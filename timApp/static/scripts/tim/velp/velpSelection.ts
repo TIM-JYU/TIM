@@ -1,5 +1,4 @@
 import angular, {IController, IFormController, IHttpPromise} from "angular";
-import $ from "jquery";
 import {timApp} from "tim/app";
 import {Binding, markAsUsed, Require} from "tim/util/utils";
 import * as velpSummary from "tim/velp/velpSummary";
@@ -66,7 +65,6 @@ export class VelpSelectionController implements IController {
     private labelAdded: boolean = false;
     public rctrl!: Require<ReviewController>;
     private default_personal_velp_group: IVelpGroup;
-    private previewReleased: boolean = false;
     private teacherRight!: Binding<boolean, "<">;
     private onInit!: Binding<(params: {$API: VelpSelectionController}) => void, "&">;
 
@@ -1110,53 +1108,6 @@ export class VelpSelectionController implements IController {
         } else if (index >= 0) {
             velp.velp_groups.splice(index, 1);
         }
-    }
-
-    /**
-     * Releases select tab.
-     * @method releaseClicked
-     */
-
-    releaseClicked() {
-        // TODO: delete this method and just use draggable directive
-        const div = $("#selectVelpsDiv");
-        this.previewReleased = !this.previewReleased;
-        const offset = div.offset() || {top: 0, left: 0};
-        const top = offset.top;
-        const left = offset.left - 270;
-        const element = div.detach();
-        const btn = document.getElementById("releaseSelectVelpsButton");
-        if (btn == null) {
-            return;
-        }
-        if (div.css("position") === "fixed") {
-            $("#selectVelpsStack").append(element);
-            // If preview has been clicked back in, save the preview position before making it static again
-            div.css("position", "static");
-            div.find(".draghandle").css("visibility", "hidden");
-            div.find(".closedraggable").css("visibility", "hidden");
-            div.css("display", "default");
-            div.css("padding", 0);
-
-            btn.innerHTML = "&#8592;";
-
-        } else {
-            // If preview has just been released or it was released last time editor was open
-            $("#velpMenu").append(element);
-            div.css("position", "fixed");
-            div.find(".draghandle").css("visibility", "visible");
-            div.find(".closedraggable").css("visibility", "visible");
-
-            div.css("display", "table");
-            div.css("width", "19em");
-            div.css("padding", 5);
-            div.css("z-index", 9999);
-            btn.innerHTML = "&#8594;";
-
-            div.offset({left, top});
-
-        }
-
     }
 }
 

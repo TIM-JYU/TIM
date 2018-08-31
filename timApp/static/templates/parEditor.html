@@ -162,19 +162,10 @@
     <div id="previewDiv"
          tim-draggable-fixed
          detachable="true"
-         caption="Preview"
+         caption="{{ $ctrl.getPreviewCaption() }}"
          save="{{$ctrl.getOptions().localSaveTag}}Preview"
          resize="true"
          class="preview"
          ng-show="$ctrl.proeditor">
-    <span>Preview
-        (<ng-pluralize count="$ctrl.parCount"
-                       when="{'0': 'empty',
-                     '1': '1 paragraph',
-                     'other': '{} paragraphs'}">
-        </ng-pluralize>)
-    </span>
-        <span ng-show="$ctrl.outofdate">...</span>
-
         <div class="previewcontent paragraphs"></div>
     </div>

@@ -962,6 +962,21 @@ or newer one that is more familiar to write in YAML:
     scrollIntoView() {
         this.element[0].scrollIntoView();
     }
+
+    getPreviewCaption() {
+        let str;
+        if (this.parCount === 0) {
+            str = "Preview (empty)";
+        } else if (this.parCount === 1) {
+            str = "Preview (1 paragraph)";
+        } else {
+            str = `Preview (${this.parCount} paragraphs)`;
+        }
+        if (this.outofdate) {
+            str += " ..."
+        }
+        return str;
+    }
 }
 
 registerDialogComponent("pareditor",

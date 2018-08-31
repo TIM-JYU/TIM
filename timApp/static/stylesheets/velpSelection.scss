@@ -1,16 +1,3 @@
-/* app css stylesheet */
-/*
-.container{
-    padding: 0;
-    max-width: 75%;
-}
-
-@media (max-width: 768px) {
-    .container{
-        margin-left: 5%;
-    }
-}
-*/
 /** Layout styles **/
 .fulldiv {
     width: 100%;
@@ -22,16 +9,6 @@
     float: left;
 }
 
-.div-80 {
-    width: 80%;
-    float: left;
-}
-
-.div-20 {
-    width: 20%;
-    float: left;
-}
-
 .div-10 {
     width: 10%;
     float: left;
@@ -39,10 +16,8 @@
 
 /** Velp area styles **/
 .velpMenu .tab-content {
-    overflow-y: auto;
     bottom: 0;
     top:0;
-    height: 90%;
 }
 
 
@@ -82,11 +57,6 @@
     height: 95%;
 }
 
-#advView {
-    padding-top: 0.5em;
-    padding-left: 0.2em;
-}
-
 .velpMenu .nav-tabs {
     margin-left: 0;
     margin-top: 0em;
@@ -123,18 +93,11 @@
 
 /* needs media queries */
 .velpArea .stack{
-    width: 98%;
-    height: auto;
-    margin: 1em 1%;
-    float: left;
-    height: 22em;
-    position: absolute;
+    background: white;
+    height: 1em;
+    width: 18em;
+    position: relative;
 }
-
-/*
-#searchVelps {
-    width: 11em;
-}*/
 
 .adjustForm {
     margin-top: 0.4em;
@@ -192,12 +155,6 @@
     white-space: normal;
 }
 
-.pointsPen {
-    top: 5px;
-    right: 5px;
-    position: absolute;
-}
-
 .tag-true, .tag-false {
     font-size: 0.85em;
     word-wrap: break-word;
@@ -228,15 +185,6 @@
 
 .addLabelBtn {
     display: inline;
-}
-
-#addVelpBtn {
-    margin-top: 0.8em;
-}
-
-#createVelpButton {
-    margin-left: 0.2em;
-    margin-top: 1.3em;
 }
 
 .velp {
@@ -317,20 +265,9 @@ position: absolute;
 box-shadow: 0px -11px 16px -12px rgba(0,0,0,0.5);
 }
 
-.velp-name {
-    width: 77%;
-    word-break: normal; /*break-all; */
-    overflow: hidden;
-    max-height: 4.5em;
-}
-
 .bottom-part{
     padding-top: 8em;
     width: 100%;
-}
-
-.velpPencil {
-    float: right;
 }
 
 .velp .edit{
@@ -395,23 +332,9 @@ box-shadow: 0px -11px 16px -12px rgba(0,0,0,0.5);
     border: none;
 }
 
-.missing-velps{
-    position: absolute;
-    left: 102%;
-    width: 17em;
-    top: 0;
-}
-
 .notes>span{
     display: block;
     margin-bottom: 0.25em;
-}
-
-/* Text selection */
-
-.text-selection{
-    background: cornflowerblue;
-    color: white;
 }
 
 /* Annotation styles */
@@ -543,15 +466,6 @@ label.disabled {
     line-height: 1.15em;
 }
 
-.annTable {
-    margin-left: 0;
-    text-align: left;
-}
-
-.annTable td {
-    border: hidden;
-}
-
 .annqmark {
     margin-left: 0.2rem;
     margin-top: 0.1rem;
@@ -644,8 +558,4 @@ label.disabled {
 
 .summThiColumn {
     text-align: center;
-}
-
-.paragraphs pre {
-    overflow: visible;
 }

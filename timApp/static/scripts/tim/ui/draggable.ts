@@ -21,8 +21,12 @@ function getPixels(s: string) {
 }
 
 const draggableTemplate = `
-<div class="draghandle" ng-mousedown="d.dragClick(); $event.preventDefault()" ng-show="d.canDrag()">
+<div class="draghandle" ng-mousedown="d.dragClick(); $event.preventDefault()">
     <p ng-show="d.caption" ng-bind="d.caption"></p>
+    <i ng-show="d.detachable"
+       ng-click="d.toggleDetach()"
+       title="{{ d.canDrag() ? 'Attach' : 'Detach' }}"
+       class="glyphicon glyphicon-arrow-{{ d.canDrag() ? 'left' : 'right' }}"></i>
     <i ng-show="d.click"
        title="Minimize dialog"
        ng-click="d.toggleMinimize()"
@@ -32,9 +36,6 @@ const draggableTemplate = `
        ng-click="d.closeFn()"
        class="glyphicon glyphicon-remove"></i>
 </div>
-<button class="timButton pull-right" ng-show="d.detachable" ng-click="d.toggleDetach()">
-    <i class="glyphicon glyphicon-arrow-{{ d.canDrag() ? 'left' : 'right' }}"></i>
-</button>
 <div ng-show="d.canResize() && !d.autoWidth"
      class="resizehandle-r resizehandle"></div>
 <div ng-show="d.canResize() && !d.autoHeight"
@@ -61,6 +62,8 @@ timApp.directive("timDraggableFixed", [() => {
         },
         restrict: "A",
         scope: {},
+        // template: draggableTemplate,
+        // transclude: true,
         // Using template + transclude here does not work for some reason with uib-modal, so we compile the
         // template manually in $postLink.
     };
@@ -208,6 +211,9 @@ export class DraggableController implements IController {
         this.handle = this.element.children(".draghandle");
 
         this.handle.on("mousedown pointerdown touchstart", (e: JQueryEventObject) => {
+            if (!this.canDrag()) {
+                return;
+            }
             this.resizeStates = {
                 up: false,
                 down: false,
