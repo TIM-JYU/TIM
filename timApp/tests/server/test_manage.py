@@ -50,13 +50,13 @@ class ManageTest(TimRouteTest):
                        {'new_name': new_alias_2},
                        expect_status=403,
                        json_key='error',
-                       expect_content="You don't have permission to write to the destination folder.")
+                       expect_content="You cannot create documents in this folder.")
         self.current_user.grant_access(pf.id, 'view')
         self.json_post(f'/alias/{new_alias}',
                        {'new_name': new_alias_2},
                        expect_status=403,
                        json_key='error',
-                       expect_content="You don't have permission to write to the destination folder.")
+                       expect_content="You cannot create documents in this folder.")
         self.current_user.grant_access(pf.id, 'edit')
         self.json_post(f'/alias/{new_alias}',
                        {'new_name': new_alias_2})
@@ -68,3 +68,12 @@ class ManageTest(TimRouteTest):
                        expect_status=403,
                        json_key='error',
                        expect_content="You don't have permission to write to the source folder.")
+
+    def test_alias_no_empty_path_part(self):
+        self.login_test1()
+        d = self.create_doc()
+        self.json_post(f'/alias/{d.path}',
+                       {'new_name': self.current_user.get_personal_folder().path + '//foo'}, expect_status=400,
+                       json_key='error',
+                       expect_content="The document path cannot have empty parts."
+                       )
