@@ -10,6 +10,7 @@ from languages import *
 import pwd, os
 import glob
 from base64 import b64encode
+from cs_sanitizer import cs_min_sanitize, svg_sanitize, tim_sanitize
 
 #  uid = pwd.getpwnam('agent')[2]
 #  os.setuid(uid)
@@ -301,13 +302,6 @@ def get_md(ttype, query):
     return s
 
 
-def min_sanitize(s):
-    if s.find('<svg') >= 0: return s;
-    s = s.replace('<', '&lt;').replace('>', '&gt;')
-
-    # s = tim_sanitize(s)
-    return s
-
 
 def get_cache_footer(query):
     cache_footer = get_param(query, "cacheFooter", "")
@@ -317,7 +311,7 @@ def get_cache_footer(query):
     if not cache_footer:
         return ''
 
-    return '<figcaption>' + min_sanitize(cache_footer) + '</figcaption>'
+    return '<figcaption>' + cs_min_sanitize(cache_footer) + '</figcaption>'
 
 
 def get_html(self, ttype, query):
@@ -347,12 +341,15 @@ def get_html(self, ttype, query):
         query.jso['markup']['imgname'] = "/csgenerated/" + task_id # + "/" + hash
         query.jso['state']= None
         ret = self.do_all(query) # otherwise generate new image
+        # if is_html, then web.console is sanitized
+        # web.err is not sanitized
+        # web.console may not be sanitized and should be put inside pre-element.
 
         htmldata = NOLAZY
 
         error = ret['web'].get('error', None)
         if error:
-            htmldata += '<div class="error">' + min_sanitize(error) + '</div>'
+            htmldata += '<pre>' + cs_min_sanitize(error) + '</pre>'
 
         is_html = get_param(query, "isHtml", False)
         default_class = 'console'
@@ -365,17 +362,17 @@ def get_html(self, ttype, query):
             cache_elem = 'pre'
 
         if cache_class:
-            cache_class = 'class="' + min_sanitize(cache_class) + '"'
+            cache_class = 'class="' + cs_min_sanitize(cache_class) + '"'
         else:
             cache_class = ''
 
         console = ret['web'].get('console', None)
         if console:
-            if not is_html:
-                console = min_sanitize(console)
-            #else:
-            #    console = tim_sanitize(console)
-            htmldata += '<' + cache_elem + ' ' + cache_class + '>' + console + '</'+ cache_elem+'>'
+           if not is_html:
+               console = cs_min_sanitize(console)
+           # else:
+           #     console = svg_sanitize(console)
+           htmldata += '<' + cache_elem + ' ' + cache_class + '>' + console + '</'+ cache_elem+'>'
 
         img = ret['web'].get('image', None)
         if img:
@@ -893,7 +890,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         is_gethtml = self.path.find('/gethtml') >= 0
         is_html = (self.path.find('/html') >= 0 or self.path.find('.html') >= 0) and not is_gethtml
         is_css = self.path.find('.css') >= 0
-        is_js = self.path.find('.js') >= 0
+        is_js = self.path.find('.js') >= 0 or self.path.find('.ts') >= 0
         is_reqs = self.path.find('/reqs') >= 0
         is_iframe_param = get_param_del(query, "iframe", "")
         is_iframe = (self.path.find('/iframe') >= 0) or is_iframe_param
@@ -1484,15 +1481,21 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             else:
                 out = re.sub(out_replace, out_by, out, flags=re.M)
 
+
+        is_html = get_param(query, "isHtml", False)
+        if is_html:
+            out = svg_sanitize(out)
+        # else:
+        #    out = tim_sanitize(out)
         web["console"] = out
         web["error"] = err + warnmessage
-        web["pwd"] = pwddir.strip()
+        web["pwd"] = cs_min_sanitize(pwddir.strip())
 
         t2 = time.time()
         ts = "%7.3f %7.3f" % ((t2 - t1start), t_run_time)
         ts += times_string
         # print(ts)
-        web["runtime"] = ts
+        web["runtime"] = cs_min_sanitize(ts)
 
         result["web"] = web
         # print(result)

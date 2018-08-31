@@ -6,11 +6,11 @@ import json
 from urllib.parse import urlparse, parse_qs
 import urllib
 import codecs
-import bleach
 import os
 import shlex
 import hashlib
 import binascii
+from cs_sanitizer import allow_minimal
 
 CACHE_DIR = "/tmp/cache/"
 
@@ -914,19 +914,6 @@ def string_to_string_replace_attribute(line, what_to_replace, query):
     return line
 
 
-allowed_tags = ['em', 'strong', 'tt', 'a', 'b', 'code', 'i', 'kbd', 'span', 'li', 'ul', 'ol']
-allowed_attrs = {
-    'a': ['href'],
-    'span': ['class']
-}
-
-
-def allow(s):
-    if not s:
-        return s
-    return bleach.clean(s, allowed_tags, allowed_attrs)
-
-
 def clean(s):
     s = str(s)
     s = s.replace('"', '')  # kannattaako, tällä poistetaan katkaisun mahdollisuus?
@@ -989,7 +976,7 @@ def get_md_heading(query, key, def_elem):
 
 def get_surrounding_headers2(query):
     result = get_heading(query, "header", "h4")
-    stem = allow(get_param(query, "stem", None))
+    stem = allow_minimal(get_param(query, "stem", None))
     if stem:
         result += '<p class="stem" >' + stem + '</p>'
     return result, get_heading(query, "footer", 'p class="plgfooter"')
@@ -997,7 +984,7 @@ def get_surrounding_headers2(query):
 
 def get_surrounding_md_headers2(query, header_style, footer_style):
     result = get_md_heading(query, "header", header_style)
-    stem = allow(get_param(query, "stem", None))
+    stem = allow_minimal(get_param(query, "stem", None))
     if stem:
         result += "\n\n" + stem
     return result, get_md_heading(query, "footer", footer_style)
@@ -1005,7 +992,7 @@ def get_surrounding_md_headers2(query, header_style, footer_style):
 
 def get_tiny_surrounding_headers(query, inside):
     result = get_heading(query, "header", "h4")
-    stem = allow(get_param(query, "stem", None))
+    stem = allow_minimal(get_param(query, "stem", None))
     if stem:
         result += '<span class="stem" >' + stem + "</span>"
     result += '<span class="csTinyText" >' + inside + '</span>\n'
@@ -1014,7 +1001,7 @@ def get_tiny_surrounding_headers(query, inside):
 
 def get_surrounding_headers(query, inside):
     result = get_heading(query, "header", "h4")
-    stem = allow(get_param(query, "stem", None))
+    stem = allow_minimal(get_param(query, "stem", None))
     if stem:
         result += '<p class="stem" >' + stem + '</p>\n'
     result += inside + '\n'
@@ -1024,7 +1011,7 @@ def get_surrounding_headers(query, inside):
 
 def get_surrounding_md_headers(query, inside, extra):
     result = get_md_heading(query, "header", "pluginHeader")
-    stem = allow(get_param(query, "stem", None))
+    stem = allow_minimal(get_param(query, "stem", None))
     if stem:
         result += "\n\n" + stem
     result += '\n```\n' + inside + '\n```\n'
@@ -1343,74 +1330,3 @@ def str_to_int(s, default=0):
     except:
         return default
 
-TIM_SAFE_TAGS = ['a',
-                 'abbr',
-                 'acronym',
-                 'b',
-                 'blockquote',
-                 'code',
-                 'em',
-                 'figcaption',
-                 'figure',
-                 'i',
-                 'li',
-                 'ol',
-                 'strong',
-                 'ul',
-                 'video',
-                 'p',
-                 'code',
-                 'div',
-                 'span',
-                 'br',
-                 'pre',
-                 'img',
-                 'h1',
-                 'h2',
-                 'h3',
-                 'h4',
-                 'h5',
-                 'h6',
-                 'h7',
-                 'hr',
-                 'table',
-                 'tbody',
-                 'thead',
-                 'tfoot',
-                 'td',
-                 'tr',
-                 'th',
-                 'caption',
-                 'colgroup',
-                 'col',
-                 'sub',
-                 'sup',
-                 'u',
-                 's',
-                 'style',
-                 'svg']
-
-TIM_SAFE_ATTRS_MAP = {'*': ['class', 'id', 'align'],
-                      'video': ['src', 'controls'],
-                      'abbr': ['title'],
-                      'acronym': ['title'],
-                      'img': ['src', 'width', 'height'],
-                      'a': ['href', 'title', 'target'],
-                      'svg': ['*']
-                      }
-
-TIM_SAFE_ATTRS = frozenset([
-    'abbr', 'accept', 'accept-charset', 'accesskey', 'action', 'align',
-    'alt', 'axis', 'border', 'cellpadding', 'cellspacing', 'char', 'charoff',
-    'charset', 'checked', 'cite', 'class', 'clear', 'cols', 'colspan',
-    'color', 'compact', 'coords', 'datetime', 'dir', 'disabled', 'enctype',
-    'for', 'frame', 'headers', 'height', 'href', 'hreflang', 'hspace', 'id',
-    'ismap', 'label', 'lang', 'longdesc', 'maxlength', 'media', 'method',
-    'multiple', 'name', 'nohref', 'noshade', 'nowrap', 'prompt', 'readonly',
-    'rel', 'rev', 'rows', 'rowspan', 'rules', 'scope', 'selected', 'shape',
-    'size', 'span', 'src', 'start', 'style', 'summary', 'tabindex', 'target', 'title',
-    'type', 'usemap', 'valign', 'value', 'vspace', 'width', 'controls', 'plugin'])
-
-
-def tim_sanitize(s):
-    return bleach.clean(s, TIM_SAFE_TAGS, TIM_SAFE_ATTRS_MAP)
