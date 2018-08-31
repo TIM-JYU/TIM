@@ -311,7 +311,7 @@ def get_cache_footer(query):
     if not cache_footer:
         return ''
 
-    return '<figcaption>' + cs_min_sanitize(cache_footer) + '</figcaption>'
+    return '<figcaption>' + tim_sanitize(cache_footer) + '</figcaption>'
 
 
 def get_html(self, ttype, query):
