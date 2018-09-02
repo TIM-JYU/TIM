@@ -43,7 +43,7 @@ import {
     IQuestionResult,
     isAskedQuestion,
     isEmptyResponse,
-    isLectureListResponse,
+    isLectureListResponse, isNoUpdatesResponse,
     IUpdateResponse,
     pointsClosed,
     questionAnswerReceived,
@@ -654,6 +654,12 @@ export class LectureController implements IController {
                 newLastId = answer.msgs[answer.msgs.length - 1].msg_id;
             }
             return [pollInterval, newLastId];
+        } else if ( isNoUpdatesResponse(answer) ) {
+            let pollInterval = answer.ms;
+            if (isNaN(pollInterval) || pollInterval < 1000) {
+                pollInterval = 4000;
+            }
+            return [pollInterval, lastID];
         }
         return [0, lastID];
         // }, () => {

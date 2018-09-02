@@ -6,7 +6,7 @@ from html5lib.serializer import HTMLSerializer
 import bleach
 
 '''
-"kijasto cs-pluginissa tarvittaville sanitoinneille
+"kirjasto cs-pluginissa tarvittaville sanitoinneille
 '''
 
 cs_allowed_tags = ['em', 'strong', 'tt', 'a', 'b', 'code', 'i', 'kbd', 'span', 'li', 'ul', 'ol']
@@ -31,7 +31,7 @@ cs_svg_tim_allowed_elements = set(allowed_elements).union({
 })
 
 
-cd_svg_allowed_attributes = set(allowed_attributes).union({
+cs_svg_allowed_attributes = set(allowed_attributes).union({
     (None, 'filter'),
     (None, 'in'),
     (None, 'in2'),
@@ -53,7 +53,7 @@ def svg_sanitize(s):
     stream = walker(dom)
     stream = sanitizer.Filter(stream,
                               allowed_elements=cs_svg_tim_allowed_elements,
-                              allowed_attributes=cd_svg_allowed_attributes,
+                              allowed_attributes=cs_svg_allowed_attributes,
                               allowed_css_properties=tim_allowed_css_props)
     serializer = HTMLSerializer(quote_attr_values='always')
     s = serializer.render(stream)
@@ -118,7 +118,7 @@ TIM_SAFE_ATTRS_MAP = {'*': ['class', 'id', 'align'],
                       'video': ['src', 'controls'],
                       'abbr': ['title'],
                       'acronym': ['title'],
-                      'img': ['src', 'width', 'height'],
+                      'img': ['src', 'width', 'height', 'style', 'title'],
                       'a': ['href', 'title', 'target'],
                       'svg': ['*']
                       }
@@ -135,6 +135,11 @@ TIM_SAFE_ATTRS = frozenset([
     'size', 'span', 'src', 'start', 'style', 'summary', 'tabindex', 'target', 'title',
     'type', 'usemap', 'valign', 'value', 'vspace', 'width', 'controls', 'plugin'])
 
+TIM_SAFE_PROTOCOLS=['http', 'https', 'smb', 'data']
+TIM_SAFE_STYLES = ['width', 'height', 'vertical-align']
+
 
 def tim_sanitize(s):
-    return bleach.clean(s, TIM_SAFE_TAGS, TIM_SAFE_ATTRS_MAP)
+    if not s:
+        return s
+    return bleach.clean(s, TIM_SAFE_TAGS, TIM_SAFE_ATTRS_MAP, protocols=TIM_SAFE_PROTOCOLS, styles=TIM_SAFE_STYLES)

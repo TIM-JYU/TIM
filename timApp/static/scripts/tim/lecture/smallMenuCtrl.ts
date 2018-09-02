@@ -129,7 +129,7 @@ timApp.component("timSmallMenu", {
             <li ng-show="$ctrl.currentLecturesList.length > 0" ng-repeat="lecture in $ctrl.currentLecturesList">
                 <p ng-click="$ctrl.selectCurrentLecture()">{{ lecture.lecture_code }}
                     <button class="timButton" value="Join"
-                            ng-click="$ctrl.lctrl.joinLecture(lecture.lecture_code,lecture.is_access_code)">Join
+                            ng-click="$ctrl.lctrl.joinLecture(lecture)">Join
                     </button>
                 </p>
             </li>

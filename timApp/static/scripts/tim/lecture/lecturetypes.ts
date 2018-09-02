@@ -148,6 +148,10 @@ export function isLectureListResponse(response: any): response is ILectureListRe
     return response.lectures != null && response.futureLectures != null;
 }
 
+export function isNoUpdatesResponse(response: any): response is INoUpdatesResponse {
+    return response.ms != null;
+}
+
 export interface ILectureListResponse2 {
     currentLectures: ILecture[];
     futureLectures: ILecture[];

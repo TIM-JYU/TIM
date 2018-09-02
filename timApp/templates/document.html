@@ -13,14 +13,14 @@
 {% block itemlinks %}
     {{ super() }}
     {% if item.rights.teacher %}
-         <li role="presentation" {{ active('view_page.teacher_view') }}><a id="headerTeacher" href="/teacher/{{ item.path }}">Teacher view</a></li>
+         <li role="presentation" {{ active('view_page.teacher_view') }}><a id="headerTeacher" href="/teacher/{{ item.path }}">Teacher</a></li>
     {% endif %}
     {% if item.rights.see_answers %}
          <li role="presentation" {{ active('view_page.see_answers_view') }}><a id="headerAnswers" href="/answers/{{ item.path }}">Answers</a></li>
     {% endif %}
-     <li role="presentation" {{ active('view_page.lecture_view') }}><a id="headerLecture" href="/lecture/{{ item.path }}">Lecture view</a></li>
-     <li role="presentation" {{ active('view_page.velp_view') }}><a id="headerVelp" href="/velp/{{ item.path }}">Velp view</a></li>
-     <li role="presentation" {{ active('view_page.slide_document') }}><a id="headerSlide" href="/slide/{{ item.path }}">Slide view</a></li>
+     <li role="presentation" {{ active('view_page.lecture_view') }}><a id="headerLecture" href="/lecture/{{ item.path }}">Lecture</a></li>
+     <li role="presentation" {{ active('view_page.velp_view') }}><a id="headerVelp" href="/velp/{{ item.path }}">Velp</a></li>
+     <li role="presentation" {{ active('view_page.slide_document') }}><a id="headerSlide" href="/slide/{{ item.path }}">Slide</a></li>
 {% endblock %}
 {% block languages %}
     {% if translations %}

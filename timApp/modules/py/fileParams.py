@@ -10,7 +10,7 @@ import os
 import shlex
 import hashlib
 import binascii
-from cs_sanitizer import allow_minimal
+from cs_sanitizer import allow_minimal, tim_sanitize, svg_sanitize
 
 CACHE_DIR = "/tmp/cache/"
 
@@ -936,7 +936,7 @@ def get_heading(query, key, def_elem):
     # print("h=",h)
     if not h:
         return ""
-    h = str(h)
+    h = tim_sanitize(str(h))
     return "<" + def_elem + ">" + h + "</" + def_elem + ">\n"
 
 
@@ -948,7 +948,7 @@ def get_md_heading(query, key, def_elem):
     # print("h=",h)
     if not h:
         return ""
-    h = str(h)
+    h = tim_sanitize(str(h))
     if not def_elem:
         return h
     return "\\" + def_elem + "{" + h + "}\n"
@@ -992,7 +992,7 @@ def get_surrounding_md_headers2(query, header_style, footer_style):
 
 def get_tiny_surrounding_headers(query, inside):
     result = get_heading(query, "header", "h4")
-    stem = allow_minimal(get_param(query, "stem", None))
+    stem = tim_sanitize(get_param(query, "stem", None))
     if stem:
         result += '<span class="stem" >' + stem + "</span>"
     result += '<span class="csTinyText" >' + inside + '</span>\n'
@@ -1001,7 +1001,7 @@ def get_tiny_surrounding_headers(query, inside):
 
 def get_surrounding_headers(query, inside):
     result = get_heading(query, "header", "h4")
-    stem = allow_minimal(get_param(query, "stem", None))
+    stem = tim_sanitize(get_param(query, "stem", None))
     if stem:
         result += '<p class="stem" >' + stem + '</p>\n'
     result += inside + '\n'
@@ -1011,7 +1011,7 @@ def get_surrounding_headers(query, inside):
 
 def get_surrounding_md_headers(query, inside, extra):
     result = get_md_heading(query, "header", "pluginHeader")
-    stem = allow_minimal(get_param(query, "stem", None))
+    stem = tim_sanitize(get_param(query, "stem", None))
     if stem:
         result += "\n\n" + stem
     result += '\n```\n' + inside + '\n```\n'

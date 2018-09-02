@@ -117,6 +117,14 @@ def get_updates():
 
 EXTRA_FIELD_NAME = "extra"
 
+def debug_print(s):
+    """
+    Just for debugging do_get_updates and it's long poll.  Problem: long poll does not notice
+    if new question starts.  But lecture wall works.
+    :param s: string to print
+    """
+    print(s)
+
 
 def do_get_updates(request):
     """Gets updates from some lecture.
@@ -124,6 +132,7 @@ def do_get_updates(request):
     Checks updates in 1 second frequently and answers if there is updates.
 
     """
+    debug_print("get updates")
     if not request.args.get('c'):
         abort(400, "Bad request")
     client_last_id = int(request.args.get('c'))  # client_message_id'))
@@ -165,18 +174,22 @@ def do_get_updates(request):
     options = lecture.options_parsed
     teacher_poll = options.get("teacher_poll", "")
     teacher_poll = teacher_poll.split(";")
+
     poll_interval_ms = 4000
     long_poll = False
+    poll_interval_t_ms = 4000
+    long_poll_t = False
+
     # noinspection PyBroadException
     try:
-        poll_interval_ms = int(options.get("poll_interval", 4))*1000
+        poll_interval_ms = int(float(options.get("poll_interval", 4))*1000)
         long_poll = bool(options.get("long_poll", False))
     except:
         pass
 
     # noinspection PyBroadException
     try:
-        poll_interval_t_ms = int(options.get("poll_interval_t", 1))*1000
+        poll_interval_t_ms = int(float(options.get("poll_interval_t", 1))*1000)
         long_poll_t = bool(options.get("long_poll_t", False))
     except:
         pass
@@ -192,18 +205,24 @@ def do_get_updates(request):
         except:
             pass
 
+
     is_lecturer = is_lecturer_of(lecture)
+    if is_lecturer:
+        poll_interval_ms = poll_interval_t_ms
+        long_poll = long_poll_t
+    if long_poll:
+        poll_interval_ms = 1000
 
     lecture_ending = 100
     base_resp = None
+    debug_print(user_name + " before loop")
 
     # Jos poistaa tämän while loopin, muuttuu long pollista perinteiseksi polliksi
     while step <= 10:
+        lecture = get_current_lecture()
         lecture_ending = check_if_lecture_is_ending(lecture)
         if is_lecturer:
             lecturers, students = get_lecture_users(lecture)
-            poll_interval_ms = poll_interval_t_ms
-            long_poll = long_poll_t
         # Gets new messages if the wall is in use.
         if use_wall:
             list_of_new_messages = lecture.messages.filter(Message.msg_id > client_last_id).order_by(
@@ -260,8 +279,10 @@ def do_get_updates(request):
 
         # Gets new questions if the questions are in use.
         if use_questions:
+            debug_print(user_name + " " + str(step))
             new_question = get_new_question(lecture, current_question_id, current_points_id)
             if new_question:
+                debug_print(user_name + " send new question")
                 return json_response_and_commit({**base_resp, EXTRA_FIELD_NAME: new_question})
 
         if list_of_new_messages:
@@ -971,7 +992,12 @@ def answer_to_question():
 
     asked_id = int(request.args.get("asked_id"))
     req_input = json.loads(request.args.get("input"))
-    answer = req_input['answers']
+    # noinspection PyBroadException
+    try:
+        answer = req_input['answers']
+    except:
+        answer = {}
+        return ok_response()  # no answer from user
     whole_answer = answer
     lecture = get_current_lecture_or_abort()
     lecture_id = lecture.lecture_id
