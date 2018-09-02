@@ -2,16 +2,16 @@ use actix::Actor;
 use actix::Handler;
 use actix::Message;
 use actix::SyncContext;
+use crate::document::DocInfo;
+use crate::models::Folder;
+use crate::models::ItemKind;
+use crate::schema;
+use crate::timerror::TimError;
+use crate::timerror::TimErrorKind;
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
 use diesel::r2d2::{ConnectionManager, Pool};
-use document::DocInfo;
 use failure::ResultExt;
-use models::Folder;
-use models::ItemKind;
-use schema;
-use timerror::TimError;
-use timerror::TimErrorKind;
 
 pub struct DbExecutor(pub Pool<ConnectionManager<PgConnection>>);
 
@@ -50,8 +50,7 @@ impl Handler<GetItems> for DbExecutor {
                 .filter(
                     name.like(format!("{}/%", msg.path))
                         .and(name.not_like(format!("{}/%/%", msg.path))),
-                )
-                .select((name, docid, public, description))
+                ).select((name, docid, public, description))
                 .load::<DocInfo>(conn)
                 .context(TimErrorKind::Db)?
         };

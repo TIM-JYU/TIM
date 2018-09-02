@@ -1,3 +1,5 @@
+use crate::timerror::TimError;
+use crate::timerror::TimErrorKind;
 use failure::Error;
 use failure::ResultExt;
 use serde_json;
@@ -5,8 +7,6 @@ use std::collections::HashMap;
 use std::convert::TryFrom;
 use std::fs::File;
 use std::path::Path;
-use timerror::TimError;
-use timerror::TimErrorKind;
 use yaml_rust::Yaml;
 use yaml_rust::YamlLoader;
 
@@ -46,7 +46,8 @@ impl TryFrom<DocParagraph> for Yaml {
     type Error = TimError;
 
     fn try_from(p: DocParagraph) -> Result<Self, Self::Error> {
-        let mut r = YamlLoader::load_from_str(p.get_markdown()).context(TimErrorKind::InvalidYaml)?;
+        let mut r =
+            YamlLoader::load_from_str(p.get_markdown()).context(TimErrorKind::InvalidYaml)?;
         let mut drain = r.drain(..);
         drain.next().ok_or(TimErrorKind::InvalidYaml.into())
     }

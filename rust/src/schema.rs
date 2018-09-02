@@ -1,5 +1,5 @@
-use models::QuestionactivitykindMapping;
-use models::ReadparagraphtypeMapping;
+use crate::models::QuestionactivitykindMapping;
+use crate::models::ReadparagraphtypeMapping;
 
 table! {
     accesstype (id) {

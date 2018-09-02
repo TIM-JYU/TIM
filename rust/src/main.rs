@@ -1,4 +1,6 @@
-#![feature(nll, proc_macro, generators, try_from)]
+#![allow(proc_macro_derive_resolution_fallback)]
+#![feature(nll, try_from)]
+#![feature(futures_api, async_await, await_macro, pin,)]
 #![recursion_limit = "128"]
 
 //#[macro_use]
@@ -16,7 +18,7 @@ extern crate diesel;
 #[macro_use]
 extern crate diesel_derive_enum;
 extern crate failure;
-extern crate futures_await as futures;
+extern crate futures;
 extern crate yaml_rust;
 
 mod db;
@@ -26,27 +28,26 @@ mod schema;
 mod timerror;
 
 use actix::Addr;
-use actix::Syn;
 use actix::SyncArbiter;
 use actix_web::pred;
 use actix_web::ResponseError;
-use actix_web::State;
 use actix_web::{http, server, App, HttpRequest, HttpResponse, Path};
 use askama::Template;
-use db::DbExecutor;
-use db::GetItem;
-use db::GetItems;
+use crate::db::DbExecutor;
+use crate::db::GetItem;
+use crate::db::GetItems;
+use crate::document::Document;
+use crate::models::Item;
+use crate::models::ItemKind;
+use crate::models::ItemList;
+use crate::timerror::TimError;
+use crate::timerror::TimErrorKind;
 use diesel::pg::PgConnection;
 use diesel::r2d2::{ConnectionManager, Pool};
-use document::Document;
 use failure::Fail;
 use failure::ResultExt;
-use futures::prelude::{async, await};
-use models::Item;
-use models::ItemKind;
-use models::ItemList;
-use timerror::TimError;
-use timerror::TimErrorKind;
+use futures::compat::Future01CompatExt;
+use futures::executor::block_on;
 
 fn view_document(info: Path<(u32,)>) -> String {
     format!("Hello {}!", &info.0)
@@ -82,28 +83,37 @@ impl ResponseError for TimError {
     }
 }
 
-#[async(boxed)]
-fn view_item(info: Path<(String,)>, state: State<AppState>) -> Result<HttpResponse, TimError> {
-    let ps: PathSpec = (&info.0[..]).into();
+fn view_item(req: &HttpRequest<AppState>) -> Result<HttpResponse, TimError> {
+    block_on(view_item_impl(req))
+}
+
+async fn view_item_impl(req: &HttpRequest<AppState>) -> Result<HttpResponse, TimError> {
+    let info = &req.match_info()["Path"];
+    let state = req.state();
+    let ps: PathSpec = (&info[..]).into();
     let path: String;
     match ps {
         PathSpec::Id(_) => return Ok(HttpResponse::Ok().body("not supported by id yet")),
         PathSpec::Path(p) => path = p.to_string(),
     }
-    let res = await!(state.db.send(GetItem {
-        path: path.to_string()
-    })).context(TimErrorKind::Db)??;
+    let res = await!(
+        state
+            .db
+            .send(GetItem {
+                path: path.to_string()
+            }).compat()
+    ).context(TimErrorKind::Db)??;
     match res {
         ItemKind::Folder(f) => {
-            let items =
-                await!(state.db.send(GetItems { path: f.get_path() })).context(TimErrorKind::Db)??;
+            let items = await!(state.db.send(GetItems { path: f.get_path() }).compat())
+                .context(TimErrorKind::Db)??;
             Ok(HttpResponse::Ok()
                 .content_type("text/html; charset=utf-8")
                 .body(
                     ItemList {
                         items: items.into_iter().map(|i| i.into()).collect(),
                     }.render()
-                        .unwrap(),
+                    .unwrap(),
                 ))
         }
         ItemKind::DocEntry(d) => {
@@ -120,12 +130,12 @@ fn view_item(info: Path<(String,)>, state: State<AppState>) -> Result<HttpRespon
     }
 }
 
-fn not_found(_info: HttpRequest<AppState>) -> &'static str {
+fn not_found(_info: &HttpRequest<AppState>) -> &'static str {
     "not found!"
 }
 
 struct AppState {
-    db: Addr<Syn, DbExecutor>,
+    db: Addr<DbExecutor>,
 }
 
 fn main() {
@@ -140,9 +150,8 @@ fn main() {
     server::new(move || {
         App::with_state(AppState { db: addr.clone() })
             .resource("/view/{Path:.*}", |r| {
-                r.method(http::Method::GET).with2(view_item)
-            })
-            .route("/{id}", http::Method::GET, view_document)
+                r.method(http::Method::GET).f(view_item)
+            }).route("/{id}", http::Method::GET, view_document)
             .default_resource(|r| {
                 r.method(http::Method::GET).f(not_found);
                 r.route()
@@ -150,8 +159,8 @@ fn main() {
                     .f(|_req| HttpResponse::MethodNotAllowed());
             })
     }).bind("127.0.0.1:80")
-        .unwrap()
-        .start();
+    .unwrap()
+    .start();
     println!("server running");
     let _ = sys.run();
 }

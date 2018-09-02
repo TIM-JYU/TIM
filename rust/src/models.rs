@@ -1,5 +1,5 @@
 use askama::Template;
-use document::DocInfo;
+use crate::document::DocInfo;
 
 pub trait Item {
     fn get_path(&self) -> String;

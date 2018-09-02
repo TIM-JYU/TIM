@@ -1,5 +1,5 @@
 use askama::Template;
-use models::Item;
+use crate::models::Item;
 
 #[derive(Template, Queryable, Serialize)]
 #[template(path = "docentry.html")]

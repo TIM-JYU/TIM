@@ -1,4 +1,5 @@
-use document::DocParagraph;
+use crate::document::DocParagraph;
+use crate::timerror::TimErrorKind;
 use failure::Error;
 use failure::ResultExt;
 use serde_json;
@@ -6,7 +7,6 @@ use std::fs::File;
 use std::io::BufRead;
 use std::io::BufReader;
 use std::path::Path;
-use timerror::TimErrorKind;
 
 pub enum Reference {
     Par {
