@@ -294,6 +294,7 @@ def do_get_updates(request):
         # For long poll wait 1 sek before new check.
         time.sleep(1)
         step += 1
+        db.session.expire_all()
 
     if lecture_ending != 100 or lecturers or students:
         return json_response_and_commit(base_resp)
