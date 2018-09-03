@@ -571,7 +571,7 @@ export class LectureController implements IController {
     async pollOnce(lastID: number): Promise<[number, number]> {
         let buster = "" + new Date().getTime();
         buster = buster.substring(buster.length - 4);
-        const response = await $http<IUpdateResponse>({
+        const [err, response] = await to($http<IUpdateResponse>({
             url: "/getUpdates",
             method: "GET",
             params: {
@@ -583,7 +583,11 @@ export class LectureController implements IController {
                 p: this.getCurrentPointsId(), // current_points_id
                 b: buster,
             },
-        });
+        }));
+        if (!response) {
+            // in case of an error, wait 30 seconds before trying again
+            return [30000, lastID];
+        }
         const answer = response.data;
         if (isLectureListResponse(answer)) {
             this.showBasicView(answer);
@@ -665,14 +669,6 @@ export class LectureController implements IController {
             return [pollInterval, lastID];
         }
         return [0, lastID];
-        // }, () => {
-        //     this.requestOnTheWay = false;
-        //     $window.clearTimeout(this.pollTimeout);
-        //     // Odottaa 30s ennen kuin yrittää uudelleen errorin jälkeen.
-        //     this.pollTimeout = setTimeout(() => {
-        //         this.pollOnce(this.lastID);
-        //     }, 30000);
-        // });
     }
 
     getCurrentQuestionId() {
