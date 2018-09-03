@@ -217,7 +217,6 @@ def do_get_updates(request):
     base_resp = None
     debug_print(user_name + " before loop")
 
-    # Jos poistaa tämän while loopin, muuttuu long pollista perinteiseksi polliksi
     while step <= 10:
         lecture = get_current_lecture()
         lecture_ending = check_if_lecture_is_ending(lecture)
@@ -291,9 +290,12 @@ def do_get_updates(request):
         if not long_poll or current_app.config['TESTING']:
             # Don't loop when testing
             break
-        # For long poll wait 1 sek before new check.
+        # For long poll wait 1 sec before new check.
         time.sleep(1)
         step += 1
+
+        # Database updates may have happened during sleep, so we have to expire all objects so that they will be
+        # reloaded.
         db.session.expire_all()
 
     if lecture_ending != 100 or lecturers or students:
