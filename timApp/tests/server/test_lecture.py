@@ -140,11 +140,10 @@ class LectureTest(TimRouteTest):
                                        'asked_time': resp['asked_time'],
                                        'doc_id': doc.id,
                                        'json': {
-                                           'hash': 'LTB4MmM5YWQxNzE=',
+                                           'hash': 'MHgzN2M5NGNhYQ==',
                                            'json': {
                                                'answerFieldType': 'radio',
                                                'headers': [],
-                                               'matrixType': '',
                                                'points': '2:1',
                                                'questionText': 'What day is it today?',
                                                'questionTitle': 'Today',

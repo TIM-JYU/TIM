@@ -19,7 +19,7 @@ def create_yaml(field_type: str,
                 choices: ChoiceList,
                 points_str: str = None,
                 headers=None,
-                matrix_type=''):
+                matrix_type=None):
     headers = headers or []
     # TODO: timeLimit missing (for lecture question)
     # TODO: matrixType useless?
@@ -27,7 +27,7 @@ def create_yaml(field_type: str,
         'answerFieldType': field_type,
         'expl': {str(i + 1): choices[i][1] for i in range(len(choices))},
         'headers': headers,
-        'matrixType': matrix_type,
+        **({'matrixType': matrix_type} if matrix_type else {}),
         'questionText': 'Is Moon made of cheese?',
         'questionTitle': 'Moon problem',
         'questionType': question_type,

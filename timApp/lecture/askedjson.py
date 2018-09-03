@@ -43,7 +43,9 @@ FIELD_NAME_MAP = dict(
     xpl='expl',
 )
 KNOWN_TITLE_KEYS = {'TITLE', 'title', 'questionTitle'}
-MANDATORY_FIELDS = {'answerFieldType', 'headers', 'matrixType', 'questionTitle', 'questionText', 'questionType', 'rows'}
+MANDATORY_FIELDS = {'answerFieldType', 'headers', 'questionTitle', 'questionText', 'questionType', 'rows'}
+CONDITIONALLY_MANDATORY_FIELDS = {'matrix': 'matrixType'}
+
 
 def normalize_question_json(q: Dict[str, Any], allow_top_level_keys: Set[str] = None):
     """Normalizes the JSON data of a question.
@@ -77,6 +79,12 @@ def normalize_question_json(q: Dict[str, Any], allow_top_level_keys: Set[str] = 
     result, err = normalize_rows(normalized['rows'])
     if not result:
         return make_error_question(err)
+    if normalized.get('matrixType') == '':
+        normalized.pop('matrixType')
+    for qt, v in CONDITIONALLY_MANDATORY_FIELDS.items():
+        if normalized['questionType'] == qt:
+            if normalized.get(v) is None:
+                return make_error_question(f'Missing {v} when questionType is {qt}')
     return normalized
 
 

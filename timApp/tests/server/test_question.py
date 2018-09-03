@@ -23,7 +23,7 @@ class QuestionTest(TimLiveServer, TimRouteTest):
         <div class="parContent" id="test1">
             <div id="{d.id}.test1.{first_id}" data-plugin="/qst">
                 <qst-runner
-                        json="{{&quot;markup&quot;: {{&quot;timeLimit&quot;: 90, &quot;questionText&quot;: &quot;What day is it today?&quot;, &quot;questionType&quot;: &quot;radio-vertical&quot;, &quot;questionTitle&quot;: &quot;Today&quot;, &quot;rows&quot;: [&quot;Monday&quot;, &quot;Wednesday&quot;, &quot;Friday&quot;], &quot;headers&quot;: [], &quot;matrixType&quot;: &quot;&quot;, &quot;answerFieldType&quot;: &quot;radio&quot;, &quot;isTask&quot;: false}}, &quot;state&quot;: null, &quot;taskID&quot;: &quot;3.test1&quot;, &quot;taskIDExt&quot;: &quot;{d.id}.test1.{first_id}&quot;, &quot;doLazy&quot;: false, &quot;userPrint&quot;: false, &quot;preview&quot;: false, &quot;anonymous&quot;: true, &quot;info&quot;: null, &quot;user_id&quot;: &quot;testuser1&quot;, &quot;targetFormat&quot;: &quot;latex&quot;, &quot;review&quot;: false, &quot;show_result&quot;: false}}"/>
+                        json="{{&quot;markup&quot;: {{&quot;timeLimit&quot;: 90, &quot;questionText&quot;: &quot;What day is it today?&quot;, &quot;questionType&quot;: &quot;radio-vertical&quot;, &quot;questionTitle&quot;: &quot;Today&quot;, &quot;rows&quot;: [&quot;Monday&quot;, &quot;Wednesday&quot;, &quot;Friday&quot;], &quot;headers&quot;: [], &quot;answerFieldType&quot;: &quot;radio&quot;, &quot;isTask&quot;: false}}, &quot;state&quot;: null, &quot;taskID&quot;: &quot;3.test1&quot;, &quot;taskIDExt&quot;: &quot;{d.id}.test1.{first_id}&quot;, &quot;doLazy&quot;: false, &quot;userPrint&quot;: false, &quot;preview&quot;: false, &quot;anonymous&quot;: true, &quot;info&quot;: null, &quot;user_id&quot;: &quot;testuser1&quot;, &quot;targetFormat&quot;: &quot;latex&quot;, &quot;review&quot;: false, &quot;show_result&quot;: false}}"/>
             </div>
         </div>
         <div class="editline" title="Click to edit this paragraph"></div>
@@ -49,7 +49,6 @@ class QuestionTest(TimLiveServer, TimRouteTest):
 json:
   answerFieldType: radio
   headers: []
-  matrixType: ''
   questionText: What day is it today?
   questionTitle: Today
   questionType: radio-vertical
@@ -74,7 +73,6 @@ points: '2:1'</code></pre>
                      'markup': {
                          'answerFieldType': 'radio',
                          'headers': [],
-                         'matrixType': '',
                          'points': '2:1',
                          'questionText': 'What day is it today?',
                          'questionTitle': 'Today',
@@ -93,7 +91,6 @@ points: '2:1'</code></pre>
                      'markup': {
                          'answerFieldType': 'radio',
                          'headers': [],
-                         'matrixType': '',
                          'points': '2:1',
                          'questionText': 'What day is it today?',
                          'questionTitle': 'Today',

@@ -50,7 +50,6 @@ class QuestionJsonNormalizeTest(unittest.TestCase):
             "questionTitle": "8-Mitä näkyy Luo",
             "questionType": "checkbox-vertical",
             "answerFieldType": "checkbox",
-            "matrixType": "",
             "timeLimit": 60,
             "headers": [],
             "rows": [{
@@ -140,7 +139,6 @@ class QuestionJsonNormalizeTest(unittest.TestCase):
                 "type": "question"
                 }, ],
             "headers": [],
-            "matrixType": "",
             "answerFieldType": "checkbox",
             # "taskId": "muutetaan",
         }, result2)
@@ -206,7 +204,6 @@ class QuestionJsonNormalizeTest(unittest.TestCase):
             "timeLimit": 40,
             "questionText": "Mit\u00e4 tulostaa",
             "questionType": "radio-vertical",
-            "matrixType": "",
             "answerFieldType": "radio",
             "questionTitle": "Mit\u00e4 tulostaa",
             "expl": {},
@@ -247,7 +244,6 @@ class QuestionJsonNormalizeTest(unittest.TestCase):
             "questionText": "Mit\u00e4 mielt\u00e4 olet t\u00e4st\u00e4 kysymyksest\u00e4?",
             "questionTitle": "kysymys",
             "timeLimit": 39601,
-            "matrixType": "",
             "headers": [],
             "rows": [{
                 "text": "V\u00e4h\u00e4n ouroboros.",
@@ -294,9 +290,9 @@ class QuestionJsonNormalizeTest(unittest.TestCase):
                           'isTask': True,
                           'matrixType': 'textArea',
                           'questionText': 'Invalid question data: Missing fields: answerFieldType, '
-                                          'headers, matrixType, questionText, questionType, rows',
+                                          'headers, questionText, questionType, rows',
                           'questionTitle': 'Invalid question data: Missing fields: answerFieldType, '
-                                           'headers, matrixType, questionText, questionType, rows',
+                                           'headers, questionText, questionType, rows',
                           'questionType': 'matrix',
                           'rows': ['']}, normalize_question_json({'questionTitle': ''}))
         self.assertEqual({'answerFieldType': 'text',
@@ -312,9 +308,29 @@ class QuestionJsonNormalizeTest(unittest.TestCase):
             "questionText": "test",
             "questionTitle": "test",
             "timeLimit": 1,
-            "matrixType": "",
+            "matrixType": "textArea",
             "headers": [],
             "rows": [None],
+            "questionType": "matrix",
+            "answerFieldType": "radio"
+        }))
+        self.assertEqual({'answerFieldType': 'text',
+                          'expl': {},
+                          'headers': [''],
+                          'invalid': True,
+                          'isTask': True,
+                          'matrixType': 'textArea',
+                          'questionText': 'Invalid question data: Missing matrixType when questionType '
+                                          'is matrix',
+                          'questionTitle': 'Invalid question data: Missing matrixType when questionType '
+                                           'is matrix',
+                          'questionType': 'matrix',
+                          'rows': ['']}, normalize_question_json({
+            "questionText": "test",
+            "questionTitle": "test",
+            "timeLimit": 1,
+            "headers": [],
+            "rows": [""],
             "questionType": "matrix",
             "answerFieldType": "radio"
         }))

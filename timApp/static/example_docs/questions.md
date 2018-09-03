@@ -2,7 +2,6 @@
 json:
   answerFieldType: radio
   headers: []
-  matrixType: ''
   questionText: What day is it today?
   questionTitle: Today
   questionType: radio-vertical
@@ -18,7 +17,6 @@ points: '2:1'
 json:
   answerFieldType: radio
   headers: []
-  matrixType: ''
   questionText: What day is it today?
   questionTitle: Today
   questionType: radio-vertical
@@ -34,7 +32,6 @@ points: '2:1'
 json:
   answerFieldType: radio
   headers: []
-  matrixType: ''
   questionText: What day is it today?
   questionTitle: Today
   questionType: radio-vertical

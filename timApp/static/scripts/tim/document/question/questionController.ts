@@ -160,7 +160,6 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
         this.question = {
             answerFieldType: "text",
             headers: [],
-            matrixType: "",
             questionText: "",
             questionTitle: "",
             questionType: "",
@@ -238,7 +237,6 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
             answerFieldType: "text",
             expl: {},
             headers: [],
-            matrixType: "",
             questionText: "",
             questionTitle: "",
             questionType: "",
@@ -632,7 +630,6 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
         this.question = {
             answerFieldType: "text",
             headers: [],
-            matrixType: "",
             questionText: "",
             questionTitle: "",
             questionType: "",
@@ -773,7 +770,7 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
         }
         if (this.question.questionType === "matrix") {
 
-            if (this.question.matrixType === "radiobutton-horizontal" || this.question.matrixType === "radiobutton-vertical") {
+            if (this.question.matrixType === "radiobutton-horizontal") {
                 this.question.answerFieldType = "radio";
             }
 

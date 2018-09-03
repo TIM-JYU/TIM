@@ -61,7 +61,7 @@
             </div>
             <!-- Vertical radio-button -->
             <div ng-if="$ctrl.qctrl.question.questionType != 'true-false'">
-                <div class="checkRadioCell" ng-if="($ctrl.qctrl.question.matrixType == 'radiobutton-vertical' && $ctrl.qctrl.question.questionType=='matrix') || $ctrl.qctrl.question.questionType == 'radio-vertical'">
+                <div class="checkRadioCell" ng-if="$ctrl.qctrl.question.questionType == 'radio-vertical'">
                     <input type="radio"
                                 name="column.rowId"
                                 ng-value="column.id"

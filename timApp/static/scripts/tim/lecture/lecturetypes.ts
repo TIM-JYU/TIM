@@ -29,7 +29,7 @@ export interface IQuestionParagraph extends IUniqueParId {
 export interface IAskedJsonBase {
     answerFieldType: AnswerFieldType;
     expl?: IExplCollection;
-    matrixType: MatrixType; // is useless
+    matrixType?: MatrixType; // is useless
     points?: string;
     questionText: string;
     questionTitle: string;
@@ -50,7 +50,7 @@ export type QuestionType =
     | "likert"
     | "";
 
-export type MatrixType = "textArea" | "" | "radiobutton-horizontal" | "radiobutton-vertical" | "checkbox";
+export type MatrixType = "textArea" | "radiobutton-horizontal" | "checkbox";
 
 export type AnswerFieldType = "radio" | "checkbox" | "matrix" | "text"; // TODO matrix seems wrong
 
