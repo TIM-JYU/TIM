@@ -9,13 +9,13 @@ import {ClipboardHandler} from "tim/document/editing/clipboard";
 //noinspection TypeScriptPreferShortImport
 import * as interceptor from "tim/document/interceptor";
 import {NotesHandler} from "tim/document/notes";
-import {getElementByParId, getParId, Paragraph} from "tim/document/parhelpers";
+import {getElementByParId, Paragraph, saveCurrentScreenPar} from "tim/document/parhelpers";
 import {ParmenuHandler} from "tim/document/parmenu";
 import * as popupMenu from "tim/document/popupMenu";
 import {QuestionHandler} from "tim/document/question/questions";
 import {initReadings} from "tim/document/readings";
 import {timLogTime} from "tim/util/timTiming";
-import {getStorage, isPageDirty, markAsUsed, markPageNotDirty, setStorage, to} from "tim/util/utils";
+import {isPageDirty, markAsUsed, markPageNotDirty, to} from "tim/util/utils";
 import {BookmarksController, IBookmarkGroup} from "../bookmark/bookmarks";
 import {IPluginInfoResponse, ParCompiler} from "../editor/parCompiler";
 import {IItem, ITag, TagType} from "../item/IItem";
@@ -185,14 +185,7 @@ export class ViewCtrl implements IController {
             this.noBeginPageBreak();
             this.document.rebuildSections();
             window.addEventListener("beforeunload", (e) => {
-                // Save currently viewed paragraph hash to browser history to make the browser
-                // come back there when returning to the document. (Firefox & IE tested; Chrome doesn't show
-                // hash in address, but returns to the right place regardless.)
-                // noinspection CssInvalidPseudoSelector
-                const parId = getParId($(".par:not('.preamble'):onScreen").first());
-                if (parId) {
-                    window.history.replaceState(undefined, undefined, `#${parId}`);
-                }
+                saveCurrentScreenPar();
 
                 if (!this.editing) {
                     return undefined;

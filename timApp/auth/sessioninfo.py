@@ -68,4 +68,4 @@ def get_user_settings():
 
 
 def save_last_page():
-    session['last_doc'] = request.path
+    session['last_doc'] = request.full_path

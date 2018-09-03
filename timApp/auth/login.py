@@ -4,6 +4,7 @@ import os
 import random
 import re
 import string
+import urllib.parse
 
 import requests
 import requests.exceptions
@@ -397,7 +398,7 @@ def finish_login(ready=True):
         anchor = "#" + anchor
     came_from = session.get('came_from', '/')
     if not is_xhr(request):
-        return safe_redirect(came_from + anchor)
+        return safe_redirect(urllib.parse.unquote(came_from) + anchor)
     else:
         return login_response()
 

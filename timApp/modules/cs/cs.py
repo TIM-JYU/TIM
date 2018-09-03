@@ -406,8 +406,7 @@ def get_html(self, ttype, query):
         jump = get_param(query, "taskID", "")
         # print("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX jump: ", jump)
         if allow_anonymous != "true":
-            return (NOLAZY + '<p class="pluginError"><a href="/login?anchor=' + jump +
-                    '">Please login to interact with this component</a></p><pre class="csRunDiv">' +
+            return (NOLAZY + '<p class="pluginError">Please <login-menu></login-menu> to interact with this component</p><pre class="csRunDiv">' +
                     get_param(query, "byCode", "") + '</pre>')
     do_lazy = is_lazy(query)
     # do_lazy = False

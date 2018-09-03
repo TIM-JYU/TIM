@@ -1,6 +1,7 @@
 import {$http, $httpParamSerializer, $window} from "../util/ngimport";
 import {to, ToReturn} from "../util/utils";
 import {IFullUser, IUser} from "./IUser";
+import {saveCurrentScreenPar} from "../document/parhelpers";
 
 export interface ILoginResponse {
     other_users: IUser[];
@@ -25,7 +26,7 @@ export class UserService {
     }
 
     public isKorppi(): boolean {
-        return this.current.name.indexOf("@") < 0;
+        return this.current.name.indexOf("@") < 0 && !this.current.name.startsWith("testuser");
     }
 
     public logout(user: IUser, logoutFromKorppi = false) {
@@ -49,16 +50,15 @@ export class UserService {
     }
 
     public korppiLogin(addUser: boolean) {
+        saveCurrentScreenPar();
         const targetUrl = "/openIDLogin?provider=korppi";
         const separator = targetUrl.indexOf("?") >= 0 ? "&" : "?";
         const cameFromRaw = $window.came_from || "";
-        const cameFrom = encodeURIComponent(cameFromRaw.replace("#", "%23"));
-        const anchorRaw = $window.anchor || window.location.hash.replace("#", "");
-        const anchor = encodeURIComponent(anchorRaw);
+        const anchorRaw = window.location.hash.replace("#", "");
         const redirectFn = function() {
             $window.location.replace(targetUrl + separator + $httpParamSerializer({
-                came_from: cameFrom,
-                anchor,
+                came_from: cameFromRaw,
+                anchor: anchorRaw,
                 add_user: addUser,
             }));
         };

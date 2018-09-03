@@ -6,6 +6,7 @@ import {$http} from "../util/ngimport";
 import {capitalizeFirstLetter, markAsUsed, to, ToReturn} from "../util/utils";
 import {IUser} from "./IUser";
 import {Users} from "./userService";
+import {saveCurrentScreenPar} from "../document/parhelpers";
 
 markAsUsed(onEnter, loading);
 
@@ -92,6 +93,7 @@ class LoginMenuController implements IController {
         } else {
             this.loginError = undefined;
             if (!this.addingToSession) {
+                saveCurrentScreenPar();
                 window.location.reload();
             }
         }

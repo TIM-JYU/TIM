@@ -390,7 +390,7 @@ def redirect_to_login():
     session['came_from'] = request.url
     session['anchor'] = request.args.get('anchor', '')
     return render_template('loginpage.html',
-                           came_from=request.url,
+                           came_from=request.full_path,
                            anchor=session['anchor']), 403
 
 
