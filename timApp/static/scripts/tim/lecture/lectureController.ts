@@ -63,6 +63,8 @@ enum LectureEndingDialogState {
     Answered,
 }
 
+const AUTOJOIN_CODE = "autojoin";
+
 // TODO: Painike, josta voisi hakea kysymyksiä.
 // TODO: Button, to get questions and wall.
 export class LectureController implements IController {
@@ -202,8 +204,7 @@ export class LectureController implements IController {
         // Check if the lecture parameter is autojoin.
         // If it is and there is only one lecture going on in the document, join it automatically.
         // Otherwise proceed as usual.
-        const tryToJoin = lectureCode != null;
-        let tryToAutoJoin = lectureCode === "autojoin";
+        let tryToAutoJoin = lectureCode === AUTOJOIN_CODE;
         if (isLectureListResponse(answer)) {
             if (tryToAutoJoin && answer.lectures.length === 1) {
                 this.chosenLecture = answer.lectures[0];
@@ -219,6 +220,7 @@ export class LectureController implements IController {
         } else {
             tryToAutoJoin = false;
         }
+        const tryToJoin = lectureCode != null && lectureCode !== AUTOJOIN_CODE;
         if (tryToJoin) {
             const [err, resp] = await to($http<ILecture>({
                 url: "/getLectureByCode",
@@ -238,8 +240,8 @@ export class LectureController implements IController {
                 this.showRightView(answer);
                 return;
             }
-            const changeLecture = this.joinLecture(resp.data);
-            if (!changeLecture) {
+            const joined = await this.joinLecture(resp.data);
+            if (!joined) {
                 this.showRightView(answer);
             }
         } else {
@@ -251,7 +253,7 @@ export class LectureController implements IController {
      * Method to join selected lecture. Checks that lecture is chosen and sends http request to server.
      * @return {boolean} true, if successfully joined lecture, else false
      */
-    async joinLecture(lecture: ILecture) {
+    async joinLecture(lecture: ILecture): Promise<boolean> {
         let changeLecture = true;
         const lectureCode = lecture.lecture_code;
         const codeRequired = lecture.is_access_code;
@@ -270,9 +272,9 @@ export class LectureController implements IController {
         }
 
         if (codeRequired) {
-            this.passwordGuess = $window.prompt("Please enter a password:", "") || undefined;
+            this.passwordGuess = $window.prompt(`Please enter a password to join the lecture '${lecture.lecture_code}':`, "") || undefined;
             if (this.passwordGuess == null) {
-                return;
+                return false;
             }
         }
         if (this.chosenLecture == null && lectureCode === "") {
@@ -306,6 +308,7 @@ export class LectureController implements IController {
             // if the user was logged in as a temporary user, we must refresh
             // to update the plugins (they may require login)
             $window.location.reload();
+            return true;
         } else {
             $("#currentList").slideUp();
             this.focusOn();
