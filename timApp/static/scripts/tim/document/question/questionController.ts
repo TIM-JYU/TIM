@@ -241,7 +241,6 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
             questionTitle: "",
             questionType: "",
             rows: [],
-            timeLimit: 0,
         };
         this.qst = qst;
     }
@@ -753,10 +752,10 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
             this.customError = "You must have at least one row.";
         }
         let timeLimit: number | undefined;
-        if (this.ui.durationAmount) {
-            timeLimit = moment.duration(this.ui.durationAmount, this.ui.durationType).seconds();
+        if (this.ui.durationAmount != null) {
+            timeLimit = moment.duration(this.ui.durationAmount, this.ui.durationType).asSeconds();
             if (timeLimit <= 0) {
-                this.customError = "Please enter a duration greater than zero or for unending question uncheck the duration box.";
+                this.customError = "Please enter a duration greater than zero, or for unending question, leave the duration box empty.";
             }
         } else {
             timeLimit = undefined;
