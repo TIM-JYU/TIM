@@ -110,14 +110,14 @@ export class CreateLectureCtrl extends DialogController<{params: ILectureFormPar
         if (!this.item) {
             return "";
         }
-        return `https://${encodeURIComponent(location.host)}/lecture/${this.item.path}?lecture=${encodeURIComponent(this.lectureCode)}`;
+        return `${location.protocol}//${encodeURIComponent(location.host)}/lecture/${this.item.path}?lecture=${encodeURIComponent(this.lectureCode)}`;
     }
 
     getAutoJoinLink() {
         if (!this.item) {
             return "";
         }
-        return `https://${encodeURIComponent(location.host)}/lecture/${this.item.path}?lecture=autojoin`;
+        return `${location.protocol}//${encodeURIComponent(location.host)}/lecture/${this.item.path}?lecture=autojoin`;
     }
 
     /**
