@@ -1024,7 +1024,7 @@ def answer_to_question():
 
     if (not lecture_answer) or (lecture_answer and answer != lecture_answer.answer):
         time_now = datetime.now(timezone.utc)
-        question_points = asked_question.points
+        question_points = asked_question.get_effective_points()
         points_table = create_points_table(question_points)
         points = calculate_points_from_json_answer(answer, points_table)
         answer = json.dumps(whole_answer)

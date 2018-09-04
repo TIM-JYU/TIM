@@ -6,7 +6,7 @@ from time import sleep
 import dateutil.parser
 
 from timApp.tests.server.timroutetest import TimRouteTest
-from timApp.lecture.askedjson import AskedJson
+from timApp.lecture.askedjson import AskedJson, make_error_question
 from timApp.lecture.askedquestion import AskedQuestion, get_asked_question
 from timApp.lecture.lecture import Lecture
 from timApp.lecture.lectureanswer import LectureAnswer
@@ -272,3 +272,16 @@ class LectureTest(TimRouteTest):
         q = AskedQuestion(lecture=l, asked_json=aj)
         a = LectureAnswer(lecture_id=l.lecture_id, asked_question=q, answer='')
         self.assertEqual(a.to_json()['answer'], [])
+
+    def test_askedjson(self):
+        j = make_error_question('')
+        j['points'] = '2:3'
+        aj = AskedJson(json=json.dumps(j))
+        aq = AskedQuestion(asked_json=aj)
+        self.assertEqual('2:3', aq.get_effective_points())
+        aq.points = '2:4'
+        self.assertEqual('2:4', aq.get_effective_points())
+        del j['points']
+        aj = AskedJson(json=json.dumps(j))
+        aq = AskedQuestion(asked_json=aj)
+        self.assertEqual(None, aq.get_effective_points())

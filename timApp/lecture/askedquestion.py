@@ -65,6 +65,12 @@ class AskedQuestion(db.Model):
             'par_id': self.par_id,
         }
 
+    def get_effective_points(self):
+        if self.points:
+            return self.points
+        aj = self.asked_json.to_json()
+        return aj['json'].get('points')
+
 
 def get_asked_question(asked_id: int) -> Optional[AskedQuestion]:
     return AskedQuestion.query.get(asked_id)
