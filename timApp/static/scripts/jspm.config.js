@@ -171,7 +171,7 @@ SystemJS.config({
       "mathjax"
     ],
     "build/chart.js": [
-      "npm:chart.js@2.5.0/src/chart.js"
+      "npm:chart.js@2.7.2/src/chart.js"
     ],
     "build/katex.js": [
       "npm:katex@0.7.1/katex.js",
