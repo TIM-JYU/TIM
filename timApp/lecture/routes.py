@@ -219,6 +219,8 @@ def do_get_updates(request):
 
     while step <= 10:
         lecture = get_current_lecture()
+        if not lecture:
+            return get_running_lectures(doc_id)
         lecture_ending = check_if_lecture_is_ending(lecture)
         if is_lecturer:
             lecturers, students = get_lecture_users(lecture)
