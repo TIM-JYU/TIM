@@ -35,6 +35,7 @@ from timApp.timdb.sqa import db
 from timApp.user.user import User
 from timApp.util.flask.requesthelper import get_option, verify_json_params
 from timApp.util.flask.responsehelper import json_response, ok_response, empty_response, json_response_and_commit
+from timApp.util.logger import log_debug
 from timApp.util.utils import get_current_time
 
 lecture_routes = Blueprint('lecture',
@@ -116,14 +117,6 @@ def get_updates():
 
 EXTRA_FIELD_NAME = "extra"
 
-def debug_print(s):
-    """
-    Just for debugging do_get_updates and it's long poll.  Problem: long poll does not notice
-    if new question starts.  But lecture wall works.
-    :param s: string to print
-    """
-    print(s)
-
 
 def do_get_updates(request):
     """Gets updates from some lecture.
@@ -131,7 +124,7 @@ def do_get_updates(request):
     Checks updates in 1 second frequently and answers if there is updates.
 
     """
-    debug_print("get updates")
+    log_debug("get updates")
     if not request.args.get('c'):
         abort(400, "Bad request")
     client_last_id = int(request.args.get('c'))  # client_message_id'))
@@ -214,7 +207,7 @@ def do_get_updates(request):
 
     lecture_ending = 100
     base_resp = None
-    debug_print(user_name + " before loop")
+    log_debug(user_name + " before loop")
 
     while step <= 10:
         lecture = get_current_lecture()
@@ -279,10 +272,10 @@ def do_get_updates(request):
 
         # Gets new questions if the questions are in use.
         if use_questions:
-            debug_print(user_name + " " + str(step))
+            log_debug(user_name + " " + str(step))
             new_question = get_new_question(lecture, current_question_id, current_points_id)
             if new_question:
-                debug_print(user_name + " send new question")
+                log_debug(user_name + " send new question")
                 return json_response_and_commit({**base_resp, EXTRA_FIELD_NAME: new_question})
 
         if list_of_new_messages:
