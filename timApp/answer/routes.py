@@ -20,7 +20,7 @@ from timApp.document.document import Document
 from timApp.markdown.dumboclient import call_dumbo
 from timApp.plugin.plugin import Plugin
 from timApp.plugin.pluginControl import find_task_ids, pluginify
-from timApp.util.utils import try_load_json
+from timApp.util.utils import try_load_json, get_current_time
 from timApp.plugin.pluginexception import PluginException
 from timApp.util.flask.requesthelper import verify_json_params, unpack_args, get_option
 from timApp.util.flask.responsehelper import json_response, ok_response
@@ -376,7 +376,7 @@ def get_all_answers_as_list(task_ids: List[str]):
             since_last_key = None
 
     period_opt = get_option(request, 'period', 'whenever')
-    period_to = datetime.now(tz=timezone.utc)
+    period_to = get_current_time()
     if period_opt == 'whenever':
         pass
     elif period_opt == 'sincelast' and since_last_key is not None:
@@ -384,7 +384,7 @@ def get_all_answers_as_list(task_ids: List[str]):
         prefs = u.get_prefs()
         last_answer_fetch = prefs.get('last_answer_fetch', {})
         period_from = last_answer_fetch.get(since_last_key, datetime.min.replace(tzinfo=timezone.utc))
-        last_answer_fetch[since_last_key] = datetime.now(tz=timezone.utc)
+        last_answer_fetch[since_last_key] = get_current_time()
         prefs['last_answer_fetch'] = last_answer_fetch
         u.set_prefs(prefs)
         db.session.commit()

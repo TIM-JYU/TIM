@@ -2,20 +2,20 @@ import io
 import json
 import re
 from collections import OrderedDict
-from datetime import timezone, datetime, timedelta
+from datetime import timedelta
 from itertools import product
 
 import dateutil.parser
 from lxml import html
 
 from timApp.answer.pointsumrule import PointSumRule, PointType
-from timApp.plugin.plugin import Plugin
 from timApp.auth.sessioninfo import get_current_user_object
+from timApp.plugin.plugin import Plugin
 from timApp.tests.db.timdbtest import TEST_USER_1_ID, TEST_USER_2_ID, TEST_USER_1_NAME
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.timdb.sqa import db
 from timApp.user.userutils import grant_view_access, grant_access, get_anon_group_id, get_anon_user_id
-from timApp.util.utils import EXAMPLE_DOCS_PATH
+from timApp.util.utils import EXAMPLE_DOCS_PATH, get_current_time
 from timApp.velp.velp_models import Annotation
 
 
@@ -99,7 +99,7 @@ class PluginTest(TimRouteTest):
             [{k: v for k, v in ans.items() if k not in ('answered_on', 'id')} for ans in answer_list])
         for ans in answer_list:
             d = dateutil.parser.parse(ans['answered_on'])
-            self.assertLess(d - datetime.now(tz=timezone.utc), timedelta(seconds=5))
+            self.assertLess(d - get_current_time(), timedelta(seconds=5))
 
         self.post_answer(plugin_type, task_id, [True, True, False],
                          save_teacher=False, teacher=True, answer_id=answer_list[0]['id'],

@@ -4,8 +4,6 @@ import http.client
 import pprint
 import time
 import traceback
-from datetime import datetime
-from datetime import timezone
 
 import werkzeug.exceptions as ex
 from flask import Response
@@ -18,54 +16,55 @@ from flask_assets import Environment
 from markupsafe import Markup
 from werkzeug.contrib.profiler import ProfilerMiddleware
 
+from timApp.admin.global_notification import global_notification
 from timApp.admin.routes import admin_bp
-from timApp.document.course.routes import course_blueprint
-from timApp.document.routes import doc_bp
-from timApp.document.translation.routes import tr_bp
-from timApp.plugin.routes import plugin_bp
-from timApp.item.routes_tags import tags_blueprint
-from timApp.util.flask.ReverseProxied import ReverseProxied
+from timApp.answer.routes import answers
 from timApp.auth.accesshelper import verify_edit_access, verify_view_access, \
     ItemLockedException, get_doc_or_abort
-from timApp.util.flask.cache import cache
-from timApp.document.create_item import get_templates_for_folder
-from timApp.document.document import Document
-from timApp.util.logger import log_info, log_error, log_debug, log_warning
-from timApp.document.minutes.routes import minutes_blueprint
-from timApp.util.flask.responsehelper import json_response, ok_response
-from timApp.velp.annotation import annotations
-from timApp.answer.routes import answers
-from timApp.bookmark.routes import bookmarks
-from timApp.document.editing.routes_clipboard import clipboard
-from timApp.document.editing.routes import edit_page
-from timApp.gamification.generateMap import generateMap
-from timApp.admin.global_notification import global_notification
-from timApp.user.groups import groups
-from timApp.lecture.routes import lecture_routes
 from timApp.auth.login import login_page, logout
-from timApp.item.manage import manage_page
-from timApp.note.routes import notes
-from timApp.notification.notify import notify, send_email
-from timApp.printing.print import print_blueprint
-from timApp.plugin.qst.qst import qst_plugin
-from timApp.plugin.timtable.timTable import timTable_plugin
-from timApp.readmark.routes import readings
-from timApp.util.flask.search import search_routes
-from timApp.user.settings.settings import settings_page
-from timApp.util.flask.routes_static import static_bp
-from timApp.upload.upload import upload
-from timApp.velp.velp import velps
-from timApp.item.routes import view_page
 from timApp.auth.sessioninfo import get_current_user_object, get_other_users_as_list, get_current_user_id, \
     logged_in, current_user_in_lecture
-from timApp.tim_app import app, default_secret
 from timApp.bookmark.bookmarks import Bookmarks
-from timApp.timdb.exceptions import ItemAlreadyExistsException
+from timApp.bookmark.routes import bookmarks
+from timApp.document.course.routes import course_blueprint
+from timApp.document.create_item import get_templates_for_folder
 from timApp.document.docentry import DocEntry
+from timApp.document.document import Document
+from timApp.document.editing.routes import edit_page
+from timApp.document.editing.routes_clipboard import clipboard
+from timApp.document.minutes.routes import minutes_blueprint
+from timApp.document.routes import doc_bp
+from timApp.document.translation.routes import tr_bp
 from timApp.folder.folder import Folder
-from timApp.user.user import User
+from timApp.gamification.generateMap import generateMap
+from timApp.item.manage import manage_page
+from timApp.item.routes import view_page
+from timApp.item.routes_tags import tags_blueprint
+from timApp.lecture.routes import lecture_routes
+from timApp.note.routes import notes
+from timApp.notification.notify import notify, send_email
+from timApp.plugin.qst.qst import qst_plugin
+from timApp.plugin.routes import plugin_bp
+from timApp.plugin.timtable.timTable import timTable_plugin
+from timApp.printing.print import print_blueprint
+from timApp.readmark.routes import readings
+from timApp.tim_app import app, default_secret
+from timApp.timdb.exceptions import ItemAlreadyExistsException
 from timApp.timdb.sqa import db
+from timApp.upload.upload import upload
+from timApp.user.groups import groups
+from timApp.user.settings.settings import settings_page
+from timApp.user.user import User
 from timApp.user.userutils import NoSuchUserException
+from timApp.util.flask.ReverseProxied import ReverseProxied
+from timApp.util.flask.cache import cache
+from timApp.util.flask.responsehelper import json_response, ok_response
+from timApp.util.flask.routes_static import static_bp
+from timApp.util.flask.search import search_routes
+from timApp.util.logger import log_info, log_error, log_debug, log_warning
+from timApp.util.utils import get_current_time
+from timApp.velp.annotation import annotations
+from timApp.velp.velp import velps
 
 cache.init_app(app)
 
@@ -172,7 +171,7 @@ def internal_error(error):
                                f'If the problem persists, please send email to <a href="mailto:{help_email}">{help_email}</a>.')
     tb = traceback.format_exc()
     message = f"""
-Exception happened on {datetime.now(tz=timezone.utc)} at {request.url}
+Exception happened on {get_current_time()} at {request.url}
 
 {get_request_message(500, include_body=True)}
 

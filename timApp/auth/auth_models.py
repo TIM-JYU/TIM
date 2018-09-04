@@ -1,7 +1,5 @@
-import datetime
-from datetime import timezone
-
 from timApp.timdb.sqa import db
+from timApp.util.utils import get_current_time
 
 
 class AccessType(db.Model):
@@ -33,11 +31,11 @@ class BlockAccess(db.Model):
 
     @property
     def future(self):
-        return self.accessible_from is not None and datetime.datetime.now(tz=timezone.utc) < self.accessible_from
+        return self.accessible_from is not None and get_current_time() < self.accessible_from
 
     @property
     def expired(self):
-        return self.accessible_to is not None and datetime.datetime.now(tz=timezone.utc) > self.accessible_to
+        return self.accessible_to is not None and get_current_time() > self.accessible_to
 
     @property
     def unlockable(self):
@@ -45,17 +43,17 @@ class BlockAccess(db.Model):
 
     @property
     def duration_future(self):
-        return self.duration_from and datetime.datetime.now(tz=timezone.utc) < self.duration_from
+        return self.duration_from and get_current_time() < self.duration_from
 
     @property
     def duration_expired(self):
-        return self.duration_to and datetime.datetime.now(tz=timezone.utc) >= self.duration_to
+        return self.duration_to and get_current_time() >= self.duration_to
 
     @property
     def seconds_left(self):
         if self.accessible_to is None:
             return None
-        return (self.accessible_to - datetime.datetime.now(tz=timezone.utc)).total_seconds()
+        return (self.accessible_to - get_current_time()).total_seconds()
 
     def __hash__(self):
         return hash((self.block_id,

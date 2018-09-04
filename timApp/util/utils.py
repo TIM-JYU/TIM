@@ -223,3 +223,7 @@ EXAMPLE_DOCS_PATH = 'static/example_docs'
 
 def decode_csplugin(text: str):
     return json.loads(binascii.unhexlify(remove_prefix(text, 'xxxHEXJSONxxx')).decode())
+
+
+def get_current_time():
+    return datetime.now(tz=timezone.utc)

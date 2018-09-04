@@ -25,7 +25,7 @@ from timApp.user.usergroupmember import UserGroupMember
 from timApp.auth.auth_models import BlockAccess
 from timApp.user.userutils import grant_access, get_access_type_id, \
     create_password_hash, check_password_hash, check_password_hash_old
-from timApp.util.utils import remove_path_special_chars, cached_property
+from timApp.util.utils import remove_path_special_chars, cached_property, get_current_time
 from timApp.user.settings.theme_css import ThemeNotFoundException, generate_theme_scss, get_combined_css_filename
 
 ItemOrBlock = Union[ItemBase, Block]
@@ -328,7 +328,7 @@ class User(db.Model):
             b = i
         if not b:
             return None
-        now = datetime.now(tz=timezone.utc)
+        now = get_current_time()
         for a in b.accesses:  # type: BlockAccess
             if a.usergroup not in self.groups:
                 name = a.usergroup.name

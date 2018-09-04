@@ -1,17 +1,18 @@
 import hashlib
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 from typing import Optional, List
 
 import bcrypt
 
+from timApp.auth.auth_models import AccessType, BlockAccess
 from timApp.document.specialnames import TEMPLATE_FOLDER_NAME
+from timApp.folder.folder import Folder
 from timApp.item.block import BlockType
 from timApp.timdb.exceptions import TimDbException
-from timApp.folder.folder import Folder
+from timApp.timdb.sqa import db
 from timApp.user.special_group_names import ANONYMOUS_GROUPNAME, \
     ANONYMOUS_USERNAME
-from timApp.timdb.sqa import db
-from timApp.auth.auth_models import AccessType, BlockAccess
+from timApp.util.utils import get_current_time
 
 ANON_USER_ID = None
 LOGGED_USER_ID = None
@@ -106,7 +107,7 @@ def grant_access(group_id: int,
 
     if accessible_from is None and duration is None:
         # the delta is to ease testing; the clocks of container and PostgreSQL are not perfectly in sync
-        accessible_from = datetime.now(tz=timezone.utc) - timedelta(milliseconds=50)
+        accessible_from = get_current_time() - timedelta(milliseconds=50)
 
     access_id = get_access_type_id(access_type)
     assert access_id is not None

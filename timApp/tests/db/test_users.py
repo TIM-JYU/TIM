@@ -1,13 +1,14 @@
 import unittest
-from datetime import datetime, timezone, timedelta
+from datetime import timedelta
 
-from timApp.tests.db.timdbtest import TimDbTest, TEST_USER_1_ID
 from timApp.item.block import insert_block, BlockType
+from timApp.tests.db.timdbtest import TimDbTest, TEST_USER_1_ID
+from timApp.timdb.sqa import db
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
-from timApp.timdb.sqa import db
 from timApp.user.userutils import get_anon_group_id
 from timApp.user.userutils import grant_access
+from timApp.util.utils import get_current_time
 
 
 class UserTest(TimDbTest):
@@ -187,18 +188,18 @@ class UserTest(TimDbTest):
         v = 'view'
 
         grant_access(self.get_test_user_1_group_id(), b, v,
-                     accessible_from=datetime.now(tz=timezone.utc) + timedelta(days=1))
+                     accessible_from=get_current_time() + timedelta(days=1))
         self.assertFalse(user.has_view_access(block))
         db.users.remove_access(self.get_test_user_1_group_id(), b, v)
 
         ba = grant_access(self.get_test_user_1_group_id(), b, v,
-                          accessible_from=datetime.now(tz=timezone.utc) - timedelta(days=1))
+                          accessible_from=get_current_time() - timedelta(days=1))
         self.assertTrue(user.has_view_access(block))
         db.users.remove_access(self.get_test_user_1_group_id(), b, v)
 
         grant_access(self.get_test_user_1_group_id(), b, v,
-                     accessible_from=datetime.now(tz=timezone.utc) - timedelta(days=1),
-                     accessible_to=datetime.now(tz=timezone.utc) - timedelta(seconds=1))
+                     accessible_from=get_current_time() - timedelta(days=1),
+                     accessible_to=get_current_time() - timedelta(seconds=1))
         self.assertFalse(user.has_view_access(block))
         db.users.remove_access(self.get_test_user_1_group_id(), b, v)
 

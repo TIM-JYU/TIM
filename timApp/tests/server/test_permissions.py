@@ -1,10 +1,11 @@
-from datetime import datetime, timezone, timedelta
+from datetime import timedelta
 
-from timApp.tests.server.timroutetest import TimRouteTest
-from timApp.item.item import Item
 from timApp.document.docentry import DocEntry
-from timApp.user.usergroup import UserGroup
+from timApp.item.item import Item
+from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.timdb.sqa import db
+from timApp.user.usergroup import UserGroup
+from timApp.util.utils import get_current_time
 
 
 class PermissionTest(TimRouteTest):
@@ -14,7 +15,7 @@ class PermissionTest(TimRouteTest):
         d = self.create_doc()
         self.assertTrue(self.current_user.has_ownership(d))
         self.json_put(f'/permissions/add/{d.id}/{"testuser1"}/{"owner"}',
-                      {'from': datetime.now(tz=timezone.utc) + timedelta(days=1),
+                      {'from': get_current_time() + timedelta(days=1),
                        'type': 'range'},
                       expect_status=403, expect_content={'error': 'You cannot remove ownership from yourself.'})
         db.session.remove()
@@ -33,7 +34,7 @@ class PermissionTest(TimRouteTest):
         self.test_user_2.grant_access(docid, 'manage')
         self.login_test2()
         self.json_put(f'/permissions/add/{docid}/testuser2/owner',
-                      {'from': datetime.now(tz=timezone.utc),
+                      {'from': get_current_time(),
                        'type': 'always'},
                       expect_status=403)
 
@@ -48,7 +49,7 @@ class PermissionTest(TimRouteTest):
         self.login_test1()
         f = self.current_user.get_personal_folder()
         self.json_put(f'/permissions/add/{f.id}/{"testuser2  ; testuser3 "}/{"view"}',
-                      {'from': datetime.now(tz=timezone.utc),
+                      {'from': get_current_time(),
                        'type': 'always'})
         f = self.current_user.get_personal_folder()
         self.assertTrue(self.test_user_2.has_view_access(f))
@@ -58,7 +59,7 @@ class PermissionTest(TimRouteTest):
         self.login_test1()
         for i in (self.current_user.get_personal_folder(), self.create_doc()):
             self.json_put(f'/permissions/add/{i.id}/testuser2/view',
-                          {'from': datetime.now(tz=timezone.utc),
+                          {'from': get_current_time(),
                            'type': 'always'})
             rights = self.get(f'/permissions/get/{i.id}')
             i = Item.find_by_id(i.id)
@@ -97,7 +98,7 @@ class PermissionTest(TimRouteTest):
         self.login_test1()
         d = self.create_doc()
         self.json_put(f'/permissions/add/{d.id}/Logged-in users/view',
-                      {'from': datetime.now(tz=timezone.utc),
+                      {'from': get_current_time(),
                        'type': 'always'})
         self.login_test2()
         self.get(d.url)

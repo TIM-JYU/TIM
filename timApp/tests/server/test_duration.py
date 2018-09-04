@@ -1,14 +1,15 @@
-from datetime import timedelta, datetime, timezone
+from datetime import timedelta
 
-from timApp.util.flask.filters import humanize_datetime
-from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.auth.accesstype import AccessType
-from timApp.document.docentry import DocEntry
-from timApp.user.usergroup import UserGroup
-from timApp.timdb.sqa import db
 from timApp.auth.auth_models import BlockAccess
+from timApp.document.docentry import DocEntry
+from timApp.tests.server.timroutetest import TimRouteTest
+from timApp.timdb.sqa import db
+from timApp.user.usergroup import UserGroup
 from timApp.user.userutils import get_access_type_id
 from timApp.user.userutils import grant_access
+from timApp.util.flask.filters import humanize_datetime
+from timApp.util.utils import get_current_time
 
 
 class DurationTest(TimRouteTest):
@@ -46,12 +47,12 @@ class DurationTest(TimRouteTest):
         doc_id = d.id
         self.login_test2()
         delta = timedelta(minutes=3)
-        now_plus_minutes = datetime.now(tz=timezone.utc) + delta
+        now_plus_minutes = get_current_time() + delta
         grant_access(self.get_test_user_2_group_id(), doc_id, 'view',
                      duration=timedelta(days=1),
                      duration_from=now_plus_minutes)
         d = DocEntry.find_by_id(doc_id)
-        now_minus_minutes = datetime.now(tz=timezone.utc) - delta
+        now_minus_minutes = get_current_time() - delta
         err_msg_too_early = f'You can unlock this item in {humanize_datetime(now_plus_minutes)}.'
         err_msg_too_late = f'You cannot unlock this item anymore (deadline expired {humanize_datetime(now_minus_minutes)}).'
         self.get(d.url_relative,
@@ -101,7 +102,7 @@ class DurationTest(TimRouteTest):
         doc_id = d.id
         self.login_test2()
         duration = timedelta(days=1)
-        now = datetime.now(tz=timezone.utc)
+        now = get_current_time()
         access = grant_access(UserGroup.get_logged_in_group().id, doc_id, 'view',
                               duration=duration,
                               duration_to=now + duration)
@@ -155,18 +156,18 @@ class DurationTest(TimRouteTest):
         self.get(d.url_relative,
                  query_string={'unlock': 'true'},
                  expect_status=403,
-                 expect_contains=[self.unlock_success, self.get_expired_msg(datetime.now(tz=timezone.utc))])
+                 expect_contains=[self.unlock_success, self.get_expired_msg(get_current_time())])
 
     def test_access_future_and_expired(self):
         self.login_test1()
         d = self.create_doc()
         doc_id = d.id
         self.login_test3()
-        self.test_user_3.grant_access(doc_id, 'view', accessible_from=datetime.now(tz=timezone.utc) + timedelta(days=1))
+        self.test_user_3.grant_access(doc_id, 'view', accessible_from=get_current_time() + timedelta(days=1))
         self.get(d.url_relative,
                  expect_status=403,
                  expect_contains='You can access this item in 23 hours from now.')
-        self.test_user_3.grant_access(doc_id, 'view', accessible_to=datetime.now(tz=timezone.utc) - timedelta(days=1))
+        self.test_user_3.grant_access(doc_id, 'view', accessible_to=get_current_time() - timedelta(days=1))
         self.get(d.url_relative,
                  expect_status=403,
                  expect_contains='Your access to this item has expired a day ago.')

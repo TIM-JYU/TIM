@@ -1,4 +1,3 @@
-from datetime import timezone, datetime
 from itertools import accumulate
 from typing import List, Iterable, Generator, Tuple, Optional
 
@@ -9,6 +8,7 @@ from timApp.item.item import Item
 from timApp.notification.notification import NotificationType, Notification
 from timApp.timdb.sqa import db
 from timApp.timtypes import TranslationType
+from timApp.util.utils import get_current_time
 
 
 class DocInfo(Item):
@@ -79,7 +79,7 @@ class DocInfo(Item):
         raise NotImplementedError
 
     def update_last_modified(self):
-        self.block.modified = datetime.now(tz=timezone.utc)
+        self.block.modified = get_current_time()
 
     def get_preamble_docs(self) -> List['DocInfo']:
         """Gets the list of preamble documents for this document.

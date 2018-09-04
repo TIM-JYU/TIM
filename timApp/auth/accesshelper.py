@@ -23,6 +23,7 @@ from timApp.user.user import ItemOrBlock
 from timApp.user.usergroup import UserGroup
 from timApp.user.userutils import get_access_type_id, grant_access
 from timApp.util.flask.requesthelper import get_option
+from timApp.util.utils import get_current_time
 
 
 def get_doc_or_abort(doc_id: int):
@@ -135,7 +136,7 @@ def abort_if_not_access_and_required(access_obj: BlockAccess,
         if ba is not None:
             unlock = get_option(request, 'unlock', False)
             if unlock and ba.unlockable:
-                ba.accessible_from = datetime.now(tz=timezone.utc)
+                ba.accessible_from = get_current_time()
                 ba.accessible_to = ba.accessible_from + ba.duration
 
                 # if this is a group duration, it means we created a personal BlockAccess instance above, so we

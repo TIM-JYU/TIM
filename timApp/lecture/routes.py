@@ -37,6 +37,7 @@ from timApp.lecture.showpoints import Showpoints
 from timApp.lecture.useractivity import Useractivity
 from timApp.timdb.sqa import db
 from timApp.lecture.question import Question
+from timApp.util.utils import get_current_time
 
 lecture_routes = Blueprint('lecture',
                            __name__,
@@ -899,7 +900,7 @@ def stop_question_from_running(question: AskedQuestion):
     # Adding extra time to limit so when people gets question a bit later than others they still get to answer
     extra_time = timedelta(seconds=3 if not app.config['TESTING'] else 0)
     end_time += extra_time
-    while datetime.now(tz=timezone.utc) < end_time:
+    while get_current_time() < end_time:
         question = AskedQuestion.query.get(qid)
         if not question:
             return

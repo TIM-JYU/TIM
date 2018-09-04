@@ -1,19 +1,20 @@
 from collections import defaultdict
-from datetime import datetime, timezone, timedelta
+from datetime import timedelta
 from typing import List, DefaultDict
 
 from sqlalchemy.orm import Query
 
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.document import Document
+from timApp.readmark.readparagraph import ReadParagraph
 from timApp.readmark.readparagraphtype import ReadParagraphType
 from timApp.timdb.sqa import db
-from timApp.readmark.readparagraph import ReadParagraph
+from timApp.util.utils import get_current_time
 
 
 def get_read_expiry_condition(delta: timedelta):
     return ((ReadParagraph.type == ReadParagraphType.click_red) |
-           (ReadParagraph.timestamp > datetime.now(tz=timezone.utc) - delta))
+           (ReadParagraph.timestamp > get_current_time() - delta))
 
 
 def get_readings(usergroup_id: int, doc: Document, filter_condition=None) -> List[ReadParagraph]:

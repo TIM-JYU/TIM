@@ -1,6 +1,6 @@
 """Routes for manage view."""
 import re
-from datetime import timezone, datetime
+from datetime import datetime
 from typing import Generator, Tuple
 
 import dateutil.parser
@@ -13,23 +13,23 @@ from isodate import parse_duration
 
 from timApp.auth.accesshelper import verify_manage_access, verify_ownership, verify_view_access, has_ownership, \
     verify_edit_access, get_doc_or_abort, get_item_or_abort, get_folder_or_abort
-from timApp.item.block import BlockType
-from timApp.timdb.dbaccess import get_timdb
-from timApp.document.create_item import copy_document_and_enum_translations
-from timApp.util.flask.requesthelper import verify_json_params, get_option
-from timApp.util.flask.responsehelper import json_response, ok_response
+from timApp.auth.auth_models import AccessType
 from timApp.auth.sessioninfo import get_current_user_group
 from timApp.auth.sessioninfo import get_current_user_object
-from timApp.document.documents import delete_document
-from timApp.item.item import Item, copy_rights
+from timApp.document.create_item import copy_document_and_enum_translations
 from timApp.document.docentry import DocEntry
+from timApp.document.documents import delete_document
 from timApp.folder.folder import Folder, path_includes
-from timApp.user.usergroup import UserGroup
-from timApp.timdb.sqa import db
-from timApp.auth.auth_models import AccessType
-from timApp.user.userutils import grant_access, grant_default_access, get_access_type_id
-from timApp.util.utils import remove_path_special_chars, split_location, join_location
+from timApp.item.block import BlockType
+from timApp.item.item import Item, copy_rights
 from timApp.item.validation import validate_item, validate_item_and_create, has_special_chars
+from timApp.timdb.dbaccess import get_timdb
+from timApp.timdb.sqa import db
+from timApp.user.usergroup import UserGroup
+from timApp.user.userutils import grant_access, grant_default_access, get_access_type_id
+from timApp.util.flask.requesthelper import verify_json_params, get_option
+from timApp.util.flask.responsehelper import json_response, ok_response
+from timApp.util.utils import remove_path_special_chars, split_location, join_location, get_current_time
 
 manage_page = Blueprint('manage_page',
                         __name__,
@@ -334,7 +334,7 @@ def verify_and_get_params(item_id, group_name, perm_type):
     duration = parse_duration(req_json.get('duration')) if access_type == 'duration' else None
 
     if access_type == 'always' or (accessible_from is None and duration is None):
-        accessible_from = datetime.now(tz=timezone.utc)
+        accessible_from = get_current_time()
 
     # SQLAlchemy doesn't know how to adapt Duration instances, so we convert it to timedelta.
     if isinstance(duration, Duration):

@@ -1,18 +1,17 @@
 import datetime
 import json
-from datetime import timezone
 from time import sleep
 
 import dateutil.parser
 
-from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.lecture.askedjson import AskedJson, make_error_question
 from timApp.lecture.askedquestion import AskedQuestion, get_asked_question
 from timApp.lecture.lecture import Lecture
 from timApp.lecture.lectureanswer import LectureAnswer
 from timApp.lecture.showpoints import Showpoints
+from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.timdb.sqa import db
-from timApp.util.utils import EXAMPLE_DOCS_PATH
+from timApp.util.utils import EXAMPLE_DOCS_PATH, get_current_time
 
 
 class LectureTest(TimRouteTest):
@@ -30,7 +29,7 @@ class LectureTest(TimRouteTest):
     def test_lecture(self):
         self.login_test1()
         doc = self.create_doc(from_file=f'{EXAMPLE_DOCS_PATH}/questions.md')
-        current_time = datetime.datetime.now(tz=timezone.utc)
+        current_time = get_current_time()
         start_time = (current_time - datetime.timedelta(minutes=15))
         end_time = (current_time + datetime.timedelta(hours=2))
         lecture_code = 'test lecture'
@@ -111,14 +110,14 @@ class LectureTest(TimRouteTest):
         aq = AskedQuestion(lecture_id=lecture_id,
                            doc_id=doc.id,
                            par_id='test',
-                           asked_time=datetime.datetime.now(tz=timezone.utc),
+                           asked_time=get_current_time(),
                            points='1',
                            expl='testing',
                            asked_json=aj)
         la = LectureAnswer(user_id=self.current_user.id,
                            lecture_id=lecture_id,
                            answer='test',
-                           answered_on=datetime.datetime.now(tz=timezone.utc),
+                           answered_on=get_current_time(),
                            points=1,
                            asked_question=aq)
         db.session.add(la)
