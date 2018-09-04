@@ -292,13 +292,15 @@ def do_get_updates(request):
         if not long_poll or current_app.config['TESTING']:
             # Don't loop when testing
             break
+
+        # Database updates may have happened during sleep, so we have to expire all objects so that they will be
+        # reloaded. Additionally, we don't want to keep the connection open during sleep, so we call commit()
+        # instead of expire_all().
+        db.session.commit()
+
         # For long poll wait 1 sec before new check.
         time.sleep(1)
         step += 1
-
-        # Database updates may have happened during sleep, so we have to expire all objects so that they will be
-        # reloaded.
-        db.session.expire_all()
 
     if lecture_ending != 100 or lecturers or students:
         return json_response_and_commit(base_resp)
