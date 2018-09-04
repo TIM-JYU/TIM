@@ -105,7 +105,7 @@ export class AnswerToQuestionController extends DialogController<{params: IAnswe
         }
     }
 
-    protected close() {
+    public close() {
         if (this.isLecturer) {
             this.stopQuestion();
         }
@@ -181,19 +181,11 @@ export class AnswerToQuestionController extends DialogController<{params: IAnswe
     }
 
     /**
-     * Use time parameter to either close question/points window or extend question end time.
-     * If time is null, question/points is closed.
-     * Else time is set as questions new end time.
+     * Changes question end time.
      */
-    public updateEndTime(time: Moment | null) {
-        if (time != null) {
-            this.endTime = time.clone().subtract(this.clockOffset);
-            this.progressMax = this.endTime.diff(this.askedTime);
-        } else {
-            if (!this.isLecturer) {
-                this.close();
-            }
-        }
+    public updateEndTime(time: Moment) {
+        this.endTime = time.clone().subtract(this.clockOffset);
+        this.updateMaxProgress();
     }
 
     private start(updateInterval: number) {
@@ -208,23 +200,15 @@ export class AnswerToQuestionController extends DialogController<{params: IAnswe
         if (!this.endTime || !this.progressMax) {
             return;
         }
-        while (true) {
+        while (!this.closed && !this.questionEnded) {
             const now = moment();
             const timeLeft = this.endTime.diff(now);
             this.barFilled = (this.endTime.diff(this.askedTime)) - timeLeft;
             this.progressText = Math.max(timeLeft / 1000, 0).toFixed(0) + " s";
             if (this.barFilled >= this.progressMax) {
-                if (!this.isLecturer && !this.questionEnded) {
-                    await this.answerToQuestion();
-                } else {
-                    this.progressText = "Time's up";
-                }
-                this.questionEnded = true;
+                await this.endQuestion();
             }
             await $timeout(updateInterval);
-            if (this.questionEnded) {
-                return;
-            }
         }
     }
 
@@ -232,11 +216,15 @@ export class AnswerToQuestionController extends DialogController<{params: IAnswe
         this.answer = at;
     }
 
-    private endQuestion() {
+    public async endQuestion() {
         this.endTime = moment();
+        this.updateMaxProgress();
         this.barFilled = this.progressMax;
         this.progressText = "Time's up";
         this.questionEnded = true;
+        if (!this.answered && !this.isLecturer) {
+            await this.answerToQuestion();
+        }
     }
 
     public setData(data: IAskedQuestion | IQuestionAnswer) {
@@ -274,9 +262,17 @@ export class AnswerToQuestionController extends DialogController<{params: IAnswe
             this.barFilled = 0;
             if (this.endTime) {
                 this.progressText = "";
-                this.progressMax = this.endTime.diff(this.askedTime);
+                this.updateMaxProgress();
                 this.start(500);
             }
+        }
+    }
+
+    private updateMaxProgress() {
+        if (this.endTime) {
+            this.progressMax = this.endTime.diff(this.askedTime);
+        } else {
+            this.progressMax = undefined;
         }
     }
 }

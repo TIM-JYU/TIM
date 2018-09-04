@@ -243,7 +243,7 @@ class AnswerSheetController implements IController {
     private pointsTable: Array<{[p: string]: string}> = [];
     private userpoints?: number;
     private disabled?: boolean;
-    private onAnswerChange!: Binding<() => (at: AnswerTable) => void, "&">;
+    private onAnswerChange!: Binding<() => ((at: AnswerTable) => void) | undefined, "&">;
 
     constructor(element: IRootElementService) {
         this.element = element;
@@ -263,6 +263,10 @@ class AnswerSheetController implements IController {
         if (qdata) {
             this.createAnswer();
             ParCompiler.processAllMathDelayed(this.element);
+
+            // Do a fake update; without this "no answer" is not registered properly if the user never clicks
+            // the answer sheet.
+            this.signalUpdate();
         } else if (adata) {
             this.answerMatrix = this.answerMatrixFromTable(adata.currentValue);
         }
@@ -495,7 +499,10 @@ class AnswerSheetController implements IController {
     }
 
     private signalUpdate() {
-        this.onAnswerChange()(this.tableFromAnswerMatrix(this.answerMatrix));
+        const c = this.onAnswerChange();
+        if (c) {
+            c(this.tableFromAnswerMatrix(this.answerMatrix));
+        }
     }
 }
 

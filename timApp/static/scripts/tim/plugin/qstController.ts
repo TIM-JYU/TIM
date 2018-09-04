@@ -87,7 +87,6 @@ class QstController implements IController {
 
     private updateAnswer(at: AnswerTable) {
         this.newAnswer = at;
-        console.log("answer updated:", JSON.stringify(at));
     }
 
     private getQuestionTitle() {

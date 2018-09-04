@@ -138,15 +138,12 @@ let qstChartIndex = timGetLSIntValue("qstChartIndex", 0);
 
 type AnswerList = IQuestionAnswer[];
 
-function* enumAnswers(answers: AnswerList): Iterable<[number, string]> {
+function* enumAnswers(answers: AnswerList): Iterable<[number, string[]]> {
     for (const answ of answers) {
         const onePersonAnswers = answ.answer;
         for (let a = 0; a < onePersonAnswers.length; a++) {
             const singleAnswers = onePersonAnswers[a];
-            for (let sa = 0; sa < singleAnswers.length; sa++) {
-                const singleAnswer = singleAnswers[sa];
-                yield [a, singleAnswer];
-            }
+            yield [a, singleAnswers];
         }
     }
 }
@@ -559,38 +556,43 @@ class ShowChartController implements IController {
         }
         if (this.isText) {
             this.textAnswers = [];
-            for (const [_, singleAnswer] of enumAnswers(answers)) {
-                this.textAnswers.push(singleAnswer);
+            for (const [_, singleAnswers] of enumAnswers(answers)) {
+                for (const singleAnswer of singleAnswers) {
+                    this.textAnswers.push(singleAnswer);
+                }
             }
         } else {
             if (!this.answerChart || !this.chartConfig) {
                 return;
             }
             const datasets = clone(this.chartConfig.data.datasets);
-            for (const [a, singleAnswer] of enumAnswers(answers)) {
-                if (datasets.length === 1) {
-                    let answered = false;
-                    const set = datasets[0].data;
-                    for (let b = 0; b < set.length; b++) {
-                        if ((b + 1) === parseInt(singleAnswer, 10)) {
-                            set[b] += 1;
-                            answered = true;
+
+            // The "no answer" situation has two different formats:
+            // Old format [[""]] (has an empty string)
+            // New format [[]] (is an empty array)
+            const firstSet = datasets[0].data;
+            for (const [a, singleAnswers] of enumAnswers(answers)) {
+                if (singleAnswers.length === 0) {
+                    if (datasets.length === 1) {
+                        firstSet[firstSet.length - 1]++; // no answer (new format)
+                    } else {
+                        datasets[datasets.length - 1].data[a]++; // no answer (new format)
+                    }
+                }
+                for (const singleAnswer of singleAnswers) {
+                    const index = parseInt(singleAnswer, 10) - 1;
+                    if (datasets.length === 1) {
+                        if (index >= 0 && index < firstSet.length) {
+                            firstSet[index]++;
+                        } else {
+                            firstSet[firstSet.length - 1]++; // no answer (old format)
                         }
-                    }
-                    if (!answered) {
-                        set[set.length - 1] += 1;
-                    }
-                } else {
-                    let answered = false;
-                    for (let d = 0; d < datasets.length; d++) {
-                        if ((d + 1) === parseInt(singleAnswer, 10)) {
-                            datasets[d].data[a] += 1;
-                            answered = true;
-                            break;
+                    } else {
+                        if (index >= 0 && index < datasets.length) {
+                            datasets[index].data[a]++;
+                        } else {
+                            datasets[datasets.length - 1].data[a]++; // no answer (old format)
                         }
-                    }
-                    if (!answered) {
-                        datasets[datasets.length - 1].data[a] += 1;
                     }
                 }
             }

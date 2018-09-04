@@ -999,12 +999,10 @@ def answer_to_question():
 
     asked_id = int(request.args.get("asked_id"))
     req_input = json.loads(request.args.get("input"))
-    # noinspection PyBroadException
-    try:
-        answer = req_input['answers']
-    except:
-        answer = {}
-        return ok_response()  # no answer from user
+    answer = req_input.get('answers')
+    if answer is None:
+        # The data SHOULD have (empty) answers array even if the user does not touch the answer sheet.
+        return abort(400, 'Missing answers in input')
     whole_answer = answer
     lecture = get_current_lecture_or_abort()
     lecture_id = lecture.lecture_id

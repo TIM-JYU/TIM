@@ -629,14 +629,20 @@ export class LectureController implements IController {
                     // extend or end question according to new_end_time
                     if (!this.isLecturer) {
                         if (currentQuestion) {
-                            currentQuestion.updateEndTime(answer.extra.new_end_time);
+                            if (answer.extra.new_end_time != null) {
+                                currentQuestion.updateEndTime(answer.extra.new_end_time);
+                            } else {
+                                await currentQuestion.endQuestion();
+                            }
                         } else {
                             $log.error("currentQuestion was undefined when trying to update end time");
                         }
                     }
                 } else if (pointsClosed(answer.extra)) {
                     if (currentQuestion) {
-                        currentQuestion.updateEndTime(null);
+                        if (!this.isLecturer) {
+                            currentQuestion.close();
+                        }
                     } else {
                         $log.error("currentQuestion was undefined when set end time to null");
                     }
