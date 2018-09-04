@@ -208,7 +208,7 @@ class LectureTest(TimRouteTest):
         self.assertEqual(resp.get('extra'), {'new_end_time': None})
 
         q = get_asked_question(aid)
-        self.assertIsNone(q.running_question)
+        self.assertFalse(q.is_running)
 
         self.login_test2()
 
@@ -232,11 +232,12 @@ class LectureTest(TimRouteTest):
         q = get_asked_question(aid)
         self.assertIsNotNone(q.running_question)
 
-        # should be stopped by the background thread
-        sleep(2)
+        sleep(1)  # the second question has a timelimit of 1 second
         q = get_asked_question(aid)
         db.session.refresh(q)
-        self.assertIsNone(q.running_question)
+        self.assertFalse(q.is_running)
+        l: Lecture = Lecture.query.get(lecture_id)
+        self.assertEqual(1, len(l.running_questions))
 
         self.post('/extendLecture',
                   query_string={**lecture_q,

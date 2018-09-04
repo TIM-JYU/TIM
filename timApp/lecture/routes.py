@@ -1,5 +1,4 @@
 import json
-import threading
 import time
 from datetime import timezone, datetime, timedelta
 from random import randrange
@@ -14,29 +13,28 @@ from flask import request
 from flask import session
 
 from timApp.auth.accesshelper import verify_ownership, get_doc_or_abort
-from timApp.document.post_process import has_ownership
-from timApp.document.randutils import hashfunc
-from timApp.util.flask.requesthelper import get_option, verify_json_params
-from timApp.util.flask.responsehelper import json_response, ok_response, empty_response, json_response_and_commit
 from timApp.auth.login import log_in_as_anonymous
-from timApp.plugin.qst.qst import get_question_data_from_document, create_points_table, \
-    calculate_points_from_json_answer, calculate_points
 from timApp.auth.sessioninfo import get_current_user_id, logged_in, get_current_user_object, \
     current_user_in_lecture, get_user_settings
-from timApp.tim_app import app
+from timApp.document.docentry import DocEntry
+from timApp.document.post_process import has_ownership
+from timApp.document.randutils import hashfunc
 from timApp.lecture.askedjson import get_asked_json_by_hash, AskedJson
 from timApp.lecture.askedquestion import AskedQuestion, get_asked_question
-from timApp.document.docentry import DocEntry
 from timApp.lecture.lecture import Lecture
 from timApp.lecture.lectureanswer import LectureAnswer, get_totals
 from timApp.lecture.message import Message
-from timApp.user.user import User
-from timApp.lecture.runningquestion import Runningquestion
+from timApp.lecture.question import Question
 from timApp.lecture.questionactivity import QuestionActivityKind, QuestionActivity
+from timApp.lecture.runningquestion import Runningquestion
 from timApp.lecture.showpoints import Showpoints
 from timApp.lecture.useractivity import Useractivity
+from timApp.plugin.qst.qst import get_question_data_from_document, create_points_table, \
+    calculate_points_from_json_answer, calculate_points
 from timApp.timdb.sqa import db
-from timApp.lecture.question import Question
+from timApp.user.user import User
+from timApp.util.flask.requesthelper import get_option, verify_json_params
+from timApp.util.flask.responsehelper import json_response, ok_response, empty_response, json_response_and_commit
 from timApp.util.utils import get_current_time
 
 lecture_routes = Blueprint('lecture',
@@ -252,9 +250,9 @@ def do_get_updates(request):
 
             q = get_asked_question(current_question_id)
             already_answered = None
-            if q and q.running_question:
+            if q and q.is_running:
                 already_answered = q.has_activity(QuestionActivityKind.Useranswered, u)
-            if q and q.running_question and not already_answered:
+            if q and q.is_running and not already_answered:
                 already_extended = q.has_activity(QuestionActivityKind.Userextended, u)
                 if not already_extended:
                     q.add_activity(QuestionActivityKind.Userextended, u)
@@ -329,9 +327,9 @@ def get_new_question(lecture: Lecture, current_question_id=None, current_points_
     """
     current_user = get_current_user_id()
     u = get_current_user_object()
-    question = lecture.running_questions
-    if question:
-        question: AskedQuestion = question[0].asked_question
+    rqs: List[Runningquestion] = lecture.running_questions
+    if rqs and rqs[0].asked_question.is_running:
+        question: AskedQuestion = rqs[0].asked_question
         asked_id = question.asked_id
         already_shown = question.has_activity(QuestionActivityKind.Usershown, u)
         already_answered = question.has_activity(QuestionActivityKind.Useranswered, u)
@@ -637,7 +635,7 @@ def delete_question_temp_data(question: AskedQuestion, lecture: Lecture):
                                QuestionActivityKind.Useranswered,
                                QuestionActivityKind.Pointsclosed,
                                QuestionActivityKind.Pointsshown])
-    lecture.running_questions = []
+    Runningquestion.query.filter_by(lecture_id=lecture.lecture_id).delete()
     stop_showing_points(lecture)
 
 
@@ -756,7 +754,7 @@ def extend_question():
     if not q:
         return abort(404)
     rq: Runningquestion = q.running_question
-    if not rq:
+    if not q.is_running:
         abort(400, 'Question is not running')
     rq.end_time += timedelta(seconds=extend)
     delete_activity(q, [QuestionActivityKind.Userextended])
@@ -834,10 +832,6 @@ def ask_question():
     rq = Runningquestion(lecture=lecture, asked_question=question, ask_time=question.asked_time, end_time=question.end_time)
     db.session.add(rq)
     db.session.commit()
-    if question.time_limit:
-        thread_to_stop_question = threading.Thread(target=stop_question_from_running,
-                                                   args=(question,))
-        thread_to_stop_question.start()
     return json_response(question)
 
 
@@ -894,30 +888,6 @@ def update_question_points():
     return ok_response()
 
 
-def stop_question_from_running(question: AskedQuestion):
-    end_time = question.end_time
-    qid = question.asked_id
-    # Adding extra time to limit so when people gets question a bit later than others they still get to answer
-    extra_time = timedelta(seconds=3 if not app.config['TESTING'] else 0)
-    end_time += extra_time
-    while get_current_time() < end_time:
-        question = AskedQuestion.query.get(qid)
-        if not question:
-            return
-        db.session.refresh(question)
-        rq = question.running_question
-        if rq:
-            end_time = extra_time + rq.end_time
-        else:
-            return
-        time.sleep(1)
-    Runningquestion.query.filter_by(asked_id=qid).delete()
-    delete_activity(question, [QuestionActivityKind.Usershown,
-                               QuestionActivityKind.Userextended,
-                               QuestionActivityKind.Useranswered])
-    db.session.commit()
-
-
 def delete_activity(question: AskedQuestion, kinds):
     QuestionActivity.query.filter((QuestionActivity.asked_id == question.asked_id) &
                                   QuestionActivity.kind.in_(kinds)).delete(synchronize_session='fetch')
@@ -964,12 +934,15 @@ def stop_question():
     if not request.args.get("asked_id"):
         abort(400)
     asked_id = int(request.args.get('asked_id'))
+    aq = get_asked_question(asked_id)
+    if not aq:
+        return abort(404, 'Asked question not found')
     lecture = get_current_lecture_or_abort()
     verify_is_lecturer(lecture)
-    Runningquestion.query.filter_by(asked_id=asked_id).delete()
-    QuestionActivity.query.filter((QuestionActivity.asked_id == asked_id) &
-                                  QuestionActivity.kind.in_([QuestionActivityKind.Usershown,
-                                                             QuestionActivityKind.Useranswered])).delete(synchronize_session='fetch')
+    if not aq.is_running:
+        return abort(400, 'Question was not running')
+    aq.running_question.end_time = get_current_time()
+    delete_activity(aq, [QuestionActivityKind.Usershown, QuestionActivityKind.Useranswered])
     db.session.commit()
     return ok_response()
 
@@ -1012,10 +985,10 @@ def answer_to_question():
 
     lecture_answer: LectureAnswer = asked_question.answers.filter_by(user_id=u.id).first()
 
-    question = asked_question.running_question
     already_answered = asked_question.has_activity(QuestionActivityKind.Useranswered, u)
-    if not question:
-        return json_response({"questionLate": "The question has already finished. Your answer was not saved."})
+    if not asked_question.is_running:
+        if not asked_question.running_question or get_current_time() > asked_question.running_question.end_time + timedelta(seconds=5):
+            return json_response({"questionLate": "The question has already finished. Your answer was not saved."})
     if already_answered:
         return json_response({"alreadyAnswered": "You have already answered to question. Your first answer is saved."})
 

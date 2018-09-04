@@ -7,6 +7,7 @@ from timApp.lecture.lecture import Lecture
 from timApp.lecture.questionactivity import QuestionActivityKind, QuestionActivity
 from timApp.timdb.sqa import db
 from timApp.timtypes import UserType
+from timApp.util.utils import get_current_time
 
 
 class AskedQuestion(db.Model):
@@ -70,6 +71,16 @@ class AskedQuestion(db.Model):
             return self.points
         aj = self.asked_json.to_json()
         return aj['json'].get('points')
+
+    @property
+    def is_running(self):
+        rq = self.running_question
+        if not rq:
+            return False
+        et = rq.end_time
+        if not et:
+            return True
+        return get_current_time() < et
 
 
 def get_asked_question(asked_id: int) -> Optional[AskedQuestion]:
