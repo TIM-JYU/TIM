@@ -253,10 +253,6 @@ class AnswerSheetController implements IController {
 
     }
 
-    private cg() {
-        return "group";
-    }
-
     $onChanges(onChangesObj: IOnChangesObject) {
         const qdata = onChangesObj.questiondata as IChangesObject<IPreviewParams> | undefined;
         const adata = onChangesObj.answertable as IChangesObject<AnswerTable> | undefined;
