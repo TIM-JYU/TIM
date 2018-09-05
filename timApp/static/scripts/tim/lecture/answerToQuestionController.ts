@@ -152,10 +152,6 @@ export class AnswerToQuestionController extends DialogController<{params: IAnswe
     }
 
     private async showPoints() {
-        if (this.question.json.json.points == null) {
-            await showMessageDialog("This question does not have points.");
-            return;
-        }
         const response = await $http<IGetNewQuestionResponse>({
             url: "/showAnswerPoints",
             method: "POST",
