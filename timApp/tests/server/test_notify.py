@@ -162,3 +162,12 @@ class NotifyFolderTest(NotifyTestBase):
         self.test_user_2.grant_access(d.id, 'view')
         self.new_par(d.document, 'test')
         self.assertEqual(1, len(sent_mails_in_testing))
+
+        self.login_test2()
+        db.session.add(d)
+        self.update_notify_settings(d, {'email_comment_add': True, 'email_comment_modify': False,
+                                        'email_doc_modify': True})
+
+        self.login_test1()
+        self.new_par(d.document, 'test')
+        self.assertEqual(2, len(sent_mails_in_testing))

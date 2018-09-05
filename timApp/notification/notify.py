@@ -146,11 +146,12 @@ def notify_doc_watchers(doc: DocInfo,
 
     full_msg = msg + '\n\n' + content_msg
 
+    notified_users = set()
     for note in doc.get_notifications(notify_type):
         user: User = note.user
-        if user.id == me.id or not user.email or not user.has_view_access(doc):
+        if user.id == me.id or not user.email or not user.has_view_access(doc) or user in notified_users:
             continue
-
+        notified_users.add(user)
         # If a document was modified and the user doesn't have edit access to it, we must not send the source md
         send_full_msg = notify_type != NotificationType.DocModified or user.has_edit_access(doc)
 
