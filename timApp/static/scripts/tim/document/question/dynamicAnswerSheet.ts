@@ -391,6 +391,10 @@ class AnswerSheetController implements IController {
         this.userpoints = params.userpoints;
     }
 
+    private questionHasPoints() {
+        return this.questiondata && this.questiondata.markup.points != null;
+    }
+
     private answerMatrixFromTable(table: AnswerTable): MatrixElement[][] {
         const data = this.processed;
         if (data.rows.length === 0) {
@@ -511,7 +515,7 @@ timApp.component("dynamicAnswerSheet", {
     template: `
 <form ng-if="$ctrl.json">
     <h5 ng-bind-html="$ctrl.getHeader()"></h5>
-    <p ng-if="$ctrl.userpoints != null" ng-bind="$ctrl.userpoints"></p>
+    <p ng-if="$ctrl.userpoints != null && $ctrl.questionHasPoints()">Points received: {{ $ctrl.userpoints }}</p>
     <table class="table" ng-class="$ctrl.getTableClass()">
         <tbody>
         <tr ng-if="$ctrl.hasHeaders()" class="answer-heading-row">
