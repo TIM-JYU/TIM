@@ -152,6 +152,10 @@ export class AnswerToQuestionController extends DialogController<{params: IAnswe
     }
 
     private async showPoints() {
+        if (this.question.json.json.points == null) {
+            await showMessageDialog("This question does not have points.");
+            return;
+        }
         const response = await $http<IGetNewQuestionResponse>({
             url: "/showAnswerPoints",
             method: "POST",
@@ -176,7 +180,12 @@ export class AnswerToQuestionController extends DialogController<{params: IAnswe
                 showExplanations: true,
             });
         } else {
-            await showMessageDialog("Did not receive result to show points.");
+            // This case happens if the lecturer did not answer the question himself.
+            this.result = true;
+            this.preview = makePreview(this.question.json.json, {
+                showCorrectChoices: true,
+                showExplanations: true,
+            });
         }
     }
 
