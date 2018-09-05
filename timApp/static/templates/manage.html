@@ -45,6 +45,27 @@
     </div>
 </div>
 
+<div class="panel panel-default">
+    <div class="panel-heading">Notifications</div>
+    <div class="panel-body">
+        <form>
+            <p>Send me email on</p>
+            <div class="checkbox"><label>
+                <input type="checkbox" ng-model="$ctrl.notifySettings.email_doc_modify"
+                       ng-change="$ctrl.notifyChanged()"/>Document modifications
+            </label></div>
+            <div class="checkbox"><label>
+                <input type="checkbox" ng-model="$ctrl.notifySettings.email_comment_add"
+                       ng-change="$ctrl.notifyChanged()"/>New comments
+            </label></div>
+            <div class="checkbox"><label>
+                <input type="checkbox" ng-model="$ctrl.notifySettings.email_comment_modify"
+                       ng-change="$ctrl.notifyChanged()"/>Edited comments
+            </label></div>
+        </form>
+    </div>
+</div>
+
 <div ng-if="!$ctrl.item.isFolder">
     <div ng-if="$ctrl.item.rights.manage" class="panel panel-default">
         <div class="panel-heading">Short names</div>
@@ -186,26 +207,6 @@
                                  params="$ctrl.copyParams"></create-item>
                 </uib-tab>
             </uib-tabset>
-        </div>
-    </div>
-    <div class="panel panel-default">
-        <div class="panel-heading">Notifications</div>
-        <div class="panel-body">
-            <form>
-                <p>Send me email on</p>
-                <div class="checkbox"><label>
-                    <input type="checkbox" ng-model="$ctrl.notifySettings.email_doc_modify"
-                           ng-change="$ctrl.notifyChanged()"/>Document modifications
-                </label></div>
-                <div class="checkbox"><label>
-                    <input type="checkbox" ng-model="$ctrl.notifySettings.email_comment_add"
-                           ng-change="$ctrl.notifyChanged()"/>New comments
-                </label></div>
-                <div class="checkbox"><label>
-                    <input type="checkbox" ng-model="$ctrl.notifySettings.email_comment_modify"
-                           ng-change="$ctrl.notifyChanged()"/>Edited comments
-                </label></div>
-            </form>
         </div>
     </div>
 

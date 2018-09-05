@@ -70,13 +70,13 @@ export class PermCtrl implements IController {
     }
 
     async $onInit() {
+        this.getNotifySettings();
         if (this.item.isFolder) {
             this.newName = this.item.name;
             this.newFolderName = this.item.location;
             this.oldName = this.newName;
             this.oldFolderName = this.newFolderName;
         } else {
-            this.getNotifySettings();
             this.item.fulltext = this.item.fulltext.trim();
             this.fulltext = this.item.fulltext;
             if (this.item.rights.manage) {
@@ -487,5 +487,4 @@ export class PermCtrl implements IController {
 timApp.component("timManage", {
     controller: PermCtrl,
     templateUrl: "/static/templates/manage.html",
-    transclude: true,
 });

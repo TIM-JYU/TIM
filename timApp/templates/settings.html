@@ -7,59 +7,10 @@
     {{ super() }}
     <script>
         var settings = {{ prefs|tojson }};
+        var css_files = {{ css_files|tojson }};
+        var notifications = {{ notifications|tojson }};
     </script>
 {% endblock %}
 {% block content %}
-    <tim-settings>
-        <div ng-init="$ctrl = $parent.$ctrl">
-        <form ng-submit="$ctrl.submit('{{ request.path + '/save' }}')">
-        <div class="panel panel-default">
-            <div class="panel-heading">Styles</div>
-            <div class="panel-body">
-
-                    {% if css_files %}
-                        <span>Available themes:</span>
-                    {% else %}
-                        <span>There are no available themes.</span>
-                    {% endif %}
-                    <br>
-                    {% for css_file in css_files %}
-                        <div class="checkbox"><label><input type="checkbox"
-                                      name="settings.css_files.{{ css_file.name }}"
-                                      ng-model="$ctrl.settings.css_files.{{ css_file.name }}"
-                                      ng-change="$ctrl.submit('{{ request.path + '/save' }}')"
-                                      ng-disabled="$ctrl.saving">
-                            <a href="{{ url_for('static', filename='css/' + css_file.name + '.scss') }}">
-                                {{ css_file.name }}</a> - {{ css_file.desc }}
-                        </label></div>
-                    {% endfor %}
-                    <div class="form-group">
-                        <label for="customCssArea">Custom CSS:</label>
-                    <textarea rows="15" id="customCssArea" class="form-control" ng-model="$ctrl.settings.custom_css"></textarea>
-                    </div>
-
-                    <button class="btn btn-default" ng-click="$ctrl.addPrintSettings();">Add Print Settings</button>
-
-            </div>
-        </div>
-        <div class="panel panel-default">
-            <div class="panel-heading">Editor</div>
-            <div class="panel-body">
-                <div class="checkbox">
-                    <label>
-                        <input type="checkbox" ng-model="$ctrl.settings.use_document_word_list">Use words from the document in
-                        ACE editor autocomplete
-                    </label>
-                </div>
-                <label>ACE editor additional word list for autocomplete (1 word per line)
-                    <textarea rows="15" class="form-control" ng-model="$ctrl.settings.word_list"></textarea>
-                </label>
-            </div>
-        </div>
-            <button class="timButton" type="submit" ng-disabled="$ctrl.saving">Save changes</button>
-            <span ng-show="$ctrl.saving">Saving...</span>
-            <button class="btn btn-default" ng-click="$ctrl.clearLocalStorage()">Clear local settings storage</button>
-        </form>
-        </div>
-    </tim-settings>
+    <tim-settings></tim-settings>
 {% endblock %}

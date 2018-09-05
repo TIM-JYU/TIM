@@ -3,52 +3,79 @@ import socket
 from typing import Optional
 
 from flask import Blueprint
+from sqlalchemy.orm import joinedload
 
-from timApp.auth.accesshelper import verify_logged_in, verify_view_access, get_doc_or_abort
-from timApp.util.decorators import async
+from timApp.auth.accesshelper import verify_logged_in, verify_view_access, get_item_or_abort
+from timApp.auth.sessioninfo import get_current_user_object, get_current_user_id
+from timApp.document.docinfo import DocInfo
 from timApp.document.docparagraph import DocParagraph
-from timApp.util.logger import log_info, log_error
+from timApp.item.block import Block
+from timApp.notification.notification import NotificationType, Notification
+from timApp.tim_app import app
+from timApp.timdb.sqa import db
+from timApp.user.user import User
+from timApp.util.decorators import async
 from timApp.util.flask.requesthelper import verify_json_params
 from timApp.util.flask.responsehelper import json_response, ok_response
-from timApp.auth.sessioninfo import get_current_user_object
-from timApp.tim_app import app
-from timApp.document.docinfo import DocInfo
-from timApp.notification.notification import NotificationType
-from timApp.user.user import User
-from timApp.timdb.sqa import db
+from timApp.util.logger import log_info, log_error
 
 FUNNEL_HOST = "funnel"
 FUNNEL_PORT = 80
 
 notify = Blueprint('notify',
                    __name__,
-                   url_prefix='')
+                   url_prefix='/notify')
 
 sent_mails_in_testing = []
 
 
-@notify.route('/notify/<int:doc_id>', methods=['GET'])
+@notify.route('/<int:doc_id>', methods=['GET'])
 def get_notify_settings(doc_id):
     verify_logged_in()
-    d = get_doc_or_abort(doc_id)
-    verify_view_access(d)
+    i = get_item_or_abort(doc_id)
+    verify_view_access(i)
     return json_response(
-        get_current_user_object().get_notify_settings(d))
+        get_current_user_object().get_notify_settings(i))
 
 
-@notify.route('/notify/<int:doc_id>', methods=['POST'])
+@notify.route('/<int:doc_id>', methods=['POST'])
 def set_notify_settings(doc_id):
     verify_logged_in()
-    d = get_doc_or_abort(doc_id)
-    verify_view_access(d)
+    i = get_item_or_abort(doc_id)
+    verify_view_access(i)
     comment_modify, comment_add, doc_modify = verify_json_params('email_comment_modify', 'email_comment_add',
                                                                  'email_doc_modify')
-    get_current_user_object().set_notify_settings(d,
+    get_current_user_object().set_notify_settings(i,
                                                   comment_modify=comment_modify,
                                                   comment_add=comment_add,
                                                   doc_modify=doc_modify)
     db.session.commit()
     return ok_response()
+
+
+@notify.route('/all')
+def get_user_notify_settings():
+    verify_logged_in()
+    nots = get_current_user_notifications()
+    return json_response(nots)
+
+
+def get_current_user_notifications():
+    u = (User.query.options(
+        joinedload(User.notifications_alt)
+            .joinedload(Notification.block)
+            .joinedload(Block.docentries)
+    ).options(
+        joinedload(User.notifications_alt)
+            .joinedload(Notification.block)
+            .joinedload(Block.folder)
+    ).options(
+        joinedload(User.notifications_alt)
+            .joinedload(Notification.block)
+            .joinedload(Block.translation)
+    ).get(get_current_user_id()))
+    nots = u.notifications_alt
+    return nots
 
 
 @async

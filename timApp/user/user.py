@@ -98,6 +98,7 @@ class User(db.Model):
     """Yubikey."""
 
     notifications = db.relationship('Notification', back_populates='user', lazy='dynamic')
+    notifications_alt = db.relationship('Notification')
     groups = db.relationship('UserGroup', secondary=UserGroupMember.__table__,
                              back_populates='users', lazy='joined')
     lectures = db.relationship('Lecture', secondary=LectureUsers.__table__,
@@ -408,6 +409,8 @@ class User(db.Model):
         n.email_comment_add = comment_add
         n.email_doc_modify = doc_modify
         n.email_comment_modify = comment_modify
+        if not any((doc_modify, comment_add, comment_modify)):
+            db.session.delete(n)
 
     @property
     def basic_info_dict(self):

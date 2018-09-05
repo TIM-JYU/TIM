@@ -36,8 +36,9 @@ class Block(db.Model):
     modified = db.Column(db.DateTime(timezone=True), default=func.now())
     """When this Block was last modified."""
 
-    docentries = db.relationship('DocEntry', back_populates='_block', lazy='dynamic')
-    folder = db.relationship('Folder', back_populates='_block', lazy='dynamic')
+    docentries = db.relationship('DocEntry', back_populates='_block')
+    folder = db.relationship('Folder', back_populates='_block', uselist=False)
+    translation = db.relationship('Translation', back_populates='_block', uselist=False, foreign_keys="Translation.doc_id")
     answerupload = db.relationship('AnswerUpload', back_populates='block', lazy='dynamic')
     accesses = db.relationship('BlockAccess', back_populates='block', lazy='joined')
     tags = db.relationship('Tag', back_populates='block', lazy='select')
@@ -51,6 +52,7 @@ class Block(db.Model):
                               primaryjoin=id == BlockAssociation.__table__.c.child,
                               secondaryjoin=id == BlockAssociation.__table__.c.parent,
                               lazy='select')
+    notifications = db.relationship('Notification', back_populates='block', lazy='dynamic')
 
     def __json__(self):
         return ['id', 'type_id', 'description', 'created', 'modified']

@@ -4,10 +4,33 @@ from timApp.document.docentry import DocEntry
 from timApp.timdb.sqa import db
 
 
-class NotifyTest(TimRouteTest):
+class NotifyTestBase(TimRouteTest):
     def setUp(self):
         super().setUp()
         sent_mails_in_testing.clear()
+
+    def update_notify_settings(self, d, new_settings):
+        self.json_post(f'/notify/{d.id}', new_settings)
+
+    def prepare_doc(self):
+        self.login_test1()
+        d = self.create_doc()
+        doc_id = d.id
+        title = d.title
+        url = d.url
+        self.test_user_2.grant_access(d.id, 'view')
+        self.new_par(d.document, 'test')
+        self.assertEqual([], sent_mails_in_testing)
+        self.login_test2()
+        d = DocEntry.find_by_id(doc_id)  # Avoids DetachedInstanceError
+        self.update_notify_settings(d, {'email_comment_add': True, 'email_comment_modify': False,
+                                        'email_doc_modify': True})
+        self.login_test1()
+        self.new_par(d.document, 'test')
+        return d, title, url
+
+
+class NotifyTest(NotifyTestBase):
 
     def test_notify(self):
         self.login_test1()
@@ -21,9 +44,6 @@ class NotifyTest(TimRouteTest):
         self.update_notify_settings(d, new_settings)
         n = self.get(notify_url)
         self.assertDictEqual(new_settings, n)
-
-    def update_notify_settings(self, d, new_settings):
-        self.json_post(f'/notify/{d.id}', new_settings)
 
     def test_notify_email(self):
         d, title, url = self.prepare_doc()
@@ -122,19 +142,23 @@ class NotifyTest(TimRouteTest):
         self.new_par(d.document, 'test')
         self.assertEqual(1, len(sent_mails_in_testing))
 
-    def prepare_doc(self):
+
+class NotifyFolderTest(NotifyTestBase):
+    def test_folder_email(self):
+        self.login_test1()
+        t1_f = self.current_user.get_personal_folder()
+        self.test_user_2.grant_access(t1_f.id, 'view')
+        self.login_test2()
+        db.session.add(t1_f)
+        self.update_notify_settings(t1_f, {'email_comment_add': True, 'email_comment_modify': False,
+                                           'email_doc_modify': True})
+        r = self.get('/notify/all')
+        self.assertEqual(1, len(r))
+        self.assertTrue(r[0]['item']['isFolder'])
         self.login_test1()
         d = self.create_doc()
-        doc_id = d.id
-        title = d.title
-        url = d.url
+        self.new_par(d.document, 'test')
+        self.assertEqual(0, len(sent_mails_in_testing))
         self.test_user_2.grant_access(d.id, 'view')
         self.new_par(d.document, 'test')
-        self.assertEqual([], sent_mails_in_testing)
-        self.login_test2()
-        d = DocEntry.find_by_id(doc_id)  # Avoids DetachedInstanceError
-        self.update_notify_settings(d, {'email_comment_add': True, 'email_comment_modify': False,
-                                        'email_doc_modify': True})
-        self.login_test1()
-        self.new_par(d.document, 'test')
-        return d, title, url
+        self.assertEqual(1, len(sent_mails_in_testing))

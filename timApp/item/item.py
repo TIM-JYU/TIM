@@ -6,7 +6,7 @@ from sqlalchemy.orm.base import instance_state
 
 from timApp.timdb.exceptions import TimDbException
 from timApp.item.block import Block, BlockType
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import db, include_if_loaded
 from timApp.auth.auth_models import BlockAccess
 from timApp.util.utils import split_location, date_to_relative
 
@@ -131,7 +131,7 @@ class Item(ItemBase):
                 'unpublished': self.block.is_unpublished() if self.block else False,
                 'public': self.public,
                 # We only add tags if they've already been loaded.
-                **({'tags': self.block.tags} if self.block and 'tags' not in instance_state(self.block).unloaded else {})
+                **include_if_loaded('tags', self.block),
                 }
 
     def get_relative_path(self, path: str):

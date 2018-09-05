@@ -129,7 +129,11 @@ class DocInfo(Item):
         return self.document.get_changelog(length)
 
     def get_notifications(self, notify_type: NotificationType) -> List[Notification]:
-        q = Notification.query.filter_by(doc_id=self.id)
+        items = set()
+        for a in self.aliases:
+            items.update(a.parents_to_root)
+        items.add(self)
+        q = Notification.query.filter(Notification.doc_id.in_([f.id for f in items]))
         if notify_type == NotificationType.CommentModified:
             q = q.filter_by(email_comment_modify=True)
         elif notify_type == NotificationType.CommentAdded:

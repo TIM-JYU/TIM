@@ -6,6 +6,7 @@ from flask import request
 from jinja2 import TemplateNotFound
 
 from timApp.auth.accesshelper import verify_logged_in, verify_admin
+from timApp.notification.notify import get_current_user_notifications
 from timApp.util.flask.requesthelper import get_option
 from timApp.util.flask.responsehelper import json_response
 from timApp.auth.sessioninfo import get_current_user_object
@@ -34,7 +35,9 @@ def show():
     available_css_files = [{'name': theme.filename, 'desc': theme.description} for theme in get_available_themes()]
 
     try:
-        return render_template('settings.html', css_files=available_css_files)
+        return render_template('settings.html',
+                               css_files=available_css_files,
+                               notifications=get_current_user_notifications())
     except TemplateNotFound:
         abort(404)
 

@@ -10,6 +10,7 @@ Use Flask-Migrate for database migrations. See <http://flask-migrate.readthedocs
 """
 
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.orm.base import instance_state
 
 db = SQLAlchemy()
 
@@ -23,3 +24,11 @@ db = SQLAlchemy()
 
 def tim_main_execute(sql: str, params=None):
     return db.session.execute(sql, params, bind=db.get_engine(bind='tim_main'))
+
+
+def include_if_loaded(attr_name: str, obj):
+    return {attr_name: getattr(obj, attr_name)} if is_attribute_loaded(attr_name, obj) else {}
+
+
+def is_attribute_loaded(attr_name, obj):
+    return obj and attr_name not in instance_state(obj).unloaded

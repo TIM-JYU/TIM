@@ -24,7 +24,7 @@ class Translation(db.Model, DocInfo):
     __table_args__ = (UniqueConstraint('src_docid', 'lang_id', name='translation_uc'),
                       )
 
-    _block = db.relationship('Block', foreign_keys=[doc_id])
+    _block = db.relationship('Block', back_populates='translation', foreign_keys=[doc_id])
 
     @property
     def docentry(self):
