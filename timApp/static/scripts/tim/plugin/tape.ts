@@ -1,21 +1,31 @@
 import {timApp} from "../app";
-import {IController} from "angular";
+import {IController, IRootElementService, IScope} from "angular";
 
 
 export class TapeController implements IController {
+    private static $inject = ["$scope", "$element"];
+
+    constructor(protected scope: IScope, protected element: IRootElementService) {
+    }
+
+    $onInit() {
+
+    }
+
     public input: number[] = [];
     public hand: number | null = null;
     public output: number[] = [];
     public memory: number[] = []
 
 
-
+// aaaa
 }
 
 timApp.component("tape", {
     controller: TapeController,
     template: `
     <div>
+    <p>Liukuhihna!</p>
         <div>
             <span class="output">
                 <span ng-repeat="n in $ctrl.output">{{n}}</span>
@@ -36,7 +46,7 @@ timApp.component("tape", {
         <!--- listalaatikko --->
         </div>
         <div class="program">
-        <!--- listalaatikko --->
+        <!--- listalaatikkaao --->
         </div>
         <div class="commandAddArea" ng-show="true">
              <input ng-model="$ctrl.newCommandParameter">
