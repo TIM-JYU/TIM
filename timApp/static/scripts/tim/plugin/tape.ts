@@ -1,24 +1,82 @@
 import {timApp} from "../app";
 import {IController, IRootElementService, IScope} from "angular";
 
+abstract class Command {
+    protected constructor(name: string) {
+        this.name = name;
+    }
+
+    protected function: ((params: CommandParameters) => void) | undefined;
+    public name: string;
+
+    public execute(params: CommandParameters) {
+        if (this.function) {
+            this.function(params);
+        }
+    }
+}
+
+// Commands
+
+class CommandParameters {
+    constructor(state: TapeState, mainParam: number) {
+        this.state = state;
+        this.mainParam = mainParam;
+    }
+
+    state: TapeState;
+    mainParam: number;
+}
+
+class Add extends Command {
+    constructor() {
+         super("ADD");
+         this.function = this.addFunc;
+    }
+
+    private addFunc(params: CommandParameters) {
+        const n = params.mainParam;
+        // TODO continue
+    }
+}
+
+class CommandInstance {
+    constructor(cmd: Command, param: number) {
+        this.command = cmd;
+        this.parameter = param;
+    }
+
+    public command: Command;
+    public parameter: number;
+
+    public getName() {
+        return this.command.name + "(" + this.parameter + ")";
+    }
+}
+
+class TapeState {
+    public input: number[] = [];
+    public hand: number | null = null;
+    public output: number[] = [];
+    public memory: number[] = [];
+    public instructionPointer: number = 0;
+}
 
 export class TapeController implements IController {
     private static $inject = ["$scope", "$element"];
 
     constructor(protected scope: IScope, protected element: IRootElementService) {
+        this.state = new TapeState();
     }
 
     $onInit() {
 
     }
 
-    public input: number[] = [];
-    public hand: number | null = null;
-    public output: number[] = [];
-    public memory: number[] = []
+    public possibleCommandList: Command[] = [];
+    public commandList: CommandInstance[] = [];
+    public state: TapeState;
 
-
-// aaaa
 }
 
 timApp.component("tape", {
@@ -28,26 +86,36 @@ timApp.component("tape", {
     <p>Liukuhihna!</p>
         <div>
             <span class="output">
-                <span ng-repeat="n in $ctrl.output">{{n}}</span>
+                Output:
+                <span ng-repeat="n in $ctrl.state.output">{{n}}</span>
             </span>
-            <span class="hand" ng-bind="$ctrl.hand">
+            Hand:
+            <span class="hand" ng-bind="$ctrl.state.hand">
             </span>
             <span class="input">
-                <span ng-repeat="n in $ctrl.input">{{n}}</span>
+                Input:
+                <span ng-repeat="n in $ctrl.state.input">{{n}}</span>
             </span>
         </div>
         <div class="memory">
-            <span ng-repeat="n in $ctrl.memory" ng-init="memindex = $index">
+            Memory:
+            <span ng-repeat="n in $ctrl.state.memory" ng-init="memindex = $index">
                 <span ng-bind="{{memindex}}"></span>
                 <span ng-bind="{{n}}"></span>
             </span>
         </div>
-        <div class="allowed-commands">
-        <!--- listalaatikko --->
+        <div>
+        <span>Add command:</span>
+        <span>Program</span>
         </div>
-        <div class="program">
-        <!--- listalaatikkaao --->
-        </div>
+        <span class="allowed-commands">
+            <select size="10">
+            </select>
+        </span>
+        <span class="program">
+            <select size="10">
+            </select>
+        </span>
         <div class="commandAddArea" ng-show="true">
              <input ng-model="$ctrl.newCommandParameter">
              <button class="timButton" ng-show="$ctrl.isSomeCellBeingEdited()"
