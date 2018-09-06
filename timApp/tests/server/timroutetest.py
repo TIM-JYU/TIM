@@ -274,6 +274,37 @@ class TimRouteTest(TimDbTest):
                              headers=headers,
                              **kwargs)
 
+    def json_delete(self,
+                    url: str,
+                    json_data: Optional[Dict] = None,
+                    as_tree: bool = False,
+                    expect_status: Optional[int] = 200,
+                    expect_content: Union[None, str, Dict, List] = None,
+                    expect_contains: Union[None, str, List[str]] = None,
+                    expect_xpath: Optional[str] = None,
+                    json_key: Optional[str] = None,
+                    headers: Optional[List[Tuple[str, str]]] = None,
+                    **kwargs):
+        """Performs a JSON DELETE request.
+
+        :param url: The request URL.
+        :param json_data: The JSON data to be submitted.
+        :param kwargs: Any custom parameters that are accepted by the 'request' method.
+        :return: See the 'request' method.
+
+        """
+        return self.json_req(url,
+                             json_data,
+                             'DELETE',
+                             as_tree=as_tree,
+                             expect_status=expect_status,
+                             expect_content=expect_content,
+                             expect_contains=expect_contains,
+                             expect_xpath=expect_xpath,
+                             json_key=json_key,
+                             headers=headers,
+                             **kwargs)
+
     def json_post(self,
                   url: str,
                   json_data: Optional[Dict] = None,

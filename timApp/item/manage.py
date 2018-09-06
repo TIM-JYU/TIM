@@ -366,10 +366,24 @@ def verify_permission_edit_access(item_id: int, perm_type: str) -> Tuple[Item, b
 def del_document(doc_id):
     d = get_doc_or_abort(doc_id)
     verify_ownership(d)
-    abort(403, 'Deleting documents has been disabled until a proper backup mechanism is implemented. '
-               'Please contact TIM administrators if you really want to delete this document. '
-               'You can hide this document from others by removing all permissions.')
-    delete_document(doc_id)
+    aliases = d.aliases
+    for a in aliases[1:]:
+        db.session.delete(a)
+    trash_folder_path = f'roskis'
+    if not Folder.find_by_path(trash_folder_path):
+        Folder.create(trash_folder_path, owner_group_id=UserGroup.get_admin_group().id, title='Roskakori')
+    first_alias = aliases[0]
+    short_name = first_alias.short_name
+    attempt = 0
+    while True:
+        trash_path = f'{trash_folder_path}/{short_name}'
+        if not Folder.find_by_path(trash_path) and not DocEntry.find_by_path(trash_path):
+            break
+        attempt += 1
+        short_name = f'{first_alias.short_name}_{attempt}'
+    first_alias.name = trash_path
+    first_alias.public = True
+    db.session.commit()
     return ok_response()
 
 

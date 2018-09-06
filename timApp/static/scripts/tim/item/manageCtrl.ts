@@ -261,12 +261,11 @@ export class PermCtrl implements IController {
         });
     }
 
-    deleteDocument(docId: number) {
+    deleteDocument() {
         if ($window.confirm("Are you sure you want to delete this document?")) {
-            $http.delete("/documents/" + docId)
+            $http.delete("/documents/" + this.item.id)
                 .then((response) => {
-                    const data = response.data;
-                    location.replace("/view/");
+                    location.replace(`/view/${this.item.location}`);
                 }, (response) => {
                     $window.alert(response.data.error);
                 });

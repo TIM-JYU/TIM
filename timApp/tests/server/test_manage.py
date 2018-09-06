@@ -1,3 +1,4 @@
+from timApp.document.docentry import DocEntry
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.folder.folder import Folder
 from timApp.timdb.sqa import db
@@ -77,3 +78,16 @@ class ManageTest(TimRouteTest):
                        json_key='error',
                        expect_content="The document path cannot have empty parts."
                        )
+
+    def test_document_delete(self):
+        self.login_test1()
+        d = self.create_doc()
+        self.json_put(f'/alias/{d.id}/{d.location}/alias')
+        old_path = d.path
+        s = d.short_name
+        self.json_delete(f'/documents/{d.id}')
+        d_deleted = DocEntry.find_by_path(f'roskis/{s}')
+        self.assertIsNotNone(d_deleted)
+        self.assertIsNone(DocEntry.find_by_path(old_path))
+        self.json_delete(f'/documents/{d.id}')
+        self.assertEqual(1, len(d.aliases))
