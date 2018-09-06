@@ -81,7 +81,7 @@ class ManageTest(TimRouteTest):
 
     def test_document_delete(self):
         self.login_test1()
-        d = self.create_doc()
+        d = self.create_doc(self.get_personal_item_path('test'))
         self.json_put(f'/alias/{d.id}/{d.location}/alias')
         old_path = d.path
         s = d.short_name
@@ -91,3 +91,9 @@ class ManageTest(TimRouteTest):
         self.assertIsNone(DocEntry.find_by_path(old_path))
         self.json_delete(f'/documents/{d.id}')
         self.assertEqual(1, len(d.aliases))
+
+        d = self.create_doc(self.get_personal_item_path('x/test'))
+        s = d.short_name
+        self.json_delete(f'/documents/{d.id}')
+        d_deleted = DocEntry.find_by_path(f'roskis/{s}_1')
+        self.assertIsNotNone(d_deleted)
