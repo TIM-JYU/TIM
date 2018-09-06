@@ -16,6 +16,7 @@ services:
    - .:/service
    - ${LOG_DIR}:/service/tim_logs
    - ${FILES_ROOT}:/tim_files
+   - /opt/jspm_cache:/root/.jspm
   working_dir: /service/timApp
   command: python3 launch.py --with-gunicorn
   environment:
