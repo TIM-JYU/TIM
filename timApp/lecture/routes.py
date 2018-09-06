@@ -233,6 +233,7 @@ def do_get_updates(request):
         # Check if current question is still running and user hasn't already answered on it on another tab
         # Return also questions new end time if it is extended
 
+        question_end_resp = None
         if current_question_id:
             resp = {
                 **base_resp,
@@ -253,8 +254,9 @@ def do_get_updates(request):
                     resp[EXTRA_FIELD_NAME]['new_end_time'] = q.running_question.end_time
                     return json_response_and_commit(resp)
             else:
-                # Return this if question has ended or user has answered to it
-                return json_response_and_commit(resp)
+                # Don't return this "question has ended" response here because there can be a new question running,
+                # so we want to return directly that.
+                question_end_resp = resp
 
         if current_points_id:
             resp = {
@@ -277,6 +279,8 @@ def do_get_updates(request):
             if new_question:
                 log_debug(user_name + " send new question")
                 return json_response_and_commit({**base_resp, EXTRA_FIELD_NAME: new_question})
+            elif question_end_resp:
+                return json_response_and_commit(question_end_resp)
 
         if list_of_new_messages:
             return json_response_and_commit(base_resp)

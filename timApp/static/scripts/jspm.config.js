@@ -187,6 +187,7 @@ SystemJS.config({
     "github:*/*.json"
   ],
   map: {
+    "ifvisible.js": "npm:ifvisible.js@1.0.6",
     "angularjs-color-picker": "npm:angularjs-color-picker@3.4.8",
     "angular-ui-grid": "npm:angular-ui-grid@4.6.3",
     "ace": "github:ajaxorg/ace-builds@1.2.6",

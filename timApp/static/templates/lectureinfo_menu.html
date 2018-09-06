@@ -3,7 +3,7 @@
         <div class="lectureSection" ng-show="!$ctrl.lctrl.lectureSettings.inLecture">
             <h1>Now:</h1>
             <div ng-show="$ctrl.lctrl.lectures.length > 0" class="lectureArea">
-                <select class="form-control" ng-change="$ctrl.lctrl.clearChange()" ng-model="$ctrl.lctrl.chosenLecture"
+                <select class="form-control" ng-model="$ctrl.lctrl.chosenLecture"
                         ng-options="lecture.lecture_code for lecture in $ctrl.lctrl.lectures">
                 </select>
                 <button class="timButton btn-lg"
@@ -37,17 +37,16 @@
             <p>Ends: {{ $ctrl.lctrl.lecture.end_time | timdate }}</p>
             <div id="inLectureIconSection">
                 <button class="timButton btn-lg"
-                        ng-click="$ctrl.lctrl.leaveLecture()" title="Leave this lecture"
-                        ng-show="$ctrl.lctrl.lectureSettings.inLecture">
+                        ng-click="$ctrl.lctrl.leaveLecture()" title="Leave this lecture">
                     <span class="glyphicon glyphicon-log-out" aria-hidden="true"></span>
                 </button>
                 <button class="timButton btn-lg"
-                        ng-click="$ctrl.lctrl.endLecture()" title="End this lecture" ng-show="$ctrl.lctrl.canStop">
+                        ng-click="$ctrl.lctrl.endLecture()" title="End this lecture" ng-show="$ctrl.lctrl.isLecturer">
                     <span class="glyphicon glyphicon-stop" aria-hidden="true"></span>
                 </button>
                 <button class="timButton btn-lg"
                         ng-click="$ctrl.lctrl.editLecture($ctrl.lctrl.lecture.lecture_id)" title="Edit this lecture"
-                        ng-show="$ctrl.lctrl.canStop">
+                        ng-show="$ctrl.lctrl.isLecturer">
                     <span class="glyphicon glyphicon-edit" aria-hidden="true"></span>
                 </button>
                 <a ng-show="$ctrl.item && $ctrl.item.id !== $ctrl.lctrl.viewctrl.item.id" href="/lecture/{{$ctrl.item.path}}">Go to lecture document</a>

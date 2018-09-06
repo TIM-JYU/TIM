@@ -118,6 +118,7 @@ class QstController implements IController {
                 parId: parId,
                 showAsk: this.lctrl.lectureSettings.inLecture,
             });
+        this.lctrl.lastQuestion = result;
     }
 
     private initCode() {

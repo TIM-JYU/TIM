@@ -283,7 +283,9 @@ export function questionHasAnswer(r: IExtraResponse): r is IQuestionHasAnswer {
     return (r as IQuestionHasAnswer).type === "answer";
 }
 
-export function isAskedQuestion(qa: IAskedQuestion | IQuestionAnswer): qa is IAskedQuestion {
+export type QuestionOrAnswer = IAskedQuestion | IQuestionAnswer;
+
+export function isAskedQuestion(qa: QuestionOrAnswer): qa is IAskedQuestion {
     return (qa as IAskedQuestion).asked_id != null;
 }
 

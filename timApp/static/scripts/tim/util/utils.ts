@@ -299,8 +299,8 @@ export function getPageXYnull(e: JQueryEventObject) {
 }
 
 export function setStorage(key: string, value: any) {
-    value = JSON.stringify(value);
-    window.localStorage.setItem(key, value);
+    const s = JSON.stringify(value);
+    window.localStorage.setItem(key, s);
 }
 
 export function getStorage(key: string) {

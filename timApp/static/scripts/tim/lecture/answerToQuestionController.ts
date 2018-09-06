@@ -6,9 +6,10 @@ import {DialogController, registerDialogComponent, showDialog, showMessageDialog
 import {$http, $timeout} from "../util/ngimport";
 import {
     AnswerTable, IAskedQuestion, IGetNewQuestionResponse, IQuestionAnswer, isAskedQuestion,
-    questionAnswerReceived, questionAsked,
+    questionAnswerReceived, questionAsked, QuestionOrAnswer,
 } from "./lecturetypes";
 import {showStatisticsDialog} from "./showStatisticsToQuestionController";
+import {getStorage, setStorage} from "../util/utils";
 
 /**
  * Created by hajoviin on 22.4.2015
@@ -24,8 +25,16 @@ import {showStatisticsDialog} from "./showStatisticsToQuestionController";
  */
 
 export interface IAnswerQuestionParams {
-    qa: IAskedQuestion | IQuestionAnswer;
+    qa: QuestionOrAnswer;
     isLecturer: boolean;
+}
+
+export function getAskedQuestionFromQA(qa: QuestionOrAnswer): IAskedQuestion {
+    if (isAskedQuestion(qa)) {
+        return qa;
+    } else {
+        return qa.asked_question;
+    }
 }
 
 export type IAnswerQuestionResult =
@@ -36,6 +45,8 @@ export type IAnswerQuestionResult =
     | {type: "reask_as_new"};
 
 export let currentQuestion: AnswerToQuestionController | undefined;
+
+export const QUESTION_STORAGE = "lectureQuestion";
 
 export class AnswerToQuestionController extends DialogController<{params: IAnswerQuestionParams}, IAnswerQuestionResult, "timAnswerQuestion"> {
     private static $inject = ["$element", "$scope"];
@@ -82,6 +93,7 @@ export class AnswerToQuestionController extends DialogController<{params: IAnswe
 
     private $onDestroy() {
         currentQuestion = undefined;
+        setStorage(QUESTION_STORAGE, null);
     }
 
     private async answerToQuestion() {
@@ -124,7 +136,7 @@ export class AnswerToQuestionController extends DialogController<{params: IAnswe
                 asked_id: this.question.asked_id,
             },
         });
-        this.endQuestion();
+        // Don't call endQuestion here; it will come from lectureController.
     }
 
     private async showAnswers() {
@@ -232,7 +244,7 @@ export class AnswerToQuestionController extends DialogController<{params: IAnswe
         }
     }
 
-    public setData(data: IAskedQuestion | IQuestionAnswer) {
+    public setData(data: QuestionOrAnswer) {
         if (isAskedQuestion(data)) {
             this.question = data;
             this.result = false;
@@ -335,4 +347,8 @@ registerDialogComponent("timAnswerQuestion",
 
 export async function showQuestionAnswerDialog(p: IAnswerQuestionParams) {
     return await showDialog<AnswerToQuestionController>("timAnswerQuestion", {params: () => p}).result;
+}
+
+export function isOpenInAnotherTab(qa: QuestionOrAnswer) {
+    return getStorage(QUESTION_STORAGE) === getAskedQuestionFromQA(qa).asked_id;
 }

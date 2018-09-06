@@ -203,9 +203,9 @@ class LectureTest(TimRouteTest):
         self.assertIsNotNone(sp)
 
         resp = self.get_updates(doc.id, msg_id, True, aid)
-        self.assertEqual(resp.get('extra'), {'new_end_time': None})
-        resp = self.get_updates(doc.id, msg_id, True, aid)
-        self.assertEqual(resp.get('extra'), {'new_end_time': None})
+        self.assertEqual(resp['extra']['type'], 'result')
+        resp = self.get_updates(doc.id, msg_id, True, curr_p=aid)
+        self.assertEqual(resp.get('extra'), None)
 
         q = get_asked_question(aid)
         self.assertFalse(q.is_running)

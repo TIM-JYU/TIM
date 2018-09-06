@@ -101,22 +101,21 @@ timApp.component("timSmallMenu", {
         <div class="smallIconSection">
             <button class="timButton btn-lg"
                     ng-click="$ctrl.lctrl.leaveLecture()"
-                    title="Leave this lecture"
-                    ng-show="$ctrl.lctrl.lectureSettings.inLecture">
+                    title="Leave this lecture">
                 <span class="glyphicon glyphicon-log-out"
                       aria-hidden="true"></span>
             </button>
             <button class="timButton btn-lg"
                     ng-click="$ctrl.lctrl.endLecture()"
                     title="End this lecture"
-                    ng-show="$ctrl.lctrl.canStop">
+                    ng-show="$ctrl.lctrl.isLecturer">
                 <span class="glyphicon glyphicon-stop"
                       aria-hidden="true"></span>
             </button>
             <button class="timButton btn-lg"
                     ng-click="$ctrl.lctrl.editLecture($ctrl.lctrl.lecture.lecture_id)"
                     title="Edit this lecture"
-                    ng-show="$ctrl.lctrl.canStop">
+                    ng-show="$ctrl.lctrl.isLecturer">
                 <span class="glyphicon glyphicon-edit"
                       aria-hidden="true"></span>
             </button>
