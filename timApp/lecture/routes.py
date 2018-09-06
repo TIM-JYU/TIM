@@ -581,8 +581,9 @@ def create_lecture():
 
     current_time = datetime.now(timezone.utc)
 
-    if start_time <= current_time <= end_time:
-        lecture.users.append(get_current_user_object())
+    u = get_current_user_object()
+    if start_time <= current_time <= end_time and u not in lecture.users:
+        lecture.users.append(u)
     db.session.commit()
     return json_response(lecture)
 
