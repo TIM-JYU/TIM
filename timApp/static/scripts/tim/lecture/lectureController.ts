@@ -165,7 +165,13 @@ export class LectureController implements IController {
         }
         if (this.lectureSettings.useWall && !this.wallInstance) {
             this.wallInstance = showLectureWall(this.wallMessages);
-        } else if (!this.lectureSettings.useWall && this.wallInstance) {
+        } else if (!this.lectureSettings.useWall) {
+            this.closeLectureWallIfOpen();
+        }
+    }
+
+    private closeLectureWallIfOpen() {
+        if (this.wallInstance) {
             this.wallInstance.close({});
             this.wallInstance = undefined;
         }
@@ -457,7 +463,7 @@ export class LectureController implements IController {
             this.canStop = false;
         }
         this.lectureSettings.inLecture = false;
-        this.wallMessages = [];
+        this.closeLectureWallIfOpen();
         this.polling = false;
         this.lecture = undefined;
         this.lecturerTable = [];
