@@ -285,3 +285,25 @@ class LectureTest(TimRouteTest):
         aj = AskedJson(json=json.dumps(j))
         aq = AskedQuestion(asked_json=aj)
         self.assertEqual(None, aq.get_effective_points())
+
+    def test_no_multiple_lectures(self):
+        """User won't join to multiple lectures if he creates many of them."""
+        self.login_test1()
+        d = self.create_doc()
+        curr = get_current_time()
+        end_time = curr + datetime.timedelta(minutes=5)
+        self.json_post('/createLecture',
+                       json_data=dict(doc_id=d.id,
+                                      end_time=end_time,
+                                      lecture_code='t1',
+                                      max_students=50,
+                                      password='1234',
+                                      start_time=curr))
+        self.json_post('/createLecture',
+                       json_data=dict(doc_id=d.id,
+                                      end_time=end_time,
+                                      lecture_code='t2',
+                                      max_students=50,
+                                      password='1234',
+                                      start_time=curr))
+        self.get_updates(d.id, -1)
