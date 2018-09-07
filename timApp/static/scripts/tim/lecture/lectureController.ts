@@ -702,12 +702,12 @@ export class LectureController implements IController {
         } else if (result.type === "closed") {
             // empty
         } else if (result.type === "reask") {
-            await askQuestion({askedId: question.asked_id});
+            this.lastQuestion = await askQuestion({askedId: question.asked_id});
         } else if (result.type === "answered") {
             // empty
         } else {
             // reask as new
-            await askQuestion({parId: question.par_id, docId: question.doc_id});
+            this.lastQuestion = await askQuestion({parId: question.par_id, docId: question.doc_id});
         }
     }
 
