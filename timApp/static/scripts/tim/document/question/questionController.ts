@@ -895,7 +895,7 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
             route = "/newParagraphQ/";
             params = {par_next: p.par_id_next, isTask: this.qst}; // TODO: should be possible to input taskId in the dialog
         } else {
-            params = {par: p.parId, taskId: p.taskId, isTask: p.qst};
+            params = {par: p.parId, taskId: p.taskId, isTask: this.qst};
         }
         const docId = p.docId;
         const response = await $http.post<IParResponse>(route, angular.extend({
