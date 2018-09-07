@@ -54,11 +54,6 @@
   opacity: 0;
 }
 
-.true-false-title {
-  text-align: center;
-  width: 50px;
-}
-
 .explanation {
   border-left: 1px solid #CCC !important;
   text-align: left !important;
@@ -102,11 +97,6 @@
   margin-top: 0px;
   padding: 0.1em;
   font-size: 0.9em;
-}
-
-.error_message {
-  color: red;
-  margin-left: 0;
 }
 
 @mixin make-cells-middle {

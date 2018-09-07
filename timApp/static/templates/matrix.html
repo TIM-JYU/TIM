@@ -2,11 +2,6 @@
     <thead>
     <tr ng-show="$ctrl.qctrl.question.questionType == 'matrix' || $ctrl.qctrl.question.questionType == 'true-false' ">
         <th></th>
-
-        <!--<th ng-show="$ctrl.qctrl.question.questionType == 'true-false'" class="true-false-title">True</th>
-        <th ng-show="$ctrl.qctrl.question.questionType == 'true-false'" class="true-false-title">False</th>-->
-
-        <!--<th ng-repeat="item in columnHeaders" ng-if="$ctrl.qctrl.question.questionType == 'matrix' || $ctrl.qctrl.question.questionType == 'true-false' " id="row-heading">-->
         <th ng-if="$ctrl.qctrl.isAskedQuestion()" ng-repeat="item in $ctrl.qctrl.columnHeaders" class="text-center"
             ng-bind-html="$ctrl.qctrl.columnHeaders[$index].text">
         <th ng-if="!$ctrl.qctrl.isAskedQuestion()" ng-repeat="item in $ctrl.qctrl.columnHeaders" class="text-center">
@@ -101,7 +96,6 @@
                               ng-model="row.expl"
                               rows="1"></textarea>
         </td>
-        <!-- ADD COMMENTS FIELD HERE. Appropriate edits need to be done to questionjson at ViewCtrl and then displaying them at directives/dynamicanswersheet.js -->
     </tr>
     <tr ng-if="!$ctrl.qctrl.isAskedQuestion()">
         <th>

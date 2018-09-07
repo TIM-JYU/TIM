@@ -79,14 +79,6 @@ $right-ratio: 100% * ($right-side-columns/$grid-columns);
     padding-left: 10px !important;
 }
 
-li.basic, li.basic_active {
-    list-style: none;
-}
-
-.sub {
-    display: none;
-}
-
 li.exp {
     list-style-image: url("#{$asset-path}/images/plus.png");
     cursor: pointer;
@@ -95,20 +87,4 @@ li.exp {
 li.col {
     list-style-image: url("#{$asset-path}/images/minus.png");
     cursor: pointer;
-}
-
-li.exp_active {
-    list-style-image: url("#{$asset-path}/images/plus.png");
-    background-color: #eeeeff;
-    cursor: pointer;
-}
-
-li.col_active {
-    list-style-image: url("#{$asset-path}/images/minus.png");
-    background-color: #eeeeff;
-    cursor: pointer; /* if not included, bullets are not shown right in moz*/
-}
-
-li.basic_active {
-    background-color: #eeeeff;
 }
