@@ -108,7 +108,10 @@ export function getElementParent(element: Node): Element | null {
     return getElementParent(parent);
 }
 
-export interface Coords {left: number; top: number; }
+export interface Coords {
+    left: number;
+    top: number;
+}
 
 export function dist(coords1: Coords, coords2: Coords) {
     return Math.sqrt(Math.pow(coords2.left - coords1.left, 2) + Math.pow(coords2.top - coords1.top, 2));
@@ -266,9 +269,24 @@ export const nameofFactoryCtrl2 = <T, U extends keyof T>(name: U) => (name2: key
 export const empty = () => {
 };
 
+// from https://stackoverflow.com/a/11744120
+export function getViewPortSize() {
+    const w = window,
+        d = document,
+        e = d.documentElement,
+        g = d.getElementsByTagName('body')[0],
+        width = w.innerWidth || e.clientWidth || g.clientWidth,
+        height = w.innerHeight || e.clientHeight || g.clientHeight;
+    return {width, height};
+}
+
+export function isSmallScreen() {
+    return getViewPortSize().width < 1200;
+}
+
 export function isMobileDevice() {
     const touch = typeof ("ontouchstart" in window || navigator.msMaxTouchPoints) !== "undefined";
-    return touch && (window.screen.width < 1200);
+    return touch && isSmallScreen();
 }
 
 export function escapeRegExp(str: string) {

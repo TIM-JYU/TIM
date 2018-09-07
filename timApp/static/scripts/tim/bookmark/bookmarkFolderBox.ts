@@ -182,7 +182,7 @@ timApp.component("bookmarkFolderBox", {
     controller: BookmarkFolderBoxCtrl,
     template: `
         <div ng-cloak ng-if="$ctrl.bookmarkFolder.items.length > 0">
-            <h3>{{$ctrl.bookmarkFolder.name}}<a class="font-medium"><i class="glyphicon glyphicon-pencil"
+            <h3>{{$ctrl.bookmarkFolder.name}}<a class="font-medium margin-4"><i class="glyphicon glyphicon-pencil"
             title="Toggle editing {{$ctrl.bookmarkFolder.name}}"
             ng-click="$ctrl.editOn = !$ctrl.editOn"></i></a></h3>
             <ul class="list-unstyled">

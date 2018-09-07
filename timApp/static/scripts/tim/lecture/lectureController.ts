@@ -82,9 +82,7 @@ export class LectureController implements IController {
     public lectures: ILecture[];
     public lectureSettings: ILectureSettings;
     private lectureEndingDialogState: LectureEndingDialogState;
-    private chosenLecture: ILecture | undefined;
     private clockOffset: number;
-    private futureLecture: ILecture | undefined;
     private futureLectures: ILecture[];
     private lectureEnded: boolean;
     private lecturerTable: ILecturePerson[];
@@ -195,7 +193,6 @@ export class LectureController implements IController {
         let tryToAutoJoin = lectureCode === AUTOJOIN_CODE;
         if (isLectureListResponse(answer)) {
             if (tryToAutoJoin && answer.lectures.length === 1) {
-                this.chosenLecture = answer.lectures[0];
                 lectureCode = answer.lectures[0].lecture_code;
             } else {
                 if (tryToAutoJoin && answer.lectures.length > 1) {
@@ -266,11 +263,6 @@ export class LectureController implements IController {
                 return false;
             }
         }
-        if (this.chosenLecture == null && lectureCode === "") {
-            $window.alert("Choose lecture to join");
-            return false;
-        }
-
         const response = await $http<ILectureResponse>({
             url: "/joinLecture",
             method: "POST",
@@ -354,14 +346,11 @@ export class LectureController implements IController {
     /**
      * Starts lecture that is in future lecture list.
      */
-    async startFutureLecture() {
-        if (!this.futureLecture) {
-            throw new Error("futureLecture was null");
-        }
+    async startFutureLecture(l: ILecture) {
         const response = await $http<ILectureResponse>({
             url: "/startFutureLecture",
             method: "POST",
-            params: {doc_id: this.viewctrl!.docId, lecture_code: this.futureLecture.lecture_code},
+            params: {doc_id: this.viewctrl!.docId, lecture_code: l.lecture_code},
         });
         const answer = response.data;
         this.showLectureView(answer);
@@ -442,14 +431,6 @@ export class LectureController implements IController {
         for (let i = 0; i < answer.futureLectures.length; i++) {
             this.futureLectures.push(answer.futureLectures[i]);
         }
-
-        if (this.lectures.length > 0) {
-            this.chosenLecture = this.lectures[0];
-        }
-
-        if (this.futureLectures.length > 0) {
-            this.futureLecture = this.futureLectures[0];
-        }
     }
 
     /**
@@ -501,7 +482,6 @@ export class LectureController implements IController {
             });
             const answer = response.data;
             this.showBasicView(answer);
-            this.chosenLecture = undefined;
             $log.info("Lecture ended, not deleted");
         }
     }
