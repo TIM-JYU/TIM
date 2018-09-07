@@ -22,9 +22,11 @@ import {IModalInstance, showMessageDialog} from "../ui/dialog";
 import {Users} from "../user/userService";
 import {$http, $log, $timeout, $window} from "../util/ngimport";
 import {
-    currentQuestion, getAskedQuestionFromQA,
+    currentQuestion,
+    getAskedQuestionFromQA,
     IAnswerQuestionResult,
-    isOpenInAnotherTab, QUESTION_STORAGE,
+    isOpenInAnotherTab,
+    QUESTION_STORAGE,
     showQuestionAnswerDialog
 } from "./answerToQuestionController";
 import {showLectureDialog} from "./createLectureCtrl";
