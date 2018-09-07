@@ -695,7 +695,7 @@ def join_lecture():
     lecture_full = lecture.is_full
 
     correct_password = True
-    if lecture.password != password_quess:
+    if lecture.password and lecture.password != password_quess:
         correct_password = False
 
     u = get_current_user_object()
