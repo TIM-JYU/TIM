@@ -10,10 +10,10 @@ from timApp.document.macroinfo import MacroInfo
 from timApp.document.yamlblock import strip_code_block, YamlBlock, merge
 from timApp.markdown.markdownconverter import expand_macros
 from timApp.plugin.pluginexception import PluginException
-from timApp.util.rndutils import get_simple_hash_from_par_and_user
 from timApp.timdb.exceptions import TimDbException
 from timApp.user.user import User
-from timApp.util.utils import try_load_json
+from timApp.util.rndutils import get_simple_hash_from_par_and_user
+from timApp.util.utils import try_load_json, get_current_time
 
 date_format = '%Y-%m-%d %H:%M:%S'
 AUTOMD = 'automd'
@@ -298,9 +298,9 @@ class Plugin:
         answer_limit = self.answer_limit()
         if answer_limit is not None and (answer_limit <= old_answers):
             return False, 'You have exceeded the answering limit.'
-        if self.starttime(default=datetime(1970, 1, 1, tzinfo=timezone.utc)) > datetime.now(timezone.utc):
+        if self.starttime(default=datetime(1970, 1, 1, tzinfo=timezone.utc)) > get_current_time():
             return False, 'You cannot submit answers yet.'
-        if self.deadline(default=datetime.max.replace(tzinfo=timezone.utc)) < datetime.now(timezone.utc):
+        if self.deadline(default=datetime.max.replace(tzinfo=timezone.utc)) < get_current_time():
             return False, 'The deadline for submitting answers has passed.'
         if tim_info.get('notValid', None):
             return False, 'Answer is not valid'

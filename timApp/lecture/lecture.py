@@ -2,8 +2,9 @@ import json
 from datetime import datetime, timezone
 from typing import Optional, List
 
-from timApp.timdb.sqa import db
 from timApp.lecture.lectureusers import LectureUsers
+from timApp.timdb.sqa import db
+from timApp.util.utils import get_current_time
 
 
 class Lecture(db.Model):
@@ -66,7 +67,7 @@ class Lecture(db.Model):
 
     @property
     def is_running(self):
-        time_now = datetime.now(timezone.utc)
+        time_now = get_current_time()
         return self.start_time <= time_now < self.end_time
 
     def to_json(self, show_password=False):

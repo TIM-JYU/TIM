@@ -1,6 +1,6 @@
 import json
 import time
-from datetime import timezone, datetime, timedelta
+from datetime import timedelta
 from random import randrange
 from typing import List, Optional
 
@@ -374,7 +374,7 @@ def check_if_lecture_is_ending(lecture: Lecture):
     """
     lecture_ending = 100
     if is_lecturer_of(lecture):
-        time_now = datetime.now(timezone.utc)
+        time_now = get_current_time()
         ending_time = lecture.end_time
         time_left = ending_time - time_now
         if time_left.total_seconds() <= 60:
@@ -441,7 +441,7 @@ def check_lecture():
 @lecture_routes.route("/startFutureLecture", methods=['POST'])
 def start_future_lecture():
     lecture = get_lecture_from_request(check_access=True)
-    time_now = datetime.now(timezone.utc)
+    time_now = get_current_time()
     lecture.start_time = time_now
     lecture.users.append(get_current_user_object())
     db.session.commit()
@@ -456,7 +456,7 @@ def get_all_lectures():
     doc_id = int(request.args.get('doc_id'))
 
     lectures = Lecture.get_all_in_document(doc_id)
-    time_now = datetime.now(timezone.utc)
+    time_now = get_current_time()
     current_lectures = []
     past_lectures = []
     future_lectures = []
@@ -528,7 +528,7 @@ def get_running_lectures(doc_id=None):
     :param doc_id: The document id for which to get lectures.
 
     """
-    time_now = datetime.now(timezone.utc)
+    time_now = get_current_time()
     list_of_lectures = []
     is_lecturer = False
     if doc_id:
@@ -583,7 +583,7 @@ def create_lecture():
     lecture.lecture_code = lecture_code
     lecture.options = options
 
-    current_time = datetime.now(timezone.utc)
+    current_time = get_current_time()
 
     u = get_current_user_object()
     if start_time <= current_time <= end_time and u not in lecture.users and not get_current_lecture():
@@ -600,7 +600,7 @@ def empty_lecture(lec: Lecture):
 @lecture_routes.route('/endLecture', methods=['POST'])
 def end_lecture():
     lecture = get_lecture_from_request()
-    now = datetime.now(timezone.utc)
+    now = get_current_time()
     lecture.end_time = now
     empty_lecture(lecture)
     db.session.commit()
@@ -810,7 +810,7 @@ def ask_question():
         asked_json = get_asked_json_by_hash(question_hash)
         if not asked_json:
             asked_json = AskedJson(json=question_json_str, hash=question_hash)
-        asked_time = datetime.now(timezone.utc)
+        asked_time = get_current_time()
 
         # Set points and expl as None because they're already contained in the JSON.
         # Only if /updatePoints is called, they are set.
@@ -821,7 +821,7 @@ def ask_question():
         question = get_asked_question(asked_id)
         if not question:
             abort(404, 'Asked question not found.')
-        question.asked_time = datetime.now(timezone.utc)
+        question.asked_time = get_current_time()
         lecture = question.lecture
     else:
         return abort(400, 'Missing parameters')
@@ -993,7 +993,7 @@ def answer_to_question():
     asked_question.add_activity(QuestionActivityKind.Useranswered, u)
 
     if (not lecture_answer) or (lecture_answer and answer != lecture_answer.answer):
-        time_now = datetime.now(timezone.utc)
+        time_now = get_current_time()
         question_points = asked_question.get_effective_points()
         points_table = create_points_table(question_points)
         points = calculate_points_from_json_answer(answer, points_table)

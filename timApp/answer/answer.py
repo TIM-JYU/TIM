@@ -1,8 +1,6 @@
-import datetime
-from datetime import timezone
-
-from timApp.timdb.sqa import db
 from timApp.answer.answer_models import UserAnswer
+from timApp.timdb.sqa import db
+from timApp.util.utils import get_current_time
 
 
 class Answer(db.Model):
@@ -40,4 +38,4 @@ class Answer(db.Model):
         self.points = points
         self.valid = valid
         self.last_points_modifier = last_points_modifier
-        self.answered_on = datetime.datetime.now(timezone.utc)
+        self.answered_on = get_current_time()

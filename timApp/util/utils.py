@@ -28,7 +28,7 @@ def date_to_relative(d: Optional[datetime]):
 
     if d is None:
         return None
-    diff = datetime.now(timezone.utc) - d
+    diff = get_current_time() - d
     s = diff.seconds
     if diff.days > 7 or diff.days < 0:
         return (datetime.now() - diff).strftime('%d %b %y')
