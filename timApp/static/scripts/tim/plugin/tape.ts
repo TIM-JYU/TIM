@@ -1,6 +1,9 @@
 import {timApp} from "../app";
 import {IController, IRootElementService, IScope} from "angular";
 
+/**
+ * Generic base class for all tape machine commands.
+ */
 abstract class Command {
     protected constructor(name: string) {
         this.name = name;
@@ -8,16 +11,19 @@ abstract class Command {
 
     protected function: ((params: CommandParameters) => void) | undefined;
     public name: string;
+    public usesParameter: boolean = true;
 
     public execute(params: CommandParameters) {
+        params.state.instructionPointer++;
         if (this.function) {
             this.function(params);
         }
     }
 }
 
-// Commands
-
+/**
+ * The parameters given to a command when it is executed.
+ */
 class CommandParameters {
     constructor(state: TapeState, mainParam: number) {
         this.state = state;
@@ -28,6 +34,41 @@ class CommandParameters {
     mainParam: number;
 }
 
+// Commands
+
+class Input extends Command {
+    constructor() {
+        super("INPUT");
+        this.function = this.inputFunc;
+        this.usesParameter = false;
+    }
+
+    private inputFunc(params: CommandParameters) {
+        if (params.state.input.length === 0) {
+            params.state.running = false;
+            return;
+        }
+
+        params.state.hand = params.state.input[0];
+        params.state.input.splice(0, 1);
+    }
+}
+
+class Output extends Command {
+    constructor() {
+        super("OUTPUT");
+        this.function = this.outputFunc;
+        this.usesParameter = false;
+    }
+
+    private outputFunc(params: CommandParameters) {
+        if (params.state.hand !== null) {
+            params.state.output.push(params.state.hand);
+            params.state.hand = null;
+        }
+    }
+}
+
 class Add extends Command {
     constructor() {
          super("ADD");
@@ -35,11 +76,98 @@ class Add extends Command {
     }
 
     private addFunc(params: CommandParameters) {
-        const n = params.mainParam;
-        // TODO continue
+        const memoryIndex = params.mainParam;
+        if (memoryIndex >= params.state.memory.length || params.state.hand == null) {
+            return;
+        }
+
+        params.state.hand = params.state.hand + params.state.memory[memoryIndex];
     }
 }
 
+class Sub extends Command {
+    constructor() {
+        super("SUB");
+        this.function = this.subFunc;
+    }
+
+    private subFunc(params: CommandParameters) {
+        const memoryIndex = params.mainParam;
+        if (memoryIndex >= params.state.memory.length || params.state.hand == null) {
+            return;
+        }
+
+        params.state.hand = params.state.hand - params.state.memory[memoryIndex];
+    }
+}
+
+class CopyTo extends Command {
+    constructor() {
+        super("COPYTO");
+        this.function = this.copyToFunc;
+    }
+
+    private copyToFunc(params: CommandParameters) {
+        if (params.state.hand) {
+            params.state.memory[params.mainParam] = params.state.hand;
+        }
+    }
+}
+
+class CopyFrom extends Command {
+    constructor() {
+        super("COPYFROM");
+        this.function = this.copyFromFunc;
+    }
+
+    private copyFromFunc(params: CommandParameters) {
+        const memoryIndex = params.mainParam;
+        if (memoryIndex < params.state.memory.length) {
+            params.state.hand = params.state.memory[memoryIndex];
+        }
+    }
+}
+
+class Jump extends Command {
+    constructor() {
+        super("JUMP");
+        this.function = this.jumpFunc;
+    }
+
+    private jumpFunc(params: CommandParameters) {
+        params.state.instructionPointer = params.mainParam;
+    }
+}
+
+class JumpIfZero extends Command {
+    constructor() {
+        super("JUMPIFZERO");
+        this.function = this.jumpIfZeroFunc;
+    }
+
+    private jumpIfZeroFunc(params: CommandParameters) {
+        if (params.state.hand !== null && params.state.hand === 0) {
+            params.state.instructionPointer = params.mainParam;
+        }
+    }
+}
+
+class JumpIfNeg extends Command {
+    constructor() {
+        super("JUMPIFNEG");
+        this.function = this.jumpIfNegFunc;
+    }
+
+    private jumpIfNegFunc(params: CommandParameters) {
+        if (params.state.hand !== null && params.state.hand < 0) {
+            params.state.instructionPointer = params.mainParam;
+        }
+    }
+}
+
+/**
+ * An instance of a command to be executed. Includes the command and its parameters.
+ */
 class CommandInstance {
     constructor(cmd: Command, param: number) {
         this.command = cmd;
@@ -50,16 +178,24 @@ class CommandInstance {
     public parameter: number;
 
     public getName() {
+        if (!this.command.usesParameter) {
+            return this.command.name;
+        }
+
         return this.command.name + "(" + this.parameter + ")";
     }
 }
 
+/**
+ * The state of the tape machine.
+ */
 class TapeState {
     public input: number[] = [];
     public hand: number | null = null;
     public output: number[] = [];
     public memory: number[] = [];
     public instructionPointer: number = 0;
+    public running: boolean = true;
 }
 
 export class TapeController implements IController {
@@ -67,22 +203,46 @@ export class TapeController implements IController {
 
     constructor(protected scope: IScope, protected element: IRootElementService) {
         this.state = new TapeState();
+        this.possibleCommandList = [new Input(), new Output(), new Add(), new Sub(),
+            new CopyTo(), new CopyFrom(), new Jump(), new JumpIfZero(), new JumpIfNeg() ]
+        this.state.memory = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
     }
 
     $onInit() {
-
+        this.state.memory = [0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
     }
 
     public possibleCommandList: Command[] = [];
     public commandList: CommandInstance[] = [];
     public state: TapeState;
 
+    public newCommandName: string = "";
+    public newCommandParameter: string = "";
+
+    public addCommand() {
+        const commandToAdd = this.possibleCommandList.find(c => c.name === this.newCommandName);
+        if (!commandToAdd) {
+            return;
+        }
+
+        let parameter = 0;
+
+        if (commandToAdd.usesParameter) {
+            parameter = parseInt(this.newCommandParameter);
+            if (isNaN(parameter)) {
+                return;
+            }
+        }
+
+        const commandInstance = new CommandInstance(commandToAdd, parameter);
+        this.commandList.push(commandInstance);
+    }
 }
 
 timApp.component("tape", {
     controller: TapeController,
     template: `
-    <div>
+    <div class="no-highlight">
     <p>Liukuhihna!</p>
         <div>
             <span class="output">
@@ -98,10 +258,13 @@ timApp.component("tape", {
             </span>
         </div>
         <div class="memory">
-            Memory:
-            <span ng-repeat="n in $ctrl.state.memory" ng-init="memindex = $index">
-                <span ng-bind="{{memindex}}"></span>
-                <span ng-bind="{{n}}"></span>
+            <div>Memory:</div>
+            <span ng-repeat="n in $ctrl.state.memory track by $index">
+                <span ng-bind="n"></span>
+            </span>
+            <div></div>
+            <span ng-repeat="n in $ctrl.state.memory track by $index">
+                <span ng-bind="$index"></span>
             </span>
         </div>
         <div>
@@ -109,17 +272,19 @@ timApp.component("tape", {
         <span>Program</span>
         </div>
         <span class="allowed-commands">
-            <select size="10">
+            <select ng-model="$ctrl.newCommandName" size="10">
+            <option ng-repeat="c in $ctrl.possibleCommandList">{{c.name}}</option>
             </select>
         </span>
         <span class="program">
             <select size="10">
+            <option ng-repeat="c in $ctrl.commandList">{{c.getName()}}</option>
             </select>
         </span>
         <div class="commandAddArea" ng-show="true">
+             <span>Parameter:</span>
              <input ng-model="$ctrl.newCommandParameter">
-             <button class="timButton" ng-show="$ctrl.isSomeCellBeingEdited()"
-                       ng-click="$ctrl.addCommand()"><span>Add command</span>
+             <button class="timButton" ng-click="$ctrl.addCommand()"><span>Add command</span>
         </div>
         <div class="commandRemoveArea" ng-show="true">
             <button class="timButton"><span>Remove command</span></button>
