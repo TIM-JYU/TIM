@@ -45,7 +45,7 @@ class Input extends Command {
 
     private inputFunc(params: CommandParameters) {
         if (params.state.input.length === 0) {
-            params.state.running = false;
+            params.state.stopped = true;
             return;
         }
 
@@ -195,21 +195,25 @@ class TapeState {
     public output: number[] = [];
     public memory: number[] = [];
     public instructionPointer: number = 0;
-    public running: boolean = true;
+    public stopped: boolean = false;
 }
 
+/**
+ * The tape machine controller.
+ */
 export class TapeController implements IController {
     private static $inject = ["$scope", "$element"];
 
     constructor(protected scope: IScope, protected element: IRootElementService) {
         this.state = new TapeState();
         this.possibleCommandList = [new Input(), new Output(), new Add(), new Sub(),
-            new CopyTo(), new CopyFrom(), new Jump(), new JumpIfZero(), new JumpIfNeg() ]
+            new CopyTo(), new CopyFrom(), new Jump(), new JumpIfZero(), new JumpIfNeg()]
         this.state.memory = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+        this.state.input = [2, 4, 7];
     }
 
     $onInit() {
-        this.state.memory = [0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+        this.step = this.step.bind(this);
     }
 
     public possibleCommandList: Command[] = [];
@@ -219,6 +223,11 @@ export class TapeController implements IController {
     public newCommandName: string = "";
     public newCommandParameter: string = "";
 
+    private timer: any;
+
+    /**
+     * Adds a command to the program.
+     */
     public addCommand() {
         const commandToAdd = this.possibleCommandList.find(c => c.name === this.newCommandName);
         if (!commandToAdd) {
@@ -236,6 +245,63 @@ export class TapeController implements IController {
 
         const commandInstance = new CommandInstance(commandToAdd, parameter);
         this.commandList.push(commandInstance);
+    }
+
+    /**
+     * Steps the program.
+     */
+    public step() {
+        if (this.state.instructionPointer >= this.commandList.length || this.state.stopped) {
+            if (this.timer) {
+                this.stop();
+            }
+            return;
+        }
+
+        const command = this.commandList[this.state.instructionPointer];
+        command.command.execute(new CommandParameters(this.state, command.parameter));
+
+        this.scope.$apply();
+    }
+
+    /**
+     * Runs the program.
+     */
+    public run() {
+        if (this.state.instructionPointer >= this.commandList.length || this.state.stopped) {
+            return;
+        }
+
+        if (this.timer) {
+            this.stop();
+        } else {
+            this.timer = setInterval(this.step, 500);
+        }
+    }
+
+    private stop() {
+        if (this.timer) {
+            clearInterval(this.timer);
+            this.timer = null;
+        }
+    }
+
+    // Rendering functions below
+
+    private getCommandColor(index: number) {
+        if (index == this.state.instructionPointer) {
+            return "red";
+        }
+
+        return "black";
+    }
+
+    private getRunButtonText() {
+        if (this.timer) {
+            return "Stop";
+        }
+
+        return "Run";
     }
 }
 
@@ -261,9 +327,6 @@ timApp.component("tape", {
             <div>Memory:</div>
             <span ng-repeat="n in $ctrl.state.memory track by $index">
                 <span ng-bind="n"></span>
-            </span>
-            <div></div>
-            <span ng-repeat="n in $ctrl.state.memory track by $index">
                 <span ng-bind="$index"></span>
             </span>
         </div>
@@ -278,7 +341,7 @@ timApp.component("tape", {
         </span>
         <span class="program">
             <select size="10">
-            <option ng-repeat="c in $ctrl.commandList">{{c.getName()}}</option>
+            <option ng-repeat="c in $ctrl.commandList" ng-style="{'color': $ctrl.getCommandColor($index)}">{{c.getName()}}</option>
             </select>
         </span>
         <div class="commandAddArea" ng-show="true">
@@ -291,7 +354,7 @@ timApp.component("tape", {
         </div>
         <div>
              <button class="timButton"
-                        ng-click="$ctrl.run()"><span>Run</span>
+                        ng-click="$ctrl.run()"><span ng-bind="$ctrl.getRunButtonText()"></span>
               <button class="timButton"
                         ng-click="$ctrl.step()"><span>Step</span>
         </div>
