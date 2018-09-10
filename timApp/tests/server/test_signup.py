@@ -7,6 +7,7 @@ from timApp.tim_app import app
 from timApp.user.newuser import NewUser
 from timApp.user.user import User
 from timApp.timdb.sqa import db
+from timApp.user.usergroup import UserGroup
 from timApp.user.userutils import create_password_hash
 
 
@@ -251,11 +252,13 @@ class TestSignUp(TimRouteTest):
         self.login_test3()
         curr_id = self.current_user.id
         curr_pw = self.current_user.pass_
+        self.assertFalse(UserGroup.get_korppi_group() in self.current_user.groups)
         self.register_user_with_korppi('t3', 'Mr Test User 3', email=self.current_user.email)
         self.assertEqual(self.current_user.id, curr_id)
         self.assertEqual(self.current_user.name, 't3')
         self.assertEqual(self.current_user.real_name, 'Mr Test User 3')
         self.assertEqual(self.current_user.pass_, curr_pw)
+        self.assertTrue(UserGroup.get_korppi_group() in self.current_user.groups)
 
     def test_email_login_without_pass(self):
         self.register_user_with_korppi('someone', 'Some One', 'someone@example.com')
