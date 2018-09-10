@@ -1,5 +1,6 @@
 import {timApp} from "../app";
 import {IController, IRootElementService, IScope} from "angular";
+import {Binding} from "../util/utils";
 
 /**
  * Generic base class for all tape machine commands.
@@ -198,6 +199,10 @@ class TapeState {
     public stopped: boolean = false;
 }
 
+export interface TapeAttrs {
+    originalInput?: number[];
+}
+
 /**
  * The tape machine controller.
  */
@@ -207,13 +212,12 @@ export class TapeController implements IController {
     constructor(protected scope: IScope, protected element: IRootElementService) {
         this.state = new TapeState();
         this.possibleCommandList = [new Input(), new Output(), new Add(), new Sub(),
-            new CopyTo(), new CopyFrom(), new Jump(), new JumpIfZero(), new JumpIfNeg()]
-        this.state.memory = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-        this.state.input = [2, 4, 7];
+            new CopyTo(), new CopyFrom(), new Jump(), new JumpIfZero(), new JumpIfNeg()];
     }
 
     $onInit() {
         this.step = this.step.bind(this);
+        this.reset();
     }
 
     public possibleCommandList: Command[] = [];
@@ -223,12 +227,15 @@ export class TapeController implements IController {
     public newCommandName: string = "";
     public newCommandParameter: string = "";
 
+    private data!: Binding<TapeAttrs, "<">;
+
     private timer: any;
+
 
     /**
      * Adds a command to the program.
      */
-    public addCommand() {
+    private addCommand() {
         const commandToAdd = this.possibleCommandList.find(c => c.name === this.newCommandName);
         if (!commandToAdd) {
             return;
@@ -250,7 +257,7 @@ export class TapeController implements IController {
     /**
      * Steps the program.
      */
-    public step() {
+    private step() {
         if (this.state.instructionPointer >= this.commandList.length || this.state.stopped) {
             if (this.timer) {
                 this.stop();
@@ -267,7 +274,7 @@ export class TapeController implements IController {
     /**
      * Runs the program.
      */
-    public run() {
+    private run() {
         if (this.state.instructionPointer >= this.commandList.length || this.state.stopped) {
             return;
         }
@@ -279,6 +286,30 @@ export class TapeController implements IController {
         }
     }
 
+    /**
+     * Resets the tape machine.
+     * Clears output, sets input to match the original input, sets the instruction pointer to zero
+     * and clears memory.
+     */
+    private reset() {
+        if (this.timer) {
+            stop();
+        }
+
+        this.state.stopped = false;
+        this.state.instructionPointer = 0;
+        this.state.output = [];
+        this.state.memory = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+        if (this.data.originalInput) {
+            this.state.input = this.data.originalInput;
+        } else {
+            this.state.input = [];
+        }
+    }
+
+    /**
+     * Stops the program if it's running.
+     */
     private stop() {
         if (this.timer) {
             clearInterval(this.timer);
@@ -307,20 +338,23 @@ export class TapeController implements IController {
 
 timApp.component("tape", {
     controller: TapeController,
+    bindings: {
+        data: "<",
+    },
     template: `
     <div class="no-highlight">
     <p>Liukuhihna!</p>
         <div>
             <span class="output">
                 Output:
-                <span ng-repeat="n in $ctrl.state.output">{{n}}</span>
+                <span ng-repeat="n in $ctrl.state.output track by $index">{{n}}</span>
             </span>
             Hand:
             <span class="hand" ng-bind="$ctrl.state.hand">
             </span>
             <span class="input">
                 Input:
-                <span ng-repeat="n in $ctrl.state.input">{{n}}</span>
+                <span ng-repeat="n in $ctrl.state.input track by $index">{{n}}</span>
             </span>
         </div>
         <div class="memory">
@@ -353,10 +387,9 @@ timApp.component("tape", {
             <button class="timButton"><span>Remove command</span></button>
         </div>
         <div>
-             <button class="timButton"
-                        ng-click="$ctrl.run()"><span ng-bind="$ctrl.getRunButtonText()"></span>
-              <button class="timButton"
-                        ng-click="$ctrl.step()"><span>Step</span>
+             <button class="timButton" ng-click="$ctrl.run()"><span ng-bind="$ctrl.getRunButtonText()"></span>
+             <button class="timButton" ng-click="$ctrl.step()"><span>Step</span>
+             <button class="timButton" ng-click="$ctrl.reset()"><span>Reset</span>
         </div>
     </div>
     `
