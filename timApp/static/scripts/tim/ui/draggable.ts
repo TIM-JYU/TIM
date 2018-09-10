@@ -2,12 +2,13 @@ import {IController, IRootElementService, IScope} from "angular";
 import {IModalInstanceService} from "angular-ui-bootstrap";
 import {timApp} from "tim/app";
 import {timLogTime} from "tim/util/timTiming";
-import {$compile, $document, $timeout} from "../util/ngimport";
+import {$compile, $document} from "../util/ngimport";
 import {
     Binding,
     getOutOffsetFully,
     getOutOffsetVisible,
-    getPageXYnull, getStorage,
+    getPageXYnull,
+    getStorage,
     IBounds,
     ISize,
     isMobileDevice,
@@ -65,7 +66,10 @@ timApp.directive("timDraggableFixed", [() => {
     };
 }]);
 
-interface Pos {X: number; Y: number; }
+interface Pos {
+    X: number;
+    Y: number;
+}
 
 interface IResizeStates {
     up: boolean;
@@ -114,10 +118,16 @@ export class DraggableController implements IController {
     }
 
     $onInit() {
+        // hide element temporarily to avoid flashing the dialog in wrong position briefly
+        this.setVisibility("hidden");
         if (this.save) {
-            const pageId = window.location.pathname.split("/")[1];  // /velp/???
+            const pageId = window.location.pathname.split("/")[1];
             this.posKey = this.save.replace("%%PAGEID%%", pageId);
         }
+    }
+
+    private setVisibility(v: "visible" | "hidden") {
+        this.element.css("visibility", v);
     }
 
     setCaption(caption: string) {
@@ -158,6 +168,11 @@ export class DraggableController implements IController {
         if (!this.modal) {
             return;
         }
+
+        // We don't want "this.modal.opened" here because then the saved position gets set incorrectly
+        // (20px too much left). On the other hand, when using "rendered", we have to manually hide the modal while
+        // loading its old position to avoid it being flashed briefly in wrong position.
+        // This is done in $onInit and setInitialLayout.
         await this.modal.rendered;
         return this.element.parents(".modal");
     }
@@ -239,6 +254,8 @@ export class DraggableController implements IController {
                 this.toggleDetach();
             }
         }
+        // restore visibility (see $onInit)
+        this.setVisibility("visible");
     }
 
     private async restoreSizeAndPosition() {
@@ -356,7 +373,7 @@ export class DraggableController implements IController {
             bottom: getPixels(this.element.css("bottom")),
             right: getPixels(this.element.css("right")),
         };
-        timLogTime("set:" + this.setLeft + "," + this.setTop, "drag");
+        timLogTime("set:" + [this.setLeft, this.setTop, this.setBottom, this.setRight].join(", "), "drag");
     }
 
     private resizeElement(e: JQueryEventObject, up: boolean, right: boolean, down: boolean, left: boolean) {
@@ -367,16 +384,9 @@ export class DraggableController implements IController {
 
         this.getSetDirs();
 
-        // prevTop = this.element.position().top;
-        // prevLeft = this.element.position().left;
-
         $document.on("mouseup pointerup touchend", this.release);
         $document.on("mousemove pointermove touchmove", this.moveResize);
     }
-
-    /*
-     this.element.css('top', this.element.position().top);
-     this.element.css('left', this.element.position().left); */
 
     private createResizeHandlers() {
         const handleRight = this.element.children(".resizehandle-r");
@@ -392,24 +402,6 @@ export class DraggableController implements IController {
             this.resizeElement(e, false, true, true, false);
         });
     }
-
-    /* Prevent document scrolling, when element inside draggable is scrolled. Currently doesn't work on touch
-     $(this.element).find('.scrollable').on('scroll wheel DOMMouseScroll mousewheel', function (e) {
-     var e0 = e.originalEvent,
-     delta = e0.wheelDelta || -e0.detail;
-     $log.info(delta);
-     e.preventDefault();
-     if (isNaN(delta)) {
-     return;
-     }
-     if ($(e.target).hasClass('scrollable')) {
-     $log.info('target ', e.target);
-     e.target.scrollTop += ( delta < 0 ? 1 : -1 ) * 30;
-     } else {
-     e.target.closest('.scrollable').scrollTop += ( delta < 0 ? 1 : -1 ) * 30;
-     $log.info('closest ', e.target.closest('.scrollable'));
-     }
-     });*/
 
     private canDrag() {
         return this.element.css("position") !== "static";
@@ -437,26 +429,15 @@ export class DraggableController implements IController {
         $document.off("mouseup pointerup touchend", this.release);
         $document.off("mousemove pointermove touchmove", this.move);
         $document.off("mousemove pointermove touchmove", this.moveResize);
-        // this.element.css("background", "red");
         this.pos = this.getPageXY(e);
         this.ensureVisibleInViewport();
-        // this.element.css("background", "blue");
         if (this.posKey) {
-            // this.element.css("background", "yellow");
             const css = this.element.css(["top", "bottom", "left",
                 "right"]);
             setStorage(this.posKey, css);
-            // this.element.css("background", "green");
 
             timLogTime("pos:" + css.left + "," + css.top, "drag");
         }
-        /*
-         if (!(upResize || rightResize || downResize || leftResize) && clickFn && e.which === 1) {
-         delta = {X: pos.X - lastPos.X, Y: pos.Y - lastPos.Y};
-         if (Math.abs(delta.Y) < 3 && Math.abs(delta.X) < 3) {
-         clickFn(scope);
-         }
-         }*/
     }
 
     private ensureFullyInViewport() {
@@ -471,20 +452,16 @@ export class DraggableController implements IController {
 
     private setCssFromBound(bound: IBounds) {
         if (this.setTop) {
-            this.element.css("top", this.getCss("top") - bound.top);
-            this.element.css("top", this.getCss("top") + bound.bottom);
+            this.element.css("top", this.getCss("top") - bound.top + bound.bottom);
         }
         if (this.setBottom) {
-            this.element.css("bottom", this.getCss("bottom") - bound.bottom);
-            this.element.css("bottom", this.getCss("bottom") + bound.top);
+            this.element.css("bottom", this.getCss("bottom") - bound.bottom + bound.top);
         }
         if (this.setLeft) {
-            this.element.css("left", this.getCss("left") - bound.left);
-            this.element.css("left", this.getCss("left") + bound.right);
+            this.element.css("left", this.getCss("left") - bound.left + bound.right);
         }
         if (this.setRight) {
-            this.element.css("right", this.getCss("right") - bound.right);
-            this.element.css("right", this.getCss("right") + bound.left);
+            this.element.css("right", this.getCss("right") - bound.right + bound.left);
         }
     }
 
@@ -493,7 +470,7 @@ export class DraggableController implements IController {
         this.delta = {
             X: this.pos.X -
 
-            this.lastPos.X, Y: this.pos.Y - this.lastPos.Y,
+                this.lastPos.X, Y: this.pos.Y - this.lastPos.Y,
         };
 
         if (this.setTop) {
@@ -519,7 +496,7 @@ export class DraggableController implements IController {
         this.pos = this.getPageXY(e);
         this.delta = {
             X: this.pos.X - this.lastPos.X, Y: this.pos.Y -
-            this.lastPos.Y,
+                this.lastPos.Y,
         };
 
         if (this.resizeStates.up) {

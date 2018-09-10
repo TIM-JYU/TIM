@@ -216,7 +216,7 @@ export function showDialog<T extends Dialog<T>>(component: T["component"],
     </div>
 </div>`);
     const instance: IModalInstanceService = $uibModal.open({
-        animation: !$window.IS_TESTING,
+        animation: false,
         backdrop: false,
         component: component,
         keyboard: false,

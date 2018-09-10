@@ -225,11 +225,10 @@ export function getOutOffsetFully(el: Element): IBounds {
     if (rect.top < 0) {
         bounds.top = rect.top;
     }
-    const height = (window.innerHeight || document.documentElement.clientHeight);
+    const {width, height} = getViewPortSize();
     if (rect.bottom > height) {
         bounds.bottom = height - rect.bottom;
     }
-    const width = (window.innerWidth || document.documentElement.clientWidth);
     if (rect.right > width) {
         bounds.right = width - rect.right;
     }
@@ -240,22 +239,21 @@ export function getOutOffsetFully(el: Element): IBounds {
 }
 
 export function getOutOffsetVisible(el: Element) {
-    const limit = 20;
+    const minVisiblePixels = 20;
     const rect = el.getBoundingClientRect();
     const bounds = {left: 0, top: 0, right: 0, bottom: 0};
     if (rect.top < 0) {
         bounds.top = rect.top;
     }
-    const height = (window.innerHeight || document.documentElement.clientHeight);
-    if (rect.top > height - 1.5 * limit) { // may be a scroll bar
-        bounds.bottom = height - rect.bottom + rect.height - 1.5 * limit;
+    const {width, height} = getViewPortSize();
+    if (rect.top > height - minVisiblePixels) {
+        bounds.bottom = height - rect.bottom + rect.height - minVisiblePixels;
     }
-    const width = (window.innerWidth || document.documentElement.clientWidth);
-    if (rect.left > width - 2 * limit) {
-        bounds.right = width - rect.right + rect.width - 2 * limit;
+    if (rect.left > width - minVisiblePixels) {
+        bounds.right = width - rect.right + rect.width - minVisiblePixels;
     }
-    if (rect.left + rect.width < limit) {
-        bounds.left = rect.left + rect.width - limit;
+    if (rect.left + rect.width < minVisiblePixels) {
+        bounds.left = rect.left + rect.width - minVisiblePixels;
     }
     return bounds;
 }
@@ -269,14 +267,15 @@ export const nameofFactoryCtrl2 = <T, U extends keyof T>(name: U) => (name2: key
 export const empty = () => {
 };
 
-// from https://stackoverflow.com/a/11744120
+// adapted from https://stackoverflow.com/a/11744120
 export function getViewPortSize() {
     const w = window,
         d = document,
         e = d.documentElement,
-        g = d.getElementsByTagName('body')[0],
-        width = w.innerWidth || e.clientWidth || g.clientWidth,
-        height = w.innerHeight || e.clientHeight || g.clientHeight;
+        g = d.getElementsByTagName('body')[0];
+    // documentElement.client{Width,Height} excludes scrollbars, so it works best.
+    const width = e.clientWidth,
+        height = e.clientHeight;
     return {width, height};
 }
 
