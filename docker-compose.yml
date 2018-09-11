@@ -129,6 +129,7 @@ services:
   working_dir: /service/timApp
   depends_on:
    - postgresql
+   - redis
   environment:
    FLASK_APP: tim_app.py
    PYTHONPATH: /service:/usr/local/lib/python3.6/dist-packages
