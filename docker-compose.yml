@@ -118,6 +118,7 @@ services:
   restart: unless-stopped
  redis:
   image: redis
+  restart: unless-stopped
  celery:
   image: timimages/tim:${TIM_IMAGE_TAG}
   command: celery -A timApp.tim_celery.celery worker -B
@@ -134,5 +135,6 @@ services:
    COMPOSE_PROJECT_NAME: ${COMPOSE_PROJECT_NAME}
    TIM_SETTINGS: ${CONFIG_FILE}
    TIM_HOST: ${TIM_HOST}
+  restart: unless-stopped
 volumes:
  data:
