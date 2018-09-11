@@ -120,7 +120,6 @@ bcrypt \
 celery[redis] \
 cffi \
 cssselect \
-cssutils \
 docformatter \
 filelock \
 flask \
