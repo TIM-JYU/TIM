@@ -76,7 +76,7 @@
                     <span ng-if="!l.edit">
                         <label>
                             <input type="checkbox"
-                                      ng-change="$ctrl.updateVelpLabels(l)"
+                                      ng-click="$ctrl.updateVelpLabels(l)"
                                       ng-checked="$ctrl.isLabelInVelp(l)">
                             {{ l.content }}
                         </label>
@@ -126,7 +126,7 @@
 
                     <label  title="{{ !g.show ? 'This group is not shown in the selected area. Change setting in manage tab.' : ''}}"
                             ng-class="{disabled: !g.edit_access, gray: !g.show}"><input type="checkbox"
-                                                                        ng-change="$ctrl.updateVelpGroups(g)"
+                                                                        ng-click="$ctrl.updateVelpGroups(g)"
                                                                         ng-checked="$ctrl.isGroupInVelp(g)"
                                                                         ng-disabled="!g.edit_access">
                         {{ g.name }}
