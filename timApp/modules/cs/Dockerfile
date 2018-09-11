@@ -18,6 +18,8 @@ RUN bash -c "${APT_INSTALL} python3 python3-pip python3-setuptools wget dirmngr 
 RUN pip3 install wheel && bash -c "${APT_CLEANUP}"
 RUN pip3 install Flask bleach && bash -c "${APT_CLEANUP}"
 
+# Keep above same as SVN Dockerfile for better caching
+
 RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF && bash -c "${APT_CLEANUP}"
 RUN echo "deb http://download.mono-project.com/repo/ubuntu bionic main" > /etc/apt/sources.list.d/mono-official.list
 RUN bash -c "${APT_INSTALL} mono-complete fsharp && ${APT_CLEANUP}"

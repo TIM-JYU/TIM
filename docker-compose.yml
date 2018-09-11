@@ -61,7 +61,7 @@ services:
   command: ./startAll.sh
   restart: unless-stopped
  showfile:
-  image: timimages/svn:latest
+  image: timimages/svn:bionic
   build: ./timApp/modules/svn
   volumes:
    - ./timApp/modules/svn:/svn:ro

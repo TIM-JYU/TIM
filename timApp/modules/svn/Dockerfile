@@ -1,69 +1,29 @@
-# Aloitetaan ubuntun imagesta
-from ubuntu
-maintainer vesal "vesal@jyu.fi"
+FROM ubuntu:18.04
+LABEL maintainer="vesal@jyu.fi"
 
-# Aikavyöhyke ja merkistöt kuntoon
-run locale-gen en_US.UTF-8
-env LANG en_US.UTF-8
-env LANGUAGE en_US:en
-env LC_ALL en_US.UTF-8
-run echo "Europe/Helsinki" > /etc/timezone; dpkg-reconfigure -f noninteractive tzdata
+ENV APT_INSTALL="DEBIAN_FRONTEND=noninteractive apt-get -qq update && DEBIAN_FRONTEND=noninteractive apt-get -q install --no-install-recommends -y" \
+    APT_CLEANUP="rm -rf /var/lib/apt/lists /usr/share/doc ~/.cache /var/cache/oracle-* /var/cache/apk /tmp/*"
 
-# Asennetaan python, pip ja flask
-run apt-get update
-run apt-get install -y python3
-run apt-get install -y python3-pip
-# run pip3 install Flask
-run pip3 install bleach
-run apt-get install -y wget
+# Timezone configuration
+RUN bash -c "${APT_INSTALL} locales tzdata apt-utils acl unzip software-properties-common && ${APT_CLEANUP}"
+RUN locale-gen en_US.UTF-8 && bash -c "${APT_CLEANUP}"
+RUN locale-gen fi_FI.UTF-8 && bash -c "${APT_CLEANUP}"
+ENV LANG=en_US.UTF-8 \
+    LANGUAGE=en \
+    LC_ALL=en_US.UTF-8 \
+    LC_CTYPE=en_US.UTF-8
+RUN echo "Europe/Helsinki" > /etc/timezone; dpkg-reconfigure -f noninteractive tzdata && bash -c "${APT_CLEANUP}"
 
-# Poistetaan pip. Sitä ei tarvitse enää ja saadaan
-# hitusen pienempi image ja vähemmän ohjelmia potentiaalisen
-# hyökkääjän käyttöön. (Periaate ok. käytännössä tosi marginaalinen
-# toimenpide) 
-# run apt-get -y --purge remove python3-pip
+RUN bash -c "${APT_INSTALL} python3 python3-pip python3-setuptools wget dirmngr gpg-agent && ${APT_CLEANUP}"
+RUN pip3 install wheel && bash -c "${APT_CLEANUP}"
+RUN pip3 install Flask bleach && bash -c "${APT_CLEANUP}"
 
-# pypy3:
-run apt-get update
-run apt-get install -y curl
-#RUN curl http://buildbot.pypy.org/nightly/py3k/pypy-c-jit-latest-linux64.tar.bz2 | tar -jxf - && mv pypy* /opt/pypy3
-#ENV PYTHONPATH /opt/pypy3/site-packages
-#ENV PATH $PATH:/opt/pypy3/bin
-# ENV LANG C.UTF-8
-# install setuptools for pypy3
-#RUN curl https://bootstrap.pypa.io/ez_setup.py | pypy3
-#RUN rm *.zip
-# install pip==1.4.1, because 1.5.4 segfaults for unknown reason
-#RUN easy_install pip==1.4.1
-#RUN ln -s /opt/pypy3/bin/pip /opt/pypy3/bin/pip3
-#run /opt/pypy3/bin/pip3 install bleach
+# Keep above same as CS Dockerfile for better caching
 
+RUN bash -c "${APT_INSTALL} curl && ${APT_CLEANUP}"
 
-run apt-get install -y wget
-run locale-gen en_US.UTF-8
-run locale-gen fi_FI.UTF-8
+RUN useradd -M agent
 
-# Sudo jos tarvitaan testeihin
-# RUN apt-get update
-# RUN apt-get -y install sudo
-# RUN useradd -m agent && echo "agent:agent" | chpasswd && adduser agent sudo
+USER agent
 
-# Lisätään käyttäjä `agent` -- Emme halua ajaa containerissakaan
-# palveluja roottina.
-run useradd -M agent 
-# run chown -R agent /service
-
-# testejä varten
-#ENV MYPASSWORD password
-#RUN echo "root:$MYPASSWORD" | chpasswd
-
-# Varmuudeksi estetään root login ja poistetaan rootin salasana,
-# jos sellainen on.
-# run usermod -p '!' root
-# run passwd -l root
-
-# Asetetaan container käynnistymään tunnuksella agent.
-user agent
-
-# Avataan portti 5000 ulos containerista.
-expose 5000
+EXPOSE 5000
