@@ -1,6 +1,5 @@
 import {IScope} from "angular";
 import $ from "jquery";
-import {getActiveDocument} from "tim/document/document";
 import {markPageDirty} from "tim/util/utils";
 import {CURSOR} from "../../editor/BaseParEditor";
 import {IPluginInfoResponse, ParCompiler} from "../../editor/parCompiler";
@@ -30,6 +29,7 @@ import {ViewCtrl} from "../viewctrl";
 import {viewCtrlDot} from "../viewutils";
 import {IExtraData, IParResponse} from "./edittypes";
 import {isManageResponse, showRenameDialog} from "./pluginRenameForm";
+import {handleUnread} from "../readings";
 
 export enum EditType {
     Edit,
@@ -303,12 +303,7 @@ This will delete the whole ${options.area ? "area" : "paragraph"} from the docum
                 return {};
             },
             unreadCb: async () => {
-                if (params.type !== EditType.Edit) {
-                    return;
-                }
-                await $http.put(`/unread/${this.viewctrl.docId}/${extraData.par}`, {});
-                params.pars.first().find(".readline").removeClass("read read-modified");
-                getActiveDocument().refreshSectionReadMarks();
+                await handleUnread(this.viewctrl.item, extraData, params);
             },
         }));
         this.viewctrl.editing = false;

@@ -1,7 +1,6 @@
 import {IScope} from "angular";
 import $ from "jquery";
 import {Moment} from "moment";
-import {getActiveDocument} from "tim/document/document";
 import {IPluginInfoResponse} from "../editor/parCompiler";
 import {openEditor} from "../editor/pareditor";
 import {showMessageDialog} from "../ui/dialog";
@@ -13,6 +12,7 @@ import {onClick} from "./eventhandlers";
 import {addElementToParagraphMargin, getFirstParId, isActionablePar, Paragraph, ParOrArea} from "./parhelpers";
 import {markParRead, readingTypes} from "./readings";
 import {ViewCtrl} from "./viewctrl";
+import {handleUnread} from "./readings";
 
 export interface INoteEditorOptions {
     noteData?: {id: string};
@@ -151,12 +151,7 @@ export class NotesHandler {
                 return {};
             },
             unreadCb: async () => {
-                if (params.type !== EditType.Edit) {
-                    return;
-                }
-                await $http.post(`/unread/${this.viewctrl.docId}/${extraData.par}`, {});
-                params.pars.first().find(".readline").removeClass("read read-modified");
-                getActiveDocument().refreshSectionReadMarks();
+                await handleUnread(this.viewctrl.item, extraData, params);
             },
         }));
         this.viewctrl.editing = false;

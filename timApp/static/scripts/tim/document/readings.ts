@@ -8,6 +8,9 @@ import {isInViewport, markPageDirty} from "../util/utils";
 import {onClick, onMouseOverOut} from "./eventhandlers";
 import {getArea, getParId, getRefAttrs, isReference} from "./parhelpers";
 import {ViewCtrl} from "./viewctrl";
+import {IItem} from "../item/IItem";
+import {IExtraData} from "./editing/edittypes";
+import {EditPosition, EditType} from "./editing/editing";
 
 export const readClasses = {
     1: "screen",
@@ -190,4 +193,13 @@ export function initReadings(sc: ViewCtrl) {
             });
         }, 10000);
     }
+}
+
+export async function handleUnread(item: IItem, extraData: IExtraData, pos: EditPosition) {
+    if (pos.type !== EditType.Edit) {
+        return;
+    }
+    await $http.put(`/unread/${item.id}/${extraData.par}`, {});
+    pos.pars.first().find(".readline").removeClass("read read-modified");
+    getActiveDocument().refreshSectionReadMarks();
 }
