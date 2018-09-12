@@ -15,10 +15,19 @@
     {{ super() }}
     {% if not hide_links %}
         <div class="pull-right">
-            <button ng-cloak ng-if="$ctrl.taggedAsCourse && !$ctrl.bookmarked" ng-click="$ctrl.addToBookmarkFolder()"
-            title="Add this page to 'My courses' bookmark folder" class="timButton label">Add to My courses</button>
-            {% block languages %}
-            {% endblock %}
+            <ul class="list-inline">
+                <li>
+                    <button ng-cloak
+                            ng-if="$ctrl.taggedAsCourse && !$ctrl.bookmarked"
+                            ng-click="$ctrl.addToBookmarkFolder()"
+                            title="Add this page to 'My courses' bookmark folder"
+                            class="timButton label">
+                        Add to My courses
+                    </button>
+                </li>
+                {% block languages %}
+                {% endblock %}
+            </ul>
         </div>
     <div class="nav nav-tabs">    {% block itemlinks %}
         <li role="presentation" {{ active('view_page.view_document') }}><a id="headerView" href="/view/{{ item.path }}">View</a></li>

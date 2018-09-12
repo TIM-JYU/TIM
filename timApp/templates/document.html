@@ -24,11 +24,9 @@
 {% endblock %}
 {% block languages %}
     {% if translations %}
-        <ul class="list-inline display-inline">
-            {% for tr in translations %}
-                <li role="presentation">
-                    <a class="label label-primary" href="/{{ route }}/{{ tr.path }}">{{ tr.lang_id }}</a></li>
-            {% endfor %}
-        </ul>
+        {% for tr in translations %}
+            <li role="presentation">
+                <a class="label label-primary" href="/{{ route }}/{{ tr.path }}">{{ tr.lang_id }}</a></li>
+        {% endfor %}
     {% endif %}
 {% endblock %}
