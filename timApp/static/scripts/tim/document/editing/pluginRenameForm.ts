@@ -18,7 +18,7 @@ export interface IParRenameParams {
 }
 
 function isFromPar(p: IParRenameParams | IManageRenameParams): p is IParRenameParams {
-    return (p as IParRenameParams).original_par != null;
+    return (p as IParRenameParams).extraData != null;
 }
 
 export type IRenameParams = IManageRenameParams | IParRenameParams;
@@ -129,14 +129,13 @@ registerDialogComponent("timPluginRename",
             "Rename automatically" or "Ignore" to proceed without renaming.</p>
         <strong>Rename duplicates:</strong>
         <form name="$ctrl.form" ng-keydown="$ctrl.keyHandler($event)">
-            <div ng-repeat="dupe in $ctrl.getDuplicates()" class="form-group form-horz-flex" tim-error-state>
+            <div ng-repeat="dupe in $ctrl.getDuplicates()" class="form-group form-horz-flex">
                 <label for="field{{$id}}" ng-bind="dupe[0]"></label>
                 <input type="text" class="form-control" name="field{{$id}}" id="field{{$id}}" required
                        ng-model="$ctrl.newNames[$index]">
                 <i ng-show="dupe[2]" class="glyphicon glyphicon-warning-sign"
                    uib-tooltip="There are answers related to this task.
                    They might be lost upon renaming this task."></i>
-                <tim-error-message></tim-error-message>
             </div>
         </form>
     </dialog-body>
