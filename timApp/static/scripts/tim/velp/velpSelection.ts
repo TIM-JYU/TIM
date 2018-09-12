@@ -43,7 +43,6 @@ const UNDEFINED = "undefined";
  * @lends module:velpSelection
  */
 export class VelpSelectionController implements IController {
-    public velps: IVelpUI[];
     private labels: ILabelUI[];
     private velpGroups: IVelpGroupUI[];
     private newVelp: INewVelp;
@@ -65,7 +64,7 @@ export class VelpSelectionController implements IController {
     private advancedOnKey!: string; // $onInit
     private default_velp_group: IVelpGroupUI;
     private labelAdded: boolean = false;
-    private rctrl!: Require<ReviewController>;
+    public rctrl!: Require<ReviewController>;
     private default_personal_velp_group: IVelpGroup;
     private previewReleased: boolean = false;
     private teacherRight!: Binding<boolean, "<">;
@@ -73,7 +72,6 @@ export class VelpSelectionController implements IController {
 
     // Data
     constructor() {
-        this.velps = [];
         this.labels = [];
         this.velpGroups = [];
 
@@ -129,6 +127,7 @@ export class VelpSelectionController implements IController {
     }
 
     $onInit() {
+        this.rctrl.velps = [];
         // Dictionaries for easier searching: Velp ids? Label ids? Annotation ids?
         const doc_id = this.docId;
         this.velpOrderingKey = "velpOrdering_" + doc_id;
@@ -231,8 +230,8 @@ export class VelpSelectionController implements IController {
             const p4 = $http.get<IVelp[]>("/{0}/get_velps".replace("{0}", doc_id.toString()));
             promises.push(p4);
             p4.then((response2) => {
-                this.velps = response2.data;
-                this.velps.forEach((v) => {
+                this.rctrl.velps = response2.data;
+                this.rctrl.velps.forEach((v) => {
                     v.used = 0;
                     v.edit = false;
                     if (typeof v.labels === UNDEFINED) {

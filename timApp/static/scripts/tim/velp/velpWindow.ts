@@ -433,7 +433,9 @@ export class VelpWindowController implements IController {
             ...data,
         };
         velpToAdd.id = json.data;
-        this.velpSelection.velps.push(velpToAdd);
+        if (this.velpSelection.rctrl.velps != null) {
+            this.velpSelection.rctrl.velps.push(velpToAdd);
+        }
 
         this.velpLocal.velp_groups = velpToAdd.velp_groups;
         this.velpLocal.labels = velpToAdd.labels;

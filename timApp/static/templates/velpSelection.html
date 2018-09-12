@@ -73,7 +73,7 @@
         <span title="Close" class="glyphicon glyphicon-remove clickable-icon closedraggable" ng-click="$ctrl.releaseClicked()" style="visibility: hidden;position: absolute; margin-left: 16.7em;margin-top: 0.2em"></span>
                     <!-- EDIT VELPS -->
 
-        <span ng-repeat="velp in filteredVelps = ($ctrl.velps | filter:{content:$ctrl.filterVelp} | orderByWhenNotEditing:$ctrl.order:filteredVelps | filterByVelpGroups:$ctrl.velpGroups | filterByLabels:$ctrl.labels:$ctrl.advancedOn
+        <span ng-repeat="velp in filteredVelps = ($ctrl.rctrl.velps | filter:{content:$ctrl.filterVelp} | orderByWhenNotEditing:$ctrl.order:filteredVelps | filterByVelpGroups:$ctrl.velpGroups | filterByLabels:$ctrl.labels:$ctrl.advancedOn
                                                  ) track by $index">
                 <velp-window
                         advanced-on="$ctrl.advancedOn"

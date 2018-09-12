@@ -19,7 +19,7 @@ import {
 } from "../util/utils";
 import {AnnotationController} from "./annotation";
 import {VelpSelectionController} from "./velpSelection";
-import {IAnnotation, IAnnotationCoordless, IAnnotationInterval, isFullCoord, IVelp} from "./velptypes";
+import {IAnnotation, IAnnotationCoordless, IAnnotationInterval, isFullCoord, IVelp, IVelpUI} from "./velptypes";
 
 /**
  * The controller handles the logic related to adding and removing annotations. It also handles the way how
@@ -57,6 +57,7 @@ export class ReviewController implements IController {
     private velpSelection!: VelpSelectionController; // initialized through onInit
     private onInit!: Binding<(params: {$SCOPE: IScope}) => void, "&">;
     private velpMode: boolean;
+    public velps?: IVelpUI[];
 
     constructor(scope: IScope) {
         this.scope = scope;
@@ -73,11 +74,11 @@ export class ReviewController implements IController {
         this.onInit({$SCOPE: this.scope});
         const response = await $http.get<IAnnotation[]>("/{0}/get_annotations".replace("{0}", this.docId.toString()));
         this.annotations = response.data;
+        this.loadDocumentAnnotations();
     }
 
     initVelpSelection(velpSelection: VelpSelectionController) {
         this.velpSelection = velpSelection;
-        this.loadDocumentAnnotations();
     }
 
     /**
@@ -726,13 +727,13 @@ export class ReviewController implements IController {
      * @returns {Object|null} Velp or null
      */
     getVelpById(id: number): IVelp | null {
-        if (typeof this.velpSelection.velps === UNDEFINED) {
+        if (!this.velps) {
             return null;
         }
 
-        for (let i = 0; i < this.velpSelection.velps.length; i++) {
-            if (this.velpSelection.velps[i].id === id) {
-                return this.velpSelection.velps[i];
+        for (const v of this.velps) {
+            if (v.id === id) {
+                return v;
             }
         }
 
