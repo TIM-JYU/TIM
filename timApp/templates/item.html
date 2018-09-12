@@ -15,8 +15,6 @@
     {{ super() }}
     {% if not hide_links %}
         <div class="pull-right">
-            <ul class="list-inline">
-                <li>
                     <button ng-cloak
                             ng-if="$ctrl.taggedAsCourse && !$ctrl.bookmarked"
                             ng-click="$ctrl.addToBookmarkFolder()"
@@ -24,10 +22,8 @@
                             class="timButton label">
                         Add to My courses
                     </button>
-                </li>
                 {% block languages %}
                 {% endblock %}
-            </ul>
         </div>
     <div class="nav nav-tabs">    {% block itemlinks %}
         <li role="presentation" {{ active('view_page.view_document') }}><a id="headerView" href="/view/{{ item.path }}">View</a></li>

@@ -25,8 +25,7 @@
 {% block languages %}
     {% if translations %}
         {% for tr in translations %}
-            <li role="presentation">
-                <a class="label label-primary" href="/{{ route }}/{{ tr.path }}">{{ tr.lang_id }}</a></li>
+                <a class="label label-primary" href="/{{ route }}/{{ tr.path }}">{{ tr.lang_id }}</a>
         {% endfor %}
     {% endif %}
 {% endblock %}
