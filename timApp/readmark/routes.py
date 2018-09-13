@@ -1,4 +1,4 @@
-from flask import Blueprint, abort
+from flask import Blueprint, abort, request
 from flask import current_app
 from sqlalchemy import func, distinct
 from sqlalchemy.exc import IntegrityError
@@ -12,7 +12,7 @@ from timApp.readmark.readparagraphtype import ReadParagraphType
 from timApp.timdb.exceptions import TimDbException
 from timApp.timdb.sqa import db
 from timApp.user.usergroup import UserGroup
-from timApp.util.flask.requesthelper import verify_json_params, get_referenced_pars_from_req
+from timApp.util.flask.requesthelper import verify_json_params, get_referenced_pars_from_req, get_option
 from timApp.util.flask.responsehelper import json_response, ok_response
 
 readings = Blueprint('readings',
@@ -87,18 +87,26 @@ def get_statistics(doc_path):
     if not d:
         abort(404)
     verify_teacher_access(d)
+    sort_opt = get_option(request, 'sort', 'username')
     cols = [func.count(distinct(ReadParagraph.par_id)).filter(ReadParagraph.type == t) for t in
             (ReadParagraphType.click_red,
              ReadParagraphType.click_par,
              ReadParagraphType.hover_par,
              ReadParagraphType.on_screen,)]
+    column_names = ('username', 'click_red', 'click_par', 'hover_par', 'on_screen')
+    sort_col_map = dict(zip(column_names, [UserGroup.name] + cols))
+    col_to_sort = sort_col_map.get(sort_opt)
+    if col_to_sort is None:
+        abort(400, 'Invalid sort option. Possible values are username (this is the default), '
+                   'click_red, click_par, hover_par and on_screen.')
     return json_response(
         list(
-            map(lambda row: dict(zip(('name', 'click_red', 'click_par', 'hover_par', 'on_screen'), row)),
+            map(lambda row: dict(zip(column_names, row)),
                 UserGroup.query.join(ReadParagraph)
                 .filter_by(doc_id=d.id)
                 .add_columns(*cols)
                 .group_by(UserGroup)
+                .order_by(col_to_sort)
                 .with_entities(UserGroup.name, *cols).all()
                 )
         )
