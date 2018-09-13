@@ -92,7 +92,7 @@ class DocEntry(db.Model, DocInfo):
 
     @staticmethod
     def find_by_path(path: str, fallback_to_id=False, try_translation=True) -> Optional['DocInfo']:
-        """Finds a DocInfo by id.
+        """Finds a DocInfo by path, falling back to id if specified.
 
         TODO: This method doesn't really belong in DocEntry class.
         """
