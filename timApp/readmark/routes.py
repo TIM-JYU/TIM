@@ -1,16 +1,19 @@
 from flask import Blueprint, abort
 from flask import current_app
+from sqlalchemy import func, distinct
 from sqlalchemy.exc import IntegrityError
 
-from timApp.auth.accesshelper import verify_read_marking_right, get_doc_or_abort
+from timApp.auth.accesshelper import verify_read_marking_right, get_doc_or_abort, verify_teacher_access
+from timApp.auth.sessioninfo import get_session_usergroup_ids, get_current_user_group
+from timApp.document.docentry import DocEntry
+from timApp.readmark.readings import mark_read, get_readings, mark_all_read
+from timApp.readmark.readparagraph import ReadParagraph
+from timApp.readmark.readparagraphtype import ReadParagraphType
+from timApp.timdb.exceptions import TimDbException
+from timApp.timdb.sqa import db
+from timApp.user.usergroup import UserGroup
 from timApp.util.flask.requesthelper import verify_json_params, get_referenced_pars_from_req
 from timApp.util.flask.responsehelper import json_response, ok_response
-from timApp.auth.sessioninfo import get_session_usergroup_ids, get_current_user_group
-from timApp.timdb.exceptions import TimDbException
-from timApp.readmark.readings import mark_read, get_readings, mark_all_read
-from timApp.readmark.readparagraphtype import ReadParagraphType
-from timApp.timdb.sqa import db
-from timApp.readmark.readparagraph import ReadParagraph
 
 readings = Blueprint('readings',
                      __name__,
@@ -76,3 +79,27 @@ def mark_document_read(doc_id):
         mark_all_read(group_id, doc)
     db.session.commit()
     return ok_response()
+
+
+@readings.route("/read/stats/<path:doc_path>")
+def get_statistics(doc_path):
+    d = DocEntry.find_by_path(doc_path, fallback_to_id=True)
+    if not d:
+        abort(404)
+    verify_teacher_access(d)
+    cols = [func.count(distinct(ReadParagraph.par_id)).filter(ReadParagraph.type == t) for t in
+            (ReadParagraphType.click_red,
+             ReadParagraphType.click_par,
+             ReadParagraphType.hover_par,
+             ReadParagraphType.on_screen,)]
+    return json_response(
+        list(
+            map(lambda row: dict(zip(('name', 'click_red', 'click_par', 'hover_par', 'on_screen'), row)),
+                UserGroup.query.join(ReadParagraph)
+                .filter_by(doc_id=d.id)
+                .add_columns(*cols)
+                .group_by(UserGroup)
+                .with_entities(UserGroup.name, *cols).all()
+                )
+        )
+    )
