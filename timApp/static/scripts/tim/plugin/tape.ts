@@ -10,16 +10,10 @@ abstract class Command {
         this.name = name;
     }
 
-    protected function: ((params: CommandParameters) => void) | undefined;
     public name: string;
     public usesParameter: boolean = true;
 
-    public execute(params: CommandParameters) {
-        params.state.instructionPointer++;
-        if (this.function) {
-            this.function(params);
-        }
-    }
+    public abstract execute(params: CommandParameters): void;
 }
 
 /**
@@ -40,11 +34,10 @@ class CommandParameters {
 class Input extends Command {
     constructor() {
         super("INPUT");
-        this.function = this.inputFunc;
         this.usesParameter = false;
     }
 
-    private inputFunc(params: CommandParameters) {
+    public execute(params: CommandParameters) {
         if (params.state.input.length === 0) {
             params.state.stopped = true;
             return;
@@ -58,11 +51,10 @@ class Input extends Command {
 class Output extends Command {
     constructor() {
         super("OUTPUT");
-        this.function = this.outputFunc;
         this.usesParameter = false;
     }
 
-    private outputFunc(params: CommandParameters) {
+    public execute(params: CommandParameters) {
         if (params.state.hand !== null) {
             params.state.output.push(params.state.hand);
             params.state.hand = null;
@@ -73,10 +65,9 @@ class Output extends Command {
 class Add extends Command {
     constructor() {
          super("ADD");
-         this.function = this.addFunc;
     }
 
-    private addFunc(params: CommandParameters) {
+    public execute(params: CommandParameters) {
         const memoryIndex = params.mainParam;
         if (memoryIndex >= params.state.memory.length || params.state.hand == null) {
             return;
@@ -89,10 +80,9 @@ class Add extends Command {
 class Sub extends Command {
     constructor() {
         super("SUB");
-        this.function = this.subFunc;
     }
 
-    private subFunc(params: CommandParameters) {
+    public execute(params: CommandParameters) {
         const memoryIndex = params.mainParam;
         if (memoryIndex >= params.state.memory.length || params.state.hand == null) {
             return;
@@ -105,10 +95,9 @@ class Sub extends Command {
 class CopyTo extends Command {
     constructor() {
         super("COPYTO");
-        this.function = this.copyToFunc;
     }
 
-    private copyToFunc(params: CommandParameters) {
+    public execute(params: CommandParameters) {
         if (params.state.hand) {
             params.state.memory[params.mainParam] = params.state.hand;
         }
@@ -118,10 +107,9 @@ class CopyTo extends Command {
 class CopyFrom extends Command {
     constructor() {
         super("COPYFROM");
-        this.function = this.copyFromFunc;
     }
 
-    private copyFromFunc(params: CommandParameters) {
+    public execute(params: CommandParameters) {
         const memoryIndex = params.mainParam;
         if (memoryIndex < params.state.memory.length) {
             params.state.hand = params.state.memory[memoryIndex];
@@ -132,10 +120,9 @@ class CopyFrom extends Command {
 class Jump extends Command {
     constructor() {
         super("JUMP");
-        this.function = this.jumpFunc;
     }
 
-    private jumpFunc(params: CommandParameters) {
+    public execute(params: CommandParameters) {
         params.state.instructionPointer = params.mainParam;
     }
 }
@@ -143,10 +130,9 @@ class Jump extends Command {
 class JumpIfZero extends Command {
     constructor() {
         super("JUMPIFZERO");
-        this.function = this.jumpIfZeroFunc;
     }
 
-    private jumpIfZeroFunc(params: CommandParameters) {
+    public execute(params: CommandParameters) {
         if (params.state.hand !== null && params.state.hand === 0) {
             params.state.instructionPointer = params.mainParam;
         }
@@ -156,10 +142,9 @@ class JumpIfZero extends Command {
 class JumpIfNeg extends Command {
     constructor() {
         super("JUMPIFNEG");
-        this.function = this.jumpIfNegFunc;
     }
 
-    private jumpIfNegFunc(params: CommandParameters) {
+    public execute(params: CommandParameters) {
         if (params.state.hand !== null && params.state.hand < 0) {
             params.state.instructionPointer = params.mainParam;
         }
@@ -261,11 +246,13 @@ export class TapeController implements IController {
         if (this.state.instructionPointer >= this.commandList.length || this.state.stopped) {
             if (this.timer) {
                 this.stop();
+                this.scope.$apply();
             }
             return;
         }
 
         const command = this.commandList[this.state.instructionPointer];
+        this.state.instructionPointer++;
         command.command.execute(new CommandParameters(this.state, command.parameter));
 
         this.scope.$apply();
@@ -343,7 +330,6 @@ timApp.component("tape", {
     },
     template: `
     <div class="no-highlight">
-    <p>Liukuhihna!</p>
         <div>
             <span class="output">
                 Output:
