@@ -232,9 +232,8 @@ def view(item_path, template_name, usergroup=None, route="view"):
     doc_settings = doc.get_settings(current_user)
 
     if not view_range:
-        preamble_pars = list(doc_info.get_preamble_pars())
         try:
-            doc.insert_preamble_pars(preamble_pars)
+            preamble_pars = doc.insert_preamble_pars()
         except PreambleException as e:
             flash(e)
         else:
@@ -254,7 +253,7 @@ def view(item_path, template_name, usergroup=None, route="view"):
     rights = doc_info.rights
     word_list = doc_info.document.get_word_list() if rights['editable'] and current_user and current_user.get_prefs().get('use_document_word_list') else []
     # We need to deference paragraphs at this point already to get the correct task ids
-    xs = dereference_pars(xs, source_doc=doc.get_source_document())
+    xs = dereference_pars(xs)
     total_points = None
     tasks_done = None
     task_groups = None

@@ -36,8 +36,7 @@ class EditRequest:
         return self.original_par
 
     def get_last_of_preamble(self) -> Optional[DocParagraph]:
-        preamble = list(self.doc.get_docinfo().get_preamble_pars())  # TODO could be optimized
-        self.doc.insert_preamble_pars(preamble)
+        preamble = self.doc.insert_preamble_pars()  # TODO could be optimized
         return preamble[-1] if preamble else None
 
     def get_context_par(self) -> DocParagraph:

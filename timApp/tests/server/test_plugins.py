@@ -1,6 +1,7 @@
 import io
 import json
 import re
+from _elementtree import Element
 from collections import OrderedDict
 from datetime import timedelta
 from itertools import product
@@ -8,6 +9,7 @@ from itertools import product
 import dateutil.parser
 from lxml import html
 
+from timApp.answer.answer import Answer
 from timApp.answer.pointsumrule import PointSumRule, PointType
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.plugin.plugin import Plugin
@@ -730,3 +732,49 @@ choices:
         self.post_answer(p.type, f'{par.get_id()}', [],
                          expect_content='The format of task id is invalid. Dot characters are not allowed.',
                          json_key='error', expect_status=400)
+
+    def test_plugin_in_preamble(self):
+        self.login_test1()
+        d = self.create_doc()
+        p = self.create_preamble_for(d)
+        p.document.add_text("""
+``` {#t plugin="mmcq"}
+stem: ""
+choices:
+  -
+    correct: true
+    reason: ""
+    text: ""
+```
+        """)
+        d.document.insert_preamble_pars()
+        par = d.document.get_paragraphs()[0]
+        plug = Plugin.from_paragraph(par)
+        self.assertEqual(f'{d.id}.t', plug.full_task_id)
+        resp = self.post_answer(plug.type, plug.task_id_ext, [True])
+        a: Answer = Answer.query.get(resp['savedNew'])
+        self.assertEqual(1, a.points)
+
+        tr_p = self.create_translation(p)
+        tr_par = tr_p.document.get_paragraphs()[0]
+        tr_par.set_markdown(par.get_markdown().replace('true', 'false'))
+        tr_par.save()
+
+        tr = self.create_translation(d)
+        tr.document.insert_preamble_pars()
+
+        resp = self.post_answer(
+            plug.type,
+            plug.task_id_ext,
+            [False],
+            ref_from=(tr.id, tr.document.get_paragraphs()[0].get_id()))
+        a: Answer = Answer.query.get(resp['savedNew'])
+        self.assertEqual(1, a.points)
+
+        tree = self.get(tr.url, as_tree=True)
+        par: Element = tree.cssselect('.par')[0]
+        self.assertEqual(tr_p.path, par.attrib['data-from-preamble'])
+        expected_par_id = p.document.get_paragraphs()[0].get_id()
+        self.assertEqual(expected_par_id, par.attrib['ref-id'])
+        self.assertEqual(str(d.id), par.attrib['ref-doc-id'])
+        self.assertTrue(par.cssselect(fr'#{d.id}\.t\.{expected_par_id}'))

@@ -245,7 +245,11 @@ def get_par_from_request(doc: Document, par_id=None, task_id_name=None) -> Tuple
             return doc, doc.get_paragraph(par_id)
         except TimDbException as e:
             abort(400, str(e))
-    orig_doc = Document(orig_doc_id)
+    if orig_doc_id != doc.doc_id:
+        orig_doc = Document(orig_doc_id)
+    else:
+        orig_doc = doc
+    orig_doc.insert_preamble_pars()
     orig_par = orig_doc.get_paragraph(orig_par_id)
     pars = dereference_pars([orig_par], source_doc=doc)
     ctx_doc = orig_doc if (not orig_doc.get_docinfo().is_original_translation and orig_par.is_translation()) else doc

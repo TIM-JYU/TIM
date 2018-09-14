@@ -144,6 +144,8 @@ class Document:
             self.par_map[curr_p.get_id()] = {'p': prev_p, 'n': next_p, 'c': curr_p}
         self.par_ids = [par.get_id() for par in self.par_cache]
         self.par_hashes = [par.get_hash() for par in self.par_cache]
+        if not self.is_incomplete_cache:
+            self.single_par_cache.update(dict((p.get_id(), p) for p in self.par_cache))
 
     def load_pars(self):
         """Loads the paragraphs from disk to memory so that subsequent iterations for the Document are faster."""
@@ -969,8 +971,7 @@ class Document:
             # Otherwise, getting settings after preamble inclusion will not work properly.
             self.get_settings()
 
-            pars = list(self.get_docinfo().get_preamble_pars())
-            self.insert_preamble_pars(pars)
+            self.insert_preamble_pars()
         return self.par_cache
 
     def get_dereferenced_paragraphs(self) -> List[DocParagraph]:
@@ -1042,10 +1043,11 @@ class Document:
                 self.par_ids.append(par_id)
                 self.par_hashes.append(t)
 
-    def insert_preamble_pars(self, pars: List[DocParagraph]):
+    def insert_preamble_pars(self):
         if self.preamble_included:
             return
         self.ensure_pars_loaded()
+        pars = list(self.get_docinfo().get_preamble_pars())
         current_ids = set(self.par_ids)
         preamble_ids = set(p.get_id() for p in pars)
         if len(pars) != len(preamble_ids):
@@ -1056,14 +1058,12 @@ class Document:
                                     f'have distinct ids from the preamble documents. Conflicting ids: {isect}')
         for p in pars:
             p.preamble_doc = p.doc.get_docinfo()
-            if p.is_translation():
-                p.set_attr('rd', p.doc.get_source_document().doc_id)
-                p.set_attr('rl', 'no')
             p.doc = self
         self.preamble_pars = pars
         self.par_cache = pars + self.par_cache
         self.__update_par_map()
         self.preamble_included = True
+        return pars
 
     def insert_temporary_pars(self, pars, context_par):
         if self.preload_option == PreloadOption.all:

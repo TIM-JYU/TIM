@@ -118,6 +118,7 @@ class Plugin:
     def from_task_id(task_id: str, user: Optional[User] = None):
         doc_id, task_id_name, par_id = Plugin.parse_task_id(task_id)
         doc = Document(doc_id)
+        doc.insert_preamble_pars()
         if par_id is not None:
             try:
                 par = doc.get_paragraph(par_id)

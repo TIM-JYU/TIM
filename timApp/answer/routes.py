@@ -88,6 +88,7 @@ def post_answer(plugintype: str, task_id_ext: str):
         return abort(400, 'The format of task id is invalid. Dot characters are not allowed.')
     task_id = str(doc_id) + '.' + str(task_id_name)
     d = get_doc_or_abort(doc_id)
+    d.document.insert_preamble_pars()
     verify_task_access(d, task_id_name, AccessType.view)
     doc = d.document
     try:
