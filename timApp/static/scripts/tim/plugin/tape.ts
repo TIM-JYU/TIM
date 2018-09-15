@@ -2,6 +2,11 @@ import {timApp} from "../app";
 import {IController, IRootElementService, IScope} from "angular";
 import {Binding} from "../util/utils";
 
+enum ParameterType {
+    NUMBER,
+    STRING
+}
+
 /**
  * Generic base class for all tape machine commands.
  */
@@ -14,19 +19,29 @@ abstract class Command {
     public usesParameter: boolean = true;
 
     public abstract execute(params: CommandParameters): void;
+
+    public getParameterName(): string {
+        return "Parameter";
+    }
+
+    public isLabel(): boolean { return false; }
+
+    public getParameterType() : ParameterType { return ParameterType.STRING; }
 }
 
 /**
  * The parameters given to a command when it is executed.
  */
 class CommandParameters {
-    constructor(state: TapeState, mainParam: number) {
+    constructor(state: TapeState, mainParam: any, commandList: CommandInstance[]) {
         this.state = state;
         this.mainParam = mainParam;
+        this.commandList = commandList;
     }
 
-    state: TapeState;
-    mainParam: number;
+    public state: TapeState;
+    public mainParam: any;
+    public commandList: CommandInstance[] = [];
 }
 
 // Commands
@@ -75,6 +90,12 @@ class Add extends Command {
 
         params.state.hand = params.state.hand + params.state.memory[memoryIndex];
     }
+
+    public getParameterName() {
+        return "Memory index";
+    }
+
+    public getParameterType() : ParameterType { return ParameterType.NUMBER; }
 }
 
 class Sub extends Command {
@@ -90,6 +111,10 @@ class Sub extends Command {
 
         params.state.hand = params.state.hand - params.state.memory[memoryIndex];
     }
+
+    public getParameterName() { return "Memory index"; }
+
+    public getParameterType() : ParameterType { return ParameterType.NUMBER; }
 }
 
 class CopyTo extends Command {
@@ -102,6 +127,10 @@ class CopyTo extends Command {
             params.state.memory[params.mainParam] = params.state.hand;
         }
     }
+
+    public getParameterName() { return "Memory index"; }
+
+    public getParameterType() : ParameterType { return ParameterType.NUMBER; }
 }
 
 class CopyFrom extends Command {
@@ -115,57 +144,88 @@ class CopyFrom extends Command {
             params.state.hand = params.state.memory[memoryIndex];
         }
     }
+
+    public getParameterName() { return "Memory index"; }
+
+    public getParameterType() : ParameterType { return ParameterType.NUMBER; }
+}
+
+class DefineLabel extends Command {
+    constructor() {
+        super("Define Label");
+    }
+
+    public execute(params: CommandParameters) { }
+
+    public getParameterName() { return "Label"; }
+
+    public isLabel() { return true; }
 }
 
 class Jump extends Command {
-    constructor() {
-        super("JUMP");
+    constructor(name: string) {
+        super(name);
     }
 
     public execute(params: CommandParameters) {
-        params.state.instructionPointer = params.mainParam;
+        this.jumpToLabel(params);
     }
+
+    protected jumpToLabel(params: CommandParameters) {
+        const index = params.commandList.findIndex(c => c.command.isLabel() && c.parameter === params.mainParam);
+        if (index > -1) {
+            params.state.instructionPointer = index + 1;
+        }
+    }
+
+    public getParameterName() { return "Label"; }
 }
 
-class JumpIfZero extends Command {
+class JumpIfZero extends Jump {
     constructor() {
         super("JUMPIFZERO");
     }
 
     public execute(params: CommandParameters) {
         if (params.state.hand !== null && params.state.hand === 0) {
-            params.state.instructionPointer = params.mainParam;
+            this.jumpToLabel(params);
         }
     }
 }
 
-class JumpIfNeg extends Command {
+class JumpIfNeg extends Jump {
     constructor() {
         super("JUMPIFNEG");
     }
 
     public execute(params: CommandParameters) {
         if (params.state.hand !== null && params.state.hand < 0) {
-            params.state.instructionPointer = params.mainParam;
+            this.jumpToLabel(params);
         }
     }
+
+    public getParameterName() { return "Label"; }
 }
 
 /**
  * An instance of a command to be executed. Includes the command and its parameters.
  */
 class CommandInstance {
-    constructor(cmd: Command, param: number) {
+    constructor(cmd: Command, param: any) {
         this.command = cmd;
         this.parameter = param;
     }
 
     public command: Command;
-    public parameter: number;
+    public parameter: any;
 
     public getName() {
         if (!this.command.usesParameter) {
             return this.command.name;
+        }
+
+        if (this.command.isLabel()) {
+            return this.parameter + ":";
         }
 
         return this.command.name + "(" + this.parameter + ")";
@@ -184,6 +244,9 @@ class TapeState {
     public stopped: boolean = false;
 }
 
+/**
+ * Attributes parsed from the paragraph YAML.
+ */
 export interface TapeAttrs {
     originalInput?: number[];
 }
@@ -197,7 +260,7 @@ export class TapeController implements IController {
     constructor(protected scope: IScope, protected element: IRootElementService) {
         this.state = new TapeState();
         this.possibleCommandList = [new Input(), new Output(), new Add(), new Sub(),
-            new CopyTo(), new CopyFrom(), new Jump(), new JumpIfZero(), new JumpIfNeg()];
+            new CopyTo(), new CopyFrom(), new DefineLabel(), new Jump("JUMP"), new JumpIfZero(), new JumpIfNeg()];
     }
 
     $onInit() {
@@ -205,12 +268,25 @@ export class TapeController implements IController {
         this.reset();
     }
 
+    $doCheck() {
+        if (this.newCommandName && this.newCommandName !== "") {
+            const command = this.possibleCommandList.find(c => c.name === this.newCommandName);
+            if (command) {
+                this.showNewCommandParameter = command.usesParameter;
+                this.newCommandParameterText = command.getParameterName() + ":";
+            }
+        }
+    }
+
     public possibleCommandList: Command[] = [];
     public commandList: CommandInstance[] = [];
     public state: TapeState;
 
-    public newCommandName: string = "";
-    public newCommandParameter: string = "";
+    private newCommandName: string = "";
+    private newCommandParameter: string = "";
+    private newCommandParameterText: string = "Parameter:";
+
+    private showNewCommandParameter: boolean = true;
 
     private data!: Binding<TapeAttrs, "<">;
 
@@ -226,12 +302,19 @@ export class TapeController implements IController {
             return;
         }
 
-        let parameter = 0;
+        let parameter;
 
         if (commandToAdd.usesParameter) {
-            parameter = parseInt(this.newCommandParameter);
-            if (isNaN(parameter)) {
-                return;
+            if (commandToAdd.getParameterType() === ParameterType.NUMBER) {
+                parameter = parseInt(this.newCommandParameter);
+                if (isNaN(parameter)) {
+                    return;
+                }
+            } else {
+                if (this.newCommandParameter === "") {
+                    return;
+                }
+                parameter = this.newCommandParameter;
             }
         }
 
@@ -253,13 +336,16 @@ export class TapeController implements IController {
 
         const command = this.commandList[this.state.instructionPointer];
         this.state.instructionPointer++;
-        command.command.execute(new CommandParameters(this.state, command.parameter));
+        command.command.execute(new CommandParameters(this.state, command.parameter, this.commandList));
+    }
 
+    private automaticStep() {
+        this.step();
         this.scope.$apply();
     }
 
     /**
-     * Runs the program.
+     * Handles clicks on the Run / Stop button.
      */
     private run() {
         if (this.state.instructionPointer >= this.commandList.length || this.state.stopped) {
@@ -269,7 +355,7 @@ export class TapeController implements IController {
         if (this.timer) {
             this.stop();
         } else {
-            this.timer = setInterval(this.step, 500);
+            this.timer = setInterval(this.automaticStep(), 500);
         }
     }
 
@@ -309,6 +395,11 @@ export class TapeController implements IController {
     private getCommandColor(index: number) {
         if (index == this.state.instructionPointer) {
             return "red";
+        }
+
+        if (index > -1 && index < this.commandList.length) {
+            if (this.commandList[index].command.isLabel())
+                return "blue";
         }
 
         return "black";
@@ -365,8 +456,10 @@ timApp.component("tape", {
             </select>
         </span>
         <div class="commandAddArea" ng-show="true">
-             <span>Parameter:</span>
-             <input ng-model="$ctrl.newCommandParameter">
+             <span class="commandParameterArea" ng-show="$ctrl.showNewCommandParameter">
+                <span>{{$ctrl.newCommandParameterText}}</span>
+                <input ng-model="$ctrl.newCommandParameter">
+             </span>
              <button class="timButton" ng-click="$ctrl.addCommand()"><span>Add command</span>
         </div>
         <div class="commandRemoveArea" ng-show="true">
