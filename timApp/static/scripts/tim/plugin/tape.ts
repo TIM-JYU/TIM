@@ -11,11 +11,13 @@ enum ParameterType {
  * Generic base class for all tape machine commands.
  */
 abstract class Command {
-    protected constructor(name: string) {
+    protected constructor(name: string, abbreviation: string) {
         this.name = name;
+        this.abbreviation = abbreviation;
     }
 
     public name: string;
+    public abbreviation: string;
     public usesParameter: boolean = true;
 
     public abstract execute(params: CommandParameters): void;
@@ -44,11 +46,11 @@ class CommandParameters {
     public commandList: CommandInstance[] = [];
 }
 
-// Commands
+//<editor-fold desc="Commands">
 
 class Input extends Command {
     constructor() {
-        super("INPUT");
+        super("INPUT", "i");
         this.usesParameter = false;
     }
 
@@ -65,7 +67,7 @@ class Input extends Command {
 
 class Output extends Command {
     constructor() {
-        super("OUTPUT");
+        super("OUTPUT", "o");
         this.usesParameter = false;
     }
 
@@ -77,9 +79,23 @@ class Output extends Command {
     }
 }
 
-class Add extends Command {
+class MemoryCommand extends Command {
+    constructor(name: string, abbr: string) {
+        super(name, abbr);
+    }
+
+    public execute(params: CommandParameters) { }
+
+    public getParameterName() {
+        return "Memory index";
+    }
+
+    public getParameterType() : ParameterType { return ParameterType.NUMBER; }
+}
+
+class Add extends MemoryCommand {
     constructor() {
-         super("ADD");
+         super("ADD", "a");
     }
 
     public execute(params: CommandParameters) {
@@ -90,17 +106,11 @@ class Add extends Command {
 
         params.state.hand = params.state.hand + params.state.memory[memoryIndex];
     }
-
-    public getParameterName() {
-        return "Memory index";
-    }
-
-    public getParameterType() : ParameterType { return ParameterType.NUMBER; }
 }
 
-class Sub extends Command {
+class Sub extends MemoryCommand {
     constructor() {
-        super("SUB");
+        super("SUB", "s");
     }
 
     public execute(params: CommandParameters) {
@@ -111,15 +121,11 @@ class Sub extends Command {
 
         params.state.hand = params.state.hand - params.state.memory[memoryIndex];
     }
-
-    public getParameterName() { return "Memory index"; }
-
-    public getParameterType() : ParameterType { return ParameterType.NUMBER; }
 }
 
-class CopyTo extends Command {
+class CopyTo extends MemoryCommand {
     constructor() {
-        super("COPYTO");
+        super("COPYTO", "t");
     }
 
     public execute(params: CommandParameters) {
@@ -127,15 +133,11 @@ class CopyTo extends Command {
             params.state.memory[params.mainParam] = params.state.hand;
         }
     }
-
-    public getParameterName() { return "Memory index"; }
-
-    public getParameterType() : ParameterType { return ParameterType.NUMBER; }
 }
 
-class CopyFrom extends Command {
+class CopyFrom extends MemoryCommand {
     constructor() {
-        super("COPYFROM");
+        super("COPYFROM", "f");
     }
 
     public execute(params: CommandParameters) {
@@ -144,15 +146,11 @@ class CopyFrom extends Command {
             params.state.hand = params.state.memory[memoryIndex];
         }
     }
-
-    public getParameterName() { return "Memory index"; }
-
-    public getParameterType() : ParameterType { return ParameterType.NUMBER; }
 }
 
 class DefineLabel extends Command {
     constructor() {
-        super("Define Label");
+        super("Define Label", ".");
     }
 
     public execute(params: CommandParameters) { }
@@ -163,8 +161,8 @@ class DefineLabel extends Command {
 }
 
 class Jump extends Command {
-    constructor(name: string) {
-        super(name);
+    constructor(name: string, abbr: string) {
+        super(name, abbr);
     }
 
     public execute(params: CommandParameters) {
@@ -183,7 +181,7 @@ class Jump extends Command {
 
 class JumpIfZero extends Jump {
     constructor() {
-        super("JUMPIFZERO");
+        super("JUMPIFZERO", "Z");
     }
 
     public execute(params: CommandParameters) {
@@ -195,7 +193,7 @@ class JumpIfZero extends Jump {
 
 class JumpIfNeg extends Jump {
     constructor() {
-        super("JUMPIFNEG");
+        super("JUMPIFNEG", "N");
     }
 
     public execute(params: CommandParameters) {
@@ -206,6 +204,8 @@ class JumpIfNeg extends Jump {
 
     public getParameterName() { return "Label"; }
 }
+
+//</editor-fold>
 
 /**
  * An instance of a command to be executed. Includes the command and its parameters.
@@ -260,7 +260,7 @@ export class TapeController implements IController {
     constructor(protected scope: IScope, protected element: IRootElementService) {
         this.state = new TapeState();
         this.possibleCommandList = [new Input(), new Output(), new Add(), new Sub(),
-            new CopyTo(), new CopyFrom(), new DefineLabel(), new Jump("JUMP"), new JumpIfZero(), new JumpIfNeg()];
+            new CopyTo(), new CopyFrom(), new DefineLabel(), new Jump("JUMP", "j"), new JumpIfZero(), new JumpIfNeg()];
     }
 
     $onInit() {
@@ -294,32 +294,45 @@ export class TapeController implements IController {
 
 
     /**
-     * Adds a command to the program.
+     * Handles clicks on the "Add command" button.
      */
-    private addCommand() {
+    private addCommandButtonClick() {
         const commandToAdd = this.possibleCommandList.find(c => c.name === this.newCommandName);
         if (!commandToAdd) {
             return;
         }
 
+        this.addCommand(commandToAdd, this.newCommandParameter);
+    }
+
+    /**
+     * Adds a command into the program.
+     * Returns true if succesful, otherwise false.
+     * @param commandToAdd The command.
+     * @param parameterString The parameter of the command given as a string.
+     */
+    private addCommand(commandToAdd: Command, parameterString: string): boolean {
         let parameter;
 
         if (commandToAdd.usesParameter) {
             if (commandToAdd.getParameterType() === ParameterType.NUMBER) {
-                parameter = parseInt(this.newCommandParameter);
+                parameter = parseInt(parameterString);
                 if (isNaN(parameter)) {
-                    return;
+                    return false;
                 }
             } else {
-                if (this.newCommandParameter === "") {
-                    return;
+                if (parameterString === "" ||
+                    parameterString.includes(' ')) { // don't allow spaces to make parsing easier
+                    // TODO show error?
+                    return false;
                 }
-                parameter = this.newCommandParameter;
+                parameter = parameterString;
             }
         }
 
         const commandInstance = new CommandInstance(commandToAdd, parameter);
         this.commandList.push(commandInstance);
+        return true;
     }
 
     /**
@@ -361,8 +374,8 @@ export class TapeController implements IController {
 
     /**
      * Resets the tape machine.
-     * Clears output, sets input to match the original input, sets the instruction pointer to zero
-     * and clears memory.
+     * Clears output, sets input to match the original input,
+     * sets the instruction pointer to zero and clears memory.
      */
     private reset() {
         if (this.timer) {
@@ -412,6 +425,41 @@ export class TapeController implements IController {
 
         return "Run";
     }
+
+    /**
+     * Converts the current program into a textual representation.
+     */
+    private toText(): string {
+        let result: string = "";
+        this.commandList.forEach(c => result += c.command.abbreviation + " " + c.parameter + "\n");
+        return result;
+    }
+
+    /**
+     * Parses a program from a textual representation.
+     * @param text The textual representation of a program.
+     */
+    private fromText(text: string) {
+        text = text.replace("\r\n", "\n").replace("\r", "\n");
+        const lines = text.split('\n');
+        for (let i = 0; i < lines.length; i++) {
+            const components = lines[i].split(' ');
+            if (components.length === 0) {
+                continue;
+            }
+
+            const command = this.possibleCommandList.find(c => c.abbreviation === components[0]);
+            if (!command) {
+                continue;
+            }
+
+            if (components.length === 1) {
+                this.addCommand(command, "");
+            } else {
+                this.addCommand(command, components[1]);
+            }
+        }
+    }
 }
 
 timApp.component("tape", {
@@ -460,7 +508,7 @@ timApp.component("tape", {
                 <span>{{$ctrl.newCommandParameterText}}</span>
                 <input ng-model="$ctrl.newCommandParameter">
              </span>
-             <button class="timButton" ng-click="$ctrl.addCommand()"><span>Add command</span>
+             <button class="timButton" ng-click="$ctrl.addCommandButtonClick()"><span>Add command</span>
         </div>
         <div class="commandRemoveArea" ng-show="true">
             <button class="timButton"><span>Remove command</span></button>
