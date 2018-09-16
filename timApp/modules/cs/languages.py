@@ -139,7 +139,7 @@ class Language:
         if is_input:
             # print("Write input file: " + inputfilename)
             if not userinput:
-                userinput = "\n"
+                userinput = ""
             if self.inputfilename.find('input.txt') >= 0:
                 stdin_default = 'input.txt'
             codecs.open(self.inputfilename, "w", "utf-8").write(userinput)

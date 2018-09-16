@@ -468,13 +468,13 @@ def get_html(self, ttype, query):
 
     usercode = get_json_eparam(query.jso, "state", "usercode", "")
     if is_review(query):
-        userinput = get_json_eparam(query.jso, "state", "userinput", None)
-        userargs = get_json_eparam(query.jso, "state", "userargs", None)
+        userinput = get_json_eparam(query.jso, "state", "userinput", '')
+        userargs = get_json_eparam(query.jso, "state", "userargs", '')
         uploaded_file = get_json_eparam(query.jso, "state", "uploadedFile", None)
         s = ""
-        if userinput is not None:
+        if ttype.find('input') >= 0 :
             s = s + '<p>Input:</p><pre>' + userinput + '</pre>'
-        if userargs is not None:
+        if ttype.find('args') >= 0:
             s = s + '<p>Args:</p><pre>' + userargs + '</pre>'
         if uploaded_file is not None:
             s = s + '<p>File:</p><pre>' + os.path.basename(uploaded_file) + '</pre>'
@@ -1021,12 +1021,16 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             if usercode:
                 query.query["usercode"] = [usercode]
 
-            userinput = get_json_param(query.jso, "state", "userinput", None)
+            userinput = get_json_param(query.jso, "input", "userinput", None)
+            if userinput is None:
+                userinput = get_json_param(query.jso, "state", "userinput", None) # this might be needles??
             if userinput is None:
                 userinput = get_json_param(query.jso, "markup", "userinput", None)
             if userinput is not None:
                 userinput = str(userinput)
-                save["userinput"] = userinput
+                markupuserinput = get_json_param(query.jso, "markup", "userinput", '')
+                if userinput != markupuserinput:
+                    save["userinput"] = userinput
                 if len(userinput) > 0 and userinput[-1:] != "\n":
                     userinput += "\n"
                 query.query["userinput"] = [userinput]
@@ -1041,8 +1045,10 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             if userargs is None:
                 userargs = get_json_param(query.jso, "markup", "userargs", None)
             if userargs is not None:
+                markupuserargs = get_json_param(query.jso, "markup", "userargs", '')
                 userargs = str(userargs)
-                save["userargs"] = userargs
+                if userargs != markupuserargs:
+                    save["userargs"] = userargs
             else:
                 userargs = ''
 

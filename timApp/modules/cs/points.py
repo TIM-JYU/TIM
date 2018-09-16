@@ -18,7 +18,9 @@ def give_points(points_rule, rule, default=0):
         ptstype = "test"
     if "doc" in rule:
         ptstype = "doc"
-        other = pts.get("run", 0) + pts.get("test", 0) + pts.get("code", 0)
+        other = 0
+        if pts:
+            other = pts.get("run", 0) + pts.get("test", 0) + pts.get("code", 0)
         if other < doc_limit:  # if not enough other points, no doc points
             p = 0
     # if "code" in rule: ptstype = "code"
