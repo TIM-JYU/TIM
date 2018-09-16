@@ -719,7 +719,7 @@ def signal_handler(signum, frame):
     print("Timed out1!")
     raise Exception("Timed out1!")
 
-type_splitter = re.compile("[^a-z0-9]")
+type_splitter = re.compile("[^+a-z0-9]")
 
 class TIMServer(http.server.BaseHTTPRequestHandler):
     def __init__(self, request, client_address, _server):
