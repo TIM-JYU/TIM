@@ -253,7 +253,7 @@ def view(item_path, template_name, usergroup=None, route="view"):
     rights = doc_info.rights
     word_list = doc_info.document.get_word_list() if rights['editable'] and current_user and current_user.get_prefs().get('use_document_word_list') else []
     # We need to deference paragraphs at this point already to get the correct task ids
-    xs = dereference_pars(xs)
+    xs = dereference_pars(xs, context_doc=doc)
     total_points = None
     tasks_done = None
     task_groups = None

@@ -251,7 +251,7 @@ def get_par_from_request(doc: Document, par_id=None, task_id_name=None) -> Tuple
         orig_doc = doc
     orig_doc.insert_preamble_pars()
     orig_par = orig_doc.get_paragraph(orig_par_id)
-    pars = dereference_pars([orig_par], source_doc=doc)
+    pars = dereference_pars([orig_par], context_doc=orig_doc)
     ctx_doc = orig_doc if (not orig_doc.get_docinfo().is_original_translation and orig_par.is_translation()) else doc
     for p in pars:
         if p.get_id() == par_id:
@@ -280,7 +280,7 @@ def verify_task_access(d: DocInfo, task_id_name, access_type):
         par = od.document.get_paragraph(par_id)
         if not par.is_reference():
             abort(403)
-        pars = dereference_pars([par])
+        pars = dereference_pars([par], context_doc=d.document)
         found_par = next((p for p in pars if p.get_attr('taskId') == task_id_name and p.doc.doc_id == d.id), None)
         if found_par is None:
             abort(403)

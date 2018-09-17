@@ -92,7 +92,7 @@ def pluginify(doc: Document,
 
     taketime("answ", "start")
     if dereference:
-        pars = dereference_pars(pars, source_doc=doc.get_source_document())
+        pars = dereference_pars(pars, context_doc=doc)
     if sanitize:
         for par in pars:
             par.sanitize_html()

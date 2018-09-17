@@ -281,33 +281,20 @@ def __resolve_final_settings_impl(pars: Iterable[DocParagraph]) -> Tuple[YamlBlo
         else:
             curr_own_settings = None
 
-            # If the paragraph does not have rd attribute (for example if it is a translated one),
-            # we have to dig the source_document so that we can resolve the reference without getting into infinite recursion.
-            if curr.get_rd() is None:
+            is_tr_or_cit = curr.is_translation() or curr.is_citation()
+            if is_tr_or_cit:
                 try:
                     curr_own_settings = DocSettings.from_paragraph(curr).get_dict()
                 except TimDbException:
                     curr_own_settings = YamlBlock()
-                if curr.is_citation():
-                    from timApp.document.document import Document
-                    source_doc_id = result.get('source_document', curr_own_settings.get('source_document'))
-                    source_doc = Document(source_doc_id) if source_doc_id else None
-                else:
-                    source_doc = curr.doc.get_source_document()
-            else:
-                source_doc = None
-
-            # If we still don't know the source document and there is no rd, we can't proceed.
-            if curr.get_rd() is None and source_doc is None:
-                # TODO: Should this be break?
-                continue
 
             try:
                 from timApp.document.document import Document
-                # We temporarily pretend that this isn't a translated paragraph so that we always get the original markdown.
+                # We temporarily pretend that this isn't a translated paragraph
+                # so that we always get the original markdown.
                 tr_attr = curr.get_attr('r')
                 curr.set_attr('r', None)
-                refs = curr.get_referenced_pars(set_html=False, source_doc=source_doc)
+                refs = curr.get_referenced_pars(set_html=False)
                 curr.set_attr('r', tr_attr)
             except InvalidReferenceException:
                 break
@@ -315,7 +302,7 @@ def __resolve_final_settings_impl(pars: Iterable[DocParagraph]) -> Tuple[YamlBlo
             if ref_had_settings:
                 result = result.merge_with(ref_settings)
                 had_settings = True
-                if curr.is_translation() or curr.is_citation():
+                if is_tr_or_cit:
                     result = result.merge_with(curr_own_settings)
             else:
                 break

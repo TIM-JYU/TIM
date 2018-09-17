@@ -840,7 +840,7 @@ class Document:
     def get_index(self) -> List[Tuple]:
         pars = [par for par in DocParagraphIter(self)]
         DocParagraph.preload_htmls(pars, self.get_settings())
-        pars = dereference_pars(pars, source_doc=self.get_source_document())
+        pars = dereference_pars(pars, context_doc=self)
 
         # Skip plugins
         html_list = [par.get_html(from_preview=False) for par in pars if not par.is_dynamic()]
@@ -975,7 +975,7 @@ class Document:
         return self.par_cache
 
     def get_dereferenced_paragraphs(self) -> List[DocParagraph]:
-        return dereference_pars(self.get_paragraphs(), source_doc=self.get_source_document())
+        return dereference_pars(self.get_paragraphs(), context_doc=self)
 
     def get_closest_paragraph_title(self, par_id: Optional[str]):
         last_title = None
@@ -1003,7 +1003,14 @@ class Document:
         if self.source_doc is None:
             docinfo = self.get_docinfo()
             if docinfo.is_original_translation:
-                src_docid = self.get_settings().get_source_document()
+                # We can't call get_settings method here because of potential infinite recursion.
+                # We therefore require that the source_document is always in the first settings paragraph of the
+                # document. This should be true for citation docs.
+                first_setting_par = next(self.get_settings_pars(), None)
+                if not first_setting_par:
+                    return None
+                settings = DocSettings.from_paragraph(first_setting_par)
+                src_docid = settings.get_source_document()
                 self.source_doc = Document(src_docid, preload_option=self.preload_option) if src_docid is not None else None
             else:
                 self.source_doc = docinfo.src_doc.document
@@ -1022,7 +1029,7 @@ class Document:
             return self.par_ids
 
     def ensure_par_ids_loaded(self):
-        if self.par_ids is None:
+        if self.par_ids is None or self.is_incomplete_cache:
             self._load_par_ids()
 
     def _load_par_ids(self):
@@ -1211,18 +1218,19 @@ def get_index_from_html_list(html_table) -> List[Tuple]:
     return index
 
 
-def dereference_pars(pars: Iterable[DocParagraph], source_doc: Optional[Document]=None) -> List[DocParagraph]:
+def dereference_pars(pars: Iterable[DocParagraph], context_doc: Document) -> List[DocParagraph]:
     """Resolves references in the given paragraphs.
 
     :param pars: The DocParagraphs to be processed.
-    :param source_doc: Default document for referencing.
+    :param context_doc: The document being processing.
 
     """
     new_pars = []
+    src_doc = context_doc.get_source_document()
     for par in pars:
         if par.is_reference():
             try:
-                new_pars += par.get_referenced_pars(source_doc=source_doc)
+                new_pars += par.get_referenced_pars()
             except TimDbException as e:
                 err_par = DocParagraph.create(
                     par.doc,
@@ -1232,6 +1240,19 @@ def dereference_pars(pars: Iterable[DocParagraph], source_doc: Optional[Document
 
                 new_pars.append(err_par)
         else:
+            # If all of the following is true:
+            #
+            # * we are processing a translated document
+            # * the document has a preamble that has at least one plugin
+            # * the preamble does not have a translation
+            #
+            # then, in order to make the answers go under the plugin at the original document,
+            # we have to "lie" that the paragraph has been dereferenced.
+            # This case is tested in test_plugin_in_preamble.
+            if src_doc is not None:
+                p = par.from_preamble()
+                if p and p.document.get_source_document() is None:
+                    par.original = par
+                    par.doc = src_doc
             new_pars.append(par)
-
     return new_pars

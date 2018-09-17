@@ -911,16 +911,16 @@ class DocParagraph:
     def __repr__(self):
         return self.__data.__repr__()
 
-    def get_referenced_pars(self, set_html: bool = True, source_doc: Optional[DocumentType] = None,
-                            tr_get_one: bool = True, visited_pars: Optional[List[Tuple[int, str]]] = None) -> List[
-            'DocParagraph']:
+    def get_referenced_pars(self,
+                            set_html: bool = True,
+                            tr_get_one: bool = True,
+                            visited_pars: Optional[List[Tuple[int, str]]] = None) -> List['DocParagraph']:
         """Returns the paragraphs that are referenced by this paragraph.
 
         The references are resolved recursively, i.e. if the referenced paragraphs are references themselves, they
         will also be resolved, and so on, until we get a list of non-reference paragraphs.
 
         :param set_html: Whether to automatically set HTML for the resolved paragraphs.
-        :param source_doc: The assumed source document in case the rd attribute of a paragraph is absent.
         :param tr_get_one: If True and this paragraph is a translation and the result contains more than one paragraph,
           only the first one of them will be returned.
         :param visited_pars: A list of already visited paragraphs to prevent infinite recursion.
@@ -984,8 +984,6 @@ class DocParagraph:
                 ref_docid = int(attrs['rd'])
             except ValueError:
                 raise InvalidReferenceException(f'Invalid reference document id: "{attrs["rd"]}"')
-        elif source_doc is not None:
-            ref_doc = source_doc
         else:
             ref_doc = self.doc.get_source_document() if not self.from_preamble() else self.from_preamble().document.get_source_document()
 
@@ -1005,7 +1003,6 @@ class DocParagraph:
 
             if par.is_reference():
                 ref_pars = par.get_referenced_pars(set_html=set_html,
-                                                   source_doc=source_doc,
                                                    visited_pars=visited_pars,
                                                    tr_get_one=tr_get_one)
             else:
@@ -1016,7 +1013,6 @@ class DocParagraph:
             for p in section_pars:
                 if p.is_reference():
                     ref_pars.extend(p.get_referenced_pars(set_html=set_html,
-                                                          source_doc=source_doc,
                                                           visited_pars=visited_pars,
                                                           tr_get_one=tr_get_one))
                 else:
