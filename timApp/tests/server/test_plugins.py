@@ -733,8 +733,8 @@ choices:
                          json_key='error', expect_status=400)
 
     def test_plugin_in_preamble(self):
-        self.run_plugin_in_preamble('x/a', create_preamble_translation=True)
-        self.run_plugin_in_preamble('y/b', create_preamble_translation=False)
+        self.run_plugin_in_preamble('a/a', create_preamble_translation=True)
+        self.run_plugin_in_preamble('b/b', create_preamble_translation=False)
 
     def run_plugin_in_preamble(self, doc_path: str, create_preamble_translation=True):
         self.login_test1()
@@ -786,3 +786,58 @@ choices:
         self.assertEqual(expected_par_id, par.attrib['ref-id'])
         self.assertEqual(str(d.id), par.attrib['ref-doc-id'])
         self.assertTrue(par.cssselect(fr'#{d.id}\.t\.{expected_par_id}'))
+
+    def test_referenced_plugin_in_preamble(self):
+        self.run_referenced_plugin_in_preamble('c/c', create_preamble_translation=True)
+        self.run_referenced_plugin_in_preamble('d/d', create_preamble_translation=False)
+
+    def run_referenced_plugin_in_preamble(self, doc_path: str, create_preamble_translation=True):
+        self.login_test1()
+        d = self.create_doc(path=self.get_personal_item_path(doc_path))
+        plugin_doc = self.create_doc(initial_par="""
+``` {#t plugin="mmcq"}
+stem: ""
+choices:
+  -
+    correct: true
+    reason: ""
+    text: ""
+        """)
+        p = self.create_preamble_for(d)
+        p.document.add_paragraph_obj(plugin_doc.document.get_paragraphs()[0].create_reference(p.document))
+        plugin_par = plugin_doc.document.get_paragraphs()[0]
+        plug = Plugin.from_paragraph(plugin_par)
+        d.document.insert_preamble_pars()
+        # The plugin is a reference, so it exists only in the original document.
+        self.post_answer(plug.type, f'{d.id}.t', [True], expect_status=400)
+
+        resp = self.post_answer(plug.type, plug.task_id_ext, [True],
+                                ref_from=(d.id, d.document.get_paragraphs()[0].get_id()))
+        a: Answer = Answer.query.get(resp['savedNew'])
+        self.assertEqual(1, a.points)
+        self.assertEqual(plug.full_task_id, a.task_id)
+
+        if create_preamble_translation:
+            tr_p = self.create_translation(p)
+        else:
+            tr_p = p
+
+        tr = self.create_translation(d)
+        tr.document.insert_preamble_pars()
+
+        resp = self.post_answer(
+            plug.type,
+            plug.task_id_ext,
+            [False],
+            ref_from=(tr.id, tr.document.get_paragraphs()[0].get_id()))
+        a: Answer = Answer.query.get(resp['savedNew'])
+        self.assertEqual(0, a.points)
+        self.assertEqual(plug.full_task_id, a.task_id)
+
+        tree = self.get(tr.url, as_tree=True)
+        par = tree.cssselect('.par')[0]
+        self.assertEqual(tr_p.path, par.attrib['data-from-preamble'])
+        expected_par_id = plugin_par.get_id()
+        self.assertEqual(expected_par_id, par.attrib['ref-id'])
+        self.assertEqual(str(plugin_doc.id), par.attrib['ref-doc-id'])
+        self.assertTrue(par.cssselect(fr'#{plugin_doc.id}\.t\.{expected_par_id}'))

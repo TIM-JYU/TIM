@@ -951,7 +951,7 @@ class DocParagraph:
             final_par.__htmldata = None
             if self.from_preamble():
                 final_par.preamble_doc = self.from_preamble()
-                if self.is_translation():
+                if self.is_translation() and (not ref_par.original or not ref_par.original.is_reference()):
                     final_par.doc = self.doc.get_source_document()
 
             if set_html:

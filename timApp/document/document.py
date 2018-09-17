@@ -1245,11 +1245,12 @@ def dereference_pars(pars: Iterable[DocParagraph], context_doc: Document) -> Lis
             # * we are processing a translated document
             # * the document has a preamble that has at least one plugin
             # * the preamble does not have a translation
+            # * the current paragraph has not already been dereferenced earlier
             #
             # then, in order to make the answers go under the plugin at the original document,
             # we have to "lie" that the paragraph has been dereferenced.
             # This case is tested in test_plugin_in_preamble.
-            if src_doc is not None:
+            if src_doc is not None and par.original is None:
                 p = par.from_preamble()
                 if p and p.document.get_source_document() is None:
                     par.original = par
