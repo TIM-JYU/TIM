@@ -1106,6 +1106,10 @@ class Document:
         cached = self.ref_doc_cache.get(ref_docid)
         if not cached:
             cached = Document(ref_docid, preload_option=self.preload_option)
+            if not cached.exists():
+                raise InvalidReferenceException("The referenced document does not exist.")
+            # It is allowed to reference things in preamble.
+            cached.insert_preamble_pars()
             self.ref_doc_cache[ref_docid] = cached
         return cached
 
@@ -1254,6 +1258,6 @@ def dereference_pars(pars: Iterable[DocParagraph], context_doc: Document) -> Lis
                 p = par.from_preamble()
                 if p and p.document.get_source_document() is None:
                     par.original = par
-                    par.doc = src_doc
+                    par.ref_doc = src_doc
             new_pars.append(par)
     return new_pars

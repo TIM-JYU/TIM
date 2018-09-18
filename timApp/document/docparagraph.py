@@ -38,6 +38,8 @@ class DocParagraph:
 
         """
         self.doc: DocumentType = doc
+        self.prev_deref = None
+        self.ref_doc = None
         self.original = None
         self.files_root = self.get_default_files_root() if files_root is None else files_root
         self.html_sanitized = False
@@ -260,7 +262,7 @@ class DocParagraph:
             self.__htmldata['attrs_str'] = self.original.get_attrs_str()
             self.__htmldata['doc_id'] = self.original.doc.doc_id
 
-            self.__htmldata['ref_doc_id'] = self.doc.doc_id
+            self.__htmldata['ref_doc_id'] = self.ref_doc.doc_id
             self.__htmldata['ref_id'] = self.__data['id']
             self.__htmldata['ref_t'] = self.__data['t']
             self.__htmldata['ref_attrs'] = self.__data['attrs']
@@ -457,9 +459,9 @@ class DocParagraph:
         if self.html is not None:
             return self.html
         if self.is_plugin():
-            return self.__set_html('')
+            return self._set_html('')
         if self.is_setting():
-            return self.__set_html(self.__get_setting_html())
+            return self._set_html(self.__get_setting_html())
 
         context_par = self.doc.get_previous_par(self, get_last_if_no_prev=False) if from_preview else None
 
@@ -548,7 +550,7 @@ class DocParagraph:
                     return p.get_referenced_pars(set_html=False)[0]
                 except InvalidReferenceException as e:
                     p.was_invalid = True
-                    p.__set_html(get_error_html(e))
+                    p._set_html(get_error_html(e))
                     return p
             htmls = par_list_to_html_list([deref_tr_par(par) for par, _, _, _, _ in unloaded_pars],
                                           auto_macros=({'h': auto_macros['h'], 'headings': hs}
@@ -563,7 +565,7 @@ class DocParagraph:
                     h = sanitize_html(h)
                     changed_pars.append(par)
                 par.__data['h'][auto_macro_hash] = h
-                par.__set_html(h, sanitized=True)
+                par._set_html(h, sanitized=True)
                 if persist:
                     par.__write()
         return changed_pars
@@ -727,9 +729,9 @@ class DocParagraph:
         if self.html_sanitized or not self.html:
             return
         new_html = sanitize_html(self.html)
-        self.__set_html(new_html, True)
+        self._set_html(new_html, True)
 
-    def __set_html(self, new_html: str, sanitized: bool = False) -> str:
+    def _set_html(self, new_html: str, sanitized: bool = False) -> str:
         """Sets the HTML for this paragraph.
 
         :param new_html: The new HTML.
@@ -911,61 +913,24 @@ class DocParagraph:
     def __repr__(self):
         return self.__data.__repr__()
 
-    def get_referenced_pars(self,
-                            set_html: bool = True,
-                            tr_get_one: bool = True,
-                            visited_pars: Optional[List[Tuple[int, str]]] = None) -> List['DocParagraph']:
+    def get_referenced_pars(self, set_html: bool = True) -> List['DocParagraph']:
+        cached = self.ref_pars.get(set_html)
+        if cached is not None:
+            return cached
+        pars = [create_final_par(p, set_html=set_html) for p in self.get_referenced_pars_impl()]
+        self.ref_pars[set_html] = pars
+        return pars
+
+    def get_referenced_pars_impl(self, visited_pars: Optional[List[Tuple[int, str]]] = None) -> List['DocParagraph']:
         """Returns the paragraphs that are referenced by this paragraph.
 
         The references are resolved recursively, i.e. if the referenced paragraphs are references themselves, they
         will also be resolved, and so on, until we get a list of non-reference paragraphs.
 
-        :param set_html: Whether to automatically set HTML for the resolved paragraphs.
-        :param tr_get_one: If True and this paragraph is a translation and the result contains more than one paragraph,
-          only the first one of them will be returned.
         :param visited_pars: A list of already visited paragraphs to prevent infinite recursion.
         :return: The list of resolved paragraphs.
 
         """
-
-        def create_final_par(ref_par: 'DocParagraph') -> 'DocParagraph':
-            if self.is_translation() and self.get_markdown():
-                md = self.get_markdown()
-            else:
-                md = ref_par.get_markdown()
-
-            new_attrs = copy(ref_par.get_attrs())
-            for k, v in self.get_attrs().items():
-                if k in SKIPPED_ATTRS:
-                    continue
-                if isinstance(v, list) and isinstance(new_attrs.get(k), list):
-                    for val in v:
-                        new_attrs[k].append(val)
-                else:
-                    new_attrs[k] = v
-
-            final_par = DocParagraph.create(ref_par.doc, par_id=ref_par.get_id(), md=md, par_hash=ref_par.get_hash(),
-                                            attrs=new_attrs)
-            final_par.original = self
-            final_par._cache_props()
-            final_par.__htmldata = None
-            if self.from_preamble():
-                final_par.preamble_doc = self.from_preamble()
-                if self.is_translation() and (not ref_par.original or not ref_par.original.is_reference()):
-                    final_par.doc = self.doc.get_source_document()
-
-            if set_html:
-                html = self.get_html(from_preview=False) if self.is_translation(
-                ) else ref_par.get_html(from_preview=False)
-
-                # if html is empty, use the source
-                if html == '':
-                    html = ref_par.get_html(from_preview=False)
-                final_par.__set_html(html)
-            return final_par
-
-        if self.ref_pars.get(set_html) is not None:
-            return self.ref_pars.get(set_html)
         if visited_pars is None:
             visited_pars = []
         par_doc_id = self.get_doc_id(), self.get_id()
@@ -998,32 +963,28 @@ class DocParagraph:
         if self.is_par_reference():
             try:
                 par = ref_doc.get_paragraph(attrs['rp'])
+                par.prev_deref = self
             except TimDbException:
                 raise InvalidReferenceException('The referenced paragraph does not exist.')
 
             if par.is_reference():
-                ref_pars = par.get_referenced_pars(set_html=set_html,
-                                                   visited_pars=visited_pars,
-                                                   tr_get_one=tr_get_one)
+                ref_pars = par.get_referenced_pars_impl(visited_pars=visited_pars)
             else:
                 ref_pars = [par]
         elif self.is_area_reference():
+            if self.is_translation():
+                raise InvalidReferenceException("A translated paragraph cannot be an area reference.")
             section_pars = ref_doc.get_named_section(attrs['ra'])
             ref_pars = []
             for p in section_pars:
+                p.prev_deref = self
                 if p.is_reference():
-                    ref_pars.extend(p.get_referenced_pars(set_html=set_html,
-                                                          visited_pars=visited_pars,
-                                                          tr_get_one=tr_get_one))
+                    ref_pars.extend(p.get_referenced_pars_impl(visited_pars=visited_pars))
                 else:
                     ref_pars.append(p)
-            if tr_get_one and self.is_translation() and len(ref_pars) > 0:
-                self.ref_pars[set_html] = [create_final_par(ref_pars[0])]
-                return self.ref_pars[set_html]
         else:
             assert False
-        self.ref_pars[set_html] = [create_final_par(ref_par) for ref_par in ref_pars]
-        return self.ref_pars[set_html]
+        return ref_pars
 
     def is_dynamic(self) -> bool:
         """Returns whether this paragraph is a dynamic paragraph.
@@ -1107,3 +1068,64 @@ def create_reference(doc: DocumentType, doc_id: int, par_id: str, r: Optional[st
 
     par._cache_props()
     return par
+
+
+def create_final_par(reached_par: DocParagraph, set_html: bool) -> DocParagraph:
+    """Creates the finalized dereferenced paragraph based on a chain of references."""
+    last_ref = reached_par.prev_deref
+    if last_ref.is_translation() and last_ref.get_markdown():
+        md = last_ref.get_markdown()
+    else:
+        md = reached_par.get_markdown()
+
+    new_attrs = copy(reached_par.get_attrs())
+    for k, v in last_ref.get_attrs().items():
+        if k in SKIPPED_ATTRS:
+            continue
+        if isinstance(v, list) and isinstance(new_attrs.get(k), list):
+            for val in v:
+                new_attrs[k].append(val)
+        else:
+            new_attrs[k] = v
+
+    final_par = DocParagraph.create(
+        attrs=new_attrs,
+        doc=reached_par.doc,
+        md=md,
+        par_hash=reached_par.get_hash(),
+        par_id=reached_par.get_id(),
+    )
+    first_ref: DocParagraph = reached_par
+    is_any_norm_reference = False
+    while True:
+        first_ref = first_ref.prev_deref
+        is_any_norm_reference = is_any_norm_reference or (first_ref.is_reference() and not first_ref.is_translation())
+        if not first_ref.prev_deref:
+            break
+
+    # We need 2 different documents under final_par:
+    #  1. what document to use for settings: "doc" attribute
+    #  2. what document id to put in HTML's ref-doc-id (might not be same as settings): "ref_doc" attribute
+    final_par.original = first_ref
+    final_par.ref_doc = reached_par.doc
+    final_par._cache_props()
+    final_par.__htmldata = None
+    if first_ref.from_preamble():
+        final_par.preamble_doc = first_ref.from_preamble()
+        if first_ref.is_translation():
+            final_par.doc = first_ref.doc
+            if not is_any_norm_reference:
+                final_par.ref_doc = first_ref.doc.get_source_document()
+    elif last_ref.is_translation():
+        final_par.doc = last_ref.doc
+        final_par.ref_doc = last_ref.doc.get_source_document()
+
+    if set_html:
+        html = last_ref.get_html(from_preview=False) if last_ref.is_translation(
+        ) else reached_par.get_html(from_preview=False)
+
+        # if html is empty, use the source
+        if html == '':
+            html = reached_par.get_html(from_preview=False)
+        final_par._set_html(html)
+    return final_par

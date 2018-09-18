@@ -96,7 +96,10 @@ class Plugin:
 
     @property
     def full_task_id(self):
-        return f'{self.par.doc.doc_id}.{self.task_id or ""}'
+        if self.par.ref_doc is not None:
+            return f'{self.par.ref_doc.doc_id}.{self.task_id or ""}'
+        else:
+            return f'{self.par.doc.doc_id}.{self.task_id or ""}'
 
     @property
     def task_id_ext(self):

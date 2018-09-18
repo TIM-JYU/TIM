@@ -59,6 +59,10 @@ export interface IEditorParams {
 
 export type IEditorResult = {type: "save", text: string} | {type: "delete"} | {type: "markunread"} | {type: "cancel"};
 
+export function getCitePar(docId: number, par: string) {
+    return `#- {rd="${docId}" rl="no" rp="${par}"}`;
+}
+
 export class PareditorController extends DialogController<{params: IEditorParams}, IEditorResult, "pareditor"> {
     private static $inject = ["$scope", "$element"];
     private deleting = false;
@@ -287,7 +291,7 @@ ${backTicks}
     }
 
     getCiteText(): string {
-        return `#- {rd="${this.getExtraData().docId}" rl="no" rp="${this.getExtraData().par}"}`;
+        return getCitePar(this.getExtraData().docId, this.getExtraData().par);
     }
 
     selectAllText(evt: Event) {

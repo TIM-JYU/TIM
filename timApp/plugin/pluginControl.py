@@ -111,12 +111,6 @@ def pluginify(doc: Document,
     plugins: Dict[str, Dict[int, Plugin]] = {}
     task_ids = []
 
-    settings = doc.get_settings()
-    global_attrs = settings.global_plugin_attrs()
-    macroinfo = settings.get_macroinfo(user)
-    macros = macroinfo.get_macros()
-    macro_delimiter = macroinfo.get_macro_delimiter()
-
     answer_map = {}
     # enum_pars = enumerate(pars)
     plugin_opts = PluginRenderOptions(do_lazy=do_lazy,
@@ -147,6 +141,10 @@ def pluginify(doc: Document,
         plugin_name = block.get_attr('plugin')
         is_gamified = block.get_attr('gamification')
         is_gamified = not not is_gamified
+        settings = block.doc.get_settings()
+        macroinfo = settings.get_macroinfo()
+        macros = macroinfo.get_macros()
+        macro_delimiter = macroinfo.get_macro_delimiter()
 
         if is_gamified:
             # md = block.get_expanded_markdown()  # not enough macros
@@ -196,7 +194,10 @@ def pluginify(doc: Document,
                 rands = block.get_rands()
                 if rands:
                     joint_macros = {**macros, **rands}
-                plugin = Plugin.from_paragraph_macros(block, global_attrs, joint_macros, macro_delimiter)
+                plugin = Plugin.from_paragraph_macros(block,
+                                                      settings.global_plugin_attrs(),
+                                                      joint_macros,
+                                                      macro_delimiter)
                 if plugin_name == 'qst':
                     plugin.values['isTask'] = not block.is_question()
             except Exception as e:

@@ -4,9 +4,10 @@ import {showMessageDialog} from "../ui/dialog";
 import {$compile, $log, $timeout, $window} from "../util/ngimport";
 import {Coords, dist, getPageXYnull, isInViewport} from "../util/utils";
 import {onClick} from "./eventhandlers";
-import {getPreambleDocId, isActionablePar, isPreamble, Paragraph} from "./parhelpers";
+import {getParId, getPreambleDocId, isActionablePar, isPreamble, Paragraph} from "./parhelpers";
 import {ViewCtrl} from "./viewctrl";
-import {createPopupMenuAttrs, getEmptyCoords, parMenuDot, viewCtrlDot} from "./viewutils";
+import {createPopupMenuAttrs, getEmptyCoords} from "./viewutils";
+import {getCitePar} from "../editor/pareditor";
 
 export function optionsWindowClosed($parOrArea?: JQuery) {
     const $editline = $(".menuopen");
@@ -81,9 +82,13 @@ export class ParmenuHandler {
             this.viewctrl.closePopupIfOpen();
             const $par = $this.parent().filter(".par");
             if (isPreamble($par)) {
+                const parId = getParId($par) || "";
                 showMessageDialog(`
-This paragraph is from a preamble document.
-To comment or edit this, go to the corresponding <a href="/view/${getPreambleDocId($par)}">preamble document</a>.`);
+<p>This paragraph is from a preamble document.
+To comment or edit this, go to the corresponding <a href="/view/${getPreambleDocId($par)}">preamble document</a>.</p>
+
+<p>Citation help: <code>${getCitePar(this.viewctrl.item.id, parId)}</code></p>
+`);
             }
             if (!isActionablePar($par)) {
                 return;
