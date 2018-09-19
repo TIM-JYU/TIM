@@ -21,16 +21,16 @@ function getPixels(s: string) {
 }
 
 const draggableTemplate = `
-<div class="draghandle" ng-mousedown="d.dragClick()" ng-show="d.canDrag()">
+<div class="draghandle" ng-mousedown="d.dragClick(); $event.preventDefault()" ng-show="d.canDrag()">
     <p ng-show="d.caption" ng-bind="d.caption"></p>
-    <i ng-show="d.closeFn"
-       title="Close dialog"
-       ng-click="d.closeFn()"
-       class="glyphicon glyphicon-remove pull-right"></i>
     <i ng-show="d.click"
        title="Minimize dialog"
        ng-click="d.toggleMinimize()"
-       class="glyphicon glyphicon-minus pull-right"></i>
+       class="glyphicon glyphicon-minus"></i>
+    <i ng-show="d.closeFn"
+       title="Close dialog"
+       ng-click="d.closeFn()"
+       class="glyphicon glyphicon-remove"></i>
 </div>
 <button class="timButton pull-right" ng-show="d.detachable" ng-click="d.toggleDetach()">
     <i class="glyphicon glyphicon-arrow-{{ d.canDrag() ? 'left' : 'right' }}"></i>
@@ -264,7 +264,7 @@ export class DraggableController implements IController {
         }
         const oldSize: any = getStorage(this.posKey +
             "Size");
-        if (oldSize && this.elementHasAbsoluteOrRelativePosition()) {
+        if (oldSize) {
             if (oldSize.width) {
                 this.element.css("width",
                     oldSize.width);

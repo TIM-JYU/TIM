@@ -5,14 +5,17 @@
 .draghandle {
     -ms-touch-action: none;
     touch-action: none;
-    min-height: 13px;
+    min-height: 13px * $line-height-base;
     width: 100%;
     background-color: $draghandle-bg-color;
     position: initial;
     margin-bottom: 0px;
     margin-top: 0;
+    display: flex;
+    align-items: center;
 
     p {
+        flex-grow: 1;
         color: set-text-color($draghandle-bg-color);
         margin-top: 0;
         padding-left: 1em;
@@ -23,13 +26,15 @@
         touch-action: none;
         margin-bottom: 0pt;
         display: inline;
+        text-overflow: ellipsis;
+        overflow: hidden;
+        white-space: nowrap;
     }
 
     i {
         color: set-text-color($draghandle-bg-color);
         cursor: pointer;
         padding-right: 1em;
-        padding-top: 0.15em;
     }
 }
 
