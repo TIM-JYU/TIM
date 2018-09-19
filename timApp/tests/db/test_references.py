@@ -282,13 +282,15 @@ class RefTest(TimDbTest):
         self.src_par.save()
         deref = ref.get_referenced_pars()[0]
         ref.ref_pars = {}
-        self.assertEqual(deref.get_classes(), ['blue', 'white', 'orange', 'red', 'green'])
+        self.assertEqual({'blue', 'white', 'orange', 'red', 'green'}, set(deref.get_classes()))
+        self.assertEqual(5, len(deref.get_classes()))
 
         self.src_par.set_attr('classes', None)
         self.src_par.save()
         ref.doc.clear_mem_cache()
         deref = ref.get_referenced_pars()[0]
-        self.assertEqual(deref.get_classes(), ['red', 'green'])
+        self.assertEqual({'red', 'green'}, set(deref.get_classes()))
+        self.assertEqual(2, len(deref.get_classes()))
         ref.ref_pars = {}
 
         self.src_par.add_class('blue', 'white', 'orange')
@@ -296,7 +298,8 @@ class RefTest(TimDbTest):
         self.src_par.save()
         ref.doc.clear_mem_cache()
         deref = ref.get_referenced_pars()[0]
-        self.assertEqual(deref.get_classes(), ['blue', 'white', 'orange'])
+        self.assertEqual({'blue', 'white', 'orange'}, set(deref.get_classes()))
+        self.assertEqual(3, len(deref.get_classes()))
 
 
 if __name__ == '__main__':

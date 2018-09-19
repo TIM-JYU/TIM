@@ -38,7 +38,7 @@ class DocParagraph:
 
         """
         self.doc: DocumentType = doc
-        self.prev_deref = None
+        self.prev_deref: 'DocParagraph' = None
         self.ref_doc = None
         self.original = None
         self.files_root = self.get_default_files_root() if files_root is None else files_root
@@ -1078,15 +1078,31 @@ def create_final_par(reached_par: DocParagraph, set_html: bool) -> DocParagraph:
     else:
         md = reached_par.get_markdown()
 
-    new_attrs = copy(reached_par.get_attrs())
-    for k, v in last_ref.get_attrs().items():
-        if k in SKIPPED_ATTRS:
-            continue
-        if isinstance(v, list) and isinstance(new_attrs.get(k), list):
-            for val in v:
-                new_attrs[k].append(val)
-        else:
-            new_attrs[k] = v
+    first_ref = reached_par
+    is_any_norm_reference = False
+    ref_chain = []
+    while True:
+        ref_chain.append(first_ref)
+        if not first_ref.prev_deref:
+            break
+        first_ref = first_ref.prev_deref
+        is_any_norm_reference = is_any_norm_reference or (first_ref.is_reference() and not first_ref.is_translation())
+
+    new_attrs = {}
+    for r in reversed(ref_chain):
+        for k, v in r.get_attrs().items():
+            if k in SKIPPED_ATTRS:
+                continue
+            if isinstance(v, list):
+                li = new_attrs.get(k)
+                if not isinstance(li, list):
+                    li = []
+                    new_attrs[k] = li
+                li += v
+            else:
+                new_attrs[k] = v
+    if all(p.is_setting() for p in ref_chain):
+        new_attrs['settings'] = ''
 
     final_par = DocParagraph.create(
         attrs=new_attrs,
@@ -1095,14 +1111,6 @@ def create_final_par(reached_par: DocParagraph, set_html: bool) -> DocParagraph:
         par_hash=reached_par.get_hash(),
         par_id=reached_par.get_id(),
     )
-    first_ref: DocParagraph = reached_par
-    is_any_norm_reference = False
-    while True:
-        first_ref = first_ref.prev_deref
-        is_any_norm_reference = is_any_norm_reference or (first_ref.is_reference() and not first_ref.is_translation())
-        if not first_ref.prev_deref:
-            break
-
     # We need 2 different documents under final_par:
     #  1. what document to use for settings: "doc" attribute
     #  2. what document id to put in HTML's ref-doc-id (might not be same as settings): "ref_doc" attribute
