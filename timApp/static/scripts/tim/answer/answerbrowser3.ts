@@ -14,6 +14,7 @@ import {Binding, markAsUsed, Require} from "../util/utils";
 import {ReviewController} from "../velp/reviewController";
 import {showAllAnswers} from "./allAnswersController";
 import {IAnswer} from "./IAnswer";
+import {KEY_DOWN, KEY_LEFT, KEY_RIGHT, KEY_UP} from "../util/keycodes";
 
 markAsUsed(allanswersctrl);
 
@@ -359,16 +360,16 @@ export class AnswerBrowserController extends DestroyScope implements IController
         }
         if (e.ctrlKey) {
             // e.key does not work on IE but it is more readable, so let's use both
-            if ((e.key === "ArrowUp" || e.which === 38)) {
+            if ((e.key === "ArrowUp" || e.which === KEY_UP)) {
                 e.preventDefault();
                 this.changeStudent(-1);
-            } else if ((e.key === "ArrowDown" || e.which === 40)) {
+            } else if ((e.key === "ArrowDown" || e.which === KEY_DOWN)) {
                 e.preventDefault();
                 this.changeStudent(1);
-            } else if ((e.key === "ArrowLeft" || e.which === 37)) {
+            } else if ((e.key === "ArrowLeft" || e.which === KEY_LEFT)) {
                 e.preventDefault();
                 this.previousAnswer();
-            } else if ((e.key === "ArrowRight" || e.which === 39)) {
+            } else if ((e.key === "ArrowRight" || e.which === KEY_RIGHT)) {
                 e.preventDefault();
                 this.nextAnswer();
             }

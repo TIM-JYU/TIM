@@ -18,6 +18,7 @@ import {$http, $window} from "../util/ngimport";
 import {Binding, markAsUsed, Require} from "../util/utils";
 import {ReviewController} from "./reviewController";
 import {IAnnotationCoordless} from "./velptypes";
+import {KEY_ENTER} from "../util/keycodes";
 
 const UNDEFINED = "undefined";
 
@@ -328,7 +329,7 @@ export class AnnotationController implements IController {
         if (event.keyCode === this.ctrlKey) {
             this.ctrlDown = true;
         }
-        if (this.ctrlDown && (String.fromCharCode(event.which).toLowerCase() === "s" || event.keyCode === 13)) {
+        if (this.ctrlDown && (String.fromCharCode(event.which).toLowerCase() === "s" || event.keyCode === KEY_ENTER)) {
             event.preventDefault();
             this.ctrlDown = false;
             if (this.checkIfChanged()) {

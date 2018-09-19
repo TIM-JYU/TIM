@@ -2,6 +2,7 @@ import {IAngularEvent} from "angular";
 import {wrapText} from "../document/editing/editing";
 import {$log, $timeout} from "../util/ngimport";
 import {BaseParEditor, CURSOR, SelectionRange, focusAfter, IEditorCallbacks} from "./BaseParEditor";
+import {KEY_1, KEY_2, KEY_3, KEY_4, KEY_B, KEY_ENTER, KEY_I, KEY_O, KEY_S, KEY_TAB, KEY_Y} from "../util/keycodes";
 
 export class TextAreaParEditor extends BaseParEditor {
     public editor: JQuery;
@@ -13,48 +14,48 @@ export class TextAreaParEditor extends BaseParEditor {
         this.editorElement = editor.get(0) as HTMLTextAreaElement;
         this.editor.keydown((e) => {
             if (e.ctrlKey) {
-                if (e.keyCode === 83) {
+                if (e.keyCode === KEY_S) {
                     this.callbacks.saveClicked();
                     e.preventDefault();
-                } else if (e.keyCode === 66) {
+                } else if (e.keyCode === KEY_B) {
                     this.surroundClicked("**", "**");
                     e.preventDefault();
-                } else if (e.keyCode === 73) {
+                } else if (e.keyCode === KEY_I) {
                     this.italicSurroundClicked();
                     e.preventDefault();
                 } else if (e.altKey) {
-                    if (e.keyCode === 79) {
+                    if (e.keyCode === KEY_O) {
                         this.codeBlockClicked();
                         e.preventDefault();
                     }
-                } else if (e.keyCode === 79) {
+                } else if (e.keyCode === KEY_O) {
                     this.surroundClicked("`", "`");
                     e.preventDefault();
-                } else if (e.keyCode === 89) {
+                } else if (e.keyCode === KEY_Y) {
                     this.commentClicked();
                     e.preventDefault();
-                } else if (e.keyCode === 49) {
+                } else if (e.keyCode === KEY_1) {
                     this.headerClicked("#");
                     e.preventDefault();
-                } else if (e.keyCode === 50) {
+                } else if (e.keyCode === KEY_2) {
                     this.headerClicked("##");
                     e.preventDefault();
-                } else if (e.keyCode === 51) {
+                } else if (e.keyCode === KEY_3) {
                     this.headerClicked("###");
                     e.preventDefault();
-                } else if (e.keyCode === 52) {
+                } else if (e.keyCode === KEY_4) {
                     this.headerClicked("####");
                     e.preventDefault();
-                } else if (e.keyCode === 13) {
+                } else if (e.keyCode === KEY_ENTER) {
                     this.endLineClicked();
                     e.preventDefault();
                 }
-            } else if (e.keyCode === 9) {
+            } else if (e.keyCode === KEY_TAB) {
                 const outdent = e.shiftKey;
                 this.indent(outdent);
                 e.preventDefault();
             } else if (e.shiftKey) {
-                if (e.keyCode === 13) {
+                if (e.keyCode === KEY_ENTER) {
                     this.paragraphClicked();
                     e.preventDefault();
                 }

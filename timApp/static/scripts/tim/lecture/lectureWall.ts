@@ -3,6 +3,7 @@ import {timApp} from "../app";
 import {DialogController, IModalInstance, registerDialogComponent, showDialog, showMessageDialog} from "../ui/dialog";
 import {$http, $timeout} from "../util/ngimport";
 import {ILectureMessage} from "./lecturetypes";
+import {KEY_ENTER} from "../util/keycodes";
 
 class LectureWallController extends DialogController<{params: {messages: ILectureMessage[]}}, {}, "timLectureWall"> {
     private static $inject = ["$element", "$scope"];
@@ -44,7 +45,7 @@ class LectureWallController extends DialogController<{params: {messages: ILectur
      * @param event They key press.
      */
     public chatEnterPressed(event: KeyboardEvent) {
-        if (event.which === 13) {
+        if (event.which === KEY_ENTER) {
             this.sendMessageEvent(this.newMsg);
         }
     }

@@ -6,6 +6,7 @@ import {$rootScope, $templateCache, $uibModal, $window} from "../util/ngimport";
 import {Binding, markAsUsed, Require} from "../util/utils";
 import * as dg from "./draggable";
 import {DraggableController} from "./draggable";
+import {KEY_ESC} from "../util/keycodes";
 
 markAsUsed(dg);
 
@@ -34,7 +35,7 @@ export abstract class DialogController<T, Ret, ComponentName extends string> imp
     }
 
     handleEscPress(e: KeyboardEvent) {
-        if (e.keyCode === 27 && this.isTopMostDialog()) {
+        if (e.keyCode === KEY_ESC && this.isTopMostDialog()) {
             this.dismiss();
         }
     }

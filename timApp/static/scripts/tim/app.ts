@@ -20,6 +20,7 @@ import plugins from "tim/plugins";
 import {convertDateStringsToMoments, markAsUsed} from "tim/util/utils";
 import {initUserService} from "./user/userService";
 import {injectProviders, injectServices} from "./util/ngimport";
+import {KEY_ENTER, KEY_S} from "./util/keycodes";
 
 markAsUsed(ngMessages, timer, aedatetimepicker, ngSanitize,
     uibootstrap, ngFileUpload, ngStorage, plugins, extramodules, oclazyload, colorpicker);
@@ -121,6 +122,20 @@ timApp.filter("timtim", ["$filter", ($filter: IFilterService) => {
         return date.format("HH:mm:ss");
     };
 }]);
+
+timApp.directive('onSave', () => {
+    return (scope, element, attrs) => {
+        element.bind("keydown", (event) => {
+            if (event.ctrlKey && (event.which === KEY_ENTER || event.which === KEY_S)) {
+                scope.$apply(() => {
+                    scope.$eval(attrs.onSave);
+                });
+
+                event.preventDefault();
+            }
+        });
+    };
+});
 
 timApp.config(injectProviders);
 timApp.run(injectServices);

@@ -240,9 +240,9 @@
         <div class="panel-body">
             <form id="fullDocumentEditor">
                 <div id="documentEditorDiv">
-                    <textarea id="doctext" class="form-control" ng-model="$ctrl.fulltext" rows="50"></textarea>
+                    <textarea on-save="$ctrl.saveDocument()" id="doctext" class="form-control" ng-model="$ctrl.fulltext" rows="50"></textarea>
                     <button id="documentEditorSaveButton" class="timButton"
-                            ng-disabled="($ctrl.item.fulltext === $ctrl.fulltext) || $ctrl.saving"
+                            ng-disabled="!$ctrl.hasTextChanged() || $ctrl.saving"
                             ng-click="$ctrl.saveDocument()">Save
                     </button>
                     <span ng-show="$ctrl.saving">Saving...</span>

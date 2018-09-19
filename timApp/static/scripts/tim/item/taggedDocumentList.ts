@@ -10,6 +10,7 @@ import {Binding, to} from "tim/util/utils";
 import {timApp} from "../app";
 import {$http, $localStorage} from "../util/ngimport";
 import {ITag, ITaggedItem, tagStyleClass, TagType} from "./IItem";
+import {KEY_ENTER} from "../util/keycodes";
 
 class TaggedDocumentListCtrl implements IController {
     public tagFilter!: Binding<string, "<">;
@@ -84,7 +85,7 @@ class TaggedDocumentListCtrl implements IController {
      * @param event Keyboard event.
      */
     async keyPressed(event: KeyboardEvent) {
-        if (event.which === 13) {
+        if (event.which === KEY_ENTER) {
             await this.getDocumentsByTag(this.tagFilter);
         }
     }

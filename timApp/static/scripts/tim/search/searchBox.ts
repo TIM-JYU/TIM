@@ -9,6 +9,7 @@ import {IItem, ITag, ITaggedItem} from "../item/IItem";
 import {$http, $localStorage, $window} from "../util/ngimport";
 import {Binding, to} from "../util/utils";
 import {ShowSearchResultController, showSearchResultDialog} from "./searchResultsCtrl";
+import {KEY_ENTER} from "../util/keycodes";
 
 /**
  * All data title/word search route returns.
@@ -232,7 +233,7 @@ export class SearchBoxCtrl implements IController {
      * @param event Keyboard event.
      */
     async keyPressed(event: KeyboardEvent) {
-        if (event.which === 13) {
+        if (event.which === KEY_ENTER) {
             await this.search();
         }
     }

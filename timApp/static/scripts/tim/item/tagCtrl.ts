@@ -11,6 +11,7 @@ import {ADMIN_GROUPNAME, TEACHERS_GROUPNAME} from "../user/IUser";
 import {Users} from "../user/userService";
 import {$http} from "../util/ngimport";
 import {markAsUsed, to} from "../util/utils";
+import {KEY_ENTER} from "../util/keycodes";
 
 markAsUsed(focusMe);
 
@@ -64,7 +65,7 @@ export class ShowTagController extends DialogController<{ params: IItem }, {}, "
      * @param event Keyboard event.
      */
     private async keyPressed(event: KeyboardEvent) {
-        if (event.which === 13) {
+        if (event.which === KEY_ENTER) {
             await this.addTagClicked();
         }
     }

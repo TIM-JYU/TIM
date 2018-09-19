@@ -8,6 +8,7 @@ import {openEditorSimple} from "../editor/pareditor";
 import {$http, $sce, $timeout} from "../util/ngimport";
 import {Binding} from "../util/utils";
 import {hideToolbar, isToolbarEnabled, openTableEditorToolbar} from "./timTableEditorToolbar";
+import {isArrowKey, KEY_DOWN, KEY_ENTER, KEY_ESC, KEY_F2, KEY_LEFT, KEY_RIGHT, KEY_TAB, KEY_UP} from "../util/keycodes";
 
 const styleToHtml: { [index: string]: string } = {
         backgroundColor: "background-color",
@@ -657,7 +658,7 @@ export class TimTableController implements IController {
             return;
         }
 
-        if (ev.keyCode === 113) { // F2
+        if (ev.keyCode === KEY_F2) {
             const modal: CellEntity = {
                 cell: "",
             };
@@ -673,7 +674,7 @@ export class TimTableController implements IController {
             }
         }
 
-        if (ev.keyCode === 13) { // Enter
+        if (ev.keyCode === KEY_ENTER) {
             if (!this.isInEditMode() || !this.viewctrl) {
                 return;
             }
@@ -698,7 +699,7 @@ export class TimTableController implements IController {
             }
         }
 
-        if (ev.keyCode === 9) { // Tab
+        if (ev.keyCode === KEY_TAB) {
             const parId = getParId(this.element.parents(".par"));
             if (!this.editing || !this.viewctrl || !parId || (this.currentCell && this.currentCell.editorOpen)) {
                 return;
@@ -717,14 +718,14 @@ export class TimTableController implements IController {
             return;
         }
 
-        if (ev.keyCode === 27) { // esc
+        if (ev.keyCode === KEY_ESC) {
             this.currentCell = undefined;
             this.scope.$apply();
             return;
         }
 
         // Arrow keys
-        if (!this.currentCell && ev.ctrlKey && (ev.keyCode === 40 || ev.keyCode === 39 || ev.keyCode === 38 || ev.keyCode === 37)) {
+        if (!this.currentCell && ev.ctrlKey && isArrowKey(ev.keyCode)) {
             this.handleArrowMovement(ev);
             this.scope.$apply();
         }
@@ -744,19 +745,19 @@ export class TimTableController implements IController {
 
         this.saveCurrentCell();
 
-        if (ev.keyCode === 40) { // down arrow
+        if (ev.keyCode === KEY_DOWN) {
             this.doCellMovement(0, 1);
             return;
         }
-        if (ev.keyCode === 39) {
+        if (ev.keyCode === KEY_RIGHT) {
             this.doCellMovement(1, 0);
             return;
         }
-        if (ev.keyCode === 37) {
+        if (ev.keyCode === KEY_LEFT) {
             this.doCellMovement(-1, 0);
             return;
         }
-        if (ev.keyCode === 38) {
+        if (ev.keyCode === KEY_UP) {
             this.doCellMovement(0, -1);
             return;
         }

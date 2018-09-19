@@ -77,8 +77,7 @@ export class PermCtrl implements IController {
             this.oldName = this.newName;
             this.oldFolderName = this.newFolderName;
         } else {
-            this.item.fulltext = this.item.fulltext.trim();
-            this.fulltext = this.item.fulltext;
+            this.updateFullText(this.item.fulltext);
             if (this.item.rights.manage) {
                 await this.getAliases();
             }
@@ -303,8 +302,7 @@ export class PermCtrl implements IController {
                 $timeout(() => {
                     this.file.result = response.data;
                     this.item.versions = response.data.versions;
-                    this.item.fulltext = response.data.fulltext;
-                    this.fulltext = response.data.fulltext;
+                    this.updateFullText(response.data.fulltext);
                 });
             }, (response: any) => {
                 if (response.status > 0) {
@@ -386,7 +384,19 @@ export class PermCtrl implements IController {
         this.fulltext = text;
     }
 
+    hasTextChanged() {
+        return this.item.fulltext !== this.fulltext;
+    }
+
+    updateFullText(txt: string) {
+        this.fulltext = txt.trim();
+        this.item.fulltext = this.fulltext;
+    }
+
     saveDocument() {
+        if (this.saving || !this.hasTextChanged()) {
+            return;
+        }
         this.saving = true;
         $http.post<IManageResponse>("/update/" + this.item.id,
             {
@@ -403,8 +413,7 @@ export class PermCtrl implements IController {
                     data = result;
                 }
             }
-            this.fulltext = data.fulltext;
-            this.item.fulltext = this.fulltext;
+            this.updateFullText(data.fulltext);
             this.item.versions = data.versions;
             this.saving = false;
         }, (response) => {
@@ -430,8 +439,7 @@ export class PermCtrl implements IController {
                 version: this.item.versions[0],
             }).then((response) => {
             const data = response.data;
-            this.fulltext = data.fulltext;
-            this.item.fulltext = this.fulltext;
+            this.updateFullText(data.fulltext);
             this.item.versions = data.versions;
         }, (response) => {
             $window.alert(response.data.error);

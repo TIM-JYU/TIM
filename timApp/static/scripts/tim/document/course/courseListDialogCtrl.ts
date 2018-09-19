@@ -15,6 +15,7 @@ import {
 } from "../../item/IItem";
 import {DialogController, registerDialogComponent, showDialog} from "../../ui/dialog";
 import {$http, $localStorage} from "../../util/ngimport";
+import {KEY_ENTER} from "../../util/keycodes";
 
 export interface ICourseListParams {
     item: IItem;
@@ -214,7 +215,7 @@ export class ShowCourseListDialogController extends DialogController<{ params: I
      * @param event Keyboard event.
      */
     private async keyPressed(event: KeyboardEvent) {
-        if (event.which === 13) {
+        if (event.which === KEY_ENTER) {
             this.refresh();
         }
     }
