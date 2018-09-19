@@ -850,7 +850,7 @@ choices:
         self.check_plugin_ref_correct(tr_p, p, p.document.get_paragraphs()[0])
         n = self.create_doc()
         n.document.add_paragraph_obj(tr_p.document.get_paragraphs()[1].create_reference(n.document))
-        print(f'd={d.id} p={p.id} tr_p={tr_p.id} n={n.id}')
+        # print(f'd={d.id} p={p.id} tr_p={tr_p.id} n={n.id}')
 
         tr_d = self.create_translation(d)
         self.check_plugin_ref_correct(n, p, p.document.get_paragraphs()[0])
