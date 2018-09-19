@@ -128,3 +128,14 @@ stem: this is a %%x()%%
         self.assertEqual(pars[:-2] + pars[-1::], ['', 'this is a cat', 'this is the law'])
         plugins = tree.cssselect('cs-runner')
         self.assertEqual('this is a cat', decode_csplugin(plugins[0].text)['stem'])
+
+    def test_usermacro_in_plugin(self):
+        """User-specific macros in plugins."""
+        self.login_test1()
+        d = self.create_doc(initial_par="""
+#- {plugin=csPlugin}
+stem: Hi, %%username%%!
+        """)
+        tree = self.get(d.url, as_tree=True)
+        plugins = tree.cssselect('cs-runner')
+        self.assertEqual('Hi, testuser1!', decode_csplugin(plugins[0].text)['stem'])
