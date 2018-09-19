@@ -142,7 +142,7 @@ def pluginify(doc: Document,
         is_gamified = block.get_attr('gamification')
         is_gamified = not not is_gamified
         settings = block.doc.get_settings()
-        macroinfo = settings.get_macroinfo()
+        macroinfo = settings.get_macroinfo(user=user)
         macros = macroinfo.get_macros()
         macro_delimiter = macroinfo.get_macro_delimiter()
 

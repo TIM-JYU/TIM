@@ -65,6 +65,14 @@ header: %%username%% and %%realname%%
         p = Plugin.from_task_id(f'{d.id}.test', User.query.get(TEST_USER_2_ID))
         self.assertEqual('testuser2 and Test user 2', p.values['header'])
 
+    def test_user_nocache(self):
+        self.login_test1()
+        d = self.create_doc(initial_par="""
+#- {nocache=true}
+I am %%username%%.
+        """)
+        self.assert_content(self.get(d.url, as_tree=True), ['I am testuser1.'])
+
     def test_macro_only_delimiter(self):
         self.login_test1()
         doc = self.create_doc(settings={'macro_delimiter': '%%'}).document
