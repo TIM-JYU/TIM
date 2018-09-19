@@ -160,6 +160,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
         this.par = element.parents(".par");
         this.parContent = this.par.find(".parContent");
         this.loading = 0;
+        this.checkKeyPress = this.checkKeyPress.bind(this);
     }
 
     $onInit() {
