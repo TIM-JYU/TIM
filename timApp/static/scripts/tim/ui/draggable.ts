@@ -272,7 +272,7 @@ export class DraggableController implements IController {
         }
         const oldSize: any = getStorage(this.posKey +
             "Size");
-        if (oldSize) {
+        if (oldSize && this.canDrag()) {
             if (oldSize.width) {
                 this.element.css("width",
                     oldSize.width);
