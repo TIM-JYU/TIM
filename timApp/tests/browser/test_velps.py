@@ -2,7 +2,7 @@ from selenium.webdriver import ActionChains
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support.select import Select
 
-from timApp.tests.browser.browsertest import BrowserTest, ignore_timeout
+from timApp.tests.browser.browsertest import BrowserTest, ignore_timeout, find_button_by_text
 
 
 class VelpTest(BrowserTest):
@@ -21,7 +21,7 @@ class VelpTest(BrowserTest):
 
         velp_selection_element = self.drv.find_element_by_css_selector('#velpSelection')
         self.assert_same_screenshot(velp_selection_element, ['velps/velp_selection_empty', 'velps/velp_selection_empty_alt'])
-        create_velp_btn = velp_selection_element.find_element_by_css_selector('#createVelpButton')
+        create_velp_btn = find_button_by_text(velp_selection_element, 'Create new velp')
         create_velp_btn.click()
         new_velp_selector = '.velp-data.new.edit'
         new_velp_element: WebElement = velp_selection_element.find_element_by_css_selector(new_velp_selector)
