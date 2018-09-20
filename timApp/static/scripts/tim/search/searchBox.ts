@@ -571,13 +571,13 @@ timApp.component("searchBox", {
             <input type="checkbox" ng-model="$ctrl.createNewWindow"> Open new window for each search</label>
         <h5 class="font-weight-normal">Search scope:</h5>
         <label class="font-weight-normal" title="Search document content">
-            <input type="checkbox" ng-model="$ctrl.searchContent"> Content search</label>
+            <input type="checkbox" ng-model="$ctrl.searchContent"> Contents</label>
         <label class="font-weight-normal" title="Search document titles">
-            <input type="checkbox" ng-model="$ctrl.searchTitles"> Title search</label>
+            <input type="checkbox" ng-model="$ctrl.searchTitles"> Titles</label>
         <label class="font-weight-normal" title="Search document tags">
-            <input type="checkbox" ng-model="$ctrl.searchTags"> Tag search</label>
+            <input type="checkbox" ng-model="$ctrl.searchTags"> Tags</label>
         <label class="font-weight-normal" title="Search document paths">
-            <input type="checkbox" ng-model="$ctrl.searchPaths"> Path search</label>
+            <input type="checkbox" ng-model="$ctrl.searchPaths"> Paths</label>
 
       </form>
     </div>
