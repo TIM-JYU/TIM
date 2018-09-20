@@ -36,6 +36,15 @@
         cursor: pointer;
         padding-right: 1em;
     }
+
+    &.attached {
+        background-color: $draghandle-attached-color;
+        border: 1px solid $basic-border-color;
+
+        p, i {
+            color: set-text-color($draghandle-attached-color);
+        }
+    }
 }
 
 .resizehandle-r {

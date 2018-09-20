@@ -66,7 +66,7 @@
     color: white;
     font-size: 0.8em;
     background-color: #3cc;
-    border: 1px solid #B7B7B7;
+    border: 1px solid $basic-border-color;
     border-bottom: none;
     padding: 0.5em 1em;
 }
@@ -75,7 +75,7 @@
     color: #333;
     font-size: 0.8em;
     background-color: #F6F6F6;
-    border: 1px solid #B7B7B7;
+    border: 1px solid $basic-border-color;
     border-bottom: none;
     padding: 0.5em 1em;
 }

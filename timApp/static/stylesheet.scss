@@ -460,7 +460,7 @@ p.caption {
 .previewcontent {
     clear: both;
     overflow-y: auto;
-    border: 1px solid rgb(183, 183, 183);
+    border: 1px solid $basic-border-color;
     background-color: #f8f8f8;
     min-height: 1px;
     padding-left: 2em;
@@ -769,8 +769,8 @@ pareditor {
     padding: 4px 8px;
     margin: 0 0 3px 0;
     background: white;
-    border-left: 1px solid rgb(183, 183, 183);
-    border-right: 1px solid rgb(183, 183, 183);
+    border-left: 1px solid $basic-border-color;
+    border-right: 1px solid $basic-border-color;
     border-bottom-right-radius: 5px;
     border-bottom-left-radius: 5px;
     display: flex;
@@ -788,7 +788,7 @@ pareditor {
 }
 
 .tabsarea, .extraButtonArea {
-    border-bottom: 1px solid rgb(183, 183, 183);
+    border-bottom: 1px solid $basic-border-color;
 }
 
 .tabsarea {
@@ -799,7 +799,7 @@ pareditor {
         height: 100%;
         display: inline-block;
         list-style: none;
-        border: 1px solid rgb(183, 183, 183);
+        border: 1px solid $basic-border-color;
         border-bottom: none;
         border-top-right-radius: 5px;
         border-top-left-radius: 5px;
@@ -1058,7 +1058,7 @@ button:disabled, input[type="submit"]:disabled, input[type="button"]:disabled, .
     height: auto;
     width: 100%;
     border-radius: 5px;
-    border: 1px solid rgb(183, 183, 183);
+    border: 1px solid $basic-border-color;
     box-sizing: border-box;
     -moz-box-sizing: border-box;
     -webkit-box-sizing: border-box;
