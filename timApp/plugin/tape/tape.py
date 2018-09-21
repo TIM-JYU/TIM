@@ -51,7 +51,7 @@ def tape_get_html(jso):
     """
     values = jso['markup']
     attrs = json.dumps(values)
-    runner = 'tape'
+    runner = 'timTape'
     s = f'<{runner} data={quoteattr(attrs)}></{runner}>'
     return s
 

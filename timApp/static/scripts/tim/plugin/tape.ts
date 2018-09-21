@@ -72,9 +72,9 @@ class Output extends Command {
     }
 
     public execute(params: CommandParameters) {
-        if (params.state.hand !== null) {
+        if (params.state.hand != null) {
             params.state.output.push(params.state.hand);
-            params.state.hand = null;
+            params.state.hand = undefined;
         }
     }
 }
@@ -197,7 +197,7 @@ class JumpIfNeg extends Jump {
     }
 
     public execute(params: CommandParameters) {
-        if (params.state.hand !== null && params.state.hand < 0) {
+        if (params.state.hand != null && params.state.hand < 0) {
             this.jumpToLabel(params);
         }
     }
@@ -225,10 +225,10 @@ class CommandInstance {
         }
 
         if (this.command.isLabel()) {
-            return this.parameter + ":";
+            return `${this.parameter}:`;
         }
 
-        return this.command.name + "(" + this.parameter + ")";
+        return `${this.command.name} (${this.parameter})`;
     }
 }
 
@@ -237,7 +237,7 @@ class CommandInstance {
  */
 class TapeState {
     public input: number[] = [];
-    public hand: number | null = null;
+    public hand: number | undefined;
     public output: number[] = [];
     public memory: number[] = [];
     public instructionPointer: number = 0;
@@ -406,7 +406,7 @@ export class TapeController implements IController {
      */
     private toText(): string {
         let result: string = "";
-        this.commandList.forEach(c => result += c.command.name + " " + c.parameter + "\n");
+        this.commandList.forEach(c => result += `${c.command.name} ${c.parameter}\n`);
         return result;
     }
 
@@ -417,8 +417,8 @@ export class TapeController implements IController {
     private fromText(text: string) {
         text = text.replace("\r\n", "\n").replace("\r", "\n");
         const lines = text.split('\n');
-        for (let i = 0; i < lines.length; i++) {
-            const components = lines[i].split(' ');
+        for (const line of lines) {
+            const components = line.split(' ');
             if (components.length === 0) {
                 continue;
             }
@@ -484,7 +484,7 @@ export class TapeController implements IController {
     }
 }
 
-timApp.component("tape", {
+timApp.component("timTape", {
     controller: TapeController,
     bindings: {
         data: "<",
