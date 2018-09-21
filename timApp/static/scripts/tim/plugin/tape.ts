@@ -268,25 +268,17 @@ export class TapeController implements IController {
         this.reset();
     }
 
-    $doCheck() {
-        if (this.newCommandName && this.newCommandName !== "") {
-            const command = this.possibleCommandList.find(c => c.name === this.newCommandName);
-            if (command) {
-                this.showNewCommandParameter = command.usesParameter;
-                this.newCommandParameterText = command.getParameterName() + ":";
-            }
-        }
-    }
-
     public possibleCommandList: Command[] = [];
     public commandList: CommandInstance[] = [];
     public state: TapeState;
 
-    private newCommandName: string = "";
+    private newCommandIndex: number = -1;
     private newCommandParameter: string = "";
     private newCommandParameterText: string = "Parameter:";
 
     private showNewCommandParameter: boolean = true;
+
+    private selectedCommandIndex: number = -1;
 
     private data!: Binding<TapeAttrs, "<">;
 
@@ -297,11 +289,11 @@ export class TapeController implements IController {
      * Handles clicks on the "Add command" button.
      */
     private addCommandButtonClick() {
-        const commandToAdd = this.possibleCommandList.find(c => c.name === this.newCommandName);
-        if (!commandToAdd) {
+        if (this.newCommandIndex == -1) {
             return;
         }
 
+        const commandToAdd = this.possibleCommandList[this.newCommandIndex];
         this.addCommand(commandToAdd, this.newCommandParameter);
     }
 
@@ -403,27 +395,10 @@ export class TapeController implements IController {
         }
     }
 
-    // Rendering functions below
-
-    private getCommandColor(index: number) {
-        if (index == this.state.instructionPointer) {
-            return "red";
+    private removeCommand() {
+        if (this.selectedCommandIndex > -1 && this.selectedCommandIndex < this.commandList.length) {
+            this.commandList.splice(this.selectedCommandIndex, 1);
         }
-
-        if (index > -1 && index < this.commandList.length) {
-            if (this.commandList[index].command.isLabel())
-                return "blue";
-        }
-
-        return "black";
-    }
-
-    private getRunButtonText() {
-        if (this.timer) {
-            return "Stop";
-        }
-
-        return "Run";
     }
 
     /**
@@ -460,6 +435,53 @@ export class TapeController implements IController {
             }
         }
     }
+
+    private onCommandClick(index: number) {
+        this.newCommandIndex = index;
+
+        if (this.newCommandIndex > 0) {
+            const command = this.possibleCommandList[this.newCommandIndex];
+            if (command) {
+                this.showNewCommandParameter = command.usesParameter;
+                this.newCommandParameterText = command.getParameterName() + ":";
+            }
+        }
+    }
+
+    // Rendering functions below
+
+    private getNewCommandColor(index: number) {
+        if (index === this.newCommandIndex) {
+            return "red";
+        }
+
+        return "black";
+    }
+
+    private getCommandColor(index: number) {
+        if (index == this.selectedCommandIndex) {
+            return "red";
+        }
+
+        if (index == this.state.instructionPointer) {
+            return "green";
+        }
+
+        if (index > -1 && index < this.commandList.length) {
+            if (this.commandList[index].command.isLabel())
+                return "blue";
+        }
+
+        return "black";
+    }
+
+    private getRunButtonText() {
+        if (this.timer) {
+            return "Stop";
+        }
+
+        return "Run";
+    }
 }
 
 timApp.component("tape", {
@@ -490,18 +512,23 @@ timApp.component("tape", {
             </span>
         </div>
         <div>
-        <span>Add command:</span>
-        <span>Program</span>
         </div>
-        <span class="allowed-commands">
-            <select ng-model="$ctrl.newCommandName" size="10">
-            <option ng-repeat="c in $ctrl.possibleCommandList">{{c.name}}</option>
-            </select>
+        <span class="allowed-commands" ng-style="{'display': 'inline-block', 'vertical-align': 'top'}">
+            Add command:
+            <ul>
+            <li ng-repeat="c in $ctrl.possibleCommandList" ng-style="{'color': $ctrl.getNewCommandColor($index)}" 
+                ng-click="$ctrl.onCommandClick($index)">{{c.name}}</li>
+            </ul>
         </span>
-        <span class="program">
-            <select size="10">
+        <span class="program" ng-style="{'display': 'inline-block', 'vertical-align': 'top'}">
+            Program
+            <ul>
+            <li ng-repeat="c in $ctrl.commandList" ng-click="$ctrl.selectedCommandIndex = $index" 
+            ng-style="{'color': $ctrl.getCommandColor($index)}">{{c.getName()}}</li>
+            </ul>
+            <!--- <select ng-model="$ctrl.selected" size="10">
             <option ng-repeat="c in $ctrl.commandList" ng-style="{'color': $ctrl.getCommandColor($index)}">{{c.getName()}}</option>
-            </select>
+            </select> --->
         </span>
         <div class="commandAddArea" ng-show="true">
              <span class="commandParameterArea" ng-show="$ctrl.showNewCommandParameter">
@@ -511,7 +538,7 @@ timApp.component("tape", {
              <button class="timButton" ng-click="$ctrl.addCommandButtonClick()"><span>Add command</span>
         </div>
         <div class="commandRemoveArea" ng-show="true">
-            <button class="timButton"><span>Remove command</span></button>
+            <button class="timButton" ng-click="$ctrl.removeCommand()"><span>Remove command</span></button>
         </div>
         <div>
              <button class="timButton" ng-click="$ctrl.run()"><span ng-bind="$ctrl.getRunButtonText()"></span>
