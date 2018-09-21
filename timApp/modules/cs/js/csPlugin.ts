@@ -1394,7 +1394,9 @@ csApp.Controller = function($scope,$transclude) {
                 reader.onload = (function(e) {
                     // showTrack(theFile.target.result,type);  
                     // console.log(theFile.target.result);
-                    $scope.usercode = reader.result as string;
+                    $scope.$evalAsync(() => {
+                        $scope.usercode = reader.result as string;
+                    });
                   });
                 reader.readAsText(file);  
 
