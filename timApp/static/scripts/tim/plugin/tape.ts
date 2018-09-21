@@ -406,7 +406,7 @@ export class TapeController implements IController {
      */
     private toText(): string {
         let result: string = "";
-        this.commandList.forEach(c => result += c.command.abbreviation + " " + c.parameter + "\n");
+        this.commandList.forEach(c => result += c.command.name + " " + c.parameter + "\n");
         return result;
     }
 
@@ -423,7 +423,7 @@ export class TapeController implements IController {
                 continue;
             }
 
-            const command = this.possibleCommandList.find(c => c.abbreviation === components[0]);
+            const command = this.possibleCommandList.find(c => c.name === components[0]);
             if (!command) {
                 continue;
             }
