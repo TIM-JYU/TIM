@@ -250,16 +250,16 @@ class AttachmentStampData:
             raise StampDataMissingAttributeError("file", str(self))
         # Text or date, attachment & issue are alternatives.
         if not self.text:
-            if len(self.date) > stamp_param_max_length or \
-                    len(self.issue) > stamp_param_max_length or \
-                    len(self.attachment) > stamp_param_max_length:
-                raise StampDataInvalidError("too long parameter", str(self))
             if not self.date:
                 raise StampDataMissingAttributeError("date", str(self))
             if not self.attachment:
                 raise StampDataMissingAttributeError("attachment", str(self))
             if not self.issue:
                 raise StampDataMissingAttributeError("issue", str(self))
+            if len(self.date) > stamp_param_max_length or \
+                    len(self.issue) > stamp_param_max_length or \
+                    len(self.attachment) > stamp_param_max_length:
+                raise StampDataInvalidError("too long parameter", str(self))
         check_pdf_validity(self.file)
 
 
