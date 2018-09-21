@@ -379,7 +379,7 @@ export class TapeController implements IController {
         this.state.output = [];
         this.state.memory = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
         if (this.data.originalInput) {
-            this.state.input = this.data.originalInput;
+            this.state.input = Array.from(this.data.originalInput);
         } else {
             this.state.input = [];
         }
