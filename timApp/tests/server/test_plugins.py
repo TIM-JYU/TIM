@@ -13,6 +13,7 @@ from timApp.answer.pointsumrule import PointSumRule, PointType
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docinfo import DocInfo
 from timApp.document.docparagraph import DocParagraph
+from timApp.document.randutils import random_id
 from timApp.plugin.plugin import Plugin
 from timApp.tests.db.timdbtest import TEST_USER_1_ID, TEST_USER_2_ID, TEST_USER_1_NAME
 from timApp.tests.server.timroutetest import TimRouteTest
@@ -446,6 +447,7 @@ class PluginTest(TimRouteTest):
         answer_ids, answer_ids2 = [], []
         for t, a in zip(task_ids, answers):
             new = new.clone()
+            new.set_id(random_id())
             new.set_attr('taskId', t.split('.')[1])
             new.save(add=True)
             answer_ids.append(self.post_answer('mmcq', t, a)['savedNew'])

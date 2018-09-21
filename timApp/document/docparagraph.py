@@ -859,15 +859,18 @@ class DocParagraph:
     def clone(self) -> 'DocParagraph':
         """Clones the paragraph.
 
-        A new ID is generated for the cloned paragraph.
-
         :return: The cloned paragraph.
 
         """
-        return DocParagraph.create(self.doc,
-                                   md=self.get_markdown(),
-                                   attrs=self.get_attrs(),
-                                   files_root=self.files_root)
+        p = self
+        return DocParagraph.create(
+            attrs=p.get_attrs(),
+            doc=p.doc,
+            html=p.html,
+            md=p.get_markdown(),
+            par_hash=p.get_hash(),
+            par_id=p.get_id(),
+        )
 
     def clear_cache(self):
         """Clears the HTML cache of this paragraph."""

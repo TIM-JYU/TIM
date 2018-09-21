@@ -231,3 +231,16 @@ class PreambleTest3(PreambleTestBase):
         d.document.set_settings({'preamble': 'chat, preamblez'})
         e = self.get(d.url, as_tree=True)
         self.assert_content(e, ['p1c', 'p2c', 'p3c', ''])
+
+    def test_preamble_ref(self):
+        self.login_test3()
+        d = self.create_doc()
+        d2 = self.create_doc()
+        par = d2.document.add_text("from preamble")[0]
+        p = self.create_preamble_for(d)
+        p.document.add_text("""test""")
+        p.document.add_paragraph_obj(par.create_reference(p.document))
+        t = self.get(d.url, as_tree=True)
+        pars = t.cssselect('.par.preamble')
+        for pr in pars:
+            self.assertEqual(p.path, pr.attrib['data-from-preamble'])

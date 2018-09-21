@@ -1054,7 +1054,10 @@ class Document:
         if self.preamble_included:
             return
         self.ensure_pars_loaded()
-        pars = list(self.get_docinfo().get_preamble_pars())
+
+        # We must clone the preamble pars because they may be used in the context of multiple documents.
+        # See the test test_preamble_ref.
+        pars = [p.clone() for p in self.get_docinfo().get_preamble_pars()]
         current_ids = set(self.par_ids)
         preamble_ids = set(p.get_id() for p in pars)
         if len(pars) != len(preamble_ids):
