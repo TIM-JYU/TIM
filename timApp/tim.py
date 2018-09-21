@@ -49,7 +49,7 @@ from timApp.notification.notify import notify, send_email
 from timApp.printing.print import print_blueprint
 from timApp.plugin.qst.qst import qst_plugin
 from timApp.plugin.timtable.timTable import timTable_plugin
-from timApp.modules.tape.tape import tape_plugin
+from timApp.plugin.tape.tape import tape_plugin
 from timApp.readmark.routes import readings
 from timApp.util.flask.search import search_routes
 from timApp.user.settings.settings import settings_page
