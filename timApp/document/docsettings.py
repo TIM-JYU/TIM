@@ -43,7 +43,7 @@ class DocSettings:
     add_par_button_text_key = 'add_par_button_text'
     mathtype_key = 'math_type'
     math_preamble_key = 'math_preamble'
-    is_minutes_key = 'is_minutes'
+    memo_minutes_key = 'memo_minutes'
 
     @staticmethod
     def settings_to_string(par: DocParagraph) -> str:
@@ -256,8 +256,8 @@ class DocSettings:
     def get_dumbo_options(self):
         return DumboOptions(math_type=self.mathtype(), math_preamble=self.math_preamble())
 
-    def is_minutes(self) -> bool:
-        return self.__dict.get(self.is_minutes_key, False)
+    def memo_minutes(self) -> bool:
+        return self.__dict.get(self.memo_minutes_key, '')
 
 
 def resolve_settings_for_pars(pars: Iterable[DocParagraph]) -> YamlBlock:

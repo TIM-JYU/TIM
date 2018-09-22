@@ -52,7 +52,7 @@ export class SidebarMenuCtrl implements IController {
     private lastTab: number;
     private vctrl?: Require<ViewCtrl>;
     private bookmarks: {};
-    private isDocumentMinutes: boolean = false;
+    private documentMemoMinutes: string = '';
     private docSettings?: {macros?: {knro?: string}};
     private hideLinks: boolean = false;
     private displayIndex?: IHeaderDisplayIndexItem[];
@@ -80,7 +80,7 @@ export class SidebarMenuCtrl implements IController {
     }
 
     $onInit() {
-        this.isDocumentMinutes = $window.isMinutes;
+        this.documentMemoMinutes = $window.memoMinutes;
         this.docSettings = $window.docSettings;
 
     }
@@ -184,7 +184,7 @@ export class SidebarMenuCtrl implements IController {
             return false;
         }
 
-        return this.docSettings.macros.knro != null && this.isDocumentMinutes &&
+        return this.docSettings.macros.knro != null && this.documentMemoMinutes == "minutes" &&
             this.vctrl.item.rights.manage;
     }
 
@@ -197,7 +197,7 @@ export class SidebarMenuCtrl implements IController {
             return false;
         }
 
-        return this.docSettings.macros.knro != null && !this.isDocumentMinutes &&
+        return this.docSettings.macros.knro != null && this.documentMemoMinutes == "memo" &&
             this.vctrl.item.rights.manage;
     }
 
@@ -209,7 +209,8 @@ export class SidebarMenuCtrl implements IController {
         if (this.docSettings == null || this.docSettings.macros == null) {
             return false;
         }
-        return this.docSettings.macros.knro != null;
+        return this.docSettings.macros.knro != null &&
+               ( this.documentMemoMinutes == "minutes" || this.documentMemoMinutes == "memo" );
     }
 
     /**

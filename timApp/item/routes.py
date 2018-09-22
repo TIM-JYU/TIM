@@ -383,7 +383,7 @@ def view(item_path, template_name, usergroup=None, route="view"):
                                       'groups': task_groups},
                            doc_settings=doc_settings,
                            word_list=word_list,
-                           is_minutes=doc_settings.is_minutes()
+                           memo_minutes=doc_settings.memo_minutes(),
                            # add_button_text=doc_settings.get_dict().get('addParButtonText', 'Add paragraph')
                            )
 

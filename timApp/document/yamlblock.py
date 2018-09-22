@@ -128,6 +128,9 @@ def correct_yaml(text: str) -> Tuple[str, YamlMergeInfo]:
                 multiline = False
                 continue
             line = indent + line
+            # TODO: Here a code that checks if first line number of spaces is more than this line number of spaces,
+            # TODO: then throw an exception for YAML error:
+            # "the" + line + " should be indented at least as much as the first line"
         else:
             key = line.split(':', 1)[0].strip()
             if key:

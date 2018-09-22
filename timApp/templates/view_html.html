@@ -46,7 +46,7 @@
         var docVersion = {{ version|tojson }};
         var wordList = {{ word_list|tojson }};
         var readExpiry = {{ doc_settings.read_expiry()|tojson }};
-        var isMinutes = {{is_minutes|tojson}};
+        var memoMinutes = {{memo_minutes|tojson}};
         var docSettings = {{ doc_settings.get_dict().values|tojson }};  //TODO: show only for edit right
         var index = {{ headers|tojson }};
         var hideLinks = {{ hide_links|tojson }};

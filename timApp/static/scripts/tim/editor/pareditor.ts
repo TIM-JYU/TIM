@@ -654,12 +654,11 @@ or newer one that is more familiar to write in YAML:
                 throw new Error("Parsing stamp parameters failed");
             }
 
-            // Knro usage starts from 1 but dates starts from 0, so dummy value was added to
-            // dates[0] to adjust the indices.
+            // Knro usage starts from 1 but dates starts from 0 but there is dummy item first
             const knro = this.docSettings.macros.knro;
             let dates = this.docSettings.macros.dates;
-            dates = ["ERROR", ...dates];
-            const kokousDate = dates[knro];
+            // dates = ["ERROR", ...dates];
+            const kokousDate = dates[knro][0];  // dates is 2-dim array
 
             // If stampFormat isn't set in preamble,
             let stampFormat = this.docSettings.macros.stampformat;

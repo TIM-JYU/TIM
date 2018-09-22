@@ -17,7 +17,7 @@ class MinutesHandlingTest(TimRouteTest):
                                   "copy": d.id})
         d2 = DocEntry.find_by_path(minutes_document_path)
         self.assertIsNotNone(d2)
-        self.assertTrue(d2.document.get_settings().is_minutes())
+        self.assertTrue(d2.document.get_settings().memo_minutes() == "minutes")
 
     def test_minute_extracts(self):
         # Tests creation of extracts from a full minutes document
