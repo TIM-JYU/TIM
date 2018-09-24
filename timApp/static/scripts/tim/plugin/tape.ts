@@ -482,6 +482,18 @@ export class TapeController implements IController {
 
         return "Run";
     }
+
+    private getHand() {
+        if (this.state.hand) {
+            return this.state.hand;
+        } else {
+            return " ";
+        }
+    }
+
+    private getMemoryText(index: number) {
+        return "#" + String(index);
+    }
 }
 
 timApp.component("timTape", {
@@ -492,21 +504,24 @@ timApp.component("timTape", {
     template: `
     <div class="no-highlight">
         <div>
-            <div ng-style="{'display': 'inline-block'}">
+            <div ng-style="{'display': 'inline-block', 'text-align': 'right'}">
                 <span class="output">
-                <span ng-repeat="n in $ctrl.state.output track by $index">{{n}}</span>
+                <div ng-repeat="n in $ctrl.state.output track by $index" ng-style="{'border': '1px solid black', 
+                    'display': 'inline-block', 'margin': '0.2em', 'padding': '0.2em'}">{{n}}</div>
                 </span>
                 <img src="../static/images/tape/output.png" />
                 <span>Output</span>
             </div>
-            <div ng-style="{'display': 'inline-block'}">
-                <span ng-style="{'display': 'inline'}" class="hand" ng-bind="$ctrl.state.hand">
-                </span>
+            <div ng-style="{'display': 'inline-block', 'text-align': 'center'}">
+                <div ng-style="{'border': '1px solid black', 
+                    'display': 'inline-block', 'margin': 'auto', 'padding': '0.2em'}"
+                     class="hand" ng-bind="$ctrl.getHand()"></div>
                 <img src="../static/images/tape/robot.png" />
             </div>
             <div ng-style="{'display': 'inline-block'}">
                 <span class="input">
-                    <span ng-repeat="n in $ctrl.state.input track by $index" ng-style="{'padding': '0.5em'">{{n}}</span>
+                    <div ng-repeat="n in $ctrl.state.input track by $index" ng-style="{'border': '1px solid black', 
+                    'display': 'inline-block', 'margin': '0.2em', 'padding': '0.2em'}">{{n}}</div>
                 </span>
                 <img src="../static/images/tape/input.png" />
                 <span>Input</span>
@@ -514,12 +529,10 @@ timApp.component("timTape", {
         </div>
         <div class="memory">
             <div>Memory:</div>
-            <span ng-repeat="n in $ctrl.state.memory track by $index">
-                <span ng-bind="n"></span>
-                <span ng-bind="$index"></span>
-            </span>
-        </div>
-        <div>
+            <div ng-repeat="n in $ctrl.state.memory track by $index" ng-style="{'display': 'inline-block', 'border': '1px solid black', 'text-align': 'center', 'padding': '0.2em', 'margin': '0.1em', 'margin-bottom': '1em'}">
+                <div ng-bind="n"></div>
+                <div ng-bind="$ctrl.getMemoryText($index)"></div>
+            </div>
         </div>
         <span class="allowed-commands" ng-style="{'display': 'inline-block', 'vertical-align': 'top'}">
             Add command:
