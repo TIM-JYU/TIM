@@ -492,17 +492,25 @@ timApp.component("timTape", {
     template: `
     <div class="no-highlight">
         <div>
-            <span class="output">
-                Output:
+            <div ng-style="{'display': 'inline-block'}">
+                <span class="output">
                 <span ng-repeat="n in $ctrl.state.output track by $index">{{n}}</span>
-            </span>
-            Hand:
-            <span class="hand" ng-bind="$ctrl.state.hand">
-            </span>
-            <span class="input">
-                Input:
-                <span ng-repeat="n in $ctrl.state.input track by $index">{{n}}</span>
-            </span>
+                </span>
+                <img src="../static/images/tape/output.png" />
+                <span>Output</span>
+            </div>
+            <div ng-style="{'display': 'inline-block'}">
+                <span ng-style="{'display': 'inline'}" class="hand" ng-bind="$ctrl.state.hand">
+                </span>
+                <img src="../static/images/tape/robot.png" />
+            </div>
+            <div ng-style="{'display': 'inline-block'}">
+                <span class="input">
+                    <span ng-repeat="n in $ctrl.state.input track by $index" ng-style="{'padding': '0.5em'">{{n}}</span>
+                </span>
+                <img src="../static/images/tape/input.png" />
+                <span>Input</span>
+            </div>
         </div>
         <div class="memory">
             <div>Memory:</div>
