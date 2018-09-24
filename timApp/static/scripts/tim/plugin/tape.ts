@@ -268,8 +268,12 @@ export class TapeController implements IController {
         this.reset();
     }
 
+    // List of commands supported by the tape machine
     public possibleCommandList: Command[] = [];
+
+    // List of commands in the current program
     public commandList: CommandInstance[] = [];
+
     public state: TapeState;
 
     private newCommandIndex: number = -1;
@@ -278,6 +282,7 @@ export class TapeController implements IController {
 
     private showNewCommandParameter: boolean = true;
 
+    // The index of the selected command of the current program, if any
     private selectedCommandIndex: number = -1;
 
     private data!: Binding<TapeAttrs, "<">;
@@ -395,6 +400,9 @@ export class TapeController implements IController {
         }
     }
 
+    /**
+     * Handles clicks on the "Remove command" button.
+     */
     private removeCommand() {
         if (this.selectedCommandIndex > -1 && this.selectedCommandIndex < this.commandList.length) {
             this.commandList.splice(this.selectedCommandIndex, 1);
@@ -436,6 +444,10 @@ export class TapeController implements IController {
         }
     }
 
+    /**
+     * Handles clicks on the "add command" command list.
+     * @param index The index of the command that was clicked.
+     */
     private onCommandClick(index: number) {
         this.newCommandIndex = index;
 
@@ -450,6 +462,10 @@ export class TapeController implements IController {
 
     // Rendering functions below
 
+    /**
+     * Gets the color of an item in the "add command" supported command list.
+     * @param index The index of the command.
+     */
     private getNewCommandColor(index: number) {
         if (index === this.newCommandIndex) {
             return "red";
@@ -458,6 +474,10 @@ export class TapeController implements IController {
         return "black";
     }
 
+    /**
+     * Gets the color of an item in the current program command list.
+     * @param index The index of the program command.
+     */
     private getCommandColor(index: number) {
         if (index == this.selectedCommandIndex) {
             return "red";
@@ -491,6 +511,10 @@ export class TapeController implements IController {
         }
     }
 
+    /**
+     * Gets the text for a specific index in the memory index (not memory content!) display.
+     * @param index The memory location index.
+     */
     private getMemoryText(index: number) {
         return "#" + String(index);
     }
