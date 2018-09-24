@@ -575,14 +575,14 @@ timApp.component("timTape", {
             <option ng-repeat="c in $ctrl.commandList" ng-style="{'color': $ctrl.getCommandColor($index)}">{{c.getName()}}</option>
             </select> --->
         </span>
-        <div class="commandAddArea" ng-show="true">
+        <div class="commandAddArea" ng-show="true" ng-style="{'margin-bottom': '0.5em'}">
              <span class="commandParameterArea" ng-show="$ctrl.showNewCommandParameter">
                 <span>{{$ctrl.newCommandParameterText}}</span>
                 <input ng-model="$ctrl.newCommandParameter">
              </span>
              <button class="timButton" ng-click="$ctrl.addCommandButtonClick()"><span>Add command</span>
         </div>
-        <div class="commandRemoveArea" ng-show="true">
+        <div class="commandRemoveArea" ng-show="true" ng-style="{'margin-bottom': '1em'}">
             <button class="timButton" ng-click="$ctrl.removeCommand()"><span>Remove command</span></button>
         </div>
         <div>
