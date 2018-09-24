@@ -248,7 +248,11 @@ class TapeState {
  * Attributes parsed from the paragraph YAML.
  */
 export interface TapeAttrs {
-    originalInput?: number[];
+    presetInput?: number[];
+    presetHand?: number;
+    presetOutput?: number[];
+    presetMemoryState?: number[];
+    presetCode?: string;
 }
 
 /**
@@ -372,7 +376,7 @@ export class TapeController implements IController {
     }
 
     /**
-     * Resets the tape machine.
+     * Resets the tape machine to its original state.
      * Clears output, sets input to match the original input,
      * sets the instruction pointer to zero and clears memory.
      */
@@ -382,13 +386,37 @@ export class TapeController implements IController {
         }
 
         this.state.stopped = false;
-        this.state.instructionPointer = 0;
-        this.state.output = [];
-        this.state.memory = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-        if (this.data.originalInput) {
-            this.state.input = Array.from(this.data.originalInput);
+
+        if (this.data.presetInput) {
+            this.state.input = Array.from(this.data.presetInput);
         } else {
             this.state.input = [];
+        }
+
+        if (this.data.presetHand) {
+            this.state.hand = this.data.presetHand;
+        } else {
+            this.state.hand = undefined;
+        }
+
+        if (this.data.presetOutput) {
+            this.state.output = Array.from(this.data.presetOutput);
+        } else {
+            this.state.output = [];
+        }
+
+        this.state.memory = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+        if (this.data.presetMemoryState) {
+            for (let i = 0; i < this.data.presetMemoryState.length && this.state.memory.length; i++) {
+                this.state.memory[i] = this.data.presetMemoryState[i];
+            }
+        }
+
+        this.state.instructionPointer = 0;
+        if (this.data.presetCode && this.commandList.length === 0) {
+            // assign pre-defined code only if we have no code right now,
+            // so we don't clear the user's code on reset
+            this.fromText(this.data.presetCode);
         }
     }
 
@@ -427,7 +455,8 @@ export class TapeController implements IController {
     private fromText(text: string) {
         text = text.replace("\r\n", "\n").replace("\r", "\n");
         const lines = text.split('\n');
-        for (const line of lines) {
+        for (let line of lines) {
+            line = line.trim();
             const components = line.split(' ');
             if (components.length === 0) {
                 continue;
