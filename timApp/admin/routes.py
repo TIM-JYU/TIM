@@ -5,7 +5,8 @@ from flask import flash, url_for, Blueprint
 
 from timApp.auth.accesshelper import verify_admin
 from timApp.tim_app import app
-from timApp.util.flask.responsehelper import safe_redirect
+from timApp.user.user import User
+from timApp.util.flask.responsehelper import safe_redirect, json_response
 
 admin_bp = Blueprint('admin',
                      __name__,
@@ -47,3 +48,13 @@ def reset_css():
     if os.path.exists(gen_dir):
         shutil.rmtree(gen_dir)
     return safe_redirect(url_for('start_page'))
+
+
+@admin_bp.route('/users/search/<term>')
+def search_users(term: str):
+    verify_admin()
+    result = User.query.filter(
+        User.name.ilike(f'%{term}%') |
+        User.real_name.ilike(f'%{term}%') |
+        User.email.ilike(f'%{term}%')).all()
+    return json_response(result)

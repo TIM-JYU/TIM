@@ -689,7 +689,7 @@ class TimRouteTest(TimDbTest):
             result = self.get(url, **kwargs)
         return result
 
-    def make_admin(self, u):
+    def make_admin(self, u: User):
         admin_group = UserGroup.get_admin_group()
         if u not in admin_group.users:
             u.groups.append(admin_group)
