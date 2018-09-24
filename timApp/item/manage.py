@@ -18,7 +18,7 @@ from timApp.auth.sessioninfo import get_current_user_group
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.create_item import copy_document_and_enum_translations
 from timApp.document.docentry import DocEntry
-from timApp.document.documents import delete_document
+from timApp.document.docinfo import move_document
 from timApp.folder.folder import Folder, path_includes
 from timApp.item.block import BlockType
 from timApp.item.item import Item, copy_rights
@@ -366,23 +366,11 @@ def verify_permission_edit_access(item_id: int, perm_type: str) -> Tuple[Item, b
 def del_document(doc_id):
     d = get_doc_or_abort(doc_id)
     verify_ownership(d)
-    aliases = d.aliases
-    for a in aliases[1:]:
-        db.session.delete(a)
     trash_folder_path = f'roskis'
-    if not Folder.find_by_path(trash_folder_path):
-        Folder.create(trash_folder_path, owner_group_id=UserGroup.get_admin_group().id, title='Roskakori')
-    first_alias = aliases[0]
-    short_name = first_alias.short_name
-    attempt = 0
-    while True:
-        trash_path = f'{trash_folder_path}/{short_name}'
-        if not Folder.find_by_path(trash_path) and not DocEntry.find_by_path(trash_path):
-            break
-        attempt += 1
-        short_name = f'{first_alias.short_name}_{attempt}'
-    first_alias.name = trash_path
-    first_alias.public = True
+    f = Folder.find_by_path(trash_folder_path)
+    if not f:
+        f = Folder.create(trash_folder_path, owner_group_id=UserGroup.get_admin_group().id, title='Roskakori')
+    move_document(d, f)
     db.session.commit()
     return ok_response()
 

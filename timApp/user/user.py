@@ -17,7 +17,8 @@ from timApp.item.block import Block
 from timApp.folder.folder import Folder
 from timApp.notification.notification import Notification
 from timApp.user.usergroup import UserGroup
-from timApp.user.special_group_names import ANONYMOUS_GROUPNAME, ANONYMOUS_USERNAME, LOGGED_IN_GROUPNAME
+from timApp.user.special_group_names import ANONYMOUS_GROUPNAME, ANONYMOUS_USERNAME, LOGGED_IN_GROUPNAME, \
+    SPECIAL_USERNAMES
 from timApp.lecture.lectureusers import LectureUsers
 from timApp.answer.answer_models import UserAnswer
 from timApp.timdb.sqa import db
@@ -104,14 +105,20 @@ class User(db.Model):
     lectures = db.relationship('Lecture', secondary=LectureUsers.__table__,
                                back_populates='users', lazy='dynamic')
     owned_lectures = db.relationship('Lecture', back_populates='owner', lazy='dynamic')
+    owned_lectures_alt = db.relationship('Lecture')
     lectureanswers = db.relationship('LectureAnswer', back_populates='user', lazy='dynamic')
+    lectureanswers_alt = db.relationship('LectureAnswer')
     messages = db.relationship('Message', back_populates='user', lazy='dynamic')
+    messages_alt = db.relationship('Message')
     questionactivity = db.relationship('QuestionActivity', back_populates='user', lazy='select')
     useractivity = db.relationship('Useractivity', back_populates='user', lazy='select')
     answers = db.relationship('Answer', secondary=UserAnswer.__table__,
                               back_populates='users', lazy='dynamic')
+    answers_alt = db.relationship('Answer', secondary=UserAnswer.__table__)
     annotations = db.relationship('Annotation', back_populates='annotator', lazy='dynamic')
+    annotations_alt = db.relationship('Annotation')
     velps = db.relationship('Velp', back_populates='creator', lazy='dynamic')
+    velps_alt = db.relationship('Velp')
 
     @property
     def logged_in(self):
@@ -200,6 +207,15 @@ class User(db.Model):
         if u:
             return u
         return User.get_by_name(email_or_username)
+
+    @property
+    def email_name_part(self):
+        parts = self.email.split('@')
+        return parts[0]
+
+    @property
+    def is_special(self):
+        return self.name in SPECIAL_USERNAMES
 
     def check_password(self, password: str, allow_old=False, update_if_old=True) -> bool:
         if not self.pass_:
