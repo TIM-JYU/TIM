@@ -89,10 +89,10 @@ class TimDbTest(unittest.TestCase):
         return User.get_by_name('testuser3')
 
     def get_test_user_1_group_id(self):
-        return self.db.users.get_personal_usergroup_by_id(TEST_USER_1_ID)
+        return 5
 
     def get_test_user_2_group_id(self):
-        return self.db.users.get_personal_usergroup_by_id(TEST_USER_2_ID)
+        return 6
 
     def assert_dict_subset(self, data, subset):
         for k, v in subset.items():
@@ -103,9 +103,9 @@ class TimDbTest(unittest.TestCase):
             self.assert_dict_subset(d, s)
 
 
-TEST_USER_1_ID = 4
-TEST_USER_2_ID = 5
-TEST_USER_3_ID = 6
+TEST_USER_1_ID = 2
+TEST_USER_2_ID = 3
+TEST_USER_3_ID = 4
 
 TEST_USER_1_NAME = 'Test user 1'
 TEST_USER_2_NAME = 'Test user 2'

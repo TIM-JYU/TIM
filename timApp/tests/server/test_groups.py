@@ -17,7 +17,9 @@ class GroupTest(TimRouteTest):
         t3 = names[2]
         t4 = names[3]
         t5 = 't5'
-        uids = [User.create_with_group(name)[0].id for name in names]
+        users_and_groups = [User.create_with_group(name) for name in names]
+        t1gid = users_and_groups[0][1].id
+        uids = [u.id for u, g in users_and_groups]
         db.session.commit()
         self.get('/groups/show/testgroup1', expect_status=404,
                  expect_content={'error': 'User group not found'})
@@ -31,8 +33,9 @@ class GroupTest(TimRouteTest):
                  expect_content={'already_belongs': [t1, t3], 'added': [t2, t4], 'not_exist': [t5]})
         self.get(f'/groups/addmember/testgroup1/{t1},{t2}',
                  expect_content={'already_belongs': [t1, t2], 'added': [], 'not_exist': []})
+        ug = UserGroup.get_by_name('testgroup1')
         self.get(f'/groups/usergroups/{t1}',
-                 expect_content=[{'id': 10, 'name': 't1'}, {'id': 14, 'name': 'testgroup1'}])
+                 expect_content=[{'id': t1gid, 'name': 't1'}, {'id': ug.id, 'name': 'testgroup1'}])
         self.get(f'/groups/belongs/{t1}/testgroup1',
                  expect_content={'status': True})
 

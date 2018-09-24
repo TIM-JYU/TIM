@@ -9,6 +9,7 @@ from timApp.lecture.askedquestion import AskedQuestion, get_asked_question
 from timApp.lecture.lecture import Lecture
 from timApp.lecture.lectureanswer import LectureAnswer
 from timApp.lecture.showpoints import Showpoints
+from timApp.tests.db.timdbtest import TEST_USER_1_ID
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.timdb.sqa import db
 from timApp.util.utils import EXAMPLE_DOCS_PATH, get_current_time
@@ -86,7 +87,7 @@ class LectureTest(TimRouteTest):
         resp = self.get_updates(doc.id, -1)
 
         self.check_time(current_time, resp)
-        u = {'email': 'test1@example.com', 'id': 4, 'name': 'testuser1', 'real_name': 'Test user 1'}
+        u = {'email': 'test1@example.com', 'id': TEST_USER_1_ID, 'name': 'testuser1', 'real_name': 'Test user 1'}
         self.assert_dict_subset(resp, {
             'msgs': [{
                 'message': msg_text,

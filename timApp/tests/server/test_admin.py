@@ -1,4 +1,5 @@
 from timApp.document.docentry import DocEntry
+from timApp.tests.db.timdbtest import TEST_USER_1_ID, TEST_USER_2_ID, TEST_USER_3_ID
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.timdb.sqa import db
 from timApp.user.special_group_names import SPECIAL_USERNAMES
@@ -12,15 +13,15 @@ class SearchTest(TimRouteTest):
         self.make_admin(self.current_user)
         self.get('/users/search/test',
                  expect_content=[{'email': 'test1@example.com',
-                                  'id': 4,
+                                  'id': TEST_USER_1_ID,
                                   'name': 'testuser1',
                                   'real_name': 'Test user 1'},
                                  {'email': 'test2@example.com',
-                                  'id': 5,
+                                  'id': TEST_USER_2_ID,
                                   'name': 'testuser2',
                                   'real_name': 'Test user 2'},
                                  {'email': 'test3@example.com',
-                                  'id': 6,
+                                  'id': TEST_USER_3_ID,
                                   'name': 'testuser3',
                                   'real_name': 'Test user 3'}])
 
