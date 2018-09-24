@@ -311,10 +311,12 @@ export class TapeController implements IController {
     private addCommand(commandToAdd: Command, parameterString: string): boolean {
         let parameter;
 
+        // TODO maybe move parameter validation to the commands themselves?
         if (commandToAdd.usesParameter) {
             if (commandToAdd.getParameterType() === ParameterType.NUMBER) {
                 parameter = parseInt(parameterString);
-                if (isNaN(parameter)) {
+                // for now we assume all numbers are memory indexes
+                if (isNaN(parameter) || parameter < 0 || parameter >= this.state.memory.length) {
                     return false;
                 }
             } else {
