@@ -561,7 +561,7 @@ timApp.component("timTape", {
         <span class="allowed-commands" ng-style="{'display': 'inline-block', 'vertical-align': 'top'}">
             Add command:
             <ul>
-            <li ng-repeat="c in $ctrl.possibleCommandList" ng-style="{'color': $ctrl.getNewCommandColor($index)}" 
+            <li ng-repeat="c in $ctrl.possibleCommandList" ng-style="{'color': $ctrl.getNewCommandColor($index), 'cursor': 'pointer'}" 
                 ng-click="$ctrl.onCommandClick($index)">{{c.name}}</li>
             </ul>
         </span>
@@ -569,7 +569,7 @@ timApp.component("timTape", {
             Program
             <ul>
             <li ng-repeat="c in $ctrl.commandList" ng-click="$ctrl.selectedCommandIndex = $index" 
-            ng-style="{'color': $ctrl.getCommandColor($index)}">{{c.getName()}}</li>
+            ng-style="{'color': $ctrl.getCommandColor($index), 'cursor': 'pointer'}">{{c.getName()}}</li>
             </ul>
             <!--- <select ng-model="$ctrl.selected" size="10">
             <option ng-repeat="c in $ctrl.commandList" ng-style="{'color': $ctrl.getCommandColor($index)}">{{c.getName()}}</option>
