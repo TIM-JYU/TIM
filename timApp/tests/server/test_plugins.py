@@ -877,3 +877,46 @@ choices:
         self.assertEqual(expected_par.get_id(), par.attrib['ref-id'])
         self.assertEqual(str(expected_doc.id), par.attrib['ref-doc-id'])
         self.assertTrue(par.cssselect(fr'#{expected_doc.id}\.t\.{expected_par.get_id()}'))
+
+    def test_answer_rename(self):
+        self.login_test1()
+        d = self.create_doc(initial_par="""
+``` {#t plugin="mmcq"}
+stem: ""
+choices:
+  -
+    correct: true
+    reason: ""
+    text: ""
+```
+
+``` {#t2 plugin="mmcq"}
+stem: ""
+choices:
+  -
+    correct: true
+    reason: ""
+    text: ""
+```
+        """)
+        p = Plugin.from_paragraph(d.document.get_paragraphs()[0])
+        p2 = Plugin.from_paragraph(d.document.get_paragraphs()[1])
+        self.post_answer(p.type, p.full_task_id, [True, False, False])
+        self.post_answer(p.type, p.full_task_id, [True, True, False])
+        self.assertEqual(2, Answer.query.filter_by(task_id=p.full_task_id).count())
+        self.get(f'/renameAnswers/{p.task_id}/ä/{d.id}',
+                 expect_status=400,
+                 expect_content={'error': 'Invalid task name: ä'})
+        self.get(f'/renameAnswers/{p.task_id}/t_new/{d.id}', expect_content={'modified': 2})
+        self.get(f'/renameAnswers/{p.task_id}/t_new/{d.id}',
+                 expect_status=400,
+                 expect_content={"error": "The new name conflicts with 2 other answers with the same task name."})
+        self.assertEqual(0, Answer.query.filter_by(task_id=p.full_task_id).count())
+        self.assertEqual(2, Answer.query.filter_by(task_id=f'{d.id}.t_new').count())
+        self.post_answer(p2.type, p2.full_task_id, [True, True, False])
+        self.get(f'/renameAnswers/t_new/{p2.task_id}/{d.id}',
+                 expect_status=400,
+                 expect_content={"error": "The new name conflicts with 1 other answers with the same task name."})
+        self.get(f'/renameAnswers/t_new/t_new2/{d.id}', expect_content={'modified': 2})
+        self.login_test2()
+        self.get(f'/renameAnswers/t_new/{p2.task_id}/{d.id}', expect_status=403)

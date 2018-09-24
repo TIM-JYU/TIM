@@ -1,5 +1,6 @@
 """Answer-related routes."""
 import json
+import re
 from datetime import timezone, timedelta, datetime
 from typing import Union, List
 
@@ -10,7 +11,7 @@ from flask import Response
 from flask import abort
 from flask import request
 
-from timApp.auth.accesshelper import verify_logged_in, get_doc_or_abort
+from timApp.auth.accesshelper import verify_logged_in, get_doc_or_abort, verify_manage_access
 from timApp.auth.accesshelper import verify_task_access, verify_teacher_access, verify_seeanswers_access, has_teacher_access, \
     verify_view_access, get_par_from_request
 from timApp.document.post_process import hide_names_in_teacher
@@ -501,3 +502,22 @@ def get_task_users(task_id):
                 user['name'] = '-'
                 user['real_name'] = get_hidden_name(user['id'])
     return json_response(users)
+
+
+@answers.route('/renameAnswers/<old_name>/<new_name>/<path:doc_path>')
+def rename_answers(old_name: str, new_name: str, doc_path: str):
+    d = DocEntry.find_by_path(doc_path, fallback_to_id=True)
+    if not d:
+        abort(404)
+    verify_manage_access(d)
+    for n in (old_name, new_name):
+        if not re.fullmatch('[a-zA-Z0-9_-]+', n):
+            abort(400, f'Invalid task name: {n}')
+    conflicts = Answer.query.filter_by(task_id=f'{d.id}.{new_name}').count()
+    if conflicts > 0:
+        abort(400, f'The new name conflicts with {conflicts} other answers with the same task name.')
+    answers_to_rename = Answer.query.filter_by(task_id=f'{d.id}.{old_name}').all()
+    for a in answers_to_rename:
+        a.task_id = f'{d.id}.{new_name}'
+    db.session.commit()
+    return json_response({'modified': len(answers_to_rename)})
