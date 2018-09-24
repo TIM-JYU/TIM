@@ -129,7 +129,7 @@ export class DraggableController implements IController {
         }
     }
 
-    private setVisibility(v: "visible" | "hidden") {
+    private setVisibility(v: "visible" | "hidden" | "inherit") {
         this.element.css("visibility", v);
     }
 
@@ -263,7 +263,11 @@ export class DraggableController implements IController {
             }
         }
         // restore visibility (see $onInit)
-        this.setVisibility("visible");
+        if (this.canDrag()) {
+            this.setVisibility("visible");
+        } else {
+            this.setVisibility("inherit");
+        }
     }
 
     private async restoreSizeAndPosition() {
