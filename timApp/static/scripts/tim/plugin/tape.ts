@@ -558,16 +558,16 @@ timApp.component("timTape", {
                 <div ng-bind="$ctrl.getMemoryText($index)"></div>
             </div>
         </div>
-        <span class="allowed-commands" ng-style="{'display': 'inline-block', 'vertical-align': 'top'}">
+        <span class="allowed-commands" ng-style="{'display': 'inline-block', 'vertical-align': 'top', 'margin-right': '2em'}">
             Add command:
-            <ul>
+            <ul class="list-unstyled" ng-style="{'border': '1px solid black'}">
             <li ng-repeat="c in $ctrl.possibleCommandList" ng-style="{'color': $ctrl.getNewCommandColor($index), 'cursor': 'pointer'}" 
                 ng-click="$ctrl.onCommandClick($index)">{{c.name}}</li>
             </ul>
         </span>
         <span class="program" ng-style="{'display': 'inline-block', 'vertical-align': 'top'}">
-            Program
-            <ul>
+            Program:
+            <ul class="list-unstyled" ng-style="{'border': '1px solid black'}">
             <li ng-repeat="c in $ctrl.commandList" ng-click="$ctrl.selectedCommandIndex = $index" 
             ng-style="{'color': $ctrl.getCommandColor($index), 'cursor': 'pointer'}">{{c.getName()}}</li>
             </ul>
