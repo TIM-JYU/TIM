@@ -439,7 +439,7 @@ export class TapeController implements IController {
     private onCommandClick(index: number) {
         this.newCommandIndex = index;
 
-        if (this.newCommandIndex > 0) {
+        if (this.newCommandIndex > -1) {
             const command = this.possibleCommandList[this.newCommandIndex];
             if (command) {
                 this.showNewCommandParameter = command.usesParameter;
