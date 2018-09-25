@@ -50,14 +50,14 @@ def date_to_relative(d: Optional[datetime]):
         return f'{s // 3600} hours ago'
 
 
-def count_chars(md, char):
-    num_ticks = 0
-    for i, c in enumerate(md):
+def count_chars_from_beginning(md: str, char: str):
+    num = 0
+    for c in md:
         if c == char:
-            num_ticks = i + 1
+            num += 1
         else:
             break
-    return num_ticks
+    return num
 
 
 def get_error_html(message: Union[str, Exception], response: Optional[str]=None):

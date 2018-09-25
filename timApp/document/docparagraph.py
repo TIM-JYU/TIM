@@ -19,7 +19,7 @@ from timApp.markdown.markdownconverter import par_list_to_html_list, expand_macr
 from timApp.util.rndutils import get_rands_as_dict, get_rands_as_str
 from timApp.timdb.exceptions import TimDbException, InvalidReferenceException
 from timApp.timtypes import DocumentType
-from timApp.util.utils import count_chars, get_error_html, title_to_id
+from timApp.util.utils import count_chars_from_beginning, get_error_html, title_to_id
 
 SKIPPED_ATTRS = {'r', 'rd', 'rp', 'ra', 'rt', 'settings'}
 
@@ -442,7 +442,7 @@ class DocParagraph:
         from timApp.document.docsettings import DocSettings
 
         try:
-            DocSettings.settings_to_string(self)
+            DocSettings.from_paragraph(self)
         except TimDbException as e:
             return f'<div class="pluginError">Invalid settings: {e}</div>'
         return '<p class="docsettings">&nbsp;</p>'
@@ -708,7 +708,7 @@ class DocParagraph:
         deltas = copy(prev_par_auto_values['h'])
         title_ids = []
         for e in blocks:
-            level = count_chars(e['md'], '#')
+            level = count_chars_from_beginning(e['md'], '#')
             if level > 0:
                 title = e['md'][level:].strip()
                 title_ids.append(title_to_id(title))

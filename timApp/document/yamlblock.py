@@ -1,12 +1,13 @@
 import re
 from copy import deepcopy
 from enum import Enum
+from textwrap import shorten
 from typing import Dict, Optional, Tuple
 
 import yaml
 from yaml import YAMLError, CSafeLoader
 
-from timApp.util.utils import count_chars
+from timApp.util.utils import count_chars_from_beginning
 
 
 class BlockEndMissingError(YAMLError):
@@ -18,6 +19,12 @@ class BlockEndMissingError(YAMLError):
 class DuplicateKeyMergeHintError(YAMLError):
     def __init__(self, key: str):
         super().__init__(f'Using merge hints in a key ("{key}") having same name in different levels is not currently supported')
+
+
+class InvalidIndentError(YAMLError):
+    def __init__(self, line: str):
+        super().__init__(f'The line "{shorten(line, width=30, placeholder="...")}" '
+                         f'must be indented at least as much as the first line.')
 
 
 class MergeStyle(Enum):
@@ -83,7 +90,7 @@ def strip_code_block(md: str) -> str:
 
 
 def get_code_block_str(md):
-    code_block_marker = '`' * count_chars(md, '`')
+    code_block_marker = '`' * count_chars_from_beginning(md, '`')
     return code_block_marker
 
 
@@ -104,6 +111,7 @@ def correct_yaml(text: str) -> Tuple[str, YamlMergeInfo]:
     indent = None
     merge_hints = {}
     encountered_keys = set()
+    multiline_first_indent = None
     for line in lines:
         line = line.rstrip()
         if missing_space_after_colon.match(line) and not multiline:
@@ -113,6 +121,7 @@ def correct_yaml(text: str) -> Tuple[str, YamlMergeInfo]:
             end_str = r.group(3)
             indent = ' ' + r.group(1)
             multiline = True
+            multiline_first_indent = None
             line, _ = line.split('|', 1)
             key = r.group(2)
             hint = r.group(5)
@@ -127,10 +136,12 @@ def correct_yaml(text: str) -> Tuple[str, YamlMergeInfo]:
             if line == end_str:
                 multiline = False
                 continue
+            if multiline_first_indent is None:
+                multiline_first_indent = count_chars_from_beginning(line, ' ')
+            else:
+                if multiline_first_indent > count_chars_from_beginning(line, ' '):
+                    raise InvalidIndentError(line)
             line = indent + line
-            # TODO: Here a code that checks if first line number of spaces is more than this line number of spaces,
-            # TODO: then throw an exception for YAML error:
-            # "the" + line + " should be indented at least as much as the first line"
         else:
             key = line.split(':', 1)[0].strip()
             if key:

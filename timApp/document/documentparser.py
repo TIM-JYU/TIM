@@ -7,7 +7,7 @@ from timApp.document.randutils import hashfunc, random_id, is_valid_id
 from timApp.document.validationresult import ValidationResult, AttributesAtEndOfCodeBlock, DuplicateParagraphId, \
     InvalidParagraphId, DuplicateTaskId, MultipleAreasWithSameName, ZeroLengthArea, OverlappingClassedArea, \
     AreaEndWithoutStart, DuplicateAreaEnd, AreaWithoutEnd
-from timApp.util.utils import count_chars
+from timApp.util.utils import count_chars_from_beginning
 
 
 class DocReader:
@@ -85,7 +85,7 @@ class DocumentParser:
                 md = r['md']
                 try:
                     last_line = md[md.rindex('\n') + 1:]
-                    num_ticks = count_chars(md, '`')
+                    num_ticks = count_chars_from_beginning(md, '`')
                     if last_line.startswith('`' * num_ticks):
                         attrs, start_index = AttributeParser(last_line).get_attributes()
                         if start_index is not None:
@@ -234,7 +234,7 @@ class DocumentParser:
             # ```
             #
             single_mark = code_block_marker[0]
-            last_line_code_chars = count_chars(block_lines[-1], single_mark)
+            last_line_code_chars = count_chars_from_beginning(block_lines[-1], single_mark)
             if (last_line_code_chars > 0 or len(line) == 0) and len(line.strip()) == last_line_code_chars:
                 block_lines[-1] = single_mark * (len(code_block_marker) - last_line_code_chars) + block_lines[-1]
             else:

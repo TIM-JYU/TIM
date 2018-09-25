@@ -4,7 +4,7 @@ import yaml
 from yaml import YAMLError
 
 from timApp.document.yamlblock import YamlBlock, MergeStyle, yaml_loader, BlockEndMissingError, \
-    DuplicateKeyMergeHintError
+    DuplicateKeyMergeHintError, InvalidIndentError
 
 
 class YamlBlockTest(unittest.TestCase):
@@ -206,3 +206,22 @@ macros:
             self.assertEqual(
                 'Using merge hints in a key ("a") having same name in different levels is not currently supported',
                 str(e.exception))
+
+    def test_multiline_invalid_indentation(self):
+        with self.assertRaises(InvalidIndentError) as e:
+            YamlBlock.from_markdown("""
+a: |!!
+ t
+b
+!!
+        """)
+        self.assertEqual(
+            'The line "b" must be indented at least as much as the first line.',
+            str(e.exception))
+        yb = YamlBlock.from_markdown("""
+a: |!!
+ t
+  b
+!!
+                """)
+        self.assertEqual({'a': 't\n b\n'}, yb)

@@ -1009,7 +1009,10 @@ class Document:
                 first_setting_par = next(self.get_settings_pars(), None)
                 if not first_setting_par:
                     return None
-                settings = DocSettings.from_paragraph(first_setting_par)
+                try:
+                    settings = DocSettings.from_paragraph(first_setting_par)
+                except TimDbException:
+                    return None
                 src_docid = settings.get_source_document()
                 self.source_doc = Document(src_docid, preload_option=self.preload_option) if src_docid is not None else None
             else:

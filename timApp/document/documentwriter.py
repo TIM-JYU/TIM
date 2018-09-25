@@ -3,7 +3,7 @@ from typing import Optional
 
 from timApp.document.documentparser import DocumentParser
 from timApp.document.documentparseroptions import DocumentParserOptions
-from timApp.util.utils import count_chars
+from timApp.util.utils import count_chars_from_beginning
 
 
 class DocumentWriter:
@@ -42,7 +42,7 @@ class DocumentWriter:
                 num_ticks = 3
                 for b in blocks:
                     if b['type'] == 'code':
-                        num_ticks = count_chars(b['md'], '`') + 1
+                        num_ticks = count_chars_from_beginning(b['md'], '`') + 1
                 text += '`' * num_ticks + ' {' + self.attrs_to_str(atomized) + '}\n' + p['md'] + '\n' + '`' * num_ticks
             else:
                 attrs_str = self.attrs_to_str(p)

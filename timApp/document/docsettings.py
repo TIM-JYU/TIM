@@ -45,17 +45,6 @@ class DocSettings:
     math_preamble_key = 'math_preamble'
     memo_minutes_key = 'memo_minutes'
 
-    @staticmethod
-    def settings_to_string(par: DocParagraph) -> str:
-        if not par.is_setting():
-            raise TimDbException(f'Not a setting paragraph: {par.get_id()}')
-        if par.is_reference() and not par.is_translation():
-            par = par.get_referenced_pars(set_html=False)[0]
-        if not par.is_setting():
-            raise TimDbException(f'The referenced paragraph is not a setting paragraph.')
-        yb = DocSettings.parse_values(par)
-        return str(yb.values)
-
     @classmethod
     def from_paragraph(cls, par: DocParagraph):
         """Constructs DocSettings from the given DocParagraph.
