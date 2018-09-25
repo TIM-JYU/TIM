@@ -86,7 +86,7 @@ class BrowserTest(TimLiveServer, TimRouteTest):
              'name': 'session',
              'path': '/',
              'secure': False,
-             'value': '.eJwtjEEKwzAMBL8S9mwaDD351EfkboS7pQHLCYoDhdK_V4bcZpiVvsg7TaWxdaRuJwOklfdmSEBAEWV-2aausztV1urcefT44Ed0r7wV7wFGqbn5gffF-3QetCl6GZDXJ9L94ms1vgyP-P0BRcctlw.DBglMQ.vvva2NpZfDBi7dlJAJoKfg5uGQo'})
+             'value': 'eyJfcGVybWFuZW50Ijp0cnVlLCJhbmNob3IiOiIiLCJjYW1lX2Zyb20iOiIvIiwidXNlcl9pZCI6Mn0.DowETw.cyvyDZcvHWr2aKC5agfIW5sUVrU'})
 
     def login_browser_test1(self):
         """Logs in as Test user 1."""
