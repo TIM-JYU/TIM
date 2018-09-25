@@ -105,7 +105,7 @@
 
             </div>
         </div>
-        <span class="triesLeft" ng-show="$ctrl.taskInfo.answerLimit && $ctrl.taskInfo.triesText && $ctrl.selectedAnswer">{{ $ctrl.taskInfo.triesText }} {{ $ctrl.getTriesLeft() }}</span>
+        <span class="triesLeft" ng-show="$ctrl.taskInfo.answerLimit && $ctrl.taskInfo.triesText">{{ $ctrl.taskInfo.triesText }} {{ $ctrl.getTriesLeft() }}</span>
         <span ng-show="$ctrl.answers.length == 0 && $ctrl.viewctrl.teacherMode">(no answers)</span>
     </div>
     <span ng-show="$ctrl.taskInfo.starttime || $ctrl.taskInfo.deadline">
