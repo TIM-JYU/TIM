@@ -16,7 +16,8 @@ class MinutesHandlingTest(TimRouteTest):
                                   "item_title": f"PK{knro}",
                                   "copy": d.id})
         d2 = DocEntry.find_by_path(minutes_document_path)
-        self.assertIsNotNone(d2)
+        chg = d2.document.get_changelog()
+        self.assertEqual(self.get_test_user_1_group_id(), chg.entries[0].group_id)
         self.assertTrue(d2.document.get_settings().memo_minutes() == "minutes")
 
     def test_minute_extracts(self):

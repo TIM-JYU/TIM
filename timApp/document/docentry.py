@@ -150,6 +150,7 @@ class DocEntry(db.Model, DocInfo):
 
         # noinspection PyArgumentList
         docentry = DocEntry(id=document.doc_id, name=path, public=True)
+        docentry._doc = document
         if path is not None:
             if Folder.find_by_path(path):
                 db.session.rollback()
