@@ -56,13 +56,19 @@ def qst_answer():
     tim_info = {}
     answers = jsondata['input']['answers']
     spoints = jsondata['markup'].get('points')
+    markup = jsondata['markup']
     if spoints:
         points_table = create_points_table(spoints)
         points = calculate_points_from_json_answer(answers, points_table)
+        minpoints = markup.get('minpoints', -1e20)
+        maxpoints = markup.get('maxpoints', 1e20)
+        if points < minpoints:
+            points = minpoints
+        if points > maxpoints:
+            points = maxpoints
         tim_info["points"] = points
     convert_md([jsondata], options=DumboOptions.default())  # TODO get mathtype from doc settings?
     info = jsondata['info']
-    markup = jsondata['markup']
     result = False
     if info and info['max_answers'] and info['max_answers'] <= info.get('earlier_answers', 0) + 1:
         result = True
