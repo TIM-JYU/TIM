@@ -564,21 +564,21 @@ timApp.component("timTape", {
                 <div ng-repeat="n in $ctrl.state.output track by $index" ng-style="{'border': '1px solid black', 
                     'display': 'inline-block', 'margin': '0.2em', 'padding': '0.2em'}">{{n}}</div>
                 </span>
-                <img src="../static/images/tape/output.png" />
+                <img src="/static/images/tape/output.png" />
                 <span>Output</span>
             </div>
             <div ng-style="{'display': 'inline-block', 'text-align': 'center'}">
                 <div ng-style="{'border': '1px solid black', 
                     'display': 'inline-block', 'margin': 'auto', 'padding': '0.2em'}"
                      class="hand" ng-bind="$ctrl.getHand()"></div>
-                <img src="../static/images/tape/robot.png" />
+                <img src="/static/images/tape/robot.png" />
             </div>
             <div ng-style="{'display': 'inline-block'}">
                 <span class="input">
                     <div ng-repeat="n in $ctrl.state.input track by $index" ng-style="{'border': '1px solid black', 
                     'display': 'inline-block', 'margin': '0.2em', 'padding': '0.2em'}">{{n}}</div>
                 </span>
-                <img src="../static/images/tape/input.png" />
+                <img src="/static/images/tape/input.png" />
                 <span>Input</span>
             </div>
         </div>
