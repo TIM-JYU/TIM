@@ -907,7 +907,7 @@ choices:
         self.get(f'/renameAnswers/{p.task_id}/ä/{d.id}',
                  expect_status=400,
                  expect_content={'error': 'Invalid task name: ä'})
-        self.get(f'/renameAnswers/{p.task_id}/t_new/{d.id}', expect_content={'modified': 2})
+        self.get(f'/renameAnswers/{p.task_id}/t_new/{d.id}', expect_content={'modified': 2, 'conflicts': 0})
         self.get(f'/renameAnswers/{p.task_id}/t_new/{d.id}',
                  expect_status=400,
                  expect_content={"error": "The new name conflicts with 2 other answers with the same task name."})
@@ -917,6 +917,12 @@ choices:
         self.get(f'/renameAnswers/t_new/{p2.task_id}/{d.id}',
                  expect_status=400,
                  expect_content={"error": "The new name conflicts with 1 other answers with the same task name."})
-        self.get(f'/renameAnswers/t_new/t_new2/{d.id}', expect_content={'modified': 2})
+        self.get(f'/renameAnswers/t_new/t_new2/{d.id}', expect_content={'modified': 2, 'conflicts': 0})
+        self.get(f'/renameAnswers/t_new2/{p2.task_id}/{d.id}',
+                 expect_status=400,
+                 expect_content={"error": "The new name conflicts with 1 other answers with the same task name."})
+        self.get(f'/renameAnswers/t_new2/{p2.task_id}/{d.id}',
+                 query_string={'force': 'true'}, expect_content={'modified': 2, 'conflicts': 1})
+        self.assertEqual(3, Answer.query.filter_by(task_id=p2.full_task_id).count())
         self.login_test2()
         self.get(f'/renameAnswers/t_new/{p2.task_id}/{d.id}', expect_status=403)

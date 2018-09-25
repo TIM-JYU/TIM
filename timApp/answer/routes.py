@@ -510,14 +510,15 @@ def rename_answers(old_name: str, new_name: str, doc_path: str):
     if not d:
         abort(404)
     verify_manage_access(d)
+    force = get_option(request, 'force', False)
     for n in (old_name, new_name):
         if not re.fullmatch('[a-zA-Z0-9_-]+', n):
             abort(400, f'Invalid task name: {n}')
     conflicts = Answer.query.filter_by(task_id=f'{d.id}.{new_name}').count()
-    if conflicts > 0:
+    if conflicts > 0 and not force:
         abort(400, f'The new name conflicts with {conflicts} other answers with the same task name.')
     answers_to_rename = Answer.query.filter_by(task_id=f'{d.id}.{old_name}').all()
     for a in answers_to_rename:
         a.task_id = f'{d.id}.{new_name}'
     db.session.commit()
-    return json_response({'modified': len(answers_to_rename)})
+    return json_response({'modified': len(answers_to_rename), 'conflicts': conflicts})
