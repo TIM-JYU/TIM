@@ -17,15 +17,15 @@ from timApp.user.usergroup import UserGroup
 
 @attr.s
 class BasicArguments:
-    urlpath: Optional[str] = attr.ib()
-    progress: bool = attr.ib()
-    doc: str = attr.ib()
-    folder: str = attr.ib()
+    progress: bool = attr.ib(kw_only=True)
+    doc: str = attr.ib(kw_only=True)
+    folder: str = attr.ib(kw_only=True)
+    urlpath: Optional[str] = attr.ib(kw_only=True, default=None)
 
 
 @attr.s
 class DryrunnableOnly:
-    dryrun: bool = attr.ib()
+    dryrun: bool = attr.ib(kw_only=True, default=False)
 
 
 @attr.s

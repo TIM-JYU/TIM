@@ -13,17 +13,17 @@ from timApp.document.docparagraph import DocParagraph
 class SearchArgumentsBasic:
     """Arguments for a search operation."""
 
-    term: str = attr.ib()
+    term: str = attr.ib(kw_only=True)
     """The search term."""
 
-    onlyfirst: Optional[int] = attr.ib()
-    """If given, only search the first x paragraphs from each document."""
-
-    regex: bool = attr.ib()
+    regex: bool = attr.ib(kw_only=True, default=False)
     """If true, interpret term as a regular expression."""
 
-    format: str = attr.ib()
+    format: str = attr.ib(kw_only=True, default='{0}')
     """Format string to print matches."""
+
+    onlyfirst: Optional[int] = attr.ib(kw_only=True, default=None)
+    """If given, only search the first x paragraphs from each document."""
 
 
 @attr.s
@@ -34,8 +34,8 @@ class SearchArgumentsBase(BasicArguments, SearchArgumentsBasic):
 @attr.s
 class SearchArgumentsCLI(SearchArgumentsBase):
     """Command-line arguments for a search operation."""
-    docsonly: bool = attr.ib()
-    exported: bool = attr.ib()
+    docsonly: bool = attr.ib(kw_only=True)
+    exported: bool = attr.ib(kw_only=True)
 
 
 class SearchResult(NamedTuple):

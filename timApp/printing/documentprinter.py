@@ -14,7 +14,7 @@ from pypandoc.py3compat import string_types, cast_bytes
 from timApp.auth.accesshelper import has_view_access
 from timApp.timdb.dbaccess import get_timdb
 from timApp.document.docparagraph import DocParagraph
-from timApp.document.document import dereference_pars
+from timApp.document.document import dereference_pars, Document
 from timApp.document.macroinfo import MacroInfo
 from timApp.document.preloadoption import PreloadOption
 from timApp.document.randutils import hashfunc
@@ -81,6 +81,17 @@ def add_nonumber(md: str) -> str:
     return result
 
 
+def get_tex_settings_and_macros(d: Document):
+    settings = d.get_settings()
+    pdoc_plugin_attrs = settings.global_plugin_attrs()
+    pdoc_macroinfo = settings.get_macroinfo(get_current_user_object())
+    pdoc_macro_delimiter = pdoc_macroinfo.get_macro_delimiter()
+    pdoc_macros = pdoc_macroinfo.get_macros()
+    pdoc_macro_env = create_environment(pdoc_macro_delimiter)
+    pdoc_macros.update(settings.get_macroinfo(key=TEX_MACROS_KEY).get_macros())
+    return settings, pdoc_plugin_attrs, pdoc_macro_env, pdoc_macros, pdoc_macro_delimiter
+
+
 class DocumentPrinter:
     def __init__(self, doc_entry: DocEntry, template_to_use: DocInfo, urlroot: str):
         self._doc_entry = doc_entry
@@ -117,13 +128,9 @@ class DocumentPrinter:
 
         if self._content is not None:
             return self._content
-        settings = self._doc_entry.document.get_settings()
-        pdoc_plugin_attrs = settings.global_plugin_attrs()
-        pdoc_macroinfo = settings.get_macroinfo(get_current_user_object())
-        pdoc_macro_delimiter = pdoc_macroinfo.get_macro_delimiter()
-        pdoc_macros = pdoc_macroinfo.get_macros()
-        pdoc_macro_env = create_environment(pdoc_macro_delimiter)
-        pdoc_macros.update(settings.get_macroinfo(key=TEX_MACROS_KEY).get_macros())
+
+        settings, _, _, pdoc_macros, _ = get_tex_settings_and_macros(self._doc_entry.document)
+
         self._macros = pdoc_macros
 
         # Remove paragraphs that are not to be printed and replace plugin pars,
@@ -139,11 +146,15 @@ class DocumentPrinter:
         if self.texfiles and self.texfiles is str:
             self.texfiles = [self.texfiles]
 
+        macroinfos = []
         for par in pars:
 
             # do not print document settings pars
-            if 'settings' in par.get_attrs():
+            if par.is_setting():
                 continue
+
+            m_info = get_tex_settings_and_macros(par.doc)
+            _, pdoc_plugin_attrs, _, pdoc_macros, pdoc_macro_delimiter = m_info
 
             if self.texplain:
                 if par.get_markdown().find("#") == 0:
@@ -166,19 +177,23 @@ class DocumentPrinter:
                 plugin_yaml_beforeprint = get_value(plugin_yaml.get('markup'), 'texbeforeprint')
                 if plugin_yaml_beforeprint is not None:
                     bppar = DocParagraph.create(doc=self._doc_entry.document, md=plugin_yaml_beforeprint)
+                    macroinfos.append(m_info)
                     pars_to_print.append(bppar)
 
                 plugin_yaml_print = get_value(plugin_yaml.get('markup'), 'texprint')
                 if plugin_yaml_print is not None:
                     ppar = DocParagraph.create(doc=self._doc_entry.document, md=plugin_yaml_print)
+                macroinfos.append(m_info)
                 pars_to_print.append(ppar)
 
                 plugin_yaml_afterprint = get_value(plugin_yaml.get('markup'), 'texafterprint')
                 if plugin_yaml_afterprint is not None:
                     appar = DocParagraph.create(doc=self._doc_entry.document, md=plugin_yaml_afterprint)
+                    macroinfos.append(m_info)
                     pars_to_print.append(appar)
 
             else:
+                macroinfos.append(m_info)
                 pars_to_print.append(ppar)
 
         tformat = target_format
@@ -200,7 +215,8 @@ class DocumentPrinter:
         export_pars = []
 
         # Get the markdown for each par dict
-        for pd in par_dicts:
+        for pd, (settings, pdoc_plugin_attrs, pdoc_macro_env, pdoc_macros, pdoc_macro_delimiter) in zip(par_dicts,
+                                                                                                        macroinfos):
             md = pd['md']
             if not pd['is_plugin'] and not pd['is_question']:
                 md = expand_macros(text=md,
@@ -208,7 +224,7 @@ class DocumentPrinter:
                                    settings=settings,
                                    macro_delimiter=pdoc_macro_delimiter,
                                    env=pdoc_macro_env,
-                                   ignore_errors=True)
+                                   ignore_errors=False)
                 classes = pd['attrs'].get('classes', [])
                 if len(classes):
                     endraw = ""
@@ -256,7 +272,7 @@ class DocumentPrinter:
         self._content = content
         return content
 
-    def write_to_format(self, target_format: PrintFormat, plugins_user_print: bool = False, path: str=None) -> bytearray:
+    def write_to_format(self, target_format: PrintFormat, plugins_user_print: bool = False, path: str=None):
         """
         Converts the document to latex and returns the converted document as a bytearray
         :param target_format: The target file format
@@ -267,8 +283,6 @@ class DocumentPrinter:
 
         if path is None:
             raise PrintingError("The path name should be given")
-
-        output_bytes = None
 
         with tempfile.NamedTemporaryFile(suffix='.latex', delete=True) as template_file, \
                 tempfile.NamedTemporaryFile(suffix='.' + target_format.value, delete=True) as output_file:
@@ -370,8 +384,6 @@ class DocumentPrinter:
                 raise PrintingError('<pre>' + str(ex) + '</pre>')
                 # finally:
                 #    os.remove(template_file.name)
-
-        return output_bytes
 
     def get_print_path(self, file_type: PrintFormat, temp: bool = True, plugins_user_print: bool = False) -> str:
         """

@@ -12,7 +12,7 @@ from timApp.document.docinfo import DocInfo
 @attr.s
 class ReplaceArguments(DryrunnableOnly, SearchArgumentsBasic):
     """Arguments for a replacement operation."""
-    to: str = attr.ib()
+    to: str = attr.ib(kw_only=True)
 
 
 @attr.s
@@ -31,8 +31,8 @@ class ReplacementResult:
     """Represents a single replacement in a :class:`DocParagraph`.
 
     """
-    search_result: SearchResult = attr.ib()
-    replacement: str = attr.ib()
+    search_result: SearchResult = attr.ib(kw_only=True)
+    replacement: str = attr.ib(kw_only=True)
 
     def get_new_markdown(self) -> str:
         """Gets the new markdown after applying the replacement string.
