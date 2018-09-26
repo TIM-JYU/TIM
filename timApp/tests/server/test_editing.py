@@ -246,3 +246,15 @@ class EditTest(TimRouteTest):
         )
         self.delete_area(d, par1.get_id(), par3.get_id())
         self.json_post(f'/unwrap_area/{d.id}/a')
+
+    def test_download(self):
+        d = self.create_doc(initial_par="test")
+        par_id = d.document.get_paragraphs()[0].get_id()
+        self.get(f'/download/{d.id}', expect_content=f"""
+#- {{id="{par_id}"}}
+test
+        """.strip() + '\n')
+        self.get(f'/download/{d.id}', query_string={'format': 'json'}, expect_content=d.document.export_raw_data())
+        self.login_test2()
+        self.get(f'/download/{d.id}', expect_status=403)
+        self.get(f'/download/{d.id}', query_string={'format': 'json'}, expect_status=403)

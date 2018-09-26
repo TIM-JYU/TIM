@@ -1,9 +1,10 @@
 from flask import Response, abort, request, Blueprint
 
 from timApp.auth.accesshelper import get_doc_or_abort, verify_edit_access
+from timApp.document.document import Document
 from timApp.document.documentversion import DocumentVersion
-from timApp.tim_app import app
 from timApp.timdb.exceptions import TimDbException
+from timApp.util.flask.requesthelper import get_option
 from timApp.util.flask.responsehelper import json_response
 
 doc_bp = Blueprint('document',
@@ -15,7 +16,15 @@ doc_bp = Blueprint('document',
 def download_document(doc_id):
     d = get_doc_or_abort(doc_id)
     verify_edit_access(d)
-    return Response(d.document.export_markdown(), mimetype="text/plain")
+    return return_doc_content(d.document)
+
+
+def return_doc_content(d: Document):
+    use_raw = get_option(request, 'format', 'md') == 'json'
+    if use_raw:
+        return json_response(d.export_raw_data())
+    else:
+        return Response(d.export_markdown(), mimetype="text/plain")
 
 
 @doc_bp.route('/download/<int:doc_id>/<int:major>/<int:minor>')
@@ -25,7 +34,7 @@ def download_document_version(doc_id, major, minor):
     doc = DocumentVersion(doc_id, (major, minor))
     if not doc.exists():
         abort(404, "This document version does not exist.")
-    return Response(doc.export_markdown(), mimetype="text/plain")
+    return return_doc_content(doc)
 
 
 @doc_bp.route('/diff/<int:doc_id>/<int:major1>/<int:minor1>/<int:major2>/<int:minor2>')
