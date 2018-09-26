@@ -78,13 +78,17 @@ def sanitize_html(html_string):
         doc = fromstring(html_string)
         c(doc)
         cleaned = tostring(doc, encoding='ascii').decode('ascii')
-        if cleaned.startswith('<div>'):
-            return cleaned[5:-6]
-        else:
-            return cleaned
+        return strip_div(cleaned)
     except lxml.etree.ParserError:  # Thrown if the HTML string is empty
         return ""
     except lxml.etree.XMLSyntaxError:  # Not yet sure why thrown
         return ""
     except ValueError:  # Thrown if XML has an encoding declaration
         return ""
+
+
+def strip_div(s: str):
+    if s.startswith('<div>'):
+        return s[5:-6]
+    else:
+        return s

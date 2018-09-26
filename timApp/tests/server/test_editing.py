@@ -258,3 +258,14 @@ test
         self.login_test2()
         self.get(f'/download/{d.id}', expect_status=403)
         self.get(f'/download/{d.id}', query_string={'format': 'json'}, expect_status=403)
+
+    def test_no_unnecessary_update(self):
+        self.login_test1()
+        d = self.create_doc(initial_par='test')
+        self.get(d.url)
+        self.new_par(d.document, """
+#- {settings=""}
+macros:
+ a: b""", next_id=d.document.get_paragraphs()[0].get_id())
+        r = self.get_updated_pars(d)
+        self.assertFalse(r['changed_pars'])

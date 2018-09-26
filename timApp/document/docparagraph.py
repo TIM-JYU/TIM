@@ -14,7 +14,7 @@ from timApp.document.macroinfo import MacroInfo
 from timApp.document.preloadoption import PreloadOption
 from timApp.document.randutils import random_id, hashfunc
 from timApp.markdown.dumboclient import DumboOptions, MathType
-from timApp.markdown.htmlSanitize import sanitize_html
+from timApp.markdown.htmlSanitize import sanitize_html, strip_div
 from timApp.markdown.markdownconverter import par_list_to_html_list, expand_macros
 from timApp.util.rndutils import get_rands_as_dict, get_rands_as_str
 from timApp.timdb.exceptions import TimDbException, InvalidReferenceException
@@ -558,10 +558,12 @@ class DocParagraph:
                                           settings=settings)
             for (par, auto_macro_hash, _, _, old_html), h in zip(unloaded_pars, htmls):
                 # h is not sanitized but old_html is, but HTML stays unchanged after sanitization most of the time
-                # so they are comparable
+                # so they are comparable after stripping div. We want to avoid calling sanitize_html unnecessarily.
                 if getattr(par, 'was_invalid', False):
                     continue
-                if h != old_html:
+                if isinstance(h, bytes):
+                    h = h.decode()
+                if strip_div(h) != old_html:
                     h = sanitize_html(h)
                     changed_pars.append(par)
                 par.__data['h'][auto_macro_hash] = h
