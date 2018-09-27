@@ -565,10 +565,11 @@ class DocParagraph:
                     h = h.decode()
                 if strip_div(h) != old_html:
                     h = sanitize_html(h)
-                    changed_pars.append(par)
+                    if not par.from_preamble():
+                        changed_pars.append(par)
                 par.__data['h'][auto_macro_hash] = h
                 par._set_html(h, sanitized=True)
-                if persist:
+                if persist and not par.from_preamble():
                     par.__write()
         return changed_pars
 

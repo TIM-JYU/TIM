@@ -269,3 +269,13 @@ macros:
  a: b""", next_id=d.document.get_paragraphs()[0].get_id())
         r = self.get_updated_pars(d)
         self.assertFalse(r['changed_pars'])
+
+    def test_no_unnecessary_update_with_preamble(self):
+        self.login_test1()
+        d = self.create_doc(initial_par='test')
+        p = self.create_preamble_for(d, initial_par="pr")
+        self.get(d.url)
+        pid = d.document.get_paragraphs()[0].get_id()
+        self.post_par(d.document, """hi""", par_id=pid)
+        r = self.get_updated_pars(d)
+        self.assertEqual({pid}, set(r['changed_pars'].keys()))
