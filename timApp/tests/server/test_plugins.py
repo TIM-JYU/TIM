@@ -926,3 +926,7 @@ choices:
         self.assertEqual(3, Answer.query.filter_by(task_id=p2.full_task_id).count())
         self.login_test2()
         self.get(f'/renameAnswers/t_new/{p2.task_id}/{d.id}', expect_status=403)
+
+    def test_timtable_nonexistent_route(self):
+        """Calling non-existent timTable route won't result in an infinite request loop."""
+        self.get('/timTable/addDatablockColumn', expect_status=404)

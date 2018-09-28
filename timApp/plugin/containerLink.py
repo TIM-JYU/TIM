@@ -251,6 +251,9 @@ def has_auto_md(data, default: bool):
 def call_plugin_resource(plugin, filename, args=None):
     try:
         plug = get_plugin(plugin)
+        # We need to avoid calling ourselves to avoid infinite request loop.
+        if plug['host'].startswith('http://localhost'):
+            raise PluginException('Plugin route not found')
         request = requests.get(plug['host'] + filename, timeout=5, stream=True, params=args)
         request.encoding = 'utf-8'
         return request

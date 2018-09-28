@@ -2,7 +2,6 @@ from flask import request, Response, stream_with_context, abort, Blueprint
 
 from timApp.plugin.containerLink import call_plugin_resource
 from timApp.plugin.pluginexception import PluginException
-from timApp.util.logger import log_warning
 
 plugin_bp = Blueprint('plugin',
                       __name__,
@@ -15,8 +14,7 @@ def plugin_call(plugin, filename):
         req = call_plugin_resource(plugin, filename, request.args)
         return Response(stream_with_context(req.iter_content()), content_type=req.headers['content-type'])
     except PluginException as e:
-        log_warning(str(e))
-        abort(404)
+        abort(404, str(e))
 
 
 @plugin_bp.route("/echoRequest/<path:filename>")
