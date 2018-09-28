@@ -35,6 +35,8 @@ class DocEntry(db.Model, DocInfo):
 
     _block = db.relationship('Block', back_populates='docentries', lazy='joined')
 
+    __table_args__ = (db.Index('docentry_id_idx', 'id'),)
+
     @property
     def path(self):
         return self.name
