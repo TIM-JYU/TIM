@@ -17,7 +17,7 @@ from timApp.auth import sessioninfo
 from timApp.auth.accesshelper import verify_view_access
 from timApp.printing.documentprinter import DocumentPrinter, PrintingError, LaTeXError
 from timApp.printing.printsettings import PrintFormat
-from timApp.util.flask.requesthelper import verify_json_params
+from timApp.util.flask.requesthelper import verify_json_params, get_option
 from timApp.util.flask.responsehelper import json_response
 from timApp.document.docinfo import DocInfo
 from timApp.document.docentry import DocEntry
@@ -131,50 +131,40 @@ def print_document(doc_path):
 def get_printed_document(doc_path):
     doc = g.doc_entry
 
-    file_type = request.args.get('file_type')
-    template_doc_id = request.args.get('template_doc_id')
-    plugins_user_print = request.args.get('plugins_user_code')
+    file_type = get_option(request, 'file_type', 'pdf')
+    template_doc_id = get_option(request, 'template_doc_id', -1)
+    plugins_user_print = get_option(request, 'plugins_user_code', False)
     line = request.args.get('line')
 
-    if file_type is None:
-        file_type = 'pdf'
-
-    if file_type.lower() not in [f.value for f in PrintFormat]:
+    if file_type.lower() not in (f.value for f in PrintFormat):
         abort(400, "The supplied query parameter 'file_type' was invalid.")
 
-    if template_doc_id is None:
-        template_doc = DocEntry.find_by_path('templates/printing/runko')
+    print_type = PrintFormat(file_type)
+
+    template_doc = None
+    if print_type != PrintFormat.PLAIN:
+        if template_doc_id == -1:
+            template_doc = DocEntry.find_by_path('templates/printing/runko')
+            if template_doc is None:
+                abort(400, "The supplied query parameter 'template_doc_id' was invalid. Needed template runko")
+            template_doc_id = template_doc.id
+        elif template_doc_id == 0:
+            template_doc = DocEntry.find_by_path('templates/printing/empty')
+            if template_doc is None:
+                abort(400, "There is no template empty")
+            template_doc_id = template_doc.id
+        else:
+            template_doc = DocEntry.find_by_id(template_doc_id)
         if template_doc is None:
-            abort(400, "The supplied query parameter 'template_doc_id' was invalid. Needed template runko")
-        template_doc_id = template_doc.id
-
-    if template_doc_id == '0':
-        template_doc = DocEntry.find_by_path('templates/printing/empty')
-        if template_doc is None:
-            abort(400, "There is no template empty")
-        template_doc_id = template_doc.id
-
-    if plugins_user_print is None or isinstance(plugins_user_print, bool):
-        plugins_user_print = 'false'
-        # abort(400, "The supplied query parameter 'plugins_user_code' was invalid.")
-
-    plugins_user_print = plugins_user_print.lower() == 'true'
-
-    template_doc_id = int(float(template_doc_id))
-    template_doc = DocEntry.find_by_id(template_doc_id)
-
-    # if template_doc is None:
-    #    abort(400, "The supplied parameter 'template_doc_id' was invalid.")
-
-    print_type = PrintFormat[file_type.upper()]
+            return abort(400, 'Template doc not found')
 
     cached = check_print_cache(doc_entry=doc,
                                template=template_doc,
                                file_type=print_type,
                                plugins_user_print=plugins_user_print)
 
-    force = str(request.args.get('force', 'false')).lower() == 'true'
-    showerror = str(request.args.get('showerror', 'false')).lower() == 'true'
+    force = get_option(request, 'force', False)
+    showerror = get_option(request, 'showerror', False)
 
     if force or showerror:
         cached = None
@@ -339,7 +329,7 @@ def check_print_cache(doc_entry: DocEntry,
 
 
 def create_printed_doc(doc_entry: DocEntry,
-                       template_doc: DocInfo,
+                       template_doc: Optional[DocInfo],
                        file_type: PrintFormat,
                        temp: bool,
                        plugins_user_print: bool = False,
@@ -356,31 +346,20 @@ def create_printed_doc(doc_entry: DocEntry,
     :return str: path to the created file
     """
 
-    # if template_doc is None:
-    #    raise PrintingError("No template file was specified for the printing!")
-
     printer = DocumentPrinter(doc_entry=doc_entry,
                               template_to_use=template_doc,
                               urlroot=urlroot)
+    path = printer.get_print_path(temp=temp,
+                                  file_type=file_type,
+                                  plugins_user_print=plugins_user_print)
+    if os.path.exists(path):
+        os.remove(path)
 
+    folder = os.path.split(path)[0]  # gets only the head of the head, tail -tuple
+    if not os.path.exists(folder):
+        os.makedirs(folder)
     try:
-        path = printer.get_print_path(temp=temp,
-                                      file_type=file_type,
-                                      plugins_user_print=plugins_user_print)
-
-        if os.path.exists(path):
-            os.remove(path)
-
-        folder = os.path.split(path)[0]  # gets only the head of the head, tail -tuple
-        if not os.path.exists(folder):
-            os.makedirs(folder)
-        # with open(path, mode='wb') as doc_file:
-        #    doc_file.write(printer.write_to_format(target_format=file_type, plugins_user_print=plugins_user_print))
         printer.write_to_format(target_format=file_type, plugins_user_print=plugins_user_print, path=path)
-
-        # if plugins_user_print:
-        #    return path
-
         pdferror = None
     except LaTeXError as err:
         pdferror = err.value

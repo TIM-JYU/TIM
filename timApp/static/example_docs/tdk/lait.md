@@ -19,6 +19,7 @@ Päätösvalta, tekstikappale 2.
 
 #- {area_end="paatosvalta"}
 
+#-
 ## Muut asiat
 
 #- {area="muutasiat"}
@@ -28,6 +29,7 @@ Muut asiat, tekstikappale 1.
 
 #- {area_end="muutasiat"}
 
+#-
 ## Arvostelu
 
 #- {area="arvostelu"}
@@ -43,6 +45,7 @@ Arvostelu, tekstikappale 3.
 
 #- {area_end="arvostelu"}
 
+#-
 ## Dosentti
 
 #- {area="dosentti"}
@@ -56,6 +59,7 @@ Dosentti, tekstikappale 3.
 
 #- {area_end="dosentti"}
 
+#-
 ## Opetussuunnitelmat, opsu
 
 #- {area="opsu"}
@@ -65,6 +69,7 @@ Opsu, tekstikappale 1.
 
 #- {area_end="opsu"}
 
+#-
 ## Opetussuunnitelmat, opsu2
 
 #- {area="opsu2"}
@@ -74,6 +79,7 @@ Opsu2, tekstikappale 1.
 
 #- {area_end="opsu2"}
 
+#-
 ## Yliopistotutkija
 
 #- {area="yliopistontutkija"}
@@ -87,6 +93,7 @@ Yliopistontutkija, tekstikappale 2.
 
 #- {area_end="yliopistontutkija"}
 
+#-
 ## Opiskelijamaarat
 
 #- {area="opiskelijamaarat"}
@@ -96,6 +103,7 @@ Opiskelijamaarat, tekstikappale 1.
 
 #- {area_end="opiskelijamaarat"}
 
+#-
 ## Valintaperusteet, valinta
 
 #- {area="valinta"}
@@ -105,6 +113,7 @@ Valinta, tekstikappale 1.
 
 #- {area_end="valinta"}
 
+#-
 ## Professori kutsumenettely, profkutsu
 
 #- {area="profkutsu"}

@@ -13,7 +13,7 @@ class PrintedDoc(db.Model):
     doc_id = db.Column(db.Integer, db.ForeignKey('block.id'), nullable=False)
     """Id of the printed document."""
 
-    template_doc_id = db.Column(db.Integer, db.ForeignKey('block.id'), nullable=False)
+    template_doc_id = db.Column(db.Integer, db.ForeignKey('block.id'), nullable=True)
     """Id of the template document."""
 
     file_type = db.Column(db.Text, nullable=False)

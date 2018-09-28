@@ -18,6 +18,7 @@ from timApp.plugin.containerLink import render_plugin_multi, render_plugin, get_
 from timApp.plugin.plugin import Plugin, PluginRenderOptions
 from timApp.plugin.pluginOutputFormat import PluginOutputFormat
 from timApp.plugin.pluginexception import PluginException
+from timApp.printing.printsettings import PrintFormat
 from timApp.user.user import User
 from timApp.util.rndutils import get_simple_hash_from_par_and_user
 from timApp.util.timtiming import taketime
@@ -66,7 +67,7 @@ def pluginify(doc: Document,
               wrap_in_div=True,
               output_format: PluginOutputFormat = PluginOutputFormat.HTML,
               user_print: bool = False,
-              target_format: str='latex',
+              target_format: PrintFormat=PrintFormat.LATEX,
               dereference=True):
     """"Pluginifies" or sanitizes the specified DocParagraphs by calling the corresponding plugin route for each plugin
     paragraph.

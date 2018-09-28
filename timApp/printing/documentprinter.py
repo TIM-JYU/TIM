@@ -32,7 +32,6 @@ from timApp.document.docentry import DocEntry
 from timApp.folder.folder import Folder
 from timApp.printing.printeddoc import PrintedDoc
 from timApp.user.user import User
-from timApp.timdb.sqa import db
 
 FILES_ROOT = '/tim_files'
 DEFAULT_PRINTING_FOLDER = os.path.join(FILES_ROOT, 'printed_documents')
@@ -56,12 +55,12 @@ class LaTeXError(Exception):
 
 def add_nonumber(md: str) -> str:
     """
-    add's {.unnumbered} after every heading line that starts with #
+    Adds {.unnumbered} after every heading line that starts with #
         Special cases:
             - many # lines in same md
                 - before #-line there must be at least two cr
-                - split bteween two cr
-            - line statring with # may continue by ordinary line
+                - split between two cr
+            - line starting with # may continue by ordinary line
                 - the unnumbered must be added before first cr
             - line starting with # may continue next line and have \ at the end
                  - undefined
@@ -93,15 +92,9 @@ def get_tex_settings_and_macros(d: Document):
 
 
 class DocumentPrinter:
-    def __init__(self, doc_entry: DocEntry, template_to_use: DocInfo, urlroot: str):
+    def __init__(self, doc_entry: DocEntry, template_to_use: Optional[DocInfo], urlroot: str):
         self._doc_entry = doc_entry
-        # if template_to_use is None:
-        #    template_to_use = DocumentPrinter.get_default_template(doc_entry)
         self._template_to_use = template_to_use
-        self._template_to_use_id = -1
-        if template_to_use:
-            self._template_to_use_id = template_to_use.id
-        self._template_doc = None
         self._content = None
         self._print_hash = None
         self._macros = {}
@@ -109,10 +102,12 @@ class DocumentPrinter:
         self.texfiles = None
         self.urlroot = urlroot
 
-    def get_template_id(self):
-        return self._template_to_use_id
+    def get_template_id(self) -> Optional[int]:
+        if self._template_to_use:
+            return self._template_to_use.id
+        return None
 
-    def get_content(self, plugins_user_print: bool = False, target_format: str = '') -> str:
+    def get_content(self, plugins_user_print: bool = False, target_format: PrintFormat = PrintFormat.PLAIN) -> str:
         """
         Gets the content of the DocEntry assigned for this DocumentPrinter object.
         Fetches the markdown for the documents paragraphs, checks whether the
@@ -146,24 +141,21 @@ class DocumentPrinter:
         if self.texfiles and self.texfiles is str:
             self.texfiles = [self.texfiles]
 
-        macroinfos = []
+        par_infos = []
         for par in pars:
 
             # do not print document settings pars
             if par.is_setting():
                 continue
 
-            m_info = get_tex_settings_and_macros(par.doc)
-            _, pdoc_plugin_attrs, _, pdoc_macros, pdoc_macro_delimiter = m_info
+            p_info = par, *get_tex_settings_and_macros(par.doc)
+            _, _, pdoc_plugin_attrs, _, pdoc_macros, pdoc_macro_delimiter = p_info
 
             if self.texplain:
                 if par.get_markdown().find("#") == 0:
                     continue
 
-
-            par_classes = par.get_attr('classes')
-
-            if par_classes is not None and 'hidden-print' in par_classes:
+            if par.has_class('hidden-print'):
                 continue
 
             ppar = par
@@ -177,28 +169,28 @@ class DocumentPrinter:
                 plugin_yaml_beforeprint = get_value(plugin_yaml.get('markup'), 'texbeforeprint')
                 if plugin_yaml_beforeprint is not None:
                     bppar = DocParagraph.create(doc=self._doc_entry.document, md=plugin_yaml_beforeprint)
-                    macroinfos.append(m_info)
+                    par_infos.append(p_info)
                     pars_to_print.append(bppar)
 
                 plugin_yaml_print = get_value(plugin_yaml.get('markup'), 'texprint')
                 if plugin_yaml_print is not None:
                     ppar = DocParagraph.create(doc=self._doc_entry.document, md=plugin_yaml_print)
-                macroinfos.append(m_info)
+                par_infos.append(p_info)
                 pars_to_print.append(ppar)
 
                 plugin_yaml_afterprint = get_value(plugin_yaml.get('markup'), 'texafterprint')
                 if plugin_yaml_afterprint is not None:
                     appar = DocParagraph.create(doc=self._doc_entry.document, md=plugin_yaml_afterprint)
-                    macroinfos.append(m_info)
+                    par_infos.append(p_info)
                     pars_to_print.append(appar)
 
             else:
-                macroinfos.append(m_info)
+                par_infos.append(p_info)
                 pars_to_print.append(ppar)
 
         tformat = target_format
-        if target_format == 'pdf' or target_format == 'json':
-            tformat = 'latex'
+        if target_format in (PrintFormat.PDF, PrintFormat.JSON):
+            tformat = PrintFormat.LATEX
 
         # Dereference pars and render markdown for plugins
         # Only the 1st return value (the pars) is needed here
@@ -215,18 +207,18 @@ class DocumentPrinter:
         export_pars = []
 
         # Get the markdown for each par dict
-        for pd, (settings, pdoc_plugin_attrs, pdoc_macro_env, pdoc_macros, pdoc_macro_delimiter) in zip(par_dicts,
-                                                                                                        macroinfos):
+        for pd, (p, settings, pdoc_plugin_attrs, pdoc_macro_env, pdoc_macros, pdoc_macro_delimiter) in zip(par_dicts,
+                                                                                                           par_infos):
             md = pd['md']
-            if not pd['is_plugin'] and not pd['is_question']:
+            if not p.is_plugin() and not p.is_question():
                 md = expand_macros(text=md,
                                    macros=pdoc_macros,
                                    settings=settings,
                                    macro_delimiter=pdoc_macro_delimiter,
                                    env=pdoc_macro_env,
                                    ignore_errors=False)
-                classes = pd['attrs'].get('classes', [])
-                if len(classes):
+                classes = p.get_classes()
+                if classes:
                     endraw = ""
                     beginraw = ""
                     nonumber = ""
@@ -287,9 +279,6 @@ class DocumentPrinter:
         with tempfile.NamedTemporaryFile(suffix='.latex', delete=True) as template_file, \
                 tempfile.NamedTemporaryFile(suffix='.' + target_format.value, delete=True) as output_file:
 
-            # if self._template_to_use is None:
-            #    raise PrintingError("No template chosen for the printing. Printing was cancelled.")
-
             if self._template_to_use:
                 template_content = DocumentPrinter.parse_template_content(doc_to_print=self._doc_entry,
                                                                           template_doc=self._template_to_use)
@@ -304,7 +293,7 @@ class DocumentPrinter:
             if re.search("^\\\\documentclass\[[^\n]*(book|report)\}", template_content, flags=re.S):
                 top_level = 'chapter'
 
-            src = self.get_content(plugins_user_print=plugins_user_print, target_format=target_format.value)
+            src = self.get_content(plugins_user_print=plugins_user_print, target_format=target_format)
             removethis = ''
             '''
             if self.texplain:
@@ -318,7 +307,6 @@ class DocumentPrinter:
                         '\n\\end{document} % ' + removethis
             '''
 
-            self._template_doc = self._template_to_use
             templbyte = bytearray(template_content, encoding='utf-8')
             # template_file.write(templbyte) # for some reason does not write small files
             with open(template_file.name, 'wb') as f:
@@ -399,7 +387,7 @@ class DocumentPrinter:
 
         path = os.path.join(DEFAULT_PRINTING_FOLDER,
                             str(self._doc_entry.id),
-                            str(self._template_to_use_id),
+                            str(self.get_template_id()),
                             str(print_hash) + "." + file_type.value)
 
         return path
@@ -525,25 +513,20 @@ class DocumentPrinter:
         if self._template_to_use:
             thash = self._template_to_use.last_modified
         content = str(self._doc_entry.id) + " " + str(self._doc_entry.last_modified) + \
-                  str(self._template_to_use_id) + " " + str(thash)
+                  str(self.get_template_id()) + " " + str(thash)
         if plugins_user_print:
             content += str(plugins_user_print) + str(get_current_user_object().id)
 
-        # self.get_content(plugins_user_print=plugins_user_print)
         return hashfunc(content)
 
     def get_printed_document_path_from_db(self, file_type: PrintFormat, plugins_user_print: bool = False) -> \
             Optional[str]:
-        #  current_doc_version = self.get_document_version_as_float()
-        #  current_template_version = self.get_template_version_as_float()
-        existing_print = db.session.query(PrintedDoc). \
-            filter(PrintedDoc.doc_id == self._doc_entry.id). \
-            filter(PrintedDoc.template_doc_id == self._template_to_use_id). \
-            filter(PrintedDoc.file_type == file_type.value). \
-            filter(PrintedDoc.version == self.hash_doc_print(plugins_user_print=plugins_user_print)). \
+        existing_print = PrintedDoc.query. \
+            filter_by(doc_id=self._doc_entry.id,
+                      template_doc_id=self.get_template_id(),
+                      file_type=file_type.value,
+                      version=self.hash_doc_print(plugins_user_print=plugins_user_print)). \
             first()
-        # filter(PrintedDoc.doc_version == current_doc_version). \
-        # filter(PrintedDoc.template_doc_version == current_template_version). \
 
         if existing_print is None or not os.path.exists(existing_print.path_to_file):
             return None

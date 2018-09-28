@@ -132,8 +132,8 @@ Allekirjoitukset: _________________________
 $body$
 ```""")
         db.session.commit()
-        ote1_tex = self.get(f'/print/{ote1.path}',
-                            query_string={'file_type': 'latex'})
+        ote1_tex = self.get_no_warn(f'/print/{ote1.path}',
+                                    query_string={'file_type': 'latex'})
         self.assertEqual(r"""
 \pagebreak
 \begin{tabular}{p{10cm} l}
@@ -185,8 +185,8 @@ Todetaan ilmoitusasiat.
 Allekirjoitukset: \_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_
         """.strip(), ote1_tex)
         ote2 = DocEntry.find_by_path(f"{d_kokous.location}/otteet/kokous{knro}/lista2")
-        ote2_tex = self.get(f'/print/{ote2.path}',
-                            query_string={'file_type': 'latex'})
+        ote2_tex = self.get_no_warn(f'/print/{ote2.path}',
+                                    query_string={'file_type': 'latex'})
         self.assertEqual(r"""
 \pagebreak
 \begin{tabular}{p{10cm} l}
@@ -207,14 +207,27 @@ arvostelu}\label{jaska-jokusen-vuxe4ituxf6skirjan-arvostelu}}
 Jaska Jokunen puolustaa 1.1.2018 julkisessa väitöstilaisuudessa
 tietojärjestelmätieteen väitöskirjaansa.
 
+\laki{
+
+}
+
+\laki{
+
+\laki{
+
 Arvostelu, tekstikappale 1.
 
 Arvostelu, tekstikappale 2.
 
 Arvostelu, tekstikappale 3.
 
-\hypertarget{dosentti}{%
-\section{Dosentti}\label{dosentti}}
+}
+
+}
+
+\laki{
+
+}
 
 \begin{itemize}
 \tightlist

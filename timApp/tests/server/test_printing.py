@@ -2,6 +2,8 @@
 import json
 import urllib.parse
 
+from timApp.document.docentry import DocEntry
+from timApp.document.docparagraph import DocParagraph
 from timApp.document.specialnames import TEMPLATE_FOLDER_NAME, PRINT_FOLDER_NAME
 from timApp.util.flask.responsehelper import to_json_str
 from timApp.tests.server.timroutetest import TimRouteTest
@@ -41,11 +43,7 @@ class PrintingTest(TimRouteTest):
         content = 'Hello 1\n\n#-\nHello 2'
         d = self.create_doc(initial_par=content)
         folder = self.current_user.get_personal_folder().path
-        t = self.create_doc(f'{folder}/{TEMPLATE_FOLDER_NAME}/{PRINT_FOLDER_NAME}/empty', initial_par="""
-``` {.latex printing_template=""}
-$body$
-```
-        """)
+        t = self.create_empty_print_template()
         tj = json.loads(to_json_str(t))
         self.get(f'/print/templates/{d.path}',
                  expect_content=[tj])
@@ -80,3 +78,15 @@ $body$
         self.assertTrue(2848 <= pdf_length <= 2854, msg=f'Unexpected file length: {pdf_length}')
         self.login_test2()
         self.get(expected_url, expect_status=403)
+
+    def create_empty_print_template(self):
+        p = f'{self.current_user.get_personal_folder().path}/{TEMPLATE_FOLDER_NAME}/{PRINT_FOLDER_NAME}/empty'
+        t = DocEntry.find_by_path(p)
+        if t:
+            return t
+        t = self.create_doc(p, initial_par="""
+``` {.latex printing_template=""}
+$body$
+```
+        """)
+        return t

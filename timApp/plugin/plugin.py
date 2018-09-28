@@ -10,6 +10,7 @@ from timApp.document.macroinfo import MacroInfo
 from timApp.document.yamlblock import strip_code_block, YamlBlock, merge
 from timApp.markdown.markdownconverter import expand_macros
 from timApp.plugin.pluginexception import PluginException
+from timApp.printing.printsettings import PrintFormat
 from timApp.timdb.exceptions import TimDbException
 from timApp.user.user import User
 from timApp.util.rndutils import get_simple_hash_from_par_and_user
@@ -29,7 +30,7 @@ class PluginRenderOptions(NamedTuple):
     do_lazy: bool
     user_print: bool
     preview: bool
-    target_format: str
+    target_format: PrintFormat
     review: bool
     wrap_in_div: bool
 
@@ -287,7 +288,7 @@ class Plugin:
                 "anonymous": options.user is not None,
                 "info": info,
                 "user_id": options.user.name if options.user is not None else 'Anonymous',
-                "targetFormat": options.target_format,
+                "targetFormat": options.target_format.value,
                 "review": options.review,
                 }
 

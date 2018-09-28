@@ -193,20 +193,20 @@ Kauppatieteiden kandidaatin tutkinto: Toteutunut xx
 
 Todetaan ilmoitusasiat.
 
-#-
+#- {id=a6PkaPa4Db9m}
 %%lista(2, seppo, olli)%%
 
 ## Jaska Jokusen väitöskirjan arvostelu
 
 Jaska Jokunen puolustaa 1.1.2018 julkisessa väitöstilaisuudessa tietojärjestelmätieteen väitöskirjaansa.
 
-#- {rd="LAIT_ID_HERE" ra="arvostelu" rl="no" .laki}
+#- {rd="LAIT_ID_HERE" ra="arvostelu" rl="no" .laki id=DwsACFgQg1cA}
 
-``` {plugin="showPdf"}
+``` {plugin="showPdf" id=ziPZpkjHHMeU}
 %%liite("Vastaväittäjän lausunto", "A", "2", "/files/zzz/opponentti.pdf")%%
 ```
 
-#-
+#- {id=lLpdQHZThcEi}
 **Esitys**
 
 Tiedekuntaneuvosto arvostelee Jaska Jokusen väitöskirjan.

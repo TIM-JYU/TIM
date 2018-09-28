@@ -649,7 +649,7 @@ class DocParagraph:
 
     def has_class(self, class_name):
         """Returns whether this paragraph has the specified class."""
-        return class_name in self.attrs.get('classes', {})
+        return class_name in self.get_classes()
 
     def add_class(self, *classes: str):
         """Adds the specified class to this paragraph."""
