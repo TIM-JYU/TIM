@@ -228,7 +228,7 @@ class CommandInstance {
             return `${this.parameter}:`;
         }
 
-        return `${this.command.name} (${this.parameter})`;
+        return `${this.command.name}(${this.parameter})`;
     }
 }
 
@@ -270,6 +270,7 @@ export class TapeController implements IController {
     $onInit() {
         this.step = this.step.bind(this);
         this.reset();
+        this.selectedCommandIndex = this.commandList.length;
     }
 
     // List of commands supported by the tape machine
@@ -425,6 +426,7 @@ export class TapeController implements IController {
             // assign pre-defined code only if we have no code right now,
             // so we don't clear the user's code on reset
             this.fromText(this.data.presetCode);
+            this.selectedCommandIndex = this.commandList.length;
         }
     }
 
