@@ -621,9 +621,9 @@ timApp.component("timTape", {
         </div>
         <div class="memory">
             <div>Memory:</div>
-            <div ng-repeat="n in $ctrl.state.memory track by $index" ng-style="{'display': 'inline-block', 'border': '1px solid black', 'text-align': 'center', 'padding': '0.2em', 'margin': '0.1em', 'margin-bottom': '1em'}">
-                <div ng-bind="n"></div>
-                <div ng-bind="$ctrl.getMemoryText($index)"></div>
+            <div ng-repeat="n in $ctrl.state.memory track by $index" ng-style="{'display': 'inline-block', 'text-align': 'center', 'padding': '0.2em', 'margin': '0.1em', 'margin-bottom': '1em'}">
+                <div ng-bind="n" ng-style="{'border': '1px solid black'}"></div>
+                <div ng-bind="$ctrl.getMemoryText($index)" ng-style="{'font-size': '0.8em'}"></div>
             </div>
         </div>
         <span class="allowed-commands" ng-style="{'display': 'inline-block', 'vertical-align': 'top', 'margin-right': '2em'}">
