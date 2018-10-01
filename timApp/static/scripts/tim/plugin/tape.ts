@@ -456,13 +456,38 @@ export class TapeController implements IController {
         text = text.replace("\r\n", "\n").replace("\r", "\n");
         const lines = text.split('\n');
         for (let line of lines) {
-            line = line.trim();
-            const components = line.split(' ');
+            line = line.replace(';', '').trim();
+            let components: string[] = [];
+            const pIndex = line.indexOf('(');
+            let separator = '(';
+
+            if (pIndex === -1) {
+                // Check for "Python syntax"
+                const spaceIndex = line.indexOf(' ');
+                if (spaceIndex > -1) {
+                    separator = ' ';
+                }
+            } else {
+                // C syntax
+
+                const closingIndex = line.indexOf(')');
+                // We wouldn't need to check the following for parsing,
+                // but check it anyway to force correct syntax
+                if (closingIndex < pIndex) {
+                    // Syntax error
+                    continue;
+                }
+
+                line = line.replace(')', '');
+                separator = '(';
+            }
+
+            components = line.split(separator);
             if (components.length === 0) {
                 continue;
             }
 
-            const command = this.possibleCommandList.find(c => c.name === components[0]);
+            const command = this.possibleCommandList.find(c => c.name === components[0].trim());
             if (!command) {
                 continue;
             }
@@ -470,7 +495,7 @@ export class TapeController implements IController {
             if (components.length === 1) {
                 this.addCommand(command, "");
             } else {
-                this.addCommand(command, components[1]);
+                this.addCommand(command, components[1].trim());
             }
         }
     }
@@ -513,7 +538,7 @@ export class TapeController implements IController {
         if (index == this.selectedCommandIndex) {
             return "red";
         }
-        
+
         if (index > -1 && index < this.commandList.length) {
             if (this.commandList[index].command.isLabel())
                 return "blue";
