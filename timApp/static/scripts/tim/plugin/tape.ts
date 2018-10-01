@@ -513,17 +513,21 @@ export class TapeController implements IController {
         if (index == this.selectedCommandIndex) {
             return "red";
         }
-
-        if (index == this.state.instructionPointer) {
-            return "green";
-        }
-
+        
         if (index > -1 && index < this.commandList.length) {
             if (this.commandList[index].command.isLabel())
                 return "blue";
         }
 
         return "black";
+    }
+
+    private getCommandBackgroundColor(index: number) {
+        if (index == this.state.instructionPointer) {
+            return "yellow";
+        }
+
+        return "white";
     }
 
     private getRunButtonText() {
@@ -600,7 +604,8 @@ timApp.component("timTape", {
             Program:
             <ul class="list-unstyled" ng-style="{'border': '1px solid black'}">
             <li ng-repeat="c in $ctrl.commandList" ng-click="$ctrl.selectedCommandIndex = $index" 
-            ng-style="{'color': $ctrl.getCommandColor($index), 'cursor': 'pointer'}">{{c.getName()}}</li>
+            ng-style="{'color': $ctrl.getCommandColor($index), 'background-color': $ctrl.getCommandBackgroundColor($index),
+            'cursor': 'pointer'}">{{c.getName()}}</li>
             </ul>
             <!--- <select ng-model="$ctrl.selected" size="10">
             <option ng-repeat="c in $ctrl.commandList" ng-style="{'color': $ctrl.getCommandColor($index)}">{{c.getName()}}</option>
