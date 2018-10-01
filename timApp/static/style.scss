@@ -198,6 +198,47 @@ tim-table {
     }
 }
 
+tim-tape {
+    .tapeItem {
+        border: 1px solid black;
+        display: inline-block;
+        margin: 0.2em;
+        padding: 0.2em;
+    }
+
+    .memoryContainer {
+        display: inline-block;
+        text-align: center;
+        padding: 0.2em;
+        margin: 0.1em 0.1em 1em 0.1em;
+    }
+
+    .memoryValue {
+        border: 1px solid black;
+    }
+
+    .memoryIndex {
+        font-size: 0.8em;
+    }
+
+    .commandListContainer {
+        display: inline-block;
+        vertical-align: top;
+    }
+
+    .newCommandList {
+        margin-right: 2em;
+    }
+
+    .listBox {
+        border: 1px solid black;
+    }
+
+    .command {
+        cursor: pointer;
+    }
+}
+
 tim-alert {
     pre {
         max-height: 50vh;

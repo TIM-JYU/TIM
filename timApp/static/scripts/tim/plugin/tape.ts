@@ -600,22 +600,18 @@ timApp.component("timTape", {
         <div>
             <div ng-style="{'display': 'inline-block', 'text-align': 'right'}">
                 <span class="output">
-                <div ng-repeat="n in $ctrl.state.output track by $index" ng-style="{'border': '1px solid black', 
-                    'display': 'inline-block', 'margin': '0.2em', 'padding': '0.2em'}">{{n}}</div>
+                <div ng-repeat="n in $ctrl.state.output track by $index" class="tapeItem">{{n}}</div>
                 </span>
                 <img src="/static/images/tape/output.png" />
                 <span>Output</span>
             </div>
             <div ng-style="{'display': 'inline-block', 'text-align': 'center'}">
-                <div ng-style="{'border': '1px solid black', 
-                    'display': 'inline-block', 'margin': 'auto', 'padding': '0.2em'}"
-                     class="hand" ng-bind="$ctrl.getHand()"></div>
+                <div class="tapeItem" ng-style="{'margin': 'auto'}" ng-bind="$ctrl.getHand()"></div>
                 <img src="/static/images/tape/robot.png" />
             </div>
             <div ng-style="{'display': 'inline-block'}">
                 <span class="input">
-                    <div ng-repeat="n in $ctrl.state.input track by $index" ng-style="{'border': '1px solid black', 
-                    'display': 'inline-block', 'margin': '0.2em', 'padding': '0.2em'}">{{n}}</div>
+                    <div ng-repeat="n in $ctrl.state.input track by $index" class="tapeItem">{{n}}</div>
                 </span>
                 <img src="/static/images/tape/input.png" />
                 <span>Input</span>
@@ -623,25 +619,24 @@ timApp.component("timTape", {
         </div>
         <div class="memory">
             <div>Memory:</div>
-            <div ng-repeat="n in $ctrl.state.memory track by $index" ng-style="{'display': 'inline-block', 'text-align': 'center', 'padding': '0.2em', 'margin': '0.1em', 'margin-bottom': '1em'}">
-                <div ng-bind="n" ng-style="{'border': '1px solid black'}"></div>
-                <div ng-bind="$ctrl.getMemoryText($index)" ng-style="{'font-size': '0.8em'}"></div>
+            <div ng-repeat="n in $ctrl.state.memory track by $index" class="memoryContainer">
+                <div ng-bind="n" class="memoryValue"></div>
+                <div ng-bind="$ctrl.getMemoryText($index)" class="memoryIndex"></div>
             </div>
         </div>
-        <span class="allowed-commands" ng-style="{'display': 'inline-block', 'vertical-align': 'top', 'margin-right': '2em'}">
+        <span class="commandListContainer newCommandList">
             Add command:
-            <ul class="list-unstyled" ng-style="{'border': '1px solid black'}">
-            <li ng-repeat="c in $ctrl.possibleCommandList" ng-style="{'color': $ctrl.getNewCommandColor($index), 'cursor': 'pointer'}" 
+            <ul class="list-unstyled listBox">
+            <li ng-repeat="c in $ctrl.possibleCommandList" class="command" ng-style="{'color': $ctrl.getNewCommandColor($index)}" 
                 ng-click="$ctrl.onCommandClick($index)">{{c.name}}</li>
             </ul>
         </span>
-        <span class="program" ng-style="{'display': 'inline-block', 'vertical-align': 'top'}">
+        <span class="commandListContainer">
             Program:
-            <ul class="list-unstyled" ng-style="{'border': '1px solid black'}">
-            <li ng-repeat="c in $ctrl.commandList" ng-click="$ctrl.selectedCommandIndex = $index" 
-            ng-style="{'color': $ctrl.getCommandColor($index), 'background-color': $ctrl.getCommandBackgroundColor($index),
-            'cursor': 'pointer'}">{{c.getName()}}</li>
-            <li ng-style="{'color': $ctrl.getCommandColor($ctrl.commandList.length + 1), 'cursor': 'pointer'}" 
+            <ul class="list-unstyled listBox">
+            <li ng-repeat="c in $ctrl.commandList" class="command" ng-click="$ctrl.selectedCommandIndex = $index" 
+            ng-style="{'color': $ctrl.getCommandColor($index), 'background-color': $ctrl.getCommandBackgroundColor($index)}">{{c.getName()}}</li>
+            <li class="command" ng-style="{'color': $ctrl.getCommandColor($ctrl.commandList.length + 1)}" 
                 ng-click="$ctrl.selectedCommandIndex = ($ctrl.commandList.length + 1)">-</li>
             </ul>
             <!--- <select ng-model="$ctrl.selected" size="10">
