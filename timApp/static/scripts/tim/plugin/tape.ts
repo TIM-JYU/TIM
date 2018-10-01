@@ -295,24 +295,27 @@ export class TapeController implements IController {
 
 
     /**
-     * Handles clicks on the "Add command" button.
+     * Handles clicks on the "Insert command" button.
      */
-    private addCommandButtonClick() {
+    private insertCommandButtonClick() {
         if (this.newCommandIndex == -1) {
             return;
         }
 
         const commandToAdd = this.possibleCommandList[this.newCommandIndex];
-        this.addCommand(commandToAdd, this.newCommandParameter);
+        this.addCommand(commandToAdd, this.newCommandParameter, this.selectedCommandIndex);
+        if (this.selectedCommandIndex !== -1)
+            this.selectedCommandIndex++;
     }
 
     /**
-     * Adds a command into the program.
+     * Inserts a command into the program.
      * Returns true if succesful, otherwise false.
      * @param commandToAdd The command.
      * @param parameterString The parameter of the command given as a string.
+     * @param index (Optional) The place where the command is inserted in the program, if not to the end.
      */
-    private addCommand(commandToAdd: Command, parameterString: string): boolean {
+    private addCommand(commandToAdd: Command, parameterString: string, index: number = -1): boolean {
         let parameter;
 
         // TODO maybe move parameter validation to the commands themselves?
@@ -334,7 +337,12 @@ export class TapeController implements IController {
         }
 
         const commandInstance = new CommandInstance(commandToAdd, parameter);
-        this.commandList.push(commandInstance);
+        if (index === -1) {
+            this.commandList.push(commandInstance);
+        } else {
+            this.commandList.splice(index, 0, commandInstance);
+        }
+
         return true;
     }
 
@@ -631,6 +639,8 @@ timApp.component("timTape", {
             <li ng-repeat="c in $ctrl.commandList" ng-click="$ctrl.selectedCommandIndex = $index" 
             ng-style="{'color': $ctrl.getCommandColor($index), 'background-color': $ctrl.getCommandBackgroundColor($index),
             'cursor': 'pointer'}">{{c.getName()}}</li>
+            <li ng-style="{'color': $ctrl.getCommandColor($ctrl.commandList.length + 1), 'cursor': 'pointer'}" 
+                ng-click="$ctrl.selectedCommandIndex = ($ctrl.commandList.length + 1)">-</li>
             </ul>
             <!--- <select ng-model="$ctrl.selected" size="10">
             <option ng-repeat="c in $ctrl.commandList" ng-style="{'color': $ctrl.getCommandColor($index)}">{{c.getName()}}</option>
@@ -641,7 +651,7 @@ timApp.component("timTape", {
                 <span>{{$ctrl.newCommandParameterText}}</span>
                 <input ng-model="$ctrl.newCommandParameter">
              </span>
-             <button class="timButton" ng-click="$ctrl.addCommandButtonClick()"><span>Add command</span>
+             <button class="timButton" ng-click="$ctrl.insertCommandButtonClick()"><span>Insert command</span>
         </div>
         <div class="commandRemoveArea" ng-show="true" ng-style="{'margin-bottom': '1em'}">
             <button class="timButton" ng-click="$ctrl.removeCommand()"><span>Remove command</span></button>
