@@ -6,7 +6,6 @@ from timApp.timdb.sqa import db
 
 class ReadParagraph(db.Model):
     """Denotes that a User(Group) has read a specific paragraph in some way."""
-    __bind_key__ = 'tim_main'
     __tablename__ = 'readparagraph'
     id = db.Column(db.Integer, primary_key=True)
     """Readmark id."""

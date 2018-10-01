@@ -19,7 +19,6 @@ class DocEntry(db.Model, DocInfo):
 
     Most of the time you should use DocInfo class instead of this.
     """
-    __bind_key__ = 'tim_main'
     __tablename__ = 'docentry'
     name = db.Column(db.Text, primary_key=True)
     """Full path of the document.

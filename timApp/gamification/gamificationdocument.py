@@ -7,7 +7,6 @@ class GamificationDocument(db.Model):
     If a line exists in this table, the document with the indicated ID is gamified.
 
     """
-    __bind_key__ = 'tim_main'
     __tablename__ = 'gamificationdocument'
     id = db.Column(db.Integer, db.ForeignKey('block.id'), primary_key=True)
 

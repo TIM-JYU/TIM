@@ -695,6 +695,12 @@ class TimRouteTest(TimDbTest):
             u.groups.append(admin_group)
             db.session.commit()
 
+    def post_comment(self, par, public, text, **kwargs):
+        return self.json_post('/postNote', {'text': text,
+                                            'access': 'everyone' if public else 'justme',
+                                            'docId': par.doc.doc_id,
+                                            'par': par.get_id()}, **kwargs)
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -4,7 +4,6 @@ from timApp.timdb.sqa import db
 class DocumentGamificationPoint(db.Model):
     """Created by TIMG This class represents the DocumentGamificationPoint database table, that stores gamification
     point information regarding each document that is gamified."""
-    __bind_key__ = 'tim_main'
     __tablename__ = 'documentgamificationpoint'
     doc_id = db.Column(db.Integer, db.ForeignKey('block.id'), primary_key=True)
     point_type_id = db.Column(db.Integer, db.ForeignKey('gamificationpointtype.point_type_id'), primary_key=True)

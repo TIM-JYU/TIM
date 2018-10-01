@@ -3,7 +3,6 @@ from timApp.timdb.sqa import db
 
 class UserNote(db.Model):
     """A comment/note that has been posted in a document paragraph."""
-    __bind_key__ = 'tim_main'
     __tablename__ = 'usernotes'
     id = db.Column(db.Integer, primary_key=True)
     """Comment id."""

@@ -1,6 +1,6 @@
 import itertools
 
-from flask import Request
+from flask import Request, current_app
 from flask import request, abort
 from werkzeug.wrappers import BaseRequest
 
@@ -81,3 +81,11 @@ def is_xhr(req: BaseRequest):
     return req.environ.get(
         'HTTP_X_REQUESTED_WITH', ''
     ).lower() == 'xmlhttprequest'
+
+
+def is_testing():
+    return current_app.config['TESTING']
+
+
+def is_localhost():
+    return current_app.config['TIM_HOST'] in ('http://localhost', 'http://nginx')

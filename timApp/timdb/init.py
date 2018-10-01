@@ -21,7 +21,7 @@ from timApp.tim_app import app
 from timApp.document.documents import import_document_from_file
 from timApp.document.docentry import DocEntry
 from timApp.user.user import User
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import db, get_tim_main_engine
 from timApp.auth.auth_models import AccessType
 from timApp.timdb.timdb import TimDb
 from timApp.user.userutils import get_anon_group_id
@@ -63,6 +63,10 @@ def postgre_create_database(host, db_name):
         conn.close()
 
 
+def database_has_tables():
+    return bool(sqlalchemy.inspect(get_tim_main_engine()).get_table_names())
+
+
 def initialize_database(create_docs=True):
     files_root_path = app.config['FILES_PATH']
     Document.default_files_root = files_root_path
@@ -71,11 +75,11 @@ def initialize_database(create_docs=True):
     was_created = postgre_create_database(app.config['DB_HOST'], app.config['TIM_NAME'])
     log_info(f'Database {app.config["TIM_NAME"]} {"was created" if was_created else "exists"}.')
     timdb = TimDb(files_root_path=files_root_path)
-    db.create_all(bind='tim_main')
     sess = timdb.session
-    if sess.query(AccessType).count() > 0:
+    if database_has_tables():
         log_info('Initial data already exists, skipping DB initialization.')
     else:
+        db.create_all()
         old_db = app.config['OLD_SQLITE_DATABASE']
         if old_db and os.path.exists(old_db):
             perform_migration(app.config['OLD_SQLITE_DATABASE'], app.config['DATABASE'])

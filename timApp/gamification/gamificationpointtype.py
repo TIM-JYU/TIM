@@ -8,7 +8,6 @@ class GamificationPointType(db.Model):
     Currently only two types exist (Demo points = 1, Clicks from read paragraphs = 2).
 
     """
-    __bind_key__ = 'tim_main'
     __tablename__ = 'gamificationpointtype'
     point_type_id = db.Column(db.Integer, primary_key=True)
     point_type_name = db.Column(db.Text)

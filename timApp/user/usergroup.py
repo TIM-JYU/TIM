@@ -18,7 +18,6 @@ class UserGroup(db.Model):
     In database, the User 'Anonymous user' belongs to 'Anonymous users' group. Other than that,
     the two groups are empty from the database's point of view.
     """
-    __bind_key__ = 'tim_main'
     __tablename__ = 'usergroup'
     id = db.Column(db.Integer, primary_key=True)
     """Usergroup identifier."""

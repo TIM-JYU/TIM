@@ -32,9 +32,6 @@ TIM_HOST = os.environ.get('TIM_HOST', 'http://localhost')
 OLD_SQLITE_DATABASE = '/tim_files/tim.db'
 DB_HOST = 'postgresql'
 DATABASE = f"postgresql://postgres@{DB_HOST}:5432/{TIM_NAME}"
-SQLALCHEMY_BINDS = {
-    'tim_main': DATABASE,
-}
 SASS_GEN_PATH = 'gen'
 TEMPLATES_AUTO_RELOAD = True
 SQLALCHEMY_DATABASE_URI = DATABASE
@@ -68,5 +65,11 @@ CELERYBEAT_SCHEDULE = {
     'update-search-files': {
         'task': 'timApp.tim_celery.update_search_files',
         'schedule': crontab(minute='*/15'),  # Repeat every quarter hour.
+    },
+    'process-notifications': {
+        'task': 'timApp.tim_celery.process_notifications',
+        'schedule': crontab(minute='*/2'),
     }
 }
+MAIL_HOST = "smtp.jyu.fi"
+MAIL_SIGNATURE = "\n\n-- \nThis message was automatically sent by TIM"

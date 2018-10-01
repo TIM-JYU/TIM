@@ -14,7 +14,6 @@ ROOT_FOLDER_ID = -1
 
 class Folder(db.Model, Item):
     """Represents a folder in the directory hierarchy."""
-    __bind_key__ = 'tim_main'
     __tablename__ = 'folder'
 
     id = db.Column(db.Integer, db.ForeignKey('block.id'), primary_key=True)

@@ -10,7 +10,6 @@ class Annotation(db.Model):
     The annotation can start and end in specific positions, in which case the annotation is supposed to be displayed
     as highlighted text in the corresponding location.
     """
-    __bind_key__ = 'tim_main'
     __tablename__ = 'annotation'
     id = db.Column(db.Integer, primary_key=True)
     """Annotation identifier."""
@@ -98,7 +97,6 @@ class Annotation(db.Model):
 
 class AnnotationComment(db.Model):
     """A comment in an Annotation."""
-    __bind_key__ = 'tim_main'
     __tablename__ = 'annotationcomment'
     id = db.Column(db.Integer, primary_key=True)
     """Comment identifier."""
@@ -121,7 +119,6 @@ class Icon(db.Model):
 
     Currently not used (0 rows in production DB as of 5th July 2018).
     """
-    __bind_key__ = 'tim_main'
     __tablename__ = 'icon'
     id = db.Column(db.Integer, primary_key=True)
     """Icon identifier."""
@@ -132,7 +129,6 @@ class Icon(db.Model):
 
 class ImportedVelpGroups(db.Model):
     """Currently not used (0 rows in production DB as of 5th July 2018)."""
-    __bind_key__ = 'tim_main'
     __tablename__ = 'importedvelpgroups'
     user_group = db.Column(db.Integer, db.ForeignKey('usergroup.id'), primary_key=True)
     doc_id = db.Column(db.Integer, db.ForeignKey('block.id'), primary_key=True)
@@ -143,7 +139,6 @@ class ImportedVelpGroups(db.Model):
 
 class LabelInVelp(db.Model):
     """Associates VelpLabels with Velps."""
-    __bind_key__ = 'tim_main'
     __tablename__ = 'labelinvelp'
     label_id = db.Column(db.Integer, db.ForeignKey('velplabel.id'), primary_key=True)
     velp_id = db.Column(db.Integer, db.ForeignKey('velp.id'), primary_key=True)
@@ -151,7 +146,6 @@ class LabelInVelp(db.Model):
 
 class LabelInVelpGroup(db.Model):
     """Currently not used (0 rows in production DB as of 5th July 2018)."""
-    __bind_key__ = 'tim_main'
     __tablename__ = 'labelinvelpgroup'
     velp_group_id = db.Column(db.Integer, db.ForeignKey('velpgroup.id'), primary_key=True)
     group_label_id = db.Column(db.Integer, db.ForeignKey('velpgrouplabel.id'), primary_key=True)
@@ -159,7 +153,6 @@ class LabelInVelpGroup(db.Model):
 
 class Velp(db.Model):
     """A Velp is a kind of category for Annotations and is visually represented by a Post-it note."""
-    __bind_key__ = 'tim_main'
     __tablename__ = 'velp'
     id = db.Column(db.Integer, primary_key=True)
     creator_id = db.Column(db.Integer, db.ForeignKey('useraccount.id'), nullable=False)
@@ -176,7 +169,6 @@ class Velp(db.Model):
 
 class VelpContent(db.Model):
     """The actual content of a Velp."""
-    __bind_key__ = 'tim_main'
     __tablename__ = 'velpcontent'
     version_id = db.Column(db.Integer, db.ForeignKey('velpversion.id'), primary_key=True)
     language_id = db.Column(db.Text, primary_key=True)
@@ -186,7 +178,6 @@ class VelpContent(db.Model):
 
 class VelpGroup(db.Model):
     """Represents a group of Velps."""
-    __bind_key__ = 'tim_main'
     __tablename__ = 'velpgroup'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.Text)
@@ -197,7 +188,6 @@ class VelpGroup(db.Model):
 
 
 class VelpGroupDefaults(db.Model):
-    __bind_key__ = 'tim_main'
     __tablename__ = 'velpgroupdefaults'
     doc_id = db.Column(db.Integer, db.ForeignKey('block.id'), primary_key=True)
     target_type = db.Column(db.Integer, nullable=False)  # 0 = document, 1 = paragraph, 2 = area
@@ -208,14 +198,12 @@ class VelpGroupDefaults(db.Model):
 
 class VelpGroupLabel(db.Model):
     """Currently not used (0 rows in production DB as of 5th July 2018)."""
-    __bind_key__ = 'tim_main'
     __tablename__ = 'velpgrouplabel'
     id = db.Column(db.Integer, primary_key=True)
     content = db.Column(db.Text, nullable=False)
 
 
 class VelpGroupSelection(db.Model):
-    __bind_key__ = 'tim_main'
     __tablename__ = 'velpgroupselection'
     user_id = db.Column(db.Integer, db.ForeignKey('useraccount.id'), primary_key=True)
     doc_id = db.Column(db.Integer, db.ForeignKey('block.id'), primary_key=True)
@@ -231,7 +219,6 @@ class VelpGroupsInDocument(db.Model):
     TODO: This table contains lots of rows in production DB (about 19000 as of 5th July 2018).
     TODO: Possibly needs some optimizations.
     """
-    __bind_key__ = 'tim_main'
     __tablename__ = 'velpgroupsindocument'
     user_id = db.Column(db.Integer, db.ForeignKey('useraccount.id'), primary_key=True)
     doc_id = db.Column(db.Integer, db.ForeignKey('block.id'), primary_key=True)
@@ -239,7 +226,6 @@ class VelpGroupsInDocument(db.Model):
 
 
 class VelpInGroup(db.Model):
-    __bind_key__ = 'tim_main'
     __tablename__ = 'velpingroup'
     velp_group_id = db.Column(db.Integer, db.ForeignKey('velpgroup.id'), primary_key=True)
     velp_id = db.Column(db.Integer, db.ForeignKey('velp.id'), primary_key=True)
@@ -248,13 +234,11 @@ class VelpInGroup(db.Model):
 
 class VelpLabel(db.Model):
     """A label that can be assigned to a Velp."""
-    __bind_key__ = 'tim_main'
     __tablename__ = 'velplabel'
     id = db.Column(db.Integer, primary_key=True)
 
 
 class VelpLabelContent(db.Model):
-    __bind_key__ = 'tim_main'
     __tablename__ = 'velplabelcontent'
     velplabel_id = db.Column(db.Integer, db.ForeignKey('velplabel.id'), primary_key=True)
     language_id = db.Column(db.Text, primary_key=True)
@@ -262,7 +246,6 @@ class VelpLabelContent(db.Model):
 
 
 class VelpVersion(db.Model):
-    __bind_key__ = 'tim_main'
     __tablename__ = 'velpversion'
     id = db.Column(db.Integer, primary_key=True)
     velp_id = db.Column(db.Integer, db.ForeignKey('velp.id'), nullable=False)

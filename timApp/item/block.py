@@ -14,7 +14,6 @@ from timApp.timtypes import FolderType
 
 class Block(db.Model):
     """The "base class" for all database objects that are part of the permission system."""
-    __bind_key__ = 'tim_main'
     __tablename__ = 'block'
     id = db.Column(db.Integer, primary_key=True)
     """A unique identifier for the Block."""

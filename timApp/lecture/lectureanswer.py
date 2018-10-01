@@ -7,7 +7,6 @@ from timApp.timdb.timdbbase import result_as_dict_list
 
 
 class LectureAnswer(db.Model):
-    __bind_key__ = 'tim_main'
     __tablename__ = 'lectureanswer'
     answer_id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('useraccount.id'), nullable=False)

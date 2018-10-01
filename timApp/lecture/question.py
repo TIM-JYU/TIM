@@ -2,7 +2,6 @@ from timApp.timdb.sqa import db
 
 
 class Question(db.Model):
-    __bind_key__ = 'tim_main'
     __tablename__ = 'question'
     question_id = db.Column(db.Integer, primary_key=True)
     doc_id = db.Column(db.Integer, db.ForeignKey('block.id'), nullable=False)

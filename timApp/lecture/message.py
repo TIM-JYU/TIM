@@ -4,7 +4,6 @@ from timApp.timdb.sqa import db
 
 
 class Message(db.Model):
-    __bind_key__ = 'tim_main'
     __tablename__ = 'message'
     msg_id = db.Column(db.Integer, primary_key=True)
     lecture_id = db.Column(db.Integer, db.ForeignKey('lecture.lecture_id'),

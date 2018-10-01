@@ -80,7 +80,7 @@ class TimDb:
         from timApp.tim_app import app
         while True:
             try:
-                self.engine = db.get_engine(app, 'tim_main')
+                self.engine = db.get_engine(app)
                 self.db = self.engine.connect().connection
                 self.session = db.session
                 break

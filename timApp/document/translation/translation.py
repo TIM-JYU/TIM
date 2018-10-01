@@ -16,7 +16,6 @@ class Translation(db.Model, DocInfo):
     - A new translated document is created (via manage view).
 
     """
-    __bind_key__ = 'tim_main'
     __tablename__ = 'translation'
     doc_id = db.Column(db.Integer, db.ForeignKey('block.id'), primary_key=True)
     src_docid = db.Column(db.Integer, db.ForeignKey('block.id'), nullable=False)

@@ -6,7 +6,6 @@ class RowOwnerInfo(db.Model):
     Information about the owner of a TimTable row. Includes document and paragraph
     id for determining the TimTable instance.
     """
-    __bind_key__ = 'tim_main'
     __tablename__ = 'rowownerinfo'
     doc_id = db.Column(db.Integer, primary_key=True)
     par_id = db.Column(db.Text, primary_key=True)

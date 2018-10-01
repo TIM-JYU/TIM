@@ -6,6 +6,7 @@ from timApp.auth.accesshelper import verify_comment_right, verify_logged_in, has
 from timApp.auth.accesshelper import verify_view_access
 from timApp.timdb.dbaccess import get_timdb
 from timApp.document.document import Document
+from timApp.timdb.sqa import db
 from timApp.util.flask.requesthelper import get_referenced_pars_from_req, verify_json_params
 from timApp.util.flask.responsehelper import json_response
 from timApp.document.editing.routes import par_response
@@ -62,10 +63,8 @@ def post_note():
     timdb.notes.add_note(group_id, Document(par.get_doc_id()), par, note_text, access, tags)
 
     if access == "everyone":
-        notify_doc_watchers(docentry,
-                            note_text,
-                            NotificationType.CommentAdded,
-                            par)
+        notify_doc_watchers(docentry, note_text, NotificationType.CommentAdded, par)
+    db.session.commit()
     return par_response([doc.get_paragraph(par_id)],
                         doc)
 
@@ -97,11 +96,9 @@ def edit_note():
     timdb.notes.modify_note(note_id, note_text, access, tags)
 
     if access == "everyone":
-        notify_doc_watchers(d,
-                            note_text,
-                            NotificationType.CommentModified,
-                            par)
+        notify_doc_watchers(d, note_text, NotificationType.CommentModified, par)
     doc = d.document
+    db.session.commit()
     return par_response([doc.get_paragraph(par_id)],
                         doc)
 
@@ -114,7 +111,16 @@ def delete_note():
     d = get_doc_or_abort(doc_id)
     if not (timdb.notes.has_edit_access(group_id, note_id) or has_ownership(d)):
         abort(403, "Sorry, you don't have permission to remove this note.")
+    note = timdb.notes.get_note(note_id)
+    par_id = note['par_id']
+    try:
+        par = d.document.get_paragraph(par_id)
+    except TimDbException:
+        return abort(400, 'Cannot delete the note because the paragraph has been deleted.')
     timdb.notes.delete_note(note_id)
+    if note['access'] == "everyone":
+        notify_doc_watchers(d, note['content'], NotificationType.CommentDeleted, par)
     doc = d.document
+    db.session.commit()
     return par_response([doc.get_paragraph(paragraph_id)],
                         doc)

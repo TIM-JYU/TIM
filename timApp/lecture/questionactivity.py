@@ -12,7 +12,6 @@ class QuestionActivityKind(Enum):
 
 
 class QuestionActivity(db.Model):
-    __bind_key__ = 'tim_main'
     __tablename__ = 'question_activity'
     asked_id = db.Column(db.Integer, db.ForeignKey('askedquestion.asked_id'), primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('useraccount.id'), primary_key=True)

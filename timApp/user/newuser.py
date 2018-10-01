@@ -6,7 +6,6 @@ from timApp.user.userutils import check_password_hash
 
 class NewUser(db.Model):
     """A user that is going to register to TIM via email and has not yet completed the registration process."""
-    __bind_key__ = 'tim_main'
     __tablename__ = 'newuser'
     email = db.Column(db.Text, primary_key=True)
     """Email address."""

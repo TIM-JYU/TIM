@@ -5,7 +5,6 @@ from timApp.util.utils import get_current_time
 
 class Answer(db.Model):
     """An answer to a task."""
-    __bind_key__ = 'tim_main'
     __tablename__ = 'answer'
     id = db.Column(db.Integer, primary_key=True)
     """Answer identifier."""

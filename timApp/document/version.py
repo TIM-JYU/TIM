@@ -9,3 +9,7 @@ zero.
 Minor version is incremented whenever a paragraph is modified.
 """
 Version = Tuple[int, int]
+
+
+def ver_to_str(v: Version):
+    return ','.join((str(x) for x in v))

@@ -4,7 +4,6 @@ from timApp.timdb.sqa import db
 class DocGamified(db.Model):
     """Created by TIMG This class represents the DocGamified database table, that connects regular documents to gamified
     ones."""
-    __bind_key__ = 'tim_main'
     __tablename__ = 'docgamified'
     gamification_doc_id = db.Column(db.Integer, db.ForeignKey('block.id'), primary_key=True)
     doc_id = db.Column(db.Integer, db.ForeignKey('block.id'), primary_key=True)

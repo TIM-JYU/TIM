@@ -4,7 +4,6 @@ from timApp.timdb.sqa import db
 class UserGamification(db.Model):
     """Created by TIMG This class represents the UserGamification database table, used connecting users to gamification
     documents."""
-    __bind_key__ = 'tim_main'
     __tablename__ = 'usergamification'
     gamification_doc_id = db.Column(db.Integer, db.ForeignKey('gamificationdocument.id'), primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('useraccount.id'), primary_key=True)

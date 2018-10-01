@@ -7,7 +7,6 @@ class PrintedDoc(db.Model):
     """A printed document. A PrintedDoc is created each time a document is printed
     (CSS printing does not count because it happens entirely in browser)."""
 
-    __bind_key__ = 'tim_main'
     __tablename__ = 'printed_doc'
     id = db.Column(db.Integer, primary_key=True)
     doc_id = db.Column(db.Integer, db.ForeignKey('block.id'), nullable=False)

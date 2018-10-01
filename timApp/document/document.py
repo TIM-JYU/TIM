@@ -383,15 +383,15 @@ class Document:
     def get_document_path(self) -> str:
         return os.path.join(self.get_documents_dir(self.files_root), str(self.doc_id))
 
-    def get_version_path(self, ver: Optional[Tuple[int, int]]=None) -> str:
+    def get_version_path(self, ver: Optional[Version]=None) -> str:
         version = self.get_version() if ver is None else ver
         return os.path.join(self.get_documents_dir(self.files_root), str(self.doc_id), str(version[0]), str(version[1]))
 
-    def get_refs_dir(self, ver: Optional[Tuple[int, int]]=None) -> str:
+    def get_refs_dir(self, ver: Optional[Version]=None) -> str:
         version = self.get_version() if ver is None else ver
         return os.path.join(self.files_root, 'refs', str(self.doc_id), str(version[0]), str(version[1]))
 
-    def get_reflist_filename(self, ver: Optional[Tuple[int, int]]=None) -> str:
+    def get_reflist_filename(self, ver: Optional[Version]=None) -> str:
         return os.path.join(self.get_refs_dir(ver), 'reflist_to')
 
     def getlogfilename(self) -> str:
@@ -920,7 +920,7 @@ class Document:
                     return True
         return False
 
-    def calculate_referenced_document_ids(self, ver: Optional[Tuple[int, int]]=None) -> Set[int]:
+    def calculate_referenced_document_ids(self, ver: Optional[Version]=None) -> Set[int]:
         """Gets all the document ids that are referenced from this document recursively.
 
         :return: The set of the document ids.
@@ -959,7 +959,7 @@ class Document:
         with open(reflist_name, 'w') as reffile:
             reffile.write(json.dumps(list(reflist)))
 
-    def get_referenced_document_ids(self, ver: Optional[Tuple[int, int]]=None) -> Set[int]:
+    def get_referenced_document_ids(self, ver: Optional[Version]=None) -> Set[int]:
         reflist_name = self.get_reflist_filename(ver)
         if os.path.isfile(reflist_name):
             reflist = self.__load_reflist(reflist_name)

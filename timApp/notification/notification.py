@@ -5,9 +5,22 @@ from timApp.timdb.sqa import db, is_attribute_loaded
 
 
 class NotificationType(enum.Enum):
-    DocModified = 'doc_modify'
-    CommentAdded = 'comment_add'
-    CommentModified = 'comment_modify'
+    DocModified = 1
+    ParAdded = 2
+    ParModified = 3
+    ParDeleted = 4
+    CommentAdded = 5
+    CommentModified = 6
+    CommentDeleted = 7
+
+    @property
+    def is_document_modification(self):
+        return self in (
+            NotificationType.DocModified,
+            NotificationType.ParAdded,
+            NotificationType.ParDeleted,
+            NotificationType.ParModified,
+        )
 
 
 class Notification(db.Model):
@@ -16,7 +29,6 @@ class Notification(db.Model):
     TODO: Instead of columns email_*, there should just be one column notify_kind with type NotificationType and
     TODO: it would be part of primary key.
     """
-    __bind_key__ = 'tim_main'
     __tablename__ = 'notification'
     user_id = db.Column(db.Integer, db.ForeignKey('useraccount.id'), primary_key=True)
     """User id."""

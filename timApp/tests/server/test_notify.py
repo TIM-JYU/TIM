@@ -1,4 +1,4 @@
-from timApp.notification.notify import sent_mails_in_testing
+from timApp.notification.notify import sent_mails_in_testing, process_pending_notifications
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.document.docentry import DocEntry
 from timApp.timdb.sqa import db
@@ -23,6 +23,9 @@ class NotifyTestBase(TimRouteTest):
         self.assertEqual([], sent_mails_in_testing)
         self.login_test2()
         d = DocEntry.find_by_id(doc_id)  # Avoids DetachedInstanceError
+
+        # testuser 2 will get notification from both additions
+        # because pending notifications have not yet been processed
         self.update_notify_settings(d, {'email_comment_add': True, 'email_comment_modify': False,
                                         'email_doc_modify': True})
         self.login_test1()
@@ -47,99 +50,100 @@ class NotifyTest(NotifyTestBase):
 
     def test_notify_email(self):
         d, title, url = self.prepare_doc()
+        process_pending_notifications()
 
         self.assertEqual(1, len(sent_mails_in_testing))
+        par_id0 = d.document.get_paragraphs()[0].get_id()
         par_id = d.document.get_paragraphs()[1].get_id()
         mail_from = 'tim@jyu.fi'
-        self.assertEqual({'group_id': f'docmodify_{d.id}',
-                          'group_subject': f'The document {title} has been modified',
-                          'mail_from': mail_from,
-                          'msg': f'Link to the paragraph: {url}#{par_id}',
-                          'rcpt': self.test_user_2.email,
-                          'reply_to': None,
-                          'subject': f'Someone edited the document {title}'}, sent_mails_in_testing[-1])
+        self.assertEqual({
+            'mail_from': mail_from,
+            'msg': f'Paragraph added: {url}#{par_id0}\n\nParagraph added: {url}#{par_id}',
+            'rcpt': self.test_user_2.email,
+            'reply_to': None,
+            'subject': f'Someone added 2 paragraphs to the document {title}'
+        }, sent_mails_in_testing[-1])
 
         self.post_par(d.document, 'test2', par_id)
-        self.assertEqual({'group_id': f'docmodify_{d.id}',
-                          'group_subject': f'The document {title} has been modified',
-                          'mail_from': mail_from,
-                          'msg': f'Link to the paragraph: {url}#{par_id}',
-                          'rcpt': self.test_user_2.email,
-                          'reply_to': None,
-                          'subject': f'Someone edited the document {title}'}, sent_mails_in_testing[-1])
+        process_pending_notifications()
+        self.assertEqual({
+            'mail_from': mail_from,
+            'msg': f'Paragraph modified: {url}#{par_id}',
+            'rcpt': self.test_user_2.email,
+            'reply_to': None,
+            'subject': f'Someone modified a paragraph in the document {title}'
+        }, sent_mails_in_testing[-1])
 
         self.test_user_2.grant_access(d.id, 'edit')
         self.new_par(d.document, 'test')
+        process_pending_notifications()
         pars = d.document.get_paragraphs()
-        self.assertEqual({'group_id': f'docmodify_{d.id}',
-                          'group_subject': f'The document {title} has been modified',
-                          'mail_from': mail_from,
-                          'msg': f'Link to the paragraph: {url}#{pars[2].get_id()}\n'
-                                 '\n'
-                                 f'Link to changes: http://localhost/diff/{d.id}/2/1/3/0\n'
-                                 '\n'
-                                 'Paragraph was added:\n'
-                                 '\n'
-                                 f'{pars[2].get_markdown()}',
-                          'rcpt': self.test_user_2.email,
-                          'reply_to': None,
-                          'subject': f'Someone edited the document {title}'}, sent_mails_in_testing[-1])
+        self.assertEqual({
+            'mail_from': mail_from,
+            'msg': f'Paragraph added: {url}#{pars[2].get_id()}'
+                   ' '
+                   f'(changes: http://localhost/diff/{d.id}/2/1/3/0)\n'
+                   '\n'
+                   f'{pars[2].get_markdown()}',
+            'rcpt': self.test_user_2.email,
+            'reply_to': None,
+            'subject': f'Someone added a paragraph to the document {title}'
+        }, sent_mails_in_testing[-1])
 
         self.post_par(d.document, 'test3', par_id)
+        process_pending_notifications()
         pars = d.document.get_paragraphs()
         par_md = pars[1].get_markdown()
-        self.assertEqual({'group_id': f'docmodify_{d.id}',
-                          'group_subject': f'The document {title} has been modified',
-                          'mail_from': mail_from,
-                          'msg': f'Link to the paragraph: {url}#{pars[1].get_id()}\n'
-                                 '\n'
-                                 f'Link to changes: http://localhost/diff/{d.id}/3/0/3/1\n'
-                                 '\n'
-                                 'Paragraph was edited:\n'
-                                 '\n'
-                                 f'{par_md}',
-                          'rcpt': self.test_user_2.email,
-                          'reply_to': None,
-                          'subject': f'Someone edited the document {title}'}, sent_mails_in_testing[-1])
+        self.assertEqual({
+            'mail_from': mail_from,
+            'msg': f'Paragraph modified: {url}#{pars[1].get_id()}'
+                   ' '
+                   f'(changes: http://localhost/diff/{d.id}/3/0/3/1)\n'
+                   '\n'
+                   f'{par_md}',
+            'rcpt': self.test_user_2.email,
+            'reply_to': None,
+            'subject': f'Someone modified a paragraph in the document {title}'
+        }, sent_mails_in_testing[-1])
 
         self.delete_par(d, par_id)
-        self.assertEqual({'group_id': f'docmodify_{d.id}',
-                          'group_subject': f'The document {title} has been modified',
-                          'mail_from': mail_from,
-                          'msg': f'Link to the document: {url}\n'
-                                 '\n'
-                                 f'Link to changes: http://localhost/diff/{d.id}/3/1/4/0\n'
-                                 '\n'
-                                 'Paragraph was deleted:\n'
-                                 '\n'
-                                 f'{par_md}',
-                          'rcpt': self.test_user_2.email,
-                          'reply_to': None,
-                          'subject': f'Someone edited the document {title}'}, sent_mails_in_testing[-1])
+        process_pending_notifications()
+        self.assertEqual({
+            'mail_from': mail_from,
+            'msg': f'Paragraph deleted: {url}'
+                   ' '
+                   f'(changes: http://localhost/diff/{d.id}/3/1/4/0)\n'
+                   '\n'
+                   f'{par_md}',
+            'rcpt': self.test_user_2.email,
+            'reply_to': None,
+            'subject': f'Someone deleted a paragraph from the document {title}'
+        }, sent_mails_in_testing[-1])
 
         self.test_user_2.grant_access(d.id, 'teacher')
         self.new_par(d.document, 'test')
+        process_pending_notifications()
         pars = d.document.get_paragraphs()
-        self.assertEqual({'group_id': f'docmodify_{d.id}',
-                          'group_subject': f'The document {title} has been modified',
-                          'mail_from': mail_from,
-                          'msg': f'Link to the paragraph: {url}#{pars[-1].get_id()}\n'
-                                 '\n'
-                                 f'Link to changes: http://localhost/diff/{d.id}/4/0/5/0\n'
-                                 '\n'
-                                 'Paragraph was added:\n'
-                                 '\n'
-                                 f'{pars[-1].get_markdown()}',
-                          'rcpt': self.test_user_2.email,
-                          'reply_to': self.test_user_1.email,
-                          'subject': f'Test user 1 edited the document {title}'}, sent_mails_in_testing[-1])
+        self.assertEqual({
+            'mail_from': mail_from,
+            'msg': f'Paragraph added by Test user 1: {url}#{pars[-1].get_id()}'
+                   ' '
+                   f'(changes: http://localhost/diff/{d.id}/4/0/5/0)\n'
+                   '\n'
+                   f'{pars[-1].get_markdown()}',
+            'rcpt': self.test_user_2.email,
+            'reply_to': self.test_user_1.email,
+            'subject': f'Test user 1 added a paragraph to the document {title}'
+        }, sent_mails_in_testing[-1])
 
     def test_revoke_view_no_email(self):
         d, title, url = self.prepare_doc()
+        process_pending_notifications()
         self.assertEqual(1, len(sent_mails_in_testing))
         self.test_user_2.remove_access(d.id, 'view')
         db.session.commit()
         self.new_par(d.document, 'test')
+        process_pending_notifications()
         self.assertEqual(1, len(sent_mails_in_testing))
 
 
@@ -161,6 +165,7 @@ class NotifyFolderTest(NotifyTestBase):
         self.assertEqual(0, len(sent_mails_in_testing))
         self.test_user_2.grant_access(d.id, 'view')
         self.new_par(d.document, 'test')
+        process_pending_notifications()
         self.assertEqual(1, len(sent_mails_in_testing))
 
         self.login_test2()
@@ -170,4 +175,5 @@ class NotifyFolderTest(NotifyTestBase):
 
         self.login_test1()
         self.new_par(d.document, 'test')
+        process_pending_notifications()
         self.assertEqual(2, len(sent_mails_in_testing))

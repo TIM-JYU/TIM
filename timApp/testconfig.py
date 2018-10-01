@@ -17,9 +17,7 @@ LOG_LEVEL_STDOUT = logging.ERROR
 LOG_PATH = os.path.join(LOG_DIR, LOG_FILE)
 TESTING = True
 OLD_SQLITE_DATABASE = None
-SQLALCHEMY_BINDS = {
-    'tim_main': DATABASE,
-}
+SQLALCHEMY_DATABASE_URI = DATABASE
 SASS_GEN_PATH = 'testgen'
 
 # Webassets seems to have a weird bug that it cannot find the cache files if the paths are not default,
@@ -37,3 +35,7 @@ SELENIUM_BROWSER_URL = os.environ.get('SELENIUM_BROWSER_URL', 'http://nginx:' +
 LIVESERVER_PORT = 5001
 QST_PLUGIN_PORT = LIVESERVER_PORT
 PERMANENT_SESSION_LIFETIME = timedelta(weeks=9999)
+
+CELERYBEAT_SCHEDULE = {
+    # don't schedule anything while testing
+}

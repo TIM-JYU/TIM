@@ -75,7 +75,6 @@ class User(db.Model):
 
     A special user 'Anonymous user' denotes a user that is not logged in. Its id is 0.
     """
-    __bind_key__ = 'tim_main'
     __tablename__ = 'useraccount'
     id = db.Column(db.Integer, primary_key=True)
     """User identifier."""

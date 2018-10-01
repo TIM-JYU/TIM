@@ -128,20 +128,13 @@ class DocInfo(Item):
             length = getattr(self, 'changelog_length', 100)
         return self.document.get_changelog(length)
 
-    def get_notifications(self, notify_type: NotificationType) -> List[Notification]:
+    def get_notifications(self, condition) -> List[Notification]:
         items = set()
         for a in self.aliases:
             items.update(a.parents_to_root)
         items.add(self)
         q = Notification.query.filter(Notification.doc_id.in_([f.id for f in items]))
-        if notify_type == NotificationType.CommentModified:
-            q = q.filter_by(email_comment_modify=True)
-        elif notify_type == NotificationType.CommentAdded:
-            q = q.filter_by(email_comment_add=True)
-        elif notify_type == NotificationType.DocModified:
-            q = q.filter_by(email_doc_modify=True)
-        else:
-            assert False, 'Unknown NotificationType'
+        q = q.filter(condition)
         return q.all()
 
     def has_translation(self, lang_id):

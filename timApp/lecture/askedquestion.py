@@ -11,7 +11,6 @@ from timApp.util.utils import get_current_time
 
 
 class AskedQuestion(db.Model):
-    __bind_key__ = 'tim_main'
     __tablename__ = 'askedquestion'
     asked_id = db.Column(db.Integer, primary_key=True)
     lecture_id = db.Column(db.Integer, db.ForeignKey('lecture.lecture_id'), nullable=False)

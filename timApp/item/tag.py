@@ -20,7 +20,6 @@ class TagType(Enum):
 
 class Tag(db.Model):
     """A tag with associated document id, tag name, type and expiration date."""
-    __bind_key__ = 'tim_main'
     __tablename__ = 'tag'
     block_id = db.Column(db.Integer, db.ForeignKey('block.id'), primary_key=True)
     name = db.Column(db.Text, primary_key=True)

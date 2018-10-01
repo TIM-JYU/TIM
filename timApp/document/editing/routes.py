@@ -117,16 +117,10 @@ def update_document(doc_id):
 def manage_response(docentry: DocInfo, pars: List[DocParagraph], timdb, ver_before: Version):
     doc = docentry.document_as_current_user
     chg = doc.get_changelog()
-    notify_doc_watchers(docentry,
-                        get_diff_link(docentry, ver_before),
-                        NotificationType.DocModified)
+    notify_doc_watchers(docentry, '', NotificationType.DocModified, old_version=ver_before)
     duplicates = check_duplicates(pars, doc, timdb)
+    db.session.commit()
     return json_response({'versions': chg, 'fulltext': doc.export_markdown(), 'duplicates': duplicates})
-
-
-def get_diff_link(docentry: DocInfo, ver_before):
-    ver_after = docentry.document.get_version()
-    return f"""Link to changes: {current_app.config['TIM_HOST']}/diff/{docentry.id}/{ver_before[0]}/{ver_before[1]}/{ver_after[0]}/{ver_after[1]}\n\n"""
 
 
 @edit_page.route("/postNewTaskNames/", methods=['POST'])
@@ -287,10 +281,9 @@ def modify_paragraph_common(doc_id, md, par_id, par_next_id):
     mark_pars_as_read_if_chosen(pars, doc)
 
     synchronize_translations(docinfo, edit_result)
-    notify_doc_watchers(docinfo,
-                        get_diff_link(docinfo, edit_request.old_doc_version) + 'Paragraph was edited:\n\n' + md,
-                        NotificationType.DocModified,
-                        par=pars[0] if pars else None)
+    notify_doc_watchers(docinfo, md, NotificationType.ParModified, par=pars[0] if pars else None,
+                        old_version=edit_request.old_doc_version)
+    db.session.commit()
     return par_response(pars,
                         doc,
                         update_cache=current_app.config['IMMEDIATE_PRELOAD'],
@@ -545,7 +538,6 @@ def mark_pars_as_read_if_chosen(pars, doc):
     if mr:
         for p in pars:
             mark_read(get_current_user_group(), doc, p)
-        db.session.commit()
 
 
 @edit_page.route("/cancelChanges/", methods=["POST"])
@@ -621,10 +613,9 @@ def add_paragraph_common(md, doc_id, par_next_id):
 
     synchronize_translations(docinfo, edit_result)
     if pars:
-        notify_doc_watchers(docinfo,
-                            get_diff_link(docinfo, edit_request.old_doc_version) + 'Paragraph was added:\n\n' + md,
-                            NotificationType.DocModified,
-                            par=pars[0])
+        notify_doc_watchers(docinfo, md, NotificationType.ParAdded, par=pars[0],
+                            old_version=edit_request.old_doc_version)
+    db.session.commit()
     return par_response(pars,
                         doc,
                         update_cache=current_app.config['IMMEDIATE_PRELOAD'],
@@ -666,11 +657,9 @@ def delete_paragraph(doc_id):
 
     if not edit_result.empty:
         docentry.update_last_modified()
-        db.session.commit()
     synchronize_translations(docentry, edit_result)
-    notify_doc_watchers(docentry,
-                        get_diff_link(docentry, version_before) + 'Paragraph was deleted:\n\n' + md,
-                        NotificationType.DocModified)
+    notify_doc_watchers(docentry, md, NotificationType.ParDeleted, old_version=version_before)
+    db.session.commit()
     return par_response([],
                         doc,
                         update_cache=current_app.config['IMMEDIATE_PRELOAD'],

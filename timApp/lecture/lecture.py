@@ -8,7 +8,6 @@ from timApp.util.utils import get_current_time
 
 
 class Lecture(db.Model):
-    __bind_key__ = 'tim_main'
     __tablename__ = 'lecture'
     lecture_id = db.Column(db.Integer, primary_key=True)
     lecture_code = db.Column(db.Text)

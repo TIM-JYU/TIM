@@ -6,7 +6,6 @@ from timApp.timdb.sqa import db
 
 
 class AskedJson(db.Model):
-    __bind_key__ = 'tim_main'
     __tablename__ = 'askedjson'
     asked_json_id = db.Column(db.Integer, primary_key=True)
     json = db.Column(db.Text, nullable=False)

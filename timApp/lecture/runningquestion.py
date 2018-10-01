@@ -5,7 +5,6 @@ from timApp.timdb.sqa import db
 
 
 class Runningquestion(db.Model):
-    __bind_key__ = 'tim_main'
     asked_id = db.Column(db.Integer, db.ForeignKey('askedquestion.asked_id'), primary_key=True)
     lecture_id = db.Column(db.Integer, db.ForeignKey('lecture.lecture_id'),
                            primary_key=True)  # TODO should not be part of primary key (asked_id is enough)

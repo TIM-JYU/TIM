@@ -158,7 +158,7 @@ class FolderTest(TimRouteTest):
         self.create_doc(self.get_personal_item_path('perf/x'))
         d = self.create_doc(self.get_personal_item_path('perf/y'))
         self.get(d.url)
-        eng = db.get_engine(bind='tim_main')
+        eng = db.get_engine()
 
         stmts = 0
         db.session.expunge_all()
