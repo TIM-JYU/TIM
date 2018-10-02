@@ -467,6 +467,21 @@ export class TapeController implements IController {
         const lines = text.split('\n');
         for (let line of lines) {
             line = line.replace(';', '').trim();
+            if (line.length == 0) {
+                continue;
+            }
+
+            const colonIndex = line.indexOf(':');
+            if (colonIndex == line.length - 1 && line.length > 1) {
+                // label found
+                const defineLabelCommand = this.possibleCommandList.find(c => c.name === "Define Label");
+                if (defineLabelCommand) {
+                    this.addCommand(defineLabelCommand, line.slice(0, line.length - 1));
+                }
+
+                continue;
+            }
+
             let components: string[] = [];
             const pIndex = line.indexOf('(');
             let separator = '(';
