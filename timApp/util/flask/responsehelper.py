@@ -1,7 +1,9 @@
+import csv
 import json
+from io import StringIO
 from urllib.parse import urlparse, urljoin
 
-from flask import request, redirect, url_for, Response
+from flask import request, redirect, url_for, Response, stream_with_context
 
 from timApp.document.timjsonencoder import TimJsonEncoder
 from timApp.timdb.sqa import db
@@ -60,3 +62,21 @@ def ok_response():
 
 def empty_response():
     return json_response({'empty': True})
+
+
+def iter_csv(data, dialect: str):
+    line = StringIO()
+    try:
+        writer = csv.writer(line, dialect=dialect)
+    except csv.Error:
+        writer = csv.writer(line)
+    for csv_line in data:
+        writer.writerow(csv_line)
+        line.seek(0)
+        yield line.read()
+        line.truncate(0)
+        line.seek(0)
+
+
+def csv_response(data, dialect='excel'):
+    return Response(stream_with_context(iter_csv(data, dialect)), mimetype='text/plain')

@@ -234,3 +234,7 @@ def seq_to_str(lst: Sequence[str]):
         return lst[0]
     else:
         return f', '.join(lst[:-1]) + ' and ' + lst[-1]
+
+
+def split_group_param(p: str):
+    return [s.strip() for s in p.split(';')]

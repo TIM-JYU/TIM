@@ -2,6 +2,7 @@ from datetime import timedelta
 
 from lxml.cssselect import CSSSelector
 
+from timApp.document.docinfo import DocInfo
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.readmark.readings import get_readings, get_read_expiry_condition
 from timApp.readmark.readparagraphtype import ReadParagraphType
@@ -20,20 +21,20 @@ class ReadingsTest(TimRouteTest):
 
     def test_readings_normal(self):
         self.login_test1()
-        doc = self.create_doc(initial_par=['test', 'test2', 'test3']).document
-        q = ReadParagraph.query.filter_by(doc_id=doc.doc_id)
-        pars = doc.get_paragraphs()
+        doc = self.create_doc(initial_par=['test', 'test2', 'test3'])
+        q = ReadParagraph.query.filter_by(doc_id=doc.id)
+        pars = doc.document.get_paragraphs()
 
         self.check_readlines(self.get_readings(doc), (UNREAD, UNREAD, UNREAD))
         self.mark_as_read(doc, pars[0].get_id())
         self.check_readlines(self.get_readings(doc), (READ, UNREAD, UNREAD))
         self.mark_as_read(doc, pars[1].get_id())
         self.check_readlines(self.get_readings(doc), (READ, READ, UNREAD))
-        doc.modify_paragraph(pars[1].get_id(), 'a')
+        doc.document.modify_paragraph(pars[1].get_id(), 'a')
         self.check_readlines(self.get_readings(doc), (READ, MODIFIED, UNREAD))
         self.mark_as_read(doc, pars[2].get_id(), ReadParagraphType.click_par)
         self.check_readlines(self.get_readings(doc), (READ, MODIFIED, PAR_CLICK))
-        doc.modify_paragraph(pars[2].get_id(), 'b')
+        doc.document.modify_paragraph(pars[2].get_id(), 'b')
         self.check_readlines(self.get_readings(doc), (READ, MODIFIED, PAR_CLICK_MODIFIED))
         self.mark_as_read(doc, pars[2].get_id())
         self.assertEqual(q.count(), 4)
@@ -45,10 +46,10 @@ class ReadingsTest(TimRouteTest):
     def test_readings_group(self):
         self.login_test1()
         self.login_test2(add=True)
-        doc = self.create_doc(initial_par=['test', 'test2', 'test3', 'test4']).document
-        q = ReadParagraph.query.filter_by(doc_id=doc.doc_id)
+        doc = self.create_doc(initial_par=['test', 'test2', 'test3', 'test4'])
+        q = ReadParagraph.query.filter_by(doc_id=doc.id)
         self.check_readlines(self.get_readings(doc), (UNREAD, UNREAD, UNREAD, UNREAD))
-        pars = doc.get_paragraphs()
+        pars = doc.document.get_paragraphs()
         self.mark_as_read(doc, pars[0].get_id())
 
         self.check_readlines(self.get_readings(doc), (READ, UNREAD, UNREAD, UNREAD))
@@ -67,7 +68,7 @@ class ReadingsTest(TimRouteTest):
         self.mark_as_read(doc, pars[2].get_id())
         self.login_test2(add=True)
         self.check_readlines(self.get_readings(doc), (READ, READ, READ, UNREAD))
-        doc.modify_paragraph(pars[2].get_id(), 'a')
+        doc.document.modify_paragraph(pars[2].get_id(), 'a')
         self.check_readlines(self.get_readings(doc), (READ, READ, MODIFIED, UNREAD))
         self.login_test2()
         self.mark_as_read(doc, pars[2].get_id())
@@ -78,15 +79,38 @@ class ReadingsTest(TimRouteTest):
         self.check_readlines(self.get_readings(doc), (READ, READ, MODIFIED, UNREAD))
         self.assertEqual(q.count(), 7)
 
-    def get_readings(self, doc):
-        readlines = readline_selector(self.get(f'/view/{doc.doc_id}', as_tree=True))
+        self.get(f'/read/stats/{doc.id}',
+                 expect_content=[
+                     {'any_of_phs': 0,
+                      'click_par': 0,
+                      'click_red': 3,
+                      'hover_par': 0,
+                      'on_screen': 0,
+                      'username': 'testuser1'},
+                     {'any_of_phs': 0,
+                      'click_par': 0,
+                      'click_red': 3,
+                      'hover_par': 0,
+                      'on_screen': 0,
+                      'username': 'testuser2'}
+                 ])
+        self.get(f'/read/stats/{doc.id}',
+                 query_string={'format': 'csv', 'csv': 'excel'},
+                 expect_content=("""
+username,click_red,click_par,hover_par,on_screen,any_of_phs
+testuser1,3,0,0,0,0
+testuser2,3,0,0,0,0
+""".strip() + '\n').replace('\n', '\r\n'))
+
+    def get_readings(self, doc: DocInfo):
+        readlines = readline_selector(self.get(f'/view/{doc.id}', as_tree=True))
         return readlines
 
-    def mark_as_unread(self, doc, par_id):
-        self.json_put(f'/unread/{doc.doc_id}/{par_id}')
+    def mark_as_unread(self, doc: DocInfo, par_id):
+        self.json_put(f'/unread/{doc.id}/{par_id}')
 
-    def mark_as_read(self, doc, par_id, read_type=ReadParagraphType.click_red, **kwargs):
-        self.json_put(f'/read/{doc.doc_id}/{par_id}/{read_type.value}', **kwargs)
+    def mark_as_read(self, doc: DocInfo, par_id, read_type=ReadParagraphType.click_red, **kwargs):
+        self.json_put(f'/read/{doc.id}/{par_id}/{read_type.value}', **kwargs)
 
     def check_readlines(self, readlines, expected):
         self.assertEqual(len(readlines), len(expected))
@@ -102,14 +126,14 @@ class ReadingsTest(TimRouteTest):
         d = self.create_doc(initial_par='test')
         d.document.add_text(f'#- {{rd={d.id} ra={"nonexistent"}}}')
         d.document.add_text(f'#- {{rd={d.id} rp={"nonexistent"}}}')
-        self.mark_as_read(d.document, d.document.get_paragraphs()[1].get_id(), expect_status=404)
-        self.mark_as_read(d.document, d.document.get_paragraphs()[2].get_id(), expect_status=404)
+        self.mark_as_read(d, d.document.get_paragraphs()[1].get_id(), expect_status=404)
+        self.mark_as_read(d, d.document.get_paragraphs()[2].get_id(), expect_status=404)
 
     def test_mark_all_read(self):
         self.login_test1()
         d = self.create_doc(initial_par=['1', '2'])
         self.json_put(f'/read/{d.id}')
-        self.check_readlines(self.get_readings(d.document), (READ, READ))
+        self.check_readlines(self.get_readings(d), (READ, READ))
         q = ReadParagraph.query.filter_by(doc_id=d.id)
         self.assertEqual(q.count(), 2)
         self.json_put(f'/read/{d.id}')
@@ -119,7 +143,7 @@ class ReadingsTest(TimRouteTest):
         self.login_test1()
         d = self.create_doc(initial_par=['1', '2'])
         self.json_put(f'/read/{d.id}')
-        self.mark_as_read(d.document, d.document.get_paragraphs()[0].get_id(), ReadParagraphType.on_screen)
+        self.mark_as_read(d, d.document.get_paragraphs()[0].get_id(), ReadParagraphType.on_screen)
         rs = get_readings(self.current_user.get_personal_group().id, d.document,
                           get_read_expiry_condition(timedelta(seconds=10)))
         self.assertEqual(len(rs), 3)

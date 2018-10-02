@@ -1,6 +1,6 @@
 from flask import Blueprint, abort, request
 from flask import current_app
-from sqlalchemy import func, distinct
+from sqlalchemy import func, distinct, true
 from sqlalchemy.exc import IntegrityError
 
 from timApp.auth.accesshelper import verify_read_marking_right, get_doc_or_abort, verify_teacher_access
@@ -13,8 +13,8 @@ from timApp.timdb.exceptions import TimDbException
 from timApp.timdb.sqa import db
 from timApp.user.usergroup import UserGroup
 from timApp.util.flask.requesthelper import verify_json_params, get_referenced_pars_from_req, get_option
-from timApp.util.flask.responsehelper import json_response, ok_response
-from timApp.util.utils import seq_to_str
+from timApp.util.flask.responsehelper import json_response, ok_response, csv_response
+from timApp.util.utils import seq_to_str, split_group_param
 
 readings = Blueprint('readings',
                      __name__,
@@ -89,6 +89,13 @@ def get_statistics(doc_path):
         abort(404)
     verify_teacher_access(d)
     sort_opt = get_option(request, 'sort', 'username')
+    group_opt = get_option(request, 'groups', None)
+    result_format = get_option(request, 'format', 'json')
+    csv_dialect = get_option(request, 'csv', 'excel-tab')
+    extra_condition = true()
+    if group_opt:
+        group_names = split_group_param(group_opt)
+        extra_condition = extra_condition & UserGroup.name.in_(group_names)
     automatic_types = [
         ReadParagraphType.click_par,
         ReadParagraphType.hover_par,
@@ -104,15 +111,29 @@ def get_statistics(doc_path):
     col_to_sort = sort_col_map.get(sort_opt)
     if col_to_sort is None:
         abort(400, f'Invalid sort option. Possible values are {seq_to_str(column_names)}.')
-    return json_response(
-        list(
-            map(lambda row: dict(zip(column_names, row)),
-                UserGroup.query.join(ReadParagraph)
-                .filter_by(doc_id=d.id)
-                .add_columns(*cols)
-                .group_by(UserGroup)
-                .order_by(col_to_sort)
-                .with_entities(UserGroup.name, *cols).all()
+    q = (UserGroup.query.join(ReadParagraph)
+         .filter_by(doc_id=d.id)
+         .filter(extra_condition)
+         .add_columns(*cols)
+         .group_by(UserGroup)
+         .order_by(col_to_sort)
+         .with_entities(UserGroup.name, *cols))
+
+    def row_to_dict(row):
+        return dict(zip(column_names, row))
+
+    if result_format == 'csv':
+        def gen_rows():
+            yield column_names
+            yield from q
+
+        return csv_response(gen_rows(), dialect=csv_dialect)
+    else:
+        return json_response(
+            list(
+                map(
+                    row_to_dict,
+                    q.all()
                 )
+            )
         )
-    )
