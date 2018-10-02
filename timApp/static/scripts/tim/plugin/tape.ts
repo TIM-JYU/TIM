@@ -633,7 +633,7 @@ timApp.component("timTape", {
         </span>
         <span class="commandListContainer">
             Program:
-            <ul class="list-unstyled listBox">
+            <ul class="list-unstyled listBox programCommandList">
             <li ng-repeat="c in $ctrl.commandList" class="command" ng-click="$ctrl.selectedCommandIndex = $index" 
             ng-style="{'color': $ctrl.getCommandColor($index), 'background-color': $ctrl.getCommandBackgroundColor($index)}">{{c.getName()}}</li>
             <li class="command" ng-style="{'color': $ctrl.getCommandColor($ctrl.commandList.length + 1)}" 

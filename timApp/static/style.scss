@@ -234,9 +234,16 @@ tim-tape {
         border: 1px solid black;
     }
 
+    .programCommandList {
+        height: 14.4em;
+        overflow: hidden;
+        overflow-y: scroll;
+    }
+
     .command {
         cursor: pointer;
     }
+
 }
 
 tim-alert {
