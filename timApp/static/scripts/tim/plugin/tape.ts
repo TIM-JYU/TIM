@@ -574,7 +574,7 @@ export class TapeController implements IController {
     }
 
     private getHand() {
-        if (this.state.hand) {
+        if (this.state.hand != null) {
             return this.state.hand;
         } else {
             return " ";
