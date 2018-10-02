@@ -617,7 +617,7 @@ timApp.component("timTape", {
                 <span>Input</span>
             </div>
         </div>
-        <div class="memory">
+        <div class="memoryArea">
             <div>Memory:</div>
             <div ng-repeat="n in $ctrl.state.memory track by $index" class="memoryContainer">
                 <div ng-bind="n" class="memoryValue"></div>

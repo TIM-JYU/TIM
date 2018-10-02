@@ -206,6 +206,12 @@ tim-tape {
         padding: 0.2em;
     }
 
+    .memoryArea {
+        display: block;
+        height: 5em;
+        overflow: hidden;
+    }
+
     .memoryContainer {
         display: inline-block;
         text-align: center;
