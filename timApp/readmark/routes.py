@@ -11,6 +11,7 @@ from timApp.readmark.readparagraph import ReadParagraph
 from timApp.readmark.readparagraphtype import ReadParagraphType
 from timApp.timdb.exceptions import TimDbException
 from timApp.timdb.sqa import db
+from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
 from timApp.util.flask.requesthelper import verify_json_params, get_referenced_pars_from_req, get_option
 from timApp.util.flask.responsehelper import json_response, ok_response, csv_response
@@ -95,7 +96,9 @@ def get_statistics(doc_path):
     extra_condition = true()
     if group_opt:
         group_names = split_group_param(group_opt)
-        extra_condition = extra_condition & UserGroup.name.in_(group_names)
+        extra_condition = extra_condition & UserGroup.name.in_(
+            User.query.join(UserGroup, User.groups).filter(UserGroup.name.in_(group_names)).with_entities(User.name)
+        )
     automatic_types = [
         ReadParagraphType.click_par,
         ReadParagraphType.hover_par,
