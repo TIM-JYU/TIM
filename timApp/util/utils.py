@@ -5,7 +5,7 @@ import os
 import re
 import shutil
 from datetime import datetime, timezone
-from typing import List, Optional, Tuple, Union, Dict, Any
+from typing import List, Optional, Tuple, Union, Dict, Any, Sequence
 
 import dateutil.parser
 
@@ -227,3 +227,10 @@ def decode_csplugin(text: str):
 
 def get_current_time():
     return datetime.now(tz=timezone.utc)
+
+
+def seq_to_str(lst: Sequence[str]):
+    if len(lst) == 1:
+        return lst[0]
+    else:
+        return f', '.join(lst[:-1]) + ' and ' + lst[-1]
