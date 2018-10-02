@@ -12,8 +12,8 @@ failure = "0.1.2"
 log = "0.4.5"
 serde = "1.0.79"
 serde_derive = "1.0.79"
-serde_json = "1.0.29"
-simple_logger = "0.5.0"
+serde_json = "1.0.31"
+simple_logger = "1.0.1"
 yaml-rust = "0.4.2"
 futures-preview = { git = "https://github.com/rust-lang-nursery/futures-rs", features = ["tokio-compat"] }
 
