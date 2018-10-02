@@ -129,7 +129,7 @@ class CopyTo extends MemoryCommand {
     }
 
     public execute(params: CommandParameters) {
-        if (params.state.hand) {
+        if (params.state.hand != null) {
             params.state.memory[params.mainParam] = params.state.hand;
         }
     }
