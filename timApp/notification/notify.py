@@ -1,9 +1,10 @@
 import smtplib
 from collections import defaultdict
 from email.mime.text import MIMEText
+from threading import Thread
 from typing import Optional, List, DefaultDict, Set
 
-from flask import Blueprint, current_app
+from flask import Blueprint, current_app, Flask
 from sqlalchemy.orm import joinedload
 
 from timApp.auth.accesshelper import verify_logged_in, verify_view_access, get_item_or_abort
@@ -89,37 +90,49 @@ def send_email(
         msg: str,
         mail_from: str = 'tim@jyu.fi',
         reply_to: str = 'no-reply@tim.jyu.fi',
-):
+) -> Optional[Thread]:
     if is_testing():
         sent_mails_in_testing.append(locals())
-        return
+        return None
 
     if is_localhost():
         # don't use log_* function because this is typically run in Celery
         print('Skipping mail send on localhost')
-        return
+        return None
 
-    mime_msg = MIMEText(msg + app.config['MAIL_SIGNATURE'])
-    mime_msg['Subject'] = subject
-    mime_msg['From'] = mail_from
-    mime_msg['To'] = rcpt
+    return Thread(target=send_email_impl, args=(app, rcpt, subject, msg, mail_from, reply_to)).start()
 
-    if reply_to:
-        mime_msg.add_header('Reply-To', reply_to)
 
-    s = smtplib.SMTP(app.config['MAIL_HOST'])
-    try:
-        s.sendmail(mail_from, [rcpt], mime_msg.as_string())
-    except (smtplib.SMTPSenderRefused,
-            smtplib.SMTPRecipientsRefused,
-            smtplib.SMTPHeloError,
-            smtplib.SMTPDataError,
-            smtplib.SMTPNotSupportedError) as e:
-        log_error(str(e))
-    else:
-        pass
-    finally:
-        s.quit()
+def send_email_impl(
+        flask_app: Flask,
+        rcpt: str,
+        subject: str,
+        msg: str,
+        mail_from: str = 'tim@jyu.fi',
+        reply_to: str = 'no-reply@tim.jyu.fi',
+):
+    with flask_app.app_context():
+        mime_msg = MIMEText(msg + flask_app.config['MAIL_SIGNATURE'])
+        mime_msg['Subject'] = subject
+        mime_msg['From'] = mail_from
+        mime_msg['To'] = rcpt
+
+        if reply_to:
+            mime_msg.add_header('Reply-To', reply_to)
+
+        s = smtplib.SMTP(flask_app.config['MAIL_HOST'])
+        try:
+            s.sendmail(mail_from, [rcpt], mime_msg.as_string())
+        except (smtplib.SMTPSenderRefused,
+                smtplib.SMTPRecipientsRefused,
+                smtplib.SMTPHeloError,
+                smtplib.SMTPDataError,
+                smtplib.SMTPNotSupportedError) as e:
+            log_error(str(e))
+        else:
+            pass
+        finally:
+            s.quit()
 
 
 def notify_doc_watchers(doc: DocInfo, content_msg: str, notify_type: NotificationType,
@@ -275,6 +288,7 @@ def get_comment_count_str(num_mods):
 def process_pending_notifications():
     pns = get_pending_notifications()
     grouped_pns: DefaultDict[GroupingKey, List[PendingNotification]] = defaultdict(list)
+    email_threads: List[Thread] = []
     for p in pns:
         grouped_pns[p.grouping_key].append(p)
     for (doc_id, t), ps in grouped_pns.items():
@@ -317,13 +331,17 @@ def process_pending_notifications():
 
             is_unique_user = len(set(p.user for p in ps_to_consider)) == 1
             reply_to = ps_to_consider[0].user.email if show_names and is_unique_user else None
-            send_email(
+            result = send_email(
                 user.email,
                 subject,
                 msg,
                 mail_from='tim@jyu.fi',
                 reply_to=reply_to,
             )
+            if result:
+                email_threads.append(result)
         for p in ps:
             p.processed = get_current_time()
+    for t in email_threads:
+        t.join()
     db.session.commit()
