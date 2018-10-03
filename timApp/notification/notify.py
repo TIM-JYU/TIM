@@ -25,9 +25,6 @@ from timApp.util.flask.responsehelper import json_response, ok_response
 from timApp.util.logger import log_error, log_warning
 from timApp.util.utils import get_current_time, seq_to_str
 
-FUNNEL_HOST = "funnel"
-FUNNEL_PORT = 80
-
 notify = Blueprint('notify',
                    __name__,
                    url_prefix='/notify')
