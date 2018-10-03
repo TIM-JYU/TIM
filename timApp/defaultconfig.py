@@ -68,7 +68,7 @@ CELERYBEAT_SCHEDULE = {
     },
     'process-notifications': {
         'task': 'timApp.tim_celery.process_notifications',
-        'schedule': crontab(minute='*/2'),
+        'schedule': crontab(minute='*/5'),
     }
 }
 MAIL_HOST = "smtp.jyu.fi"
