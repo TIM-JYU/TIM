@@ -20,7 +20,7 @@ class PendingNotification(db.Model):
     par_id = db.Column(db.Text, nullable=True)
     text = db.Column(db.Text, nullable=True)
     created = db.Column(db.DateTime(timezone=True), nullable=False, default=func.now())
-    processed = db.Column(db.DateTime(timezone=True), nullable=True)
+    processed = db.Column(db.DateTime(timezone=True), nullable=True, index=True)
     kind = db.Column(db.Enum(NotificationType), nullable=False)
 
     user: User = db.relationship('User', lazy='joined')
