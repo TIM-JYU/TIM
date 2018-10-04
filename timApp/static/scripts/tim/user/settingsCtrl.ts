@@ -104,6 +104,7 @@ timApp.component("timSettings", {
         </div>
     </bootstrap-panel>
     <bootstrap-panel title="Notifications">
+        <h4>Subscribed items</h4>
         <p>You get emails from the following documents and folders:</p>
         <ul>
             <li ng-repeat="n in $ctrl.notifications">
@@ -121,6 +122,24 @@ timApp.component("timSettings", {
                       uib-tooltip="Comment modifications"></span>
             </li>
         </ul>
+        <h4>Exclusion list</h4>
+        <p>
+            Sometimes you may want to subscribe to emails from a folder but exclude some documents within it.
+            Using the list below you can specify which folders and documents should be excluded from your email
+            subscriptions.
+        </p>
+        <p>Type one regular expression per line that should match the path of the folder or document,
+        e.g. <code>users/courses/programming1/ht</code>.</p>
+        <div class="form-group">
+        <textarea class="form-control" rows="5" ng-model="$ctrl.settings.email_exclude">
+        </textarea>
+        </div>
+
+        <div>
+            <button class="timButton" ng-disabled="$ctrl.saving" ng-click="$ctrl.submit()">Save changes</button>
+            <tim-loading ng-show="$ctrl.saving"></tim-loading>
+        </div>
+
     </bootstrap-panel>
     <bootstrap-panel title="Other settings">
         <button class="btn btn-default" ng-click="$ctrl.clearLocalStorage()">Clear local settings storage</button>

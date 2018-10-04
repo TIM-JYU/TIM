@@ -303,7 +303,7 @@ def process_pending_notifications():
             assert False, 'Unknown notify type'
         users_to_notify: Set[User] = set(n.user for n in doc.get_notifications(condition))
         for user in users_to_notify:
-            if not user.email or not user.has_view_access(doc):
+            if not user.email or not user.has_view_access(doc) or user.get_prefs().is_item_excluded_from_emails(doc):
                 continue
 
             # don't send emails about own actions

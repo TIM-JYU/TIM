@@ -1,33 +1,31 @@
 import json
-import os
 from datetime import datetime, timedelta, timezone
-from typing import Dict, Optional, Union, Set
 from typing import List
+from typing import Optional, Union, Set
 
-from flask import current_app
 from sqlalchemy.orm import Query
 
-from timApp.document.timjsonencoder import TimJsonEncoder
-from timApp.user.settings.theme import Theme
+from timApp.answer.answer_models import UserAnswer
 from timApp.auth.accesstype import AccessType
+from timApp.auth.auth_models import BlockAccess
 from timApp.document.docinfo import DocInfo
-from timApp.timdb.exceptions import TimDbException
-from timApp.item.item import Item, ItemBase
-from timApp.item.block import Block
+from timApp.document.timjsonencoder import TimJsonEncoder
 from timApp.folder.folder import Folder
+from timApp.item.block import Block
+from timApp.item.item import ItemBase
+from timApp.lecture.lectureusers import LectureUsers
 from timApp.notification.notification import Notification
-from timApp.user.usergroup import UserGroup
+from timApp.timdb.exceptions import TimDbException
+from timApp.timdb.sqa import db
+from timApp.user.preferences import Preferences
+from timApp.user.settings.theme import Theme
 from timApp.user.special_group_names import ANONYMOUS_GROUPNAME, ANONYMOUS_USERNAME, LOGGED_IN_GROUPNAME, \
     SPECIAL_USERNAMES
-from timApp.lecture.lectureusers import LectureUsers
-from timApp.answer.answer_models import UserAnswer
-from timApp.timdb.sqa import db
+from timApp.user.usergroup import UserGroup
 from timApp.user.usergroupmember import UserGroupMember
-from timApp.auth.auth_models import BlockAccess
 from timApp.user.userutils import grant_access, get_access_type_id, \
     create_password_hash, check_password_hash, check_password_hash_old
 from timApp.util.utils import remove_path_special_chars, cached_property, get_current_time
-from timApp.user.settings.theme_css import ThemeNotFoundException, generate_theme_scss, get_combined_css_filename
 
 ItemOrBlock = Union[ItemBase, Block]
 maxdate = datetime.max.replace(tzinfo=timezone.utc)
@@ -283,31 +281,21 @@ class User(db.Model):
             return f
         return folders[0]
 
-    def get_prefs(self) -> Dict:
+    def get_prefs(self) -> Preferences:
         prefs = json.loads(self.prefs or '{}')
-        if not prefs.get('css_files'):
-            prefs['css_files'] = {}
-        if not prefs.get('custom_css'):
-            prefs['custom_css'] = ''
-        css_file_list = [css for css, v in prefs['css_files'].items() if v]
-        css_file_list.sort()
-        theme_list = [Theme(f) for f in css_file_list]
         try:
-            generate_theme_scss(theme_list, os.path.join('static', current_app.config['SASS_GEN_PATH']))
-        except ThemeNotFoundException:
-            self.set_prefs(prefs)
-            return self.get_prefs()
-        prefs['css_combined'] = get_combined_css_filename(theme_list)
-        return prefs
+            return Preferences.from_json(prefs)
+        except TypeError:
+            return Preferences()
 
-    def set_prefs(self, prefs: Dict):
-        css_files = prefs.get('css_files', {})
+    def set_prefs(self, prefs: Preferences):
+        css_files = prefs.css_files
         existing_css_files = {}
         for k, v in css_files.items():
             t = Theme(k)
             if t.exists() and v:
                 existing_css_files[t.filename] = True
-        prefs['css_files'] = existing_css_files
+        prefs.css_files = existing_css_files
         self.prefs = json.dumps(prefs, cls=TimJsonEncoder)
 
     def get_groups(self, include_special=True) -> Query:

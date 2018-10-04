@@ -177,3 +177,17 @@ class NotifyFolderTest(NotifyTestBase):
         self.new_par(d.document, 'test')
         process_pending_notifications()
         self.assertEqual(2, len(sent_mails_in_testing))
+        prefs = self.test_user_2.get_prefs()
+        prefs.email_exclude = d.location
+        self.test_user_2.set_prefs(prefs)
+        db.session.commit()
+        self.new_par(d.document, 'test')
+        process_pending_notifications()
+        self.assertEqual(2, len(sent_mails_in_testing))
+
+        prefs.email_exclude = '**invalid regex**'
+        self.test_user_2.set_prefs(prefs)
+        db.session.commit()
+        self.new_par(d.document, 'test')
+        process_pending_notifications()
+        self.assertEqual(3, len(sent_mails_in_testing))

@@ -84,8 +84,8 @@ class ParEditorTest(BrowserTest):
         self.login_test1()
         d = self.create_doc(initial_par='words in the document')
         prefs = self.current_user.get_prefs()
-        prefs['use_document_word_list'] = True
-        prefs['word_list'] = '\n'.join(('cat', 'dog', 'mouse'))
+        prefs.use_document_word_list = True
+        prefs.word_list = '\n'.join(('cat', 'dog', 'mouse'))
         self.current_user.set_prefs(prefs)
         db.session.commit()
         self.goto_document(d)
@@ -100,7 +100,7 @@ class ParEditorTest(BrowserTest):
         self.wait_for_preview_to_finish()
         self.assert_same_screenshot(pareditor, 'pareditor/autocomplete')
         prefs = self.current_user.get_prefs()
-        prefs['use_document_word_list'] = False
+        prefs.use_document_word_list = False
         self.current_user.set_prefs(prefs)
         db.session.commit()
         get_cancel_button(pareditor).click()

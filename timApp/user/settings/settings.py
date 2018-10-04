@@ -16,6 +16,7 @@ from timApp.item.block import Block, BlockType
 from timApp.document.docentry import DocEntry
 from timApp.folder.folder import Folder
 from timApp.user.user import User
+from timApp.user.preferences import Preferences
 from timApp.timdb.sqa import db
 from timApp.auth.auth_models import BlockAccess
 from timApp.answer.answer_models import AnswerUpload
@@ -42,9 +43,18 @@ def show():
         abort(404)
 
 
+@settings_page.route('/get')
+def get_settings():
+    return json_response(get_current_user_object().get_prefs())
+
+
 @settings_page.route('/save', methods=['POST'])
 def save_settings():
-    get_current_user_object().set_prefs(request.get_json())
+    try:
+        j = request.get_json()
+        get_current_user_object().set_prefs(Preferences.from_json(j))
+    except TypeError:
+        abort(400, f'Invalid settings: {j}')
     db.session.commit()
     show()  # Regenerate CSS
     return json_response(get_current_user_object().get_prefs())
@@ -52,7 +62,8 @@ def save_settings():
 
 @settings_page.route('/get/<name>')
 def get_setting(name):
-    return json_response({name: get_current_user_object().get_prefs().get(name)})
+    prefs = get_current_user_object().get_prefs()
+    return json_response({name: getattr(prefs, name, None)})
 
 
 def get_user_info(u: User, include_doc_content=False):

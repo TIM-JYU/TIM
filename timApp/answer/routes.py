@@ -384,10 +384,10 @@ def get_all_answers_as_list(task_ids: List[str]):
     elif period_opt == 'sincelast' and since_last_key is not None:
         u = get_current_user_object()
         prefs = u.get_prefs()
-        last_answer_fetch = prefs.get('last_answer_fetch', {})
+        last_answer_fetch = prefs.last_answer_fetch
         period_from = last_answer_fetch.get(since_last_key, datetime.min.replace(tzinfo=timezone.utc))
         last_answer_fetch[since_last_key] = get_current_time()
-        prefs['last_answer_fetch'] = last_answer_fetch
+        prefs.last_answer_fetch = last_answer_fetch
         u.set_prefs(prefs)
         db.session.commit()
     elif period_opt == 'day':

@@ -115,3 +115,71 @@ class SettingsTest(TimRouteTest):
                                  'uploaded_images': [],
                                  'velpgroups': [],
                                  'velps': []})
+
+    def test_settings_save(self):
+        self.login_test1()
+        self.json_post(f'/settings/save', {'invalid': 'yes'}, expect_status=400)
+        self.get(f'/settings/get',
+                 expect_content={'css_combined': 'default',
+                                 'css_files': {},
+                                 'email_exclude': '',
+                                 'last_answer_fetch': {},
+                                 'use_document_word_list': False,
+                                 'word_list': '',
+                                 'custom_css': '',
+                                 })
+        self.json_post(
+            f'/settings/save',
+            {
+                'css_combined': 'xxx',  # doesn't matter
+                'css_files': {'bluetheme': True, 'reunukset': False},
+                'email_exclude': 'users/something\nusers/another',
+                'last_answer_fetch': {},
+                'use_document_word_list': True,
+                'word_list': 'cat\ndog',
+                'custom_css': 'somecss',
+            }
+        )
+        self.get(f'/settings/get',
+                 expect_content={
+                     'css_combined': 'bluetheme',
+                     'css_files': {'bluetheme': True},
+                     'email_exclude': 'users/something\nusers/another',
+                     'last_answer_fetch': {},
+                     'use_document_word_list': True,
+                     'word_list': 'cat\ndog',
+                     'custom_css': 'somecss',
+                 })
+        self.json_post(
+            f'/settings/save',
+            {
+                'css_combined': 'xxx',  # doesn't matter
+                'css_files': {'bluetheme': True, 'nonexistent': True},
+                'email_exclude': 'users/something\nusers/another',
+                'last_answer_fetch': {},
+                'use_document_word_list': True,
+                'word_list': 'cat\ndog',
+                'custom_css': 'somecss',
+            }
+        )
+        self.get(f'/settings/get',
+                 expect_content={
+                     'css_combined': 'bluetheme',
+                     'css_files': {'bluetheme': True},
+                     'email_exclude': 'users/something\nusers/another',
+                     'last_answer_fetch': {},
+                     'use_document_word_list': True,
+                     'word_list': 'cat\ndog',
+                     'custom_css': 'somecss',
+                 })
+
+    def test_settings_get_single(self):
+        self.login_test1()
+        self.get(f'/settings/get/last_answer_fetch',
+                 expect_content={
+                     'last_answer_fetch': {},
+                 })
+        self.get(f'/settings/get/nonexistent',
+                 expect_content={
+                     'nonexistent': None,
+                 })
