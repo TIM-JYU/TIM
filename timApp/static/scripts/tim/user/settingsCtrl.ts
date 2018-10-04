@@ -128,8 +128,8 @@ timApp.component("timSettings", {
             Using the list below you can specify which folders and documents should be excluded from your email
             subscriptions.
         </p>
-        <p>Type one regular expression per line that should match the path of the folder or document,
-        e.g. <code>users/courses/programming1/ht</code>.</p>
+        <p>Type one regular expression per line that should match any part of the path of the folder or document,
+        e.g. <code>/ht/</code> would match any path with <code>/ht/</code> in it.</p>
         <div class="form-group">
         <textarea class="form-control" rows="5" ng-model="$ctrl.settings.email_exclude">
         </textarea>
