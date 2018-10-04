@@ -334,7 +334,7 @@ class CSComtest(CS):
             eri = out.find("Test Failure")
         if eri < 0:
             eri = out.find("Test Error")
-        if out.find("Compile error") >= 0:
+        if out.find("Compile error") >= 0 or err.find("Compile error") >= 0:
             return code, out, err, pwddir
         give_points(points_rule, "testrun")
         self.run_points_given = True
