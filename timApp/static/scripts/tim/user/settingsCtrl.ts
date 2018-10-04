@@ -2,6 +2,7 @@ import {IController} from "angular";
 import $ from "jquery";
 import {timApp} from "tim/app";
 import {$http, $window} from "../util/ngimport";
+import {to} from "../util/utils";
 
 interface ISettings {
     css_combined: string;
@@ -9,7 +10,7 @@ interface ISettings {
 }
 
 export class SettingsCtrl implements IController {
-    private saving: boolean = false;
+    private saving = false;
     private style: HTMLElementTagNameMap["style"];
     private settings: ISettings;
     private cssFiles: {}[];
@@ -19,10 +20,6 @@ export class SettingsCtrl implements IController {
         this.settings = $window.settings;
         this.cssFiles = $window.css_files;
         this.notifications = $window.notifications;
-        $(".docEditor").change(() => {
-            this.style.innerHTML = this.settings.custom_css;
-        });
-
         this.updateCss();
         this.style = document.createElement("style");
         this.style.type = "text/css";
@@ -33,17 +30,20 @@ export class SettingsCtrl implements IController {
 
     }
 
-    async submit(saveUrl: string) {
+    $doCheck() {
+        this.style.innerHTML = this.settings.custom_css;
+    }
+
+    async submit() {
         this.saving = true;
-        try {
-            const response = await $http.post<ISettings>(saveUrl, this.settings);
+        const [err, response] = await to($http.post<ISettings>("/settings/save", this.settings));
+        if (response) {
             this.settings = response.data;
             this.updateCss();
-        } catch (e) {
-            alert("Failed to save settings.");
-        } finally {
-            this.saving = false;
+        } else if (err) {
+            alert(err.data.error);
         }
+        this.saving = false;
     }
 
     updateCss() {
@@ -54,18 +54,16 @@ export class SettingsCtrl implements IController {
         window.localStorage.clear();
     }
 
-    addPrintSettings() {
-        jQuery.get("/static/userPrintSettings.css", (data) => {
-            $("#customCssArea").val(data);
-            $("#customCssArea").serialize();
-        }, "text");
+    async addPrintSettings() {
+        const resp = await $http.get<string>("/static/userPrintSettings.css");
+        this.settings.custom_css = resp.data;
     }
 }
 
 timApp.component("timSettings", {
     controller: SettingsCtrl,
     template: `<h1>TIM settings</h1>
-<form ng-submit="$ctrl.submit('/settings/save')">
+<form>
     <bootstrap-panel title="Styles">
         <span ng-if="$ctrl.cssFiles">Available themes:</span>
         <span ng-if="!$ctrl.cssFiles">There are no available themes.</span>
@@ -75,7 +73,7 @@ timApp.component("timSettings", {
             <input type="checkbox"
                    name="settings.css_files[css_file.name]"
                    ng-model="$ctrl.settings.css_files[css_file.name]"
-                   ng-change="$ctrl.submit('/settings/save')"
+                   ng-change="$ctrl.submit()"
                    ng-disabled="$ctrl.saving">
             <a href="/static/css/{{ css_file.name }}.scss">
                 {{ css_file.name }}</a> - {{ css_file.desc }}
@@ -85,8 +83,9 @@ timApp.component("timSettings", {
             <textarea rows="15" id="customCssArea" class="form-control"
                       ng-model="$ctrl.settings.custom_css"></textarea>
         </div>
-
-        <button class="btn btn-default" ng-click="$ctrl.addPrintSettings();">Add Print Settings</button>
+        <button class="timButton" ng-disabled="$ctrl.saving" ng-click="$ctrl.submit()">Save changes</button>
+        <tim-loading ng-show="$ctrl.saving"></tim-loading>
+        <button class="btn btn-default" ng-click="$ctrl.addPrintSettings()">Add Print Settings</button>
 
     </bootstrap-panel>
     <bootstrap-panel title="Editor">
@@ -99,14 +98,18 @@ timApp.component("timSettings", {
         <label>ACE editor additional word list for autocomplete (1 word per line)
             <textarea rows="15" class="form-control" ng-model="$ctrl.settings.word_list"></textarea>
         </label>
+        <div>
+            <button class="timButton" ng-disabled="$ctrl.saving" ng-click="$ctrl.submit()">Save changes</button>
+            <tim-loading ng-show="$ctrl.saving"></tim-loading>
+        </div>
     </bootstrap-panel>
     <bootstrap-panel title="Notifications">
         <p>You get emails from the following documents and folders:</p>
         <ul>
             <li ng-repeat="n in $ctrl.notifications">
                 <a href="/manage/{{n.item.path}}">
-                <span ng-if="n.item.isFolder" class="glyphicon glyphicon-folder-open"></span>
-                {{n.item.title}}</a>
+                    <span ng-if="n.item.isFolder" class="glyphicon glyphicon-folder-open"></span>
+                    {{n.item.title}}</a>
                 <span ng-if="n.email_doc_modify"
                       class="glyphicon glyphicon-pencil"
                       uib-tooltip="Document modifications"></span>
@@ -119,9 +122,9 @@ timApp.component("timSettings", {
             </li>
         </ul>
     </bootstrap-panel>
-    <button class="timButton" type="submit" ng-disabled="$ctrl.saving">Save changes</button>
-    <span ng-show="$ctrl.saving">Saving...</span>
-    <button class="btn btn-default" ng-click="$ctrl.clearLocalStorage()">Clear local settings storage</button>
+    <bootstrap-panel title="Other settings">
+        <button class="btn btn-default" ng-click="$ctrl.clearLocalStorage()">Clear local settings storage</button>
+    </bootstrap-panel>
 </form>
     `,
 });
