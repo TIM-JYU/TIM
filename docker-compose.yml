@@ -121,7 +121,7 @@ services:
   restart: unless-stopped
  celery:
   image: timimages/tim:${TIM_IMAGE_TAG}
-  command: celery -A timApp.tim_celery.celery worker -B
+  command: bash -c "celery -A timApp.tim_celery.celery beat --detach && celery -A timApp.tim_celery.celery worker --concurrency 4"
   volumes:
    - .:/service
    - ${LOG_DIR}:/service/tim_logs
