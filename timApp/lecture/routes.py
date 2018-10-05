@@ -428,7 +428,7 @@ def check_lecture():
         if lecture.is_running:
             return json_response(lecture_dict(lecture))
         else:
-            leave_lecture_function(lecture)
+            leave_lecture(lecture)
             empty_lecture(lecture)
             db.session.commit()
     doc_id = request.args.get('doc_id')
@@ -438,12 +438,17 @@ def check_lecture():
         return empty_response()
 
 
+def switch_to_lecture(l: Lecture):
+    u = get_current_user_object()
+    u.lectures = [l]
+
+
 @lecture_routes.route("/startFutureLecture", methods=['POST'])
 def start_future_lecture():
     lecture = get_lecture_from_request(check_access=True)
     time_now = get_current_time()
     lecture.start_time = time_now
-    lecture.users.append(get_current_user_object())
+    switch_to_lecture(lecture)
     db.session.commit()
     return json_response(lecture_dict(lecture))
 
@@ -585,9 +590,8 @@ def create_lecture():
 
     current_time = get_current_time()
 
-    u = get_current_user_object()
-    if start_time <= current_time <= end_time and u not in lecture.users and not get_current_lecture():
-        lecture.users.append(u)
+    if start_time <= current_time <= end_time and not get_current_lecture():
+        switch_to_lecture(lecture)
     db.session.commit()
     return json_response(lecture)
 
@@ -699,17 +703,13 @@ def join_lecture():
         correct_password = False
 
     u = get_current_user_object()
-    lectures = u.lectures.all()
     if not lecture_ended and not lecture_full and correct_password:
         if not logged_in():
             log_in_as_anonymous(session)  # TODO check this if g.user should be reset
-        if lectures:
-            leave_lecture_function(lectures[0])
-        lecture.users.append(u)
+        switch_to_lecture(lecture)
 
         update_activity(lecture, u)
 
-        session['in_lecture'] = [lecture_id]
         db.session.commit()
 
     return json_response(
@@ -725,20 +725,14 @@ def update_activity(lecture: Lecture, u: User):
 
 
 @lecture_routes.route('/leaveLecture', methods=['POST'])
-def leave_lecture():
+def leave_lecture_route():
     lecture = get_lecture_from_request(check_access=False)
-    leave_lecture_function(lecture)
+    leave_lecture(lecture)
     db.session.commit()
     return ok_response()
 
 
-def leave_lecture_function(lecture: Lecture):
-    lecture_id = lecture.lecture_id
-    if 'in_lecture' in session:
-        lecture_list = session['in_lecture']
-        if lecture_id in lecture_list:
-            lecture_list.remove(lecture_id)
-        session['in_lecture'] = lecture_list
+def leave_lecture(lecture: Lecture):
     u = get_current_user_object()
     if u in lecture.users:
         lecture.users.remove(u)
