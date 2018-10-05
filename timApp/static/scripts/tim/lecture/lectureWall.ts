@@ -46,7 +46,7 @@ class LectureWallController extends DialogController<{params: {messages: ILectur
      */
     public chatEnterPressed(event: KeyboardEvent) {
         if (event.which === KEY_ENTER) {
-            this.sendMessageEvent(this.newMsg);
+            this.sendMessage();
         }
     }
 
@@ -55,9 +55,9 @@ class LectureWallController extends DialogController<{params: {messages: ILectur
      * @param message The message to be sent.
      * @returns {boolean} Whether the message was sent successfully.
      */
-    public async sendMessageEvent(message: string) {
+    public async sendMessage() {
+        const message = this.newMsg;
         if (message.trim() === "") {
-            await showMessageDialog("Can't send empty messages");
             return false;
         }
         await $http({
@@ -124,10 +124,20 @@ registerDialogComponent(
     <dialog-footer>
         <div class="row">
             <div class="col-sm-8">
-                <input class="form-control"
-                       ng-model="$ctrl.newMsg"
-                       ng-keypress="$ctrl.chatEnterPressed($event)"
-                       placeholder="Type message...">
+                <div class="input-group">
+                    <input class="form-control"
+                           ng-model="$ctrl.newMsg"
+                           ng-keypress="$ctrl.chatEnterPressed($event)"
+                           placeholder="Type message...">
+                    <span class="input-group-btn">
+                       <button ng-disabled="!$ctrl.newMsg"
+                               title="Send message"
+                               class="timButton"
+                               ng-click="$ctrl.sendMessage()">
+                           <i class="glyphicon glyphicon-send"></i>
+                       </button>
+                    </span>
+                </div>
             </div>
             <div class="col-sm-4">
                 <div class="btn-group" uib-dropdown is-open="status.isopen">
