@@ -5,13 +5,15 @@ import os
 import re
 import subprocess
 import tempfile
-from typing import Optional, List
+from typing import Optional, List, Tuple, Dict
 
 from flask import current_app
+from jinja2 import Environment
 from pypandoc import _as_unicode, _validate_formats
 from pypandoc.py3compat import string_types, cast_bytes
 
 from timApp.auth.accesshelper import has_view_access
+from timApp.document.docsettings import DocSettings
 from timApp.timdb.dbaccess import get_timdb
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.document import dereference_pars, Document
@@ -136,12 +138,12 @@ class DocumentPrinter:
         pars_to_print = []
         self.texplain = settings.is_texplain()
 
-        self.texfiles = settings.get_macroinfo(key=TEX_MACROS_KEY).\
+        self.texfiles = settings.get_macroinfo(key=TEX_MACROS_KEY). \
             get_macros().get('texfiles')
         if self.texfiles and self.texfiles is str:
             self.texfiles = [self.texfiles]
 
-        par_infos = []
+        par_infos: List[Tuple[DocParagraph, DocSettings, dict, Environment, Dict[str, object], str]] = []
         for par in pars:
 
             # do not print document settings pars
@@ -192,24 +194,25 @@ class DocumentPrinter:
         if target_format in (PrintFormat.PDF, PrintFormat.JSON):
             tformat = PrintFormat.LATEX
 
-        # Dereference pars and render markdown for plugins
-        # Only the 1st return value (the pars) is needed here
-        par_dicts, _, _, _ = pluginify(doc=self._doc_entry.document,
-                                       pars=pars_to_print,
-                                       timdb=get_timdb(),
-                                       user=get_current_user_object(),
-                                       output_format=PluginOutputFormat.MD,
-                                       wrap_in_div=False,
-                                       user_print=plugins_user_print,
-                                       target_format=tformat,
-                                       dereference=False)
+        # render markdown for plugins
+        pars_to_print, _, _, _ = pluginify(
+            doc=self._doc_entry.document,
+            pars=pars_to_print,
+            timdb=get_timdb(),
+            user=get_current_user_object(),
+            output_format=PluginOutputFormat.MD,
+            wrap_in_div=False,
+            user_print=plugins_user_print,
+            target_format=tformat,
+            dereference=False,
+        )
 
         export_pars = []
 
         # Get the markdown for each par dict
-        for pd, (p, settings, pdoc_plugin_attrs, pdoc_macro_env, pdoc_macros, pdoc_macro_delimiter) in zip(par_dicts,
-                                                                                                           par_infos):
-            md = pd['md']
+        for p, (_, settings, pdoc_plugin_attrs, pdoc_macro_env, pdoc_macros, pdoc_macro_delimiter) in zip(pars_to_print,
+                                                                                                          par_infos):
+            md = p.get_final_dict()['md']
             if not p.is_plugin() and not p.is_question():
                 md = expand_macros(text=md,
                                    macros=pdoc_macros,
@@ -264,7 +267,7 @@ class DocumentPrinter:
         self._content = content
         return content
 
-    def write_to_format(self, target_format: PrintFormat, plugins_user_print: bool = False, path: str=None):
+    def write_to_format(self, target_format: PrintFormat, plugins_user_print: bool = False, path: str = None):
         """
         Converts the document to latex and returns the converted document as a bytearray
         :param target_format: The target file format
@@ -326,7 +329,7 @@ class DocumentPrinter:
             os.environ["texdocid"] = str(self._doc_entry.document.doc_id)
             from_format = 'markdown'
             if self.texplain:
-               from_format = 'latex'
+                from_format = 'latex'
 
             texfiles = None
             if self.texfiles:
@@ -354,8 +357,8 @@ class DocumentPrinter:
                                              '-Mtexdocid=' + str(self._doc_entry.document.doc_id),
                                              ],
                                  filters=filters,
-                                 removethis = removethis,
-                                 texfiles = texfiles
+                                 removethis=removethis,
+                                 texfiles=texfiles
                                  )
                 # template_file.seek(0)
                 # output_bytes = bytearray(output_file.read())
@@ -538,7 +541,7 @@ class DocumentPrinter:
 # use own version, because the original fall down if scandinavian chars in erros messages
 
 def tim_convert_text(source, to, from_format, extra_args=(), encoding='utf-8',
-                     outputfile=None, filters=None, removethis=None, texfiles = None):
+                     outputfile=None, filters=None, removethis=None, texfiles=None):
     """Converts given `source` from `format` to `to`.
     :param str source: Unicode string or bytes (see encoding)
     :param str to: format into which the input should be converted; can be one of
@@ -565,7 +568,7 @@ def tim_convert_text(source, to, from_format, extra_args=(), encoding='utf-8',
 
 
 def tim_convert_input(source, from_format, input_type, to, extra_args=(), outputfile=None,
-                      filters=None, removethis=None, texfiles = None):
+                      filters=None, removethis=None, texfiles=None):
     pandoc_path = '/usr/bin/pandoc'
     stdout = ''
 
@@ -725,32 +728,32 @@ def run_latex(outputfile, latex_file, new_env, string_input):
 
 
 def get_file(latex_file, fileurl, new_env):
-     filedir = os.path.dirname(latex_file)
-     end = fileurl.find('?')
-     if end < 0:
-         end = len(fileurl)
-     filename = fileurl[fileurl.rfind("/") + 1:end]
-     dot = filename.rfind('.') # change last - to . if tehre is no dot at the end
-     minus = filename.rfind('-')
-     if dot < minus:
-         filename = filename[:minus] + '.' + filename[minus+1:]
-     args = ['wget', fileurl, '-O', filename]
-     p = subprocess.Popen(
-         args,
-         stdout=subprocess.PIPE,
-         stderr=subprocess.PIPE,
-         cwd=filedir,
-         env=new_env)
+    filedir = os.path.dirname(latex_file)
+    end = fileurl.find('?')
+    if end < 0:
+        end = len(fileurl)
+    filename = fileurl[fileurl.rfind("/") + 1:end]
+    dot = filename.rfind('.')  # change last - to . if tehre is no dot at the end
+    minus = filename.rfind('-')
+    if dot < minus:
+        filename = filename[:minus] + '.' + filename[minus + 1:]
+    args = ['wget', fileurl, '-O', filename]
+    p = subprocess.Popen(
+        args,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        cwd=filedir,
+        env=new_env)
 
-     if not (p.returncode is None):
-         raise RuntimeError(
-             'Get file died with exitcode "%s" before receiving input: %s' % (p.returncode, p.stderr.read())
-         )
+    if not (p.returncode is None):
+        raise RuntimeError(
+            'Get file died with exitcode "%s" before receiving input: %s' % (p.returncode, p.stderr.read())
+        )
 
-     stdout, stderr = p.communicate(None)
-     stdout = _decode_result(stdout)
-     stderr = _decode_result(stderr)
-     if p.returncode > 0:
-         raise RuntimeError(
-             'Get file %s failed: "%s": %s %s' % (fileurl, p.returncode, stdout, stderr)
-         )
+    stdout, stderr = p.communicate(None)
+    stdout = _decode_result(stdout)
+    stderr = _decode_result(stderr)
+    if p.returncode > 0:
+        raise RuntimeError(
+            'Get file %s failed: "%s": %s %s' % (fileurl, p.returncode, stdout, stderr)
+        )

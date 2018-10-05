@@ -456,15 +456,19 @@ def get_state():
                                                     user,
                                                     timdb,
                                                     custom_answer=answer)
-    [reviewhtml], _, _, _ = pluginify(doc,
-                                      [block],
-                                      user,
-                                      timdb,
-                                      custom_answer=answer,
-                                      review=review,
-                                      wrap_in_div=False) if review else ([None], None, None, None)
-
-    return json_response({'html': texts[0]['html'], 'reviewHtml': reviewhtml['html'] if review else None})
+    html = texts[0].get_final_dict()['html']
+    if review:
+        block.final_dict = None
+        review_pars, _, _, _ = pluginify(doc,
+                                         [block],
+                                         user,
+                                         timdb,
+                                         custom_answer=answer,
+                                         review=review,
+                                         wrap_in_div=False)
+        return json_response({'html': html, 'reviewHtml': review_pars[0].get_final_dict()['html']})
+    else:
+        return json_response({'html': html, 'reviewHtml': None})
 
 
 def verify_answer_access(answer_id, user_id, require_teacher_if_not_own=False):

@@ -68,7 +68,7 @@ def pluginify(doc: Document,
               output_format: PluginOutputFormat = PluginOutputFormat.HTML,
               user_print: bool = False,
               target_format: PrintFormat=PrintFormat.LATEX,
-              dereference=True):
+              dereference=True) -> Tuple[List[DocParagraph], List[str], List[str], List[str]]:
     """"Pluginifies" or sanitizes the specified DocParagraphs by calling the corresponding plugin route for each plugin
     paragraph.
 
@@ -102,7 +102,7 @@ def pluginify(doc: Document,
     md_out = (output_format == PluginOutputFormat.MD)
     html_out = False if md_out else (output_format == PluginOutputFormat.HTML)
 
-    html_pars = [par.html_dict(use_md=md_out) for par in pars]
+    html_pars = [par.get_final_dict(use_md=md_out) for par in pars]
 
     # taketime("answ", "sansitize")
 
@@ -323,7 +323,7 @@ def pluginify(doc: Document,
 
     # taketime("phtml done")
 
-    return html_pars, js_paths, css_paths, modules
+    return pars, js_paths, css_paths, modules
 
 
 def get_markup_value(markup, key, default):

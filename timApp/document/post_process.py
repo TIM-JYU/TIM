@@ -1,7 +1,7 @@
 """Common functions for use with routes."""
 from collections import defaultdict
 from datetime import datetime
-from typing import List, Dict
+from typing import List, Dict, DefaultDict, Tuple
 
 import pytz
 from flask import flash
@@ -31,16 +31,16 @@ def hide_names_in_teacher(doc_id):
 def post_process_pars(doc: Document, pars, user: User, sanitize=True, do_lazy=False, edit_window=False,
                       load_plugin_states=True):
     timdb = get_timdb()
-    taketime("start pluginfy")
-    html_pars, js_paths, css_paths, modules = pluginify(doc,
-                                                        pars,
-                                                        user,
-                                                        timdb,
-                                                        sanitize=sanitize,
-                                                        do_lazy=do_lazy,
-                                                        edit_window=edit_window,
-                                                        load_states=load_plugin_states)
-    taketime("end pluginfy")
+    taketime("start pluginify")
+    final_pars, js_paths, css_paths, modules = pluginify(doc,
+                                                         pars,
+                                                         user,
+                                                         timdb,
+                                                         sanitize=sanitize,
+                                                         do_lazy=do_lazy,
+                                                         edit_window=edit_window,
+                                                         load_states=load_plugin_states)
+    taketime("end pluginify")
     settings = doc.get_settings()
     macroinfo = settings.get_macroinfo()
     user_macros = macroinfo.get_user_specific_macros(user)
@@ -50,47 +50,49 @@ def post_process_pars(doc: Document, pars, user: User, sanitize=True, do_lazy=Fa
     # Process user-specific macros.
     # We define the environment here because it stays the same for each paragraph. This improves performance.
     env = create_environment(delimiter)
-    for htmlpar in html_pars: # update only user specific, because others are done in a cache pahes
-        if not htmlpar['is_plugin']:  # TODO: Think if plugins still needs to expand macros?
-            # htmlpar.insert_rnds(0)
-            no_macros = DocParagraph.is_no_macros(htmlpar['attrs'], doc_nomacros)
+    for p in final_pars:  # update only user specific, because others are done in a cache pahes
+        if not p.is_plugin():  # TODO: Think if plugins still needs to expand macros?
+            # p.insert_rnds(0)
+            no_macros = DocParagraph.is_no_macros(p.get_attrs(), doc_nomacros)
             if not no_macros:
-                htmlpar['html'] = expand_macros(htmlpar['html'], user_macros, settings, delimiter, env=env,
-                                                ignore_errors=True)
-            # if htmlpar['attrs'].get('texmacros', False): # in view texmacros should be inside $
-            #    htmlpar['md'] = '<p><span class="math inline">\\(' + htmlpar['md'] + '\\)</span></p>';
-
+                f_dict = p.get_final_dict()
+                f_dict['html'] = expand_macros(f_dict['html'], user_macros, settings, delimiter, env=env,
+                                               ignore_errors=True)
 
     # taketime("macros done")
 
     if edit_window:
         # Skip readings and notes
-        return process_areas(settings, html_pars, macros, delimiter, env), js_paths, css_paths, modules
+        return process_areas(settings, final_pars, macros, delimiter, env), js_paths, css_paths, modules
 
     if settings.show_authors():
         authors = doc.get_changelog(-1).get_authorinfo(pars)
-        for p in html_pars:
-            p['authorinfo'] = authors.get(p['id'])
+        for p in final_pars:
+            f_dict = p.get_final_dict()
+            f_dict['authorinfo'] = authors.get(f_dict['id'])
     # There can be several references of the same paragraph in the document, which is why we need a dict of lists
-    pars_dict = defaultdict(list)
+    pars_dict: DefaultDict[Tuple[str, int], List[dict]] = defaultdict(list)
 
     if not has_edit_access(doc.get_docinfo()):
-        for htmlpar in html_pars:
-            if htmlpar.get('is_question'):
-                htmlpar['html'] = ' '
-                htmlpar['cls'] = 'hidden'
+        for p in final_pars:
+            if p.is_question():
+                d = p.get_final_dict()
+                d['html'] = ' '
+                d['cls'] = 'hidden'
 
-    for htmlpar in html_pars:
-        if htmlpar.get('ref_id') and htmlpar.get('ref_doc_id'):
-            key = htmlpar.get('ref_id'), htmlpar.get('ref_doc_id')
-            pars_dict[key].append(htmlpar)
+    for p in final_pars:
+        d = p.get_final_dict()
+        if p.original:
+            key = d.get('ref_id'), d.get('ref_doc_id')
+            pars_dict[key].append(d)
 
-        key = htmlpar['id'], htmlpar['doc_id']
-        pars_dict[key].append(htmlpar)
+        key = d['id'], d['doc_id']
+        pars_dict[key].append(d)
 
-    for p in html_pars:
-        p['status'] = ReadMarkCollection()
-        p['notes'] = []
+    for p in final_pars:
+        d = p.get_final_dict()
+        d['status'] = ReadMarkCollection()
+        d['notes'] = []
     # taketime("pars done")
 
     group = user.get_personal_group().id if user is not None else get_anon_group_id()
@@ -130,10 +132,10 @@ def post_process_pars(doc: Document, pars, user: User, sanitize=True, do_lazy=Fa
                 p['notes'].append(n)
     # taketime("notes mixed")
 
-    return process_areas(settings, html_pars, macros, delimiter, env), js_paths, css_paths, modules
+    return process_areas(settings, final_pars, macros, delimiter, env), js_paths, css_paths, modules
 
 
-def process_areas(settings, html_pars: List[Dict], macros, delimiter, env) -> List[Dict]:
+def process_areas(settings, pars: List[DocParagraph], macros, delimiter, env) -> List[Dict]:
     class Area:
 
         def __init__(self, index, area_attrs):
@@ -156,30 +158,22 @@ def process_areas(settings, html_pars: List[Dict], macros, delimiter, env) -> Li
                 return i
         return 0
 
-    for html_par in html_pars:
+    for p in pars:
+        html_par = p.get_final_dict()
         new_areas = current_areas.copy()
-        area_start = None
-        area_end = None
         cur_area = None
-
-        for attrs in ['ref_attrs', 'attrs']:
-            if attrs in html_par:
-                area_start = html_par[attrs].get('area')
-                area_end = html_par[attrs].get('area_end')
-                if area_start is not None:
-                    cur_area = Area(get_free_index(), html_par[attrs])
-                    new_areas[area_start] = cur_area
-                if area_end is not None:
-                    try:
-                        free_indexes[new_areas[area_end].index] = True
-                    except KeyError:
-                        flash(
-                            f'area_end found for "{area_end}" without corresponding start. Fix this to get rid of this warning.')
-                    new_areas.pop(area_end, None)
-                break
-
-        html_par['areas'] = new_areas
-        html_par['other_areas'] = current_areas
+        area_start = p.get_attr('area')
+        area_end = p.get_attr('area_end')
+        if area_start is not None:
+            cur_area = Area(get_free_index(), p.get_attrs())
+            new_areas[area_start] = cur_area
+        if area_end is not None:
+            try:
+                free_indexes[new_areas[area_end].index] = True
+            except KeyError:
+                flash(
+                    f'area_end found for "{area_end}" without corresponding start. Fix this to get rid of this warning.')
+            new_areas.pop(area_end, None)
 
         if new_areas != current_areas:
             # This paragraph changes the open areas
@@ -238,25 +232,20 @@ def process_areas(settings, html_pars: List[Dict], macros, delimiter, env) -> Li
                                     alttext = "This area can only be viewed from <STARTTIME> to <ENDTIME>"
                                 alttext = alttext.replace('<STARTTIME>', str(starttime)).replace('<ENDTIME>', str(endtime))
                                 new_pars.append(DocParagraph.create(doc=Document(html_par['doc_id']), par_id=html_par['id'],
-                                                                    md=alttext).html_dict())
+                                                                    md=alttext).get_final_dict())
 
         else:
-            # new_pars.append(html_par)
-            # continue
             # Just a normal paragraph
             access = True
-            attrs = html_par.get('attrs')
-            vis = attrs.get('visible')  # check if there is visible attribute in par itself
+            vis = p.get_attr('visible')  # check if there is visible attribute in par itself
             if vis is None:
-                vis = True
+                pass
             else:
                 if str(vis).find(delimiter) >= 0:
                     vis = expand_macros(vis, macros, settings, delimiter, env=env, ignore_errors=True)
                 vis = get_boolean(vis, True)
                 if not vis:
                     access = False  # TODO: this should be added as some kind of small par that is visible in edit-mode
-
-                # if any([a.attrs.get('starttime') or a.attrs.get('endtime') for a in current_areas.values()]):
                 # Timed paragraph
             if access:  # par itself is visible, is it in some area that is not visible
                 for a in current_areas.values():
@@ -272,10 +261,6 @@ def process_areas(settings, html_pars: List[Dict], macros, delimiter, env) -> Li
                             starttime = getdatetime(st, default_val=min_time)
                             endtime = getdatetime(et, default_val=max_time)
                             access &= starttime <= now < endtime
-                            # if not access and a.attrs.get('alttext') is not None:
-                            #     TODO:  what??? here was just todo?  alttext is already show in area?
-                            #     noinspection PyUnusedLocal
-                            #     alttext = a.attrs.get('alttext')
 
             if access:
                 new_pars.append(html_par)

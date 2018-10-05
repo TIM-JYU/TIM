@@ -44,7 +44,7 @@ class DocParagraph:
         self.files_root = self.get_default_files_root() if files_root is None else files_root
         self.html_sanitized = False
         self.html = None
-        self.__htmldata = None
+        self.final_dict = None
 
         # Cache for referenced paragraphs. Keys {True, False} correspond to the values of set_html parameter in
         # get_referenced_pars.
@@ -171,12 +171,11 @@ class DocParagraph:
 
     @staticmethod
     def is_no_macros(settings, doc_macros):
-        nm =  settings.get('nomacros', None)
+        nm = settings.get('nomacros')
         if nm is not None:
             nm = nm.lower()
             return nm != 'false'
         return doc_macros
-
 
     @classmethod
     def get_latest(cls, doc, par_id: str, files_root: Optional[str] = None) -> 'DocParagraph':
@@ -252,38 +251,38 @@ class DocParagraph:
         """Returns the internal data dictionary."""
         return self.__data
 
-    def _mkhtmldata(self, from_preview: bool = True, output_md: bool = False):
+    def _make_final_dict(self, from_preview: bool = True, output_md: bool = False):
         """Prepares the internal __htmldata dictionary that contains all the information required for embedding the
         paragraph in HTML."""
         self._cache_props()
 
         if self.original:
-            self.__htmldata = dict(self.original.__data)
-            self.__htmldata['attrs_str'] = self.original.get_attrs_str()
-            self.__htmldata['doc_id'] = self.original.doc.doc_id
+            self.final_dict = dict(self.original.__data)
+            self.final_dict['attrs_str'] = self.original.get_attrs_str()
+            self.final_dict['doc_id'] = self.original.doc.doc_id
 
-            self.__htmldata['ref_doc_id'] = self.ref_doc.doc_id
-            self.__htmldata['ref_id'] = self.__data['id']
-            self.__htmldata['ref_t'] = self.__data['t']
-            self.__htmldata['ref_attrs'] = self.__data['attrs']
-            self.__htmldata['ref_attrs_str'] = self.get_attrs_str()
+            self.final_dict['ref_doc_id'] = self.ref_doc.doc_id
+            self.final_dict['ref_id'] = self.__data['id']
+            self.final_dict['ref_t'] = self.__data['t']
+            self.final_dict['ref_attrs'] = self.__data['attrs']
+            self.final_dict['ref_attrs_str'] = self.get_attrs_str()
         else:
-            self.__htmldata = dict(self.__data)
-            self.__htmldata['attrs_str'] = self.get_attrs_str()
-            self.__htmldata['doc_id'] = self.doc.doc_id
+            self.final_dict = dict(self.__data)
+            self.final_dict['attrs_str'] = self.get_attrs_str()
+            self.final_dict['doc_id'] = self.doc.doc_id
 
         if output_md:
-            self.__htmldata['md'] = self.get_markdown()
+            self.final_dict['md'] = self.get_markdown()
         else:
             try:
-                self.__htmldata['html'] = self.get_html(from_preview=from_preview)
+                self.final_dict['html'] = self.get_html(from_preview=from_preview)
 
             except Exception as e:
-                self.__htmldata['html'] = get_error_html(e)
+                self.final_dict['html'] = get_error_html(e)
 
         preamble = self.from_preamble()
         plugintype = self.get_attr('plugin')
-        self.__htmldata['cls'] = ' '.join(['par']
+        self.final_dict['cls'] = ' '.join(['par']
                                           + (self.get_classes() if not self.get_attr('area') else [])
                                           + (['questionPar'] if self.is_question() else [])
                                           + (['preamble'] if preamble else [])
@@ -292,10 +291,10 @@ class DocParagraph:
         # Need to check for gamification attribute to avoid ng-non-bindable directive being added in the par.
         # As an AngularJS component it needs to be processed by AngularJS. is_plugin also shouldn't return True
         # for gamification because it isn't a proper plugin.
-        self.__htmldata['is_plugin'] = self.is_plugin() or self.get_attr('gamification') is not None
+        self.final_dict['is_plugin'] = self.is_plugin() or self.get_attr('gamification') is not None
         if preamble:
-            self.__htmldata['from_preamble'] = preamble.path
-        self.__htmldata['is_question'] = self.is_question()
+            self.final_dict['from_preamble'] = preamble.path
+        self.final_dict['is_question'] = self.is_question()
 
     def _cache_props(self):
         """Caches some boolean properties about this paragraph in internal attributes."""
@@ -303,10 +302,12 @@ class DocParagraph:
         self.__is_ref = self.is_par_reference() or self.is_area_reference()
         self.__is_setting = 'settings' in self.get_attrs()
 
-    def html_dict(self, use_md: bool = False) -> Dict:
-        """Returns a dictionary that contains all the information required for embedding the paragraph in HTML."""
-        self._mkhtmldata(output_md=use_md)
-        return self.__htmldata
+    def get_final_dict(self, use_md: bool = False) -> Dict:
+        """Returns a dictionary that contains the finalized values of the paragraph."""
+        if self.final_dict:
+            return self.final_dict
+        self._make_final_dict(output_md=use_md)
+        return self.final_dict
 
     def get_doc_id(self) -> int:
         """Returns the Document id to which this paragraph is attached."""
@@ -743,8 +744,8 @@ class DocParagraph:
 
         """
         self.html = new_html
-        if self.__htmldata is not None:
-            self.__htmldata['html'] = new_html
+        if self.final_dict is not None:
+            self.final_dict['html'] = new_html
         self.html_sanitized = sanitized
         return self.html
 
@@ -835,7 +836,7 @@ class DocParagraph:
         with open(self.get_path(), 'r') as f:
             self.__data = json.loads(f.read())
             self._cache_props()
-            self.__htmldata = None
+            self.final_dict = None
             return True
 
     def __write(self):
@@ -1123,7 +1124,7 @@ def create_final_par(reached_par: DocParagraph, set_html: bool) -> DocParagraph:
     final_par.original = first_ref
     final_par.ref_doc = reached_par.doc
     final_par._cache_props()
-    final_par.__htmldata = None
+    final_par.final_dict = None
     if first_ref.from_preamble():
         final_par.preamble_doc = first_ref.from_preamble()
         if first_ref.is_translation():

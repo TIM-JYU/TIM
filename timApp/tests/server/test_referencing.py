@@ -85,3 +85,19 @@ class ReferencingTest(TimRouteTest):
         e = self.get(t.url, as_tree=True)
         self.assert_content(e, ['The referenced document does not exist.', 'new',
                                 'The referenced document does not exist.', 'new'])
+
+    def test_visible_attribute_reference(self):
+        self.login_test1()
+        d = self.create_doc(initial_par="""
+This is visible.
+
+#- {visible=false}
+This should not be visible.
+        """)
+        r = self.get(d.url, as_tree=True)
+        self.assert_content(r, ['This is visible.'])
+        d2 = self.create_doc(initial_par='This is first of d2.')
+        invis_par = d.document.get_paragraphs()[1]
+        d2.document.add_paragraph_obj(invis_par.create_reference(d2.document))
+        r = self.get(d2.url, as_tree=True)
+        self.assert_content(r, ['This is first of d2.'])
