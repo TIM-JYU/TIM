@@ -11,6 +11,7 @@ import pwd, os
 import glob
 from base64 import b64encode
 from cs_sanitizer import cs_min_sanitize, svg_sanitize, tim_sanitize
+from os.path import splitext
 
 #  uid = pwd.getpwnam('agent')[2]
 #  os.setuid(uid)
@@ -319,11 +320,26 @@ def get_html(self, ttype, query):
     htmldata =  get_param(query, "cacheHtml", None) # check if constant html
     if htmldata:
         return tim_sanitize(htmldata) + get_cache_footer(query)
+    gv_data = get_param(query, "gvData", None)
+    if gv_data:  # convert graphViz plugin to csPlugin
+        gv_type = get_param(query, "gvType", 'dot')
+        query.jso['markup']['type'] = 'run'
+        query.jso['markup']['cmds'] = gv_type + ' -Tsvg prg'
+        query.jso['markup']['isHtml'] = True
+        query.query['isHtml'] = [True]
+        query.query['type'] = ['run']
+        query.jso['markup']['fullprogram'] = gv_data
+        query.jso['markup']['cacheClass'] = 'figure graphviz '
+        if get_param(query, "cache", True):
+            query.jso['markup']['cache'] = True
+        else:
+            check_fullprogram(query, True)
+
     if get_param(query, "cache", False): # check if we should take the html from cache
         cache_root = "/tmp"
         cache_clear = get_param(query, "cacheClear", True)
         if not cache_clear:
-            cache_root = "/tmp/ucache" # maybe user dependent cacha that may grow bigger, so to different place
+            cache_root = "/tmp/ucache" # maybe user dependent cache that may grow bigger, so to different place
         h = hashlib.new('ripemd160')
         h.update(str(query.jso['markup']).encode())
         task_id = get_param(query, "taskID", False)
@@ -341,6 +357,7 @@ def get_html(self, ttype, query):
 
         query.jso['markup']['imgname'] = "/csgenerated/" + task_id # + "/" + hash
         query.jso['state']= None
+
         ret = self.do_all(query) # otherwise generate new image
         # if is_html, then web.console is sanitized
         # web.err is not sanitized
@@ -349,6 +366,9 @@ def get_html(self, ttype, query):
         htmldata = NOLAZY
 
         error = ret['web'].get('error', None)
+        if not ret:
+            return ""
+
         if error:
             htmldata += '<pre>' + cs_min_sanitize(error) + '</pre>'
 
@@ -373,14 +393,16 @@ def get_html(self, ttype, query):
                console = cs_min_sanitize(console)
            # else:
            #     console = svg_sanitize(console)
-           htmldata += '<' + cache_elem + ' ' + cache_class + '>' + console + '</'+ cache_elem+'>'
+           htmldata += '<' + cache_elem + ' ' + cache_class + '>' + console + '</' + cache_elem+'>'
 
         img = ret['web'].get('image', None)
         if img:
             with open(img,"rb") as fh:
                 pngdata = fh.read()
             pngenc = b64encode(pngdata)
-            htmldata += '<img src="data:image/png;base64, ' + pngenc.decode() + '" />'
+            _,imgext = splitext(img)
+            imgext = imgext[1:]
+            htmldata += '<img src="data:image/'+imgext+';base64, ' + pngenc.decode() + '" />'
             os.remove(img)
 
         htmldata += get_cache_footer(query)
@@ -845,6 +867,21 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             self.wout(str(e))
 
     def do_all_t(self, query):
+        gv_data = get_param(query, "gvData", None)
+        if gv_data:  # convert graphViz plugin to csPlugin
+            gv_type = get_param(query, "gvType", 'dot')
+            query.jso['markup']['type'] = 'run'
+            if query.jso.get('input', None):
+                query.jso['input']['type'] = 'run'
+                query.jso['input']['markup']['type'] = 'run'
+            query.query['type'] = ['run']
+            query.jso['markup']['cmds'] = gv_type + ' -Tsvg prg'
+            query.jso['markup']['isHtml'] = True
+            if get_param(query, "cache", True):
+                query.jso['markup']['cache'] = True
+            query.jso['markup']['fullprogram'] = gv_data
+            query.jso['markup']['cacheClass'] = 'figure graphviz '
+
         t1start = time.time()
         t_run_time = 0
         times_string = ""
@@ -951,7 +988,6 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         ttype = get_param(query, "type", "cs").lower()
         ttype = type_splitter.split(ttype)
         ttype = ttype[0]
-
 
         if is_tauno and not is_answer:
             ttype = 'tauno'  # answer is newer tauno

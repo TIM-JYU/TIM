@@ -228,8 +228,8 @@ export class SidebarMenuCtrl implements IController {
         }
 
         $http.post<{path: string}>("/minutes/createMinutes", angular.extend({
-            item_path: this.vctrl.item.location + "/PK/PK" + this.docSettings.macros.knro,
-            item_title: "PK" + this.docSettings.macros.knro,
+            item_path: this.vctrl.item.location + "/pk/pk" + this.docSettings.macros.knro,
+            item_title: "pk" + this.docSettings.macros.knro,
             copy: this.vctrl.item.id,
         })).then((response) => {
             $window.location.href = "/view/" + response.data.path;

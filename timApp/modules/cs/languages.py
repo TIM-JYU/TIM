@@ -1,6 +1,7 @@
 from subprocess import check_output
 from points import *
 from run import *
+from os.path import splitext
 
 sys.path.insert(0, '/py')  # /py on mountattu docker kontissa /opt/tim/timApp/modules/py -hakemistoon
 
@@ -68,6 +69,12 @@ class Language:
         self.compile_commandline = ""
         self.just_compile = False
         self.imgname = get_param(query, "imgname", None)
+        self.imgsource = get_imgsource(query)
+        self.imgext = '.png'
+        if self.imgsource:
+            n,e = splitext(self.imgsource)
+            if e:
+                self.imgext = e
 
         # Check if user name or temp name
 
@@ -110,8 +117,8 @@ class Language:
         self.inputfilename = "/tmp/%s/%s" % (self.basename, self.ifilename)
         self.prgpath = "/tmp/%s" % self.basename
         self.filepath = self.prgpath
-        self.imgsource = ""
-        self.pngname = ""
+        # self.imgsource = ""
+        self.imgdest = ""
 
         self.before_code = get_param(query, "beforeCode", "")
 
@@ -157,8 +164,8 @@ class Language:
     def runself(self, args, cwd=None, shell=None, kill_tree=None, timeout=None, env=None, stdin=None, uargs=None,
                 code=None, extra=None, ulimit=None, no_x11=None, savestate=None, dockercontainer=None,
                 no_uargs=False):
-        if self.imgname:
-            self.pngname = self.imgname + '.png'
+        if self.imgname:  # this should only come from cache run
+            self.imgdest = self.imgname + self.imgext
         uargs = df(uargs, self.userargs)
         if no_uargs:
             uargs = None
@@ -189,20 +196,25 @@ class Language:
         if code == -9:
             out = "Runtime exceeded, maybe loop forever\n" + out
             return out, err
-        if self.imgsource and self.pngname:
+        if self.imgsource and self.imgdest:
+            _, imgext = splitext(self.imgsource)
+            if not imgext:
+                imgext = '.png'
+            destname, destext = splitext(self.imgdest)
+            destname = destname + imgext
             ims = self.imgsource
             if not ims.startswith("/"):
                 ims = self.filepath + "/" + ims
-            image_ok, e = copy_file(ims, self.pngname, True, self.is_optional_image)
+            image_ok, e = copy_file(ims, destname, True, self.is_optional_image)
             if e:
                 err = (str(err) + "\n" + str(e) + "\n" + str(out))
             # print(self.is_optional_image, image_ok)
             remove(self.imgsource)
             if image_ok:
                 if self.imgname:
-                    web["image"] = self.pngname
+                    web["image"] = self.imgdest
                 else:
-                    web["image"] = "/csgenerated/" + self.rndname + ".png"
+                    web["image"] = "/csgenerated/" + self.rndname + imgext
                 give_points(points_rule, "run")
                 self.run_points_given = True
         return out, err
@@ -237,9 +249,9 @@ class Jypeli(CS):
         super().__init__(query, sourcecode)
         self.imgsource = "/tmp/%s/output.bmp" % self.basename
         self.pure_bmpname = "./%s.bmp" % self.filename
-        self.pngname = "/csgenerated/%s.png" % self.rndname
+        self.imgdest = "/csgenerated/%s.png" % self.rndname
         self.pure_exename = u"{0:s}.exe".format(self.filename)
-        self.pure_pngname = u"{0:s}.png".format(self.rndname)
+        self.pure_mgdest = u"{0:s}.png".format(self.rndname)
 
     def get_cmdline(self, sourcecode):
         mainfile = "/cs/jypeli/Ohjelma.cs"
@@ -275,17 +287,17 @@ class Jypeli(CS):
         out = re.sub("^Could not open AL device - OpenAL Error: OutOfMemory.*\n", "", out, flags=re.M)
 
         wait_file(self.imgsource)
-        run(["convert", "-flip", self.imgsource, self.pngname], cwd=self.prgpath, timeout=20)
+        run(["convert", "-flip", self.imgsource, self.imgdest], cwd=self.prgpath, timeout=20)
         remove(self.imgsource)
-        # print("*** Screenshot: https://tim.it.jyu.fi/csgenerated/%s\n" % self.pure_pngname)
+        # print("*** Screenshot: https://tim.it.jyu.fi/csgenerated/%s\n" % self.pure_imgdest)
         out = re.sub('Number of joysticks:.*\n.*', "", out)
         if code == -9:
             out = "Runtime exceeded, maybe loop forever\n" + out
         else:
             if self.imgname:
-                web["image"] = self.pngname
+                web["image"] = self.imgdest
             else:
-                web["image"] = "/csgenerated/" + self.pure_pngname
+                web["image"] = "/csgenerated/" + self.imgdest
             give_points(points_rule, "run")
             self.run_points_given = True
         if self.delete_tmp:
@@ -521,7 +533,7 @@ class Graphics(Java):
     def __init__(self, query, sourcecode):
         super().__init__(query, sourcecode)
         self.imgsource = "%s/run/capture.png" % self.prgpath
-        self.pngname = "/csgenerated/%s.png" % self.rndname
+        self.imgdest = "/csgenerated/%s.png" % self.rndname
 
     def run(self, web, sourcelines, points_rule):
         a = []
@@ -618,8 +630,7 @@ class PY3(Language):
         self.exename = self.sourcefilename
         self.pure_exename = "./%s.py" % self.filename
         self.fileext = "py"
-        self.pngname = "/csgenerated/%s.png" % self.rndname
-        self.imgsource = get_imgsource(query)
+        self.imgdest = "/csgenerated/%s.png" % self.rndname
 
     def run(self, web, sourcelines, points_rule):
         code, out, err, pwddir = self.runself(["python3", self.pure_exename])
@@ -648,7 +659,7 @@ class Swift(Language):
         self.exename = self.sourcefilename
         self.pure_exename = "./%s.swift" % self.filename
         self.fileext = "swift"
-        self.pngname = "/csgenerated/%s.png" % self.rndname
+        self.imgdest = "/csgenerated/%s.png" % self.rndname
         self.imgsource = get_imgsource(query)
 
     def run(self, web, sourcelines, points_rule):
@@ -665,7 +676,7 @@ class Lua(Language):
         self.exename = self.sourcefilename
         self.pure_exename = "./%s.lua" % self.filename
         self.fileext = "lua"
-        self.pngname = "/csgenerated/%s.png" % self.rndname
+        self.imgdest = "/csgenerated/%s.png" % self.rndname
         self.imgsource = get_imgsource(query)
 
     def run(self, web, sourcelines, points_rule):
@@ -789,7 +800,7 @@ class Alloy(Language):
         self.exename = self.sourcefilename
         self.pure_exename = "./%s.als" % self.filename
         self.imgsource = "%s/mm.png" % self.prgpath
-        self.pngname = "/csgenerated/%s.png" % self.rndname
+        self.imgdest = "/csgenerated/%s.png" % self.rndname
 
     def run(self, web, sourcelines, points_rule):
         runcmd = ["java", "-cp", "/cs/java/alloy-dev.jar:/cs/java", "RunAll", self.pure_exename]
@@ -804,7 +815,7 @@ class Run(Language):
         self.sourcefilename = "/tmp/%s/%s" % (self.basename, self.filename)
         self.exename = self.sourcefilename
         self.pure_exename = "/home/agent/%s" % self.filename
-        self.pngname = "/csgenerated/%s.png" % self.rndname
+        self.imgdest = "/csgenerated/%s.png" % self.rndname
         self.imgsource = get_imgsource(query)
 
     def run(self, web, sourcelines, points_rule):
@@ -816,13 +827,13 @@ class Run(Language):
             cmd = []
             uargs = ""
         # print("run: ", cmd, extra, self.pure_exename, self.sourcefilename)
-        # print("Run1: ", self.imgsource, self.pngname)
+        # print("Run1: ", self.imgsource, self.imgdest)
         try:
             code, out, err, pwddir = self.runself(cmd, uargs=uargs, extra=extra)
         except Exception as e:
             print(e)
             code, out, err = (-1, "", str(e))
-        # print("Run2: ", self.imgsource, self.pngname)
+        # print("Run2: ", self.imgsource, self.imgdest)
         out, err = self.copy_image(web, code, out, err, points_rule)
         return code, out, err, pwddir
 
@@ -857,8 +868,8 @@ class R(Language):
         self.pure_exename = "./%s.r" % self.filename
         #  self.imgsource = "%s/Rplot001.%s" % (self.prgpath, self.image_ext)
         self.imgsource = "Rplot001.%s" % self.image_ext
-        self.pure_pngname = u"{0:s}.{1:s}".format(self.rndname, self.image_ext)
-        self.pngname = "/csgenerated/%s.%s" % (self.rndname, self.image_ext)
+        self.pure_imgdest = u"{0:s}.{1:s}".format(self.rndname, self.image_ext)
+        self.imgdest = "/csgenerated/%s.%s" % (self.rndname, self.image_ext)
 
     def run(self, web, sourcelines, points_rule):
         code, out, err, pwddir = self.runself(["Rscript", "--save", "--restore", self.pure_exename],
@@ -920,7 +931,7 @@ class Octave(Language):
         self.exename = self.sourcefilename
         self.pure_exename = "./%s.m" % self.filename
         self.fileext = "m"
-        self.pngname = "/csgenerated/%s.png" % self.rndname
+        self.imgdest = "/csgenerated/%s.png" % self.rndname
         self.imgsource = get_imgsource(query)
         self.wavsource = get_param(query, "wavsource", "")
         # wavdest = "/csgenerated/%s/%s" % (self.user_id, wavsource)

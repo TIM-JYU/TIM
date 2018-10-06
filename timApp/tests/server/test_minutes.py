@@ -14,10 +14,10 @@ class MinutesHandlingTest(TimRouteTest):
         self.login_test1()
         knro = 3
         d = self.create_doc(settings={"macros": {"knro": knro}})
-        minutes_document_path = f"{d.location}/PK/PK{knro}"
+        minutes_document_path = f"{d.location}/pk/pk{knro}"
         self.json_post("/minutes/createMinutes",
                        json_data={"item_path": minutes_document_path,
-                                  "item_title": f"PK{knro}",
+                                  "item_title": f"pk{knro}",
                                   "copy": d.id})
         d2 = DocEntry.find_by_path(minutes_document_path)
         chg = d2.document.get_changelog()
