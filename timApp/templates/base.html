@@ -5,7 +5,7 @@
 {%- endmacro %}
 {% set lecture_assets = in_lecture or lecture_mode or request.endpoint == 'lecture.show_lecture_info' %}
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
     {% block head %}
         <base href="{{ request.path }}">
