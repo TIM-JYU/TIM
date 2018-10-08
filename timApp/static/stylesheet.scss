@@ -135,7 +135,7 @@ a .glyphicon {
             font-size: $inline-code-size;
         }
 
-        & > h1 {
+        & > h1, & > div > h1 {
             @include h1-base();
         }
 
