@@ -16,7 +16,7 @@ class ClipboardTest(TimDbTest):
         self.clipboard.clear_all()
 
     def test_empty(self):
-        clip = self.clipboard.get(1)
+        clip = self.clipboard.get(self.test_user_1)
         self.assertIsNone(clip.read())
 
     def test_readwrite(self):
@@ -24,7 +24,7 @@ class ClipboardTest(TimDbTest):
         attrs = {'a': '1', 'b': '2'}
         par = {'id': random_id(), 'md': text, 't': hashfunc(text, attrs), 'attrs': attrs}
 
-        clip = self.clipboard.get(1)
+        clip = self.clipboard.get(self.test_user_1)
         clip.write([par])
         read_pars = clip.read()
 
@@ -37,7 +37,7 @@ class ClipboardTest(TimDbTest):
         attrs = {'a': '1', 'b': '2'}
         par = {'id': random_id(), 'md': text, 't': hashfunc(text, attrs), 'attrs': attrs}
 
-        clip = self.clipboard.get(1)
+        clip = self.clipboard.get(self.test_user_1)
         clip.write([par])
 
         read_pars = clip.read()
@@ -50,10 +50,10 @@ class ClipboardTest(TimDbTest):
         self.assertEqual(read_pars[0]['md'], par['md'])
         self.assertDictEqual(read_pars[0]['attrs'], par['attrs'])
 
-        clip = self.clipboard.get(2)
+        clip = self.clipboard.get(self.test_user_2)
         self.assertIsNone(clip.read())
 
-        clip = self.clipboard.get(1)
+        clip = self.clipboard.get(self.test_user_1)
         read_pars = clip.read()
         self.assertEqual(len(read_pars), 1)
         self.assertEqual(read_pars[0]['md'], par['md'])
@@ -65,7 +65,7 @@ class ClipboardTest(TimDbTest):
 
         pars = [doc.add_paragraph(f'Kappale {i}', attrs={'kappale': str(i)}) for i in range(0, 10)]
 
-        clip = self.clipboard.get(1)
+        clip = self.clipboard.get(self.test_user_1)
         clip.copy_pars(doc, pars[3].get_id(), pars[6].get_id())
 
         read_pars = clip.read()
@@ -75,7 +75,7 @@ class ClipboardTest(TimDbTest):
             self.assertDictEqual(read_pars[i - 3]['attrs'], pars[i].get_attrs())
 
     def test_paste(self):
-        clip = self.clipboard.get(1)
+        clip = self.clipboard.get(self.test_user_1)
 
         pars = [{'id': random_id(), 'md': f'Kappale 1.{i}', 'attrs': {'kappale': str(i)}} for i in range(0, 1)]
         clip.write(pars)

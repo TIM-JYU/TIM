@@ -579,7 +579,7 @@ This will delete the whole ${options.area ? "area" : "paragraph"} from the docum
                 {
                     func: (e: JQueryEventObject, par: Paragraph) => this.viewctrl.clipboardHandler.showPasteMenu(e, par),
                     desc: "Paste...",
-                    show: $window.editMode && (this.viewctrl.allowPasteRef || this.viewctrl.allowPasteContent),
+                    show: $window.editMode && (this.viewctrl.clipMeta.allowPasteRef || this.viewctrl.clipMeta.allowPasteContent),
                 },
                 {func: (e: JQueryEventObject, par: Paragraph) => this.viewctrl.clipboardHandler.showMoveMenu(e, par), desc: "Move here...", show: $window.allowMove},
                 {

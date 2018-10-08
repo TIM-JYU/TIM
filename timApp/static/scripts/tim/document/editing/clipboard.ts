@@ -20,6 +20,22 @@ import {viewCtrlDot} from "../viewutils";
 import {EditType} from "./editing";
 import {IParResponse} from "./edittypes";
 
+export type ClipboardMetaResponse = {
+    area_name?: string;
+    disable_ref: boolean;
+    disable_content: boolean;
+    last_action?: "copy" | "cut" | "paste";
+    empty: false;
+} | {empty: true}
+
+export interface IClipboardMeta {
+    area_name?: string;
+    allowPasteRef: boolean;
+    allowPasteContent: boolean;
+    last_action?: "copy" | "cut" | "paste";
+    empty: boolean;
+}
+
 export class ClipboardHandler {
     public sc: IScope;
     public viewctrl: ViewCtrl;
@@ -27,9 +43,6 @@ export class ClipboardHandler {
     constructor(sc: IScope, view: ViewCtrl) {
         this.sc = sc;
         this.viewctrl = view;
-        view.allowPasteContent = false;
-        view.allowPasteRef = false;
-
         view.pasteFunctions = this.getPasteFunctions();
     }
 
@@ -85,9 +98,6 @@ export class ClipboardHandler {
                 type: EditType.Edit,
             });
         }
-
-        this.viewctrl.allowPasteContent = false;
-        this.viewctrl.allowPasteRef = false;
     }
 
     async moveAbove(e: Event, $parOrArea: ParOrArea) {
@@ -170,25 +180,33 @@ export class ClipboardHandler {
 
     async updateClipboardStatus() {
         if (!Users.isLoggedIn()) {
-            this.viewctrl.allowPasteContent = false;
-            this.viewctrl.allowPasteRef = false;
+            this.viewctrl.clipMeta.allowPasteContent = false;
+            this.viewctrl.clipMeta.allowPasteRef = false;
             return;
         }
 
-        const [err, response] = await to($http.get<{empty: any, disable_ref: any}>("/clipboardstatus", {}));
+        const [err, response] = await to($http.get<ClipboardMetaResponse>("/clipboardstatus", {}));
         if (!response) {
             if (err) {
-                this.viewctrl.allowPasteContent = false;
-                this.viewctrl.allowPasteRef = false;
+                this.viewctrl.clipMeta.allowPasteContent = false;
+                this.viewctrl.clipMeta.allowPasteRef = false;
             }
             return;
         }
-        if (!("empty" in response.data) || response.data.empty) {
-            this.viewctrl.allowPasteContent = false;
-            this.viewctrl.allowPasteRef = false;
+        if (response.data.empty) {
+            this.viewctrl.clipMeta = {
+                allowPasteContent: false,
+                allowPasteRef: false,
+                empty: true,
+            }
         } else {
-            this.viewctrl.allowPasteContent = true;
-            this.viewctrl.allowPasteRef = !("disable_ref" in response.data && response.data.disable_ref);
+            this.viewctrl.clipMeta = {
+                allowPasteContent: !response.data.disable_content,
+                allowPasteRef: !response.data.disable_ref,
+                area_name: response.data.area_name,
+                empty: false,
+                last_action: response.data.last_action,
+            };
         }
     }
 
@@ -198,22 +216,22 @@ export class ClipboardHandler {
             {
                 func: (e: Event, $par: Paragraph) => this.pasteRefAbove(e, $par),
                 desc: "Above, as a reference",
-                show: this.viewctrl.allowPasteRef,
+                show: this.viewctrl.clipMeta.allowPasteRef,
             },
             {
                 func: (e: Event, $par: Paragraph) => this.pasteContentAbove(e, $par),
                 desc: "Above, as content",
-                show: this.viewctrl.allowPasteContent,
+                show: this.viewctrl.clipMeta.allowPasteContent,
             },
             {
                 func: (e: Event, $par: Paragraph) => this.pasteRefBelow(e, $par),
                 desc: "Below, as a reference",
-                show: this.viewctrl.allowPasteRef,
+                show: this.viewctrl.clipMeta.allowPasteRef,
             },
             {
                 func: (e: Event, $par: Paragraph) => this.pasteContentBelow(e, $par),
                 desc: "Below, as content",
-                show: this.viewctrl.allowPasteContent,
+                show: this.viewctrl.clipMeta.allowPasteContent,
             },
             {
                 func: (e: Event, $par: Paragraph) => {
@@ -227,12 +245,12 @@ export class ClipboardHandler {
             {
                 func: (e: Event, $par: Paragraph) => this.moveAbove(e, $par),
                 desc: "Above",
-                show: this.viewctrl.allowPasteContent,
+                show: this.viewctrl.clipMeta.allowPasteContent,
             },
             {
                 func: (e: Event, $par: Paragraph) => this.moveBelow(e, $par),
                 desc: "Below",
-                show: this.viewctrl.allowPasteContent,
+                show: this.viewctrl.clipMeta.allowPasteContent,
             },
             {func: empty, desc: "Cancel", show: true},
         ];
@@ -258,9 +276,6 @@ export class ClipboardHandler {
                 type: EditType.Edit,
             });
         }
-
-        this.viewctrl.allowPasteContent = true;
-        this.viewctrl.allowPasteRef = false;
     }
 
     async copyPar(e: Event, $par: Paragraph) {
@@ -276,8 +291,6 @@ export class ClipboardHandler {
             }
             return;
         }
-        this.viewctrl.allowPasteContent = true;
-        this.viewctrl.allowPasteRef = true;
     }
 
     async copyOrCutArea(e: Event, $parOrArea: ParOrArea, overrideDocId: number, cut: boolean) {
@@ -324,9 +337,6 @@ export class ClipboardHandler {
                         pars: getPars(getElementByParId(firstPar), getElementByParId(lastPar)),
                         type: EditType.Edit,
                     });
-
-                    this.viewctrl.allowPasteContent = true;
-                    this.viewctrl.allowPasteRef = false;
                 }
             }
 
@@ -341,8 +351,6 @@ export class ClipboardHandler {
             }
             this.viewctrl.selection.start = undefined;
             this.viewctrl.selection.end = undefined;
-            this.viewctrl.allowPasteContent = true;
-            this.viewctrl.allowPasteRef = true;
         }
     }
 

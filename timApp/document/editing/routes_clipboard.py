@@ -7,19 +7,19 @@ from flask import g
 
 from timApp.auth.accesshelper import verify_logged_in, get_doc_or_abort
 from timApp.auth.accesshelper import verify_view_access, verify_edit_access
-from timApp.timdb.dbaccess import get_timdb
-from timApp.document.editing.clipboard import Clipboard
+from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.document import Document
+from timApp.document.editing.clipboard import Clipboard
 from timApp.document.editing.documenteditresult import DocumentEditResult
+from timApp.document.editing.routes import par_response, verify_par_edit_access
+from timApp.document.translation.synchronize_translations import synchronize_translations
+from timApp.readmark.readings import copy_readings
+from timApp.timdb.dbaccess import get_timdb
+from timApp.timdb.exceptions import TimDbException
+from timApp.timdb.sqa import db
 from timApp.util.flask.requesthelper import verify_json_params, get_option
 from timApp.util.flask.responsehelper import json_response, ok_response
-from timApp.document.editing.routes import par_response, verify_par_edit_access
-from timApp.auth.sessioninfo import get_current_user_id
-from timApp.document.translation.synchronize_translations import synchronize_translations
-from timApp.timdb.exceptions import TimDbException
-from timApp.readmark.readings import copy_readings
-from timApp.timdb.sqa import db
 
 clipboard = Blueprint('clipboard',
                       __name__,
@@ -47,7 +47,7 @@ def cut_to_clipboard(doc_id, from_par, to_par):
 
     timdb = get_timdb()
     doc: Document = g.docentry.document_as_current_user
-    clip = Clipboard(timdb.files_root_path).get(get_current_user_id())
+    clip = Clipboard(timdb.files_root_path).get(get_current_user_object())
     try:
         for p in doc.get_section(from_par, to_par):
             verify_par_edit_access(p)
@@ -71,9 +71,9 @@ def copy_to_clipboard(doc_id, from_par, to_par):
 
     timdb = get_timdb()
     doc = g.docentry.document_as_current_user
-    clip = Clipboard(timdb.files_root_path).get(get_current_user_id())
+    clip = Clipboard(timdb.files_root_path).get(get_current_user_object())
     try:
-        clip.copy_pars(doc, from_par, to_par, area_name, ref_doc)
+        clip.copy_pars(doc, from_par, to_par, area_name, ref_doc, disable_ref=False)
     except TimDbException as e:
         return abort(400, str(e))
 
@@ -89,12 +89,14 @@ def paste_from_clipboard(doc_id):
 
     timdb = get_timdb()
     doc = g.docentry.document_as_current_user
-    clip = Clipboard(timdb.files_root_path).get(get_current_user_id())
+    clip = Clipboard(timdb.files_root_path).get(get_current_user_object())
     meta = clip.read_metadata()
     was_cut = meta.get('last_action') == 'cut'
 
     if meta.get('empty', True):
         abort(400, 'The clipboard is empty.')
+    if not as_ref and meta.get('disable_content'):
+        abort(403, 'The contents of the clipboard cannot be pasted as content.')
     if as_ref and meta.get('disable_ref'):
         abort(400, 'The contents of the clipboard cannot be pasted as a reference.')
 
@@ -140,7 +142,7 @@ def delete_from_source(doc_id):
 
     timdb = get_timdb()
     doc = g.docentry.document_as_current_user
-    clip = Clipboard(timdb.files_root_path).get(get_current_user_id())
+    clip = Clipboard(timdb.files_root_path).get(get_current_user_object())
     pars = clip.read(as_ref=True, force_parrefs=True)
     if not pars:
         return json_response({'doc_ver': doc.get_version(), 'pars': []})
@@ -164,7 +166,7 @@ def show_clipboard():
     verify_view_access(d)
     doc = d.document
 
-    clip = Clipboard(timdb.files_root_path).get(get_current_user_id())
+    clip = Clipboard(timdb.files_root_path).get(get_current_user_object())
     pars = [DocParagraph.from_dict(doc, par) for par in clip.read() or []]
     return par_response(pars, doc)
 
@@ -173,6 +175,6 @@ def show_clipboard():
 def get_clipboard_status():
     verify_logged_in()
     timdb = get_timdb()
-    clip = Clipboard(timdb.files_root_path).get(get_current_user_id())
+    clip = Clipboard(timdb.files_root_path).get(get_current_user_object())
     status = clip.read_metadata()
     return json_response(status)

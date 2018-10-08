@@ -5,7 +5,7 @@ import ngs, {ngStorage} from "ngstorage";
 import {timApp} from "tim/app";
 import {AreaHandler} from "tim/document/areas";
 import {Document, setActiveDocument} from "tim/document/document";
-import {ClipboardHandler} from "tim/document/editing/clipboard";
+import {ClipboardHandler, IClipboardMeta} from "tim/document/editing/clipboard";
 //noinspection TypeScriptPreferShortImport
 import * as interceptor from "tim/document/interceptor";
 import {NotesHandler} from "tim/document/notes";
@@ -71,8 +71,7 @@ export class ViewCtrl implements IController {
     private notification: string = "";
     addParagraphFunctions: MenuFunctionCollection = [];
     pasteFunctions: MenuFunctionCollection = [];
-    allowPasteRef: boolean = false;
-    allowPasteContent: boolean = false;
+    clipMeta: IClipboardMeta = {allowPasteContent: false, allowPasteRef: false, empty: true};
     popupMenuAttrs: IPopupMenuAttrs = createPopupMenuAttrs();
     selection: {pars?: JQuery; start?: Paragraph; end?: Paragraph} = {};
     public par: JQuery | undefined;
@@ -340,8 +339,8 @@ export class ViewCtrl implements IController {
             () => this.selection.end,
             () => this.editing,
             () => this.getEditMode(),
-            () => this.allowPasteContent,
-            () => this.allowPasteRef,
+            () => this.clipMeta.allowPasteContent,
+            () => this.clipMeta.allowPasteRef,
             () => this.getAllowMove()], (newValues, oldValues, scope) => {
             const par = $(".actionButtons").parent(".par");
             this.parmenuHandler.updatePopupMenu(par.length > 0 ? par : undefined);

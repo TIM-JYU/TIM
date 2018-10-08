@@ -192,3 +192,19 @@ Document:
                 self.paste(d, par_before=pos)
             else:
                 self.paste(d, par_after=pos)
+
+    def test_paste_permission(self):
+        self.login_test1()
+        d = self.create_doc(initial_par="""
+#- {plugin=csPlugin}
+stem: x
+        """)
+        self.test_user_2.grant_access(d.id, 'view')
+        self.login_test2()
+        par = d.document.get_paragraphs()[0]
+        db.session.add(d)
+        self.copy(d, par, par)
+        d2 = self.create_doc(initial_par='test2')
+        par2 = d2.document.get_paragraphs()[0]
+        self.paste(d2, as_ref=False, expect_status=403, par_after=par2)
+        self.paste(d2, as_ref=True, par_after=par2)

@@ -9,6 +9,18 @@ from timApp.document.documentparser import DocumentParser
 from timApp.document.documentwriter import DocumentWriter
 from timApp.document.randutils import random_id
 from timApp.timdb.exceptions import TimDbException
+from timApp.user.user import User
+
+
+def can_see_par_source(u: User, p: DocParagraph):
+    d = p.doc.get_docinfo()
+    if u.has_edit_access(d):
+        return True
+    if not u.has_view_access(d):
+        return False
+    if not p.is_plugin():
+        return True
+    return False
 
 
 class Clipboard:
@@ -19,8 +31,8 @@ class Clipboard:
     def get_path(self):
         return os.path.join(self.files_root, 'clipboard')
 
-    def get(self, user_id: int):
-        return Clipboard.UserClipboard(self, user_id)
+    def get(self, user: User):
+        return Clipboard.UserClipboard(self, user)
 
     def clear_all(self):
         path = self.get_path()
@@ -29,9 +41,9 @@ class Clipboard:
 
     class UserClipboard:
 
-        def __init__(self, parent: 'Clipboard', user_id: int):
-            self.user_id = user_id
-            self.path = os.path.join(parent.get_path(), str(self.user_id))
+        def __init__(self, parent: 'Clipboard', user: User):
+            self.user = user
+            self.path = os.path.join(parent.get_path(), str(self.user.id))
 
         def get_metafilename(self) -> str:
             return os.path.join(self.path, 'metadata')
@@ -125,8 +137,12 @@ class Clipboard:
 
             par_objs = doc.get_section(par_start, par_end)
             pars = [p.dict() for p in par_objs]
+            cannot_see_source = any(not can_see_par_source(self.user, p) for p in par_objs)
 
-            self.write_metadata(area_name=area_name, disable_ref=disable_ref, last_action='copy')
+            self.write_metadata(area_name=area_name,
+                                disable_ref=disable_ref,
+                                disable_content=cannot_see_source,
+                                last_action='copy')
             self.write(pars)
             self.write_refs(par_objs, area_name)
 
