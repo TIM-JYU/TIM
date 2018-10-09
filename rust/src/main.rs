@@ -3,23 +3,14 @@
 #![feature(futures_api, async_await, await_macro, pin,)]
 #![recursion_limit = "128"]
 
-//#[macro_use]
-extern crate askama;
-extern crate serde_json;
 #[macro_use]
 extern crate serde_derive;
 #[macro_use]
 extern crate log;
-extern crate actix;
-extern crate actix_web;
-extern crate simple_logger;
 #[macro_use]
 extern crate diesel;
 #[macro_use]
 extern crate diesel_derive_enum;
-extern crate failure;
-extern crate futures;
-extern crate yaml_rust;
 
 mod db;
 mod document;
