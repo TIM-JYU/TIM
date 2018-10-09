@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-import http.client
 import pprint
 import time
 import traceback
@@ -58,7 +57,7 @@ from timApp.user.user import User
 from timApp.user.userutils import NoSuchUserException
 from timApp.util.flask.ReverseProxied import ReverseProxied
 from timApp.util.flask.cache import cache
-from timApp.util.flask.responsehelper import json_response, ok_response
+from timApp.util.flask.responsehelper import json_response, ok_response, error_generic
 from timApp.util.flask.routes_static import static_bp
 from timApp.util.flask.search import search_routes
 from timApp.util.logger import log_info, log_error, log_debug, log_warning
@@ -102,16 +101,6 @@ app.register_blueprint(course_blueprint)
 app.wsgi_app = ReverseProxied(app.wsgi_app)
 
 assets = Environment(app)
-
-
-def error_generic(error, code):
-    if 'text/html' in request.headers.get("Accept", ""):
-        return render_template('error.html',
-                               message=error.description,
-                               code=code,
-                               status=http.client.responses[code]), code
-    else:
-        return json_response({'error': error.description}, code)
 
 
 @app.context_processor

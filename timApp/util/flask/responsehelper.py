@@ -1,9 +1,10 @@
 import csv
+import http.client
 import json
 from io import StringIO
 from urllib.parse import urlparse, urljoin
 
-from flask import request, redirect, url_for, Response, stream_with_context
+from flask import request, redirect, url_for, Response, stream_with_context, render_template
 
 from timApp.document.timjsonencoder import TimJsonEncoder
 from timApp.timdb.sqa import db
@@ -80,3 +81,13 @@ def iter_csv(data, dialect: str):
 
 def csv_response(data, dialect='excel'):
     return Response(stream_with_context(iter_csv(data, dialect)), mimetype='text/plain')
+
+
+def error_generic(error, code, template='error.html'):
+    if 'text/html' in request.headers.get("Accept", ""):
+        return render_template(template,
+                               message=error.description,
+                               code=code,
+                               status=http.client.responses[code]), code
+    else:
+        return json_response({'error': error.description}, code)

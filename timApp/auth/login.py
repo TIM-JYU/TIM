@@ -22,9 +22,9 @@ from yubico_client.yubico_exceptions import YubicoError
 from timApp.auth.accesshelper import verify_logged_in, verify_admin
 from timApp.timdb.dbaccess import get_timdb
 from timApp.korppi.openid import KorppiOpenIDResponse
-from timApp.util.logger import log_error
+from timApp.util.logger import log_error, log_warning
 from timApp.util.flask.requesthelper import verify_json_params, get_option, is_xhr
-from timApp.util.flask.responsehelper import safe_redirect, json_response, ok_response
+from timApp.util.flask.responsehelper import safe_redirect, json_response, ok_response, error_generic
 from timApp.notification.notify import send_email
 from timApp.auth.sessioninfo import get_current_user, get_other_users, get_session_users_ids, get_other_users_as_list, \
     get_current_user_object
@@ -173,6 +173,16 @@ def login_with_openid():
 username_parse_error = 'Could not parse username from OpenID response.'
 
 
+class KorppiEmailException(Exception):
+    code = 400
+    description = ""
+
+
+@login_page.errorhandler(KorppiEmailException)
+def already_exists(error: KorppiEmailException):
+    return error_generic(error, 400, template='korppi_email_error.html')
+
+
 @oid.after_login
 def openid_success_handler(resp: KorppiOpenIDResponse):
     m = re.fullmatch('https://korppi.jyu.fi/openid/account/([a-z]+)', resp.identity_url)
@@ -182,7 +192,8 @@ def openid_success_handler(resp: KorppiOpenIDResponse):
     if not username:
         return abort(400, username_parse_error)
     if not resp.email:
-        return abort(400, 'Missing email')
+        log_warning(f'User did not have email in Korppi: {username}')
+        raise KorppiEmailException()
     if not resp.fullname:
         return abort(400, 'Missing fullname')
     if not resp.firstname:
