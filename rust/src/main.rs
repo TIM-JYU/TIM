@@ -43,6 +43,8 @@ use failure::Fail;
 use failure::ResultExt;
 use futures::compat::Future01CompatExt;
 use futures::executor::block_on;
+use rayon;
+use crate::document::DocParagraph;
 
 fn view_document(info: Path<(u32,)>) -> String {
     format!("Hello {}!", &info.0)
@@ -115,7 +117,7 @@ async fn view_item_impl(req: &HttpRequest<AppState>) -> Result<HttpResponse, Tim
                 ))
         }
         ItemKind::DocEntry(d) => {
-            let doc = Document::load_newest(
+            let doc: Document<DocParagraph> = Document::load_newest(
                 d.id,
                 format!("../timApp/tim_files/docs/{}", d.id),
                 format!("../timApp/tim_files/pars/{}", d.id),
@@ -139,6 +141,7 @@ struct AppState {
 
 fn main() -> Result<(), failure::Error> {
     // simple_logger::init().unwrap();
+    rayon::ThreadPoolBuilder::new().num_threads(8).build_global().unwrap();
     let sys = actix::System::new("tim");
     let settings = Settings::new()?;
     let manager = ConnectionManager::<PgConnection>::new(settings.psql_address);

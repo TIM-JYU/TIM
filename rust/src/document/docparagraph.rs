@@ -9,6 +9,7 @@ use std::fs::File;
 use std::path::Path;
 use yaml_rust::Yaml;
 use yaml_rust::YamlLoader;
+use std::io::Read;
 
 #[derive(Deserialize, Debug)]
 pub struct AttributeSet {
@@ -31,10 +32,16 @@ pub struct DocParagraph {
 
 impl DocParagraph {
     pub fn from_path(path: impl AsRef<Path>) -> Result<DocParagraph, Error> {
-        info!("{:#?}", path.as_ref());
         let file = File::open(path)?;
         let p = serde_json::from_reader(file)?;
         Ok(p)
+    }
+
+    pub fn plain_string(path: impl AsRef<Path>) -> Result<String, Error> {
+        let mut file = File::open(path)?;
+        let mut contents = String::new();
+        file.read_to_string(&mut contents)?;
+        Ok(contents)
     }
 
     pub fn get_markdown(&self) -> &str {

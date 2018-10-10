@@ -17,6 +17,7 @@ simple_logger = "1.0.1"
 yaml-rust = "0.4.2"
 futures-preview = { git = "https://github.com/rust-lang-nursery/futures-rs", features = ["tokio-compat"] }
 config = "0.9.1"
+rayon = "1.0.2"
 
 [dependencies.actix-web]
 version = "0.7.8"

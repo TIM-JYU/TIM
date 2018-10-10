@@ -7,6 +7,7 @@ use std::fs::File;
 use std::io::BufRead;
 use std::io::BufReader;
 use std::path::Path;
+use rayon::prelude::*;
 
 pub enum Reference {
     Par {
@@ -30,9 +31,9 @@ pub enum DocPart {
 }
 
 #[derive(Debug)]
-pub struct Document {
+pub struct Document<T=DocParagraph> {
     id: i32,
-    pars: Vec<DocParagraph>,
+    pars: Vec<T>,
 }
 
 #[derive(Deserialize, Debug)]
@@ -53,11 +54,11 @@ pub struct ChangeLogEntry {
 }
 
 impl Document {
-    pub fn load_newest(
+    pub fn load_newest<T>(
         id: i32,
-        history_path: impl AsRef<Path>,
-        par_path: impl AsRef<Path>,
-    ) -> Result<Document, Error> {
+        history_path: T,
+        par_path: T,
+    ) -> Result<Document<DocParagraph>, Error> where T: AsRef<Path> + Sync {
         let changelog = File::open(history_path.as_ref().join("changelog"))
             .context(TimErrorKind::NonExistentOrEmptyDocument)?;
         let mut file = BufReader::new(&changelog);
@@ -69,13 +70,12 @@ impl Document {
             .join(format!("{}/{}", p.ver[0], p.ver[1]));
         let cfile = File::open(version_file_path)?;
         let cfiler = BufReader::new(&cfile);
-        let mut pars = vec![];
-        for l in cfiler.lines() {
+        let pars = cfiler.lines().collect::<Vec<_>>().into_iter().map( |l| {
             let unwrapped = l.unwrap();
             let v: Vec<_> = unwrapped.splitn(2, '/').collect();
-            let p = DocParagraph::from_path(par_path.as_ref().join(v[0]).join(v[1]))?;
-            pars.push(p);
-        }
+            let p = DocParagraph::from_path(par_path.as_ref().join(v[0]).join(v[1])).unwrap();
+            p
+        }).collect();
         Ok(Document { id, pars })
     }
 }
