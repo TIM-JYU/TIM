@@ -70,7 +70,7 @@ impl Document {
             .join(format!("{}/{}", p.ver[0], p.ver[1]));
         let cfile = File::open(version_file_path)?;
         let cfiler = BufReader::new(&cfile);
-        let pars = cfiler.lines().collect::<Vec<_>>().into_iter().map( |l| {
+        let pars = cfiler.lines().collect::<Vec<_>>().into_par_iter().map( |l| {
             let unwrapped = l.unwrap();
             let v: Vec<_> = unwrapped.splitn(2, '/').collect();
             let p = DocParagraph::from_path(par_path.as_ref().join(v[0]).join(v[1])).unwrap();
