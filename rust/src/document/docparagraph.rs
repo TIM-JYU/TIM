@@ -32,8 +32,10 @@ pub struct DocParagraph {
 
 impl DocParagraph {
     pub fn from_path(path: impl AsRef<Path>) -> Result<DocParagraph, Error> {
-        let file = File::open(path)?;
-        let p = serde_json::from_reader(file)?;
+        let mut file = File::open(path)?;
+        let mut contents = String::new();
+        file.read_to_string(&mut contents)?;
+        let p = serde_json::from_str(&contents)?;
         Ok(p)
     }
 
