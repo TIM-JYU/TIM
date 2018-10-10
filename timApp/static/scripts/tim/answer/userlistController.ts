@@ -1,7 +1,7 @@
 import {IAngularEvent, IController, IRootElementService, IScope} from "angular";
 import * as allanswersctrl from "tim/answer/allAnswersController";
 import {timApp} from "tim/app";
-import uiGrid from "ui-grid";
+import uiGrid, {IFilterOptions, IGridColumnOf, IGridRowOf} from "ui-grid";
 import {ViewCtrl} from "../document/viewctrl";
 import {DialogController, registerDialogComponent, showDialog} from "../ui/dialog";
 import {IUser} from "../user/IUser";
@@ -11,10 +11,22 @@ import {showAllAnswers} from "./allAnswersController";
 
 markAsUsed(allanswersctrl);
 
+interface IFixedFilterOptions extends IFilterOptions {
+    rawTerm?: boolean;
+}
+
 export interface IExportOptions {
     totalPointField: string;
     velpPointField: string;
     taskPointField: string;
+}
+
+function filterFn(term: string, cellValue: any, row: IGridRowOf<any>, column: IGridColumnOf<any>) {
+    try {
+        return new RegExp(term, "i").test(cellValue);
+    } catch {
+        return false;
+    }
 }
 
 export class UserListController implements IController {
@@ -55,9 +67,26 @@ export class UserListController implements IController {
         }
 
         this.columns = [
-            {field: "real_name", name: "Full name", cellTooltip: true, headerTooltip: true},
-            {field: "name", name: "Username", cellTooltip: true, headerTooltip: true, maxWidth: 100},
-            {field: "task_count", name: "Tasks", cellTooltip: true, headerTooltip: true, maxWidth: smallFieldWidth},
+            {
+                field: "real_name",
+                name: "Full name",
+                cellTooltip: true,
+                headerTooltip: true,
+            },
+            {
+                field: "name",
+                name: "Username",
+                cellTooltip: true,
+                headerTooltip: true,
+                maxWidth: 100,
+            },
+            {
+                field: "task_count",
+                name: "Tasks",
+                cellTooltip: true,
+                headerTooltip: true,
+                maxWidth: smallFieldWidth,
+            },
             {
                 field: "task_points",
                 name: "Task points",
@@ -82,8 +111,21 @@ export class UserListController implements IController {
                 maxWidth: smallFieldWidth,
                 visible: anyAnnotations,
             },
-            {field: "total_points", name: "Points", cellTooltip: true, headerTooltip: true, maxWidth: smallFieldWidth},
+            {
+                field: "total_points",
+                name: "Points",
+                cellTooltip: true,
+                headerTooltip: true,
+                maxWidth: smallFieldWidth,
+            },
         ];
+        for (const c of this.columns) {
+            const f: IFixedFilterOptions = {
+                condition: filterFn,
+                rawTerm: true, // required for RegExp to work
+            };
+            c.filter = f;
+        }
         this.instantUpdate = false;
 
         this.gridOptions = {
