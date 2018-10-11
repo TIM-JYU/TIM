@@ -85,6 +85,29 @@ services:
   command: sleep infinity
   restart: unless-stopped
   read_only: true
+ rust:
+  image: rustlang/rust:nightly
+  depends_on:
+   - postgresql
+   - csplugin
+   - pali
+   - showfile
+   - haskellplugins
+   - imagex
+   - dumbo
+  volumes:
+   - .:/service
+   - ${FILES_ROOT}:/tim_files:ro
+   - /opt/rust/cargo-cache/git:/usr/local/cargo/git
+   - /opt/rust/cargo-cache/registry:/usr/local/cargo/registry
+  working_dir: /service/rust
+  command: cargo run --release
+  environment:
+   TIM_BIND: 0.0.0.0:5000
+   CARGO_TARGET_DIR: dist_linux
+   TIM_PSQL_ADDRESS: postgresql://postgres@postgresql:5432/${COMPOSE_PROJECT_NAME}
+   COMPOSE_PROJECT_NAME: ${COMPOSE_PROJECT_NAME}
+  restart: unless-stopped
  postgresql:
   profiles:
    - prod

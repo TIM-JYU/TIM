@@ -6,7 +6,9 @@ from typing import Tuple, Optional, List, Union, Any, ValuesView, Generator
 
 import attr
 import filelock
+import requests
 import sass
+from flask import abort
 from flask import current_app
 from flask import flash
 from flask import redirect
@@ -18,7 +20,7 @@ from sqlalchemy.orm import joinedload, defaultload
 
 from timApp.answer.answers import add_missing_users_from_group, get_points_by_rule
 from timApp.auth.accesshelper import verify_view_access, verify_teacher_access, verify_seeanswers_access, \
-    get_doc_or_abort, verify_manage_access, AccessDenied, ItemLockedException
+    get_doc_or_abort, verify_manage_access, AccessDenied, ItemLockedException, verify_edit_access
 from timApp.auth.auth_models import BlockAccess
 from timApp.auth.get_user_rights_for_item import get_user_rights_for_item
 from timApp.auth.sessioninfo import get_current_user_object, logged_in, save_last_page
@@ -1204,3 +1206,15 @@ def get_viewrange_with_header_id(doc_id: int, header_id: str):
         raise NotExist(f"Header '{header_id}' not found in the document '{doc_info.short_name}'!")
     view_range = decide_view_range(doc_info, current_set_size, index, forwards=True)
     return json_response(view_range)
+
+
+@view_page.route('/rust/<path:doc_path>')
+def view_rust(doc_path: str):
+    item = DocEntry.find_by_path(doc_path)
+    if not item:
+        item = Folder.find_by_path(doc_path)
+    if not item:
+        abort(404)
+    verify_edit_access(item)
+    resp = requests.get(f'http://rust:5000/view/{item.path}', stream=True)
+    return resp.raw.read(), resp.status_code, resp.headers.items()
