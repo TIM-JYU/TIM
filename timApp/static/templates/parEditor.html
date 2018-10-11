@@ -1,18 +1,5 @@
-  <div ng-show="$ctrl.proeditor">
-    <ul class="tabsarea">
-        <li id="navigate" class="tab active"><a ng-click="$ctrl.tabClicked($event, 'navigateButtons')">Navigation</a></li>
-        <li id="style" class="tab"><a ng-click="$ctrl.tabClicked($event, 'styleButtons')">Style</a></li>
-        <li id="insert" class="tab"><a ng-click="$ctrl.tabClicked($event, 'insertButtons')">Insert</a></li>
-        <li id="special" class="tab"><a ng-click="$ctrl.tabClicked($event, 'specialButtons')">Characters</a></li>
-        <li id="tex" class="tab"><a ng-click="$ctrl.tabClicked($event, 'texButtons')">TeX</a></li>
-        <li id="plugin" class="tab" ng-show="$ctrl.getOptions().showPlugins"><a ng-click="$ctrl.tabClicked($event, 'pluginButtons')">Plugins</a>
-        </li>
-        <li id="settings" class="tab" ng-show="$ctrl.getOptions().showSettings"><a ng-click="$ctrl.tabClicked($event, 'settingsButtons')">Settings</a></li>
-        <li id="upload" class="tab" ng-show="$ctrl.getOptions().showImageUpload"><a ng-click="$ctrl.tabClicked($event, 'uploadButtons')">Upload</a>
-        </li>
-        <li id="help" class="tab"><a ng-click="$ctrl.tabClicked($event, 'helpButtons')">Help</a></li>
-    </ul>
-    <div id="navigateButtons" class="extraButtonArea">
+  <uib-tabset ng-show="$ctrl.proeditor" active="$ctrl.activeTab">
+    <uib-tab heading="Navigation" index="'navigation'">
         <button class="editorButton" title="Undo" ng-click="$ctrl.editor.undoClicked()">&#8630;</button>
         <button class="editorButton" title="Redo" ng-click="$ctrl.editor.redoClicked()">&#8631;</button>
         <button class="editorButton" title="Move left" ng-click="$ctrl.editor.leftClicked()">&#8592;</button>
@@ -28,8 +15,8 @@
         </button>
         <button class="editorButton" title="Toggle insert mode on or off" ng-click="$ctrl.editor.insertClicked()">Ins
         </button>
-    </div>
-    <div id="styleButtons" class="extraButtonArea hidden">
+    </uib-tab>
+    <uib-tab heading="Style" index="'style'">
         <button class="editorButton" title="Indent selection/line" ng-click="$ctrl.editor.indentClicked()">&#8649;
         </button>
         <button class="editorButton" title="Outdent selection/line" ng-click="$ctrl.editor.outdentClicked()">&#8647;
@@ -50,8 +37,8 @@
         <button class="editorButton" title="Heading 2 (Ctrl-2)" ng-click="$ctrl.editor.headerClicked('##')">H2</button>
         <button class="editorButton" title="Heading 3 (Ctrl-3)" ng-click="$ctrl.editor.headerClicked('###')">H3</button>
         <button class="editorButton" title="Heading 4 (Ctrl-4)" ng-click="$ctrl.editor.headerClicked('####')">H4</button>
-    </div>
-    <div id="insertButtons" class="extraButtonArea hidden">
+    </uib-tab>
+    <uib-tab heading="Insert" index="'insert'">
         <button class="editorButton" title="Add link"
                 ng-click="$ctrl.editor.linkClicked('Linkin teksti', 'Linkin osoite')">Link
         </button>
@@ -59,14 +46,14 @@
                 ng-click="$ctrl.editor.linkClicked('Kuvan teksti', 'Kuvan osoite', true)">Image
         </button>
         <button class="editorButton" title="List item" ng-click="$ctrl.editor.listClicked()">List</button>
-        <button class="editorButton" title="Table" ng-click="$ctrl.tableClicked($event)">Table</button>
-        <button class="editorButton" title="Slide" ng-click="$ctrl.slideClicked($event)">Slide</button>
+        <tim-editor-menu data="$ctrl.tableMenu"></tim-editor-menu>
+        <tim-editor-menu data="$ctrl.slideMenu"></tim-editor-menu>
         <button class="editorButton" title="Break text to start a new paragraph (Shift-Enter)" ng-click="$ctrl.editor.paragraphClicked()">Paragraph break</button>
         <button class="editorButton" title="Forces line to end at cursor position (Ctrl-Enter)" ng-click="$ctrl.editor.endLineClicked()">End line</button>
         <button class="editorButton" title="Creates a comment block or sets the line to a comment (Ctrl-Y)" ng-click="$ctrl.editor.commentClicked()">Comment</button>
         <button class="editorButton" title="Creates a page break for web printing" ng-click="$ctrl.editor.pageBreakClicked()">Page break</button>
-    </div>
-    <div id="specialButtons" class="extraButtonArea hidden">
+    </uib-tab>
+    <uib-tab heading="Characters" index="'characters'">
         <button class="editorButton" ng-click="$ctrl.editor.charClicked($event)">@</button>
         <button class="editorButton" ng-click="$ctrl.editor.charClicked($event)">#</button>
         <button class="editorButton" ng-click="$ctrl.editor.charClicked($event)">`</button>
@@ -82,15 +69,15 @@
         <button class="editorButton" ng-click="$ctrl.editor.charClicked($event)">\</button>
         <button class="editorButton" ng-click="$ctrl.editor.charClicked($event, '&#173;')">Soft hyphen</button>
         <button class="editorButton" ng-click="$ctrl.editor.charClicked($event, '⁞')">Cursor</button>
-    </div>
-    <div id="texButtons" class="extraButtonArea hidden">
+    </uib-tab>
+    <uib-tab heading="TeX" index="'tex'">
         <button class="editorButton" ng-click="$ctrl.editor.surroundClicked('$', '$')">TeX equation</button>
         <button class="editorButton" ng-click="$ctrl.editor.surroundClicked('$$', '$$')">TeX block</button>
         <button class="editorButton" ng-click="$ctrl.editor.indexClicked()">X&#x2093;</button>
         <button class="editorButton" ng-click="$ctrl.editor.powerClicked()">X&#x207f;</button>
         <button class="editorButton" ng-click="$ctrl.editor.squareClicked()">&radic;</button>
-    </div>
-    <div id="settingsButtons" class="extraButtonArea hidden" ng-if="$ctrl.getOptions().showSettings">
+    </uib-tab>
+    <uib-tab heading="Settings" index="'settings'" ng-if="$ctrl.getOptions().showSettings">
         <button class="editorButton" ng-click="$ctrl.editor.insertTemplate('auto_number_headings: 1\n')" title="Auto number headings level">Heading numbering</button>
         <button class="editorButton" ng-click="$ctrl.editor.insertTemplate('css: |!!\n.style {\n\n}\n!!\n')" title="Styles for this document">CSS</button>
         <button class="editorButton" ng-click="$ctrl.editor.insertTemplate('macros:\n  key: value\n')" title="Macro values fo document">Macros</button>
@@ -100,9 +87,17 @@
         <button class="editorButton" ng-click="$ctrl.editor.insertTemplate('global_plugin_attrs:\n csPlugin:\n   stem: value\n all:\n   stem: value\n')" title="Global values for the plugins">Global plugin</button>
         <a href="https://tim.jyu.fi/view/tim/ohjeita/documentin-asetukset#settings_list" target="_blank"
            title="Help for settings"><i class="helpButton glyphicon glyphicon-question-sign"></i></a>
-    </div>
-    <div id="pluginButtons" class="extraButtonArea hidden" ng-show="$ctrl.getOptions().showPlugins"></div>
-    <div id="uploadButtons" class="extraButtonArea hidden" ng-show="$ctrl.getOptions().showImageUpload">
+    </uib-tab>
+    <uib-tab heading="Plugins" index="'plugins'" ng-show="$ctrl.getOptions().showPlugins">
+        <tim-editor-menu ng-repeat="m in $ctrl.pluginMenus" data="m"></tim-editor-menu>
+        <a class="helpButton"
+           title="Help for plugin attributes"
+           href="https://tim.jyu.fi/view/tim/ohjeita/csPlugin"
+           target="_blank">
+            <i class="helpButton glyphicon glyphicon-question-sign"></i>
+        </a>
+    </uib-tab>
+    <uib-tab heading="Upload" index="'upload'" ng-show="$ctrl.getOptions().showImageUpload">
         <span>
             Upload image/file: <input type="file" ngf-select="$ctrl.onFileSelect($file)">
             <span ng-show="$ctrl.file.progress >= 0 && !$ctrl.file.error"
@@ -110,21 +105,22 @@
             <a ng-href="{{$ctrl.uploadedFile}}" >{{$ctrl.uploadedFile}}</a>
         </span>
         <div class="error" ng-show="$ctrl.file.error" ng-bind="$ctrl.file.error"></div>
-    </div>
-    <div id="helpButtons" class="extraButtonArea hidden form-inline">
-        <a class="helpButton margin-4" href="https://tim.jyu.fi/view/tim/TIM-ohjeet" target="_blank" title="General TIM Help">TIM
+    </uib-tab>
+    <uib-tab heading="Help" index="'help'">
+        <a class="helpButton margin-4" href="https://tim.jyu.fi/view/tim/TIM-ohjeet" target="_blank"
+                title="General TIM Help">TIM
             Help</a>
-        <span class="margin-4">To cite this paragraph:</span>
-        <input readonly
-               class="form-control"
-               type="text"
-               ng-model="$ctrl.citeText"
-               title="Copy this line to cite this paragraph"
-               ng-focus="$ctrl.selectAllText($event)"/>
-        <a href="https://tim.jyu.fi/view/tim/TIM-ohjeet#viitteen-katsominen" target="_blank"
-           title="Help for references"><i class="helpButton glyphicon glyphicon-question-sign"></i></a>
-    </div>
-  </div>
+            <span class="margin-4">To cite this paragraph:</span>
+            <input readonly
+                   class="form-control"
+                   type="text"
+                   ng-model="$ctrl.citeText"
+                   title="Copy this line to cite this paragraph"
+                   ng-focus="$ctrl.selectAllText($event)"/>
+            <a href="https://tim.jyu.fi/view/tim/TIM-ohjeet#viitteen-katsominen" target="_blank"
+               title="Help for references"><i class="helpButton glyphicon glyphicon-question-sign"></i></a>
+    </uib-tab>
+  </uib-tabset>
     <div class="editorContainer">
     </div>
     <div class="editButtonArea">

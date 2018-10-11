@@ -750,6 +750,21 @@ pareditor {
     .editortags, .choices, .editoropts {
         display: inline-block;
     }
+
+    .helpButton {
+        font-size: large;
+    }
+
+    .tab-content > .active {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+
+        .form-control {
+            width: auto;
+            flex: 1 0 auto;
+        }
+    }
 }
 
 .editButtonArea {
@@ -758,62 +773,6 @@ pareditor {
 
 .editorButton {
     margin: 2px;
-}
-
-.extraButtonArea {
-    padding: 4px 8px;
-    margin: 0 0 3px 0;
-    background: white;
-    border-left: 1px solid $basic-border-color;
-    border-right: 1px solid $basic-border-color;
-    border-bottom-right-radius: 5px;
-    border-bottom-left-radius: 5px;
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-
-    .helpButton {
-        font-size: large;
-    }
-
-    .form-control {
-        width: auto;
-        flex: 1 0 auto;
-    }
-}
-
-.tabsarea, .extraButtonArea {
-    border-bottom: 1px solid $basic-border-color;
-}
-
-.tabsarea {
-    margin: 0;
-    padding: 0;
-
-    li {
-        height: 100%;
-        display: inline-block;
-        list-style: none;
-        border: 1px solid $basic-border-color;
-        border-bottom: none;
-        border-top-right-radius: 5px;
-        border-top-left-radius: 5px;
-        margin: 0;
-        background: rgb(246, 246, 246);
-
-        & > a {
-            display: block;
-            height: auto;
-            margin: 0;
-            color: rgb(96, 96, 96);
-            padding: 0.5em 1em;
-            text-decoration: none;
-
-            &:hover {
-                text-decoration: none;
-            }
-        }
-    }
 }
 
 li.tab.active, li.tab.pinned {

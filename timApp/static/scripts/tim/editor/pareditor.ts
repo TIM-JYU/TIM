@@ -2,21 +2,19 @@ import angular, {IPromise, IRootElementService, IScope} from "angular";
 import $ from "jquery";
 import rangyinputs from "rangyinputs";
 import {setEditorScope} from "tim/editor/editorScope";
-import sessionsettings from "tim/session";
-import {markAsUsed, setSetting} from "tim/util/utils";
+import {markAsUsed} from "tim/util/utils";
 import {IExtraData} from "../document/editing/edittypes";
+import {getElementByParId} from "../document/parhelpers";
 import {DialogController, registerDialogComponent, showDialog, showMessageDialog} from "../ui/dialog";
-import {$compile, $http, $localStorage, $log, $timeout, $upload, $window} from "../util/ngimport";
+import {$http, $localStorage, $timeout, $upload, $window} from "../util/ngimport";
 import {IAceEditor} from "./ace-types";
 import {AceParEditor} from "./AceParEditor";
 import {IPluginInfoResponse, ParCompiler} from "./parCompiler";
 import {TextAreaParEditor} from "./TextAreaParEditor";
-import {getElementByParId} from "../document/parhelpers";
+import {timApp} from "../app";
 
 markAsUsed(rangyinputs);
 
-const MENU_BUTTON_CLASS = "menuButtons";
-const MENU_BUTTON_CLASS_DOT = "." + MENU_BUTTON_CLASS;
 const TIM_TABLE_CELL = "timTableCell";
 
 export interface IPreviewResult {
@@ -57,10 +55,41 @@ export interface IEditorParams {
     unreadCb: () => Promise<void>;
 }
 
+interface IEditorMenuItem {
+    title: string;
+    func: () => void;
+    name: string;
+}
+
+interface IEditorMenu {
+    title: string;
+    items: IEditorMenuItem[]
+}
+
 export type IEditorResult = {type: "save", text: string} | {type: "delete"} | {type: "markunread"} | {type: "cancel"};
 
 export function getCitePar(docId: number, par: string) {
     return `#- {rd="${docId}" rl="no" rp="${par}"}`;
+}
+
+type PluginMenuItemObject = {data: string, expl?: string, text?: string, file?: string};
+type PluginMenuItem = PluginMenuItemObject | string;
+
+type PluginTabOldFormat = {
+    text: string[],
+    templates: PluginMenuItem[][],
+};
+
+type PluginTabNewFormat = {
+    templates: {[name: string]: PluginMenuItem | PluginMenuItem[]},
+};
+
+function isOldTabFormat(d: any): d is PluginTabOldFormat {
+    return Array.isArray(d.text) && Array.isArray(d.templates);
+}
+
+function isNewTabFormat(d: any): d is PluginTabNewFormat {
+    return d.text == null && !Array.isArray(d.templates) && d.templates != null;
 }
 
 export class PareditorController extends DialogController<{params: IEditorParams}, IEditorResult, "pareditor"> {
@@ -73,27 +102,20 @@ export class PareditorController extends DialogController<{params: IEditorParams
     private wrap!: {n: number}; // $onInit
     private outofdate: boolean;
     private parCount: number;
-    private pluginButtonList: {[tabName: string]: JQuery[]};
     private proeditor!: boolean; // $onInit
     private saving: boolean = false;
     private scrollPos?: number;
-    private tables: {
-        normal: string,
-        example: string,
-        noheaders: string,
-        multiline: string,
-        strokes: string,
-        pipe: string,
-        timTable1x1: string,
-        timTable2x2: string,
-    };
     private storage: Storage;
     private touchDevice: boolean;
-    private plugintab?: JQuery;
     private autocomplete!: boolean; // $onInit
     private citeText!: string; // $onInit
     private docSettings?: {macros: {dates: string[], knro: number, stampformat: string}};
     private uploadedFile?: string;
+    private activeTab?: string;
+    private tableMenu: IEditorMenu;
+    private slideMenu: IEditorMenu;
+    private pluginMenus: IEditorMenu[] = [];
+    private lastTab?: string;
 
     private getOptions() {
         return this.resolve.params.options;
@@ -122,8 +144,6 @@ export class PareditorController extends DialogController<{params: IEditorParams
         super(element, scope);
         this.storage = localStorage;
 
-        this.pluginButtonList = {};
-
         if ((navigator.userAgent.match(/Trident/i))) {
             this.isIE = true;
         }
@@ -132,7 +152,7 @@ export class PareditorController extends DialogController<{params: IEditorParams
 
         const backTicks = "```";
 
-        this.tables = {
+        const tables = {
             normal: `
 Otsikko1 Otsikko2 Otsikko3 Otsikko4
 -------- -------- -------- --------
@@ -224,6 +244,38 @@ table:
 ${backTicks}
 `.trim(),
         };
+        this.tableMenu = {
+            title: "Table",
+            items: Object.keys(tables).map((k) => {
+                return {
+                    name: k,
+                    title: "",
+                    func: () => {
+                        this.editor!.insertTemplate(tables[k as keyof typeof tables]);
+                    },
+                };
+            }),
+        };
+        this.slideMenu = {
+            title: "Slide",
+            items: [
+                {
+                    name: "Slide break",
+                    title: "Break text to start a new slide",
+                    func: () => this.editor!.ruleClicked(),
+                },
+                {
+                    name: "Slide fragment",
+                    title: "Content inside the fragment will be hidden and shown when next is clicked in slide view",
+                    func: () => this.editor!.surroundClicked("§§", "§§"),
+                },
+                {
+                    name: "Fragment block",
+                    title: "Content inside will show as a fragment and may contain inner slide fragments",
+                    func: () => this.editor!.surroundClicked("<§", "§>"),
+                },
+            ],
+        };
 
         $(document).on("webkitfullscreenchange mozfullscreenchange fullscreenchange MSFullscreenChange", (event) => {
             const editor = element[0];
@@ -239,14 +291,23 @@ ${backTicks}
         this.touchDevice = false;
     }
 
+    $doCheck() {
+        if (this.lastTab != this.activeTab) {
+            this.lastTab = this.activeTab;
+            this.wrapFn();
+        }
+    }
+
     $onInit() {
         super.$onInit();
         this.autocomplete = this.getLocalBool("autocomplete", false);
         const saveTag = this.getSaveTag();
         this.proeditor = this.getLocalBool("proeditor",
             saveTag === "par" || saveTag === TIM_TABLE_CELL);
+        this.activeTab = this.getLocalValue("editortab") || "navigation";
+        this.lastTab = this.activeTab;
         this.citeText = this.getCiteText();
-        const sn = this.storage.getItem("wrap" + this.getSaveTag());
+        const sn = this.getLocalValue("wrap");
         let n = parseInt(sn || "-90");
         if (isNaN(n)) {
             n = -90;
@@ -273,17 +334,12 @@ ${backTicks}
         this.docSettings = $window.docSettings;
     }
 
-    $postLink() {
-        this.plugintab = this.element.find("#pluginButtons");
-        this.getPluginsInOrder();
+    private getLocalValue(val: string) {
+        return this.storage.getItem(val + this.getSaveTag());
+    }
 
-        if (sessionsettings.editortab) {
-            const tab = sessionsettings.editortab.substring(0, sessionsettings.editortab.lastIndexOf("Buttons"));
-            const tabelement = this.element.find("#" + tab);
-            if (tabelement.length) {
-                this.setActiveTab(tabelement, sessionsettings.editortab);
-            }
-        }
+    $postLink() {
+        this.getPluginsInOrder();
     }
 
     $onDestroy() {
@@ -318,7 +374,7 @@ ${backTicks}
 Template format is either the old plugin syntax:
 
     {
-        'text' : ['my1', 'my2'],      // list of tabs firts
+        'text' : ['my1', 'my2'],      // list of tabs first
         'templates' : [               // and then array of arrays of items
             [
                 {'data': 'cat', 'expl': 'Add cat', 'text': 'Cat'},
@@ -347,70 +403,71 @@ or newer one that is more familiar to write in YAML:
 
  */
     getPluginsInOrder() {
-        for (const plugin in $window.reqs) {
-            if ($window.reqs.hasOwnProperty(plugin)) {
-                const data = $window.reqs[plugin];
-                if (data.templates) {
-                    const isobj = !(data.templates instanceof Array);
-                    let tabs = data.text || [plugin];
-                    if (isobj) { tabs = Object.keys(data.templates); }
-                    const len = tabs.length;
-                    for (let j = 0; j < len; j++) {
-                        const tab = tabs[j];
-                        let templs = null;
-                        if (isobj) {
-                            templs = data.templates[tab];
-                        } else {
-                            templs = data.templates[j];
-                        }
-                        if (!(templs instanceof Array)) { templs = [templs]; }
-                        if (!this.pluginButtonList[tab]) {
-                            this.pluginButtonList[tab] = [];
-                        }
-                        for (let k = 0; k < templs.length; k++) {
-                            let template = templs[k];
-                            if (!(template instanceof Object)) {
-                                template = {text: template, data: template};
-                            }
-                            const text = (template.text || template.file || template.data);
-                            const tempdata = (template.data || null);
-                            let clickfn;
-                            if (tempdata) {
-                                clickfn = `$ctrl.putTemplate(${JSON.stringify(tempdata)})`;
-                            } else {
-                                clickfn = `$ctrl.getTemplate(${JSON.stringify(plugin)}, ${JSON.stringify(template.file)}, ${JSON.stringify(j)})`;
-                            }
-                            this.pluginButtonList[tab].push(this.createMenuButton(text, template.expl, clickfn));
-                        }
+        const tabs: {[tabName: string]: IEditorMenuItem[] | undefined} = {};
+        for (const plugin of Object.keys($window.reqs)) {
+            const data = $window.reqs[plugin] as unknown;
+            let tabNames;
+            if (isNewTabFormat(data)) {
+                tabNames = Object.keys(data.templates);
+            } else if (isOldTabFormat(data)) {
+                tabNames = data.text || [plugin];
+            } else {
+                continue;
+            }
+            const len = tabNames.length;
+            for (let j = 0; j < len; j++) {
+                const tab = tabNames[j];
+                let templs: PluginMenuItem[] | PluginMenuItem;
+                if (isNewTabFormat(data)) {
+                    templs = data.templates[tab];
+                } else {
+                    templs = data.templates[j];
+                }
+                let templsArray: PluginMenuItem[];
+                if (Array.isArray(templs)) {
+                    templsArray = templs;
+                } else {
+                    templsArray = [templs];
+                }
+
+                for (const template of templsArray) {
+                    let templateObj: PluginMenuItemObject;
+                    if (typeof template === "string") {
+                        templateObj = {text: template, data: template};
+                    } else {
+                        templateObj = template;
+                    }
+                    const text = (templateObj.text || templateObj.file || templateObj.data);
+                    const file = templateObj.file;
+                    const tempdata = (templateObj.data || null);
+                    let clickfn;
+                    if (tempdata) {
+                        clickfn = () => {
+                            this.putTemplate(tempdata);
+                        };
+                    } else if (file) {
+                        clickfn = async () => {
+                            await this.getTemplate(plugin, file, j.toString());
+                        };
+                    } else {
+                        continue;
+                    }
+                    const existing = tabs[tab];
+                    const item = {name: text, title: templateObj.expl || "", func: clickfn};
+                    if (!existing) {
+                        tabs[tab] = [item];
+                    } else {
+                        existing.push(item);
                     }
                 }
             }
         }
-
-        if (!this.plugintab) {
-            throw new Error("Plugin tab was not initialized");
+        for (const t of Object.keys(tabs)) {
+            this.pluginMenus.push({
+                title: t,
+                items: tabs[t]!,
+            })
         }
-
-        for (const key in this.pluginButtonList) {
-            if (this.pluginButtonList.hasOwnProperty(key)) {
-                const clickfunction = `$ctrl.pluginClicked($event, ${JSON.stringify(key)})`;
-                const button = $("<button>", {
-                    "class": "editorButton",
-                    "text": key,
-                    "title": key,
-                    "ng-click": clickfunction,
-                });
-                this.plugintab.append($compile(button)(this.scope));
-            }
-        }
-
-        const help = $("<a>", {
-            class: "helpButton",
-            text: "[?]",
-            title: "Help for plugin attributes",
-            onclick: "window.open('https://tim.jyu.fi/view/tim/ohjeita/csPlugin', '_blank')",
-        });
-        this.plugintab.append($compile(help)(this.scope));
     }
 
     getInitialText() {
@@ -602,6 +659,7 @@ or newer one that is more familiar to write in YAML:
     }
 
     private saveOptions() {
+        this.setLocalValue("editortab", this.activeTab || "navigation");
         this.setLocalValue("autocomplete", this.autocomplete.toString());
         this.setLocalValue("oldMode", this.isAce(this.editor) ? "ace" : "text");
         this.setLocalValue("wrap", "" + this.wrap.n);
@@ -715,121 +773,29 @@ or newer one that is more familiar to write in YAML:
         }
     }
 
-    closeMenu(e: JQueryEventObject | null, force: boolean) {
-        const container = $(MENU_BUTTON_CLASS_DOT);
-        if (force || (e != null && !container.is(e.target) && container.has(e.target as Element).length === 0)) {
-            container.remove();
-            $(document).off("mouseup.closemenu");
-        }
-    }
-
-    createMenuButton(text: string, title: string, clickfunction: string) {
-        const $span = $("<span>", {class: "actionButtonRow"});
-        const button_width = 130;
-        $span.append($("<button>", {
-            "class": "timButton editMenuButton",
-            "text": text,
-            "title": title,
-            "ng-click": clickfunction + "; $ctrl.closeMenu($event, true); $ctrl.wrapFn()",
-            // "width": button_width,
-        }));
-        return $span;
-    }
-
-    createMenu($event: Event, buttons: JQuery[]) {
-        if (!$event.target) {
-            return;
-        }
-        this.closeMenu(null, true);
-        const $button = $($event.target);
-        const coords = {left: $button.position().left, top: $button.position().top};
-        let $actionDiv = $("<div>", {class: MENU_BUTTON_CLASS});
-
-        for (let i = 0; i < buttons.length; i++) {
-            $actionDiv.append(buttons[i]);
-        }
-
-        $actionDiv.append(this.createMenuButton("Close menu", "", ""));
-        $actionDiv.offset(coords);
-        $actionDiv.css("position", "absolute"); // IE needs this
-        $actionDiv = $compile($actionDiv)(this.scope);
-        $button.parent().prepend($actionDiv);
-        $(document).on("mouseup.closemenu", (e: JQueryEventObject) => this.closeMenu(e, false));
-    }
-
-    tableClicked($event: Event) {
-        const buttons = [];
-        for (const key in this.tables) {
-            if (this.tables.hasOwnProperty(key)) {
-                const text = key.charAt(0).toUpperCase() + key.substring(1);
-                const clickfn = `$ctrl.editor.insertTemplate($ctrl.tables[${JSON.stringify(key)}])`;
-                buttons.push(this.createMenuButton(text, "", clickfn));
-            }
-        }
-        this.createMenu($event, buttons);
-    }
-
-    slideClicked($event: Event) {
-        const buttons = [];
-        buttons.push(this.createMenuButton("Slide break", "Break text to start a new slide", "$ctrl.editor.ruleClicked()"));
-        buttons.push(this.createMenuButton("Slide fragment", "Content inside the fragment will be hidden and shown when next is clicked in slide view", "$ctrl.editor.surroundClicked('§§', '§§')"));
-        buttons.push(this.createMenuButton("Fragment block", "Content inside will show as a fragment and may contain inner slide fragments", "$ctrl.editor.surroundClicked('<§', '§>')"));
-        this.createMenu($event, buttons);
-    }
-
-    pluginClicked($event: Event, key: string) {
-        this.createMenu($event, this.pluginButtonList[key]);
-    }
-
     putTemplate(data: string) {
         this.focusEditor();
         this.editor!.insertTemplate(data);
     }
 
-    getTemplate(plugin: string, template: string, index: string) {
-        $.ajax({
-            type: "GET",
-            url: "/" + plugin + "/template/" + template + "/" + index,
-            dataType: "text",
-            processData: false,
-            success: (data) => {
-                data = data.replace(/\\/g, "\\\\");
-                this.editor!.insertTemplate(data);
-            },
-            error() {
-                $log.error("Error getting template");
-            },
-        });
+    async getTemplate(plugin: string, template: string, index: string) {
+        const response = await $http.get<string>(`/${plugin}/template/${template}/${index}`);
+        let data = response.data;
+        data = data.replace(/\\/g, "\\\\");
+        this.editor!.insertTemplate(data);
         this.focusEditor();
     }
 
-    tabClicked($event: Event, area: string) {
-        if (!$event.target) {
-            return;
-        }
-        const active = $($event.target as HTMLElement).parent();
-        setSetting("editortab", area);
-        this.setActiveTab(active, area);
+    tabClicked() {
         this.wrapFn();
     }
 
     /**
-     * Sets active tab
-     * @param active tab <li> element
-     * @param area area to make visible
+     * Sets the active tab.
+     * @param name The tab to activate.
      */
-    setActiveTab(active: JQuery, area: string) {
-        const naviArea = this.element.find("#" + area);
-        const buttons = this.element.find(".extraButtonArea");
-        const tabs = this.element.find(".tab");
-        for (let i = 0; i < buttons.length; i++) {
-            $(buttons[i]).attr("class", "extraButtonArea hidden");
-        }
-        for (let j = 0; j < tabs.length; j++) {
-            $(tabs[j]).removeClass("active");
-        }
-        $(active).attr("class", "tab active");
-        $(naviArea).attr("class", "extraButtonArea");
+    setActiveTab(name: string) {
+        this.activeTab = name;
     }
 
     /**
@@ -977,6 +943,27 @@ or newer one that is more familiar to write in YAML:
         return str;
     }
 }
+
+timApp.component("timEditorMenu", {
+    bindings: {
+        data: "<",
+    },
+    template: `
+<div class="btn-group" uib-dropdown>
+    <button type="button" class="editorButton" uib-dropdown-toggle>
+        {{ $ctrl.data.title }} <span class="caret"></span>
+    </button>
+    <ul class="dropdown-menu"
+        uib-dropdown-menu
+        role="menu"
+        aria-labelledby="single-button">
+        <li ng-repeat="item in $ctrl.data.items" role="menuitem">
+            <a title="{{ item.title }}" href="#" ng-click="item.func(); $event.preventDefault()">{{ item.name }}</a>
+        </li>
+    </ul>
+</div>
+    `,
+});
 
 registerDialogComponent("pareditor",
     PareditorController,
