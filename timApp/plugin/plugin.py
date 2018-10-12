@@ -312,7 +312,12 @@ class Plugin:
         return True, 'ok'
 
     def is_cached(self):
-        return self.values.get('cache', False)
+        cached = self.values.get('cache', None)
+        if cached:
+            return True
+        if cached is not None:
+            return False
+        return self.values.get('gvData', False)  # Graphviz is cached if not cacahe: false attribute
 
     def is_lazy(self) -> bool:
         do_lazy = self.options.do_lazy
@@ -341,7 +346,7 @@ class Plugin:
         if self.is_cached():
             return None
         # Some plugins don't have answers but they may still need to be loaded lazily.
-        if self.type.startswith('show') or self.type == 'graphviz':
+        if self.type.startswith('show'):  # or self.type == 'graphviz':
             return 'lazyonly' if self.is_lazy() else None
         return 'full'
 
