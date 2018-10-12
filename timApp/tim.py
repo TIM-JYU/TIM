@@ -46,6 +46,7 @@ from timApp.plugin.qst.qst import qst_plugin
 from timApp.plugin.routes import plugin_bp
 from timApp.plugin.timtable.timTable import timTable_plugin
 from timApp.printing.print import print_blueprint
+from timApp.plugin.tape.tape import tape_plugin
 from timApp.readmark.routes import readings
 from timApp.tim_app import app, default_secret
 from timApp.timdb.exceptions import ItemAlreadyExistsException
@@ -72,6 +73,7 @@ app.register_blueprint(settings_page)
 app.register_blueprint(manage_page)
 app.register_blueprint(qst_plugin)
 app.register_blueprint(timTable_plugin)
+app.register_blueprint(tape_plugin)
 app.register_blueprint(edit_page)
 app.register_blueprint(view_page)
 app.register_blueprint(login_page)
