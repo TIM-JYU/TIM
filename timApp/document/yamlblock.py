@@ -139,7 +139,7 @@ def correct_yaml(text: str) -> Tuple[str, YamlMergeInfo]:
             if multiline_first_indent is None:
                 multiline_first_indent = count_chars_from_beginning(line, ' ')
             else:
-                if multiline_first_indent > count_chars_from_beginning(line, ' '):
+                if line and multiline_first_indent > count_chars_from_beginning(line, ' '):
                     raise InvalidIndentError(line)
             line = indent + line
         else:

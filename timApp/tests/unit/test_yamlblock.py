@@ -225,3 +225,13 @@ a: |!!
 !!
                 """)
         self.assertEqual({'a': 't\n b\n'}, yb)
+
+    def test_empty_line_auto_indent(self):
+        yb = YamlBlock.from_markdown("""
+a: |!!
+ t
+
+ b
+!!
+                """)
+        self.assertEqual({'a': 't\n\nb\n'}, yb)
