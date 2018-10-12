@@ -346,7 +346,8 @@ class Plugin:
         if self.is_cached():
             return None
         # Some plugins don't have answers but they may still need to be loaded lazily.
-        if self.type.startswith('show'):  # or self.type == 'graphviz':
+        # We sometimes want answerbrowser for graphviz too, so we don't exclude it here.
+        if self.type.startswith('show'):
             return 'lazyonly' if self.is_lazy() else None
         return 'full'
 

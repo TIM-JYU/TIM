@@ -685,7 +685,7 @@ a
         ab = e.cssselect('answerbrowser')
         ablazy = e.cssselect('tim-plugin-loader')
         self.assertFalse(ab)
-        self.assertFalse(ablazy)
+        self.assertTrue(ablazy)
 
     def test_lazyonly_browser(self):
         self.login_test1()
@@ -696,7 +696,7 @@ lazy: true
         """)
         e = self.get(d.url, as_tree=True)
         ablazy = e.cssselect('tim-plugin-loader')
-        self.assertEqual({'type': 'lazyonly', 'task-id': f'{d.id}.'}, ablazy[0].attrib)
+        self.assertEqual({'type': 'full', 'task-id': f'{d.id}.'}, ablazy[0].attrib)
 
     def test_cache_no_browser(self):
         self.login_test1()
