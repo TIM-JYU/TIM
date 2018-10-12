@@ -123,7 +123,7 @@ class PluginTest(TimRouteTest):
                                    'answer_id': answer_list[0]['id'],
                                    'par_id': par_id,
                                    'doc_id': doc.doc_id})
-        self.assertDictEqual({'html': "<div id='" + task_id_ext + "' data-plugin='/mmcq'><mmcq "
+        self.assertEqual({'html': "<div id='" + task_id_ext + "' answer-id='19' data-plugin='/mmcq'><mmcq "
                                                                   "data-content='{&quot;state&quot;:[true,false,true],&quot;question&quot;:{&quot;falseText&quot;:null,&quot;button&quot;:null,&quot;wrongText&quot;:null,&quot;onTry&quot;:null,&quot;header&quot;:null,&quot;stem&quot;:&quot;Answer "
                                                                   'yes or no to the following '
                                                                   'questions.&quot;,&quot;headerText&quot;:null,&quot;choices&quot;:[{&quot;text&quot;:&quot;&lt;span '

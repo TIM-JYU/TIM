@@ -103,7 +103,7 @@ class Answers(TimDbBase):
         template = ','.join(['%s'] * len(task_ids))
         c = self.db.cursor()
         c.execute(f"""
-        SELECT task_id, content, points, answered_on, valid, cnt
+        SELECT id, task_id, content, points, answered_on, valid, cnt
         FROM
         (
         SELECT MAX(Answer.id) as aid, COUNT(Answer.id) as cnt

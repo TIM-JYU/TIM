@@ -49,7 +49,11 @@
                             ng-click="$ctrl.setNewest()">{{ $ctrl.filteredAnswers.length }}</a></span>
                     <label class="checkbox-inline" ng-show="$ctrl.anyInvalid">
                         <input type="checkbox" ng-model="$ctrl.onlyValid">Show valid only</label>
-                    <span ng-show="$ctrl.showTeacher()"> | <a ng-click="$ctrl.getAllAnswers()">All answers</a></span>
+                    <span ng-show="$ctrl.showTeacher()"> | <a ng-click="$ctrl.getAllAnswers()">All answers</a>
+                        <span ng-show="$ctrl.selectedAnswer">
+                            | <a ng-click="$event.preventDefault()" ng-href="{{ $ctrl.getAnswerLink() }}">Link</a>
+                        </span>
+                    </span>
                 </div>
             </div>
             <div class="row" ng-show="$ctrl.selectedAnswer">

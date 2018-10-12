@@ -359,7 +359,10 @@ class Plugin:
             stem = str(markup.get("stem", "Open plugin"))
             html = html.replace("<!--", "<!-LAZY-").replace("-->", "-LAZY->")
             html = f'{LAZYSTART}{html}{LAZYEND}<span style="font-weight:bold">{header}</span><div><p>{stem}</p></div>'
-        return f"<div id='{self.task_id_ext}' data-plugin='/{self.type}'>{html}</div>" if self.options.wrap_in_div else html
+        answer_attr = ''
+        if self.answer:
+            answer_attr = f""" answer-id='{self.answer["id"]}'"""
+        return f"<div id='{self.task_id_ext}'{answer_attr} data-plugin='/{self.type}'>{html}</div>" if self.options.wrap_in_div else html
 
 
 def parse_plugin_values_macros(par: DocParagraph,

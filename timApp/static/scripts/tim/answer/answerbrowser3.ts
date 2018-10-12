@@ -7,14 +7,15 @@ import {dereferencePar, getParId} from "../document/parhelpers";
 import {ViewCtrl} from "../document/viewctrl";
 import {ParCompiler} from "../editor/parCompiler";
 import {DestroyScope} from "../ui/destroyScope";
+import {showMessageDialog} from "../ui/dialog";
 import {IUser} from "../user/IUser";
 import {Users} from "../user/userService";
-import {$compile, $filter, $http, $timeout, $window} from "../util/ngimport";
-import {Binding, markAsUsed, Require} from "../util/utils";
+import {KEY_DOWN, KEY_LEFT, KEY_RIGHT, KEY_UP} from "../util/keycodes";
+import {$compile, $filter, $http, $httpParamSerializer, $timeout, $window} from "../util/ngimport";
+import {Binding, getURLParameter, markAsUsed, Require, to} from "../util/utils";
 import {ReviewController} from "../velp/reviewController";
 import {showAllAnswers} from "./allAnswersController";
 import {IAnswer} from "./IAnswer";
-import {KEY_DOWN, KEY_LEFT, KEY_RIGHT, KEY_UP} from "../util/keycodes";
 
 markAsUsed(allanswersctrl);
 
@@ -29,14 +30,16 @@ const RLAZYEND = new RegExp(LAZYEND, "g");
 function makeNotLazy(html: string) {
     let s = html.replace(RLAZYSTART, "");
     const i = s.lastIndexOf(LAZYEND);
-    if (i >= 0) { s = s.substring(0, i); }
+    if (i >= 0) {
+        s = s.substring(0, i);
+    }
     s = s.replace(RLAZYEND, "");
     s = s.replace(/-LAZY->/g, "-->");
     s = s.replace(/<!-LAZY-/g, "<!--");
     return s;
 }
 
-function loadPlugin(html: string, $par: JQuery, scope: IScope) {
+async function loadPlugin(html: string, $par: JQuery, scope: IScope) {
     const newhtml = makeNotLazy(html);
     const plugin = $par.find(".parContent");
 
@@ -49,9 +52,8 @@ function loadPlugin(html: string, $par: JQuery, scope: IScope) {
     plugin.empty().append($compile(newhtml)(scope));
     plugin.css("opacity", "1.0");
     ParCompiler.processAllMathDelayed(plugin);
-    $timeout(() => {
-        plugin.css("height", "");
-    }, 500);
+    await $timeout(500);
+    plugin.css("height", "");
 }
 
 export class PluginLoaderCtrl extends DestroyScope implements IController {
@@ -68,6 +70,12 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
     }
 
     $onInit() {
+        if (this.isValidTaskId(this.taskId)) {
+            const [id, name] = this.taskId.split(".");
+            if (getURLParameter("task") === name) {
+                this.loadPlugin();
+            }
+        }
     }
 
     $postLink() {
@@ -106,7 +114,7 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
         if (origHtml.indexOf(LAZYSTART) < 0) {
             // plugin is not lazy; it is already loaded
         } else {
-            loadPlugin(origHtml, par, this.viewctrl.scope);
+            void loadPlugin(origHtml, par, this.viewctrl.scope);
         }
         this.element.remove();
     }
@@ -164,7 +172,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
         this.checkKeyPress = this.checkKeyPress.bind(this);
     }
 
-    $onInit() {
+    async $onInit() {
         this.scope.$watch(() => this.taskId, (newValue, oldValue) => {
             if (newValue === oldValue) {
                 return;
@@ -174,9 +182,6 @@ export class AnswerBrowserController extends DestroyScope implements IController
             }
             this.getAvailableAnswers();
         });
-
-        // Loads annotations to answer
-        setTimeout(() => this.changeAnswer(), 500); // TODO: Don't use timeout
 
         if (this.viewctrl.teacherMode) {
             this.par.attr("tabindex", 1);
@@ -227,24 +232,40 @@ export class AnswerBrowserController extends DestroyScope implements IController
         ], (newValues, oldValues, scope) => this.updateFilteredAndSetNewest());
 
         // call checkUsers automatically for now; suitable only for lazy mode!
-        this.checkUsers();
+        await this.checkUsers();
+        this.updateAnswerFromURL();
         this.par.on("mouseenter touchstart", () => {
-            this.checkUsers();
+            void this.checkUsers();
         });
 
-        this.scope.$on("userChanged", (event, args) => {
+        this.scope.$on("userChanged", async (event, args) => {
                 this.user = args.user;
                 this.firstLoad = false;
                 this.shouldUpdateHtml = true;
                 if (args.updateAll) {
-                    this.loadIfChanged();
+                    await this.loadIfChanged();
                 } else if (this.hasUserChanged()) {
                     this.dimPlugin();
                 } else {
-                    this.parContent.css("opacity", "1.0");
+                    this.unDimPlugin();
                 }
             },
         );
+    }
+
+    private unDimPlugin() {
+        this.parContent.css("opacity", "1.0");
+    }
+
+    urlParamMatchesThisTask() {
+        return getURLParameter("task") === this.getTaskName();
+    }
+
+    async $postLink() {
+        if (this.urlParamMatchesThisTask()) {
+            await $timeout(0);
+            this.element[0].scrollIntoView();
+        }
     }
 
     savePoints() {
@@ -280,7 +301,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
         this.par.focus();
     }
 
-    changeAnswer(forceUpdate = false) {
+    async changeAnswer(forceUpdate = false) {
         if (this.selectedAnswer == null || !this.user) {
             return;
         }
@@ -288,7 +309,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
             this.skipAnswerUpdateForId = undefined;
             return;
         }
-        this.parContent.css("opacity", "1.0");
+        this.unDimPlugin();
         this.skipAnswerUpdateForId = undefined;
         this.updatePoints();
         const $par = this.par;
@@ -297,7 +318,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
             return;
         }
         this.loading++;
-        $http.get<{html: string, reviewHtml: string}>("/getState", {
+        const [err, response] = await to($http.get<{html: string, reviewHtml: string}>("/getState", {
             params: {
                 ref_from_doc_id: this.viewctrl.docId,
                 ref_from_par_id: getParId($par),
@@ -307,21 +328,21 @@ export class AnswerBrowserController extends DestroyScope implements IController
                 answer_id: this.selectedAnswer.id,
                 review: this.review,
             },
-        }).then((response) => {
-            if (!this.selectedAnswer) {
-                return;
+        }));
+        if (!response) {
+            if (err) {
+                this.showError(err);
             }
-            loadPlugin(response.data.html, $par, this.scope);
-            if (this.review) {
-                this.par.find(".review").html(response.data.reviewHtml);
-            }
-            this.rctrl.loadAnnotationsToAnswer(this.selectedAnswer.id, $par[0], this.review);
-
-        }, (response) => {
-            this.showError(response);
-        }).finally(() => {
-            this.loading--;
-        });
+            return;
+        }
+        if (!this.selectedAnswer) {
+            return;
+        }
+        void loadPlugin(response.data.html, $par, this.scope);
+        if (this.review) {
+            this.par.find(".review").html(response.data.reviewHtml);
+        }
+        this.rctrl.loadAnnotationsToAnswer(this.selectedAnswer.id, $par[0], this.review);
     }
 
     nextAnswer() {
@@ -457,23 +478,50 @@ export class AnswerBrowserController extends DestroyScope implements IController
         }
     }
 
-    getAvailableUsers() {
+    async getAvailableUsers() {
         this.loading++;
-        $http.get<IUser[]>("/getTaskUsers/" + this.taskId, {params: {group: this.viewctrl.group}})
-            .then((response) => {
-                this.users = response.data;
-            }, (response) => {
-                this.showError(response);
-            }).finally(() => {
-            this.loading--;
-        });
+        const [err, response] = await to($http.get<IUser[]>("/getTaskUsers/" + this.taskId, {params: {group: this.viewctrl.group}}));
+        this.loading--;
+        if (!response) {
+            if (err) {
+                this.showError(err);
+            }
+            return;
+        }
+        this.users = response.data;
     }
 
     showError(response: {data: {error: string}}) {
         this.alerts.push({msg: "Error: " + response.data.error, type: "danger"});
     }
 
-    getAvailableAnswers(updateHtml = true) {
+    getAnswerLink() {
+        if (!this.user || !this.selectedAnswer) {
+            return undefined;
+        }
+        return `/teacher/${this.viewctrl.item.path}?${$httpParamSerializer({
+            answerNumber: this.answers.length - this.findSelectedAnswerIndexFromUnFiltered(),
+            task: this.getTaskName(),
+            user: this.user.name,
+        })}`;
+    }
+
+    updateAnswerFromURL() {
+        const answerNumber = getURLParameter("answerNumber");
+        const index = this.answers.length - parseInt(answerNumber || "1", 10);
+        if (answerNumber != null && this.urlParamMatchesThisTask()) {
+            if (index >= 0 && index < this.answers.length) {
+                this.onlyValid = false;
+                this.updateFiltered();
+                this.selectedAnswer = this.filteredAnswers.length > 0 ? this.filteredAnswers[index] : undefined;
+                this.changeAnswer(true);
+            } else {
+                void showMessageDialog(`Answer number ${answerNumber} is out of range for this task and user.`);
+            }
+        }
+    }
+
+    async getAvailableAnswers(updateHtml = true) {
         if (!this.viewctrl.item.rights || !this.viewctrl.item.rights.browse_own_answers) {
             return;
         }
@@ -481,45 +529,56 @@ export class AnswerBrowserController extends DestroyScope implements IController
             return;
         }
         this.loading++;
-        $http.get<IAnswer[]>("/answers/" + this.taskId + "/" + this.user.id)
-            .then((response) => {
-                const data = response.data;
-                if (data.length > 0 && (this.hasUserChanged() || data.length !== (this.answers || []).length)) {
-                    this.answers = data;
-                    this.updateFiltered();
-                    this.selectedAnswer = this.filteredAnswers.length > 0 ? this.filteredAnswers[0] : undefined;
-                    this.updatePoints();
-                    if (!this.selectedAnswer) {
-                        this.dimPlugin();
-                    } else {
-                        if (!updateHtml) {
-                            // The selectedAnswer assignment causes changeAnswer to be called (by Angular),
-                            // but we don't want to update it again because it was already updated.
-                            this.skipAnswerUpdateForId = this.selectedAnswer.id;
-                        } else if (this.fetchedUser && this.user && this.user.id !== this.fetchedUser.id) {
-                            // If user was changed, apparently changeAnswer isn't called by Angular (because the whole
-                            // collection is modified).
-                            this.changeAnswer();
-                        }
-                    }
-                } else {
-                    this.answers = data;
-                    if (this.answers.length === 0 && this.viewctrl.teacherMode) {
-                        this.dimPlugin();
-                    }
-                    this.updateFilteredAndSetNewest();
-                    const i = this.findSelectedAnswerIndex();
-                    if (i >= 0) {
-                        this.selectedAnswer = this.filteredAnswers[i];
-                        this.updatePoints();
-                    }
+        const [err, response] = await to($http.get<IAnswer[]>(`/answers/${this.taskId}/${this.user.id}`));
+        this.loading--;
+        if (!response) {
+            if (err) {
+                this.showError(err);
+            }
+            return;
+        }
+        const data = response.data;
+        if (data.length > 0 && (this.hasUserChanged() || data.length !== (this.answers || []).length)) {
+            this.answers = data;
+            this.updateFiltered();
+            this.selectedAnswer = this.filteredAnswers.length > 0 ? this.filteredAnswers[0] : undefined;
+            this.updatePoints();
+            if (!this.selectedAnswer) {
+                this.dimPlugin();
+            } else {
+                if (!updateHtml) {
+                    // The selectedAnswer assignment causes changeAnswer to be called (by Angular),
+                    // but we don't want to update it again because it was already updated.
+                    this.skipAnswerUpdateForId = this.selectedAnswer.id;
+                } else if (this.fetchedUser && this.user && this.user.id !== this.fetchedUser.id) {
+                    // If user was changed, apparently changeAnswer isn't called by Angular (because the whole
+                    // collection is modified).
+                    this.changeAnswer();
+                } else if (this.getPluginHtmlAnswerId() !== this.selectedAnswer.id) {
+                    this.changeAnswer();
                 }
-                this.fetchedUser = this.user;
-            }, (response) => {
-                this.showError(response);
-            }).finally(() => {
-            this.loading--;
-        });
+            }
+        } else {
+            this.answers = data;
+            if (this.answers.length === 0 && this.viewctrl.teacherMode) {
+                this.dimPlugin();
+            }
+            this.updateFilteredAndSetNewest();
+            const i = this.findSelectedAnswerIndex();
+            if (i >= 0) {
+                this.selectedAnswer = this.filteredAnswers[i];
+                this.updatePoints();
+            }
+        }
+        this.fetchedUser = this.user;
+    }
+
+    getPluginHtmlAnswerId() {
+        const idStr = this.parContent.children().first().attr("answer-id");
+        if (!idStr) {
+            return undefined;
+        }
+        return parseInt(idStr, 10);
     }
 
     hasUserChanged() {
@@ -537,10 +596,10 @@ export class AnswerBrowserController extends DestroyScope implements IController
         return this.taskInfo.userMin != null && this.taskInfo.userMax != null;
     }
 
-    loadIfChanged() {
+    async loadIfChanged() {
         if (this.hasUserChanged()) {
-            this.getAvailableAnswers(this.shouldUpdateHtml);
-            this.loadInfo();
+            await this.getAvailableAnswers(this.shouldUpdateHtml);
+            await this.loadInfo();
             this.firstLoad = false;
             this.shouldUpdateHtml = false;
         }
@@ -562,30 +621,31 @@ export class AnswerBrowserController extends DestroyScope implements IController
         return Math.max(this.taskInfo.answerLimit - this.answers.length, 0);
     }
 
-    loadInfo() {
+    async loadInfo() {
         if (this.taskInfo != null) {
             return;
         }
         this.loading++;
-        $http.get<ITaskInfo>("/taskinfo/" + this.taskId)
-            .then((response) => {
-                this.taskInfo = response.data;
-            }, (response) => {
-                this.showError(response);
-            }).finally(() => {
-            this.loading--;
-        });
+        const [err, response] = await to($http.get<ITaskInfo>("/taskinfo/" + this.taskId));
+        this.loading--;
+        if (!response) {
+            if (err) {
+                this.showError(err);
+            }
+            return;
+        }
+        this.taskInfo = response.data;
     }
 
-    checkUsers() {
+    async checkUsers() {
         if (this.loading > 0) {
             return;
         }
-        this.loadIfChanged();
+        await this.loadIfChanged();
         if (this.viewctrl.teacherMode && this.users == null) {
             this.users = [];
             if (this.viewctrl.users.length > 0) {
-                this.getAvailableUsers();
+                await this.getAvailableUsers();
             }
         }
     }
@@ -604,6 +664,18 @@ export class AnswerBrowserController extends DestroyScope implements IController
         }
         for (let i = 0; i < this.filteredAnswers.length; i++) {
             if (this.filteredAnswers[i].id === this.selectedAnswer.id) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    private findSelectedAnswerIndexFromUnFiltered() {
+        if (this.selectedAnswer == null) {
+            return -1;
+        }
+        for (let i = 0; i < this.answers.length; i++) {
+            if (this.answers[i].id === this.selectedAnswer.id) {
                 return i;
             }
         }
@@ -633,6 +705,11 @@ export class AnswerBrowserController extends DestroyScope implements IController
     }
 
     $onDestroy() {
+    }
+
+    private getTaskName() {
+        const [id, name] = this.taskId.split(".");
+        return name;
     }
 }
 

@@ -3,10 +3,10 @@ import * as allanswersctrl from "tim/answer/allAnswersController";
 import {timApp} from "tim/app";
 import uiGrid, {IFilterOptions, IGridColumnOf, IGridRowOf} from "ui-grid";
 import {ViewCtrl} from "../document/viewctrl";
-import {DialogController, registerDialogComponent, showDialog} from "../ui/dialog";
+import {DialogController, registerDialogComponent, showDialog, showMessageDialog} from "../ui/dialog";
 import {IUser} from "../user/IUser";
 import {$timeout} from "../util/ngimport";
-import {Binding, markAsUsed, Require} from "../util/utils";
+import {Binding, getURLParameter, markAsUsed, Require} from "../util/utils";
 import {showAllAnswers} from "./allAnswersController";
 
 markAsUsed(allanswersctrl);
@@ -149,6 +149,18 @@ export class UserListController implements IController {
                 if (this.gridOptions && this.gridOptions.data) {
                     gridApi.grid.modifyRows(this.gridOptions.data as any[]);
                     gridApi.selection.selectRow(this.gridOptions.data[0]);
+                    const userName = getURLParameter("user");
+                    if (userName) {
+                        const foundUser = this.findUserByName(userName);
+                        if (foundUser) {
+                            this.gridApi.selection.selectRow(foundUser);
+                        } else {
+                            void showMessageDialog(`User ${userName} not found from answerers.`);
+                            gridApi.selection.selectRow(this.gridOptions.data[0]);
+                        }
+                    } else {
+                        gridApi.selection.selectRow(this.gridOptions.data[0]);
+                    }
                 }
                 gridApi.cellNav.on.navigate(this.scope, (newRowCol, oldRowCol) => {
                     gridApi.selection.selectRow(newRowCol.row.entity);
@@ -254,6 +266,10 @@ export class UserListController implements IController {
             elem.click();
             document.body.removeChild(elem);
         }
+    }
+
+    private findUserByName(userName: string) {
+        return this.viewctrl.users.find((u) => u.name === userName);
     }
 }
 
