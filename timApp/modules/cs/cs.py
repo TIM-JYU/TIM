@@ -534,12 +534,15 @@ def get_html(self, ttype, query):
                 query,
                 '' + ebycode + '') + '</div>'
         else:
-            lazy_visible = ('<div class="lazyVisible csRunDiv no-popup-menu" >' +
+            # btn = '<p class="csRunMenu"><button class="tim-button"></button></p>'
+            btn = '<p class="csRunMenu">&nbsp;</p>'
+            #  TODO: remove the first <p> from next line when AnswerBrowser does it's job.
+            lazy_visible = ('<p>&nbsp;</p><div class="lazyVisible csRunDiv no-popup-menu" >' +
                             get_surrounding_headers(query,
                                                     ('<div class="csRunCode csEditorAreaDiv '
                                                      'csrunEditorDiv csRunArea csInputArea '
                                                      'csLazyPre" ng-non-bindable><pre>') +
-                                                    ebycode + '</pre></div>') + '</div>')
+                                                    ebycode + '</pre></div>') + btn + '</div>')
         # lazyClass = ' class="lazyHidden"'
         lazy_start = LAZYSTART
         lazy_end = LAZYEND
@@ -933,6 +936,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         is_css = self.path.find('.css') >= 0
         is_js = self.path.find('.js') >= 0 or self.path.find('.ts') >= 0
         is_reqs = self.path.find('/reqs') >= 0
+        is_graphviz  = self.path.find('/graphviz') >= 0
         is_iframe_param = get_param_del(query, "iframe", "")
         is_iframe = (self.path.find('/iframe') >= 0) or is_iframe_param
         is_answer = self.path.find('/answer') >= 0
@@ -996,7 +1000,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
         if is_reqs:
             templs = {}
-            if not (is_tauno or is_rikki or is_parsons or is_simcir):
+            if not (is_tauno or is_rikki or is_parsons or is_simcir or is_graphviz ):
                 templs = get_all_templates('templates')
             result_json = {"js": ["/cs/js/build/csPlugin.js",
                                   ],
@@ -1408,9 +1412,11 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                     # print("Run2: ", language.imgsource, language.pngname)
                     out, err = language.copy_image(web, code, out, err, points_rule)
                 else:  # Most languages are run from here
+                    print(query.jso.get("markup").get("byCode"))
                     code, out, err, pwddir = language.run(web, slines, points_rule)
 
                 t_run_time = time.time() - t1startrun
+                print(out[590:650])
                 try:
                     times_string += codecs.open(language.fullpath + "/run/time.txt", 'r', "iso-8859-15").read() or ""
                 except:

@@ -50,7 +50,7 @@ def get_plugins():
             "uploader": {"host": current_app.config['UPLOADER_CONTAINER_URL']},
             #  "shortNote": {"host": "http://" + HASKELLPLUGIN_NAME + ":5003/"},
             # "graphviz": {"host": "http://" + HASKELLPLUGIN_NAME + ":5004/"},
-            "graphviz": {"host": "http://" + CSPLUGIN_NAME + ":5000/cs/"},
+            "graphviz": {"host": "http://" + CSPLUGIN_NAME + ":5000/cs/graphviz/"},
             "pali": {"host": "http://" + PALIPLUGIN_NAME + ":5000/"},
             "imagex": {"host": "http://" + IMAGEXPLUGIN_NAME + ":5000/"},
             "qst": {"host": "http://" + "localhost" + f":{current_app.config['QST_PLUGIN_PORT']}/qst/", REGEXATTRS: ["rows", "questionText"]},

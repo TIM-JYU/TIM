@@ -1646,6 +1646,7 @@ csApp.Controller = function($scope,$transclude) {
     
 	$scope.doRunCode = async function(runType, nosave, extraMarkUp) {
 		// $scope.viewCode = false;
+        if ( $scope.isRunning ) return; // do not run if previuos is still running
         window.clearInterval($scope.runTimer);
         $scope.closeDocument();
         //alert("moi");
@@ -1690,6 +1691,7 @@ csApp.Controller = function($scope,$transclude) {
             $scope.runError = true;
             $scope.isRunning = true;
         }
+        $scope.isRunning = true;
 		$scope.resImage = "";
 		$scope.imgURL = "";
 		$scope.wavURL = "";
@@ -1767,6 +1769,7 @@ csApp.Controller = function($scope,$transclude) {
             }
         }>({method: 'PUT', url: url, data:params, headers: {'Content-Type': 'application/json'}, timeout: 20000 }
 		).then(function(response) {
+            $scope.isRunning = false;
 		    let data = response.data;
 			if ( data.web.error && false ) {
 				$scope.error = data.web.error;
@@ -1782,7 +1785,6 @@ csApp.Controller = function($scope,$transclude) {
 			var imgURL = "";
 			var wavURL = "";
 			$scope.runSuccess = true;
-            $scope.isRunning = false;
 
 			$scope.runError = $scope.error; // !$scope.runSuccess;
 
@@ -1825,8 +1827,8 @@ csApp.Controller = function($scope,$transclude) {
 			$scope.processPluginMath();
 
 		}, function(response) {
-		    let data = response.data;
             $scope.isRunning = false;
+		    let data = response.data;
 			$scope.errors.push(status);
             $scope.error = "Ikuinen silmukka tai jokin muu vika?";
             // $scope.error = "TIMIssä ongelmia, odota vikaa tutkitaan...";

@@ -102,7 +102,12 @@ def post_answer(plugintype: str, task_id_ext: str):
     except TimDbException as e:
         # This happens when plugin tries to call answer route when previewing because the preview par is temporary
         # and not part of the document.
-        return abort(400, str(e))
+        result = {}
+        return json_response(result)  # TODO: do only when in preview
+        # return abort(400, str(e))
+    except Exception as e:  # when in preview and do not get block id
+        result = {}
+        return json_response(result)  # TODO: do only when in preview
     if 'input' not in request.get_json():
         return json_response({'error': 'The key "input" was not found from the request.'}, 400)
     answerdata = request.get_json()['input']
@@ -314,13 +319,18 @@ def get_answers(task_id, user_id):
         verify_seeanswers_access(d)
     if user is None:
         abort(400, 'Non-existent user')
-    user_answers = timdb.answers.get_answers(user_id, task_id)
-    if hide_names_in_teacher(doc_id):
-        for answer in user_answers:
-            for c in answer['collaborators']:
-                if should_hide_name(doc_id, c['user_id']):
-                    c['real_name'] = get_hidden_name(c['user_id'])
-    return json_response(user_answers)
+    result = {}
+    try:
+        user_answers = timdb.answers.get_answers(user_id, task_id)
+        if hide_names_in_teacher(doc_id):
+            for answer in user_answers:
+                for c in answer['collaborators']:
+                    if should_hide_name(doc_id, c['user_id']):
+                        c['real_name'] = get_hidden_name(c['user_id'])
+        result = user_answers
+    except Exception as e:
+        abort(400, str(e))
+    return json_response(result)
 
 
 @answers.route("/allDocumentAnswersPlain/<path:doc_path>")

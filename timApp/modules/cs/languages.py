@@ -11,8 +11,6 @@ cmdline_whitelist = "A-Za-z\-/\.åöäÅÖÄ 0-9_"
 filename_whitelist = "A-Za-z\-/\.åöäÅÖÄ 0-9_"
 
 
-
-
 def sanitize_filename(s):
     global cmdline_whitelist
     return re.sub("[^" + filename_whitelist + "]", "", s)
@@ -33,6 +31,10 @@ def df(value, default):
     if value is not None:
         return value
     return default
+
+
+def is_compile_error(out, err):
+    return out.find("Compile error") >= 0 or err.find("Compile error") >= 0
 
 
 class Language:
@@ -65,14 +67,14 @@ class Language:
         self.is_optional_image = get_json_param(query.jso, "markup", "optional_image", False)
         self.hide_compile_out = False
         self.run_points_given = False  # Put this on if give run or test points
-        self.readpoints_default = None # what is default string for readpoints
+        self.readpoints_default = None  # what is default string for readpoints
         self.compile_commandline = ""
         self.just_compile = False
         self.imgname = get_param(query, "imgname", None)
         self.imgsource = get_imgsource(query)
         self.imgext = '.png'
         if self.imgsource:
-            n,e = splitext(self.imgsource)
+            n, e = splitext(self.imgsource)
             if e:
                 self.imgext = e
 
@@ -101,7 +103,17 @@ class Language:
             mkdirs("/tmp/tmp")
 
         self.fullpath = "/tmp/" + self.basename  # check it is sure under userpath
-        self.filename = get_param(query, "filename", "prg")
+        fname = "prg"
+        # noinspection PyBroadException
+        try:  # lets do filename that depeds from the taskID.  Needed when many autorun plugins in same page
+            tid = query.jso.get("taskID", "prg")
+            i = tid.find(".")
+            if i >= 0:
+                tid = tid[i + 1:]
+            fname = re.sub(r"[^A-Za-z0-9_]", "", tid)
+        except:
+            pass
+        self.filename = get_param(query, "filename", fname)
         self.ifilename = get_param(query, "inputfilename", "/input.txt")
 
         self.fileext = ""
@@ -130,7 +142,7 @@ class Language:
         self.filedext = ext
         for ex in extensions:
             if self.filename.endswith(ex):
-                self.fileext = ex.replace(".","")
+                self.fileext = ex.replace(".", "")
                 self.filedext = ex
                 self.filename = self.filename[:-len(ex)]
                 break
@@ -172,20 +184,20 @@ class Language:
         if self.just_compile:
             args = []
         code, out, err, pwddir = run2(args,
-                    cwd=df(cwd, self.prgpath),
-                    shell=df(shell, False),
-                    kill_tree=df(kill_tree, True),
-                    timeout=df(timeout, self.timeout),
-                    env=df(env, self.env),
-                    stdin=df(stdin, self.stdin),
-                    uargs=uargs,
-                    code=df(code, "utf-8"),
-                    extra=df(extra, ""),
-                    ulimit=df(ulimit, self.ulimit),
-                    no_x11=df(no_x11, self.no_x11),
-                    savestate=df(savestate, self.savestate),
-                    dockercontainer=df(dockercontainer, self.dockercontainer),
-                    compile_commandline = self.compile_commandline)
+                                      cwd=df(cwd, self.prgpath),
+                                      shell=df(shell, False),
+                                      kill_tree=df(kill_tree, True),
+                                      timeout=df(timeout, self.timeout),
+                                      env=df(env, self.env),
+                                      stdin=df(stdin, self.stdin),
+                                      uargs=uargs,
+                                      code=df(code, "utf-8"),
+                                      extra=df(extra, ""),
+                                      ulimit=df(ulimit, self.ulimit),
+                                      no_x11=df(no_x11, self.no_x11),
+                                      savestate=df(savestate, self.savestate),
+                                      dockercontainer=df(dockercontainer, self.dockercontainer),
+                                      compile_commandline=self.compile_commandline)
         if self.just_compile and not err:
             return code, "", "Compiled " + self.filename, pwddir
         return code, out, err, pwddir
@@ -237,11 +249,12 @@ class CS(Language):
         return s
 
     def get_cmdline(self, sourcecode):
-        cmdline = "%s /r:System.Numerics.dll /out:%s %s /cs/jypeli/TIMconsole.cs" % (self.compiler, self.exename, self.sourcefilename)
+        cmdline = "%s /r:System.Numerics.dll /out:%s %s /cs/jypeli/TIMconsole.cs" % (
+        self.compiler, self.exename, self.sourcefilename)
         return cmdline
 
     def run(self, web, sourcelines, points_rule):
-        return self.runself(["mono", "-O=all",  self.pure_exename])
+        return self.runself(["mono", "-O=all", self.pure_exename])
 
 
 class Jypeli(CS):
@@ -297,7 +310,7 @@ class Jypeli(CS):
             if self.imgname:
                 web["image"] = self.imgdest
             else:
-                web["image"] = "/csgenerated/" + self.imgdest
+                web["image"] = self.imgdest
             give_points(points_rule, "run")
             self.run_points_given = True
         if self.delete_tmp:
@@ -346,7 +359,7 @@ class CSComtest(CS):
             eri = out.find("Test Failure")
         if eri < 0:
             eri = out.find("Test Error")
-        if out.find("Compile error") >= 0 or err.find("Compile error") >= 0:
+        if is_compile_error(out, err):
             return code, out, err, pwddir
         give_points(points_rule, "testrun")
         self.run_points_given = True
@@ -446,6 +459,8 @@ class Kotlin(Java):
 
 
 def check_comtest(self, ttype, code, out, err, web, points_rule):
+    if is_compile_error(out, err):
+        return out, err
     eri = -1
     out = remove_before("Execution Runtime:", out)
     if code == -9:
@@ -999,6 +1014,7 @@ class Lang(Language):
     def run(self, web, sourcelines, points_rule):
         code, out, err, pwddir = self.runself([])
         return code, out, err, pwddir
+
 
 dummy_language = Language(QueryClass(), "")
 
