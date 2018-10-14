@@ -144,7 +144,7 @@ class Answers(TimDbBase):
         counts = "count(a.answered_on)"
         groups = "group by a.task_id, u.id"
         print_header = print_opt == "all" or print_opt == "header"
-        print_answers = print_opt == "all" or print_opt == "answers"
+        print_answers = print_opt == "all" or print_opt == "answers" or print_opt == "answersnoline"
 
         minmax = "max"
         if age == "min":
@@ -181,6 +181,11 @@ ORDER BY {order_by}, a.answered_on
 
         result = []
 
+        lf = "\n"
+        if print_opt == "answersnoline":
+            lf = ""
+
+
         cnt = 0
         for row in c.fetchall():
             cnt += 1
@@ -208,7 +213,7 @@ ORDER BY {order_by}, a.answered_on
             if print_header:
                 res = header
             if print_answers:
-                res += "\n" + answ
+                res += lf + answ
             if print_opt == "korppi":
                 res = name + ";"
                 taskid = row[1]
