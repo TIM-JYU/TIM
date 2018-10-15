@@ -316,25 +316,33 @@ def get_cache_footer(query):
     return '<figcaption>' + cache_footer + '</figcaption>'
 
 
-def get_html(self, ttype, query):
-    htmldata =  get_param(query, "cacheHtml", None) # check if constant html
-    if htmldata:
-        return tim_sanitize(htmldata) + get_cache_footer(query)
+def convert_graphviz(query):
     gv_data = get_param(query, "gvData", None)
     if gv_data:  # convert graphViz plugin to csPlugin
         gv_type = get_param(query, "gvType", 'dot')
         query.jso['markup']['type'] = 'run'
-        query.jso['markup']['cmds'] = gv_type + ' -Tsvg prg'
+        query.jso['markup']['cmds'] = gv_type + ' -Tsvg {0}'
         query.jso['markup']['isHtml'] = True
         query.query['isHtml'] = [True]
         query.query['type'] = ['run']
         query.jso['markup']['fullprogram'] = gv_data
         query.jso['markup']['cacheClass'] = 'figure graphviz '
+        if query.jso.get('input', None):
+            query.jso['input']['type'] = 'run'
+            query.jso['input']['markup']['type'] = 'run'
         if get_param(query, "cache", True):
             query.jso['markup']['cache'] = True
         else:
             check_fullprogram(query, True)
 
+
+
+
+def get_html(self, ttype, query):
+    htmldata =  get_param(query, "cacheHtml", None) # check if constant html
+    if htmldata:
+        return tim_sanitize(htmldata) + get_cache_footer(query)
+    convert_graphviz(query)
     if get_param(query, "cache", False): # check if we should take the html from cache
         cache_root = "/tmp"
         cache_clear = get_param(query, "cacheClear", True)
@@ -870,21 +878,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             self.wout(str(e))
 
     def do_all_t(self, query):
-        gv_data = get_param(query, "gvData", None)
-        if gv_data:  # convert graphViz plugin to csPlugin
-            gv_type = get_param(query, "gvType", 'dot')
-            query.jso['markup']['type'] = 'run'
-            if query.jso.get('input', None):
-                query.jso['input']['type'] = 'run'
-                query.jso['input']['markup']['type'] = 'run'
-            query.query['type'] = ['run']
-            query.jso['markup']['cmds'] = gv_type + ' -Tsvg prg'
-            query.jso['markup']['isHtml'] = True
-            if get_param(query, "cache", True):
-                query.jso['markup']['cache'] = True
-            query.jso['markup']['fullprogram'] = gv_data
-            query.jso['markup']['cacheClass'] = 'figure graphviz '
-
+        convert_graphviz(query)
         t1start = time.time()
         t_run_time = 0
         times_string = ""
@@ -1412,11 +1406,11 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                     # print("Run2: ", language.imgsource, language.pngname)
                     out, err = language.copy_image(web, code, out, err, points_rule)
                 else:  # Most languages are run from here
-                    print(query.jso.get("markup").get("byCode"))
+                    # print(query.jso.get("markup").get("byCode"))
                     code, out, err, pwddir = language.run(web, slines, points_rule)
 
                 t_run_time = time.time() - t1startrun
-                print(out[590:650])
+                # print(out[590:650])
                 try:
                     times_string += codecs.open(language.fullpath + "/run/time.txt", 'r', "iso-8859-15").read() or ""
                 except:
