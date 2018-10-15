@@ -4,6 +4,7 @@ import {getItem, IItem} from "../item/IItem";
 import {DialogController, registerDialogComponent, showDialog, showMessageDialog} from "../ui/dialog";
 import {DurationChoice} from "../ui/durationPicker";
 import {$http} from "../util/ngimport";
+import {to} from "../util/utils";
 import {ILecture, ILectureFormParams, ILectureOptions} from "./lecturetypes";
 
 /**
@@ -47,6 +48,7 @@ export class CreateLectureCtrl extends DialogController<{params: ILectureFormPar
     private item?: IItem;
     private options: ILectureOptions;
     private form!: IFormController; // initialized in the template
+    private submittingLecture = false;
 
     constructor(protected element: IRootElementService, protected scope: IScope) {
         super(element, scope);
@@ -189,7 +191,7 @@ export class CreateLectureCtrl extends DialogController<{params: ILectureFormPar
      * Function for creating a new lecture and validation.
      */
     async submitLecture() {
-        if (this.startTime == null) {
+        if (this.startTime == null || this.submittingLecture) {
             return;
         }
         if (!this.item) {
@@ -216,8 +218,16 @@ export class CreateLectureCtrl extends DialogController<{params: ILectureFormPar
             end_time: this.endTime,
             options: this.options,
         };
-        const response = await
-            $http.post<ILecture>("/createLecture", lectureParams);
+        this.submittingLecture = true;
+        const [err, response] = await
+            to($http.post<ILecture>("/createLecture", lectureParams));
+        this.submittingLecture = false;
+        if (!response) {
+            if (err) {
+                await showMessageDialog(err.data.error);
+            }
+            return;
+        }
         this.close(response.data);
     }
 

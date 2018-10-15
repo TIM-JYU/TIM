@@ -137,12 +137,12 @@
         <button class="timButton"
                 ng-click="clctrl.submitLecture()"
                 ng-show="clctrl.creatingNew()"
-                ng-disabled="!clctrl.form.$valid">Create
+                ng-disabled="!clctrl.form.$valid || clctrl.submittingLecture">Create
         </button>
         <button class="timButton"
                 ng-click="clctrl.submitLecture()"
                 ng-show="!clctrl.creatingNew()"
-                ng-disabled="!clctrl.form.$valid">Update
+                ng-disabled="!clctrl.form.$valid || clctrl.submittingLecture">Update
         </button>
         <button class="timButton"
                 ng-click="clctrl.cancelCreation()">Cancel
