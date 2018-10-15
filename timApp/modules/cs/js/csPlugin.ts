@@ -499,10 +499,10 @@ var languageTypes = {} as ILanguageTypes;
 // What are known language types (be carefull not to include partial word):
 languageTypes.runTypes     = ["fortran","css","jypeli","scala","java","graphics","cc","c++","shell","vpython","py2", "py","fs","clisp",
                               "jjs","psql","sql","alloy","text","cs","run","md","js","glowscript","sage","simcir",
-                              "xml", "octave","lua", "swift","mathcheck", "html", "processing", "r", "wescheme", "ping", "kotlin" ];
+                              "xml", "octave","lua", "swift","mathcheck", "html", "processing", "rust", "r", "wescheme", "ping", "kotlin" ];
 languageTypes.aceModes     = ["fortran", "css","csharp","scala","java","java"    ,"c_cpp","c_cpp","sh","python","python", "python","fsharp","lisp",
                               "javascript","sql","sql","alloy","text","csharp","run","text","javascript","javascript","python","json",
-                              "xml","matlab","lua","swift","text", "html", "javascript", "r", "scheme", "text", "kotlin"];
+                              "xml","matlab","lua","swift","text", "html", "javascript", "text", "r", "scheme", "text", "kotlin"];
 // For editor modes see: http://ace.c9.io/build/kitchen-sink.html ja sieltä http://ace.c9.io/build/demo/kitchen-sink/demo.js
 
 // What are known test types (be carefull not to include partial word):

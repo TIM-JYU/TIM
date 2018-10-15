@@ -6,7 +6,7 @@ from subprocess import PIPE, Popen
 import subprocess
 import shutil
 
-CS3_TAG = 'bionic'
+CS3_TAG = 'rust'
 
 sys.path.insert(0, '/py')  # /py on mountattu docker kontissa /opt/tim/timApp/modules/py -hakemistoon
 

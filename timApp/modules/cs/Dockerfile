@@ -188,6 +188,24 @@ RUN \
   bash -c "${APT_INSTALL} oracle-java10-installer && ${APT_CLEANUP}"
 RUN bash -c "${APT_INSTALL} oracle-java10-set-default && ${APT_CLEANUP}"
 
+# Rust (nightly)
+ENV CARGO_HOME=/cargo
+ENV RUSTUP_HOME=/rustup
+RUN curl https://sh.rustup.rs -sSf | sh -s -- --default-toolchain nightly -y && rm -r /rustup/toolchains/nightly-x86_64-unknown-linux-gnu/share/doc
+
+RUN bash -c "${APT_INSTALL} ncdu && ${APT_CLEANUP}"
+
+RUN wget -q https://dl.google.com/go/go1.11.1.linux-amd64.tar.gz && tar -C /usr/local -xzf go1.11.1.linux-amd64.tar.gz && rm go1.11.1.linux-amd64.tar.gz
+ENV PATH=$PATH:/usr/local/go/bin
+
+RUN wget -q ftp://freepascal.stack.nl/pub/mirrors/fpc/dist/3.0.4/x86_64-linux/fpc-3.0.4.x86_64-linux.tar && \
+    tar -xf fpc-3.0.4.x86_64-linux.tar && \
+    cd fpc-3.0.4.x86_64-linux && \
+    printf "\nn\nn\nn\n" | ./install.sh && \
+    cd .. && \
+    rm -r fpc-3.0.4.x86_64-linux && \
+    rm fpc-3.0.4.x86_64-linux.tar
+
 # RUN bash -c "${APT_INSTALL} uuid-runtime && ${APT_CLEANUP}"
 # RUN uuidgen > /etc/machine-id
 # RUN dbus-uuidgen > /etc/machine-id
@@ -195,6 +213,7 @@ RUN bash -c "${APT_INSTALL} oracle-java10-set-default && ${APT_CLEANUP}"
 
 RUN useradd -m agent
 ENV HOME /home/agent
+RUN ln -s "/cargo/bin/"* "/usr/bin/"
 RUN mkdir -p /service
 RUN chown -R agent /service
 

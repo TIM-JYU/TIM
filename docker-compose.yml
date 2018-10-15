@@ -33,7 +33,7 @@ services:
   command: postgres -c 'max_connections=200'
   restart: unless-stopped
  csplugin:
-  image: timimages/cs3:bionic
+  image: timimages/cs3:rust
   build: ./timApp/modules/cs
   volumes:
    - ./timApp/modules/cs:/cs
@@ -70,7 +70,7 @@ services:
   command: ./startAll.sh
   restart: unless-stopped
  imagex:
-  image: timimages/cs3:bionic
+  image: timimages/cs3:rust
   volumes:
    - ./timApp/modules/imagex:/imagex:ro
    - ./timApp/modules/py:/py:ro

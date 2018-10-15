@@ -1006,6 +1006,21 @@ class Octave(Language):
         return code, out, err, pwddir
 
 
+class Rust(Language):
+    def __init__(self, query, sourcecode):
+        super().__init__(query, sourcecode)
+        self.compiler = "rustc"
+
+    def extension(self):
+        self.check_extension([".rs"], ".rs", ".exe")
+
+    def get_cmdline(self, sourcecode):
+        return f"{self.compiler} -C debuginfo=0 -o {self.exename} {self.opt} {self.sourcefilename}"
+
+    def run(self, web, sourcelines, points_rule):
+        return self.runself([self.pure_exename])
+
+
 # Copy this for new language class
 class Lang(Language):
     def __init__(self, query, sourcecode):
@@ -1065,3 +1080,4 @@ languages["wescheme"] = WeScheme
 languages["ping"] = Ping
 languages["kotlin"] = Kotlin
 languages["fortran"] = Fortran
+languages["rust"] = Rust

@@ -19,7 +19,7 @@ services:
   tmpfs:
    - /var/lib/postgresql/data
  imagex:
-  image: timimages/cs3sudo:bionic
+  image: timimages/cs3sudo:rust
   volumes:
    - ./timApp/modules/imagex:/imagex:ro
    - ./timApp/modules/py:/py:ro
@@ -36,7 +36,7 @@ services:
   ports:
    - "49997:22"
  csplugin:
-  image: timimages/cs3sudo:bionic
+  image: timimages/cs3sudo:rust
   build:
    context: ./timApp/modules/cs
    dockerfile: DockerfileS
@@ -44,7 +44,7 @@ services:
   ports:
    - "49998:22"
  showfile:
-  image: timimages/cs3sudo:bionic
+  image: timimages/cs3sudo:rust
   build:
    context: ./timApp/modules/cs
    dockerfile: DockerfileS
