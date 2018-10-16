@@ -110,7 +110,9 @@ class Language:
             i = tid.find(".")
             if i >= 0:
                 tid = tid[i + 1:]
-            fname = re.sub(r"[^A-Za-z0-9_]", "", tid)
+            asciified = re.sub(r"[^A-Za-z0-9_]", "", tid)
+            if asciified:
+                fname = asciified
         except:
             pass
         self.filename = get_param(query, "filename", fname)
