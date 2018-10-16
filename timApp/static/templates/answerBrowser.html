@@ -13,7 +13,7 @@
                         <select class="form-control"
                                 ng-model="$ctrl.user"
                                 ng-options="(user.real_name + ' (' + user.name + ')') for user in $ctrl.users track by user.id"
-                                ng-change="$ctrl.getAvailableAnswers()"></select>
+                                ng-change="$ctrl.getAnswersAndUpdate()"></select>
                         <span class="input-group-btn">
                      <button class="btn btn-primary" ng-click="$ctrl.changeStudent(+1)">&darr;</button>
                     </span>
@@ -126,6 +126,6 @@
             {{ $ctrl.taskInfo.starttime | timdate }} - {{ $ctrl.taskInfo.deadline | timdate }}
         </span>
     </span>
-    <span ng-show="$ctrl.viewctrl.teacherMode && $ctrl.hasUserChanged() && !$ctrl.firstLoad && !$ctrl.loading">(hover/click to update)</span>
+    <span ng-show="$ctrl.viewctrl.teacherMode && $ctrl.hasUserChanged() && !$ctrl.loading">(hover/click to update)</span>
     <!-- <img style="display: inline" src="/static/images/loading.gif" ng-show="$ctrl.loading"> -->
 </div>

@@ -1,5 +1,4 @@
 import {IController, IRootElementService, IScope} from "angular";
-import $ from "jquery";
 import * as allanswersctrl from "tim/answer/allAnswersController";
 import {timApp} from "tim/app";
 import {timLogTime} from "tim/util/timTiming";
@@ -137,6 +136,12 @@ interface ITaskInfo {
     answerLimit: number;
 }
 
+interface IAnswerSaveEvent {
+    taskId: string;
+    savedNew: number | false;
+    error?: string;
+}
+
 export class AnswerBrowserController extends DestroyScope implements IController {
     private static $inject = ["$scope", "$element"];
     private par: JQuery;
@@ -147,8 +152,6 @@ export class AnswerBrowserController extends DestroyScope implements IController
     private parContent: JQuery;
     private user: IUser | undefined;
     private fetchedUser: IUser | undefined;
-    private firstLoad: boolean = true;
-    private shouldUpdateHtml?: boolean;
     private saveTeacher: boolean = false;
     private users: IUser[] | undefined;
     private answers: IAnswer[] = [];
@@ -162,7 +165,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
     private alerts: Array<{}> = [];
     private taskInfo: ITaskInfo | undefined;
     private points: number | undefined;
-    private skipAnswerUpdateForId: number | undefined;
+    private loadedAnswer: {id: number | undefined, review: boolean} = {review: false, id: undefined};
 
     constructor(private scope: IScope, private element: IRootElementService) {
         super(scope, element);
@@ -180,7 +183,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
             if (this.viewctrl.teacherMode) {
                 this.getAvailableUsers();
             }
-            this.getAvailableAnswers();
+            this.getAnswersAndUpdate();
         });
 
         if (this.viewctrl.teacherMode) {
@@ -191,11 +194,16 @@ export class AnswerBrowserController extends DestroyScope implements IController
             this.par[0].addEventListener("keydown", this.checkKeyPress);
         }
 
-        this.scope.$on("answerSaved", (event, args) => {
+        this.scope.$on("answerSaved", (event, args: IAnswerSaveEvent) => {
             if (args.taskId === this.taskId) {
-                this.getAvailableAnswers(false);
-                // HACK: for some reason the math mode is lost because of the above call, so we restore it here
-                ParCompiler.processAllMathDelayed(this.par.find(".parContent"));
+                if (args.savedNew) {
+                    this.loadedAnswer.id = args.savedNew;
+                    this.review = false;
+                    this.loadedAnswer.review = false;
+                    this.getAnswersAndUpdate();
+                    // HACK: for some reason the math mode is lost because of the above call, so we restore it here
+                    ParCompiler.processAllMathDelayed(this.par.find(".parContent"));
+                }
                 if (args.error) {
                     this.alerts.push({msg: args.error, type: "warning"});
                 }
@@ -209,9 +217,10 @@ export class AnswerBrowserController extends DestroyScope implements IController
         } else {
             this.user = Users.getCurrent();
         }
+        this.loadedAnswer.id = this.getPluginHtmlAnswerId();
 
-        this.shouldUpdateHtml = this.viewctrl.users.length > 0 && this.user !== this.viewctrl.users[0];
-        if (this.shouldUpdateHtml) {
+        // TODO: This condition is inaccurate because we don't really know who the initially loaded user is.
+        if (this.viewctrl.users.length > 0 && this.user !== this.viewctrl.users[0]) {
             this.dimPlugin();
         }
         this.saveTeacher = false;
@@ -225,24 +234,30 @@ export class AnswerBrowserController extends DestroyScope implements IController
         this.shouldFocus = false;
         this.alerts = [];
 
-        this.scope.$watch(() => this.review, () => this.changeAnswer(true));
+        this.scope.$watch(() => this.review, () => this.changeAnswer());
         this.scope.$watchGroup([
             () => this.onlyValid,
         ], (newValues, oldValues, scope) => this.updateFilteredAndSetNewest());
 
-        // call checkUsers automatically for now; suitable only for lazy mode!
-        await this.checkUsers();
-        this.updateAnswerFromURL();
+        const answs = await this.getAnswers();
+        if (answs) {
+            this.answers = answs;
+            const updated = this.updateAnswerFromURL();
+            if (!updated) {
+                this.handleAnswerFetch(this.answers);
+            }
+        }
+        await this.loadInfo();
+        await this.checkUsers(); // load users, answers have already been loaded for the currently selected user
+
         this.par.on("mouseenter touchstart", () => {
             void this.checkUsers();
         });
 
         this.scope.$on("userChanged", async (event, args) => {
                 this.user = args.user;
-                this.firstLoad = false;
-                this.shouldUpdateHtml = true;
                 if (args.updateAll) {
-                    await this.loadIfChanged();
+                    await this.loadUserAnswersIfChanged();
                 } else if (this.hasUserChanged()) {
                     this.dimPlugin();
                 } else {
@@ -300,49 +315,45 @@ export class AnswerBrowserController extends DestroyScope implements IController
         this.par.focus();
     }
 
-    async changeAnswer(forceUpdate = false) {
+    async changeAnswer() {
         if (this.selectedAnswer == null || !this.user) {
             return;
         }
-        if (!forceUpdate && this.skipAnswerUpdateForId === this.selectedAnswer.id) {
-            this.skipAnswerUpdateForId = undefined;
-            return;
-        }
         this.unDimPlugin();
-        this.skipAnswerUpdateForId = undefined;
         this.updatePoints();
-        const $par = this.par;
-        const ids = dereferencePar($par);
+        const par = this.par;
+        const ids = dereferencePar(par);
         if (!ids) {
             return;
         }
-        this.loading++;
-        const [err, response] = await to($http.get<{html: string, reviewHtml: string}>("/getState", {
-            params: {
-                ref_from_doc_id: this.viewctrl.docId,
-                ref_from_par_id: getParId($par),
-                doc_id: ids[0],
-                par_id: ids[1],
-                user_id: this.user.id,
-                answer_id: this.selectedAnswer.id,
-                review: this.review,
-            },
-        }));
-        this.loading--;
-        if (!response) {
-            if (err) {
-                this.showError(err);
+        if (this.selectedAnswer.id !== this.loadedAnswer.id || this.loadedAnswer.review !== this.review) {
+            this.loading++;
+            const [err, response] = await to($http.get<{html: string, reviewHtml: string}>("/getState", {
+                params: {
+                    ref_from_doc_id: this.viewctrl.docId,
+                    ref_from_par_id: getParId(par),
+                    doc_id: ids[0],
+                    par_id: ids[1],
+                    user_id: this.user.id,
+                    answer_id: this.selectedAnswer.id,
+                    review: this.review,
+                },
+            }));
+            this.loading--;
+            if (!response) {
+                if (err) {
+                    this.showError(err);
+                }
+                return;
             }
-            return;
+            this.loadedAnswer.id = this.selectedAnswer.id;
+            this.loadedAnswer.review = this.review;
+            void loadPlugin(response.data.html, par, this.scope);
+            if (this.review) {
+                this.par.find(".review").html(response.data.reviewHtml);
+            }
         }
-        if (!this.selectedAnswer) {
-            return;
-        }
-        void loadPlugin(response.data.html, $par, this.scope);
-        if (this.review) {
-            this.par.find(".review").html(response.data.reviewHtml);
-        }
-        this.rctrl.loadAnnotationsToAnswer(this.selectedAnswer.id, $par[0], this.review);
+        this.rctrl.loadAnnotationsToAnswer(this.selectedAnswer.id, par[0], this.review);
     }
 
     nextAnswer() {
@@ -351,7 +362,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
             newIndex = this.filteredAnswers.length - 1;
         }
         this.selectedAnswer = this.filteredAnswers[newIndex];
-        this.changeAnswer(true);
+        this.changeAnswer();
     }
 
     previousAnswer() {
@@ -360,7 +371,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
             newIndex = 0;
         }
         this.selectedAnswer = this.filteredAnswers[newIndex];
-        this.changeAnswer(true);
+        this.changeAnswer();
     }
 
     findSelectedUserIndex() {
@@ -415,7 +426,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
             return;
         }
         this.user = this.users[newIndex];
-        this.getAvailableAnswers();
+        this.getAnswersAndUpdate();
 
         // Be careful when modifying the following code. All browsers (IE/Chrome/FF)
         // behave slightly differently when it comes to (de-)focusing something.
@@ -514,19 +525,48 @@ export class AnswerBrowserController extends DestroyScope implements IController
                 this.onlyValid = false;
                 this.updateFiltered();
                 this.selectedAnswer = this.filteredAnswers.length > 0 ? this.filteredAnswers[index] : undefined;
-                this.changeAnswer(true);
+                this.changeAnswer();
+                return true;
             } else {
                 void showMessageDialog(`Answer number ${answerNumber} is out of range for this task and user.`);
             }
         }
+        return false;
     }
 
-    async getAvailableAnswers(updateHtml = true) {
+    async getAnswersAndUpdate() {
         if (!this.viewctrl.item.rights || !this.viewctrl.item.rights.browse_own_answers) {
             return;
         }
-        if (!this.user) {
+        const data = await this.getAnswers();
+        if (!data) {
             return;
+        }
+        this.handleAnswerFetch(data);
+    }
+
+    private handleAnswerFetch(data: IAnswer[]) {
+        if (data.length > 0 && (this.hasUserChanged() || data.length !== this.answers.length)) {
+            this.answers = data;
+            this.updateFiltered();
+            this.selectedAnswer = this.filteredAnswers.length > 0 ? this.filteredAnswers[0] : undefined;
+            if (!this.selectedAnswer) {
+                this.dimPlugin();
+            } else {
+                this.changeAnswer();
+            }
+        } else {
+            this.answers = data;
+            if (this.answers.length === 0 && this.viewctrl.teacherMode) {
+                this.dimPlugin();
+            }
+            this.updateFilteredAndSetNewest();
+        }
+    }
+
+    private async getAnswers() {
+        if (!this.user) {
+            return undefined;
         }
         this.loading++;
         const [err, response] = await to($http.get<IAnswer[]>(`/answers/${this.taskId}/${this.user.id}`));
@@ -535,42 +575,10 @@ export class AnswerBrowserController extends DestroyScope implements IController
             if (err) {
                 this.showError(err);
             }
-            return;
-        }
-        const data = response.data;
-        if (data.length > 0 && (this.hasUserChanged() || data.length !== (this.answers || []).length)) {
-            this.answers = data;
-            this.updateFiltered();
-            this.selectedAnswer = this.filteredAnswers.length > 0 ? this.filteredAnswers[0] : undefined;
-            this.updatePoints();
-            if (!this.selectedAnswer) {
-                this.dimPlugin();
-            } else {
-                if (!updateHtml) {
-                    // The selectedAnswer assignment causes changeAnswer to be called (by Angular),
-                    // but we don't want to update it again because it was already updated.
-                    this.skipAnswerUpdateForId = this.selectedAnswer.id;
-                } else if (this.fetchedUser && this.user && this.user.id !== this.fetchedUser.id) {
-                    // If user was changed, apparently changeAnswer isn't called by Angular (because the whole
-                    // collection is modified).
-                    this.changeAnswer();
-                } else if (this.getPluginHtmlAnswerId() !== this.selectedAnswer.id) {
-                    this.changeAnswer();
-                }
-            }
-        } else {
-            this.answers = data;
-            if (this.answers.length === 0 && this.viewctrl.teacherMode) {
-                this.dimPlugin();
-            }
-            this.updateFilteredAndSetNewest();
-            const i = this.findSelectedAnswerIndex();
-            if (i >= 0) {
-                this.selectedAnswer = this.filteredAnswers[i];
-                this.updatePoints();
-            }
+            return undefined;
         }
         this.fetchedUser = this.user;
+        return response.data;
     }
 
     getPluginHtmlAnswerId() {
@@ -596,12 +604,10 @@ export class AnswerBrowserController extends DestroyScope implements IController
         return this.taskInfo.userMin != null && this.taskInfo.userMax != null;
     }
 
-    async loadIfChanged() {
+    async loadUserAnswersIfChanged() {
         if (this.hasUserChanged()) {
-            await this.getAvailableAnswers(this.shouldUpdateHtml);
+            await this.getAnswersAndUpdate();
             await this.loadInfo();
-            this.firstLoad = false;
-            this.shouldUpdateHtml = false;
         }
     }
 
@@ -641,7 +647,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
         if (this.loading > 0) {
             return;
         }
-        await this.loadIfChanged();
+        await this.loadUserAnswersIfChanged();
         if (this.viewctrl.teacherMode && this.users == null) {
             this.users = [];
             if (this.viewctrl.users.length > 0) {
