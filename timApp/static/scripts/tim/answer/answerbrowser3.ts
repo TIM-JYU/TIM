@@ -611,7 +611,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
 
     showVelpsCheckBox() {
         // return this.$parent.teacherMode || $window.velpMode; // && this.$parent.item.rights.teacher;
-        return $window.velpMode || ($(this.par).attr("class") || "").indexOf("has-annotation") >= 0;
+        return $window.velpMode || this.par.hasClass("has-annotation");
     }
 
     getTriesLeft() {
