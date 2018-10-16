@@ -8,7 +8,7 @@ import {
     getOutOffsetFully,
     getOutOffsetVisible,
     getPageXYnull,
-    getStorage,
+    getStorage, getViewPortSize,
     IBounds,
     ISize,
     isMobileDevice,
@@ -274,16 +274,17 @@ export class DraggableController implements IController {
         if (!this.posKey) {
             return;
         }
-        const oldSize: any = getStorage(this.posKey +
+        const oldSize: {width?: string, height?: string} = getStorage(this.posKey +
             "Size");
         if (oldSize && this.canDrag()) {
+            const vps = getViewPortSize();
             if (oldSize.width) {
                 this.element.css("width",
-                    oldSize.width);
+                    Math.min(getPixels(oldSize.width), vps.width * 0.97));
             }
             if (oldSize.height && !this.autoHeight) {
                 this.element.css("height",
-                    oldSize.height);
+                    Math.min(getPixels(oldSize.height), vps.height * 0.97));
             }
         }
         const oldPos: {left: string, right: string, top: string, bottom: string} | null = getStorage(this.posKey);
