@@ -499,7 +499,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
         if (!this.user || !this.selectedAnswer) {
             return undefined;
         }
-        return `/teacher/${this.viewctrl.item.path}?${$httpParamSerializer({
+        return `/answers/${this.viewctrl.item.path}?${$httpParamSerializer({
             answerNumber: this.answers.length - this.findSelectedAnswerIndexFromUnFiltered(),
             task: this.getTaskName(),
             user: this.user.name,
