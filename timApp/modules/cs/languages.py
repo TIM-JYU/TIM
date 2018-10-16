@@ -23,7 +23,7 @@ def sanitize_cmdline(s):
 
 def illegal_cmdline_chars(s):
     global cmdline_whitelist
-    return "";
+    return ""
     # return re.sub("[" + cmdline_whitelist + "]", "", s)
 
 
@@ -105,12 +105,14 @@ class Language:
         self.fullpath = "/tmp/" + self.basename  # check it is sure under userpath
         fname = "prg"
         # noinspection PyBroadException
-        try:  # lets do filename that depeds from the taskID.  Needed when many autorun plugins in same page
+        try:  # Let's do filename that depends on the taskID. Needed when many autorun plugins in the same page.
             tid = query.jso.get("taskID", "prg")
             i = tid.find(".")
             if i >= 0:
                 tid = tid[i + 1:]
             asciified = re.sub(r"[^A-Za-z0-9_]", "", tid)
+            # taskID variable may end with a dot (when the plugin doesn't have a task id),
+            # so need to ensure asciified is not empty. Can also happen if task id has only non-ascii chars.
             if asciified:
                 fname = asciified
         except:
