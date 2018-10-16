@@ -407,6 +407,12 @@ p.caption {
     right: calc(-#{$note-width} + #{$readline-offset} - 5px);
 }
 
+.notes {
+    ul {
+        padding-left: 1em;
+    }
+}
+
 .text-smaller {
     font-size: smaller;
 }
