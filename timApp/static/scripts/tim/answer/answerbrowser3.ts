@@ -226,7 +226,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
         this.shouldFocus = false;
         this.alerts = [];
 
-        this.scope.$watch(() => this.review, () => this.changeAnswer());
+        this.scope.$watch(() => this.review, () => this.changeAnswer(true));
         this.scope.$watchGroup([
             () => this.onlyValid,
         ], (newValues, oldValues, scope) => this.updateFilteredAndSetNewest());
