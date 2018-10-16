@@ -1,4 +1,5 @@
 import smtplib
+import urllib.parse
 from collections import defaultdict
 from email.mime.text import MIMEText
 from threading import Thread
@@ -18,6 +19,7 @@ from timApp.notification.notification import NotificationType, Notification
 from timApp.notification.pending_notification import DocumentNotification, CommentNotification, \
     PendingNotification, get_pending_notifications, GroupingKey
 from timApp.tim_app import app
+from timApp.timdb.exceptions import TimDbException
 from timApp.timdb.sqa import db
 from timApp.user.user import User
 from timApp.util.flask.requesthelper import verify_json_params, is_testing, is_localhost
@@ -205,9 +207,23 @@ def get_message_for(ps: List[PendingNotification], d: DocInfo, show_text: bool, 
             s = f'Comment deleted'
         else:
             assert False, 'Unknown NotificationType'
+        url = f'{d.url}{"#" + par if par else ""}'
         if show_names:
             s += f' by {name_str}'
-        msg += f'{s}: {d.url}{"#" + par if par else ""}'
+            d.document.insert_preamble_pars()
+            if par and not p.notify_type.is_document_modification:
+                try:
+                    pobj = d.document.get_paragraph(par)
+                except TimDbException:
+                    pass
+                else:
+                    if pobj.is_task():
+                        task_id = pobj.get_attr('taskId')
+                        params = urllib.parse.urlencode({'task': task_id, 'user': p.user.name})
+                        url = f'{d.get_url_for_view("answers")}?{params}'
+
+        msg += f'{s}: {url}'
+
         if show_text and p.notify_type.is_document_modification:
             assert isinstance(p, DocumentNotification)
             v1 = p.version_before

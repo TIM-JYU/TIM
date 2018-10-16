@@ -146,6 +146,28 @@ class NotifyTest(NotifyTestBase):
         process_pending_notifications()
         self.assertEqual(1, len(sent_mails_in_testing))
 
+    def test_answer_link_email(self):
+        d, title, url = self.prepare_doc()
+
+        process_pending_notifications()
+        [plug] = d.document.add_text("""
+#- {plugin=csPlugin #t}
+stem: test
+        """)
+        self.test_user_2.grant_access(d.id, 'teacher')
+        self.post_comment(plug, public=True, text='Hello')
+        process_pending_notifications()
+        self.assertEqual(
+            {'mail_from': 'tim@jyu.fi',
+             'msg': 'Comment posted by Test user 1: '
+                    f'http://localhost/answers/{d.path}?task=t&user=testuser1\n'
+                    '\n'
+                    'Hello',
+             'rcpt': 'test2@example.com',
+             'reply_to': 'test1@example.com',
+             'subject': f'Test user 1 posted a comment to the document {title}'},
+            sent_mails_in_testing[-1])
+
 
 class NotifyFolderTest(NotifyTestBase):
     def test_folder_email(self):
