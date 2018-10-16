@@ -328,6 +328,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
                 review: this.review,
             },
         }));
+        this.loading--;
         if (!response) {
             if (err) {
                 this.showError(err);
