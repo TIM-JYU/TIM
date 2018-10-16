@@ -210,7 +210,6 @@ export class AnswerBrowserController extends DestroyScope implements IController
             this.user = Users.getCurrent();
         }
 
-        this.firstLoad = true;
         this.shouldUpdateHtml = this.viewctrl.users.length > 0 && this.user !== this.viewctrl.users[0];
         if (this.shouldUpdateHtml) {
             this.dimPlugin();
