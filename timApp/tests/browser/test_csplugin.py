@@ -28,6 +28,11 @@ type: python
         self.wait_until_present('answerbrowser')
         self.assert_same_screenshot(par, 'csplugin/python_after_answer')
 
+        # post a second answer because otherwise clicking previous answer does not do anything
+        textarea.send_keys(' ')
+        runbutton.click()
+        self.wait_until_hidden('.csRunError')  # this has the "...running..." text
+
         self.wait_and_click(PREV_ANSWER)
         self.wait_until_hidden('.console')
         # Wait until answer is replaced in HTML
