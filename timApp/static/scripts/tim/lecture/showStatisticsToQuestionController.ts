@@ -42,15 +42,15 @@ export class ShowStatisticsToQuestionController extends DialogController<{params
     private async getLectureAnswers() {
         while (!this.closed) {
             const now = moment();
-            const [err, response] = await to($http.get<IQuestionAnswer[]>("/getLectureAnswers", {
+            const r = await to($http.get<IQuestionAnswer[]>("/getLectureAnswers", {
                 params: {
                     after: this.lastFetch.toISOString(),
                     asked_id: this.resolve.params.asked_id,
                     buster: new Date().getTime(),
                 },
             }));
-            if (response) {
-                const data = response.data;
+            if (r.ok) {
+                const data = r.result.data;
                 for (const ans of data) {
                     this.answers.push(ans);
                 }

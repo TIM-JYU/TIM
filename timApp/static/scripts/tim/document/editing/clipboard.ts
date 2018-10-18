@@ -81,15 +81,13 @@ export class ClipboardHandler {
     }
 
     async deleteFromSource() {
-        const [err, response] = await to($http.post<{doc_ver: any, pars: any[]}>("/clipboard/deletesrc/" + this.viewctrl.docId, {}));
-        if (!response) {
-            if (err) {
-                await showMessageDialog(err.data.error);
-            }
+        const r = await to($http.post<{doc_ver: any, pars: any[]}>("/clipboard/deletesrc/" + this.viewctrl.docId, {}));
+        if (!r.ok) {
+            await showMessageDialog(r.result.data.error);
             return;
         }
-        const doc_ver = response.data.doc_ver;
-        const pars = response.data.pars;
+        const doc_ver = r.result.data.doc_ver;
+        const pars = r.result.data.pars;
         if (pars.length > 0) {
             const firstPar = pars[0].id;
             const lastPar = pars[pars.length - 1].id;
@@ -102,80 +100,60 @@ export class ClipboardHandler {
 
     async moveAbove(e: Event, $parOrArea: ParOrArea) {
 
-        const [err, response] = await to($http.post<IParResponse>("/clipboard/paste/" + this.viewctrl.docId, {
+        const r = await to($http.post<IParResponse>("/clipboard/paste/" + this.viewctrl.docId, {
             par_before: getFirstParId($parOrArea),
         }));
-        if (!response) {
-            if (err) {
-                await showMessageDialog(err.data.error);
-            }
-            return;
-        }
-        if (response.data == null) {
+        if (!r.ok) {
+            await showMessageDialog(r.result.data.error);
             return;
         }
 
-        this.viewctrl.editingHandler.addSavedParToDom(response.data, {type: EditType.AddAbove, par: $parOrArea});
+        this.viewctrl.editingHandler.addSavedParToDom(r.result.data, {type: EditType.AddAbove, par: $parOrArea});
         this.deleteFromSource();
     }
 
     async moveBelow(e: Event, $parOrArea: ParOrArea) {
 
-        const [err, response] = await to($http.post<IParResponse>("/clipboard/paste/" + this.viewctrl.docId, {
+        const r = await to($http.post<IParResponse>("/clipboard/paste/" + this.viewctrl.docId, {
             par_after: getLastParId($parOrArea),
         }));
-        if (!response) {
-            if (err) {
-                await showMessageDialog(err.data.error);
-            }
-            return;
-        }
-        if (response.data == null) {
+        if (!r.ok) {
+            await showMessageDialog(r.result.data.error);
             return;
         }
 
-        this.viewctrl.editingHandler.addSavedParToDom(response.data, {type: EditType.AddBelow, par: $parOrArea});
+        this.viewctrl.editingHandler.addSavedParToDom(r.result.data, {type: EditType.AddBelow, par: $parOrArea});
         this.deleteFromSource();
     }
 
     async pasteAbove(e: Event, $parOrArea: ParOrArea | undefined, asRef: boolean) {
 
-        const [err, response] = await to($http.post<IParResponse>("/clipboard/paste/" + this.viewctrl.docId, {
+        const r = await to($http.post<IParResponse>("/clipboard/paste/" + this.viewctrl.docId, {
             par_before: $parOrArea ? getFirstParId($parOrArea) : null,
             as_ref: asRef,
         }));
-        if (!response) {
-            if (err) {
-                await showMessageDialog(err.data.error);
-            }
-            return;
-        }
-        if (response.data == null) {
+        if (!r.ok) {
+            await showMessageDialog(r.result.data.error);
             return;
         }
 
-        this.viewctrl.editingHandler.addSavedParToDom(response.data, $parOrArea ? {
+        this.viewctrl.editingHandler.addSavedParToDom(r.result.data, $parOrArea ? {
             type: EditType.AddAbove,
             par: $parOrArea,
         } : {type: EditType.AddBottom});
     }
 
     async pasteBelow(e: Event, $parOrArea: ParOrArea, asRef: boolean) {
-        const [err, response] = await to($http.post<IParResponse>("/clipboard/paste/" + this.viewctrl.docId, {
+        const r = await to($http.post<IParResponse>("/clipboard/paste/" + this.viewctrl.docId, {
             par_after: getLastParId($parOrArea),
             as_ref: asRef,
         }));
-        if (!response) {
-            if (err) {
-                await showMessageDialog(err.data.error);
-            }
-            return;
-        }
-        if (response.data == null) {
+        if (!r.ok) {
+            await showMessageDialog(r.result.data.error);
             return;
         }
 
-        this.viewctrl.editingHandler.addSavedParToDom(response.data, {type: EditType.AddBelow, par: $parOrArea});
+        this.viewctrl.editingHandler.addSavedParToDom(r.result.data, {type: EditType.AddBelow, par: $parOrArea});
     }
 
     async updateClipboardStatus() {
@@ -185,27 +163,25 @@ export class ClipboardHandler {
             return;
         }
 
-        const [err, response] = await to($http.get<ClipboardMetaResponse>("/clipboardstatus", {}));
-        if (!response) {
-            if (err) {
-                this.viewctrl.clipMeta.allowPasteContent = false;
-                this.viewctrl.clipMeta.allowPasteRef = false;
-            }
+        const r = await to($http.get<ClipboardMetaResponse>("/clipboardstatus", {}));
+        if (!r.ok) {
+            this.viewctrl.clipMeta.allowPasteContent = false;
+            this.viewctrl.clipMeta.allowPasteRef = false;
             return;
         }
-        if (response.data.empty) {
+        if (r.result.data.empty) {
             this.viewctrl.clipMeta = {
                 allowPasteContent: false,
                 allowPasteRef: false,
                 empty: true,
-            }
+            };
         } else {
             this.viewctrl.clipMeta = {
-                allowPasteContent: !response.data.disable_content,
-                allowPasteRef: !response.data.disable_ref,
-                area_name: response.data.area_name,
+                allowPasteContent: !r.result.data.disable_content,
+                allowPasteRef: !r.result.data.disable_ref,
+                area_name: r.result.data.area_name,
                 empty: false,
-                last_action: response.data.last_action,
+                last_action: r.result.data.last_action,
             };
         }
     }
@@ -259,15 +235,13 @@ export class ClipboardHandler {
     async cutPar(e: Event, $par: Paragraph) {
         const docParId = [this.viewctrl.docId, $par.attr("id")];
 
-        const [err, response] = await to($http.post<{doc_ver: any, pars: any[]}>("/clipboard/cut/" + docParId[0] + "/" + docParId[1] + "/" + docParId[1], {}));
-        if (!response) {
-            if (err) {
-                await showMessageDialog(err.data.error);
-            }
+        const r = await to($http.post<{doc_ver: any, pars: any[]}>("/clipboard/cut/" + docParId[0] + "/" + docParId[1] + "/" + docParId[1], {}));
+        if (!r.ok) {
+            await showMessageDialog(r.result.data.error);
             return;
         }
-        const doc_ver = response.data.doc_ver;
-        const pars = response.data.pars;
+        const doc_ver = r.result.data.doc_ver;
+        const pars = r.result.data.pars;
         if (pars.length > 0) {
             const firstPar = pars[0].id;
             const lastPar = pars[pars.length - 1].id;
@@ -284,11 +258,9 @@ export class ClipboardHandler {
             return;
         }
 
-        const [err, response] = await to($http.post("/clipboard/copy/" + docParId[0] + "/" + docParId[1] + "/" + docParId[1], {}));
-        if (!response) {
-            if (err) {
-                await showMessageDialog(err.data.error);
-            }
+        const r = await to($http.post("/clipboard/copy/" + docParId[0] + "/" + docParId[1] + "/" + docParId[1], {}));
+        if (!r.ok) {
+            await showMessageDialog(r.result.data.error);
             return;
         }
     }
@@ -315,21 +287,19 @@ export class ClipboardHandler {
 
         if (cut) {
 
-            const [err, response] = await to($http.post<{doc_ver: any, pars: any[]}>("/clipboard/cut/" + docId + "/" + areaStart + "/" + areaEnd, {
+            const r = await to($http.post<{doc_ver: any, pars: any[]}>("/clipboard/cut/" + docId + "/" + areaStart + "/" + areaEnd, {
                 area_name: areaName,
             }));
-            if (!response) {
-                if (err) {
-                    await showMessageDialog(err.data.error);
-                }
+            if (!r.ok) {
+                await showMessageDialog(r.result.data.error);
                 return;
             }
             this.viewctrl.selection.start = undefined;
             this.viewctrl.selection.end = undefined;
 
             if (docId === this.viewctrl.docId) {
-                const doc_ver = response.data.doc_ver;
-                const pars = response.data.pars;
+                const doc_ver = r.result.data.doc_ver;
+                const pars = r.result.data.pars;
                 if (pars.length > 0) {
                     const firstPar = pars[0].id;
                     const lastPar = pars[pars.length - 1].id;
@@ -341,12 +311,12 @@ export class ClipboardHandler {
             }
 
         } else {
-            const [err, response] = await to($http.post("/clipboard/copy/" + docId + "/" + areaStart + "/" + areaEnd, {
+            const r = await to($http.post("/clipboard/copy/" + docId + "/" + areaStart + "/" + areaEnd, {
                 refDocId,
                 areaName,
             }));
-            if (err) {
-                await showMessageDialog(err.data.error);
+            if (!r.ok) {
+                await showMessageDialog(r.result.data.error);
                 return;
             }
             this.viewctrl.selection.start = undefined;

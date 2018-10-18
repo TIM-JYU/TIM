@@ -36,13 +36,12 @@ export class StartCtrl implements IController {
      * Opens 'Available courses' dialog.
      */
     async openCourseListDialog() {
-        const [err, response] = await to($http.get<ICourseSettings>(`/courses/settings`));
-        if (response) {
-            void showCourseListDialog({item: this.item, settings: response.data});
+        const r = await to($http.get<ICourseSettings>(`/courses/settings`));
+        if (r.ok) {
+            void showCourseListDialog({item: this.item, settings: r.result.data});
+            return;
         }
-        if (err) {
-            void showMessageDialog(`Course settings not found: ${err.data.error}`);
-        }
+        void showMessageDialog(`Course settings not found: ${r.result.data.error}`);
     }
 }
 

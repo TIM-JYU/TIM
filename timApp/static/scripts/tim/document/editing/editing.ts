@@ -235,15 +235,13 @@ export class EditingHandler {
             cursorPos = initialText.indexOf(CURSOR);
             initialText = initialText.replace(CURSOR, "");
         } else if (options.showDelete && parId !== "HELP_PAR") {
-            const [err, resp] = await to($http.get<{text: string}>(`/getBlock/${this.viewctrl.docId}/${parId}`,
+            const r = await to($http.get<{text: string}>(`/getBlock/${this.viewctrl.docId}/${parId}`,
                 {params: extraData}));
-            if (resp) {
-                initialText = resp.data.text;
-            } else if (err) {
-                await showMessageDialog(`Failed to open editor: ${err.data.error}`);
-                return;
+            if (r.ok) {
+                initialText = r.result.data.text;
             } else {
-                throw new Error("unreachable");
+                await showMessageDialog(`Failed to open editor: ${r.result.data.error}`);
+                return;
             }
         }
         this.viewctrl.editing = true;
@@ -269,30 +267,30 @@ This will delete the whole ${options.area ? "area" : "paragraph"} from the docum
                 touchDevice: isMobileDevice(),
             },
             deleteCb: async () => {
-                const [err, resp] = await to($http.post<IParResponse>(`/deleteParagraph/${this.viewctrl.docId}`, extraData));
-                if (err) {
-                    return {error: err.data.error};
-                } else if (resp) {
+                const r = await to($http.post<IParResponse>(`/deleteParagraph/${this.viewctrl.docId}`, extraData));
+                if (!r.ok) {
+                    return {error: r.result.data.error};
+                } else {
                     this.handleDelete(params);
                 }
                 return {};
             },
             previewCb: async (text) => (await $http.post<IPluginInfoResponse>(`/preview/${this.viewctrl.docId}`, {text, ...extraData})).data,
             saveCb: async (text, data) => {
-                const [err, resp] = await to($http.post<IParResponse>(url, {text, ...data}));
-                if (err) {
-                    return {error: err.data.error};
-                } else if (resp) {
-                    const saveData = resp.data;
+                const r = await to($http.post<IParResponse>(url, {text, ...data}));
+                if (!r.ok) {
+                    return {error: r.result.data.error};
+                } else {
+                    const saveData = r.result.data;
                     if (saveData.duplicates && saveData.duplicates.length > 0 && saveData.new_par_ids != null) {
-                        const [renameErr, result] = await to(showRenameDialog({
+                        const r = await to(showRenameDialog({
                             duplicates: saveData.duplicates,
                             extraData,
                             new_par_ids: saveData.new_par_ids,
                             original_par: saveData.original_par,
                         }));
-                        if (result && !isManageResponse(result)) {
-                            this.addSavedParToDom(result, params);
+                        if (r.ok && !isManageResponse(r.result)) {
+                            this.addSavedParToDom(r.result, params);
                         } else {
                             this.addSavedParToDom(saveData, params);
                         }
@@ -329,19 +327,17 @@ This will delete the whole ${options.area ? "area" : "paragraph"} from the docum
                 parNext = undefined;
             }
 
-            const [err, response] = await
+            const r = await
                 to($http.post<IParResponse>("/newParagraph/", {
                     text: '``` {settings=""}\nexample:\n```',
                     docId: this.viewctrl.docId,
                     par_next: parNext,
                 }));
-            if (!response) {
-                if (err) {
-                    await showMessageDialog(err.data.error);
-                }
+            if (!r.ok) {
+                await showMessageDialog(r.result.data.error);
                 return;
             }
-            this.addSavedParToDom(response.data, {type: EditType.AddBottom});
+            this.addSavedParToDom(r.result.data, {type: EditType.AddBottom});
             this.editSettingsPars(true);
         } else if (pars.length === 1) {
             this.toggleParEditor({type: EditType.Edit, pars: $(pars[0])}, {area: false});

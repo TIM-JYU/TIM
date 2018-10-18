@@ -169,7 +169,7 @@ class QstController implements IController {
             return;
         }
 
-        const [err, response] = await to($http<{
+        const r = await to($http<{
             web: {
                 result: string,
                 show_result: boolean,
@@ -184,15 +184,13 @@ class QstController implements IController {
                 timeout: 20000,
             },
         ));
-        if (!response) {
-            if (err) {
-                this.isRunning = false;
-                this.errors.push(err.data.error);
-                this.error = "Ikuinen silmukka tai jokin muu vika?";
-            }
+        if (!r.ok) {
+            this.isRunning = false;
+            this.errors.push(r.result.data.error);
+            this.error = "Ikuinen silmukka tai jokin muu vika?";
             return;
         }
-        const data = response.data;
+        const data = r.result.data;
         this.isRunning = false;
         this.error = "";
         this.result = data.web.result;

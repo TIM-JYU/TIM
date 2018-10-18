@@ -84,12 +84,12 @@ class LoginMenuController implements IController {
     }
 
     public async loginWithEmail() {
-        const [err] = await Users.loginWithEmail(
+        const result = await Users.loginWithEmail(
             this.loginForm.email,
             this.loginForm.password,
             this.addingToSession);
-        if (err) {
-            this.loginError = err.data.error;
+        if (!result.ok) {
+            this.loginError = result.result.data.error;
         } else {
             this.loginError = undefined;
             if (!this.addingToSession) {
@@ -112,12 +112,12 @@ class LoginMenuController implements IController {
         if (!this.email || this.signUpRequestInProgress) {
             return;
         }
-        const [err, resp] = await this.sendRequest("/altsignup", {
+        const r = await this.sendRequest("/altsignup", {
             email: this.email,
         });
-        if (err) {
-            this.signUpError = err.data.error;
-        } else if (resp) {
+        if (!r.ok) {
+            this.signUpError = r.result.data.error;
+        } else {
             this.signUpError = undefined;
             this.emailSent = true;
             this.focusPassword = true;
@@ -128,19 +128,19 @@ class LoginMenuController implements IController {
         if (!this.email || !this.tempPassword || this.signUpRequestInProgress) {
             return;
         }
-        const [err, resp] = await this.sendRequest<IOkResponse | INameResponse>("/checkTempPass", {
+        const r = await this.sendRequest<IOkResponse | INameResponse>("/checkTempPass", {
             email: this.email,
             token: this.tempPassword,
         });
-        if (err) {
-            this.signUpError = err.data.error;
-        } else if (resp) {
+        if (!r.ok) {
+            this.signUpError = r.result.data.error;
+        } else {
             this.signUpError = undefined;
             this.tempPasswordProvided = true;
             this.focusName = true;
-            if (resp.data.status === "name") {
-                this.name = resp.data.name;
-                this.canChangeName = resp.data.can_change_name;
+            if (r.result.data.status === "name") {
+                this.name = r.result.data.name;
+                this.canChangeName = r.result.data.can_change_name;
                 if (!this.canChangeName) {
                     this.focusName = false;
                     this.focusNewPassword = true;
@@ -167,17 +167,17 @@ class LoginMenuController implements IController {
         if (!this.name || this.signUpRequestInProgress) {
             return;
         }
-        const [err, resp] = await this.sendRequest<{status: "registered" | "updated"}>("/altsignup2", {
+        const r = await this.sendRequest<{status: "registered" | "updated"}>("/altsignup2", {
             email: this.email,
             passconfirm: this.rePassword,
             password: this.newPassword,
             realname: this.name,
             token: this.tempPassword,
         });
-        if (err) {
-            this.signUpError = err.data.error;
-        } else if (resp) {
-            this.finishStatus = resp.data.status;
+        if (!r.ok) {
+            this.signUpError = r.result.data.error;
+        } else {
+            this.finishStatus = r.result.data.status;
             this.signUpError = undefined;
             this.nameProvided = true;
             this.focusLink = true;
@@ -228,15 +228,9 @@ class LoginMenuController implements IController {
 
     private async sendRequest<T>(url: string, data: any): ToReturn<T> {
         this.signUpRequestInProgress = true;
-        const [err, resp] = await to($http.post<T>(url, data));
+        const r = await to($http.post<T>(url, data));
         this.signUpRequestInProgress = false;
-        if (err && !resp) {
-            return [err, resp];
-        } else if (!err && resp) {
-            return [err, resp];
-        } else {
-            throw new Error("unreachable");
-        }
+        return r;
     }
 }
 

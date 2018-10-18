@@ -50,9 +50,9 @@ class TaggedDocumentListCtrl implements IController {
     }
 
     private async getAllTags() {
-        const [err, response] = await to($http.get<string[]>(`/tags/getAllTags`));
-        if (response) {
-            this.allUniqueTags = response.data;
+        const r = await to($http.get<string[]>(`/tags/getAllTags`));
+        if (r.ok) {
+            this.allUniqueTags = r.result.data;
         }
     }
 

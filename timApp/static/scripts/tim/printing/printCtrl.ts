@@ -116,14 +116,15 @@ export class PrintCtrl extends DialogController<{params: IPrintParams}, {}, "tim
             this.notificationmsg = undefined;
 
             const postURL = "/print/" + this.document.path;
-            const [err, response] = await to($http.post<{url: string, errormsg?: string, latex?: string, latexline?: string}>(postURL, {
+            const r = await to($http.post<{url: string, errormsg?: string, latex?: string, latexline?: string}>(postURL, {
                 fileType,
                 templateDocId: chosenTemplateId,
                 printPluginsUserCode: pluginsUserCode,
                 removeOldImages,
                 force,
             }));
-            if (response) {
+            if (r.ok) {
+                const response = r.result;
                 // console.log(response);
 
                 // Uncomment this line to automatically open the created doc in a popup tab.
@@ -139,8 +140,8 @@ export class PrintCtrl extends DialogController<{params: IPrintParams}, {}, "tim
 
                 this.loading = false;
 
-            } else if (err) {
-                const reformatted = err.data.error.split("\\n").join("<br/>");
+            } else {
+                const reformatted = r.result.data.error.split("\\n").join("<br/>");
                 this.errormsg = reformatted;
                 this.loading = false;
             }

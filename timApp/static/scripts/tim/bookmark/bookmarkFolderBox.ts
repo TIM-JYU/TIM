@@ -112,12 +112,12 @@ class BookmarkFolderBoxCtrl implements IController {
      * @returns {Promise<void>}
      */
     private async editFromList(b: IBookmark) {
-        const [err, bookmark] = await to(showBookmarkDialog({
+        const r = await to(showBookmarkDialog({
             group: this.bookmarkFolderName,
             link: b.link,
             name: b.name,
         }));
-        if (!bookmark || !bookmark.name) {
+        if (!r.ok || !r.result.name) {
             return;
         }
         const response = await $http.post<IBookmarkGroup[]>("/bookmarks/edit", {
@@ -125,7 +125,7 @@ class BookmarkFolderBoxCtrl implements IController {
             group: this.bookmarkFolderName,
             link: b.link,
             name: b.name,
-            }, new: bookmark,
+            }, new: r.result,
         });
         if (response) {
             this.bookmarks = response.data;

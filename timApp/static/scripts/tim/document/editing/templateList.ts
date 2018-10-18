@@ -10,11 +10,11 @@ class TemplateListCtrl implements IController {
     private templateList: IItem[] = [];
 
     private async loadTemplate(t: IItem) {
-        const [err] = await to($http.post("/update/" + this.doc.id, {
+        const r = await to($http.post("/update/" + this.doc.id, {
             template_name: t.path,
         }));
-        if (err) {
-            await showMessageDialog(err.data.error);
+        if (!r.ok) {
+            await showMessageDialog(r.result.data.error);
         } else {
             $window.location.reload();
         }

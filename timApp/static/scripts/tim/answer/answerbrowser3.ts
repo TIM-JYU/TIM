@@ -328,7 +328,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
         }
         if (this.selectedAnswer.id !== this.loadedAnswer.id || this.loadedAnswer.review !== this.review) {
             this.loading++;
-            const [err, response] = await to($http.get<{html: string, reviewHtml: string}>("/getState", {
+            const r = await to($http.get<{html: string, reviewHtml: string}>("/getState", {
                 params: {
                     ref_from_doc_id: this.viewctrl.docId,
                     ref_from_par_id: getParId(par),
@@ -340,17 +340,15 @@ export class AnswerBrowserController extends DestroyScope implements IController
                 },
             }));
             this.loading--;
-            if (!response) {
-                if (err) {
-                    this.showError(err);
-                }
+            if (!r.ok) {
+                this.showError(r.result);
                 return;
             }
             this.loadedAnswer.id = this.selectedAnswer.id;
             this.loadedAnswer.review = this.review;
-            void loadPlugin(response.data.html, par, this.scope);
+            void loadPlugin(r.result.data.html, par, this.scope);
             if (this.review) {
-                this.par.find(".review").html(response.data.reviewHtml);
+                this.par.find(".review").html(r.result.data.reviewHtml);
             }
         }
         this.rctrl.loadAnnotationsToAnswer(this.selectedAnswer.id, par[0], this.review);
@@ -491,15 +489,13 @@ export class AnswerBrowserController extends DestroyScope implements IController
 
     async getAvailableUsers() {
         this.loading++;
-        const [err, response] = await to($http.get<IUser[]>("/getTaskUsers/" + this.taskId, {params: {group: this.viewctrl.group}}));
+        const r = await to($http.get<IUser[]>("/getTaskUsers/" + this.taskId, {params: {group: this.viewctrl.group}}));
         this.loading--;
-        if (!response) {
-            if (err) {
-                this.showError(err);
-            }
+        if (!r.ok) {
+            this.showError(r.result);
             return;
         }
-        this.users = response.data;
+        this.users = r.result.data;
     }
 
     showError(response: {data: {error: string}}) {
@@ -569,16 +565,14 @@ export class AnswerBrowserController extends DestroyScope implements IController
             return undefined;
         }
         this.loading++;
-        const [err, response] = await to($http.get<IAnswer[]>(`/answers/${this.taskId}/${this.user.id}`));
+        const r = await to($http.get<IAnswer[]>(`/answers/${this.taskId}/${this.user.id}`));
         this.loading--;
-        if (!response) {
-            if (err) {
-                this.showError(err);
-            }
+        if (!r.ok) {
+            this.showError(r.result);
             return undefined;
         }
         this.fetchedUser = this.user;
-        return response.data;
+        return r.result.data;
     }
 
     getPluginHtmlAnswerId() {
@@ -632,15 +626,13 @@ export class AnswerBrowserController extends DestroyScope implements IController
             return;
         }
         this.loading++;
-        const [err, response] = await to($http.get<ITaskInfo>("/taskinfo/" + this.taskId));
+        const r = await to($http.get<ITaskInfo>("/taskinfo/" + this.taskId));
         this.loading--;
-        if (!response) {
-            if (err) {
-                this.showError(err);
-            }
+        if (!r.ok) {
+            this.showError(r.result);
             return;
         }
-        this.taskInfo = response.data;
+        this.taskInfo = r.result.data;
     }
 
     async checkUsers() {

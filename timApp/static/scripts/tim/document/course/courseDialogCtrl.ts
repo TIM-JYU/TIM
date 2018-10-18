@@ -56,9 +56,9 @@ export class ShowCourseDialogController extends DialogController<{ params: IItem
      */
     private async getCurrentSpecialTags() {
         const docPath = this.resolve.params.path;
-        const [err, response] = await to($http.get<ITag[]>(`/tags/getTags/${docPath}`));
-        if (response) {
-            const tags = response.data;
+        const r = await to($http.get<ITag[]>(`/tags/getTags/${docPath}`));
+        if (r.ok) {
+            const tags = r.result.data;
             for (const tag of tags) {
                 if (tag.type === TagType.CourseCode) {
                     this.currentCode = tag;
@@ -77,16 +77,16 @@ export class ShowCourseDialogController extends DialogController<{ params: IItem
     private async removeCurrentSpecialTags() {
         const docPath = this.resolve.params.path;
         const data = {tagObject: this.currentSubject};
-        const [err, response] = await to($http.post(`/tags/remove/${docPath}`, data));
-        if (err) {
-            this.errorMessage = err.data.error;
+        const r = await to($http.post(`/tags/remove/${docPath}`, data));
+        if (!r.ok) {
+            this.errorMessage = r.result.data.error;
             this.successMessage = undefined;
             return;
         }
         const data2 = {tagObject: this.currentCode};
-        const [err2, response2] = await to($http.post(`/tags/remove/${docPath}`, data2));
-        if (err2) {
-            this.errorMessage = err2.data.error;
+        const r2 = await to($http.post(`/tags/remove/${docPath}`, data2));
+        if (!r2.ok) {
+            this.errorMessage = r2.result.data.error;
             this.successMessage = undefined;
             return;
         }
@@ -153,34 +153,30 @@ export class ShowCourseDialogController extends DialogController<{ params: IItem
             expires: this.expires,  name: this.courseSubject.trim(), type: TagType.Subject,
         };
         const data = {tags: [codeTag, subjectTag]};
-        const [err, response] = await to($http.post(`/tags/add/${docPath}`, data));
+        const r = await to($http.post(`/tags/add/${docPath}`, data));
 
-        if (err) {
-            this.errorMessage = err.data.error;
+        if (!r.ok) {
+            this.errorMessage = r.result.data.error;
             this.successMessage = undefined;
             return;
         }
-        if (response) {
-            this.errorMessage = undefined;
-            this.successMessage = `'${codeName}' successfully added as a '${this.courseSubject}' course.`;
-            await this.getCurrentSpecialTags();
-            return;
-        }
+        this.errorMessage = undefined;
+        this.successMessage = `'${codeName}' successfully added as a '${this.courseSubject}' course.`;
+        await this.getCurrentSpecialTags();
+        return;
     }
 
     /**
      * Gets the subjects list from the designated course settings document.
      */
     private async getSubjects() {
-        const [err, response] = await to($http.get<ICourseSettings>(`/courses/settings`));
-        if (response) {
-            this.subjects = response.data.course_subjects;
-        }
-        if (err) {
-            this.errorMessage = err.data.error;
-            this.successMessage = undefined;
+        const r = await to($http.get<ICourseSettings>(`/courses/settings`));
+        if (r.ok) {
+            this.subjects = r.result.data.course_subjects;
             return;
         }
+        this.errorMessage = r.result.data.error;
+        this.successMessage = undefined;
     }
 }
 

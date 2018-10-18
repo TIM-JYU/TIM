@@ -172,6 +172,10 @@ export function clone<T>(obj: T): T {
     return JSON.parse(JSON.stringify(obj));
 }
 
+type Success<T> = {ok: true, result: T};
+type Failure<T> = {ok: false, result: T};
+type Result<T, U> = Success<T> | Failure<U>;
+
 /**
  * Wraps the given promise so that it always gets fulfilled.
  * Adapted from await-to-js library: https://github.com/scopsy/await-to-js
@@ -180,14 +184,14 @@ export function clone<T>(obj: T): T {
  * @returns A promise that resolves to either a success or error.
  */
 export function to<T, U = {data: {error: string}}>(promise: IPromise<T>,
-                                                   errorExt?: object): IPromise<[U, undefined] | [null, T]> {
+                                                   errorExt?: object): IPromise<Result<T, U>> {
     return promise
-        .then<[null, T]>((data: T) => [null, data])
-        .catch<[U, undefined]>((err) => {
+        .then<Success<T>>((data: T) => ({ok: true, result: data}))
+        .catch<Failure<U>>((err) => {
             if (errorExt) {
                 Object.assign(err, errorExt);
             }
-            return [err, undefined];
+            return {ok: false, result: err};
         });
 }
 
@@ -336,5 +340,5 @@ export function capitalizeFirstLetter(s: string) {
     return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
-export type ToReturn<T, U = {data: {error: string}}> = IPromise<[U, undefined] | [null, IHttpResponse<T>]>;
+export type ToReturn<T, U = {data: {error: string}}> = IPromise<Result<IHttpResponse<T>, U>>;
 export const ToReturn = Promise;

@@ -142,11 +142,11 @@ export class GamificationMapCtrl implements IController {
     async loadMap() {
         // Configure data and generate the JSON map file.
         this.loading = true;
-        const [err, response] = await to($http.post<IMapResponse>("/generateMap", this.parsedData));
+        const r = await to($http.post<IMapResponse>("/generateMap", this.parsedData));
         this.loading = false;
-        if (response) {
+        if (r.ok) {
             this.errorMessage = undefined;
-            this.json = response.data;
+            this.json = r.result.data;
             // Fill the sources array with tileset image sources.
             for (const tileset of this.json.tilesets) {
                 this.sources.push(tileset.image);
@@ -154,9 +154,8 @@ export class GamificationMapCtrl implements IController {
             this.createCanvases();
             // Preload the images and draw the map.
             this.loadImages((p) => this.callback(p));
-        }
-        if (err) {
-            this.errorMessage = err.data.error;
+        } else {
+            this.errorMessage = r.result.data.error;
         }
 
     }

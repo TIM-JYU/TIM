@@ -1,6 +1,7 @@
 import {IController} from "angular";
 import $ from "jquery";
 import {timApp} from "tim/app";
+import {showMessageDialog} from "../ui/dialog";
 import {$http, $window} from "../util/ngimport";
 import {to} from "../util/utils";
 
@@ -36,12 +37,12 @@ export class SettingsCtrl implements IController {
 
     async submit() {
         this.saving = true;
-        const [err, response] = await to($http.post<ISettings>("/settings/save", this.settings));
-        if (response) {
-            this.settings = response.data;
+        const r = await to($http.post<ISettings>("/settings/save", this.settings));
+        if (r.ok) {
+            this.settings = r.result.data;
             this.updateCss();
-        } else if (err) {
-            alert(err.data.error);
+        } else {
+            void showMessageDialog(r.result.data.error);
         }
         this.saving = false;
     }

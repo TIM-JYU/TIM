@@ -305,8 +305,8 @@ export class SidebarMenuCtrl implements IController {
      */
     private async markAllAsRead() {
         if (this.vctrl) {
-                const [err, response] = await to($http.put("/read/" + this.vctrl.item.id, {}));
-                if (err) {
+                const r = await to($http.put("/read/" + this.vctrl.item.id, {}));
+                if (!r.ok) {
                     $window.alert("Could not mark the document as read.");
                     return;
                 }

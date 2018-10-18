@@ -219,16 +219,14 @@ export class CreateLectureCtrl extends DialogController<{params: ILectureFormPar
             options: this.options,
         };
         this.submittingLecture = true;
-        const [err, response] = await
+        const r = await
             to($http.post<ILecture>("/createLecture", lectureParams));
         this.submittingLecture = false;
-        if (!response) {
-            if (err) {
-                await showMessageDialog(err.data.error);
-            }
+        if (!r.ok) {
+            await showMessageDialog(r.result.data.error);
             return;
         }
-        this.close(response.data);
+        this.close(r.result.data);
     }
 
     /**

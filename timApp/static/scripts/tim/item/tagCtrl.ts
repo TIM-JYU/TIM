@@ -74,16 +74,14 @@ export class ShowTagController extends DialogController<{ params: IItem }, {}, "
      * Gets all unique tags in the database as an ITag list.
      */
     private async getUniqueTags(): Promise<ITag[] | undefined> {
-        const [err, response] = await to($http.get<ITag[]>(`/tags/getAllTags`));
-        if (err) {
-            this.errorMessage = err.data.error;
+        const r = await to($http.get<ITag[]>(`/tags/getAllTags`));
+        if (!r.ok) {
+            this.errorMessage = r.result.data.error;
             this.successMessage = undefined;
             return;
         } else {
             this.errorMessage = undefined;
-        }
-        if (response) {
-            this.allTags = response.data;
+            this.allTags = r.result.data;
             return this.allTags;
         }
     }
@@ -93,16 +91,14 @@ export class ShowTagController extends DialogController<{ params: IItem }, {}, "
      */
     private async updateTags() {
         const docPath = this.resolve.params.path;
-        const [err, response] = await to($http.get<ITag[]>(`/tags/getTags/${docPath}`));
+        const r = await to($http.get<ITag[]>(`/tags/getTags/${docPath}`));
 
-        if (err) {
-            this.errorMessage = err.data.error;
+        if (!r.ok) {
+            this.errorMessage = r.result.data.error;
             this.successMessage = undefined;
         } else {
             this.errorMessage = undefined;
-        }
-        if (response) {
-            this.tagsList = response.data;
+            this.tagsList = r.result.data;
             // Get all globally used tags and remove document's tags from them for tag suggestion list.
             const allTags = await this.getUniqueTags();
             const tagsListStrings = [];
@@ -142,15 +138,13 @@ export class ShowTagController extends DialogController<{ params: IItem }, {}, "
                 type: this.selected.type,
             };
             const data = {oldTag: this.selected, newTag: newTag};
-            const [err, response] = await to($http.post(`/tags/edit/${docPath}`, data));
+            const r = await to($http.post(`/tags/edit/${docPath}`, data));
 
-            if (err) {
-                this.errorMessage = err.data.error;
+            if (!r.ok) {
+                this.errorMessage = r.result.data.error;
                 this.successMessage = undefined;
             } else {
                 this.errorMessage = undefined;
-            }
-            if (response) {
                 this.successMessage = `'${this.selected.name}' was edited.`;
                 this.selected = undefined;
                 await this.updateTags();
@@ -184,15 +178,13 @@ export class ShowTagController extends DialogController<{ params: IItem }, {}, "
 
         const docPath = this.resolve.params.path;
         const data = {tagObject: t};
-        const [err, response] = await to($http.post(`/tags/remove/${docPath}`, data));
+        const r = await to($http.post(`/tags/remove/${docPath}`, data));
 
-        if (err) {
-            this.errorMessage = err.data.error;
+        if (!r.ok) {
+            this.errorMessage = r.result.data.error;
             this.successMessage = undefined;
         } else {
             this.errorMessage = undefined;
-        }
-        if (response) {
             this.successMessage = `'${t.name}' was removed.`;
             await this.updateTags();
             return;
@@ -224,15 +216,13 @@ export class ShowTagController extends DialogController<{ params: IItem }, {}, "
             }
         });
         const data = {tags: tagObjects};
-        const [err, response] = await to($http.post(`/tags/add/${docPath}`, data));
+        const r = await to($http.post(`/tags/add/${docPath}`, data));
 
-        if (err) {
-            this.errorMessage = err.data.error;
+        if (!r.ok) {
+            this.errorMessage = r.result.data.error;
             this.successMessage = undefined;
         } else {
             this.errorMessage = undefined;
-        }
-        if (response) {
             this.successMessage = `'${this.tagName}' successfully added.`;
             await this.updateTags();
             this.tagName = "";

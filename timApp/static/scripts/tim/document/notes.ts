@@ -82,10 +82,10 @@ export class NotesHandler {
             };
         } else {
             url = "/editNote";
-            const [err, resp] = await to($http.get<{text: string, extraData: INote}>("/note/" + options.noteData.id));
+            const r = await to($http.get<{text: string, extraData: INote}>("/note/" + options.noteData.id));
 
-            if (resp) {
-                const notedata = resp.data;
+            if (r.ok) {
+                const notedata = r.result.data;
                 initialText = notedata.text;
                 data = {
                     id: options.noteData.id,
@@ -93,11 +93,9 @@ export class NotesHandler {
                         markread: false,
                     },
                 };
-            } else if (err) {
-                await showMessageDialog(`Failed to open comment editor: ${err.data.error}`);
-                return;
             } else {
-                throw new Error("unreachable");
+                await showMessageDialog(`Failed to open comment editor: ${r.result.data.error}`);
+                return;
             }
         }
 
@@ -132,21 +130,21 @@ export class NotesHandler {
                 }],
             },
             deleteCb: async () => {
-                const [err, resp] = await to($http.post<IParResponse>(`/deleteNote`, extraData));
-                if (err) {
-                    return {error: err.data.error};
-                } else if (resp) {
-                    this.viewctrl.editingHandler.addSavedParToDom(resp.data, params);
+                const r = await to($http.post<IParResponse>(`/deleteNote`, extraData));
+                if (!r.ok) {
+                    return {error: r.result.data.error};
+                } else {
+                    this.viewctrl.editingHandler.addSavedParToDom(r.result.data, params);
                 }
                 return {};
             },
             previewCb: async (text) => (await $http.post<IPluginInfoResponse>(`/preview/${this.viewctrl.docId}`, {text, ...extraData})).data,
             saveCb: async (text, eData) => {
-                const [err, resp] = await to($http.post<IParResponse>(url, {text, ...eData}));
-                if (err) {
-                    return {error: err.data.error};
-                } else if (resp) {
-                    this.viewctrl.editingHandler.addSavedParToDom(resp.data, params);
+                const r = await to($http.post<IParResponse>(url, {text, ...eData}));
+                if (!r.ok) {
+                    return {error: r.result.data.error};
+                } else {
+                    this.viewctrl.editingHandler.addSavedParToDom(r.result.data, params);
                 }
                 return {};
             },

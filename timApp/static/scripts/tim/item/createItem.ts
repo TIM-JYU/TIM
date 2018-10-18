@@ -53,9 +53,9 @@ class CreateItemController implements IController {
      */
     private async checkExpiredTags() {
         if (this.params && this.params.copy) {
-            const [err, response] = await to($http.get<ITaggedItem>(`/tags/getDoc/${this.params.copy}`));
-            if (response) {
-                const tags = response.data.tags;
+            const r = await to($http.get<ITaggedItem>(`/tags/getDoc/${this.params.copy}`));
+            if (r.ok) {
+                const tags = r.result.data.tags;
                 for (const tag of tags) {
                     if (tag.expires && tag.type === TagType.Regular) {
                         this.tagsWithExpirations = true;

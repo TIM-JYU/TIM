@@ -406,11 +406,11 @@ export class PermCtrl implements IController {
             }).then(async (response) => {
             let data = response.data;
             if (data.duplicates.length > 0) {
-                const [err, result] = await to(showRenameDialog({
+                const r = await to(showRenameDialog({
                     duplicates: data.duplicates,
                 }));
-                if (result && isManageResponse(result)) {
-                    data = result;
+                if (r.ok && isManageResponse(r.result)) {
+                    data = r.result;
                 }
             }
             this.updateFullText(data.fulltext);

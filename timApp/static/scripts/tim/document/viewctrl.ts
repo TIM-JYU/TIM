@@ -359,9 +359,9 @@ export class ViewCtrl implements IController {
      */
     private async checkIfTaggedAsCourse() {
         this.taggedAsCourse = false;
-        const [err, response] = await to($http.get<ITag[]>(`/tags/getTags/${this.item.path}`));
-        if (response) {
-            for (const tag of response.data) {
+        const r = await to($http.get<ITag[]>(`/tags/getTags/${this.item.path}`));
+        if (r.ok) {
+            for (const tag of r.result.data) {
                 if (isCourse(tag)) {
                     if (isExpired(tag)) {
                         return;

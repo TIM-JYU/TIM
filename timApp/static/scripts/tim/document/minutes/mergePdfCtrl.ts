@@ -54,15 +54,13 @@ export class ShowMergePdfController extends DialogController<{ params: IMergePar
      */
     async listAttachments() {
         const url = `/minutes/listAttachments/${this.resolve.params.document.path}`;
-        const  [err, response] = await to($http.get<IAttachmentParams>(url, {}));
-        if (err) {
-            this.errorMessage = err.data.error;
+        const r = await to($http.get<IAttachmentParams>(url, {}));
+        if (!r.ok) {
+            this.errorMessage = r.result.data.error;
             return;
         }
-        if (response) {
-            this.attachmentList = response.data.pdf_paths;
-            this.warnIncompleteList = response.data.incomplete_list;
-        }
+        this.attachmentList = r.result.data.pdf_paths;
+        this.warnIncompleteList = r.result.data.incomplete_list;
     }
 
     /**
@@ -73,26 +71,22 @@ export class ShowMergePdfController extends DialogController<{ params: IMergePar
 
         this.loading = true;
         const url = `/minutes/mergeAttachments/${this.resolve.params.document.path}`;
-        const  [err, response] = await to($http.get<{url: string}>(url, {}));
-        if (err) {
-            void showMessageDialog(err.data.error);
+        const r = await to($http.get<{url: string}>(url, {}));
+        if (!r.ok) {
+            void showMessageDialog(r.result.data.error);
             this.loading = false;
             return;
         }
 
-        if (response) {
-            this.loading = false;
-            const [err2, response2] = await to($http.post<{url: string}>(url, {}));
+        this.loading = false;
+        const r2 = await to($http.post<{url: string}>(url, {}));
 
-            if (err2) {
-                void showMessageDialog (err2.data.error);
-                this.loading = false;
-                return;
-            }
-            if (response2) {
-                this.docUrl = response2.data.url;
-            }
+        if (!r2.ok) {
+            void showMessageDialog(r2.result.data.error);
+            this.loading = false;
+            return;
         }
+        this.docUrl = r2.result.data.url;
     }
 
     async $onInit() {

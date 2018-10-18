@@ -94,18 +94,18 @@ export class BookmarksController implements IController {
     async editItem(group: IBookmarkGroup, item: IBookmark, e: Event) {
         e.stopPropagation();
         e.preventDefault();
-        const [err, bookmark] = await to(showBookmarkDialog({
+        const r = await to(showBookmarkDialog({
             group: group.name,
             name: item.name,
             link: item.link,
         }));
-        if (!bookmark) {
+        if (!r.ok) {
             $timeout(() => {
                 this.keepGroupOpen(group);
             }, 0);
             return;
         }
-        if (!bookmark.name) {
+        if (!r.result.name) {
             return;
         }
         const response = await $http.post<IBookmarkGroup[]>("/bookmarks/edit", {
@@ -113,7 +113,7 @@ export class BookmarksController implements IController {
                 group: group.name,
                 name: item.name,
                 link: item.link,
-            }, new: bookmark,
+            }, new: r.result,
         });
         this.getFromServer(response.data, group);
     }

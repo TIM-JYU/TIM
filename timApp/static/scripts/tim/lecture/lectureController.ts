@@ -207,7 +207,7 @@ export class LectureController implements IController {
         }
         const tryToJoin = lectureCode != null && lectureCode !== AUTOJOIN_CODE;
         if (tryToJoin) {
-            const [err, resp] = await to($http<ILecture>({
+            const r = await to($http<ILecture>({
                 url: "/getLectureByCode",
                 method: "GET",
                 params: {
@@ -216,7 +216,7 @@ export class LectureController implements IController {
                     buster: new Date().getTime(),
                 },
             }));
-            if (!resp) {
+            if (!r.ok) {
                 if (tryToAutoJoin) {
                     await showMessageDialog("Could not find a lecture for this document.");
                 } else {
@@ -225,7 +225,7 @@ export class LectureController implements IController {
                 this.showRightView(answer);
                 return;
             }
-            const joined = await this.joinLecture(resp.data);
+            const joined = await this.joinLecture(r.result.data);
             if (!joined) {
                 this.showRightView(answer);
             }
@@ -524,7 +524,7 @@ export class LectureController implements IController {
     async pollOnce(lastID: number): Promise<[number, number]> {
         let buster = "" + new Date().getTime();
         buster = buster.substring(buster.length - 4);
-        const [err, response] = await to($http<IUpdateResponse>({
+        const r = await to($http<IUpdateResponse>({
             url: "/getUpdates",
             method: "GET",
             params: {
@@ -537,11 +537,11 @@ export class LectureController implements IController {
                 b: buster,
             },
         }));
-        if (!response) {
+        if (!r.ok) {
             // in case of an error, wait 30 seconds before trying again
             return [30000, lastID];
         }
-        const answer = response.data;
+        const answer = r.result.data;
         if (isLectureListResponse(answer)) {
             this.showBasicView(answer);
         } else if (hasUpdates(answer)) {

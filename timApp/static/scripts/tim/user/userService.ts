@@ -95,7 +95,7 @@ export class UserService {
     }
 
     public async loginWithEmail(email: string, password: string, addUser: boolean): ToReturn<ILoginResponse> {
-        const [err, response] = await to($http<ILoginResponse>(
+        const r = await to($http<ILoginResponse>(
             {
                 method: "POST",
                 url: "/altlogin",
@@ -109,17 +109,11 @@ export class UserService {
                     add_user: addUser,
                 }),
             }));
-        if (response) {
-            this.group = response.data.other_users;
-            this.current = response.data.current_user;
+        if (r.ok) {
+            this.group = r.result.data.other_users;
+            this.current = r.result.data.current_user;
         }
-        if (err && !response) {
-            return [err, response];
-        } else if (response && !err) {
-            return [err, response];
-        } else {
-            throw new Error("unreachable");
-        }
+        return r;
     }
 }
 

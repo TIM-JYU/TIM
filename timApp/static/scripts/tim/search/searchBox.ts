@@ -325,24 +325,22 @@ export class SearchBoxCtrl implements IController {
      * @returns {Promise<void>}
      */
     private async pathSearch() {
-        const [err, response] = await to($http<ISearchResultsInfo>({
+        const r = await to($http<ISearchResultsInfo>({
             method: "GET",
             params: {...this.getCommonSearchOptions()},
             url: "/search/paths",
         }));
-        if (err) {
-            this.errorMessage = this.getErrorMessage(err);
+        if (!r.ok) {
+            this.errorMessage = this.getErrorMessage(r.result);
             this.pathResults = [];
             return;
         }
-        if (response) {
-            // Path results use title interface.
-            this.pathResults.push(...response.data.title_results);
-            if (response.data.incomplete_search_reason) {
-                this.incompleteSearchReason = response.data.incomplete_search_reason;
-            }
-            this.pathMatchCount = response.data.title_result_count;
+        // Path results use title interface.
+        this.pathResults.push(...r.result.data.title_results);
+        if (r.result.data.incomplete_search_reason) {
+            this.incompleteSearchReason = r.result.data.incomplete_search_reason;
         }
+        this.pathMatchCount = r.result.data.title_result_count;
     }
 
     /**
@@ -350,23 +348,21 @@ export class SearchBoxCtrl implements IController {
      * @returns {Promise<void>}
      */
     private async titleSearch() {
-        const [err, response] = await to($http<ISearchResultsInfo>({
+        const r = await to($http<ISearchResultsInfo>({
             method: "GET",
             params: {...this.getCommonSearchOptions()},
             url: "/search/titles",
         }));
-        if (err) {
-            this.errorMessage = this.getErrorMessage(err);
+        if (!r.ok) {
+            this.errorMessage = this.getErrorMessage(r.result);
             this.titleResults = [];
             return;
         }
-        if (response) {
-            this.titleResults = response.data.title_results;
-            if (response.data.incomplete_search_reason) {
-                this.incompleteSearchReason = response.data.incomplete_search_reason;
-            }
-            this.titleMatchCount = response.data.title_result_count;
+        this.titleResults = r.result.data.title_results;
+        if (r.result.data.incomplete_search_reason) {
+            this.incompleteSearchReason = r.result.data.incomplete_search_reason;
         }
+        this.titleMatchCount = r.result.data.title_result_count;
     }
 
     /**
@@ -374,7 +370,7 @@ export class SearchBoxCtrl implements IController {
      * @returns {Promise<void>}
      */
     private async wordSearch() {
-        const [err, response] = await to($http<ISearchResultsInfo>({
+        const r = await to($http<ISearchResultsInfo>({
             method: "GET",
             params: {
                 ignorePlugins: this.ignorePlugins,
@@ -385,21 +381,20 @@ export class SearchBoxCtrl implements IController {
             },
             url: "/search",
         }));
-        if (err) {
-            this.errorMessage = this.getErrorMessage(err);
+        if (!r.ok) {
+            this.errorMessage = this.getErrorMessage(r.result);
             this.results = [];
             this.titleResults = [];
             return;
         }
-        if (response) {
-            this.results = response.data.content_results;
-            this.titleResults = response.data.title_results;
-            if (response.data.incomplete_search_reason) {
-                this.incompleteSearchReason = response.data.incomplete_search_reason;
-            }
-            this.wordMatchCount = response.data.word_result_count;
-            this.titleMatchCount = response.data.title_result_count;
+        const response = r.result;
+        this.results = response.data.content_results;
+        this.titleResults = response.data.title_results;
+        if (response.data.incomplete_search_reason) {
+            this.incompleteSearchReason = response.data.incomplete_search_reason;
         }
+        this.wordMatchCount = response.data.word_result_count;
+        this.titleMatchCount = response.data.title_result_count;
     }
 
     /**
@@ -407,20 +402,20 @@ export class SearchBoxCtrl implements IController {
      * @returns {Promise<void>}
      */
     private async tagSearch() {
-        const [err, response] = await to($http<ITagSearchResultsInfo>({
+        const r = await to($http<ITagSearchResultsInfo>({
             method: "GET",
             params: {...this.getCommonSearchOptions()},
             url: "/search/tags",
         }));
-        if (response) {
+        if (r.ok) {
+            const response = r.result;
             this.tagResults = response.data.results;
             this.tagMatchCount = response.data.tag_result_count;
             if (response.data.incomplete_search_reason) {
                 this.incompleteSearchReason = response.data.incomplete_search_reason;
             }
-        }
-        if (err) {
-            this.errorMessage = this.getErrorMessage(err);
+        } else {
+            this.errorMessage = this.getErrorMessage(r.result);
             this.tagResults = [];
             return;
         }
