@@ -60,11 +60,11 @@ def get_block(doc_id, par_id):
         try:
             section = d.document.export_section(area_start, area_end)
         except TimDbException as e:
-            return abort(404, str(e))
+            return abort(404, 'Area not found. It may have been deleted.')
         return json_response({"text": section})
     else:
         try:
             par = d.document.get_paragraph(par_id)
         except TimDbException as e:
-            return abort(404, str(e))
+            return abort(404, 'Paragraph not found. It may have been deleted.')
         return json_response({"text": par.get_exported_markdown()})

@@ -19,11 +19,11 @@ class EditTest(TimRouteTest):
                          expect_status=400,
                          expect_content={'error': f'Paragraph {invalid_par} does not exist'})
         self.get(f'/getBlock/{d.id}/{invalid_par}', expect_status=404,
-                 expect_content=f'Document {d.id}: Paragraph not found: {invalid_par}',
+                 expect_content='Paragraph not found. It may have been deleted.',
                  json_key='error')
         self.get(f'/getBlock/{d.id}/{par_id}', query_string={'area_start': par_id, 'area_end': invalid_par},
                  expect_status=404,
-                 expect_content=f'Document {d.id}: Paragraph not found: {invalid_par}',
+                 expect_content='Area not found. It may have been deleted.',
                  json_key='error')
 
     def test_duplicate_task_ids(self):
