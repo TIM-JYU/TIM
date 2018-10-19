@@ -27,7 +27,7 @@ def get_note(note_id):
     timdb = get_timdb()
     note = timdb.notes.get_note(note_id)
     if not note:
-        abort(404)
+        abort(404, 'Comment not found. It may have been deleted.')
     d = get_doc_or_abort(note['doc_id'])
     if not (timdb.notes.has_edit_access(get_current_user_group(), note_id) or has_ownership(d)):
         abort(403)

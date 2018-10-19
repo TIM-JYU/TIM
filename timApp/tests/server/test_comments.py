@@ -53,7 +53,10 @@ class CommentTest(NotifyTestBase):
         self.json_post('/postNote', {}, expect_status=400)
 
     def test_nonexistent_note(self):
-        self.get('/note/999', expect_status=404)
+        self.get('/note/999',
+                 expect_status=404,
+                 expect_content='Comment not found. It may have been deleted.',
+                 json_key='error')
 
     def test_nonexistent_note_post(self):
         self.login_test1()
