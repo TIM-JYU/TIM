@@ -208,3 +208,52 @@ class TranslationTest(TimRouteTest):
         t = self.create_translation(d)
         t.document.add_text('#- {r=tr}')
         self.get(t.url)
+
+    def test_translation_outofdate(self):
+        self.login_test1()
+        d = self.create_doc(initial_par="""
+a
+#-
+b
+        """)
+        t = self.create_translation(d)
+        self.check_outofdate_count(t, 2)
+        par = d.document.get_paragraphs()[0]
+        tr_par = t.document.get_paragraphs()[0]
+        self.post_par(t.document,
+                      tr_par.get_exported_markdown() + ' tr',
+                      tr_par.get_id(),
+                      extra_data={'tags': {'marktranslated': True}})
+        self.check_outofdate_count(t, 1)
+        self.post_par(d.document,
+                      par.get_exported_markdown() + ' edit',
+                      par.get_id())
+        self.check_outofdate_count(t, 2)
+        self.post_par(t.document,
+                      tr_par.get_exported_markdown() + ' tr2',
+                      tr_par.get_id(),
+                      extra_data={'tags': {'marktranslated': True}})
+        self.check_outofdate_count(t, 1)
+        self.post_par(t.document,
+                      tr_par.get_exported_markdown() + ' tr',
+                      tr_par.get_id(),
+                      extra_data={'tags': {'marktranslated': False}})
+        self.check_outofdate_count(t, 2)
+
+        # Make sure merely toggling translation state (without changing markdown) will update the paragraph.
+        self.post_par(t.document,
+                      tr_par.get_exported_markdown() + ' tr',
+                      tr_par.get_id(),
+                      extra_data={'tags': {'marktranslated': True}})
+        self.check_outofdate_count(t, 1)
+
+        self.test_user_2.grant_access(t.id, 'view')
+
+        # only editors should see the outofdate messages
+        self.login_test2()
+        self.check_outofdate_count(t, 0)
+
+    def check_outofdate_count(self, t, count):
+        e = self.get(t.url, as_tree=True)
+        outofdates = e.cssselect('.tr-outofdate')
+        self.assertEqual(count, len(outofdates))

@@ -27,7 +27,7 @@ import {
 } from "../parhelpers";
 import {ViewCtrl} from "../viewctrl";
 import {viewCtrlDot} from "../viewutils";
-import {IExtraData, IParResponse} from "./edittypes";
+import {IExtraData, IParResponse, ITags} from "./edittypes";
 import {isManageResponse, showRenameDialog} from "./pluginRenameForm";
 import {handleUnread} from "../readings";
 
@@ -214,9 +214,17 @@ export class EditingHandler {
             areaEnd = undefined;
         }
 
-        const tags = {markread: false};
-        const markread = $window.localStorage.getItem("markread") || false;
-        tags.markread = markread === "true";
+        const tagKeys: Array<keyof ITags> = ["markread"];
+        const tagsDescs: Array<{name: keyof ITags, desc: string}> = [{name: "markread", desc: "Mark as read"}];
+        const tags: ITags = {markread: false};
+        if (this.viewctrl.item.src_docid != null) {
+            tagKeys.push("marktranslated");
+            tagsDescs.push({name: "marktranslated", desc: "Mark as translated"});
+        }
+        for (const t of tagKeys) {
+            const x = window.localStorage.getItem(t) || false;
+            tags[t] = x === "true";
+        }
 
         const extraData: IExtraData = {
             area_end: areaEnd,
@@ -261,9 +269,7 @@ This will delete the whole ${options.area ? "area" : "paragraph"} from the docum
                 showPlugins: true,
                 cursorPosition: cursorPos,
                 showSettings: params.type === EditType.Edit ? isSettingsPar(params.pars) : false,
-                tags: [
-                    {name: "markread", desc: "Mark as read"},
-                ],
+                tags: tagsDescs,
                 touchDevice: isMobileDevice(),
             },
             deleteCb: async () => {

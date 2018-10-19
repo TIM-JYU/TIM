@@ -261,10 +261,24 @@ def modify_paragraph_common(doc_id, md, par_id, par_next_id):
         pars_to_add = editor_pars[1:]
         abort_if_duplicate_ids(doc, pars_to_add)
 
-        if editor_pars[0].is_different_from(original_par):
+        p = editor_pars[0]
+        tr_opt = edit_request.mark_translated
+        if tr_opt is None:
+            pass
+        elif tr_opt:
+            if p.is_translation():
+                try:
+                    deref = p.get_referenced_pars(set_html=False)
+                except TimDbException as e:
+                    return abort(400, str(e))
+                p.set_attr('rt', deref[0].get_hash())
+        else:
+            p.set_attr('rt', None)
+
+        if p.is_different_from(original_par):
             verify_par_edit_access(original_par)
             par = doc.modify_paragraph_obj(par_id=par_id,
-                                           p=editor_pars[0])
+                                           p=p)
             pars.append(par)
             edit_result.changed.append(par)
         else:

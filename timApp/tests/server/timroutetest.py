@@ -370,7 +370,7 @@ class TimRouteTest(TimDbTest):
                             headers=headers,
                             **kwargs)
 
-    def post_par(self, doc: Document, text: str, par_id: str, **kwargs):
+    def post_par(self, doc: Document, text: str, par_id: str, extra_data=None, **kwargs):
         """Edits a paragraph in a document.
 
         :param doc: The document to be edited.
@@ -380,11 +380,14 @@ class TimRouteTest(TimDbTest):
 
         """
         doc.clear_mem_cache()
+        if extra_data is None:
+            extra_data = {}
         return self.json_post('/postParagraph/', {
             "text": text,
             "docId": doc.doc_id,
             "par": par_id,
-            "par_next": None
+            "par_next": None,
+            **extra_data,
         }, **kwargs)
 
     def post_area(self, doc: DocInfo, text: str, area_start: str, area_end: str, **kwargs):

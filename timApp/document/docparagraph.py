@@ -54,6 +54,7 @@ class DocParagraph:
         self.attrs = None
         self.nomacros = False
         self.nocache = False
+        self.ref_chain = None
 
     def __eq__(self, other):
         if isinstance(other, self.__class__):
@@ -1045,6 +1046,18 @@ class DocParagraph:
         return DumboOptions(math_type=MathType.from_string(self.get_attr('math_type') or base_opts.math_type),
                             math_preamble=self.get_attr('math_preamble') or base_opts.math_preamble)
 
+    def is_translation_out_of_date(self):
+        if not self.ref_chain:
+            return False
+        last_ref = self.ref_chain.prev_deref
+        reached_par = self.ref_chain
+        return (
+                last_ref.is_translation()
+                and not reached_par.is_setting()
+                and reached_par.get_hash() != last_ref.get_attr('rt')
+        )
+
+
 def is_real_id(par_id: Optional[str]):
     """Returns whether the given paragraph id corresponds to some real paragraph
     instead of being None or a placeholder value ('HELP_PAR').
@@ -1087,16 +1100,16 @@ def create_final_par(reached_par: DocParagraph, set_html: bool) -> DocParagraph:
 
     first_ref = reached_par
     is_any_norm_reference = False
-    ref_chain = []
+    ref_list = []
     while True:
-        ref_chain.append(first_ref)
+        ref_list.append(first_ref)
         if not first_ref.prev_deref:
             break
         first_ref = first_ref.prev_deref
         is_any_norm_reference = is_any_norm_reference or (first_ref.is_reference() and not first_ref.is_translation())
 
     new_attrs = {}
-    for r in reversed(ref_chain):
+    for r in reversed(ref_list):
         for k, v in r.get_attrs().items():
             if k in SKIPPED_ATTRS:
                 continue
@@ -1108,7 +1121,7 @@ def create_final_par(reached_par: DocParagraph, set_html: bool) -> DocParagraph:
                 li += v
             else:
                 new_attrs[k] = v
-    if all(p.is_setting() for p in ref_chain):
+    if all(p.is_setting() for p in ref_list):
         new_attrs['settings'] = ''
 
     final_par = DocParagraph.create(
@@ -1134,6 +1147,8 @@ def create_final_par(reached_par: DocParagraph, set_html: bool) -> DocParagraph:
     elif last_ref.is_translation():
         final_par.doc = last_ref.doc
         final_par.ref_doc = last_ref.doc.get_source_document()
+
+    final_par.ref_chain = reached_par
 
     if set_html:
         html = last_ref.get_html(from_preview=False) if last_ref.is_translation(

@@ -143,12 +143,10 @@
             </label>
         </div>
     </div>
-    <div class="editoropts">
-        <label class="font-weight-normal"><input type="checkbox" ng-model="$ctrl.proeditor"/> Advanced view</label>
-        <label class="font-weight-normal" ng-show="$ctrl.aceEnabled()"><input type="checkbox" ng-model="$ctrl.autocomplete"/> Autocomplete</label>
-    </div>
-    <div class="editortags">
-        <label class="font-weight-normal" ng-repeat="tag in $ctrl.getOptions().tags">
+    <div class="inline-flex">
+        <label class="font-weight-normal margin-5-right"><input type="checkbox" ng-model="$ctrl.proeditor"/> Advanced view</label>
+        <label class="font-weight-normal margin-5-right" ng-show="$ctrl.aceEnabled()"><input type="checkbox" ng-model="$ctrl.autocomplete"/> Autocomplete</label>
+        <label class="font-weight-normal margin-5-right" ng-repeat="tag in $ctrl.getOptions().tags">
             <input type="checkbox" ng-model="$ctrl.getExtraData().tags[tag.name]"/> {{ tag.desc }}
         </label>
     </div>

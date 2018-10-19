@@ -3,7 +3,8 @@ import $ from "jquery";
 import rangyinputs from "rangyinputs";
 import {setEditorScope} from "tim/editor/editorScope";
 import {markAsUsed} from "tim/util/utils";
-import {IExtraData} from "../document/editing/edittypes";
+import {timApp} from "../app";
+import {IExtraData, ITags} from "../document/editing/edittypes";
 import {getElementByParId} from "../document/parhelpers";
 import {DialogController, registerDialogComponent, showDialog, showMessageDialog} from "../ui/dialog";
 import {$http, $localStorage, $timeout, $upload, $window} from "../util/ngimport";
@@ -11,7 +12,6 @@ import {IAceEditor} from "./ace-types";
 import {AceParEditor} from "./AceParEditor";
 import {IPluginInfoResponse, ParCompiler} from "./parCompiler";
 import {TextAreaParEditor} from "./TextAreaParEditor";
-import {timApp} from "../app";
 
 markAsUsed(rangyinputs);
 
@@ -22,7 +22,7 @@ export interface IPreviewResult {
 }
 
 export interface ITag {
-    name: string;
+    name: keyof ITags;
     desc: string;
 }
 
@@ -355,13 +355,9 @@ ${backTicks}
     }
 
     getLocalBool(name: string, def: boolean): boolean {
-        let ret = def;
-        if (!ret) {
-            ret = false;
-        }
         const val = this.storage.getItem(name + this.getSaveTag());
         if (!val) {
-            return ret;
+            return def;
         }
         return val === "true";
     }
@@ -666,8 +662,10 @@ or newer one that is more familiar to write in YAML:
         if (this.getExtraData().access != null) {
             $localStorage.noteAccess = this.getExtraData().access;
         }
-        if (this.getExtraData().tags.markread != null) { // TODO: use a loop
-            $window.localStorage.setItem("markread", this.getExtraData().tags.markread.toString());
+        for (const [k, v] of Object.entries(this.getExtraData().tags)) {
+            if (v != null) {
+                $window.localStorage.setItem(k, v.toString());
+            }
         }
         this.setLocalValue("proeditor", this.proeditor.toString());
 

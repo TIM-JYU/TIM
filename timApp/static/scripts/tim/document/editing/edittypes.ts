@@ -32,6 +32,8 @@ export interface IParInfo {
     area_end?: string;
 }
 
+export type ITags = {markread: boolean, marktranslated?: boolean};
+
 export interface IExtraData extends IParInfo {
     // attrs: {classes: string[], [i: string]: any};
     docId: number;
@@ -39,7 +41,7 @@ export interface IExtraData extends IParInfo {
     id?: string; // note id
     forced_classes?: string[];
     access?: string;
-    tags: {markread: boolean};
+    tags: ITags;
 }
 
 export type Duplicate = [string, string] | [string, string, "hasAnswers"];

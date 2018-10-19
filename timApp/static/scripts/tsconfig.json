@@ -14,7 +14,7 @@
     "target": "es5",
     "lib": [
       "dom",
-      "es7",
+      "es2017",
       "scripthost"
     ],
     "experimentalDecorators": true,

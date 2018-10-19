@@ -10,7 +10,8 @@ from timApp.document.docentry import DocEntry
 
 class EditRequest:
     def __init__(self, doc: Document, area_start: str = None, area_end: str = None, par: str = None, text: str = None,
-                 next_par_id: str = None, preview: bool = False, forced_classes: Optional[List[str]]=None):
+                 next_par_id: str = None, preview: bool = False, forced_classes: Optional[List[str]] = None,
+                 mark_translated: bool=None):
         self.forced_classes = forced_classes or []
         self.doc = doc
         self.preview = preview
@@ -23,6 +24,7 @@ class EditRequest:
         self.editor_pars = None
         self.original_par = self.doc.get_paragraph(self.par) if not self.editing_area and par is not None and not self.is_adding else None
         self.context_par = self.get_context_par()
+        self.mark_translated = mark_translated
 
     @property
     def is_adding(self):
@@ -68,9 +70,11 @@ class EditRequest:
     def from_request(doc: Document, text: Optional[str] = None, preview: bool = False) -> 'EditRequest':
         if text is None:
             text, = verify_json_params('text')
-        area_start, area_end, par, par_next, forced_classes = verify_json_params('area_start', 'area_end', 'par',
-                                                                                 'par_next', 'forced_classes',
-                                                                                 require=False)
+        area_start, area_end, par, par_next, forced_classes, tags = verify_json_params('area_start', 'area_end', 'par',
+                                                                                       'par_next', 'forced_classes',
+                                                                                       'tags',
+                                                                                       require=False)
+        mark_translated = tags.get('marktranslated') if tags else None
         return EditRequest(doc=doc,
                            text=text,
                            area_start=area_start,
@@ -78,7 +82,8 @@ class EditRequest:
                            par=par,
                            next_par_id=par_next,
                            preview=preview,
-                           forced_classes=forced_classes)
+                           forced_classes=forced_classes,
+                           mark_translated=mark_translated)
 
 
 def get_pars_from_editor_text(doc: Document, text: str,

@@ -196,6 +196,13 @@ a .glyphicon {
         }
     }
 
+    .tr-outofdate::before {
+        content: "Translation is out of date";
+        color: red;
+        position: absolute;
+        top: 0;
+        right: 0;
+    }
 
     .mdcontent {
         color: #DCDCDC;
@@ -753,7 +760,7 @@ pareditor {
     display: block;
     background: inherit;
 
-    .editortags, .choices, .editoropts {
+    .choices {
         display: inline-block;
     }
 
@@ -1198,4 +1205,8 @@ body > .footer {
 
 .margin-5-right {
     margin-right: 5px;
+}
+
+.inline-flex {
+    display: inline-flex;
 }

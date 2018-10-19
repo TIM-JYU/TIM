@@ -8,6 +8,7 @@ from xml.sax.saxutils import quoteattr
 import yaml
 import yaml.parser
 
+from timApp.auth.accesshelper import has_edit_access
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.document import dereference_pars, Document
 from timApp.document.yamlblock import YamlBlock
@@ -86,14 +87,15 @@ def pluginify(doc: Document,
     :param target_format: for MD-print what exact format to use
     :param dereference: should pars be checked id dereference is needed
     :return: Processed HTML blocks along with JavaScript, CSS stylesheet and AngularJS module dependencies.
-
-    :type pars: list[DocParagraph]
-
     """
 
     taketime("answ", "start")
     if dereference:
         pars = dereference_pars(pars, context_doc=doc)
+    if not edit_window and has_edit_access(doc.get_docinfo()):
+        for p in pars:
+            if p.is_translation_out_of_date():
+                p.add_class('tr-outofdate')
     if sanitize:
         for par in pars:
             par.sanitize_html()

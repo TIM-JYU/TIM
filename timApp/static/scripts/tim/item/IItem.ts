@@ -13,6 +13,7 @@ export interface IItem {
     rights: IRights;
     versions: Array<{}>;
     path: string;
+    src_docid?: number;
 }
 
 export interface ITag {
