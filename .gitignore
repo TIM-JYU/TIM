@@ -43,6 +43,7 @@
 /variables.sh
 _build/
 bower_components/
+cargo-cache/
 dist/
 dist_*/
 log.txt
