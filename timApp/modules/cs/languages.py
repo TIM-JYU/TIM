@@ -7,6 +7,23 @@ sys.path.insert(0, '/py')  # /py on mountattu docker kontissa /opt/tim/timApp/mo
 
 from fileParams import *  # noqa
 
+"""
+Adding new language to csPlugin:
+
+0. Install new compiler to cs/Dockerfile and build new Dcoker container form that
+    - in /opt/tim run ./docker-compose.sh build csplugin
+1. Add language name to languages list at the bottom of this file
+    - remember to use lowercase letters
+2. Add language class starting with capital letter
+3. Mimic some existing language when doing the new class
+    - the most simpliest one is CC that works when just compiler name end extensions are enought to change 
+4. And language to csPlugin.ts languageTypes.runTypes list
+   and to exactly same place the Ace-editor highligter name to languageTypes.aceModes
+     - if there is shorter language name in the list, add new name befre the
+       shorter name.  F.ex there is "r", so every langua name tarting with "r"
+       must be before "r" in the list (TODO: fix the list not depedent of the order) 
+"""
+
 cmdline_whitelist = "A-Za-z\-/\.åöäÅÖÄ 0-9_"
 filename_whitelist = "A-Za-z\-/\.åöäÅÖÄ 0-9_"
 
@@ -1021,6 +1038,22 @@ class Rust(Language):
         return self.runself([self.pure_exename])
 
 
+class Pascal(Language):
+    def __init__(self, query, sourcecode):
+        super().__init__(query, sourcecode)
+        self.compiler = "fpc"
+
+    def extension(self):
+        self.check_extension([".pp", ".pas"], ".pas", ".exe")
+
+    def get_cmdline(self, sourcecode):
+        return self.compiler + " %s %s -o%s" % (self.opt, self.sourcefilename, self.exename)
+
+    def run(self, web, sourcelines, points_rule):
+        return self.runself([self.pure_exename])
+
+
+
 # Copy this for new language class
 class Lang(Language):
     def __init__(self, query, sourcecode):
@@ -1081,3 +1114,4 @@ languages["ping"] = Ping
 languages["kotlin"] = Kotlin
 languages["fortran"] = Fortran
 languages["rust"] = Rust
+languages["pascal"] = Pascal
