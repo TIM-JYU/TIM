@@ -2,7 +2,7 @@ import {timApp} from "../app";
 import {IController, IRootElementService, IScope} from "angular";
 import {Binding} from "../util/utils";
 
-enum ParameterType {
+export enum ParameterType {
     NUMBER,
     STRING
 }
@@ -10,7 +10,7 @@ enum ParameterType {
 /**
  * Generic base class for all tape machine commands.
  */
-abstract class Command {
+export abstract class Command {
     protected constructor(name: string, abbreviation: string) {
         this.name = name;
         this.abbreviation = abbreviation;
@@ -26,6 +26,12 @@ abstract class Command {
         return "Parameter";
     }
 
+    public toString(param: string): string {
+        if ( this.usesParameter )
+            return this.name + "(" + param + ")"
+        return this.name;
+    }
+
     public isLabel(): boolean { return false; }
 
     public getParameterType() : ParameterType { return ParameterType.STRING; }
@@ -34,7 +40,7 @@ abstract class Command {
 /**
  * The parameters given to a command when it is executed.
  */
-class CommandParameters {
+export class CommandParameters {
     constructor(state: TapeState, mainParam: any, commandList: CommandInstance[]) {
         this.state = state;
         this.mainParam = mainParam;
@@ -74,6 +80,9 @@ class Output extends Command {
     public execute(params: CommandParameters) {
         if (params.state.hand != null) {
             params.state.output.push(params.state.hand);
+            while (params.state.output.length > 6 ) {
+                params.state.output.splice(0,1);
+            }
             params.state.hand = undefined;
         }
     }
@@ -158,6 +167,10 @@ class DefineLabel extends Command {
     public getParameterName() { return "Label"; }
 
     public isLabel() { return true; }
+
+    public toString(param: string): string {
+        return param + ":"
+    }
 }
 
 class Jump extends Command {
@@ -210,7 +223,7 @@ class JumpIfNeg extends Jump {
 /**
  * An instance of a command to be executed. Includes the command and its parameters.
  */
-class CommandInstance {
+export class CommandInstance {
     constructor(cmd: Command, param: any) {
         this.command = cmd;
         this.parameter = param;
@@ -235,7 +248,7 @@ class CommandInstance {
 /**
  * The state of the tape machine.
  */
-class TapeState {
+export class TapeState {
     public input: number[] = [];
     public hand: number | undefined;
     public output: number[] = [];
@@ -253,6 +266,11 @@ export interface TapeAttrs {
     presetOutput?: number[];
     presetMemoryState?: number[];
     presetCode?: string;
+    hideCommands: boolean;
+    hidePresetInput: boolean;
+    hidePresetMem: boolean;
+    hideTextMode: boolean;
+    hideCopyAll: boolean;
 }
 
 /**
@@ -269,6 +287,14 @@ export class TapeController implements IController {
 
     $onInit() {
         this.step = this.step.bind(this);
+        this.inputString = "";
+        if ( this.data.presetInput ) {
+            this.inputString = String(this.data.presetInput);
+        }
+        this.memString = "";
+        if ( this.data.presetMemoryState ) {
+            this.memString = String(this.data.presetMemoryState);
+        }
         this.reset();
         this.selectedCommandIndex = this.commandList.length;
     }
@@ -285,7 +311,7 @@ export class TapeController implements IController {
     private newCommandParameter: string = "";
     private newCommandParameterText: string = "Parameter:";
 
-    private showNewCommandParameter: boolean = true;
+    private showNewCommandParameter: boolean = false;
 
     // The index of the selected command of the current program, if any
     private selectedCommandIndex: number = -1;
@@ -293,6 +319,11 @@ export class TapeController implements IController {
     private data!: Binding<TapeAttrs, "<">;
 
     private timer: any;
+
+    private inputString : string = '';
+    private memString : string = '';
+    private programAsText: string = '';
+    private textmode: boolean = false;
 
 
     /**
@@ -302,11 +333,22 @@ export class TapeController implements IController {
         if (this.newCommandIndex == -1) {
             return;
         }
+        if (this.textmode) {
+            let n = $("#textAreaRobotProgram").getSelection().start;
+            let r = 0;
+            let text = this.programAsText;
+            for (let i=0; i<n; i++) {
+                if (text[i] === "\n") r++;
+            }
+            this.selectedCommandIndex = r;
+        }
 
         const commandToAdd = this.possibleCommandList[this.newCommandIndex];
         this.addCommand(commandToAdd, this.newCommandParameter, this.selectedCommandIndex);
         if (this.selectedCommandIndex !== -1)
             this.selectedCommandIndex++;
+        if (this.textmode) this.textAll();
+
     }
 
     /**
@@ -343,7 +385,6 @@ export class TapeController implements IController {
         } else {
             this.commandList.splice(index, 0, commandInstance);
         }
-
         return true;
     }
 
@@ -351,6 +392,7 @@ export class TapeController implements IController {
      * Steps the program.
      */
     private step() {
+        this.changeList();
         if (this.state.instructionPointer >= this.commandList.length || this.state.stopped) {
             if (this.timer) {
                 this.stop();
@@ -362,6 +404,9 @@ export class TapeController implements IController {
         const command = this.commandList[this.state.instructionPointer];
         this.state.instructionPointer++;
         command.command.execute(new CommandParameters(this.state, command.parameter, this.commandList));
+        let cmdul = $("#cmditems");
+        let cmdli = cmdul.children()[this.state.instructionPointer];
+        cmdli.scrollIntoView();
     }
 
     private automaticStep() {
@@ -380,8 +425,25 @@ export class TapeController implements IController {
         if (this.timer) {
             this.stop();
         } else {
-            this.timer = setInterval(this.automaticStep(), 500);
+            this.timer = setInterval(() => this.automaticStep(), 500);
         }
+    }
+
+
+    private arrayFromString(s? : string): number[]
+    {
+        if ( !s ) return [];
+        s = s.trim();
+        if ( s === "" ) return [];
+
+        let result = [];
+        var pieces = s.split(',');
+        for (let n of pieces) {
+            let val = Number(n.trim());
+            if ( !val ) val = 0;
+            result.push(val)
+        }
+        return result;
     }
 
     /**
@@ -396,11 +458,7 @@ export class TapeController implements IController {
 
         this.state.stopped = false;
 
-        if (this.data.presetInput) {
-            this.state.input = Array.from(this.data.presetInput);
-        } else {
-            this.state.input = [];
-        }
+        this.state.input = this.arrayFromString(this.inputString);  // Array.from(this.data.presetInput);
 
         if (this.data.presetHand) {
             this.state.hand = this.data.presetHand;
@@ -415,10 +473,11 @@ export class TapeController implements IController {
         }
 
         this.state.memory = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-        if (this.data.presetMemoryState) {
-            for (let i = 0; i < this.data.presetMemoryState.length && this.state.memory.length; i++) {
-                this.state.memory[i] = this.data.presetMemoryState[i];
-            }
+
+        let memState = this.arrayFromString(this.memString);  // Array.from(this.data.presetInput);
+
+        for (let i = 0; i < memState.length && i < this.state.memory.length; i++) {
+            this.state.memory[i] = memState[i];
         }
 
         this.state.instructionPointer = 0;
@@ -447,6 +506,49 @@ export class TapeController implements IController {
         if (this.selectedCommandIndex > -1 && this.selectedCommandIndex < this.commandList.length) {
             this.commandList.splice(this.selectedCommandIndex, 1);
         }
+        // this.textAll();
+    }
+
+    private textAll() {
+        this.programAsText = this.toText();
+    }
+
+
+    private copyAll() {
+        // this.changeText();
+        if ( this.textmode ) {
+            $("#textAreaRobotProgram").select();
+        } else {
+            let text = this.toText();
+            $("#hiddenRobotProgram").val(text).select();
+        }
+        document.execCommand("copy");
+    }
+
+
+    private paste() {
+        if ( this.programAsText === "" ) return;
+        this.commandList = [];
+        this.fromText(this.programAsText);
+    }
+
+
+    private changeList() {
+        if ( !this.textmode ) return;
+        this.textmode = false;
+        this.paste();
+    }
+
+
+    private changeText() {
+        if ( this.textmode ) return;
+        this.textmode = true;
+        this.textAll();
+    }
+
+    private changeMode() {
+        if ( this.textmode ) this.changeList();
+        else this.changeText();
     }
 
     /**
@@ -454,7 +556,10 @@ export class TapeController implements IController {
      */
     private toText(): string {
         let result: string = "";
-        this.commandList.forEach(c => result += `${c.command.name} ${c.parameter}\n`);
+        // this.commandList.forEach(c => result += `${c.command.name} ${c.parameter}\n`);
+        for (let c of this.commandList) {
+             result += c.command.toString(c.parameter) + "\n"
+        }
         return result;
     }
 
@@ -512,7 +617,8 @@ export class TapeController implements IController {
                 continue;
             }
 
-            const command = this.possibleCommandList.find(c => c.name === components[0].trim());
+            let name = components[0].trim().toUpperCase();
+            const command = this.possibleCommandList.find(c => c.name === name);
             if (!command) {
                 continue;
             }
@@ -601,7 +707,7 @@ export class TapeController implements IController {
      * @param index The memory location index.
      */
     private getMemoryText(index: number) {
-        return "#" + String(index);
+        return /* "#" + */ String(index);
     }
 }
 
@@ -611,23 +717,129 @@ timApp.component("timTape", {
         data: "<",
     },
     template: `
-    <div class="no-highlight">
-        <div>
-            <div ng-style="{'display': 'inline-block', 'text-align': 'right'}">
-                <span class="output">
-                <div ng-repeat="n in $ctrl.state.output track by $index" class="tapeItem">{{n}}</div>
-                </span>
+<style>
+
+tim-tape .robotMainDiv {
+    text-align: left;
+
+}
+
+tim-tape .outputvalues, tim-tape .inputvalues, tim-tape .handItem {
+    height: 40px;
+}
+tim-tape .outputbelt, tim-tape .inputbelt {
+    width: 150px;
+    overflow: hidden;
+}
+tim-tape .outputvalues {
+    width: 150px;
+    overflow: hidden;
+    text-align: right;
+}
+tim-tape .inputvalues {
+    width: 150px;
+    overflow: hidden;
+    text-align: left;
+}
+
+tim-tape .robotRunButtons {
+    display: table;
+    position: relative;
+    left: 180px;
+    top: -70px;
+}
+tim-tape .inputbelt, tim-tape .outputbelt, tim-tape .robotDiv {
+    display: inline-block;
+    text-align: center;
+    vertical-align: top;
+}
+tim-tape .robotDiv {
+}
+tim-tape .tapeAndRobotDiv {
+    display: inline-table;
+    width: 700px;
+}
+tim-tape .memoryArea {
+    width: 700px;
+}
+tim-tape .memoryValue {
+    display: inline-table;
+    width: 30px;
+}
+tim-tape .programArea {
+    display: flex;
+    width: 700px;
+}
+tim-tape .commandAddArea .timButton, tim-tape .commandAddArea input {
+    display: grid;
+    width: 100px;
+}
+tim-tape .commandButtons {
+}
+tim-tape .commandAddArea {
+    margin-top: 30px;
+    width: 120px;
+}
+tim-tape .commandParamArea {
+    height: 80px;
+}
+tim-tape .presetInput {
+    text-align: left;
+    width: 200px;
+}
+tim-tape .robotEditDiv {
+    
+}
+tim-tape .robotEditArea {
+   height: calc(100% - 40px);
+   width: 150px;
+   white-space: pre;
+   overflow-wrap: normal;
+   overflow-x: scroll;
+}
+
+tim-tape .robotPresets {
+    margin-top: 30px;
+    display: inline-block;
+    vertical-align: top;
+    margin-left: 2em;
+}
+
+tim-tape .commandListContainer {
+   width: 150px;
+}
+
+</style>
+    <div class="no-highlight robotMainDiv">
+        <div class="tapeAndRobotDiv">
+            <div class="outputbelt" >
+                <div class="outputvalues">
+                    <span class="output">
+                    <div ng-repeat="n in $ctrl.state.output track by $index" class="tapeItem">{{n}}</div>
+                    </span>
+               </div> 
                 <img src="/static/images/tape/output.png" />
                 <span>Output</span>
             </div>
-            <div ng-style="{'display': 'inline-block', 'text-align': 'center'}">
-                <div class="tapeItem" ng-style="{'margin': 'auto'}" ng-bind="$ctrl.getHand()"></div>
-                <img src="/static/images/tape/robot.png" />
+            <div class="robotDiv" >
+                <div class="handItem">
+                    <div class="tapeItem"  ng-bind="$ctrl.getHand()"></div>
+                </div>
+                <div class="robotImage">
+                    <img src="/static/images/tape/robot.png" />
+                    <div class="robotRunButtons">
+                         <button class="timButton" ng-click="$ctrl.step()"><span>Step</span>
+                         <button class="timButton" ng-click="$ctrl.run()"><span ng-bind="$ctrl.getRunButtonText()"></span>
+                         <button class="timButton" ng-click="$ctrl.reset()"><span>Reset</span>
+                    </div>
+                </div>
             </div>
-            <div ng-style="{'display': 'inline-block'}">
-                <span class="input">
-                    <div ng-repeat="n in $ctrl.state.input track by $index" class="tapeItem">{{n}}</div>
-                </span>
+            <div class="inputbelt">
+                <div class="inputvalues">
+                    <span class="input">
+                        <div ng-repeat="n in $ctrl.state.input track by $index" class="tapeItem">{{n}}</div>
+                    </span>
+                </div>
                 <img src="/static/images/tape/input.png" />
                 <span>Input</span>
             </div>
@@ -639,40 +851,62 @@ timApp.component("timTape", {
                 <div ng-bind="$ctrl.getMemoryText($index)" class="memoryIndex"></div>
             </div>
         </div>
-        <span class="commandListContainer newCommandList">
-            Add command:
-            <ul class="list-unstyled listBox">
-            <li ng-repeat="c in $ctrl.possibleCommandList" class="command" ng-style="{'color': $ctrl.getNewCommandColor($index)}" 
-                ng-click="$ctrl.onCommandClick($index)">{{c.name}}</li>
-            </ul>
-        </span>
-        <span class="commandListContainer">
-            Program:
-            <ul class="list-unstyled listBox programCommandList">
-            <li ng-repeat="c in $ctrl.commandList" class="command" ng-click="$ctrl.selectedCommandIndex = $index" 
-            ng-style="{'color': $ctrl.getCommandColor($index), 'background-color': $ctrl.getCommandBackgroundColor($index)}">{{c.getName()}}</li>
-            <li class="command" ng-style="{'color': $ctrl.getCommandColor($ctrl.commandList.length + 1)}" 
-                ng-click="$ctrl.selectedCommandIndex = ($ctrl.commandList.length + 1)">-</li>
-            </ul>
-            <!--- <select ng-model="$ctrl.selected" size="10">
-            <option ng-repeat="c in $ctrl.commandList" ng-style="{'color': $ctrl.getCommandColor($index)}">{{c.getName()}}</option>
-            </select> --->
-        </span>
-        <div class="commandAddArea" ng-show="true" ng-style="{'margin-bottom': '0.5em'}">
-             <span class="commandParameterArea" ng-show="$ctrl.showNewCommandParameter">
-                <span>{{$ctrl.newCommandParameterText}}</span>
-                <input ng-model="$ctrl.newCommandParameter">
-             </span>
-             <button class="timButton" ng-click="$ctrl.insertCommandButtonClick()"><span>Insert command</span>
+        <div class="programArea">
+            <span class="commandListContainer newCommandList" ng-hide="$ctrl.data.hideCommands">
+                Commands:
+                <ul class="list-unstyled listBox">
+                <li ng-repeat="c in $ctrl.possibleCommandList" class="command" ng-style="{'color': $ctrl.getNewCommandColor($index)}" 
+                    ng-click="$ctrl.onCommandClick($index)">{{c.name}}</li>
+                </ul>
+            </span>
+            <div class="commandAddArea" ng-hide="$ctrl.data.hideCommands" >
+                 <div class="commandParamArea">
+                     <span class="commandParameterArea" ng-show="$ctrl.showNewCommandParameter">
+                        <span>{{$ctrl.newCommandParameterText}}</span>
+                        <input size="5em" ng-model="$ctrl.newCommandParameter">
+                     </span>
+                 </div>
+                 <div class="commandButtons">
+                     <button class="timButton" ng-click="$ctrl.insertCommandButtonClick()"><span>Insert -&gt;</span>
+                     <button class="timButton" ng-click="$ctrl.removeCommand()"><span>&lt;- Remove</span></button>
+                     <button class="timButton" ng-click="$ctrl.copyAll()" ng-hide="$ctrl.data.hideCopyAll"><span>Copy all</span></button>
+                     <!-- <button class="timButton" ng-click="$ctrl.paste()"><span>Paste</span></button> -->
+                 </div>
+            </div>
+            <span class="commandListContainer">
+                Program:
+                <textarea class= "robotEditArea" id="textAreaRobotProgram" ng-model="$ctrl.programAsText" ng-hide="!$ctrl.textmode"></textarea>
+                <ul id="cmditems" class="list-unstyled listBox programCommandList" ng-hide="$ctrl.textmode">
+                <li  ng-repeat="c in $ctrl.commandList" class="command" ng-click="$ctrl.selectedCommandIndex = $index" 
+                ng-style="{'color': $ctrl.getCommandColor($index), 'background-color': $ctrl.getCommandBackgroundColor($index)}">{{c.getName()}}</li>
+                <li class="command" ng-style="{'color': $ctrl.getCommandColor($ctrl.commandList.length + 1)}" 
+                    ng-click="$ctrl.selectedCommandIndex = ($ctrl.commandList.length + 1)">-</li>
+                </ul>
+                <!--- <select ng-model="$ctrl.selected" size="10">
+                <option ng-repeat="c in $ctrl.commandList" ng-style="{'color': $ctrl.getCommandColor($index)}">{{c.getName()}}</option>
+                </select> --->
+            </span>
+            <div class="robotPresets">
+                <div class="presetInput" ng-hide="$ctrl.data.hidePresetInput" >
+                     <div class="commandParamArea">
+                         <span>
+                            <span>Preset input:</span>
+                            <input size="15em" ng-model="$ctrl.inputString">
+                         </span>
+                     </div>
+                </div>
+                <div class="presetInput" ng-hide="$ctrl.data.hidePresetMem" >
+                     <div class="commandParamArea">
+                         <span>
+                            <span>Preset memory:</span>
+                            <input size="15em" ng-model="$ctrl.memString">
+                         </span>
+                     </div>
+                </div>
+                <span ng-hide="$ctrl.data.hideTextMode"><input type="checkbox" name="textmode" value="textmode" ng-model="$ctrl.textmode" ng-click="$ctrl.changeMode()">&nbsp;Text&nbsp;mode</div></span>
+            </div>
         </div>
-        <div class="commandRemoveArea" ng-show="true" ng-style="{'margin-bottom': '1em'}">
-            <button class="timButton" ng-click="$ctrl.removeCommand()"><span>Remove command</span></button>
-        </div>
-        <div>
-             <button class="timButton" ng-click="$ctrl.run()"><span ng-bind="$ctrl.getRunButtonText()"></span>
-             <button class="timButton" ng-click="$ctrl.step()"><span>Step</span>
-             <button class="timButton" ng-click="$ctrl.reset()"><span>Reset</span>
-        </div>
+        <textarea style= "height: 1px; width: 1px; position: fixed;" id="hiddenRobotProgram"></textarea>
     </div>
     `
 });
