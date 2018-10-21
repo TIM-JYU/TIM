@@ -370,6 +370,8 @@ export class TapeController implements IController {
             this.selectedCommandIndex++;
         if (this.textmode) this.textAll();
 
+        this.checkCommandInView(this.selectedCommandIndex);
+
     }
 
     /**
@@ -409,6 +411,37 @@ export class TapeController implements IController {
         return true;
     }
 
+
+    private isElementVisibleInParent(el:Element, par:Element) {
+        var rect     = el.getBoundingClientRect(),
+            prect     = par.getBoundingClientRect(),
+            vWidth   = par.clientWidth,
+            vHeight  = par.clientHeight,
+            efp      = function (x:number, y:number) { return document.elementFromPoint(x, y) };
+
+        if ( rect.top < prect.top ) return false;
+        if ( prect.top + prect.height < rect.top + rect.height ) return false;
+        return true;
+    }
+
+
+    private checkCommandInView(n : number) {
+        if (this.commandList.length > 10) { // long program, ensure command is visible
+            let cmdul = $("#cmditems");
+            if ( n >= this.commandList.length ) n = this.commandList.length-1;
+            if ( n < 0 ) return;
+            let cmdli = cmdul.children()[n];
+            if (!this.isElementVisibleInParent(cmdli, cmdul[0]))
+                cmdli.scrollIntoView();
+        }
+    }
+
+
+    private checkCurrentCommandInView() {
+        this.checkCommandInView(this.state.instructionPointer);
+    }
+
+
     /**
      * Steps the program.
      */
@@ -425,9 +458,8 @@ export class TapeController implements IController {
         const command = this.commandList[this.state.instructionPointer];
         this.state.instructionPointer++;
         command.command.execute(new CommandParameters(this.state, command.parameter, this.commandList));
-        let cmdul = $("#cmditems");
-        let cmdli = cmdul.children()[this.state.instructionPointer];
-        cmdli.scrollIntoView();
+
+        this.checkCurrentCommandInView();
     }
 
     private automaticStep() {
@@ -508,6 +540,8 @@ export class TapeController implements IController {
             this.fromText(this.data.presetCode);
             this.selectedCommandIndex = this.commandList.length;
         }
+
+        this.checkCurrentCommandInView();
     }
 
     /**
