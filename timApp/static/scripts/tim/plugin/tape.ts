@@ -285,7 +285,27 @@ export class TapeController implements IController {
             new CopyTo(), new CopyFrom(), new DefineLabel(), new Jump("JUMP", "j"), new JumpIfZero(), new JumpIfNeg()];
     }
 
+    private isiOS(): boolean {
+          var iDevices = [
+            'iPad Simulator',
+            'iPhone Simulator',
+            'iPod Simulator',
+            'iPad',
+            'iPhone',
+            'iPod'
+          ];
+
+          if (!!navigator.platform) {
+            while (iDevices.length) {
+              if (navigator.platform === iDevices.pop()){ return true; }
+            }
+          }
+
+          return false;
+    }
+
     $onInit() {
+        this.iOS = this.isiOS();
         this.step = this.step.bind(this);
         this.inputString = "";
         if ( this.data.presetInput ) {
@@ -323,7 +343,8 @@ export class TapeController implements IController {
     private inputString : string = '';
     private memString : string = '';
     private programAsText: string = '';
-    private textmode: boolean = false;
+    private textmode: boolean = false; // do not use as ng-model, because ipad changes it different time than PC
+    private iOS: boolean = false;
 
 
     /**
@@ -514,13 +535,27 @@ export class TapeController implements IController {
     }
 
 
+    private selectAllText(name: string, newtext:string) {
+        let jh = $(name);
+        if ( newtext ) jh.val(newtext);
+        let h = jh[0];
+        if ( !h ) return;
+        if ( this.iOS ) {
+            h.focus();
+            h.setSelectionRange(0,99999);  // select is not working in iOS
+        } else {
+            jh.select();
+        }
+
+    }
+
+
     private copyAll() {
         // this.changeText();
         if ( this.textmode ) {
-            $("#textAreaRobotProgram").select();
+            this.selectAllText("#textAreaRobotProgram","");
         } else {
-            let text = this.toText();
-            $("#hiddenRobotProgram").val(text).select();
+            this.selectAllText("#hiddenRobotProgram", this.toText());
         }
         document.execCommand("copy");
     }
@@ -547,7 +582,7 @@ export class TapeController implements IController {
     }
 
     private changeMode() {
-        if ( this.textmode ) this.changeList();
+        if ( this.textmode ) this.changeList(); // oldtextmode to know the old value istead of the automatic
         else this.changeText();
     }
 
@@ -903,10 +938,10 @@ tim-tape .commandListContainer {
                          </span>
                      </div>
                 </div>
-                <span ng-hide="$ctrl.data.hideTextMode"><input type="checkbox" name="textmode" value="textmode" ng-model="$ctrl.textmode" ng-click="$ctrl.changeMode()">&nbsp;Text&nbsp;mode</div></span>
+                <span ng-hide="$ctrl.data.hideTextMode"><input type="checkbox" id="belttextbox" name="textmode" value="textmode"  ng-click="$ctrl.changeMode()" /><label for="belttextbox">&nbsp;Text&nbsp;mode</label></div></span>
             </div>
         </div>
-        <textarea style= "height: 1px; width: 1px; position: fixed;" id="hiddenRobotProgram"></textarea>
+        <textarea style= "height: 1px; width: 1px; position: unset;" id="hiddenRobotProgram"></textarea>
     </div>
     `
 });
