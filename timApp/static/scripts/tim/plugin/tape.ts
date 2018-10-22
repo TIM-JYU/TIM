@@ -355,7 +355,8 @@ export class TapeController implements IController {
             return;
         }
         if (this.textmode) {
-            let n = $("#textAreaRobotProgram").getSelection().start;
+            // let h = jh[0] as HTMLTextAreaElement;
+            let n = this.element.find(".textAreaRobotProgram").getSelection().start;
             let r = 0;
             let text = this.programAsText;
             for (let i=0; i<n; i++) {
@@ -427,9 +428,9 @@ export class TapeController implements IController {
 
     private checkCommandInView(n : number) {
         if (this.commandList.length > 10) { // long program, ensure command is visible
-            let cmdul = $("#cmditems");
             if ( n >= this.commandList.length ) n = this.commandList.length-1;
             if ( n < 0 ) return;
+            let cmdul = this.element.find(".cmditems");
             let cmdli = cmdul.children()[n];
             if (!this.isElementVisibleInParent(cmdli, cmdul[0]))
                 cmdli.scrollIntoView();
@@ -570,7 +571,7 @@ export class TapeController implements IController {
 
 
     private selectAllText(name: string, newtext:string) {
-        let jh = $(name);
+        let jh = this.element.find(name);
         if ( newtext ) jh.val(newtext);
         let h = jh[0];
         if ( !h ) return;
@@ -587,9 +588,9 @@ export class TapeController implements IController {
     private copyAll() {
         // this.changeText();
         if ( this.textmode ) {
-            this.selectAllText("#textAreaRobotProgram","");
+            this.selectAllText(".textAreaRobotProgram","");
         } else {
-            this.selectAllText("#hiddenRobotProgram", this.toText());
+            this.selectAllText(".hiddenRobotProgram", this.toText());
         }
         document.execCommand("copy");
     }
@@ -944,8 +945,8 @@ tim-tape .commandListContainer {
             </div>
             <span class="commandListContainer">
                 Program:
-                <textarea class= "robotEditArea" id="textAreaRobotProgram" ng-model="$ctrl.programAsText" ng-hide="!$ctrl.textmode"></textarea>
-                <ul id="cmditems" class="list-unstyled listBox programCommandList" ng-hide="$ctrl.textmode">
+                <textarea class= "robotEditArea textAreaRobotProgram" ng-model="$ctrl.programAsText" ng-hide="!$ctrl.textmode"></textarea>
+                <ul class="cmditems list-unstyled listBox programCommandList" ng-hide="$ctrl.textmode">
                 <li  ng-repeat="c in $ctrl.commandList" class="command" ng-click="$ctrl.selectedCommandIndex = $index" 
                 ng-style="{'color': $ctrl.getCommandColor($index), 'background-color': $ctrl.getCommandBackgroundColor($index)}">{{c.getName()}}</li>
                 <li class="command" ng-style="{'color': $ctrl.getCommandColor($ctrl.commandList.length + 1)}" 
@@ -972,10 +973,10 @@ tim-tape .commandListContainer {
                          </span>
                      </div>
                 </div>
-                <span ng-hide="$ctrl.data.hideTextMode"><input type="checkbox" id="belttextbox" name="textmode" value="textmode"  ng-click="$ctrl.changeMode()" /><label for="belttextbox">&nbsp;Text&nbsp;mode</label></div></span>
+                <span ng-hide="$ctrl.data.hideTextMode"><input type="checkbox" class="belttextbox" name="textmode" value="textmode"  ng-click="$ctrl.changeMode()" /><label for="belttextbox">&nbsp;Text&nbsp;mode</label></div></span>
             </div>
         </div>
-        <textarea style= "height: 1px; width: 1px; position: unset;" id="hiddenRobotProgram"></textarea>
+        <textarea style= "height: 1px; width: 1px; position: unset;" class="hiddenRobotProgram"></textarea>
     </div>
     `
 });
