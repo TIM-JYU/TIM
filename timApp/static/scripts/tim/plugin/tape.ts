@@ -355,7 +355,6 @@ export class TapeController implements IController {
             return;
         }
         if (this.textmode) {
-            // let h = jh[0] as HTMLTextAreaElement;
             let n = this.element.find(".textAreaRobotProgram").getSelection().start;
             let r = 0;
             let text = this.programAsText;
@@ -573,7 +572,7 @@ export class TapeController implements IController {
     private selectAllText(name: string, newtext:string) {
         let jh = this.element.find(name);
         if ( newtext ) jh.val(newtext);
-        let h = jh[0];
+        let h = jh[0] as HTMLTextAreaElement;
         if ( !h ) return;
         if ( this.iOS ) {
             h.focus();
