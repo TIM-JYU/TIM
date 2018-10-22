@@ -95,6 +95,22 @@ class ReadingsTest(TimRouteTest):
                       'username': 'testuser2'}
                  ])
         self.get(f'/read/stats/{doc.id}',
+                 query_string={'blocks': ';'.join(p.get_id() for p in pars[0:2])},
+                 expect_content=[
+                     {'any_of_phs': 0,
+                      'click_par': 0,
+                      'click_red': 2,
+                      'hover_par': 0,
+                      'on_screen': 0,
+                      'username': 'testuser1'},
+                     {'any_of_phs': 0,
+                      'click_par': 0,
+                      'click_red': 2,
+                      'hover_par': 0,
+                      'on_screen': 0,
+                      'username': 'testuser2'}
+                 ])
+        self.get(f'/read/stats/{doc.id}',
                  query_string={'format': 'csv', 'csv': 'excel'},
                  expect_content=("""
 username,click_red,click_par,hover_par,on_screen,any_of_phs

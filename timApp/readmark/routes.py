@@ -15,7 +15,7 @@ from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
 from timApp.util.flask.requesthelper import verify_json_params, get_referenced_pars_from_req, get_option
 from timApp.util.flask.responsehelper import json_response, ok_response, csv_response
-from timApp.util.utils import seq_to_str, split_group_param
+from timApp.util.utils import seq_to_str, split_by_semicolon
 
 readings = Blueprint('readings',
                      __name__,
@@ -91,14 +91,18 @@ def get_statistics(doc_path):
     verify_teacher_access(d)
     sort_opt = get_option(request, 'sort', 'username')
     group_opt = get_option(request, 'groups', None)
+    block_opt = get_option(request, 'blocks', None)
     result_format = get_option(request, 'format', 'json')
     csv_dialect = get_option(request, 'csv', 'excel-tab')
     extra_condition = true()
     if group_opt:
-        group_names = split_group_param(group_opt)
+        group_names = split_by_semicolon(group_opt)
         extra_condition = extra_condition & UserGroup.name.in_(
             User.query.join(UserGroup, User.groups).filter(UserGroup.name.in_(group_names)).with_entities(User.name)
         )
+    if block_opt:
+        block_ids = split_by_semicolon(block_opt)
+        extra_condition = extra_condition & ReadParagraph.par_id.in_(block_ids)
     automatic_types = [
         ReadParagraphType.click_par,
         ReadParagraphType.hover_par,

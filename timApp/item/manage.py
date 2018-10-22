@@ -30,7 +30,7 @@ from timApp.user.userutils import grant_access, grant_default_access, get_access
 from timApp.util.flask.requesthelper import verify_json_params, get_option
 from timApp.util.flask.responsehelper import json_response, ok_response
 from timApp.util.utils import remove_path_special_chars, split_location, join_location, get_current_time, \
-    split_group_param
+    split_by_semicolon
 
 manage_page = Blueprint('manage_page',
                         __name__,
@@ -303,7 +303,7 @@ def remove_default_doc_permission(folder_id, group_id, perm_type, object_type):
 
 def verify_and_get_params(item_id, group_name, perm_type):
     _, is_owner = verify_permission_edit_access(item_id, perm_type)
-    groups = UserGroup.query.filter(UserGroup.name.in_(split_group_param(group_name))).all()
+    groups = UserGroup.query.filter(UserGroup.name.in_(split_by_semicolon(group_name))).all()
     if len(groups) == 0:
         abort(404, 'No user group with this name was found.')
     group_ids = [group.id for group in groups]
