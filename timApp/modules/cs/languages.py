@@ -225,7 +225,7 @@ class Language:
 
     def copy_image(self, web, code, out, err, points_rule):
         if err:
-            return "", err
+            return out, err
         if code == -9:
             out = "Runtime exceeded, maybe loop forever\n" + out
             return out, err
