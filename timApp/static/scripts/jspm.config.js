@@ -89,7 +89,7 @@ SystemJS.config({
         "moment": "npm:moment@2.22.2/moment.js"
       }
     },
-    "npm:angular@1.7.3/angular.js": {
+    "npm:angular@1.7.5/angular.js": {
       "deps": [
         "jquery",
         "eonasdan-bootstrap-datetimepicker"
@@ -107,6 +107,11 @@ SystemJS.config({
     "npm:katex@0.7.1/dist/contrib/auto-render.min.js": {
       "globals": {
         "katex": "npm:katex@0.7.1/katex.js"
+      }
+    },
+    "npm:angular-diff-match-patch@0.7.4/angular-diff-match-patch.js": {
+      "globals": {
+        "diff_match_patch": "npm:diff-match-patch@1.0.4/index.js"
       }
     },
     "/cs/simcir/simcir-basicset.js": {
@@ -187,13 +192,14 @@ SystemJS.config({
     "github:*/*.json"
   ],
   map: {
+    "angular-diff-match-patch": "npm:angular-diff-match-patch@0.7.4",
     "ifvisible.js": "npm:ifvisible.js@1.0.6",
     "angularjs-color-picker": "npm:angularjs-color-picker@3.4.8",
     "angular-ui-grid": "npm:angular-ui-grid@4.6.3",
     "ace": "github:ajaxorg/ace-builds@1.2.6",
     "constants": "npm:jspm-nodelibs-constants@0.2.1",
     "events": "npm:jspm-nodelibs-events@0.2.2",
-    "angular": "npm:angular@1.7.3",
+    "angular": "npm:angular@1.7.5",
     "angular-animate": "npm:angular-animate@1.7.3",
     "angular-bootstrap-colorpicker": "npm:angular-bootstrap-colorpicker@3.0.26",
     "angular-eonasdan-datetimepicker": "npm:angular-eonasdan-datetimepicker@0.3.9",
@@ -221,7 +227,6 @@ SystemJS.config({
     "net": "npm:jspm-nodelibs-net@0.2.1",
     "ng-file-upload": "npm:ng-file-upload@12.2.13",
     "ngstorage": "npm:ngstorage@0.3.11",
-    "oclazyload": "npm:oclazyload@1.1.0",
     "os": "npm:jspm-nodelibs-os@0.2.1",
     "path": "npm:jspm-nodelibs-path@0.2.3",
     "process": "npm:jspm-nodelibs-process@0.2.1",
@@ -240,7 +245,7 @@ SystemJS.config({
   packages: {
     "npm:angular-eonasdan-datetimepicker@0.3.9": {
       "map": {
-        "angular": "npm:angular@1.7.3"
+        "angular": "npm:angular@1.7.5"
       }
     },
     "npm:angular-timer@1.3.5": {
@@ -281,9 +286,6 @@ SystemJS.config({
       }
     },
     "npm:ng-file-upload@12.2.13": {
-      "map": {}
-    },
-    "npm:oclazyload@1.1.0": {
       "map": {}
     },
     "npm:punycode@1.3.2": {
@@ -587,13 +589,19 @@ SystemJS.config({
     },
     "npm:angularjs-color-picker@3.4.8": {
       "map": {
-        "angular": "npm:angular@1.7.3",
+        "angular": "npm:angular@1.7.5",
         "tinycolor2": "npm:tinycolor2@1.4.1"
       }
     },
     "npm:angular-ui-grid@4.6.3": {
       "map": {
-        "angular": "npm:angular@1.7.3"
+        "angular": "npm:angular@1.7.5"
+      }
+    },
+    "npm:angular-diff-match-patch@0.7.4": {
+      "map": {
+        "diff-match-patch": "npm:diff-match-patch@1.0.4",
+        "angular": "npm:angular@1.7.5"
       }
     }
   }

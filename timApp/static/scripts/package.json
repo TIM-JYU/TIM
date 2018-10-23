@@ -33,7 +33,6 @@
     "@types/mathjax": "^0.0.31",
     "@types/ng-file-upload": "^12.2.2",
     "@types/ngstorage": "^0.3.34",
-    "@types/oclazyload": "^0.0.31",
     "@types/rangyinputs": "^1.2.0",
     "@types/systemjs": "^0.20.2",
     "@types/ui-grid": "^0.0.35",
@@ -54,6 +53,7 @@
       "ace": "github:ajaxorg/ace-builds@^1.2.6",
       "angular-animate": "npm:angular-animate@^1.7.3",
       "angular-bootstrap-colorpicker": "npm:angular-bootstrap-colorpicker@^3.0.26",
+      "angular-diff-match-patch": "npm:angular-diff-match-patch@^0.7.4",
       "angular-eonasdan-datetimepicker": "npm:angular-eonasdan-datetimepicker@^0.3.9",
       "angular-messages": "npm:angular-messages@^1.7.3",
       "angular-sanitize": "npm:angular-sanitize@^1.7.3",
@@ -69,7 +69,6 @@
       "katex": "npm:katex@0.7.1",
       "ng-file-upload": "npm:ng-file-upload@^12.2.13",
       "ngstorage": "npm:ngstorage@^0.3.11",
-      "oclazyload": "npm:oclazyload@^1.1.0",
       "rangyinputs": "github:jigargosar/rangyinputs@^1.2.0",
       "text": "github:systemjs/plugin-text@^0.0.9",
       "ts": "github:frankwallis/plugin-typescript@^9.0.0"
@@ -81,7 +80,7 @@
       "ts-runtime": "npm:babel-runtime@^5.8.24"
     },
     "peerDependencies": {
-      "angular": "npm:angular@^1.7.3",
+      "angular": "npm:angular@^1.7.5",
       "assert": "npm:jspm-nodelibs-assert@^0.2.0",
       "bootstrap": "github:twbs/bootstrap@^3.3.7",
       "buffer": "npm:jspm-nodelibs-buffer@^0.2.0",
@@ -165,7 +164,7 @@
           "angular": "1.7"
         }
       },
-      "npm:angular@1.7.3": {
+      "npm:angular@1.7.5": {
         "format": "global",
         "jspmNodeConversion": false,
         "main": "angular",

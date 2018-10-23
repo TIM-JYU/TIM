@@ -13,7 +13,6 @@ import {Moment} from "moment";
 import moment from "moment";
 import ngFileUpload from "ng-file-upload";
 import ngStorage from "ngstorage";
-import oclazyload from "oclazyload";
 import angularmodules from "tim/angularmodules";
 import extramodules from "tim/extramodules";
 import plugins from "tim/plugins";
@@ -23,12 +22,12 @@ import {injectProviders, injectServices} from "./util/ngimport";
 import {KEY_ENTER, KEY_S} from "./util/keycodes";
 
 markAsUsed(ngMessages, timer, aedatetimepicker, ngSanitize,
-    uibootstrap, ngFileUpload, ngStorage, plugins, extramodules, oclazyload, colorpicker);
+    uibootstrap, ngFileUpload, ngStorage, plugins, extramodules, colorpicker);
 
 // timApp's Angular modules:
 // base: 'ngMessages', 'timer', 'ae-datetimepicker', 'ngSanitize', 'ui.bootstrap'
 // item: 'ngFileUpload'
-// view_html: 'oc.lazyLoad', 'ui.ace', 'ngStorage' + plugin modules
+// view_html: 'ui.ace', 'ngStorage' + plugin modules
 // teacher mode: 'ui.grid', 'ui.grid.cellNav', 'ui.grid.selection', 'ui.grid.exporter', 'ui.grid.autoResize'
 export const timApp = angular.module("timApp", [
     "ngMessages",
@@ -38,7 +37,6 @@ export const timApp = angular.module("timApp", [
     "ui.bootstrap",
     "ngFileUpload",
     "ngStorage",
-    "oc.lazyLoad",
     "color.picker",
 ].concat(angularmodules));
 // disable Angular URL manipulation when using ng-include; from http://stackoverflow.com/a/19825756

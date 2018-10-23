@@ -1,20 +1,22 @@
 import {IScope} from "angular";
-import {$compile, $log, $ocLazyLoad, $timeout} from "tim/util/ngimport";
+import {$compile, $injector, $log, $timeout} from "tim/util/ngimport";
 import {timLogTime} from "tim/util/timTiming";
 import {lazyLoad, lazyLoadMany} from "../util/lazyLoad";
+import {injectStyle} from "../util/utils";
 
 export interface IPluginInfoResponse {
     js: string[];
     texts: string;
     css: string[];
     angularModule: string[];
+    trdiff?: {old: string, new: string};
 }
 
 export class ParagraphCompiler {
     public async compile(data: IPluginInfoResponse, scope: IScope) {
         await lazyLoadMany(data.js);
-        await $ocLazyLoad.inject(data.angularModule);
-        await $ocLazyLoad.load(data.css);
+        $injector.loadNewModules(data.angularModule);
+        data.css.forEach((s) => injectStyle(s));
         const compiled = $compile(data.texts)(scope);
         await this.processAllMathDelayed(compiled);
         return compiled;

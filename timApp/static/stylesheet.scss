@@ -465,10 +465,15 @@ p.caption {
     border: 1px solid #cccccc;
 }
 
+.border {
+    border: 1px solid $basic-border-color;
+    border-radius: 0;
+}
+
 .previewcontent {
+    @extend .border;
     clear: both;
     overflow-y: auto;
-    border: 1px solid $basic-border-color;
     background-color: #f8f8f8;
     min-height: 1px;
     padding-left: 2em;
@@ -1209,4 +1214,22 @@ body > .footer {
 
 .inline-flex {
     display: inline-flex;
+}
+
+pre.diff {
+    background-color: #f8f8f8;
+    height: 100%;
+    match {
+        color: gray;
+    }
+
+    ins {
+        color: black;
+        background: #bbffbb;
+    }
+
+    del {
+        color: black;
+        background: #ffbbbb;
+    }
 }

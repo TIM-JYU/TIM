@@ -368,6 +368,7 @@ def par_response(pars,
         preview = False
     else:
         preview = edit_request and edit_request.preview
+    trdiff = None
     # Do not check for duplicates for preview because the operation is heavy
     if not preview:
         duplicates = check_duplicates(pars, doc, get_timdb())
@@ -382,6 +383,25 @@ def par_response(pars,
                                  limit=current_app.config['LAST_EDITED_BOOKMARK_LIMIT']).save_bookmarks()
     else:
         duplicates = None
+        if len(pars) == 1:
+            p = pars[0]
+            if p.is_translation():
+                try:
+                    deref = p.get_referenced_pars(set_html=False)[0].ref_chain
+                except TimDbException:
+                    pass
+                else:
+                    newest_exported = deref.get_exported_markdown()
+                    old_exported = ''
+                    rt = p.get_attr('rt')
+                    if rt:
+                        try:
+                            old_par = DocParagraph.get(deref.doc, deref.get_id(), rt)
+                        except TimDbException:
+                            pass
+                        else:
+                            old_exported = old_par.get_exported_markdown()
+                    trdiff = {'old': old_exported, 'new': newest_exported}
 
     pars, js_paths, css_paths, modules = post_process_pars(doc, pars, current_user, edit_window=preview)
 
@@ -395,6 +415,7 @@ def par_response(pars,
                           'js': js_paths,
                           'jsModuleIds': list(get_module_ids(js_paths)),
                           'css': css_paths,
+                          'trdiff': trdiff,
                           'angularModule': modules,  # not used in JS at all, maybe not needed at all
                           'changed_pars': {p['id']: render_template('partials/paragraphs.html',
                                                                     text=[p],

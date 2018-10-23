@@ -153,6 +153,14 @@
     <label class="pull-right font-weight-normal" ng-if="$ctrl.wrap.n!=-1" title="Put 0 to no wrap" ng-click="$ctrl.editor.forceWrap(true)">Wrap:
         <input type="text" ng-pattern="/[-0-9]*/" ng-model="$ctrl.wrap.n" size="2"/>
     </label>
+    <div ng-if="$ctrl.trdiff"
+         tim-draggable-fixed
+         detachable="true"
+         caption="Difference in original document"
+         save="{{$ctrl.getOptions().localSaveTag}}Trdiff"
+         resize="true">
+        <pre class="diff border" diff left-obj="$ctrl.trdiff.old" right-obj="$ctrl.trdiff.new"></pre>
+    </div>
     <div id="previewDiv"
          tim-draggable-fixed
          detachable="true"

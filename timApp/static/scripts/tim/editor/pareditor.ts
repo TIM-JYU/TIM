@@ -7,7 +7,7 @@ import {timApp} from "../app";
 import {IExtraData, ITags} from "../document/editing/edittypes";
 import {getElementByParId} from "../document/parhelpers";
 import {DialogController, registerDialogComponent, showDialog, showMessageDialog} from "../ui/dialog";
-import {$http, $localStorage, $timeout, $upload, $window} from "../util/ngimport";
+import {$http, $injector, $localStorage, $timeout, $upload, $window} from "../util/ngimport";
 import {IAceEditor} from "./ace-types";
 import {AceParEditor} from "./AceParEditor";
 import {IPluginInfoResponse, ParCompiler} from "./parCompiler";
@@ -116,6 +116,7 @@ export class PareditorController extends DialogController<{params: IEditorParams
     private slideMenu: IEditorMenu;
     private pluginMenus: IEditorMenu[] = [];
     private lastTab?: string;
+    private trdiff?: {old: string, new: string};
 
     private getOptions() {
         return this.resolve.params.options;
@@ -539,6 +540,11 @@ or newer one that is more familiar to write in YAML:
             this.outofdate = true;
             const data = await this.resolve.params.previewCb(text);
             const compiled = await ParCompiler.compile(data, this.scope);
+            if (data.trdiff) {
+                const module = await import("angular-diff-match-patch");
+                $injector.loadNewModules([module]);
+            }
+            this.trdiff = data.trdiff;
             const $previewDiv = angular.element(".previewcontent");
             $previewDiv.empty().append(compiled);
             this.outofdate = false;

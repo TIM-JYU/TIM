@@ -1,7 +1,6 @@
 // idea from https://github.com/bcherny/ngimport
 import * as angular from "angular";
 import {ngStorage} from "ngstorage";
-import {ILazyLoad} from "oclazyload";
 
 export let $anchorScroll: angular.IAnchorScrollService = null as any;
 export let $cacheFactory: angular.ICacheFactoryService = null as any;
@@ -23,7 +22,6 @@ export let $localStorage: ngStorage.StorageService = null as any;
 export let $location: angular.ILocationService = null as any;
 export let $log: angular.ILogService = null as any;
 export let $logProvider: angular.ILogProvider = null as any;
-export let $ocLazyLoad: ILazyLoad = null as any;
 export let $parse: angular.IParseService = null as any;
 export let $provide: angular.auto.IProvideService = null as any;
 export let $q: angular.IQService = null as any;
@@ -83,7 +81,6 @@ export function injectServices($i: angular.auto.IInjectorService) {
     $xhrFactory = $i.get("$xhrFactory") as angular.IXhrFactory<any>;
 
     // 3rd party services
-    $ocLazyLoad = $i.get("$ocLazyLoad") as ILazyLoad;
     $uibModal = $i.get("$uibModal") as angular.ui.bootstrap.IModalService;
     $upload = $i.get("Upload") as angular.angularFileUpload.IUploadService;
 }

@@ -342,3 +342,11 @@ export function capitalizeFirstLetter(s: string) {
 
 export type ToReturn<T, U = {data: {error: string}}> = IPromise<Result<IHttpResponse<T>, U>>;
 export const ToReturn = Promise;
+
+export function injectStyle(url: string) {
+    const head = document.getElementsByTagName("head")[0];
+    const link = document.createElement("link");
+    link.setAttribute("rel", "stylesheet");
+    link.setAttribute("href", url);
+    head.appendChild(link);
+}
