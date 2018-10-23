@@ -910,6 +910,8 @@ class R(Language):
     def run(self, web, sourcelines, points_rule):
         code, out, err, pwddir = self.runself(["Rscript", "--save", "--restore", self.pure_exename],
                                               ulimit=df(self.ulimit, "ulimit -f 80000"))
+        err = re.sub("^Loading required package: .*\n", "", err, flags=re.M)
+        err = re.sub("^This is vegan .*\n", "", err, flags=re.M)
         out, err = self.copy_image(web, code, out, err, points_rule)
         if self.delete_tmp:
             remove(self.sourcefilename)
