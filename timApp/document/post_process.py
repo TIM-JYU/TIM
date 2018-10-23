@@ -82,7 +82,7 @@ def post_process_pars(doc: Document, pars, user: User, sanitize=True, do_lazy=Fa
 
     for p in final_pars:
         d = p.get_final_dict()
-        if p.original:
+        if p.original and not p.original.is_translation():
             key = d.get('ref_id'), d.get('ref_doc_id')
             pars_dict[key].append(d)
 

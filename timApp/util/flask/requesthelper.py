@@ -41,7 +41,7 @@ def unpack_args(*args, types):
 
 
 def get_referenced_pars_from_req(par):
-    if par.is_reference():
+    if par.is_reference() and not par.is_translation():
         try:
             return [ref_par for ref_par in par.get_referenced_pars(set_html=False)]
         except InvalidReferenceException as e:

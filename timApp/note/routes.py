@@ -57,8 +57,7 @@ def post_note():
     timdb = get_timdb()
     group_id = get_current_user_group()
 
-    if par.get_attr('r') != 'tr':
-        par = get_referenced_pars_from_req(par)[0]
+    par = get_referenced_pars_from_req(par)[0]
 
     timdb.notes.add_note(group_id, Document(par.get_doc_id()), par, note_text, access, tags)
 
