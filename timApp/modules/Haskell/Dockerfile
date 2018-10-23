@@ -13,14 +13,13 @@ COPY Choices/LICENSE ./
 COPY Choices/stack.yaml stack.yaml
 COPY Choices/Choice.cabal Choice.cabal
 
-RUN stack solver --system-ghc --update-config
 RUN stack build --system-ghc --only-dependencies
 
 COPY Choices/*.hs ./
 
 RUN stack build --system-ghc
 
-FROM ubuntu:17.04
+FROM ubuntu:18.04
 ENV APT_INSTALL="DEBIAN_FRONTEND=noninteractive apt-get -qq update && DEBIAN_FRONTEND=noninteractive apt-get -q install --no-install-recommends -y" \
     APT_CLEANUP="rm -r /var/lib/apt/lists/*"
 
