@@ -704,6 +704,14 @@ class TimRouteTest(TimDbTest):
                                             'docId': par.doc.doc_id,
                                             'par': par.get_id()}, **kwargs)
 
+    def post_preview(self, d: DocInfo, text: str, par_next=None, par=None, **kwargs):
+        data = {'text': text}
+        if par_next:
+            data['par_next'] = par_next
+        if par:
+            data['par'] = par
+        return self.json_post(f'/preview/{d.id}', data, **kwargs)
+
 
 if __name__ == '__main__':
     unittest.main()

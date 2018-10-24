@@ -174,13 +174,13 @@ class TimTest(TimRouteTest):
         """
         self.login_test1()
         md_table = """---\r\n|a|\r\n|-|"""
-        doc = self.create_doc(initial_par=md_table).document
-        tree = self.get(f'/view/{doc.doc_id}', as_tree=True)
+        doc = self.create_doc(initial_par=md_table)
+        tree = self.get(f'/view/{doc.id}', as_tree=True)
         table_xpath = r'.//div[@class="par"]/div[@class="parContent"]/table'
         tables = tree.findall(table_xpath)
         self.assertEqual(1, len(tables))
 
-        self.json_post(f'/preview/{doc.doc_id}', {'text': md_table}, json_key='texts', expect_xpath=table_xpath)
+        self.post_preview(doc, text=md_table, json_key='texts', expect_xpath=table_xpath)
 
     def test_clear_cache(self):
         self.login_test1()

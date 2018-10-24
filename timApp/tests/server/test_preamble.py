@@ -124,11 +124,11 @@ a: b
         self.assert_content(doc, ['1. a', '2. b', '3. c', '4. d'])
         pars = d.document.get_paragraphs()
         first_par = pars[0]
-        e = self.json_post(f'/preview/{d.id}', {'text': '# d', 'par': first_par.get_id()},
-                           json_key='texts', as_tree=True)
+        e = self.post_preview(d, text='# d', par=first_par.get_id(),
+                              json_key='texts', as_tree=True)
         self.assert_content(e, ['4. d'])
-        e = self.json_post(f'/preview/{d.id}', {'text': '# d', 'par_next': first_par.get_id()},
-                           json_key='texts', as_tree=True)
+        e = self.post_preview(d, text='# d', par_next=first_par.get_id(),
+                              json_key='texts', as_tree=True)
         self.assert_content(e, ['4. d'])
 
         e = self.post_par(d.document, '# x', first_par.get_id(), json_key='texts', as_tree=True)

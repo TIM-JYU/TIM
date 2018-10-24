@@ -186,55 +186,55 @@ Lorem ipsum.
         pars = d.document.get_par_ids()
         self.get_updated_pars(d)
 
-        e = self.json_post(f'/preview/{d.id}', {'text': '# d\n\n# e\n\n#-\n\n# f'}, json_key='texts', as_tree=True)
+        e = self.post_preview(d, text='# d\n\n# e\n\n#-\n\n# f', json_key='texts', as_tree=True)
         self.assert_content(e, ['3. d\n4. e', '5. f'])
 
-        e = self.json_post(f'/preview/{d.id}', {'text': '# d\n\n# e\n\n#-\n\n# f', 'par_next': pars[1]},
-                           json_key='texts', as_tree=True)
+        e = self.post_preview(d, text='# d\n\n# e\n\n#-\n\n# f', par_next=pars[1],
+                              json_key='texts', as_tree=True)
         self.assert_content(e, ['1. d\n2. e', '3. f'])
 
-        e = self.json_post(f'/preview/{d.id}', {'text': '# d\n\n# e\n\n#-\n\n# f', 'par_next': pars[2]},
-                           json_key='texts', as_tree=True)
+        e = self.post_preview(d, text='# d\n\n# e\n\n#-\n\n# f', par_next=pars[2],
+                              json_key='texts', as_tree=True)
         self.assert_content(e, ['2. d\n3. e', '4. f'])
 
-        e = self.json_post(f'/preview/{d.id}', {'text': '# d\n\n# e\n\n#-\n\n# f', 'par_next': pars[3]},
-                           json_key='texts', as_tree=True)
+        e = self.post_preview(d, text='# d\n\n# e\n\n#-\n\n# f', par_next=pars[3],
+                              json_key='texts', as_tree=True)
         self.assert_content(e, ['2. d\n3. e', '4. f'])
 
         orig_par = orig.document.get_paragraphs()[2]
-        e = self.json_post(f'/preview/{d.id}', {'text': f'# x {{r=tr rp={orig_par.get_id()}}}', 'par': pars[2]},
-                           json_key='texts', as_tree=True)
+        e = self.post_preview(d, text=f'# x {{r=tr rp={orig_par.get_id()}}}', par=pars[2],
+                              json_key='texts', as_tree=True)
         self.assert_content(e, ['x'])
 
     def check_doc_preview(self, d: DocInfo):
         pars = d.document.get_par_ids()
         self.get_updated_pars(d)
 
-        e = self.json_post(f'/preview/{d.id}', {'text': '# d\n\n# e\n\n#-\n\n# f', 'par_next': pars[1]},
-                           json_key='texts', as_tree=True)
+        e = self.post_preview(d, text='# d\n\n# e\n\n#-\n\n# f', par_next=pars[1],
+                              json_key='texts', as_tree=True)
         self.assert_content(e, ['1. d\n2. e', '3. f'])
 
-        e = self.json_post(f'/preview/{d.id}', {'text': '# d\n\n# e\n\n#-\n\n# f', 'par': pars[1], 'par_next': pars[2]},
-                           json_key='texts', as_tree=True)
+        e = self.post_preview(d, text='# d\n\n# e\n\n#-\n\n# f', par=pars[1], par_next=pars[2],
+                              json_key='texts', as_tree=True)
         self.assert_content(e, ['1. d\n2. e', '3. f'])
 
-        e = self.json_post(f'/preview/{d.id}', {'text': '# d\n\n# e\n\n#-\n\n# f', 'par_next': pars[2]},
-                           json_key='texts', as_tree=True)
+        e = self.post_preview(d, text='# d\n\n# e\n\n#-\n\n# f', par_next=pars[2],
+                              json_key='texts', as_tree=True)
         self.assert_content(e, ['2. d\n3. e', '4. f'])
 
-        e = self.json_post(f'/preview/{d.id}', {'text': '# d\n\n# e\n\n#-\n\n# f', 'par': pars[2], 'par_next': pars[3]},
-                           json_key='texts', as_tree=True)
+        e = self.post_preview(d, text='# d\n\n# e\n\n#-\n\n# f', par=pars[2], par_next=pars[3],
+                              json_key='texts', as_tree=True)
         self.assert_content(e, ['2. d\n3. e', '4. f'])
 
-        e = self.json_post(f'/preview/{d.id}', {'text': '# d\n\n# e\n\n#-\n\n# f', 'par_next': pars[3]},
-                           json_key='texts', as_tree=True)
+        e = self.post_preview(d, text='# d\n\n# e\n\n#-\n\n# f', par_next=pars[3],
+                              json_key='texts', as_tree=True)
         self.assert_content(e, ['3. d\n4. e', '5. f'])
 
-        e = self.json_post(f'/preview/{d.id}', {'text': '# d\n\n# e\n\n#-\n\n# f', 'par': pars[3]},
-                           json_key='texts', as_tree=True)
+        e = self.post_preview(d, text='# d\n\n# e\n\n#-\n\n# f', par=pars[3],
+                              json_key='texts', as_tree=True)
         self.assert_content(e, ['3. d\n4. e', '5. f'])
 
-        e = self.json_post(f'/preview/{d.id}', {'text': '# d\n\n# e\n\n#-\n\n# f'}, json_key='texts', as_tree=True)
+        e = self.post_preview(d, text='# d\n\n# e\n\n#-\n\n# f', json_key='texts', as_tree=True)
         self.assert_content(e, ['4. d\n5. e', '6. f'])
 
     def test_translation_nonumber_edit(self):
