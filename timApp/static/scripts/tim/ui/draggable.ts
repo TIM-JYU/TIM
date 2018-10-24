@@ -194,11 +194,6 @@ export class DraggableController implements IController {
         return m.css("position") === "absolute" && this.parentDraggable == null;
     }
 
-    private elementHasAbsoluteOrRelativePosition() {
-        const s = this.element.css("position");
-        return s === "absolute" || s === "relative";
-    }
-
     setDragClickFn(fn: () => void) {
         this.dragClick = fn;
     }

@@ -7,7 +7,10 @@ declare module "angularjs-color-picker";
 declare module "bootstrap-sass";
 declare module "angular-touch";
 declare module "angular-bootstrap-colorpicker";
-declare module "angular-diff-match-patch";
+declare module "angular-diff-match-patch" {
+    const moduleName: string;
+    export = moduleName;
+}
 declare module "katex-auto-render" {
 
     interface Delimiter {

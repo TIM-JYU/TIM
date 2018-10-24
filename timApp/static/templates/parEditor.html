@@ -159,7 +159,10 @@
          caption="Difference in original document"
          save="{{$ctrl.getOptions().localSaveTag}}Trdiff"
          resize="true">
-        <pre class="diff border" diff left-obj="$ctrl.trdiff.old" right-obj="$ctrl.trdiff.new"></pre>
+        <div class="diff border">
+            <pre diff left-obj="$ctrl.trdiff.old" right-obj="$ctrl.trdiff.new"></pre>
+            <a href="{{ $ctrl.getSourceDocumentLink() }}"><i class="glyphicon glyphicon-link"></i></a>
+        </div>
     </div>
     <div id="previewDiv"
          tim-draggable-fixed

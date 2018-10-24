@@ -1216,20 +1216,30 @@ body > .footer {
     display: inline-flex;
 }
 
-pre.diff {
+.diff {
+    position: relative;
     background-color: #f8f8f8;
     height: 100%;
-    match {
-        color: gray;
+
+    a {
+        position: absolute;
+        top: 0;
+        right: 0;
+        margin: 0.5em 1.5em 0.5em 0.5em;
     }
 
-    ins {
-        color: black;
-        background: #bbffbb;
-    }
+    pre {
+        height: 100%;
+        border: 0;
 
-    del {
-        color: black;
-        background: #ffbbbb;
+        ins {
+            color: black;
+            background: #bbffbb;
+        }
+
+        del {
+            color: black;
+            background: #ffbbbb;
+        }
     }
 }

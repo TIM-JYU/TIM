@@ -350,3 +350,7 @@ export function injectStyle(url: string) {
     link.setAttribute("href", url);
     head.appendChild(link);
 }
+
+export function fixDefExport<T>(o: {default: T}) {
+    return o as any as T;
+}

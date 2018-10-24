@@ -2,10 +2,11 @@ import angular, {IPromise, IRootElementService, IScope} from "angular";
 import $ from "jquery";
 import rangyinputs from "rangyinputs";
 import {setEditorScope} from "tim/editor/editorScope";
-import {markAsUsed} from "tim/util/utils";
+import {fixDefExport, markAsUsed} from "tim/util/utils";
 import {timApp} from "../app";
 import {IExtraData, ITags} from "../document/editing/edittypes";
-import {getElementByParId} from "../document/parhelpers";
+import {getElementByParId, getParAttributes} from "../document/parhelpers";
+import {IItem} from "../item/IItem";
 import {DialogController, registerDialogComponent, showDialog, showMessageDialog} from "../ui/dialog";
 import {$http, $injector, $localStorage, $timeout, $upload, $window} from "../util/ngimport";
 import {IAceEditor} from "./ace-types";
@@ -541,7 +542,7 @@ or newer one that is more familiar to write in YAML:
             const data = await this.resolve.params.previewCb(text);
             const compiled = await ParCompiler.compile(data, this.scope);
             if (data.trdiff) {
-                const module = await import("angular-diff-match-patch");
+                const module = fixDefExport(await import("angular-diff-match-patch"));
                 $injector.loadNewModules([module]);
             }
             this.trdiff = data.trdiff;
@@ -945,6 +946,17 @@ or newer one that is more familiar to write in YAML:
             str += " ..."
         }
         return str;
+    }
+
+    getSourceDocumentLink() {
+        const trs: IItem[] = $window.translations;
+        const orig = trs.find((t) => t.id === t.src_docid);
+        if (orig) {
+            const parId = this.getExtraData().par;
+            const par = getElementByParId(parId);
+            const rp = getParAttributes(par).rp;
+            return `/view/${orig.path}#${rp}`;
+        }
     }
 }
 

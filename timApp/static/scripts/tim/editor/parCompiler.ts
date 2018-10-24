@@ -2,7 +2,7 @@ import {IScope} from "angular";
 import {$compile, $injector, $log, $timeout} from "tim/util/ngimport";
 import {timLogTime} from "tim/util/timTiming";
 import {lazyLoad, lazyLoadMany} from "../util/lazyLoad";
-import {injectStyle} from "../util/utils";
+import {fixDefExport, injectStyle} from "../util/utils";
 
 export interface IPluginInfoResponse {
     js: string[];
@@ -35,7 +35,7 @@ export class ParagraphCompiler {
             return;
         }
         timLogTime("processAllMath start", "view");
-        const renderMathInElement = (await import("katex-auto-render")) as any as typeof import ("katex-auto-render");
+        const renderMathInElement = fixDefExport(await import("katex-auto-render"));
         mathelems.each((index, elem) => {
             const result = this.processMath(renderMathInElement, elem, false);
             if (result != null) {
