@@ -217,7 +217,7 @@ export class EditingHandler {
         const tagKeys: Array<keyof ITags> = ["markread"];
         const tagsDescs: Array<{name: keyof ITags, desc: string}> = [{name: "markread", desc: "Mark as read"}];
         const tags: ITags = {markread: false};
-        if (this.viewctrl.item.src_docid != null) {
+        if (this.viewctrl.isTranslation()) {
             tagKeys.push("marktranslated");
             tagsDescs.push({name: "marktranslated", desc: "Mark as translated"});
         }

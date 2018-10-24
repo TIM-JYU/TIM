@@ -267,11 +267,9 @@ def modify_paragraph_common(doc_id, md, par_id, par_next_id):
             pass
         elif tr_opt:
             if p.is_translation():
-                try:
-                    deref = p.get_referenced_pars(set_html=False)
-                except TimDbException as e:
-                    return abort(400, str(e))
-                p.set_attr('rt', deref[0].get_hash())
+                deref = mark_as_translated(p)
+                if not deref:
+                    return abort(400, 'Paragraph is not a translation.')
         else:
             p.set_attr('rt', None)
 
@@ -303,6 +301,16 @@ def modify_paragraph_common(doc_id, md, par_id, par_next_id):
                         update_cache=current_app.config['IMMEDIATE_PRELOAD'],
                         edit_request=edit_request,
                         edit_result=edit_result)
+
+
+def mark_as_translated(p: DocParagraph):
+    try:
+        deref = p.get_referenced_pars(set_html=False)
+    except TimDbException:
+        deref = None
+    if deref:
+        p.set_attr('rt', deref[0].get_hash())
+    return deref
 
 
 def abort_if_duplicate_ids(doc: Document, pars_to_add: List[DocParagraph]):
@@ -772,4 +780,17 @@ def unwrap_area(doc_id, area_name):
     except TimDbException as e:
         abort(400, str(e))
 
+    return ok_response()
+
+
+@edit_page.route("/markTranslated/<int:doc_id>", methods=["POST"])
+def mark_translated_route(doc_id):
+    d = get_doc_or_abort(doc_id)
+    verify_edit_access(d)
+    for p in d.document_as_current_user.get_paragraphs():
+        if p.is_translation() and not p.is_setting():
+            old_rt = p.get_attr('rt')
+            mark_as_translated(p)
+            if old_rt != p.get_attr('rt'):
+                p.save()
     return ok_response()

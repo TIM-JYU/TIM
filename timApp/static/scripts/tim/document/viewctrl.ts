@@ -266,6 +266,10 @@ export class ViewCtrl implements IController {
         timLogTime("ViewCtrl end", "view");
     }
 
+    public isTranslation() {
+        return this.item.src_docid != null && this.item.src_docid !== this.item.id;
+    }
+
     startLiveUpdates() {
         const sc = this.scope;
         const origLiveUpdates = this.liveUpdates;

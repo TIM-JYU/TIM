@@ -3,16 +3,12 @@ import {timApp} from "tim/app";
 import * as loading from "tim/ui/loadingIndicator";
 import * as onEnter from "tim/ui/onEnter";
 import {$http} from "../util/ngimport";
-import {capitalizeFirstLetter, markAsUsed, to, ToReturn} from "../util/utils";
+import {capitalizeFirstLetter, IOkResponse, markAsUsed, to, ToReturn} from "../util/utils";
 import {IUser} from "./IUser";
 import {Users} from "./userService";
 import {saveCurrentScreenPar} from "../document/parhelpers";
 
 markAsUsed(onEnter, loading);
-
-interface IOkResponse {
-    status: "ok";
-}
 
 interface INameResponse {
     status: "name";

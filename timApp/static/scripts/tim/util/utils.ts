@@ -354,3 +354,7 @@ export function injectStyle(url: string) {
 export function fixDefExport<T>(o: {default: T}) {
     return o as any as T;
 }
+
+export interface IOkResponse {
+    status: "ok";
+}

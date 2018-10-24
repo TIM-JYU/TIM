@@ -1,8 +1,8 @@
-import {IController} from "angular";
-import angular from "angular";
+import angular, {IController} from "angular";
 import $ from "jquery";
 import {timApp} from "tim/app";
 import {showCourseDialog} from "../document/course/courseDialogCtrl";
+import {getActiveDocument} from "../document/document";
 import {showMergePdfDialog} from "../document/minutes/mergePdfCtrl";
 import {ViewCtrl} from "../document/viewctrl";
 import {showTagDialog} from "../item/tagCtrl";
@@ -12,9 +12,8 @@ import {ITemplate, showPrintDialog} from "../printing/printCtrl";
 import {showMessageDialog} from "../ui/dialog";
 import {ADMIN_GROUPNAME, TEACHERS_GROUPNAME} from "../user/IUser";
 import {Users, UserService} from "../user/userService";
-import {$http, $uibModal, $window} from "../util/ngimport";
-import {Require, to} from "../util/utils";
-import {getActiveDocument} from "../document/document";
+import {$http, $window} from "../util/ngimport";
+import {IOkResponse, Require, to} from "../util/utils";
 
 /**
  * FILL WITH SUITABLE TEXT
@@ -382,6 +381,17 @@ export class SidebarMenuCtrl implements IController {
         }
         return temp;
     }
+
+    private async markTranslated() {
+        if (this.vctrl && window.confirm("This will mark all paragraphs in this document as translated. Continue?")) {
+            const r = await to($http.post<IOkResponse>(`/markTranslated/${this.vctrl.item.id}`, {}));
+            if (r.ok) {
+                window.location.reload();
+            } else {
+                void showMessageDialog(r.result.data.error);
+            }
+        }
+    }
 }
 
 timApp.component("timSidebarMenu", {
@@ -411,25 +421,24 @@ timApp.component("timSidebarMenu", {
         <a href="/settings">Customize TIM</a>
         <div ng-show="!($ctrl.vctrl.item && !$ctrl.vctrl.item.isFolder)">
             <h5>Search</h5>
-            <button class="timButton btn btn-block"
+            <button class="timButton btn-block"
                     title="Search with tags" ng-click="$ctrl.searchWithTagsStart()">Search with tags
             </button>
         </div>
 
-        <div ng-if="$ctrl.vctrl && $ctrl.vctrl.item.rights.manage">
+        <div ng-if="$ctrl.users.isLoggedIn() && $ctrl.vctrl && !$ctrl.vctrl.item.isFolder">
             <h5>Document settings</h5>
-            <button class="timButton btn btn-block"
+            <button ng-if="$ctrl.vctrl.item.rights.editable"
+                    class="timButton btn-block"
                     ng-click="$ctrl.vctrl.editingHandler.editSettingsPars()">Edit settings
             </button>
-            <button ng-show="$ctrl.users.isLoggedIn()" class="timButton btn btn-block"
+            <button class="timButton btn-block"
                     ng-click="$ctrl.markAllAsRead()"
                     title="Mark all paragraphs of the document as read">Mark all as read
             </button>
-        </div>
-        <div ng-if="!$ctrl.vctrl.item.rights.manage && !$ctrl.vctrl.item.isFolder && $ctrl.users.isLoggedIn()">
-            <h5>Document settings</h5>
-            <button class="timButton btn btn-block" ng-click="$ctrl.markAllAsRead()"
-                    title="Mark all paragraphs of the document as read">Mark all as read
+            <button ng-if="$ctrl.vctrl.isTranslation()" class="timButton btn-block"
+                    ng-click="$ctrl.markTranslated()"
+                    title="Mark document as translated">Mark all as translated
             </button>
         </div>
 
@@ -463,10 +472,10 @@ timApp.component("timSidebarMenu", {
             <a style="display: inline-block" href="https://tim.jyu.fi/view/tim/ohjeita/tulostusohje">
                 <span class="glyphicon glyphicon-question-sign"></span>
             </a>
-            <button class="timButton btn btn-block" title="Print using LaTeX => best quality"
+            <button class="timButton btn-block" title="Print using LaTeX => best quality"
                     ng-click="$ctrl.printDocument()">Print document
             </button>
-            <button class="timButton btn btn-block" title="Print using Browser own printing capabilities"
+            <button class="timButton btn-block" title="Print using Browser own printing capabilities"
                     ng-click="$ctrl.cssPrint()">Browser print
             </button>
             <h5 style="display: inline-block">Document tags</h5>
@@ -474,24 +483,24 @@ timApp.component("timSidebarMenu", {
                      href=" https://tim.jyu.fi/view/tim/ohjeita/opettajan-ohje#kurssikoodi">
             <span class="glyphicon glyphicon-question-sign"></span>
             </a>
-            <button class="timButton btn btn-block" ng-show="$ctrl.vctrl.item.rights.manage"
+            <button class="timButton btn-block" ng-show="$ctrl.vctrl.item.rights.manage"
                     title="Add and remove document tags" ng-click="$ctrl.addTag()">Edit tags
             </button>
-            <button class="timButton btn btn-block" title="Search with tags"
+            <button class="timButton btn-block" title="Search with tags"
                     ng-click="$ctrl.searchWithTags()">Search with tags
             </button>
-            <button class="timButton btn btn-block" ng-show="$ctrl.userBelongsToTeachersOrIsAdmin()"
+            <button class="timButton btn-block" ng-show="$ctrl.userBelongsToTeachersOrIsAdmin()"
                     title="Set document as a course main page"
                     ng-click="$ctrl.openCourseDialog()">Set as a course
             </button>
             <h5 style="display: inline-block" ng-show="$ctrl.isMinutesOrInvitation()">Memos/Minutes</h5>
-            <button class="timButton btn btn-block" ng-show="$ctrl.enableCreateExtractsButton()"
+            <button class="timButton btn-block" ng-show="$ctrl.enableCreateExtractsButton()"
                     ng-click="$ctrl.createMinuteExtracts()">Create extracts
             </button>
-            <button class="timButton btn btn-block" ng-show="$ctrl.enableCreateMinutesButton()"
+            <button class="timButton btn-block" ng-show="$ctrl.enableCreateMinutesButton()"
                     ng-click="$ctrl.createMinutes()">Create minutes
             </button>
-            <button class="timButton btn btn-block" ng-show="$ctrl.isMinutesOrInvitation()"
+            <button class="timButton btn-block" ng-show="$ctrl.isMinutesOrInvitation()"
                     ng-click="$ctrl.mergePdf()">Merge attachments
             </button>
         </div>
