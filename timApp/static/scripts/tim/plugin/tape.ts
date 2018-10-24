@@ -28,7 +28,7 @@ export abstract class Command {
 
     public toString(param: string): string {
         if ( this.usesParameter )
-            return this.name + "(" + param + ")"
+            return this.name + "(" + param + ")";
         return this.name;
     }
 
@@ -273,11 +273,53 @@ export interface TapeAttrs {
     hideCopyAll: boolean;
 }
 
+function isiOS(): boolean {
+      let iDevices = [
+        'iPad Simulator',
+        'iPhone Simulator',
+        'iPod Simulator',
+        'iPad',
+        'iPhone',
+        'iPod'
+      ];
+
+      if (!!navigator.platform) {
+        while (iDevices.length) {
+          if (navigator.platform === iDevices.pop()){ return true; }
+        }
+      }
+      return false;
+}
+
+
+function scrollElementVisibleInParent(el:Element, par:Element, extraY: number) {
+    // Scroll par window so that el comes visible if it is not visible
+    // it is ensured that at least extraY times el hight is over or under el
+    let rect     = el.getBoundingClientRect(),
+        prect     = par.getBoundingClientRect();
+
+    let dy = prect.top-rect.top;
+    if ( dy > 0 ) { // el too high
+        par.scrollTop -= dy + extraY*rect.height;
+        return false;
+    }
+
+    dy = (prect.top + prect.height) - (rect.top + rect.height);
+    if ( dy < 0 ) { // el too low
+        par.scrollTop -= dy - extraY*rect.height;
+        return false;
+    }
+    return true;
+}
+
+
+
+
 /**
  * The tape machine controller.
  */
 export class TapeController implements IController {
-    private static $inject = ["$scope", "$element"];
+    private static $inject = ["$scope", "$element"]; // do not remove this even PyCharm says it is not used
 
     constructor(protected scope: IScope, protected element: IRootElementService) {
         this.state = new TapeState();
@@ -285,27 +327,8 @@ export class TapeController implements IController {
             new CopyTo(), new CopyFrom(), new DefineLabel(), new Jump("JUMP", "j"), new JumpIfZero(), new JumpIfNeg()];
     }
 
-    private isiOS(): boolean {
-          var iDevices = [
-            'iPad Simulator',
-            'iPhone Simulator',
-            'iPod Simulator',
-            'iPad',
-            'iPhone',
-            'iPod'
-          ];
-
-          if (!!navigator.platform) {
-            while (iDevices.length) {
-              if (navigator.platform === iDevices.pop()){ return true; }
-            }
-          }
-
-          return false;
-    }
-
     $onInit() {
-        this.iOS = this.isiOS();
+        this.iOS = isiOS();
         this.step = this.step.bind(this);
         this.inputString = "";
         if ( this.data.presetInput ) {
@@ -413,27 +436,13 @@ export class TapeController implements IController {
     }
 
 
-    private isElementVisibleInParent(el:Element, par:Element) {
-        var rect     = el.getBoundingClientRect(),
-            prect     = par.getBoundingClientRect(),
-            vWidth   = par.clientWidth,
-            vHeight  = par.clientHeight,
-            efp      = function (x:number, y:number) { return document.elementFromPoint(x, y) };
-
-        if ( rect.top < prect.top ) return false;
-        if ( prect.top + prect.height < rect.top + rect.height ) return false;
-        return true;
-    }
-
-
     private checkCommandInView(n : number) {
         if (this.commandList.length > 10) { // long program, ensure command is visible
             if ( n >= this.commandList.length ) n = this.commandList.length-1;
             if ( n < 0 ) return;
             let cmdul = this.element.find(".cmditems");
             let cmdli = cmdul.children()[n];
-            if (!this.isElementVisibleInParent(cmdli, cmdul[0]))
-                cmdli.scrollIntoView();
+            scrollElementVisibleInParent(cmdli, cmdul[0], 1);
         }
     }
 
@@ -484,14 +493,14 @@ export class TapeController implements IController {
     }
 
 
-    private arrayFromString(s? : string): number[]
+    private static arrayFromString(s? : string): number[]
     {
         if ( !s ) return [];
         s = s.trim();
         if ( s === "" ) return [];
 
         let result = [];
-        var pieces = s.split(',');
+        let pieces = s.split(',');
         for (let n of pieces) {
             let val = Number(n.trim());
             if ( !val ) val = 0;
@@ -512,7 +521,7 @@ export class TapeController implements IController {
 
         this.state.stopped = false;
 
-        this.state.input = this.arrayFromString(this.inputString);  // Array.from(this.data.presetInput);
+        this.state.input = TapeController.arrayFromString(this.inputString);  // Array.from(this.data.presetInput);
 
         if (this.data.presetHand) {
             this.state.hand = this.data.presetHand;
@@ -528,7 +537,7 @@ export class TapeController implements IController {
 
         this.state.memory = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 
-        let memState = this.arrayFromString(this.memString);  // Array.from(this.data.presetInput);
+        let memState = TapeController.arrayFromString(this.memString);  // Array.from(this.data.presetInput);
 
         for (let i = 0; i < memState.length && i < this.state.memory.length; i++) {
             this.state.memory[i] = memState[i];
