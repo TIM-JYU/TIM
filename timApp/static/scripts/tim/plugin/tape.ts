@@ -344,6 +344,7 @@ export class TapeController implements IController {
     private memString : string = '';
     private programAsText: string = '';
     private textmode: boolean = false; // do not use as ng-model, because ipad changes it different time than PC
+    private textmodeCB: boolean = false;
     private iOS: boolean = false;
 
 
@@ -605,6 +606,7 @@ export class TapeController implements IController {
     private changeList() {
         if ( !this.textmode ) return;
         this.textmode = false;
+        this.textmodeCB = false;
         this.paste();
     }
 
@@ -612,6 +614,7 @@ export class TapeController implements IController {
     private changeText() {
         if ( this.textmode ) return;
         this.textmode = true;
+        this.textmodeCB = true;
         this.textAll();
     }
 
@@ -972,7 +975,7 @@ tim-tape .commandListContainer {
                          </span>
                      </div>
                 </div>
-                <span ng-hide="$ctrl.data.hideTextMode"><input type="checkbox" class="belttextbox" name="textmode" value="textmode"  ng-click="$ctrl.changeMode()" /><label for="belttextbox">&nbsp;Text&nbsp;mode</label></div></span>
+                <span ng-hide="$ctrl.data.hideTextMode"><input type="checkbox" ng-model="$ctrl.textmodeCB" class="belttextbox" name="textmode" value="textmode"  ng-click="$ctrl.changeMode()" /><label for="belttextbox">&nbsp;Text&nbsp;mode</label></div></span>
             </div>
         </div>
         <textarea style= "height: 1px; width: 1px; position: unset;" class="hiddenRobotProgram"></textarea>
