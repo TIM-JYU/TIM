@@ -13,7 +13,11 @@ class CsPluginTest(BrowserTest):
 type: python
         """)
         dt = self.create_translation(d)
-        dt.document.set_settings({'global_plugin_attrs': {'all': {'lang': 'en'}}})
+        dt.document.set_settings({
+            'global_plugin_attrs': {'all': {'lang': 'en'}},
+            # Hide the out-of-date decoration so we don't have to update the screenshot because of it.
+            'css': '.tr-outofdate::before { display: none; }',
+        })
         self.goto_document(dt)
         par = self.find_element_avoid_staleness('#py')
         self.wait_until_hidden('tim-plugin-loader')
