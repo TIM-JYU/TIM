@@ -137,13 +137,22 @@ export class VelpSelectionController implements IController {
 
         this.onInit({$API: this});
 
+        // TODO check if these routes can all be called simultaneously
+        // TODO fetch all data using just one route
+        const p1 = $http.get<IVelpGroup[]>(`/${docId}/get_velp_groups`);
         // Get velpgroup data
-        const response = await $http.get<IVelpGroup[]>(`/${docId}/get_velp_groups`);
+        const response = await p1;
+        const p2 = $http.get<IVelpGroup>(`/${docId}/get_default_velp_group`);
+        const p4 = $http.get<IVelp[]>(`/${docId}/get_velps`);
+        const p5 = $http.get<ILabel[]>(`/${docId}/get_velp_labels`);
+        const p6 = $http.get<IVelpGroupCollection>(`/${docId}/get_velp_group_personal_selections`);
+        const p7 = $http.get<IVelpGroupCollection>(`/${docId}/get_velp_group_default_selections`);
+        // Get default velp group data
+        const response2 = await p2;
+        const p3 = $http.get<IVelpGroup & {created_new_group: boolean}>("/get_default_personal_velp_group");
+
         this.velpGroups = response.data;
 
-        // Get default velp group data
-
-        const response2 = await $http.get<IVelpGroup>(`/${docId}/get_default_velp_group`);
         this.default_velp_group = response2.data;
 
         // If doc_default exists already for some reason but isn't a velp group yet, remove it from fetched velp groups
@@ -167,7 +176,7 @@ export class VelpSelectionController implements IController {
         }
 
         // Get personal velp group data
-        const response3 = await $http.get<IVelpGroup & {created_new_group: boolean}>("/get_default_personal_velp_group");
+        const response3 = await p3;
         const data = response3.data;
         this.default_personal_velp_group = {id: data.id, name: data.name, target_type: null, default: true};
 
@@ -179,16 +188,16 @@ export class VelpSelectionController implements IController {
             this.newVelp.velp_groups.push(this.default_personal_velp_group.id);
         }
 
-        if (this.default_personal_velp_group.id < 0) {
+        if (this.default_personal_velp_group.id < 0 && !this.velpGroupsContain(this.default_velp_group)) {
             this.velpGroups.push(this.default_velp_group);
         }
 
-        if (this.default_velp_group.id < 0) {
+        if (this.default_velp_group.id < 0 && !this.velpGroupsContain(this.default_velp_group)) {
             this.velpGroups.push(this.default_velp_group);
         }
 
         // Get velp and annotation data
-        const response4 = await $http.get<IVelp[]>(`/${docId}/get_velps`);
+        const response4 = await p4;
         this.rctrl.velps = response4.data;
         this.rctrl.velps.forEach((v) => {
             v.used = 0;
@@ -199,7 +208,7 @@ export class VelpSelectionController implements IController {
         });
 
         // Get label data
-        const response5 = await $http.get<ILabel[]>(`/${docId}/get_velp_labels`);
+        const response5 = await p5;
         this.labels = response5.data;
         this.labels.forEach((l) => {
             l.edit = false;
@@ -211,7 +220,7 @@ export class VelpSelectionController implements IController {
             }
         });
 
-        const response6 = await $http.get<IVelpGroupCollection>(`/${docId}/get_velp_group_personal_selections`);
+        const response6 = await p6;
         this.groupSelections = response6.data;
         if (!this.groupSelections.hasOwnProperty("0")) {
             this.groupSelections["0"] = [];
@@ -229,7 +238,7 @@ export class VelpSelectionController implements IController {
             }
         });
 
-        const response7 = await $http.get<IVelpGroupCollection>(`/${docId}/get_velp_group_default_selections`);
+        const response7 = await p7;
         this.groupDefaults = response7.data;
 
         const docDefaults = this.groupDefaults["0"];
@@ -1025,6 +1034,15 @@ export class VelpSelectionController implements IController {
         } else if (index >= 0) {
             velp.velp_groups.splice(index, 1);
         }
+    }
+
+    velpGroupsContain(g: IVelpGroup) {
+        for (const vg of this.velpGroups) {
+            if (vg.id === g.id) {
+                return true;
+            }
+        }
+        return false;
     }
 }
 
