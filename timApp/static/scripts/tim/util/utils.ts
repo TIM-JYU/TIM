@@ -344,6 +344,12 @@ export type ToReturn<T, U = {data: {error: string}}> = IPromise<Result<IHttpResp
 export const ToReturn = Promise;
 
 export function injectStyle(url: string) {
+    const links = document.getElementsByTagName("link");
+    for (let i = 0; i < links.length; i++) {
+        if (links[i].getAttribute("href") === url) {
+            return;
+        }
+    }
     const head = document.getElementsByTagName("head")[0];
     const link = document.createElement("link");
     link.setAttribute("rel", "stylesheet");
