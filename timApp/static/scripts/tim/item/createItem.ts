@@ -3,7 +3,7 @@ import {timApp} from "tim/app";
 import * as formErrorMessage from "tim/ui/formErrorMessage";
 import * as shortNameValidator from "tim/ui/shortNameValidator";
 import {Binding, getURLParameter, markAsUsed} from "tim/util/utils";
-import {$http, $window} from "../util/ngimport";
+import {$http} from "../util/ngimport";
 import {slugify} from "../util/slugify";
 import {to} from "../util/utils";
 import {ITaggedItem, TagType} from "./IItem";
@@ -67,19 +67,22 @@ class CreateItemController implements IController {
         this.tagsWithExpirations = false;
     }
 
-    createItem() {
+    async createItem() {
         this.creating = true;
-        $http.post<{path: string}>("/createItem", angular.extend({
+        const r = await to($http.post<{path: string}>("/createItem", angular.extend({
             item_path: this.itemLocation + "/" + this.itemName,
             item_type: this.itemType,
             item_title: this.itemTitle,
-        }, this.params)).then((response) => {
-            $window.location.href = "/view/" + response.data.path;
-        }, (response) => {
+        }, this.params)));
+
+        if (!r.ok) {
             this.alerts = [];
-            this.alerts.push({msg: response.data.error, type: "danger"});
+            this.alerts.push({msg: r.result.data.error, type: "danger"});
             this.creating = false;
-        });
+            return;
+        }
+
+        window.location.href = "/view/" + r.result.data.path;
     }
 
     closeAlert(index: number) {

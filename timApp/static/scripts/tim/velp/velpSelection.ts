@@ -1,9 +1,9 @@
-import angular, {IController, IFormController, IHttpPromise} from "angular";
+import angular, {IController, IFormController} from "angular";
 import {timApp} from "tim/app";
 import {Binding, markAsUsed, Require} from "tim/util/utils";
 import * as velpSummary from "tim/velp/velpSummary";
 import {colorPalette, VelpWindowController} from "tim/velp/velpWindow";
-import {$http, $log, $q, $window} from "../util/ngimport";
+import {$http, $log} from "../util/ngimport";
 import {ReviewController} from "./reviewController";
 import {
     ILabel,
@@ -15,7 +15,6 @@ import {
     IVelpGroup,
     IVelpGroupCollection,
     IVelpGroupUI,
-    IVelpUI,
     VelpGroupSelectionType,
 } from "./velptypes";
 
@@ -39,7 +38,6 @@ const UNDEFINED = "undefined";
 
 /**
  * Controller for velp selection
- * @lends module:velpSelection
  */
 export class VelpSelectionController implements IController {
     private labels: ILabelUI[];
@@ -124,12 +122,12 @@ export class VelpSelectionController implements IController {
         this.default_personal_velp_group = {id: -2, name: "Personal-default", target_type: null, default: true};
     }
 
-    $onInit() {
+    async $onInit() {
         this.rctrl.velps = [];
         // Dictionaries for easier searching: Velp ids? Label ids? Annotation ids?
-        const doc_id = this.docId;
-        this.velpOrderingKey = "velpOrdering_" + doc_id;
-        this.velpLabelsKey = "velpLabels_" + doc_id;
+        const docId = this.docId;
+        this.velpOrderingKey = "velpOrdering_" + docId;
+        this.velpLabelsKey = "velpLabels_" + docId;
         this.advancedOnKey = "advancedOn"; // TODO: should this be document specific?
 
         // Values to store in localstorage:
@@ -137,196 +135,115 @@ export class VelpSelectionController implements IController {
         this.selectedLabels = JSON.parse(this.getValuesFromLocalStorage(this.velpLabelsKey, "[]"));
         this.advancedOn = JSON.parse(this.getValuesFromLocalStorage(this.advancedOnKey, "false"));
 
+        this.onInit({$API: this});
+
         // Get velpgroup data
-        const promises: Array<IHttpPromise<any>> = [];
-        promises.push();
-        const p1 = $http.get<IVelpGroup[]>("/{0}/get_velp_groups".replace("{0}", doc_id.toString()));
-        promises.push(p1);
-        p1.then((response) => {
-            this.velpGroups = response.data;
+        const response = await $http.get<IVelpGroup[]>(`/${docId}/get_velp_groups`);
+        this.velpGroups = response.data;
 
-            // Get default velp group data
+        // Get default velp group data
 
-            const p2 = $http.get<IVelpGroup>("/{0}/get_default_velp_group".replace("{0}", doc_id.toString()));
-            promises.push(p2);
-            p2.then((response2) => {
-                this.default_velp_group = response2.data;
+        const response2 = await $http.get<IVelpGroup>(`/${docId}/get_default_velp_group`);
+        this.default_velp_group = response2.data;
 
-                // If doc_default exists already for some reason but isn't a velp group yet, remove it from fetched velp groups
-                for (const g of this.velpGroups) {
-                    if (g.name === this.default_velp_group.name && this.default_velp_group.id < 0) {
-                        const extraDefaultIndex = this.velpGroups.indexOf(g);
-                        this.velpGroups.push(this.default_velp_group);
-                        this.velpGroups.splice(extraDefaultIndex, 1);
-                        break;
-                    }
+        // If doc_default exists already for some reason but isn't a velp group yet, remove it from fetched velp groups
+        for (const g of this.velpGroups) {
+            if (g.name === this.default_velp_group.name && this.default_velp_group.id < 0) {
+                const extraDefaultIndex = this.velpGroups.indexOf(g);
+                this.velpGroups.push(this.default_velp_group);
+                this.velpGroups.splice(extraDefaultIndex, 1);
+                break;
+            }
+        }
+
+        if (this.default_velp_group.edit_access) {
+            this.velpGroups.forEach((g) => {
+                if (g.id === this.default_velp_group.id) {
+                    g.selected = true;
                 }
-
-                if (this.default_velp_group.edit_access) {
-                    this.velpGroups.forEach((g) => {
-                        if (g.id === this.default_velp_group.id) {
-                            g.selected = true;
-                        }
-                    });
-                    this.default_velp_group.selected = true;
-                    this.newVelp.velp_groups.push(this.default_velp_group.id);
-                }
-
-                // this.groupDefaults["0"] = [default_velp_group];
-
-                // Get personal velp group data
-                const p3 = $http.get<IVelpGroup & {created_new_group: boolean}>("/get_default_personal_velp_group");
-                promises.push(p3);
-                p3.then((response3) => {
-                    const data = response3.data;
-                    this.default_personal_velp_group = {id: data.id, name: data.name, target_type: null, default: true};
-
-                    if (data.created_new_group) {
-                        this.velpGroups.push(data);
-                    }
-
-                    if (!this.default_velp_group.edit_access) {
-                        this.newVelp.velp_groups.push(this.default_personal_velp_group.id);
-                        /*this.velpGroups.some(function (g) {
-                         if (g.id === default_personal_velp_group.id)
-                         g.selected = true;
-                         });*/
-                    }
-
-                    if (this.default_personal_velp_group.id < 0) {
-                        this.velpGroups.push(this.default_velp_group);
-                    }
-
-                    /*
-                     this.velpGroups.forEach(function(g) {
-                     if (g.id === default_personal_velp_group.id){
-                     if (typeof g.default === UNDEFINED){
-                     g.default = true;
-                     }
-
-                     } else if (g.id === default_velp_group.id){
-
-                     if (typeof g.default === UNDEFINED){
-                     g.default = true;
-                     }
-
-                     //g.show = true;
-                     //g.default = true;
-                     }
-                     });
-                     */
-                    this.updateVelpList();
-                });
-
-                if (this.default_velp_group.id < 0) {
-                    this.velpGroups.push(this.default_velp_group);
-                }
-
             });
+            this.default_velp_group.selected = true;
+            this.newVelp.velp_groups.push(this.default_velp_group.id);
+        }
 
-            // Get velp and annotation data
-            const p4 = $http.get<IVelp[]>("/{0}/get_velps".replace("{0}", doc_id.toString()));
-            promises.push(p4);
-            p4.then((response2) => {
-                this.rctrl.velps = response2.data;
-                this.rctrl.velps.forEach((v) => {
-                    v.used = 0;
-                    v.edit = false;
-                    if (typeof v.labels === UNDEFINED) {
-                        v.labels = [];
-                    }
-                });
-            });
+        // Get personal velp group data
+        const response3 = await $http.get<IVelpGroup & {created_new_group: boolean}>("/get_default_personal_velp_group");
+        const data = response3.data;
+        this.default_personal_velp_group = {id: data.id, name: data.name, target_type: null, default: true};
 
-            /*
-             $http.get('/get_default_personal_velp_group').success(function (data) {
-             default_personal_velp_group = {id: data.id, name: data.name};
-             if (data.created_new_group) {
-             this.velpGroups.push(data);
-             }
-             if (!default_velp_group.edit_access) {
-             this.newVelp.velp_groups.push(default_personal_velp_group.id);
-             this.velpGroups.some(function (g) {
-             if (g.id === default_personal_velp_group.id)
-             return g.selected = true;
-             });
-             }
-             });
-             */
-            /*
-             p = $http.get('/{0}/get_annotations'.replace('{0}', doc_id));
-             promises.push(p);
-             p.success(function (data) {
-             this.annotations = data;
-             this.loadDocumentAnnotations();
-             });
-             */
-            // Get label data
-            const p5 = $http.get<ILabel[]>("/{0}/get_velp_labels".replace("{0}", doc_id.toString()));
-            promises.push(p5);
-            p5.then((response2) => {
-                this.labels = response2.data;
-                this.labels.forEach((l) => {
-                    l.edit = false;
-                    l.selected = false;
-                    for (let i = 0; i < this.selectedLabels.length; i++) {
-                        if (l.id === this.selectedLabels[i]) {
-                            l.selected = true;
-                        }
-                    }
-                });
-            });
+        if (data.created_new_group) {
+            this.velpGroups.push(data);
+        }
 
-            const p6 = $http.get<IVelpGroupCollection>("/{0}/get_velp_group_personal_selections".replace("{0}", doc_id.toString()));
-            promises.push(p6);
-            p6.then((response2) => {
-                this.groupSelections = response2.data;
-                if (!this.groupSelections.hasOwnProperty("0")) {
-                    this.groupSelections["0"] = [];
-                }
+        if (!this.default_velp_group.edit_access) {
+            this.newVelp.velp_groups.push(this.default_personal_velp_group.id);
+        }
 
-                const docSelections = this.groupSelections["0"];
+        if (this.default_personal_velp_group.id < 0) {
+            this.velpGroups.push(this.default_velp_group);
+        }
 
-                this.velpGroups.forEach((g) => {
-                    g.show = false;
-                    for (let i = 0; i < docSelections.length; i++) {
-                        if (docSelections[i].id === g.id && docSelections[i].selected) {
-                            g.show = true;
-                            break;
-                        }
-                    }
-                });
-                // this.updateVelpList();
+        if (this.default_velp_group.id < 0) {
+            this.velpGroups.push(this.default_velp_group);
+        }
 
-            });
-
-            const p7 = $http.get<IVelpGroupCollection>("/{0}/get_velp_group_default_selections".replace("{0}", doc_id.toString()));
-            promises.push(p7);
-            p7.then((response2) => {
-                this.groupDefaults = response2.data;
-
-                const docDefaults = this.groupDefaults["0"];
-
-                this.velpGroups.forEach((g) => {
-
-                    for (let i = 0; i < docDefaults.length; i++) {
-                        if (docDefaults[i].id === g.id && docDefaults[i].selected) {
-                            g.default = true;
-                            break;
-                        }
-                    }
-                });
-                // this.updateVelpList();
-
-            });
-
-            $q.all(promises).then(() => {
-                this.updateVelpList();
-            });
-
+        // Get velp and annotation data
+        const response4 = await $http.get<IVelp[]>(`/${docId}/get_velps`);
+        this.rctrl.velps = response4.data;
+        this.rctrl.velps.forEach((v) => {
+            v.used = 0;
+            v.edit = false;
+            if (typeof v.labels === UNDEFINED) {
+                v.labels = [];
+            }
         });
 
-        this.onInit({$API: this});
+        // Get label data
+        const response5 = await $http.get<ILabel[]>(`/${docId}/get_velp_labels`);
+        this.labels = response5.data;
+        this.labels.forEach((l) => {
+            l.edit = false;
+            l.selected = false;
+            for (let i = 0; i < this.selectedLabels.length; i++) {
+                if (l.id === this.selectedLabels[i]) {
+                    l.selected = true;
+                }
+            }
+        });
+
+        const response6 = await $http.get<IVelpGroupCollection>(`/${docId}/get_velp_group_personal_selections`);
+        this.groupSelections = response6.data;
+        if (!this.groupSelections.hasOwnProperty("0")) {
+            this.groupSelections["0"] = [];
+        }
+
+        const docSelections = this.groupSelections["0"];
+
+        this.velpGroups.forEach((g) => {
+            g.show = false;
+            for (let i = 0; i < docSelections.length; i++) {
+                if (docSelections[i].id === g.id && docSelections[i].selected) {
+                    g.show = true;
+                    break;
+                }
+            }
+        });
+
+        const response7 = await $http.get<IVelpGroupCollection>(`/${docId}/get_velp_group_default_selections`);
+        this.groupDefaults = response7.data;
+
+        const docDefaults = this.groupDefaults["0"];
+
+        this.velpGroups.forEach((g) => {
+            for (let i = 0; i < docDefaults.length; i++) {
+                if (docDefaults[i].id === g.id && docDefaults[i].selected) {
+                    g.default = true;
+                    break;
+                }
+            }
+        });
+
+        this.updateVelpList();
     }
 
     // Methods
@@ -339,7 +256,7 @@ export class VelpSelectionController implements IController {
      * @returns {*}
      */
     getValuesFromLocalStorage(key: string, defaultValue: string): string {
-        const item = $window.localStorage.getItem(key);
+        const item = window.localStorage.getItem(key);
         if (item == null) {
             return defaultValue;
         }
@@ -347,11 +264,11 @@ export class VelpSelectionController implements IController {
     }
 
     changeOrdering(order: string) {
-        $window.localStorage.setItem(this.velpOrderingKey, order);
+        window.localStorage.setItem(this.velpOrderingKey, order);
     }
 
     changeSelectedLabels() {
-        $window.localStorage.setItem(this.velpLabelsKey, JSON.stringify(this.selectedLabels));
+        window.localStorage.setItem(this.velpLabelsKey, JSON.stringify(this.selectedLabels));
     }
 
     /**
@@ -401,7 +318,7 @@ export class VelpSelectionController implements IController {
      */
 
     setAdvancedOnlocalStorage(value: boolean) {
-        $window.localStorage.setItem(this.advancedOnKey, value.toString());
+        window.localStorage.setItem(this.advancedOnKey, value.toString());
     }
 
     /**
@@ -1023,7 +940,7 @@ export class VelpSelectionController implements IController {
     checkCheckBoxes(type: VelpGroupSelectionType) {
         let targetID = null;
 
-        if (this.isAttachedToParagraph()  && this.rctrl.selectedElement != null) {
+        if (this.isAttachedToParagraph() && this.rctrl.selectedElement != null) {
             targetID = this.rctrl.selectedElement.id;
         } else {
             targetID = "0";

@@ -2,15 +2,16 @@ import {IPromise} from "angular";
 import $ from "jquery";
 import moment from "moment";
 import {getActiveDocument} from "tim/document/document";
+import {IItem} from "../item/IItem";
+import {showMessageDialog} from "../ui/dialog";
 import {Users} from "../user/userService";
 import {$http, $log, $timeout, $window} from "../util/ngimport";
-import {isInViewport, markPageDirty} from "../util/utils";
+import {isInViewport, markPageDirty, to} from "../util/utils";
+import {EditPosition, EditType} from "./editing/editing";
+import {IExtraData} from "./editing/edittypes";
 import {onClick, onMouseOverOut} from "./eventhandlers";
 import {getArea, getParId, getRefAttrs, isReference} from "./parhelpers";
 import {ViewCtrl} from "./viewctrl";
-import {IItem} from "../item/IItem";
-import {IExtraData} from "./editing/edittypes";
-import {EditPosition, EditType} from "./editing/editing";
 
 export const readClasses = {
     1: "screen",
@@ -57,10 +58,11 @@ export async function markParRead($par: JQuery, readingType: readingTypes) {
     if (isReference($par)) {
         data = getRefAttrs($par);
     }
-    if (!Users.isLoggedIn()) { return; }
-    try {
-        await $http.put(`/read/${getActiveDocument().id}/${parId}/${readingType}`, data);
-    } catch (e) {
+    if (!Users.isLoggedIn()) {
+        return;
+    }
+    const r = await to($http.put(`/read/${getActiveDocument().id}/${parId}/${readingType}`, data));
+    if (!r.ok) {
         $log.error("Could not save the read marking for paragraph " + parId);
         $readline.removeClass(readClassName);
         return;
@@ -78,9 +80,8 @@ async function markParsRead($pars: JQuery) {
     }).get();
     $pars.find(".readline").addClass(readClasses[readingTypes.clickRed]);
     const doc = getActiveDocument();
-    try {
-        await $http.put("/read/" + doc.id + "/" + "null" + "/" + readingTypes.clickRed, {pars: parIds});
-    } catch (e) {
+    const r = await to($http.put("/read/" + doc.id + "/" + "null" + "/" + readingTypes.clickRed, {pars: parIds}));
+    if (!r.ok) {
         $log.error("Could not save the read markings");
         return;
     }
@@ -89,10 +90,9 @@ async function markParsRead($pars: JQuery) {
 
 async function markAllAsRead() {
     const doc = getActiveDocument();
-    try {
-        await $http.put("/read/" + doc.id, {});
-    } catch (e) {
-        $window.alert("Could not mark the document as read.");
+    const r = await to($http.put("/read/" + doc.id, {}));
+    if (!r.ok) {
+        await showMessageDialog("Could not mark the document as read.");
         return;
     }
     $(".readline").attr("class", "readline read");
@@ -129,7 +129,7 @@ function readlineHandler($this: JQuery, e: Event) {
     return true;
 }
 
-export function initReadings(sc: ViewCtrl) {
+export async function initReadings(sc: ViewCtrl) {
     onClick(".readline", readlineHandler);
 
     onClick(".areareadline", function areareadlineHandler($this, e) {
@@ -147,14 +147,16 @@ export function initReadings(sc: ViewCtrl) {
         }
         $log.info($this);
 
-        $http.put("/read/" + sc.docId + "/" + areaId, {})
-            .then((response) => {
+        (async () => {
+            const r = await to($http.put("/read/" + sc.docId + "/" + areaId, {}));
+            if (r.ok) {
                 getArea(areaId).find(".readline").attr("class", "areareadline read");
                 markPageDirty();
-            }, () => {
-                $window.alert("Could not save the read marking.");
+            } else {
+                await showMessageDialog("Could not save the read marking.");
                 $this.attr("class", oldClass);
-            });
+            }
+        })();
 
         return false;
     });
@@ -170,7 +172,7 @@ export function initReadings(sc: ViewCtrl) {
         const $par = $readsection.parents(".par");
         const parId = getParId($par);
         if ($par.length === 0 || !parId) {
-            $window.alert("Unable to mark this section as read");
+            void showMessageDialog("Unable to mark this section as read");
             return;
         }
         const $pars = doc.sections[parId];
@@ -185,13 +187,8 @@ export function initReadings(sc: ViewCtrl) {
     });
 
     if (Users.isLoggedIn()) {
-        $timeout(() => {
-            $http.post("/bookmarks/markLastRead/" + sc.docId, {}).then(() => {
-                // all ok
-            }, () => {
-                $log.error("Failed to mark document as last read");
-            });
-        }, 10000);
+        await $timeout(10000);
+        await $http.post("/bookmarks/markLastRead/" + sc.docId, {});
     }
 }
 

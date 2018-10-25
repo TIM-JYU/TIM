@@ -1,13 +1,14 @@
 import {IScope} from "angular";
 import $ from "jquery";
 import * as nameArea from "tim/document/editing/nameArea";
-import {Coords, markAsUsed} from "tim/util/utils";
-import {$http, $timeout, $window} from "../util/ngimport";
+import {markAsUsed, to} from "tim/util/utils";
+import {$http, $timeout} from "../util/ngimport";
 import {INameAreaOptions, showNameAreaDialog} from "./editing/nameArea";
 import {onClick, onMouseOverOut} from "./eventhandlers";
 import {Area, getArea, getFirstParId, getLastParId, Paragraph, Paragraphs} from "./parhelpers";
 import {ViewCtrl} from "./viewctrl";
 import {getEmptyCoords} from "./viewutils";
+import {showMessageDialog} from "../ui/dialog";
 
 markAsUsed(nameArea);
 
@@ -131,18 +132,15 @@ export class AreaHandler {
     }
 
     async nameAreaOk($area: Area, areaName: string, options: INameAreaOptions) {
-        try {
-            await $http.post("/name_area/" + this.viewctrl.docId + "/" + areaName, {
-                area_start: getFirstParId($area.first()),
-                area_end: getLastParId($area.last()),
-                options,
-            });
-            // $area.children().wrapAll('<div class="areaContent">');
-            // $area.append('<div class="areaeditline1">');
-            // if (options.collapsible)
+        const r = await to($http.post("/name_area/" + this.viewctrl.docId + "/" + areaName, {
+            area_start: getFirstParId($area.first()),
+            area_end: getLastParId($area.last()),
+            options,
+        }));
+        if (r.ok) {
             this.viewctrl.reload();
-        } catch (e) {
-            $window.alert(e.data.error);
+        } else {
+            await showMessageDialog(r.result.data.error);
         }
     }
 
@@ -154,15 +152,14 @@ export class AreaHandler {
     async removeAreaMarking(e: Event, $pars: Paragraph) {
         const areaName = this.selectedAreaName;
         if (!areaName) {
-            $window.alert("Could not get area name");
+            await showMessageDialog("Could not get area name");
         }
 
-        try {
-            await
-                $http.post("/unwrap_area/" + this.viewctrl.docId + "/" + areaName, {});
+        const r = await to($http.post("/unwrap_area/" + this.viewctrl.docId + "/" + areaName, {}));
+        if (r.ok) {
             this.viewctrl.reload();
-        } catch (e) {
-            $window.alert(e.data.error);
+        } else {
+            await showMessageDialog(r.result.data.error);
         }
     }
 }

@@ -4,7 +4,7 @@ import {timApp} from "tim/app";
 import {watchEditMode} from "tim/document/editing/editmode";
 import {DraggableController} from "../ui/draggable";
 import {$http, $window} from "../util/ngimport";
-import {Binding, Require} from "../util/utils";
+import {Binding, Require, to} from "../util/utils";
 import {ViewCtrl} from "./viewctrl";
 import {MenuFunctionCollection, MenuFunctionEntry} from "./viewutils";
 
@@ -28,6 +28,7 @@ export class PopupMenuController implements IController {
     private scope: IScope;
     private actions?: Binding<MenuFunctionCollection, "<">;
     private draggable: Require<DraggableController | undefined>;
+    private content?: string;
 
     constructor(scope: IScope, element: IRootElementService) {
         this.element = element;
@@ -88,24 +89,22 @@ export class PopupMenuController implements IController {
         }
     }
 
-    getContent(contentUrl: string) {
+    async getContent(contentUrl: string) {
         if (!contentUrl) {
-            $("#content").remove();
+            this.content = undefined;
             return;
         }
 
-        $http.get<{texts: string}>(contentUrl, {params: {doc_id: this.vctrl.docId}},
-        ).then((response) => {
-            $("#content").append(response.data.texts);
-        }, () => {
-            $window.alert("Error occurred when getting contents.");
-        });
+        const r = await to($http.get<{texts: string}>(contentUrl, {params: {doc_id: this.vctrl.docId}}));
+        if (r.ok) {
+            this.content = r.result.data.texts;
+        }
     }
 
     watchEditMode(newEditMode: EditMode | null, oldEditMode: EditMode | null) {
         if (this.editcontext && newEditMode && newEditMode !== this.editcontext) {
             // We don't want to destroy our scope before returning from this function
-            $window.setTimeout(() => this.closePopup(), 0.1);
+            window.setTimeout(() => this.closePopup(), 0.1);
         }
     }
 }

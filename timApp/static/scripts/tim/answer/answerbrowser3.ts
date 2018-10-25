@@ -282,21 +282,21 @@ export class AnswerBrowserController extends DestroyScope implements IController
         }
     }
 
-    savePoints() {
+    async savePoints() {
         if (!this.selectedAnswer || !this.user) {
             return;
         }
-        $http.put("/savePoints/" + this.user.id + "/" + this.selectedAnswer.id,
-            {points: this.points}).then((response) => {
-            if (!this.selectedAnswer) {
-                return;
-            }
-            this.selectedAnswer.points = this.points;
-        }, (response) => {
-            this.showError(response);
-        }).finally(() => {
-            this.shouldFocus = true;
-        });
+        const r = await to($http.put("/savePoints/" + this.user.id + "/" + this.selectedAnswer.id,
+            {points: this.points}));
+        this.shouldFocus = true;
+        if (!r.ok) {
+            this.showError(r.result);
+            return;
+        }
+        if (!this.selectedAnswer) {
+            return;
+        }
+        this.selectedAnswer.points = this.points;
     }
 
     updatePoints() {

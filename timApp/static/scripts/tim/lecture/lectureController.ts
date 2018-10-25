@@ -12,11 +12,10 @@
  */
 
 import {IController, IScope} from "angular";
-import $ from "jquery";
 import moment from "moment";
 import {timApp} from "tim/app";
 import sessionsettings from "tim/session";
-import {clone, getURLParameter, markAsUsed, Require, setSetting, setStorage, to} from "tim/util/utils";
+import {clone, getURLParameter, markAsUsed, Require, setStorage, to} from "tim/util/utils";
 import {ViewCtrl} from "../document/viewctrl";
 import {IModalInstance, showMessageDialog} from "../ui/dialog";
 import {Users} from "../user/userService";
@@ -82,7 +81,6 @@ export class LectureController implements IController {
     public lectures: ILecture[];
     public lectureSettings: ILectureSettings;
     private lectureEndingDialogState: LectureEndingDialogState;
-    private clockOffset: number;
     private futureLectures: ILecture[];
     private lectureEnded: boolean;
     private lecturerTable: ILecturePerson[];
@@ -114,7 +112,6 @@ export class LectureController implements IController {
         this.lectureEndingDialogState = LectureEndingDialogState.NotAnswered;
         this.lectureEnded = false;
         this.wallMessages = [];
-        this.clockOffset = 0;
         this.settings = sessionsettings;
 
         this.lectureSettings = {
@@ -132,7 +129,6 @@ export class LectureController implements IController {
         }
         await this.checkIfInLecture();
         void this.startLongPolling();
-        this.getClockOffset();
     }
 
     $postLink() {
@@ -248,7 +244,7 @@ export class LectureController implements IController {
                 if (this.lecture.lecture_code === lectureCode) {
                     changeLecture = false;
                 } else {
-                    changeLecture = $window.confirm(`You are already in lecture ${this.lecture.lecture_code}. Do you want to switch to lecture ${lectureCode}?`);
+                    changeLecture = window.confirm(`You are already in lecture ${this.lecture.lecture_code}. Do you want to switch to lecture ${lectureCode}?`);
                 }
             }
         }
@@ -286,10 +282,9 @@ export class LectureController implements IController {
         } else if (!Users.isLoggedIn()) {
             // if the user was logged in as a temporary user, we must refresh
             // to update the plugins (they may require login)
-            $window.location.reload();
+            window.location.reload();
             return true;
         } else {
-            $("#currentList").slideUp();
             this.studentTable = [];
             this.lecturerTable = [];
             this.showLectureView(answer);
@@ -297,33 +292,6 @@ export class LectureController implements IController {
             this.lectureSettings.useQuestions = true;
             return true;
         }
-    }
-
-    /**
-     * Checks time offset between client server. Used to set question end time right.
-     */
-    getClockOffset() {
-        $http<{t1: number, t2: number, t3: number}>({
-            url: "/getServerTime",
-            method: "GET",
-            params: {t1: new Date().valueOf()},
-        }).then((response) => {
-            const data = response.data;
-            const t4 = new Date().valueOf();
-            // const t3 = parseInt(data.t3);
-            const t2 = data.t2;
-            const t1 = data.t1;
-            this.clockOffset = ((t2 - t1) + (t2 - t4)) / 2;
-            window.setTimeout(() => {
-                setSetting("clock_offset", this.clockOffset.toString());
-            }, 1000);
-        }, () => {
-            if (this.settings.clock_offset) {
-                this.clockOffset = this.settings.clock_offset;
-            } else {
-                this.clockOffset = 0;
-            }
-        });
     }
 
     lectureOrThrow(): ILecture {
@@ -473,7 +441,7 @@ export class LectureController implements IController {
      */
     async endLecture() {
         // TODO: Change to some better confirm dialog.
-        const confirmAnswer = $window.confirm("Do you really want to end this lecture?");
+        const confirmAnswer = window.confirm("Do you really want to end this lecture?");
         if (confirmAnswer) {
             const response = await $http<ILectureListResponse>({
                 url: "/endLecture",

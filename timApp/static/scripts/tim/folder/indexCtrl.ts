@@ -3,6 +3,7 @@ import {timApp} from "tim/app";
 import {IItem} from "../item/IItem";
 import {Users} from "../user/userService";
 import {$http, $timeout, $upload, $window} from "../util/ngimport";
+import {to} from "../util/utils";
 
 // Controller used in document index and folders
 
@@ -34,26 +35,19 @@ class IndexCtrl implements IController {
         return str.indexOf(suffix, str.length - suffix.length) !== -1;
     }
 
-    getParameterByName(name: string) {
-        name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
-        const regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
-            results = regex.exec($window.location.search);
-        return results == null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
-    }
-
-    getItems() {
-        $http<IItem[]>({
+    async getItems() {
+        const r = await to($http<IItem[]>({
             method: "GET",
             url: "/getItems",
             params: {
                 folder: this.item.location,
             },
-        }).then((response) => {
-            this.itemList = response.data;
-        }, (response) => {
+        }));
+        if (r.ok) {
+            this.itemList = r.result.data;
+        } else {
             this.itemList = [];
-            // TODO: Show some error message.
-        });
+        }
     }
 
     onFileSelect(file: any) {

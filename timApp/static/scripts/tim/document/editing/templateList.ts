@@ -3,7 +3,7 @@ import {Binding, to} from "tim/util/utils";
 import {timApp} from "../../app";
 import {IItem} from "../../item/IItem";
 import {showMessageDialog} from "../../ui/dialog";
-import {$http, $window} from "../../util/ngimport";
+import {$http} from "../../util/ngimport";
 
 class TemplateListCtrl implements IController {
     private doc!: Binding<IItem, "<">;
@@ -16,7 +16,7 @@ class TemplateListCtrl implements IController {
         if (!r.ok) {
             await showMessageDialog(r.result.data.error);
         } else {
-            $window.location.reload();
+            window.location.reload();
         }
     }
 

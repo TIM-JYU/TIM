@@ -14,7 +14,7 @@ import {timApp} from "tim/app";
 import * as focusme from "tim/ui/focusMe";
 import {showMessageDialog} from "../ui/dialog";
 import {IUser} from "../user/IUser";
-import {$http, $window} from "../util/ngimport";
+import {$http} from "../util/ngimport";
 import {Binding, markAsUsed, Require} from "../util/utils";
 import {ReviewController} from "./reviewController";
 import {IAnnotationCoordless} from "./velptypes";
@@ -196,7 +196,7 @@ export class AnnotationController implements IController {
     deleteAnnotation() {
 
         if (this.annotation.comments.length < 2) {
-            if (!$window.confirm("Delete - are you sure?")) {
+            if (!window.confirm("Delete - are you sure?")) {
                 return;
             }
             this.rctrl.deleteAnnotation(this.annotation.id);

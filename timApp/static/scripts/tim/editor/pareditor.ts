@@ -326,7 +326,7 @@ ${backTicks}
             }
         }
         this.draggable.makeHeightAutomatic();
-        const oldMode = $window.localStorage.getItem("oldMode" + this.getOptions().localSaveTag) || (this.getOptions().touchDevice ? "text" : "ace");
+        const oldMode = window.localStorage.getItem("oldMode" + this.getOptions().localSaveTag) || (this.getOptions().touchDevice ? "text" : "ace");
         this.changeEditor(oldMode);
         this.scope.$watch(() => this.autocomplete, () => {
             if (this.isAce(this.editor)) {
@@ -365,7 +365,7 @@ ${backTicks}
     }
 
     setLocalValue(name: string, val: string) {
-        $window.localStorage.setItem(name + this.getSaveTag(), val);
+        window.localStorage.setItem(name + this.getSaveTag(), val);
     }
 
     /*
@@ -671,7 +671,7 @@ or newer one that is more familiar to write in YAML:
         }
         for (const [k, v] of Object.entries(this.getExtraData().tags)) {
             if (v != null) {
-                $window.localStorage.setItem(k, v.toString());
+                window.localStorage.setItem(k, v.toString());
             }
         }
         this.setLocalValue("proeditor", this.proeditor.toString());

@@ -1,6 +1,6 @@
 <div class="inner">
     <div class="error" ng-show="$ctrl.vctrl.notification" ng-bind="$ctrl.vctrl.notification"></div>
-    <div id="content" class="actionButtonContent"></div>
+    <div ng-if="$ctrl.content" ng-bind-html="$ctrl.content" class="actionButtonContent"></div>
 
     <div class="row" ng-repeat="f in $ctrl.actions | filter:{show: true}">
         <div ng-class="$ctrl.colClass">

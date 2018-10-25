@@ -3,7 +3,7 @@ import {timApp} from "tim/app";
 import * as focusMe from "tim/ui/focusMe";
 import {Binding, markAsUsed, to} from "tim/util/utils";
 import {ViewCtrl} from "../document/viewctrl";
-import {DialogController, registerDialogComponent, showDialog} from "../ui/dialog";
+import {DialogController, registerDialogComponent, showDialog, showMessageDialog} from "../ui/dialog";
 import {$http, $timeout, $window} from "../util/ngimport";
 
 markAsUsed(focusMe);
@@ -118,28 +118,34 @@ export class BookmarksController implements IController {
         this.getFromServer(response.data, group);
     }
 
-    deleteItem(group: IBookmarkGroup, item: IBookmark, e: Event) {
+    async deleteItem(group: IBookmarkGroup, item: IBookmark, e: Event) {
         e.stopPropagation();
         e.preventDefault();
-        return $http.post<IBookmarkGroup[]>("/bookmarks/delete", {
+        const r = await to($http.post<IBookmarkGroup[]>("/bookmarks/delete", {
             group: group.name,
             name: item.name,
-        })
-            .then((response) => {
-                this.getFromServer(response.data, group);
-            }, (response) => {
-                $window.alert("Could not delete bookmark.");
-            });
+        }));
+        if (!r.ok) {
+            void showMessageDialog("Could not delete bookmark.");
+            return;
+        }
+
+        this.getFromServer(r.result.data, group);
     }
 
-    deleteGroup(group: IBookmarkGroup, e: Event) {
+    async deleteGroup(group: IBookmarkGroup, e: Event) {
         e.stopPropagation();
         e.preventDefault();
-        if ($window.confirm("Are you sure you want to delete this bookmark group?")) {
-            $http.post<IBookmarkGroup[]>("/bookmarks/deleteGroup", {group: group.name})
-                .then((resp) => this.getFromServer(resp.data), (response) => {
-                    $window.alert("Could not delete bookmark group.");
-                });
+        if (window.confirm("Are you sure you want to delete this bookmark group?")) {
+            const r = await to($http.post<IBookmarkGroup[]>("/bookmarks/deleteGroup", {
+                group: group.name,
+            }));
+            if (!r.ok) {
+                void showMessageDialog("Could not delete bookmark group.");
+                return;
+            }
+
+            this.getFromServer(r.result.data);
         }
     }
 
@@ -194,8 +200,8 @@ class CreateBookmarkCtrl extends DialogController<{params: IBookmark}, IBookmark
         }
         this.focusGroup = false;
         this.focusName = true;
-        this.showParamsCheckbox = $window.location.search.length > 1;
-        this.showHashCheckbox = $window.location.hash.length > 1;
+        this.showParamsCheckbox = window.location.search.length > 1;
+        this.showHashCheckbox = window.location.hash.length > 1;
     }
 
     protected getTitle() {
@@ -204,12 +210,12 @@ class CreateBookmarkCtrl extends DialogController<{params: IBookmark}, IBookmark
 
     public ok() {
         if (!this.bookmark.link) {
-            this.bookmark.link = $window.location.pathname;
+            this.bookmark.link = window.location.pathname;
             if (this.includeParams) {
-                this.bookmark.link += $window.location.search;
+                this.bookmark.link += window.location.search;
             }
             if (this.includeHash) {
-                this.bookmark.link += $window.location.hash;
+                this.bookmark.link += window.location.hash;
             }
         }
 

@@ -5,8 +5,14 @@ import {fetchAskedQuestion, showQuestionEditDialog} from "../document/question/q
 import {DialogController, registerDialogComponent, showDialog, showMessageDialog} from "../ui/dialog";
 import {$http, $timeout} from "../util/ngimport";
 import {
-    AnswerTable, IAskedQuestion, IGetNewQuestionResponse, IQuestionAnswer, isAskedQuestion,
-    questionAnswerReceived, questionAsked, QuestionOrAnswer,
+    AnswerTable,
+    IAskedQuestion,
+    IGetNewQuestionResponse,
+    IQuestionAnswer,
+    isAskedQuestion,
+    questionAnswerReceived,
+    questionAsked,
+    QuestionOrAnswer,
 } from "./lecturetypes";
 import {showStatisticsDialog} from "./showStatisticsToQuestionController";
 import {getStorage, setStorage} from "../util/utils";
@@ -60,7 +66,6 @@ export class AnswerToQuestionController extends DialogController<{params: IAnswe
     private buttonText: string = "Answer";
     private result?: boolean;
     private question!: IAskedQuestion; // $onInit
-    private clockOffset = moment.duration(0, "milliseconds");
     private preview!: IPreviewParams; // $onInit
     private questionEnded: boolean = false;
     private answer?: AnswerTable;
@@ -201,7 +206,7 @@ export class AnswerToQuestionController extends DialogController<{params: IAnswe
      * Changes question end time.
      */
     public updateEndTime(time: Moment) {
-        this.endTime = time.clone().subtract(this.clockOffset);
+        this.endTime = time.clone();
         this.updateMaxProgress();
     }
 
@@ -267,11 +272,10 @@ export class AnswerToQuestionController extends DialogController<{params: IAnswe
             this.questionEnded = true;
             this.answered = true;
         }
-        this.askedTime = this.question.asked_time.clone().subtract(this.clockOffset);
+        this.askedTime = this.question.asked_time.clone();
 
-        // clockOffset usually in range [-100, -25] (milliseconds), so it's almost meaningless? Using 0 for now.
         if (this.question.json.json.timeLimit) {
-            this.endTime = this.askedTime.clone().add(this.question.json.json.timeLimit, "seconds").subtract(this.clockOffset);
+            this.endTime = this.askedTime.clone().add(this.question.json.json.timeLimit, "seconds");
         }
         this.isLecturer = this.resolve.params.isLecturer;
 

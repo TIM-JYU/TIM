@@ -1,7 +1,7 @@
 import {IController, IRootElementService} from "angular";
 import {timApp} from "tim/app";
 import {$http} from "../util/ngimport";
-import {Binding} from "../util/utils";
+import {Binding, to} from "../util/utils";
 
 class RefPopupController implements IController {
     private static $inject = ["$element"];
@@ -21,15 +21,15 @@ class RefPopupController implements IController {
     }
 
     async $onInit() {
-        try {
-            const response = await $http.get<{doc_name: string, doc_author: string, par_name: string}>(`/par_info/${this.docid}/${this.parid}`);
-            this.doc_name = response.data.doc_name;
-            this.doc_author = response.data.doc_author;
-            this.par_name = response.data.par_name;
+        const r = await to($http.get<{doc_name: string, doc_author: string, par_name: string}>(`/par_info/${this.docid}/${this.parid}`));
+        if (r.ok) {
+            this.doc_name = r.result.data.doc_name;
+            this.doc_author = r.result.data.doc_author;
+            this.par_name = r.result.data.par_name;
             this.loaded = true;
             this.ref_loaded = true;
-        } catch (e) {
-            this.error = e.data.error;
+        } else {
+            this.error = r.result.data.error;
         }
     }
 

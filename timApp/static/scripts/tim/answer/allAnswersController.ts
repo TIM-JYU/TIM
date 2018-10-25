@@ -2,7 +2,8 @@ import {IPromise} from "angular";
 import moment from "moment";
 import {ngStorage} from "ngstorage";
 import {DialogController, registerDialogComponent, showDialog} from "../ui/dialog";
-import {$http, $httpParamSerializer, $localStorage, $log, $window} from "../util/ngimport";
+import {$http, $httpParamSerializer, $localStorage} from "../util/ngimport";
+import {to} from "../util/utils";
 
 interface IOptions {
     age: string;
@@ -32,7 +33,7 @@ export class AllAnswersCtrl extends DialogController<{params: IAllAnswersParams}
         return "Get answers";
     }
 
-    $onInit() {
+    async $onInit() {
         super.$onInit();
         const options = this.resolve.params;
         moment.locale("en", {
@@ -66,16 +67,13 @@ export class AllAnswersCtrl extends DialogController<{params: IAllAnswersParams}
         };
 
         this.lastFetch = null;
-        $http.get<{last_answer_fetch: {[index: string]: string}}>("/settings/get/last_answer_fetch").then((response) => {
-            if (response.data.last_answer_fetch) {
-                this.lastFetch = response.data.last_answer_fetch[options.identifier];
-                if (!this.lastFetch) {
-                    this.lastFetch = "no fetches yet";
-                }
+        const r = await to($http.get<{last_answer_fetch: {[index: string]: string}}>("/settings/get/last_answer_fetch"));
+        if (r.ok && r.result.data.last_answer_fetch) {
+            this.lastFetch = r.result.data.last_answer_fetch[options.identifier];
+            if (!this.lastFetch) {
+                this.lastFetch = "no fetches yet";
             }
-        }, (response) => {
-            $log.error("Failed to fetch last answer time");
-        });
+        }
     }
 
     ok() {
@@ -85,7 +83,7 @@ export class AllAnswersCtrl extends DialogController<{params: IAllAnswersParams}
         if (this.options.periodTo) {
             this.options.periodTo = this.options.periodTo.toDate();
         }
-        $window.open(this.resolve.params.url + "?" + $httpParamSerializer(this.options), "_blank");
+        window.open(this.resolve.params.url + "?" + $httpParamSerializer(this.options), "_blank");
         this.close({});
     }
 

@@ -10,10 +10,12 @@ import {showMessageDialog} from "../ui/dialog";
 import {$compile, $http, $timeout, $window} from "../util/ngimport";
 import {
     angularWait,
-    assertIsText, Binding,
+    assertIsText,
+    Binding,
     checkIfElement,
     getElementParent,
-    isInViewport, Require,
+    isInViewport,
+    Require,
     scrollToElement,
     stringOrNull,
 } from "../util/utils";
@@ -586,8 +588,8 @@ export class ReviewController implements IController {
 
         try {
             let range;
-            if ($window.getSelection) {
-                range = $window.getSelection();
+            if (window.getSelection) {
+                range = window.getSelection();
             } else {
                 range = document.getSelection();
             }

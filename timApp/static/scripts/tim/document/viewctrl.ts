@@ -431,7 +431,7 @@ export class ViewCtrl implements IController {
 
     reload() {
         markPageNotDirty();
-        $window.location.reload();
+        window.location.reload();
     }
 
     closeRefreshDlg() {

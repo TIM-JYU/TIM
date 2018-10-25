@@ -1,7 +1,8 @@
+import {saveCurrentScreenPar} from "../document/parhelpers";
+import {showMessageDialog} from "../ui/dialog";
 import {$http, $httpParamSerializer, $window} from "../util/ngimport";
 import {to, ToReturn} from "../util/utils";
 import {IFullUser, IUser} from "./IUser";
-import {saveCurrentScreenPar} from "../document/parhelpers";
 
 export interface ILoginResponse {
     other_users: IUser[];
@@ -29,20 +30,24 @@ export class UserService {
         return this.current.name.indexOf("@") < 0 && !this.current.name.startsWith("testuser");
     }
 
-    public logout(user: IUser, logoutFromKorppi = false) {
-        $http.post<ILoginResponse>("/logout", {user_id: user.id}).then((response) => {
-            this.group = response.data.other_users;
-            this.current = response.data.current_user;
-            if (!this.isLoggedIn()) {
-                if (logoutFromKorppi) {
-                    this.korppiLogout(function() {
-                        $window.location.reload();
-                    });
-                } else {
-                    $window.location.reload();
-                }
+    public async logout(user: IUser, logoutFromKorppi = false) {
+        const r = await to($http.post<ILoginResponse>("/logout", {user_id: user.id}));
+        if (!r.ok) {
+            void showMessageDialog(r.result.data.error);
+            return;
+        }
+        const response = r.result;
+        this.group = response.data.other_users;
+        this.current = response.data.current_user;
+        if (!this.isLoggedIn()) {
+            if (logoutFromKorppi) {
+                this.korppiLogout(() => {
+                    window.location.reload();
+                });
+            } else {
+                window.location.reload();
             }
-        });
+        }
     }
 
     public isLoggedIn() {
@@ -56,7 +61,7 @@ export class UserService {
         const cameFromRaw = $window.came_from || "";
         const anchorRaw = window.location.hash.replace("#", "");
         const redirectFn = function() {
-            $window.location.replace(targetUrl + separator + $httpParamSerializer({
+            window.location.replace(targetUrl + separator + $httpParamSerializer({
                 came_from: cameFromRaw,
                 anchor: anchorRaw,
                 add_user: addUser,

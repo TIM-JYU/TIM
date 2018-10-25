@@ -1,4 +1,4 @@
-import angular, {IController} from "angular";
+import {IController} from "angular";
 import $ from "jquery";
 import {timApp} from "tim/app";
 import {showCourseDialog} from "../document/course/courseDialogCtrl";
@@ -147,17 +147,16 @@ export class SidebarMenuCtrl implements IController {
     }
 
     /**
-     *
-     * @param settings_data : print settings
+     * Opens print dialog.
      */
-    printDocument(settings_data: {}) {
-        const api_address_for_templates = "/print/templates/" + $window.item.path;
-        $http.get<ITemplate[]>(api_address_for_templates)
-            .then((response) => {
-                showPrintDialog({templates: response.data, document: $window.item});
-            }, (response) => {
-                console.log(response.toString());
-            });
+    async printDocument() {
+        if (!this.vctrl) {
+            return;
+        }
+        const r = await to($http.get<ITemplate[]>(`/print/templates/${this.vctrl.item.path}`));
+        if (r.ok) {
+            await showPrintDialog({templates: r.result.data, document: this.vctrl.item});
+        }
     }
 
     cssPrint() {
@@ -215,26 +214,27 @@ export class SidebarMenuCtrl implements IController {
     /**
      * Creates minutes from a IT faculty council meeting invitation
      */
-    createMinutes() {
+    async createMinutes() {
         if (!this.vctrl) {
-            void showMessageDialog("Not in a document");
+            await showMessageDialog("Not in a document");
             return;
         }
 
         if (this.docSettings == null || this.docSettings.macros == null || this.docSettings.macros.knro == null) {
-            void showMessageDialog("The document has no 'knro' macro defined");
+            await showMessageDialog("The document has no 'knro' macro defined");
             return;
         }
 
-        $http.post<{path: string}>("/minutes/createMinutes", angular.extend({
+        const r = await to($http.post<{path: string}>("/minutes/createMinutes", {
             item_path: this.vctrl.item.location + "/pk/pk" + this.docSettings.macros.knro,
             item_title: "pk" + this.docSettings.macros.knro,
             copy: this.vctrl.item.id,
-        })).then((response) => {
-            $window.location.href = "/view/" + response.data.path;
-        }, (response) => {
-            void showMessageDialog(response.data.error);
-        });
+        }));
+        if (r.ok) {
+            window.location.href = "/view/" + r.result.data.path;
+        } else {
+            await showMessageDialog(r.result.data.error);
+        }
     }
 
     stampPdf() {
@@ -306,7 +306,7 @@ export class SidebarMenuCtrl implements IController {
         if (this.vctrl) {
                 const r = await to($http.put("/read/" + this.vctrl.item.id, {}));
                 if (!r.ok) {
-                    $window.alert("Could not mark the document as read.");
+                    await showMessageDialog("Could not mark the document as read.");
                     return;
                 }
                 $(".readline").attr("class", "readline read");

@@ -24,7 +24,7 @@ import {
     QuestionType,
 } from "../../lecture/lecturetypes";
 import {DialogController, registerDialogComponent, showDialog, showMessageDialog} from "../../ui/dialog";
-import {$http, $timeout, $window} from "../../util/ngimport";
+import {$http, $timeout} from "../../util/ngimport";
 import {IParResponse} from "../editing/edittypes";
 import {QuestionMatrixController} from "./questionMatrix";
 
@@ -124,7 +124,7 @@ export async function fetchAndEditQuestion(docId: number, parId: string, edit: b
 }
 
 export async function deleteQuestionWithConfirm(docId: number, parId: string): Promise<IParResponse | null> {
-    const confirmDi = $window.confirm("Are you sure you want to delete this question?");
+    const confirmDi = window.confirm("Are you sure you want to delete this question?");
     if (confirmDi) {
         const response = await $http.post<IParResponse>(`/deleteParagraph/${docId}`, {par: parId});
         return response.data;

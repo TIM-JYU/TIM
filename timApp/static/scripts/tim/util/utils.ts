@@ -144,7 +144,7 @@ export function getURLParameter(sParam: string): string | undefined {
     return undefined;
 }
 
-export async function setSetting(setting: "editortab" | "clock_offset" | "timelimit", value: string) {
+export async function setSetting(setting: "timelimit", value: string) {
     await $http({
         method: "POST",
         url: "/sessionsetting/" + setting + "/" + value,

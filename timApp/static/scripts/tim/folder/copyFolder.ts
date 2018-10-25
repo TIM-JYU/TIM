@@ -1,8 +1,9 @@
 import {IController, IScope} from "angular";
 import {timApp} from "../app";
 import {IItem} from "../item/IItem";
-import {$http, $window} from "../util/ngimport";
-import {Binding} from "../util/utils";
+import {showMessageDialog} from "../ui/dialog";
+import {$http} from "../util/ngimport";
+import {Binding, to} from "../util/utils";
 
 type PreviewList = Array<{from: string, to: string}>;
 
@@ -28,27 +29,27 @@ class CopyFolderCtrl implements IController {
 
     async copyFolderPreview(path: string, exclude: string) {
         this.copyingFolder = "notcopying";
-        try {
-            const result = await $http.post<PreviewList>(`/copy/${this.item.id}/preview`, {
-                destination: path,
-                exclude: exclude,
-            });
-            this.copyPreviewList = result.data;
-        } catch (e) {
-            $window.alert(e.data.error);
+        const r = await to($http.post<PreviewList>(`/copy/${this.item.id}/preview`, {
+            destination: path,
+            exclude: exclude,
+        }));
+        if (r.ok) {
+            this.copyPreviewList = r.result.data;
+        } else {
+            await showMessageDialog(r.result.data.error);
         }
     }
 
     async copyFolder(path: string, exclude: string) {
         this.copyingFolder = "copying";
-        try {
-            const result = await $http.post(`/copy/${this.item.id}`, {destination: path, exclude: exclude});
+        const r = await to($http.post(`/copy/${this.item.id}`, {destination: path, exclude: exclude}));
+        if (r.ok) {
             this.copyingFolder = "finished";
             this.copyPreviewList = undefined;
-            this.newFolder = result.data;
-        } catch (e) {
+            this.newFolder = r.result.data;
+        } else {
             this.copyingFolder = "notcopying";
-            $window.alert(e.data.error);
+            await showMessageDialog(r.result.data.error);
         }
     }
 

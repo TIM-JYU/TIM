@@ -100,14 +100,14 @@ export class LectureInfoController implements IController {
      * Sends http request to delete the lecture.
      */
     private async deleteLecture() {
-        const confirmAnswer = $window.confirm("Do you really want to delete this lecture?");
+        const confirmAnswer = window.confirm("Do you really want to delete this lecture?");
         if (confirmAnswer) {
             await $http({
                 url: "/deleteLecture",
                 method: "POST",
                 params: {lecture_id: this.lecture.lecture_id},
             });
-            $window.history.back();
+            window.history.back();
         }
     }
 

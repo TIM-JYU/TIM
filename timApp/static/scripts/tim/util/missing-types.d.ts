@@ -41,8 +41,6 @@ declare module "tim/plugins";
 declare module "tim/angularmodules";
 declare module "tim/extramodules";
 declare module "tim/session" {
-    let clock_offset: string | undefined;
-    let editortab: string | undefined;
     let timelimit: string | undefined;
 }
 declare module "tim/show_slide_vars";

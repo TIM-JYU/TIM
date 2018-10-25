@@ -2,7 +2,7 @@ import angular, {IRootElementService, IScope} from "angular";
 import {ngStorage} from "ngstorage";
 import {IItem} from "../item/IItem";
 import {DialogController, registerDialogComponent, showDialog} from "../ui/dialog";
-import {$http, $localStorage, $window} from "../util/ngimport";
+import {$http, $localStorage} from "../util/ngimport";
 import {to} from "../util/utils";
 
 export interface ITemplate extends IItem {
@@ -149,7 +149,7 @@ export class PrintCtrl extends DialogController<{params: IPrintParams}, {}, "tim
     }
 
     private openURLinNewTab(url: string) {
-        $window.open(url, "_blank");
+        window.open(url, "_blank");
     }
 
     private create() {

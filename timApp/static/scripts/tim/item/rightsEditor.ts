@@ -2,10 +2,10 @@ import {IController, IScope} from "angular";
 import moment, {Duration, Moment} from "moment";
 import {timApp} from "tim/app";
 import * as focusMe from "tim/ui/focusMe";
-import {Binding, markAsUsed} from "tim/util/utils";
+import {Binding, markAsUsed, to} from "tim/util/utils";
 import {showMessageDialog} from "../ui/dialog";
 import {durationTypes} from "../ui/durationPicker";
-import {$http, $window} from "../util/ngimport";
+import {$http} from "../util/ngimport";
 
 markAsUsed(focusMe);
 
@@ -102,17 +102,18 @@ class RightsEditorController implements IController {
     }
 
     removeConfirm(group: IRight, type: string) {
-        if ($window.confirm("Remove " + type + " right from " + group.name + "?")) {
+        if (window.confirm("Remove " + type + " right from " + group.name + "?")) {
             this.removePermission(group, type);
         }
     }
 
-    getPermissions() {
+    async getPermissions() {
         if (!this.urlRoot || !this.itemId) {
             return;
         }
-        $http.get<{grouprights: IRight[], accesstypes: IAccessType[]}>("/" + this.urlRoot + "/get/" + this.itemId).then((response) => {
-            const data = response.data;
+        const r = await to($http.get<{grouprights: IRight[], accesstypes: IAccessType[]}>(`/${this.urlRoot}/get/${this.itemId}`));
+        if (r.ok) {
+            const data = r.result.data;
             this.grouprights = data.grouprights;
             if (data.accesstypes) {
                 this.accessTypes = data.accesstypes;
@@ -120,17 +121,18 @@ class RightsEditorController implements IController {
                     this.accessType = this.accessTypes[0];
                 }
             }
-        }, (response) => {
-            $window.alert("Could not fetch permissions.");
-        });
+        } else {
+            await showMessageDialog("Could not fetch permissions.");
+        }
     }
 
-    removePermission(right: IRight, type: string) {
-        $http.put("/" + this.urlRoot + "/remove/" + this.itemId + "/" + right.gid + "/" + type, {}).then((response) => {
-            this.getPermissions();
-        }, (response) => {
-            $window.alert(response.data.error);
-        });
+    async removePermission(right: IRight, type: string) {
+        const r = await to($http.put(`/${this.urlRoot}/remove/${this.itemId}/${right.gid}/${type}`, {}));
+        if (r.ok) {
+            await this.getPermissions();
+        } else {
+            await showMessageDialog(r.result.data.error);
+        }
     }
 
     cancel() {
@@ -142,14 +144,15 @@ class RightsEditorController implements IController {
         return this.selectedRight != null;
     }
 
-    addOrEditPermission(groupname: string, type: IAccessType) {
-        $http.put("/" + this.urlRoot + "/add/" + this.itemId + "/" + groupname.split("\n").join(";") + "/" + type.name,
-            this.timeOpt).then((response) => {
+    async addOrEditPermission(groupname: string, type: IAccessType) {
+        const r = await to($http.put(`/${this.urlRoot}/add/${this.itemId}/${groupname.split("\n").join(";")}/${type.name}`,
+            this.timeOpt));
+        if (r.ok) {
             this.getPermissions();
             this.cancel();
-        }, (response) => {
-            $window.alert(response.data.error);
-        });
+        } else {
+            await showMessageDialog(r.result.data.error);
+        }
     }
 
     getPlaceholder() {
