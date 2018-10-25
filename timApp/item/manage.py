@@ -185,7 +185,6 @@ def change_alias(alias):
     alias = alias.strip('/')
     new_alias, = verify_json_params('new_name')
     new_alias = new_alias.strip('/')
-    validate_item(new_alias, 'document')
     is_public, = verify_json_params('public', require=False, default=True)
 
     doc = DocEntry.find_by_path(alias, try_translation=False)
@@ -196,6 +195,7 @@ def change_alias(alias):
 
     new_parent, _ = split_location(new_alias)
     if alias != new_alias:
+        validate_item(new_alias, 'document')
         src_f = Folder.find_first_existing(alias)
         if not get_current_user_object().can_write_to_folder(src_f):
             return abort(403, "You don't have permission to write to the source folder.")
@@ -203,6 +203,8 @@ def change_alias(alias):
     Folder.create(new_parent, get_current_user_group())
     doc.name = new_alias
     doc.public = is_public
+    if all(not a.public for a in doc.aliases):
+        abort(400, 'This is the only visible name for this document, so you cannot make it invisible.')
     db.session.commit()
     return ok_response()
 

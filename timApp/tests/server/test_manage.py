@@ -97,3 +97,20 @@ class ManageTest(TimRouteTest):
         self.json_delete(f'/documents/{d.id}')
         d_deleted = DocEntry.find_by_path(f'roskis/{s}_1')
         self.assertIsNotNone(d_deleted)
+
+    def test_shortname_public_toggle(self):
+        self.login_test1()
+        d = self.create_doc()
+        self.json_put(f'/alias/{d.id}/{d.path}x')
+        self.json_post(f'/alias/{d.path}x',
+                       {'new_name': d.path + 'x',
+                        'public': False})
+
+        self.json_post(
+            f'/alias/{d.path}',
+            {'new_name': d.path,
+             'public': False},
+            expect_status=400,
+            expect_content='This is the only visible name for this document, so you cannot make it invisible.',
+            json_key='error',
+        )
