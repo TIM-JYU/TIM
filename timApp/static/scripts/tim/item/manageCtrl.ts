@@ -93,23 +93,29 @@ export class PermCtrl implements IController {
         if (r.ok) {
             this.item.versions = r.result.data.versions;
             this.hasMoreChangelog = this.item.versions.length === newLength;
+        } else {
+            await showMessageDialog(r.result.data.error);
         }
     }
 
     async getAliases() {
-        const response = await $http.get<IItem[]>("/alias/" + this.item.id, {});
-        const data = response.data;
-        if (this.aliases && this.aliases.length > 0 &&
-            data.length > 0 &&
-            data[0].path !== this.aliases[0].path) {
-            // The first name has changed, reload to update the links
-            window.location.replace("/manage/" + data[0].path);
+        const r = await to($http.get<IItem[]>("/alias/" + this.item.id, {}));
+        if (r.ok) {
+            const data = r.result.data;
+            if (this.aliases && this.aliases.length > 0 &&
+                data.length > 0 &&
+                data[0].path !== this.aliases[0].path) {
+                // The first name has changed, reload to update the links
+                window.location.replace("/manage/" + data[0].path);
+            } else {
+                this.aliases = data;
+            }
+            // mark the form pristine; otherwise it will complain about required field unnecessarily
+            this.newAliasForm.$setPristine();
+            this.newAlias = {location: this.item.location};
         } else {
-            this.aliases = data;
+            await showMessageDialog(r.result.data.error);
         }
-        // mark the form pristine; otherwise it will complain about required field unnecessarily
-        this.newAliasForm.$setPristine();
-        this.newAlias = {location: this.item.location};
     }
 
     async getTranslations() {
@@ -175,10 +181,14 @@ export class PermCtrl implements IController {
             showMessageDialog("Title not provided.");
             return;
         }
-        await $http.put("/changeTitle/" + this.item.id, {
+        const r = await to($http.put("/changeTitle/" + this.item.id, {
             new_title: this.newTitle,
-        });
-        this.syncTitle(this.newTitle);
+        }));
+        if (r.ok) {
+            this.syncTitle(this.newTitle);
+        } else {
+            await showMessageDialog(r.result.data.error);
+        }
     }
 
     async renameFolder(newName: string) {
@@ -224,6 +234,8 @@ export class PermCtrl implements IController {
         }));
         if (r.ok) {
             await this.getAliases();
+        } else {
+            await showMessageDialog(r.result.data.error);
         }
     }
 
@@ -231,6 +243,8 @@ export class PermCtrl implements IController {
         const r = await to($http.delete("/alias/" + encodeURIComponent(alias.path), {}));
         if (r.ok) {
             await this.getAliases();
+        } else {
+            await showMessageDialog(r.result.data.error);
         }
     }
 
@@ -246,6 +260,8 @@ export class PermCtrl implements IController {
             } else {
                 location.replace("/manage/" + newAlias);
             }
+        } else {
+            await showMessageDialog(r.result.data.error);
         }
     }
 
