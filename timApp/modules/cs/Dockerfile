@@ -188,6 +188,10 @@ RUN \
   bash -c "${APT_INSTALL} oracle-java10-installer && ${APT_CLEANUP}"
 RUN bash -c "${APT_INSTALL} oracle-java10-set-default && ${APT_CLEANUP}"
 
+# TODO: Java 10 install no longer works.
+# Until Java 11 is installed, new packages must be placed below Java 10 installation to use the old cache.
+RUN R -e 'install.packages(c("ggplot2"))'
+
 # Rust (nightly)
 ENV CARGO_HOME=/cargo
 ENV RUSTUP_HOME=/rustup
