@@ -58,14 +58,16 @@ export interface IEditorParams {
 
 interface IEditorMenuItem {
     title: string;
-    func: () => void;
+    func: (e: Event) => void;
     name: string;
 }
 
 interface IEditorMenu {
     title: string;
-    items: IEditorMenuItem[]
+    items: IEditorMenuItem[];
 }
+
+type EditorEntry = IEditorMenu | IEditorMenuItem;
 
 export type IEditorResult = {type: "save", text: string} | {type: "delete"} | {type: "markunread"} | {type: "cancel"};
 
@@ -73,23 +75,37 @@ export function getCitePar(docId: number, par: string) {
     return `#- {rd="${docId}" rl="no" rp="${par}"}`;
 }
 
-type PluginMenuItemObject = {data: string, expl?: string, text?: string, file?: string};
-type PluginMenuItem = PluginMenuItemObject | string;
+interface IPluginMenuItemObject {
+    data: string;
+    expl?: string;
+    text?: string;
+    file?: string;
+}
 
-type PluginTabOldFormat = {
-    text: string[],
-    templates: PluginMenuItem[][],
-};
+type PluginMenuItem = IPluginMenuItemObject | string;
 
-type PluginTabNewFormat = {
-    templates: {[name: string]: PluginMenuItem | PluginMenuItem[]},
-};
+interface IPluginTabOldFormat {
+    text: string[];
+    templates: PluginMenuItem[][];
+}
 
-function isOldTabFormat(d: any): d is PluginTabOldFormat {
+interface IPluginTabNewFormat {
+    templates: {[name: string]: PluginMenuItem | PluginMenuItem[]};
+}
+
+interface IEditorTab {
+    entries: EditorEntry[];
+    extra?: string;
+    name: string;
+
+    show?(): boolean;
+}
+
+function isOldTabFormat(d: any): d is IPluginTabOldFormat {
     return Array.isArray(d.text) && Array.isArray(d.templates);
 }
 
-function isNewTabFormat(d: any): d is PluginTabNewFormat {
+function isNewTabFormat(d: any): d is IPluginTabNewFormat {
     return d.text == null && !Array.isArray(d.templates) && d.templates != null;
 }
 
@@ -113,34 +129,9 @@ export class PareditorController extends DialogController<{params: IEditorParams
     private docSettings?: {macros: {dates: string[], knro: number, stampformat: string}};
     private uploadedFile?: string;
     private activeTab?: string;
-    private tableMenu: IEditorMenu;
-    private slideMenu: IEditorMenu;
-    private pluginMenus: IEditorMenu[] = [];
     private lastTab?: string;
+    private tabs: IEditorTab[];
     private trdiff?: {old: string, new: string};
-
-    private getOptions() {
-        return this.resolve.params.options;
-    }
-
-    private getExtraData() {
-        return this.resolve.params.extraData;
-    }
-
-    protected getTitle(): string {
-        return this.resolve.params.options.caption;
-    }
-
-    protected confirmDismiss() {
-        if (this.editor!.getEditorText() === this.getInitialText()) {
-            return true;
-        }
-        return window.confirm("You have unsaved changes. Close editor anyway?");
-    }
-
-    private getSaveTag() {
-        return this.getOptions().localSaveTag;
-    }
 
     constructor(protected scope: IScope, protected element: IRootElementService) {
         super(element, scope);
@@ -246,38 +237,188 @@ table:
 ${backTicks}
 `.trim(),
         };
-        this.tableMenu = {
-            title: "Table",
-            items: Object.keys(tables).map((k) => {
-                return {
-                    name: k,
-                    title: "",
-                    func: () => {
-                        this.editor!.insertTemplate(tables[k as keyof typeof tables]);
+
+        this.tabs = [
+            {
+                entries: [
+                    {title: "Undo", name: "&#8630;", func: () => this.editor!.undoClicked()},
+                    {title: "Redo", name: "&#8631;", func: () => this.editor!.redoClicked()},
+                    {title: "Move left", name: "&#8592;", func: () => this.editor!.leftClicked()},
+                    {title: "Move right", name: "&#8594;", func: () => this.editor!.rightClicked()},
+                    {title: "Move up", name: "&#8593;", func: () => this.editor!.upClicked()},
+                    {title: "Move down", name: "&#8595;", func: () => this.editor!.downClicked()},
+                    {title: "Move to the beginning of the line", name: "Home", func: () => this.editor!.homeClicked()},
+                    {title: "Move to the end of the line", name: "End", func: () => this.editor!.endClicked()},
+                    {title: "Move to the beginning of the file", name: "Top", func: () => this.editor!.topClicked()},
+                    {title: "Move to the end of the file", name: "Bottom", func: () => this.editor!.bottomClicked()},
+                    {title: "Toggle insert mode on or off", name: "Ins", func: () => this.editor!.insertClicked()},
+                ],
+                name: "Navigation",
+            },
+            {
+                entries: [
+                    {title: "Indent selection/line", func: () => this.editor!.indentClicked(), name: "&#8649;"},
+                    {title: "Outdent selection/line", func: () => this.editor!.outdentClicked(), name: "&#8647;"},
+                    {title: "Bold (Ctrl-B)", func: () => this.editor!.surroundClicked("**", "**"), name: "<b>B</b>"},
+                    {title: "Italic (Ctrl-I)", func: () => this.editor!.italicSurroundClicked(), name: "<i>I</i>"},
+                    {title: "Underline", func: () => this.editor!.surroundClicked("<u>", "</u>"), name: "<u>U</u>"},
+                    {title: "Strikethrough", func: () => this.editor!.surroundClicked("<s>", "</s>"), name: "<s>Z</s>"},
+                    {title: "Add any style", func: () => this.editor!.styleClicked("Teksti", "red"), name: "Style"},
+                    {title: "Code (Ctrl-O)", func: () => this.editor!.surroundClicked("`", "`"), name: "Code"},
+                    {title: "Code block (Ctrl-Alt-O)", func: () => this.editor!.codeBlockClicked(), name: "Code block"},
+                    {title: "Subscript", func: () => this.editor!.surroundClicked("~", "~"), name: "X_"},
+                    {title: "Superscript", func: () => this.editor!.surroundClicked("^", "^"), name: "X^"},
+                    {title: "Heading 1 (Ctrl-1)", func: () => this.editor!.headerClicked("#"), name: "H1"},
+                    {title: "Heading 2 (Ctrl-2)", func: () => this.editor!.headerClicked("##"), name: "H2"},
+                    {title: "Heading 3 (Ctrl-3)", func: () => this.editor!.headerClicked("###"), name: "H3"},
+                    {title: "Heading 4 (Ctrl-4)", func: () => this.editor!.headerClicked("####"), name: "H4"},
+                ],
+                name: "Style",
+            },
+            {
+                entries: [
+                    {
+                        title: "Add link",
+                        func: () => this.editor!.linkClicked("Linkin teksti", "Linkin osoite", false),
+                        name: "Link",
                     },
-                };
-            }),
-        };
-        this.slideMenu = {
-            title: "Slide",
-            items: [
-                {
-                    name: "Slide break",
-                    title: "Break text to start a new slide",
-                    func: () => this.editor!.ruleClicked(),
-                },
-                {
-                    name: "Slide fragment",
-                    title: "Content inside the fragment will be hidden and shown when next is clicked in slide view",
-                    func: () => this.editor!.surroundClicked("§§", "§§"),
-                },
-                {
-                    name: "Fragment block",
-                    title: "Content inside will show as a fragment and may contain inner slide fragments",
-                    func: () => this.editor!.surroundClicked("<§", "§>"),
-                },
-            ],
-        };
+                    {
+                        title: "Add image",
+                        func: () => this.editor!.linkClicked("Kuvan teksti", "Kuvan osoite", true),
+                        name: "Image",
+                    },
+                    {title: "List item", func: () => this.editor!.listClicked(), name: "List"},
+                    {
+                        title: "Slide",
+                        items: [
+                            {
+                                name: "Slide break",
+                                title: "Break text to start a new slide",
+                                func: () => this.editor!.ruleClicked(),
+                            },
+                            {
+                                name: "Slide fragment",
+                                title: "Content inside the fragment will be hidden and shown when next is clicked in slide view",
+                                func: () => this.editor!.surroundClicked("§§", "§§"),
+                            },
+                            {
+                                name: "Fragment block",
+                                title: "Content inside will show as a fragment and may contain inner slide fragments",
+                                func: () => this.editor!.surroundClicked("<§", "§>"),
+                            },
+                        ],
+                    },
+                    {
+                        title: "Table",
+                        items: Object.entries(tables).map(([k, v]) => ({
+                            name: k,
+                            title: "",
+                            func: () => {
+                                this.editor!.insertTemplate(v);
+                            },
+                        })),
+                    },
+                    {
+                        title: "Break text to start a new paragraph (Shift-Enter)",
+                        func: () => this.editor!.paragraphClicked(),
+                        name: "Paragraph break",
+                    },
+                    {
+                        title: "Forces line to end at cursor position (Ctrl-Enter)",
+                        func: () => this.editor!.endLineClicked(),
+                        name: "End line",
+                    },
+                    {
+                        title: "Creates a comment block or sets the line to a comment (Ctrl-Y)",
+                        func: () => this.editor!.commentClicked(),
+                        name: "Comment",
+                    },
+                    {
+                        title: "Creates a page break for web printing",
+                        func: () => this.editor!.pageBreakClicked(),
+                        name: "Page break",
+                    },
+                ],
+                name: "Insert",
+            },
+            {
+                entries: [
+                    {title: "", func: ($event) => this.editor!.charClicked($event), name: "@"},
+                    {title: "", func: ($event) => this.editor!.charClicked($event), name: "#"},
+                    {title: "", func: ($event) => this.editor!.charClicked($event), name: "`"},
+                    {title: "", func: ($event) => this.editor!.charClicked($event), name: "$"},
+                    {title: "", func: ($event) => this.editor!.charClicked($event), name: "€"},
+                    {title: "", func: ($event) => this.editor!.charClicked($event), name: "%"},
+                    {title: "", func: ($event) => this.editor!.charClicked($event), name: "&"},
+                    {title: "", func: ($event) => this.editor!.charClicked($event), name: "{"},
+                    {title: "", func: ($event) => this.editor!.charClicked($event), name: "}"},
+                    {title: "", func: ($event) => this.editor!.charClicked($event), name: "["},
+                    {title: "", func: ($event) => this.editor!.charClicked($event), name: "]"},
+                    {title: "", func: ($event) => this.editor!.charClicked($event), name: "/"},
+                    {title: "", func: ($event) => this.editor!.charClicked($event), name: "\\"},
+                    {title: "", func: ($event) => this.editor!.charClicked($event, "&#173;"), name: "Soft hyphen"},
+                    {title: "", func: ($event) => this.editor!.charClicked($event, "⁞"), name: "Cursor"},
+                ],
+                name: "Characters",
+            },
+            {
+                entries: [
+                    {title: "", func: () => this.editor!.surroundClicked("$", "$"), name: "TeX equation"},
+                    {title: "", func: () => this.editor!.surroundClicked("$$", "$$"), name: "TeX block"},
+                    {title: "", func: () => this.editor!.indexClicked(), name: "X&#x2093;"},
+                    {title: "", func: () => this.editor!.powerClicked(), name: "X&#x207f;"},
+                    {title: "", func: () => this.editor!.squareClicked(), name: "&radic;"},
+                ],
+                name: "TeX",
+            },
+            {
+                entries: [
+                    {
+                        title: "Auto number headings level",
+                        func: () => this.editor!.insertTemplate("auto_number_headings: 1\n"),
+                        name: "Heading numbering",
+                    },
+                    {
+                        title: "Styles for this document",
+                        func: () => this.editor!.insertTemplate("css: |!!\n.style {\n\n}\n!!\n"),
+                        name: "CSS",
+                    },
+                    {
+                        title: "Macro values fo document",
+                        func: () => this.editor!.insertTemplate("macros:\n  key: value\n"),
+                        name: "Macros",
+                    },
+                    {
+                        title: "Show task summary in the begining of the doc",
+                        func: () => this.editor!.insertTemplate("show_task_summary: true\n"),
+                        name: "Task summary",
+                    },
+                    {
+                        title: "Update documetn automatically in this interval (sec)",
+                        func: () => this.editor!.insertTemplate("live_updates: 5\n"),
+                        name: "Live update",
+                    },
+                    {
+                        title: "Calculate plugins lazy or not",
+                        func: () => this.editor!.insertTemplate("lazy: false\n"),
+                        name: "Lazy",
+                    },
+                    {
+                        title: "Global values for the plugins",
+                        func: () => this.editor!.insertTemplate("global_plugin_attrs:\n csPlugin:\n   stem: value\n all:\n   stem: value\n"),
+                        name: "Global plugin",
+                    },
+                ],
+                name: "Settings",
+                show: () => this.getOptions().showSettings,
+                extra: `
+<a href="https://tim.jyu.fi/view/tim/ohjeita/documentin-asetukset#settings_list"
+   target="_blank"
+   title="Help for settings">
+   <i class="helpButton glyphicon glyphicon-question-sign"></i>
+</a>`,
+            },
+        ];
 
         $(document).on("webkitfullscreenchange mozfullscreenchange fullscreenchange MSFullscreenChange", (event) => {
             const editor = element[0];
@@ -291,6 +432,14 @@ ${backTicks}
         this.outofdate = false;
         this.parCount = 0;
         this.touchDevice = false;
+    }
+
+    getVisibleTabs() {
+        return this.tabs.filter((t) => !t.show || t.show());
+    }
+
+    getTabIndex(t: IEditorTab) {
+        return t.name.toLowerCase();
     }
 
     $doCheck() {
@@ -334,10 +483,6 @@ ${backTicks}
             }
         });
         this.docSettings = $window.docSettings;
-    }
-
-    private getLocalValue(val: string) {
-        return this.storage.getItem(val + this.getSaveTag());
     }
 
     $postLink() {
@@ -429,7 +574,7 @@ or newer one that is more familiar to write in YAML:
                 }
 
                 for (const template of templsArray) {
-                    let templateObj: PluginMenuItemObject;
+                    let templateObj: IPluginMenuItemObject;
                     if (typeof template === "string") {
                         templateObj = {text: template, data: template};
                     } else {
@@ -460,12 +605,26 @@ or newer one that is more familiar to write in YAML:
                 }
             }
         }
+        const pluginTab: IEditorTab = {
+            name: "Plugins",
+            entries: [],
+            show: () => this.getOptions().showPlugins,
+            extra: `
+<a class="helpButton"
+   title="Help for plugin attributes"
+   href="https://tim.jyu.fi/view/tim/ohjeita/csPlugin"
+   target="_blank">
+    <i class="helpButton glyphicon glyphicon-question-sign"></i>
+</a>
+            `,
+        };
         for (const t of Object.keys(tabs)) {
-            this.pluginMenus.push({
+            pluginTab.entries.push({
                 title: t,
                 items: tabs[t]!,
-            })
+            });
         }
+        this.tabs.push(pluginTab);
     }
 
     getInitialText() {
@@ -569,14 +728,6 @@ or newer one that is more familiar to write in YAML:
         }
     }
 
-    private async focusEditor() {
-        await $timeout();
-        const s = $(window).scrollTop();
-        this.editor!.focus();
-        await $timeout();
-        $(window).scrollTop(s || this.scrollPos || 0);
-    }
-
     changeMeta() {
         if (!this.oldmeta) {
             return;
@@ -661,27 +812,6 @@ or newer one that is more familiar to write in YAML:
         }
     }
 
-    private saveOptions() {
-        this.setLocalValue("editortab", this.activeTab || "navigation");
-        this.setLocalValue("autocomplete", this.autocomplete.toString());
-        this.setLocalValue("oldMode", this.isAce(this.editor) ? "ace" : "text");
-        this.setLocalValue("wrap", "" + this.wrap.n);
-        if (this.getExtraData().access != null) {
-            $localStorage.noteAccess = this.getExtraData().access;
-        }
-        for (const [k, v] of Object.entries(this.getExtraData().tags)) {
-            if (v != null) {
-                window.localStorage.setItem(k, v.toString());
-            }
-        }
-        this.setLocalValue("proeditor", this.proeditor.toString());
-
-        if (this.isAce(this.editor)) {
-            this.setLocalValue("acewrap", this.editor.editor.getSession().getUseWrapMode().toString());
-            this.setLocalValue("acebehaviours", this.editor.editor.getBehavioursEnabled().toString()); // some of these are in editor and some in session?
-        }
-    }
-
     aceEnabled(): boolean {
         return this.isAce(this.editor);
     }
@@ -719,7 +849,7 @@ or newer one that is more familiar to write in YAML:
 
             // Knro usage starts from 1 but dates starts from 0 but there is dummy item first
             const knro = this.docSettings.macros.knro;
-            let dates = this.docSettings.macros.dates;
+            const dates = this.docSettings.macros.dates;
             // dates = ["ERROR", ...dates];
             const kokousDate = dates[knro][0];  // dates is 2-dim array
 
@@ -943,7 +1073,7 @@ or newer one that is more familiar to write in YAML:
             str = `Preview (${this.parCount} paragraphs)`;
         }
         if (this.outofdate) {
-            str += " ..."
+            str += " ...";
         }
         return str;
     }
@@ -956,6 +1086,62 @@ or newer one that is more familiar to write in YAML:
             const par = getElementByParId(parId);
             const rp = getParAttributes(par).rp;
             return `/view/${orig.path}#${rp}`;
+        }
+    }
+
+    protected getTitle(): string {
+        return this.resolve.params.options.caption;
+    }
+
+    protected confirmDismiss() {
+        if (this.editor!.getEditorText() === this.getInitialText()) {
+            return true;
+        }
+        return window.confirm("You have unsaved changes. Close editor anyway?");
+    }
+
+    private getOptions() {
+        return this.resolve.params.options;
+    }
+
+    private getExtraData() {
+        return this.resolve.params.extraData;
+    }
+
+    private getSaveTag() {
+        return this.getOptions().localSaveTag;
+    }
+
+    private getLocalValue(val: string) {
+        return this.storage.getItem(val + this.getSaveTag());
+    }
+
+    private async focusEditor() {
+        await $timeout();
+        const s = $(window).scrollTop();
+        this.editor!.focus();
+        await $timeout();
+        $(window).scrollTop(s || this.scrollPos || 0);
+    }
+
+    private saveOptions() {
+        this.setLocalValue("editortab", this.activeTab || "navigation");
+        this.setLocalValue("autocomplete", this.autocomplete.toString());
+        this.setLocalValue("oldMode", this.isAce(this.editor) ? "ace" : "text");
+        this.setLocalValue("wrap", "" + this.wrap.n);
+        if (this.getExtraData().access != null) {
+            $localStorage.noteAccess = this.getExtraData().access;
+        }
+        for (const [k, v] of Object.entries(this.getExtraData().tags)) {
+            if (v != null) {
+                window.localStorage.setItem(k, v.toString());
+            }
+        }
+        this.setLocalValue("proeditor", this.proeditor.toString());
+
+        if (this.isAce(this.editor)) {
+            this.setLocalValue("acewrap", this.editor.editor.getSession().getUseWrapMode().toString());
+            this.setLocalValue("acebehaviours", this.editor.editor.getBehavioursEnabled().toString()); // some of these are in editor and some in session?
         }
     }
 }
@@ -974,9 +1160,30 @@ timApp.component("timEditorMenu", {
         role="menu"
         aria-labelledby="single-button">
         <li ng-repeat="item in $ctrl.data.items" role="menuitem">
-            <a title="{{ item.title }}" href="#" ng-click="item.func(); $event.preventDefault()">{{ item.name }}</a>
+            <a title="{{ item.title }}"
+               href="#"
+               ng-click="item.func($event); $event.preventDefault()"
+               ng-bind-html="item.name"></a>
         </li>
     </ul>
+</div>
+    `,
+});
+
+timApp.component("timEditorEntry", {
+    bindings: {
+        data: "<",
+    },
+    template: `
+<div ng-switch on="$ctrl.data.items != null">
+    <button ng-switch-default
+            type="button"
+            class="editorButton"
+            title="{{ $ctrl.data.title }}"
+            ng-click="$ctrl.data.func($event); $event.preventDefault()"
+            ng-bind-html="$ctrl.data.name">
+    </button>
+    <tim-editor-menu ng-switch-when="true" data="$ctrl.data"></tim-editor-menu>
 </div>
     `,
 });

@@ -521,7 +521,7 @@ export class AceParEditor extends BaseParEditor {
     // Insert
     // Special characters
     @focusAfter
-    charClicked($event: Event, char: string | undefined) {
+    charClicked($event: Event, char?: string) {
         if (!$event.target) {
             return;
         }
