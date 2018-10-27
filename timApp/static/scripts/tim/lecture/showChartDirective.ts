@@ -24,6 +24,8 @@ function timStripHtml(s: string) {
     s = s.replace(/<[^>]*>?/gm, "");  // problem: <img src=http://www.google.com.kh/images/srpr/nav_logo27.png onload="alert(42)" >
     s = s.replace("\\(", "");
     s = s.replace("\\)", "");
+    s = s.replace("&lt;", "<");
+    s = s.replace("&gt;", ">");
     return s;
 }
 

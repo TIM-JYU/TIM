@@ -28,10 +28,11 @@ PALIPLUGIN_NAME = 'pali'
 IMAGEXPLUGIN_NAME = 'imagex'
 MARKUP = 'markup'
 REGEXATTRS = 'regexattrs'
+AUTOMDATTRS = 'automdattrs'
 
 PLUGINS = None
 PLUGIN_REGEX_OBJS = {}
-
+QSTMDATTRS = ["rows", "questionText", "choices", "[0-9]", ".*[Tt]ext"]
 
 def get_plugins():
     global PLUGINS
@@ -46,14 +47,16 @@ def get_plugins():
             "showVideo": {"host": "http://" + SVNPLUGIN_NAME + ":5000/svn/video/"},
             "showPdf": {"host": "http://" + SVNPLUGIN_NAME + ":5000/svn/pdf/"},
             "mcq": {"host": "http://" + HASKELLPLUGIN_NAME + ":5001/"},
+            "mcq2": {"host": "http://" + "localhost" + f":{current_app.config['QST_PLUGIN_PORT']}/qst/mcq/", REGEXATTRS: QSTMDATTRS, AUTOMDATTRS: True},
             "mmcq": {"host": "http://" + HASKELLPLUGIN_NAME + ":5002/"},
+            "mmcq2": {"host": "http://" + "localhost" + f":{current_app.config['QST_PLUGIN_PORT']}/qst/mmcq/", REGEXATTRS: QSTMDATTRS, AUTOMDATTRS: True},
             "uploader": {"host": current_app.config['UPLOADER_CONTAINER_URL']},
             #  "shortNote": {"host": "http://" + HASKELLPLUGIN_NAME + ":5003/"},
             # "graphviz": {"host": "http://" + HASKELLPLUGIN_NAME + ":5004/"},
             "graphviz": {"host": "http://" + CSPLUGIN_NAME + ":5000/cs/graphviz/"},
             "pali": {"host": "http://" + PALIPLUGIN_NAME + ":5000/"},
             "imagex": {"host": "http://" + IMAGEXPLUGIN_NAME + ":5000/"},
-            "qst": {"host": "http://" + "localhost" + f":{current_app.config['QST_PLUGIN_PORT']}/qst/", REGEXATTRS: ["rows", "questionText"]},
+            "qst": {"host": "http://" + "localhost" + f":{current_app.config['QST_PLUGIN_PORT']}/qst/", REGEXATTRS: QSTMDATTRS, AUTOMDATTRS: True},
             "timTable": {"host": "http://" + "localhost" + f":{current_app.config['QST_PLUGIN_PORT']}/timTable/", "instance": timTable.TimTable()},
             "tape": {"host": "http://" + "localhost" + f":{current_app.config['QST_PLUGIN_PORT']}/tape/"},
             "echo": {"host": "http://" + "tim" + ":5000/echoRequest/", "skip_reqs": True}
@@ -70,6 +73,8 @@ def get_plugin_regex_obj(plugin: str):
         PLUGIN_REGEX_OBJS[plugin] = regex_obj
     return regex_obj
 
+
+# QST_REGEX_OBJ = get_plugin_regex_obj('qst')
 
 def call_plugin_generic(plugin: str, method: str, route: str, data=None, headers=None, params=None):
     plug = get_plugin(plugin)
@@ -169,7 +174,8 @@ def prepare_for_dumbo_attr_list_recursive(regex_obj, plugin_data: dict):
                 prepare_for_dumbo_attr_list_list_recursive(regex_obj, value)
         elif isinstance(value, str):
              if regex_obj.search(key) is not None:
-                 plugin_data[key] = "md: " + value
+                 if not plugin_data[key].startswith('md:'):
+                    plugin_data[key] = "md:" + value
 
 
 def prepare_for_dumbo_attr_list_list_recursive(regex_obj, data: list):
@@ -180,7 +186,8 @@ def prepare_for_dumbo_attr_list_list_recursive(regex_obj, data: list):
         elif isinstance(item, list):
             prepare_for_dumbo_attr_list_list_recursive(regex_obj, data)
         elif isinstance(item, str):
-            data[i] = "md: " + item
+            if not item.startswith('md:'):
+                data[i] = "md:" + item
 
 
 def convert_tex_mock(plugin_data):
@@ -202,9 +209,12 @@ def render_plugin_multi(doc: Document, plugin: str, plugin_data: List[Plugin],
     plugin_instance = get_inner_plugin_instance(plugin)
     inner = plugin_instance is not None
 
+    plugin_dict = get_plugin(plugin)
+    plugin_automd = plugin_dict.get(AUTOMDATTRS, default_auto_md)
+    regexattrs = plugin_dict.get(REGEXATTRS)
+
     for plug_dict in plugin_dicts:
-        if has_auto_md(plug_dict[MARKUP], default_auto_md):
-            regexattrs = get_plugin(plugin).get(REGEXATTRS)
+        if has_auto_md(plug_dict[MARKUP], plugin_automd):
             if regexattrs is not None:
                 regex_obj = get_plugin_regex_obj(plugin)
                 # use attribute list instead of calling the plugin
@@ -216,7 +226,6 @@ def render_plugin_multi(doc: Document, plugin: str, plugin_data: List[Plugin],
                     continue
             else:
                 raise PluginException("automd for non-inner plugins not implemented yet") # TODO implement
-
 
     if doc.get_settings().plugin_md():
         convert_md(plugin_dicts,

@@ -21,6 +21,8 @@ from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docinfo import DocInfo
 from timApp.lecture.askedjson import normalize_question_json
 
+from timApp.plugin.containerLink import prepare_for_dumbo_attr_list_recursive, get_plugin_regex_obj
+
 qst_plugin = Blueprint('qst_plugin',
                        __name__,
                        url_prefix='')  # TODO: Better URL prefix.
@@ -32,6 +34,38 @@ class QuestionInDocument(NamedTuple):
     taskId: Optional[str]
     docId: int
     parId: str
+
+
+@qst_plugin.route("/qst/mcq/reqs/")
+@qst_plugin.route("/qst/mcq/reqs")
+def qst_mcq_reqs():
+    reqs = {
+        "type": "embedded",
+        "js": [
+            # "tim/controllers/qstController",
+               ],
+        "angularModule": [],
+        "multihtml": True,
+        "multimd": True
+    }
+
+    return json_response(reqs)
+
+
+@qst_plugin.route("/qst/mmcq/reqs/")
+@qst_plugin.route("/qst/mmcq/reqs")
+def qst_mmcq_reqs():
+    reqs = {
+        "type": "embedded",
+        "js": [
+            # "tim/controllers/qstController",
+               ],
+        "angularModule": [],
+        "multihtml": True,
+        "multimd": True
+    }
+
+    return json_response(reqs)
 
 
 @qst_plugin.route("/qst/reqs/")
@@ -50,9 +84,26 @@ def qst_reqs():
     return json_response(reqs)
 
 
+@qst_plugin.route("/qst/mcq/answer/", methods=["PUT"])
+def qst_mcq_answer():
+    jsondata = request.get_json()
+    convert_mcq_to_qst(jsondata)
+    return qst_answer_jso(jsondata)
+
+
+@qst_plugin.route("/qst/mmcq/answer/", methods=["PUT"])
+def qst_mmcq_answer():
+    jsondata = request.get_json()
+    convert_mcq_to_qst(jsondata, True)
+    return qst_answer_jso(jsondata)
+
+
 @qst_plugin.route("/qst/answer/", methods=["PUT"])
 def qst_answer():
-    jsondata = request.get_json()
+    return qst_answer_jso(request.get_json())
+
+
+def qst_answer_jso(jsondata):
     tim_info = {}
     answers = jsondata['input']['answers']
     spoints = jsondata['markup'].get('points')
@@ -95,6 +146,95 @@ def qst_multihtml():
     return json_response(multi)
 
 
+def copy_value(name, qjso, jsom, defvalue = None):
+    v = jsom.get(name, defvalue)
+    if v:
+        qjso[name] = v
+
+
+def convert_mcq_to_qst(jso, is_mmcq = False):
+    jsom = jso.get("markup")
+    qjso = {}
+    jso["markup"] = qjso
+    qjso["questionText"] = jsom.get("stem", "")
+    qjso["questionTitle"] = jsom.get("stem", "")
+    qjso["stem"] = jsom.get("headerText", "Check your understanding")
+    qjso["answerFieldType"] = "radio";
+    qjso["isTask"] = True;
+    copy_value("answerLimit", qjso, jsom, "1")
+    copy_value("header", qjso, jsom)
+    copy_value("footer", qjso, jsom)
+    copy_value("button", qjso, jsom)
+    copy_value("buttonText", qjso, jsom)
+    if is_mmcq:
+        qjso["questionType"] = "true-false";
+        true_text = jsom.get("trueText", "True")
+        false_text = jsom.get("falseText", "False")
+        qjso["headers"] = [true_text, false_text];
+        state = jso.get("state", None)
+        if isinstance(state, list) and state:
+            item = state[0]
+            if not isinstance(item, list):
+                new_state = [];
+                n = 1
+                for item in state:
+                    new_item = []
+                    if item == True:
+                        new_item = ["1"]
+                    if item == False:
+                        new_item = ["2"]
+                    new_state.append(new_item)
+                jso["state"] = new_state
+    else:
+        qjso["questionType"] = "radio-vertical";
+        qjso["headers"] = [];
+        state = jso.get("state", None)
+        if isinstance(state, int):
+            jso["state"] = [[str(state+1)]]
+
+    rows = [];
+    qjso["rows"] = rows;
+    choices = jsom.get("choices", [])
+    for c in choices:
+        rows.append(c.get("text", ""))
+    expl = {};
+    qjso["expl"] = expl;
+    i = 1
+    for c in choices:
+        expl[str(i)] = c.get("reason", "")
+        i += 1
+    points = ""
+    i = 1
+    sep = ""
+    for c in choices:
+        cor = c.get("correct", False)
+        if cor:
+            points += sep + str(i)+":1"
+            sep = ";"
+        i += 1
+    qjso["points"] = points
+
+
+@qst_plugin.route("/qst/mcq/multihtml/", methods=["POST"])
+def qst__mcq_multihtml():
+    jsondata = request.get_json()
+    multi = []
+    for jso in jsondata:
+        convert_mcq_to_qst(jso)
+        multi.append(qst_get_html(jso, is_review(request)))
+    return json_response(multi)
+
+
+@qst_plugin.route("/qst/mmcq/multihtml/", methods=["POST"])
+def qst__mmcq_multihtml():
+    jsondata = request.get_json()
+    multi = []
+    for jso in jsondata:
+        convert_mcq_to_qst(jso, True)
+        multi.append(qst_get_html(jso, is_review(request)))
+    return json_response(multi)
+
+
 @qst_plugin.route("/qst/multimd/", methods=["POST"])
 def qst_multimd():
     jsondata = request.get_json()
@@ -104,6 +244,7 @@ def qst_multimd():
     return json_response(multi)
 
 
+@qst_plugin.route("/qst/mcq/multimd", methods=["POST"])
 @qst_plugin.route("/qst/mcq/multimd/", methods=["POST"])
 def qst_mcq_multimd():
     jsondata = request.get_json()
@@ -113,6 +254,7 @@ def qst_mcq_multimd():
     return json_response(multi)
 
 
+@qst_plugin.route("/qst/mmcq/multimd", methods=["POST"])
 @qst_plugin.route("/qst/mmcq/multimd/", methods=["POST"])
 def qst_mmcq_multimd():
     jsondata = request.get_json()
@@ -127,6 +269,7 @@ def get_question_md():
     md, = verify_json_params('text')
     markup = json.loads(md)
     plugin_data = {'markup': markup}
+    prepare_for_dumbo_attr_list_recursive(get_plugin_regex_obj('qst'), plugin_data)
     convert_md([plugin_data], options=DumboOptions.default())
 
     return json_response({'md': plugin_data['markup']})
@@ -400,7 +543,7 @@ def qst_get_md(jso):
     texboxh = markup.get('texboxh', '10')
     stem = markup.get('stem', '')
     stem += '\par' if stem else ''
-    qjson = markup.get('json',{})
+    qjson = markup  # .get('json',{})
     question_text = qjson.get('questionText', '')
     question_type = qjson.get('questionType', '')
     vertical = question_type.find('vertical') >= 0
@@ -566,8 +709,12 @@ def get_question_data_from_document(d: DocInfo, par_id: str, edit=False) -> Ques
     except PluginException:
         return abort(400, f'Paragraph is not a plugin: {par_id}')
     plugindata = {'markup': plugin_values}
-    if not edit:
+    markup = plugindata.get('markup')
+    if ( markup.get("choices", None) ):
+        convert_mcq_to_qst(plugindata, par.get_attr('plugin', '').find('mmcq') == 0)
+    if not edit or edit == 'false':
         settings = d.document.get_settings()
+        prepare_for_dumbo_attr_list_recursive(get_plugin_regex_obj('qst'), plugindata)
         convert_md([plugindata], options=par.get_dumbo_options(base_opts=settings.get_dumbo_options()))
     markup = plugindata.get('markup')
     return QuestionInDocument(

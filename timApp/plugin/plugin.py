@@ -269,7 +269,8 @@ class Plugin:
         options = self.options
         if self.answer is not None:
             state = try_load_json(self.answer['content'])
-            if isinstance(state, dict) and options.user is not None:
+            # if isinstance(state, dict) and options.user is not None:
+            if options.user is not None:
                 info = self.get_info([options.user], old_answers=self.answer.get('cnt'), valid=self.answer['valid'])
             else:
                 info = None

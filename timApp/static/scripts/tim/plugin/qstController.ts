@@ -60,7 +60,10 @@ class QstController implements IController {
         this.isLecturer = (this.lctrl && this.lctrl.isLecturer) || false;
         this.attrs = JSON.parse(this.json);
         // console.log(this.attrs);
-        this.preview = makePreview(this.attrs.markup, {answerTable: this.attrs.state || [], enabled: !this.attrs.markup.invalid});
+        this.preview = makePreview(this.attrs.markup, {answerTable: this.attrs.state || [],
+                                                        showCorrectChoices: this.attrs.show_result,
+                                                        showExplanations: this.attrs.show_result,
+                                                        enabled: !this.attrs.markup.invalid});
         this.result = "";
         this.button = this.attrs.markup.button || "Save";
         this.resetText = this.attrs.markup.resetText || "Reset";
@@ -222,7 +225,7 @@ qstApp.component("qstRunner", {
         <span class="glyphicon glyphicon-question-sign" title="Ask question"></span>
     </a>
     <span ng-show="$ctrl.result">{{$ctrl.result}}</span>
-    <p class="plgfooter" ng-bind-html="$ctrl.getHeader()"></p>
+    <p class="plgfooter" ng-bind-html="$ctrl.getFooter()"></p>
 </div>
 <div ng-if="!$ctrl.isTask()">
     <a class="questionAddedNew" ng-click="$ctrl.questionClicked()">
