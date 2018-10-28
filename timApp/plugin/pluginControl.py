@@ -230,8 +230,8 @@ def pluginify(doc: Document,
 
     for plugin_name, plugin_block_map in plugins.items():
         taketime("plg", plugin_name)
-        plugin_lazy = get_plugin(plugin_name).get("lazy", True)
         try:
+            plugin_lazy = get_plugin(plugin_name).get("lazy", True)
             resp = plugin_reqs(plugin_name)
         except PluginException as e:
             for idx in plugin_block_map.keys():
