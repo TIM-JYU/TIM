@@ -32,7 +32,15 @@ AUTOMDATTRS = 'automdattrs'
 
 PLUGINS = None
 PLUGIN_REGEX_OBJS = {}
-QSTMDATTRS = ["rows", "questionText", "choices", "[0-9]", ".*[Tt]ext"]
+QSTMDATTRS = ["rows", "choices", "[0-9]", ".*[Tt]ext"]
+
+"""
+plugin class attributes
+host:        host address for the plugin server
+REGEXATTRS:  list of regexp for yaml attribut names that are handled as markdown when automd attribute is true or 
+             plugin class is AUTOMDATTRS: true
+AUTOMDATTRS: if true, plugin is allways automd
+"""
 
 def get_plugins():
     global PLUGINS
@@ -57,7 +65,7 @@ def get_plugins():
             "pali": {"host": "http://" + PALIPLUGIN_NAME + ":5000/"},
             "imagex": {"host": "http://" + IMAGEXPLUGIN_NAME + ":5000/"},
             "qst": {"host": "http://" + "localhost" + f":{current_app.config['QST_PLUGIN_PORT']}/qst/", REGEXATTRS: QSTMDATTRS, AUTOMDATTRS: True},
-            "timTable": {"host": "http://" + "localhost" + f":{current_app.config['QST_PLUGIN_PORT']}/timTable/", "instance": timTable.TimTable()},
+            "timTable": {"host": "http://" + "localhost" + f":{current_app.config['QST_PLUGIN_PORT']}/timTable/", "instance": timTable.TimTable(), 'lazy': False},
             "tape": {"host": "http://" + "localhost" + f":{current_app.config['QST_PLUGIN_PORT']}/tape/"},
             "echo": {"host": "http://" + "tim" + ":5000/echoRequest/", "skip_reqs": True}
         }

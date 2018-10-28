@@ -94,6 +94,7 @@ class Plugin:
         self.par = par
         self.points_rule_cache = None  # cache for points rule
         self.output = None
+        self.plugin_lazy = None
 
     @property
     def full_task_id(self):
@@ -322,6 +323,7 @@ class Plugin:
 
     def is_lazy(self) -> bool:
         do_lazy = self.options.do_lazy
+        plugin_lazy = self.plugin_lazy
         html = self.output
         if do_lazy == NEVERLAZY:
             return False
@@ -335,6 +337,10 @@ class Plugin:
             return False
         if html is not None and html.find(NOLAZY) >= 0:
             return False  # not allowed to make lazy
+        if markup_lazy == True:
+            return True  # user wants lazy
+        if plugin_lazy == False:
+            return False
         return True
 
     def is_automd_enabled(self, default = False):

@@ -14,7 +14,7 @@ from timApp.document.document import dereference_pars, Document
 from timApp.document.yamlblock import YamlBlock
 from timApp.markdown.dumboclient import call_dumbo
 from timApp.markdown.markdownconverter import expand_macros
-from timApp.plugin.containerLink import plugin_reqs
+from timApp.plugin.containerLink import plugin_reqs, get_plugin
 from timApp.plugin.containerLink import render_plugin_multi, render_plugin, get_plugins
 from timApp.plugin.plugin import Plugin, PluginRenderOptions
 from timApp.plugin.pluginOutputFormat import PluginOutputFormat
@@ -122,7 +122,8 @@ def pluginify(doc: Document,
                                       target_format=target_format,
                                       user=user,
                                       review=review,
-                                      wrap_in_div=wrap_in_div)
+                                      wrap_in_div=wrap_in_div
+                                      )
 
     if load_states and custom_answer is None and user is not None:
         for idx, block in enumerate(pars):  # find taskid's
@@ -229,6 +230,7 @@ def pluginify(doc: Document,
 
     for plugin_name, plugin_block_map in plugins.items():
         taketime("plg", plugin_name)
+        plugin_lazy = get_plugin(plugin_name).get("lazy", True)
         try:
             resp = plugin_reqs(plugin_name)
         except PluginException as e:
@@ -297,6 +299,7 @@ def pluginify(doc: Document,
                 continue
 
             for idx, plugin, html in zip(plugin_block_map.keys(), plugin_block_map.values(), plugin_htmls):
+                plugin.plugin_lazy = plugin_lazy
                 plugin.set_output(html)
                 html_pars[idx]['answerbrowser_type'] = plugin.get_answerbrowser_type()
                 html_pars[idx][output_format.value] = plugin.get_final_output()
