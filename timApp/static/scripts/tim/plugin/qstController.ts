@@ -13,8 +13,15 @@ import {showMessageDialog} from "../ui/dialog";
 import {$http} from "../util/ngimport";
 import {Binding, to} from "../util/utils";
 
-export interface IQstAttributes {
-    markup: IQuestionMarkup;
+// Represents fields that are not actually stored in plugin markup but that are added by TIM alongside markup
+// in view route so that extra information can be passed to qst component. TODO: they should not be inside markup.
+interface IQstExtraInfo {
+    invalid?: boolean;
+    isTask: boolean;
+}
+
+interface IQstAttributes {
+    markup: IQuestionMarkup & IQstExtraInfo;
     doLazy: boolean;
     anonymous: boolean;
     info: {};

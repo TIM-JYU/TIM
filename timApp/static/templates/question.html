@@ -44,16 +44,26 @@
                 </select>
             </div>
             <tim-question-matrix ng-if="qctrl.question.questionType"></tim-question-matrix>
-
-            <div class="form-horz-flex">
+            <div class="checkbox">
+                <label><input type="checkbox" ng-model="qctrl.qst"/> Document question</label>
+            </div>
+            <div class="form-group form-horz-flex"
+                 ng-if="qctrl.qst">
+                <label for="answerLimit{{$id}}">Answer limit</label>
+                <input ng-model="qctrl.pluginMarkup.answerLimit"
+                       id="answerLimit{{$id}}"
+                       class="form-control"
+                       placeholder="Maximum number of allowed answer attempts"
+                       type="number"
+                       min="1"
+                       step="1"/>
+            </div>
+            <div class="form-horz-flex" ng-if="!qctrl.qst">
                 <label>
                     Duration
                 </label>
                 <tim-duration-picker amount="qctrl.ui.durationAmount"
                                      type="qctrl.ui.durationType"></tim-duration-picker>
-            </div>
-            <div class="checkbox">
-                <label><input type="checkbox" ng-model="qctrl.qst"/> Document question</label>
             </div>
         </form>
         <bootstrap-panel title="Preview">

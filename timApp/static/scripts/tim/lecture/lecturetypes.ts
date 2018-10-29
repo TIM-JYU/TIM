@@ -7,16 +7,19 @@ export interface IExplCollection {
     [idString: string]: string;
 }
 
-export interface IQuestionMarkup extends IAskedJsonJson {
+export interface IGenericPluginMarkup {
+    answerLimit?: number;
     button?: string;
     buttonText?: string;
     lazy?: boolean;
-    isTask: boolean; // if false, it is a lecture question
     header?: string;
     footer?: string;
     resetText?: string;
     stem?: string;
-    invalid?: boolean;
+}
+
+export interface IQuestionMarkup extends IAskedJsonJson, IGenericPluginMarkup {
+
 }
 
 export interface IQuestionParagraph extends IUniqueParId {

@@ -491,7 +491,17 @@ def mmcq_get_md(jso):
     return result
 
 
-qst_attrs = {'button', 'buttonText', 'footer', 'header', 'isTask', 'lazy', 'resetText', 'stem', }
+qst_attrs = {
+    'answerLimit',
+    'button',
+    'buttonText',
+    'footer',
+    'header',
+    'isTask',
+    'lazy',
+    'resetText',
+    'stem',
+}
 
 
 def qst_get_html(jso, review):

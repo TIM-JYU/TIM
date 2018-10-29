@@ -9,13 +9,14 @@ import {
     minimizeJson,
 } from "tim/document/question/dynamicAnswerSheet";
 import {timelimit} from "tim/session";
-import {markAsUsed, setSetting} from "tim/util/utils";
+import {markAsUsed, setSetting, to} from "tim/util/utils";
 import {ParCompiler} from "../../editor/parCompiler";
 import {
     IAskedJsonJson,
     IAskedQuestion,
     IColumn,
     IExplCollection,
+    IGenericPluginMarkup,
     IHeader,
     IQuestionParagraph,
     IQuestionUI,
@@ -148,6 +149,7 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
     private customError: string | undefined;
     private f?: IFormController;
     private qst = false;
+    private pluginMarkup: IGenericPluginMarkup = {};
 
     constructor(element: IRootElementService, protected scope: IScope) {
         super(element, scope);
@@ -243,6 +245,7 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
             rows: [],
         };
         this.qst = qst;
+        this.pluginMarkup.answerLimit = qst ? 1 : undefined;
     }
 
     private newQuestion(data: INewQuestionParams) {
@@ -262,6 +265,7 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
 
         if (!isAskedQuestion(data)) {
             this.qst = data.qst;
+            this.pluginMarkup = data.markup;
         }
 
         if (json.questionTitle) {
@@ -898,13 +902,24 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
             params = {par: p.parId, taskId: p.taskId, isTask: this.qst};
         }
         const docId = p.docId;
-        const response = await $http.post<IParResponse>(route, angular.extend({
+
+        // Change undefined to null. This avoids "null" being saved in the markup for answerLimit.
+        this.pluginMarkup.answerLimit = this.pluginMarkup.answerLimit || undefined;
+
+        const r = await to($http.post<IParResponse>(route, {
             docId,
             ...params,
-            question: this.question,
+            question: {
+                ...this.pluginMarkup, // this also retains the other attributes that are not visible in edit dialog
+                ...this.question,
+            },
         }));
-        const data = response.data;
-        this.close({data, deleted: false, ask, type: "edit"});
+        if (r.ok) {
+            const data = r.result.data;
+            this.close({data, deleted: false, ask, type: "edit"});
+        } else {
+            await showMessageDialog(r.result.data.error);
+        }
     }
 
     /**
