@@ -73,3 +73,5 @@ CELERYBEAT_SCHEDULE = {
 }
 MAIL_HOST = "smtp.jyu.fi"
 MAIL_SIGNATURE = "\n\n-- \nThis message was automatically sent by TIM"
+WTF_CSRF_METHODS = ['POST', 'PUT', 'PATCH', 'DELETE']
+WTF_CSRF_HEADERS = ['X-XSRF-TOKEN']

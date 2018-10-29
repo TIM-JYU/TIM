@@ -12,6 +12,7 @@ from flask import render_template
 from flask import request
 from flask import session
 from flask_assets import Environment
+from flask_wtf.csrf import generate_csrf
 from markupsafe import Markup
 from werkzeug.contrib.profiler import ProfilerMiddleware
 
@@ -353,6 +354,13 @@ def del_g(response):
         if hasattr(g, 'owned'):
             del g.owned
     return response
+
+
+@app.after_request
+def after_request(resp):
+    token = generate_csrf()
+    resp.set_cookie('XSRF-TOKEN', token)
+    return resp
 
 
 # noinspection PyUnusedLocal

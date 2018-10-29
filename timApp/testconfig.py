@@ -39,3 +39,4 @@ PERMANENT_SESSION_LIFETIME = timedelta(weeks=9999)
 CELERYBEAT_SCHEDULE = {
     # don't schedule anything while testing
 }
+WTF_CSRF_METHODS = []

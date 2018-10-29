@@ -9,6 +9,7 @@ import sys
 
 from flask import Flask
 from flask_migrate import Migrate
+from flask_wtf import CSRFProtect
 from sqlalchemy.sql.ddl import CreateTable
 
 from timApp.answer.answer import Answer
@@ -143,6 +144,8 @@ db.init_app(app)
 db.app = app
 migrate = Migrate(app, db)
 oid = KorppiOpenID(app, safe_roots=['https://korppi.jyu.fi'])
+
+CSRFProtect(app)
 
 app.jinja_env.filters['map_format'] = map_format
 app.jinja_env.filters['datestr_to_relative'] = datestr_to_relative
