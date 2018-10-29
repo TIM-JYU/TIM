@@ -146,37 +146,37 @@ def qst_multihtml():
     return json_response(multi)
 
 
-def copy_value(name, qjso, jsom, defvalue = None):
+def copy_value(name, qjso, jsom, defvalue=None):
     v = jsom.get(name, defvalue)
     if v:
         qjso[name] = v
 
 
-def convert_mcq_to_qst(jso, is_mmcq = False):
+def convert_mcq_to_qst(jso, is_mmcq=False):
     jsom = jso.get("markup")
-    qjso = {}
+    qjso = {
+        "questionText": jsom.get("stem", ""),
+        "questionTitle": jsom.get("stem", ""),
+        "stem": jsom.get("headerText", "Check your understanding"),
+        "answerFieldType": "radio",
+        "isTask": True,
+    }
     jso["markup"] = qjso
-    qjso["questionText"] = jsom.get("stem", "")
-    qjso["questionTitle"] = jsom.get("stem", "")
-    qjso["stem"] = jsom.get("headerText", "Check your understanding")
-    qjso["answerFieldType"] = "radio";
-    qjso["isTask"] = True;
     copy_value("answerLimit", qjso, jsom, "1")
     copy_value("header", qjso, jsom)
     copy_value("footer", qjso, jsom)
     copy_value("button", qjso, jsom)
     copy_value("buttonText", qjso, jsom)
     if is_mmcq:
-        qjso["questionType"] = "true-false";
+        qjso["questionType"] = "true-false"
         true_text = jsom.get("trueText", "True")
         false_text = jsom.get("falseText", "False")
-        qjso["headers"] = [true_text, false_text];
+        qjso["headers"] = [true_text, false_text]
         state = jso.get("state", None)
         if isinstance(state, list) and state:
             item = state[0]
             if not isinstance(item, list):
-                new_state = [];
-                n = 1
+                new_state = []
                 for item in state:
                     new_item = []
                     if item == True:
@@ -186,19 +186,19 @@ def convert_mcq_to_qst(jso, is_mmcq = False):
                     new_state.append(new_item)
                 jso["state"] = new_state
     else:
-        qjso["questionType"] = "radio-vertical";
-        qjso["headers"] = [];
+        qjso["questionType"] = "radio-vertical"
+        qjso["headers"] = []
         state = jso.get("state", None)
         if isinstance(state, int):
-            jso["state"] = [[str(state+1)]]
+            jso["state"] = [[str(state + 1)]]
 
-    rows = [];
-    qjso["rows"] = rows;
+    rows = []
+    qjso["rows"] = rows
     choices = jsom.get("choices", [])
     for c in choices:
         rows.append(c.get("text", ""))
-    expl = {};
-    qjso["expl"] = expl;
+    expl = {}
+    qjso["expl"] = expl
     i = 1
     for c in choices:
         expl[str(i)] = c.get("reason", "")
@@ -209,7 +209,7 @@ def convert_mcq_to_qst(jso, is_mmcq = False):
     for c in choices:
         cor = c.get("correct", False)
         if cor:
-            points += sep + str(i)+":1"
+            points += sep + str(i) + ":1"
             sep = ";"
         i += 1
     qjso["points"] = points
