@@ -311,9 +311,8 @@ class AnswerSheetController implements IController {
     }
 
     private getInputClass(rowIndex: number, colIndex: number) {
-        const pts:any = this.getPoints(rowIndex, colIndex);
-        const pt:any = pts *1;
-        return pt != NaN && pt > 0 ? "qst-correct" : "qst-normal";
+        const pts = this.getPoints(rowIndex, colIndex);
+        return pts != null && parseFloat(pts) > 0 ? "qst-correct" : "qst-normal";
     }
 
     private canShowExpl(): boolean {
