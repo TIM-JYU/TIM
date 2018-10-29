@@ -3,16 +3,13 @@
 #![feature(futures_api, async_await, await_macro, pin)]
 #![recursion_limit = "128"]
 
-#[macro_use]
+extern crate log;
 extern crate serde_derive;
 #[macro_use]
-extern crate log;
-#[macro_use]
 extern crate diesel;
-#[macro_use]
-extern crate diesel_derive_enum;
 extern crate config;
 extern crate core;
+extern crate diesel_derive_enum;
 
 mod db;
 mod document;
@@ -30,6 +27,8 @@ use askama::Template;
 use crate::db::DbExecutor;
 use crate::db::GetItem;
 use crate::db::GetItems;
+use crate::document::DocId;
+use crate::document::DocParagraph;
 use crate::document::Document;
 use crate::models::Item;
 use crate::models::ItemKind;
@@ -44,7 +43,6 @@ use failure::ResultExt;
 use futures::compat::Future01CompatExt;
 use futures::executor::block_on;
 use rayon;
-use crate::document::DocParagraph;
 
 fn view_document(info: Path<(u32,)>) -> String {
     format!("Hello {}!", &info.0)
@@ -93,14 +91,12 @@ async fn view_item_impl(req: &HttpRequest<AppState>) -> Result<HttpResponse, Tim
         PathSpec::Id(_) => return Ok(HttpResponse::Ok().body("not supported by id yet")),
         PathSpec::Path(p) => path = p.to_string(),
     }
-    let res = await!(
-        state
-            .db
-            .send(GetItem {
-                path: path.to_string()
-            })
-            .compat()
-    )
+    let res = await!(state
+        .db
+        .send(GetItem {
+            path: path.to_string()
+        })
+        .compat())
     .context(TimErrorKind::Db)??;
     match res {
         ItemKind::Folder(f) => {
@@ -117,12 +113,10 @@ async fn view_item_impl(req: &HttpRequest<AppState>) -> Result<HttpResponse, Tim
                 ))
         }
         ItemKind::DocEntry(d) => {
-            let doc: Document<DocParagraph> = Document::load_newest(
-                d.id,
-                format!("../timApp/tim_files/docs/{}", d.id),
-                format!("../timApp/tim_files/pars/{}", d.id),
-            )
-            .context(TimErrorKind::DocumentLoad)?;
+            let d_id = DocId(d.id);
+            let doc: Document<DocParagraph> =
+                Document::load_newest(d_id, d_id.get_docs_path(), d_id.get_pars_path())
+                    .context(TimErrorKind::DocumentLoad)?;
             let doc_str = format!("{:#?}", doc);
             Ok(HttpResponse::Ok()
                 .content_type("text/plain; charset=utf-8")
@@ -141,7 +135,10 @@ struct AppState {
 
 fn main() -> Result<(), failure::Error> {
     // simple_logger::init().unwrap();
-    rayon::ThreadPoolBuilder::new().num_threads(8).build_global().unwrap();
+    rayon::ThreadPoolBuilder::new()
+        .num_threads(8)
+        .build_global()
+        .unwrap();
     let sys = actix::System::new("tim");
     let settings = Settings::new()?;
     let manager = ConnectionManager::<PgConnection>::new(settings.psql_address);

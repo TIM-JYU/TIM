@@ -5,23 +5,24 @@ authors = ["Mika Lehtinen <mikkalle@student.jyu.fi>"]
 edition = "2018"
 
 [dependencies]
-actix = "0.7.4"
-askama = "0.7.1"
+actix = "0.7.5"
+askama = "0.7.2"
 diesel-derive-enum = { version = "0.4.4", features = ["postgres"] }
-failure = "0.1.2"
+failure = "0.1.3"
 log = "0.4.5"
-serde = "1.0.79"
-serde_derive = "1.0.79"
-serde_json = "1.0.31"
+serde = "1.0.80"
+serde_derive = "1.0.80"
+serde_json = "1.0.32"
 simple_logger = "1.0.1"
 yaml-rust = "0.4.2"
 futures-preview = { git = "https://github.com/rust-lang-nursery/futures-rs", features = ["tokio-compat"] }
 tera = { git = "https://gitlab.com/tim-jyu/tera" }
 config = "0.9.1"
 rayon = "1.0.2"
+chrono = { version = "0.4.6", features = ["serde"] }
 
 [dependencies.actix-web]
-version = "0.7.8"
+version = "0.7.13"
 default-features = false
 features = ["brotli", "flate2-c"]
 
@@ -31,4 +32,4 @@ default-features = false
 features = ["postgres", "r2d2", "32-column-tables"]
 
 [build-dependencies]
-askama = "0.7.1"
+askama = "0.7.2"

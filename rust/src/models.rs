@@ -1,5 +1,7 @@
 use askama::Template;
 use crate::document::DocInfo;
+use diesel_derive_enum::DbEnum;
+use serde_derive::Serialize;
 
 pub trait Item {
     fn get_path(&self) -> String;

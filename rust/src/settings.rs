@@ -1,5 +1,6 @@
 use config::Environment;
 use config::{Config, ConfigError};
+use serde_derive::Deserialize;
 
 #[derive(Debug, Deserialize)]
 pub struct Settings {
