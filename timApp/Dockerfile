@@ -130,6 +130,7 @@ flask-migrate \
 flask-openid \
 flask-sqlalchemy \
 flask-testing \
+flask-wtf \
 gevent \
 git+git://github.com/miracle2k/webassets.git \
 gunicorn \
