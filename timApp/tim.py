@@ -49,7 +49,7 @@ from timApp.plugin.timtable.timTable import timTable_plugin
 from timApp.printing.print import print_blueprint
 from timApp.plugin.tape.tape import tape_plugin
 from timApp.readmark.routes import readings
-from timApp.tim_app import app, default_secret
+from timApp.tim_app import app, default_secret, csrf
 from timApp.timdb.exceptions import ItemAlreadyExistsException
 from timApp.timdb.sqa import db
 from timApp.upload.upload import upload
@@ -104,6 +104,11 @@ app.register_blueprint(course_blueprint)
 app.wsgi_app = ReverseProxied(app.wsgi_app)
 
 assets = Environment(app)
+
+
+csrf.exempt(qst_plugin)
+csrf.exempt(timTable_plugin)
+csrf.exempt(tape_plugin)
 
 
 @app.context_processor

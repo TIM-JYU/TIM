@@ -145,7 +145,7 @@ db.app = app
 migrate = Migrate(app, db)
 oid = KorppiOpenID(app, safe_roots=['https://korppi.jyu.fi'])
 
-CSRFProtect(app)
+csrf = CSRFProtect(app)
 
 app.jinja_env.filters['map_format'] = map_format
 app.jinja_env.filters['datestr_to_relative'] = datestr_to_relative
