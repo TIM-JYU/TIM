@@ -417,8 +417,10 @@ timApp.component("timSidebarMenu", {
         <uib-tab-heading>
             <i class="glyphicon glyphicon-cog"></i>
         </uib-tab-heading>
-        <h5>Customize</h5>
-        <a href="/settings">Customize TIM</a>
+        <div ng-if="$ctrl.users.isLoggedIn()">
+            <h5>Customize</h5>
+            <a href="/settings">Customize TIM</a>
+        </div>
         <div ng-show="!($ctrl.vctrl.item && !$ctrl.vctrl.item.isFolder)">
             <h5>Search</h5>
             <button class="timButton btn-block"
