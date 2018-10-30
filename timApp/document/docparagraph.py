@@ -565,7 +565,8 @@ class DocParagraph:
                     continue
                 if isinstance(h, bytes):
                     h = h.decode()
-                if strip_div(h) != old_html:
+                h = strip_div(h)
+                if h != old_html:
                     h = sanitize_html(h)
                     if not par.from_preamble():
                         changed_pars.append(par)

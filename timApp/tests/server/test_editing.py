@@ -1,5 +1,7 @@
 from lxml import html
+from lxml.html import HtmlElement
 
+from timApp.document.docparagraph import DocParagraph
 from timApp.tests.server.timroutetest import TimRouteTest
 
 
@@ -279,3 +281,19 @@ macros:
         self.post_par(d.document, """hi""", par_id=pid)
         r = self.get_updated_pars(d)
         self.assertEqual({pid}, set(r['changed_pars'].keys()))
+
+    def test_cache_no_extra_div(self):
+        self.login_test1()
+        d = self.create_doc()
+        p = DocParagraph.from_dict(d.document, {
+            "attrs": {},
+            "h": {
+                "thisIsSomeOldHash": "<h2 id=\"hi\">hi</h2>"
+            },
+            "id": "eHdzfXQbvcIY",
+            "md": "## hi",
+        })
+        d.document.add_paragraph_obj(p)
+        e = self.get(d.url, as_tree=True)
+        pc: HtmlElement = e.cssselect('.parContent')[0]
+        self.assertEqual('h2', pc.getchildren()[0].tag)
