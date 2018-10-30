@@ -307,7 +307,7 @@ class TimRouteTest(TimDbTest):
 
     def json_post(self,
                   url: str,
-                  json_data: Optional[Dict] = None,
+                  json_data: Optional[Union[Dict, List]] = None,
                   as_tree: bool = False,
                   expect_status: Optional[int] = 200,
                   expect_content: Union[None, str, Dict, List] = None,

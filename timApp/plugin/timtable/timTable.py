@@ -10,6 +10,7 @@ from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.document import Document
 from timApp.plugin.plugin import Plugin
 from timApp.plugin.timtable.row_owner_info import RowOwnerInfo
+from timApp.tim_app import csrf
 from timApp.util.flask.requesthelper import verify_json_params, get_option
 from timApp.util.flask.responsehelper import json_response
 from timApp.document.docentry import DocEntry
@@ -101,6 +102,7 @@ def tim_table_multihtml_direct(jsondata):
 
 
 @timTable_plugin.route("multihtml/", methods=["POST"])
+@csrf.exempt
 def tim_table_multihtml():
     """
     Route for getting the HTML of all TimTable plugins in a document.
@@ -138,6 +140,7 @@ def tim_table_get_html(jso, review):
 
 
 @timTable_plugin.route("multimd/", methods=["POST"])
+@csrf.exempt
 def tim_table_multimd():
     """
     Handles latex printing.

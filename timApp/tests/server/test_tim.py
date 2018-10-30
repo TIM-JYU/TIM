@@ -3,6 +3,7 @@ import re
 import unittest
 
 from defusedxml.lxml import tostring
+from flask import current_app
 from lxml.cssselect import CSSSelector
 
 from timApp.document.document import Document
@@ -236,6 +237,27 @@ class TimTest(TimRouteTest):
         d = self.create_doc(initial_par='testing')
         self.get(f'/par_info/{d.id}/{d.document.get_paragraphs()[0].get_id()}',
                  expect_content={'doc_author': 'Test user 1 (testuser1)', 'doc_name': d.title})
+
+    def test_csrf(self):
+        try:
+            self.login_test1()
+            current_app.config['WTF_CSRF_METHODS'] = ['POST', 'PUT', 'PATCH', 'DELETE']
+            self.create_doc(expect_status=400,
+                            expect_content='The CSRF token is missing.',
+                            json_key='error')
+            self.json_post('/tape/multihtml/', [])
+            self.json_post('/qst/multihtml/', [])
+            self.json_post('/timTable/multihtml/', [])
+            self.json_post('/qst/multimd/', [])
+            self.json_post('/timTable/multimd/', [])
+            self.json_put('/qst/answer/',
+                          {
+                              'info': {},
+                              'input': {'answers': []},
+                              'markup': {},
+                          })
+        finally:
+            current_app.config['WTF_CSRF_METHODS'] = []
 
 
 if __name__ == '__main__':

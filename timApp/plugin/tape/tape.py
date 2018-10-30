@@ -5,6 +5,8 @@ from xml.sax.saxutils import quoteattr
 from flask import Blueprint
 from flask import abort
 from flask import request
+
+from timApp.tim_app import csrf
 from timApp.util.flask.responsehelper import json_response
 
 tape_plugin = Blueprint('tape_plugin',
@@ -30,6 +32,7 @@ def tape_reqs():
 
 
 @tape_plugin.route("multihtml/", methods=["POST"])
+@csrf.exempt
 def tape_multihtml():
     """
     Route for getting the HTML of all tape plugins in a document.

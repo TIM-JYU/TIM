@@ -106,11 +106,6 @@ app.wsgi_app = ReverseProxied(app.wsgi_app)
 assets = Environment(app)
 
 
-csrf.exempt(qst_plugin)
-csrf.exempt(timTable_plugin)
-csrf.exempt(tape_plugin)
-
-
 @app.context_processor
 def inject_custom_css() -> dict:
     """Injects the user prefs variable to all templates."""

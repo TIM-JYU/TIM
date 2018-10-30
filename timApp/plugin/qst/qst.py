@@ -15,6 +15,7 @@ from timApp.markdown.dumboclient import DumboOptions
 from timApp.plugin.plugin import Plugin, PluginException
 from timApp.plugin.plugin import get_num_value
 from timApp.plugin.plugin import get_value
+from timApp.tim_app import csrf
 from timApp.util.flask.requesthelper import verify_json_params
 from timApp.util.flask.responsehelper import json_response
 from timApp.auth.sessioninfo import get_current_user_object
@@ -85,6 +86,7 @@ def qst_reqs():
 
 
 @qst_plugin.route("/qst/mcq/answer/", methods=["PUT"])
+@csrf.exempt
 def qst_mcq_answer():
     jsondata = request.get_json()
     convert_mcq_to_qst(jsondata)
@@ -92,6 +94,7 @@ def qst_mcq_answer():
 
 
 @qst_plugin.route("/qst/mmcq/answer/", methods=["PUT"])
+@csrf.exempt
 def qst_mmcq_answer():
     jsondata = request.get_json()
     convert_mcq_to_qst(jsondata, True)
@@ -99,6 +102,7 @@ def qst_mmcq_answer():
 
 
 @qst_plugin.route("/qst/answer/", methods=["PUT"])
+@csrf.exempt
 def qst_answer():
     return qst_answer_jso(request.get_json())
 
@@ -138,6 +142,7 @@ def is_review(request):
 
 
 @qst_plugin.route("/qst/multihtml/", methods=["POST"])
+@csrf.exempt
 def qst_multihtml():
     jsondata = request.get_json()
     multi = []
@@ -216,6 +221,7 @@ def convert_mcq_to_qst(jso, is_mmcq=False):
 
 
 @qst_plugin.route("/qst/mcq/multihtml/", methods=["POST"])
+@csrf.exempt
 def qst__mcq_multihtml():
     jsondata = request.get_json()
     multi = []
@@ -226,6 +232,7 @@ def qst__mcq_multihtml():
 
 
 @qst_plugin.route("/qst/mmcq/multihtml/", methods=["POST"])
+@csrf.exempt
 def qst__mmcq_multihtml():
     jsondata = request.get_json()
     multi = []
@@ -236,6 +243,7 @@ def qst__mmcq_multihtml():
 
 
 @qst_plugin.route("/qst/multimd/", methods=["POST"])
+@csrf.exempt
 def qst_multimd():
     jsondata = request.get_json()
     multi = []
@@ -246,6 +254,7 @@ def qst_multimd():
 
 @qst_plugin.route("/qst/mcq/multimd", methods=["POST"])
 @qst_plugin.route("/qst/mcq/multimd/", methods=["POST"])
+@csrf.exempt
 def qst_mcq_multimd():
     jsondata = request.get_json()
     multi = []
@@ -256,6 +265,7 @@ def qst_mcq_multimd():
 
 @qst_plugin.route("/qst/mmcq/multimd", methods=["POST"])
 @qst_plugin.route("/qst/mmcq/multimd/", methods=["POST"])
+@csrf.exempt
 def qst_mmcq_multimd():
     jsondata = request.get_json()
     multi = []
@@ -276,6 +286,7 @@ def get_question_md():
 
 
 @qst_plugin.route("/qst/html/", methods=["POST"])
+@csrf.exempt
 def qst_html():
     jsondata = request.get_json()
 
