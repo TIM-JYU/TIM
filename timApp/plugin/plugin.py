@@ -63,7 +63,7 @@ def get_num_value(values, key, default=None):
     value = get_value(values, key, default)
     # noinspection PyBroadException
     try:
-        float(value)
+        value = float(value)
     except:
         value = default
     return value

@@ -125,7 +125,7 @@ def qst_answer_jso(jsondata):
     convert_md([jsondata], options=DumboOptions.default())  # TODO get mathtype from doc settings?
     info = jsondata['info']
     result = False
-    if info and info['max_answers'] and info['max_answers'] <= info.get('earlier_answers', 0) + 1:
+    if info and info['max_answers'] and get_num_value(info,'max_answers', 1) <= get_num_value(info,'earlier_answers', 0) + 1:
         result = True
     if not result:
         markup = None
@@ -531,7 +531,7 @@ def qst_get_html(jso, review):
                                      allow_top_level_keys=
                                      qst_attrs)
     jso['markup'] = markup
-    if info and info['max_answers'] and info['max_answers'] <= info.get('earlier_answers', 0):
+    if info and info['max_answers'] and get_num_value(info,'max_answers', 1) <= get_num_value(info,'earlier_answers', 0):
         result = True
     if not result:
         delete_key(markup, 'points')
