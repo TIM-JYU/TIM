@@ -12,6 +12,7 @@ from timApp.document.docparagraph import DocParagraph
 from timApp.folder.folder import Folder
 from timApp.tim_app import app
 from timApp.timdb.exceptions import TimDbException
+from timApp.timdb.sqa import db
 from timApp.user.usergroup import UserGroup
 
 
@@ -91,7 +92,7 @@ def process_items(func: Callable[[DocInfo, BasicArguments], int], parser: Argume
         else:
             assert False
         try:
-            if getattr(opts, 'dryrun', False):
+            if getattr(opts, 'dryrun', True):
                 print('Dry run mode enabled - the following only shows what WOULD be done.')
             for d in docs:
                 if opts.progress:
@@ -107,6 +108,8 @@ def process_items(func: Callable[[DocInfo, BasicArguments], int], parser: Argume
                   f'affected: {total_pars} in {total_docs} documents')
         else:
             print(f'Total paragraphs found: {total_pars} in {total_docs} documents')
+        if not getattr(opts, 'dryrun', True):
+            db.session.commit()
 
 
 def create_argparser(description: str, readonly=False):

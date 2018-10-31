@@ -13,7 +13,7 @@ from timApp.document.docparagraph import DocParagraph
 class SearchArgumentsBasic:
     """Arguments for a search operation."""
 
-    term: str = attr.ib(kw_only=True)
+    term: str = attr.ib(kw_only=True, default='')
     """The search term."""
 
     regex: bool = attr.ib(kw_only=True, default=False)
@@ -123,9 +123,9 @@ def search_and_print(d: DocInfo, args: SearchArgumentsCLI):
     return found
 
 
-def create_basic_search_argparser(desc: str, is_readonly=True):
+def create_basic_search_argparser(desc: str, is_readonly=True, require_term=True):
     parser = create_argparser(desc, readonly=is_readonly)
-    parser.add_argument('--term', required=True, help='search term')
+    parser.add_argument('--term', required=require_term, help='search term')
     parser.add_argument('--only-first', help='search only first x paragraphs in each document', dest='onlyfirst',
                         type=int)
     to_param = '' if is_readonly else ', to'

@@ -1,28 +1,24 @@
-from timApp.admin.search_in_documents import SearchArgumentsBasic, search
-from timApp.admin.util import enum_docs
+from timApp.admin.search_in_documents import SearchArgumentsBasic, search, create_basic_search_argparser, \
+    SearchArgumentsCLI
+from timApp.admin.util import enum_docs, process_items
+from timApp.document.docinfo import DocInfo
 from timApp.item.block import BlockType, Block
 from timApp.item.blockassociation import BlockAssociation
 from timApp.timdb.sqa import db
 from timApp.upload.uploadedfile import UploadedFile
 from timApp.user.usergroup import UserGroup
 
+upload_regexes = [
+    r'\[[^\[\]]*\]\(/(files|images)/(\d+)/([^()]+)\)',  # normal images and links
+    r'"/(files|images)/(\d+)/([^"]+)"',  # relative path in quotes
+    r': *"?/(files|images)/(\d+)/([^"\n]+)"?'  # in plugin markdown, e.g. "file: /images/123456/a.jpg"
+]
+
 
 def associate_old_uploads():
     """Associates old uploads with documents and removes access for those uploads from anonymous users.
     This means only document viewers will be able to view the uploaded files, as it is with new uploads.
     """
-    filelink_search = SearchArgumentsBasic(
-        format='',
-        onlyfirst=False,
-        regex=True,
-        term=r'\[[^\[\]]*\]\(/(files|images)/(\d+)/([^()]+)\)'
-    )
-    string_search = SearchArgumentsBasic(
-        format='',
-        onlyfirst=False,
-        regex=True,
-        term=r'"/(files|images)/(\d+)/([^"]+)"'
-    )
     anon = UserGroup.get_anonymous_group()
 
     def del_anon(u: UploadedFile):
@@ -35,8 +31,13 @@ def associate_old_uploads():
                 db.session.delete(acc)
 
     for d in enum_docs():
-        associate_document(d, del_anon, filelink_search)
-        associate_document(d, del_anon, string_search)
+        for r in upload_regexes:
+            associate_document(d, SearchArgumentsBasic(
+                format='',
+                onlyfirst=False,
+                regex=True,
+                term=r
+            ), del_anon)
     orphans = Block.query.filter(Block.type_id.in_([BlockType.File.value, BlockType.Image.value]) & Block.id.notin_(
         BlockAssociation.query.with_entities(BlockAssociation.child))).all()
     print(f'Deleting anon accesses from {len(orphans)} orphan uploads')
@@ -45,16 +46,45 @@ def associate_old_uploads():
     db.session.commit()
 
 
-def associate_document(d, del_anon, filelink_search):
-    for r in search(d, filelink_search, use_exported=False):
+def associate_document(d, search_opt, del_anon=None):
+    found = 0
+    for r in search(d, search_opt, use_exported=False):
+        found = r.num_pars_found
         kind, up_id, filename = r.match.group(1), int(r.match.group(2)), r.match.group(3)
         up = UploadedFile.find_by_id_and_type(up_id, BlockType.File if kind == 'files' else BlockType.Image)
         if not up:
             print(f'Upload not found: {up_id}/{filename}')
             continue
-        del_anon(up)
+        if del_anon:
+            del_anon(up)
         if d.block not in up.parents:
             print(f'{d.url}: adding child {up.relative_filesystem_path}')
             up.parents.append(d.block)
         else:
             print(f'{d.url}: already has child {up.relative_filesystem_path}')
+    return found
+
+
+def search_and_print(d: DocInfo, args: SearchArgumentsCLI):
+    found = 0
+    for r in upload_regexes:
+        found += associate_document(d, SearchArgumentsBasic(
+            format='',
+            onlyfirst=False,
+            regex=True,
+            term=r
+        ))
+    return found
+
+
+def main():
+    parser = create_basic_search_argparser(
+        'Scans documents for uploaded files and associates them with the containing documents',
+        is_readonly=False,
+        require_term=False,
+    )
+    process_items(search_and_print, parser)
+
+
+if __name__ == '__main__':
+    main()
