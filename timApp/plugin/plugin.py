@@ -82,7 +82,7 @@ class Plugin:
     starttime_key = 'starttime'
     points_rule_key = 'pointsRule'
     answer_limit_key = 'answerLimit'
-    limit_defaults = {'mmcq': 1}
+    limit_defaults = {'mmcq': 1, 'mmcq2': 1, 'mcq': 1, 'mcq2': 1}
 
     def __init__(self, task_id: Optional[str], values: dict, plugin_type: str, par: Optional[DocParagraph] = None):
         self.answer = None
