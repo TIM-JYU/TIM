@@ -209,14 +209,22 @@ def convert_mcq_to_qst(jso, is_mmcq=False):
         expl[str(i)] = c.get("reason", "")
         i += 1
     points = ""
-    i = 1
     sep = ""
+    i = 1
     for c in choices:
         cor = c.get("correct", False)
-        if cor:
-            points += sep + str(i) + ":1"
-            sep = ";"
+        if is_mmcq:
+            if cor:
+                points += sep + "1:1"
+            else:
+                points += sep + "2:1"
+            sep = "|"
+        else:
+            if cor:
+                points = str(i) + ":1"
+                break
         i += 1
+
     qjso["points"] = points
 
 

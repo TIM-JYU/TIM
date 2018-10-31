@@ -206,6 +206,8 @@ class QstController implements IController {
         this.result = data.web.result;
         if (data.web.markup && data.web.show_result) {
             this.preview = makePreview(data.web.markup, {answerTable: data.web.state, enabled: true});
+            this.preview.showExplanations = true;
+            this.preview.showCorrectChoices = true;
         }
     }
 }
