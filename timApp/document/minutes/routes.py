@@ -139,6 +139,8 @@ def create_minute_extracts(doc):
         #  Next must be add_text to avoid first coming as text and then changing to different paragraph
         #  and #- must be on the column 1!
         docentry.document.add_text(f"""
+PÖYTÄKIRJANOTE - Lista {extract_number} -  {extract_title}      
+\        
 #- {{rd="{d.id}" ra="ETUSIVU"}}
            """)
         for par in paragraphs:
