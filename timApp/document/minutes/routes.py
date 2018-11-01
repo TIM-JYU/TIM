@@ -136,6 +136,11 @@ def create_minute_extracts(doc):
     for extract_number, (extract_title, paragraphs) in extract_dict.items():
         docentry = create_or_get_and_wipe_document(f"{base_path}lista{extract_number}", f"lista{extract_number}")
 
+        #  Next must be add_text to avoid first coming as text and then changing to different paragraph
+        #  and #- must be on the column 1!
+        docentry.document.add_text(f"""
+#- {{rd="{d.id}" ra="ETUSIVU"}}
+           """)
         for par in paragraphs:
             docentry.document.add_paragraph_obj(par.create_reference(docentry.document, add_rd=True))
         docentry.document.add_paragraph("%%ALLEKIRJOITUKSET%%")
