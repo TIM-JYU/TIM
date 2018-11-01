@@ -138,7 +138,7 @@ def create_minute_extracts(doc):
 
         for par in paragraphs:
             docentry.document.add_paragraph_obj(par.create_reference(docentry.document, add_rd=True))
-        docentry.document.add_paragraph("Allekirjoitukset: _________________________")
+        docentry.document.add_paragraph("%%ALLEKIRJOITUKSET%%")
 
         # add into the composite document a link leading to the new extract document
         composite_paragraph.set_markdown(f"{composite_paragraph.get_markdown()}\n" +
