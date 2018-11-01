@@ -4,6 +4,7 @@ use failure::Error;
 use failure::ResultExt;
 use serde_derive::Deserialize;
 use serde_json;
+use std::borrow::Borrow;
 use std::collections::HashMap;
 use std::convert::TryFrom;
 use std::fs::File;
@@ -13,25 +14,59 @@ use tera::{Context, Tera};
 use yaml_rust::Yaml;
 use yaml_rust::YamlLoader;
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Deserialize, Debug, Clone, Eq, PartialEq, Hash)]
 pub struct ParId(pub String);
 
-#[derive(Deserialize, Debug)]
+pub struct ParIdRef<'a>(pub &'a str);
+
+impl<'a> From<&'a str> for ParIdRef<'a> {
+    fn from(s: &'a str) -> Self {
+        ParIdRef(s)
+    }
+}
+
+pub trait ParIdLike {
+    fn get_str(&self) -> &str;
+}
+
+impl Borrow<str> for ParId {
+    fn borrow(&self) -> &str {
+        &self.0
+    }
+}
+
+impl<'a> Borrow<str> for ParIdRef<'a> {
+    fn borrow(&self) -> &str {
+        self.0
+    }
+}
+
+impl ParIdLike for ParId {
+    fn get_str(&self) -> &str {
+        &self.0
+    }
+}
+
+impl<'a> ParIdLike for &'a ParId {
+    fn get_str(&self) -> &str {
+        &self.0
+    }
+}
+
+impl<'a> ParIdLike for ParIdRef<'a> {
+    fn get_str(&self) -> &str {
+        self.0
+    }
+}
+
+#[derive(Deserialize, Debug, Clone)]
 pub struct AttributeSet {
     classes: Option<Vec<String>>,
-    plugin: Option<String>,
-    #[serde(rename = "taskId")]
-    task_id: Option<String>,
-    settings: Option<String>,
-    pub ra: Option<String>,
-    pub rd: Option<String>,
-    pub rp: Option<String>,
-    pub rt: Option<String>,
     #[serde(flatten)]
     pub others: HashMap<String, String>,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct DocParagraph {
     pub id: ParId,
     md: String,
@@ -80,5 +115,15 @@ impl TryFrom<DocParagraph> for Yaml {
             YamlLoader::load_from_str(p.get_markdown()).context(TimErrorKind::InvalidYaml)?;
         let mut drain = r.drain(..);
         drain.next().ok_or(TimErrorKind::InvalidYaml.into())
+    }
+}
+
+pub trait AttributeContainer {
+    fn get_attr(&self, k: &str) -> Option<&String>;
+}
+
+impl AttributeContainer for DocParagraph {
+    fn get_attr(&self, k: &str) -> Option<&String> {
+        self.attrs.others.get(k)
     }
 }

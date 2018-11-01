@@ -1,42 +1,71 @@
 use chrono::prelude::*;
+use crate::document::docparagraph::AttributeContainer;
+use crate::document::docparagraph::ParIdLike;
 use crate::document::DocParagraph;
 use crate::document::ParId;
 use crate::timerror::TimErrorKind;
 use failure::Error;
 use failure::ResultExt;
+use indexmap::IndexMap;
+use rayon::iter::IntoParallelIterator;
 use rayon::prelude::*;
 use serde_derive::Deserialize;
 use serde_json;
 use std::collections::hash_map::Entry;
 use std::collections::HashMap;
+use std::collections::HashSet;
 use std::fs::File;
 use std::io::BufRead;
 use std::io::BufReader;
 use std::path::Path;
 use std::path::PathBuf;
 
-pub struct BlockListEntry {
-    pub par_id: ParId,
-    pub hash: String,
+trait ParPath {
+    fn get_par_path(&self, d: DocId) -> PathBuf;
 }
 
-impl BlockListEntry {
-    pub fn new(par_id: ParId, hash: String) -> Self {
-        BlockListEntry { par_id, hash }
+impl<'a, T> ParPath for (&'a T, &'a str)
+where
+    T: ParIdLike,
+{
+    fn get_par_path(&self, d: DocId) -> PathBuf {
+        d.get_pars_path().join(&(self.0).get_str()).join(self.1)
     }
+}
 
-    pub fn get_par_path(&self, d: DocId) -> PathBuf {
-        d.get_pars_path().join(&self.par_id.0).join(&self.hash)
+//impl<'a, T> ParPath for (T, &'a str)
+//where
+//    T: ParIdLike,
+//{
+//    fn get_par_path(&self, d: DocId) -> PathBuf {
+//        d.get_pars_path().join(&(self.0).get_str()).join(self.1)
+//    }
+//}
+
+impl<'a, T> ParPath for (T, &'a String)
+where
+    T: ParIdLike,
+{
+    fn get_par_path(&self, d: DocId) -> PathBuf {
+        let (id, hash) = self;
+        (id, &***hash).get_par_path(d)
     }
 }
 
 pub struct BlockList {
-    pub entries: Vec<BlockListEntry>,
+    pub entries: IndexMap<ParId, String>,
 }
 
 impl BlockList {
-    pub fn new(entries: Vec<BlockListEntry>) -> Self {
+    pub fn new(entries: IndexMap<ParId, String>) -> Self {
         BlockList { entries }
+    }
+
+    pub fn get_entry(&self, p: &ParId) -> Option<&str> {
+        match self.entries.get(p) {
+            None => None,
+            Some(val) => Some(val),
+        }
     }
 }
 
@@ -65,6 +94,49 @@ impl DocumentStore {
             }
         }
     }
+
+    fn load_area(&mut self, id: DocId, area_name: &str) -> Result<Vec<DocParagraph>, Error> {
+        let doc = self.load_document(id)?;
+        let mut pars = Vec::new();
+        get_area(
+            &mut pars,
+            &mut doc
+                .pars
+                .iter()
+                .skip_while(|p| {
+                    p.attrs
+                        .others
+                        .get("area")
+                        .map_or(true, |name| name != area_name)
+                })
+                .cloned(),
+            area_name,
+        );
+        Ok(pars)
+    }
+
+    pub fn new() -> Self {
+        DocumentStore {
+            docs: HashMap::new(),
+            block_lists: HashMap::new(),
+        }
+    }
+}
+
+fn get_area<T>(result: &mut Vec<T>, pars: &mut impl Iterator<Item = T>, area_name: &str)
+where
+    T: AttributeContainer,
+{
+    for p in pars {
+        if !p
+            .get_attr("area_end")
+            .map_or(true, |name| name != area_name)
+        {
+            result.push(p);
+            break;
+        }
+        result.push(p);
+    }
 }
 
 #[derive(Debug, Eq, Hash, PartialEq, Copy, Clone)]
@@ -79,7 +151,31 @@ impl DocId {
     }
 }
 
-struct CtxPar {
+#[derive(Debug)]
+pub enum PP {
+    Norm(CtxPar),
+    DerefPar(Box<PP>, Box<PP>),
+
+    // TODO maybe include CtxPar
+    Error(String),
+
+    Area(Vec<PP>),
+
+    // TODO: CtxPar maybe not needed
+    Ref(CtxPar, DocRef),
+
+    Setting(CtxPar),
+    Plugin(CtxPar),
+}
+
+impl From<CtxPar> for PP {
+    fn from(c: CtxPar) -> Self {
+        PP::Norm(c)
+    }
+}
+
+#[derive(Debug)]
+pub struct CtxPar {
     doc: DocId,
     p: DocParagraph,
 }
@@ -90,44 +186,141 @@ impl CtxPar {
     }
 }
 
-trait PipelineInput {
+impl AttributeContainer for CtxPar {
+    fn get_attr(&self, k: &str) -> Option<&String> {
+        self.p.get_attr(k)
+    }
+}
+
+pub trait PipelineInput {
     fn get_doc_id(&self) -> DocId;
     fn get_blocks(self) -> Vec<CtxPar>;
 }
 
-fn dereference_blocks(blocks: Vec<CtxPar>) -> Vec<CtxPar> {
+#[derive(Eq, PartialEq, Hash, Clone, Debug)]
+pub enum DocRef {
+    Par(DocId, ParId),
+    Area(DocId, String),
+}
+
+fn deref_single(p: DocRef, docs: &mut DocumentStore, visited_pars: &mut HashSet<DocRef>) -> PP {
+    if visited_pars.contains(&p) {
+        PP::Error("Reference cycle detected".to_owned())
+    } else {
+        match p {
+            DocRef::Par(refdoc, ref rp) => match docs.load_blocklist(refdoc) {
+                Ok(list) => match list.entries.get(rp) {
+                    None => PP::Error("Paragraph not found".to_owned()),
+                    Some(hash) => {
+                        match DocParagraph::from_path((&rp, &**hash).get_par_path(refdoc)) {
+                            Ok(dp) => {
+                                visited_pars.insert(p);
+                                preprocess_single(CtxPar::new(refdoc, dp))
+                            }
+                            Err(_) => PP::Error("Paragraph not found".to_owned()),
+                        }
+                    }
+                },
+                Err(_) => PP::Error("Document not found".to_owned()),
+            },
+            DocRef::Area(refdoc, ref ra) => match docs.load_area(refdoc, ra) {
+                Ok(pars) => {
+                    visited_pars.insert(p);
+                    PP::Area(preprocess_pars(
+                        pars.into_iter().map(|p| CtxPar::new(refdoc, p)),
+                    ))
+                }
+                Err(_) => PP::Error("Failed to load area".to_owned()),
+            },
+        }
+    }
+}
+
+fn dereference_blocks(
+    blocks: Vec<PP>,
+    docs: &mut DocumentStore,
+    visited_pars: &mut HashSet<DocRef>,
+) -> Vec<PP> {
     blocks
         .into_iter()
-        .flat_map(|CtxPar { p, doc }| {
-            let attr_map = &p.attrs;
-            match (
-                attr_map.rd.as_ref().map(|rd| rd.parse()),
-                attr_map.rp.as_ref(),
-                attr_map.ra.as_ref(),
-            ) {
-                (Some(Ok(rd)), Some(rp), None) => {
-                    let x = DocParagraph::from_path("").unwrap_or(p);
-                    dereference_blocks(vec![CtxPar {
-                        p: x,
-                        doc: DocId(rd),
-                    }])
+        .map(|mut pp| loop {
+            pp = match pp {
+                PP::Norm(_) => return pp,
+                PP::DerefPar(box PP::Norm(_), _) => return pp,
+                PP::DerefPar(box PP::DerefPar(_, _), _) => {
+                    unreachable!("first slot of DerefPar cannot contain DerefPar")
                 }
-                (None, None, None)
-                | (None, None, Some(_))
-                | (None, Some(_), Some(_))
-                | (None, Some(_), None)
-                | (Some(Err(_)), _, _)
-                | (Some(Ok(_)), None, None)
-                | (Some(Ok(_)), Some(_), Some(_))
-                | (Some(Ok(_)), None, Some(_)) => vec![CtxPar::new(doc, p)],
-            }
+                PP::DerefPar(box PP::Error(_), _) => return pp,
+                PP::DerefPar(box PP::Area(pars), p2) => {
+                    return PP::DerefPar(
+                        Box::from(PP::Area(dereference_blocks(pars, docs, visited_pars))),
+                        p2,
+                    )
+                }
+                PP::DerefPar(box PP::Ref(ref _ctxpar, ref docref), _) => PP::DerefPar(
+                    Box::from(deref_single(docref.clone(), docs, visited_pars)),
+                    Box::from(pp),
+                ),
+                PP::DerefPar(box PP::Setting(_), _) => return pp,
+                PP::DerefPar(box PP::Plugin(_), _) => return pp,
+                PP::Error(_) => return pp,
+                PP::Area(pars) => return PP::Area(dereference_blocks(pars, docs, visited_pars)),
+                PP::Ref(ref _ctxpar, ref docref) => PP::DerefPar(
+                    Box::from(deref_single(docref.clone(), docs, visited_pars)),
+                    Box::from(pp),
+                ),
+                PP::Setting(_) => return pp,
+                PP::Plugin(_) => return pp,
+            };
         })
         .collect()
 }
 
-fn run_html_pipeline(x: impl PipelineInput) {
+fn preprocess_single(p: CtxPar) -> PP {
+    let attrs = &p.p.attrs.others;
+    let plugin = attrs.get("plugin");
+    let rd = attrs.get("rd").and_then(|rd| rd.parse().ok());
+    let ra = attrs.get("ra").cloned();
+    let rp = attrs.get("rp").cloned();
+    let s = attrs.get("settings");
+    match (plugin, rd, rp, ra, s) {
+        (_, Some(rd), Some(rp), _, _) => PP::Ref(p, DocRef::Par(DocId(rd), ParId(rp))),
+        (_, Some(rd), _, Some(ra), _) => PP::Ref(p, DocRef::Area(DocId(rd), ra)),
+        (Some(_name), _, _, _, _) => PP::Plugin(p),
+        (_, _, _, _, Some(_name)) => PP::Setting(p),
+        (_, _, _, _, _) => PP::Norm(p),
+    }
+}
+
+fn preprocess_pars(pars: impl IntoIterator<Item = CtxPar>) -> Vec<PP> {
+    let mut result = Vec::new();
+    let mut iter = pars.into_iter();
+    let mut curr_areas = Vec::new();
+    while let Some(next) = iter.next() {
+        if let Some(_area) = next.p.attrs.others.get("area") {
+            curr_areas.push(vec![]);
+        }
+        let maybe_area_end = next.p.attrs.others.get("area_end").cloned();
+        let pp = preprocess_single(next);
+        if let Some(last) = curr_areas.last_mut() {
+            last.push(pp);
+        } else {
+            result.push(pp);
+        }
+        if let Some(_area) = maybe_area_end {
+            if let Some(areapars) = curr_areas.pop() {
+                result.push(PP::Area(areapars))
+            }
+        }
+    }
+    result
+}
+
+pub fn run_html_pipeline(docs: &mut DocumentStore, x: impl PipelineInput) -> Vec<PP> {
     let blocks = x.get_blocks();
-    let blocks = dereference_blocks(blocks);
+    let mut visited = HashSet::new();
+    let blocks = dereference_blocks(preprocess_pars(blocks), docs, &mut visited);
+    blocks
 }
 
 #[allow(unused)]
@@ -237,12 +430,12 @@ impl Document {
         let lines = cfiler
             .lines()
             .map(|l| {
-                l.map(|line| -> Result<BlockListEntry, Error> {
+                l.map(|line| -> Result<(ParId, String), Error> {
                     let (id, h) = split_block_line(line)?;
-                    Ok(BlockListEntry::new(ParId(id), h))
+                    Ok((ParId(id), h))
                 })
             })
-            .collect::<Result<Result<Vec<BlockListEntry>, _>, _>>()??;
+            .collect::<Result<Result<_, _>, _>>()??;
         Ok(BlockList::new(lines))
     }
 
@@ -253,9 +446,11 @@ impl Document {
         let lines = Self::load_lines(id, history_path)?;
         let pars = lines
             .entries
+            .iter()
+            .collect::<Vec<_>>() // TODO indexmap doesn't support rayon yet
             .into_par_iter()
-            .map(|be| {
-                let p = DocParagraph::from_path(be.get_par_path(id));
+            .map(|parhash| {
+                let p = DocParagraph::from_path(parhash.get_par_path(id));
                 p
             })
             .collect::<Result<_, _>>()?;
@@ -266,8 +461,19 @@ impl Document {
         BlockList::new(
             self.pars
                 .iter()
-                .map(|p| BlockListEntry::new(p.id.clone(), p.t.clone()))
+                .map(|p| (p.id.clone(), p.t.clone()))
                 .collect(),
         )
+    }
+}
+
+impl PipelineInput for Document {
+    fn get_doc_id(&self) -> DocId {
+        self.id
+    }
+
+    fn get_blocks(self) -> Vec<CtxPar> {
+        let id = self.id;
+        self.pars.into_iter().map(|p| CtxPar::new(id, p)).collect()
     }
 }

@@ -1,6 +1,6 @@
-mod docinfo;
-mod docparagraph;
-mod document;
+pub mod docinfo;
+pub mod docparagraph;
+pub mod document;
 
 pub use self::docinfo::DocInfo;
 pub use self::docparagraph::DocParagraph;
