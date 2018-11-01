@@ -521,7 +521,7 @@ timApp.component("dynamicAnswerSheet", {
         <tr ng-if="$ctrl.hasHeaders()" class="answer-heading-row">
             <th ng-if="$ctrl.isMatrix()"></th>
             <th ng-repeat="h in $ctrl.processed.headers" ng-bind-html="$ctrl.fixText(h.text)"></th>
-            <th ng-show="$ctrl.canShowExpl()"></th>
+            <th ng-if="$ctrl.canShowExpl()"></th>
         </tr>
         <tr ng-repeat="row in $ctrl.processed.rows track by $index" ng-init="rowi = $index">
             <td ng-if="$ctrl.isMatrix()" ng-bind-html="$ctrl.fixText(row.text)"></td>
@@ -552,9 +552,9 @@ timApp.component("dynamicAnswerSheet", {
                             ng-model="$ctrl.answerMatrix[rowi][coli]">
 </textarea>
                     <span ng-bind-html="$ctrl.getLabelText(row, col)"></span></label>
-                <p ng-show="(p = $ctrl.getPoints(rowi, coli)) != null" class="qst-points" ng-bind="p"></p>
+                <p ng-if="(p = $ctrl.getPoints(rowi, coli)) != null" class="qst-points" ng-bind="p"></p>
             </td>
-            <td ng-show="p = $ctrl.getExpl(rowi)" ng-bind-html="p" class="explanation"></td>
+            <td ng-if="p = $ctrl.getExpl(rowi)" ng-bind-html="p" class="explanation"></td>
         </tr>
         </tbody>
     </table>
