@@ -272,6 +272,7 @@ ${backTicks}
                     {title: "Heading 2 (Ctrl-2)", func: () => this.editor!.headerClicked("##"), name: "H2"},
                     {title: "Heading 3 (Ctrl-3)", func: () => this.editor!.headerClicked("###"), name: "H3"},
                     {title: "Heading 4 (Ctrl-4)", func: () => this.editor!.headerClicked("####"), name: "H4"},
+                    {title: "Heading 5 (Ctrl-5)", func: () => this.editor!.headerClicked("#####"), name: "H5"},
                 ],
                 name: "Style",
             },
