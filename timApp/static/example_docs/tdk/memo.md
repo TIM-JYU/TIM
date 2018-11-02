@@ -5,6 +5,8 @@ macros:
    knro: 9
 ```
 
+#- {area="ETUSIVU"}
+
 #-
 %%A%%
 
@@ -118,6 +120,8 @@ table:
   texAutoSize: false
 
 ```
+
+#- {area_end="ETUSIVU"}
 
 #- {.hidden-print}
 ---

@@ -1,13 +1,15 @@
 from timApp.admin.replace_in_documents import perform_replace, ReplaceArguments
 from timApp.document.docentry import DocEntry
 from timApp.document.specialnames import TEMPLATE_FOLDER_NAME, PRINT_FOLDER_NAME, PREAMBLE_FOLDER_NAME
-from timApp.tests.server.timroutetest import TimRouteTest
+from timApp.tests.browser.browsertest import BrowserTest
 from timApp.timdb.sqa import db
 from timApp.user.usergroup import UserGroup
 from timApp.util.utils import EXAMPLE_DOCS_PATH
 
 
-class MinutesHandlingTest(TimRouteTest):
+# BrowserTest is required because test needs in-process plugin (timTable) and
+# TimRouteTest's testclient is not multithreaded.
+class MinutesHandlingTest(BrowserTest):
 
     def test_minutes_creation(self):
         # Tests creation of minutes based on a meeting invitation document
@@ -63,6 +65,7 @@ class MinutesHandlingTest(TimRouteTest):
              'Lista 1, (PDF) - Ilmoitusasiat\n'
              'Lista 2, (PDF) - Jaska Jokusen väitöskirjan arvostelu',
              '{"area_end": "kokous9"}'])
+        ote_index.document.clear_mem_cache()
         self.assertEqual("""## Pöytäkirjan asiakohtien otteet {area="kokous9"}
 
 
@@ -72,7 +75,12 @@ class MinutesHandlingTest(TimRouteTest):
 #- {area_end="kokous9"}
 """, ote_index.document.export_markdown(export_ids=False))
         ote1 = DocEntry.find_by_path(f"{d_kokous.location}/otteet/kokous{knro}/lista1")
-        self.assertEqual("""#- {rd="5" rp="dsENZazDtd1Z"}
+        self.assertEqual(r"""PÖYTÄKIRJANOTE - Lista 1 -  Ilmoitusasiat      
+\
+
+#- {rd="5" ra="ETUSIVU"}
+
+#- {rd="5" rp="dsENZazDtd1Z"}
 
 #- {rd="5" rp="sEj1vkUWmFmG"}
 
@@ -90,6 +98,26 @@ class MinutesHandlingTest(TimRouteTest):
         self.assert_content(
             ote_html,
             ['Kokoukset | Seuraava esityslista | pdf | Ohjeet | Keskustelu | Ylläpito',
+             'PÖYTÄKIRJANOTE - Lista 1 - Ilmoitusasiat',
+             '{"ra": "ETUSIVU", "rd": "5"}',
+             'JYVÄSKYLÄN YLIOPISTO\n'
+             'KOKOUSKUTSU\n'
+             '\n'
+             '\n'
+             '\n'
+             '\n'
+             'Informaatioteknologian tiedekunta\n'
+             '\n'
+             '\n'
+             '\n'
+             '\n'
+             '\n'
+             'TIEDEKUNTANEUVOSTON KOKOUS 9/2018\n'
+             'Aika 11.9.2018 klo 9:00\n'
+             'Paikka Jossakin Agoralla',
+             '',
+             '',
+             '{"ra": "ETUSIVU", "rd": "5"}',
              '!================!Page Break!================!\n'
              '\n'
              '\n'
@@ -132,9 +160,98 @@ class MinutesHandlingTest(TimRouteTest):
 $body$
 ```""")
         db.session.commit()
+        ote1.document.clear_mem_cache()
         ote1_tex = self.get_no_warn(f'/print/{ote1.path}',
                                     query_string={'file_type': 'latex'})
         self.assertEqual(r"""
+PÖYTÄKIRJANOTE - Lista 1 - Ilmoitusasiat\\
+~\\
+
+\begin{tabular}{p{10cm} l}
+JYVÄSKYLÄN YLIOPISTO              & KOKOUSKUTSU \\
+Informaatioteknologian tiedekunta &      \\
+\end{tabular}
+
+\hypertarget{tiedekuntaneuvoston-kokous-92018}{%
+\chapter{TIEDEKUNTANEUVOSTON KOKOUS
+9/2018}\label{tiedekuntaneuvoston-kokous-92018}}
+
+Aika 11.9.2018 klo 9:00
+
+Paikka Jossakin Agoralla
+
+\begin{table}[H]
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc}
+
+\hhline{~~~~}
+\multicolumn{1}{l}{\multirow{1}{*}{\cellcolor{lightgray}\fontsize{12}{0}\selectfont{\textcolor{black}{{\textbf{\emph{Jäsen}}}}}}} & \multicolumn{1}{l}{\multirow{1}{50.0pt}{\cellcolor{lightgray}\fontsize{12}{0}\selectfont{\textcolor{black}{{\textbf{\emph{Läsnä asiat:}}}}}}}& \multicolumn{1}{l}{\multirow{1}{*}{\cellcolor{lightgray}\fontsize{12}{0}\selectfont{\textcolor{black}{{\textbf{\emph{Varajäsen:}}}}}}}& \multicolumn{1}{l}{\multirow{1}{50.0pt}{\cellcolor{lightgray}\fontsize{12}{0}\selectfont{\textcolor{black}{{\textbf{\emph{Läsnä asiat:}}}}}}}
+\tabularnewline[15.0pt]
+\hhline{~~~~~~~}
+\multicolumn{4}{l}{\multirow{1}{*}{\fontsize{12}{0}\selectfont{\textcolor{black}{{\emph{Professorit}}}}}} 
+\tabularnewline[0pt]
+\hhline{~~~~~~~}
+\multicolumn{1}{l}{\multirow{1}{*}{\fontsize{12}{0}\selectfont{\textcolor{black}{{Dekaani, TkT Henki Henkilö}}}}} & \multicolumn{1}{l}{\multirow{1}{50.0pt}{\fontsize{12}{0}\selectfont{\textcolor{black}{{}}}}}& \multicolumn{1}{l}{\multirow{1}{*}{\fontsize{12}{0}\selectfont{\textcolor{black}{{}}}}}& \multicolumn{1}{l}{\multirow{1}{50.0pt}{\fontsize{12}{0}\selectfont{\textcolor{black}{{}}}}}
+\tabularnewline[0pt]
+\hhline{~~~~}
+\multicolumn{1}{l}{\multirow{1}{*}{\fontsize{12}{0}\selectfont{\textcolor{black}{{Professori, FT Henki Henkilö2}}}}} & \multicolumn{1}{l}{\multirow{1}{50.0pt}{\fontsize{12}{0}\selectfont{\textcolor{black}{{}}}}}& \multicolumn{1}{l}{\multirow{1}{*}{\fontsize{12}{0}\selectfont{\textcolor{black}{{Professori, FT Henki Henkilö3}}}}}& \multicolumn{1}{l}{\multirow{1}{50.0pt}{\fontsize{12}{0}\selectfont{\textcolor{black}{{}}}}}
+\tabularnewline[0pt]
+\hhline{~~~~}
+\multicolumn{1}{l}{\multirow{1}{*}{\fontsize{12}{0}\selectfont{\textcolor{black}{{Professori, FT Henki Henkilö4}}}}} & \multicolumn{1}{l}{\multirow{1}{50.0pt}{\fontsize{12}{0}\selectfont{\textcolor{black}{{}}}}}& \multicolumn{1}{l}{\multirow{1}{*}{\fontsize{12}{0}\selectfont{\textcolor{black}{{Professori, KTT Henki Henkilö5}}}}}& \multicolumn{1}{l}{\multirow{1}{50.0pt}{\fontsize{12}{0}\selectfont{\textcolor{black}{{}}}}}
+\tabularnewline[0pt]
+\hhline{~~~~}
+\multicolumn{1}{l}{\multirow{1}{*}{\fontsize{12}{0}\selectfont{\textcolor{black}{{Professori, FT Henki Henkilö6}}}}} & \multicolumn{1}{l}{\multirow{1}{50.0pt}{\fontsize{12}{0}\selectfont{\textcolor{black}{{}}}}}& \multicolumn{1}{l}{\multirow{1}{*}{\fontsize{12}{0}\selectfont{\textcolor{black}{{Professori, FT Henki Henkilö7}}}}}& \multicolumn{1}{l}{\multirow{1}{50.0pt}{\fontsize{12}{0}\selectfont{\textcolor{black}{{}}}}}
+\tabularnewline[0pt]
+\hhline{~~~~}
+\multicolumn{1}{l}{\multirow{1}{*}{\fontsize{12}{0}\selectfont{\textcolor{black}{{Professori, FT Henki Henkilö8}}}}} & \multicolumn{1}{l}{\multirow{1}{50.0pt}{\fontsize{12}{0}\selectfont{\textcolor{black}{{}}}}}& \multicolumn{1}{l}{\multirow{1}{*}{\fontsize{12}{0}\selectfont{\textcolor{black}{{Tutkimusprofessori, TkT Henki Henkilö9}}}}}& \multicolumn{1}{l}{\multirow{1}{50.0pt}{\fontsize{12}{0}\selectfont{\textcolor{black}{{}}}}}
+\tabularnewline[0pt]
+\hhline{~~~~~~~}
+\multicolumn{4}{l}{\multirow{1}{*}{\fontsize{12}{0}\selectfont{\textcolor{black}{{}}}}} 
+\tabularnewline[0pt]
+\hhline{~~~~~~~}
+\multicolumn{4}{l}{\multirow{1}{*}{\fontsize{12}{0}\selectfont{\textcolor{black}{{\emph{Muu opetus- ja tutkimushlöstö ja muu hlöstö}}}}}} 
+\tabularnewline[0pt]
+\hhline{~~~~~~~}
+\multicolumn{1}{l}{\multirow{1}{*}{\fontsize{12}{0}\selectfont{\textcolor{black}{{Projektitutkija, FT Henki Henkilö9}}}}} & \multicolumn{1}{l}{\multirow{1}{50.0pt}{\fontsize{12}{0}\selectfont{\textcolor{black}{{}}}}}& \multicolumn{1}{l}{\multirow{1}{*}{\fontsize{12}{0}\selectfont{\textcolor{black}{{Lehtori, KTT, LitM Henki Henkilö10}}}}}& \multicolumn{1}{l}{\multirow{1}{50.0pt}{\fontsize{12}{0}\selectfont{\textcolor{black}{{}}}}}
+\tabularnewline[0pt]
+\hhline{~~~~}
+\multicolumn{1}{l}{\multirow{1}{*}{\fontsize{12}{0}\selectfont{\textcolor{black}{{Lehtori, FT Henki Henkilö11}}}}} & \multicolumn{1}{l}{\multirow{1}{50.0pt}{\fontsize{12}{0}\selectfont{\textcolor{black}{{}}}}}& \multicolumn{1}{l}{\multirow{1}{*}{\fontsize{12}{0}\selectfont{\textcolor{black}{{Yliopistonopettaja, FT Henki Henkilö12}}}}}& \multicolumn{1}{l}{\multirow{1}{50.0pt}{\fontsize{12}{0}\selectfont{\textcolor{black}{{}}}}}
+\tabularnewline[0pt]
+\hhline{~~~~}
+\multicolumn{1}{l}{\multirow{1}{*}{\fontsize{12}{0}\selectfont{\textcolor{black}{{Yliopistonopettaja, FT Henki Henkilö12}}}}} & \multicolumn{1}{l}{\multirow{1}{50.0pt}{\fontsize{12}{0}\selectfont{\textcolor{black}{{}}}}}& \multicolumn{1}{l}{\multirow{1}{*}{\fontsize{12}{0}\selectfont{\textcolor{black}{{Yliopistonopettaja, FT Henki Henkilö13}}}}}& \multicolumn{1}{l}{\multirow{1}{50.0pt}{\fontsize{12}{0}\selectfont{\textcolor{black}{{}}}}}
+\tabularnewline[0pt]
+\hhline{~~~~~~~}
+\multicolumn{4}{l}{\multirow{1}{*}{\fontsize{12}{0}\selectfont{\textcolor{black}{{}}}}} 
+\tabularnewline[0pt]
+\hhline{~~~~~~~}
+\multicolumn{4}{l}{\multirow{1}{*}{\fontsize{12}{0}\selectfont{\textcolor{black}{{\emph{Opiskelijat}}}}}} 
+\tabularnewline[0pt]
+\hhline{~~~~~~~}
+\multicolumn{1}{l}{\multirow{1}{*}{\fontsize{12}{0}\selectfont{\textcolor{black}{{Henki Henkilö14}}}}} & \multicolumn{1}{l}{\multirow{1}{50.0pt}{\fontsize{12}{0}\selectfont{\textcolor{black}{{}}}}}& \multicolumn{1}{l}{\multirow{1}{*}{\fontsize{12}{0}\selectfont{\textcolor{black}{{Henki Henkilö15}}}}}& \multicolumn{1}{l}{\multirow{1}{50.0pt}{\fontsize{12}{0}\selectfont{\textcolor{black}{{}}}}}
+\tabularnewline[0pt]
+\hhline{~~~~}
+\multicolumn{1}{l}{\multirow{1}{*}{\fontsize{12}{0}\selectfont{\textcolor{black}{{Henki Henkilö16}}}}} & \multicolumn{1}{l}{\multirow{1}{50.0pt}{\fontsize{12}{0}\selectfont{\textcolor{black}{{}}}}}& \multicolumn{1}{l}{\multirow{1}{*}{\fontsize{12}{0}\selectfont{\textcolor{black}{{Henki Henkilö17}}}}}& \multicolumn{1}{l}{\multirow{1}{50.0pt}{\fontsize{12}{0}\selectfont{\textcolor{black}{{}}}}}
+\tabularnewline[0pt]
+\hhline{~~~~}
+\multicolumn{1}{l}{\multirow{1}{*}{\fontsize{12}{0}\selectfont{\textcolor{black}{{Henki Henkilö18}}}}} & \multicolumn{1}{l}{\multirow{1}{50.0pt}{\fontsize{12}{0}\selectfont{\textcolor{black}{{}}}}}& \multicolumn{1}{l}{\multirow{1}{*}{\fontsize{12}{0}\selectfont{\textcolor{black}{{Henki Henkilö19}}}}}& \multicolumn{1}{l}{\multirow{1}{50.0pt}{\fontsize{12}{0}\selectfont{\textcolor{black}{{}}}}}
+\tabularnewline[0pt]
+\hhline{~~~~}
+\multicolumn{1}{l}{\multirow{1}{*}{\fontsize{12}{0}\selectfont{\textcolor{black}{{}}}}} & \multicolumn{1}{l}{\multirow{1}{50.0pt}{\fontsize{12}{0}\selectfont{\textcolor{black}{{}}}}}& \multicolumn{1}{l}{\multirow{1}{*}{\fontsize{12}{0}\selectfont{\textcolor{black}{{}}}}}& \multicolumn{1}{l}{\multirow{1}{50.0pt}{\fontsize{12}{0}\selectfont{\textcolor{black}{{}}}}}
+\tabularnewline[0pt]
+\hhline{~~~~~~~}
+\multicolumn{4}{l}{\multirow{1}{*}{\fontsize{12}{0}\selectfont{\textcolor{black}{{\emph{Ulkopuoliset jäsenet:}}}}}} 
+\tabularnewline[0pt]
+\hhline{~~~~~~~}
+\multicolumn{1}{l}{\multirow{1}{*}{\fontsize{12}{0}\selectfont{\textcolor{black}{{Professori Henki Henkilö20}}}}} & \multicolumn{1}{l}{\multirow{1}{50.0pt}{\fontsize{12}{0}\selectfont{\textcolor{black}{{}}}}}& \multicolumn{1}{l}{\multirow{1}{*}{\fontsize{12}{0}\selectfont{\textcolor{black}{{}}}}}& \multicolumn{1}{l}{\multirow{1}{50.0pt}{\fontsize{12}{0}\selectfont{\textcolor{black}{{}}}}}
+\tabularnewline[0pt]
+\hhline{~~~~}
+\multicolumn{1}{l}{\multirow{1}{*}{\fontsize{12}{0}\selectfont{\textcolor{black}{{TkT Henki Henkilö21}}}}} & \multicolumn{1}{l}{\multirow{1}{50.0pt}{\fontsize{12}{0}\selectfont{\textcolor{black}{{}}}}}& \multicolumn{1}{l}{\multirow{1}{*}{\fontsize{12}{0}\selectfont{\textcolor{black}{{}}}}}& \multicolumn{1}{l}{\multirow{1}{50.0pt}{\fontsize{12}{0}\selectfont{\textcolor{black}{{}}}}}
+\tabularnewline[0pt]
+\hhline{~~~~}
+\end{tabular}%
+}
+\end{table}
+
 \pagebreak
 \begin{tabular}{p{10cm} l}
 JYVÄSKYLÄN YLIOPISTO              & Asialista 9/2018 \\
@@ -187,6 +304,94 @@ Todetaan ilmoitusasiat.
         ote2_tex = self.get_no_warn(f'/print/{ote2.path}',
                                     query_string={'file_type': 'latex'})
         self.assertEqual(r"""
+PÖYTÄKIRJANOTE - Lista 2 - Jaska Jokusen väitöskirjan arvostelu\\
+~\\
+
+\begin{tabular}{p{10cm} l}
+JYVÄSKYLÄN YLIOPISTO              & KOKOUSKUTSU \\
+Informaatioteknologian tiedekunta &      \\
+\end{tabular}
+
+\hypertarget{tiedekuntaneuvoston-kokous-92018}{%
+\chapter{TIEDEKUNTANEUVOSTON KOKOUS
+9/2018}\label{tiedekuntaneuvoston-kokous-92018}}
+
+Aika 11.9.2018 klo 9:00
+
+Paikka Jossakin Agoralla
+
+\begin{table}[H]
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc}
+
+\hhline{~~~~}
+\multicolumn{1}{l}{\multirow{1}{*}{\cellcolor{lightgray}\fontsize{12}{0}\selectfont{\textcolor{black}{{\textbf{\emph{Jäsen}}}}}}} & \multicolumn{1}{l}{\multirow{1}{50.0pt}{\cellcolor{lightgray}\fontsize{12}{0}\selectfont{\textcolor{black}{{\textbf{\emph{Läsnä asiat:}}}}}}}& \multicolumn{1}{l}{\multirow{1}{*}{\cellcolor{lightgray}\fontsize{12}{0}\selectfont{\textcolor{black}{{\textbf{\emph{Varajäsen:}}}}}}}& \multicolumn{1}{l}{\multirow{1}{50.0pt}{\cellcolor{lightgray}\fontsize{12}{0}\selectfont{\textcolor{black}{{\textbf{\emph{Läsnä asiat:}}}}}}}
+\tabularnewline[15.0pt]
+\hhline{~~~~~~~}
+\multicolumn{4}{l}{\multirow{1}{*}{\fontsize{12}{0}\selectfont{\textcolor{black}{{\emph{Professorit}}}}}} 
+\tabularnewline[0pt]
+\hhline{~~~~~~~}
+\multicolumn{1}{l}{\multirow{1}{*}{\fontsize{12}{0}\selectfont{\textcolor{black}{{Dekaani, TkT Henki Henkilö}}}}} & \multicolumn{1}{l}{\multirow{1}{50.0pt}{\fontsize{12}{0}\selectfont{\textcolor{black}{{}}}}}& \multicolumn{1}{l}{\multirow{1}{*}{\fontsize{12}{0}\selectfont{\textcolor{black}{{}}}}}& \multicolumn{1}{l}{\multirow{1}{50.0pt}{\fontsize{12}{0}\selectfont{\textcolor{black}{{}}}}}
+\tabularnewline[0pt]
+\hhline{~~~~}
+\multicolumn{1}{l}{\multirow{1}{*}{\fontsize{12}{0}\selectfont{\textcolor{black}{{Professori, FT Henki Henkilö2}}}}} & \multicolumn{1}{l}{\multirow{1}{50.0pt}{\fontsize{12}{0}\selectfont{\textcolor{black}{{}}}}}& \multicolumn{1}{l}{\multirow{1}{*}{\fontsize{12}{0}\selectfont{\textcolor{black}{{Professori, FT Henki Henkilö3}}}}}& \multicolumn{1}{l}{\multirow{1}{50.0pt}{\fontsize{12}{0}\selectfont{\textcolor{black}{{}}}}}
+\tabularnewline[0pt]
+\hhline{~~~~}
+\multicolumn{1}{l}{\multirow{1}{*}{\fontsize{12}{0}\selectfont{\textcolor{black}{{Professori, FT Henki Henkilö4}}}}} & \multicolumn{1}{l}{\multirow{1}{50.0pt}{\fontsize{12}{0}\selectfont{\textcolor{black}{{}}}}}& \multicolumn{1}{l}{\multirow{1}{*}{\fontsize{12}{0}\selectfont{\textcolor{black}{{Professori, KTT Henki Henkilö5}}}}}& \multicolumn{1}{l}{\multirow{1}{50.0pt}{\fontsize{12}{0}\selectfont{\textcolor{black}{{}}}}}
+\tabularnewline[0pt]
+\hhline{~~~~}
+\multicolumn{1}{l}{\multirow{1}{*}{\fontsize{12}{0}\selectfont{\textcolor{black}{{Professori, FT Henki Henkilö6}}}}} & \multicolumn{1}{l}{\multirow{1}{50.0pt}{\fontsize{12}{0}\selectfont{\textcolor{black}{{}}}}}& \multicolumn{1}{l}{\multirow{1}{*}{\fontsize{12}{0}\selectfont{\textcolor{black}{{Professori, FT Henki Henkilö7}}}}}& \multicolumn{1}{l}{\multirow{1}{50.0pt}{\fontsize{12}{0}\selectfont{\textcolor{black}{{}}}}}
+\tabularnewline[0pt]
+\hhline{~~~~}
+\multicolumn{1}{l}{\multirow{1}{*}{\fontsize{12}{0}\selectfont{\textcolor{black}{{Professori, FT Henki Henkilö8}}}}} & \multicolumn{1}{l}{\multirow{1}{50.0pt}{\fontsize{12}{0}\selectfont{\textcolor{black}{{}}}}}& \multicolumn{1}{l}{\multirow{1}{*}{\fontsize{12}{0}\selectfont{\textcolor{black}{{Tutkimusprofessori, TkT Henki Henkilö9}}}}}& \multicolumn{1}{l}{\multirow{1}{50.0pt}{\fontsize{12}{0}\selectfont{\textcolor{black}{{}}}}}
+\tabularnewline[0pt]
+\hhline{~~~~~~~}
+\multicolumn{4}{l}{\multirow{1}{*}{\fontsize{12}{0}\selectfont{\textcolor{black}{{}}}}} 
+\tabularnewline[0pt]
+\hhline{~~~~~~~}
+\multicolumn{4}{l}{\multirow{1}{*}{\fontsize{12}{0}\selectfont{\textcolor{black}{{\emph{Muu opetus- ja tutkimushlöstö ja muu hlöstö}}}}}} 
+\tabularnewline[0pt]
+\hhline{~~~~~~~}
+\multicolumn{1}{l}{\multirow{1}{*}{\fontsize{12}{0}\selectfont{\textcolor{black}{{Projektitutkija, FT Henki Henkilö9}}}}} & \multicolumn{1}{l}{\multirow{1}{50.0pt}{\fontsize{12}{0}\selectfont{\textcolor{black}{{}}}}}& \multicolumn{1}{l}{\multirow{1}{*}{\fontsize{12}{0}\selectfont{\textcolor{black}{{Lehtori, KTT, LitM Henki Henkilö10}}}}}& \multicolumn{1}{l}{\multirow{1}{50.0pt}{\fontsize{12}{0}\selectfont{\textcolor{black}{{}}}}}
+\tabularnewline[0pt]
+\hhline{~~~~}
+\multicolumn{1}{l}{\multirow{1}{*}{\fontsize{12}{0}\selectfont{\textcolor{black}{{Lehtori, FT Henki Henkilö11}}}}} & \multicolumn{1}{l}{\multirow{1}{50.0pt}{\fontsize{12}{0}\selectfont{\textcolor{black}{{}}}}}& \multicolumn{1}{l}{\multirow{1}{*}{\fontsize{12}{0}\selectfont{\textcolor{black}{{Yliopistonopettaja, FT Henki Henkilö12}}}}}& \multicolumn{1}{l}{\multirow{1}{50.0pt}{\fontsize{12}{0}\selectfont{\textcolor{black}{{}}}}}
+\tabularnewline[0pt]
+\hhline{~~~~}
+\multicolumn{1}{l}{\multirow{1}{*}{\fontsize{12}{0}\selectfont{\textcolor{black}{{Yliopistonopettaja, FT Henki Henkilö12}}}}} & \multicolumn{1}{l}{\multirow{1}{50.0pt}{\fontsize{12}{0}\selectfont{\textcolor{black}{{}}}}}& \multicolumn{1}{l}{\multirow{1}{*}{\fontsize{12}{0}\selectfont{\textcolor{black}{{Yliopistonopettaja, FT Henki Henkilö13}}}}}& \multicolumn{1}{l}{\multirow{1}{50.0pt}{\fontsize{12}{0}\selectfont{\textcolor{black}{{}}}}}
+\tabularnewline[0pt]
+\hhline{~~~~~~~}
+\multicolumn{4}{l}{\multirow{1}{*}{\fontsize{12}{0}\selectfont{\textcolor{black}{{}}}}} 
+\tabularnewline[0pt]
+\hhline{~~~~~~~}
+\multicolumn{4}{l}{\multirow{1}{*}{\fontsize{12}{0}\selectfont{\textcolor{black}{{\emph{Opiskelijat}}}}}} 
+\tabularnewline[0pt]
+\hhline{~~~~~~~}
+\multicolumn{1}{l}{\multirow{1}{*}{\fontsize{12}{0}\selectfont{\textcolor{black}{{Henki Henkilö14}}}}} & \multicolumn{1}{l}{\multirow{1}{50.0pt}{\fontsize{12}{0}\selectfont{\textcolor{black}{{}}}}}& \multicolumn{1}{l}{\multirow{1}{*}{\fontsize{12}{0}\selectfont{\textcolor{black}{{Henki Henkilö15}}}}}& \multicolumn{1}{l}{\multirow{1}{50.0pt}{\fontsize{12}{0}\selectfont{\textcolor{black}{{}}}}}
+\tabularnewline[0pt]
+\hhline{~~~~}
+\multicolumn{1}{l}{\multirow{1}{*}{\fontsize{12}{0}\selectfont{\textcolor{black}{{Henki Henkilö16}}}}} & \multicolumn{1}{l}{\multirow{1}{50.0pt}{\fontsize{12}{0}\selectfont{\textcolor{black}{{}}}}}& \multicolumn{1}{l}{\multirow{1}{*}{\fontsize{12}{0}\selectfont{\textcolor{black}{{Henki Henkilö17}}}}}& \multicolumn{1}{l}{\multirow{1}{50.0pt}{\fontsize{12}{0}\selectfont{\textcolor{black}{{}}}}}
+\tabularnewline[0pt]
+\hhline{~~~~}
+\multicolumn{1}{l}{\multirow{1}{*}{\fontsize{12}{0}\selectfont{\textcolor{black}{{Henki Henkilö18}}}}} & \multicolumn{1}{l}{\multirow{1}{50.0pt}{\fontsize{12}{0}\selectfont{\textcolor{black}{{}}}}}& \multicolumn{1}{l}{\multirow{1}{*}{\fontsize{12}{0}\selectfont{\textcolor{black}{{Henki Henkilö19}}}}}& \multicolumn{1}{l}{\multirow{1}{50.0pt}{\fontsize{12}{0}\selectfont{\textcolor{black}{{}}}}}
+\tabularnewline[0pt]
+\hhline{~~~~}
+\multicolumn{1}{l}{\multirow{1}{*}{\fontsize{12}{0}\selectfont{\textcolor{black}{{}}}}} & \multicolumn{1}{l}{\multirow{1}{50.0pt}{\fontsize{12}{0}\selectfont{\textcolor{black}{{}}}}}& \multicolumn{1}{l}{\multirow{1}{*}{\fontsize{12}{0}\selectfont{\textcolor{black}{{}}}}}& \multicolumn{1}{l}{\multirow{1}{50.0pt}{\fontsize{12}{0}\selectfont{\textcolor{black}{{}}}}}
+\tabularnewline[0pt]
+\hhline{~~~~~~~}
+\multicolumn{4}{l}{\multirow{1}{*}{\fontsize{12}{0}\selectfont{\textcolor{black}{{\emph{Ulkopuoliset jäsenet:}}}}}} 
+\tabularnewline[0pt]
+\hhline{~~~~~~~}
+\multicolumn{1}{l}{\multirow{1}{*}{\fontsize{12}{0}\selectfont{\textcolor{black}{{Professori Henki Henkilö20}}}}} & \multicolumn{1}{l}{\multirow{1}{50.0pt}{\fontsize{12}{0}\selectfont{\textcolor{black}{{}}}}}& \multicolumn{1}{l}{\multirow{1}{*}{\fontsize{12}{0}\selectfont{\textcolor{black}{{}}}}}& \multicolumn{1}{l}{\multirow{1}{50.0pt}{\fontsize{12}{0}\selectfont{\textcolor{black}{{}}}}}
+\tabularnewline[0pt]
+\hhline{~~~~}
+\multicolumn{1}{l}{\multirow{1}{*}{\fontsize{12}{0}\selectfont{\textcolor{black}{{TkT Henki Henkilö21}}}}} & \multicolumn{1}{l}{\multirow{1}{50.0pt}{\fontsize{12}{0}\selectfont{\textcolor{black}{{}}}}}& \multicolumn{1}{l}{\multirow{1}{*}{\fontsize{12}{0}\selectfont{\textcolor{black}{{}}}}}& \multicolumn{1}{l}{\multirow{1}{50.0pt}{\fontsize{12}{0}\selectfont{\textcolor{black}{{}}}}}
+\tabularnewline[0pt]
+\hhline{~~~~}
+\end{tabular}%
+}
+\end{table}
+
 \pagebreak
 \begin{tabular}{p{10cm} l}
 JYVÄSKYLÄN YLIOPISTO              & Asialista 9/2018 \\
