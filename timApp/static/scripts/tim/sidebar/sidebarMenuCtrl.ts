@@ -51,7 +51,7 @@ export class SidebarMenuCtrl implements IController {
     private lastTab: number;
     private vctrl?: Require<ViewCtrl>;
     private bookmarks: {};
-    private documentMemoMinutes: string = '';
+    private documentMemoMinutes: string | undefined;
     private docSettings?: {macros?: {knro?: string}};
     private hideLinks: boolean = false;
     private displayIndex?: IHeaderDisplayIndexItem[];
