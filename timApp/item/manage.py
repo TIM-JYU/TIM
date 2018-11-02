@@ -458,7 +458,7 @@ def copy_folder(f_from: Folder, f_to: Folder, modifier: UserGroup, exclude_re):
         nd = DocEntry.create(join_location(f_to.path, d.short_name), title=d.title)
         copy_rights(d, nd)
         nd.document.modifier_group_id = modifier.id
-        for tr, new_tr in copy_document_and_enum_translations(d, nd):
+        for tr, new_tr in copy_document_and_enum_translations(d, nd, copy_uploads=True):
             copy_rights(tr, new_tr)
     for f in f_from.get_all_folders():
         if exclude_re.search(f.path):

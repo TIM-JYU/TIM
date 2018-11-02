@@ -13,7 +13,7 @@ from flask import session
 
 from timApp.auth.accesshelper import verify_view_access, verify_teacher_access, verify_seeanswers_access, \
     get_rights, has_edit_access, get_doc_or_abort
-from timApp.document.create_item import create_or_copy_item
+from timApp.document.create_item import create_or_copy_item, create_citation_doc
 from timApp.document.post_process import post_process_pars, \
     hide_names_in_teacher
 from timApp.folder.folder_view import try_return_folder
@@ -474,7 +474,10 @@ def create_item_route():
     if use_template is None:
         use_template = True
 
-    item = create_or_copy_item(item_path, item_type, item_title, cite_id, copy_id, template_name, use_template)
+    if cite_id:
+        item = create_citation_doc(cite_id, item_path, item_title)
+    else:
+        item = create_or_copy_item(item_path, item_type, item_title, copy_id, template_name, use_template)
     db.session.commit()
     return json_response(item)
 

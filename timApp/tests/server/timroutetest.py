@@ -1,5 +1,5 @@
 """Defines the TimRouteTest class."""
-
+import io
 import json
 import socket
 import unittest
@@ -711,6 +711,9 @@ class TimRouteTest(TimDbTest):
         if par:
             data['par'] = par
         return self.json_post(f'/preview/{d.id}', data, **kwargs)
+
+    def upload_file(self, d: DocInfo, content: bytes, filename: str):
+        return self.post('/upload/', data={'doc_id': str(d.id), 'file': (io.BytesIO(content), filename)})
 
 
 if __name__ == '__main__':

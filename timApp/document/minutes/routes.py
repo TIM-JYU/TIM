@@ -173,7 +173,14 @@ def create_minutes_route():
 
     verify_manage_access(d)
 
-    item = create_or_copy_item(item_path, "document", item_title, copy_id=copy_id, use_template=False)
+    item = create_or_copy_item(
+        item_path,
+        "document",
+        item_title,
+        copy_id=copy_id,
+        use_template=False,
+        copy_uploads=False,
+    )
     item.document.add_setting(DocSettings.memo_minutes_key, "minutes")
     db.session.commit()
     return json_response(item)

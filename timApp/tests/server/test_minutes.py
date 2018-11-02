@@ -2,30 +2,42 @@ from timApp.admin.replace_in_documents import perform_replace, ReplaceArguments
 from timApp.document.docentry import DocEntry
 from timApp.document.specialnames import TEMPLATE_FOLDER_NAME, PRINT_FOLDER_NAME, PREAMBLE_FOLDER_NAME
 from timApp.tests.browser.browsertest import BrowserTest
+from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.timdb.sqa import db
 from timApp.user.usergroup import UserGroup
 from timApp.util.utils import EXAMPLE_DOCS_PATH
 
 
-# BrowserTest is required because test needs in-process plugin (timTable) and
-# TimRouteTest's testclient is not multithreaded.
-class MinutesHandlingTest(BrowserTest):
+# TODO: Logging in as different user does not work in BrowserTest classes
+class MinutesCreation(TimRouteTest):
 
     def test_minutes_creation(self):
         # Tests creation of minutes based on a meeting invitation document
         self.login_test1()
         knro = 3
         d = self.create_doc(settings={"macros": {"knro": knro}})
+        j = self.upload_file(d, b'GIF87a', 'test.jpg')
+        image_path = j['image']
         minutes_document_path = f"{d.location}/pk/pk{knro}"
         self.json_post("/minutes/createMinutes",
                        json_data={"item_path": minutes_document_path,
                                   "item_title": f"pk{knro}",
                                   "copy": d.id})
+
         d2 = DocEntry.find_by_path(minutes_document_path)
         chg = d2.document.get_changelog()
         self.assertEqual(self.get_test_user_1_group_id(), chg.entries[0].group_id)
         self.assertTrue(d2.document.get_settings().memo_minutes() == "minutes")
 
+        # Files should not get copied to minutes document.
+        self.test_user_2.grant_access(d2.id, 'view')
+        self.login_test2()
+        self.get(f'/images/{image_path}', expect_status=403)
+
+
+# BrowserTest is required because test needs in-process plugin (timTable) and
+# TimRouteTest's testclient is not multithreaded.
+class MinutesHandling(BrowserTest):
     def test_minute_extracts(self):
         # Tests creation of extracts from a full minutes document
         self.login_test1()

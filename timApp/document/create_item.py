@@ -65,7 +65,15 @@ def get_templates_for_folder(folder: Folder) -> List[DocEntry]:
     return templates
 
 
-def do_create_item(item_path, item_type, item_title, copied_doc: Optional[DocInfo], template_name, use_template=True):
+def do_create_item(
+        item_path,
+        item_type,
+        item_title,
+        copied_doc: Optional[DocInfo],
+        template_name,
+        use_template=True,
+        copy_uploads=True,
+):
     item = create_item(item_path,
                        item_type,
                        item_title,
@@ -74,7 +82,7 @@ def do_create_item(item_path, item_type, item_title, copied_doc: Optional[DocInf
 
     if isinstance(item, DocInfo):
         if copied_doc:
-            for tr, new_tr in copy_document_and_enum_translations(copied_doc, item):
+            for tr, new_tr in copy_document_and_enum_translations(copied_doc, item, copy_uploads=copy_uploads):
                 copy_default_rights(new_tr.id, BlockType.Document)
         elif use_template:
             templates = get_templates_for_folder(item.parent)
@@ -90,8 +98,9 @@ def do_create_item(item_path, item_type, item_title, copied_doc: Optional[DocInf
     return item
 
 
-def copy_document_and_enum_translations(source: DocInfo, target: DocInfo) -> Generator[Tuple[DocInfo, DocInfo], None, None]:
-    target.children.extend(source.children)  # required to retain rights to uploaded files
+def copy_document_and_enum_translations(source: DocInfo, target: DocInfo, copy_uploads: bool) -> Generator[Tuple[DocInfo, DocInfo], None, None]:
+    if copy_uploads:
+        target.children.extend(source.children)  # required to retain rights to uploaded files
 
     # Copy tags except course code and subject.
     for tag in source.block.tags:
@@ -116,11 +125,15 @@ def copy_document_and_enum_translations(source: DocInfo, target: DocInfo) -> Gen
             yield tr, new_tr
 
 
-def create_or_copy_item(item_path: str, item_type: str, item_title: str, cite_id: int = None, copy_id: int = None,
-                        template_name: str = None, use_template: bool = True):
-    if cite_id:
-        return create_citation_doc(cite_id, item_path, item_title)
-
+def create_or_copy_item(
+        item_path: str,
+        item_type: str,
+        item_title: str,
+        copy_id: int = None,
+        template_name: str = None,
+        use_template: bool = True,
+        copy_uploads: bool = True,
+):
     d = None
     if copy_id:
         d = get_doc_or_abort(copy_id)
@@ -129,7 +142,7 @@ def create_or_copy_item(item_path: str, item_type: str, item_title: str, cite_id
         vr = d.document.validate()
         if vr.issues:
             abort(400, f'The following errors must be fixed before copying:\n{vr}')
-    item = do_create_item(item_path, item_type, item_title, d, template_name, use_template)
+    item = do_create_item(item_path, item_type, item_title, d, template_name, use_template, copy_uploads=copy_uploads)
     return item
 
 

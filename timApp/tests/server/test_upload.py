@@ -57,8 +57,7 @@ class UploadTest(TimRouteTest):
         self.login_test1()
         d = self.create_doc()
         d_id = d.id
-        j = self.post('/upload/',
-                      data={'doc_id': str(d.id), 'file': (io.BytesIO(b'test file'), 'test.md')})
+        j = self.upload_file(d, b'test file', 'test.md')
         d = DocEntry.find_by_id(d_id)
         up_id = d.block.children[0].id
         self.assertEqual(f'{up_id}/test.md', j['file'])
@@ -102,5 +101,5 @@ class UploadTest(TimRouteTest):
     def create_doc_with_image(self):
         d = self.create_doc()
         d_id = d.id
-        j = self.post('/upload/', data={'doc_id': str(d.id), 'file': (io.BytesIO(b'GIF87a'), 'test.jpg')})
+        j = self.upload_file(d, b'GIF87a', 'test.jpg')
         return d_id, j['image']
