@@ -2,6 +2,7 @@ export const KEY_1 = 49;
 export const KEY_2 = 50;
 export const KEY_3 = 51;
 export const KEY_4 = 52;
+export const KEY_5 = 53;
 export const KEY_B = 66;
 export const KEY_DOWN = 40;
 export const KEY_ENTER = 13;

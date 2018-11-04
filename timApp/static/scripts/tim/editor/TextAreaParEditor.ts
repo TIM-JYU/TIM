@@ -46,6 +46,9 @@ export class TextAreaParEditor extends BaseParEditor {
                 } else if (e.keyCode === KEY_4) {
                     this.headerClicked("####");
                     e.preventDefault();
+                } else if (e.keyCode === KEY_5) {
+                    this.headerClicked("#####");
+                    e.preventDefault();
                 } else if (e.keyCode === KEY_ENTER) {
                     this.endLineClicked();
                     e.preventDefault();

@@ -137,6 +137,17 @@ export class AceParEditor extends BaseParEditor {
             },
         });
         this.editor.commands.addCommand({
+            name: "h5",
+            bindKey: {
+                win: "Ctrl-5",
+                mac: "Command-5",
+                sender: "editor|cli",
+            },
+            exec: () => {
+                this.headerClicked("#####");
+            },
+        });
+        this.editor.commands.addCommand({
             name: "endLine",
             bindKey: {
                 win: "Ctrl-Enter",

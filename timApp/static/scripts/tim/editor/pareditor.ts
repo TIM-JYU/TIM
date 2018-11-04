@@ -255,7 +255,7 @@ ${backTicks}
                 ],
                 name: "Navigation",
             },
-            {
+            { // To change keys, change also:  TextAreaParEditor.ts ja AceParEditor.ts and maybe keycodes.ts
                 entries: [
                     {title: "Indent selection/line", func: () => this.editor!.indentClicked(), name: "&#8649;"},
                     {title: "Outdent selection/line", func: () => this.editor!.outdentClicked(), name: "&#8647;"},
