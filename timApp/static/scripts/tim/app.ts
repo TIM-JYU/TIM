@@ -1,6 +1,11 @@
 import angular, {
-    IFilterService, IHttpProvider, IHttpResponseTransformer,
-    IModule, IQProvider, IQService, IWindowService,
+    IFilterService,
+    IHttpProvider,
+    IHttpResponseTransformer,
+    IModule,
+    IQProvider,
+    IQService,
+    IWindowService,
 } from "angular";
 import aedatetimepicker from "angular-eonasdan-datetimepicker";
 import colorpicker from "angularjs-color-picker";
@@ -9,8 +14,7 @@ import ngSanitize from "angular-sanitize";
 import timer from "angular-timer";
 import uibootstrap from "angular-ui-bootstrap";
 import humanizeDuration from "humanize-duration";
-import {Moment} from "moment";
-import moment from "moment";
+import moment, {Moment} from "moment";
 import ngFileUpload from "ng-file-upload";
 import ngStorage from "ngstorage";
 import angularmodules from "tim/angularmodules";

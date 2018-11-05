@@ -6,7 +6,7 @@ import {IFormController, IRootElementService, IScope} from "angular";
 import {Moment} from "moment";
 import * as focusMe from "tim/ui/focusMe";
 import {DialogController, registerDialogComponent, showDialog} from "../ui/dialog";
-import {IItem, ITag, tagIsExpired, tagStyleClass, TagType} from "./IItem";
+import {IItem, ITag, tagStyleClass, TagType} from "./IItem";
 import {ADMIN_GROUPNAME, TEACHERS_GROUPNAME} from "../user/IUser";
 import {Users} from "../user/userService";
 import {$http} from "../util/ngimport";

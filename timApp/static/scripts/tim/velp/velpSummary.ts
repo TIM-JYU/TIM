@@ -9,8 +9,7 @@
  * @copyright 2016 Timber project members
  */
 
-import angular from "angular";
-import {IController} from "angular";
+import angular, {IController} from "angular";
 import {timApp} from "tim/app";
 import {Binding} from "../util/utils";
 import {IAnnotation, IUIFields} from "./velptypes";

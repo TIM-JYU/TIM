@@ -2,7 +2,7 @@ import {IController, IPromise, IRootElementService, IScope} from "angular";
 import "angular-ui-bootstrap";
 import {IModalInstanceService} from "angular-ui-bootstrap";
 import {timApp} from "../app";
-import {$rootScope, $templateCache, $uibModal, $window} from "../util/ngimport";
+import {$rootScope, $templateCache, $uibModal} from "../util/ngimport";
 import {Binding, markAsUsed, Require} from "../util/utils";
 import * as dg from "./draggable";
 import {DraggableController} from "./draggable";

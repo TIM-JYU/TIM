@@ -9,7 +9,7 @@ import {ngStorage} from "ngstorage";
 import {Binding, to} from "tim/util/utils";
 import {timApp} from "../app";
 import {$http, $localStorage} from "../util/ngimport";
-import {ITag, ITaggedItem, tagStyleClass, TagType} from "./IItem";
+import {ITag, ITaggedItem, tagStyleClass} from "./IItem";
 import {KEY_ENTER} from "../util/keycodes";
 
 class TaggedDocumentListCtrl implements IController {

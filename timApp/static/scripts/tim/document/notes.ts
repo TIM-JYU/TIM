@@ -10,9 +10,8 @@ import {EditPosition, EditType} from "./editing/editing";
 import {IExtraData, IParResponse} from "./editing/edittypes";
 import {onClick} from "./eventhandlers";
 import {addElementToParagraphMargin, getFirstParId, isActionablePar, Paragraph, ParOrArea} from "./parhelpers";
-import {markParRead, readingTypes} from "./readings";
+import {handleUnread, markParRead, readingTypes} from "./readings";
 import {ViewCtrl} from "./viewctrl";
-import {handleUnread} from "./readings";
 
 export interface INoteEditorOptions {
     noteData?: {id: string};

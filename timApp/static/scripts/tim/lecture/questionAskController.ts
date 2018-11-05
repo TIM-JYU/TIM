@@ -3,7 +3,10 @@ import * as answerSheet from "tim/document/question/dynamicAnswerSheet";
 import {markAsUsed} from "tim/util/utils";
 import {IPreviewParams, makePreview} from "../document/question/dynamicAnswerSheet";
 import {
-    deleteQuestionWithConfirm, fetchAndEditQuestion, fetchAskedQuestion, fetchQuestion,
+    deleteQuestionWithConfirm,
+    fetchAndEditQuestion,
+    fetchAskedQuestion,
+    fetchQuestion,
     showQuestionEditDialog,
 } from "../document/question/questionController";
 import {DialogController, registerDialogComponent, showDialog, showMessageDialog} from "../ui/dialog";

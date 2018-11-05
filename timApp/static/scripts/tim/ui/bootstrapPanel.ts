@@ -1,5 +1,4 @@
-import {IController} from "angular";
-import {IRootElementService} from "angular";
+import {IController, IRootElementService} from "angular";
 import {timApp} from "tim/app";
 import {Binding, Require} from "../util/utils";
 

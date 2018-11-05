@@ -2,7 +2,6 @@
  * Controller for merging attachments in TIM documents.
  */
 import {IRootElementService, IScope} from "angular";
-import {ngStorage} from "ngstorage";
 import {IItem} from "../../item/IItem";
 import {DialogController, registerDialogComponent, showDialog, showMessageDialog} from "../../ui/dialog";
 import {$http} from "../../util/ngimport";
