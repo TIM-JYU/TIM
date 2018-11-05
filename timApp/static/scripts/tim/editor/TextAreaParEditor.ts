@@ -2,7 +2,7 @@ import {IAngularEvent} from "angular";
 import {wrapText} from "../document/editing/editing";
 import {$log, $timeout} from "../util/ngimport";
 import {BaseParEditor, CURSOR, SelectionRange, focusAfter, IEditorCallbacks} from "./BaseParEditor";
-import {KEY_1, KEY_2, KEY_3, KEY_4, KEY_B, KEY_ENTER, KEY_I, KEY_O, KEY_S, KEY_TAB, KEY_Y} from "../util/keycodes";
+import {KEY_1, KEY_2, KEY_3, KEY_4, KEY_5, KEY_B, KEY_ENTER, KEY_I, KEY_O, KEY_S, KEY_TAB, KEY_Y} from "../util/keycodes";
 
 export class TextAreaParEditor extends BaseParEditor {
     public editor: JQuery;
