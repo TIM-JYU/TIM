@@ -363,7 +363,10 @@ def insert_heading_numbers(html_str: str, heading_info, auto_number_headings: bo
         curr_id = title_to_id(e.text)
         hcount = used.get(curr_id, 0)
         if hcount > 0:
-            e.attrib['id'] += '-' + str(hcount)
+            try:
+                e.attrib['id'] += '-' + str(hcount)
+            except KeyError:
+                e.set('id', f'{curr_id}-{hcount}')
         if auto_number_headings:
             level = int(e.tag[1])
             counts[level] += 1

@@ -297,3 +297,17 @@ macros:
         e = self.get(d.url, as_tree=True)
         pc: HtmlElement = e.cssselect('.parContent')[0]
         self.assertEqual('h2', pc.getchildren()[0].tag)
+
+    def test_html_heading_same_as_md(self):
+        self.login_test1()
+        d = self.create_doc(initial_par="""
+# x
+#-
+<h1>x</h1>
+        """)
+        e = self.get(d.url, as_tree=True)
+        content = e.cssselect('.parContent')
+        p1: HtmlElement = content[0].getchildren()[0]
+        p2: HtmlElement = content[1].getchildren()[0]
+        self.assertEqual('x', p1.get('id'))
+        self.assertEqual('x-1', p2.get('id'))
