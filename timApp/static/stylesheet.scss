@@ -334,6 +334,13 @@ a .glyphicon {
         border-radius: 0;
         overflow: $pre-overflow;
 
+        // On Android Chrome, if there are wide pre blocks in the document, dialogs are not opened correctly because
+        // the page width is the maximum of the widths of the pre blocks. This forces horizontal scrolling for all pre
+        // blocks, fixing the issue.
+        @media screen and (max-width: $screen-xs-max) {
+            overflow-x: scroll;
+        }
+
         code {
             white-space: pre;
             font-size: $block-code-size;
