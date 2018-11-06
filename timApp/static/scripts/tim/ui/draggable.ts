@@ -82,6 +82,11 @@ interface IResizeStates {
     right: boolean;
 }
 
+export enum VisibilityFix {
+    Partial,
+    Full,
+}
+
 export class DraggableController implements IController {
     private static $inject = ["$scope", "$element"];
 
@@ -157,7 +162,7 @@ export class DraggableController implements IController {
         } else {
             this.element.css("position", "absolute");
             this.element.css("visibility", "visible");
-            this.restoreSizeAndPosition();
+            this.restoreSizeAndPosition(VisibilityFix.Partial);
         }
         setStorage(this.posKey + "detach", this.canDrag());
     }
@@ -234,11 +239,11 @@ export class DraggableController implements IController {
 
         // DialogController will call setInitialLayout in case draggable is inside modal
         if (!this.isModal()) {
-            await this.setInitialLayout();
+            await this.setInitialLayout(VisibilityFix.Partial);
         }
     }
 
-    public async setInitialLayout() {
+    public async setInitialLayout(vf: VisibilityFix) {
         if (this.absolute) {
             await this.makeModalPositionAbsolute();
         }
@@ -250,7 +255,7 @@ export class DraggableController implements IController {
         }
         if (this.posKey) {
             this.getSetDirs();
-            await this.restoreSizeAndPosition();
+            await this.restoreSizeAndPosition(vf);
             if (getStorage(this.posKey + "min") && !this.forceMaximized) {
                 this.toggleMinimize();
             }
@@ -266,7 +271,7 @@ export class DraggableController implements IController {
         }
     }
 
-    private async restoreSizeAndPosition() {
+    private async restoreSizeAndPosition(vf: VisibilityFix) {
         if (!this.posKey) {
             return;
         }
@@ -307,7 +312,14 @@ export class DraggableController implements IController {
             timLogTime("oldpos:" + oldPos.left + ", " + oldPos.top, "drag");
         }
         if (oldPos || oldSize) {
-            this.ensureVisibleInViewport();
+            switch (vf) {
+                case VisibilityFix.Partial:
+                    this.ensureVisibleInViewport();
+                    break;
+                case VisibilityFix.Full:
+                    this.ensureFullyInViewport();
+                    break;
+            }
         }
     }
 

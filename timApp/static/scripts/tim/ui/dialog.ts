@@ -5,7 +5,7 @@ import {timApp} from "../app";
 import {$rootScope, $templateCache, $uibModal} from "../util/ngimport";
 import {Binding, markAsUsed, Require} from "../util/utils";
 import * as dg from "./draggable";
-import {DraggableController} from "./draggable";
+import {DraggableController, VisibilityFix} from "./draggable";
 import {KEY_ESC} from "../util/keycodes";
 
 markAsUsed(dg);
@@ -29,7 +29,7 @@ export abstract class DialogController<T, Ret, ComponentName extends string> imp
         this.draggable.setCloseFn(() => this.dismiss());
         this.draggable.setCaption(this.getTitle());
         this.draggable.setDragClickFn(() => bringToFront(this.scope));
-        this.draggable.setInitialLayout();
+        this.draggable.setInitialLayout(this.getInitialVisibility());
         bringToFront(this.scope);
         document.addEventListener("keydown", this.handleEscPress);
     }
@@ -42,6 +42,10 @@ export abstract class DialogController<T, Ret, ComponentName extends string> imp
 
     public getDraggable() {
         return this.draggable;
+    }
+
+    protected getInitialVisibility(): VisibilityFix {
+        return VisibilityFix.Full;
     }
 
     protected close(returnValue: Ret) {
