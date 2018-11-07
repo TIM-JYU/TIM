@@ -12,6 +12,7 @@ interface IOptions {
     sort: string;
     periodFrom: any;
     periodTo: any;
+    consent: string;
 }
 
 export interface IAllAnswersParams {
@@ -47,6 +48,7 @@ export class AllAnswersCtrl extends DialogController<{params: IAllAnswersParams}
             sort: "username",
             periodFrom: null,
             periodTo: null,
+            consent: "any",
         };
         this.$storage = $localStorage.$default({
             allAnswersOptions: this.options,

@@ -23,7 +23,7 @@ from timApp.plugin.plugin import Plugin
 from timApp.plugin.pluginControl import find_task_ids, pluginify
 from timApp.util.utils import try_load_json, get_current_time
 from timApp.plugin.pluginexception import PluginException
-from timApp.util.flask.requesthelper import verify_json_params, unpack_args, get_option
+from timApp.util.flask.requesthelper import verify_json_params, unpack_args, get_option, get_consent_opt
 from timApp.util.flask.responsehelper import json_response, ok_response
 from timApp.auth.sessioninfo import get_current_user_id, logged_in
 from timApp.auth.sessioninfo import get_current_user_object, get_session_users, get_current_user_group
@@ -376,6 +376,7 @@ def get_all_answers_as_list(task_ids: List[str]):
     name_opt = get_option(request, 'name', 'both')
     sort_opt = get_option(request, 'sort', 'task')
     print_opt = get_option(request, 'print', 'all')
+    consent = get_consent_opt()
     printname = name_opt == 'both'
 
     period_from = datetime.min.replace(tzinfo=timezone.utc)
@@ -432,7 +433,8 @@ def get_all_answers_as_list(task_ids: List[str]):
                                                 sort_opt,
                                                 print_opt,
                                                 period_from,
-                                                period_to)
+                                                period_to,
+                                                consent=consent)
     return all_answers
 
 

@@ -94,6 +94,23 @@ class ReadingsTest(TimRouteTest):
                       'on_screen': 0,
                       'username': 'testuser2'}
                  ])
+        self.get(f'/read/stats/{doc.id}', query_string={'consent': 'any'},
+                 expect_content=[
+                     {'any_of_phs': 0,
+                      'click_par': 0,
+                      'click_red': 3,
+                      'hover_par': 0,
+                      'on_screen': 0,
+                      'username': 'testuser1'},
+                     {'any_of_phs': 0,
+                      'click_par': 0,
+                      'click_red': 3,
+                      'hover_par': 0,
+                      'on_screen': 0,
+                      'username': 'testuser2'}
+                 ])
+        self.get(f'/read/stats/{doc.id}', query_string={'consent': 'true'},
+                 expect_content=[])
         self.get(f'/read/stats/{doc.id}',
                  query_string={'blocks': ';'.join(p.get_id() for p in pars[0:2])},
                  expect_content=[

@@ -1,10 +1,12 @@
 import itertools
 
-from flask import Request, current_app
+from flask import Request, current_app, request
 from flask import request, abort
+from typing import Optional
 from werkzeug.wrappers import BaseRequest
 
 from timApp.timdb.exceptions import InvalidReferenceException
+from timApp.user.user import Consent
 
 
 def verify_json_params(*args: str, require=True, default=None, error_msgs=None):
@@ -89,3 +91,16 @@ def is_testing():
 
 def is_localhost():
     return current_app.config['TIM_HOST'] in ('http://localhost', 'http://nginx')
+
+
+def get_consent_opt() -> Optional[Consent]:
+    consent_opt = get_option(request, 'consent', 'any')
+    if consent_opt == 'true':
+        consent = Consent.CookieAndData
+    elif consent_opt == 'false':
+        consent = Consent.CookieOnly
+    elif consent_opt == 'any':
+        consent = None
+    else:
+        return abort(400, 'Invalid consent option. Must be "true", "false" or "any".')
+    return consent

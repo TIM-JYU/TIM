@@ -10,6 +10,7 @@ from timApp.timdb.sqa import tim_main_execute
 from timApp.answer.answer_models import AnswerTag, UserAnswer
 from timApp.answer.answer import Answer
 from timApp.timdb.timdbbase import TimDbBase, result_as_dict_list
+from timApp.user.user import Consent
 from timApp.util.utils import get_sql_template
 
 
@@ -126,7 +127,8 @@ class Answers(TimDbBase):
                         sort: str,
                         print_opt: str,
                         period_from: datetime,
-                        period_to: datetime) -> List[str]:
+                        period_to: datetime,
+                        consent: Optional[Consent]) -> List[str]:
         """Gets all answers to the specified tasks.
 
         :param period_from: The minimum answering time for answers.
@@ -163,7 +165,12 @@ class Answers(TimDbBase):
         order_by = 'a.task_id, u.name'
         if sort == 'username':
             order_by = 'u.name, a.task_id'
-
+        consent_str = ''
+        if consent is not None:
+            if consent == Consent.CookieAndData:
+                consent_str = "AND u.consent = 'CookieAndData'"
+            else:
+                consent_str = "AND u.consent = 'CookieOnly'"
         c = self.db.cursor()
         sql = f"""
 SELECT DISTINCT u.name, a.task_id, a.content, a.answered_on, n, a.points, u.real_name
@@ -172,6 +179,7 @@ FROM
 FROM answer AS a, userAnswer AS ua, useraccount AS u
 WHERE a.task_id IN ({get_sql_template(task_ids)}) AND ua.answer_id = a.id AND u.id = ua.user_id AND a.answered_on >= %s AND a.answered_on < %s
 {validstr}
+{consent_str}
 {groups}
 ) t
 JOIN answer a ON a.id = t.id JOIN useranswer ua ON ua.answer_id = a.id JOIN useraccount u ON u.id = ua.user_id

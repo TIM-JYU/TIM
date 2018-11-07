@@ -345,6 +345,7 @@ class PluginTest(TimRouteTest):
 {'Test user 2'}; {'testuser2'}; {re.escape(task_id)}; {date_re}; 1; 2\.0
 \[True, True, True\]
         """.strip())
+        self.assertEqual('', self.get(f'/allAnswersPlain/{task_id}', query_string={'consent': 'true'}))
 
         # make sure invalid date won't throw
         self.get(f'/allDocumentAnswersPlain/{doc.id}', query_string={'period': 'other', 'periodTo': 'asd'})
