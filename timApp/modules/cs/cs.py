@@ -395,6 +395,8 @@ def get_html(self, ttype, query):
         else:
             cache_class = ''
 
+        image_attributes = cs_min_sanitize(get_param(query, "imageAttributes", ""))
+
         console = ret['web'].get('console', None)
         if console:
            if not is_html:
@@ -410,8 +412,11 @@ def get_html(self, ttype, query):
             pngenc = b64encode(pngdata)
             _,imgext = splitext(img)
             imgext = imgext[1:]
-            htmldata += '<img src="data:image/'+imgext+';base64, ' + pngenc.decode() + '" />'
-            os.remove(img)
+            htmldata += '<img src="data:image/'+imgext+';base64, ' + pngenc.decode() + '" ' + image_attributes + '/>'
+            try:
+                os.remove(img)
+            except:
+                pass
 
         htmldata += get_cache_footer(query)
 
