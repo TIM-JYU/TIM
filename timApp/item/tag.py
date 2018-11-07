@@ -14,9 +14,6 @@ class TagType(Enum):
     Subject = 3
     """The Tag is the name for a subject."""
 
-    def to_json(self):
-        return self.value
-
 
 class Tag(db.Model):
     """A tag with associated document id, tag name, type and expiration date."""

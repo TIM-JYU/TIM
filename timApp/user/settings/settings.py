@@ -7,19 +7,20 @@ from jinja2 import TemplateNotFound
 
 from timApp.auth.accesshelper import verify_logged_in, verify_admin
 from timApp.notification.notify import get_current_user_notifications
-from timApp.util.flask.requesthelper import get_option
-from timApp.util.flask.responsehelper import json_response
+from timApp.util.flask.requesthelper import get_option, verify_json_params
+from timApp.util.flask.responsehelper import json_response, ok_response
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.user.settings.theme import get_available_themes
 from timApp.auth.accesstype import AccessType
 from timApp.item.block import Block, BlockType
 from timApp.document.docentry import DocEntry
 from timApp.folder.folder import Folder
-from timApp.user.user import User
+from timApp.user.user import User, Consent
 from timApp.user.preferences import Preferences
 from timApp.timdb.sqa import db
 from timApp.auth.auth_models import BlockAccess
 from timApp.answer.answer_models import AnswerUpload
+from timApp.util.utils import get_current_time
 
 settings_page = Blueprint('settings_page',
                           __name__,
@@ -101,7 +102,6 @@ def get_user_info(u: User, include_doc_content=False):
 @settings_page.route('/info')
 @settings_page.route('/info/<username>')
 def get_info_route(username=None):
-    verify_logged_in()
     if username:
         verify_admin()
         u = User.get_by_name(username)
@@ -111,3 +111,17 @@ def get_info_route(username=None):
         u = get_current_user_object()
     include_doc_content = get_option(request, 'content', False)
     return json_response(get_user_info(u, include_doc_content))
+
+
+@settings_page.route('/updateConsent', methods=['POST'])
+def update_consent():
+    u = get_current_user_object()
+    v, = verify_json_params('consent')
+    try:
+        consent = Consent(v)
+    except ValueError:
+        return abort(400, 'Invalid consent value.')
+    u.consent = consent
+    u.consent_time = get_current_time()
+    db.session.commit()
+    return ok_response()

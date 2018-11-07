@@ -3,6 +3,7 @@ from datetime import datetime, timedelta, timezone
 from typing import List
 from typing import Optional, Union, Set
 
+from enum import Enum
 from sqlalchemy.orm import Query
 
 from timApp.answer.answer_models import UserAnswer
@@ -68,6 +69,11 @@ seeanswers_access_set = {t.value for t in [
 ]}
 
 
+class Consent(Enum):
+    CookieOnly = 1
+    CookieAndData = 2
+
+
 class User(db.Model):
     """A user account.
 
@@ -92,8 +98,11 @@ class User(db.Model):
     pass_ = db.Column('pass', db.Text)
     """Password hashed with bcrypt."""
 
-    yubikey = db.Column(db.Text)
-    """Yubikey."""
+    consent = db.Column(db.Enum(Consent), nullable=True)
+    """Consent for cookie/data collection."""
+
+    consent_time = db.Column(db.DateTime(timezone=True), nullable=True)
+    """Timestamp of last consent modification."""
 
     notifications = db.relationship('Notification', back_populates='user', lazy='dynamic')
     notifications_alt = db.relationship('Notification')
@@ -426,5 +435,6 @@ class User(db.Model):
         return {**self.basic_info_dict,
                 'group': self.get_personal_group(),
                 'groups': self.groups,
-                'folder': self.get_personal_folder()
+                'folder': self.get_personal_folder(),
+                'consent': self.consent,
                 } if full else self.basic_info_dict

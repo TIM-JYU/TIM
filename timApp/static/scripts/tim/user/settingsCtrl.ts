@@ -1,13 +1,24 @@
 import {IController} from "angular";
 import $ from "jquery";
 import {timApp} from "tim/app";
+import {ConsentType} from "../ui/consent";
 import {showMessageDialog} from "../ui/dialog";
 import {$http, $window} from "../util/ngimport";
-import {to} from "../util/utils";
+import {IOkResponse, to} from "../util/utils";
+import {Users} from "./userService";
 
 interface ISettings {
     css_combined: string;
     custom_css: string;
+}
+
+export async function setConsent(c: ConsentType) {
+    const r = await to($http.post<IOkResponse>("/settings/updateConsent", {consent: c}));
+    if (r.ok) {
+        // nothing to do
+    } else {
+        void showMessageDialog(r.result.data.error);
+    }
 }
 
 export class SettingsCtrl implements IController {
@@ -16,6 +27,7 @@ export class SettingsCtrl implements IController {
     private settings: ISettings;
     private cssFiles: {}[];
     private notifications: {}[];
+    private consent: ConsentType | undefined;
 
     constructor() {
         this.settings = $window.settings;
@@ -28,7 +40,7 @@ export class SettingsCtrl implements IController {
     }
 
     $onInit() {
-
+        this.consent = Users.getCurrent().consent;
     }
 
     $doCheck() {
@@ -44,6 +56,15 @@ export class SettingsCtrl implements IController {
         } else {
             void showMessageDialog(r.result.data.error);
         }
+        this.saving = false;
+    }
+
+    async updateConsent() {
+        if (this.consent == null) {
+            return;
+        }
+        this.saving = true;
+        await setConsent(this.consent);
         this.saving = false;
     }
 
@@ -144,6 +165,13 @@ timApp.component("timSettings", {
     </bootstrap-panel>
     <bootstrap-panel title="Other settings">
         <button class="btn btn-default" ng-click="$ctrl.clearLocalStorage()">Clear local settings storage</button>
+    </bootstrap-panel>
+    <bootstrap-panel title="Consent">
+        <tim-consent-checkbox lang="'en'" consent="$ctrl.consent"></tim-consent-checkbox>
+        <div>
+            <button class="timButton" ng-disabled="$ctrl.saving" ng-click="$ctrl.updateConsent()">Save changes</button>
+            <tim-loading ng-show="$ctrl.saving"></tim-loading>
+        </div>
     </bootstrap-panel>
 </form>
     `,

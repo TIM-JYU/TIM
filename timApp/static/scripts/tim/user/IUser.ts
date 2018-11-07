@@ -1,3 +1,5 @@
+import {ConsentType} from "../ui/consent";
+
 export const TEACHERS_GROUPNAME = "teachers";
 export const ADMIN_GROUPNAME = "Administrators";
 
@@ -10,6 +12,7 @@ export interface IUser {
 
 export interface IFullUser extends IUser {
     groups: IGroup[];
+    consent: ConsentType | undefined;
 }
 
 export interface IGroup {

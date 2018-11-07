@@ -9,6 +9,7 @@ from lxml.cssselect import CSSSelector
 from timApp.document.document import Document
 from timApp.markdown.markdownconverter import md_to_html
 from timApp.tests.server.timroutetest import TimRouteTest
+from timApp.user.user import Consent
 from timApp.user.userutils import get_anon_group_id, grant_view_access
 
 link_selector = CSSSelector('a')
@@ -258,6 +259,16 @@ class TimTest(TimRouteTest):
                           })
         finally:
             current_app.config['WTF_CSRF_METHODS'] = []
+
+    def test_consent(self):
+        self.login_test1()
+        self.assertEqual(None, self.current_user.consent)
+        self.json_post(f'/settings/updateConsent', {'consent': Consent.CookieAndData.value})
+        self.assertEqual(Consent.CookieAndData, self.current_user.consent)
+        self.json_post(f'/settings/updateConsent', {'consent': Consent.CookieOnly.value})
+        self.assertEqual(Consent.CookieOnly, self.current_user.consent)
+        self.json_post(f'/settings/updateConsent', {'consent': 9999}, expect_status=400)
+        self.json_post(f'/settings/updateConsent', {'consent': 'x'}, expect_status=400)
 
 
 if __name__ == '__main__':

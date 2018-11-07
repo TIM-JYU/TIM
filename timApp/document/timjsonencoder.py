@@ -1,6 +1,7 @@
 import datetime
 import json
 
+from enum import Enum
 from isodate import duration_isoformat
 from jinja2 import Undefined
 from sqlalchemy.ext.declarative import DeclarativeMeta
@@ -39,6 +40,8 @@ class TimJsonEncoder(json.JSONEncoder):
                 except TypeError:
                     data[field] = None
             return data
+        if isinstance(o, Enum):
+            return o.value
 
         from timApp.document.docparagraph import DocParagraph
         if isinstance(o, DocParagraph):  # currently not used anywhere

@@ -180,17 +180,12 @@ type Result<T, U> = Success<T> | Failure<U>;
  * Wraps the given promise so that it always gets fulfilled.
  * Adapted from await-to-js library: https://github.com/scopsy/await-to-js
  * @param promise Promise to wrap.
- * @param errorExt Optional error information.
  * @returns A promise that resolves to either a success or error.
  */
-export function to<T, U = {data: {error: string}}>(promise: IPromise<T>,
-                                                   errorExt?: object): IPromise<Result<T, U>> {
+export function to<T, U = {data: {error: string}}>(promise: IPromise<T>): IPromise<Result<T, U>> {
     return promise
         .then<Success<T>>((data: T) => ({ok: true, result: data}))
         .catch<Failure<U>>((err) => {
-            if (errorExt) {
-                Object.assign(err, errorExt);
-            }
             return {ok: false, result: err};
         });
 }

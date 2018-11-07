@@ -1,5 +1,6 @@
 import {IController} from "angular";
 import $ from "jquery";
+import {ngStorage} from "ngstorage";
 import {timApp} from "tim/app";
 import {showCourseDialog} from "../document/course/courseDialogCtrl";
 import {getActiveDocument} from "../document/document";
@@ -9,10 +10,12 @@ import {showTagDialog} from "../item/tagCtrl";
 import {showTagSearchDialog} from "../item/tagSearchCtrl";
 import {ILecture, ILectureListResponse2} from "../lecture/lecturetypes";
 import {ITemplate, showPrintDialog} from "../printing/printCtrl";
+import {showConsentDialog} from "../ui/consent";
 import {showMessageDialog} from "../ui/dialog";
 import {ADMIN_GROUPNAME, TEACHERS_GROUPNAME} from "../user/IUser";
+import {setConsent} from "../user/settingsCtrl";
 import {Users, UserService} from "../user/userService";
-import {$http, $window} from "../util/ngimport";
+import {$http, $localStorage, $window} from "../util/ngimport";
 import {IOkResponse, Require, to} from "../util/utils";
 
 /**
@@ -55,6 +58,7 @@ export class SidebarMenuCtrl implements IController {
     private docSettings?: {macros?: {knro?: string}};
     private hideLinks: boolean = false;
     private displayIndex?: IHeaderDisplayIndexItem[];
+    private storage: ngStorage.StorageService & {consent: null | number};
 
     constructor() {
         this.currentLecturesList = [];
@@ -73,15 +77,31 @@ export class SidebarMenuCtrl implements IController {
             this.active = 6;
         }
         this.lastTab = this.active;
+        this.storage = $localStorage.$default({
+            consent: null,
+        });
 
         this.updateLeftSide();
         $($window).resize(() => this.updateLeftSide());
     }
 
-    $onInit() {
+    async $onInit() {
         this.documentMemoMinutes = $window.memoMinutes;
         this.docSettings = $window.docSettings;
+        await this.processConsent();
+    }
 
+    private async processConsent() {
+        const current = Users.getCurrent();
+        if (this.storage.consent == null && current.consent == null) {
+            this.storage.consent = await showConsentDialog();
+        }
+        if (this.storage.consent != null && current.consent == null && Users.isLoggedIn()) {
+            await setConsent(this.storage.consent);
+        }
+        if (current.consent != null && this.storage.consent == null) {
+            this.storage.consent = current.consent;
+        }
     }
 
     updateLeftSide() {

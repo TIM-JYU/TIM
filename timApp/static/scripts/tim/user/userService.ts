@@ -18,7 +18,7 @@ export class UserService {
         this.group = group;
     }
 
-    public getCurrent(): IUser {
+    public getCurrent(): IFullUser {
         return this.current;
     }
 

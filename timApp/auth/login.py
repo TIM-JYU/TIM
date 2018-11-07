@@ -430,69 +430,6 @@ def quick_login(username):
     return redirect(url_for('view_page.index_page'))
 
 
-def get_yubico_client():
-    # You need to put the key file in timApp directory
-    # The first line is app key (5 numbers) and
-    # the second line is app secret (28 characters)
-
-    yubi_key_file = 'yubi.key'
-    if not os.path.exists(yubi_key_file):
-        return None
-
-    with open(yubi_key_file, 'rt') as f:
-        app_key = f.readline().rstrip('\n')
-        app_secret = f.readline().rstrip('\n')
-        return Yubico(app_key, app_secret)
-
-
-@login_page.route("/yubi_reg/<otp>")
-def yubi_register(otp):
-    """For registering a new YubiKey for a user"""
-    verify_logged_in()
-
-    client = get_yubico_client()
-    if not client:
-        abort(403, 'Yubico API keys not configured - see routes/login.py for details')
-
-    try:
-        if not client.verify(otp):
-            abort(403, 'Authentication failed')
-    except YubicoError:
-        abort(403, 'Authentication failed')
-
-    get_current_user_object().yubikey = otp[:12]
-    db.session.commit()
-    return ok_response()
-
-
-@login_page.route("/yubi_login/<username>/<otp>")
-def yubi_login(username, otp):
-    """Log in using an YubiKey (see http://www.yubico.com)."""
-    user = User.get_by_name(username)
-    if user is None:
-        abort(404, 'User not found.')
-
-    user_pubid = user.yubikey
-    if user_pubid is None or len(user_pubid) != 12:
-        abort(403, 'YubiKey login is not enabled for this account.')
-    if len(otp) != 44 or otp[:12] != user_pubid:
-        abort(403, 'OTP invalid or not registered to this account.')
-
-    client = get_yubico_client()
-    if not client:
-        abort(403, 'Yubico API keys not configured - see routes/login.py for details')
-
-    try:
-        if not client.verify(otp):
-            abort(403, 'Authentication failed')
-    except YubicoError:
-        abort(403, 'Authentication failed')
-
-    session['user_id'] = user.id
-    flash(f"Logged in as: {username}")
-    return redirect(url_for('view_page.index_page'))
-
-
 def log_in_as_anonymous(sess) -> User:
     timdb = get_timdb()
     user_name = 'Anonymous'
