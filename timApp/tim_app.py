@@ -48,6 +48,7 @@ from timApp.plugin.timtable.row_owner_info import RowOwnerInfo
 from timApp.readmark.readparagraph import ReadParagraph
 from timApp.slide.slidestatus import SlideStatus
 from timApp.timdb.sqa import db
+from timApp.user.consentchange import ConsentChange
 from timApp.user.newuser import NewUser
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
@@ -78,6 +79,7 @@ reg_models(
     BlockAccess,
     BlockAssociation,
     CommentNotification,
+    ConsentChange,
     DocEntry,
     DocGamified,
     DocumentGamificationPoint,

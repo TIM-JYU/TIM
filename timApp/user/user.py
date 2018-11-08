@@ -99,11 +99,9 @@ class User(db.Model):
     """Password hashed with bcrypt."""
 
     consent = db.Column(db.Enum(Consent), nullable=True)
-    """Consent for cookie/data collection."""
+    """Current consent for cookie/data collection."""
 
-    consent_time = db.Column(db.DateTime(timezone=True), nullable=True)
-    """Timestamp of last consent modification."""
-
+    consents = db.relationship('ConsentChange', back_populates='user', lazy='select')
     notifications = db.relationship('Notification', back_populates='user', lazy='dynamic')
     notifications_alt = db.relationship('Notification')
     groups = db.relationship('UserGroup', secondary=UserGroupMember.__table__,

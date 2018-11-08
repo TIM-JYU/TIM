@@ -263,10 +263,15 @@ class TimTest(TimRouteTest):
     def test_consent(self):
         self.login_test1()
         self.assertEqual(None, self.current_user.consent)
+        self.assertEqual(0, len(self.current_user.consents))
         self.json_post(f'/settings/updateConsent', {'consent': Consent.CookieAndData.value})
         self.assertEqual(Consent.CookieAndData, self.current_user.consent)
         self.json_post(f'/settings/updateConsent', {'consent': Consent.CookieOnly.value})
         self.assertEqual(Consent.CookieOnly, self.current_user.consent)
+        self.json_post(f'/settings/updateConsent', {'consent': Consent.CookieOnly.value})
+
+        self.assertEqual(2, len(self.current_user.consents))
+
         self.json_post(f'/settings/updateConsent', {'consent': 9999}, expect_status=400)
         self.json_post(f'/settings/updateConsent', {'consent': 'x'}, expect_status=400)
 

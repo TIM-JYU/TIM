@@ -7,6 +7,7 @@ from jinja2 import TemplateNotFound
 
 from timApp.auth.accesshelper import verify_logged_in, verify_admin
 from timApp.notification.notify import get_current_user_notifications
+from timApp.user.consentchange import ConsentChange
 from timApp.util.flask.requesthelper import get_option, verify_json_params
 from timApp.util.flask.responsehelper import json_response, ok_response
 from timApp.auth.sessioninfo import get_current_user_object
@@ -121,7 +122,8 @@ def update_consent():
         consent = Consent(v)
     except ValueError:
         return abort(400, 'Invalid consent value.')
-    u.consent = consent
-    u.consent_time = get_current_time()
-    db.session.commit()
+    if u.consent != consent:
+        u.consent = consent
+        u.consents.append(ConsentChange(consent=consent))
+        db.session.commit()
     return ok_response()
