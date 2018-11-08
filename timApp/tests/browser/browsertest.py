@@ -22,6 +22,8 @@ from timApp.tests.db.timdbtest import TEST_USER_1_NAME, TEST_USER_2_NAME, TEST_U
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.tests.timliveserver import TimLiveServer
 from timApp.document.docinfo import DocInfo
+from timApp.timdb.sqa import db
+from timApp.user.user import Consent
 
 PREV_ANSWER = 'answerbrowser .prevAnswer'
 
@@ -271,6 +273,10 @@ class BrowserTest(TimLiveServer, TimRouteTest):
     def wait_and_click(self, selector: str):
         self.wait.until(ec.element_to_be_clickable((By.CSS_SELECTOR, selector)))
         self.drv.find_element_by_css_selector(selector).click()
+
+    def accept_consent(self):
+        self.current_user.consent = Consent.CookieOnly
+        db.session.commit()
 
 
 def find_button_by_text(root: WebElement, text: str):

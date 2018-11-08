@@ -61,6 +61,7 @@ class QuestionTest(BrowserTest):
         """Create document questions and answer them."""
         self.login_browser_quick_test1()
         self.login_test1()
+        self.accept_consent()
 
         points = ['3', '1', '', '0']
         choices = [
