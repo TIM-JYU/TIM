@@ -35,13 +35,13 @@ timApp.component("timConsentChoice", {
     <label>
         <input ng-model="$ctrl.consent"
                ng-value="2"
-               type="radio"> <span ng-bind-html="$ctrl.getText('en', true)"></span> /
+               type="radio"> <span ng-bind-html="$ctrl.getText('en', true)"></span><br>
         <span ng-bind-html="$ctrl.getText('fi', true)"></span>
     </label>
-    <label>
+    <label style="font-size: small">
         <input ng-model="$ctrl.consent"
                ng-value="1"
-               type="radio"> <span ng-bind-html="$ctrl.getText('en', false)"></span> /
+               type="radio"> <span ng-bind-html="$ctrl.getText('en', false)"></span><br>
         <span ng-bind-html="$ctrl.getText('fi', false)"></span>
     </label>
 </div>
