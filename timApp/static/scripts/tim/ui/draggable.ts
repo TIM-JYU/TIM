@@ -13,7 +13,7 @@ import {
     IBounds,
     ISize,
     isMobileDevice,
-    setStorage
+    setStorage,
 } from "../util/utils";
 
 function getPixels(s: string) {
@@ -86,6 +86,8 @@ export enum VisibilityFix {
     Partial,
     Full,
 }
+
+type CssDir = "left" | "right" | "bottom" | "top";
 
 export class DraggableController implements IController {
     private static $inject = ["$scope", "$element"];
@@ -311,15 +313,13 @@ export class DraggableController implements IController {
             }
             timLogTime("oldpos:" + oldPos.left + ", " + oldPos.top, "drag");
         }
-        if (oldPos || oldSize) {
-            switch (vf) {
-                case VisibilityFix.Partial:
-                    this.ensureVisibleInViewport();
-                    break;
-                case VisibilityFix.Full:
-                    this.ensureFullyInViewport();
-                    break;
-            }
+        switch (vf) {
+            case VisibilityFix.Partial:
+                this.ensureVisibleInViewport();
+                break;
+            case VisibilityFix.Full:
+                this.ensureFullyInViewport();
+                break;
         }
     }
 
@@ -440,7 +440,7 @@ export class DraggableController implements IController {
         return this.lastPageXYPos;
     }
 
-    private getCss(key: "left" | "right" | "bottom" | "top") {
+    private getCss(key: CssDir) {
         return getPixels(this.element.css(key));
     }
 
@@ -471,18 +471,22 @@ export class DraggableController implements IController {
         this.setCssFromBound(bound);
     }
 
+    private addToCss(prop: CssDir, amount: number) {
+        this.element.css(prop, this.getCss(prop) + amount);
+    }
+
     private setCssFromBound(bound: IBounds) {
         if (this.setTop) {
-            this.element.css("top", this.getCss("top") - bound.top + bound.bottom);
+            this.addToCss("top", -bound.top + bound.bottom);
         }
         if (this.setBottom) {
-            this.element.css("bottom", this.getCss("bottom") - bound.bottom + bound.top);
+            this.addToCss("bottom", -bound.bottom + bound.top);
         }
         if (this.setLeft) {
-            this.element.css("left", this.getCss("left") - bound.left + bound.right);
+            this.addToCss("left", -bound.left + bound.right);
         }
         if (this.setRight) {
-            this.element.css("right", this.getCss("right") - bound.right + bound.left);
+            this.addToCss("right", -bound.right + bound.left);
         }
     }
 

@@ -338,7 +338,7 @@ a .glyphicon {
         // the page width is the maximum of the widths of the pre blocks. This forces horizontal scrolling for all pre
         // blocks, fixing the issue.
         @media screen and (max-width: $screen-xs-max) {
-            overflow-x: scroll;
+            // overflow-x: scroll;
         }
 
         code {

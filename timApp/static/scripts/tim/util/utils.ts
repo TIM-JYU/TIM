@@ -218,10 +218,52 @@ export type Binding<T, Type extends BindingType> = T;
 
 export type Require<T> = Binding<T, "<">;
 
+function getVisualViewport() {
+    const w = window as any;
+    if (!w.visualViewport) {
+        return undefined;
+    }
+    return w.visualViewport as {
+        height: number,
+        offsetLeft: number,
+        offsetTop: number,
+        onresize: null,
+        onscroll: null,
+        pageLeft: number,
+        pageTop: number,
+        scale: number,
+        width: number,
+    };
+}
+
+function fixClientRectForVisualViewport(r: ClientRect | DOMRect) {
+    const vw = getVisualViewport();
+    if (!vw) {
+        return r;
+    }
+    const newLeft = r.left - vw.offsetLeft;
+    const newTop = r.top - vw.offsetTop;
+    return {
+        bottom: newTop + r.height,
+        height: r.height,
+        left: newLeft,
+        right: newLeft + r.width,
+        top: newTop,
+        width: r.width,
+    };
+}
+
+export function getVisualBoundingRect(el: Element) {
+    return fixClientRectForVisualViewport(el.getBoundingClientRect());
+}
+
 export function getOutOffsetFully(el: Element): IBounds {
-    const rect = el.getBoundingClientRect();
+    const rect = getVisualBoundingRect(el);
     const bounds = {left: 0, top: 0, right: 0, bottom: 0};
     if (rect.top < 0) {
+        bounds.top = rect.top;
+    }
+    if (rect.top > 0 && isMobileDevice()) {
         bounds.top = rect.top;
     }
     const {width, height} = getViewPortSize();
@@ -239,7 +281,7 @@ export function getOutOffsetFully(el: Element): IBounds {
 
 export function getOutOffsetVisible(el: Element) {
     const minVisiblePixels = 20;
-    const rect = el.getBoundingClientRect();
+    const rect = getVisualBoundingRect(el);
     const bounds = {left: 0, top: 0, right: 0, bottom: 0};
     if (rect.top < 0) {
         bounds.top = rect.top;
@@ -268,6 +310,10 @@ export const empty = () => {
 
 // adapted from https://stackoverflow.com/a/11744120
 export function getViewPortSize() {
+    const vw = getVisualViewport();
+    if (vw) {
+        return {width: vw.width, height: vw.height};
+    }
     const w = window,
         d = document,
         e = d.documentElement,
