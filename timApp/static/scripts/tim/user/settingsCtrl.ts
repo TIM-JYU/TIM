@@ -167,7 +167,7 @@ timApp.component("timSettings", {
         <button class="btn btn-default" ng-click="$ctrl.clearLocalStorage()">Clear local settings storage</button>
     </bootstrap-panel>
     <bootstrap-panel title="Consent">
-        <tim-consent-checkbox lang="'en'" consent="$ctrl.consent"></tim-consent-checkbox>
+        <tim-consent-choice consent="$ctrl.consent"></tim-consent-choice>
         <div>
             <button class="timButton" ng-disabled="$ctrl.saving" ng-click="$ctrl.updateConsent()">Save changes</button>
             <tim-loading ng-show="$ctrl.saving"></tim-loading>

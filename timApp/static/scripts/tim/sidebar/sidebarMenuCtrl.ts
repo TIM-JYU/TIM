@@ -58,7 +58,11 @@ export class SidebarMenuCtrl implements IController {
     private docSettings?: {macros?: {knro?: string}};
     private hideLinks: boolean = false;
     private displayIndex?: IHeaderDisplayIndexItem[];
-    private storage: ngStorage.StorageService & {consent: null | number};
+    // Consent types:
+    // number corresponds to values of ConsentType
+    // null means that the user has approved only cookies (but has not seen the data collection options)
+    // undefined means that the user has not acknowledged anything yet
+    private storage: ngStorage.StorageService & {consent: null | undefined | number};
 
     constructor() {
         this.currentLecturesList = [];
@@ -78,7 +82,7 @@ export class SidebarMenuCtrl implements IController {
         }
         this.lastTab = this.active;
         this.storage = $localStorage.$default({
-            consent: null,
+            consent: undefined,
         });
 
         this.updateLeftSide();
@@ -93,8 +97,8 @@ export class SidebarMenuCtrl implements IController {
 
     private async processConsent() {
         const current = Users.getCurrent();
-        if (this.storage.consent == null && current.consent == null) {
-            this.storage.consent = await showConsentDialog();
+        if ((this.storage.consent === undefined && !Users.isLoggedIn()) || (Users.isLoggedIn() && current.consent == null)) {
+            this.storage.consent = await showConsentDialog(Users.isLoggedIn());
         }
         if (this.storage.consent != null && current.consent == null && Users.isLoggedIn()) {
             await setConsent(this.storage.consent);

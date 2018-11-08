@@ -5,7 +5,7 @@
 import {IRootElementService, IScope} from "angular";
 import * as focusMe from "tim/ui/focusMe";
 import {markAsUsed} from "../util/utils";
-import * as ccheckbox from "./consentCheckbox";
+import * as ccheckbox from "./consentChoice";
 import {DialogController, registerDialogComponent, showDialog} from "./dialog";
 
 markAsUsed(focusMe, ccheckbox);
@@ -15,10 +15,10 @@ export enum ConsentType {
     CookieAndData = 2,
 }
 
-export class ConsentController extends DialogController<{}, ConsentType, "timConsent"> {
+export class ConsentController extends DialogController<{params: {showDataCollectionOptions: boolean}}, ConsentType | null, "timConsent"> {
     private static $inject = ["$element", "$scope"];
 
-    private consent: ConsentType = ConsentType.CookieAndData;
+    private consent: ConsentType | null = null;
 
     constructor(protected element: IRootElementService, protected scope: IScope) {
         super(element, scope);
@@ -30,6 +30,14 @@ export class ConsentController extends DialogController<{}, ConsentType, "timCon
 
     public accept() {
         this.close(this.consent);
+    }
+
+    showDataCollection() {
+        return this.resolve.params.showDataCollectionOptions;
+    }
+
+    isIncomplete() {
+        return this.showDataCollection() && this.consent == null;
     }
 }
 
@@ -44,20 +52,24 @@ registerDialogComponent("timConsent",
         This site uses cookies to personalize experience and analyze traffic. By using the site you accept the
         <a href="/view/tim/Rekisteriseloste">privacy policy</a>.
 
-        <tim-consent-checkbox lang="'en'" consent="$ctrl.consent"></tim-consent-checkbox>
         <hr>
+
         Tämä sivusto käyttää evästeitä käyttäjäkokemuksen personointiin ja liikenteen analysointiin. Käyttämällä
         sivustoa hyväksyt <a href="/view/tim/Rekisteriseloste">tietosuojalausekkeen</a>.
+        <div ng-if="$ctrl.showDataCollection()">
+            <hr>
+            <tim-consent-choice consent="$ctrl.consent">
 
-        <tim-consent-checkbox lang="'fi'" consent="$ctrl.consent"></tim-consent-checkbox>
+            </tim-consent-choice>
+        </div>
     </dialog-body>
     <dialog-footer>
-        <button class="timButton" ng-click="$ctrl.accept()">Accept and close</button>
+        <button ng-disabled="$ctrl.isIncomplete()" class="timButton" ng-click="$ctrl.accept()">Accept and close</button>
     </dialog-footer>
 </tim-dialog>
 `,
     });
 
-export async function showConsentDialog() {
-    return await showDialog<ConsentController>("timConsent", {}).result;
+export async function showConsentDialog(showDataCollectionOptions: boolean) {
+    return await showDialog<ConsentController>("timConsent", {params: () => ({showDataCollectionOptions})}).result;
 }
