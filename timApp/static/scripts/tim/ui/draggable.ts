@@ -313,13 +313,15 @@ export class DraggableController implements IController {
             }
             timLogTime("oldpos:" + oldPos.left + ", " + oldPos.top, "drag");
         }
-        switch (vf) {
-            case VisibilityFix.Partial:
-                this.ensureVisibleInViewport();
-                break;
-            case VisibilityFix.Full:
-                this.ensureFullyInViewport();
-                break;
+        if (oldSize || oldPos || isMobileDevice()) {
+            switch (vf) {
+                case VisibilityFix.Partial:
+                    this.ensureVisibleInViewport();
+                    break;
+                case VisibilityFix.Full:
+                    this.ensureFullyInViewport();
+                    break;
+            }
         }
     }
 
