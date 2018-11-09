@@ -25,7 +25,7 @@ export class ConsentController extends DialogController<{params: {showDataCollec
     }
 
     public getTitle() {
-        return "Consent";
+        return "Consent / suostumus";
     }
 
     public accept() {
@@ -64,7 +64,7 @@ registerDialogComponent("timConsent",
         </div>
     </dialog-body>
     <dialog-footer>
-        <button ng-disabled="$ctrl.isIncomplete()" class="timButton" ng-click="$ctrl.accept()">Accept and close</button>
+        <button ng-disabled="$ctrl.isIncomplete()" class="timButton" ng-click="$ctrl.accept()">Accept and close / Hyväksy ja sulje</button>
     </dialog-footer>
 </tim-dialog>
 `,
