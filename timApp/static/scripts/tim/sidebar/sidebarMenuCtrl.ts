@@ -92,7 +92,7 @@ export class SidebarMenuCtrl implements IController {
     async $onInit() {
         this.documentMemoMinutes = $window.memoMinutes;
         this.docSettings = $window.docSettings;
-        await this.processConsent();
+        // await this.processConsent();
     }
 
     private async processConsent() {
