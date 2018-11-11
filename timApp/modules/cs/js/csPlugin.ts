@@ -499,10 +499,12 @@ var languageTypes = {} as ILanguageTypes;
 // What are known language types (be carefull not to include partial word):
 languageTypes.runTypes     = ["pascal", "fortran","css","jypeli","scala","java","graphics","cc","c++","shell","vpython","py2", "py","fs","clisp",
                               "jjs","psql","sql","alloy","text","cs","run","md","js","glowscript","sage","simcir",
-                              "xml", "octave","lua", "swift","mathcheck", "html", "processing", "rust", "r", "wescheme", "ping", "kotlin" ];
+                              "xml", "octave","lua", "swift","mathcheck", "html", "processing", "rust", "r", "wescheme", "ping", "kotlin",
+                              "smalltalk"];
 languageTypes.aceModes     = ["pascal", "fortran", "css","csharp","scala","java","java"    ,"c_cpp","c_cpp","sh","python","python", "python","fsharp","lisp",
                               "javascript","sql","sql","alloy","text","csharp","run","text","javascript","javascript","python","json",
-                              "xml","matlab","lua","swift","text", "html", "javascript", "text", "r", "scheme", "text", "kotlin"];
+                              "xml","matlab","lua","swift","text", "html", "javascript", "text", "r", "scheme", "text", "kotlin",
+                              "smalltalk"];
 // For editor modes see: http://ace.c9.io/build/kitchen-sink.html ja sieltä http://ace.c9.io/build/demo/kitchen-sink/demo.js
 
 // What are known test types (be carefull not to include partial word):
@@ -540,7 +542,10 @@ languageTypes.isAllType = function(type) {
 
     if (!type) return false;
     type = type.toLowerCase();
-    return type.indexOf("all") >= 0;
+    if ( !type.startsWith("all") ) return false;
+    if ( type.match(/^all[^a-z0-9]/) ) return true;
+    return false;
+
 };
 
 
@@ -952,7 +957,7 @@ csApp.directiveFunction = function(t,isInput) {
 			csApp.set(scope,attrs,"argsstem",scope.isText ? (english ? "File name:" : "Tiedoston nimi:") : (english ? "Args:": "Args"));
 			csApp.set(scope,attrs,"userinput","");
 			csApp.set(scope,attrs,"userargs",scope.isText && isArgs ? scope.filename : "");
-			csApp.set(scope,attrs,"selectedLanguage", scope.type);
+			csApp.set(scope,attrs,"selectedLanguage", rt);
 			csApp.set(scope,attrs,"inputstem","");
 			csApp.set(scope,attrs,"inputrows",1);
 			csApp.set(scope,attrs,"toggleEditor",scope.isSimcir ? "True" : false);
@@ -2509,6 +2514,7 @@ csApp.Controller = function($scope,$transclude) {
                 enableLiveAutocompletion: false,
                 enableSnippets: true,
                 maxLines: $scope.maxRows
+                // showTokenInfo: true
             });
             // $scope.aceEditor.setOptions({enableLiveAutocompletion: $scope.autocomplete});
             $scope.aceEditor.setFontSize(15);
