@@ -453,10 +453,10 @@ class Java(Language):
         self.sourcefilename = self.javaname
 
     def get_cmdline(self, sourcecode):
-        return "javac -Xlint:all -cp %s %s" % (self.classpath, self.javaname)
+        return "javac --module-path /javafx-sdk-11.0.1/lib --add-modules=ALL-MODULE-PATH -Xlint:all -cp %s %s" % (self.classpath, self.javaname)
 
     def run(self, web, sourcelines, points_rule):
-        code, out, err, pwddir = self.runself(["java", "-cp", self.classpath, self.javaclassname],
+        code, out, err, pwddir = self.runself(["java", "--module-path", "/javafx-sdk-11.0.1/lib", "--add-modules=ALL-MODULE-PATH", "-cp", self.classpath, self.javaclassname],
                                               ulimit=df(self.ulimit, "ulimit -f 10000"))
         return code, out, err, pwddir
 
@@ -580,7 +580,7 @@ class Graphics(Java):
         if rect:
             a.extend(["--rect", rect])
         # print(a)
-        runcmd = ["java", "sample.Runner", self.javaclassname, "--captureName", "run/capture.png"]
+        runcmd = ["java", "--module-path", "/javafx-sdk-11.0.1/lib", "--add-modules=ALL-MODULE-PATH", "sample.Runner", self.javaclassname, "--captureName", "run/capture.png"]
         runcmd.extend(a)
         code, out, err, pwddir = self.runself(runcmd, cwd=self.prgpath)
         out, err = self.copy_image(web, code, out, err, points_rule)
