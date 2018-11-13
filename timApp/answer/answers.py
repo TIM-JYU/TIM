@@ -10,14 +10,14 @@ from timApp.timdb.sqa import tim_main_execute
 from timApp.answer.answer_models import AnswerTag, UserAnswer
 from timApp.answer.answer import Answer
 from timApp.timdb.timdbbase import TimDbBase, result_as_dict_list
-from timApp.user.user import Consent
+from timApp.user.user import Consent, User
 from timApp.util.utils import get_sql_template
 
 
 class Answers(TimDbBase):
 
     def save_answer(self,
-                    user_ids: List[int],
+                    users: List[User],
                     task_id: str,
                     content: str,
                     points: Optional[float],
@@ -29,7 +29,7 @@ class Answers(TimDbBase):
         :param points_given_by: The usergroup id who gave the points, or None if they were given by a plugin.
         :param tags: Tags for the answer.
         :param valid: Whether the answer is considered valid (e.g. sent before deadline, etc.)
-        :param user_ids: The id of the usergroup to which the answer belongs.
+        :param users: The id of the usergroup to which the answer belongs.
         :param task_id: The id of the task.
         :param content: The content of the answer.
         :param points: Points for the task.
@@ -37,10 +37,9 @@ class Answers(TimDbBase):
         """
         if tags is None:
             tags = []
-        existing_answers = self.get_common_answers(user_ids, task_id)
-        if len(existing_answers) > 0 and existing_answers[0]['content'] == content:
-            existing_id = existing_answers[0]['id']
-            a = Answer.query.filter(Answer.id == existing_id).one()
+        existing_answers = self.get_common_answers(users, task_id)
+        if len(existing_answers) > 0 and existing_answers[0].content == content:
+            a = existing_answers[0]
             a.points = points
             a.last_points_modifier = points_given_by
             return None
@@ -51,8 +50,8 @@ class Answers(TimDbBase):
         answer_id = a.id
         assert answer_id > 0
 
-        for user_id in user_ids:
-            ua = UserAnswer(user_id=user_id, answer_id=answer_id)
+        for u in users:
+            ua = UserAnswer(user_id=u.id, answer_id=answer_id)
             self.session.add(ua)
 
         for tag in tags:
@@ -177,36 +176,17 @@ ORDER BY {order_by}, a.answered_on
             result.append(res)
         return result
 
-    def get_common_answers(self, user_ids: List[int], task_id: str) -> List[dict]:
-        common_answers_ids = None
-        for user_id in user_ids:
-            c = self.db.cursor()
-            c.execute("""SELECT answer_id
-                FROM UserAnswer
-                JOIN Answer ON Answer.id = UserAnswer.answer_id
-                WHERE user_id = %s AND task_id = %s
-             """, [user_id, task_id])
-            ids = c.fetchall()
-            if common_answers_ids is None:
-                common_answers_ids = set()
-                for answer_id in ids:
-                    common_answers_ids.add(answer_id[0])
-            else:
-                curr_answers = set()
-                for answer_id in ids:
-                    curr_answers.add(answer_id[0])
-                common_answers_ids.intersection_update(curr_answers)
-        if common_answers_ids is None or len(common_answers_ids) == 0:
-            return []
-        template = ','.join(['%s'] * len(common_answers_ids))
-        c = self.db.cursor()
-        c.execute(f"""SELECT id, task_id, content, points
-            FROM Answer
-            WHERE id IN ({template})
-            ORDER BY answered_on DESC, id DESC
-         """, list(common_answers_ids))
-        common_answers = result_as_dict_list(c)
-        return common_answers
+    def get_common_answers(self, users: List[User], task_id: str) -> List[Answer]:
+        q = Answer.query.filter_by(task_id=task_id).join(User, Answer.users).filter(
+            User.id.in_([u.id for u in users])).order_by(Answer.id.desc())
+
+        def g():
+            user_set = set(users)
+            for a in q:  # type: Answer
+                if not (user_set - set(a.users_all)):
+                    yield a
+
+        return list(g())
 
     def get_users_for_tasks(self, task_ids: List[str], user_ids: Optional[List[int]]=None, group_by_user=True, group_by_doc=False) -> List[Dict[str, str]]:
         if not task_ids:

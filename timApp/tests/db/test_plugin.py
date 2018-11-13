@@ -1,7 +1,7 @@
 from timApp.answer.answer import Answer
-from timApp.plugin.plugin import Plugin
-from timApp.tests.db.timdbtest import TimDbTest, TEST_USER_1_ID, TEST_USER_2_ID
 from timApp.document.docentry import DocEntry
+from timApp.plugin.plugin import Plugin
+from timApp.tests.db.timdbtest import TimDbTest
 from timApp.util.flask.responsehelper import to_dict
 from timApp.util.utils import EXAMPLE_DOCS_PATH
 
@@ -17,9 +17,9 @@ class PluginTest(TimDbTest):
             break
         a_ids = []
         for i in range(1, 5):
-            aid = db.answers.save_answer([TEST_USER_1_ID], p.full_task_id,
+            aid = db.answers.save_answer([self.test_user_1], p.full_task_id,
                                          f'content{i}', points=None, valid=True)
-            aid2 = db.answers.save_answer([TEST_USER_2_ID], p.full_task_id,
+            aid2 = db.answers.save_answer([self.test_user_2], p.full_task_id,
                                           f'content{i}', points=None, valid=True)
             a_ids.append((aid, aid2))
         for i, (aid, aid2) in enumerate(a_ids, start=1):

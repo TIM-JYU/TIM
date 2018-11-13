@@ -132,14 +132,15 @@ def post_answer(plugintype: str, task_id_ext: str):
             expected_task_id = answer.task_id
             if expected_task_id != task_id:
                 return abort(400, 'Task ids did not match')
-            users = [u.id for u in answer.users_all]
+            users = answer.users_all
             if not users:
                 return abort(400, 'No users found for the specified answer')
             user_id = answer_browser_data.get('userId', None)
-            if user_id not in users:
+            if user_id not in (u.id for u in users):
                 return abort(400, 'userId is not associated with answer_id')
+    curr_user = get_current_user_object()
     try:
-        plugin = Plugin.from_paragraph(par, user=get_current_user_object())
+        plugin = Plugin.from_paragraph(par, user=curr_user)
     except PluginException as e:
         return abort(400, str(e))
 
@@ -167,18 +168,17 @@ def post_answer(plugintype: str, task_id_ext: str):
     current_user_id = get_current_user_id()
 
     if users is None:
-        users = [u['id'] for u in get_session_users()]
-    user_objs = [User.query.get(uid) for uid in users]
+        users = [User.query.get(u['id']) for u in get_session_users()]
 
     old_answers = timdb.answers.get_common_answers(users, task_id)
     try:
         valid, _ = plugin.is_answer_valid(len(old_answers), {})
     except PluginException as e:
         return abort(400, str(e))
-    info = plugin.get_info(user_objs, len(old_answers), look_answer=is_teacher and not save_teacher, valid=valid)
+    info = plugin.get_info(users, len(old_answers), look_answer=is_teacher and not save_teacher, valid=valid)
 
     # Get the newest answer (state). Only for logged in users.
-    state = try_load_json(old_answers[0]['content']) if logged_in() and len(old_answers) > 0 else None
+    state = try_load_json(old_answers[0].content) if logged_in() and len(old_answers) > 0 else None
 
     # TODO Don't put these under markup; they are there for compatibility for now.
     plugin.values['current_user_id'] = info['current_user_id']
@@ -257,8 +257,8 @@ def post_answer(plugintype: str, task_id_ext: str):
             if not is_valid:
                 result['error'] = explanation
         elif save_teacher:
-            if current_user_id not in users:
-                users.append(current_user_id)
+            if curr_user not in users:
+                users.append(curr_user)
             points = answer_browser_data.get('points', points)
             points = points_to_float(points)
             result['savedNew'] = timdb.answers.save_answer(users,
