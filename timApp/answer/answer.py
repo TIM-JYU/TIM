@@ -1,5 +1,5 @@
 from timApp.answer.answer_models import UserAnswer
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import db, include_if_loaded
 from timApp.util.utils import get_current_time
 
 
@@ -30,6 +30,8 @@ class Answer(db.Model):
     uploads = db.relationship('AnswerUpload', back_populates='answer', lazy='dynamic')
     users = db.relationship('User', secondary=UserAnswer.__table__,
                             back_populates='answers', lazy='dynamic')
+    users_all = db.relationship('User', secondary=UserAnswer.__table__,
+                                back_populates='answers', lazy='select')
 
     def __init__(self, task_id, content, points, valid, last_points_modifier=None):
         self.task_id = task_id
@@ -38,3 +40,21 @@ class Answer(db.Model):
         self.valid = valid
         self.last_points_modifier = last_points_modifier
         self.answered_on = get_current_time()
+
+    def get_answer_number(self):
+        u = self.users.first()
+        if not u:
+            return 1
+        return u.get_answers_for_task(self.task_id).filter(Answer.answered_on <= self.answered_on).count()
+
+    def to_json(self):
+        return {
+            'id': self.id,
+            'task_id': self.task_id,
+            'content': self.content,
+            'points': self.points,
+            'answered_on': self.answered_on,
+            'valid': self.valid,
+            'last_points_modifier': self.last_points_modifier,
+            **include_if_loaded('users_all', self, 'users'),
+        }

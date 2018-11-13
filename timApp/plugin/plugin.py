@@ -4,6 +4,7 @@ from typing import Tuple, Optional, Union, Iterable, Dict, NamedTuple
 
 import yaml
 
+from timApp.answer.answer import Answer
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.document import Document
 from timApp.document.macroinfo import MacroInfo
@@ -85,7 +86,8 @@ class Plugin:
     limit_defaults = {'mmcq': 1, 'mmcq2': 1, 'mcq': 1, 'mcq2': 1}
 
     def __init__(self, task_id: Optional[str], values: dict, plugin_type: str, par: Optional[DocParagraph] = None):
-        self.answer = None
+        self.answer: Optional[Answer] = None
+        self.answer_count = None
         self.options: PluginRenderOptions = None
         self.task_id = task_id
         assert isinstance(values, dict)
@@ -261,18 +263,19 @@ class Plugin:
             'valid': valid
         }
 
-    def set_render_options(self, answer, options: PluginRenderOptions):
-        self.answer = answer
+    def set_render_options(self, answer: Optional[Tuple[Answer, int]], options: PluginRenderOptions):
+        if answer:
+            self.answer, self.answer_count = answer
         self.options = options
 
     def render_json(self):
         task_id = self.full_task_id
         options = self.options
         if self.answer is not None:
-            state = try_load_json(self.answer['content'])
+            state = try_load_json(self.answer.content)
             # if isinstance(state, dict) and options.user is not None:
             if options.user is not None:
-                info = self.get_info([options.user], old_answers=self.answer.get('cnt'), valid=self.answer['valid'])
+                info = self.get_info([options.user], old_answers=self.answer_count, valid=self.answer.valid)
             else:
                 info = None
         else:
@@ -368,7 +371,7 @@ class Plugin:
             html = f'{LAZYSTART}{html}{LAZYEND}<span style="font-weight:bold">{header}</span><div><p>{stem}</p></div>'
         answer_attr = ''
         if self.answer:
-            answer_attr = f""" answer-id='{self.answer["id"]}'"""
+            answer_attr = f""" answer-id='{self.answer.id}'"""
         return f"<div id='{self.task_id_ext}'{answer_attr} data-plugin='/{self.type}'>{html}</div>" if self.options.wrap_in_div else html
 
 

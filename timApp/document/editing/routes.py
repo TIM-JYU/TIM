@@ -6,6 +6,7 @@ from flask import abort
 from flask import current_app
 from flask import request
 
+from timApp.answer.answer import Answer
 from timApp.auth.accesshelper import verify_edit_access, verify_view_access, get_rights, get_doc_or_abort, \
     verify_teacher_access, verify_manage_access, verify_ownership, verify_seeanswers_access
 from timApp.document.post_process import post_process_pars
@@ -560,7 +561,7 @@ def check_duplicates(pars, doc, timdb):
                         duplicate.append(task_id)
                         duplicate.append(par.get_id())
                         task_id_to_check = str(doc.doc_id) + "." + task_id
-                        if timdb.answers.check_if_plugin_has_answers(task_id_to_check) == 1:
+                        if Answer.query.filter_by(task_id=task_id_to_check).first():
                             duplicate.append('hasAnswers')
                         duplicates.append(duplicate)
                         break

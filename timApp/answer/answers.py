@@ -61,62 +61,6 @@ class Answers(TimDbBase):
         self.session.flush()
         return answer_id
 
-    def get_answers(self, user_id: int, task_id: str, get_collaborators: bool=True) -> List[dict]:
-        """Gets the answers of a user in a task, ordered descending by submission time.
-
-        :param get_collaborators: Whether collaborators for each answer should be fetched.
-        :param user_id: The id of the user.
-        :param task_id: The id of the task.
-
-        """
-
-        r = tim_main_execute("""SELECT Answer.id, task_id, content, points,
-                                 answered_on, valid, last_points_modifier
-                          FROM Answer
-                          JOIN UserAnswer ON Answer.id = UserAnswer.answer_id
-                          WHERE task_id = :taskid
-                            AND user_id = :userid
-                          ORDER BY answered_on DESC, Answer.id DESC""", {'taskid': task_id, 'userid': user_id})
-
-        answers = result_as_dict_list(r.cursor)
-        if not get_collaborators:
-            return answers
-
-        self.set_collaborators(answers)
-        return answers
-
-    def set_collaborators(self, answers):
-        if not answers:
-            return
-        answer_dict = defaultdict(list)
-        r = tim_main_execute(f"""SELECT answer_id, user_id, real_name, email FROM UserAnswer
-            JOIN Answer ON Answer.id = UserAnswer.answer_id
-            JOIN UserAccount ON UserAnswer.user_id = UserAccount.id
-            WHERE answer_id IN :ids""", {'ids': tuple(answer['id'] for answer in answers)})
-        for row in r.cursor.fetchall():
-            answer_dict[row[0]].append({'user_id': row[1], 'real_name': row[2], 'email': row[3]})
-        for answer in answers:
-            answer['collaborators'] = answer_dict[answer['id']]
-
-    def get_newest_answers(self, user_id: int, task_ids: List[str]) -> List[dict]:
-        if len(task_ids) == 0:
-            return []
-        template = ','.join(['%s'] * len(task_ids))
-        c = self.db.cursor()
-        c.execute(f"""
-        SELECT id, task_id, content, points, answered_on, valid, cnt
-        FROM
-        (
-        SELECT MAX(Answer.id) as aid, COUNT(Answer.id) as cnt
-        FROM Answer
-        JOIN UserAnswer ON Answer.id = UserAnswer.answer_id
-        WHERE task_id IN ({template})
-         AND user_id = %s
-         AND valid = TRUE
-        GROUP BY task_id
-        ) t JOIN Answer a ON a.id = t.aid""", task_ids + [user_id])
-        return result_as_dict_list(c)
-
     def get_all_answers(self,
                         task_ids: List[str],
                         usergroup: Optional[int],
@@ -232,19 +176,6 @@ ORDER BY {order_by}, a.answered_on
 
             result.append(res)
         return result
-
-    def check_if_plugin_has_answers(self, task_id: 'str') -> 'int':
-        """Checks if there are answers to the plugin.
-
-        :param task_id: The task id of plugin ín format doc_id.par_id
-        :return: 0 if not found, 1 if answers exist
-
-        """
-        cursor = self.db.cursor()
-        cursor.execute("""SELECT EXISTS(SELECT 1 FROM Answer WHERE task_id = %s LIMIT 1)""", [task_id])
-        result = cursor.fetchone()
-        real_result = result[0]
-        return real_result
 
     def get_common_answers(self, user_ids: List[int], task_id: str) -> List[dict]:
         common_answers_ids = None
@@ -394,73 +325,3 @@ ORDER BY {order_by}, a.answered_on
                 result_list.append(row)
             return result_list
         return result
-
-    def getAnswersForGroup(self, user_ids: List[int], task_id: str) -> List[dict]:
-        """Gets the answers of the users in a task, ordered descending by submission time.
-
-        All users in the list `user_ids` must be associated with the answer.
-
-        """
-
-        cursor = self.db.cursor()
-        sql = """select id, task_id, content, points, answered_on from Answer where task_id = %s
-                          %s
-                          order by answered_on desc""" % (
-            " ".join(["and id in (select answer_id from UserAnswer where user_id = %d)" % user_id for user_id in user_ids]))
-        cursor.execute(sql, [task_id])
-        return result_as_dict_list(cursor)
-
-    def get_users(self, answer_id: int) -> List[int]:
-        """Gets the user ids of the specified answer.
-
-        :param answer_id: The id of the answer.
-        :return: The user ids.
-
-        """
-        c = self.db.cursor()
-        c.execute("""SELECT user_id FROM UserAnswer
-            WHERE answer_id = %s""", [answer_id])
-        return [u['user_id'] for u in result_as_dict_list(c)]
-
-    def get_task_id(self, answer_id: int) -> Optional[str]:
-        c = self.db.cursor()
-        c.execute("""SELECT task_id FROM Answer
-            WHERE id = %s""", [answer_id])
-        result = result_as_dict_list(c)
-        return result[0]['task_id'] if len(result) > 0 else None
-
-    def get_users_by_taskid(self, task_id: str):
-        c = self.db.cursor()
-        c.execute("""SELECT DISTINCT UserAccount.id, name, real_name, email
-            FROM UserAccount
-            JOIN UserAnswer ON UserAnswer.user_id = UserAccount.id
-            JOIN Answer on Answer.id = UserAnswer.answer_id
-            WHERE task_id = %s
-            ORDER BY real_name ASC""", [task_id])
-        result = result_as_dict_list(c)
-        return result
-
-    def get_answer(self, answer_id: int) -> Optional[dict]:
-        """Gets data for a single answer.
-
-        The field 'cnt' is the 1-based index of the answer for the user (or the set of collaborators) for the task. So
-        cnt for the first answer is always 1.
-
-        """
-        result = tim_main_execute("""SELECT id, task_id, content, points,
-                                 answered_on, valid, cnt
-                          FROM Answer a
-                          CROSS JOIN LATERAL (
-                            SELECT COUNT(*) as cnt
-                            FROM Answer b
-                            JOIN useranswer ua ON ua.answer_id = b.id
-                            WHERE b.task_id = a.task_id
-                              AND b.answered_on <= a.answered_on
-                              AND ua.user_id IN (SELECT user_id FROM useranswer WHERE answer_id = a.id)
-                          ) t
-                          WHERE id = :id
-                          ORDER BY answered_on DESC""", {'id': answer_id})
-
-        answers = result_as_dict_list(result.cursor)
-        self.set_collaborators(answers)
-        return answers[0] if len(answers) > 0 else None

@@ -99,11 +99,11 @@
                     </label>
                 </div>
             </div>
-            <div class="row" ng-show="$ctrl.selectedAnswer.collaborators.length > 1">
+            <div class="row" ng-show="$ctrl.selectedAnswer.users.length > 1">
                 <div class="col-xs-12">
                     Collaborators:
                     <ul>
-                        <li ng-repeat="c in $ctrl.selectedAnswer.collaborators"><a ng-href="mailto:{{c.email}}">{{ c.real_name }}</a></li>
+                        <li ng-repeat="c in $ctrl.selectedAnswer.users"><a ng-href="mailto:{{c.email}}">{{ c.real_name }}</a></li>
                     </ul>
                 </div>
             </div>

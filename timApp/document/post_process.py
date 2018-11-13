@@ -35,7 +35,6 @@ def post_process_pars(doc: Document, pars, user: User, sanitize=True, do_lazy=Fa
     final_pars, js_paths, css_paths, modules = pluginify(doc,
                                                          pars,
                                                          user,
-                                                         timdb,
                                                          sanitize=sanitize,
                                                          do_lazy=do_lazy,
                                                          edit_window=edit_window,

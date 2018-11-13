@@ -27,8 +27,8 @@ def get_tim_main_engine():
     return db.get_engine()
 
 
-def include_if_loaded(attr_name: str, obj):
-    return {attr_name: getattr(obj, attr_name)} if is_attribute_loaded(attr_name, obj) else {}
+def include_if_loaded(attr_name: str, obj, key_name=None):
+    return {(key_name or attr_name): getattr(obj, attr_name)} if is_attribute_loaded(attr_name, obj) else {}
 
 
 def is_attribute_loaded(attr_name, obj):

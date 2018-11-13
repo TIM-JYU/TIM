@@ -111,6 +111,11 @@ TEST_USER_1_NAME = 'Test user 1'
 TEST_USER_2_NAME = 'Test user 2'
 TEST_USER_3_NAME = 'Test user 3'
 
+TEST_USER_1_USERNAME = 'testuser1'
+TEST_USER_2_USERNAME = 'testuser2'
+TEST_USER_3_USERNAME = 'testuser3'
+
+
 GITLAB_SKIP_TESTS = {
     'tests.browser.test_questions.QuestionTest.test_questions',
 }

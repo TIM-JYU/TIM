@@ -4,8 +4,9 @@ from typing import List
 from typing import Optional, Union, Set
 
 from enum import Enum
-from sqlalchemy.orm import Query
+from sqlalchemy.orm import Query, joinedload
 
+from timApp.answer.answer import Answer
 from timApp.answer.answer_models import UserAnswer
 from timApp.auth.accesstype import AccessType
 from timApp.auth.auth_models import BlockAccess
@@ -422,12 +423,25 @@ class User(db.Model):
         if not any((doc_modify, comment_add, comment_modify)):
             db.session.delete(n)
 
+    def get_answers_for_task(self, task_id: str):
+        return self.answers.options(joinedload(Answer.users_all)).order_by(Answer.id.desc()).filter_by(task_id=task_id)
+
     @property
     def basic_info_dict(self):
-        return {'id': self.id,
+        if not getattr(self, 'hide_name', False):
+            return {
+                'id': self.id,
                 'name': self.name,
                 'real_name': self.real_name,
-                'email': self.email}
+                'email': self.email,
+            }
+        else:
+            return {
+                'id': self.id,
+                'name': f'student{self.id}',
+                'real_name': f'Student {self.id}',
+                'email': f'student{self.id}@example.com',
+            }
 
     def to_json(self, full=False):
         return {**self.basic_info_dict,

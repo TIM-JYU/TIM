@@ -7,7 +7,9 @@ from xml.sax.saxutils import quoteattr
 
 import yaml
 import yaml.parser
+from sqlalchemy import func
 
+from timApp.answer.answer import Answer
 from timApp.auth.accesshelper import has_edit_access
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.document import dereference_pars, Document
@@ -58,8 +60,7 @@ def find_task_ids(blocks: List[DocParagraph]) -> Tuple[List[str], int]:
 def pluginify(doc: Document,
               pars: List[DocParagraph],
               user: Optional[User],
-              timdb,
-              custom_answer=None,
+              custom_answer: Optional[Answer]=None,
               sanitize=True,
               do_lazy=False,
               edit_window=False,
@@ -76,7 +77,6 @@ def pluginify(doc: Document,
     :param doc Document / DocumentVersion object.
     :param pars: A list of DocParagraphs to be processed.
     :param user: The current user object.
-    :param timdb: A reference to the database.
     :param custom_answer: Optional answer that will used as the state for the plugin instead of answer database.
     If this parameter is specified, the expression len(blocks) MUST be 1.
     :param sanitize: Whether the blocks should be sanitized before processing.
@@ -133,12 +133,22 @@ def pluginify(doc: Document,
                 task_id = f"{block.get_doc_id()}.{attr_taskid or ''}"
                 if not task_id.endswith('.'):
                     task_ids.append(task_id)
-        answers = timdb.answers.get_newest_answers(user.id, task_ids)
+        col = func.max(Answer.id).label('col')
+        cnt = func.count(Answer.id).label('cnt')
+        sub = (user
+                .answers
+                .filter(Answer.task_id.in_(task_ids) & Answer.valid == True)
+                .add_columns(col, cnt)
+                .with_entities(col, cnt)
+                .group_by(Answer.task_id).subquery())
+        answers: List[Tuple[Answer, int]] = (
+                Answer.query.join(sub, Answer.id == sub.c.col)
+                .with_entities(Answer, sub.c.cnt)
+                .all()
+        )
         # TODO: RND_SEED get all users rand_seeds for this doc's tasks. New table?
-        # Close database here because we won't need it for a while
-        timdb.close()
-        for answer in answers:
-            answer_map[answer['task_id']] = answer
+        for answer_and_cnt, cnt in answers:
+            answer_map[answer_and_cnt.task_id] = answer_and_cnt, cnt
 
     for idx, block in enumerate(pars):
         attr_taskid = block.get_attr('taskId')
@@ -174,15 +184,13 @@ def pluginify(doc: Document,
             task_id = f"{block.get_doc_id()}.{attr_taskid or ''}"
             new_seed = False
             rnd_seed = None
-            answer = {}
+            answer_and_cnt = None
 
             if load_states:
                 if custom_answer is not None:
-                    answer = custom_answer
+                    answer_and_cnt = custom_answer, custom_answer.get_answer_number()
                 else:
-                    answer = answer_map.get(task_id, None)
-                if answer is not None:
-                    rnd_seed = answer.get('rndseed', None)
+                    answer_and_cnt = answer_map.get(task_id, None)
 
             if rnd_seed is None:
                 rnd_seed = get_simple_hash_from_par_and_user(block, user) # TODO: RND_SEED: get users seed for this plugin
@@ -211,7 +219,7 @@ def pluginify(doc: Document,
             if plugin_name not in plugins:
                 plugins[plugin_name] = OrderedDict()
 
-            plugin.set_render_options(answer if load_states and answer is not None else None, plugin_opts)
+            plugin.set_render_options(answer_and_cnt if load_states and answer_and_cnt is not None else None, plugin_opts)
             plugins[plugin_name][idx] = plugin
         else:
             if block.nocache and not is_gamified:  # get_nocache():

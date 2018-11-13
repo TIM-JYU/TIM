@@ -15,13 +15,16 @@ from timApp.document.docinfo import DocInfo
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.randutils import random_id
 from timApp.plugin.plugin import Plugin
-from timApp.tests.db.timdbtest import TEST_USER_1_ID, TEST_USER_2_ID, TEST_USER_1_NAME
+from timApp.tests.db.timdbtest import TEST_USER_1_ID, TEST_USER_2_ID, TEST_USER_1_NAME, TEST_USER_1_USERNAME, \
+    TEST_USER_2_USERNAME
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.timdb.sqa import db
+from timApp.user.special_group_names import ANONYMOUS_USERNAME
+from timApp.user.user import User
 from timApp.user.userutils import grant_view_access, grant_access, get_anon_group_id, get_anon_user_id
+from timApp.util.flask.responsehelper import to_dict
 from timApp.util.utils import EXAMPLE_DOCS_PATH, get_current_time
 from timApp.velp.velp_models import Annotation
-
 
 PLUGIN_NOT_EXIST_ERROR = {}  # TODO the error value should be better
 
@@ -81,25 +84,25 @@ class PluginTest(TimRouteTest):
         resp = self.post_answer(plugin_type, task_id, [True, False, True])
         self.check_ok_answer(resp)
 
-        answer_list = self.get(f'/answers/{task_id}/{self.current_user_id()}')
+        answer_list = self.get_task_answers(task_id)
 
         self.assertListEqual(
-            [{'collaborators': [{'real_name': TEST_USER_1_NAME, 'email': 'test1@example.com', 'user_id': TEST_USER_1_ID}],
+            [{'users': [{'real_name': TEST_USER_1_NAME, 'email': 'test1@example.com', 'id': TEST_USER_1_ID, 'name': TEST_USER_1_USERNAME}],
               'content': '[true, false, true]',
               'points': 9.0, 'task_id': task_id, 'valid': True, 'last_points_modifier': None},
-             {'collaborators': [{'real_name': TEST_USER_1_NAME, 'email': 'test1@example.com', 'user_id': TEST_USER_1_ID}],
+             {'users': [{'real_name': TEST_USER_1_NAME, 'email': 'test1@example.com', 'id': TEST_USER_1_ID, 'name': TEST_USER_1_USERNAME}],
               'content': '[false, false, true]',
               'points': None, 'task_id': task_id, 'valid': True, 'last_points_modifier': None},
-             {'collaborators': [{'real_name': TEST_USER_1_NAME, 'email': 'test1@example.com', 'user_id': TEST_USER_1_ID}],
+             {'users': [{'real_name': TEST_USER_1_NAME, 'email': 'test1@example.com', 'id': TEST_USER_1_ID, 'name': TEST_USER_1_USERNAME}],
               'content': '[true, true, true]',
               'points': 2.0, 'task_id': task_id, 'valid': True, 'last_points_modifier': None},
-             {'collaborators': [{'real_name': TEST_USER_1_NAME, 'email': 'test1@example.com', 'user_id': TEST_USER_1_ID}],
+             {'users': [{'real_name': TEST_USER_1_NAME, 'email': 'test1@example.com', 'id': TEST_USER_1_ID, 'name': TEST_USER_1_USERNAME}],
               'content': '[true, false, false]',
               'points': 2.0, 'task_id': task_id, 'valid': False, 'last_points_modifier': None},
-             {'collaborators': [{'real_name': TEST_USER_1_NAME, 'email': 'test1@example.com', 'user_id': TEST_USER_1_ID}],
+             {'users': [{'real_name': TEST_USER_1_NAME, 'email': 'test1@example.com', 'id': TEST_USER_1_ID, 'name': TEST_USER_1_USERNAME}],
               'content': '[true, true, false]',
               'points': 1.0, 'task_id': task_id, 'valid': True, 'last_points_modifier': None},
-             {'collaborators': [{'real_name': TEST_USER_1_NAME, 'email': 'test1@example.com', 'user_id': TEST_USER_1_ID}],
+             {'users': [{'real_name': TEST_USER_1_NAME, 'email': 'test1@example.com', 'id': TEST_USER_1_ID, 'name': TEST_USER_1_USERNAME}],
               'content': '[true, false, false]',
               'points': 2.0, 'task_id': task_id, 'valid': True, 'last_points_modifier': None}],
             [{k: v for k, v in ans.items() if k not in ('answered_on', 'id')} for ans in answer_list])
@@ -118,12 +121,13 @@ class PluginTest(TimRouteTest):
         self.check_ok_answer(resp, is_new=False)
 
         par_id = doc.get_paragraph_by_task(task_name).get_id()
+        aid = answer_list[0]['id']
         j = self.get('/getState',
                      query_string={'user_id': self.current_user_id(),
-                                   'answer_id': answer_list[0]['id'],
+                                   'answer_id': aid,
                                    'par_id': par_id,
                                    'doc_id': doc.doc_id})
-        self.assertEqual({'html': "<div id='" + task_id_ext + "' answer-id='19' data-plugin='/mmcq'><mmcq "
+        self.assertEqual({'html': "<div id='" + task_id_ext + f"' answer-id='{aid}' data-plugin='/mmcq'><mmcq "
                                                                   "data-content='{&quot;state&quot;:[true,false,true],&quot;question&quot;:{&quot;falseText&quot;:null,&quot;button&quot;:null,&quot;wrongText&quot;:null,&quot;onTry&quot;:null,&quot;header&quot;:null,&quot;stem&quot;:&quot;Answer "
                                                                   'yes or no to the following '
                                                                   'questions.&quot;,&quot;headerText&quot;:null,&quot;choices&quot;:[{&quot;text&quot;:&quot;&lt;span '
@@ -136,7 +140,6 @@ class PluginTest(TimRouteTest):
                                                                   "reason.&quot;}],&quot;trueText&quot;:null,&quot;buttonText&quot;:null,&quot;correctText&quot;:null}}'></mmcq></div>",
                               'reviewHtml': None}, j)
 
-        timdb = self.get_db()
         grant_access(get_anon_group_id(), doc.doc_id, 'view')
 
         tree = self.get(f'/view/{doc.doc_id}', as_tree=True, query_string={'lazy': False})
@@ -162,15 +165,17 @@ class PluginTest(TimRouteTest):
         self.check_ok_answer(resp)
 
         anon_id = get_anon_user_id()
-        anon_answers = timdb.answers.get_answers(anon_id, task_id)
+        anon = User.get_by_id(anon_id)
+        anon_answers = to_dict(anon.get_answers_for_task(task_id).all())
 
-        self.assertListEqual([{'collaborators': [{'real_name': 'Anonymous user', 'email': None, 'user_id': anon_id}],
-                               'content': '[true, false, false]',
-                               'points': 6.0,
-                               'task_id': task_id,
-                               'valid': 1,
-                               'last_points_modifier': None}],
-                             [{k: v for k, v in ans.items() if k not in ('answered_on', 'id')} for ans in anon_answers])
+        self.assertEqual(
+            [{'users': [{'real_name': 'Anonymous user', 'email': None, 'id': anon_id, 'name': ANONYMOUS_USERNAME}],
+              'content': '[true, false, false]',
+              'points': 6.0,
+              'task_id': task_id,
+              'valid': True,
+              'last_points_modifier': None}],
+            [{k: v for k, v in ans.items() if k not in ('answered_on', 'id')} for ans in anon_answers])
 
         self.get('/getState', query_string={'user_id': anon_id,
                                             'answer_id': answer_list[0]['id'],
@@ -187,6 +192,14 @@ class PluginTest(TimRouteTest):
         self.assertEqual(0, len(summary))
         # Anonymous users can't see their answers
         self.assertIsNone(json.loads(plugs[0].find('mmcq').get('data-content'))['state'])
+
+        self.login_test1()
+        self.get(f'/getTaskUsers/{task_id}',
+                 expect_content=[{'email': None, 'id': 0, 'name': 'Anonymous', 'real_name': 'Anonymous user'},
+                                 {'email': 'test1@example.com',
+                                  'id': 2,
+                                  'name': 'testuser1',
+                                  'real_name': 'Test user 1'}])
 
     def test_idless_plugin(self):
         self.login_test1()
@@ -288,16 +301,16 @@ class PluginTest(TimRouteTest):
         mimetype, ur, user_input = self.do_plugin_upload(doc, file_content, filename, task_id, task_name)
         answer_list = self.get_task_answers(task_id)
         self.assertEqual(1, len(answer_list))
-        self.assertListEqual([{'real_name': TEST_USER_1_NAME, 'email': 'test1@example.com', 'user_id': TEST_USER_1_ID},
-                              {'real_name': 'Test user 2', 'email': 'test2@example.com', 'user_id': TEST_USER_2_ID}],
-                             answer_list[0]['collaborators'])
+        self.assertListEqual([{'real_name': TEST_USER_1_NAME, 'email': 'test1@example.com', 'id': TEST_USER_1_ID, 'name': TEST_USER_1_USERNAME},
+                              {'real_name': 'Test user 2', 'email': 'test2@example.com', 'id': TEST_USER_2_ID, 'name': TEST_USER_2_USERNAME}],
+                             answer_list[0]['users'])
         self.assertEqual(file_content, self.get_no_warn(ur['file']))
         self.login_test2()
         answer_list = self.get_task_answers(task_id)
         self.assertEqual(1, len(answer_list))
-        self.assertListEqual([{'real_name': TEST_USER_1_NAME, 'email': 'test1@example.com', 'user_id': TEST_USER_1_ID},
-                              {'real_name': 'Test user 2', 'email': 'test2@example.com', 'user_id': TEST_USER_2_ID}],
-                             answer_list[0]['collaborators'])
+        self.assertListEqual([{'real_name': TEST_USER_1_NAME, 'email': 'test1@example.com', 'id': TEST_USER_1_ID, 'name': TEST_USER_1_USERNAME},
+                              {'real_name': 'Test user 2', 'email': 'test2@example.com', 'id': TEST_USER_2_ID, 'name': TEST_USER_2_USERNAME}],
+                             answer_list[0]['users'])
         self.assertEqual(file_content, self.get_no_warn(ur['file']))
 
     def test_all_answers(self):

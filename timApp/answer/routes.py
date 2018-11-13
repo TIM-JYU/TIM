@@ -2,7 +2,7 @@
 import json
 import re
 from datetime import timezone, timedelta, datetime
-from typing import Union, List
+from typing import Union, List, Tuple
 
 import dateutil.parser
 import dateutil.relativedelta
@@ -10,6 +10,8 @@ from flask import Blueprint
 from flask import Response
 from flask import abort
 from flask import request
+from sqlalchemy import distinct
+from sqlalchemy.orm import joinedload
 
 from timApp.auth.accesshelper import verify_logged_in, get_doc_or_abort, verify_manage_access
 from timApp.auth.accesshelper import verify_task_access, verify_teacher_access, verify_seeanswers_access, has_teacher_access, \
@@ -44,11 +46,11 @@ answers = Blueprint('answers',
 @answers.route("/savePoints/<int:user_id>/<int:answer_id>", methods=['PUT'])
 def save_points(answer_id, user_id):
     answer, _ = verify_answer_access(answer_id, user_id, require_teacher_if_not_own=True)
-    doc_id, task_id_name, _ = Plugin.parse_task_id(answer['task_id'])
+    doc_id, task_id_name, _ = Plugin.parse_task_id(answer.task_id)
     d = get_doc_or_abort(doc_id)
     points, = verify_json_params('points')
     try:
-        plugin = Plugin.from_task_id(answer['task_id'], user=get_current_user_object())
+        plugin = Plugin.from_task_id(answer.task_id, user=get_current_user_object())
     except PluginException as e:
         return abort(400, str(e))
     a = Answer.query.get(answer_id)
@@ -124,11 +126,14 @@ def post_answer(plugintype: str, task_id_ext: str):
     if is_teacher:
         answer_id = answer_browser_data.get('answer_id', None)
         if answer_id is not None:
-            expected_task_id = timdb.answers.get_task_id(answer_id)
+            answer = Answer.query.get(answer_id)
+            if not answer:
+                return abort(404, f'Answer not found: {answer_id}')
+            expected_task_id = answer.task_id
             if expected_task_id != task_id:
                 return abort(400, 'Task ids did not match')
-            users = timdb.answers.get_users(answer_id)
-            if len(users) == 0:
+            users = [u.id for u in answer.users_all]
+            if not users:
                 return abort(400, 'No users found for the specified answer')
             user_id = answer_browser_data.get('userId', None)
             if user_id not in users:
@@ -274,7 +279,7 @@ def post_answer(plugintype: str, task_id_ext: str):
 
 
 def get_hidden_name(user_id):
-    return 'Undisclosed student %d' % user_id
+    return 'Student %d' % user_id
 
 
 def should_hide_name(doc_id, user_id):
@@ -308,29 +313,26 @@ def get_answers(task_id, user_id):
     except ValueError:
         abort(404, 'Not a valid user id')
     verify_logged_in()
-    timdb = get_timdb()
     try:
         doc_id, _, _ = Plugin.parse_task_id(task_id)
     except PluginException as e:
         return abort(400, str(e))
     d = get_doc_or_abort(doc_id)
-    user = timdb.users.get_user(user_id)
+    user = User.get_by_id(user_id)
     if user_id != get_current_user_id():
         verify_seeanswers_access(d)
     if user is None:
         abort(400, 'Non-existent user')
-    result = {}
     try:
-        user_answers = timdb.answers.get_answers(user_id, task_id)
+        user_answers: List[Answer] = user.get_answers_for_task(task_id).all()
         if hide_names_in_teacher(doc_id):
             for answer in user_answers:
-                for c in answer['collaborators']:
-                    if should_hide_name(doc_id, c['user_id']):
-                        c['real_name'] = get_hidden_name(c['user_id'])
-        result = user_answers
+                for u in answer.users_all:
+                    if should_hide_name(doc_id, u.id):
+                        u.hide_name = True
+        return json_response(user_answers)
     except Exception as e:
-        abort(400, str(e))
-    return json_response(result)
+        return abort(400, str(e))
 
 
 @answers.route("/allDocumentAnswersPlain/<path:doc_path>")
@@ -466,7 +468,6 @@ def get_state():
     texts, js_paths, css_paths, modules = pluginify(doc,
                                                     [block],
                                                     user,
-                                                    timdb,
                                                     custom_answer=answer)
     html = texts[0].get_final_dict()['html']
     if review:
@@ -474,7 +475,6 @@ def get_state():
         review_pars, _, _, _ = pluginify(doc,
                                          [block],
                                          user,
-                                         timdb,
                                          custom_answer=answer,
                                          review=review,
                                          wrap_in_div=False)
@@ -483,12 +483,11 @@ def get_state():
         return json_response({'html': html, 'reviewHtml': None})
 
 
-def verify_answer_access(answer_id, user_id, require_teacher_if_not_own=False):
-    timdb = get_timdb()
-    answer = timdb.answers.get_answer(answer_id)
+def verify_answer_access(answer_id, user_id, require_teacher_if_not_own=False) -> Tuple[Answer, int]:
+    answer: Answer = Answer.query.get(answer_id)
     if answer is None:
         abort(400, 'Non-existent answer')
-    doc_id, task_id_name, _ = Plugin.parse_task_id(answer['task_id'])
+    doc_id, task_id_name, _ = Plugin.parse_task_id(answer.task_id)
     d = get_doc_or_abort(doc_id)
     if user_id != get_current_user_id() or not logged_in():
         if require_teacher_if_not_own:
@@ -497,7 +496,7 @@ def verify_answer_access(answer_id, user_id, require_teacher_if_not_own=False):
             verify_task_access(d, task_id_name, AccessType.see_answers)
     else:
         verify_task_access(d, task_id_name, AccessType.view)
-        if not any(a['user_id'] == user_id for a in answer['collaborators']):
+        if not any(a.id == user_id for a in answer.users_all):
             abort(403, "You don't have access to this answer.")
     return answer, doc_id
 
@@ -508,15 +507,13 @@ def get_task_users(task_id):
     d = get_doc_or_abort(doc_id)
     verify_seeanswers_access(d)
     usergroup = request.args.get('group')
-    timdb = get_timdb()
-    users = timdb.answers.get_users_by_taskid(task_id)
+    users = User.query.join(Answer, User.answers).filter_by(task_id=task_id).order_by(User.real_name.asc()).all()
     if usergroup is not None:
-        users = [user for user in users if timdb.users.is_user_id_in_group(user['id'], usergroup)]
+        users = [user for user in users if usergroup in user.groups]
     if hide_names_in_teacher(doc_id):
         for user in users:
-            if should_hide_name(doc_id, user['id']):
-                user['name'] = '-'
-                user['real_name'] = get_hidden_name(user['id'])
+            if should_hide_name(doc_id, user.id):
+                user.hide_name = True
     return json_response(users)
 
 

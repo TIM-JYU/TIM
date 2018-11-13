@@ -14,7 +14,6 @@ from pypandoc.py3compat import string_types, cast_bytes
 
 from timApp.auth.accesshelper import has_view_access
 from timApp.document.docsettings import DocSettings
-from timApp.timdb.dbaccess import get_timdb
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.document import dereference_pars, Document
 from timApp.document.macroinfo import MacroInfo
@@ -198,7 +197,6 @@ class DocumentPrinter:
         pars_to_print, _, _, _ = pluginify(
             doc=self._doc_entry.document,
             pars=pars_to_print,
-            timdb=get_timdb(),
             user=get_current_user_object(),
             output_format=PluginOutputFormat.MD,
             wrap_in_div=False,

@@ -46,6 +46,10 @@ def to_json_str(jsondata):
                       cls=TimJsonEncoder)
 
 
+def to_dict(jsondata):
+    return json.loads(to_json_str(jsondata))
+
+
 def set_no_cache_headers(response: Response) -> Response:
     """Sets headers for the response that should prevent any caching of the result.
 
