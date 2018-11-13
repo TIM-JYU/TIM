@@ -3,15 +3,16 @@ import json
 from collections import defaultdict, OrderedDict
 from datetime import datetime
 from operator import itemgetter
-from typing import List, Optional, Dict
+from typing import List, Optional, Dict, Tuple, Iterable
 
+from sqlalchemy import func
+
+from timApp.answer.answer import Answer
+from timApp.answer.answer_models import AnswerTag, UserAnswer
 from timApp.answer.pointsumrule import PointSumRule, PointType
 from timApp.timdb.sqa import tim_main_execute
-from timApp.answer.answer_models import AnswerTag, UserAnswer
-from timApp.answer.answer import Answer
 from timApp.timdb.timdbbase import TimDbBase, result_as_dict_list
 from timApp.user.user import Consent, User
-from timApp.util.utils import get_sql_template
 
 
 class Answers(TimDbBase):
@@ -86,70 +87,63 @@ class Answers(TimDbBase):
         :param print_opt: all = header and answers, header=only header, answers=only answers, korppi=korppi form
 
         """
-        counts = "count(a.answered_on)"
-        groups = "group by a.task_id, u.id"
         print_header = print_opt == "all" or print_opt == "header"
         print_answers = print_opt == "all" or print_opt == "answers" or print_opt == "answersnoline"
 
-        minmax = "max"
-        if age == "min":
-            minmax = "min"
-        if age == "all":
-            minmax = ""
-            counts = "a.valid"
-            groups = ""
-
-        validstr = "AND a.valid"
-        if valid == "all":
-            validstr = ""
-        if valid == "0":
-            validstr = "AND NOT a.valid"
-
-        order_by = 'a.task_id, u.name'
-        if sort == 'username':
-            order_by = 'u.name, a.task_id'
-        consent_str = ''
+        q = (Answer
+             .query
+             .filter((period_from <= Answer.answered_on) & (Answer.answered_on < period_to))
+             .filter(Answer.task_id.in_(task_ids)))
+        if valid == 'all':
+            pass
+        elif valid == '0':
+            q = q.filter_by(valid=False)
+        else:
+            q = q.filter_by(valid=True)
+        q = q.join(User, Answer.users)
         if consent is not None:
-            if consent == Consent.CookieAndData:
-                consent_str = "AND u.consent = 'CookieAndData'"
-            else:
-                consent_str = "AND u.consent = 'CookieOnly'"
-        c = self.db.cursor()
-        sql = f"""
-SELECT DISTINCT u.name, a.task_id, a.content, a.answered_on, n, a.points, u.real_name
-FROM
-(SELECT {minmax} (a.id) AS id, {counts} as n
-FROM answer AS a, userAnswer AS ua, useraccount AS u
-WHERE a.task_id IN ({get_sql_template(task_ids)}) AND ua.answer_id = a.id AND u.id = ua.user_id AND a.answered_on >= %s AND a.answered_on < %s
-{validstr}
-{consent_str}
-{groups}
-) t
-JOIN answer a ON a.id = t.id JOIN useranswer ua ON ua.answer_id = a.id JOIN useraccount u ON u.id = ua.user_id
-ORDER BY {order_by}, a.answered_on
-        """
-        c.execute(sql, task_ids + [period_from, period_to])
+            q = q.filter_by(consent=consent)
 
+        if age == "min":
+            minmax = func.min(Answer.id).label('minmax')
+            counts = func.count(Answer.answered_on).label('count')
+        elif age == "all":
+            minmax = Answer.id
+            counts = Answer.valid
+        else:
+            minmax = func.max(Answer.id).label('minmax')
+            counts = func.count(Answer.answered_on).label('count')
+
+        q = q.add_columns(minmax, counts)
+        if age != 'all':
+            q = q.group_by(Answer.task_id, User.id)
+        q = q.with_entities(minmax, counts)
+        sub = q.subquery()
+        q = Answer.query.join(sub, Answer.id == sub.c.minmax).join(User, Answer.users)
+        if sort == 'username':
+            q = q.order_by(User.name, Answer.task_id)
+        else:
+            q = q.order_by(Answer.task_id, User.name)
+        q = q.with_entities(Answer, User, sub.c.count)
         result = []
 
         lf = "\n"
         if print_opt == "answersnoline":
             lf = ""
 
-
+        qq: Iterable[Tuple[Answer, User, int]] = q
         cnt = 0
-        for row in c.fetchall():
+        for a, u, n in qq:
             cnt += 1
-            points = str(row[5])
+            points = str(a.points)
             if points == "None":
                 points = ""
-            n = str(int(row[4]))
-            name = row[0]
+            name = u.name
             if hide_names:
                 name = "user" + str(cnt)
-            header = name + "; " + row[1] + "; " + str(row[3]) + "; " + n + "; " + points
+            header = name + "; " + a.task_id + "; " + str(a.answered_on) + "; " + str(n) + "; " + points
             # print(separator + header)
-            line = json.loads(row[2])
+            line = json.loads(a.content)
             answ = str(line)
             if isinstance(line, dict):  # maybe csPlugin?
                 if "usercode" in line:  # is csPlugin
@@ -160,14 +154,14 @@ ORDER BY {order_by}, a.answered_on
 
             res = ""
             if printname and not hide_names:
-                header = str(row[6]) + "; " + header
+                header = str(u.real_name) + "; " + header
             if print_header:
                 res = header
             if print_answers:
                 res += lf + answ
             if print_opt == "korppi":
                 res = name + ";"
-                taskid = row[1]
+                taskid = a.task_id
                 i = taskid.find(".")
                 if i >= 0:
                     taskid = taskid[i + 1:]
