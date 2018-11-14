@@ -5,16 +5,14 @@ from timApp.user.user import User
 class AnswerTest(TimDbTest):
 
     def check_totals(self, db, user: User, task_ids, task_count, total_points):
-        self.assertListEqual([{'id': user.id,
-                               'name': user.name,
-                               'email': user.email,
-                               'real_name': user.real_name,
-                               'task_count': task_count,
-                               'task_points': total_points,
-                               'total_points': total_points,
-                               'velp_points': None,
-                               'velped_task_count': 0
-                               }], db.answers.get_users_for_tasks(task_ids, [user.id]))
+        self.assertEqual([{**user.basic_info_dict,
+                           'user': user,
+                           'task_count': task_count,
+                           'task_points': total_points,
+                           'total_points': total_points,
+                           'velp_points': 0,
+                           'velped_task_count': 0
+                           }], db.answers.get_users_for_tasks(task_ids, [user.id]))
 
     def test_summary(self):
         db = self.get_db()

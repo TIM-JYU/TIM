@@ -6,7 +6,7 @@ from operator import itemgetter
 from typing import List, Optional, Dict, Tuple, Iterable
 
 from sqlalchemy import func
-from sqlalchemy.orm import selectinload
+from sqlalchemy.orm import selectinload, aliased
 
 from timApp.answer.answer import Answer
 from timApp.answer.answer_models import AnswerTag, UserAnswer
@@ -244,8 +244,11 @@ class Answers(TimDbBase):
         def g():
             for r in main:
                 d = r._asdict()
-                del d['User']
-                yield {**d, **r.User.basic_info_dict}
+                d['user'] = d.pop('User')
+                yield {
+                    **d,
+                    **r.User.basic_info_dict,  # TODO remove this; user info is under user key
+                }
 
         result = list(g())
         return result

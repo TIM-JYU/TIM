@@ -292,7 +292,7 @@ def view(item_path, template_name, usergroup=None, route="view"):
     # Close database here because we won't need it for a while
     timdb.close()
 
-    current_list_user = User.query.get(user_list[0]['id']) if user_list else None
+    current_list_user: Optional[User] = user_list[0]['user'] if user_list else None
 
     raw_css = doc_settings.css() if doc_settings else None
     doc_css = sanitize_html('<style type="text/css">' + raw_css + '</style>') if raw_css else None
