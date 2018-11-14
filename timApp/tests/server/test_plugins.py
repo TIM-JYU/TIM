@@ -367,7 +367,7 @@ class PluginTest(TimRouteTest):
         # using document path should work as well
         self.get(f'/allDocumentAnswersPlain/{doc.path}')
         # test age parameter
-        all_text = self.get(f'/allDocumentAnswersPlain/{doc.path}', query_string={'age': 'all'})
+        all_text = self.get(f'/allDocumentAnswersPlain/{doc.path}', query_string={'age': 'all', 'valid': 'all'})
         self.assertGreater(len(all_text), len(text))
         invalid_age = self.get(f'/allDocumentAnswersPlain/{doc.path}', query_string={'age': 'asd'})
         self.assertEqual(invalid_age, text)

@@ -6,7 +6,7 @@ from operator import itemgetter
 from typing import List, Optional, Dict, Tuple, Iterable
 
 from sqlalchemy import func
-from sqlalchemy.orm import selectinload, aliased
+from sqlalchemy.orm import selectinload, defaultload
 
 from timApp.answer.answer import Answer
 from timApp.answer.answer_models import AnswerTag, UserAnswer
@@ -103,6 +103,7 @@ class Answers(TimDbBase):
         else:
             q = q.filter_by(valid=True)
         q = q.join(User, Answer.users)
+        q = q.options(defaultload(Answer.users).lazyload(User.groups))
         if consent is not None:
             q = q.filter_by(consent=consent)
 
