@@ -6,13 +6,15 @@ from operator import itemgetter
 from typing import List, Optional, Dict, Tuple, Iterable
 
 from sqlalchemy import func
+from sqlalchemy.orm import selectinload
 
 from timApp.answer.answer import Answer
 from timApp.answer.answer_models import AnswerTag, UserAnswer
 from timApp.answer.pointsumrule import PointSumRule, PointType
-from timApp.timdb.sqa import tim_main_execute
-from timApp.timdb.timdbbase import TimDbBase, result_as_dict_list
+from timApp.timdb.sqa import db
+from timApp.timdb.timdbbase import TimDbBase
 from timApp.user.user import Consent, User
+from timApp.velp.velp_models import Annotation
 
 
 class Answers(TimDbBase):
@@ -22,8 +24,8 @@ class Answers(TimDbBase):
                     task_id: str,
                     content: str,
                     points: Optional[float],
-                    tags: Optional[List[str]]=None,
-                    valid: bool=True,
+                    tags: Optional[List[str]] = None,
+                    valid: bool = True,
                     points_given_by=None):
         """Saves an answer to the database.
 
@@ -149,7 +151,7 @@ class Answers(TimDbBase):
                 if "usercode" in line:  # is csPlugin
                     answ = line.get("usercode", "-")
                 else:
-                    if "points" in line:    # empty csPlugin answer
+                    if "points" in line:  # empty csPlugin answer
                         answ = ""
 
             res = ""
@@ -182,60 +184,76 @@ class Answers(TimDbBase):
 
         return list(g())
 
-    def get_users_for_tasks(self, task_ids: List[str], user_ids: Optional[List[int]]=None, group_by_user=True, group_by_doc=False) -> List[Dict[str, str]]:
+    def get_users_for_tasks(self, task_ids: List[str], user_ids: Optional[List[int]] = None, group_by_user=True,
+                            group_by_doc=False) -> List[Dict[str, str]]:
         if not task_ids:
             return []
 
-        sub = r", substring(task_id from '(\d+)\..+')"
-        subb = sub + " AS doc_id"
+        a3 = (Annotation.query
+              .filter_by(valid_until=None)
+              .group_by(Annotation.answer_id)
+              .with_entities(Annotation.answer_id.label('annotation_answer_id'),
+                             func.sum(Annotation.points).label('velp_points'))
+              .subquery())
+        a2 = Answer.query.with_entities(Answer.id, Answer.points).subquery()
+        a1 = (Answer.query
+              .join(UserAnswer, UserAnswer.answer_id == Answer.id)
+              .filter(Answer.task_id.in_(task_ids) & (Answer.valid == True))
+              .group_by(UserAnswer.user_id, Answer.task_id)
+              .with_entities(Answer.task_id,
+                             UserAnswer.user_id.label('uid'),
+                             func.max(Answer.id).label('aid')).subquery())
+        tmp = (db.session.query(a1, a2, a3)
+               .join(a2, a1.c.aid == a2.c.id)
+               .outerjoin(a3, a3.c.annotation_answer_id == a1.c.aid)
+               .subquery())
+        main = (User.query
+                .join(UserAnswer, UserAnswer.user_id == User.id)
+                .join(tmp, (tmp.c.aid == UserAnswer.answer_id) & (User.id == tmp.c.uid)))
+        group_by_cols = []
+        cols = []
+        if not group_by_user:
+            min_task_id = func.min(tmp.c.task_id).label('task_id')
+            group_by_cols.append(tmp.c.task_id)
+            cols.append(min_task_id)
+        if group_by_doc:
+            doc_id = func.substring(tmp.c.task_id, '(\d+)\..+').label('doc_id')
+            group_by_cols.append(doc_id)
+            cols.append(doc_id)
+        if user_ids is not None:
+            main = main.filter(User.id.in_(user_ids))
+        main = main.group_by(User.id, *group_by_cols)
 
-        if user_ids is None:
-            user_ids = []
-            user_restrict_sql = ''
-        elif not user_ids:
-            user_restrict_sql = 'AND FALSE'
-        else:
-            user_restrict_sql = f'AND UserAccount.id IN :user_ids'
-        sql = f"""
-                SELECT *, task_points + COALESCE(velp_points, 0) as total_points
-                FROM (
-                SELECT UserAccount.id, name, real_name, email,
-                       COUNT(task_id) AS task_count{subb if group_by_doc else ''},
-                       ROUND(SUM(cast(points as float))::numeric,4) as task_points,
-                       ROUND(SUM(velp_points)::numeric,4) as velp_points,
-                       COUNT(annotation_answer_id) AS velped_task_count
-                       {', MIN(task_id) as task_id' if not group_by_user else ''}
-                FROM UserAccount
-                JOIN UserAnswer ON UserAccount.id = UserAnswer.user_id
-                JOIN (
+        # prevents error:
+        # column "usergroup_1.id" must appear in the GROUP BY clause or be used in an aggregate function
+        main = main.options(selectinload(User.groups))
 
-                      (SELECT Answer.task_id, UserAnswer.user_id as uid, MAX(Answer.id) as aid
-                      FROM Answer
-                      JOIN UserAnswer ON UserAnswer.answer_id = Answer.id
-                      WHERE task_id IN :task_ids AND Answer.valid = TRUE
-                      GROUP BY UserAnswer.user_id, Answer.task_id) a1
-                      JOIN (SELECT id, points FROM Answer) a2 ON a2.id = a1.aid
-                      LEFT JOIN (SELECT
-                                 answer_id as annotation_answer_id,
-                                 SUM(points) as velp_points
-                                 FROM annotation
-                                 WHERE valid_until IS NULL
-                                 GROUP BY answer_id
-                                 ) a3 ON a3.annotation_answer_id = a1.aid
+        task_sum = func.sum(tmp.c.points).label('task_points')
+        velp_sum = func.coalesce(func.sum(tmp.c.velp_points), 0).label('velp_points')
 
-                      ) tmp ON tmp.aid = UserAnswer.answer_id AND UserAccount.id = tmp.uid
-                {user_restrict_sql}
-                GROUP BY UserAccount.id {'' if group_by_user else ', task_id'}{sub if group_by_doc else ''}
-                ORDER BY real_name ASC
-                ) tmp
-            """
-        result = tim_main_execute(sql, {'task_ids': tuple(task_ids), 'user_ids': tuple(user_ids)})
-        return result_as_dict_list(result.cursor)
+        main = main.with_entities(
+            User,
+            func.count(tmp.c.task_id).label('task_count'),
+            task_sum,
+            velp_sum,
+            (task_sum + velp_sum).label('total_points'),
+            func.count(tmp.c.annotation_answer_id).label('velped_task_count'),
+            *cols,
+        ).order_by(User.real_name)
+
+        def g():
+            for r in main:
+                d = r._asdict()
+                del d['User']
+                yield {**d, **r.User.basic_info_dict}
+
+        result = list(g())
+        return result
 
     def get_points_by_rule(self, points_rule: Optional[Dict],
                            task_ids: List[str],
-                           user_ids: Optional[List[int]]=None,
-                           flatten: bool=False):
+                           user_ids: Optional[List[int]] = None,
+                           flatten: bool = False):
         """Computes the point sum from given tasks accoring to the given point rule.
 
         :param points_rule: The points rule.
@@ -295,7 +313,8 @@ class Answers(TimDbBase):
                 for groupname, _ in sorted(rule.groups.items()):
                     row['groups'][groupname] = {'task_sum': task_groups['groups'].get(groupname, {}).get('task_sum', 0),
                                                 'velp_sum': task_groups['groups'].get(groupname, {}).get('velp_sum', 0),
-                                                'total_sum': task_groups['groups'].get(groupname, {}).get('total_sum', 0)}
+                                                'total_sum': task_groups['groups'].get(groupname, {}).get('total_sum',
+                                                                                                          0)}
                 result_list.append(row)
             return result_list
         return result

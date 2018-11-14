@@ -32,6 +32,7 @@ class Answer(db.Model):
                             back_populates='answers', lazy='dynamic')
     users_all = db.relationship('User', secondary=UserAnswer.__table__,
                                 back_populates='answers', lazy='select')
+    annotations = db.relationship('Annotation', back_populates='answer')
 
     def __init__(self, task_id, content, points, valid, last_points_modifier=None):
         self.task_id = task_id

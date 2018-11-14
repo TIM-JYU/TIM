@@ -93,6 +93,7 @@ class Annotation(db.Model):
     """Positional information about the annotation."""
 
     annotator = db.relationship('User', back_populates='annotations')
+    answer = db.relationship('Answer', back_populates='annotations')
 
 
 class AnnotationComment(db.Model):
