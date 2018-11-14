@@ -351,8 +351,8 @@ class PluginTest(TimRouteTest):
 {'Test user 2'}; {'testuser2'}; {re.escape(task_id2)}; {date_re}; 1; 2\.0
 \[False, False\]
 """.strip())
-        text = self.get(f'/allAnswersPlain/{task_id}')
-        self.assertRegex(text, fr"""
+        text2 = self.get(f'/allAnswersPlain/{task_id}')
+        self.assertRegex(text2, fr"""
 {TEST_USER_1_NAME}; {'testuser1'}; {re.escape(task_id)}; {date_re}; 1; 2\.0
 \[True, False, False\]
 
@@ -366,6 +366,11 @@ class PluginTest(TimRouteTest):
         self.get(f'/allDocumentAnswersPlain/{doc.id}', query_string={'period': 'other', 'periodTo': 'asd'})
         # using document path should work as well
         self.get(f'/allDocumentAnswersPlain/{doc.path}')
+        # test age parameter
+        all_text = self.get(f'/allDocumentAnswersPlain/{doc.path}', query_string={'age': 'all'})
+        self.assertGreater(len(all_text), len(text))
+        invalid_age = self.get(f'/allDocumentAnswersPlain/{doc.path}', query_string={'age': 'asd'})
+        self.assertEqual(invalid_age, text)
 
     def test_save_points(self):
         cannot_give_custom = {'error': 'You cannot give yourself custom points in this task.'}

@@ -110,8 +110,8 @@ class Answers(TimDbBase):
             minmax = func.min(Answer.id).label('minmax')
             counts = func.count(Answer.answered_on).label('count')
         elif age == "all":
-            minmax = Answer.id
-            counts = Answer.valid
+            minmax = Answer.id.label('minmax')
+            counts = Answer.valid.label('count')
         else:
             minmax = func.max(Answer.id).label('minmax')
             counts = func.count(Answer.answered_on).label('count')
