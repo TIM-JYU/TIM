@@ -123,9 +123,9 @@ class Answers(TimDbBase):
         sub = q.subquery()
         q = Answer.query.join(sub, Answer.id == sub.c.minmax).join(User, Answer.users)
         if sort == 'username':
-            q = q.order_by(User.name, Answer.task_id)
+            q = q.order_by(User.name, Answer.task_id, Answer.answered_on)
         else:
-            q = q.order_by(Answer.task_id, User.name)
+            q = q.order_by(Answer.task_id, User.name, Answer.answered_on)
         q = q.with_entities(Answer, User, sub.c.count)
         result = []
 
@@ -141,9 +141,10 @@ class Answers(TimDbBase):
             if points == "None":
                 points = ""
             name = u.name
+            n = str(int(n))  # n may be a boolean, so convert to int (0/1) first
             if hide_names:
                 name = "user" + str(cnt)
-            header = name + "; " + a.task_id + "; " + str(a.answered_on) + "; " + str(n) + "; " + points
+            header = name + "; " + a.task_id + "; " + str(a.answered_on) + "; " + n + "; " + points
             # print(separator + header)
             line = json.loads(a.content)
             answ = str(line)
