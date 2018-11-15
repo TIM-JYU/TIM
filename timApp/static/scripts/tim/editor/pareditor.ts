@@ -84,13 +84,21 @@ interface IPluginMenuItemObject {
 
 type PluginMenuItem = IPluginMenuItemObject | string;
 
-interface IPluginTabOldFormat {
+interface IEditorTabContent {
+    [name: string]: PluginMenuItem | PluginMenuItem[];
+}
+
+interface IEditorTemplateFormatV1 {
     text: string[];
     templates: PluginMenuItem[][];
 }
 
-interface IPluginTabNewFormat {
-    templates: {[name: string]: PluginMenuItem | PluginMenuItem[]};
+interface IEditorTemplateFormatV2 {
+    templates: IEditorTabContent;
+}
+
+interface IEditorTemplateFormatV3 {
+    editor_tabs: {[tab: string]: IEditorTabContent};
 }
 
 interface IEditorTab {
@@ -101,12 +109,16 @@ interface IEditorTab {
     show?(): boolean;
 }
 
-function isOldTabFormat(d: any): d is IPluginTabOldFormat {
+function isV1Format(d: any): d is IEditorTemplateFormatV1 {
     return Array.isArray(d.text) && Array.isArray(d.templates);
 }
 
-function isNewTabFormat(d: any): d is IPluginTabNewFormat {
+function isV2Format(d: any): d is IEditorTemplateFormatV2 {
     return d.text == null && !Array.isArray(d.templates) && d.templates != null;
+}
+
+function isV3Format(d: any): d is IEditorTemplateFormatV3 {
+    return d.editor_tabs != null;
 }
 
 export class PareditorController extends DialogController<{params: IEditorParams}, IEditorResult, "pareditor"> {
@@ -419,6 +431,23 @@ ${backTicks}
    <i class="helpButton glyphicon glyphicon-question-sign"></i>
 </a>`,
             },
+            {
+                name: "Plugins",
+                entries: [],
+                show: () => this.getOptions().showPlugins,
+                extra: `
+<a class="helpButton"
+   title="Help for plugin attributes"
+   href="https://tim.jyu.fi/view/tim/ohjeita/csPlugin"
+   target="_blank">
+    <i class="helpButton glyphicon glyphicon-question-sign"></i>
+</a>
+            `,
+            },
+            {
+                name: "Upload",
+                entries: [],
+            },
         ];
 
         $(document).on("webkitfullscreenchange mozfullscreenchange fullscreenchange MSFullscreenChange", (event) => {
@@ -436,7 +465,17 @@ ${backTicks}
     }
 
     getVisibleTabs() {
-        return this.tabs.filter((t) => !t.show || t.show());
+        // Upload tab is shown separately in the template because
+        // it has special content that cannot be placed under "extra".
+        return this.tabs.filter((t) => (!t.show || t.show()) && t.name !== "Upload");
+    }
+
+    getUploadTab() {
+        return this.findTab("upload");
+    }
+
+    findTab(name: string) {
+        return this.tabs.find((t) => t.name.toLowerCase() === name.toLowerCase());
     }
 
     getTabIndex(t: IEditorTab) {
@@ -518,7 +557,7 @@ ${backTicks}
 Template format is either the old plugin syntax:
 
     {
-        'text' : ['my1', 'my2'],      // list of tabs first
+        'text' : ['my1', 'my2'],      // list of menus first
         'templates' : [               // and then array of arrays of items
             [
                 {'data': 'cat', 'expl': 'Add cat', 'text': 'Cat'},
@@ -534,7 +573,7 @@ or newer one that is more familiar to write in YAML:
 
     {
         'templates' :
-          { 'my1':  // list of objects where is the name of tab as a key
+          { 'my1':  // list of objects where is the name of menu as a key
             [
                 {'data': 'cat', 'expl': 'Add cat', 'text': 'Cat'},
                 {'data': 'dog', 'expl': 'Add dog'},
@@ -547,85 +586,84 @@ or newer one that is more familiar to write in YAML:
 
  */
     getPluginsInOrder() {
-        const tabs: {[tabName: string]: IEditorMenuItem[] | undefined} = {};
+        const tabs: {[tab: string]: {[menuName: string]: IEditorMenuItem[] | undefined} | undefined} = {};
         for (const plugin of Object.keys($window.reqs)) {
             const data = $window.reqs[plugin] as unknown;
-            let tabNames;
-            if (isNewTabFormat(data)) {
-                tabNames = Object.keys(data.templates);
-            } else if (isOldTabFormat(data)) {
-                tabNames = data.text || [plugin];
+            let pluginTabs;
+            if (isV3Format(data)) {
+                pluginTabs = data.editor_tabs;
+            } else if (isV2Format(data)) {
+                pluginTabs = {plugins: Object.entries(data.templates)};
+            } else if (isV1Format(data)) {
+                const menus = [];
+                const menuNames = data.text || [plugin];
+                for (let i = 0; i < menuNames.length; i++) {
+                    menus.push([menuNames[i], data.templates[i]]);
+                }
+                pluginTabs = {plugins: menus};
             } else {
                 continue;
             }
-            const len = tabNames.length;
-            for (let j = 0; j < len; j++) {
-                const tab = tabNames[j];
-                let templs: PluginMenuItem[] | PluginMenuItem;
-                if (isNewTabFormat(data)) {
-                    templs = data.templates[tab];
-                } else {
-                    templs = data.templates[j];
-                }
-                let templsArray: PluginMenuItem[];
-                if (Array.isArray(templs)) {
-                    templsArray = templs;
-                } else {
-                    templsArray = [templs];
-                }
+            for (const [tab, menus] of Object.entries(pluginTabs)) {
+                let j = -1;
+                for (const [menu, templs] of menus) {
+                    j++;
+                    let templsArray: PluginMenuItem[];
+                    if (Array.isArray(templs)) {
+                        templsArray = templs;
+                    } else {
+                        templsArray = [templs];
+                    }
 
-                for (const template of templsArray) {
-                    let templateObj: IPluginMenuItemObject;
-                    if (typeof template === "string") {
-                        templateObj = {text: template, data: template};
-                    } else {
-                        templateObj = template;
-                    }
-                    const text = (templateObj.text || templateObj.file || templateObj.data);
-                    const file = templateObj.file;
-                    const tempdata = (templateObj.data || null);
-                    let clickfn;
-                    if (tempdata) {
-                        clickfn = () => {
-                            this.putTemplate(tempdata);
-                        };
-                    } else if (file) {
-                        clickfn = async () => {
-                            await this.getTemplate(plugin, file, j.toString());
-                        };
-                    } else {
-                        continue;
-                    }
-                    const existing = tabs[tab];
-                    const item = {name: text, title: templateObj.expl || "", func: clickfn};
-                    if (!existing) {
-                        tabs[tab] = [item];
-                    } else {
-                        existing.push(item);
+                    for (const template of templsArray) {
+                        let templateObj: IPluginMenuItemObject;
+                        if (typeof template === "string") {
+                            templateObj = {text: template, data: template};
+                        } else {
+                            templateObj = template;
+                        }
+                        const text = (templateObj.text || templateObj.file || templateObj.data);
+                        const file = templateObj.file;
+                        const tempdata = (templateObj.data || null);
+                        let clickfn;
+                        if (tempdata) {
+                            clickfn = () => {
+                                this.putTemplate(tempdata);
+                            };
+                        } else if (file) {
+                            clickfn = async () => {
+                                await this.getTemplate(plugin, file, j.toString()); // TODO: Why is index needed for getTemplate...?
+                            };
+                        } else {
+                            continue;
+                        }
+                        const existingTab = tabs[tab];
+                        const item = {name: text, title: templateObj.expl || "", func: clickfn};
+                        if (!existingTab) {
+                            tabs[tab] = {[menu]: [item]};
+                        } else {
+                            const existingMenu = existingTab[menu];
+                            if (!existingMenu) {
+                                existingTab[menu] = [item];
+                            } else {
+                                existingMenu.push(item);
+                            }
+                        }
                     }
                 }
             }
         }
-        const pluginTab: IEditorTab = {
-            name: "Plugins",
-            entries: [],
-            show: () => this.getOptions().showPlugins,
-            extra: `
-<a class="helpButton"
-   title="Help for plugin attributes"
-   href="https://tim.jyu.fi/view/tim/ohjeita/csPlugin"
-   target="_blank">
-    <i class="helpButton glyphicon glyphicon-question-sign"></i>
-</a>
-            `,
-        };
-        for (const t of Object.keys(tabs)) {
-            pluginTab.entries.push({
-                title: t,
-                items: tabs[t]!,
-            });
+        for (const [tabName, menus] of Object.entries(tabs)) {
+            const tab = this.findTab(tabName);
+            if (tab) {
+                for (const [k, v] of Object.entries(menus!)) {
+                    tab.entries.push({
+                        title: k,
+                        items: v!,
+                    });
+                }
+            }
         }
-        this.tabs.push(pluginTab);
     }
 
     getInitialText() {

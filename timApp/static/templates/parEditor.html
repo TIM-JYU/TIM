@@ -11,6 +11,7 @@
             <a ng-href="{{$ctrl.uploadedFile}}" >{{$ctrl.uploadedFile}}</a>
         </span>
         <div class="error" ng-show="$ctrl.file.error" ng-bind="$ctrl.file.error"></div>
+        <tim-editor-entry ng-repeat="e in $ctrl.getUploadTab().entries" data="e"></tim-editor-entry>
     </uib-tab>
     <uib-tab heading="Help" index="'help'">
         <a class="helpButton margin-4" href="https://tim.jyu.fi/view/tim/TIM-ohjeet" target="_blank"
