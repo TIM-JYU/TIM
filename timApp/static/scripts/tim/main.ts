@@ -90,7 +90,11 @@ $(() => {
     // This is a workaround for it.
     if (location.hash && !location.hash.includes("/")) {
         try {
-            const element = $(decodeURIComponent(location.hash))[0];
+            const id = decodeURIComponent(location.hash).slice(1);
+
+            // Don't use jQuery selector here because id would have to be escaped
+            // and then jQuery would have to be updated to get escapeSelector method.
+            const element = document.getElementById(id);
             if (element) {
                 // Both with and without setTimeout are needed to get smooth experience.
                 // Firefox and Chrome behave slightly differently.
