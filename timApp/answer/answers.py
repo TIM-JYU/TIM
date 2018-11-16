@@ -5,7 +5,7 @@ from datetime import datetime
 from operator import itemgetter
 from typing import List, Optional, Dict, Tuple, Iterable
 
-from sqlalchemy import func
+from sqlalchemy import func, Numeric, Float
 from sqlalchemy.orm import selectinload, defaultload
 
 from timApp.answer.answer import Answer
@@ -230,8 +230,8 @@ class Answers(TimDbBase):
         # column "usergroup_1.id" must appear in the GROUP BY clause or be used in an aggregate function
         main = main.options(selectinload(User.groups))
 
-        task_sum = func.sum(tmp.c.points).label('task_points')
-        velp_sum = func.coalesce(func.sum(tmp.c.velp_points), 0).label('velp_points')
+        task_sum = func.round(func.sum(tmp.c.points).cast(Numeric), 4).cast(Float).label('task_points')
+        velp_sum = func.round(func.coalesce(func.sum(tmp.c.velp_points).cast(Numeric), 0), 4).cast(Float).label('velp_points')
 
         main = main.with_entities(
             User,

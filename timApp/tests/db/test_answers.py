@@ -29,7 +29,7 @@ class AnswerTest(TimDbTest):
     def check_user(self, db, u: User, task_id1, task_id2):
         uid = u.id
         self.assertListEqual([], db.answers.get_users_for_tasks([task_id1], [uid]))
-        db.answers.save_answer([u], task_id1, 'content', 1, [], True)
+        db.answers.save_answer([u], task_id1, 'content', 1.00001, [], True)
         self.check_totals(db, u, [task_id1], 1, 1.0)
         db.answers.save_answer([u], task_id1, 'content1', 10, [], False)
         self.check_totals(db, u, [task_id1], 1, 1.0)
