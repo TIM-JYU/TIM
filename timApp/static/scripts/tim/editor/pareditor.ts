@@ -589,11 +589,11 @@ or newer one that is more familiar to write in YAML:
  */
     getPluginsInOrder() {
         const tabs: {[tab: string]: {[menuName: string]: IEditorMenuItem[] | undefined} | undefined} = {};
-        for (const plugin of Object.keys($window.reqs)) {
-            const data = $window.reqs[plugin] as unknown;
+        for (const [plugin, d] of Object.entries($window.reqs)) {
+            const data = d as unknown;
             let pluginTabs: Array<[string, MenuNameAndItems]>;
             if (isV3Format(data)) {
-                // this needs a type cast inside map because otherwise it's inferred as a plain array and not tuple
+                // this needs a type cast inside map because otherwise it's inferred as a plain array and not a tuple
                 pluginTabs = Object.entries(data.editor_tabs).map(([k, v]) => [k, Object.entries(v)] as [string, MenuNameAndItems]);
             } else if (isV2Format(data)) {
                 pluginTabs = Object.entries({plugins: Object.entries(data.templates)});
@@ -607,7 +607,7 @@ or newer one that is more familiar to write in YAML:
             } else {
                 continue;
             }
-            for (const [tab, menus] of (pluginTabs)) {
+            for (const [tab, menus] of pluginTabs) {
                 for (const [j, [menu, templs]] of menus.entries()) {
                     let templsArray: PluginMenuItem[];
                     if (Array.isArray(templs)) {
