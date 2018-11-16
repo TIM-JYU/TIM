@@ -121,6 +121,8 @@ function isV3Format(d: any): d is IEditorTemplateFormatV3 {
     return d.editor_tabs != null;
 }
 
+type MenuNameAndItems = [string, PluginMenuItem | PluginMenuItem[]][];
+
 export class PareditorController extends DialogController<{params: IEditorParams}, IEditorResult, "pareditor"> {
     private static $inject = ["$scope", "$element"];
     private deleting = false;
@@ -589,25 +591,24 @@ or newer one that is more familiar to write in YAML:
         const tabs: {[tab: string]: {[menuName: string]: IEditorMenuItem[] | undefined} | undefined} = {};
         for (const plugin of Object.keys($window.reqs)) {
             const data = $window.reqs[plugin] as unknown;
-            let pluginTabs;
+            let pluginTabs: Array<[string, MenuNameAndItems]>;
             if (isV3Format(data)) {
-                pluginTabs = data.editor_tabs;
+                // this needs a type cast inside map because otherwise it's inferred as a plain array and not tuple
+                pluginTabs = Object.entries(data.editor_tabs).map(([k, v]) => [k, Object.entries(v)] as [string, MenuNameAndItems]);
             } else if (isV2Format(data)) {
-                pluginTabs = {plugins: Object.entries(data.templates)};
+                pluginTabs = Object.entries({plugins: Object.entries(data.templates)});
             } else if (isV1Format(data)) {
-                const menus = [];
+                const menus: MenuNameAndItems = [];
                 const menuNames = data.text || [plugin];
                 for (let i = 0; i < menuNames.length; i++) {
                     menus.push([menuNames[i], data.templates[i]]);
                 }
-                pluginTabs = {plugins: menus};
+                pluginTabs = Object.entries({plugins: menus});
             } else {
                 continue;
             }
-            for (const [tab, menus] of Object.entries(pluginTabs)) {
-                let j = -1;
-                for (const [menu, templs] of menus) {
-                    j++;
+            for (const [tab, menus] of (pluginTabs)) {
+                for (const [j, [menu, templs]] of menus.entries()) {
                     let templsArray: PluginMenuItem[];
                     if (Array.isArray(templs)) {
                         templsArray = templs;
@@ -616,7 +617,7 @@ or newer one that is more familiar to write in YAML:
                     }
 
                     for (const template of templsArray) {
-                        let templateObj: IPluginMenuItemObject;
+                        let templateObj;
                         if (typeof template === "string") {
                             templateObj = {text: template, data: template};
                         } else {
@@ -1265,4 +1266,16 @@ export function openEditorSimple(docId: number, text: string, caption: string, l
         unreadCb: async () => {
         },
     });
+}
+
+export function test() {
+    const fns = [];
+    let i = -1;
+    for (const x of "hi") {
+        i++;
+        fns.push(() => console.log(i));
+    }
+    for (const f of fns) {
+        f();
+    }
 }
