@@ -51,7 +51,6 @@ class LectureTest(TimRouteTest):
         # TODO: Check also other than status code
         self.get(f'/getAllLecturesFromDocument', query_string=dict(doc_id=doc.id))
         self.get(f'/getAllMessages', query_string=lecture_q)
-        self.get(f'/getLectureAnswerTotals/{lecture_id}')
         self.get(f'/getLectureByCode', query_string=dict(doc_id=doc.id, lecture_code=lecture_code))
         self.get(f'/getLectureInfo', query_string=lecture_q)
         self.get(f'/showLectureInfo/{lecture_id}')
@@ -248,6 +247,16 @@ class LectureTest(TimRouteTest):
         self.get('/getLectureAnswers', query_string=dict(asked_id=aid))
         self.post('/endLecture', query_string=lecture_q)
         self.post('/leaveLecture', query_string=lecture_q)
+
+        totals = self.get(f'/getLectureAnswerTotals/{lecture_id}')
+        self.assertEqual("""
+testuser1;sum;1.0
+testuser2;sum;0.0
+
+testuser1;count;2
+testuser2;count;1
+        """.strip() + '\n', totals)
+
         self.post('/deleteLecture', query_string=lecture_q)
         self.post('/deleteLecture', query_string=lecture_q, expect_status=404)
 

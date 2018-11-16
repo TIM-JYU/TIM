@@ -1,9 +1,13 @@
 import json
 from json import JSONDecodeError
-from typing import Optional
+from typing import Optional, List, Tuple
 
-from timApp.timdb.sqa import db, tim_main_execute
-from timApp.timdb.timdbbase import result_as_dict_list
+from sqlalchemy import func
+from sqlalchemy.orm import lazyload
+
+from timApp.lecture.lecture import Lecture
+from timApp.timdb.sqa import db
+from timApp.user.user import User
 
 
 class LectureAnswer(db.Model):
@@ -39,13 +43,17 @@ class LectureAnswer(db.Model):
         }
 
 
-def get_totals(lecture_id: int, user_id: Optional[int]=None):
-    condition = 'AND u.id = :userid' if user_id is not None else ''
-    r = tim_main_execute(f"""SELECT u.name, SUM(a.points) as sum, COUNT(*) as count
-    FROM LectureAnswer a
-    JOIN UserAccount u ON a.user_id = u.id
-    WHERE a.lecture_id = :lectureid
-    {condition}
-    GROUP BY u.name
-    ORDER BY u.name""", {'lectureid': lecture_id, **({'userid': user_id} if user_id else {})})
-    return result_as_dict_list(r.cursor)
+def get_totals(lecture: Lecture, user: Optional[User]=None) -> List[Tuple[User, float, int]]:
+    q = User.query
+    if user:
+        q = q.filter_by(id=user.id)
+    q = (q.join(LectureAnswer)
+         .options(lazyload(User.groups))
+         .filter_by(lecture_id=lecture.lecture_id)
+         .group_by(User.id)
+         .order_by(User.name)
+         .with_entities(User,
+                        func.sum(LectureAnswer.points),
+                        func.count())
+         )
+    return q.all()

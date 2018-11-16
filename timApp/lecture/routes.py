@@ -84,17 +84,18 @@ def get_lecture_info():
 
 @lecture_routes.route('/getLectureAnswerTotals/<int:lecture_id>')
 def get_lecture_answer_totals(lecture_id):
-    is_lecturer = is_lecturer_of(Lecture.find_by_id(lecture_id))
-    results = get_totals(lecture_id, None if is_lecturer else get_current_user_id())
+    lec = Lecture.find_by_id(lecture_id)
+    is_lecturer = is_lecturer_of(lec)
+    results = get_totals(lec, None if is_lecturer else get_current_user_object())
     sum_field_name = get_option(request, 'sum_field_name', 'sum')
     count_field_name = get_option(request, 'count_field_name', 'count')
 
     def generate_text():
-        for a in results:
-            yield f'{a["name"]};{sum_field_name};{a["sum"]}\n'
+        for u, p, c in results:
+            yield f'{u.name};{sum_field_name};{p}\n'
         yield '\n'
-        for a in results:
-            yield f'{a["name"]};{count_field_name};{a["count"]}\n'
+        for u, p, c in results:
+            yield f'{u.name};{count_field_name};{c}\n'
     return Response(generate_text(), mimetype='text/plain')
 
 
