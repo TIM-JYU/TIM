@@ -655,14 +655,16 @@ or newer one that is more familiar to write in YAML:
             }
         }
         for (const [tabName, menus] of Object.entries(tabs)) {
-            const tab = this.findTab(tabName);
-            if (tab) {
-                for (const [k, v] of Object.entries(menus!)) {
-                    tab.entries.push({
-                        title: k,
-                        items: v!,
-                    });
-                }
+            let tab = this.findTab(tabName);
+            if (!tab) {
+                tab = {name: tabName, entries: []};
+                this.tabs.push(tab);
+            }
+            for (const [k, v] of Object.entries(menus!)) {
+                tab.entries.push({
+                    title: k,
+                    items: v!,
+                });
             }
         }
     }
