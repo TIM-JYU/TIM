@@ -238,7 +238,7 @@ class Answers(TimDbBase):
             func.count(tmp.c.task_id).label('task_count'),
             task_sum,
             velp_sum,
-            (task_sum + velp_sum).label('total_points'),
+            func.round((task_sum + velp_sum).cast(Numeric), 4).cast(Float).label('total_points'),
             func.count(tmp.c.annotation_answer_id).label('velped_task_count'),
             *cols,
         ).order_by(User.real_name)
