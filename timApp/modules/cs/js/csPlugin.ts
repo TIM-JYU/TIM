@@ -2673,7 +2673,7 @@ csApp.Controller = function($scope,$transclude) {
                 var opts = 'seamless="seamless" sandbox="allow-scripts allow-forms allow-same-origin"';
                 if ( $scope.iframeopts ) opts = $scope.iframeopts;
                 var angularElement = '<div tim-draggable-fixed class="no-popup-menu" style="top: 91px; right: 0px; z-index: 20" >'+
-                  '<span class="csRunMenu"><div><a href ng-click="toggleFixed()" >{{irrotaKiinnita}}</a><a href ng-click="closeFrame()" style="float: right" >[X]</a></div></span>'+
+                  '<span class="csRunMenu"><div class="csFixRelease"><a href ng-click="toggleFixed()" >{{irrotaKiinnita}}</a><a href ng-click="closeFrame()" style="float: right" >[X]</a></div></span>'+
                     (!$scope.fullhtml ? '<iframe id="'+v.vid+'" class="jsCanvas" src="' + fsrc + '?scripts='+($scope.attrs.scripts||scripts)+'&html='+ html + '" ' + v.w + v.h + ' style="border:0" '+ opts +'>':
                     '<iframe id="'+v.vid+'" class="jsCanvas" '  + v.w + v.h + ' style="border:0" '+ opts + ' >')+
                   '</iframe>'+
