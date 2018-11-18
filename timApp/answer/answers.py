@@ -1,5 +1,6 @@
 """"""
 import json
+import math
 from collections import defaultdict, OrderedDict
 from datetime import datetime
 from operator import itemgetter
@@ -282,14 +283,16 @@ class Answers(TimDbBase):
             for groupname, group in groups.items():
                 group['task_sum'] = 0
                 group['velp_sum'] = 0
-                if PointType.task in rule.groups[groupname].point_types:
+                gr = rule.groups[groupname]
+                if PointType.task in gr.point_types:
                     group['task_sum'] = round(sum(t['task_points']
                                                   for t in group['tasks'] if t['task_points'] is not None), 2)
                 if PointType.velp in rule.groups[groupname].point_types:
                     group['velp_sum'] = round(sum(t['velp_points']
                                                   for t in group['tasks'] if t['velp_points'] is not None), 2)
                 group['velped_task_count'] = sum(1 for t in group['tasks'] if t['velped_task_count'] > 0)
-                group['total_sum'] = group['task_sum'] + group['velp_sum']
+                total_sum = group['task_sum'] + group['velp_sum']
+                group['total_sum'] = min(max(total_sum, gr.min_points), gr.max_points)
                 groupsums.append((group['task_sum'], group['velp_sum'], group['total_sum']))
             if rule.count_type == 'best':
                 groupsums = sorted(groupsums, reverse=True, key=itemgetter(2))

@@ -77,8 +77,12 @@ def return_points(points_rule, result):
     if "save" not in result:
         return
     # if not points_rule.get("valid", False) and "points" not in points_rule: return # no rule found
+    min_points = points_rule.get("min_points", 0)
+    max_points = points_rule.get("max_points", 1e100)
     if "result" in points_rule:
-        tim_info = {"points": points_rule["result"]}
+        points = points_rule["result"]
+        tim_info = {"points": max(min(points,max_points), min_points)}
         result["tim_info"] = tim_info
     if "points" in points_rule:
-        result["save"]["points"] = points_rule["points"]
+        points = points_rule["points"]
+        result["save"]["points"] = points

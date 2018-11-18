@@ -257,6 +257,7 @@ def view(item_path, template_name, usergroup=None, route="view"):
     total_points = None
     tasks_done = None
     task_groups = None
+    show_task_info = False
     user_list = []
     user_dict = None
     task_ids, plugin_count = find_task_ids(xs)
@@ -281,6 +282,7 @@ def view(item_path, template_name, usergroup=None, route="view"):
             total_points = info[0]['total_points']
             tasks_done = info[0]['task_count']
             task_groups = info[0].get('groups')
+            show_task_info = tasks_done > 0 or total_points != 0
 
     no_question_auto_numbering = None
 
@@ -380,6 +382,7 @@ def view(item_path, template_name, usergroup=None, route="view"):
                            task_info={'total_points': total_points,
                                       'tasks_done': tasks_done,
                                       'total_tasks': total_tasks,
+                                      'show' : show_task_info,
                                       'groups': task_groups},
                            doc_settings=doc_settings,
                            word_list=word_list,

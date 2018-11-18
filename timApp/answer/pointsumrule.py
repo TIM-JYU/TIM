@@ -15,6 +15,8 @@ class Group:
         if isinstance(data, str):
             self.matchers = {data}
             self.point_types = {PointType.task, PointType.velp}
+            self.min_points = 0
+            self.max_points = 1e100
         elif isinstance(data, dict):
             match_re = data.get('match', name)
             # match can be a single regex or a list of regexes
@@ -30,6 +32,8 @@ class Group:
                 self.point_types.add(PointType.velp)
             if 't' in point_type:
                 self.point_types.add(PointType.task)
+            self.min_points = data.get("min_points", 0)
+            self.max_points = data.get("max_points", 1e100)
 
     def check_match(self, task_id: str):
         try:
