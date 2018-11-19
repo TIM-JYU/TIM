@@ -1,4 +1,4 @@
-<div ng-repeat="group in $ctrl.data" class="btn-group btn-group-sm margin-4" uib-dropdown is-open="group.isOpen">
+<div ng-repeat="group in $ctrl.data" class="btn-group btn-group-sm margin-4" uib-dropdown dropdown-append-to-body is-open="group.isOpen">
     <button type="button" class="btn btn-default" uib-dropdown-toggle>
         {{ group.name || 'Top level' }} <span class="caret"></span>
     </button>

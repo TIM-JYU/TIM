@@ -116,21 +116,6 @@ export class SidebarMenuCtrl implements IController {
         }
     }
 
-    bookmarkTabSelected(isSelected: boolean) {
-        const tabContent = $("#menuTabs").find(".tab-content");
-        if (isSelected) {
-            // The dropdown menu is clipped if it's near right side of the menu without applying this hack
-            // Also the dropdown menu causes vertical scrollbar to appear without specifying height
-            tabContent.css("height", "calc(100vh - 51.2833px)");
-            tabContent.css("overflow-x", "visible");
-            tabContent.css("overflow-y", "visible");
-        } else {
-            tabContent.css("height", "auto");
-            tabContent.css("overflow-x", "hidden");
-            tabContent.css("overflow-y", "auto");
-        }
-    }
-
     showSidebar() {
         const tabs = $("#menuTabs");
         if (tabs.is(":visible")) {
@@ -428,8 +413,7 @@ timApp.component("timSidebarMenu", {
     <i class="glyphicon glyphicon-menu-hamburger" title="Click to open sidebar-menu"></i>
 </div>
 <uib-tabset id="menuTabs" active="$ctrl.active" class="hidden-sm hidden-xs">
-    <uib-tab ng-if="!$ctrl.hideLinks && $ctrl.users.isLoggedIn()" index="6" select="$ctrl.bookmarkTabSelected(true)"
-             deselect="$ctrl.bookmarkTabSelected(false)">
+    <uib-tab ng-if="!$ctrl.hideLinks && $ctrl.users.isLoggedIn()" index="6">
         <uib-tab-heading>
             <i class="glyphicon glyphicon-bookmark"></i>
         </uib-tab-heading>
