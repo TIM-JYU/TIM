@@ -75,30 +75,38 @@ export function getCitePar(docId: number, par: string) {
     return `#- {rd="${docId}" rl="no" rp="${par}"}`;
 }
 
-interface IPluginMenuItemObject {
+interface IMenuItemObject {
     data: string;
     expl?: string;
     text?: string;
     file?: string;
 }
 
-type PluginMenuItem = IPluginMenuItemObject | string;
+type MenuItem = IMenuItemObject | string;
+
+type MenuItemEntries = MenuItem | MenuItem[];
 
 interface IEditorTabContent {
-    [name: string]: PluginMenuItem | PluginMenuItem[];
+    [name: string]: MenuItemEntries;
 }
 
 interface IEditorTemplateFormatV1 {
     text: string[];
-    templates: PluginMenuItem[][];
+    templates: MenuItem[][];
 }
 
 interface IEditorTemplateFormatV2 {
     templates: IEditorTabContent;
 }
 
+interface EditorItem<T> {
+    text: string;
+    shortcut: string;
+    items: T;
+}
+
 interface IEditorTemplateFormatV3 {
-    editor_tabs: {[tab: string]: IEditorTabContent};
+    editor_tabs: Array<EditorItem<Array<EditorItem<MenuItemEntries>>>>;
 }
 
 interface IEditorTab {
@@ -121,7 +129,7 @@ function isV3Format(d: any): d is IEditorTemplateFormatV3 {
     return d.editor_tabs != null;
 }
 
-type MenuNameAndItems = [string, PluginMenuItem | PluginMenuItem[]][];
+type MenuNameAndItems = [string, MenuItemEntries][];
 
 export class PareditorController extends DialogController<{params: IEditorParams}, IEditorResult, "pareditor"> {
     private static $inject = ["$scope", "$element"];
@@ -528,7 +536,7 @@ ${backTicks}
     }
 
     $postLink() {
-        this.getPluginsInOrder();
+        this.initCustomTabs();
     }
 
     $onDestroy() {
@@ -555,61 +563,32 @@ ${backTicks}
         window.localStorage.setItem(name + this.getSaveTag(), val);
     }
 
-    /*
-Template format is either the old plugin syntax:
-
-    {
-        'text' : ['my1', 'my2'],      // list of menus first
-        'templates' : [               // and then array of arrays of items
-            [
-                {'data': 'cat', 'expl': 'Add cat', 'text': 'Cat'},
-                {'data': 'dog', 'expl': 'Add dog'},
-            ],
-            [
-                {'data': 'fox', 'expl': 'Add fox', 'text': 'Fox'},
-            ]
-        ]
-    }
-
-or newer one that is more familiar to write in YAML:
-
-    {
-        'templates' :
-          { 'my1':  // list of objects where is the name of menu as a key
-            [
-                {'data': 'cat', 'expl': 'Add cat', 'text': 'Cat'},
-                {'data': 'dog', 'expl': 'Add dog'},
-            ]
-           ,
-           'my2':  // if only one, does not need to be array
-                {'data': 'fox', 'expl': 'Add fox', 'text': 'Fox'},
-          }
-    }
-
- */
-    getPluginsInOrder() {
+    initCustomTabs() {
         const tabs: {[tab: string]: {[menuName: string]: IEditorMenuItem[] | undefined} | undefined} = {};
         for (const [plugin, d] of Object.entries($window.reqs)) {
             const data = d as unknown;
-            let pluginTabs: Array<[string, MenuNameAndItems]>;
+            let currTabs: Array<[string, MenuNameAndItems]>;
             if (isV3Format(data)) {
-                // this needs a type cast inside map because otherwise it's inferred as a plain array and not a tuple
-                pluginTabs = Object.entries(data.editor_tabs).map(([k, v]) => [k, Object.entries(v)] as [string, MenuNameAndItems]);
+                // this needs type casts inside maps because otherwise the types are inferred as plain arrays and not tuples
+                currTabs = Object
+                    .entries(data.editor_tabs)
+                    .map(([k, v]) => [v.text, v.items // editor_tabs is an array, so k is just (unused) index here
+                        .map((m) => [m.text, m.items] as [string, MenuItemEntries])] as [string, MenuNameAndItems]);
             } else if (isV2Format(data)) {
-                pluginTabs = Object.entries({plugins: Object.entries(data.templates)});
+                currTabs = Object.entries({plugins: Object.entries(data.templates)});
             } else if (isV1Format(data)) {
                 const menus: MenuNameAndItems = [];
                 const menuNames = data.text || [plugin];
                 for (let i = 0; i < menuNames.length; i++) {
                     menus.push([menuNames[i], data.templates[i]]);
                 }
-                pluginTabs = Object.entries({plugins: menus});
+                currTabs = Object.entries({plugins: menus});
             } else {
                 continue;
             }
-            for (const [tab, menus] of pluginTabs) {
+            for (const [tab, menus] of currTabs) {
                 for (const [j, [menu, templs]] of menus.entries()) {
-                    let templsArray: PluginMenuItem[];
+                    let templsArray: MenuItem[];
                     if (Array.isArray(templs)) {
                         templsArray = templs;
                     } else {
