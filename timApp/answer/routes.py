@@ -23,6 +23,7 @@ from timApp.document.document import Document
 from timApp.markdown.dumboclient import call_dumbo
 from timApp.plugin.plugin import Plugin
 from timApp.plugin.pluginControl import find_task_ids, pluginify
+from timApp.user.usergroup import UserGroup
 from timApp.util.utils import try_load_json, get_current_time
 from timApp.plugin.pluginexception import PluginException
 from timApp.util.flask.requesthelper import verify_json_params, unpack_args, get_option, get_consent_opt
@@ -507,9 +508,10 @@ def get_task_users(task_id):
     d = get_doc_or_abort(doc_id)
     verify_seeanswers_access(d)
     usergroup = request.args.get('group')
-    users = User.query.join(Answer, User.answers).filter_by(task_id=task_id).order_by(User.real_name.asc()).all()
+    q = User.query.join(Answer, User.answers).filter_by(task_id=task_id).join(UserGroup, User.groups).order_by(User.real_name.asc())
     if usergroup is not None:
-        users = [user for user in users if usergroup in user.groups]
+        q = q.filter(UserGroup.name.in_([usergroup]))
+    users = q.all()
     if hide_names_in_teacher(doc_id):
         for user in users:
             if should_hide_name(doc_id, user.id):

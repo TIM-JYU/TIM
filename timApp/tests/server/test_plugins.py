@@ -200,6 +200,12 @@ class PluginTest(TimRouteTest):
                                   'id': 2,
                                   'name': 'testuser1',
                                   'real_name': 'Test user 1'}])
+        self.get(f'/getTaskUsers/{task_id}',
+                 query_string={'group': 'testuser1'},
+                 expect_content=[{'email': 'test1@example.com',
+                                  'id': 2,
+                                  'name': 'testuser1',
+                                  'real_name': 'Test user 1'}])
 
         self.get(doc.get_url_for_view('teacher'))
 
