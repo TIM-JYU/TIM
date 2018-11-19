@@ -15,45 +15,45 @@ use yaml_rust::Yaml;
 use yaml_rust::YamlLoader;
 
 #[derive(Deserialize, Debug, Clone, Eq, PartialEq, Hash)]
-pub struct ParId(pub String);
+pub struct BlockId(pub String);
 
-pub struct ParIdRef<'a>(pub &'a str);
+pub struct BlockIdRef<'a>(pub &'a str);
 
-impl<'a> From<&'a str> for ParIdRef<'a> {
+impl<'a> From<&'a str> for BlockIdRef<'a> {
     fn from(s: &'a str) -> Self {
-        ParIdRef(s)
+        BlockIdRef(s)
     }
 }
 
-pub trait ParIdLike {
+pub trait BlockIdLike {
     fn get_str(&self) -> &str;
 }
 
-impl Borrow<str> for ParId {
+impl Borrow<str> for BlockId {
     fn borrow(&self) -> &str {
         &self.0
     }
 }
 
-impl<'a> Borrow<str> for ParIdRef<'a> {
+impl<'a> Borrow<str> for BlockIdRef<'a> {
     fn borrow(&self) -> &str {
         self.0
     }
 }
 
-impl ParIdLike for ParId {
+impl BlockIdLike for BlockId {
     fn get_str(&self) -> &str {
         &self.0
     }
 }
 
-impl<'a> ParIdLike for &'a ParId {
+impl<'a> BlockIdLike for &'a BlockId {
     fn get_str(&self) -> &str {
         &self.0
     }
 }
 
-impl<'a> ParIdLike for ParIdRef<'a> {
+impl<'a> BlockIdLike for BlockIdRef<'a> {
     fn get_str(&self) -> &str {
         self.0
     }
@@ -67,15 +67,15 @@ pub struct AttributeSet {
 }
 
 #[derive(Deserialize, Debug, Clone)]
-pub struct DocParagraph {
-    pub id: ParId,
+pub struct DocBlock {
+    pub id: BlockId,
     md: String,
     pub t: String,
     pub attrs: AttributeSet,
 }
 
-impl DocParagraph {
-    pub fn from_path(path: impl AsRef<Path>) -> Result<DocParagraph, Error> {
+impl DocBlock {
+    pub fn from_path(path: impl AsRef<Path>) -> Result<DocBlock, Error> {
         let mut file = File::open(path).context("Failed to open DocParagraph file")?;
         let mut contents = String::new();
         //let mut contents = String::from(r#"{"id": "rehjt804ij043g", "md": "cat is brown", "t": "84u5945t954jt", "attrs": {}}"#);
@@ -95,10 +95,10 @@ impl DocParagraph {
         &self.md
     }
 
-    pub fn get_expanded_markdown(self, macros: &Context) -> DocParagraph {
+    pub fn get_expanded_markdown(self, macros: &Context) -> DocBlock {
         let md =
             Tera::one_off(&self.md, macros, false).unwrap_or("FAILED TO PROCESS MACROS".to_owned());
-        DocParagraph {
+        DocBlock {
             id: self.id,
             md,
             t: self.t,
@@ -107,10 +107,10 @@ impl DocParagraph {
     }
 }
 
-impl TryFrom<DocParagraph> for Yaml {
+impl TryFrom<DocBlock> for Yaml {
     type Error = TimError;
 
-    fn try_from(p: DocParagraph) -> Result<Self, Self::Error> {
+    fn try_from(p: DocBlock) -> Result<Self, Self::Error> {
         let mut r =
             YamlLoader::load_from_str(p.get_markdown()).context(TimErrorKind::InvalidYaml)?;
         let mut drain = r.drain(..);
@@ -122,7 +122,7 @@ pub trait AttributeContainer {
     fn get_attr(&self, k: &str) -> Option<&String>;
 }
 
-impl AttributeContainer for DocParagraph {
+impl AttributeContainer for DocBlock {
     fn get_attr(&self, k: &str) -> Option<&String> {
         self.attrs.others.get(k)
     }

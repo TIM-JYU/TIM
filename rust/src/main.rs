@@ -1,5 +1,5 @@
 #![allow(proc_macro_derive_resolution_fallback)]
-#![feature(nll, try_from, box_patterns)]
+#![feature(try_from, box_patterns)]
 #![feature(futures_api, async_await, await_macro, pin)]
 #![recursion_limit = "128"]
 
@@ -27,10 +27,10 @@ use askama::Template;
 use crate::db::DbExecutor;
 use crate::db::GetItem;
 use crate::db::GetItems;
-use crate::document::document::run_html_pipeline;
 use crate::document::document::DocumentStore;
+use crate::document::processing::run_html_pipeline;
+use crate::document::DocBlock;
 use crate::document::DocId;
-use crate::document::DocParagraph;
 use crate::document::Document;
 use crate::models::Item;
 use crate::models::ItemKind;
@@ -116,9 +116,8 @@ async fn view_item_impl(req: &HttpRequest<AppState>) -> Result<HttpResponse, Tim
         }
         ItemKind::DocEntry(d) => {
             let d_id = DocId(d.id);
-            let doc: Document<DocParagraph> =
-                Document::load_newest(d_id, d_id.get_docs_path(), d_id.get_pars_path())
-                    .context(TimErrorKind::DocumentLoad)?;
+            let doc: Document<DocBlock> =
+                Document::load_newest(d_id).context(TimErrorKind::DocumentLoad)?;
             let doc_str = format!("{:#?}", run_html_pipeline(&mut DocumentStore::new(), doc));
             Ok(HttpResponse::Ok()
                 .content_type("text/plain; charset=utf-8")
