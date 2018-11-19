@@ -13,18 +13,23 @@ export function checkBindings(controller: any, bindings: {[name: string]: string
     }
 }
 
+const blacklist = new Set(["name", "title"]);
+
 // adapted from http://aboutcode.net/2013/07/27/json-date-parsing-angularjs.html
 export function convertDateStringsToMoments(input: {[index: string]: any}): void {
     if (input == null || typeof input !== "object") {
         return;
     }
 
-    for (const key of Object.keys(input)) {
-        const value = input[key];
+
+    for (const [key, value] of Object.entries(input)) {
         if (typeof value === "string") {
-            const m = moment(value, moment.ISO_8601, true);
-            if (m.isValid()) {
-                input[key] = m;
+            // ignore strings and keys that are most likely not intended to be interpreted as timestamps
+            if (!blacklist.has(key)) {
+                const m = moment(value, moment.ISO_8601, true);
+                if (m.isValid()) {
+                    input[key] = m;
+                }
             }
         } else {
             convertDateStringsToMoments(value);
