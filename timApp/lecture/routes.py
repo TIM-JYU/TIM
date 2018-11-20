@@ -5,7 +5,7 @@ from random import randrange
 from typing import List, Optional
 
 import dateutil.parser
-from flask import Blueprint, render_template
+from flask import Blueprint, render_template, g
 from flask import Response
 from flask import abort
 from flask import current_app
@@ -706,7 +706,8 @@ def join_lecture():
     u = get_current_user_object()
     if not lecture_ended and not lecture_full and correct_password:
         if not logged_in():
-            log_in_as_anonymous(session)  # TODO check this if g.user should be reset
+            u = log_in_as_anonymous(session)
+            g.user = u
         switch_to_lecture(lecture)
 
         update_activity(lecture, u)
