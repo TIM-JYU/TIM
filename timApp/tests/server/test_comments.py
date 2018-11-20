@@ -7,6 +7,7 @@ from lxml.html import HtmlElement
 from timApp.document.docparagraph import DocParagraph
 from timApp.notification.notify import process_pending_notifications, sent_mails_in_testing
 from timApp.tests.server.test_notify import NotifyTestBase
+from timApp.tests.server.timroutetest import get_note_id_from_json
 from timApp.timdb.sqa import db
 from timApp.user.userutils import get_anon_group_id, grant_view_access
 
@@ -145,4 +146,10 @@ class CommentTest(NotifyTestBase):
                           expect_status=403,
                           expect_content='Only private comments can be posted on this document.',
                           json_key='error')
-        self.post_comment(par, public=False, text='test')
+        c = self.post_comment(par, public=False, text='test')
+        self.json_post('/editNote', {'id': get_note_id_from_json(c),
+                                     'text': 'edited',
+                                     'access': 'everyone',
+                                     'docId': d.id,
+                                     'par': par.get_id()},
+                       expect_status=403)

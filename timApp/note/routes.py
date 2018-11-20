@@ -39,6 +39,11 @@ def get_note(note_id):
     return json_response({'text': note['content'], 'extraData': note})
 
 
+def check_note_access_ok(is_public: bool, doc: Document):
+    if is_public and doc.get_settings().comments() == 'private':
+        return abort(403, 'Only private comments can be posted on this document.')
+
+
 @notes.route("/postNote", methods=['POST'])
 def post_note():
     note_text, access, doc_id, par_id = verify_json_params('text', 'access', 'docId', 'par')
@@ -51,8 +56,7 @@ def post_note():
     docentry = get_doc_or_abort(doc_id)
     verify_comment_right(docentry)
     doc = docentry.document
-    if is_public and doc.get_settings().comments() == 'private':
-        return abort(403, 'Only private comments can be posted on this document.')
+    check_note_access_ok(is_public, doc)
     try:
         par = doc.get_paragraph(par_id)
     except TimDbException as e:
@@ -82,6 +86,8 @@ def edit_note():
     note_text = jsondata['text']
     access = jsondata['access']
     par_id = jsondata['par']
+    is_public = access == "everyone"
+    check_note_access_ok(is_public, d.document)
     try:
         par = d.document.get_paragraph(par_id)
     except TimDbException as e:

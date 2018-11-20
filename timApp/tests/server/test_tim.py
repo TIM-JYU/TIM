@@ -1,14 +1,12 @@
 """Unit tests for TIM routes."""
-import re
 import unittest
 
-from defusedxml.lxml import tostring
 from flask import current_app
 from lxml.cssselect import CSSSelector
 
 from timApp.document.document import Document
 from timApp.markdown.markdownconverter import md_to_html
-from timApp.tests.server.timroutetest import TimRouteTest
+from timApp.tests.server.timroutetest import TimRouteTest, get_note_id_from_json
 from timApp.user.user import Consent
 from timApp.user.userutils import get_anon_group_id, grant_view_access
 
@@ -61,7 +59,7 @@ class TimTest(TimRouteTest):
                                             'access': 'everyone',
                                             'docId': doc_id,
                                             'par': first_id})
-        note_id = int(re.search(r'note-id="(\d+)"', json['texts']).groups()[0])
+        note_id = get_note_id_from_json(json)
 
         self.assertTrue(comment_of_test1_html in json['texts'])
         self.get(f'/view/{doc_name}', expect_contains=comment_of_test1_html)

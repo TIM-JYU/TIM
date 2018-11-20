@@ -1,6 +1,7 @@
 """Defines the TimRouteTest class."""
 import io
 import json
+import re
 import socket
 import unittest
 import warnings
@@ -718,3 +719,8 @@ class TimRouteTest(TimDbTest):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+def get_note_id_from_json(json):
+    note_id = int(re.search(r'note-id="(\d+)"', json['texts']).groups()[0])
+    return note_id
