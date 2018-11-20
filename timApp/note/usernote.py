@@ -1,3 +1,7 @@
+from typing import Optional
+
+from sqlalchemy import func
+
 from timApp.timdb.sqa import db
 
 
@@ -22,7 +26,7 @@ class UserNote(db.Model):
     content = db.Column(db.Text, nullable=False)
     """Comment content."""
 
-    created = db.Column(db.DateTime(timezone=True), nullable=False)
+    created = db.Column(db.DateTime(timezone=True), nullable=False, default=func.now())
     """Comment creation timestamp."""
 
     modified = db.Column(db.DateTime(timezone=True))
@@ -38,3 +42,7 @@ class UserNote(db.Model):
     """Comment HTML cache."""
 
     usergroup = db.relationship('UserGroup', back_populates='notes')
+
+
+def get_comment_by_id(c_id: int) -> Optional[UserNote]:
+    return UserNote.query.get(c_id)

@@ -163,17 +163,17 @@
             <div class="notes">
                 {%- for note in t.notes -%}
                     <div class="{{ ['note', 'editable' if note.editable else '', 'private' if note.private else '']|join(' ')|trim }}"
-                         note-id="{{ note.id }}">
-                        {{ note.html|safe }}
+                         note-id="{{ note.note.id }}">
+                        {{ note.note.html|safe }}
                         &mdash;
                         {%- if item.rights.teacher %}
-                            <a class="username" title="{{ note.real_name }}" href="mailto:{{ note.user_email }}"
-                            >{{ note.user_name }}</a>
+                            <a class="username" title="{{ note.user.real_name }}" href="mailto:{{ note.user.email }}"
+                            >{{ note.user.name }}</a>
                         {%- endif %}
-                        <span class="timestamp" title="{{ note.created }}">{{ note.created|datestr_to_relative }}</span>
-                        {%- if note.modified -%}
-                            <span class="timestamp" title="{{ note.modified }}">
-                                (edited {{ note.modified|datestr_to_relative }})
+                        <span class="timestamp" title="{{ note.note.created }}">{{ note.note.created|datestr_to_relative }}</span>
+                        {%- if note.note.modified -%}
+                            <span class="timestamp" title="{{ note.note.modified }}">
+                                (edited {{ note.note.modified|datestr_to_relative }})
                             </span>
                         {%- endif -%}
                     </div>

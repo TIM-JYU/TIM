@@ -4,7 +4,6 @@ import time
 from time import sleep
 
 from timApp.answer.answers import Answers
-from timApp.note.notes import Notes
 from timApp.timdb.sqa import db
 from timApp.user.users import Users
 from timApp.util.logger import log_info, log_debug, log_error, log_warning
@@ -55,8 +54,6 @@ class TimDb:
         self.time = 0
         self.engine = None
         self.db = None
-        self.notes = None
-        self.readings = None
         self.users = None
         self.answers = None
         self.velps = None
@@ -96,7 +93,6 @@ class TimDb:
         TimDb.instances += 1
         # num_connections = self.get_pg_connections()
         # log_info('TimDb instances/PG connections: {}/{} (constructor)'.format(TimDb.instances, num_connections))
-        self.notes = Notes(self.db, self.files_root_path, 'notes', self.current_user_name, self.session)
         self.users = Users(self.db, self.files_root_path, 'users', self.current_user_name, self.session)
         self.answers = Answers(self.db, self.files_root_path, 'answers', self.current_user_name, self.session)
         self.velps = Velps(self.db, self.files_root_path, 'velps', self.current_user_name, self.session)

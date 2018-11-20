@@ -14,6 +14,7 @@ from timApp.document.editing.clipboard import Clipboard
 from timApp.document.editing.documenteditresult import DocumentEditResult
 from timApp.document.editing.routes import par_response, verify_par_edit_access
 from timApp.document.translation.synchronize_translations import synchronize_translations
+from timApp.note.notes import move_notes
 from timApp.readmark.readings import copy_readings
 from timApp.timdb.dbaccess import get_timdb
 from timApp.timdb.exceptions import TimDbException
@@ -123,12 +124,12 @@ def paste_from_clipboard(doc_id):
                 src_par = DocParagraph.get_latest(src_doc, src_parid)
                 copy_readings(src_par, dest_par)
                 if was_cut:
-                    timdb.notes.move_notes(src_par, dest_par, commit=False)
+                    move_notes(src_par, dest_par)
 
         except ValueError:
             pass
 
-    timdb.commit()
+    db.session.commit()
     edit_result = DocumentEditResult(added=pars)
     synchronize_translations(g.docentry, edit_result)
     return par_response(pars, doc, edit_result=edit_result)

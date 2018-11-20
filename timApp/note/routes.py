@@ -4,16 +4,19 @@ from flask import request
 
 from timApp.auth.accesshelper import verify_comment_right, verify_logged_in, has_ownership, get_doc_or_abort
 from timApp.auth.accesshelper import verify_view_access
-from timApp.timdb.dbaccess import get_timdb
+from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.document import Document
+from timApp.document.editing.routes import par_response
+from timApp.markdown.markdownconverter import md_to_html
+from timApp.note.notes import tagstostr
+from timApp.note.usernote import get_comment_by_id, UserNote
+from timApp.notification.notification import NotificationType
+from timApp.notification.notify import notify_doc_watchers
+from timApp.timdb.exceptions import TimDbException
 from timApp.timdb.sqa import db
 from timApp.util.flask.requesthelper import get_referenced_pars_from_req, verify_json_params
 from timApp.util.flask.responsehelper import json_response
-from timApp.document.editing.routes import par_response
-from timApp.notification.notify import notify_doc_watchers
-from timApp.auth.sessioninfo import get_current_user_group
-from timApp.timdb.exceptions import TimDbException
-from timApp.notification.notification import NotificationType
+from timApp.util.utils import get_current_time
 
 notes = Blueprint('notes',
                   __name__,
@@ -22,21 +25,25 @@ notes = Blueprint('notes',
 KNOWN_TAGS = ['difficult', 'unclear']
 
 
+def has_note_edit_access(n: UserNote):
+    d = get_doc_or_abort(n.doc_id)
+    g = get_current_user_object().get_personal_group()
+    return n.usergroup == g or has_ownership(d)
+
+
+def get_comment_and_check_exists(note_id: int):
+    note = get_comment_by_id(note_id)
+    if not note:
+        return abort(404, 'Comment not found. It may have been deleted.')
+    return note
+
+
 @notes.route("/note/<int:note_id>")
 def get_note(note_id):
-    timdb = get_timdb()
-    note = timdb.notes.get_note(note_id)
-    if not note:
-        abort(404, 'Comment not found. It may have been deleted.')
-    d = get_doc_or_abort(note['doc_id'])
-    if not (timdb.notes.has_edit_access(get_current_user_group(), note_id) or has_ownership(d)):
-        abort(403)
-    note.pop('usergroup_id')
-    tags = note['tags']
-    note['tags'] = {}
-    for tag in KNOWN_TAGS:
-        note['tags'][tag] = tag in tags
-    return json_response({'text': note['content'], 'extraData': note})
+    note = get_comment_and_check_exists(note_id)
+    if not has_note_edit_access(note):
+        return abort(403)
+    return json_response({'text': note.content, 'extraData': note})
 
 
 def check_note_access_ok(is_public: bool, doc: Document):
@@ -61,12 +68,17 @@ def post_note():
         par = doc.get_paragraph(par_id)
     except TimDbException as e:
         return abort(404, str(e))
-    timdb = get_timdb()
-    group_id = get_current_user_group()
 
     par = get_referenced_pars_from_req(par)[0]
-
-    timdb.notes.add_note(group_id, Document(par.get_doc_id()), par, note_text, access, tags)
+    n = UserNote(usergroup=get_current_user_object().get_personal_group(),
+                 doc_id=par.get_doc_id(),
+                 par_id=par.get_id(),
+                 par_hash=par.get_hash(),
+                 content=note_text,
+                 access=access,
+                 html=md_to_html(note_text),
+                 tags=tagstostr(tags))
+    db.session.add(n)
 
     if is_public:
         notify_doc_watchers(docentry, note_text, NotificationType.CommentAdded, par)
@@ -79,29 +91,32 @@ def post_note():
 def edit_note():
     verify_logged_in()
     jsondata = request.get_json()
-    group_id = get_current_user_group()
-    doc_id = int(jsondata['docId'])
-    d = get_doc_or_abort(doc_id)
+    note_id = int(jsondata['id'])
+    n = get_comment_and_check_exists(note_id)
+    d = get_doc_or_abort(n.doc_id)
     verify_view_access(d)
     note_text = jsondata['text']
     access = jsondata['access']
-    par_id = jsondata['par']
+    par_id = n.par_id
     is_public = access == "everyone"
     check_note_access_ok(is_public, d.document)
     try:
         par = d.document.get_paragraph(par_id)
     except TimDbException as e:
         return abort(400, str(e))
-    note_id = int(jsondata['id'])
+
     sent_tags = jsondata.get('tags', {})
     tags = []
     for tag in KNOWN_TAGS:
         if sent_tags.get(tag):
             tags.append(tag)
-    timdb = get_timdb()
-    if not (timdb.notes.has_edit_access(group_id, note_id) or has_ownership(d)):
+    if not has_note_edit_access(n):
         abort(403, "Sorry, you don't have permission to edit this note.")
-    timdb.notes.modify_note(note_id, note_text, access, tags)
+    n.content = note_text
+    n.html = md_to_html(note_text)
+    n.access = access
+    n.tags = tagstostr(tags)
+    n.modified = get_current_time()
 
     if access == "everyone":
         notify_doc_watchers(d, note_text, NotificationType.CommentModified, par)
@@ -113,21 +128,19 @@ def edit_note():
 
 @notes.route("/deleteNote", methods=['POST'])
 def delete_note():
-    group_id = get_current_user_group()
     doc_id, note_id, paragraph_id = verify_json_params('docId', 'id', 'par')
-    timdb = get_timdb()
+    note = get_comment_and_check_exists(note_id)
     d = get_doc_or_abort(doc_id)
-    if not (timdb.notes.has_edit_access(group_id, note_id) or has_ownership(d)):
+    if not has_note_edit_access(note):
         abort(403, "Sorry, you don't have permission to remove this note.")
-    note = timdb.notes.get_note(note_id)
-    par_id = note['par_id']
+    par_id = note.par_id
     try:
         par = d.document.get_paragraph(par_id)
     except TimDbException:
         return abort(400, 'Cannot delete the note because the paragraph has been deleted.')
-    timdb.notes.delete_note(note_id)
-    if note['access'] == "everyone":
-        notify_doc_watchers(d, note['content'], NotificationType.CommentDeleted, par)
+    db.session.delete(note)
+    if note.access == "everyone":
+        notify_doc_watchers(d, note.content, NotificationType.CommentDeleted, par)
     doc = d.document
     db.session.commit()
     return par_response([doc.get_paragraph(paragraph_id)],

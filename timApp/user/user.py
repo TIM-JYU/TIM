@@ -159,7 +159,11 @@ class User(db.Model):
         return self.real_name
 
     @staticmethod
-    def create(name: str, real_name: str, email: str, password: str = '',
+    def create(name: str,
+               real_name: str,
+               email: str,
+               password: str = '',
+               uid: int=None,
                commit: bool = True) -> 'User':
         """Creates a new user with the specified name.
 
@@ -172,7 +176,7 @@ class User(db.Model):
         """
 
         p_hash = create_password_hash(password) if password != '' else ''
-        user = User(name=name, real_name=real_name, email=email, pass_=p_hash)
+        user = User(id=uid, name=name, real_name=real_name, email=email, pass_=p_hash)
         db.session.add(user)
         db.session.flush()
         if commit:
@@ -185,8 +189,10 @@ class User(db.Model):
                           real_name: Optional[str] = None,
                           email: Optional[str] = None,
                           password: Optional[str] = None,
-                          is_admin: bool = False):
+                          is_admin: bool = False,
+                          uid: Optional[int] = None):
         user = User.create(name, real_name or name, email or name + '@example.com', password=password or '',
+                           uid=uid,
                            commit=False)
         group = UserGroup.create(name, commit=False)
         user.groups.append(group)
@@ -243,7 +249,7 @@ class User(db.Model):
 
     @cached_property
     def personal_group_prop(self) -> UserGroup:
-        if self.id < 0 or self.name == ANONYMOUS_USERNAME:
+        if self.name == ANONYMOUS_USERNAME:
             return UserGroup.get_anonymous_group()
         for g in self.groups:
             if g.name == self.name or g.name == 'group of user ' + self.name:

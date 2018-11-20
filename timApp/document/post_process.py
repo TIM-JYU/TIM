@@ -7,6 +7,7 @@ import pytz
 from flask import flash
 
 from timApp.auth.accesshelper import has_ownership, has_edit_access
+from timApp.note.notes import get_notes, UserNoteAndUser
 from timApp.timdb.dbaccess import get_timdb
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.document import Document
@@ -112,23 +113,22 @@ def post_process_pars(doc: Document, pars, user: User, sanitize=True, do_lazy=Fa
                         p['status'].add(r, modified=True)
 
     taketime("read mixed")
-    notes = timdb.notes.get_notes(group, doc)
+    notes = get_notes(group, doc)
     is_owner = has_ownership(doc.get_docinfo())
     # Close database here because we won't need it for a while
     timdb.close()
     # taketime("notes picked")
 
-    for n in notes:
-        key = (n['par_id'], n['doc_id'])
+    for n, u in notes:
+        key = (n.par_id, n.doc_id)
         pars = pars_dict.get(key)
         if pars:
-            n['editable'] = n['usergroup_id'] == group or is_owner
-            n.pop('usergroup_id', None)
-            n['private'] = n['access'] == 'justme'
+            editable = n.usergroup_id == group or is_owner
+            private = n.access == 'justme'
             for p in pars:
                 if 'notes' not in p:
                     p['notes'] = []
-                p['notes'].append(n)
+                p['notes'].append(UserNoteAndUser(user=u, note=n, editable=editable, private=private))
     # taketime("notes mixed")
 
     return process_areas(settings, final_pars, macros, delimiter, env), js_paths, css_paths, modules

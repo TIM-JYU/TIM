@@ -1,5 +1,7 @@
 from typing import Optional
 
+from sqlalchemy import func
+
 from timApp.timdb.exceptions import TimDbException
 from timApp.item.block import Block, BlockType
 from timApp.user.user import User
@@ -45,22 +47,12 @@ class Users(TimDbBase):
 
         """
 
-        next_id = self.get_next_anonymous_user_id()
-        u = User(id=next_id, name=name + str(abs(next_id)), real_name=real_name)
+        next_id = User.query.with_entities(func.min(User.id)).scalar() - 1
+        u, _ = User.create_with_group(uid=next_id, name=name + str(abs(next_id)), real_name=real_name)
         self.session.add(u)
-        u.groups.append(UserGroup.get_anonymous_group())
         if commit:
             self.session.commit()
         return u
-
-    def get_next_anonymous_user_id(self) -> int:
-        """
-        :returns: The next unused negative id.
-        """
-        cursor = self.db.cursor()
-        cursor.execute('SELECT MIN(id) AS next_id FROM UserAccount')
-        user_id = min(result_as_dict_list(cursor)[0]['next_id'], 0)
-        return user_id - 1
 
     def get_rights_holders(self, block_id: int):
         cursor = self.db.cursor()

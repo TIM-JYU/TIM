@@ -23,6 +23,7 @@ class CommentTest(NotifyTestBase):
         comment1 = 'This is a comment.'
         comment2 = 'This is a comment 2.'
         comment3 = 'This is a comment 3.'
+        comment4 = 'This is a comment 4.'
         expected_comments = [comment1, comment2, comment3]
         comment_private = 'This is a private comment.'
 
@@ -34,12 +35,20 @@ class CommentTest(NotifyTestBase):
         grant_view_access(get_anon_group_id(), d.doc_id)
 
         self.login_anonymous()
+        self.assertEqual(-1, self.current_user.id)
         comments = self.post_comment_and_return_html(comment2, par)
         self.assertEqual(2, len(comments))
         comments = self.post_comment_and_return_html(comment3, par)
         self.assertEqual(3, len(comments))
         for e, a in zip(expected_comments, comments):
             self.assertEqual(e, a.find('p').text_content())
+        comments = self.post_comment_and_return_html(comment3, par, public=False)
+        self.assertEqual(4, len(comments))
+
+        self.login_anonymous()
+        self.assertEqual(-2, self.current_user.id)
+        comments = self.post_comment_and_return_html(comment4, par, public=False)
+        self.assertEqual(4, len(comments))
 
     def post_comment_and_return_html(self, text: str, par: DocParagraph, public: bool = True) -> List[HtmlElement]:
         resp = self.post_comment(par, public, text)

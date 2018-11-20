@@ -6,6 +6,7 @@ from lxml.cssselect import CSSSelector
 
 from timApp.document.document import Document
 from timApp.markdown.markdownconverter import md_to_html
+from timApp.note.notes import get_notes
 from timApp.tests.server.timroutetest import TimRouteTest, get_note_id_from_json
 from timApp.user.user import Consent
 from timApp.user.userutils import get_anon_group_id, grant_view_access
@@ -118,9 +119,9 @@ class TimTest(TimRouteTest):
                                      'par': first_id}, expect_contains=comment_of_test2, json_key='texts')
 
         ug = self.current_group().id
-        notes = timdb.notes.get_notes(ug, Document(doc_id), include_public=False)
+        notes = get_notes(ug, Document(doc_id), include_public=False)
         self.assertEqual(1, len(notes))
-        test2_note_id = notes[0]['id']
+        test2_note_id = notes[0][0].id
 
         self.login_test1()
         self.get(f'/note/{test2_note_id}', expect_contains=comment_of_test2, json_key='text')
@@ -133,7 +134,7 @@ class TimTest(TimRouteTest):
                                        'docId': doc_id,
                                        'par': first_id})
         ug = self.current_group().id
-        notes = timdb.notes.get_notes(ug, Document(doc_id), include_public=True)
+        notes = get_notes(ug, Document(doc_id), include_public=True)
         self.assertEqual(1, len(notes))
 
         self.get(f'/getBlock/{doc_id}/{first_id}',

@@ -208,3 +208,12 @@ stem: x
         par2 = d2.document.get_paragraphs()[0]
         self.paste(d2, as_ref=False, expect_status=403, par_after=par2)
         self.paste(d2, as_ref=True, par_after=par2)
+
+    def test_cut_to_other_doc(self):
+        self.login_test1()
+        d = self.create_doc(initial_par='test')
+        p = d.document.get_paragraphs()[0]
+        self.cut(d, p, p)
+        d2 = self.create_doc(initial_par='x')
+        p2 = d2.document.get_paragraphs()[0]
+        self.paste(d2, par_after=p2)
