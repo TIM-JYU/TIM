@@ -42,6 +42,7 @@ def get_note(note_id):
 @notes.route("/postNote", methods=['POST'])
 def post_note():
     note_text, access, doc_id, par_id = verify_json_params('text', 'access', 'docId', 'par')
+    is_public = access == "everyone"
     sent_tags, = verify_json_params('tags', require=False, default={})
     tags = []
     for tag in KNOWN_TAGS:
@@ -50,6 +51,8 @@ def post_note():
     docentry = get_doc_or_abort(doc_id)
     verify_comment_right(docentry)
     doc = docentry.document
+    if is_public and doc.get_settings().comments() == 'private':
+        return abort(403, 'Only private comments can be posted on this document.')
     try:
         par = doc.get_paragraph(par_id)
     except TimDbException as e:
@@ -61,7 +64,7 @@ def post_note():
 
     timdb.notes.add_note(group_id, Document(par.get_doc_id()), par, note_text, access, tags)
 
-    if access == "everyone":
+    if is_public:
         notify_doc_watchers(docentry, note_text, NotificationType.CommentAdded, par)
     db.session.commit()
     return par_response([doc.get_paragraph(par_id)],

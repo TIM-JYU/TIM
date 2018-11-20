@@ -44,6 +44,7 @@ class DocSettings:
     mathtype_key = 'math_type'
     math_preamble_key = 'math_preamble'
     memo_minutes_key = 'memo_minutes'
+    comments_key = 'comments'
 
     @classmethod
     def from_paragraph(cls, par: DocParagraph):
@@ -247,6 +248,9 @@ class DocSettings:
 
     def memo_minutes(self) -> bool:
         return self.__dict.get(self.memo_minutes_key, '')
+
+    def comments(self):
+        return self.__dict.get(self.comments_key)
 
 
 def resolve_settings_for_pars(pars: Iterable[DocParagraph]) -> YamlBlock:

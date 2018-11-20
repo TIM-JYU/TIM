@@ -136,3 +136,13 @@ class CommentTest(NotifyTestBase):
              'reply_to': None,
              'subject': f'Someone modified a paragraph in the document {d.title}'},
             sent_mails_in_testing[-1])
+
+    def test_only_private_comments(self):
+        self.login_test1()
+        d = self.create_doc(settings={'comments': 'private'}, initial_par='test')
+        par = d.document.get_paragraphs()[0]
+        self.post_comment(par, public=True, text='test',
+                          expect_status=403,
+                          expect_content='Only private comments can be posted on this document.',
+                          json_key='error')
+        self.post_comment(par, public=False, text='test')
