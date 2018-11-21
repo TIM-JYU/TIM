@@ -562,8 +562,8 @@ def get_html(self, ttype, query):
 
     if ttype == "c1" or True:  # c1 oli testejä varten ettei sinä aikana rikota muita.
         hx = binascii.hexlify(jso.encode("UTF8"))
-        s = lazy_start + '<' + r + lazy_class + ' ng-cloak>xxxHEXJSONxxx' + hx.decode() + '</' + r + '>' + lazy_end
-        s += lazy_visible
+        sxx: str = hx.decode()
+        s = f'{lazy_start}<{r}{lazy_class} ng-cloak>xxxHEXJSONxxx{sxx}</{r}>{lazy_end}{lazy_visible}'
     return s
 
 

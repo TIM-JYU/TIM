@@ -16,7 +16,6 @@ import {
     IAskedQuestion,
     IColumn,
     IExplCollection,
-    IGenericPluginMarkup,
     IHeader,
     IQuestionParagraph,
     IQuestionUI,
@@ -28,6 +27,7 @@ import {DialogController, registerDialogComponent, showDialog, showMessageDialog
 import {$http, $timeout} from "../../util/ngimport";
 import {IParResponse} from "../editing/edittypes";
 import {QuestionMatrixController} from "./questionMatrix";
+import {IGenericPluginMarkup} from "../../plugin/util";
 
 markAsUsed(QuestionMatrixController);
 

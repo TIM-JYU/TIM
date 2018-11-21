@@ -1,6 +1,5 @@
 declare module "sagecell" {
-
-    interface CellInfo {
+    export interface CellInfo {
         array: CellInfo[];
         hide: string[];
         defaultLanguage: string;
@@ -32,5 +31,5 @@ declare module "sagecell" {
     }
 
     const sage: Sage;
-    export = sage;
+    export default sage;
 }

@@ -12,6 +12,7 @@ import {showQuestionAskDialog} from "../lecture/questionAskController";
 import {showMessageDialog} from "../ui/dialog";
 import {$http} from "../util/ngimport";
 import {Binding, to} from "../util/utils";
+import {IPluginAttributes} from "./util";
 
 // Represents fields that are not actually stored in plugin markup but that are added by TIM alongside markup
 // in view route so that extra information can be passed to qst component. TODO: they should not be inside markup.
@@ -20,19 +21,7 @@ interface IQstExtraInfo {
     isTask: boolean;
 }
 
-interface IQstAttributes {
-    markup: IQuestionMarkup & IQstExtraInfo;
-    doLazy: boolean;
-    anonymous: boolean;
-    info: {};
-    preview: boolean;
-    show_result: boolean;
-    state: AnswerTable | null;
-    targetFormat: string;
-    taskID: string;
-    taskIDExt: string;
-    userPrint: boolean;
-}
+type IQstAttributes = IPluginAttributes<IQuestionMarkup & IQstExtraInfo, AnswerTable>;
 
 class QstController implements IController {
     private static $inject = ["$element"];

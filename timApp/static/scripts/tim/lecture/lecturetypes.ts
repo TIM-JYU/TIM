@@ -1,21 +1,11 @@
 import moment, {Moment} from "moment";
 import {IItem} from "../item/IItem";
+import {IGenericPluginMarkup} from "../plugin/util";
 import {DurationChoice} from "../ui/durationPicker";
 import {IUser} from "../user/IUser";
 
 export interface IExplCollection {
     [idString: string]: string;
-}
-
-export interface IGenericPluginMarkup {
-    answerLimit?: number;
-    button?: string;
-    buttonText?: string;
-    lazy?: boolean;
-    header?: string;
-    footer?: string;
-    resetText?: string;
-    stem?: string;
 }
 
 export interface IQuestionMarkup extends IAskedJsonJson, IGenericPluginMarkup {
