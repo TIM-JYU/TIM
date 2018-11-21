@@ -17,7 +17,6 @@ class UserTest(TimDbTest):
         anonymous_usergroup_id = get_anon_group_id()
         name, real_name, email, password = ['test', 'John Doe', 'john@example.com', '0123456789abcdef']
         user = User.create(name, real_name, email, password)
-        user_id = user.id
         g = UserGroup.create(name)
         gid = g.id
         g2 = UserGroup.create('dummy')
@@ -29,10 +28,9 @@ class UserTest(TimDbTest):
         test_block_2 = insert_block(block_type=BlockType.Document, description='test', owner_group_id=gid)
         db.session.commit()
 
-        saved_user = timdb.users.get_user(user_id)
-        self.assertEqual(saved_user['name'], name)
-        self.assertEqual(saved_user['real_name'], real_name)
-        self.assertEqual(saved_user['email'], email)
+        self.assertEqual(user.name, name)
+        self.assertEqual(user.real_name, real_name)
+        self.assertEqual(user.email, email)
         g3 = UserGroup.create('dummy2')
         gid3 = g3.id
         self.assertNotEqual(gid3, anonymous_usergroup_id)  # Should not be equal to anonymous usergroup id

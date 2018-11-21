@@ -16,9 +16,9 @@ from flask import request
 
 from timApp.auth.accesshelper import verify_logged_in, has_seeanswers_access, has_teacher_access, \
     has_ownership, get_doc_or_abort, verify_view_access
+from timApp.auth.sessioninfo import get_current_user_id, get_current_user_object
 from timApp.timdb.dbaccess import get_timdb
 from timApp.util.flask.responsehelper import json_response, ok_response
-from timApp.auth.sessioninfo import get_current_user_id
 from timApp.velp.annotations import Annotations
 
 annotations = Blueprint('annotations',
@@ -102,11 +102,10 @@ def add_annotation() -> Dict:
 
     verify_logged_in()
 
-    annotator_id = get_current_user_id()
-    annotator_name = timdb.users.get_user(annotator_id)['name']
+    annotator = get_current_user_object()
     velp_version_id = timdb.velps.get_latest_velp_version(velp_id)["id"]
 
-    new_id = timdb.annotations.create_annotation(velp_version_id, visible_to, points, annotator_id, document_id,
+    new_id = timdb.annotations.create_annotation(velp_version_id, visible_to, points, annotator.id, document_id,
                                                  paragraph_id_start, paragraph_id_end, offset_start, node_start,
                                                  depth_start, offset_end, node_end, depth_end, hash_start, hash_end,
                                                  element_path_start, element_path_end, None, icon_id, color, answer_id)
@@ -115,7 +114,7 @@ def add_annotation() -> Dict:
     #     comment_data = dict(content=default_comment, annotation_id=new_id)
     #     add_comment_helper(comment_data)
 
-    return json_response({"id": new_id, "annotator_name": annotator_name})
+    return json_response({"id": new_id, "annotator_name": annotator.name})
 
 
 @annotations.route("/update_annotation", methods=['POST'])
@@ -249,10 +248,10 @@ def add_comment_helper(json_data) -> Dict:
     # Todo maybe check that content isn't an empty string
     timdb = get_timdb()
     verify_logged_in()
-    commenter_id = get_current_user_id()
-    timdb.annotations.add_comment(annotation_id, commenter_id, content)
+    commenter = get_current_user_object()
+    timdb.annotations.add_comment(annotation_id, commenter.id, content)
     # TODO notice with email to annotator if commenter is not itself
-    return json_response(timdb.users.get_user(commenter_id))
+    return json_response(commenter)
 
 
 @annotations.route("/<int:doc_id>/get_annotations", methods=['GET'])

@@ -1,20 +1,17 @@
-from typing import Optional
-
 from sqlalchemy import func
+from typing import List, Tuple, Optional
 
-from timApp.timdb.exceptions import TimDbException
+from timApp.auth.auth_models import BlockAccess
 from timApp.item.block import Block, BlockType
-from timApp.user.user import User
-from timApp.user.usergroup import UserGroup
+from timApp.timdb.sqa import db
+from timApp.timdb.timdbbase import TimDbBase
+from timApp.timdb.timdbbase import result_as_dict_list
 from timApp.user.special_group_names import ANONYMOUS_USERNAME, ANONYMOUS_GROUPNAME, KORPPI_GROUPNAME, \
     LOGGED_IN_GROUPNAME, \
     LOGGED_IN_USERNAME, ADMIN_GROUPNAME, TEACHERS_GROUPNAME
-from timApp.timdb.sqa import db
-from timApp.auth.auth_models import BlockAccess
-from timApp.timdb.timdbbase import TimDbBase
-from timApp.timdb.timdbbase import result_as_dict_list
-from timApp.user.userutils import get_anon_group_id, \
-    get_anon_user_id, get_access_type_id, get_default_right_document
+from timApp.user.user import User
+from timApp.user.usergroup import UserGroup
+from timApp.user.userutils import get_access_type_id, get_default_right_document
 
 
 class Users(TimDbBase):
@@ -86,63 +83,6 @@ class Users(TimDbBase):
         doc = get_default_right_document(folder_id, object_type, create_if_not_exist=True)
         self.remove_access(group_id, doc.id, access_type)
 
-    def get_user(self, user_id: int, include_authdata=False) -> Optional[dict]:
-        """Gets the user with the specified id.
-
-        :param include_authdata: Whether to include authentication-related fields in the result. Default False.
-        :param user_id: The user id.
-        :returns: A dict object representing the user. Columns: id, name.
-
-        """
-        authtemplate = ', yubikey, pass' if include_authdata else ''
-        cursor = self.db.cursor()
-        cursor.execute(f'SELECT id, name, real_name, email {authtemplate} FROM UserAccount WHERE id = %s', [user_id])
-        result = result_as_dict_list(cursor)
-        return result[0] if len(result) > 0 else None
-
-    def get_usergroups_by_name(self, name: str):
-        """Gets the usergroups that have the specified name.
-
-        :param name: The name of the usergroup to be retrieved.
-
-        """
-
-        cursor = self.db.cursor()
-        cursor.execute('SELECT id FROM UserGroup WHERE name = %s', [name])
-        return result_as_dict_list(cursor)
-
-    def get_personal_usergroup(self, user: dict) -> int:
-        """Gets the personal user group for the user.
-
-        :param user: The user object.
-
-        """
-        if user is None:
-            raise TimDbException("No such user")
-
-        # For anonymous users, we return the group of anonymous users
-        if user['id'] < 0 or user['id'] == get_anon_user_id():
-            return get_anon_group_id()
-
-        userName = user['name']
-        groups = self.get_usergroups_by_name(userName)
-        if len(groups) > 0:
-            return groups[0]['id']
-
-        groups = self.get_usergroups_by_name('group of user ' + userName)
-        if len(groups) > 0:
-            return groups[0]['id']
-
-        raise TimDbException(f'Personal usergroup for user {userName} was not found!')
-
-    def is_user_id_in_group(self, user_id: int, usergroup_name: str) -> bool:
-        cursor = self.db.cursor()
-        cursor.execute("""SELECT User_id FROM UserGroupMember WHERE
-                          User_id      = %s AND
-                          UserGroup_id = (SELECT id FROM UserGroup WHERE name = %s)
-                       """, [user_id, usergroup_name])
-        return len(cursor.fetchall()) > 0
-
     def remove_access(self, group_id: int, block_id: int, access_type: str):
         access_type_id = get_access_type_id(access_type)
         i = Block.query.get(block_id)
@@ -150,22 +90,3 @@ class Users(TimDbBase):
             if a.usergroup_id == group_id and a.type == access_type_id:
                 db.session.delete(a)
                 break
-
-    def check_if_in_group(self, username, usergroup_name):
-        c = self.db.cursor()
-        c.execute("""SELECT ua.id, ua.name, ug.user_id, ug.usergroup_id, gr.id, gr.name
-            FROM UserAccount AS ua, usergroupmember As ug, usergroup AS gr
-            WHERE ua.id=ug.user_id  and ug.usergroup_id=gr.id and ua.name=%s and gr.name=%s
-            """, [username, usergroup_name])
-        return c.rowcount > 0
-
-    def check_if_in_group_by_id(self, usernid, usergroup_name):
-        c = self.db.cursor()
-        c.execute("""SELECT ug.user_id, ug.usergroup_id, gr.id, gr.name
-            FROM usergroupmember As ug, usergroup AS gr
-            WHERE ug.user_id=%s  and ug.usergroup_id=gr.id  and gr.name=%s
-            """, [usernid, usergroup_name])
-        return c.rowcount > 0
-
-    def get_personal_usergroup_by_id(self, user_id: int) -> Optional[int]:
-        return self.get_personal_usergroup(self.get_user(user_id))

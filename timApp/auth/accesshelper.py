@@ -19,7 +19,7 @@ from timApp.item.item import Item, ItemBase
 from timApp.timdb.exceptions import TimDbException
 from timApp.timdb.sqa import db
 from timApp.timdb.timdb import TimDb
-from timApp.user.user import ItemOrBlock
+from timApp.user.user import ItemOrBlock, User
 from timApp.user.usergroup import UserGroup
 from timApp.user.userutils import get_access_type_id, grant_access
 from timApp.util.flask.requesthelper import get_option
@@ -287,9 +287,9 @@ def verify_task_access(d: DocInfo, task_id_name, access_type):
         return found_par
 
 
-def grant_access_to_session_users(timdb: TimDb, block_id: int):
+def grant_access_to_session_users(block_id: int):
     for u in get_other_users_as_list():
-        grant_access(timdb.users.get_personal_usergroup_by_id(u['id']),
+        grant_access(User.get_by_id(int(u['id'])).get_personal_group().id,
                      block_id,
                      'manage',
                      commit=False)

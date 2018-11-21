@@ -11,6 +11,11 @@ class AccessType(db.Model):
     name = db.Column(db.Text, nullable=False)
     """Access type name, such as 'view', 'edit', 'manage', etc."""
 
+    accesses = db.relationship('BlockAccess', back_populates='atype')
+
+    def __json__(self):
+        return ['id', 'name']
+
 
 class BlockAccess(db.Model):
     """A single permission. Relates a UserGroup with a Block along with an AccessType."""
@@ -26,6 +31,7 @@ class BlockAccess(db.Model):
 
     block = db.relationship('Block', back_populates='accesses')
     usergroup = db.relationship('UserGroup', back_populates='accesses')
+    atype = db.relationship('AccessType', back_populates='accesses')
 
     @property
     def future(self):

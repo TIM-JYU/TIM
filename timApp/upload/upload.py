@@ -24,7 +24,6 @@ from timApp.item.block import Block
 from timApp.item.block import BlockType
 from timApp.item.validation import validate_item_and_create, validate_uploaded_document_content
 from timApp.plugin.plugin import Plugin
-from timApp.timdb.dbaccess import get_timdb
 from timApp.timdb.sqa import db
 from timApp.upload.uploadedfile import UploadedFile, PluginUpload, PluginUploadInfo, StampedPDF
 from timApp.util.flask.responsehelper import json_response
@@ -103,7 +102,6 @@ def pluginupload_file(doc_id: int, task_id: str):
     if file is None:
         abort(400, 'Missing file')
     content = file.read()
-    timdb = get_timdb()
     u = get_current_user_object()
     f = UploadedFile.save_new(
         content,
@@ -114,7 +112,7 @@ def pluginupload_file(doc_id: int, task_id: str):
             user=u,
             doc=d))
     f.block.set_owner(u.get_personal_group())
-    grant_access_to_session_users(timdb, f.id)
+    grant_access_to_session_users(f.id)
     mt = get_mimetype(f.filesystem_path.as_posix())
     db.session.commit()
     return json_response(

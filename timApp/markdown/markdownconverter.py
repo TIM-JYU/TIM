@@ -42,43 +42,16 @@ def Pz(i):
     return ""
 
 
-def belongs(username, groupname):
-    """
-    Returns if user belongs to group
-    :param username: user to check
-    :param groupname: group to check
-    :return:
-    """
-    from timApp.timdb.dbaccess import get_timdb
-    timdb = get_timdb()
-    result = timdb.users.check_if_in_group(username, groupname)
-    return result
-
-
-def belongs_by_id(userid, groupname):
-    """
-    Returns if user belongs to group
-    :param username: user to check
-    :param groupname: group to check
-    :return:
-    """
-    from timApp.timdb.dbaccess import get_timdb
-    timdb = get_timdb()
-    result = timdb.users.check_if_in_group_by_id(userid, groupname)
-    return result
-
-
 class Belongs:
     def __init__(self, user):
-        self.username = user.name
-        self.userid = user.id
+        self.user = user
         self.cache = {}
 
-    def belongs_to_group(self, groupname):
+    def belongs_to_group(self, groupname: str):
         b = self.cache.get(groupname, None)
         if b is not None:
             return b
-        b = belongs_by_id(self.userid, groupname)
+        b = any(gr.name == groupname for gr in self.user.groups)
         self.cache[groupname] = b
         return b
 

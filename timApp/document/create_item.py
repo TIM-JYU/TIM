@@ -6,21 +6,20 @@ from werkzeug.exceptions import abort
 
 from timApp.auth.accesshelper import grant_access_to_session_users, reset_request_access_cache, get_doc_or_abort, \
     verify_edit_access
-from timApp.item.tag import TagType, Tag
-from timApp.timdb.dbaccess import get_timdb
-from timApp.document.specialnames import FORCED_TEMPLATE_NAME, TEMPLATE_FOLDER_NAME
 from timApp.auth.sessioninfo import get_current_user_object, get_current_user_group
-from timApp.tim_app import app
 from timApp.bookmark.bookmarks import Bookmarks
+from timApp.document.docentry import DocEntry, get_documents, create_document_and_block
 from timApp.document.docinfo import DocInfo
 from timApp.document.documents import create_citation
-from timApp.item.block import copy_default_rights, BlockType
-from timApp.document.docentry import DocEntry, get_documents, create_document_and_block
-from timApp.folder.folder import Folder
+from timApp.document.specialnames import FORCED_TEMPLATE_NAME, TEMPLATE_FOLDER_NAME
 from timApp.document.translation.translation import Translation, add_tr_entry
+from timApp.folder.folder import Folder
+from timApp.item.block import copy_default_rights, BlockType
+from timApp.item.tag import TagType, Tag
+from timApp.item.validation import validate_item_and_create
+from timApp.tim_app import app
 from timApp.user.userutils import DOC_DEFAULT_RIGHT_NAME, FOLDER_DEFAULT_RIGHT_NAME
 from timApp.util.utils import split_location
-from timApp.item.validation import validate_item_and_create
 
 
 def create_item(item_path, item_type_str, item_title, create_function, owner_group_id):
@@ -29,8 +28,7 @@ def create_item(item_path, item_type_str, item_title, create_function, owner_gro
     validate_item_and_create(item_path, item_type_str, owner_group_id)
 
     item = create_function(item_path, owner_group_id, item_title)
-    timdb = get_timdb()
-    grant_access_to_session_users(timdb, item.id)
+    grant_access_to_session_users(item.id)
     item_type = BlockType.from_str(item_type_str)
     if item_type == BlockType.Document:
         bms = Bookmarks(get_current_user_object())
