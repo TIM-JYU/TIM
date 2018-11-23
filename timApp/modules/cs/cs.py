@@ -12,6 +12,7 @@ import glob
 from base64 import b64encode
 from cs_sanitizer import cs_min_sanitize, svg_sanitize, tim_sanitize
 from os.path import splitext
+from xml.sax.saxutils import quoteattr
 
 #  uid = pwd.getpwnam('agent')[2]
 #  os.setuid(uid)
@@ -561,9 +562,7 @@ def get_html(self, ttype, query):
         lazy_end = LAZYEND
 
     if ttype == "c1" or True:  # c1 oli testejä varten ettei sinä aikana rikota muita.
-        hx = binascii.hexlify(jso.encode("UTF8"))
-        sxx: str = hx.decode()
-        s = f'{lazy_start}<{r}{lazy_class} ng-cloak>xxxHEXJSONxxx{sxx}</{r}>{lazy_end}{lazy_visible}'
+        s = f'{lazy_start}<{r}{lazy_class} json={quoteattr(jso)}></{r}>{lazy_end}{lazy_visible}'
     return s
 
 

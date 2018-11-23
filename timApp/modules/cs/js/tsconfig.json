@@ -24,6 +24,12 @@
       "jquery": [
         "../../../static/scripts/node_modules/@types/jquery"
       ],
+      "io-ts": [
+        "../../../static/scripts/node_modules/io-ts/lib"
+      ],
+      "io-ts/*": [
+        "../../../static/scripts/node_modules/io-ts/*"
+      ],
       "tim/*": [
         "../../../static/scripts/decls/*"
       ]

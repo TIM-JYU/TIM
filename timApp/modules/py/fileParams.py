@@ -102,31 +102,6 @@ def get_2_items(js, key1, key2, def1=None, def2=None):
     return value1, value2
 
 
-def handle_by(byc):
-    if not byc:
-        return byc
-    bycs = byc.split("\n")
-    if len(bycs) > 0 and bycs[0].strip() == "//":  # remove empty comment on first line (due YAML limatations)
-        del bycs[0]
-        byc = "\n".join(bycs)
-    n = len(byc)
-    if n > 0 and byc[n - 1] == "\n":
-        byc = byc[0:n - 1]
-    return byc
-
-
-def get_param_by(query, key, default):
-    byc = get_param(query, key, default)
-    # print("KEY: ", key, " PYC: ", byc, "|||")
-    if not byc:
-        byc = default
-    if not byc:
-        return byc
-    byc = handle_by(byc)
-    # print("KEY: ", key, " PYC: ", byc, "|||")
-    return byc
-
-
 def get_param_del(query, key, default):
     key = check_key(query, key)
     if key not in query.query:
@@ -144,21 +119,6 @@ def get_param_del(query, key, default):
     if value == 'undefined':
         return default
     return value
-
-
-def replace_param(query, key, new_value):
-    if key not in query.query:
-        if query.jso is None:
-            return
-        if "markup" not in query.jso:
-            return
-        if key in query.jso["markup"]:
-            query.jso["markup"][key] = new_value
-        return
-    value = query.query[key][0]
-    if value == 'undefined':
-        return
-    query.query[key][0] = new_value
 
 
 def do_matcher(key):
@@ -436,10 +396,10 @@ class FileParams:
         self.lastn = int(get_param(query, "lastn" + nr, "1000000"))
         self.include = get_param(query, "include" + nr, "")
         self.replace = do_matcher(get_param(query, "replace" + nr, ""))
-        self.by = replace_random(query, get_param_by(query, "by" + nr, ""))
+        self.by = replace_random(query, get_param(query, "by" + nr, ""))
         if not self.by and nr == "":
-            self.by = replace_random(query, get_param_by(query, "byCode" + nr, ""))
-        self.prorgam = replace_random(query, get_param_by(query, "program" + nr, ""))
+            self.by = replace_random(query, get_param(query, "byCode" + nr, ""))
+        self.prorgam = replace_random(query, get_param(query, "program" + nr, ""))
         self.breakCount = int(get_param(query, "breakCount" + nr, "0"))
 
         self.reps = []
@@ -453,7 +413,7 @@ class FileParams:
                 get_param(query, "replace" + rep_nr + str(i), ""))  # replace.1.1 tyyliin replace1 on siis replace.0.1
             if not rep:
                 break
-            byc = replace_random(query, get_param_by(query, "byCode" + rep_nr + str(i), ""))
+            byc = replace_random(query, get_param(query, "byCode" + rep_nr + str(i), ""))
             self.reps.append({"by": rep, "bc": byc})
 
         if self.breakCount:
@@ -718,25 +678,11 @@ def multi_post_params(self):
 
 
 def get_query_from_json(jso):
-    # print(jso.repr())
-    # print("====================================================")
     result = QueryClass()
-    # print("result.query ================================== ")
-    # pp.pprint(result.query)
-    # print jso
     result.jso = jso
-    for field in list(result.jso.keys()):
-        # print field + ":" + jso[field]
-        if field == "markup":
-            for f in list(result.jso[field].keys()):
-                if f == "byCode":
-                    result.query[f] = [handle_by(str(result.jso[field][f]))]
-                else:
-                    result.query[f] = [str(result.jso[field][f])]
-        else:
-            if field != "state" and field != "input":
-                result.query[field] = [str(result.jso[field])]
-    # print(jso)
+    for field, value in result.jso.items():
+        if field not in ('state', 'input'):
+            result.query[field] = [value]
     return result
 
 
@@ -906,8 +852,8 @@ def string_to_string_replace_attribute(line, what_to_replace, query):
         leave_away = "byCode"
     params = query_params_to_attribute(query.query, leave_away)
     line = line.replace(what_to_replace, params)
-    by = get_param_by(query, "byCode", "")
-    by = get_param_by(query, "usercode", by)
+    by = get_param(query, "byCode", "")
+    by = get_param(query, "usercode", by)
     # print("BY XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX", by.encode())
     line = line.replace("##USERCODE##", by)
     # print(line.encode())

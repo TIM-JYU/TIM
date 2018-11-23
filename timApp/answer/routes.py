@@ -180,11 +180,6 @@ def post_answer(plugintype: str, task_id_ext: str):
     # Get the newest answer (state). Only for logged in users.
     state = try_load_json(old_answers[0].content) if logged_in() and len(old_answers) > 0 else None
 
-    # TODO Don't put these under markup; they are there for compatibility for now.
-    plugin.values['current_user_id'] = info['current_user_id']
-    plugin.values['user_id'] = info['user_id']
-    plugin.values['look_answer'] = info['look_answer']
-
     timdb.close()
 
     answer_call_data = {'markup': plugin.values,

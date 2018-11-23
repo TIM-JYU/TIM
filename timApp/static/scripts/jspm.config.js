@@ -192,6 +192,7 @@ SystemJS.config({
     "github:*/*.json"
   ],
   map: {
+    "io-ts": "npm:io-ts@1.4.1",
     "angular-diff-match-patch": "npm:angular-diff-match-patch@0.7.4",
     "ifvisible.js": "npm:ifvisible.js@1.0.6",
     "angularjs-color-picker": "npm:angularjs-color-picker@3.4.8",
@@ -602,6 +603,11 @@ SystemJS.config({
       "map": {
         "diff-match-patch": "npm:diff-match-patch@1.0.4",
         "angular": "npm:angular@1.7.5"
+      }
+    },
+    "npm:io-ts@1.4.1": {
+      "map": {
+        "fp-ts": "npm:fp-ts@1.11.1"
       }
     }
   }
