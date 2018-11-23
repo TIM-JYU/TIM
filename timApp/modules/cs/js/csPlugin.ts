@@ -1,4 +1,4 @@
-import angular, {IAttributes, IController, IRootElementService, IScope} from "angular";
+import angular, {IController, IRootElementService, IScope} from "angular";
 import * as t from "io-ts";
 import $ from "jquery";
 import {CellInfo} from "sagecell";
@@ -6,8 +6,8 @@ import {IAce, IAceEditor} from "tim/editor/ace-types";
 import {ParCompiler} from "tim/editor/parCompiler";
 import {IPluginAttributes} from "tim/plugin/util";
 import {lazyLoadMany, lazyLoadTS} from "tim/util/lazyLoad";
-import {$compile, $http, $interval, $sce, $timeout, $upload, $window} from "tim/util/ngimport";
-import {getHeading, set} from "tim/util/timHelper";
+import {$compile, $http, $sce, $timeout, $upload, $window} from "tim/util/ngimport";
+import {set} from "tim/util/timHelper";
 import {Binding, fixDefExport, to} from "tim/util/utils";
 import * as csparsons from "./cs-parsons/csparsons";
 
@@ -63,7 +63,6 @@ Sagea varten ks: https://github.com/sagemath/sagecell/blob/master/doc/embedding.
 */
 
 const csApp = angular.module("csApp", ["ngSanitize", "ngFileUpload"]);
-const taunoPHIndex = 3;
 
 function csLogTime(msg: string) {
     const d = new Date();
@@ -82,7 +81,7 @@ let taunoNr = 0;
 // to be able to register.
 
 interface IPwd {
-    savestate: string;
+    savestate?: string;
     path: string;
     attrs?: {path: string};
 
@@ -427,11 +426,11 @@ function commentTrim(s: string) {
 
 function makeTemplate() {
     return `<div class="csRunDiv type-{{$ctrl.rtype}}">
-    <p>Here comes header</p>
+    <h4 ng-bind-html="$ctrl.header"></h4>
     <p ng-if="$ctrl.stem" class="stem" ng-bind-html="$ctrl.stem"></p>
     <div ng-if="$ctrl.isSimcir || $ctrl.isTauno">
     <p ng-if="$ctrl.taunoOn" class="pluginHide""><a ng-click="$ctrl.hideTauno()">{{$ctrl.hideTaunoText}}</a></p>
-    <div><p></p></div>
+    <div class="taunoContainer"><p></p></div>
     <p ng-if="!$ctrl.taunoOn" class="pluginShow"><a ng-click="$ctrl.showTauno()">{{$ctrl.showTaunoText}}</a></p>
     <p ng-if="$ctrl.taunoOn && $ctrl.isTauno"
        class="pluginHide">
@@ -540,7 +539,7 @@ function makeTemplate() {
         <a ng-click="$ctrl.closeDocument()">X</a></p>
         <iframe width="800" height="600" ng-src="{{$ctrl.docURL}}" target="csdocument" allowfullscreen/>
     </div>
-    <p class="plgfooter">Here comes footer</p>
+    <p class="footer" ng-bind-html="$ctrl.footer"></p>
 </div>
 `;
 }
@@ -592,7 +591,10 @@ async function loadMathcheck() {
     });
 }
 
-function getInt(s: string) {
+function getInt(s: string | number) {
+    if (typeof s === "number") {
+        return s;
+    }
     const n = parseInt(s);
     if (isNaN(n)) {
         return 0;
@@ -605,26 +607,6 @@ function countChars(s: string, c: string) {
     for (let i = 0; i < s.length; n += +(c === s[i++])) {
     }
     return n;
-}
-
-function updateEditSize(scope: CsController) {
-    if (!scope) {
-        return;
-    }
-    if (!scope.usercode) {
-        return;
-    }
-    let n = countChars(scope.usercode, "\n") + 1;
-    if (n < scope.minRows) {
-        n = scope.minRows;
-    }
-    if (n > scope.maxRows) {
-        n = scope.maxRows;
-    }
-    if (n < 1) {
-        n = 1;
-    }
-    scope.rows = n;
 }
 
 function ifIs(value: string, name: string, def: string | number) {
@@ -781,57 +763,85 @@ function getPaths<A>(v: t.Validation<A>): string[] {
     return v.fold((errors) => errors.map((error) => error.context.map(({key}) => key).join(".")), () => ["no errors"]);
 }
 
-class CsController implements IController {
+class CsBase {
+    protected attrs!: ICsAttributes;
+
+    constructor(
+        protected scope: IScope,
+        protected element: IRootElementService) {
+    }
+
+    $postLink() {
+    }
+
+    protected getParentAttr(name: string) {
+        return this.element.parent().attr(name);
+    }
+
+    protected getByCode() {
+        return commentTrim(this.attrs.by || this.attrs.byCode || "");
+    }
+
+    protected getTaskId() {
+        return this.getParentAttr("id");
+    }
+
+    protected getPlugin() {
+        return this.getParentAttr("data-plugin");
+    }
+
+    protected getRootElement() {
+        return this.element[0];
+    }
+}
+
+class CsController extends CsBase implements IController {
     private static $inject = ["$scope", "$element", "$attrs"];
 
     private aceEditor?: IAceEditor;
-    private aelement: object;
-    private attrs: ICsAttributes;
     // autoupdate: number;
     // byCode: string; method
     private canvas?: HTMLCanvasElement;
     private canvasConsole: {log: (...args: string[]) => void};
     // canvasHeight: number;
     // canvasWidth: number;
-    private code: string;
-    private codeInitialized: boolean;
+    private code?: string;
+    private codeInitialized: boolean = false;
     private comtestError?: string;
-    private contentWindow: GlowScriptWindow;
+    private contentWindow?: GlowScriptWindow;
     private copyingFromTauno: boolean;
     private csparson: any;
     // cssPrint: boolean;
     private cursor: string;
     private docLink: string;
     private docURL?: string;
-    private edit: HTMLTextAreaElement;
+    private edit!: HTMLTextAreaElement;
     private editArea?: Element;
     private editorIndex: number;
-    private editorMode: number;
+    private editorMode!: number;
     private editorModeIndecies: number[];
     // editorModes: string;
-    // element0: HTMLElement;
     // english: boolean; method
     private error?: string;
     private errors: string[];
     // private file: {};
     private fileError?: string;
     private fileProgress?: number;
-    private fullhtml: string;
-    private glowscript: boolean;
-    private gsDefaultLanguage: string;
+    private fullhtml?: string;
+    private glowscript: boolean = false; // method?
+    private gsDefaultLanguage?: string;
     // private height: string;
     private htmlresult: string;
-    private iframe: boolean;
+    private iframe: boolean = false;
     private iframeClientHeight: number;
-    private iframeLoadTries: number;
+    private iframeLoadTries: number = 10;
     // private iframeopts: string;
     private imgURL: string;
-    private indent: number;
+    private indent!: number;
     // private indices: string;
-    private initUserCode: boolean;
-    private irrotaKiinnita: string;
+    private initUserCode: boolean = false;
+    private irrotaKiinnita?: string;
     // private isAll: boolean; method
-    private isFirst: boolean;
     // private isHtml: boolean;
     // private isMathCheck: boolean; method
     private isRunning: boolean = false;
@@ -845,21 +855,21 @@ class CsController implements IController {
     private lastUserargs?: string;
     private lastUserinput?: string;
     private localcode?: string;
-    private maxRows: number;
+    private maxRows!: number;
     // private minRows: number; method
     // private mode: string; method
     private muokattu: boolean;
     // private noConsoleClear: boolean;
-    private noeditor: boolean;
+    private noeditor!: boolean;
     // private nosave: boolean;
-    private oneruntime: string;
-    private out: {write: Function, writeln: Function, canvas: Element};
+    private oneruntime?: string;
+    private out?: {write: Function, writeln: Function, canvas: Element};
     private parson?: ParsonsWidget;
     private parsonsId?: Vid;
-    private plugin?: string; // maybe method
-    private postcode: string = "";
-    private precode: string = "";
-    private preview: HTMLElement; // TODO optional?
+    // private plugin?: string; // maybe method
+    private postcode?: string;
+    private precode?: string;
+    private preview!: HTMLElement;
     // private replace: string;
     private result?: string;
     // private rows: number;
@@ -881,9 +891,8 @@ class CsController implements IController {
     // private showCodeOn: string;
     private simcir?: JQuery;
     // private table: string;
-    private taskId?: string;
-    private taunoElem: HTMLElement;
-    private taunoId: string; // TODO optional?
+    private taunoElem?: HTMLElement;
+    private taunoId?: string;
     private taunoOn: boolean;
     // private taunotype: string;
     // private tiny: boolean; method
@@ -915,8 +924,8 @@ class CsController implements IController {
     // Binding that has all the data as a JSON string.
     private json!: Binding<string, "@">;
 
-    constructor(private scope: IScope, private element: IRootElementService, private attributes: IAttributes) {
-        this.byCode = "";
+    constructor(scope: IScope, element: IRootElementService) {
+        super(scope, element);
         this.errors = [];
         this.taunoOn = false;
         this.result = "";
@@ -941,9 +950,10 @@ class CsController implements IController {
         this.lastJS = "";
         this.iframeClientHeight = -1;
         this.cursor = "⁞"; // \u0383"; //"\u0347"; // "\u02FD";
-        this.isFirst = true;
         this.docLink = "Document";
         this.muokattu = false;
+        this.editorIndex = 0;
+        this.editorModeIndecies = [];
     }
 
     svgImageSnippet() {
@@ -958,15 +968,12 @@ class CsController implements IController {
             console.log(getPaths(validated));
             throw new Error("faillllled");
         }
-        let x: string = validated.value.selectedLanguage;
         this.attrs = validated.value;
         console.log(this.attrs);
         throw new Error("asdasdasd");
-        this.byCode = this.attrs.by || this.attrs.byCode;
-        const element = this.element;
         const attrs = this.attrs;
         let kind;
-        switch (element[0].tagName.toLowerCase()) {
+        switch (this.getRootElement().tagName.toLowerCase()) {
             case "cs-runner":
                 kind = "console";
                 break;
@@ -1010,13 +1017,6 @@ class CsController implements IController {
                 console.warn("Unrecognized csplugin tag type, falling back to 'console'");
                 kind = "console";
                 break;
-        }
-        this.taunoElem = element[0].children[taunoPHIndex] as HTMLElement; // Check this carefully, where is Tauno placeholder
-        this.plugin = element.parent().attr("data-plugin");
-        this.taskId = element.parent().attr("id");
-        this.element = element;
-        if (this.scope.$parent.$$prevSibling) {
-            this.isFirst = false;
         }
         set(this, attrs, "lang", "fi");
         const english = this.lang === "en";
@@ -1085,7 +1085,7 @@ class CsController implements IController {
         }
         set(this, attrs, "codeunder", false);
         set(this, attrs, "codeover", false);
-        set(this, attrs, "open", !this.isFirst);
+        set(this, attrs, "open", false);
         set(this, attrs, "rows", 1);
         set(this, attrs, "cols", 10);
         set(this, attrs, "maxrows", 100);
@@ -1133,7 +1133,6 @@ class CsController implements IController {
         set(this, attrs, "usercode", "");
         this.editorMode = parseInt(this.editorMode);
         this.editorText = [this.normal, this.highlight, this.parsons, this.jsparsons];
-        this.editorModeIndecies = [];
         for (const c of this.editorModes) {
             this.editorModeIndecies.push(parseInt(c));
         }
@@ -1144,8 +1143,8 @@ class CsController implements IController {
         this.checkEditorModeLocalStorage();
 
         this.showCodeLink = this.showCodeOn;
-        this.minRows = getInt(this.rows);
-        this.maxRows = getInt(this.maxrows);
+        this.minRows = getInt(this.attrs.rows);
+        this.maxRows = getInt(this.attrs.maxrows);
 
         this.toggleEditorText = [english ? "Edit" : "Muokkaa", english ? "Hide" : "Piilota"];
 
@@ -1153,15 +1152,14 @@ class CsController implements IController {
             this.toggleEditorText = this.toggleEditor.split("|");
         }
 
-        if (this.usercode === "" && this.byCode) {
-            this.usercode = this.byCode;
+        if (this.usercode === "" && this.getByCode()) {
+            this.usercode = this.getByCode();
             this.initUserCode = true;
         }
         this.usercode = commentTrim(this.usercode);
         if (this.blind) {
             this.usercode = this.usercode.replace(/@author.*/, "@author XXXX");
         }
-        this.byCode = commentTrim(this.byCode);
 
         if (this.usercode) {
             const rowCount = countChars(this.usercode, "\n") + 1;
@@ -1184,7 +1182,7 @@ class CsController implements IController {
             this.uploadstem = english ? "Upload image/file" : "Lataa kuva/tiedosto";
         }
         this.buttonText = english ? "Run" : "Aja";
-        if (this.type.indexOf("text") >= 0 || this.isSimcir || this.justSave) { // || scope.isSage ) {
+        if (this.type.indexOf("text") >= 0 || this.isSimcir || this.justSave) {
             this.isRun = true;
             this.buttonText = english ? "Save" : "Tallenna";
         }
@@ -1193,7 +1191,6 @@ class CsController implements IController {
             this.buttonText = this.button;
         }
 
-        this.indent = getInt(this.indent);
         if (this.indent < 0) {
             if (this.file) {
                 this.indent = 8;
@@ -1202,15 +1199,6 @@ class CsController implements IController {
             }
         }
 
-        this.edit = element.find("textarea")[0]; // angular.element(e); // $("#"+scope.editid);
-        this.preview = element.find(".csrunPreview")[0]; // angular.element(e); // $("#"+scope.editid);
-
-        this.element0 = element[0];
-        element[0].childNodes[0].outerHTML = getHeading(attrs, "header", this, "h4");
-        const n = element[0].childNodes.length;
-        if (n > 1) {
-            element[0].childNodes[n - 1].outerHTML = getHeading(attrs, "footer", this, 'p class="footer"');
-        }
         if (this.open) {
             if (kind === "tauno" || kind === "simcir") {
                 this.showTauno();
@@ -1245,7 +1233,6 @@ class CsController implements IController {
         if (this.attrs.autorun) {
             this.runCodeLink(true);
         }
-        this.editorIndex = 0;
         if (this.editorMode !== 0 || this.editorModes !== "01" || this.cssPrint) {
             this.showOtherEditor(this.editorMode);
         } // Forces code editor to change to pre
@@ -1254,21 +1241,24 @@ class CsController implements IController {
         this.changeCodeLink();
         this.processPluginMath();
 
-        csLogTime(this.taskId);
+        csLogTime(this.getTaskId() || "taskId missing");
 
         this.showUploaded(this.attrs.uploadedFile, this.attrs.uploadedType);
     }
 
     $postLink() {
+        this.taunoElem = this.element.find("taunoContainer")[0] as HTMLElement;
+        this.edit = this.element.find("textarea")[0] as HTMLTextAreaElement;
+        this.preview = this.element.find(".csrunPreview")[0];
         const styleArgs = getParam(this, "style-args", "");
         if (styleArgs) {
-            const argsEdit = this.element[0].getElementsByClassName("csArgsArea");
+            const argsEdit = this.getRootElement().getElementsByClassName("csArgsArea");
             if (argsEdit.length > 0) {
                 argsEdit[0].setAttribute("style", styleArgs);
             }
         }
         this.initEditorKeyBindings();
-        $(this.element[0]).bind("keydown", (event) => {
+        $(this.getRootElement()).bind("keydown", (event) => {
             if (event.ctrlKey || event.metaKey) {
                 switch (String.fromCharCode(event.which).toLowerCase()) {
                     case "s":
@@ -1282,6 +1272,26 @@ class CsController implements IController {
         });
     }
 
+    updateEditSize() {
+        if (!this) {
+            return;
+        }
+        if (!this.usercode) {
+            return;
+        }
+        let n = countChars(this.usercode, "\n") + 1;
+        if (n < this.minRows) {
+            n = this.minRows;
+        }
+        if (n > this.maxRows) {
+            n = this.maxRows;
+        }
+        if (n < 1) {
+            n = 1;
+        }
+        this.rows = n;
+    }
+
     async $doCheck() {
         let anyChanged = false;
         if (this.usercode !== this.dochecks.usercode) {
@@ -1289,12 +1299,12 @@ class CsController implements IController {
                 this.aceEditor.getSession().setValue(this.usercode);
             }
             this.dochecks.usercode = this.usercode;
-            if (!this.copyingFromTauno && this.usercode !== this.byCode) {
+            if (!this.copyingFromTauno && this.usercode !== this.getByCode()) {
                 this.muokattu = true;
             }
             this.copyingFromTauno = false;
             if (this.minRows < this.maxRows) {
-                updateEditSize(this);
+                this.updateEditSize();
             }
             if (this.viewCode) {
                 this.pushShowCodeNow();
@@ -1330,7 +1340,8 @@ class CsController implements IController {
     }
 
     onFileSelect(file: File) {
-        if (!this.taskId) {
+        const taskId = this.getTaskId();
+        if (!taskId) {
             console.log("taskId missing");
             return;
         }
@@ -1356,7 +1367,7 @@ class CsController implements IController {
             this.uploadedFile = undefined;
             this.uploadresult = undefined;
             this.docURL = undefined;
-            const ti = this.taskId.split(".");
+            const ti = taskId.split(".");
             if (ti.length < 2) {
                 return;
             }
@@ -1406,23 +1417,22 @@ class CsController implements IController {
         const name = uploadFileTypesName(file);
         let html = `<p class="smalllink"><a href="${file}" title="${type}">${name}</a></p>`; // (' + type + ')</p>';
         if (type.indexOf("image") === 0) {
-            html += '<img src="' + this.uploadedFile + '"/>';
+            html += `<img src="${this.uploadedFile}"/>`;
             this.uploadresult = $sce.trustAsHtml(html);
             return;
         }
         if (type.indexOf("video") === 0) {
-            html += '<video src="' + this.uploadedFile + '" controls/>';
+            html += `<video src="${this.uploadedFile}" controls/>`;
             this.uploadresult = $sce.trustAsHtml(html);
             return;
         }
         if (type.indexOf("audio") === 0) {
-            html += '<audio src="' + this.uploadedFile + '" controls/>';
+            html += `<audio src="${this.uploadedFile}" controls/>`;
             this.uploadresult = $sce.trustAsHtml(html);
             return;
         }
         if (type.indexOf("text") === 0) {
             html += '<div style="overflow: auto; -webkit-overflow-scrolling: touch; max-height:900px; -webkit-box-pack: center; -webkit-box-align: center; display: -webkit-box;"  width:1200px>';
-            // html += '<iframe  width="800" src="' + file +'" target="csdocument" allowfullscreen  onload="resizeIframe(this)" '+$scope.iframeopts+' />';
             html += `<iframe  width="800" src="${file}" target="csdocument" allowfullscreen   ${this.iframeopts} />`;
             html += "</div>";
             this.uploadresult = $sce.trustAsHtml(html);
@@ -1475,7 +1485,7 @@ class CsController implements IController {
     }
 
     logTime(msg: string) {
-        csLogTime(msg + " " + this.taskId);
+        csLogTime(msg + " " + this.getTaskId());
         return true;
     }
 
@@ -1641,13 +1651,14 @@ class CsController implements IController {
             params.input.nosave = true;
         }
         let url = "/cs/answer";
-        if (this.plugin) {
-            url = this.plugin;
+        const plugin = this.getPlugin();
+        if (plugin) {
+            url = plugin;
             const i = url.lastIndexOf("/");
             if (i > 0) {
                 url = url.substring(i);
             }
-            url += "/" + this.taskId + "/answer/";  // Häck piti vähän muuttaa, jotta kone häviää.
+            url += "/" + this.getTaskId() + "/answer/";  // Häck piti vähän muuttaa, jotta kone häviää.
         }
         const t0run = performance.now();
         const r = await to($http<{
@@ -1987,10 +1998,8 @@ class CsController implements IController {
         const weSchemeUrl = tt;
         const s = this.table;
         this.iframe = true;
-        // $scope.sageOutput = $scope.element0.getElementsByClassName('outputSage')[0];
         if (this.iframe) {
             this.taunoElem.innerHTML =
-                // '<p class="pluginHide"" ><a ng-click="hideTauno()">hide Tauno</a></p>' + // ng-click ei toimi..
                 '<iframe id="' + v.vid + '" class="showWeScheme" src="' + weSchemeUrl + '" ' + v.w + v.h + " " + this.iframeopts + " ></iframe>";
         } else {
             this.taunoElem.innerHTML = '<div class="taunoNaytto" id="' + v.vid + '" />';
@@ -2000,7 +2009,7 @@ class CsController implements IController {
 
     initCode() {
         this.muokattu = false;
-        this.usercode = this.byCode;
+        this.usercode = this.getByCode();
         this.imgURL = "";
         this.runSuccess = false;
         this.runError = false;
@@ -2048,9 +2057,9 @@ class CsController implements IController {
             this.sageInput.value = this.getReplacedCode();
             return;
         }
-        this.sageArea = this.element0.getElementsByClassName("computeSage")[0];
-        this.editArea = this.element0.getElementsByClassName("csEditArea")[0];
-        this.sageOutput = this.element0.getElementsByClassName("outputSage")[0];
+        this.sageArea = this.getRootElement().getElementsByClassName("computeSage")[0];
+        this.editArea = this.getRootElement().getElementsByClassName("csEditArea")[0];
+        this.sageOutput = this.getRootElement().getElementsByClassName("outputSage")[0];
 
         this.sagecellInfo = sagecell.makeSagecell({
             inputLocation: this.sageArea,
@@ -2074,8 +2083,8 @@ class CsController implements IController {
                     this.sagecellInfo.code = this.getReplacedCode();
                     // cs.sagecellInfo.session.code = cs.sagecellInfo.code;
                 };
-                const sagecellOptions = this.element0.getElementsByClassName("sagecell_options")[0];
-                const csRunMenuArea = this.element0.getElementsByClassName("csRunMenuArea")[0];
+                const sagecellOptions = this.getRootElement().getElementsByClassName("sagecell_options")[0];
+                const csRunMenuArea = this.getRootElement().getElementsByClassName("csRunMenuArea")[0];
                 if (csRunMenuArea && sagecellOptions) {
                     csRunMenuArea.appendChild(sagecellOptions);
                 }
@@ -2189,7 +2198,6 @@ class CsController implements IController {
 
     getCodeFromLocalCode(f?: () => void) {
         // f: function to call after ready
-        // $scope.code = $scope.localcode;
         if (!this.localcode) {
             this.code = this.usercode;
             this.precode = "";
@@ -2287,7 +2295,8 @@ class CsController implements IController {
         if (!this.usercode) {
             return;
         }
-        if (!this.taskId) {
+        const taskId = this.getTaskId();
+        if (!taskId) {
             console.log("taskId missing");
             return;
         }
@@ -2301,7 +2310,7 @@ class CsController implements IController {
         }
         this.lastMD = text;
         const r = await to($http.post<{texts: string | Array<{html: string}>}>(
-            `/preview/${this.taskId.split(".")[0]}`, {
+            `/preview/${taskId.split(".")[0]}`, {
                 text: text,
             }));
         if (r.ok) {
@@ -2400,7 +2409,7 @@ class CsController implements IController {
                 this.usercode = s;
             },
         });
-        parson.init(this.byCode, this.usercode);
+        parson.init(this.getByCode(), this.usercode);
         parson.show();
         this.csparson = parson;
     }
@@ -2502,7 +2511,7 @@ class CsController implements IController {
         }
         const eindex = this.editorModeIndecies[this.editorMode];
         this.editorIndex = eindex;
-        const otherEditDiv = this.element0.getElementsByClassName("csrunEditorDiv")[0];
+        const otherEditDiv = this.getRootElement().getElementsByClassName("csrunEditorDiv")[0];
         const editorDiv = angular.element(otherEditDiv) as JQuery;
         this.edit = $compile(html[eindex])(this.scope)[0] as HTMLTextAreaElement; // TODO unsafe cast
         // don't set the html immediately in case of Ace to avoid ugly flash because of lazy load
@@ -2686,9 +2695,8 @@ class CsController implements IController {
                 ${opts}></iframe>
 </div>
 `;
-                this.aelement = angular.element(angularElement);
-                this.canvas = this.aelement[0] as HTMLCanvasElement; // TODO this seems wrong
-                // $scope.canvas = angular.element('<iframe id="'+v.vid+'" class="jsCanvas" src="/cs/gethtml/canvas.html" ' + v.w + v.h + ' style="border:0" seamless="seamless" ></iframe>');
+                const e = angular.element(angularElement);
+                this.canvas = e[0] as HTMLCanvasElement; // TODO this seems wrong, it isn't canvas
                 this.iframeLoadTries = 10;
             } else {
                 this.canvas = angular.element(// '<div class="userlist" tim-draggable-fixed="" style="top: 91px; right: -375px;">'+
@@ -2697,12 +2705,9 @@ class CsController implements IController {
                     "")[0] as HTMLCanvasElement; // '</div>');
             }
             const $previewDiv = angular.element(this.preview);
-            // $previewDiv.html($scope.canvas);
             $previewDiv.empty().append($compile(this.canvas)(this.scope));
-            // $scope.canvas = $scope.preview.find(".csCanvas")[0];
         }
         let text = this.usercode.replace(this.cursor, "");
-        // if ( text === $scope.lastJS && $scope.userargs === $scope.lastUserargs && $scope.userinput === $scope.lastUserinput ) return;
         if (!this.attrs.runeverytime && text === this.lastJS && this.userargs === this.lastUserargs && this.userinput === this.lastUserinput) {
             return;
         }
@@ -2714,7 +2719,6 @@ class CsController implements IController {
 
         if (this.iframe) { // in case of iframe, the text is send to iframe
             const f = document.getElementById(this.taunoId) as GlowScriptFrame; // but on first time it might be not loaded yet
-            // var s = $scope.taunoElem.contentWindow().getUserCodeFromTauno();
             // wait for contentWindow ready and the callback function also
             if (!f || !f.contentWindow || (!f.contentWindow.runJavaScript && !this.fullhtml && !wescheme)
                 || (wescheme && !f.contentWindow.runWeScheme)) {
@@ -2773,10 +2777,10 @@ class CsController implements IController {
         this.error = "";
         this.runError = false;
         try {
-            const ctx = this.canvas.getContext("2d");
+            const ctx = this.canvas.getContext("2d")!;
             ctx.save();
             this.result = "";
-            const beforeCode = "function paint(ctx,out, userargs, userinput, console) { ";
+            const beforeCode = "function paint(ctx, out, userargs, userinput, console) { ";
             const afterCode = "\n}\n";
             let a = "";
             let b = "";
@@ -2789,10 +2793,11 @@ class CsController implements IController {
 
             const paint = new Function("return (" + b + text + a + ")")();
             if (!this.out) {
-                this.out = this.element0.getElementsByClassName("console")[0] as any;
-                this.out.write = (s: string) => this.write(s);
-                this.out.writeln = (s: string) => this.writeln(s);
-                this.out.canvas = this.canvas;
+                const elem = this.getRootElement().getElementsByClassName("console")[0] as any;
+                this.out = elem;
+                elem.write = (s: string) => this.write(s);
+                elem.writeln = (s: string) => this.writeln(s);
+                elem.canvas = this.canvas;
             }
             paint(ctx, this.out, this.userargs, this.userinput, cons);
             ctx.restore();
@@ -2890,7 +2895,7 @@ csApp.component("csTextRunner", {
     ...commonComponentOptions,
     template: `
 <div class="csRunDiv csTinyDiv" style="text-align: left;">
-    <p>Here comes header</p>
+    <h4 ng-bind-html="$ctrl.header"></h4>
     <span ng-if="$ctrl.stem"
           class="stem"
           ng-bind-html="$ctrl.stem"></span>
@@ -2928,36 +2933,53 @@ csApp.component("csWeschemeRunner", {
 
 const csConsoleApp = angular.module("csConsoleApp", ["ngSanitize"]);
 
-class CsConsoleController implements IController {
+class CsConsoleController extends CsBase implements IController {
     private static $inject = ["$element"];
 
-    isShell: boolean;
+    // isShell: boolean; method
     cursor: number;
     currentSize: string;
-    isHtml: boolean;
-    oldpwd: string;
+    // isHtml: boolean;
+    oldpwd!: string;
     currentInput: string;
-    pwd: string;
-    attrs: AttrType;
-    byCode: string;
-    taskId: string;
-    plugin: string;
-    ident: string;
-    content: AttrType;
+    pwd!: string;
+    attrs!: AttrType;
+    // byCode: string; method
+    // content: AttrType;
     examples: Array<{expr: string, title: string}>;
     history: Array<{istem: string, ostem: string, input: string, response: string}>;
-    savestate: string;
-    path: string;
-    type: string;
+    // savestate: string;
+    // path: string;
+    // type: string;
 
     // Binding that has all the data as a JSON string.
     private json!: Binding<string, "@">;
 
-    constructor(private element: IRootElementService) {
-
+    constructor(scope: IScope, element: IRootElementService) {
+        super(scope, element);
+        this.examples = [];
+        this.history = [];
+        this.currentSize = "normal";
+        this.currentInput = "";
+        this.cursor = this.history.length; // this.history.length means new input is last command.
     }
 
     $postLink() {
+        // nothing to do
+    }
+
+    $onInit() {
+        this.attrs = JSON.parse(this.data);
+
+        // This block could be re-used
+
+        this.content = this.attrs;
+        // End of generally re-usable TIM stuff
+        if (this.content.examples) {
+            const s = this.content.examples.replace(/'/g, '"');
+            this.examples = JSON.parse(s);
+        }
+
         const attrs = this.attrs;
         set(this, attrs, "usercode", "");
         set(this, attrs, "type", "cs");
@@ -2966,38 +2988,13 @@ class CsConsoleController implements IController {
         this.pwd = ConsolePWD.getPWD(this);
         this.oldpwd = this.pwd;
         this.isShell = languageTypes.getRunType(this.type, "") === "shell";
-        if (this.usercode === "" && this.byCode) {
-            this.usercode = this.byCode.split("\n")[0];
+        if (this.usercode === "" && this.getByCode()) {
+            this.usercode = this.getByCode().split("\n")[0];
         }
         this.currentInput = this.usercode;
         if (this.isShell) {
             ConsolePWD.register(this);
         }
-    }
-
-    $onInit() {
-        this.attrs = JSON.parse(this.data);
-        this.byCode = this.attrs.by || this.attrs.byCode;
-
-        // This block could be re-used
-        this.taskId = this.element.parent().attr("id");
-        this.plugin = this.element.parent().attr("data-plugin");
-        const reqPath = this.plugin + "/" + this.ident + "/";
-        this.content = this.attrs;
-        // End of generally re-usable TIM stuff
-
-        this.examples = [];
-
-        if (this.content.examples) {
-            const s = this.content.examples.replace(/'/g, '"');
-            this.examples = JSON.parse(s);
-        }
-
-        this.history = [];
-
-        this.currentSize = "normal";
-        this.currentInput = "";
-        this.cursor = this.history.length; // $scope.history.length means new input is last command.
     }
 
     setPWD(pwd: string) {
@@ -3011,7 +3008,7 @@ class CsConsoleController implements IController {
     }
 
     focusOnInput() {
-        const el = this.element[0].querySelector(".console-input") as HTMLInputElement | null;
+        const el = this.getRootElement().querySelector(".console-input") as HTMLInputElement | null;
         if (el) {
             el.focus();
         }
@@ -3019,13 +3016,14 @@ class CsConsoleController implements IController {
 
     async handler() {
         let url = "/cs/answer";
-        if (this.plugin) {
-            url = this.plugin;
+        const plugin = this.getPlugin();
+        if (plugin) {
+            url = plugin;
             const i = url.lastIndexOf("/");
             if (i > 0) {
                 url = url.substring(i);
             }
-            url += "/" + this.taskId + "/answer/";  // Häck piti vähän muuttaa, jotta kone häviää.
+            url += "/" + this.getTaskId() + "/answer/";  // Häck piti vähän muuttaa, jotta kone häviää.
         }
         const t = languageTypes.getRunType(this.content.type, "shell");
         const ucode = this.currentInput;
@@ -3088,7 +3086,7 @@ class CsConsoleController implements IController {
         this.currentInput = "";
         this.cursor = this.history.length;
         await $timeout();
-        const el = this.element[0].querySelector(".console-output");
+        const el = this.getRootElement().querySelector(".console-output");
         if (el) {
             el.scrollTop = el.scrollHeight;
         }
@@ -3121,7 +3119,7 @@ class CsConsoleController implements IController {
     handleKey(ev: KeyboardEvent) {
         if (ev.which === 13) {
             this.handler();
-        }// submit();
+        }
         if (ev.which === 40) {
             this.down();
         }
