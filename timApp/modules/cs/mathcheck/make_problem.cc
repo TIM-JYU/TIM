@@ -1,6 +1,6 @@
 #define confuse
 #include "input_output.cc"
-copyright make_problem_cc( "make_problem.cc", "Antti Valmari", 20170825 );
+copyright make_problem_cc( "make_problem.cc", "Antti Valmari", 20180921 );
 /*
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -21,6 +21,7 @@ copyright make_problem_cc( "make_problem.cc", "Antti Valmari", 20170825 );
 
 
 #include <ctime>
+#include <sys/time.h>
 #ifdef cgibin
 #define one_page
 #endif
@@ -32,7 +33,9 @@ copyright make_problem_cc( "make_problem.cc", "Antti Valmari", 20170825 );
 unsigned random_seed = 0;
 
 void random_init(){
-  random_seed = time(0);
+  timeval tm;
+  gettimeofday( &tm, 0 );
+  random_seed = time(0) ^ tm.tv_usec;
   random_seed *= 2718281; random_seed += 314159265;
   random_seed *= 2718281; random_seed += 314159265;
 }
@@ -135,7 +138,7 @@ void error_( const char *msg ){ err_pos = inp_byte_now; error( msg ); }
 
 /* Skip spaces and at most one newline among them. */
 unsigned inp_indent = 0;  // nr of spaces in the beginning of the current line
-inline void inp_skip_white_space(){
+inline void skip_white_space(){
   while( inp_chr == ' ' ){ inp_get_chr(); }
   if( inp_chr == '\n' ){
     inp_indent = 0; inp_get_chr();
@@ -147,7 +150,7 @@ inline void inp_skip_white_space(){
 
 /* Get a non-negative integer. */
 unsigned inp_get_nr(){
-  inp_skip_white_space();
+  skip_white_space();
   if( inp_chr < '0' || inp_chr > '9' ){ error_( "Expected a number" ); }
   unsigned result = 0;
   while( inp_chr >= '0' && inp_chr <= '9' ){
@@ -168,8 +171,8 @@ enum tkn_type {
   tkn_answer, tkn_box_size, tkn_confuse_off, tkn_confuse_on,
   tkn_feedback_height, tkn_filename, tkn_hidden, tkn_html, tkn_initial,
   tkn_instructions, tkn_last_number, tkn_let, tkn_new_file, tkn_no_chain,
-  tkn_no_focus, tkn_question, tkn_submit, tkn_suomi, tkn_text, tkn_title,
-  tkn_err, tkn_none,
+  tkn_no_focus, tkn_question, tkn_random_seed, tkn_submit, tkn_suomi,
+  tkn_text, tkn_title, tkn_err, tkn_none,
   tkn_eof
 } inp_tkn = tkn_err;
 
@@ -181,8 +184,8 @@ const char *tkn_names[] = {
   "`",
   "answer", "box_size", "confuse_off", "confuse_on", "feedback_height",
   "filename", "hidden", "html", "initial", "instructions", "last_number",
-  "let", "new_file", "no_chain", "no_focus", "question", "submit", "suomi",
-  "text", "title", 0
+  "let", "new_file", "no_chain", "no_focus", "question", "random_seed",
+  "submit", "suomi", "text", "title", 0
 };
 
 
@@ -192,8 +195,8 @@ bool inp_prgh = true;   // there was an empty line
 void inp_get_tkn(){
 
   /* Skip white space including empty lines. */
-  inp_skip_white_space();
-  while( inp_chr == '\n' ){ inp_skip_white_space(); inp_prgh = true; }
+  skip_white_space();
+  while( inp_chr == '\n' ){ skip_white_space(); inp_prgh = true; }
 
   /* Skip the # or detect its absence. */
   if( !inp_chr ){ inp_tkn = tkn_eof; return; }
@@ -272,7 +275,7 @@ void inp_copy_raw(){
     space_level = 0;  // 0 = nothing, 1 = space, 2 = line feed is pending
 
   /* Skip leading white space. */
-  inp_skip_white_space();
+  skip_white_space();
   if( inp_chr == '\n' ){ inp_get_tkn(); inp_copy_status = 0; return; }
 
   /* Scan the input up to the end or a non-escape-code token. */
@@ -285,7 +288,7 @@ void inp_copy_raw(){
       inp_get_chr(); continue;
     }
     else if( inp_chr == '\n' ){
-      space_level = 2; inp_skip_white_space();
+      space_level = 2; skip_white_space();
       if( inp_chr == '\n' ){  // empty line, so exit
         inp_get_tkn(); inp_prgh = true; break;
       }
@@ -416,7 +419,7 @@ unsigned                              // size of answering textarea
   rows_l = rows_g, cols_l = cols_g;   // valid to next #box_size or #filename
 unsigned
   fb_height = 0,  // if > 0, a feedback iframe is created
-  fb_cnt = 0;     // a running number of feedback iframes on the same page 
+  fb_cnt = 0;     // a running number of feedback iframes on the same page
 bool
   make_file_chain = true,   // ok answer page links to the next problem page
   confuse_hidden = true;    // confuse hidden textareas
@@ -655,7 +658,7 @@ void open_form(){
   open_file();
   if( !err_ok ){ return; }
   out_print( "\n<form action=\t\"" ); out_print( URL_cgi_base );
-  out_print( "mathcheck.out\" method=post target=_blank>\n" );
+  out_print( "mathcheck.cgi\" method=post target=_blank>\n" );
   if( fb_height ){ out_print( "<table class=ifr>\n<tr><td class=ifrl>\n" ); }
   form_is_open = true;
 }
@@ -681,19 +684,19 @@ void append_int( std::string &str, int ii ){
 
 /* Report that an expected char (or either of two) was not got. */
 bool no_match_lp(){
-  if( inp_chr == '(' ){ inp_get_chr(); inp_skip_white_space(); return false; }
+  if( inp_chr == '(' ){ inp_get_chr(); skip_white_space(); return false; }
   else{ error_( "Expected <kbd>(</kbd>" ); return true; }
 }
 char err_char[] = "Expected (operator or) <kbd> </kbd> or <kbd> </kbd>";
 bool no_match( char ch ){
-  if( inp_chr == ch ){ inp_get_chr(); inp_skip_white_space(); return false; }
+  if( inp_chr == ch ){ inp_get_chr(); skip_white_space(); return false; }
   else{
     err_char[28] = ch; err_char[35] = '\0'; error_( err_char ); return true;
   }
 }
 bool no_match( char ch1, char ch2 ){
   if( inp_chr == ch1 || inp_chr == ch2 ){
-    inp_get_chr(); inp_skip_white_space(); return false;
+    inp_get_chr(); skip_white_space(); return false;
   }else{
     err_char[28] = ch1; err_char[44] = ch2; err_char[35] = ' ';
     error_( err_char ); return true;
@@ -713,7 +716,7 @@ int prm_i_atom(){
 
   /* Number */
   if( is_digit( inp_chr ) ){
-    result = inp_get_nr(); inp_skip_white_space(); return result;
+    result = inp_get_nr(); skip_white_space(); return result;
   }
 
   switch( inp_match( prm_i_names, prm_i_cnt ) ){
@@ -730,7 +733,7 @@ int prm_i_atom(){
     break;
 
   case 2: { // gcd
-    inp_skip_white_space();
+    skip_white_space();
     if( no_match_lp() ){ return 0; }
     unsigned n1 = abs_u( prm_i_expr() );
     if( !err_ok || no_match( ',' ) ){ return 0; }
@@ -745,14 +748,14 @@ int prm_i_atom(){
     break; }
 
   case 3:   //  random
-    inp_skip_white_space();
+    skip_white_space();
     if( no_match_lp() ){ return 0; }
     result = random( prm_i_expr() );
     if( !err_ok || no_match( ')' ) ){ return 0; }
     break;
 
   case 4: { // select
-    inp_skip_white_space();
+    skip_white_space();
     if( no_match_lp() ){ return 0; }
     int ii = prm_i_expr();
     if( ii < 0 ){ ii = 0; }
@@ -774,7 +777,7 @@ int prm_i_atom(){
     return 0;
   }
 
-  inp_skip_white_space(); return result;
+  skip_white_space(); return result;
 }
 
 
@@ -782,7 +785,7 @@ int prm_sign(){
   bool negate = false;
   while( inp_chr == '+' || inp_chr == '-' ){
     if( inp_chr == '-' ){ negate = !negate; }
-    inp_get_chr(); inp_skip_white_space();
+    inp_get_chr(); skip_white_space();
   }
   if( negate ){ return -prm_i_atom(); }
   else{ return prm_i_atom(); }
@@ -793,7 +796,7 @@ int prm_prod(){
   int result = prm_sign();
   while( err_ok && ( inp_chr == '*' || inp_chr == '/' || inp_chr == '%' ) ){
     char opr = inp_chr;
-    inp_get_chr(); inp_skip_white_space();
+    inp_get_chr(); skip_white_space();
     if( opr == '*' ){ result *= prm_sign(); }
     else if( opr == '/' ){ result /= prm_sign(); }
     else{ result %= prm_sign(); }
@@ -806,7 +809,7 @@ int prm_sum(){
   int result = prm_prod();
   while( err_ok && ( inp_chr == '+' || inp_chr == '-' ) ){
     char opr = inp_chr;
-    inp_get_chr(); inp_skip_white_space();
+    inp_get_chr(); skip_white_space();
     if( opr == '+' ){ result += prm_prod(); }
     else{ result -= prm_prod(); }
   }
@@ -815,7 +818,7 @@ int prm_sum(){
 
 
 int prm_i_expr(){
-  inp_skip_white_space();
+  skip_white_space();
   return prm_sum();
 }
 
@@ -829,7 +832,7 @@ void prm_s_expr( std::string & );
 
 void prm_s_atom( std::string &result ){
   result = "";
-  inp_skip_white_space();
+  skip_white_space();
 
   /* String literal */
   if( inp_chr == '\"' ){
@@ -871,7 +874,7 @@ void prm_s_atom( std::string &result ){
       error_( "<kbd>\"</kbd> is missing somewhere" ); return;
     }
 
-    inp_get_chr(); inp_skip_white_space(); return;
+    inp_get_chr(); skip_white_space(); return;
   }
 
   unsigned tkn = inp_match( prm_s_names, prm_s_cnt );
@@ -888,7 +891,7 @@ void prm_s_atom( std::string &result ){
     break;
 
   case 1: case 4: { // "Pterm", "pterm"
-    inp_skip_white_space();
+    skip_white_space();
     if( no_match_lp() ){ return; }
     int vv = prm_i_expr();
     if( !err_ok || no_match( ',' ) ){ return; }
@@ -901,7 +904,7 @@ void prm_s_atom( std::string &result ){
     break; }
 
   case 2: { // "Pz"
-    inp_skip_white_space();
+    skip_white_space();
     if( no_match_lp() ){ return; }
     int vv = prm_i_expr();
     if( vv < 0 ){ result += '-'; append_digits( result, -vv ); }
@@ -910,14 +913,14 @@ void prm_s_atom( std::string &result ){
     break; }
 
   case 3:   // "pZ"
-    inp_skip_white_space();
+    skip_white_space();
     if( no_match_lp() ){ return; }
     append_int( result, prm_i_expr() );
     if( !err_ok || no_match( ')' ) ){ return; }
     break;
 
   case 5: { // "select"
-    inp_skip_white_space();
+    skip_white_space();
     if( no_match_lp() ){ return; }
     int ii = prm_i_expr();
     if( ii < 0 ){ ii = 0; }
@@ -939,7 +942,7 @@ void prm_s_atom( std::string &result ){
     return;
   }
 
-  inp_skip_white_space(); return;
+  skip_white_space(); return;
 }
 
 
@@ -964,13 +967,13 @@ unsigned prm_tkn = prm_p_cnt + 1;
 
 void prm_statements( bool do_assign ){
   while( err_ok ){
-    inp_skip_white_space();
+    skip_white_space();
     prm_tkn = inp_match( prm_p_names, prm_p_cnt );
 
     /* Variable */
     if( !prm_tkn ){
       char prm = inp_ltr;
-      inp_skip_white_space();
+      skip_white_space();
       if( inp_chr != ':' ){ error( "Expected <kbd>:=</kbd>" ); return; }
       inp_get_chr();
       if( inp_chr != '=' ){ error( "Expected <kbd>:=</kbd>" ); return; }
@@ -1286,6 +1289,14 @@ void instructions(){
     " <kbd>#question</kbd> does not first close it.\n" );
   out_print( "These commands are not obligatory, but without them there will"
     " be no answer boxes.\n" );
+
+  out_print( "\n<dt><kbd>#random_seed</kbd> <em>&lt;value&gt;</em>\n" );
+  out_print( "<dd>This command sets the seed of the pseudorandom number"
+    " generator.\n" );
+  out_print( "If this command is not used, the seed is picked from the"
+    " starting time of the execution.\n" );
+  out_print( "The seed affects both the random parameters in the questions"
+    " and the confusion feature.\n" );
 
   out_print( "\n<dt><kbd>#SUbmit</kbd>" );
   out_print( "\n<dt><kbd>#Submit</kbd>" );
@@ -1662,7 +1673,7 @@ int main(){
       file_number = buf_mid = last_number = 0;
       rows_l = rows_g; cols_l = cols_g;
       title.clear(); make_file_chain = true;
-      inp_skip_white_space();
+      skip_white_space();
       if( !is_ltr( inp_chr ) ){
         error( "File name must start with a letter" ); continue;
       }
@@ -1717,7 +1728,7 @@ int main(){
       open_file();
       if( !err_ok ){ continue; }
       out_print( "\n<form action=\t\"" ); out_print( URL_cgi_base );
-      out_print( "mathcheck.out\" method=post target=_blank>" );
+      out_print( "mathcheck.cgi\" method=post target=_blank>" );
       out_print( "\n<textarea name=\"extra\" style=display:none>\n" );
       out_print( inp_tkn == tkn_Instructions ? "help" : "brief_help" );
       out_print( " end_of_answer</textarea>\n" );
@@ -1778,6 +1789,13 @@ int main(){
       answer_box_pending = true; answer_box_prgh = false;
       continue;
 
+    /* Input random number seed. */
+    case tkn_random_seed:
+      random_seed = inp_get_nr();
+      random_seed *= 2718281; random_seed += 314159265;
+      random_seed *= 2718281; random_seed += 314159265;
+      break;
+
     /* Make submit buttons (if a form is open).
       tkn_submit makes only the "new tab" button, others make both.
       If the making of next_URL and no_next_URL is on, the result is
@@ -1813,7 +1831,7 @@ int main(){
     case tkn_title:
       close_file( false );
       title.clear();
-      inp_skip_white_space();
+      skip_white_space();
       if( !inp_chr || inp_chr == '\n' ){
         error( "The title string is missing" ); continue;
       }

@@ -199,9 +199,13 @@ public:
   } type;
 
   union{
-    struct{ unsigned nu, de; } r_val;   // numerator and denominator
-    struct{ double lo, hi; } d_val;     // interval of doubles
-    truth_val t_val;                    // truth value
+    unsigned r_nu;    // numerator
+    double d_lo;      // start of interval of doubles
+    truth_val t_val;  // truth value
+  };
+  union{
+    unsigned r_de;    // denominator
+    double d_hi;      // end of interval of doubles
   };
 
 
@@ -213,15 +217,15 @@ public:
     type( de ? nu ? is_neg ? neg : pos : zer : und )
   {
     unsigned gg = gcd( nu, de );
-    r_val.nu = nu / gg; r_val.de = de / gg;
+    r_nu = nu / gg; r_de = de / gg;
   }
 
   number( int ii ): type( ii < 0 ? neg : ii ? pos : zer ){
-    r_val.nu = ii < 0 ? -ii : ii; r_val.de = 1;
+    r_nu = ii < 0 ? -ii : ii; r_de = 1;
   }
 
   number( num_type type, double lo_, double hi_ ): type( type ){
-    d_val.lo = lo_; d_val.hi = hi_;
+    d_lo = lo_; d_hi = hi_;
   }
 
   number( truth_val tv ): type( trv ), t_val( tv ){}
@@ -232,43 +236,38 @@ public:
   /* Convert the number to dbl, if it is not dbl, dbu, or und. */
   void to_dblu(){
     switch( type ){
-    case zer: type = dbl; d_val.lo = d_val.hi = 0.; return;
+    case zer: type = dbl; d_lo = d_hi = 0.; return;
     case pos: case neg: {
-      bool do_round =
-        r_val.nu >= 0xFFffFFff || ( ( r_val.de - 1 ) & r_val.de );
-      d_val.lo = double( r_val.nu ) / double( r_val.de );
-      if( type == neg ){ d_val.lo = -d_val.lo; }
+      bool do_round = r_nu >= 0xFFffFFff || ( ( r_de - 1 ) & r_de );
+      d_lo = double( r_nu ) / double( r_de );
+      if( type == neg ){ d_lo = -d_lo; }
       if( do_round ){
-        d_val.hi = nextafter( d_val.lo, 1/0. );
-        d_val.lo = nextafter( d_val.lo, -1/0. );
-      }else{ d_val.hi = d_val.lo; }
+        d_hi = nextafter( d_lo, 1/0. );
+        d_lo = nextafter( d_lo, -1/0. );
+      }else{ d_hi = d_lo; }
       type = dbl; return;
     }
-    case trv: type = dbl; d_val.lo = d_val.hi = t_val; return;
+    case trv: type = dbl; d_lo = d_hi = t_val; return;
     case dbl: case dbu:   // standardize the representation of undefined
-      if( !( d_val.lo == d_val.lo ) ){ type = dbu; d_val.lo = -1/0.; }
-      if( !( d_val.hi == d_val.hi ) ){ type = dbu; d_val.hi = 1/0.; }
+      if( !( d_lo == d_lo ) ){ type = dbu; d_lo = -1/0.; }
+      if( !( d_hi == d_hi ) ){ type = dbu; d_hi = 1/0.; }
     default: return;
     }
   }
 
   /* Update ends of intervals (used in implementation of arithmetic). */
   inline void set_lo_hi( double dd ){
-    if( dd < d_val.lo ){ d_val.lo = dd; }
-    if( dd > d_val.hi ){ d_val.hi = dd; }
+    if( dd < d_lo ){ d_lo = dd; }
+    if( dd > d_hi ){ d_hi = dd; }
   }
   inline void set_lo_hi( double dd, double rdn, double rup ){
-    if( dd <= d_val.lo ){ d_val.lo = nextafter( dd, rdn ); }
-    if( dd >= d_val.hi ){ d_val.hi = nextafter( dd, rup ); }
+    if( dd <= d_lo ){ d_lo = nextafter( dd, rdn ); }
+    if( dd >= d_hi ){ d_hi = nextafter( dd, rup ); }
   }
 
   /* Replace an interval by its low|high end. */
-  inline void ddn(){
-    if( type == dbl || type == dbu ){ d_val.hi = d_val.lo; }
-  }
-  inline void dup(){
-    if( type == dbl || type == dbu ){ d_val.lo = d_val.hi; }
-  }
+  inline void ddn(){ if( type == dbl || type == dbu ){ d_hi = d_lo; } }
+  inline void dup(){ if( type == dbl || type == dbu ){ d_lo = d_hi; } }
 
   /* Yield a hash value. */
   inline unsigned hash() const {
@@ -276,10 +275,10 @@ public:
       default:
       case und: return 271828;
       case zer: return 314159;
-      case pos: return r_val.nu ^ r_val.de;
-      case neg: return ~( r_val.nu ^ r_val.de );
-      case dbl: return unsigned( ( d_val.lo + d_val.hi ) / 2. );
-      case dbu: return 141421 + unsigned( ( d_val.lo + d_val.hi ) / 2. );
+      case pos: return r_nu ^ r_de;
+      case neg: return ~( r_nu ^ r_de );
+      case dbl: return unsigned( ( d_lo + d_hi ) / 2. );
+      case dbu: return 141421 + unsigned( ( d_lo + d_hi ) / 2. );
       case trv: return 987654 + 101 * t_val;
     }
   }
@@ -290,17 +289,13 @@ public:
   inline truth_val to_tv() const { return type == trv ? t_val : tv_FUT; }
 
   unsigned to_unsigned() const {
-    return type == pos && r_val.de == 1 ? r_val.nu : 0;
+    return type == pos && r_de == 1 ? r_nu : 0;
   }
 
   int to_int() const {
     if( type == zer ){ return 0; }
-    if( type == pos && r_val.nu <= INT_MAX && r_val.de == 1 ){
-      return r_val.nu;
-    }
-    if( type == neg && r_val.nu <= INT_MAX && r_val.de == 1 ){
-      return -r_val.nu;
-    }
+    if( type == pos && r_nu <= INT_MAX && r_de == 1 ){ return r_nu; }
+    if( type == neg && r_nu <= INT_MAX && r_de == 1 ){ return -r_nu; }
     return INT_MIN;
   }
 
@@ -318,50 +313,49 @@ public:
 
   inline bool is_int_type() const {
     if( type == zer ){ return true; }
-    return ( type == pos || type == neg ) && r_val.de == 1;
+    return ( type == pos || type == neg ) && r_de == 1;
   }
 
   inline bool isc_neg() const {
-    return type == neg || ( type == dbl && d_val.hi < 0 );
+    return type == neg || ( type == dbl && d_hi < 0 );
   }
 
   inline bool isc_1() const {
     return
-      ( type == pos && r_val.de == 1 && r_val.nu == 1 ) ||
-      ( type == dbl && d_val.lo == 1. && d_val.hi == 1. );
+      ( type == pos && r_de == 1 && r_nu == 1 ) ||
+      ( type == dbl && d_lo == 1. && d_hi == 1. );
   }
 
   inline bool nu_even() const {
     return
-      type == zer || ( ( type == pos || type == neg ) && !( r_val.nu % 2 ) );
+      type == zer || ( ( type == pos || type == neg ) && !( r_nu % 2 ) );
   }
 
   inline bool de_odd() const {
-    return type == zer || ( ( type == pos || type == neg ) && r_val.de % 2 );
+    return type == zer || ( ( type == pos || type == neg ) && r_de % 2 );
   }
 
   inline bool is_unprecise_type() const { return type == dbl || type == dbu; }
 
   inline bool is_prop_rat_type() const {
-    return ( type == pos || type == neg ) && r_val.de != 1;
+    return ( type == pos || type == neg ) && r_de != 1;
   }
 
   inline truth_val is_int() const {
     switch( type ){
     case und: case trv: return tv_U;
     case zer: return tv_T;
-    case pos: case neg:
-      return r_val.de == 1 ? tv_T : tv_F;
+    case pos: case neg: return r_de == 1 ? tv_T : tv_F;
     case dbl: {
-      double fl = floor( d_val.lo );
-      if( fl < d_val.lo && d_val.hi < fl + 1. ){ return tv_F; }
-      if( d_val.lo == d_val.hi ){ return fl == d_val.lo ? tv_T : tv_F; }
+      double fl = floor( d_lo );
+      if( fl < d_lo && d_hi < fl + 1. ){ return tv_F; }
+      if( d_lo == d_hi ){ return fl == d_lo ? tv_T : tv_F; }
       return tv_FT;
     }
     case dbu: {
-      double fl = floor( d_val.lo );
-      if( fl < d_val.lo && d_val.hi < fl + 1. ){ return tv_FU; }
-      if( d_val.lo == d_val.hi ){ return fl == d_val.lo ? tv_UT : tv_FU; }
+      double fl = floor( d_lo );
+      if( fl < d_lo && d_hi < fl + 1. ){ return tv_FU; }
+      if( d_lo == d_hi ){ return fl == d_lo ? tv_UT : tv_FU; }
       return tv_FUT;
     }
     default: return tv_FUT;
@@ -372,10 +366,9 @@ public:
     switch( type ){
     case zer: case pos: case neg: return true;
     case dbl: return
-      ( 0 < d_val.lo && d_val.hi - d_val.lo < d_val.lo / 1024 ) ||
-      ( 0 > d_val.hi && d_val.lo - d_val.hi > d_val.hi / 1024 ) ||
-      ( -1E-10 < d_val.lo && d_val.lo <= 0. &&
-        0. <= d_val.hi && d_val.hi < 1E-10 );
+      ( 0 < d_lo && d_hi - d_lo < d_lo / 1024 ) ||
+      ( 0 > d_hi && d_lo - d_hi > d_hi / 1024 ) ||
+      ( -1E-10 < d_lo && d_lo <= 0. && 0. <= d_hi && d_hi < 1E-10 );
     default: return false;
     }
   }
@@ -388,7 +381,7 @@ public:
       case pos: type = neg; return;
       case neg: type = pos; return;
       case dbl: case dbu: {
-        double tmp = d_val.lo; d_val.lo = -d_val.hi; d_val.hi = -tmp; return;
+        double tmp = d_lo; d_lo = -d_hi; d_hi = -tmp; return;
       }
       default: return;
     }
@@ -398,29 +391,25 @@ public:
     switch( type ){
       case zer: case trv: type = und; return;
       case pos: case neg: {
-        unsigned nn = r_val.nu; r_val.nu = r_val.de; r_val.de = nn; return;
+        unsigned nn = r_nu; r_nu = r_de; r_de = nn; return;
       }
       case dbl: case dbu: {
-        if( d_val.lo < 0. ){
-          if( d_val.hi > 0. ){
-            d_val.lo = -1/0.; d_val.hi = 1/0.; type = dbu; return;
-          }
-          double tmp = d_val.lo;
-          if( d_val.hi == 0. ){ d_val.lo = -1/0.; type = dbu; }
-          else{ d_val.lo = nextafter( 1./d_val.hi, -1/0. ); }
-          d_val.hi = nextafter( 1./tmp, 0. ); return;
+        if( d_lo < 0. ){
+          if( d_hi > 0. ){ d_lo = -1/0.; d_hi = 1/0.; type = dbu; return; }
+          double tmp = d_lo;
+          if( d_hi == 0. ){ d_lo = -1/0.; type = dbu; }
+          else{ d_lo = nextafter( 1./d_hi, -1/0. ); }
+          d_hi = nextafter( 1./tmp, 0. ); return;
         }
-        if( d_val.lo == 0. ){
-          if( d_val.hi == 0. ){ type = und; return; }
-          if( d_val.hi < 1/0. ){
-            d_val.lo = nextafter( 1./d_val.hi, 0. ); d_val.hi = 1/0.;
-          }
+        if( d_lo == 0. ){
+          if( d_hi == 0. ){ type = und; return; }
+          if( d_hi < 1/0. ){ d_lo = nextafter( 1./d_hi, 0. ); d_hi = 1/0.; }
           type = dbu; return;
         }
-        // d_val.lo > 0
-        double tmp = d_val.lo;
-        d_val.lo = nextafter( 1./d_val.hi, 0. );
-        d_val.hi = nextafter( 1./tmp, 1/0. ); return;
+        // d_lo > 0
+        double tmp = d_lo;
+        d_lo = nextafter( 1./d_hi, 0. );
+        d_hi = nextafter( 1./tmp, 1/0. ); return;
        }
       default: return;
     }
@@ -435,27 +424,27 @@ public:
     if( x2.type == dbl || x2.type == dbu ){ to_dblu(); }
     if( type == dbl || type == dbu ){
       if( x2.type == dbu ){ type = dbu; }else{ x2.to_dblu(); }
-      d_val.lo = nextafter( d_val.lo + x2.d_val.lo, -1/0. );
-      d_val.hi = nextafter( d_val.hi + x2.d_val.hi, 1/0. ); return *this;
+      d_lo = nextafter( d_lo + x2.d_lo, -1/0. );
+      d_hi = nextafter( d_hi + x2.d_hi, 1/0. ); return *this;
     }
     // type and x2.type are in {pos, neg}
     unsigned
-      gg = gcd( r_val.de, x2.r_val.de ),
-      d1 = r_val.de / gg, d2 = x2.r_val.de / gg,
-      dd = ovfl_mult( r_val.de, d2 ),
-      n1 = ovfl_mult( r_val.nu, d2 ), n2 = ovfl_mult( x2.r_val.nu, d1 );
+      gg = gcd( r_de, x2.r_de ),
+      d1 = r_de / gg, d2 = x2.r_de / gg,
+      dd = ovfl_mult( r_de, d2 ),
+      n1 = ovfl_mult( r_nu, d2 ), n2 = ovfl_mult( x2.r_nu, d1 );
     if( !( n1 && n2 && dd ) ){ to_dblu(); operator +=( x2 ); return *this; }
     if( type == x2.type ){
       if( n1 + n2 < n1 ){ to_dblu(); operator +=( x2 ); return *this; }
-      r_val.nu = n1 + n2;
+      r_nu = n1 + n2;
     }else if( n1 == n2 ){
       type = zer; return *this;
     }else if( n1 > n2 ){
-      r_val.nu = n1 - n2;
+      r_nu = n1 - n2;
     }else{
-      r_val.nu = n2 - n1; type = x2.type;
+      r_nu = n2 - n1; type = x2.type;
     }
-    gg = gcd( r_val.nu, dd ); r_val.nu /= gg; r_val.de = dd / gg;
+    gg = gcd( r_nu, dd ); r_nu /= gg; r_de = dd / gg;
     return *this;
   }
 
@@ -463,17 +452,16 @@ public:
 
   /* *= of two non-zero rationals */
   number & sub_prod( unsigned n2, unsigned d2, num_type t2 ){
-    unsigned g1 = gcd( r_val.nu, d2 ), g2 = gcd( r_val.de, n2 );
-    r_val.nu /= g1; d2 /= g1; r_val.de /= g2; n2 /= g2;
-    unsigned nn = ovfl_mult( r_val.nu, n2 ), dd = ovfl_mult( r_val.de, d2 );
+    unsigned g1 = gcd( r_nu, d2 ), g2 = gcd( r_de, n2 );
+    r_nu /= g1; d2 /= g1; r_de /= g2; n2 /= g2;
+    unsigned nn = ovfl_mult( r_nu, n2 ), dd = ovfl_mult( r_de, d2 );
     if( nn && dd ){
-      r_val.nu = nn; r_val.de = dd; type = type == t2 ? pos : neg;
-      return *this;
+      r_nu = nn; r_de = dd; type = type == t2 ? pos : neg; return *this;
     }
-    d_val.lo = ( double( r_val.nu ) / r_val.de ) * ( double( n2 ) / d2 );
-    if( t2 != type ){ d_val.lo = -d_val.lo; }
-    d_val.hi = nextafter( d_val.lo, 1/0. );
-    d_val.lo = nextafter( d_val.lo, -1/0. );
+    d_lo = ( double( r_nu ) / r_de ) * ( double( n2 ) / d2 );
+    if( t2 != type ){ d_lo = -d_lo; }
+    d_hi = nextafter( d_lo, 1/0. );
+    d_lo = nextafter( d_lo, -1/0. );
     type = dbl; return *this;
   }
 
@@ -482,45 +470,37 @@ public:
       type = und; return *this;
     }
     if( type == zer ){
-      if( x2.type == dbu ){ type = dbu; d_val.lo = d_val.hi = 0.; }
+      if( x2.type == dbu ){ type = dbu; d_lo = d_hi = 0.; }
       return *this;
     }
     if( x2.type == zer ){
-      if( type == dbu ){ d_val.lo = d_val.hi = 0.; }else{ type = zer; }
+      if( type == dbu ){ d_lo = d_hi = 0.; }else{ type = zer; }
       return *this;
     }
     if( x2.type == dbl || x2.type == dbu ){ to_dblu(); }
     if( type != dbl && type != dbu ){
-      return sub_prod( x2.r_val.nu, x2.r_val.de, x2.type );
+      return sub_prod( x2.r_nu, x2.r_de, x2.type );
     }
     if( x2.type == dbu ){ type = dbu; }else{ x2.to_dblu(); }
     double y1 = 0., y2 = 0., y3 = 0., y4 = 0.;
-    if( d_val.lo != 0 ){
-      double dir = d_val.lo > 0. ? 1/0. : -1/0.;
-      if( x2.d_val.lo != 0. ){
-        y1 = nextafter( d_val.lo * x2.d_val.lo, -dir );
-      }
-      if( x2.d_val.hi != 0. ){
-        y2 = nextafter( d_val.lo * x2.d_val.hi, dir );
-      }
+    if( d_lo != 0 ){
+      double dir = d_lo > 0. ? 1/0. : -1/0.;
+      if( x2.d_lo != 0. ){ y1 = nextafter( d_lo * x2.d_lo, -dir ); }
+      if( x2.d_hi != 0. ){ y2 = nextafter( d_lo * x2.d_hi, dir ); }
     }
-    if( d_val.hi != 0 ){
-      double dir = d_val.hi > 0. ? 1/0. : -1/0.;
-      if( x2.d_val.lo != 0. ){
-        y3 = nextafter( d_val.hi * x2.d_val.lo, -dir );
-      }
-      if( x2.d_val.hi != 0. ){
-        y4 = nextafter( d_val.hi * x2.d_val.hi, dir );
-      }
+    if( d_hi != 0 ){
+      double dir = d_hi > 0. ? 1/0. : -1/0.;
+      if( x2.d_lo != 0. ){ y3 = nextafter( d_hi * x2.d_lo, -dir ); }
+      if( x2.d_hi != 0. ){ y4 = nextafter( d_hi * x2.d_hi, dir ); }
     }
-    if( y1 < y4 ){ d_val.lo = y1; d_val.hi = y4; }
-    else{ d_val.lo = y4; d_val.hi = y1; }
+    if( y1 < y4 ){ d_lo = y1; d_hi = y4; }
+    else{ d_lo = y4; d_hi = y1; }
     if( y2 < y3 ){
-      if( y2 < d_val.lo ){ d_val.lo = y2; }
-      if( y3 > d_val.hi ){ d_val.hi = y3; }
+      if( y2 < d_lo ){ d_lo = y2; }
+      if( y3 > d_hi ){ d_hi = y3; }
     }else{
-      if( y3 < d_val.lo ){ d_val.lo = y3; }
-      if( y2 > d_val.hi ){ d_val.hi = y2; }
+      if( y3 < d_lo ){ d_lo = y3; }
+      if( y2 > d_hi ){ d_hi = y2; }
     }
     return *this;
   }
@@ -532,14 +512,13 @@ public:
     ){ type = und; return *this; }
     if( type == zer ){
       if(
-        x2.type == dbu ||
-        ( x2.type == dbl && x2.d_val.lo <= 0. && x2.d_val.hi >= 0. )
-      ){ type = dbu; d_val.lo = d_val.hi = 0.; }
+        x2.type == dbu || ( x2.type == dbl && x2.d_lo <= 0. && x2.d_hi >= 0. )
+      ){ type = dbu; d_lo = d_hi = 0.; }
       return *this;
     }
     if( x2.type == dbl || x2.type == dbu ){ to_dblu(); }
     if( type == dbl || type == dbu ){ x2.invert(); return operator *=( x2 ); }
-    return sub_prod( x2.r_val.de, x2.r_val.nu, x2.type );
+    return sub_prod( x2.r_de, x2.r_nu, x2.type );
   }
 
 
@@ -580,9 +559,9 @@ inline double to_double( number xx ){
     default:
     case number::und: case number::dbu: case number::trv: return 0/0.;
     case number::zer: return 0.;
-    case number::pos: return double( xx.r_val.nu ) / double( xx.r_val.de );
-    case number::neg: return -double( xx.r_val.nu ) / double( xx.r_val.de );
-    case number::dbl: return ( xx.d_val.lo + xx.d_val.hi ) / 2.;
+    case number::pos: return double( xx.r_nu ) / double( xx.r_de );
+    case number::neg: return -double( xx.r_nu ) / double( xx.r_de );
+    case number::dbl: return ( xx.d_lo + xx.d_hi ) / 2.;
   }
 }
 
@@ -591,13 +570,13 @@ inline double to_double( number xx ){
 number abs( number xx ){
   if( xx.type == number::neg ){ xx.type = number::pos; }
   else if( xx.type == number::dbl || xx.type == number::dbu ){
-    if( xx.d_val.lo < 0. ){
-      double tmp = -xx.d_val.lo;
-      if( xx.d_val.hi > 0. ){
-        if( xx.d_val.hi < tmp ){ xx.d_val.hi = tmp; }
-        xx.d_val.lo = 0; return xx;
+    if( xx.d_lo < 0. ){
+      double tmp = -xx.d_lo;
+      if( xx.d_hi > 0. ){
+        if( xx.d_hi < tmp ){ xx.d_hi = tmp; }
+        xx.d_lo = 0; return xx;
       }
-      xx.d_val.lo = -xx.d_val.hi; xx.d_val.hi = tmp;
+      xx.d_lo = -xx.d_hi; xx.d_hi = tmp;
     }
   }
   return xx;
@@ -610,24 +589,22 @@ number floor( number xx ){
   if( xx.type == number::zer ){ return xx; }
   if( xx.type == number::und || xx.type == number::trv ){ return numu; }
   if( xx.type == number::pos ){
-    xx.r_val.nu /= xx.r_val.de; xx.r_val.de = 1;
-    if( !xx.r_val.nu ){ xx.type = number::zer; }
+    xx.r_nu /= xx.r_de; xx.r_de = 1;
+    if( !xx.r_nu ){ xx.type = number::zer; }
     return xx;
   }
   if( xx.type == number::neg ){
-    if( xx.r_val.de != 1 ){
-      xx.r_val.nu /= xx.r_val.de; ++xx.r_val.nu; xx.r_val.de = 1;
-    }
+    if( xx.r_de != 1 ){ xx.r_nu /= xx.r_de; ++xx.r_nu; xx.r_de = 1; }
     return xx;
   }
-  xx.d_val.lo = floor( xx.d_val.lo ); xx.d_val.hi = floor( xx.d_val.hi );
-  if( xx.type == number::dbl && xx.d_val.lo == xx.d_val.hi ){
-    bool is_neg = xx.d_val.lo < 0; double dd = xx.d_val.lo;
+  xx.d_lo = floor( xx.d_lo ); xx.d_hi = floor( xx.d_hi );
+  if( xx.type == number::dbl && xx.d_lo == xx.d_hi ){
+    bool is_neg = xx.d_lo < 0; double dd = xx.d_lo;
     if( is_neg ){ dd = -dd; }
     unsigned uu = unsigned( dd );
     if( dd != uu ){ return xx; }
     xx.type = is_neg ? number::neg : uu ? number::pos : number::zer;
-    xx.r_val.nu = uu; xx.r_val.de = 1;
+    xx.r_nu = uu; xx.r_de = 1;
   }
   return xx;
 }
@@ -636,24 +613,22 @@ number ceil( number xx ){
   if( xx.type == number::zer ){ return xx; }
   if( xx.type == number::und || xx.type == number::trv ){ return numu; }
   if( xx.type == number::neg ){
-    xx.r_val.nu /= xx.r_val.de; xx.r_val.de = 1;
-    if( !xx.r_val.nu ){ xx.type = number::zer; }
+    xx.r_nu /= xx.r_de; xx.r_de = 1;
+    if( !xx.r_nu ){ xx.type = number::zer; }
     return xx;
   }
   if( xx.type == number::pos ){
-    if( xx.r_val.de != 1 ){
-      xx.r_val.nu /= xx.r_val.de; ++xx.r_val.nu; xx.r_val.de = 1;
-    }
+    if( xx.r_de != 1 ){ xx.r_nu /= xx.r_de; ++xx.r_nu; xx.r_de = 1; }
     return xx;
   }
-  xx.d_val.lo = ceil( xx.d_val.lo ); xx.d_val.hi = ceil( xx.d_val.hi );
-  if( xx.type == number::dbl && xx.d_val.lo == xx.d_val.hi ){
-    bool is_neg = xx.d_val.lo < 0; double dd = xx.d_val.lo;
+  xx.d_lo = ceil( xx.d_lo ); xx.d_hi = ceil( xx.d_hi );
+  if( xx.type == number::dbl && xx.d_lo == xx.d_hi ){
+    bool is_neg = xx.d_lo < 0; double dd = xx.d_lo;
     if( is_neg ){ dd = -dd; }
     unsigned uu = unsigned( dd );
     if( dd != uu ){ return xx; }
     xx.type = is_neg ? number::neg : uu ? number::pos : number::zer;
-    xx.r_val.nu = uu; xx.r_val.de = 1;
+    xx.r_nu = uu; xx.r_de = 1;
   }
   return xx;
 }
@@ -667,19 +642,17 @@ number sqrt( number xx ){
   ){ return numu; }
   if( xx.type == number::zer ){ return num0; }
   if( xx.type == number::pos ){
-    unsigned pp = sqrt( xx.r_val.nu ) + .5;
-    if( pp * pp == xx.r_val.nu ){
-      unsigned qq = sqrt( xx.r_val.de ) + .5;
-      if( qq * qq == xx.r_val.de ){
-        xx.r_val.nu = pp; xx.r_val.de = qq; return xx;
-      }
+    unsigned pp = sqrt( xx.r_nu ) + .5;
+    if( pp * pp == xx.r_nu ){
+      unsigned qq = sqrt( xx.r_de ) + .5;
+      if( qq * qq == xx.r_de ){ xx.r_nu = pp; xx.r_de = qq; return xx; }
     }
     xx.to_dblu();
   }
-  if( xx.d_val.hi < 0. ){ return numu; }
-  xx.d_val.hi = nextafter( sqrt( xx.d_val.hi ), 1/0. );
-  if( xx.d_val.lo < 0. ){ xx.type = number::dbu; xx.d_val.lo = 0.; }
-  else{ xx.d_val.lo = nextafter( sqrt( xx.d_val.lo ), 0. ); }
+  if( xx.d_hi < 0. ){ return numu; }
+  xx.d_hi = nextafter( sqrt( xx.d_hi ), 1/0. );
+  if( xx.d_lo < 0. ){ xx.type = number::dbu; xx.d_lo = 0.; }
+  else{ xx.d_lo = nextafter( sqrt( xx.d_lo ), 0. ); }
   return xx;
 }
 
@@ -687,8 +660,8 @@ number exp( number xx ){
   if( xx.type == number::und || xx.type == number::trv ){ return numu; }
   if( xx.type == number::zer ){ return num1; }
   xx.to_dblu();
-  xx.d_val.lo = nextafter( exp( xx.d_val.lo ), 0. );
-  xx.d_val.hi = nextafter( exp( xx.d_val.hi ), 1/0. );
+  xx.d_lo = nextafter( exp( xx.d_lo ), 0. );
+  xx.d_hi = nextafter( exp( xx.d_hi ), 1/0. );
   return xx;
 }
 
@@ -699,10 +672,10 @@ number log( number xx ){
   ){ return numu; }
   if( xx.isc_1() ){ return num0; }
   xx.to_dblu();
-  if( xx.d_val.hi <= 0. ){ return numu; }
-  if( xx.d_val.lo <= 0. ){ xx.type = number::dbu; xx.d_val.lo = -1/0.; }
-  else{ xx.d_val.lo = nextafter( log( xx.d_val.lo ), -1/0. ); }
-  xx.d_val.hi = nextafter( log( xx.d_val.hi ), 1/0. );
+  if( xx.d_hi <= 0. ){ return numu; }
+  if( xx.d_lo <= 0. ){ xx.type = number::dbu; xx.d_lo = -1/0.; }
+  else{ xx.d_lo = nextafter( log( xx.d_lo ), -1/0. ); }
+  xx.d_hi = nextafter( log( xx.d_hi ), 1/0. );
   return xx;
 }
 
@@ -713,10 +686,29 @@ number log10( number xx ){
   ){ return numu; }
   if( xx.isc_1() ){ return num0; }
   xx.to_dblu();
-  if( xx.d_val.hi <= 0. ){ return numu; }
-  if( xx.d_val.lo <= 0. ){ xx.type = number::dbu; xx.d_val.lo = -1/0.; }
-  else{ xx.d_val.lo = nextafter( log10( xx.d_val.lo ), -1/0. ); }
-  xx.d_val.hi = nextafter( log10( xx.d_val.hi ), 1/0. );
+  if( xx.d_hi <= 0. ){ return numu; }
+  if( xx.d_lo <= 0. ){ xx.type = number::dbu; xx.d_lo = -1/0.; }
+  else{ xx.d_lo = nextafter( log10( xx.d_lo ), -1/0. ); }
+  xx.d_hi = nextafter( log10( xx.d_hi ), 1/0. );
+  return xx;
+}
+
+number log_general( number aa, number xx ){
+  if(
+    xx.type == number::und || xx.type == number::zer ||
+    xx.type == number::neg || xx.type == number::trv ||
+    aa.type == number::und || aa.type == number::zer ||
+    aa.type == number::neg || aa.type == number::trv
+  ){ return numu; }
+  aa.to_dblu();
+  if( aa.d_hi <= 1. ){ return numu; }
+  if( xx.isc_1() ){ return num0; }
+  xx.to_dblu();
+  if( xx.d_hi <= 0. ){ return numu; }
+  if( xx.d_lo <= 0. ){ xx.type = number::dbu; xx.d_lo = -1/0.; }
+  else{ xx.d_lo = nextafter( log( xx.d_lo ) / log( aa.d_hi ), -1/0. ); }
+  if( aa.d_lo <= 1. ){ xx.type = number::dbu; xx.d_hi = 1/0.; }
+  else{ xx.d_hi = nextafter( log( xx.d_hi ) / log( xx.d_hi ), 1/0. ); }
   return xx;
 }
 
@@ -735,15 +727,15 @@ number pow( number x1, number x2 ){
   if( x1.type == number::zer ){
     if( x2.type == number::pos ){ return num0; }
     if( x2.type == number::neg ){ return numu; }
-    if( x2.d_val.hi < 0. ){ return numu; }
-    if( x2.d_val.hi == 0. ){
-      return x2.d_val.lo < 0. || x2.type == number::dbu ? numu1 : num1;
+    if( x2.d_hi < 0. ){ return numu; }
+    if( x2.d_hi == 0. ){
+      return x2.d_lo < 0. || x2.type == number::dbu ? numu1 : num1;
     }
-    // x2.d_val.hi > 0.
-    if( x2.d_val.lo > 0. && x2.type == number::dbl ){ return x1; }
-    x1.d_val.lo = 0.;
-    x1.d_val.hi = x2.d_val.lo > 0. ? 0. : 1.;
-    x1.type = x2.d_val.lo < 0. || x2.type == number::dbu
+    // x2.d_hi > 0.
+    if( x2.d_lo > 0. && x2.type == number::dbl ){ return x1; }
+    x1.d_lo = 0.;
+    x1.d_hi = x2.d_lo > 0. ? 0. : 1.;
+    x1.type = x2.d_lo < 0. || x2.type == number::dbu
       ? number::dbu : number::dbl;
     return x1;
   }
@@ -751,68 +743,68 @@ number pow( number x1, number x2 ){
   /* Explicit multiplication, if exponent is an integer near zero */
   if(
     ( x2.type == number::pos || x2.type == number::neg ) &&
-    x2.r_val.de == 1 && x2.r_val.nu <= 10
+    x2.r_de == 1 && x2.r_nu <= 10
   ){
     if( x2.type == number::neg ){ x1.invert(); }
     number yy = x1;
-    for( unsigned ii = 1; ii < x2.r_val.nu; ++ii ){ yy *= x1; }
+    for( unsigned ii = 1; ii < x2.r_nu; ++ii ){ yy *= x1; }
     return yy;
   }
 
   // If exponent is certainly rational, at least one of these is true.
   bool
     odd_de = x2.type == number::pos || x2.type == number::neg,
-    odd_nu = odd_de && x2.r_val.nu % 2;
-  odd_de = odd_de && x2.r_val.de % 2;
+    odd_nu = odd_de && x2.r_nu % 2;
+  odd_de = odd_de && x2.r_de % 2;
 
   /* General case, compute via pow( double ). */
   number yy( number::dbl, 1/0., -1/0. );
   x1.to_dblu(); x2.to_dblu();
-  if( x2.d_val.lo <= 0. && x2.d_val.hi >= 0. ){ yy.set_lo_hi( 1. ); }
-  if( x1.d_val.lo < 0. ){
-    if(
-      !odd_de && ( x2.d_val.lo < 0. || x2.d_val.hi > 0. )
-    ){ yy.type = number::dbu; }
+  if( x2.d_lo <= 0. && x2.d_hi >= 0. ){ yy.set_lo_hi( 1. ); }
+  if( x1.d_lo < 0. ){
+    if( !odd_de && ( x2.d_lo < 0. || x2.d_hi > 0. ) ){
+      yy.type = number::dbu;
+    }
     if( !odd_nu || odd_de ){
-      double dd = pow( -x1.d_val.lo, x2.d_val.lo );
+      double dd = pow( -x1.d_lo, x2.d_lo );
       if( !odd_nu ){ yy.set_lo_hi( dd, 0., 1/0. ); }
       if( odd_nu == odd_de ){ yy.set_lo_hi( -dd, -1/0., 0. ); }
-      dd = pow( -x1.d_val.lo, x2.d_val.hi );
+      dd = pow( -x1.d_lo, x2.d_hi );
       if( !odd_nu ){ yy.set_lo_hi( dd, 0., 1/0. ); }
       if( odd_nu == odd_de ){ yy.set_lo_hi( -dd, -1/0., 0. ); }
     }
-    if( x1.d_val.hi < 0. ){
+    if( x1.d_hi < 0. ){
       if( !odd_de ){ yy.type = number::dbu; }
       if( !odd_nu || odd_de ){
-        double dd = pow( -x1.d_val.hi, x2.d_val.lo );
+        double dd = pow( -x1.d_hi, x2.d_lo );
         if( !odd_nu ){ yy.set_lo_hi( dd, 0., 1/0. ); }
         if( odd_nu == odd_de ){ yy.set_lo_hi( -dd, -1/0., 0. ); }
-        dd = pow( -x1.d_val.hi, x2.d_val.hi );
+        dd = pow( -x1.d_hi, x2.d_hi );
         if( !odd_nu ){ yy.set_lo_hi( dd, 0., 1/0. ); }
         if( odd_nu == odd_de ){ yy.set_lo_hi( -dd, -1/0., 0. ); }
       }
     }
   }
-  if( x1.d_val.hi > 0. ){
-    yy.set_lo_hi( pow( x1.d_val.hi, x2.d_val.lo ), 0., 1/0. );
-    yy.set_lo_hi( pow( x1.d_val.hi, x2.d_val.hi ), 0., 1/0. );
-    if( x1.d_val.lo > 0. ){
-      yy.set_lo_hi( pow( x1.d_val.lo, x2.d_val.lo ), 0., 1/0. );
-      yy.set_lo_hi( pow( x1.d_val.lo, x2.d_val.hi ), 0., 1/0. );
+  if( x1.d_hi > 0. ){
+    yy.set_lo_hi( pow( x1.d_hi, x2.d_lo ), 0., 1/0. );
+    yy.set_lo_hi( pow( x1.d_hi, x2.d_hi ), 0., 1/0. );
+    if( x1.d_lo > 0. ){
+      yy.set_lo_hi( pow( x1.d_lo, x2.d_lo ), 0., 1/0. );
+      yy.set_lo_hi( pow( x1.d_lo, x2.d_hi ), 0., 1/0. );
     }
   }
-  if( x1.d_val.lo <= 0. && x1.d_val.hi >= 0. ){
-    if( x2.d_val.hi > 0. ){
+  if( x1.d_lo <= 0. && x1.d_hi >= 0. ){
+    if( x2.d_hi > 0. ){
       yy.set_lo_hi( 0. );
-      if( x1.d_val.lo < 0. && x2.d_val.lo == 0. ){ yy.set_lo_hi( -1. ); }
+      if( x1.d_lo < 0. && x2.d_lo == 0. ){ yy.set_lo_hi( -1. ); }
     }
-    if( x2.d_val.lo < 0. ){
+    if( x2.d_lo < 0. ){
       yy.type = number::dbu;
-      if( x1.d_val.hi > 0. ){ yy.d_val.hi = 1/0.; }
-      if( x1.d_val.lo < 0. ){ yy.d_val.lo = -1/0.; yy.d_val.hi = 1/0.; }
+      if( x1.d_hi > 0. ){ yy.d_hi = 1/0.; }
+      if( x1.d_lo < 0. ){ yy.d_lo = -1/0.; yy.d_hi = 1/0.; }
     }
   }
-  if( yy.d_val.lo > yy.d_val.hi ){ yy.type = number::und; }
+  if( yy.d_lo > yy.d_hi ){ yy.type = number::und; }
   return yy;
 
 }
@@ -825,34 +817,27 @@ void trig_scale( number &xx ){
     xx.type == number::und || xx.type == number::zer || xx.type == number::trv
   ){ return; }
   xx.to_dblu();
-  if( xx.d_val.lo < -1e20 || xx.d_val.hi > 1e20 ){
-    xx.d_val.lo = 0.; xx.d_val.hi = 7.; return;
+  if( xx.d_lo < -1e20 || xx.d_hi > 1e20 ){
+    xx.d_lo = 0.; xx.d_hi = 7.; return;
   }
-  double dd = floor( xx.d_val.lo / num2pi.d_val.hi );
+  double dd = floor( xx.d_lo / num2pi.d_hi );
   xx -= number( number::dbl, dd, dd ) * num2pi;
-  while( xx.d_val.lo < 0 ){ xx += num2pi; }
+  while( xx.d_lo < 0 ){ xx += num2pi; }
 }
 
 number sin( number xx ){
   trig_scale( xx );
   if( xx.type == number::und || xx.type == number::zer ){ return xx; }
   if( xx.type == number::trv ){ return numu; }
-  double d1 = sin( xx.d_val.lo ), d2 = sin( xx.d_val.hi );
+  double d1 = sin( xx.d_lo ), d2 = sin( xx.d_hi );
   number yy( number::dbl,
     nextafter( d1 < d2 ? d1 : d2, -1. ), nextafter( d1 < d2 ? d2 : d1, 1. )
   );
   do{
-    if( xx.d_val.lo <= numpi2.d_val.hi && xx.d_val.hi >= numpi2.d_val.lo ){
-      yy.d_val.hi = 1.;
-    }
-    if( xx.d_val.lo <= num3pi2.d_val.hi && xx.d_val.hi >= num3pi2.d_val.lo ){
-      yy.d_val.lo = -1.;
-    }
+    if( xx.d_lo <= numpi2.d_hi && xx.d_hi >= numpi2.d_lo ){ yy.d_hi = 1.; }
+    if( xx.d_lo <= num3pi2.d_hi && xx.d_hi >= num3pi2.d_lo ){ yy.d_lo = -1.; }
     xx -= num2pi;
-  }while(
-    xx.d_val.hi >= numpi2.d_val.lo &&
-    ( yy.d_val.lo > -1. || yy.d_val.hi < 1. )
-  );
+  }while( xx.d_hi >= numpi2.d_lo && ( yy.d_lo > -1. || yy.d_hi < 1. ) );
   return yy;
 }
 
@@ -860,17 +845,15 @@ number cos( number xx ){
   trig_scale( xx );
   if( xx.type == number::und || xx.type == number::trv ){ return numu; }
   if( xx.type == number::zer ){ return num1; }
-  double d1 = cos( xx.d_val.lo ), d2 = cos( xx.d_val.hi );
+  double d1 = cos( xx.d_lo ), d2 = cos( xx.d_hi );
   number yy( number::dbl,
     nextafter( d1 < d2 ? d1 : d2, -1. ), nextafter( d1 < d2 ? d2 : d1, 1. )
   );
   do{
-    if( xx.d_val.lo <= 0. && xx.d_val.hi >= 0. ){ yy.d_val.hi = 1.; }
-    if( xx.d_val.lo <= numpi.d_val.hi && xx.d_val.hi >= numpi.d_val.lo ){
-      yy.d_val.lo = -1.;
-    }
+    if( xx.d_lo <= 0. && xx.d_hi >= 0. ){ yy.d_hi = 1.; }
+    if( xx.d_lo <= numpi.d_hi && xx.d_hi >= numpi.d_lo ){ yy.d_lo = -1.; }
     xx -= num2pi;
-  }while( xx.d_val.hi >= 0 && ( yy.d_val.lo > -1. || yy.d_val.hi < 1. ) );
+  }while( xx.d_hi >= 0 && ( yy.d_lo > -1. || yy.d_hi < 1. ) );
   return yy;
 }
 
@@ -878,19 +861,16 @@ number tan( number xx ){
   trig_scale( xx );
   if( xx.type == number::und || xx.type == number::zer ){ return xx; }
   if( xx.type == number::trv ){ return numu; }
-  double d1 = tan( xx.d_val.lo ), d2 = tan( xx.d_val.hi );
+  double d1 = tan( xx.d_lo ), d2 = tan( xx.d_hi );
   number yy( number::dbl,
     nextafter( d1 < d2 ? d1 : d2, -1/0. ),
     nextafter( d1 < d2 ? d2 : d1, 1/0. ) );
   do{
-    if( xx.d_val.lo <= numpi2.d_val.hi && xx.d_val.hi >= numpi2.d_val.lo ){
-      yy.type = number::dbu; yy.d_val.lo = -1/0.; yy.d_val.hi = 1/0.;
+    if( xx.d_lo <= numpi2.d_hi && xx.d_hi >= numpi2.d_lo ){
+      yy.type = number::dbu; yy.d_lo = -1/0.; yy.d_hi = 1/0.;
     }
     xx -= numpi;
-  }while(
-    xx.d_val.hi >= numpi2.d_val.lo &&
-    ( yy.d_val.lo > -1/0. || yy.d_val.hi < 1/0. )
-  );
+  }while( xx.d_hi >= numpi2.d_lo && ( yy.d_lo > -1/0. || yy.d_hi < 1/0. ) );
   return yy;
 }
 
@@ -900,8 +880,8 @@ number sinh( number xx ){
   if( xx.type == number::und || xx.type == number::trv ){ return numu; }
   if( xx.type == number::zer ){ return num0; }
   xx.to_dblu();
-  xx.d_val.lo = nextafter( sinh( xx.d_val.lo ), -1/0. );
-  xx.d_val.hi = nextafter( sinh( xx.d_val.hi ), 1/0. );
+  xx.d_lo = nextafter( sinh( xx.d_lo ), -1/0. );
+  xx.d_hi = nextafter( sinh( xx.d_hi ), 1/0. );
   return xx;
 }
 
@@ -909,19 +889,19 @@ number cosh( number xx ){
   if( xx.type == number::und || xx.type == number::trv ){ return numu; }
   if( xx.type == number::zer ){ return num1; }
   xx.to_dblu();
-  if( xx.d_val.lo <= 0 ){
-    if( xx.d_val.hi >= 0 ){
-      if( -xx.d_val.lo > xx.d_val.hi ){ xx.d_val.hi = -xx.d_val.lo; }
-      xx.d_val.hi = nextafter( cosh( xx.d_val.hi ), 1/0. );
-      xx.d_val.lo = 1.; return xx;
+  if( xx.d_lo <= 0 ){
+    if( xx.d_hi >= 0 ){
+      if( -xx.d_lo > xx.d_hi ){ xx.d_hi = -xx.d_lo; }
+      xx.d_hi = nextafter( cosh( xx.d_hi ), 1/0. );
+      xx.d_lo = 1.; return xx;
     }
-    double yy = xx.d_val.lo;
-    xx.d_val.lo = nextafter( cosh( xx.d_val.hi ), 1. );
-    xx.d_val.hi = nextafter( cosh( yy ), 1/0. );
+    double yy = xx.d_lo;
+    xx.d_lo = nextafter( cosh( xx.d_hi ), 1. );
+    xx.d_hi = nextafter( cosh( yy ), 1/0. );
     return xx;
   }
-  xx.d_val.lo = nextafter( cosh( xx.d_val.lo ), 1. );
-  xx.d_val.hi = nextafter( cosh( xx.d_val.hi ), 1/0. );
+  xx.d_lo = nextafter( cosh( xx.d_lo ), 1. );
+  xx.d_hi = nextafter( cosh( xx.d_hi ), 1/0. );
   return xx;
 }
 
@@ -929,8 +909,8 @@ number tanh( number xx ){
   if( xx.type == number::und || xx.type == number::trv ){ return numu; }
   if( xx.type == number::zer ){ return num0; }
   xx.to_dblu();
-  xx.d_val.lo = nextafter( tanh( xx.d_val.lo ), -1. );
-  xx.d_val.hi = nextafter( tanh( xx.d_val.hi ), 1. );
+  xx.d_lo = nextafter( tanh( xx.d_lo ), -1. );
+  xx.d_hi = nextafter( tanh( xx.d_hi ), 1. );
   return xx;
 }
 
@@ -945,8 +925,8 @@ number factorial( number nn ){
   case number::dbl: case number::dbu:  //??? could approximate better
     return number( number::dbu, 1., 1/0. );
   case number::pos: {
-    if( nn.r_val.de != 1 ){ return number::und; }
-    unsigned ii = nn.r_val.nu;
+    if( nn.r_de != 1 ){ return number::und; }
+    unsigned ii = nn.r_nu;
     if( ii >= fact_size ){ ii = fact_size - 1; }
     fact_val[ 0 ] = 1;
     for( ; fact_computed < ii; ){
@@ -968,9 +948,9 @@ inline bool operator ==( number x1, number x2 ){
   if( x1.type == number::trv ){ return x1.t_val == x2.t_val; }
   if( x1.type == number::und || x1.type == number::zer ){ return true; }
   if( x1.type == number::dbl || x1.type == number::dbu ){
-    return x1.d_val.lo == x2.d_val.lo && x1.d_val.hi == x2.d_val.hi;
+    return x1.d_lo == x2.d_lo && x1.d_hi == x2.d_hi;
   }
-  return x1.r_val.nu == x2.r_val.nu && x1.r_val.de == x2.r_val.de;
+  return x1.r_nu == x2.r_nu && x1.r_de == x2.r_de;
 }
 
 truth_val num_eq( number x1, number x2 ){
@@ -984,17 +964,16 @@ truth_val num_eq( number x1, number x2 ){
   ){
     if( x1.type != x2.type ){ return tv_F; }
     if( x1.type == number::zer ){ return tv_T; }
-    return
-      x1.r_val.nu == x2.r_val.nu && x1.r_val.de == x2.r_val.de ? tv_T : tv_F;
+    return x1.r_nu == x2.r_nu && x1.r_de == x2.r_de ? tv_T : tv_F;
   }
   x1.to_dblu(); x2.to_dblu();
   truth_val del_U =
     x1.type == number::dbu || x2.type == number::dbu ? tv_FUT : tv_FT;
-  if( x1.d_val.hi < x2.d_val.lo ){ return truth_val( tv_FU | del_U ); }
-  if( x2.d_val.hi < x1.d_val.lo ){ return truth_val( tv_FU | del_U ); }
-  if(
-    x1.d_val.hi == x2.d_val.lo && x2.d_val.hi == x1.d_val.lo
-  ){ return truth_val( tv_UT | del_U ); }
+  if( x1.d_hi < x2.d_lo ){ return truth_val( tv_FU | del_U ); }
+  if( x2.d_hi < x1.d_lo ){ return truth_val( tv_FU | del_U ); }
+  if( x1.d_hi == x2.d_lo && x2.d_hi == x1.d_lo ){
+    return truth_val( tv_UT | del_U );
+  }
   return truth_val( tv_FUT | del_U );
 }
 
@@ -1029,14 +1008,14 @@ truth_val num_lt( number x1, number x2 ){
       return x1.type == number::neg ? tv_T : tv_F;
     }
     return x1.type == number::pos ?
-      ration_lt( x1.r_val.nu, x1.r_val.de, x2.r_val.nu, x2.r_val.de ) :
-      ration_lt( x2.r_val.nu, x2.r_val.de, x1.r_val.nu, x1.r_val.de );
+      ration_lt( x1.r_nu, x1.r_de, x2.r_nu, x2.r_de ) :
+      ration_lt( x2.r_nu, x2.r_de, x1.r_nu, x1.r_de );
   }
   x1.to_dblu(); x2.to_dblu();
   truth_val del_U =
     x1.type == number::dbu || x2.type == number::dbu ? tv_FUT : tv_FT;
-  if( x1.d_val.hi < x2.d_val.lo ){ return truth_val( tv_UT | del_U ); }
-  if( x2.d_val.hi <= x1.d_val.lo ){ return truth_val( tv_FU | del_U ); }
+  if( x1.d_hi < x2.d_lo ){ return truth_val( tv_UT | del_U ); }
+  if( x2.d_hi <= x1.d_lo ){ return truth_val( tv_FU | del_U ); }
   return truth_val( tv_FUT | del_U );
 }
 
@@ -1056,14 +1035,14 @@ truth_val num_lq( number x1, number x2 ){
       return x1.type == number::neg ? tv_T : tv_F;
     }
     return x1.type == number::pos ?
-      !ration_lt( x2.r_val.nu, x2.r_val.de, x1.r_val.nu, x1.r_val.de ) :
-      !ration_lt( x1.r_val.nu, x1.r_val.de, x2.r_val.nu, x2.r_val.de );
+      !ration_lt( x2.r_nu, x2.r_de, x1.r_nu, x1.r_de ) :
+      !ration_lt( x1.r_nu, x1.r_de, x2.r_nu, x2.r_de );
   }
   x1.to_dblu(); x2.to_dblu();
   truth_val del_U =
     x1.type == number::dbu || x2.type == number::dbu ? tv_FUT : tv_FT;
-  if( x1.d_val.hi <= x2.d_val.lo ){ return truth_val( tv_UT | del_U ); }
-  if( x2.d_val.hi < x1.d_val.lo ){ return truth_val( tv_FU | del_U ); }
+  if( x1.d_hi <= x2.d_lo ){ return truth_val( tv_UT | del_U ); }
+  if( x2.d_hi < x1.d_lo ){ return truth_val( tv_FU | del_U ); }
   return truth_val( tv_FUT | del_U );
 }
 
@@ -1075,8 +1054,8 @@ void num_check(){
   }
   number nn = factorial( 190 );
   if( !nn.is_dbl() ){ mc_err_print( "190! wrong type" ); }
-  if( nn.d_val.lo != nextafter( 1/0., 0. ) ){
+  if( nn.d_lo != nextafter( 1/0., 0. ) ){
     mc_err_print( "190! wrong lo" );
   }
-  if( nn.d_val.hi != 1/0. ){ mc_err_print( "190! wrong hi" ); }
+  if( nn.d_hi != 1/0. ){ mc_err_print( "190! wrong hi" ); }
 }

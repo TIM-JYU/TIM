@@ -1,7 +1,7 @@
 #define confuse
 #define record
 #include "input_output.cc"
-copyright mathcheck_cc( "mathcheck.cc", "Antti Valmari", 20170825 );
+copyright mathcheck_cc( "mathcheck.cc", "Antti Valmari", 20181007 );
 /*
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -69,7 +69,7 @@ void out_double( double xx, bool no_exp = false ){
   /* Process not-a-numbers, sign, and infinities. */
   if( !is_defined( xx ) ){ out_html( "undefined" ); return; }
   out_mode( om_am );
-  if( xx < 0 ){ out_print( '-' ); xx = -xx; }
+  if( xx < 0 ){ out_print( "\xE2\x88\x92" ); xx = -xx; }
   if( xx == 1/0. ){ out_print( "oo" ); return; }
 
   /* Process a precise integer */
@@ -119,7 +119,7 @@ void out_double( double xx, bool no_exp = false ){
   /* Print the exponent part. */
   if( ee ){
     out_print( "* 10^(" );
-    if( ee < 0 ){ out_print( '-' ); ee = -ee; }
+    if( ee < 0 ){ out_print( "\xE2\x88\x92" ); ee = -ee; }
     out_print( unsigned( ee ) ); out_print( ')' );
   }
 
@@ -155,8 +155,9 @@ enum err_type {
   err_few_tests, err_plausible,
 
   /* These arise as a result of a checking operation. */
-  err_cmp, err_equ1, err_equ2, err_equ3, err_equ4, err_equ5, err_qua,
-  err_tree,
+  err_cmp, err_CFG_in, err_CFG_not_in, err_CFG_short, err_CFG_long,
+  err_CFG_start, err_CFG_1, err_CFG_2, err_equ1, err_equ2, err_equ3, err_equ4,
+  err_equ5, err_qua, err_tree,
 
   /* These prevent trying the main operation (e.g., comparison of exprs). */
   err_dom, err_no_var,
@@ -255,20 +256,20 @@ void out_number( number xx, bool no_exp = false ){
   if( xx.is_dbl() || xx.is_dbu() ){
     if( xx.is_dbu() ){ out_html( "undefined or " ); }
     else{
-      double avg = ( xx.d_val.lo + xx.d_val.hi ) / 2.;
+      double avg = ( xx.d_lo + xx.d_hi ) / 2.;
       if(
         (
-          ( xx.d_val.hi < 0. || 0. < xx.d_val.lo ) &&
-          xx.d_val.hi - xx.d_val.lo < ( avg < 0. ? -avg : avg ) * r_eps
+          ( xx.d_hi < 0. || 0. < xx.d_lo ) &&
+          xx.d_hi - xx.d_lo < ( avg < 0. ? -avg : avg ) * r_eps
         ) || (
-          -r_eps < xx.d_val.lo && xx.d_val.lo <= 0. &&
-           r_eps > xx.d_val.hi && xx.d_val.hi >= 0.
+          -r_eps < xx.d_lo && xx.d_lo <= 0. &&
+           r_eps > xx.d_hi && xx.d_hi >= 0.
         )
       ){ out_double( avg ); return; }
     }
-    out_double( xx.d_val.lo, no_exp );
+    out_double( xx.d_lo, no_exp );
     out_html( " &hellip; " );
-    out_double( xx.d_val.hi, no_exp );
+    out_double( xx.d_hi, no_exp );
     return;
   }
   out_mode( om_am );
@@ -281,11 +282,11 @@ void out_number( number xx, bool no_exp = false ){
     out_print( '\"' ); return;
   }
   if( xx.is_zer() ){ out_print( '0' ); return; }
-  if( xx.is_neg() ){ out_print( '-' ); }
-  if( xx.r_val.de != 1 ){ out_print( "frac(" ); }
-  out_print( xx.r_val.nu );
-  if( xx.r_val.de != 1 ){
-    out_print( ")(" ); out_print( xx.r_val.de ); out_print( ')' );
+  if( xx.is_neg() ){ out_print( "\xE2\x88\x92" ); }
+  if( xx.r_de != 1 ){ out_print( "frac(" ); }
+  out_print( xx.r_nu );
+  if( xx.r_de != 1 ){
+    out_print( ")(" ); out_print( xx.r_de ); out_print( ')' );
   }
 }
 
@@ -306,12 +307,14 @@ const char *tkn_str[] = {
   "∃", "−", "√", "∧", "∨", "≠", "≤", "≥", "⋅", "⌈", "⌉", "⌊", "⌋",
 #endif
   "!", "!=",
-  "#(", "#)", "#/",
+  "#(", "#)", "#*", "#/",
   "&&", "(", ")", "*", "*/", "+", ",", "-", "-->", "...", "/", "/*", "/**/",
   "/\\", ":", ";", "<", "<--", "<->", "<=", "<==", "<=>", "=", "==>", ">",
   ">=",
   "AA", "Arithmetic", "Array_claim",
   "Brief_help",
+  "CFG_compare", "CFG_in", "CFG_long", "CFG_not_in", "CFG_set", "CFG_set2",
+  "CFG_short", "CFG_start", "CFG_start2", "CFG_tree",
   "DD", "DE", "De", "Draw_function",
   "EE", "Equation",
   "FF",
@@ -319,33 +322,33 @@ const char *tkn_str[] = {
   "Help",
   "LA", "La",
   "MathCheck", "Modulo",
-  "Newproblem",
   "OM", "Om",
   "PH", "PI", "PS", "Parse_tree", "Ph", "Pi", "Prop_logic", "Ps",
   "SI", "Si",
   "TH", "TT", "Th", "Tree_compare",
   "UU",
   "XI", "Xi",
-  "[", "\\/", "]", "^", "^^", "^|", "_|",
-  "abs", "al", "and", "arithmetic", "array_claim", "assume",
+  "[", "\\/", "]", "^", "^^", "^|", "_", "_|",
+  "abs", "al", "allow_comp", "and", "arithmetic", "array_claim", "assume",
   "b_nodes", "ban_comp", "be", "brief_help",
   "ceil", "ch", "cos", "cosh", "cot",
   "ddn", "de", "debug_off", "debug_on", "draw_function", "draw_off",
   "draw_on", "dup",
-  "e", "end_of_answer", "enda", "ends", "ep", "equation", "et",
-  "f_ban_der", "f_nodes", "f_top_opr", "floor", "forget_errors",
-  //??? "funcpar_off", "funcpar_on",
+  "e", "end_of_answer", "enda", "ends", "ep", "equation", "et", "exam_off",
+  "exam_on",
+  "f_CNF", "f_DNF", "f_ban", "f_ban_der", "f_nodes", "f_top_opr", "floor",
+  "forget_errors",
   "ga",
   "help", "hide_expr",
   "io",
   "ka",
   "la", "ln", "log",
   "mathcheck", "modulo", "mu",
-  "newproblem", "next_URL", "no_next_URL", "not", "nu",
-  "ok_text", "om", "or", "original",
+  "next_URL", "no_next_URL", "not", "nu",
+  "ok_text", "om", "only_no_yes_off", "only_no_yes_on", "or", "original",
   "parse_tree", "ph", "pi", "prop3_off", "prop3_on", "prop_logic",
   "prove_off", "prove_on", "ps",
-  "rh", "root",
+  "reset", "rh", "root",
   "si", "sin", "sinh", "skip_error", "solve", "sqrt", "sum",
   "ta", "tan", "tanh", "th", "tree_compare",
   "undef_off", "undef_on", "up",
@@ -372,13 +375,15 @@ enum tkn_type {
   tkn_Usdot, tkn_Ulceil, tkn_Urceil, tkn_Ulfloor, tkn_Urfloor,
 #endif
   tkn_excl, tkn_nq,
-  tkn_lP, tkn_rP, tkn_frac,
+  tkn_lP, tkn_rP, tkn_iprod, tkn_frac,
   tkn_2amp, tkn_lp, tkn_rp, tkn_ast, tkn_rc, tkn_plus, tkn_comma, tkn_minus,
   tkn_rarr, tkn_3dot, tkn_div, tkn_lc, tkn_lf, tkn_ud, tkn_colon, tkn_semic,
   tkn_lt, tkn_larr, tkn_harr, tkn_lq, tkn_lArr, tkn_hArr, tkn_eq, tkn_rArr,
   tkn_gt, tkn_gq,
   tkn_AA, tkn_Arithm, tkn_Array,
   tkn_Brief_help,
+  tkn_CFG_cmp, tkn_CFG_in, tkn_CFG_long, tkn_CFG_not_in, tkn_CFG_set,
+  tkn_CFG_set2, tkn_CFG_short, tkn_CFG_start, tkn_CFG_start2, tkn_CFG_tree,
   tkn_DD, tkn_DE, tkn_De, tkn_Draw,
   tkn_EE, tkn_Equation,
   tkn_FF,
@@ -386,33 +391,34 @@ enum tkn_type {
   tkn_Help,
   tkn_LA, tkn_La,
   tkn_MathCheck, tkn_Mod,
-  tkn_Nwprbl,
   tkn_OM, tkn_Om,
   tkn_PH, tkn_PI, tkn_PS, tkn_Parse, tkn_Ph, tkn_Pi, tkn_Prop_logic, tkn_Ps,
   tkn_SI, tkn_Si,
   tkn_TH, tkn_TT, tkn_Th, tkn_Tree_cmp,
   tkn_UU,
   tkn_XI, tkn_Xi,
-  tkn_lB, tkn_du, tkn_rB, tkn_sup, tkn_2sup, tkn_rceil, tkn_rfloor,
-  tkn_abs, tkn_al, tkn_and, tkn_arithm, tkn_array, tkn_assume,
+  tkn_lB, tkn_du, tkn_rB, tkn_sup, tkn_2sup, tkn_rceil, tkn_sub, tkn_rfloor,
+  tkn_abs, tkn_al, tkn_allow_comp, tkn_and, tkn_arithm, tkn_array, tkn_assume,
   tkn_b_nodes, tkn_ban_comp, tkn_be, tkn_brief_help,
   tkn_ceil, tkn_ch, tkn_cos, tkn_cosh, tkn_cot,
   tkn_ddn, tkn_de, tkn_debug_off, tkn_debug_on, tkn_draw, tkn_draw_off,
   tkn_draw_on, tkn_dup,
   tkn_e2718, tkn_eoa, tkn_enda, tkn_ends, tkn_ep, tkn_equation, tkn_et,
-  tkn_f_ban_der, tkn_f_nodes, tkn_f_top_opr, tkn_floor, tkn_forget_err,
-  //??? tkn_fp_off, tkn_fp_on,
+  tkn_exam_off, tkn_exam_on,
+  tkn_f_CNF, tkn_f_DNF, tkn_f_ban, tkn_f_ban_der, tkn_f_nodes, tkn_f_top_opr,
+  tkn_floor, tkn_forget_err,
   tkn_ga,
   tkn_help, tkn_hide_expr,
   tkn_io,
   tkn_ka,
   tkn_la, tkn_ln, tkn_log,
   tkn_mathcheck, tkn_mod, tkn_mu,
-  tkn_nwprbl, tkn_next_URL, tkn_no_next_URL, tkn_not, tkn_nu,
-  tkn_ok_text, tkn_om, tkn_or, tkn_original,
+  tkn_next_URL, tkn_no_next_URL, tkn_not, tkn_nu,
+  tkn_ok_text, tkn_om, tkn_only_no_yes_off, tkn_only_no_yes_on, tkn_or,
+  tkn_original,
   tkn_parse, tkn_ph, tkn_pi, tkn_prop3_off, tkn_prop3_on, tkn_prop_logic,
   tkn_prove_off, tkn_prove_on, tkn_ps,
-  tkn_rh, tkn_root,
+  tkn_reset, tkn_rh, tkn_root,
   tkn_si, tkn_sin, tkn_sinh, tkn_skip_errs, tkn_solve, tkn_sqrt, tkn_sum,
   tkn_ta, tkn_tan, tkn_tanh, tkn_th, tkn_tree_cmp,
   tkn_undef_off, tkn_undef_on, tkn_up,
@@ -484,7 +490,7 @@ enum op_type {
     are used as variable names and must be in a consecutive sequence from
     op_alpha to op_Xi. */
   op_lp, op_rp, op_lP, op_rP, op_lB, op_rB, op_lfloor, op_rfloor, op_lceil,
-  op_rceil, op_comma, op_colon, op_semic,
+  op_rceil, op_sub, op_comma, op_colon, op_semic,
   op_false, op_undef, op_true,
   op_alpha, op_beta, op_chi, op_delta, op_epsilon, op_varepsilon, op_eta,
   op_gamma, op_iota, op_kappa, op_lambda, op_mu, op_nu, op_omega, op_phi,
@@ -496,16 +502,17 @@ enum op_type {
 };
 const char *op_AM[] = {
   "constant", "", "variable", "",
-  "+", "-", "", "*", "/", "^", "root(n)",
+  "+", "\xE2\x88\x92", "", "*", "/", "^", "root(...)",
   "|", "sqrt", "!",
   "e", "ln", "log",
   "sin", "cos", "tan", "cot", "sinh", "cosh", "tanh", "sf\"ddn\"",
   "sf\"dup\"",
-  "sum", "frac(del)(del x)",
+  "sum", "frac(del)(del ...)",
   "<", "<=", "=", "!=", ">", ">=",
   "not", "^^", "vv", "larr", "harr", "rarr", "AA", "EE", " in ZZ", "lArr",
   "hArr", "rArr",
-  "(", ")", "#(", "#)", "[", "]", "|__", "__|", "|~", "~|", ",", ":", ";",
+  "(", ")", "#(", "#)", "[", "]", "|__", "__|", "|~", "~|", "_", ",", ":",
+  ";",
   "sf\"F\"", "sf\"U\"", "sf\"T\"",
   "alpha", "beta", "chi", "delta", "epsilon", "varepsilon", "eta", "gamma",
   "iota", "kappa", "lambda", "mu", "nu", "omega", "phi", "varphi", "pi",
@@ -520,9 +527,9 @@ const byte op_font[] = {
   164, 165, 166, 167, 43, 45, 32, 22, 23, 94, 24, 168, 24, 33, 101, 169, 170,
   171, 172, 173, 174, 175, 176, 177, 182, 183, 161, 26, 60, 1, 61, 2, 62, 3,
   4, 5, 6, 7, 8, 9, 10, 11, 178, 12, 13, 14, 40, 41, 40, 41, 91, 93, 18, 19,
-  20, 21, 44, 58, 59, 15, 16, 17, 128, 129, 130, 131, 132, 133, 134, 135, 136,
-  137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151,
-  152, 153, 154, 155, 156, 157, 158, 159, 160, 161, 162, 163, 127
+  20, 21, 44, 95, 58, 59, 15, 16, 17, 128, 129, 130, 131, 132, 133, 134, 135,
+  136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150,
+  151, 152, 153, 154, 155, 156, 157, 158, 159, 160, 161, 162, 163, 127
 };
 
 /* Check that there is the right number of operator strings. */
@@ -600,7 +607,7 @@ op_type op_tkn( tkn_type tkn ){
   case tkn_Urceil: case tkn_rceil: return op_rceil;
   case tkn_Ulfloor: case tkn_lfloor: return op_lfloor;
   case tkn_Urfloor: case tkn_rfloor: return op_rfloor;
-  case tkn_DD: return op_deriv;
+  case tkn_iprod: return op_iprod;
   case tkn_lp: return op_lp;
   case tkn_rp: return op_rp;
   case tkn_plus: return op_plus;
@@ -611,12 +618,14 @@ op_type op_tkn( tkn_type tkn ){
   case tkn_lt: return op_lt;
   case tkn_eq: return op_eq;
   case tkn_gt: return op_gt;
+  case tkn_DD: return op_deriv;
   case tkn_FF: return op_false;
   case tkn_TT: return op_true;
   case tkn_UU: return op_undef;
   case tkn_lB: return op_lB;
   case tkn_rB: return op_rB;
   case tkn_sup: return op_pow;
+  case tkn_sub: return op_sub;
   case tkn_abs: case tkn_vbar: return op_abs;
   case tkn_ceil: return op_lceil;
   case tkn_cos: return op_cos;
@@ -773,6 +782,21 @@ inline void out_var_name( unsigned nm ){
   if( nm <= 'z' ){ out_am( char( nm ) ); }else{ out_am( op_AM[ nm - 'z' ] ); }
 }
 
+/* Prints an operator with an optional variable name. */
+void out_op( op_type opr, unsigned vv = 0 ){
+  if( opr == op_deriv ){
+    out_am( "frac(del)(del " );
+    if( check_var_name( vv ) ){ out_var_name( vv ); }
+    else{ out_print( "..." ); }
+    out_am( ')' );
+  }else if( opr == op_iprod ){
+    out_html( "invisible multiplication" );
+  }else{
+    out_am( op_AM[ opr ] );
+    if( check_var_name( vv ) ){ out_print( ' ' ); out_var_name( vv ); }
+  }
+}
+
 /* Prints the name of var_used[ ii ], with hiding emphasis as appropriate. */
 inline void out_idx_name( unsigned ii ){
   if(
@@ -826,11 +850,12 @@ int                                 //   arr_lo - arr_ofst - 1
 
 /* Test value sequences for different types */
 const number test_seq_R[] = {
-  0, 1, 2, 5, -1, -2, -5, 10, -10, 20, -20, 50, -50, 100, -100,
+  0, 1, 2, 3, 4, 5, 6, -1, -2, -3, -4, -5, -6, 10, -10, 20, -20, 50, -50, 100,
+  -100,
   number( 1, 10 ), number( 1, 10, true ),
   number( 1, 100 ), number( 1, 100, true )
 };
-const unsigned test_size_R = 19;
+const unsigned test_size_R = 25;
 const number test_seq_R2[] = { 0, 1, 3, -1, -3, 10, -10, 30, -30, 100, -100 };
 const unsigned test_size_R2 = 11;
 const int test_seq_Z[] = {
@@ -1038,47 +1063,45 @@ inline void var_close( unsigned ii ){
 
 /* Global and chain-local parsing-related and operation mode variables */
 bool
-  gs_debug = false,         // show debug information
-  gs_draw = true,           // draw curves of expressions in error message
-//??? gs_func_par = false,  // always write parentheses around sin etc. args
-  gs_prop3 = false,         // use tv_U also in propositional logic
-  gs_prove = true,          // try to prove the claims
-  // gs_u_impl_f = true,    // UU ==> FF in logic chains, always applied
-  gs_undef_check = true,    // treat undef as different from defined
-#ifndef subhtml
-  gs_verbose = true;        // print headers, version info, etc.
+  gs_debug = false,       // show debug information
+  gs_draw = true,         // draw curves of expressions in error message
+  gs_only_no_yes = false, // do not give full feedback on an error
+  gs_prop3 = false,       // use tv_U also in propositional logic
+  gs_prove = true,        // try to prove the claims
+  // gs_u_impl_f = true,  // UU ==> FF in logic chains, always applied
+  gs_undef_check = true,  // treat undef as different from defined
+  gs_verbose = false;     // true ==> print headers, version info, etc.
+#ifdef exam
+const bool gs_exam = true;  // examination mode: provide limited feedback
 #else
-  gs_verbose = false;       // print headers, version info, etc.
+bool gs_exam = false;
 #endif
-std::string gs_ok_text;     // printed if the answer passes the check
+std::string gs_ok_text;   // printed if the answer passes the check
 bool
-  ls_ban_comp = false,      // disallow < <= > >=
-  ls_f_ban_der = false,     // disallow derivatives in the final expression
-  ls_hide_expr = false;     // do not show the next expr of a solution chain
+  ls_allow_comp = false,  // allow below chain oprs also in exam textareas
+  ls_ban_comp = false,    // disallow < <= > >= <== ==> as chain oprs
+  ls_hide_expr = false,   // do not show the next expr of a solution chain
+  ls_f_CNF = false,       // final expression must be in CNF
+  ls_f_DNF = false;       // final expression must be in DNF
 unsigned
-  ls_b_nodes = 0,           // > 0: bonus complexity of the final expression
-  ls_f_nodes = 0,           // > 0: maximum complexity of the final expression
-  ls_solve = 0;             // variable that must be solved
-op_type ls_f_top_opr = op_err;      // required root of the final expr tree
+  ls_b_nodes = 0,         // > 0: bonus complexity of the final expression
+  ls_f_nodes = 0,         // > 0: maximum complexity of the final expression
+  ls_solve = 0,           // variable that must be solved
+  ls_f_top_var = 0,       // the var of ls_f_top_opr, if it is AA, DD, EE
+  ls_f_ban_cnt = 0;       // number of finally banned operators
+unsigned const ls_f_ban_max = 30;   // maximum nr of finally banned operators
+op_type
+  ls_f_top_opr = op_err,  // required root of the final expr tree
+  ls_f_ban_ops[ op_err ];   // finally banned operators
 const unsigned URL_max = 100;       // maximum length of next problem page URL
 char next_URL[ URL_max + 1 ] = {};  // URL of next problem page
 
-void reset_global_settings( bool verbose = true ){
+void reset_global_settings(){
   // For easier debugging, remember to not reset debug here!
-  gs_draw = true; //??? gs_func_par = false;
-  gs_prop3 = false; gs_prove = true; gs_undef_check = true;
+  if( gs_verbose ){ pgh_msg( "Settings reset" ); }
+  gs_only_no_yes = gs_prop3 = gs_verbose = false;
+  gs_draw = gs_prove = gs_undef_check = true;
   gs_ok_text.clear();
-#ifdef subhtml
-  gs_verbose = false;
-#else
-  gs_verbose = true;
-  if( verbose ){ pgh_msg( "Settings reset" ); }
-#endif
-}
-
-
-inline void skip_white_space(){
-  while( inp_chr == ' ' || inp_chr == '\n' ){ inp_get_chr(); }
 }
 
 
@@ -1095,7 +1118,7 @@ void get_token(){
   ++tkn_cnt; tkn_val = 0;
 
   /* Skip spaces and newlines. */
-  skip_white_space();
+  inp_skip_white_space();
 
   /* Remember token start place for potential error messages. */
   err_pos = inp_byte_now;
@@ -1120,8 +1143,8 @@ void get_token(){
 
     /* If the constant is an unsigned integer, return. */
     if( inp_chr != '.' ){ return; }
-    err_pos = inp_byte_now; inp_get_chr();
-    if( !is_digit( inp_chr ) ){ inp_revert_to( err_pos ); return; }
+    inp_get_chr();
+    if( !is_digit( inp_chr ) ){ inp_unread( 1 ); return; }
 
     /* Decimal number */
     tkn_now = tkn_decimal;
@@ -1142,6 +1165,11 @@ void get_token(){
   /* Report error. */
   inp_get_chr(); err_set_inp( "Unknown token" );
 
+}
+
+inline void unget_token(){
+  inp_revert_to( err_pos );
+  if( tkn_now == tkn_err ){ err_reset(); }else{ tkn_now = tkn_err; }
 }
 
 
@@ -1371,7 +1399,6 @@ public:
       is_sin_like( opr_ ) || opr_ == op_deriv ||
       opr_ == op_ddn || opr_ == op_dup
     ){
-      //??? if( gs_func_par ){ rup = gp_force; }
       if( opr_ == op_deriv ){
         out_am( " frac(del)(del " ); out_idx_name( var_idx() ); out_am( ')' );
       }else{
@@ -1388,7 +1415,7 @@ public:
 
     /* Special case: factorial */
     if( opr_ == op_fact ){
-      right_->print_AM(); out_am( " !" );
+      right_->print_AM( ap14 ); out_am( " !" );
       if( this_par ){ out_print( ')' ); }
       return;
     }
@@ -1447,10 +1474,19 @@ public:
   }
 
   /* Reveals whether the expression contains the given operator. */
-  bool has_opr( op_type opr1 ){
+  bool has_opr_raw( op_type opr1 ){
     if( opr_ == opr1 ){ return true; }
-    if( left_ && left_->has_opr( opr1 ) ){ return true; }
-    return right_ && right_->has_opr( opr1 );
+    if( left_ && left_->has_opr_raw( opr1 ) ){ return true; }
+    return right_ && right_->has_opr_raw( opr1 );
+  }
+  bool has_opr_pow(){
+    if( opr_ == op_pow || ( is_sin_like( opr_ ) && left_ ) ){ return true; }
+    if( left_ && left_->has_opr_pow() ){ return true; }
+    return right_ && right_->has_opr_pow();
+  }
+  inline bool has_opr( op_type opr1 ){
+    if( opr1 == op_pow ){ return has_opr_pow(); }
+    else{ return has_opr_raw( opr1 ); }
   }
 
   /* Reveals whether the expression contains ii as not solved. */
@@ -1461,6 +1497,52 @@ public:
     if( left_ && !left_->solved( ii, opr_ ) ){ return false; }
     if( right_ && !right_->solved( ii, opr_ ) ){ return false; }
     return true;
+  }
+
+  /* Reveals whether the expression is a logical or arithm (negated) atom. */
+  bool is_atom( bool may_neg ){
+    if(
+      opr_ == op_const || opr_ == op_mixn || opr_ == op_var ||
+      is_rel( opr_ ) || opr_ == op_is_int || opr_ == op_e2718 || opr_ == op_pi
+    ){ return true; }
+    if( may_neg && ( opr_ == op_not || ( opr_ == op_minus && !left_ ) ) ){
+      return right_->is_atom( false );
+    }
+    return false;
+  }
+
+  /* How about op_forall vs. op_and, and op_sum and op_exists vs. op_or??? */
+
+  /* Reveals whether the expression is a logical or arithm clause. */
+  bool is_clause(){
+    if(
+      opr_ == op_or || ( left_ && ( opr_ == op_plus || opr_ == op_minus ) )
+    ){ return left_->is_clause() && right_->is_clause(); }
+    return is_atom( true );
+  }
+
+  /* Reveals whether the expression is in conjunctive normal form. */
+  bool is_CNF(){
+    if( opr_ == op_and || opr_ == op_iprod || opr_ == op_vprod ){
+      return left_->is_CNF() && right_->is_CNF();
+    }
+    return is_clause();
+  }
+
+  /* Reveals whether the expression is a logical or arithm clause. */
+  bool is_esualc(){
+    if( opr_ == op_and || opr_ == op_iprod || opr_ == op_vprod ){
+      return left_->is_esualc() && right_->is_esualc();
+    }
+    return is_atom( true );
+  }
+
+  /* Reveals whether the expression is in disjunctive normal form. */
+  bool is_DNF(){
+    if(
+      opr_ == op_or || ( left_ && ( opr_ == op_plus || opr_ == op_minus ) )
+    ){ return left_->is_DNF() && right_->is_DNF(); }
+    return is_esualc();
   }
 
 };
@@ -1526,12 +1608,7 @@ expression *new_expr(
   */
 
   /* Operators that yield a truth value. */
-  if( yields_logic( opr ) ){
-    ee->type_ = opr == op_const ? 0x40 : 0x60;
-    // if( left ){ ee->type_ |= left->type_ & 0x20; }
-    // if( right ){ ee->type_ |= right->type_ & 0x20; }
-    return ee;
-  }
+  if( yields_logic( opr ) ){ ee->type_ = 0x60; return ee; }
 
   /* Derivative */
   if( opr == op_deriv ){ ee->type_ = left->type_; return ee; }
@@ -1542,13 +1619,13 @@ expression *new_expr(
       case number::dbu:
       case number::und: ee->type_ = 0x1F; return ee;
       case number::zer: ee->type_ = 0x1; return ee;
-      case number::pos: ee->type_ = val.r_val.de == 1 ? 0x2 : 0xA; return ee;
-      case number::neg: ee->type_ = val.r_val.de == 1 ? 0x4 : 0xC; return ee;
+      case number::pos: ee->type_ = val.r_de == 1 ? 0x2 : 0xA; return ee;
+      case number::neg: ee->type_ = val.r_de == 1 ? 0x4 : 0xC; return ee;
       case number::dbl:
         ee->type_ = 0x18;
-        if( val.d_val.lo < 0. ){ ee->type_ |= 4; }
-        if( val.d_val.hi > 0. ){ ee->type_ |= 2; }
-        if( val.d_val.lo <= 0. && val.d_val.hi >= 0. ){ ee->type_ |= 1; }
+        if( val.d_lo < 0. ){ ee->type_ |= 4; }
+        if( val.d_hi > 0. ){ ee->type_ |= 2; }
+        if( val.d_lo <= 0. && val.d_hi >= 0. ){ ee->type_ |= 1; }
         return ee;
       case number::trv: ee->type_ = 0x40; return ee;
     }
@@ -1557,7 +1634,9 @@ expression *new_expr(
   if( opr == op_e2718 || opr == op_pi ){ ee->type_ = 0x1A; return ee; }
   if( opr == op_var ){
     ee->type_ =
-      ee->var().type == vtp_Z || ee->var().type == vtp_idx ? 0x27 : 0x3F;
+      ee->var().type == vtp_Z || ee->var().type == vtp_idx ? 0x27 :
+      ee->var().type == vtp_tv2 || ee->var().type == vtp_tv3 ? 0x60 :
+      ee->var().type == vtp_mod ? 0xA3 : 0x3F;
     return ee;
   }
   if( !right ){ ee->type_ = 0x3F; return ee; }
@@ -2098,11 +2177,11 @@ bool fail_eq( number x1, number x2 ){
   ){
     if( x1.type != x2.type ){ return true; }
     if( x1.type == number::zer ){ return false; }
-    return x1.r_val.nu != x2.r_val.nu || x1.r_val.de != x2.r_val.de;
+    return x1.r_nu != x2.r_nu || x1.r_de != x2.r_de;
   }
   x1.to_dblu(); x2.to_dblu();
   return
-    ( x1.d_val.hi < x2.d_val.lo || x2.d_val.hi < x1.d_val.lo ) &&
+    ( x1.d_hi < x2.d_lo || x2.d_hi < x1.d_lo ) &&
     ( x1.type != number::dbu || x2.type != number::dbu );
 }
 
@@ -2124,12 +2203,12 @@ bool fail_lt( number x1, number x2 ){
     if( x1.type == number::zer ){ return x2.type != number::pos; }
     if( x1.type != x2.type ){ return x1.type == number::pos; }
     return x1.type == number::pos ?
-      ration_lt( x1.r_val.nu, x1.r_val.de, x2.r_val.nu, x2.r_val.de ) == tv_F:
-      ration_lt( x2.r_val.nu, x2.r_val.de, x1.r_val.nu, x1.r_val.de ) == tv_F;
+      ration_lt( x1.r_nu, x1.r_de, x2.r_nu, x2.r_de ) == tv_F:
+      ration_lt( x2.r_nu, x2.r_de, x1.r_nu, x1.r_de ) == tv_F;
   }
   x1.to_dblu(); x2.to_dblu();
   return
-    x1.d_val.lo >= x2.d_val.hi &&
+    x1.d_lo >= x2.d_hi &&
     ( x1.type != number::dbu || x2.type != number::dbu );
 }
 
@@ -2151,12 +2230,12 @@ bool fail_lq( number x1, number x2 ){
     if( x1.type == number::zer ){ return x2.type == number::neg; }
     if( x1.type != x2.type ){ return x1.type == number::pos; }
     return x1.type == number::pos ?
-      ration_lt( x2.r_val.nu, x2.r_val.de, x1.r_val.nu, x1.r_val.de ) == tv_T:
-      ration_lt( x1.r_val.nu, x1.r_val.de, x2.r_val.nu, x2.r_val.de ) == tv_T;
+      ration_lt( x2.r_nu, x2.r_de, x1.r_nu, x1.r_de ) == tv_T:
+      ration_lt( x1.r_nu, x1.r_de, x2.r_nu, x2.r_de ) == tv_T;
   }
   x1.to_dblu(); x2.to_dblu();
   return
-    x1.d_val.lo > x2.d_val.hi &&
+    x1.d_lo > x2.d_hi &&
     ( x1.type != number::dbu || x2.type != number::dbu );
 }
 
@@ -2263,17 +2342,17 @@ bool try_fail_leq(
 
         /* Try to convert the value of the variable to precise rational. */
         else if(
-          ns != 0. && ( xx.is_pos() || xx.is_neg() ) && xx.r_val.de >= 100
+          ns != 0. && ( xx.is_pos() || xx.is_neg() ) && xx.r_de >= 100
         ){
-          unsigned n1 = xx.r_val.nu, n2 = xx.r_val.de % n1;
+          unsigned n1 = xx.r_nu, n2 = xx.r_de % n1;
           while( true ){
             if( n2 < 100 ){ break; }
             n1 %= n2;
             if( n1 < 100 ){ n1 = n2; break; }
             n2 %= n1;
           }
-          var_used[ ii ].value.r_val.nu /= n1;
-          var_used[ ii ].value.r_val.de /= n1;
+          var_used[ ii ].value.r_nu /= n1;
+          var_used[ ii ].value.r_de /= n1;
           test_step[ ii ] = 0; best_dir = 0;
         }
 
@@ -2463,10 +2542,10 @@ bool elt( expression *e1, expression *e2 ){
     } //??? is this appropriate treatment of imprecise values?
     if( x1.is_zer() ){ return false; }
     if( x2.is_zer() ){ return true; }
-    if( x1.r_val.de > x2.r_val.de ){ return false; }
-    if( x2.r_val.de > x1.r_val.de ){ return true; }
-    if( x1.r_val.nu > x2.r_val.nu ){ return false; }
-    if( x2.r_val.nu > x1.r_val.nu ){ return true; }
+    if( x1.r_de > x2.r_de ){ return false; }
+    if( x2.r_de > x1.r_de ){ return true; }
+    if( x1.r_nu > x2.r_nu ){ return false; }
+    if( x2.r_nu > x1.r_nu ){ return true; }
     return x1.type < x2.type;
   }
   if( e2->opr() == op_const || e2->opr() == op_e2718 || e2->opr() == op_pi ){
@@ -3367,10 +3446,11 @@ expression *domain( expression *ee ){
 
 /* Problem types */
 enum pb_type {
-  pb_arithm, pb_array_claim, pb_equation, pb_modulo, pb_prop_logic,
-  pb_tree_compare,
+  pb_arithm, pb_array_claim, pb_CFG_compare, pb_CFG_in, pb_CFG_not_in,
+  pb_equation, pb_modulo, pb_prop_logic, pb_tree_compare,
   pb_MathCheck, pb_brief_help, pb_help,
-  pb_draw_function, pb_parse_tree
+  pb_CFG_long, pb_CFG_set, pb_CFG_set2, pb_CFG_short, pb_CFG_start,
+  pb_CFG_start2, pb_CFG_tree, pb_draw_function, pb_parse_tree
 } pb_mode = pb_arithm;
 
 
@@ -3512,10 +3592,14 @@ bool parse_is_top_tkn(){
   if( inp_ff_exam ){ return false; }
   return
     tkn_now == tkn_forget_err || parse_is( tkn_eoa ) ||
-    parse_is( tkn_nwprbl ) || parse_is( tkn_Nwprbl ) ||
     parse_is( tkn_arithm ) || parse_is( tkn_Arithm ) ||
     parse_is( tkn_array ) || parse_is( tkn_Array ) ||
     parse_is( tkn_brief_help ) || parse_is( tkn_Brief_help ) ||
+    parse_is( tkn_CFG_cmp ) || parse_is( tkn_CFG_in ) ||
+    parse_is( tkn_CFG_long ) || parse_is( tkn_CFG_not_in ) ||
+    parse_is( tkn_CFG_set ) || parse_is( tkn_CFG_set2 ) ||
+    parse_is( tkn_CFG_short ) || parse_is( tkn_CFG_start ) ||
+    parse_is( tkn_CFG_start2 ) || parse_is( tkn_CFG_tree ) ||
     parse_is( tkn_draw ) || parse_is( tkn_Draw ) ||
     parse_is( tkn_equation ) || parse_is( tkn_Equation ) ||
     parse_is( tkn_help ) || parse_is( tkn_Help ) ||
@@ -3567,7 +3651,7 @@ void parse_comment( bool new_pg = false ){
         inp_get_chr();
         while( true ){
           if( inp_chr == ' ' || inp_chr == '\n' ){ out_am( ' ' ); }
-          skip_white_space();
+          inp_skip_white_space();
           if( inp_chr == '`' ){ inp_get_chr(); tkn_now = tkn_err; break; }
           get_token();
           if( tkn_now == tkn_rc || tkn_now == tkn_eoi ){ break; }
@@ -3582,8 +3666,7 @@ void parse_comment( bool new_pg = false ){
             }
           }
           else if( tkn_now == tkn_var || tkn_now == tkn_err ){
-            if( tkn_now == tkn_err ){ err_mode = err_none; }
-            inp_revert_to( err_pos ); out_am( inp_chr ); inp_get_chr();
+            unget_token(); out_am( inp_chr ); inp_get_chr();
           }
           else{ out_am( ' ' ); out_tkn( tkn_now ); }
         }
@@ -3611,19 +3694,36 @@ bool is_setting_tkn(){
   if(
     tkn_now == tkn_debug_off || tkn_now == tkn_debug_on ||
     tkn_now == tkn_draw_off || tkn_now == tkn_draw_on ||
-    //??? tkn_now == tkn_fp_off || tkn_now == tkn_fp_on ||
+    tkn_now == tkn_exam_off || tkn_now == tkn_exam_on ||
+    tkn_now == tkn_only_no_yes_off || tkn_now == tkn_only_no_yes_on ||
     tkn_now == tkn_prop3_off || tkn_now == tkn_prop3_on ||
     tkn_now == tkn_prove_off || tkn_now == tkn_prove_on ||
+    tkn_now == tkn_reset ||
     tkn_now == tkn_undef_off || tkn_now == tkn_undef_on ||
     tkn_now == tkn_verbose_off || tkn_now == tkn_verbose_on ||
-    tkn_now == tkn_b_nodes || tkn_now == tkn_ban_comp ||
-    tkn_now == tkn_f_ban_der || tkn_now == tkn_f_nodes ||
-    tkn_now == tkn_f_top_opr || tkn_now == tkn_forget_err ||
-    tkn_now == tkn_hide_expr || tkn_now == tkn_next_URL ||
-    tkn_now == tkn_no_next_URL || tkn_now == tkn_ok_text ||
-    tkn_now == tkn_skip_errs || tkn_now == tkn_solve
+    tkn_now == tkn_allow_comp || tkn_now == tkn_b_nodes ||
+    tkn_now == tkn_ban_comp || tkn_now == tkn_f_CNF || tkn_now == tkn_f_DNF ||
+    tkn_now == tkn_f_ban || tkn_now == tkn_f_ban_der ||
+    tkn_now == tkn_f_nodes || tkn_now == tkn_f_top_opr ||
+    tkn_now == tkn_forget_err || tkn_now == tkn_hide_expr ||
+    tkn_now == tkn_next_URL || tkn_now == tkn_no_next_URL ||
+    tkn_now == tkn_ok_text || tkn_now == tkn_skip_errs ||
+    tkn_now == tkn_solve
   ){ parse_cnt = 0; parse_dones = tkn_cnt; return true; }
   return false;
+}
+
+
+/* Print a mode description. */
+void print_CNF(){
+  if( pb_mode == pb_arithm || pb_mode == pb_tree_compare ){
+    out_html( "a product of sums" );
+  }else{ out_html( "in conjunctive normal form" ); }
+}
+void print_DNF(){
+  if( pb_mode == pb_arithm || pb_mode == pb_tree_compare ){
+    out_html( "a sum of products" );
+  }else{ out_html( "in disjunctive normal form" ); }
 }
 
 
@@ -3633,10 +3733,14 @@ void parse_settings( bool new_pg = false ){
   bool matched = false;
   do{
     matched = false;
+
+    /* In the exam textareas, only comments are allowed. */
     if( parse_is( tkn_lc, tkn_lf ) ){
       parse_comment( new_pg ); matched = true;
     }
     if( inp_ff_exam ){ continue; }
+
+    /* On-off settings */
     if( tkn_now == tkn_debug_off ){
       pgh_msg( "Debug mode off" );
       gs_debug = false; get_token(); matched = true;
@@ -3653,20 +3757,30 @@ void parse_settings( bool new_pg = false ){
       if( gs_verbose ){ pgh_msg( "Curve drawing mode on" ); }
       gs_draw = true; get_token(); matched = true;
     }
-/*???
-    if( tkn_now == tkn_fp_off ){
-      if( gs_verbose ){
-        pgh_msg( "Not always parentheses around sin, log, etc. arguments" );
-      }
-      gs_func_par = false; get_token(); matched = true;
+    if( tkn_now == tkn_exam_off ){
+#ifndef exam
+      if( gs_verbose ){ pgh_msg( "Examination mode off" ); }
+      gs_exam = false;
+#endif
+      get_token(); matched = true;
     }
-    if( tkn_now == tkn_fp_on ){
-      if( gs_verbose ){
-        pgh_msg( "Always parentheses around sin, log, etc. arguments" );
-      }
-      gs_func_par = true; get_token(); matched = true;
+    if( tkn_now == tkn_exam_on ){
+#ifndef exam
+      if( gs_verbose ){ pgh_msg( "Examination mode on" ); }
+      gs_exam = true;
+#endif
+      get_token(); matched = true;
     }
-*/
+    if( tkn_now == tkn_only_no_yes_off ){
+      if( gs_verbose ){ pgh_msg( "Full feedback on an error is given" ); }
+      gs_only_no_yes = false; get_token(); matched = true;
+    }
+    if( tkn_now == tkn_only_no_yes_on ){
+      if( gs_verbose ){
+        pgh_msg( "Restricted feedback on an error is given" );
+      }
+      gs_only_no_yes = true; get_token(); matched = true;
+    }
     if( tkn_now == tkn_prop3_off ){
       if( gs_verbose ){
         pgh_msg( "The undefined value is not used in propositional logic" );
@@ -3687,6 +3801,9 @@ void parse_settings( bool new_pg = false ){
       if( gs_verbose ){ pgh_msg( "Prove on" ); }
       gs_prove = true; get_token(); matched = true;
     }
+    if( tkn_now == tkn_reset ){
+      reset_global_settings(); get_token(); matched = true;
+    }
     if( tkn_now == tkn_undef_off ){
       if( gs_verbose ){ pgh_msg( "Ignore undefined" ); }
       gs_undef_check = false; get_token(); matched = true;
@@ -3696,11 +3813,31 @@ void parse_settings( bool new_pg = false ){
       gs_undef_check = true; get_token(); matched = true;
     }
     if( tkn_now == tkn_verbose_off ){
+      if( gs_verbose ){ pgh_msg( "Verbose off" ); }
       gs_verbose = false; get_token(); matched = true;
     }
     if( tkn_now == tkn_verbose_on ){
-      pgh_msg( "Verbose on" ); gs_verbose = true; get_token(); matched = true;
+      pgh_msg( "Verbose on" );
+      gs_verbose = true; get_token(); matched = true;
     }
+
+    /* Other global settings */
+    if( tkn_now == tkn_allow_comp ){
+      if( gs_verbose ){
+        pgh_msg( "The relation chain may contain " );
+        out_print( "&lt;, &le;, &gt;, and &ge; or &lArr; and &rArr;" );
+      }
+      ls_allow_comp = true; get_token(); matched = true;
+    }
+    if( tkn_now == tkn_ban_comp ){
+      if( gs_verbose ){
+        pgh_msg( "The relation chain must not contain " );
+        out_print( "&lt;, &le;, &gt;, and &ge; or &lArr; and &rArr;" );
+      }
+      ls_ban_comp = true; get_token(); matched = true;
+    }
+
+    /* Local settings */
     if( !ls_b_nodes && tkn_now == tkn_b_nodes ){
       get_token();
       if( parse_is( tkn_number ) ){ ls_b_nodes = tkn_val.to_unsigned(); }
@@ -3716,20 +3853,42 @@ void parse_settings( bool new_pg = false ){
       }
       get_token(); matched = true;
     }
-    if( tkn_now == tkn_ban_comp ){
+    if( tkn_now == tkn_f_CNF ){
       if( gs_verbose ){
-        pgh_msg( "The solution must not contain " );
-        out_print( "&lt;, &le;, &gt;, or &ge;" );
+        pgh_msg( "The final expression must be " ); print_CNF();
       }
-      ls_ban_comp = true; get_token(); matched = true;
+      ls_f_CNF = true; get_token(); matched = true;
+    }
+    if( tkn_now == tkn_f_DNF ){
+      if( gs_verbose ){
+        pgh_msg( "The final expression must be " ); print_DNF();
+      }
+      ls_f_DNF = true; get_token(); matched = true;
+    }
+    if( tkn_now == tkn_f_ban ){
+      if( gs_verbose ){ pgh_msg( "The final expression must not contain" ); }
+      get_token();
+      while( !parse_is( tkn_semic ) && tkn_now != tkn_eoi ){
+        op_type opr = op_tkn( tkn_now );
+        if( gs_verbose ){ out_html( ' ' ); out_op( opr ); }
+        if( ls_f_ban_cnt >= ls_f_ban_max ){
+          err_set_inp( "Too many operators banned" ); return;
+        }
+        ls_f_ban_ops[ ls_f_ban_cnt ] = opr; ++ls_f_ban_cnt; get_token();
+      }
+      get_token(); matched = true;
     }
     if( tkn_now == tkn_f_ban_der ){
       if( gs_verbose ){
         pgh_msg(
-          "The final expression must not contain the derivative operator"
+          "The final expression must not contain `frac(del)(del ...)`"
         );
       }
-      ls_f_ban_der = true; get_token(); matched = true;
+      if( ls_f_ban_cnt >= ls_f_ban_max ){
+        err_set_inp( "Too many operators banned" ); return;
+      }
+      ls_f_ban_ops[ ls_f_ban_cnt ] = op_deriv; ++ls_f_ban_cnt;
+      get_token(); matched = true;
     }
     if( !ls_f_nodes && tkn_now == tkn_f_nodes ){
       get_token();
@@ -3745,11 +3904,19 @@ void parse_settings( bool new_pg = false ){
       }
       get_token(); matched = true;
     }
-    if( tkn_now == tkn_f_top_opr ){
+    if( ls_f_top_opr == op_err && tkn_now == tkn_f_top_opr ){
       get_token(); ls_f_top_opr = op_tkn( tkn_now );
+      if(
+        ls_f_top_opr == op_deriv ||
+        ls_f_top_opr == op_forall || ls_f_top_opr == op_exists
+      ){
+        get_token(); ls_f_top_var = parse_is_var_name();
+        if( !ls_f_top_var ){ err_set_inp( "A variable is needed here" ); }
+      }
+      if( err_mode ){ return; }
       if( gs_verbose ){
         pgh_msg( "The top operator of the final expression must be " );
-        out_am( op_AM[ ls_f_top_opr ] );
+        out_op( ls_f_top_opr, ls_f_top_var );
       }
       get_token(); matched = true;
     }
@@ -3762,7 +3929,7 @@ void parse_settings( bool new_pg = false ){
     }
     if( tkn_now == tkn_next_URL ){
       unsigned ii = 0;
-      skip_white_space();
+      inp_skip_white_space();
       while( ' ' < inp_chr && inp_chr < '\x7F' ){
         if( ii >= URL_max ){ mc_err_print( "Too long next URL" ); return; }
         next_URL[ ii ] = inp_chr; inp_get_chr(); ++ii;
@@ -3805,6 +3972,7 @@ void parse_settings( bool new_pg = false ){
       }
       get_token(); matched = true;
     }
+
   }while( matched );
 }
 
@@ -3845,7 +4013,7 @@ const pm_type       // bits for choosing alternative sub-grammars
   pm_in_der = 32,   // inside derivative
   pm_no_var = 64,   // variables must not occur
   pm_no_new_free = 128, // previously unseen free variables must not occur
-  pm_no_comp = 256, // <, <=, >=, and > must not occur
+//pm_no_comp = 256, // <, ..., ==> must not occur as relation chain oprs
   pm_was_not = 512, // negat. has just occurred (so parentheses must come now)
   pm_smpl_idx = 1024, // compar. chain of int, const, -const, or int +- const
   pm_no_qua = 2048, // quantifiers must not occur
@@ -4000,7 +4168,10 @@ expression *parse_arithm_atom( pm_type pm_now ){
   }
   if(
     !( pm_now & ( pm_mod | pm_in_func | pm_in_der ) ) && tkn_now == tkn_floor
-  ){ get_token(); return new_expr( op_lfloor, parse_func_arg( pm_now ) ); }
+  ){
+    get_token();
+    return new_expr( op_lfloor, parse_func_arg( pm_now & ~pm_int ) );
+  }
 
   /* Ceiling */
   if(
@@ -4013,7 +4184,10 @@ expression *parse_arithm_atom( pm_type pm_now ){
   }
   if(
     !( pm_now & ( pm_mod | pm_in_func | pm_in_der ) ) && tkn_now == tkn_ceil
-  ){ get_token(); return new_expr( op_lceil, parse_func_arg( pm_now ) ); }
+  ){
+    get_token();
+    return new_expr( op_lceil, parse_func_arg( pm_now & ~pm_int ) );
+  }
 
   /* Square root */
   if( !( pm_now & pm_int ) && parse_is( tkn_sqrt, tkn_Usqrt ) ){
@@ -4081,7 +4255,7 @@ expression *parse_arithm_atom( pm_type pm_now ){
     number val = tkn_val;
     get_token();
     expression *ee = parse_inv_prod( pm_now | pm_in_der );
-    return new_expr( derivative( ee, to_var_idx( val ) ), op_deriv, ee, val );
+    return new_expr( derivative( ee, vv ), op_deriv, ee, val );
   }
 
   parse_error(); return expr_dummy;
@@ -4137,9 +4311,11 @@ expression *parse_inv_prod( pm_type pm_now ){
       ( parse_is( tkn_e2718 ) || parse_is( tkn_pi, tkn_Upi ) ) ) ||
     ( !( pm_now & ( pm_mod | pm_in_der ) ) &&
       ( parse_is( tkn_lfloor, tkn_Ulfloor ) ||
-        parse_is( tkn_lceil, tkn_Ulceil ) ) )
+        parse_is( tkn_lceil, tkn_Ulceil ) ) ) ||
+    tkn_now == tkn_iprod
   ){
     if( err_mode ){ return new_expr( op_var, tkn_val ); }
+    if( tkn_now == tkn_iprod ){ get_token(); }
     ee = new_expr( ee, op_iprod, parse_div( pm_now ) );
   }
   return ee;
@@ -4157,7 +4333,7 @@ expression *parse_prod( pm_type pm_now ){
 /* Unary + and - */
 expression *parse_sign( pm_type pm_now ){
   if(
-    !par_expr && ( parse_is( tkn_plus ) || parse_is( tkn_minus, tkn_Uminus ) )
+    !par_expr && ( parse_is( tkn_plus ) || parse_is( tkn_Uminus, tkn_minus ) )
   ){
     op_type opr = op_tkn( tkn_now ); get_token();
     return new_expr( opr, parse_sign( pm_now ) );
@@ -4168,7 +4344,7 @@ expression *parse_sign( pm_type pm_now ){
 /* Addition + and subtraction - */
 expression *parse_sum( pm_type pm_now ){
   expression *ee = parse_sign( pm_now );
-  while( parse_is( tkn_plus ) || parse_is( tkn_minus, tkn_Uminus ) ){
+  while( parse_is( tkn_plus ) || parse_is( tkn_Uminus, tkn_minus ) ){
     op_type opr = op_tkn( tkn_now ); get_token();
     ee = new_expr( ee, opr, parse_sign( pm_now ) );
   }
@@ -4199,7 +4375,7 @@ expression *parse_simple_index( pm_type pm_now, bool & allow_const ){
     if( !err_mode ){ get_token(); }
     if(
       allow_const &&
-      ( parse_is( tkn_plus ) || parse_is( tkn_minus, tkn_Uminus ) )
+      ( parse_is( tkn_plus ) || parse_is( tkn_Uminus, tkn_minus ) )
     ){
       op_type opr = op_tkn( tkn_now ); expression *e2 = expr_dummy;
       get_token();
@@ -4216,7 +4392,7 @@ expression *parse_simple_index( pm_type pm_now, bool & allow_const ){
     if( parse_is( tkn_number ) ){
       e1 = new_expr( tkn_val ); get_token(); return e1;
     }
-    if( parse_is( tkn_minus, tkn_Uminus ) ){
+    if( parse_is( tkn_Uminus, tkn_minus ) ){
       get_token();
       if( parse_is( tkn_number ) ){ e1 = new_expr( tkn_val ); get_token(); }
       else{ parse_error(); }
@@ -4306,12 +4482,9 @@ expression *parse_logic_atom( pm_type pm_now ){
     parse_simple_index( pm_now, allow_const ) :
     parse_expression( pm_now & pm_not_in );
   while(
-    parse_is( tkn_eq ) || parse_is( tkn_nq, tkn_Une ) || (
-      !( pm_now & pm_no_comp ) && (
-        parse_is( tkn_lt ) || parse_is( tkn_lq, tkn_Ule ) ||
-        parse_is( tkn_gt ) || parse_is( tkn_gq, tkn_Uge )
-      )
-    )
+    parse_is( tkn_eq ) || parse_is( tkn_nq, tkn_Une ) ||
+    parse_is( tkn_lt ) || parse_is( tkn_lq, tkn_Ule ) ||
+    parse_is( tkn_gt ) || parse_is( tkn_gq, tkn_Uge )
   ){
     rel_op = op_tkn( tkn_now ); get_token();
     expression *e2 = pm_now & pm_smpl_idx ?
@@ -4385,6 +4558,15 @@ expression *parse_pred_or_expr( pm_type pm_now ){
 
 
 #include "draw.cc"
+
+bool draw_ok(){
+  if( !draw_err ){ return true; }
+  out_html( "\n<p>Sorry, I cannot draw it! " ); out_print( draw_err );
+  draw_err = 0;
+  return false;
+}
+
+#include "CFG.cc"
 
 
 /* Print the equals or approximates sign depending on the type of xx. */
@@ -4503,8 +4685,41 @@ void err_report(){
         "The expressions must contain one variable (for the horizontal axis)"
       );
       break;
+    case err_CFG_in:
+      out_html( '\"' ); out_esc( err_msg );
+      out_print( "\" is in the language <i>" ); out_print( CFG::start0 );
+      out_print( "</i>" );
+      break;
+    case err_CFG_not_in:
+      out_html( '\"' ); out_esc( err_msg );
+      out_print( "\" is not in the language <i>" ); out_print( CFG::start0 );
+      out_print( "</i>" );
+      break;
+    case err_CFG_short:
+      out_html( '\"' ); out_esc( err_msg );
+      out_print( "\" is too short, minimum length is " );
+      out_print( CFG_short );
+      break;
+    case err_CFG_long:
+      out_html( '\"' ); out_esc( err_msg );
+      out_print( "\" is too long, maximum length is " );
+      out_print( CFG_short );
+      break;
+    case err_CFG_start:
+      out_html( "Wrong start symbol " ); out_print( CFG::start1 );
+      out_print( ", must be " ); out_print( CFG::start0 );
+      break;
+    case err_CFG_1:
+      out_html( '\"' ); out_esc( err_msg );
+      out_print( "\" belongs to the first language but not the second" );
+      break;
+    case err_CFG_2:
+      out_html( '\"' ); out_esc( err_msg );
+      out_print( "\" belongs to the second language but not the first" );
+      break;
     case err_cmp:
       out_html( "Relation does not hold" );
+      if( gs_only_no_yes ){ break; }
       print_err_var_vals();
       out_html( "\n<table" ); err_class(); out_print( ">\n" );
       result_table_row( "left", test_left );
@@ -4560,10 +4775,12 @@ void err_report(){
         draw_reset_colours(); draw_colour( draw::black );
         draw_colour( draw::red ); draw_colour( draw::dgreen );
         draw_img_curve( 2, nn, dd, x_zero, 120, true, lo_lim, hi_lim );
-        out_html( "<br>" ); out_am( i_left ); out_am( " <= " );
-        out_idx_name( vv ); out_am( " <= " ); out_print( i_left + 20 );
-        out_html( " and " ); out_double( draw::min_dy );
-        out_am( " <= uarr <= " ); out_double( draw::max_dy );
+        if( draw_ok() ){
+          out_html( "<br>" ); out_am( i_left ); out_am( " <= " );
+          out_idx_name( vv ); out_am( " <= " ); out_print( i_left + 20 );
+          out_html( " and " ); out_double( draw::min_dy );
+          out_am( " <= uarr <= " ); out_double( draw::max_dy );
+        }
 
       }
       break;
@@ -4572,6 +4789,7 @@ void err_report(){
       break;
     case err_equ2:
       out_html( "The equation does not hold" );
+      if( gs_only_no_yes ){ break; }
       print_err_var_vals();
       if( err_expr ){
         out_html( "\n<br>The first expression with this root may be " );
@@ -4604,7 +4822,7 @@ void err_report(){
   err_end();
   if(
     err_inp <= err_mode && err_mode <= err_combs &&
-    tkn_now != tkn_eoi && tkn_now != tkn_eoa
+    tkn_now != tkn_eoi && tkn_now != tkn_eoa && inp_chr
   ){ html_err_buff( err_pos ); }
   if( mc_err_msg ){ mc_err_print( mc_err_msg ); }
 }
@@ -4839,6 +5057,18 @@ bool check_expl_root( expression *ee ){
   return true;
 }
 
+
+/* Checks that the roots are explicit, without checking anything else. */
+bool return_is_explicit( expression *ee ){
+  if( ee->opr() == op_or ){
+    return
+      return_is_explicit( ee->left() ) && return_is_explicit( ee->right() );
+  }
+  return ee->opr() == op_eq && ee->left()->opr() == op_var &&
+    known_const( ee->right() );
+}
+
+
 /* By trying the teacher-given and student-found values, check that the
   equation is correctly solved. */
 void check_equation( expression *ee, bool been_up ){
@@ -4847,8 +5077,10 @@ void check_equation( expression *ee, bool been_up ){
     if( tv_no_T( eval_tv( ee ) ) ){ test_fail( err_equ1 ); return; }
   }
   sol_step.push_back( ee );
-  if( ee == expr_F ){ root_is_explicit = true; }
-  else if( !been_up ){ check_expl_root( ee ); }
+  if( !been_up ){
+    if( ee == expr_F ){ root_is_explicit = true; }
+    else{ check_expl_root( ee ); }
+  }
 }
 
 
@@ -4865,12 +5097,10 @@ void print_debug_expr( expression *ee, expression *ed = 0 ){
 bool skip_mild_errors(){
   bool result = false;
   if( tkn_now == tkn_skip_errs ){
-#ifndef exam
-    if( err_is_mild() ){
-      err_report(); err_mode = err_none;
+    if( !gs_exam && err_is_mild() ){
+      err_report(); err_reset();
       pgh_msg( "Error skipped" ); --err_cnt; result = true;
     }
-#endif
     get_token();
   }
   return result;
@@ -4878,7 +5108,7 @@ bool skip_mild_errors(){
 
 
 /* Checking of an arithmetic relation chain */
-void parse_arithm_relation_chain( pm_type pm_now ){
+void parse_arithm_relation_chain(){
   now_expr = 0; expression *d2 = 0;
   op_type rel_op = op_type( 0 );
   bool rel_up = true, rel_dn = true;
@@ -4891,7 +5121,7 @@ void parse_arithm_relation_chain( pm_type pm_now ){
     now_expr = parse_arithmetic( 0 );
     if(
       !( parse_is( tkn_eq ) || (
-        !( pm_now & pm_no_comp ) && (
+        !ls_ban_comp && ( !inp_ff_exam || ls_allow_comp ) && (
           ( rel_up && ( parse_is( tkn_lq, tkn_Ule ) || parse_is( tkn_lt ) ) )
           ||
           ( rel_dn && ( parse_is( tkn_gq, tkn_Uge ) || parse_is( tkn_gt ) ) )
@@ -4900,9 +5130,8 @@ void parse_arithm_relation_chain( pm_type pm_now ){
     ){ parse_error(); }
     if( !err_mode ){ d2 = l_and( dom_expr, domain( now_expr ) ); }
 
-#ifndef exam
     /* Check the previous relation, if it exists. */
-    if( !err_mode && prev_expr ){
+    if( !gs_exam && !err_mode && prev_expr ){
       if(
         gs_prove && d1 == d2 && l_or(
           new_logic( simplify( prev_expr ), rel_op, simplify( now_expr ) ),
@@ -4911,7 +5140,6 @@ void parse_arithm_relation_chain( pm_type pm_now ){
       ){ err_mode = err_proven; }
       else{ check_relation( prev_expr, now_expr, rel_op ); }
     }
-#endif
 
     /* Print the previous relation symbol, if it exists. */
     pgh_ensure();
@@ -4942,7 +5170,7 @@ void parse_arithm_relation_chain( pm_type pm_now ){
     if( !err_mode ){
       if(
         parse_is( tkn_eq ) ||
-        ( !( pm_now & pm_no_comp ) && (
+        ( !ls_ban_comp && ( !inp_ff_exam || ls_allow_comp ) && (
           ( rel_up && ( parse_is( tkn_lq, tkn_Ule ) || parse_is( tkn_lt ) ) )
           ||
           ( rel_dn && ( parse_is( tkn_gq, tkn_Uge ) || parse_is( tkn_gt ) ) )
@@ -4970,144 +5198,42 @@ void parse_arithm_relation_chain( pm_type pm_now ){
 }
 
 
-/* Helpers for drawing parse trees * /
-
-const unsigned
-  tree_diff = 40,   // minimum distance between centres of parse tree nodes
-  tree_max_depth = ( draw::y_max_size - 19 ) / tree_diff + 1;
-unsigned
-  tree_width1[ tree_max_depth + 1 ],  // nr of parallel nodes at each level
-  tree_width2[ tree_max_depth + 1 ];  // nr of drawn nodes at each level
-
-bool tree_rel_chain( expression *ee ){
-  return is_srel( ee->opr() ) && is_srel( ee->left()->opr() );
-}
-
-/ * Computes the width of each layer. Reveals over-high trees by updating
-  tree_width1[ tree_max_depth ]. * /
-void tree_find_width( expression *ee, unsigned depth ){
-  if( !ee || depth > tree_max_depth ){ return; }
-  ++tree_width1[ depth ]; ++depth;
-  op_type opr = ee->opr();
-  if(
-    opr == op_deriv || opr == op_forall || opr == op_exists || opr == op_sum
-  ){ if( depth <= tree_max_depth ){ ++tree_width1[ depth ]; } }
-  if( opr != op_deriv ){
-    tree_find_width( ee->left(), depth - tree_rel_chain( ee ) );
-  }
-  tree_find_width( ee->right(), depth );
-}
-
-/ * Compute the x-coordinate of node number tw2 on layer depth. * /
-unsigned tree_x( unsigned depth, unsigned tw2 ){
-  return (
-    ( 2 * tw2 + 1 ) * ( draw::x_size + tree_diff - 19 ) / tree_width1[ depth ]
-    - tree_diff + 19 - 1
-  ) / 2;
-}
-
-/ * Draw a parse tree. * /
-void tree_draw( expression *ee, unsigned depth, bool in_rel_chain ){
-  if( !ee || depth >= tree_max_depth ){ return; }
-
-  / * Draw links. * /
-  unsigned
-    xx = tree_x( depth, tree_width2[ depth ] ),
-    yy = draw::y_size - 19/2 - 1 - tree_diff * depth,
-    dx = is_srel( ee->opr() )
-      ? ( draw::x_size + tree_diff - 19 ) / tree_width1[ depth ] : 0,
-    dtw = 0, tw2 = tree_width2[ depth + 1 ];
-  op_type opr = ee->opr(); bool trc = tree_rel_chain( ee );
-  if( trc ){
-    expression *e2 = ee->left();
-    while( is_srel( e2->opr() ) ){ e2 = e2->left(); ++dtw; }
-    xx += dtw * dx; draw_horizontal( xx - dx, xx, yy, 3 ); ++dtw;
-  }
-  if( !in_rel_chain ){ dx = 0; }
-  if(
-    opr == op_deriv || opr == op_forall || opr == op_exists || opr == op_sum
-  ){
-    draw_line( xx, yy, tree_x( depth + 1, tw2 ), yy - tree_diff, 1 ); ++tw2;
-  }
-  if( ee->left() && opr != op_deriv && !trc ){
-    draw_line( xx, yy, tree_x( depth + 1, tw2 ), yy - tree_diff, 1 ); ++tw2;
-  }
-  if( ee->right() ){
-    draw_line(
-      xx + dx/2, yy, tree_x( depth + 1, tw2 + dtw ), yy - tree_diff, 1
-    );
-  }
-
-  / * Draw subtrees. * /
-  if(
-    opr == op_deriv || opr == op_forall || opr == op_exists || opr == op_sum
-  ){ tree_draw( new_expr( op_var, ee->val() ), depth + 1, false ); }
-  if( opr != op_deriv ){
-    tree_draw( ee->left(), depth + 1 - trc, is_srel( opr ) ? true : false );
-  }
-  tree_draw( ee->right(), depth + 1, false );
-
-  / * Draw operator node. * /
-  ++tree_width2[ depth ];
-  draw_circle( xx, yy, 19/2, 1, 2 );
-  char ch = op_font[ opr ];
-  if( opr == op_const ){
-    if( ee->type() & 0x7 ){
-      int ii = ee->val().to_int();
-      if( -9 <= ii && ii < 0 ){
-        draw_char( xx - 7, yy - 6, 27, 1 );
-        draw_char( xx - 1, yy - 6, '0' - ii, 1 ); ch = ' ';
-      }else if( 0 <= ii && ii <= 9 ){ ch = ii + '0'; }
-    }else if( ee->type() & 0x40 ){
-      truth_val t1 = ee->val().to_tv();
-      if( t1 == tv_F ){ ch = 15; }
-      else if( t1 == tv_U ){ ch = 16; }
-      else if( t1 == tv_T ){ ch = 17; }
-    }
-  }else if( opr == op_var ){
-    unsigned nm = ee->var().name;
-    ch = nm <= 'z' ? nm : nm - 'z' - op_alpha + 128;
-  }
-  draw_char( xx - 3, yy - 6, ch, 1 );
-
-}*/
-
-
 /* Copy the nonempty tree to a tree drawing data structure. */
 const char *too_big_tree = "Sorry, cannot draw, some node is too big";
 draw_tree_node *copy_tree( expression *ee ){
 
   /* Construct name. */
   op_type opr = ee->opr();
-  char name_buf[ draw_tree_node::name_max + 1 ] = {};
   unsigned nb = 0;
   const char *name = 0; bool low_draw = false;
   if( opr == op_var ){
     unsigned nm = ee->var().name;
-    name_buf[ nb++ ] = nm <= 'z' ? nm : nm - 'z' - op_alpha + 128;
+    draw::name_buff[ nb++ ] = nm <= 'z' ? nm : nm - 'z' - op_alpha + 128;
   }else if( opr == op_const ){
     switch( ee->val().type ){
     case number::und: name = "undefined"; break;
     case number::zer: name = "0"; break;
     case number::pos: case number::neg: {
-      unsigned nn = ee->val().r_val.nu, digits = 0;
-      if( ee->val().is_neg() ){ name_buf[0] = '-'; ++digits; }
+      unsigned nn = ee->val().r_nu, digits = 0;
+      if( ee->val().is_neg() ){ draw::name_buff[0] = '-'; ++digits; }
       do{ nn /= 10; ++digits; }while( nn );
-      nn = ee->val().r_val.de;
+      nn = ee->val().r_de;
       if( nn != 1 ){
         ++digits;
         do{ nn /= 10; ++digits; }while( nn );
       }
-      if( digits > draw_tree_node::name_max ){
-        name_buf[ nb++ ] = op_font[ op_const ];
+      if( digits > draw::name_max ){
+        draw::name_buff[ nb++ ] = op_font[ op_const ];
       }else{
-        nb = digits; nn = ee->val().r_val.de;
+        nb = digits; nn = ee->val().r_de;
         if( nn != 1 ){
-          do{ name_buf[ --digits ] = nn % 10 + '0'; nn /= 10; }while( nn );
-          name_buf[ --digits ] = '/';
+          do{ draw::name_buff[ --digits ] = nn % 10 + '0'; nn /= 10; }
+          while( nn );
+          draw::name_buff[ --digits ] = '/';
         }
-        nn = ee->val().r_val.nu;
-        do{ name_buf[ --digits ] = nn % 10 + '0'; nn /= 10; }while( nn );
+        nn = ee->val().r_nu;
+        do{ draw::name_buff[ --digits ] = nn % 10 + '0'; nn /= 10; }
+        while( nn );
       }
       break;
     }
@@ -5115,12 +5241,12 @@ draw_tree_node *copy_tree( expression *ee ){
     case number::dbu: name = "dbu"; break;
     case number::trv: {
       truth_val tv = ee->val().to_tv();
-      if( tv_may_F( tv ) ){ name_buf[ nb++ ] = 15; }
-      if( tv_may_U( tv ) ){ name_buf[ nb++ ] = 16; }
-      if( tv_may_T( tv ) ){ name_buf[ nb++ ] = 17; }
+      if( tv_may_F( tv ) ){ draw::name_buff[ nb++ ] = 15; }
+      if( tv_may_U( tv ) ){ draw::name_buff[ nb++ ] = 16; }
+      if( tv_may_T( tv ) ){ draw::name_buff[ nb++ ] = 17; }
       break;
     }
-    default: name_buf[ nb++ ] = op_font[ op_const ];
+    default: draw::name_buff[ nb++ ] = op_font[ op_const ];
     }
   }
   else if( is_sin_like( opr ) ){ name = op_AM[ opr ]; }
@@ -5128,33 +5254,33 @@ draw_tree_node *copy_tree( expression *ee ){
   else if( opr == op_dup ){ name = "dup"; }
   else if( is_rel( opr ) ){
     unsigned ii = 1; expression *e2 = ee->left(); low_draw = true;
-    while( is_rel( e2->opr() ) && ii < draw_tree_node::name_max ){
+    while( is_rel( e2->opr() ) && ii < draw::name_max ){
       e2 = e2->left(); ++ii;
     }
     if( is_rel( e2->opr() ) ){ err_set_inp( too_big_tree ); }
     nb = ii;
     for( e2 = ee; ii; e2 = e2->left() ){
-      name_buf[ --ii ] = op_font[ e2->opr() ];
+      draw::name_buff[ --ii ] = op_font[ e2->opr() ];
     }
   }
   else if( is_lrel( opr ) ){
     unsigned ii = 1; expression *e2 = ee->left(); low_draw = true;
-    while( is_lrel( e2->opr() ) && ii < draw_tree_node::name_max ){
+    while( is_lrel( e2->opr() ) && ii < draw::name_max ){
       e2 = e2->left(); ++ii;
     }
     if( is_lrel( e2->opr() ) ){ err_set_inp( too_big_tree ); }
     nb = ii;
     for( e2 = ee; ii; e2 = e2->left() ){
-      name_buf[ --ii ] = op_font[ e2->opr() ];
+      draw::name_buff[ --ii ] = op_font[ e2->opr() ];
     }
   }
-  else{ name_buf[ nb++ ] = op_font[ opr ]; }
-  name_buf[ nb ] = '\0';
+  else{ draw::name_buff[ nb++ ] = op_font[ opr ]; }
+  draw::name_buff[ nb ] = '\0';
 
   /* Copy the node. */
   draw_tree_node
     *nd = new draw_tree_node(
-      name ? name : name_buf, ee->extra(), ee->extra() >> 8, low_draw
+      name ? name : draw::name_buff, ee->extra(), ee->extra() >> 8, low_draw
     );
 
   /* Copy the children. */
@@ -5218,41 +5344,15 @@ void parse_tree_chain(){
     if( gs_debug ){ print_debug_expr( now_expr, expr_T ); }
 
     /* Copy the tree to a tree drawing data structure and draw it. */
-#ifndef exam
-    if( !err_mode ){
+    if( !gs_exam && !err_mode ){
       draw_reset_colours(); draw_colour( draw::white );
       draw_colour( draw::maroon );
       now_expr->recursive_extra( 2 | (1<<8) );
       draw_tree_node *nd = copy_tree( now_expr );
-      if( !err_mode ){ nd->draw( "A parse tree" ); }
-    }
-#endif
-
-    /* Find the size of the parse tree. * /
-    for( unsigned ii = 0; ii <= tree_max_depth; ++ii ){
-      tree_width1[ ii ] = tree_width2[ ii ] = 0;
-    }
-    tree_find_width( now_expr, 0 );
-    unsigned height = 0, width = tree_width1[ 0 ];
-    for( ; height <= tree_max_depth && tree_width1[ height ]; ++height ){
-      if( tree_width1[ height ] > width ){ width = tree_width1[ height ]; }
-    }
-    unsigned
-      x_sz = tree_diff * ( width - 1 ) + 19,
-      y_sz = tree_diff * ( height - 1 ) + 19;
-
-    / * Draw the parse tree. * /
-    if( x_sz > draw::x_max_size || y_sz > draw::y_max_size ){
-      err_set_inp( too_big_tree );
-    }else if( !err_mode ){
-      draw_reset_buffer( x_sz, y_sz ); draw_reset_colours();
-      draw_colour( draw::white ); draw_colour( draw::maroon );
-      draw_colour( draw::blue );
-      tree_draw( now_expr, 0, false );
-      draw_make_img( "A parse tree" );
+      if( !err_mode ){ nd->draw( "A parse tree" ); draw_ok(); }
     }
 
-    / * Continue with the input. */
+    /* Continue with the input. */
     skip_mild_errors();
     parse_settings();
     if( err_mode ){ return; }
@@ -5263,9 +5363,7 @@ void parse_tree_chain(){
 
 /* Compare and draw parse trees of a chain of expressions. */
 void parse_tree_compare(){
-#ifndef exam
   expression *hidden_expr = 0;  // teacher's expression
-#endif
   unsigned round = 0;   // must be at least two rounds
 
   /* Scan the input until an expression or exit. */
@@ -5279,8 +5377,7 @@ void parse_tree_compare(){
 
     /* Copy the tree to a tree drawing data structure and draw it. */
     out_html( "\n<p>" ); pgh_broken = false;
-#ifndef exam
-    if( !err_mode ){
+    if( !gs_exam && !gs_only_no_yes && !err_mode ){
       draw_reset_colours(); draw_colour( draw::white );
       if( !round ){
         draw_colour( draw::maroon );
@@ -5292,9 +5389,8 @@ void parse_tree_compare(){
         hidden_expr->recursive_extra( 2 | (1<<8) );
       }
       draw_tree_node *nd = copy_tree( now_expr );
-      if( !err_mode ){ nd->draw( "A parse tree" ); }
+      if( !err_mode ){ nd->draw( "A parse tree" ); draw_ok(); }
     }
-#endif
 
     /* Print the expression. */
     if( !round || ls_hide_expr ){ out_html( "model-answer\n" ); }
@@ -5308,16 +5404,14 @@ void parse_tree_compare(){
 
     ++round;
   }
-#ifndef exam
-  if( now_expr != hidden_expr ){ test_fail( err_tree ); }
-#endif
+  if( !gs_exam && now_expr != hidden_expr ){ test_fail( err_tree ); }
 }
 
 
 /* Get a possibly negated integer or decimal value. */
 double parse_d_const(){
   double dd = 0/0.;
-  bool is_neg = parse_is( tkn_minus, tkn_Uminus );
+  bool is_neg = parse_is( tkn_Uminus, tkn_minus );
   if( is_neg ){ get_token(); }
   if( parse_is( tkn_number ) || parse_is( tkn_decimal ) ){
     dd = to_double( tkn_val ); get_token();
@@ -5356,9 +5450,7 @@ void parse_draw_function_chain(){
   draw_reset_colours(); draw_colour( draw::black );
 
   /* Read the functions. */
-#ifndef exam
   expression *ee[ draw_max_curves ] = {};
-#endif
   unsigned nr_funcs = 0;
   for( ; nr_funcs < draw_max_curves; ++nr_funcs ){
 
@@ -5391,9 +5483,7 @@ void parse_draw_function_chain(){
       out_print( "model-answer\n" ); ls_hide_expr = false;
     }else{ now_expr->print_AM(); out_html( '\n' ); }
     if( gs_debug ){ print_debug_expr( now_expr, dd ); }
-#ifndef exam
     ee[ nr_funcs ] = now_expr;
-#endif
 
     /* Process optional continuation command. */
     parse_settings();
@@ -5413,42 +5503,44 @@ void parse_draw_function_chain(){
     err_set_inp( "The variable must be of real number type" ); return;
   }
 
-#ifndef exam
-  /* See above the first draw_img_curve call for explanation of the horizontal
-    axis. */
-  const unsigned nn = 1603;   // 1 + 2 * width of the image in pixels
-  double wos = ( x_right - x_left ) / ( nn - 3 );   // width of sample
+  if( !gs_exam ){
+    /* See above the first draw_img_curve call for explanation of the
+      horizontal axis. */
+    const unsigned nn = 1603;   // 1 + 2 * width of the image in pixels
+    double wos = ( x_right - x_left ) / ( nn - 3 );   // width of sample
 
-  /* Compute the location of the y-axis. */
-  unsigned x_zero = ~0u;
-  if( x_left <= 0. && 0. <= x_right ){ x_zero = -x_left / wos + 1; }
+    /* Compute the location of the y-axis. */
+    unsigned x_zero = ~0u;
+    if( x_left <= 0. && 0. <= x_right ){ x_zero = -x_left / wos + 1; }
 
-  /* Compute the y-values. */
-  double dd[ draw_max_curves * nn ], xx = x_left - wos;
-  for( unsigned ii = 0; ii < nn; ++ii ){
-    var_used[ vv ].value = number( number::dbl, xx, xx );
-    if( eval_tv( dom_expr ) == tv_T ){
-      for( unsigned jj = 0; jj < nr_funcs; ++jj ){
-        dd[ nn * jj + ii ] = to_double( eval_expr( ee[ jj ] ) );
+    /* Compute the y-values. */
+    double dd[ draw_max_curves * nn ], xx = x_left - wos;
+    for( unsigned ii = 0; ii < nn; ++ii ){
+      var_used[ vv ].value = number( number::dbl, xx, xx );
+      if( eval_tv( dom_expr ) == tv_T ){
+        for( unsigned jj = 0; jj < nr_funcs; ++jj ){
+          dd[ nn * jj + ii ] = to_double( eval_expr( ee[ jj ] ) );
+        }
+      }else{
+        for( unsigned jj = 0; jj < nr_funcs; ++jj ){
+          dd[ nn * jj + ii ] = 0/0.;
+        }
       }
-    }else{
-      for( unsigned jj = 0; jj < nr_funcs; ++jj ){
-        dd[ nn * jj + ii ] = 0/0.;
-      }
+      xx += wos; // = x_left + ii * wos;
     }
-    xx += wos; // = x_left + ii * wos;
-  }
 
-  /* Draw the curves and tell the scales. */
-  out_html( "\n<p>" ); pgh_broken = false;
-  draw_img_curve(
-    nr_funcs, nn, dd, x_zero, 250, !( y_down == y_down ), y_down, y_up
-  );
-  out_print( "<br>" ); out_double( x_left ); out_am( " <= " );
-  out_idx_name( vv ); out_am( " <= " ); out_double( x_right );
-  out_html( " and " ); out_double( draw::min_dy ); out_am( " <= uarr <= " );
-  out_double( draw::max_dy );
-#endif
+    /* Draw the curves and tell the scales. */
+    out_html( "\n<p>" ); pgh_broken = false;
+    draw_img_curve(
+      nr_funcs, nn, dd, x_zero, 250, !( y_down == y_down ), y_down, y_up
+    );
+    if( draw_ok() ){
+      out_print( "<br>" ); out_double( x_left ); out_am( " <= " );
+      out_idx_name( vv ); out_am( " <= " ); out_double( x_right );
+      out_html( " and " ); out_double( draw::min_dy );
+      out_am( " <= uarr <= " ); out_double( draw::max_dy );
+    }
+  }
 
 }
 
@@ -5468,30 +5560,40 @@ void parse_logic_chain( pm_type pm_now ){
     if(
       !(
         parse_is( tkn_hArr, tkn_UhArr ) ||
-        ( rel_up && parse_is( tkn_rArr, tkn_UrArr ) ) ||
-        ( rel_dn && parse_is( tkn_lArr, tkn_UlArr ) ) ||
+        ( rel_up && !ls_ban_comp && ( !inp_ff_exam || ls_allow_comp ) &&
+          parse_is( tkn_rArr, tkn_UrArr ) ) ||
+        ( rel_dn && !ls_ban_comp && ( !inp_ff_exam || ls_allow_comp ) &&
+          parse_is( tkn_lArr, tkn_UlArr ) ) ||
         ( pb_mode == pb_equation && parse_is( tkn_original ) ) ||
         is_setting_tkn() || ( rel_op && parse_is_top_tkn() )
       )
     ){ parse_error(); }
 
-#ifndef exam
-    /* Check the previous relation, if it exists. */
-    if( !err_mode && prev_expr ){
-      if(
-        gs_prove && pb_mode == pb_prop_logic && l_or(
-          new_logic( simplify( prev_expr ), rel_op, simplify( now_expr ) ),
-          l_not( dom_expr )
-        ) == expr_T
-      ){ err_mode = err_proven; }
-      else if( pb_mode == pb_equation ){
-        check_equation( now_expr, been_up );
+    /* Check a step. */
+    if( !err_mode ){
+
+      /* Check an equation and record whether it explicitly shows roots. */
+      if( pb_mode == pb_equation ){
+        if( !gs_exam ){ check_equation( now_expr, been_up ); }
+        else if( !been_up ){
+          if( now_expr == expr_F ){ root_is_explicit = true; }
+          else{ root_is_explicit = return_is_explicit( now_expr ); }
+        }
       }
-      else{ check_logic( prev_expr, now_expr, rel_op ); }
-    }else if( !err_mode && pb_mode == pb_equation ){
-      check_equation( now_expr, been_up );
+
+      /* Check the previous relation, if it exists. */
+      else if( !gs_exam && prev_expr ){
+        if(
+          gs_prove && pb_mode == pb_prop_logic &&
+          l_or(
+            new_logic( simplify( prev_expr ), rel_op, simplify( now_expr ) ),
+            l_not( dom_expr )
+          ) == expr_T
+        ){ err_mode = err_proven; }
+        else{ check_logic( prev_expr, now_expr, rel_op ); }
+      }
+
     }
-#endif
 
     /* Print the previous relation symbol, if it exists. */
     pgh_ensure();
@@ -5529,8 +5631,10 @@ void parse_logic_chain( pm_type pm_now ){
     if( !err_mode ){
       if(
         parse_is( tkn_hArr, tkn_UhArr ) ||
-        ( rel_up && parse_is( tkn_rArr, tkn_UrArr ) ) ||
-        ( rel_dn && parse_is( tkn_lArr, tkn_UlArr ) )
+        ( rel_up && !ls_ban_comp && ( !inp_ff_exam || ls_allow_comp ) &&
+          parse_is( tkn_rArr, tkn_UrArr ) ) ||
+        ( rel_dn && !ls_ban_comp && ( !inp_ff_exam || ls_allow_comp ) &&
+          parse_is( tkn_lArr, tkn_UlArr ) )
       ){
         if( tkn_now == tkn_rArr || tkn_now == tkn_UrArr ){
           rel_dn = false; been_up = true;
@@ -5611,7 +5715,7 @@ void parse_array_start(){
   if( !parse_is_var( vtp_idx, 0 ) ){ parse_error(); return; }
   arr_sz_var = to_var_idx( tkn_val );
   get_token(); arr_ofst = 0;
-  if( parse_is( tkn_plus ) || parse_is( tkn_minus, tkn_Uminus ) ){
+  if( parse_is( tkn_plus ) || parse_is( tkn_Uminus, tkn_minus ) ){
     e1 = parse_arithmetic( pm_int | pm_no_var );
     if( err_mode ){ return; }
     arr_ofst = eval_expr( e1 ).to_int();
@@ -5676,8 +5780,8 @@ void parse_array_chain(){
 
     /* Check the previous logical equivalence. */
     if( !err_mode && e1 ){
-#ifndef exam
       check_array_claim( e1, now_expr );
+      if( gs_exam && err_mode && err_mode != err_qua ){ err_reset(); }
       /* The below is not safe, because A[0] = A[0] reduces to true not
         undefined when 0 is not a legal index.
       if(
@@ -5685,7 +5789,6 @@ void parse_array_chain(){
         new_logic( simplify( e1 ), op_leq, simplify( now_expr ) ) == expr_T
       ){ err_mode = err_proven; }
       else{ check_array_claim( e1, now_expr ); }*/
-#endif
     }
 
     /* Print the previous logical equivalence symbol. */
@@ -5746,7 +5849,7 @@ void parse_given_roots(){
   get_token();
 
   /* If no roots were given, just pass the end marker. */
-  if( parse_is( tkn_ends ) || parse_is( tkn_semic ) ){ get_token(); return; }
+  if( parse_is( tkn_semic, tkn_ends ) ){ get_token(); return; }
   roots_given = true;
 
   /* Process explicit indication of no roots. */
@@ -5787,9 +5890,11 @@ bool is_problem_mode(
   tkn_type tkn_1, tkn_type tkn_2, pb_type pbt, const char *msg
 ){
   if( !inp_ff_exam && ( parse_is( tkn_1 ) || parse_is( tkn_2 ) ) ){
-    if( gs_verbose ){ out_html( "\n<p><hr>\n" ); }
-    if( tkn_now == tkn_2 ){ reset_global_settings(); }
-    if( msg && gs_verbose ){ pgh_msg( msg ); }
+    bool was_gs_verbose = gs_verbose;
+    if( was_gs_verbose ){
+      out_html( "\n<p><hr>\n" );
+      if( msg ){ pgh_msg( msg ); }
+    }
     pb_mode = pbt; get_token(); return true;
   }else{ return false; }
 }
@@ -5804,15 +5909,15 @@ int main(){
 
   /* Initializations */
   time_reset();                     // start run time measurement
-  reset_global_settings( false );
+  reset_global_settings();
 #ifdef subhtml
   html_ptr = &std::cout;
 #else
   html_begin( std::cout, "MathCheck Feedback" );  // start writing the output
 #endif
   inp_deconfuse_on(); inp_start(); get_token();   // start reading the input
-  if( tkn_now == tkn_verbose_off ){ gs_verbose = false; }
-  if( gs_verbose ){
+  if( tkn_now == tkn_verbose_on ){
+    gs_verbose = true;
     out_html( "<h1>MathCheck Feedback</h1>\n\n" );
     out_print( "<p class=unimp>MathCheck version " );
     html_date( copyright::date ); out_print( '\n' );
@@ -5827,9 +5932,7 @@ int main(){
   }
 
   /* Check a solution sequence. */
-#ifndef exam
   unsigned points = 0;  // total points
-#endif
   do{
     parse_settings( true );
 
@@ -5857,11 +5960,29 @@ int main(){
     dom_expr = expr_T;
 
     /* Recognize the problem mode and reset global settings if needed. */
-    if( is_problem_mode( tkn_nwprbl, tkn_Nwprbl, pb_mode, 0 ) ){}
-    else if( is_problem_mode( tkn_arithm, tkn_Arithm, pb_arithm,
-      "Arithmetic" ) ){}
+    if( is_problem_mode( tkn_arithm, tkn_Arithm, pb_arithm, "Arithmetic" ) ){}
     else if( is_problem_mode( tkn_brief_help, tkn_Brief_help, pb_brief_help,
       0 ) ){}
+    else if( is_problem_mode( tkn_CFG_cmp, tkn_CFG_cmp, pb_CFG_compare,
+      "CFG comparison" ) ){ unget_token(); }
+    else if( is_problem_mode( tkn_CFG_in, tkn_CFG_in, pb_CFG_in,
+      "CFG membership test" ) ){ unget_token(); }
+    else if( is_problem_mode( tkn_CFG_long, tkn_CFG_long, pb_CFG_long,
+      "CFG string length upper bound" ) ){}
+    else if( is_problem_mode( tkn_CFG_not_in, tkn_CFG_not_in, pb_CFG_not_in,
+      "CFG nonmembership test" ) ){ unget_token(); }
+    else if( is_problem_mode( tkn_CFG_set, tkn_CFG_set, pb_CFG_set,
+      "CFG set grammar" ) ){ unget_token(); }
+    else if( is_problem_mode( tkn_CFG_set2, tkn_CFG_set2, pb_CFG_set2,
+      "CFG student grammar" ) ){ unget_token(); }
+    else if( is_problem_mode( tkn_CFG_short, tkn_CFG_short, pb_CFG_short,
+      "CFG string length lower bound" ) ){}
+    else if( is_problem_mode( tkn_CFG_start, tkn_CFG_start, pb_CFG_start,
+      "CFG start symbol" ) ){ unget_token(); }
+    else if( is_problem_mode( tkn_CFG_start2, tkn_CFG_start2,
+      pb_CFG_start2, "CFG student start symbol" ) ){ unget_token(); }
+    else if( is_problem_mode( tkn_CFG_tree, tkn_CFG_tree, pb_CFG_tree,
+      "CFG parse tree" ) ){ unget_token(); }
     else if( is_problem_mode( tkn_draw, tkn_Draw, pb_draw_function,
       "Draw function" ) ){ var_f_max = 1; }
     else if( is_problem_mode( tkn_help, tkn_Help, pb_help, 0 ) ){}
@@ -5906,7 +6027,6 @@ int main(){
         /* Parse domain restriction. */
         get_token();
         pm_type pm_now = pm_no_qua;
-        if( ls_ban_comp ){ pm_now |= pm_no_comp; }
         if( pb_mode == pb_arithm || pb_mode == pb_draw_function ){
           dom_expr = parse_predicate( pm_now );
         }else if( pb_mode == pb_equation ){
@@ -5947,13 +6067,60 @@ int main(){
 
       /* Do the actual checking. */
       if( !err_mode ){
-        pm_type pm_now = ls_ban_comp ? pm_no_comp : 0;
         if( pb_mode == pb_arithm ){
-          parse_arithm_relation_chain( pm_now );
+          parse_arithm_relation_chain();
         }else if( pb_mode == pb_array_claim ){
           parse_array_chain();
         }else if( pb_mode == pb_brief_help || pb_mode == pb_help ){
           instructions( pb_mode == pb_help );
+          if( !parse_is_top_tkn() ){ parse_error(); }
+        }else if( pb_mode == pb_CFG_compare ){
+          parse_CFG_compare();
+          if( !err_mode ){ get_token(); }
+          parse_settings();
+          if( !parse_is_top_tkn() ){ parse_error(); }
+        }else if( pb_mode == pb_CFG_in ){
+          parse_CFG_in( true );
+        }else if( pb_mode == pb_CFG_long ){
+          if( parse_is( tkn_semic ) ){ CFG_long = ~0u; }
+          else if( parse_is( tkn_number ) ){
+            CFG_long = tkn_val.to_unsigned();
+          }else{ parse_error(); }
+          if( !err_mode ){ get_token(); }
+          parse_settings();
+          if( !parse_is_top_tkn() ){ parse_error(); }
+        }else if( pb_mode == pb_CFG_not_in ){
+          parse_CFG_in( false );
+          parse_settings();
+        }else if( pb_mode == pb_CFG_set ){
+          CFG_read();
+          if( !err_mode ){ get_token(); }
+          parse_settings();
+          if( !parse_is_top_tkn() ){ parse_error(); }
+        }else if( pb_mode == pb_CFG_set2 ){
+          CFG_read(1);
+          if( !err_mode ){ get_token(); }
+          parse_settings();
+          if( !parse_is_top_tkn() ){ parse_error(); }
+        }else if( pb_mode == pb_CFG_short ){
+          CFG_short = tkn_val.to_unsigned();
+          parse_pass( tkn_number );
+          parse_settings();
+          if( !parse_is_top_tkn() ){ parse_error(); }
+        }else if( pb_mode == pb_CFG_start ){
+          CFG_start_symbol();
+          if( !err_mode ){ get_token(); }
+          parse_settings();
+          if( !parse_is_top_tkn() ){ parse_error(); }
+        }else if( pb_mode == pb_CFG_start2 ){
+          CFG_start_symbol(1);
+          if( !err_mode ){ get_token(); }
+          parse_settings();
+          if( !parse_is_top_tkn() ){ parse_error(); }
+        }else if( pb_mode == pb_CFG_tree ){
+          parse_CFG_tree();
+          if( !err_mode ){ get_token(); }
+          parse_settings();
           if( !parse_is_top_tkn() ){ parse_error(); }
         }else if( pb_mode == pb_draw_function ){
           parse_draw_function_chain();
@@ -5965,17 +6132,15 @@ int main(){
             var_used[ 0 ].value = roots_val[ ii ];
             if( eval_tv( dom_expr ) != tv_T ){ test_fail( err_equ5 ); }
           }
-          if( !err_mode ){
-            parse_logic_chain( pm_now | pm_no_qua | pm_no_new_free );
-          }
+          if( !err_mode ){ parse_logic_chain( pm_no_qua | pm_no_new_free ); }
         }else if( pb_mode == pb_modulo ){
-          parse_logic_chain( pm_now | pm_mod );
+          parse_logic_chain( pm_mod );
         }else if( pb_mode == pb_parse_tree ){
           parse_tree_chain();
         }else if( pb_mode == pb_tree_compare ){
           parse_tree_compare();
         }else if( pb_mode == pb_prop_logic ){
-          parse_logic_chain( pm_now | pm_tv | pm_no_qua );
+          parse_logic_chain( pm_tv | pm_no_qua );
         }else{ mc_err_print( "This feature has not yet been implemented" ); }
       }
 
@@ -5999,25 +6164,35 @@ int main(){
       unsigned old_cnt = err_cnt;
 
       /* Finally banned operators */
-      if( ls_f_ban_der && now_expr && now_expr->has_opr( op_deriv ) ){
-        out_html( "\n<p class=warn>The final expression must not contain the"
-          " derivative operator.\n" );
-        ++err_cnt;
+      if( now_expr ){
+        for( unsigned ii = 0; ii < ls_f_ban_cnt; ++ii ){
+          if( now_expr->has_opr( ls_f_ban_ops[ ii ] ) ){
+            out_html( "\n<p class=warn>The final expression must not contain "
+              );
+            out_op( ls_f_ban_ops[ ii ] ); out_html( ".\n" ); ++err_cnt;
+          }
+        }
       }
 
-      /* Finally required operator */
-      if( ls_f_top_opr != op_err ){
-        if( now_expr->opr() != ls_f_top_opr ){
-          out_html( "\n<p class=warn>The top operator of the final answer"
+      /* Finally required top operator */
+      if( now_expr && ls_f_top_opr != op_err ){
+        op_type opr = now_expr->opr();
+        if( is_sin_like( opr ) && now_expr->left() ){ opr = op_pow; }
+        if(
+          opr != ls_f_top_opr ||
+          ( ls_f_top_var && now_expr->var().name != ls_f_top_var )
+        ){
+          out_html( "\n<p class=warn>The top operator of the final expression"
             " must be " );
-          out_am( op_AM[ ls_f_top_opr ] ); out_html( " .\n" );
+          out_op( ls_f_top_opr, ls_f_top_var ); out_html( ".\n" );
           ++err_cnt;
         }else if(
           ( now_expr->left() && now_expr->left()->has_opr( ls_f_top_opr ) ) ||
           ( now_expr->right() && now_expr->right()->has_opr( ls_f_top_opr ) )
         ){
-          out_html( "\n<p class=warn>The final answer must not contain " );
-          out_am( op_AM[ ls_f_top_opr ] ); out_html( " except on top.\n" );
+          out_html( "\n<p class=warn>The final expression must not contain "
+            );
+          out_op( ls_f_top_opr ); out_html( " except on top.\n" );
           ++err_cnt;
         }
       }
@@ -6041,62 +6216,73 @@ int main(){
         }
       }
 
+      /* Required final form */
+      if( now_expr ){
+        if( ls_f_CNF && !now_expr->is_CNF() ){
+          out_html( "\n<p class=warn>The final expression must be " );
+          print_CNF(); out_html( ".\n" ); ++err_cnt;
+        }
+        if( ls_f_DNF && !now_expr->is_DNF() ){
+          out_html( "\n<p class=warn>The final expression must be " );
+          print_DNF(); out_html( ".\n" ); ++err_cnt;
+        }
+      }
+
       /* Complexity */
       if( err_cnt <= old_cnt && ( ls_f_nodes || ls_b_nodes ) && now_expr ){
         unsigned fc = now_expr->node_cnt();
-        if( !ls_f_nodes || fc <= ls_f_nodes ){
-#ifndef exam
-          if( fc <= ls_b_nodes ){
-            out_html( "\n<p class=assess>The complexity of the final"
-              " expression is " );
-            out_print( fc ); out_print( ", which is so small that you get a"
-              " bonus!\n" );
-            ++points;
-          }else if( ls_b_nodes ){
-            out_html( "\n<p>The complexity of the final expression is " );
-            out_print( fc ); out_print( ", which is accepted.\n" );
-            out_print( "However, if you make it at most " );
-            out_print( ls_b_nodes ); out_print( ", you will get a bonus!\n" );
-          }
-#endif
-        }else if( ls_f_nodes ){
+        if( ls_f_nodes && fc > ls_f_nodes ){
           out_html( "\n<p class=warn>The complexity of the final expression"
             " is " );
           out_print( fc ); out_print( ", while it must be at most " );
           out_print( ls_f_nodes ); out_print( ".\n" );
           ++err_cnt;
+        }else if( !gs_exam && ls_b_nodes && fc <= ls_b_nodes ){
+          out_html( "\n<p class=assess>The complexity of the final expression"
+            " is " );
+          out_print( fc ); out_print( ", which is so small that you get a"
+            " bonus!\n" );
+          ++points;
+        }else if( ls_b_nodes ){
+          out_html( "\n<p>The complexity of the final expression is " );
+          out_print( fc );
+          if( gs_exam ){ out_print( ".\n" ); }
+          else{
+            out_print( ", which is accepted.\n" );
+            out_print( "However, if you make it at most " );
+            out_print( ls_b_nodes ); out_print( ", you will get a bonus!\n" );
+          }
         }
       }
 
       /* Write the disclaimer. */
       if( err_cnt <= old_cnt && pb_mode < pb_MathCheck ){
-#ifdef exam
-        out_html( "\n<p>No syntax errors found.\n" );
-#else
-        ++points;
-        if( !gs_ok_text.empty() ){
-          out_html( "\n<p class=assess>" );
-          out_print( gs_ok_text.c_str() ); out_print( '\n' );
-        }else{
-          out_html( "\n<p>No errors found. " );
-          if( !check_level ){
-            out_print( "MathCheck is convinced that there are no errors.\n" );
-          }else if( check_level == 1 ){
-            out_print( "Please notice that the check was not complete.\n" );
+        if( gs_exam ){ out_html( "\n<p>No syntax errors found.\n" ); }
+        else{
+          ++points;
+          if( !gs_ok_text.empty() ){
+            out_html( "\n<p class=assess>" );
+            out_print( gs_ok_text.c_str() ); out_print( '\n' );
           }else{
-            out_print( "<span class=warn>Warning!" );
-            if( check_level & 4 ){
-              out_print(
-                " Some step looked bad, but MathCheck was unable to check it."
-              );
+            out_html( "\n<p>No errors found. " );
+            if( !check_level ){
+              out_print( "MathCheck is convinced that there are no"
+                " errors.\n" );
+            }else if( check_level == 1 ){
+              out_print( "Please notice that the check was not complete.\n" );
+            }else{
+              out_print( "<span class=warn>Warning!" );
+              if( check_level & 4 ){
+                out_print( " Some step looked bad, but MathCheck was unable"
+                  " to check it." );
+              }
+              if( check_level & 2 ){
+                out_print( " Some step was weakly checked." );
+              }
+              out_print( "</span>\n" );
             }
-            if( check_level & 2 ){
-              out_print( " Some step was weakly checked." );
-            }
-            out_print( "</span>\n" );
           }
         }
-#endif
       }
       if( pb_MathCheck <= pb_mode && pb_mode <= pb_help ){
         pb_mode = pb_arithm;
@@ -6104,12 +6290,13 @@ int main(){
 
     }
 
+    /* Reset chain-local settings. */
+    ls_allow_comp = ls_ban_comp = ls_hide_expr = ls_f_CNF = ls_f_DNF = false;
+    ls_b_nodes = ls_f_nodes = ls_solve = ls_f_top_var = ls_f_ban_cnt = 0;
+    ls_f_top_opr = op_err;
+
     /* Pass the optional end_of_answer token. */
     if( parse_is( tkn_eoa ) ){ get_token(); parse_settings( true ); }
-
-    /* Reset chain-local settings. */
-    ls_ban_comp = ls_f_ban_der = ls_hide_expr = false;
-    ls_b_nodes = ls_f_nodes = ls_solve = 0; ls_f_top_opr = op_err;
 
   }while( tkn_now != tkn_eoi );
 
@@ -6150,10 +6337,10 @@ int main(){
     out_print( char( us / 1000 + '0' ) );
     out_print( " seconds\n" );
   }
-#ifndef exam
-  html_points( points );
-#endif
-#ifndef subhtml
+  if( !gs_exam){ html_points( points ); }
+#ifdef subhtml
+  out_flush();
+#else
   html_record();
   html_end();
 #endif

@@ -1,4 +1,4 @@
-copyright draw_cc( "draw.cc", "Antti Valmari", 20170109 );
+copyright draw_cc( "draw.cc", "Antti Valmari", 20181004 );
 /*
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -24,15 +24,6 @@ typedef unsigned char byte;
 
 /* Helper functions needed when this file is used outside MathCheck */
 #ifndef mathcheck
-
-void mc_err_print( const char *msg0, unsigned u1 = 0, const char *msg1 = 0 ){
-  static unsigned cnt = 0;
-  if( ++cnt > 3 ){ return; }
-  std::cerr << "\nWe are sorry! There apparently is a bug in MathCheck." <<
-    msg0;
-  if( msg1 ){ std::cerr << u1 << msg1; }
-  std::cerr << '\n';
-}
 
 const char b64chars[] =
   "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
@@ -76,6 +67,7 @@ void b64send_str( const char *str ){
 
 
 /*** Drawing buffer ***/
+const char *draw_err = 0;
 namespace draw{
 
   const unsigned x_max_size = 1024, y_max_size = 512;   // maximum size of ...
@@ -95,9 +87,7 @@ namespace draw{
 
   /* Registering a colour. */
   byte draw_colour( unsigned clr ){
-    if( colour_cnt >= colour_max ){
-      mc_err_print( "Too many colours" ); return 0;
-    }
+    if( colour_cnt >= colour_max ){ draw_err = "Too many colours"; return 0; }
     unsigned ii = 3 * colour_cnt;
     colour_map[ ii ] = ( clr >> 16 ) & 0xFF;
     colour_map[ ++ii ] = ( clr >> 8 ) & 0xFF;
@@ -112,6 +102,8 @@ namespace draw{
 
   /* Reset the drawing buffer. */
   void draw_reset_buffer( unsigned x_sz, unsigned y_sz ){
+    if( x_sz > x_max_size ){ draw_err = "The image is too wide"; return; }
+    if( y_sz > y_max_size ){ draw_err = "The image is too tall"; return; }
     x_size = x_sz; y_size = y_sz;
     for( int yy = 0; yy < y_size; ++yy ){
       int ii = yy * x_max_size, kk = ii + x_size;
@@ -604,6 +596,11 @@ copyright draw_font_def_cc( "draw_font_def.cc" );
 namespace draw{
 
 
+  /* A buffer for delivering string parameters. */
+  const unsigned name_max = 12;
+  char name_buff[ name_max + 1 ] = {};
+
+
   /* Produce the img element containing the image as gif. */
   void draw_make_img( const char *alt_name ){
 
@@ -855,11 +852,12 @@ namespace draw{
   ){
 
     /* Ensure that cn is legal. */
-    if( !cn ){ return; }
+    if( !cn ){ draw_err = "There are no curves"; return; }
     if( cn > draw_max_curves ){ cn = draw_max_curves; }
 
     /* Initialize the drawing pad. */
     draw_reset_buffer( nn / 2, height );
+    if( draw_err ){ return; }
 
     /* If required, set the y-range on the basis of the data. */
     if( auto_scale ){
@@ -872,7 +870,7 @@ namespace draw{
       }
 
       /* If there was no data, draw nothing. */
-      if( min_dy == 1/0. ){ return; }
+      if( min_dy == 1/0. ){ draw_err = "There is no data to draw"; return; }
 
       /* Adjust the minimum and maximum for more informative pictures. */
       if( max_dy == min_dy ){
@@ -925,7 +923,6 @@ namespace draw{
 
     /* Data members */
     static const unsigned
-      name_max = 12,  // maximum number of characters in node contents text
       rr = draw_font_height / 2 + 3,  // radius of node circular parts
       x_sep = 10,     // minimum empty horizontal distance between nodes
       y_sep = 40;     // vertical distance between centres of nodes
@@ -1049,6 +1046,15 @@ namespace draw{
       children = new tree_arc( child, children );
     }
 
+    /* Reverse the list of the children of the current node. */
+    void reverse_children(){
+      tree_arc *cd1 = 0, *cd2 = 0;
+      while( children ){
+        cd1 = children; children = children->next; cd1->next = cd2; cd2 = cd1;
+      }
+      children = cd2;
+    }
+
     /* Draw a subtree. */
     void draw_subtree( int xx, int yy ){
       if( low_draw && n_len >= 2 ){
@@ -1110,8 +1116,10 @@ namespace draw{
       /* Draw and delete the tree */
       int dh = ( depth() - 1 ) * y_sep;
       draw_reset_buffer( x_max - x_min + 1, dh + 2*rr + 1 );
-      draw_subtree( -x_min, dh + rr );
-      draw_make_img( alt_name );
+      if( !draw_err ){
+        draw_subtree( -x_min, dh + rr );
+        draw_make_img( alt_name );
+      }
       delete this;
 
     }

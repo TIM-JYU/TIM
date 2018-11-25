@@ -1,5 +1,5 @@
 /* MathCheck input/output and some other utilities
-  Copyright Antti Valmari. */ const unsigned date = 20170824;
+  Copyright Antti Valmari. */ const unsigned date = 20180921;
 /*
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -369,6 +369,12 @@ void inp_get_chr(){
 }
 
 
+/* Skip white space. */
+inline void inp_skip_white_space(){
+  while( inp_chr == ' ' || inp_chr == '\n' ){ inp_get_chr(); }
+}
+
+
 void inp_start(){
 #ifdef cgibin
   inp_ff_read_name();
@@ -406,7 +412,8 @@ unsigned inp_match( const char *strings[], unsigned max ){
   inp_ltr = is_ltr( inp_chr ) ? inp_chr : '\0';
 
   /* Read input and make low...hig narrower as long as possible. */
-  unsigned low = 0, hig = max - 1, best_match = max, best_loc = 0, ii = 0;
+  unsigned
+    low = 0, hig = max - 1, best_match = max, best_loc = inp_byte_now, ii = 0;
   while( true ){
 
     /* Remember the best word match. Reject incomplete letter-digit words. */
@@ -443,7 +450,7 @@ unsigned inp_match( const char *strings[], unsigned max ){
   }
 
   /* Report failure. */
-  return max + 1;
+  inp_revert_to( best_loc ); return max + 1;
 
 }
 
@@ -606,7 +613,7 @@ inline void out_print( unsigned nn ){
 }
 
 inline void out_print( int nn ){
-  if( nn < 0 ){ out_print( '-' ); nn = -nn; }
+  if( nn < 0 ){ out_print( "\xE2\x88\x92" ); nn = -nn; }
   out_print( unsigned( nn ) );  // works also with 0x80000000
 }
 
@@ -679,7 +686,7 @@ void html_begin_begin(
   out_print( "\t</title>\n<link rel=stylesheet type=\"text/css\" href=\t\"" );
   out_print( URL_css ); out_print( "\"\t>\n" );
   if( use_MathJax ){
-    out_print( "<script type=\"text/javascript\" src=\t\"" );
+    out_print( "<script src=\t\"" );
     out_print( URL_mathjax ); out_print( "\"\t>\t</script>\n" );
   }
 }
@@ -791,7 +798,7 @@ void html_copyright( const char *tool_name ){
   out_print( "This is free software, and you are welcome to redistribute it"
     " under certain conditions.\n" );
   out_print( "See the licence for details.\n" );
-  out_print( "Please contact antti.valmari&#64;tut.fi for the source"
+  out_print( "Please contact antti.valmari&#64;jyu.fi for the source"
     " code (and a copy of the licence).\n\n<p>" );
 
   /* Sort the file list. */
@@ -827,7 +834,7 @@ void html_copyright( const char *tool_name ){
 
   /* Print MathJax information. */
   out_print( "\n<p>The program uses <a"
-    " href=\"http://www.mathjax.org\">MathJax &copy; The MathJax"
+    " href=\"https://www.mathjax.org\">MathJax &copy; The MathJax"
     " Consortium</a> for presenting mathematical formulae nicely.\n" );
 
 }
