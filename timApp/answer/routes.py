@@ -166,7 +166,6 @@ def post_answer(plugintype: str, task_id_ext: str):
                 abort(400, f'File was already uploaded: {file}')
 
     # Load old answers
-    current_user_id = get_current_user_id()
 
     if users is None:
         users = [User.query.get(u['id']) for u in get_session_users()]
