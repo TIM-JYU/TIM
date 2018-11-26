@@ -96,7 +96,7 @@ def send_email(
 
     if is_localhost():
         # don't use log_* function because this is typically run in Celery
-        print('Skipping mail send on localhost')
+        print(f'Skipping mail send on localhost, message: {msg}')
         return None
 
     return Thread(target=send_email_impl, args=(app, rcpt, subject, msg, mail_from, reply_to)).start()
