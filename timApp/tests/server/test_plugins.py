@@ -959,3 +959,28 @@ choices:
     def test_timtable_nonexistent_route(self):
         """Calling non-existent timTable route won't result in an infinite request loop."""
         self.get('/timTable/addDatablockColumn', expect_status=404)
+
+    def test_save_teachers_fix(self):
+        self.login_test1()
+        d = self.create_doc(initial_par="""
+``` {#t plugin="mmcq"}
+stem: ""
+choices:
+  -
+    correct: true
+    reason: ""
+    text: ""
+```""")
+        grant_view_access(self.test_user_2.get_personal_group().id, d.id)
+        did = d.id
+        self.login_test2()
+        a = self.post_answer('mmcq', f'{did}.t', [False, False, False])
+        self.login_test1()
+        aid = a['savedNew']
+        self.post_answer('mmcq', f'{did}.t', [False, False, True],
+                         save_teacher=True,
+                         teacher=True,
+                         user_id=self.test_user_2.id,
+                         answer_id=aid)
+        a: Answer = Answer.query.get(aid)
+        self.assertEqual(2, len(a.users_all))
