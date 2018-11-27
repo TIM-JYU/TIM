@@ -16,7 +16,3 @@ export function lazyLoadMany(moduleNames: string[]): Promise<any[]> {
         });
     });
 }
-
-export function lazyLoadTS<T>(moduleName: string, normalizedParentName: string): Promise<T> {
-    return SystemJS.import(moduleName, normalizedParentName);
-}

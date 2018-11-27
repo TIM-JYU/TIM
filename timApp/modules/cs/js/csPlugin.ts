@@ -5,11 +5,10 @@ import {CellInfo} from "sagecell";
 import {IAce, IAceEditor} from "tim/editor/ace-types";
 import {ParCompiler} from "tim/editor/parCompiler";
 import {IPluginAttributes} from "tim/plugin/util";
-import {lazyLoadMany, lazyLoadTS} from "tim/util/lazyLoad";
+import {lazyLoadMany} from "tim/util/lazyLoad";
 import {$compile, $http, $sce, $timeout, $upload, $window} from "tim/util/ngimport";
 import {set} from "tim/util/timHelper";
 import {Binding, fixDefExport, to} from "tim/util/utils";
-import * as csparsons from "./cs-parsons/csparsons";
 
 interface Simcir {
     setupSimcir(element: JQuery, data: {}): void;
@@ -40,6 +39,8 @@ declare class ParsonsWidget {
     init(a: string, b: string): void;
 
     show(): void;
+
+    getFeedback(): unknown;
 }
 
 interface AttrType {
@@ -82,11 +83,13 @@ let taunoNr = 0;
 
 interface IPwd {
     savestate?: string;
-    path: string;
-    attrs?: {path: string};
+    path?: string;
+    attrs?: {path?: string};
 
     setPWD(s: string): void;
 }
+
+type IPwdWithoutSetPWD = Pick<IPwd, "savestate" | "path" | "attrs"> & {setPWD?(s: string): void};
 
 class CWPD {
     pwdHolders: IPwd[] = [];
@@ -103,11 +106,11 @@ class CWPD {
         this.pwdHolders.push(scope);
     }
 
-    isUser(scope: IPwd) {
+    isUser(scope: IPwdWithoutSetPWD) {
         return (scope.path === "user" || (scope.attrs && scope.attrs.path === "user"));
     }
 
-    setPWD(pwd: string, scope: IPwd) {
+    setPWD(pwd: string, scope: IPwdWithoutSetPWD) {
         if (!this.isUser(scope) || !scope.savestate) {
             if (scope.setPWD) {
                 scope.setPWD("/home/agent");
@@ -440,7 +443,8 @@ function makeTemplate() {
         {{$ctrl.taunoOhjeText}}</a></p>
     <p ng-if="$ctrl.taunoOn && !$ctrl.noeditor && $ctrl.isSimcir" class="pluginHide"">
     <a ng-click="$ctrl.copyFromSimcir()">copy from SimCir</a>
-    | <a ng-click="$ctrl.copyToSimcir()">copy to SimCir</a> | <a ng-click="$ctrl.hideTauno()">hide SimCir</a></p>
+    | <a ng-click="$ctrl.copyToSimcir()">copy to SimCir</a> | <a ng-click="$ctrl.hideTauno()">hide SimCir</a>
+    </p>
     </div>
     <div ng-if="$ctrl.upload" class="form-inline small">
         <div class="form-group small"> {{$ctrl.uploadstem}}: <input type="file" ngf-select="$ctrl.onFileSelect($file)">
@@ -451,7 +455,7 @@ function makeTemplate() {
         <div ng-if="$ctrl.uploadresult"><span ng-bind-html="$ctrl.uploadresult"></span></div>
     </div>
     <div ng-show="$ctrl.isAll" style="float: right;">{{$ctrl.languageText}}
-        <select ng-model="$ctrl.selectedLanguage" ng-options="$ctrl.progLanguages" ng-required></select>
+        <select ng-model="$ctrl.selectedLanguage" ng-options="o for o in $ctrl.progLanguages" ng-required></select>
     </div>
     <pre ng-if="$ctrl.viewCode && $ctrl.codeover">{{$ctrl.code}}</pre>
     <div class="csRunCode">
@@ -609,7 +613,7 @@ function countChars(s: string, c: string) {
     return n;
 }
 
-function ifIs(value: string, name: string, def: string | number) {
+function ifIs(value: number | undefined, name: string, def: string | number) {
     if (!value && !def) {
         return "";
     }
@@ -661,7 +665,9 @@ export function withDefault<T extends t.Any>(
  */
 const CsMarkupOptional = t.partial({
     answerLimit: t.number,
+    autoupdate: t.number,
     buttonText: t.string,
+    buttons: t.string,
     by: t.string,
     byCode: t.string,
     file: t.string,
@@ -669,9 +675,10 @@ const CsMarkupOptional = t.partial({
     footer: t.string,
     fullhtml: t.string,
     header: t.string,
-    height: t.string,
+    height: t.number,
     html: t.string,
     indices: t.string,
+    languages: t.string, // not used in any plugin?
     lazy: t.boolean,
     mode: t.string,
     parsonsmaxcheck: t.number,
@@ -688,13 +695,13 @@ const CsMarkupOptional = t.partial({
     uploadbycode: t.boolean,
     uploadstem: t.string,
     variables: t.string,
-    width: t.string,
+    width: t.number,
 });
 
 const CsMarkupDefaults = t.type({
     argsplaceholder: withDefault(t.string, "Write your program args here"),
     argsstem: withDefault(t.string, "Args:"),
-    autoupdate: withDefault(t.boolean, false),
+    autorun: withDefault(t.boolean, false),
     parsonsnotordermatters: withDefault(t.boolean, false),
     blind: withDefault(t.boolean, false),
     button: withDefault(t.string, ""),
@@ -711,8 +718,8 @@ const CsMarkupDefaults = t.type({
     iframeopts: withDefault(t.string, ""),
     indent: withDefault(t.number, -1),
     initSimcir: withDefault(t.string, ""),
-    "style-args": withDefault(t.string, ""),
-    "style-words": withDefault(t.string, ""),
+    "style-args": withDefault(t.string, ""), // TODO get rid of "-"
+    "style-words": withDefault(t.string, ""), // TODO get rid of "-"
     inputplaceholder: withDefault(t.string, "Write your input here"),
     inputrows: withDefault(t.number, 1),
     inputstem: withDefault(t.string, ""),
@@ -736,7 +743,7 @@ const CsMarkupDefaults = t.type({
     showCodeOff: withDefault(t.string, "Hide extra code"),
     showCodeOn: withDefault(t.string, "Show all code"),
     showRuntime: withDefault(t.boolean, false),
-    toggleEditor: withDefault(t.boolean, false),
+    toggleEditor: withDefault(t.union([t.boolean, t.string]), false),
     type: withDefault(t.string, "cs"),
     upload: withDefault(t.boolean, false),
     userargs: withDefault(t.string, ""),
@@ -764,7 +771,7 @@ function getPaths<A>(v: t.Validation<A>): string[] {
 }
 
 class CsBase {
-    protected attrs!: ICsAttributes;
+    public attrs!: Readonly<ICsAttributes>;
 
     constructor(
         protected scope: IScope,
@@ -827,12 +834,9 @@ class CsController extends CsBase implements IController {
     // private file: {};
     private fileError?: string;
     private fileProgress?: number;
-    private fullhtml?: string;
-    private glowscript: boolean = false; // method?
     private gsDefaultLanguage?: string;
     // private height: string;
     private htmlresult: string;
-    private iframe: boolean = false;
     private iframeClientHeight: number;
     private iframeLoadTries: number = 10;
     // private iframeopts: string;
@@ -866,7 +870,6 @@ class CsController extends CsBase implements IController {
     private out?: {write: Function, writeln: Function, canvas: Element};
     private parson?: ParsonsWidget;
     private parsonsId?: Vid;
-    // private plugin?: string; // maybe method
     private postcode?: string;
     private precode?: string;
     private preview!: HTMLElement;
@@ -912,7 +915,7 @@ class CsController extends CsBase implements IController {
     private wavURL: string = "";
     // private width: string;
     // private words: boolean;
-    // private wrap: number;
+    private wrap!: number;
 
     // These are used only in $doCheck to keep track of the old values.
     private dochecks: {
@@ -923,6 +926,8 @@ class CsController extends CsBase implements IController {
 
     // Binding that has all the data as a JSON string.
     private json!: Binding<string, "@">;
+    private editorText: string[] = [];
+    private rows: number = 1;
 
     constructor(scope: IScope, element: IRootElementService) {
         super(scope, element);
@@ -960,18 +965,11 @@ class CsController extends CsBase implements IController {
         return $sce.trustAsHtml(this.htmlresult);
     }
 
-    $onInit() {
-        const parsed = JSON.parse(this.json);
-        const validated = CsMarkup.decode(parsed.markup);
-        if (validated.isLeft()) {
-            console.log(parsed);
-            console.log(getPaths(validated));
-            throw new Error("faillllled");
-        }
-        this.attrs = validated.value;
-        console.log(this.attrs);
-        throw new Error("asdasdasd");
-        const attrs = this.attrs;
+    get english() {
+        return this.attrs.lang === "en";
+    }
+
+    get kind() {
         let kind;
         switch (this.getRootElement().tagName.toLowerCase()) {
             case "cs-runner":
@@ -1018,121 +1016,286 @@ class CsController extends CsBase implements IController {
                 kind = "console";
                 break;
         }
-        set(this, attrs, "lang", "fi");
-        const english = this.lang === "en";
-        this.english = english;
+        return kind;
+    }
 
-        if ((kind === "tauno" || kind === "simcir")) { // Tauno translations
-            let taunoText = "Tauno";
-            if (kind === "simcir") {
-                taunoText = "SimCir";
+    get isSimcir() {
+        return this.kind === "simcir";
+    }
+
+    get isTauno() {
+        return this.kind === "tauno";
+    }
+
+    getTaunoOrSimcir() {
+        if (this.isSimcir) {
+            return "SimCir";
+        } else {
+            return "Tauno";
+        }
+    }
+
+    get hideTaunoText() {
+        return (this.english ? "hide " : "piilota ") + this.getTaunoOrSimcir();
+    }
+
+    get showTaunoText() {
+        return (this.english ? "Click here to show " : "Näytä ") + this.getTaunoOrSimcir();
+    }
+
+    get taunoOhjeText() {
+        return this.english ?
+            'Copy the code you made by Tauno by pressing the link "copy from Tauno". Then press Run button. Note that the running code may have different code than in Tauno!' :
+            'Kopioi Taunolla tekemäsi koodi "kopioi Taunosta"-linkkiä painamalla. Sitten paina Aja-painiketta. Huomaa, että ajossa voi olla eri taulukko kuin Taunossa!';
+    }
+
+    get copyFromTaunoText() {
+        return this.english ? "copy from Tauno" : "kopioi Taunosta";
+    }
+
+    get copyFromSimCirText() {
+        return this.english ? "copy from SimCir" : "kopioi SimCiristä";
+    }
+
+    get copyToSimCirText() {
+        return this.english ? "copy to SimCir" : "kopioi SimCiriin";
+    }
+
+    get type() {
+        return this.attrs.type;
+    }
+
+    get languageText() {
+        return this.english ? "language: " : "kieli: ";
+    }
+
+    get forcedupload() {
+        return this.type === "upload";
+    }
+
+    get upload() {
+        return this.type === "upload" || this.attrs.upload || this.attrs.uploadbycode;
+    }
+
+    get rtype() {
+        return languageTypes.getRunType(this.type, "text");
+    }
+
+    get isSage() {
+        return this.rtype === "sage";
+    }
+
+    get isMathCheck() {
+        return this.rtype === "mathcheck";
+    }
+
+    get nocode() {
+        return this.type === "upload" || this.attrs.nocode;
+    }
+
+    get placeholder() {
+        const tiny = this.type.indexOf("tiny") >= 0;
+        return this.attrs.placeholder || (tiny ? "" : this.english ? "Write your code here" : "Kirjoita koodi tähän:");
+    }
+
+    get inputplaceholder() {
+        return this.attrs.inputplaceholder || (this.english ? "Write your input here" : "Kirjoita syöte tähän");
+    }
+
+    get isText() {
+        const rt = this.rtype;
+        return rt === "text" || rt === "xml" || rt === "css";
+    }
+
+    get argsplaceholder() {
+        return this.attrs.argsplaceholder || (this.isText ? (this.english ? "Write file name here" : "Kirjoita tiedoston nimi tähän") : (this.english ? "Write your program args here" : "Kirjoita ohjelman argumentit tähän"));
+    }
+
+    get argsstem() {
+        return this.attrs.argsstem || (this.isText ? (this.english ? "File name:" : "Tiedoston nimi:") : (this.english ? "Args:" : "Args"));
+    }
+
+    get iframe() {
+        return this.attrs.iframe
+            || languageTypes.isInArray(this.rtype, ["glowscript", "vpython"])
+            || this.isTauno
+            || this.isProcessing
+            || this.type === "wescheme"
+            || this.fullhtml
+            || this.type.indexOf("html") >= 0
+            || this.type.indexOf("/vis") >= 0;
+    }
+
+    get fullhtml() {
+        const r = this.attrs.fullhtml || "";
+        if (!r && this.type.indexOf("html") >= 0 || this.isProcessing) {
+            return "REPLACEBYCODE";
+        }
+        return r;
+    }
+
+    get isProcessing() {
+        return this.type.indexOf("processing") >= 0;
+    }
+
+    get toggleEditor() {
+        return this.attrs.toggleEditor || this.isSimcir;
+    }
+
+    get toggleEditorText() {
+        if (typeof this.toggleEditor === "string" && this.toggleEditor.indexOf("|") >= 0) {
+            return this.toggleEditor.split("|");
+        } else {
+            return this.english ? ["Edit", "Hide"] : ["Muokkaa", "Piilota"];
+        }
+    }
+
+    get minRows() {
+        return getInt(this.attrs.rows);
+    }
+
+    get isAll() {
+        return languageTypes.isAllType(this.type);
+    }
+
+    get glowscript() {
+        return languageTypes.isInArray(this.rtype, ["glowscript", "vpython"]);
+    }
+
+    get isRun() {
+        return ((languageTypes.getRunType(this.type, "") !== "" || this.isAll) && this.attrs.norun === false)
+            || (this.type.indexOf("text") >= 0 || this.isSimcir || this.attrs.justSave)
+            || this.attrs.button; // or this.buttonText?
+    }
+
+    get buttonText() {
+        if (this.attrs.button) {
+            return this.attrs.button;
+        }
+        if (this.type.indexOf("text") >= 0 || this.isSimcir || this.attrs.justSave) {
+            return this.english ? "Save" : "Tallenna";
+        }
+        return this.english ? "Run" : "Aja";
+    }
+
+    get isTest() {
+        return languageTypes.getTestType(this.type, this.selectedLanguage, "") !== "";
+    }
+
+    get isUnitTest() {
+        return languageTypes.getUnitTestType(this.type, this.selectedLanguage, "") !== "";
+    }
+
+    get isDocument() {
+        return this.type.indexOf("doc") >= 0;
+    }
+
+    get showInput() {
+        return this.type.indexOf("input") >= 0;
+    }
+
+    get showArgs() {
+        return this.type.indexOf("args") >= 0;
+    }
+
+    get uploadstem() {
+        return this.attrs.uploadstem || (this.english ? "Upload image/file" : "Lataa kuva/tiedosto");
+    }
+
+    get file() {
+        return this.attrs.file;
+    }
+
+    get showCodeOn() {
+        return this.attrs.showCodeOn || (this.english ? "Show all code" : "Näytä koko koodi");
+    }
+
+    get showCodeOff() {
+        return this.attrs.showCodeOff || (this.english ? "Hide extra code" : "Piilota muu koodi");
+    }
+
+    get resetText() {
+        return this.attrs.resetText || (this.english ? "Reset" : "Alusta");
+    }
+
+    get editorModes() {
+        return this.attrs.editorModes.toString();
+    }
+
+    get buttons() {
+        let b = this.attrs.buttons;
+        if (b) {
+            const helloButtons = "public \nclass \nHello \n\\n\n{\n}\n" +
+                "static \nvoid \n Main\n(\n)\n" +
+                '        Console.WriteLine(\n"\nworld!\n;\n ';
+            const typeButtons = "bool \nchar\n int \ndouble \nstring \nStringBuilder \nPhysicsObject \n[] \nreturn \n, ";
+            const charButtons = "a\nb\nc\nd\ne\ni\nj\n.\n0\n1\n2\n3\n4\n5\nfalse\ntrue\nnull\n=";
+            b = b.replace("$hellobuttons$", helloButtons);
+            b = b.replace("$typebuttons$", typeButtons);
+            b = b.replace("$charbuttons$", charButtons);
+            b = b.trim();
+            b = b.replace("$space$", " ");
+            return b.split("\n");
+        }
+    }
+
+    get progLanguages() {
+        if (this.isAll) {
+            const langs = this.attrs.languages;
+            if (langs) {
+                return langs.split(/[\n;\/]/);
+            } else {
+                return languageTypes.runTypes;
             }
-            this.hideTaunoText = (english ? "hide " : "piilota ") + taunoText;
-            this.showTaunoText = (english ? "Click here to show " : "Näytä ") + taunoText;
-            this.taunoOhjeText = english ?
-                'Copy the code you made by Tauno by pressing the link "copy from Tauno". Then press Run button. Note that the running code may have different code than in Tauno!' :
-                'Kopioi Taunolla tekemäsi koodi "kopioi Taunosta"-linkkiä painamalla. Sitten paina Aja-painiketta. Huomaa, että ajossa voi olla eri taulukko kuin Taunossa!';
-            this.copyFromTaunoText = english ? "copy from Tauno" : "kopioi Taunosta";
-            this.copyFromSimCirText = english ? "copy from SimCir" : "kopioi SimCiristä";
-            this.copyToSimCirText = english ? "copy to SimCir" : "kopioi SimCiriin";
         }
+    }
 
-        this.languageText = english ? "language: " : "kieli: ";
+    get cssPrint() {
+        return this.attrs.cssPrint;
+    }
 
-        set(this, attrs, "type", "cs");
-        const rt = languageTypes.getRunType(this.type, "text");
-        let iupload = false;
-        let inoeditor = false;
-        let inocode = false;
-        if (this.type === "upload") {
-            iupload = true;
-            inoeditor = true;
-            inocode = true;
-            this.forcedupload = true;
+    get mode() {
+        return languageTypes.getAceModeType(this.type, this.attrs.mode || "");
+    }
+
+    get iframeopts() {
+        return this.attrs.iframeopts;
+    }
+
+    get nosave() {
+        return this.attrs.nosave;
+    }
+
+    get path() {
+        return this.attrs.path;
+    }
+
+    $onInit() {
+        const parsed = JSON.parse(this.json);
+        const validated = CsMarkup.decode(parsed.markup);
+        if (validated.isLeft()) {
+            console.log(parsed);
+            console.log(getPaths(validated));
+            throw new Error("faillllled");
         }
-
-        this.isText = rt === "text" || rt === "xml" || rt === "css";
-        this.rtype = rt;
-        this.isSage = rt === "sage";
-        this.isMathCheck = rt === "mathcheck";
-        this.isSimcir = kind === "simcir";
-        this.tiny = this.type.indexOf("tiny") >= 0;
+        this.attrs = validated.value;
+        console.log(this.attrs);
+        throw new Error("asdasdasd");
+        const rt = this.rtype;
+        const isText = this.isText;
         const isArgs = this.type.indexOf("args") >= 0;
 
-        set(this, attrs, "file");
-        set(this, attrs, "viewCode", false);
-        set(this, attrs, "filename");
-        set(this, attrs, "nosave", false);
-        set(this, attrs, "upload", iupload);
-        if (this.attrs.uploadbycode) {
-            this.upload = true;
-        }
-        set(this, attrs, "uploadstem");
-        set(this, attrs, "nocode", inocode);
-        set(this, attrs, "lang");
-        set(this, attrs, "width");
-        set(this, attrs, "height");
-        set(this, attrs, "table");
-        set(this, attrs, "variables");
-        set(this, attrs, "indices");
-        set(this, attrs, "replace");
-        set(this, attrs, "taunotype");
-        set(this, attrs, "stem");
-        set(this, attrs, "iframe", false);
-        if (languageTypes.isInArray(rt, ["glowscript", "vpython"])) {
-            this.glowscript = true;
-            this.iframe = true;
-        }
-        set(this, attrs, "codeunder", false);
-        set(this, attrs, "codeover", false);
-        set(this, attrs, "open", false);
-        set(this, attrs, "rows", 1);
-        set(this, attrs, "cols", 10);
-        set(this, attrs, "maxrows", 100);
-        set(this, attrs, "cssPrint", false); // For changing code editors to pre-defined paragraphs.
-        set(this, attrs, "attrs.bycode");
-        set(this, attrs, "placeholder", this.tiny ? "" : english ? "Write your code here" : "Kirjoita koodi tähän:");
-        set(this, attrs, "inputplaceholder", english ? "Write your input here" : "Kirjoita syöte tähän");
-        set(this, attrs, "argsplaceholder", this.isText ? (english ? "Write file name here" : "Kirjoita tiedoston nimi tähän") : (english ? "Write your program args here" : "Kirjoita ohjelman argumentit tähän"));
-        set(this, attrs, "argsstem", this.isText ? (english ? "File name:" : "Tiedoston nimi:") : (english ? "Args:" : "Args"));
-        set(this, attrs, "userinput", "");
-        set(this, attrs, "userargs", this.isText && isArgs ? this.filename : "");
-        set(this, attrs, "selectedLanguage", rt);
-        set(this, attrs, "inputstem", "");
-        set(this, attrs, "inputrows", 1);
-        set(this, attrs, "toggleEditor", this.isSimcir ? "True" : false);
-        set(this, attrs, "indent", -1);
-        set(this, attrs, "user_id");
-        set(this, attrs, "isHtml", false);
-        set(this, attrs, "autoupdate", false);
-        set(this, attrs, "canvasWidth", 700);
-        set(this, attrs, "canvasHeight", 300);
-        set(this, attrs, "button", "");
-        set(this, attrs, "noeditor", this.isSimcir ? "True" : inoeditor);
-        set(this, attrs, "norun", false);
-        set(this, attrs, "normal", english ? "Normal" : "Tavallinen");
-        set(this, attrs, "highlight", "Highlight");
-        set(this, attrs, "parsons", "Parsons");
-        set(this, attrs, "jsparsons", "JS-Parsons");
-        set(this, attrs, "editorMode", -1);
-        set(this, attrs, "showCodeOn", english ? "Show all code" : "Näytä koko koodi");
-        set(this, attrs, "showCodeOff", english ? "Hide extra code" : "Piilota muu koodi");
-        set(this, attrs, "resetText", english ? "Reset" : "Alusta");
-        set(this, attrs, "blind", false);
-        set(this, attrs, "words", false);
-        set(this, attrs, "editorModes", "01");
-        set(this, attrs, "justSave", false);
-        set(this, attrs, "validityCheck", "");
-        set(this, attrs, "validityCheckMessage", "");
-        set(this, attrs, "savestate");
-        set(this, attrs, "mode");
-        set(this, attrs, "iframeopts", "");
-        set(this, attrs, "noConsoleClear", false);
-        set(this, attrs, "showRuntime", false);
-        set(this, attrs, "wrap", this.isText ? 70 : -1);
-        set(this, attrs, "usercode", "");
-        this.editorMode = parseInt(this.editorMode);
-        this.editorText = [this.normal, this.highlight, this.parsons, this.jsparsons];
+        this.userinput = this.attrs.userinput;
+        this.userargs = this.attrs.userargs || (isText && isArgs ? this.attrs.filename || "" : "");
+        this.selectedLanguage = this.attrs.selectedLanguage || rt;
+        this.noeditor = this.isSimcir || (this.type === "upload");
+        this.wrap = this.attrs.wrap || (isText ? 70 : -1);
+        this.editorText = [
+            this.attrs.normal || this.english ? "Normal" : "Tavallinen",
+            this.attrs.highlight,
+            this.attrs.parsons,
+            this.attrs.jsparsons,
+        ];
         for (const c of this.editorModes) {
             this.editorModeIndecies.push(parseInt(c));
         }
@@ -1142,22 +1305,15 @@ class CsController extends CsBase implements IController {
         }
         this.checkEditorModeLocalStorage();
 
-        this.showCodeLink = this.showCodeOn;
-        this.minRows = getInt(this.attrs.rows);
         this.maxRows = getInt(this.attrs.maxrows);
-
-        this.toggleEditorText = [english ? "Edit" : "Muokkaa", english ? "Hide" : "Piilota"];
-
-        if (this.toggleEditor && this.toggleEditor !== "True") {
-            this.toggleEditorText = this.toggleEditor.split("|");
-        }
+        this.rows = this.minRows;
 
         if (this.usercode === "" && this.getByCode()) {
             this.usercode = this.getByCode();
             this.initUserCode = true;
         }
         this.usercode = commentTrim(this.usercode);
-        if (this.blind) {
+        if (this.attrs.blind) {
             this.usercode = this.usercode.replace(/@author.*/, "@author XXXX");
         }
 
@@ -1170,27 +1326,6 @@ class CsController extends CsBase implements IController {
             this.maxRows = 10;
         }
 
-        this.isAll = languageTypes.isAllType(this.type);
-        this.isRun = (languageTypes.getRunType(this.type, false) !== false || this.isAll) && this.norun === false;
-        this.isTest = languageTypes.getTestType(this.type, this.selectedLanguage, false) !== false;
-        this.isUnitTest = languageTypes.getUnitTestType(this.type, this.selectedLanguage, false) !== false;
-        this.isDocument = (this.type.indexOf("doc") >= 0);
-
-        this.showInput = (this.type.indexOf("input") >= 0);
-        this.showArgs = (this.type.indexOf("args") >= 0);
-        if (!this.uploadstem) {
-            this.uploadstem = english ? "Upload image/file" : "Lataa kuva/tiedosto";
-        }
-        this.buttonText = english ? "Run" : "Aja";
-        if (this.type.indexOf("text") >= 0 || this.isSimcir || this.justSave) {
-            this.isRun = true;
-            this.buttonText = english ? "Save" : "Tallenna";
-        }
-        if (this.button) {
-            this.isRun = true;
-            this.buttonText = this.button;
-        }
-
         if (this.indent < 0) {
             if (this.file) {
                 this.indent = 8;
@@ -1199,34 +1334,10 @@ class CsController extends CsBase implements IController {
             }
         }
 
-        if (this.open) {
+        if (this.attrs.open) {
+            const kind = this.kind;
             if (kind === "tauno" || kind === "simcir") {
                 this.showTauno();
-            }
-            // if (kind === 'wescheme') scope.showWeScheme();
-        }
-
-        let b = attrs.buttons || this.attrs.buttons;
-        if (b) {
-            const helloButtons = "public \nclass \nHello \n\\n\n{\n}\n" +
-                "static \nvoid \n Main\n(\n)\n" +
-                '        Console.WriteLine(\n"\nworld!\n;\n ';
-            const typeButtons = "bool \nchar\n int \ndouble \nstring \nStringBuilder \nPhysicsObject \n[] \nreturn \n, ";
-            const charButtons = "a\nb\nc\nd\ne\ni\nj\n.\n0\n1\n2\n3\n4\n5\nfalse\ntrue\nnull\n=";
-            b = b.replace("$hellobuttons$", helloButtons);
-            b = b.replace("$typebuttons$", typeButtons);
-            b = b.replace("$charbuttons$", charButtons);
-            b = b.trim();
-            b = b.replace("$space$", " ");
-            this.buttons = b.split("\n");
-        }
-
-        if (this.isAll) {
-            const langs = attrs.languages || this.attrs.languages;
-            if (langs) {
-                this.progLanguages = langs.split(/[\n;\/]/);
-            } else {
-                this.progLanguages = languageTypes.runTypes;
             }
         }
 
@@ -1236,9 +1347,7 @@ class CsController extends CsBase implements IController {
         if (this.editorMode !== 0 || this.editorModes !== "01" || this.cssPrint) {
             this.showOtherEditor(this.editorMode);
         } // Forces code editor to change to pre
-        this.mode = languageTypes.getAceModeType(this.type, this.mode);
 
-        this.changeCodeLink();
         this.processPluginMath();
 
         csLogTime(this.getTaskId() || "taskId missing");
@@ -1250,7 +1359,7 @@ class CsController extends CsBase implements IController {
         this.taunoElem = this.element.find("taunoContainer")[0] as HTMLElement;
         this.edit = this.element.find("textarea")[0] as HTMLTextAreaElement;
         this.preview = this.element.find(".csrunPreview")[0];
-        const styleArgs = getParam(this, "style-args", "");
+        const styleArgs = this.attrs["style-args"];
         if (styleArgs) {
             const argsEdit = this.getRootElement().getElementsByClassName("csArgsArea");
             if (argsEdit.length > 0) {
@@ -1258,7 +1367,7 @@ class CsController extends CsBase implements IController {
             }
         }
         this.initEditorKeyBindings();
-        $(this.getRootElement()).bind("keydown", (event) => {
+        this.element.bind("keydown", (event) => {
             if (event.ctrlKey || event.metaKey) {
                 switch (String.fromCharCode(event.which).toLowerCase()) {
                     case "s":
@@ -1328,8 +1437,8 @@ class CsController extends CsBase implements IController {
             const currUsercode = this.usercode;
             const currUserargs = this.userargs;
             const currUserinput = this.userinput;
-            if (this.runned && this.autoupdate) {
-                await $timeout(this.autoupdate);
+            if (this.runned && this.attrs.autoupdate) {
+                await $timeout(this.attrs.autoupdate);
                 if (currUsercode === this.usercode &&
                     currUserargs === this.userargs &&
                     currUserinput === this.userinput) {
@@ -1468,7 +1577,7 @@ class CsController extends CsBase implements IController {
                     this.edit.selectionEnd = start;
                 });
             }
-            if (this.editorIndex === 1) { // ACE
+            if (this.editorIndex === 1 && this.aceEditor) {
                 const editor = this.aceEditor;
                 let cursor = editor.selection.getCursor();
                 const index = editor.session.doc.positionToIndex(cursor, 0);
@@ -1585,7 +1694,7 @@ class CsController extends CsBase implements IController {
         }
 
         this.checkIndent();
-        if (!this.autoupdate) {
+        if (!this.attrs.autoupdate) {
             this.tinyErrorStyle = {};
             this.error = "... running ...";
             this.runError = true;
@@ -1595,7 +1704,7 @@ class CsController extends CsBase implements IController {
         this.imgURL = "";
         this.wavURL = "";
         this.runSuccess = false;
-        if (!(languageTypes.isInArray(runType, csJSTypes) || this.noConsoleClear)) {
+        if (!(languageTypes.isInArray(runType, csJSTypes) || this.attrs.noConsoleClear)) {
             this.result = "";
         }
         this.runTestGreen = false;
@@ -1619,13 +1728,13 @@ class CsController extends CsBase implements IController {
         if (this.userargs) {
             uargs = this.userargs;
         }
-        if (this.validityCheck) {
-            const re = new RegExp(this.validityCheck);
+        if (this.attrs.validityCheck) {
+            const re = new RegExp(this.attrs.validityCheck);
             if (!ucode.match(re)) {
                 this.tinyErrorStyle = {color: "red"};
-                let msg = this.validityCheckMessage;
+                let msg = this.attrs.validityCheckMessage;
                 if (!msg) {
-                    msg = "Did not match to " + this.validityCheck;
+                    msg = "Did not match to " + this.attrs.validityCheck;
                 }
                 this.error = msg;
                 this.isRunning = false;
@@ -1712,26 +1821,27 @@ class CsController extends CsBase implements IController {
 
             const docURL = data.web.docurl;
 
+            const err = data.web.console || "";
             if (docURL) {
                 this.docURL = docURL;
-                this.error = data.web.console.trim();
+                this.error = err.trim();
             }
 
             if (wavURL) {
                 // <video src="https://tim.jyu.fi/csgenerated/vesal/sinewave.wav" type="video/mp4" controls="" autoplay="true" ></video>
                 this.wavURL = wavURL;
-                this.result = data.web.console.trim();
+                this.result = err.trim();
             }
 
             if (imgURL) {
                 this.imgURL = imgURL + this.imgURL;
-                this.result = data.web.console.trim();
+                this.result = err.trim();
             } else {
                 if (this.runSuccess) {
-                    if (this.isHtml) {
-                        this.htmlresult = removeXML(data.web.console || "") + this.htmlresult;
+                    if (this.attrs.isHtml) {
+                        this.htmlresult = removeXML(err) + this.htmlresult;
                     } else if (!languageTypes.isInArray(runType, csJSTypes)) {
-                        this.result = data.web.console;
+                        this.result = err;
                     } else {
                         this.error = data.web.error;
                     }
@@ -1859,13 +1969,13 @@ class CsController extends CsBase implements IController {
         if (!dh) {
             dh = 500;
         }
-        const w = ifIs(this.width, "width", dw);
-        const h = ifIs(this.height, "height", dh);
+        const w = ifIs(this.attrs.width, "width", dw);
+        const h = ifIs(this.attrs.height, "height", dh);
         return {vid: vid, w: w, h: h};
     }
 
     async setCircuitData() {
-        let data: {width: any, height: any};
+        let data: {width: number, height: number} = {width: 0, height: 0};
         this.runError = false;
         try {
             if (this.usercode) {
@@ -1876,18 +1986,18 @@ class CsController extends CsBase implements IController {
             this.runError = true;
         }
         try {
-            const initstr = getParam(this, "initSimcir", "") as string;
+            const initstr = this.attrs.initSimcir;
             if (initstr) {
                 const initdata = JSON.parse(initstr);
-                $.extend(data, initdata);
+                data = {...data, ...initdata};
             }
         } catch (err) {
             this.error = err.message;
             this.runError = true;
         }
 
-        data.width = getParam(this, "width", 800);
-        data.height = getParam(this, "height", 400);
+        data.width = this.attrs.width || 800;
+        data.height = this.attrs.height || 400;
         this.simcir.children().remove();
         const simcir = await loadSimcir();
         simcir.setupSimcir(this.simcir, data);
@@ -1947,13 +2057,6 @@ class CsController extends CsBase implements IController {
         if (this.isSimcir) {
             return this.showSimcir();
         }
-        /*
-        csApp.taunoNr++;
-        var vid = 'tauno'+csApp.taunoNr;
-        $scope.taunoId = vid;
-        var w = csApp.ifIs($scope.width,"width",800);
-        var h = csApp.ifIs($scope.height,"height",500);
-        */
         const v = this.getVid();
         let p = "";
         let tt = "/cs/tauno/index.html?lang=" + this.lang + "&";
@@ -1974,11 +2077,9 @@ class CsController extends CsBase implements IController {
         p += doVariables(this.indices, "i");
 
         taunoUrl = taunoUrl + p;
-        this.iframe = true;
         if (this.iframe) {
             this.taunoElem.innerHTML =
-                // '<p class="pluginHide"" ><a ng-click="hideTauno()">hide Tauno</a></p>' + // ng-click ei toimi..
-                '<iframe id="' + v.vid + '" class="showTauno" src="' + taunoUrl + '" ' + v.w + v.h + " " + this.iframeopts + " ></iframe>";
+                `<iframe id="${v.vid}" class="showTauno" src="${taunoUrl}" ${v.w}${v.h} ${this.iframeopts} ></iframe>`;
         } else {
             this.taunoElem.innerHTML = '<div class="taunoNaytto" id="' + v.vid + '" />';
         }
@@ -1997,7 +2098,6 @@ class CsController extends CsBase implements IController {
         const tt = "/csstatic/WeScheme/WeSchemeEditor.html";
         const weSchemeUrl = tt;
         const s = this.table;
-        this.iframe = true;
         if (this.iframe) {
             this.taunoElem.innerHTML =
                 '<iframe id="' + v.vid + '" class="showWeScheme" src="' + weSchemeUrl + '" ' + v.w + v.h + " " + this.iframeopts + " ></iframe>";
@@ -2101,18 +2201,16 @@ class CsController extends CsBase implements IController {
         this.showCodeNow();
     }
 
-    changeCodeLink() {
+    get showCodeLink() {
         if (this.viewCode) {
-            this.showCodeLink = this.showCodeOff;
+            return this.showCodeOff;
         } else {
-            this.showCodeLink = this.showCodeOn;
+            return this.showCodeOn;
         }
-
     }
 
     showCode() {
         this.viewCode = !this.viewCode;
-        this.changeCodeLink();
         this.localcode = undefined;
         this.showCodeNow();
     }
@@ -2164,19 +2262,23 @@ class CsController extends CsBase implements IController {
     }
 
     getReplacedCode() {
-        // $scope.code = $scope.localcode;
         if (!this.attrs.program) {
             this.code = this.usercode;
             return this.code;
         }
         const st = this.attrs.program.split("\n");
+        [this.code] = this.maybeReplace(st);
+        return this.code;
+    }
+
+    private maybeReplace(st: string[]): [string, string, string] {
         let r = "";
         const rp = ["", ""]; // alkuosa, loppuosa
         let step = 0;
         let nl = "";
         let nls = "";
-        const needReplace = !!this.replace;
-        const regexp = new RegExp(this.replace);
+        const needReplace = !!this.attrs.replace;
+        const regexp = new RegExp(this.attrs.replace || "");
         for (const s of st) {
             // if ( s.indexOf($scope.replace) >= 0 ) {
             if (needReplace && regexp.test(s)) {
@@ -2192,8 +2294,7 @@ class CsController extends CsBase implements IController {
             }
             nl = nls = "\n";
         }
-        this.code = r;
-        return this.code;
+        return [r, rp[0], rp[1]];
     }
 
     getCodeFromLocalCode(f?: () => void) {
@@ -2208,31 +2309,7 @@ class CsController extends CsBase implements IController {
             return;
         }
         const st = this.localcode.split("\n");
-        let r = "";
-        const rp = ["", ""]; // alkuosa, loppuosa
-        let step = 0;
-        let nl = "";
-        let nls = "";
-        const needReplace = !!this.replace;
-        const regexp = new RegExp(this.replace);
-        for (const s of st) {
-            // if ( s.indexOf($scope.replace) >= 0 ) {
-            if (needReplace && regexp.test(s)) {
-                r += nl + this.usercode;
-                if (step === 0) {
-                    step++;
-                    nls = "";
-                    continue;
-                }
-            } else {
-                r += nl + s;
-                rp[step] += nls + s;
-            }
-            nl = nls = "\n";
-        }
-        this.code = r;
-        this.precode = rp[0];
-        this.postcode = rp[1];
+        [this.code, this.precode, this.postcode] = this.maybeReplace(st);
         if (f) {
             f();
         }
@@ -2368,7 +2445,7 @@ class CsController extends CsBase implements IController {
         }
         let classes = "csrunEditorDiv sortable-code";
         let canIndent = true;
-        if (this.words) {
+        if (this.attrs.words) {
             classes += " jssortable-words";
             canIndent = false;
         }
@@ -2395,18 +2472,17 @@ class CsController extends CsBase implements IController {
     }
 
     async showCsParsons(sortable: Element) {
-        const csp = await lazyLoadTS<typeof csparsons>("./cs-parsons/csparsons.js", __moduleName);
+        const csp = await import("./cs-parsons/csparsons");
         const parson = new csp.CsParsonsWidget({
             sortable: sortable,
-            words: this.words,
+            words: this.attrs.words,
             minWidth: "40px",
             shuffle: this.initUserCode,
-            styleWords: getParam(this, "style-words", "") as string,
-            maxcheck: getParam(this, "parsonsmaxcheck", "") as number,
-            notordermatters: getParam(this, "parsonsnotordermatters", false) as boolean,
+            styleWords: this.attrs["style-words"],
+            maxcheck: this.attrs.parsonsmaxcheck,
+            notordermatters: this.attrs.parsonsnotordermatters,
             onChange: (p) => {
-                const s = p.join("\n");
-                this.usercode = s;
+                this.usercode = p.join("\n");
             },
         });
         parson.init(this.getByCode(), this.usercode);
@@ -2469,7 +2545,7 @@ class CsController extends CsBase implements IController {
             this.usercode = this.getJsParsonsCode();
         }
 
-        this.parson = null;
+        this.parson = undefined;
         this.csparson = null;
 
         const editorHtml = '<textarea class="csRunArea csrunEditorDiv" ng-hide="noeditor" rows={{rows}} ng-model="usercode" ng-trim="false" placeholder="{{placeholder}}"></textarea>';
@@ -2500,7 +2576,6 @@ class CsController extends CsBase implements IController {
             html = [editorHtml, aceHtml, parsonsHtml, parsonsHtml];
         }
 
-        this.mode = languageTypes.getAceModeType(this.type, this.mode);
         if (editorMode != undefined) {
             this.editorMode = editorMode;
         } else {
@@ -2617,12 +2692,10 @@ class CsController extends CsBase implements IController {
     async showJS() {
         let isProcessing = false;
         if (this.type.indexOf("processing") >= 0) {
-            this.iframe = true;
             isProcessing = true;
         }
         let wescheme = false;
         if (this.type === "wescheme") {
-            this.iframe = true;
             wescheme = true;
         }
 
@@ -2636,19 +2709,7 @@ class CsController extends CsBase implements IController {
         if (!this.canvas) { // create a canvas on first time
             let html = "";
             let scripts = "";
-            this.fullhtml = (this.attrs.fullhtml || "");
-            if (this.fullhtml) {
-                this.iframe = true;
-            }  // fullhtml always to iframe
-            if (this.type.indexOf("html") >= 0) {
-                this.iframe = true; // html always iframe
-                if (!this.fullhtml) {
-                    this.fullhtml = "REPLACEBYCODE";
-                }
-
-            }  // html always to iframe
             if (this.type.indexOf("/vis") >= 0) {
-                this.iframe = true;  // visjs always to iframe
                 html = '<div id="myDiv" class="mydiv" width="800" height="400" ></div>';
                 scripts = "https://cdnjs.cloudflare.com/ajax/libs/vis/4.20.0/vis.min.js";
             }
@@ -2669,9 +2730,6 @@ class CsController extends CsBase implements IController {
                 }
                 if (isProcessing) {
                     fsrc = "/cs/gethtml/processing.html";
-                    if (!this.fullhtml) {
-                        this.fullhtml = "REPLACEBYCODE";
-                    }
                 }
                 const v = this.getVid(dw, dh);
                 this.irrotaKiinnita = this.english ? "Release" : "Irrota";
