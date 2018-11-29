@@ -1091,7 +1091,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 userargs = ''
 
 
-            is_doc = get_json_param3(query.jso, "input", "markup", "document", False)
+            is_doc = get_json_param(query.jso, "input", "document", False)
 
             extra_files = get_json_param(query.jso, "markup", "extrafiles", None)
             if not extra_files:

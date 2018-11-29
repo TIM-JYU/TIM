@@ -36,10 +36,10 @@ def check_key(query, key):
         return key2
     if not query.jso:
         return key
-    if "input" in query.jso and "markup" in query.jso["input"]:
-        if key in query.jso["input"]["markup"]:
+    if "input" in query.jso:
+        if key in query.jso["input"]:
             return key
-        if key2 in query.jso["input"]["markup"]:
+        if key2 in query.jso["input"]:
             return key2
     if "markup" not in query.jso:
         return key
@@ -67,8 +67,8 @@ def get_param(query, key, default):
     if key not in query.get_query:
         if query.jso is None:
             return dvalue
-        if "input" in query.jso and "markup" in query.jso["input"] and key in query.jso["input"]["markup"]:
-            value = query.jso["input"]["markup"][key]
+        if "input" in query.jso and key in query.jso["input"]:
+            value = query.jso["input"][key]
             if value != 'undefined':
                 return value
 
@@ -164,28 +164,6 @@ def get_json_param(jso, key1, key2, default):
     except:
         # print("JSO XXXXXXXXXXXXX", jso)
         print("KEY1=", key1, "KEY2=", key2)
-        return default
-
-
-def get_json_param3(jso, key1, key2, key3, default):
-    # noinspection PyBroadException
-    try:
-        if jso is None:
-            return default
-        if key1 not in jso:
-            return default
-        if not key2:
-            return jso[key1]
-        if not jso[key1]:
-            return default
-        if key2 not in jso[key1]:
-            return default
-        if key3 not in jso[key1][key2]:
-            return default
-        return jso[key1][key2][key3]
-    except:
-        # print("JSO XXXXXXXXXXXXX", jso)
-        print("KEY1=", key1, "KEY2=", key2, "KEY3=", key3)
         return default
 
 
