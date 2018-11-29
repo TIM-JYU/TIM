@@ -15,6 +15,7 @@ from sqlalchemy.sql.ddl import CreateTable
 from timApp.answer.answer import Answer
 from timApp.answer.answer_models import AnswerTag, AnswerUpload, UserAnswer
 from timApp.auth.auth_models import AccessType, BlockAccess
+from timApp.item.blockrelevance import BlockRelevance
 from timApp.document.docentry import DocEntry
 from timApp.document.timjsonencoder import TimJsonEncoder
 from timApp.document.translation.translation import Translation
@@ -78,6 +79,7 @@ reg_models(
     Block,
     BlockAccess,
     BlockAssociation,
+    BlockRelevance,
     CommentNotification,
     ConsentChange,
     DocEntry,
