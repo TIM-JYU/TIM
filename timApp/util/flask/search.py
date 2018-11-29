@@ -38,6 +38,7 @@ PREVIEW_MAX_LENGTH = 160
 PROCESSED_CONTENT_FILE_NAME = "content_all_processed.log"
 PROCESSED_TITLE_FILE_NAME = "titles_all_processed.log"
 RAW_CONTENT_FILE_NAME = "all.log"
+DEFAULT_RELEVANCE = 10
 
 
 @search_routes.route('getFolders')
@@ -383,6 +384,20 @@ def add_doc_info_title_line(doc_id: int) -> Union[str, None]:
                       ensure_ascii=False) + '\n'
 
 
+def get_doc_relevance(doc_info):
+    """
+    Returns document relevance or default value, if relevance hasn't been set.
+    :param doc_info: Document.
+    :return: Relevance value.
+    """
+    try:
+        if doc_info.relevance:
+            return doc_info.relevance
+    except:
+        pass
+    return DEFAULT_RELEVANCE
+
+
 def add_doc_info_content_line(doc_id: int, par_data, remove_deleted_pars: bool = True, add_title: bool = False) \
         -> Union[str, None]:
     """
@@ -401,6 +416,9 @@ def add_doc_info_content_line(doc_id: int, par_data, remove_deleted_pars: bool =
         if not doc_info:
             return None
     par_json_list = []
+
+    doc_relevance = get_doc_relevance(doc_info)
+
     for par in par_data:
         par_dict = json.loads(f"{{{par}}}")
         par_id = par_dict['id']
@@ -416,9 +434,11 @@ def add_doc_info_content_line(doc_id: int, par_data, remove_deleted_pars: bool =
         if not doc_info:
             doc_info = DocEntry.find_by_id(doc_id)
         doc_title = doc_info.title
-        return json.dumps({'doc_id': doc_id, 'doc_title': doc_title, 'pars': par_json_list}, ensure_ascii=False) + '\n'
+        return json.dumps({'doc_id': doc_id, 'doc_relevance': doc_relevance,
+                           'doc_title': doc_title, 'pars': par_json_list}, ensure_ascii=False) + '\n'
     else:
-        return json.dumps({'doc_id': doc_id, 'pars': par_json_list}, ensure_ascii=False) + '\n'
+        return json.dumps({'doc_id': doc_id, 'doc_relevance': doc_relevance,
+                           'pars': par_json_list}, ensure_ascii=False) + '\n'
 
 
 def get_doc_par_id(line: str) -> Union[Tuple[int, str, str], None]:
