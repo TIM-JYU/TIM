@@ -768,12 +768,17 @@ def query_params_to_attribute(query, leave_away):
     return result + ""
 
 
-def query_params_to_map(query):
+def query_params_to_map(query, transform=None):
+    if transform is None:
+        def transform(x):
+            return x[0]
     result = {}
     for field in query.keys():
         if not field.startswith("-"):
-            result[field] = query[field][0]
-
+            result[field] = transform(query[field])
+    m = result.get("markup")
+    if m:
+        result["markup"] = query_params_to_map(m, transform=lambda x: x)
     return result
 
 
