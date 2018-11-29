@@ -380,21 +380,26 @@ def add_doc_info_title_line(doc_id: int) -> Union[str, None]:
     doc_info = DocEntry.find_by_id(doc_id)
     if not doc_info:
         return None
-    return json.dumps({'doc_id': doc_id, 'doc_title': doc_info.title},
+    return json.dumps({'doc_id': doc_id,
+                       'doc_title': doc_info.title},
                       ensure_ascii=False) + '\n'
 
 
-def get_doc_relevance(doc_info):
+def get_doc_relevance(doc_info: DocInfo):
     """
-    Returns document relevance or default value, if relevance hasn't been set.
+    Returns item's (or parent's) relevance value. If no relevance was found until root, use default.
     :param doc_info: Document.
-    :return: Relevance value.
+    :return: Relevance value of the item or any of its parents'.
     """
-    try:
-        if doc_info.relevance:
-            return doc_info.relevance
-    except:
-        pass
+
+    if doc_info.relevance:
+        return doc_info.relevance
+    else:
+        parents = doc_info.parents_to_root
+        for parent in parents:
+            # print(doc_info, parent, parent.relevance)
+            if parent.relevance:
+                return parent.relevance
     return DEFAULT_RELEVANCE
 
 
@@ -434,11 +439,16 @@ def add_doc_info_content_line(doc_id: int, par_data, remove_deleted_pars: bool =
         if not doc_info:
             doc_info = DocEntry.find_by_id(doc_id)
         doc_title = doc_info.title
-        return json.dumps({'doc_id': doc_id, 'doc_relevance': doc_relevance,
-                           'doc_title': doc_title, 'pars': par_json_list}, ensure_ascii=False) + '\n'
+        return json.dumps({'doc_id': doc_id,
+                           'doc_relevance': doc_relevance,
+                           'doc_title': doc_title,
+                           'pars': par_json_list}
+                          , ensure_ascii=False) + '\n'
     else:
-        return json.dumps({'doc_id': doc_id, 'doc_relevance': doc_relevance,
-                           'pars': par_json_list}, ensure_ascii=False) + '\n'
+        return json.dumps({'doc_id': doc_id,
+                           'doc_relevance': doc_relevance,
+                           'pars': par_json_list},
+                          ensure_ascii=False) + '\n'
 
 
 def get_doc_par_id(line: str) -> Union[Tuple[int, str, str], None]:

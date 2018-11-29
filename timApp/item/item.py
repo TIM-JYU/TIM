@@ -47,6 +47,10 @@ class ItemBase:
     def children(self):
         return self.block.children
 
+    @property
+    def relevance(self) -> int:
+        return self.block.relevance if self.block else None
+
 
 class Item(ItemBase):
     """An item that exists in the TIM directory hierarchy. Currently :class:`~.Folder` and :class:`~.DocInfo`."""

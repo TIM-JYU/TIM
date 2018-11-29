@@ -13,7 +13,7 @@ from flask import session
 
 from timApp.auth.accesshelper import verify_view_access, verify_teacher_access, verify_seeanswers_access, \
     get_rights, has_edit_access, get_doc_or_abort, verify_manage_access
-from timApp.document.blockrelevance import BlockRelevance
+from timApp.item.blockrelevance import BlockRelevance
 from timApp.document.create_item import create_or_copy_item, create_citation_doc
 from timApp.document.post_process import post_process_pars, \
     hide_names_in_teacher
@@ -495,45 +495,49 @@ def get_item(item_id: int):
     return json_response(i)
 
 
-@view_page.route('/getRelevance/<int:item_id>', methods=["GET"])
+@view_page.route('/items/relevance/get/<int:item_id>')
 def get_blockrelevance(item_id: int):
+    """
+    Returns the BlockRelevance of item.
+    :param item_id: Item id.
+    :return: BlockRelevance object or null if not found.
+    """
     i = Item.find_by_id(item_id)
     if not i:
         abort(404, 'Item not found')
     verify_manage_access(i)
-    relevance = i.block.relevance
+    relevance = i.relevance
     return json_response(relevance)
 
 
-@view_page.route('/setRelevance/<int:item_id>')
+@view_page.route('/items/relevance/set/<int:item_id>', methods=["POST"])
 def set_blockrelevance(item_id):
     """
     Add block relevance or edit if it already exists for the block.
-    :param item_id:
-    :return:
+    :param item_id: Item id.
+    :return: Ok response.
     """
-    relevance_value = get_option(request, 'value', default=None, cast=int)
+    # TODO: Using the route with just an URL string (requires browser plugin).
+
+    relevance_value, = verify_json_params('value')
     i = Item.find_by_id(item_id)
     if not i:
         abort(404, 'Item not found')
     verify_manage_access(i)
 
-    try:
-        blockrelevance = i.block.relevance
-    except:
-        pass
-    else:
-        if blockrelevance:
-            try:
-                db.session.delete(blockrelevance)
-            except Exception as e:
-                print(e)
-                db.session.rollback()
-                abort(400, f"Chaging block relevance failed: {str(e)}")
+    blockrelevance = i.relevance
+    if blockrelevance:
+        try:
+            db.session.delete(blockrelevance)
+        except Exception as e:
+            print(e)
+            db.session.rollback()
+            abort(400, f"Changing block relevance failed: {str(e)}")
 
     blockrelevance = BlockRelevance(relevance=relevance_value)
     try:
-        i.block.relevance.append(blockrelevance)
+        # i.relevance.append(blockrelevance)
+        i.relevance = blockrelevance
         db.session.commit()
     except Exception as e:
         print(e)

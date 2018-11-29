@@ -27,10 +27,6 @@ class DocInfo(Item):
         raise NotImplementedError
 
     @property
-    def relevance(self) -> int:
-        raise NotImplementedError
-
-    @property
     def is_original_translation(self) -> bool:
         """Returns whether this object is the document from which other translated documents were created."""
         return self.id == self.src_docid

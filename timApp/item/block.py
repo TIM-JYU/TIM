@@ -53,7 +53,7 @@ class Block(db.Model):
                               lazy='select')
     notifications = db.relationship('Notification', back_populates='block', lazy='dynamic')
 
-    relevance = db.relationship('BlockRelevance', back_populates='_block')
+    relevance = db.relationship('BlockRelevance', back_populates='_block', uselist=False)
 
     def __json__(self):
         return ['id', 'type_id', 'description', 'created', 'modified']
