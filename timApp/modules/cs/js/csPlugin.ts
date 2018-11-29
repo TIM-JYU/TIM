@@ -4,10 +4,8 @@ import $ from "jquery";
 import {CellInfo} from "sagecell";
 import {IAce, IAceEditor} from "tim/editor/ace-types";
 import {ParCompiler} from "tim/editor/parCompiler";
-import {IPluginAttributes} from "tim/plugin/util";
 import {lazyLoadMany} from "tim/util/lazyLoad";
 import {$compile, $http, $sce, $timeout, $upload, $window} from "tim/util/ngimport";
-import {set} from "tim/util/timHelper";
 import {Binding, fixDefExport, to} from "tim/util/utils";
 
 interface Simcir {
@@ -17,17 +15,21 @@ interface Simcir {
 }
 
 interface GlowScriptWindow extends Window {
-    runJavaScript?(text: string, args: string, input: string, wantsConsole: boolean): string;
+    runJavaScript(text: string, args: string, input: string, wantsConsole: boolean): string;
 
-    setDefLanguage?(language: string): void;
+    setDefLanguage(language: string): void;
 
     getConsoleHeight?(): number;
 
     runWeScheme(s: string): void;
 }
 
-interface GlowScriptFrame extends HTMLIFrameElement {
-    contentWindow: GlowScriptWindow;
+interface TaunoWindow extends Window {
+    getUserCodeFromTauno(): string;
+}
+
+interface CustomFrame<T extends Window> extends HTMLIFrameElement {
+    contentWindow: T;
 }
 
 // js-parsons is unused; just declare a stub to make TS happy
@@ -36,11 +38,15 @@ declare class ParsonsWidget {
 
     constructor(data: {});
 
-    init(a: string, b: string): void;
+    options: {permutation: (n: number) => number[]};
+
+    init(a: string): void;
 
     show(): void;
 
     getFeedback(): unknown;
+
+    shuffleLines(): void;
 }
 
 interface AttrType {
@@ -429,10 +435,11 @@ function commentTrim(s: string) {
 
 function makeTemplate() {
     return `<div class="csRunDiv type-{{$ctrl.rtype}}">
-    <h4 ng-bind-html="$ctrl.header"></h4>
+    <div class="pluginError" ng-if="$ctrl.markupError" ng-bind="$ctrl.markupError"></div>
+    <h4 ng-if="$ctrl.header" ng-bind-html="$ctrl.header"></h4>
     <p ng-if="$ctrl.stem" class="stem" ng-bind-html="$ctrl.stem"></p>
     <div ng-if="$ctrl.isSimcir || $ctrl.isTauno">
-    <p ng-if="$ctrl.taunoOn" class="pluginHide""><a ng-click="$ctrl.hideTauno()">{{$ctrl.hideTaunoText}}</a></p>
+    <p ng-if="$ctrl.taunoOn" class="pluginHide"><a ng-click="$ctrl.hideTauno()">{{$ctrl.hideTaunoText}}</a></p>
     <div class="taunoContainer"><p></p></div>
     <p ng-if="!$ctrl.taunoOn" class="pluginShow"><a ng-click="$ctrl.showTauno()">{{$ctrl.showTaunoText}}</a></p>
     <p ng-if="$ctrl.taunoOn && $ctrl.isTauno"
@@ -441,17 +448,17 @@ function makeTemplate() {
         <a ng-click="$ctrl.hideTauno()">{{$ctrl.hideTaunoText}}</a></p>
     <p ng-if="$ctrl.taunoOn && $ctrl.isTauno" class="taunoOhje">
         {{$ctrl.taunoOhjeText}}</a></p>
-    <p ng-if="$ctrl.taunoOn && !$ctrl.noeditor && $ctrl.isSimcir" class="pluginHide"">
+    <p ng-if="$ctrl.taunoOn && !$ctrl.noeditor && $ctrl.isSimcir" class="pluginHide">
     <a ng-click="$ctrl.copyFromSimcir()">copy from SimCir</a>
     | <a ng-click="$ctrl.copyToSimcir()">copy to SimCir</a> | <a ng-click="$ctrl.hideTauno()">hide SimCir</a>
     </p>
     </div>
     <div ng-if="$ctrl.upload" class="form-inline small">
         <div class="form-group small"> {{$ctrl.uploadstem}}: <input type="file" ngf-select="$ctrl.onFileSelect($file)">
-            <span ng-show="$ctrl.file.progress >= 0 && !$ctrl.file.error"
-                  ng-bind="$ctrl.file.progress < 100 ? 'Uploading... ' + $ctrl.file.progress + '%' : 'Done!'"></span>
+            <span ng-show="$ctrl.fileProgress >= 0 && !$ctrl.fileError"
+                  ng-bind="$ctrl.fileProgress < 100 ? 'Uploading... ' + $ctrl.fileProgress + '%' : 'Done!'"></span>
         </div>
-        <div class="error" ng-show="$ctrl.file.error" ng-bind="$ctrl.file.error"></div>
+        <div class="error" ng-show="$ctrl.fileError" ng-bind="$ctrl.fileError"></div>
         <div ng-if="$ctrl.uploadresult"><span ng-bind-html="$ctrl.uploadresult"></span></div>
     </div>
     <div ng-show="$ctrl.isAll" style="float: right;">{{$ctrl.languageText}}
@@ -506,7 +513,7 @@ function makeTemplate() {
             <a href="" ng-disabled="$ctrl.isRunning"
                ng-click="$ctrl.runDocument()">{{$ctrl.docLink}}</a>&nbsp&nbsp</span>
             <a href=""
-               ng-if="!$ctrl.nocode && ($ctrl.file || $ctrl.attrs.program)"
+               ng-if="!$ctrl.nocode && ($ctrl.file || $ctrl.program)"
                ng-click="$ctrl.showCode()">{{$ctrl.showCodeLink}}</a>&nbsp&nbsp
             <a href=""
                ng-if="$ctrl.muokattu"
@@ -623,7 +630,7 @@ function ifIs(value: number | undefined, name: string, def: string | number) {
     return `${name}="${value}" `;
 }
 
-function doVariables(v: string, name: string) {
+function doVariables(v: string | undefined, name: string) {
     if (!v) {
         return "";
     }
@@ -663,13 +670,25 @@ export function withDefault<T extends t.Any>(
  * If a field does not match the type, an error will be shown to the user
  * and the plugin won't work until the problem is fixed.
  */
+
+const Example = t.type({
+    expr: t.string,
+    title: t.string,
+});
+
 const CsMarkupOptional = t.partial({
+    // TODO: this gets deleted in server but only conditionally,
+    //  decide if this should be here
+    // program: t.string,
+
     answerLimit: t.number,
+    argsplaceholder: t.string,
+    argsstem: t.string,
     autoupdate: t.number,
     buttonText: t.string,
     buttons: t.string,
-    by: t.string,
     byCode: t.string,
+    examples: t.array(Example),
     file: t.string,
     filename: t.string,
     footer: t.string,
@@ -678,16 +697,21 @@ const CsMarkupOptional = t.partial({
     height: t.number,
     html: t.string,
     indices: t.string,
+    inputplaceholder: t.string,
     languages: t.string, // not used in any plugin?
     lazy: t.boolean,
     mode: t.string,
+    normal: t.string,
     parsonsmaxcheck: t.number,
     path: t.string,
-    program: t.string,
+    placeholder: t.string,
     replace: t.string,
+    resetText: t.string,
     runeverytime: t.boolean,
     savestate: t.string,
     scripts: t.string,
+    showCodeOff: t.string,
+    showCodeOn: t.string,
     stem: t.string,
     table: t.string,
     taunotype: t.string,
@@ -699,8 +723,6 @@ const CsMarkupOptional = t.partial({
 });
 
 const CsMarkupDefaults = t.type({
-    argsplaceholder: withDefault(t.string, "Write your program args here"),
-    argsstem: withDefault(t.string, "Args:"),
     autorun: withDefault(t.boolean, false),
     parsonsnotordermatters: withDefault(t.boolean, false),
     blind: withDefault(t.boolean, false),
@@ -714,13 +736,12 @@ const CsMarkupDefaults = t.type({
     editorMode: withDefault(t.number, -1),
     editorModes: withDefault(t.union([t.string, t.number]), "01"),
     highlight: withDefault(t.string, "Highlight"),
-    iframe: withDefault(t.boolean, false),
+    iframe: withDefault(t.boolean, false), // TODO this maybe gets deleted on server
     iframeopts: withDefault(t.string, ""),
     indent: withDefault(t.number, -1),
     initSimcir: withDefault(t.string, ""),
     "style-args": withDefault(t.string, ""), // TODO get rid of "-"
     "style-words": withDefault(t.string, ""), // TODO get rid of "-"
-    inputplaceholder: withDefault(t.string, "Write your input here"),
     inputrows: withDefault(t.number, 1),
     inputstem: withDefault(t.string, ""),
     isHtml: withDefault(t.boolean, false),
@@ -731,17 +752,12 @@ const CsMarkupDefaults = t.type({
     noConsoleClear: withDefault(t.boolean, false),
     nocode: withDefault(t.boolean, false),
     noeditor: withDefault(t.boolean, false),
-    normal: withDefault(t.string, "Normal"),
     norun: withDefault(t.boolean, false),
     nosave: withDefault(t.boolean, false),
     open: withDefault(t.boolean, false),
     parsons: withDefault(t.string, "Parsons"),
-    placeholder: withDefault(t.string, ""),
-    resetText: withDefault(t.string, "Reset"),
     rows: withDefault(t.number, 1),
     selectedLanguage: withDefault(t.string, "text"),
-    showCodeOff: withDefault(t.string, "Hide extra code"),
-    showCodeOn: withDefault(t.string, "Show all code"),
     showRuntime: withDefault(t.boolean, false),
     toggleEditor: withDefault(t.union([t.boolean, t.string]), false),
     type: withDefault(t.string, "cs"),
@@ -758,12 +774,29 @@ const CsMarkupDefaults = t.type({
 
 const CsMarkup = t.intersection([CsMarkupOptional, CsMarkupDefaults]);
 
-interface ICsAttributes extends t.TypeOf<typeof CsMarkup> {
+const CsAll = t.intersection([
+    t.partial({
+        by: t.string,
+        program: t.string,
+        replace: t.string,
+        uploadedFile: t.string,
+        uploadedType: t.string,
+    }),
+    t.type({
+        // anonymous: t.boolean,
+        // doLazy: t.boolean,
+        // info: t.null,
+        markup: t.readonly(CsMarkup),
+        // preview: t.boolean,
+        // review: t.boolean,
+        // targetFormat: t.literal("latex"),
+        // taskID: t.string,
+        // taskIDExt: t.string,
+        // userPrint: t.boolean,
+    })]);
+
+interface ICsAttributes extends t.TypeOf<typeof CsAll> {
 }
-
-type ICsPluginAttributes = IPluginAttributes<ICsAttributes, null>;
-
-type ICsAttributesImpl = Required<ICsAttributes>;
 
 // from io-ts readme
 function getPaths<A>(v: t.Validation<A>): string[] {
@@ -771,7 +804,14 @@ function getPaths<A>(v: t.Validation<A>): string[] {
 }
 
 class CsBase {
-    public attrs!: Readonly<ICsAttributes>;
+    public attrsall: Readonly<ICsAttributes> = getDefaults();
+
+    protected usercode: string = "";
+
+    // Binding that has all the data as a JSON string.
+    protected json!: Binding<string, "@">;
+
+    private markupError?: string;
 
     constructor(
         protected scope: IScope,
@@ -781,12 +821,28 @@ class CsBase {
     $postLink() {
     }
 
+    $onInit() {
+        const parsed = JSON.parse(this.json) as unknown;
+        const validated = CsAll.decode(parsed);
+        if (validated.isLeft()) {
+            this.markupError = `Plugin has invalid markup values: ${getPaths(validated)}`;
+        } else {
+            this.attrsall = validated.value;
+        }
+        console.log(parsed);
+        console.log(this);
+    }
+
     protected getParentAttr(name: string) {
         return this.element.parent().attr(name);
     }
 
-    protected getByCode() {
-        return commentTrim(this.attrs.by || this.attrs.byCode || "");
+    get attrs() {
+        return this.attrsall.markup;
+    }
+
+    get byCode() {
+        return commentTrim(this.attrsall.by || this.attrs.byCode || "");
     }
 
     protected getTaskId() {
@@ -800,6 +856,22 @@ class CsBase {
     protected getRootElement() {
         return this.element[0];
     }
+
+    get type() {
+        return this.attrs.type;
+    }
+
+    get path() {
+        return this.attrs.path;
+    }
+}
+
+function getDefaults() {
+    const d = CsAll.decode({markup: {}, info: null});
+    if (d.isLeft()) {
+        throw new Error("Could not get default values");
+    }
+    return d.value;
 }
 
 class CsController extends CsBase implements IController {
@@ -894,8 +966,7 @@ class CsController extends CsBase implements IController {
     // private showCodeOn: string;
     private simcir?: JQuery;
     // private table: string;
-    private taunoElem?: HTMLElement;
-    private taunoId?: string;
+    private taunoElem!: HTMLElement;
     private taunoOn: boolean;
     // private taunotype: string;
     // private tiny: boolean; method
@@ -906,7 +977,6 @@ class CsController extends CsBase implements IController {
     private uploadedType?: string;
     private uploadresult?: string;
     private userargs: string = "";
-    private usercode: string = "";
     private userinput: string = "";
     // private validityCheck: string;
     // private validityCheckMessage: string;
@@ -924,8 +994,6 @@ class CsController extends CsBase implements IController {
         usercode?: string
     } = {};
 
-    // Binding that has all the data as a JSON string.
-    private json!: Binding<string, "@">;
     private editorText: string[] = [];
     private rows: number = 1;
 
@@ -1019,6 +1087,10 @@ class CsController extends CsBase implements IController {
         return kind;
     }
 
+    get isInput() {
+        return this.getRootElement().tagName.toLowerCase().endsWith("-input");
+    }
+
     get isSimcir() {
         return this.kind === "simcir";
     }
@@ -1033,6 +1105,10 @@ class CsController extends CsBase implements IController {
         } else {
             return "Tauno";
         }
+    }
+
+    get program() {
+        return this.attrsall.program;
     }
 
     get hideTaunoText() {
@@ -1059,10 +1135,6 @@ class CsController extends CsBase implements IController {
 
     get copyToSimCirText() {
         return this.english ? "copy to SimCir" : "kopioi SimCiriin";
-    }
-
-    get type() {
-        return this.attrs.type;
     }
 
     get languageText() {
@@ -1113,6 +1185,10 @@ class CsController extends CsBase implements IController {
 
     get argsstem() {
         return this.attrs.argsstem || (this.isText ? (this.english ? "File name:" : "Tiedoston nimi:") : (this.english ? "Args:" : "Args"));
+    }
+
+    get header() {
+        return this.attrs.header;
     }
 
     get iframe() {
@@ -1169,8 +1245,9 @@ class CsController extends CsBase implements IController {
     }
 
     get buttonText() {
-        if (this.attrs.button) {
-            return this.attrs.button;
+        const txt = this.attrs.button || this.attrs.buttonText;
+        if (txt) {
+            return txt;
         }
         if (this.type.indexOf("text") >= 0 || this.isSimcir || this.attrs.justSave) {
             return this.english ? "Save" : "Tallenna";
@@ -1266,21 +1343,8 @@ class CsController extends CsBase implements IController {
         return this.attrs.nosave;
     }
 
-    get path() {
-        return this.attrs.path;
-    }
-
     $onInit() {
-        const parsed = JSON.parse(this.json);
-        const validated = CsMarkup.decode(parsed.markup);
-        if (validated.isLeft()) {
-            console.log(parsed);
-            console.log(getPaths(validated));
-            throw new Error("faillllled");
-        }
-        this.attrs = validated.value;
-        console.log(this.attrs);
-        throw new Error("asdasdasd");
+        super.$onInit();
         const rt = this.rtype;
         const isText = this.isText;
         const isArgs = this.type.indexOf("args") >= 0;
@@ -1308,8 +1372,8 @@ class CsController extends CsBase implements IController {
         this.maxRows = getInt(this.attrs.maxrows);
         this.rows = this.minRows;
 
-        if (this.usercode === "" && this.getByCode()) {
-            this.usercode = this.getByCode();
+        if (this.usercode === "" && this.byCode) {
+            this.usercode = this.byCode;
             this.initUserCode = true;
         }
         this.usercode = commentTrim(this.usercode);
@@ -1334,13 +1398,6 @@ class CsController extends CsBase implements IController {
             }
         }
 
-        if (this.attrs.open) {
-            const kind = this.kind;
-            if (kind === "tauno" || kind === "simcir") {
-                this.showTauno();
-            }
-        }
-
         if (this.attrs.autorun) {
             this.runCodeLink(true);
         }
@@ -1352,11 +1409,12 @@ class CsController extends CsBase implements IController {
 
         csLogTime(this.getTaskId() || "taskId missing");
 
-        this.showUploaded(this.attrs.uploadedFile, this.attrs.uploadedType);
+        this.showUploaded(this.attrsall.uploadedFile, this.attrsall.uploadedType);
     }
 
-    $postLink() {
-        this.taunoElem = this.element.find("taunoContainer")[0] as HTMLElement;
+    async $postLink() {
+        await $timeout(); // because of ng-if, tauno would not be found until Angular has processed everything
+        this.taunoElem = this.element.find(".taunoContainer")[0] as HTMLElement;
         this.edit = this.element.find("textarea")[0] as HTMLTextAreaElement;
         this.preview = this.element.find(".csrunPreview")[0];
         const styleArgs = this.attrs["style-args"];
@@ -1379,12 +1437,16 @@ class CsController extends CsBase implements IController {
                 }
             }
         });
+
+        if (this.attrs.open) {
+            const kind = this.kind;
+            if (kind === "tauno" || kind === "simcir") {
+                this.showTauno();
+            }
+        }
     }
 
     updateEditSize() {
-        if (!this) {
-            return;
-        }
         if (!this.usercode) {
             return;
         }
@@ -1408,7 +1470,7 @@ class CsController extends CsBase implements IController {
                 this.aceEditor.getSession().setValue(this.usercode);
             }
             this.dochecks.usercode = this.usercode;
-            if (!this.copyingFromTauno && this.usercode !== this.getByCode()) {
+            if (!this.copyingFromTauno && this.usercode !== this.byCode) {
                 this.muokattu = true;
             }
             this.copyingFromTauno = false;
@@ -1517,7 +1579,7 @@ class CsController extends CsBase implements IController {
         }, 0);
     }
 
-    showUploaded(file: string, type: string) {
+    showUploaded(file: string | undefined, type: string | undefined) {
         if (!file || !type) {
             return;
         }
@@ -1541,7 +1603,7 @@ class CsController extends CsBase implements IController {
             return;
         }
         if (type.indexOf("text") === 0) {
-            html += '<div style="overflow: auto; -webkit-overflow-scrolling: touch; max-height:900px; -webkit-box-pack: center; -webkit-box-align: center; display: -webkit-box;"  width:1200px>';
+            html = '<div style="overflow: auto; -webkit-overflow-scrolling: touch; max-height:900px; -webkit-box-pack: center; -webkit-box-align: center; display: -webkit-box;"  width:1200px>';
             html += `<iframe  width="800" src="${file}" target="csdocument" allowfullscreen   ${this.iframeopts} />`;
             html += "</div>";
             this.uploadresult = $sce.trustAsHtml(html);
@@ -1551,10 +1613,7 @@ class CsController extends CsBase implements IController {
 
         if (is(uploadFileTypes, file)) {
             html += '<div style="overflow: auto; -webkit-overflow-scrolling: touch; max-height:1200px; -webkit-box-pack: center; -webkit-box-align: center; display: -webkit-box;"  width:1200px>';
-            // html += '<iframe width="800" height="900"  src="' + file +'" target="csdocument" allowfullscreen onload="resizeIframe(this)" '+$scope.iframeopts+' />';
             html += `<iframe width="800" height="900"  src="${file}" target="csdocument" allowfullscreen " ${this.iframeopts} />`;
-            // html += '<embed  width="800" height="16000"  src="' + file +'" />';
-            // html += '<object width="800" height="600"   data="' + file +'" type="' + type +'"  ></object>';
             html += "</div>";
             this.uploadresult = $sce.trustAsHtml(html);
             return;
@@ -1678,7 +1737,7 @@ class CsController extends CsBase implements IController {
         }
 
         if (this.simcir) {
-            this.usercode = await this.getCircuitData();
+            this.usercode = await this.getCircuitData(this.simcir);
         } else if (this.taunoOn && (!this.muokattu || !this.usercode)) {
             this.copyTauno();
         }
@@ -1870,15 +1929,14 @@ class CsController extends CsBase implements IController {
     }
 
     copyTauno() {
-        const f = document.getElementById(this.taunoId) as any;
-        // var s = $scope.taunoElem.contentWindow().getUserCodeFromTauno();
+        const f = this.taunoElem.firstChild as CustomFrame<TaunoWindow>;
         let s = f.contentWindow.getUserCodeFromTauno();
         this.copyingFromTauno = true;
         const treplace = this.attrs.treplace || "";
         if (treplace) {
             const treps = treplace.split("&");
-            for (let i = 0; i < treps.length; i++) {
-                const reps = (treps[i] + "|").split("|");
+            for (const trep of treps) {
+                const reps = (trep + "|").split("|");
                 s = s.replace(new RegExp(reps[0], "g"), reps[1]);
                 s = s.replace(new RegExp("\n\n", "g"), "\n");
             }
@@ -1889,7 +1947,6 @@ class CsController extends CsBase implements IController {
     }
 
     async addText(s: string) {
-        // $scope.usercode += s;
         if (this.noeditor) {
             this.userargs += s + " ";
             return;
@@ -1898,7 +1955,7 @@ class CsController extends CsBase implements IController {
         let editor: IAceEditor | undefined;
         let i = 0;
         if (this.editorIndex === 1) {
-            editor = this.aceEditor;
+            editor = this.aceEditor!;
             i = editor.session.doc.positionToIndex(editor.selection.getCursor(), 0);
         } else {
             tbox = this.edit;
@@ -1962,7 +2019,6 @@ class CsController extends CsBase implements IController {
     getVid(dw?: number | string, dh?: number | string): Vid {
         taunoNr++;
         const vid = "tauno" + taunoNr;
-        this.taunoId = vid;
         if (!dw) {
             dw = "100%";
         }
@@ -1975,6 +2031,10 @@ class CsController extends CsBase implements IController {
     }
 
     async setCircuitData() {
+        if (!this.simcir) {
+            console.warn("setCircuitData: simcir not loaded");
+            return;
+        }
         let data: {width: number, height: number} = {width: 0, height: 0};
         this.runError = false;
         try {
@@ -2003,9 +2063,9 @@ class CsController extends CsBase implements IController {
         simcir.setupSimcir(this.simcir, data);
     }
 
-    async getCircuitData() {
+    async getCircuitData(simcirElem: JQuery) {
         const simcir = await loadSimcir();
-        const d = simcir.controller(this.simcir.find(".simcir-workspace"));
+        const d = simcir.controller(simcirElem.find(".simcir-workspace"));
         const data = d.data();
 
         let buf = "";
@@ -2031,7 +2091,6 @@ class CsController extends CsBase implements IController {
         println("  ]");
         print("}");
         return buf;
-        // return JSON.stringify(result);
     }
 
     copyToSimcir() {
@@ -2039,16 +2098,16 @@ class CsController extends CsBase implements IController {
     }
 
     async copyFromSimcir() {
-        this.usercode = await this.getCircuitData();
+        if (this.simcir) {
+            this.usercode = await this.getCircuitData(this.simcir);
+        }
     }
 
     showSimcir() {
         const v = this.getVid();
         this.taunoOn = true;
         this.taunoElem.innerHTML = `<div id=${v.vid}></div>`;
-        const jqTauno = $(this.taunoElem);
-        this.simcir = $("#" + v.vid);
-        this.simcir = jqTauno.find("#" + v.vid);
+        this.simcir = $(this.taunoElem).children().first();
         this.setCircuitData();
         return true;
     }
@@ -2059,12 +2118,12 @@ class CsController extends CsBase implements IController {
         }
         const v = this.getVid();
         let p = "";
-        let tt = "/cs/tauno/index.html?lang=" + this.lang + "&";
-        if (this.taunotype && this.taunotype === "ptauno") {
-            tt = "/cs/tauno/index.html?lang=" + this.lang + "&s&";
+        let tt = "/cs/tauno/index.html?lang=" + this.attrs.lang + "&";
+        if (this.attrs.taunotype && this.attrs.taunotype === "ptauno") {
+            tt = "/cs/tauno/index.html?lang=" + this.attrs.lang + "&s&";
         }
         let taunoUrl = tt; // +"?"; // t=1,2,3,4,5,6&ma=4&mb=5&ialku=0&iloppu=5";
-        const s = this.table;
+        const s = this.attrs.table;
         if (s && s.length > 0) {
             if (s[0] === "s") {
                 p = "ts=" + s.substring(1) + "&";
@@ -2073,43 +2132,37 @@ class CsController extends CsBase implements IController {
             }                      // table by it's items
         }
 
-        p += doVariables(this.variables, "m");
-        p += doVariables(this.indices, "i");
+        p += doVariables(this.attrs.variables, "m");
+        p += doVariables(this.attrs.indices, "i");
 
         taunoUrl = taunoUrl + p;
         if (this.iframe) {
             this.taunoElem.innerHTML =
                 `<iframe id="${v.vid}" class="showTauno" src="${taunoUrl}" ${v.w}${v.h} ${this.iframeopts} ></iframe>`;
         } else {
-            this.taunoElem.innerHTML = '<div class="taunoNaytto" id="' + v.vid + '" />';
+            this.taunoElem.innerHTML = `<div class="taunoNaytto" id="${v.vid}" />`;
         }
         this.taunoOn = true;
     }
 
     runWeScheme(s: string) {
-        // var f = document.getElementById($scope.taunoId) as any;
-        // var s = $scope.taunoElem.contentWindow().getUserCodeFromTauno();
-        // $scope.contentWindow.runWeScheme(s);
     }
 
     showWeScheme() {
         const v = this.getVid();
-        const p = "";
-        const tt = "/csstatic/WeScheme/WeSchemeEditor.html";
-        const weSchemeUrl = tt;
-        const s = this.table;
+        const weSchemeUrl = "/csstatic/WeScheme/WeSchemeEditor.html";
         if (this.iframe) {
             this.taunoElem.innerHTML =
-                '<iframe id="' + v.vid + '" class="showWeScheme" src="' + weSchemeUrl + '" ' + v.w + v.h + " " + this.iframeopts + " ></iframe>";
+                `<iframe id="${v.vid}" class="showWeScheme" src="${weSchemeUrl}" ${v.w}${v.h} ${this.iframeopts} ></iframe>`;
         } else {
-            this.taunoElem.innerHTML = '<div class="taunoNaytto" id="' + v.vid + '" />';
+            this.taunoElem.innerHTML = `<div class="taunoNaytto" id="${v.vid}" />`;
         }
         this.taunoOn = true;
     }
 
     initCode() {
         this.muokattu = false;
-        this.usercode = this.getByCode();
+        this.usercode = this.byCode;
         this.imgURL = "";
         this.runSuccess = false;
         this.runError = false;
@@ -2175,15 +2228,15 @@ class CsController extends CsBase implements IController {
             getCode: () => this.getReplacedCode(),
             autoeval: this.attrs.autorun || firstTime,
             callback: () => {
-                this.sageButton = this.sageArea.getElementsByClassName("sagecell_evalButton")[0] as HTMLElement;
-                this.sageInput = this.sageArea.getElementsByClassName("sagecell_commands")[0] as HTMLInputElement;
+                this.sageButton = this.sageArea!.getElementsByClassName("sagecell_evalButton")[0] as HTMLElement;
+                this.sageInput = this.sageArea!.getElementsByClassName("sagecell_commands")[0] as HTMLInputElement;
 
                 this.sageButton.onclick = () => {
                     // cs.checkSageSave();
-                    this.sagecellInfo.code = this.getReplacedCode();
+                    this.sagecellInfo!.code = this.getReplacedCode();
                     // cs.sagecellInfo.session.code = cs.sagecellInfo.code;
                 };
-                const sagecellOptions = this.getRootElement().getElementsByClassName("sagecell_options")[0];
+                const sagecellOptions = this.getRootElement().getElementsByClassName("sagecell_options")[0] as HTMLElement;
                 const csRunMenuArea = this.getRootElement().getElementsByClassName("csRunMenuArea")[0];
                 if (csRunMenuArea && sagecellOptions) {
                     csRunMenuArea.appendChild(sagecellOptions);
@@ -2262,13 +2315,17 @@ class CsController extends CsBase implements IController {
     }
 
     getReplacedCode() {
-        if (!this.attrs.program) {
+        if (!this.program) {
             this.code = this.usercode;
             return this.code;
         }
-        const st = this.attrs.program.split("\n");
+        const st = this.program.split("\n");
         [this.code] = this.maybeReplace(st);
         return this.code;
+    }
+
+    get replace() {
+        return this.attrs.replace || this.attrsall.replace;
     }
 
     private maybeReplace(st: string[]): [string, string, string] {
@@ -2277,8 +2334,8 @@ class CsController extends CsBase implements IController {
         let step = 0;
         let nl = "";
         let nls = "";
-        const needReplace = !!this.attrs.replace;
-        const regexp = new RegExp(this.attrs.replace || "");
+        const needReplace = !!this.replace;
+        const regexp = new RegExp(this.replace || "");
         for (const s of st) {
             // if ( s.indexOf($scope.replace) >= 0 ) {
             if (needReplace && regexp.test(s)) {
@@ -2297,21 +2354,14 @@ class CsController extends CsBase implements IController {
         return [r, rp[0], rp[1]];
     }
 
-    getCodeFromLocalCode(f?: () => void) {
-        // f: function to call after ready
+    getCodeFromLocalCode() {
         if (!this.localcode) {
             this.code = this.usercode;
             this.precode = "";
             this.postcode = "";
-            if (f) {
-                f();
-            }
-            return;
-        }
-        const st = this.localcode.split("\n");
-        [this.code, this.precode, this.postcode] = this.maybeReplace(st);
-        if (f) {
-            f();
+        } else {
+            const st = this.localcode.split("\n");
+            [this.code, this.precode, this.postcode] = this.maybeReplace(st);
         }
     }
 
@@ -2319,22 +2369,21 @@ class CsController extends CsBase implements IController {
         if (!this.viewCode) {
             return;
         }
-        this.getAllCode(null);
+        this.getAllCode();
     }
 
-    async getAllCode(f) {
-        // f: function to call after ready
-        if (this.localcode !== null) {
-            this.getCodeFromLocalCode(f);
+    async getAllCode() {
+        if (this.localcode != null) {
+            this.getCodeFromLocalCode();
             return;
         }
-        if (!this.file && !this.attrs.program) {
+        if (!this.file && !this.program) {
             this.localcode = "";
-            this.getCodeFromLocalCode(f);
+            this.getCodeFromLocalCode();
             return;
         }
 
-        const params = this.attrs;
+        const params = this.attrsall;
         const r = await to($http<{msg: string, error: string} | string>({
                 method: "POST",
                 url: "/cs/",
@@ -2351,10 +2400,10 @@ class CsController extends CsBase implements IController {
             // Server always seems to give text/plain as result, so prepare for it.
             if (typeof data === "string") {
                 this.localcode = data;
-                this.getCodeFromLocalCode(f);
+                this.getCodeFromLocalCode();
             } else if (data.msg !== "") {
                 this.localcode = data.msg;
-                this.getCodeFromLocalCode(f);
+                this.getCodeFromLocalCode();
             } else {
                 this.errors.push(data.error);
                 this.precode = "";
@@ -2378,8 +2427,7 @@ class CsController extends CsBase implements IController {
             return;
         }
         if (this.precode == undefined) {
-            this.getAllCode(this.showMD);
-            return;
+            await this.getAllCode();
         }
         const text = this.precode + "\n" + this.usercode.replace(this.cursor, "") + "\n" + this.postcode;
         if (text === this.lastMD) {
@@ -2485,7 +2533,7 @@ class CsController extends CsBase implements IController {
                 this.usercode = p.join("\n");
             },
         });
-        parson.init(this.getByCode(), this.usercode);
+        parson.init(this.byCode, this.usercode);
         parson.show();
         this.csparson = parson;
     }
@@ -2540,7 +2588,7 @@ class CsController extends CsBase implements IController {
         }
     }
 
-    async showOtherEditor(editorMode: number) {
+    async showOtherEditor(editorMode?: number) {
         if (this.parson) {
             this.usercode = this.getJsParsonsCode();
         }
@@ -2548,26 +2596,28 @@ class CsController extends CsBase implements IController {
         this.parson = undefined;
         this.csparson = null;
 
-        const editorHtml = '<textarea class="csRunArea csrunEditorDiv" ng-hide="noeditor" rows={{rows}} ng-model="usercode" ng-trim="false" placeholder="{{placeholder}}"></textarea>';
+        const editorHtml = `
+<textarea class="csRunArea csrunEditorDiv"
+          ng-hide="$ctrl.noeditor"
+          rows={{$ctrl.rows}}
+          ng-model="$ctrl.usercode"
+          ng-trim="false"
+          placeholder="{{$ctrl.placeholder}}"></textarea>
+`;
 
-        const aceHtml = '<div class="no-popup-menu"><div ng-show="mode"' +
-            // var aceHtml = '<div ng-show="mode" ui-ace="{  mode: \'{{mode}}\',    require: [\'/static/scripts/bower_components/ace-builds/src-min-noconflict/ext-language_tools.js\'],  advanced: {enableSnippets: true,enableBasicAutocompletion: true,enableLiveAutocompletion: true}}"'+
-            // ' style="left:-6em; height:{{rows*1.17}}em;" class="csRunArea csEditArea" ng-hide="noeditor"  ng-model="usercode" ng-trim="false" placeholder="{{placeholder}}"></div>'+
-            // ' style="left:-5px; width: 101% !important;'+
-            ' " class="csRunArea csEditArea csAceEditor" ng-hide="noeditor" ng-trim="false" placeholder="{{placeholder}}"></div>' +
-            /*
-            '<div style="right:0px;">'+
-            '<button ng-click="moveCursor(-1, 0);">&#x21d0;</button>'+
-            '<button ng-click="moveCursor( 0,-1);">&#x21d1;</button>'+
-            '<button ng-click="moveCursor( 1, 0);">&#x21d2;</button>'+
-            '<button ng-click="moveCursor( 0, 1);">&#x21d3;</button>'+
-            '</div>'+
-            */
-            "</div>";
+        const aceHtml = `
+<div class="no-popup-menu">
+    <div ng-show="$ctrl.mode"
+         class="csRunArea csEditArea csAceEditor"
+         ng-hide="$ctrl.noeditor"
+         ng-trim="false"
+         placeholder="{{$ctrl.placeholder}}"></div>
+</div>
+`;
 
-        const cssHtml = "<pre>{{usercode}}</pre>";
+        const cssHtml = `<pre>{{$ctrl.usercode}}</pre>`;
 
-        const parsonsHtml = '<div class="no-popup-menu"></div>';
+        const parsonsHtml = `<div class="no-popup-menu"></div>`;
 
         let html;
         if (this.cssPrint) {
@@ -2633,13 +2683,6 @@ class CsController extends CsBase implements IController {
         }
     }
 
-    moveCursor(dx: number, dy: number) {
-        const p = this.aceEditor.getCursorPosition();
-        p.row += dy;
-        p.column += dx;
-        this.aceEditor.moveCursorToPosition(p);
-    }
-
     // Runs when editor loads
     aceLoaded(ace: IAce, editor: IAceEditor) {
         this.aceEditor = editor;
@@ -2657,6 +2700,10 @@ class CsController extends CsBase implements IController {
     }
 
     toggleFixed() {
+        if (!this.canvas) {
+            console.warn("toggleFixed: canvas not initialized");
+            return;
+        }
         if (this.canvas.style.position === "fixed") {
             this.canvas.style.position = "";
             this.irrotaKiinnita = this.english ? "Release" : "Irrota";
@@ -2668,8 +2715,8 @@ class CsController extends CsBase implements IController {
     }
 
     getCode() {
-        if (this.attrs.program && !this.codeInitialized) {
-            this.localcode = this.attrs.program;
+        if (this.program && !this.codeInitialized) {
+            this.localcode = this.program;
             this.getCodeFromLocalCode();
         }
         this.codeInitialized = true;
@@ -2719,7 +2766,8 @@ class CsController extends CsBase implements IController {
                 fsrc = "/csstatic/WeScheme/openEditor.html";
             }
             if (this.iframe) {
-                let dw, dh;
+                let dw;
+                let dh;
                 if (this.glowscript) {
                     fsrc = "/cs/gethtml/GlowScript.html";
                     dh = "430";
@@ -2758,9 +2806,7 @@ class CsController extends CsBase implements IController {
                 this.iframeLoadTries = 10;
             } else {
                 this.canvas = angular.element(// '<div class="userlist" tim-draggable-fixed="" style="top: 91px; right: -375px;">'+
-                    '<canvas id="csCanvas" width="' + this.canvasWidth + '" height="' + this.canvasHeight + '" class="jsCanvas"></canvas>' +
-                    // '<canvas id="csCanvas" width="'+$scope.canvasWidth+'" height="'+$scope.canvasHeight+'" class="jsCanvas userlist" tim-draggable-fixed="" style="top: 91px; right: -375px;"></canvas>' +
-                    "")[0] as HTMLCanvasElement; // '</div>');
+                    `<canvas id="csCanvas" width="${this.attrs.canvasWidth}" height="${this.attrs.canvasHeight}" class="jsCanvas"></canvas>`)[0] as HTMLCanvasElement;
             }
             const $previewDiv = angular.element(this.preview);
             $previewDiv.empty().append($compile(this.canvas)(this.scope));
@@ -2776,7 +2822,7 @@ class CsController extends CsBase implements IController {
         text = this.getCode();
 
         if (this.iframe) { // in case of iframe, the text is send to iframe
-            const f = document.getElementById(this.taunoId) as GlowScriptFrame; // but on first time it might be not loaded yet
+            const f = this.taunoElem.firstChild as CustomFrame<GlowScriptWindow>; // but on first time it might be not loaded yet
             // wait for contentWindow ready and the callback function also
             if (!f || !f.contentWindow || (!f.contentWindow.runJavaScript && !this.fullhtml && !wescheme)
                 || (wescheme && !f.contentWindow.runWeScheme)) {
@@ -2802,11 +2848,12 @@ class CsController extends CsBase implements IController {
             if (this.fullhtml) {
                 let fhtml = this.fullhtml.replace("REPLACEBYCODE", text);
                 if (isProcessing) {
-                    fhtml = '<script src="/cs/static/processing/processing.js"></script>\n' +
-                        '<script type="text/processing" data-processing-target="mycanvas">\n' +
-                        fhtml + "\n" +
-                        "</script>\n" +
-                        '<canvas id="mycanvas"></canvas>';
+                    fhtml = `
+<script src="/cs/static/processing/processing.js"></script>
+<script type="text/processing" data-processing-target="mycanvas">
+${fhtml}
+</script>
+<canvas id="mycanvas"></canvas>`;
                 }
                 f.contentWindow.document.open();
                 f.contentWindow.document.write(fhtml);
@@ -2885,6 +2932,34 @@ class CsController extends CsBase implements IController {
         } else {
             this.scope.$apply();
         }
+    }
+
+    get showRuntime() {
+        return this.attrs.showRuntime;
+    }
+
+    get stem() {
+        return this.attrs.stem;
+    }
+
+    get codeover() {
+        return this.attrs.codeover;
+    }
+
+    get codeunder() {
+        return this.attrs.codeunder;
+    }
+
+    get footer() {
+        return this.attrs.footer;
+    }
+
+    get inputstem() {
+        return this.attrs.inputstem;
+    }
+
+    get inputrows() {
+        return this.attrs.inputrows;
     }
 }
 
@@ -3001,17 +3076,13 @@ class CsConsoleController extends CsBase implements IController {
     oldpwd!: string;
     currentInput: string;
     pwd!: string;
-    attrs!: AttrType;
     // byCode: string; method
     // content: AttrType;
-    examples: Array<{expr: string, title: string}>;
+    examples: Array<t.TypeOf<typeof Example>>;
     history: Array<{istem: string, ostem: string, input: string, response: string}>;
     // savestate: string;
     // path: string;
     // type: string;
-
-    // Binding that has all the data as a JSON string.
-    private json!: Binding<string, "@">;
 
     constructor(scope: IScope, element: IRootElementService) {
         super(scope, element);
@@ -3026,28 +3097,29 @@ class CsConsoleController extends CsBase implements IController {
         // nothing to do
     }
 
+    get isShell() {
+        return languageTypes.getRunType(this.type, "") === "shell";
+    }
+
+    get savestate() {
+        return this.attrs.savestate;
+    }
+
     $onInit() {
-        this.attrs = JSON.parse(this.data);
+        super.$onInit();
 
         // This block could be re-used
 
-        this.content = this.attrs;
         // End of generally re-usable TIM stuff
-        if (this.content.examples) {
-            const s = this.content.examples.replace(/'/g, '"');
-            this.examples = JSON.parse(s);
+        if (this.attrs.examples) {
+            this.examples = this.attrs.examples;
         }
 
         const attrs = this.attrs;
-        set(this, attrs, "usercode", "");
-        set(this, attrs, "type", "cs");
-        set(this, attrs, "path");
-        set(this, attrs, "savestate");
         this.pwd = ConsolePWD.getPWD(this);
         this.oldpwd = this.pwd;
-        this.isShell = languageTypes.getRunType(this.type, "") === "shell";
-        if (this.usercode === "" && this.getByCode()) {
-            this.usercode = this.getByCode().split("\n")[0];
+        if (this.usercode === "" && this.byCode) {
+            this.usercode = this.byCode.split("\n")[0];
         }
         this.currentInput = this.usercode;
         if (this.isShell) {
@@ -3083,7 +3155,7 @@ class CsConsoleController extends CsBase implements IController {
             }
             url += "/" + this.getTaskId() + "/answer/";  // Häck piti vähän muuttaa, jotta kone häviää.
         }
-        const t = languageTypes.getRunType(this.content.type, "shell");
+        const t = languageTypes.getRunType(this.type, "shell");
         const ucode = this.currentInput;
         const isInput = false;
         const uargs = "";
@@ -3114,7 +3186,7 @@ class CsConsoleController extends CsBase implements IController {
                 s = "<pre>" + s + "</pre>";
             } else {
                 s = data.web.console || "";
-                if (!this.isHtml) {
+                if (!this.attrs.isHtml) {
                     s = "<pre>" + s + "</pre>";
                 }
             }
