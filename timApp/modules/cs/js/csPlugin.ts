@@ -763,7 +763,6 @@ const CsMarkupDefaults = t.type({
     type: withDefault(t.string, "cs"),
     upload: withDefault(t.boolean, false),
     userargs: withDefault(t.string, ""),
-    usercode: withDefault(t.string, ""),
     userinput: withDefault(t.string, ""),
     validityCheck: withDefault(t.string, ""),
     validityCheckMessage: withDefault(t.string, ""),
@@ -781,6 +780,7 @@ const CsAll = t.intersection([
         replace: t.string,
         uploadedFile: t.string,
         uploadedType: t.string,
+        usercode: t.string,
     }),
     t.type({
         // anonymous: t.boolean,
@@ -1372,9 +1372,13 @@ class CsController extends CsBase implements IController {
         this.maxRows = getInt(this.attrs.maxrows);
         this.rows = this.minRows;
 
-        if (this.usercode === "" && this.byCode) {
-            this.usercode = this.byCode;
-            this.initUserCode = true;
+        if (this.attrsall.usercode == null) {
+            if (this.byCode) {
+                this.usercode = this.byCode;
+                this.initUserCode = true;
+            }
+        } else {
+            this.usercode = this.attrsall.usercode;
         }
         this.usercode = commentTrim(this.usercode);
         if (this.attrs.blind) {
