@@ -710,6 +710,7 @@ const CsMarkupOptional = t.partial({
     runeverytime: t.boolean,
     savestate: t.string,
     scripts: t.string,
+    selectedLanguage: t.string,
     showCodeOff: t.string,
     showCodeOn: t.string,
     stem: t.string,
@@ -718,6 +719,8 @@ const CsMarkupOptional = t.partial({
     treplace: t.string,
     uploadbycode: t.boolean,
     uploadstem: t.string,
+    userargs: t.string,
+    userinput: t.string,
     variables: t.string,
     width: t.number,
 });
@@ -757,13 +760,10 @@ const CsMarkupDefaults = t.type({
     open: withDefault(t.boolean, false),
     parsons: withDefault(t.string, "Parsons"),
     rows: withDefault(t.number, 1),
-    selectedLanguage: withDefault(t.string, "text"),
     showRuntime: withDefault(t.boolean, false),
     toggleEditor: withDefault(t.union([t.boolean, t.string]), false),
     type: withDefault(t.string, "cs"),
     upload: withDefault(t.boolean, false),
-    userargs: withDefault(t.string, ""),
-    userinput: withDefault(t.string, ""),
     validityCheck: withDefault(t.string, ""),
     validityCheckMessage: withDefault(t.string, ""),
     viewCode: withDefault(t.boolean, false),
@@ -780,7 +780,9 @@ const CsAll = t.intersection([
         replace: t.string,
         uploadedFile: t.string,
         uploadedType: t.string,
+        userargs: t.string,
         usercode: t.string,
+        userinput: t.string,
     }),
     t.type({
         // anonymous: t.boolean,
@@ -1349,8 +1351,8 @@ class CsController extends CsBase implements IController {
         const isText = this.isText;
         const isArgs = this.type.indexOf("args") >= 0;
 
-        this.userinput = this.attrs.userinput;
-        this.userargs = this.attrs.userargs || (isText && isArgs ? this.attrs.filename || "" : "");
+        this.userinput = this.attrsall.userinput || this.attrs.userinput || "";
+        this.userargs = this.attrsall.userargs || this.attrs.userargs || (isText && isArgs ? this.attrs.filename || "" : "");
         this.selectedLanguage = this.attrs.selectedLanguage || rt;
         this.noeditor = this.isSimcir || (this.type === "upload");
         this.wrap = this.attrs.wrap || (isText ? 70 : -1);
