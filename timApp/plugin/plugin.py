@@ -10,6 +10,7 @@ from timApp.document.document import Document
 from timApp.document.macroinfo import MacroInfo
 from timApp.document.yamlblock import strip_code_block, YamlBlock, merge
 from timApp.markdown.markdownconverter import expand_macros
+from timApp.plugin.pluginOutputFormat import PluginOutputFormat
 from timApp.plugin.pluginexception import PluginException
 from timApp.printing.printsettings import PrintFormat
 from timApp.timdb.exceptions import TimDbException
@@ -32,8 +33,13 @@ class PluginRenderOptions(NamedTuple):
     user_print: bool
     preview: bool
     target_format: PrintFormat
+    output_format: PluginOutputFormat
     review: bool
     wrap_in_div: bool
+
+    @property
+    def is_html(self):
+        return self.output_format == PluginOutputFormat.HTML
 
 
 def get_value(values, key, default=None):
@@ -369,6 +375,9 @@ class Plugin:
             stem = str(markup.get("stem", "Open plugin"))
             html = html.replace("<!--", "<!-LAZY-").replace("-->", "-LAZY->")
             html = f'{LAZYSTART}{html}{LAZYEND}<span style="font-weight:bold">{header}</span><div><p>{stem}</p></div>'
+        if self.options.is_html:
+            # Angular templates must be escaped
+            html = html.replace('{{', r'\{\{').replace('}}', r'\}\}')
         answer_attr = ''
         if self.answer:
             answer_attr = f""" answer-id='{self.answer.id}'"""

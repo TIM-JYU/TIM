@@ -120,6 +120,7 @@ def pluginify(doc: Document,
                                       user_print=user_print,
                                       preview=edit_window,
                                       target_format=target_format,
+                                      output_format=output_format,
                                       user=user,
                                       review=review,
                                       wrap_in_div=wrap_in_div
