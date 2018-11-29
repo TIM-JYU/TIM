@@ -517,7 +517,7 @@ timApp.component("timSidebarMenu", {
 
     </uib-tab>
 
-    <uib-tab ng-if="$ctrl.displayIndex.length > 0 && !$ctrl.hideLinks" index="0">
+    <uib-tab ng-if="$ctrl.displayIndex.length > 0" index="0">
         <uib-tab-heading>
             <i class="glyphicon glyphicon-book"></i>
         </uib-tab-heading>
