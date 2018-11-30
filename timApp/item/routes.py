@@ -505,7 +505,7 @@ def get_blockrelevance(item_id: int):
     i = Item.find_by_id(item_id)
     if not i:
         abort(404, 'Item not found')
-    # verify_view_access(i)
+    verify_view_access(i)
     relevance = i.relevance
     return json_response(relevance)
 
