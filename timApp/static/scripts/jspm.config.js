@@ -11,6 +11,7 @@ SystemJS.config({
     "mathjax": "mathjax/mathjax.js",
     "sagecell": "/static/embedded_sagecell.js",
     "cs/": "/cs/js/build/",
+    "svn/": "/svn/js/build/",
     "tim/": "tim/"
   },
   browserConfig: {

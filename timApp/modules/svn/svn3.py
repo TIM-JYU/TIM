@@ -32,6 +32,7 @@ import math
 import sys
 sys.path.insert(0, '/py')  # /py on mountattu docker kontissa /opt/tim/timApp/modules/py -hakemistoon
 from fileParams import *  # noqa
+from xml.sax.saxutils import quoteattr
 
 
 PORT = 5000
@@ -265,19 +266,19 @@ def get_video_html(query):
     if video_type == "small":
         # s = string_to_string_replace_attribute(
         #     '<small-video-runner \n##QUERYPARAMS##\n></small-video-runner>', "##QUERYPARAMS##", query)
-        s = '<small-video-runner ng-cloak>xxxHEXJSONxxx' + hx.decode() + '</list-video-runner>'
+        s = f'<small-video-runner json={quoteattr(jso)}></list-video-runner>'
         s = make_lazy(s, query, small_video_html)
         return s
     if video_type == "list":
         #  s = string_to_string_replace_attribute(
         #     '<list-video-runner \n##QUERYPARAMS##\n></list-video-runner>', "##QUERYPARAMS##", query)
-        s = '<list-video-runner  ng-cloak>xxxHEXJSONxxx' + hx.decode() + '</list-video-runner>'
+        s = f'<list-video-runner json={quoteattr(jso)}></list-video-runner>'
         s = make_lazy(s, query, list_video_html)
         return s
     if video_app:
         # s = string_to_string_replace_attribute(
         #    '<video-runner \n##QUERYPARAMS##\n></video-runner>', "##QUERYPARAMS##", query)
-        s = '<video-runner ng-cloak>xxxHEXJSONxxx' + hx.decode() + '</list-video-runner>'
+        s = f'<video-runner json={quoteattr(jso)}></list-video-runner>'
         s = make_lazy(s, query, video_html)
         return s
 
@@ -498,7 +499,7 @@ class TIMShowFileServer(http.server.BaseHTTPRequestHandler):
         if is_reqs:
             result_json = join_dict({"multihtml": True, "multimd": True}, get_all_templates(tempdir))
             if is_video or is_pdf:
-                result_json.update({"js": ["/svn/video/js/video.js"], "angularModule": ["videoApp"]})
+                result_json.update({"js": ["/svn/js/video.js"], "angularModule": ["videoApp"]})
             result_str = json.dumps(result_json)
             self.wout(result_str)
             return
@@ -509,7 +510,7 @@ class TIMShowFileServer(http.server.BaseHTTPRequestHandler):
 
         if is_js:
             # print(content_type)
-            self.wout(file_to_string('js/video.js'))
+            self.wout(file_to_string('js/build/video.js'))
             return
 
         s = get_html(self, query, show_html)

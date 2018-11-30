@@ -27,6 +27,7 @@ import * as showStatisticsToQuestionController from "tim/lecture/showStatisticsT
 import * as qstController from "tim/plugin/qstController";
 import * as tape from "tim/plugin/tape";
 import * as timTable from "tim/plugin/timTable";
+import * as pluginUtil from "tim/plugin/util";
 import * as searchBox from "tim/search/searchBox";
 import * as sidebarMenuCtrl from "tim/sidebar/sidebarMenuCtrl";
 import * as bootstrapPanel from "tim/ui/bootstrapPanel";
@@ -58,6 +59,7 @@ markAsUsed(
     loginMenu,
     manageCtrl,
     pareditor,
+    pluginUtil,
     qstController,
     questionAskController,
     questionController,

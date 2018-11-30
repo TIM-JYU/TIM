@@ -4,9 +4,10 @@ import $ from "jquery";
 import {CellInfo} from "sagecell";
 import {IAce, IAceEditor} from "tim/editor/ace-types";
 import {ParCompiler} from "tim/editor/parCompiler";
+import {GenericPluginMarkup, PluginBase, withDefault} from "tim/plugin/util";
 import {lazyLoadMany} from "tim/util/lazyLoad";
 import {$compile, $http, $sce, $timeout, $upload, $window} from "tim/util/ngimport";
-import {Binding, fixDefExport, to} from "tim/util/utils";
+import {fixDefExport, to} from "tim/util/utils";
 
 interface Simcir {
     setupSimcir(element: JQuery, data: {}): void;
@@ -649,20 +650,6 @@ interface IExtraMarkup {
     document?: boolean;
 }
 
-// from https://github.com/teamdigitale/italia-ts-commons/blob/de4d85a2a1502da54f78aace8c6d7b263803f115/src/types.ts
-export function withDefault<T extends t.Any>(
-    type: T,
-    defaultValue: t.TypeOf<T>,
-): t.Type<t.TypeOf<T>, any> {
-    return new t.Type(
-        type.name,
-        (v: any): v is T => type.is(v),
-        (v: any, c: any) =>
-            type.validate(v !== undefined && v !== null ? v : defaultValue, c),
-        (v: any) => type.encode(v),
-    );
-}
-
 /**
  * This defines the required format for the csPlugin YAML markup.
  * All fields in the markup are optional (as indicated by t.partial function).
@@ -681,39 +668,32 @@ const CsMarkupOptional = t.partial({
     //  decide if this should be here
     // program: t.string,
 
-    answerLimit: t.number,
     argsplaceholder: t.string,
     argsstem: t.string,
     autoupdate: t.number,
-    buttonText: t.string,
     buttons: t.string,
     byCode: t.string,
     examples: t.array(Example),
     file: t.string,
     filename: t.string,
-    footer: t.string,
     fullhtml: t.string,
-    header: t.string,
     height: t.number,
     html: t.string,
     indices: t.string,
     inputplaceholder: t.string,
     languages: t.string, // not used in any plugin?
-    lazy: t.boolean,
     mode: t.string,
     normal: t.string,
     parsonsmaxcheck: t.number,
     path: t.string,
     placeholder: t.string,
     replace: t.string,
-    resetText: t.string,
     runeverytime: t.boolean,
     savestate: t.string,
     scripts: t.string,
     selectedLanguage: t.string,
     showCodeOff: t.string,
     showCodeOn: t.string,
-    stem: t.string,
     table: t.string,
     taunotype: t.string,
     treplace: t.string,
@@ -729,29 +709,28 @@ const CsMarkupDefaults = t.type({
     autorun: withDefault(t.boolean, false),
     parsonsnotordermatters: withDefault(t.boolean, false),
     blind: withDefault(t.boolean, false),
-    button: withDefault(t.string, ""),
     canvasHeight: withDefault(t.number, 300),
     canvasWidth: withDefault(t.number, 700),
     codeover: withDefault(t.boolean, false),
     codeunder: withDefault(t.boolean, false),
-    cols: withDefault(t.number, 10),
+    cols: withDefault(t.Integer, 10),
     cssPrint: withDefault(t.boolean, false),
-    editorMode: withDefault(t.number, -1),
-    editorModes: withDefault(t.union([t.string, t.number]), "01"),
+    editorMode: withDefault(t.Integer, -1),
+    editorModes: withDefault(t.union([t.string, t.Integer]), "01"),
     highlight: withDefault(t.string, "Highlight"),
     iframe: withDefault(t.boolean, false), // TODO this maybe gets deleted on server
     iframeopts: withDefault(t.string, ""),
-    indent: withDefault(t.number, -1),
+    indent: withDefault(t.Integer, -1),
     initSimcir: withDefault(t.string, ""),
     "style-args": withDefault(t.string, ""), // TODO get rid of "-"
     "style-words": withDefault(t.string, ""), // TODO get rid of "-"
-    inputrows: withDefault(t.number, 1),
+    inputrows: withDefault(t.Integer, 1),
     inputstem: withDefault(t.string, ""),
     isHtml: withDefault(t.boolean, false),
     jsparsons: withDefault(t.string, "JS-Parsons"),
     justSave: withDefault(t.boolean, false),
     lang: withDefault(t.string, "fi"),
-    maxrows: withDefault(t.number, 100),
+    maxrows: withDefault(t.Integer, 100),
     noConsoleClear: withDefault(t.boolean, false),
     nocode: withDefault(t.boolean, false),
     noeditor: withDefault(t.boolean, false),
@@ -759,7 +738,7 @@ const CsMarkupDefaults = t.type({
     nosave: withDefault(t.boolean, false),
     open: withDefault(t.boolean, false),
     parsons: withDefault(t.string, "Parsons"),
-    rows: withDefault(t.number, 1),
+    rows: withDefault(t.Integer, 1),
     showRuntime: withDefault(t.boolean, false),
     toggleEditor: withDefault(t.union([t.boolean, t.string]), false),
     type: withDefault(t.string, "cs"),
@@ -768,10 +747,10 @@ const CsMarkupDefaults = t.type({
     validityCheckMessage: withDefault(t.string, ""),
     viewCode: withDefault(t.boolean, false),
     words: withDefault(t.boolean, false),
-    wrap: withDefault(t.number, -1),
+    wrap: withDefault(t.Integer, -1),
 });
 
-const CsMarkup = t.intersection([CsMarkupOptional, CsMarkupDefaults]);
+const CsMarkup = t.intersection([CsMarkupOptional, CsMarkupDefaults, GenericPluginMarkup]);
 
 const CsAll = t.intersection([
     t.partial({
@@ -797,66 +776,11 @@ const CsAll = t.intersection([
         // userPrint: t.boolean,
     })]);
 
-interface ICsAttributes extends t.TypeOf<typeof CsAll> {
-}
-
-// from io-ts readme
-function getPaths<A>(v: t.Validation<A>): string[] {
-    return v.fold((errors) => errors.map((error) => error.context.map(({key}) => key).join(".")), () => ["no errors"]);
-}
-
-class CsBase {
-    public attrsall: Readonly<ICsAttributes> = getDefaults();
-
+class CsBase extends PluginBase<t.TypeOf<typeof CsMarkup>, t.TypeOf<typeof CsAll>, typeof CsAll> {
     protected usercode: string = "";
-
-    // Binding that has all the data as a JSON string.
-    protected json!: Binding<string, "@">;
-
-    private markupError?: string;
-
-    constructor(
-        protected scope: IScope,
-        protected element: IRootElementService) {
-    }
-
-    $postLink() {
-    }
-
-    $onInit() {
-        const parsed = JSON.parse(this.json) as unknown;
-        const validated = CsAll.decode(parsed);
-        if (validated.isLeft()) {
-            this.markupError = `Plugin has invalid markup values: ${getPaths(validated)}`;
-        } else {
-            this.attrsall = validated.value;
-        }
-        console.log(parsed);
-        console.log(this);
-    }
-
-    protected getParentAttr(name: string) {
-        return this.element.parent().attr(name);
-    }
-
-    get attrs() {
-        return this.attrsall.markup;
-    }
 
     get byCode() {
         return commentTrim(this.attrsall.by || this.attrs.byCode || "");
-    }
-
-    protected getTaskId() {
-        return this.getParentAttr("id");
-    }
-
-    protected getPlugin() {
-        return this.getParentAttr("data-plugin");
-    }
-
-    protected getRootElement() {
-        return this.element[0];
     }
 
     get type() {
@@ -866,33 +790,28 @@ class CsBase {
     get path() {
         return this.attrs.path;
     }
-}
 
-function getDefaults() {
-    const d = CsAll.decode({markup: {}, info: null});
-    if (d.isLeft()) {
-        throw new Error("Could not get default values");
+    protected getAttributeType() {
+        return CsAll;
     }
-    return d.value;
+
+    getDefaultMarkup() {
+        return {};
+    }
 }
 
 class CsController extends CsBase implements IController {
-    private static $inject = ["$scope", "$element", "$attrs"];
+    private static $inject = ["$scope", "$element"];
 
     private aceEditor?: IAceEditor;
-    // autoupdate: number;
-    // byCode: string; method
     private canvas?: HTMLCanvasElement;
     private canvasConsole: {log: (...args: string[]) => void};
-    // canvasHeight: number;
-    // canvasWidth: number;
     private code?: string;
     private codeInitialized: boolean = false;
     private comtestError?: string;
     private contentWindow?: GlowScriptWindow;
     private copyingFromTauno: boolean;
     private csparson: any;
-    // cssPrint: boolean;
     private cursor: string;
     private docLink: string;
     private docURL?: string;
@@ -901,45 +820,27 @@ class CsController extends CsBase implements IController {
     private editorIndex: number;
     private editorMode!: number;
     private editorModeIndecies: number[];
-    // editorModes: string;
-    // english: boolean; method
     private error?: string;
     private errors: string[];
-    // private file: {};
     private fileError?: string;
     private fileProgress?: number;
     private gsDefaultLanguage?: string;
-    // private height: string;
     private htmlresult: string;
     private iframeClientHeight: number;
     private iframeLoadTries: number = 10;
-    // private iframeopts: string;
     private imgURL: string;
     private indent!: number;
-    // private indices: string;
     private initUserCode: boolean = false;
     private irrotaKiinnita?: string;
-    // private isAll: boolean; method
-    // private isHtml: boolean;
-    // private isMathCheck: boolean; method
     private isRunning: boolean = false;
-    // private isSage: boolean; method
-    // private isSimcir: boolean; method
-    // private isText: boolean; method
-    // private jstype: string; unused
-    // private lang: string;
     private lastJS: string;
     private lastMD: string;
     private lastUserargs?: string;
     private lastUserinput?: string;
     private localcode?: string;
     private maxRows!: number;
-    // private minRows: number; method
-    // private mode: string; method
     private muokattu: boolean;
-    // private noConsoleClear: boolean;
     private noeditor!: boolean;
-    // private nosave: boolean;
     private oneruntime?: string;
     private out?: {write: Function, writeln: Function, canvas: Element};
     private parson?: ParsonsWidget;
@@ -947,10 +848,7 @@ class CsController extends CsBase implements IController {
     private postcode?: string;
     private precode?: string;
     private preview!: HTMLElement;
-    // private replace: string;
     private result?: string;
-    // private rows: number;
-    // private rtype: string; method
     private runError?: string | boolean;
     private runned: boolean = false;
     private runSuccess: boolean;
@@ -963,30 +861,17 @@ class CsController extends CsBase implements IController {
     private sageInput?: HTMLInputElement;
     private sageOutput?: Element;
     private selectedLanguage!: string;
-    // private showCodeLink: string; // method
-    // private showCodeOff: string;
-    // private showCodeOn: string;
     private simcir?: JQuery;
-    // private table: string;
     private taunoElem!: HTMLElement;
     private taunoOn: boolean;
-    // private taunotype: string;
-    // private tiny: boolean; method
     private tinyErrorStyle: Partial<CSSStyleDeclaration> = {};
-    // private type: string;
-    // private upload: boolean; method
     private uploadedFile?: string;
     private uploadedType?: string;
     private uploadresult?: string;
     private userargs: string = "";
     private userinput: string = "";
-    // private validityCheck: string;
-    // private validityCheckMessage: string;
-    // private variables: string;
     private viewCode: boolean;
     private wavURL: string = "";
-    // private width: string;
-    // private words: boolean;
     private wrap!: number;
 
     // These are used only in $doCheck to keep track of the old values.
@@ -1187,10 +1072,6 @@ class CsController extends CsBase implements IController {
 
     get argsstem() {
         return this.attrs.argsstem || (this.isText ? (this.english ? "File name:" : "Tiedoston nimi:") : (this.english ? "Args:" : "Args"));
-    }
-
-    get header() {
-        return this.attrs.header;
     }
 
     get iframe() {
@@ -2944,20 +2825,12 @@ ${fhtml}
         return this.attrs.showRuntime;
     }
 
-    get stem() {
-        return this.attrs.stem;
-    }
-
     get codeover() {
         return this.attrs.codeover;
     }
 
     get codeunder() {
         return this.attrs.codeunder;
-    }
-
-    get footer() {
-        return this.attrs.footer;
     }
 
     get inputstem() {
