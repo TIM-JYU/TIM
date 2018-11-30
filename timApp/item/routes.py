@@ -505,7 +505,7 @@ def get_blockrelevance(item_id: int):
     i = Item.find_by_id(item_id)
     if not i:
         abort(404, 'Item not found')
-    verify_manage_access(i)
+    # verify_view_access(i)
     relevance = i.relevance
     return json_response(relevance)
 
@@ -519,29 +519,28 @@ def set_blockrelevance(item_id):
     """
     # TODO: Using the route with just an URL string (requires browser plugin).
 
-    relevance_value, = verify_json_params('value')
     i = Item.find_by_id(item_id)
     if not i:
         abort(404, 'Item not found')
     verify_manage_access(i)
 
+    relevance_value, = verify_json_params('value')
+
+    # If block has existign relevance, delete it before adding the new one.
     blockrelevance = i.relevance
     if blockrelevance:
         try:
             db.session.delete(blockrelevance)
         except Exception as e:
-            print(e)
             db.session.rollback()
-            abort(400, f"Changing block relevance failed: {str(e)}")
-
+            abort(400, f"Changing block relevance failed: {str(e.__class__.__name__)}: {str(e)}")
     blockrelevance = BlockRelevance(relevance=relevance_value)
+
     try:
-        # i.relevance.append(blockrelevance)
-        i.relevance = blockrelevance
+        i.block.relevance = blockrelevance
         db.session.commit()
     except Exception as e:
-        print(e)
         db.session.rollback()
-        abort(400, f"Setting block relevance failed: {str(e)}")
+        abort(400, f"Setting block relevance failed: {str(e.__class__.__name__)}: {str(e)}")
     return ok_response()
 
