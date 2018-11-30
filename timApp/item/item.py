@@ -4,6 +4,7 @@ from flask import current_app
 from sqlalchemy import tuple_, func
 from sqlalchemy.orm.base import instance_state
 
+from timApp.item.blockrelevance import BlockRelevance
 from timApp.timdb.exceptions import TimDbException
 from timApp.item.block import Block, BlockType
 from timApp.timdb.sqa import db, include_if_loaded
@@ -48,7 +49,7 @@ class ItemBase:
         return self.block.children
 
     @property
-    def relevance(self) -> int:
+    def relevance(self) -> BlockRelevance:
         return self.block.relevance if self.block else None
 
 
@@ -132,6 +133,7 @@ class Item(ItemBase):
                 'title': self.title,
                 'location': self.location,
                 'id': self.id,
+                'relevance': self.relevance,
                 'modified': date_to_relative(self.last_modified),
                 'owner': self.owner,
                 'rights': self.rights,
