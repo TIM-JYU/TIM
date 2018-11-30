@@ -423,11 +423,11 @@ def add_doc_info_content_line(doc_id: int, par_data, remove_deleted_pars: bool =
             return None
     par_json_list = []
 
-    doc_relevance = get_doc_relevance(doc_info)
+    # doc_relevance = get_doc_relevance(doc_info)
 
     # If excluded from search, skip from search file too.
-    if doc_relevance == EXCLUDED_RELEVANCE:
-        return None
+    # if doc_relevance == EXCLUDED_RELEVANCE:
+    #    return None
 
     for par in par_data:
         par_dict = json.loads(f"{{{par}}}")
@@ -445,13 +445,13 @@ def add_doc_info_content_line(doc_id: int, par_data, remove_deleted_pars: bool =
             doc_info = DocEntry.find_by_id(doc_id)
         doc_title = doc_info.title
         return json.dumps({'doc_id': doc_id,
-                           'doc_relevance': doc_relevance,
+                           # 'doc_relevance': doc_relevance,
                            'doc_title': doc_title,
                            'pars': par_json_list}
                           , ensure_ascii=False) + '\n'
     else:
         return json.dumps({'doc_id': doc_id,
-                           'doc_relevance': doc_relevance,
+                           # 'doc_relevance': doc_relevance,
                            'pars': par_json_list},
                           ensure_ascii=False) + '\n'
 
@@ -932,6 +932,15 @@ def search():
                 if search_owned_docs:
                     if not user.has_ownership(doc_info, allow_admin=False):
                         continue
+
+                doc_relevance = get_doc_relevance(doc_info)
+
+                # Skip if excluded relevance.
+                if doc_relevance == EXCLUDED_RELEVANCE:
+                    continue
+
+                # print(doc_info.to_json())
+                # print(doc_relevance)
 
                 pars = line_info['pars']
                 doc_result = DocResult(doc_info)
