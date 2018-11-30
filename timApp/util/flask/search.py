@@ -39,6 +39,7 @@ PROCESSED_CONTENT_FILE_NAME = "content_all_processed.log"
 PROCESSED_TITLE_FILE_NAME = "titles_all_processed.log"
 RAW_CONTENT_FILE_NAME = "all.log"
 DEFAULT_RELEVANCE = 10
+EXCLUDED_RELEVANCE = 0
 
 
 @search_routes.route('getFolders')
@@ -393,13 +394,13 @@ def get_doc_relevance(doc_info: DocInfo):
     """
 
     if doc_info.relevance:
-        return doc_info.relevance
+        return doc_info.relevance.relevance
     else:
         parents = doc_info.parents_to_root
         for parent in parents:
             # print(doc_info, parent, parent.relevance)
             if parent.relevance:
-                return parent.relevance
+                return parent.relevance.relevance
     return DEFAULT_RELEVANCE
 
 
@@ -423,6 +424,10 @@ def add_doc_info_content_line(doc_id: int, par_data, remove_deleted_pars: bool =
     par_json_list = []
 
     doc_relevance = get_doc_relevance(doc_info)
+
+    # If excluded from search, skip from search file too.
+    if doc_relevance == EXCLUDED_RELEVANCE:
+        return None
 
     for par in par_data:
         par_dict = json.loads(f"{{{par}}}")
