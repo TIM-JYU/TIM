@@ -11,9 +11,15 @@ export interface IItem {
     isFolder: boolean;
     fulltext: string;
     rights: IRights;
+    relevance: IRelevance;
     versions: Array<{}>;
     path: string;
     src_docid?: number;
+}
+
+export interface IRelevance {
+    block_id: number;
+    relevance: number;
 }
 
 export interface ITag {
