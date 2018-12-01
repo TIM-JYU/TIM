@@ -1,4 +1,4 @@
-﻿import angular, {IRootElementService, IScope} from "angular";
+﻿import angular from "angular";
 import * as t from "io-ts";
 import {GenericPluginMarkup, PluginBase, withDefault} from "tim/plugin/util";
 

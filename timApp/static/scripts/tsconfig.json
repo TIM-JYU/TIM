@@ -31,7 +31,6 @@
     "bower_components",
     "build",
     "build-ide",
-    "decls",
-    "tim/plugin/imagex.ts"
+    "decls"
   ]
 }
