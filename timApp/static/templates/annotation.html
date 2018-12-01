@@ -5,7 +5,7 @@
                                                                 ng-style="{backgroundColor: actrl.getCustomColor()}">
     <span class="fulldiv">
         <span class="div-90 annTopSection">
-            <p><span class="annHeader"><strong>{{ velp }}</strong></span></p>
+            <p><span class="annHeader"><strong>{{ actrl.annotation.content }}</strong></span></p>
             <p ng-show="actrl.showFull"><a class="username" href="mailto:{{ actrl.annotation.email }}">{{ actrl.annotation.annotator_name }}</a>
                     <span class="timestamp" title="{{ actrl.annotation.creationtime }}">{{ actrl.annotation.timesince }}</span></p>
         </span>
