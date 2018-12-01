@@ -6,6 +6,25 @@
   //display: none;
 }
 
+.printpagebreak {
+    text-align: center;
+    color: deeppink;
+    display: none;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 1em;
+    margin-bottom: 1em;
+}
+
+.printpagebreak .parContent {
+    text-align: center;
+}
+
+.printpagebreak::before {
+    content: "!================!Page Break!================!";
+}
+
+
 [id='CSSpagebreak'] p{
   display: none;
 }
@@ -33,11 +52,26 @@
   [id='CSSpagebreak'] {
     page-break-after: always !important;
     //display: initial;
+    display: none;
   }
 
   [id='CSSpagebreak'] p{
     display: none;
   }
+
+  .printpagebreak::before {
+      content: "" !important;
+  }
+
+  .printpagebreak {
+    page-break-after: always !important;
+    display: block; /* otherwise does not work */
+  }
+
+  .printpagebreak p {
+      display: none;
+  }
+
 
   [id='noBreak']{
     page-break-inside: avoid !important;

@@ -522,7 +522,7 @@ export class TextAreaParEditor extends BaseParEditor {
         }
         toNextLine = toNextLine.trim();
 
-        const breakline = '\n#-{print="false"}\n<div id="CSSpagebreak"><p>!================!Page Break!================!</p></div>\n#-\n';
+        const breakline = '\n#- {.printpagebreak}\n#-\n';
 
         this.editor.replaceSelectedText(toKeepInLine + breakline + "\n" + toNextLine);
     }

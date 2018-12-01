@@ -232,7 +232,7 @@ export class AceParEditor extends BaseParEditor {
         }
         toNextLine = toNextLine.trim();
 
-        const breakline = '\n#-{print="false"}\n<div id="CSSpagebreak"><p>!================!Page Break!================!</p></div>\n#-\n';
+        const breakline = '\n#- {.printpagebreak}\n#-\n';
 
         this.editor.selection.setRange(range, false);
         this.editor.insert(toKeepInLine + breakline + "\n" + toNextLine);
