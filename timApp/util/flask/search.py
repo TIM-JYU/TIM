@@ -927,8 +927,8 @@ def search():
 
                 doc_relevance = get_doc_relevance(doc_info)
 
-                # Skip if excluded relevance.
-                if doc_relevance == EXCLUDED_RELEVANCE:
+                # Skip if excluded relevance or less.
+                if doc_relevance <= EXCLUDED_RELEVANCE:
                     continue
 
                 # print(doc_info.to_json())
