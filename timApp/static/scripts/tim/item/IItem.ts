@@ -11,7 +11,7 @@ export interface IItem {
     isFolder: boolean;
     fulltext: string;
     rights: IRights;
-    relevance: IRelevance;
+    relevance?: IRelevance;
     versions: Array<{}>;
     path: string;
     src_docid?: number;
