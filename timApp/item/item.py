@@ -133,7 +133,6 @@ class Item(ItemBase):
                 'title': self.title,
                 'location': self.location,
                 'id': self.id,
-                'relevance': self.relevance,
                 'modified': date_to_relative(self.last_modified),
                 'owner': self.owner,
                 'rights': self.rights,
@@ -141,6 +140,7 @@ class Item(ItemBase):
                 'public': self.public,
                 # We only add tags if they've already been loaded.
                 **include_if_loaded('tags', self.block),
+                **include_if_loaded('relevance', self.block),
                 }
 
     def get_relative_path(self, path: str):
