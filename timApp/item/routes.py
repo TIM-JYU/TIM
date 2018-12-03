@@ -43,6 +43,7 @@ from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
 from timApp.util.timtiming import taketime
 from timApp.util.utils import remove_path_special_chars
+from timApp.util.utils import get_error_message
 
 Range = Tuple[int, int]
 
@@ -533,7 +534,7 @@ def set_blockrelevance(item_id):
             db.session.delete(blockrelevance)
         except Exception as e:
             db.session.rollback()
-            abort(400, f"Changing block relevance failed: {str(e.__class__.__name__)}: {str(e)}")
+            abort(400, f"Changing block relevance failed: {get_error_message(e)}")
     blockrelevance = BlockRelevance(relevance=relevance_value)
 
     try:
@@ -541,6 +542,6 @@ def set_blockrelevance(item_id):
         db.session.commit()
     except Exception as e:
         db.session.rollback()
-        abort(400, f"Setting block relevance failed: {str(e.__class__.__name__)}: {str(e)}")
+        abort(400, f"Setting block relevance failed: {get_error_message(e)}: {str(e)}")
     return ok_response()
 

@@ -25,6 +25,7 @@ from timApp.tim_app import app
 from timApp.util.flask.requesthelper import get_option
 from timApp.util.flask.responsehelper import json_response
 from timApp.util.logger import log_error
+from timApp.util.utils import get_error_message
 
 search_routes = Blueprint('search',
                           __name__,
@@ -361,15 +362,6 @@ def validate_query(query: str, search_whole_words: bool) -> None:
     if len(query.strip()) < MIN_WHOLE_WORDS_QUERY_LENGTH and search_whole_words:
         abort(400, f'Whole word search text must be at least {MIN_WHOLE_WORDS_QUERY_LENGTH} character(s) '
                    f'long with whitespace stripped.')
-
-
-def get_error_message(e: Exception) -> str:
-    """
-    Gives error message with error class.
-    :param e: Exception.
-    :return: String 'ErrorClass: reason'.
-    """
-    return f"{str(e.__class__.__name__)}: {str(e)}"
 
 
 def add_doc_info_title_line(doc_id: int) -> Union[str, None]:
