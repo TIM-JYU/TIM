@@ -162,7 +162,7 @@ class QstController implements IController {
             if (i > 0) {
                 url = url.substring(i);
             }
-            url += "/" + this.taskId + "/answer/";  // Häck piti vähän muuttaa, jotta kone häviää.
+            url += "/" + this.taskId + "/answer/";
         } else {
             this.error = "plugin or taskId missing";
             return;

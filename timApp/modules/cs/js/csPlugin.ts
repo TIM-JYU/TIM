@@ -1713,7 +1713,7 @@ class CsController extends CsBase implements IController {
             if (i > 0) {
                 url = url.substring(i);
             }
-            url += "/" + this.getTaskId() + "/answer/";  // Häck piti vähän muuttaa, jotta kone häviää.
+            url += "/" + this.getTaskId() + "/answer/";
         }
         const t0run = performance.now();
         const r = await to($http<{
@@ -3032,7 +3032,7 @@ class CsConsoleController extends CsBase implements IController {
             if (i > 0) {
                 url = url.substring(i);
             }
-            url += "/" + this.getTaskId() + "/answer/";  // Häck piti vähän muuttaa, jotta kone häviää.
+            url += "/" + this.getTaskId() + "/answer/";
         }
         const t = languageTypes.getRunType(this.type, "shell");
         const ucode = this.currentInput;
