@@ -79,8 +79,7 @@ class RelevanceCtrl implements IController {
     }
 
     private async saveClicked() {
-        // Check zero too because otherwise it's handled like null.
-        if (this.relevance || this.relevance === 0) {
+        if (this.relevance != null) {
             void this.setRelevance(this.relevance);
         } else {
             this.errorMessage = "Incorrect relevance value: input a whole number!";
@@ -94,15 +93,14 @@ timApp.component("relevanceEdit", {
     controller: RelevanceCtrl,
     template: `
         <div class="input-group">
-            <input class="form-control" ng-model="$ctrl.relevance" name="relevanceField"
-                ng-keypress="$ctrl.keyPressed($event)" type="text"
+            <input class="form-control" ng-model="$ctrl.relevance" ng-keypress="$ctrl.keyPressed($event)" type="text"
                 title="Enter a new relevance value; relevance of 0 or less will be completely excluded from search"
-                placeholder="Enter a new relevance value" id="relevanceField">
+                placeholder="Enter relevance value">
         </div>
-        <div ng-show="$ctrl.isDefault">
+        <div ng-if="$ctrl.isDefault">
              <p>Note: parent folder relevance may override default value</p>
         </div>
-        <div ng-show="$ctrl.errorMessage" class="alert alert-warning">
+        <div ng-if="$ctrl.errorMessage" class="alert alert-warning">
             <span class="glyphicon glyphicon-exclamation-sign"></span> {{$ctrl.errorMessage}}
         </div>
         <p></p>

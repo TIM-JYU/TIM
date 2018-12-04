@@ -66,13 +66,10 @@
     </div>
 </div>
 
-<div class="panel panel-default">
-    <div class="panel-heading">Relevance</div>
-    <div class="panel-body">
+<bootstrap-panel title="Relevance">
         <p>View and set relevance value denoting item priority in search results</p>
         <relevance-edit></relevance-edit>
-    </div>
-</div>
+</bootstrap-panel>
 
 <div ng-if="!$ctrl.item.isFolder">
     <div ng-if="$ctrl.item.rights.manage" class="panel panel-default">
