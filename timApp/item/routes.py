@@ -526,7 +526,7 @@ def set_blockrelevance(item_id):
     verify_manage_access(i)
 
     relevance_value, = verify_json_params('value')
-    # If block has existign relevance, delete it before adding the new one.
+    # If block has existing relevance, delete it before adding the new one.
     blockrelevance = i.relevance
     if blockrelevance:
         try:
@@ -548,24 +548,22 @@ def set_blockrelevance(item_id):
 @view_page.route('/items/relevance/reset/<int:item_id>')
 def reset_blockrelevance(item_id):
     """
-    Add block relevance or edit if it already exists for the block.
+    Reset (delete) block relevance.
     :param item_id: Item id.
     :return: Ok response.
     """
-    # TODO: Using the route with just an URL string (requires browser plugin).
 
     i = Item.find_by_id(item_id)
     if not i:
         abort(404, 'Item not found')
     verify_manage_access(i)
-
-    # If block has existign relevance, delete it before adding the new one.
     blockrelevance = i.relevance
     if blockrelevance:
         try:
             db.session.delete(blockrelevance)
+            db.session.commit()
         except Exception as e:
             db.session.rollback()
-            abort(400, f"Changing block relevance failed: {get_error_message(e)}")
+            abort(400, f"Resetting block relevance failed: {get_error_message(e)}")
     return ok_response()
 

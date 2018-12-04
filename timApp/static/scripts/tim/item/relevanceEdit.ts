@@ -3,7 +3,7 @@
  *
  * Relevance value denotes document or folder search priority. Higher value means the document or
  * documents in the folder will be higher in the results list. Item can be excluded from all search results by
- * setting relevance as zero.
+ * setting relevance as zero or less.
  */
 
 import {IController} from "angular";
@@ -22,10 +22,14 @@ class RelevanceCtrl implements IController {
     private errorMessage: string|undefined;
 
     async $onInit() {
-        this.getRelevance();
+        void this.getRelevance();
     }
 
+    /**
+     * Fetch the current item relevance value.
+     */
     private async getRelevance() {
+        this.errorMessage = undefined;
         const r = await to($http.get<IRelevance>(`/items/relevance/get/${this.item.id}`));
         if (r.ok) {
             if (!r.result.data) {
@@ -35,25 +39,38 @@ class RelevanceCtrl implements IController {
                 this.isDefault = false;
                 this.relevance = r.result.data.relevance;
             }
+        } else {
+            this.errorMessage = r.result.data.error;
         }
     }
 
+    /**
+     * Set new relevance value for the item.
+     * @param newValue Input value.
+     */
     private async setRelevance(newValue: number) {
+        this.errorMessage = undefined;
         const r = await to($http.post(
             `/items/relevance/set/${this.item.id}`,
-            {"value": newValue}));
+            {value: newValue}));
         if (r.ok) {
             this.isDefault = false;
+        } else {
+            this.errorMessage = r.result.data.error;
         }
     }
 
+    /**
+     * Return default relevance value.
+     */
     private async resetRelevance() {
-        const r = await to($http.get<IRelevance>(`/items/relevance/get/${this.item.id}`));
+        this.errorMessage = undefined;
+        const r = await to($http.get<IRelevance>(`/items/relevance/reset/${this.item.id}`));
         if (r.ok) {
             this.isDefault = true;
             this.relevance = DEFAULT_RELEVANCE_VALUE;
         } else {
-            // TODO: error
+            this.errorMessage = r.result.data.error;
         }
     }
 
@@ -66,7 +83,7 @@ class RelevanceCtrl implements IController {
         if (this.relevance || this.relevance === 0) {
             void this.setRelevance(this.relevance);
         } else {
-            // TODO: error
+            this.errorMessage = "Incorrect relevance value: input a whole number!";
         }
     }
 }
@@ -78,10 +95,15 @@ timApp.component("relevanceEdit", {
     template: `
         <div class="input-group">
             <input class="form-control" ng-model="$ctrl.relevance" name="relevanceField"
-                ng-keypress="$ctrl.keyPressed($event)" type="number"
+                ng-keypress="$ctrl.keyPressed($event)" type="text"
                 title="Enter a new relevance value; relevance of 0 or less will be completely excluded from search"
                 placeholder="Enter a new relevance value" id="relevanceField">
-            <span class="" ng-if="$ctrl.isDefault">* Default value: parent folder relevance may override this</span>
+        </div>
+        <div ng-show="$ctrl.isDefault">
+             <p>Note: parent folder relevance may override default value</p>
+        </div>
+        <div ng-show="$ctrl.errorMessage" class="alert alert-warning">
+            <span class="glyphicon glyphicon-exclamation-sign"></span> {{$ctrl.errorMessage}}
         </div>
         <p></p>
         <div>
