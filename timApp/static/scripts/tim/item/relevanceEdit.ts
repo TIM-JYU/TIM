@@ -19,6 +19,7 @@ class RelevanceCtrl implements IController {
     private item: IItem = $window.item;
     private relevance: number|undefined;
     private isDefault: boolean = false;
+    private errorMessage: string|undefined;
 
     async $onInit() {
         this.getRelevance();
@@ -61,7 +62,8 @@ class RelevanceCtrl implements IController {
     }
 
     private async saveClicked() {
-        if (this.relevance) {
+        // Check zero too because otherwise it's handled like null.
+        if (this.relevance || this.relevance === 0) {
             void this.setRelevance(this.relevance);
         } else {
             // TODO: error
