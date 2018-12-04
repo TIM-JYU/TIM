@@ -120,6 +120,7 @@ export class SearchBoxCtrl implements IController {
     private searchWholeWords: boolean = true; // Whole word search.
     private searchOwned: boolean = false; // Limit search to docs owned by the user.
     private searchPaths: boolean = false; // Search document paths.
+    private noExclude: boolean = false; // Don't exclude documents with <= 0 relevance.
 
     // Controller's private attributes:
     private errorMessage: string | undefined; // Message displayed only in search panel.
@@ -246,7 +247,7 @@ export class SearchBoxCtrl implements IController {
             this.storage.searchWordStorage = this.query;
         }
         this.storage.optionsStorage = [];
-        this.storage.optionsStorage = [this.advancedSearch, this.caseSensitive, this.createNewWindow,
+        this.storage.optionsStorage = [this.advancedSearch, this.caseSensitive, this.createNewWindow, this.noExclude,
             this.ignorePlugins, this.regex, this.searchTitles, this.searchWholeWords, this.searchTags,
             this.searchOwned, this.searchContent, this.searchPaths];
     }
@@ -258,8 +259,8 @@ export class SearchBoxCtrl implements IController {
         if (this.storage.searchWordStorage) {
             this.query = this.storage.searchWordStorage;
         }
-        if (this.storage.optionsStorage && this.storage.optionsStorage.length > 10) {
-            [this.advancedSearch, this.caseSensitive, this.createNewWindow,
+        if (this.storage.optionsStorage && this.storage.optionsStorage.length > 11) {
+            [this.advancedSearch, this.caseSensitive, this.createNewWindow, this.noExclude,
             this.ignorePlugins, this.regex, this.searchTitles, this.searchWholeWords, this.searchTags,
             this.searchOwned, this.searchContent, this.searchPaths] = this.storage.optionsStorage;
         }
@@ -313,6 +314,7 @@ export class SearchBoxCtrl implements IController {
         return {
             caseSensitive: this.caseSensitive,
             folder: this.folder,
+            noExclude: this.noExclude,
             query: this.query,
             regex: this.regex,
             searchOwned: this.searchOwned,
@@ -564,6 +566,8 @@ timApp.component("searchBox", {
             <input type="checkbox" ng-model="$ctrl.searchOwned"> Search owned documents</label>
         <label class="font-weight-normal" title="Show result of each search in new window">
             <input type="checkbox" ng-model="$ctrl.createNewWindow"> Open new window for each search</label>
+        <label class="font-weight-normal" title="Don't exclude documents with zero or less relevance">
+            <input type="checkbox" ng-model="$ctrl.noExclude"> Don't exclude documents</label>
         <h5 class="font-weight-normal">Search scope:</h5>
         <label class="font-weight-normal" title="Search document content">
             <input type="checkbox" ng-model="$ctrl.searchContent"> Contents</label>

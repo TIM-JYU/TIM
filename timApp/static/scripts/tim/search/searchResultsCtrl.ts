@@ -213,7 +213,6 @@ export class ShowSearchResultController extends DialogController<{ ctrl: SearchB
                 this.displayResults.push(newDocResult);
             }
         }
-        console.log(this.displayResults);
     }
 
     /**
