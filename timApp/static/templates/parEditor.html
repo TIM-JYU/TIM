@@ -5,12 +5,19 @@
     </uib-tab>
     <uib-tab heading="Upload" index="'upload'" ng-show="$ctrl.getOptions().showImageUpload">
         <span>
-            Upload image/file: <input type="file" ngf-select="$ctrl.onFileSelect($file)">
+            Upload image/file:
+            <input ng-paste="$ctrl.onPaste($event)" id="pasteInput"
+                   placeholder='paste image' size="9" style="font-size: 0.7em;" ng-show="$ctrl.isACE" />
+                   <!--ngf-drop="$ctrl.onDrop($event)"  ng-dragover="$ctrl.allowDrop($event)" -->
+                   <!-- ondragover="$ctrl.allowDrop($event)" ondrop="$ctrl.onDrop($event)" -->
+            <input type="file" ngf-select="$ctrl.onFileSelect($file)">
             <span ng-show="$ctrl.file.progress >= 0 && !$ctrl.file.error"
                   ng-bind="$ctrl.file.progress < 100 ? 'Uploading... ' + $ctrl.file.progress + '%' : 'Done!'"></span>
             <a ng-href="{{$ctrl.uploadedFile}}" >{{$ctrl.uploadedFile}}</a>
         </span>
         <div class="error" ng-show="$ctrl.file.error" ng-bind="$ctrl.file.error"></div>
+        <span>
+        </span>
         <tim-editor-entry ng-repeat="e in $ctrl.getUploadTab().entries" data="e"></tim-editor-entry>
     </uib-tab>
     <uib-tab heading="Help" index="'help'">
