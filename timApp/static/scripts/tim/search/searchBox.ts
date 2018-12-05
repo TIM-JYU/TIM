@@ -120,7 +120,7 @@ export class SearchBoxCtrl implements IController {
     private searchWholeWords: boolean = true; // Whole word search.
     private searchOwned: boolean = false; // Limit search to docs owned by the user.
     private searchPaths: boolean = false; // Search document paths.
-    private noExclude: boolean = false; // Don't exclude documents with <= 0 relevance.
+    private relevanceThreshold: number = 10; // Exclude documents with < X relevance.
 
     // Controller's private attributes:
     private errorMessage: string | undefined; // Message displayed only in search panel.
@@ -128,6 +128,8 @@ export class SearchBoxCtrl implements IController {
     private loading: boolean = false; // Display loading icon.
     private item: IItem = $window.item;
     private storage: ngStorage.StorageService & {
+        maxDocResultsStorage: null | string,
+        relevanceThresholdStorage: null | string,
         searchWordStorage: null | string,
         optionsStorage: null | boolean[]};
     private folderSuggestions: string[] = []; // A list of folder path suggestions.
@@ -142,8 +144,10 @@ export class SearchBoxCtrl implements IController {
      */
     constructor() {
         this.storage = $localStorage.$default({
+            maxDocResultsStorage: null,
             optionsStorage: null,
             optionsValueStorage: null,
+            relevanceThresholdStorage: null,
             searchWordStorage: null,
         });
     }
@@ -246,8 +250,14 @@ export class SearchBoxCtrl implements IController {
         if (this.query.trim().length > 0) {
             this.storage.searchWordStorage = this.query;
         }
+        if (this.relevanceThreshold != null) {
+            this.storage.relevanceThresholdStorage = this.relevanceThreshold.toString();
+        }
+        if (this.maxDocResults != null) {
+            this.storage.maxDocResultsStorage = this.maxDocResults.toString();
+        }
         this.storage.optionsStorage = [];
-        this.storage.optionsStorage = [this.advancedSearch, this.caseSensitive, this.createNewWindow, this.noExclude,
+        this.storage.optionsStorage = [this.advancedSearch, this.caseSensitive, this.createNewWindow,
             this.ignorePlugins, this.regex, this.searchTitles, this.searchWholeWords, this.searchTags,
             this.searchOwned, this.searchContent, this.searchPaths];
     }
@@ -259,8 +269,14 @@ export class SearchBoxCtrl implements IController {
         if (this.storage.searchWordStorage) {
             this.query = this.storage.searchWordStorage;
         }
-        if (this.storage.optionsStorage && this.storage.optionsStorage.length > 11) {
-            [this.advancedSearch, this.caseSensitive, this.createNewWindow, this.noExclude,
+        if (this.storage.relevanceThresholdStorage != null) {
+            this.relevanceThreshold = +this.storage.relevanceThresholdStorage;
+        }
+        if (this.storage.maxDocResultsStorage != null) {
+            this.maxDocResults = +this.storage.maxDocResultsStorage;
+        }
+        if (this.storage.optionsStorage && this.storage.optionsStorage.length > 10) {
+            [this.advancedSearch, this.caseSensitive, this.createNewWindow,
             this.ignorePlugins, this.regex, this.searchTitles, this.searchWholeWords, this.searchTags,
             this.searchOwned, this.searchContent, this.searchPaths] = this.storage.optionsStorage;
         }
@@ -313,8 +329,8 @@ export class SearchBoxCtrl implements IController {
     private getCommonSearchOptions() {
         return {
             caseSensitive: this.caseSensitive,
+            relevanceThreshold: this.relevanceThreshold,
             folder: this.folder,
-            noExclude: this.noExclude,
             query: this.query,
             regex: this.regex,
             searchOwned: this.searchOwned,
@@ -544,13 +560,20 @@ timApp.component("searchBox", {
                            typeahead-min-length="1">
                 </div>
            </div>
-           <div class="form-group" title="Input maximum number of results to get from a single document">
-                <label for="max-doc-results-selector" class="col-sm-6 control-label font-weight-normal"
-                style="text-align:left;">Max results per document:</label>
-                <div class="col-sm-6">
+           <div class="form-group">
+                <label for="max-doc-results-selector" class="col-sm-4 control-label font-weight-normal"
+                style="text-align:left;">Max results / doc:</label>
+                <div class="col-sm-3" title="Input maximum number of results to get from a single document">
                     <input ng-model="$ctrl.maxDocResults" name="max-doc-results-selector"
-                           type="number" class="form-control" id="folder-selector"
-                           placeholder="Input a result limit">
+                           type="number" class="form-control" id="max-doc-results-selector"
+                           placeholder="">
+                </div>
+                <label for="min-relevance-selector" class="col-sm-2 control-label font-weight-normal"
+                style="text-align:left;">Relevance:</label>
+                <div class="col-sm-3" title="Input minimum relevance value to include in results">
+                    <input ng-model="$ctrl.relevanceThreshold" name="min-relevance-selector"
+                           type="number" class="form-control" id="min-relevance-selector"
+                           placeholder="">
                 </div>
            </div>
 
@@ -566,8 +589,6 @@ timApp.component("searchBox", {
             <input type="checkbox" ng-model="$ctrl.searchOwned"> Search owned documents</label>
         <label class="font-weight-normal" title="Show result of each search in new window">
             <input type="checkbox" ng-model="$ctrl.createNewWindow"> Open new window for each search</label>
-        <label class="font-weight-normal" title="Don't exclude documents with zero or less relevance">
-            <input type="checkbox" ng-model="$ctrl.noExclude"> Don't exclude documents</label>
         <h5 class="font-weight-normal">Search scope:</h5>
         <label class="font-weight-normal" title="Search document content">
             <input type="checkbox" ng-model="$ctrl.searchContent"> Contents</label>

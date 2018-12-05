@@ -2,8 +2,8 @@
  * A component for viewing and changing document or folder relevance value.
  *
  * Relevance value denotes document or folder search priority. Higher value means the document or
- * documents in the folder will be higher in the results list. Item can be excluded from all search results by
- * setting relevance as zero or less.
+ * documents in the folder will be higher in the results list. Low relevance documents will be excluded from search,
+ * the relevance threshold value can be changed by user.
  */
 
 import {IController} from "angular";
@@ -94,7 +94,7 @@ timApp.component("relevanceEdit", {
     template: `
         <div class="input-group">
             <input class="form-control" ng-model="$ctrl.relevance" ng-keypress="$ctrl.keyPressed($event)" type="text"
-                title="Enter a new relevance value; relevance of 0 or less will be completely excluded from search"
+                title="Enter a new relevance value; as default relevances less than 10 will be excluded from search"
                 placeholder="Enter relevance value">
         </div>
         <div ng-if="$ctrl.isDefault">

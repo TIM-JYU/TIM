@@ -40,7 +40,6 @@ PROCESSED_CONTENT_FILE_NAME = "content_all_processed.log"
 PROCESSED_TITLE_FILE_NAME = "titles_all_processed.log"
 RAW_CONTENT_FILE_NAME = "all.log"
 DEFAULT_RELEVANCE = 10
-EXCLUDED_RELEVANCE = 0
 
 
 @search_routes.route('getFolders')
@@ -793,6 +792,18 @@ def path_search():
                           'content_results': []})
 
 
+def is_excluded(doc_info, relevance_threshold):
+    """
+    Exclude if relevance is less than relevance threshold.
+    :param doc_info: Document.
+    :param relevance_threshold: Min included relevance.
+    :return: True if document relevance is less than relevance threshold.
+    """
+    if get_doc_relevance(doc_info) < relevance_threshold:
+        return True
+    return False
+
+
 @search_routes.route("")
 def search():
     """
@@ -809,7 +820,7 @@ def search():
     ignore_plugins = get_option(request, 'ignorePlugins', default=False, cast=bool)
     search_titles = get_option(request, 'searchTitles', default=True, cast=bool)
     search_content = get_option(request, 'searchContent', default=True, cast=bool)
-    no_exclude = get_option(request, 'noExclude', default=False, cast=bool)
+    relevance_threshold = get_option(request, 'relevanceThreshold', default=0, cast=int)
 
     if search_content and not Path(dir_path / content_search_file_name).exists():
         abort(404, f"Combined content file '{content_search_file_name}' not found, unable to perform content search!")
@@ -889,6 +900,9 @@ def search():
                     if not user.has_ownership(doc_info, allow_admin=False):
                         continue
 
+                if is_excluded(doc_info, relevance_threshold):
+                    continue
+
                 doc_result = DocResult(doc_info)
 
                 doc_title = line_info['doc_title']
@@ -926,10 +940,7 @@ def search():
                     if not user.has_ownership(doc_info, allow_admin=False):
                         continue
 
-                doc_relevance = get_doc_relevance(doc_info)
-
-                # Skip if excluded relevance or less.
-                if not no_exclude and doc_relevance <= EXCLUDED_RELEVANCE:
+                if is_excluded(doc_info, relevance_threshold):
                     continue
 
                 pars = line_info['pars']
