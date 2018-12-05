@@ -19,6 +19,7 @@ class RelevanceCtrl implements IController {
     private item: IItem = $window.item;
     private relevance: number|undefined;
     private isDefault: boolean = false;
+    private isInherited: boolean = false;
     private errorMessage: string|undefined;
 
     async $onInit() {
@@ -33,10 +34,22 @@ class RelevanceCtrl implements IController {
         const r = await to($http.get<IRelevance>(`/items/relevance/get/${this.item.id}`));
         if (r.ok) {
             if (!r.result.data) {
-                this.isDefault = true;
-                this.relevance = DEFAULT_RELEVANCE_VALUE;
+
+                const r2 = await to($http.get<IRelevance>(`/items/parentrelevance/get/${this.item.id}`));
+                if (r2.ok) {
+                    if (!r2.result.data) {
+                        this.isDefault = true;
+                        this.relevance = DEFAULT_RELEVANCE_VALUE;
+                    } else {
+                        this.isInherited = true;
+                        this.relevance = r2.result.data.relevance;
+                    }
+                } else {
+                    this.errorMessage = r2.result.data.error;
+                }
             } else {
                 this.isDefault = false;
+                this.isInherited = false;
                 this.relevance = r.result.data.relevance;
             }
         } else {
@@ -55,23 +68,22 @@ class RelevanceCtrl implements IController {
             {value: newValue}));
         if (r.ok) {
             this.isDefault = false;
+            this.isInherited = false;
         } else {
             this.errorMessage = r.result.data.error;
         }
     }
 
     /**
-     * Return default relevance value.
+     * Return default (or inherited) relevance value.
      */
     private async resetRelevance() {
         this.errorMessage = undefined;
         const r = await to($http.get<IRelevance>(`/items/relevance/reset/${this.item.id}`));
-        if (r.ok) {
-            this.isDefault = true;
-            this.relevance = DEFAULT_RELEVANCE_VALUE;
-        } else {
+        if (!r.ok) {
             this.errorMessage = r.result.data.error;
         }
+        void this.getRelevance();
     }
 
     private async resetClicked() {
@@ -97,13 +109,18 @@ timApp.component("relevanceEdit", {
                 title="Enter a new relevance value; as default relevances less than 10 will be excluded from search"
                 placeholder="Enter relevance value">
         </div>
-        <div ng-if="$ctrl.isDefault">
-             <p>Note: parent folder relevance may override default value</p>
+        <p></p>
+        <div ng-if="$ctrl.isDefault" class="alert alert-warning">
+             <span class="glyphicon glyphicon-exclamation-sign"></span>
+             Default relevance value. Note: this may be affected by changes in parent directories.
         </div>
-        <div ng-if="$ctrl.errorMessage" class="alert alert-warning">
+        <div ng-if="$ctrl.isInherited" class="alert alert-info">
+             <span class="glyphicon glyphicon-exclamation-sign"></span>
+             Relevance value was inherited from a parent directory.
+        </div>
+        <div ng-if="$ctrl.errorMessage" class="alert alert-info">
             <span class="glyphicon glyphicon-exclamation-sign"></span> {{$ctrl.errorMessage}}
         </div>
-        <p></p>
         <div>
             <button class="timButton" ng-click="$ctrl.saveClicked()" title="Save new relevance value">Save</button>
             <button class="timButton" ng-click="$ctrl.resetClicked()" ng-disabled="$ctrl.isDefault"

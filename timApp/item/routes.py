@@ -512,7 +512,7 @@ def get_blockrelevance(item_id: int):
 
 
 @view_page.route('/items/relevance/set/<int:item_id>', methods=["POST"])
-def set_blockrelevance(item_id):
+def set_blockrelevance(item_id: int):
     """
     Add block relevance or edit if it already exists for the block.
     :param item_id: Item id.
@@ -546,7 +546,7 @@ def set_blockrelevance(item_id):
 
 
 @view_page.route('/items/relevance/reset/<int:item_id>')
-def reset_blockrelevance(item_id):
+def reset_blockrelevance(item_id: int):
     """
     Reset (delete) block relevance.
     :param item_id: Item id.
@@ -567,3 +567,22 @@ def reset_blockrelevance(item_id):
             abort(400, f"Resetting block relevance failed: {get_error_message(e)}")
     return ok_response()
 
+
+@view_page.route('/items/parentrelevance/get/<int:item_id>')
+def get_parentrelevance(item_id: int):
+    """
+    Returns first non-null parent relevance value. If no relevance was found until root, return None.
+    :param item_id: Item id.
+    :return: Parent relevance.
+    """
+    i = Item.find_by_id(item_id)
+    if not i:
+        abort(404, 'Item not found')
+    verify_view_access(i)
+    parents = i.parents_to_root
+    for parent in parents:
+        if parent.relevance:
+            # Return relevance with parent's id.
+            return json_response(parent.relevance)
+    # If parents don't have relevance either, return item's null relevance.
+    return json_response(None)
