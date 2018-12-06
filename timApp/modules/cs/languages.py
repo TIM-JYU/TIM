@@ -889,6 +889,9 @@ class SimCir(Language):
 class Sage(Language):
     pass
 
+class Stack(Language):
+    pass
+
 
 class R(Language):
     def __init__(self, query, sourcecode):
@@ -1117,3 +1120,4 @@ languages["kotlin"] = Kotlin
 languages["fortran"] = Fortran
 languages["rust"] = Rust
 languages["pascal"] = Pascal
+languages["stack"] = Stack
