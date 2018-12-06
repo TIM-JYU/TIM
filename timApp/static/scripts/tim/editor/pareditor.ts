@@ -851,15 +851,19 @@ ${backTicks}
         let event = e as any; // ClipboardEvent;
         let items = (event.clipboardData || event.originalEvent.clipboardData).items;
         // find pasted image among pasted items
-        var blob = null;
+        let blob = null;
+        let blobs = 0;
         for (let i = 0; i < items.length; i++) {
+            // TODO: one could inspect if some item contains image name and then use that to name the image
             if (items[i].type.indexOf("image") === 0) {
                 blob = items[i].getAsFile();
                 if (blob !== null) {
                     this.onFileSelect(blob)
+                    blobs++;
                 }
             }
         }
+        if ( blobs > 0 ) e.preventDefault();
     }
 
     onDrop(e: any) {
@@ -890,7 +894,7 @@ ${backTicks}
         let attachmentParams;
         let macroParams;
 
-        // To identify attachment-macro.
+        // To identify attachment-macro. // TODO: jos editorissa monta liitettä, tekee väärin
         const macroStringBegin = "%%liite(";
         const macroStringEnd = ")%%";
 
@@ -941,12 +945,14 @@ ${backTicks}
                     const editor = this.editor!;
                     const isplugin = (editor.editorStartsWith("``` {"));
                     let start = "[File](";
-                    if (response.data.image) {
-                        this.uploadedFile = "/images/" + response.data.image;
+                    let savedir = '/files/'
+                    if (response.data.image  || response.data.file.toString().indexOf(".svg") >= 0 ) {
                         start = "![Image](";
-                    } else {
-                        this.uploadedFile = "/files/" + response.data.file;
                     }
+                    if (response.data.image ) {
+                        savedir = "/images/"; // TODO why is svg going to files, not images???
+                    }
+                    this.uploadedFile = savedir + response.data.file;
                     if (isplugin) {
                         editor.insertTemplate(this.uploadedFile);
                     } else {
