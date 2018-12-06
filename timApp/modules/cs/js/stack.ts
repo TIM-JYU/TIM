@@ -5,12 +5,13 @@ import {GenericPluginMarkup, PluginBase, withDefault} from "tim/plugin/util";
 const stackApp = angular.module("stackApp", ["ngSanitize"]);
 
 
-function ifIs(value: number | undefined, name: string) {
+function ifIsS(value: number | undefined, name: string) {
     if (!value) {
         return "";
     }
     return name + '="' + value + '" ';
 }
+
 
 const StackMarkup = t.intersection([
     t.partial({
@@ -35,12 +36,12 @@ const StackMarkup = t.intersection([
         open: withDefault(t.boolean, false),
     }),
 ]);
-const ShowFileAll = t.type({markup: StackMarkup});
+const StackAll = t.type({markup: StackMarkup});
 
 // TODO: register video to ViewCtrl so that ImageX can access it
 class StackController extends PluginBase<t.TypeOf<typeof StackMarkup>,
-    t.TypeOf<typeof ShowFileAll>,
-    typeof ShowFileAll> {
+    t.TypeOf<typeof StackAll>,
+    typeof StackAll> {
     private static $inject = ["$scope", "$element"];
 
     get videoicon() {
@@ -116,8 +117,8 @@ class StackController extends PluginBase<t.TypeOf<typeof StackMarkup>,
         }
 
         this.span = this.limits;
-        const w = ifIs(this.width, "width");
-        const h = ifIs(this.height, "height");
+        const w = ifIsS(this.width, "width");
+        const h = ifIsS(this.height, "height");
         const moniviestin = this.attrs.file.indexOf("m3.jyu.fi") >= 0;
         let params = "?";
         if (this.start) {
@@ -180,7 +181,7 @@ class StackController extends PluginBase<t.TypeOf<typeof StackMarkup>,
     }
 
     protected getAttributeType() {
-        return ShowFileAll;
+        return StackAll;
     }
 }
 
@@ -194,14 +195,16 @@ const common = {
 stackApp.component("stackRunner", {
     ...common,
     template: `
+    <h1>Stack main</h1>
 <div class="videoRunDiv">
+    <h1>Stack</h1>
     <p ng-if="$ctrl.header" ng-bind-html="$ctrl.header"></p>
     <p ng-if="$ctrl.stem" class="stem" ng-bind-html="$ctrl.stem"></p>
     <div class="videoContainer"></div>
     <div class="no-popup-menu">
         <img src="/csstatic/video.png"
              ng-if="!$ctrl.videoOn"
-             ng-click="$ctrl.showVideo()"
+             ng-click="$ctrl.showStack()"
              width="200"
              alt="Click here to show the video"/></div>
     <a href="{{$ctrl.doclink}}" ng-if="$ctrl.doclink" target="timdoc">
