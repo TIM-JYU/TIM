@@ -950,9 +950,11 @@ ${backTicks}
                         start = "![Image](";
                     }
                     if (response.data.image ) {
-                        savedir = "/images/"; // TODO why is svg going to files, not images???
+                        savedir = "/images/"
+                        this.uploadedFile = savedir + response.data.image;
+                    } else {
+                        this.uploadedFile = savedir + response.data.file;
                     }
-                    this.uploadedFile = savedir + response.data.file;
                     if (isplugin) {
                         editor.insertTemplate(this.uploadedFile);
                     } else {
