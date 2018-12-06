@@ -1005,6 +1005,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             if not (is_tauno or is_rikki or is_parsons or is_simcir or is_graphviz ):
                 templs = get_all_templates('templates')
             result_json = {"js": ["/cs/js/build/csPlugin.js",
+                                  "/cs/js/build/stack.js"
                                   ],
                            "angularModule": ["csApp", "csConsoleApp"],
                            "css": ["/cs/css/cs.css",
