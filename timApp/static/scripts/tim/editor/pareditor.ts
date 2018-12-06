@@ -1101,6 +1101,7 @@ ${backTicks}
             neweditor.getSession().on("change", () => {
                 this.editorChanged();
             });
+            /*
             neweditor.getSession().on("paste", (e) => {
                 this.onPaste(e); // TODO: does newer fire
             });
@@ -1114,6 +1115,7 @@ ${backTicks}
                // this.onPaste(e); // only works for text input.
                 return;
             };
+            */
             neweditor.setBehavioursEnabled(this.getLocalBool("acebehaviours", false));
             neweditor.getSession().setUseWrapMode(this.getLocalBool("acewrap", false));
             neweditor.setOptions({maxLines: 28});
