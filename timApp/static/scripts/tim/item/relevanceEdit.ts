@@ -12,6 +12,14 @@ import {timApp} from "../app";
 import {$http, $window} from "../util/ngimport";
 import {IItem, IRelevance} from "./IItem";
 
+export const relevanceSuggestions = [
+            {value: -100, name:  "-100 = Buried"},
+            {value: 0, name:    "0 = Ignored"},
+            {value: 1, name:    "1 = Not important"},
+            {value: 10, name:   "10 = Normal"},
+            {value: 50, name:   "50 = Important"},
+            {value: 100, name:  "100 = Very important"}];
+
 export const DEFAULT_RELEVANCE_VALUE: number = 10;
 
 class RelevanceCtrl implements IController {
@@ -21,6 +29,7 @@ class RelevanceCtrl implements IController {
     private isDefault: boolean = false;
     private isInherited: boolean = false;
     private errorMessage: string|undefined;
+    private suggestions = relevanceSuggestions;
 
     async $onInit() {
         void this.getRelevance();
@@ -106,8 +115,8 @@ timApp.component("relevanceEdit", {
     template: `
         <div class="input-group">
             <input class="form-control" ng-model="$ctrl.relevance" ng-keypress="$ctrl.keyPressed($event)" type="text"
-                title="Enter a new relevance value; as default relevances less than 10 will be excluded from search"
-                placeholder="Enter relevance value">
+                title="Enter a new relevance value" placeholder="Enter relevance value" typeahead-min-length="0"
+                uib-typeahead="s.value as s.name for s in $ctrl.suggestions | orderBy:'-value'">
         </div>
         <p></p>
         <div ng-if="$ctrl.isDefault" class="alert alert-warning">

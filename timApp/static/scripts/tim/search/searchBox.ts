@@ -10,6 +10,7 @@ import {$http, $localStorage, $window} from "../util/ngimport";
 import {Binding, to} from "../util/utils";
 import {ShowSearchResultController, showSearchResultDialog} from "./searchResultsCtrl";
 import {KEY_ENTER} from "../util/keycodes";
+import {relevanceSuggestions} from "../item/relevanceEdit";
 
 /**
  * All data title/word search route returns.
@@ -120,7 +121,8 @@ export class SearchBoxCtrl implements IController {
     private searchWholeWords: boolean = true; // Whole word search.
     private searchOwned: boolean = false; // Limit search to docs owned by the user.
     private searchPaths: boolean = false; // Search document paths.
-    private relevanceThreshold: number = 10; // Exclude documents with < X relevance.
+    private relevanceThreshold: number = 1; // Exclude documents with < X relevance.
+    private suggestions = relevanceSuggestions;
 
     // Controller's private attributes:
     private errorMessage: string | undefined; // Message displayed only in search panel.
@@ -565,15 +567,14 @@ timApp.component("searchBox", {
                 style="text-align:left;">Max results / doc:</label>
                 <div class="col-sm-3" title="Input maximum number of results to get from a single document">
                     <input ng-model="$ctrl.maxDocResults" name="max-doc-results-selector"
-                           type="number" class="form-control" id="max-doc-results-selector"
-                           placeholder="">
+                           type="number" class="form-control" id="max-doc-results-selector">
                 </div>
                 <label for="min-relevance-selector" class="col-sm-2 control-label font-weight-normal"
                 style="text-align:left;">Relevance:</label>
                 <div class="col-sm-3" title="Input minimum relevance value to include in results">
                     <input ng-model="$ctrl.relevanceThreshold" name="min-relevance-selector"
-                           type="number" class="form-control" id="min-relevance-selector"
-                           placeholder="">
+                           type="number" class="form-control" id="min-relevance-selector" typeahead-min-length="0"
+                            uib-typeahead="s.value as s.name for s in $ctrl.suggestions | orderBy:'-value'">
                 </div>
            </div>
 
