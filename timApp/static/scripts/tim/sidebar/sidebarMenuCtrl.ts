@@ -17,6 +17,8 @@ import {setConsent} from "../user/settingsCtrl";
 import {Users, UserService} from "../user/userService";
 import {$http, $localStorage, $window} from "../util/ngimport";
 import {IOkResponse, Require, to} from "../util/utils";
+import {showRelevanceEditDialog} from "../item/relevanceEditDialog";
+import {IRelevanceResponse} from "../item/relevanceEdit";
 
 /**
  * FILL WITH SUITABLE TEXT
@@ -63,6 +65,7 @@ export class SidebarMenuCtrl implements IController {
     // null means that the user has approved only cookies (but has not seen the data collection options)
     // undefined means that the user has not acknowledged anything yet
     private storage: ngStorage.StorageService & {consent: null | undefined | number};
+    private currentRelevance: string = "?";
 
     constructor() {
         this.currentLecturesList = [];
@@ -92,6 +95,7 @@ export class SidebarMenuCtrl implements IController {
     async $onInit() {
         this.documentMemoMinutes = $window.memoMinutes;
         this.docSettings = $window.docSettings;
+        void this.getCurrentRelevance();
         // await this.processConsent();
     }
 
@@ -284,6 +288,13 @@ export class SidebarMenuCtrl implements IController {
     }
 
     /**
+     * Open relevance edit dialog.
+     */
+    openRelevanceEditDialog() {
+        void showRelevanceEditDialog($window.item);
+    }
+
+    /**
      * Opens 'Set as a course' -dialog.
      */
     openCourseDialog() {
@@ -391,6 +402,15 @@ export class SidebarMenuCtrl implements IController {
         return temp;
     }
 
+    private async getCurrentRelevance() {
+        if ($window.item) {
+            const r = await to($http.get<IRelevanceResponse>(`/items/relevance/get/${$window.item.id}`));
+            if (r.ok) {
+                this.currentRelevance = "" + r.result.data.relevance.relevance;
+            }
+        }
+    }
+
     private async markTranslated() {
         if (this.vctrl && window.confirm("This will mark all paragraphs in this document as translated. Continue?")) {
             const r = await to($http.post<IOkResponse>(`/markTranslated/${this.vctrl.item.id}`, {}));
@@ -429,18 +449,29 @@ timApp.component("timSidebarMenu", {
             <h5>Customize</h5>
             <a href="/settings">Customize TIM</a>
         </div>
-        <div ng-show="!($ctrl.vctrl.item && !$ctrl.vctrl.item.isFolder)">
-            <h5>Search</h5>
-            <button class="timButton btn-block"
-                    title="Search with tags" ng-click="$ctrl.searchWithTagsStart()">Search with tags
+        <div ng-if="!($ctrl.vctrl.item && !$ctrl.vctrl.item.isFolder && $ctrl.vctrl.item.rights.manage)">
+            <h5>Folder settings</h5>
+            <button class="timButton btn-block" title="Set item relevance value"
+                    ng-click="$ctrl.openRelevanceEditDialog()">
+                    Edit relevance (<span uib-tooltip="Current relevance value">{{$ctrl.currentRelevance}}</span>)
             </button>
         </div>
-
+        <div ng-show="!($ctrl.vctrl.item && !$ctrl.vctrl.item.isFolder)">
+            <h5>Search</h5>
+            <button class="timButton btn-block" title="Search with tags"
+                    ng-click="$ctrl.searchWithTagsStart()">Search with tags
+            </button>
+        </div>
         <div ng-if="$ctrl.users.isLoggedIn() && $ctrl.vctrl && !$ctrl.vctrl.item.isFolder">
             <h5>Document settings</h5>
             <button ng-if="$ctrl.vctrl.item.rights.editable"
                     class="timButton btn-block"
                     ng-click="$ctrl.vctrl.editingHandler.editSettingsPars()">Edit settings
+            </button>
+            <button class="timButton btn-block" ng-if="$ctrl.vctrl.item.rights.manage"
+                    title="Set item relevance value"
+                    ng-click="$ctrl.openRelevanceEditDialog()">
+                    Edit relevance (<span uib-tooltip="Current relevance value">{{$ctrl.currentRelevance}}</span>)
             </button>
             <button class="timButton btn-block"
                     ng-click="$ctrl.markAllAsRead()"
@@ -451,7 +482,6 @@ timApp.component("timSidebarMenu", {
                     title="Mark document as translated">Mark all as translated
             </button>
         </div>
-
         <div ng-show="$ctrl.lctrl.lectureSettings.inLecture">
             <h5>Lecture settings</h5>
             <div class="checkbox">
@@ -514,7 +544,6 @@ timApp.component("timSidebarMenu", {
                     ng-click="$ctrl.mergePdf()">Merge attachments
             </button>
         </div>
-
     </uib-tab>
 
     <uib-tab ng-if="$ctrl.displayIndex.length > 0" index="0">
