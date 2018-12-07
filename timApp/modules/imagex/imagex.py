@@ -109,11 +109,6 @@ class ImagexServer(tim_server.TimServer):
             s = make_lazy(s, query, get_lazy_imagex_html)
         return s
 
-    # Creates accurate state for answer, ie. changes the object positions.
-    def create_state_imagex(self, markup, drags):
-        dict = {"objects": drags}
-        return dict
-
     # gets reqs
     def get_reqs_result(self) -> dict:
         """

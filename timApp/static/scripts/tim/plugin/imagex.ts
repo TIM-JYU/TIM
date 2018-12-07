@@ -4,7 +4,7 @@ import * as t from "io-ts";
 import {ViewCtrl} from "../document/viewctrl";
 import {editorChangeValue} from "../editor/editorScope";
 import {$http, $q, $sce, $window} from "../util/ngimport";
-import {markAsUsed, to} from "../util/utils";
+import {markAsUsed, Require, to} from "../util/utils";
 import {GenericPluginMarkup, PluginBase, withDefault} from "./util";
 
 markAsUsed(ngSanitize);
@@ -44,10 +44,7 @@ function isFakePlayer(p: VideoPlayer): p is IFakeVideo {
     return "fakeVideo" in p && p.fakeVideo;
 }
 
-function tupleToCoords(p: TuplePoint | undefined) {
-    if (!p) {
-        return undefined;
-    }
+function tupleToCoords(p: TuplePoint) {
     return {x: p[0], y: p[1]};
 }
 
@@ -56,20 +53,20 @@ class FreeHand {
     public redraw?: () => void;
     private videoPlayer: VideoPlayer;
     private emotion: boolean;
-    private scope: ImageXController;
+    private imgx: ImageXController;
     private prevPos?: TuplePoint;
     private lastDrawnSeg?: number;
     private lastVT?: number;
     private ctx: CanvasRenderingContext2D;
 
-    constructor(scope: ImageXController, drawData: ILineSegment[], player: HTMLVideoElement | undefined) {
+    constructor(imgx: ImageXController, drawData: ILineSegment[], player: HTMLVideoElement | undefined) {
         this.freeDrawing = drawData;
-        this.ctx = scope.getCanvasCtx();
-        this.emotion = scope.emotion;
-        this.scope = scope;
+        this.ctx = imgx.getCanvasCtx();
+        this.emotion = imgx.emotion;
+        this.imgx = imgx;
         this.videoPlayer = player || {currentTime: 1e60, fakeVideo: true};
         if (!isFakePlayer(this.videoPlayer)) {
-            if (this.scope.attrs.analyzeDot) {
+            if (this.imgx.attrs.analyzeDot) {
                 this.videoPlayer.ontimeupdate = () => this.drawCirclesVideoDot(this.ctx, this.freeDrawing, this.videoPlayer);
             } else {
                 this.videoPlayer.ontimeupdate = () => this.drawCirclesVideo(this.ctx, this.freeDrawing, this.videoPlayer);
@@ -79,7 +76,7 @@ class FreeHand {
 
     draw(ctx: CanvasRenderingContext2D) {
         if (this.emotion) {
-            if (this.scope.teacherMode) {
+            if (this.imgx.teacherMode) {
                 if (isFakePlayer(this.videoPlayer)) {
                     this.drawCirclesVideo(ctx, this.freeDrawing, this.videoPlayer);
                 }
@@ -89,15 +86,12 @@ class FreeHand {
         }
     }
 
-    startSegment(pxy?: IPoint) {
-        if (!pxy) {
-            return;
-        }
+    startSegment(pxy: IPoint) {
         const p: TuplePoint = [Math.round(pxy.x), Math.round(pxy.y)];
         const ns: ILineSegment = {lines: [p]};
         if (!this.emotion) {
-            ns.color = this.scope.color;
-            ns.w = this.scope.w;
+            ns.color = this.imgx.color;
+            ns.w = this.imgx.w;
         }
         this.freeDrawing.push(ns);
         this.prevPos = p;
@@ -107,7 +101,7 @@ class FreeHand {
         // this.drawingSurfaceImageData = null; // not used anywhere
     }
 
-    startSegmentDraw(redraw: () => void, pxy: IPoint) {
+    startSegmentDraw(pxy: IPoint) {
         if (!pxy) {
             return;
         }
@@ -121,13 +115,11 @@ class FreeHand {
         } else {
             p = [Math.round(pxy.x), Math.round(pxy.y)];
         }
-        this.redraw = redraw;
-        const ns: any = {};
+        const ns: ILineSegment = {lines: [p]};
         if (!this.emotion) {
-            ns.color = this.scope.color;
-            ns.w = this.scope.w;
+            ns.color = this.imgx.color;
+            ns.w = this.imgx.w;
         }
-        ns.lines = [p];
         this.freeDrawing.push(ns);
         this.prevPos = p;
     }
@@ -151,7 +143,7 @@ class FreeHand {
             //    ns.lines = [p];
             ns.lines.push(p);
         }
-        if (!this.scope.lineMode || this.emotion) {
+        if (!this.imgx.lineMode || this.emotion) {
             this.prevPos = p;
         }
     }
@@ -178,18 +170,15 @@ class FreeHand {
         }
     }
 
-    addPointDraw(ctx: CanvasRenderingContext2D, pxy?: IPoint) {
-        if (!pxy) {
-            return;
-        }
-        if (this.scope.lineMode) {
+    addPointDraw(ctx: CanvasRenderingContext2D, pxy: IPoint) {
+        if (this.imgx.lineMode) {
             this.popPoint(1);
             if (this.redraw) {
                 this.redraw();
             }
         }
         if (!this.emotion) {
-            this.line(ctx, this.prevPos, [pxy.x, pxy.y]);
+            this.line(ctx, this.prevPos, pxy);
         }
         this.addPoint(pxy);
     }
@@ -202,42 +191,45 @@ class FreeHand {
     }
 
     setColor(newColor: string) {
-        this.scope.color = newColor;
-        this.startSegment(tupleToCoords(this.prevPos));
+        this.imgx.color = newColor;
+        if (this.prevPos)
+            this.startSegment(tupleToCoords(this.prevPos));
     }
 
     setWidth(newWidth: number) {
-        this.scope.w = newWidth;
-        if (this.scope.w < 1) {
-            this.scope.w = 1;
+        this.imgx.w = newWidth;
+        if (this.imgx.w < 1) {
+            this.imgx.w = 1;
         }
-        this.startSegment(tupleToCoords(this.prevPos));
+        if (this.prevPos)
+            this.startSegment(tupleToCoords(this.prevPos));
     }
 
     incWidth(dw: number) {
-        this.setWidth(this.scope.w + dw);
+        this.setWidth(this.imgx.w + dw);
     }
 
     setLineMode(newMode: boolean) {
-        this.scope.lineMode = newMode;
+        this.imgx.lineMode = newMode;
     }
 
     flipLineMode() {
-        this.setLineMode(!this.scope.lineMode);
+        this.setLineMode(!this.imgx.lineMode);
     }
 
-    line(ctx: CanvasRenderingContext2D, p1: TuplePoint | undefined, p2: TuplePoint) {
+    line(ctx: CanvasRenderingContext2D, p1: TuplePoint | undefined, p2: IPoint) {
         if (!p1 || !p2) {
             return;
         }
         ctx.beginPath();
-        ctx.strokeStyle = this.scope.color;
-        ctx.lineWidth = this.scope.w;
+        ctx.strokeStyle = this.imgx.color;
+        ctx.lineWidth = this.imgx.w;
         ctx.moveTo(p1[0], p1[1]);
-        ctx.lineTo(p2[0], p2[1]);
+        ctx.lineTo(p2.x, p2.y);
         ctx.stroke();
     }
 
+    // TODO get rid of type assertions ("as number")
     drawCirclesVideoDot(ctx: CanvasRenderingContext2D, dr: ILineSegment[], videoPlayer: VideoPlayer) {
         for (let dri = 0; dri < dr.length; dri++) {
             const seg = dr[dri];
@@ -247,7 +239,7 @@ class FreeHand {
             let seg2 = 0;
             let s = "";
             for (let lni = 0; lni < seg.lines.length; lni++) {
-                if (vt < seg.lines[lni][3]) {
+                if (vt < (seg.lines[lni][3] as number)) {
                     break;
                 }
                 seg1 = seg2;
@@ -256,11 +248,11 @@ class FreeHand {
 
             // console.log("" + seg1 + "-" + seg2 + ": " + seg.lines[seg2][3]);
             let drawDone = false;
-            if (this.scope.attrs.dotVisibleTime && this.lastVT && (vt - this.lastVT) > this.scope.attrs.dotVisibleTime) { // remove old dot if needed
-                this.scope.draw();
+            if (this.imgx.attrs.dotVisibleTime && this.lastVT && (vt - this.lastVT) > this.imgx.attrs.dotVisibleTime) { // remove old dot if needed
+                this.imgx.draw();
                 drawDone = true;
             }
-            if (this.scope.attrs.showVideoTime) {
+            if (this.imgx.attrs.showVideoTime) {
                 showTime(ctx, vt, 0, 0, "13px Arial");
             }
             if (this.lastDrawnSeg == seg2) {
@@ -268,9 +260,9 @@ class FreeHand {
             }
             this.lastDrawnSeg = -1;
             if (!drawDone) {
-                this.scope.draw();
+                this.imgx.draw();
             }
-            if (this.scope.attrs.showVideoTime) {
+            if (this.imgx.attrs.showVideoTime) {
                 showTime(ctx, vt, 0, 0, "13px Arial");
             }
             if (seg1 < 0 || vt == 0 || seg.lines[seg2][3] == 0) {
@@ -283,13 +275,13 @@ class FreeHand {
             this.lastVT = vt;
             applyStyleAndWidth(ctx, seg);
             ctx.moveTo(seg.lines[seg1][0], seg.lines[seg1][1]);
-            if (this.scope.attrs.drawLast) {
+            if (this.imgx.attrs.drawLast) {
                 ctx.lineTo(seg.lines[seg2][0], seg.lines[seg2][1]);
             }
             ctx.stroke();
             drawFillCircle(ctx, 30, seg.lines[seg2][0], seg.lines[seg2][1], "black", 0.5);
-            if (this.scope.attrs.showTimes) {
-                s = dateToString(seg.lines[seg2][3], false);
+            if (this.imgx.attrs.showTimes) {
+                s = dateToString(seg.lines[seg2][3] as number, false);
                 drawText(ctx, s, seg.lines[seg2][0], seg.lines[seg2][1], "13px Arial");
             }
 
@@ -297,9 +289,10 @@ class FreeHand {
         }
     }
 
+    // TODO get rid of type assertions ("as number")
     drawCirclesVideo(ctx: CanvasRenderingContext2D, dr: ILineSegment[], videoPlayer: VideoPlayer) {
         if (!isFakePlayer(videoPlayer)) {
-            this.scope.draw();
+            this.imgx.draw();
         }
         const vt = videoPlayer.currentTime;
         for (let dri = 0; dri < dr.length; dri++) {
@@ -312,20 +305,20 @@ class FreeHand {
             applyStyleAndWidth(ctx, seg);
             ctx.moveTo(seg.lines[0][0], seg.lines[0][1]);
             if (isFakePlayer(videoPlayer)) {
-                s = dateToString(seg.lines[0][2], true);
+                s = dateToString(seg.lines[0][2] as number, true);
                 drawText(ctx, s, seg.lines[0][0], seg.lines[0][1]);
             } else {
-                if (vt >= seg.lines[0][3]) {
+                if (vt >= (seg.lines[0][3] as number)) {
                     drawFillCircle(ctx, 5, seg.lines[0][0], seg.lines[0][1], "black", 0.5);
                 }
             }
             for (let lni = 1; lni < seg.lines.length; lni++) {
-                if (vt < seg.lines[lni][3]) {
+                if (vt < (seg.lines[lni][3] as number)) {
                     break;
                 }
                 ctx.lineTo(seg.lines[lni][0], seg.lines[lni][1]);
                 if (isFakePlayer(videoPlayer)) {
-                    s = dateToString(seg.lines[lni][2], true);
+                    s = dateToString(seg.lines[lni][2] as number, true);
                     drawText(ctx, s, seg.lines[lni][0], seg.lines[lni][1]);
                 }
             }
@@ -340,8 +333,7 @@ function applyStyleAndWidth(ctx: CanvasRenderingContext2D, seg: ILineSegment) {
 }
 
 function drawFreeHand(ctx: CanvasRenderingContext2D, dr: ILineSegment[]) {
-    for (let dri = 0; dri < dr.length; dri++) {
-        const seg = dr[dri];
+    for (const seg of dr) {
         if (seg.lines.length < 2) {
             continue;
         }
@@ -388,8 +380,9 @@ function showTime(ctx: CanvasRenderingContext2D, vt: number, x: number, y: numbe
     ctx.stroke();
 }
 
-const directiveTemplate = `<div class="csRunDiv no-popup-menu">
-    <p>Header comes here</p>
+const directiveTemplate = `
+<div class="csRunDiv no-popup-menu">
+    <h4 ng-if="$ctrl.header" ng-bind-html="$ctrl.header"></h4>
     <p ng-if="$ctrl.stem" class="stem" ng-bind-html="$ctrl.stem"></p>
     <div>
         <canvas class="canvas"
@@ -460,14 +453,11 @@ const directiveTemplate = `<div class="csRunDiv no-popup-menu">
     <pre class="" ng-show="$ctrl.result">{{$ctrl.result}}</pre>
     <div class="replyHTML" ng-if="$ctrl.replyHTML"><span ng-bind-html="$ctrl.svgImageSnippet()"></span></div>
     <img ng-if="$ctrl.replyImage" class="grconsole" ng-src="{{$ctrl.replyImage}}" alt=""/>
-    <p class="plgfooter">Here comes footer</p>
+    <p class="plgfooter" ng-if="$ctrl.footer" ng-bind-html="$ctrl.footer"></p>
 </div>
 `;
 
 function drawFillCircle(ctx: CanvasRenderingContext2D, r: number, p1: number, p2: number, c: string, tr: number) {
-    if (!p1 || !p2) {
-        return;
-    }
     const p = ctx;
     p.globalAlpha = tr;
     p.beginPath();
@@ -499,31 +489,19 @@ function getPos(canvas: Element, p: MouseOrTouch) {
 
 type ObjectType = "target" | "fixedobject" | "dragobject";
 
-function isObjectOnTopOf(position: IPoint, object: DrawObject, name: ObjectType, grabOffset: number) {
-    if (object.name !== name) {
-        return false;
-    }
+function isObjectOnTopOf(position: IPoint, object: DrawObject, grabOffset: number) {
     return object.isPointInside(position, grabOffset);
 }
 
 function areObjectsOnTopOf<T extends DrawObject>(
     position: IPoint,
     objects: T[],
-    name: ObjectType,
     grabOffset: number | undefined,
 ): T | undefined {
     for (const o of objects) {
-        const collision = isObjectOnTopOf(position, o, name, 0);
+        const collision = isObjectOnTopOf(position, o, grabOffset || 0);
         if (collision) {
             return o;
-        }
-    }
-    if (grabOffset) {
-        for (const o of objects) {
-            const collision = isObjectOnTopOf(position, o, name, grabOffset);
-            if (collision && o.name === "dragobject") {
-                return o;
-            }
         }
     }
     return undefined;
@@ -533,13 +511,19 @@ type MouseOrTouch = MouseEvent | Touch;
 
 type DrawObject = Target | FixedObject | DragObject;
 
+enum TargetState {
+    Normal,
+    Snap,
+    Drop,
+}
+
 class DragTask {
     public ctx: CanvasRenderingContext2D;
     private mousePosition: IPoint;
     private freeHand: FreeHand;
     private mouseDown = false;
-    private activeDragObject?: DragObject;
-    private drawObjects: DrawObject[];
+    private activeDragObject?: {obj: DragObject, xoffset: number, yoffset: number};
+    public drawObjects: DrawObject[];
 
     constructor(private canvas: HTMLCanvasElement, private imgx: ImageXController) {
         this.ctx = canvas.getContext("2d")!;
@@ -548,7 +532,7 @@ class DragTask {
         this.freeHand = imgx.freeHandDrawing;
 
         this.canvas.style.touchAction = "double-tap-zoom"; // To get IE and EDGE touch to work
-        this.freeHand.redraw = () => this.redraw();
+        this.freeHand.redraw = () => this.draw();
 
         this.canvas.style.msTouchAction = "none";
 
@@ -592,7 +576,6 @@ class DragTask {
                     }
                     if (c === "c") {
                         this.freeHand.clear();
-                        this.draw();
                     }
                     if (c === "r") {
                         this.freeHand.setColor("#f00");
@@ -657,44 +640,54 @@ class DragTask {
         return result;
     }
 
+    get dragobjects(): DragObject[] {
+        const result = [];
+        for (const o of this.drawObjects) {
+            if (o.name === "dragobject") {
+                result.push(o);
+            }
+        }
+        return result;
+    }
+
     draw() {
         const canvas = this.canvas;
-        this.ctx.fillStyle = getValue1(scope.background, "color", "white");
+        this.ctx.fillStyle = "white"; // TODO get from markup?
         this.ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        for (let i = 0; i < this.drawObjects.length; i++) {
-            if (this.activeDragObject) {
-                const dobj = this.activeDragObject;
-                if (dobj.lock != "x") {
-                    dobj.x = toRange(dobj.xlimits, this.mousePosition.x - dobj.xoffset);
-                }
-                if (dobj.lock != "y") {
-                    dobj.y = toRange(dobj.ylimits, this.mousePosition.y - dobj.yoffset);
-                }
+        if (this.activeDragObject) {
+            const dobj = this.activeDragObject;
+            if (dobj.obj.lock !== "x" && dobj.obj.xlimits) {
+                dobj.obj.x = toRange(dobj.obj.xlimits, this.mousePosition.x - dobj.xoffset);
             }
-            this.drawObjects[i].draw();
-            if (this.drawObjects[i].name == "dragobject") {
+            if (dobj.obj.lock !== "y" && dobj.obj.ylimits) {
+                dobj.obj.y = toRange(dobj.obj.ylimits, this.mousePosition.y - dobj.yoffset);
+            }
+        }
+        const targets = this.targets;
+        for (const o of this.drawObjects) {
+            o.draw();
+            if (o.name === "dragobject") {
                 if (this.activeDragObject) {
-                    const onTopOf = areObjectsOnTopOf(this.activeDragObject,
-                        this.targets, "target", this.imgx.grabOffset);
+                    const onTopOf = areObjectsOnTopOf(this.activeDragObject.obj,
+                        targets, this.imgx.grabOffset);
                     if (onTopOf && onTopOf.objectCount < onTopOf.maxObjects) {
-                        onTopOf.color = onTopOf.snapColor;
+                        onTopOf.state = TargetState.Snap;
                     }
-                    const onTopOfB = areObjectsOnTopOf(this.drawObjects[i],
-                        this.drawObjects, "target", this.imgx.grabOffset);
-                    if (onTopOfB && this.drawObjects[i] !== this.activeDragObject) {
-                        onTopOfB.color = onTopOfB.dropColor;
+                    const onTopOfB = areObjectsOnTopOf(o,
+                        targets, this.imgx.grabOffset);
+                    if (onTopOfB && o !== this.activeDragObject.obj) {
+                        onTopOfB.state = TargetState.Drop;
                     }
                 } else {
-                    const onTopOfA = areObjectsOnTopOf(this.drawObjects[i],
-                        this.drawObjects, "target", this.imgx.grabOffset);
+                    const onTopOfA = areObjectsOnTopOf(o,
+                        targets, this.imgx.grabOffset);
                     if (onTopOfA) {
-                        onTopOfA.color = onTopOfA.dropColor;
+                        onTopOfA.state = TargetState.Drop;
                     }
                 }
-            } else if (this.drawObjects[i].name === "target") {
-                this.drawObjects[i].color = this.drawObjects[i].origColor;
-
+            } else if (o.name === "target") {
+                o.state = TargetState.Normal;
             }
         }
         this.freeHand.draw(this.ctx);
@@ -702,47 +695,46 @@ class DragTask {
 
     downEvent(event: Event, p: MouseOrTouch) {
         this.mousePosition = getPos(this.canvas, p);
-        this.activeDragObject =
-            areObjectsOnTopOf(this.mousePosition, this.drawObjects, "dragobject", this.imgx.grabOffset);
+        let active = areObjectsOnTopOf(this.mousePosition, this.dragobjects, 0);
+        if (!active) {
+            active = areObjectsOnTopOf(this.mousePosition, this.dragobjects, this.imgx.grabOffset);
+        }
 
-        if (scope.emotion) {
+        if (this.imgx.emotion) {
             drawFillCircle(this.ctx, 30, this.mousePosition.x, this.mousePosition.y, "black", 0.5);
-            this.freeHand.startSegmentDraw(this.ctx, this.mousePosition); // TODO this is wrong in original
+            this.freeHand.startSegmentDraw(this.mousePosition);
             this.freeHand.addPointDraw(this.ctx, this.mousePosition);
-            if (scope.autosave) {
-                scope.imagexScope.save();
+            if (this.imgx.attrs.autosave) {
+                this.imgx.save();
             }
         }
 
-        if (this.activeDragObject) {
+        if (active) {
             const array = this.drawObjects;
-            array.push(array.splice(array.indexOf(this.activeDragObject), 1)[0]); // put active last so that it gets drawn on top of others
+            array.push(array.splice(array.indexOf(active), 1)[0]); // put active last so that it gets drawn on top of others
             this.canvas.style.cursor = "pointer";
-            this.activeDragObject.xoffset = this.mousePosition.x - this.activeDragObject.x;
-            this.activeDragObject.yoffset = this.mousePosition.y - this.activeDragObject.y;
-            // event.preventDefault();
+            this.activeDragObject = {
+                obj: active,
+                xoffset: this.mousePosition.x - active.x,
+                yoffset: this.mousePosition.y - active.y,
+            };
             this.draw();
-        } else if (scope.freeHand) {
+        } else if (this.imgx.freeHand) {
             this.canvas.style.cursor = "pointer";
             this.mouseDown = true;
             if (!this.imgx.emotion) {
-                this.freeHand.startSegmentDraw(this.redraw, this.mousePosition);
+                this.freeHand.startSegmentDraw(this.mousePosition);
             }
         }
 
-        if (scope.preview) {
+        if (this.imgx.attrsall.preview) {
             this.imgx.coords = `[${Math.round(this.mousePosition.x)}, ${Math.round(this.mousePosition.y)}]`;
             editorChangeValue(["position:"], this.imgx.coords);
         }
     }
 
-    redraw() {
-        this.draw();
-    }
-
     moveEvent(event: Event, p: MouseOrTouch) {
         if (this.activeDragObject) {
-            // if (this.activeDragObject)
             if (event != p) {
                 event.preventDefault();
             }
@@ -761,7 +753,6 @@ class DragTask {
     }
 
     upEvent(event: Event, p: MouseOrTouch) {
-
         if (this.activeDragObject) {
             this.canvas.style.cursor = "default";
             if (event != p) {
@@ -769,14 +760,14 @@ class DragTask {
             }
             this.mousePosition = getPos(this.canvas, p);
 
-            const isTarget = areObjectsOnTopOf(this.activeDragObject,
-                this.drawObjects, "target", undefined);
+            const isTarget = areObjectsOnTopOf(this.activeDragObject.obj,
+                this.targets, undefined);
 
             if (isTarget) {
                 if (isTarget.objectCount < isTarget.maxObjects) {
                     if (isTarget.snap) {
-                        this.activeDragObject.x = isTarget.x + isTarget.snapOffset[0];
-                        this.activeDragObject.y = isTarget.y + isTarget.snapOffset[1];
+                        this.activeDragObject.obj.x = isTarget.x + isTarget.snapOffset.x;
+                        this.activeDragObject.obj.y = isTarget.y + isTarget.snapOffset.y;
                     }
                 }
             }
@@ -791,11 +782,6 @@ class DragTask {
             this.mouseDown = false;
             this.freeHand.endSegment();
         }
-        setTimeout(this.draw, 1000);
-        // TODO: Miksi tama on taalla?
-        if (!this.imgx.emotion) {
-            this.draw();
-        }
     }
 
     te(event: TouchEvent) {
@@ -805,20 +791,20 @@ class DragTask {
     addRightAnswers() {
         // have to add handler for drawing finalanswer here. no way around it.
         if (this.imgx.rightAnswersSet) {
-            dt.draw();
+            this.draw();
             return;
         }
-        if (!scope.answer || !scope.answer.rightanswers) {
+        if (!this.imgx.answer || !this.imgx.answer.rightanswers) {
             return;
         }
 
-        const rightdrags = scope.answer.rightanswers;
-        let j = 0;
-        for (j = 0; j < rightdrags.length; j++) {
+        const objects = this.dragobjects; // TODO or all objects?
+        const rightdrags = this.imgx.answer.rightanswers;
+        for (let j = 0; j < rightdrags.length; j++) {
             let p = 0;
             for (p = 0; p < objects.length; p++) {
                 if (objects[p].id === rightdrags[j].id) {
-                    let values: any = {beg: objects[p], end: rightdrags[j]};
+                    const values = {beg: objects[p], end: rightdrags[j]};
                     rightdrags[j].x = rightdrags[j].position[0];
                     rightdrags[j].y = rightdrags[j].position[1];
                     // line.color = getValueDef(values, "answerproperties.color", "green");
@@ -826,14 +812,12 @@ class DragTask {
                     const line = new Line(dt, values);
                     line.did = "-";
                     this.drawObjects.push(line);
-                    // line.draw();
-                    values = {};
                 }
             }
         }
-        scope.rightAnswersSet = true;
+        this.imgx.rightAnswersSet = true;
 
-        dt.draw();
+        this.draw();
     }
 }
 
@@ -856,16 +840,12 @@ class Pin {
 
     constructor(
         private ctx: CanvasRenderingContext2D,
-        pos: IPinPosition,
-        private color: string,
-        private visible: boolean,
-        private radius: number,
-        private lineWidth: number,
+        private values: Required<PinPropsT>,
     ) {
         this.pos = {
-            align: pos.align || "northwest",
-            coord: pos.coord || {x: 0, y: 0}, // TODO better defaults for coord
-            start: pos.start || {x: 0, y: 0},
+            align: values.position.align || "northwest",
+            coord: tupleToCoords(values.position.coord || [0, 0]), // TODO better defaults for coord
+            start: tupleToCoords(values.position.start || [0, 0]),
         };
     }
 
@@ -915,15 +895,15 @@ class Pin {
     }
 
     draw() {
-        if (this.visible) {
-            this.ctx.strokeStyle = this.color;
-            this.ctx.fillStyle = this.color;
+        if (this.values.visible) {
+            this.ctx.strokeStyle = this.values.color;
+            this.ctx.fillStyle = this.values.color;
             this.ctx.beginPath();
-            this.ctx.arc(0, 0, this.radius, 0, 2 * Math.PI);
+            this.ctx.arc(0, 0, this.values.dotRadius, 0, 2 * Math.PI);
             this.ctx.fill();
             this.ctx.beginPath();
             this.ctx.moveTo(0, 0);
-            this.ctx.lineWidth = this.lineWidth;
+            this.ctx.lineWidth = this.values.linewidth;
             this.ctx.lineTo(-this.pos.coord.x, -this.pos.coord.y);
             this.ctx.stroke();
         }
@@ -934,14 +914,39 @@ function point(x: number, y: number) {
     return {x, y};
 }
 
-abstract class ObjBase {
+// These two are from type-zoo: https://github.com/pelotom/type-zoo
+export type Omit<T, K extends keyof any> = T extends any ? Pick<T, Exclude<keyof T, K>> : never;
+export type Overwrite<T, U> = Omit<T, keyof T & keyof U> & U;
+
+type MakeOptional<T, U extends keyof T> = Overwrite<T, { [P in U]?: T[P] }>;
+type RequireExcept<T, U extends keyof T> = MakeOptional<Required<T>, U>;
+
+/**
+ * Makes all properties required except size.
+ */
+type RequireExceptSize<T extends CommonPropsT> = RequireExcept<T, "size" | "id">;
+
+type Id<T> = T;
+type C<T> = Readonly<RequireExceptSize<T>>;
+
+abstract class ObjBase<T extends C<TargetPropsT | DragObjectPropsT | FixedObjectPropsT>> {
     public x: number;
     public y: number;
     public a: number;
-    public mainShape: Shape;
+
+    abstract get mainShape(): Shape;
 
     // Center point of object ignoring possible pin; used in drag & drop checks.
     abstract get center(): IPoint;
+
+    protected constructor(protected ctx: CanvasRenderingContext2D,
+                          protected values: T,
+                          public did: string) {
+        const z = values.position;
+        this.x = z[0];
+        this.y = z[1];
+        this.a = this.values.a;
+    }
 
     isPointInside(p: IPoint, offset?: number) {
         // TODO check child shapes too
@@ -949,97 +954,51 @@ abstract class ObjBase {
     }
 
     normalizePoint(p: IPoint) {
+        const to_radians = Math.PI / 180;
         const {x, y} = this.center;
-        const sina = Math.sin(-this.a * to_radians);
-        const cosa = Math.cos(-this.a * to_radians);
+        const sina = Math.sin(this.a * to_radians);
+        const cosa = Math.cos(this.a * to_radians);
         const rotatedX = cosa * (p.x - x) - sina * (p.y - y);
         const rotatedY = cosa * (p.y - y) + sina * (p.x - x);
         return point(rotatedX, rotatedY);
     }
+
+    get id(): string {
+        return this.values.id || this.did;
+    }
 }
 
-class DragObject extends ObjBase {
-    public did: string;
-    public id: string;
+class DragObject extends ObjBase<C<DragObjectPropsT>> {
 
     public name: "dragobject" = "dragobject";
+    private pin: Pin;
+    public mainShape: Shape;
 
-    constructor(private ctx: CanvasRenderingContext2D, values, defId) {
-        super();
-        this.did = defId;
-        this.id = getValue(values.id, defId);
-        values.id = this.id;
+    get lock() {
+        return this.values.lock;
+    }
 
-        this.draw = Empty;
-        this.draggableObject = {};
-        this.draggablePin = getValueDef(values, "pin.draggable", false); // TODO: not used according to search
-        if (this.draggablePin) {
-            this.type = "pin";
-            this.draggableObject.type = getValueDef(values, "type", "textbox", true);
-        } else {
-            this.type = getValueDef(values, "type", "textbox", true);
-        }
-        if (values.state === "state") {
-            this.position = values.position;
-            this.x = this.position[0] - values.pinpointoffsetx; // TODO: these are not used according to search
-            this.y = this.position[1] - values.pinpointoffsety;
-        } else {
-            this.position = getValueDef(values, "position", [0, 0]);
-            this.x = this.position[0];
-            this.y = this.position[1];
-        }
-        this.draggableObject.x = this.x;
-        this.draggableObject.y = this.y;
+    get xlimits() {
+        return this.values.xlimits;
+    }
 
-        this.origPos = {};
-        this.origPos.x = this.x;
-        this.origPos.y = this.y;
-        this.origPos.pos = this.position;
-        this.lock = getValueDef(values, "lock", "");
-        this.xlimits = getValueDef(values, "xlimits", null);
-        this.ylimits = getValueDef(values, "ylimits", null);
+    get ylimits() {
+        return this.values.xlimits;
+    }
 
-        // If default values of type, size, a or position are changed, check also imagex.py
-        if (this.type === "vector") {
-            this.size = getValueDef(values, "size", [50, 4]);
-        } else {
-            this.size = getValueDef(values, "size", [10, 10]);
-        }
-        this.r1 = getValue(this.size[0], 10);
-        this.r2 = getValue(this.size[1], this.r1);
-        this.target = null;
-        this.currentTarget = null;
-        this.ispin = isKeyDef(values, "pin", false);
-        this.a = -getValueDef(values, "a", 0);
-        this.imgproperties = {};
-        this.textboxproperties = {};
-        this.vectorproperties = {};
+    constructor(ctx: CanvasRenderingContext2D,
+                values: C<DragObjectPropsT>,
+                defId: string) {
+        super(ctx, values, defId);
+        this.pin = new Pin(ctx, {
+            color: values.pin.color || "black",
+            dotRadius: values.pin.dotRadius || 5,
+            length: values.pin.length || 10,
+            linewidth: values.pin.linewidth || 1,
+            position: values.pin.position || {},
+            visible: values.pin.visible || true,
+        });
 
-        this.init = shapeFunctions[this.type].init;
-        this.pinInit = shapeFunctions.pin.init;
-        this.pinInit2 = shapeFunctions.pin.init2;
-        this.textbox = {};
-        this.textbox.init = shapeFunctions.textbox.init;
-        this.textbox.init(values);
-
-        if (this.type === "vector" || this.draggableObject.type === "vector") {
-            this.vectorInit = shapeFunctions.vector.init;
-            this.vectorInit(values);
-            this.vectorDraw = shapeFunctions.vector.draw;
-        }
-
-        if (this.type === "img" || this.draggableObject.type === "img") {
-            this.init2 = shapeFunctions.img.init2;
-            this.imageDraw = shapeFunctions.img.draw;
-        }
-
-        this.pinInit(values);
-        // this.pinDraw = shapeFunctions['pin'].draw;
-        this.textbox.draw = shapeFunctions.textbox.draw;
-
-        this.init(values);
-        this.draw = shapeFunctions.pin.draw;
-        // this.draw = shapeFunctions[this.type].draw;
     }
 
     draw() {
@@ -1047,44 +1006,55 @@ class DragObject extends ObjBase {
     }
 
     get center(): IPoint {
-        return point(this.x, this.y); // TODO
+        const off = this.pin.getOffsetForObject(this.mainShape.size);
+        return point(this.x - off.x, this.y - off.y);
+    }
+
+    resetPosition() {
+        this.x = this.values.position[0];
+        this.y = this.values.position[1];
     }
 }
 
-class Target extends ObjBase {
+class Target extends ObjBase<C<TargetPropsT>> {
     public name: "target" = "target";
+    objectCount = 0;
+    maxObjects = 1000;
+    state = TargetState.Normal;
+    public mainShape: Shape;
 
-    constructor(dt: DragTask, values, defId) {
-        super();
-        this.did = defId;
-        this.id = getValue(values.id, defId);
-        values.id = this.id;
-        this.ctx = dt.ctx;
-        this.maxObjects = getValue(values.maxObjects, 1000);
-        this.objectCount = 0;
+    get snapOffset() {
+        return this.values.snapOffset ? tupleToCoords(this.values.snapOffset) : point(0, 0);
+    }
+
+    get snap() {
+        return this.values.snap;
+    }
+
+    get color() {
+        switch (this.state) {
+            case TargetState.Normal:
+                return this.values.color;
+            case TargetState.Snap:
+                return this.values.snapColor;
+            case TargetState.Drop:
+                return this.values.dropColor;
+        }
+    }
+
+    constructor(ctx: CanvasRenderingContext2D,
+                values: C<TargetPropsT>,
+                defId: string) {
+        super(ctx, values, defId);
         // If default values of type, size, a or position are changed, check also imagex.py
         this.position = getValueDef(values, "position", [0, 0]);
-        this.x = this.position[0];
-        this.y = this.position[1];
-        this.a = -getValueDef(values, "a", 0);
         this.snap = getValueDef(values, "snap", true);
         this.snapOffset = getValueDef(values, "snapOffset", [0, 0]);
         this.type = getValueDef(values, "type", "rectangle", true);
-        this.size = getValueDef(values, "size", [10, 10]);
-        this.imgproperties = {};
-        this.textboxproperties = {};
-        this.vectorproperties = {};
-        this.r1 = getValue(this.size[0], 10);
-        this.r2 = getValue(this.size[1], this.r1);
         this.color = getValueDef(values, "color", "Blue");
         this.origColor = getValueDef(values, "color", "Blue");
         this.snapColor = getValueDef(values, "snapColor", "Cyan");
         this.dropColor = getValueDef(values, "dropColor", this.snapColor);
-        this.init = shapeFunctions[this.type].init;
-        this.init(values);
-        // this.textboxInit = shapeFunctions['textbox'].init;
-        // this.textBoxDraw = shapeFunctions['textbox'].draw;
-        this.draw = shapeFunctions[this.type].draw;
     }
 
     draw() {
@@ -1092,52 +1062,23 @@ class Target extends ObjBase {
     }
 
     get center(): IPoint {
-        return undefined;
+        return tupleToCoords(this.values.position); // position means center for Target
     }
 }
 
-class FixedObject extends ObjBase {
+class FixedObject extends ObjBase<C<FixedObjectPropsT>> {
     public name: "fixedobject" = "fixedobject";
+    public mainShape: Shape;
 
-    constructor(dt: DragTask, values, defId?) {
-        super();
-        this.did = defId;
-        this.id = getValue(values.id, defId);
-        values.id = this.id;
-        if (values.name === "background") {
-            this.type = "img";
-        } else {
-            this.type = getValueDef(values, "type", "rectangle", true);
-        }
-        this.ctx = dt.ctx;
+    constructor(ctx: CanvasRenderingContext2D,
+                values: C<FixedObjectPropsT>,
+                defId: string) {
+        super(ctx, values, defId);
         // If default values of type, size, a or position are changed, check also imagex.py
-        this.position = getValueDef(values, "position", [0, 0]);
-        this.x = this.position[0];
-        this.y = this.position[1];
-        this.a = -getValueDef(values, "a", 0);
         this.color = getValueDef(values, "color", "Blue");
         this.size = getValueDef(values, "size", [10, 10]);
         this.r1 = getValue(this.size[0], 10);
         this.r2 = getValue(this.size[1], this.r1);
-        this.imgproperties = {};
-        this.textboxproperties = {};
-        this.vectorproperties = {};
-
-        this.init = shapeFunctions[this.type].init;
-        if (this.name === "fixedobject") {
-            this.textbox = {};
-            this.textbox.init = shapeFunctions.textbox.init;
-            this.textbox.init(values);
-            this.textbox.draw = shapeFunctions.textbox.draw;
-        }
-        if (this.type === "img") {
-            this.init2 = shapeFunctions.img.init2;
-        }
-        this.imageDraw = shapeFunctions.img.draw;
-        this.vectorDraw = shapeFunctions.vector.draw;
-
-        this.init(values);
-        this.draw = shapeFunctions[this.type].draw;
     }
 
     draw() {
@@ -1145,14 +1086,29 @@ class FixedObject extends ObjBase {
     }
 
     get center(): IPoint {
-        return undefined;
+        const s = this.mainShape.size;
+        return {x: this.x + s.width / 2, y: this.y + s.height / 2}; // for FixedObject, position is top-left corner
     }
 }
 
 class Shape {
-    // All shapes are rectangular or elliptical for now, so we can have these here.
-    constructor(protected r1: number, protected r2: number) {
+    constructor(protected explicitSize: ISized | undefined) {
 
+    }
+
+    /**
+     * Size of the object if no size has been explicitly set.
+     */
+    get preferredSize() {
+        return {width: 10, height: 10};
+    }
+
+    get size(): ISized {
+        if (this.explicitSize) {
+            return this.explicitSize;
+        } else {
+            return this.preferredSize;
+        }
     }
 
     /**
@@ -1162,8 +1118,9 @@ class Shape {
      * @param offset how near the shape the point should be to be considered inside the shape. Default 0.
      */
     isNormalizedPointInsideShape(p: IPoint, offset?: number) {
-        const r1 = this.r1 + (offset || 0);
-        const r2 = this.r2 + (offset || 0);
+        const s = this.size;
+        const r1 = s.width + (offset || 0);
+        const r2 = s.height + (offset || 0);
         return p.x >= -r1 / 2 && p.y <= r1 / 2 &&
             p.y >= -r2 / 2 && p.y <= r2 / 2;
     }
@@ -1195,67 +1152,70 @@ class Ellipse extends Shape {
         private readonly ctx: CanvasRenderingContext2D,
         private readonly color: string,
         private readonly lineWidth: number = 2,
-        r1: number,
-        r2: number,
+        size: ISized | undefined,
     ) {
-        super(r1, r2);
+        super(size);
     }
 
     draw() {
+        const {width, height} = this.size;
         this.ctx.strokeStyle = this.color;
         this.ctx.lineWidth = this.lineWidth;
         this.ctx.save();
         this.ctx.beginPath();
-        this.ctx.scale(this.r1 / 2, this.r2 / 2);
+        this.ctx.scale(width / 2, height / 2);
         this.ctx.arc(0, 0, 1, 0, 2 * Math.PI, false);
         this.ctx.restore();
         this.ctx.stroke();
     }
 
     isNormalizedPointInsideShape(p: IPoint, offset?: number) {
-        const r1 = this.r1 + (offset || 0);
-        const r2 = this.r2 + (offset || 0);
+        const {width, height} = this.size;
+        const r1 = width + (offset || 0);
+        const r2 = height + (offset || 0);
         return (Math.pow(p.x, 2) / Math.pow(r1 / 2, 2)) +
             (Math.pow(p.y, 2) / Math.pow(r2 / 2, 2)) <= 1;
     }
 }
 
-class Rectangle {
+class Rectangle extends Shape {
     constructor(
         protected readonly ctx: CanvasRenderingContext2D,
         protected readonly color: string,
         protected readonly lineWidth: number = 2,
         protected readonly cornerRadius: number = 0,
-        protected readonly r1: number,
-        protected readonly r2: number,
+        size: ISized | undefined,
     ) {
-        if (this.cornerRadius > this.r1 / 2 || this.cornerRadius > this.r2 / 2) {
-            if (this.cornerRadius > this.r1 / 2) {
-                this.cornerRadius = this.r1 / 2;
+        super(size);
+        const {width, height} = this.size;
+        if (this.cornerRadius > width / 2 || this.cornerRadius > height / 2) {
+            if (this.cornerRadius > width / 2) {
+                this.cornerRadius = width / 2;
             }
-            if (this.cornerRadius > this.r2 / 2) {
-                this.cornerRadius = this.r2 / 2;
+            if (this.cornerRadius > height / 2) {
+                this.cornerRadius = height / 2;
             }
         }
     }
 
     draw() {
+        const {width, height} = this.size;
         this.ctx.strokeStyle = this.color;
         this.ctx.lineWidth = this.lineWidth;
         this.ctx.save();
         this.ctx.beginPath();
-        this.ctx.moveTo(-this.r1 / 2 - 1 + this.cornerRadius, -this.r2 / 2);
-        this.ctx.lineTo(this.r1 / 2 - this.cornerRadius, -this.r2 / 2);
-        this.ctx.arc(this.r1 / 2 - this.cornerRadius, -this.r2 / 2 + this.cornerRadius,
+        this.ctx.moveTo(-width / 2 - 1 + this.cornerRadius, -height / 2); // TODO why -1?
+        this.ctx.lineTo(width / 2 - this.cornerRadius, -height / 2);
+        this.ctx.arc(width / 2 - this.cornerRadius, -height / 2 + this.cornerRadius,
             this.cornerRadius, 1.5 * Math.PI, 0);
-        this.ctx.lineTo(this.r1 / 2, this.r2 / 2 - this.cornerRadius);
-        this.ctx.arc(this.r1 / 2 - this.cornerRadius, this.r2 / 2 - this.cornerRadius,
+        this.ctx.lineTo(width / 2, height / 2 - this.cornerRadius);
+        this.ctx.arc(width / 2 - this.cornerRadius, height / 2 - this.cornerRadius,
             this.cornerRadius, 0, 0.5 * Math.PI);
-        this.ctx.lineTo(-this.r1 / 2 + this.cornerRadius, this.r2 / 2);
-        this.ctx.arc(-this.r1 / 2 + this.cornerRadius, this.r2 / 2 - this.cornerRadius,
+        this.ctx.lineTo(-width / 2 + this.cornerRadius, height / 2);
+        this.ctx.arc(-width / 2 + this.cornerRadius, height / 2 - this.cornerRadius,
             this.cornerRadius, 0.5 * Math.PI, Math.PI);
-        this.ctx.lineTo(-this.r1 / 2, -this.r2 / 2 + this.cornerRadius);
-        this.ctx.arc(-this.r1 / 2 + this.cornerRadius, -this.r2 / 2 +
+        this.ctx.lineTo(-width / 2, -height / 2 + this.cornerRadius);
+        this.ctx.arc(-width / 2 + this.cornerRadius, -height / 2 +
             this.cornerRadius, this.cornerRadius, Math.PI, 1.5 * Math.PI);
         this.ctx.restore();
         this.ctx.stroke();
@@ -1264,13 +1224,11 @@ class Rectangle {
 
 const auxctx = document.createElement("canvas").getContext("2d")!;
 
-class Textbox {
+class Textbox extends Shape {
     private lines: string[];
     private textwidth: number;
     private textHeight: number;
     private rect: Rectangle;
-    private r1: number;
-    private r2: number;
     private leftMargin = 0;
     private rightMargin = 0;
     private topMargin = 0;
@@ -1282,40 +1240,42 @@ class Textbox {
         protected readonly borderColor: string,
         protected readonly lineWidth: number = 2,
         protected readonly cornerRadius: number = 0,
-        size: IPoint | undefined,
+        size: ISized | undefined,
         text: string,
         protected readonly font: string,
     ) {
+        super(size);
         this.lines = text.split("\n");
         auxctx.font = this.font;
         const lineWidths = this.lines.map((line) => auxctx.measureText(line).width);
         this.textwidth = Math.max(...lineWidths);
         this.textHeight = parseInt(auxctx.font, 10) * 1.1;
 
-        if (size) {
-            this.r1 = size.x;
-            this.r2 = size.y;
-        } else {
-            this.r1 = this.textwidth + this.leftMargin + this.rightMargin;
-            this.r2 = (this.textHeight * this.lines.length)
-                + this.topMargin + this.bottomMargin;
-        }
-        if (this.cornerRadius > this.r1 / 2 || this.cornerRadius > this.r2 / 2) {
-            if (this.cornerRadius > this.r1 / 2) {
-                this.cornerRadius = this.r1 / 2;
+        const {width, height} = this.size;
+        if (this.cornerRadius > width / 2 || this.cornerRadius > height / 2) {
+            if (this.cornerRadius > width / 2) {
+                this.cornerRadius = width / 2;
             }
-            if (this.cornerRadius > this.r2 / 2) {
-                this.cornerRadius = this.r2 / 2;
+            if (this.cornerRadius > height / 2) {
+                this.cornerRadius = height / 2;
             }
         }
-        this.rect = new Rectangle(ctx, color, lineWidth, cornerRadius, this.r1, this.r2);
+        this.rect = new Rectangle(ctx, color, lineWidth, cornerRadius, this.size);
+    }
+
+    get preferredSize() {
+        return {
+            width: this.textwidth + this.leftMargin + this.rightMargin,
+            height: (this.textHeight * this.lines.length)
+                + this.topMargin + this.bottomMargin,
+        };
     }
 
     draw() {
         this.rect.draw();
         let textStart = this.topMargin;
-        for (let i = 0; i < this.lines.length; i++) {
-            this.ctx.fillText(this.lines[i], this.leftMargin, textStart);
+        for (const line of this.lines) {
+            this.ctx.fillText(line, this.leftMargin, textStart);
             textStart += this.textHeight;
         }
         this.ctx.lineWidth = this.lineWidth;
@@ -1324,56 +1284,75 @@ class Textbox {
     }
 }
 
-class Vector {
+class Vector extends Shape {
+    private arrowHeadWidth: number;
+    private arrowHeadLength: number;
+
     constructor(
         private readonly ctx: CanvasRenderingContext2D,
         private readonly color: string,
         private readonly lineWidth: number = 2,
-        private readonly r1: number,
-        private readonly r2: number,
-        private readonly arrowHeadWidth: number = r2 * 3,
-        private readonly arrowHeadLength: number = r2 * 5,
+        size: ISized | undefined,
+        arrowHeadWidth: number | undefined,
+        arrowHeadLength: number | undefined,
     ) {
+        super(size);
+        this.arrowHeadWidth = arrowHeadWidth || this.size.height * 3;
+        this.arrowHeadLength = arrowHeadLength || this.size.height * 5;
+    }
+
+    get preferredSize() {
+        return {
+            width: 50,
+            height: 4,
+        };
     }
 
     draw() {
+        const {width, height} = this.size;
         this.ctx.strokeStyle = this.color;
         this.ctx.fillStyle = this.ctx.strokeStyle;
         this.ctx.save();
         this.ctx.beginPath();
-        this.ctx.lineTo(0, this.r2);
-        this.ctx.lineTo(this.r1 - this.arrowHeadLength, this.r2);
-        this.ctx.lineTo(this.r1 - this.arrowHeadLength, this.r2 / 2 +
+        this.ctx.lineTo(0, height);
+        this.ctx.lineTo(width - this.arrowHeadLength, height);
+        this.ctx.lineTo(width - this.arrowHeadLength, height / 2 +
             this.arrowHeadWidth / 2);
-        this.ctx.lineTo(this.r1, this.r2 / 2);
-        this.ctx.lineTo(this.r1 - this.arrowHeadLength,
-            this.r2 / 2 - this.arrowHeadWidth / 2);
-        this.ctx.lineTo(this.r1 - this.arrowHeadLength, 0);
+        this.ctx.lineTo(width, height / 2);
+        this.ctx.lineTo(width - this.arrowHeadLength,
+            height / 2 - this.arrowHeadWidth / 2);
+        this.ctx.lineTo(width - this.arrowHeadLength, 0);
         this.ctx.lineTo(0, 0);
         this.ctx.fill();
         this.ctx.restore();
     }
 }
 
-class DImage {
+class DImage extends Shape {
     constructor(
         private readonly ctx: CanvasRenderingContext2D,
         private readonly image: HTMLImageElement,
-        private readonly r1: number = image.width,
-        private readonly r2: number = image.height,
+        size: ISized | undefined,
     ) {
+        super(size);
+    }
+
+    get preferredSize() {
+        return {
+            width: this.image.width,
+            height: this.image.height,
+        };
     }
 
     draw() {
-        this.ctx.drawImage(this.image, 0, 0, this.r1, this.r2);
+        const {width, height} = this.size;
+        this.ctx.drawImage(this.image, 0, 0, width, height);
     }
 }
 
 function isTouchDevice() {
     return typeof window.ontouchstart !== "undefined";
 }
-
-const to_radians = Math.PI / 180;
 
 function loadImage(src: string) {
     const deferred = $q.defer<HTMLImageElement>();
@@ -1387,27 +1366,25 @@ function loadImage(src: string) {
 
 const videos = {};
 
-const ObjectSpec = t.union([]);
+const ObjectType = t.keyof({
+    ellipse: null,
+    img: null,
+    rectangle: null,
+    textbox: null,
+    vector: null,
+});
 
-const ObjectType = t.union([
-    t.literal("textbox"),
-    t.literal("vector"),
-    t.literal("ellipse"),
-    t.literal("img"),
-    t.literal("rectangle"),
-]);
-
-const PinAlignment = t.union([
-    t.literal("north"),
-    t.literal("south"),
-    t.literal("west"),
-    t.literal("east"),
-    t.literal("northeast"),
-    t.literal("northwest"),
-    t.literal("southwest"),
-    t.literal("southeast"),
-    t.literal("center"),
-]);
+const PinAlignment = t.keyof({
+    center: null,
+    east: null,
+    north: null,
+    northeast: null,
+    northwest: null,
+    south: null,
+    southeast: null,
+    southwest: null,
+    west: null,
+});
 
 type PinAlign = t.TypeOf<typeof PinAlignment>;
 
@@ -1422,17 +1399,24 @@ const ValidCoord = t.tuple([t.number, t.number]);
 
 const CoordProp = t.union([ValidCoord, EmptyCoord]);
 
-const TextboxProps = t.partial({
-    borderColor: t.string,
-    borderWidth: t.number,
-    cornerradius: t.number,
-    fillColor: t.string,
-    font: t.string,
-    position: CoordProp,
-    size: CoordProp,
-    text: t.string,
-    textColor: t.string,
+const CommonProps = t.partial({
+    a: t.number,
+    id: t.string,
+    position: ValidCoord,
+    size: ValidCoord,
 });
+
+const TextboxProps = t.intersection([
+    CommonProps,
+    t.partial({
+        borderColor: t.string,
+        borderWidth: t.number,
+        cornerradius: t.number,
+        fillColor: t.string,
+        font: t.string,
+        text: t.string,
+        textColor: t.string,
+    })]);
 
 const VectorProps = t.partial({
     arrowheadlength: t.number,
@@ -1441,41 +1425,60 @@ const VectorProps = t.partial({
 });
 
 const PinProps = t.partial({
+    color: t.string,
+    dotRadius: t.number,
+    length: t.number,
+    linewidth: t.number,
     position: t.partial({
         align: PinAlignment,
+        coord: ValidCoord,
+        start: ValidCoord,
     }),
     visible: t.boolean,
 });
 
-const FixedObjectProps = t.partial({
-    id: t.string,
-    imgproperties: ImgProps,
-    position: ValidCoord,
-    textboxproperties: TextboxProps,
-    type: ObjectType,
-});
+type PinPropsT = t.TypeOf<typeof PinProps>;
 
-const TargetProps = t.partial({
-    color: t.string,
-    dropColor: t.string,
-    id: t.string,
-    points: t.dictionary(t.string, t.number),
-    position: ValidCoord,
-    size: ValidCoord,
-    snapColor: t.string,
-    snapOffset: ValidCoord,
-    type: ObjectType,
+const FixedObjectProps = t.intersection([
+    CommonProps,
+    t.partial({
+        imgproperties: ImgProps,
+        textboxproperties: TextboxProps,
+        type: ObjectType,
+        vectorproperties: VectorProps,
+    })]);
+
+const TargetProps = t.intersection([
+    CommonProps,
+    t.partial({
+        color: t.string,
+        dropColor: t.string,
+        points: t.dictionary(t.string, t.number),
+        snap: t.boolean,
+        snapColor: t.string,
+        snapOffset: ValidCoord,
+        type: ObjectType,
+    })]);
+
+const Lock = t.keyof({
+    x: null,
+    y: null,
 });
 
 const DragObjectProps = t.intersection([
     t.partial({
-        lock: t.union([t.literal("x"), t.literal("y")]),
+        lock: Lock,
         pin: PinProps,
         xlimits: ValidCoord,
         ylimits: ValidCoord,
     }),
     FixedObjectProps,
 ]);
+
+type CommonPropsT = t.TypeOf<typeof CommonProps>;
+type DragObjectPropsT = t.TypeOf<typeof DragObjectProps>;
+type TargetPropsT = t.TypeOf<typeof TargetProps>;
+type FixedObjectPropsT = t.TypeOf<typeof FixedObjectProps>;
 
 const BackgroundProps = t.intersection([
     t.partial({
@@ -1540,7 +1543,7 @@ class ImageXController extends PluginBase<t.TypeOf<typeof ImageXMarkup>,
     typeof ImageXAll> {
 
     get emotion() {
-        return false; // TODO
+        return this.attrs.emotion;
     }
 
     get max_tries() {
@@ -1609,11 +1612,15 @@ class ImageXController extends PluginBase<t.TypeOf<typeof ImageXMarkup>,
     private tries = 0;
     private previewColor = "";
     private isRunning: boolean = false;
-    private vctrl!: ViewCtrl;
+    private vctrl!: Require<ViewCtrl>;
     private replyImage?: string;
     private replyHTML?: string;
     private canvas!: HTMLCanvasElement;
     private dt!: DragTask;
+
+    draw() {
+        this.dt.draw();
+    }
 
     constructor(scope: IScope, element: IRootElementService) {
         super(scope, element);
@@ -1629,7 +1636,6 @@ class ImageXController extends PluginBase<t.TypeOf<typeof ImageXMarkup>,
     $onInit() {
         super.$onInit();
         this.tries = this.attrsall.tries;
-
         this.freeHandDrawing = new FreeHand(this,
             this.attrsall.freeHandData,
             this.videoPlayer);
@@ -1640,32 +1646,23 @@ class ImageXController extends PluginBase<t.TypeOf<typeof ImageXMarkup>,
         this.w = this.attrs.freeHandWidth;
         this.color = this.attrs.freeHandColor;
         this.lineMode = this.attrs.freeHandLine;
-        this.freeHandDrawing.update = () => {
-            const phase = this.$root.$$phase;
-            if (phase == "$apply" || phase == "$digest") {
-                return;
-            }
-            this.$apply();
-        };
 
         this.canvas = this.element.find(".canvas")[0] as HTMLCanvasElement;
 
         const dt = new DragTask(this.canvas, this);
         this.dt = dt;
 
-        const userObjects = this.attrs.markup.objects;
+        const userObjects = this.attrs.objects;
 
-        const userTargets = this.attrs.markup.targets;
-        const userFixedObjects = this.attrs.markup.fixedobjects;
+        const userTargets = this.attrs.targets;
+        const userFixedObjects = this.attrs.fixedobjects;
         const fixedobjects = [];
         const targets = [];
         const objects = [];
+        const ctx = this.getCanvasCtx();
 
-        this.defaults = this.attrs.markup.defaults;
-
-        if (this.attrs.markup.background) {
-            this.attrs.markup.background.name = "background";
-            const background = new FixedObject(dt, this.attrs.markup.background);
+        if (this.attrs.background) {
+            const background = new FixedObject(dt, this.attrs.background);
             dt.drawObjects.push(background);
         }
 
@@ -1673,29 +1670,20 @@ class ImageXController extends PluginBase<t.TypeOf<typeof ImageXMarkup>,
 
         if (userFixedObjects) {
             for (let i = 0; i < userFixedObjects.length; i++) {
-                if (userFixedObjects[i]) {
-                    fixedobjects.push(new FixedObject(dt, userFixedObjects[i], "fix" + (i + 1)));
-                }
+                fixedobjects.push(new FixedObject(ctx, userFixedObjects[i], "fix" + (i + 1)));
             }
         }
 
         if (userTargets) {
             for (let i = 0; i < userTargets.length; i++) {
-                if (userTargets[i]) {
-                    targets.push(new Target(dt, userTargets[i], "trg" + (i + 1)));
-                }
+                targets.push(new Target(ctx, userTargets[i], "trg" + (i + 1)));
             }
         }
 
         if (userObjects) {
             for (let i = 0; i < userObjects.length; i++) {
-                if (userObjects[i]) {
-                    const newObject = new DragObject(dt, userObjects[i], "obj" + (i + 1));
-                }
+                const newObject = new DragObject(ctx, userObjects[i], "obj" + (i + 1));
                 objects.push(newObject);
-                if (!this.drags) {
-                    this.drags = [];
-                }
                 this.drags.push(newObject);
             }
         }
@@ -1717,21 +1705,8 @@ class ImageXController extends PluginBase<t.TypeOf<typeof ImageXMarkup>,
             }
         }
 
-        for (let i = 0; i < fixedobjects.length; i++) {
-            dt.drawObjects.push(fixedobjects[i]);
-        }
-
-        for (let i = 0; i < targets.length; i++) {
-            dt.drawObjects.push(targets[i]);
-        }
-
-        for (let i = 0; i < objects.length; i++) {
-            dt.drawObjects.push(objects[i]);
-        }
-
+        dt.drawObjects = dt.drawObjects.concat(fixedobjects, targets, objects);
         dt.draw();
-
-        this.objects = objects;
 
         this.previewColor = globalPreviewColor;
     }
@@ -1750,7 +1725,7 @@ class ImageXController extends PluginBase<t.TypeOf<typeof ImageXMarkup>,
     }
 
     getPColor() {
-        if (this.preview) {
+        if (this.attrsall.preview) {
             globalPreviewColor = this.previewColor;
             editorChangeValue(["[a-zA-Z]*[cC]olor[a-zA-Z]*:"], `"${globalPreviewColor}"`);
         }
@@ -1824,26 +1799,20 @@ class ImageXController extends PluginBase<t.TypeOf<typeof ImageXMarkup>,
         }
     }
 
-// Reset the positions of dragobjects.
+    // Resets the positions of dragobjects.
     resetExercise() {
         this.error = "";
         this.result = "";
         this.freeHandDrawing.clear();
-        // Objects dragged by user.
-        const objects = this.drags;
 
-        if (objects) {
-            for (let i = 0; i < objects.length; i++) {
-                const obj = objects[i];
-                obj.x = obj.origPos.x;
-                obj.y = obj.origPos.y;
-                obj.position = obj.origPos.pos;
-            }
+        for (const obj of this.drags) {
+            obj.resetPosition();
         }
-        // Draw the excercise so that reset appears instantly.
+
 
         const dobjs = this.dt.drawObjects;
 
+        // this is for hiding the lines of right answers
         for (let i = dobjs.length - 1; i--;) {
             if (dobjs[i].did === "-") {
                 dobjs.splice(i, 1);
@@ -1851,6 +1820,7 @@ class ImageXController extends PluginBase<t.TypeOf<typeof ImageXMarkup>,
         }
         this.rightAnswersSet = false;
 
+        // Draw the exercise so that reset appears instantly.
         this.dt.draw();
     }
 
@@ -1860,7 +1830,7 @@ class ImageXController extends PluginBase<t.TypeOf<typeof ImageXMarkup>,
 
     videoPlay() {
         const video = this.videoPlayer;
-        if (video.fakeVideo) {
+        if (!video) {
             return;
         }
         if (video.paused) {
@@ -1872,7 +1842,7 @@ class ImageXController extends PluginBase<t.TypeOf<typeof ImageXMarkup>,
 
     videoBeginning() {
         const video = this.videoPlayer;
-        if (video.fakeVideo) {
+        if (!video) {
             return;
         }
         if (video.paused) {
