@@ -10,7 +10,8 @@ import {IController} from "angular";
 import {to} from "tim/util/utils";
 import {timApp} from "../app";
 import {$http, $window} from "../util/ngimport";
-import {IItem, IRelevance} from "./IItem";
+import {IItem, IRelevance, ITag} from "./IItem";
+import {IDocSearchResult} from "../search/searchBox";
 
 export const relevanceSuggestions = [
             {value: -100, name:  "-100 = Buried"},
@@ -20,7 +21,11 @@ export const relevanceSuggestions = [
             {value: 50, name:   "50 = Important"},
             {value: 100, name:  "100 = Very important"}];
 
-export const DEFAULT_RELEVANCE_VALUE: number = 10;
+export interface IRelevanceResponse {
+    default: boolean; // Item and its parents don't have set relevance.
+    inherited: boolean; // Relevance was inherited from a parent.
+    relevance: IRelevance;
+}
 
 class RelevanceCtrl implements IController {
     private static $inject = ["$element", "$scope"];
@@ -36,31 +41,16 @@ class RelevanceCtrl implements IController {
     }
 
     /**
-     * Fetch the current item relevance value.
+     * Fetch the current item's relevance value and whether it was default or inherited from parent.
      */
     private async getRelevance() {
         this.errorMessage = undefined;
-        const r = await to($http.get<IRelevance>(`/items/relevance/get/${this.item.id}`));
+        const r = await to($http.get<IRelevanceResponse>(`/items/relevance/get/${this.item.id}`));
         if (r.ok) {
-            if (!r.result.data) {
-
-                const r2 = await to($http.get<IRelevance>(`/items/parentrelevance/get/${this.item.id}`));
-                if (r2.ok) {
-                    if (!r2.result.data) {
-                        this.isDefault = true;
-                        this.relevance = DEFAULT_RELEVANCE_VALUE;
-                    } else {
-                        this.isInherited = true;
-                        this.relevance = r2.result.data.relevance;
-                    }
-                } else {
-                    this.errorMessage = r2.result.data.error;
-                }
-            } else {
-                this.isDefault = false;
-                this.isInherited = false;
-                this.relevance = r.result.data.relevance;
-            }
+            // console.log(r.result.data);
+            this.isDefault = r.result.data.default;
+            this.isInherited = r.result.data.inherited;
+            this.relevance = r.result.data.relevance.relevance;
         } else {
             this.errorMessage = r.result.data.error;
         }
@@ -113,6 +103,7 @@ timApp.component("relevanceEdit", {
     },
     controller: RelevanceCtrl,
     template: `
+        <p>View and set relevance value denoting item priority in search results</p>
         <div class="input-group">
             <input class="form-control" ng-model="$ctrl.relevance" ng-keypress="$ctrl.keyPressed($event)" type="text"
                 title="Enter a new relevance value" placeholder="Enter relevance value" typeahead-min-length="0"

@@ -45,6 +45,7 @@ from timApp.util.timtiming import taketime
 from timApp.util.utils import remove_path_special_chars
 from timApp.util.utils import get_error_message
 
+DEFAULT_RELEVANCE = 10
 Range = Tuple[int, int]
 
 view_page = Blueprint('view_page',
@@ -496,21 +497,6 @@ def get_item(item_id: int):
     return json_response(i)
 
 
-@view_page.route('/items/relevance/get/<int:item_id>')
-def get_blockrelevance(item_id: int):
-    """
-    Returns the BlockRelevance of item.
-    :param item_id: Item id.
-    :return: BlockRelevance object or null if not found.
-    """
-    i = Item.find_by_id(item_id)
-    if not i:
-        abort(404, 'Item not found')
-    verify_view_access(i)
-    relevance = i.relevance
-    return json_response(relevance)
-
-
 @view_page.route('/items/relevance/set/<int:item_id>', methods=["POST"])
 def set_blockrelevance(item_id: int):
     """
@@ -568,21 +554,72 @@ def reset_blockrelevance(item_id: int):
     return ok_response()
 
 
-@view_page.route('/items/parentrelevance/get/<int:item_id>')
-def get_parentrelevance(item_id: int):
+@view_page.route('/items/relevance/get/<int:item_id>')
+def get_relevance_route(item_id: int):
     """
-    Returns first non-null parent relevance value. If no relevance was found until root, return None.
+    Returns item relevance or first non-null parent relevance. If no relevance was found until root,
+    return default relevance.
     :param item_id: Item id.
-    :return: Parent relevance.
+    :return: Relevance object and whether it was inherited or not set (default).
     """
     i = Item.find_by_id(item_id)
     if not i:
         abort(404, 'Item not found')
     verify_view_access(i)
+
+    default = False
+    inherited = False
+
+    # If block has set relevance, return it.
+    if i.relevance:
+        return json_response({
+            "relevance": i.relevance,
+            "default": default,
+            "inherited": inherited})
+
+    # Check parents for relevance in case target block didn't have one.
     parents = i.parents_to_root
     for parent in parents:
         if parent.relevance:
+            inherited = True
             # Return relevance with parent's id.
-            return json_response(parent.relevance)
-    # If parents don't have relevance either, return item's null relevance.
-    return json_response(None)
+            return json_response({
+                "relevance": parent.relevance,
+                "default": default,
+                "inherited": inherited})
+
+    # If parents don't have relevance either, return default relevance.
+    default = True
+    return json_response({
+        "relevance": {
+            "block_id": item_id,
+            "relevance": DEFAULT_RELEVANCE
+        },
+        "default": default,
+        "inherited": inherited})
+
+
+def get_document_relevance_nonroute(i: DocInfo):
+    """
+    Returns document relevance value or first non-null parent relevance value.
+    If no relevance was found until root, return default relevance value.
+    :param i: Document.
+    :return: Relevance value.
+    """
+    if not i:
+        abort(404, 'Item not found')
+    verify_view_access(i)
+
+    # If block has set relevance, return it.
+    if i.relevance:
+        return i.relevance.relevance
+
+    # Check parents for relevance in case target document didn't have one.
+    parents = i.parents_to_root
+    for parent in parents:
+        if parent.relevance:
+            # Return parent relevance.
+            return parent.relevance.relevance
+
+    # If parents don't have relevance either, return default value as relevance.
+    return DEFAULT_RELEVANCE

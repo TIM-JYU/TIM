@@ -20,6 +20,7 @@ from timApp.document.docentry import DocEntry, get_documents
 from timApp.document.docinfo import DocInfo
 from timApp.folder.folder import Folder
 from timApp.item.block import Block
+from timApp.item.routes import get_document_relevance_nonroute
 from timApp.item.tag import Tag
 from timApp.tim_app import app
 from timApp.util.flask.requesthelper import get_option
@@ -375,24 +376,6 @@ def add_doc_info_title_line(doc_id: int) -> Union[str, None]:
     return json.dumps({'doc_id': doc_id,
                        'doc_title': doc_info.title},
                       ensure_ascii=False) + '\n'
-
-
-def get_doc_relevance(doc_info: DocInfo):
-    """
-    Returns item's (or parent's) relevance value. If no relevance was found until root, use default.
-    :param doc_info: Document.
-    :return: Relevance value of the item or any of its parents'.
-    """
-
-    if doc_info.relevance:
-        return doc_info.relevance.relevance
-    else:
-        parents = doc_info.parents_to_root
-        for parent in parents:
-            # print(doc_info, parent, parent.relevance)
-            if parent.relevance:
-                return parent.relevance.relevance
-    return DEFAULT_RELEVANCE
 
 
 def add_doc_info_content_line(doc_id: int, par_data, remove_deleted_pars: bool = True, add_title: bool = False) \
@@ -799,7 +782,7 @@ def is_excluded(doc_info, relevance_threshold):
     :param relevance_threshold: Min included relevance.
     :return: True if document relevance is less than relevance threshold.
     """
-    if get_doc_relevance(doc_info) < relevance_threshold:
+    if get_document_relevance_nonroute(doc_info) < relevance_threshold:
         return True
     return False
 
