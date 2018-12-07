@@ -1007,7 +1007,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             result_json = {"js": ["/cs/js/build/csPlugin.js",
                                   "/cs/js/build/stack.js"
                                   ],
-                           "angularModule": ["csApp", "csConsoleApp"],
+                           "angularModule": ["csApp", "csConsoleApp", "stackApp"],
                            "css": ["/cs/css/cs.css",
                                    "/cs/css/mathcheck.css"
                                    ], "multihtml": True, "multimd": True}

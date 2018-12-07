@@ -1,6 +1,9 @@
 ﻿import angular from "angular";
 import * as t from "io-ts";
 import {GenericPluginMarkup, PluginBase, withDefault} from "tim/plugin/util";
+import {to} from "tim/util/utils";
+import {$http, $timeout, $sce} from "tim/util/ngimport";
+import {ParCompiler} from "tim/editor/parCompiler";
 
 const stackApp = angular.module("stackApp", ["ngSanitize"]);
 
@@ -15,169 +18,140 @@ function ifIsS(value: number | undefined, name: string) {
 
 const StackMarkup = t.intersection([
     t.partial({
-        docicon: t.string,
-        doclink: t.string,
-        doctext: t.string,
-        end: t.string,
-        followid: t.string,
-        height: t.number,
-        hidetext: t.string,
-        iframe: t.boolean,
-        iframeopts: t.string,
-        start: t.string,
-        videoicon: t.string,
-        videoname: t.string,
-        width: t.number,
+        by: t.string,
+        userinput: t.string,  // ATTR: käyttäjän syöte
+        question: t.string,
+        defaults: t.string,
+        readOnly: t.boolean,
+        feedback: t.boolean,
+        hasScore: t.boolean,
+        lang: t.string,
+        seed: t.number
+
     }),
     GenericPluginMarkup,
     t.type({
-        autoplay: withDefault(t.boolean, true),
-        file: t.string,
-        open: withDefault(t.boolean, false),
+        // autoplay: withDefault(t.boolean, true),
+        // file: t.string, eikö kuulu, mulle kuuluu, ei oo mute, joo moi
+        // open: withDefault(t.boolean, false),
     }),
 ]);
-const StackAll = t.type({markup: StackMarkup});
+const StackAll = t.intersection([
+    t.partial({
+        by: t.string,
+        userinput: t.string,
+    }),
+    t.type({
+        markup: StackMarkup,
+    }),
+]);
 
-// TODO: register video to ViewCtrl so that ImageX can access it
+
 class StackController extends PluginBase<t.TypeOf<typeof StackMarkup>,
     t.TypeOf<typeof StackAll>,
     typeof StackAll> {
-    private static $inject = ["$scope", "$element"];
+    private static $inject = ["$scope", "$element", "$sce"];
 
-    get videoicon() {
-        return this.attrs.videoicon || "/csstatic/video_small.png";
-    }
-
-    get docicon() {
-        return this.attrs.docicon || "/csstatic/book.png";
-    }
-
-    get iframe() {
-        return this.attrs.iframe;
-    }
-
-    get videoname() {
-        return this.attrs.videoname;
-    }
-
-    get doclink() {
-        return this.attrs.doclink;
-    }
-
-    get hidetext() {
-        return this.attrs.hidetext || "hide video";
-    }
-
-    get doctext() {
-        return this.attrs.doctext;
-    }
-
-    private watchEnd?: number;
-    private videoHtml!: HTMLElement;
-    private start?: number;
-    private end?: number;
-    private videoOn: boolean = false;
     private span: string = "";
-    private origSize!: string;
-    private origWidth: any;
-    private origHeight: any;
-    private video?: HTMLVideoElement;
-    private limits: string = "";
-    private duration: string = "";
-    private startt: string = "";
-    private width?: number;
-    private height?: number;
+    private userCode: string = "";
+    private stackoutput: string = "";
+    private stackfeedback: string = "";
+    private stackformatcorrectresponse: string = "";
+    private stackscore: string = "";
+    private stacksummariseresponse: string = "";
+    private stackanswernotes: string = "";
+    private stacktime: string = "";
+
 
     $onInit() {
         super.$onInit();
-        this.width = this.attrs.width;
-        this.height = this.attrs.height;
+        // this.width = this.attrs.width;
+        // this.height = this.attrs.height;
+        this.userCode = this.attrsall.by || this.attrs.by || "";
+
     }
 
-    $postLink() {
-        super.$postLink();
-        this.videoHtml = this.element.find(".videoContainer")[0];
-        if (this.attrs.open) {
-            this.showStack();
+
+      processNodes(res:any, nodes:any) {
+        for (var i = 0; i < nodes.length; i++) {
+          var element = nodes[i];
+          if (element.name.indexOf('stackapi_') === 0 && element.name.indexOf('_val') === -1) {
+            if (element.type === 'checkbox' || element.type === 'radio') {
+              if (element.checked) {
+                res[element.name] = element.value
+              }
+            } else {
+              res[element.name] = element.value
+            }
+          }
         }
-    }
+        return res;
+      }
 
-    hideVideo() {
-        this.videoOn = false;
-        this.videoHtml.innerHTML = "<p></p>";
-        this.span = "";
-        return true;
-    }
 
+      outputAsHtml() {
+         return $sce.trustAsHtml(this.stackoutput);
+      }
+
+      collectAnswer() {
+        let parent = this.element[0];
+        let inputs = parent.getElementsByTagName('input')
+        let textareas = parent.getElementsByTagName('textarea')
+        let selects = parent.getElementsByTagName('select')
+        let res = {};
+        res = this.processNodes(res, inputs);
+        res = this.processNodes(res, textareas);
+        res = this.processNodes(res, selects);
+        return res;
+      }
+
+
+      collectData() {
+        let res: any = {
+          question: this.attrs.question,
+          readOnly: this.attrs.readOnly || false, //document.getElementById('readOnly').checked,
+          feedback: this.attrs.feedback || true, //document.getElementById('feedback').checked,
+          score: this.attrs.hasScore || true, //document.getElementById('hasScore').checked,
+          lang: this.attrs.lang || '', //document.getElementById('lang').value,
+          prefix: 'stackapi_',
+          answer: this.collectAnswer(),
+          seed: this.attrs.seed || 12313122
+        }
+        if (this.attrs.defaults) {
+          res['defaults'] = this.attrs.defaults
+        }
+        return res;
+      }
+
+
+    async runCode() {
+        let url = "http://tim3/stackserver/api/endpoint.php";
+        this.stackoutput = "";
+
+        const r = await to($http.post<{texts: string | Array<{html: string}>}>(
+            url, this.collectData()
+        ));
+
+        let json:any = r.result.data;
+        this.stackoutput = json.questiontext;
+        this.stackfeedback = json.generalfeedback;
+        this.stackformatcorrectresponse = json.formatcorrectresponse;
+        this.stackscore = json.score.toString();
+        this.stacksummariseresponse = JSON.stringify(json.summariseresponse);
+        this.stackanswernotes = JSON.stringify(json.answernotes);
+        this.stacktime = '<b>Request Time:</b> ' + json.request_time +
+                  ' <b>Api Time:</b> ' + json.api_time;
+
+        // MathJax.Hub.Queue(["Typeset",MathJax.Hub]);
+        await ParCompiler.processAllMathDelayed(this.element);
+    }
 
 
     showStack() {
-        if (this.videoOn) {
-            return this.hideVideo();
-        }
-
-        this.span = this.limits;
-        const w = ifIsS(this.width, "width");
-        const h = ifIsS(this.height, "height");
-        const moniviestin = this.attrs.file.indexOf("m3.jyu.fi") >= 0;
-        let params = "?";
-        if (this.start) {
-            if (moniviestin) {
-                params = "#position=" + this.start;
-            } else {
-                params = "?start=" + this.start + "&end=" + this.end;
-            }
-        }
-        if (this.iframe) {
-            let file = this.attrs.file;
-            this.videoHtml.innerHTML = `
-<iframe class="showVideo"
-        src="${file}${params}"
-        ${w}${h}
-        frameborder="0"
-        allowfullscreen
-        ${this.attrs.iframeopts || ""}>
-</iframe>`;
-        } else {
-            params = "";
-            if (this.start) {
-                params = "#params=" + this.start; // iPad ei tottele 'loadedmetadata'
-                if (this.end) {
-                    params += "," + this.end;
-                }
-            }
-            let autoplay = "";
-            if (this.attrs.autoplay) {
-                autoplay = "autoplay";
-            }
-            this.videoHtml.innerHTML = `
-<stack class="showVideo"
-       src="${this.attrs.file}${params}"
-       ${w}${h}/>`;
-            this.video = this.videoHtml.firstElementChild as HTMLVideoElement;
-        }
-        this.videoOn = true;
-        if (!this.video) {
-            return;
-        }
-        this.video.addEventListener("loadedmetadata", () => {
-            this.video!.currentTime = this.start || 0;
-        }, false);
-
-        this.watchEnd = this.end;
-        this.video.addEventListener("timeupdate", () => {
-            if (this.watchEnd && this.video!.currentTime > this.watchEnd) {
-                this.video!.pause();
-                this.watchEnd = 1000000;
-            }
-        }, false);
     }
 
     getDefaultMarkup() {
-        return {
-            file: "https://example.com",
-            iframe: true,
-        };
+        return {};
     }
 
     protected getAttributeType() {
@@ -195,23 +169,35 @@ const common = {
 stackApp.component("stackRunner", {
     ...common,
     template: `
-    <h1>Stack main</h1>
-<div class="videoRunDiv">
-    <h1>Stack</h1>
-    <p ng-if="$ctrl.header" ng-bind-html="$ctrl.header"></p>
-    <p ng-if="$ctrl.stem" class="stem" ng-bind-html="$ctrl.stem"></p>
-    <div class="videoContainer"></div>
+<div class="csRunDiv math">
+    <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
+    <p ng-if="::$ctrl.stem" class="stem" ng-bind-html="::$ctrl.stem"></p>
     <div class="no-popup-menu">
-        <img src="/csstatic/video.png"
-             ng-if="!$ctrl.videoOn"
-             ng-click="$ctrl.showStack()"
-             width="200"
-             alt="Click here to show the video"/></div>
-    <a href="{{$ctrl.doclink}}" ng-if="$ctrl.doclink" target="timdoc">
-        <span ng-if="$ctrl.docicon"><img ng-src="{{$ctrl.docicon}}"
-                                    alt="Go to doc"/> </span>{{$ctrl.doctext}}</a>
-    <video-zoom c="$ctrl"></video-zoom>
-    <p class="plgfooter" ng-if="$ctrl.footer" ng-bind-html="$ctrl.footer"></p>
+                <div class="csRunCode"><textarea class="csRunArea csInputArea"
+                                         rows={{$ctrl.inputrows}}
+                                         ng-model="$ctrl.userCode"
+                                         ng-trim="false"
+                                         placeholder="{{$ctrl.inputplaceholder}}"></textarea></div>
+    </div>
+        <p class="csRunMenu">
+            <button ng-if="true" ng-disabled="$ctrl.isRunning" title="(Ctrl-S)" ng-click="$ctrl.runCode()"
+                    ng-bind-html="'Send'"></button>
+                    </p>
+                    
+    <div id="output" ng-bind-html="$ctrl.outputAsHtml()"></div>
+    <h5>General feedback:</h5>
+    <div id="generalfeedback" ng-bind-html="$ctrl.stackfeedback"></div>
+    <h5>Format correct response:</h5>
+    <div id="formatcorrectresponse" ng-bind-html="$ctrl.stackformatcorrectresponse"></div>
+    <p>Score: <span id="score" ng-bind-html="$ctrl.stackscore"></span></p>
+    <p>Summarise response:</p>
+    <div id="summariseresponse" ng-bind-html="$ctrl.stacksummariseresponse"></div>
+    <p>Answer notes:</p>
+    <div id="answernotes" ng-bind-html="$ctrl.stackanswernotes"></div>
+    <p>Time:</p>
+    <div id="time" ng-bind-html="$ctrl.stacktime"></div>
+                    
+    <p class="plgfooter" ng-if="::$ctrl.footer" ng-bind-html="::$ctrl.footer"></p>
 </div>
 `,
 });

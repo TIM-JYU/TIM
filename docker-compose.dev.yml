@@ -43,6 +43,16 @@ services:
   command: ${CSPLUGIN_DEV_COMMAND:-/usr/sbin/sshd -D}
   ports:
    - "49998:22"
+ stack-test-container:
+  build: /var/www/api
+  image: stack
+  security_opt:
+   - seccomp:unconfined
+  volumes:
+   - '/var/www/api/plots:/var/data/api/stack/plots'
+  restart: unless-stopped
+  ports:
+   - "90:80"
  showfile:
   image: timimages/cs3sudo:rust
   build:
