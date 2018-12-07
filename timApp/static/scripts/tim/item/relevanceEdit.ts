@@ -105,7 +105,7 @@ timApp.component("relevanceEdit", {
     template: `
         <p>View and set relevance value denoting item priority in search results</p>
         <div class="input-group">
-            <input class="form-control" ng-model="$ctrl.relevance" ng-keypress="$ctrl.keyPressed($event)" type="text"
+            <input class="form-control" ng-model="$ctrl.relevance" type="number"
                 title="Enter a new relevance value" placeholder="Enter relevance value" typeahead-min-length="0"
                 uib-typeahead="s.value as s.name for s in $ctrl.suggestions | orderBy:'-value'">
         </div>
