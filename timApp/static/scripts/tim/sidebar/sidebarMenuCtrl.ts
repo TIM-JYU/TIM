@@ -65,7 +65,8 @@ export class SidebarMenuCtrl implements IController {
     // null means that the user has approved only cookies (but has not seen the data collection options)
     // undefined means that the user has not acknowledged anything yet
     private storage: ngStorage.StorageService & {consent: null | undefined | number};
-    private currentRelevance: string = "?";
+    private currentRelevance?: number;
+    private showRelevance: boolean = true;
 
     constructor() {
         this.currentLecturesList = [];
@@ -402,12 +403,17 @@ export class SidebarMenuCtrl implements IController {
         return temp;
     }
 
+    /**
+     * Fetches active relevance value. If root dir (id = -1), skip and hide relevance dir.
+     */
     private async getCurrentRelevance() {
-        if ($window.item) {
+        if ($window.item && $window.item.id !== -1) {
             const r = await to($http.get<IRelevanceResponse>(`/items/relevance/get/${$window.item.id}`));
             if (r.ok) {
-                this.currentRelevance = "" + r.result.data.relevance.relevance;
+                this.currentRelevance = r.result.data.relevance.relevance;
             }
+        } else {
+            this.showRelevance = false;
         }
     }
 
@@ -449,7 +455,7 @@ timApp.component("timSidebarMenu", {
             <h5>Customize</h5>
             <a href="/settings">Customize TIM</a>
         </div>
-        <div ng-if="!($ctrl.vctrl.item && !$ctrl.vctrl.item.isFolder && $ctrl.vctrl.item.rights.manage)">
+<div ng-if="!($ctrl.vctrl.item && !$ctrl.vctrl.item.isFolder && $ctrl.vctrl.item.rights.manage) && $ctrl.showRelevance">
             <h5>Folder settings</h5>
             <button class="timButton btn-block" title="Set item relevance value"
                     ng-click="$ctrl.openRelevanceEditDialog()">
