@@ -45,7 +45,7 @@ services:
    - "49998:22"
  stack-api-server:
   build: /var/www/api
-  image: stack
+  image: timimages/stack
   security_opt:
    - seccomp:unconfined
   volumes:

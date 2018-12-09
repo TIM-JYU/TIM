@@ -19,11 +19,11 @@ function ifIsS(value: number | undefined, name: string) {
 
 
 const StackMarkup = t.intersection([
-    t.partial({
+    t.partial({ // this.attrs
         by: t.string,
-        usercode: t.string,
-        userinput: t.string,  // ATTR: käyttäjän syöte
-        timWay:t.boolean
+        timWay:t.boolean,
+        correctresponse: t.boolean,
+        generalfeedback: t.boolean,
 
     }),
     GenericPluginMarkup,
@@ -36,7 +36,6 @@ const StackMarkup = t.intersection([
 const StackAll = t.intersection([
     t.partial({
         by: t.string,
-        userinput: t.string,
     }),
     t.type({
         markup: StackMarkup,
@@ -122,7 +121,7 @@ class StackController extends PluginBase<t.TypeOf<typeof StackMarkup>,
                     try {
                         res = JSON.parse(this.userCode);
                     } catch {
-                        this.timWay = true;
+                        // this.timWay = true;
                     }
               } // note: can not be else, because timWay may change during try
           }
@@ -254,7 +253,7 @@ stackApp.component("stackRunner", {
     <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
     <p ng-if="::$ctrl.stem" class="stem" ng-bind-html="::$ctrl.stem"></p>
     <div class="no-popup-menu">
-                <div class="csRunCode"><textarea class="csRunArea csInputArea"
+                <div class="csRunCode"><textarea class="csRunArea csInputArea" ng-if="::$ctrl.timWay"
                                          rows={{$ctrl.inputrows}}
                                          ng-model="$ctrl.userCode"
                                          ng-trim="false"
@@ -274,15 +273,19 @@ stackApp.component("stackRunner", {
           ng-style="$ctrl.tinyErrorStyle" ng-bind-html="$ctrl.error"></span>
 
     <div ng-if="$ctrl.stackfeedback">
-        <h5>General feedback:</h5>
-        <div id="generalfeedback" ng-bind-html="$ctrl.stackfeedback"></div>
-        <h5>Format correct response:</h5>
-        <div id="formatcorrectresponse" ng-bind-html="$ctrl.stackformatcorrectresponse"></div>
-        <div style="font-size: 0.7em;">
-            <p>Score: <span id="score" ng-bind-html="$ctrl.stackscore"></span></p>
-            <p>Summarise response: <span id="summariseresponse" ng-bind-html="$ctrl.stacksummariseresponse"></span></p>
-            <p>Answer notes: <span id="answernotes" ng-bind-html="$ctrl.stackanswernotes"></span></p>
-            <p>Time: <span id="time" ng-bind-html="$ctrl.stacktime"></span></p>
+        <div ng-if="::$ctrl.attrs.generalfeedback">
+            <h5>General feedback:</h5>
+            <div id="generalfeedback" ng-bind-html="$ctrl.stackfeedback"></div>
+        </div>
+        <div ng-if="::$ctrl.attrs.correctresponse">
+            <h5>Format correct response:</h5>
+            <div id="formatcorrectresponse" ng-bind-html="$ctrl.stackformatcorrectresponse"></div>
+            <div style="font-size: 0.7em;">
+                <p>Score: <span id="score" ng-bind-html="$ctrl.stackscore"></span></p>
+                <p>Summarise response: <span id="summariseresponse" ng-bind-html="$ctrl.stacksummariseresponse"></span></p>
+                <p>Answer notes: <span id="answernotes" ng-bind-html="$ctrl.stackanswernotes"></span></p>
+                <p>Time: <span id="time" ng-bind-html="$ctrl.stacktime"></span></p>
+            </div>
         </div>
     </div>                    
 
