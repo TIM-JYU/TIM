@@ -82,28 +82,28 @@ RUN wget -q \
 RUN bash -c "${APT_INSTALL} clang libicu-dev curl && ${APT_CLEANUP}"
 
 # Everything up to here should cache nicely between Swift versions, assuming dev dependencies change little
-ENV SWIFT_BRANCH=swift-4.2-convergence \
-    SWIFT_VERSION=swift-4.2-CONVERGENCE \
+ENV SWIFT_BRANCH=swift-4.2-release \
+    SWIFT_VERSION=swift-4.2-RELEASE \
     SWIFT_PLATFORM=ubuntu18.04 \
     PATH=/usr/bin:$PATH
-
+ENV SWIFT_URL=https://swift.org/builds/swift-4.2.1-release/ubuntu1804/swift-4.2.1-RELEASE/swift-4.2.1-RELEASE-ubuntu18.04.tar.gz
 # Download GPG keys, signature and Swift package, then unpack and cleanup
-RUN SWIFT_URL=https://swift.org/builds/$SWIFT_BRANCH/$(echo "$SWIFT_PLATFORM" | tr -d .)/$SWIFT_VERSION/$SWIFT_VERSION-$SWIFT_PLATFORM.tar.gz \
-    && curl -fSsL $SWIFT_URL -o swift.tar.gz \
-    && curl -fSsL $SWIFT_URL.sig -o swift.tar.gz.sig \
-    && export GNUPGHOME="$(mktemp -d)" \
-    && gpg --keyserver ha.pool.sks-keyservers.net \
-      --recv-keys \
-      '7463 A81A 4B2E EA1B 551F  FBCF D441 C977 412B 37AD' \
-      '1BE1 E29A 084C B305 F397  D62A 9F59 7F4D 21A5 6D5F' \
-      'A3BA FD35 56A5 9079 C068  94BD 63BC 1CFE 91D3 06C6' \
-      '5E4D F843 FB06 5D7F 7E24  FBA2 EF54 30F0 71E1 B235' \
-      '8513 444E 2DA3 6B7C 1659  AF4D 7638 F1FB 2B2B 08C4' \
-    && gpg --batch --verify --quiet swift.tar.gz.sig swift.tar.gz \
-    && tar -xzf swift.tar.gz --directory / --strip-components=1 \
-    && pkill -9 gpg-agent \
-    && pkill -9 dirmngr \
-    && rm -r "$GNUPGHOME" swift.tar.gz.sig swift.tar.gz
+# RUN export SWIFT_URL=https://swift.org/builds/$SWIFT_BRANCH/$(echo "$SWIFT_PLATFORM" | tr -d .)/$SWIFT_VERSION/$SWIFT_VERSION-$SWIFT_PLATFORM.tar.gz
+RUN curl -fSsL $SWIFT_URL -o swift.tar.gz
+#    && curl -fSsL $SWIFT_URL.sig -o swift.tar.gz.sig \
+RUN export GNUPGHOME="$(mktemp -d)"
+#    && gpg --keyserver ha.pool.sks-keyservers.net \
+#      --recv-keys \
+#      '7463 A81A 4B2E EA1B 551F  FBCF D441 C977 412B 37AD' \
+#      '1BE1 E29A 084C B305 F397  D62A 9F59 7F4D 21A5 6D5F' \
+#      'A3BA FD35 56A5 9079 C068  94BD 63BC 1CFE 91D3 06C6' \
+#      '5E4D F843 FB06 5D7F 7E24  FBA2 EF54 30F0 71E1 B235' \
+#      '8513 444E 2DA3 6B7C 1659  AF4D 7638 F1FB 2B2B 08C4' \
+#    && gpg --batch --verify --quiet swift.tar.gz.sig swift.tar.gz \
+RUN  tar -xzf swift.tar.gz --directory / --strip-components=1
+#    && pkill -9 gpg-agent \
+#    && pkill -9 dirmngr \
+# RUN rm -r "$GNUPGHOME" swift.tar.gz.sig swift.tar.gz
 RUN chmod -R 755 /usr/lib/swift
 # Swift ends
 
@@ -157,6 +157,9 @@ RUN bash -c "${APT_INSTALL} fpc && ${APT_CLEANUP}"
 # Go
 RUN wget -q https://dl.google.com/go/go1.11.1.linux-amd64.tar.gz && tar -C /usr/local -xzf go1.11.1.linux-amd64.tar.gz && rm go1.11.1.linux-amd64.tar.gz
 ENV PATH=$PATH:/usr/local/go/bin
+
+RUN pip3 install requests --upgrade && bash -c "${APT_CLEANUP}"
+
 
 # RUN bash -c "${APT_INSTALL} uuid-runtime && ${APT_CLEANUP}"
 # RUN uuidgen > /etc/machine-id

@@ -4,8 +4,10 @@ import {GenericPluginMarkup, PluginBase, withDefault} from "tim/plugin/util";
 import {to} from "tim/util/utils";
 import {$http, $timeout, $sce} from "tim/util/ngimport";
 import {ParCompiler} from "tim/editor/parCompiler";
+import {string} from "../../../static/scripts/jspm_packages/npm/io-ts@1.4.1/lib";
 
 const stackApp = angular.module("stackApp", ["ngSanitize"]);
+const STACK_VARIABLE_PREFIX = 'stackapi_';
 
 
 function ifIsS(value: number | undefined, name: string) {
@@ -19,14 +21,9 @@ function ifIsS(value: number | undefined, name: string) {
 const StackMarkup = t.intersection([
     t.partial({
         by: t.string,
+        usercode: t.string,
         userinput: t.string,  // ATTR: käyttäjän syöte
-        question: t.string,
-        defaults: t.string,
-        readOnly: t.boolean,
-        feedback: t.boolean,
-        hasScore: t.boolean,
-        lang: t.string,
-        seed: t.number
+        timWay:t.boolean
 
     }),
     GenericPluginMarkup,
@@ -51,8 +48,8 @@ class StackController extends PluginBase<t.TypeOf<typeof StackMarkup>,
     t.TypeOf<typeof StackAll>,
     typeof StackAll> {
     private static $inject = ["$scope", "$element", "$sce"];
-
     private span: string = "";
+    private error: string = "";
     private userCode: string = "";
     private stackoutput: string = "";
     private stackfeedback: string = "";
@@ -61,13 +58,29 @@ class StackController extends PluginBase<t.TypeOf<typeof StackMarkup>,
     private stacksummariseresponse: string = "";
     private stackanswernotes: string = "";
     private stacktime: string = "";
+    private isRunning: boolean = false;
+    private inputrows: number = 1;
+    private timWay: boolean = false; // if answer is given to TIM TextArea-field
 
 
     $onInit() {
         super.$onInit();
         // this.width = this.attrs.width;
         // this.height = this.attrs.height;
-        this.userCode = this.attrsall.by || this.attrs.by || "";
+        let aa:any = this.attrsall;
+        this.userCode = aa.usercode || this.attrs.by || "";
+        this.timWay = aa.timWay || this.attrs.timWay || false;
+
+        this.element.bind("keydown", (event) => {
+            if (event.ctrlKey || event.metaKey) {
+                switch (String.fromCharCode(event.which).toLowerCase()) {
+                    case "s":
+                        event.preventDefault();
+                        this.runSend();
+                        break;
+                }
+            }
+        });
 
     }
 
@@ -75,7 +88,7 @@ class StackController extends PluginBase<t.TypeOf<typeof StackMarkup>,
       processNodes(res:any, nodes:any) {
         for (var i = 0; i < nodes.length; i++) {
           var element = nodes[i];
-          if (element.name.indexOf('stackapi_') === 0 && element.name.indexOf('_val') === -1) {
+          if (element.name.indexOf(STACK_VARIABLE_PREFIX) === 0 && element.name.indexOf('_val') === -1) {
             if (element.type === 'checkbox' || element.type === 'radio') {
               if (element.checked) {
                 res[element.name] = element.value
@@ -94,61 +107,129 @@ class StackController extends PluginBase<t.TypeOf<typeof StackMarkup>,
       }
 
       collectAnswer() {
-        let parent = this.element[0];
-        let inputs = parent.getElementsByTagName('input')
-        let textareas = parent.getElementsByTagName('textarea')
-        let selects = parent.getElementsByTagName('select')
-        let res = {};
-        res = this.processNodes(res, inputs);
-        res = this.processNodes(res, textareas);
-        res = this.processNodes(res, selects);
-        return res;
+          let parent = this.element[0];
+          let inputs = parent.getElementsByTagName('input');
+          let textareas = parent.getElementsByTagName('textarea');
+          let selects = parent.getElementsByTagName('select');
+          let res: any = {};
+          if ( !this.timWay ) {
+              res = this.processNodes(res, inputs);
+              res = this.processNodes(res, textareas);
+              res = this.processNodes(res, selects);
+              if (Object.keys(res).length && this.userCode ) {
+                  this.userCode = JSON.stringify(res);
+              } else {
+                    try {
+                        res = JSON.parse(this.userCode);
+                    } catch {
+                        this.timWay = true;
+                    }
+              } // note: can not be else, because timWay may change during try
+          }
+          if ( this.timWay ) res[STACK_VARIABLE_PREFIX +'ans1'] = this.userCode;
+          return res;
       }
 
 
       collectData() {
         let res: any = {
-          question: this.attrs.question,
-          readOnly: this.attrs.readOnly || false, //document.getElementById('readOnly').checked,
-          feedback: this.attrs.feedback || true, //document.getElementById('feedback').checked,
-          score: this.attrs.hasScore || true, //document.getElementById('hasScore').checked,
-          lang: this.attrs.lang || '', //document.getElementById('lang').value,
-          prefix: 'stackapi_',
+          prefix: STACK_VARIABLE_PREFIX,
           answer: this.collectAnswer(),
-          seed: this.attrs.seed || 12313122
-        }
-        if (this.attrs.defaults) {
-          res['defaults'] = this.attrs.defaults
         }
         return res;
       }
 
 
-    async runCode() {
-        let url = "http://tim3/stackserver/api/endpoint.php";
-        this.stackoutput = "";
+    async handleServerResult(r:any) {
+        try {
+            if (typeof r === 'string' || r instanceof String) {
+                this.error = r.toString();
+                return;
+            }
+            let json: any = r;
+            this.stackoutput = json.questiontext;
+            this.stackfeedback = json.generalfeedback;
+            this.stackformatcorrectresponse = json.formatcorrectresponse;
+            this.stackscore = json.score.toString();
+            this.stacksummariseresponse = JSON.stringify(json.summariseresponse);
+            this.stackanswernotes = JSON.stringify(json.answernotes);
+            this.stacktime = 'Request Time: '
+                + (json.request_time).toFixed(2)
+                + ' Api Time: ' + (json.api_time).toFixed(2);
 
+            await ParCompiler.processAllMathDelayed(this.element);
+        } finally {
+            this.isRunning = false;
+        }
+    }
+
+
+    async runPeek() { // this is just for test purposes
+        this.isRunning = true;
+        let url = "http://tim3/stackserver/api/endpoint.php";
+        // this.stackoutput = "";
+        let data = this.collectData();
+        data.question = "";
+        data.seed = 1;
+        data.question =`
+name: test
+question_html: "<p>[[validation:ans1]]</p>"
+inputs:
+  ans1:
+    type: algebraic
+    model_answer: ta+c
+    box_size: 20
+    syntax_attribute: value
+    forbid_words: int
+    require_lowest_terms: true
+    check_answer_type: true
+    show_validations: with_varlist
+`;
         const r = await to($http.post<{texts: string | Array<{html: string}>}>(
-            url, this.collectData()
+            url, data
+        ));
+        await this.handleServerResult(r.result.data);
+    }
+
+
+    async runSend() {
+        this.error = "";
+        this.isRunning = true;
+        let url = "/cs/answer";
+        const plugin = this.getPlugin();
+        if (plugin) {
+            url = plugin;
+            const i = url.lastIndexOf("/");
+            if (i > 0) {
+                url = url.substring(i);
+            }
+            url += "/" + this.getTaskId() + "/answer/";
+        }
+        let stackData = this.collectData();
+        let params = {
+            input: {
+                usercode: this.timWay ? this.userCode : JSON.stringify(stackData.answer),
+                stackData: stackData,
+                nosave: false,
+                type: 'stack'
+            },
+        };
+
+        const r:any = await to($http<
+            any
+        >({method: "PUT", url: url, data: params, timeout: 20000},
         ));
 
-        let json:any = r.result.data;
-        this.stackoutput = json.questiontext;
-        this.stackfeedback = json.generalfeedback;
-        this.stackformatcorrectresponse = json.formatcorrectresponse;
-        this.stackscore = json.score.toString();
-        this.stacksummariseresponse = JSON.stringify(json.summariseresponse);
-        this.stackanswernotes = JSON.stringify(json.answernotes);
-        this.stacktime = '<b>Request Time:</b> ' + json.request_time +
-                  ' <b>Api Time:</b> ' + json.api_time;
-
-        // MathJax.Hub.Queue(["Typeset",MathJax.Hub]);
-        await ParCompiler.processAllMathDelayed(this.element);
+        let error = r.result.data.web.error;
+        if ( error ) {
+            this.error = error;
+            this.isRunning = false;
+            return;
+        }
+        let stackResult = r.result.data.web.stackResult;
+        await this.handleServerResult(stackResult);
     }
 
-
-    showStack() {
-    }
 
     getDefaultMarkup() {
         return {};
@@ -179,24 +260,32 @@ stackApp.component("stackRunner", {
                                          ng-trim="false"
                                          placeholder="{{$ctrl.inputplaceholder}}"></textarea></div>
     </div>
-        <p class="csRunMenu">
-            <button ng-if="true" ng-disabled="$ctrl.isRunning" title="(Ctrl-S)" ng-click="$ctrl.runCode()"
-                    ng-bind-html="'Send'"></button>
-                    </p>
                     
     <div id="output" ng-bind-html="$ctrl.outputAsHtml()"></div>
-    <h5>General feedback:</h5>
-    <div id="generalfeedback" ng-bind-html="$ctrl.stackfeedback"></div>
-    <h5>Format correct response:</h5>
-    <div id="formatcorrectresponse" ng-bind-html="$ctrl.stackformatcorrectresponse"></div>
-    <p>Score: <span id="score" ng-bind-html="$ctrl.stackscore"></span></p>
-    <p>Summarise response:</p>
-    <div id="summariseresponse" ng-bind-html="$ctrl.stacksummariseresponse"></div>
-    <p>Answer notes:</p>
-    <div id="answernotes" ng-bind-html="$ctrl.stackanswernotes"></div>
-    <p>Time:</p>
-    <div id="time" ng-bind-html="$ctrl.stacktime"></div>
-                    
+    <p class="csRunMenu">
+        <button ng-if="true" ng-disabled="$ctrl.isRunning" title="(Ctrl-S)" ng-click="$ctrl.runSend()"
+                ng-bind-html="'Send'"></button>
+        <button ng-if="true" ng-disabled="$ctrl.isRunning"  ng-click="$ctrl.runPeek()"
+                ng-bind-html="'Peek'"></button>
+    </p>
+
+    <span class="csRunError"
+          ng-if="$ctrl.error"
+          ng-style="$ctrl.tinyErrorStyle" ng-bind-html="$ctrl.error"></span>
+
+    <div ng-if="$ctrl.stackfeedback">
+        <h5>General feedback:</h5>
+        <div id="generalfeedback" ng-bind-html="$ctrl.stackfeedback"></div>
+        <h5>Format correct response:</h5>
+        <div id="formatcorrectresponse" ng-bind-html="$ctrl.stackformatcorrectresponse"></div>
+        <div style="font-size: 0.7em;">
+            <p>Score: <span id="score" ng-bind-html="$ctrl.stackscore"></span></p>
+            <p>Summarise response: <span id="summariseresponse" ng-bind-html="$ctrl.stacksummariseresponse"></span></p>
+            <p>Answer notes: <span id="answernotes" ng-bind-html="$ctrl.stackanswernotes"></span></p>
+            <p>Time: <span id="time" ng-bind-html="$ctrl.stacktime"></span></p>
+        </div>
+    </div>                    
+
     <p class="plgfooter" ng-if="::$ctrl.footer" ng-bind-html="::$ctrl.footer"></p>
 </div>
 `,

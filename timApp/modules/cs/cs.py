@@ -566,7 +566,7 @@ def get_html(self, ttype, query):
         lazy_end = LAZYEND
 
     if ttype == "c1" or True:  # c1 oli testejä varten ettei sinä aikana rikota muita.
-        s = f'{lazy_start}<{r}{lazy_class} json={quoteattr(jso)}></{r}>{lazy_end}{lazy_visible}'
+        s = f'{lazy_start}<{r}{lazy_class}  ng-cloak json={quoteattr(jso)}></{r}>{lazy_end}{lazy_visible}'
     return s
 
 
@@ -1368,6 +1368,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
             err = ""
             out = ""
+            retdata = {}
 
             pwddir = ""
 

@@ -1,4 +1,7 @@
 from subprocess import check_output
+import requests
+
+
 from points import *
 from run import *
 from os.path import splitext
@@ -889,8 +892,33 @@ class SimCir(Language):
 class Sage(Language):
     pass
 
+
 class Stack(Language):
-    pass
+    def __init__(self, query, sourcecode):
+        super().__init__(query, sourcecode)
+        self.sourcefilename = "/tmp/%s/%s.txt" % (self.basename, self.filename)
+        self.fileext = "txt"
+        self.readpoints_default = 'Score: (.*)'
+
+    def run(self, web, sourcelines, points_rule):
+        url = "http://stack-api-server/api/endpoint.php"
+        data = self.query.jso.get("input").get("stackData")
+        stack_data = self.query.jso.get('markup').get('-stackData')
+        if not stack_data:
+            stack_data = self.query.jso.get('markup').get('stackData')
+        if not stack_data:
+            err = "stackData missign from plugin"
+            return 0, "", err, ""
+        stack_data["answer"] = data.get("answer")
+        stack_data["prefix"] = data.get("prefix")
+
+        r = requests.post(url=url, data=json.dumps(stack_data))   #  json.dumps(data_to_send, cls=TimJsonEncoder))
+        # r = requests.get(url="http://stack-test-container/api/endpoint.html")
+
+        r = r.json()
+        out = "Score: %s" % r.get("score",0)
+        web["stackResult"] = r
+        return 0, out, "", ""
 
 
 class R(Language):

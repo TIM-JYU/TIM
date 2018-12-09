@@ -43,7 +43,7 @@ services:
   command: ${CSPLUGIN_DEV_COMMAND:-/usr/sbin/sshd -D}
   ports:
    - "49998:22"
- stack-test-container:
+ stack-api-server:
   build: /var/www/api
   image: stack
   security_opt:
