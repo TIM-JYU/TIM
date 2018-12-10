@@ -4,6 +4,7 @@ services:
   image: timimages/tim:${TIM_IMAGE_TAG}
   build: ./timApp
   depends_on:
+   - stack-api-server
    - postgresql
    - csplugin
    - pali
@@ -136,6 +137,14 @@ services:
    COMPOSE_PROJECT_NAME: ${COMPOSE_PROJECT_NAME}
    TIM_SETTINGS: ${CONFIG_FILE}
    TIM_HOST: ${TIM_HOST}
+  restart: unless-stopped
+ stack-api-server:
+  # build: /var/www/api
+  image: timimages/stack
+  security_opt:
+   - seccomp:unconfined
+  volumes:
+   - '/var/www/api/plots:/var/data/api/stack/plots'
   restart: unless-stopped
 volumes:
  data:
