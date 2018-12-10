@@ -21,7 +21,7 @@ import {
     OptionalDragObjectPropNames,
     OptionalFixedObjPropNames,
     OptionalPropNames,
-    OptionalTargetPropNames,
+    OptionalTargetPropNames, PinAlign,
     PinPropsT,
     RequireExcept,
     TargetPropsT, TextboxPropsT,
@@ -815,15 +815,53 @@ class DragTask {
     }
 }
 
+function alignToDir(a: PinAlign, diagonalFactor: number) {
+    let alignOffset;
+    switch (a) {
+        case "north":
+            alignOffset = {x: 0, y: -1};
+            break;
+        case "northeast":
+            alignOffset = {x: diagonalFactor, y: -diagonalFactor};
+            break;
+        case "northwest":
+            alignOffset = {x: -diagonalFactor, y: -diagonalFactor};
+            break;
+        case "south":
+            alignOffset = {x: 0, y: 1};
+            break;
+        case "southeast":
+            alignOffset = {x: diagonalFactor, y: diagonalFactor};
+            break;
+        case "southwest":
+            alignOffset = {x: -diagonalFactor, y: diagonalFactor};
+            break;
+        case "east":
+            alignOffset = {x: 1, y: 0};
+            break;
+        case "west":
+            alignOffset = {x: -1, y: 0};
+            break;
+        case "center":
+            alignOffset = {x: 0, y: 0};
+            break;
+        default:
+            throw new Error(`Unexpected alignment: ${a}`);
+    }
+    return alignOffset;
+}
+
 class Pin {
     private pos: Required<IPinPosition>;
 
     constructor(
         private values: Required<PinPropsT>,
     ) {
+        const a = values.position.align || "northwest";
+        const {x, y} = alignToDir(a, 1 / Math.sqrt(2));
         this.pos = {
-            align: values.position.align || "northwest",
-            coord: tupleToCoords(values.position.coord || [20, 20]), // TODO better defaults for coord
+            align: a,
+            coord: tupleToCoords(values.position.coord || [x * values.length, y * values.length]),
             start: tupleToCoords(values.position.start || [0, 0]),
         };
     }
@@ -835,41 +873,10 @@ class Pin {
     getOffsetForObject(o: ISized) {
         const wp2 = o.width / 2;
         const hp2 = o.height / 2;
-        let alignOffset;
-        switch (this.pos.align) {
-            case "north":
-                alignOffset = {x: 0, y: -hp2};
-                break;
-            case "northeast":
-                alignOffset = {x: wp2, y: -hp2};
-                break;
-            case "northwest":
-                alignOffset = {x: -wp2, y: -hp2};
-                break;
-            case "south":
-                alignOffset = {x: 0, y: hp2};
-                break;
-            case "southeast":
-                alignOffset = {x: wp2, y: hp2};
-                break;
-            case "southwest":
-                alignOffset = {x: -wp2, y: hp2};
-                break;
-            case "east":
-                alignOffset = {x: wp2, y: 0};
-                break;
-            case "west":
-                alignOffset = {x: -wp2, y: 0};
-                break;
-            case "center":
-                alignOffset = {x: 0, y: 0};
-                break;
-            default:
-                throw new Error(`Unexpected alignment: ${this.pos.align}`);
-        }
+        let alignOffset = alignToDir(this.pos.align, 1);
         return {
-            x: -(this.pos.coord.x + this.pos.start.x + alignOffset.x),
-            y: -(this.pos.coord.y + this.pos.start.y + alignOffset.y),
+            x: -(this.pos.coord.x + this.pos.start.x + alignOffset.x * wp2),
+            y: -(this.pos.coord.y + this.pos.start.y + alignOffset.y * hp2),
         };
     }
 
@@ -1053,8 +1060,8 @@ class DragObject extends ObjBase<RequireExcept<DragObjectPropsT, OptionalDragObj
         super(ctx, values, defId);
         this.pin = new Pin({
             color: values.pin.color || "black",
-            dotRadius: values.pin.dotRadius || 5,
-            length: values.pin.length || 10,
+            dotRadius: values.pin.dotRadius || 3,
+            length: values.pin.length || 20,
             linewidth: values.pin.linewidth || 2,
             position: values.pin.position || {},
             visible: values.pin.visible || true,

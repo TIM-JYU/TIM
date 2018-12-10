@@ -74,7 +74,7 @@ const PinAlignment = t.keyof({
     west: null,
 });
 
-type PinAlign = t.TypeOf<typeof PinAlignment>;
+export type PinAlign = t.TypeOf<typeof PinAlignment>;
 
 const ImgProps = t.type({
     src: t.string,
