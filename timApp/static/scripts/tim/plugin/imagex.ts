@@ -1032,7 +1032,7 @@ function textboxFromProps(values: {textboxproperties?: TextboxPropsT, color?: st
         () => overrideColorFn() || props.borderColor || values.color || "black",
         props.textColor || "black",
         props.fillColor || "transparent",
-        2,
+        props.borderWidth || 2,
         props.cornerradius || 2,
         s,
         props.text || defaultText,
@@ -1076,9 +1076,9 @@ class DragObject extends ObjBase<RequireExcept<DragObjectPropsT, OptionalDragObj
     }
 
     draw() {
-        super.draw();
         this.initialTransform();
         this.pin.draw(this.ctx);
+        super.draw();
     }
 
     get mainShapeOffset() {
@@ -1571,7 +1571,6 @@ class ImageXController extends PluginBase<t.TypeOf<typeof ImageXMarkup>,
                     a: 0,
                     imgproperties: {src: this.attrs.background.src, textbox: false},
                     position: [0, 0],
-                    size: [this.attrs.canvaswidth, this.attrs.canvasheight],
                     type: "img",
                 },
                 "background");
