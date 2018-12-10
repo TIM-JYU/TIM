@@ -1,44 +1,40 @@
-import angular, {IRootElementService, IScope} from "angular";
+import angular, {IPromise, IRootElementService, IScope} from "angular";
 import ngSanitize from "angular-sanitize";
 import * as t from "io-ts";
 import {ViewCtrl} from "../document/viewctrl";
 import {editorChangeValue} from "../editor/editorScope";
-import {$http, $q, $sce, $window} from "../util/ngimport";
-import {markAsUsed, Require, to} from "../util/utils";
-import {GenericPluginMarkup, PluginBase, withDefault} from "./util";
+import {$http, $q, $sce, $timeout, $window} from "../util/ngimport";
+import {clone, markAsUsed, Require, to} from "../util/utils";
+import {
+    CommonPropsT,
+    DefaultPropsT,
+    DragObjectPropsT,
+    FixedObjectPropsT,
+    IFakeVideo,
+    ILineSegment,
+    ImageXAll,
+    ImageXMarkup,
+    IPinPosition,
+    IPoint,
+    ISized,
+    MouseOrTouch, ObjectTypeT, OptionalCommonPropNames,
+    OptionalDragObjectPropNames,
+    OptionalFixedObjPropNames,
+    OptionalPropNames,
+    OptionalTargetPropNames,
+    PinPropsT,
+    RequireExcept,
+    TargetPropsT, TextboxPropsT,
+    TuplePoint,
+    VideoPlayer,
+} from "./imagextypes";
+import {PluginBase} from "./util";
 
 markAsUsed(ngSanitize);
 
 const imagexApp = angular.module("imagexApp", ["ngSanitize"]);
 
 let globalPreviewColor = "#fff";
-
-interface IPoint {
-    x: number;
-    y: number;
-}
-
-const TuplePointR = t.union([t.tuple([t.number, t.number]), t.tuple([t.number, t.number, t.number, t.number])]);
-
-const LineSegment = t.intersection([
-    t.type({lines: t.array(TuplePointR)}),
-    t.partial({
-        color: t.string,
-        w: t.number,
-    }),
-]);
-
-type TuplePoint = t.TypeOf<typeof TuplePointR>;
-
-interface ILineSegment extends t.TypeOf<typeof LineSegment> {
-}
-
-interface IFakeVideo {
-    currentTime: number;
-    fakeVideo: true;
-}
-
-type VideoPlayer = IFakeVideo | HTMLVideoElement;
 
 function isFakePlayer(p: VideoPlayer): p is IFakeVideo {
     return "fakeVideo" in p && p.fakeVideo;
@@ -382,6 +378,7 @@ function showTime(ctx: CanvasRenderingContext2D, vt: number, x: number, y: numbe
 
 const directiveTemplate = `
 <div class="csRunDiv no-popup-menu">
+    <div class="pluginError" ng-if="$ctrl.markupError" ng-bind="$ctrl.markupError"></div>
     <h4 ng-if="$ctrl.header" ng-bind-html="$ctrl.header"></h4>
     <p ng-if="$ctrl.stem" class="stem" ng-bind-html="$ctrl.stem"></p>
     <div>
@@ -414,7 +411,7 @@ const directiveTemplate = `
             Showanswer
         </button>
         &nbsp&nbsp<a ng-if="$ctrl.button" ng-disabled="$ctrl.isRunning" ng-click="$ctrl.resetExercise()">
-            {{resetText}}</a>&nbsp&nbsp<a
+            {{$ctrl.resetText}}</a>&nbsp&nbsp<a
                 href="" ng-if="$ctrl.muokattu" ng-click="$ctrl.initCode()">{{$ctrl.resetText}}</a><label
                 ng-show="$ctrl.freeHandVisible">FreeHand <input type="checkbox" name="freeHand" value="true"
                                                                 ng-model="$ctrl.freeHand"></label> <span><span
@@ -487,8 +484,6 @@ function getPos(canvas: Element, p: MouseOrTouch) {
     };
 }
 
-type ObjectType = "target" | "fixedobject" | "dragobject";
-
 function isObjectOnTopOf(position: IPoint, object: DrawObject, grabOffset: number) {
     return object.isPointInside(position, grabOffset);
 }
@@ -506,10 +501,6 @@ function areObjectsOnTopOf<T extends DrawObject>(
     }
     return undefined;
 }
-
-type MouseOrTouch = MouseEvent | Touch;
-
-type DrawObject = Target | FixedObject | DragObject;
 
 enum TargetState {
     Normal,
@@ -652,16 +643,19 @@ class DragTask {
 
     draw() {
         const canvas = this.canvas;
+        this.ctx.setTransform(1, 0, 0, 1, 0, 0);
         this.ctx.fillStyle = "white"; // TODO get from markup?
         this.ctx.fillRect(0, 0, canvas.width, canvas.height);
 
         if (this.activeDragObject) {
             const dobj = this.activeDragObject;
-            if (dobj.obj.lock !== "x" && dobj.obj.xlimits) {
-                dobj.obj.x = toRange(dobj.obj.xlimits, this.mousePosition.x - dobj.xoffset);
+            const xlimits: [number, number] = dobj.obj.xlimits || [Number.MIN_VALUE, Number.MAX_VALUE];
+            const ylimits: [number, number] = dobj.obj.ylimits || [Number.MIN_VALUE, Number.MAX_VALUE];
+            if (dobj.obj.lock !== "x") {
+                dobj.obj.x = toRange(xlimits, this.mousePosition.x - dobj.xoffset);
             }
-            if (dobj.obj.lock !== "y" && dobj.obj.ylimits) {
-                dobj.obj.y = toRange(dobj.obj.ylimits, this.mousePosition.y - dobj.yoffset);
+            if (dobj.obj.lock !== "y") {
+                dobj.obj.y = toRange(ylimits, this.mousePosition.y - dobj.yoffset);
             }
         }
         const targets = this.targets;
@@ -809,7 +803,7 @@ class DragTask {
                     rightdrags[j].y = rightdrags[j].position[1];
                     // line.color = getValueDef(values, "answerproperties.color", "green");
                     // line.lineWidth = getValueDef(values, "answerproperties.lineWidth", 2);
-                    const line = new Line(dt, values);
+                    const line = new Line(this.ctx, values);
                     line.did = "-";
                     this.drawObjects.push(line);
                 }
@@ -821,30 +815,15 @@ class DragTask {
     }
 }
 
-// pin begin (non-dot) position = align place + start
-// pin end (dot) position = begin + coord
-// in YAML, "position" means pin end, so everything else should be computed based on that
-interface IPinPosition {
-    align?: PinAlign;
-    start?: IPoint;
-    coord?: IPoint;
-}
-
-interface ISized {
-    width: number;
-    height: number;
-}
-
 class Pin {
     private pos: Required<IPinPosition>;
 
     constructor(
-        private ctx: CanvasRenderingContext2D,
         private values: Required<PinPropsT>,
     ) {
         this.pos = {
             align: values.position.align || "northwest",
-            coord: tupleToCoords(values.position.coord || [0, 0]), // TODO better defaults for coord
+            coord: tupleToCoords(values.position.coord || [20, 20]), // TODO better defaults for coord
             start: tupleToCoords(values.position.start || [0, 0]),
         };
     }
@@ -859,22 +838,22 @@ class Pin {
         let alignOffset;
         switch (this.pos.align) {
             case "north":
-                alignOffset = {x: 0, y: hp2};
-                break;
-            case "northeast":
-                alignOffset = {x: wp2, y: hp2};
-                break;
-            case "northwest":
-                alignOffset = {x: -wp2, y: hp2};
-                break;
-            case "south":
                 alignOffset = {x: 0, y: -hp2};
                 break;
-            case "southeast":
+            case "northeast":
                 alignOffset = {x: wp2, y: -hp2};
                 break;
-            case "southwest":
+            case "northwest":
                 alignOffset = {x: -wp2, y: -hp2};
+                break;
+            case "south":
+                alignOffset = {x: 0, y: hp2};
+                break;
+            case "southeast":
+                alignOffset = {x: wp2, y: hp2};
+                break;
+            case "southwest":
+                alignOffset = {x: -wp2, y: hp2};
                 break;
             case "east":
                 alignOffset = {x: wp2, y: 0};
@@ -894,18 +873,18 @@ class Pin {
         };
     }
 
-    draw() {
+    draw(ctx: CanvasRenderingContext2D) {
         if (this.values.visible) {
-            this.ctx.strokeStyle = this.values.color;
-            this.ctx.fillStyle = this.values.color;
-            this.ctx.beginPath();
-            this.ctx.arc(0, 0, this.values.dotRadius, 0, 2 * Math.PI);
-            this.ctx.fill();
-            this.ctx.beginPath();
-            this.ctx.moveTo(0, 0);
-            this.ctx.lineWidth = this.values.linewidth;
-            this.ctx.lineTo(-this.pos.coord.x, -this.pos.coord.y);
-            this.ctx.stroke();
+            ctx.strokeStyle = this.values.color;
+            ctx.fillStyle = this.values.color;
+            ctx.beginPath();
+            ctx.arc(0, 0, this.values.dotRadius, 0, 2 * Math.PI);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.lineWidth = this.values.linewidth;
+            ctx.lineTo(-this.pos.coord.x, -this.pos.coord.y);
+            ctx.stroke();
         }
     }
 }
@@ -914,27 +893,27 @@ function point(x: number, y: number) {
     return {x, y};
 }
 
-// These two are from type-zoo: https://github.com/pelotom/type-zoo
-export type Omit<T, K extends keyof any> = T extends any ? Pick<T, Exclude<keyof T, K>> : never;
-export type Overwrite<T, U> = Omit<T, keyof T & keyof U> & U;
+export type DrawObject = Target | FixedObject | DragObject;
 
-type MakeOptional<T, U extends keyof T> = Overwrite<T, { [P in U]?: T[P] }>;
-type RequireExcept<T, U extends keyof T> = MakeOptional<Required<T>, U>;
+interface IChildShape {
+    s: Shape;
+    p: IPoint;
+}
 
-/**
- * Makes all properties required except size.
- */
-type RequireExceptSize<T extends CommonPropsT> = RequireExcept<T, "size" | "id">;
+const toRadians = Math.PI / 180;
 
-type Id<T> = T;
-type C<T> = Readonly<RequireExceptSize<T>>;
-
-abstract class ObjBase<T extends C<TargetPropsT | DragObjectPropsT | FixedObjectPropsT>> {
+abstract class ObjBase<T extends RequireExcept<CommonPropsT, OptionalCommonPropNames>> {
     public x: number;
     public y: number;
     public a: number;
+    protected childShapes: IChildShape[] = [];
+    private pendingImage?: IPromise<HTMLImageElement>;
 
-    abstract get mainShape(): Shape;
+    public mainShape: Shape;
+
+    get overrideColor(): string | undefined {
+        return undefined;
+    }
 
     // Center point of object ignoring possible pin; used in drag & drop checks.
     abstract get center(): IPoint;
@@ -946,6 +925,50 @@ abstract class ObjBase<T extends C<TargetPropsT | DragObjectPropsT | FixedObject
         this.x = z[0];
         this.y = z[1];
         this.a = this.values.a;
+        let s;
+        if (this.values.size) {
+            const [width, height] = this.values.size;
+            s = {width, height};
+        }
+        switch (values.type) {
+            case "img":
+                let img;
+                if (this.values.imgproperties) {
+                    [this.pendingImage, img] = loadImage(this.values.imgproperties.src);
+                    if (this.values.imgproperties.textbox) {
+                        this.childShapes.push({
+                            p: this.values.textboxproperties ? tupleToCoords(this.values.textboxproperties.position || [0, 0]) : {
+                                x: 0,
+                                y: 0,
+                            },
+                            s: textboxFromProps(this.values, s, () => this.overrideColor, this.id),
+                        });
+                    }
+                } else {
+                    [this.pendingImage, img] = loadImage("/static/images/Imagex.png");
+                }
+                this.mainShape = new DImage(img, s);
+                break;
+            case "ellipse":
+                this.mainShape = new Ellipse(() => this.overrideColor || this.values.color || "black", 2, s);
+                break;
+            case "textbox":
+                this.mainShape = textboxFromProps(this.values, s, () => this.overrideColor, this.id);
+                break;
+            case "vector":
+                const vprops = this.values.vectorproperties || {};
+                this.mainShape = new Vector(
+                    () => this.overrideColor || vprops.color || this.values.color || "black",
+                    2,
+                    s,
+                    vprops.arrowheadwidth,
+                    vprops.arrowheadlength,
+                );
+                break;
+            default: // rectangle
+                this.mainShape = new Rectangle(() => this.overrideColor || this.values.color || "black", 2, 0, s);
+                break;
+        }
     }
 
     isPointInside(p: IPoint, offset?: number) {
@@ -954,10 +977,9 @@ abstract class ObjBase<T extends C<TargetPropsT | DragObjectPropsT | FixedObject
     }
 
     normalizePoint(p: IPoint) {
-        const to_radians = Math.PI / 180;
         const {x, y} = this.center;
-        const sina = Math.sin(this.a * to_radians);
-        const cosa = Math.cos(this.a * to_radians);
+        const sina = Math.sin(this.a * toRadians);
+        const cosa = Math.cos(this.a * toRadians);
         const rotatedX = cosa * (p.x - x) - sina * (p.y - y);
         const rotatedY = cosa * (p.y - y) + sina * (p.x - x);
         return point(rotatedX, rotatedY);
@@ -966,13 +988,52 @@ abstract class ObjBase<T extends C<TargetPropsT | DragObjectPropsT | FixedObject
     get id(): string {
         return this.values.id || this.did;
     }
+
+    get mainShapeOffset() {
+        return {x: 0, y: 0};
+    }
+
+    draw() {
+        this.initialTransform();
+        const {x, y} = this.mainShapeOffset;
+        this.ctx.translate(x, y);
+        this.mainShape.draw(this.ctx);
+        for (const s of this.childShapes) {
+            this.ctx.save();
+            this.ctx.translate(s.p.x, s.p.y);
+            s.s.draw(this.ctx);
+            this.ctx.restore();
+        }
+    }
+
+    protected initialTransform() {
+        this.ctx.setTransform(1, 0, 0, 1, 0, 0);
+        this.ctx.translate(this.x, this.y);
+        this.ctx.rotate(-this.a * toRadians);
+    }
 }
 
-class DragObject extends ObjBase<C<DragObjectPropsT>> {
+function textboxFromProps(values: {textboxproperties?: TextboxPropsT, color?: string},
+                          s: ISized | undefined,
+                          overrideColorFn: () => string | undefined,
+                          defaultText: string) {
+    const props = values.textboxproperties || {};
+    return new Textbox(
+        () => overrideColorFn() || props.borderColor || values.color || "black",
+        props.textColor || "black",
+        props.fillColor || "transparent",
+        2,
+        props.cornerradius || 2,
+        s,
+        props.text || defaultText,
+        props.font || "14px Arial",
+    );
+}
+
+class DragObject extends ObjBase<RequireExcept<DragObjectPropsT, OptionalDragObjectPropNames>> {
 
     public name: "dragobject" = "dragobject";
     private pin: Pin;
-    public mainShape: Shape;
 
     get lock() {
         return this.values.lock;
@@ -983,31 +1044,36 @@ class DragObject extends ObjBase<C<DragObjectPropsT>> {
     }
 
     get ylimits() {
-        return this.values.xlimits;
+        return this.values.ylimits;
     }
 
     constructor(ctx: CanvasRenderingContext2D,
-                values: C<DragObjectPropsT>,
+                values: RequireExcept<DragObjectPropsT, OptionalDragObjectPropNames>,
                 defId: string) {
         super(ctx, values, defId);
-        this.pin = new Pin(ctx, {
+        this.pin = new Pin({
             color: values.pin.color || "black",
             dotRadius: values.pin.dotRadius || 5,
             length: values.pin.length || 10,
-            linewidth: values.pin.linewidth || 1,
+            linewidth: values.pin.linewidth || 2,
             position: values.pin.position || {},
             visible: values.pin.visible || true,
         });
-
     }
 
     draw() {
-        // TODO
+        super.draw();
+        this.initialTransform();
+        this.pin.draw(this.ctx);
+    }
+
+    get mainShapeOffset() {
+        return this.pin.getOffsetForObject(this.mainShape.size);
     }
 
     get center(): IPoint {
         const off = this.pin.getOffsetForObject(this.mainShape.size);
-        return point(this.x - off.x, this.y - off.y);
+        return point(this.x + off.x, this.y + off.y); // TODO plus or minus?
     }
 
     resetPosition() {
@@ -1016,12 +1082,11 @@ class DragObject extends ObjBase<C<DragObjectPropsT>> {
     }
 }
 
-class Target extends ObjBase<C<TargetPropsT>> {
+class Target extends ObjBase<RequireExcept<TargetPropsT, OptionalTargetPropNames>> {
     public name: "target" = "target";
     objectCount = 0;
     maxObjects = 1000;
     state = TargetState.Normal;
-    public mainShape: Shape;
 
     get snapOffset() {
         return this.values.snapOffset ? tupleToCoords(this.values.snapOffset) : point(0, 0);
@@ -1031,10 +1096,10 @@ class Target extends ObjBase<C<TargetPropsT>> {
         return this.values.snap;
     }
 
-    get color() {
+    get overrideColor() {
         switch (this.state) {
             case TargetState.Normal:
-                return this.values.color;
+                return undefined;
             case TargetState.Snap:
                 return this.values.snapColor;
             case TargetState.Drop:
@@ -1043,22 +1108,10 @@ class Target extends ObjBase<C<TargetPropsT>> {
     }
 
     constructor(ctx: CanvasRenderingContext2D,
-                values: C<TargetPropsT>,
+                values: RequireExcept<TargetPropsT, OptionalTargetPropNames>,
                 defId: string) {
         super(ctx, values, defId);
         // If default values of type, size, a or position are changed, check also imagex.py
-        this.position = getValueDef(values, "position", [0, 0]);
-        this.snap = getValueDef(values, "snap", true);
-        this.snapOffset = getValueDef(values, "snapOffset", [0, 0]);
-        this.type = getValueDef(values, "type", "rectangle", true);
-        this.color = getValueDef(values, "color", "Blue");
-        this.origColor = getValueDef(values, "color", "Blue");
-        this.snapColor = getValueDef(values, "snapColor", "Cyan");
-        this.dropColor = getValueDef(values, "dropColor", this.snapColor);
-    }
-
-    draw() {
-        // TODO
     }
 
     get center(): IPoint {
@@ -1066,23 +1119,14 @@ class Target extends ObjBase<C<TargetPropsT>> {
     }
 }
 
-class FixedObject extends ObjBase<C<FixedObjectPropsT>> {
+class FixedObject extends ObjBase<RequireExcept<FixedObjectPropsT, OptionalFixedObjPropNames>> {
     public name: "fixedobject" = "fixedobject";
-    public mainShape: Shape;
 
     constructor(ctx: CanvasRenderingContext2D,
-                values: C<FixedObjectPropsT>,
+                values: RequireExcept<FixedObjectPropsT, OptionalFixedObjPropNames>,
                 defId: string) {
         super(ctx, values, defId);
         // If default values of type, size, a or position are changed, check also imagex.py
-        this.color = getValueDef(values, "color", "Blue");
-        this.size = getValueDef(values, "size", [10, 10]);
-        this.r1 = getValue(this.size[0], 10);
-        this.r2 = getValue(this.size[1], this.r1);
-    }
-
-    draw() {
-        // TODO
     }
 
     get center(): IPoint {
@@ -1091,8 +1135,8 @@ class FixedObject extends ObjBase<C<FixedObjectPropsT>> {
     }
 }
 
-class Shape {
-    constructor(protected explicitSize: ISized | undefined) {
+abstract class Shape {
+    protected constructor(protected explicitSize: ISized | undefined) {
 
     }
 
@@ -1121,9 +1165,11 @@ class Shape {
         const s = this.size;
         const r1 = s.width + (offset || 0);
         const r2 = s.height + (offset || 0);
-        return p.x >= -r1 / 2 && p.y <= r1 / 2 &&
+        return p.x >= -r1 / 2 && p.x <= r1 / 2 &&
             p.y >= -r2 / 2 && p.y <= r2 / 2;
     }
+
+    abstract draw(ctx: CanvasRenderingContext2D): void;
 }
 
 class Line {
@@ -1149,24 +1195,23 @@ class Line {
 
 class Ellipse extends Shape {
     constructor(
-        private readonly ctx: CanvasRenderingContext2D,
-        private readonly color: string,
-        private readonly lineWidth: number = 2,
+        private readonly color: () => string,
+        private readonly lineWidth: number,
         size: ISized | undefined,
     ) {
         super(size);
     }
 
-    draw() {
+    draw(ctx: CanvasRenderingContext2D) {
         const {width, height} = this.size;
-        this.ctx.strokeStyle = this.color;
-        this.ctx.lineWidth = this.lineWidth;
-        this.ctx.save();
-        this.ctx.beginPath();
-        this.ctx.scale(width / 2, height / 2);
-        this.ctx.arc(0, 0, 1, 0, 2 * Math.PI, false);
-        this.ctx.restore();
-        this.ctx.stroke();
+        ctx.strokeStyle = this.color();
+        ctx.lineWidth = this.lineWidth;
+        ctx.save();
+        ctx.beginPath();
+        ctx.scale(width / 2, height / 2);
+        ctx.arc(0, 0, 1, 0, 2 * Math.PI, false);
+        ctx.restore();
+        ctx.stroke();
     }
 
     isNormalizedPointInsideShape(p: IPoint, offset?: number) {
@@ -1180,10 +1225,9 @@ class Ellipse extends Shape {
 
 class Rectangle extends Shape {
     constructor(
-        protected readonly ctx: CanvasRenderingContext2D,
-        protected readonly color: string,
-        protected readonly lineWidth: number = 2,
-        protected readonly cornerRadius: number = 0,
+        protected readonly color: () => string,
+        protected readonly lineWidth: number,
+        protected readonly cornerRadius: number,
         size: ISized | undefined,
     ) {
         super(size);
@@ -1198,27 +1242,27 @@ class Rectangle extends Shape {
         }
     }
 
-    draw() {
+    draw(ctx: CanvasRenderingContext2D) {
         const {width, height} = this.size;
-        this.ctx.strokeStyle = this.color;
-        this.ctx.lineWidth = this.lineWidth;
-        this.ctx.save();
-        this.ctx.beginPath();
-        this.ctx.moveTo(-width / 2 - 1 + this.cornerRadius, -height / 2); // TODO why -1?
-        this.ctx.lineTo(width / 2 - this.cornerRadius, -height / 2);
-        this.ctx.arc(width / 2 - this.cornerRadius, -height / 2 + this.cornerRadius,
+        ctx.strokeStyle = this.color();
+        ctx.lineWidth = this.lineWidth;
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(-width / 2 - 1 + this.cornerRadius, -height / 2); // TODO why -1?
+        ctx.lineTo(width / 2 - this.cornerRadius, -height / 2);
+        ctx.arc(width / 2 - this.cornerRadius, -height / 2 + this.cornerRadius,
             this.cornerRadius, 1.5 * Math.PI, 0);
-        this.ctx.lineTo(width / 2, height / 2 - this.cornerRadius);
-        this.ctx.arc(width / 2 - this.cornerRadius, height / 2 - this.cornerRadius,
+        ctx.lineTo(width / 2, height / 2 - this.cornerRadius);
+        ctx.arc(width / 2 - this.cornerRadius, height / 2 - this.cornerRadius,
             this.cornerRadius, 0, 0.5 * Math.PI);
-        this.ctx.lineTo(-width / 2 + this.cornerRadius, height / 2);
-        this.ctx.arc(-width / 2 + this.cornerRadius, height / 2 - this.cornerRadius,
+        ctx.lineTo(-width / 2 + this.cornerRadius, height / 2);
+        ctx.arc(-width / 2 + this.cornerRadius, height / 2 - this.cornerRadius,
             this.cornerRadius, 0.5 * Math.PI, Math.PI);
-        this.ctx.lineTo(-width / 2, -height / 2 + this.cornerRadius);
-        this.ctx.arc(-width / 2 + this.cornerRadius, -height / 2 +
+        ctx.lineTo(-width / 2, -height / 2 + this.cornerRadius);
+        ctx.arc(-width / 2 + this.cornerRadius, -height / 2 +
             this.cornerRadius, this.cornerRadius, Math.PI, 1.5 * Math.PI);
-        this.ctx.restore();
-        this.ctx.stroke();
+        ctx.stroke();
+        ctx.restore();
     }
 }
 
@@ -1229,17 +1273,17 @@ class Textbox extends Shape {
     private textwidth: number;
     private textHeight: number;
     private rect: Rectangle;
-    private leftMargin = 0;
-    private rightMargin = 0;
-    private topMargin = 0;
-    private bottomMargin = 0;
+    private leftMargin = 3;
+    private rightMargin = 3;
+    private topMargin = 3;
+    private bottomMargin = 3;
 
     constructor(
-        protected readonly ctx: CanvasRenderingContext2D,
-        protected readonly color: string,
-        protected readonly borderColor: string,
-        protected readonly lineWidth: number = 2,
-        protected readonly cornerRadius: number = 0,
+        protected readonly borderColor: () => string,
+        protected readonly textColor: string,
+        protected readonly fillColor: string,
+        protected readonly lineWidth: number,
+        protected readonly cornerRadius: number,
         size: ISized | undefined,
         text: string,
         protected readonly font: string,
@@ -1260,7 +1304,7 @@ class Textbox extends Shape {
                 this.cornerRadius = height / 2;
             }
         }
-        this.rect = new Rectangle(ctx, color, lineWidth, cornerRadius, this.size);
+        this.rect = new Rectangle(borderColor, lineWidth, cornerRadius, this.size);
     }
 
     get preferredSize() {
@@ -1271,16 +1315,16 @@ class Textbox extends Shape {
         };
     }
 
-    draw() {
-        this.rect.draw();
+    draw(ctx: CanvasRenderingContext2D) {
+        this.rect.draw(ctx);
         let textStart = this.topMargin;
+        ctx.translate(-this.size.width / 2, 0);
+        ctx.font = this.font;
+        ctx.fillStyle = this.textColor;
         for (const line of this.lines) {
-            this.ctx.fillText(line, this.leftMargin, textStart);
+            ctx.fillText(line, this.leftMargin, textStart);
             textStart += this.textHeight;
         }
-        this.ctx.lineWidth = this.lineWidth;
-        this.ctx.strokeStyle = this.borderColor;
-        this.ctx.stroke();
     }
 }
 
@@ -1289,9 +1333,8 @@ class Vector extends Shape {
     private arrowHeadLength: number;
 
     constructor(
-        private readonly ctx: CanvasRenderingContext2D,
-        private readonly color: string,
-        private readonly lineWidth: number = 2,
+        private readonly color: () => string,
+        private readonly lineWidth: number,
         size: ISized | undefined,
         arrowHeadWidth: number | undefined,
         arrowHeadLength: number | undefined,
@@ -1308,29 +1351,28 @@ class Vector extends Shape {
         };
     }
 
-    draw() {
+    draw(ctx: CanvasRenderingContext2D) {
         const {width, height} = this.size;
-        this.ctx.strokeStyle = this.color;
-        this.ctx.fillStyle = this.ctx.strokeStyle;
-        this.ctx.save();
-        this.ctx.beginPath();
-        this.ctx.lineTo(0, height);
-        this.ctx.lineTo(width - this.arrowHeadLength, height);
-        this.ctx.lineTo(width - this.arrowHeadLength, height / 2 +
+        ctx.strokeStyle = this.color();
+        ctx.fillStyle = ctx.strokeStyle;
+        ctx.save();
+        ctx.beginPath();
+        ctx.lineTo(0, height);
+        ctx.lineTo(width - this.arrowHeadLength, height);
+        ctx.lineTo(width - this.arrowHeadLength, height / 2 +
             this.arrowHeadWidth / 2);
-        this.ctx.lineTo(width, height / 2);
-        this.ctx.lineTo(width - this.arrowHeadLength,
+        ctx.lineTo(width, height / 2);
+        ctx.lineTo(width - this.arrowHeadLength,
             height / 2 - this.arrowHeadWidth / 2);
-        this.ctx.lineTo(width - this.arrowHeadLength, 0);
-        this.ctx.lineTo(0, 0);
-        this.ctx.fill();
-        this.ctx.restore();
+        ctx.lineTo(width - this.arrowHeadLength, 0);
+        ctx.lineTo(0, 0);
+        ctx.fill();
+        ctx.restore();
     }
 }
 
 class DImage extends Shape {
     constructor(
-        private readonly ctx: CanvasRenderingContext2D,
         private readonly image: HTMLImageElement,
         size: ISized | undefined,
     ) {
@@ -1344,9 +1386,9 @@ class DImage extends Shape {
         };
     }
 
-    draw() {
+    draw(ctx: CanvasRenderingContext2D) {
         const {width, height} = this.size;
-        this.ctx.drawImage(this.image, 0, 0, width, height);
+        ctx.drawImage(this.image, 0, 0, width, height);
     }
 }
 
@@ -1354,189 +1396,31 @@ function isTouchDevice() {
     return typeof window.ontouchstart !== "undefined";
 }
 
-function loadImage(src: string) {
+function loadImage(src: string): [IPromise<HTMLImageElement>, HTMLImageElement] {
     const deferred = $q.defer<HTMLImageElement>();
     const sprite = new Image();
     sprite.onload = () => {
         deferred.resolve(sprite);
     };
     sprite.src = src;
-    return deferred.promise;
+    return [deferred.promise, sprite];
 }
 
 const videos = {};
 
-const ObjectType = t.keyof({
-    ellipse: null,
-    img: null,
-    rectangle: null,
-    textbox: null,
-    vector: null,
-});
-
-const PinAlignment = t.keyof({
-    center: null,
-    east: null,
-    north: null,
-    northeast: null,
-    northwest: null,
-    south: null,
-    southeast: null,
-    southwest: null,
-    west: null,
-});
-
-type PinAlign = t.TypeOf<typeof PinAlignment>;
-
-const ImgProps = t.type({
-    src: t.string,
-    textbox: withDefault(t.boolean, true),
-});
-
-const EmptyCoord = t.readonlyArray(t.number); // TODO should get rid of this by fixing imagex markups
-
-const ValidCoord = t.tuple([t.number, t.number]);
-
-const CoordProp = t.union([ValidCoord, EmptyCoord]);
-
-const CommonProps = t.partial({
-    a: t.number,
-    id: t.string,
-    position: ValidCoord,
-    size: ValidCoord,
-});
-
-const TextboxProps = t.intersection([
-    CommonProps,
-    t.partial({
-        borderColor: t.string,
-        borderWidth: t.number,
-        cornerradius: t.number,
-        fillColor: t.string,
-        font: t.string,
-        text: t.string,
-        textColor: t.string,
-    })]);
-
-const VectorProps = t.partial({
-    arrowheadlength: t.number,
-    arrowheadwidth: t.number,
-    color: t.string,
-});
-
-const PinProps = t.partial({
-    color: t.string,
-    dotRadius: t.number,
-    length: t.number,
-    linewidth: t.number,
-    position: t.partial({
-        align: PinAlignment,
-        coord: ValidCoord,
-        start: ValidCoord,
-    }),
-    visible: t.boolean,
-});
-
-type PinPropsT = t.TypeOf<typeof PinProps>;
-
-const FixedObjectProps = t.intersection([
-    CommonProps,
-    t.partial({
-        imgproperties: ImgProps,
-        textboxproperties: TextboxProps,
-        type: ObjectType,
-        vectorproperties: VectorProps,
-    })]);
-
-const TargetProps = t.intersection([
-    CommonProps,
-    t.partial({
-        color: t.string,
-        dropColor: t.string,
-        points: t.dictionary(t.string, t.number),
-        snap: t.boolean,
-        snapColor: t.string,
-        snapOffset: ValidCoord,
-        type: ObjectType,
-    })]);
-
-const Lock = t.keyof({
-    x: null,
-    y: null,
-});
-
-const DragObjectProps = t.intersection([
-    t.partial({
-        lock: Lock,
-        pin: PinProps,
-        xlimits: ValidCoord,
-        ylimits: ValidCoord,
-    }),
-    FixedObjectProps,
-]);
-
-type CommonPropsT = t.TypeOf<typeof CommonProps>;
-type DragObjectPropsT = t.TypeOf<typeof DragObjectProps>;
-type TargetPropsT = t.TypeOf<typeof TargetProps>;
-type FixedObjectPropsT = t.TypeOf<typeof FixedObjectProps>;
-
-const BackgroundProps = t.intersection([
-    t.partial({
-        a: t.number,
-    }),
-    t.type({
-        src: t.string,
-    }),
-]);
-
-const DefaultProps = t.intersection([DragObjectProps, TargetProps]);
-
-const ImageXMarkup = t.intersection([
-    t.partial({
-        background: BackgroundProps,
-        buttonPlay: t.string,
-        buttonRevert: t.string,
-        fixedobjects: t.readonlyArray(FixedObjectProps),
-        followid: t.string,
-        freeHand: t.union([t.boolean, t.literal("use")]),
-        freeHandColor: t.string,
-        freeHandShortCut: t.boolean,
-        freeHandVisible: t.boolean,
-        freeHandWidth: t.number,
-        max_tries: t.number,
-        objects: t.readonlyArray(DragObjectProps),
-        targets: t.readonlyArray(TargetProps),
-    }),
-    GenericPluginMarkup,
-    t.type({
-        analyzeDot: withDefault(t.boolean, false),
-        autosave: withDefault(t.boolean, false),
-        autoupdate: withDefault(t.number, 500),
-        canvasheight: withDefault(t.number, 600),
-        canvaswidth: withDefault(t.number, 800),
-        cols: withDefault(t.number, 20),
-        dotVisibleTime: withDefault(t.number, 1),
-        drawLast: withDefault(t.boolean, false),
-        emotion: withDefault(t.boolean, false),
-        extraGrabAreaHeight: withDefault(t.number, 30),
-        finalanswer: withDefault(t.boolean, false),
-        freeHandColor: withDefault(t.string, "red"),
-        freeHandLine: withDefault(t.boolean, false),
-        freeHandLineVisible: withDefault(t.boolean, true),
-        freeHandShortCuts: withDefault(t.boolean, true),
-        freeHandToolbar: withDefault(t.boolean, true),
-        freeHandWidth: withDefault(t.number, 2),
-        showTimes: withDefault(t.boolean, false),
-        showVideoTime: withDefault(t.boolean, true),
-    }),
-]);
-
-const ImageXAll = t.type({
-    freeHandData: t.array(LineSegment),
-    markup: ImageXMarkup,
-    preview: t.boolean,
-    tries: t.number,
-});
+function baseDefs(t: ObjectTypeT, color: string): RequireExcept<DefaultPropsT, OptionalPropNames> {
+    return {
+        a: 0,
+        color,
+        dropColor: "cyan",
+        pin: {},
+        position: [0, 0],
+        snap: true,
+        snapColor: "cyan",
+        snapOffset: [0, 0],
+        type: t,
+    };
+}
 
 class ImageXController extends PluginBase<t.TypeOf<typeof ImageXMarkup>,
     t.TypeOf<typeof ImageXAll>,
@@ -1633,11 +1517,15 @@ class ImageXController extends PluginBase<t.TypeOf<typeof ImageXMarkup>,
         return this.canvas.getContext("2d")!;
     }
 
-    $onInit() {
+    async $onInit() {
         super.$onInit();
-        this.tries = this.attrsall.tries;
+
+        // timeout required; otherwise the canvas element will be overwritten with another by Angular
+        await $timeout();
+        this.canvas = this.element.find(".canvas")[0] as HTMLCanvasElement;
+        this.tries = this.attrsall.tries || 0;
         this.freeHandDrawing = new FreeHand(this,
-            this.attrsall.freeHandData,
+            this.attrsall.freeHandData || [],
             this.videoPlayer);
         if (this.attrs.freeHand === "use") {
             this.freeHand = false;
@@ -1646,8 +1534,6 @@ class ImageXController extends PluginBase<t.TypeOf<typeof ImageXMarkup>,
         this.w = this.attrs.freeHandWidth;
         this.color = this.attrs.freeHandColor;
         this.lineMode = this.attrs.freeHandLine;
-
-        this.canvas = this.element.find(".canvas")[0] as HTMLCanvasElement;
 
         const dt = new DragTask(this.canvas, this);
         this.dt = dt;
@@ -1662,27 +1548,50 @@ class ImageXController extends PluginBase<t.TypeOf<typeof ImageXMarkup>,
         const ctx = this.getCanvasCtx();
 
         if (this.attrs.background) {
-            const background = new FixedObject(dt, this.attrs.background);
+            const background = new FixedObject(
+                ctx, {
+                    a: 0,
+                    imgproperties: {src: this.attrs.background.src, textbox: false},
+                    position: [0, 0],
+                    size: [this.attrs.canvaswidth, this.attrs.canvasheight],
+                    type: "img",
+                },
+                "background");
             dt.drawObjects.push(background);
         }
 
         this.error = "";
+        let fixedDef: RequireExcept<DefaultPropsT, OptionalPropNames> = {
+            ...baseDefs("rectangle", "blue"),
+            ...this.attrs.defaults,
+        };
 
         if (userFixedObjects) {
             for (let i = 0; i < userFixedObjects.length; i++) {
-                fixedobjects.push(new FixedObject(ctx, userFixedObjects[i], "fix" + (i + 1)));
+                fixedDef = {...fixedDef, ...userFixedObjects[i]}; // TODO this doesn't work for nested properties ({img,vector,textbox}properties)
+                fixedobjects.push(new FixedObject(ctx, fixedDef, "fix" + (i + 1)));
             }
         }
 
+        let targetDef: RequireExcept<DefaultPropsT, OptionalPropNames> = {
+            ...baseDefs("rectangle", "blue"),
+            ...this.attrs.defaults,
+        };
         if (userTargets) {
             for (let i = 0; i < userTargets.length; i++) {
-                targets.push(new Target(ctx, userTargets[i], "trg" + (i + 1)));
+                targetDef = {...targetDef, ...userTargets[i]};
+                targets.push(new Target(ctx, targetDef, "trg" + (i + 1)));
             }
         }
 
+        let dragDef: RequireExcept<DefaultPropsT, OptionalPropNames> = {
+            ...baseDefs("textbox", "black"),
+            ...this.attrs.defaults,
+        };
         if (userObjects) {
             for (let i = 0; i < userObjects.length; i++) {
-                const newObject = new DragObject(ctx, userObjects[i], "obj" + (i + 1));
+                dragDef = {...dragDef, ...userObjects[i]};
+                const newObject = new DragObject(ctx, dragDef, "obj" + (i + 1));
                 objects.push(newObject);
                 this.drags.push(newObject);
             }
@@ -1691,21 +1600,20 @@ class ImageXController extends PluginBase<t.TypeOf<typeof ImageXMarkup>,
         if (this.attrs.state && this.attrs.state.userAnswer) {
             this.userHasAnswered = true;
             const userDrags = this.attrs.state.userAnswer.drags;
-            if (objects && userDrags && userDrags.length > 0) {
-                for (let i = 0; i < objects.length; i++) {
-                    for (let j = 0; j < userDrags.length; j++) {
-                        if (objects[i].did === userDrags[j].did) {
-                            objects[i].position[0] = userDrags[j].position[0];
-                            objects[i].position[1] = userDrags[j].position[1];
-                            objects[i].x = objects[i].position[0];
-                            objects[i].y = objects[i].position[1];
+            if (userDrags && userDrags.length > 0) {
+                for (const o of objects) {
+                    for (const ud of userDrags) {
+                        if (o.did === ud.did) {
+                            o.x = ud.position[0];
+                            o.y = ud.position[1];
                         }
                     }
                 }
             }
         }
 
-        dt.drawObjects = dt.drawObjects.concat(fixedobjects, targets, objects);
+        dt.drawObjects = [...dt.drawObjects, ...fixedobjects, ...targets, ...objects];
+        console.log(dt.drawObjects);
         dt.draw();
 
         this.previewColor = globalPreviewColor;
@@ -1809,7 +1717,6 @@ class ImageXController extends PluginBase<t.TypeOf<typeof ImageXMarkup>,
             obj.resetPosition();
         }
 
-
         const dobjs = this.dt.drawObjects;
 
         // this is for hiding the lines of right answers
@@ -1909,6 +1816,38 @@ class ImageXController extends PluginBase<t.TypeOf<typeof ImageXMarkup>,
     protected getAttributeType() {
         return ImageXAll;
     }
+
+    get canvaswidth(): number {
+        return this.attrs.canvaswidth;
+    }
+
+    get canvasheight(): number {
+        return this.attrs.canvasheight;
+    }
+
+    get preview() {
+        return this.attrsall.preview;
+    }
+
+    get button() {
+        return this.attrs.button || "Save";
+    }
+
+    get resetText() {
+        return this.attrs.resetText || "Reset";
+    }
+
+    get freeHandLineVisible() {
+        return this.attrs.freeHandLineVisible;
+    }
+
+    get freeHandToolbar() {
+        return this.attrs.freeHandToolbar;
+    }
+
+    get finalanswer() {
+        return undefined; // TODO
+    }
 }
 
 imagexApp.component("imagexRunner", {
@@ -1917,7 +1856,7 @@ imagexApp.component("imagexRunner", {
     },
     controller: ImageXController,
     require: {
-        vctrl: "^timView",
+        // vctrl: "^timView",
     },
     template: directiveTemplate,
 });

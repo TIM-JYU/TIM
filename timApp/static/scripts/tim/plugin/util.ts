@@ -74,7 +74,7 @@ export abstract class PluginBase<MarkupType extends IGenericPluginMarkup, A exte
     // Binding that has all the data as a JSON string.
     protected json!: Binding<string, "@">;
 
-    private markupError?: string;
+    protected markupError?: string;
 
     constructor(
         protected scope: IScope,

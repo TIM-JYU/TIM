@@ -16,6 +16,7 @@ from http_params import *
 import tim_server
 # Library for checking if a point is inside a shape.
 from geometry import*
+from xml.sax.saxutils import quoteattr
 # For copying dicts.
 from copy import deepcopy
 # Methods for checking contents of JSON.
@@ -53,7 +54,7 @@ class ImagexServer(tim_server.TimServer):
         # Get user id from session
         user_id = query.get_param("user_id", "--")
         preview = query.get_param("preview", False)
-        targets = {"targets": query.get_param("-targets", {})}
+        targets = {"targets": query.get_param("-targets", [])}
         query2 = ""
 
         if is_review(query):
@@ -69,8 +70,8 @@ class ImagexServer(tim_server.TimServer):
             jso2['markup'].update(targets)  # += targets
             print("--..--" + str(jso2))
             jso2['markup']['preview'] = True
-            if jso2['markup']['targets'] == {}:
-                jso2['markup'].update({"targets": query.get_param("targets", {})})
+            if jso2['markup']['targets'] == []:
+                jso2['markup'].update({"targets": query.get_param("targets", [])})
                 print("jso" + str(jso2))
             query2 = QueryParams(jso2)
 
@@ -92,15 +93,7 @@ class ImagexServer(tim_server.TimServer):
             jso = query.to_json(accept_nonhyphen)
         runner = 'imagex-runner'
         attrs = json.dumps(jso)
-
-        # print(attrs) # uncomment this to look what is in outgoing js
-
-        if query.get_param("nohex", False):  # as a default do hex
-            attrs = "xxxJSONxxx" + attrs
-        else:  # this is on by default, but for debug can be put off to see the json better
-            hx = 'xxxHEXJSONxxx' + binascii.hexlify(attrs.encode("UTF8")).decode()
-            attrs = hx
-        s = '<' + runner + '>' + attrs + '</' + runner + '>'
+        s = f'<{runner} json={quoteattr(attrs)}></{runner}>'
 
         # Put query2 into s if it exists, otherwise send query.
         if query2:
