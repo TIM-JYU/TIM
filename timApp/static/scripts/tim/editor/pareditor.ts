@@ -13,6 +13,7 @@ import {IAceEditor} from "./ace-types";
 import {AceParEditor} from "./AceParEditor";
 import {IPluginInfoResponse, ParCompiler} from "./parCompiler";
 import {TextAreaParEditor} from "./TextAreaParEditor";
+import DroppableEvent = JQueryUI.DroppableEvent;
 
 markAsUsed(rangyinputs);
 
@@ -135,6 +136,7 @@ export class PareditorController extends DialogController<{params: IEditorParams
     private static $inject = ["$scope", "$element"];
     private deleting = false;
     private editor?: TextAreaParEditor | AceParEditor; // $onInit
+    private isACE : boolean = false;
     private file?: File & {progress?: number, error?: string};
     private isIE: boolean = false;
     private oldmeta?: HTMLMetaElement;
@@ -302,12 +304,12 @@ ${backTicks}
                 entries: [
                     {
                         title: "Add link",
-                        func: () => this.editor!.linkClicked("Linkin teksti", "Linkin osoite", false),
+                        func: () => this.editor!.linkClicked("Linkin_teksti", "Linkin_osoite", false),
                         name: "Link",
                     },
                     {
                         title: "Add image",
-                        func: () => this.editor!.linkClicked("Kuvan teksti", "Kuvan osoite", true),
+                        func: () => this.editor!.linkClicked("Kuvan_teksti", "Kuvan_osoite", true),
                         name: "Image",
                     },
                     {title: "List item", func: () => this.editor!.listClicked(), name: "List"},
@@ -706,6 +708,10 @@ ${backTicks}
         });
         this.editor.setEditorText(text);
         $textarea.on("input", () => this.editorChanged());
+        $textarea.on("paste", (e) => this.onPaste(e));
+        $textarea.on("drop", (e) => this.onDrop(e));
+        $textarea.on("dragover", (e) => this.allowDrop(e));
+
     }
 
     editorChanged() {
@@ -841,6 +847,44 @@ ${backTicks}
         return editor !== undefined && (editor.editor as IAceEditor).renderer != null;
     }
 
+    onPaste(e: any) {
+        let event = e as any; // ClipboardEvent;
+        let items = (event.clipboardData || event.originalEvent.clipboardData).items;
+        // find pasted image among pasted items
+        let blob = null;
+        let blobs = 0;
+        for (let i = 0; i < items.length; i++) {
+            // TODO: one could inspect if some item contains image name and then use that to name the image
+            if (items[i].type.indexOf("image") === 0) {
+                blob = items[i].getAsFile();
+                if (blob !== null) {
+                    this.onFileSelect(blob)
+                    blobs++;
+                }
+            }
+        }
+        if ( blobs > 0 ) e.preventDefault();
+    }
+
+    onDrop(e: any) {
+        e.preventDefault();
+        let event = e as DroppableEvent;
+        let files = e.originalEvent.dataTransfer.files;
+        if ( !files ) return;
+        for (let i = 0; i < files.length; i++)
+            this.onFileSelect(files[i]);
+    }
+
+    allowDrop(e:object) {
+        let event = e as DragEvent;
+        event.preventDefault();
+    }
+
+    loadFiles(items: any) {
+
+    }
+
+
     onFileSelect(file: File) {
         const editor = this.editor!;
         this.focusEditor();
@@ -850,7 +894,7 @@ ${backTicks}
         let attachmentParams;
         let macroParams;
 
-        // To identify attachment-macro.
+        // To identify attachment-macro. // TODO: jos editorissa monta liitettä, tekee väärin
         const macroStringBegin = "%%liite(";
         const macroStringEnd = ")%%";
 
@@ -901,11 +945,15 @@ ${backTicks}
                     const editor = this.editor!;
                     const isplugin = (editor.editorStartsWith("``` {"));
                     let start = "[File](";
-                    if (response.data.image) {
-                        this.uploadedFile = "/images/" + response.data.image;
+                    let savedir = '/files/'
+                    if (response.data.image  || response.data.file.toString().indexOf(".svg") >= 0 ) {
                         start = "![Image](";
+                    }
+                    if (response.data.image ) {
+                        savedir = "/images/"
+                        this.uploadedFile = savedir + response.data.image;
                     } else {
-                        this.uploadedFile = "/files/" + response.data.file;
+                        this.uploadedFile = savedir + response.data.file;
                     }
                     if (isplugin) {
                         editor.insertTemplate(this.uploadedFile);
@@ -1007,6 +1055,14 @@ ${backTicks}
     async changeEditor(initialMode?: string) {
         let text = "";
         const editorContainer = this.element.find(".editorContainer");
+        // const pasteInput = this.element.find(".pasteinput");
+        // pasteInput.on("drop", (e) => this.onDrop(e));
+        // pasteInput.on("dragover", (e) => this.allowDrop(e));
+        const pasteInput = document.getElementById("pasteInput");
+        if ( pasteInput ) {
+            pasteInput.ondrop = (e) => this.onDrop(e);
+            pasteInput.ondragover = (e) => this.allowDrop(e);
+        }
         editorContainer.addClass("editor-loading");
         let oldPosition;
         if (this.editor) {
@@ -1018,7 +1074,9 @@ ${backTicks}
             oldeditor = this.element.find("#ace_editor");
             oldeditor.remove();
             this.createTextArea(text);
+            this.isACE = false;
         } else {
+            this.isACE = true;
             oldeditor = this.element.find("#teksti");
             oldeditor.remove();
             const ace = (await import("tim/editor/ace")).ace;
@@ -1043,6 +1101,21 @@ ${backTicks}
             neweditor.getSession().on("change", () => {
                 this.editorChanged();
             });
+            /*
+            neweditor.getSession().on("paste", (e) => {
+                this.onPaste(e); // TODO: does newer fire
+            });
+            neweditor.getSession().on("drop", (e) => {
+                this.onDrop(e); // TODO: does newer fire
+            });
+            neweditor.getSession().on("dragover", (e) => {
+                this.allowDrop(e); // TODO: does newer fire
+            });
+            neweditor.onPaste = (e) => {
+               // this.onPaste(e); // only works for text input.
+                return;
+            };
+            */
             neweditor.setBehavioursEnabled(this.getLocalBool("acebehaviours", false));
             neweditor.getSession().setUseWrapMode(this.getLocalBool("acewrap", false));
             neweditor.setOptions({maxLines: 28});
