@@ -134,7 +134,8 @@ const PinProps = t.partial({
     visible: t.boolean,
 });
 
-export type PinPropsT = t.TypeOf<typeof PinProps>;
+export interface PinPropsT extends t.TypeOf<typeof PinProps> {
+}
 
 const FixedObjectProps = t.intersection([
     CommonProps,
@@ -165,13 +166,27 @@ const DragObjectProps = t.intersection([
     FixedObjectProps,
 ]);
 
-export type CommonPropsT = t.TypeOf<typeof CommonProps>;
-export type DragObjectPropsT = t.TypeOf<typeof DragObjectProps>;
-export type TargetPropsT = t.TypeOf<typeof TargetProps>;
-export type FixedObjectPropsT = t.TypeOf<typeof FixedObjectProps>;
-export type TextboxPropsT = t.TypeOf<typeof TextboxProps>;
-export type ImgPropsT = t.TypeOf<typeof ImgProps>;
-export type VectorPropsT = t.TypeOf<typeof VectorProps>;
+export interface CommonPropsT extends t.TypeOf<typeof CommonProps> {
+}
+
+export interface DragObjectPropsT extends t.TypeOf<typeof DragObjectProps> {
+}
+
+export interface TargetPropsT extends t.TypeOf<typeof TargetProps> {
+}
+
+export interface FixedObjectPropsT extends t.TypeOf<typeof FixedObjectProps> {
+}
+
+export interface TextboxPropsT extends t.TypeOf<typeof TextboxProps> {
+}
+
+export interface ImgPropsT extends t.TypeOf<typeof ImgProps> {
+}
+
+export interface VectorPropsT extends t.TypeOf<typeof VectorProps> {
+}
+
 export type ObjectTypeT = t.TypeOf<typeof ObjectType>;
 
 const BackgroundProps = t.intersection([
@@ -185,7 +200,8 @@ const BackgroundProps = t.intersection([
 
 const DefaultProps = t.intersection([DragObjectProps, TargetProps]);
 
-export type DefaultPropsT = t.TypeOf<typeof DefaultProps>;
+export interface DefaultPropsT extends t.TypeOf<typeof DefaultProps> {
+}
 
 export const ImageXMarkup = t.intersection([
     t.partial({
@@ -228,10 +244,29 @@ export const ImageXMarkup = t.intersection([
     }),
 ]);
 
+export const RightAnswer = t.type({
+    id: t.string,
+    position: ValidCoord,
+});
+
+export interface RightAnswerT extends t.TypeOf<typeof RightAnswer> {
+}
+
 export const ImageXAll = t.intersection([
     t.partial({
         freeHandData: t.array(LineSegment),
         preview: t.boolean,
+        state: t.union([
+            t.null,
+            t.partial({
+                userAnswer: t.partial({
+                    drags: t.array(t.type({
+                        did: t.string,
+                        id: t.string,
+                        position: ValidCoord,
+                    })),
+                }),
+            })]),
         tries: t.number,
     }),
     t.type({

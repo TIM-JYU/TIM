@@ -4,7 +4,7 @@ import * as t from "io-ts";
 import {ViewCtrl} from "../document/viewctrl";
 import {editorChangeValue} from "../editor/editorScope";
 import {$http, $q, $sce, $timeout, $window} from "../util/ngimport";
-import {clone, markAsUsed, Require, to} from "../util/utils";
+import {markAsUsed, Require, to} from "../util/utils";
 import {
     CommonPropsT,
     DefaultPropsT,
@@ -17,14 +17,19 @@ import {
     IPinPosition,
     IPoint,
     ISized,
-    MouseOrTouch, ObjectTypeT, OptionalCommonPropNames,
+    MouseOrTouch,
+    ObjectTypeT,
+    OptionalCommonPropNames,
     OptionalDragObjectPropNames,
     OptionalFixedObjPropNames,
     OptionalPropNames,
-    OptionalTargetPropNames, PinAlign,
+    OptionalTargetPropNames,
+    PinAlign,
     PinPropsT,
     RequireExcept,
-    TargetPropsT, TextboxPropsT,
+    RightAnswerT,
+    TargetPropsT,
+    TextboxPropsT,
     TuplePoint,
     VideoPlayer,
 } from "./imagextypes";
@@ -515,6 +520,7 @@ class DragTask {
     private mouseDown = false;
     private activeDragObject?: {obj: DragObject, xoffset: number, yoffset: number};
     public drawObjects: DrawObject[];
+    public lines?: Line[];
 
     constructor(private canvas: HTMLCanvasElement, private imgx: ImageXController) {
         this.ctx = canvas.getContext("2d")!;
@@ -643,7 +649,7 @@ class DragTask {
 
     draw() {
         const canvas = this.canvas;
-        this.ctx.setTransform(1, 0, 0, 1, 0, 0);
+        setIdentityTransform(this.ctx);
         this.ctx.fillStyle = "white"; // TODO get from markup?
         this.ctx.fillRect(0, 0, canvas.width, canvas.height);
 
@@ -682,6 +688,12 @@ class DragTask {
                 }
             } else if (o.name === "target") {
                 o.state = TargetState.Normal;
+            }
+        }
+        setIdentityTransform(this.ctx);
+        if (this.lines) {
+            for (const l of this.lines) {
+                l.draw(this.ctx);
             }
         }
         this.freeHand.draw(this.ctx);
@@ -782,35 +794,18 @@ class DragTask {
         return event.touches[0] || event.changedTouches[0];
     }
 
-    addRightAnswers() {
-        // have to add handler for drawing finalanswer here. no way around it.
-        if (this.imgx.rightAnswersSet) {
-            this.draw();
-            return;
-        }
-        if (!this.imgx.answer || !this.imgx.answer.rightanswers) {
-            return;
-        }
-
-        const objects = this.dragobjects; // TODO or all objects?
-        const rightdrags = this.imgx.answer.rightanswers;
+    addRightAnswers(answers: RightAnswerT[]) {
+        this.lines = [];
+        const objects = this.drawObjects;
+        const rightdrags = answers;
         for (let j = 0; j < rightdrags.length; j++) {
-            let p = 0;
-            for (p = 0; p < objects.length; p++) {
+            for (let p = 0; p < objects.length; p++) {
                 if (objects[p].id === rightdrags[j].id) {
-                    const values = {beg: objects[p], end: rightdrags[j]};
-                    rightdrags[j].x = rightdrags[j].position[0];
-                    rightdrags[j].y = rightdrags[j].position[1];
-                    // line.color = getValueDef(values, "answerproperties.color", "green");
-                    // line.lineWidth = getValueDef(values, "answerproperties.lineWidth", 2);
-                    const line = new Line(this.ctx, values);
-                    line.did = "-";
-                    this.drawObjects.push(line);
+                    const line = new Line("green", 2, objects[p], tupleToCoords(rightdrags[j].position));
+                    this.lines.push(line);
                 }
             }
         }
-        this.imgx.rightAnswersSet = true;
-
         this.draw();
     }
 }
@@ -914,7 +909,7 @@ abstract class ObjBase<T extends RequireExcept<CommonPropsT, OptionalCommonPropN
     public y: number;
     public a: number;
     protected childShapes: IChildShape[] = [];
-    private pendingImage?: IPromise<HTMLImageElement>;
+    public pendingImage?: IPromise<HTMLImageElement>;
 
     public mainShape: Shape;
 
@@ -1014,10 +1009,14 @@ abstract class ObjBase<T extends RequireExcept<CommonPropsT, OptionalCommonPropN
     }
 
     protected initialTransform() {
-        this.ctx.setTransform(1, 0, 0, 1, 0, 0);
+        setIdentityTransform(this.ctx);
         this.ctx.translate(this.x, this.y);
         this.ctx.rotate(-this.a * toRadians);
     }
+}
+
+function setIdentityTransform(ctx: CanvasRenderingContext2D) {
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
 }
 
 function textboxFromProps(values: {textboxproperties?: TextboxPropsT, color?: string},
@@ -1118,7 +1117,6 @@ class Target extends ObjBase<RequireExcept<TargetPropsT, OptionalTargetPropNames
                 values: RequireExcept<TargetPropsT, OptionalTargetPropNames>,
                 defId: string) {
         super(ctx, values, defId);
-        // If default values of type, size, a or position are changed, check also imagex.py
     }
 
     get center(): IPoint {
@@ -1133,7 +1131,6 @@ class FixedObject extends ObjBase<RequireExcept<FixedObjectPropsT, OptionalFixed
                 values: RequireExcept<FixedObjectPropsT, OptionalFixedObjPropNames>,
                 defId: string) {
         super(ctx, values, defId);
-        // If default values of type, size, a or position are changed, check also imagex.py
     }
 
     get center(): IPoint {
@@ -1181,7 +1178,6 @@ abstract class Shape {
 
 class Line {
     constructor(
-        private readonly ctx: CanvasRenderingContext2D,
         private readonly color: string,
         private readonly lineWidth: number,
         private readonly beg: IPoint,
@@ -1190,13 +1186,13 @@ class Line {
 
     }
 
-    draw() {
-        this.ctx.beginPath();
-        this.ctx.moveTo(this.beg.x, this.beg.y);
-        this.ctx.lineTo(this.end.x, this.end.y);
-        this.ctx.lineWidth = this.lineWidth;
-        this.ctx.strokeStyle = this.color;
-        this.ctx.stroke();
+    draw(ctx: CanvasRenderingContext2D) {
+        ctx.beginPath();
+        ctx.moveTo(this.beg.x, this.beg.y);
+        ctx.lineTo(this.end.x, this.end.y);
+        ctx.lineWidth = this.lineWidth;
+        ctx.strokeStyle = this.color;
+        ctx.stroke();
     }
 }
 
@@ -1429,6 +1425,10 @@ function baseDefs(t: ObjectTypeT, color: string): RequireExcept<DefaultPropsT, O
     };
 }
 
+interface IAnswerResponse {
+    rightanswers?: RightAnswerT[];
+}
+
 class ImageXController extends PluginBase<t.TypeOf<typeof ImageXMarkup>,
     t.TypeOf<typeof ImageXAll>,
     typeof ImageXAll> {
@@ -1494,7 +1494,6 @@ class ImageXController extends PluginBase<t.TypeOf<typeof ImageXMarkup>,
     public coords = "";
     public drags: DragObject[] = [];
     public userHasAnswered = false;
-    public rightAnswersSet: boolean = false;
 
     private muokattu: boolean;
     private result: string;
@@ -1508,6 +1507,7 @@ class ImageXController extends PluginBase<t.TypeOf<typeof ImageXMarkup>,
     private replyHTML?: string;
     private canvas!: HTMLCanvasElement;
     private dt!: DragTask;
+    private answer?: IAnswerResponse;
 
     draw() {
         this.dt.draw();
@@ -1604,9 +1604,9 @@ class ImageXController extends PluginBase<t.TypeOf<typeof ImageXMarkup>,
             }
         }
 
-        if (this.attrs.state && this.attrs.state.userAnswer) {
+        if (this.attrsall.state && this.attrsall.state.userAnswer) {
             this.userHasAnswered = true;
-            const userDrags = this.attrs.state.userAnswer.drags;
+            const userDrags = this.attrsall.state.userAnswer.drags;
             if (userDrags && userDrags.length > 0) {
                 for (const o of objects) {
                     for (const ud of userDrags) {
@@ -1620,6 +1620,11 @@ class ImageXController extends PluginBase<t.TypeOf<typeof ImageXMarkup>,
         }
 
         dt.drawObjects = [...dt.drawObjects, ...fixedobjects, ...targets, ...objects];
+        for (const d of dt.drawObjects) {
+            if (d.pendingImage) {
+                await d.pendingImage;
+            }
+        }
         console.log(dt.drawObjects);
         dt.draw();
 
@@ -1667,7 +1672,7 @@ class ImageXController extends PluginBase<t.TypeOf<typeof ImageXMarkup>,
 // show correct answer is also sent.
     async doshowAnswer() {
         if (this.answer && this.answer.rightanswers) {
-            this.dt.addRightAnswers();
+            this.dt.addRightAnswers(this.answer.rightanswers);
             return;
         }
 
@@ -1696,7 +1701,7 @@ class ImageXController extends PluginBase<t.TypeOf<typeof ImageXMarkup>,
 
         const r = await to($http<{
             web: {
-                error?: string, result: string, tries: number, answer: string,
+                error?: string, result: string, tries: number, answer: IAnswerResponse,
             },
         }>({method: "PUT", url, data: params, timeout: 20000},
         ));
@@ -1708,7 +1713,10 @@ class ImageXController extends PluginBase<t.TypeOf<typeof ImageXMarkup>,
             this.tries = data.web.tries;
             // for showing right answers.
             this.answer = data.web.answer;
-            this.dt.addRightAnswers();
+            const ra = this.answer.rightanswers;
+            if (ra) {
+                this.dt.addRightAnswers(ra);
+            }
         } else {
             this.error = "Ikuinen silmukka tai jokin muu vika?";
         }
@@ -1724,15 +1732,7 @@ class ImageXController extends PluginBase<t.TypeOf<typeof ImageXMarkup>,
             obj.resetPosition();
         }
 
-        const dobjs = this.dt.drawObjects;
-
-        // this is for hiding the lines of right answers
-        for (let i = dobjs.length - 1; i--;) {
-            if (dobjs[i].did === "-") {
-                dobjs.splice(i, 1);
-            }
-        }
-        this.rightAnswersSet = false;
+        this.dt.lines = undefined;
 
         // Draw the exercise so that reset appears instantly.
         this.dt.draw();
