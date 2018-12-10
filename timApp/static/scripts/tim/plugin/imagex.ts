@@ -968,7 +968,11 @@ abstract class ObjBase<T extends RequireExcept<CommonPropsT, OptionalCommonPropN
                 );
                 break;
             default: // rectangle
-                this.mainShape = new Rectangle(() => this.overrideColor || this.values.color || "black", 2, 0, s);
+                this.mainShape = new Rectangle(() => this.overrideColor || this.values.color || "black",
+                    "transparent",
+                    2,
+                    0,
+                    s);
                 break;
         }
     }
@@ -1036,6 +1040,10 @@ function textboxFromProps(values: {textboxproperties?: TextboxPropsT, color?: st
     );
 }
 
+function valueOr(v: boolean | undefined, def: boolean): boolean {
+    return v != null ? v : def;
+}
+
 class DragObject extends ObjBase<RequireExcept<DragObjectPropsT, OptionalDragObjectPropNames>> {
 
     public name: "dragobject" = "dragobject";
@@ -1063,7 +1071,7 @@ class DragObject extends ObjBase<RequireExcept<DragObjectPropsT, OptionalDragObj
             length: values.pin.length || 20,
             linewidth: values.pin.linewidth || 2,
             position: values.pin.position || {},
-            visible: values.pin.visible || true,
+            visible: valueOr(values.pin.visible, true),
         });
     }
 
@@ -1229,6 +1237,7 @@ class Ellipse extends Shape {
 class Rectangle extends Shape {
     constructor(
         protected readonly color: () => string,
+        protected readonly fillColor: string,
         protected readonly lineWidth: number,
         protected readonly cornerRadius: number,
         size: ISized | undefined,
@@ -1248,6 +1257,7 @@ class Rectangle extends Shape {
     draw(ctx: CanvasRenderingContext2D) {
         const {width, height} = this.size;
         ctx.strokeStyle = this.color();
+        ctx.fillStyle = this.fillColor;
         ctx.lineWidth = this.lineWidth;
         ctx.save();
         ctx.beginPath();
@@ -1264,6 +1274,7 @@ class Rectangle extends Shape {
         ctx.lineTo(-width / 2, -height / 2 + this.cornerRadius);
         ctx.arc(-width / 2 + this.cornerRadius, -height / 2 +
             this.cornerRadius, this.cornerRadius, Math.PI, 1.5 * Math.PI);
+        ctx.fill();
         ctx.stroke();
         ctx.restore();
     }
@@ -1307,7 +1318,7 @@ class Textbox extends Shape {
                 this.cornerRadius = height / 2;
             }
         }
-        this.rect = new Rectangle(borderColor, lineWidth, cornerRadius, this.size);
+        this.rect = new Rectangle(borderColor, fillColor, lineWidth, cornerRadius, this.size);
     }
 
     get preferredSize() {
