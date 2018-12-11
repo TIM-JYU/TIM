@@ -65,6 +65,15 @@ export async function getItem(itemId: number) {
 }
 
 /**
+ * Check if item is root folder.
+ * @param item Item to check.
+ * @returns {boolean} True if root folder.
+ */
+export function isRootFolder(item: IItem) {
+    return item.id === -1;
+}
+
+/**
  * Returns course code if it exists for the item.
  * @param {ITag[]} tags A list of tags.
  * @param {boolean} checkExpiration If true, expired courses will be return as undefined.

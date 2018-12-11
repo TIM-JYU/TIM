@@ -599,17 +599,13 @@ def get_relevance_route(item_id: int):
         "inherited": inherited})
 
 
-def get_document_relevance_nonroute(i: DocInfo):
+def get_document_relevance(i: DocInfo):
     """
     Returns document relevance value or first non-null parent relevance value.
     If no relevance was found until root, return default relevance value.
     :param i: Document.
     :return: Relevance value.
     """
-    if not i:
-        abort(404, 'Item not found')
-    verify_view_access(i)
-
     # If block has set relevance, return it.
     if i.relevance:
         return i.relevance.relevance

@@ -19,6 +19,7 @@ import {$http, $localStorage, $window} from "../util/ngimport";
 import {IOkResponse, Require, to} from "../util/utils";
 import {showRelevanceEditDialog} from "../item/relevanceEditDialog";
 import {IRelevanceResponse} from "../item/relevanceEdit";
+import {isRootFolder} from "../item/IItem";
 
 /**
  * FILL WITH SUITABLE TEXT
@@ -407,7 +408,7 @@ export class SidebarMenuCtrl implements IController {
      * Fetches active relevance value. If root dir (id = -1), skip and hide relevance dir.
      */
     private async getCurrentRelevance() {
-        if ($window.item && $window.item.id !== -1) {
+        if ($window.item && !isRootFolder($window.item)) {
             const r = await to($http.get<IRelevanceResponse>(`/items/relevance/get/${$window.item.id}`));
             if (r.ok) {
                 this.currentRelevance = r.result.data.relevance.relevance;

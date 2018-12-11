@@ -10,8 +10,7 @@ import {IController} from "angular";
 import {to} from "tim/util/utils";
 import {timApp} from "../app";
 import {$http, $window} from "../util/ngimport";
-import {IItem, IRelevance, ITag} from "./IItem";
-import {IDocSearchResult} from "../search/searchBox";
+import {IItem, IRelevance} from "./IItem";
 
 export const relevanceSuggestions = [
             {value: -100, name:  "-100 = Buried"},
@@ -100,6 +99,7 @@ class RelevanceCtrl implements IController {
 
 timApp.component("relevanceEdit", {
     bindings: {
+        focusField: "<",
     },
     controller: RelevanceCtrl,
     template: `

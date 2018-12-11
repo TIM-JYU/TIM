@@ -20,7 +20,7 @@ from timApp.document.docentry import DocEntry, get_documents
 from timApp.document.docinfo import DocInfo
 from timApp.folder.folder import Folder
 from timApp.item.block import Block
-from timApp.item.routes import get_document_relevance_nonroute
+from timApp.item.routes import get_document_relevance
 from timApp.item.tag import Tag
 from timApp.tim_app import app
 from timApp.util.flask.requesthelper import get_option
@@ -775,14 +775,14 @@ def path_search():
                           'content_results': []})
 
 
-def is_excluded(doc_info, relevance_threshold):
+def is_excluded(doc_info: DocInfo, relevance_threshold: int) -> bool:
     """
     Exclude if relevance is less than relevance threshold.
     :param doc_info: Document.
     :param relevance_threshold: Min included relevance.
     :return: True if document relevance is less than relevance threshold.
     """
-    if get_document_relevance_nonroute(doc_info) < relevance_threshold:
+    if get_document_relevance(doc_info) < relevance_threshold:
         return True
     return False
 
