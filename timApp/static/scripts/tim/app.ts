@@ -147,3 +147,7 @@ timApp.run(initUserService);
 timApp.run(["$window", "$q", ($window: IWindowService, $q: IQService) => {
     $window.Promise = $q;
 }]);
+
+timApp.config(["$sanitizeProvider", ($sanitizeProvider: any) => {
+    $sanitizeProvider.addValidAttrs(["style"]);
+}]);
