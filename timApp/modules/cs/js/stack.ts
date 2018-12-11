@@ -2,7 +2,7 @@
 import * as t from "io-ts";
 import {GenericPluginMarkup, PluginBase, withDefault} from "tim/plugin/util";
 import {to} from "tim/util/utils";
-import {$http, $timeout, $sce} from "tim/util/ngimport";
+import {$http, $timeout, $sce, $compile} from "tim/util/ngimport";
 import {ParCompiler} from "tim/editor/parCompiler";
 import {boolean, string} from "../../../static/scripts/jspm_packages/npm/io-ts@1.4.1/lib";
 
@@ -52,6 +52,7 @@ class StackController extends PluginBase<t.TypeOf<typeof StackMarkup>,
     private error: string = "";
     private userCode: string = "";
     private stackoutput: string = "";
+    private stackpeek: boolean = false;
     private stackfeedback: string = "";
     private stackformatcorrectresponse: string = "";
     private stackscore: string = "";
@@ -166,13 +167,40 @@ class StackController extends PluginBase<t.TypeOf<typeof StackMarkup>,
     }
 
 
+    async handleServerPeekResult(r:any) {
+        try {
+            if (typeof r === 'string' || r instanceof String) {
+                this.error = r.toString();
+                return;
+            }
+            let json: any = r;
+
+            let peekDiv = this.element.find(".peekdiv");
+            let peekDivC = peekDiv.children();
+            // editorDiv.empty();
+            let pdiv = $('<div><div class="math">'+json.questiontext +'</div></div>');
+            await ParCompiler.processAllMathDelayed(pdiv);
+            peekDivC.replaceWith(pdiv); // TODO: vielä välähtää
+
+        } finally {
+            this.isRunning = false;
+        }
+    }
+
+
     async autoPeek() {
         if ( !this.attrs.autopeek ) return;
+        this.stackoutput = '';
         await this.runPeek();
     }
 
     async runPeek() { // this is just for test purposes
         this.isRunning = true;
+        if (!this.stackpeek) {
+            let divinput = this.element.find('.stackinputfeedback');
+            divinput.remove();
+        }
+        this.stackpeek = true;
         let url = "/stackserver/api/endpoint.php";
         // this.stackoutput = "";
         let data = this.collectData();
@@ -195,11 +223,12 @@ inputs:
         const r = await to($http.post<{texts: string | Array<{html: string}>}>(
             url, data
         ));
-        await this.handleServerResult(r.result.data);
+        await this.handleServerPeekResult(r.result.data);
     }
 
 
     async runSend(nosave: boolean) {
+        this.stackpeek = false;
         nosave = nosave == true;
         this.error = "";
         this.isRunning = true;
@@ -271,6 +300,8 @@ stackApp.component("stackRunner", {
     </div>
                     
     <div id="output" ng-bind-html="$ctrl.outputAsHtml()"></div>
+    <!-- <div class="peekdiv" id="peek" ng-bind-html="$ctrl.stackpeek"></div> -->
+    <div ng-cloak ng-if="$ctrl.stackpeek" class="peekdiv" id="peek" style="height: 10em;"><div></div></div>
     <p class="csRunMenu">
         <button ng-if="true" ng-disabled="$ctrl.isRunning" title="(Ctrl-S)" ng-click="$ctrl.runSend()"
                 ng-bind-html="'Send'"></button>
