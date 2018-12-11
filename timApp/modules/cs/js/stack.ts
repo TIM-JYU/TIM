@@ -4,7 +4,7 @@ import {GenericPluginMarkup, PluginBase, withDefault} from "tim/plugin/util";
 import {to} from "tim/util/utils";
 import {$http, $timeout, $sce} from "tim/util/ngimport";
 import {ParCompiler} from "tim/editor/parCompiler";
-import {string} from "../../../static/scripts/jspm_packages/npm/io-ts@1.4.1/lib";
+import {boolean, string} from "../../../static/scripts/jspm_packages/npm/io-ts@1.4.1/lib";
 
 const stackApp = angular.module("stackApp", ["ngSanitize"]);
 const STACK_VARIABLE_PREFIX = 'stackapi_';
@@ -24,9 +24,8 @@ const StackMarkup = t.intersection([
         timWay:t.boolean,
         correctresponse: t.boolean,
         generalfeedback: t.boolean,
-        open: t.boolean
-
-
+        open: t.boolean,
+        autopeek: t.boolean
     }),
     GenericPluginMarkup,
     t.type({
@@ -167,6 +166,11 @@ class StackController extends PluginBase<t.TypeOf<typeof StackMarkup>,
     }
 
 
+    async autoPeek() {
+        if ( !this.attrs.autopeek ) return;
+        await this.runPeek();
+    }
+
     async runPeek() { // this is just for test purposes
         this.isRunning = true;
         let url = "/stackserver/api/endpoint.php";
@@ -262,6 +266,7 @@ stackApp.component("stackRunner", {
                                          rows={{$ctrl.inputrows}}
                                          ng-model="$ctrl.userCode"
                                          ng-trim="false"
+                                         ng-change="$ctrl.autoPeek()"
                                          placeholder="{{$ctrl.inputplaceholder}}"></textarea></div>
     </div>
                     
