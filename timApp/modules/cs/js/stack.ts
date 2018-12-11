@@ -24,6 +24,8 @@ const StackMarkup = t.intersection([
         timWay:t.boolean,
         correctresponse: t.boolean,
         generalfeedback: t.boolean,
+        open: t.boolean
+
 
     }),
     GenericPluginMarkup,
@@ -75,12 +77,14 @@ class StackController extends PluginBase<t.TypeOf<typeof StackMarkup>,
                 switch (String.fromCharCode(event.which).toLowerCase()) {
                     case "s":
                         event.preventDefault();
-                        this.runSend();
+                        this.runSend(false);
                         break;
                 }
             }
         });
 
+        if ( this.attrs.open )
+            this.runSend(true);
     }
 
 
@@ -191,7 +195,8 @@ inputs:
     }
 
 
-    async runSend() {
+    async runSend(nosave: boolean) {
+        nosave = nosave == true;
         this.error = "";
         this.isRunning = true;
         let url = "/cs/answer";
@@ -209,7 +214,7 @@ inputs:
             input: {
                 usercode: this.timWay ? this.userCode : JSON.stringify(stackData.answer),
                 stackData: stackData,
-                nosave: false,
+                nosave: nosave,
                 type: 'stack'
             },
         };

@@ -194,6 +194,9 @@ class Language:
     def run(self, web, sourcelines, points_rule):
         return 0, "", "", ""
 
+    def convert(self, sourcelines):
+        return 0, sourcelines, "", ""
+
     def clean_error(self, err):
         return err
 
@@ -758,7 +761,14 @@ class Text(Language):
 
 
 class XML(Text):
-    pass
+    def run(self, web, sourcelines, points_rule):
+        convert = self.query.jso.get('markup', {}).get('convert', None)
+        if not convert:
+            return super(XML, self).run(web, sourcelines, points_rule)
+
+        language_class = languages.get(convert.lower(), Language)
+        language = language_class(self.query, sourcelines)
+        return language.convert(sourcelines)
 
 
 class Css(Text):
@@ -909,6 +919,10 @@ class Stack(Language):
         if not stack_data:
             err = "stackData missign from plugin"
             return 0, "", err, ""
+        nosave = self.query.jso.get('input', {}).get('nosave', False)
+        if nosave:
+            stack_data['score'] = False
+            stack_data['feedback'] = False
         stack_data["answer"] = data.get("answer")
         stack_data["prefix"] = data.get("prefix")
 
@@ -919,6 +933,13 @@ class Stack(Language):
         out = "Score: %s" % r.get("score",0)
         web["stackResult"] = r
         return 0, out, "", ""
+
+    def convert(self, sourcelines):
+        url = "http://stack-api-server/api/xmltoyaml.php"
+        data = {'xml' : sourcelines}
+        r = requests.post(url=url, data=json.dumps(data))
+        r = r.json()
+        return 0, r.get('yaml'), "", ""
 
 
 class R(Language):
