@@ -1,5 +1,6 @@
 import angular, {IPromise, IRootElementService, IScope} from "angular";
 import ngSanitize from "angular-sanitize";
+import deepmerge from "deepmerge";
 import * as t from "io-ts";
 import {ViewCtrl} from "../document/viewctrl";
 import {editorChangeValue} from "../editor/editorScope";
@@ -47,6 +48,10 @@ function isFakePlayer(p: VideoPlayer): p is IFakeVideo {
 
 function tupleToCoords(p: TuplePoint) {
     return {x: p[0], y: p[1]};
+}
+
+function tupleToSizedOrDef(p: TuplePoint | undefined | null, def?: ISized) {
+    return p ? {width: p[0], height: p[1]} : def;
 }
 
 class FreeHand {
@@ -868,10 +873,10 @@ class Pin {
     getOffsetForObject(o: ISized) {
         const wp2 = o.width / 2;
         const hp2 = o.height / 2;
-        let alignOffset = alignToDir(this.pos.align, 1);
+        const alignOffset = alignToDir(this.pos.align, 1);
         return {
-            x: -(this.pos.coord.x + this.pos.start.x + alignOffset.x * wp2),
-            y: -(this.pos.coord.y + this.pos.start.y + alignOffset.y * hp2),
+            x: -(this.pos.coord.x + alignOffset.x * wp2),
+            y: -(this.pos.coord.y + alignOffset.y * hp2),
         };
     }
 
@@ -885,7 +890,7 @@ class Pin {
             ctx.beginPath();
             ctx.moveTo(0, 0);
             ctx.lineWidth = this.values.linewidth;
-            ctx.lineTo(-this.pos.coord.x, -this.pos.coord.y);
+            ctx.lineTo(-(this.pos.coord.x - this.pos.start.x), -(this.pos.coord.y - this.pos.start.y));
             ctx.stroke();
         }
     }
@@ -904,12 +909,14 @@ interface IChildShape {
 
 const toRadians = Math.PI / 180;
 
+type ImageLoadResult = HTMLImageElement | Event;
+
 abstract class ObjBase<T extends RequireExcept<CommonPropsT, OptionalCommonPropNames>> {
     public x: number;
     public y: number;
     public a: number;
     protected childShapes: IChildShape[] = [];
-    public pendingImage?: IPromise<HTMLImageElement>;
+    public pendingImage?: IPromise<ImageLoadResult>;
 
     public mainShape: Shape;
 
@@ -918,7 +925,11 @@ abstract class ObjBase<T extends RequireExcept<CommonPropsT, OptionalCommonPropN
     }
 
     // Center point of object ignoring possible pin; used in drag & drop checks.
-    abstract get center(): IPoint;
+    get center(): IPoint {
+        const off = this.mainShapeOffset;
+        const rotOff = this.getRotatedPoint(off.x, off.y, this.a);
+        return point(this.x + rotOff.x, this.y + rotOff.y);
+    }
 
     protected constructor(protected ctx: CanvasRenderingContext2D,
                           protected values: T,
@@ -926,7 +937,7 @@ abstract class ObjBase<T extends RequireExcept<CommonPropsT, OptionalCommonPropN
         const z = values.position;
         this.x = z[0];
         this.y = z[1];
-        this.a = this.values.a;
+        this.a = -this.values.a;
         let s;
         if (this.values.size) {
             const [width, height] = this.values.size;
@@ -984,11 +995,17 @@ abstract class ObjBase<T extends RequireExcept<CommonPropsT, OptionalCommonPropN
 
     normalizePoint(p: IPoint) {
         const {x, y} = this.center;
-        const sina = Math.sin(this.a * toRadians);
-        const cosa = Math.cos(this.a * toRadians);
-        const rotatedX = cosa * (p.x - x) - sina * (p.y - y);
-        const rotatedY = cosa * (p.y - y) + sina * (p.x - x);
-        return point(rotatedX, rotatedY);
+        const xdiff = (p.x - x);
+        const ydiff = (p.y - y);
+        return this.getRotatedPoint(xdiff, ydiff, -this.a);
+    }
+
+    protected getRotatedPoint(x: number, y: number, angle: number) {
+        const sina = Math.sin(angle * toRadians);
+        const cosa = Math.cos(angle * toRadians);
+        const rx = cosa * x - sina * y;
+        const ry = cosa * y + sina * x;
+        return point(rx, ry);
     }
 
     get id(): string {
@@ -1003,10 +1020,13 @@ abstract class ObjBase<T extends RequireExcept<CommonPropsT, OptionalCommonPropN
         this.initialTransform();
         const {x, y} = this.mainShapeOffset;
         this.ctx.translate(x, y);
+        this.ctx.save();
         this.mainShape.draw(this.ctx);
+        this.ctx.restore();
+        this.ctx.translate(-this.mainShape.size.width / 2, -this.mainShape.size.height / 2);
         for (const s of this.childShapes) {
             this.ctx.save();
-            this.ctx.translate(s.p.x, s.p.y);
+            this.ctx.translate(s.p.x + s.s.size.width / 2, s.p.y + s.s.size.height / 2);
             s.s.draw(this.ctx);
             this.ctx.restore();
         }
@@ -1015,7 +1035,7 @@ abstract class ObjBase<T extends RequireExcept<CommonPropsT, OptionalCommonPropN
     protected initialTransform() {
         setIdentityTransform(this.ctx);
         this.ctx.translate(this.x, this.y);
-        this.ctx.rotate(-this.a * toRadians);
+        this.ctx.rotate(this.a * toRadians);
     }
 }
 
@@ -1031,16 +1051,16 @@ function textboxFromProps(values: {textboxproperties?: TextboxPropsT, color?: st
     return new Textbox(
         () => overrideColorFn() || props.borderColor || values.color || "black",
         props.textColor || "black",
-        props.fillColor || "transparent",
-        props.borderWidth || 2,
-        props.cornerradius || 2,
-        s,
+        props.fillColor || "white",
+        valueOr(props.borderWidth, 2),
+        valueOr(props.cornerradius, 2),
+        tupleToSizedOrDef(props.size, s),
         props.text || defaultText,
         props.font || "14px Arial",
     );
 }
 
-function valueOr(v: boolean | undefined, def: boolean): boolean {
+function valueOr<T>(v: T | undefined, def: T): T {
     return v != null ? v : def;
 }
 
@@ -1066,10 +1086,10 @@ class DragObject extends ObjBase<RequireExcept<DragObjectPropsT, OptionalDragObj
                 defId: string) {
         super(ctx, values, defId);
         this.pin = new Pin({
-            color: values.pin.color || "black",
-            dotRadius: values.pin.dotRadius || 3,
-            length: values.pin.length || 20,
-            linewidth: values.pin.linewidth || 2,
+            color: values.pin.color || "blue",
+            dotRadius: valueOr(values.pin.dotRadius, 3),
+            length: valueOr(values.pin.length, 15),
+            linewidth: valueOr(values.pin.linewidth, 2),
             position: values.pin.position || {},
             visible: valueOr(values.pin.visible, true),
         });
@@ -1085,11 +1105,6 @@ class DragObject extends ObjBase<RequireExcept<DragObjectPropsT, OptionalDragObj
         return this.pin.getOffsetForObject(this.mainShape.size);
     }
 
-    get center(): IPoint {
-        const off = this.pin.getOffsetForObject(this.mainShape.size);
-        return point(this.x + off.x, this.y + off.y); // TODO plus or minus?
-    }
-
     resetPosition() {
         this.x = this.values.position[0];
         this.y = this.values.position[1];
@@ -1103,7 +1118,7 @@ class Target extends ObjBase<RequireExcept<TargetPropsT, OptionalTargetPropNames
     state = TargetState.Normal;
 
     get snapOffset() {
-        return this.values.snapOffset ? tupleToCoords(this.values.snapOffset) : point(0, 0);
+        return tupleToCoords(this.values.snapOffset);
     }
 
     get snap() {
@@ -1126,10 +1141,6 @@ class Target extends ObjBase<RequireExcept<TargetPropsT, OptionalTargetPropNames
                 defId: string) {
         super(ctx, values, defId);
     }
-
-    get center(): IPoint {
-        return tupleToCoords(this.values.position); // position means center for Target
-    }
 }
 
 class FixedObject extends ObjBase<RequireExcept<FixedObjectPropsT, OptionalFixedObjPropNames>> {
@@ -1141,9 +1152,9 @@ class FixedObject extends ObjBase<RequireExcept<FixedObjectPropsT, OptionalFixed
         super(ctx, values, defId);
     }
 
-    get center(): IPoint {
+    get mainShapeOffset() {
         const s = this.mainShape.size;
-        return {x: this.x + s.width / 2, y: this.y + s.height / 2}; // for FixedObject, position is top-left corner
+        return {x: s.width / 2, y: s.height / 2}; // for FixedObject, position is top-left corner
     }
 }
 
@@ -1220,7 +1231,9 @@ class Ellipse extends Shape {
         ctx.save();
         ctx.beginPath();
         ctx.scale(width / 2, height / 2);
-        ctx.arc(0, 0, 1, 0, 2 * Math.PI, false);
+        ctx.arc(0, 0, 1, 0, 2 * Math.PI);
+
+        // Restore before stroke is intentional; otherwise the ellipse will look filled.
         ctx.restore();
         ctx.stroke();
     }
@@ -1259,7 +1272,6 @@ class Rectangle extends Shape {
         ctx.strokeStyle = this.color();
         ctx.fillStyle = this.fillColor;
         ctx.lineWidth = this.lineWidth;
-        ctx.save();
         ctx.beginPath();
         ctx.moveTo(-width / 2 - 1 + this.cornerRadius, -height / 2); // TODO why -1?
         ctx.lineTo(width / 2 - this.cornerRadius, -height / 2);
@@ -1276,7 +1288,6 @@ class Rectangle extends Shape {
             this.cornerRadius, this.cornerRadius, Math.PI, 1.5 * Math.PI);
         ctx.fill();
         ctx.stroke();
-        ctx.restore();
     }
 }
 
@@ -1307,7 +1318,7 @@ class Textbox extends Shape {
         auxctx.font = this.font;
         const lineWidths = this.lines.map((line) => auxctx.measureText(line).width);
         this.textwidth = Math.max(...lineWidths);
-        this.textHeight = parseInt(auxctx.font, 10) * 1.1;
+        this.textHeight = parseInt(auxctx.font, 10);
 
         const {width, height} = this.size;
         if (this.cornerRadius > width / 2 || this.cornerRadius > height / 2) {
@@ -1332,8 +1343,9 @@ class Textbox extends Shape {
     draw(ctx: CanvasRenderingContext2D) {
         this.rect.draw(ctx);
         let textStart = this.topMargin;
-        ctx.translate(-this.size.width / 2, 0);
+        ctx.translate(-this.size.width / 2, -this.size.height / 2);
         ctx.font = this.font;
+        ctx.textBaseline = "top";
         ctx.fillStyle = this.textColor;
         for (const line of this.lines) {
             ctx.fillText(line, this.leftMargin, textStart);
@@ -1354,8 +1366,8 @@ class Vector extends Shape {
         arrowHeadLength: number | undefined,
     ) {
         super(size);
-        this.arrowHeadWidth = arrowHeadWidth || this.size.height * 3;
-        this.arrowHeadLength = arrowHeadLength || this.size.height * 5;
+        this.arrowHeadWidth = valueOr(arrowHeadWidth, this.size.height * 3);
+        this.arrowHeadLength = valueOr(arrowHeadLength, this.size.height * 5);
     }
 
     get preferredSize() {
@@ -1369,7 +1381,7 @@ class Vector extends Shape {
         const {width, height} = this.size;
         ctx.strokeStyle = this.color();
         ctx.fillStyle = ctx.strokeStyle;
-        ctx.save();
+        ctx.translate(-width / 2, -height / 2);
         ctx.beginPath();
         ctx.lineTo(0, height);
         ctx.lineTo(width - this.arrowHeadLength, height);
@@ -1381,7 +1393,6 @@ class Vector extends Shape {
         ctx.lineTo(width - this.arrowHeadLength, 0);
         ctx.lineTo(0, 0);
         ctx.fill();
-        ctx.restore();
     }
 }
 
@@ -1402,6 +1413,7 @@ class DImage extends Shape {
 
     draw(ctx: CanvasRenderingContext2D) {
         const {width, height} = this.size;
+        ctx.translate(-width / 2, -height / 2);
         ctx.drawImage(this.image, 0, 0, width, height);
     }
 }
@@ -1410,11 +1422,14 @@ function isTouchDevice() {
     return typeof window.ontouchstart !== "undefined";
 }
 
-function loadImage(src: string): [IPromise<HTMLImageElement>, HTMLImageElement] {
-    const deferred = $q.defer<HTMLImageElement>();
+function loadImage(src: string): [IPromise<ImageLoadResult>, HTMLImageElement] {
+    const deferred = $q.defer<ImageLoadResult>();
     const sprite = new Image();
     sprite.onload = () => {
         deferred.resolve(sprite);
+    };
+    sprite.onerror = (e) => {
+        deferred.resolve(e);
     };
     sprite.src = src;
     return [deferred.promise, sprite];
@@ -1578,36 +1593,44 @@ class ImageXController extends PluginBase<t.TypeOf<typeof ImageXMarkup>,
         }
 
         this.error = "";
-        let fixedDef: RequireExcept<DefaultPropsT, OptionalPropNames> = {
-            ...baseDefs("rectangle", "blue"),
-            ...this.attrs.defaults,
-        };
+
+        // We don't ever want to concatenate arrays when merging.
+        const opts: deepmerge.Options = {arrayMerge: (destinationArray, sourceArray, options) => sourceArray};
+
+        let fixedDef = deepmerge<RequireExcept<FixedObjectPropsT, OptionalFixedObjPropNames>>(
+            baseDefs("rectangle", "blue"),
+            this.attrs.defaults || {},
+            opts,
+        );
 
         if (userFixedObjects) {
             for (let i = 0; i < userFixedObjects.length; i++) {
-                fixedDef = {...fixedDef, ...userFixedObjects[i]}; // TODO this doesn't work for nested properties ({img,vector,textbox}properties)
+                fixedDef = deepmerge(fixedDef, userFixedObjects[i], opts);
                 fixedobjects.push(new FixedObject(ctx, fixedDef, "fix" + (i + 1)));
             }
         }
 
-        let targetDef: RequireExcept<DefaultPropsT, OptionalPropNames> = {
-            ...baseDefs("rectangle", "blue"),
-            ...this.attrs.defaults,
-        };
+        let targetDef = deepmerge<RequireExcept<TargetPropsT, OptionalTargetPropNames>>(
+            baseDefs("rectangle", "blue"),
+            this.attrs.defaults || {},
+            opts,
+        );
         if (userTargets) {
             for (let i = 0; i < userTargets.length; i++) {
-                targetDef = {...targetDef, ...userTargets[i]};
+                delete targetDef.points; // never merge this
+                targetDef = deepmerge(targetDef, userTargets[i], opts);
                 targets.push(new Target(ctx, targetDef, "trg" + (i + 1)));
             }
         }
 
-        let dragDef: RequireExcept<DefaultPropsT, OptionalPropNames> = {
-            ...baseDefs("textbox", "black"),
-            ...this.attrs.defaults,
-        };
+        let dragDef = deepmerge<RequireExcept<DragObjectPropsT, OptionalDragObjectPropNames>>(
+            baseDefs("textbox", "black"),
+            this.attrs.defaults || {},
+            opts,
+        );
         if (userObjects) {
             for (let i = 0; i < userObjects.length; i++) {
-                dragDef = {...dragDef, ...userObjects[i]};
+                dragDef = deepmerge(dragDef, userObjects[i], opts);
                 const newObject = new DragObject(ctx, dragDef, "obj" + (i + 1));
                 objects.push(newObject);
                 this.drags.push(newObject);
@@ -1630,12 +1653,17 @@ class ImageXController extends PluginBase<t.TypeOf<typeof ImageXMarkup>,
         }
 
         dt.drawObjects = [...dt.drawObjects, ...fixedobjects, ...targets, ...objects];
+
         for (const d of dt.drawObjects) {
             if (d.pendingImage) {
-                await d.pendingImage;
+                const r = await d.pendingImage;
+                if (r instanceof Event) {
+                    this.markupError = `Failed to load image ${r.srcElement!.getAttribute("src")}`;
+                    break;
+                }
             }
         }
-        console.log(dt.drawObjects);
+        // console.log(dt.drawObjects);
         dt.draw();
 
         this.previewColor = globalPreviewColor;

@@ -6,7 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "node build.js",
-    "buildDev": "jspm bundle tim/main + tim/document/slide + tim/plugin/imagex - \"(tim/main + tim/document/slide - [tim/**/*])\" build/tim.js -wd",
+    "buildDev": "jspm bundle tim/main + tim/document/slide - \"(tim/main + tim/document/slide - [tim/**/*])\" build/tim.js -wd",
     "fixLibs": "node fix-libs.js",
     "jspmInstall": "jspm install"
   },
@@ -36,6 +36,7 @@
     "@types/rangyinputs": "^1.2.0",
     "@types/systemjs": "^0.20.2",
     "@types/ui-grid": "^0.0.35",
+    "deepmerge": "^3.0.0",
     "ifvisible.js": "^1.0.6",
     "io-ts": "^1.4.1",
     "moment": "^2.22.2",
@@ -65,6 +66,7 @@
       "angularjs-color-picker": "npm:angularjs-color-picker@^3.4.8",
       "bootstrap-sass": "github:twbs/bootstrap-sass@^3.3.7",
       "chart.js": "npm:chart.js@^2.7.2",
+      "deepmerge": "npm:deepmerge@^3.0.0",
       "humanize-duration": "github:EvanHahn/HumanizeDuration.js@^3.15.1",
       "ifvisible.js": "npm:ifvisible.js@^1.0.6",
       "io-ts": "npm:io-ts@^1.4.1",

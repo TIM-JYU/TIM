@@ -83,6 +83,8 @@ const ImgProps = t.type({
 
 const ValidCoord = t.tuple([t.number, t.number]);
 
+const Size = t.union([t.null, ValidCoord]);
+
 const TextboxProps = t.intersection([
     // CommonProps,
     t.partial({
@@ -90,7 +92,7 @@ const TextboxProps = t.intersection([
         // color: t.string,
         // id: t.string,
         position: ValidCoord,
-        size: ValidCoord,
+        size: Size,
         // type: ObjectType,
 
         borderColor: t.string,
@@ -113,7 +115,7 @@ const CommonProps = t.partial({
     color: t.string,
     id: t.string,
     position: ValidCoord,
-    size: ValidCoord,
+    size: Size,
     type: ObjectType,
 
     imgproperties: ImgProps,

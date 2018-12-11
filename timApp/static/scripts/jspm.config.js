@@ -170,9 +170,6 @@ SystemJS.config({
     "build/slide.js": [
       "tim/document/slide.ts"
     ],
-    "build/imagex.js": [
-      "tim/plugin/imagex.ts"
-    ],
     "build/mathjax.js": [
       "mathjax"
     ],
@@ -193,6 +190,7 @@ SystemJS.config({
     "github:*/*.json"
   ],
   map: {
+    "deepmerge": "npm:deepmerge@3.0.0",
     "io-ts": "npm:io-ts@1.4.1",
     "angular-diff-match-patch": "npm:angular-diff-match-patch@0.7.4",
     "ifvisible.js": "npm:ifvisible.js@1.0.6",
