@@ -169,7 +169,7 @@ class StackController extends PluginBase<t.TypeOf<typeof StackMarkup>,
 
     async runPeek() { // this is just for test purposes
         this.isRunning = true;
-        let url = "http://tim3/stackserver/api/endpoint.php";
+        let url = "/stackserver/api/endpoint.php";
         // this.stackoutput = "";
         let data = this.collectData();
         data.question = "";
