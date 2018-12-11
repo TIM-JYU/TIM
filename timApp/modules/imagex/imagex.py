@@ -54,8 +54,7 @@ class ImagexServer(tim_server.TimServer):
         # Get user id from session
         user_id = query.get_param("user_id", "--")
         preview = query.get_param("preview", False)
-        targets = {"targets": query.get_param("-targets", [])}
-        query2 = ""
+        hiddentargets = query.get_param("-targets", None)
 
         if is_review(query):
             usercode = "image"
@@ -64,16 +63,11 @@ class ImagexServer(tim_server.TimServer):
             print("REVIEW: ", result)
             return result
 
-        # Check if this is in preview. If it is set targets as visible. and query2 is used instead of query.
-        if preview:
+        # Check if this is in preview. If it is, set targets as visible.
+        if preview and hiddentargets:
             jso2 = query.to_json(accept_nonhyphen)
-            jso2['markup'].update(targets)  # += targets
-            print("--..--" + str(jso2))
-            jso2['markup']['preview'] = True
-            if jso2['markup']['targets'] == []:
-                jso2['markup'].update({"targets": query.get_param("targets", [])})
-                print("jso" + str(jso2))
-            query2 = QueryParams(jso2)
+            jso2['markup']['targets'] = hiddentargets
+            query = QueryParams(jso2)
 
         # do the next if Anonymoys is not allowed to use plugins
         if user_id == "Anonymous":
@@ -86,20 +80,11 @@ class ImagexServer(tim_server.TimServer):
                        '">Please login to interact with this component</a></p><pre class="csRunDiv">' + \
                        query.get_param("byCode", "") + '</pre>' # imageX does not have byCode???
 
-        # Send query 2 instead of normal query if it exists.
-        if query2:
-            jso = query2.to_json(accept_nonhyphen)
-        else:
-            jso = query.to_json(accept_nonhyphen)
+        jso = query.to_json(accept_nonhyphen)
         runner = 'imagex-runner'
         attrs = json.dumps(jso)
         s = f'<{runner} json={quoteattr(attrs)}></{runner}>'
-
-        # Put query2 into s if it exists, otherwise send query.
-        if query2:
-            s = make_lazy(s, query2, get_lazy_imagex_html)
-        else:
-            s = make_lazy(s, query, get_lazy_imagex_html)
+        s = make_lazy(s, query, get_lazy_imagex_html)
         return s
 
     # gets reqs

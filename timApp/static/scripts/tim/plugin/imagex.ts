@@ -5,7 +5,7 @@ import * as t from "io-ts";
 import {ViewCtrl} from "../document/viewctrl";
 import {editorChangeValue} from "../editor/editorScope";
 import {$http, $q, $sce, $timeout, $window} from "../util/ngimport";
-import {markAsUsed, Require, to} from "../util/utils";
+import {markAsUsed, numOrStringToNumber, Require, to} from "../util/utils";
 import {
     CommonPropsT,
     DefaultPropsT,
@@ -18,6 +18,7 @@ import {
     IPinPosition,
     IPoint,
     ISized,
+    ISizedPartial,
     MouseOrTouch,
     ObjectTypeT,
     OptionalCommonPropNames,
@@ -29,9 +30,12 @@ import {
     PinPropsT,
     RequireExcept,
     RightAnswerT,
+    SingleSize,
+    SizeT,
     TargetPropsT,
     TextboxPropsT,
     TuplePoint,
+    ValidCoord,
     VideoPlayer,
 } from "./imagextypes";
 import {PluginBase} from "./util";
@@ -50,7 +54,7 @@ function tupleToCoords(p: TuplePoint) {
     return {x: p[0], y: p[1]};
 }
 
-function tupleToSizedOrDef(p: TuplePoint | undefined | null, def?: ISized) {
+function tupleToSizedOrDef(p: SizeT | undefined | null, def: ISizedPartial | undefined) {
     return p ? {width: p[0], height: p[1]} : def;
 }
 
@@ -335,7 +339,7 @@ class FreeHand {
 
 function applyStyleAndWidth(ctx: CanvasRenderingContext2D, seg: ILineSegment) {
     ctx.strokeStyle = seg.color || ctx.strokeStyle;
-    ctx.lineWidth = seg.w || ctx.lineWidth;
+    ctx.lineWidth = numOrStringToNumber(seg.w || ctx.lineWidth);
 }
 
 function drawFreeHand(ctx: CanvasRenderingContext2D, dr: ILineSegment[]) {
@@ -404,24 +408,25 @@ const directiveTemplate = `
                                        ng-disabled="$ctrl.isRunning"
                                        ng-click="$ctrl.save()">{{$ctrl.button}}
     </button>
-        &nbsp&nbsp
+        &nbsp;&nbsp;
         <button ng-if="$ctrl.buttonPlay"
                 ng-disabled="$ctrl.isRunning"
                 ng-click="$ctrl.videoPlay()">{{$ctrl.buttonPlay}}
         </button>
-        &nbsp&nbsp
+        &nbsp;&nbsp;
         <button ng-if="$ctrl.buttonRevert"
                 ng-disabled="$ctrl.isRunning"
                 ng-click="$ctrl.videoBeginning()">{{$ctrl.buttonRevert}}
         </button>
-        &nbsp&nbsp
+        &nbsp;&nbsp;
         <button ng-show="$ctrl.finalanswer && $ctrl.userHasAnswered"
                 ng-disabled="$ctrl.isRunning"
                 ng-click="$ctrl.showAnswer()">
             Showanswer
         </button>
-        &nbsp&nbsp<a ng-if="$ctrl.button" ng-disabled="$ctrl.isRunning" ng-click="$ctrl.resetExercise()">
-            {{$ctrl.resetText}}</a>&nbsp&nbsp<a
+        &nbsp;&nbsp;<a ng-if="$ctrl.button"
+        ng-disabled="$ctrl.isRunning"
+        ng-click="$ctrl.resetExercise()">{{$ctrl.resetText}}</a>&nbsp;&nbsp;<a
                 href="" ng-if="$ctrl.muokattu" ng-click="$ctrl.initCode()">{{$ctrl.resetText}}</a><label
                 ng-show="$ctrl.freeHandVisible">FreeHand <input type="checkbox" name="freeHand" value="true"
                                                                 ng-model="$ctrl.freeHand"></label> <span><span
@@ -430,7 +435,11 @@ const directiveTemplate = `
                    name="freeHandLine"
                    value="true"
                    ng-model="$ctrl.lineMode"></label> <span
-                ng-show="$ctrl.freeHandToolbar"><input ng-show="true" id="freeWidth" size="1" style="width: 1.7em"
+                ng-show="$ctrl.freeHandToolbar"><input ng-show="true"
+                                                       id="freeWidth"
+                                                       size="1"
+                                                       style="width: 2em"
+                                                       type="number"
                                                        ng-model="$ctrl.w"/>
             <input colorpicker="hex"
                    type="text"
@@ -856,8 +865,9 @@ class Pin {
 
     constructor(
         private values: Required<PinPropsT>,
+        defaultAlign: PinAlign,
     ) {
-        const a = values.position.align || "northwest";
+        const a = values.position.align || defaultAlign;
         const {x, y} = alignToDir(a, 1 / Math.sqrt(2));
         this.pos = {
             align: a,
@@ -939,9 +949,12 @@ abstract class ObjBase<T extends RequireExcept<CommonPropsT, OptionalCommonPropN
         this.y = z[1];
         this.a = -this.values.a;
         let s;
-        if (this.values.size) {
+        if (ValidCoord.is(this.values.size)) {
             const [width, height] = this.values.size;
             s = {width, height};
+        } else if (SingleSize.is(this.values.size)) {
+            const [width] = this.values.size;
+            s = {width};
         }
         switch (values.type) {
             case "img":
@@ -1044,7 +1057,7 @@ function setIdentityTransform(ctx: CanvasRenderingContext2D) {
 }
 
 function textboxFromProps(values: {textboxproperties?: TextboxPropsT, color?: string},
-                          s: ISized | undefined,
+                          s: ISizedPartial | undefined,
                           overrideColorFn: () => string | undefined,
                           defaultText: string) {
     const props = values.textboxproperties || {};
@@ -1092,7 +1105,7 @@ class DragObject extends ObjBase<RequireExcept<DragObjectPropsT, OptionalDragObj
             linewidth: valueOr(values.pin.linewidth, 2),
             position: values.pin.position || {},
             visible: valueOr(values.pin.visible, true),
-        });
+        }, this.values.type === "vector" ? "west" : "northwest");
     }
 
     draw() {
@@ -1158,8 +1171,12 @@ class FixedObject extends ObjBase<RequireExcept<FixedObjectPropsT, OptionalFixed
     }
 }
 
+function isSized(s: ISizedPartial): s is ISized {
+    return s.height != null;
+}
+
 abstract class Shape {
-    protected constructor(protected explicitSize: ISized | undefined) {
+    protected constructor(protected explicitSize: ISizedPartial | undefined) {
 
     }
 
@@ -1172,7 +1189,12 @@ abstract class Shape {
 
     get size(): ISized {
         if (this.explicitSize) {
-            return this.explicitSize;
+            if (isSized(this.explicitSize)) {
+                return this.explicitSize;
+            } else {
+                const p = this.preferredSize;
+                return {width: this.explicitSize.width, height: this.explicitSize.width * p.height / p.width};
+            }
         } else {
             return this.preferredSize;
         }
@@ -1219,7 +1241,7 @@ class Ellipse extends Shape {
     constructor(
         private readonly color: () => string,
         private readonly lineWidth: number,
-        size: ISized | undefined,
+        size: ISizedPartial | undefined,
     ) {
         super(size);
     }
@@ -1253,7 +1275,7 @@ class Rectangle extends Shape {
         protected readonly fillColor: string,
         protected readonly lineWidth: number,
         protected readonly cornerRadius: number,
-        size: ISized | undefined,
+        size: ISizedPartial | undefined,
     ) {
         super(size);
         const {width, height} = this.size;
@@ -1309,7 +1331,7 @@ class Textbox extends Shape {
         protected readonly fillColor: string,
         protected readonly lineWidth: number,
         protected readonly cornerRadius: number,
-        size: ISized | undefined,
+        size: ISizedPartial | undefined,
         text: string,
         protected readonly font: string,
     ) {
@@ -1361,7 +1383,7 @@ class Vector extends Shape {
     constructor(
         private readonly color: () => string,
         private readonly lineWidth: number,
-        size: ISized | undefined,
+        size: ISizedPartial | undefined,
         arrowHeadWidth: number | undefined,
         arrowHeadLength: number | undefined,
     ) {
@@ -1399,7 +1421,7 @@ class Vector extends Shape {
 class DImage extends Shape {
     constructor(
         private readonly image: HTMLImageElement,
-        size: ISized | undefined,
+        size: ISizedPartial | undefined,
     ) {
         super(size);
     }
@@ -1558,10 +1580,10 @@ class ImageXController extends PluginBase<t.TypeOf<typeof ImageXMarkup>,
         this.canvas = this.element.find(".canvas")[0] as HTMLCanvasElement;
         this.tries = this.attrsall.tries || 0;
         this.freeHandDrawing = new FreeHand(this,
-            this.attrsall.freeHandData || [],
+            this.attrsall.state && this.attrsall.state.freeHandData || [],
             this.videoPlayer);
-        if (this.attrs.freeHand === "use") {
-            this.freeHand = false;
+        if (this.isFreeHandInUse) {
+            this.freeHand = true;
         }
 
         this.w = this.attrs.freeHandWidth;
@@ -1583,9 +1605,10 @@ class ImageXController extends PluginBase<t.TypeOf<typeof ImageXMarkup>,
         if (this.attrs.background) {
             const background = new FixedObject(
                 ctx, {
-                    a: 0,
+                    a: this.attrs.background.a || 0,
                     imgproperties: {src: this.attrs.background.src, textbox: false},
                     position: [0, 0],
+                    size: this.attrs.background.size,
                     type: "img",
                 },
                 "background");

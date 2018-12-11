@@ -11,7 +11,7 @@ const LineSegment = t.intersection([
     t.type({lines: t.array(TuplePointR)}),
     t.partial({
         color: t.string,
-        w: t.number,
+        w: t.union([t.number, t.string]), // TODO should convert w to number only in database
     }),
 ]);
 export type TuplePoint = t.TypeOf<typeof TuplePointR>;
@@ -39,6 +39,11 @@ export interface IPinPosition {
 export interface ISized {
     width: number;
     height: number;
+}
+
+export interface ISizedPartial {
+    width: number;
+    height?: number;
 }
 
 // These two are from type-zoo: https://github.com/pelotom/type-zoo
@@ -81,9 +86,13 @@ const ImgProps = t.type({
     textbox: withDefault(t.boolean, true),
 });
 
-const ValidCoord = t.tuple([t.number, t.number]);
+export const ValidCoord = t.tuple([t.number, t.number]);
 
-const Size = t.union([t.null, ValidCoord]);
+export const SingleSize = t.tuple([t.number]);
+
+const Size = t.union([t.null, ValidCoord, SingleSize]);
+
+export type SizeT = t.TypeOf<typeof Size>;
 
 const TextboxProps = t.intersection([
     // CommonProps,
@@ -194,6 +203,7 @@ export type ObjectTypeT = t.TypeOf<typeof ObjectType>;
 const BackgroundProps = t.intersection([
     t.partial({
         a: t.number,
+        size: Size,
     }),
     t.type({
         src: t.string,
@@ -256,11 +266,11 @@ export interface RightAnswerT extends t.TypeOf<typeof RightAnswer> {
 
 export const ImageXAll = t.intersection([
     t.partial({
-        freeHandData: t.array(LineSegment),
         preview: t.boolean,
         state: t.union([
             t.null,
             t.partial({
+                freeHandData: t.array(LineSegment),
                 userAnswer: t.partial({
                     drags: t.array(t.type({
                         did: t.string,
