@@ -599,23 +599,27 @@ def get_relevance_route(item_id: int):
         "inherited": inherited})
 
 
-def get_document_relevance(i: DocInfo):
+def get_document_relevance(i: DocInfo) -> int:
     """
     Returns document relevance value or first non-null parent relevance value.
     If no relevance was found until root, return default relevance value.
     :param i: Document.
     :return: Relevance value.
     """
+    # Deleted files etc. without DocInfo are considered to have default relevance.
+    if not i:
+        return DEFAULT_RELEVANCE
+
     # If block has set relevance, return it.
-    if i.relevance:
-        return i.relevance.relevance
+    if i.relevance and i.relevance.relevance:
+            return i.relevance.relevance
 
     # Check parents for relevance in case target document didn't have one.
     parents = i.parents_to_root
     for parent in parents:
-        if parent.relevance:
-            # Return parent relevance.
-            return parent.relevance.relevance
+        if parent.relevance and parent.relevance.relevance:
+                # Return parent relevance.
+                return parent.relevance.relevance
 
     # If parents don't have relevance either, return default value as relevance.
     return DEFAULT_RELEVANCE

@@ -574,9 +574,8 @@ timApp.component("searchBox", {
                 <label for="min-relevance-selector" class="col-sm-2 control-label font-weight-normal"
                 style="text-align:left;">Relevance:</label>
                 <div class="col-sm-3" title="Input minimum relevance value to include in results">
-                    <input ng-model="$ctrl.relevanceThreshold" name="min-relevance-selector"
-                            ng-disabled="$ctrl.ignoreRelevance" type="number" class="form-control"
-                            id="min-relevance-selector" typeahead-min-length="0"
+                    <input ng-model="$ctrl.relevanceThreshold" name="min-relevance-selector" type="number"
+                            class="form-control" id="min-relevance-selector" typeahead-min-length="0"
                             uib-typeahead="s.value as s.name for s in $ctrl.suggestions | orderBy:'-value'">
                 </div>
            </div>
@@ -593,8 +592,6 @@ timApp.component("searchBox", {
             <input type="checkbox" ng-model="$ctrl.searchOwned"> Search owned documents</label>
         <label class="font-weight-normal" title="Show result of each search in new window">
             <input type="checkbox" ng-model="$ctrl.createNewWindow"> Open new window for each search</label>
-        <label class="font-weight-normal" title="Skip document relevance check for faster but less accurate search">
-            <input type="checkbox" ng-model="$ctrl.ignoreRelevance"> Ignore relevance</label>
         <h5 class="font-weight-normal">Search scope:</h5>
         <label class="font-weight-normal" title="Search document content">
             <input type="checkbox" ng-model="$ctrl.searchContent"> Contents</label>

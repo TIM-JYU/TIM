@@ -371,9 +371,11 @@ def add_doc_info_title_line(doc_id: int) -> Union[str, None]:
     :return: String with doc data.
     """
     doc_info = DocEntry.find_by_id(doc_id)
+    doc_relevance = get_document_relevance(doc_info)
     if not doc_info:
         return None
     return json.dumps({'doc_id': doc_id,
+                       'd_r': doc_relevance,
                        'doc_title': doc_info.title},
                       ensure_ascii=False) + '\n'
 
@@ -397,11 +399,7 @@ def add_doc_info_content_line(doc_id: int, par_data, remove_deleted_pars: bool =
             return None
     par_json_list = []
 
-    # doc_relevance = get_doc_relevance(doc_info)
-
-    # If excluded from search, skip from search file too.
-    # if doc_relevance == EXCLUDED_RELEVANCE:
-    #    return None
+    doc_relevance = get_document_relevance(doc_info)
 
     for par in par_data:
         par_dict = json.loads(f"{{{par}}}")
@@ -419,13 +417,13 @@ def add_doc_info_content_line(doc_id: int, par_data, remove_deleted_pars: bool =
             doc_info = DocEntry.find_by_id(doc_id)
         doc_title = doc_info.title
         return json.dumps({'doc_id': doc_id,
-                           # 'doc_relevance': doc_relevance,
+                           'd_r': doc_relevance,
                            'doc_title': doc_title,
                            'pars': par_json_list}
                           , ensure_ascii=False) + '\n'
     else:
         return json.dumps({'doc_id': doc_id,
-                           # 'doc_relevance': doc_relevance,
+                           'd_r': doc_relevance,
                            'pars': par_json_list},
                           ensure_ascii=False) + '\n'
 
@@ -775,14 +773,14 @@ def path_search():
                           'content_results': []})
 
 
-def is_excluded(doc_info: DocInfo, relevance_threshold: int) -> bool:
+def is_excluded(relevance: int, relevance_threshold: int) -> bool:
     """
     Exclude if relevance is less than relevance threshold.
-    :param doc_info: Document.
+    :param relevance: Document relevance value.
     :param relevance_threshold: Min included relevance.
     :return: True if document relevance is less than relevance threshold.
     """
-    if get_document_relevance(doc_info) < relevance_threshold:
+    if relevance < relevance_threshold:
         return True
     return False
 
@@ -871,6 +869,7 @@ def search():
             if line and len(line) > 10:
                 line_info = json.loads(line)
                 doc_id = line_info['doc_id']
+                relevance = line_info['d_r']
                 # TODO: Handle aliases and translated documents.
                 doc_info = DocEntry.query.filter((DocEntry.id == doc_id) & (DocEntry.name.like(folder + "%"))). \
                     options(lazyload(DocEntry._block)).first()
@@ -885,7 +884,7 @@ def search():
                         continue
 
                 if not ignore_relevance:
-                    if is_excluded(doc_info, relevance_threshold):
+                    if is_excluded(relevance, relevance_threshold):
                         continue
 
                 doc_result = DocResult(doc_info)
@@ -911,6 +910,7 @@ def search():
                 # The file is supposed to contain doc_id and pars in a list for each document.
                 line_info = json.loads(line)
                 doc_id = line_info['doc_id']
+                relevance = line_info['d_r']
                 # TODO: Handle aliases.
                 doc_info = DocEntry.query.filter((DocEntry.id == doc_id) & (DocEntry.name.like(folder + "%"))). \
                     options(lazyload(DocEntry._block).joinedload(Block.relevance)).first()
@@ -927,7 +927,7 @@ def search():
 
                 # If ignore_relevance is chosen, skips relevance check to save time.
                 if not ignore_relevance:
-                    if is_excluded(doc_info, relevance_threshold):
+                    if is_excluded(relevance, relevance_threshold):
                         continue
 
                 pars = line_info['pars']
