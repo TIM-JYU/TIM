@@ -179,7 +179,7 @@ class StackController extends PluginBase<t.TypeOf<typeof StackMarkup>,
             let peekDivC = peekDiv.children();
             // editorDiv.empty();
             let pdiv = $('<div><div class="math">'+json.questiontext +'</div></div>');
-            await ParCompiler.processAllMathDelayed(pdiv);
+            await ParCompiler.processAllMath(pdiv);
             peekDivC.replaceWith(pdiv); // TODO: vielä välähtää
 
         } finally {
