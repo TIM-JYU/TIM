@@ -593,7 +593,7 @@ timApp.component("searchBox", {
             <input type="checkbox" ng-model="$ctrl.searchOwned"> Search owned documents</label>
         <label class="font-weight-normal" title="Show result of each search in new window">
             <input type="checkbox" ng-model="$ctrl.createNewWindow"> Open new window for each search</label>
-        <label class="font-weight-normal" title="Skip document relevance check make search faster but less accurate">
+        <label class="font-weight-normal" title="Skip document relevance check for faster but less accurate search">
             <input type="checkbox" ng-model="$ctrl.ignoreRelevance"> Ignore relevance</label>
         <h5 class="font-weight-normal">Search scope:</h5>
         <label class="font-weight-normal" title="Search document content">

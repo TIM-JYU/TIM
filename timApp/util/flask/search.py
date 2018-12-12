@@ -803,7 +803,7 @@ def search():
     ignore_plugins = get_option(request, 'ignorePlugins', default=False, cast=bool)
     search_titles = get_option(request, 'searchTitles', default=True, cast=bool)
     search_content = get_option(request, 'searchContent', default=True, cast=bool)
-    relevance_threshold = get_option(request, 'relevanceThreshold', default=0, cast=int)
+    relevance_threshold = get_option(request, 'relevanceThreshold', default=1, cast=int)
     ignore_relevance = get_option(request, 'ignoreRelevance', default=False, cast=bool)
 
     if search_content and not Path(dir_path / content_search_file_name).exists():
@@ -913,7 +913,7 @@ def search():
                 doc_id = line_info['doc_id']
                 # TODO: Handle aliases.
                 doc_info = DocEntry.query.filter((DocEntry.id == doc_id) & (DocEntry.name.like(folder + "%"))). \
-                    options(lazyload(DocEntry._block)).first()
+                    options(joinedload(DocEntry._block).joinedload(Block.relevance)).first()
                 if not doc_info:
                     continue
                 # If not allowed to view, continue to the next one.
@@ -925,6 +925,7 @@ def search():
                     if not user.has_ownership(doc_info, allow_admin=False):
                         continue
 
+                # If ignore_relevance is chosen, skips relevance check to save time.
                 if not ignore_relevance:
                     if is_excluded(doc_info, relevance_threshold):
                         continue
