@@ -311,7 +311,7 @@ stackApp.component("stackRunner", {
     <p class="csRunMenu">
         <button ng-if="true" ng-disabled="$ctrl.isRunning" title="(Ctrl-S)" ng-click="$ctrl.runSend()"
                 ng-bind-html="'Send'"></button>
-        <button ng-if="true" ng-disabled="$ctrl.isRunning"  ng-click="$ctrl.runPeek()"
+        <button ng-if="::!$ctrl.attrs.autopeek" ng-disabled="$ctrl.isRunning"  ng-click="$ctrl.runPeek()"
                 ng-bind-html="'Peek'"></button>
     </p>
 
