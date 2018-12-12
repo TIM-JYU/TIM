@@ -804,6 +804,7 @@ def search():
     search_titles = get_option(request, 'searchTitles', default=True, cast=bool)
     search_content = get_option(request, 'searchContent', default=True, cast=bool)
     relevance_threshold = get_option(request, 'relevanceThreshold', default=0, cast=int)
+    ignore_relevance = get_option(request, 'ignoreRelevance', default=False, cast=bool)
 
     if search_content and not Path(dir_path / content_search_file_name).exists():
         abort(404, f"Combined content file '{content_search_file_name}' not found, unable to perform content search!")
@@ -883,8 +884,9 @@ def search():
                     if not user.has_ownership(doc_info, allow_admin=False):
                         continue
 
-                if is_excluded(doc_info, relevance_threshold):
-                    continue
+                if not ignore_relevance:
+                    if is_excluded(doc_info, relevance_threshold):
+                        continue
 
                 doc_result = DocResult(doc_info)
 
@@ -923,8 +925,9 @@ def search():
                     if not user.has_ownership(doc_info, allow_admin=False):
                         continue
 
-                if is_excluded(doc_info, relevance_threshold):
-                    continue
+                if not ignore_relevance:
+                    if is_excluded(doc_info, relevance_threshold):
+                        continue
 
                 pars = line_info['pars']
                 doc_result = DocResult(doc_info)

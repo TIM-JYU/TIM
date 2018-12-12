@@ -121,6 +121,7 @@ export class SearchBoxCtrl implements IController {
     private searchWholeWords: boolean = true; // Whole word search.
     private searchOwned: boolean = false; // Limit search to docs owned by the user.
     private searchPaths: boolean = false; // Search document paths.
+    private ignoreRelevance: boolean = false; // Don't limit results by relevance.
     private relevanceThreshold: number = 1; // Exclude documents with < X relevance.
     private suggestions = relevanceSuggestions;
 
@@ -261,7 +262,7 @@ export class SearchBoxCtrl implements IController {
         this.storage.optionsStorage = [];
         this.storage.optionsStorage = [this.advancedSearch, this.caseSensitive, this.createNewWindow,
             this.ignorePlugins, this.regex, this.searchTitles, this.searchWholeWords, this.searchTags,
-            this.searchOwned, this.searchContent, this.searchPaths];
+            this.searchOwned, this.searchContent, this.searchPaths, this.ignoreRelevance];
     }
 
     /**
@@ -277,10 +278,10 @@ export class SearchBoxCtrl implements IController {
         if (this.storage.maxDocResultsStorage != null) {
             this.maxDocResults = +this.storage.maxDocResultsStorage;
         }
-        if (this.storage.optionsStorage && this.storage.optionsStorage.length > 10) {
+        if (this.storage.optionsStorage && this.storage.optionsStorage.length > 11) {
             [this.advancedSearch, this.caseSensitive, this.createNewWindow,
             this.ignorePlugins, this.regex, this.searchTitles, this.searchWholeWords, this.searchTags,
-            this.searchOwned, this.searchContent, this.searchPaths] = this.storage.optionsStorage;
+            this.searchOwned, this.searchContent, this.searchPaths, this.ignoreRelevance] = this.storage.optionsStorage;
         }
     }
 
@@ -331,10 +332,11 @@ export class SearchBoxCtrl implements IController {
     private getCommonSearchOptions() {
         return {
             caseSensitive: this.caseSensitive,
-            relevanceThreshold: this.relevanceThreshold,
             folder: this.folder,
+            ignoreRelevance: this.ignoreRelevance,
             query: this.query,
             regex: this.regex,
+            relevanceThreshold: this.relevanceThreshold,
             searchOwned: this.searchOwned,
             searchWholeWords: this.searchWholeWords,
         };
@@ -573,7 +575,8 @@ timApp.component("searchBox", {
                 style="text-align:left;">Relevance:</label>
                 <div class="col-sm-3" title="Input minimum relevance value to include in results">
                     <input ng-model="$ctrl.relevanceThreshold" name="min-relevance-selector"
-                           type="number" class="form-control" id="min-relevance-selector" typeahead-min-length="0"
+                            ng-disabled="$ctrl.ignoreRelevance" type="number" class="form-control"
+                            id="min-relevance-selector" typeahead-min-length="0"
                             uib-typeahead="s.value as s.name for s in $ctrl.suggestions | orderBy:'-value'">
                 </div>
            </div>
@@ -590,6 +593,8 @@ timApp.component("searchBox", {
             <input type="checkbox" ng-model="$ctrl.searchOwned"> Search owned documents</label>
         <label class="font-weight-normal" title="Show result of each search in new window">
             <input type="checkbox" ng-model="$ctrl.createNewWindow"> Open new window for each search</label>
+        <label class="font-weight-normal" title="Skip document relevance check make search faster but less accurate">
+            <input type="checkbox" ng-model="$ctrl.ignoreRelevance"> Ignore relevance</label>
         <h5 class="font-weight-normal">Search scope:</h5>
         <label class="font-weight-normal" title="Search document content">
             <input type="checkbox" ng-model="$ctrl.searchContent"> Contents</label>
