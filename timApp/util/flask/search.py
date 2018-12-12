@@ -869,7 +869,7 @@ def search():
             if line and len(line) > 10:
                 line_info = json.loads(line)
                 doc_id = line_info['doc_id']
-                relevance = line_info['d_r']
+
                 # TODO: Handle aliases and translated documents.
                 doc_info = DocEntry.query.filter((DocEntry.id == doc_id) & (DocEntry.name.like(folder + "%"))). \
                     options(lazyload(DocEntry._block)).first()
@@ -883,9 +883,15 @@ def search():
                     if not user.has_ownership(doc_info, allow_admin=False):
                         continue
 
+                # If relevance is ignored or not found from search file, skip check.
                 if not ignore_relevance:
-                    if is_excluded(relevance, relevance_threshold):
-                        continue
+                    try:
+                        relevance = line_info['d_r']
+                    except KeyError:
+                        pass
+                    else:
+                        if is_excluded(relevance, relevance_threshold):
+                            continue
 
                 doc_result = DocResult(doc_info)
 
@@ -910,7 +916,7 @@ def search():
                 # The file is supposed to contain doc_id and pars in a list for each document.
                 line_info = json.loads(line)
                 doc_id = line_info['doc_id']
-                relevance = line_info['d_r']
+
                 # TODO: Handle aliases.
                 doc_info = DocEntry.query.filter((DocEntry.id == doc_id) & (DocEntry.name.like(folder + "%"))). \
                     options(lazyload(DocEntry._block).joinedload(Block.relevance)).first()
@@ -925,10 +931,15 @@ def search():
                     if not user.has_ownership(doc_info, allow_admin=False):
                         continue
 
-                # If ignore_relevance is chosen, skips relevance check to save time.
+                # If relevance is ignored or not found from search file, skip check.
                 if not ignore_relevance:
-                    if is_excluded(relevance, relevance_threshold):
-                        continue
+                    try:
+                        relevance = line_info['d_r']
+                    except KeyError:
+                        pass
+                    else:
+                        if is_excluded(relevance, relevance_threshold):
+                            continue
 
                 pars = line_info['pars']
                 doc_result = DocResult(doc_info)
