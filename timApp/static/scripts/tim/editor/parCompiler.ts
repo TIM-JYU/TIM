@@ -3,6 +3,7 @@ import {$compile, $injector, $log, $timeout} from "tim/util/ngimport";
 import {timLogTime} from "tim/util/timTiming";
 import {lazyLoad, lazyLoadMany} from "../util/lazyLoad";
 import {fixDefExport, injectStyle} from "../util/utils";
+import {ViewCtrl} from "../document/viewctrl";
 
 export interface IPluginInfoResponse {
     js: string[];
@@ -13,11 +14,13 @@ export interface IPluginInfoResponse {
 }
 
 export class ParagraphCompiler {
-    public async compile(data: IPluginInfoResponse, scope: IScope) {
+    public async compile(data: IPluginInfoResponse, scope: IScope, view?: ViewCtrl) {
         await lazyLoadMany(data.js);
         $injector.loadNewModules(data.angularModule);
         data.css.forEach((s) => injectStyle(s));
-        const compiled = $compile(data.texts)(scope);
+        const compiled = $compile(data.texts)(scope,
+            undefined,
+            view ? {transcludeControllers: {timView: {instance: view}}} : {});
         await this.processAllMathDelayed(compiled);
         return compiled;
     }

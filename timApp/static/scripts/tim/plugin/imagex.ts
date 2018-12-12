@@ -1931,7 +1931,7 @@ imagexApp.component("imagexRunner", {
     },
     controller: ImageXController,
     require: {
-        // vctrl: "^timView",
+        vctrl: "^timView",
     },
     template: directiveTemplate,
 });
