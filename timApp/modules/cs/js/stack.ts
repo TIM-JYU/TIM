@@ -160,7 +160,13 @@ class StackController extends PluginBase<t.TypeOf<typeof StackMarkup>,
                 + (json.request_time).toFixed(2)
                 + ' Api Time: ' + (json.api_time).toFixed(2);
 
-            await ParCompiler.processAllMathDelayed(this.element);
+            await ParCompiler.processAllMath(this.element);
+            let html = this.element.find('.stackOutput');
+            let inputs = html.find('input');
+            $(inputs).keydown((e) => {
+                this.scope.$evalAsync(() => { this.autoPeek() });
+            });
+
         } finally {
             this.isRunning = false;
         }
@@ -190,7 +196,7 @@ class StackController extends PluginBase<t.TypeOf<typeof StackMarkup>,
 
     async autoPeek() {
         if ( !this.attrs.autopeek ) return;
-        this.stackoutput = '';
+        // this.stackoutput = '';
         await this.runPeek();
     }
 
@@ -299,7 +305,7 @@ stackApp.component("stackRunner", {
                                          placeholder="{{$ctrl.inputplaceholder}}"></textarea></div>
     </div>
                     
-    <div id="output" ng-bind-html="$ctrl.outputAsHtml()"></div>
+    <div id="output" class="stackOutput" ng-bind-html="$ctrl.outputAsHtml()"></div>
     <!-- <div class="peekdiv" id="peek" ng-bind-html="$ctrl.stackpeek"></div> -->
     <div ng-cloak ng-if="$ctrl.stackpeek" class="peekdiv" id="peek" style="height: 10em;"><div></div></div>
     <p class="csRunMenu">
