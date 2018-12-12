@@ -913,7 +913,7 @@ def search():
                 doc_id = line_info['doc_id']
                 # TODO: Handle aliases.
                 doc_info = DocEntry.query.filter((DocEntry.id == doc_id) & (DocEntry.name.like(folder + "%"))). \
-                    options(joinedload(DocEntry._block).joinedload(Block.relevance)).first()
+                    options(lazyload(DocEntry._block).joinedload(Block.relevance)).first()
                 if not doc_info:
                     continue
                 # If not allowed to view, continue to the next one.
