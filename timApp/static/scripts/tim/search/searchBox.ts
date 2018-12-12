@@ -262,7 +262,7 @@ export class SearchBoxCtrl implements IController {
         this.storage.optionsStorage = [];
         this.storage.optionsStorage = [this.advancedSearch, this.caseSensitive, this.createNewWindow,
             this.ignorePlugins, this.regex, this.searchTitles, this.searchWholeWords, this.searchTags,
-            this.searchOwned, this.searchContent, this.searchPaths, this.ignoreRelevance];
+            this.searchOwned, this.searchContent, this.searchPaths];
     }
 
     /**
@@ -278,10 +278,10 @@ export class SearchBoxCtrl implements IController {
         if (this.storage.maxDocResultsStorage != null) {
             this.maxDocResults = +this.storage.maxDocResultsStorage;
         }
-        if (this.storage.optionsStorage && this.storage.optionsStorage.length > 11) {
+        if (this.storage.optionsStorage && this.storage.optionsStorage.length > 10) {
             [this.advancedSearch, this.caseSensitive, this.createNewWindow,
             this.ignorePlugins, this.regex, this.searchTitles, this.searchWholeWords, this.searchTags,
-            this.searchOwned, this.searchContent, this.searchPaths, this.ignoreRelevance] = this.storage.optionsStorage;
+            this.searchOwned, this.searchContent, this.searchPaths] = this.storage.optionsStorage;
         }
     }
 

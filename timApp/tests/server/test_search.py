@@ -13,7 +13,7 @@ class SearchTest(TimRouteTest):
         text_in_document = 'House cats like to hunt too.'
         d = self.create_doc(initial_par=text_in_document)
         self.get(f'search/createContentFile')
-        url = f'search?caseSensitive=false&folder=&ignorePlugins=false&query={text_to_search}&regex=false'
+        url = f'search?ignoreRelevance=true&caseSensitive=false&folder=&ignorePlugins=false&query={text_to_search}&regex=false'
         self.get(url,
                  expect_status=200,
                  expect_content={'content_results': [{'doc': {'id': d.id,
@@ -26,7 +26,6 @@ class SearchTest(TimRouteTest):
                                                                   'name': u_name},
                                                               'path': d.path,
                                                               'public': True,
-                                                              'relevance': None,
                                                               'rights': {
                                                                   'browse_own_answers': True,
                                                                   'can_comment': True,
@@ -134,7 +133,7 @@ class SearchTest(TimRouteTest):
         d = self.create_doc(initial_par=plugin_md)
         self.get(f'search/createContentFile')
         self.test_user_1.grant_access(d.id, 'edit')
-        self.get(f'search?folder=&query={text_to_search}',
+        self.get(f'search?ignoreRelevance=true&folder=&query={text_to_search}',
                  expect_status=200,
                  expect_content={
                      'content_results': [{'doc': {'id': d.id,
@@ -147,7 +146,6 @@ class SearchTest(TimRouteTest):
                                                       'name': self.test_user_1.name},
                                                   'path': d.path,
                                                   'public': True,
-                                                  'relevance': None,
                                                   'rights': {'browse_own_answers': True,
                                                              'can_comment': True,
                                                              'can_mark_as_read': True,
@@ -200,7 +198,7 @@ class SearchTest(TimRouteTest):
         search_word = "Some title"
         d = self.create_doc(title=search_word, initial_par="I cannot be found without some par content here.")
         self.get(f'search/createContentFile')
-        url = f'search?folder=&query={search_word}&searchContent=false&searchTitles=true'
+        url = f'search?ignoreRelevance=true&folder=&query={search_word}&searchContent=false&searchTitles=true'
         self.get(url,
                  expect_status=200,
                  expect_content={'content_results': [],
@@ -217,7 +215,6 @@ class SearchTest(TimRouteTest):
                                                                 'name': self.test_user_1.name},
                                                             'path': d.path,
                                                             'public': True,
-                                                            'relevance': None,
                                                             'rights': {
                                                                 'browse_own_answers': True,
                                                                 'can_comment': True,
