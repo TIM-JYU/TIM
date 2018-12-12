@@ -75,11 +75,13 @@ class FreeHand {
         this.emotion = imgx.emotion;
         this.imgx = imgx;
         this.videoPlayer = player || {currentTime: 1e60, fakeVideo: true};
-        if (!isFakePlayer(this.videoPlayer)) {
-            if (this.imgx.attrs.analyzeDot) {
-                this.videoPlayer.ontimeupdate = () => this.drawCirclesVideoDot(this.ctx, this.freeDrawing, this.videoPlayer);
-            } else {
-                this.videoPlayer.ontimeupdate = () => this.drawCirclesVideo(this.ctx, this.freeDrawing, this.videoPlayer);
+        if (this.emotion && this.imgx.teacherMode) {
+            if (!isFakePlayer(this.videoPlayer)) {
+                if (this.imgx.attrs.analyzeDot) {
+                    this.videoPlayer.ontimeupdate = () => this.drawCirclesVideoDot(this.ctx, this.freeDrawing, this.videoPlayer);
+                } else {
+                    this.videoPlayer.ontimeupdate = () => this.drawCirclesVideo(this.ctx, this.freeDrawing, this.videoPlayer);
+                }
             }
         }
     }
@@ -1451,13 +1453,11 @@ function loadImage(src: string): [IPromise<ImageLoadResult>, HTMLImageElement] {
         deferred.resolve(sprite);
     };
     sprite.onerror = (e) => {
-        deferred.resolve(e);
+        deferred.resolve(e as Event);
     };
     sprite.src = src;
     return [deferred.promise, sprite];
 }
-
-const videos = {};
 
 function baseDefs(t: ObjectTypeT, color: string): RequireExcept<DefaultPropsT, OptionalPropNames> {
     return {
@@ -1510,7 +1510,9 @@ class ImageXController extends PluginBase<t.TypeOf<typeof ImageXMarkup>,
     }
 
     get videoPlayer(): HTMLVideoElement | undefined {
-        return $window.videoApp && this.attrs.followid && $window.videoApp.videos[this.attrs.followid];
+        if (this.attrs.followid) {
+            return this.vctrl.getVideo(this.attrs.followid);
+        }
     }
 
     get buttonPlay() {
