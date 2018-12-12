@@ -1640,8 +1640,15 @@ class ImageXController extends PluginBase<t.TypeOf<typeof ImageXMarkup>,
         );
         if (userTargets) {
             for (let i = 0; i < userTargets.length; i++) {
-                delete targetDef.points; // never merge this
                 targetDef = deepmerge(targetDef, userTargets[i], opts);
+
+                // Don't deepmerge points object because it's undesirable.
+                // Currently this doesn't matter either way because points is not used in client side.
+                if (userTargets[i].points != null) {
+                    targetDef.points = userTargets[i].points;
+                } else {
+                    delete targetDef.points;
+                }
                 targets.push(new Target(ctx, targetDef, "trg" + (i + 1)));
             }
         }
