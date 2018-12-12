@@ -611,13 +611,13 @@ def get_document_relevance(i: DocInfo) -> int:
         return DEFAULT_RELEVANCE
 
     # If block has set relevance, return it.
-    if i.relevance and i.relevance.relevance:
+    if i.relevance:
             return i.relevance.relevance
 
     # Check parents for relevance in case target document didn't have one.
     parents = i.parents_to_root
     for parent in parents:
-        if parent.relevance and parent.relevance.relevance:
+        if parent.relevance:
                 # Return parent relevance.
                 return parent.relevance.relevance
 

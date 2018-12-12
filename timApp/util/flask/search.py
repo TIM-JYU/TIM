@@ -890,6 +890,7 @@ def search():
                     except KeyError:
                         pass
                     else:
+                        # Leave documents with excluded relevance out of the results.
                         if is_excluded(relevance, relevance_threshold):
                             continue
 
@@ -919,7 +920,7 @@ def search():
 
                 # TODO: Handle aliases.
                 doc_info = DocEntry.query.filter((DocEntry.id == doc_id) & (DocEntry.name.like(folder + "%"))). \
-                    options(lazyload(DocEntry._block).joinedload(Block.relevance)).first()
+                    options(lazyload(DocEntry._block)).first()
                 if not doc_info:
                     continue
                 # If not allowed to view, continue to the next one.
@@ -936,6 +937,7 @@ def search():
                     try:
                         relevance = line_info['d_r']
                     except KeyError:
+                        # TODO: Add message to user about skipped relevances.
                         pass
                     else:
                         if is_excluded(relevance, relevance_threshold):
