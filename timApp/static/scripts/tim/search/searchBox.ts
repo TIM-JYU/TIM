@@ -10,6 +10,7 @@ import {$http, $localStorage, $window} from "../util/ngimport";
 import {Binding, to} from "../util/utils";
 import {ShowSearchResultController, showSearchResultDialog} from "./searchResultsCtrl";
 import {KEY_ENTER} from "../util/keycodes";
+import {relevanceSuggestions} from "../item/relevanceEdit";
 
 /**
  * All data title/word search route returns.
@@ -120,6 +121,9 @@ export class SearchBoxCtrl implements IController {
     private searchWholeWords: boolean = true; // Whole word search.
     private searchOwned: boolean = false; // Limit search to docs owned by the user.
     private searchPaths: boolean = false; // Search document paths.
+    private ignoreRelevance: boolean = false; // Don't limit results by relevance.
+    private relevanceThreshold: number = 1; // Exclude documents with < X relevance.
+    private suggestions = relevanceSuggestions;
 
     // Controller's private attributes:
     private errorMessage: string | undefined; // Message displayed only in search panel.
@@ -127,6 +131,8 @@ export class SearchBoxCtrl implements IController {
     private loading: boolean = false; // Display loading icon.
     private item: IItem = $window.item;
     private storage: ngStorage.StorageService & {
+        maxDocResultsStorage: null | string,
+        relevanceThresholdStorage: null | string,
         searchWordStorage: null | string,
         optionsStorage: null | boolean[]};
     private folderSuggestions: string[] = []; // A list of folder path suggestions.
@@ -141,8 +147,10 @@ export class SearchBoxCtrl implements IController {
      */
     constructor() {
         this.storage = $localStorage.$default({
+            maxDocResultsStorage: null,
             optionsStorage: null,
             optionsValueStorage: null,
+            relevanceThresholdStorage: null,
             searchWordStorage: null,
         });
     }
@@ -245,6 +253,12 @@ export class SearchBoxCtrl implements IController {
         if (this.query.trim().length > 0) {
             this.storage.searchWordStorage = this.query;
         }
+        if (this.relevanceThreshold != null) {
+            this.storage.relevanceThresholdStorage = this.relevanceThreshold.toString();
+        }
+        if (this.maxDocResults != null) {
+            this.storage.maxDocResultsStorage = this.maxDocResults.toString();
+        }
         this.storage.optionsStorage = [];
         this.storage.optionsStorage = [this.advancedSearch, this.caseSensitive, this.createNewWindow,
             this.ignorePlugins, this.regex, this.searchTitles, this.searchWholeWords, this.searchTags,
@@ -257,6 +271,12 @@ export class SearchBoxCtrl implements IController {
     private loadLocalStorage() {
         if (this.storage.searchWordStorage) {
             this.query = this.storage.searchWordStorage;
+        }
+        if (this.storage.relevanceThresholdStorage != null) {
+            this.relevanceThreshold = +this.storage.relevanceThresholdStorage;
+        }
+        if (this.storage.maxDocResultsStorage != null) {
+            this.maxDocResults = +this.storage.maxDocResultsStorage;
         }
         if (this.storage.optionsStorage && this.storage.optionsStorage.length > 10) {
             [this.advancedSearch, this.caseSensitive, this.createNewWindow,
@@ -313,8 +333,10 @@ export class SearchBoxCtrl implements IController {
         return {
             caseSensitive: this.caseSensitive,
             folder: this.folder,
+            ignoreRelevance: this.ignoreRelevance,
             query: this.query,
             regex: this.regex,
+            relevanceThreshold: this.relevanceThreshold,
             searchOwned: this.searchOwned,
             searchWholeWords: this.searchWholeWords,
         };
@@ -542,13 +564,19 @@ timApp.component("searchBox", {
                            typeahead-min-length="1">
                 </div>
            </div>
-           <div class="form-group" title="Input maximum number of results to get from a single document">
-                <label for="max-doc-results-selector" class="col-sm-6 control-label font-weight-normal"
-                style="text-align:left;">Max results per document:</label>
-                <div class="col-sm-6">
+           <div class="form-group">
+                <label for="max-doc-results-selector" class="col-sm-4 control-label font-weight-normal"
+                style="text-align:left;">Max results / doc:</label>
+                <div class="col-sm-3" title="Input maximum number of results to get from a single document">
                     <input ng-model="$ctrl.maxDocResults" name="max-doc-results-selector"
-                           type="number" class="form-control" id="folder-selector"
-                           placeholder="Input a result limit">
+                           type="number" class="form-control" id="max-doc-results-selector">
+                </div>
+                <label for="min-relevance-selector" class="col-sm-2 control-label font-weight-normal"
+                style="text-align:left;">Relevance:</label>
+                <div class="col-sm-3" title="Input minimum relevance value to include in results">
+                    <input ng-model="$ctrl.relevanceThreshold" name="min-relevance-selector" type="number"
+                            class="form-control" id="min-relevance-selector" typeahead-min-length="0"
+                            uib-typeahead="s.value as s.name for s in $ctrl.suggestions | orderBy:'-value'">
                 </div>
            </div>
 

@@ -11,9 +11,15 @@ export interface IItem {
     isFolder: boolean;
     fulltext: string;
     rights: IRights;
+    relevance?: IRelevance;
     versions: Array<{}>;
     path: string;
     src_docid?: number;
+}
+
+export interface IRelevance {
+    block_id: number;
+    relevance: number;
 }
 
 export interface ITag {
@@ -56,6 +62,15 @@ export interface ITaggedItem extends IItem {
 
 export async function getItem(itemId: number) {
     return (await $http.get<IItem>(`/items/${itemId}`)).data;
+}
+
+/**
+ * Check if item is root folder.
+ * @param item Item to check.
+ * @returns {boolean} True if root folder.
+ */
+export function isRootFolder(item: IItem) {
+    return item.id === -1;
 }
 
 /**

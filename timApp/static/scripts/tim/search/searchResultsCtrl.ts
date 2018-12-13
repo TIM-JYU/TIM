@@ -31,9 +31,11 @@ export class ShowSearchResultController extends DialogController<{ ctrl: SearchB
     private collapsables = false; // True if there are any collapsable results.
     private searchComponent: undefined | SearchBoxCtrl;
     private sortingOptions = [
-            {value: "1", name: "Sort by path"},
+            {value: "1", name: "Sort by relevance"},
             {value: "2", name: "Sort by title"},
-            {value: "3", name: "Sort by matches"}];
+            {value: "3", name: "Sort by matches"},
+            {value: "4", name: "Sort by path"}];
+
     private orderByOption = this.sortingOptions[0];
 
     constructor(protected element: IRootElementService, protected scope: IScope) {
@@ -250,12 +252,28 @@ export class ShowSearchResultController extends DialogController<{ ctrl: SearchB
         }
         if (orderByOption.value === "3") {
             return (r: ISearchResultDisplay) =>  {
+                // Negative values to get ascending order.
                 let matches =  - (r.result.num_par_results + r.num_tag_results + r.result.num_title_results);
                 // Show "x or more matches" before "x matches".
                 if (r.result.incomplete) {
                     matches -= 1;
                 }
                 return matches;
+            };
+        }
+        if (orderByOption.value === "1") {
+            return (r: ISearchResultDisplay) =>  {
+                let matches =  - (r.result.num_par_results + r.num_tag_results + r.result.num_title_results);
+                // Show "x or more matches" before "x matches".
+                if (r.result.incomplete) {
+                    matches -= 1;
+                }
+                const relevance = r.result.doc.relevance;
+                let relevanceValue = 10; // TODO: Set a global constant for default relevance.
+                if (relevance) {
+                    relevanceValue = relevance.relevance;
+                }
+                return matches - relevanceValue;
             };
         } else {
             return (r: ISearchResultDisplay) =>  r.result.doc.path;

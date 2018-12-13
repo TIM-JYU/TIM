@@ -238,3 +238,12 @@ def seq_to_str(lst: Sequence[str]):
 
 def split_by_semicolon(p: str):
     return [s.strip() for s in p.split(';')]
+
+
+def get_error_message(e: Exception) -> str:
+    """
+    Gives error message with error class.
+    :param e: Exception.
+    :return: String 'ErrorClass: reason'.
+    """
+    return f"{str(e.__class__.__name__)}: {str(e)}"
