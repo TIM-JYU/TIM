@@ -606,20 +606,17 @@ def get_document_relevance(i: DocInfo) -> int:
     :param i: Document.
     :return: Relevance value.
     """
-    # Deleted files etc. without DocInfo are considered to have default relevance.
-    if not i:
-        return DEFAULT_RELEVANCE
 
     # If block has set relevance, return it.
     if i.relevance:
-            return i.relevance.relevance
+        return i.relevance.relevance
 
     # Check parents for relevance in case target document didn't have one.
     parents = i.parents_to_root
     for parent in parents:
         if parent.relevance:
-                # Return parent relevance.
-                return parent.relevance.relevance
+            # Return parent relevance.
+            return parent.relevance.relevance
 
     # If parents don't have relevance either, return default value as relevance.
     return DEFAULT_RELEVANCE

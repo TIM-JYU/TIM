@@ -81,12 +81,15 @@ class DocEntry(db.Model, DocInfo):
         return DocEntry.query.filter_by(id=doc_id).all()
 
     @staticmethod
-    def find_by_id(doc_id: int) -> Optional['DocInfo']:
+    def find_by_id(doc_id: int, docentry_load_opts=None) -> Optional['DocInfo']:
         """Finds a DocInfo by id.
 
         TODO: This method doesn't really belong in DocEntry class.
         """
-        d = DocEntry.query.filter_by(id=doc_id).first()
+        q = DocEntry.query.filter_by(id=doc_id)
+        if docentry_load_opts:
+            q = q.options(docentry_load_opts)
+        d = q.first()
         if d:
             return d
         return Translation.query.get(doc_id)

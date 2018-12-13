@@ -2,6 +2,7 @@ from itertools import accumulate
 
 from flask import current_app
 from sqlalchemy import tuple_, func
+from sqlalchemy.orm import defaultload
 from sqlalchemy.orm.base import instance_state
 
 from timApp.item.blockrelevance import BlockRelevance
@@ -113,7 +114,17 @@ class Item(ItemBase):
         if not paths:
             return [Folder.get_root()]
         path_tuples = [split_location(p) for p in paths]
-        crumbs = Folder.query.filter(tuple_(Folder.location, Folder.name).in_(path_tuples)).order_by(func.length(Folder.location).desc()).all()
+
+        # TODO: Add an option whether to load relevance eagerly or not;
+        #  currently eager by default is better to speed up search cache processing
+        #  and it doesn't slow down other code much.
+        crumbs = (
+            Folder.query
+                .filter(tuple_(Folder.location, Folder.name).in_(path_tuples))
+                .order_by(func.length(Folder.location).desc())
+                .options(defaultload(Folder._block).joinedload(Block.relevance))
+                .all()
+        )
         crumbs.append(Folder.get_root())
         return crumbs
 

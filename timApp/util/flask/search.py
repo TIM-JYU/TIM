@@ -10,7 +10,7 @@ from typing import Match, Union, Tuple
 from flask import Blueprint, json
 from flask import abort
 from flask import request
-from sqlalchemy.orm import joinedload, lazyload
+from sqlalchemy.orm import joinedload, lazyload, defaultload
 
 from timApp.auth.accesshelper import has_view_access, verify_admin, has_edit_access
 from timApp.auth.accesstype import AccessType
@@ -364,16 +364,21 @@ def validate_query(query: str, search_whole_words: bool) -> None:
                    f'long with whitespace stripped.')
 
 
+# Query options for loading DocEntry relevance eagerly; it should speed up search cache processing because
+# we know we'll need relevance.
+docentry_eager_relevance_opt = defaultload(DocEntry._block).joinedload(Block.relevance)
+
+
 def add_doc_info_title_line(doc_id: int) -> Union[str, None]:
     """
     Forms a JSON-compatible string with doc id, title and path.
     :param doc_id: Document id.
     :return: String with doc data.
     """
-    doc_info = DocEntry.find_by_id(doc_id)
-    doc_relevance = get_document_relevance(doc_info)
+    doc_info = DocEntry.find_by_id(doc_id, docentry_load_opts=docentry_eager_relevance_opt)
     if not doc_info:
         return None
+    doc_relevance = get_document_relevance(doc_info)
     return json.dumps({'doc_id': doc_id,
                        'd_r': doc_relevance,
                        'doc_title': doc_info.title},
@@ -390,13 +395,11 @@ def add_doc_info_content_line(doc_id: int, par_data, remove_deleted_pars: bool =
     :param add_title Add document title.
     :return: String with paragraph data grouped under a document.
     """
-    doc_info = None
     if not par_data:
         return None
-    if remove_deleted_pars:
-        doc_info = DocEntry.find_by_id(doc_id)
-        if not doc_info:
-            return None
+    doc_info = DocEntry.find_by_id(doc_id, docentry_load_opts=docentry_eager_relevance_opt)
+    if not doc_info:
+        return None
     par_json_list = []
 
     doc_relevance = get_document_relevance(doc_info)
@@ -413,8 +416,6 @@ def add_doc_info_content_line(doc_id: int, par_data, remove_deleted_pars: bool =
         par_attrs = par_dict['attrs']
         par_json_list.append({'id': par_id, 'attrs': par_attrs, 'md': par_md})
     if add_title:
-        if not doc_info:
-            doc_info = DocEntry.find_by_id(doc_id)
         doc_title = doc_info.title
         return json.dumps({'doc_id': doc_id,
                            'd_r': doc_relevance,
