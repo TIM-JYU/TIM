@@ -103,7 +103,7 @@ const TextboxProps = t.clean(t.intersection([
         cornerradius: t.number,
         fillColor: t.string,
         font: t.string,
-        text: t.string,
+        text: t.union([t.null, t.string]),
         textColor: t.string,
     })]));
 
