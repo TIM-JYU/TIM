@@ -4,7 +4,6 @@ import {GenericPluginMarkup, PluginBase, withDefault} from "tim/plugin/util";
 import {to} from "tim/util/utils";
 import {$http, $timeout, $sce, $compile} from "tim/util/ngimport";
 import {ParCompiler} from "tim/editor/parCompiler";
-import {boolean, string} from "../../../static/scripts/jspm_packages/npm/io-ts@1.4.1/lib";
 
 const stackApp = angular.module("stackApp", ["ngSanitize"]);
 const STACK_VARIABLE_PREFIX = 'stackapi_';
@@ -142,6 +141,10 @@ class StackController extends PluginBase<t.TypeOf<typeof StackMarkup>,
         return res;
       }
 
+    replace(s:string): string {
+        // s = s.replace('https://stack-api-server/plots/', '/stackserver/plots/');
+        return s;
+    }
 
     async handleServerResult(r:any) {
         try {
@@ -150,12 +153,12 @@ class StackController extends PluginBase<t.TypeOf<typeof StackMarkup>,
                 return;
             }
             let json: any = r;
-            this.stackoutput = json.questiontext;
-            this.stackfeedback = json.generalfeedback;
-            this.stackformatcorrectresponse = json.formatcorrectresponse;
+            this.stackoutput = this.replace(json.questiontext);
+            this.stackfeedback = this.replace(json.generalfeedback);
+            this.stackformatcorrectresponse = this.replace(json.formatcorrectresponse);
             this.stackscore = json.score.toString();
-            this.stacksummariseresponse = JSON.stringify(json.summariseresponse);
-            this.stackanswernotes = JSON.stringify(json.answernotes);
+            this.stacksummariseresponse = this.replace(JSON.stringify(json.summariseresponse));
+            this.stackanswernotes = this.replace(JSON.stringify(json.answernotes));
             this.stacktime = 'Request Time: '
                 + (json.request_time).toFixed(2)
                 + ' Api Time: ' + (json.api_time).toFixed(2);
@@ -164,7 +167,7 @@ class StackController extends PluginBase<t.TypeOf<typeof StackMarkup>,
             let html = this.element.find('.stackOutput');
             let inputs = html.find('input');
             $(inputs).keydown((e) => {
-                this.scope.$evalAsync(() => { this.autoPeek() });
+                this.scope.$evalAsync(() => { this.autoPeekInput(e) });
             });
 
         } finally {
@@ -193,6 +196,35 @@ class StackController extends PluginBase<t.TypeOf<typeof StackMarkup>,
         }
     }
 
+    private timer:any;
+    private stopTimer(): boolean {
+        if (!this.timer) return false;
+        clearTimeout(this.timer);
+        this.timer = null;
+        return true;
+    }
+
+    async autoPeekInput(e:any) {
+        this.stopTimer();
+        this.timer = setTimeout( () => this.timedAutoPeek(e) ,500);
+    }
+
+    async timedAutoPeek(e:any) {
+        this.stopTimer();
+        if ( !this.attrs.autopeek ) return;
+        let target: HTMLInputElement = e.currentTarget as HTMLInputElement;
+        let id:string = target.id;
+        id = id.substr(STACK_VARIABLE_PREFIX.length);
+        let answ: any = {};
+        answ[STACK_VARIABLE_PREFIX + id] = target.value;
+        let data: any = {
+            prefix: STACK_VARIABLE_PREFIX,
+            verifyvar: id,
+            answer: answ,
+        }
+
+        await this.runValidationPeek(data, id);
+    }
 
     async autoPeek() {
         if ( !this.attrs.autopeek ) return;
@@ -201,6 +233,11 @@ class StackController extends PluginBase<t.TypeOf<typeof StackMarkup>,
     }
 
     async runPeek() { // this is just for test purposes
+        let data = this.collectData();
+        await this.runValidationPeek(data, 'ans1');
+    }
+
+    async runValidationPeek2(data:any, id:string) { // this is just for test purposes
         this.isRunning = true;
         if (!this.stackpeek) {
             let divinput = this.element.find('.stackinputfeedback');
@@ -208,15 +245,13 @@ class StackController extends PluginBase<t.TypeOf<typeof StackMarkup>,
         }
         this.stackpeek = true;
         let url = "/stackserver/api/endpoint.php";
-        // this.stackoutput = "";
-        let data = this.collectData();
         data.question = "";
         data.seed = 1;
         data.question =`
 name: test
-question_html: "<p>[[validation:ans1]]</p>"
+question_html: "<p>[[validation: ` + id + `]]</p>"
 inputs:
-  ans1:
+  ` + id + `:
     type: algebraic
     model_answer: ta+c
     box_size: 20
@@ -233,11 +268,35 @@ inputs:
     }
 
 
-    async runSend(nosave: boolean) {
-        this.stackpeek = false;
-        nosave = nosave == true;
-        this.error = "";
+    async runValidationPeek(data:any, id:string) { // this is just for test purposes
         this.isRunning = true;
+        if (!this.stackpeek) { // remove extra fields from sceen
+            let divinput = this.element.find('.stackinputfeedback');
+            divinput.remove();
+            divinput = this.element.find('.stackprtfeedback');
+            divinput.remove();
+            divinput = this.element.find('.stackpartmark');
+            divinput.remove();
+        }
+        this.stackpeek = true;
+        let url = this.getTaskUrl();
+        data.seed = 1;
+        let params = {
+            input: {
+                usercode: '',
+                stackData: data,
+                nosave: true,
+                type: 'stack'
+            },
+        };
+        const r:any = await to($http<any>({method: "PUT", url: url, data: params, timeout: 20000}, ));
+        await this.handleServerPeekResult(r.result.data.web.stackResult);
+    }
+
+    private taskUrl: string = '';
+
+    getTaskUrl(): string {
+        if ( this.taskUrl ) return this.taskUrl;
         let url = "/cs/answer";
         const plugin = this.getPlugin();
         if (plugin) {
@@ -248,6 +307,17 @@ inputs:
             }
             url += "/" + this.getTaskId() + "/answer/";
         }
+        this.taskUrl = url;
+        return url;
+    }
+
+
+    async runSend(nosave: boolean) {
+        this.stackpeek = false;
+        nosave = nosave == true;
+        this.error = "";
+        this.isRunning = true;
+        let url = this.getTaskUrl();
         let stackData = this.collectData();
         let params = {
             input: {

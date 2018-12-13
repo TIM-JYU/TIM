@@ -144,7 +144,8 @@ services:
   security_opt:
    - seccomp:unconfined
   volumes:
-   - '/var/www/api/plots:/var/data/api/stack/plots'
+   - /var/www/api/plots:/var/data/api/stack/plots:rw
+   - /var/www/api/plots:/var/www/html/plots:rw
   restart: unless-stopped
 volumes:
  data:

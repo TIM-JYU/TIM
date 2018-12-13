@@ -925,6 +925,10 @@ class Stack(Language):
             stack_data['feedback'] = False
         stack_data["answer"] = data.get("answer")
         stack_data["prefix"] = data.get("prefix")
+        stack_data["verifyvar"] = data.get("verifyvar", "")
+        stack_data["ploturl"] = '/stackserver/plots/'
+        if stack_data["verifyvar"]:
+            stack_data["score"] = False
 
         r = requests.post(url=url, data=json.dumps(stack_data))   #  json.dumps(data_to_send, cls=TimJsonEncoder))
         # r = requests.get(url="http://stack-test-container/api/endpoint.html")
