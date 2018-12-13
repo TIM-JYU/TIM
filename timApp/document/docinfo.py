@@ -131,7 +131,7 @@ class DocInfo(Item):
     def get_notifications(self, condition) -> List[Notification]:
         items = set()
         for a in self.aliases:
-            items.update(a.parents_to_root)
+            items.update(a.parents_to_root())
         items.add(self)
         q = Notification.query.filter(Notification.doc_id.in_([f.id for f in items]))
         q = q.filter(condition)

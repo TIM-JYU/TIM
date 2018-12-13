@@ -8,7 +8,7 @@
     {{ super() }}
     <script>
         var item = {{item|tojson}};
-        var breadcrumbs = {{item.parents_to_root|tojson}};
+        var breadcrumbs = {{item.parents_to_root()|tojson}};
     </script>
 {% endblock %}
 {% block header %}

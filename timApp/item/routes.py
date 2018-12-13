@@ -578,7 +578,7 @@ def get_relevance_route(item_id: int):
             "inherited": inherited})
 
     # Check parents for relevance in case target block didn't have one.
-    parents = i.parents_to_root
+    parents = i.parents_to_root(include_root=False)
     for parent in parents:
         if parent.relevance:
             inherited = True
@@ -612,7 +612,7 @@ def get_document_relevance(i: DocInfo) -> int:
         return i.relevance.relevance
 
     # Check parents for relevance in case target document didn't have one.
-    parents = i.parents_to_root
+    parents = i.parents_to_root(include_root=False)
     for parent in parents:
         if parent.relevance:
             # Return parent relevance.

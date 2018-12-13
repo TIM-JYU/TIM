@@ -104,8 +104,7 @@ class Item(ItemBase):
         parts = self.path_without_lang.rsplit('/', 1)
         return parts[len(parts) - 1]
 
-    @property
-    def parents_to_root(self):
+    def parents_to_root(self, include_root=True):
         if not self.path_without_lang:
             return []
         path_parts = self.path_without_lang.split('/')
@@ -125,7 +124,8 @@ class Item(ItemBase):
                 .options(defaultload(Folder._block).joinedload(Block.relevance))
                 .all()
         )
-        crumbs.append(Folder.get_root())
+        if include_root:
+            crumbs.append(Folder.get_root())
         return crumbs
 
     @property
