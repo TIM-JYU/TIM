@@ -56,7 +56,7 @@ export class ParagraphCompiler {
     }
 
     public async processMathJax(elements: Element[] | Element) {
-        const MathJax = await lazyLoad<jax.IMathJax>("mathjax");
+        const MathJax = await import("mathjax");
         MathJax.Hub!.Queue(["Typeset", MathJax.Hub, elements]);
     }
 

@@ -590,19 +590,6 @@ function insertAtCaret(txtarea: HTMLTextAreaElement, text: string) {
     txtarea.scrollTop = scrollPos;
 }
 
-const mathcheckLoaded = false;
-
-async function loadMathcheck() {
-    if (mathcheckLoaded) {
-        return;
-    }
-    await $.ajax({
-        dataType: "script",
-        cache: true,
-        url: "//cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=AM_HTMLorMML",
-    });
-}
-
 function getInt(s: string | number) {
     if (typeof s === "number") {
         return s;
@@ -1464,10 +1451,9 @@ class CsController extends CsBase implements IController {
         if (!this.isMathCheck) {
             return;
         }
-        await loadMathcheck();
-        $timeout(() => {
-            // MathJax.Hub.Queue(["Typeset", MathJax.Hub, $scope.element[0]]); // TODO
-        }, 0);
+
+        await $timeout();
+        await ParCompiler.processMathJax(this.element[0]);
     }
 
     showUploaded(file: string | undefined, type: string | undefined) {
