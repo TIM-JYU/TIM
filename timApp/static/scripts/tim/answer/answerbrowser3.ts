@@ -4,7 +4,7 @@ import {timApp} from "tim/app";
 import {timLogTime} from "tim/util/timTiming";
 import {dereferencePar, getParId} from "../document/parhelpers";
 import {ViewCtrl} from "../document/viewctrl";
-import {ParCompiler} from "../editor/parCompiler";
+import {compileWithViewctrl, ParCompiler} from "../editor/parCompiler";
 import {DestroyScope} from "../ui/destroyScope";
 import {showMessageDialog} from "../ui/dialog";
 import {IUser} from "../user/IUser";
@@ -38,7 +38,7 @@ function makeNotLazy(html: string) {
     return s;
 }
 
-async function loadPlugin(html: string, $par: JQuery, scope: IScope) {
+async function loadPlugin(html: string, $par: JQuery, scope: IScope, viewctrl: ViewCtrl) {
     const newhtml = makeNotLazy(html);
     const plugin = $par.find(".parContent");
 
@@ -48,7 +48,7 @@ async function loadPlugin(html: string, $par: JQuery, scope: IScope) {
     // the plugin's height goes to zero until Angular has finished compiling it.
     const height = plugin.height() || 500;
     plugin.height(height);
-    plugin.empty().append($compile(newhtml)(scope));
+    plugin.empty().append(compileWithViewctrl(newhtml, scope, viewctrl));
     plugin.css("opacity", "1.0");
     ParCompiler.processAllMathDelayed(plugin);
     await $timeout(500);
@@ -105,15 +105,15 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
         this.compiled = true;
         if (!this.viewctrl.noBrowser && this.isValidTaskId(this.taskId) && this.type !== "lazyonly") {
             const newHtml = `<answerbrowser task-id="${this.taskId}"></answerbrowser>`;
-            const newElement = $compile(newHtml);
-            par.prepend(newElement(this.viewctrl.scope)[0]);
+            const newElement = compileWithViewctrl(newHtml, this.viewctrl.scope, this.viewctrl);
+            par.prepend(newElement[0]);
         }
         // Next the inside of the plugin to non lazy
         const origHtml = plugin[0].innerHTML;
         if (origHtml.indexOf(LAZYSTART) < 0) {
             // plugin is not lazy; it is already loaded
         } else {
-            void loadPlugin(origHtml, par, this.viewctrl.scope);
+            void loadPlugin(origHtml, par, this.viewctrl.scope, this.viewctrl);
         }
         this.element.remove();
     }
@@ -346,7 +346,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
             }
             this.loadedAnswer.id = this.selectedAnswer.id;
             this.loadedAnswer.review = this.review;
-            void loadPlugin(r.result.data.html, par, this.scope);
+            void loadPlugin(r.result.data.html, par, this.scope, this.viewctrl);
             if (this.review) {
                 this.par.find(".review").html(r.result.data.reviewHtml);
             }

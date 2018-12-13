@@ -234,7 +234,6 @@ class ImagexServer(tim_server.TimServer):
         # Check if getting finalanswer from excercise is allowed and if client asked for it.
         finalanswer = query.get_param("finalanswer", False)
         finalanswerquery = query.get_json_param("input", "finalanswerquery", False)
-        tries = tries + 1
 
         if tries >= max_tries and (finalanswer == False or finalanswerquery == False):
             out = "You have exceeded the answering limit or have seen the answer"
@@ -246,7 +245,7 @@ class ImagexServer(tim_server.TimServer):
             self.wout(sresult)
             return
 
-        if finalanswer and finalanswerquery:
+        if finalanswer and finalanswerquery and tries >= max_tries:
             print("--final answer--")
             obj = {}
             answertable = []
@@ -263,7 +262,7 @@ class ImagexServer(tim_server.TimServer):
             answer['rightanswers'] = answertable
             answer['studentanswers'] = gottenpoints
             print(answer)
-
+        tries = tries + 1
         free_hand_data = query.get_json_param("input", "freeHandData", None)
 
         # Save user input and points to markup

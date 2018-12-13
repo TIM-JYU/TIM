@@ -13,14 +13,18 @@ export interface IPluginInfoResponse {
     trdiff?: {old: string, new: string};
 }
 
+export function compileWithViewctrl(html: string, scope: IScope, view: ViewCtrl | undefined) {
+    return $compile(html)(scope,
+        undefined,
+        view ? {transcludeControllers: {timView: {instance: view}}} : {});
+}
+
 export class ParagraphCompiler {
     public async compile(data: IPluginInfoResponse, scope: IScope, view?: ViewCtrl) {
         await lazyLoadMany(data.js);
         $injector.loadNewModules(data.angularModule);
         data.css.forEach((s) => injectStyle(s));
-        const compiled = $compile(data.texts)(scope,
-            undefined,
-            view ? {transcludeControllers: {timView: {instance: view}}} : {});
+        const compiled = compileWithViewctrl(data.texts, scope, view);
         await this.processAllMathDelayed(compiled);
         return compiled;
     }

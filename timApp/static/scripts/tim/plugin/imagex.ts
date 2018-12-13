@@ -4,7 +4,7 @@ import deepmerge from "deepmerge";
 import * as t from "io-ts";
 import {ViewCtrl} from "../document/viewctrl";
 import {editorChangeValue} from "../editor/editorScope";
-import {$http, $q, $sce, $timeout, $window} from "../util/ngimport";
+import {$http, $q, $sce, $timeout} from "../util/ngimport";
 import {markAsUsed, numOrStringToNumber, Require, to} from "../util/utils";
 import {
     CommonPropsT,
@@ -424,7 +424,7 @@ const directiveTemplate = `
         <button ng-show="$ctrl.finalanswer && $ctrl.userHasAnswered"
                 ng-disabled="$ctrl.isRunning"
                 ng-click="$ctrl.showAnswer()">
-            Showanswer
+            Show correct answer
         </button>
         &nbsp;&nbsp;<a ng-if="$ctrl.button"
         ng-disabled="$ctrl.isRunning"
@@ -466,7 +466,6 @@ const directiveTemplate = `
                ng-click="$ctrl.getPColor()"
                size="10"/> <label> Coord:
             <input ng-model="$ctrl.coords" ng-click="$ctrl.getPColor()" size="10"/></label></span></div>
-    <span class="tries" ng-if="$ctrl.max_tries"> Tries: {{$ctrl.tries}}/{{$ctrl.max_tries}}</span>
     <pre class="" ng-if="$ctrl.error && $ctrl.preview">{{$ctrl.error}}</pre>
     <pre class="" ng-show="$ctrl.result">{{$ctrl.result}}</pre>
     <div class="replyHTML" ng-if="$ctrl.replyHTML"><span ng-bind-html="$ctrl.svgImageSnippet()"></span></div>
@@ -1923,7 +1922,7 @@ class ImageXController extends PluginBase<t.TypeOf<typeof ImageXMarkup>,
     }
 
     get finalanswer() {
-        return undefined; // TODO
+        return this.max_tries && this.tries >= this.max_tries;
     }
 }
 
