@@ -1296,7 +1296,7 @@ class Rectangle extends Shape {
         ctx.fillStyle = this.fillColor;
         ctx.lineWidth = this.lineWidth;
         ctx.beginPath();
-        ctx.moveTo(-width / 2 - 1 + this.cornerRadius, -height / 2); // TODO why -1?
+        ctx.moveTo(-width / 2 + this.cornerRadius, -height / 2);
         ctx.lineTo(width / 2 - this.cornerRadius, -height / 2);
         ctx.arc(width / 2 - this.cornerRadius, -height / 2 + this.cornerRadius,
             this.cornerRadius, 1.5 * Math.PI, 0);
@@ -1309,6 +1309,7 @@ class Rectangle extends Shape {
         ctx.lineTo(-width / 2, -height / 2 + this.cornerRadius);
         ctx.arc(-width / 2 + this.cornerRadius, -height / 2 +
             this.cornerRadius, this.cornerRadius, Math.PI, 1.5 * Math.PI);
+        ctx.closePath();
         ctx.fill();
         ctx.stroke();
     }
