@@ -1486,7 +1486,7 @@ class ImageXController extends PluginBase<t.TypeOf<typeof ImageXMarkup>,
     }
 
     get max_tries() {
-        return this.attrs.max_tries;
+        return this.attrs.answerLimit;
     }
 
     get freeHandVisible() {
@@ -1580,7 +1580,7 @@ class ImageXController extends PluginBase<t.TypeOf<typeof ImageXMarkup>,
         // timeout required; otherwise the canvas element will be overwritten with another by Angular
         await $timeout();
         this.canvas = this.element.find(".canvas")[0] as HTMLCanvasElement;
-        this.tries = this.attrsall.tries || 0;
+        this.tries = this.attrsall.info && this.attrsall.info.earlier_answers || 0;
         this.freeHandDrawing = new FreeHand(this,
             this.attrsall.state && this.attrsall.state.freeHandData || [],
             this.videoPlayer);

@@ -39,7 +39,7 @@ export interface IGenericPluginMarkup extends t.TypeOf<typeof GenericPluginMarku
 export function getDefaults<MarkupType extends IGenericPluginMarkup,
     A extends {markup: MarkupType},
     T extends Type<A>>(runtimeType: T, defaultMarkup: MarkupType) {
-    const d = runtimeType.decode({markup: defaultMarkup});
+    const d = runtimeType.decode({markup: defaultMarkup, info: null});
     if (d.isLeft()) {
         throw new Error("Could not get default markup");
     }

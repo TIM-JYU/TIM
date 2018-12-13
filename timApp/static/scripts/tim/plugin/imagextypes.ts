@@ -6,14 +6,14 @@ export interface IPoint {
     y: number;
 }
 
-const TuplePointR = t.union([t.tuple([t.number, t.number]), t.tuple([t.number, t.number, t.number, t.number])]);
-const LineSegment = t.intersection([
+const TuplePointR = t.clean(t.union([t.tuple([t.number, t.number]), t.tuple([t.number, t.number, t.number, t.number])]));
+const LineSegment = t.clean(t.intersection([
     t.type({lines: t.array(TuplePointR)}),
     t.partial({
         color: t.string,
         w: t.union([t.number, t.string]), // TODO should convert w to number only in database
     }),
-]);
+]));
 export type TuplePoint = t.TypeOf<typeof TuplePointR>;
 
 export interface ILineSegment extends t.TypeOf<typeof LineSegment> {
@@ -52,22 +52,16 @@ export type Overwrite<T, U> = Omit<T, keyof T & keyof U> & U;
 
 type MakeOptional<T, U extends keyof T> = Overwrite<T, { [P in U]?: T[P] }>;
 export type RequireExcept<T, U extends keyof T> = MakeOptional<Required<T>, U>;
-/**
- * Makes all properties required except size.
- */
-type RequireExceptSize<T extends CommonPropsT> = RequireExcept<T, "size" | "id">;
-export type Id<T> = T;
-export type C<T> = Readonly<RequireExceptSize<T>>;
 
-const ObjectType = t.keyof({
+const ObjectType = t.clean(t.keyof({
     ellipse: null,
     img: null,
     rectangle: null,
     textbox: null,
     vector: null,
-});
+}));
 
-const PinAlignment = t.keyof({
+const PinAlignment = t.clean(t.keyof({
     center: null,
     east: null,
     north: null,
@@ -77,24 +71,24 @@ const PinAlignment = t.keyof({
     southeast: null,
     southwest: null,
     west: null,
-});
+}));
 
 export type PinAlign = t.TypeOf<typeof PinAlignment>;
 
-const ImgProps = t.type({
+const ImgProps = t.clean(t.type({
     src: t.string,
     textbox: withDefault(t.boolean, true),
-});
+}));
 
-export const ValidCoord = t.tuple([t.number, t.number]);
+export const ValidCoord = t.clean(t.tuple([t.number, t.number]));
 
-export const SingleSize = t.tuple([t.number]);
+export const SingleSize = t.clean(t.tuple([t.number]));
 
-const Size = t.union([t.null, ValidCoord, SingleSize]);
+const Size = t.clean(t.union([t.null, ValidCoord, SingleSize]));
 
 export type SizeT = t.TypeOf<typeof Size>;
 
-const TextboxProps = t.intersection([
+const TextboxProps = t.clean(t.intersection([
     // CommonProps,
     t.partial({
         a: t.number,
@@ -111,15 +105,15 @@ const TextboxProps = t.intersection([
         font: t.string,
         text: t.string,
         textColor: t.string,
-    })]);
+    })]));
 
-const VectorProps = t.partial({
+const VectorProps = t.clean(t.partial({
     arrowheadlength: t.number,
     arrowheadwidth: t.number,
     color: t.string,
-});
+}));
 
-const CommonProps = t.partial({
+const CommonProps = t.clean(t.partial({
     a: t.number,
     color: t.string,
     id: t.string,
@@ -130,9 +124,9 @@ const CommonProps = t.partial({
     imgproperties: ImgProps,
     textboxproperties: TextboxProps,
     vectorproperties: VectorProps,
-});
+}));
 
-const PinProps = t.partial({
+const PinProps = t.clean(t.partial({
     color: t.string,
     dotRadius: t.number,
     length: t.number,
@@ -143,16 +137,14 @@ const PinProps = t.partial({
         start: ValidCoord,
     }),
     visible: t.boolean,
-});
+}));
 
 export interface PinPropsT extends t.TypeOf<typeof PinProps> {
 }
 
-const FixedObjectProps = t.intersection([
-    CommonProps,
-    t.partial({})]);
+const FixedObjectProps = CommonProps;
 
-const TargetProps = t.intersection([
+const TargetProps = t.clean(t.intersection([
     CommonProps,
     t.partial({
         dropColor: t.string,
@@ -160,14 +152,14 @@ const TargetProps = t.intersection([
         snap: t.boolean,
         snapColor: t.string,
         snapOffset: ValidCoord,
-    })]);
+    })]));
 
-const Lock = t.keyof({
+const Lock = t.clean(t.keyof({
     x: null,
     y: null,
-});
+}));
 
-const DragObjectProps = t.intersection([
+const DragObjectProps = t.clean(t.intersection([
     t.partial({
         lock: Lock,
         pin: PinProps,
@@ -175,7 +167,7 @@ const DragObjectProps = t.intersection([
         ylimits: ValidCoord,
     }),
     FixedObjectProps,
-]);
+]));
 
 export interface CommonPropsT extends t.TypeOf<typeof CommonProps> {
 }
@@ -200,7 +192,7 @@ export interface VectorPropsT extends t.TypeOf<typeof VectorProps> {
 
 export type ObjectTypeT = t.TypeOf<typeof ObjectType>;
 
-const BackgroundProps = t.intersection([
+const BackgroundProps = t.clean(t.intersection([
     t.partial({
         a: t.number,
         size: Size,
@@ -208,14 +200,14 @@ const BackgroundProps = t.intersection([
     t.type({
         src: t.string,
     }),
-]);
+]));
 
-const DefaultProps = t.intersection([DragObjectProps, TargetProps]);
+const DefaultProps = t.clean(t.intersection([DragObjectProps, TargetProps]));
 
 export interface DefaultPropsT extends t.TypeOf<typeof DefaultProps> {
 }
 
-export const ImageXMarkup = t.intersection([
+export const ImageXMarkup = t.clean(t.intersection([
     t.partial({
         background: BackgroundProps,
         buttonPlay: t.string,
@@ -228,7 +220,6 @@ export const ImageXMarkup = t.intersection([
         freeHandShortCut: t.boolean,
         freeHandVisible: t.boolean,
         freeHandWidth: t.number,
-        max_tries: t.number,
         objects: t.readonlyArray(DragObjectProps),
         targets: t.readonlyArray(TargetProps),
     }),
@@ -254,17 +245,17 @@ export const ImageXMarkup = t.intersection([
         showTimes: withDefault(t.boolean, false),
         showVideoTime: withDefault(t.boolean, true),
     }),
-]);
+]));
 
-export const RightAnswer = t.type({
+export const RightAnswer = t.clean(t.type({
     id: t.string,
     position: ValidCoord,
-});
+}));
 
 export interface RightAnswerT extends t.TypeOf<typeof RightAnswer> {
 }
 
-export const ImageXAll = t.intersection([
+export const ImageXAll = t.clean(t.intersection([
     t.partial({
         preview: t.boolean,
         state: t.union([
@@ -279,12 +270,12 @@ export const ImageXAll = t.intersection([
                     })),
                 }),
             })]),
-        tries: t.number,
     }),
     t.type({
+        info: t.union([t.null, t.type({earlier_answers: t.Integer})]),
         markup: ImageXMarkup,
     }),
-]);
+]));
 
 // By default, all properties are required when passing data to ObjBase constructors.
 // Here we make some properties optional.
