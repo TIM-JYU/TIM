@@ -495,7 +495,7 @@ function makeTemplate() {
                      ng-trim="false"
                      placeholder="{{$ctrl.argsplaceholder}}"></span>
     </div>
-    <p class="csRunSnippets" ng-if="$ctrl.buttons">
+    <p class="csRunSnippets" ng-if="$ctrl.buttons"> 
         <button ng-repeat="item in $ctrl.buttons" ng-click="$ctrl.addText(item)">{{$ctrl.addTextHtml(item)}}</button>
         &nbsp;&nbsp;
     </p>
@@ -873,6 +873,7 @@ class CsController extends CsBase implements IController {
     private viewCode: boolean;
     private wavURL: string = "";
     private wrap!: number;
+    private buttons: string[] = [];
 
     // These are used only in $doCheck to keep track of the old values.
     private dochecks: {
@@ -1182,7 +1183,7 @@ class CsController extends CsBase implements IController {
         return this.attrs.editorModes.toString();
     }
 
-    get buttons() {
+    getTemplateButtons() : string[] {
         let b = this.attrs.buttons;
         if (b) {
             const helloButtons = "public \nclass \nHello \n\\n\n{\n}\n" +
@@ -1197,6 +1198,7 @@ class CsController extends CsBase implements IController {
             b = b.replace("$space$", " ");
             return b.split("\n");
         }
+        return [];
     }
 
     get progLanguages() {
@@ -1228,6 +1230,7 @@ class CsController extends CsBase implements IController {
 
     $onInit() {
         super.$onInit();
+        this.buttons = this.getTemplateButtons();
         const rt = this.rtype;
         const isText = this.isText;
         const isArgs = this.type.indexOf("args") >= 0;
@@ -1237,6 +1240,7 @@ class CsController extends CsBase implements IController {
         this.selectedLanguage = this.attrs.selectedLanguage || rt;
         this.noeditor = this.isSimcir || (this.type === "upload");
         this.wrap = this.attrs.wrap || (isText ? 70 : -1);
+        this.editorMode = this.attrs.editorMode;
         this.editorText = [
             this.attrs.normal || this.english ? "Normal" : "Tavallinen",
             this.attrs.highlight,
@@ -2525,12 +2529,15 @@ class CsController extends CsBase implements IController {
         this.editorIndex = eindex;
         const otherEditDiv = this.getRootElement().getElementsByClassName("csrunEditorDiv")[0];
         const editorDiv = angular.element(otherEditDiv) as JQuery;
+        // editorDiv.empty();
         this.edit = $compile(html[eindex])(this.scope)[0] as HTMLTextAreaElement; // TODO unsafe cast
         // don't set the html immediately in case of Ace to avoid ugly flash because of lazy load
         if (eindex === 1) {
             const ace = (await import("tim/editor/ace")).ace;
-            editorDiv.empty().append(this.edit);
-            const editor = ace.edit(editorDiv.find(".csAceEditor")[0]) as IAceEditor;
+            editorDiv.empty();
+            editorDiv.append(this.edit);
+            // const editor = ace.edit(editorDiv.find(".csAceEditor")[0]) as IAceEditor;
+            const editor = ace.edit(this.edit) as IAceEditor;
 
             this.aceLoaded(ace, editor);
             if (this.mode) {
