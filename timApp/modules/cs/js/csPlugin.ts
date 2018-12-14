@@ -652,8 +652,9 @@ const Example = t.type({
 
 const CsMarkupOptional = t.partial({
     // TODO: this gets deleted in server but only conditionally,
-    //  decide if this should be here
-    // program: t.string,
+    //  decide if this should be here.
+    //  Seems yes; GlowScript uses it at least.
+    program: t.string,
 
     argsplaceholder: t.string,
     argsstem: t.string,
@@ -983,7 +984,7 @@ class CsController extends CsBase implements IController {
     }
 
     get program() {
-        return this.attrsall.program;
+        return this.attrsall.program || this.attrs.program;
     }
 
     get hideTaunoText() {
