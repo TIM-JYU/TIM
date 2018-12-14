@@ -8,6 +8,7 @@ from datetime import datetime, timezone
 from typing import List, Optional, Tuple, Union, Dict, Any, Sequence
 
 import dateutil.parser
+from lxml.html import HtmlElement
 
 from timApp.markdown.htmlSanitize import sanitize_html
 
@@ -221,8 +222,8 @@ def get_boolean(s, default, cast=None):
 EXAMPLE_DOCS_PATH = 'static/example_docs'
 
 
-def decode_csplugin(text: str):
-    return json.loads(binascii.unhexlify(remove_prefix(text, 'xxxHEXJSONxxx')).decode())
+def decode_csplugin(text: HtmlElement):
+    return json.loads(text.get('json'))['markup']
 
 
 def get_current_time():

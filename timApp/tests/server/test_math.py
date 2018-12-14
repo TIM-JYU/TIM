@@ -89,7 +89,7 @@ stem: 'md: $a+b$'
         t = self.get(d.url, as_tree=True)
         plugins = t.cssselect('cs-runner')
         for plugin, e in zip(plugins, [a_plus_b_svg, a_plus_b_mathjax]):
-            stem = decode_csplugin(plugin.text)['stem']
+            stem = decode_csplugin(plugin)['stem']
             self.assert_same_html(html.fromstring(stem), e)
 
     def test_mixed_settings(self):
