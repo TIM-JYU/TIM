@@ -375,8 +375,9 @@ class Plugin:
             stem = str(markup.get("stem", "Open plugin"))
             html = html.replace("<!--", "<!-LAZY-").replace("-->", "-LAZY->")
             html = f'{LAZYSTART}{html}{LAZYEND}<span style="font-weight:bold">{header}</span><div><p>{stem}</p></div>'
-        if self.options.is_html:
-            # Angular templates must be escaped
+        if self.options.is_html and self.type not in ('mcq', 'mmcq'):
+            # Angular templates must be escaped, but skip mcq and mmcq because they get their data in slightly
+            # non-Angular way and they would break otherwise.
             html = html.replace('{{', r'\{\{').replace('}}', r'\}\}')
         answer_attr = ''
         if self.answer:
