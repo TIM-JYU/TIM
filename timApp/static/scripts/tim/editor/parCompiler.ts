@@ -3,6 +3,7 @@ import {$compile, $injector, $log, $timeout} from "tim/util/ngimport";
 import {timLogTime} from "tim/util/timTiming";
 import {lazyLoad, lazyLoadMany} from "../util/lazyLoad";
 import {fixDefExport, injectStyle} from "../util/utils";
+import {ViewCtrl} from "../document/viewctrl";
 
 export interface IPluginInfoResponse {
     js: string[];
@@ -12,12 +13,18 @@ export interface IPluginInfoResponse {
     trdiff?: {old: string, new: string};
 }
 
+export function compileWithViewctrl(html: string, scope: IScope, view: ViewCtrl | undefined) {
+    return $compile(html)(scope,
+        undefined,
+        view ? {transcludeControllers: {timView: {instance: view}}} : {});
+}
+
 export class ParagraphCompiler {
-    public async compile(data: IPluginInfoResponse, scope: IScope) {
+    public async compile(data: IPluginInfoResponse, scope: IScope, view?: ViewCtrl) {
         await lazyLoadMany(data.js);
         $injector.loadNewModules(data.angularModule);
         data.css.forEach((s) => injectStyle(s));
-        const compiled = $compile(data.texts)(scope);
+        const compiled = compileWithViewctrl(data.texts, scope, view);
         await this.processAllMathDelayed(compiled);
         return compiled;
     }
@@ -49,7 +56,7 @@ export class ParagraphCompiler {
     }
 
     public async processMathJax(elements: Element[] | Element) {
-        const MathJax = await lazyLoad<jax.IMathJax>("mathjax");
+        const MathJax = await import("mathjax");
         MathJax.Hub!.Queue(["Typeset", MathJax.Hub, elements]);
     }
 

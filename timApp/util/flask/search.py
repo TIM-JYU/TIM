@@ -10,7 +10,7 @@ from typing import Match, Union, Tuple
 from flask import Blueprint, json
 from flask import abort
 from flask import request
-from sqlalchemy.orm import joinedload, lazyload
+from sqlalchemy.orm import joinedload, lazyload, defaultload
 
 from timApp.auth.accesshelper import has_view_access, verify_admin, has_edit_access
 from timApp.auth.accesstype import AccessType
@@ -20,11 +20,13 @@ from timApp.document.docentry import DocEntry, get_documents
 from timApp.document.docinfo import DocInfo
 from timApp.folder.folder import Folder
 from timApp.item.block import Block
+from timApp.item.routes import get_document_relevance
 from timApp.item.tag import Tag
 from timApp.tim_app import app
 from timApp.util.flask.requesthelper import get_option
 from timApp.util.flask.responsehelper import json_response
 from timApp.util.logger import log_error
+from timApp.util.utils import get_error_message
 
 search_routes = Blueprint('search',
                           __name__,
@@ -38,6 +40,7 @@ PREVIEW_MAX_LENGTH = 160
 PROCESSED_CONTENT_FILE_NAME = "content_all_processed.log"
 PROCESSED_TITLE_FILE_NAME = "titles_all_processed.log"
 RAW_CONTENT_FILE_NAME = "all.log"
+DEFAULT_RELEVANCE = 10
 
 
 @search_routes.route('getFolders')
@@ -361,13 +364,9 @@ def validate_query(query: str, search_whole_words: bool) -> None:
                    f'long with whitespace stripped.')
 
 
-def get_error_message(e: Exception) -> str:
-    """
-    Gives error message with error class.
-    :param e: Exception.
-    :return: String 'ErrorClass: reason'.
-    """
-    return f"{str(e.__class__.__name__)}: {str(e)}"
+# Query options for loading DocEntry relevance eagerly; it should speed up search cache processing because
+# we know we'll need relevance.
+docentry_eager_relevance_opt = defaultload(DocEntry._block).joinedload(Block.relevance)
 
 
 def add_doc_info_title_line(doc_id: int) -> Union[str, None]:
@@ -376,10 +375,13 @@ def add_doc_info_title_line(doc_id: int) -> Union[str, None]:
     :param doc_id: Document id.
     :return: String with doc data.
     """
-    doc_info = DocEntry.find_by_id(doc_id)
+    doc_info = DocEntry.find_by_id(doc_id, docentry_load_opts=docentry_eager_relevance_opt)
     if not doc_info:
         return None
-    return json.dumps({'doc_id': doc_id, 'doc_title': doc_info.title},
+    doc_relevance = get_document_relevance(doc_info)
+    return json.dumps({'doc_id': doc_id,
+                       'd_r': doc_relevance,
+                       'doc_title': doc_info.title},
                       ensure_ascii=False) + '\n'
 
 
@@ -393,14 +395,15 @@ def add_doc_info_content_line(doc_id: int, par_data, remove_deleted_pars: bool =
     :param add_title Add document title.
     :return: String with paragraph data grouped under a document.
     """
-    doc_info = None
     if not par_data:
         return None
-    if remove_deleted_pars:
-        doc_info = DocEntry.find_by_id(doc_id)
-        if not doc_info:
-            return None
+    doc_info = DocEntry.find_by_id(doc_id, docentry_load_opts=docentry_eager_relevance_opt)
+    if not doc_info:
+        return None
     par_json_list = []
+
+    doc_relevance = get_document_relevance(doc_info)
+
     for par in par_data:
         par_dict = json.loads(f"{{{par}}}")
         par_id = par_dict['id']
@@ -413,12 +416,17 @@ def add_doc_info_content_line(doc_id: int, par_data, remove_deleted_pars: bool =
         par_attrs = par_dict['attrs']
         par_json_list.append({'id': par_id, 'attrs': par_attrs, 'md': par_md})
     if add_title:
-        if not doc_info:
-            doc_info = DocEntry.find_by_id(doc_id)
         doc_title = doc_info.title
-        return json.dumps({'doc_id': doc_id, 'doc_title': doc_title, 'pars': par_json_list}, ensure_ascii=False) + '\n'
+        return json.dumps({'doc_id': doc_id,
+                           'd_r': doc_relevance,
+                           'doc_title': doc_title,
+                           'pars': par_json_list}
+                          , ensure_ascii=False) + '\n'
     else:
-        return json.dumps({'doc_id': doc_id, 'pars': par_json_list}, ensure_ascii=False) + '\n'
+        return json.dumps({'doc_id': doc_id,
+                           'd_r': doc_relevance,
+                           'pars': par_json_list},
+                          ensure_ascii=False) + '\n'
 
 
 def get_doc_par_id(line: str) -> Union[Tuple[int, str, str], None]:
@@ -766,6 +774,18 @@ def path_search():
                           'content_results': []})
 
 
+def is_excluded(relevance: int, relevance_threshold: int) -> bool:
+    """
+    Exclude if relevance is less than relevance threshold.
+    :param relevance: Document relevance value.
+    :param relevance_threshold: Min included relevance.
+    :return: True if document relevance is less than relevance threshold.
+    """
+    if relevance < relevance_threshold:
+        return True
+    return False
+
+
 @search_routes.route("")
 def search():
     """
@@ -782,6 +802,8 @@ def search():
     ignore_plugins = get_option(request, 'ignorePlugins', default=False, cast=bool)
     search_titles = get_option(request, 'searchTitles', default=True, cast=bool)
     search_content = get_option(request, 'searchContent', default=True, cast=bool)
+    relevance_threshold = get_option(request, 'relevanceThreshold', default=1, cast=int)
+    ignore_relevance = get_option(request, 'ignoreRelevance', default=False, cast=bool)
 
     if search_content and not Path(dir_path / content_search_file_name).exists():
         abort(404, f"Combined content file '{content_search_file_name}' not found, unable to perform content search!")
@@ -848,6 +870,7 @@ def search():
             if line and len(line) > 10:
                 line_info = json.loads(line)
                 doc_id = line_info['doc_id']
+
                 # TODO: Handle aliases and translated documents.
                 doc_info = DocEntry.query.filter((DocEntry.id == doc_id) & (DocEntry.name.like(folder + "%"))). \
                     options(lazyload(DocEntry._block)).first()
@@ -860,6 +883,17 @@ def search():
                 if search_owned_docs:
                     if not user.has_ownership(doc_info, allow_admin=False):
                         continue
+
+                # If relevance is ignored or not found from search file, skip check.
+                if not ignore_relevance:
+                    try:
+                        relevance = line_info['d_r']
+                    except KeyError:
+                        pass
+                    else:
+                        # Leave documents with excluded relevance out of the results.
+                        if is_excluded(relevance, relevance_threshold):
+                            continue
 
                 doc_result = DocResult(doc_info)
 
@@ -884,6 +918,7 @@ def search():
                 # The file is supposed to contain doc_id and pars in a list for each document.
                 line_info = json.loads(line)
                 doc_id = line_info['doc_id']
+
                 # TODO: Handle aliases.
                 doc_info = DocEntry.query.filter((DocEntry.id == doc_id) & (DocEntry.name.like(folder + "%"))). \
                     options(lazyload(DocEntry._block)).first()
@@ -897,6 +932,17 @@ def search():
                 if search_owned_docs:
                     if not user.has_ownership(doc_info, allow_admin=False):
                         continue
+
+                # If relevance is ignored or not found from search file, skip check.
+                if not ignore_relevance:
+                    try:
+                        relevance = line_info['d_r']
+                    except KeyError:
+                        # TODO: Add message to user about skipped relevances.
+                        pass
+                    else:
+                        if is_excluded(relevance, relevance_threshold):
+                            continue
 
                 pars = line_info['pars']
                 doc_result = DocResult(doc_info)

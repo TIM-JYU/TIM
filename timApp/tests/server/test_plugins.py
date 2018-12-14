@@ -681,7 +681,7 @@ a
 
 """)
         r = self.get(d.url, as_tree=True).cssselect('.parContent')
-        self.assertIn('xxxHEXJSONxxx', r[0].text_content().strip())
+        self.assertTrue(r[0].cssselect('video-runner'))
         self.assertEqual('Plugin showVideo error: YAML is malformed: a', r[1].text_content().strip())
 
     def test_nonexistent_plugin(self):

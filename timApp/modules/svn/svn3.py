@@ -30,9 +30,18 @@ import socketserver
 import time
 import math
 import sys
+
+import json
+
+import re
+
 sys.path.insert(0, '/py')  # /py on mountattu docker kontissa /opt/tim/timApp/modules/py -hakemistoon
-from fileParams import *  # noqa
-from xml.sax.saxutils import quoteattr
+
+from fileParams import get_param, get_surrounding_headers2, is_user_lazy, add_lazy, NOLAZY, get_clean_param, \
+    replace_template_param, replace_template_params, query_params_to_map_check_parts, encode_json_data, make_lazy, \
+    get_params, do_headers, post_params, multi_post_params, get_chache_keys, clear_cache, get_template, join_dict, \
+    get_all_templates, file_to_string, get_file_to_output, get_surrounding_md_headers, get_surrounding_headers, \
+    get_surrounding_md_headers2
 
 
 PORT = 5000
@@ -258,27 +267,27 @@ def get_video_html(query):
     iframe = get_param(query, "iframe", False) or True
     js = query_params_to_map_check_parts(query)
     jso = json.dumps(js)
-    hx = binascii.hexlify(jso.encode("UTF8"))
 
     video_type = get_param(query, "type", "icon")
     # print ("iframe " + iframe + " url: " + url)
     video_app = True
+    encoded = encode_json_data(jso)
     if video_type == "small":
         # s = string_to_string_replace_attribute(
         #     '<small-video-runner \n##QUERYPARAMS##\n></small-video-runner>', "##QUERYPARAMS##", query)
-        s = f'<small-video-runner json={quoteattr(jso)}></list-video-runner>'
+        s = f'<small-video-runner json="{encoded}"></list-video-runner>'
         s = make_lazy(s, query, small_video_html)
         return s
     if video_type == "list":
         #  s = string_to_string_replace_attribute(
         #     '<list-video-runner \n##QUERYPARAMS##\n></list-video-runner>', "##QUERYPARAMS##", query)
-        s = f'<list-video-runner json={quoteattr(jso)}></list-video-runner>'
+        s = f'<list-video-runner json="{encoded}"></list-video-runner>'
         s = make_lazy(s, query, list_video_html)
         return s
     if video_app:
         # s = string_to_string_replace_attribute(
         #    '<video-runner \n##QUERYPARAMS##\n></video-runner>', "##QUERYPARAMS##", query)
-        s = f'<video-runner json={quoteattr(jso)}></list-video-runner>'
+        s = f'<video-runner json="{encoded}"></list-video-runner>'
         s = make_lazy(s, query, video_html)
         return s
 
@@ -348,7 +357,6 @@ def get_video_md(query):
     iframe = get_param(query, "iframe", False) or True
     js = query_params_to_map_check_parts(query)
     jso = json.dumps(js)
-    hx = binascii.hexlify(jso.encode("UTF8"))
 
     video_type = get_param(query, "type", "icon")
     # print ("iframe " + iframe + " url: " + url)

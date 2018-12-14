@@ -2,8 +2,10 @@ from itertools import accumulate
 
 from flask import current_app
 from sqlalchemy import tuple_, func
+from sqlalchemy.orm import defaultload
 from sqlalchemy.orm.base import instance_state
 
+from timApp.item.blockrelevance import BlockRelevance
 from timApp.timdb.exceptions import TimDbException
 from timApp.item.block import Block, BlockType
 from timApp.timdb.sqa import db, include_if_loaded
@@ -46,6 +48,10 @@ class ItemBase:
     @property
     def children(self):
         return self.block.children
+
+    @property
+    def relevance(self) -> BlockRelevance:
+        return self.block.relevance if self.block else None
 
 
 class Item(ItemBase):
@@ -98,8 +104,7 @@ class Item(ItemBase):
         parts = self.path_without_lang.rsplit('/', 1)
         return parts[len(parts) - 1]
 
-    @property
-    def parents_to_root(self):
+    def parents_to_root(self, include_root=True):
         if not self.path_without_lang:
             return []
         path_parts = self.path_without_lang.split('/')
@@ -108,8 +113,19 @@ class Item(ItemBase):
         if not paths:
             return [Folder.get_root()]
         path_tuples = [split_location(p) for p in paths]
-        crumbs = Folder.query.filter(tuple_(Folder.location, Folder.name).in_(path_tuples)).order_by(func.length(Folder.location).desc()).all()
-        crumbs.append(Folder.get_root())
+
+        # TODO: Add an option whether to load relevance eagerly or not;
+        #  currently eager by default is better to speed up search cache processing
+        #  and it doesn't slow down other code much.
+        crumbs = (
+            Folder.query
+                .filter(tuple_(Folder.location, Folder.name).in_(path_tuples))
+                .order_by(func.length(Folder.location).desc())
+                .options(defaultload(Folder._block).joinedload(Block.relevance))
+                .all()
+        )
+        if include_root:
+            crumbs.append(Folder.get_root())
         return crumbs
 
     @property
@@ -135,6 +151,7 @@ class Item(ItemBase):
                 'public': self.public,
                 # We only add tags if they've already been loaded.
                 **include_if_loaded('tags', self.block),
+                **include_if_loaded('relevance', self.block),
                 }
 
     def get_relative_path(self, path: str):

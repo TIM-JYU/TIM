@@ -8,7 +8,7 @@ SystemJS.config({
     "simcir/basicset": "/cs/simcir/simcir-basicset.js",
     "simcir/library": "/cs/simcir/simcir-library.js",
     "simcir/oma-kirjasto": "/cs/simcir/simcir-oma-kirjasto.js",
-    "mathjax": "mathjax/mathjax.js",
+    "mathjax": "/static/scripts/mathjax/mathjax.js",
     "sagecell": "/static/embedded_sagecell.js",
     "cs/": "/cs/js/build/",
     "svn/": "/svn/js/build/",
@@ -170,12 +170,9 @@ SystemJS.config({
     "build/slide.js": [
       "tim/document/slide.ts"
     ],
-    "build/imagex.js": [
-      "tim/plugin/imagex.ts"
-    ],
-    "build/mathjax.js": [
-      "mathjax"
-    ],
+    // "build/mathjax.js": [
+    //   "mathjax"
+    // ],
     "build/chart.js": [
       "npm:chart.js@2.7.2/src/chart.js"
     ],
@@ -193,6 +190,7 @@ SystemJS.config({
     "github:*/*.json"
   ],
   map: {
+    "deepmerge": "npm:deepmerge@3.0.0",
     "io-ts": "npm:io-ts@1.4.1",
     "angular-diff-match-patch": "npm:angular-diff-match-patch@0.7.4",
     "ifvisible.js": "npm:ifvisible.js@1.0.6",

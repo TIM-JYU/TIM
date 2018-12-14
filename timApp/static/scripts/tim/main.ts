@@ -15,6 +15,7 @@ import * as loadMap from "tim/gamification/loadMap";
 import * as breadcrumbs from "tim/item/breadcrumbs";
 import * as createItem from "tim/item/createItem";
 import * as manageCtrl from "tim/item/manageCtrl";
+import * as relevanceEdit from "tim/item/relevanceEdit";
 import * as rightsEditor from "tim/item/rightsEditor";
 import * as taggedDocumentList from "tim/item/taggedDocumentList";
 import * as answerToQuestionController from "tim/lecture/answerToQuestionController";
@@ -24,6 +25,7 @@ import * as lectureInfoController from "tim/lecture/lectureInfoController";
 import * as lectureMenu from "tim/lecture/lectureMenu";
 import * as questionAskController from "tim/lecture/questionAskController";
 import * as showStatisticsToQuestionController from "tim/lecture/showStatisticsToQuestionController";
+import * as imagex from "tim/plugin/imagex";
 import * as qstController from "tim/plugin/qstController";
 import * as tape from "tim/plugin/tape";
 import * as timTable from "tim/plugin/timTable";
@@ -51,6 +53,7 @@ markAsUsed(
     breadcrumbs,
     createItem,
     createLectureCtrl,
+    imagex,
     indexCtrl,
     lectureController,
     lectureInfoController,
@@ -64,6 +67,7 @@ markAsUsed(
     questionAskController,
     questionController,
     reviewController,
+    relevanceEdit,
     rightsEditor,
     searchBox,
     settingsCtrl,

@@ -69,6 +69,7 @@ const courseFolder = "My courses";
 
 export class ViewCtrl implements IController {
     private notification: string = "";
+    private videoElements: {[name: string]: HTMLVideoElement | undefined} = {};
     addParagraphFunctions: MenuFunctionCollection = [];
     pasteFunctions: MenuFunctionCollection = [];
     clipMeta: IClipboardMeta = {allowPasteContent: false, allowPasteRef: false, empty: true};
@@ -268,6 +269,14 @@ export class ViewCtrl implements IController {
 
     public isTranslation() {
         return this.item.src_docid != null && this.item.src_docid !== this.item.id;
+    }
+
+    getVideo(followid: string): HTMLVideoElement | undefined {
+        return this.videoElements[followid];
+    }
+
+    registerVideo(followid: string, v: HTMLVideoElement): void {
+        this.videoElements[followid] = v;
     }
 
     startLiveUpdates() {

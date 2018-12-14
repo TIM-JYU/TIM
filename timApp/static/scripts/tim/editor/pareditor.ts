@@ -14,6 +14,7 @@ import {AceParEditor} from "./AceParEditor";
 import {IPluginInfoResponse, ParCompiler} from "./parCompiler";
 import {TextAreaParEditor} from "./TextAreaParEditor";
 import DroppableEvent = JQueryUI.DroppableEvent;
+import {ViewCtrl} from "../document/viewctrl";
 
 markAsUsed(rangyinputs);
 
@@ -36,6 +37,7 @@ export interface IChoice {
 
 export interface IEditorParams {
     initialText?: string;
+    viewCtrl?: ViewCtrl;
     defaultSize: "sm" | "md" | "lg";
     extraData: IExtraData;
     options: {
@@ -726,7 +728,7 @@ ${backTicks}
             this.scrollPos = this.element.find(".previewcontent").scrollTop() || this.scrollPos;
             this.outofdate = true;
             const data = await this.resolve.params.previewCb(text);
-            const compiled = await ParCompiler.compile(data, this.scope);
+            const compiled = await ParCompiler.compile(data, this.scope, this.resolve.params.viewCtrl);
             if (data.trdiff) {
                 const module = fixDefExport(await import("angular-diff-match-patch"));
                 $injector.loadNewModules([module]);

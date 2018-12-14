@@ -410,3 +410,10 @@ export function fixDefExport<T>(o: {default: T}) {
 export interface IOkResponse {
     status: "ok";
 }
+
+export function numOrStringToNumber(s: number | string) {
+    if (typeof s === "number") {
+        return s;
+    }
+    return parseFloat(s);
+}

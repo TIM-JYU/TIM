@@ -27,10 +27,6 @@ var bundles = [
         modules: 'tim/editor/ace', // preconfigured Ace editor, lazily loaded
         file: 'build/ace.js'
     },
-    {
-        modules: 'tim/plugin/imagex - tim/main', // ImageX plugin
-        file: 'build/imagex.js'
-    }
 ];
 
 //noinspection JSAnnotator

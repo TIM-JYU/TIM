@@ -64,7 +64,7 @@ CELERY_IMPORTS = ('timApp.tim_celery',)
 CELERYBEAT_SCHEDULE = {
     'update-search-files': {
         'task': 'timApp.tim_celery.update_search_files',
-        'schedule': crontab(minute='*/15'),  # Repeat every quarter hour.
+        'schedule': crontab(minute='*/30'),  # Repeat every 30 mins.
     },
     'process-notifications': {
         'task': 'timApp.tim_celery.process_notifications',

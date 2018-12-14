@@ -7,7 +7,9 @@ import shutil
 from datetime import datetime, timezone
 from typing import List, Optional, Tuple, Union, Dict, Any, Sequence
 
+import base64
 import dateutil.parser
+from lxml.html import HtmlElement
 
 from timApp.markdown.htmlSanitize import sanitize_html
 
@@ -221,8 +223,8 @@ def get_boolean(s, default, cast=None):
 EXAMPLE_DOCS_PATH = 'static/example_docs'
 
 
-def decode_csplugin(text: str):
-    return json.loads(binascii.unhexlify(remove_prefix(text, 'xxxHEXJSONxxx')).decode())
+def decode_csplugin(text: HtmlElement):
+    return json.loads(base64.b64decode(text.get('json')))['markup']
 
 
 def get_current_time():
@@ -238,3 +240,12 @@ def seq_to_str(lst: Sequence[str]):
 
 def split_by_semicolon(p: str):
     return [s.strip() for s in p.split(';')]
+
+
+def get_error_message(e: Exception) -> str:
+    """
+    Gives error message with error class.
+    :param e: Exception.
+    :return: String 'ErrorClass: reason'.
+    """
+    return f"{str(e.__class__.__name__)}: {str(e)}"

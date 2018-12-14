@@ -85,8 +85,8 @@ I am %%username%%.
 ```
 """)
         d.document.set_settings({'macros': None})
-        r = self.get(d.url, as_tree=True).cssselect('.parContent')
-        self.assertIn('xxxHEXJSONxxx', r[1].text_content().strip())
+        r = self.get(d.url, as_tree=True).cssselect('.parContent video-runner')
+        self.assertTrue(r)
 
     def test_invalid_macros(self):
         self.login_test1()
@@ -127,7 +127,7 @@ stem: this is a %%x()%%
         pars = get_content(tree)
         self.assertEqual(pars[:-2] + pars[-1::], ['', 'this is a cat', 'this is the law'])
         plugins = tree.cssselect('cs-runner')
-        self.assertEqual('this is a cat', decode_csplugin(plugins[0].text)['stem'])
+        self.assertEqual('this is a cat', decode_csplugin(plugins[0])['stem'])
 
     def test_usermacro_in_plugin(self):
         """User-specific macros in plugins."""
@@ -138,4 +138,4 @@ stem: Hi, %%username%%!
         """)
         tree = self.get(d.url, as_tree=True)
         plugins = tree.cssselect('cs-runner')
-        self.assertEqual('Hi, testuser1!', decode_csplugin(plugins[0].text)['stem'])
+        self.assertEqual('Hi, testuser1!', decode_csplugin(plugins[0])['stem'])

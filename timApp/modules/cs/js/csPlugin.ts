@@ -590,19 +590,6 @@ function insertAtCaret(txtarea: HTMLTextAreaElement, text: string) {
     txtarea.scrollTop = scrollPos;
 }
 
-const mathcheckLoaded = false;
-
-async function loadMathcheck() {
-    if (mathcheckLoaded) {
-        return;
-    }
-    await $.ajax({
-        dataType: "script",
-        cache: true,
-        url: "//cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=AM_HTMLorMML",
-    });
-}
-
 function getInt(s: string | number) {
     if (typeof s === "number") {
         return s;
@@ -665,8 +652,9 @@ const Example = t.type({
 
 const CsMarkupOptional = t.partial({
     // TODO: this gets deleted in server but only conditionally,
-    //  decide if this should be here
-    // program: t.string,
+    //  decide if this should be here.
+    //  Seems yes; GlowScript uses it at least.
+    program: t.string,
 
     argsplaceholder: t.string,
     argsstem: t.string,
@@ -847,7 +835,7 @@ class CsController extends CsBase implements IController {
     private parsonsId?: Vid;
     private postcode?: string;
     private precode?: string;
-    private preview!: HTMLElement;
+    private preview!: JQuery<HTMLElement>;
     private result?: string;
     private runError?: string | boolean;
     private runned: boolean = false;
@@ -996,7 +984,7 @@ class CsController extends CsBase implements IController {
     }
 
     get program() {
-        return this.attrsall.program;
+        return this.attrsall.program || this.attrs.program;
     }
 
     get hideTaunoText() {
@@ -1289,9 +1277,6 @@ class CsController extends CsBase implements IController {
             }
         }
 
-        if (this.attrs.autorun) {
-            this.runCodeLink(true);
-        }
         if (this.editorMode !== 0 || this.editorModes !== "01" || this.cssPrint) {
             this.showOtherEditor(this.editorMode);
         } // Forces code editor to change to pre
@@ -1307,7 +1292,7 @@ class CsController extends CsBase implements IController {
         await $timeout(); // because of ng-if, tauno would not be found until Angular has processed everything
         this.taunoElem = this.element.find(".taunoContainer")[0] as HTMLElement;
         this.edit = this.element.find("textarea")[0] as HTMLTextAreaElement;
-        this.preview = this.element.find(".csrunPreview")[0];
+        this.preview = this.element.find(".csrunPreview");
         const styleArgs = this.attrs["style-args"];
         if (styleArgs) {
             const argsEdit = this.getRootElement().getElementsByClassName("csArgsArea");
@@ -1334,6 +1319,9 @@ class CsController extends CsBase implements IController {
             if (kind === "tauno" || kind === "simcir") {
                 this.showTauno();
             }
+        }
+        if (this.attrs.autorun) {
+            this.runCodeLink(true);
         }
     }
 
@@ -1464,10 +1452,9 @@ class CsController extends CsBase implements IController {
         if (!this.isMathCheck) {
             return;
         }
-        await loadMathcheck();
-        $timeout(() => {
-            // MathJax.Hub.Queue(["Typeset", MathJax.Hub, $scope.element[0]]); // TODO
-        }, 0);
+
+        await $timeout();
+        await ParCompiler.processMathJax(this.element[0]);
     }
 
     showUploaded(file: string | undefined, type: string | undefined) {
@@ -2036,21 +2023,6 @@ class CsController extends CsBase implements IController {
         this.taunoOn = true;
     }
 
-    runWeScheme(s: string) {
-    }
-
-    showWeScheme() {
-        const v = this.getVid();
-        const weSchemeUrl = "/csstatic/WeScheme/WeSchemeEditor.html";
-        if (this.iframe) {
-            this.taunoElem.innerHTML =
-                `<iframe id="${v.vid}" class="showWeScheme" src="${weSchemeUrl}" ${v.w}${v.h} ${this.iframeopts} ></iframe>`;
-        } else {
-            this.taunoElem.innerHTML = `<div class="taunoNaytto" id="${v.vid}" />`;
-        }
-        this.taunoOn = true;
-    }
-
     initCode() {
         this.muokattu = false;
         this.usercode = this.byCode;
@@ -2332,7 +2304,7 @@ class CsController extends CsBase implements IController {
         if (r.ok) {
             const data = r.result.data;
             let s = "";
-            const $previewDiv = angular.element(this.preview);
+            const $previewDiv = this.preview;
 
             if (typeof data.texts === "string") {
                 s = data.texts;
@@ -2688,11 +2660,11 @@ class CsController extends CsBase implements IController {
         <a href
            ng-click="$ctrl.closeFrame()"
            style="float: right">[X]</a></div></span>
-    <iframe ng-if="$ctrl.fullhtml" id="${v.vid}" class="jsCanvas"
+    <iframe ng-if="!$ctrl.fullhtml" id="${v.vid}" class="jsCanvas"
             src="${fsrc}?scripts=${this.attrs.scripts || scripts}&html=${html}" ${v.w}${v.h} style="border:0"
-            ${opts}>
-        <iframe ng-if="!$ctrl.fullhtml" id="${v.vid}" class="jsCanvas" ${v.w}${v.h} style="border:0"
-                ${opts}></iframe>
+            ${opts}></iframe>
+    <iframe ng-if="$ctrl.fullhtml" id="${v.vid}" class="jsCanvas" ${v.w}${v.h} style="border:0"
+            ${opts}></iframe>
 </div>
 `;
                 const e = angular.element(angularElement);
@@ -2702,7 +2674,7 @@ class CsController extends CsBase implements IController {
                 this.canvas = angular.element(// '<div class="userlist" tim-draggable-fixed="" style="top: 91px; right: -375px;">'+
                     `<canvas id="csCanvas" width="${this.attrs.canvasWidth}" height="${this.attrs.canvasHeight}" class="jsCanvas"></canvas>`)[0] as HTMLCanvasElement;
             }
-            const $previewDiv = angular.element(this.preview);
+            const $previewDiv = this.preview;
             $previewDiv.empty().append($compile(this.canvas)(this.scope));
         }
         let text = this.usercode.replace(this.cursor, "");
@@ -2716,7 +2688,7 @@ class CsController extends CsBase implements IController {
         text = this.getCode();
 
         if (this.iframe) { // in case of iframe, the text is send to iframe
-            const f = this.taunoElem.firstChild as CustomFrame<GlowScriptWindow>; // but on first time it might be not loaded yet
+            const f = this.preview.find("iframe")[0] as CustomFrame<GlowScriptWindow>; // but on first time it might be not loaded yet
             // wait for contentWindow ready and the callback function also
             if (!f || !f.contentWindow || (!f.contentWindow.runJavaScript && !this.fullhtml && !wescheme)
                 || (wescheme && !f.contentWindow.runWeScheme)) {
@@ -2753,7 +2725,6 @@ ${fhtml}
                 f.contentWindow.document.write(fhtml);
                 f.contentWindow.document.close();
             } else if (wescheme) {
-                // $scope.runWeScheme($scope.usercode);
                 try {
                     f.contentWindow.runWeScheme(this.usercode);
                 } catch (e) {
@@ -3001,7 +2972,6 @@ class CsConsoleController extends CsBase implements IController {
             this.examples = this.attrs.examples;
         }
 
-        const attrs = this.attrs;
         this.pwd = ConsolePWD.getPWD(this);
         this.oldpwd = this.pwd;
         if (this.usercode === "" && this.byCode) {

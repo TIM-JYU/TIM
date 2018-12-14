@@ -12,7 +12,8 @@ from flask import request
 from flask import session
 
 from timApp.auth.accesshelper import verify_view_access, verify_teacher_access, verify_seeanswers_access, \
-    get_rights, has_edit_access, get_doc_or_abort
+    get_rights, has_edit_access, get_doc_or_abort, verify_manage_access
+from timApp.item.blockrelevance import BlockRelevance
 from timApp.document.create_item import create_or_copy_item, create_citation_doc
 from timApp.document.post_process import post_process_pars, \
     hide_names_in_teacher
@@ -31,7 +32,7 @@ from timApp.markdown.markdownconverter import create_environment
 from timApp.plugin.pluginControl import find_task_ids, get_all_reqs
 from timApp.timdb.sqa import db
 from timApp.util.flask.requesthelper import get_option, verify_json_params
-from timApp.util.flask.responsehelper import json_response
+from timApp.util.flask.responsehelper import json_response, ok_response
 from timApp.auth.sessioninfo import get_current_user_object, get_current_user_id, logged_in, current_user_in_lecture, \
     get_user_settings, save_last_page
 from timApp.document.docinfo import DocInfo
@@ -42,7 +43,9 @@ from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
 from timApp.util.timtiming import taketime
 from timApp.util.utils import remove_path_special_chars
+from timApp.util.utils import get_error_message
 
+DEFAULT_RELEVANCE = 10
 Range = Tuple[int, int]
 
 view_page = Blueprint('view_page',
@@ -492,3 +495,128 @@ def get_item(item_id: int):
         abort(404, 'Item not found')
     verify_view_access(i)
     return json_response(i)
+
+
+@view_page.route('/items/relevance/set/<int:item_id>', methods=["POST"])
+def set_blockrelevance(item_id: int):
+    """
+    Add block relevance or edit if it already exists for the block.
+    :param item_id: Item id.
+    :return: Ok response.
+    """
+    # TODO: Using the route with just an URL string (requires browser plugin).
+
+    i = Item.find_by_id(item_id)
+    if not i:
+        abort(404, 'Item not found')
+    verify_manage_access(i)
+
+    relevance_value, = verify_json_params('value')
+    # If block has existing relevance, delete it before adding the new one.
+    blockrelevance = i.relevance
+    if blockrelevance:
+        try:
+            db.session.delete(blockrelevance)
+        except Exception as e:
+            db.session.rollback()
+            abort(400, f"Changing block relevance failed: {get_error_message(e)}")
+    blockrelevance = BlockRelevance(relevance=relevance_value)
+
+    try:
+        i.block.relevance = blockrelevance
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        abort(400, f"Setting block relevance failed: {get_error_message(e)}: {str(e)}")
+    return ok_response()
+
+
+@view_page.route('/items/relevance/reset/<int:item_id>')
+def reset_blockrelevance(item_id: int):
+    """
+    Reset (delete) block relevance.
+    :param item_id: Item id.
+    :return: Ok response.
+    """
+
+    i = Item.find_by_id(item_id)
+    if not i:
+        abort(404, 'Item not found')
+    verify_manage_access(i)
+    blockrelevance = i.relevance
+    if blockrelevance:
+        try:
+            db.session.delete(blockrelevance)
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            abort(400, f"Resetting block relevance failed: {get_error_message(e)}")
+    return ok_response()
+
+
+@view_page.route('/items/relevance/get/<int:item_id>')
+def get_relevance_route(item_id: int):
+    """
+    Returns item relevance or first non-null parent relevance. If no relevance was found until root,
+    return default relevance.
+    :param item_id: Item id.
+    :return: Relevance object and whether it was inherited or not set (default).
+    """
+    i = Item.find_by_id(item_id)
+    if not i:
+        abort(404, 'Item not found')
+    verify_view_access(i)
+
+    default = False
+    inherited = False
+
+    # If block has set relevance, return it.
+    if i.relevance:
+        return json_response({
+            "relevance": i.relevance,
+            "default": default,
+            "inherited": inherited})
+
+    # Check parents for relevance in case target block didn't have one.
+    parents = i.parents_to_root(include_root=False)
+    for parent in parents:
+        if parent.relevance:
+            inherited = True
+            # Return relevance with parent's id.
+            return json_response({
+                "relevance": parent.relevance,
+                "default": default,
+                "inherited": inherited})
+
+    # If parents don't have relevance either, return default relevance.
+    default = True
+    return json_response({
+        "relevance": {
+            "block_id": item_id,
+            "relevance": DEFAULT_RELEVANCE
+        },
+        "default": default,
+        "inherited": inherited})
+
+
+def get_document_relevance(i: DocInfo) -> int:
+    """
+    Returns document relevance value or first non-null parent relevance value.
+    If no relevance was found until root, return default relevance value.
+    :param i: Document.
+    :return: Relevance value.
+    """
+
+    # If block has set relevance, return it.
+    if i.relevance:
+        return i.relevance.relevance
+
+    # Check parents for relevance in case target document didn't have one.
+    parents = i.parents_to_root(include_root=False)
+    for parent in parents:
+        if parent.relevance:
+            # Return parent relevance.
+            return parent.relevance.relevance
+
+    # If parents don't have relevance either, return default value as relevance.
+    return DEFAULT_RELEVANCE

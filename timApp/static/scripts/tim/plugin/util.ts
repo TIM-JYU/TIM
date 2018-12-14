@@ -39,7 +39,7 @@ export interface IGenericPluginMarkup extends t.TypeOf<typeof GenericPluginMarku
 export function getDefaults<MarkupType extends IGenericPluginMarkup,
     A extends {markup: MarkupType},
     T extends Type<A>>(runtimeType: T, defaultMarkup: MarkupType) {
-    const d = runtimeType.decode({markup: defaultMarkup});
+    const d = runtimeType.decode({markup: defaultMarkup, info: null});
     if (d.isLeft()) {
         throw new Error("Could not get default markup");
     }
@@ -74,7 +74,7 @@ export abstract class PluginBase<MarkupType extends IGenericPluginMarkup, A exte
     // Binding that has all the data as a JSON string.
     protected json!: Binding<string, "@">;
 
-    private markupError?: string;
+    protected markupError?: string;
 
     constructor(
         protected scope: IScope,
@@ -88,15 +88,17 @@ export abstract class PluginBase<MarkupType extends IGenericPluginMarkup, A exte
     }
 
     $onInit() {
-        const parsed = JSON.parse(this.json) as unknown;
+        const parsed = JSON.parse(atob(this.json)) as unknown;
         const validated = this.getAttributeType().decode(parsed);
         if (validated.isLeft()) {
             this.markupError = `Plugin has invalid markup values: ${getPaths(validated)}`;
         } else {
             this.attrsall = validated.value;
         }
-        console.log(parsed);
-        console.log(this);
+
+        // These can be uncommented for debugging:
+        // console.log(parsed);
+        // console.log(this);
     }
 
     protected abstract getAttributeType(): T;

@@ -1194,7 +1194,8 @@ body > .footer {
 
 @media (max-width: $screen-xs-max) {
     .container-fluid {
-        padding: 0;
+        padding-left: $container-xs-padding;
+        padding-right: $container-xs-padding;
     }
 }
 .search-panel {
@@ -1208,7 +1209,6 @@ body > .footer {
 .search-result-dialog {
     z-index:6;
     width:auto;
-    max-height: 500px;
 }
 
 .no-page-break-before {

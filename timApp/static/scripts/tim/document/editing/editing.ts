@@ -254,6 +254,7 @@ export class EditingHandler {
         }
         this.viewctrl.editing = true;
         await to(openEditor({
+            viewCtrl: this.viewctrl,
             extraData,
             initialText,
             defaultSize: "lg",

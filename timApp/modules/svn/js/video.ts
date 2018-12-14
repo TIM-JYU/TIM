@@ -1,6 +1,7 @@
 ﻿import angular from "angular";
 import * as t from "io-ts";
 import {GenericPluginMarkup, PluginBase, withDefault} from "tim/plugin/util";
+import {ViewCtrl} from "tim/document/viewctrl";
 
 const videoApp = angular.module("videoApp", ["ngSanitize"]);
 
@@ -155,6 +156,7 @@ class ShowFileController extends PluginBase<t.TypeOf<typeof ShowFileMarkup>,
     private startt: string = "";
     private width?: number;
     private height?: number;
+    private vctrl!: ViewCtrl;
 
     $onInit() {
         super.$onInit();
@@ -306,6 +308,9 @@ class ShowFileController extends PluginBase<t.TypeOf<typeof ShowFileMarkup>,
         if (!this.video) {
             return;
         }
+        if (this.attrs.followid) {
+            this.vctrl.registerVideo(this.attrs.followid, this.video);
+        }
         this.video.addEventListener("loadedmetadata", () => {
             this.video!.currentTime = this.start || 0;
         }, false);
@@ -336,6 +341,9 @@ const common = {
         json: "@",
     },
     controller: ShowFileController,
+    require: {
+        vctrl: "^timView",
+    },
 };
 
 videoApp.component("videoRunner", {

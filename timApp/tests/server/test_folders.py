@@ -282,13 +282,13 @@ class FolderParentTest(TimRouteTest):
         fname = self.get_personal_item_path('x/y/z')
         self.create_folder(fname)
         f = Folder.find_by_path(fname)
-        self.assertEqual(['y', 'x', 'Test user 1', 'users', 'All documents'], [p.title for p in f.parents_to_root])
+        self.assertEqual(['y', 'x', 'Test user 1', 'users', 'All documents'], [p.title for p in f.parents_to_root()])
         f = Folder.find_by_path('users')
-        self.assertEqual(['All documents'], [p.title for p in f.parents_to_root])
+        self.assertEqual(['All documents'], [p.title for p in f.parents_to_root()])
 
     def test_root_parents(self):
         f = Folder.get_root()
-        self.assertEqual([], [p.title for p in f.parents_to_root])
+        self.assertEqual([], [p.title for p in f.parents_to_root()])
 
 
 class FolderContentTest(TimRouteTest):

@@ -25,6 +25,9 @@ class SearchArgumentsBasic:
     onlyfirst: Optional[int] = attr.ib(kw_only=True, default=None)
     """If given, only search the first x paragraphs from each document."""
 
+    filter_attr: Optional[str] = attr.ib(kw_only=True, default=None)
+    """If given, only search the paragraphs that have the specified attribute and value."""
+
 
 @attr.s
 class SearchArgumentsBase(BasicArguments, SearchArgumentsBasic):
@@ -71,6 +74,16 @@ class SearchResult(NamedTuple):
         )
 
 
+def matches_attr_filter(p: DocParagraph, key: Optional[str], value: Optional[str]):
+    if key is None:
+        return True
+    a = p.get_attr(key)
+    if a is not None:
+        return True if value is None else a == value
+    else:
+        return False
+
+
 def search(d: DocInfo, args: SearchArgumentsBasic, use_exported: bool) -> Generator[SearchResult, None, None]:
     """Performs a search operation for the specified document, yielding SearchResults.
 
@@ -81,13 +94,20 @@ def search(d: DocInfo, args: SearchArgumentsBasic, use_exported: bool) -> Genera
     results_found = 0
     pars_processed = 0
     pars_found = 0
+    filter_attr_key = None
+    filter_attr_value = None
+    if args.filter_attr:
+        parts = args.filter_attr.split('=')
+        filter_attr_key = parts[0]
+        if len(parts) > 1:
+            filter_attr_value = parts[1]
 
     regex = re.compile(args.term if args.regex else re.escape(args.term), re.DOTALL)
     for d, p in enum_pars(d):
         pars_processed += 1
         md = p.get_exported_markdown(skip_tr=True) if use_exported else p.get_markdown()
         matches = list(regex.finditer(md))
-        if matches:
+        if matches and matches_attr_filter(p, filter_attr_key, filter_attr_value):
             pars_found += 1
             for m in matches:
                 results_found += 1
@@ -136,6 +156,7 @@ def create_basic_search_argparser(desc: str, is_readonly=True, require_term=True
                              f'indices 0 through number of subgroups in the regex, doc_id, par_id, url{to_param}.',
                         default=format_default)
     parser.add_argument('--regex', help='interpret search term as a regular expression', action='store_true')
+    parser.add_argument('--filter_attr', help='filter paragraphs by attribute[=value]')
     return parser
 
 
