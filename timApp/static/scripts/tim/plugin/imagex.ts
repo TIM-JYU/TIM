@@ -5,7 +5,7 @@ import * as t from "io-ts";
 import {ViewCtrl} from "../document/viewctrl";
 import {editorChangeValue} from "../editor/editorScope";
 import {$http, $q, $sce, $timeout} from "../util/ngimport";
-import {markAsUsed, numOrStringToNumber, Require, to} from "../util/utils";
+import {markAsUsed, numOrStringToNumber, Require, to, valueOr} from "../util/utils";
 import {
     CommonPropsT,
     DefaultPropsT,
@@ -1072,10 +1072,6 @@ function textboxFromProps(values: {textboxproperties?: TextboxPropsT, color?: st
         props.text || defaultText,
         props.font || "14px Arial",
     );
-}
-
-function valueOr<T>(v: T | undefined, def: T): T {
-    return v != null ? v : def;
 }
 
 class DragObject extends ObjBase<RequireExcept<DragObjectPropsT, OptionalDragObjectPropNames>> {

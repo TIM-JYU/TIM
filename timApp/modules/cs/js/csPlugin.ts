@@ -8,6 +8,7 @@ import {GenericPluginMarkup, PluginBase, withDefault} from "tim/plugin/util";
 import {lazyLoadMany} from "tim/util/lazyLoad";
 import {$compile, $http, $sce, $timeout, $upload, $window} from "tim/util/ngimport";
 import {fixDefExport, to} from "tim/util/utils";
+import {valueOr} from "tim/util/utils";
 
 interface Simcir {
     setupSimcir(element: JQuery, data: {}): void;
@@ -1043,11 +1044,11 @@ class CsController extends CsBase implements IController {
 
     get placeholder() {
         const tiny = this.type.indexOf("tiny") >= 0;
-        return this.attrs.placeholder || (tiny ? "" : this.english ? "Write your code here" : "Kirjoita koodi tähän:");
+        return valueOr(this.attrs.placeholder, (tiny ? "" : this.english ? "Write your code here" : "Kirjoita koodi tähän:"));
     }
 
     get inputplaceholder() {
-        return this.attrs.inputplaceholder || (this.english ? "Write your input here" : "Kirjoita syöte tähän");
+        return valueOr(this.attrs.inputplaceholder, (this.english ? "Write your input here" : "Kirjoita syöte tähän"));
     }
 
     get isText() {
@@ -1056,11 +1057,11 @@ class CsController extends CsBase implements IController {
     }
 
     get argsplaceholder() {
-        return this.attrs.argsplaceholder || (this.isText ? (this.english ? "Write file name here" : "Kirjoita tiedoston nimi tähän") : (this.english ? "Write your program args here" : "Kirjoita ohjelman argumentit tähän"));
+        return valueOr(this.attrs.argsplaceholder, (this.isText ? (this.english ? "Write file name here" : "Kirjoita tiedoston nimi tähän") : (this.english ? "Write your program args here" : "Kirjoita ohjelman argumentit tähän")));
     }
 
     get argsstem() {
-        return this.attrs.argsstem || (this.isText ? (this.english ? "File name:" : "Tiedoston nimi:") : (this.english ? "Args:" : "Args"));
+        return valueOr(this.attrs.argsstem, (this.isText ? (this.english ? "File name:" : "Tiedoston nimi:") : (this.english ? "Args:" : "Args")));
     }
 
     get iframe() {
@@ -1148,7 +1149,7 @@ class CsController extends CsBase implements IController {
     }
 
     get uploadstem() {
-        return this.attrs.uploadstem || (this.english ? "Upload image/file" : "Lataa kuva/tiedosto");
+        return valueOr(this.attrs.uploadstem, (this.english ? "Upload image/file" : "Lataa kuva/tiedosto"));
     }
 
     get file() {
@@ -1156,15 +1157,15 @@ class CsController extends CsBase implements IController {
     }
 
     get showCodeOn() {
-        return this.attrs.showCodeOn || (this.english ? "Show all code" : "Näytä koko koodi");
+        return valueOr(this.attrs.showCodeOn, (this.english ? "Show all code" : "Näytä koko koodi"));
     }
 
     get showCodeOff() {
-        return this.attrs.showCodeOff || (this.english ? "Hide extra code" : "Piilota muu koodi");
+        return valueOr(this.attrs.showCodeOff, (this.english ? "Hide extra code" : "Piilota muu koodi"));
     }
 
     get resetText() {
-        return this.attrs.resetText || (this.english ? "Reset" : "Alusta");
+        return valueOr(this.attrs.resetText, (this.english ? "Reset" : "Alusta"));
     }
 
     get editorModes() {

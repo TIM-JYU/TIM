@@ -417,3 +417,7 @@ export function numOrStringToNumber(s: number | string) {
     }
     return parseFloat(s);
 }
+
+export function valueOr<T>(v: T | undefined, def: T): T {
+    return v != null ? v : def;
+}
