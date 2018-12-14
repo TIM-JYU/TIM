@@ -10,6 +10,9 @@ import os
 import shlex
 import hashlib
 import binascii
+
+import base64
+
 from cs_sanitizer import allow_minimal, tim_sanitize, svg_sanitize
 
 CACHE_DIR = "/tmp/cache/"
@@ -1259,3 +1262,6 @@ def str_to_int(s, default=0):
     except:
         return default
 
+
+def encode_json_data(d: str):
+    return base64.b64encode(d.encode()).decode()

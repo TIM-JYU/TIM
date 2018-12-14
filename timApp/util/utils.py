@@ -7,6 +7,7 @@ import shutil
 from datetime import datetime, timezone
 from typing import List, Optional, Tuple, Union, Dict, Any, Sequence
 
+import base64
 import dateutil.parser
 from lxml.html import HtmlElement
 
@@ -223,7 +224,7 @@ EXAMPLE_DOCS_PATH = 'static/example_docs'
 
 
 def decode_csplugin(text: HtmlElement):
-    return json.loads(text.get('json'))['markup']
+    return json.loads(base64.b64decode(text.get('json')))['markup']
 
 
 def get_current_time():

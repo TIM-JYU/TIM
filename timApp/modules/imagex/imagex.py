@@ -15,7 +15,7 @@ from http_params import *
 import tim_server
 # Library for checking if a point is inside a shape.
 from geometry import*
-from xml.sax.saxutils import quoteattr
+from fileParams import encode_json_data
 
 PORT = 5000
 PROGDIR = "."
@@ -79,7 +79,7 @@ class ImagexServer(tim_server.TimServer):
         jso = query.to_json(accept_nonhyphen)
         runner = 'imagex-runner'
         attrs = json.dumps(jso)
-        s = f'<{runner} json={quoteattr(attrs)}></{runner}>'
+        s = f'<{runner} json="{encode_json_data(attrs)}"></{runner}>'
         s = make_lazy(s, query, get_lazy_imagex_html)
         return s
 

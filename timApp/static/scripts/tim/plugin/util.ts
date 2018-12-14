@@ -88,7 +88,7 @@ export abstract class PluginBase<MarkupType extends IGenericPluginMarkup, A exte
     }
 
     $onInit() {
-        const parsed = JSON.parse(this.json) as unknown;
+        const parsed = JSON.parse(atob(this.json)) as unknown;
         const validated = this.getAttributeType().decode(parsed);
         if (validated.isLeft()) {
             this.markupError = `Plugin has invalid markup values: ${getPaths(validated)}`;
