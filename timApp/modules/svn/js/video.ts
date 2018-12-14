@@ -375,7 +375,7 @@ videoApp.component("videoRunner", {
 </div>
 `,
 });
-/*
+
 videoApp.component("smallVideoRunner", {
     ...common,
     template: `
@@ -397,7 +397,7 @@ videoApp.component("smallVideoRunner", {
 </div>
 `,
 });
-/*
+
 videoApp.component("listVideoRunner", {
     ...common,
     template: `
@@ -423,4 +423,3 @@ videoApp.component("listVideoRunner", {
 </div>
 `,
 });
-*/
