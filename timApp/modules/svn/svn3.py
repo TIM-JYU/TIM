@@ -30,6 +30,7 @@ import socketserver
 import time
 import math
 import sys
+import os
 
 import json
 
@@ -466,7 +467,7 @@ class TIMShowFileServer(http.server.BaseHTTPRequestHandler):
         show_html = self.path.find('/html') >= 0
         is_template = self.path.find('/template') >= 0
         is_css = self.path.find('/css') >= 0
-        is_js = self.path.find('/js') >= 0
+        is_js = self.path.find('/js') >= 0  or self.path.find('.ts') >= 0
         is_reqs = self.path.find('/reqs') >= 0
         is_image = self.path.find('/image') >= 0
         is_video = self.path.find('/video') >= 0
@@ -518,7 +519,12 @@ class TIMShowFileServer(http.server.BaseHTTPRequestHandler):
 
         if is_js:
             # print(content_type)
-            self.wout(file_to_string('js/build/video.js'))
+            filereq = self.path
+            filereq = os.path.basename(filereq)
+            if self.path.find('.ts') < 0:
+                filereq = 'build/' + filereq
+            self.wout(file_to_string('js/' + filereq))
+            # self.wout(file_to_string(self.path))
             return
 
         s = get_html(self, query, show_html)

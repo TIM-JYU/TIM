@@ -2,13 +2,18 @@
 import * as t from "io-ts";
 import {GenericPluginMarkup, PluginBase, withDefault} from "tim/plugin/util";
 import {ViewCtrl} from "tim/document/viewctrl";
+import {valueDefu} from "tim/util/utils";
 
 const videoApp = angular.module("videoApp", ["ngSanitize"]);
 
-function muunna(value: string | undefined) {
+function muunna(value: string | number | undefined): number | undefined {
     if (!value) {
         return undefined;
     }
+    if (typeof value == 'number' ) {
+        return value;
+    }
+
     let s = "0 0 0 " + value.replace(/s/g, "").replace(/[,\/;:.hm]/g, " "); // loppu s unohdetaan muodosta 1h3m2s
     s = s.trim();
     const sc = s.split(" ");
@@ -28,14 +33,14 @@ videoApp.component("videoZoom", {
         c: "<",
     },
     template: `
-<p ng-if="$ctrl.c.videoOn" class="pluginShow"><span ng-if="$ctrl.c.video.playbackRate"> Speed:
+<p ng-if="$ctrl.c.videoOn" class="pluginShow"><span ng-if="::$ctrl.c.video.playbackRate"> Speed:
     <a ng-click="$ctrl.c.speed(1.0/1.2)" title="Slow speed"> - </a>
     <a ng-click="$ctrl.c.speed(0)" title="Speed to 1x"> 1x </a>
     <a ng-click="$ctrl.c.speed(1.2)" title="Faster speed"> + </a> </span>Zoom:
     <a ng-click="$ctrl.c.zoom(1.0/1.4)" title="Zoom out"> - </a>
     <a ng-click="$ctrl.c.zoom(0)" title="Reset to original size"> r </a>
     <a ng-click="$ctrl.c.zoom(1.4)" title="Zoom in"> + </a>
-    <a ng-click="$ctrl.c.hideVideo()">{{$ctrl.c.hidetext}}</a>
+    <a ng-click="$ctrl.c.hideVideo()">{{::$ctrl.c.hidetext}}</a>
 </p>
 `,
 });
@@ -84,18 +89,18 @@ function ifIs(value: number | undefined, name: string) {
 
 const ShowFileMarkup = t.intersection([
     t.partial({
-        docicon: t.string,
-        doclink: t.string,
-        doctext: t.string,
-        end: t.string,
+        docicon: t.union([t.null, t.string]),
+        doclink: t.union([t.null, t.string]),
+        doctext: t.union([t.null, t.string]),
+        end: t.union([t.number, t.string]),
         followid: t.string,
         height: t.number,
-        hidetext: t.string,
+        hidetext: t.union([t.null, t.string]),
         iframe: t.boolean,
-        iframeopts: t.string,
-        start: t.string,
-        videoicon: t.string,
-        videoname: t.string,
+        iframeopts: t.union([t.null, t.string]),
+        start: t.union([t.number, t.string]),
+        videoicon: t.union([t.literal(false), t.null, t.string]),
+        videoname: t.union([t.null, t.string]),
         width: t.number,
     }),
     GenericPluginMarkup,
@@ -130,11 +135,13 @@ class ShowFileController extends PluginBase<t.TypeOf<typeof ShowFileMarkup>,
     }
 
     get doclink() {
+        // console.log("doclink");
         return this.attrs.doclink;
     }
 
     get hidetext() {
-        return this.attrs.hidetext || "hide video";
+        // console.log("hidetext");
+        return valueDefu(this.attrs.hidetext, "hide video");
     }
 
     get doctext() {
@@ -350,66 +357,70 @@ videoApp.component("videoRunner", {
     ...common,
     template: `
 <div class="videoRunDiv">
-    <p ng-if="$ctrl.header" ng-bind-html="$ctrl.header"></p>
-    <p ng-if="$ctrl.stem" class="stem" ng-bind-html="$ctrl.stem"></p>
+    <div class="pluginError" ng-if="::$ctrl.markupError" ng-bind="::$ctrl.markupError"></div>
+    <p ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></p>
+    <p ng-if="::$ctrl.stem" class="stem" ng-bind-html="::$ctrl.stem"></p>
     <div class="videoContainer"></div>
     <div class="no-popup-menu">
         <img src="/csstatic/video.png"
-             ng-if="!$ctrl.videoOn"
-             ng-click="$ctrl.showVideo()"
+             ng-if="::!$ctrl.videoOn"
+             ng-click="::$ctrl.showVideo()"
              width="200"
              alt="Click here to show the video"/></div>
-    <a href="{{$ctrl.doclink}}" ng-if="$ctrl.doclink" target="timdoc">
-        <span ng-if="$ctrl.docicon"><img ng-src="{{$ctrl.docicon}}"
-                                    alt="Go to doc"/> </span>{{$ctrl.doctext}}</a>
+    <a href="{{::$ctrl.doclink}}" ng-if="::$ctrl.doclink" target="timdoc">
+        <span ng-if="::$ctrl.docicon"><img ng-src="{{::$ctrl.docicon}}"
+                                    alt="Go to doc"/> </span>{{::$ctrl.doctext}}</a>
     <video-zoom c="$ctrl"></video-zoom>
-    <p class="plgfooter" ng-if="$ctrl.footer" ng-bind-html="$ctrl.footer"></p>
+    <p class="plgfooter" ng-if="::$ctrl.footer" ng-bind-html="::$ctrl.footer"></p>
 </div>
 `,
 });
-
+/*
 videoApp.component("smallVideoRunner", {
     ...common,
     template: `
 <div class="smallVideoRunDiv">
-    <p ng-if="$ctrl.header" ng-bind-html="$ctrl.header"></p>
-    <p><span class="stem" ng-bind-html="$ctrl.stem"></span>
-        <a ng-if="$ctrl.videoname" class="videoname"
-           ng-click="$ctrl.showVideo()"><span ng-if="$ctrl.videoicon">
-            <img ng-src="{{$ctrl.videoicon}}" alt="Click here to show"/> </span>
-            {{$ctrl.videoname}} {{$ctrl.duration}} {{$ctrl.span}}</a>
-        <a href="{{$ctrl.doclink}}" ng-if="$ctrl.doclink" target="timdoc">
-            <span ng-if="$ctrl.docicon"><img ng-src="{{$ctrl.docicon}}"
-                                             alt="Go to doc"/> </span>{{$ctrl.doctext}}</a>
+    <div class="pluginError" ng-if="::$ctrl.markupError" ng-bind="::$ctrl.markupError"></div>
+    <p ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></p>
+    <p><span class="stem" ng-bind-html="::$ctrl.stem"></span>
+        <a ng-if="::$ctrl.videoname" class="videoname"
+           ng-click="$ctrl.showVideo()"><span ng-if="::$ctrl.videoicon">
+            <img ng-src="{{::$ctrl.videoicon}}" alt="Click here to show"/> </span>
+            {{::$ctrl.videoname}} {{::$ctrl.duration}} {{::$ctrl.span}}</a>
+        <a href="{{::$ctrl.doclink}}" ng-if="::$ctrl.doclink" target="timdoc">
+            <span ng-if="::$ctrl.docicon"><img ng-src="{{::$ctrl.docicon}}"
+                                             alt="Go to doc"/> </span>{{::$ctrl.doctext}}</a>
     </p>
     <div class="videoContainer"></div>
     <video-zoom c="$ctrl"></video-zoom>
-    <p class="plgfooter" ng-if="$ctrl.footer" ng-bind-html="$ctrl.footer"></p>
+    <p class="plgfooter" ng-if="::$ctrl.footer" ng-bind-html="::$ctrl.footer"></p>
 </div>
 `,
 });
-
+/*
 videoApp.component("listVideoRunner", {
     ...common,
     template: `
 <div class="listVideoRunDiv">
-    <p ng-if="$ctrl.header" ng-bind-html="$ctrl.header"></p>
+    <div class="pluginError" ng-if="$ctrl.markupError" ng-bind="$ctrl.markupError"></div>
+    <p ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></p>
     <ul>
-        <li><span class="stem" ng-bind-html="$ctrl.stem"></span>
-            <a ng-if="$ctrl.videoname" class="videoname"
+        <li><span class="stem" ng-bind-html="::$ctrl.stem"></span>
+            <a ng-if="::$ctrl.videoname" class="videoname"
                ng-click="$ctrl.showVideo()">
-                <span ng-if="$ctrl.videoicon">
-                    <img ng-src="{{$ctrl.videoicon}}" alt="Click here to show"/>
-                </span>{{$ctrl.videoname}}{{$ctrl.startt}}
-                {{$ctrl.duration}}
-                {{$ctrl.span}}</a>
-            <a href="{{$ctrl.doclink}}" ng-if="$ctrl.doclink" target="timdoc"><span
-                    ng-if="$ctrl.docicon"><img
-                    ng-src="{{$ctrl.docicon}}" alt="Go to doc"/> </span>{{$ctrl.doctext}}</a></li>
+                <span ng-if="::$ctrl.videoicon">
+                    <img ng-src="{{::$ctrl.videoicon}}" alt="Click here to show"/>
+                </span>{{::$ctrl.videoname}}{{::$ctrl.startt}}
+                {{::$ctrl.duration}}
+                {{::$ctrl.span}}</a>
+            <a href="{{::$ctrl.doclink}}" ng-if="::$ctrl.doclink" target="timdoc"><span
+                    ng-if="::$ctrl.docicon"><img
+                    ng-src="{{::$ctrl.docicon}}" alt="Go to doc"/> </span>{{::$ctrl.doctext}}</a></li>
     </ul>
     <div class="videoContainer"></div>
     <video-zoom c="$ctrl"></video-zoom>
-    <p class="plgfooter" ng-if="$ctrl.footer" ng-bind-html="$ctrl.footer"></p>
+    <p class="plgfooter" ng-if="::$ctrl.footer" ng-bind-html="::$ctrl.footer"></p>
 </div>
 `,
 });
+*/
