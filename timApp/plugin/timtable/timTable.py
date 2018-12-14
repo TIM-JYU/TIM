@@ -199,7 +199,6 @@ def tim_table_add_row():
     """
     doc_id, par_id, row_id = verify_json_params('docId', 'parId', 'rowId')
     d, plug = get_plugin_from_paragraph(doc_id, par_id)
-    verify_edit_access(d)
     add_row(plug, row_id)
     return json_response(prepare_for_and_call_dumbo(plug))
 
@@ -298,24 +297,23 @@ def tim_table_add_datablock_row():
     datablock_entries = construct_datablock_entry_list_from_yaml(plug)
     new_datablock_entries = []
 
-    if datablock_entries:
-        for entry in datablock_entries:
-            if entry.row == row_id - 1:
-                new_datablock_entries.append(RelativeDataBlockValue(row_id, entry.column, ''))
-            elif entry.row >= row_id:
-                entry.row += 1
+    try:
+        rows = plug.values[TABLE][ROWS]
+    except KeyError:
+        return abort(400)
+    if not rows:
+        return abort(400)
+    row = rows[-1][ROW]
+    for i in range(0, len(row)):
+        new_datablock_entries.append(RelativeDataBlockValue(len(rows), i, ''))
 
-            new_datablock_entries.append(entry)
-    else:
-        try:
-            rows = plug.values[TABLE][ROWS]
-        except KeyError:
-            return abort(400)
-        if not rows:
-            return abort(400)
-        row = rows[-1][ROW]
-        for i in range(0, len(row)):
-            new_datablock_entries.append(RelativeDataBlockValue(len(rows), i, ''))
+    for entry in datablock_entries:
+        if entry.row == row_id - 1:
+            new_datablock_entries.append(RelativeDataBlockValue(row_id, entry.column, ''))
+        elif entry.row >= row_id:
+            entry.row += 1
+
+        new_datablock_entries.append(entry)
 
     apply_datablock_from_entry_list(plug, new_datablock_entries)
     plug.save()
@@ -332,10 +330,12 @@ def tim_table_add_column():
     """
     doc_id, par_id, col_id = verify_json_params('docId', 'parId', 'colId')
     d, plug = get_plugin_from_paragraph(doc_id, par_id)
-    verify_edit_access(d)
     try:
         rows = plug.values[TABLE][ROWS]
     except KeyError:
+        return abort(400)
+
+    if is_in_datainput_mode(plug):
         return abort(400)
 
     if col_id < 1:
@@ -354,6 +354,7 @@ def tim_table_add_column():
                 new_cell[CELL] = ''
                 current_row.append(new_cell)
     else:
+        # Insert a new column into the table instead of adding it to the end
         for row in rows:
             try:
                 current_row = row[ROW]
@@ -369,6 +370,12 @@ def tim_table_add_column():
                 new_cell[CELL] = ''
                 current_row.insert(col_id, {CELL: ""})
 
+        datablock_entries = construct_datablock_entry_list_from_yaml(plug)
+        for entry in datablock_entries:
+            if entry.column >= col_id:
+                entry.column += 1
+        apply_datablock_from_entry_list(plug, datablock_entries)
+
     plug.save()
     return json_response(prepare_for_and_call_dumbo(plug))
 
@@ -380,17 +387,29 @@ def tim_table_add_datablock_column():
     Doesn't affect the table's regular YAML.
     :return: The entire table's data after the column has been added.
     """
-    doc_id, par_id, col_id = verify_json_params('docId', 'parId')
+    doc_id, par_id, col_id = verify_json_params('docId', 'parId', 'colId')
     d, plug = get_plugin_from_paragraph(doc_id, par_id)
-    verify_edit_access(d)
+
+    if not is_in_datainput_mode(plug):
+        return abort(400)
 
     if not is_datablock(plug.values):
         create_datablock(plug.values[TABLE])
 
     column_counts, datablock_entries = get_column_counts(plug)
 
-    for row_index, column_count in column_counts.items():
-        datablock_entries.append(RelativeDataBlockValue(row_index, column_count, ''))
+    if col_id < 0:
+        # Add a column to the end of each row, regardless of their length
+        for row_index, column_count in column_counts.items():
+            datablock_entries.append(RelativeDataBlockValue(row_index, column_count, ''))
+    else:
+        # Insert a new column into the table instead of adding it to the end
+        for entry in datablock_entries:
+            if entry.column >= col_id:
+                entry.column += 1
+        for row_index, column_count in column_counts.items():
+            if column_count >= col_id:
+                datablock_entries.append(RelativeDataBlockValue(row_index, col_id, ''))
 
     apply_datablock_from_entry_list(plug, datablock_entries)
     plug.save()
@@ -426,29 +445,6 @@ def get_column_counts(plug: Plugin) -> Tuple[Dict[int, int], List[RelativeDataBl
     return column_counts, datablock_entries
 
 
-@timTable_plugin.route("removeDatablockColumn", methods=["POST"])
-def tim_table_remove_datablock_column():
-    """
-    Removes a column from the table's datablock.
-    Doesn't affect the regular table structure.
-    :return: The entire table's data after the column has been removed.
-    """
-    doc_id, par_id = verify_json_params('docId', 'parId')
-    d, plug = get_plugin_from_paragraph(doc_id, par_id)
-    verify_edit_access(d)
-
-    column_counts, datablock_entries = get_column_counts(plug)
-
-    new_datablock_entries = []
-    for entry in datablock_entries:
-        if entry.column < column_counts[entry.row] - 1:
-            new_datablock_entries.append(entry)
-
-    apply_datablock_from_entry_list(plug, new_datablock_entries)
-    plug.save()
-    return json_response(prepare_for_and_call_dumbo(plug))
-
-
 @timTable_plugin.route("removeRow", methods=["POST"])
 def tim_table_remove_row():
     """
@@ -457,7 +453,6 @@ def tim_table_remove_row():
     """
     doc_id, par_id, row_id, datablock_only = verify_json_params('docId', 'parId', 'rowId', 'datablockOnly')
     d, plug = get_plugin_from_paragraph(doc_id, par_id)
-    verify_edit_access(d)
     if not datablock_only:
         try:
             rows = plug.values[TABLE][ROWS]
@@ -491,24 +486,24 @@ def tim_table_remove_column():
     Removes a column from the table.
     :return: The entire table's data after the column has been removed.
     """
-    doc_id, par_id, col_id = verify_json_params('docId', 'parId', 'colId')
+    doc_id, par_id, col_id, datablock_only = verify_json_params('docId', 'parId', 'colId', 'datablockOnly')
     d, plug = get_plugin_from_paragraph(doc_id, par_id)
-    verify_edit_access(d)
-    try:
-        rows = plug.values[TABLE][ROWS]
-    except KeyError:
-        return abort(400)
-
-    for row in rows:
+    if not datablock_only:
         try:
-            current_row = row[ROW]
+            rows = plug.values[TABLE][ROWS]
         except KeyError:
             return abort(400)
-        if len(current_row) <= col_id:
-            continue # continue instead of erroring out, some rows might have colspan in
-                     # their cells while we can still remove the column from other rows
 
-        current_row.pop(col_id)
+        for row in rows:
+            try:
+                current_row = row[ROW]
+            except KeyError:
+                return abort(400)
+            if len(current_row) <= col_id:
+                continue # continue instead of erroring out, some rows might have colspan in
+                         # their cells while we can still remove the column from other rows
+
+            current_row.pop(col_id)
 
     if is_datablock(plug.values):
         datablock_entries = construct_datablock_entry_list_from_yaml(plug)
@@ -571,7 +566,6 @@ def set_cell_style_attribute(doc_id, par_id, row_id, col_id, attribute, value):
     :return: The entire table's data after the style attribute has been set.
     """
     d, plug = get_plugin_from_paragraph(doc_id, par_id)
-    verify_edit_access(d)
     data_input_mode = is_in_datainput_mode(plug)
     if data_input_mode:
         datablock_entries = construct_datablock_entry_list_from_yaml(plug)
@@ -617,7 +611,6 @@ def set_cell_style_attribute(doc_id, par_id, row_id, col_id, attribute, value):
 
     plug.save()
     return json_response(prepare_for_and_call_dumbo(plug))
-
 
 
 def get_plugin_from_paragraph(doc_id, par_id) -> (DocEntry, Plugin):

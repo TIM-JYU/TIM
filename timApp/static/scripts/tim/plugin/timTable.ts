@@ -40,29 +40,12 @@ export interface TimTable {
     dataInput?: boolean;
 }
 
-export interface ITable extends ITableStyles {
+export interface ITable { // extends ITableStyles
     rows?: IRow[];
     columns?: IColumn[];
     tabledatablock?: DataEntity;
 }
 
-/**
- * Styles
- */
-export interface ITableStyles {
-    backgroundColor?: string;
-    border?: string;
-    borderTop?: string;
-    borderBottom?: string;
-    borderLeft?: string;
-    borderRight?: string;
-    verticalAlign?: string;
-    textAlign?: string;
-    color?: string;
-    fontFamily?: string;
-    fontSize?: string;
-    visibility?: string;
-}
 
 export interface DataEntity {
     type: "Relative" | "Abstract";
@@ -76,25 +59,68 @@ export interface CellDataEntity {
 export type CellType = string | number | boolean | null;
 export type CellEntity = ICell | CellType;
 
-export interface IRow extends IRowStyles {
+export interface IRow { // extends IRowStyles
     row?: CellEntity[];
     id?: string;
 }
 
-export interface IRowStyles {
-    backgroundColor?: string;
-    border?: string;
-    borderTop?: string;
-    borderBottom?: string;
-    borderLeft?: string;
-    borderRight?: string;
-    verticalAlign?: string;
-    textAlign?: string;
-    color?: string;
-    fontFamily?: string;
-    fontSize?: string;
-    fontWeight?: string;
+export interface IColumn { // extends IColumnStyles
+    id?: string;
+    span?: number;
+    formula?: string;
 }
+
+export interface ICell { // extends ICellStyles
+    cell: CellType;
+    editing?: boolean;
+    editorOpen?: boolean;
+    type?: string;
+    colspan?: number;
+    rowspan?: number;
+    id?: string;
+    formula?: string;
+    row?: number;
+    col?: number;
+    underSpanOf?: {row: number, col: number};
+    renderIndexX?: number;
+    renderIndexY?: number;
+    inputScope?: boolean | undefined;
+    [key: string]: any;
+}
+
+/**
+ * Styles
+ */
+
+const tableStyles: Set<string> = new Set<string>([
+    "backgroundColor",
+    "border",
+    "borderTop",
+    "borderBottom",
+    "borderLeft",
+    "borderRight",
+    "verticalAlign",
+    "textAlign",
+    "color",
+    "fontFamily",
+    "fontSize",
+    "visibility"
+    ]);
+
+const rowStyles: Set<string> = new Set<string>( [
+    "backgroundColor",
+    "border",
+    "borderTop",
+    "borderBottom",
+    "borderLeft",
+    "borderRight",
+    "verticalAlign",
+    "textAlign",
+    "color",
+    "fontFamily",
+    "fontSize",
+    "fontWeight"
+    ]);
 
 const cellStyles: Set<string> = new Set<string>([
     "verticalAlign",
@@ -113,87 +139,41 @@ const cellStyles: Set<string> = new Set<string>([
     "height",
     "colspan",
     "rowspan",
-    ]);
-
-/*export interface ICellStyles {
-    verticalAlign?: string;
-    fontSize?: string;
-    border?: string;
-    borderTop?: string;
-    borderBottom?: string;
-    borderLeft?: string;
-    borderRight?: string;
-    backgroundColor?: string;
-    textAlign?: string;
-    fontFamily?: string;
-    color?: string;
-    fontWeight?: string;
-} */
-
-export interface ICell { // extends ICellStyles
-    cell: CellType;
-    editing?: boolean;
-    editorOpen?: boolean;
-    type?: string;
-    colspan?: number;
-    rowspan?: number;
-    id?: string;
-    formula?: string;
-    row?: number;
-    col?: number;
-    inputScope?: boolean | undefined;
-    [key: string]: any;
-}
-
-export interface IColumn { // extends IColumnStyles
-    id?: string;
-    span?: number;
-    formula?: string;
-}
+]);
 
 const columnStyles: Set<string> = new Set<string>([
-        "width",
-        "backgroundColor",
-        "border",
-        "borderTop",
-        "borderBottom",
-        "borderLeft",
-        "borderRight",
-    ]);
+    "width",
+    "backgroundColor",
+    "border",
+    "borderTop",
+    "borderBottom",
+    "borderLeft",
+    "borderRight",
+]);
 
-/*export interface IColumnStyles {
-    width?: string;
-    backgroundColor?: string;
-    border?: string;
-    borderTop?: string;
-    borderBottom?: string;
-    borderLeft?: string;
-    borderRight?: string;
-} */
+const columnCellStyles: Set<string> = new Set<string>([
+    "fontSize",
+    "verticalAlign",
+    "textAlign",
+    "fontFamily",
+    "color",
+    "fontWeight",
+]);
 
-const columnCellStyles: Set<string> = new Set<string>(
-    [
-            "fontSize",
-            "verticalAlign",
-            "textAlign",
-            "fontFamily",
-            "color",
-            "fontWeight",
-            ]);
 
-/** Using this for property validating failed
-export interface IColumnCellStyles {
-    verticalAlign: string;
-    fontSize: string;
-    textAlign: string;
-    fontFamily: string;
-    color: string;
-    fontWeight: string;
-} */
+enum Direction {
+    Up = 1,
+    Down = 2,
+    UpAndDown = 3,
+    Left = 4,
+    Right = 8,
+    LeftAndRight = 12
+}
 
 function isPrimitiveCell(cell: CellEntity): cell is CellType {
     return cell == null || (cell as ICell).cell === undefined;
 }
+
 
 export class TimTableController implements IController {
     private static $inject = ["$scope", "$element", "$sce"];
@@ -205,17 +185,29 @@ export class TimTableController implements IController {
     private editedCellContent: string | undefined;
     private editedCellInitialContent: string | undefined;
     private currentCell?: { row: number, col: number, editorOpen: boolean };
-    private lastEditedCell?: {row: number, col: number};
+    private activeCell?: {row: number, col: number};
+
+    /**
+     * Stores the last direction that the user moved towards with arrow keys
+     * or Enter / Tab. Used for saving and retrieving the "coordinate" of a cell that is
+     * embedded in another cell through colspan / rowspan so it can be used in navigation.
+     */
+    private lastDirection?: { direction: Direction, coord: number };
     private mouseInTable?: boolean;
     private bigEditorOpen: boolean = false;
 
     private addRowButtonText: string = "";
+
 
     constructor(private scope: IScope, private element: IRootElementService) {
         this.keyDownPressedTable = this.keyDownPressedTable.bind(this);
         this.onClick = this.onClick.bind(this);
         this.setCellTextAlign = this.setCellTextAlign.bind(this);
         this.setCellBackgroundColor = this.setCellBackgroundColor.bind(this);
+        this.addColumnFromToolbar = this.addColumnFromToolbar.bind(this);
+        this.addRowFromToolbar = this.addRowFromToolbar.bind(this);
+        this.removeColumnFromToolbar = this.removeColumnFromToolbar.bind(this);
+        this.removeRowFromToolbar = this.removeRowFromToolbar.bind(this);
     }
 
     /**
@@ -224,7 +216,7 @@ export class TimTableController implements IController {
     $onInit() {
 
         this.initializeCellDataMatrix();
-        this.readDataBlockAndSetValuesToDataCellMatrix();
+        this.processDataBlockAndCellDataMatrix();
 
         if (this.viewctrl == null) {
             return;
@@ -253,8 +245,8 @@ export class TimTableController implements IController {
     $doCheck() {
         // TODO reference timTableEditorToolbar and ask if the color is different
 
-        /*if (this.lastEditedCell) {
-            const cell = this.cellDataMatrix[this.lastEditedCell.row][this.lastEditedCell.col];
+        /*if (this.activeCell) {
+            const cell = this.cellDataMatrix[this.activeCell.row][this.activeCell.col];
             if (cell.backgroundColor) {
                 if (cell.backgroundColor !== this.selectedCellBackgroundColor) {
                     cell.backgroundColor = this.selectedCellBackgroundColor;
@@ -280,8 +272,12 @@ export class TimTableController implements IController {
         if (this.mouseInTable) {
             if (this.isInEditMode() && isToolbarEnabled()) {
                 openTableEditorToolbar({callbacks: {
-                setTextAlign: this.setCellTextAlign,
-                setCellBackgroundColor: this.setCellBackgroundColor}, activeTable: this } );
+                    setTextAlign: this.setCellTextAlign,
+                    setCellBackgroundColor: this.setCellBackgroundColor,
+                    addColumn: this.addColumnFromToolbar,
+                    addRow: this.addRowFromToolbar,
+                    removeColumn: this.removeColumnFromToolbar,
+                    removeRow: this.removeRowFromToolbar}, activeTable: this } );
             } else {
                 // Hide the toolbar if we're not in edit mode
                 hideToolbar(this);
@@ -299,7 +295,7 @@ export class TimTableController implements IController {
                     return;
                 }
 
-                this.lastEditedCell = undefined;
+                this.activeCell = undefined;
 
                 // Do not hide the toolbar if the user clicks on another TimTable
                 if ($(target).parents(".timTableTable").length > 0) {
@@ -329,7 +325,7 @@ export class TimTableController implements IController {
     }
 
     /**
-     * Set attirbutes value to correct ones when saved cell values
+     * Set attributes value to correct ones when saved cell values
      */
     public editSave() {
         this.editing = false;
@@ -337,7 +333,7 @@ export class TimTableController implements IController {
     }
 
     /**
-     * Returns true if currentcell is not undefined
+     * Returns true if the simple cell content editor is open
      * @returns {{row: number; col: number; editorOpen: boolean} | undefined}
      */
     public isSomeCellBeingEdited() {
@@ -345,14 +341,14 @@ export class TimTableController implements IController {
     }
 
     /**
-     * Sets mouseInTable attribut to true
+     * Sets mouseInTable attribute to true
      */
     public mouseInsideTable() {
         this.mouseInTable = true;
     }
 
     /**
-     * Sets mouseInTable attribut to false
+     * Sets mouseInTable attribute to false
      */
     public mouseOutTable() {
         this.mouseInTable = false;
@@ -406,7 +402,7 @@ export class TimTableController implements IController {
      * @param {CellEntity} cell
      * @param {number} docId Document id
      * @param {string} value Value that editor will show
-     * @param {string} parId Pargharph id
+     * @param {string} parId Paragraph id
      * @param {number} row Row index
      * @param {number} col Column index
      * @returns {Promise<void>}
@@ -538,9 +534,10 @@ export class TimTableController implements IController {
     }
 
     /**
-     * Reads DataBlock and sets all values to DataCellMatrix
+     * Combines datablock data with YAML table data.
+     * Also processes rowspan and colspan and sets the table up for rendering.
      */
-    private readDataBlockAndSetValuesToDataCellMatrix() {
+    private processDataBlockAndCellDataMatrix() {
         if (this.data.table.tabledatablock) {   // reads tabledatablock and sets all values to datacellmatrix
             for (const item in this.data.table.tabledatablock.cells) {
 
@@ -558,7 +555,51 @@ export class TimTableController implements IController {
             }
         }
 
-        const cdm = this.cellDataMatrix;
+        // Process cell col/rowspan and figure out which cells should be rendered as part of another cell
+        // (or, in terms of HTML, should not be rendered at all)
+
+        for (let y = 0; y < this.cellDataMatrix.length; y++) {
+            const row = this.cellDataMatrix[y];
+
+            if (!row) { continue; }
+
+            let renderIndexX = 0;
+
+            for (let x = 0; x < row.length; x++) {
+                const cell = row[x];
+                if (cell.underSpanOf) {
+                    continue;
+                }
+                cell.renderIndexX = renderIndexX;
+                cell.renderIndexY = y;
+                renderIndexX++;
+
+                const colspan = cell.colspan ? cell.colspan : 1;
+                const rowspan = cell.rowspan ? cell.rowspan : 1;
+
+                if (colspan === 1 && rowspan === 1) { continue; } // might enhance performance?
+
+                for (let spanCellY = 0; spanCellY < rowspan; spanCellY++) {
+                    if (y + spanCellY >= this.cellDataMatrix.length) { break; }
+
+                    const spanRow = this.cellDataMatrix[y + spanCellY];
+
+                    for (let spanCellX = 0; spanCellX < colspan; spanCellX++) {
+                        if (spanCellY == 0 && spanCellX == 0) { continue; }
+                        if (x + spanCellX >= spanRow.length) { break; }
+
+                        const spanCell = spanRow[x + spanCellX];
+                        if (spanCell.underSpanOf)
+                        {
+                            // console.log("Found intersecting colspan / rowspan areas");
+                            break;
+                        }
+
+                        spanCell.underSpanOf = {row: y, col: x};
+                    }
+                }
+            }
+        }
     }
 
     /**
@@ -668,8 +709,8 @@ export class TimTableController implements IController {
             }
 
             // if no cell is being edited, open the last-edited cell for editing
-            if (this.lastEditedCell != undefined) {
-                this.openCell(this.lastEditedCell.row, this.lastEditedCell.col);
+            if (this.activeCell != undefined) {
+                this.openCell(this.activeCell.row, this.activeCell.col);
                 return;
             }
         }
@@ -687,15 +728,17 @@ export class TimTableController implements IController {
                     this.saveCells(value, this.viewctrl.item.id, parId, this.currentCell.row, this.currentCell.col);
                 }
                 if (this.currentCell.row === this.cellDataMatrix.length - 1) {
-                    this.openCellNextRowOrColumn(this.currentCell.row, this.currentCell.col + 1);
+                    //this.openCellNextRowOrColumn(this.currentCell.row, this.currentCell.col + 1);
+                    this.doCellMovement(Direction.Right);
                 } else {
-                    this.openCellNextRowOrColumn(this.currentCell.row + 1, this.currentCell.col);
+                    //this.openCellNextRowOrColumn(this.currentCell.row + 1, this.currentCell.col);
+                    this.doCellMovement(Direction.Down);
                 }
                 return;
             }
 
-            if (this.lastEditedCell) {
-                this.openCell(this.lastEditedCell.row, this.lastEditedCell.col);
+            if (this.activeCell) {
+                this.openCell(this.activeCell.row, this.activeCell.col);
             }
         }
 
@@ -712,7 +755,8 @@ export class TimTableController implements IController {
             }
 
             if (this.currentCell) {
-                this.openCellNextRowOrColumn(this.currentCell.row, this.currentCell.col + 1);
+                this.doCellMovement(Direction.Right);
+                // this.openCellNextRowOrColumn(this.currentCell.row, this.currentCell.col + 1);
             }
 
             return;
@@ -746,56 +790,102 @@ export class TimTableController implements IController {
         this.saveCurrentCell();
 
         if (ev.keyCode === KEY_DOWN) {
-            this.doCellMovement(0, 1);
-            return;
-        }
-        if (ev.keyCode === KEY_RIGHT) {
-            this.doCellMovement(1, 0);
-            return;
-        }
-        if (ev.keyCode === KEY_LEFT) {
-            this.doCellMovement(-1, 0);
-            return;
-        }
-        if (ev.keyCode === KEY_UP) {
-            this.doCellMovement(0, -1);
-            return;
+            this.doCellMovement(Direction.Down);
+        } else if (ev.keyCode === KEY_RIGHT) {
+            this.doCellMovement(Direction.Right);
+        } else if (ev.keyCode === KEY_LEFT) {
+            this.doCellMovement(Direction.Left);
+        } else if (ev.keyCode === KEY_UP) {
+            this.doCellMovement(Direction.Up);
         }
     }
 
     /**
      * Switches the edit mode to another cell relative to either the current
      * or last edited cell.
-     * @param {number} x
-     * @param {number} y
+     * @param direction The direction that the cell edit mode should move to.
      */
-    private doCellMovement(x: number, y: number) {
-        if (this.currentCell) {
-            this.openCell(this.currentCell.row + y, this.currentCell.col + x);
-            return;
-        }
+    private doCellMovement(direction: Direction) {
+        if (this.activeCell) {
+            let x = this.activeCell.col;
+            let y = this.activeCell.row;
+            if (this.lastDirection) {
+                if ((this.lastDirection.direction & Direction.UpAndDown) > 0) {
+                    if ((direction & Direction.UpAndDown) > 0) {
+                        x = this.lastDirection.coord;
+                    }
+                } else {
+                    if ((direction & Direction.LeftAndRight) > 0) {
+                        y = this.lastDirection.coord;
+                    }
+                }
+            }
+            const nextCellCoords = this.getNextCell(x, y, direction);
 
-        if (this.lastEditedCell) {
-            const newRow = this.constrainRowIndex(this.lastEditedCell.row + y);
-            const newColumn = this.constrainColumnIndex(newRow, this.lastEditedCell.col + x);
-            this.setActiveCell(newRow, newColumn);
+            if (!nextCellCoords) {
+                return;
+            }
+
+            if (this.currentCell) {
+                this.openCell(nextCellCoords.row, nextCellCoords.col);
+                return;
+            }
+
+            this.setActiveCell(nextCellCoords.row, nextCellCoords.col);
         }
     }
 
     /**
-     * Clicks specified cell or hops opposite side of the table
-     * @param {number} rowi Row index
-     * @param {number} coli Column index
+     * Gets the next cell in a given direction from a cell.
+     * Takes rowspan and colspan into account.
+     * @param x The X coordinate (column index) of the source cell.
+     * @param y The Y coordinate (row index) of the source cell.
+     * @param direction The direction.
      */
-    private openCell(rowi: number, coli: number) {
-        const modal: CellEntity = {
-            cell: "",
-        };
+    private getNextCell(x: number, y: number, direction: Direction): {row: number, col: number} | null {
+        let sourceCell = this.cellDataMatrix[y][x];
+        while (sourceCell.underSpanOf) {
+            sourceCell = this.cellDataMatrix[sourceCell.underSpanOf.row][sourceCell.underSpanOf.col];
+        }
 
-        rowi = this.constrainRowIndex(rowi);
-        coli = this.constrainColumnIndex(rowi, coli);
+        let nextRow;
+        let nextColumn;
+        let cell;
+        switch (direction) {
+            case Direction.Up:
+                nextRow = this.constrainRowIndex(y - 1);
+                nextColumn = this.constrainColumnIndex(nextRow, x);
+                this.lastDirection = { direction: direction, coord: nextColumn };
+                break;
+            case Direction.Left:
+                nextRow = this.constrainRowIndex(y);
+                nextColumn = this.constrainColumnIndex(nextRow, x - 1);
+                this.lastDirection = { direction: direction, coord: nextRow };
+                break;
+            case Direction.Down:
+                const sourceRowspan = sourceCell.rowspan ? sourceCell.rowspan : 1;
+                nextRow = this.constrainRowIndex(y + sourceRowspan);
+                nextColumn = this.constrainColumnIndex(nextRow, x);
+                this.lastDirection = { direction: direction, coord: nextColumn };
+                break;
+            case Direction.Right:
+                const sourceColspan = sourceCell.colspan ? sourceCell.colspan : 1;
+                nextRow = this.constrainRowIndex(y);
+                nextColumn = this.constrainColumnIndex(nextRow, x + sourceColspan);
+                this.lastDirection = { direction: direction, coord: nextRow };
+                break;
+            default:
+                return null;
+        }
 
-        this.cellClicked(modal, rowi, coli);
+        cell = this.cellDataMatrix[nextRow][nextColumn];
+        while (cell.underSpanOf) {
+            nextRow = cell.underSpanOf.row;
+            nextColumn = cell.underSpanOf.col;
+            cell = this.cellDataMatrix[nextRow][nextColumn];
+        }
+
+        return { row: nextRow, col: nextColumn };
     }
 
     private constrainRowIndex(rowIndex: number) {
@@ -813,7 +903,7 @@ export class TimTableController implements IController {
     }
 
     /**
-     * Clicks given or hops opposite side of the table
+     * Opens given cell for editing or hops to opposite side of the table
      * @param {number} rowi Row index
      * @param {number} coli Column index
      */
@@ -835,17 +925,40 @@ export class TimTableController implements IController {
             coli = this.cellDataMatrix[rowi].length - 1;
         }
 
-        this.cellClicked(modal, rowi, coli);
+        let cell = this.cellDataMatrix[rowi][coli];
+        while (cell.underSpanOf) {
+            rowi = cell.underSpanOf.row;
+            coli = cell.underSpanOf.col;
+            cell = this.cellDataMatrix[rowi][coli];
+        }
+
+        this.openCellForEditing(modal, rowi, coli);
     }
 
     private setActiveCell(rowi: number, coli: number) {
-        this.lastEditedCell = {row: rowi, col: coli};
-        /*const cell = this.cellDataMatrix[rowi][coli];
-        if (cell.backgroundColor) {
-            this.selectedCellBackgroundColor = cell.backgroundColor;
-        } else {
-            this.selectedCellBackgroundColor = this.DEFAULT_CELL_BGCOLOR; ///a
-        } */
+        let cell = this.cellDataMatrix[rowi][coli];
+        while (cell.underSpanOf) {
+            rowi = cell.underSpanOf.row;
+            coli = cell.underSpanOf.col;
+            cell = this.cellDataMatrix[rowi][coli];
+        }
+        this.activeCell = {row: rowi, col: coli};
+    }
+
+    /**
+     * Clicks specified cell or hops opposite side of the table
+     * @param {number} rowi Row index
+     * @param {number} coli Column index
+     */
+    private openCell(rowi: number, coli: number) {
+        const modal: CellEntity = {
+            cell: "",
+        };
+
+        rowi = this.constrainRowIndex(rowi);
+        coli = this.constrainColumnIndex(rowi, coli);
+
+        this.openCellForEditing(modal, rowi, coli);
     }
 
     /**
@@ -856,6 +969,18 @@ export class TimTableController implements IController {
      * @param {MouseEvent} event If mouse was clikced
      */
     private async cellClicked(cell: CellEntity, rowi: number, coli: number, event?: MouseEvent) {
+        this.openCellForEditing(cell, rowi, coli, event);
+        this.lastDirection = undefined;
+    }
+
+    /**
+     * Opens a cell for editing.
+     * @param cell The cell.
+     * @param rowi The row index.
+     * @param coli The column index.
+     * @param event The mouse event, if the cell was clicked.
+     */
+    private openCellForEditing(cell: CellEntity, rowi: number, coli: number, event?: MouseEvent) {
         const parId = getParId(this.element.parents(".par"));
         if (!this.isInEditMode() || !this.viewctrl || !parId || (this.currentCell && this.currentCell.editorOpen)) { return; }
 
@@ -865,11 +990,11 @@ export class TimTableController implements IController {
             }
         }
 
-        const activeCell = this.lastEditedCell;
+        const activeCell = this.activeCell;
         this.setActiveCell(rowi, coli);
         if (this.currentCell ||
-            (activeCell && this.lastEditedCell &&
-            activeCell.row === this.lastEditedCell.row && activeCell.col === this.lastEditedCell.col)) {
+            (activeCell && this.activeCell &&
+            activeCell.row === this.activeCell.row && activeCell.col === this.activeCell.col)) {
             this.saveCurrentCell();
             const cellData = this.getCellContentString(rowi, coli);
             this.editedCellContent = cellData;
@@ -907,7 +1032,11 @@ export class TimTableController implements IController {
     private async calculateElementPlaces(rowi: number, coli: number, event?: MouseEvent) {
         await $timeout();
         const table = this.element.find(".timTableTable").first();
-        const tablecell = table.children("tbody").last().children("tr").eq(rowi).children("td").eq(coli);
+        const cell = this.cellDataMatrix[rowi][coli];
+        if (cell.renderIndexX === undefined || cell.renderIndexY === undefined) {
+            return; // we should never be able to get here
+        }
+        const tablecell = table.children("tbody").last().children("tr").eq(cell.renderIndexY).children("td").eq(cell.renderIndexX);
         const off = tablecell.offset();
         /*let off;
         if (event && event.target) {
@@ -1044,19 +1173,7 @@ export class TimTableController implements IController {
         }
 
         const row = this.data.table.rows[rowi];
-
-        // TODO decide what to do with this old implementation
-        for (const key of Object.keys(row)) {
-            const property: string = styleToHtml[key];
-            if (property === undefined) {
-                continue;
-            }
-            const c = row[key as keyof IRowStyles];
-            if (!c) {
-                continue;
-            }
-            styles[property] = c;
-        }
+        this.applyStyle(styles, row, rowStyles);
         return styles;
     }
 
@@ -1066,18 +1183,7 @@ export class TimTableController implements IController {
      */
     private stylingForTable(tab: ITable) {
         const styles: { [index: string]: string } = {};
-
-        for (const key of Object.keys(tab)) {
-            const property: string = styleToHtml[key];
-            if (property === undefined) {
-                continue;
-            }
-            const c = tab[key as keyof ITableStyles];
-            if (!c) {
-                continue;
-            }
-            styles[property] = c;
-        }
+        this.applyStyle(styles, tab, tableStyles);
         return styles;
     }
 
@@ -1123,37 +1229,35 @@ export class TimTableController implements IController {
     }
 
     /**
-     * Handles the user's click on the "add row" button.
-     */
-    async addRowButtonClick() {
-        if (this.isInDataInputMode()) {
-            this.addDatablockRow();
-        } else {
-            this.addRegularRow();
-        }
-    }
-
-    /**
      * Tells the server to add a new row into this table.
      */
-    async addRegularRow() {
+    async addRow(rowId: number) {
         if (this.viewctrl == null) {
             return;
         }
 
         const parId = this.getOwnParId();
         const docId = this.viewctrl.item.id;
-        let rowId = this.cellDataMatrix.length;
-        if (this.data.table.rows) {
-            rowId = this.data.table.rows.length;
+        if (rowId == -1) {
+            if (this.isInDataInputMode()) {
+                rowId = this.cellDataMatrix.length;
+            } else {
+                if (this.data.table.rows) {
+                    rowId = this.data.table.rows.length;
+                } else {
+                    return;
+                }
+            }
         }
+
         let response;
 
         if (this.isInGlobalAppendMode()) {
             response = await $http.post<TimTable>("/timTable/addUserSpecificRow",
                 {docId, parId});
         } else {
-            response = await $http.post<TimTable>("/timTable/addRow",
+            const route = this.isInDataInputMode() ? "/timTable/addDatablockRow" : "/timTable/addRow";
+            response = await $http.post<TimTable>(route,
                 {docId, parId, rowId});
         }
 
@@ -1162,46 +1266,27 @@ export class TimTableController implements IController {
     }
 
     /**
-     * Tells the server to add a new datablock-only row into this table.
-     */
-    async addDatablockRow() {
-        if (this.viewctrl == null) {
-            return;
-        }
-
-        const parId = this.getOwnParId();
-        const docId = this.viewctrl.item.id;
-        const rowId = this.cellDataMatrix.length;
-        const response = await $http.post<TimTable>("/timTable/addDatablockRow",
-            {docId, parId, rowId});
-
-        this.data = response.data;
-        this.reInitialize();
-    }
-
-    /**
      * Tells the server to remove a row from this table.
      */
-    async removeRow() {
+    async removeRow(rowId: number) {
         if (this.viewctrl == null || !this.data.table.rows) {
             return;
         }
 
-        let datablockOnly;
-        let rowId;
+        const datablockOnly = this.isInDataInputMode();
 
-        if (this.isInDataInputMode()) {
-            datablockOnly = true;
-            rowId = this.cellDataMatrix.length - 1;
-        } else {
-            datablockOnly = false;
-            rowId = this.data.table.rows.length - 1;
+        if (rowId == -1) {
+            if (datablockOnly) {
+                rowId = this.cellDataMatrix.length - 1;
+            } else {
+                rowId = this.data.table.rows.length - 1;
+            }
         }
 
         const docId = this.viewctrl.item.id;
         const parId = this.getOwnParId();
 
-        if (rowId < 1) { return; }
+        if (rowId < 0 || this.cellDataMatrix.length < 2) { return; }
 
         const response = await $http.post<TimTable>("/timTable/removeRow",
             {docId, parId, rowId, datablockOnly});
@@ -1210,27 +1295,16 @@ export class TimTableController implements IController {
     }
 
     /**
-     * Handles the user's click on the "add column" button.
-     */
-    async addColumnButtonClick() {
-        if (this.isInDataInputMode()) {
-            this.addColumn("/timTable/addDatablockColumn");
-        } else {
-            this.addColumn("/timTable/addColumn");
-        }
-    }
-
-    /**
      * Tells the server to add a new column into this table.
      */
-    async addColumn(route: string) {
+    async addColumn(colId: number) {
         if (this.viewctrl == null) {
             return;
         }
 
+        const route = this.isInDataInputMode() ? "/timTable/addDatablockColumn" : "/timTable/addColumn";
         const parId = this.getOwnParId();
         const docId = this.viewctrl.item.id;
-        const colId = -1; // magic number for adding a column to each row regardless of the row's length
         const response = await $http.post<TimTable>(route,
             {docId, parId, colId});
         this.data = response.data;
@@ -1238,48 +1312,24 @@ export class TimTableController implements IController {
     }
 
     /**
-     * Handles clicks on the "remove column" button.
-     */
-    async removeColumnButtonClick() {
-        if (this.isInDataInputMode()) {
-            this.removeDatablockColumn();
-        } else {
-            this.removeColumn();
-        }
-    }
-
-    /**
-     * Tells the server to remove a datablock column from this table.
-     */
-    async removeDatablockColumn() {
-        if (this.viewctrl == null) {
-            return;
-        }
-
-        const parId = this.getOwnParId();
-        const docId = this.viewctrl.item.id;
-        const response = await $http.post<TimTable>("/timTable/removeDatablockColumn",
-            {docId, parId});
-        this.data = response.data;
-        this.reInitialize();
-    }
-
-    /**
      * Tells the server to remove a column from this table.
      */
-    async removeColumn() {
+    async removeColumn(colId: number) {
         if (this.viewctrl == null) {
             return;
         }
 
         const parId = this.getOwnParId();
         const docId = this.viewctrl.item.id;
-        let colId = this.getColumnCount() - 1;
+        if (colId == -1) {
+            colId = this.getColumnCount() - 1;
+        }
+        const datablockOnly = this.isInDataInputMode();
 
-        if (colId < 1) { return; }
+        if (colId < 0) { return; }
 
         const response = await $http.post<TimTable>("/timTable/removeColumn",
-            {docId, parId, colId});
+            {docId, parId, colId, datablockOnly});
         this.data = response.data;
         this.reInitialize();
     }
@@ -1291,7 +1341,7 @@ export class TimTableController implements IController {
      */
     private reInitialize() {
         this.initializeCellDataMatrix();
-        this.readDataBlockAndSetValuesToDataCellMatrix();
+        this.processDataBlockAndCellDataMatrix();
         ParCompiler.processAllMathDelayed(this.element);
 
         if (this.currentCell) {
@@ -1303,17 +1353,11 @@ export class TimTableController implements IController {
      * Calculates and returns the number of columns in the table.
      */
     private getColumnCount() {
-        if (this.viewctrl == null || !this.data.table.rows) {
-            return 0;
-        }
-
         let highestCellCount = 0;
 
-        this.data.table.rows.forEach((row) => {
-            if (row.row) {
-                if (row.row.length > highestCellCount) {
-                    highestCellCount = row.row.length;
-                }
+        this.cellDataMatrix.forEach((row) => {
+            if (row.length > highestCellCount) {
+                highestCellCount = row.length;
             }
         });
 
@@ -1337,7 +1381,7 @@ export class TimTableController implements IController {
      * In data input mode, new rows are added to the datablock instead of the regular YAML.
      */
     private isInDataInputMode() {
-        return this.data.dataInput;
+        return this.data.dataInput === true;
     }
 
     /**
@@ -1364,6 +1408,22 @@ export class TimTableController implements IController {
 
     //<editor-fold desc="Toolbar">
 
+    async addColumnFromToolbar(offset: number) {
+        if (this.activeCell) return this.addColumn(this.activeCell.col + offset);
+    }
+
+    async addRowFromToolbar(offset: number) {
+        if (this.activeCell) return this.addRow(this.activeCell.row + offset);
+    }
+
+    async removeColumnFromToolbar() {
+        if (this.activeCell) return this.removeColumn(this.activeCell.col);
+    }
+
+    async removeRowFromToolbar() {
+        if (this.activeCell) return this.removeRow(this.activeCell.row);
+    }
+
     async setCellBackgroundColor(value: string) {
         this.setCellStyleAttribute("setCellBackgroundColor", "color", value);
     }
@@ -1379,41 +1439,20 @@ export class TimTableController implements IController {
      * @param value The value of the attribute.
      */
     async setCellStyleAttribute(route: string, key: string, value: string) {
-        if (!this.viewctrl || !this.lastEditedCell) {
+        if (!this.viewctrl || !this.activeCell) {
             return;
         }
 
         const parId = this.getOwnParId();
         const docId = this.viewctrl.item.id;
-        const rowId = this.lastEditedCell.row;
-        const colId = this.lastEditedCell.col;
+        const rowId = this.activeCell.row;
+        const colId = this.activeCell.col;
 
         const response = await $http.post<TimTable>("/timTable/" + route,
             {docId, parId, rowId, colId, [key]: value});
         this.data = response.data;
         this.reInitialize();
     }
-
-    /**
-     * Tells the server to change the background color of the selected cell.
-     */
-    /*async setCellBackgroundColor() {
-        if (!this.viewctrl || !this.lastEditedCell) {
-            return;
-        }
-
-        const parId = this.getOwnParId();
-        const docId = this.viewctrl.item.id;
-        const rowId = this.lastEditedCell.row;
-        const colId = this.lastEditedCell.col;
-        const color = this.selectedCellBackgroundColor;
-
-        const response = await $http.post<TimTable>("/timTable/setCellBackgroundColor",
-            {docId, parId, rowId, colId, color});
-        this.data = response.data;
-        this.reInitialize();
-        this.selectedCellBackgroundColor = this.cellDataMatrix[rowId][colId].backgroundColor;
-    }*/
 
     //</editor-fold>
 
@@ -1435,8 +1474,8 @@ export class TimTableController implements IController {
             return this.currentCell.row === rowi && this.currentCell.col === coli;
         }*/
 
-        if (this.lastEditedCell) {
-            return this.lastEditedCell.row === rowi && this.lastEditedCell.col === coli;
+        if (this.activeCell) {
+            return this.activeCell.row === rowi && this.activeCell.col === coli;
         }
 
         return false;
@@ -1454,6 +1493,10 @@ export class TimTableController implements IController {
         return this.cellDataMatrix[rowi][coli].cell;
     }
 
+    private showCell(cell: ICell) {
+        return !cell.underSpanOf;
+    }
+
     //</editor-fold>
 }
 
@@ -1469,29 +1512,30 @@ timApp.component("timTable", {
      ng-mouseleave="$ctrl.mouseOutTable()">
     <div class="timTableContentDiv no-highlight">
     <button class="timTableEditor timButton buttonAddCol" title="Add column" ng-show="$ctrl.isInEditMode()"
-            ng-click="$ctrl.addColumnButtonClick()"><span class="glyphicon glyphicon-plus"></span></button>
+            ng-click="$ctrl.addColumn(-1)"><span class="glyphicon glyphicon-plus"></span></button>
     <button class="timTableEditor timButton buttonRemoveCol" title="Remove column" ng-show="$ctrl.isInEditMode()"
-            ng-click="$ctrl.removeColumnButtonClick()"><span class="glyphicon glyphicon-minus"></span></button>
+            ng-click="$ctrl.removeColumn(-1)"><span class="glyphicon glyphicon-minus"></span></button>
     <table ng-class="{editable: $ctrl.isInEditMode() && !$ctrl.isInForcedEditMode(), forcedEditable: $ctrl.isInForcedEditMode()}" class="timTableTable"
      ng-style="$ctrl.stylingForTable($ctrl.data.table)" id={{$ctrl.data.table.id}}>
         <col ng-repeat="c in $ctrl.data.table.columns" ng-attr-span="{{c.span}}}" id={{c.id}}
              ng-style="$ctrl.stylingForColumn(c)"/>
         <tr ng-repeat="r in $ctrl.cellDataMatrix" ng-init="rowi = $index"
             ng-style="$ctrl.stylingForRow(rowi)">
-                <td ng-class="{'activeCell': $ctrl.isActiveCell(rowi, coli)}"
-                 ng-repeat="td in r" ng-init="coli = $index" colspan="{{td.colspan}}" rowspan="{{td.rowspan}}"
+                <td ng-class="{'activeCell': $ctrl.isActiveCell(rowi, coli)}" 
+                 ng-repeat="td in r" ng-init="coli = $index" ng-if="$ctrl.showCell(td)" 
+                 colspan="{{td.colspan}}" rowspan="{{td.rowspan}}"
                     ng-style="$ctrl.stylingForCell(rowi, coli)" ng-click="$ctrl.cellClicked(td, rowi, coli, $event)">
                     <div ng-bind-html="$ctrl.getTrustedCellContentHtml(rowi, coli)">
                     </div>
                 </td>
         </tr>
     </table>
-    <button class="timTableEditor timButton buttonAddRow" title="Add row" ng-show="$ctrl.isInEditMode()" ng-click="$ctrl.addRowButtonClick()"><span
+    <button class="timTableEditor timButton buttonAddRow" title="Add row" ng-show="$ctrl.isInEditMode()" ng-click="$ctrl.addRow(-1)"><span
             class="glyphicon glyphicon-plus" ng-bind="$ctrl.addRowButtonText"></span></button>
-    <button class="timTableEditor timButton buttonRemoveRow" title="Remove row" ng-show="$ctrl.isInEditMode()" ng-click="$ctrl.removeRow()"><span
+    <button class="timTableEditor timButton buttonRemoveRow" title="Remove row" ng-show="$ctrl.isInEditMode()" ng-click="$ctrl.removeRow(-1)"><span
             class="glyphicon glyphicon-minus"></span></button>            
     </div>
-    <div class="timTableEditor">
+    <div class="timTableEditor no-highlight">
         <input class="editInput" ng-show="$ctrl.isSomeCellBeingEdited()"
                    ng-keydown="$ctrl.keyDownPressedInSmallEditor($event)"
                    ng-keyup="$ctrl.keyUpPressedInSmallEditor($event)" ng-model="$ctrl.editedCellContent">

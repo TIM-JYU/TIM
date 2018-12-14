@@ -97,6 +97,21 @@ class CellBorders:
     def __repr__(self) -> str:
         return custom_repr(self)
 
+    def set_all_borders(self, color: Tuple[str, bool]) -> None:
+        """
+        Set all borders visible and with same color.
+        :param color: Tuple containing color name or hex and whether it's in hex.
+        :return: None.
+        """
+        self.left = True
+        self.right = True
+        self.top = True
+        self.bottom = True
+        self.color_bottom = color
+        self.color_top = color
+        self.color_left = color
+        self.color_right = color
+
 
 class Cell:
     """
@@ -312,6 +327,17 @@ class Row:
         for cell in self.cells:
             i += cell.colspan
         return i
+
+    def get_cell(self, index: int) -> Union[Cell, None]:
+        """
+        Gives cell with the index number (which may be different from list index).
+        :param index: Cell index number in the table.
+        :return: Cell or None, if not found.
+        """
+        for cell in self.cells:
+            if cell.index == index:
+                return cell
+        return None
 
     def __repr__(self):
         return custom_repr(self)
@@ -928,21 +954,22 @@ def add_missing_elements(table_json, datablock):
     return table_json
 
 
-def get_span(item) -> (int, int):
+def get_span(item, default=None) -> (int, int):
     """
     Parses row and column span of the cell.
     If not specified, assume it's 1.
     :param item: Cell data.
+    :param default: Default used when not found.
     :return: Colspan and rowspan in a tuple.
     """
     try:
         colspan = item['colspan']
     except:
-        colspan = default_colspan
+        colspan = default
     try:
         rowspan = item['rowspan']
     except:
-        rowspan = default_rowspan
+        rowspan = default
     return colspan, rowspan
 
 
@@ -1036,7 +1063,7 @@ def parse_hex_color(color, default_color=None) -> Union[str, None]:
     return color
 
 
-def get_border_color(border_data) -> (str, bool):
+def get_border_color(border_data) -> Tuple[str, bool]:
     """
     Parses border color from HTML border format.
     :param border_data: HTML border format with line thickness, style, color.
@@ -1064,12 +1091,8 @@ def get_borders(item, default_borders=CellBorders()) -> CellBorders:
     try:
         border_data = item['border']
         if border_data:
-            (color, color_html) = get_border_color(border_data)
-            borders = CellBorders(True, True, True, True)
-            borders.color_bottom = color, color_html
-            borders.color_top = color, color_html
-            borders.color_left = color, color_html
-            borders.color_right = color, color_html
+            borders = CellBorders()
+            borders.set_all_borders(get_border_color(border_data))
             return borders
     except:
         borders = copy.copy(default_borders)
@@ -1246,7 +1269,7 @@ def decide_format(format_levels):
     return final_format
 
 
-def is_close(a, b, rel_tol=1e-09, abs_tol=0.0):
+def is_close(a, b, rel_tol=1e-09, abs_tol=0.0) -> bool:
     """
     Compares floats and returns true if they are almost same.
     Source: https://stackoverflow.com/questions/5595425/
@@ -1258,6 +1281,20 @@ def is_close(a, b, rel_tol=1e-09, abs_tol=0.0):
     :return: True if floats are very close to each other.
     """
     return abs(a - b) <= max(rel_tol * max(abs(a), abs(b)), abs_tol)
+
+
+def decide_colspan_rowspan(cell_colspan, cell_rowspan, datablock_colspan, datablock_rowspan):
+    colspan = cell_colspan
+    rowspan = cell_rowspan
+    if datablock_colspan:
+        colspan = datablock_colspan
+    if not colspan:
+        colspan = default_colspan
+    if datablock_colspan:
+        rowspan = datablock_rowspan
+    if not rowspan:
+        rowspan = default_rowspan
+    return colspan, rowspan
 
 
 def convert_table(table_json, draw_html_borders: bool = False) -> Table:
@@ -1306,12 +1343,8 @@ def convert_table(table_json, draw_html_borders: bool = False) -> Table:
 
     # Add light borders around every cell like in HTML-table.
     if draw_html_borders:
-        border_color = ("lightgray", False)
-        table_borders = CellBorders(left=True, right=True, top=True, bottom=True,
-                     color_bottom=border_color,
-                     color_top=border_color,
-                     color_left=border_color,
-                     color_right=border_color)
+        table_borders = CellBorders()
+        table_borders.set_all_borders(("lightgray", False))
 
     # Get column formattings:
     column_bg_color_list = get_column_color_list("backgroundColor", table_json)
@@ -1338,7 +1371,16 @@ def convert_table(table_json, draw_html_borders: bool = False) -> Table:
         # TODO: Change the logic: in HTML these go around the whole row, not each cell!
         row_borders = get_borders(row_data, table_borders)
 
+        skip_index = 0
         for j in range(0, len(table_json_rows[i]['row'])):
+            # Skips following cells based on previous cell's colspan.
+            if skip_index > 0:
+                skip_index -= 1
+                continue
+            # Skip cells that have been added because of rowspan.
+            if table_row.get_cell(j):
+                continue
+
             cell_data = table_json_rows[i]['row'][j]
 
             content = get_content(cell_data)
@@ -1352,7 +1394,7 @@ def convert_table(table_json, draw_html_borders: bool = False) -> Table:
             cell_font_family = get_font_family(cell_data, None)
             cell_font_size = get_font_size(cell_data, None)
             cell_font_weight = get_key_value(cell_data, "fontWeight", None)
-            (colspan, rowspan) = get_span(cell_data)
+            (cell_colspan, cell_rowspan) = get_span(cell_data)
             borders = get_borders(cell_data, row_borders)
 
             # Get datablock formats:
@@ -1373,6 +1415,7 @@ def convert_table(table_json, draw_html_borders: bool = False) -> Table:
             datablock_font_size = get_font_size(datablock_cell_data, None)
             datablock_h_align = get_text_horizontal_align(datablock_cell_data, None)
             datablock_font_weight = get_key_value(datablock_cell_data, "fontWeight", None)
+            datablock_colspan, datablock_rowspan = get_span(datablock_cell_data)
 
             # Decide which styles to use (from table, column, row, cell or datablock)
             (bg_color, bg_color_html) = decide_format_tuple([
@@ -1422,6 +1465,7 @@ def convert_table(table_json, draw_html_borders: bool = False) -> Table:
                 row_font_weight,
                 cell_font_weight,
                 datablock_font_weight])
+            colspan, rowspan = decide_colspan_rowspan(cell_colspan, cell_rowspan, datablock_colspan, datablock_rowspan)
 
             c = Cell(
                 content=content,
@@ -1440,14 +1484,13 @@ def convert_table(table_json, draw_html_borders: bool = False) -> Table:
                 font_weight=font_weight
             )
 
+            # TODO: Cells that are replaced in html by rowspan or colspan are left in some cases and
+            # TODO: may break multicol and -row cells and their borders.
             # Cells with rowspan > 1:
             # Multirow-cells need to be set from bottom-up in LaTeX to
             # properly show bg-colors, and empty cells need to be placed
             # above to avoid overlap, since LaTeX doesn't automatically
             # move cells aside.
-            # TODO: Multirow-multicol cells have some border problems.
-            # TODO: Cells that are replaced in html by rowspan or colspan are left in some cases and
-            # TODO: may break multicol and -row cells.
             if rowspan > 1:
                 # Take multicol-cells messing up indices into account with this:
                 cell_index = table_row.get_colspan()
@@ -1467,6 +1510,8 @@ def convert_table(table_json, draw_html_borders: bool = False) -> Table:
             # Normal cells:
             else:
                 table_row.add_cell(j, c)
+
+            skip_index = colspan - 1
 
     # Set row and column sizes according to cell contents.
     if get_key_value(table_json, "texAutoSize", True):
