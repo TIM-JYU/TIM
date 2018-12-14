@@ -95,8 +95,10 @@ export abstract class PluginBase<MarkupType extends IGenericPluginMarkup, A exte
         } else {
             this.attrsall = validated.value;
         }
-        console.log(parsed);
-        console.log(this);
+
+        // These can be uncommented for debugging:
+        // console.log(parsed);
+        // console.log(this);
     }
 
     protected abstract getAttributeType(): T;
