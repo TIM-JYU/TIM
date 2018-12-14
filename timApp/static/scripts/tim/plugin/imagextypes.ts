@@ -121,7 +121,7 @@ const CommonProps = t.clean(t.partial({
     size: Size,
     type: ObjectType,
 
-    imgproperties: ImgProps,
+    imgproperties: t.union([t.null, ImgProps]),
     textboxproperties: TextboxProps,
     vectorproperties: VectorProps,
 }));
