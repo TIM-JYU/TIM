@@ -1276,9 +1276,6 @@ class CsController extends CsBase implements IController {
             }
         }
 
-        if (this.attrs.autorun) {
-            this.runCodeLink(true);
-        }
         if (this.editorMode !== 0 || this.editorModes !== "01" || this.cssPrint) {
             this.showOtherEditor(this.editorMode);
         } // Forces code editor to change to pre
@@ -1321,6 +1318,9 @@ class CsController extends CsBase implements IController {
             if (kind === "tauno" || kind === "simcir") {
                 this.showTauno();
             }
+        }
+        if (this.attrs.autorun) {
+            this.runCodeLink(true);
         }
     }
 
@@ -2971,7 +2971,6 @@ class CsConsoleController extends CsBase implements IController {
             this.examples = this.attrs.examples;
         }
 
-        const attrs = this.attrs;
         this.pwd = ConsolePWD.getPWD(this);
         this.oldpwd = this.pwd;
         if (this.usercode === "" && this.byCode) {
