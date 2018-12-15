@@ -333,9 +333,18 @@ inputs:
         >({method: "PUT", url: url, data: params, timeout: 20000},
         ));
 
-        let error = r.result.data.web.error;
+        let error = r.result.data.error;
+        if ( !error ) {
+            if ( r.result.data.web )
+                error = r.result.data.web.error;
+        }
         if ( error ) {
             this.error = error;
+            this.isRunning = false;
+            return;
+        }
+        if ( !r.result.data.web ) {
+            this.error = 'No web reply from csPlugin!';
             this.isRunning = false;
             return;
         }

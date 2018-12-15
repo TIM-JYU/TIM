@@ -135,12 +135,13 @@ class ShowFileController extends PluginBase<t.TypeOf<typeof ShowFileMarkup>,
     }
 
     get doclink() {
-        // console.log("doclink");
-        return this.attrs.doclink;
+        console.log("doclink " + this.attrs.doclink);
+        //return this.attrs.doclink;
+        return valueDefu(this.attrs.doclink, "");
     }
 
     get hidetext() {
-        // console.log("hidetext");
+        console.log("hidetext");
         return valueDefu(this.attrs.hidetext, "hide video");
     }
 
@@ -370,7 +371,7 @@ videoApp.component("videoRunner", {
     <a href="{{::$ctrl.doclink}}" ng-if="::$ctrl.doclink" target="timdoc">
         <span ng-if="::$ctrl.docicon"><img ng-src="{{::$ctrl.docicon}}"
                                     alt="Go to doc"/> </span>{{::$ctrl.doctext}}</a>
-    <video-zoom c="$ctrl"></video-zoom>
+    <video-zoom c="::$ctrl"></video-zoom>
     <p class="plgfooter" ng-if="::$ctrl.footer" ng-bind-html="::$ctrl.footer"></p>
 </div>
 `,
@@ -392,7 +393,7 @@ videoApp.component("smallVideoRunner", {
                                              alt="Go to doc"/> </span>{{::$ctrl.doctext}}</a>
     </p>
     <div class="videoContainer"></div>
-    <video-zoom c="$ctrl"></video-zoom>
+    <video-zoom c="::$ctrl"></video-zoom>
     <p class="plgfooter" ng-if="::$ctrl.footer" ng-bind-html="::$ctrl.footer"></p>
 </div>
 `,
@@ -418,7 +419,7 @@ videoApp.component("listVideoRunner", {
                     ng-src="{{::$ctrl.docicon}}" alt="Go to doc"/> </span>{{::$ctrl.doctext}}</a></li>
     </ul>
     <div class="videoContainer"></div>
-    <video-zoom c="$ctrl"></video-zoom>
+    <video-zoom c="::$ctrl"></video-zoom>
     <p class="plgfooter" ng-if="::$ctrl.footer" ng-bind-html="::$ctrl.footer"></p>
 </div>
 `,
