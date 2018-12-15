@@ -83,70 +83,70 @@ class StackController extends PluginBase<t.TypeOf<typeof StackMarkup>,
         });
 
         if ( this.attrs.open )
-            this.runSend(true);
+            this.runGetTask();
     }
 
 
-      processNodes(res:any, nodes:any) {
-        for (var i = 0; i < nodes.length; i++) {
-          var element = nodes[i];
-          if (element.name.indexOf(STACK_VARIABLE_PREFIX) === 0 && element.name.indexOf('_val') === -1) {
-            if (element.type === 'checkbox' || element.type === 'radio') {
-              if (element.checked) {
-                res[element.name] = element.value
-              }
-            } else {
+    processNodes(res:any, nodes:any) {
+      for (var i = 0; i < nodes.length; i++) {
+        let element = nodes[i];
+        if (element.name.indexOf(STACK_VARIABLE_PREFIX) === 0 && element.name.indexOf('_val') === -1) {
+          if (element.type === 'checkbox' || element.type === 'radio') {
+            if (element.checked) {
               res[element.name] = element.value
             }
+          } else {
+            res[element.name] = element.value
           }
         }
-        return res;
       }
+      return res;
+    }
 
 
-      outputAsHtml() {
-         return $sce.trustAsHtml(this.stackoutput);
-      }
+    outputAsHtml() {
+       return $sce.trustAsHtml(this.stackoutput);
+    }
 
-      collectAnswer() {
-          let parent = this.element[0];
-          let inputs = parent.getElementsByTagName('input');
-          let textareas = parent.getElementsByTagName('textarea');
-          let selects = parent.getElementsByTagName('select');
-          let res: any = {};
-          if ( !this.timWay ) {
-              res = this.processNodes(res, inputs);
-              res = this.processNodes(res, textareas);
-              res = this.processNodes(res, selects);
-              if (Object.keys(res).length && this.userCode ) {
-                  this.userCode = JSON.stringify(res);
-              } else {
-                    try {
-                        res = JSON.parse(this.userCode);
-                    } catch {
-                        // this.timWay = true;
-                    }
-              } // note: can not be else, because timWay may change during try
-          }
-          if ( this.timWay ) res[STACK_VARIABLE_PREFIX +'ans1'] = this.userCode;
-          return res;
-      }
-
-
-      collectData() {
-        let res: any = {
-          prefix: STACK_VARIABLE_PREFIX,
-          answer: this.collectAnswer(),
+    collectAnswer() {
+        let parent = this.element[0];
+        let inputs = parent.getElementsByTagName('input');
+        let textareas = parent.getElementsByTagName('textarea');
+        let selects = parent.getElementsByTagName('select');
+        let res: any = {};
+        if ( !this.timWay ) {
+            res = this.processNodes(res, inputs);
+            res = this.processNodes(res, textareas);
+            res = this.processNodes(res, selects);
+            if (Object.keys(res).length && this.userCode ) {
+                this.userCode = JSON.stringify(res);
+            } else {
+                  try {
+                      res = JSON.parse(this.userCode);
+                  } catch {
+                      // this.timWay = true;
+                  }
+            } // note: can not be else, because timWay may change during try
         }
+        if ( this.timWay ) res[STACK_VARIABLE_PREFIX +'ans1'] = this.userCode;
         return res;
+    }
+
+
+    collectData() {
+      let res: any = {
+        prefix: STACK_VARIABLE_PREFIX,
+        answer: this.collectAnswer(),
       }
+      return res;
+    }
 
     replace(s:string): string {
         // s = s.replace('https://stack-api-server/plots/', '/stackserver/plots/');
         return s;
     }
 
-    async handleServerResult(r:any) {
+    async handleServerResult(r:any, getTask: boolean) {
         try {
             if (typeof r === 'string' || r instanceof String) {
                 this.error = r.toString();
@@ -154,11 +154,13 @@ class StackController extends PluginBase<t.TypeOf<typeof StackMarkup>,
             }
             let json: any = r;
             this.stackoutput = this.replace(json.questiontext);
-            this.stackfeedback = this.replace(json.generalfeedback);
-            this.stackformatcorrectresponse = this.replace(json.formatcorrectresponse);
+            if ( !getTask ) {
+                this.stackfeedback = this.replace(json.generalfeedback);
+                this.stackformatcorrectresponse = this.replace(json.formatcorrectresponse);
+                this.stacksummariseresponse = this.replace(JSON.stringify(json.summariseresponse));
+                this.stackanswernotes = this.replace(JSON.stringify(json.answernotes));
+            }
             this.stackscore = json.score.toString();
-            this.stacksummariseresponse = this.replace(JSON.stringify(json.summariseresponse));
-            this.stackanswernotes = this.replace(JSON.stringify(json.answernotes));
             this.stacktime = 'Request Time: '
                 + (json.request_time).toFixed(2)
                 + ' Api Time: ' + (json.api_time).toFixed(2);
@@ -169,6 +171,10 @@ class StackController extends PluginBase<t.TypeOf<typeof StackMarkup>,
             $(inputs).keydown((e) => {
                 this.scope.$evalAsync(() => { this.autoPeekInput(e) });
             });
+            if ( getTask )  { // remove input validation texts
+                let divinput = this.element.find('.stackinputfeedback');
+                divinput.remove();
+            }
 
         } finally {
             this.isRunning = false;
@@ -312,9 +318,13 @@ inputs:
     }
 
 
-    async runSend(nosave: boolean) {
+    async runGetTask() {
+        this.runSend(true);
+    }
+
+    async runSend(getTask: boolean) {
         this.stackpeek = false;
-        nosave = nosave == true;
+        getTask = getTask == true;
         this.error = "";
         this.isRunning = true;
         let url = this.getTaskUrl();
@@ -323,7 +333,7 @@ inputs:
             input: {
                 usercode: this.timWay ? this.userCode : JSON.stringify(stackData.answer),
                 stackData: stackData,
-                nosave: nosave,
+                getTask: getTask,
                 type: 'stack'
             },
         };
@@ -333,7 +343,12 @@ inputs:
         >({method: "PUT", url: url, data: params, timeout: 20000},
         ));
 
-        let error = r.result.data.error;
+        let error = ''
+        if ( !r.result.data ) {
+            this.error = 'Timeout';
+            return;
+        }
+        error = r.result.data.error;
         if ( !error ) {
             if ( r.result.data.web )
                 error = r.result.data.web.error;
@@ -349,7 +364,7 @@ inputs:
             return;
         }
         let stackResult = r.result.data.web.stackResult;
-        await this.handleServerResult(stackResult);
+        await this.handleServerResult(stackResult, getTask);
     }
 
 

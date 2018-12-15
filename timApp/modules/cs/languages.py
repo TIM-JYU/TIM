@@ -920,6 +920,27 @@ class Stack(Language):
             err = "stackData missign from plugin"
             return 0, "", err, ""
         nosave = self.query.jso.get('input', {}).get('nosave', False)
+        q = stack_data.get("question","")
+        if q.find("[[jsxgraph]]") >= 0:  # make jsxgraph replace
+            q = q.replace("[[jsxgraph]]","""
+              <iframe frameBorder='0' width='520' height='530' srcdoc="<!DOCTYPE html>
+              <html><head>
+              <title>JSXGraph</title>
+              <script type='text/javascript' charset='UTF-8' src='https://cdnjs.cloudflare.com/ajax/libs/jsxgraph/0.99.7/jsxgraphcore.js'></script>
+              <link rel='stylesheet' type='text/css' href='https://cdnjs.cloudflare.com/ajax/libs/jsxgraph/0.99.7/jsxgraph.css'>
+              </head>
+              <body>
+              <div id='jxgbox' class='jxgbox' style='width:500px; height:500px'></div>
+              <script type='text/javascript'>
+                  var divid = 'jxgbox';
+            """)
+            q = q.replace("[[/jsxgraph]]", """
+                board.update();
+              </script>
+              </body></html>
+              "></iframe>
+            """)
+            stack_data["question"] = q
         if nosave:
             stack_data['score'] = False
             stack_data['feedback'] = False
