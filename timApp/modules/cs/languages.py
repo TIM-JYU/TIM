@@ -920,7 +920,14 @@ class Stack(Language):
         self.readpoints_default = 'Score: (.*)'
 
     def modifyUsercode(self, s):
-        return s;
+        if not s.startswith("{"):
+            return s
+        s = s.replace("&quot;",'"')
+        js = json.loads(s)
+        res = ''
+        for key in js:
+            res += js[key] + "\n"
+        return res;
 
     def run(self, web, sourcelines, points_rule, save):
         get_task = self.query.jso.get("input",{}).get("getTask",False)

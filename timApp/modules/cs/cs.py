@@ -466,7 +466,6 @@ def get_html(self, ttype, query):
     if get_param(query, "noeditor", False):
         bycode = ""
 
-
     qso = json.dumps(query.jso)
     # print(qso)
     uf = get_param(query, "uploadedFile", None)
@@ -477,7 +476,6 @@ def get_html(self, ttype, query):
         js["uploadedFile"] = uf
         js["uploadedType"] = ut
 
-    jso = json.dumps(js)
     # jso)
     runner = 'cs-runner'
     # print(ttype)
@@ -515,6 +513,10 @@ def get_html(self, ttype, query):
         language_class = languages.get(ttype.lower(), Language)
         language = language_class(query, bycode)
         usercode = language.modifyUsercode(usercode)
+        before_open = before_open.replace('{USERCODE}', usercode)
+        js['markup']['beforeOpen'] = before_open
+
+    jso = json.dumps(js)
 
     if is_rv:
         userinput = get_json_eparam(query.jso, "state", "userinput", '')

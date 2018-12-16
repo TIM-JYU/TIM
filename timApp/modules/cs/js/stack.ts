@@ -62,6 +62,7 @@ class StackController extends PluginBase<t.TypeOf<typeof StackMarkup>,
     private isRunning: boolean = false;
     private inputrows: number = 1;
     private timWay: boolean = false; // if answer is given to TIM TextArea-field
+    private isOpen: boolean = false;
 
 
     $onInit() {
@@ -328,6 +329,7 @@ inputs:
 
 
     async runGetTask() {
+        this.isOpen = true;
         this.runSend(true);
     }
 
@@ -399,7 +401,7 @@ stackApp.component("stackRunner", {
 <div class="csRunDiv math">
     <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
     <p ng-if="::$ctrl.stem" class="stem" ng-bind-html="::$ctrl.stem"></p>
-    <p ng-if="::$ctrl.attrs.beforeOpen" class="stem" ng-bind-html="::$ctrl.attrs.beforeOpen"></p>
+    <p ng-if="!$ctrl.isOpen" class="stem" ng-bind-html="::$ctrl.attrs.beforeOpen"></p>
     <div class="no-popup-menu">
                 <div class="csRunCode"><textarea class="csRunArea csInputArea" ng-if="::$ctrl.timWay"
                                          rows={{$ctrl.inputrows}}
@@ -413,7 +415,8 @@ stackApp.component("stackRunner", {
     <!-- <div class="peekdiv" id="peek" ng-bind-html="$ctrl.stackpeek"></div> -->
     <div ng-cloak ng-if="$ctrl.stackpeek" class="peekdiv" id="peek" style="height: 10em;"><div></div></div>
     <p class="csRunMenu">
-        <button ng-if="true" ng-disabled="$ctrl.isRunning" title="(Ctrl-S)" ng-click="$ctrl.runSend()"
+        <button ng-if="!$ctrl.isOpen"  title="(Ctrl-S)" ng-click="$ctrl.runGetTask()"  ng-bind-html="'Show task'"></button>
+        <button ng-if="$ctrl.isOpen && !$ctrl.isRunning" ng-disabled="$ctrl.isRunning" title="(Ctrl-S)" ng-click="$ctrl.runSend()"
                 ng-bind-html="'Send'"></button>
         <button ng-if="::!$ctrl.attrs.autopeek" ng-disabled="$ctrl.isRunning"  ng-click="$ctrl.runPeek()"
                 ng-bind-html="'Peek'"></button>
