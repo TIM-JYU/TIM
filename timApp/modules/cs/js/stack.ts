@@ -416,7 +416,7 @@ stackApp.component("stackRunner", {
     <div ng-cloak ng-if="$ctrl.stackpeek" class="peekdiv" id="peek" style="height: 10em;"><div></div></div>
     <p class="csRunMenu">
         <button ng-if="!$ctrl.isOpen"  title="(Ctrl-S)" ng-click="$ctrl.runGetTask()"  ng-bind-html="'Show task'"></button>
-        <button ng-if="$ctrl.isOpen && !$ctrl.isRunning" ng-disabled="$ctrl.isRunning" title="(Ctrl-S)" ng-click="$ctrl.runSend()"
+        <button ng-if="$ctrl.isOpen" ng-disabled="$ctrl.isRunning" title="(Ctrl-S)" ng-click="$ctrl.runSend()"
                 ng-bind-html="'Send'"></button>
         <button ng-if="::!$ctrl.attrs.autopeek" ng-disabled="$ctrl.isRunning"  ng-click="$ctrl.runPeek()"
                 ng-bind-html="'Peek'"></button>
