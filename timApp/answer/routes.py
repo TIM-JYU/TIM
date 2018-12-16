@@ -122,7 +122,15 @@ def post_answer(plugintype: str, task_id_ext: str):
     if save_teacher:
         verify_teacher_access(d)
     users = None
-    if not save_answer or is_teacher:
+    curr_user = get_current_user_object()
+    try:
+        plugin = Plugin.from_paragraph(par, user=curr_user)
+    except PluginException as e:
+        return abort(400, str(e))
+
+    get_task = answerdata and answerdata.get("getTask", None) and plugin.plugin_class.get("canGiveTask", False)
+
+    if not (save_answer or get_task) or is_teacher:
         verify_seeanswers_access(d)
     if is_teacher:
         answer_id = answer_browser_data.get('answer_id', None)
@@ -139,11 +147,6 @@ def post_answer(plugintype: str, task_id_ext: str):
             user_id = answer_browser_data.get('userId', None)
             if user_id not in (u.id for u in users):
                 return abort(400, 'userId is not associated with answer_id')
-    curr_user = get_current_user_object()
-    try:
-        plugin = Plugin.from_paragraph(par, user=curr_user)
-    except PluginException as e:
-        return abort(400, str(e))
 
     if plugin.type != plugintype:
         abort(400, f'Plugin type mismatch: {plugin.type} != {plugintype}')
@@ -210,10 +213,11 @@ def post_answer(plugintype: str, task_id_ext: str):
             text_to_add = result[0]
         obj[key] = text_to_add
 
-    add_reply(result['web'], '-replyImage')
-    add_reply(result['web'], '-replyMD', True)
-    add_reply(result['web'], '-replyHTML')
-    if 'save' in jsonresp:
+    if not get_task:
+        add_reply(result['web'], '-replyImage')
+        add_reply(result['web'], '-replyMD', True)
+        add_reply(result['web'], '-replyHTML')
+    if 'save' in jsonresp and not get_task:
         # TODO: RND_SEED: save used rnd_seed for this answer if answer is saved, found from par.get_rnd_seed()
         save_object = jsonresp['save']
         tags = []

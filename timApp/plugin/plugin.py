@@ -4,6 +4,7 @@ from typing import Tuple, Optional, Union, Iterable, Dict, NamedTuple
 
 import re
 import yaml
+import timApp
 
 from timApp.answer.answer import Answer
 from timApp.document.docparagraph import DocParagraph
@@ -92,7 +93,8 @@ class Plugin:
     answer_limit_key = 'answerLimit'
     limit_defaults = {'mmcq': 1, 'mmcq2': 1, 'mcq': 1, 'mcq2': 1}
 
-    def __init__(self, task_id: Optional[str], values: dict, plugin_type: str, par: Optional[DocParagraph] = None):
+    def __init__(self, task_id: Optional[str], values: dict, plugin_type: str,
+                 plugin_class: dict, par: Optional[DocParagraph] = None):
         self.answer: Optional[Answer] = None
         self.answer_count = None
         self.options: PluginRenderOptions = None
@@ -100,6 +102,7 @@ class Plugin:
         assert isinstance(values, dict)
         self.values = values
         self.type = plugin_type
+        self.plugin_class = plugin_class
         self.par = par
         self.points_rule_cache = None  # cache for points rule
         self.output = None
@@ -154,9 +157,11 @@ class Plugin:
         if not par.is_plugin():
             raise PluginException(f'The paragraph {par.get_id()} is not a plugin.')
         task_id_name = par.get_attr('taskId')
+        plugin_name = par.get_attr('plugin')
+        plugin_class = timApp.plugin.containerLink.get_plugin(plugin_name)
         plugin_data = parse_plugin_values_macros(par, global_attrs, macros, macro_delimiter)
         handle_plugin_error(plugin_data, task_id_name)
-        p = Plugin(task_id_name, plugin_data['markup'], par.get_attrs()['plugin'], par=par)
+        p = Plugin(task_id_name, plugin_data['markup'], par.get_attrs()['plugin'], par=par, plugin_class= plugin_class)
         return p
 
     @staticmethod
@@ -165,13 +170,15 @@ class Plugin:
         if not par.is_plugin():
             raise PluginException(f'The paragraph {par.get_id()} is not a plugin.')
         task_id_name = par.get_attr('taskId')
+        plugin_name = par.get_attr('plugin')
+        plugin_class = timApp.plugin.containerLink.get_plugin(plugin_name)
         rnd_seed = get_simple_hash_from_par_and_user(par, user)  # TODO: RND_SEED get users rnd_seed for this plugin
         par.insert_rnds(rnd_seed)
         plugin_data = parse_plugin_values(par,
                                           global_attrs=doc.get_settings().global_plugin_attrs(),
                                           macroinfo=doc.get_settings().get_macroinfo(user))
         handle_plugin_error(plugin_data, task_id_name)
-        p = Plugin(task_id_name, plugin_data['markup'], par.get_attrs()['plugin'], par=par)
+        p = Plugin(task_id_name, plugin_data['markup'], par.get_attrs()['plugin'], par=par, plugin_class= plugin_class)
         return p
 
     @staticmethod

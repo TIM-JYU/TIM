@@ -42,6 +42,7 @@ REGEXATTRS:  list of regexp for yaml attribut names that are handled as markdown
 AUTOMDATTRS: if true, plugin is allways automd
 """
 
+
 def get_plugins():
     global PLUGINS
     if PLUGINS is None:

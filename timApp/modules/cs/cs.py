@@ -452,7 +452,6 @@ def get_html(self, ttype, query):
     if query.hide_program:
         get_param_del(query, 'program', '')
 
-
     js = query_params_to_map_check_parts(query)
     # print(js)
     if "byFile" in js and not ("byCode" in js):
@@ -466,6 +465,7 @@ def get_html(self, ttype, query):
             bycode = js["by"]
     if get_param(query, "noeditor", False):
         bycode = ""
+
 
     qso = json.dumps(query.jso)
     # print(qso)
@@ -506,7 +506,17 @@ def get_html(self, ttype, query):
         runner = 'stack-runner'
 
     usercode = get_json_eparam(query.jso, "state", "usercode", "")
-    if is_review(query):
+
+    before_open = query.jso.get("markup", {}).get('beforeOpen','')
+    language = None
+    is_rv = is_review(query)
+
+    if before_open or is_rv:
+        language_class = languages.get(ttype.lower(), Language)
+        language = language_class(query, bycode)
+        usercode = language.modifyUsercode(usercode)
+
+    if is_rv:
         userinput = get_json_eparam(query.jso, "state", "userinput", '')
         userargs = get_json_eparam(query.jso, "state", "userargs", '')
         uploaded_file = get_json_eparam(query.jso, "state", "uploadedFile", None)
@@ -1009,7 +1019,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                            "angularModule": ["csApp", "csConsoleApp", "stackApp"],
                            "css": ["/cs/css/cs.css",
                                    "/cs/css/mathcheck.css"
-                                   ], "multihtml": True, "multimd": True}
+                                   ], "multihtml": True, "multimd": True, "canGiveTask": True}
             if is_parsons:
                 result_json = {"js": ["/cs/js/build/csPlugin.js",
                                       "jqueryui-touch-punch",
@@ -1169,6 +1179,9 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
             language_class = languages.get(ttype.lower(), Language)
             language = language_class(query, s)
+
+            if not language.can_give_task() and query.jso.get("input",{}).get("getTask", False):
+                raise Exception("Give task not allowed for " + ttype)
 
             mkdirs(language.prgpath)
             # os.chdir(language.prgpath)
@@ -1416,7 +1429,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                     out, err = language.copy_image(web, code, out, err, points_rule)
                 else:  # Most languages are run from here
                     # print(query.jso.get("markup").get("byCode"))
-                    code, out, err, pwddir = language.run(web, slines, points_rule)
+                    code, out, err, pwddir = language.run(web, slines, points_rule, save)
 
                 t_run_time = time.time() - t1startrun
                 # print(out[590:650])
@@ -1535,7 +1548,6 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                         out = re.sub(replace, rep.get("by", out_by), out, flags=re.M)
             else:
                 out = re.sub(out_replace, out_by, out, flags=re.M)
-
 
         is_html = get_param(query, "isHtml", False)
         if is_html:

@@ -24,7 +24,8 @@ const StackMarkup = t.intersection([
         correctresponse: t.boolean,
         generalfeedback: t.boolean,
         open: t.boolean,
-        autopeek: t.boolean
+        autopeek: t.boolean,
+        beforeOpen: t.string
     }),
     GenericPluginMarkup,
     t.type({
@@ -153,6 +154,10 @@ class StackController extends PluginBase<t.TypeOf<typeof StackMarkup>,
                 return;
             }
             let json: any = r;
+            if ( r.error ) {
+                this.error = r.message;
+                return;
+            }
             this.stackoutput = this.replace(json.questiontext);
             if ( !getTask ) {
                 this.stackfeedback = this.replace(json.generalfeedback);
@@ -296,6 +301,10 @@ inputs:
             },
         };
         const r:any = await to($http<any>({method: "PUT", url: url, data: params, timeout: 20000}, ));
+        if ( !r.result ) return;
+        if ( !r.result.data ) return;
+        if ( !r.result.data.web ) return;
+        if ( !r.result.data.web.stackResult ) return;
         await this.handleServerPeekResult(r.result.data.web.stackResult);
     }
 
@@ -390,6 +399,7 @@ stackApp.component("stackRunner", {
 <div class="csRunDiv math">
     <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
     <p ng-if="::$ctrl.stem" class="stem" ng-bind-html="::$ctrl.stem"></p>
+    <p ng-if="::$ctrl.attrs.beforeOpen" class="stem" ng-bind-html="::$ctrl.attrs.beforeOpen"></p>
     <div class="no-popup-menu">
                 <div class="csRunCode"><textarea class="csRunArea csInputArea" ng-if="::$ctrl.timWay"
                                          rows={{$ctrl.inputrows}}

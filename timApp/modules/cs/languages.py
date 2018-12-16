@@ -191,14 +191,20 @@ class Language:
     def before_save(self, s):
         return s
 
-    def run(self, web, sourcelines, points_rule):
+    def run(self, web, sourcelines, points_rule, save):
         return 0, "", "", ""
 
     def convert(self, sourcelines):
         return 0, sourcelines, "", ""
 
+    def modifyUsercode(self, s):
+        return s;
+
     def clean_error(self, err):
         return err
+
+    def can_give_task(self):
+        return False
 
     def runself(self, args, cwd=None, shell=None, kill_tree=None, timeout=None, env=None, stdin=None, uargs=None,
                 code=None, extra=None, ulimit=None, no_x11=None, savestate=None, dockercontainer=None,
@@ -904,13 +910,20 @@ class Sage(Language):
 
 
 class Stack(Language):
+    def can_give_task(self):
+        return True
+
     def __init__(self, query, sourcecode):
         super().__init__(query, sourcecode)
         self.sourcefilename = "/tmp/%s/%s.txt" % (self.basename, self.filename)
         self.fileext = "txt"
         self.readpoints_default = 'Score: (.*)'
 
-    def run(self, web, sourcelines, points_rule):
+    def modifyUsercode(self, s):
+        return s;
+
+    def run(self, web, sourcelines, points_rule, save):
+        get_task = self.query.jso.get("input",{}).get("getTask",False)
         url = "http://stack-api-server/api/endpoint.php"
         data = self.query.jso.get("input").get("stackData")
         stack_data = self.query.jso.get('markup').get('-stackData')
@@ -919,7 +932,13 @@ class Stack(Language):
         if not stack_data:
             err = "stackData missign from plugin"
             return 0, "", err, ""
+        seed = stack_data.get("seed", 0)
+        userseed = seed
+        state = self.query.jso.get("state",{})
+        if  isinstance(state, dict):
+            userseed = state.get("seed", seed)
         nosave = self.query.jso.get('input', {}).get('nosave', False)
+        stack_data["seed"] = userseed
         q = stack_data.get("question","")
         if q.find("[[jsxgraph]]") >= 0:  # make jsxgraph replace
             q = q.replace("[[jsxgraph]]","""
@@ -941,7 +960,7 @@ class Stack(Language):
               "></iframe>
             """)
             stack_data["question"] = q
-        if nosave:
+        if nosave or get_task:
             stack_data['score'] = False
             stack_data['feedback'] = False
         stack_data["answer"] = data.get("answer")
@@ -950,6 +969,8 @@ class Stack(Language):
         stack_data["ploturl"] = '/stackserver/plots/'
         if stack_data["verifyvar"]:
             stack_data["score"] = False
+        else:
+            save["seed"] = userseed
 
         r = requests.post(url=url, data=json.dumps(stack_data))   #  json.dumps(data_to_send, cls=TimJsonEncoder))
         # r = requests.get(url="http://stack-test-container/api/endpoint.html")
