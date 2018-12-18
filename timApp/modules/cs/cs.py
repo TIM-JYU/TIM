@@ -912,6 +912,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         save = {}
         web = {}
         result["web"] = web
+        result["save"] = save
 
         # print("doAll ===================================================")
         # print(self.path)
@@ -1196,8 +1197,8 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             nosave = get_param(query, "nosave", None)
             nosave = get_json_param(query.jso, "input", "nosave", nosave)
 
-            if not nosave:
-                result["save"] = save
+            if nosave:
+                result["save"] = {};
 
             if is_doc:
                 s = replace_code(query.cut_errors, s)
@@ -1428,10 +1429,10 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                         print(e)
                         code, out, err = (-1, "", str(e))
                     # print("Run2: ", language.imgsource, language.pngname)
-                    out, err = language.copy_image(web, code, out, err, points_rule)
+                    out, err = language.copy_image(result, code, out, err, points_rule)
                 else:  # Most languages are run from here
                     # print(query.jso.get("markup").get("byCode"))
-                    code, out, err, pwddir = language.run(web, slines, points_rule, save)
+                    code, out, err, pwddir = language.run(result, slines, points_rule)
 
                 t_run_time = time.time() - t1startrun
                 # print(out[590:650])

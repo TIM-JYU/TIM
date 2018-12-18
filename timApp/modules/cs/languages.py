@@ -191,7 +191,7 @@ class Language:
     def before_save(self, s):
         return s
 
-    def run(self, web, sourcelines, points_rule, save):
+    def run(self, sourcelines, points_rule):
         return 0, "", "", ""
 
     def convert(self, sourcelines):
@@ -235,7 +235,7 @@ class Language:
             return code, "", "Compiled " + self.filename, pwddir
         return code, out, err, pwddir
 
-    def copy_image(self, web, code, out, err, points_rule):
+    def copy_image(self, result, code, out, err, points_rule):
         if err:
             return out, err
         if code == -9:
@@ -256,6 +256,7 @@ class Language:
             # print(self.is_optional_image, image_ok)
             remove(self.imgsource)
             if image_ok:
+                web = result["web"]
                 if self.imgname:
                     web["image"] = self.imgdest
                 else:
@@ -286,7 +287,7 @@ class CS(Language):
         self.compiler, self.exename, self.sourcefilename)
         return cmdline
 
-    def run(self, web, sourcelines, points_rule):
+    def run(self, result, sourcelines, points_rule):
         return self.runself(["mono", "-O=all", self.pure_exename])
 
 
@@ -322,7 +323,7 @@ class Jypeli(CS):
         # /r:/cs/jypeli/Tao.Sdl.dll  /r:/cs/jypeli/OpenTK.dll
         return cmdline
 
-    def run(self, web, sourcelines, points_rule):
+    def run(self, result, sourcelines, points_rule):
         code, out, err, pwddir = self.runself(["mono", self.pure_exename],
                                               ulimit=df(self.ulimit, "ulimit -f 80000"))
         if err.find("Compile") >= 0:
@@ -340,6 +341,7 @@ class Jypeli(CS):
         if code == -9:
             out = "Runtime exceeded, maybe loop forever\n" + out
         else:
+            web = result["web"]
             if self.imgname:
                 web["image"] = self.imgdest
             else:
@@ -374,7 +376,7 @@ class CSComtest(CS):
                   (self.sourcefilename, self.compiler, self.testdll, CSComtest.nunit, self.sourcefilename, testcs)
         return cmdline
 
-    def run(self, web, sourcelines, points_rule):
+    def run(self, result, sourcelines, points_rule):
         eri = -1
         code, out, err, pwddir = self.runself(["nunit-console", "-nologo", "-nodots", self.testdll])
         # print(code, out, err)
@@ -396,6 +398,7 @@ class CSComtest(CS):
             return code, out, err, pwddir
         give_points(points_rule, "testrun")
         self.run_points_given = True
+        web = result["web"]
         web["testGreen"] = True
         if eri >= 0:
             web["testGreen"] = False
@@ -425,7 +428,7 @@ class Shell(Language):
         self.fileext = "sh"
 
     # noinspection PyBroadException
-    def run(self, web, sourcelines, points_rule):
+    def run(self, result, sourcelines, points_rule):
         try:
             os.system('chmod +x ' + self.exename)
         except:
@@ -441,7 +444,7 @@ class Shell(Language):
 
 
 class Ping(Shell):
-    def run(self, web, sourcelines, points_rule):
+    def run(self, result, sourcelines, points_rule):
         return 0, "Ping", "", ""
 
 
@@ -467,7 +470,7 @@ class Java(Language):
     def get_cmdline(self, sourcecode):
         return "javac --module-path /javafx-sdk-11.0.1/lib --add-modules=ALL-MODULE-PATH -Xlint:all -cp %s %s" % (self.classpath, self.javaname)
 
-    def run(self, web, sourcelines, points_rule):
+    def run(self, result, sourcelines, points_rule):
         code, out, err, pwddir = self.runself(["java", "--module-path", "/javafx-sdk-11.0.1/lib", "--add-modules=ALL-MODULE-PATH", "-cp", self.classpath, self.javaclassname],
                                               ulimit=df(self.ulimit, "ulimit -f 10000"))
         return code, out, err, pwddir
@@ -485,13 +488,13 @@ class Kotlin(Java):
     def get_cmdline(self, sourcecode):
         return "kotlinc  %s -include-runtime -d %s" % (self.filename, self.jarname)
 
-    def run(self, web, sourcelines, points_rule):
+    def run(self, result, sourcelines, points_rule):
         code, out, err, pwddir = self.runself(["java", "-jar", self.jarname],
                                               ulimit=df(self.ulimit, "ulimit -f 10000"))
         return code, out, err, pwddir
 
 
-def check_comtest(self, ttype, code, out, err, web, points_rule):
+def check_comtest(self, ttype, code, out, err, result, points_rule):
     if is_compile_error(out, err):
         return out, err
     eri = -1
@@ -519,6 +522,7 @@ def check_comtest(self, ttype, code, out, err, web, points_rule):
         eri = out.find("ERROR:")  # ccomtest compile error
     p = re.compile('Xlib: {2}extension "RANDR" missing on display ":1"\.\n')
     err = p.sub("", err)
+    web = result["web"]
     web["testGreen"] = True
     give_points(points_rule, "testrun")
     self.run_points_given = True
@@ -558,9 +562,9 @@ class JComtest(Java):
     def get_cmdline(self, sourcecode):
         return "java comtest.ComTest %s && javac %s %s" % (self.sourcefilename, self.sourcefilename, self.testcs)
 
-    def run(self, web, sourcelines, points_rule):
+    def run(self, result, sourcelines, points_rule):
         code, out, err, pwddir = self.runself(["java", "org.junit.runner.JUnitCore", self.testdll], no_uargs=True)
-        out, err = check_comtest(self, "jcomtest", code, out, err, web, points_rule)
+        out, err = check_comtest(self, "jcomtest", code, out, err, result, points_rule)
         return code, out, err, pwddir
 
 
@@ -571,9 +575,9 @@ class JUnit(Java):
     def get_cmdline(self, sourcecode):
         return "javac %s" % self.javaname
 
-    def run(self, web, sourcelines, points_rule):
+    def run(self, result, sourcelines, points_rule):
         code, out, err, pwddir = self.runself(["java", "org.junit.runner.JUnitCore", self.javaclassname])
-        out, err = check_comtest(self, "junit", code, out, err, web, points_rule)
+        out, err = check_comtest(self, "junit", code, out, err, result, points_rule)
         return code, out, err, pwddir
 
 
@@ -583,7 +587,7 @@ class Graphics(Java):
         self.imgsource = "%s/run/capture.png" % self.prgpath
         self.imgdest = "/csgenerated/%s.png" % self.rndname
 
-    def run(self, web, sourcelines, points_rule):
+    def run(self, result, sourcelines, points_rule):
         a = []
         delay = get_json_param(self.query.jso, "markup", "delay", "0")
         if delay is not None:
@@ -595,7 +599,7 @@ class Graphics(Java):
         runcmd = ["java", "--module-path", "/javafx-sdk-11.0.1/lib", "--add-modules=ALL-MODULE-PATH", "sample.Runner", self.javaclassname, "--captureName", "run/capture.png"]
         runcmd.extend(a)
         code, out, err, pwddir = self.runself(runcmd, cwd=self.prgpath)
-        out, err = self.copy_image(web, code, out, err, points_rule)
+        out, err = self.copy_image(result, code, out, err, points_rule)
         err = re.sub('Xlib: {2}extension "RANDR" missing on display ":1"\.\n', "", err)
         return code, out, err, pwddir
 
@@ -610,7 +614,7 @@ class Scala(Language):
     def get_cmdline(self, sourcecode):
         return "scalac %s" % self.sourcefilename
 
-    def run(self, web, sourcelines, points_rule):
+    def run(self, result, sourcelines, points_rule):
         return self.runself(["scala", self.classname], ulimit=df(self.ulimit, "ulimit -f 10000"))
 
 
@@ -625,7 +629,7 @@ class CC(Language):
     def get_cmdline(self, sourcecode):
         return self.compiler + " -Wall %s %s -o %s -lm" % (self.opt, self.sourcefilename, self.exename)
 
-    def run(self, web, sourcelines, points_rule):
+    def run(self, result, sourcelines, points_rule):
         return self.runself([self.pure_exename])
 
 
@@ -646,9 +650,9 @@ class CComtest(Language):
         self.testcs = u"{0:s}.cpp".format(self.filename)
         self.hide_compile_out = True
 
-    def run(self, web, sourcelines, points_rule):
+    def run(self, result, sourcelines, points_rule):
         code, out, err, pwddir = self.runself(["java", "-jar", "/cs/java/comtestcpp.jar", "-nq", self.testcs])
-        out, err = check_comtest(self, "ccomtest", code, out, err, web, points_rule)
+        out, err = check_comtest(self, "ccomtest", code, out, err, result, points_rule)
         return code, out, err, pwddir
 
 
@@ -667,7 +671,7 @@ class Fortran(Language):
     def get_cmdline(self, sourcecode):
         return self.compiler + " -Wall %s %s -o %s -lm" % (self.opt, self.sourcefilename, self.exename)
 
-    def run(self, web, sourcelines, points_rule):
+    def run(self, result, sourcelines, points_rule):
         return self.runself([self.pure_exename])
 
 
@@ -680,7 +684,7 @@ class PY3(Language):
         self.fileext = "py"
         self.imgdest = "/csgenerated/%s.png" % self.rndname
 
-    def run(self, web, sourcelines, points_rule):
+    def run(self, result, sourcelines, points_rule):
         code, out, err, pwddir = self.runself(["python3", self.pure_exename])
         if err:
             err = re.sub("/usr/lib/python3/dist-packages/matplotlib/font_manager(.*\n)*.*This may take a moment.'\)",
@@ -694,9 +698,9 @@ class PY3(Language):
 
 
 class PY2(PY3):
-    def run(self, web, sourcelines, points_rule):
+    def run(self, result, sourcelines, points_rule):
         code, out, err, pwddir = self.runself(["python2", self.pure_exename])
-        out, err = self.copy_image(web, code, out, err, points_rule)
+        out, err = self.copy_image(result, code, out, err, points_rule)
         return code, out, err, pwddir
 
 
@@ -710,7 +714,7 @@ class Swift(Language):
         self.imgdest = "/csgenerated/%s.png" % self.rndname
         self.imgsource = get_imgsource(query)
 
-    def run(self, web, sourcelines, points_rule):
+    def run(self, result, sourcelines, points_rule):
         code, out, err, pwddir = self.runself(["swift", self.pure_exename],
                                               ulimit=df(self.ulimit, "ulimit -f 80000 -t 10 -s 600"))
         out, err = self.copy_image(web, code, out, err, points_rule)
@@ -727,9 +731,9 @@ class Lua(Language):
         self.imgdest = "/csgenerated/%s.png" % self.rndname
         self.imgsource = get_imgsource(query)
 
-    def run(self, web, sourcelines, points_rule):
+    def run(self, result, sourcelines, points_rule):
         code, out, err, pwddir = self.runself(["lua", self.pure_exename])
-        out, err = self.copy_image(web, code, out, err, points_rule)
+        out, err = self.copy_image(result, code, out, err, points_rule)
         return code, out, err, pwddir
 
 
@@ -741,7 +745,7 @@ class CLisp(Language):
         self.fileext = "lisp"
         self.pure_exename = u"./{0:s}.lisp".format(self.filename)
 
-    def run(self, web, sourcelines, points_rule):
+    def run(self, result, sourcelines, points_rule):
         code, out, err, pwddir = self.runself(["sbcl", "--script", self.pure_exename])
         # p = re.compile("WARNING:\n"
         #               "Couldn't re-execute SBCL with proper personality flags (/proc isn't mounted? setuid?)\n"
@@ -758,7 +762,7 @@ class Text(Language):
         self.sourcefilename = "/tmp/%s/%s" % (self.basename, self.filename)
         self.pure_exename = u"./{0:s}".format(self.filename)
 
-    def run(self, web, sourcelines, points_rule):
+    def run(self, result, sourcelines, points_rule):
         showname = self.filename
         if showname == "prg":
             showname = ""
@@ -767,10 +771,10 @@ class Text(Language):
 
 
 class XML(Text):
-    def run(self, web, sourcelines, points_rule):
+    def run(self, result, sourcelines, points_rule):
         convert = self.query.jso.get('markup', {}).get('convert', None)
         if not convert:
-            return super(XML, self).run(web, sourcelines, points_rule)
+            return super(XML, self).run(result, sourcelines, points_rule)
 
         language_class = languages.get(convert.lower(), Language)
         language = language_class(self.query, sourcelines)
@@ -796,13 +800,13 @@ class JJS(Language):
                                 '    print(res);'
                                 '};')
 
-    def run(self, web, sourcelines, points_rule):
+    def run(self, result, sourcelines, points_rule):
         code, out, err, pwddir = self.runself(["jjs", self.pure_exename])
         return code, out, err, pwddir
 
 
 class JS(Language):
-    def run(self, web, sourcelines, points_rule):
+    def run(self, result, sourcelines, points_rule):
         return 0, "", "", ""
 
 
@@ -835,7 +839,7 @@ class SQL(Language):
     def set_stdin(self, userinput):
         self.stdin = self.pure_exename
 
-    def run(self, web, sourcelines, points_rule):
+    def run(self, result, sourcelines, points_rule):
         code, out, err, pwddir = self.runself(["sqlite3", self.dbname])
         if not out:
             empty_result = get_param(self.query, "emptyResult", "No result")
@@ -844,7 +848,7 @@ class SQL(Language):
 
 
 class PSQL(SQL):
-    def run(self, web, sourcelines, points_rule):
+    def run(self, result, sourcelines, points_rule):
         return self.runself(["psql", "-h", self.dbname, "-U", "$psqluser"])
 
 
@@ -857,10 +861,10 @@ class Alloy(Language):
         self.imgsource = "%s/mm.png" % self.prgpath
         self.imgdest = "/csgenerated/%s.png" % self.rndname
 
-    def run(self, web, sourcelines, points_rule):
+    def run(self, result, sourcelines, points_rule):
         runcmd = ["java", "-cp", "/cs/java/alloy-dev.jar:/cs/java", "RunAll", self.pure_exename]
         code, out, err, pwddir = self.runself(runcmd)
-        out, err = self.copy_image(web, code, out, err, points_rule)
+        out, err = self.copy_image(result, code, out, err, points_rule)
         return code, out, err, pwddir
 
 
@@ -873,7 +877,7 @@ class Run(Language):
         self.imgdest = "/csgenerated/%s.png" % self.rndname
         self.imgsource = get_imgsource(query)
 
-    def run(self, web, sourcelines, points_rule):
+    def run(self, result, sourcelines, points_rule):
         code, out, err, pwddir = self.runself([])
         uargs = self.userargs
         cmd = shlex.split(get_param(self.query, "cmd", "ls -la") + " " + self.pure_exename)
@@ -889,7 +893,7 @@ class Run(Language):
             print(e)
             code, out, err = (-1, "", str(e))
         # print("Run2: ", self.imgsource, self.imgdest)
-        out, err = self.copy_image(web, code, out, err, points_rule)
+        out, err = self.copy_image(result, code, out, err, points_rule)
         return code, out, err, pwddir
 
 
@@ -929,7 +933,7 @@ class Stack(Language):
             res += js[key] + "\n"
         return res;
 
-    def run(self, web, sourcelines, points_rule, save):
+    def run(self, result, sourcelines, points_rule):
         get_task = self.query.jso.get("input",{}).get("getTask",False)
         url = "http://stack-api-server/api/endpoint.php"
         data = self.query.jso.get("input").get("stackData")
@@ -977,6 +981,7 @@ class Stack(Language):
         if stack_data["verifyvar"]:
             stack_data["score"] = False
         else:
+            save = result["save"]
             save["seed"] = userseed
 
         r = requests.post(url=url, data=json.dumps(stack_data))   #  json.dumps(data_to_send, cls=TimJsonEncoder))
@@ -984,6 +989,7 @@ class Stack(Language):
 
         r = r.json()
         out = "Score: %s" % r.get("score",0)
+        web = result["web"];
         web["stackResult"] = r
         return 0, out, "", ""
 
@@ -1012,12 +1018,12 @@ class R(Language):
         self.pure_imgdest = u"{0:s}.{1:s}".format(self.rndname, self.image_ext)
         self.imgdest = "/csgenerated/%s.%s" % (self.rndname, self.image_ext)
 
-    def run(self, web, sourcelines, points_rule):
+    def run(self, result, sourcelines, points_rule):
         code, out, err, pwddir = self.runself(["Rscript", "--save", "--restore", self.pure_exename],
                                               ulimit=df(self.ulimit, "ulimit -f 80000"))
         err = re.sub("^Loading required package: .*\n", "", err, flags=re.M)
         err = re.sub("^This is vegan .*\n", "", err, flags=re.M)
-        out, err = self.copy_image(web, code, out, err, points_rule)
+        out, err = self.copy_image(result, code, out, err, points_rule)
         if self.delete_tmp:
             remove(self.sourcefilename)
             remove(self.exename)
@@ -1034,7 +1040,7 @@ class FS(Language):
     def get_cmdline(self, sourcecode):
         return "fsharpc --out:%s %s" % (self.exename, self.sourcefilename)
 
-    def run(self, web, sourcelines, points_rule):
+    def run(self, result, sourcelines, points_rule):
         return self.runself(["mono", self.pure_exename])
 
     def clean_error(self, err):
@@ -1051,7 +1057,7 @@ class Mathcheck(Language):
         self.fileext = "txt"
         self.readpoints_default = '<!--!points! (.*) -->'
 
-    def run(self, web, sourcelines, points_rule):
+    def run(self, result, sourcelines, points_rule):
         self.stdin = "%s.txt" % self.filename
         cmdline = "/cs/mathcheck/mathcheck_subhtml.out <%s" % sanitize_filename(self.sourcefilename)
         # print("mathcheck: ", self.stdin)
@@ -1083,7 +1089,7 @@ class Octave(Language):
         self.wavname = "%s%s" % (self.rndname, self.wavsource)
         mkdirs("/csgenerated/%s" % self.user_id)
 
-    def run(self, web, sourcelines, points_rule):
+    def run(self, result, sourcelines, points_rule):
         # print("octave: ", self.exename)
         extra = get_param(self.query, "extra", "").format(self.pure_exename, self.userargs)
         self.dockercontainer = get_json_param(self.query.jso, "markup", "dockercontainer", f"timimages/cs3:{CS3_TAG}")
@@ -1117,7 +1123,7 @@ class Octave(Language):
             err = "\n".join(lout)
             err = err.strip()
             print("err2: ", err)
-        out, err = self.copy_image(web, code, out, err, points_rule)
+        out, err = self.copy_image(result, code, out, err, points_rule)
         if self.wavsource and self.wavdest:
             remove(self.wavdest)
             wav_ok, e = copy_file(self.filepath + "/" + self.wavsource, self.wavdest, True, self.is_optional_image)
@@ -1125,6 +1131,7 @@ class Octave(Language):
                 err = (str(err) + "\n" + str(e) + "\n" + str(out))
             # print("WAV: ", self.is_optional_image, wav_ok, self.wavname, self.wavsource, self.wavdest)
             remove(self.wavsource)
+            web = result["web"]
             if wav_ok:
                 web["wav"] = "/csgenerated/" + self.wavname
         return code, out, err, pwddir
@@ -1141,7 +1148,7 @@ class Rust(Language):
     def get_cmdline(self, sourcecode):
         return f"{self.compiler} -C debuginfo=0 -o {self.exename} {self.opt} {self.sourcefilename}"
 
-    def run(self, web, sourcelines, points_rule):
+    def run(self, result, sourcelines, points_rule):
         return self.runself([self.pure_exename])
 
 
@@ -1156,7 +1163,7 @@ class Pascal(Language):
     def get_cmdline(self, sourcecode):
         return self.compiler + " %s %s -o%s" % (self.opt, self.sourcefilename, self.exename)
 
-    def run(self, web, sourcelines, points_rule):
+    def run(self, result, sourcelines, points_rule):
         return self.runself([self.pure_exename])
 
 
@@ -1170,7 +1177,7 @@ class Lang(Language):
         cmdline = ""
         return cmdline
 
-    def run(self, web, sourcelines, points_rule):
+    def run(self, result, sourcelines, points_rule):
         code, out, err, pwddir = self.runself([])
         return code, out, err, pwddir
 
