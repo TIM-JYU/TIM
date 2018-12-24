@@ -139,7 +139,7 @@ services:
    TIM_HOST: ${TIM_HOST}
   restart: unless-stopped
  stack-api-server:
-  build: /var/www/api
+  # build: /var/www/api
   image: timimages/stack
   security_opt:
    - seccomp:unconfined
