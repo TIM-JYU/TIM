@@ -1,11 +1,13 @@
-function ServerSyncValues(elem, frameName, prefix, debugName, dname, inputs)  {
+function ServerSyncValues(parentElem, frameName, prefix, debugName, dname, options)  {
     var self = this;
-    this.elem = elem;
+    this.parentElem = parentElem;
     this.dname = dname;
     this.inputs = {};
-    this.jsxFrame = elem.querySelector(frameName);
+    if ( !options ) options = {};
+
+    this.jsxFrame = parentElem.querySelector(frameName);
     if ( debugName )
-        this.debugElem = elem.querySelector(debugName);
+        this.debugElem = parentElem.querySelector(debugName);
     else
         this.debugElem = null;
     this.channel = new MessageChannel();
@@ -25,8 +27,14 @@ function ServerSyncValues(elem, frameName, prefix, debugName, dname, inputs)  {
 
     function getValue(inp) {
         if ( !inp ) return '';
-        if ( !inp.input.value ) return '';
-        return JSON.parse(inp.input.value);
+        var value = inp.input.value;
+        if ( !value ) return '';
+        try {
+            return JSON.parse(inp.input.value);
+        } catch (e) {
+            return value;
+        }
+
     }
 
     function onChange(e)  {
@@ -47,7 +55,7 @@ function ServerSyncValues(elem, frameName, prefix, debugName, dname, inputs)  {
     var getInput = function(name) {
         var inp = self.inputs[name];
         if ( inp ) return inp;
-        var input = elem.querySelector('#'+prefix+name);
+        var input = parentElem.querySelector('#'+prefix+name);
         if ( !input ) return null;
         inp = {input: input, lastValue: ''};
         self.inputs[name] = inp;
@@ -79,6 +87,9 @@ function ServerSyncValues(elem, frameName, prefix, debugName, dname, inputs)  {
                     ev.port = self.channel.port1;
                     inp.input.dispatchEvent(ev);
                     break;
+                case 'setVisibility':
+                    inp.input.style.display = cmd.value;
+                    break;
             }
         }
         if ( retCmd.length ) self.send(retCmd);
@@ -94,20 +105,22 @@ function ServerSyncValues(elem, frameName, prefix, debugName, dname, inputs)  {
     };
 
 
-    var values = "Init";
-    if ( inputs ) {
-        values = {};
-        var names = inputs.split(",");
+    var values = {};
+    if ( options.sendInputs ) {
+        var names = options.sendInputs.split(",");
         for (var i = 0; i<names.length; i++) {
             var name = names[i].trim();
             var inp = getInput(name);
             values[name] = getValue(inp);
         }
     }
+    var init = {};
+    if ( values ) init.values = values;
+    if ( options.initObject ) init.initObject = options.initObject;
 
     this.jsxFrame.addEventListener("load", function() {
         self.debug(frameName + ' loaded', 'i');
-        self.jsxFrame.contentWindow.postMessage(values , '*', [self.channel.port2]);
+        self.jsxFrame.contentWindow.postMessage(init , '*', [self.channel.port2]);
     });
 
 };

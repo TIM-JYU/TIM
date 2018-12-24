@@ -65,9 +65,11 @@ function JSXClientSync(port, dname, inputs) {
        return true;
     }
 
-    this.bind_elem = function(name, elem, setf, getf, event) {
+    this.bind_elem = function(name, elem, setf, getf, event, options) {
         var bind = {name: name, elem: elem, value: JSON.stringify(getf()), setf: setf, getf: getf}
         itemsToSync[name] = bind;
+        bind.wait1 = options.wait1;
+        bind.on = options.on;
 
         if ( self.is(inputs,name) ) setf(inputs[name]);
         else self.send([{cmd: 'get', name: name}]);
@@ -94,7 +96,7 @@ function JSXClientSync(port, dname, inputs) {
         if (typeof des === 'undefined')  des = 2;
         var getf = function() { return [elem.X().round(des), elem.Y().round(des)];};
         var setf = function(val) { if ( val ) elem.moveTo(val); };
-        self.bind_elem(name, elem, setf, getf, event);
+        self.bind_elem(name, elem, setf, getf, event, options);
     };
 
     this.bind_slider = function(name, elem, options) {
@@ -106,10 +108,11 @@ function JSXClientSync(port, dname, inputs) {
         var setf = function(val) { 
             if ( !isNaN(parseFloat(val)) ) elem.setValue(val);
         };
-        self.bind_elem(name, elem, setf, getf, event);
+        self.bind_elem(name, elem, setf, getf, event, options);
     };
 
     this.bind_var = function(name, options) {
+        // TODO: do an other version where exisiting input is used
         options = options || {};
         var event = options.event || "change";
         var input = document.createElement("input");
@@ -120,8 +123,7 @@ function JSXClientSync(port, dname, inputs) {
         // var elem = { value: "", on: function(event, onChange){}};
         var getf = function() { return JSON.parse(input.value); };
         var setf = function(val) { input.value = JSON.stringify(val); };
-        var bind = self.bind_elem(name, input, setf, getf, event);
-        bind.wait1 = options.wait1;
+        var bind = self.bind_elem(name, input, setf, getf, event, options);
         return input;
     };
 
@@ -136,6 +138,11 @@ function JSXClientSync(port, dname, inputs) {
         if ( bind ) return bind.getf();
         return self.is(inputs,name) ? inputs[name] : '';
     };
+
+    this.setVisibility = function(name, val) {
+        self.send([{cmd: 'setVisibility', name: name, value: val}]);
+    };
+
 
     this.find_input_id = function(divid, name) {
         return name;

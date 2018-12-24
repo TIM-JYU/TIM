@@ -139,7 +139,7 @@ services:
    TIM_HOST: ${TIM_HOST}
   restart: unless-stopped
  stack-api-server:
-  # build: /var/www/api
+  build: /var/www/api
   image: timimages/stack
   security_opt:
    - seccomp:unconfined
@@ -147,5 +147,7 @@ services:
    - /var/www/api/plots:/var/data/api/stack/plots:rw
    - /var/www/api/plots:/var/www/html/plots:rw
   restart: unless-stopped
+  ports:
+   - "90:80"
 volumes:
  data:

@@ -89,10 +89,13 @@ class StackController extends PluginBase<t.TypeOf<typeof StackMarkup>,
     }
 
 
-    processNodes(res:any, nodes:any) {
+    processNodes(res:any, nodes:any, id: string) {
       for (var i = 0; i < nodes.length; i++) {
         let element = nodes[i];
-        if (element.name.indexOf(STACK_VARIABLE_PREFIX) === 0 && element.name.indexOf('_val') === -1) {
+        if (element.name.indexOf(STACK_VARIABLE_PREFIX) === 0 &&
+            element.name.indexOf('_val') === -1 &&
+            element.name.indexOf(id) >= 0
+        ) {
           if (element.type === 'checkbox' || element.type === 'radio') {
             if (element.checked) {
               res[element.name] = element.value
@@ -110,16 +113,16 @@ class StackController extends PluginBase<t.TypeOf<typeof StackMarkup>,
        return $sce.trustAsHtml(this.stackoutput);
     }
 
-    collectAnswer() {
+    collectAnswer(id:string) {
         let parent = this.element[0];
         let inputs = parent.getElementsByTagName('input');
         let textareas = parent.getElementsByTagName('textarea');
         let selects = parent.getElementsByTagName('select');
         let res: any = {};
         if ( !this.timWay ) {
-            res = this.processNodes(res, inputs);
-            res = this.processNodes(res, textareas);
-            res = this.processNodes(res, selects);
+            res = this.processNodes(res, inputs, id);
+            res = this.processNodes(res, textareas, id);
+            res = this.processNodes(res, selects, id);
             if (Object.keys(res).length && this.userCode ) {
                 this.userCode = JSON.stringify(res);
             } else {
@@ -138,7 +141,7 @@ class StackController extends PluginBase<t.TypeOf<typeof StackMarkup>,
     collectData() {
       let res: any = {
         prefix: STACK_VARIABLE_PREFIX,
-        answer: this.collectAnswer(),
+        answer: this.collectAnswer(''),
       }
       return res;
     }
@@ -228,7 +231,10 @@ class StackController extends PluginBase<t.TypeOf<typeof StackMarkup>,
         let id:string = target.id;
         id = id.substr(STACK_VARIABLE_PREFIX.length);
         let answ: any = {};
-        answ[STACK_VARIABLE_PREFIX + id] = target.value;
+        // answ[STACK_VARIABLE_PREFIX + id] = target.value;
+        let isub = id.indexOf('_sub_');
+        if ( isub > 0 ) id = id.substr(0, isub); // f.ex in matrix case stackapi_ans1_sub_0_1
+        answ = this.collectAnswer(id);
         let data: any = {
             prefix: STACK_VARIABLE_PREFIX,
             verifyvar: id,
@@ -413,7 +419,7 @@ stackApp.component("stackRunner", {
                     
     <div id="output" class="stackOutput" ng-bind-html="$ctrl.outputAsHtml()"></div>
     <!-- <div class="peekdiv" id="peek" ng-bind-html="$ctrl.stackpeek"></div> -->
-    <div ng-cloak ng-if="$ctrl.stackpeek" class="peekdiv" id="peek" style="height: 10em;"><div></div></div>
+    <div ng-cloak ng-if="$ctrl.stackpeek" class="peekdiv" id="peek" style="min-height: 10em;"><div></div></div>
     <p class="csRunMenu">
         <button ng-if="!$ctrl.isOpen"  title="(Ctrl-S)" ng-click="$ctrl.runGetTask()"  ng-bind-html="'Show task'"></button>
         <button ng-if="$ctrl.isOpen" ng-disabled="$ctrl.isRunning" title="(Ctrl-S)" ng-click="$ctrl.runSend()"
