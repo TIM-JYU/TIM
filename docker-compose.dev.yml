@@ -44,18 +44,25 @@ services:
   ports:
    - "49998:22"
  stack-api-server:
-  build: /var/www/api
-  image: timimages/stack
+  image: timimages/stack-debug
+  build:
+    context: /var/www/api
+    dockerfile: DockerfileDebug
   security_opt:
    - seccomp:unconfined
   volumes:
    - /opt/tim/timApp/modules/cs/generated/stackplots:/var/data/api/stack/plots:rw
    - /var/www/api/plots:/var/data/api/stack/plots:rw
    - /var/www/api/plots:/var/www/html/plots:rw
-   - /var/www/api/api:/var/www/html/api
+   - /var/www/api/api:/var/www/html/api:rw
+   - /var/www/api/stack:/var/www/html/stack:rw
+   - /var/www/blob:/var/www/html/api/blob:rw
+   - /var/www/api/api/config.php.docker:/var/www/html/config.php
   restart: unless-stopped
   ports:
    - "90:80"
+   - "49992:22"
+   - "9000:9000"
  showfile:
   image: timimages/cs3sudo:rust
   build:

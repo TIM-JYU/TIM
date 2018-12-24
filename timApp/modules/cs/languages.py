@@ -1,6 +1,6 @@
 from subprocess import check_output
 import requests
-
+from base64 import b64encode
 
 from points import *
 from run import *
@@ -946,31 +946,31 @@ class Stack(Language):
         seed = stack_data.get("seed", 0)
         userseed = seed
         state = self.query.jso.get("state",{})
-        if  isinstance(state, dict):
+        if isinstance(state, dict):
             userseed = state.get("seed", seed)
         nosave = self.query.jso.get('input', {}).get('nosave', False)
         stack_data["seed"] = userseed
         q = stack_data.get("question","")
-        if q.find("[[jsxgraph]]") >= 0:  # make jsxgraph replace
-            q = q.replace("[[jsxgraph]]","""
-              <iframe frameBorder='0' width='520' height='530' srcdoc="<!DOCTYPE html>
-              <html><head>
-              <title>JSXGraph</title>
-              <script type='text/javascript' charset='UTF-8' src='https://cdnjs.cloudflare.com/ajax/libs/jsxgraph/0.99.7/jsxgraphcore.js'></script>
-              <link rel='stylesheet' type='text/css' href='https://cdnjs.cloudflare.com/ajax/libs/jsxgraph/0.99.7/jsxgraph.css'>
-              </head>
-              <body>
-              <div id='jxgbox' class='jxgbox' style='width:500px; height:500px'></div>
-              <script type='text/javascript'>
-                  var divid = 'jxgbox';
-            """)
-            q = q.replace("[[/jsxgraph]]", """
-                board.update();
-              </script>
-              </body></html>
-              "></iframe>
-            """)
+        if not self.query.jso.get('markup').get('stackjsx') and q.find("[[jsxgraph]]") >= 0:  # make jsxgraph replace
+            jsxtempl: str = open("/cs/stack/vec2.tmpl", "r").read()
+            lines = q.split("[[jsxgraph]]")
+            lines2 = lines[1].split("[[/jsxgraph]]")
+            alku = lines[0]
+            jsx = lines2[0]
+            loppu = lines2[1]
+            jsx = jsxtempl.replace("/*USERCODEHERE*/", jsx)
+            jsxenc = b64encode(jsx.encode())
+            jsx = "data:text/html;base64," + jsxenc.decode()
+
+            q = alku + "" +\
+                '     <iframe id="jsxFrame1" frameborder="0" width="520" height="520" sandbox="allow-scripts"  src="' +\
+                jsx + '         "></iframe>\n' +\
+                "     <script>\n" +\
+                "     var sv = new ServerSyncValues(document.getElementById('div1'), '#jsxFrame1', 'stackapi_');\n" +\
+                "     </script>" + loppu
+
             stack_data["question"] = q
+
         if nosave or get_task:
             stack_data['score'] = False
             stack_data['feedback'] = False
@@ -987,9 +987,12 @@ class Stack(Language):
         r = requests.post(url=url, data=json.dumps(stack_data))   #  json.dumps(data_to_send, cls=TimJsonEncoder))
         # r = requests.get(url="http://stack-test-container/api/endpoint.html")
 
-        r = r.json()
+        try:
+            r = r.json()
+        except:
+            return 1, "", str(r.content.decode()), ""
         out = "Score: %s" % r.get("score",0)
-        web = result["web"];
+        web = result["web"]
         web["stackResult"] = r
         return 0, out, "", ""
 
