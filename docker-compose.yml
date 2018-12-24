@@ -146,6 +146,7 @@ services:
   volumes:
    - /var/www/api/plots:/var/data/api/stack/plots:rw
    - /var/www/api/plots:/var/www/html/plots:rw
+   - /var/www/api/api/config.php.docker:/var/www/html/config.php:rw
   restart: unless-stopped
   ports:
    - "90:80"
