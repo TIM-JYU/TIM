@@ -148,6 +148,7 @@ services:
    - /var/www/api/plots:/var/www/html/plots:rw
    - /var/www/api/api/config.php.docker:/var/www/html/config.php:rw
    - /var/www/api/entrypoint_install_and_run.sh:/var/www/html/entrypoint_install_and_run.sh
+   - /var/www/api/entrypoint_install_and_run.sh:/var/www/html/entrypoint_install_and_run.sh
   restart: unless-stopped
   ports:
    - "90:80"

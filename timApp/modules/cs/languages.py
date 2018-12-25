@@ -951,14 +951,14 @@ class Stack(Language):
         nosave = self.query.jso.get('input', {}).get('nosave', False)
         stack_data["seed"] = userseed
         q = stack_data.get("question","")
-        if not self.query.jso.get('markup').get('stackjsx') and q.find("[[jsxgraph ") >= 0:  # make jsxgraph replace
-            q = q.replace('[[jsxgraph ','[[jsxgraphapi ')
-            q = q.replace('[[/jsxgraph]]','[[/jsxgraphapi]]')
-
-            stack_data["question"] = q
+        # if not self.query.jso.get('markup').get('stackjsx') and q.find("[[jsxgraph ") >= 0:  # make jsxgraph replace
+        #    q = q.replace('[[jsxgraph ','[[jsxgraphapi ')
+        #    q = q.replace('[[/jsxgraph]]','[[/jsxgraphapi]]')
+        #
+        #    stack_data["question"] = q
 
         if nosave or get_task:
-            stack_data['score'] = Falseplo
+            stack_data['score'] = False
             stack_data['feedback'] = False
         stack_data["answer"] = data.get("answer")
         stack_data["prefix"] = data.get("prefix")
