@@ -127,7 +127,12 @@ function JSXClientSync(port, dname, inputs) {
         };
         // var elem = { value: "", on: function(event, onChange){}};
         var getf = function() { return JSON.parse(input.value); };
-        var setf = function(val) { input.value = JSON.stringify(val); return true; };
+        var setf = function(val) {
+            input.value = JSON.stringify(val);
+            var e = new Event('change');
+            input.dispatchEvent(e);
+            return true;
+        };
         var bind = self.bind_elem(name, input, setf, getf, event, options);
         return input;
     };
