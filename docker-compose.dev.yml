@@ -58,6 +58,7 @@ services:
    - /var/www/api/stack:/var/www/html/stack:rw
    - /var/www/blob:/var/www/html/api/blob:rw
    - /var/www/api/api/config.php.docker:/var/www/html/config.php
+   - /var/www/api/entrypoint_install_and_run_debug.sh:/var/www/html/entrypoint_install_and_run.sh
   restart: unless-stopped
   ports:
    - "90:80"

@@ -42,9 +42,10 @@ function JSXClientSync(port, dname, inputs) {
                         var sval = JSON.stringify(cmd.value);
                         if ( sval === bind.lastValue ) break;
                         bind.lastValue = sval;
-                        bind.setf(cmd.value);
+                        if ( !bind.setf(cmd.value) ) break;
                         if ( bind.wait1 ) bind.wait1(sval);
                         bind.wait1 = null;
+                        if ( bind.on ) bind.on(sval);
                         if ( bind.elem ) {
                             if (bind.elem.board) bind.elem.board.update();
                             if (bind.elem.update) bind.elem.update();
@@ -95,7 +96,10 @@ function JSXClientSync(port, dname, inputs) {
         var des = options.des;
         if (typeof des === 'undefined')  des = 2;
         var getf = function() { return [elem.X().round(des), elem.Y().round(des)];};
-        var setf = function(val) { if ( val ) elem.moveTo(val); };
+        var setf = function(val) {
+            if ( Array.isArray(val) ) { elem.moveTo(val); return true; }
+            return false;
+        };
         self.bind_elem(name, elem, setf, getf, event, options);
     };
 
@@ -106,7 +110,8 @@ function JSXClientSync(port, dname, inputs) {
         if (typeof des === 'undefined')  des = 2;
         var getf = function() { return elem.Value().round(des); };
         var setf = function(val) { 
-            if ( !isNaN(parseFloat(val)) ) elem.setValue(val);
+            if ( !isNaN(parseFloat(val)) ) { elem.setValue(val); return true; }
+            return false;
         };
         self.bind_elem(name, elem, setf, getf, event, options);
     };
@@ -122,7 +127,7 @@ function JSXClientSync(port, dname, inputs) {
         };
         // var elem = { value: "", on: function(event, onChange){}};
         var getf = function() { return JSON.parse(input.value); };
-        var setf = function(val) { input.value = JSON.stringify(val); };
+        var setf = function(val) { input.value = JSON.stringify(val); return true; };
         var bind = self.bind_elem(name, input, setf, getf, event, options);
         return input;
     };

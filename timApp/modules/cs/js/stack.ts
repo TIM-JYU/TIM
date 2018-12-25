@@ -63,6 +63,7 @@ class StackController extends PluginBase<t.TypeOf<typeof StackMarkup>,
     private inputrows: number = 1;
     private timWay: boolean = false; // if answer is given to TIM TextArea-field
     private isOpen: boolean = false;
+    private lastInputFieldId: string = '';
 
 
     $onInit() {
@@ -178,7 +179,10 @@ class StackController extends PluginBase<t.TypeOf<typeof StackMarkup>,
             let html = this.element.find('.stackOutput');
             let inputs = html.find('input');
             $(inputs).keydown((e) => {
-                this.scope.$evalAsync(() => { this.autoPeekInput(e) });
+                let target: HTMLInputElement = e.currentTarget as HTMLInputElement;
+                let id: string = target.id;
+                this.lastInputFieldId = id;
+                this.scope.$evalAsync(() => { this.autoPeekInput(id); });
             });
             if ( getTask )  { // remove input validation texts
                 let divinput = this.element.find('.stackinputfeedback');
@@ -224,11 +228,14 @@ class StackController extends PluginBase<t.TypeOf<typeof StackMarkup>,
         this.timer = setTimeout( () => this.timedAutoPeek(e) ,500);
     }
 
-    async timedAutoPeek(e:any) {
+    async timedAutoPeek(id:string) {
         this.stopTimer();
-        if ( !this.attrs.autopeek ) return;
-        let target: HTMLInputElement = e.currentTarget as HTMLInputElement;
-        let id:string = target.id;
+        if (!this.attrs.autopeek) return;
+        await this.doPeek(id);
+    }
+
+    async doPeek(id:string)
+    {
         id = id.substr(STACK_VARIABLE_PREFIX.length);
         let answ: any = {};
         // answ[STACK_VARIABLE_PREFIX + id] = target.value;
@@ -244,45 +251,11 @@ class StackController extends PluginBase<t.TypeOf<typeof StackMarkup>,
         await this.runValidationPeek(data, id);
     }
 
-    async autoPeek() {
-        if ( !this.attrs.autopeek ) return;
-        // this.stackoutput = '';
-        await this.runPeek();
-    }
-
     async runPeek() { // this is just for test purposes
-        let data = this.collectData();
-        await this.runValidationPeek(data, 'ans1');
-    }
-
-    async runValidationPeek2(data:any, id:string) { // this is just for test purposes
-        this.isRunning = true;
-        if (!this.stackpeek) {
-            let divinput = this.element.find('.stackinputfeedback');
-            divinput.remove();
-        }
-        this.stackpeek = true;
-        let url = "/stackserver/api/endpoint.php";
-        data.question = "";
-        data.seed = 1;
-        data.question =`
-name: test
-question_html: "<p>[[validation: ` + id + `]]</p>"
-inputs:
-  ` + id + `:
-    type: algebraic
-    model_answer: ta+c
-    box_size: 20
-    syntax_attribute: value
-    forbid_words: int
-    require_lowest_terms: true
-    check_answer_type: true
-    show_validations: with_varlist
-`;
-        const r = await to($http.post<{texts: string | Array<{html: string}>}>(
-            url, data
-        ));
-        await this.handleServerPeekResult(r.result.data);
+        // let data = this.collectData();
+        // await this.runValidationPeek(data, 'ans1');
+        if ( this.lastInputFieldId)
+            this.doPeek(this.lastInputFieldId);
     }
 
 
