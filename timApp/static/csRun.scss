@@ -233,3 +233,289 @@ p.stem {
 .sortitem {
   box-sizing: content-box;
 }
+
+.stackOutput {
+    margin: 0 10px 0 10px;
+}
+
+.que.stack .matrixtable td {
+    border: 0 solid black;
+}
+
+
+.matrixtable tbody>tr>td {
+    padding-left: 0px !important;
+    padding-top: 5px !important;
+    padding-bottom: 4px !important;
+    padding-right: 0px !important;
+}
+
+/* Styles used when questions are being attempted. */
+.que.stack .stacksyntaxexample {
+    color: #1f536b;
+    font-family: monospace;
+    font-size: 100%;
+    font-weight: bold;
+}
+.que.stack .stackinputfeedback {
+    border: 1px solid #fff;
+    background-color: #fff;
+    margin: 0.2em 3em 0.5em;
+    padding: 0.5em 0.5em 0;
+}
+.que.stack .equivreasoning .stackinputfeedback {
+    display: inline-block;
+    margin-left: 0.5em;
+    margin-right: 0;
+}
+.que.stack textarea {
+    float: left;
+    max-width: 100%;
+}
+.que.stack input[type=text] {
+    max-width: 100%;
+}
+.que.stack .stackinputfeedback.empty {
+    display: none;
+}
+.que.stack .stackinputfeedback.waiting,
+.que.stack .stackinputfeedback.loading {
+    color: #888;
+    min-height: 1em;
+}
+.que.stack .stackinputfeedback.loading {
+    background: #fff url([[pix:moodle|i/loading_small]]) no-repeat top right;
+}
+.que.stack .stackinputfeedback.waiting .stacksyntaxexample,
+.que.stack .stackinputfeedback.loading .stacksyntaxexample {
+    color: #84aec1;
+}
+
+.que.stack .formulation .stackprtfeedback {
+    background: #fcf8e3;
+    margin: 0.2em -0.2em 0.5em;
+    padding: 0.2em 0.5em 0.2em 0.2em;
+    display: inline-block;
+}
+.que.stack .formulation .stackprtfeedback .correct,
+.que.stack .formulation .stackprtfeedback .partiallycorrect,
+.que.stack .formulation .stackprtfeedback .incorrect {
+    background: transparent;
+}
+.que.stack .formulation .questiontestslink {
+    float: right;
+    font-size: 0.7em;
+    margin: -1.3em -3em;
+}
+.que.stack .formulation .answer .option {
+    margin: 0.7em;
+}
+
+.que.stack .matrixtable {
+    border: 0 solid black;
+}
+.que.stack .matrixtable td {
+    border: 0 solid black;
+}
+
+
+/* Styles for the editing form. */
+body#page-question-type-stack .fitem_fgroup .accesshide,
+body#page-question-type-stack-questiontestedit .fitem_fgroup .accesshide {
+    font: inherit;
+    left: 0;
+    position: static;
+}
+body#page-question-type-stack div[id^=fgroup_id_][id*=node_] {
+    margin-top: 2em;
+    background: #ddf;
+    margin-bottom: 0;
+}
+body#page-question-type-stack div[id^=fgroup_id_][id*=nodewhentrue_],
+body#page-question-type-stack div[id^=fitem_id_][id*=truefeedback_] {
+    background: #cfc;
+    margin-bottom: 0;
+}
+body#page-question-type-stack div[id^=fgroup_id_][id*=nodewhenfalse_],
+body#page-question-type-stack div[id^=fitem_id_][id*=falsefeedback_] {
+    background: #fcc;
+    margin-bottom: 0;
+}
+body#page-question-type-stack div[id^=fitem_id_][id*=truefeedback_],
+body#page-question-type-stack div[id^=fitem_id_][id*=falsefeedback_] {
+    padding-bottom: 0.3em;
+}
+body#page-question-type-stack div[id^=fitem_id_][id*=nodeadd] {
+    margin-top: 2em;
+}
+
+/* Styles for the supporting scripts, healthcheck, etc. */
+body.path-question-type-stack dt {
+    font-weight: bold;
+}
+body.path-question-type-stack dd {
+    margin-left: 2em;
+}
+body#page-question-type-stack-healthcheck textarea {
+    font-family: monospace;
+    font-size: 0.8em;
+    width: 100%;
+    white-space: pre;
+}
+body#page-question-type-stack-healthcheck div.box {
+    background: #ddd;
+}
+body#page-question-type-stack-healthcheck div.box h2 {
+    margin-top: 0;
+    margin-bottom: 0;
+}
+body#page-question-type-stack-healthcheck div.box h3 {
+    margin-top: 0.7em;
+    margin-bottom: 0.3em;
+}
+body#page-question-type-stack-healthcheck div.box pre {
+    margin-bottom: 0;
+}
+body.path-question-type-stack table.stacktestsuite .notes td,
+body.path-question-type-stack p.notes {
+    font-weight: bold;
+}
+body.path-question-type-stack table.stacktestsuite .pass td,
+body.path-question-type-stack p.pass {
+    background-color: #dfd;
+}
+body.path-question-type-stack table.stacktestsuite .fail td,
+body.path-question-type-stack p.fail {
+    background-color: #fdd;
+}
+body.path-question-type-stack table.stacktestsuite .expectedfail td {
+    background-color: #ffd;
+}
+body.path-question-type-stack table.stacktestsuite pre {
+    font-size: 0.7em;
+}
+body.path-question-type-stack h2.fail,
+body.path-question-type-stack h3 span.fail {
+    color: #f00;
+}
+body.path-question-type-stack h2.pass,
+body.path-question-type-stack h3 span.pass {
+    color: #080;
+}
+body.path-question-type-stack .overallresult {
+    color: white;
+    font-weight: bold;
+    padding: 0.5em;
+}
+body.path-question-type-stack .overallresult.fail {
+    background: #f00;
+}
+body.path-question-type-stack .overallresult.pass {
+    background: #080;
+}
+body.path-question-type-stack .testcasebuttons div,
+body.path-question-type-stack .testcasebuttons form {
+    display: inline;
+}
+
+body.path-question-type-stack pre.questiontext,
+body#page-question-type-stack-replacedollars div.questiontext,
+body.path-question-type-stack .questionnote,
+body.path-question-type-stack .questionvariables {
+    background: #eee;
+    padding: 1em;
+}
+body.path-question-type-stack div.questionvariables {
+    padding-bottom: 0.1em;
+}
+body.path-question-type-stack .factsheet {
+    color: #000;
+    border: 1px solid #000;
+    background: #eee;
+    padding: 1em;
+}
+
+body.path-question-type-stack .undeployedvariant .singlebutton,
+body.path-question-type-stack .undeployedvariant .singlebutton div,
+body.path-question-type-stack .undeployedvariant .singlebutton form {
+    display: inline;
+}
+body.path-question-type-stack .switchtovariant {
+    margin-top: 1em;
+}
+
+.displayequation {
+    display: block;
+    text-align: left;
+    margin: 0.5em 0 0.5em 2em;
+}
+.stack_plot {
+    text-align: center;
+}
+body#page-question-type-stack-replacedollars pre.questiontext {
+    white-space: pre-wrap;
+}
+body#page-question-type-stack-replacedollars pre del {
+    color: red;
+    font-weight: bold;
+}
+body#page-question-type-stack-replacedollars pre ins {
+    color: green;
+    font-weight: bold;
+}
+
+body.ie:not(.ie11) .stack_abstract_graph {
+    /* Once IE can cope, we can delete this rule. */
+    display: none;
+}
+.stack_abstract_graph {
+    background: #ffc;
+    margin: 5px;
+}
+.stack_abstract_graph path {
+    stroke-width: 3px;
+    fill: none;
+}
+.stack_abstract_graph path.left {
+    stroke: #0d0;
+}
+.stack_abstract_graph circle.left {
+    fill: #0d0;
+}
+.stack_abstract_graph path.right {
+    stroke: #a00;
+}
+.stack_abstract_graph circle.right {
+    fill: #a00;
+}
+.stack_abstract_graph path.cross {
+    stroke: #f00;
+    stroke-linecap: round;
+}
+.stack_abstract_graph text {
+    font-family: Verdana;
+}
+.stack_abstract_graph text.nodelabel {
+    font-size: 14px;
+    fill: #fff;
+    alignment-baseline: middle;
+    text-anchor: middle;
+}
+.stack_abstract_graph text.edgelabel {
+    font-size: 10px;
+    fill: #000;
+    alignment-baseline: middle;
+}
+.stack_abstract_graph text.edgelabel.left {
+    text-anchor: end;
+}
+.stack_abstract_graph text.edgelabel.right {
+    text-anchor: start;
+}
+.stack_abstract_graph circle.node {
+    fill: #00f;
+}
+
+.que.stack {
+    background-color: azure;
+}

@@ -377,7 +377,7 @@ const common = {
 stackApp.component("stackRunner", {
     ...common,
     template: `
-<div class="csRunDiv math">
+<div class="csRunDiv math que stack">
     <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
     <p ng-if="::$ctrl.stem" class="stem" ng-bind-html="::$ctrl.stem"></p>
     <p ng-if="!$ctrl.isOpen" class="stem" ng-bind-html="::$ctrl.attrs.beforeOpen"></p>
