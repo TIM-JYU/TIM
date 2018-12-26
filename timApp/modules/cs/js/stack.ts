@@ -374,6 +374,60 @@ const common = {
     controller: StackController,
 };
 
+/*
+
+
+Palutteita (esimerkit 2x2 matriisien kertolaskusta
+
+  https://stack2.maths.ed.ac.uk/demo2018/mod/quiz/attempt.php?attempt=1502&cmid=147&page=4&scrollpos=281#q9
+
+Oikein:
+
+<div class="stackprtfeedback stackprtfeedback-prt1" id="yui_3">
+ <div class="correct" id="yui_3">
+ <span style="font-size: 1.5em; color:green;" id="yui_3_17">
+   <i class="fa fa-check" id="yui_3_17_2_"></i></span>
+   Correct answer, well done.
+ </div>
+ <div class="gradingdetails">
+   Marks for this submission: 1.00/1.00. Accounting for previous tries, this gives <strong>0.90/1.00</strong>.
+ </div>
+</div>
+
+.fa-check:before {
+    content: "\f00c";
+}
+
+Väärin:
+
+<div class="outcome clearfix" id="yui_3">
+  <h4 class="accesshide">Feedback</h4>
+  <div class="feedback">
+  <p></p>
+  <div class="stackprtfeedback stackprtfeedback-prt1">
+    <div class="incorrect">
+      <span style="font-size: 1.5em; color:red;"><i class="fa fa-times"></i></span>
+      Incorrect answer.
+    </div><span class="filter_mathjaxloader_equation">The entries underlined in red below are those that are incorrect.
+    <span class="filter_mathjaxloader_equation">...
+
+    <div class="gradingdetails">
+      Marks for this submission: 0.00/1.00. Accounting for previous tries, this gives <strong>0.90/1.00</strong>.
+      This submission attracted a penalty of 0.10. Total penalties so far: 0.20.
+    </div>
+   </div>
+   <p></p>
+  </div>
+</div>
+
+.fa-remove:before, .fa-close:before, .fa-times:before {
+    content: "\f00d";
+}
+
+
+ */
+
+
 stackApp.component("stackRunner", {
     ...common,
     template: `

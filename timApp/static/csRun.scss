@@ -517,5 +517,19 @@ body.ie:not(.ie11) .stack_abstract_graph {
 }
 
 .que.stack {
-    background-color: azure;
+    background-color: #d9edf7;
+}
+
+.stackprtfeedback {
+    background-color: #fcf8e3;
+    border: 1px solid #fbeed5;
+}
+
+.stackpartmark {
+    background-color: #fcf8e3;
+    border: 1px solid #fbeed5;
+}
+
+.stack textarea {
+    border: 1px solid black !important;
 }
