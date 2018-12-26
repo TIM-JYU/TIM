@@ -147,6 +147,7 @@ def tim_sanitize(s):
 
 STACK_ILLEGAL_WORDS=['SCRIPT', 'IFRAME']
 
+# This is not enoug, see: https://docs.microsoft.com/en-us/previous-versions/msp-n-p/ff649310(v=pandp.10)#potentially-dangerous-html-tags
 def check_not_script(s):
     sunesc = html.unescape(str(s)).upper()
     for w in STACK_ILLEGAL_WORDS:
