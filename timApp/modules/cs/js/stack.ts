@@ -178,8 +178,8 @@ class StackController extends PluginBase<t.TypeOf<typeof StackMarkup>,
                 this.stackoutput = qt.substr(0,i)+"\n";
                 this.stackinputfeedback = qt.substr(i);
             } else {
-                this.stackoutput = "";
-                this.stackinputfeedback = qt;
+                this.stackoutput = qt;
+                this.stackinputfeedback = "";
             }
 
             if ( !getTask ) {
