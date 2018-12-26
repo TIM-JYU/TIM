@@ -1567,6 +1567,8 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         ts += times_string
         # print(ts)
         web["runtime"] = cs_min_sanitize(ts)
+        if  result.get('nosave',False):  # Language has decided not to save
+            del result["save"]
 
         result["web"] = web
         # print(result)

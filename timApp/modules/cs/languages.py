@@ -5,6 +5,7 @@ from base64 import b64encode
 from points import *
 from run import *
 from os.path import splitext
+from cs_sanitizer import check_not_script
 
 sys.path.insert(0, '/py')  # /py on mountattu docker kontissa /opt/tim/timApp/modules/py -hakemistoon
 
@@ -922,6 +923,7 @@ class Stack(Language):
         self.sourcefilename = "/tmp/%s/%s.txt" % (self.basename, self.filename)
         self.fileext = "txt"
         self.readpoints_default = 'Score: (.*)'
+        self.delete_tmp = False
 
     def modifyUsercode(self, s):
         if not s.startswith("{"):
@@ -951,6 +953,7 @@ class Stack(Language):
         nosave = self.query.jso.get('input', {}).get('nosave', False)
         stack_data["seed"] = userseed
         q = stack_data.get("question","")
+
         # if not self.query.jso.get('markup').get('stackjsx') and q.find("[[jsxgraph ") >= 0:  # make jsxgraph replace
         #    q = q.replace('[[jsxgraph ','[[jsxgraphapi ')
         #    q = q.replace('[[/jsxgraph]]','[[/jsxgraphapi]]')
@@ -970,6 +973,15 @@ class Stack(Language):
             save = result["save"]
             save["seed"] = userseed
 
+        for key in stack_data:
+            s = stack_data[key]
+            if True:  # TODO: here maybe a list of checked fields
+                try:
+                    check_not_script(s)
+                except Exception as e:
+                    result['nosave'] = True
+                    return 1, "", str(e) + " " + str(key) + ": " + html.escape(str(s)), ""
+
         r = requests.post(url=url, data=json.dumps(stack_data))   #  json.dumps(data_to_send, cls=TimJsonEncoder))
         # r = requests.get(url="http://stack-test-container/api/endpoint.html")
 
@@ -978,6 +990,12 @@ class Stack(Language):
         except:
             return 1, "", str(r.content.decode()), ""
         out = "Score: %s" % r.get("score",0)
+        # r['questiontext'] = tim_sanitize(r['questiontext'])
+
+
+        if nosave:
+            out = ""
+            result["nosave"] = True
         web = result["web"]
         web["stackResult"] = r
         return 0, out, "", ""

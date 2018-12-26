@@ -4,6 +4,7 @@ from html5lib.filters import sanitizer
 from html5lib.filters.sanitizer import allowed_elements, allowed_attributes, allowed_css_properties
 from html5lib.serializer import HTMLSerializer
 import bleach
+import html
 
 '''
 "kirjasto cs-pluginissa tarvittaville sanitoinneille
@@ -143,3 +144,11 @@ def tim_sanitize(s):
     if not s:
         return s
     return bleach.clean(s, TIM_SAFE_TAGS, TIM_SAFE_ATTRS_MAP, protocols=TIM_SAFE_PROTOCOLS, styles=TIM_SAFE_STYLES)
+
+STACK_ILLEGAL_WORDS=['SCRIPT', 'IFRAME']
+
+def check_not_script(s):
+    sunesc = html.unescape(str(s)).upper()
+    for w in STACK_ILLEGAL_WORDS:
+        if sunesc.find(w) >= 0:
+            raise RuntimeError('Do not use word ' + w +'!')

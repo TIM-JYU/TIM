@@ -1,8 +1,8 @@
 ﻿import angular from "angular";
 import * as t from "io-ts";
-import {GenericPluginMarkup, PluginBase, withDefault} from "tim/plugin/util";
+import {GenericPluginMarkup, PluginBase} from "tim/plugin/util";
 import {to} from "tim/util/utils";
-import {$http, $timeout, $sce, $compile} from "tim/util/ngimport";
+import {$http, $sce} from "tim/util/ngimport";
 import {ParCompiler} from "tim/editor/parCompiler";
 
 const stackApp = angular.module("stackApp", ["ngSanitize"]);
@@ -52,6 +52,7 @@ class StackController extends PluginBase<t.TypeOf<typeof StackMarkup>,
     private error: string = "";
     private userCode: string = "";
     private stackoutput: string = "";
+    private stackinputfeedback: string ="";
     private stackpeek: boolean = false;
     private stackfeedback: string = "";
     private stackformatcorrectresponse: string = "";
@@ -64,6 +65,8 @@ class StackController extends PluginBase<t.TypeOf<typeof StackMarkup>,
     private timWay: boolean = false; // if answer is given to TIM TextArea-field
     private isOpen: boolean = false;
     private lastInputFieldId: string = '';
+    private lastInputFieldValue: string = '';
+    private lastInputFieldElement: HTMLInputElement | null = null;
 
 
     $onInit() {
@@ -74,7 +77,7 @@ class StackController extends PluginBase<t.TypeOf<typeof StackMarkup>,
         this.userCode = aa.usercode || this.attrs.by || "";
         this.timWay = aa.timWay || this.attrs.timWay || false;
 
-        this.element.bind("keydown", (event) => {
+        this.element.on("keydown", (event) => {
             if (event.ctrlKey || event.metaKey) {
                 switch (String.fromCharCode(event.which).toLowerCase()) {
                     case "s":
@@ -111,7 +114,13 @@ class StackController extends PluginBase<t.TypeOf<typeof StackMarkup>,
 
 
     outputAsHtml() {
-       return $sce.trustAsHtml(this.stackoutput);
+        let s = $sce.trustAsHtml(this.stackoutput);
+        return s;
+    }
+
+    stackinputfeedbackAsHtml() {
+        let s = $sce.trustAsHtml(this.stackinputfeedback);
+        return s;
     }
 
     collectAnswer(id:string) {
@@ -140,11 +149,10 @@ class StackController extends PluginBase<t.TypeOf<typeof StackMarkup>,
 
 
     collectData() {
-      let res: any = {
-        prefix: STACK_VARIABLE_PREFIX,
-        answer: this.collectAnswer(''),
-      }
-      return res;
+        return {
+          prefix: STACK_VARIABLE_PREFIX,
+          answer: this.collectAnswer(''),
+      };
     }
 
     replace(s:string): string {
@@ -163,7 +171,17 @@ class StackController extends PluginBase<t.TypeOf<typeof StackMarkup>,
                 this.error = r.message;
                 return;
             }
-            this.stackoutput = this.replace(json.questiontext);
+
+            let qt =  this.replace(json.questiontext);
+            let i = qt.indexOf('<div class="stackinputfeedback"');
+            if ( i>=0 ) {
+                this.stackoutput = qt.substr(0,i)+"\n";
+                this.stackinputfeedback = qt.substr(i);
+            } else {
+                this.stackoutput = "";
+                this.stackinputfeedback = qt;
+            }
+
             if ( !getTask ) {
                 this.stackfeedback = this.replace(json.generalfeedback);
                 this.stackformatcorrectresponse = this.replace(json.formatcorrectresponse);
@@ -178,12 +196,9 @@ class StackController extends PluginBase<t.TypeOf<typeof StackMarkup>,
             await ParCompiler.processAllMath(this.element);
             let html = this.element.find('.stackOutput');
             let inputs = html.find('input');
-            $(inputs).keydown((e) => {
-                let target: HTMLInputElement = e.currentTarget as HTMLInputElement;
-                let id: string = target.id;
-                this.lastInputFieldId = id;
-                this.scope.$evalAsync(() => { this.autoPeekInput(id); });
-            });
+            let inputse = html.find('textarea');
+            $(inputs).keyup(e=>this.inputHandler(e));
+            $(inputse).keyup(e=>this.inputHandler(e));
             if ( getTask )  { // remove input validation texts
                 let divinput = this.element.find('.stackinputfeedback');
                 divinput.remove();
@@ -193,6 +208,18 @@ class StackController extends PluginBase<t.TypeOf<typeof StackMarkup>,
             this.isRunning = false;
         }
     }
+
+    async inputHandler(e:any) {
+        let target: HTMLInputElement = e.currentTarget as HTMLInputElement;
+        this.lastInputFieldElement = target;
+        let id: string = target.id;
+        if ( this.lastInputFieldId === id && this.lastInputFieldValue === target.value ) return;
+        this.lastInputFieldId = id;
+        this.lastInputFieldValue = target.value;
+        this.scope.$evalAsync(() => { this.autoPeekInput(id); });
+        // await this.autoPeekInput(id);
+    }
+
 
 
     async handleServerPeekResult(r:any) {
@@ -223,9 +250,9 @@ class StackController extends PluginBase<t.TypeOf<typeof StackMarkup>,
         return true;
     }
 
-    async autoPeekInput(e:any) {
+    async autoPeekInput(id:string) {
         this.stopTimer();
-        this.timer = setTimeout( () => this.timedAutoPeek(e) ,500);
+        this.timer = setTimeout( () => this.timedAutoPeek(id) ,500);
     }
 
     async timedAutoPeek(id:string) {
@@ -237,29 +264,28 @@ class StackController extends PluginBase<t.TypeOf<typeof StackMarkup>,
     async doPeek(id:string)
     {
         id = id.substr(STACK_VARIABLE_PREFIX.length);
-        let answ: any = {};
         // answ[STACK_VARIABLE_PREFIX + id] = target.value;
         let isub = id.indexOf('_sub_');
         if ( isub > 0 ) id = id.substr(0, isub); // f.ex in matrix case stackapi_ans1_sub_0_1
-        answ = this.collectAnswer(id);
+        let answ = this.collectAnswer(id);
         let data: any = {
             prefix: STACK_VARIABLE_PREFIX,
             verifyvar: id,
             answer: answ,
-        }
+        };
 
-        await this.runValidationPeek(data, id);
+        await this.runValidationPeek(data);
     }
 
-    async runPeek() { // this is just for test purposes
+    async runPeek() { //kutsutaan templatesta
         // let data = this.collectData();
         // await this.runValidationPeek(data, 'ans1');
-        if ( this.lastInputFieldId)
-            this.doPeek(this.lastInputFieldId);
+        if ( this.lastInputFieldId )
+            await this.doPeek(this.lastInputFieldId);
     }
 
 
-    async runValidationPeek(data:any, id:string) { // this is just for test purposes
+    async runValidationPeek(data:any) {
         this.isRunning = true;
         if (!this.stackpeek) { // remove extra fields from sceen
             let divinput = this.element.find('.stackinputfeedback');
@@ -280,10 +306,15 @@ class StackController extends PluginBase<t.TypeOf<typeof StackMarkup>,
                 type: 'stack'
             },
         };
+        this.error = '';
         const r:any = await to($http<any>({method: "PUT", url: url, data: params, timeout: 20000}, ));
         if ( !r.result ) return;
         if ( !r.result.data ) return;
         if ( !r.result.data.web ) return;
+        if ( r.result.data.web.error ) {
+            this.error = r.result.data.web.error;
+            return;
+        }
         if ( !r.result.data.web.stackResult ) return;
         await this.handleServerPeekResult(r.result.data.web.stackResult);
     }
@@ -309,7 +340,7 @@ class StackController extends PluginBase<t.TypeOf<typeof StackMarkup>,
 
     async runGetTask() {
         this.isOpen = true;
-        this.runSend(true);
+        await this.runSend(true);
     }
 
     async runSend(getTask: boolean) {
@@ -333,12 +364,11 @@ class StackController extends PluginBase<t.TypeOf<typeof StackMarkup>,
         >({method: "PUT", url: url, data: params, timeout: 20000},
         ));
 
-        let error = ''
         if ( !r.result.data ) {
             this.error = 'Timeout';
             return;
         }
-        error = r.result.data.error;
+        let error = r.result.data.error;
         if ( !error ) {
             if ( r.result.data.web )
                 error = r.result.data.web.error;
@@ -355,6 +385,13 @@ class StackController extends PluginBase<t.TypeOf<typeof StackMarkup>,
         }
         let stackResult = r.result.data.web.stackResult;
         await this.handleServerResult(stackResult, getTask);
+        if ( this.lastInputFieldId ) {
+            this.lastInputFieldElement = this.element.find('#'+this.lastInputFieldId)[0] as any;
+            if ( this.lastInputFieldElement ) {
+                this.lastInputFieldElement.focus();
+                this.lastInputFieldElement.selectionStart = 0;  this.lastInputFieldElement.selectionEnd = 1000;
+            }
+        }
     }
 
 
@@ -424,6 +461,7 @@ Väärin:
     content: "\f00d";
 }
 
+// style="min-height: 20em; max-height: 20em; overflow: auto"
 
  */
 
@@ -431,30 +469,33 @@ Väärin:
 stackApp.component("stackRunner", {
     ...common,
     template: `
-<div class="csRunDiv math que stack">
+<div ng-cloak class="csRunDiv math que stack no-popup-menu" >
     <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
     <p ng-if="::$ctrl.stem" class="stem" ng-bind-html="::$ctrl.stem"></p>
     <p ng-if="!$ctrl.isOpen" class="stem" ng-bind-html="::$ctrl.attrs.beforeOpen"></p>
-    <div class="no-popup-menu">
-                <div class="csRunCode"><textarea class="csRunArea csInputArea" ng-if="::$ctrl.timWay"
-                                         rows={{$ctrl.inputrows}}
-                                         ng-model="$ctrl.userCode"
-                                         ng-trim="false"
-                                         ng-change="$ctrl.autoPeek()"
-                                         placeholder="{{$ctrl.inputplaceholder}}"></textarea></div>
-    </div>
                     
-    <div id="output" class="stackOutput" ng-bind-html="$ctrl.outputAsHtml()"></div>
+    <div class="no-popup-menu stackOutput" ng-if="::$ctrl.timWay" >
+        <div class="csRunCode"><textarea class="csRunArea csInputArea"
+                                 name="stackapi_ans1" id="stackapi_ans1"   
+                                 rows={{$ctrl.inputrows}}
+                                 ng-model="$ctrl.userCode"
+                                 ng-trim="false"
+                                 ng-change="$ctrl.autoPeek()"
+                                 placeholder="{{$ctrl.inputplaceholder}}"></textarea></div>
+    </div>
+    <div ng-cloak id="output" ng-if="::!$ctrl.timWay" class="stackOutput" ng-bind-html="$ctrl.outputAsHtml()">
+    <!--<div ng-cloak id="output" ng-if="::!$ctrl.timWay" class="stackOutput" ng-bind-html="$ctrl.output">-->
+    </div>
     <!-- <div class="peekdiv" id="peek" ng-bind-html="$ctrl.stackpeek"></div> -->
-    <div ng-cloak ng-if="$ctrl.stackpeek" class="peekdiv" id="peek" style="min-height: 10em;"><div></div></div>
     <p class="csRunMenu">
-        <button ng-if="!$ctrl.isOpen"  title="(Ctrl-S)" ng-click="$ctrl.runGetTask()"  ng-bind-html="'Show task'"></button>
+        <button ng-if="!$ctrl.isOpen"  ng-click="$ctrl.runGetTask()"  ng-bind-html="'Show task'"></button>
         <button ng-if="$ctrl.isOpen" ng-disabled="$ctrl.isRunning" title="(Ctrl-S)" ng-click="$ctrl.runSend()"
                 ng-bind-html="'Send'"></button>
         <button ng-if="::!$ctrl.attrs.autopeek" ng-disabled="$ctrl.isRunning"  ng-click="$ctrl.runPeek()"
                 ng-bind-html="'Peek'"></button>
     </p>
-
+    <div ng-cloak ng-if="$ctrl.stackpeek" class="peekdiv" id="peek" style="min-height: 10em;"><div></div></div>
+    <div ng-cloak id="stackinputfeedback" class="stackinputfeedback1" ng-bind-html="$ctrl.stackinputfeedbackAsHtml()"></div>
     <span class="csRunError"
           ng-if="$ctrl.error"
           ng-style="$ctrl.tinyErrorStyle" ng-bind-html="$ctrl.error"></span>
