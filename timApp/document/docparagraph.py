@@ -45,6 +45,7 @@ class DocParagraph:
         self.html_sanitized = False
         self.html = None
         self.final_dict = None
+        self.style = None # style for min/max-height ans autoscroll
 
         # Cache for referenced paragraphs. Keys {True, False} correspond to the values of set_html parameter in
         # get_referenced_pars.
@@ -296,6 +297,7 @@ class DocParagraph:
         if preamble:
             self.final_dict['from_preamble'] = preamble.path
         self.final_dict['is_question'] = self.is_question()
+        self.final_dict['style'] = None
 
     def _cache_props(self):
         """Caches some boolean properties about this paragraph in internal attributes."""
@@ -1033,6 +1035,22 @@ class DocParagraph:
 
         """
         self.__data['id'] = par_id
+
+    def set_style(self, style: str):
+        """Sets the style for this paragraph.
+
+        :param style: The new style for the paragraph.
+
+        """
+        self.final_dict['style'] = style
+
+    def get_style(self) -> str:
+        """Returns the style of this paragraph."""
+        try:
+            return self.final_dict['style']
+        except:
+            return ''
+
 
     def is_citation(self):
         return self.get_attr('r') == 'c'

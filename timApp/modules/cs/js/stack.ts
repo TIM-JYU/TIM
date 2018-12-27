@@ -1,6 +1,6 @@
 ﻿import angular from "angular";
 import * as t from "io-ts";
-import {GenericPluginMarkup, PluginBase} from "tim/plugin/util";
+import {GenericPluginMarkup, PluginBase, withDefault} from "tim/plugin/util";
 import {to} from "tim/util/utils";
 import {$http, $sce} from "tim/util/ngimport";
 import {ParCompiler} from "tim/editor/parCompiler";
@@ -24,8 +24,10 @@ const StackMarkup = t.intersection([
         correctresponse: t.boolean,
         generalfeedback: t.boolean,
         open: t.boolean,
-        autopeek: t.boolean,
-        beforeOpen: t.string
+        autopeek: withDefault(t.boolean, true),
+        beforeOpen: t.string,
+        buttonBottom: t.boolean,
+        lang: withDefault(t.string, "fi"),
     }),
     GenericPluginMarkup,
     t.type({
@@ -67,10 +69,12 @@ class StackController extends PluginBase<t.TypeOf<typeof StackMarkup>,
     private lastInputFieldId: string = '';
     private lastInputFieldValue: string = '';
     private lastInputFieldElement: HTMLInputElement | null = null;
+    private button: string = '';
 
 
     $onInit() {
         super.$onInit();
+        this.button = this.buttonText;
         // this.width = this.attrs.width;
         // this.height = this.attrs.height;
         let aa:any = this.attrsall;
@@ -112,6 +116,17 @@ class StackController extends PluginBase<t.TypeOf<typeof StackMarkup>,
       return res;
     }
 
+    get english() {
+        return this.attrs.lang === "en";
+    }
+
+    get buttonText() {
+        const txt = this.attrs.button || this.attrs.buttonText;
+        if (txt) {
+            return txt;
+        }
+        return this.english ? "Send" : "Lähetä";
+    }
 
     outputAsHtml() {
         let s = $sce.trustAsHtml(this.stackoutput);
@@ -174,12 +189,12 @@ class StackController extends PluginBase<t.TypeOf<typeof StackMarkup>,
 
             let qt =  this.replace(json.questiontext);
             let i = qt.indexOf('<div class="stackinputfeedback"');
-            if ( i>=0 ) {
-                this.stackoutput = qt.substr(0,i)+"\n";
-                this.stackinputfeedback = qt.substr(i);
-            } else {
+            if ( this.attrs.buttonBottom || i<0 ) {
                 this.stackoutput = qt;
                 this.stackinputfeedback = "";
+            } else {
+                this.stackoutput = qt.substr(0,i)+"\n";
+                this.stackinputfeedback = qt.substr(i);
             }
 
             if ( !getTask ) {
@@ -490,7 +505,7 @@ stackApp.component("stackRunner", {
     <p class="csRunMenu">
         <button ng-if="!$ctrl.isOpen"  ng-click="$ctrl.runGetTask()"  ng-bind-html="'Show task'"></button>
         <button ng-if="$ctrl.isOpen" ng-disabled="$ctrl.isRunning" title="(Ctrl-S)" ng-click="$ctrl.runSend()"
-                ng-bind-html="'Send'"></button>
+                ng-bind-html="::$ctrl.button"></button>
         <button ng-if="::!$ctrl.attrs.autopeek" ng-disabled="$ctrl.isRunning"  ng-click="$ctrl.runPeek()"
                 ng-bind-html="'Peek'"></button>
     </p>
@@ -501,7 +516,7 @@ stackApp.component("stackRunner", {
           ng-style="$ctrl.tinyErrorStyle" ng-bind-html="$ctrl.error"></span>
 
     <div ng-if="$ctrl.stackfeedback">
-        <div ng-if="::$ctrl.attrs.generalfeedback">
+        <div ng-if="$ctrl.attrs.generalfeedback">
             <h5>General feedback:</h5>
             <div id="generalfeedback" ng-bind-html="$ctrl.stackfeedback"></div>
         </div>

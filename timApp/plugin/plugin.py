@@ -107,6 +107,7 @@ class Plugin:
         self.points_rule_cache = None  # cache for points rule
         self.output = None
         self.plugin_lazy = None
+        self.style = ''
 
     @property
     def full_task_id(self):
@@ -366,6 +367,9 @@ class Plugin:
     def set_output(self, output: str):
         self.output = output
 
+    def set_style(self, style):
+        self.style = style
+
     def get_answerbrowser_type(self):
         if self.is_cached():
             return None
@@ -384,9 +388,23 @@ class Plugin:
             html = html.replace("<!--", "<!-LAZY-").replace("-->", "-LAZY->")
             html = f'{LAZYSTART}{html}{LAZYEND}<span style="font-weight:bold">{header}</span><div><p>{stem}</p></div>'
         answer_attr = ''
+
+        # Create min and max height for div
+        style = ''
+        mh = self.values.get('-min-height', 0)
+        if mh:
+            style = (f'min-height:{str(mh)};')
+        mh = self.values.get('-max-height', 0)
+        if mh:
+            style += f'max-height:{str(mh)};overflow-y:auto;'
+        if style:
+            style = 'style=' + style
+
+        plgclass = f"class=plugin{self.type}"
+
         if self.answer:
             answer_attr = f""" answer-id='{self.answer.id}'"""
-        return f"<div id='{self.task_id_ext}'{answer_attr} data-plugin='/{self.type}'>{html}</div>" if self.options.wrap_in_div else html
+        return f"<div id='{self.task_id_ext}'{answer_attr} data-plugin='/{self.type}' {plgclass} {style}>{html}</div>" if self.options.wrap_in_div else html
 
 
 def parse_plugin_values_macros(par: DocParagraph,

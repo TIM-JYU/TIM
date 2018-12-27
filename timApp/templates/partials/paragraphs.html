@@ -76,7 +76,7 @@
         <div class="{{ t.cls }}"
              id="{{ t.id }}"
              t="{{ t.t }}"
-             attrs="{{ t.attrs_str }}"
+             attrs='{{ t.attrs_str }}'
          {% if t.ref_attrs and t.ref_attrs.classes and "deleted" in t.ref_attrs.classes %}
              title="This paragraph has been deleted from the source document."
          {% endif %}
@@ -117,7 +117,7 @@
                 </div>
             {%- endif -%}
         {%- else -%}
-            <div class="parContent"{% if task_id %} id="{{ task_id }}"{% endif %}>
+            <div class="parContent"{% if task_id %} id="{{ task_id }}"{% endif %} {{ t.style }}>
                 {{ t.html|safe }}
             </div>
                 {%- if t.authorinfo -%}

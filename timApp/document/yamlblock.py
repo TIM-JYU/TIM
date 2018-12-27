@@ -80,6 +80,8 @@ class YamlBlock:
 missing_space_after_colon = re.compile("^[ \t]*[^ :]*:[^ ]")  # kissa:istuu
 multiline_unindented_string = re.compile(
     """^( *)([^ :"']+): *\| *([^ 0-9+-]+[^ ]*)( (a|r|r\?))? *$""")  # program: ||| or  program: |!!!
+multiline_unindented_obj_string = re.compile(
+    """^( *)([^ :"']+): *@ *([^ 0-9+-]+[^ ]*)$""")  # object: @|| or  object: @!!!
 
 
 def strip_code_block(md: str) -> str:
@@ -94,6 +96,77 @@ def get_code_block_str(md):
     return code_block_marker
 
 
+def compare_same(s1: str, s2: str, n: int) -> bool:
+    """
+    :param s1: string than can contain max n spaces at the begining
+    :param s2: string to oompare, no spaces in the begining
+    :param n: how many spaces allowed to caintain still to be same
+    :return: True is same False other
+    """
+    if not n:
+        n = 0
+    i = s1.find(s2)
+    if i < 0 or i > n: #  No match or too far
+        return False
+    if i + len(s2) != len(s1): #  The end part is not exactly same
+        return False
+    return count_chars_from_beginning(s1, ' ') <= n
+
+
+def correct_obj(text: str) -> str:
+    """
+    Also gives an other way to write multiline attributes, by starting
+    the multiline like: `object: @!!`  (`!!` could be any number and any non a-z,A-Z chars
+    and ending it by `!!` in first column.
+
+    :param text: Text to convert to proper yaml.
+    :return: Text that is proper yaml obj
+    """
+    # don't use splitlines here - it loses the possible last trailing newline character, and we don't want that.
+    while True:  # repeat
+        lines = text.split('\n')
+        n = 0
+        s = ""
+        multiline = False
+        end_str = ''
+        indent = None
+        multiline_first_indent = None
+        lf = ""
+        for line in lines:
+            line = line.rstrip()
+            r = multiline_unindented_obj_string.match(line)
+            if r and not multiline:
+                n += 1
+                end_str = r.group(3)
+                indent = r.group(1)
+                multiline = True
+                multiline_first_indent = None
+                line, _ = line.split('@', 1)
+                s = s + lf + line.rstrip()
+                lf = '\n'
+                continue
+            if multiline:
+                if compare_same(line, end_str, multiline_first_indent):
+                    multiline = False
+                    continue
+                if multiline_first_indent is None:
+                    multiline_first_indent = count_chars_from_beginning(line, ' ')
+                    if multiline_first_indent == 0:
+                        indent = ' ' + indent  # we need at least one more than start line
+                else:
+                    if line and multiline_first_indent > count_chars_from_beginning(line, ' '):
+                        raise InvalidIndentError(line)
+                line = indent + line
+            s = s + lf + line
+            lf = '\n'
+        if multiline:
+            raise BlockEndMissingError(end_str)
+        if n == 0:
+            return s
+        text = s
+    # until n = 0
+
+
 def correct_yaml(text: str) -> Tuple[str, YamlMergeInfo]:
     """Inserts missing spaces after `:` Like  `width:20` => `width: 20`
     Also gives an other way to write multiline attributes, by starting
@@ -104,6 +177,7 @@ def correct_yaml(text: str) -> Tuple[str, YamlMergeInfo]:
     :return: Text that is proper yaml.
     """
     # don't use splitlines here - it loses the possible last trailing newline character, and we don't want that.
+    text = correct_obj(text)
     lines = text.split('\n')
     s = ""
     multiline = False
@@ -112,6 +186,7 @@ def correct_yaml(text: str) -> Tuple[str, YamlMergeInfo]:
     merge_hints = {}
     encountered_keys = set()
     multiline_first_indent = None
+    lf = ""
     for line in lines:
         line = line.rstrip()
         if missing_space_after_colon.match(line) and not multiline:
@@ -119,7 +194,7 @@ def correct_yaml(text: str) -> Tuple[str, YamlMergeInfo]:
         r = multiline_unindented_string.match(line)
         if r and not multiline:
             end_str = r.group(3)
-            indent = ' ' + r.group(1)
+            indent = r.group(1)
             multiline = True
             multiline_first_indent = None
             line, _ = line.split('|', 1)
@@ -129,15 +204,18 @@ def correct_yaml(text: str) -> Tuple[str, YamlMergeInfo]:
                 if key in encountered_keys:
                     raise DuplicateKeyMergeHintError(key)
                 merge_hints[key] = MergeStyle(hint)
-            s = s + '\n' + line + '|'
+            s = s + lf + line + '|'
+            lf = '\n'
             encountered_keys.add(key)
             continue
         if multiline:
-            if line == end_str:
+            if compare_same(line, end_str, multiline_first_indent):
                 multiline = False
                 continue
             if multiline_first_indent is None:
                 multiline_first_indent = count_chars_from_beginning(line, ' ')
+                if multiline_first_indent == 0:
+                    indent = ' ' + indent  # we need at least one more than start line
             else:
                 if line and multiline_first_indent > count_chars_from_beginning(line, ' '):
                     raise InvalidIndentError(line)
@@ -148,7 +226,8 @@ def correct_yaml(text: str) -> Tuple[str, YamlMergeInfo]:
                 if key in encountered_keys and key in merge_hints:
                     raise DuplicateKeyMergeHintError(key)
                 encountered_keys.add(key)
-        s = s + '\n' + line
+        s = s + lf + line
+        lf = '\n'
     if multiline:
         raise BlockEndMissingError(end_str)
     return s, merge_hints
