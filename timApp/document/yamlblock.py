@@ -79,7 +79,7 @@ class YamlBlock:
 
 missing_space_after_colon = re.compile("^[ \t]*[^ :]*:[^ ]")  # kissa:istuu
 multiline_unindented_string = re.compile(
-    """^( *)([^ :"']+): *\| *([^ 0-9+-]+[^ ]*)( (a|r|r\?))? *$""")  # program: ||| or  program: |!!!
+    """^( *)([^ :"']+): *(\|[+-]?)([0-9]*) *([^ 0-9+-]+[^ ]*)( (a|r|r\?))? *$""")  # program: ||| or  program: |!!!
 multiline_unindented_obj_string = re.compile(
     """^( *)([^ :"']+): *@ *([^ 0-9+-]+[^ ]*)$""")  # object: @|| or  object: @!!!
 
@@ -115,44 +115,117 @@ def compare_same(s1: str, s2: str, n: int) -> bool:
 
 def correct_obj(text: str) -> str:
     """
-    Also gives an other way to write multiline attributes, by starting
-    the multiline like: `object: @!!`  (`!!` could be any number and any non a-z,A-Z chars
+    Also gives an other way to write unindented object attributes, by starting
+    the attribute like: `object: @!!`  (`!!` could any combinations of chars except space
     and ending it by `!!` in first column.
 
     :param text: Text to convert to proper yaml.
     :return: Text that is proper yaml obj
     """
+    """
+     Problem analyze:
+        il = atribute line indent len,   fi = first line indent
+        indent = string that must be inserted to every line, len = it's lenght
+       
+        |a1: @!            il = 0, fi = 0     il-fi+1  = 1 
+        |a            => indent=" "   len 1 
+    
+        |a1: @!            il = 0, fi = 4     il-fi+1  = -3 
+        |    a        => indent=""    len 0
+    
+        |a1: @!            il = 0, fi = 1     il-fi+1  = 2
+        | a           => indent=""    len 0
+    
+        | a1: @!           il = 1  fi = 1     il-fi+1  = 2
+        | a           => indent=" "   len 1
+
+        |  a1: @!          il = 2  fi = 0     il-fi+1  = 2
+        |a            => indent="   " len 3
+
+        |  a1: @!          il = 2  fi = 1     il-fi+1  = 2  
+        | a           => indent="  "  len 2
+        
+    Note: This is almost the same as correct_yaml-body but no hint handling.
+    It may be possible to put them just one code but then it is even more difficult to
+    understand what is happening.  One small difference is that in this code we look for @
+    and do not put it back as we do with | in correct_yaml.
+    
+    And the idea is to run this as many times as there is no changes any more in object level.
+    The objects could be nested, string can not be.  There is still a problem that if string
+    includes object start, this function will destroy it, f.ex:
+    
+        |a1: |!!
+        |cat
+        |  o1: @!
+        |a:1
+        |!
+        |!!
+        
+    even should be    
+
+        |a1: |
+        | cat
+        |   o1: @!
+        | a:1
+
+    There are testcases for all these things in timApp/tests/unit/test_correct_yaml.py
+
+    """
     # don't use splitlines here - it loses the possible last trailing newline character, and we don't want that.
-    while True:  # repeat
+    while True:  # repeat until n == 0
         lines = text.split('\n')
-        n = 0
+        n = 0 # count how many unindented object block found and how many handled
         s = ""
         multiline = False
+        multiline_string = False
         end_str = ''
         indent = None
         multiline_first_indent = None
+        original_indent_len = 0
+        max_allowed_spaces = 0
         lf = ""
         for line in lines:
             line = line.rstrip()
-            r = multiline_unindented_obj_string.match(line)
-            if r and not multiline:
-                n += 1
-                end_str = r.group(3)
-                indent = r.group(1)
-                multiline = True
+            r2 = multiline_unindented_string.match(line)
+            if r2 and not multiline: # we have multiline string and we do nothing until it ends
+                end_str = r2.group(4)
+                indent = r2.group(1)
+                max_allowed_spaces = original_indent_len = len(indent)
+                indent = "" # no changes while in multilinestring
+                multiline_string = multiline = True
                 multiline_first_indent = None
-                line, _ = line.split('@', 1)
-                s = s + lf + line.rstrip()
+                s = s + lf + line
                 lf = '\n'
                 continue
+            else:
+                r = multiline_unindented_obj_string.match(line)
+                if r and not multiline_string:
+                    n += 1
+                if r and not multiline:
+                    end_str = r.group(3)
+                    indent = r.group(1)
+                    max_allowed_spaces = original_indent_len = len(indent)
+                    multiline = True
+                    multiline_first_indent = None
+                    line, _ = line.split('@', 1)
+                    s = s + lf + line.rstrip()
+                    lf = '\n'
+                    continue
             if multiline:
-                if compare_same(line, end_str, multiline_first_indent):
+                if compare_same(line, end_str, max_allowed_spaces):
                     multiline = False
+                    if multiline_string:
+                        s = s + lf + line
+                        multiline_string = False
+                    else:  # one more unindented object handled
+                        n -= 1
                     continue
                 if multiline_first_indent is None:
                     multiline_first_indent = count_chars_from_beginning(line, ' ')
-                    if multiline_first_indent == 0:
-                        indent = ' ' + indent  # we need at least one more than start line
+                    needed_indent_length = max(original_indent_len - multiline_first_indent + 1, 0)
+                    if not multiline_string: # we do not touch multiline strings in this function
+                        indent = ' ' * needed_indent_length
+                    max_allowed_spaces = original_indent_len + multiline_first_indent
                 else:
                     if line and multiline_first_indent > count_chars_from_beginning(line, ' '):
                         raise InvalidIndentError(line)
@@ -170,14 +243,15 @@ def correct_obj(text: str) -> str:
 def correct_yaml(text: str) -> Tuple[str, YamlMergeInfo]:
     """Inserts missing spaces after `:` Like  `width:20` => `width: 20`
     Also gives an other way to write multiline attributes, by starting
-    the multiline like: `program: |!!`  (`!!` could be any number and any non a-z,A-Z chars
+    the multiline like: `program: |!!`  (`!!` could any combinations of chars except space
     and ending it by `!!` in first column.
 
     :param text: Text to convert to proper yaml.
     :return: Text that is proper yaml.
     """
     # don't use splitlines here - it loses the possible last trailing newline character, and we don't want that.
-    text = correct_obj(text)
+    if text.find(':@') >= 0:  # we suppose that using this is so rare that it is cheaper to avoid
+        text = correct_obj(text) # this call as much as possible
     lines = text.split('\n')
     s = ""
     multiline = False
@@ -186,6 +260,8 @@ def correct_yaml(text: str) -> Tuple[str, YamlMergeInfo]:
     merge_hints = {}
     encountered_keys = set()
     multiline_first_indent = None
+    original_indent_len = 0
+    max_allowed_spaces = 0
     lf = ""
     for line in lines:
         line = line.rstrip()
@@ -193,29 +269,38 @@ def correct_yaml(text: str) -> Tuple[str, YamlMergeInfo]:
             line = line.replace(':', ': ', 1)
         r = multiline_unindented_string.match(line)
         if r and not multiline:
-            end_str = r.group(3)
+            end_str = r.group(5)
             indent = r.group(1)
-            multiline = True
             multiline_first_indent = None
+            fls = 0
+            if r.group(4):
+                fls = int(r.group(4))
+                multiline_first_indent = 0
+                needed_indent_length = max(original_indent_len - fls + 1, 0)
+                indent = ' ' * needed_indent_length
+            original_indent_len = len(indent)
+            max_allowed_spaces = original_indent_len + fls
+            multiline = True
             line, _ = line.split('|', 1)
             key = r.group(2)
-            hint = r.group(5)
+            hint = r.group(7)
             if hint in ('a', 'r', 'r?'):
                 if key in encountered_keys:
                     raise DuplicateKeyMergeHintError(key)
                 merge_hints[key] = MergeStyle(hint)
-            s = s + lf + line + '|'
+            s = s + lf + line + r.group(3) + r.group(4)
             lf = '\n'
             encountered_keys.add(key)
             continue
         if multiline:
-            if compare_same(line, end_str, multiline_first_indent):
+            if compare_same(line, end_str, max_allowed_spaces):
                 multiline = False
                 continue
             if multiline_first_indent is None:
                 multiline_first_indent = count_chars_from_beginning(line, ' ')
-                if multiline_first_indent == 0:
-                    indent = ' ' + indent  # we need at least one more than start line
+                needed_indent_length = max(original_indent_len - multiline_first_indent + 1, 0)
+                indent = ' ' * needed_indent_length
+                max_allowed_spaces = original_indent_len + multiline_first_indent
             else:
                 if line and multiline_first_indent > count_chars_from_beginning(line, ' '):
                     raise InvalidIndentError(line)

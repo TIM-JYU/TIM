@@ -128,7 +128,11 @@ def post_answer(plugintype: str, task_id_ext: str):
     except PluginException as e:
         return abort(400, str(e))
 
-    get_task = answerdata and answerdata.get("getTask", None) and plugin.plugin_class.get("canGiveTask", False)
+    try:
+        get_task = answerdata and answerdata.get("getTask", None) and plugin.plugin_class.get("canGiveTask", False)
+    except:
+        get_task = False
+
 
     if not (save_answer or get_task) or is_teacher:
         verify_seeanswers_access(d)

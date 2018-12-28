@@ -13,11 +13,11 @@ class TestCorrect_yaml(TestCase):
     def test_correct_yaml1(self):
         s1 = """
 first:1
-second:|!!
+second:|!! a
 one
   two
 !!
-third:|!!
+third:|+1!!
  one
    two
 !!
@@ -27,12 +27,13 @@ first: 1
 second: |
  one
    two
-third: |
+third: |+1
  one
    two
 """
         a1, h = correct_yaml(s1)
         self.assertEqual(e1, a1, "Not same in normal case")
+        self.assertEqual(h['second'].value, 'a', "Hint wrong")
 
     ##############################################################
 
@@ -65,22 +66,22 @@ one:
         s1 = """
 first:1
 second:|!!
-one
+one:
   two
 !!
-third:|!!
-    one
-    two
-    !!
+   third:|!!
+     one
+     two
+   !!
 """
         e1 = """
 first: 1
 second: |
- one
+ one:
    two
-third: |
-    one
-    two
+   third: |
+     one
+     two
 """
         a1, h = correct_yaml(s1)
         self.assertEqual(e1, a1, "Not same in normal case")
@@ -89,13 +90,15 @@ third: |
     def test_correct_yaml4(self):
         s1 = """
 first:1
-second:@!!
-one:
- two:@!
-three: 
-  four:1
-!  
-!!
+second:@!!1
+one: @!2
+two:@!3
+three:@!4
+four:1
+!4
+!3
+!2  
+!!1
 third:|!!
     one
     two
@@ -107,10 +110,83 @@ second:
  one:
   two:
    three:
-     four: 1
+    four: 1
 third: |
     one
     two
 """
         a1, h = correct_yaml(s1)
         self.assertEqual(e1, a1, "Not same in object case")
+
+
+    ##############################################################
+    def test_correct_yaml5(self):
+        s1 = """
+first:1
+second:@!!1
+one: @!2
+two:@!3
+three:|!4
+string
+!4
+!3
+!2  
+!!1
+third:|!!
+    one
+    two
+    !!
+"""
+        e1 = """
+first: 1
+second:
+ one:
+  two:
+   three: |
+    string
+third: |
+    one
+    two
+"""
+        a1, h = correct_yaml(s1)
+        self.assertEqual(e1, a1, "Not same in object case 5")
+
+    ##############################################################
+    def test_correct_yaml6(self):
+        s1 = """
+a1: |!!
+cat
+  o1: @!
+a:1
+!
+!!
+"""
+        e1 = """
+a1: |
+ cat
+   o1: @!
+ a:1
+ !
+"""
+        a1, h = correct_yaml(s1)
+        self.assertEqual(e1, a1, "Not same in object inside string")
+
+    ##############################################################
+    def test_correct_yaml7(self):
+        s1 = """
+a1: |a1jono
+cat
+  o1: @!
+a:1
+!
+a1jono
+"""
+        e1 = """
+a1: |
+ cat
+   o1: @!
+ a:1
+ !
+"""
+        a1, h = correct_yaml(s1)
+        self.assertEqual(e1, a1, "Not same in object inside string, string named")

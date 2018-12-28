@@ -117,7 +117,7 @@
                 </div>
             {%- endif -%}
         {%- else -%}
-            <div class="parContent"{% if task_id %} id="{{ task_id }}"{% endif %} {{ t.style }}>
+            <div class="parContent"{% if task_id %} id="{{ task_id }}"{% endif %}>
                 {{ t.html|safe }}
             </div>
                 {%- if t.authorinfo -%}
