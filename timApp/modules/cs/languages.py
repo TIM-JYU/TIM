@@ -693,7 +693,7 @@ class PY3(Language):
             err = err.strip()
             if err:
                 return code, out, err, pwddir
-        out, err = self.copy_image(web, code, out, err, points_rule)
+        out, err = self.copy_image(result, code, out, err, points_rule)
         err = err.strip()
         return code, out, err, pwddir
 
@@ -718,7 +718,7 @@ class Swift(Language):
     def run(self, result, sourcelines, points_rule):
         code, out, err, pwddir = self.runself(["swift", self.pure_exename],
                                               ulimit=df(self.ulimit, "ulimit -f 80000 -t 10 -s 600"))
-        out, err = self.copy_image(web, code, out, err, points_rule)
+        out, err = self.copy_image(result, code, out, err, points_rule)
         return code, out, err, pwddir
 
 
