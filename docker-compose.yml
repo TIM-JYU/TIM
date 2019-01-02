@@ -139,17 +139,19 @@ services:
    TIM_HOST: ${TIM_HOST}
   restart: unless-stopped
  stack-api-server:
-  #build: /var/www/api
+  build: ./stack
   image: timimages/stack
   security_opt:
    - seccomp:unconfined
   volumes:
-   - /var/www/api/plots:/var/data/api/stack/plots:rw
-   - /var/www/api/plots:/var/www/html/plots:rw
-   - /var/www/api/api/config.php.docker:/var/www/html/config.php:rw
-   - /var/www/api/entrypoint_install_and_run.sh:/var/www/html/entrypoint_install_and_run.sh
-   # - /var/www/api/stack/cas/castext/jsxgraphapi.block.php:/var/www/html/stack/cas/castext/jsxgraph.block.php
+   - ./stack/plots:/var/data/api/stack/plots:rw
+   - ./stack/plots:/var/www/html/plots:rw
+   - ./stack/api/config.php.docker:/var/www/html/config.php:rw
+   - ./stack/entrypoint_install_and_run.sh:/var/www/html/entrypoint_install_and_run.sh
+   # - ./stack/cas/castext/jsxgraphapi.block.php:/var/www/html/stack/cas/castext/jsxgraph.block.php
   restart: unless-stopped
+  environment:
+   BROWSER_URL: ${BROWSER_URL}
   ports:
    - "90:80"
 volumes:
