@@ -31,6 +31,7 @@ def create_yaml(field_type: str,
         'questionText': 'Is Moon made of cheese?',
         'questionTitle': 'Moon problem',
         'questionType': question_type,
+        'answerLimit': 1,
         'rows': [c[0] for c in choices],
         **({'points': points_str} if points_str else {}),
     }
@@ -224,7 +225,7 @@ class QuestionTest(BrowserTest):
         find_button_by_text(dialog, 'Save').click()
         self.wait_until_hidden('tim-edit-question')
         qst = self.find_element_and_move_to('qst-runner')
-        self.assert_same_screenshot(qst, f'questions/qst_{questiontype}')
+        self.assert_same_screenshot(qst, f'questions/qst_{questiontype}', attempts=2)
         d.document.clear_mem_cache()
         qst_par = d.document.get_paragraphs()[0]
         qst_md = qst_par.get_markdown()
