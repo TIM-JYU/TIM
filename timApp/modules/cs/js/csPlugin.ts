@@ -8,7 +8,7 @@ import {GenericPluginMarkup, PluginBase, withDefault} from "tim/plugin/util";
 import {lazyLoadMany} from "tim/util/lazyLoad";
 import {$compile, $http, $sce, $timeout, $upload, $window} from "tim/util/ngimport";
 import {fixDefExport, to} from "tim/util/utils";
-import {valueOr} from "tim/util/utils";
+import {valueOr, valueDefu} from "tim/util/utils";
 
 interface Simcir {
     setupSimcir(element: JQuery, data: {}): void;
@@ -675,7 +675,7 @@ const CsMarkupOptional = t.partial({
     normal: t.string,
     parsonsmaxcheck: t.number,
     path: t.string,
-    placeholder: t.string,
+    placeholder: t.union([t.null, t.string]),
     replace: t.string,
     runeverytime: t.boolean,
     savestate: t.string,
@@ -1044,7 +1044,7 @@ class CsController extends CsBase implements IController {
 
     get placeholder() {
         const tiny = this.type.indexOf("tiny") >= 0;
-        return valueOr(this.attrs.placeholder, (tiny ? "" : this.english ? "Write your code here" : "Kirjoita koodi tähän:"));
+        return valueDefu(this.attrs.placeholder, (tiny ? "" : this.english ? "Write your code here" : "Kirjoita koodi tähän:"));
     }
 
     get inputplaceholder() {
