@@ -68,11 +68,11 @@ export function checkIfElement(x: any): x is Element {
  */
 export function isInViewport(el: Element) {
     const rect = el.getBoundingClientRect();
-    if ( !document.documentElement ) return true;
+    if (!document.documentElement) return true;
     return (
         rect.top >= 0 &&
         rect.left >= 0 &&
-        rect.bottom <= (window.innerHeight || document.documentElement.clientHeight ) &&
+        rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
         rect.right <= (window.innerWidth || document.documentElement.clientWidth)
     );
 }
@@ -324,7 +324,7 @@ export function getViewPortSize() {
         e = d.documentElement,
         g = d.getElementsByTagName('body')[0];
     // documentElement.client{Width,Height} excludes scrollbars, so it works best.
-    if ( !e ) return {width:1024, height:768};
+    if (!e) return {width: 1024, height: 768};
     const width = e.clientWidth,
         height = e.clientHeight;
     return {width, height};
@@ -423,8 +423,8 @@ export function valueOr<T extends {}, K extends T>(v: T | undefined | null, def:
     return v != null ? v : def;
 }
 
-export function valueDefu(s:string | undefined | null, def:string) : string {
-    if ( s === undefined ) return def;
-    if ( s === null ) return "";
+export function valueDefu(s: string | undefined | null, def: string): string {
+    if (s === undefined) return def;
+    if (s === null) return "";
     return s;
 }
