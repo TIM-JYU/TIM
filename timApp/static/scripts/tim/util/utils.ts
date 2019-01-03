@@ -419,7 +419,7 @@ export function numOrStringToNumber(s: number | string) {
     return parseFloat(s);
 }
 
-export function valueOr<T>(v: T | undefined, def: T): T {
+export function valueOr<T extends {}, K extends T>(v: T | undefined | null, def: K): T {
     return v != null ? v : def;
 }
 

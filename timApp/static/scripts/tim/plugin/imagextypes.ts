@@ -52,6 +52,10 @@ export type Overwrite<T, U> = Omit<T, keyof T & keyof U> & U;
 
 type MakeOptional<T, U extends keyof T> = Overwrite<T, { [P in U]?: T[P] }>;
 export type RequireExcept<T, U extends keyof T> = MakeOptional<Required<T>, U>;
+export type RequiredNonNull<T> = {
+    [P in keyof T]-?: NonNullable<T[P]>;
+};
+export type RequireNonNullExcept<T, U extends keyof T> = MakeOptional<RequiredNonNull<T>, U>;
 
 const ObjectType = t.clean(t.keyof({
     ellipse: null,
@@ -89,48 +93,43 @@ const Size = t.clean(t.union([t.null, ValidCoord, SingleSize]));
 export type SizeT = t.TypeOf<typeof Size>;
 
 const TextboxProps = t.clean(t.intersection([
-    // CommonProps,
     t.partial({
         a: t.number,
-        // color: t.string,
-        // id: t.string,
         position: ValidCoord,
         size: Size,
-        // type: ObjectType,
-
-        borderColor: t.string,
-        borderWidth: t.number,
+        borderColor: t.union([t.null, t.string]),
+        borderWidth: t.union([t.null, t.number]),
         cornerradius: t.number,
         fillColor: t.string,
-        font: t.string,
+        font: t.union([t.null, t.string]),
         text: t.union([t.null, t.string]),
-        textColor: t.string,
+        textColor: t.union([t.null, t.string]),
     })]));
 
 const VectorProps = t.clean(t.partial({
     arrowheadlength: t.number,
     arrowheadwidth: t.number,
-    color: t.string,
+    color: t.union([t.null, t.string]),
 }));
 
 const CommonProps = t.clean(t.partial({
     a: t.number,
-    color: t.string,
+    color: t.union([t.null, t.string]),
     id: t.string,
     position: ValidCoord,
     size: Size,
-    type: ObjectType,
+    type: t.union([t.null, ObjectType]),
 
     imgproperties: t.union([t.null, ImgProps]),
-    textboxproperties: TextboxProps,
-    vectorproperties: VectorProps,
+    textboxproperties: t.union([t.null, TextboxProps]),
+    vectorproperties: t.union([t.null, VectorProps]),
 }));
 
 const PinProps = t.clean(t.partial({
-    color: t.string,
-    dotRadius: t.number,
-    length: t.number,
-    linewidth: t.number,
+    color: t.union([t.null, t.string]),
+    dotRadius: t.union([t.null, t.number]),
+    length: t.union([t.null, t.number]),
+    linewidth: t.union([t.null, t.number]),
     position: t.partial({
         align: PinAlignment,
         coord: ValidCoord,

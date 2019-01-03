@@ -27,8 +27,8 @@ import {
     OptionalPropNames,
     OptionalTargetPropNames,
     PinAlign,
-    PinPropsT,
-    RequireExcept,
+    PinPropsT, RequiredNonNull,
+    RequireExcept, RequireNonNullExcept,
     RightAnswerT,
     SingleSize,
     SizeT,
@@ -862,17 +862,18 @@ function alignToDir(a: PinAlign, diagonalFactor: number) {
 }
 
 class Pin {
-    private pos: Required<IPinPosition>;
+    private pos: RequiredNonNull<IPinPosition>;
 
     constructor(
-        private values: Required<PinPropsT>,
+        private values: RequiredNonNull<PinPropsT>,
         defaultAlign: PinAlign,
     ) {
         const a = values.position.align || defaultAlign;
         const {x, y} = alignToDir(a, 1 / Math.sqrt(2));
+        const lngth = values.length;
         this.pos = {
             align: a,
-            coord: tupleToCoords(values.position.coord || [x * values.length, y * values.length]),
+            coord: tupleToCoords(values.position.coord || [x * lngth, y * lngth]),
             start: tupleToCoords(values.position.start || [0, 0]),
         };
     }
@@ -1057,7 +1058,7 @@ function setIdentityTransform(ctx: CanvasRenderingContext2D) {
     ctx.setTransform(1, 0, 0, 1, 0, 0);
 }
 
-function textboxFromProps(values: {textboxproperties?: TextboxPropsT, color?: string},
+function textboxFromProps(values: {textboxproperties?: TextboxPropsT | null, color?: string | null},
                           s: ISizedPartial | undefined,
                           overrideColorFn: () => string | undefined,
                           defaultText: string) {
