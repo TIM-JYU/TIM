@@ -48,6 +48,10 @@
 <div class="panel panel-default">
     <div class="panel-heading">Notifications</div>
     <div class="panel-body">
+        <tim-alert severity="info" ng-if="!$ctrl.item.isFolder">
+            Want to quickly get notifications from multiple documents?
+            Subscribe to <a href="..">the entire folder</a>.
+        </tim-alert>
         <form>
             <p>Send me email on</p>
             <div class="checkbox"><label>
@@ -62,8 +66,6 @@
                 <input type="checkbox" ng-model="$ctrl.notifySettings.email_comment_modify"
                        ng-change="$ctrl.notifyChanged()"/>Edited comments
             </label></div>
-            <p>If you want to set many documents for email, goto the correspongind directory
-                and check there.  See <a href="https://tim.jyu.fi/view/tim/TIM-ohjeet#dirchange">TIM-User guide</a>.</p>
         </form>
     </div>
 </div>
