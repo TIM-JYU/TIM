@@ -79,10 +79,15 @@ const PinAlignment = t.clean(t.keyof({
 
 export type PinAlign = t.TypeOf<typeof PinAlignment>;
 
-const ImgProps = t.clean(t.type({
-    src: t.string,
-    textbox: withDefault(t.boolean, true),
-}));
+const ImgProps = t.clean(
+    t.intersection([
+        t.partial({
+            textbox: t.boolean,
+        }),
+        t.type({
+            src: t.string,
+        }),
+    ]));
 
 export const ValidCoord = t.clean(t.tuple([t.number, t.number]));
 
