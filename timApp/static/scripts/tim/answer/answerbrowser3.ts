@@ -10,7 +10,7 @@ import {showMessageDialog} from "../ui/dialog";
 import {IUser} from "../user/IUser";
 import {Users} from "../user/userService";
 import {KEY_DOWN, KEY_LEFT, KEY_RIGHT, KEY_UP} from "../util/keycodes";
-import {$compile, $filter, $http, $httpParamSerializer, $timeout, $window} from "../util/ngimport";
+import {$filter, $http, $httpParamSerializer, $timeout, $window} from "../util/ngimport";
 import {Binding, getURLParameter, markAsUsed, Require, to} from "../util/utils";
 import {ReviewController} from "../velp/reviewController";
 import {showAllAnswers} from "./allAnswersController";
@@ -41,18 +41,11 @@ function makeNotLazy(html: string) {
 async function loadPlugin(html: string, $par: JQuery, scope: IScope, viewctrl: ViewCtrl) {
     const newhtml = makeNotLazy(html);
     const plugin = $par.find(".parContent");
-
-    // Set explicit height for the plugin temporarily.
-    // Without this fix, if the plugin is at the bottom of the screen,
-    // the browser's scroll position would jump inconveniently because
-    // the plugin's height goes to zero until Angular has finished compiling it.
-    const height = plugin.height() || 500;
-    plugin.height(height);
-    plugin.empty().append(compileWithViewctrl(newhtml, scope, viewctrl));
+    const compiled = compileWithViewctrl(newhtml, scope, viewctrl);
+    await $timeout(); // let AngularJS finish its processing
+    plugin.empty().append(compiled);
     plugin.css("opacity", "1.0");
     ParCompiler.processAllMathDelayed(plugin);
-    await $timeout(500);
-    plugin.css("height", "");
 }
 
 export class PluginLoaderCtrl extends DestroyScope implements IController {
