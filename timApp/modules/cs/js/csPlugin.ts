@@ -2925,7 +2925,7 @@ csApp.component("csWeschemeRunner", {
 const csConsoleApp = angular.module("csConsoleApp", ["ngSanitize"]);
 
 class CsConsoleController extends CsBase implements IController {
-    private static $inject = ["$element"];
+    private static $inject = ["$scope", "$element"];
 
     // isShell: boolean; method
     cursor: number;
