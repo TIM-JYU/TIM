@@ -689,7 +689,7 @@ const CsMarkupOptional = t.partial({
     treplace: t.string,
     uploadbycode: t.boolean,
     uploadstem: t.string,
-    userargs: t.string,
+    userargs: t.union([t.string, t.number]),
     userinput: t.string,
     variables: t.string,
     width: t.number,
@@ -1224,7 +1224,7 @@ class CsController extends CsBase implements IController {
         const isArgs = this.type.indexOf("args") >= 0;
 
         this.userinput = this.attrsall.userinput || this.attrs.userinput || "";
-        this.userargs = this.attrsall.userargs || this.attrs.userargs || (isText && isArgs ? this.attrs.filename || "" : "");
+        this.userargs = (this.attrsall.userargs || this.attrs.userargs || (isText && isArgs ? this.attrs.filename || "" : "")).toString();
         this.selectedLanguage = this.attrs.selectedLanguage || rt;
         this.noeditor = valueOr(this.attrs.noeditor, this.isSimcir || (this.type === "upload"));
         this.wrap = this.attrs.wrap || (isText ? 70 : -1);
