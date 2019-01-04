@@ -682,7 +682,7 @@ const CsMarkupOptional = t.partial({
     scripts: t.string,
     selectedLanguage: t.string,
     showCodeOff: t.string,
-    showCodeOn: t.string,
+    showCodeOn: t.union([t.null, t.string]),
     table: t.string,
     taunotype: t.string,
     treplace: t.string,
@@ -1157,7 +1157,7 @@ class CsController extends CsBase implements IController {
     }
 
     get showCodeOn() {
-        return valueOr(this.attrs.showCodeOn, (this.english ? "Show all code" : "Näytä koko koodi"));
+        return valueDefu(this.attrs.showCodeOn, (this.english ? "Show all code" : "Näytä koko koodi"));
     }
 
     get showCodeOff() {
