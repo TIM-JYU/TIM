@@ -51,6 +51,12 @@ function getPaths<A>(v: t.Validation<A>): string[] {
     return v.fold((errors) => errors.map((error) => error.context.map(({key}) => key).join(".")), () => ["no errors"]);
 }
 
+/**
+ * Base class for plugins.
+ *
+ * All properties or fields having a one-time binding in template should eventually return a non-undefined value.
+ * That's why there are "|| null"s in several places.
+ */
 export abstract class PluginBase<MarkupType extends IGenericPluginMarkup, A extends {markup: MarkupType}, T extends Type<A>> {
 
     get attrs(): Readonly<MarkupType> {
@@ -58,15 +64,15 @@ export abstract class PluginBase<MarkupType extends IGenericPluginMarkup, A exte
     }
 
     get footer() {
-        return this.attrs.footer;
+        return this.attrs.footer || null;
     }
 
     get header() {
-        return this.attrs.header;
+        return this.attrs.header || null;
     }
 
     get stem() {
-        return this.attrs.stem;
+        return this.attrs.stem || null;
     }
 
     // Parsed form of json binding or default value if json was not valid.

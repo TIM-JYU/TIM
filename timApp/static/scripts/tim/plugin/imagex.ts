@@ -394,31 +394,31 @@ function showTime(ctx: CanvasRenderingContext2D, vt: number, x: number, y: numbe
 
 const directiveTemplate = `
 <div class="csRunDiv no-popup-menu">
-    <div class="pluginError" ng-if="$ctrl.markupError" ng-bind="$ctrl.markupError"></div>
-    <h4 ng-if="$ctrl.header" ng-bind-html="$ctrl.header"></h4>
-    <p ng-if="$ctrl.stem" class="stem" ng-bind-html="$ctrl.stem"></p>
+    <div class="pluginError" ng-if="::$ctrl.markupError" ng-bind="::$ctrl.markupError"></div>
+    <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
+    <p ng-if="::$ctrl.stem" class="stem" ng-bind-html="::$ctrl.stem"></p>
     <div>
         <canvas class="canvas"
                 tabindex="1"
-                width={{$ctrl.canvaswidth}}
-                height={{$ctrl.canvasheight}}
+                width={{::$ctrl.canvaswidth}}
+                height={{::$ctrl.canvasheight}}
                 no-popup-menu></canvas>
         <div class="content"></div>
     </div>
-    <p class="csRunMenu">&nbsp;<button ng-if="$ctrl.button"
+    <p class="csRunMenu">&nbsp;<button ng-if="::$ctrl.button"
                                        class="timButton"
                                        ng-disabled="$ctrl.isRunning"
-                                       ng-click="$ctrl.save()">{{$ctrl.button}}
+                                       ng-click="$ctrl.save()">{{::$ctrl.button}}
     </button>
         &nbsp;&nbsp;
-        <button ng-if="$ctrl.buttonPlay"
+        <button ng-if="::$ctrl.buttonPlay"
                 ng-disabled="$ctrl.isRunning"
-                ng-click="$ctrl.videoPlay()">{{$ctrl.buttonPlay}}
+                ng-click="$ctrl.videoPlay()">{{::$ctrl.buttonPlay}}
         </button>
         &nbsp;&nbsp;
-        <button ng-if="$ctrl.buttonRevert"
+        <button ng-if="::$ctrl.buttonRevert"
                 ng-disabled="$ctrl.isRunning"
-                ng-click="$ctrl.videoBeginning()">{{$ctrl.buttonRevert}}
+                ng-click="$ctrl.videoBeginning()">{{::$ctrl.buttonRevert}}
         </button>
         &nbsp;&nbsp;
         <button ng-show="$ctrl.finalanswer && $ctrl.userHasAnswered"
@@ -426,18 +426,18 @@ const directiveTemplate = `
                 ng-click="$ctrl.showAnswer()">
             Show correct answer
         </button>
-        &nbsp;&nbsp;<a ng-if="$ctrl.button"
+        &nbsp;&nbsp;<a ng-if="::$ctrl.button"
         ng-disabled="$ctrl.isRunning"
-        ng-click="$ctrl.resetExercise()">{{$ctrl.resetText}}</a>&nbsp;&nbsp;<a
-                href="" ng-if="$ctrl.muokattu" ng-click="$ctrl.initCode()">{{$ctrl.resetText}}</a><label
+        ng-click="$ctrl.resetExercise()">{{::$ctrl.resetText}}</a>&nbsp;&nbsp;<a
+                href="" ng-if="$ctrl.muokattu" ng-click="$ctrl.initCode()">{{::$ctrl.resetText}}</a><label
                 ng-show="$ctrl.freeHandVisible">FreeHand <input type="checkbox" name="freeHand" value="true"
                                                                 ng-model="$ctrl.freeHand"></label> <span><span
-                ng-show="$ctrl.freeHand"><label ng-show="$ctrl.freeHandLineVisible">Line
+                ng-show="$ctrl.freeHand"><label ng-show="::$ctrl.freeHandLineVisible">Line
             <input type="checkbox"
                    name="freeHandLine"
                    value="true"
                    ng-model="$ctrl.lineMode"></label> <span
-                ng-show="$ctrl.freeHandToolbar"><input ng-show="true"
+                ng-show="::$ctrl.freeHandToolbar"><input ng-show="true"
                                                        id="freeWidth"
                                                        size="1"
                                                        style="width: 2em"
@@ -457,7 +457,7 @@ const directiveTemplate = `
                     ng-click="$ctrl.setFColor('#0f0')">G</span>&nbsp;<a href="" ng-click="$ctrl.undo()">Undo</a>
         </span></span></span>
     </p>
-    <div ng-show="$ctrl.preview"><span><span ng-style="{'background-color': $ctrl.previewColor}"
+    <div ng-show="::$ctrl.preview"><span><span ng-style="{'background-color': $ctrl.previewColor}"
                                              style="display: table-cell; text-align: center; width: 30px;"
                                              ng-click="$ctrl.getPColor()">&lt;-</span>
         <input ng-model="$ctrl.previewColor"
@@ -470,7 +470,7 @@ const directiveTemplate = `
     <pre class="" ng-show="$ctrl.result">{{$ctrl.result}}</pre>
     <div class="replyHTML" ng-if="$ctrl.replyHTML"><span ng-bind-html="$ctrl.svgImageSnippet()"></span></div>
     <img ng-if="$ctrl.replyImage" class="grconsole" ng-src="{{$ctrl.replyImage}}" alt=""/>
-    <p class="plgfooter" ng-if="$ctrl.footer" ng-bind-html="$ctrl.footer"></p>
+    <p class="plgfooter" ng-if="::$ctrl.footer" ng-bind-html="::$ctrl.footer"></p>
 </div>
 `;
 
@@ -1513,11 +1513,11 @@ class ImageXController extends PluginBase<t.TypeOf<typeof ImageXMarkup>,
     }
 
     get buttonPlay() {
-        return this.attrs.buttonPlay || (this.videoPlayer ? "Aloita/pysäytä" : undefined);
+        return this.attrs.buttonPlay || (this.videoPlayer ? "Aloita/pysäytä" : null);
     }
 
     get buttonRevert() {
-        return this.attrs.buttonRevert || (this.videoPlayer ? "Video alkuun" : undefined);
+        return this.attrs.buttonRevert || (this.videoPlayer ? "Video alkuun" : null);
     }
 
     get teacherMode() {

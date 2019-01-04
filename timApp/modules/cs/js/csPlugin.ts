@@ -436,35 +436,35 @@ function commentTrim(s: string) {
 }
 
 function makeTemplate() {
-    return `<div class="csRunDiv type-{{$ctrl.rtype}}">
-    <div class="pluginError" ng-if="$ctrl.markupError" ng-bind="$ctrl.markupError"></div>
-    <h4 ng-if="$ctrl.header" ng-bind-html="$ctrl.header"></h4>
-    <p ng-if="$ctrl.stem" class="stem" ng-bind-html="$ctrl.stem"></p>
-    <div ng-if="$ctrl.isSimcir || $ctrl.isTauno">
+    return `<div class="csRunDiv type-{{::$ctrl.rtype}}">
+    <div class="pluginError" ng-if="::$ctrl.markupError" ng-bind="::$ctrl.markupError"></div>
+    <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
+    <p ng-if="::$ctrl.stem" class="stem" ng-bind-html="::$ctrl.stem"></p>
+    <div ng-if="::$ctrl.isSimcir || $ctrl.isTauno">
     <p ng-if="$ctrl.taunoOn" class="pluginHide"><a ng-click="$ctrl.hideTauno()">{{$ctrl.hideTaunoText}}</a></p>
     <div class="taunoContainer"><p></p></div>
     <p ng-if="!$ctrl.taunoOn" class="pluginShow"><a ng-click="$ctrl.showTauno()">{{$ctrl.showTaunoText}}</a></p>
     <p ng-if="$ctrl.taunoOn && $ctrl.isTauno"
        class="pluginHide">
-        <a ng-click="$ctrl.copyTauno()">{{$ctrl.copyFromTaunoText}}</a> |
-        <a ng-click="$ctrl.hideTauno()">{{$ctrl.hideTaunoText}}</a></p>
+        <a ng-click="$ctrl.copyTauno()">{{::$ctrl.copyFromTaunoText}}</a> |
+        <a ng-click="$ctrl.hideTauno()">{{::$ctrl.hideTaunoText}}</a></p>
     <p ng-if="$ctrl.taunoOn && $ctrl.isTauno" class="taunoOhje">
-        {{$ctrl.taunoOhjeText}}</a></p>
+        {{::$ctrl.taunoOhjeText}}</a></p>
     <p ng-if="$ctrl.taunoOn && !$ctrl.noeditor && $ctrl.isSimcir" class="pluginHide">
     <a ng-click="$ctrl.copyFromSimcir()">copy from SimCir</a>
     | <a ng-click="$ctrl.copyToSimcir()">copy to SimCir</a> | <a ng-click="$ctrl.hideTauno()">hide SimCir</a>
     </p>
     </div>
-    <div ng-if="$ctrl.upload" class="form-inline small">
-        <div class="form-group small"> {{$ctrl.uploadstem}}: <input type="file" ngf-select="$ctrl.onFileSelect($file)">
+    <div ng-if="::$ctrl.upload" class="form-inline small">
+        <div class="form-group small"> {{::$ctrl.uploadstem}}: <input type="file" ngf-select="$ctrl.onFileSelect($file)">
             <span ng-show="$ctrl.fileProgress >= 0 && !$ctrl.fileError"
                   ng-bind="$ctrl.fileProgress < 100 ? 'Uploading... ' + $ctrl.fileProgress + '%' : 'Done!'"></span>
         </div>
         <div class="error" ng-show="$ctrl.fileError" ng-bind="$ctrl.fileError"></div>
         <div ng-if="$ctrl.uploadresult"><span ng-bind-html="$ctrl.uploadresult"></span></div>
     </div>
-    <div ng-show="$ctrl.isAll" style="float: right;">{{$ctrl.languageText}}
-        <select ng-model="$ctrl.selectedLanguage" ng-options="o for o in $ctrl.progLanguages" ng-required></select>
+    <div ng-show="::$ctrl.isAll" style="float: right;">{{::$ctrl.languageText}}
+        <select ng-model="$ctrl.selectedLanguage" ng-options="o for o in ::$ctrl.progLanguages" ng-required></select>
     </div>
     <pre ng-if="$ctrl.viewCode && $ctrl.codeover">{{$ctrl.code}}</pre>
     <div class="csRunCode">
@@ -480,46 +480,46 @@ function makeTemplate() {
         </div>
         <pre class="csRunPost" ng-if="$ctrl.viewCode && !$ctrl.codeunder && !$ctrl.codeover">{{$ctrl.postcode}}</pre>
     </div>
-    <div ng-if="$ctrl.isSage" class="computeSage no-popup-menu"></div>
-    <div class="csInputDiv" ng-hide="!$ctrl.showInput || !$ctrl.isInput"><p ng-show="$ctrl.inputstem" class="stem">
-        {{$ctrl.inputstem}}</p>
+    <div ng-if="::$ctrl.isSage" class="computeSage no-popup-menu"></div>
+    <div class="csInputDiv" ng-hide="::!$ctrl.showInput || !$ctrl.isInput"><p ng-show="::$ctrl.inputstem" class="stem">
+        {{::$ctrl.inputstem}}</p>
         <div class="csRunCode"><textarea class="csRunArea csInputArea"
-                                         rows={{$ctrl.inputrows}}
+                                         rows={{::$ctrl.inputrows}}
                                          ng-model="$ctrl.userinput"
                                          ng-trim="false"
-                                         placeholder="{{$ctrl.inputplaceholder}}"></textarea></div>
+                                         placeholder="{{::$ctrl.inputplaceholder}}"></textarea></div>
     </div>
-    <div class="csArgsDiv" ng-hide="!$ctrl.showArgs || !$ctrl.isInput"><label>{{$ctrl.argsstem}} </label>
+    <div class="csArgsDiv" ng-hide="::!$ctrl.showArgs || !$ctrl.isInput"><label>{{::$ctrl.argsstem}} </label>
         <span><input type="text"
                      class="csArgsArea"
                      ng-model="$ctrl.userargs"
                      ng-trim="false"
-                     placeholder="{{$ctrl.argsplaceholder}}"></span>
+                     placeholder="{{::$ctrl.argsplaceholder}}"></span>
     </div>
-    <p class="csRunSnippets" ng-if="$ctrl.buttons"> 
-        <button ng-repeat="item in $ctrl.buttons" ng-click="$ctrl.addText(item)">{{$ctrl.addTextHtml(item)}}</button>
+    <p class="csRunSnippets" ng-if="::$ctrl.buttons"> 
+        <button ng-repeat="item in ::$ctrl.buttons" ng-click="$ctrl.addText(item)">{{$ctrl.addTextHtml(item)}}</button>
         &nbsp;&nbsp;
     </p>
-    <div class="csRunMenuArea" ng-if="!$ctrl.forcedupload">
+    <div class="csRunMenuArea" ng-if="::!$ctrl.forcedupload">
         <p class="csRunMenu">
-            <button ng-if="$ctrl.isRun" ng-disabled="$ctrl.isRunning" title="(Ctrl-S)" ng-click="$ctrl.runCode()"
-                    ng-bind-html="$ctrl.buttonText"></button>
+            <button ng-if="::$ctrl.isRun" ng-disabled="$ctrl.isRunning" title="(Ctrl-S)" ng-click="$ctrl.runCode()"
+                    ng-bind-html="::$ctrl.buttonText"></button>
             &nbsp&nbsp
-            <button ng-if="$ctrl.isTest" ng-disabled="$ctrl.isRunning" ng-click="$ctrl.runTest()">Test</button>
+            <button ng-if="::$ctrl.isTest" ng-disabled="$ctrl.isRunning" ng-click="$ctrl.runTest()">Test</button>
             &nbsp&nbsp
-            <button ng-if="$ctrl.isUnitTest"
+            <button ng-if="::$ctrl.isUnitTest"
                     ng-disabled="$ctrl.isRunning"
                     ng-click="$ctrl.runUnitTest()">UTest
             </button>
-            &nbsp&nbsp<span ng-if="$ctrl.isDocument">
+            &nbsp&nbsp<span ng-if="::$ctrl.isDocument">
             <a href="" ng-disabled="$ctrl.isRunning"
                ng-click="$ctrl.runDocument()">{{$ctrl.docLink}}</a>&nbsp&nbsp</span>
             <a href=""
-               ng-if="!$ctrl.nocode && ($ctrl.file || $ctrl.program)"
+               ng-if="::!$ctrl.nocode && ($ctrl.file || $ctrl.program)"
                ng-click="$ctrl.showCode()">{{$ctrl.showCodeLink}}</a>&nbsp&nbsp
             <a href=""
                ng-if="$ctrl.muokattu"
-               ng-click="$ctrl.initCode()">{{$ctrl.resetText}}</a>
+               ng-click="$ctrl.initCode()">{{::$ctrl.resetText}}</a>
             <a href=""
                ng-if="$ctrl.toggleEditor"
                ng-click="$ctrl.hideShowEditor()">{{$ctrl.toggleEditorText[$ctrl.noeditor ? 0 : 1]}}</a>
@@ -528,7 +528,7 @@ function makeTemplate() {
                ng-click="$ctrl.showOtherEditor()">
                 {{$ctrl.editorText[$ctrl.editorModeIndecies[$ctrl.editorMode+1]]}}
             </a>
-            <span ng-if="$ctrl.showRuntime"
+            <span ng-if="::$ctrl.showRuntime"
                   class="inputSmall"
                   style="float: right;"
                   title="Run time in sec {{$ctrl.runtime}}">{{$ctrl.oneruntime}}</span>
@@ -538,7 +538,7 @@ function makeTemplate() {
                                                           ng-model="$ctrl.wrap"
                                                           size="2"/></label></span></p>
     </div>
-    <div ng-if="$ctrl.isSage" class="outputSage no-popup-menu"></div>
+    <div ng-if="::$ctrl.isSage" class="outputSage no-popup-menu"></div>
     <pre ng-if="$ctrl.viewCode && $ctrl.codeunder">{{$ctrl.code}}</pre>
     <p class="unitTestGreen" ng-if="$ctrl.runTestGreen">&nbsp;ok</p>
     <pre class="unitTestRed" ng-if="$ctrl.runTestRed">{{$ctrl.comtestError}}</pre>
@@ -552,7 +552,7 @@ function makeTemplate() {
         <a ng-click="$ctrl.closeDocument()">X</a></p>
         <iframe width="800" height="600" ng-src="{{$ctrl.docURL}}" target="csdocument" allowfullscreen/>
     </div>
-    <p class="footer" ng-bind-html="$ctrl.footer"></p>
+    <p class="footer" ng-bind-html="::$ctrl.footer"></p>
 </div>
 `;
 }
@@ -672,6 +672,7 @@ const CsMarkupOptional = t.partial({
     inputplaceholder: t.string,
     languages: t.string, // not used in any plugin?
     mode: t.string,
+    noeditor: t.boolean,
     normal: t.string,
     parsonsmaxcheck: t.number,
     path: t.string,
@@ -722,7 +723,6 @@ const CsMarkupDefaults = t.type({
     maxrows: withDefault(t.Integer, 100),
     noConsoleClear: withDefault(t.boolean, false),
     nocode: withDefault(t.boolean, false),
-    noeditor: withDefault(t.boolean, false),
     norun: withDefault(t.boolean, false),
     nosave: withDefault(t.boolean, false),
     open: withDefault(t.boolean, false),
@@ -859,7 +859,7 @@ class CsController extends CsBase implements IController {
     private uploadresult?: string;
     private userargs: string = "";
     private userinput: string = "";
-    private viewCode: boolean;
+    private viewCode!: boolean;
     private wavURL: string = "";
     private wrap!: number;
     private buttons: string[] = [];
@@ -881,7 +881,6 @@ class CsController extends CsBase implements IController {
         this.result = "";
         this.htmlresult = "";
         this.imgURL = "";
-        this.viewCode = false;
         this.runSuccess = false;
         this.copyingFromTauno = false;
         this.lastMD = "";
@@ -1227,9 +1226,10 @@ class CsController extends CsBase implements IController {
         this.userinput = this.attrsall.userinput || this.attrs.userinput || "";
         this.userargs = this.attrsall.userargs || this.attrs.userargs || (isText && isArgs ? this.attrs.filename || "" : "");
         this.selectedLanguage = this.attrs.selectedLanguage || rt;
-        this.noeditor = this.isSimcir || (this.type === "upload");
+        this.noeditor = valueOr(this.attrs.noeditor, this.isSimcir || (this.type === "upload"));
         this.wrap = this.attrs.wrap || (isText ? 70 : -1);
         this.editorMode = this.attrs.editorMode;
+        this.viewCode = this.attrs.viewCode;
         this.editorText = [
             this.attrs.normal || this.english ? "Normal" : "Tavallinen",
             this.attrs.highlight,
@@ -2886,10 +2886,10 @@ csApp.component("csTextRunner", {
     ...commonComponentOptions,
     template: `
 <div class="csRunDiv csTinyDiv" style="text-align: left;">
-    <h4 ng-bind-html="$ctrl.header"></h4>
-    <span ng-if="$ctrl.stem"
+    <h4 ng-bind-html="::$ctrl.header"></h4>
+    <span ng-if="::$ctrl.stem"
           class="stem"
-          ng-bind-html="$ctrl.stem"></span>
+          ng-bind-html="::$ctrl.stem"></span>
     <input class="csTinyText no-popup-menu"
            ng-hide="$ctrl.noeditor && !$ctrl.viewCode"
            size="{{$ctrl.cols}}"
@@ -2897,14 +2897,14 @@ csApp.component("csTextRunner", {
            ng-trim="false"
            ng-attr-placeholder="{{$ctrl.placeholder}}"
            ng-keypress="$ctrl.runCodeIfCR($event);"/>
-    <button ng-if="$ctrl.isRun"
+    <button ng-if="::$ctrl.isRun"
             ng-disabled="$ctrl.isRunning"
             title="(Ctrl-S)"
             ng-click="$ctrl.runCode();"
-            ng-bind-html="$ctrl.buttonText"></button>
+            ng-bind-html="::$ctrl.buttonText"></button>
     &nbsp;&nbsp;<a href=""
                    ng-if="$ctrl.muokattu"
-                   ng-click="$ctrl.initCode();">{{$ctrl.resetText}}</a>&nbsp;&nbsp;
+                   ng-click="$ctrl.initCode();">{{::$ctrl.resetText}}</a>&nbsp;&nbsp;
     <pre class="console"
          ng-show="$ctrl.result">{{$ctrl.result}}</pre>
     <span class="csRunError"
@@ -3127,7 +3127,7 @@ csConsoleApp.component("csConsole", {
     <div class="console-output-elem"
          ng-repeat="item in $ctrl.history track by $index"><span class="console-oldinput">  <span
             class="console-in">{{item.istem}}</span>  <span class="console-userInput">{{item.input}}</span> </span>
-        <span class="console-oldresponse"><span ng-if="!$ctrl.isShell">  <br/>  <span
+        <span class="console-oldresponse"><span ng-if="::!$ctrl.isShell">  <br/>  <span
                 class="console-out">{{item.ostem}}</span></span>  <span class="console-response"
                                                                         ng-class="{error:item.error}"><span
                 ng-bind-html="item.response"></span></span>
@@ -3139,13 +3139,13 @@ csConsoleApp.component("csConsole", {
               ng-click="$ctrl.examplesVisible=!$ctrl.examplesVisible">    ▼ example expressions ▲</span>
         <div>Click to load:</div>
         <ul>
-            <li ng-repeat="example in $ctrl.examples track by $index">
+            <li ng-repeat="example in ::$ctrl.examples track by $index">
                 <a ng-click="$ctrl.loadExample($index)"
                    title="{{example.expr}}">{{example.title||example.expr}}</a>
             </li>
             <ul>
     </div>
-    <div class="console-curIndex" ng-if="$ctrl.isShell">{{$ctrl.pwd}}</div>
+    <div class="console-curIndex" ng-if="::$ctrl.isShell">{{$ctrl.pwd}}</div>
     <span class="console-curIndex">in_{{$ctrl.cursor}}</span><input type="text" placeholder="type expressions here"
                                                                     class="console-input"
                                                                     ng-model="$ctrl.currentInput"/>&nbsp;<div

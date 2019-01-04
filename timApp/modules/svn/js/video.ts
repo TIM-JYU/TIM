@@ -2,7 +2,7 @@
 import * as t from "io-ts";
 import {GenericPluginMarkup, PluginBase, withDefault, nullable} from "tim/plugin/util";
 import {ViewCtrl} from "tim/document/viewctrl";
-import {valueDefu} from "tim/util/utils";
+import {valueDefu, valueOr} from "tim/util/utils";
 
 const videoApp = angular.module("videoApp", ["ngSanitize"]);
 
@@ -10,7 +10,7 @@ function muunna(value: string | number | undefined): number | undefined {
     if (!value) {
         return undefined;
     }
-    if (typeof value == 'number' ) {
+    if (typeof value == 'number') {
         return value;
     }
 
@@ -118,7 +118,7 @@ class ShowFileController extends PluginBase<t.TypeOf<typeof ShowFileMarkup>,
     private static $inject = ["$scope", "$element"];
 
     get videoicon() {
-        return this.attrs.videoicon || "/csstatic/video_small.png";
+        return valueOr(this.attrs.videoicon, "/csstatic/video_small.png");
     }
 
     get docicon() {
@@ -130,7 +130,7 @@ class ShowFileController extends PluginBase<t.TypeOf<typeof ShowFileMarkup>,
     }
 
     get videoname() {
-        return this.attrs.videoname;
+        return this.attrs.videoname || null;
     }
 
     get doclink() {
@@ -145,7 +145,7 @@ class ShowFileController extends PluginBase<t.TypeOf<typeof ShowFileMarkup>,
     }
 
     get doctext() {
-        return this.attrs.doctext;
+        return this.attrs.doctext || null;
     }
 
     private watchEnd?: number;
@@ -153,14 +153,14 @@ class ShowFileController extends PluginBase<t.TypeOf<typeof ShowFileMarkup>,
     private start?: number;
     private end?: number;
     private videoOn: boolean = false;
-    private span: string = "";
+    private span?: string | null;
     private origSize!: string;
     private origWidth: any;
     private origHeight: any;
     private video?: HTMLVideoElement;
-    private limits: string = "";
-    private duration: string = "";
-    private startt: string = "";
+    private limits!: string | null;
+    private duration!: string | null;
+    private startt!: string | null;
     private width?: number;
     private height?: number;
     private vctrl!: ViewCtrl;
@@ -171,10 +171,14 @@ class ShowFileController extends PluginBase<t.TypeOf<typeof ShowFileMarkup>,
         this.end = muunna(this.attrs.end);
         this.width = this.attrs.width;
         this.height = this.attrs.height;
-        if (this.start && this.end) {
+        if (this.start != null && this.end != null) {
             this.duration = `(${time2String(this.end - this.start)})`;
             this.limits = `(${time2String(this.start)}-${time2String(this.end)})`;
             this.startt = `, ${time2String(this.start)}`;
+        } else {
+            this.duration = null;
+            this.limits = null;
+            this.startt = null;
         }
         this.getPrevZoom();
     }
@@ -363,8 +367,8 @@ videoApp.component("videoRunner", {
     <div class="videoContainer"></div>
     <div class="no-popup-menu">
         <img src="/csstatic/video.png"
-             ng-if="::!$ctrl.videoOn"
-             ng-click="::$ctrl.showVideo()"
+             ng-if="!$ctrl.videoOn"
+             ng-click="$ctrl.showVideo()"
              width="200"
              alt="Click here to show the video"/></div>
     <a href="{{::$ctrl.doclink}}" ng-if="::$ctrl.doclink" target="timdoc">
@@ -402,7 +406,7 @@ videoApp.component("listVideoRunner", {
     ...common,
     template: `
 <div class="listVideoRunDiv">
-    <div class="pluginError" ng-if="$ctrl.markupError" ng-bind="$ctrl.markupError"></div>
+    <div class="pluginError" ng-if="::$ctrl.markupError" ng-bind="::$ctrl.markupError"></div>
     <p ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></p>
     <ul>
         <li><span class="stem" ng-bind-html="::$ctrl.stem"></span>
