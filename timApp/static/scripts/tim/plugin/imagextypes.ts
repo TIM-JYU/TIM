@@ -97,9 +97,11 @@ const Size = t.clean(t.union([t.null, ValidCoord, SingleSize]));
 
 export type SizeT = t.TypeOf<typeof Size>;
 
+const Angle = t.clean(t.union([t.null, t.number]));
+
 const TextboxProps = t.clean(t.intersection([
     t.partial({
-        a: t.number,
+        a: Angle,
         position: ValidCoord,
         size: Size,
         borderColor: t.union([t.null, t.string]),
@@ -118,7 +120,7 @@ const VectorProps = t.clean(t.partial({
 }));
 
 const CommonProps = t.clean(t.partial({
-    a: t.number,
+    a: Angle,
     color: t.union([t.null, t.string]),
     id: t.string,
     position: ValidCoord,
@@ -198,7 +200,7 @@ export type ObjectTypeT = t.TypeOf<typeof ObjectType>;
 
 const BackgroundProps = t.clean(t.intersection([
     t.partial({
-        a: t.number,
+        a: Angle,
         size: Size,
     }),
     t.type({

@@ -949,7 +949,7 @@ abstract class ObjBase<T extends RequireExcept<CommonPropsT, OptionalCommonPropN
         const z = values.position;
         this.x = z[0];
         this.y = z[1];
-        this.a = -this.values.a;
+        this.a = -(valueOr(this.values.a, 0));
         let s;
         if (ValidCoord.is(this.values.size)) {
             const [width, height] = this.values.size;
