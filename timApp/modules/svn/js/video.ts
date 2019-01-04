@@ -1,6 +1,6 @@
 ﻿import angular from "angular";
 import * as t from "io-ts";
-import {GenericPluginMarkup, PluginBase, withDefault} from "tim/plugin/util";
+import {GenericPluginMarkup, PluginBase, withDefault, nullable} from "tim/plugin/util";
 import {ViewCtrl} from "tim/document/viewctrl";
 import {valueDefu} from "tim/util/utils";
 
@@ -89,18 +89,18 @@ function ifIs(value: number | undefined, name: string) {
 
 const ShowFileMarkup = t.intersection([
     t.partial({
-        docicon: t.union([t.null, t.string]),
-        doclink: t.union([t.null, t.string]),
-        doctext: t.union([t.null, t.string]),
+        docicon: nullable(t.string),
+        doclink: nullable(t.string),
+        doctext: nullable(t.string),
         end: t.union([t.number, t.string]),
         followid: t.string,
         height: t.number,
-        hidetext: t.union([t.null, t.string]),
+        hidetext: nullable(t.string),
         iframe: t.boolean,
-        iframeopts: t.union([t.null, t.string]),
+        iframeopts: nullable(t.string),
         start: t.union([t.number, t.string]),
         videoicon: t.union([t.literal(false), t.null, t.string]),
-        videoname: t.union([t.null, t.string]),
+        videoname: nullable(t.string),
         width: t.number,
     }),
     GenericPluginMarkup,

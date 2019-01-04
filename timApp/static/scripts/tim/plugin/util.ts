@@ -133,3 +133,7 @@ export function withDefault<T extends t.Any>(
         (v: any) => type.encode(v),
     );
 }
+
+export function nullable<T extends t.Any>(type: T) {
+    return t.union([t.null, type]);
+}

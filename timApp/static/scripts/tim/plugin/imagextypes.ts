@@ -1,5 +1,5 @@
 import * as t from "io-ts";
-import {GenericPluginMarkup, withDefault} from "./util";
+import {GenericPluginMarkup, nullable, withDefault} from "./util";
 
 export interface IPoint {
     x: number;
@@ -97,46 +97,46 @@ const Size = t.clean(t.union([t.null, ValidCoord, SingleSize]));
 
 export type SizeT = t.TypeOf<typeof Size>;
 
-const Angle = t.clean(t.union([t.null, t.number]));
+const Angle = t.clean(nullable(t.number));
 
 const TextboxProps = t.clean(t.intersection([
     t.partial({
         a: Angle,
         position: ValidCoord,
         size: Size,
-        borderColor: t.union([t.null, t.string]),
-        borderWidth: t.union([t.null, t.number]),
+        borderColor: nullable(t.string),
+        borderWidth: nullable(t.number),
         cornerradius: t.number,
         fillColor: t.string,
-        font: t.union([t.null, t.string]),
-        text: t.union([t.null, t.string]),
-        textColor: t.union([t.null, t.string]),
+        font: nullable(t.string),
+        text: nullable(t.string),
+        textColor: nullable(t.string),
     })]));
 
 const VectorProps = t.clean(t.partial({
     arrowheadlength: t.number,
     arrowheadwidth: t.number,
-    color: t.union([t.null, t.string]),
+    color: nullable(t.string),
 }));
 
 const CommonProps = t.clean(t.partial({
     a: Angle,
-    color: t.union([t.null, t.string]),
+    color: nullable(t.string),
     id: t.string,
     position: ValidCoord,
     size: Size,
-    type: t.union([t.null, ObjectType]),
+    type: nullable(ObjectType),
 
-    imgproperties: t.union([t.null, ImgProps]),
-    textboxproperties: t.union([t.null, TextboxProps]),
-    vectorproperties: t.union([t.null, VectorProps]),
+    imgproperties: nullable(ImgProps),
+    textboxproperties: nullable(TextboxProps),
+    vectorproperties: nullable(VectorProps),
 }));
 
 const PinProps = t.clean(t.partial({
-    color: t.union([t.null, t.string]),
-    dotRadius: t.union([t.null, t.number]),
-    length: t.union([t.null, t.number]),
-    linewidth: t.union([t.null, t.number]),
+    color: nullable(t.string),
+    dotRadius: nullable(t.number),
+    length: nullable(t.number),
+    linewidth: nullable(t.number),
     position: t.partial({
         align: PinAlignment,
         coord: ValidCoord,
@@ -278,7 +278,7 @@ export const ImageXAll = t.clean(t.intersection([
             })]),
     }),
     t.type({
-        info: t.union([t.null, t.type({earlier_answers: t.Integer})]),
+        info: nullable(t.type({earlier_answers: t.Integer})),
         markup: ImageXMarkup,
     }),
 ]));

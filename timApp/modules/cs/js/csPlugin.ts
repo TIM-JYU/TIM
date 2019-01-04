@@ -4,7 +4,7 @@ import $ from "jquery";
 import {CellInfo} from "sagecell";
 import {IAce, IAceEditor} from "tim/editor/ace-types";
 import {ParCompiler} from "tim/editor/parCompiler";
-import {GenericPluginMarkup, PluginBase, withDefault} from "tim/plugin/util";
+import {GenericPluginMarkup, PluginBase, withDefault, nullable} from "tim/plugin/util";
 import {lazyLoadMany} from "tim/util/lazyLoad";
 import {$compile, $http, $sce, $timeout, $upload, $window} from "tim/util/ngimport";
 import {fixDefExport, to} from "tim/util/utils";
@@ -675,14 +675,14 @@ const CsMarkupOptional = t.partial({
     normal: t.string,
     parsonsmaxcheck: t.number,
     path: t.string,
-    placeholder: t.union([t.null, t.string]),
+    placeholder: nullable(t.string),
     replace: t.string,
     runeverytime: t.boolean,
     savestate: t.string,
     scripts: t.string,
     selectedLanguage: t.string,
     showCodeOff: t.string,
-    showCodeOn: t.union([t.null, t.string]),
+    showCodeOn: nullable(t.string),
     table: t.string,
     taunotype: t.string,
     treplace: t.string,
