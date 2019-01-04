@@ -112,7 +112,6 @@ const ShowFileMarkup = t.intersection([
 ]);
 const ShowFileAll = t.type({markup: ShowFileMarkup});
 
-// TODO: register video to ViewCtrl so that ImageX can access it
 class ShowFileController extends PluginBase<t.TypeOf<typeof ShowFileMarkup>,
     t.TypeOf<typeof ShowFileAll>,
     typeof ShowFileAll> {
