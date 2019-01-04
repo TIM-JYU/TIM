@@ -134,13 +134,10 @@ class ShowFileController extends PluginBase<t.TypeOf<typeof ShowFileMarkup>,
     }
 
     get doclink() {
-        console.log("doclink " + this.attrs.doclink);
-        //return this.attrs.doclink;
         return valueDefu(this.attrs.doclink, "");
     }
 
     get hidetext() {
-        console.log("hidetext");
         return valueDefu(this.attrs.hidetext, "hide video");
     }
 

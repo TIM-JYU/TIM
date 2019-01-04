@@ -1396,15 +1396,11 @@ class CsController extends CsBase implements IController {
             console.log("taskId missing");
             return;
         }
-        console.log(file);
 
         if (file) {
             if (this.attrs.uploadbycode) {
-                console.log("bycode");
                 const reader = new FileReader();
                 reader.onload = ((e) => {
-                    // showTrack(theFile.target.result,type);
-                    // console.log(theFile.target.result);
                     this.scope.$evalAsync(() => {
                         this.usercode = reader.result as string;
                     });
@@ -2350,7 +2346,7 @@ class CsController extends CsBase implements IController {
         }
         parsonsEditDiv.setAttribute("id", v.vid);
         if ($("#" + v.vid).length === 0) {
-            console.log("wait 300 ms " + v.vid);
+            console.log("Wait 300 ms " + v.vid);
             await $timeout(300);
             this.showJsParsons(parsonsEditDiv);
             return;
@@ -2553,7 +2549,6 @@ class CsController extends CsBase implements IController {
     // Runs when editor loads
     aceLoaded(ace: IAce, editor: IAceEditor) {
         this.aceEditor = editor;
-        console.log("Ace editor loaded successfully");
         const session = editor.getSession();
         session.setUndoManager(new ace.UndoManager());
     }
@@ -2700,7 +2695,7 @@ class CsController extends CsBase implements IController {
                 if (this.iframeLoadTries <= 0) {
                     return;
                 }
-                console.log("Odotetaan 300 ms");
+                console.log("Wait 300 ms");
                 await $timeout(300);
                 this.showJS();
                 return;
@@ -3048,7 +3043,6 @@ class CsConsoleController extends CsBase implements IController {
                 }
             }
             this.submit(s);
-            // console.log(["data", data.web]);
         } else {
             console.log(["protocol error", r.result.data]);
             this.submit("Endless loop?");
