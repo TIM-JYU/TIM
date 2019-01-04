@@ -1171,7 +1171,7 @@ class CsController extends CsBase implements IController {
         return this.attrs.editorModes.toString();
     }
 
-    getTemplateButtons() : string[] {
+    getTemplateButtons(): string[] {
         let b = this.attrs.buttons;
         if (b) {
             const helloButtons = "public \nclass \nHello \n\\n\n{\n}\n" +
