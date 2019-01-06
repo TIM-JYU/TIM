@@ -527,7 +527,10 @@ function makeTemplate() {
                ng-if="!$ctrl.noeditor"
                ng-click="$ctrl.showOtherEditor()">
                 {{$ctrl.editorText[$ctrl.editorModeIndecies[$ctrl.editorMode+1]]}}
-            </a>
+            </a>&nbsp&nbsp
+            <a href=""
+               ng-if="::$ctrl.attrs.copyLink"
+               ng-click="$ctrl.copyCode()">{{$ctrl.attrs.copyLink}}</a>
             <span ng-if="::$ctrl.showRuntime"
                   class="inputSmall"
                   style="float: right;"
@@ -670,7 +673,7 @@ const CsMarkupOptional = t.partial({
     html: t.string,
     indices: t.string,
     inputplaceholder: t.string,
-    languages: t.string, // not used in any plugin?
+    languages: t.string, // not used in any plugin? // TODO: should be used to give set of languages that can be used
     mode: t.string,
     noeditor: t.boolean,
     normal: t.string,
@@ -704,6 +707,7 @@ const CsMarkupDefaults = t.type({
     codeover: withDefault(t.boolean, false),
     codeunder: withDefault(t.boolean, false),
     cols: withDefault(t.Integer, 10),
+    copyLink: withDefault(t.string, "Copy"),
     cssPrint: withDefault(t.boolean, false),
     editorMode: withDefault(t.Integer, -1),
     editorModes: withDefault(t.union([t.string, t.Integer]), "01"),
@@ -1346,6 +1350,7 @@ class CsController extends CsBase implements IController {
     async $doCheck() {
         let anyChanged = false;
         if (this.usercode !== this.dochecks.usercode) {
+            this.checkByCodeRemove();
             if (this.aceEditor && this.aceEditor.getSession().getValue() !== this.usercode) {
                 this.aceEditor.getSession().setValue(this.usercode);
             }
@@ -2126,6 +2131,119 @@ class CsController extends CsBase implements IController {
         this.viewCode = !this.viewCode;
         this.localcode = undefined;
         this.showCodeNow();
+    }
+
+
+    getClipboardHelper(): any {  // TODO: tätä voisi ahrkita TIMin globaaliksi funktioksi?
+        // @ts-ignore
+        let e1 = document.copyHelperElement;  // prevent extra creating and deleting
+        if ( e1 ) return e1;
+        e1 = document.createElement('textarea');
+        e1.setAttribute('readonly', '');
+        e1.style.position = 'absolute';
+        e1.style.left = '-9999px';
+        document.body.appendChild(e1);
+        // document.body.removeChild(el);
+        // @ts-ignore
+        document.copyHelperElement = e1;
+        return e1;
+    }
+
+
+    copyToClipboard(s:string) {  // TODO: tätä voisi ahrkita TIMin globaaliksi funktioksi?
+        let e1 = this.getClipboardHelper();
+        e1.value = s;
+        e1.select();
+        document.execCommand('copy');
+    }
+
+
+    getFromClipboard(): string {  // This does not work, it is not possible to get user clp contents
+        let e1 = this.getClipboardHelper();
+        e1.select();
+        document.execCommand('paste');
+        e1.select();
+        return e1.value;
+    }
+
+
+    getSameIndent(s:string, beg: number): string {
+        let n = 0;
+        let b = beg;
+        for (let i=b; i<s.length; i++) {
+            const c = s[i];
+            if (c == ' ') n++;
+            else if (c == '\n') { b = i+1; n = 0; }
+            else break;
+        }
+        return s.substr(b, n);
+    }
+
+
+    findLastNonEmpty(s: string): number {
+        let i = s.length-1;
+        let foundChars = false;
+
+        for ( ; i >= 0; i--) {
+            let c = s[i];
+            if ( c == '\n') {
+                if ( foundChars ) { i++; break; }
+            } else if ( c != ' ') foundChars = true;
+        }
+        return i;
+    }
+
+
+    copyCode() {
+        let pre = "";
+        let post = "";
+        let extra = false;
+        if ( this.viewCode && this.precode ) { // TODO: get if not present?
+            pre = this.precode +"\n";
+            extra = true;
+        }
+
+        if ( this.viewCode && this.postcode ) { // TODO: get if not present?
+            post = this.postcode +"\n";
+            extra = true;
+        }
+
+        let usercode = this.usercode;
+
+        // TODO: begin and end texts as a parameter and then indext picked there
+        let ind = ""
+        if ( extra ) {
+            ind = this.getSameIndent(this.usercode,0);
+            pre += ind+ "// BYCODEBEGIN\n";  // TODO: ask comment string from language
+            let i = this.findLastNonEmpty(usercode);
+            ind = this.getSameIndent(this.usercode, i);
+            post = "\n" + ind + "// BYCODEEND\n" + post;  // TODO: ask comment string from language
+        }
+        let s = pre + this.usercode + post;
+        this.copyToClipboard(s);
+    }
+
+
+    checkByCodeRemove() {
+        // TODO: begin and end texts as a parameter and then indext picked there
+        if ( this.nocode || !(this.file || this.program) ) return;
+        const BEGINCODE = "BYCODEBEGIN";
+        const ENDCODE = "BYCODEEND";
+        let code = this.usercode;
+        let i = code.indexOf(BEGINCODE);
+        if ( i >= 0) {
+            let endl = code.indexOf("\n", i);
+            if (endl<0) return; // NO user code
+            code = code.substr(endl+1);
+        }
+        i = code.indexOf(ENDCODE);
+        if ( i >= 0 ) {
+            let endl = code.lastIndexOf("\n", i);
+            if ( endl >= 0 ) code = code.substr(0, endl-1);
+        }
+        if ( code.length == this.usercode.length ) return;
+        this.usercode = code;
+
     }
 
     checkIndent() {
