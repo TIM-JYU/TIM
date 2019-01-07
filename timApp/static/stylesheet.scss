@@ -1250,3 +1250,11 @@ body > .footer {
         }
     }
 }
+
+tim-plugin-loader, answerbrowser {
+    display: block;
+
+    &.has-answers {
+        min-height: 23px;
+    }
+}

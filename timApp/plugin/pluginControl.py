@@ -329,6 +329,7 @@ def pluginify(doc: Document,
                 plugin.plugin_lazy = plugin_lazy
                 plugin.set_output(html)
                 html_pars[idx]['answerbrowser_type'] = plugin.get_answerbrowser_type()
+                html_pars[idx]['answer_count'] = plugin.answer_count
                 html_pars[idx][output_format.value] = plugin.get_final_output()
         else:
             for idx, plugin in plugin_block_map.items():
@@ -351,6 +352,7 @@ def pluginify(doc: Document,
 
                     plugin.set_output(html)
                     html_pars[idx]['answerbrowser_type'] = plugin.get_answerbrowser_type()
+                    html_pars[idx]['answer_count'] = plugin.answer_count
                     html_pars[idx][output_format.value] = plugin.get_final_output()
 
     # taketime("phtml done")

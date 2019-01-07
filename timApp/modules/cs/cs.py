@@ -565,8 +565,7 @@ def get_html(self, ttype, query):
         else:
             # btn = '<p class="csRunMenu"><button class="tim-button"></button></p>'
             btn = '<p class="csRunMenu">&nbsp;</p>'
-            #  TODO: remove the first <p> from next line when AnswerBrowser does it's job.
-            lazy_visible = ('<p>&nbsp;</p><div class="lazyVisible csRunDiv no-popup-menu" >' +
+            lazy_visible = ('<div class="lazyVisible csRunDiv no-popup-menu" >' +
                             get_surrounding_headers(query,
                                                     ('<div class="csRunCode csEditorAreaDiv '
                                                      'csrunEditorDiv csRunArea csInputArea '

@@ -13,10 +13,15 @@ export interface IPluginInfoResponse {
     trdiff?: {old: string, new: string};
 }
 
-export function compileWithViewctrl(html: string, scope: IScope, view: ViewCtrl | undefined) {
+export function compileWithViewctrl(html: string | Element, scope: IScope, view: ViewCtrl | undefined) {
     return $compile(html)(scope,
         undefined,
-        view ? {transcludeControllers: {timView: {instance: view}}} : {});
+        view ? {
+            transcludeControllers: {
+                timView: {instance: view},
+                timReview: {instance: view.reviewCtrlScope!.$ctrl},
+            }
+        } : {});
 }
 
 export class ParagraphCompiler {

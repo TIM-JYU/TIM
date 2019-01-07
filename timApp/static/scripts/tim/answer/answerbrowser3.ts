@@ -88,7 +88,7 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
         return taskId.slice(-1) !== ".";
     }
 
-    loadPlugin() {
+    async loadPlugin() {
         if (this.compiled) {
             console.warn(`Plugin ${this.taskId} was already compiled`);
             return;
@@ -96,19 +96,29 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
         const par: JQuery = this.element.parents(".par");
         const plugin = par.find(".parContent");
         this.compiled = true;
+        let abElem;
         if (!this.viewctrl.noBrowser && this.isValidTaskId(this.taskId) && this.type !== "lazyonly") {
-            const newHtml = `<answerbrowser task-id="${this.taskId}"></answerbrowser>`;
-            const newElement = compileWithViewctrl(newHtml, this.viewctrl.scope, this.viewctrl);
-            par.prepend(newElement[0]);
+            const currClass = this.element.attr("class");
+            const ab = document.createElement("answerbrowser");
+            ab.setAttribute("task-id", this.taskId);
+            if (currClass) {
+                // This retains has-answers class if it exists.
+                // It is needed to reduce the amount of vertical jumping.
+                ab.setAttribute("class", currClass);
+            }
+            abElem = compileWithViewctrl(ab, this.viewctrl.scope, this.viewctrl)[0];
         }
         // Next the inside of the plugin to non lazy
         const origHtml = plugin[0].innerHTML;
         if (origHtml.indexOf(LAZYSTART) < 0) {
             // plugin is not lazy; it is already loaded
         } else {
-            void loadPlugin(origHtml, par, this.viewctrl.scope, this.viewctrl);
+            await loadPlugin(origHtml, par, this.viewctrl.scope, this.viewctrl);
         }
         this.element.remove();
+        if (abElem) {
+            par.prepend(abElem);
+        }
     }
 }
 

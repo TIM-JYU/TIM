@@ -95,7 +95,9 @@
         {% if not t.is_plugin %}ng-non-bindable{% endif %}>
         {% set task_id = (t.ref_attrs or t.attrs)['taskId'] %}
             {%- if t.answerbrowser_type and not preview -%}
-                <tim-plugin-loader type="{{ t.answerbrowser_type }}" task-id="{{ (t.ref_doc_id or t.doc_id) }}.{{ task_id }}">
+                <tim-plugin-loader type="{{ t.answerbrowser_type }}"
+                                   {% if t.answer_count %}class="has-answers"{% endif %}
+                                   task-id="{{ (t.ref_doc_id or t.doc_id) }}.{{ task_id }}">
                 </tim-plugin-loader>
             {%- endif -%}
         {%- if task_id and not preview -%}
