@@ -593,7 +593,7 @@ export class ReviewController implements IController {
             } else {
                 range = document.getSelection();
             }
-            if (range.toString().length > 0) {
+            if (range && range.toString().length > 0) {
                 this.selectedArea = range.getRangeAt(0);
                 this.selectedElement = this.getElementParentUntilAttribute(this.selectedArea.startContainer, "t") || undefined;
             } else {

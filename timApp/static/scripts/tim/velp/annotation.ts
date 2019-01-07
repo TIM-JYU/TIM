@@ -209,7 +209,7 @@ export class AnnotationController implements IController {
      */
     updateAnnotation() {
         let margin = false;
-        if (this.velpElement.parentElement == null) {
+        if (this.velpElement.parentElement == null || this.velpElement.parentElement.offsetParent == null) {
             return;
         }
         if (this.velpElement.parentElement.offsetParent.className === "notes") {

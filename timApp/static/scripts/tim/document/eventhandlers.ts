@@ -71,19 +71,13 @@ export function onClick(className: string, func: (obj: JQuery, e: JQueryEventObj
 
 export function onMouseOver(className: string, func: MouseFn) {
     $document.on("mouseover", className, function(e: JQueryEventObject) {
-        if (func($(this) as any, fixPageCoords(e))) {
-            e.preventDefault();
-            e.stopPropagation();
-        }
+        func($(this) as any, fixPageCoords(e));
     });
 }
 
 export function onMouseOut(className: string, func: MouseFn) {
     $document.on("mouseout", className, function(e: JQueryEventObject) {
-        if (func($(this) as any, fixPageCoords(e))) {
-            e.preventDefault();
-            e.stopPropagation();
-        }
+        func($(this) as any, fixPageCoords(e));
     });
 }
 
@@ -95,14 +89,10 @@ export function onMouseOverOut(className: string, func: MouseOverOutFn) {
     // true when over, false when out
 
     $document.on("mouseover", className, function(e: JQueryEventObject) {
-        if (func($(this) as any, fixPageCoords(e), true)) {
-            e.preventDefault();
-        }
+        func($(this) as any, fixPageCoords(e), true)
     });
 
     $document.on("mouseout", className, function(e: JQueryEventObject) {
-        if (func($(this) as any, fixPageCoords(e), false)) {
-            e.preventDefault();
-        }
+        func($(this) as any, fixPageCoords(e), false)
     });
 }

@@ -82,12 +82,12 @@ export class TextAreaParEditor extends BaseParEditor {
     // Navigation
     @focusAfter
     undoClicked() {
-        document.execCommand("undo", false, null);
+        document.execCommand("undo", false, undefined);
     }
 
     @focusAfter
     redoClicked() {
-        document.execCommand("redo", false, null);
+        document.execCommand("redo", false, undefined);
     }
 
     scrollToCaret() {

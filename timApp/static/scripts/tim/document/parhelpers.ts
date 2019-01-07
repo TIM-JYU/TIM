@@ -234,6 +234,6 @@ export function saveCurrentScreenPar() {
     // noinspection CssInvalidPseudoSelector
     const parId = getParId($(".par:not('.preamble'):onScreen").first());
     if (parId) {
-        window.history.replaceState(undefined, undefined, `${location.protocol}//${location.host}${location.pathname}${location.search}#${parId}`);
+        window.history.replaceState(undefined, document.title, `${location.protocol}//${location.host}${location.pathname}${location.search}#${parId}`);
     }
 }

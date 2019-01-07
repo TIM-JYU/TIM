@@ -370,6 +370,9 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
     private moveToElement(event: Event, dir: number) {
         event.preventDefault();
         const activeObj = document.activeElement;
+        if (!activeObj) {
+            return 0;
+        }
         const id = activeObj.id;
         if (!id || id[0] !== "r") {
             return 0;

@@ -1,5 +1,7 @@
 import {$sanitize} from "./ngimport";
 
+// DO NOT USE THESE FUNCTIONS IN NEW CODE!
+
 export function initAttributes(clone: JQuery, $scope: any) {
     if (!clone[0]) {
         return;
@@ -27,7 +29,7 @@ export function initAttributes(clone: JQuery, $scope: any) {
 
 export function getHeading($scope: any, attrs: IAttributes, key: string, defElem: string) {
     const h = set($scope, attrs, key, "");
-    return toHeading(h, defElem);
+    return toHeading(h as any, defElem);
 }
 
 export function toHeading(h: string, defElem: string) {
@@ -89,7 +91,7 @@ export interface ISettable {
     [index: string]: {} | undefined;
 }
 
-export function setk<T extends ISettable, K extends keyof T>(scope: T, sname: K, attrs: IAttributes, keys: string[], def: T[K]): T[K] {
+export function setk<T extends ISettable, K extends keyof T>(scope: any, sname: K, attrs: IAttributes, keys: string[], def: T[K]): T[K] {
     scope[sname] = def;
     let val = get(attrs, keys);
     if (val != undefined) {
@@ -106,7 +108,7 @@ export function setk<T extends ISettable, K extends keyof T>(scope: T, sname: K,
     return scope[sname];
 }
 
-export function setn<T extends ISettable, K extends keyof T>(scope: T, sname: K, attrs: IAttributes, name: string, def?: T[K]): T[K] {
+export function setn<T extends ISettable, K extends keyof T>(scope: T, sname: K, attrs: IAttributes, name: string, def: T[K]): T[K] {
     if (name.indexOf(".") < 0) {
         name = "markup." + name;
     }
@@ -120,7 +122,7 @@ export function set<T extends ISettable>(scope: T, attrs: IAttributes, name: str
     }
     const keys = name.split(".");
     const sname = keys[keys.length - 1] as keyof T;
-    return setk(scope, sname, attrs, keys, def);
+    return setk(scope, sname as any, attrs, keys, def);
 }
 
 export function Hex2Str(s: string) {

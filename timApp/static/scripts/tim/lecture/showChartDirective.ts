@@ -29,7 +29,7 @@ function timStripHtml(s: string) {
     return s;
 }
 
-function timFillArray(len: number, value: any) {
+function timFillArray<T>(len: number, value: T) {
     return Array.apply(null, new Array(len)).map(() => value);
 }
 
@@ -153,13 +153,13 @@ function* enumAnswers(answers: AnswerList): Iterable<[number, string[]]> {
 interface IDataSet {
     label: string | string[];
     fill: string;
-    borderColor: string;
+    borderColor: string | string[];
     pointBackgroundColor: string;
     pointBorderColor: string;
     pointHoverBackgroundColor: string;
     pointHoverBorderColor: string;
     data: number[];
-    backgroundColor?: string;
+    backgroundColor?: string | string[];
     borderWidth?: number;
 }
 
@@ -366,7 +366,7 @@ class ShowChartController implements IController {
         const color = this.basicSets[index % this.basicSets.length].fill;
         dataSets[index].backgroundColor = timFillArray(emptyData.length, color);
         const bordercolor = this.basicSets[index % this.basicSets.length].borderColor;
-        dataSets[index].borderColor = timFillArray(emptyData.length, bordercolor);
+        dataSets[index].borderColor = timFillArray(emptyData.length, bordercolor as string);
         dataSets[index].borderWidth = 1;
     }
 
