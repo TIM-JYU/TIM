@@ -84,7 +84,7 @@ def copy_readings(src_par: DocParagraph, dest_par: DocParagraph):
 
 
 def get_common_readings(usergroup_ids: List[int], doc: Document, filter_condition=None):
-    users: List[DefaultDict[str, ReadParagraph]] = []
+    users: List[DefaultDict[str, DefaultDict[ReadParagraphType, ReadParagraph]]] = []
     for u in usergroup_ids:
         reading_map = defaultdict(lambda: defaultdict(lambda: ReadParagraph(par_hash=None)))
         rs = get_readings(u, doc, filter_condition)
