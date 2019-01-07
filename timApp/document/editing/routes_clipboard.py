@@ -129,7 +129,6 @@ def paste_from_clipboard(doc_id):
         except ValueError:
             pass
 
-    db.session.commit()
     edit_result = DocumentEditResult(added=pars)
     synchronize_translations(g.docentry, edit_result)
     return par_response(pars, doc, edit_result=edit_result)

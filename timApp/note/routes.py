@@ -82,7 +82,6 @@ def post_note():
 
     if is_public:
         notify_doc_watchers(docentry, note_text, NotificationType.CommentAdded, par)
-    db.session.commit()
     return par_response([doc.get_paragraph(par_id)],
                         doc)
 
@@ -121,7 +120,6 @@ def edit_note():
     if access == "everyone":
         notify_doc_watchers(d, note_text, NotificationType.CommentModified, par)
     doc = d.document
-    db.session.commit()
     return par_response([doc.get_paragraph(par_id)],
                         doc)
 
@@ -142,6 +140,5 @@ def delete_note():
     if note.access == "everyone":
         notify_doc_watchers(d, note.content, NotificationType.CommentDeleted, par)
     doc = d.document
-    db.session.commit()
     return par_response([doc.get_paragraph(paragraph_id)],
                         doc)

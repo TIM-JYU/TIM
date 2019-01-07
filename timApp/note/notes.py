@@ -40,8 +40,6 @@ def process_notes(result: List[Tuple[UserNote, User]]) -> List[Tuple[UserNote, U
     for note, u in result:
         if note.html is None:
             note.html = md_to_html(note.content)
-
-    db.session.commit()
     return result
 
 

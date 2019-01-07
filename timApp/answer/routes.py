@@ -10,8 +10,6 @@ from flask import Blueprint
 from flask import Response
 from flask import abort
 from flask import request
-from sqlalchemy import distinct
-from sqlalchemy.orm import joinedload
 
 from timApp.auth.accesshelper import verify_logged_in, get_doc_or_abort, verify_manage_access
 from timApp.auth.accesshelper import verify_task_access, verify_teacher_access, verify_seeanswers_access, has_teacher_access, \
@@ -186,8 +184,6 @@ def post_answer(plugintype: str, task_id_ext: str):
 
     # Get the newest answer (state). Only for logged in users.
     state = try_load_json(old_answers[0].content) if logged_in() and len(old_answers) > 0 else None
-
-    timdb.close()
 
     answer_call_data = {'markup': plugin.values,
                         'state': state,

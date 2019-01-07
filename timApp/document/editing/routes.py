@@ -289,14 +289,12 @@ def modify_paragraph_common(doc_id, md, par_id, par_next_id):
             edit_result.added.append(par)
         if not edit_result.empty:
             docinfo.update_last_modified()
-            db.session.commit()
 
     mark_pars_as_read_if_chosen(pars, doc)
 
     synchronize_translations(docinfo, edit_result)
     notify_doc_watchers(docinfo, md, NotificationType.ParModified, par=pars[0] if pars else None,
                         old_version=edit_request.old_doc_version)
-    db.session.commit()
     return par_response(pars,
                         doc,
                         update_cache=current_app.config['IMMEDIATE_PRELOAD'],
@@ -417,25 +415,28 @@ def par_response(pars,
     changed_pars, _, _, _ = post_process_pars(doc, changed_pars, current_user, edit_window=preview)
     original_par = edit_request.original_par if edit_request else None
 
-    return json_response({'texts': render_template('partials/paragraphs.html',
-                                                   text=pars,
-                                                   item={'rights': get_rights(doc.get_docinfo())},
-                                                   preview=preview),
-                          'js': js_paths,
-                          'jsModuleIds': list(get_module_ids(js_paths)),
-                          'css': css_paths,
-                          'trdiff': trdiff,
-                          'angularModule': modules,  # not used in JS at all, maybe not needed at all
-                          'changed_pars': {p['id']: render_template('partials/paragraphs.html',
-                                                                    text=[p],
-                                                                    item={'rights': get_rights(doc.get_docinfo())}) for p in
-                                           changed_pars},
-                          'version': new_doc_version,
-                          'duplicates': duplicates,
-                          'original_par': {'md': original_par.get_markdown(),
-                                           'attrs': original_par.get_attrs()} if original_par else None,
-                          'new_par_ids': edit_result.new_par_ids if edit_result else None
-                          })
+    r = json_response({'texts': render_template('partials/paragraphs.html',
+                                                text=pars,
+                                                item={'rights': get_rights(doc.get_docinfo())},
+                                                preview=preview),
+                       'js': js_paths,
+                       'jsModuleIds': list(get_module_ids(js_paths)),
+                       'css': css_paths,
+                       'trdiff': trdiff,
+                       'angularModule': modules,  # not used in JS at all, maybe not needed at all
+                       'changed_pars': {p['id']: render_template('partials/paragraphs.html',
+                                                                 text=[p],
+                                                                 item={'rights': get_rights(doc.get_docinfo())}) for p
+                                        in
+                                        changed_pars},
+                       'version': new_doc_version,
+                       'duplicates': duplicates,
+                       'original_par': {'md': original_par.get_markdown(),
+                                        'attrs': original_par.get_attrs()} if original_par else None,
+                       'new_par_ids': edit_result.new_par_ids if edit_result else None
+                       })
+    db.session.commit()
+    return r
 
 
 # Gets next available name for plugin
@@ -652,14 +653,12 @@ def add_paragraph_common(md, doc_id, par_next_id):
         edit_result.added.append(par)
     if not edit_result.empty:
         docinfo.update_last_modified()
-        db.session.commit()
     mark_pars_as_read_if_chosen(pars, doc)
 
     synchronize_translations(docinfo, edit_result)
     if pars:
         notify_doc_watchers(docinfo, md, NotificationType.ParAdded, par=pars[0],
                             old_version=edit_request.old_doc_version)
-    db.session.commit()
     return par_response(pars,
                         doc,
                         update_cache=current_app.config['IMMEDIATE_PRELOAD'],
@@ -703,7 +702,6 @@ def delete_paragraph(doc_id):
         docentry.update_last_modified()
     synchronize_translations(docentry, edit_result)
     notify_doc_watchers(docentry, md, NotificationType.ParDeleted, old_version=version_before)
-    db.session.commit()
     return par_response([],
                         doc,
                         update_cache=current_app.config['IMMEDIATE_PRELOAD'],

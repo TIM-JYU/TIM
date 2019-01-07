@@ -294,9 +294,6 @@ def view(item_path, template_name, usergroup=None, route="view"):
 
     is_in_lecture = current_user_in_lecture()
 
-    # Close database here because we won't need it for a while
-    timdb.close()
-
     current_list_user: Optional[User] = user_list[0]['user'] if user_list else None
 
     raw_css = doc_settings.css() if doc_settings else None

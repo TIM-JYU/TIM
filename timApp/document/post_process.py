@@ -8,7 +8,6 @@ from flask import flash
 
 from timApp.auth.accesshelper import has_ownership, has_edit_access
 from timApp.note.notes import get_notes, UserNoteAndUser
-from timApp.timdb.dbaccess import get_timdb
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.document import Document
 from timApp.readmark.readmarkcollection import ReadMarkCollection
@@ -31,7 +30,6 @@ def hide_names_in_teacher(doc_id):
 # TODO: post_process_pars is called twice in one save??? Or even 4 times, 2 after editor is closed??
 def post_process_pars(doc: Document, pars, user: User, sanitize=True, do_lazy=False, edit_window=False,
                       load_plugin_states=True):
-    timdb = get_timdb()
     taketime("start pluginify")
     final_pars, js_paths, css_paths, modules = pluginify(doc,
                                                          pars,
@@ -115,8 +113,6 @@ def post_process_pars(doc: Document, pars, user: User, sanitize=True, do_lazy=Fa
     taketime("read mixed")
     notes = get_notes(group, doc)
     is_owner = has_ownership(doc.get_docinfo())
-    # Close database here because we won't need it for a while
-    timdb.close()
     # taketime("notes picked")
 
     for n, u in notes:
