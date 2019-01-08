@@ -527,8 +527,7 @@ function makeTemplate() {
             <a href=""
                ng-if="!$ctrl.noeditor"
                ng-click="$ctrl.showOtherEditor()">
-                {{$ctrl.editorText[$ctrl.editorModeIndecies[$ctrl.editorMode+1]]}}
-            </a>&nbsp&nbsp
+                {{$ctrl.editorText[$ctrl.editorModeIndecies[$ctrl.editorMode+1]]}}</a>&nbsp&nbsp
             <a href=""
                ng-if="::$ctrl.attrs.copyLink"
                ng-click="$ctrl.copyCode()">{{$ctrl.attrs.copyLink}}</a>
