@@ -1,6 +1,5 @@
 from subprocess import check_output
 import requests
-from base64 import b64encode
 
 from points import *
 from run import *
@@ -14,18 +13,18 @@ from fileParams import *  # noqa
 """
 Adding new language to csPlugin:
 
-0. Install new compiler to cs/Dockerfile and build new Dcoker container form that
+0. Install new compiler to cs/Dockerfile and build new Docker container from that
     - in /opt/tim run ./docker-compose.sh build csplugin
 1. Add language name to languages list at the bottom of this file
     - remember to use lowercase letters
-2. Add language class starting with capital letter
-3. Mimic some existing language when doing the new class
-    - the most simpliest one is CC that works when just compiler name end extensions are enought to change 
+2. Add the language class starting with capital letter
+3. Mimic some existing language when creating the new class
+    - the simplest one is CC that works when just compiler name end extensions are enough to change 
 4. And language to csPlugin.ts languageTypes.runTypes list
-   and to exactly same place the Ace-editor highligter name to languageTypes.aceModes
-     - if there is shorter language name in the list, add new name befre the
-       shorter name.  F.ex there is "r", so every langua name tarting with "r"
-       must be before "r" in the list (TODO: fix the list not depedent of the order) 
+   and to exactly same place the Ace editor highlighter name to languageTypes.aceModes
+     - if there is a shorter language name in the list, add a new name before the
+       shorter name.  For example there is "r", so every language name starting with "r"
+       must be before "r" in the list (TODO: fix the list to be not dependent on the order)
 """
 
 cmdline_whitelist = "A-Za-z\-/\.åöäÅÖÄ 0-9_"
@@ -198,8 +197,8 @@ class Language:
     def convert(self, sourcelines):
         return 0, sourcelines, "", ""
 
-    def modifyUsercode(self, s):
-        return s;
+    def modify_usercode(self, s):
+        return s
 
     def clean_error(self, err):
         return err
@@ -925,7 +924,7 @@ class Stack(Language):
         self.readpoints_default = 'Score: (.*)'
         self.delete_tmp = False
 
-    def modifyUsercode(self, s):
+    def modify_usercode(self, s):
         if not s.startswith("{"):
             return s
         s = s.replace("&quot;",'"')
@@ -933,7 +932,7 @@ class Stack(Language):
         res = ''
         for key in js:
             res += js[key] + "\n"
-        return res;
+        return res
 
     def run(self, result, sourcelines, points_rule):
         get_task = self.query.jso.get("input",{}).get("getTask",False)
@@ -943,7 +942,7 @@ class Stack(Language):
         if not stack_data:
             stack_data = self.query.jso.get('markup').get('stackData')
         if not stack_data:
-            err = "stackData missign from plugin"
+            err = "stackData missing from plugin"
             return 0, "", err, ""
         seed = stack_data.get("seed", 0)
         userseed = seed
@@ -994,7 +993,6 @@ class Stack(Language):
             return 1, "", str(r.content.decode()), ""
         out = "Score: %s" % r.get("score",0)
         # r['questiontext'] = tim_sanitize(r['questiontext'])
-
 
         if nosave:
             out = ""

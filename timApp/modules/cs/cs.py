@@ -512,7 +512,7 @@ def get_html(self, ttype, query):
     if before_open or is_rv:
         language_class = languages.get(ttype.lower(), Language)
         language = language_class(query, bycode)
-        usercode = language.modifyUsercode(usercode)
+        usercode = language.modify_usercode(usercode)
         before_open = before_open.replace('{USERCODE}', usercode)
         js['markup']['beforeOpen'] = before_open
 
