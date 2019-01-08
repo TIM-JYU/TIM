@@ -470,11 +470,12 @@ function makeTemplate() {
     <div class="csRunCode">
         <pre class="csRunPre" ng-if="$ctrl.viewCode && !$ctrl.codeunder && !$ctrl.codeover">{{$ctrl.precode}}</pre>
         <div class="csEditorAreaDiv">
-            <div class="csrunEditorDiv"><textarea class="csRunArea csEditArea no-popup-menu"
-                                                  ng-hide="$ctrl.noeditor && !$ctrl.viewCode" rows="{{$ctrl.rows}}"
-                                                  ng-model="$ctrl.usercode"
-                                                  ng-trim="false"
-                                                  ng-attr-placeholder="{{$ctrl.placeholder}}"></textarea>
+            <div class="csrunEditorDiv" ng-hide="$ctrl.noeditor && !$ctrl.viewCode">
+            <textarea class="csRunArea csEditArea no-popup-menu"
+                      rows="{{$ctrl.rows}}"
+                      ng-model="$ctrl.usercode"
+                      ng-trim="false"
+                      ng-attr-placeholder="{{$ctrl.placeholder}}"></textarea>
             </div>
             <div class="csRunChanged" ng-if="$ctrl.usercode !== $ctrl.byCode"></div>
         </div>
@@ -2576,7 +2577,6 @@ class CsController extends CsBase implements IController {
 
         const editorHtml = `
 <textarea class="csRunArea csrunEditorDiv"
-          ng-hide="$ctrl.noeditor"
           rows={{$ctrl.rows}}
           ng-model="$ctrl.usercode"
           ng-trim="false"
@@ -2586,10 +2586,7 @@ class CsController extends CsBase implements IController {
         const aceHtml = `
 <div class="no-popup-menu">
     <div ng-show="$ctrl.mode"
-         class="csRunArea csEditArea csAceEditor"
-         ng-hide="$ctrl.noeditor"
-         ng-trim="false"
-         placeholder="{{$ctrl.placeholder}}"></div>
+         class="csRunArea csEditArea csAceEditor"></div>
 </div>
 `;
 
