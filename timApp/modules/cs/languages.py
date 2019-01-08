@@ -192,7 +192,7 @@ class Language:
     def before_save(self, s):
         return s
 
-    def run(self, sourcelines, points_rule):
+    def run(self, result, sourcelines, points_rule):
         return 0, "", "", ""
 
     def convert(self, sourcelines):
