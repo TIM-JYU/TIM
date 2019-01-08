@@ -1220,6 +1220,10 @@ class CsController extends CsBase implements IController {
         return this.attrs.nosave;
     }
 
+    get cols() {
+        return this.attrs.cols;
+    }
+
     $onInit() {
         super.$onInit();
         this.buttons = this.getTemplateButtons();
@@ -2995,13 +2999,13 @@ csApp.component("csTextRunner", {
     ...commonComponentOptions,
     template: `
 <div class="csRunDiv csTinyDiv" style="text-align: left;">
-    <h4 ng-bind-html="::$ctrl.header"></h4>
+    <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
     <span ng-if="::$ctrl.stem"
           class="stem"
           ng-bind-html="::$ctrl.stem"></span>
     <input class="csTinyText no-popup-menu"
            ng-hide="$ctrl.noeditor && !$ctrl.viewCode"
-           size="{{$ctrl.cols}}"
+           size="{{::$ctrl.cols}}"
            ng-model="$ctrl.usercode"
            ng-trim="false"
            ng-attr-placeholder="{{$ctrl.placeholder}}"
