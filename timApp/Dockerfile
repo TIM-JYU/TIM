@@ -176,7 +176,7 @@ RUN bash -c "${APT_INSTALL} curl pdftk gpg-agent && ${APT_CLEANUP} && pdftk --ve
 
 RUN (curl -sL https://deb.nodesource.com/setup_10.x | bash -) && bash -c "${APT_INSTALL} nodejs && ${APT_CLEANUP}"
 RUN npm i npm@latest -g && bash -c "${APT_CLEANUP}"
-RUN npm install -g typescript@3.0 typedoc tslint jspm typescript-formatter && npm cache clean --force && bash -c "${APT_CLEANUP}"
+RUN npm install -g typescript@3.2 typedoc tslint jspm typescript-formatter && npm cache clean --force && bash -c "${APT_CLEANUP}"
 
 RUN mkdir /var/run/sshd
 RUN echo 'root:test' | chpasswd
