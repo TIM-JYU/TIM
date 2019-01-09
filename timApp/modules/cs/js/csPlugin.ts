@@ -425,7 +425,7 @@ function iotaPermutation(n: number) {
 }
 
 function commentTrim(s: string) {
-    if (!s) {
+    if (!s || s === "//") {
         return "";
     }
     const n = s.indexOf("//\n");
