@@ -381,7 +381,6 @@ class FileParams:
         if not self.by and nr == "":
             self.by = replace_random(query, get_param(query, "byCode" + nr, ""))
         self.prorgam = replace_random(query, get_param(query, "program" + nr, ""))
-        self.breakCount = int(get_param(query, "breakCount" + nr, "0"))
 
         self.reps = []
 
@@ -396,30 +395,6 @@ class FileParams:
                 break
             byc = replace_random(query, get_param(query, "byCode" + rep_nr + str(i), ""))
             self.reps.append({"by": rep, "bc": byc})
-
-        if self.breakCount:
-            self.breaks = []
-            self.breaksBegin = []
-            self.breaksBeforeBegin = []
-            self.breaksBefore = []
-            self.breaksAfter = []
-            def_after = -1
-            for i in range(0, self.breakCount + 1):
-                brkdef = ""
-                if i >= self.breakCount:
-                    brkdef = "!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-                    def_after = 0
-                self.breaksBegin.append(do_matcher(get_param(query, "breakBegin" +
-                                                             rep_nr + str(i), "").replace("\\\\", "\\")))
-                self.breaks.append(
-                    do_matcher(get_param(query, "break" + rep_nr + str(i), brkdef).replace("\\\\", "\\")))
-                self.breaksBeforeBegin.append(int(get_param(query, "breakBeforeBegin" + rep_nr + str(i), 0)))
-                self.breaksBefore.append(int(get_param(query, "breakBefore" + rep_nr + str(i), 0)))
-                self.breaksAfter.append(int(get_param(query, "breakAfter" + rep_nr + str(i), def_after)))
-                if def_after < 0:
-                    def_after = 0
-                else:
-                    def_after = -1
 
         usercode = get_json_param(query.jso, "input" + nr, "usercode", None)
         # if ( query.jso != None and query.jso.has_key("input") and query.jso["input"].has_key("usercode") ):
@@ -450,22 +425,6 @@ class FileParams:
             return "File not found " + self.url
 
         return self.scan_needed_lines(lines, escape_html)
-
-    def get_raw_lines(self):
-        if self.prorgam:
-            # print(self.prorgam)
-            return self.prorgam.split("\n")
-        if not self.url:
-            # print("SELF.BY:", self.by.encode());
-            if not self.by:
-                return []
-            return []  # self.by.replace("\\n", "\n")
-
-        lines = get_url_lines(self.url)
-        if not lines:
-            return ["File not found " + self.url]
-
-        return lines
 
     def scan_needed_range(self, lines):
         n = len(lines)
@@ -523,27 +482,6 @@ class FileParams:
 
         return result
 
-    def join_lines(self, lines, n1, n2, escape_html):
-        result = ""
-        n = len(lines)
-        if n1 < 0:
-            n1 = 0
-        if n2 >= n:
-            n2 = n - 1
-        for i in range(n1, n2 + 1):
-            line = lines[i]
-            # for r in self.reps:
-            #    if check(r["by"], line): line = r["bc"]  # + "\n"
-
-            if escape_html:
-                line = html.escape(line)
-            ln = self.linefmt.format(i + 1)
-            result += ln + line + "\n"
-            if i + 1 >= self.lastn:
-                break
-
-        return result
-
     def get_include(self, escape_html=False):
         if not self.include:
             return ""
@@ -551,27 +489,6 @@ class FileParams:
         if escape_html:
             data = html.escape(data)
         return data
-
-    def scan_line_parts_range(self, part, n0, lines):
-        n = len(lines)
-        n1 = scan_lines(lines, n, n0 + self.breaksBeforeBegin[part], self.breaksBegin[part], 1)
-        n2 = n1
-        # n1 = scan_lines(lines, n, n1, self.start_scan, self.start_scan_dir)
-        n1 += self.breaksBefore[part]
-        if n1 < 0:
-            n1 = 0
-        if n2 < n1:
-            n2 = n1  # if n1 went forward
-
-        if self.breaks[part]:
-            n2 = scan_lines(lines, n, n2, self.breaks[part], 1)
-        # n2 = scan_lines(lines, n, n2, self.end_scan, self.end_scan_dir)
-        else:
-            n2 = n - 1
-        n2 += self.breaksAfter[part]
-        if n2 >= n:
-            n2 = n - 1
-        return n1, n2
 
 
 def get_params(self):
@@ -599,33 +516,6 @@ def get_file_to_output(query, show_html):
         return s
     except Exception as e:
         return str(e)
-
-
-def get_file_parts_to_output(query, show_html):
-    p0 = FileParams(query, "", "")
-    parts = []
-    n2 = -1
-    lines = p0.get_raw_lines()
-    j = 0
-    part0 = ""
-    s = get_param(query, "byCode", "")
-    if s:
-        part0 = s
-    s = get_json_param(query.jso, "input", "usercode", None)
-    if s:
-        part0 = s
-    p0.reps.insert(0, {"by": "", "bc": part0})
-    for i in range(0, p0.breakCount + 1):
-        n1, n2 = p0.scan_line_parts_range(i, n2 + 1, lines)
-        part = p0.join_lines(lines, n1, n2, show_html)
-        if i % 2 != 0:
-            if j < len(p0.reps) and p0.reps[j] and p0.reps[j]["bc"]:
-                part = p0.reps[j]["bc"]
-            # else:
-            #    p0.reps[j]["bc"] = part
-            j += 1
-        parts.append(part)
-    return parts
 
 
 def join_file_parts(parts):
@@ -765,19 +655,6 @@ def query_params_to_map(query, transform=None):
 
 def query_params_to_map_check_parts(query):
     result = query_params_to_map(query.query)
-
-    # Replace all byCode by fileparts if exists
-    if int(get_param(query, "breakCount", 0)) > 0:
-        parts = get_file_parts_to_output(query, False)
-        if "byCode" not in result and parts[1]:
-            result["byCode"] = parts[1]
-        j = 1
-        for i in range(3, len(parts)):
-            if i % 2 != 0:
-                byn = "byCode" + str(j)
-                if byn not in result and parts[i]:
-                    result[byn] = parts[i]
-                j += 1
     return result
 
 

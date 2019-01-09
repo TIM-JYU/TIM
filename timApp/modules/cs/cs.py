@@ -1115,14 +1115,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             # s = ""
             # if p0.url != "":
             #
-            if p0.breakCount > 0:
-                parts = get_file_parts_to_output(query, False)
-                # print(parts)
-                if print_file == "2":
-                    return self.wout(json.dumps(parts))
-                s = join_file_parts(parts)
-            else:
-                s = get_file_to_output(query, False and print_file)
+            s = get_file_to_output(query, False and print_file)
             slines = ""
 
             # Open the file and write it
