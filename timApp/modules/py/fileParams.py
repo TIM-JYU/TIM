@@ -269,7 +269,7 @@ def get_url_lines(url):
     cache[url] = lines
 
     try:
-        # open(diskcache,"w").write("\n".join(lines));
+        # open(diskcache,"w").write("\n".join(lines))
         if not os.path.isdir(CACHE_DIR):
             os.mkdir(CACHE_DIR)
 
@@ -415,7 +415,7 @@ class FileParams:
             # print(self.prorgam)
             return self.scan_needed_lines(self.prorgam.split("\n"), escape_html)
         if not self.url:
-            # print("SELF.BY:", self.by.encode());
+            # print("SELF.BY:", self.by.encode())
             if not self.by:
                 return ""
             return self.by  # self.by.replace("\\n", "\n")

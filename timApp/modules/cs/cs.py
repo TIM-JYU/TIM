@@ -1142,7 +1142,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             nosave = get_json_param(query.jso, "input", "nosave", nosave)
 
             if nosave:
-                result["save"] = {};
+                result["save"] = {}
 
             if is_doc:
                 s = replace_code(query.cut_errors, s)
