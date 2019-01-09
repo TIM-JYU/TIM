@@ -482,12 +482,15 @@ def handle_common_params(query, tiny, ttype):
         get_param_del(query, 'program', '')
     js = query_params_to_map_check_parts(query)
     # print(js)
-    if "byFile" in js and not ("byCode" in js):
+
+    q_bycode = get_param(query, "byCode", None)
+    q_byfile = get_param(query, "byFile", None)
+    if q_byfile is not None and q_bycode is None:
         # TODO: Better error message for missing file
-        js["byCode"] = get_url_lines_as_string(js["byFile"])
+        js["by"] = get_url_lines_as_string(q_byfile)
     bycode = ""
-    if "byCode" in js:
-        bycode = js["byCode"]
+    if q_bycode is not None:
+        bycode = q_bycode
     else:
         if "by" in js:
             bycode = js["by"]
