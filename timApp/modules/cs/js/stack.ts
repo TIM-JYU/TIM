@@ -133,7 +133,7 @@ class StackController extends PluginBase<t.TypeOf<typeof StackMarkup>,
                 element.name.indexOf("_val") === -1 &&
                 element.name.indexOf(id) >= 0
             ) {
-                if (element instanceof HTMLInputElement) {
+                if (element instanceof HTMLInputElement && (element.type === "checkbox" || element.type === "radio")) {
                     if (element.checked) {
                         res[element.name] = element.value;
                     }
