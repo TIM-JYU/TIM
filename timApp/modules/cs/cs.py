@@ -175,58 +175,7 @@ def delete_extra_files(extra_files, prgpath):
 def get_md(ttype, query):
     tiny = False
 
-    if query.hide_program:
-        get_param_del(query, 'program', '')
-
-    js = query_params_to_map_check_parts(query)
-    if "byFile" in js and not ("byCode" in js):
-        js["byCode"] = get_url_lines_as_string(
-            js["byFile"])  # TODO: Tähän niin että jos tiedosto puuttuu, niin parempi tieto
-    bycode = ""
-    if "by" in js:
-        bycode = js["by"]
-    if "byCode" in js:
-        bycode = js["byCode"]
-    if get_param(query, "noeditor", False):
-        bycode = ""
-
-    qso = json.dumps(query.jso)
-    # print(qso)
-    uf = get_param(query, "uploadedFile", None)
-    ut = get_param(query, "uploadedType", None)
-    uf = get_json_eparam(query.jso, "state", "uploadedFile", uf)
-    ut = get_json_eparam(query.jso, "state", "uploadedType", ut)
-    if uf and ut:
-        js["uploadedFile"] = uf
-        js["uploadedType"] = ut
-
-    jso = json.dumps(js)
-    # print(jso)
-    runner = 'cs-runner'
-    # print(ttype)
-    is_input = ''
-    if "input" in ttype or "args" in ttype:
-        is_input = '-input'
-    if "comtest" in ttype or "junit" in ttype:
-        runner = 'cs-comtest-runner'
-    if "tauno" in ttype:
-        runner = 'cs-tauno-runner'
-    if "simcir" in ttype:
-        runner = 'cs-simcir-runner'
-        bycode = ''
-    if "tiny" in ttype:
-        runner = 'cs-text-runner'
-        tiny = True
-    if "parsons" in ttype:
-        runner = 'cs-parsons-runner'
-    if "jypeli" in ttype or "graphics" in ttype or "alloy" in ttype:
-        runner = 'cs-jypeli-runner'
-    if "sage" in ttype:
-        runner = 'cs-sage-runner'
-    if "wescheme" in ttype:
-        runner = 'cs-wescheme-runner'
-    if "stack" in ttype:
-        runner = 'stack-runner'
+    bycode, is_input, js, runner, tiny = handle_common_params(query, tiny, ttype)
 
     usercode = None
     user_print = get_json_param(query.jso, "userPrint", None, False)
@@ -449,59 +398,7 @@ def get_html(self, ttype, query):
     # do_lazy = False
     # print("do_lazy",do_lazy,type(do_lazy))
 
-    if query.hide_program:
-        get_param_del(query, 'program', '')
-
-    js = query_params_to_map_check_parts(query)
-    # print(js)
-    if "byFile" in js and not ("byCode" in js):
-        js["byCode"] = get_url_lines_as_string(js["byFile"])
-        # TODO: Tähän niin että jos tiedosto puuttuu, niin parempi tieto
-    bycode = ""
-    if "byCode" in js:
-        bycode = js["byCode"]
-    else:
-        if "by" in js:
-            bycode = js["by"]
-    if get_param(query, "noeditor", False):
-        bycode = ""
-
-    qso = json.dumps(query.jso)
-    # print(qso)
-    uf = get_param(query, "uploadedFile", None)
-    ut = get_param(query, "uploadedType", None)
-    uf = get_json_eparam(query.jso, "state", "uploadedFile", uf)
-    ut = get_json_eparam(query.jso, "state", "uploadedType", ut)
-    if uf and ut:
-        js["uploadedFile"] = uf
-        js["uploadedType"] = ut
-
-    # jso)
-    runner = 'cs-runner'
-    # print(ttype)
-    is_input = ''
-    if "input" in ttype or "args" in ttype:
-        is_input = '-input'
-    if "comtest" in ttype or "junit" in ttype:
-        runner = 'cs-comtest-runner'
-    if "tauno" in ttype:
-        runner = 'cs-tauno-runner'
-    if "simcir" in ttype:
-        runner = 'cs-simcir-runner'
-        bycode = ''
-    if "tiny" in ttype:
-        runner = 'cs-text-runner'
-        tiny = True
-    if "parsons" in ttype:
-        runner = 'cs-parsons-runner'
-    if "jypeli" in ttype or "graphics" in ttype or "alloy" in ttype:
-        runner = 'cs-jypeli-runner'
-    if "sage" in ttype:
-        runner = 'cs-sage-runner'
-    if "wescheme" in ttype:
-        runner = 'cs-wescheme-runner'
-    if "stack" in ttype:
-        runner = 'stack-runner'
+    bycode, is_input, js, runner, tiny = handle_common_params(query, tiny, ttype)
 
     usercode = get_json_eparam(query.jso, "state", "usercode", "")
 
@@ -578,6 +475,60 @@ def get_html(self, ttype, query):
     if ttype == "c1" or True:  # c1 oli testejä varten ettei sinä aikana rikota muita.
         s = f'{lazy_start}<{r}{lazy_class} ng-cloak json="{encode_json_data(jso)}"></{r}>{lazy_end}{lazy_visible}'
     return s
+
+
+def handle_common_params(query, tiny, ttype):
+    if query.hide_program:
+        get_param_del(query, 'program', '')
+    js = query_params_to_map_check_parts(query)
+    # print(js)
+    if "byFile" in js and not ("byCode" in js):
+        # TODO: Better error message for missing file
+        js["byCode"] = get_url_lines_as_string(js["byFile"])
+    bycode = ""
+    if "byCode" in js:
+        bycode = js["byCode"]
+    else:
+        if "by" in js:
+            bycode = js["by"]
+    if get_param(query, "noeditor", False):
+        bycode = ""
+    qso = json.dumps(query.jso)
+    # print(qso)
+    uf = get_param(query, "uploadedFile", None)
+    ut = get_param(query, "uploadedType", None)
+    uf = get_json_eparam(query.jso, "state", "uploadedFile", uf)
+    ut = get_json_eparam(query.jso, "state", "uploadedType", ut)
+    if uf and ut:
+        js["uploadedFile"] = uf
+        js["uploadedType"] = ut
+    # jso)
+    runner = 'cs-runner'
+    # print(ttype)
+    is_input = ''
+    if "input" in ttype or "args" in ttype:
+        is_input = '-input'
+    if "comtest" in ttype or "junit" in ttype:
+        runner = 'cs-comtest-runner'
+    if "tauno" in ttype:
+        runner = 'cs-tauno-runner'
+    if "simcir" in ttype:
+        runner = 'cs-simcir-runner'
+        bycode = ''
+    if "tiny" in ttype:
+        runner = 'cs-text-runner'
+        tiny = True
+    if "parsons" in ttype:
+        runner = 'cs-parsons-runner'
+    if "jypeli" in ttype or "graphics" in ttype or "alloy" in ttype:
+        runner = 'cs-jypeli-runner'
+    if "sage" in ttype:
+        runner = 'cs-sage-runner'
+    if "wescheme" in ttype:
+        runner = 'cs-wescheme-runner'
+    if "stack" in ttype:
+        runner = 'stack-runner'
+    return bycode, is_input, js, runner, tiny
 
 
 def wait_file(f1):
