@@ -1,60 +1,87 @@
 ﻿import angular from "angular";
 import * as t from "io-ts";
-import {GenericPluginMarkup, PluginBase, withDefault} from "tim/plugin/util";
-import {to} from "tim/util/utils";
-import {$http, $sce} from "tim/util/ngimport";
 import {ParCompiler} from "tim/editor/parCompiler";
+import {GenericPluginMarkup, PluginBase, withDefault} from "tim/plugin/util";
+import {$http, $sce} from "tim/util/ngimport";
+import {to} from "tim/util/utils";
 
 const stackApp = angular.module("stackApp", ["ngSanitize"]);
-const STACK_VARIABLE_PREFIX = 'stackapi_';
-
-
-function ifIsS(value: number | undefined, name: string) {
-    if (!value) {
-        return "";
-    }
-    return name + '="' + value + '" ';
-}
-
+const STACK_VARIABLE_PREFIX = "stackapi_";
 
 const StackMarkup = t.intersection([
     t.partial({ // this.attrs
+        beforeOpen: t.string,
+        buttonBottom: t.boolean,
         by: t.string,
-        timWay:t.boolean,
         correctresponse: t.boolean,
         generalfeedback: t.boolean,
         open: t.boolean,
-        autopeek: withDefault(t.boolean, true),
-        beforeOpen: t.string,
-        buttonBottom: t.boolean,
-        lang: withDefault(t.string, "fi"),
+        timWay: t.boolean,
     }),
     GenericPluginMarkup,
-    t.type({
+    t.type({ // this.attrs
+        autopeek: withDefault(t.boolean, true),
+        lang: withDefault(t.string, "fi"),
         // autoplay: withDefault(t.boolean, true),
-        // file: t.string, eikö kuulu, mulle kuuluu, ei oo mute, joo moi
+        // file: t.string,
         // open: withDefault(t.boolean, false),
     }),
 ]);
 const StackAll = t.intersection([
     t.partial({
         by: t.string,
+        timWay: t.boolean,
+        usercode: t.string,
     }),
     t.type({
         markup: StackMarkup,
     }),
 ]);
 
+type StackResult = string | {
+    answernotes: any,
+    api_time: number,
+    error: false,
+    formatcorrectresponse: string,
+    generalfeedback: string,
+    questiontext: string,
+    request_time: number,
+    score: number,
+    summariseresponse: any,
+} | {
+    error: true,
+    message: string,
+};
+
+interface StackData {
+    answer: {[name: string]: string};
+    prefix: string;
+    seed?: number;
+    verifyvar: string;
+}
 
 class StackController extends PluginBase<t.TypeOf<typeof StackMarkup>,
     t.TypeOf<typeof StackAll>,
     typeof StackAll> {
+
+    get english() {
+        return this.attrs.lang === "en";
+    }
+
+    get buttonText() {
+        const txt = this.attrs.button || this.attrs.buttonText;
+        if (txt) {
+            return txt;
+        }
+        return this.english ? "Send" : "Lähetä";
+    }
+
     private static $inject = ["$scope", "$element", "$sce"];
     private span: string = "";
     private error: string = "";
     private userCode: string = "";
     private stackoutput: string = "";
-    private stackinputfeedback: string ="";
+    private stackinputfeedback: string = "";
     private stackpeek: boolean = false;
     private stackfeedback: string = "";
     private stackformatcorrectresponse: string = "";
@@ -66,18 +93,19 @@ class StackController extends PluginBase<t.TypeOf<typeof StackMarkup>,
     private inputrows: number = 1;
     private timWay: boolean = false; // if answer is given to TIM TextArea-field
     private isOpen: boolean = false;
-    private lastInputFieldId: string = '';
-    private lastInputFieldValue: string = '';
-    private lastInputFieldElement: HTMLInputElement | null = null;
-    private button: string = '';
+    private lastInputFieldId: string = "";
+    private lastInputFieldValue: string = "";
+    private lastInputFieldElement: HTMLInputElement | undefined;
+    private button: string = "";
 
+    private timer: NodeJS.Timer | undefined;
+
+    private taskUrl: string = "";
 
     $onInit() {
         super.$onInit();
         this.button = this.buttonText;
-        // this.width = this.attrs.width;
-        // this.height = this.attrs.height;
-        let aa:any = this.attrsall;
+        const aa = this.attrsall;
         this.userCode = aa.usercode || this.attrs.by || "";
         this.timWay = aa.timWay || this.attrs.timWay || false;
 
@@ -92,130 +120,120 @@ class StackController extends PluginBase<t.TypeOf<typeof StackMarkup>,
             }
         });
 
-        if ( this.attrs.open )
+        if (this.attrs.open) {
             this.runGetTask();
+        }
     }
 
-
-    processNodes(res:any, nodes:any, id: string) {
-      for (var i = 0; i < nodes.length; i++) {
-        let element = nodes[i];
-        if (element.name.indexOf(STACK_VARIABLE_PREFIX) === 0 &&
-            element.name.indexOf('_val') === -1 &&
-            element.name.indexOf(id) >= 0
-        ) {
-          if (element.type === 'checkbox' || element.type === 'radio') {
-            if (element.checked) {
-              res[element.name] = element.value
+    processNodes(res: {[name: string]: string}, nodes: HTMLCollectionOf<HTMLInputElement> |
+        HTMLCollectionOf<HTMLTextAreaElement> | HTMLCollectionOf<HTMLSelectElement>, id: string): {[name: string]: string} {
+        for (let i = 0; i < nodes.length; i++) {
+            const element = nodes[i];
+            if (element.name.indexOf(STACK_VARIABLE_PREFIX) === 0 &&
+                element.name.indexOf("_val") === -1 &&
+                element.name.indexOf(id) >= 0
+            ) {
+                if (element instanceof HTMLInputElement) {
+                    if (element.checked) {
+                        res[element.name] = element.value;
+                    }
+                } else {
+                    res[element.name] = element.value;
+                }
             }
-          } else {
-            res[element.name] = element.value
-          }
         }
-      }
-      return res;
-    }
-
-    get english() {
-        return this.attrs.lang === "en";
-    }
-
-    get buttonText() {
-        const txt = this.attrs.button || this.attrs.buttonText;
-        if (txt) {
-            return txt;
-        }
-        return this.english ? "Send" : "Lähetä";
+        return res;
     }
 
     outputAsHtml() {
-        let s = $sce.trustAsHtml(this.stackoutput);
+        const s = $sce.trustAsHtml(this.stackoutput);
         return s;
     }
 
     stackinputfeedbackAsHtml() {
-        let s = $sce.trustAsHtml(this.stackinputfeedback);
+        const s = $sce.trustAsHtml(this.stackinputfeedback);
         return s;
     }
 
-    collectAnswer(id:string) {
-        let parent = this.element[0];
-        let inputs = parent.getElementsByTagName('input');
-        let textareas = parent.getElementsByTagName('textarea');
-        let selects = parent.getElementsByTagName('select');
-        let res: any = {};
-        if ( !this.timWay ) {
+    collectAnswer(id: string) {
+        const parent = this.element[0];
+        const inputs = parent.getElementsByTagName("input");
+        const textareas = parent.getElementsByTagName("textarea");
+        const selects = parent.getElementsByTagName("select");
+        let res: {[name: string]: string} = {};
+        if (!this.timWay) {
             res = this.processNodes(res, inputs, id);
             res = this.processNodes(res, textareas, id);
             res = this.processNodes(res, selects, id);
-            if (Object.keys(res).length && this.userCode ) {
+            if (Object.keys(res).length && this.userCode) {
                 this.userCode = JSON.stringify(res);
             } else {
-                  try {
-                      res = JSON.parse(this.userCode);
-                  } catch {
-                      // this.timWay = true;
-                  }
-            } // note: can not be else, because timWay may change during try
+                try {
+                    res = JSON.parse(this.userCode);
+                } catch {
+                    // this.timWay = true;
+                }
+            } // note: cannot be else because timWay may change during try
         }
-        if ( this.timWay ) res[STACK_VARIABLE_PREFIX +'ans1'] = this.userCode;
+        if (this.timWay) {
+            res[STACK_VARIABLE_PREFIX + "ans1"] = this.userCode;
+        }
         return res;
     }
 
-
     collectData() {
         return {
-          prefix: STACK_VARIABLE_PREFIX,
-          answer: this.collectAnswer(''),
-      };
+            prefix: STACK_VARIABLE_PREFIX,
+            answer: this.collectAnswer(""),
+        };
     }
 
-    replace(s:string): string {
+    replace(s: string): string {
         // s = s.replace('https://stack-api-server/plots/', '/stackserver/plots/');
         return s;
     }
 
-    async handleServerResult(r:any, getTask: boolean) {
+    async handleServerResult(r: StackResult, getTask: boolean) {
         try {
-            if (typeof r === 'string' || r instanceof String) {
+            if (typeof r === "string") {
                 this.error = r.toString();
                 return;
             }
-            let json: any = r;
-            if ( r.error ) {
-                this.error = r.message;
+            const json = r;
+            if (json.error) {
+                this.error = json.message;
                 return;
             }
 
-            let qt =  this.replace(json.questiontext);
-            let i = qt.indexOf('<div class="stackinputfeedback"');
-            if ( this.attrs.buttonBottom || i<0 ) {
+            const qt = this.replace(json.questiontext);
+            const i = qt.indexOf('<div class="stackinputfeedback"');
+            if (this.attrs.buttonBottom || i < 0) {
                 this.stackoutput = qt;
                 this.stackinputfeedback = "";
             } else {
-                this.stackoutput = qt.substr(0,i)+"\n";
+                this.stackoutput = qt.substr(0, i) + "\n";
                 this.stackinputfeedback = qt.substr(i);
             }
 
-            if ( !getTask ) {
+            if (!getTask) {
                 this.stackfeedback = this.replace(json.generalfeedback);
                 this.stackformatcorrectresponse = this.replace(json.formatcorrectresponse);
                 this.stacksummariseresponse = this.replace(JSON.stringify(json.summariseresponse));
                 this.stackanswernotes = this.replace(JSON.stringify(json.answernotes));
             }
             this.stackscore = json.score.toString();
-            this.stacktime = 'Request Time: '
+            this.stacktime = "Request Time: "
                 + (json.request_time).toFixed(2)
-                + ' Api Time: ' + (json.api_time).toFixed(2);
+                + " Api Time: " + (json.api_time).toFixed(2);
 
             await ParCompiler.processAllMath(this.element);
-            let html = this.element.find('.stackOutput');
-            let inputs = html.find('input');
-            let inputse = html.find('textarea');
-            $(inputs).keyup(e=>this.inputHandler(e));
-            $(inputse).keyup(e=>this.inputHandler(e));
-            if ( getTask )  { // remove input validation texts
-                let divinput = this.element.find('.stackinputfeedback');
+            const html = this.element.find(".stackOutput");
+            const inputs = html.find("input");
+            const inputse = html.find("textarea");
+            $(inputs).keyup((e) => this.inputHandler(e));
+            $(inputse).keyup((e) => this.inputHandler(e));
+            if (getTask) { // remove input validation texts
+                const divinput = this.element.find(".stackinputfeedback");
                 divinput.remove();
             }
 
@@ -224,31 +242,37 @@ class StackController extends PluginBase<t.TypeOf<typeof StackMarkup>,
         }
     }
 
-    async inputHandler(e:any) {
-        let target: HTMLInputElement = e.currentTarget as HTMLInputElement;
+    async inputHandler(e: JQuery.Event) {
+        const target = e.currentTarget as HTMLInputElement;
         this.lastInputFieldElement = target;
-        let id: string = target.id;
-        if ( this.lastInputFieldId === id && this.lastInputFieldValue === target.value ) return;
+        const id: string = target.id;
+        if (this.lastInputFieldId === id && this.lastInputFieldValue === target.value) {
+            return;
+        }
         this.lastInputFieldId = id;
         this.lastInputFieldValue = target.value;
-        this.scope.$evalAsync(() => { this.autoPeekInput(id); });
+        this.scope.$evalAsync(() => {
+            this.autoPeekInput(id);
+        });
         // await this.autoPeekInput(id);
     }
 
-
-
-    async handleServerPeekResult(r:any) {
+    async handleServerPeekResult(r: StackResult) {
         try {
-            if (typeof r === 'string' || r instanceof String) {
+            if (typeof r === "string") {
                 this.error = r.toString();
                 return;
             }
-            let json: any = r;
+            if (r.error) {
+                this.error = r.message;
+                return;
+            }
+            const json = r;
 
-            let peekDiv = this.element.find(".peekdiv");
-            let peekDivC = peekDiv.children();
+            const peekDiv = this.element.find(".peekdiv");
+            const peekDivC = peekDiv.children();
             // editorDiv.empty();
-            let pdiv = $('<div><div class="math">'+json.questiontext +'</div></div>');
+            const pdiv = $('<div><div class="math">' + json.questiontext + "</div></div>");
             await ParCompiler.processAllMath(pdiv);
             peekDivC.replaceWith(pdiv); // TODO: vielä välähtää
 
@@ -257,33 +281,28 @@ class StackController extends PluginBase<t.TypeOf<typeof StackMarkup>,
         }
     }
 
-    private timer:any;
-    private stopTimer(): boolean {
-        if (!this.timer) return false;
-        clearTimeout(this.timer);
-        this.timer = null;
-        return true;
+    async autoPeekInput(id: string) {
+        this.stopTimer();
+        this.timer = setTimeout(() => this.timedAutoPeek(id), 500);
     }
 
-    async autoPeekInput(id:string) {
+    async timedAutoPeek(id: string) {
         this.stopTimer();
-        this.timer = setTimeout( () => this.timedAutoPeek(id) ,500);
-    }
-
-    async timedAutoPeek(id:string) {
-        this.stopTimer();
-        if (!this.attrs.autopeek) return;
+        if (!this.attrs.autopeek) {
+            return;
+        }
         await this.doPeek(id);
     }
 
-    async doPeek(id:string)
-    {
+    async doPeek(id: string) {
         id = id.substr(STACK_VARIABLE_PREFIX.length);
         // answ[STACK_VARIABLE_PREFIX + id] = target.value;
-        let isub = id.indexOf('_sub_');
-        if ( isub > 0 ) id = id.substr(0, isub); // f.ex in matrix case stackapi_ans1_sub_0_1
-        let answ = this.collectAnswer(id);
-        let data: any = {
+        const isub = id.indexOf("_sub_");
+        if (isub > 0) {
+            id = id.substr(0, isub); // f.ex in matrix case stackapi_ans1_sub_0_1
+        }
+        const answ = this.collectAnswer(id);
+        const data = {
             prefix: STACK_VARIABLE_PREFIX,
             verifyvar: id,
             answer: answ,
@@ -292,52 +311,57 @@ class StackController extends PluginBase<t.TypeOf<typeof StackMarkup>,
         await this.runValidationPeek(data);
     }
 
-    async runPeek() { //kutsutaan templatesta
+    async runPeek() { // called from template
         // let data = this.collectData();
         // await this.runValidationPeek(data, 'ans1');
-        if ( this.lastInputFieldId )
+        if (this.lastInputFieldId) {
             await this.doPeek(this.lastInputFieldId);
+        }
     }
 
-
-    async runValidationPeek(data:any) {
+    async runValidationPeek(data: StackData) {
         this.isRunning = true;
         if (!this.stackpeek) { // remove extra fields from sceen
-            let divinput = this.element.find('.stackinputfeedback');
+            let divinput = this.element.find(".stackinputfeedback");
             divinput.remove();
-            divinput = this.element.find('.stackprtfeedback');
+            divinput = this.element.find(".stackprtfeedback");
             divinput.remove();
-            divinput = this.element.find('.stackpartmark');
+            divinput = this.element.find(".stackpartmark");
             divinput.remove();
         }
         this.stackpeek = true;
-        let url = this.getTaskUrl();
+        const url = this.getTaskUrl();
         data.seed = 1;
-        let params = {
+        const params = {
             input: {
-                usercode: '',
+                usercode: "",
                 stackData: data,
                 nosave: true,
-                type: 'stack'
+                type: "stack",
             },
         };
-        this.error = '';
-        const r:any = await to($http<any>({method: "PUT", url: url, data: params, timeout: 20000}, ));
-        if ( !r.result ) return;
-        if ( !r.result.data ) return;
-        if ( !r.result.data.web ) return;
-        if ( r.result.data.web.error ) {
-            this.error = r.result.data.web.error;
+        this.error = "";
+        const r = await to($http<{
+            web: {
+                stackResult: StackResult,
+            },
+        }>({
+            method: "PUT",
+            url: url,
+            data: params,
+            timeout: 20000,
+        }));
+        if (!r.ok) {
+            this.error = r.result.data.error;
             return;
         }
-        if ( !r.result.data.web.stackResult ) return;
         await this.handleServerPeekResult(r.result.data.web.stackResult);
     }
 
-    private taskUrl: string = '';
-
     getTaskUrl(): string {
-        if ( this.taskUrl ) return this.taskUrl;
+        if (this.taskUrl) {
+            return this.taskUrl;
+        }
         let url = "/cs/answer";
         const plugin = this.getPlugin();
         if (plugin) {
@@ -352,7 +376,6 @@ class StackController extends PluginBase<t.TypeOf<typeof StackMarkup>,
         return url;
     }
 
-
     async runGetTask() {
         this.isOpen = true;
         await this.runSend(true);
@@ -363,52 +386,42 @@ class StackController extends PluginBase<t.TypeOf<typeof StackMarkup>,
         getTask = getTask == true;
         this.error = "";
         this.isRunning = true;
-        let url = this.getTaskUrl();
-        let stackData = this.collectData();
-        let params = {
+        const url = this.getTaskUrl();
+        const stackData = this.collectData();
+        const params = {
             input: {
                 usercode: this.timWay ? this.userCode : JSON.stringify(stackData.answer),
                 stackData: stackData,
                 getTask: getTask,
-                type: 'stack'
+                type: "stack",
             },
         };
 
-        const r:any = await to($http<
-            any
-        >({method: "PUT", url: url, data: params, timeout: 20000},
+        const r = await to($http<{
+            web: {stackResult: StackResult},
+        }>({method: "PUT", url: url, data: params, timeout: 20000},
         ));
+        this.isRunning = false;
 
-        if ( !r.result.data ) {
-            this.error = 'Timeout';
+        if (!r.ok) {
+            this.error = r.result.data.error;
             return;
         }
-        let error = r.result.data.error;
-        if ( !error ) {
-            if ( r.result.data.web )
-                error = r.result.data.web.error;
-        }
-        if ( error ) {
-            this.error = error;
-            this.isRunning = false;
+        if (!r.result.data.web) {
+            this.error = "No web reply from csPlugin!";
             return;
         }
-        if ( !r.result.data.web ) {
-            this.error = 'No web reply from csPlugin!';
-            this.isRunning = false;
-            return;
-        }
-        let stackResult = r.result.data.web.stackResult;
+        const stackResult = r.result.data.web.stackResult;
         await this.handleServerResult(stackResult, getTask);
-        if ( this.lastInputFieldId ) {
-            this.lastInputFieldElement = this.element.find('#'+this.lastInputFieldId)[0] as any;
-            if ( this.lastInputFieldElement ) {
+        if (this.lastInputFieldId) {
+            this.lastInputFieldElement = this.element.find("#" + this.lastInputFieldId)[0] as HTMLInputElement;
+            if (this.lastInputFieldElement) {
                 this.lastInputFieldElement.focus();
-                this.lastInputFieldElement.selectionStart = 0;  this.lastInputFieldElement.selectionEnd = 1000;
+                this.lastInputFieldElement.selectionStart = 0;
+                this.lastInputFieldElement.selectionEnd = 1000;
             }
         }
     }
-
 
     getDefaultMarkup() {
         return {};
@@ -416,6 +429,15 @@ class StackController extends PluginBase<t.TypeOf<typeof StackMarkup>,
 
     protected getAttributeType() {
         return StackAll;
+    }
+
+    private stopTimer(): boolean {
+        if (!this.timer) {
+            return false;
+        }
+        clearTimeout(this.timer);
+        this.timer = undefined;
+        return true;
     }
 }
 
@@ -428,12 +450,11 @@ const common = {
 
 /*
 
-
-Palutteita (esimerkit 2x2 matriisien kertolaskusta
+Feedback (examples from 2x2 matrix multiplication)
 
   https://stack2.maths.ed.ac.uk/demo2018/mod/quiz/attempt.php?attempt=1502&cmid=147&page=4&scrollpos=281#q9
 
-Oikein:
+Correct:
 
 <div class="stackprtfeedback stackprtfeedback-prt1" id="yui_3">
  <div class="correct" id="yui_3">
@@ -450,7 +471,7 @@ Oikein:
     content: "\f00c";
 }
 
-Väärin:
+Wrong:
 
 <div class="outcome clearfix" id="yui_3">
   <h4 class="accesshide">Feedback</h4>
@@ -478,8 +499,7 @@ Väärin:
 
 // style="min-height: 20em; max-height: 20em; overflow: auto"
 
- */
-
+*/
 
 stackApp.component("stackRunner", {
     ...common,
@@ -488,10 +508,10 @@ stackApp.component("stackRunner", {
     <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
     <p ng-if="::$ctrl.stem" class="stem" ng-bind-html="::$ctrl.stem"></p>
     <p ng-if="!$ctrl.isOpen" class="stem" ng-bind-html="::$ctrl.attrs.beforeOpen"></p>
-                    
+
     <div class="no-popup-menu stackOutput" ng-if="::$ctrl.timWay" >
         <div class="csRunCode"><textarea class="csRunArea csInputArea"
-                                 name="stackapi_ans1" id="stackapi_ans1"   
+                                 name="stackapi_ans1" id="stackapi_ans1"
                                  rows={{$ctrl.inputrows}}
                                  ng-model="$ctrl.userCode"
                                  ng-trim="false"
@@ -510,7 +530,9 @@ stackApp.component("stackRunner", {
                 ng-bind-html="'Peek'"></button>
     </p>
     <div ng-cloak ng-if="$ctrl.stackpeek" class="peekdiv" id="peek" style="min-height: 10em;"><div></div></div>
-    <div ng-cloak id="stackinputfeedback" class="stackinputfeedback1" ng-bind-html="$ctrl.stackinputfeedbackAsHtml()"></div>
+    <div ng-cloak id="stackinputfeedback"
+         class="stackinputfeedback1"
+         ng-bind-html="$ctrl.stackinputfeedbackAsHtml()"></div>
     <span class="csRunError"
           ng-if="$ctrl.error"
           ng-style="$ctrl.tinyErrorStyle" ng-bind-html="$ctrl.error"></span>
@@ -525,15 +547,15 @@ stackApp.component("stackRunner", {
             <div id="formatcorrectresponse" ng-bind-html="$ctrl.stackformatcorrectresponse"></div>
             <div style="font-size: 0.7em;">
                 <p>Score: <span id="score" ng-bind-html="$ctrl.stackscore"></span></p>
-                <p>Summarise response: <span id="summariseresponse" ng-bind-html="$ctrl.stacksummariseresponse"></span></p>
+                <p>Summarise response: <span id="summariseresponse"
+                                             ng-bind-html="$ctrl.stacksummariseresponse"></span></p>
                 <p>Answer notes: <span id="answernotes" ng-bind-html="$ctrl.stackanswernotes"></span></p>
                 <p>Time: <span id="time" ng-bind-html="$ctrl.stacktime"></span></p>
             </div>
         </div>
-    </div>                    
+    </div>
 
     <p class="plgfooter" ng-if="::$ctrl.footer" ng-bind-html="::$ctrl.footer"></p>
 </div>
 `,
 });
-
