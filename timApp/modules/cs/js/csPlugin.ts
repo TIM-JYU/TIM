@@ -441,22 +441,23 @@ function makeTemplate() {
     <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
     <p ng-if="::$ctrl.stem" class="stem" ng-bind-html="::$ctrl.stem"></p>
     <div ng-if="::$ctrl.isSimcir || $ctrl.isTauno">
-    <p ng-if="$ctrl.taunoOn" class="pluginHide"><a ng-click="$ctrl.hideTauno()">{{$ctrl.hideTaunoText}}</a></p>
-    <div class="taunoContainer"><p></p></div>
-    <p ng-if="!$ctrl.taunoOn" class="pluginShow"><a ng-click="$ctrl.showTauno()">{{$ctrl.showTaunoText}}</a></p>
-    <p ng-if="$ctrl.taunoOn && $ctrl.isTauno"
-       class="pluginHide">
-        <a ng-click="$ctrl.copyTauno()">{{::$ctrl.copyFromTaunoText}}</a> |
-        <a ng-click="$ctrl.hideTauno()">{{::$ctrl.hideTaunoText}}</a></p>
-    <p ng-if="$ctrl.taunoOn && $ctrl.isTauno" class="taunoOhje">
-        {{::$ctrl.taunoOhjeText}}</a></p>
-    <p ng-if="$ctrl.taunoOn && !$ctrl.noeditor && $ctrl.isSimcir" class="pluginHide">
-    <a ng-click="$ctrl.copyFromSimcir()">copy from SimCir</a>
-    | <a ng-click="$ctrl.copyToSimcir()">copy to SimCir</a> | <a ng-click="$ctrl.hideTauno()">hide SimCir</a>
-    </p>
+        <p ng-if="$ctrl.taunoOn" class="pluginHide"><a ng-click="$ctrl.hideTauno()">{{$ctrl.hideTaunoText}}</a></p>
+        <div class="taunoContainer"><p></p></div>
+        <p ng-if="!$ctrl.taunoOn" class="pluginShow"><a ng-click="$ctrl.showTauno()">{{$ctrl.showTaunoText}}</a></p>
+        <p ng-if="$ctrl.taunoOn && $ctrl.isTauno"
+           class="pluginHide">
+            <a ng-click="$ctrl.copyTauno()">{{::$ctrl.copyFromTaunoText}}</a> |
+            <a ng-click="$ctrl.hideTauno()">{{::$ctrl.hideTaunoText}}</a></p>
+        <p ng-if="$ctrl.taunoOn && $ctrl.isTauno" class="taunoOhje">
+            {{::$ctrl.taunoOhjeText}}</a></p>
+        <p ng-if="$ctrl.taunoOn && !$ctrl.noeditor && $ctrl.isSimcir" class="pluginHide">
+            <a ng-click="$ctrl.copyFromSimcir()">copy from SimCir</a>
+            | <a ng-click="$ctrl.copyToSimcir()">copy to SimCir</a> | <a ng-click="$ctrl.hideTauno()">hide SimCir</a>
+        </p>
     </div>
     <div ng-if="::$ctrl.upload" class="form-inline small">
-        <div class="form-group small"> {{::$ctrl.uploadstem}}: <input type="file" ngf-select="$ctrl.onFileSelect($file)">
+        <div class="form-group small"> {{::$ctrl.uploadstem}}:
+            <input type="file" ngf-select="$ctrl.onFileSelect($file)">
             <span ng-show="$ctrl.fileProgress >= 0 && !$ctrl.fileError"
                   ng-bind="$ctrl.fileProgress < 100 ? 'Uploading... ' + $ctrl.fileProgress + '%' : 'Done!'"></span>
         </div>
@@ -497,7 +498,7 @@ function makeTemplate() {
                      ng-trim="false"
                      placeholder="{{::$ctrl.argsplaceholder}}"></span>
     </div>
-    <p class="csRunSnippets" ng-if="::$ctrl.buttons"> 
+    <p class="csRunSnippets" ng-if="::$ctrl.buttons">
         <button ng-repeat="item in ::$ctrl.buttons" ng-click="$ctrl.addText(item)">{{$ctrl.addTextHtml(item)}}</button>
         &nbsp;&nbsp;
     </p>
