@@ -1016,6 +1016,10 @@ class DocParagraph:
 
         return bool(self.get_attr('plugin'))
 
+    def is_yaml(self) -> bool:
+        """Returns whether this paragraph is YAML markup."""
+        return self.is_plugin() or self.is_setting()
+
     def is_question(self) -> bool:
         """Returns whether this paragraph is a question paragraph."""
         return self.is_plugin() and bool(self.get_attr('question'))

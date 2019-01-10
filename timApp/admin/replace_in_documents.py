@@ -2,11 +2,13 @@ from argparse import ArgumentTypeError
 from typing import Tuple
 
 import attr
+from yaml import YAMLError
 
 from timApp.admin.search_in_documents import create_basic_search_argparser, search, SearchResult, \
     SearchArgumentsBasic
 from timApp.admin.util import process_items, DryrunnableOnly, BasicArguments, get_url_for_match
 from timApp.document.docinfo import DocInfo
+from timApp.document.yamlblock import YamlBlock
 
 
 @attr.s
@@ -33,6 +35,7 @@ class ReplacementResult:
     """
     search_result: SearchResult = attr.ib(kw_only=True)
     replacement: str = attr.ib(kw_only=True)
+    error: str = attr.ib(kw_only=True, default=None)
 
     def get_new_markdown(self) -> str:
         """Gets the new markdown after applying the replacement string.
@@ -72,11 +75,22 @@ def perform_replace(d: DocInfo, args: ReplaceArguments):
     """
     for r in search(d, args, use_exported=False):
         repl = ReplacementResult(search_result=r, replacement=args.to)
+        old_md = r.par.get_markdown()
+        new_md = repl.get_new_markdown()
+        if r.par.is_yaml():
+            try:
+                yb = YamlBlock.from_markdown(r.par.get_expanded_markdown())
+            except YAMLError:
+                repl.error = f'YAML is invalid before replacement, so not doing anything'
+            if not repl.error:
+                try:
+                    p_temp = r.par.clone()
+                    p_temp.set_markdown(new_md)
+                    yb_new = YamlBlock.from_markdown(p_temp.get_expanded_markdown())
+                except YAMLError:
+                    repl.error = 'YAML would be invalid after replacement, so not doing anything'
         yield repl
-        if not args.dryrun:
-            old_md = r.par.get_markdown()
-            new_md = repl.get_new_markdown()
-
+        if not args.dryrun and not repl.error:
             # The method get_new_markdown replaces all occurrences in a paragraph,
             # so some ReplacementResults are (in this sense) redundant.
             if old_md == new_md:
@@ -91,6 +105,8 @@ def replace_and_print(d: DocInfo, args: ReplaceArgumentsCLI):
     n = 0
     for r in perform_replace(d, args):
         n = r.search_result.num_pars_found
+        if r.error:
+            print(r.error + ':')
         print(f'{r.format_match(args)}')
     return n
 

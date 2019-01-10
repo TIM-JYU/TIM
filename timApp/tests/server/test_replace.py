@@ -132,3 +132,33 @@ class ReplaceTest(TimRouteTest):
         repls = [p.get_replacement() for p in perform_replace(d, args)]
         self.assertEqual([('[[', 'x'), ('[[', 'x')], repls)
         self.assertEqual('xx[\n', d.document.export_markdown(export_ids=False))
+
+    def test_skip_invalid_yaml(self):
+        self.login_test1()
+        d = self.create_doc(settings={'macros': {'a': 'foo', 'b': 'bar'}}, initial_par="""
+``` {plugin=csPlugin}
+b: bar
+asd
+```
+
+``` {plugin=csPlugin}
+b: bar
+a: %%a%%
+```
+""")
+        args = ReplaceArguments(
+            dryrun=False,
+            format='',
+            onlyfirst=False,
+            regex=False,
+            term=r'b: bar',
+            to=r'x',
+        )
+        repls = [p for p in perform_replace(d, args)]
+        self.assertEqual('YAML would be invalid after replacement, so not doing anything',
+                         repls[0].error)
+        self.assertEqual('YAML is invalid before replacement, so not doing anything',
+                         repls[1].error)
+        self.assertEqual('YAML would be invalid after replacement, so not doing anything',
+                         repls[2].error)
+        self.assertEqual('bar', d.document.get_settings().get_dict()['macros']['b'])

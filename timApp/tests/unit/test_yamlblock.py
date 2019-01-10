@@ -235,3 +235,26 @@ a: |!!
 !!
                 """)
         self.assertEqual({'a': 't\n\nb\n'}, yb)
+
+    def test_standard_indent_marker(self):
+        yb = YamlBlock.from_markdown("""
+a: |1
+ x
+""")
+        self.assertEqual({'a': 'x\n'}, yb)
+
+        yb = YamlBlock.from_markdown("""
+a: |9
+           x
+""")
+        self.assertEqual({'a': '  x\n'}, yb)
+
+        yb = YamlBlock.from_markdown("""
+a: |1
+""")
+        self.assertEqual({'a': ''}, yb)
+
+        yb = YamlBlock.from_markdown("""
+a: |9
+""")
+        self.assertEqual({'a': ''}, yb)
