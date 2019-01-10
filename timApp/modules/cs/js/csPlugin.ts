@@ -671,13 +671,14 @@ const CsMarkupOptional = t.partial({
     filename: t.string,
     fullhtml: t.string,
     height: t.number,
+    highlight: nullable(t.string),
     html: t.string,
     indices: t.string,
     inputplaceholder: t.string,
     languages: t.string, // not used in any plugin? // TODO: should be used to give set of languages that can be used
     mode: t.string,
     noeditor: t.boolean,
-    normal: t.string,
+    normal: nullable(t.string),
     parsonsmaxcheck: t.number,
     path: t.string,
     placeholder: nullable(t.string),
@@ -712,7 +713,6 @@ const CsMarkupDefaults = t.type({
     cssPrint: withDefault(t.boolean, false),
     editorMode: withDefault(t.Integer, -1),
     editorModes: withDefault(t.union([t.string, t.Integer]), "01"),
-    highlight: withDefault(t.string, "Highlight"),
     iframe: withDefault(t.boolean, false), // TODO this maybe gets deleted on server
     iframeopts: withDefault(t.string, ""),
     indent: withDefault(t.Integer, -1),
@@ -1169,7 +1169,7 @@ class CsController extends CsBase implements IController {
     }
 
     get resetText() {
-        return valueOr(this.attrs.resetText, (this.english ? "Reset" : "Alusta"));
+        return valueDefu(this.attrs.resetText, (this.english ? "Reset" : "Alusta"));
     }
 
     get editorModes() {
@@ -1240,8 +1240,8 @@ class CsController extends CsBase implements IController {
         this.editorMode = this.attrs.editorMode;
         this.viewCode = this.attrs.viewCode;
         this.editorText = [
-            this.attrs.normal || this.english ? "Normal" : "Tavallinen",
-            this.attrs.highlight,
+            valueDefu(this.attrs.normal, this.english ? "Normal" : "Tavallinen"),
+            valueDefu(this.attrs.highlight, "Highlight"),
             this.attrs.parsons,
             this.attrs.jsparsons,
         ];

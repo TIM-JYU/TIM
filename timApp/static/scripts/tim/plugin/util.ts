@@ -28,7 +28,7 @@ export const GenericPluginMarkup = t.partial({
     footer: t.string,
     header: t.string,
     lazy: t.boolean,
-    resetText: t.string,
+    resetText: nullable(t.string),
     stem: t.string,
 });
 
