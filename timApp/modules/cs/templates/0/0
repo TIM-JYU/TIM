@@ -3,7 +3,6 @@ Full Java program
 ``` {#PLUGINNAMEHERE plugin="csPlugin"}
 type: java
 fullprogram: |!!
-//
 // BYCODEBEGIN
 public class HelloWorld {
     public static void main(String args[]) {

@@ -7,7 +7,6 @@ header: Java
 type: java/comtest
 path: user
 byCode: |
- //
  package example;
  public class Laskuja {
      /** 
@@ -55,8 +54,7 @@ byCode: |
             getTextKartalta().setText(args[0]);
 replace: REPLACE
 userargs: 20
-program: |
- //
+program: |1
     /**
      * 
      */
@@ -353,8 +351,7 @@ program: |
  }
 
 replace: FUNCTION
-byCode: |
- //
+byCode: |1
          window.add((x,y)->sin(x)*cos(y),-2*PI,-2*PI,2*PI,2*PI);  
          window.rotate(Axis.X, 50);
          window.rotate(Axis.Y, 20);
@@ -393,8 +390,7 @@ type: jypeli
 maxrows: 20
 file: https://svn.cc.jyu.fi/srv/svn/ohj1/luentomonistecs/esimerkit/Pohja/Jypeli/Jypeli.cs
 replace: INSERT YOUR CODE HERE
-byCode: |
- //
+byCode: |1
          Level.Background.Color = Color.Black;
          PhysicsObject pallo = new PhysicsObject(200,200,Shape.Circle);
          pallo.Color = Color.Yellow;
@@ -423,7 +419,6 @@ byCode: |
 header: C ohjelma käännettynä C++:lla
 type: c++
 byCode: |
- //
  // C++ kääntäjällä
  #include <stdio.h>
  int main(void)
@@ -439,7 +434,6 @@ byCode: |
 header: C++
 type: c++/comtest
 byCode: |
- //
  // C++ -kieli
  #include <iostream>
  using namespace std;
@@ -542,7 +536,6 @@ function paint(ctx,out) {
 !!
 replace: REPLACE
 byCode: |!!
-//
   var x1 = 100;
   var y1 = 200;
   circle(ctx, x1, y1, 50);
@@ -588,7 +581,6 @@ file: "https://jsbin.com/iwovaj/74/embed?js,output"
 ``` {#floatvika plugin="csPlugin"}
 header: Float ongelma / C#
 program: |
- //
  using System;
  public class FloatOngelma
  {
@@ -598,8 +590,7 @@ program: |
      }
  }
 replace: CODE
-byCode: |
- //
+byCode: |1
          float s = 0;
          float d = 0.1f;
          for (int i=0; i<1000; i++) s += d;
@@ -748,7 +739,6 @@ inputstem: "Anna syöte"
 inputrows: 3
 stdin: input.txt
 byCode: |
- //
  // C++ -kieli
  #include <iostream>
  #include <iomanip>

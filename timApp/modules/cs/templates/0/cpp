@@ -7,9 +7,7 @@ opt: -g
 cmds: valgrind -q --leak-check=full {0}
 path: user
 fullprogram: |!!
-//
 // BYCODEBEGIN
 // BYCODEEND
-//
 !!
 ```

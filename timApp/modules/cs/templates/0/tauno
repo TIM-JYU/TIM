@@ -15,8 +15,7 @@ file: https://svn.cc.jyu.fi/srv/svn/ohj1/luentomonistecs/esimerkit/Pohja/Tauno/K
 replace: "TODO: Kopioi"
 byCode: ""
 replace1: "TODO: TESTIT TAHAN"
-byCode1: |
- //
+byCode1: |1
      ///     55, 44, 33, 2   | 2, 33, 44, 55
      ///     23, 45, 12, 9   | 9, 12, 45, 23
 replace2: "int.* t ="
