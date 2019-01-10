@@ -8,8 +8,9 @@ import {to} from "tim/util/utils";
 const stackApp = angular.module("stackApp", ["ngSanitize"]);
 const STACK_VARIABLE_PREFIX = "stackapi_";
 
+// this.attrs
 const StackMarkup = t.intersection([
-    t.partial({ // this.attrs
+    t.partial({
         beforeOpen: t.string,
         buttonBottom: t.boolean,
         by: t.string,
@@ -19,7 +20,7 @@ const StackMarkup = t.intersection([
         timWay: t.boolean,
     }),
     GenericPluginMarkup,
-    t.type({ // this.attrs
+    t.type({
         autopeek: withDefault(t.boolean, true),
         lang: withDefault(t.string, "fi"),
         // autoplay: withDefault(t.boolean, true),
@@ -53,7 +54,7 @@ type StackResult = string | {
     message: string,
 };
 
-interface StackData {
+interface IStackData {
     answer: {[name: string]: string};
     prefix: string;
     seed?: number;
@@ -76,7 +77,7 @@ class StackController extends PluginBase<t.TypeOf<typeof StackMarkup>,
         return this.english ? "Send" : "Lähetä";
     }
 
-    private static $inject = ["$scope", "$element", "$sce"];
+    private static $inject = ["$scope", "$element"];
     private span: string = "";
     private error: string = "";
     private userCode: string = "";
@@ -183,8 +184,8 @@ class StackController extends PluginBase<t.TypeOf<typeof StackMarkup>,
 
     collectData() {
         return {
-            prefix: STACK_VARIABLE_PREFIX,
             answer: this.collectAnswer(""),
+            prefix: STACK_VARIABLE_PREFIX,
         };
     }
 
@@ -194,51 +195,45 @@ class StackController extends PluginBase<t.TypeOf<typeof StackMarkup>,
     }
 
     async handleServerResult(r: StackResult, getTask: boolean) {
-        try {
-            if (typeof r === "string") {
-                this.error = r.toString();
-                return;
-            }
-            const json = r;
-            if (json.error) {
-                this.error = json.message;
-                return;
-            }
+        if (typeof r === "string") {
+            this.error = r.toString();
+            return;
+        }
+        if (r.error) {
+            this.error = r.message;
+            return;
+        }
 
-            const qt = this.replace(json.questiontext);
-            const i = qt.indexOf('<div class="stackinputfeedback"');
-            if (this.attrs.buttonBottom || i < 0) {
-                this.stackoutput = qt;
-                this.stackinputfeedback = "";
-            } else {
-                this.stackoutput = qt.substr(0, i) + "\n";
-                this.stackinputfeedback = qt.substr(i);
-            }
+        const qt = this.replace(r.questiontext);
+        const i = qt.indexOf('<div class="stackinputfeedback"');
+        if (this.attrs.buttonBottom || i < 0) {
+            this.stackoutput = qt;
+            this.stackinputfeedback = "";
+        } else {
+            this.stackoutput = qt.substr(0, i) + "\n";
+            this.stackinputfeedback = qt.substr(i);
+        }
 
-            if (!getTask) {
-                this.stackfeedback = this.replace(json.generalfeedback);
-                this.stackformatcorrectresponse = this.replace(json.formatcorrectresponse);
-                this.stacksummariseresponse = this.replace(JSON.stringify(json.summariseresponse));
-                this.stackanswernotes = this.replace(JSON.stringify(json.answernotes));
-            }
-            this.stackscore = json.score.toString();
-            this.stacktime = "Request Time: "
-                + (json.request_time).toFixed(2)
-                + " Api Time: " + (json.api_time).toFixed(2);
+        if (!getTask) {
+            this.stackfeedback = this.replace(r.generalfeedback);
+            this.stackformatcorrectresponse = this.replace(r.formatcorrectresponse);
+            this.stacksummariseresponse = this.replace(JSON.stringify(r.summariseresponse));
+            this.stackanswernotes = this.replace(JSON.stringify(r.answernotes));
+        }
+        this.stackscore = r.score.toString();
+        this.stacktime = "Request Time: "
+            + (r.request_time).toFixed(2)
+            + " Api Time: " + (r.api_time).toFixed(2);
 
-            await ParCompiler.processAllMath(this.element);
-            const html = this.element.find(".stackOutput");
-            const inputs = html.find("input");
-            const inputse = html.find("textarea");
-            $(inputs).keyup((e) => this.inputHandler(e));
-            $(inputse).keyup((e) => this.inputHandler(e));
-            if (getTask) { // remove input validation texts
-                const divinput = this.element.find(".stackinputfeedback");
-                divinput.remove();
-            }
-
-        } finally {
-            this.isRunning = false;
+        await ParCompiler.processAllMath(this.element);
+        const html = this.element.find(".stackOutput");
+        const inputs = html.find("input");
+        const inputse = html.find("textarea");
+        $(inputs).keyup((e) => this.inputHandler(e));
+        $(inputse).keyup((e) => this.inputHandler(e));
+        if (getTask) { // remove input validation texts
+            const divinput = this.element.find(".stackinputfeedback");
+            divinput.remove();
         }
     }
 
@@ -258,27 +253,20 @@ class StackController extends PluginBase<t.TypeOf<typeof StackMarkup>,
     }
 
     async handleServerPeekResult(r: StackResult) {
-        try {
-            if (typeof r === "string") {
-                this.error = r.toString();
-                return;
-            }
-            if (r.error) {
-                this.error = r.message;
-                return;
-            }
-            const json = r;
-
-            const peekDiv = this.element.find(".peekdiv");
-            const peekDivC = peekDiv.children();
-            // editorDiv.empty();
-            const pdiv = $('<div><div class="math">' + json.questiontext + "</div></div>");
-            await ParCompiler.processAllMath(pdiv);
-            peekDivC.replaceWith(pdiv); // TODO: vielä välähtää
-
-        } finally {
-            this.isRunning = false;
+        if (typeof r === "string") {
+            this.error = r.toString();
+            return;
         }
+        if (r.error) {
+            this.error = r.message;
+            return;
+        }
+        const peekDiv = this.element.find(".peekdiv");
+        const peekDivC = peekDiv.children();
+        // editorDiv.empty();
+        const pdiv = $('<div><div class="math">' + r.questiontext + "</div></div>");
+        await ParCompiler.processAllMath(pdiv);
+        peekDivC.replaceWith(pdiv); // TODO: still flashes
     }
 
     async autoPeekInput(id: string) {
@@ -303,9 +291,9 @@ class StackController extends PluginBase<t.TypeOf<typeof StackMarkup>,
         }
         const answ = this.collectAnswer(id);
         const data = {
+            answer: answ,
             prefix: STACK_VARIABLE_PREFIX,
             verifyvar: id,
-            answer: answ,
         };
 
         await this.runValidationPeek(data);
@@ -319,7 +307,7 @@ class StackController extends PluginBase<t.TypeOf<typeof StackMarkup>,
         }
     }
 
-    async runValidationPeek(data: StackData) {
+    async runValidationPeek(data: IStackData) {
         this.isRunning = true;
         if (!this.stackpeek) { // remove extra fields from sceen
             let divinput = this.element.find(".stackinputfeedback");
@@ -334,10 +322,10 @@ class StackController extends PluginBase<t.TypeOf<typeof StackMarkup>,
         data.seed = 1;
         const params = {
             input: {
-                usercode: "",
-                stackData: data,
                 nosave: true,
+                stackData: data,
                 type: "stack",
+                usercode: "",
             },
         };
         this.error = "";
@@ -346,11 +334,12 @@ class StackController extends PluginBase<t.TypeOf<typeof StackMarkup>,
                 stackResult: StackResult,
             },
         }>({
-            method: "PUT",
-            url: url,
             data: params,
+            method: "PUT",
             timeout: 20000,
+            url: url,
         }));
+        this.isRunning = false;
         if (!r.ok) {
             this.error = r.result.data.error;
             return;
@@ -381,19 +370,18 @@ class StackController extends PluginBase<t.TypeOf<typeof StackMarkup>,
         await this.runSend(true);
     }
 
-    async runSend(getTask: boolean) {
+    async runSend(getTask = false) {
         this.stackpeek = false;
-        getTask = getTask == true;
         this.error = "";
         this.isRunning = true;
         const url = this.getTaskUrl();
         const stackData = this.collectData();
         const params = {
             input: {
-                usercode: this.timWay ? this.userCode : JSON.stringify(stackData.answer),
-                stackData: stackData,
                 getTask: getTask,
+                stackData: stackData,
                 type: "stack",
+                usercode: this.timWay ? this.userCode : JSON.stringify(stackData.answer),
             },
         };
 
