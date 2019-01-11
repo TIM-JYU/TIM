@@ -9,6 +9,7 @@ from timApp.admin.search_in_documents import create_basic_search_argparser, sear
 from timApp.admin.util import process_items, DryrunnableOnly, BasicArguments, get_url_for_match
 from timApp.document.docinfo import DocInfo
 from timApp.document.yamlblock import YamlBlock
+from timApp.timdb.exceptions import TimDbException
 
 
 @attr.s
@@ -82,6 +83,8 @@ def perform_replace(d: DocInfo, args: ReplaceArguments):
                 yb = YamlBlock.from_markdown(r.par.get_expanded_markdown())
             except YAMLError:
                 repl.error = f'YAML is invalid before replacement, so not doing anything'
+            except TimDbException as e:
+                repl.error = f'Exception: {str(e)}'
             if not repl.error:
                 try:
                     p_temp = r.par.clone()
