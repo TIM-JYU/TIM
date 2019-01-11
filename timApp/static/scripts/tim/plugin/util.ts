@@ -27,10 +27,10 @@ export const GenericPluginMarkup = t.partial({
     button: t.string,
     buttonText: t.string,
     footer: t.string,
-    header: t.string,
+    header: nullable(t.string),
     lazy: t.boolean,
     resetText: nullable(t.string),
-    stem: t.string,
+    stem: nullable(t.string),
 });
 
 export interface IGenericPluginMarkup extends t.TypeOf<typeof GenericPluginMarkup> {
