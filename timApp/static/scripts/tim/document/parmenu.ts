@@ -178,8 +178,7 @@ To comment or edit this, go to the corresponding <a href="/view/${getPreambleDoc
                 // Double click
                 this.viewctrl.defaultAction.func(e, $par, coords);
             } else {
-                // Two clicks
-                this.showOptionsWindow(e, $par);
+                // Two clicks but they were too slow; do nothing.
             }
         } else if (toggle1) {
             // Clicked once
