@@ -790,7 +790,7 @@ class CsBase extends PluginBase<t.TypeOf<typeof CsMarkup>, t.TypeOf<typeof CsAll
     }
 
     getDefaultMarkup() {
-        return {};
+        return {norun: true}; // prevent running broken plugin accidentally
     }
 }
 
