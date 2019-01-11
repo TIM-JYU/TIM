@@ -14,18 +14,23 @@ function fixPageCoords(e: JQueryEventObject) {
     return e;
 }
 
-export function onClick(className: string, func: (obj: JQuery, e: JQueryEventObject) => boolean | void, overrideModalCheck = false) {
-    let downEvent: JQueryEventObject | null = null;
-    let downCoords: Coords | null = null;
-    let lastDownEvent: JQueryEventObject | null = null;
-    let lastclicktime = -1;
+export function onClick(className: string,
+                        func: (obj: JQuery, e: JQueryEventObject) => boolean | void,
+                        overrideModalCheck = false) {
+    let downEvent: JQueryEventObject | undefined;
+    let downCoords: Coords | undefined;
+    let lastDownEvent: JQueryEventObject | undefined;
+    let lastclicktime: number | undefined;
 
     $document.on("mousedown touchstart", className, (e: JQueryEventObject) => {
         if (!overrideModalCheck && ($(".actionButtons").length > 0 || $(EDITOR_CLASS_DOT).length > 0)) {
             // Disable while there are modal gui elements
             return;
         }
-        if (lastDownEvent && lastDownEvent.type !== e.type && new Date().getTime() - lastclicktime < 500) {
+        if (lastDownEvent &&
+            lastclicktime &&
+            lastDownEvent.type !== e.type &&
+            new Date().getTime() - lastclicktime < 500) {
             // This is to prevent chaotic behavior from both mouseDown and touchStart
             // events happening at the same coordinates
             $log.info("Ignoring event:");
@@ -49,11 +54,11 @@ export function onClick(className: string, func: (obj: JQuery, e: JQueryEventObj
         }
         if (dist(downCoords, {left: e2.pageX, top: e2.pageY}) > 10) {
             // Moved too far away, cancel the event
-            downEvent = null;
+            downEvent = undefined;
         }
     });
     $document.on("touchcancel", className, (e: JQueryEventObject) => {
-        downEvent = null;
+        downEvent = undefined;
     });
     // it is wrong to register both events at the same time; see https://stackoverflow.com/questions/8503453
     const isIOS = ((/iphone|ipad/gi).test(navigator.appVersion));
@@ -64,7 +69,7 @@ export function onClick(className: string, func: (obj: JQuery, e: JQueryEventObj
                 // e.preventDefault();
                 // e.stopPropagation();
             }
-            downEvent = null;
+            downEvent = undefined;
         }
     });
 }
@@ -89,10 +94,10 @@ export function onMouseOverOut(className: string, func: MouseOverOutFn) {
     // true when over, false when out
 
     $document.on("mouseover", className, function(e: JQueryEventObject) {
-        func($(this) as any, fixPageCoords(e), true)
+        func($(this) as any, fixPageCoords(e), true);
     });
 
     $document.on("mouseout", className, function(e: JQueryEventObject) {
-        func($(this) as any, fixPageCoords(e), false)
+        func($(this) as any, fixPageCoords(e), false);
     });
 }
