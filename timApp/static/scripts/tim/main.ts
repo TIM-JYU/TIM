@@ -33,6 +33,7 @@ import * as pluginUtil from "tim/plugin/util";
 import * as searchBox from "tim/search/searchBox";
 import * as sidebarMenuCtrl from "tim/sidebar/sidebarMenuCtrl";
 import * as bootstrapPanel from "tim/ui/bootstrapPanel";
+import * as markupError from "tim/ui/markuperror";
 import * as loginMenu from "tim/user/loginMenu";
 import * as settingsCtrl from "tim/user/settingsCtrl";
 import {markAsUsed} from "tim/util/utils";
@@ -61,6 +62,7 @@ markAsUsed(
     loadMap,
     loginMenu,
     manageCtrl,
+    markupError,
     pareditor,
     pluginUtil,
     qstController,

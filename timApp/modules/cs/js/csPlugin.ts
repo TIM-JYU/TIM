@@ -437,7 +437,7 @@ function commentTrim(s: string) {
 
 function makeTemplate() {
     return `<div class="csRunDiv type-{{::$ctrl.rtype}}">
-    <div class="pluginError" ng-if="::$ctrl.markupError" ng-bind="::$ctrl.markupError"></div>
+    <tim-markup-error ng-if="::$ctrl.markupError" data="::$ctrl.markupError"></tim-markup-error>
     <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
     <p ng-if="::$ctrl.stem" class="stem" ng-bind-html="::$ctrl.stem"></p>
     <div ng-if="::$ctrl.isSimcir || $ctrl.isTauno">

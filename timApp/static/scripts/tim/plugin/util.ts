@@ -47,27 +47,57 @@ export function getDefaults<MarkupType extends IGenericPluginMarkup,
     return d.value;
 }
 
-// from io-ts readme with adaptations
-function getPaths<A>(v: Left<t.Errors, A>): string[] {
-    const ps: Array<[string, string]> = v.value
+function getEssentialContext(c: t.Context) {
+    for (let i = c.length - 1; i >= 0; i--) {
+        if (isNaN(parseInt(c[i].key, 10)) || c[i].type.name.startsWith("xxwsdx")) {
+            return c.slice(0, i + 1);
+        }
+    }
+    return c;
+}
+
+type MarkupError = Array<{name: string, type: string}>;
+
+function isPrefixOfSome(s: string, others: string[]) {
+    for (const o of others) {
+        if (o.startsWith(s + ".")) {
+            return true;
+        }
+    }
+    return false;
+}
+
+function getErrors<A>(v: Left<t.Errors, A>): MarkupError {
+    const ps: Array<[string[], string]> = v.value
         .filter((e) => e.context.length >= 3 && e.context[0].key === "" && e.context[1].key === "markup")
-        .map((error) => [error.context[2].key, error.context.length > 3 ? error.context[error.context.length - 1].type.name : error.context[2].type.name] as [string, string]);
-    const errs = new Map<string, string[]>();
-    for (const [key, type] of ps) {
-        // not useful to report undefined
-        if (type === "undefined") {
+        .map((error) => getEssentialContext(error.context))
+        .map((error) => [error.slice(2).map((x) => x.key), error[error.length - 1].type.name] as [string[], string]);
+    const errs = new Map<string, Set<string>>();
+    const knownKeys = ps.map(([keys, _]) => keys.join("."));
+    for (let [keys, type] of ps) {
+        const key = keys.join(".");
+        // don't report parent fields because it's not useful
+        if (isPrefixOfSome(key, knownKeys)) {
             continue;
         }
+        // avoid too verbose messages
+        if (type.length > 50) {
+            type = "valid object";
+        }
+        if (type.startsWith("(") && type.endsWith(")")) {
+            type = type.slice(1, type.length - 1);
+        }
+        type = type.replace(/ \| /g, " or ");
         const vals = errs.get(key);
         if (vals == null) {
-            errs.set(key, [type]);
+            errs.set(key, new Set([type]));
         } else {
-            vals.push(type);
+            vals.add(type);
         }
     }
     const result = [];
     for (const [key, types] of errs.entries()) {
-        result.push(`${key} (expected ${types.join(" or ")})`);
+        result.push({type: Array.from(types).join(" or "), name: key});
     }
     return result;
 }
@@ -101,7 +131,7 @@ export abstract class PluginBase<MarkupType extends IGenericPluginMarkup, A exte
     // Binding that has all the data as a JSON string.
     protected json!: Binding<string, "@">;
 
-    protected markupError?: string;
+    protected markupError?: Array<{name: string, type: string}>;
 
     constructor(
         protected scope: IScope,
@@ -118,7 +148,7 @@ export abstract class PluginBase<MarkupType extends IGenericPluginMarkup, A exte
         const parsed = JSON.parse(atob(this.json)) as unknown;
         const validated = this.getAttributeType().decode(parsed);
         if (validated.isLeft()) {
-            this.markupError = `Plugin has invalid values for these markup fields: ${(getPaths(validated)).join(", ")}`;
+            this.markupError = getErrors(validated);
         } else {
             this.attrsall = validated.value;
         }

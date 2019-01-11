@@ -394,7 +394,8 @@ function showTime(ctx: CanvasRenderingContext2D, vt: number, x: number, y: numbe
 
 const directiveTemplate = `
 <div class="csRunDiv no-popup-menu">
-    <div class="pluginError" ng-if="::$ctrl.markupError" ng-bind="::$ctrl.markupError"></div>
+    <tim-markup-error ng-if="::$ctrl.markupError" data="::$ctrl.markupError"></tim-markup-error>
+    <div class="pluginError" ng-if="::$ctrl.imageLoadError" ng-bind="::$ctrl.imageLoadError"></div>
     <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
     <p ng-if="::$ctrl.stem" class="stem" ng-bind-html="::$ctrl.stem"></p>
     <div>
@@ -1477,6 +1478,7 @@ interface IAnswerResponse {
 class ImageXController extends PluginBase<t.TypeOf<typeof ImageXMarkup>,
     t.TypeOf<typeof ImageXAll>,
     typeof ImageXAll> {
+    private imageLoadError?: string | null;
 
     get emotion() {
         return this.attrs.emotion;
@@ -1682,15 +1684,17 @@ class ImageXController extends PluginBase<t.TypeOf<typeof ImageXMarkup>,
         }
 
         dt.drawObjects = [...dt.drawObjects, ...fixedobjects, ...targets, ...objects];
-
         for (const d of dt.drawObjects) {
             if (d.pendingImage) {
                 const r = await d.pendingImage;
                 if (r instanceof Event) {
-                    this.markupError = `Failed to load image ${r.srcElement!.getAttribute("src")}`;
+                    this.imageLoadError = `Failed to load image ${r.srcElement!.getAttribute("src")}`;
                     break;
                 }
             }
+        }
+        if (!this.imageLoadError) {
+            this.imageLoadError = null;
         }
         // console.log(dt.drawObjects);
         dt.draw();

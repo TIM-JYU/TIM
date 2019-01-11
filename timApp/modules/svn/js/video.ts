@@ -358,7 +358,7 @@ videoApp.component("videoRunner", {
     ...common,
     template: `
 <div class="videoRunDiv">
-    <div class="pluginError" ng-if="::$ctrl.markupError" ng-bind="::$ctrl.markupError"></div>
+    <tim-markup-error ng-if="::$ctrl.markupError" data="::$ctrl.markupError"></tim-markup-error>
     <p ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></p>
     <p ng-if="::$ctrl.stem" class="stem" ng-bind-html="::$ctrl.stem"></p>
     <div class="videoContainer"></div>
@@ -381,7 +381,7 @@ videoApp.component("smallVideoRunner", {
     ...common,
     template: `
 <div class="smallVideoRunDiv">
-    <div class="pluginError" ng-if="::$ctrl.markupError" ng-bind="::$ctrl.markupError"></div>
+    <tim-markup-error ng-if="::$ctrl.markupError" data="::$ctrl.markupError"></tim-markup-error>
     <p ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></p>
     <p><span class="stem" ng-bind-html="::$ctrl.stem"></span>
         <a ng-if="::$ctrl.videoname" class="videoname"
@@ -403,7 +403,7 @@ videoApp.component("listVideoRunner", {
     ...common,
     template: `
 <div class="listVideoRunDiv">
-    <div class="pluginError" ng-if="::$ctrl.markupError" ng-bind="::$ctrl.markupError"></div>
+    <tim-markup-error ng-if="::$ctrl.markupError" data="::$ctrl.markupError"></tim-markup-error>
     <p ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></p>
     <ul>
         <li><span class="stem" ng-bind-html="::$ctrl.stem"></span>
