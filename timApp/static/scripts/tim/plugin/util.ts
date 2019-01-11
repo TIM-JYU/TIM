@@ -1,4 +1,5 @@
 import {IRootElementService, IScope} from "angular";
+import {Left} from "fp-ts/lib/Either";
 import * as t from "io-ts";
 import {Type} from "io-ts/lib";
 import {Binding} from "../util/utils";
@@ -46,9 +47,29 @@ export function getDefaults<MarkupType extends IGenericPluginMarkup,
     return d.value;
 }
 
-// from io-ts readme
-function getPaths<A>(v: t.Validation<A>): string[] {
-    return v.fold((errors) => errors.map((error) => error.context.map(({key}) => key).join(".")), () => ["no errors"]);
+// from io-ts readme with adaptations
+function getPaths<A>(v: Left<t.Errors, A>): string[] {
+    const ps: Array<[string, string]> = v.value
+        .filter((e) => e.context.length >= 3 && e.context[0].key === "" && e.context[1].key === "markup")
+        .map((error) => [error.context[2].key, error.context.length > 3 ? error.context[error.context.length - 1].type.name : error.context[2].type.name] as [string, string]);
+    const errs = new Map<string, string[]>();
+    for (const [key, type] of ps) {
+        // not useful to report undefined
+        if (type === "undefined") {
+            continue;
+        }
+        const vals = errs.get(key);
+        if (vals == null) {
+            errs.set(key, [type]);
+        } else {
+            vals.push(type);
+        }
+    }
+    const result = [];
+    for (const [key, types] of errs.entries()) {
+        result.push(`${key} (expected ${types.join(" or ")})`);
+    }
+    return result;
 }
 
 /**
@@ -97,7 +118,7 @@ export abstract class PluginBase<MarkupType extends IGenericPluginMarkup, A exte
         const parsed = JSON.parse(atob(this.json)) as unknown;
         const validated = this.getAttributeType().decode(parsed);
         if (validated.isLeft()) {
-            this.markupError = `Plugin has invalid markup values: ${getPaths(validated)}`;
+            this.markupError = `Plugin has invalid values for these markup fields: ${(getPaths(validated)).join(", ")}`;
         } else {
             this.attrsall = validated.value;
         }
