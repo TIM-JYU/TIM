@@ -265,22 +265,26 @@ def correct_yaml(text: str) -> Tuple[str, YamlMergeInfo]:
     original_indent_len = 0
     max_allowed_spaces = 0
     lf = ""
-    end_mathc = None
+    end_match = None
     for line in lines:
         line = line.rstrip()
-        if end_mathc:  # to protect : space insertion while in normal | or >
-            if not end_mathc.match(line):
+        if end_match:  # to protect : space insertion while in normal | or >
+            if not end_match.match(line):
                 s = s + lf + line
                 lf = '\n'
                 continue
-            end_mathc = None
+            end_match = None
         if missing_space_after_colon.match(line) and not multiline:
             line = line.replace(':', ': ', 1)
         r = normal_multiline_indented_string.match(line)
         if r and not multiline:
             indent = r.group(1)
-            em = "$" + indent + "[^ ]*$"
-            end_mathc =  re.compile(em)
+            spacereg = ""
+            spaces = len(indent)
+            if spaces != 0:
+                spacereg = ' {0,' + str(spaces)+ '}'
+            em = "^" + spacereg + "[^ ]+.*$"
+            end_match =  re.compile(em)
             s = s + lf + line
             lf = '\n'
             continue

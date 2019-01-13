@@ -220,12 +220,22 @@ string
 !4
 third: |
   one:a
+four:
+  long: |
+    a:1
+    b:2
+ end     
 """
         e1 = """
 three: |
  string
 third: |
   one:a
+four:
+  long: |
+    a:1
+    b:2
+ end
 """
         a1, h = correct_yaml(s1)
         self.assertEqual(e1, a1, "Not same in normal multiline")
