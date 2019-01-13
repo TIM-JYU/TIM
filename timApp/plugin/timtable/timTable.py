@@ -35,6 +35,7 @@ TEXT = 'text'
 FORMULA = 'formula'
 NUMBER = 'number'
 DATABLOCK = 'tabledatablock'
+USERDATA = 'userdata'
 CELLS = 'cells'
 COL = 'col'
 RELATIVE = 'relative'
@@ -133,6 +134,9 @@ def tim_table_get_html(jso, review):
     :return:
     """
     values = jso[MARKUP]
+    state = jso.get("state",{})
+    if state != None:
+        values[USERDATA] = state.get(USERDATA,None)
     attrs = json.dumps(values)
     runner = 'tim-table'
     s = f'<{runner} data={quoteattr(attrs)}></{runner}>'
@@ -221,6 +225,23 @@ def tim_table_add_user_specific_row():
     # db.session.flush()
     db.session.commit()
     return json_response(prepare_for_and_call_dumbo(plug))
+
+@timTable_plugin.route("answer/", methods=["PUT"])
+@csrf.exempt
+def timTable_answer():
+    return timTable_answer_jso(request.get_json())
+
+
+def timTable_answer_jso(jsondata):
+    tim_info = {}
+    answers = jsondata['input']['answers']
+    spoints = jsondata['markup'].get('points')
+    markup = jsondata['markup']
+    result = ""
+
+    save = answers
+    web = {'result': "Vastattu", 'markup': markup, 'show_result': result, 'state': save}
+    return json_response({'save': save, 'web': web, "tim_info": tim_info})
 
 
 def add_row(plug: Plugin, row_id: int):

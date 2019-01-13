@@ -77,9 +77,11 @@ class YamlBlock:
         return yaml.dump(self.values, default_flow_style=False)
 
 
-missing_space_after_colon = re.compile("^[ \t]*[^ :]*:[^ ]")  # kissa:istuu
+missing_space_after_colon = re.compile("^[ \t]*[^ :[\]()'\"]*:[^ /=:]")  # kissa:istuu mutta ei http://koti tai a:=5
 multiline_unindented_string = re.compile(
     """^( *)([^ :"']+): *(\|[+-]?)([0-9]*) *([^ 0-9+-]+[^ ]*)( (a|r|r\?))? *$""")  # program: ||| or  program: |!!!
+normal_multiline_indented_string = re.compile(
+    """^( *)([^ :"']+): *([|>][+-]?)([0-9]*) *$""")  # program: | or  program: |+2
 multiline_unindented_obj_string = re.compile(
     """^( *)([^ :"']+): *@ *([^ 0-9+-]+[^ ]*)$""")  # object: @|| or  object: @!!!
 
@@ -188,7 +190,7 @@ def correct_obj(text: str) -> str:
             line = line.rstrip()
             r2 = multiline_unindented_string.match(line)
             if r2 and not multiline: # we have multiline string and we do nothing until it ends
-                end_str = r2.group(4)
+                end_str = r2.group(5)
                 indent = r2.group(1)
                 max_allowed_spaces = original_indent_len = len(indent)
                 indent = "" # no changes while in multilinestring
@@ -263,10 +265,25 @@ def correct_yaml(text: str) -> Tuple[str, YamlMergeInfo]:
     original_indent_len = 0
     max_allowed_spaces = 0
     lf = ""
+    end_mathc = None
     for line in lines:
         line = line.rstrip()
+        if end_mathc:  # to protect : space insertion while in normal | or >
+            if not end_mathc.match(line):
+                s = s + lf + line
+                lf = '\n'
+                continue
+            end_mathc = None
         if missing_space_after_colon.match(line) and not multiline:
             line = line.replace(':', ': ', 1)
+        r = normal_multiline_indented_string.match(line)
+        if r and not multiline:
+            indent = r.group(1)
+            em = "$" + indent + "[^ ]*$"
+            end_mathc =  re.compile(em)
+            s = s + lf + line
+            lf = '\n'
+            continue
         r = multiline_unindented_string.match(line)
         if r and not multiline:
             end_str = r.group(5)

@@ -106,7 +106,7 @@ const ShowFileMarkup = t.intersection([
     GenericPluginMarkup,
     t.type({
         autoplay: withDefault(t.boolean, true),
-        file: t.string,
+        file: withDefault(t.string, ''),
         open: withDefault(t.boolean, false),
     }),
 ]);

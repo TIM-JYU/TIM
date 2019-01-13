@@ -9,6 +9,7 @@ import {$http, $sce, $timeout} from "../util/ngimport";
 import {Binding} from "../util/utils";
 import {hideToolbar, isToolbarEnabled, openTableEditorToolbar} from "./timTableEditorToolbar";
 import {isArrowKey, KEY_DOWN, KEY_ENTER, KEY_ESC, KEY_F2, KEY_LEFT, KEY_RIGHT, KEY_TAB, KEY_UP} from "../util/keycodes";
+// import {to} from "../../decls/util/utils";
 
 const styleToHtml: { [index: string]: string } = {
         backgroundColor: "background-color",
@@ -38,6 +39,8 @@ export interface TimTable {
     forcedEditMode?: boolean;
     globalAppendMode?: boolean;
     dataInput?: boolean;
+    task?: boolean;
+    userdata?:DataEntity;
 }
 
 export interface ITable { // extends ITableStyles
@@ -177,11 +180,18 @@ function isPrimitiveCell(cell: CellEntity): cell is CellType {
 
 export class TimTableController implements IController {
     private static $inject = ["$scope", "$element", "$sce"];
+    private error: string = "";
+    private taskUrl: string = "";
+
     public viewctrl?: ViewCtrl;
     public cellDataMatrix: ICell[][] = [];
     private data!: Binding<TimTable, "<">;
+    private editRight: boolean = false;
+    private userdata?: DataEntity = undefined;
     private editing: boolean = false;
     private forcedEditMode: boolean = false;
+    private task: boolean = false;
+    private isRunning: boolean = false;
     private editedCellContent: string | undefined;
     private editedCellInitialContent: string | undefined;
     private currentCell?: { row: number, col: number, editorOpen: boolean };
@@ -210,6 +220,42 @@ export class TimTableController implements IController {
         this.removeRowFromToolbar = this.removeRowFromToolbar.bind(this);
     }
 
+    getTaskUrl(): string {
+        if (this.taskUrl) {
+            return this.taskUrl;
+        }
+        let url = "/cs/answer";
+        const plugin = this.getPlugin();
+        if (plugin) {
+            url = plugin;
+            const i = url.lastIndexOf("/");
+            if (i > 0) {
+                url = url.substring(i);
+            }
+            url += "/" + this.getTaskId() + "/answer/";
+        }
+        this.taskUrl = url;
+        return url;
+    }
+
+
+    protected getParentAttr(name: string) {
+        return this.element.parent().attr(name);
+    }
+
+    protected getTaskId() {
+        return this.getParentAttr("id");
+    }
+
+    protected getPlugin() {
+        return this.getParentAttr("data-plugin");
+    }
+
+    protected getRootElement() {
+        return this.element[0];
+    }
+
+
     /**
      * Set listener and initializes tabledatablock
      */
@@ -217,22 +263,34 @@ export class TimTableController implements IController {
 
         this.initializeCellDataMatrix();
         this.processDataBlockAndCellDataMatrix();
+        this.userdata = this.data.userdata;
+        if ( this.userdata ) this.processDataBlock(this.userdata.cells);
+        else this.userdata =  {
+            type: 'Relative',
+            cells: {},
+        };
 
         if (this.viewctrl == null) {
             return;
         } else {
-            const parId = getParId(this.element.parents(".par"));
-            if (parId == null) {
-                return;
+            this.editRight = this.viewctrl.item.rights.editable;
+
+            if (this.data.task) {
+                this.task = true;
             }
             if (this.data.addRowButtonText) {
                 this.addRowButtonText = " " + this.data.addRowButtonText;
             }
             if (this.data.forcedEditMode) {
-                this.forcedEditMode = this.data.forcedEditMode && this.viewctrl.item.rights.editable;
+                this.forcedEditMode = this.data.forcedEditMode && (this.editRight || this.task);
                 this.editing = this.forcedEditMode;
             }
 
+
+            const parId = getParId(this.element.parents(".par"));
+            if (parId == null) {
+                return;
+            }
             this.viewctrl.addTable(this, parId);
         }
         document.addEventListener("keyup", this.keyDownPressedTable);
@@ -324,6 +382,23 @@ export class TimTableController implements IController {
         return this.editing || this.forcedEditMode;
     }
 
+
+    public addRowEnabled() {
+        return this.editRight;
+    }
+
+    public delRowEnabled() {
+        return this.editRight;
+    }
+
+    public addColEnabled() {
+        return this.editRight;
+    }
+
+    public delColEnabled() {
+        return this.editRight;
+    }
+
     /**
      * Set attributes value to correct ones when saved cell values
      */
@@ -354,6 +429,64 @@ export class TimTableController implements IController {
         this.mouseInTable = false;
     }
 
+
+    public sendDataBlock() {
+        if ( this.isRunning ) return;
+        this.sendDataBlockAsync();
+    }
+
+    async sendDataBlockAsync() {
+        if ( !this.task ) return;
+        this.error = "";
+        this.isRunning = true;
+        const url = this.getTaskUrl();
+        const params = {
+            input: {
+                answers: {
+                    userdata: this.userdata
+                }
+            },
+        };
+
+        /*
+        const r = await to($http<{
+            // web: {stackResult: StackResult},
+        }>({method: "PUT", url: url, data: params, timeout: 20000},
+        ));
+        */
+        const r = await $http.put<string[]>(url, params);
+
+        this.isRunning = false;
+/*
+        if (!r.ok) {
+            this.error = r.result.data.error;
+            return;
+        }
+*/
+    }
+
+
+
+    public colnumToLetters(column_index: number): string {
+        /*
+        Transforms column index to letter
+        :param column_index: ex. 2
+        :return: column index as letter
+        */
+        const ASCII_OF_A:number = 65
+        const ASCII_CHAR_COUNT = 26
+        let last_char:string = String.fromCharCode(ASCII_OF_A + (column_index % ASCII_CHAR_COUNT));
+        let remainder:number = Math.floor(column_index / ASCII_CHAR_COUNT);
+
+        if ( remainder == 0)
+            return last_char;
+        else if ( remainder <= ASCII_CHAR_COUNT )
+            return String.fromCharCode(ASCII_OF_A + remainder - 1) + last_char;
+        // recursive call to figure out the rest of the letters
+        return this.colnumToLetters(remainder - 1) + last_char
+    }
+
+
     /**
      * Saves cell content
      * @param {string} cellContent Saved value
@@ -363,6 +496,13 @@ export class TimTableController implements IController {
      * @param {number} col Column index
      */
     async saveCells(cellContent: string, docId: number, parId: string, row: number, col: number) {
+        if ( this.task ) {
+            this.cellDataMatrix[row][col].cell = cellContent;
+            let coordinate:string = this.colnumToLetters(col) + ""+(row+1);
+            if (this.userdata)
+                this.userdata.cells[coordinate] = cellContent;
+            return;
+        }
         const response = await $http.post<string[]>("/timTable/saveCell", {
             cellContent,
             docId,
@@ -534,11 +674,36 @@ export class TimTableController implements IController {
     }
 
     /**
+     * Combines datablock data
+     * @param {CellDataEntity} cells: cells part of tabledatablock
+     */
+    private processDataBlock(cells: CellDataEntity) {
+        for (const item in cells) {
+
+            const alphaRegExp = new RegExp("([A-Z]*)");
+            const alpha = alphaRegExp.exec(item);
+            const value = cells[item];
+
+            if (alpha == null) {
+                continue;
+            }
+            const numberPlace = item.substring(alpha[0].length);
+
+            const address = this.getAddress(alpha[0], numberPlace);
+            if (this.checkThatAddIsValid(address)) {
+                this.setValueToMatrix(address.row, address.col, value);
+            }
+        }
+    }
+
+    /**
      * Combines datablock data with YAML table data.
      * Also processes rowspan and colspan and sets the table up for rendering.
      */
     private processDataBlockAndCellDataMatrix() {
         if (this.data.table.tabledatablock) {   // reads tabledatablock and sets all values to datacellmatrix
+            this.processDataBlock(this.data.table.tabledatablock.cells);
+            /*
             for (const item in this.data.table.tabledatablock.cells) {
 
                 const alphaRegExp = new RegExp("([A-Z]*)");
@@ -553,6 +718,7 @@ export class TimTableController implements IController {
                     this.setValueToMatrix(address.row, address.col, value);
                 }
             }
+            */
         }
 
         // Process cell col/rowspan and figure out which cells should be rendered as part of another cell
@@ -656,6 +822,10 @@ export class TimTableController implements IController {
     private resizeCellDataMatrixHeight(length: number) {
         for (let i = this.cellDataMatrix.length; i < length; i++) {
             this.cellDataMatrix[i] = [];
+            if ( i < 1 ) continue;
+            for (let j=0; j<this.cellDataMatrix[i-1].length; j++) {
+                this.cellDataMatrix[i][j] = this.createDummyCell();
+            }
         }
     }
 
@@ -665,9 +835,11 @@ export class TimTableController implements IController {
      * @param {number} width The new width of the row.
      */
     private resizeRowWidth(rowIndex: number, width: number) {
-        const row = this.cellDataMatrix[rowIndex];
-        for (let i = row.length; i < width; i++) {
-            row[i] = this.createDummyCell();
+        for (let ri = 0; ri < this.cellDataMatrix.length; ri++) {
+            const row = this.cellDataMatrix[ri];
+            for (let i = row.length; i < width; i++) {
+                row[i] = this.createDummyCell();
+            }
         }
     }
 
@@ -999,7 +1171,8 @@ export class TimTableController implements IController {
             const cellData = this.getCellContentString(rowi, coli);
             this.editedCellContent = cellData;
             this.editedCellInitialContent = cellData;
-            this.getCellData(cell, this.viewctrl.item.id, parId, rowi, coli);
+            if ( !this.task )
+                this.getCellData(cell, this.viewctrl.item.id, parId, rowi, coli);
             this.currentCell = {row: rowi, col: coli, editorOpen: false};
             this.calculateElementPlaces(rowi, coli, event);
         }
@@ -1511,9 +1684,9 @@ timApp.component("timTable", {
     template: `<div ng-mouseenter="$ctrl.mouseInsideTable()"
      ng-mouseleave="$ctrl.mouseOutTable()">
     <div class="timTableContentDiv no-highlight">
-    <button class="timTableEditor timButton buttonAddCol" title="Add column" ng-show="$ctrl.isInEditMode()"
+    <button class="timTableEditor timButton buttonAddCol" title="Add column" ng-show="$ctrl.addColEnabled()"
             ng-click="$ctrl.addColumn(-1)"><span class="glyphicon glyphicon-plus"></span></button>
-    <button class="timTableEditor timButton buttonRemoveCol" title="Remove column" ng-show="$ctrl.isInEditMode()"
+    <button class="timTableEditor timButton buttonRemoveCol" title="Remove column" ng-show="$ctrl.delColEnabled()"
             ng-click="$ctrl.removeColumn(-1)"><span class="glyphicon glyphicon-minus"></span></button>
     <table ng-class="{editable: $ctrl.isInEditMode() && !$ctrl.isInForcedEditMode(), forcedEditable: $ctrl.isInForcedEditMode()}" class="timTableTable"
      ng-style="$ctrl.stylingForTable($ctrl.data.table)" id={{$ctrl.data.table.id}}>
@@ -1530,9 +1703,9 @@ timApp.component("timTable", {
                 </td>
         </tr>
     </table>
-    <button class="timTableEditor timButton buttonAddRow" title="Add row" ng-show="$ctrl.isInEditMode()" ng-click="$ctrl.addRow(-1)"><span
+    <button class="timTableEditor timButton buttonAddRow" title="Add row" ng-show="$ctrl.addRowEnabled()" ng-click="$ctrl.addRow(-1)"><span
             class="glyphicon glyphicon-plus" ng-bind="$ctrl.addRowButtonText"></span></button>
-    <button class="timTableEditor timButton buttonRemoveRow" title="Remove row" ng-show="$ctrl.isInEditMode()" ng-click="$ctrl.removeRow(-1)"><span
+    <button class="timTableEditor timButton buttonRemoveRow" title="Remove row" ng-show="$ctrl.delRowEnabled()" ng-click="$ctrl.removeRow(-1)"><span
             class="glyphicon glyphicon-minus"></span></button>            
     </div>
     <div class="timTableEditor no-highlight">
@@ -1548,7 +1721,11 @@ timApp.component("timTable", {
              <button class="timButton buttonOpenBigEditor" ng-show="$ctrl.isSomeCellBeingEdited()"
                     ng-click="$ctrl.openBigEditor()" class="timButton"><span class="glyphicon glyphicon-pencil"></span>
             </button>
+   
+            
 </div>
+
+  <button class="timButton" ng-show="::$ctrl.task" ng-click="$ctrl.sendDataBlock()" >Tallenna</button> 
 
 </div>
 `,

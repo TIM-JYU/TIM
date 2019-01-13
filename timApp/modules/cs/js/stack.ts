@@ -386,7 +386,7 @@ class StackController extends PluginBase<t.TypeOf<typeof StackMarkup>,
         };
 
         const r = await to($http<{
-            web: {stackResult: StackResult},
+            web: {stackResult: StackResult, error?: string},
         }>({method: "PUT", url: url, data: params, timeout: 20000},
         ));
         this.isRunning = false;
@@ -397,6 +397,10 @@ class StackController extends PluginBase<t.TypeOf<typeof StackMarkup>,
         }
         if (!r.result.data.web) {
             this.error = "No web reply from csPlugin!";
+            return;
+        }
+        if (r.result.data.web.error) {
+            this.error = r.result.data.web.error;
             return;
         }
         const stackResult = r.result.data.web.stackResult;

@@ -190,3 +190,63 @@ a1: |
 """
         a1, h = correct_yaml(s1)
         self.assertEqual(e1, a1, "Not same in object inside string, string named")
+
+    ##############################################################
+    def test_correct_yaml8(self):
+        s1 = """
+teksti: |!!
+ Tekstia
+!!
+olio:
+    ali:@!
+      name: Kalle
+!
+"""
+        e1 = """
+teksti: |
+ Tekstia
+olio:
+    ali:
+      name: Kalle
+"""
+        a1, h = correct_yaml(s1)
+        self.assertEqual(e1, a1, "Not same in string before object, string named")
+
+    ##############################################################
+    def test_correct_yaml9(self):
+        s1 = """
+three:|!4
+string
+!4
+third: |
+  one:a
+"""
+        e1 = """
+three: |
+ string
+third: |
+  one:a
+"""
+        a1, h = correct_yaml(s1)
+        self.assertEqual(e1, a1, "Not same in normal multiline")
+
+    ##############################################################
+    def test_correct_yaml10(self):
+        s1 = """
+avain:"joopa
+http://koti"
+avain:'joopa
+http://koti'
+avain:joopa
+  https://koti
+"""
+        e1 = """
+avain: "joopa
+http://koti"
+avain: 'joopa
+http://koti'
+avain: joopa
+  https://koti
+"""
+        a1, h = correct_yaml(s1)
+        self.assertEqual(e1, a1, "Not same in prevent http:")
