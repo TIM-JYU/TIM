@@ -913,7 +913,7 @@ def prepare_for_dumbo(values):
 
 
 def is_of_unconvertible_type(value):
-    return isinstance(value, int) or isinstance(value, bool) or isinstance(value, float)
+    return isinstance(value, int) or isinstance(value, bool) or isinstance(value, float) or not value;
 
 
 def is_primitive(value):

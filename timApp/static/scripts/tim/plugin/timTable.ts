@@ -286,6 +286,12 @@ export class TimTableController implements IController {
                 this.editing = this.forcedEditMode;
             }
 
+            if (this.data.task) {
+                this.task = true;
+                this.forcedEditMode = true;
+                let id = this.getTaskId(); // TODO: why this could be undefined?
+                if ( id && id.indexOf("..") >= 0 ) this.error = "If task, should also have taskId!"
+            }
 
             const parId = getParId(this.element.parents(".par"));
             if (parId == null) {
@@ -294,6 +300,7 @@ export class TimTableController implements IController {
             this.viewctrl.addTable(this, parId);
         }
         document.addEventListener("keyup", this.keyDownPressedTable);
+        document.addEventListener("keydown", this.keyDownTable);
         // document.addEventListener("click", this.onClick);
         onClick("body", ($this, e) => {
             this.onClick(e);
@@ -323,6 +330,7 @@ export class TimTableController implements IController {
      */
     $onDestroy() {
         document.removeEventListener("keyup", this.keyDownPressedTable);
+        document.removeEventListener("keydown", this.keyDownTable);
         //document.removeEventListener("click", this.onClick);
     }
 
@@ -384,19 +392,19 @@ export class TimTableController implements IController {
 
 
     public addRowEnabled() {
-        return this.editRight;
+        return !this.task && this.editRight && this.isInEditMode();
     }
 
     public delRowEnabled() {
-        return this.editRight;
+        return !this.task && this.editRight && this.isInEditMode();
     }
 
     public addColEnabled() {
-        return this.editRight;
+        return !this.task && this.editRight && this.isInEditMode();
     }
 
     public delColEnabled() {
-        return this.editRight;
+        return !this.task && this.editRight && this.isInEditMode();
     }
 
     /**
@@ -432,6 +440,7 @@ export class TimTableController implements IController {
 
     public sendDataBlock() {
         if ( this.isRunning ) return;
+        this.saveAndCloseSmallEditor();
         this.sendDataBlockAsync();
     }
 
@@ -487,6 +496,42 @@ export class TimTableController implements IController {
     }
 
 
+    setUserAttribute(row: number, col: number, key: string, value: string) {
+        this.cellDataMatrix[row][col][key] = value;
+        if (!this.userdata) return;
+        let coordinate:string = this.colnumToLetters(col) + ""+(row+1);
+        if ( !this.userdata.cells[coordinate] ) {
+            let data: CellEntity = {cell: null};
+            data[key] = value;
+            this.userdata.cells[coordinate] = data;
+            return;
+        }
+        const cellValue = this.userdata.cells[coordinate];
+        if (isPrimitiveCell(cellValue)) {
+            let data: CellEntity = {cell: this.cellToString(cellValue)};
+            data[key] = value;
+            this.userdata.cells[coordinate] = data;
+            return;
+        }
+        cellValue[key] = value;
+    }
+
+    setUserContent(row: number, col: number, content: string) {
+        this.cellDataMatrix[row][col].cell = content;
+        if (!this.userdata) return;
+        let coordinate:string = this.colnumToLetters(col) + ""+(row+1);
+        if ( !this.userdata.cells[coordinate] ) {
+            this.userdata.cells[coordinate] = content;
+            return;
+        }
+        const cellValue = this.userdata.cells[coordinate];
+        if (isPrimitiveCell(cellValue)) {
+            this.userdata.cells[coordinate] = content;
+            return;
+        }
+        cellValue.cell = content;
+    }
+
     /**
      * Saves cell content
      * @param {string} cellContent Saved value
@@ -497,10 +542,7 @@ export class TimTableController implements IController {
      */
     async saveCells(cellContent: string, docId: number, parId: string, row: number, col: number) {
         if ( this.task ) {
-            this.cellDataMatrix[row][col].cell = cellContent;
-            let coordinate:string = this.colnumToLetters(col) + ""+(row+1);
-            if (this.userdata)
-                this.userdata.cells[coordinate] = cellContent;
+            this.setUserContent(row, col, cellContent);
             return;
         }
         const response = await $http.post<string[]>("/timTable/saveCell", {
@@ -636,8 +678,11 @@ export class TimTableController implements IController {
         }
 
         for (const key of Object.keys(sourceCell)) {
-            targetCell[key] = sourceCell[key];
+            let value = sourceCell[key];
+            if ( value != null)
+                targetCell[key] = value;
         }
+
     }
 
     /**
@@ -862,6 +907,13 @@ export class TimTableController implements IController {
         }
     }
 
+    private keyDownTable(ev: KeyboardEvent) {
+        // if (!this.mouseInTable) return;
+        if (ev.keyCode === KEY_TAB) {
+            ev.preventDefault();
+        }
+
+    }
     /**
      * Deals with keyevents inside div
      * @param {KeyboardEvent} ev KeyboardEvent
@@ -891,6 +943,12 @@ export class TimTableController implements IController {
             if (!this.isInEditMode() || !this.viewctrl) {
                 return;
             }
+            ev.preventDefault();
+
+            if ( ev.shiftKey ) {
+                this.doCellMovement(Direction.Up);
+                return;
+            }
 
             const parId = getParId(this.element.parents(".par"));
 
@@ -915,6 +973,13 @@ export class TimTableController implements IController {
         }
 
         if (ev.keyCode === KEY_TAB) {
+            ev. preventDefault();
+            if ( ev.shiftKey )
+                this.doCellMovement(Direction.Left);
+            else
+                this.doCellMovement(Direction.Right);
+            return;
+            /*
             const parId = getParId(this.element.parents(".par"));
             if (!this.editing || !this.viewctrl || !parId || (this.currentCell && this.currentCell.editorOpen)) {
                 return;
@@ -927,14 +992,16 @@ export class TimTableController implements IController {
             }
 
             if (this.currentCell) {
-                this.doCellMovement(Direction.Right);
+                if ( this.doCellMovement(Direction.Right) )  ev.preventDefault();
                 // this.openCellNextRowOrColumn(this.currentCell.row, this.currentCell.col + 1);
             }
 
             return;
+            */
         }
 
         if (ev.keyCode === KEY_ESC) {
+            ev.preventDefault();
             this.currentCell = undefined;
             this.scope.$apply();
             return;
@@ -942,8 +1009,7 @@ export class TimTableController implements IController {
 
         // Arrow keys
         if (!this.currentCell && ev.ctrlKey && isArrowKey(ev.keyCode)) {
-            this.handleArrowMovement(ev);
-            this.scope.$apply();
+            if ( this.handleArrowMovement(ev) ) ev.preventDefault();
         }
     }
 
@@ -951,25 +1017,26 @@ export class TimTableController implements IController {
      * Handles arrow movement inside table
      * @param {KeyboardEvent} ev Keyboardevent
      */
-    private handleArrowMovement(ev: KeyboardEvent) {
+    private handleArrowMovement(ev: KeyboardEvent): boolean {
         const modal: CellEntity = {
             cell: "",
         };
 
         const parId = getParId(this.element.parents(".par"));
-        if (!this.editing || !this.viewctrl || !parId || (this.currentCell && this.currentCell.editorOpen)) { return; }
+        if (!this.editing || !this.viewctrl || !parId || (this.currentCell && this.currentCell.editorOpen)) { return false; }
 
         this.saveCurrentCell();
 
         if (ev.keyCode === KEY_DOWN) {
-            this.doCellMovement(Direction.Down);
+            return this.doCellMovement(Direction.Down);
         } else if (ev.keyCode === KEY_RIGHT) {
-            this.doCellMovement(Direction.Right);
+            return this.doCellMovement(Direction.Right);
         } else if (ev.keyCode === KEY_LEFT) {
-            this.doCellMovement(Direction.Left);
+            return this.doCellMovement(Direction.Left);
         } else if (ev.keyCode === KEY_UP) {
-            this.doCellMovement(Direction.Up);
+            return this.doCellMovement(Direction.Up);
         }
+        return false;
     }
 
     /**
@@ -977,7 +1044,7 @@ export class TimTableController implements IController {
      * or last edited cell.
      * @param direction The direction that the cell edit mode should move to.
      */
-    private doCellMovement(direction: Direction) {
+    private doCellMovement(direction: Direction): boolean {
         if (this.activeCell) {
             let x = this.activeCell.col;
             let y = this.activeCell.row;
@@ -995,16 +1062,17 @@ export class TimTableController implements IController {
             const nextCellCoords = this.getNextCell(x, y, direction);
 
             if (!nextCellCoords) {
-                return;
+                return true;
             }
 
             if (this.currentCell) {
                 this.openCell(nextCellCoords.row, nextCellCoords.col);
-                return;
+                return true;
             }
 
             this.setActiveCell(nextCellCoords.row, nextCellCoords.col);
         }
+        return true;
     }
 
     /**
@@ -1115,6 +1183,7 @@ export class TimTableController implements IController {
             cell = this.cellDataMatrix[rowi][coli];
         }
         this.activeCell = {row: rowi, col: coli};
+        this.scope.$applyAsync();
     }
 
     /**
@@ -1598,7 +1667,7 @@ export class TimTableController implements IController {
     }
 
     async setCellBackgroundColor(value: string) {
-        this.setCellStyleAttribute("setCellBackgroundColor", "color", value);
+        this.setCellStyleAttribute("setCellBackgroundColor", "backgroundColor", value);
     }
 
     async setCellTextAlign(value: string) {
@@ -1616,10 +1685,16 @@ export class TimTableController implements IController {
             return;
         }
 
+        if ( value.indexOf("##") == 0 ) value = value.substr(1); // sometimes there is extra # in colors?
         const parId = this.getOwnParId();
         const docId = this.viewctrl.item.id;
         const rowId = this.activeCell.row;
         const colId = this.activeCell.col;
+
+        if ( this.task ) {
+            this.setUserAttribute(rowId, colId, key, value);
+            return;
+        }
 
         const response = await $http.post<TimTable>("/timTable/" + route,
             {docId, parId, rowId, colId, [key]: value});
@@ -1726,6 +1801,7 @@ timApp.component("timTable", {
 </div>
 
   <button class="timButton" ng-show="::$ctrl.task" ng-click="$ctrl.sendDataBlock()" >Tallenna</button> 
+  <span class="error" ng-show="$ctrl.error" ng-bind="$ctrl.error"></span>
 
 </div>
 `,
