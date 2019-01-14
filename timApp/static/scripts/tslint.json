@@ -3,6 +3,7 @@
   "rules": {
     "align": false,
     "member-access": false,
+    "member-ordering": false,
     "object-literal-shorthand": false
   },
   "defaultSeverity": "warning"
