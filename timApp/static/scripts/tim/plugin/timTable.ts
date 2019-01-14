@@ -40,6 +40,7 @@ export interface TimTable {
     globalAppendMode?: boolean;
     dataInput?: boolean;
     task?: boolean;
+    taskBorders?: boolean;
     userdata?: DataEntity;
 }
 
@@ -190,6 +191,7 @@ export class TimTableController extends DestroyScope implements IController {
     private forcedEditMode: boolean = false;
     private task: boolean = false;
     private isRunning: boolean = false;
+    public taskBorders: boolean = false;
     private editedCellContent: string | undefined;
     private editedCellInitialContent: string | undefined;
     private currentCell?: {row: number, col: number, editorOpen: boolean};
@@ -267,6 +269,11 @@ export class TimTableController extends DestroyScope implements IController {
                 cells: {},
             };
         }
+        let tb = false;
+        if ( this.data.taskBorders ) tb = true;
+        else if ( this.data.taskBorders == false ) tb = false;
+        else tb = this.data.task == true;
+        this.taskBorders = tb;
 
         if (this.viewctrl == null) {
             return;
@@ -383,6 +390,13 @@ export class TimTableController extends DestroyScope implements IController {
      */
     public isInForcedEditMode() {
         return this.forcedEditMode;
+    }
+
+
+    public taskBordersf() {
+        if ( this.data.taskBorders ) return true;
+        if ( this.data.taskBorders == false ) return false;
+        return this.data.task;
     }
 
     /**
@@ -1747,6 +1761,10 @@ timApp.component("timTable", {
     },
     template: `<div ng-mouseenter="$ctrl.mouseInsideTable()"
      ng-mouseleave="$ctrl.mouseOutTable()">
+<div ng-cloak ng-class="{
+          'csRunDiv': $ctrl.taskBorders}" class=" no-popup-menu" >
+    <h4 ng-if="::$ctrl.data.header" ng-bind-html="::$ctrl.data.header"></h4>
+    <p ng-if="::$ctrl.data.stem" class="stem" ng-bind-html="::$ctrl.data.stem"></p>
     <div class="timTableContentDiv no-highlight">
     <button class="timTableEditor timButton buttonAddCol" title="Add column" ng-show="$ctrl.addColEnabled()"
             ng-click="$ctrl.addColumn(-1)"><span class="glyphicon glyphicon-plus"></span></button>
@@ -1788,9 +1806,12 @@ timApp.component("timTable", {
 
 
 </div>
-
-  <button class="timButton" ng-show="::$ctrl.task" ng-click="$ctrl.sendDataBlock()" >Tallenna</button>
+<div class="csRunMenuArea ng-show="::$ctrl.task">
+  <p class="csRunMenu"><button class="timButton" ng-show="::$ctrl.task" ng-click="$ctrl.sendDataBlock()" >Tallenna</button></p>
+</div>  
+  <p class="plgfooter" ng-if="::$ctrl.data.footer" ng-bind-html="::$ctrl.data.footer"></p>
   <span class="error" ng-show="$ctrl.error" ng-bind="$ctrl.error"></span>
+</div>
 
 </div>
 `,
