@@ -57,7 +57,7 @@ export class ParmenuHandler {
 
             if (this.viewctrl.selection.start != null) {
                 this.viewctrl.editingHandler.extendSelection($par, true);
-            } else {
+            } else if (!this.isCloseMenuDefault()) {
                 const offset = $par.offset() || getEmptyCoords();
                 const coords = {left: e.pageX - offset.left, top: e.pageY - offset.top};
                 const toggle1 = $par.find(".actionButtons").length === 0;
@@ -108,6 +108,10 @@ To comment or edit this, go to the corresponding <a href="/view/${getPreambleDoc
 
         this.viewctrl.popupMenuAttrs = createPopupMenuAttrs();
         this.updatePopupMenu();
+    }
+
+    private isCloseMenuDefault() {
+        return this.viewctrl.defaultAction && this.viewctrl.defaultAction.desc === "Close menu";
     }
 
     showPopupMenu(e: JQueryEventObject,
