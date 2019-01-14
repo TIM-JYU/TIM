@@ -948,10 +948,8 @@ export class TimTableController extends DestroyScope implements IController {
 
             if (parId && this.currentCell !== undefined && this.currentCell.row !== undefined && this.currentCell.col !== undefined) { // if != undefined is missing, then returns some number if true, if the number is 0 then statement is false
                 if (this.currentCell.row === this.cellDataMatrix.length - 1) {
-                    //this.openCellNextRowOrColumn(this.currentCell.row, this.currentCell.col + 1);
                     this.doCellMovement(Direction.Right);
                 } else {
-                    //this.openCellNextRowOrColumn(this.currentCell.row + 1, this.currentCell.col);
                     this.doCellMovement(Direction.Down);
                 }
                 return;
@@ -1105,39 +1103,6 @@ export class TimTableController extends DestroyScope implements IController {
         if (columnIndex < 0) { return row.length - 1; }
 
         return columnIndex;
-    }
-
-    /**
-     * Opens given cell for editing or hops to opposite side of the table
-     * @param {number} rowi Row index
-     * @param {number} coli Column index
-     */
-    private openCellNextRowOrColumn(rowi: number, coli: number) {
-        const modal: CellEntity = {
-            cell: "",
-        };
-
-        if (rowi >= this.cellDataMatrix.length) {
-            rowi = 0;
-        } else if (rowi < 0) {
-            rowi = this.cellDataMatrix.length - 1;
-        }
-
-        if (coli >= this.cellDataMatrix[rowi].length) {
-            coli = 0;
-            if (rowi + 1 < this.cellDataMatrix.length) { rowi++; }
-        } else if (coli < 0) {
-            coli = this.cellDataMatrix[rowi].length - 1;
-        }
-
-        let cell = this.cellDataMatrix[rowi][coli];
-        while (cell.underSpanOf) {
-            rowi = cell.underSpanOf.row;
-            coli = cell.underSpanOf.col;
-            cell = this.cellDataMatrix[rowi][coli];
-        }
-
-        this.openCellForEditing(modal, rowi, coli);
     }
 
     private setActiveCell(rowi: number, coli: number) {
