@@ -1,6 +1,5 @@
 import {IRootElementService, IScope} from "angular";
 import {DialogController, registerDialogComponent, showDialog} from "../ui/dialog";
-import {getURLParameter} from "../util/utils";
 
 export interface ITimTableToolbarCallbacks {
     setTextAlign: (value: string) => void;
@@ -19,8 +18,14 @@ export interface ITimTableEditorToolbarParams {
 let instance: TimTableEditorToolbarController | undefined;
 
 export class TimTableEditorToolbarController extends DialogController<{params: ITimTableEditorToolbarParams},
-    { }, "timTableEditorToolbar" > {
+    {}, "timTableEditorToolbar"> {
     private static $inject = ["$scope", "$element"];
+    private colorOpts = {
+        format: "hex",
+        inputClass: "form-control input-xs",
+        placeholder: "#EEEEEE",
+        round: false,
+    };
 
     readonly DEFAULT_CELL_BGCOLOR = "#EEEEEE";
 
@@ -107,7 +112,9 @@ export class TimTableEditorToolbarController extends DialogController<{params: I
     }
 
     private eventApi = {
-        onClose: (api: any, color: string, $event: any) => { TimTableEditorToolbarController.onColorPickerClose(color); },
+        onClose: (api: any, color: string, $event: any) => {
+            TimTableEditorToolbarController.onColorPickerClose(color);
+        },
     };
 
     /**
@@ -150,7 +157,6 @@ export function isToolbarEnabled() {
     return true;
 }
 
-// : IPromise< { } >
 export function openTableEditorToolbar(p: ITimTableEditorToolbarParams) {
     if (instance) {
         instance.show(p.callbacks, p.activeTable);
@@ -176,39 +182,56 @@ registerDialogComponent("timTableEditorToolbar",
     TimTableEditorToolbarController,
     {
         template: `
-  <div >
-    <div class="timTableEditorToolbar">
-        <div>
-            <span role="menuitem" uib-dropdown>
-                <a uib-dropdown-toggle>Edit</a>
-                <ul class="dropdown-menu" uib-dropdown-menu>
-                    <li role="menuitem" ng-click="$ctrl.removeRow()"><a>Remove row</a></li>
-                    <li role="menuitem" ng-click="$ctrl.removeColumn()"><a>Remove column</a></li>
-                </ul>
-            </span>
-            <span role="menuitem" uib-dropdown>
-                <a uib-dropdown-toggle>Insert</a>
-                <ul class="dropdown-menu" uib-dropdown-menu>
-                    <li role="menuitem" ng-click="$ctrl.addRow(0)"><a>Row above</a></li>
-                    <li role="menuitem" ng-click="$ctrl.addRow(1)"><a>Row below</a></li>
-                    <li role="menuitem" ng-click="$ctrl.addColumn(1)"><a>Column to the right</a></li>
-                    <li role="menuitem" ng-click="$ctrl.addColumn(0)"><a>Column to the left</a></li>
-                </ul>
-            </span> 
+<tim-dialog class="overflow-visible">
+    <dialog-body>
+        <div class="row">
+            <div class="col-xs-12">
+                <div class="btn-group" role="menuitem" uib-dropdown>
+                    <button class="timButton btn-xs" uib-dropdown-toggle>Edit <span class="caret"></span></button>
+                    <ul class="dropdown-menu" uib-dropdown-menu>
+                        <li role="menuitem" ng-click="$ctrl.removeRow()"><a>Remove row</a></li>
+                        <li role="menuitem" ng-click="$ctrl.removeColumn()"><a>Remove column</a></li>
+                    </ul>
+                </div>
+                <div class="btn-group" role="menuitem" uib-dropdown>
+                    <button class="timButton btn-xs" uib-dropdown-toggle>Insert <span class="caret"></span></button>
+                    <ul class="dropdown-menu" uib-dropdown-menu>
+                        <li role="menuitem" ng-click="$ctrl.addRow(0)"><a>Row above</a></li>
+                        <li role="menuitem" ng-click="$ctrl.addRow(1)"><a>Row below</a></li>
+                        <li role="menuitem" ng-click="$ctrl.addColumn(1)"><a>Column to the right</a></li>
+                        <li role="menuitem" ng-click="$ctrl.addColumn(0)"><a>Column to the left</a></li>
+                    </ul>
+                </div>
+            </div>
         </div>
-        <color-picker class="timtable-colorpicker" ng-model="$ctrl.cellBackgroundColor" event-api="$ctrl.eventApi"
-        options="{'format':'hex', 'placeholder': '#EEEEEE', 'round': false}"></color-picker>
-        <button ng-style="$ctrl.getStyle()" ng-click="$ctrl.applyBackgroundColor()">Apply color</button>
-        <button class="glyphicon glyphicon-align-left" title="Align left" ng-click="$ctrl.setTextAlign('left')"></button>
-        <button class="glyphicon glyphicon-align-center" title="Align center" ng-click="$ctrl.setTextAlign('center')"></button>
-        <button class="glyphicon glyphicon-align-right" title="Align right" ng-click="$ctrl.setTextAlign('right')"></button>
-        <!--- <button class="editorButton" title="Align left" ng-click="$ctrl.alignLeft()"><span
-                class="glyphicon glyphicon-align-left"></span></button>
-        <button class="editorButton" title="Align center" ng-click="$ctrl.alignCenter()"><span
-                class="glyphicon glyphicon-align-center"></span></button>
-        <button class="editorButton" title="Align right" ng-click="$ctrl.alignRight()"><span
-                class="glyphicon glyphicon-align-right"></span></button> --->
-    </div>
-  </div>
+        <div class="row">
+            <div class="col-xs-12">
+                <color-picker ng-model="$ctrl.cellBackgroundColor"
+                              event-api="$ctrl.eventApi"
+                              options="$ctrl.colorOpts">
+                </color-picker>
+                <button class="timButton btn-xs"
+                        ng-style="$ctrl.getStyle()"
+                        ng-click="$ctrl.applyBackgroundColor()">Apply color
+                </button>
+                <button class="timButton btn-xs"
+                        title="Align left"
+                        ng-click="$ctrl.setTextAlign('left')">
+                    <i class="glyphicon glyphicon-align-left"></i>
+                </button>
+                <button class="timButton btn-xs"
+                        title="Align center"
+                        ng-click="$ctrl.setTextAlign('center')">
+                    <i class="glyphicon glyphicon-align-center"></i>
+                </button>
+                <button class="timButton btn-xs"
+                        title="Align right"
+                        ng-click="$ctrl.setTextAlign('right')">
+                    <i class="glyphicon glyphicon-align-right"></i>
+                </button>
+            </div>
+        </div>
+    </dialog-body>
+</tim-dialog>
 `,
     });

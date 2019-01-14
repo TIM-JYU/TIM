@@ -1,4 +1,4 @@
-import {IController, IPromise, IRootElementService, IScope} from "angular";
+import {IController, IPromise, IRootElementService, IScope, ITranscludeFunction} from "angular";
 import "angular-ui-bootstrap";
 import {IModalInstanceService} from "angular-ui-bootstrap";
 import {timApp} from "../app";
@@ -114,10 +114,12 @@ export function registerDialogComponent<T extends Dialog<T>>(name: T["component"
 }
 
 class TimDialogCtrl implements IController {
-    private static $inject = ["$scope"];
+    private static $inject = ["$scope", "$transclude"];
     private draggable: DraggableController | undefined;
+    private hasFooter: boolean;
 
-    constructor(private scope: IScope) {
+    constructor(private scope: IScope, private transclude: ITranscludeFunction) {
+        this.hasFooter = transclude.isSlotFilled("footer");
     }
 
     $onInit() {
@@ -155,7 +157,7 @@ timApp.component("timDialog", {
 </div>
 <div ng-mousedown="$ctrl.bringToFront()" class="modal-body" id="modal-body" ng-transclude="body">
 </div>
-<div ng-mousedown="$ctrl.bringToFront()" class="modal-footer" ng-transclude="footer">
+<div ng-if="$ctrl.hasFooter" ng-mousedown="$ctrl.bringToFront()" class="modal-footer" ng-transclude="footer">
 </div>
     `,
     controller: TimDialogCtrl,
@@ -164,8 +166,8 @@ timApp.component("timDialog", {
     },
     transclude: {
         body: "dialogBody",
-        footer: "dialogFooter",
-        header: "dialogHeader",
+        footer: "?dialogFooter",
+        header: "?dialogHeader",
     },
 });
 
