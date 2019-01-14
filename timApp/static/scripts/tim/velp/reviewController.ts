@@ -579,7 +579,7 @@ export class ReviewController implements IController {
         if (!$event.target) {
             return;
         }
-        const $par = $($event.target as HTMLElement).parents(".par")[0];
+        const par = $($event.target as HTMLElement).parents(".par")[0];
 
         let oldElement = null;
         if (this.selectedElement != null) {
@@ -616,8 +616,8 @@ export class ReviewController implements IController {
              if (elements.length > 0)
              this.selectedElement = elements[0];
              */
-            if ($par && $par.id) {
-                this.selectedElement = $par;
+            if (par && par.id) {
+                this.selectedElement = par;
             }
 
         }

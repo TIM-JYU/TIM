@@ -97,8 +97,8 @@ class QstController implements IController {
     }
 
     private questionClicked() {
-        const $par = this.element.parents(".par");
-        const parId = getParId($par);
+        const par = this.element.parents(".par");
+        const parId = getParId(par);
         if (!parId) {
             showMessageDialog("Not a valid paragraph.");
             return;

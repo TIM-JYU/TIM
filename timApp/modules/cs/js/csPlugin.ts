@@ -4,11 +4,10 @@ import $ from "jquery";
 import {CellInfo} from "sagecell";
 import {IAce, IAceEditor} from "tim/editor/ace-types";
 import {ParCompiler} from "tim/editor/parCompiler";
-import {GenericPluginMarkup, PluginBase, withDefault, nullable} from "tim/plugin/util";
+import {GenericPluginMarkup, nullable, PluginBase, withDefault} from "tim/plugin/util";
 import {lazyLoadMany} from "tim/util/lazyLoad";
 import {$compile, $http, $sce, $timeout, $upload, $window} from "tim/util/ngimport";
-import {fixDefExport, to} from "tim/util/utils";
-import {valueOr, valueDefu} from "tim/util/utils";
+import {fixDefExport, to, valueDefu, valueOr} from "tim/util/utils";
 
 interface Simcir {
     setupSimcir(element: JQuery, data: {}): void;
@@ -2424,7 +2423,7 @@ class CsController extends CsBase implements IController {
         if (r.ok) {
             const data = r.result.data;
             let s = "";
-            const $previewDiv = this.preview;
+            const previewDiv = this.preview;
 
             if (typeof data.texts === "string") {
                 s = data.texts;
@@ -2439,9 +2438,9 @@ class CsController extends CsBase implements IController {
             s = s.replace(/<div class="editline".*<.div>/, "");
             s = s.replace(/<div class="readline"[\s\S]*?<.div>/, "");
             const html = $compile(s)(this.scope);
-            $previewDiv.empty().append(html);
+            previewDiv.empty().append(html);
 
-            ParCompiler.processAllMath($previewDiv);
+            ParCompiler.processAllMath(previewDiv);
             // $scope.outofdate = false;
             // $scope.parCount = len;
 
@@ -2789,8 +2788,8 @@ class CsController extends CsBase implements IController {
                 this.canvas = angular.element(// '<div class="userlist" tim-draggable-fixed="" style="top: 91px; right: -375px;">'+
                     `<canvas id="csCanvas" width="${this.attrs.canvasWidth}" height="${this.attrs.canvasHeight}" class="jsCanvas"></canvas>`)[0] as HTMLCanvasElement;
             }
-            const $previewDiv = this.preview;
-            $previewDiv.empty().append($compile(this.canvas)(this.scope));
+            const previewDiv = this.preview;
+            previewDiv.empty().append($compile(this.canvas)(this.scope));
         }
         let text = this.usercode.replace(this.cursor, "");
         if (!this.attrs.runeverytime && text === this.lastJS && this.userargs === this.lastUserargs && this.userinput === this.lastUserinput) {
@@ -3103,9 +3102,8 @@ class CsConsoleController extends CsBase implements IController {
     }
 
     loadExample(i: number) {
-        const $scope = this;
-        $scope.currentInput = $scope.examples[i].expr;
-        $scope.focusOnInput();
+        this.currentInput = this.examples[i].expr;
+        this.focusOnInput();
     }
 
     focusOnInput() {

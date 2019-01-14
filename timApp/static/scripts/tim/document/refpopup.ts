@@ -30,8 +30,8 @@ export class RefPopupHandler {
             }
             this.overReflink = true;
 
-            const $par = $this.parents(".par").find(".parContent");
-            const offset = $par.offset() || getEmptyCoords();
+            const par = $this.parents(".par").find(".parContent");
+            const offset = par.offset() || getEmptyCoords();
             const coords = {left: e.pageX - offset.left + 10, top: e.pageY - offset.top + 10};
 
             const docid = $this.attr("data-docid");
@@ -65,14 +65,14 @@ export class RefPopupHandler {
     }
 
     showRefPopup(e: Event, $ref: JQuery, coords: Coords, attrs: IRefPopupAttrs) {
-        const $popup = $("<ref-popup>");
-        $popup.offset(coords);
+        const popup = $("<ref-popup>");
+        popup.offset(coords);
 
-        $popup.attr("docid", attrs.docid);
-        $popup.attr("parid", attrs.parid);
+        popup.attr("docid", attrs.docid);
+        popup.attr("parid", attrs.parid);
 
-        $ref.parent().prepend($popup); // need to prepend to DOM before compiling
-        this.popupElement = $compile($popup[0])(this.sc);
+        $ref.parent().prepend(popup); // need to prepend to DOM before compiling
+        this.popupElement = $compile(popup[0])(this.sc);
     }
 
     hideRefPopup() {

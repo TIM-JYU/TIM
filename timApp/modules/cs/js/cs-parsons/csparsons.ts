@@ -96,21 +96,21 @@ export class CsParsonsWidget {
                 items: ":not(.parsonsstatic)",
                 start: function() {
                     $(".parsonsstatic", this).each(function() {
-                        const $this = $(this);
-                        $this.data("pos", $this.index());
+                        const thisJq = $(this);
+                        thisJq.data("pos", thisJq.index());
                     });
                 },
                 change: function() {
-                    const $sortable = $(this);
-                    const $statics = $(".parsonsstatic", this).detach();
-                    const $helper = $("<" + type + "></" + type + ">").prependTo(this as any);
-                    $statics.each(function() {
-                        const $this = $(this);
-                        const target = $this.data("pos");
+                    const sortable = $(this);
+                    const statics = $(".parsonsstatic", this).detach();
+                    const helper = $("<" + type + "></" + type + ">").prependTo(this as any);
+                    statics.each(function() {
+                        const thisJq = $(this);
+                        const target = thisJq.data("pos");
 
-                        $this.insertAfter($(type, $sortable).eq(target));
+                        thisJq.insertAfter($(type, sortable).eq(target));
                     });
-                    $helper.remove();
+                    helper.remove();
                 },
             });
         } else {

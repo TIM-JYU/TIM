@@ -46,38 +46,38 @@ export class ClipboardHandler {
         view.pasteFunctions = this.getPasteFunctions();
     }
 
-    showPasteMenu(e: JQueryEventObject, $parOrArea: ParOrArea) {
+    showPasteMenu(e: JQueryEventObject, parOrArea: ParOrArea) {
         this.viewctrl.pasteFunctions = this.getPasteFunctions();
-        this.viewctrl.parmenuHandler.showPopupMenu(e, $parOrArea, {
+        this.viewctrl.parmenuHandler.showPopupMenu(e, parOrArea, {
             actions: viewCtrlDot("pasteFunctions"),
             contenturl: "/clipboard",
             save: false,
         });
     }
 
-    showMoveMenu(e: JQueryEventObject, $parOrArea: ParOrArea) {
+    showMoveMenu(e: JQueryEventObject, parOrArea: ParOrArea) {
         this.viewctrl.pasteFunctions = this.getMoveFunctions();
-        this.viewctrl.parmenuHandler.showPopupMenu(e, $parOrArea, {
+        this.viewctrl.parmenuHandler.showPopupMenu(e, parOrArea, {
             actions: viewCtrlDot("pasteFunctions"),
             contenturl: "/clipboard",
             save: false,
         });
     }
 
-    pasteContentAbove(e: Event, $par: Paragraph) {
-        this.pasteAbove(e, $par, false);
+    pasteContentAbove(e: Event, par: Paragraph) {
+        this.pasteAbove(e, par, false);
     }
 
-    pasteRefAbove(e: Event, $par: Paragraph) {
-        this.pasteAbove(e, $par, true);
+    pasteRefAbove(e: Event, par: Paragraph) {
+        this.pasteAbove(e, par, true);
     }
 
-    pasteContentBelow(e: Event, $par: Paragraph) {
-        this.pasteBelow(e, $par, false);
+    pasteContentBelow(e: Event, par: Paragraph) {
+        this.pasteBelow(e, par, false);
     }
 
-    pasteRefBelow(e: Event, $par: Paragraph) {
-        this.pasteBelow(e, $par, true);
+    pasteRefBelow(e: Event, par: Paragraph) {
+        this.pasteBelow(e, par, true);
     }
 
     async deleteFromSource() {
@@ -98,38 +98,38 @@ export class ClipboardHandler {
         }
     }
 
-    async moveAbove(e: Event, $parOrArea: ParOrArea) {
+    async moveAbove(e: Event, parOrArea: ParOrArea) {
 
         const r = await to($http.post<IParResponse>("/clipboard/paste/" + this.viewctrl.docId, {
-            par_before: getFirstParId($parOrArea),
+            par_before: getFirstParId(parOrArea),
         }));
         if (!r.ok) {
             await showMessageDialog(r.result.data.error);
             return;
         }
 
-        this.viewctrl.editingHandler.addSavedParToDom(r.result.data, {type: EditType.AddAbove, par: $parOrArea});
+        this.viewctrl.editingHandler.addSavedParToDom(r.result.data, {type: EditType.AddAbove, par: parOrArea});
         this.deleteFromSource();
     }
 
-    async moveBelow(e: Event, $parOrArea: ParOrArea) {
+    async moveBelow(e: Event, parOrArea: ParOrArea) {
 
         const r = await to($http.post<IParResponse>("/clipboard/paste/" + this.viewctrl.docId, {
-            par_after: getLastParId($parOrArea),
+            par_after: getLastParId(parOrArea),
         }));
         if (!r.ok) {
             await showMessageDialog(r.result.data.error);
             return;
         }
 
-        this.viewctrl.editingHandler.addSavedParToDom(r.result.data, {type: EditType.AddBelow, par: $parOrArea});
+        this.viewctrl.editingHandler.addSavedParToDom(r.result.data, {type: EditType.AddBelow, par: parOrArea});
         this.deleteFromSource();
     }
 
-    async pasteAbove(e: Event, $parOrArea: ParOrArea | undefined, asRef: boolean) {
+    async pasteAbove(e: Event, parOrArea: ParOrArea | undefined, asRef: boolean) {
 
         const r = await to($http.post<IParResponse>("/clipboard/paste/" + this.viewctrl.docId, {
-            par_before: $parOrArea ? getFirstParId($parOrArea) : null,
+            par_before: parOrArea ? getFirstParId(parOrArea) : null,
             as_ref: asRef,
         }));
         if (!r.ok) {
@@ -137,15 +137,15 @@ export class ClipboardHandler {
             return;
         }
 
-        this.viewctrl.editingHandler.addSavedParToDom(r.result.data, $parOrArea ? {
+        this.viewctrl.editingHandler.addSavedParToDom(r.result.data, parOrArea ? {
             type: EditType.AddAbove,
-            par: $parOrArea,
+            par: parOrArea,
         } : {type: EditType.AddBottom});
     }
 
-    async pasteBelow(e: Event, $parOrArea: ParOrArea, asRef: boolean) {
+    async pasteBelow(e: Event, parOrArea: ParOrArea, asRef: boolean) {
         const r = await to($http.post<IParResponse>("/clipboard/paste/" + this.viewctrl.docId, {
-            par_after: getLastParId($parOrArea),
+            par_after: getLastParId(parOrArea),
             as_ref: asRef,
         }));
         if (!r.ok) {
@@ -153,7 +153,7 @@ export class ClipboardHandler {
             return;
         }
 
-        this.viewctrl.editingHandler.addSavedParToDom(r.result.data, {type: EditType.AddBelow, par: $parOrArea});
+        this.viewctrl.editingHandler.addSavedParToDom(r.result.data, {type: EditType.AddBelow, par: parOrArea});
     }
 
     async updateClipboardStatus() {
@@ -190,27 +190,27 @@ export class ClipboardHandler {
         this.updateClipboardStatus();
         return [
             {
-                func: (e: Event, $par: Paragraph) => this.pasteRefAbove(e, $par),
+                func: (e: Event, p: Paragraph) => this.pasteRefAbove(e, p),
                 desc: "Above, as a reference",
                 show: this.viewctrl.clipMeta.allowPasteRef,
             },
             {
-                func: (e: Event, $par: Paragraph) => this.pasteContentAbove(e, $par),
+                func: (e: Event, p: Paragraph) => this.pasteContentAbove(e, p),
                 desc: "Above, as content",
                 show: this.viewctrl.clipMeta.allowPasteContent,
             },
             {
-                func: (e: Event, $par: Paragraph) => this.pasteRefBelow(e, $par),
+                func: (e: Event, p: Paragraph) => this.pasteRefBelow(e, p),
                 desc: "Below, as a reference",
                 show: this.viewctrl.clipMeta.allowPasteRef,
             },
             {
-                func: (e: Event, $par: Paragraph) => this.pasteContentBelow(e, $par),
+                func: (e: Event, p: Paragraph) => this.pasteContentBelow(e, p),
                 desc: "Below, as content",
                 show: this.viewctrl.clipMeta.allowPasteContent,
             },
             {
-                func: (e: Event, $par: Paragraph) => {
+                func: (e: Event, p: Paragraph) => {
                 }, desc: "Cancel", show: true,
             },
         ];
@@ -219,12 +219,12 @@ export class ClipboardHandler {
     getMoveFunctions() {
         return [
             {
-                func: (e: Event, $par: Paragraph) => this.moveAbove(e, $par),
+                func: (e: Event, p: Paragraph) => this.moveAbove(e, p),
                 desc: "Above",
                 show: this.viewctrl.clipMeta.allowPasteContent,
             },
             {
-                func: (e: Event, $par: Paragraph) => this.moveBelow(e, $par),
+                func: (e: Event, p: Paragraph) => this.moveBelow(e, p),
                 desc: "Below",
                 show: this.viewctrl.clipMeta.allowPasteContent,
             },
@@ -232,8 +232,8 @@ export class ClipboardHandler {
         ];
     }
 
-    async cutPar(e: Event, $par: Paragraph) {
-        const docParId = [this.viewctrl.docId, $par.attr("id")];
+    async cutPar(e: Event, par: Paragraph) {
+        const docParId = [this.viewctrl.docId, par.attr("id")];
 
         const r = await to($http.post<{doc_ver: any, pars: any[]}>("/clipboard/cut/" + docParId[0] + "/" + docParId[1] + "/" + docParId[1], {}));
         if (!r.ok) {
@@ -252,8 +252,8 @@ export class ClipboardHandler {
         }
     }
 
-    async copyPar(e: Event, $par: Paragraph) {
-        const docParId = dereferencePar($par);
+    async copyPar(e: Event, par: Paragraph) {
+        const docParId = dereferencePar(par);
         if (!docParId) {
             return;
         }
@@ -265,17 +265,17 @@ export class ClipboardHandler {
         }
     }
 
-    async copyOrCutArea(e: Event, $parOrArea: ParOrArea, overrideDocId: number, cut: boolean) {
+    async copyOrCutArea(e: Event, parOrArea: ParOrArea, overrideDocId: number, cut: boolean) {
         let refDocId;
         let areaName;
         let areaStart;
         let areaEnd;
 
         if ($window.editMode === "area") {
-            refDocId = getAreaDocId($parOrArea);
-            areaName = getAreaId($parOrArea);
-            areaStart = getFirstParId($parOrArea);
-            areaEnd = getLastParId($parOrArea);
+            refDocId = getAreaDocId(parOrArea);
+            areaName = getAreaId(parOrArea);
+            areaStart = getFirstParId(parOrArea);
+            areaEnd = getLastParId(parOrArea);
         } else {
             refDocId = null;
             areaName = null;
@@ -324,11 +324,11 @@ export class ClipboardHandler {
         }
     }
 
-    cutArea(e: Event, $parOrArea: ParOrArea) {
-        this.copyOrCutArea(e, $parOrArea, this.viewctrl.docId, true);
+    cutArea(e: Event, parOrArea: ParOrArea) {
+        this.copyOrCutArea(e, parOrArea, this.viewctrl.docId, true);
     }
 
-    copyArea(e: Event, $parOrArea: ParOrArea) {
-        this.copyOrCutArea(e, $parOrArea, this.viewctrl.docId, false);
+    copyArea(e: Event, parOrArea: ParOrArea) {
+        this.copyOrCutArea(e, parOrArea, this.viewctrl.docId, false);
     }
 }

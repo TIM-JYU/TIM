@@ -13,11 +13,11 @@ import {showMessageDialog} from "../ui/dialog";
 markAsUsed(nameArea);
 
 function selectArea(areaName: string, className: string, selected: boolean) {
-    const $selection = $(".area.area_" + areaName).children(className);
+    const selection = $(".area.area_" + areaName).children(className);
     if (selected) {
-        $selection.addClass("manualhover");
+        selection.addClass("manualhover");
     } else {
-        $selection.removeClass("manualhover");
+        selection.removeClass("manualhover");
     }
 }
 
@@ -100,9 +100,9 @@ export class AreaHandler {
         if (!areaName) {
             return;
         }
-        const $pars = getArea(areaName).find(".par");
-        const $areaPart = $this.parent().filter(".area");
-        const offset = $areaPart.offset() || getEmptyCoords();
+        const pars = getArea(areaName).find(".par");
+        const areaPart = $this.parent().filter(".area");
+        const offset = areaPart.offset() || getEmptyCoords();
         const coords = {left: e.pageX - offset.left, top: e.pageY - offset.top};
 
         this.selectedAreaName = areaName;
@@ -110,7 +110,7 @@ export class AreaHandler {
 
         // We need the timeout so we don't trigger the ng-clicks on the buttons
         $timeout(() => {
-            this.showAreaOptionsWindow(e, $areaPart, $pars);
+            this.showAreaOptionsWindow(e, areaPart, pars);
         }, 80);
     }
 
@@ -119,8 +119,8 @@ export class AreaHandler {
         this.viewctrl.parmenuHandler.showPopupMenu(e, $pars, this.viewctrl.popupMenuAttrs, $area, "area");
     }
 
-    startArea(e: Event, $par: Paragraph) {
-        this.viewctrl.editingHandler.extendSelection($par);
+    startArea(e: Event, par: Paragraph) {
+        this.viewctrl.editingHandler.extendSelection(par);
     }
 
     async nameArea(e: Event, $pars: Paragraphs) {

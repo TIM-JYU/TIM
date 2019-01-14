@@ -21,8 +21,8 @@ export class QuestionHandler {
     }
 
     // Opens pop-up window to create question.
-    async addQuestionQst(e: Event, $par: Paragraph) {
-        const parNextId = getParId($par);
+    async addQuestionQst(e: Event, par: Paragraph) {
+        const parNextId = getParId(par);
         if (!parNextId) {
             showMessageDialog("Not a valid paragraph.");
             return;
@@ -31,11 +31,11 @@ export class QuestionHandler {
         if (result.type === "points") {
             throw new Error("unexpected result type from dialog");
         }
-        this.viewctrl.editingHandler.addSavedParToDom(result.data, {type: EditType.AddAbove, par: $par});
+        this.viewctrl.editingHandler.addSavedParToDom(result.data, {type: EditType.AddAbove, par: par});
     }
 
-    async editQst(e: Event, $par: Paragraph) {
-        const parId = getParId($par);
+    async editQst(e: Event, par: Paragraph) {
+        const parId = getParId(par);
         if (!parId) {
             showMessageDialog("Not a valid paragraph.");
             return;
@@ -44,7 +44,7 @@ export class QuestionHandler {
         if (result.type === "points") {
             throw new Error("unexpected result type from dialog");
         }
-        const position: EditPosition = {type: EditType.Edit, pars: $par};
+        const position: EditPosition = {type: EditType.Edit, pars: par};
         if (result.deleted) {
             this.viewctrl.editingHandler.handleDelete(position);
         } else {
@@ -54,8 +54,8 @@ export class QuestionHandler {
 
     // Event handler for "Add question below"
     // Opens pop-up window to create question.
-    async addQuestion(e: Event, $par: Paragraph) {
-        const parNextId = getParId($par.next());
+    async addQuestion(e: Event, par: Paragraph) {
+        const parNextId = getParId(par.next());
         if (!parNextId) {
             showMessageDialog("Not a valid paragraph.");
             return;
@@ -64,7 +64,7 @@ export class QuestionHandler {
         if (result.type === "points") {
             throw new Error("unexpected result type from dialog");
         }
-        this.viewctrl.editingHandler.addSavedParToDom(result.data, {type: EditType.AddBelow, par: $par});
+        this.viewctrl.editingHandler.addSavedParToDom(result.data, {type: EditType.AddBelow, par: par});
     }
 
     processQuestions() {
@@ -73,10 +73,10 @@ export class QuestionHandler {
         let separator = ")";
         if (this.showQuestions()) {
             for (let i = 0; i < questions.length; i++) {
-                const $par = questions.eq(i);
-                const questionChildren = $par.children();
+                const par = questions.eq(i);
+                const questionChildren = par.children();
                 const questionNumber = questionChildren.find(".questionNumber");
-                // var questionTitle = getParAttributes($par).question;
+                // var questionTitle = getParAttributes(par).question;
                 let questionTitle = questionNumber[0].innerHTML;
                 if (questionTitle.length > 10) {
                     questionTitle = questionTitle.substr(0, 10) + "\r\n...";

@@ -37,26 +37,26 @@ function isAlreadyRead(readline: JQuery, readingType: readingTypes) {
     return timeSinceLastRead < getActiveDocument().readExpiry();
 }
 
-export async function markParRead($par: JQuery, readingType: readingTypes) {
-    const $readline = $par.find(".readline");
+export async function markParRead(par: JQuery, readingType: readingTypes) {
+    const readline = par.find(".readline");
     const readClassName = readClasses[readingType];
-    if (isAlreadyRead($readline, readingType)) {
+    if (isAlreadyRead(readline, readingType)) {
         return;
     }
 
     // If the paragraph is only a preview, ignore it.
-    if ($par.parents(".previewcontent").length > 0 || $par.parents(".csrunPreview").length > 0) {
+    if (par.parents(".previewcontent").length > 0 || par.parents(".csrunPreview").length > 0) {
         return;
     }
-    const parId = getParId($par);
+    const parId = getParId(par);
     if (parId === "NEW_PAR" || !parId || parId === "HELP_PAR") {
         return;
     }
-    $readline.addClass(readClassName);
-    $readline.attr(`time-${readClassName}`, moment().toISOString());
+    readline.addClass(readClassName);
+    readline.attr(`time-${readClassName}`, moment().toISOString());
     let data = {};
-    if (isReference($par)) {
-        data = getRefAttrs($par);
+    if (isReference(par)) {
+        data = getRefAttrs(par);
     }
     if (!Users.isLoggedIn()) {
         return;
@@ -64,10 +64,10 @@ export async function markParRead($par: JQuery, readingType: readingTypes) {
     const r = await to($http.put(`/read/${getActiveDocument().id}/${parId}/${readingType}`, data));
     if (!r.ok) {
         $log.error("Could not save the read marking for paragraph " + parId);
-        $readline.removeClass(readClassName);
+        readline.removeClass(readClassName);
         return;
     }
-    $readline.removeClass(readClassName + "-modified");
+    readline.removeClass(readClassName + "-modified");
     if (readingType === readingTypes.clickRed) {
         markPageDirty();
         getActiveDocument().refreshSectionReadMarks();
@@ -169,14 +169,14 @@ export async function initReadings(sc: ViewCtrl) {
 
     onClick(".readsection", function readSectionHandler($readsection, e) {
         const doc = getActiveDocument();
-        const $par = $readsection.parents(".par");
-        const parId = getParId($par);
-        if ($par.length === 0 || !parId) {
+        const par = $readsection.parents(".par");
+        const parId = getParId(par);
+        if (par.length === 0 || !parId) {
             void showMessageDialog("Unable to mark this section as read");
             return;
         }
-        const $pars = doc.sections[parId];
-        markParsRead($($pars.map((p: JQuery) => p[0])));
+        const pars = doc.sections[parId];
+        markParsRead($(pars.map((p: JQuery) => p[0])));
         $readsection.remove();
     });
 

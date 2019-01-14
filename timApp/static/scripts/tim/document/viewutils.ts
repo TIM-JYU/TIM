@@ -2,7 +2,7 @@ import {Coords, nameofFactoryCtrl, nameofFactoryCtrl2} from "../util/utils";
 import {Paragraph} from "./parhelpers";
 import {ViewCtrl} from "./viewctrl";
 
-export type MenuFunction = ((e: JQueryEventObject, $par: Paragraph, coords?: Coords) => any);
+export type MenuFunction = ((e: JQueryEventObject, par: Paragraph, coords?: Coords) => any);
 export interface MenuFunctionEntry {func: MenuFunction; desc: string; show: boolean; }
 export type MenuFunctionCollection = MenuFunctionEntry[];
 export const viewCtrlDot = nameofFactoryCtrl<ViewCtrl>();

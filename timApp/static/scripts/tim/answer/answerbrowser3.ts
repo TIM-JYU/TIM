@@ -38,9 +38,9 @@ function makeNotLazy(html: string) {
     return s;
 }
 
-async function loadPlugin(html: string, $par: JQuery, scope: IScope, viewctrl: ViewCtrl) {
+async function loadPlugin(html: string, par: JQuery, scope: IScope, viewctrl: ViewCtrl) {
     const newhtml = makeNotLazy(html);
-    const plugin = $par.find(".parContent");
+    const plugin = par.find(".parContent");
     const compiled = compileWithViewctrl(newhtml, scope, viewctrl);
     await $timeout(); // let AngularJS finish its processing
     plugin.empty().append(compiled);

@@ -522,9 +522,9 @@ ${backTicks}
 
         if (this.getOptions().touchDevice) {
             if (!this.oldmeta) {
-                const $meta = $("meta[name='viewport']");
-                this.oldmeta = $meta[0] as HTMLMetaElement;
-                $meta.remove();
+                const meta = $("meta[name='viewport']");
+                this.oldmeta = meta[0] as HTMLMetaElement;
+                meta.remove();
                 $("head").prepend('<meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, user-scalable=0">');
             }
         }
@@ -674,10 +674,10 @@ ${backTicks}
 
     adjustPreview() {
         window.setTimeout(() => {
-            const $editor = this.element;
-            const $previewContent = this.element.find(".previewcontent");
+            const editor = this.element;
+            const previewContent = this.element.find(".previewcontent");
             // Check that editor doesn't go out of bounds
-            const editorOffset = $editor.offset();
+            const editorOffset = editor.offset();
             if (!editorOffset) {
                 return;
             }
@@ -688,31 +688,31 @@ ${backTicks}
             if (editorOffset.left < 0) {
                 newOffset.left = 0;
             }
-            $editor.offset(newOffset);
+            editor.offset(newOffset);
             if (this.scrollPos) {
-                $previewContent.scrollTop(this.scrollPos);
+                previewContent.scrollTop(this.scrollPos);
             }
         }, 25);
 
     }
 
     createTextArea(text: string) {
-        const $textarea = $(`
+        const textarea = $(`
 <textarea rows="10"
       id="teksti"
       wrap="off">
 </textarea>`);
-        this.element.find(".editorContainer").append($textarea);
+        this.element.find(".editorContainer").append(textarea);
         this.editor = new TextAreaParEditor(this.element.find("#teksti"), {
             wrapFn: () => this.wrapFn(),
             saveClicked: () => this.saveClicked(),
             getWrapValue: () => this.wrap.n,
         });
         this.editor.setEditorText(text);
-        $textarea.on("input", () => this.editorChanged());
-        $textarea.on("paste", (e) => this.onPaste(e));
-        $textarea.on("drop", (e) => this.onDrop(e));
-        $textarea.on("dragover", (e) => this.allowDrop(e));
+        textarea.on("input", () => this.editorChanged());
+        textarea.on("paste", (e) => this.onPaste(e));
+        textarea.on("drop", (e) => this.onDrop(e));
+        textarea.on("dragover", (e) => this.allowDrop(e));
 
     }
 
@@ -734,10 +734,10 @@ ${backTicks}
                 $injector.loadNewModules([module]);
             }
             this.trdiff = data.trdiff;
-            const $previewDiv = angular.element(".previewcontent");
-            $previewDiv.empty().append(compiled);
+            const previewDiv = angular.element(".previewcontent");
+            previewDiv.empty().append(compiled);
             this.outofdate = false;
-            this.parCount = $previewDiv.children().length;
+            this.parCount = previewDiv.children().length;
             this.element.find(".editorContainer").resize();
         });
     }
@@ -762,8 +762,8 @@ ${backTicks}
             return;
         }
         $("meta[name='viewport']").remove();
-        const $meta = $(this.oldmeta);
-        $("head").prepend($meta);
+        const meta = $(this.oldmeta);
+        $("head").prepend(meta);
     }
 
     async deleteClicked() {

@@ -54,7 +54,7 @@ export class NotesHandler {
         });
     }
 
-    async toggleNoteEditor($parOrArea: ParOrArea, options: INoteEditorOptions = {}) {
+    async toggleNoteEditor(parOrArea: ParOrArea, options: INoteEditorOptions = {}) {
         if (this.viewctrl.editing) {
             await showMessageDialog("Some editor is already open.");
             return;
@@ -63,7 +63,7 @@ export class NotesHandler {
         if (!this.viewctrl.item.rights.can_comment) {
             return;
         }
-        const parId = getFirstParId($parOrArea);
+        const parId = getFirstParId(parOrArea);
         if (!parId) {
             return;
         }
@@ -104,7 +104,7 @@ export class NotesHandler {
             par: parId,
             ...data,
         };
-        const params: EditPosition = {type: EditType.Edit, pars: $parOrArea};
+        const params: EditPosition = {type: EditType.Edit, pars: parOrArea};
         this.viewctrl.editing = true;
         await to(openEditor({
             extraData,
@@ -154,17 +154,17 @@ export class NotesHandler {
         this.viewctrl.editing = false;
     }
 
-    showNoteWindow(e: Event, $par: Paragraph) {
-        this.toggleNoteEditor($par);
+    showNoteWindow(e: Event, par: Paragraph) {
+        this.toggleNoteEditor(par);
     }
 
     /**
      * Creates the note badge button (the button with letter 'C' on it).
      * @method createNoteBadge
-     * @param $par - Element where the badge needs to be attached
+     * @param par - Element where the badge needs to be attached
      */
-    createNoteBadge($par: Paragraph) {
-        this.noteBadgePar = $par;
+    createNoteBadge(par: Paragraph) {
+        this.noteBadgePar = par;
         if (this.noteBadge) {
             // var parent = getElementParent(sc.noteBadge);
             // if ( !parent ) $compile(sc.noteBadge)(sc);
@@ -204,28 +204,28 @@ export class NotesHandler {
             return;
         }
         $event.stopPropagation();
-        let $par = $($event.target as HTMLElement);
-        if (!$par.hasClass("par")) { $par = $par.parents(".par"); }
-        this.updateNoteBadge($par);
+        let par = $($event.target as HTMLElement);
+        if (!par.hasClass("par")) { par = par.parents(".par"); }
+        this.updateNoteBadge(par);
     }
 
     /**
      * Moves the note badge to the correct element.
      * @method updateNoteBadge
-     * @param $par - Element where the badge needs to be attached
+     * @param par - Element where the badge needs to be attached
      */
-    updateNoteBadge($par: Paragraph) {
-        if (!$par) { return; }
-        if (!isActionablePar($par)) {
+    updateNoteBadge(par: Paragraph) {
+        if (!par) { return; }
+        if (!isActionablePar(par)) {
             return;
         }
-        if ($par.parents(".previewcontent").length > 0) {
+        if (par.parents(".previewcontent").length > 0) {
             return;
         }
-        markParRead($par, readingTypes.clickPar);
-        const newElement = $par[0];
+        markParRead(par, readingTypes.clickPar);
+        const newElement = par[0];
         if (!newElement) { return; }
-        addElementToParagraphMargin(newElement, this.createNoteBadge($par));
+        addElementToParagraphMargin(newElement, this.createNoteBadge(par));
     }
 
     /**

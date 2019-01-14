@@ -489,24 +489,24 @@ export class ViewCtrl implements IController {
         this.questionHandler.processQuestions();
     }
 
-    applyDynamicStyles($par: Paragraph) {
+    applyDynamicStyles(par: Paragraph) {
         if ($window.editMode) {
-            $par.addClass("editmode");
+            par.addClass("editmode");
 
             // Show hidden paragraphs if in edit mode
-            $par.find(".mdcontent").css("display", "initial");
+            par.find(".mdcontent").css("display", "initial");
         }
     }
 
     setHeaderLinks() {
         const pars = $(".parContent");
         pars.each((index, elem) => {
-            const $p = $(elem);
-            $p.find("h1, h2, h3, h4, h5, h6").each((i, e) => {
-                const $h = $(e);
-                const id = $h.attr("id");
+            const p = $(elem);
+            p.find("h1, h2, h3, h4, h5, h6").each((i, e) => {
+                const h = $(e);
+                const id = h.attr("id");
                 if (angular.isDefined(id)) {
-                    $h.append($("<a>", {
+                    h.append($("<a>", {
                         text: "#",
                         href: "#" + id,
                         class: "headerlink",
