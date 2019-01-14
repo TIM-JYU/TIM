@@ -11,26 +11,26 @@ import {$http, $timeout} from "../util/ngimport";
 import {Binding} from "../util/utils";
 import {hideToolbar, isToolbarEnabled, openTableEditorToolbar} from "./timTableEditorToolbar";
 
-const styleToHtml: { [index: string]: string } = {
-        backgroundColor: "background-color",
-        border: "border",
-        borderBottom: "border-bottom",
-        borderLeft: "border-left",
-        borderRight: "border-right",
-        borderTop: "border-top",
-        color: "color",
-        colspan: "colspan",
-        fontFamily: "font-family",
-        fontSize: "font-size",
-        fontWeight: "font-weight",
-        height: "height",
-        horizontalAlign: "horizontal-align",
-        rowspan: "rowspan",
-        textAlign: "text-align",
-        verticalAlign: "vertical-align",
-        visibility: "visibility",
-        width: "width",
-    };
+const styleToHtml: {[index: string]: string} = {
+    backgroundColor: "background-color",
+    border: "border",
+    borderBottom: "border-bottom",
+    borderLeft: "border-left",
+    borderRight: "border-right",
+    borderTop: "border-top",
+    color: "color",
+    colspan: "colspan",
+    fontFamily: "font-family",
+    fontSize: "font-size",
+    fontWeight: "font-weight",
+    height: "height",
+    horizontalAlign: "horizontal-align",
+    rowspan: "rowspan",
+    textAlign: "text-align",
+    verticalAlign: "vertical-align",
+    visibility: "visibility",
+    width: "width",
+};
 
 export interface TimTable {
     table: ITable;
@@ -40,7 +40,7 @@ export interface TimTable {
     globalAppendMode?: boolean;
     dataInput?: boolean;
     task?: boolean;
-    userdata?:DataEntity;
+    userdata?: DataEntity;
 }
 
 export interface ITable { // extends ITableStyles
@@ -87,6 +87,7 @@ export interface ICell { // extends ICellStyles
     renderIndexX?: number;
     renderIndexY?: number;
     inputScope?: boolean | undefined;
+
     [key: string]: any;
 }
 
@@ -107,9 +108,9 @@ const tableStyles: Set<string> = new Set<string>([
     "fontFamily",
     "fontSize",
     "visibility",
-    ]);
+]);
 
-const rowStyles: Set<string> = new Set<string>( [
+const rowStyles: Set<string> = new Set<string>([
     "backgroundColor",
     "border",
     "borderTop",
@@ -122,7 +123,7 @@ const rowStyles: Set<string> = new Set<string>( [
     "fontFamily",
     "fontSize",
     "fontWeight",
-    ]);
+]);
 
 const cellStyles: Set<string> = new Set<string>([
     "verticalAlign",
@@ -191,7 +192,7 @@ export class TimTableController extends DestroyScope implements IController {
     private isRunning: boolean = false;
     private editedCellContent: string | undefined;
     private editedCellInitialContent: string | undefined;
-    private currentCell?: { row: number, col: number, editorOpen: boolean };
+    private currentCell?: {row: number, col: number, editorOpen: boolean};
     private activeCell?: {row: number, col: number};
 
     /**
@@ -199,7 +200,7 @@ export class TimTableController extends DestroyScope implements IController {
      * or Enter / Tab. Used for saving and retrieving the "coordinate" of a cell that is
      * embedded in another cell through colspan / rowspan so it can be used in navigation.
      */
-    private lastDirection?: { direction: Direction, coord: number };
+    private lastDirection?: {direction: Direction, coord: number};
     private mouseInTable?: boolean;
     private bigEditorOpen: boolean = false;
 
@@ -255,15 +256,17 @@ export class TimTableController extends DestroyScope implements IController {
      * Set listener and initializes tabledatablock
      */
     $onInit() {
-
         this.initializeCellDataMatrix();
         this.processDataBlockAndCellDataMatrix();
         this.userdata = this.data.userdata;
-        if ( this.userdata ) this.processDataBlock(this.userdata.cells);
-        else this.userdata =  {
-            type: 'Relative',
-            cells: {},
-        };
+        if (this.userdata) {
+            this.processDataBlock(this.userdata.cells);
+        } else {
+            this.userdata = {
+                type: "Relative",
+                cells: {},
+            };
+        }
 
         if (this.viewctrl == null) {
             return;
@@ -284,8 +287,10 @@ export class TimTableController extends DestroyScope implements IController {
             if (this.data.task) {
                 this.task = true;
                 this.forcedEditMode = true;
-                let id = this.getTaskId(); // TODO: why this could be undefined?
-                if ( id && id.indexOf("..") >= 0 ) this.error = "If task, should also have taskId!"
+                const id = this.getTaskId(); // TODO: why this could be undefined?
+                if (id && id.indexOf("..") >= 0) {
+                    this.error = "If task, should also have taskId!";
+                }
             }
 
             const parId = getParId(this.element.parents(".par"));
@@ -326,19 +331,22 @@ export class TimTableController extends DestroyScope implements IController {
     $onDestroy() {
         document.removeEventListener("keyup", this.keyDownPressedTable);
         document.removeEventListener("keydown", this.keyDownTable);
-        //document.removeEventListener("click", this.onClick);
+        // document.removeEventListener("click", this.onClick);
     }
 
     private onClick(e: JQueryEventObject) {
         if (this.mouseInTable) {
             if (this.isInEditMode() && isToolbarEnabled()) {
-                openTableEditorToolbar({callbacks: {
-                    setTextAlign: this.setCellTextAlign,
-                    setCellBackgroundColor: this.setCellBackgroundColor,
-                    addColumn: this.addColumnFromToolbar,
-                    addRow: this.addRowFromToolbar,
-                    removeColumn: this.removeColumnFromToolbar,
-                    removeRow: this.removeRowFromToolbar}, activeTable: this } );
+                openTableEditorToolbar({
+                    callbacks: {
+                        setTextAlign: this.setCellTextAlign,
+                        setCellBackgroundColor: this.setCellBackgroundColor,
+                        addColumn: this.addColumnFromToolbar,
+                        addRow: this.addRowFromToolbar,
+                        removeColumn: this.removeColumnFromToolbar,
+                        removeRow: this.removeRowFromToolbar,
+                    }, activeTable: this,
+                });
             } else {
                 // Hide the toolbar if we're not in edit mode
                 hideToolbar(this);
@@ -385,7 +393,6 @@ export class TimTableController extends DestroyScope implements IController {
         return this.editing || this.forcedEditMode;
     }
 
-
     public addRowEnabled() {
         return !this.task && this.editRight && this.isInEditMode();
     }
@@ -407,12 +414,13 @@ export class TimTableController extends DestroyScope implements IController {
      */
     public editSave() {
         this.editing = false;
-        if (this.currentCell) { this.currentCell = undefined; }
+        if (this.currentCell) {
+            this.currentCell = undefined;
+        }
     }
 
     /**
-     * Returns true if the simple cell content editor is open
-     * @returns {{row: number; col: number; editorOpen: boolean} | undefined}
+     * Returns true if the simple cell content editor is open.
      */
     public isSomeCellBeingEdited() {
         return this.currentCell;
@@ -432,23 +440,26 @@ export class TimTableController extends DestroyScope implements IController {
         this.mouseInTable = false;
     }
 
-
     public sendDataBlock() {
-        if ( this.isRunning ) return;
+        if (this.isRunning) {
+            return;
+        }
         this.saveAndCloseSmallEditor();
         this.sendDataBlockAsync();
     }
 
     async sendDataBlockAsync() {
-        if ( !this.task ) return;
+        if (!this.task) {
+            return;
+        }
         this.error = "";
         this.isRunning = true;
         const url = this.getTaskUrl();
         const params = {
             input: {
                 answers: {
-                    userdata: this.userdata
-                }
+                    userdata: this.userdata,
+                },
             },
         };
 
@@ -461,49 +472,49 @@ export class TimTableController extends DestroyScope implements IController {
         const r = await $http.put<string[]>(url, params);
 
         this.isRunning = false;
-/*
-        if (!r.ok) {
-            this.error = r.result.data.error;
-            return;
-        }
-*/
-    }
-
-
-
-    public colnumToLetters(column_index: number): string {
         /*
-        Transforms column index to letter
-        :param column_index: ex. 2
-        :return: column index as letter
+                if (!r.ok) {
+                    this.error = r.result.data.error;
+                    return;
+                }
         */
-        const ASCII_OF_A:number = 65
-        const ASCII_CHAR_COUNT = 26
-        let last_char:string = String.fromCharCode(ASCII_OF_A + (column_index % ASCII_CHAR_COUNT));
-        let remainder:number = Math.floor(column_index / ASCII_CHAR_COUNT);
-
-        if ( remainder == 0)
-            return last_char;
-        else if ( remainder <= ASCII_CHAR_COUNT )
-            return String.fromCharCode(ASCII_OF_A + remainder - 1) + last_char;
-        // recursive call to figure out the rest of the letters
-        return this.colnumToLetters(remainder - 1) + last_char
     }
 
+    /**
+     * Transforms column index to letter.
+     * @param colIndex ex. 2
+     * @return column index as letter
+     */
+    public colnumToLetters(colIndex: number): string {
+        const ASCII_OF_A = 65;
+        const ASCII_CHAR_COUNT = 26;
+        const lastChar = String.fromCharCode(ASCII_OF_A + (colIndex % ASCII_CHAR_COUNT));
+        const remainder = Math.floor(colIndex / ASCII_CHAR_COUNT);
+
+        if (remainder == 0) {
+            return lastChar;
+        } else if (remainder <= ASCII_CHAR_COUNT) {
+            return String.fromCharCode(ASCII_OF_A + remainder - 1) + lastChar;
+        }
+        // recursive call to figure out the rest of the letters
+        return this.colnumToLetters(remainder - 1) + lastChar;
+    }
 
     setUserAttribute(row: number, col: number, key: string, value: string) {
         this.cellDataMatrix[row][col][key] = value;
-        if (!this.userdata) return;
-        let coordinate:string = this.colnumToLetters(col) + ""+(row+1);
-        if ( !this.userdata.cells[coordinate] ) {
-            let data: CellEntity = {cell: null};
+        if (!this.userdata) {
+            return;
+        }
+        const coordinate = this.colnumToLetters(col) + "" + (row + 1);
+        if (!this.userdata.cells[coordinate]) {
+            const data: CellEntity = {cell: null};
             data[key] = value;
             this.userdata.cells[coordinate] = data;
             return;
         }
         const cellValue = this.userdata.cells[coordinate];
         if (isPrimitiveCell(cellValue)) {
-            let data: CellEntity = {cell: this.cellToString(cellValue)};
+            const data: CellEntity = {cell: this.cellToString(cellValue)};
             data[key] = value;
             this.userdata.cells[coordinate] = data;
             return;
@@ -513,9 +524,11 @@ export class TimTableController extends DestroyScope implements IController {
 
     setUserContent(row: number, col: number, content: string) {
         this.cellDataMatrix[row][col].cell = content;
-        if (!this.userdata) return;
-        let coordinate:string = this.colnumToLetters(col) + ""+(row+1);
-        if ( !this.userdata.cells[coordinate] ) {
+        if (!this.userdata) {
+            return;
+        }
+        const coordinate = this.colnumToLetters(col) + "" + (row + 1);
+        if (!this.userdata.cells[coordinate]) {
             this.userdata.cells[coordinate] = content;
             return;
         }
@@ -536,7 +549,7 @@ export class TimTableController extends DestroyScope implements IController {
      * @param {number} col Column index
      */
     async saveCells(cellContent: string, docId: number, parId: string, row: number, col: number) {
-        if ( this.task ) {
+        if (this.task) {
             this.setUserContent(row, col, cellContent);
             return;
         }
@@ -583,7 +596,9 @@ export class TimTableController extends DestroyScope implements IController {
      * @returns {Promise<void>}
      */
     async openEditor(cell: CellEntity, docId: number, value: string, parId: string, row: number, col: number) {
-        if (this.currentCell) { this.currentCell.editorOpen = true; }
+        if (this.currentCell) {
+            this.currentCell.editorOpen = true;
+        }
         if (this.editedCellContent == undefined) {
             return;
         }
@@ -591,7 +606,9 @@ export class TimTableController extends DestroyScope implements IController {
         const result = await openEditorSimple(docId, this.editedCellContent,
             "Edit table cell", "timTableCell");
         this.bigEditorOpen = false;
-        if (this.currentCell) { this.currentCell.editorOpen = false; }
+        if (this.currentCell) {
+            this.currentCell.editorOpen = false;
+        }
         if (result.type == "save" && result.text != this.editedCellInitialContent) {
             this.saveCells(result.text, docId, parId, row, col);
             // ctrl.cellDataMatrix[row][col] = result.text
@@ -602,7 +619,9 @@ export class TimTableController extends DestroyScope implements IController {
             this.closeSmallEditor();
         }
         if (isPrimitiveCell(cell)) {
-        } else { cell.editorOpen = false; }
+        } else {
+            cell.editorOpen = false;
+        }
     }
 
     /**
@@ -616,7 +635,9 @@ export class TimTableController extends DestroyScope implements IController {
             this.currentCell.editorOpen = true;
         }
         const parId = getParId(this.element.parents(".par"));
-        if (parId === undefined || !this.viewctrl) { return; }
+        if (parId === undefined || !this.viewctrl) {
+            return;
+        }
         this.openEditor(cell, this.viewctrl.item.id, this.getCellContentString(rowi, coli), parId, rowi, coli);
         const edit = this.element.find(".editInput");
         edit.focus();
@@ -633,7 +654,9 @@ export class TimTableController extends DestroyScope implements IController {
         const modal: CellEntity = {
             cell: this.editedCellContent,
         };
-        if (this.currentCell != undefined) { this.editorOpen(modal, this.currentCell.row, this.currentCell.col); }
+        if (this.currentCell != undefined) {
+            this.editorOpen(modal, this.currentCell.row, this.currentCell.col);
+        }
     }
 
     /**
@@ -671,9 +694,10 @@ export class TimTableController extends DestroyScope implements IController {
         }
 
         for (const key of Object.keys(sourceCell)) {
-            let value = sourceCell[key];
-            if ( value != null)
+            const value = sourceCell[key];
+            if (value != null) {
                 targetCell[key] = value;
+            }
         }
 
     }
@@ -697,7 +721,9 @@ export class TimTableController extends DestroyScope implements IController {
      * @returns {string}
      */
     private cellToString(cell: CellType) {
-        if (cell == null) { return ""; }
+        if (cell == null) {
+            return "";
+        }
         return cell.toString();
     }
 
@@ -765,7 +791,9 @@ export class TimTableController extends DestroyScope implements IController {
         for (let y = 0; y < this.cellDataMatrix.length; y++) {
             const row = this.cellDataMatrix[y];
 
-            if (!row) { continue; }
+            if (!row) {
+                continue;
+            }
 
             let renderIndexX = 0;
 
@@ -781,20 +809,27 @@ export class TimTableController extends DestroyScope implements IController {
                 const colspan = cell.colspan ? cell.colspan : 1;
                 const rowspan = cell.rowspan ? cell.rowspan : 1;
 
-                if (colspan === 1 && rowspan === 1) { continue; } // might enhance performance?
+                if (colspan === 1 && rowspan === 1) {
+                    continue;
+                } // might enhance performance?
 
                 for (let spanCellY = 0; spanCellY < rowspan; spanCellY++) {
-                    if (y + spanCellY >= this.cellDataMatrix.length) { break; }
+                    if (y + spanCellY >= this.cellDataMatrix.length) {
+                        break;
+                    }
 
                     const spanRow = this.cellDataMatrix[y + spanCellY];
 
                     for (let spanCellX = 0; spanCellX < colspan; spanCellX++) {
-                        if (spanCellY == 0 && spanCellX == 0) { continue; }
-                        if (x + spanCellX >= spanRow.length) { break; }
+                        if (spanCellY == 0 && spanCellX == 0) {
+                            continue;
+                        }
+                        if (x + spanCellX >= spanRow.length) {
+                            break;
+                        }
 
                         const spanCell = spanRow[x + spanCellX];
-                        if (spanCell.underSpanOf)
-                        {
+                        if (spanCell.underSpanOf) {
                             // console.log("Found intersecting colspan / rowspan areas");
                             break;
                         }
@@ -808,11 +843,13 @@ export class TimTableController extends DestroyScope implements IController {
 
     /**
      * Coordinates validation
-     * @param {{col: number; row: number}} address row and column index
+     * @param {{col: number, row: number}} address row and column index
      * @returns {boolean} true if valid
      */
-    private checkThatAddIsValid(address: { col: number, row: number }) {
-        if (address.col >= 0 && address.row >= 0) { return true; }
+    private checkThatAddIsValid(address: {col: number, row: number}) {
+        if (address.col >= 0 && address.row >= 0) {
+            return true;
+        }
     }
 
     /**
@@ -820,7 +857,7 @@ export class TimTableController extends DestroyScope implements IController {
      * ex. C5 -> 2,4
      * @param {string} colValue Column value, ex. 'A'
      * @param {string} rowValue  Row value, ex. '1'
-     * @returns {{col: number; row: number}} Coordinates as index numbers
+     * @returns {{col: number, row: number}} Coordinates as index numbers
      */
     private getAddress(colValue: string, rowValue: string) {
         const charCodeOfA = "A".charCodeAt(0);
@@ -832,7 +869,7 @@ export class TimTableController extends DestroyScope implements IController {
             reversedCharacterPlaceInString++;
         }
         columnIndex = columnIndex - 1;
-        const rowIndex: number = parseInt(rowValue) - 1;
+        const rowIndex = parseInt(rowValue) - 1;
         return {col: columnIndex, row: rowIndex};
     }
 
@@ -860,8 +897,10 @@ export class TimTableController extends DestroyScope implements IController {
     private resizeCellDataMatrixHeight(length: number) {
         for (let i = this.cellDataMatrix.length; i < length; i++) {
             this.cellDataMatrix[i] = [];
-            if ( i < 1 ) continue;
-            for (let j=0; j<this.cellDataMatrix[i-1].length; j++) {
+            if (i < 1) {
+                continue;
+            }
+            for (let j = 0; j < this.cellDataMatrix[i - 1].length; j++) {
                 this.cellDataMatrix[i][j] = this.createDummyCell();
             }
         }
@@ -939,7 +978,7 @@ export class TimTableController extends DestroyScope implements IController {
             }
             ev.preventDefault();
 
-            if ( ev.shiftKey ) {
+            if (ev.shiftKey) {
                 this.doCellMovement(Direction.Up);
                 return;
             }
@@ -961,11 +1000,12 @@ export class TimTableController extends DestroyScope implements IController {
         }
 
         if (ev.keyCode === KEY_TAB) {
-            ev. preventDefault();
-            if ( ev.shiftKey )
+            ev.preventDefault();
+            if (ev.shiftKey) {
                 this.doCellMovement(Direction.Left);
-            else
+            } else {
                 this.doCellMovement(Direction.Right);
+            }
             return;
         }
 
@@ -978,7 +1018,9 @@ export class TimTableController extends DestroyScope implements IController {
 
         // Arrow keys
         if (!this.currentCell && ev.ctrlKey && isArrowKey(ev.keyCode)) {
-            if ( this.handleArrowMovement(ev) ) ev.preventDefault();
+            if (this.handleArrowMovement(ev)) {
+                ev.preventDefault();
+            }
         }
     }
 
@@ -988,7 +1030,9 @@ export class TimTableController extends DestroyScope implements IController {
      */
     private handleArrowMovement(ev: KeyboardEvent): boolean {
         const parId = getParId(this.element.parents(".par"));
-        if (!this.editing || !this.viewctrl || !parId || (this.currentCell && this.currentCell.editorOpen)) { return false; }
+        if (!this.editing || !this.viewctrl || !parId || (this.currentCell && this.currentCell.editorOpen)) {
+            return false;
+        }
 
         if (ev.keyCode === KEY_DOWN) {
             return this.doCellMovement(Direction.Down);
@@ -1058,24 +1102,24 @@ export class TimTableController extends DestroyScope implements IController {
             case Direction.Up:
                 nextRow = this.constrainRowIndex(y - 1);
                 nextColumn = this.constrainColumnIndex(nextRow, x);
-                this.lastDirection = { direction: direction, coord: nextColumn };
+                this.lastDirection = {direction: direction, coord: nextColumn};
                 break;
             case Direction.Left:
                 nextRow = this.constrainRowIndex(y);
                 nextColumn = this.constrainColumnIndex(nextRow, x - 1);
-                this.lastDirection = { direction: direction, coord: nextRow };
+                this.lastDirection = {direction: direction, coord: nextRow};
                 break;
             case Direction.Down:
                 const sourceRowspan = sourceCell.rowspan ? sourceCell.rowspan : 1;
                 nextRow = this.constrainRowIndex(y + sourceRowspan);
                 nextColumn = this.constrainColumnIndex(nextRow, x);
-                this.lastDirection = { direction: direction, coord: nextColumn };
+                this.lastDirection = {direction: direction, coord: nextColumn};
                 break;
             case Direction.Right:
                 const sourceColspan = sourceCell.colspan ? sourceCell.colspan : 1;
                 nextRow = this.constrainRowIndex(y);
                 nextColumn = this.constrainColumnIndex(nextRow, x + sourceColspan);
-                this.lastDirection = { direction: direction, coord: nextRow };
+                this.lastDirection = {direction: direction, coord: nextRow};
                 break;
             default:
                 return null;
@@ -1088,19 +1132,27 @@ export class TimTableController extends DestroyScope implements IController {
             cell = this.cellDataMatrix[nextRow][nextColumn];
         }
 
-        return { row: nextRow, col: nextColumn };
+        return {row: nextRow, col: nextColumn};
     }
 
     private constrainRowIndex(rowIndex: number) {
-        if (rowIndex >= this.cellDataMatrix.length) { return 0; }
-        if (rowIndex < 0) { return this.cellDataMatrix.length - 1; }
+        if (rowIndex >= this.cellDataMatrix.length) {
+            return 0;
+        }
+        if (rowIndex < 0) {
+            return this.cellDataMatrix.length - 1;
+        }
         return rowIndex;
     }
 
     private constrainColumnIndex(rowIndex: number, columnIndex: number) {
         const row = this.cellDataMatrix[rowIndex];
-        if (columnIndex >= row.length) { return 0; }
-        if (columnIndex < 0) { return row.length - 1; }
+        if (columnIndex >= row.length) {
+            return 0;
+        }
+        if (columnIndex < 0) {
+            return row.length - 1;
+        }
 
         return columnIndex;
     }
@@ -1153,7 +1205,9 @@ export class TimTableController extends DestroyScope implements IController {
      */
     private async openCellForEditing(cell: CellEntity, rowi: number, coli: number, event?: MouseEvent) {
         const parId = getParId(this.element.parents(".par"));
-        if (!this.isInEditMode() || !this.viewctrl || !parId || (this.currentCell && this.currentCell.editorOpen)) { return; }
+        if (!this.isInEditMode() || !this.viewctrl || !parId || (this.currentCell && this.currentCell.editorOpen)) {
+            return;
+        }
 
         if (this.currentCell) {
             if (this.currentCell.row === rowi && this.currentCell.col === coli) {
@@ -1250,7 +1304,6 @@ export class TimTableController extends DestroyScope implements IController {
 
             edit.width(editOuterWidth);
 
-
             if (editOffset && editOuterHeight && tableCellOffset && editOuterWidth) {
                 this.element.find(".buttonOpenBigEditor").offset({
                     left: tableCellOffset.left,
@@ -1268,10 +1321,10 @@ export class TimTableController extends DestroyScope implements IController {
                 const buttonAcceptEditWidth = buttonAcceptEdit.outerWidth();
 
                 if (buttonAcceptEditOffset && buttonAcceptEditWidth) {
-                     this.element.find(".buttonCloseSmallEditor").offset({
-                     left: buttonAcceptEditOffset.left + buttonAcceptEditWidth,
-                     top: editOffset.top,
-                });
+                    this.element.find(".buttonCloseSmallEditor").offset({
+                        left: buttonAcceptEditOffset.left + buttonAcceptEditWidth,
+                        top: editOffset.top,
+                    });
                 }
 
             }
@@ -1288,8 +1341,8 @@ export class TimTableController extends DestroyScope implements IController {
         const styles = this.stylingForCellOfColumn(coli);
 
         if (this.getCellContentString(rowi, coli) === "") {
-            styles["height"] = "2em";
-            styles["width"] = "1.5em";
+            styles.height = "2em";
+            styles.width = "1.5em";
         }
 
         const cell = this.cellDataMatrix[rowi][coli];
@@ -1306,7 +1359,7 @@ export class TimTableController extends DestroyScope implements IController {
      * @param {number} coli The index of the column
      */
     private stylingForCellOfColumn(coli: number) {
-        const styles: { [index: string]: string } = {};
+        const styles: {[index: string]: string} = {};
         const table = this.data.table;
 
         if (!table.columns) {
@@ -1332,7 +1385,7 @@ export class TimTableController extends DestroyScope implements IController {
      * @param {IColumn} col The column to be styled
      */
     private stylingForColumn(col: IColumn) {
-        const styles: { [index: string]: string } = {};
+        const styles: {[index: string]: string} = {};
 
         this.applyStyle(styles, col, columnStyles);
         return styles;
@@ -1343,7 +1396,7 @@ export class TimTableController extends DestroyScope implements IController {
      * @param {IRow} rowi The row to be styled
      */
     private stylingForRow(rowi: number) {
-        const styles: { [index: string]: string } = {};
+        const styles: {[index: string]: string} = {};
 
         if (!this.data.table.rows || rowi >= this.data.table.rows.length) {
             return styles;
@@ -1359,7 +1412,7 @@ export class TimTableController extends DestroyScope implements IController {
      * @returns {{[p: string]: string}}
      */
     private stylingForTable(tab: ITable) {
-        const styles: { [index: string]: string } = {};
+        const styles: {[index: string]: string} = {};
         this.applyStyle(styles, tab, tableStyles);
         return styles;
     }
@@ -1372,13 +1425,13 @@ export class TimTableController extends DestroyScope implements IController {
      * @param object The object that contains the user-given style attributes
      * @param {Set<string>} validAttrs A set that contains the accepted style attributes
      */
-    private applyStyle(styles: { [index: string]: string }, object: any, validAttrs: Set<string>) {
+    private applyStyle(styles: {[index: string]: string}, object: any, validAttrs: Set<string>) {
         for (const key of Object.keys(object)) {
             if (!validAttrs.has(key)) {
                 continue;
             }
 
-            const property: string = styleToHtml[key];
+            const property = styleToHtml[key];
             if (!property) {
                 continue;
             }
@@ -1393,7 +1446,9 @@ export class TimTableController extends DestroyScope implements IController {
     public async toggleEditMode() {
         await this.saveCurrentCell();
         this.currentCell = undefined;
-        if (!this.editing) { this.editSave(); }
+        if (!this.editing) {
+            this.editSave();
+        }
         this.editing = !this.editing;
     }
 
@@ -1455,7 +1510,9 @@ export class TimTableController extends DestroyScope implements IController {
         const docId = this.viewctrl.item.id;
         const parId = this.getOwnParId();
 
-        if (rowId < 0 || this.cellDataMatrix.length < 2) { return; }
+        if (rowId < 0 || this.cellDataMatrix.length < 2) {
+            return;
+        }
 
         const response = await $http.post<TimTable>("/timTable/removeRow",
             {docId, parId, rowId, datablockOnly});
@@ -1495,7 +1552,9 @@ export class TimTableController extends DestroyScope implements IController {
         }
         const datablockOnly = this.isInDataInputMode();
 
-        if (colId < 0) { return; }
+        if (colId < 0) {
+            return;
+        }
 
         const response = await $http.post<TimTable>("/timTable/removeColumn",
             {docId, parId, colId, datablockOnly});
@@ -1575,22 +1634,28 @@ export class TimTableController extends DestroyScope implements IController {
         this.closeSmallEditor();
     }
 
-    //<editor-fold desc="Toolbar">
-
     async addColumnFromToolbar(offset: number) {
-        if (this.activeCell) return this.addColumn(this.activeCell.col + offset);
+        if (this.activeCell) {
+            return this.addColumn(this.activeCell.col + offset);
+        }
     }
 
     async addRowFromToolbar(offset: number) {
-        if (this.activeCell) return this.addRow(this.activeCell.row + offset);
+        if (this.activeCell) {
+            return this.addRow(this.activeCell.row + offset);
+        }
     }
 
     async removeColumnFromToolbar() {
-        if (this.activeCell) return this.removeColumn(this.activeCell.col);
+        if (this.activeCell) {
+            return this.removeColumn(this.activeCell.col);
+        }
     }
 
     async removeRowFromToolbar() {
-        if (this.activeCell) return this.removeRow(this.activeCell.row);
+        if (this.activeCell) {
+            return this.removeRow(this.activeCell.row);
+        }
     }
 
     async setCellBackgroundColor(value: string) {
@@ -1612,13 +1677,16 @@ export class TimTableController extends DestroyScope implements IController {
             return;
         }
 
-        if ( value.indexOf("##") == 0 ) value = value.substr(1); // sometimes there is extra # in colors?
+        // sometimes there is extra # in colors?
+        if (value.indexOf("##") == 0) {
+            value = value.substr(1);
+        }
         const parId = this.getOwnParId();
         const docId = this.viewctrl.item.id;
         const rowId = this.activeCell.row;
         const colId = this.activeCell.col;
 
-        if ( this.task ) {
+        if (this.task) {
             this.setUserAttribute(rowId, colId, key, value);
             return;
         }
@@ -1629,9 +1697,6 @@ export class TimTableController extends DestroyScope implements IController {
         this.reInitialize();
     }
 
-    //</editor-fold>
-
-    //<editor-fold desc="Rendering">
     /**
      * Checks whether a cell is the currently active cell of the table.
      * The active cell is the cell that is being edited, or if no cell is being edited,
@@ -1664,15 +1729,12 @@ export class TimTableController extends DestroyScope implements IController {
      * @param coli Column index
      */
     private getTrustedCellContentHtml(rowi: number, coli: number) {
-        //return this.sceService.trustAsHtml(this.cellDataMatrix[rowi][coli].cell);
         return this.cellDataMatrix[rowi][coli].cell;
     }
 
     private showCell(cell: ICell) {
         return !cell.underSpanOf;
     }
-
-    //</editor-fold>
 }
 
 timApp.component("timTable", {
@@ -1696,8 +1758,8 @@ timApp.component("timTable", {
              ng-style="$ctrl.stylingForColumn(c)"/>
         <tr ng-repeat="r in $ctrl.cellDataMatrix" ng-init="rowi = $index"
             ng-style="$ctrl.stylingForRow(rowi)">
-                <td ng-class="{'activeCell': $ctrl.isActiveCell(rowi, coli)}" 
-                 ng-repeat="td in r" ng-init="coli = $index" ng-if="$ctrl.showCell(td)" 
+                <td ng-class="{'activeCell': $ctrl.isActiveCell(rowi, coli)}"
+                 ng-repeat="td in r" ng-init="coli = $index" ng-if="$ctrl.showCell(td)"
                  colspan="{{td.colspan}}" rowspan="{{td.rowspan}}"
                     ng-style="$ctrl.stylingForCell(rowi, coli)" ng-click="$ctrl.cellClicked(td, rowi, coli, $event)">
                     <div ng-bind-html="$ctrl.getTrustedCellContentHtml(rowi, coli)">
@@ -1708,7 +1770,7 @@ timApp.component("timTable", {
     <button class="timTableEditor timButton buttonAddRow" title="Add row" ng-show="$ctrl.addRowEnabled()" ng-click="$ctrl.addRow(-1)"><span
             class="glyphicon glyphicon-plus" ng-bind="$ctrl.addRowButtonText"></span></button>
     <button class="timTableEditor timButton buttonRemoveRow" title="Remove row" ng-show="$ctrl.delRowEnabled()" ng-click="$ctrl.removeRow(-1)"><span
-            class="glyphicon glyphicon-minus"></span></button>            
+            class="glyphicon glyphicon-minus"></span></button>
     </div>
     <div class="timTableEditor no-highlight">
         <input class="editInput" ng-show="$ctrl.isSomeCellBeingEdited()"
@@ -1723,11 +1785,11 @@ timApp.component("timTable", {
              <button class="timButton buttonOpenBigEditor" ng-show="$ctrl.isSomeCellBeingEdited()"
                     ng-click="$ctrl.openBigEditor()" class="timButton"><span class="glyphicon glyphicon-pencil"></span>
             </button>
-   
-            
+
+
 </div>
 
-  <button class="timButton" ng-show="::$ctrl.task" ng-click="$ctrl.sendDataBlock()" >Tallenna</button> 
+  <button class="timButton" ng-show="::$ctrl.task" ng-click="$ctrl.sendDataBlock()" >Tallenna</button>
   <span class="error" ng-show="$ctrl.error" ng-bind="$ctrl.error"></span>
 
 </div>
