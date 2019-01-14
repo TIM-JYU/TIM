@@ -147,7 +147,7 @@ export class TimTableEditorToolbarController extends DialogController<{params: I
 }
 
 export function isToolbarEnabled() {
-    return window.location.hostname !== "tim.jyu.fi" || getURLParameter("toolbar") !== undefined;
+    return true;
 }
 
 // : IPromise< { } >
