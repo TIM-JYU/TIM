@@ -308,6 +308,7 @@ export class TimTableController extends DestroyScope implements IController {
         }
         document.addEventListener("keyup", this.keyDownPressedTable);
         document.addEventListener("keydown", this.keyDownTable);
+        document.addEventListener("keypress", this.keyDownTable);
         // document.addEventListener("click", this.onClick);
         onClick("body", ($this, e) => {
             this.onClick(e);
@@ -1235,11 +1236,14 @@ export class TimTableController extends DestroyScope implements IController {
             (activeCell && this.activeCell &&
                 activeCell.row === this.activeCell.row && activeCell.col === this.activeCell.col)) {
             await this.saveCurrentCell();
+            let value: string = "";
             if (!this.task) {
-                const value = await this.getCellData(cell, this.viewctrl.item.id, parId, rowi, coli);
-                this.editedCellContent = value;
-                this.editedCellInitialContent = value;
+                value = await this.getCellData(cell, this.viewctrl.item.id, parId, rowi, coli);
+            } else {
+                value = this.getCellContentString(rowi,coli);
             }
+            this.editedCellContent = value;
+            this.editedCellInitialContent = value;
             this.currentCell = {row: rowi, col: coli, editorOpen: false};
             this.calculateElementPlaces(rowi, coli, event);
         }
@@ -1705,8 +1709,8 @@ export class TimTableController extends DestroyScope implements IController {
             return;
         }
 
-        const response = await $http.post<TimTable>("/timTable/" + route,
-            {docId, parId, rowId, colId, [key]: value});
+        const data = {docId, parId, rowId, colId, [key]: value};
+        const response = await $http.post<TimTable>("/timTable/" + route, data);
         this.data = response.data;
         this.reInitialize();
     }

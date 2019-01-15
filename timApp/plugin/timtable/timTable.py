@@ -551,7 +551,7 @@ def tim_table_set_cell_background_color():
     Sets a cell's background color.
     :return: The entire table's data after the cell's background color has been set.
     """
-    doc_id, par_id, row_id, col_id, color = verify_json_params('docId', 'parId', 'rowId', 'colId', 'color')
+    doc_id, par_id, row_id, col_id, color = verify_json_params('docId', 'parId', 'rowId', 'colId', 'backgroundColor')
     return set_cell_style_attribute(doc_id, par_id, row_id, col_id, BACKGROUND_COLOR, color)
 
 
