@@ -885,18 +885,6 @@ input[type="file"] {
     }
 }
 
-.menuButtons {
-    display: table;
-    position: absolute;
-    white-space: nowrap;
-    border-radius: 3px;
-    padding: 12px;
-    margin: 0;
-    background-color: #f8f8ff;
-    z-index: 100;
-    min-height: 50px;
-}
-
 .actionButtonContent {
     white-space: normal;
     max-width: 600px;
@@ -929,10 +917,6 @@ input[type="file"] {
     max-height: 200px;
     overflow-x: hidden;
     overflow-y: scroll;
-}
-
-.actionButtonRow {
-    display: table-row;
 }
 
 @import "csRun";
