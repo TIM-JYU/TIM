@@ -677,6 +677,7 @@ starttime: 15
 ```
 
 ``` {#t2 plugin="csPlugin"}
+starttime:
 deadline:
 ```
 """)
@@ -686,10 +687,7 @@ deadline:
                          expect_content='Invalid date format: 15',
                          json_key='error')
         p = Plugin.from_paragraph(d.document.get_paragraphs()[1])
-        self.post_answer(p.type, p.full_task_id, [],
-                         expect_status=400,
-                         expect_content='Invalid date format: None',
-                         json_key='error')
+        self.post_answer(p.type, p.full_task_id, [])
 
     def test_invalid_yaml(self):
         self.login_test1()

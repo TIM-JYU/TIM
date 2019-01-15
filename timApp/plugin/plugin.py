@@ -130,7 +130,7 @@ class Plugin:
         if isinstance(d, datetime):
             if d.tzinfo is None:
                 d = d.replace(tzinfo=timezone.utc)
-        else:
+        elif d is not None:
             raise PluginException(f'Invalid date format: {d}')
         return d
 
@@ -206,10 +206,10 @@ class Plugin:
         return doc_id, task_id_name, par_id
 
     def deadline(self, default=None):
-        return self.get_date(get_value(self.values, self.deadline_key, default))
+        return self.get_date(get_value(self.values, self.deadline_key, default)) or default
 
     def starttime(self, default=None):
-        return self.get_date(get_value(self.values, self.starttime_key, default))
+        return self.get_date(get_value(self.values, self.starttime_key, default)) or default
 
     def points_rule(self):
         if self.points_rule_cache is None:
