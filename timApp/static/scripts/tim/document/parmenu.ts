@@ -57,11 +57,11 @@ export class ParmenuHandler {
 
             if (this.viewctrl.selection.start != null) {
                 this.viewctrl.editingHandler.extendSelection(par, true);
-            } else if (!this.isCloseMenuDefault()) {
+            } else {
                 const offset = par.offset() || getEmptyCoords();
                 const coords = {left: e.pageX - offset.left, top: e.pageY - offset.top};
-                const toggle1 = par.find(".actionButtons").length === 0;
-                const toggle2 = par.hasClass("lightselect");
+                const toggle1 = !par.hasClass("lightselect");
+                const toggle2 = par.hasClass("lightselect") && !this.isCloseMenuDefault();
 
                 $(".par.selected").removeClass("selected");
                 $(".par.lightselect").removeClass("lightselect");
