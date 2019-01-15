@@ -127,9 +127,11 @@ class Plugin:
                 d = datetime.strptime(d, "%Y-%m-%d %H:%M:%S")
             except ValueError:
                 raise PluginException(f'Invalid date format: {d}')
-        if d is not None:
+        if isinstance(d, datetime):
             if d.tzinfo is None:
                 d = d.replace(tzinfo=timezone.utc)
+        else:
+            raise PluginException(f'Invalid date format: {d}')
         return d
 
     @staticmethod

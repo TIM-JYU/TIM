@@ -669,6 +669,28 @@ choices:
         self.assertEqual(resp['error'], 'The deadline for submitting answers has passed.')
         self.get(d.url_relative)
 
+    def test_invalid_interval(self):
+        self.login_test1()
+        d = self.create_doc(initial_par="""
+``` {#t plugin="csPlugin"}
+starttime: 15
+```
+
+``` {#t2 plugin="csPlugin"}
+deadline:
+```
+""")
+        p = Plugin.from_paragraph(d.document.get_paragraphs()[0])
+        self.post_answer(p.type, p.full_task_id, [],
+                         expect_status=400,
+                         expect_content='Invalid date format: 15',
+                         json_key='error')
+        p = Plugin.from_paragraph(d.document.get_paragraphs()[1])
+        self.post_answer(p.type, p.full_task_id, [],
+                         expect_status=400,
+                         expect_content='Invalid date format: None',
+                         json_key='error')
+
     def test_invalid_yaml(self):
         self.login_test1()
         d = self.create_doc(initial_par="""
