@@ -106,7 +106,7 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
                 // It is needed to reduce the amount of vertical jumping.
                 ab.setAttribute("class", currClass);
             }
-            abElem = compileWithViewctrl(ab, this.viewctrl.scope, this.viewctrl)[0];
+            abElem = compileWithViewctrl(ab, this.viewctrl.scope, this.viewctrl, {timPar: {instance: par}})[0];
         }
         // Next the inside of the plugin to non lazy
         const origHtml = plugin[0].innerHTML;
@@ -147,12 +147,12 @@ interface IAnswerSaveEvent {
 
 export class AnswerBrowserController extends DestroyScope implements IController {
     private static $inject = ["$scope", "$element"];
-    private par: JQuery;
+    private par!: JQuery;
     private taskId!: Binding<string, "@">;
     private loading: number;
     private viewctrl!: Require<ViewCtrl>;
     private rctrl!: Require<ReviewController>;
-    private parContent: JQuery;
+    private parContent!: JQuery;
     private user: IUser | undefined;
     private fetchedUser: IUser | undefined;
     private saveTeacher: boolean = false;
@@ -172,13 +172,12 @@ export class AnswerBrowserController extends DestroyScope implements IController
 
     constructor(private scope: IScope, private element: IRootElementService) {
         super(scope, element);
-        this.par = element.parents(".par");
-        this.parContent = this.par.find(".parContent");
         this.loading = 0;
         this.checkKeyPress = this.checkKeyPress.bind(this);
     }
 
     async $onInit() {
+        this.parContent = this.par.find(".parContent");
         this.scope.$watch(() => this.taskId, (newValue, oldValue) => {
             if (newValue === oldValue) {
                 return;
@@ -720,6 +719,12 @@ timApp.component("answerbrowser", {
     },
     controller: AnswerBrowserController,
     require: {
+        // This is not a real component but a workaround for getting reference to the correct paragraph.
+        // Answerbrowser gets compiled before being attached to DOM to avoid too early rendering,
+        // so we can't use "this.element.parents()" to look for parent elements, so instead, we pass
+        // the paragraph to the compile call.
+        par: "^timPar",
+
         rctrl: "^timReview",
         viewctrl: "^timView",
     },

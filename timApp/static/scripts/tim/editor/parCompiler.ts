@@ -13,14 +13,18 @@ export interface IPluginInfoResponse {
     trdiff?: {old: string, new: string};
 }
 
-export function compileWithViewctrl(html: string | Element, scope: IScope, view: ViewCtrl | undefined) {
+export function compileWithViewctrl(html: string | Element,
+                                    scope: IScope,
+                                    view: ViewCtrl | undefined,
+                                    extraCtrls: {[name: string]: {instance: unknown}} = {}) {
     return $compile(html)(scope,
         undefined,
         view ? {
             transcludeControllers: {
                 timView: {instance: view},
                 timReview: {instance: view.reviewCtrlScope!.$ctrl},
-            }
+                ...extraCtrls,
+            },
         } : {});
 }
 
@@ -74,8 +78,8 @@ export class ParagraphCompiler {
      * @returns null if KaTeX processed the element successfully. Otherwise, the failed element.
      */
     public processMath(katexFunction: (e: Element) => void,
-        elem: Element,
-        tryMathJax: boolean): Element | null {
+                       elem: Element,
+                       tryMathJax: boolean): Element | null {
         try {
             katexFunction(elem);
             return null;
