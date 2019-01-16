@@ -74,12 +74,12 @@ test2
     def test_merge_replace(self):
         yb = YamlBlock.from_markdown(self.md1)
         yb2 = YamlBlock.from_markdown(self.md2)
-        ybc = YamlBlock.from_markdown(self.combined_replace)
-        self.assertEqual(yb.merge_with(yb2), ybc)
+        ybc = YamlBlock.from_markdown(self.combined_append)
+        self.assertEqual(yb.merge_with(yb2).values, ybc.values)
 
         yb2 = YamlBlock.from_markdown(self.md2.replace('|!!', '|!! r'))
         self.assertEqual(yb2.merge_hints, {'css': MergeStyle.Replace})
-        self.assertEqual(yb.merge_with(yb2).values, ybc.values)
+        self.assertEqual(yb.merge_with(yb2).values, YamlBlock.from_markdown(self.combined_replace).values)
 
     def test_merge_replace_if_not_exist(self):
         yb = YamlBlock.from_markdown(self.md1)
@@ -258,3 +258,9 @@ a: |1
 a: |9
 """)
         self.assertEqual({'a': ''}, yb)
+
+    def test_css_default_append(self):
+        yb = YamlBlock.from_markdown("css: 'html {display: none;}'")
+        yb2 = YamlBlock.from_markdown("css: 'body {display: none;}'")
+        result = yb.merge_with(yb2)
+        self.assertEqual({'css': 'html {display: none;}body {display: none;}'}, result)

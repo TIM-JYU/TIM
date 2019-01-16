@@ -365,6 +365,9 @@ def merge(a: dict, b: dict, merge_info: Optional[YamlMergeInfo] = None):
     return __merge_helper(a, b, 0, merge_info=merge_info)
 
 
+default_append_keys = {'css'}
+
+
 def __merge_helper(a: dict, b: dict, depth: int = 0, merge_info: Optional[YamlMergeInfo] = None):
     for key in b:
         if key in a:
@@ -375,13 +378,12 @@ def __merge_helper(a: dict, b: dict, depth: int = 0, merge_info: Optional[YamlMe
             elif type(a[key]) != type(b[key]):
                 a[key] = b[key]
             else:
+                m = MergeStyle.Append if key in default_append_keys else MergeStyle.Replace
                 if merge_info:
-                    m = merge_info.get(key, MergeStyle.Replace)
-                    if m == MergeStyle.Replace:
-                        a[key] = b[key]
-                    elif m == MergeStyle.Append:
-                        a[key] += b[key]
-                else:
+                    m = merge_info.get(key, m)
+                if m == MergeStyle.Replace:
                     a[key] = b[key]
+                elif m == MergeStyle.Append:
+                    a[key] += b[key]
         else:
             a[key] = b[key]
