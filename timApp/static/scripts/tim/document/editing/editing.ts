@@ -26,10 +26,10 @@ import {
     Paragraph,
 } from "../parhelpers";
 import {ViewCtrl} from "../viewctrl";
-import {viewCtrlDot} from "../viewutils";
 import {IExtraData, IParResponse, ITags} from "./edittypes";
 import {isManageResponse, showRenameDialog} from "./pluginRenameForm";
 import {handleUnread} from "../readings";
+import {MenuFunctionList} from "../viewutils";
 
 export enum EditType {
     Edit,
@@ -116,7 +116,6 @@ export class EditingHandler {
         this.sc = sc;
         this.viewctrl = view;
         this.viewctrl.editing = false;
-        this.viewctrl.addParagraphFunctions = this.getAddParagraphFunctions();
 
         this.viewctrl.selection = {};
 
@@ -534,8 +533,8 @@ This will delete the whole ${options.area ? "area" : "paragraph"} from the docum
         return tableCtrl.isInEditMode();
     }
 
-    getEditorFunctions(par?: Paragraph) {
-        const parEditable = ((!par && this.viewctrl.item.rights.editable) || (par && canEditPar(this.viewctrl.item, par)));
+    getEditorFunctions(par?: Paragraph): MenuFunctionList {
+        const parEditable = ((!par && this.viewctrl.item.rights.editable) || (par && canEditPar(this.viewctrl.item, par))) || false;
         const timTableEditMode = this.isTimTableInEditMode(par);
         if (this.viewctrl.editing) {
             return [
@@ -583,6 +582,7 @@ This will delete the whole ${options.area ? "area" : "paragraph"} from the docum
                     func: (e: JQueryEventObject, p: Paragraph) => this.viewctrl.clipboardHandler.showPasteMenu(e, p),
                     desc: "Paste...",
                     show: $window.editMode && (this.viewctrl.clipMeta.allowPasteRef || this.viewctrl.clipMeta.allowPasteContent),
+                    closeAfter: false,
                 },
                 {func: (e: JQueryEventObject, p: Paragraph) => this.viewctrl.clipboardHandler.showMoveMenu(e, p), desc: "Move here...", show: $window.allowMove},
                 {
@@ -618,10 +618,6 @@ This will delete the whole ${options.area ? "area" : "paragraph"} from the docum
                 {func: empty, desc: "Close menu", show: true},
             ];
         }
-    }
-
-    showAddParagraphMenu(e: JQueryEventObject, parOrArea: JQuery) {
-        this.viewctrl.parmenuHandler.showPopupMenu(e, parOrArea, {actions: viewCtrlDot("addParagraphFunctions"), save: false});
     }
 
     getAddParagraphFunctions() {

@@ -16,7 +16,6 @@ import {
     ParOrArea,
 } from "../parhelpers";
 import {ViewCtrl} from "../viewctrl";
-import {viewCtrlDot} from "../viewutils";
 import {EditType} from "./editing";
 import {IParResponse} from "./edittypes";
 
@@ -43,23 +42,22 @@ export class ClipboardHandler {
     constructor(sc: IScope, view: ViewCtrl) {
         this.sc = sc;
         this.viewctrl = view;
-        view.pasteFunctions = this.getPasteFunctions();
     }
 
     showPasteMenu(e: JQueryEventObject, parOrArea: ParOrArea) {
-        this.viewctrl.pasteFunctions = this.getPasteFunctions();
         this.viewctrl.parmenuHandler.showPopupMenu(e, parOrArea, {
-            actions: viewCtrlDot("pasteFunctions"),
+            actions: this.getPasteFunctions(),
             contenturl: "/clipboard",
+            editbutton: false,
             save: false,
         });
     }
 
     showMoveMenu(e: JQueryEventObject, parOrArea: ParOrArea) {
-        this.viewctrl.pasteFunctions = this.getMoveFunctions();
         this.viewctrl.parmenuHandler.showPopupMenu(e, parOrArea, {
-            actions: viewCtrlDot("pasteFunctions"),
+            actions: this.getMoveFunctions(),
             contenturl: "/clipboard",
+            editbutton: false,
             save: false,
         });
     }

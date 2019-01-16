@@ -304,12 +304,6 @@ export function getOutOffsetVisible(el: Element) {
     return bounds;
 }
 
-export const nameofFactory = <T>() => (name: keyof T) => name;
-
-export const nameofFactoryCtrl = <T>() => (name: keyof T, ctrl = "$ctrl") => `${ctrl}.${name}`;
-
-export const nameofFactoryCtrl2 = <T, U extends keyof T>(name: U) => (name2: keyof T[U], ctrl = "$ctrl") => `${ctrl}.${name}.${name2}`;
-
 export const empty = () => {
 };
 

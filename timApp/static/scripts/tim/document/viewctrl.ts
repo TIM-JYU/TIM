@@ -6,7 +6,6 @@ import {timApp} from "tim/app";
 import {AreaHandler} from "tim/document/areas";
 import {Document, setActiveDocument} from "tim/document/document";
 import {ClipboardHandler, IClipboardMeta} from "tim/document/editing/clipboard";
-//noinspection TypeScriptPreferShortImport
 import * as interceptor from "tim/document/interceptor";
 import {NotesHandler} from "tim/document/notes";
 import {getElementByParId, Paragraph, saveCurrentScreenPar} from "tim/document/parhelpers";
@@ -30,10 +29,9 @@ import {ReviewController} from "../velp/reviewController";
 import {EditingHandler} from "./editing/editing";
 import {PendingCollection} from "./editing/edittypes";
 import {onClick} from "./eventhandlers";
-import {IPopupMenuAttrs, optionsWindowClosed} from "./parmenu";
 import {PopupMenuController} from "./popupMenu";
 import {RefPopupHandler} from "./refpopup";
-import {createPopupMenuAttrs, MenuFunctionCollection, MenuFunctionEntry} from "./viewutils";
+import {MenuFunctionEntry} from "./viewutils";
 
 markAsUsed(ngs, popupMenu, interceptor);
 
@@ -70,10 +68,7 @@ const courseFolder = "My courses";
 export class ViewCtrl implements IController {
     private notification: string = "";
     private videoElements: {[name: string]: HTMLVideoElement | undefined} = {};
-    addParagraphFunctions: MenuFunctionCollection = [];
-    pasteFunctions: MenuFunctionCollection = [];
     clipMeta: IClipboardMeta = {allowPasteContent: false, allowPasteRef: false, empty: true};
-    popupMenuAttrs: IPopupMenuAttrs = createPopupMenuAttrs();
     selection: {pars?: JQuery; start?: Paragraph; end?: Paragraph} = {};
     public par: JQuery | undefined;
 
@@ -105,7 +100,6 @@ export class ViewCtrl implements IController {
     public $storage: ngStorage.StorageService & {defaultAction: string | null; noteAccess: string};
     private liveUpdates: number;
     private oldWidth: number;
-    public editorFunctions: MenuFunctionCollection = [];
     public defaultAction: MenuFunctionEntry | undefined;
     public reviewCtrlScope?: IScope & {$ctrl: ReviewController};
     public lectureCtrl?: LectureController;
@@ -116,7 +110,7 @@ export class ViewCtrl implements IController {
     public notesHandler: NotesHandler;
     public parmenuHandler: ParmenuHandler;
     public refpopupHandler: RefPopupHandler;
-    private popupmenu?: PopupMenuController;
+    public popupmenu?: PopupMenuController;
 
     // To show a button that adds the document to bookmark folder 'My courses'.
     private taggedAsCourse: boolean = false;
@@ -198,22 +192,29 @@ export class ViewCtrl implements IController {
             });
         });
 
-        onClick("html.ng-scope", ($this, e) => {
+        onClick("html", ($this, e) => {
             // Clicking anywhere
             const tagName = (e.target as Element).tagName.toLowerCase();
             const jqTarget = $(e.target);
             const ignoreTags = ["button", "input", "label", "i"];
-            const ignoreClasses = ["menu-icon", "editline", "areaeditline", "draghandle", "actionButtons"];
+            const ignoreClasses = [
+                "actionButtons",
+                "areaeditline",
+                "draghandle",
+                "editline",
+                "menu-icon",
+                "modal-dialog",
+            ];
 
             let curElement = jqTarget;
             let limit = 10;
             while (curElement != null) {
-                if (this.editing || $.inArray(tagName, ignoreTags) >= 0 || curElement.attr("position") === "absolute") {
+                if (this.editing || ignoreTags.includes(tagName) || curElement.attr("position") === "absolute") {
                     return false;
                 }
 
-                for (let i = 0; i < ignoreClasses.length; i++) {
-                    if (curElement.hasClass(ignoreClasses[i])) {
+                for (const c of ignoreClasses) {
+                    if (curElement.hasClass(c)) {
                         return false;
                     }
                 }
@@ -225,11 +226,6 @@ export class ViewCtrl implements IController {
             }
 
             this.closePopupIfOpen();
-
-            if (tagName !== "p") {
-                $(".selected").removeClass("selected");
-                $(".lightselect").removeClass("lightselect");
-            }
 
             return false;
 
@@ -257,7 +253,7 @@ export class ViewCtrl implements IController {
         }
 
         try {
-            const found = $filter("filter")(this.editorFunctions,
+            const found = $filter("filter")(this.editingHandler.getEditorFunctions(),
                 {desc: this.$storage.defaultAction, show: true}, true);
             if (found.length) {
                 this.defaultAction = found[0];
@@ -282,7 +278,9 @@ export class ViewCtrl implements IController {
     startLiveUpdates() {
         const sc = this.scope;
         const origLiveUpdates = this.liveUpdates;
-        if (!origLiveUpdates) { return; }
+        if (!origLiveUpdates) {
+            return;
+        }
         let stop: IPromise<any> | undefined;
         stop = $interval(async () => {
             const response = await $http.get<{version: [number, number], diff: DiffResult[], live: number}>("/getParDiff/" + this.docId + "/" + this.docVersion[0] + "/" + this.docVersion[1]);
@@ -356,7 +354,7 @@ export class ViewCtrl implements IController {
             () => this.clipMeta.allowPasteRef,
             () => this.getAllowMove()], (newValues, oldValues, scope) => {
             const par = $(".actionButtons").parent(".par");
-            this.parmenuHandler.updatePopupMenu(par.length > 0 ? par : undefined);
+            this.parmenuHandler.updatePopupMenuIfOpen(this.parmenuHandler.getPopupAttrs(par.length > 0 ? par : undefined));
             if (this.editing) {
                 this.notification = "Editor is already open.";
             } else {
@@ -529,12 +527,11 @@ export class ViewCtrl implements IController {
         this.popupmenu = param;
     }
 
-    closePopupIfOpen() {
+    async closePopupIfOpen() {
         if (this.popupmenu) {
-            const par = this.popupmenu.element.parents(".par");
-            this.popupmenu.closePopup();
+            this.popupmenu.close();
+            await this.popupmenu.closePromise();
             this.popupmenu = undefined;
-            optionsWindowClosed(par);
         }
     }
 
@@ -571,7 +568,7 @@ export class ViewCtrl implements IController {
         const headers = $(".parContent h1");
         if (headers.length > 0) {
             headers.first().addClass("no-page-break-before");
-                return;
+            return;
         }
     }
 }

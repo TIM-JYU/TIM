@@ -70,7 +70,7 @@ timApp.directive("timDraggableFixed", [() => {
     };
 }]);
 
-interface Pos {
+export interface Pos {
     X: number;
     Y: number;
 }
@@ -104,8 +104,6 @@ export class DraggableController implements IController {
     private prevSize: ISize = {width: 0, height: 0};
     private resizeStates: IResizeStates = {up: false, down: false, right: false, left: false};
     private lastPos: Pos = {X: 0, Y: 0};
-    private pos?: Pos;
-    private delta?: Pos;
     private lastPageXYPos = {X: 0, Y: 0};
     private handle?: JQuery;
     private closeFn?: () => void;
@@ -452,7 +450,6 @@ export class DraggableController implements IController {
         $document.off("mouseup pointerup touchend", this.release);
         $document.off("mousemove pointermove touchmove", this.move);
         $document.off("mousemove pointermove touchmove", this.moveResize);
-        this.pos = this.getPageXY(e);
         this.ensureVisibleInViewport();
         if (this.posKey) {
             const css = this.element.css(["top", "bottom", "left",
@@ -463,7 +460,7 @@ export class DraggableController implements IController {
         }
     }
 
-    private ensureFullyInViewport() {
+    public ensureFullyInViewport() {
         const bound = getOutOffsetFully(this.element[0]);
         this.setCssFromBound(bound);
     }
@@ -493,65 +490,68 @@ export class DraggableController implements IController {
     }
 
     move = (e: JQueryEventObject) => {
-        this.pos = this.getPageXY(e);
-        this.delta = {
-            X: this.pos.X -
-
-                this.lastPos.X, Y: this.pos.Y - this.lastPos.Y,
-        };
-
-        if (this.setTop) {
-            this.element.css("top", this.prev.top + this.delta.Y);
-        }
-        if (this.setLeft) {
-            this.element.css("left", this.prev.left + this.delta.X);
-        }
-        if (this.setBottom) {
-            this.element.css("bottom",
-                this.prev.bottom - this.delta.Y);
-        }
-        if (this.setRight) {
-            this.element.css("right"
-                , this.prev.right - this.delta.X);
-        }
-
+        const pos = this.getPageXY(e);
+        this.doMove(pos);
         e.preventDefault();
         e.stopPropagation();
     }
 
+    private doMove(pos: Pos) {
+        const delta = {
+            X: pos.X -
+
+                this.lastPos.X, Y: pos.Y - this.lastPos.Y,
+        };
+
+        if (this.setTop) {
+            this.element.css("top", this.prev.top + delta.Y);
+        }
+        if (this.setLeft) {
+            this.element.css("left", this.prev.left + delta.X);
+        }
+        if (this.setBottom) {
+            this.element.css("bottom",
+                this.prev.bottom - delta.Y);
+        }
+        if (this.setRight) {
+            this.element.css("right"
+                , this.prev.right - delta.X);
+        }
+    }
+
     moveResize = (e: JQueryEventObject) => {
-        this.pos = this.getPageXY(e);
-        this.delta = {
-            X: this.pos.X - this.lastPos.X, Y: this.pos.Y -
+        const pos = this.getPageXY(e);
+        const delta = {
+            X: pos.X - this.lastPos.X, Y: pos.Y -
                 this.lastPos.Y,
         };
 
         if (this.resizeStates.up) {
             this.element.css("height",
-                this.prevSize.height - this.delta.Y);
+                this.prevSize.height - delta.Y);
             if (this.setTop) {
-                this.element.css("top", this.prev.top + this.delta.Y);
+                this.element.css("top", this.prev.top + delta.Y);
             }
         }
         if (this.resizeStates.left) {
             this.element.css(
-                "width", this.prevSize.width - this.delta.X);
+                "width", this.prevSize.width - delta.X);
             if (this.setLeft) {
-                this.element.css("left", this.prev.left + this.delta.X);
+                this.element.css("left", this.prev.left + delta.X);
             }
         }
         if (this.resizeStates.down) {
-            this.element.css("height", this.prevSize.height + this.delta.Y);
+            this.element.css("height", this.prevSize.height + delta.Y);
             if (this.setBottom) {
-                this.element.css("bottom", this.prev.bottom - this.delta.Y);
+                this.element.css("bottom", this.prev.bottom - delta.Y);
             }
         }
         if (this.resizeStates.right) {
-            this.element.css("width", this.prevSize.width + this.delta.X);
+            this.element.css("width", this.prevSize.width + delta.X);
 
-            if (this.setRight && this.delta.X >= 0) {
+            if (this.setRight && delta.X >= 0) {
                 this.element.css(
-                    "right", this.prev.right - this.delta.X);
+                    "right", this.prev.right - delta.X);
             }
         }
 
@@ -562,6 +562,14 @@ export class DraggableController implements IController {
         if (this.posKey) {
             setStorage(this.posKey + "Size", size);
         }
+    }
+
+    async moveTo(p: Pos) {
+        if (this.absolute) {
+            await this.makeModalPositionAbsolute();
+        }
+        this.element.css("margin", "inherit");
+        this.doMove(p);
     }
 
     $destroy() {

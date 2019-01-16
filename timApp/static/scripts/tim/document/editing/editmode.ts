@@ -1,7 +1,7 @@
 import {IScope} from "angular";
 import $ from "jquery";
 
-export function watchEditMode(newVal: string | null, oldVal: string | null, $scope: IScope) {
+export function watchEditMode(newVal: string | null, oldVal: string | null | undefined, $scope: IScope) {
     const w: any = window;
     w.editMode = newVal;
     $(".editmode").removeClass("editmode");

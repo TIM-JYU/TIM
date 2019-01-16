@@ -15,7 +15,7 @@ function fixPageCoords(e: JQueryEventObject) {
 }
 
 export function onClick(className: string,
-                        func: (obj: JQuery, e: JQueryEventObject) => boolean | void,
+                        func: (obj: JQuery, e: JQueryEventObject) => unknown,
                         overrideModalCheck = false) {
     let downEvent: JQueryEventObject | undefined;
     let downCoords: Coords | undefined;
@@ -65,10 +65,7 @@ export function onClick(className: string,
     const eventName = isIOS ? "touchend" : "mouseup";
     $document.on(eventName, className, function(e) {
         if (downEvent != null) {
-            if (func($(this) as any, downEvent)) {
-                // e.preventDefault();
-                // e.stopPropagation();
-            }
+            func($(this) as any, downEvent);
             downEvent = undefined;
         }
     });

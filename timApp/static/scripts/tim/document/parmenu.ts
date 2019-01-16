@@ -1,29 +1,16 @@
 import {IScope} from "angular";
 import $ from "jquery";
+import {getCitePar} from "../editor/pareditor";
 import {showMessageDialog} from "../ui/dialog";
-import {$compile, $log, $timeout, $window} from "../util/ngimport";
-import {Coords, dist, getPageXYnull, isInViewport} from "../util/utils";
+import {Coords, dist, getPageXYnull, to} from "../util/utils";
 import {onClick} from "./eventhandlers";
 import {getParId, getPreambleDocId, isActionablePar, isPreamble, Paragraph} from "./parhelpers";
+import {EditMode, showPopupMenu} from "./popupMenu";
 import {ViewCtrl} from "./viewctrl";
-import {createPopupMenuAttrs, getEmptyCoords} from "./viewutils";
-import {getCitePar} from "../editor/pareditor";
-
-export function optionsWindowClosed(parOrArea?: JQuery) {
-    const editline = $(".menuopen");
-    editline.removeClass("menuopen");
-}
+import {getEmptyCoords, MenuFunctionList} from "./viewutils";
 
 function selectionToStr(selection: JQuery) {
     return selection.toArray().map((e) => "#" + e.id).join(",");
-}
-
-export interface IPopupMenuAttrs {
-    actions: string;
-    editbutton?: boolean;
-    contenturl?: string;
-    save: boolean;
-    onclose?: string;
 }
 
 export class ParmenuHandler {
@@ -73,13 +60,13 @@ export class ParmenuHandler {
         }, true);
 
         this.viewctrl.defaultAction = {
-            func: (e: JQueryEventObject, p: Paragraph) => this.showOptionsWindow(e, p),
             desc: "Show options window",
+            func: (e, p) => this.showOptionsWindow(e, p),
             show: true,
         };
 
-        onClick(".editline", ($this, e) => {
-            this.viewctrl.closePopupIfOpen();
+        onClick(".editline", async ($this, e) => {
+            await this.viewctrl.closePopupIfOpen();
             const par = $this.parent().filter(".par");
             if (isPreamble(par)) {
                 const parId = getParId(par) || "";
@@ -96,64 +83,42 @@ To comment or edit this, go to the corresponding <a href="/view/${getPreambleDoc
             if (this.viewctrl.selection.start != null) {
                 this.viewctrl.editingHandler.extendSelection(par);
             }
-            const offset = par.offset() || getEmptyCoords();
-            const coords = {left: e.pageX - offset.left, top: e.pageY - offset.top};
 
-            // We need the timeout so we don't trigger the ng-clicks on the buttons
-            $timeout(() => {
-                this.showOptionsWindow(e, par);
-            }, 80);
+            this.showOptionsWindow(e, par);
             return false;
         }, true);
-
-        this.viewctrl.popupMenuAttrs = createPopupMenuAttrs();
-        this.updatePopupMenu();
     }
 
     private isCloseMenuDefault() {
         return this.viewctrl.defaultAction && this.viewctrl.defaultAction.desc === "Close menu";
     }
 
-    showPopupMenu(e: JQueryEventObject,
-                  $pars: Paragraph,
-                  attrs: IPopupMenuAttrs,
-                  $rootElement?: JQuery,
-                  editcontext?: string) {
-        if (!$rootElement) {
-            $rootElement = $pars;
+    async showPopupMenu(e: JQueryEventObject,
+                        $pars: Paragraph,
+                        attrs: {
+                            actions: MenuFunctionList,
+                            save: boolean,
+                            contenturl?: string,
+                            editbutton: boolean,
+                        },
+                        editcontext?: EditMode) {
+        const p = {
+            actions: attrs.actions,
+            areaEditButton: $(".area").length > 0,
+            contenturl: attrs.contenturl,
+            editbutton: attrs.editbutton,
+            editcontext: editcontext,
+            pos: getPageXYnull(e) || undefined,
+            save: attrs.save,
+            srcid: selectionToStr($pars),
+            vctrl: this.viewctrl,
+        };
+        if (this.updatePopupMenuIfOpen(p)) {
+            return;
         }
-
-        const popup = $("<popup-menu>");
-        const draggable = $("<div class='actionButtons' tim-draggable-fixed>");
-        popup.attr("srcid", selectionToStr($pars));
-        if (editcontext) {
-            popup.attr("editcontext", editcontext);
-        }
-        popup.attr("actions", attrs.actions);
-        if (attrs.editbutton) {
-            popup.attr("editbutton", attrs.editbutton.toString());
-        }
-        if (attrs.contenturl) {
-            popup.attr("contenturl", attrs.contenturl.toString());
-        }
-        popup.attr("save", (attrs.save || true).toString());
-        popup.attr("on-close", attrs.onclose || "");
-
-        // todo: cache this value if needed
-        if ($(".area").length > 0) {
-            popup.attr("areaeditbutton", "true");
-        }
-        draggable.append(popup);
-        $rootElement.prepend(draggable); // need to prepend to DOM before compiling
-        $compile(draggable[0])(this.sc);
-        const pos = getPageXYnull(e);
-        if (pos) {
-            draggable.offset({left: pos.X, top: pos.Y});
-        }
-
-        if (!isInViewport(draggable[0])) {
-            draggable[0].scrollIntoView();
-        }
+        await to(showPopupMenu(p));
+        const editline = $(".menuopen");
+        editline.removeClass("menuopen");
     }
 
     toggleActionButtons(e: JQueryEventObject, par: Paragraph, toggle1: boolean, toggle2: boolean, coords: Coords) {
@@ -190,7 +155,6 @@ To comment or edit this, go to the corresponding <a href="/view/${getPreambleDoc
             this.lastclicktime = new Date().getTime();
             this.lastclickplace = coords;
         } else {
-            $log.info("This line is new: " + par);
             par.children().remove(".actionButtons");
             par.removeClass("selected");
             par.removeClass("lightselect");
@@ -199,23 +163,31 @@ To comment or edit this, go to the corresponding <a href="/view/${getPreambleDoc
 
     showOptionsWindow(e: JQueryEventObject, par: Paragraph) {
         this.viewctrl.clipboardHandler.updateClipboardStatus();
-        this.updatePopupMenu(par);
+        const result = this.getPopupAttrs(par);
         par.children(".editline").addClass("menuopen");
-        this.showPopupMenu(e, par, this.viewctrl.popupMenuAttrs, undefined, "par");
+        this.showPopupMenu(e, par, result, "par");
     }
 
-    optionsWindowClosed() {
-        optionsWindowClosed();
-    }
-
-    updatePopupMenu(par?: Paragraph) {
-        this.viewctrl.editorFunctions = this.viewctrl.editingHandler.getEditorFunctions(par);
-        if (this.viewctrl.selection.start != null && $window.editMode) {
-            this.viewctrl.popupMenuAttrs.save = false;
-            this.viewctrl.popupMenuAttrs.editbutton = false;
-        } else {
-            this.viewctrl.popupMenuAttrs.save = true;
-            this.viewctrl.popupMenuAttrs.editbutton = true;
+    updatePopupMenuIfOpen(attrs: {
+        actions: MenuFunctionList,
+        save: boolean,
+        contenturl?: string,
+        editbutton: boolean,
+    }) {
+        if (this.viewctrl.popupmenu) {
+            this.viewctrl.popupmenu.updateAttrs(attrs);
+            return true;
         }
+        return false;
+    }
+
+    getPopupAttrs(par?: Paragraph) {
+        const fns = this.viewctrl.editingHandler.getEditorFunctions(par);
+        const hasSelectionAndEditMode = this.viewctrl.item.rights.editable;
+        return {
+            actions: fns,
+            editbutton: hasSelectionAndEditMode,
+            save: hasSelectionAndEditMode,
+        };
     }
 }

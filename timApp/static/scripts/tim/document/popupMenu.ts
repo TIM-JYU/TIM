@@ -1,60 +1,107 @@
-import {IController, IRootElementService, IScope} from "angular";
+import {IRootElementService, IScope} from "angular";
 import $ from "jquery";
-import {timApp} from "tim/app";
 import {watchEditMode} from "tim/document/editing/editmode";
-import {DraggableController} from "../ui/draggable";
-import {$http, $window} from "../util/ngimport";
-import {Binding, Require, to} from "../util/utils";
+import {DialogController, registerDialogComponent, showDialog} from "../ui/dialog";
+import {Pos} from "../ui/draggable";
+import {$http, $timeout, $window} from "../util/ngimport";
+import {to} from "../util/utils";
 import {ViewCtrl} from "./viewctrl";
-import {MenuFunctionCollection, MenuFunctionEntry} from "./viewutils";
+import {MenuFunctionEntry, MenuFunctionList} from "./viewutils";
 
 export type EditMode = "par" | "area";
 
-export class PopupMenuController implements IController {
+export interface IPopupParams {
+    actions: MenuFunctionList;
+    areaEditButton: boolean;
+    contenturl?: string;
+    editbutton: boolean;
+    editcontext?: EditMode;
+    save: boolean;
+    srcid: string;
+    vctrl: ViewCtrl;
+    pos?: Pos;
+}
+
+/**
+ * A popup menu component that is used in the document view.
+ */
+export class PopupMenuController extends DialogController<{params: IPopupParams}, {}, "popupMenu"> {
     private static $inject = ["$scope", "$element"];
-    private model: {editState: EditMode | null};
-    public element: IRootElementService;
-    private contenturl!: Binding<string, "@">;
-    private srcid!: Binding<string, "@">;
-    private $pars!: JQuery; // $onInit
-    private editcontext?: Binding<string, "@">;
-    private editbutton?: Binding<boolean, "@">;
-    private areaEditButton: boolean;
-    private onClose!: Binding<(pars: JQuery) => void, "&">;
-    private colClass?: string;
-    private halfColClass?: string;
-    private vctrl!: Require<ViewCtrl>;
-    private save?: Binding<boolean, "<">;
-    private scope: IScope;
-    private actions?: Binding<MenuFunctionCollection, "<">;
-    private draggable: Require<DraggableController | undefined>;
+    public editState: EditMode | null;
     private content?: string;
+    private olds: Partial<IPopupParams> & {editState?: EditMode | null} = {
+        contenturl: undefined,
+        editState: undefined,
+    };
+    private p!: IPopupParams;
 
     constructor(scope: IScope, element: IRootElementService) {
-        this.element = element;
-        this.scope = scope;
-        this.model = {editState: $window.editMode};
-        this.areaEditButton = false;
+        super(element, scope);
+        this.editState = $window.editMode;
     }
 
-    $onInit() {
-        this.vctrl.registerPopupMenu(this);
-        this.$pars = $(this.srcid);
-        this.getContent(this.contenturl);
-        this.colClass = this.save ? "col-xs-10" : "col-xs-12";
-        this.halfColClass = this.save ? "col-xs-5" : "col-xs-6";
-        this.scope.$watch(() => this.model.editState, watchEditMode);
-        this.scope.$watch(() => this.model.editState, (newEditMode, oldEditMode) => this.watchEditMode(newEditMode, oldEditMode));
-    }
-
-    closePopup() {
-        if (this.draggable) {
-            this.draggable.$destroy();
+    updateAttrs(p: Partial<IPopupParams>) {
+        this.p = {...this.p, ...p};
+        if (p.contenturl) {
+            this.getContent(p.contenturl);
         }
-        this.element.remove();
+    }
 
-        if (this.onClose) {
-            this.onClose(this.$pars);
+    get vctrl() {
+        return this.p.vctrl;
+    }
+
+    get areaEditButton() {
+        return this.p.areaEditButton;
+    }
+
+    get editbutton() {
+        return this.p.editbutton;
+    }
+
+    get actions() {
+        return this.p.actions;
+    }
+
+    get save() {
+        return this.p.save;
+    }
+
+    public close() {
+        super.close({});
+    }
+
+    get colClass() {
+        return this.p.save ? "col-xs-10" : "col-xs-12";
+    }
+
+    get halfColClass() {
+        return this.p.save ? "col-xs-5" : "col-xs-6";
+    }
+
+    async $onInit() {
+        super.$onInit();
+        this.p = this.resolve.params;
+        this.vctrl.registerPopupMenu(this);
+        await this.draggable.makeHeightAutomatic();
+        if (this.p.pos) {
+            this.draggable.moveTo(this.p.pos);
+        }
+    }
+
+    async $doCheck() {
+        if (this.p.contenturl != this.olds.contenturl && this.p.contenturl) {
+            this.olds.contenturl = this.p.contenturl;
+            this.getContent(this.p.contenturl);
+        }
+        if (this.editState != this.olds.editState) {
+            this.olds.editState = this.editState;
+            watchEditMode(this.editState, this.olds.editState, this.scope);
+            this.watchEditMode(this.editState, this.olds.editState);
+
+            // When the number of visible buttons increases, the dialog may go off screen.
+            await $timeout();
+            this.draggable.ensureFullyInViewport();
         }
     }
 
@@ -64,8 +111,10 @@ export class PopupMenuController implements IController {
      * @param f The function to call
      */
     callFunc(e: JQueryEventObject, f: MenuFunctionEntry) {
-        f.func(e, this.$pars);
-        this.closePopup();
+        f.func(e, $(this.p.srcid));
+        if (f.closeAfter || f.closeAfter == null) {
+            this.close();
+        }
     }
 
     getChecked(fDesc: string) {
@@ -77,7 +126,7 @@ export class PopupMenuController implements IController {
     }
 
     clicked(f: MenuFunctionEntry) {
-        if (!this.save) {
+        if (!this.p.save) {
             return;
         }
         if (this.vctrl.defaultAction && this.vctrl.defaultAction.desc === f.desc) {
@@ -95,40 +144,81 @@ export class PopupMenuController implements IController {
             return;
         }
 
-        const r = await to($http.get<{texts: string}>(contentUrl, {params: {doc_id: this.vctrl.docId}}));
+        const r = await to($http.get<{texts: string}>(contentUrl, {params: {doc_id: this.vctrl.item.id}}));
         if (r.ok) {
             this.content = r.result.data.texts;
         }
     }
 
     watchEditMode(newEditMode: EditMode | null, oldEditMode: EditMode | null) {
-        if (this.editcontext && newEditMode && newEditMode !== this.editcontext) {
+        if (this.p.editcontext && newEditMode && newEditMode !== this.p.editcontext) {
             // We don't want to destroy our scope before returning from this function
-            window.setTimeout(() => this.closePopup(), 0.1);
+            window.setTimeout(() => this.close(), 0.1);
         }
+    }
+
+    protected getTitle(): string {
+        return " ";
     }
 }
 
-/**
- * A popup menu directive that is used in the document view.
- * Requires a paragraph (element with class "par") or
- * an area (element with a class "area") as its ancestor.
- */
-timApp.component("popupMenu", {
-    bindings: {
-        actions: "=",
-        areaEditButton: "<",
-        contenturl: "@",
-        editbutton: "<?",
-        editcontext: "@?",
-        onClose: "&",
-        save: "<?",
-        srcid: "@",
+registerDialogComponent("popupMenu",
+    PopupMenuController,
+    {
+        template: `
+<tim-dialog>
+    <dialog-body>
+        <div class="inner">
+            <div class="error" ng-show="$ctrl.vctrl.notification" ng-bind="$ctrl.vctrl.notification"></div>
+            <div ng-if="$ctrl.content" ng-bind-html="$ctrl.content" class="actionButtonContent"></div>
+
+            <div class="row" ng-repeat="f in $ctrl.actions | filter:{show: true}">
+                <div ng-class="$ctrl.colClass">
+                    <button class="wideButton btn-sm" ng-bind="f.desc" ng-click="$ctrl.callFunc($event, f)">
+                    </button>
+                </div>
+
+                <div class="col-xs-1" ng-if="$ctrl.save">
+                    <input ng-checked="$ctrl.getChecked(f.desc)"
+                           ng-click="$ctrl.clicked(f)"
+                           class="valign"
+                           title="Set this button as the default action for double-click"
+                           type="radio">
+                </div>
+            </div>
+
+            <div class="row" style="padding-top: 6px" ng-if="$ctrl.editbutton && $ctrl.vctrl.item.rights.editable">
+                <div ng-class="$ctrl.halfColClass" style="padding-right: 0">
+                    <button class="wideButton parEditButton" ng-model="$ctrl.editState" uib-btn-radio="'par'"
+                            uncheckable="true" title="Toggle paragraph edit mode">
+                        <i class="glyphicon glyphicon-minus"></i>
+                        <i class="glyphicon glyphicon-pencil"></i>
+                    </button>
+                </div>
+                <div ng-class="$ctrl.halfColClass" style="padding-left: 0">
+                    <button class="wideButton areaEditButton" ng-model="$ctrl.editState"
+                            ng-disabled="$ctrl.areaEditButton ? '' : 'disabled'" uib-btn-radio="'area'"
+                            uncheckable="true"
+                            title="Toggle area edit mode">
+                        <i class="glyphicon glyphicon-align-justify"></i>
+                        <i class="glyphicon glyphicon-pencil"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </dialog-body>
+</tim-dialog>
+    `,
     },
-    controller: PopupMenuController,
-    require: {
-        vctrl: "^timView",
-        draggable: "?^timDraggableFixed",
-    },
-    templateUrl: "/static/templates/popupMenu.html",
-});
+);
+
+export function showPopupMenu(p: IPopupParams) {
+    return showDialog<PopupMenuController>("popupMenu", {params: () => p},
+        {
+            absolute: true,
+            // backdrop: true,
+            // classes: [],
+            showMinimizeButton: false,
+            size: "sm",
+        }).result;
+}

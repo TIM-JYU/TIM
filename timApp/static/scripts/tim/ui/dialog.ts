@@ -2,11 +2,11 @@ import {IController, IPromise, IRootElementService, IScope, ITranscludeFunction}
 import "angular-ui-bootstrap";
 import {IModalInstanceService} from "angular-ui-bootstrap";
 import {timApp} from "../app";
+import {KEY_ESC} from "../util/keycodes";
 import {$rootScope, $templateCache, $uibModal} from "../util/ngimport";
 import {Binding, markAsUsed, Require} from "../util/utils";
 import * as dg from "./draggable";
 import {DraggableController, VisibilityFix} from "./draggable";
-import {KEY_ESC} from "../util/keycodes";
 
 markAsUsed(dg);
 
@@ -20,7 +20,7 @@ export abstract class DialogController<T, Ret, ComponentName extends string> imp
 
     protected abstract getTitle(): string;
 
-    constructor(protected element: IRootElementService, protected scope: any) {
+    constructor(protected element: IRootElementService, protected scope: IScope) {
         this.handleEscPress = this.handleEscPress.bind(this);
     }
 
@@ -46,6 +46,10 @@ export abstract class DialogController<T, Ret, ComponentName extends string> imp
 
     protected getInitialVisibility(): VisibilityFix {
         return VisibilityFix.Full;
+    }
+
+    public closePromise(): IPromise<unknown> {
+        return this.modalInstance.closed;
     }
 
     protected close(returnValue: Ret) {
@@ -200,7 +204,7 @@ export interface IModalInstance<Result> {
 }
 
 export function showDialog<T extends Dialog<T>>(component: T["component"],
-                                                resolve: {[P in keyof T["resolve"]]: () => T["resolve"][P]},
+                                                resolve: { [P in keyof T["resolve"]]: () => T["resolve"][P] },
                                                 opts: {
                                                     saveKey?: string,
                                                     classes?: string[],
@@ -208,10 +212,11 @@ export function showDialog<T extends Dialog<T>>(component: T["component"],
                                                     size?: "sm" | "md" | "lg",
                                                     absolute?: boolean,
                                                     forceMaximized?: boolean,
+                                                    backdrop?: boolean,
                                                 } = {}): IModalInstance<T["ret"]> {
     $templateCache.put("uib/template/modal/window.html", `
 <div tim-draggable-fixed
-     click="${opts.showMinimizeButton !== undefined ? opts.showMinimizeButton : true }"
+     click="${opts.showMinimizeButton !== undefined ? opts.showMinimizeButton : true}"
      resize="true"
      save="${opts.saveKey || component}"
      absolute="${opts.absolute || false}"
@@ -224,7 +229,7 @@ export function showDialog<T extends Dialog<T>>(component: T["component"],
 </div>`);
     const instance: IModalInstanceService = $uibModal.open({
         animation: false,
-        backdrop: false,
+        backdrop: opts.backdrop || false,
         component: component,
         keyboard: false,
         openedClass: "unused-class", // prevents scrolling from being disabled
