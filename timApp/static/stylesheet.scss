@@ -875,14 +875,6 @@ input[type="file"] {
     }
 }
 
-.actionButtonContent {
-    white-space: normal;
-    max-width: 600px;
-    max-height: 200px;
-    overflow-x: hidden;
-    overflow-y: scroll;
-}
-
 .refPopup {
     position: relative;
     white-space: nowrap;
@@ -899,14 +891,6 @@ input[type="file"] {
 
 .refPopup label {
     font-weight: bold;
-}
-
-.actionButtonContent {
-    white-space: normal;
-    max-width: 600px;
-    max-height: 200px;
-    overflow-x: hidden;
-    overflow-y: scroll;
 }
 
 @import "csRun";

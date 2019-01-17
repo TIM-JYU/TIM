@@ -168,42 +168,36 @@ registerDialogComponent("popupMenu",
         template: `
 <tim-dialog>
     <dialog-body>
-        <div class="inner">
+        <div class="flex cl">
             <div class="error" ng-show="$ctrl.vctrl.notification" ng-bind="$ctrl.vctrl.notification"></div>
-            <div ng-if="$ctrl.content" ng-bind-html="$ctrl.content" class="actionButtonContent"></div>
+            <div ng-if="$ctrl.content" ng-bind-html="$ctrl.content"></div>
 
-            <div class="row" ng-repeat="f in $ctrl.actions | filter:{show: true}">
-                <div ng-class="$ctrl.colClass">
-                    <button class="wideButton btn-sm" ng-bind="f.desc" ng-click="$ctrl.callFunc($event, f)">
-                    </button>
-                </div>
+            <div class="flex rw align-center" ng-repeat="f in $ctrl.actions | filter:{show: true}">
+                <button class="timButton btn-sm flex-grow-5" ng-bind="f.desc" ng-click="$ctrl.callFunc($event, f)">
+                </button>
 
-                <div class="col-xs-1" ng-if="$ctrl.save">
-                    <input ng-checked="$ctrl.getChecked(f.desc)"
-                           ng-click="$ctrl.clicked(f)"
-                           class="valign"
-                           title="Set this button as the default action for double-click"
-                           type="radio">
-                </div>
+                <input ng-if="$ctrl.save"
+                       ng-checked="$ctrl.getChecked(f.desc)"
+                       ng-click="$ctrl.clicked(f)"
+                       style="margin: 5px 0 5px 15px;"
+                       title="Set this button as the default action for double-click"
+                       type="radio">
             </div>
 
-            <div class="row" style="padding-top: 6px" ng-if="$ctrl.editbutton && $ctrl.vctrl.item.rights.editable">
-                <div ng-class="$ctrl.halfColClass" style="padding-right: 0">
-                    <button class="wideButton parEditButton" ng-model="$ctrl.editState" uib-btn-radio="'par'"
-                            uncheckable="true" title="Toggle paragraph edit mode">
-                        <i class="glyphicon glyphicon-minus"></i>
-                        <i class="glyphicon glyphicon-pencil"></i>
-                    </button>
-                </div>
-                <div ng-class="$ctrl.halfColClass" style="padding-left: 0">
-                    <button class="wideButton areaEditButton" ng-model="$ctrl.editState"
-                            ng-disabled="$ctrl.areaEditButton ? '' : 'disabled'" uib-btn-radio="'area'"
-                            uncheckable="true"
-                            title="Toggle area edit mode">
-                        <i class="glyphicon glyphicon-align-justify"></i>
-                        <i class="glyphicon glyphicon-pencil"></i>
-                    </button>
-                </div>
+            <div class="flex rw" style="padding-top: 6px; margin-right: 28px"
+                 ng-if="$ctrl.editbutton && $ctrl.vctrl.item.rights.editable">
+                <button class="timButton parEditButton flex-grow-5" ng-model="$ctrl.editState" uib-btn-radio="'par'"
+                        uncheckable="true" title="Toggle paragraph edit mode">
+                    <i class="glyphicon glyphicon-minus"></i>
+                    <i class="glyphicon glyphicon-pencil"></i>
+                </button>
+                <button class="timButton areaEditButton flex-grow-5" ng-model="$ctrl.editState"
+                        ng-disabled="$ctrl.areaEditButton ? '' : 'disabled'" uib-btn-radio="'area'"
+                        uncheckable="true"
+                        title="Toggle area edit mode">
+                    <i class="glyphicon glyphicon-align-justify"></i>
+                    <i class="glyphicon glyphicon-pencil"></i>
+                </button>
             </div>
         </div>
     </dialog-body>
@@ -219,6 +213,6 @@ export function showPopupMenu(p: IPopupParams) {
             // backdrop: true,
             // classes: [],
             showMinimizeButton: false,
-            size: "sm",
+            size: "xs",
         }).result;
 }

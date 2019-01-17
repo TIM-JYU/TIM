@@ -337,7 +337,7 @@ export function escapeRegExp(str: string) {
     return str.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&");
 }
 
-export function getPageXYnull(e: JQueryEventObject) {
+export function getPageXY(e: JQueryEventObject) {
     if (!(
         "pageX" in e) || (
         e.pageX == 0 && e.pageY == 0)) {
@@ -354,7 +354,6 @@ export function getPageXYnull(e: JQueryEventObject) {
                 Y: originalEvent.changedTouches[0].pageY,
             };
         }
-        return null;
     }
 
     return {X: e.pageX, Y: e.pageY};

@@ -23,7 +23,7 @@ export function onClick(className: string,
     let lastclicktime: number | undefined;
 
     $document.on("mousedown touchstart", className, (e: JQueryEventObject) => {
-        if (!overrideModalCheck && ($(".actionButtons").length > 0 || $(EDITOR_CLASS_DOT).length > 0)) {
+        if (!overrideModalCheck && ($(EDITOR_CLASS_DOT).length > 0)) {
             // Disable while there are modal gui elements
             return;
         }

@@ -2,7 +2,7 @@ import {IScope} from "angular";
 import $ from "jquery";
 import {getCitePar} from "../editor/pareditor";
 import {showMessageDialog} from "../ui/dialog";
-import {Coords, dist, getPageXYnull, to} from "../util/utils";
+import {Coords, dist, getPageXY, to} from "../util/utils";
 import {onClick} from "./eventhandlers";
 import {getParId, getPreambleDocId, isActionablePar, isPreamble, Paragraph} from "./parhelpers";
 import {EditMode, showPopupMenu} from "./popupMenu";
@@ -108,7 +108,7 @@ To comment or edit this, go to the corresponding <a href="/view/${getPreambleDoc
             contenturl: attrs.contenturl,
             editbutton: attrs.editbutton,
             editcontext: editcontext,
-            pos: getPageXYnull(e) || undefined,
+            pos: getPageXY(e),
             save: attrs.save,
             srcid: selectionToStr($pars),
             vctrl: this.viewctrl,
@@ -155,7 +155,6 @@ To comment or edit this, go to the corresponding <a href="/view/${getPreambleDoc
             this.lastclicktime = new Date().getTime();
             this.lastclickplace = coords;
         } else {
-            par.children().remove(".actionButtons");
             par.removeClass("selected");
             par.removeClass("lightselect");
         }

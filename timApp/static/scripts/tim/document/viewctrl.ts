@@ -198,7 +198,6 @@ export class ViewCtrl implements IController {
             const jqTarget = $(e.target);
             const ignoreTags = ["button", "input", "label", "i"];
             const ignoreClasses = [
-                "actionButtons",
                 "areaeditline",
                 "draghandle",
                 "editline",
@@ -353,7 +352,7 @@ export class ViewCtrl implements IController {
             () => this.clipMeta.allowPasteContent,
             () => this.clipMeta.allowPasteRef,
             () => this.getAllowMove()], (newValues, oldValues, scope) => {
-            const par = $(".actionButtons").parent(".par");
+            const par = $(".editline.menuopen").parents(".par");
             this.parmenuHandler.updatePopupMenuIfOpen(this.parmenuHandler.getPopupAttrs(par.length > 0 ? par : undefined));
             if (this.editing) {
                 this.notification = "Editor is already open.";

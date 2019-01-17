@@ -209,7 +209,7 @@ export function showDialog<T extends Dialog<T>>(component: T["component"],
                                                     saveKey?: string,
                                                     classes?: string[],
                                                     showMinimizeButton?: boolean,
-                                                    size?: "sm" | "md" | "lg",
+                                                    size?: "sm" | "md" | "lg" | "xs", // xs is custom TIM style
                                                     absolute?: boolean,
                                                     forceMaximized?: boolean,
                                                     backdrop?: boolean,

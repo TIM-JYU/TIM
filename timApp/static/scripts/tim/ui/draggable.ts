@@ -7,7 +7,7 @@ import {
     Binding,
     getOutOffsetFully,
     getOutOffsetVisible,
-    getPageXYnull,
+    getPageXY,
     getStorage,
     getViewPortSize,
     IBounds,
@@ -433,7 +433,7 @@ export class DraggableController implements IController {
     }
 
     private getPageXY(e: JQueryEventObject) {
-        const pos = getPageXYnull(e);
+        const pos = getPageXY(e);
         if (pos) {
             this.lastPageXYPos = pos;
         }
