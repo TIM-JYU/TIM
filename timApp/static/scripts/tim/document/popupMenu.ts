@@ -71,14 +71,6 @@ export class PopupMenuController extends DialogController<{params: IPopupParams}
         super.close({});
     }
 
-    get colClass() {
-        return this.p.save ? "col-xs-10" : "col-xs-12";
-    }
-
-    get halfColClass() {
-        return this.p.save ? "col-xs-5" : "col-xs-6";
-    }
-
     async $onInit() {
         super.$onInit();
         this.p = this.resolve.params;
@@ -210,8 +202,6 @@ export function showPopupMenu(p: IPopupParams) {
     return showDialog<PopupMenuController>("popupMenu", {params: () => p},
         {
             absolute: true,
-            // backdrop: true,
-            // classes: [],
             showMinimizeButton: false,
             size: "xs",
         }).result;
