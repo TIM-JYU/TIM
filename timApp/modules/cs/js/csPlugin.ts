@@ -2138,14 +2138,16 @@ class CsController extends CsBase implements IController {
     }
 
 
-    getClipboardHelper(): any {  // TODO: tätä voisi ahrkita TIMin globaaliksi funktioksi?
+    getClipboardHelper(): any {  // TODO: tätä voisi harkita TIMin globaaliksi funktioksi?
         // @ts-ignore
         let e1 = document.copyHelperElement;  // prevent extra creating and deleting
         if ( e1 ) return e1;
         e1 = document.createElement('textarea');
         e1.setAttribute('readonly', '');
-        e1.style.position = 'absolute';
-        e1.style.left = '-9999px';
+        // e1.style.position = 'absolute';
+        e1.style.position = 'fixed'; // fixed seems better for FF and Edge so not to jump to end
+        // e1.style.left = '-9999px';
+        e1.style.top = '-9999px';
         document.body.appendChild(e1);
         // document.body.removeChild(el);
         // @ts-ignore
@@ -2154,7 +2156,7 @@ class CsController extends CsBase implements IController {
     }
 
 
-    copyToClipboard(s:string) {  // TODO: tätä voisi ahrkita TIMin globaaliksi funktioksi?
+    copyToClipboard(s:string) {  // TODO: tätä voisi harkita TIMin globaaliksi funktioksi?
         let e1 = this.getClipboardHelper();
         e1.value = s;
         e1.select();
