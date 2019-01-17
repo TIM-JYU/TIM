@@ -192,7 +192,7 @@ registerDialogComponent("popupMenu",
                     <i class="glyphicon glyphicon-pencil"></i>
                 </button>
                 <button class="timButton areaEditButton flex-grow-5" ng-model="$ctrl.editState"
-                        ng-disabled="$ctrl.areaEditButton ? '' : 'disabled'" uib-btn-radio="'area'"
+                        ng-disabled="true" uib-btn-radio="'area'"
                         uncheckable="true"
                         title="Toggle area edit mode">
                     <i class="glyphicon glyphicon-align-justify"></i>
