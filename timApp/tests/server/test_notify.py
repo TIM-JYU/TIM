@@ -82,7 +82,7 @@ class NotifyTest(NotifyTestBase):
             'mail_from': mail_from,
             'msg': f'Paragraph added: {url}#{pars[2].get_id()}'
                    ' '
-                   f'(changes: http://localhost/diff/{d.id}/2/1/3/0)\n'
+                   f'(changes: http://localhost/diff/{d.id}/2/1/3/0 )\n'
                    '\n'
                    f'{pars[2].get_markdown()}',
             'rcpt': self.test_user_2.email,
@@ -98,7 +98,7 @@ class NotifyTest(NotifyTestBase):
             'mail_from': mail_from,
             'msg': f'Paragraph modified: {url}#{pars[1].get_id()}'
                    ' '
-                   f'(changes: http://localhost/diff/{d.id}/3/0/3/1)\n'
+                   f'(changes: http://localhost/diff/{d.id}/3/0/3/1 )\n'
                    '\n'
                    f'{par_md}',
             'rcpt': self.test_user_2.email,
@@ -112,7 +112,7 @@ class NotifyTest(NotifyTestBase):
             'mail_from': mail_from,
             'msg': f'Paragraph deleted: {url}'
                    ' '
-                   f'(changes: http://localhost/diff/{d.id}/3/1/4/0)\n'
+                   f'(changes: http://localhost/diff/{d.id}/3/1/4/0 )\n'
                    '\n'
                    f'{par_md}',
             'rcpt': self.test_user_2.email,
@@ -128,7 +128,7 @@ class NotifyTest(NotifyTestBase):
             'mail_from': mail_from,
             'msg': f'Paragraph added by Test user 1: {url}#{pars[-1].get_id()}'
                    ' '
-                   f'(changes: http://localhost/diff/{d.id}/4/0/5/0)\n'
+                   f'(changes: http://localhost/diff/{d.id}/4/0/5/0 )\n'
                    '\n'
                    f'{pars[-1].get_markdown()}',
             'rcpt': self.test_user_2.email,

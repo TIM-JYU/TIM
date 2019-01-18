@@ -228,7 +228,7 @@ def get_message_for(ps: List[PendingNotification], d: DocInfo, show_text: bool, 
             assert isinstance(p, DocumentNotification)
             v1 = p.version_before
             v2 = p.version_after
-            msg += f' (changes: {get_diff_link(d, v1, v2)})'
+            msg += f' (changes: {get_diff_link(d, v1, v2)} )'
         msg += '\n\n'
         if show_text or not p.notify_type.is_document_modification:
             msg += p.text + '\n\n'
