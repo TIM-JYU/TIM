@@ -550,31 +550,38 @@ class DragTask {
         this.canvas.style.msTouchAction = "none";
 
         this.canvas.addEventListener("mousemove", (event) => {
+            event.preventDefault();
             this.imgx.getScope().$evalAsync(() => {
                 this.moveEvent(event, event);
             });
         });
         this.canvas.addEventListener("touchmove", (event) => {
+            event.preventDefault();
             this.imgx.getScope().$evalAsync(() => {
                 this.moveEvent(event, this.te(event));
             });
         });
         this.canvas.addEventListener("mousedown", (event) => {
+            event.preventDefault();
             this.imgx.getScope().$evalAsync(() => {
                 this.downEvent(event, event);
             });
         });
         this.canvas.addEventListener("touchstart", (event) => {
+            event.preventDefault();
             this.imgx.getScope().$evalAsync(() => {
+
                 this.downEvent(event, this.te(event));
             });
         });
         this.canvas.addEventListener("mouseup", (event) => {
+            event.preventDefault();
             this.imgx.getScope().$evalAsync(() => {
                 this.upEvent(event, event);
             });
         });
         this.canvas.addEventListener("touchend", (event) => {
+            event.preventDefault();
             this.imgx.getScope().$evalAsync(() => {
                 this.upEvent(event, this.te(event));
             });
@@ -716,6 +723,7 @@ class DragTask {
     }
 
     downEvent(event: Event, p: MouseOrTouch) {
+        event.preventDefault();
         this.mousePosition = getPos(this.canvas, p);
         let active = areObjectsOnTopOf(this.mousePosition, this.dragobjects, 0);
         if (!active) {
@@ -756,6 +764,7 @@ class DragTask {
     }
 
     moveEvent(event: Event, p: MouseOrTouch) {
+        event.preventDefault();
         if (this.activeDragObject) {
             if (event != p) {
                 event.preventDefault();
@@ -807,6 +816,7 @@ class DragTask {
     }
 
     te(event: TouchEvent) {
+        event.preventDefault();
         return event.touches[0] || event.changedTouches[0];
     }
 
@@ -1579,6 +1589,15 @@ class ImageXController extends PluginBase<t.TypeOf<typeof ImageXMarkup>,
         // timeout required; otherwise the canvas element will be overwritten with another by Angular
         await $timeout();
         this.canvas = this.element.find(".canvas")[0] as HTMLCanvasElement;
+        this.element[0].addEventListener("touchstart", (event) => {
+           // event.preventDefault();
+        });
+
+        this.element[0].addEventListener("touchmove", (event) => {
+           // event.preventDefault();
+        });
+
+
         this.tries = this.attrsall.info && this.attrsall.info.earlier_answers || 0;
         this.freeHandDrawing = new FreeHand(this,
             this.attrsall.state && this.attrsall.state.freeHandData || [],

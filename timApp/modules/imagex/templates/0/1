@@ -16,42 +16,42 @@ objects:
     pin:
       visible: true
       position: 
-        align: ""
-        coord: []
+        xalign: ""
+        xcoord: []
       color: ""
-      length: 
+      length:
     textboxproperties:
       positionOnImage:
-        coord: []
+        xcoord: []
       borderWidth:
       borderColor: ""
       text: ""
       textColor: ""
       font: ""
-      size: []
-  - 
+      xsize: []
+  -
     type: "img"
     position: [300, 400]
     id: "obj2"
-    imgproperties: 
+    imgproperties:
       src: "/static/images/tim-logo_42height.png"
       textbox: true
     pin:
       visible: true
-      position: 
+      position:
         align: "west"
     textboxproperties:
       positionOnImage:
         coord: [15, 55]
       text: "sieni"
-  - 
+  -
     type: "textbox"
     position: [300, 500]
     a: 30
     id: "obj3"
     pin:
       visible: true
-      position: 
+      position:
         align: "southeast"
       color: "purple"
     textboxproperties:
@@ -62,7 +62,7 @@ objects:
       textColor: "blue"
       backgroud: yellow
       font: "30px times"
-      size: []
+      xsize: []
 targets: 
   - 
       id: "target1"

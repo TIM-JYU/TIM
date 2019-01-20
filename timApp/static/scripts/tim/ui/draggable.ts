@@ -4,7 +4,7 @@ import {timApp} from "tim/app";
 import {timLogTime} from "tim/util/timTiming";
 import {$compile, $document} from "../util/ngimport";
 import {
-    Binding,
+    Binding, debugTextToHeader,
     getOutOffsetFully,
     getOutOffsetVisible,
     getPageXY,
@@ -20,9 +20,10 @@ function getPixels(s: string) {
     const s2 = s.replace(/px$/, "");
     return Number(s2) || 0;
 }
+// <div class="draghandle" ng-class="{'attached': !d.canDrag()}" ng-mousedown="d.dragClick(); $event.preventDefault()">
 
 const draggableTemplate = `
-<div class="draghandle" ng-class="{'attached': !d.canDrag()}" ng-mousedown="d.dragClick(); $event.preventDefault()">
+<div class="draghandle" ng-class="{'attached': !d.canDrag()}" >
     <p ng-show="d.caption" ng-bind="d.caption"></p>
     <i ng-show="d.detachable"
        ng-click="d.toggleDetach()"
@@ -217,6 +218,8 @@ export class DraggableController implements IController {
             if (!this.canDrag()) {
                 return;
             }
+            // e.preventDefault(); // TODO: if this is used, in mobila possible to move, but not close dialog
+
             this.resizeStates = {
                 up: false,
                 down: false,
@@ -309,6 +312,7 @@ export class DraggableController implements IController {
                     this.element.css("bottom", oldPos.bottom);
                 }
             }
+            // debugTextToHeader(JSON.stringify(oldPos));
             timLogTime("oldpos:" + oldPos.left + ", " + oldPos.top, "drag");
         }
         if (oldSize || oldPos || isMobileDevice()) {
@@ -398,6 +402,7 @@ export class DraggableController implements IController {
     }
 
     private resizeElement(e: JQueryEventObject, up: boolean, right: boolean, down: boolean, left: boolean) {
+        e.preventDefault();
         this.resizeStates = {up, down, left, right};
         $document.off("mouseup pointerup touchend", this.release);
         $document.off("mousemove pointermove touchmove", this.moveResize);
@@ -452,6 +457,7 @@ export class DraggableController implements IController {
         $document.off("mousemove pointermove touchmove", this.moveResize);
         this.ensureVisibleInViewport();
         if (this.posKey) {
+            // e.preventDefault();
             const css = this.element.css(["top", "bottom", "left",
                 "right"]);
             setStorage(this.posKey, css);
@@ -490,6 +496,7 @@ export class DraggableController implements IController {
     }
 
     move = (e: JQueryEventObject) => {
+        // e.preventDefault();
         const pos = this.getPageXY(e);
         this.doMove(pos);
         e.preventDefault();
@@ -520,6 +527,7 @@ export class DraggableController implements IController {
     }
 
     moveResize = (e: JQueryEventObject) => {
+        // e.preventDefault();
         const pos = this.getPageXY(e);
         const delta = {
             X: pos.X - this.lastPos.X, Y: pos.Y -

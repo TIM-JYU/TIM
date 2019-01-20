@@ -85,7 +85,8 @@ markAsUsed(
     viewctrl,
 );
 
-timLogInit(document.location.search.slice(1));
+if ( document.location)
+    timLogInit(document.location.search.slice(1));
 
 $(() => {
     timLogTime("DOM ready", "main.ts");

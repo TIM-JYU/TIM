@@ -1753,6 +1753,16 @@ export class TimTableController extends DestroyScope implements IController {
     private showCell(cell: ICell) {
         return !cell.underSpanOf;
     }
+
+    /*
+    public drag(event:any) {
+        let a = 2;
+    }
+
+    public allowDrop(event:any) {
+        return true;
+    }
+    */
 }
 
 timApp.component("timTable", {
@@ -1780,7 +1790,8 @@ timApp.component("timTable", {
              ng-style="$ctrl.stylingForColumn(c)"/>
         <tr ng-repeat="r in $ctrl.cellDataMatrix" ng-init="rowi = $index"
             ng-style="$ctrl.stylingForRow(rowi)">
-                <td ng-class="{'activeCell': $ctrl.isActiveCell(rowi, coli)}"
+                <td ng-class="{'activeCell': $ctrl.isActiveCell(rowi, coli)}" 
+                 <!-- draggable="true" ondragstart="$ctrl.drag(event)" ondragover="$ctrl.allowDrop(event)" -->
                  ng-repeat="td in r" ng-init="coli = $index" ng-if="$ctrl.showCell(td)"
                  colspan="{{td.colspan}}" rowspan="{{td.rowspan}}"
                     ng-style="$ctrl.stylingForCell(rowi, coli)" ng-click="$ctrl.cellClicked(td, rowi, coli, $event)">

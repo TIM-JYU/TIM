@@ -337,6 +337,15 @@ export function escapeRegExp(str: string) {
     return str.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&");
 }
 
+export function debugTextToHeader(s: string) {
+  var para = document.createElement("p");
+  var node = document.createTextNode(s);
+  para.appendChild(node);
+  var element = document.getElementById("header");
+  if ( element )
+    element.appendChild(para);
+}
+
 export function getPageXY(e: JQueryEventObject) {
     if (!(
         "pageX" in e) || (
@@ -354,6 +363,7 @@ export function getPageXY(e: JQueryEventObject) {
                 Y: originalEvent.changedTouches[0].pageY,
             };
         }
+        // return null;
     }
 
     return {X: e.pageX, Y: e.pageY};

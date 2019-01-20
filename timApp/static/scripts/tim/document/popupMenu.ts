@@ -4,7 +4,7 @@ import {watchEditMode} from "tim/document/editing/editmode";
 import {DialogController, registerDialogComponent, showDialog} from "../ui/dialog";
 import {Pos} from "../ui/draggable";
 import {$http, $timeout, $window} from "../util/ngimport";
-import {to} from "../util/utils";
+import {debugTextToHeader, to} from "../util/utils";
 import {ViewCtrl} from "./viewctrl";
 import {MenuFunctionEntry, MenuFunctionList} from "./viewutils";
 
@@ -199,7 +199,9 @@ registerDialogComponent("popupMenu",
 );
 
 export function showPopupMenu(p: IPopupParams) {
+    // debugTextToHeader("showPopupMenu" + JSON.stringify(p.pos));
     return showDialog<PopupMenuController>("popupMenu", {params: () => p},
+    // return showDialog<PopupMenuController>(null, {params: () => p},
         {
             absolute: true,
             showMinimizeButton: false,

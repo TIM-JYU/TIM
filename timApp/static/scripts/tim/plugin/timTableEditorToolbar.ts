@@ -23,11 +23,11 @@ export class TimTableEditorToolbarController extends DialogController<{params: I
     private colorOpts = {
         format: "hex",
         inputClass: "form-control input-xs",
-        placeholder: "#EEEEEE",
+        placeholder: "yellow",
         round: false,
     };
 
-    readonly DEFAULT_CELL_BGCOLOR = "#EEEEEE";
+    readonly DEFAULT_CELL_BGCOLOR = "yellow"; // "#EEEEEE";
 
     constructor(protected scope: IScope, protected element: IRootElementService) {
         super(element, scope);

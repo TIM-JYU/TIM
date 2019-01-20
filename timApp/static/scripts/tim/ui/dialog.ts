@@ -4,7 +4,7 @@ import {IModalInstanceService} from "angular-ui-bootstrap";
 import {timApp} from "../app";
 import {KEY_ESC} from "../util/keycodes";
 import {$rootScope, $templateCache, $uibModal} from "../util/ngimport";
-import {Binding, markAsUsed, Require} from "../util/utils";
+import {Binding, debugTextToHeader, markAsUsed, Require} from "../util/utils";
 import * as dg from "./draggable";
 import {DraggableController, VisibilityFix} from "./draggable";
 
