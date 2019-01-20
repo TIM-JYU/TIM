@@ -1221,3 +1221,15 @@ tim-plugin-loader, answerbrowser {
 .color-picker-input-wrapper {
     top: 7px;
 }
+
+.inlineEditorDiv .timButton {
+    margin: 0px;
+    padding: 4px 8px 3px 8px;
+}
+
+.inlineEditorDiv {
+    background: white;
+    display: inline-block;
+    border-radius: 5px;
+   /* position: fixed; */
+}

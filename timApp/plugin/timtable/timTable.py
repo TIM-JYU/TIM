@@ -544,6 +544,29 @@ def tim_table_remove_column():
 #############################
 # Table editor toolbar routes
 #############################
+@timTable_plugin.route("setCell_all", methods=["POST"])
+def tim_table_set_cell_all():
+    """
+    Sets a cell's background color.
+    :return: The entire table's data after the cell's background color has been set.
+    """
+    #  TODO: this is not ready.  Save all data celldata at once
+    doc_id, par_id, row_id, col_id, value = verify_json_params('docId', 'parId', 'rowId', 'colId', 'value')
+    return set_cell_style_attribute(doc_id, par_id, row_id, col_id, BACKGROUND_COLOR, value)
+
+
+@timTable_plugin.route("setCell", methods=["POST"])
+def tim_table_set_cell():
+    """
+    Sets a cell's background color.
+    :return: The entire table's data after the cell's background color has been set.
+    """
+    json_params = request.get_json() or {}
+    doc_id, par_id, row_id, col_id, key, value = verify_json_params('docId', 'parId', 'rowId', 'colId', 'key', 'value')
+    if key == 'cell':
+        return tim_table_save_cell_value(value, doc_id, par_id, row_id, col_id)
+    return set_cell_style_attribute(doc_id, par_id, row_id, col_id, key, value)
+
 
 @timTable_plugin.route("setCellBackgroundColor", methods=["POST"])
 def tim_table_set_cell_background_color():
@@ -681,8 +704,12 @@ def tim_table_save_cell_list():
     Saves cell content
     :return: The cell content as html
     """
-    multi = []
     cell_content, docid, parid, row, col = verify_json_params('cellContent', 'docId', 'parId', 'row', 'col')
+    return tim_table_save_cell_value(cell_content, docid, parid, row, col)
+
+
+def tim_table_save_cell_value(cell_content, docid, parid, row, col):
+    multi = []
     d, plug = get_plugin_from_paragraph(docid, parid)
     yaml = plug.values
     # verify_edit_access(d)

@@ -4,6 +4,7 @@ import {DialogController, registerDialogComponent, showDialog} from "../ui/dialo
 export interface ITimTableToolbarCallbacks {
     setTextAlign: (value: string) => void;
     setCellBackgroundColor: (value: string) => void;
+    setCell: (value: object) => void;
     addColumn: (offset: number) => void;
     addRow: (offset: number) => void;
     removeColumn: () => void;
@@ -55,7 +56,7 @@ export class TimTableEditorToolbarController extends DialogController<{params: I
     }
 
     public callbacks!: ITimTableToolbarCallbacks; // $onInit
-    private activeTable?: object;
+    public activeTable?: object;
     private visible: boolean = true;
 
     private previousBackgroundColor: string = this.DEFAULT_CELL_BGCOLOR;
@@ -109,6 +110,13 @@ export class TimTableEditorToolbarController extends DialogController<{params: I
      */
     private setTextAlign(value: string) {
         this.callbacks.setTextAlign(value);
+    }
+
+    /**
+     * Sets the text-align value of a cell.
+     */
+    private setCell(value: object) {
+        this.callbacks.setCell(value);
     }
 
     private eventApi = {
@@ -184,8 +192,8 @@ registerDialogComponent("timTableEditorToolbar",
         template: `
 <tim-dialog class="overflow-visible">
     <dialog-body>
-        <div class="row">
-            <div class="col-xs-12">
+        <div class="row" >
+            <div class="col-xs-12" style="top: -0.8em;">
                 <div class="btn-group" role="menuitem" uib-dropdown>
                     <button class="timButton btn-xs" uib-dropdown-toggle>Edit <span class="caret"></span></button>
                     <ul class="dropdown-menu" uib-dropdown-menu>
@@ -205,7 +213,7 @@ registerDialogComponent("timTableEditorToolbar",
             </div>
         </div>
         <div class="row">
-            <div class="col-xs-12">
+            <div class="col-xs-12" id="timTableToolbarRow">
                 <color-picker ng-model="$ctrl.cellBackgroundColor"
                               event-api="$ctrl.eventApi"
                               options="$ctrl.colorOpts">
@@ -229,6 +237,11 @@ registerDialogComponent("timTableEditorToolbar",
                         ng-click="$ctrl.setTextAlign('right')">
                     <i class="glyphicon glyphicon-align-right"></i>
                 </button>
+                <button class="timButton btn-xs" ng-repeat="r in $ctrl.activeTable.data.toolbarTemplates" ng-init="rowi = $index"
+                     ng-style="r" style="color:black" ng-click="$ctrl.setCell(r)">
+                     {{r.cell}}
+                </button>
+
             </div>
         </div>
     </dialog-body>

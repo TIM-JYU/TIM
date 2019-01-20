@@ -214,6 +214,7 @@ export class TimTableController extends DestroyScope implements IController {
         this.onClick = this.onClick.bind(this);
         this.setCellTextAlign = this.setCellTextAlign.bind(this);
         this.setCellBackgroundColor = this.setCellBackgroundColor.bind(this);
+        this.setCell = this.setCell.bind(this);
         this.addColumnFromToolbar = this.addColumnFromToolbar.bind(this);
         this.addRowFromToolbar = this.addRowFromToolbar.bind(this);
         this.removeColumnFromToolbar = this.removeColumnFromToolbar.bind(this);
@@ -349,6 +350,7 @@ export class TimTableController extends DestroyScope implements IController {
                     callbacks: {
                         setTextAlign: this.setCellTextAlign,
                         setCellBackgroundColor: this.setCellBackgroundColor,
+                        setCell: this.setCell,
                         addColumn: this.addColumnFromToolbar,
                         addRow: this.addRowFromToolbar,
                         removeColumn: this.removeColumnFromToolbar,
@@ -1271,6 +1273,23 @@ export class TimTableController extends DestroyScope implements IController {
         return false;
     }
 
+    private async saveToCurrentCell(value:string) {
+        if (!this.viewctrl || !this.activeCell) {
+            return;
+        }
+        const parId = this.getOwnParId();
+        const docId = this.viewctrl.item.id;
+        const rowId = this.activeCell.row;
+        const colId = this.activeCell.col;
+
+        if (typeof value === "string" ) {
+            // @ts-ignore
+            await this.saveCells(value, docId, parId, rowId, colId);
+            await ParCompiler.processAllMath(this.element);
+            return true;
+        }
+        return false;
+    }
     /**
      * Calculates new places for plus-icons, input element and pen icon
      * @param {number} rowi Row Index
@@ -1286,7 +1305,18 @@ export class TimTableController extends DestroyScope implements IController {
             return; // we should never be able to get here
         }
         const tablecell = table.children("tbody").last().children("tr").eq(cell.renderIndexY).children("td").eq(cell.renderIndexX);
-        const off = tablecell.offset();
+        const tableCellOffset = tablecell.offset();
+
+        let cell2y = 0;
+        if ( rowi > 0 ) {
+            const cell2 = this.cellDataMatrix[rowi-1][coli];
+            if (cell2.renderIndexX !== undefined && cell2.renderIndexY !== undefined) {
+                const tablecell2 = table.children("tbody").last().children("tr").eq(cell2.renderIndexY).children("td");
+                const off2 = tablecell2.offset();
+                if (off2) cell2y = off2.top;
+            }
+        }
+
         /*let off;
         if (event && event.target) {
             let obj = $(event.target);
@@ -1299,53 +1329,91 @@ export class TimTableController extends DestroyScope implements IController {
             off = tablecell.offset();
             if (!off) { return; }
         }*/
-        if (off) {
-            this.element.find(".editInput").offset(off);
-            await $timeout();
-            const edit = this.element.find(".editInput");
-            edit.focus();
-            const editOffset = edit.offset();
-            const editOuterHeight = edit.outerHeight();
-            const tableCellOffset = tablecell.offset();
-            const tableCellWidth = tablecell.outerWidth();
+        if (!tableCellOffset ) return;
+        if (!table) return;
 
-            // const editOuterWidth = edit.outerWidth();
+        // this.element.find(".editInput").offset(off);
+        const inlineEditorDiv = this.element.find(".inlineEditorDiv");
+        inlineEditorDiv.height(1);
+        inlineEditorDiv[0].style.position = "relative";
+        const edit = this.element.find(".editInput");
+        await $timeout();
+        edit.focus();
+        const toff = table.offset();
+        // @ts-ignore
+        inlineEditorDiv.offset({left:toff.left, top:toff.top+ table.height()});
+        // @ts-ignore
+        if ( this.data.editorBottom ) return;
+        edit.offset(tableCellOffset);
 
-            const minEditWidth = 200;
+        const editOffset = edit.offset();
+        const tableCellWidth = tablecell.innerWidth();
 
-            let editOuterWidth;
-            if (tableCellWidth) {
-                editOuterWidth = Math.max(minEditWidth, tableCellWidth);
-            } else {
-                editOuterWidth = minEditWidth;
-            }
+        // const editOuterWidth = edit.outerWidth();
 
-            edit.width(editOuterWidth);
+        const minEditWidth = 20;
 
-            if (editOffset && editOuterHeight && tableCellOffset && editOuterWidth) {
-                this.element.find(".buttonOpenBigEditor").offset({
-                    left: tableCellOffset.left,
-                    top: editOffset.top + editOuterHeight,
-                });
+        let editOuterWidth;
+        if (tableCellWidth) {
+            editOuterWidth = Math.max(minEditWidth, tableCellWidth);
+        } else {
+            editOuterWidth = minEditWidth;
+        }
 
-                const buttonAcceptEdit = this.element.find(".buttonAcceptEdit");
+        edit.width(editOuterWidth);
+        // @ts-ignore
+        edit.height(tablecell.innerHeight()-2);
 
-                buttonAcceptEdit.offset({
-                    left: tableCellOffset.left + editOuterWidth,
+        const inlineEditorButtons = this.element.find(".inlineEditorButtons");
+        // @ts-ignore
+        if ( this.data.editorButtonsBottom ) {
+            // @ts-ignore
+            inlineEditorButtons.offset({left:toff.left, top:toff.top + table.height() + 5});
+            return;
+        }
+        // @ts-ignore
+        if ( this.data.editorButtonsRight ) {
+            // @ts-ignore
+            inlineEditorButtons.offset({left:tableCellOffset.left + editOuterWidth + 5, top:tableCellOffset.top + 5});
+            return;
+        }
+        const editOuterHeight = edit.outerHeight();
+        const buttonOpenBigEditor = this.element.find(".buttonOpenBigEditor");
+        let h = buttonOpenBigEditor.height() || 20;
+        if (editOffset && editOuterHeight && tableCellOffset && editOuterWidth) {
+            const mul = rowi == 0 ? 1 : 2;
+            inlineEditorButtons.offset({
+                left: tableCellOffset.left,
+                top: (cell2y ? cell2y : editOffset.top) - h - 5,
+            });
+            /*
+            const buttonOpenBigEditor = this.element.find(".buttonOpenBigEditor");
+            buttonOpenBigEditor.offset({
+                left: tableCellOffset.left + editOuterWidth,
+                top: editOffset.top + editOuterHeight ,
+            });
+
+            const buttonOpenBigEditorWidth = buttonOpenBigEditor.outerWidth();
+            const buttonOpenBigEditorOffset = buttonOpenBigEditor.offset();
+
+            const buttonAcceptEdit = this.element.find(".buttonAcceptEdit");
+
+            buttonAcceptEdit.offset({
+                left: tableCellOffset.left + editOuterWidth,
+                top: editOffset.top,
+            });
+
+            const buttonAcceptEditOffset = buttonAcceptEdit.offset();
+            const buttonAcceptEditWidth = buttonAcceptEdit.outerWidth();
+
+            if (buttonAcceptEditOffset && buttonAcceptEditWidth) {
+                this.element.find(".buttonCloseSmallEditor").offset({
+                    left: buttonAcceptEditOffset.left + buttonAcceptEditWidth,
                     top: editOffset.top,
                 });
-
-                const buttonAcceptEditOffset = buttonAcceptEdit.offset();
-                const buttonAcceptEditWidth = buttonAcceptEdit.outerWidth();
-
-                if (buttonAcceptEditOffset && buttonAcceptEditWidth) {
-                    this.element.find(".buttonCloseSmallEditor").offset({
-                        left: buttonAcceptEditOffset.left + buttonAcceptEditWidth,
-                        top: editOffset.top,
-                    });
-                }
-
             }
+            */
+
         }
     }
 
@@ -1680,6 +1748,17 @@ export class TimTableController extends DestroyScope implements IController {
         this.setCellStyleAttribute("setCellBackgroundColor", "backgroundColor", value);
     }
 
+    async setCell(value: object) {
+        for (let key in value) {
+            // @ts-ignore
+            const s: any = value[key];
+            if (key === 'cell')
+                await this.saveToCurrentCell(s);
+            else
+                await this.setCellStyleAttribute("setCell", key, s);
+        }
+    }
+
     async setCellTextAlign(value: string) {
         this.setCellStyleAttribute("setCellTextAlign", "textAlign", value);
     }
@@ -1710,6 +1789,7 @@ export class TimTableController extends DestroyScope implements IController {
         }
 
         const data = {docId, parId, rowId, colId, [key]: value};
+        if ( route === "setCell") data = {docId, parId, rowId, colId, key: key, value: value};
         const response = await $http.post<TimTable>("/timTable/" + route, data);
         this.data = response.data;
         this.reInitialize();
@@ -1791,7 +1871,6 @@ timApp.component("timTable", {
         <tr ng-repeat="r in $ctrl.cellDataMatrix" ng-init="rowi = $index"
             ng-style="$ctrl.stylingForRow(rowi)">
                 <td ng-class="{'activeCell': $ctrl.isActiveCell(rowi, coli)}" 
-                 <!-- draggable="true" ondragstart="$ctrl.drag(event)" ondragover="$ctrl.allowDrop(event)" -->
                  ng-repeat="td in r" ng-init="coli = $index" ng-if="$ctrl.showCell(td)"
                  colspan="{{td.colspan}}" rowspan="{{td.rowspan}}"
                     ng-style="$ctrl.stylingForCell(rowi, coli)" ng-click="$ctrl.cellClicked(td, rowi, coli, $event)">
@@ -1805,22 +1884,26 @@ timApp.component("timTable", {
     <button class="timTableEditor timButton buttonRemoveRow" title="Remove row" ng-show="$ctrl.delRowEnabled()" ng-click="$ctrl.removeRow(-1)"><span
             class="glyphicon glyphicon-minus"></span></button>
     </div>
-    <div class="timTableEditor no-highlight">
-        <input class="editInput" ng-show="$ctrl.isSomeCellBeingEdited()"
+    <div class="timTableEditor inlineEditorDiv no-highlight" ng-show=$ctrl.isSomeCellBeingEdited()>
+        <input class="editInput"  ng-show="$ctrl.isSomeCellBeingEdited()"
                    ng-keydown="$ctrl.keyDownPressedInSmallEditor($event)"
-                   ng-keyup="$ctrl.keyUpPressedInSmallEditor($event)" ng-model="$ctrl.editedCellContent">
-             <button class="timButton buttonCloseSmallEditor" ng-show="$ctrl.isSomeCellBeingEdited()"
-                    ng-click="$ctrl.closeSmallEditor()"
-                    class="timButton"><span class="glyphicon glyphicon-remove"></span>
-             <button class="timButton buttonAcceptEdit" ng-show="$ctrl.isSomeCellBeingEdited()"
-                    ng-click="$ctrl.saveAndCloseSmallEditor()"
-                     class="timButton"><span class="glyphicon glyphicon-ok"></span>
-             <button class="timButton buttonOpenBigEditor" ng-show="$ctrl.isSomeCellBeingEdited()"
-                    ng-click="$ctrl.openBigEditor()" class="timButton"><span class="glyphicon glyphicon-pencil"></span>
-            </button>
+                   ng-keyup="$ctrl.keyUpPressedInSmallEditor($event)" ng-model="$ctrl.editedCellContent"><!--
+             --><span class="inlineEditorButtons" ng-show="$ctrl.isSomeCellBeingEdited()" ><!--      
+                 --><button class="timButton buttonOpenBigEditor"
+                        ng-click="$ctrl.openBigEditor()" class="timButton"><span class="glyphicon glyphicon-pencil"></span>
+                 </button><!--
+                 --><button class="timButton buttonCloseSmallEditor"
+                        ng-click="$ctrl.closeSmallEditor()"
+                        class="timButton"><span class="glyphicon glyphicon-remove"></span>
+                 </button><!--
+                 --><button class="timButton buttonAcceptEdit"
+                        ng-click="$ctrl.saveAndCloseSmallEditor()"
+                         class="timButton"><span class="glyphicon glyphicon-ok"></span>
+                 </button>
+             </span>
 
 
-</div>
+    </div>
 <div class="csRunMenuArea ng-show="::$ctrl.task">
   <p class="csRunMenu"><button class="timButton" ng-show="::$ctrl.task" ng-click="$ctrl.sendDataBlock()" >Tallenna</button></p>
 </div>  
