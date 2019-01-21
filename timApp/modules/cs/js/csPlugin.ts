@@ -61,8 +61,8 @@ interface AttrType {
 // TODO better name?
 interface Vid {
     vid: string;
-    w: any;
-    h: any;
+    w: string;
+    h: string;
 }
 
 const csPluginStartTime = new Date();
@@ -792,6 +792,8 @@ class CsBase extends PluginBase<t.TypeOf<typeof CsMarkup>, t.TypeOf<typeof CsAll
         return {norun: true}; // prevent running broken plugin accidentally
     }
 }
+
+let copyHelperElement: HTMLTextAreaElement | undefined;
 
 class CsController extends CsBase implements IController {
     private static $inject = ["$scope", "$element"];
@@ -2137,43 +2139,39 @@ class CsController extends CsBase implements IController {
         this.showCodeNow();
     }
 
-
-    getClipboardHelper(): any {  // TODO: tätä voisi harkita TIMin globaaliksi funktioksi?
-        // @ts-ignore
-        let e1 = document.copyHelperElement;  // prevent extra creating and deleting
-        if ( e1 ) return e1;
-        e1 = document.createElement('textarea');
-        e1.setAttribute('readonly', '');
+    getClipboardHelper() {  // TODO: could be a TIM global function
+        let e1 = copyHelperElement;  // prevent extra creating and deleting
+        if (e1) {
+            return e1;
+        }
+        e1 = document.createElement("textarea");
+        e1.setAttribute("readonly", "");
         // e1.style.position = 'absolute';
-        e1.style.position = 'fixed'; // fixed seems better for FF and Edge so not to jump to end
+        e1.style.position = "fixed"; // fixed seems better for FF and Edge so not to jump to end
         // e1.style.left = '-9999px';
-        e1.style.top = '-9999px';
+        e1.style.top = "-9999px";
         document.body.appendChild(e1);
         // document.body.removeChild(el);
-        // @ts-ignore
-        document.copyHelperElement = e1;
+        copyHelperElement = e1;
         return e1;
     }
 
-
-    copyToClipboard(s:string) {  // TODO: tätä voisi harkita TIMin globaaliksi funktioksi?
-        let e1 = this.getClipboardHelper();
+    copyToClipboard(s: string) {  // TODO: could be a TIM global function
+        const e1 = this.getClipboardHelper();
         e1.value = s;
         e1.select();
-        document.execCommand('copy');
+        document.execCommand("copy");
     }
 
-
-    getFromClipboard(): string {  // This does not work, it is not possible to get user clp contents
-        let e1 = this.getClipboardHelper();
+    getFromClipboard() {  // This does not work, it is not possible to get user clp contents
+        const e1 = this.getClipboardHelper();
         e1.select();
-        document.execCommand('paste');
+        document.execCommand("paste");
         e1.select();
         return e1.value;
     }
 
-
-    getSameIndent(s:string, beg: number): string {
+    getSameIndent(s: string, beg: number): string {
         let n = 0;
         let b = beg;
         for (let i=b; i<s.length; i++) {
@@ -2184,7 +2182,6 @@ class CsController extends CsBase implements IController {
         }
         return s.substr(b, n);
     }
-
 
     findLastNonEmpty(s: string): number {
         let i = s.length-1;
@@ -2198,7 +2195,6 @@ class CsController extends CsBase implements IController {
         }
         return i;
     }
-
 
     copyCode() {
         let pre = "";
@@ -2228,7 +2224,6 @@ class CsController extends CsBase implements IController {
         let s = pre + this.usercode + post;
         this.copyToClipboard(s);
     }
-
 
     checkByCodeRemove() {
         // TODO: begin and end texts as a parameter and then indext picked there

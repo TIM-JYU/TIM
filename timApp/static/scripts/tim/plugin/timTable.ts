@@ -42,6 +42,9 @@ export interface TimTable {
     task?: boolean;
     taskBorders?: boolean;
     userdata?: DataEntity;
+    editorBottom?: boolean;
+    editorButtonsBottom?: boolean;
+    editorButtonsRight?: boolean;
 }
 
 export interface ITable { // extends ITableStyles
@@ -1278,12 +1281,14 @@ export class TimTableController extends DestroyScope implements IController {
             return;
         }
         const parId = this.getOwnParId();
+        if (!parId) {
+            return;
+        }
         const docId = this.viewctrl.item.id;
         const rowId = this.activeCell.row;
         const colId = this.activeCell.col;
 
         if (typeof value === "string" ) {
-            // @ts-ignore
             await this.saveCells(value, docId, parId, rowId, colId);
             await ParCompiler.processAllMath(this.element);
             return true;
@@ -1339,10 +1344,8 @@ export class TimTableController extends DestroyScope implements IController {
         const edit = this.element.find(".editInput");
         await $timeout();
         edit.focus();
-        const toff = table.offset();
-        // @ts-ignore
-        inlineEditorDiv.offset({left:toff.left, top:toff.top+ table.height()});
-        // @ts-ignore
+        const toff = table.offset()!;
+        inlineEditorDiv.offset({left:toff.left, top:toff.top+ table.height()!});
         if ( this.data.editorBottom ) return;
         edit.offset(tableCellOffset);
 
@@ -1361,19 +1364,14 @@ export class TimTableController extends DestroyScope implements IController {
         }
 
         edit.width(editOuterWidth);
-        // @ts-ignore
-        edit.height(tablecell.innerHeight()-2);
+        edit.height(tablecell.innerHeight()!-2);
 
         const inlineEditorButtons = this.element.find(".inlineEditorButtons");
-        // @ts-ignore
         if ( this.data.editorButtonsBottom ) {
-            // @ts-ignore
-            inlineEditorButtons.offset({left:toff.left, top:toff.top + table.height() + 5});
+            inlineEditorButtons.offset({left:toff.left, top:toff.top + table.height()! + 5});
             return;
         }
-        // @ts-ignore
         if ( this.data.editorButtonsRight ) {
-            // @ts-ignore
             inlineEditorButtons.offset({left:tableCellOffset.left + editOuterWidth + 5, top:tableCellOffset.top + 5});
             return;
         }
@@ -1749,13 +1747,12 @@ export class TimTableController extends DestroyScope implements IController {
     }
 
     async setCell(value: object) {
-        for (let key in value) {
-            // @ts-ignore
-            const s: any = value[key];
-            if (key === 'cell')
+        for (const [key, s] of Object.entries(value)) {
+            if (key === "cell") {
                 await this.saveToCurrentCell(s);
-            else
+            } else {
                 await this.setCellStyleAttribute("setCell", key, s);
+            }
         }
     }
 
@@ -1788,7 +1785,7 @@ export class TimTableController extends DestroyScope implements IController {
             return;
         }
 
-        const data = {docId, parId, rowId, colId, [key]: value};
+        let data = {docId, parId, rowId, colId, [key]: value};
         if ( route === "setCell") data = {docId, parId, rowId, colId, key: key, value: value};
         const response = await $http.post<TimTable>("/timTable/" + route, data);
         this.data = response.data;
