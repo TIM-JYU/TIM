@@ -268,9 +268,6 @@ export function getOutOffsetFully(el: Element): IBounds {
     if (rect.top < 0) {
         bounds.top = rect.top;
     }
-    if (rect.top > 0 && isMobileDevice()) {
-        bounds.top = rect.top;
-    }
     const {width, height} = getViewPortSize();
     if (rect.bottom > height) {
         bounds.bottom = height - rect.bottom;

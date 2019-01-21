@@ -2,9 +2,9 @@ import {IController, IRootElementService, IScope} from "angular";
 import {IModalInstanceService} from "angular-ui-bootstrap";
 import {timApp} from "tim/app";
 import {timLogTime} from "tim/util/timTiming";
-import {$compile, $document} from "../util/ngimport";
+import {$compile, $document, $q} from "../util/ngimport";
 import {
-    Binding, debugTextToHeader,
+    Binding,
     getOutOffsetFully,
     getOutOffsetVisible,
     getPageXY,
@@ -118,6 +118,7 @@ export class DraggableController implements IController {
     private parentDraggable?: DraggableController;
     private forceMaximized?: Binding<boolean, "<">;
     private modal?: IModalInstanceService;
+    private layoutReady = $q.defer();
 
     constructor(private scope: IScope, private element: IRootElementService) {
     }
@@ -271,6 +272,7 @@ export class DraggableController implements IController {
         } else {
             this.setVisibility("inherit");
         }
+        this.layoutReady.resolve();
     }
 
     private async restoreSizeAndPosition(vf: VisibilityFix) {
@@ -573,9 +575,7 @@ export class DraggableController implements IController {
     }
 
     async moveTo(p: Pos) {
-        if (this.absolute) {
-            await this.makeModalPositionAbsolute();
-        }
+        await this.layoutReady.promise;
         this.element.css("margin", "inherit");
         this.doMove(p);
     }
