@@ -77,7 +77,8 @@ export class PopupMenuController extends DialogController<{params: IPopupParams}
         this.vctrl.registerPopupMenu(this);
         await this.draggable.makeHeightAutomatic();
         if (this.p.pos) {
-            this.draggable.moveTo(this.p.pos);
+            await this.draggable.moveTo(this.p.pos);
+            this.draggable.ensureFullyInViewport();
         }
     }
 
