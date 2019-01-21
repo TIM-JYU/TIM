@@ -33,8 +33,7 @@ export function onClick(className: string,
             new Date().getTime() - lastclicktime < 500) {
             // This is to prevent chaotic behavior from both mouseDown and touchStart
             // events happening at the same coordinates
-            $log.info("Ignoring event:");
-            $log.info(e);
+            $log.info("Ignoring event:", e);
             return;
         }
 
