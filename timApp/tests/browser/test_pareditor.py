@@ -30,7 +30,7 @@ class ParEditorTest(BrowserTest):
         return 0.003
 
     def wait_for_preview_to_finish(self):
-        self.wait.until_not(ec.text_to_be_present_in_element((By.CSS_SELECTOR, '#previewDiv'), '...'))
+        self.wait.until_not(ec.text_to_be_present_in_element((By.CSS_SELECTOR, '.previewDiv'), '...'))
 
     def test_add_bottom_focus_switch(self):
         """Ensures:

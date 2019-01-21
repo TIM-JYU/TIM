@@ -78,13 +78,12 @@
             <a href="{{ $ctrl.getSourceDocumentLink() }}"><i class="glyphicon glyphicon-link"></i></a>
         </div>
     </div>
-    <div id="previewDiv"
-         tim-draggable-fixed
+    <div tim-draggable-fixed
          detachable="true"
          caption="{{ $ctrl.getPreviewCaption() }}"
          save="{{$ctrl.getOptions().localSaveTag}}Preview"
          resize="true"
-         class="preview"
+         class="previewDiv"
          ng-show="$ctrl.proeditor">
         <div class="previewcontent paragraphs"></div>
     </div>

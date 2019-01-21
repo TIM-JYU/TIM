@@ -446,21 +446,30 @@ p.caption {
     position: relative;
 }
 
-#previewDiv {
+.previewDiv {
     min-width: 20em;
     max-width: 52em;
     clear: both;
     border-radius: 5px;
     background: inherit;
+
+    .editline, .readline, .arealine, .areaeditline1, .areaeditline2, .areaeditline3 {
+        display: none;
+    }
+
+    .par {
+        margin-left: 0;
+        margin-right: 0;
+    }
 }
 
-#previewDiv .editline, #previewDiv .readline, #previewDiv .arealine .csrunPreview .editline .areaeditline1 .areaeditline2 .areaeditline3, .csrunPreview .readline {
-    display: none;
-}
+.pastePreview {
+    @extend .previewDiv;
 
-#previewDiv .par {
-    margin-left: 0;
-    margin-right: 0;
+    min-width: 0;
+    max-height: 10em;
+    overflow-x: hidden;
+    overflow-y: auto;
 }
 
 #slideFrame {

@@ -140,6 +140,7 @@ export class PopupMenuController extends DialogController<{params: IPopupParams}
         const r = await to($http.get<{texts: string}>(contentUrl, {params: {doc_id: this.vctrl.item.id}}));
         if (r.ok) {
             this.content = r.result.data.texts;
+            this.draggable.ensureFullyInViewport();
         }
     }
 
@@ -163,7 +164,7 @@ registerDialogComponent("popupMenu",
     <dialog-body>
         <div class="flex cl">
             <div class="error" ng-show="$ctrl.vctrl.notification" ng-bind="$ctrl.vctrl.notification"></div>
-            <div ng-if="$ctrl.content" ng-bind-html="$ctrl.content"></div>
+            <div class="pastePreview" ng-if="$ctrl.content" ng-bind-html="$ctrl.content"></div>
 
             <div class="flex rw align-center" ng-repeat="f in $ctrl.actions | filter:{show: true}">
                 <button class="timButton btn-sm flex-grow-5" ng-bind="f.desc" ng-click="$ctrl.callFunc($event, f)">
