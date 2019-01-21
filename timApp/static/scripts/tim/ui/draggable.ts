@@ -20,10 +20,9 @@ function getPixels(s: string) {
     const s2 = s.replace(/px$/, "");
     return Number(s2) || 0;
 }
-// <div class="draghandle" ng-class="{'attached': !d.canDrag()}" ng-mousedown="d.dragClick(); $event.preventDefault()">
 
 const draggableTemplate = `
-<div class="draghandle" ng-class="{'attached': !d.canDrag()}" >
+<div class="draghandle" ng-class="{'attached': !d.canDrag()}" ng-mousedown="d.dragClick(); $event.preventDefault()">
     <p ng-show="d.caption" ng-bind="d.caption"></p>
     <i ng-show="d.detachable"
        ng-click="d.toggleDetach()"
@@ -315,15 +314,13 @@ export class DraggableController implements IController {
             // debugTextToHeader(JSON.stringify(oldPos));
             timLogTime("oldpos:" + oldPos.left + ", " + oldPos.top, "drag");
         }
-        if (oldSize || oldPos || isMobileDevice()) {
-            switch (vf) {
-                case VisibilityFix.Partial:
-                    this.ensureVisibleInViewport();
-                    break;
-                case VisibilityFix.Full:
-                    this.ensureFullyInViewport();
-                    break;
-            }
+        switch (vf) {
+            case VisibilityFix.Partial:
+                this.ensureVisibleInViewport();
+                break;
+            case VisibilityFix.Full:
+                this.ensureFullyInViewport();
+                break;
         }
     }
 
@@ -402,7 +399,7 @@ export class DraggableController implements IController {
     }
 
     private resizeElement(e: JQueryEventObject, up: boolean, right: boolean, down: boolean, left: boolean) {
-        e.preventDefault();
+        // e.preventDefault();
         this.resizeStates = {up, down, left, right};
         $document.off("mouseup pointerup touchend", this.release);
         $document.off("mousemove pointermove touchmove", this.moveResize);
@@ -481,6 +478,9 @@ export class DraggableController implements IController {
     }
 
     private setCssFromBound(bound: IBounds) {
+        if (bound.bottom === 0 && bound.top === 0 && bound.right === 0 && bound.left === 0) {
+            return;
+        }
         if (this.setTop) {
             this.addToCss("top", -bound.top + bound.bottom);
         }
