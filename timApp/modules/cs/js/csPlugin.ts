@@ -1513,7 +1513,7 @@ class CsController extends CsBase implements IController {
     checkWrap() {
         const r = wrapText(this.usercode, this.wrap);
         if (r.modified) {
-            if (this.editorIndex === 0) {
+            if (this.editorIndex === 0 && this.edit) {
                 const start = this.edit.selectionStart;
 
                 this.usercode = r.s;
