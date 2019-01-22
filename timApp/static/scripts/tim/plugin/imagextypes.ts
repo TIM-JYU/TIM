@@ -121,6 +121,7 @@ const VectorProps = t.clean(t.partial({
 
 const CommonProps = t.clean(t.partial({
     a: Angle,
+    borderWidth: nullable(t.number),
     color: nullable(t.string),
     id: t.string,
     position: ValidCoord,
@@ -291,7 +292,8 @@ export type OptionalCommonPropNames =
     | "imgproperties"
     | "textboxproperties"
     | "vectorproperties"
-    | "color";
+    | "color"
+    | "borderWidth";
 export type OptionalFixedObjPropNames = OptionalCommonPropNames;
 export type OptionalDragObjectPropNames = OptionalFixedObjPropNames | "xlimits" | "ylimits" | "lock";
 export type OptionalTargetPropNames = "points" | OptionalFixedObjPropNames;

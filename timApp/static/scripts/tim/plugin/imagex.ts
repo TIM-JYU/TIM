@@ -1007,7 +1007,7 @@ abstract class ObjBase<T extends RequireExcept<CommonPropsT, OptionalCommonPropN
             default: // rectangle
                 this.mainShape = new Rectangle(() => this.overrideColor || this.values.color || "black",
                     "transparent",
-                    2,
+                    this.values.borderWidth || 2,
                     0,
                     s);
                 break;
