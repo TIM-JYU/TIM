@@ -697,6 +697,7 @@ const CsMarkupOptional = t.partial({
     userinput: t.union([t.string, t.number]),
     variables: t.string,
     width: t.number,
+    wrap: t.Integer,
 });
 
 const CsMarkupDefaults = t.type({
@@ -740,7 +741,6 @@ const CsMarkupDefaults = t.type({
     validityCheckMessage: withDefault(t.string, ""),
     viewCode: withDefault(t.boolean, false),
     words: withDefault(t.boolean, false),
-    wrap: withDefault(t.Integer, -1),
 });
 
 const CsMarkup = t.intersection([CsMarkupOptional, CsMarkupDefaults, GenericPluginMarkup]);
