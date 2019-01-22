@@ -16,19 +16,18 @@ objects:
     pin:
       visible: true
       position: 
-        xalign: ""
-        xcoord: []
+        align: "northwest"
+        #start: [10,10]
+        #coord: [5,5]
       color: ""
-      length:
+      length: 15
     textboxproperties:
-      positionOnImage:
-        xcoord: []
       borderWidth:
       borderColor: ""
       text: ""
       textColor: ""
       font: ""
-      xsize: []
+      size:
   -
     type: "img"
     position: [300, 400]
@@ -41,9 +40,8 @@ objects:
       position:
         align: "west"
     textboxproperties:
-      positionOnImage:
-        coord: [15, 55]
       text: "sieni"
+      position: [15, 55]
   -
     type: "textbox"
     position: [300, 500]
@@ -62,7 +60,7 @@ objects:
       textColor: "blue"
       backgroud: yellow
       font: "30px times"
-      xsize: []
+      size:
 targets: 
   - 
       id: "target1"

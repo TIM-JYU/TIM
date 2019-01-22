@@ -12,15 +12,14 @@ Raahattava objekti kuvatehtävään
       visible: true
       position: 
         align: "west"
-        coord: []
+        #coord: [10, 10]
       color: ""
       length: 
     textboxproperties:
-      positionOnImage:
-        coord: []
+      position: [0, 0]
       borderWidth:
       borderColor: ""
       text: ""
       textColor: ""
       font: ""
-      size: []
+      size:
