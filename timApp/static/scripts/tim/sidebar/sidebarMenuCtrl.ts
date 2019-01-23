@@ -526,8 +526,8 @@ timApp.component("timSidebarMenu", {
                     ng-click="$ctrl.cssPrint()">Browser print
             </button>
             <h5 style="display: inline-block">Document tags</h5>
-            <a style="display: inline-block
-                     href=" https://tim.jyu.fi/view/tim/ohjeita/opettajan-ohje#kurssikoodi">
+            <a style="display: inline-block"
+                     href="https://tim.jyu.fi/view/tim/ohjeita/opettajan-ohje#kurssikoodi">
             <span class="glyphicon glyphicon-question-sign"></span>
             </a>
             <button class="timButton btn-block" ng-show="$ctrl.vctrl.item.rights.manage"
