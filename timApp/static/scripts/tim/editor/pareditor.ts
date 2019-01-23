@@ -6,15 +6,15 @@ import {fixDefExport, markAsUsed} from "tim/util/utils";
 import {timApp} from "../app";
 import {IExtraData, ITags} from "../document/editing/edittypes";
 import {getElementByParId, getParAttributes} from "../document/parhelpers";
-import {IItem} from "../item/IItem";
+import {IDocument} from "../item/IItem";
 import {DialogController, registerDialogComponent, showDialog, showMessageDialog} from "../ui/dialog";
 import {$http, $injector, $localStorage, $timeout, $upload, $window} from "../util/ngimport";
 import {IAceEditor} from "./ace-types";
 import {AceParEditor} from "./AceParEditor";
 import {IPluginInfoResponse, ParCompiler} from "./parCompiler";
 import {TextAreaParEditor} from "./TextAreaParEditor";
-import DroppableEvent = JQueryUI.DroppableEvent;
 import {ViewCtrl} from "../document/viewctrl";
+import DroppableEvent = JQueryUI.DroppableEvent;
 
 markAsUsed(rangyinputs);
 
@@ -1175,7 +1175,7 @@ ${backTicks}
     }
 
     getSourceDocumentLink() {
-        const trs: IItem[] = $window.translations;
+        const trs: IDocument[] = $window.translations;
         const orig = trs.find((t) => t.id === t.src_docid);
         if (orig) {
             const parId = this.getExtraData().par;

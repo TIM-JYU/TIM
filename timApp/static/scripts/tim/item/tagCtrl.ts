@@ -7,8 +7,8 @@ import {Moment} from "moment";
 import * as focusMe from "tim/ui/focusMe";
 import {DialogController, registerDialogComponent, showDialog} from "../ui/dialog";
 import {IItem, ITag, tagStyleClass, TagType} from "./IItem";
-import {ADMIN_GROUPNAME, TEACHERS_GROUPNAME} from "../user/IUser";
-import {Users} from "../user/userService";
+import {TEACHERS_GROUPNAME} from "../user/IUser";
+import {userBelongsToGroupOrIsAdmin} from "../user/userService";
 import {$http} from "../util/ngimport";
 import {markAsUsed, to} from "../util/utils";
 import {KEY_ENTER} from "../util/keycodes";
@@ -354,11 +354,5 @@ export async function showTagDialog(d: IItem) {
  * @returns {boolean}
  */
 function userBelongsToTeachersOrIsAdmin() {
-    if (Users.belongsToGroup(ADMIN_GROUPNAME)) {
-        return true;
-    }
-    if (Users.belongsToGroup(TEACHERS_GROUPNAME)) {
-        return true;
-    }
-    return false;
+    return userBelongsToGroupOrIsAdmin(TEACHERS_GROUPNAME);
 }

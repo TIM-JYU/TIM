@@ -21,7 +21,6 @@ export function convertDateStringsToMoments(input: {[index: string]: any}): void
         return;
     }
 
-
     for (const [key, value] of Object.entries(input)) {
         if (typeof value === "string") {
             // ignore strings and keys that are most likely not intended to be interpreted as timestamps

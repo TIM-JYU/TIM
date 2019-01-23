@@ -5,7 +5,7 @@
 import {IController} from "angular";
 import {ngStorage} from "ngstorage";
 import {timApp} from "../app";
-import {IItem, ITag, ITaggedItem} from "../item/IItem";
+import {DocumentOrFolder, IItem, ITag, ITaggedItem} from "../item/IItem";
 import {$http, $localStorage, $window} from "../util/ngimport";
 import {Binding, to} from "../util/utils";
 import {ShowSearchResultController, showSearchResultDialog} from "./searchResultsCtrl";
@@ -129,7 +129,7 @@ export class SearchBoxCtrl implements IController {
     private errorMessage: string | undefined; // Message displayed only in search panel.
     private focusMe: boolean = true;
     private loading: boolean = false; // Display loading icon.
-    private item: IItem = $window.item;
+    private item: DocumentOrFolder = $window.item;
     private storage: ngStorage.StorageService & {
         maxDocResultsStorage: null | string,
         relevanceThresholdStorage: null | string,

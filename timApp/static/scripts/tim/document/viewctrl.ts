@@ -17,7 +17,7 @@ import {timLogTime} from "tim/util/timTiming";
 import {isPageDirty, markAsUsed, markPageNotDirty, to} from "tim/util/utils";
 import {BookmarksController, IBookmarkGroup} from "../bookmark/bookmarks";
 import {IPluginInfoResponse, ParCompiler} from "../editor/parCompiler";
-import {IItem, ITag, TagType} from "../item/IItem";
+import {IDocument, ITag, TagType} from "../item/IItem";
 import {LectureController} from "../lecture/lectureController";
 import {TimTableController} from "../plugin/timTable";
 import {initCssPrint} from "../printing/cssPrint";
@@ -76,7 +76,7 @@ export class ViewCtrl implements IController {
 
     public lectureMode: boolean;
     public inLecture: boolean;
-    public item: IItem;
+    public item: IDocument;
     public docId: number;
 
     private hidePending: boolean;

@@ -1,20 +1,32 @@
 import moment, {Moment} from "moment";
 import {IRights} from "../user/IRights";
+import {IGroup} from "../user/IUser";
 import {$http} from "../util/ngimport";
-import {IUser} from "../user/IUser";
+
+export interface IDocument extends IItem {
+    isFolder: false;
+    src_docid?: number;
+}
+
+export interface IFullDocument extends IDocument {
+    fulltext: string;
+    versions: Array<{}>; // TODO proper element type
+}
+
+export type DocumentOrFolder = IDocument | IFolder;
 
 export interface IItem {
     id: number;
-    name: string;
     location: string;
-    title: string;
-    isFolder: boolean;
-    fulltext: string;
-    rights: IRights;
-    relevance?: IRelevance;
-    versions: Array<{}>;
+    modified: string; // TODO change type to Moment
+    name: string;
+    owner: IGroup;
     path: string;
-    src_docid?: number;
+    public: boolean;
+    relevance?: IRelevance;
+    rights: IRights;
+    title: string;
+    unpublished: boolean;
 }
 
 export interface IRelevance {
@@ -29,18 +41,8 @@ export interface ITag {
     name: string;
 }
 
-export interface IFolder {
-    name: string;
-    path: string;
-    title: string;
-    location: string;
-    id: number;
-    modified: string;
-    owner: IUser;
-    rights: IRights;
-    unpublished: boolean;
-    public: boolean;
-    isFolder: boolean;
+export interface IFolder extends IItem {
+    isFolder: true;
 }
 
 export enum TagType {
@@ -54,7 +56,7 @@ export interface ICourseSettings {
 }
 
 // A list of course subjects. May contain lists within lists.
-export type ISubjectList = string | { [subject: string]: ISubjectList[] };
+export type ISubjectList = string | {[subject: string]: ISubjectList[]};
 
 export interface ITaggedItem extends IItem {
     tags: ITag[];
@@ -83,7 +85,7 @@ export function getCourseCode(tags: ITag[], checkExpiration: boolean = false) {
     for (const tag of tags) {
         if (tag.type === TagType.CourseCode) {
             if (checkExpiration && tagIsExpired(tag)) {
-                    return undefined;
+                return undefined;
             }
             return tag.name;
         }

@@ -2,7 +2,7 @@ import {saveCurrentScreenPar} from "../document/parhelpers";
 import {showMessageDialog} from "../ui/dialog";
 import {$http, $httpParamSerializer, $window} from "../util/ngimport";
 import {to, ToReturn} from "../util/utils";
-import {IFullUser, IUser} from "./IUser";
+import {ADMIN_GROUPNAME, IFullUser, IUser} from "./IUser";
 
 export interface ILoginResponse {
     other_users: IUser[];
@@ -129,4 +129,12 @@ export function initUserService() {
         throw new Error("UserService already initialized");
     }
     Users = new UserService($window.current_user, $window.other_users);
+}
+
+/**
+ * Checks whether user belongs to a certain group or admins group.
+ * @returns {boolean}
+ */
+export function userBelongsToGroupOrIsAdmin(group: string) {
+    return Users.belongsToGroup(ADMIN_GROUPNAME) || Users.belongsToGroup(group);
 }

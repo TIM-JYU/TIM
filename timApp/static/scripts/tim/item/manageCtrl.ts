@@ -6,7 +6,7 @@ import * as copyFolder from "../folder/copyFolder";
 import {showMessageDialog} from "../ui/dialog";
 import {$http, $timeout, $upload, $window} from "../util/ngimport";
 import {markAsUsed, to} from "../util/utils";
-import {IItem} from "./IItem";
+import {IFolder, IFullDocument, IItem} from "./IItem";
 
 markAsUsed(copyFolder);
 
@@ -34,7 +34,7 @@ export class PermCtrl implements IController {
     private translations: Array<IItem & {old_title: string}> = [];
     private newTranslation: {language: string, title: string};
     private accessTypes: Array<{}>;
-    private item: IItem;
+    private item: IFullDocument | IFolder;
     private newName?: string;
     private oldFolderName?: string;
     private oldName?: string;
@@ -44,7 +44,7 @@ export class PermCtrl implements IController {
     private copyParams: {copy: number};
     private citeParams: {cite: number};
     private aliases: IItem[] = [];
-    private old_title?: string;
+    private oldTitle?: string;
     private fileUploadError: string | undefined;
     private tracWikiText: string = "";
     private saving: boolean = false;
@@ -61,7 +61,10 @@ export class PermCtrl implements IController {
         this.objName = $window.objName;
         this.newFolderName = this.item.location;
         this.newAlias = {location: this.newFolderName};
-        this.wikiRoot = "https://trac.cc.jyu.fi/projects/ohj2/wiki/"; // Todo: replace something remembers users last choice
+
+        // TODO: replace with something that remembers user's last choice
+        this.wikiRoot = "https://trac.cc.jyu.fi/projects/ohj2/wiki/";
+
         this.hasMoreChangelog = true;
         this.newTitle = this.item.title;
         this.copyParams = {copy: this.item.id};
@@ -86,13 +89,14 @@ export class PermCtrl implements IController {
     }
 
     async showMoreChangelog() {
-        const newLength = this.item.versions.length + 100;
+        const d = this.itemAsDocument();
+        const newLength = d.versions.length + 100;
         this.changelogLoading = true;
         const r = await to($http.get<{versions: IChangelogEntry[]}>("/changelog/" + this.item.id + "/" + (newLength)));
         this.changelogLoading = false;
         if (r.ok) {
-            this.item.versions = r.result.data.versions;
-            this.hasMoreChangelog = this.item.versions.length === newLength;
+            d.versions = r.result.data.versions;
+            this.hasMoreChangelog = d.versions.length === newLength;
         } else {
             await showMessageDialog(r.result.data.error);
         }
@@ -135,7 +139,7 @@ export class PermCtrl implements IController {
                 this.translations.push(trnew);
             }
 
-            this.old_title = this.item.title;
+            this.oldTitle = this.item.title;
 
         } else {
             await showMessageDialog(`Error loading translations: ${r.result.data.error}`);
@@ -167,11 +171,11 @@ export class PermCtrl implements IController {
     syncTitle(title: string) {
         this.item.title = title;
         this.newTitle = title;
-        $window.document.title = title + " - Manage - TIM";
-        for (let i = 0; i < this.translations.length; ++i) {
-            if (this.translations[i].id === this.item.id) {
-                this.translations[i].title = title;
-                this.translations[i].old_title = title;
+        document.title = title + " - Manage - TIM";
+        for (const t of this.translations) {
+            if (t.id === this.item.id) {
+                t.title = title;
+                t.old_title = title;
             }
         }
     }
@@ -230,7 +234,7 @@ export class PermCtrl implements IController {
     async addAlias(newAlias: IAlias) {
         const path = encodeURIComponent(this.combine(newAlias.location || "", newAlias.name));
         const r = await to($http.put(`/alias/${this.item.id}/${path}`, {
-            public: Boolean(newAlias.public),
+            public: newAlias.public,
         }));
         if (r.ok) {
             await this.getAliases();
@@ -251,8 +255,8 @@ export class PermCtrl implements IController {
     async updateAlias(alias: IAlias, first: boolean) {
         const newAlias = this.combine(alias.location, alias.name);
         const r = await to($http.post("/alias/" + encodeURIComponent(alias.path), {
-            public: Boolean(alias.public),
             new_name: newAlias,
+            public: alias.public,
         }));
         if (r.ok) {
             if (!first || newAlias === alias.path) {
@@ -288,6 +292,7 @@ export class PermCtrl implements IController {
     }
 
     updateDocument(file: any) {
+        const d = this.itemAsDocument();
         this.file = file;
         this.fileUploadError = undefined;
         if (file) {
@@ -296,8 +301,8 @@ export class PermCtrl implements IController {
                 url: "/update/" + this.item.id,
                 data: {
                     file,
-                    original: this.item.fulltext,
-                    version: this.item.versions[0],
+                    original: d.fulltext,
+                    version: d.versions[0],
                 },
                 method: "POST",
             });
@@ -305,7 +310,7 @@ export class PermCtrl implements IController {
             file.upload.then((response: any) => {
                 $timeout(() => {
                     this.file.result = response.data;
-                    this.item.versions = response.data.versions;
+                    d.versions = response.data.versions;
                     this.updateFullText(response.data.fulltext);
                 });
             }, (response: any) => {
@@ -389,15 +394,27 @@ export class PermCtrl implements IController {
     }
 
     hasTextChanged() {
-        return this.item.fulltext !== this.fulltext;
+        const d = this.itemAsDocument();
+        return d.fulltext !== this.fulltext;
     }
 
     updateFullText(txt: string) {
         this.fulltext = txt.trim();
-        this.item.fulltext = this.fulltext;
+        const d = this.itemAsDocument();
+        d.fulltext = this.fulltext;
+    }
+
+    itemAsDocument() {
+        if (this.item.isFolder) {
+            const message = "Current item is unexpectedly folder instead of document";
+            void showMessageDialog(message);
+            throw new Error(message);
+        }
+        return this.item;
     }
 
     async saveDocument() {
+        const d = this.itemAsDocument();
         if (this.saving || !this.hasTextChanged()) {
             return;
         }
@@ -406,21 +423,21 @@ export class PermCtrl implements IController {
             {data: {error: string, is_warning?: boolean}}>($http.post<IManageResponse>(`/update/${this.item.id}`,
             {
                 fulltext: this.fulltext,
-                original: this.item.fulltext,
-                version: this.item.versions[0],
+                original: d.fulltext,
+                version: d.versions[0],
             }));
         if (r.ok) {
             let data = r.result.data;
             if (data.duplicates.length > 0) {
-                const d = await to(showRenameDialog({
+                const renameResult = await to(showRenameDialog({
                     duplicates: data.duplicates,
                 }));
-                if (d.ok && isManageResponse(d.result)) {
-                    data = d.result;
+                if (renameResult.ok && isManageResponse(renameResult.result)) {
+                    data = renameResult.result;
                 }
             }
             this.updateFullText(data.fulltext);
-            this.item.versions = data.versions;
+            d.versions = data.versions;
             this.saving = false;
         } else {
             const data = r.result.data;
@@ -436,19 +453,20 @@ export class PermCtrl implements IController {
     }
 
     async saveDocumentWithWarnings() {
+        const d = this.itemAsDocument();
         this.saving = true;
         const r = await to($http.post<IManageResponse>("/update/" + this.item.id,
             {
                 fulltext: this.fulltext,
-                original: this.item.fulltext,
                 ignore_warnings: true,
-                version: this.item.versions[0],
+                original: d.fulltext,
+                version: d.versions[0],
             }));
         this.saving = false;
         if (r.ok) {
             const data = r.result.data;
             this.updateFullText(data.fulltext);
-            this.item.versions = data.versions;
+            d.versions = data.versions;
         } else {
             await showMessageDialog(r.result.data.error);
         }
