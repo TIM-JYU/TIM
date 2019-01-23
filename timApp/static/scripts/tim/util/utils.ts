@@ -178,7 +178,7 @@ export function clone<T>(obj: T): T {
 
 type Success<T> = {ok: true, result: T};
 type Failure<T> = {ok: false, result: T};
-type Result<T, U> = Success<T> | Failure<U>;
+export type Result<T, U> = Success<T> | Failure<U>;
 
 /**
  * Wraps the given promise so that it always gets fulfilled.

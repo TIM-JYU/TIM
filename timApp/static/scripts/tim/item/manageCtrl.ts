@@ -6,7 +6,7 @@ import * as copyFolder from "../folder/copyFolder";
 import {showMessageDialog} from "../ui/dialog";
 import {$http, $timeout, $upload, $window} from "../util/ngimport";
 import {markAsUsed, to} from "../util/utils";
-import {IFolder, IFullDocument, IItem} from "./IItem";
+import {IDocument, IFolder, IFullDocument, IItem, redirectToItem} from "./IItem";
 
 markAsUsed(copyFolder);
 
@@ -484,12 +484,12 @@ export class PermCtrl implements IController {
     }
 
     async createTranslation() {
-        const r = await to($http.post<{path: string}>(`/translate/${this.item.id}/${this.newTranslation.language}`, {
+        const r = await to($http.post<IDocument>(`/translate/${this.item.id}/${this.newTranslation.language}`, {
             doc_title: this.newTranslation.title,
         }));
         if (r.ok) {
             const data = r.result.data;
-            location.href = "/view/" + data.path;
+            redirectToItem(data);
         } else {
             await showMessageDialog(r.result.data.error);
         }

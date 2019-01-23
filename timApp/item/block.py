@@ -10,6 +10,7 @@ from timApp.user.usergroup import UserGroup
 from timApp.timdb.sqa import db
 from timApp.auth.auth_models import BlockAccess
 from timApp.timtypes import FolderType
+from timApp.util.utils import get_current_time
 
 
 class Block(db.Model):
@@ -100,7 +101,7 @@ class Block(db.Model):
         self.accesses.append(
             BlockAccess(usergroup_id=usergroup.id,
                         type=AccessType.owner.value,
-                        accessible_from=datetime.now(tz=timezone.utc)))
+                        accessible_from=get_current_time()))
 
 
 class BlockType(Enum):
@@ -135,7 +136,7 @@ def insert_block(block_type: BlockType, description: Optional[str], owner_group_
         access = BlockAccess(block=b,
                              usergroup_id=owner_group_id,
                              type=AccessType.owner.value,
-                             accessible_from=datetime.now(tz=timezone.utc))
+                             accessible_from=get_current_time())
         db.session.add(access)
     db.session.add(b)
     db.session.flush()

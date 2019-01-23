@@ -3,6 +3,8 @@ from typing import Tuple, List
 from flask import Blueprint, abort
 
 from timApp.auth.accesshelper import verify_admin, check_admin_access
+from timApp.auth.accesstype import AccessType
+from timApp.auth.auth_models import BlockAccess
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.create_item import apply_template, create_document
 from timApp.item.validation import ItemValidationRule
@@ -12,7 +14,7 @@ from timApp.user.special_group_names import SPECIAL_GROUPS, PRIVILEGED_GROUPS
 from timApp.user.user import User, view_access_set, edit_access_set
 from timApp.user.usergroup import UserGroup
 from timApp.util.flask.responsehelper import json_response, ok_response
-from timApp.util.utils import remove_path_special_chars
+from timApp.util.utils import remove_path_special_chars, get_current_time
 
 groups = Blueprint('groups',
                    __name__,
@@ -104,8 +106,14 @@ def create_group(groupname):
     )
     apply_template(doc)
     u.admin_doc = doc.block
+    f = doc.parent
+    if len(f.block.accesses) == 1:
+        f.block.accesses.append(BlockAccess(usergroup=UserGroup.get_logged_in_group(),
+                                            type=AccessType.view.value,
+                                            accessible_from=get_current_time(),
+                                            ))
     db.session.commit()
-    return ok_response()
+    return json_response(doc)
 
 
 def verify_group_access(ug: UserGroup, access_set):

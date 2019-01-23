@@ -28,7 +28,7 @@ class GroupTest(TimRouteTest):
             groupname = f'testgroup1{is_admin}'
             self.get(f'/groups/show/{groupname}', expect_status=404,
                      expect_content={'error': 'User group not found'})
-            self.get(f'/groups/create/{groupname}', expect_content=self.ok_resp)
+            self.get(f'/groups/create/{groupname}')
             self.get(f'/groups/create/{groupname}',
                      expect_content={'error': 'User group already exists.'},
                      expect_status=400)
@@ -90,7 +90,7 @@ class GroupTest(TimRouteTest):
             self.get('/groups/create/1', expect_status=400, expect_content=self.error_resp)
             self.get('/groups/create/a1@a', expect_status=400, expect_content=self.error_resp)
             self.get('/groups/create/ok ok', expect_status=400, expect_content=self.error_resp)
-            self.get(f'/groups/create/test x1{is_admin}', expect_content=self.ok_resp)
+            self.get(f'/groups/create/test x1{is_admin}')
 
             self.get('/groups/addmember/Logged-in users/testuser1', expect_status=400,
                      expect_content={'error': 'Cannot edit special groups.'})
@@ -128,7 +128,7 @@ class GroupTest(TimRouteTest):
 
     def test_groups_trim(self):
         self.init_admin()
-        self.get('/groups/create/testing1', expect_content=self.ok_resp)
+        self.get('/groups/create/testing1')
         self.get('/groups/addmember/testing1/testuser1 ,testuser2  ',
                  expect_content={'added': ['testuser1', 'testuser2'], 'already_belongs': [], 'not_exist': []})
 
@@ -138,12 +138,14 @@ class GroupTest2(TimRouteTest):
         self.test_user_3.make_admin()
         db.session.commit()
         self.login_test3()
-        self.get('/groups/create/edittest1', expect_content=self.ok_resp)
+        self.get('/groups/create/edittest1')
         d = DocEntry.find_by_path('groups/edittest1')
         self.assertEqual('Administrators', d.parent.owner.name)
         self.login_test1()
         self.get('/groups/show/edittest1', expect_status=403)
         self.test_user_1.grant_access(d.id, 'view')
+        self.get(d.url)
+        self.get(d.parent.url)
         self.get('/groups/show/edittest1')
         self.get('/groups/addmember/edittest1/testuser1', expect_status=403)
         self.test_user_1.grant_access(d.id, 'edit')

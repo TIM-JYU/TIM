@@ -1,3 +1,4 @@
+/* tslint:disable:max-line-length */
 import {IController} from "angular";
 import $ from "jquery";
 import {ngStorage} from "ngstorage";
@@ -6,6 +7,9 @@ import {showCourseDialog} from "../document/course/courseDialogCtrl";
 import {getActiveDocument} from "../document/document";
 import {showMergePdfDialog} from "../document/minutes/mergePdfCtrl";
 import {ViewCtrl} from "../document/viewctrl";
+import {IDocument, isRootFolder, redirectToItem} from "../item/IItem";
+import {IRelevanceResponse} from "../item/relevanceEdit";
+import {showRelevanceEditDialog} from "../item/relevanceEditDialog";
 import {showTagDialog} from "../item/tagCtrl";
 import {showTagSearchDialog} from "../item/tagSearchCtrl";
 import {ILecture, ILectureListResponse2} from "../lecture/lecturetypes";
@@ -17,21 +21,7 @@ import {setConsent} from "../user/settingsCtrl";
 import {Users, UserService} from "../user/userService";
 import {$http, $localStorage, $window} from "../util/ngimport";
 import {IOkResponse, Require, to} from "../util/utils";
-import {showRelevanceEditDialog} from "../item/relevanceEditDialog";
-import {IRelevanceResponse} from "../item/relevanceEdit";
-import {isRootFolder} from "../item/IItem";
-
-/**
- * FILL WITH SUITABLE TEXT
- * @module sidebarMenuCtrl
- * @author Matias Berg
- * @author Bek Eljurkaev
- * @author Minna Lehtomäki
- * @author Juhani Sihvonen
- * @author Hannu Viinikainen
- * @licence MIT
- * @copyright 2015 Timppa project authors
- */
+import {showInputDialog} from "../ui/inputDialog";
 
 export interface IHeader {
     id: string;
@@ -185,7 +175,7 @@ export class SidebarMenuCtrl implements IController {
     }
 
     createMinuteExtracts() {
-        window.location.href = window.location.href.replace("/view/", "/minutes/createMinuteExtracts/" );
+        window.location.href = window.location.href.replace("/view/", "/minutes/createMinuteExtracts/");
     }
 
     /**
@@ -223,7 +213,7 @@ export class SidebarMenuCtrl implements IController {
             return false;
         }
         return this.docSettings.macros.knro != null &&
-               ( this.documentMemoMinutes == "minutes" || this.documentMemoMinutes == "memo" );
+            (this.documentMemoMinutes == "minutes" || this.documentMemoMinutes == "memo");
     }
 
     /**
@@ -326,13 +316,13 @@ export class SidebarMenuCtrl implements IController {
      */
     private async markAllAsRead() {
         if (this.vctrl) {
-                const r = await to($http.put("/read/" + this.vctrl.item.id, {}));
-                if (!r.ok) {
-                    await showMessageDialog("Could not mark the document as read.");
-                    return;
-                }
-                $(".readline").attr("class", "readline read");
-                getActiveDocument().refreshSectionReadMarks();
+            const r = await to($http.put("/read/" + this.vctrl.item.id, {}));
+            if (!r.ok) {
+                await showMessageDialog("Could not mark the document as read.");
+                return;
+            }
+            $(".readline").attr("class", "readline read");
+            getActiveDocument().refreshSectionReadMarks();
         }
     }
 
@@ -428,6 +418,23 @@ export class SidebarMenuCtrl implements IController {
             }
         }
     }
+
+    private async createGroup() {
+        const doc = await showInputDialog({
+            defaultValue: "",
+            text: "Enter name of the usergroup",
+            title: "Create group",
+            validator: async (s) => {
+                const r = await to($http.get<IDocument>(`/groups/create/${s}`));
+                if (r.ok) {
+                    return {ok: true, result: r.result.data};
+                } else {
+                    return {ok: false, result: r.result.data.error};
+                }
+            },
+        });
+        redirectToItem(doc);
+    }
 }
 
 timApp.component("timSidebarMenu", {
@@ -456,7 +463,14 @@ timApp.component("timSidebarMenu", {
             <h5>Customize</h5>
             <a href="/settings">Customize TIM</a>
         </div>
-<div ng-if="!($ctrl.vctrl.item && !$ctrl.vctrl.item.isFolder && $ctrl.vctrl.item.rights.manage) && $ctrl.showRelevance">
+        <div ng-if="$ctrl.users.isGroupAdmin()">
+            <h5>Groups</h5>
+            <button class="timButton btn-block" title="Create a new group"
+                    ng-click="$ctrl.createGroup()">Create a new group
+            </button>
+            <a href="/view/groups">Browse existing groups</a>
+        </div>
+        <div ng-if="!($ctrl.vctrl.item && !$ctrl.vctrl.item.isFolder && $ctrl.vctrl.item.rights.manage) && $ctrl.showRelevance">
             <h5>Folder settings</h5>
             <button class="timButton btn-block" title="Set item relevance value"
                     ng-click="$ctrl.openRelevanceEditDialog()">

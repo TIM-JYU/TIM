@@ -140,6 +140,10 @@ export class DraggableController implements IController {
         this.element.css("visibility", v);
     }
 
+    public getLayoutPromise() {
+        return this.layoutReady.promise;
+    }
+
     setCaption(caption: string) {
         this.caption = caption;
     }

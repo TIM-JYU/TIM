@@ -86,6 +86,10 @@ export class UserService {
         return false;
     }
 
+    public isGroupAdmin() {
+        return userBelongsToGroupOrIsAdmin("Group admins");
+    }
+
     public korppiLogout(redirectFn: () => any) {
         $http(
             {

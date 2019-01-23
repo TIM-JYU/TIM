@@ -125,10 +125,11 @@ timApp.filter("timtim", ["$filter", ($filter: IFilterService) => {
     };
 }]);
 
-timApp.directive('onSave', () => {
+timApp.directive("onSave", () => {
     return (scope, element, attrs) => {
         element.bind("keydown", (event) => {
-            if (event.ctrlKey && (event.which === KEY_ENTER || event.which === KEY_S)) {
+            if ((event.ctrlKey && (event.which === KEY_ENTER || event.which === KEY_S)) ||
+                (element[0] instanceof HTMLInputElement && event.which === KEY_ENTER)) {
                 scope.$apply(() => {
                     scope.$eval(attrs.onSave);
                 });
