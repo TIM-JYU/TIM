@@ -1,44 +1,25 @@
-# -*- coding: utf-8 -*-
-
-from typing import List, Optional, Generator, Tuple
+from typing import List, Generator, Tuple, Union
 
 from werkzeug.exceptions import abort
 
 from timApp.auth.accesshelper import grant_access_to_session_users, reset_request_access_cache, get_doc_or_abort, \
     verify_edit_access
-from timApp.auth.sessioninfo import get_current_user_object, get_current_user_group
+from timApp.auth.sessioninfo import get_current_user_object, get_current_user_group, get_current_user_group_object
 from timApp.bookmark.bookmarks import Bookmarks
 from timApp.document.docentry import DocEntry, get_documents, create_document_and_block
 from timApp.document.docinfo import DocInfo
-from timApp.document.documents import create_citation
+from timApp.document.documents import apply_citation
 from timApp.document.specialnames import FORCED_TEMPLATE_NAME, TEMPLATE_FOLDER_NAME
 from timApp.document.translation.translation import Translation, add_tr_entry
 from timApp.folder.folder import Folder
 from timApp.item.block import copy_default_rights, BlockType
+from timApp.item.item import Item
 from timApp.item.tag import TagType, Tag
-from timApp.item.validation import validate_item_and_create
+from timApp.item.validation import validate_item_and_create_intermediate_folders, ItemValidationRule
 from timApp.tim_app import app
+from timApp.user.usergroup import UserGroup
 from timApp.user.userutils import DOC_DEFAULT_RIGHT_NAME, FOLDER_DEFAULT_RIGHT_NAME
 from timApp.util.utils import split_location
-
-
-def create_item(item_path, item_type_str, item_title, create_function, owner_group_id):
-    item_path = item_path.strip('/')
-
-    validate_item_and_create(item_path, item_type_str, owner_group_id)
-
-    item = create_function(item_path, owner_group_id, item_title)
-    grant_access_to_session_users(item.id)
-    item_type = BlockType.from_str(item_type_str)
-    if item_type == BlockType.Document:
-        bms = Bookmarks(get_current_user_object())
-        bms.add_bookmark('Last edited',
-                         item.title,
-                         item.url_relative,
-                         move_to_top=True,
-                         limit=app.config['LAST_EDITED_BOOKMARK_LIMIT']).save_bookmarks()
-    copy_default_rights(item.id, item_type)
-    return item
 
 
 def get_templates_for_folder(folder: Folder) -> List[DocEntry]:
@@ -63,40 +44,58 @@ def get_templates_for_folder(folder: Folder) -> List[DocEntry]:
     return templates
 
 
-def do_create_item(
-        item_path,
-        item_type,
-        item_title,
-        copied_doc: Optional[DocInfo],
-        template_name,
-        use_template=True,
-        copy_uploads=True,
-):
-    item = create_item(item_path,
-                       item_type,
-                       item_title,
-                       DocEntry.create if item_type == 'document' else Folder.create,
-                       get_current_user_group())
+def create_document(
+        item_path: str,
+        item_title: str,
+        validation_rule: ItemValidationRule = None,
+        parent_owner: UserGroup = None,
+) -> DocInfo:
+    return do_create_item(item_path, BlockType.Document, item_title, validation_rule, parent_owner)
 
-    if isinstance(item, DocInfo):
-        if copied_doc:
-            for tr, new_tr in copy_document_and_enum_translations(copied_doc, item, copy_uploads=copy_uploads):
-                copy_default_rights(new_tr.id, BlockType.Document)
-        elif use_template:
-            templates = get_templates_for_folder(item.parent)
-            matched_templates = None
-            if template_name:
-                matched_templates = list(filter(lambda t: t.short_name == template_name, templates))
-            if not matched_templates:
-                matched_templates = list(filter(lambda t: t.short_name == FORCED_TEMPLATE_NAME, templates))
-            if matched_templates:
-                template = matched_templates[0]
-                item.document.update(template.document.export_markdown(), item.document.export_markdown())
+
+def do_create_item(
+        item_path: str,
+        item_type: BlockType,
+        item_title: str,
+        validation_rule: ItemValidationRule = None,
+        parent_owner: UserGroup = None,
+) -> Union[DocInfo, Folder]:
+    create_function = DocEntry.create if item_type == BlockType.Document else Folder.create
+    owner_group = get_current_user_group_object()
+
+    item_path = item_path.strip('/')
+
+    validate_item_and_create_intermediate_folders(item_path, item_type, parent_owner or owner_group, validation_rule)
+
+    item = create_function(item_path, owner_group.id, item_title)
+    grant_access_to_session_users(item.id)
+    if item_type == BlockType.Document:
+        bms = Bookmarks(get_current_user_object())
+        bms.add_bookmark('Last edited',
+                         item.title,
+                         item.url_relative,
+                         move_to_top=True,
+                         limit=app.config['LAST_EDITED_BOOKMARK_LIMIT']).save_bookmarks()
+    copy_default_rights(item.id, item_type)
+
     reset_request_access_cache()
     return item
 
 
-def copy_document_and_enum_translations(source: DocInfo, target: DocInfo, copy_uploads: bool) -> Generator[Tuple[DocInfo, DocInfo], None, None]:
+def apply_template(item: DocInfo, template_name: str = None):
+    templates = get_templates_for_folder(item.parent)
+    matched_templates = None
+    if template_name:
+        matched_templates = list(filter(lambda t: t.short_name == template_name, templates))
+    if not matched_templates:
+        matched_templates = list(filter(lambda t: t.short_name == FORCED_TEMPLATE_NAME, templates))
+    if matched_templates:
+        template = matched_templates[0]
+        item.document.update(template.document.export_markdown(), item.document.export_markdown())
+
+
+def copy_document_and_enum_translations(source: DocInfo, target: DocInfo, copy_uploads: bool) -> Generator[
+    Tuple[DocInfo, DocInfo], None, None]:
     if copy_uploads:
         target.children.extend(source.children)  # required to retain rights to uploaded files
 
@@ -125,7 +124,7 @@ def copy_document_and_enum_translations(source: DocInfo, target: DocInfo, copy_u
 
 def create_or_copy_item(
         item_path: str,
-        item_type: str,
+        item_type: BlockType,
         item_title: str,
         copy_id: int = None,
         template_name: str = None,
@@ -140,18 +139,20 @@ def create_or_copy_item(
         vr = d.document.validate()
         if vr.issues:
             abort(400, f'The following errors must be fixed before copying:\n{vr}')
-    item = do_create_item(item_path, item_type, item_title, d, template_name, use_template, copy_uploads=copy_uploads)
+    item = do_create_item(item_path, item_type, item_title)
+    if isinstance(item, DocInfo):
+        if d:
+            for tr, new_tr in copy_document_and_enum_translations(d, item, copy_uploads=copy_uploads):
+                copy_default_rights(new_tr.id, BlockType.Document)
+        elif use_template:
+            apply_template(item, template_name)
     return item
 
 
-def create_citation_doc(doc_id, doc_path, doc_title):
+def create_citation_doc(doc_id: int, doc_path: str, doc_title: str):
     d = get_doc_or_abort(doc_id)
     verify_edit_access(d)
-
     src_doc = d.document
-
-    def factory(path, group, title):
-        return create_citation(src_doc, group, path, title)
-
-    item = create_item(doc_path, 'document', doc_title, factory, get_current_user_group())
+    item = create_document(doc_path, doc_title)
+    apply_citation(item, src_doc)
     return item

@@ -1,8 +1,9 @@
 from typing import List
 
 from timApp.user.special_group_names import ANONYMOUS_GROUPNAME, LARGE_GROUPS, KORPPI_GROUPNAME, LOGGED_IN_GROUPNAME, \
-    ADMIN_GROUPNAME
+    ADMIN_GROUPNAME, GROUPADMIN_GROUPNAME
 from timApp.timdb.sqa import db
+from timApp.user.usergroupdoc import UserGroupDoc
 from timApp.user.usergroupmember import UserGroupMember
 
 
@@ -33,6 +34,13 @@ class UserGroup(db.Model):
     readparagraphs_alt = db.relationship('ReadParagraph')
     notes = db.relationship('UserNote', back_populates='usergroup', lazy='dynamic')
     notes_alt = db.relationship('UserNote')
+
+    admin_doc = db.relationship(
+        'Block',
+        secondary=UserGroupDoc.__table__,
+        lazy='select',
+        uselist=False,
+    )
 
     def is_anonymous(self) -> bool:
         return self.name == ANONYMOUS_GROUPNAME
@@ -76,6 +84,10 @@ class UserGroup(db.Model):
     @staticmethod
     def get_admin_group() -> 'UserGroup':
         return UserGroup.query.filter_by(name=ADMIN_GROUPNAME).one()
+
+    @staticmethod
+    def get_groupadmin_group() -> 'UserGroup':
+        return UserGroup.query.filter_by(name=GROUPADMIN_GROUPNAME).one()
 
     @staticmethod
     def get_korppi_group() -> 'UserGroup':

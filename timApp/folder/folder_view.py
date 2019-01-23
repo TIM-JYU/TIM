@@ -2,10 +2,11 @@ from flask import request, render_template
 
 from timApp.auth.accesshelper import verify_view_access
 from timApp.auth.sessioninfo import current_user_in_lecture, get_user_settings, get_current_user_object
-from timApp.document.create_item import get_templates_for_folder, do_create_item
+from timApp.document.create_item import get_templates_for_folder, do_create_item, apply_template, create_document
 from timApp.document.specialnames import FORCED_TEMPLATE_NAME
 
 from timApp.folder.folder import Folder
+from timApp.item.block import BlockType
 from timApp.timdb.sqa import db
 from timApp.util.flask.requesthelper import get_option
 
@@ -33,7 +34,8 @@ def try_return_folder(item_name):
         if template_item and template_item.short_name == FORCED_TEMPLATE_NAME:
             ind = item_name.rfind('/')
             if ind >= 0:
-                ret = do_create_item(item_name, 'document', item_name[ind + 1:], None, template_item.path)
+                item = create_document(item_name, item_name[ind + 1:])
+                apply_template(item, template_item.path)
                 db.session.commit()
                 return view(item_name, 'view_html.html')
 

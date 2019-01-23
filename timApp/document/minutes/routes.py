@@ -9,8 +9,9 @@ import timApp.plugin
 import timApp.util
 
 from timApp.auth.accesshelper import verify_manage_access, verify_edit_access, verify_view_access
-from timApp.document.create_item import do_create_item, create_or_copy_item
+from timApp.document.create_item import do_create_item, create_or_copy_item, create_document
 from timApp.document.docsettings import DocSettings
+from timApp.item.block import BlockType
 from timApp.util.flask.requesthelper import verify_json_params
 from timApp.util.flask.responsehelper import safe_redirect, json_response
 from timApp.document.docentry import DocEntry
@@ -175,7 +176,7 @@ def create_minutes_route():
 
     item = create_or_copy_item(
         item_path,
-        "document",
+        BlockType.Document,
         item_title,
         copy_id=copy_id,
         use_template=False,
@@ -197,7 +198,7 @@ def create_or_get_and_wipe_document(path: str, title: str):
     d = DocEntry.find_by_path(path)
 
     if not d:
-        return do_create_item(path, "document", title, copied_doc=None, template_name=None, use_template=False)
+        return create_document(path, title)
     else:
         d.title = title  # update title of existing document
 

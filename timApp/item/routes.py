@@ -13,6 +13,7 @@ from flask import session
 
 from timApp.auth.accesshelper import verify_view_access, verify_teacher_access, verify_seeanswers_access, \
     get_rights, has_edit_access, get_doc_or_abort, verify_manage_access
+from timApp.item.block import BlockType
 from timApp.item.blockrelevance import BlockRelevance
 from timApp.document.create_item import create_or_copy_item, create_citation_doc
 from timApp.document.post_process import post_process_pars, \
@@ -480,7 +481,8 @@ def create_item_route():
     if cite_id:
         item = create_citation_doc(cite_id, item_path, item_title)
     else:
-        item = create_or_copy_item(item_path, item_type, item_title, copy_id, template_name, use_template)
+        item = create_or_copy_item(item_path, BlockType.Document if item_type == 'document' else BlockType.Folder,
+                                   item_title, copy_id, template_name, use_template)
     db.session.commit()
     return json_response(item)
 

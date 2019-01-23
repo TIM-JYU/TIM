@@ -53,6 +53,7 @@ from timApp.user.consentchange import ConsentChange
 from timApp.user.newuser import NewUser
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
+from timApp.user.usergroupdoc import UserGroupDoc
 from timApp.user.usergroupmember import UserGroupMember
 from timApp.util.flask.filters import map_format, timdate, humanize_timedelta, humanize_datetime
 from timApp.util.logger import setup_logging
@@ -116,6 +117,7 @@ reg_models(
     UserAnswer,
     UserGamification,
     UserGroup,
+    UserGroupDoc,
     UserGroupMember,
     UserNote,
     Velp,

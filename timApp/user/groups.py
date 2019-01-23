@@ -2,20 +2,30 @@ from typing import Tuple, List
 
 from flask import Blueprint, abort
 
-from timApp.auth.accesshelper import verify_admin
+from timApp.auth.accesshelper import verify_admin, check_admin_access
+from timApp.auth.sessioninfo import get_current_user_object
+from timApp.document.create_item import apply_template, create_document
+from timApp.item.validation import ItemValidationRule
 from timApp.timdb.dbaccess import get_timdb
-from timApp.util.flask.responsehelper import json_response, ok_response
-from timApp.user.user import User
+from timApp.timdb.sqa import db
+from timApp.user.special_group_names import SPECIAL_GROUPS, PRIVILEGED_GROUPS
+from timApp.user.user import User, view_access_set, edit_access_set
 from timApp.user.usergroup import UserGroup
-from timApp.user.special_group_names import SPECIAL_GROUPS
+from timApp.util.flask.responsehelper import json_response, ok_response
+from timApp.util.utils import remove_path_special_chars
 
 groups = Blueprint('groups',
                    __name__,
                    url_prefix='/groups')
 
-
 USER_NOT_FOUND = 'User not found'
 USERGROUP_NOT_FOUND = 'User group not found'
+
+
+def verify_groupadmin():
+    if not check_admin_access():
+        if not UserGroup.get_groupadmin_group() in get_current_user_object().groups:
+            abort(403, 'This action requires group administrator rights.')
 
 
 def get_uid_gid(groupname, usernames) -> Tuple[UserGroup, List[User]]:
@@ -28,10 +38,10 @@ def get_uid_gid(groupname, usernames) -> Tuple[UserGroup, List[User]]:
 
 @groups.route('/show/<groupname>')
 def show_members(groupname):
-    verify_admin()
     ug = UserGroup.get_by_name(groupname)
     if not ug:
         abort(404, USERGROUP_NOT_FOUND)
+    verify_group_view_access(ug)
     return json_response(ug.users.all())
 
 
@@ -46,13 +56,13 @@ def show_usergroups(username):
 
 @groups.route('/belongs/<username>/<groupname>')
 def belongs(username, groupname):
-    verify_admin()
-    u = User.get_by_name(username)
-    if not u:
-        abort(404, USER_NOT_FOUND)
     ug = UserGroup.get_by_name(groupname)
     if not ug:
         abort(404, USERGROUP_NOT_FOUND)
+    verify_group_view_access(ug)
+    u = User.get_by_name(username)
+    if not u:
+        abort(404, USER_NOT_FOUND)
     return json_response({'status': ug in u.groups})
 
 
@@ -73,7 +83,7 @@ def create_group(groupname):
      2. lowercase ASCII strings (Korppi users) with length being in range [2,8].
 
     """
-    verify_admin()
+    verify_groupadmin()
     if UserGroup.get_by_name(groupname):
         abort(400, 'User group already exists.')
     has_digits = False
@@ -85,18 +95,47 @@ def create_group(groupname):
         has_non_alnum = has_non_alnum or not (c.isalnum() or c.isspace())
     if not has_digits or not has_letters or has_non_alnum:
         abort(400, 'Usergroup must contain at least one digit and one letter and must be alphanumeric.')
-    UserGroup.create(groupname)
+    u = UserGroup.create(groupname, commit=False)
+    doc = create_document(
+        f'groups/{remove_path_special_chars(groupname)}',
+        groupname,
+        validation_rule=ItemValidationRule(check_write_perm=False),
+        parent_owner=UserGroup.get_admin_group(),
+    )
+    apply_template(doc)
+    u.admin_doc = doc.block
+    db.session.commit()
     return ok_response()
+
+
+def verify_group_access(ug: UserGroup, access_set):
+    if ug.name in PRIVILEGED_GROUPS:
+        verify_admin()
+    b = ug.admin_doc
+    if not b:
+        verify_groupadmin()
+    else:
+        u = get_current_user_object()
+        if not u.has_some_access(b, access_set):
+            verify_groupadmin()
+
+
+def verify_group_edit_access(ug: UserGroup):
+    if ug.name in SPECIAL_GROUPS:
+        abort(400, 'Cannot edit special groups.')
+    verify_group_access(ug, edit_access_set)
+
+
+def verify_group_view_access(ug: UserGroup):
+    verify_group_access(ug, view_access_set)
 
 
 @groups.route('/addmember/<groupname>/<usernames>')
 def add_member(usernames, groupname):
-    verify_admin()
-    if groupname in SPECIAL_GROUPS:
-        abort(400, 'Cannot add members to special groups.')
     timdb = get_timdb()
     usernames = get_usernames(usernames)
     group, users = get_uid_gid(groupname, usernames)
+    verify_group_edit_access(group)
     existing_usernames = set(u.name for u in users)
     existing_ids = set(u.id for u in group.users)
     already_exists = set(u.name for u in group.users) & set(usernames)
@@ -112,12 +151,10 @@ def add_member(usernames, groupname):
 
 @groups.route('/removemember/<groupname>/<usernames>')
 def remove_member(usernames, groupname):
-    verify_admin()
-    if groupname in SPECIAL_GROUPS:
-        abort(400, 'Cannot remove members from special groups.')
     timdb = get_timdb()
     usernames = get_usernames(usernames)
     group, users = get_uid_gid(groupname, usernames)
+    verify_group_edit_access(group)
     existing_usernames = set(u.name for u in users)
     existing_ids = set(u.id for u in group.users)
     not_exist = [name for name in usernames if name not in existing_usernames]

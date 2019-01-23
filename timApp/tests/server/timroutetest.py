@@ -694,9 +694,12 @@ class TimRouteTest(TimDbTest):
         return result
 
     def make_admin(self, u: User):
-        admin_group = UserGroup.get_admin_group()
-        if u not in admin_group.users:
-            u.groups.append(admin_group)
+        gr = UserGroup.get_admin_group()
+        self.add_to_group(gr, u)
+
+    def add_to_group(self, gr: UserGroup, u: User):
+        if u not in gr.users:
+            u.groups.append(gr)
             db.session.commit()
 
     def post_comment(self, par, public, text, **kwargs):

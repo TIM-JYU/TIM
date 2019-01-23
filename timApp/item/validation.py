@@ -1,18 +1,34 @@
 import re
 
+import attr
 import magic
 from bs4 import UnicodeDammit
 from flask import current_app
 from werkzeug.exceptions import abort
 
 from timApp.auth.sessioninfo import logged_in, get_current_user_object
+from timApp.item.block import BlockType
 from timApp.timdb.exceptions import ItemAlreadyExistsException
 from timApp.document.docentry import DocEntry
 from timApp.folder.folder import Folder
+from timApp.user.usergroup import UserGroup
 from timApp.util.utils import split_location
 
 
-def validate_item(item_path: str, item_type: str):
+@attr.s
+class ItemValidationRule:
+    """Rules for item validation."""
+
+    check_write_perm: bool = attr.ib(kw_only=True, default=True)
+    """Whether to check for write permission of containing folder."""
+
+
+def validate_item(item_path: str,
+                  item_type: BlockType,
+                  validation_rule: ItemValidationRule = None):
+    if not validation_rule:
+        validation_rule = ItemValidationRule()
+    item_type_str = item_type.name.lower()
     if not logged_in():
         abort(403, f'You have to be logged in to perform this action.')
 
@@ -20,14 +36,14 @@ def validate_item(item_path: str, item_type: str):
         abort(400, 'item_path was None')
 
     if not all(part for part in item_path.split('/')):
-        abort(400, f'The {item_type} path cannot have empty parts.')
+        abort(400, f'The {item_type_str} path cannot have empty parts.')
 
-    if re.match('^(\d)*$', item_path) is not None:
-        abort(400, f'The {item_type} path can not be a number to avoid confusion with document id.')
+    if re.match(r'^(\d)*$', item_path) is not None:
+        abort(400, f'The {item_type_str} path can not be a number to avoid confusion with document id.')
 
     if has_special_chars(item_path):
         abort(400,
-              f'The {item_type} path has invalid characters. Only letters, numbers, underscores and dashes are allowed.')
+              f'The {item_type_str} path has invalid characters. Only letters, numbers, underscores and dashes are allowed.')
 
     if DocEntry.find_by_path(item_path) is not None or Folder.find_by_path(item_path) is not None:
         raise ItemAlreadyExistsException('Item with a same name already exists.')
@@ -35,14 +51,18 @@ def validate_item(item_path: str, item_type: str):
     f = Folder.find_first_existing(item_path)
     if not f:
         abort(403)
-    if not get_current_user_object().can_write_to_folder(f):
-        abort(403, f'You cannot create {item_type}s in this folder.')
+    if validation_rule.check_write_perm:
+        if not get_current_user_object().can_write_to_folder(f):
+            abort(403, f'You cannot create {item_type_str}s in this folder.')
 
 
-def validate_item_and_create(item_path: str, item_type: str, owner_group_id: int):
-    validate_item(item_path, item_type)
+def validate_item_and_create_intermediate_folders(item_path: str,
+                                                  item_type: BlockType,
+                                                  owner_group: UserGroup,
+                                                  validation_rule: ItemValidationRule = None):
+    validate_item(item_path, item_type, validation_rule)
     item_path, _ = split_location(item_path)
-    Folder.create(item_path, owner_group_id, apply_default_rights=True)
+    Folder.create(item_path, owner_group.id, apply_default_rights=True)
 
 
 def validate_uploaded_document_content(file_content):

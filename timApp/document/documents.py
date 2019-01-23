@@ -21,28 +21,20 @@ def create_translation(original_doc: Document,
     return doc
 
 
-def create_citation(original_doc: Document,
-                    owner_group_id: int,
-                    path: str,
-                    title: str) -> DocInfo:
-    """Creates a citation document with the specified name. Each paragraph of the citation document references the
+def apply_citation(new_doc: DocInfo, src_doc: Document):
+    """Creates a citation document. Each paragraph of the citation document references the
     paragraph in the original document.
 
-    :param title: The document title.
-    :param original_doc: The original document to be cited.
-    :param path: The path of the document to be created.
-    :param owner_group_id: The id of the owner group.
-    :returns: The newly created document object.
-
+    :param new_doc: The document where the citation paragraphs will be added.
+    :param src_doc: The original document to be cited.
     """
 
-    doc_entry = DocEntry.create(path, owner_group_id, title)
-    doc = doc_entry.document
+    doc = new_doc.document
 
-    add_reference_pars(doc, original_doc, 'c')
+    add_reference_pars(doc, src_doc, 'c')
 
-    settings = {'source_document': original_doc.doc_id}
-    orig_pars = original_doc.get_paragraphs()
+    settings = {'source_document': src_doc.doc_id}
+    orig_pars = src_doc.get_paragraphs()
     if orig_pars and orig_pars[0].is_setting():
         curr_par = doc.get_paragraphs()[0]
         yb = YamlBlock(values=settings)
@@ -50,8 +42,6 @@ def create_citation(original_doc: Document,
         curr_par.save()
     else:
         doc.set_settings(settings)
-
-    return doc_entry
 
 
 def add_reference_pars(doc: Document, original_doc: Document, r: str):

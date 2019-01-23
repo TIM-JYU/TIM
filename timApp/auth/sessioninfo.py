@@ -51,7 +51,11 @@ def get_current_user_id():
 
 
 def get_current_user_group():
-    return get_current_user_object().get_personal_group().id
+    return get_current_user_group_object().id
+
+
+def get_current_user_group_object():
+    return get_current_user_object().get_personal_group()
 
 
 def logged_in():

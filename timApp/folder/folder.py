@@ -166,7 +166,7 @@ class Folder(db.Model, Item):
         return self.path
 
     @property
-    def block(self):
+    def block(self) -> Optional[Block]:
         """Overridden for optimization: root folder does not have a db entry, so we won't try to query for it."""
         if self.is_root():
             return None

@@ -14,7 +14,7 @@ from isodate import parse_duration
 from timApp.auth.accesshelper import verify_manage_access, verify_ownership, verify_view_access, has_ownership, \
     verify_edit_access, get_doc_or_abort, get_item_or_abort, get_folder_or_abort
 from timApp.auth.auth_models import AccessType
-from timApp.auth.sessioninfo import get_current_user_group
+from timApp.auth.sessioninfo import get_current_user_group, get_current_user_group_object
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.create_item import copy_document_and_enum_translations
 from timApp.document.docentry import DocEntry
@@ -22,7 +22,7 @@ from timApp.document.docinfo import move_document
 from timApp.folder.folder import Folder, path_includes
 from timApp.item.block import BlockType
 from timApp.item.item import Item, copy_rights
-from timApp.item.validation import validate_item, validate_item_and_create, has_special_chars
+from timApp.item.validation import validate_item, validate_item_and_create_intermediate_folders, has_special_chars
 from timApp.timdb.dbaccess import get_timdb
 from timApp.timdb.sqa import db
 from timApp.user.usergroup import UserGroup
@@ -171,10 +171,7 @@ def add_alias(doc_id, new_alias):
 
     new_alias = new_alias.strip('/')
 
-    validate_item(new_alias, 'document')
-
-    parent_folder, _ = split_location(new_alias)
-    Folder.create(parent_folder, get_current_user_group())
+    validate_item_and_create_intermediate_folders(new_alias, BlockType.Document, get_current_user_group_object())
     d.add_alias(new_alias, is_public)
     db.session.commit()
     return ok_response()
@@ -193,14 +190,12 @@ def change_alias(alias):
 
     verify_manage_access(doc)
 
-    new_parent, _ = split_location(new_alias)
     if alias != new_alias:
-        validate_item(new_alias, 'document')
         src_f = Folder.find_first_existing(alias)
         if not get_current_user_object().can_write_to_folder(src_f):
             return abort(403, "You don't have permission to write to the source folder.")
+        validate_item_and_create_intermediate_folders(new_alias, BlockType.Document, get_current_user_group_object())
 
-    Folder.create(new_parent, get_current_user_group())
     doc.name = new_alias
     doc.public = is_public
     if all(not a.public for a in doc.aliases):
@@ -252,7 +247,7 @@ def rename_folder(item_id):
     if parent_f.id == item_id:
         return abort(403, "A folder cannot contain itself.")
 
-    validate_item(new_name, 'folder')
+    validate_item(new_name, BlockType.Folder)
 
     f.rename_path(new_name)
     db.session.commit()
@@ -413,9 +408,9 @@ def get_copy_folder_params(folder_id):
 @manage_page.route("/copy/<int:folder_id>", methods=["POST"])
 def copy_folder_endpoint(folder_id):
     f, dest, compiled = get_copy_folder_params(folder_id)
-    o = get_current_user_group()
-    validate_item_and_create(dest, 'folder', o)
-    nf = Folder.create(dest, o, apply_default_rights=True)
+    o = get_current_user_group_object()
+    validate_item_and_create_intermediate_folders(dest, BlockType.Folder, o)
+    nf = Folder.create(dest, o.id, apply_default_rights=True)
     ug = get_current_user_object().get_personal_group()
     copy_folder(f, nf, ug, compiled)
     db.session.commit()

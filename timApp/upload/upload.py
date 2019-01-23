@@ -15,14 +15,14 @@ from werkzeug.utils import secure_filename
 from timApp.auth.accesshelper import verify_view_access, verify_seeanswers_access, verify_task_access, \
     grant_access_to_session_users, get_doc_or_abort, verify_edit_access
 from timApp.auth.accesstype import AccessType
-from timApp.auth.sessioninfo import get_current_user_group, logged_in
+from timApp.auth.sessioninfo import get_current_user_group, logged_in, get_current_user_group_object
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import DocInfo
 from timApp.document.documents import import_document
 from timApp.item.block import Block
 from timApp.item.block import BlockType
-from timApp.item.validation import validate_item_and_create, validate_uploaded_document_content
+from timApp.item.validation import validate_item_and_create_intermediate_folders, validate_uploaded_document_content
 from timApp.plugin.plugin import Plugin
 from timApp.timdb.sqa import db
 from timApp.upload.uploadedfile import UploadedFile, PluginUpload, PluginUploadInfo, StampedPDF
@@ -168,7 +168,7 @@ def upload_document(folder, file):
     path = posixpath.join(folder, os.path.splitext(secure_filename(file.filename))[0])
 
     content = validate_uploaded_document_content(file)
-    validate_item_and_create(path, 'document', get_current_user_group())
+    validate_item_and_create_intermediate_folders(path, BlockType.Document, get_current_user_group_object())
 
     doc = import_document(content, path, get_current_user_group())
     db.session.commit()

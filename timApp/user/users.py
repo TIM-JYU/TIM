@@ -1,5 +1,4 @@
 from sqlalchemy import func
-from typing import List, Tuple, Optional
 
 from timApp.auth.auth_models import BlockAccess
 from timApp.item.block import Block, BlockType
@@ -8,7 +7,7 @@ from timApp.timdb.timdbbase import TimDbBase
 from timApp.timdb.timdbbase import result_as_dict_list
 from timApp.user.special_group_names import ANONYMOUS_USERNAME, ANONYMOUS_GROUPNAME, KORPPI_GROUPNAME, \
     LOGGED_IN_GROUPNAME, \
-    LOGGED_IN_USERNAME, ADMIN_GROUPNAME, TEACHERS_GROUPNAME
+    LOGGED_IN_USERNAME, ADMIN_GROUPNAME, TEACHERS_GROUPNAME, GROUPADMIN_GROUPNAME
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
 from timApp.user.userutils import get_access_type_id, get_default_right_document
@@ -27,6 +26,7 @@ class Users(TimDbBase):
         korppi_group = UserGroup(name=KORPPI_GROUPNAME)
         admin_group = UserGroup(name=ADMIN_GROUPNAME)
         teachers_group = UserGroup(name=TEACHERS_GROUPNAME)
+        groupadmin_group = UserGroup(name=GROUPADMIN_GROUPNAME)
         anon.groups.append(anon_group)
         logged.groups.append(logged_group)
         self.session.add(anon)
@@ -34,6 +34,7 @@ class Users(TimDbBase):
         self.session.add(korppi_group)
         self.session.add(admin_group)
         self.session.add(teachers_group)
+        self.session.add(groupadmin_group)
 
     def create_anonymous_user(self, name: str, real_name: str, commit: bool = True) -> User:
         """Creates a new anonymous user.
