@@ -2240,7 +2240,8 @@ class CsController extends CsBase implements IController {
         i = code.indexOf(ENDCODE);
         if ( i >= 0 ) {
             let endl = code.lastIndexOf("\n", i);
-            if ( endl >= 0 ) code = code.substr(0, endl-1);
+            if ( endl > 0 && code[endl-1] == '\r') endl--; // if there are linefeeds like cr lf
+            if ( endl >= 0 ) code = code.substr(0, endl);
         }
         if ( code.length == this.usercode.length ) return;
         this.usercode = code;
