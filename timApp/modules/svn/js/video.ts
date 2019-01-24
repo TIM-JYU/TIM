@@ -36,10 +36,10 @@ videoApp.component("videoZoom", {
 <p ng-if="$ctrl.c.videoOn" class="pluginShow"><span ng-if="::$ctrl.c.video.playbackRate"> Speed:
     <a ng-click="$ctrl.c.speed(1.0/1.2)" title="Slow speed"> - </a>
     <a ng-click="$ctrl.c.speed(0)" title="Speed to 1x"> 1x </a>
-    <a ng-click="$ctrl.c.speed(1.2)" title="Faster speed"> + </a> </span>Zoom:
+    <a ng-click="$ctrl.c.speed(1.2)" title="Faster speed"> + </a> </span><span class="zoom">Zoom:
     <a ng-click="$ctrl.c.zoom(1.0/1.4)" title="Zoom out"> - </a>
     <a ng-click="$ctrl.c.zoom(0)" title="Reset to original size"> r </a>
-    <a ng-click="$ctrl.c.zoom(1.4)" title="Zoom in"> + </a>
+    <a ng-click="$ctrl.c.zoom(1.4)" title="Zoom in"> + </a></span>
     <a ng-click="$ctrl.c.hideVideo()">{{::$ctrl.c.hidetext}}</a>
 </p>
 `,
