@@ -145,8 +145,8 @@ class GroupTest2(TimRouteTest):
         self.get('/groups/create/edittest1')
         d = DocEntry.find_by_path('groups/edittest1')
         self.assertEqual('Administrators', d.parent.owner.name)
-        self.assertEqual({'group': 'edittest1', 'docid': d.id, 'docpath': d.path},
-                         d.document.get_settings().get_macroinfo().get_macros())
+        self.assertEqual({'group': 'edittest1'},
+                         d.document.get_settings().get_dict()['macros'])
         self.login_test1()
         self.get('/groups/show/edittest1', expect_status=403)
         self.test_user_1.grant_access(d.id, 'view')

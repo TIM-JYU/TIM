@@ -105,7 +105,7 @@ def create_group(groupname):
         parent_owner=UserGroup.get_admin_group(),
     )
     apply_template(doc)
-    s = doc.document.get_settings().get_macroinfo().get_macros()
+    s = doc.document.get_settings().get_dict().get('macros', {})
     s['group'] = groupname
     doc.document.add_setting('macros', s)
     u.admin_doc = doc.block
