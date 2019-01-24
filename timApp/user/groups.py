@@ -134,6 +134,8 @@ def verify_group_access(ug: UserGroup, access_set):
 def verify_group_edit_access(ug: UserGroup):
     if ug.name in SPECIAL_GROUPS:
         abort(400, 'Cannot edit special groups.')
+    if User.get_by_name(ug.name):
+        abort(400, 'Cannot edit personal groups.')
     verify_group_access(ug, edit_access_set)
 
 

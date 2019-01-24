@@ -112,6 +112,10 @@ class GroupTest(TimRouteTest):
                 )
             else:
                 self.get('/groups/addmember/Group admins/testuser1')
+            self.get('/groups/addmember/testuser1/testuser2', expect_status=400,
+                     expect_content={'error': 'Cannot edit personal groups.'})
+            self.get('/groups/removemember/testuser1/testuser1', expect_status=400,
+                     expect_content={'error': 'Cannot edit personal groups.'})
             self.get('/groups/removemember/Logged-in users/testuser1', expect_status=400,
                      expect_content={'error': 'Cannot edit special groups.'})
 
