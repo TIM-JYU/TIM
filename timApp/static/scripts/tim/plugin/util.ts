@@ -1,4 +1,4 @@
-import {IRootElementService, IScope} from "angular";
+import {IController, IRootElementService, IScope} from "angular";
 import {Left} from "fp-ts/lib/Either";
 import * as t from "io-ts";
 import {Type} from "io-ts/lib";
@@ -102,13 +102,52 @@ function getErrors<A>(v: Left<t.Errors, A>): MarkupError {
     return result;
 }
 
+export class PluginMeta {
+    constructor(private element: IRootElementService) {
+
+    }
+
+    protected getParentAttr(name: string) {
+        return this.element.parent().attr(name);
+    }
+
+    public getTaskId() {
+        return this.getParentAttr("id");
+    }
+
+    protected getPlugin() {
+        return this.getParentAttr("data-plugin");
+    }
+
+    public getAnswerUrl() {
+        const plugin = this.getPlugin();
+        if (!plugin) {
+            const message = "Could not find plugin type from HTML";
+            alert(message);
+            throw new Error(message);
+        }
+        let url = plugin;
+        const i = url.lastIndexOf("/");
+        if (i > 0) {
+            url = url.substring(i);
+        }
+        url += `/${this.getTaskId()}/answer/`;
+        return url;
+    }
+}
+
 /**
  * Base class for plugins.
  *
  * All properties or fields having a one-time binding in template should eventually return a non-undefined value.
  * That's why there are "|| null"s in several places.
  */
-export abstract class PluginBase<MarkupType extends IGenericPluginMarkup, A extends {markup: MarkupType}, T extends Type<A>> {
+export abstract class PluginBase<MarkupType extends IGenericPluginMarkup, A extends {markup: MarkupType}, T extends Type<A>> implements IController {
+    private static $inject = ["$scope", "$element"];
+
+    buttonText() {
+        return this.attrs.button || this.attrs.buttonText || null;
+    }
 
     get attrs(): Readonly<MarkupType> {
         return this.attrsall.markup;
@@ -132,11 +171,13 @@ export abstract class PluginBase<MarkupType extends IGenericPluginMarkup, A exte
     protected json!: Binding<string, "@">;
 
     protected markupError?: Array<{name: string, type: string}>;
+    protected pluginMeta: PluginMeta;
 
     constructor(
         protected scope: IScope,
         protected element: IRootElementService) {
         this.attrsall = getDefaults(this.getAttributeType(), this.getDefaultMarkup());
+        this.pluginMeta = new PluginMeta(element);
     }
 
     abstract getDefaultMarkup(): Partial<MarkupType>;
@@ -159,18 +200,6 @@ export abstract class PluginBase<MarkupType extends IGenericPluginMarkup, A exte
     }
 
     protected abstract getAttributeType(): T;
-
-    protected getParentAttr(name: string) {
-        return this.element.parent().attr(name);
-    }
-
-    protected getTaskId() {
-        return this.getParentAttr("id");
-    }
-
-    protected getPlugin() {
-        return this.getParentAttr("data-plugin");
-    }
 
     protected getRootElement() {
         return this.element[0];

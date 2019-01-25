@@ -28,10 +28,6 @@ services:
   ports:
    - "49995:22"
  pali:
-  image: timimages/palisudo:compose
-  build:
-   context: ./timApp/modules/pali
-   dockerfile: DockerfileS
   command: ${PALI_DEV_COMMAND:-/usr/sbin/sshd -D}
   ports:
    - "49997:22"

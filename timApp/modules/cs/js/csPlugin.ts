@@ -504,7 +504,7 @@ function makeTemplate() {
     <div class="csRunMenuArea" ng-if="::!$ctrl.forcedupload">
         <p class="csRunMenu">
             <button ng-if="::$ctrl.isRun" ng-disabled="$ctrl.isRunning" title="(Ctrl-S)" ng-click="$ctrl.runCode()"
-                    ng-bind-html="::$ctrl.buttonText"></button>
+                    ng-bind-html="::$ctrl.buttonText()"></button>
             &nbsp&nbsp
             <button ng-if="::$ctrl.isTest" ng-disabled="$ctrl.isRunning" ng-click="$ctrl.runTest()">Test</button>
             &nbsp&nbsp
@@ -796,8 +796,6 @@ class CsBase extends PluginBase<t.TypeOf<typeof CsMarkup>, t.TypeOf<typeof CsAll
 let copyHelperElement: HTMLTextAreaElement | undefined;
 
 class CsController extends CsBase implements IController {
-    private static $inject = ["$scope", "$element"];
-
     private aceEditor?: IAceEditor;
     private canvas?: HTMLCanvasElement;
     private canvasConsole: {log: (...args: string[]) => void};
@@ -1119,11 +1117,11 @@ class CsController extends CsBase implements IController {
     get isRun() {
         return ((languageTypes.getRunType(this.type, "") !== "" || this.isAll) && this.attrs.norun === false)
             || (this.type.indexOf("text") >= 0 || this.isSimcir || this.attrs.justSave)
-            || this.attrs.button; // or this.buttonText?
+            || this.attrs.button; // or this.buttonText()?
     }
 
-    get buttonText() {
-        const txt = this.attrs.button || this.attrs.buttonText;
+    buttonText() {
+        const txt = super.buttonText();
         if (txt) {
             return txt;
         }
@@ -1294,7 +1292,7 @@ class CsController extends CsBase implements IController {
 
         this.processPluginMath();
 
-        csLogTime(this.getTaskId() || "taskId missing");
+        csLogTime(this.pluginMeta.getTaskId() || "taskId missing");
 
         this.showUploaded(this.attrsall.uploadedFile, this.attrsall.uploadedType);
     }
@@ -1402,7 +1400,7 @@ class CsController extends CsBase implements IController {
     }
 
     onFileSelect(file: File) {
-        const taskId = this.getTaskId();
+        const taskId = this.pluginMeta.getTaskId();
         if (!taskId) {
             console.log("taskId missing");
             return;
@@ -1539,7 +1537,7 @@ class CsController extends CsBase implements IController {
     }
 
     logTime(msg: string) {
-        csLogTime(msg + " " + this.getTaskId());
+        csLogTime(msg + " " + this.pluginMeta.getTaskId());
         return true;
     }
 
@@ -1704,16 +1702,7 @@ class CsController extends CsBase implements IController {
         if (nosave || this.nosave) {
             params.input.nosave = true;
         }
-        let url = "/cs/answer";
-        const plugin = this.getPlugin();
-        if (plugin) {
-            url = plugin;
-            const i = url.lastIndexOf("/");
-            if (i > 0) {
-                url = url.substring(i);
-            }
-            url += "/" + this.getTaskId() + "/answer/";
-        }
+        const url = this.pluginMeta.getAnswerUrl();
         const t0run = performance.now();
         const r = await to($http<{
             web: {
@@ -2401,7 +2390,7 @@ class CsController extends CsBase implements IController {
         if (!this.usercode) {
             return;
         }
-        const taskId = this.getTaskId();
+        const taskId = this.pluginMeta.getTaskId();
         if (!taskId) {
             console.log("taskId missing");
             return;
@@ -3012,7 +3001,7 @@ csApp.component("csTextRunner", {
             ng-disabled="$ctrl.isRunning"
             title="(Ctrl-S)"
             ng-click="$ctrl.runCode();"
-            ng-bind-html="::$ctrl.buttonText"></button>
+            ng-bind-html="::$ctrl.buttonText()"></button>
     &nbsp;&nbsp;<a href=""
                    ng-if="$ctrl.muokattu"
                    ng-click="$ctrl.initCode();">{{::$ctrl.resetText}}</a>&nbsp;&nbsp;
@@ -3036,8 +3025,6 @@ csApp.component("csWeschemeRunner", {
 const csConsoleApp = angular.module("csConsoleApp", ["ngSanitize"]);
 
 class CsConsoleController extends CsBase implements IController {
-    private static $inject = ["$scope", "$element"];
-
     // isShell: boolean; method
     cursor: number;
     currentSize: string;
@@ -3112,16 +3099,7 @@ class CsConsoleController extends CsBase implements IController {
     }
 
     async handler() {
-        let url = "/cs/answer";
-        const plugin = this.getPlugin();
-        if (plugin) {
-            url = plugin;
-            const i = url.lastIndexOf("/");
-            if (i > 0) {
-                url = url.substring(i);
-            }
-            url += "/" + this.getTaskId() + "/answer/";
-        }
+        const url = this.pluginMeta.getAnswerUrl();
         const t = languageTypes.getRunType(this.type, "shell");
         const ucode = this.currentInput;
         const isInput = false;

@@ -1,25 +1,24 @@
-# -*- coding: utf-8 -*-
-__author__ = 'vesal'
 """
-Module for serving TIM example pali plugin.
-See: https://tim.it.jyu.fi/view/tim/TIMin%20kehitys/Plugin%20development
-Serving from local port 5000
+Module for serving TIM example palindrome plugin.
+See: https://tim.jyu.fi/view/tim/TIMin-kehitys/Plugin-development
 """
+import re
+from typing import List, Union
 
-import binascii
-import sys
-sys.path.insert(0, '/py')  # /py on mountattu docker kontissa /opt/tim/timApp/modules/py -hakemistoon
+import attr
+from flask import Flask, jsonify, render_template_string
+from marshmallow import Schema, fields, post_load, validates, ValidationError
+from marshmallow.utils import missing
+from webargs.flaskparser import use_args
+from werkzeug.exceptions import UnprocessableEntity
 
-
-from http_params import *
-import tim_server
-
-PORT = 5000
-PROGDIR = "."
+from pluginserver_flask import GenericMarkupModel, GenericMarkupSchema, GenericHtmlSchema, GenericHtmlModel, \
+    GenericAnswerSchema, render_validationerror, GenericAnswerModel, Missing, \
+    make_base64, InfoSchema, render_multihtml
 
 
 def check_letters(word: str, needed_len: int) -> bool:
-    """checks if word has needed_amount of chars.
+    """Checks if word has needed amount of chars.
 
     :param word: word to check
     :param needed_len: how many letters needed
@@ -30,134 +29,219 @@ def check_letters(word: str, needed_len: int) -> bool:
     return len(re.sub("[^[A-ZÅÄÖ]", "", s)) == needed_len
 
 
-def get_lazy_pali_html(query: QueryParams) -> str:
-    """Returns a lazy version of plugins html.
-
-    :param query: query params where lazy options can be read
-    :return: lazy version of pali-plugins html
-
-    """
-    initword = str(query.get_param("initword", ""))
-    s = '<div class="csRunDiv no-popup-menu">'
-    s += replace_template_params(query, "<h4>{{header}}</h4>", "header")
-    s += replace_template_params(query, '<p class="stem" >{{stem}}</p>', "stem")
-    s += replace_template_params(query, '<div><label>{{inputstem}} <span><input type ="text" class="paliInput"  value="{{state.userword}}" size="{{cols}}"></span></label>',
-                                 "", ["inputstem", "state.userword:" + initword, "cols"])
-    s += '</div>'
-    s += replace_template_params(query,
-                                 '&nbsp;&nbsp;<span class="tries"> Tries: {{tries}}/{{max_tries}}</span>', "max_tries", ["tries:0"])
-    s += replace_template_params(query, '<p class="plgfooter">{{footer}}</p>', "footer")
-    s += '</div>'
-    return s
+app = Flask(__name__, static_folder=".", static_url_path="")
 
 
-class PaliServer(tim_server.TimServer):
-    """Class for palindrome server that can handle the TIM routes."""
+@app.errorhandler(422)
+def handle_invalid_request(error: UnprocessableEntity):
+    return jsonify({'web': {'error': render_validationerror(ValidationError(message=error.data['messages']))}})
 
-    def get_html(self, query: QueryParams) -> str:
-        """Return the html for this query. Params are dumbed as hexstring to avoid problems with html input and so on.
 
-        :param query: get or put params
-        :return : html string for this markup
+@app.before_request
+def print_rq():
+    pass
+    # pprint(request.get_json(silent=True))
 
+
+@attr.s(auto_attribs=True)
+class PaliStateModel:
+    userword: str
+
+
+class PaliStateSchema(Schema):
+    userword = fields.Str(required=True)
+
+    @post_load
+    def make_obj(self, data):
+        return PaliStateModel(**data)
+
+    class Meta:
+        strict = True
+
+
+@attr.s(auto_attribs=True)
+class PaliMarkupModel(GenericMarkupModel):
+    points_array: Union[str, Missing] = missing
+    inputstem: Union[str, Missing] = missing
+    needed_len: Union[int, Missing] = missing
+    initword: Union[str, Missing] = missing
+    cols: Union[int, Missing] = missing
+
+
+class PaliMarkupSchema(GenericMarkupSchema):
+    points_array = fields.List(fields.List(fields.Number()))
+    inputstem = fields.Str()
+    needed_len = fields.Int()
+    initword = fields.Str()
+    cols = fields.Int()
+
+    @validates('points_array')
+    def validate_points_array(self, value):
+        if len(value) != 2 or not all(len(v) == 2 for v in value):
+            raise ValidationError('Must be of size 2 x 2.')
+
+    @post_load
+    def make_obj(self, data):
+        return PaliMarkupModel(**data)
+
+    class Meta:
+        strict = True
+
+
+@attr.s(auto_attribs=True)
+class PaliInputModel:
+    userword: str
+    paliOK: bool
+    nosave: bool = missing
+
+
+class PaliInputSchema(Schema):
+    nosave = fields.Bool()
+    paliOK = fields.Bool(required=True)
+    userword = fields.Str(required=True)
+
+    @validates('userword')
+    def validate_userword(self, word):
+        if not word:
+            raise ValidationError('Must not be empty.')
+
+    @post_load
+    def make_obj(self, data):
+        return PaliInputModel(**data)
+
+
+class PaliAttrs(Schema):
+    markup = fields.Nested(PaliMarkupSchema)
+    state = fields.Nested(PaliStateSchema, allow_none=True, required=True)
+
+
+@attr.s(auto_attribs=True)
+class PaliHtmlModel(GenericHtmlModel[PaliInputModel, PaliMarkupModel, PaliStateModel]):
+    def get_static_html(self) -> str:
+        return render_static_pali(self)
+
+    def get_browser_json(self):
+        r = super().get_browser_json()
+        if self.state:
+            r['userword'] = self.state.userword
+        return r
+
+    def get_real_html(self):
+        return render_template_string(
+            """<pali-runner json="{{data}}"></pali-runner>""",
+            data=make_base64(self.get_browser_json()),
+        )
+
+    class Meta:
+        strict = True
+
+
+class PaliHtmlSchema(GenericHtmlSchema):
+    markup = fields.Nested(PaliMarkupSchema)
+    state = fields.Nested(PaliStateSchema, allow_none=True, required=True)
+    info = fields.Nested(InfoSchema, allow_none=True, required=True)
+
+    @post_load
+    def make_obj(self, data):
+        # noinspection PyArgumentList
+        return PaliHtmlModel(**data)
+
+    class Meta:
+        strict = True
+
+
+@attr.s(auto_attribs=True)
+class PaliAnswerModel(GenericAnswerModel[PaliInputModel, PaliMarkupModel, PaliStateModel]):
+    pass
+
+
+class PaliAnswerSchema(GenericAnswerSchema):
+    input = fields.Nested(PaliInputSchema, required=True)
+    markup = fields.Nested(PaliMarkupSchema)
+    state = fields.Nested(PaliStateSchema, allow_none=True, required=True)
+
+    @post_load
+    def make_obj(self, data):
+        # noinspection PyArgumentList
+        return PaliAnswerModel(**data)
+
+    class Meta:
+        strict = True
+
+
+def render_static_pali(m: PaliHtmlModel):
+    return render_template_string(
         """
-        # print(query.dump()) # uncomment to see query
-        user_id = query.get_param("user_id", "--")
+<div class="csRunDiv no-popup-menu">
+    <h4>{{ header }}</h4>
+    <p class="stem">{{ stem }}</p>
+    <div><label>{{ inputstem or '' }} <span>
+        <input type="text"
+               class="form-control"
+               placeholder="{{inputplaceholder}}"
+               size="{{cols}}"></span></label>
+    </div>
+    <button class="timButton">
+        {{ buttonText or button or "Save" }}
+    </button>
+    <a>{{ resetText }}</a>
+    <p class="plgfooter">{{ footer }}</p>
+</div>
+        """,
+        **attr.asdict(m.markup),
+    )
 
-        # do the next if Anonymoys is not allowed to use plugins
-        if user_id == "Anonymous":
-            # SANITOIDAAN markupista tuleva syöte
-            return NOLAZY + '<p class="pluginError">The interactive plugin works only for users who are logged in</p><pre class="csRunDiv">' \
-                + query.get_sanitized_param("initword", "") + '</pre>'
 
-        # check if points array is 2x2 matrix
-        points_array = query.get_param("points_array", None)
-        if points_array and not check_array(points_array, 2, 2):
-            return NOLAZY + '<p class="pluginError">points_array must be an 2x2 array, f.ex [[0, 0.1], [0.6, 1]]</p>'
+@app.route('/multihtml/', methods=['post'])
+@use_args(GenericHtmlSchema(many=True, strict=True), locations=("json",))
+def multihtml(args: List[GenericHtmlSchema]):
+    return render_multihtml(PaliHtmlSchema(), args)
 
-        jso = query.to_json(accept_nonhyphen)
-        runner = 'pali-runner'
 
-        attrs = json.dumps(jso)
-        # print(attrs) # uncomment this to look what is in outgoing js
-        if query.get_param("nohex", False):  # as a default do hex
-            attrs = "xxxJSONxxx" + attrs
-        else:  # this is on by default, but for debug can be put off to see the json better
-            hx = 'xxxHEXJSONxxx' + binascii.hexlify(attrs.encode("UTF8")).decode()
-            attrs = hx
-        s = '<' + runner + '>' + attrs + '</' + runner + '>'
-        s = make_lazy(s, query, get_lazy_pali_html)
-        return s
+@app.route('/answer/', methods=['put'])
+@use_args(PaliAnswerSchema(strict=True), locations=("json",))
+def answer(args: PaliAnswerModel):
+    web = {}
+    result = {'web': web}
+    needed_len = args.markup.needed_len
+    userword = args.input.userword
+    pali_ok = args.input.paliOK
+    len_ok = True
+    if needed_len:
+        len_ok = check_letters(userword, needed_len)
+    if not len_ok:
+        web['error'] = "Wrong length"
+    if not needed_len and not pali_ok:
+        len_ok = False
+    points_array = args.markup.points_array or [[0, 0.25], [0.5, 1]]
+    points = points_array[pali_ok][len_ok]
 
-    def get_reqs_result(self) -> dict:
-        """
-        :return: reqs result as json
-        """
-        # Get templates for plugin
-        templs = {}
-        # templs = get_all_templates('/pali/templates') # uncoment this to test how templates works
-        ret = {"js": ["tim/util/timHelper", "js/pali.js"], "angularModule": ["paliApp"],
-               "css": ["css/pali.css"], "multihtml": True}
-        ret.update(templs)
-        return ret
+    # plugin can ask not to save the word
+    nosave = args.input.nosave
+    if not nosave:
+        tim_info = {"points": points}
+        save = {"userword": userword}
+        result["save"] = save
+        result["tim_info"] = tim_info
+        web['result'] = "saved"
 
-    def do_answer(self, query: QueryParams):
-        """Do answer route. Check if userword is different than the old word.  If it is save the new word if max_tires
-        is not passed.  Count points based pali ok and length ok.
+    return jsonify(result)
 
-        :param query: post and get params
-        :return: nothing
 
-        """
-        do_headers(self, "application/json")
-        result = {}
-        web = {}
-        result["web"] = web
-        out = ""
-        err = ""
-        tries = 0
-        try:
-            print(query.dump())  # uncomment this to see the query
-
-            userword = str(query.get_json_param("input", "userword", None))
-            oldword = str(query.get_json_param("state", "userword", ""))
-            max_tries = int(query.get_param("max_tries", 1000000))
-            tries = int(query.get_json_param("state", "tries", 0))
-            if userword:
-                pali_ok = query.get_json_param("input", "paliOK", False)
-                needed_len = int(query.get_param("needed_len", 0))
-                len_ok = True
-                if needed_len:
-                    len_ok = check_letters(userword, needed_len)
-                if not len_ok:
-                    err = "Wrong length"
-                if not needed_len and not pali_ok:
-                    len_ok = False
-                points_array = query.get_param("points_array", [[0, 0.25], [0.5, 1]])
-                points = points_array[pali_ok][len_ok]
-
-                # plugin can ask not to save the word
-                nosave = query.get_json_param("input", "nosave", None)
-                if (not nosave) and tries < max_tries and userword != oldword:
-                    tries += 1
-                    tim_info = {"points": points}
-                    save = {"userword": userword, "tries": tries}
-                    result["save"] = save
-                    result["tim_info"] = tim_info
-                    out = "saved"
-                    # print(tries,max_tries)
-        except Exception as e:
-            err = str(e)
-
-        out = out[0:20000]
-        web["tries"] = tries
-        web["result"] = out
-        web["error"] = err
-
-        sresult = json.dumps(result)
-        self.wout(sresult)
-        print(sresult)
+@app.route('/reqs/')
+@app.route('/reqs')
+def reqs():
+    return jsonify({
+        "js": ["js/build/pali.js"],
+        "angularModule": ["paliApp"],
+        "multihtml": True,
+        "css": ["css/pali.css"],
+    })
 
 
 if __name__ == '__main__':
-    tim_server.start_server(PaliServer, 'pali')
+    app.run(
+        host='0.0.0.0',
+        port=5000,
+        debug=True,
+    )

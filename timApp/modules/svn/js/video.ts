@@ -115,7 +115,6 @@ const ShowFileAll = t.type({markup: ShowFileMarkup});
 class ShowFileController extends PluginBase<t.TypeOf<typeof ShowFileMarkup>,
     t.TypeOf<typeof ShowFileAll>,
     typeof ShowFileAll> {
-    private static $inject = ["$scope", "$element"];
 
     get videoicon() {
         return valueOr(this.attrs.videoicon, "/csstatic/video_small.png");

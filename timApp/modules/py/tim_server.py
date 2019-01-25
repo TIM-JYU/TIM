@@ -65,7 +65,7 @@ class TimServer(http.server.BaseHTTPRequestHandler):
         if self.path.find('/multihtml') < 0:
             return self.do_all(post_params(self))
 
-        print("do_POST MULTIHML ==========================================")
+        print("do_POST MULTIHTML ==========================================")
         querys = multi_post_params(self)
         do_headers(self, "application/json")
         htmls = []

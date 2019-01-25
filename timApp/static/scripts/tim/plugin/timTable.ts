@@ -10,6 +10,7 @@ import {isArrowKey, KEY_DOWN, KEY_ENTER, KEY_ESC, KEY_F2, KEY_LEFT, KEY_RIGHT, K
 import {$http, $timeout} from "../util/ngimport";
 import {Binding} from "../util/utils";
 import {hideToolbar, isToolbarEnabled, openTableEditorToolbar} from "./timTableEditorToolbar";
+import {PluginMeta} from "./util";
 
 const styleToHtml: {[index: string]: string} = {
     backgroundColor: "background-color",
@@ -216,12 +217,14 @@ export class TimTableController extends DestroyScope implements IController {
     private bigEditorOpen: boolean = false;
 
     private addRowButtonText: string = "";
+    private pluginMeta: PluginMeta;
 
     constructor(private scope: IScope, private element: IRootElementService) {
         super(scope, element);
         this.keyUpTable = this.keyUpTable.bind(this);
         this.keyDownTable = this.keyDownTable.bind(this);
         this.keyPressTable = this.keyPressTable.bind(this);
+        this.pluginMeta = new PluginMeta(element);
         this.onClick = this.onClick.bind(this);
         this.setCell = this.setCell.bind(this);
         this.addToTemplates = this.addToTemplates.bind(this);
@@ -236,16 +239,7 @@ export class TimTableController extends DestroyScope implements IController {
         if (this.taskUrl) {
             return this.taskUrl;
         }
-        let url = "/cs/answer";
-        const plugin = this.getPlugin();
-        if (plugin) {
-            url = plugin;
-            const i = url.lastIndexOf("/");
-            if (i > 0) {
-                url = url.substring(i);
-            }
-            url += "/" + this.getTaskId() + "/answer/";
-        }
+        const url = this.pluginMeta.getAnswerUrl();
         this.taskUrl = url;
         return url;
     }

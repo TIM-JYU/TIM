@@ -123,6 +123,7 @@ cssselect \
 docformatter \
 filelock \
 flask \
+flask-apispec \
 flask-assets \
 flask-caching \
 flask-compress \

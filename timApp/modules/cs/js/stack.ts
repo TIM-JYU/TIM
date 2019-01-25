@@ -69,15 +69,14 @@ class StackController extends PluginBase<t.TypeOf<typeof StackMarkup>,
         return this.attrs.lang === "en";
     }
 
-    get buttonText() {
-        const txt = this.attrs.button || this.attrs.buttonText;
+    buttonText() {
+        const txt = super.buttonText();
         if (txt) {
             return txt;
         }
         return this.english ? "Send" : "Lähetä";
     }
 
-    private static $inject = ["$scope", "$element"];
     private span: string = "";
     private error: string = "";
     private userCode: string = "";
@@ -105,7 +104,7 @@ class StackController extends PluginBase<t.TypeOf<typeof StackMarkup>,
 
     $onInit() {
         super.$onInit();
-        this.button = this.buttonText;
+        this.button = this.buttonText();
         const aa = this.attrsall;
         this.userCode = aa.usercode || this.attrs.by || "";
         this.timWay = aa.timWay || this.attrs.timWay || false;
@@ -351,16 +350,7 @@ class StackController extends PluginBase<t.TypeOf<typeof StackMarkup>,
         if (this.taskUrl) {
             return this.taskUrl;
         }
-        let url = "/cs/answer";
-        const plugin = this.getPlugin();
-        if (plugin) {
-            url = plugin;
-            const i = url.lastIndexOf("/");
-            if (i > 0) {
-                url = url.substring(i);
-            }
-            url += "/" + this.getTaskId() + "/answer/";
-        }
+        const url = this.pluginMeta.getAnswerUrl();
         this.taskUrl = url;
         return url;
     }

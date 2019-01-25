@@ -1,34 +1,18 @@
-# Aloitetaan ubuntun imagesta
-from ubuntu
-maintainer vesal "vesal@jyu.fi"
+FROM ubuntu
 
-# Asennetaan python, pip 
+RUN apt-get update
+RUN apt-get install -y python3
+RUN apt-get install -y python3-pip
+RUN pip3 install bleach
+RUN apt-get install -y wget
 
-run apt-get update
-run apt-get install -y python3
-run apt-get install -y python3-pip
-run pip3 install bleach
-run apt-get install -y wget 
+RUN mkdir /service
 
-# Lisätään alkuperäinen hakemisto polkuun /service
-run mkdir /service
+RUN useradd -M agent
+RUN chown -R agent /service
 
-# Lisätään käyttäjä `agent` -- Emme halua ajaa containerissakaan
-# palveluja roottina.
-run useradd -M agent 
-run chown -R agent /service
-
-# testejä varten
 ENV MYPASSWORD password
-# RUN echo "root:$MYPASSWORD" | chpasswd
 
-# Varmuudeksi estetään root login ja poistetaan rootin salasana,
-# jos sellainen on.
-# run usermod -p '!' root
-# run passwd -l root
+USER agent
 
-# Asetetaan container käynnistymään tunnuksella agent.
-user agent
-
-# Avataan portti 5000 ulos containerista.
-expose 5000
+EXPOSE 5000

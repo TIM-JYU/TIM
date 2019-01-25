@@ -12,7 +12,7 @@ import {showQuestionAskDialog} from "../lecture/questionAskController";
 import {showMessageDialog} from "../ui/dialog";
 import {$http} from "../util/ngimport";
 import {Binding, to} from "../util/utils";
-import {IPluginAttributes} from "./util";
+import {IPluginAttributes, PluginMeta} from "./util";
 
 // Represents fields that are not actually stored in plugin markup but that are added by TIM alongside markup
 // in view route so that extra information can be passed to qst component. TODO: they should not be inside markup.
@@ -36,16 +36,16 @@ class QstController implements IController {
     private plugin?: string;
     private json!: Binding<string, "@">;
     private cursor: string;
-    private element: IRootElementService;
     private attrs!: IQstAttributes; // $onInit
     private preview!: IPreviewParams; // $onInit
     private button: string = "";
     private resetText: string = "";
     private stem: string = "";
     private newAnswer: AnswerTable = [];
+    private pluginMeta: PluginMeta;
 
-    constructor($element: IRootElementService) {
-        this.element = $element;
+    constructor(private element: IRootElementService) {
+        this.pluginMeta = new PluginMeta(element);
         this.updateAnswer = this.updateAnswer.bind(this);
         this.errors = [];
         this.preclass = "qst";
@@ -155,18 +155,7 @@ class QstController implements IController {
         if (nosave) {
             params.input.nosave = true;
         }
-        let url = "/qst/answer";
-        if (this.plugin && this.taskId) {
-            url = this.plugin;
-            const i = url.lastIndexOf("/");
-            if (i > 0) {
-                url = url.substring(i);
-            }
-            url += "/" + this.taskId + "/answer/";
-        } else {
-            this.error = "plugin or taskId missing";
-            return;
-        }
+        const url = this.pluginMeta.getAnswerUrl();
 
         const r = await to($http<{
             web: {
@@ -198,6 +187,10 @@ class QstController implements IController {
             this.preview.showExplanations = true;
             this.preview.showCorrectChoices = true;
         }
+    }
+
+    protected getElement() {
+        return this.element;
     }
 }
 

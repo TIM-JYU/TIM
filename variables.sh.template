@@ -20,3 +20,6 @@ export IS_DEVELOPMENT=false                    # Whether this is a local develop
 export CONFIG_FILE=''                          # Location of config file to use; OK to be empty when running locally;
                                                 # use 'productionconfig.py' in production
 export LOG_DIR=${DIR}/tim_logs                 # Location of log directory; will be mapped for TIM container at /service/tim_logs
+
+# To print the concrete values of these variables, you can use:
+# env - bash -c ". ./variables.sh && env | grep -Ev '^(_|PWD|SHLVL)='"

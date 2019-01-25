@@ -253,7 +253,6 @@ def pluginify(doc: Document,
 
     for plugin_name, plugin_block_map in plugins.items():
         taketime("plg", plugin_name)
-        plugin = None
         try:
             plugin = get_plugin(plugin_name)
             plugin_lazy = plugin.get("lazy", True)

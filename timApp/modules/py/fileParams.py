@@ -13,7 +13,7 @@ import binascii
 
 import base64
 
-from cs_sanitizer import allow_minimal, tim_sanitize, svg_sanitize
+from cs_sanitizer import allow_minimal, tim_sanitize
 
 CACHE_DIR = "/tmp/cache/"
 

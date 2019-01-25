@@ -1544,7 +1544,6 @@ class ImageXController extends PluginBase<t.TypeOf<typeof ImageXMarkup>,
         return this.scope;
     }
 
-    private static $inject = ["$scope", "$element"];
     public w = 0;
     public freeHand = false;
     public lineMode = false;
@@ -1777,18 +1776,7 @@ class ImageXController extends PluginBase<t.TypeOf<typeof ImageXMarkup>,
                 freeHandData: this.freeHandDrawing.freeDrawing,
             },
         };
-        let url = "/imagex/answer";
-        const plugin = this.getPlugin();
-        const taskId = this.getTaskId();
-        if (plugin) {
-            url = plugin;
-            const i = url.lastIndexOf("/");
-            if (i > 0) {
-                url = url.substring(i);
-            }
-            url += "/" + taskId + "/answer/";
-        }
-
+        const url = this.pluginMeta.getAnswerUrl();
         const r = await to($http<{
             web: {
                 error?: string, result: string, tries: number, answer: IAnswerResponse,
@@ -1870,17 +1858,7 @@ class ImageXController extends PluginBase<t.TypeOf<typeof ImageXMarkup>,
         if (nosave) {
             params.input.nosave = true;
         }
-        let url = "/imagex/answer";
-        const plugin = this.getPlugin();
-        const taskId = this.getTaskId();
-        if (plugin) {
-            url = plugin;
-            const i = url.lastIndexOf("/");
-            if (i > 0) {
-                url = url.substring(i);
-            }
-            url += "/" + taskId + "/answer/";
-        }
+        const url = this.pluginMeta.getAnswerUrl();
 
         const r = await to($http<{
             web: {
