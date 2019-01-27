@@ -135,8 +135,21 @@ def tim_table_get_html(jso, review):
     """
     values = jso[MARKUP]
     state = jso.get("state",{})
+    userdata = None
     if state != None:
-        values[USERDATA] = state.get(USERDATA,None)
+        userdata = state.get(USERDATA, None)
+        values[USERDATA] = userdata
+    if jso.get("review", False):
+        udata = ""
+        if not userdata:
+            return ""
+        ucells = userdata["cells"]
+        if not ucells:
+            return ""
+        for key in ucells:
+            udata += key + ": " + json.dumps(ucells[key]) + "\n"
+        s = f'<pre>{udata}</pre>'
+        return s
     attrs = json.dumps(values)
     runner = 'tim-table'
     s = f'<{runner} data={quoteattr(attrs)}></{runner}>'
@@ -551,107 +564,123 @@ def tim_table_set_cell_all():
     :return: The entire table's data after the cell's background color has been set.
     """
     #  TODO: this is not ready.  Save all data celldata at once
-    doc_id, par_id, row_id, col_id, value = verify_json_params('docId', 'parId', 'rowId', 'colId', 'value')
-    return set_cell_style_attribute(doc_id, par_id, row_id, col_id, BACKGROUND_COLOR, value)
+    # doc_id, par_id, row_id, col_id, value = verify_json_params('docId', 'parId', 'rowId', 'colId', 'value')
+    doc_id, par_id, y1, y2, x1, x2, value = verify_json_params('docId', 'parId', 'y1', 'y2', 'x1', 'x2', 'value')
+    return set_cell_style_attribute(doc_id, par_id, y1, y2, x1, x2, BACKGROUND_COLOR, value)
 
 
 @timTable_plugin.route("setCell", methods=["POST"])
 def tim_table_set_cell():
     """
-    Sets a cell's background color.
-    :return: The entire table's data after the cell's background color has been set.
+    Sets a cell's attributes or content.
+    :return: The entire table's data after the cell's things has been set.
     """
     json_params = request.get_json() or {}
-    doc_id, par_id, row_id, col_id, key, value = verify_json_params('docId', 'parId', 'rowId', 'colId', 'key', 'value')
+    doc_id, par_id, y1, y2, x1, x2, key, value = verify_json_params('docId', 'parId', 'y1', 'y2', 'x1', 'x2', 'key', 'value')
+
     if key == 'cell':
-        return tim_table_save_cell_value(value, doc_id, par_id, row_id, col_id)
-    return set_cell_style_attribute(doc_id, par_id, row_id, col_id, key, value)
+        return tim_table_save_cell_value(value, doc_id, par_id, y2, x2)
+    return set_cell_style_attribute(doc_id, par_id, y1, y2, x1, x2, key, value)
 
 
-@timTable_plugin.route("setCellBackgroundColor", methods=["POST"])
-def tim_table_set_cell_background_color():
-    """
-    Sets a cell's background color.
-    :return: The entire table's data after the cell's background color has been set.
-    """
-    doc_id, par_id, row_id, col_id, color = verify_json_params('docId', 'parId', 'rowId', 'colId', 'backgroundColor')
-    return set_cell_style_attribute(doc_id, par_id, row_id, col_id, BACKGROUND_COLOR, color)
+def clear_attributes(cell):
+    keys = []
+    for key in cell:
+        keys.append(key)
+    for key in keys:
+        if key != 'cell':
+            del cell[key]
 
 
-@timTable_plugin.route("setCellColor", methods=["POST"])
-def tim_table_set_cell_foreground_color():
-    """
-    Sets a cell's foreground color.
-    :return: The entire table's data after the cell's foreground color has been set.
-    """
-    doc_id, par_id, row_id, col_id, color = verify_json_params('docId', 'parId', 'rowId', 'colId', 'color')
-    return set_cell_style_attribute(doc_id, par_id, row_id, col_id, 'color', color)
-
-
-@timTable_plugin.route("setCellTextAlign", methods=["POST"])
-def tim_table_set_cell_text_align():
-    """
-    Sets a cell's text align.
-    :return: The entire table's data after the cell's text align has been set.
-    """
-    doc_id, par_id, row_id, col_id, text_align = verify_json_params('docId', 'parId', 'rowId', 'colId', 'textAlign')
-    return set_cell_style_attribute(doc_id, par_id, row_id, col_id, 'textAlign', text_align)
-
-
-def set_cell_style_attribute(doc_id, par_id, row_id, col_id, attribute, value):
+def set_cell_style_attribute(doc_id, par_id, y1, y2, x1, x2, attribute, value):
     """
     Sets a style attribute for a cell.
     :param doc_id: Document ID
     :param par_id: Paragraph ID
-    :param row_id: Row index
-    :param col_id: Column index
+    :param y1: Row index
+    :param y2: Row index
+    :param x1: Column index
+    :param x2: Column index
     :param attribute: The attribute to set.
     :param value: The value of the attribute.
     :return: The entire table's data after the style attribute has been set.
     """
     d, plug = get_plugin_from_paragraph(doc_id, par_id)
     data_input_mode = is_in_datainput_mode(plug)
-    if data_input_mode:
-        datablock_entries = construct_datablock_entry_list_from_yaml(plug)
-        existing_datablock_entry = None
-        for entry in datablock_entries:
-            if entry.row == row_id and entry.column == col_id:
-                existing_datablock_entry = entry
-                break
 
-        if not existing_datablock_entry:
-            try:
-                cell_content = find_cell(plug.values[TABLE][ROWS], row_id, col_id)
-            except KeyError:
-                cell_content = ''
-            new_entry = RelativeDataBlockValue(row_id, col_id, {attribute: value, CELL: cell_content} )
-            datablock_entries.append(new_entry)
-        else:
-            if isinstance(existing_datablock_entry.data, str):
-                existing_datablock_entry.data = {CELL: existing_datablock_entry.data, attribute: value}
+    for row_id in range(y1,y2+1):
+        for col_id in range(x1,x2+1):
+            if data_input_mode:
+                datablock_entries = construct_datablock_entry_list_from_yaml(plug)
+                existing_datablock_entry = None
+                for entry in datablock_entries:
+                    if entry.row == row_id and entry.column == col_id:
+                        existing_datablock_entry = entry
+                        break
+
+                if not existing_datablock_entry:
+                    if attribute != "CLEAR":
+                        try:
+                            cell_content = find_cell(plug.values[TABLE][ROWS], row_id, col_id)
+                        except KeyError:
+                            cell_content = ''
+                        new_entry = RelativeDataBlockValue(row_id, col_id, {attribute: value, CELL: cell_content} )
+                        datablock_entries.append(new_entry)
+                    else:
+                        pass
+                else:
+                    if isinstance(existing_datablock_entry.data, str):
+                        if attribute != "CLEAR":
+                            existing_datablock_entry.data = {CELL: existing_datablock_entry.data, attribute: value}
+                        else:
+                            pass
+                    else:
+                        if attribute != "CLEAR":
+                            existing_datablock_entry.data[attribute] = value
+                        else:
+                            clear_attributes(existing_datablock_entry.data)
+                apply_datablock_from_entry_list(plug, datablock_entries)
             else:
-                existing_datablock_entry.data[attribute] = value
-        apply_datablock_from_entry_list(plug, datablock_entries)
-    else:
-        try:
-            rows = plug.values[TABLE][ROWS]
-        except KeyError:
-            return abort(400)
+                try:
+                    rows = plug.values[TABLE][ROWS]
+                except KeyError:
+                    return abort(400)
 
-        if len(rows) <= row_id:
-            return abort(400)
-        row = rows[row_id]
-        try:
-            row_data = row[ROW]
-        except KeyError:
-            return abort(400)
-        if len(row_data) <= col_id:
-            return abort(400)
-        cell = row_data[col_id]
-        if is_primitive(cell):
-            row_data[col_id] = {CELL: cell, attribute: value}
-        else:
-            cell[attribute] = value
+                if len(rows) <= row_id:
+                    if attribute == "CLEAR":
+                        continue
+                    # return abort(400)
+                    for ir in range(len(rows), row_id+1):
+                        rows.append({ ROW: []})
+                row = rows[row_id]
+                try:
+                    row_data = row[ROW]
+                except KeyError:
+                    return abort(400)
+                if len(row_data) <= col_id:
+                    if attribute == "CLEAR":
+                        continue
+                    # return abort(400)
+                    for ic in range(len(row_data), col_id+1):
+                        row_data.append('')
+                cell = row_data[col_id]
+                if is_primitive(cell):
+                    if attribute != "CLEAR":
+                        row_data[col_id] = {CELL: cell, attribute: value}
+                    else:
+                        pass
+                else:
+                    if attribute != "CLEAR":
+                        cell[attribute] = value
+                    else:
+                        try:
+                            if value != "ALL":
+                                del cell[value]
+                            else:
+                                clear_attributes(cell)
+                        except:
+                            pass
+
 
     plug.save()
     return json_response(prepare_for_and_call_dumbo(plug))

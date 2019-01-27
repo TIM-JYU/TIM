@@ -2,9 +2,8 @@ import {IRootElementService, IScope} from "angular";
 import {DialogController, registerDialogComponent, showDialog} from "../ui/dialog";
 
 export interface ITimTableToolbarCallbacks {
-    setTextAlign: (value: string) => void;
-    setCellBackgroundColor: (value: string) => void;
     setCell: (value: object) => void;
+    addToTemplates: () => void;
     addColumn: (offset: number) => void;
     addRow: (offset: number) => void;
     removeColumn: () => void;
@@ -47,12 +46,6 @@ export class TimTableEditorToolbarController extends DialogController<{params: I
      */
     $doCheck() {
 
-        /* replaced by onColorPickerClose
-        if (this.cellBackgroundColor !== this.previousBackgroundColor) {
-            this.previousBackgroundColor = this.cellBackgroundColor;
-            this.callbacks.setCellBackgroundColor("#" + this.cellBackgroundColor);
-            this.scope.$apply();
-        } */
     }
 
     public callbacks!: ITimTableToolbarCallbacks; // $onInit
@@ -109,14 +102,58 @@ export class TimTableEditorToolbarController extends DialogController<{params: I
      * Sets the text-align value of a cell.
      */
     private setTextAlign(value: string) {
-        this.callbacks.setTextAlign(value);
+       //  this.callbacks.setTextAlign(value);
+        this.callbacks.setCell({textAlign: value});
     }
 
     /**
-     * Sets the text-align value of a cell.
+     * Sets the cell by template
      */
     private setCell(value: object) {
         this.callbacks.setCell(value);
+    }
+
+
+    /**
+     * Clears cell format
+     */
+    private clearFormat() {
+        this.callbacks.setCell({CLEAR: "ALL"});
+    }
+
+
+    private pinSelected() {
+        const style : any = {};
+        if ( !this.activeTable ) return style;
+        if ( (this.activeTable as any).shiftDown ) {
+            style["background"] = 'black';
+        }
+        return style;
+    }
+
+
+    private changePin() {
+        const t: any = this.activeTable;
+        if ( !t ) return;
+        t.shiftDown = !t.shiftDown;
+        t.startCell = t.activeCell;
+    }
+
+
+    /**
+     * Add current cell to templates
+     */
+    private addToTemplates() {
+        this.callbacks.addToTemplates();
+    }
+
+
+    /**
+     * Gets the cell text for toolbar
+     */
+    private getCellForToolbar(value: any) {
+        if ( !value.cell ) return "\u2003"; // &#8195  em space &emsp;
+        return value.cell.substr(0,5);
     }
 
     private eventApi = {
@@ -132,7 +169,7 @@ export class TimTableEditorToolbarController extends DialogController<{params: I
     private static onColorPickerClose(color: string) {
         if (instance) {
             instance.previousBackgroundColor = instance.cellBackgroundColor;
-            instance.callbacks.setCellBackgroundColor("#" + color);
+            instance.callbacks.setCell({backgroundColor: "#" + color});
         }
     }
 
@@ -141,7 +178,7 @@ export class TimTableEditorToolbarController extends DialogController<{params: I
     }
 
     private applyBackgroundColor() {
-        this.callbacks.setCellBackgroundColor("#" + this.previousBackgroundColor);
+        this.callbacks.setCell({backgroundColor: "#" + this.previousBackgroundColor});
     }
 
     private addColumn(offset: number) {
@@ -206,8 +243,8 @@ registerDialogComponent("timTableEditorToolbar",
                     <ul class="dropdown-menu" uib-dropdown-menu>
                         <li role="menuitem" ng-click="$ctrl.addRow(0)"><a>Row above</a></li>
                         <li role="menuitem" ng-click="$ctrl.addRow(1)"><a>Row below</a></li>
-                        <li role="menuitem" ng-click="$ctrl.addColumn(1)"><a>Column to the right</a></li>
                         <li role="menuitem" ng-click="$ctrl.addColumn(0)"><a>Column to the left</a></li>
+                        <li role="menuitem" ng-click="$ctrl.addColumn(1)"><a>Column to the right</a></li>
                     </ul>
                 </div>
             </div>
@@ -216,7 +253,8 @@ registerDialogComponent("timTableEditorToolbar",
             <div class="col-xs-12" id="timTableToolbarRow">
                 <color-picker ng-model="$ctrl.cellBackgroundColor"
                               event-api="$ctrl.eventApi"
-                              options="$ctrl.colorOpts">
+                              options="$ctrl.colorOpts"
+                              style="top: -0.5em;position: relative;">
                 </color-picker>
                 <button class="timButton btn-xs"
                         ng-style="$ctrl.getStyle()"
@@ -239,7 +277,23 @@ registerDialogComponent("timTableEditorToolbar",
                 </button>
                 <button class="timButton btn-xs" ng-repeat="r in $ctrl.activeTable.data.toolbarTemplates" ng-init="rowi = $index"
                      ng-style="r" style="color:black" ng-click="$ctrl.setCell(r)">
-                     {{r.cell}}
+                     {{$ctrl.getCellForToolbar(r)}}
+                </button>
+                <button class="timButton btn-xs"
+                        title="Add current cell to templates"
+                        ng-click="$ctrl.addToTemplates()">
+                    <i class="glyphicon glyphicon-shopping-cart"></i>
+                </button>
+                <button class="timButton btn-xs"
+                        title="Clear format"
+                        ng-click="$ctrl.clearFormat()">
+                    <i class="glyphicon glyphicon-trash"></i>
+                </button>
+                <button class="timButton btn-xs"
+                        title="Pin area corner"
+                        ng-style="$ctrl.pinSelected()"
+                        ng-click="$ctrl.changePin()">
+                    <i class="glyphicon glyphicon-pushpin"></i>
                 </button>
 
             </div>

@@ -45,6 +45,9 @@ export interface TimTable {
     editorBottom?: boolean;
     editorButtonsBottom?: boolean;
     editorButtonsRight?: boolean;
+    toolbarTemplates?: any;
+    rowCount?: number;
+    colCount?: number;
 }
 
 export interface ITable { // extends ITableStyles
@@ -199,6 +202,9 @@ export class TimTableController extends DestroyScope implements IController {
     private editedCellInitialContent: string | undefined;
     private currentCell?: {row: number, col: number, editorOpen: boolean};
     private activeCell?: {row: number, col: number};
+    private startCell?: {row: number, col: number};
+    public shiftDown: boolean = false;
+    private scount: number = 0;
 
     /**
      * Stores the last direction that the user moved towards with arrow keys
@@ -213,11 +219,12 @@ export class TimTableController extends DestroyScope implements IController {
 
     constructor(private scope: IScope, private element: IRootElementService) {
         super(scope, element);
-        this.keyDownPressedTable = this.keyDownPressedTable.bind(this);
+        this.keyUpTable = this.keyUpTable.bind(this);
+        this.keyDownTable = this.keyDownTable.bind(this);
+        this.keyPressTable = this.keyPressTable.bind(this);
         this.onClick = this.onClick.bind(this);
-        this.setCellTextAlign = this.setCellTextAlign.bind(this);
-        this.setCellBackgroundColor = this.setCellBackgroundColor.bind(this);
         this.setCell = this.setCell.bind(this);
+        this.addToTemplates = this.addToTemplates.bind(this);
         this.addColumnFromToolbar = this.addColumnFromToolbar.bind(this);
         this.addRowFromToolbar = this.addRowFromToolbar.bind(this);
         this.removeColumnFromToolbar = this.removeColumnFromToolbar.bind(this);
@@ -310,9 +317,9 @@ export class TimTableController extends DestroyScope implements IController {
             }
             this.viewctrl.addTable(this, parId);
         }
-        document.addEventListener("keyup", this.keyDownPressedTable);
+        document.addEventListener("keyup", this.keyUpTable);
         document.addEventListener("keydown", this.keyDownTable);
-        document.addEventListener("keypress", this.keyDownTable);
+        document.addEventListener("keypress", this.keyPressTable);
         // document.addEventListener("click", this.onClick);
         onClick("body", ($this, e) => {
             this.onClick(e);
@@ -322,27 +329,15 @@ export class TimTableController extends DestroyScope implements IController {
     $doCheck() {
         // TODO reference timTableEditorToolbar and ask if the color is different
 
-        /*if (this.activeCell) {
-            const cell = this.cellDataMatrix[this.activeCell.row][this.activeCell.col];
-            if (cell.backgroundColor) {
-                if (cell.backgroundColor !== this.selectedCellBackgroundColor) {
-                    cell.backgroundColor = this.selectedCellBackgroundColor;
-                    this.setCellBackgroundColor();
-                }
-            } else if (this.selectedCellBackgroundColor !== this.DEFAULT_CELL_BGCOLOR) {
-                cell.backgroundColor = this.selectedCellBackgroundColor;
-                this.setCellBackgroundColor();
-            }
-        }*/
-
     }
 
     /**
      * Removes listener and cleans up
      */
     $onDestroy() {
-        document.removeEventListener("keyup", this.keyDownPressedTable);
+        document.removeEventListener("keyup", this.keyUpTable);
         document.removeEventListener("keydown", this.keyDownTable);
+        document.removeEventListener("keypress", this.keyPressTable);
         // document.removeEventListener("click", this.onClick);
     }
 
@@ -351,9 +346,8 @@ export class TimTableController extends DestroyScope implements IController {
             if (this.isInEditMode() && isToolbarEnabled()) {
                 openTableEditorToolbar({
                     callbacks: {
-                        setTextAlign: this.setCellTextAlign,
-                        setCellBackgroundColor: this.setCellBackgroundColor,
                         setCell: this.setCell,
+                        addToTemplates: this.addToTemplates,
                         addColumn: this.addColumnFromToolbar,
                         addRow: this.addRowFromToolbar,
                         removeColumn: this.removeColumnFromToolbar,
@@ -520,13 +514,20 @@ export class TimTableController extends DestroyScope implements IController {
         return this.colnumToLetters(remainder - 1) + lastChar;
     }
 
+
+    /*
+     * Set attribute to user object.  If key == CLEAR, remove attribute in value
+     * IF key == CLEAR and value = ALL, clear all attributes
+     */
     setUserAttribute(row: number, col: number, key: string, value: string) {
-        this.cellDataMatrix[row][col][key] = value;
+        if ( key != "CLEAR")
+            this.cellDataMatrix[row][col][key] = value;
         if (!this.userdata) {
             return;
         }
         const coordinate = this.colnumToLetters(col) + "" + (row + 1);
         if (!this.userdata.cells[coordinate]) {
+            if ( key == "CLEAR") return; // nothing to do
             const data: CellEntity = {cell: null};
             data[key] = value;
             this.userdata.cells[coordinate] = data;
@@ -534,12 +535,28 @@ export class TimTableController extends DestroyScope implements IController {
         }
         const cellValue = this.userdata.cells[coordinate];
         if (isPrimitiveCell(cellValue)) {
+            if ( key == "CLEAR") return; // nothing to do
             const data: CellEntity = {cell: this.cellToString(cellValue)};
             data[key] = value;
             this.userdata.cells[coordinate] = data;
             return;
         }
-        cellValue[key] = value;
+        if ( key != "CLEAR") {
+            cellValue[key] = value;
+            return;
+        }
+        if ( value == "ALL" ) {
+            for ( key in cellValue) {
+                if ( key == "cell") continue;
+                delete this.cellDataMatrix[row][col][key];
+            }
+            const data = cellValue.cell;
+            this.userdata.cells[coordinate] = data;
+            return;
+        }
+
+        delete cellValue[value];
+        delete this.cellDataMatrix[row][col][value];
     }
 
     setUserContent(row: number, col: number, content: string) {
@@ -685,6 +702,30 @@ export class TimTableController extends DestroyScope implements IController {
      */
     private initializeCellDataMatrix() {
         this.cellDataMatrix = [];
+        if (!this.data.table.rows) this.data.table.rows = [];
+
+        let nrows = this.data.rowCount || 0;
+        let ncols = this.data.colCount || 0;
+        nrows = Math.max(this.data.table.rows.length, nrows);
+
+        for (let iy = 0; iy < this.data.table.rows.length; iy++) {
+            let row = this.data.table.rows[iy];
+            if ( row.row ) ncols = Math.max(row.row.length, ncols);
+        }
+        for (let iy = 0; iy < nrows; iy++) {
+            this.cellDataMatrix[iy] = [];
+            for (let ix = 0; ix < ncols; ix++)
+                this.cellDataMatrix[iy][ix] = this.createDummyCell();
+
+            let row = this.data.table.rows[iy];
+            if (!row || !row.row) continue;
+            for (let ix=0; ix < row.row.length; ix++) {
+                const itemInRow = row.row[ix];
+                this.applyCellEntityAttributesToICell(itemInRow, this.cellDataMatrix[iy][ix]);
+            }
+
+        }
+        /*
         if (this.data.table.rows) {
             this.data.table.rows.forEach((item, index) => {
                 this.cellDataMatrix[index] = [];
@@ -700,6 +741,7 @@ export class TimTableController extends DestroyScope implements IController {
                 }
             });
         }
+        */
     }
 
     /**
@@ -960,6 +1002,16 @@ export class TimTableController extends DestroyScope implements IController {
     }
 
     private keyDownTable(ev: KeyboardEvent) {
+        this.shiftDown =  ev.shiftKey;
+
+        // if (!this.mouseInTable) return;
+        if (ev.keyCode === KEY_TAB) {
+            ev.preventDefault();
+        }
+
+    }
+
+    private keyPressTable(ev: KeyboardEvent) {
         // if (!this.mouseInTable) return;
         if (ev.keyCode === KEY_TAB) {
             ev.preventDefault();
@@ -971,7 +1023,10 @@ export class TimTableController extends DestroyScope implements IController {
      * Deals with key events inside the table.
      * @param {KeyboardEvent} ev KeyboardEvent
      */
-    private async keyDownPressedTable(ev: KeyboardEvent) {
+    private keyUpTable(ev: KeyboardEvent) {
+        // this.shiftDown = ev.shiftKey;
+        this.shiftDown = ev.shiftKey;
+
         if (!this.mouseInTable) {
             return;
         }
@@ -1050,7 +1105,7 @@ export class TimTableController extends DestroyScope implements IController {
      */
     private handleArrowMovement(ev: KeyboardEvent): boolean {
         const parId = getParId(this.element.parents(".par"));
-        if (!this.editing || !this.viewctrl || !parId || (this.currentCell && this.currentCell.editorOpen)) {
+        if (!(this.editing || this.task) || !this.viewctrl || !parId || (this.currentCell && this.currentCell.editorOpen)) {
             return false;
         }
 
@@ -1185,6 +1240,7 @@ export class TimTableController extends DestroyScope implements IController {
             cell = this.cellDataMatrix[rowi][coli];
         }
         this.activeCell = {row: rowi, col: coli};
+        if ( !this.shiftDown ) this.startCell = {row: rowi, col: coli};
         this.scope.$applyAsync();
     }
 
@@ -1313,8 +1369,8 @@ export class TimTableController extends DestroyScope implements IController {
         const tableCellOffset = tablecell.offset();
 
         let cell2y = 0;
-        if ( rowi > 0 ) {
-            const cell2 = this.cellDataMatrix[rowi-1][coli];
+        if (rowi > 0) {
+            const cell2 = this.cellDataMatrix[rowi - 1][coli];
             if (cell2.renderIndexX !== undefined && cell2.renderIndexY !== undefined) {
                 const tablecell2 = table.children("tbody").last().children("tr").eq(cell2.renderIndexY).children("td");
                 const off2 = tablecell2.offset();
@@ -1334,7 +1390,7 @@ export class TimTableController extends DestroyScope implements IController {
             off = tablecell.offset();
             if (!off) { return; }
         }*/
-        if (!tableCellOffset ) return;
+        if (!tableCellOffset) return;
         if (!table) return;
 
         // this.element.find(".editInput").offset(off);
@@ -1343,75 +1399,85 @@ export class TimTableController extends DestroyScope implements IController {
         inlineEditorDiv[0].style.position = "relative";
         const edit = this.element.find(".editInput");
         await $timeout();
-        edit.focus();
+        // edit.focus();
         const toff = table.offset()!;
-        inlineEditorDiv.offset({left:toff.left, top:toff.top+ table.height()!});
-        if ( this.data.editorBottom ) return;
-        edit.offset(tableCellOffset);
+        inlineEditorDiv.offset({left: toff.left, top: toff.top + table.height()!});
+        try {
+            if (this.data.editorBottom) {
+                // edit.focus();
+                return;
+            }
+            edit.offset(tableCellOffset);
 
-        const editOffset = edit.offset();
-        const tableCellWidth = tablecell.innerWidth();
+            const editOffset = edit.offset();
+            const tableCellWidth = tablecell.innerWidth();
 
-        // const editOuterWidth = edit.outerWidth();
+            // const editOuterWidth = edit.outerWidth();
 
-        const minEditWidth = 20;
+            const minEditWidth = 20;
 
-        let editOuterWidth;
-        if (tableCellWidth) {
-            editOuterWidth = Math.max(minEditWidth, tableCellWidth);
-        } else {
-            editOuterWidth = minEditWidth;
-        }
+            let editOuterWidth;
+            if (tableCellWidth) {
+                editOuterWidth = Math.max(minEditWidth, tableCellWidth);
+            } else {
+                editOuterWidth = minEditWidth;
+            }
 
-        edit.width(editOuterWidth);
-        edit.height(tablecell.innerHeight()!-2);
+            edit.width(editOuterWidth);
+            edit.height(tablecell.innerHeight()! - 2);
 
-        const inlineEditorButtons = this.element.find(".inlineEditorButtons");
-        if ( this.data.editorButtonsBottom ) {
-            inlineEditorButtons.offset({left:toff.left, top:toff.top + table.height()! + 5});
-            return;
-        }
-        if ( this.data.editorButtonsRight ) {
-            inlineEditorButtons.offset({left:tableCellOffset.left + editOuterWidth + 5, top:tableCellOffset.top + 5});
-            return;
-        }
-        const editOuterHeight = edit.outerHeight();
-        const buttonOpenBigEditor = this.element.find(".buttonOpenBigEditor");
-        let h = buttonOpenBigEditor.height() || 20;
-        if (editOffset && editOuterHeight && tableCellOffset && editOuterWidth) {
-            const mul = rowi == 0 ? 1 : 2;
-            inlineEditorButtons.offset({
-                left: tableCellOffset.left,
-                top: (cell2y ? cell2y : editOffset.top) - h - 5,
-            });
-            /*
+            const inlineEditorButtons = this.element.find(".inlineEditorButtons");
+            if (this.data.editorButtonsBottom) {
+                inlineEditorButtons.offset({left: toff.left, top: toff.top + table.height()! + 5});
+                return;
+            }
+            if (this.data.editorButtonsRight) {
+                inlineEditorButtons.offset({
+                    left: tableCellOffset.left + editOuterWidth + 5,
+                    top: tableCellOffset.top + 5
+                });
+                return;
+            }
+            const editOuterHeight = edit.outerHeight();
             const buttonOpenBigEditor = this.element.find(".buttonOpenBigEditor");
-            buttonOpenBigEditor.offset({
-                left: tableCellOffset.left + editOuterWidth,
-                top: editOffset.top + editOuterHeight ,
-            });
+            let h = buttonOpenBigEditor.height() || 20;
+            if (editOffset && editOuterHeight && tableCellOffset && editOuterWidth) {
+                const mul = rowi == 0 ? 1 : 2;
+                inlineEditorButtons.offset({
+                    left: tableCellOffset.left,
+                    top: (cell2y ? cell2y : editOffset.top) - h - 5,
+                });
+                /*
+                const buttonOpenBigEditor = this.element.find(".buttonOpenBigEditor");
+                buttonOpenBigEditor.offset({
+                    left: tableCellOffset.left + editOuterWidth,
+                    top: editOffset.top + editOuterHeight ,
+                });
 
-            const buttonOpenBigEditorWidth = buttonOpenBigEditor.outerWidth();
-            const buttonOpenBigEditorOffset = buttonOpenBigEditor.offset();
+                const buttonOpenBigEditorWidth = buttonOpenBigEditor.outerWidth();
+                const buttonOpenBigEditorOffset = buttonOpenBigEditor.offset();
 
-            const buttonAcceptEdit = this.element.find(".buttonAcceptEdit");
+                const buttonAcceptEdit = this.element.find(".buttonAcceptEdit");
 
-            buttonAcceptEdit.offset({
-                left: tableCellOffset.left + editOuterWidth,
-                top: editOffset.top,
-            });
-
-            const buttonAcceptEditOffset = buttonAcceptEdit.offset();
-            const buttonAcceptEditWidth = buttonAcceptEdit.outerWidth();
-
-            if (buttonAcceptEditOffset && buttonAcceptEditWidth) {
-                this.element.find(".buttonCloseSmallEditor").offset({
-                    left: buttonAcceptEditOffset.left + buttonAcceptEditWidth,
+                buttonAcceptEdit.offset({
+                    left: tableCellOffset.left + editOuterWidth,
                     top: editOffset.top,
                 });
-            }
-            */
 
+                const buttonAcceptEditOffset = buttonAcceptEdit.offset();
+                const buttonAcceptEditWidth = buttonAcceptEdit.outerWidth();
+
+                if (buttonAcceptEditOffset && buttonAcceptEditWidth) {
+                    this.element.find(".buttonCloseSmallEditor").offset({
+                        left: buttonAcceptEditOffset.left + buttonAcceptEditWidth,
+                        top: editOffset.top,
+                    });
+                }
+                */
+            }
+
+        }finally {
+            edit.focus();
         }
     }
 
@@ -1742,12 +1808,10 @@ export class TimTableController extends DestroyScope implements IController {
         }
     }
 
-    async setCellBackgroundColor(value: string) {
-        this.setCellStyleAttribute("setCellBackgroundColor", "backgroundColor", value);
-    }
 
     async setCell(value: object) {
         for (const [key, s] of Object.entries(value)) {
+            if (key.indexOf("$$") == 0) continue;
             if (key === "cell") {
                 await this.saveToCurrentCell(s);
             } else {
@@ -1756,9 +1820,30 @@ export class TimTableController extends DestroyScope implements IController {
         }
     }
 
-    async setCellTextAlign(value: string) {
-        this.setCellStyleAttribute("setCellTextAlign", "textAlign", value);
+
+    async addToTemplates() {
+        if (!this.viewctrl || !this.activeCell) {
+            return;
+        }
+        const rowId = this.activeCell.row;
+        const colId = this.activeCell.col;
+        let obj = this.cellDataMatrix[rowId][colId];
+        let templ: any = {}
+        for (let key in obj) {
+            if ( key.indexOf("render") == 0 || key.indexOf("border") == 0) continue;
+            if ( key.indexOf("$$") == 0 ) continue;
+            if ( key == "cell" && !obj[key] ) continue;
+            templ[key] = obj[key];
+        }
+        if ( typeof this.data.toolbarTemplates === 'undefined') this.data.toolbarTemplates = [];
+        for (let i in this.data.toolbarTemplates) {
+            let ob = this.data.toolbarTemplates[i];
+            delete ob["$$hashKey"];
+            if (JSON.stringify(ob) == JSON.stringify(templ)) return;
+        }
+        this.data.toolbarTemplates.push(templ);
     }
+
 
     /**
      * Tells the server to set a cell style attribute.
@@ -1779,16 +1864,30 @@ export class TimTableController extends DestroyScope implements IController {
         const docId = this.viewctrl.item.id;
         const rowId = this.activeCell.row;
         const colId = this.activeCell.col;
+        let x1 = colId;
+        let x2 = colId;
+        let y1 = rowId;
+        let y2 = rowId;
+        if ( this.startCell ) {
+            x1 = Math.min(this.activeCell.col, this.startCell.col);
+            x2 = Math.max(this.activeCell.col, this.startCell.col);
+            y1 = Math.min(this.activeCell.row, this.startCell.row);
+            y2 = Math.max(this.activeCell.row, this.startCell.row);
+        }
 
         if (this.task) {
-            this.setUserAttribute(rowId, colId, key, value);
+            for (let y = y1; y <=y2; y++)
+                for (let x = x1; x <=x2; x++)
+                    this.setUserAttribute(y, x, key, value);
             return;
         }
 
-        let data = {docId, parId, rowId, colId, [key]: value};
-        if ( route === "setCell") data = {docId, parId, rowId, colId, key: key, value: value};
+        let data = {docId, parId, y1, y2, x1, x2, [key]: value};
+        if ( route === "setCell") data = {docId, parId, y1, y2, x1, x2, key: key, value: value};
         const response = await $http.post<TimTable>("/timTable/" + route, data);
+        const toolbarTemplates = this.data.toolbarTemplates;
         this.data = response.data;
+        this.data.toolbarTemplates = toolbarTemplates;
         this.reInitialize();
     }
 
@@ -1808,6 +1907,14 @@ export class TimTableController extends DestroyScope implements IController {
         /*if (this.currentCell && this.currentCell.editorOpen) {
             return this.currentCell.row === rowi && this.currentCell.col === coli;
         }*/
+
+        if (this.activeCell && this.startCell) {
+            const x1 = Math.min(this.activeCell.col, this.startCell.col);
+            const x2 = Math.max(this.activeCell.col, this.startCell.col);
+            const y1 = Math.min(this.activeCell.row, this.startCell.row);
+            const y2 = Math.max(this.activeCell.row, this.startCell.row);
+            return x1 <= coli && coli <= x2 && y1 <= rowi && rowi <= y2;
+        }
 
         if (this.activeCell) {
             return this.activeCell.row === rowi && this.activeCell.col === coli;
