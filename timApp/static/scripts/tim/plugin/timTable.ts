@@ -48,6 +48,7 @@ export interface TimTable {
     toolbarTemplates?: any;
     rowCount?: number;
     colCount?: number;
+    hid: any;
 }
 
 export interface ITable { // extends ITableStyles
@@ -204,7 +205,6 @@ export class TimTableController extends DestroyScope implements IController {
     private activeCell?: {row: number, col: number};
     private startCell?: {row: number, col: number};
     public shiftDown: boolean = false;
-    private scount: number = 0;
 
     /**
      * Stores the last direction that the user moved towards with arrow keys
@@ -229,6 +229,7 @@ export class TimTableController extends DestroyScope implements IController {
         this.addRowFromToolbar = this.addRowFromToolbar.bind(this);
         this.removeColumnFromToolbar = this.removeColumnFromToolbar.bind(this);
         this.removeRowFromToolbar = this.removeRowFromToolbar.bind(this);
+        // if ( !this.data.hid ) this.data.hid = {};
     }
 
     getTaskUrl(): string {
@@ -264,6 +265,13 @@ export class TimTableController extends DestroyScope implements IController {
     protected getRootElement() {
         return this.element[0];
     }
+
+
+    private getHid(): any {
+        if ( !this.data.hid ) this.data.hid = {};
+        return this.data.hid;
+    }
+
 
     /**
      * Set listener and initializes tabledatablock
@@ -1032,6 +1040,7 @@ export class TimTableController extends DestroyScope implements IController {
         }
 
         if (ev.keyCode === KEY_F2) {
+            if ( this.getHid().edit ) return;
             const modal: CellEntity = {
                 cell: "",
             };
@@ -1280,6 +1289,7 @@ export class TimTableController extends DestroyScope implements IController {
      * @param event The mouse event, if the cell was clicked.
      */
     private async openCellForEditing(cell: CellEntity, rowi: number, coli: number, event?: MouseEvent) {
+
         const parId = getParId(this.element.parents(".par"));
         if (!this.isInEditMode() || !this.viewctrl || !parId || (this.currentCell && this.currentCell.editorOpen)) {
             return;
@@ -1293,6 +1303,7 @@ export class TimTableController extends DestroyScope implements IController {
 
         const activeCell = this.activeCell;
         this.setActiveCell(rowi, coli);
+        if ( this.getHid().edit ) return;
         if (this.currentCell ||
             (activeCell && this.activeCell &&
                 activeCell.row === this.activeCell.row && activeCell.col === this.activeCell.col)) {
