@@ -5,20 +5,17 @@ import {Type} from "io-ts/lib";
 import {Binding} from "../util/utils";
 
 export interface IPluginAttributes<Markup extends IGenericPluginMarkup, State> {
-    markup: Markup; // not in csplugin?
+    markup: Markup;
     doLazy: boolean;
     anonymous: boolean;
     info: {};
     preview: boolean;
-    show_result: boolean; // not in csplugin?
-    state: State | null; // not in csplugin?
+    show_result: boolean; // not in csplugin
+    state: State | null; // not in csplugin
     targetFormat: string;
     taskID: string;
     taskIDExt: string;
     userPrint: boolean;
-    // csplugin has these:
-    // user_id: string
-    // review: boolean
 }
 
 // Attributes that are valid for all plugins.
