@@ -43,6 +43,13 @@ class MarkdownConverterTest(TimDbTest):
                          msg='If this test fails, you probably do not have up-to-date Dumbo. '
                              'Run ./pull_all.sh to update.')
 
+    def test_unsafe_not_allowed(self):
+        self.assertEqual("""
+<div class="error">
+Syntax error in template: access to attribute &#8216;<strong>class</strong>&#8217; of &#8216;str&#8217; object is unsafe.
+</div>
+        """.strip(), md_to_html("""%%''.__class__.__mro__%%""", macro_delimiter='%%', macros={}))
+
     def test_markup_md_conversion(self):
         self.assertEqual({'test1': 'value1', 'test2': '<em>value2</em>'}, timApp.markdown.dumboclient.call_dumbo(
             {'test1': 'value1', 'test2': 'md:*value2*'}, path='/mdkeys'))

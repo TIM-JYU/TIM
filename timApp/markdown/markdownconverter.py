@@ -3,7 +3,8 @@ import re
 from typing import Optional, Dict
 
 from flask import g
-from jinja2 import Environment, TemplateSyntaxError
+from jinja2 import TemplateSyntaxError
+from jinja2.sandbox import SandboxedEnvironment
 from lxml import html, etree
 
 from timApp.document.yamlblock import YamlBlock
@@ -103,14 +104,16 @@ def expand_macros(text: str, macros, settings, macro_delimiter: Optional[str]=No
 
 
 def create_environment(macro_delimiter: str):
-    env = Environment(variable_start_string=macro_delimiter,
-                      variable_end_string=macro_delimiter,
-                      comment_start_string='{!!!',
-                      comment_end_string='!!!}',
-                      block_start_string='{%',
-                      block_end_string='%}',
-                      lstrip_blocks=True,
-                      trim_blocks=True)
+    env = SandboxedEnvironment(
+        variable_start_string=macro_delimiter,
+        variable_end_string=macro_delimiter,
+        comment_start_string='{!!!',
+        comment_end_string='!!!}',
+        block_start_string='{%',
+        block_end_string='%}',
+        lstrip_blocks=True,
+        trim_blocks=True,
+    )
     env.filters['Pz'] = Pz
 
     # During some markdown tests, there is no request context and therefore no g object.
