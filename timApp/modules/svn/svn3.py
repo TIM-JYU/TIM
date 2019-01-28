@@ -42,8 +42,7 @@ from fileParams import get_param, get_surrounding_headers2, is_user_lazy, add_la
     replace_template_param, replace_template_params, query_params_to_map_check_parts, encode_json_data, make_lazy, \
     get_params, do_headers, post_params, multi_post_params, get_chache_keys, clear_cache, get_template, join_dict, \
     get_all_templates, file_to_string, get_file_to_output, get_surrounding_md_headers, get_surrounding_headers, \
-    get_surrounding_md_headers2
-
+    get_surrounding_md_headers2, QueryClass
 
 PORT = 5000
 
@@ -258,7 +257,7 @@ def video_html(query):
     return s
 
 
-def get_video_html(query):
+def get_video_html(query: QueryClass):
     """Muodostaa videon näyttämiseksi tarvittavan HTML-koodin.
 
     :param query: pyynnön paramterit
@@ -459,7 +458,7 @@ class TIMShowFileServer(http.server.BaseHTTPRequestHandler):
     def wout(self, s):
         self.wfile.write(s.encode("UTF-8"))
 
-    def do_all(self, query):
+    def do_all(self, query: QueryClass):
         # print(self.path)
         # print(self.headers)
         # print query
@@ -575,7 +574,7 @@ def get_md(self, query):
     return s
 
 
-def get_html(self, query, show_html):
+def get_html(self: http.server.BaseHTTPRequestHandler, query: QueryClass, show_html: bool):
     is_image = self.path.find('/image/') >= 0
     is_video = self.path.find('/video/') >= 0
     is_pdf = self.path.find('/pdf/') >= 0

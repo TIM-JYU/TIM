@@ -1,27 +1,26 @@
-# -*- coding: utf-8 -*-
-__author__ = 'vesal,iltapeur,mikkalle'
 """
 Module for serving TIM imagex plugin.
 See: https://tim.it.jyu.fi/view/tim/TIMin%20kehitys/Plugin%20development
 Serving from local port 5000
 """
-
+import json
 import sys
+
+from geometry import is_inside
+
 sys.path.insert(0, '/py')  # /py on mountattu docker kontissa /opt/tim/timApp/modules/py -hakemistoon
 
-# yaml templates and other methods imported from here.
-from http_params import *
 # ImagexServer is inherited from this. Contains methods like do_GET, do_PUT, etc generic server stuff.
 import tim_server
 # Library for checking if a point is inside a shape.
-from geometry import*
-from fileParams import encode_json_data
+from fileParams import encode_json_data, make_lazy, NOLAZY, replace_template_params, is_review, get_all_templates, \
+    do_headers, QueryClass, get_param, get_json_param, query_params_to_map, get_query_from_json
 
 PORT = 5000
 PROGDIR = "."
 
 
-def get_lazy_imagex_html(query: QueryParams) -> str:
+def get_lazy_imagex_html(query: QueryClass) -> str:
     """Returns the lazy version of html before the real template is given by javascript.
 
     :param query: query params where lazy options can be read
@@ -30,7 +29,7 @@ def get_lazy_imagex_html(query: QueryParams) -> str:
     """
     s = '<div class="csRunDiv no-popup-menu">'
     s += replace_template_params(query, "<h4>{{header}}</h4>", "header")
-    s += replace_template_params(query, '<p class="stem" >{{stem}}</p>', "stem")
+    s += replace_template_params(query, '<p class="stem">{{stem}}</p>', "stem")
     s += '</div>'
     return s
 
@@ -38,7 +37,7 @@ def get_lazy_imagex_html(query: QueryParams) -> str:
 class ImagexServer(tim_server.TimServer):
     """Class for imagex server that can handle the TIM routes."""
 
-    def get_html(self, query: QueryParams) -> str:
+    def get_html(self, query: QueryClass) -> str:
         print("--QUERYHTML--" + str(query))
         """Return the html for this query. Params are dumbed as hexstring to avoid problems with html input and so on.
 
@@ -48,9 +47,9 @@ class ImagexServer(tim_server.TimServer):
         """
         # print("--Query--"+ query.dump() + "--Query--" ) # uncomment to see query
         # Get user id from session
-        user_id = query.get_param("user_id", "--")
-        preview = query.get_param("preview", False)
-        hiddentargets = query.get_param("-targets", None)
+        user_id = get_param(query, "user_id", "--")
+        preview = get_param(query, "preview", False)
+        hiddentargets = get_param(query, "-targets", None)
 
         if is_review(query):
             usercode = "image"
@@ -61,22 +60,22 @@ class ImagexServer(tim_server.TimServer):
 
         # Check if this is in preview. If it is, set targets as visible.
         if preview and hiddentargets:
-            jso2 = query.to_json(accept_nonhyphen)
+            jso2 = query_params_to_map(query.query)
             jso2['markup']['targets'] = hiddentargets
-            query = QueryParams(jso2)
+            query = get_query_from_json(jso2)
 
         # do the next if Anonymoys is not allowed to use plugins
         if user_id == "Anonymous":
-            allow_anonymous = str(query.get_param("anonymous", "false")).lower()
+            allow_anonymous = str(get_param(query, "anonymous", "false")).lower()
             # SANITOIDAAN markupista tuleva syöte
-            jump = query.get_param("taskID", "")
+            jump = get_param(query, "taskID", "")
             # print("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX jump: ", jump)
             if allow_anonymous != "true":
                 return NOLAZY + '<p class="pluginError"><a href="/login?anchor=' + jump +\
                        '">Please login to interact with this component</a></p><pre class="csRunDiv">' + \
-                       query.get_param("byCode", "") + '</pre>' # imageX does not have byCode???
+                       get_param(query, "byCode", "") + '</pre>' # imageX does not have byCode???
 
-        jso = query.to_json(accept_nonhyphen)
+        jso = query_params_to_map(query.query)
         runner = 'imagex-runner'
         attrs = json.dumps(jso)
         s = f'<{runner} json="{encode_json_data(attrs)}"></{runner}>'
@@ -103,19 +102,7 @@ class ImagexServer(tim_server.TimServer):
         ret.update(templs)
         return ret
 
-    def gettargetattr(self, prevtarget, defaults, attr, default):
-        """Get attr for target.
-
-        First checked from default, then from the previous target. if neither is found return default.
-
-        """
-        if str(attr) in defaults:
-            return defaults[str(attr)]
-        if str(attr) in prevtarget:
-            return prevtarget[str(attr)]
-        return default
-
-    def do_answer(self, query: QueryParams):
+    def do_answer(self, query: QueryClass):
         """Do answer route. Check if images are dragged to correct targets. Award points on whether they are or aren't.
 
         :param query: post and get params
@@ -132,7 +119,7 @@ class ImagexServer(tim_server.TimServer):
         err = ""
 
         previous_value = {}
-        defaults = query.get_param("defaults", {})
+        defaults = get_param(query, "defaults", {})
 
         # Find value for key from value, previous or defaults. If nowhere, return default_value.
         def get_value_def(value, key, default_value, keep_empty_as_none=False):
@@ -175,21 +162,21 @@ class ImagexServer(tim_server.TimServer):
                 return d[k]
             return ret
 
-        # print("--state--" + str(query.get_param("state",None)))
+        # print("--state--" + str(get_param(query, "state",None)))
         # Student points
         points = 0
         # get default values for targets. If values arent told for targets get them from here or from previous
         # target.
         # If all tries have been used just return.
-        max_tries = int(query.get_param("answerLimit", 1000000))
-        tries = int(query.get_json_param("info", "earlier_answers", 0))
+        max_tries = int(get_param(query, "answerLimit", 1000000))
+        tries = int(get_json_param(query, "info", "earlier_answers", 0))
 
         # Targets dict
         try:
-            targets = list(query.get_param("targets", None))
+            targets = list(get_param(query, "targets", None))
         except:
             targets = []
-        drags = query.get_json_param("input", "drags", None)
+        drags = get_json_param(query, "input", "drags", None)
         gottenpoints = {}
         gottenpointsobj = {}
         # For tracking indexes
@@ -232,8 +219,8 @@ class ImagexServer(tim_server.TimServer):
 
         answer = {}
         # Check if getting finalanswer from excercise is allowed and if client asked for it.
-        finalanswer = query.get_param("finalanswer", False)
-        finalanswerquery = query.get_json_param("input", "finalanswerquery", False)
+        finalanswer = get_param(query, "finalanswer", False)
+        finalanswerquery = get_json_param(query, "input", "finalanswerquery", False)
 
         if tries >= max_tries and (finalanswer == False or finalanswerquery == False):
             out = "You have exceeded the answering limit or have seen the answer"
@@ -263,7 +250,7 @@ class ImagexServer(tim_server.TimServer):
             answer['studentanswers'] = gottenpoints
             print(answer)
         tries = tries + 1
-        free_hand_data = query.get_json_param("input", "freeHandData", None)
+        free_hand_data = get_json_param(query, "input", "freeHandData", None)
 
         # Save user input and points to markup
         save = {"userAnswer": {"drags": drags}}
@@ -284,6 +271,5 @@ class ImagexServer(tim_server.TimServer):
         self.wout(sresult)
 
 
-# Start plugin.
 if __name__ == '__main__':
-    tim_server.start_server(ImagexServer, 'imagex')
+    tim_server.start_server(ImagexServer)

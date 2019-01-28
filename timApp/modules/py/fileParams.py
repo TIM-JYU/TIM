@@ -1,4 +1,5 @@
-# -*- coding:utf-8 -*-
+import http.server
+from typing import List, Any, Dict, Callable
 from urllib.request import urlopen
 import re
 import html
@@ -26,7 +27,7 @@ class QueryClass:
         self.jso = None
 
 
-def check_key(query, key):
+def check_key(query: QueryClass, key: str):
     # return key
     key2 = "-" + key
     if key in query.query:
@@ -59,7 +60,7 @@ def normalize_bool(value):
     return value
 
 
-def get_param(query, key, default):
+def get_param(query: QueryClass, key, default):
     key = check_key(query, key)
     dvalue = default
     if key in query.query:
@@ -86,7 +87,7 @@ def get_param(query, key, default):
     return normalize_bool(value)
 
 
-def get_param_table(query, key):
+def get_param_table(query: QueryClass, key: str):
     value = get_param(query, key, None)
     if not value:
         return None
@@ -97,7 +98,7 @@ def get_param_table(query, key):
     return value
 
 
-def get_2_items(js, key1, key2, def1=None, def2=None):
+def get_2_items(js, key1: str, key2: str, def1=None, def2=None):
     if not isinstance(js, dict):
         return js, def2
     value1 = js.get(key1, def1)
@@ -105,7 +106,7 @@ def get_2_items(js, key1, key2, def1=None, def2=None):
     return value1, value2
 
 
-def get_param_del(query, key, default):
+def get_param_del(query: QueryClass, key: str, default: Any):
     key = check_key(query, key)
     if key not in query.query:
         if query.jso is None:
@@ -124,13 +125,13 @@ def get_param_del(query, key, default):
     return value
 
 
-def do_matcher(key):
+def do_matcher(key: str):
     if not key:
         return False
     return re.compile(key)
 
 
-def check(matcher, line):
+def check(matcher, line: str):
     if not matcher:
         return False
     match = matcher.search(line)
@@ -170,7 +171,7 @@ def get_json_param(jso, key1, key2, default):
         return default
 
 
-def get_scan_value(s):
+def get_scan_value(s: str):
     direction = 1
     if s:
         if s[0] == '-':
@@ -182,7 +183,7 @@ def get_scan_value(s):
     return direction, match
 
 
-def scan_lines(lines, n, i, scanner, direction):
+def scan_lines(lines: List[str], n: int, i: int, scanner, direction: int):
     if not scanner:
         return i
     i += direction
@@ -222,7 +223,7 @@ def get_chache_keys():
 
 
 # noinspection PyBroadException
-def get_url_lines(url):
+def get_url_lines(url: str):
     global cache
     # print("========= CACHE KEYS ==========\n", get_chache_keys())
     if url in cache:
@@ -282,7 +283,7 @@ def get_url_lines(url):
 
 
 # noinspection PyBroadException
-def get_url_lines_as_string(url):
+def get_url_lines_as_string(url: str):
     global cache
     cachename = "lines_" + url
     diskcache = CACHE_DIR + cachename.replace('/', '_').replace(':', '_')
@@ -340,7 +341,7 @@ def get_url_lines_as_string(url):
     return result
 
 
-def replace_random(query, s):
+def replace_random(query: QueryClass, s):
     if not hasattr(query, 'randomcheck'):
         return s
     result = s
@@ -352,7 +353,7 @@ def replace_random(query, s):
     return result
 
 
-def do_escape(s):
+def do_escape(s: str):
     line = html.escape(s)
     # line = line.replace("{","&#123;")
     #  because otherwise problems with angular {{, no need if used inside ng-non-bindable
@@ -362,7 +363,7 @@ def do_escape(s):
 
 class FileParams:
 
-    def __init__(self, query, nr, url):  # , **defs):
+    def __init__(self, query: QueryClass, nr: str, url: str):  # , **defs):
         self.url = get_param(query, "file" + nr, "")  # defs.get('file',""))
         self.start = do_matcher(get_param(query, "start" + nr, "").replace("\\\\", "\\"))
         self.start_scan_dir, self.start_scan = get_scan_value(get_param(query, "startscan" + nr, ""))
@@ -498,7 +499,7 @@ def get_params(self):
     return result
 
 
-def get_file_to_output(query, show_html):
+def get_file_to_output(query: QueryClass, show_html: bool):
     try:
         p0 = FileParams(query, "", "")
         # if p0.url == "":
@@ -518,29 +519,13 @@ def get_file_to_output(query, show_html):
         return str(e)
 
 
-def join_file_parts(parts):
-    s = ""
-    for i in range(0, len(parts)):
-        s = s + parts[i]
-
-    return s
-
 number_of_multi_html_reqs = 0
 
 
-def multi_post_params(self):
+def multi_post_params(self) -> List[QueryClass]:
     content_length = int(self.headers['Content-Length'])
     f = self.rfile.read(content_length)
-
-    # print(f)
-    # print(type(f))
     u = f.decode("UTF8")
-
-    # uncomment to get request to file /tmps/mhx.json
-    # global number_of_multi_html_reqs
-    # number_of_multi_html_reqs += 1
-    # with codecs.open("/tmps/mh%d.json" % number_of_multi_html_reqs, "w", "utf-8") as fj: fj.write(u)
-
     jsos = json.loads(u)
     results = []
     for jso in jsos:
@@ -548,7 +533,7 @@ def multi_post_params(self):
     return results
 
 
-def get_query_from_json(jso):
+def get_query_from_json(jso) -> QueryClass:
     result = QueryClass()
     result.jso = jso
     for field, value in result.jso.items():
@@ -557,7 +542,7 @@ def get_query_from_json(jso):
     return result
 
 
-def post_params(self):
+def post_params(self: http.server.BaseHTTPRequestHandler) -> QueryClass:
     # print "postParams ================================================"
     # print self
     # pprint(self.__dict__,indent=2)
@@ -570,14 +555,6 @@ def post_params(self):
         content_type = self.headers['Content-Type']
     if 'content-cype' in self.headers:
         content_type = self.headers['content-type']
-    '''
-    form = cgi.FieldStorage(
-        fp=self.rfile,
-        headers=self.headers,
-        environ={'REQUEST_METHOD': 'POST',
-                 'CONTENT_TYPE': content_type
-        })
-    '''
 
     f = self.rfile.read(content_length)
     # print(f)
@@ -610,7 +587,7 @@ def post_params(self):
     return result
 
 
-def file_to_string(name):
+def file_to_string(name: str):
     fr = codecs.open(name, encoding="utf-8-sig")
     lines = fr.readlines()
     result = ""
@@ -621,7 +598,7 @@ def file_to_string(name):
     return result
 
 
-def query_params_to_angular(query):
+def query_params_to_angular(query: Dict[str, Any]):
     result = ""
     for field in query.keys():
         result = result + field + "=\"" + query[field][0] + "\";\n"
@@ -639,7 +616,7 @@ def query_params_to_attribute(query, leave_away):
     return result + ""
 
 
-def query_params_to_map(query, transform=None):
+def query_params_to_map(query: Dict[str, Any], transform=None):
     if transform is None:
         def transform(x):
             return x[0]
@@ -653,42 +630,12 @@ def query_params_to_map(query, transform=None):
     return result
 
 
-def query_params_to_map_check_parts(query):
+def query_params_to_map_check_parts(query: QueryClass):
     result = query_params_to_map(query.query)
     return result
 
 
-def query_params_to_json(query):
-    result = json.dumps(query_params_to_map(query))
-    return result
-
-
-def file_to_string_replace_ng(name, what_to_replace, query):
-    fr = codecs.open(name, encoding="utf-8-sig")
-    lines = fr.readlines()
-    result = ""
-    params = query_params_to_angular(query.query)
-    for i in range(0, len(lines)):
-        line = lines[i].replace(what_to_replace, params)
-        result += line
-    fr.close()
-    return result
-
-
-def file_to_string_replace_url(name, what_to_replace, query):
-    fr = codecs.open(name, encoding="utf-8-sig")
-    lines = fr.readlines()
-    # params = queryParamsToURL(query)
-    qmap = query_params_to_map(query.query)
-    params = urllib.parse.urlencode(qmap)
-    result = ""
-    for i in range(0, len(lines)):
-        line = lines[i].replace(what_to_replace, params)
-        result += line
-    fr.close()
-
-
-def string_to_string_replace_url(line, what_to_replace, query):
+def string_to_string_replace_url(line: str, what_to_replace: str, query: QueryClass):
     qmap = query_params_to_map(query.query)
     params = urllib.parse.urlencode(qmap)
     line = line.replace(what_to_replace, params)
@@ -697,19 +644,7 @@ def string_to_string_replace_url(line, what_to_replace, query):
     return line
 
 
-def file_to_string_replace_attribute(name, what_to_replace, query):
-    fr = codecs.open(name, encoding="utf-8-sig")
-    lines = fr.readlines()
-    params = query_params_to_attribute(query.query, None)
-    result = ""
-    for i in range(0, len(lines)):
-        line = lines[i].replace(what_to_replace, params)
-        result += line
-    fr.close()
-    return result
-
-
-def string_to_string_replace_attribute(line, what_to_replace, query):
+def string_to_string_replace_attribute(line: str, what_to_replace: str, query: QueryClass):
     leave_away = None
     if "##USERCODE##" in line:
         leave_away = "byCode"
@@ -737,7 +672,7 @@ attrs = {
 tags = ['a', 'p', 'em', 'strong', 'tt', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'i', 'b', 'code']
 
 
-def get_heading(query, key, def_elem):
+def get_heading(query: QueryClass, key: str, def_elem: str):
     if not query:
         return ""
     # return "kana"
@@ -749,7 +684,7 @@ def get_heading(query, key, def_elem):
     return "<" + def_elem + ">" + h + "</" + def_elem + ">\n"
 
 
-def get_md_heading(query, key, def_elem):
+def get_md_heading(query: QueryClass, key: str, def_elem: str):
     if not query:
         return ""
     # return "kana"
@@ -783,7 +718,7 @@ def get_md_heading(query, key, def_elem):
     #  return result_html
 
 
-def get_surrounding_headers2(query):
+def get_surrounding_headers2(query: QueryClass):
     result = get_heading(query, "header", "h4")
     stem = allow_minimal(get_param(query, "stem", None))
     if stem:
@@ -791,7 +726,7 @@ def get_surrounding_headers2(query):
     return result, get_heading(query, "footer", 'p class="plgfooter"')
 
 
-def get_surrounding_md_headers2(query, header_style, footer_style):
+def get_surrounding_md_headers2(query: QueryClass, header_style, footer_style):
     result = get_md_heading(query, "header", header_style)
     stem = allow_minimal(get_param(query, "stem", None))
     if stem:
@@ -799,7 +734,7 @@ def get_surrounding_md_headers2(query, header_style, footer_style):
     return result, get_md_heading(query, "footer", footer_style)
 
 
-def get_tiny_surrounding_headers(query, inside):
+def get_tiny_surrounding_headers(query: QueryClass, inside):
     result = get_heading(query, "header", "h4")
     stem = tim_sanitize(get_param(query, "stem", None))
     if stem:
@@ -808,7 +743,7 @@ def get_tiny_surrounding_headers(query, inside):
     return result
 
 
-def get_surrounding_headers(query, inside):
+def get_surrounding_headers(query: QueryClass, inside):
     result = get_heading(query, "header", "h4")
     stem = tim_sanitize(get_param(query, "stem", None))
     if stem:
@@ -818,7 +753,7 @@ def get_surrounding_headers(query, inside):
     return result
 
 
-def get_surrounding_md_headers(query, inside, extra):
+def get_surrounding_md_headers(query: QueryClass, inside, extra):
     result = get_md_heading(query, "header", "pluginHeader")
     stem = tim_sanitize(get_param(query, "stem", None))
     if stem:
@@ -829,7 +764,7 @@ def get_surrounding_md_headers(query, inside, extra):
     return result
 
 
-def get_clean_param(query, key, default):
+def get_clean_param(query: QueryClass, key, default):
     s = get_param(query, key, default)
     # return str(s)
     return clean(s)
@@ -980,7 +915,7 @@ NOLAZY = "<!--nolazy-->"
 NEVERLAZY = "NEVERLAZY"
 
 
-def is_lazy(query):
+def is_lazy(query: QueryClass):
     # print(query)
     caller_lazy = get_param(query, "doLazy", NEVERLAZY)
     # print("caller_lazy=",caller_lazy)
@@ -1000,7 +935,7 @@ def is_lazy(query):
     return do_lazy
 
 
-def is_user_lazy(query):
+def is_user_lazy(query: QueryClass):
     caller_lazy = get_param(query, "doLazy", NEVERLAZY)
     # print("caller_lazy=",caller_lazy)
     if caller_lazy == NEVERLAZY:
@@ -1019,7 +954,7 @@ def add_lazy(plugin_html: str) -> str:
     return LAZYSTART + plugin_html + LAZYEND
 
 
-def make_lazy(plugin_html: str, query, htmlfunc) -> str:
+def make_lazy(plugin_html: str, query: QueryClass, htmlfunc: Callable[[QueryClass], str]) -> str:
     """Makes plugin string to lazy.
 
     :param plugin_html: ready html for the plugin
@@ -1035,7 +970,7 @@ def make_lazy(plugin_html: str, query, htmlfunc) -> str:
     return lazy_plugin_html
 
 
-def replace_template_params(query, template: str, cond_itemname: str, itemnames=None) -> str:
+def replace_template_params(query: QueryClass, template: str, cond_itemname: str, itemnames=None) -> str:
     """Replaces all occurances of itemnames and cond_item_name in template by their value in query if  cond_itemname
     exists in query.
 
@@ -1065,7 +1000,7 @@ def replace_template_params(query, template: str, cond_itemname: str, itemnames=
     return result
 
 
-def replace_template_param(query, template: str, cond_itemname: str, default="") -> str:
+def replace_template_param(query: QueryClass, template: str, cond_itemname: str, default="") -> str:
     """Replaces all occurances of itemnames and cond_item_name in template by their value in query if  cond_itemname
     exists in query.
 
@@ -1091,19 +1026,19 @@ def replace_template_param(query, template: str, cond_itemname: str, default="")
     return result
 
 
-def is_review(query):
+def is_review(query: QueryClass):
     # print(query)
     result = get_param(query, "review", False)
     return result
 
 
-def mkdirs(path):
+def mkdirs(path: str):
     if os.path.exists(path):
         return
     os.makedirs(path)
 
 
-def remove(fname):
+def remove(fname: str):
     # noinspection PyBroadException
     try:
         os.remove(fname)
@@ -1111,7 +1046,7 @@ def remove(fname):
         return
 
 
-def remove_before(what, s):
+def remove_before(what: str, s: str):
     # print("=================================== WHAT ==============")
     # print(what, " ", s)
     i = s.find(what)
@@ -1124,7 +1059,7 @@ def remove_before(what, s):
     return s[i + 1:]
 
 
-def tquote(s):
+def tquote(s: str):
     if s.startswith("$"):
         return s
     r = shlex.quote(s)
@@ -1133,7 +1068,7 @@ def tquote(s):
     return r.replace("'", '"')
 
 
-def str_to_int(s, default=0):
+def str_to_int(s: str, default=0):
     try:
         return int(s)
     except:

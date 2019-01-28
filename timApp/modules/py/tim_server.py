@@ -1,22 +1,22 @@
-# -*- coding: utf-8 -*-
-__author__ = 'vesal'
 """
-Base class for TIM-server
-Serving from local port 5000
+Base class for TIM plugin server. THIS IS DEPRECATED, DO NOT USE IN NEW CODE!
+Serving from local port 5000.
 """
-
 import http.server
-import socketserver
-from http_params import *
-import os
+import json
 import logging
+import os
+import socketserver
+
+from fileParams import get_template, file_to_string, do_headers, multi_post_params, get_param, QueryClass, get_params, \
+    post_params
 
 PORT = 5000
 PROGDIR = "."
 
 
 class TimServer(http.server.BaseHTTPRequestHandler):
-    """Base class for TIM-server."""
+    """Base class for TIM-server. THIS IS DEPRECATED, DO NOT USE IN NEW CODE!"""
 
     def __init__(self, request, client_address, _server):
         super().__init__(request, client_address, _server)
@@ -69,7 +69,7 @@ class TimServer(http.server.BaseHTTPRequestHandler):
         querys = multi_post_params(self)
         do_headers(self, "application/json")
         htmls = []
-        self.user_id = querys[0].get_param("user_id", "--")
+        self.user_id = get_param(querys[0], "user_id", "--")
         print("UserId:", self.user_id)
         log(self)
         # print(querys)
@@ -131,10 +131,9 @@ class TimServer(http.server.BaseHTTPRequestHandler):
         do_headers(self, content_type)
         return self.wout(txt)
 
-    def get_html(self, query: QueryParams) -> str:
+    def get_html(self, query: QueryClass) -> str:
         """Return the html for this query. Params are dumbed as hexstring to avoid problems with html input and so on.
 
-        :type query: QueryParams
         :rtype : str
         :param query: get or put params
         :return : html string for this markup
@@ -159,20 +158,19 @@ class TimServer(http.server.BaseHTTPRequestHandler):
         result_str = json.dumps(result_json)
         return self.wout(result_str)
 
-    def do_template(self, query: QueryParams):
+    def do_template(self, query: QueryClass):
         """Gets a template.
 
-        :type query: QueryParams
         :rtype : str
         :param query: get or put params
         :return: template result as json
 
         """
-        tempfile = query.get_param("file", "")
-        tidx = query.get_param("idx", "0")
+        tempfile = get_param(query, "file", "")
+        tidx = get_param(query, "idx", "0")
         return get_template('templates', tidx, tempfile)
 
-    def do_all(self, query: QueryParams):
+    def do_all(self, query: QueryClass):
         """Do all other routes.
 
         :param query: post and get params
@@ -191,10 +189,9 @@ class TimServer(http.server.BaseHTTPRequestHandler):
         do_headers(self, 'text/plain')
         return self.wout("Unknow query: " + self.path)
 
-    def do_answer(self, query: QueryParams):
+    def do_answer(self, query: QueryClass):
         """Do answer route.
 
-        :type query: QueryParams
         :param query: post and get params
         :return: nothing
 
@@ -225,16 +222,16 @@ class ThreadedHTTPServer(socketserver.ThreadingMixIn, http.server.HTTPServer):
 
     print("Debug mode/ThreadingMixIn")
 
+
 # else:
 #    class ThreadedHTTPServer(socketserver.ForkingMixIn, http.server.HTTPServer):
 #        """Handle requests in a separate thread."""
 #    print("Normal mode/ForkingMixIn")
 
 
-def start_server(http_server: TimServer, logname: str):
+def start_server(http_server):
     if not os.path.exists("/var/log"):
         os.makedirs("/var/log")
-    CURRENTDIR = os.getcwd()
     # Logging to file is disabled for now because Docker redirects stdin to an internal JSON file automatically
     # and setting ownership to volumes via Docker is not possible.
     # logging.basicConfig(filename='/var/log/' + logname + '.log', level=logging.INFO, format='%(asctime)s %(message)s')

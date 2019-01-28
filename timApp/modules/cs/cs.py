@@ -287,9 +287,7 @@ def convert_graphviz(query):
             check_fullprogram(query, True)
 
 
-
-
-def get_html(self, ttype, query):
+def get_html(self: 'TIMServer', ttype, query: QueryClass):
     htmldata =  get_param(query, "cacheHtml", None) # check if constant html
     if htmldata:
         return tim_sanitize(htmldata) + get_cache_footer(query)
@@ -477,7 +475,7 @@ def get_html(self, ttype, query):
     return s
 
 
-def handle_common_params(query, tiny, ttype):
+def handle_common_params(query: QueryClass, tiny, ttype):
     if query.hide_program:
         get_param_del(query, 'program', '')
     js = query_params_to_map_check_parts(query)
@@ -849,7 +847,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             logging.exception("Timed out 2 trace")
             self.wout(str(e))
 
-    def do_all_t(self, query):
+    def do_all_t(self, query: QueryClass):
         convert_graphviz(query)
         t1start = time.time()
         t_run_time = 0
