@@ -1706,7 +1706,7 @@ class ImageXController extends PluginBase<t.TypeOf<typeof ImageXMarkup>,
             if (d.pendingImage) {
                 const r = await d.pendingImage;
                 if (r instanceof Event) {
-                    this.imageLoadError = `Failed to load image ${r.srcElement!.getAttribute("src")}`;
+                    this.imageLoadError = `Failed to load image ${(r.target as Element)!.getAttribute("src")}`;
                     break;
                 }
             }
