@@ -138,7 +138,7 @@ def check(matcher, line: str):
     return match
 
 
-def get_json_eparam(jso, key1, key2, default, escape_html_special_chars: bool = True):
+def get_json_eparam(jso: Dict[str, Any], key1: str, key2: str, default: Any, escape_html_special_chars: bool = True):
     # escaped param
     result = get_json_param(jso, key1, key2, default)
     if result is None:
@@ -151,7 +151,7 @@ def get_json_eparam(jso, key1, key2, default, escape_html_special_chars: bool = 
     return html.unescape(result)
 
 
-def get_json_param(jso, key1, key2, default):
+def get_json_param(jso: Dict[str, Any], key1: str, key2: str, default: Any):
     # noinspection PyBroadException
     try:
         if jso is None:

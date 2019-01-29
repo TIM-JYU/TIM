@@ -38,7 +38,6 @@ class ImagexServer(tim_server.TimServer):
     """Class for imagex server that can handle the TIM routes."""
 
     def get_html(self, query: QueryClass) -> str:
-        print("--QUERYHTML--" + str(query))
         """Return the html for this query. Params are dumbed as hexstring to avoid problems with html input and so on.
 
         :param query: get or put params
@@ -76,6 +75,7 @@ class ImagexServer(tim_server.TimServer):
                        get_param(query, "byCode", "") + '</pre>' # imageX does not have byCode???
 
         jso = query_params_to_map(query.query)
+        jso['state'] = query.jso['state']
         runner = 'imagex-runner'
         attrs = json.dumps(jso)
         s = f'<{runner} json="{encode_json_data(attrs)}"></{runner}>'
@@ -169,14 +169,14 @@ class ImagexServer(tim_server.TimServer):
         # target.
         # If all tries have been used just return.
         max_tries = int(get_param(query, "answerLimit", 1000000))
-        tries = int(get_json_param(query, "info", "earlier_answers", 0))
+        tries = int(get_json_param(query.jso, "info", "earlier_answers", 0))
 
         # Targets dict
         try:
             targets = list(get_param(query, "targets", None))
         except:
             targets = []
-        drags = get_json_param(query, "input", "drags", None)
+        drags = get_json_param(query.jso, "input", "drags", None)
         gottenpoints = {}
         gottenpointsobj = {}
         # For tracking indexes
@@ -220,7 +220,7 @@ class ImagexServer(tim_server.TimServer):
         answer = {}
         # Check if getting finalanswer from excercise is allowed and if client asked for it.
         finalanswer = get_param(query, "finalanswer", False)
-        finalanswerquery = get_json_param(query, "input", "finalanswerquery", False)
+        finalanswerquery = get_json_param(query.jso, "input", "finalanswerquery", False)
 
         if tries >= max_tries and (finalanswer == False or finalanswerquery == False):
             out = "You have exceeded the answering limit or have seen the answer"
@@ -250,7 +250,7 @@ class ImagexServer(tim_server.TimServer):
             answer['studentanswers'] = gottenpoints
             print(answer)
         tries = tries + 1
-        free_hand_data = get_json_param(query, "input", "freeHandData", None)
+        free_hand_data = get_json_param(query.jso, "input", "freeHandData", None)
 
         # Save user input and points to markup
         save = {"userAnswer": {"drags": drags}}
