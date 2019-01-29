@@ -265,18 +265,16 @@ export interface RightAnswerT extends t.TypeOf<typeof RightAnswer> {
 export const ImageXAll = t.clean(t.intersection([
     t.partial({
         preview: t.boolean,
-        state: t.union([
-            t.null,
-            t.partial({
-                freeHandData: t.array(LineSegment),
-                userAnswer: t.partial({
-                    drags: t.array(t.type({
-                        did: t.string,
-                        id: t.string,
-                        position: ValidCoord,
-                    })),
-                }),
-            })]),
+        state: nullable(t.partial({
+            freeHandData: t.array(LineSegment),
+            userAnswer: t.partial({
+                drags: t.array(t.type({
+                    did: t.string,
+                    id: t.string,
+                    position: ValidCoord,
+                })),
+            }),
+        })),
     }),
     t.type({
         info: nullable(t.type({earlier_answers: t.Integer})),
