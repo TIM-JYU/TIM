@@ -58,7 +58,7 @@ class PaliController extends PluginBase<t.TypeOf<typeof PaliMarkup>, t.TypeOf<ty
 
     $onInit() {
         super.$onInit();
-        this.userword = this.attrsall.userword || "";
+        this.userword = this.attrsall.userword || this.attrs.initword || "";
         this.modelOpts = {debounce: this.autoupdate};
         this.checkPalindrome();
     }
@@ -73,6 +73,14 @@ class PaliController extends PluginBase<t.TypeOf<typeof PaliMarkup>, t.TypeOf<ty
 
     get inputplaceholder() {
         return this.attrs.inputplaceholder || null;
+    }
+
+    get inputstem() {
+        return this.attrs.inputstem || null;
+    }
+
+    get cols() {
+        return this.attrs.cols;
     }
 
     checkPalindrome() {
@@ -132,7 +140,7 @@ paliApp.component("paliRunner", {
 <div class="csRunDiv no-popup-menu">
     <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
     <p ng-if="::$ctrl.stem" class="stem">{{::$ctrl.stem}}</p>
-    <div><label>{{::$ctrl.inputstem}} <span>
+    <div class="form-inline"><label>{{::$ctrl.inputstem}} <span>
         <input type="text"
                class="form-control"
                ng-model="$ctrl.userword"

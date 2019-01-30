@@ -145,7 +145,7 @@ def render_validationerror(e: ValidationError):
         The following fields have invalid values:
         <ul>
         {% for k, v in errors.items() %}
-        <li>{{k}}: {{v}}</li>
+        <li>{{k}}: {{v[0]}}</li>
         {% endfor %}
         </ul>
         </div>
