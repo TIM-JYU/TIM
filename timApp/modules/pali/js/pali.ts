@@ -6,6 +6,7 @@ import * as t from "io-ts";
 import {GenericPluginMarkup, nullable, PluginBase, withDefault} from "tim/plugin/util";
 import {$http} from "tim/util/ngimport";
 import {to} from "tim/util/utils";
+import {valueDefu} from "tim/util/utils";
 
 const paliApp = angular.module("paliApp", ["ngSanitize"]);
 
@@ -81,6 +82,10 @@ class PaliController extends PluginBase<t.TypeOf<typeof PaliMarkup>, t.TypeOf<ty
 
     get cols() {
         return this.attrs.cols;
+    }
+
+    get resetText() {
+        return valueDefu(this.attrs.resetText, "Reset");
     }
 
     checkPalindrome() {
