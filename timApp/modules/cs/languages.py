@@ -1,4 +1,6 @@
 from subprocess import check_output
+from typing import Optional
+
 import requests
 
 from points import *
@@ -58,7 +60,7 @@ def is_compile_error(out, err):
 
 
 class Language:
-    def __init__(self, query, sourcecode):
+    def __init__(self, query: Optional[QueryClass], sourcecode):
         """
         :param self: object reference
         :param query: query to use
@@ -67,7 +69,9 @@ class Language:
         self.query = query
         self.stdin = None
         self.query = query
-        self.user_id = get_param(query, "user_id", "--")
+        self.user_id = '--'
+        if query.jso:
+            self.user_id = query.jso.get('info', {}).get('user_id', '--')
         self.rndname = generate_filename()
         self.delete_tmp = True
         self.opt = get_param(query, "opt", "")
