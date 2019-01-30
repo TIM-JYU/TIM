@@ -60,6 +60,7 @@ class ImagexServer(tim_server.TimServer):
         # Check if this is in preview. If it is, set targets as visible.
         if preview and hiddentargets:
             jso2 = query_params_to_map(query.query)
+            jso2['state'] = query.jso['state']
             jso2['markup']['targets'] = hiddentargets
             query = get_query_from_json(jso2)
 
