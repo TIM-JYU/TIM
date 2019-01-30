@@ -1004,3 +1004,29 @@ choices:
                          answer_id=aid)
         a: Answer = Answer.query.get(aid)
         self.assertEqual(2, len(a.users_all))
+
+    def test_pali(self):
+        self.login_test1()
+        d = self.create_doc(initial_par="""
+#- {plugin=pali #t}
+needed_len: 6
+        """)
+        e = self.get(d.url, as_tree=True).cssselect('pali-runner')
+        self.assertTrue(e)
+        a = self.post_answer(plugin_type='pali', task_id=f'{d.id}.t', user_input={'userword': 'aaaa'})
+        self.assertEqual('paliOK: Missing data for required field.',
+                         html.fromstring(a['web']['error']).cssselect('li')[0].text)
+        a = self.post_answer(plugin_type='pali', task_id=f'{d.id}.t', user_input={'paliOK': True, 'userword': 'aaaa'})
+        self.assertEqual({'error': 'Wrong length', 'result': 'saved'}, a['web'])
+        a = self.post_answer(plugin_type='pali', task_id=f'{d.id}.t', user_input={'paliOK': True, 'userword': 'aaaaaa'})
+        self.assertEqual({'result': 'saved'}, a['web'])
+
+        p = d.document.get_paragraphs()[0]
+        p.set_markdown("""needed_len: 6\nlazy: true""")
+        p.save()
+
+        h = self.get(d.url, as_tree=True)
+        e = h.cssselect('pali-runner')
+        self.assertFalse(e)
+        e = h.cssselect('.csRunDiv')
+        self.assertTrue(e)
