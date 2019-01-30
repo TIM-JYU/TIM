@@ -1,46 +1,18 @@
 """
 Module for serving TIM example palindrome plugin.
-See: https://tim.jyu.fi/view/tim/TIMin-kehitys/Plugin-development
 """
 import re
-from typing import List, Union
+from typing import Union
 
 import attr
-from flask import Flask, jsonify, render_template_string
+from flask import jsonify, render_template_string
 from marshmallow import Schema, fields, post_load, validates, ValidationError
 from marshmallow.utils import missing
 from webargs.flaskparser import use_args
-from werkzeug.exceptions import UnprocessableEntity
 
 from pluginserver_flask import GenericMarkupModel, GenericMarkupSchema, GenericHtmlSchema, GenericHtmlModel, \
-    GenericAnswerSchema, render_validationerror, GenericAnswerModel, Missing, \
-    make_base64, InfoSchema, render_multihtml
-
-
-def check_letters(word: str, needed_len: int) -> bool:
-    """Checks if word has needed amount of chars.
-
-    :param word: word to check
-    :param needed_len: how many letters needed
-    :return: true if len match
-
-    """
-    s = word.upper()
-    return len(re.sub("[^[A-ZÅÄÖ]", "", s)) == needed_len
-
-
-app = Flask(__name__, static_folder=".", static_url_path="")
-
-
-@app.errorhandler(422)
-def handle_invalid_request(error: UnprocessableEntity):
-    return jsonify({'web': {'error': render_validationerror(ValidationError(message=error.data['messages']))}})
-
-
-@app.before_request
-def print_rq():
-    pass
-    # pprint(request.get_json(silent=True))
+    GenericAnswerSchema, GenericAnswerModel, Missing, \
+    make_base64, InfoSchema, create_app
 
 
 @attr.s(auto_attribs=True)
@@ -136,9 +108,7 @@ class PaliHtmlModel(GenericHtmlModel[PaliInputModel, PaliMarkupModel, PaliStateM
         strict = True
 
 
-class PaliHtmlSchema(GenericHtmlSchema):
-    markup = fields.Nested(PaliMarkupSchema)
-    state = fields.Nested(PaliStateSchema, allow_none=True, required=True)
+class PaliHtmlSchema(PaliAttrs, GenericHtmlSchema):
     info = fields.Nested(InfoSchema, allow_none=True, required=True)
 
     @post_load
@@ -155,10 +125,8 @@ class PaliAnswerModel(GenericAnswerModel[PaliInputModel, PaliMarkupModel, PaliSt
     pass
 
 
-class PaliAnswerSchema(GenericAnswerSchema):
+class PaliAnswerSchema(PaliAttrs, GenericAnswerSchema):
     input = fields.Nested(PaliInputSchema, required=True)
-    markup = fields.Nested(PaliMarkupSchema)
-    state = fields.Nested(PaliStateSchema, allow_none=True, required=True)
 
     @post_load
     def make_obj(self, data):
@@ -192,10 +160,7 @@ def render_static_pali(m: PaliHtmlModel):
     )
 
 
-@app.route('/multihtml/', methods=['post'])
-@use_args(GenericHtmlSchema(many=True, strict=True), locations=("json",))
-def multihtml(args: List[GenericHtmlSchema]):
-    return render_multihtml(PaliHtmlSchema(), args)
+app = create_app(__name__, PaliHtmlSchema())
 
 
 @app.route('/answer/', methods=['put'])
@@ -226,6 +191,18 @@ def answer(args: PaliAnswerModel):
         web['result'] = "saved"
 
     return jsonify(result)
+
+
+def check_letters(word: str, needed_len: int) -> bool:
+    """Checks if word has needed amount of chars.
+
+    :param word: word to check
+    :param needed_len: how many letters needed
+    :return: true if len match
+
+    """
+    s = word.upper()
+    return len(re.sub("[^[A-ZÅÄÖ]", "", s)) == needed_len
 
 
 @app.route('/reqs/')

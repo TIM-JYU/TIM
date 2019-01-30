@@ -3,10 +3,12 @@ import json
 from typing import Optional, Set, Union, TypeVar, Generic, Dict, List
 
 import attr
-from flask import render_template_string, jsonify
+from flask import render_template_string, jsonify, Flask
 from marshmallow import Schema, fields, post_load, missing, pre_load, ValidationError
 # noinspection PyProtectedMember
 from marshmallow.utils import _Missing as Missing
+from webargs.flaskparser import use_args
+from werkzeug.exceptions import UnprocessableEntity
 
 
 @attr.s(auto_attribs=True)
@@ -210,3 +212,23 @@ def render_multihtml(schema: Schema, args: List[GenericHtmlSchema]):
         else:
             results.append(render_plugin_html(p.data))
     return jsonify(results)
+
+
+def create_app(name: str, html_schema: GenericHtmlSchema):
+    app = Flask(name, static_folder=".", static_url_path="")
+
+    @app.errorhandler(422)
+    def handle_invalid_request(error: UnprocessableEntity):
+        return jsonify({'web': {'error': render_validationerror(ValidationError(message=error.data['messages']))}})
+
+    @app.route('/multihtml/', methods=['post'])
+    @use_args(GenericHtmlSchema(many=True, strict=True), locations=("json",))
+    def multihtml(args: List[GenericHtmlSchema]):
+        return render_multihtml(html_schema, args)
+
+    @app.before_request
+    def print_rq():
+        pass
+        # pprint(request.get_json(silent=True))
+
+    return app
