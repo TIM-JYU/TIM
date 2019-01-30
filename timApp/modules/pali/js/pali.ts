@@ -98,6 +98,7 @@ class PaliController extends PluginBase<t.TypeOf<typeof PaliMarkup>, t.TypeOf<ty
         this.userword = this.attrs.initword || "";
         this.error = undefined;
         this.result = undefined;
+        this.checkPalindrome();
     }
 
     saveText() {
