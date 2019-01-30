@@ -39,6 +39,7 @@ class InfoSchema(Schema):
 class GenericMarkupModel:
     hidden_keys: Set[str]
     header: Union[str, Missing] = missing
+    footer: Union[str, Missing] = missing
     stem: Union[str, Missing] = missing
     lazy: Union[bool, Missing] = missing
 
@@ -49,6 +50,7 @@ class GenericMarkupModel:
 class GenericMarkupSchema(Schema):
     lazy = fields.Bool()
     header = fields.Str()
+    footer = fields.Str()
     hidden_keys = fields.List(fields.Str(), required=True)
     stem = fields.Str()
 
