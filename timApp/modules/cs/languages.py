@@ -71,7 +71,7 @@ class Language:
         self.query = query
         self.user_id = '--'
         if query.jso:
-            self.user_id = query.jso.get('info', {}).get('user_id', '--')
+            self.user_id = df(query.jso.get('info'), {}).get('user_id', '--')
         self.rndname = generate_filename()
         self.delete_tmp = True
         self.opt = get_param(query, "opt", "")
