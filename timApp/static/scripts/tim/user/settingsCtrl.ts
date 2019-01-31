@@ -3,7 +3,7 @@ import $ from "jquery";
 import {timApp} from "tim/app";
 import {ConsentType} from "../ui/consent";
 import {showMessageDialog} from "../ui/dialog";
-import {$http, $window} from "../util/ngimport";
+import {$http, $timeout, $window} from "../util/ngimport";
 import {IOkResponse, to} from "../util/utils";
 import {Users} from "./userService";
 
@@ -28,6 +28,7 @@ export class SettingsCtrl implements IController {
     private cssFiles: {}[];
     private notifications: {}[];
     private consent: ConsentType | undefined;
+    private storageClear = false;
 
     constructor() {
         this.settings = $window.settings;
@@ -72,8 +73,11 @@ export class SettingsCtrl implements IController {
         $('link[rel="stylesheet"]').first().attr("href", "/static/gen/" + this.settings.css_combined + ".css");
     }
 
-    clearLocalStorage() {
+    async clearLocalStorage() {
         window.localStorage.clear();
+        this.storageClear = true;
+        await $timeout(3000);
+        this.storageClear = false;
     }
 
     async addPrintSettings() {
@@ -165,6 +169,7 @@ timApp.component("timSettings", {
     </bootstrap-panel>
     <bootstrap-panel title="Other settings">
         <button class="btn btn-default" ng-click="$ctrl.clearLocalStorage()">Clear local settings storage</button>
+        <span ng-if="$ctrl.storageClear">Local storage cleared.</span>
     </bootstrap-panel>
 <!--    <bootstrap-panel title="Consent">
         <tim-consent-choice consent="$ctrl.consent"></tim-consent-choice>
