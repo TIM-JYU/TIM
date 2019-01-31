@@ -463,13 +463,6 @@ timApp.component("timSidebarMenu", {
             <h5>Customize</h5>
             <a href="/settings">Customize TIM</a>
         </div>
-        <div ng-if="$ctrl.users.isGroupAdmin()">
-            <h5>Groups</h5>
-            <button class="timButton btn-block" title="Create a new group"
-                    ng-click="$ctrl.createGroup()">Create a new group
-            </button>
-            <a href="/view/groups">Browse existing groups</a>
-        </div>
         <div ng-if="!($ctrl.vctrl.item && !$ctrl.vctrl.item.isFolder && $ctrl.vctrl.item.rights.manage) && $ctrl.showRelevance">
             <h5>Folder settings</h5>
             <button class="timButton btn-block" title="Set item relevance value"
@@ -564,6 +557,13 @@ timApp.component("timSidebarMenu", {
             <button class="timButton btn-block" ng-show="$ctrl.isMinutesOrInvitation()"
                     ng-click="$ctrl.mergePdf()">Merge attachments
             </button>
+        </div>
+        <div ng-if="$ctrl.users.isGroupAdmin()">
+            <h5>Groups</h5>
+            <button class="timButton btn-block" title="Create a new group"
+                    ng-click="$ctrl.createGroup()">Create a new group
+            </button>
+            <a href="/view/groups">Browse existing groups</a>
         </div>
     </uib-tab>
 
