@@ -408,7 +408,7 @@ export class DraggableController implements IController {
     }
 
     private resizeElement(e: JQueryEventObject, up: boolean, right: boolean, down: boolean, left: boolean) {
-        // e.preventDefault();
+        e.preventDefault();
         this.resizeStates = {up, down, left, right};
         $document.off("mouseup pointerup touchend", this.release);
         $document.off("mousemove pointermove touchmove", this.moveResize);
