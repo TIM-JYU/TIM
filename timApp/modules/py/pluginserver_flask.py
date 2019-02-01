@@ -1,3 +1,19 @@
+"""Defines the skeleton for all TIM plugins.
+
+TIM interacts with plugins through certain HTTP routes:
+
+* multihtml: Renders the plugin instances as HTML.
+             Called with a list of JSONs of the same plugin type.
+             The route returns a list of corresponding HTMLs.
+* answer:    Renders the plugin response when an answer is posted to the plugin.
+
+The accepted data of each route is defined by Marshmallow Schemas. Each Schema
+has a corresponding Model to make code more type-safe. Upon successful validation, the JSON
+is converted to the corresponding Model object that can be used in code.
+
+If validation fails, the plugin returns an error with status code 422.
+
+"""
 import base64
 import json
 from typing import Optional, Set, Union, TypeVar, Generic, Dict, List
@@ -185,6 +201,11 @@ def is_lazy(q: GenericHtmlModel):
 
 
 def render_plugin_lazy(m: GenericHtmlModel[PluginInput, PluginMarkup, PluginState]):
+    """Renders lazy HTML for a plugin.
+
+    :param m: The plugin HTML schema.
+    :return: HTML.
+    """
     return render_template_string(
         """
 <!--lazy {{ real_html|safe }} lazy-->
@@ -195,6 +216,11 @@ def render_plugin_lazy(m: GenericHtmlModel[PluginInput, PluginMarkup, PluginStat
 
 
 def render_plugin_html(m: GenericHtmlModel[PluginInput, PluginMarkup, PluginState]):
+    """Renders HTML for a plugin.
+
+    :param m: The plugin HTML schema.
+    :return: HTML.
+    """
     if m.user_id == "Anonymous":
         return render_plugin_with_login_request(m)
     if is_lazy(m):
@@ -202,7 +228,13 @@ def render_plugin_html(m: GenericHtmlModel[PluginInput, PluginMarkup, PluginStat
     return m.get_real_html()
 
 
-def render_multihtml(schema: Schema, args: List[GenericHtmlSchema]):
+def render_multihtml(schema: GenericHtmlSchema, args: List[GenericHtmlSchema]):
+    """Renders HTMLs according to the given Schema.
+
+    :param schema: The plugin HTML schema.
+    :param args: Partially validated HTML arguments.
+    :return: List of HTMLs.
+    """
     results = []
     for a in args:
         try:
@@ -215,6 +247,12 @@ def render_multihtml(schema: Schema, args: List[GenericHtmlSchema]):
 
 
 def create_app(name: str, html_schema: GenericHtmlSchema):
+    """Creates the Flask app for the plugin server.
+
+    :param name: Name of import, usually __name__ should be passed.
+    :param html_schema: Schema for the plugin html route.
+    :return: The app.
+    """
     app = Flask(name, static_folder=".", static_url_path="")
 
     @app.errorhandler(422)
