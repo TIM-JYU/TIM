@@ -1246,3 +1246,8 @@ tim-plugin-loader, answerbrowser {
 .color-picker-wrapper .color-picker-panel.color-picker-panel-bottom {
     top: 2em !important;
 }
+
+tim-user-list {
+    display: block;
+    height: calc(100% - #{13px * $line-height-base});
+}
