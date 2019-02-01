@@ -22,8 +22,9 @@ function getPixels(s: string) {
 }
 
 const draggableTemplate = `
-<div class="draghandle" ng-class="{'attached': !d.canDrag()}" ng-mousedown="d.dragClick(); $event.preventDefault()">
-    <p ng-show="d.caption" ng-bind="d.caption"></p>
+<div class="draghandle drag"
+     ng-class="{'attached': !d.canDrag()}" ng-mousedown="d.dragClick(); $event.preventDefault()">
+    <p class="drag" ng-show="d.caption" ng-bind="d.caption"></p>
     <i ng-show="d.detachable"
        ng-click="d.toggleDetach()"
        title="{{ d.canDrag() ? 'Attach' : 'Detach' }}"
@@ -222,7 +223,9 @@ export class DraggableController implements IController {
             if (!this.canDrag()) {
                 return;
             }
-            // e.preventDefault(); // TODO: if this is used, in mobila possible to move, but not close dialog
+            if ($(e.target).hasClass("drag")) {
+                e.preventDefault();
+            }
 
             this.resizeStates = {
                 up: false,
