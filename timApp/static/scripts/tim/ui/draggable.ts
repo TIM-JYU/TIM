@@ -467,6 +467,7 @@ export class DraggableController implements IController {
 
             timLogTime("pos:" + css.left + "," + css.top, "drag");
         }
+        this.scope.$evalAsync();
     }
 
     public ensureFullyInViewport() {
