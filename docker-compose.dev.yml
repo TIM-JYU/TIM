@@ -57,9 +57,7 @@ services:
    - ./stack/entrypoint_install_and_run_debug.sh:/var/www/html/entrypoint_install_and_run.sh
   restart: unless-stopped
   ports:
-   - "90:80"
    - "49992:22"
-   - "9000:9000"
  showfile:
   image: timimages/cs3sudo:rust
   build:

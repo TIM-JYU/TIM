@@ -154,7 +154,5 @@ services:
   restart: unless-stopped
   environment:
    BROWSER_URL: ${BROWSER_URL}
-  ports:
-   - "90:80"
 volumes:
  data:
