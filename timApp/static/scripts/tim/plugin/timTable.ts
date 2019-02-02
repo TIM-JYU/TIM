@@ -47,12 +47,12 @@ export interface TimTable {
     editorButtonsBottom?: boolean;
     editorButtonsRight?: boolean;
     toolbarTemplates?: any;
-    rowCount?: number;
-    colCount?: number;
     hid: any;
 }
 
 export interface ITable { // extends ITableStyles
+    countRow?: number;
+    countCol?: number;
     rows?: IRow[];
     columns?: IColumn[];
     tabledatablock?: DataEntity;
@@ -117,6 +117,7 @@ const tableStyles: Set<string> = new Set<string>([
     "fontFamily",
     "fontSize",
     "visibility",
+    "width"
 ]);
 
 const rowStyles: Set<string> = new Set<string>([
@@ -706,8 +707,8 @@ export class TimTableController extends DestroyScope implements IController {
         this.cellDataMatrix = [];
         if (!this.data.table.rows) this.data.table.rows = [];
 
-        let nrows = this.data.rowCount || 0;
-        let ncols = this.data.colCount || 0;
+        let nrows = this.data.table.countRow || 0;
+        let ncols = this.data.table.countCol || 0;
         nrows = Math.max(this.data.table.rows.length, nrows);
 
         for (let iy = 0; iy < this.data.table.rows.length; iy++) {
@@ -1818,6 +1819,7 @@ export class TimTableController extends DestroyScope implements IController {
         for (const [key, s] of Object.entries(value)) {
             if (key.indexOf("$$") == 0) continue;
             if (key === "cell") {
+                this.editedCellContent = s;
                 await this.saveToCurrentCell(s);
             } else {
                 await this.setCellStyleAttribute("setCell", key, s);

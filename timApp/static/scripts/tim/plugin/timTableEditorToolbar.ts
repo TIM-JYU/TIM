@@ -284,8 +284,8 @@ registerDialogComponent("timTableEditorToolbar",
                     <i class="glyphicon glyphicon-align-right"></i>
                 </button>
                 <button class="timButton btn-xs" ng-repeat="r in $ctrl.activeTable.data.toolbarTemplates" ng-init="rowi = $index"
-                     ng-style="r" style="color:black" ng-click="$ctrl.setCell(r)">
-                     {{$ctrl.getCellForToolbar(r)}}
+                     ng-style="r" style="color:black;background-color:white" ng-click="$ctrl.setCell(r)" ng-bind-html="$ctrl.getCellForToolbar(r)">
+                     <!--{{$ctrl.getCellForToolbar(r)}}-->
                 </button>
                 <button class="timButton btn-xs"
                         ng-hide="$ctrl.hid.addToTemplates"

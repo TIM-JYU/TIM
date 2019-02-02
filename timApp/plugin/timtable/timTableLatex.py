@@ -772,7 +772,10 @@ def get_column_width_list(table_data):
     """
     l = []
     try:
-        columns_data = table_data['columns']
+        try:
+            columns_data = table_data['columnstex']
+        except:
+            columns_data = table_data['columns']
     except:
         return [None] * default_max_col_count
     for i in range(0, len(columns_data)):
