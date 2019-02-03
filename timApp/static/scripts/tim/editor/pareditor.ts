@@ -242,24 +242,28 @@ rivejä      olla
             timTable1x1: `
 ${backTicks} {plugin="timTable"}
 table:
+    countRow: 1
+    countCol: 1
     rows:
       - row:
-        - cell: "solu"
+        - cell: ''
 ${backTicks}
 `.trim(),
 
             timTable2x2: `
 ${backTicks} {plugin="timTable"}
 table:
+    countRow: 2
+    countCol: 2
     rows:
       - row:
-        - cell: 'Ekan sarakkeen otsikko'
-        - cell: 'Tokan sarakkeen otsikko'
+        - cell: 'Otsikko 1'
+        - cell: 'Otsikko 2'
         backgroundColor: lightgray
         fontWeight: bold
       - row:
-        - cell: '1. solun sisältö'
-        - cell: '2. solun sisältö'
+        - cell: 'Solu 1'
+        - cell: 'Solu 2'
 ${backTicks}
 `.trim(),
         };

@@ -800,7 +800,7 @@ def find_cell(rows: list, row: int, col: int) -> str:
     """
     if row >= len(rows):
         return ''
-    right_row = rows[row][ROW]
+    right_row = rows[row].get(ROW,[])
     if col >= len(right_row):
         return ''
     right_cell = right_row[col]

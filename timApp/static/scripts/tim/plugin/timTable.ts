@@ -26,6 +26,8 @@ const styleToHtml: {[index: string]: string} = {
     fontWeight: "font-weight",
     height: "height",
     horizontalAlign: "horizontal-align",
+    minWidth: "min-width",
+    maxWidth: "max-width",
     rowspan: "rowspan",
     textAlign: "text-align",
     verticalAlign: "vertical-align",
@@ -53,6 +55,12 @@ export interface TimTable {
 export interface ITable { // extends ITableStyles
     countRow?: number;
     countCol?: number;
+    defrows?: {[index: string]: string};
+    defcols?: {[index: string]: string};
+    defcells?: {[index: string]: string};
+    defcolsrange?: any;  // TODO: { range: [0,2], def: { } }
+    defrowsrange?: any;
+    defcellsrange?: any; // TODO: { range: [0,2, 3,-2], def: { } }
     rows?: IRow[];
     columns?: IColumn[];
     tabledatablock?: DataEntity;
@@ -133,6 +141,7 @@ const rowStyles: Set<string> = new Set<string>([
     "fontFamily",
     "fontSize",
     "fontWeight",
+    "height"
 ]);
 
 const cellStyles: Set<string> = new Set<string>([
@@ -193,6 +202,7 @@ export class TimTableController extends DestroyScope implements IController {
 
     public viewctrl?: ViewCtrl;
     public cellDataMatrix: ICell[][] = [];
+    public columns: IColumn[] = [];
     private data!: Binding<TimTable, "<">;
     private editRight: boolean = false;
     private userdata?: DataEntity = undefined;
@@ -699,6 +709,24 @@ export class TimTableController extends DestroyScope implements IController {
         }
     }
 
+
+    /**
+     * Check if defcols that columns array has as many items than celldatamatrix
+     */
+    private ensureColums() {
+        if (!this.data.table ) return;
+        if (!this.data.table.defcols && !this.data.table.columns) return;
+        if ( this.data.table.defcols ) {
+            const n = this.cellDataMatrix[0].length;
+            if (!this.data.table.columns) this.data.table.columns = [];
+            for (var i = this.data.table.columns.length; i < n; i++)
+                this.data.table.columns.push({});
+        }
+        this.columns = Object.assign([], this.data.table.columns);
+    }
+
+
+
     /**
      * Initialize celldatamatrix with the values from yaml and yaml only
      * @constructor
@@ -728,23 +756,7 @@ export class TimTableController extends DestroyScope implements IController {
             }
 
         }
-        /*
-        if (this.data.table.rows) {
-            this.data.table.rows.forEach((item, index) => {
-                this.cellDataMatrix[index] = [];
-                if (item.row) {
-                    item.row.forEach((item2, index2) => {
-                        if (item.row) {
-                            const itemInRow = item.row[index2];
-                            // this.cellDataMatrix[index][index2] = this.cellEntityToString(itemInRow);
-                            this.cellDataMatrix[index][index2] = this.createDummyCell();
-                            this.applyCellEntityAttributesToICell(itemInRow, this.cellDataMatrix[index][index2]);
-                        }
-                    });
-                }
-            });
-        }
-        */
+        this.ensureColums();
     }
 
     /**
@@ -983,6 +995,7 @@ export class TimTableController extends DestroyScope implements IController {
                 row[i] = this.createDummyCell();
             }
         }
+        this.ensureColums();
     }
 
     /**
@@ -1495,10 +1508,26 @@ export class TimTableController extends DestroyScope implements IController {
      */
     private stylingForCell(rowi: number, coli: number) {
         const styles = this.stylingForCellOfColumn(coli);
+        //const styles: {[index: string]: string} = {};
 
         if (this.getCellContentString(rowi, coli) === "") {
             styles.height = "2em";
             styles.width = "1.5em";
+        }
+
+        const def = this.data.table.defcells;
+        if ( def ) this.applyStyle(styles, def, cellStyles);
+
+        const defrange = this.data.table.defcellsrange;
+        if ( defrange) {
+            const rown = this.cellDataMatrix.length;
+            const coln = this.cellDataMatrix[0].length;
+            for (var dra of defrange) {
+                const dr = dra; // TODO: korvaa kunnon tyypillä!
+                this.checkRange(dr);
+                if ( this.checkIndex2(dr.range, rown, coln, rowi, coli) )
+                    this.applyStyle(styles, dr.def, columnStyles);
+            }
         }
 
         const cell = this.cellDataMatrix[rowi][coli];
@@ -1518,6 +1547,8 @@ export class TimTableController extends DestroyScope implements IController {
         const styles: {[index: string]: string} = {};
         const table = this.data.table;
 
+
+
         if (!table.columns) {
             return styles;
         }
@@ -1536,12 +1567,112 @@ export class TimTableController extends DestroyScope implements IController {
         return styles;
     }
 
+
+    /**
+     * Makex r[i] to index if possible, otherwise return def
+     * @param r ange to check
+     * @param i index to take from r
+     * @param n max value
+     * @param def in case no item
+     */
+    private static toIndex(r:any, i:number, n:number, def: number) {
+        if ( r.length <= i) return def;
+        var idx = r[i];
+        if ( idx < 0 ) idx = n + idx;
+        if ( idx < 0 ) idx = 0;
+        if ( idx >= n ) idx = n-1;
+        return idx;
+    }
+
+
+    /**
+     * Checks if dr.range is valid range.  If it is string, change it to array.
+     * To prevent another check, mark it checked.
+     * @param dr default range to check
+     */
+    private checkRange(dr: any) {
+        if ( dr.ok ) return;
+        var r = dr.range;
+        if ( !r ) { dr.ok = true; return; }
+        if ( typeof r === "number" ) {
+            dr.range = [r];
+            dr.ok = true;
+            return;
+        }
+        if ( typeof r !== "string" ) { dr.ok = true; return; }
+
+        r = "["+ r.replace("[","").replace("]","") + "]";
+        try {
+            r = JSON.parse(r);
+        } catch (e) {
+            dr.range = [];
+            dr.ok = true;
+            return;
+        }
+        dr.range = r;
+        dr.ok = true;
+        return;
+    }
+
+
+    /**
+     * Check if index is between r[0]-r[1] where negative means i steps backward
+     * @param r range to check, may be like [1,-1]
+     * @param rown max_value
+     * @param coln max_value
+     * @param rowi index to check
+     * @param coli index to check
+     */
+    private checkIndex2(r:any, rown: number, coln: number, rowi: number, coli: number): boolean {
+        if ( !r ) return false;
+        if ( r.length == 0) return false;
+        const ir1 = TimTableController.toIndex(r, 0, rown,0);
+        if ( rowi < ir1 ) return false;
+        const ic1 = TimTableController.toIndex(r, 1, coln,0);
+        if ( coli < ic1 ) return false;
+        const ir2 = TimTableController.toIndex(r, 2, rown,ir1);
+        if ( ir2 < rowi ) return false;
+        const ic2 = TimTableController.toIndex(r, 3, coln,ic1);
+        if ( ic2 < coli ) return false;
+        return true;
+    }
+
+    /**
+     * Check if index is between r[0]-r[1] where negative means i steps backward
+     * @param r range to check, may be like [1,-1]
+     * @param n max_value
+     * @param index index to check
+     */
+    private checkIndex(r:any, n: number, index: number): boolean {
+        if ( !r ) return false;
+        if ( r.length == 0) return false;
+        const i1 = TimTableController.toIndex(r, 0, n,0);
+        if ( index < i1 ) return false;
+        const i2 = TimTableController.toIndex(r, 1, n, i1);
+        if ( i2 < index  ) return false;
+        return true;
+    }
+
     /**
      * Sets style attributes for columns
      * @param {IColumn} col The column to be styled
      */
-    private stylingForColumn(col: IColumn) {
+    private stylingForColumn(col: IColumn, index: number) {
         const styles: {[index: string]: string} = {};
+
+        const def = this.data.table.defcols;
+        if ( def ) this.applyStyle(styles, def, columnStyles);
+
+        const defrange = this.data.table.defcolsrange;
+        if ( defrange) {
+            const n = this.cellDataMatrix[0].length;
+            for (var dra of defrange) {
+                const dr = dra; // TODO: korvaa kunnon tyypillä!
+                this.checkRange(dr);
+                if ( this.checkIndex(dr.range, n, index) )
+                    this.applyStyle(styles, dr.def, columnStyles);
+            }
+        }
 
         this.applyStyle(styles, col, columnStyles);
         return styles;
@@ -1553,6 +1684,20 @@ export class TimTableController extends DestroyScope implements IController {
      */
     private stylingForRow(rowi: number) {
         const styles: {[index: string]: string} = {};
+        if (!this.data.table ) { return styles; }
+
+        const def = this.data.table.defrows;
+        if ( def ) this.applyStyle(styles, def, rowStyles);
+        const defrange = this.data.table.defrowsrange;
+        if ( defrange) { // todo: do all this on init
+            const n = this.cellDataMatrix.length;
+            for (var dra of defrange) {
+                const dr = dra; // TODO: korvaa kunnon tyypillä!
+                this.checkRange(dr);
+                if ( this.checkIndex(dr.range, n, rowi) )
+                    this.applyStyle(styles, dr.def, rowStyles);
+            }
+        }
 
         if (!this.data.table.rows || rowi >= this.data.table.rows.length) {
             return styles;
@@ -1582,6 +1727,7 @@ export class TimTableController extends DestroyScope implements IController {
      * @param {Set<string>} validAttrs A set that contains the accepted style attributes
      */
     private applyStyle(styles: {[index: string]: string}, object: any, validAttrs: Set<string>) {
+        if ( !object ) return;
         for (const key of Object.keys(object)) {
             if (!validAttrs.has(key)) {
                 continue;
@@ -1977,8 +2123,8 @@ timApp.component("timTable", {
             ng-click="$ctrl.removeColumn(-1)"><span class="glyphicon glyphicon-minus"></span></button>
     <table ng-class="{editable: $ctrl.isInEditMode() && !$ctrl.isInForcedEditMode(), forcedEditable: $ctrl.isInForcedEditMode()}" class="timTableTable"
      ng-style="$ctrl.stylingForTable($ctrl.data.table)" id={{$ctrl.data.table.id}}>
-        <col ng-repeat="c in $ctrl.data.table.columns" ng-attr-span="{{c.span}}}" id={{c.id}}
-             ng-style="$ctrl.stylingForColumn(c)"/>
+        <col ng-repeat="c in $ctrl.columns" ng-attr-span="{{c.span}}}" id={{c.id}}
+             ng-style="$ctrl.stylingForColumn(c, $index)"/>
         <tr ng-repeat="r in $ctrl.cellDataMatrix" ng-init="rowi = $index"
             ng-style="$ctrl.stylingForRow(rowi)">
                 <td ng-class="{'activeCell': $ctrl.isActiveCell(rowi, coli)}" 
