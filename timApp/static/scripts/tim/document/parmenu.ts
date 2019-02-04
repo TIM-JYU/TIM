@@ -2,7 +2,7 @@ import {IScope} from "angular";
 import $ from "jquery";
 import {getCitePar} from "../editor/pareditor";
 import {showMessageDialog} from "../ui/dialog";
-import {Coords, dist, getPageXY, to, debugTextToHeader} from "../util/utils";
+import {Coords, dist, getPageXY, to} from "../util/utils";
 import {onClick} from "./eventhandlers";
 import {getParId, getPreambleDocId, isActionablePar, isPreamble, Paragraph} from "./parhelpers";
 import {EditMode, showPopupMenu} from "./popupMenu";
@@ -102,8 +102,7 @@ To comment or edit this, go to the corresponding <a href="/view/${getPreambleDoc
                             editbutton: boolean,
                         },
                         editcontext?: EditMode) {
-        var pos = getPageXY(e);
-        // debugTextToHeader(JSON.stringify(pos));  // pos is OK for ipad
+        const pos = getPageXY(e);
         const p = {
             actions: attrs.actions,
             areaEditButton: $(".area").length > 0,
