@@ -5,10 +5,11 @@ TIM interacts with plugins through certain HTTP routes:
 * multihtml: Renders the plugin instances as HTML.
              Called with a list of JSONs of the same plugin type.
              The route returns a list of corresponding HTMLs.
+
 * answer:    Renders the plugin response when an answer is posted to the plugin.
 
 The accepted data of each route is defined by Marshmallow Schemas. Each Schema
-has a corresponding Model to make code more type-safe. Upon successful validation, the JSON
+should have a corresponding Model to make code more type-safe. Upon successful validation, the JSON
 is converted to the corresponding Model object that can be used in code.
 
 If validation fails, the plugin returns an error with status code 422.
@@ -29,6 +30,7 @@ from werkzeug.exceptions import UnprocessableEntity
 
 @attr.s(auto_attribs=True)
 class InfoModel:
+    """Model for the information that is given by TIM in an answer request."""
     current_user_id: str
     earlier_answers: int
     look_answer: bool
@@ -55,7 +57,11 @@ class InfoSchema(Schema):
 
 @attr.s(auto_attribs=True)
 class GenericMarkupModel:
+    """Base class for all markup models. Defines some fields that are applicable to all plugins."""
+
     hidden_keys: Set[str]
+    """Meta field that keeps track which markup fields were hidden (that is, prefixed with "-")."""
+
     header: Union[str, Missing] = missing
     footer: Union[str, Missing] = missing
     stem: Union[str, Missing] = missing
@@ -121,6 +127,7 @@ PluginInput = TypeVar('PluginInput')
 
 @attr.s(auto_attribs=True)
 class GenericRouteModel(Generic[PluginInput, PluginMarkup, PluginState]):
+    """Base class for answer and HTML route models. Contains the fields that the routes have in common."""
     info: Optional[InfoModel]
     markup: PluginMarkup
     state: Optional[PluginState]
@@ -129,11 +136,13 @@ class GenericRouteModel(Generic[PluginInput, PluginMarkup, PluginState]):
 
 @attr.s(auto_attribs=True)
 class GenericAnswerModel(GenericRouteModel[PluginInput, PluginMarkup, PluginState]):
+    """Generic base class for answer route models."""
     input: PluginInput
 
 
 @attr.s(auto_attribs=True)
 class GenericHtmlModel(GenericRouteModel[PluginInput, PluginMarkup, PluginState]):
+    """Generic base class for HTML route models."""
     anonymous: bool
     doLazy: bool
     preview: bool
@@ -149,16 +158,22 @@ class GenericHtmlModel(GenericRouteModel[PluginInput, PluginMarkup, PluginState]
         return r
 
     def get_static_html(self) -> str:
-        raise NotImplementedError('Must be implemented by derived class.')
+        """Renders a static version of the plugin.
+
+        This is meant to be a static lightweight lookalike version of the plugin.
+        """
+        raise NotImplementedError('Must be implemented by a derived class.')
 
     def get_real_html(self) -> str:
-        raise NotImplementedError('Must be implemented by derived class.')
+        """Renders the plugin as HTML."""
+        raise NotImplementedError('Must be implemented by a derived class.')
 
     class Meta:
         strict = True
 
 
 def render_validationerror(e: ValidationError):
+    """Renders a validation error as HTML indicating which fields were erroneous."""
     return render_template_string(
         """
         <div class="pluginError">
@@ -174,21 +189,24 @@ def render_validationerror(e: ValidationError):
 
 
 def render_plugin_with_login_request(m: GenericHtmlModel[PluginInput, PluginMarkup, PluginState]):
+    """Renders a static version of the plugin as HTML along with a request to log in."""
     return render_template_string(
         """
 <!--nolazy-->
 <p class="pluginError">
-    Please <login-menu></login-menu> to interact with this component
+    Please <login-menu></login-menu> to interact with this component.
 </p>
 {{ static_html }}""", static_html=m.get_static_html(),
     )
 
 
 def make_base64(d: dict):
+    """Converts the given dict to a base64-encoded JSON string."""
     return base64.b64encode(json.dumps(d).encode()).decode()
 
 
 def is_lazy(q: GenericHtmlModel):
+    """Determines if the server should render a lazy version of the plugin."""
     if q.doLazy == 'NEVERLAZY':
         return False  # TODO currently unreachable because doLazy is validated as bool
     if q.markup.lazy:
@@ -202,6 +220,9 @@ def is_lazy(q: GenericHtmlModel):
 
 def render_plugin_lazy(m: GenericHtmlModel[PluginInput, PluginMarkup, PluginState]):
     """Renders lazy HTML for a plugin.
+
+    The lazy HTML displays the static version of the plugin and has the real HTML as a hidden HTML comment
+    that will be activated on mouse hover.
 
     :param m: The plugin HTML schema.
     :return: HTML.
@@ -249,8 +270,8 @@ def render_multihtml(schema: GenericHtmlSchema, args: List[GenericHtmlSchema]):
 def create_app(name: str, html_schema: GenericHtmlSchema):
     """Creates the Flask app for the plugin server.
 
-    :param name: Name of import, usually __name__ should be passed.
-    :param html_schema: Schema for the plugin html route.
+    :param name: Name of import. Usually __name__ should be passed.
+    :param html_schema: Schema for the plugin HTML route.
     :return: The app.
     """
     app = Flask(name, static_folder=".", static_url_path="")
