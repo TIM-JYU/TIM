@@ -132,6 +132,10 @@ export function tagStyleClass(tag: ITag, selected: boolean) {
     return color + " " + opacity + " " + highlight;
 }
 
+export function getViewUrl(data: IItem) {
+    return "/view/" + data.path;
+}
+
 export function redirectToItem(data: IItem) {
-    location.href = "/view/" + data.path;
+    location.href = getViewUrl(data);
 }

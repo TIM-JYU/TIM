@@ -563,6 +563,21 @@ This will delete the whole ${options.area ? "area" : "paragraph"} from the docum
                     desc: "Comment/note",
                     show: this.viewctrl.item.rights.can_comment,
                 },
+                {
+                    func: (e, p) => {
+                        if (!par) {
+                            return;
+                        }
+                        const attrs = getRefAttrs(par);
+                        const docId = attrs["ref-doc-id"];
+                        const w = window.open(`/view/${docId}#${attrs["ref-id"]}`);
+                        if (w) {
+                            w.focus();
+                        }
+                    },
+                    desc: "Follow reference",
+                    show: par && isReference(par),
+                },
                 {func: (e: Event, p: Paragraph) => this.showEditWindow(e, p), desc: "Edit", show: parEditable},
                 {func: (e: Event, p: Paragraph) => this.toggleTableEditor(e, p), desc: "Edit table", show: parEditable && timTableEditMode === false},
                 {func: (e: Event, p: Paragraph) => this.toggleTableEditor(e, p), desc: "Close table editor", show: parEditable && timTableEditMode === true},
