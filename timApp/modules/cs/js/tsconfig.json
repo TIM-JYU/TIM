@@ -1,49 +1,14 @@
 {
+  "extends": "../../../static/scripts/tsconfig_plugin",
   "compilerOptions": {
-    "module": "system",
-    "strict": true,
-    "allowUnreachableCode": true,
-    "removeComments": true,
-    "preserveConstEnums": true,
-    "sourceMap": true,
-    "outDir": "build",
-    "allowJs": true,
-    "moduleResolution": "node",
-    "baseUrl": ".",
-    "target": "es5",
-    "lib": [
-      "dom",
-      "es7",
-      "scripthost"
-    ],
-    "noEmit": false,
-    "paths": {
-      "angular": [
-        "../../../static/scripts/node_modules/@types/angular"
-      ],
-      "jquery": [
-        "../../../static/scripts/node_modules/@types/jquery"
-      ],
-      "io-ts": [
-        "../../../static/scripts/node_modules/io-ts/lib"
-      ],
-      "io-ts/*": [
-        "../../../static/scripts/node_modules/io-ts/*"
-      ],
-      "tim/*": [
-        "../../../static/scripts/decls/*"
-      ]
-    },
-    "typeRoots": [
-      "../../../static/scripts/node_modules/@types",
-      "../../../static/scripts/tim/util/types",
-      "../../../static/scripts/tim/util"
-    ]
+    "outDir": "build"
   },
-  "exclude": [
-    "node_modules",
-    "jspm_packages",
-    "bower_components"
+  "include": [
+    "./**/*.ts"
   ],
-  "include": ["./**/*.ts"]
+  "references": [
+    {
+      "path": "../../../static/scripts"
+    }
+  ]
 }

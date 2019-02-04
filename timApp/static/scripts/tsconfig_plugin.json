@@ -1,0 +1,42 @@
+{
+  "compilerOptions": {
+    "module": "system",
+    "strict": true,
+    "allowUnreachableCode": true,
+    "removeComments": true,
+    "preserveConstEnums": true,
+    "sourceMap": true,
+    "moduleResolution": "node",
+    "baseUrl": ".",
+    "target": "es5",
+    "lib": [
+      "dom",
+      "es7",
+      "scripthost"
+    ],
+    "noEmit": false,
+    "paths": {
+      "angular": [
+        "./node_modules/@types/angular"
+      ],
+      "jquery": [
+        "./node_modules/@types/jquery"
+      ],
+      "io-ts": [
+        "./node_modules/io-ts/lib"
+      ],
+      "io-ts/*": [
+        "./node_modules/io-ts/*"
+      ]
+    },
+    "typeRoots": [
+      "./node_modules/@types",
+      "./tim/util/types",
+      "./tim/util"
+    ]
+  },
+  "exclude": [
+    "node_modules",
+    "jspm_packages"
+  ]
+}

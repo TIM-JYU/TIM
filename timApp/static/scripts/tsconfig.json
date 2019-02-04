@@ -9,6 +9,7 @@
     "outDir": "build-ide",
     "moduleResolution": "node",
     "baseUrl": ".",
+    "composite": true,
     "paths": {
     },
     "target": "es5",
