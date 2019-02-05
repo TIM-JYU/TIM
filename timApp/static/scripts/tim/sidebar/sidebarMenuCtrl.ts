@@ -167,8 +167,7 @@ export class SidebarMenuCtrl implements IController {
     cssPrint() {
         // FOR DEBUGGING
         // AutoPageBreak();
-        // TODO: Remove "any" after TypeScript 2.8.2 release
-        (window as any).print();
+        window.print();
 
         // FOR DEBUGGING
         // UndoAutoPageBreak();
