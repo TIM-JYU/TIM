@@ -93,7 +93,7 @@ To comment or edit this, go to the corresponding <a href="/view/${getPreambleDoc
         return this.viewctrl.defaultAction && this.viewctrl.defaultAction.desc === "Close menu";
     }
 
-    async showPopupMenu(e: JQueryEventObject,
+    async showPopupMenu(e: JQuery.Event,
                         $pars: Paragraph,
                         attrs: {
                             actions: MenuFunctionList,
@@ -122,7 +122,7 @@ To comment or edit this, go to the corresponding <a href="/view/${getPreambleDoc
         editline.removeClass("menuopen");
     }
 
-    toggleActionButtons(e: JQueryEventObject, par: Paragraph, toggle1: boolean, toggle2: boolean, coords: Coords) {
+    toggleActionButtons(e: JQuery.Event, par: Paragraph, toggle1: boolean, toggle2: boolean, coords: Coords) {
         if (!this.viewctrl.item.rights.editable && !this.viewctrl.item.rights.can_comment) {
             return;
         }
@@ -161,7 +161,7 @@ To comment or edit this, go to the corresponding <a href="/view/${getPreambleDoc
         }
     }
 
-    showOptionsWindow(e: JQueryEventObject, par: Paragraph) {
+    showOptionsWindow(e: JQuery.Event, par: Paragraph) {
         this.viewctrl.clipboardHandler.updateClipboardStatus();
         const result = this.getPopupAttrs(par);
         par.children(".editline").addClass("menuopen");

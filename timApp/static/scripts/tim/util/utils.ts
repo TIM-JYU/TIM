@@ -342,7 +342,7 @@ export function debugTextToHeader(s: string) {
     element.appendChild(para);
 }
 
-export function getPageXY(e: JQueryEventObject) {
+export function getPageXY(e: JQuery.Event) {
     if (!(
         "pageX" in e) || (
         e.pageX == 0 && e.pageY == 0)) {

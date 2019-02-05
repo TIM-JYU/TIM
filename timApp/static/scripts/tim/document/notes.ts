@@ -161,7 +161,7 @@ export class NotesHandler {
         this.viewctrl.editing = false;
     }
 
-    showNoteWindow(e: Event, par: Paragraph) {
+    showNoteWindow(e: JQuery.Event, par: Paragraph) {
         this.toggleNoteEditor(par);
     }
 

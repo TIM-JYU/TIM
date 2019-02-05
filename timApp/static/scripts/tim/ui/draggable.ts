@@ -219,7 +219,7 @@ export class DraggableController implements IController {
         this.createResizeHandlers();
         this.handle = this.element.children(".draghandle");
 
-        this.handle.on("mousedown pointerdown touchstart", (e: JQueryEventObject) => {
+        this.handle.on("mousedown pointerdown touchstart", (e: JQuery.Event) => {
             if (!this.canDrag()) {
                 return;
             }
@@ -407,7 +407,7 @@ export class DraggableController implements IController {
         timLogTime("set:" + [this.setLeft, this.setTop, this.setBottom, this.setRight].join(", "), "drag");
     }
 
-    private resizeElement(e: JQueryEventObject, up: boolean, right: boolean, down: boolean, left: boolean) {
+    private resizeElement(e: JQuery.Event, up: boolean, right: boolean, down: boolean, left: boolean) {
         e.preventDefault();
         this.resizeStates = {up, down, left, right};
         $document.off("mouseup pointerup touchend", this.release);
@@ -422,15 +422,15 @@ export class DraggableController implements IController {
 
     private createResizeHandlers() {
         const handleRight = this.element.children(".resizehandle-r");
-        handleRight.on("mousedown pointerdown touchstart", (e: JQueryEventObject) => {
+        handleRight.on("mousedown pointerdown touchstart", (e: JQuery.Event) => {
             this.resizeElement(e, false, true, false, false);
         });
         const handleDown = this.element.children(".resizehandle-d");
-        handleDown.on("mousedown pointerdown touchstart", (e: JQueryEventObject) => {
+        handleDown.on("mousedown pointerdown touchstart", (e: JQuery.Event) => {
             this.resizeElement(e, false, false, true, false);
         });
         const handleRightDown = this.element.children(".resizehandle-rd");
-        handleRightDown.on("mousedown pointerdown touchstart", (e: JQueryEventObject) => {
+        handleRightDown.on("mousedown pointerdown touchstart", (e: JQuery.Event) => {
             this.resizeElement(e, false, true, true, false);
         });
     }
@@ -443,7 +443,7 @@ export class DraggableController implements IController {
         return !this.areaMinimized && this.resize && this.canDrag();
     }
 
-    private getPageXY(e: JQueryEventObject) {
+    private getPageXY(e: JQuery.Event) {
         const pos = getPageXY(e);
         if (pos) {
             this.lastPageXYPos = pos;
@@ -457,7 +457,7 @@ export class DraggableController implements IController {
 
     // The methods release, move and moveResize are required to be instance
     // functions because they are used as callbacks for $document.on/off.
-    release = (e: JQueryEventObject) => {
+    release = (e: JQuery.Event) => {
         $document.off("mouseup pointerup touchend", this.release);
         $document.off("mousemove pointermove touchmove", this.move);
         $document.off("mousemove pointermove touchmove", this.moveResize);
@@ -505,7 +505,7 @@ export class DraggableController implements IController {
         }
     }
 
-    move = (e: JQueryEventObject) => {
+    move = (e: JQuery.Event) => {
         // e.preventDefault();
         const pos = this.getPageXY(e);
         this.doMove(pos);
@@ -536,7 +536,7 @@ export class DraggableController implements IController {
         }
     }
 
-    moveResize = (e: JQueryEventObject) => {
+    moveResize = (e: JQuery.Event) => {
         // e.preventDefault();
         const pos = this.getPageXY(e);
         const delta = {

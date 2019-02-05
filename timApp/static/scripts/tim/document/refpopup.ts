@@ -64,7 +64,7 @@ export class RefPopupHandler {
         });
     }
 
-    showRefPopup(e: Event, $ref: JQuery, coords: Coords, attrs: IRefPopupAttrs) {
+    showRefPopup(e: JQuery.Event, $ref: JQuery, coords: Coords, attrs: IRefPopupAttrs) {
         const popup = $("<ref-popup>");
         popup.offset(coords);
 

@@ -94,7 +94,7 @@ export class AreaHandler {
         });
     }
 
-    onAreaEditClicked($this: JQuery, e: JQueryEventObject, className: string) {
+    onAreaEditClicked($this: JQuery, e: JQuery.Event, className: string) {
         this.viewctrl.closePopupIfOpen();
         const areaName = $this.attr("data-area");
         if (!areaName) {
@@ -114,16 +114,16 @@ export class AreaHandler {
         }, 80);
     }
 
-    showAreaOptionsWindow(e: JQueryEventObject, $area: Area, $pars: Paragraphs) {
+    showAreaOptionsWindow(e: JQuery.Event, $area: Area, $pars: Paragraphs) {
         this.viewctrl.clipboardHandler.updateClipboardStatus();
         this.viewctrl.parmenuHandler.showPopupMenu(e, $pars, this.viewctrl.parmenuHandler.getPopupAttrs(), "area");
     }
 
-    startArea(e: Event, par: Paragraph) {
+    startArea(e: JQuery.Event, par: Paragraph) {
         this.viewctrl.editingHandler.extendSelection(par);
     }
 
-    async nameArea(e: Event, $pars: Paragraphs) {
+    async nameArea(e: JQuery.Event, $pars: Paragraphs) {
         if (!this.viewctrl.selection.pars) {
             return;
         }
@@ -149,7 +149,7 @@ export class AreaHandler {
         this.viewctrl.selection.end = undefined;
     }
 
-    async removeAreaMarking(e: Event, $pars: Paragraph) {
+    async removeAreaMarking(e: JQuery.Event, $pars: Paragraph) {
         const areaName = this.selectedAreaName;
         if (!areaName) {
             await showMessageDialog("Could not get area name");

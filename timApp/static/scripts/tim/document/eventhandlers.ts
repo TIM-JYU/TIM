@@ -3,7 +3,7 @@ import {$document, $log} from "../util/ngimport";
 import {Coords, dist} from "../util/utils";
 import {EDITOR_CLASS_DOT} from "./parhelpers";
 
-function fixPageCoords(e: JQueryEventObject) {
+function fixPageCoords(e: JQuery.Event) {
     if (!("pageX" in e) || (e.pageX === 0 && e.pageY === 0)) {
         const originalEvent = e.originalEvent;
         if (originalEvent instanceof TouchEvent) {
@@ -15,14 +15,14 @@ function fixPageCoords(e: JQueryEventObject) {
 }
 
 export function onClick(className: string,
-                        func: (obj: JQuery, e: JQueryEventObject) => unknown,
+                        func: (obj: JQuery, e: JQuery.Event) => unknown,
                         overrideModalCheck = false) {
-    let downEvent: JQueryEventObject | undefined;
+    let downEvent: JQuery.Event | undefined;
     let downCoords: Coords | undefined;
-    let lastDownEvent: JQueryEventObject | undefined;
+    let lastDownEvent: JQuery.Event | undefined;
     let lastclicktime: number | undefined;
 
-    $document.on("mousedown touchstart", className, (e: JQueryEventObject) => {
+    $document.on("mousedown touchstart", className, (e: JQuery.Event) => {
         if (!overrideModalCheck && ($(EDITOR_CLASS_DOT).length > 0)) {
             // Disable while there are modal gui elements
             return;
@@ -42,7 +42,7 @@ export function onClick(className: string,
         downCoords = {left: downEvent.pageX, top: downEvent.pageY};
         lastclicktime = new Date().getTime();
     });
-    $document.on("mousemove touchmove", className, (e: JQueryEventObject) => {
+    $document.on("mousemove touchmove", className, (e: JQuery.Event) => {
         if (downEvent == null) {
             return;
         }
@@ -56,44 +56,44 @@ export function onClick(className: string,
             downEvent = undefined;
         }
     });
-    $document.on("touchcancel", className, (e: JQueryEventObject) => {
+    $document.on("touchcancel", className, (e: JQuery.Event) => {
         downEvent = undefined;
     });
     // it is wrong to register both events at the same time; see https://stackoverflow.com/questions/8503453
     const isIOS = ((/iphone|ipad/gi).test(navigator.appVersion));
     const eventName = isIOS ? "touchend" : "mouseup";
-    $document.on(eventName, className, function(e) {
+    $document.on(eventName, className, (e: JQuery.Event) => {
         if (downEvent != null) {
-            func($(this) as any, downEvent);
+            func($(e.currentTarget as HTMLElement), downEvent);
             downEvent = undefined;
         }
     });
 }
 
 export function onMouseOver(className: string, func: MouseFn) {
-    $document.on("mouseover", className, function(e: JQueryEventObject) {
-        func($(this) as any, fixPageCoords(e));
+    $document.on("mouseover", className, (e: JQuery.Event) => {
+        func($(e.currentTarget as HTMLElement), fixPageCoords(e));
     });
 }
 
 export function onMouseOut(className: string, func: MouseFn) {
-    $document.on("mouseout", className, function(e: JQueryEventObject) {
-        func($(this) as any, fixPageCoords(e));
+    $document.on("mouseout", className, (e: JQuery.Event) => {
+        func($(e.currentTarget as HTMLElement), fixPageCoords(e));
     });
 }
 
-export type MouseFn = (p: JQuery, e: JQueryEventObject) => void;
-export type MouseOverOutFn = (p: JQuery, e: JQueryEventObject, over: boolean) => void;
+export type MouseFn = (p: JQuery, e: JQuery.Event) => void;
+export type MouseOverOutFn = (p: JQuery, e: JQuery.Event, over: boolean) => void;
 
 export function onMouseOverOut(className: string, func: MouseOverOutFn) {
     // A combination function with a third parameter
     // true when over, false when out
 
-    $document.on("mouseover", className, function(e: JQueryEventObject) {
-        func($(this) as any, fixPageCoords(e), true);
+    $document.on("mouseover", className, (e: JQuery.Event) => {
+        func($(e.currentTarget as HTMLElement), fixPageCoords(e), true);
     });
 
-    $document.on("mouseout", className, function(e: JQueryEventObject) {
-        func($(this) as any, fixPageCoords(e), false);
+    $document.on("mouseout", className, (e: JQuery.Event) => {
+        func($(e.currentTarget as HTMLElement), fixPageCoords(e), false);
     });
 }

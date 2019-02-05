@@ -21,7 +21,7 @@ export class QuestionHandler {
     }
 
     // Opens pop-up window to create question.
-    async addQuestionQst(e: Event, par: Paragraph) {
+    async addQuestionQst(e: JQuery.Event, par: Paragraph) {
         const parNextId = getParId(par);
         if (!parNextId) {
             showMessageDialog("Not a valid paragraph.");
@@ -34,7 +34,7 @@ export class QuestionHandler {
         this.viewctrl.editingHandler.addSavedParToDom(result.data, {type: EditType.AddAbove, par: par});
     }
 
-    async editQst(e: Event, par: Paragraph) {
+    async editQst(e: JQuery.Event, par: Paragraph) {
         const parId = getParId(par);
         if (!parId) {
             showMessageDialog("Not a valid paragraph.");
@@ -54,7 +54,7 @@ export class QuestionHandler {
 
     // Event handler for "Add question below"
     // Opens pop-up window to create question.
-    async addQuestion(e: Event, par: Paragraph) {
+    async addQuestion(e: JQuery.Event, par: Paragraph) {
         const parNextId = getParId(par.next());
         if (!parNextId) {
             showMessageDialog("Not a valid paragraph.");

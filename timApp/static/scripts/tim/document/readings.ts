@@ -124,7 +124,7 @@ function queueParagraphForReading() {
     }) as any, 300 * numWords);
 }
 
-function readlineHandler($this: JQuery, e: Event) {
+function readlineHandler($this: JQuery, e: JQuery.Event) {
     markParRead($this.parents(".par"), readingTypes.clickRed);
     return true;
 }

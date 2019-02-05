@@ -354,7 +354,7 @@ export class TimTableController extends DestroyScope implements IController {
         // document.removeEventListener("click", this.onClick);
     }
 
-    private onClick(e: JQueryEventObject) {
+    private onClick(e: JQuery.Event) {
         if (this.mouseInTable) {
             if (this.isInEditMode() && isToolbarEnabled()) {
                 openTableEditorToolbar({
