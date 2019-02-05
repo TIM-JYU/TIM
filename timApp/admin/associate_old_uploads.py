@@ -11,7 +11,7 @@ from timApp.user.usergroup import UserGroup
 upload_regexes = [
     r'\[[^\[\]]*\]\(/(files|images)/(\d+)/([^()]+)\)',  # normal images and links
     r'"/(files|images)/(\d+)/([^"]+)"',  # relative path in quotes
-    r': *"?/(files|images)/(\d+)/([^"\n]+)"?'  # in plugin markdown, e.g. "file: /images/123456/a.jpg"
+    r'(?::|src=) *"?/(files|images)/(\d+)/([^"\n]+)"?'  # in plugin markdown, e.g. "file: /images/123456/a.jpg"
 ]
 
 
