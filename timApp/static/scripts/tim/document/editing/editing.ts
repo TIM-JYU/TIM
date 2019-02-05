@@ -309,7 +309,7 @@ This will delete the whole ${options.area ? "area" : "paragraph"} from the docum
             unreadCb: async () => {
                 await handleUnread(this.viewctrl.item, extraData, params);
             },
-        }));
+        }).result);
         this.viewctrl.editing = false;
     }
 

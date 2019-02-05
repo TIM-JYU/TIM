@@ -1,4 +1,4 @@
-import angular, {IPromise, IRootElementService, IScope} from "angular";
+import angular, {IRootElementService, IScope} from "angular";
 import $ from "jquery";
 import rangyinputs from "rangyinputs";
 import {setEditorScope} from "tim/editor/editorScope";
@@ -7,7 +7,7 @@ import {timApp} from "../app";
 import {IExtraData, ITags} from "../document/editing/edittypes";
 import {getElementByParId, getParAttributes} from "../document/parhelpers";
 import {IDocument} from "../item/IItem";
-import {DialogController, registerDialogComponent, showDialog, showMessageDialog} from "../ui/dialog";
+import {DialogController, IModalInstance, registerDialogComponent, showDialog, showMessageDialog} from "../ui/dialog";
 import {$http, $injector, $localStorage, $timeout, $upload, $window} from "../util/ngimport";
 import {IAceEditor} from "./ace-types";
 import {AceParEditor} from "./AceParEditor";
@@ -1292,11 +1292,11 @@ registerDialogComponent("pareditor",
     PareditorController,
     {templateUrl: "/static/templates/parEditor.html"});
 
-export function openEditor(p: IEditorParams): IPromise<IEditorResult> {
+export function openEditor(p: IEditorParams): IModalInstance<IEditorResult> {
     return showDialog<PareditorController>(
         "pareditor",
         {params: () => p},
-        {saveKey: p.options.localSaveTag, absolute: true, size: p.defaultSize, forceMaximized: true}).result;
+        {saveKey: p.options.localSaveTag, absolute: true, size: p.defaultSize, forceMaximized: true});
 }
 
 export function openEditorSimple(docId: number, text: string, caption: string, localSaveTag: string) {
@@ -1325,7 +1325,7 @@ export function openEditorSimple(docId: number, text: string, caption: string, l
         },
         unreadCb: async () => {
         },
-    });
+    }).result;
 }
 
 export function test() {

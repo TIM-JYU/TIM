@@ -2,9 +2,9 @@ import {IScope} from "angular";
 import $ from "jquery";
 import {Moment} from "moment";
 import {IPluginInfoResponse} from "../editor/parCompiler";
-import {openEditor} from "../editor/pareditor";
-import {showMessageDialog} from "../ui/dialog";
-import {$compile, $http, $window} from "../util/ngimport";
+import {IEditorResult, openEditor} from "../editor/pareditor";
+import {IModalInstance, showMessageDialog} from "../ui/dialog";
+import {$compile, $http, $timeout, $window} from "../util/ngimport";
 import {getElementParent, isMobileDevice, to} from "../util/utils";
 import {EditPosition, EditType} from "./editing/editing";
 import {IExtraData, IParResponse} from "./editing/edittypes";
@@ -36,6 +36,7 @@ export class NotesHandler {
     public viewctrl: ViewCtrl;
     public noteBadgePar: JQuery | undefined;
     public noteBadge: HTMLElement | undefined;
+    private editorInstance?: IModalInstance<IEditorResult>;
 
     constructor(sc: IScope, view: ViewCtrl) {
         this.sc = sc;
@@ -55,7 +56,11 @@ export class NotesHandler {
     }
 
     async toggleNoteEditor(parOrArea: ParOrArea, options: INoteEditorOptions = {}) {
-        if (this.viewctrl.editing) {
+        if (this.editorInstance) {
+            // Double-clicking a comment will trigger this message, but it seems like on Chrome, the message dialog
+            // interferes with the editor dialog if it opens first, making the editor invisible.
+            // Awaiting for editor render helps.
+            await this.editorInstance.rendered;
             await showMessageDialog("Some editor is already open.");
             return;
         }
@@ -106,7 +111,7 @@ export class NotesHandler {
         };
         const params: EditPosition = {type: EditType.Edit, pars: parOrArea};
         this.viewctrl.editing = true;
-        await to(openEditor({
+        this.editorInstance = openEditor({
             extraData,
             initialText,
             defaultSize: "md",
@@ -150,7 +155,9 @@ export class NotesHandler {
             unreadCb: async () => {
                 await handleUnread(this.viewctrl.item, extraData, params);
             },
-        }));
+        });
+        await to(this.editorInstance.result);
+        this.editorInstance = undefined;
         this.viewctrl.editing = false;
     }
 

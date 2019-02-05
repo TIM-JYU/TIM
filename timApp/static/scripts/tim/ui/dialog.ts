@@ -197,7 +197,7 @@ export async function showMessageDialog(message: string) {
     return showDialog<MessageDialogController>("timMessageDialog", {message: () => message});
 }
 
-export interface IModalInstance<Result> {
+export interface IModalInstance<Result> extends IModalInstanceService {
     result: IPromise<Result>;
 
     close(result: Result): void;
