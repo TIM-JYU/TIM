@@ -21,7 +21,7 @@ export interface IPluginAttributes<Markup extends IGenericPluginMarkup, State> {
 // Attributes that are valid for all plugins.
 export const GenericPluginMarkup = t.partial({
     answerLimit: t.Integer,
-    button: t.string,
+    button: nullable(t.string),
     buttonText: t.string,
     footer: t.string,
     header: nullable(t.string),

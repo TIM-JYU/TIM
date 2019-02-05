@@ -503,7 +503,10 @@ function makeTemplate() {
     </p>
     <div class="csRunMenuArea" ng-if="::!$ctrl.forcedupload">
         <p class="csRunMenu">
-            <button ng-if="::$ctrl.isRun" ng-disabled="$ctrl.isRunning" title="(Ctrl-S)" ng-click="$ctrl.runCode()"
+            <button ng-if="::$ctrl.isRun && $ctrl.buttonText()"
+                    ng-disabled="$ctrl.isRunning"
+                    title="(Ctrl-S)"
+                    ng-click="$ctrl.runCode()"
                     ng-bind-html="::$ctrl.buttonText()"></button>
             &nbsp&nbsp
             <button ng-if="::$ctrl.isTest" ng-disabled="$ctrl.isRunning" ng-click="$ctrl.runTest()">Test</button>
@@ -1124,6 +1127,9 @@ class CsController extends CsBase implements IController {
         const txt = super.buttonText();
         if (txt) {
             return txt;
+        }
+        if (this.attrs.button === null || this.attrs.buttonText === null) {
+            return null;
         }
         if (this.type.indexOf("text") >= 0 || this.isSimcir || this.attrs.justSave) {
             return this.english ? "Save" : "Tallenna";
