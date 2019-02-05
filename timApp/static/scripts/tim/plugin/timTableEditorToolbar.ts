@@ -1,5 +1,6 @@
 import {IRootElementService, IScope} from "angular";
 import {DialogController, registerDialogComponent, showDialog} from "../ui/dialog";
+import {TimTableController} from "./timTable";
 
 export interface ITimTableToolbarCallbacks {
     setCell: (value: object) => void;
@@ -12,7 +13,7 @@ export interface ITimTableToolbarCallbacks {
 
 export interface ITimTableEditorToolbarParams {
     callbacks: ITimTableToolbarCallbacks;
-    activeTable: object;
+    activeTable: TimTableController;
 }
 
 let instance: TimTableEditorToolbarController | undefined;
@@ -38,7 +39,7 @@ export class TimTableEditorToolbarController extends DialogController<{params: I
         super.$onInit();
         this.callbacks = this.resolve.params.callbacks;
         this.activeTable = this.resolve.params.activeTable;
-        this.hid = (this.activeTable as any).data.hid;
+        this.hid = this.activeTable.data.hid;
         this.draggable.setCloseFn(undefined); // Hides the close button
     }
 
@@ -50,7 +51,7 @@ export class TimTableEditorToolbarController extends DialogController<{params: I
     }
 
     public callbacks!: ITimTableToolbarCallbacks; // $onInit
-    public activeTable?: object;
+    public activeTable?: TimTableController;
     private visible: boolean = true;
     private hid?: any;
 
@@ -86,10 +87,10 @@ export class TimTableEditorToolbarController extends DialogController<{params: I
      * @param callbacks Callbacks for communicating with the table.
      * @param activeTable The object that requested the toolbar to open.
      */
-    public show(callbacks: ITimTableToolbarCallbacks, activeTable: object) {
+    public show(callbacks: ITimTableToolbarCallbacks, activeTable: TimTableController) {
         this.visible = true;
         this.activeTable = activeTable;
-        this.hid = (this.activeTable as any).data.hid;
+        this.hid = this.activeTable.data.hid;
         this.callbacks = callbacks;
     }
 
@@ -128,7 +129,7 @@ export class TimTableEditorToolbarController extends DialogController<{params: I
     private pinSelected() {
         const style : any = {};
         if ( !this.activeTable ) return style;
-        if ( (this.activeTable as any).shiftDown ) {
+        if ( this.activeTable.shiftDown ) {
             style["background"] = 'black';
         }
         return style;

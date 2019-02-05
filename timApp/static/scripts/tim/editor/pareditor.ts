@@ -714,9 +714,9 @@ ${backTicks}
         });
         this.editor.setEditorText(text);
         textarea.on("input", () => this.editorChanged());
-        textarea.on("paste", (e) => this.onPaste(e));
-        textarea.on("drop", (e) => this.onDrop(e));
-        textarea.on("dragover", (e) => this.allowDrop(e));
+        textarea.on("paste", (e: JQuery.Event) => this.onPaste(e));
+        textarea.on("drop", (e: JQuery.Event) => this.onDrop(e));
+        textarea.on("dragover", (e: JQuery.Event) => this.allowDrop(e));
 
     }
 
@@ -853,43 +853,40 @@ ${backTicks}
         return editor !== undefined && (editor.editor as IAceEditor).renderer != null;
     }
 
-    onPaste(e: any) {
-        let event = e as any; // ClipboardEvent;
-        let items = (event.clipboardData || event.originalEvent.clipboardData).items;
+    onPaste(e: JQuery.Event) {
+        const items = (e.originalEvent as ClipboardEvent).clipboardData.items;
         // find pasted image among pasted items
-        let blob = null;
         let blobs = 0;
         for (let i = 0; i < items.length; i++) {
             // TODO: one could inspect if some item contains image name and then use that to name the image
             if (items[i].type.indexOf("image") === 0) {
-                blob = items[i].getAsFile();
+                const blob = items[i].getAsFile();
                 if (blob !== null) {
-                    this.onFileSelect(blob)
+                    this.onFileSelect(blob);
                     blobs++;
                 }
             }
         }
-        if ( blobs > 0 ) e.preventDefault();
+        if (blobs > 0) {
+            e.preventDefault();
+        }
     }
 
-    onDrop(e: any) {
+    onDrop(e: JQuery.Event) {
         e.preventDefault();
-        let event = e as DroppableEvent;
-        let files = e.originalEvent.dataTransfer.files;
-        if ( !files ) return;
-        for (let i = 0; i < files.length; i++)
+        const de = e.originalEvent as DragEvent;
+        if (!de.dataTransfer) {
+            return;
+        }
+        const files = de.dataTransfer.files;
+        for (let i = 0; i < files.length; i++) {
             this.onFileSelect(files[i]);
+        }
     }
 
-    allowDrop(e:object) {
-        let event = e as DragEvent;
-        event.preventDefault();
+    allowDrop(e: JQuery.Event) {
+        e.preventDefault();
     }
-
-    loadFiles(items: any) {
-
-    }
-
 
     onFileSelect(file: File) {
         const editor = this.editor!;
@@ -1066,8 +1063,8 @@ ${backTicks}
         // pasteInput.on("dragover", (e) => this.allowDrop(e));
         const pasteInput = document.getElementById("pasteInput");
         if ( pasteInput ) {
-            pasteInput.ondrop = (e) => this.onDrop(e);
-            pasteInput.ondragover = (e) => this.allowDrop(e);
+            pasteInput.ondrop = (e) => this.onDrop(jQuery.Event(e));
+            pasteInput.ondragover = (e) => this.allowDrop(jQuery.Event(e));
         }
         editorContainer.addClass("editor-loading");
         let oldPosition;
@@ -1109,13 +1106,13 @@ ${backTicks}
             });
             /*
             neweditor.getSession().on("paste", (e) => {
-                this.onPaste(e); // TODO: does newer fire
+                this.onPaste(e); // TODO: does never fire
             });
             neweditor.getSession().on("drop", (e) => {
-                this.onDrop(e); // TODO: does newer fire
+                this.onDrop(e); // TODO: does never fire
             });
             neweditor.getSession().on("dragover", (e) => {
-                this.allowDrop(e); // TODO: does newer fire
+                this.allowDrop(e); // TODO: does never fire
             });
             neweditor.onPaste = (e) => {
                // this.onPaste(e); // only works for text input.

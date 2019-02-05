@@ -21,9 +21,8 @@ export function initCssPrint() {
     // INTERNET EXPLORER
     const ua = window.navigator.userAgent;
     if (ua.indexOf("MSIE ") > 0) {
-        // TODO: Remove "any" after TypeScript 2.8.2 release
-        (window as any).onbeforeprint = BeforePrint;
-        (window as any).onafterprint = AfterPrint;
+        window.onbeforeprint = BeforePrint;
+        window.onafterprint = AfterPrint;
     }
 }
 
