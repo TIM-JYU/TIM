@@ -8,8 +8,7 @@ import {
     makePreview,
     minimizeJson,
 } from "tim/document/question/dynamicAnswerSheet";
-import {timelimit} from "tim/session";
-import {markAsUsed, setSetting, to} from "tim/util/utils";
+import {getStorage, markAsUsed, setStorage, to} from "tim/util/utils";
 import {ParCompiler} from "../../editor/parCompiler";
 import {
     IAskedJsonJson,
@@ -228,7 +227,7 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
 
     private setTime() {
         this.ui = {durationType: "seconds", durationAmount: 30};
-        const timeLimit = parseInt(timelimit || "30");
+        const timeLimit: number = getStorage("timelimit") || 30;
         if (timeLimit > 0) {
             this.ui.durationAmount = timeLimit;
         }
@@ -888,7 +887,7 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
             return;
         }
 
-        await setSetting("timelimit", (questionjson.timeLimit && questionjson.timeLimit.toString()) || "30");
+        setStorage("timelimit", questionjson.timeLimit || 30);
 
         if (isAskedQuestion(p)) {
             await this.updatePoints(p);

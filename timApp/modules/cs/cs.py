@@ -971,7 +971,6 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                                   "/cs/js/build/stack.js",
                                   "/cs/stack/ServerSyncValues.js"
                                   ],
-                           "angularModule": ["csApp", "csConsoleApp", "stackApp"],
                            "css": ["/cs/css/cs.css",
                                    "/cs/css/mathcheck.css"
                                    ], "multihtml": True, "multimd": True, "canGiveTask": True}
@@ -985,12 +984,10 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                                       "/cs/js-parsons/lib/skulpt-stdlib.js",
                                       "/cs/js-parsons/lib/prettify.js"
                                       ],
-                               "angularModule": ["csApp", "csConsoleApp"],
                                "css": ["/cs/css/cs.css", "/cs/js-parsons/parsons.css",
                                        "/cs/js-parsons/lib/prettify.css"], "multihtml": True, "multimd": True}
             if is_simcir:
                 result_json = {"js": ["/cs/js/build/csPlugin.js"],
-                               "angularModule": ["csApp"],
                                "css": ["/cs/css/cs.css", "/cs/simcir/simcir.css", "/cs/simcir/simcir-basicset.css"],
                                "multihtml": True, "multimd": True}
             result_json.update(templs)

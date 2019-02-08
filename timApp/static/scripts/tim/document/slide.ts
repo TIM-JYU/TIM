@@ -1,7 +1,7 @@
 import $ from "jquery";
 import Reveal from "reveal";
-import {background_color, background_url, is_owner, item} from "tim/show_slide_vars";
 import {getURLParameter} from "tim/util/utils";
+import {IItem} from "../item/IItem";
 import {$log} from "../util/ngimport";
 
 const pollInterval = 500;
@@ -13,6 +13,8 @@ function refresh() {
         return; // TODO: think this so that things are paired
     }
     clearTimeout(pollTimeout);
+    const w = window as any;
+    const item: IItem = w.item;
     $.ajax({
         cache: false,
         url: "/getslidestatus",
@@ -60,6 +62,8 @@ function updateSlideStatus(h: number, v: number, f: number) {
     }
     receiving = false;
     clearTimeout(pollTimeout);
+    const w = window as any;
+    const item: IItem = w.item;
     $.ajax({
         dataType: "json",
         url: "/setslidestatus",
@@ -79,6 +83,9 @@ function updateSlideStatus(h: number, v: number, f: number) {
 function initReveal() {
     // Full list of configuration options available here:
     // https://github.com/hakimel/reveal.js#configuration
+    const w = window as any;
+    const item: IItem = w.item;
+    const is_owner = item.rights.manage;
     Reveal.initialize({
         fragments: true,
         width: 1150,
@@ -121,6 +128,11 @@ function initReveal() {
 }
 
 $(() => {
+    const w = window as any;
+    const background_url = w.background_url;
+    const background_color = w.background_color;
+    const item: IItem = w.item;
+    const is_owner = item.rights.manage;
     if (getURLParameter("controls") == null && is_owner) {
         pollTimeout = window.setTimeout(refresh, pollInterval);
     }

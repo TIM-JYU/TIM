@@ -92,8 +92,7 @@ class ImagexServer(tim_server.TimServer):
         templs = get_all_templates('templates')
         # print("--templates--" + str(templs))
         ret = {
-            "js": ["tim/plugin/imagex", "angular-bootstrap-colorpicker"],
-            "angularModule": ["imagexApp", "colorpicker.module"],
+            "js": ["tim/plugin/imagex"],
             "css": [
                 "/static/css/imagex.css",
                 "/static/scripts/jspm_packages/npm/angular-bootstrap-colorpicker@3.0.26/css/colorpicker.min.css",

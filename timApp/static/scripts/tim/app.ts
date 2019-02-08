@@ -8,25 +8,22 @@ import angular, {
     IWindowService,
 } from "angular";
 import aedatetimepicker from "angular-eonasdan-datetimepicker";
-import colorpicker from "angularjs-color-picker";
 import ngMessages from "angular-messages";
 import ngSanitize from "angular-sanitize";
 import timer from "angular-timer";
 import uibootstrap from "angular-ui-bootstrap";
+import colorpicker from "angularjs-color-picker";
 import humanizeDuration from "humanize-duration";
 import moment, {Moment} from "moment";
 import ngFileUpload from "ng-file-upload";
 import ngStorage from "ngstorage";
-import angularmodules from "tim/angularmodules";
-import extramodules from "tim/extramodules";
-import plugins from "tim/plugins";
 import {convertDateStringsToMoments, markAsUsed} from "tim/util/utils";
 import {initUserService} from "./user/userService";
-import {injectProviders, injectServices} from "./util/ngimport";
 import {KEY_ENTER, KEY_S} from "./util/keycodes";
+import {injectProviders, injectServices} from "./util/ngimport";
 
 markAsUsed(ngMessages, timer, aedatetimepicker, ngSanitize,
-    uibootstrap, ngFileUpload, ngStorage, plugins, extramodules, colorpicker);
+    uibootstrap, ngFileUpload, ngStorage, colorpicker);
 
 // timApp's Angular modules:
 // base: 'ngMessages', 'timer', 'ae-datetimepicker', 'ngSanitize', 'ui.bootstrap'
@@ -42,7 +39,7 @@ export const timApp = angular.module("timApp", [
     "ngFileUpload",
     "ngStorage",
     "color.picker",
-].concat(angularmodules));
+]);
 // disable Angular URL manipulation when using ng-include; from http://stackoverflow.com/a/19825756
 timApp.config(["$provide", ($provide: IModule) => {
     $provide.decorator("$browser", ["$delegate", ($delegate: any) => {

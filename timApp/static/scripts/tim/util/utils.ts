@@ -1,6 +1,5 @@
 import angular, {IHttpResponse, IPromise} from "angular";
 import moment from "moment";
-import sessionsettings from "tim/session";
 import {$http, $timeout} from "./ngimport";
 
 export function checkBindings(controller: any, bindings: {[name: string]: string}) {
@@ -146,14 +145,6 @@ export function getURLParameter(sParam: string): string | undefined {
         }
     }
     return undefined;
-}
-
-export async function setSetting(setting: "timelimit", value: string) {
-    await $http({
-        method: "POST",
-        url: "/sessionsetting/" + setting + "/" + value,
-    });
-    sessionsettings[setting] = value;
 }
 
 /**

@@ -464,19 +464,19 @@ def get_state():
     if user is None:
         abort(400, 'Non-existent user')
 
-    texts, js_paths, css_paths, modules = pluginify(doc,
-                                                    [block],
-                                                    user,
-                                                    custom_answer=answer)
+    texts, js_paths, css_paths = pluginify(doc,
+                                           [block],
+                                           user,
+                                           custom_answer=answer)
     html = texts[0].get_final_dict()['html']
     if review:
         block.final_dict = None
-        review_pars, _, _, _ = pluginify(doc,
-                                         [block],
-                                         user,
-                                         custom_answer=answer,
-                                         review=review,
-                                         wrap_in_div=False)
+        review_pars, _, _ = pluginify(doc,
+                                      [block],
+                                      user,
+                                      custom_answer=answer,
+                                      review=review,
+                                      wrap_in_div=False)
         return json_response({'html': html, 'reviewHtml': review_pars[0].get_final_dict()['html']})
     else:
         return json_response({'html': html, 'reviewHtml': None})

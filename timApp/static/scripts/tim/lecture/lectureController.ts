@@ -14,7 +14,6 @@
 import {IController, IScope} from "angular";
 import moment from "moment";
 import {timApp} from "tim/app";
-import sessionsettings from "tim/session";
 import {clone, getURLParameter, markAsUsed, Require, setStorage, to} from "tim/util/utils";
 import {ViewCtrl} from "../document/viewctrl";
 import {IModalInstance, showMessageDialog} from "../ui/dialog";
@@ -26,7 +25,7 @@ import {
     IAnswerQuestionResult,
     isOpenInAnotherTab,
     QUESTION_STORAGE,
-    showQuestionAnswerDialog
+    showQuestionAnswerDialog,
 } from "./answerToQuestionController";
 import {showLectureDialog} from "./createLectureCtrl";
 import {showLectureEnding} from "./lectureEnding";
@@ -87,7 +86,6 @@ export class LectureController implements IController {
     private newMessagesAmount: number;
     private newMessagesAmountText: string;
     private scope: IScope;
-    private settings: any;
     private showPoll: boolean;
     private studentTable: ILecturePerson[];
     viewctrl: Require<ViewCtrl | undefined>;
@@ -112,7 +110,6 @@ export class LectureController implements IController {
         this.lectureEndingDialogState = LectureEndingDialogState.NotAnswered;
         this.lectureEnded = false;
         this.wallMessages = [];
-        this.settings = sessionsettings;
 
         this.lectureSettings = {
             inLecture: false,

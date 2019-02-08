@@ -7,7 +7,6 @@ export interface IParResponse {
     js: string[];
     jsModuleIds: string[];
     css: string[];
-    angularModule: string[];
     changed_pars: PendingCollection;
     version: [number, number];
     duplicates?: Duplicate[];

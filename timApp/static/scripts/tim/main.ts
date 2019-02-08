@@ -1,5 +1,6 @@
 import angular from "angular";
 import bootstrap from "bootstrap";
+import * as t from "io-ts";
 import $ from "jquery";
 import * as answerbrowser from "tim/answer/answerbrowser3";
 import * as userlistController from "tim/answer/userlistController";
@@ -85,13 +86,33 @@ markAsUsed(
     viewctrl,
 );
 
-if ( document.location)
+if (document.location) {
     timLogInit(document.location.search.slice(1));
+}
 
-$(() => {
+$(async () => {
     timLogTime("DOM ready", "main.ts");
     insertLogDivIfEnabled();
-    angular.bootstrap(document, ["timApp"], {strictDi: false});
+    const jsmodules = (window as any).JSMODULES;
+    const moduleLoads = [];
+    for (const mname of jsmodules) {
+        const m = import(mname);
+        moduleLoads.push(m);
+    }
+    const StringArray = t.array(t.string);
+    const angularModules: string[] = [];
+    for (const m of moduleLoads) {
+        const loaded = await m;
+        const names = loaded.moduleNames;
+        if (StringArray.is(names)) {
+            angularModules.push(...names);
+        }
+    }
+    const extraAngularModules = (window as any).ANGULARMODULES;
+    if (StringArray.is(extraAngularModules)) {
+        angularModules.push(...extraAngularModules);
+    }
+    angular.bootstrap(document, ["timApp", ...angularModules], {strictDi: false});
     timLogTime("Angular bootstrap done", "main.ts");
     ParCompiler.processAllMathDelayed($("body"), 1500);
 

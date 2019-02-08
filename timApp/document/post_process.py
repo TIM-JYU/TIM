@@ -29,15 +29,15 @@ def hide_names_in_teacher(doc_id):
 
 # TODO: post_process_pars is called twice in one save??? Or even 4 times, 2 after editor is closed??
 def post_process_pars(doc: Document, pars, user: User, sanitize=True, do_lazy=False, edit_window=False,
-                      load_plugin_states=True):
+                      load_plugin_states=True) -> Tuple[List[dict], List[str], List[str]]:
     taketime("start pluginify")
-    final_pars, js_paths, css_paths, modules = pluginify(doc,
-                                                         pars,
-                                                         user,
-                                                         sanitize=sanitize,
-                                                         do_lazy=do_lazy,
-                                                         edit_window=edit_window,
-                                                         load_states=load_plugin_states)
+    final_pars, js_paths, css_paths = pluginify(doc,
+                                                pars,
+                                                user,
+                                                sanitize=sanitize,
+                                                do_lazy=do_lazy,
+                                                edit_window=edit_window,
+                                                load_states=load_plugin_states)
     taketime("end pluginify")
     settings = doc.get_settings()
     macroinfo = settings.get_macroinfo()
@@ -61,7 +61,7 @@ def post_process_pars(doc: Document, pars, user: User, sanitize=True, do_lazy=Fa
 
     if edit_window:
         # Skip readings and notes
-        return process_areas(settings, final_pars, macros, delimiter, env), js_paths, css_paths, modules
+        return process_areas(settings, final_pars, macros, delimiter, env), js_paths, css_paths
 
     if settings.show_authors():
         authors = doc.get_changelog(-1).get_authorinfo(pars)
@@ -127,7 +127,7 @@ def post_process_pars(doc: Document, pars, user: User, sanitize=True, do_lazy=Fa
                 p['notes'].append(UserNoteAndUser(user=u, note=n, editable=editable, private=private))
     # taketime("notes mixed")
 
-    return process_areas(settings, final_pars, macros, delimiter, env), js_paths, css_paths, modules
+    return process_areas(settings, final_pars, macros, delimiter, env), js_paths, css_paths
 
 
 def process_areas(settings, pars: List[DocParagraph], macros, delimiter, env) -> List[Dict]:

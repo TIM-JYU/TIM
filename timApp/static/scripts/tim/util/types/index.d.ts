@@ -36,15 +36,6 @@ declare module "ace" {
 declare module "ace/snippets";
 declare module "rangyinputs";
 
-// All inline module definitions that exist in HTML templates should be listed here:
-declare module "tim/plugins";
-declare module "tim/angularmodules";
-declare module "tim/extramodules";
-declare module "tim/session" {
-    let timelimit: string | undefined;
-}
-declare module "tim/show_slide_vars";
-
 declare module "mathjax" {
     const MathJax: jax.IMathJax;
     export = MathJax;

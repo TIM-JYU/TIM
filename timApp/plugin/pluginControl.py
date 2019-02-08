@@ -70,7 +70,7 @@ def pluginify(doc: Document,
               output_format: PluginOutputFormat = PluginOutputFormat.HTML,
               user_print: bool = False,
               target_format: PrintFormat=PrintFormat.LATEX,
-              dereference=True) -> Tuple[List[DocParagraph], List[str], List[str], List[str]]:
+              dereference=True) -> Tuple[List[DocParagraph], List[str], List[str]]:
     """"Pluginifies" or sanitizes the specified DocParagraphs by calling the corresponding plugin route for each plugin
     paragraph.
 
@@ -247,7 +247,6 @@ def pluginify(doc: Document,
 
     js_paths = []
     css_paths = []
-    modules = []
 
     # taketime("answ", "done", len(answers))
 
@@ -276,7 +275,7 @@ def pluginify(doc: Document,
                     plugin_name, f'Failed to parse JSON from plugin reqs route: {e}', resp,
                     plugin_output_format=output_format)
             continue
-        plugin_js_files, plugin_css_files, plugin_modules = plugin_deps(reqs)
+        plugin_js_files, plugin_css_files = plugin_deps(reqs)
         for src in plugin_js_files:
             if src.startswith("http") or src.startswith("/"):  # absolute URL
                 js_paths.append(src)
@@ -289,13 +288,10 @@ def pluginify(doc: Document,
                 css_paths.append(src)
             else:
                 css_paths.append(f"/{plugin_name}/{src}")
-        for mod in plugin_modules:
-            modules.append(mod)
 
         # Remove duplicates, preserving order
         js_paths = list(OrderedDict.fromkeys(js_paths))
         css_paths = list(OrderedDict.fromkeys(css_paths))
-        modules = list(OrderedDict.fromkeys(modules))
 
         default_auto_md = reqs.get('default_automd', False)
 
@@ -356,7 +352,7 @@ def pluginify(doc: Document,
 
     # taketime("phtml done")
 
-    return pars, js_paths, css_paths, modules
+    return pars, js_paths, css_paths
 
 
 def get_markup_value(markup, key, default):
@@ -380,14 +376,13 @@ def get_all_reqs():
     return allreqs
 
 
-def plugin_deps(p: Dict) -> Tuple[List[str], List[str], List[str]]:
+def plugin_deps(p: Dict) -> Tuple[List[str], List[str]]:
     """
 
     :param p: is json of plugin requirements of the form:
-              {"js": ["js.js"], "css":["css.css"], "angularModule":["module"]}
+              {"js": ["js.js"], "css":["css.css"]}
     """
     js_files = []
-    modules = []
     css_files = []
     if "css" in p:
         for cssF in p['css']:
@@ -395,7 +390,4 @@ def plugin_deps(p: Dict) -> Tuple[List[str], List[str], List[str]]:
     if "js" in p:
         for jsF in p['js']:
             js_files.append(jsF)
-    if "angularModule" in p:
-        for ng in p['angularModule']:
-            modules.append(ng)
-    return js_files, css_files, modules
+    return js_files, css_files

@@ -11,20 +11,10 @@
         <link rel="stylesheet" href="{{ url_for('static', filename='scripts/reveal/css/print/pdf.css') }}" />
     {% endif %}
     {% include 'partials/doc_customcss.html' %}
-{% endblock %}
-
-{% block extramoduledefinitions %}
-    {{ super() }}
-    SystemJS.amdDefine('tim/show_slide_vars.ts', ['exports'], function (exports) {
-        exports.is_owner = item.rights.manage;
-        exports.background_url = {{ (slide_background_url or None)|tojson }};
-        exports.background_color = {{ (slide_background_color or None)|tojson }};
-        exports.item = item;
-    });
-{% endblock %}
-
-{% block extramodules %}
-    {{ (["tim/document/slide"])|map('map_format', "'%s'")|join(', ')|safe }}
+    <script>
+        var background_url = {{ (slide_background_url or None)|tojson }};
+        var background_color = {{ (slide_background_color or None)|tojson }};
+    </script>
 {% endblock %}
 
 {% block body %}

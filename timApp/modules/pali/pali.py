@@ -210,7 +210,6 @@ def check_letters(word: str, needed_len: int) -> bool:
 def reqs():
     return jsonify({
         "js": ["js/build/pali.js"],
-        "angularModule": ["paliApp"],
         "multihtml": True,
         "css": ["css/pali.css"],
     })

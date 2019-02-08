@@ -16,8 +16,7 @@ class ParDiffTest(TimRouteTest):
                                     'version': [1, 0]})
         self.assert_dict_subset(r['diff'][0], {'after_id': None,
                                                'type': 'insert'})
-        self.assert_dict_subset(r['diff'][0]['content'], {'angularModule': [],
-                                                          'css': [],
+        self.assert_dict_subset(r['diff'][0]['content'], {'css': [],
                                                           'js': []})
         e = html.fromstring(r['diff'][0]['content']['texts'])
         self.assert_content(e, ['1'])

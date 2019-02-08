@@ -6,6 +6,7 @@ import {ViewCtrl} from "../document/viewctrl";
 import {editorChangeValue} from "../editor/editorScope";
 import {$http, $q, $sce, $timeout} from "../util/ngimport";
 import {markAsUsed, numOrStringToNumber, Require, to, valueOr} from "../util/utils";
+import * as colorpicker from "angular-bootstrap-colorpicker";
 import {
     CommonPropsT,
     DefaultPropsT,
@@ -40,9 +41,10 @@ import {
 } from "./imagextypes";
 import {PluginBase} from "./util";
 
-markAsUsed(ngSanitize);
+markAsUsed(ngSanitize, colorpicker);
 
-const imagexApp = angular.module("imagexApp", ["ngSanitize"]);
+export const moduleNames = ["imagexApp"];
+const imagexApp = angular.module(moduleNames[0], ["ngSanitize", "colorpicker.module"]);
 
 let globalPreviewColor = "#fff";
 

@@ -304,7 +304,8 @@ def view(item_path, template_name, usergroup=None, route="view"):
     slide_background_url = None
     slide_background_color = None
 
-    if template_name == 'show_slide.html':
+    is_slide = template_name == 'show_slide.html'
+    if is_slide:
         slide_background_url = doc_settings.get_slide_background_url()
         slide_background_color = doc_settings.get_slide_background_color()
         do_lazy = False
@@ -312,12 +313,14 @@ def view(item_path, template_name, usergroup=None, route="view"):
         do_lazy = get_option(request, "lazy", doc_settings.lazy(
             default=plugin_count >= current_app.config['PLUGIN_COUNT_LAZY_LIMIT']))
 
-    texts, js_paths, css_paths, modules = post_process_pars(doc,
-                                                            xs,
-                                                            current_list_user or current_user,
-                                                            sanitize=False,
-                                                            do_lazy=do_lazy,
-                                                            load_plugin_states=not hide_answers)
+    texts, js_paths, css_paths = post_process_pars(
+        doc,
+        xs,
+        current_list_user or current_user,
+        sanitize=False,
+        do_lazy=do_lazy,
+        load_plugin_states=not hide_answers,
+    )
 
     index = get_index_from_html_list(t['html'] for t in texts)
 
@@ -352,6 +355,18 @@ def view(item_path, template_name, usergroup=None, route="view"):
         ]
         }
         '''
+    if is_slide:
+        js_paths.append('tim/document/slide')
+    angular_module_names = []
+    if teacher_or_see_answers:
+        js_paths.append('angular-ui-grid')
+        angular_module_names += [
+            "ui.grid",
+            "ui.grid.cellNav",
+            "ui.grid.selection",
+            "ui.grid.exporter",
+            "ui.grid.autoResize",
+        ]
 
     return render_template(template_name,
                            access=access,
@@ -366,7 +381,7 @@ def view(item_path, template_name, usergroup=None, route="view"):
                            version=doc.get_version(),
                            js=js_paths,
                            cssFiles=css_paths,
-                           jsMods=modules,
+                           jsMods=angular_module_names,
                            jsModuleIds=get_module_ids(js_paths),
                            doc_css=doc_css,
                            start_index=start_index,
@@ -443,17 +458,20 @@ def check_updated_pars(doc_id, major, minor):
     # taketime("after rights")
     for diff in diffs:  # about < 1 ms
         if diff.get('content'):
-            pars, js_paths, css_paths, modules = post_process_pars(d,
-                                                                   diff['content'],
-                                                                   get_current_user_object(),
-                                                                   edit_window=False)
-            diff['content'] = {'texts': render_template('partials/paragraphs.html',
-                                                        text=pars,
-                                                        item={'rights': rights},
-                                                        preview=False),
-                               'js': js_paths,
-                               'css': css_paths,
-                               'angularModule': modules}
+            pars, js_paths, css_paths = post_process_pars(
+                d,
+                diff['content'],
+                get_current_user_object(),
+                edit_window=False,
+            )
+            diff['content'] = {
+                'texts': render_template('partials/paragraphs.html',
+                                         text=pars,
+                                         item={'rights': rights},
+                                         preview=False),
+                'js': js_paths,
+                'css': css_paths,
+            }
     # taketime("after for diffs")
     return json_response({'diff': diffs,
                           'version': d.get_version(),

@@ -23,7 +23,6 @@ def tape_reqs():
             # "js/timTable.js"
             # "tim/controllers/qstController",
         ],
-        "angularModule": [],
         "multihtml": True,
         "multimd": False,
         "default_automd": False,

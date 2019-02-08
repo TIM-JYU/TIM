@@ -1,7 +1,6 @@
 import {IScope} from "angular";
 import {$compile, $injector, $log, $timeout} from "tim/util/ngimport";
 import {timLogTime} from "tim/util/timTiming";
-import {lazyLoad, lazyLoadMany} from "../util/lazyLoad";
 import {fixDefExport, injectStyle} from "../util/utils";
 import {ViewCtrl} from "../document/viewctrl";
 
@@ -9,7 +8,6 @@ export interface IPluginInfoResponse {
     js: string[];
     texts: string;
     css: string[];
-    angularModule: string[];
     trdiff?: {old: string, new: string};
 }
 
@@ -30,8 +28,12 @@ export function compileWithViewctrl(html: string | Element,
 
 export class ParagraphCompiler {
     public async compile(data: IPluginInfoResponse, scope: IScope, view?: ViewCtrl) {
-        await lazyLoadMany(data.js);
-        $injector.loadNewModules(data.angularModule);
+        for (const m of data.js) {
+            const mod = await import(m);
+            if (mod.moduleNames) {
+                $injector.loadNewModules(mod.moduleNames);
+            }
+        }
         data.css.forEach((s) => injectStyle(s));
         const compiled = compileWithViewctrl(data.texts, scope, view);
         await this.processAllMathDelayed(compiled);

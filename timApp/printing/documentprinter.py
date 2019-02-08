@@ -194,7 +194,7 @@ class DocumentPrinter:
             tformat = PrintFormat.LATEX
 
         # render markdown for plugins
-        pars_to_print, _, _, _ = pluginify(
+        pars_to_print, _, _ = pluginify(
             doc=self._doc_entry.document,
             pars=pars_to_print,
             user=get_current_user_object(),
