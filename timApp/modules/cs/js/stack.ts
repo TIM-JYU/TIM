@@ -5,8 +5,8 @@ import {GenericPluginMarkup, PluginBase, withDefault} from "tim/plugin/util";
 import {$http, $sce} from "tim/util/ngimport";
 import {to} from "tim/util/utils";
 
-export const moduleNames = ["stackApp"];
-const stackApp = angular.module(moduleNames[0], ["ngSanitize"]);
+const stackApp = angular.module("stackApp", ["ngSanitize"]);
+export const moduleDefs = [stackApp];
 const STACK_VARIABLE_PREFIX = "stackapi_";
 
 // this.attrs

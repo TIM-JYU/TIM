@@ -3321,4 +3321,4 @@ export function truthTable(sentence: string, topbottomLines: boolean) {
     }
 }
 
-export const moduleNames = ["csApp", "csConsoleApp"];
+export const moduleDefs = [csApp, csConsoleApp];

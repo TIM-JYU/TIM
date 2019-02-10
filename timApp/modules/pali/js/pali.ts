@@ -8,8 +8,8 @@ import {$http} from "tim/util/ngimport";
 import {to} from "tim/util/utils";
 import {valueDefu} from "tim/util/utils";
 
-export const moduleNames = ["paliApp"];
-const paliApp = angular.module(moduleNames[0], ["ngSanitize"]);
+const paliApp = angular.module("paliApp", ["ngSanitize"]);
+export const moduleDefs = [paliApp];
 
 const PaliMarkup = t.intersection([
     t.partial({

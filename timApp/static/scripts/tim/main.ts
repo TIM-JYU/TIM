@@ -1,6 +1,5 @@
 import angular from "angular";
 import bootstrap from "bootstrap";
-import * as t from "io-ts";
 import $ from "jquery";
 import * as answerbrowser from "tim/answer/answerbrowser3";
 import * as userlistController from "tim/answer/userlistController";
@@ -37,7 +36,7 @@ import * as bootstrapPanel from "tim/ui/bootstrapPanel";
 import * as markupError from "tim/ui/markuperror";
 import * as loginMenu from "tim/user/loginMenu";
 import * as settingsCtrl from "tim/user/settingsCtrl";
-import {markAsUsed} from "tim/util/utils";
+import {markAsUsed, ModuleArray, StringArray} from "tim/util/utils";
 import * as annotation from "tim/velp/annotation";
 import * as reviewController from "tim/velp/reviewController";
 import * as velpSelection from "tim/velp/velpSelection";
@@ -99,13 +98,12 @@ $(async () => {
         const m = import(mname);
         moduleLoads.push(m);
     }
-    const StringArray = t.array(t.string);
     const angularModules: string[] = [];
     for (const m of moduleLoads) {
         const loaded = await m;
-        const names = loaded.moduleNames;
-        if (StringArray.is(names)) {
-            angularModules.push(...names);
+        const mods = loaded.moduleDefs;
+        if (ModuleArray.is(mods)) {
+            angularModules.push(...mods.map((mm) => mm.name));
         }
     }
     const extraAngularModules = (window as any).ANGULARMODULES;

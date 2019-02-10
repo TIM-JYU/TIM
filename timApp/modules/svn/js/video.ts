@@ -4,8 +4,8 @@ import {ViewCtrl} from "tim/document/viewctrl";
 import {GenericPluginMarkup, nullable, PluginBase, withDefault} from "tim/plugin/util";
 import {valueDefu, valueOr} from "tim/util/utils";
 
-export const moduleNames = ["videoApp"];
-const videoApp = angular.module(moduleNames[0], ["ngSanitize"]);
+const videoApp = angular.module("videoApp", ["ngSanitize"]);
+export const moduleDefs = [videoApp];
 
 function muunna(value: string | number | undefined): number | undefined {
     if (!value) {

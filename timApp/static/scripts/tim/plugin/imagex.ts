@@ -43,8 +43,9 @@ import {PluginBase} from "./util";
 
 markAsUsed(ngSanitize, colorpicker);
 
-export const moduleNames = ["imagexApp"];
-const imagexApp = angular.module(moduleNames[0], ["ngSanitize", "colorpicker.module"]);
+
+const imagexApp = angular.module("imagexApp", ["ngSanitize", "colorpicker.module"]);
+export const moduleDefs = [imagexApp];
 
 let globalPreviewColor = "#fff";
 

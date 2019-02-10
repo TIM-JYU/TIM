@@ -1,8 +1,8 @@
 import {IScope} from "angular";
 import {$compile, $injector, $log, $timeout} from "tim/util/ngimport";
 import {timLogTime} from "tim/util/timTiming";
-import {fixDefExport, injectStyle} from "../util/utils";
 import {ViewCtrl} from "../document/viewctrl";
+import {fixDefExport, injectStyle, ModuleArray} from "../util/utils";
 
 export interface IPluginInfoResponse {
     js: string[];
@@ -30,8 +30,9 @@ export class ParagraphCompiler {
     public async compile(data: IPluginInfoResponse, scope: IScope, view?: ViewCtrl) {
         for (const m of data.js) {
             const mod = await import(m);
-            if (mod.moduleNames) {
-                $injector.loadNewModules(mod.moduleNames);
+            const defs = mod.moduleDefs;
+            if (ModuleArray.is(defs)) {
+                $injector.loadNewModules(defs.map((d) => d.name));
             }
         }
         data.css.forEach((s) => injectStyle(s));
