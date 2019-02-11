@@ -181,7 +181,7 @@ def get_module_ids(js_paths: List[str]):
 
 
 def view(item_path, template_name, usergroup=None, route="view"):
-    taketime("view begin",zero=True)
+    taketime("view begin", zero=True)
     if has_special_chars(item_path):
         return redirect(remove_path_special_chars(request.path) + '?' + request.query_string.decode('utf8'))
 
@@ -255,7 +255,9 @@ def view(item_path, template_name, usergroup=None, route="view"):
             DocParagraph.preload_htmls(src_doc.get_paragraphs(), src_doc.get_settings(), clear_cache)
 
     rights = doc_info.rights
-    word_list = doc_info.document.get_word_list() if rights['editable'] and current_user and current_user.get_prefs().use_document_word_list else []
+    word_list = (doc_info.document.get_word_list()
+                 if rights['editable'] and current_user and current_user.get_prefs().use_document_word_list
+                 else [])
     # We need to deference paragraphs at this point already to get the correct task ids
     xs = dereference_pars(xs, context_doc=doc)
     total_points = None
@@ -398,7 +400,7 @@ def view(item_path, template_name, usergroup=None, route="view"):
                            task_info={'total_points': total_points,
                                       'tasks_done': tasks_done,
                                       'total_tasks': total_tasks,
-                                      'show' : show_task_info,
+                                      'show': show_task_info,
                                       'groups': task_groups},
                            doc_settings=doc_settings,
                            word_list=word_list,

@@ -60,7 +60,7 @@ def find_task_ids(blocks: List[DocParagraph]) -> Tuple[List[str], int]:
 def pluginify(doc: Document,
               pars: List[DocParagraph],
               user: Optional[User],
-              custom_answer: Optional[Answer]=None,
+              custom_answer: Optional[Answer] = None,
               sanitize=True,
               do_lazy=False,
               edit_window=False,
@@ -69,9 +69,10 @@ def pluginify(doc: Document,
               wrap_in_div=True,
               output_format: PluginOutputFormat = PluginOutputFormat.HTML,
               user_print: bool = False,
-              target_format: PrintFormat=PrintFormat.LATEX,
+              target_format: PrintFormat = PrintFormat.LATEX,
               dereference=True) -> Tuple[List[DocParagraph], List[str], List[str]]:
-    """"Pluginifies" or sanitizes the specified DocParagraphs by calling the corresponding plugin route for each plugin
+    """
+    "Pluginifies" the specified DocParagraphs by calling the corresponding plugin route for each plugin
     paragraph.
 
     :param doc Document / DocumentVersion object.
@@ -137,13 +138,13 @@ def pluginify(doc: Document,
         col = func.max(Answer.id).label('col')
         cnt = func.count(Answer.id).label('cnt')
         sub = (user
-                .answers
-                .filter(Answer.task_id.in_(task_ids) & Answer.valid == True)
-                .add_columns(col, cnt)
-                .with_entities(col, cnt)
-                .group_by(Answer.task_id).subquery())
+               .answers
+               .filter(Answer.task_id.in_(task_ids) & Answer.valid == True)
+               .add_columns(col, cnt)
+               .with_entities(col, cnt)
+               .group_by(Answer.task_id).subquery())
         answers: List[Tuple[Answer, int]] = (
-                Answer.query.join(sub, Answer.id == sub.c.col)
+            Answer.query.join(sub, Answer.id == sub.c.col)
                 .with_entities(Answer, sub.c.cnt)
                 .all()
         )
@@ -171,9 +172,9 @@ def pluginify(doc: Document,
                                    settings=settings,
                                    macro_delimiter=macro_delimiter)
 
-                gamified_data = YamlBlock.from_markdown(md).values
+                gd = YamlBlock.from_markdown(md).values
                 runner = 'gamification-map'
-                html_pars[idx][output_format.value] = f'<{runner} data={quoteattr(json.dumps(gamified_data))}></{runner}>'
+                html_pars[idx][output_format.value] = f'<{runner} data={quoteattr(json.dumps(gd))}></{runner}>'
             except yaml.YAMLError as e:
                 html_pars[idx][output_format.value] = '<div class="error"><p>Gamification error:</p><pre>' + \
                                                       str(e) + \
@@ -194,7 +195,10 @@ def pluginify(doc: Document,
                     answer_and_cnt = answer_map.get(task_id, None)
 
             if rnd_seed is None:
-                rnd_seed = get_simple_hash_from_par_and_user(block, user) # TODO: RND_SEED: get users seed for this plugin
+                rnd_seed = get_simple_hash_from_par_and_user(
+                    block,
+                    user,
+                )  # TODO: RND_SEED: get users seed for this plugin
                 new_seed = True
 
             try:
@@ -220,7 +224,8 @@ def pluginify(doc: Document,
             if plugin_name not in plugins:
                 plugins[plugin_name] = OrderedDict()
 
-            plugin.set_render_options(answer_and_cnt if load_states and answer_and_cnt is not None else None, plugin_opts)
+            plugin.set_render_options(answer_and_cnt if load_states and answer_and_cnt is not None else None,
+                                      plugin_opts)
             plugins[plugin_name][idx] = plugin
         else:
             if block.nocache and not is_gamified:  # get_nocache():
