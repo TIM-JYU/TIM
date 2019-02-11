@@ -2,10 +2,9 @@ from copy import deepcopy
 from datetime import datetime, timezone
 from typing import Tuple, Optional, Union, Iterable, Dict, NamedTuple
 
-import re
 import yaml
-import timApp
 
+import timApp
 from timApp.answer.answer import Answer
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.document import Document
@@ -107,7 +106,6 @@ class Plugin:
         self.points_rule_cache = None  # cache for points rule
         self.output = None
         self.plugin_lazy = None
-        self.style = ''
 
     @property
     def full_task_id(self):
@@ -368,9 +366,6 @@ class Plugin:
 
     def set_output(self, output: str):
         self.output = output
-
-    def set_style(self, style):
-        self.style = style
 
     def get_answerbrowser_type(self):
         if self.is_cached():

@@ -213,20 +213,6 @@ def pluginify(doc: Document,
                                                       macro_delimiter)
                 if plugin_name == 'qst':
                     plugin.values['isTask'] = not block.is_question()
-
-                # Create min and max height for div
-                style = ''
-                mh = plugin.values.get('-min-height',0)
-                if mh:
-                    style = (f'min-height:{str(mh)};')
-                mh = plugin.values.get('-max-height', 0)
-                if mh:
-                    style += f'max-height:{str(mh)};overflow-y:auto'
-                if style:
-                    style = 'style=' + style
-                    # block.set_style(style)
-                    plugin.set_style(style)
-
             except Exception as e:
                 html_pars[idx][output_format.value] = get_error_plugin(plugin_name, str(e),
                                                                        plugin_output_format=output_format)
