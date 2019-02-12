@@ -107,16 +107,12 @@ def pluginify(doc: Document,
 
     html_pars = [par.get_final_dict(use_md=md_out) for par in pars]
 
-    # taketime("answ", "sansitize")
-
     if custom_answer is not None:
         if len(pars) != 1:
             raise PluginException('len(blocks) must be 1 if custom state is specified')
     plugins: Dict[str, Dict[int, Plugin]] = {}
-    task_ids = []
 
     answer_map = {}
-    # enum_pars = enumerate(pars)
     plugin_opts = PluginRenderOptions(do_lazy=do_lazy,
                                       user_print=user_print,
                                       preview=edit_window,
@@ -128,13 +124,7 @@ def pluginify(doc: Document,
                                       )
 
     if load_states and custom_answer is None and user is not None:
-        for idx, block in enumerate(pars):  # find taskid's
-            attr_taskid = block.get_attr('taskId')
-            plugin_name = block.get_attr('plugin')
-            if plugin_name and attr_taskid:
-                task_id = f"{block.get_doc_id()}.{attr_taskid or ''}"
-                if not task_id.endswith('.'):
-                    task_ids.append(task_id)
+        task_ids, _ = find_task_ids(pars)
         col = func.max(Answer.id).label('col')
         cnt = func.count(Answer.id).label('cnt')
         sub = (user
