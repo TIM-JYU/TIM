@@ -458,6 +458,10 @@ timApp.component("timSidebarMenu", {
         <uib-tab-heading>
             <i class="glyphicon glyphicon-cog"></i>
         </uib-tab-heading>
+        <div>
+            <h5>Help</h5>
+            <a title="Open TIM-ohjeet" href="/view/tim/tim-ohjeet">User guide</a>
+        </div>
         <div ng-if="$ctrl.users.isLoggedIn()">
             <h5>Customize</h5>
             <a href="/settings">Customize TIM</a>
