@@ -403,7 +403,7 @@ export class SidebarMenuCtrl implements IController {
                 this.currentRelevance = r.result.data.relevance.relevance;
             }
         } else {
-            this.showRelevance = false;
+            this.showRelevance = false; // Don't show in root folder.
         }
     }
 
@@ -462,7 +462,8 @@ timApp.component("timSidebarMenu", {
             <h5>Customize</h5>
             <a href="/settings">Customize TIM</a>
         </div>
-        <div ng-if="!($ctrl.vctrl.item && !$ctrl.vctrl.item.isFolder && $ctrl.vctrl.item.rights.manage) && $ctrl.showRelevance">
+        <div ng-if="$ctrl.users.isLoggedIn() && !($ctrl.vctrl.item && !$ctrl.vctrl.item.isFolder)
+             && $ctrl.showRelevance">
             <h5>Folder settings</h5>
             <button class="timButton btn-block" title="Set item relevance value"
                     ng-click="$ctrl.openRelevanceEditDialog()">
