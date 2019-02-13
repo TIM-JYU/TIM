@@ -1,2 +1,0 @@
-Longer palindromes
-Short palindromes

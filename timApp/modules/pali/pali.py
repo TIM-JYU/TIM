@@ -1,5 +1,5 @@
 """
-Module for serving TIM example palindrome plugin.
+TIM example plugin: a palindrome checker.
 """
 import re
 from typing import Union
@@ -12,11 +12,12 @@ from webargs.flaskparser import use_args
 
 from pluginserver_flask import GenericMarkupModel, GenericMarkupSchema, GenericHtmlSchema, GenericHtmlModel, \
     GenericAnswerSchema, GenericAnswerModel, Missing, \
-    make_base64, InfoSchema, create_app
+    InfoSchema, create_app
 
 
 @attr.s(auto_attribs=True)
 class PaliStateModel:
+    """Model for the information that is stored in TIM database for each answer."""
     userword: str
 
 
@@ -62,15 +63,16 @@ class PaliMarkupSchema(GenericMarkupSchema):
 
 @attr.s(auto_attribs=True)
 class PaliInputModel:
+    """Model for the information that is sent from browser (plugin AngularJS component)."""
     userword: str
     paliOK: bool
     nosave: bool = missing
 
 
 class PaliInputSchema(Schema):
-    nosave = fields.Bool()
-    paliOK = fields.Bool(required=True)
     userword = fields.Str(required=True)
+    paliOK = fields.Bool(required=True)
+    nosave = fields.Bool()
 
     @validates('userword')
     def validate_userword(self, word):
@@ -83,12 +85,19 @@ class PaliInputSchema(Schema):
 
 
 class PaliAttrs(Schema):
+    """Common fields for HTML and answer routes."""
     markup = fields.Nested(PaliMarkupSchema)
     state = fields.Nested(PaliStateSchema, allow_none=True, required=True)
+
+    class Meta:
+        strict = True
 
 
 @attr.s(auto_attribs=True)
 class PaliHtmlModel(GenericHtmlModel[PaliInputModel, PaliMarkupModel, PaliStateModel]):
+    def get_component_html_name(self) -> str:
+        return 'pali-runner'
+
     def get_static_html(self) -> str:
         return render_static_pali(self)
 
@@ -97,12 +106,6 @@ class PaliHtmlModel(GenericHtmlModel[PaliInputModel, PaliMarkupModel, PaliStateM
         if self.state:
             r['userword'] = self.state.userword
         return r
-
-    def get_real_html(self):
-        return render_template_string(
-            """<pali-runner json="{{data}}"></pali-runner>""",
-            data=make_base64(self.get_browser_json()),
-        )
 
     class Meta:
         strict = True
@@ -208,16 +211,60 @@ def check_letters(word: str, needed_len: int) -> bool:
 @app.route('/reqs/')
 @app.route('/reqs')
 def reqs():
+    templates = ["""
+``` {#ekapali plugin="pali"}
+header: Kirjoita palindromi
+stem: Kirjoita palindromi, jossa on 5 kirjainta.
+-points_array: [[0, 0.1], [0.6, 1]]
+inputstem: "Palindromisi:"
+needed_len: 5
+answerLimit: 3
+initword: muikku
+cols: 20
+```""", """
+``` {#tokapali plugin="pali"}
+header: Kirjoita palindromi
+stem: Kirjoita palindromi, jossa on 7 kirjainta.
+-points_array: [[0, 0.1], [0.6, 1]]
+inputstem: "Palindromisi:"
+needed_len: 7
+answerLimit: 4
+initword: muikku
+cols: 20
+```"""]
     return jsonify({
         "js": ["js/build/pali.js"],
         "multihtml": True,
         "css": ["css/pali.css"],
-    })
+        'editor_tabs': [
+            {
+                'text': 'Plugins',
+                'items': [
+                    {
+                        'text': 'Pali',
+                        'items': [
+                            {
+                                'data': templates[0].strip(),
+                                'text': '5 letters',
+                                'expl': 'Add a 5-letter palindrome task',
+                            },
+                            {
+                                'data': templates[1].strip(),
+                                'text': '7 letters',
+                                'expl': 'Add a 7-letter palindrome task',
+                            },
+                        ],
+                    },
+                ],
+            },
+        ],
+    },
+    )
 
 
 if __name__ == '__main__':
     app.run(
         host='0.0.0.0',
         port=5000,
-        debug=True,
+        debug=False,  # for live reloading, this can be turned on
     )

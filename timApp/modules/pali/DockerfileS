@@ -1,9 +1,0 @@
-# Aloitetaan palin:n imagesta
-from timimages/pali:compose
-USER root
-RUN bash -c "${APT_INSTALL} openssh-server && ${APT_CLEANUP}"
-RUN mkdir /var/run/sshd
-RUN echo 'root:test' | chpasswd
-RUN sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
-expose 22
-CMD service  ssh start && /bin/bash -c "su agent"

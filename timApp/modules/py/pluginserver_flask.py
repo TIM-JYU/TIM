@@ -36,7 +36,7 @@ class InfoModel:
     look_answer: bool
     max_answers: Optional[int]
     user_id: str
-    valid: bool
+    valid: bool  # could be False e.g. if answering deadline has passed
 
 
 class InfoSchema(Schema):
@@ -57,10 +57,14 @@ class InfoSchema(Schema):
 
 @attr.s(auto_attribs=True)
 class GenericMarkupModel:
-    """Base class for all markup models. Defines some fields that are applicable to all plugins."""
+    """Specifies which fields the editor can use in the plugin markup.
+    This base class defines some fields that are applicable to all plugins.
+    """
 
     hidden_keys: Set[str]
-    """Meta field that keeps track which markup fields were hidden (that is, prefixed with "-")."""
+    """Meta field that keeps track which markup fields were hidden (that is, prefixed with "-").
+    Hidden keys are never sent to browser.
+    """
 
     header: Union[str, Missing] = missing
     footer: Union[str, Missing] = missing
@@ -166,6 +170,15 @@ class GenericHtmlModel(GenericRouteModel[PluginInput, PluginMarkup, PluginState]
 
     def get_real_html(self) -> str:
         """Renders the plugin as HTML."""
+        component = self.get_component_html_name()
+        return render_template_string(
+            """<{{component}} json="{{data}}"></{{component}}>""",
+            data=make_base64(self.get_browser_json()),
+            component=component,
+        )
+
+    def get_component_html_name(self) -> str:
+        """Gets the name of the Angular component as it should be in HTML."""
         raise NotImplementedError('Must be implemented by a derived class.')
 
     class Meta:
