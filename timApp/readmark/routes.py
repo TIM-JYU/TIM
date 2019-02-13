@@ -132,16 +132,19 @@ def get_statistics(doc_path):
          .order_by(col_to_sort)
          .with_entities(UserGroup.name, *cols))
 
-    def row_to_dict(row):
-        di = dict(zip(column_names, row))
+    def maybe_hide_name_from_row(row):
         if hide_names_in_teacher():
-            di['username'] = 'user'
-        return di
+            _, rest = row[0], row[1:]
+            return ('user', *rest)
+        return row
+
+    def row_to_dict(row):
+        return dict(zip(column_names, maybe_hide_name_from_row(row)))
 
     if result_format == 'csv':
         def gen_rows():
             yield column_names
-            yield from q
+            yield from (maybe_hide_name_from_row(row) for row in q)
 
         return csv_response(gen_rows(), dialect=csv_dialect)
     else:
