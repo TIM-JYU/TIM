@@ -196,6 +196,9 @@ def view(item_path, template_name, usergroup=None, route="view"):
     edit_mode = request.args.get('edit', None) if has_edit_access(doc_info) else None
     create_environment("%%")  # TODO get macroinf
 
+    hide_names = get_option(request, 'hide_names', None, cast=bool)
+    if hide_names is not None:
+        session['hide_names'] = hide_names
     if route == 'teacher':
         if not verify_teacher_access(doc_info, require=False, check_duration=True):
             if verify_view_access(doc_info):
@@ -326,14 +329,11 @@ def view(item_path, template_name, usergroup=None, route="view"):
 
     index = get_index_from_html_list(t['html'] for t in texts)
 
-    if hide_names_in_teacher(doc_id):
+    if hide_names_in_teacher():
         for user in user_list:
-            u: User = user_dict[user['id']] if user_dict else User.query.get(user['id'])
-            if not u.has_ownership(doc_info) \
-                    and user['id'] != get_current_user_id():
-                user['name'] = '-'
-                user['real_name'] = f'Someone {user["id"]}'
-                user['email'] = f'someone_{user["id"]}@example.com'
+            user['name'] = f'user{user["id"]}'
+            user['real_name'] = f'User {user["id"]}'
+            user['email'] = f'user{user["id"]}@example.com'
 
     settings = get_user_settings()
     # settings['add_button_text'] = doc_settings.get_dict().get('addParButtonText', 'Add paragraph')

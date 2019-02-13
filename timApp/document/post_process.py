@@ -4,9 +4,10 @@ from datetime import datetime
 from typing import List, Dict, DefaultDict, Tuple
 
 import pytz
-from flask import flash
+from flask import flash, session
 
 from timApp.auth.accesshelper import has_ownership, has_edit_access
+from timApp.document.docinfo import DocInfo
 from timApp.note.notes import get_notes, UserNoteAndUser
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.document import Document
@@ -22,9 +23,8 @@ from timApp.util.timtiming import taketime
 from timApp.util.utils import getdatetime, get_boolean
 
 
-# noinspection PyUnusedLocal
-def hide_names_in_teacher(doc_id):
-    return False
+def hide_names_in_teacher():
+    return session.get('hide_names', False)
 
 
 # TODO: post_process_pars is called twice in one save??? Or even 4 times, 2 after editor is closed??

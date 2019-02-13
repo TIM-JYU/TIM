@@ -444,9 +444,9 @@ class User(db.Model):
         else:
             return {
                 'id': self.id,
-                'name': f'student{self.id}',
-                'real_name': f'Student {self.id}',
-                'email': f'student{self.id}@example.com',
+                'name': f'user{self.id}',
+                'real_name': f'User {self.id}',
+                'email': f'user{self.id}@example.com',
             }
 
     def to_json(self, full=False):

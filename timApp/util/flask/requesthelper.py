@@ -57,7 +57,7 @@ def get_option(req: Request, name: str, default, cast=None):
         return default
     result = req.args[name]
     lresult = result.lower()
-    if isinstance(default, bool):
+    if isinstance(default, bool) or cast is bool:
         if len(lresult) == 0:
             return default
         if "f0".find(lresult[0]) >= 0:
@@ -65,14 +65,14 @@ def get_option(req: Request, name: str, default, cast=None):
         if "t1".find(lresult[0]) >= 0:
             return True
         return True
-    if isinstance(default, int):
+    if isinstance(default, int) or cast is int:
         try:
             return int(lresult)
         except ValueError:
             return default
     if cast is not None:
         try:
-            result = cast(result)
+            result = cast(lresult)
         except ValueError:
             return default
     return result

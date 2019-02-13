@@ -139,12 +139,6 @@ testuser2,3,0,0,0,0
         readlines = readline_selector(self.get(f'/view/{doc.id}', as_tree=True))
         return readlines
 
-    def mark_as_unread(self, doc: DocInfo, par_id):
-        self.json_put(f'/unread/{doc.id}/{par_id}')
-
-    def mark_as_read(self, doc: DocInfo, par_id, read_type=ReadParagraphType.click_red, **kwargs):
-        self.json_put(f'/read/{doc.id}/{par_id}/{read_type.value}', **kwargs)
-
     def check_readlines(self, readlines, expected):
         self.assertEqual(len(readlines), len(expected))
         for r, e in zip(readlines, expected):
