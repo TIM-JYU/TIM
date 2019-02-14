@@ -39,6 +39,7 @@ class PaliMarkupModel(GenericMarkupModel):
     needed_len: Union[int, Missing] = missing
     initword: Union[str, Missing] = missing
     cols: Union[int, Missing] = missing
+    inputplaceholder: Union[str, Missing] = missing
 
 
 class PaliMarkupSchema(GenericMarkupSchema):
@@ -47,6 +48,7 @@ class PaliMarkupSchema(GenericMarkupSchema):
     needed_len = fields.Int()
     initword = fields.Str()
     cols = fields.Int()
+    inputplaceholder = fields.Str()
 
     @validates('points_array')
     def validate_points_array(self, value):
