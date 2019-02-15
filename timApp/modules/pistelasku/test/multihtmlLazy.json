@@ -1,0 +1,25 @@
+[
+  {
+   "lazy": true,
+   "markup": {
+     "-points_array": [[3],[2,3]]
+   },
+   "taskID": "2.wrongpoints"
+  },
+ {
+   "state": null,
+   "markup":
+   {"needed_len": 4,
+     "header": "Kirjoita palindromi",
+     "inputstem": "Palindromisi:",
+     "user_id": "vesal",
+     "autoupdate": 2000,
+     "initword": null,
+     "-points_array": [[0, 0.1], [0.6, 1]],
+     "stem": "Kirjoita palindromi jossa 4 kirjainta",
+     "cols": 20,
+     "footer": "Saitko tehty\u00e4?"},
+   "doLazy": true,
+   "taskID": "7.tokapali2"
+  }
+]
