@@ -1,8 +1,0 @@
-mkl_
-vivanauk
-vesalap
-Kaasalainen
-pekrneva
-tetuvaha
-sijualle
-titalund
