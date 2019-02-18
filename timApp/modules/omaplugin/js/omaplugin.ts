@@ -1,5 +1,5 @@
 /**
- * Defines the client-side implementation of an example plugin (a palindrome checker).
+ * Defines the client-side implementation of an example plugin (a omapluginndrome checker).
  */
 import angular, {INgModelOptions} from "angular";
 import * as t from "io-ts";
@@ -8,10 +8,10 @@ import {$http} from "tim/util/ngimport";
 import {to} from "tim/util/utils";
 import {valueDefu} from "tim/util/utils";
 
-const paliApp = angular.module("paliApp", ["ngSanitize"]);
-export const moduleDefs = [paliApp];
+const omapluginApp = angular.module("omapluginApp", ["ngSanitize"]);
+export const moduleDefs = [omapluginApp];
 
-const PaliMarkup = t.intersection([
+const omapluginMarkup = t.intersection([
     t.partial({
         initword: t.string,
         inputplaceholder: nullable(t.string),
@@ -24,14 +24,14 @@ const PaliMarkup = t.intersection([
         cols: withDefault(t.number, 20),
     }),
 ]);
-const PaliAll = t.intersection([
+const omapluginAll = t.intersection([
     t.partial({
         userword: t.string,
     }),
-    t.type({markup: PaliMarkup}),
+    t.type({markup: omapluginMarkup}),
 ]);
 
-function isPalindrome(s: string) {
+function isomapluginndrome(s: string) {
     let sc = s.toLowerCase();
     sc = sc.replace(/[^a-zåöä]/g, "");
     for (let i1 = 0, i2 = sc.length - 1; i1 < i2; i1++, i2--) {
@@ -42,7 +42,7 @@ function isPalindrome(s: string) {
     return true;
 }
 
-class PaliController extends PluginBase<t.TypeOf<typeof PaliMarkup>, t.TypeOf<typeof PaliAll>, typeof PaliAll> {
+class omapluginController extends PluginBase<t.TypeOf<typeof omapluginMarkup>, t.TypeOf<typeof omapluginAll>, typeof omapluginAll> {
     private result?: string;
     private error?: string;
     private isRunning = false;
@@ -62,7 +62,7 @@ class PaliController extends PluginBase<t.TypeOf<typeof PaliMarkup>, t.TypeOf<ty
         super.$onInit();
         this.userword = this.attrsall.userword || this.attrs.initword || "";
         this.modelOpts = {debounce: this.autoupdate};
-        this.checkPalindrome();
+        this.checkomapluginndrome();
     }
 
     get edited() {
@@ -89,8 +89,8 @@ class PaliController extends PluginBase<t.TypeOf<typeof PaliMarkup>, t.TypeOf<ty
         return valueDefu(this.attrs.resetText, "Reset");
     }
 
-    checkPalindrome() {
-        const is = isPalindrome(this.userword);
+    checkomapluginndrome() {
+        const is = isomapluginndrome(this.userword);
         this.runTestGreen = is;
         return is;
     }
@@ -99,7 +99,7 @@ class PaliController extends PluginBase<t.TypeOf<typeof PaliMarkup>, t.TypeOf<ty
         this.userword = this.attrs.initword || "";
         this.error = undefined;
         this.result = undefined;
-        this.checkPalindrome();
+        this.checkomapluginndrome();
     }
 
     saveText() {
@@ -113,7 +113,7 @@ class PaliController extends PluginBase<t.TypeOf<typeof PaliMarkup>, t.TypeOf<ty
         const params = {
             input: {
                 nosave: false,
-                paliOK: this.checkPalindrome(),
+                omapluginOK: this.checkomapluginndrome(),
                 userword: this.userword,
             },
         };
@@ -134,15 +134,15 @@ class PaliController extends PluginBase<t.TypeOf<typeof PaliMarkup>, t.TypeOf<ty
     }
 
     protected getAttributeType() {
-        return PaliAll;
+        return omapluginAll;
     }
 }
 
-paliApp.component("paliRunner", {
+omapluginApp.component("omapluginRunner", {
     bindings: {
         json: "@",
     },
-    controller: PaliController,
+    controller: omapluginController,
     template: `
 <div class="csRunDiv no-popup-menu">
     <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
@@ -152,7 +152,7 @@ paliApp.component("paliRunner", {
                class="form-control"
                ng-model="$ctrl.userword"
                ng-model-options="::$ctrl.modelOpts"
-               ng-change="$ctrl.checkPalindrome()"
+               ng-change="$ctrl.checkomapluginndrome()"
                ng-trim="false"
                placeholder="{{::$ctrl.inputplaceholder}}"
                size="{{::$ctrl.cols}}"></span></label>

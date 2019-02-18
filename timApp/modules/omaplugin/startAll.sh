@@ -1,2 +1,2 @@
 #!/usr/bin/env bash
-python3 pali.py
+python3 omaplugin.py
