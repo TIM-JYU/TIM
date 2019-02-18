@@ -137,7 +137,7 @@ def do_merge(primary, secondary):
     return moved_data
 
 
-@admin_bp.route('/users/softDelete/<name>')
+@admin_bp.route('/users/softDelete/<name>', methods=['post'])
 def soft_delete(name: str):
     verify_admin()
     u = User.get_by_name(name)
