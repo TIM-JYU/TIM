@@ -188,7 +188,7 @@ def answer(args: PistelaskuAnswerModel):
         save = {"userword": userword}
         result["save"] = save
         result["tim_info"] = tim_info
-        web['result'] = "saved"
+        web['result'] = "Tähän tulee funktio joka generoi lomakkeen"
 
     return jsonify(result)
 

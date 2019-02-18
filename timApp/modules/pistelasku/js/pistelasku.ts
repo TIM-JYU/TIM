@@ -1,5 +1,5 @@
 /**
- * Defines the client-side implementation of an example plugin (a palindrome checker).
+ * Defines the client-side implementation of an example plugin (a pistelaskundrome checker).
  */
 import angular, {INgModelOptions} from "angular";
 import * as t from "io-ts";
@@ -12,9 +12,9 @@ const pistelaskuApp = angular.module("pistelaskuApp", ["ngSanitize"]);
 
 const PistelaskuMarkup = t.intersection([
     t.partial({
-        initword: t.number,
-        inputplaceholder: nullable(t.number),
-        inputstem: t.number,
+        initword: t.string,
+        inputplaceholder: nullable(t.string),
+        inputstem: t.string,
     }),
     GenericPluginMarkup,
     t.type({
@@ -25,12 +25,12 @@ const PistelaskuMarkup = t.intersection([
 ]);
 const PistelaskuAll = t.intersection([
     t.partial({
-        userword: t.number,
+        userword: t.string,
     }),
-    t.type({markup: PaliMarkup}),
+    t.type({markup: PistelaskuMarkup}),
 ]);
 
-function isPalindrome(s: string) {
+function isPistelaskundrome(s: string) {
     let sc = s.toLowerCase();
     sc = sc.replace(/[^a-zåöä]/g, "");
     for (let i1 = 0, i2 = sc.length - 1; i1 < i2; i1++, i2--) {
@@ -41,7 +41,7 @@ function isPalindrome(s: string) {
     return true;
 }
 
-class PaliController extends PluginBase<t.TypeOf<typeof PaliMarkup>, t.TypeOf<typeof PaliAll>, typeof PaliAll> {
+class PistelaskuController extends PluginBase<t.TypeOf<typeof PistelaskuMarkup>, t.TypeOf<typeof PistelaskuAll>, typeof PistelaskuAll> {
     private result?: string;
     private error?: string;
     private isRunning = false;
@@ -54,14 +54,14 @@ class PaliController extends PluginBase<t.TypeOf<typeof PaliMarkup>, t.TypeOf<ty
     }
 
     buttonText() {
-        return super.buttonText() || "Save";
+        return super.buttonText() || "Generate";
     }
 
     $onInit() {
         super.$onInit();
         this.userword = this.attrsall.userword || this.attrs.initword || "";
         this.modelOpts = {debounce: this.autoupdate};
-        this.checkPalindrome();
+        this.checkPistelaskundrome();
     }
 
     get edited() {
@@ -88,8 +88,8 @@ class PaliController extends PluginBase<t.TypeOf<typeof PaliMarkup>, t.TypeOf<ty
         return valueDefu(this.attrs.resetText, "Reset");
     }
 
-    checkPalindrome() {
-        const is = isPalindrome(this.userword);
+    checkPistelaskundrome() {
+        const is = isPistelaskundrome(this.userword);
         this.runTestGreen = is;
         return is;
     }
@@ -98,7 +98,7 @@ class PaliController extends PluginBase<t.TypeOf<typeof PaliMarkup>, t.TypeOf<ty
         this.userword = this.attrs.initword || "";
         this.error = undefined;
         this.result = undefined;
-        this.checkPalindrome();
+        this.checkPistelaskundrome();
     }
 
     saveText() {
@@ -106,13 +106,13 @@ class PaliController extends PluginBase<t.TypeOf<typeof PaliMarkup>, t.TypeOf<ty
     }
 
     async doSaveText(nosave: boolean) {
-        this.error = "... saving ...";
+        this.error = "... generating ...";
         this.isRunning = true;
         this.result = undefined;
         const params = {
             input: {
                 nosave: false,
-                paliOK: this.checkPalindrome(),
+                pistelaskuOK: this.checkPistelaskundrome(),
                 userword: this.userword,
             },
         };
@@ -133,15 +133,15 @@ class PaliController extends PluginBase<t.TypeOf<typeof PaliMarkup>, t.TypeOf<ty
     }
 
     protected getAttributeType() {
-        return PaliAll;
+        return PistelaskuAll;
     }
 }
 
-paliApp.component("paliRunner", {
+pistelaskuApp.component("pistelaskuRunner", {
     bindings: {
         json: "@",
     },
-    controller: PaliController,
+    controller: PistelaskuController,
     template: `
 <div class="csRunDiv no-popup-menu">
     <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
@@ -151,7 +151,7 @@ paliApp.component("paliRunner", {
                class="form-control"
                ng-model="$ctrl.userword"
                ng-model-options="::$ctrl.modelOpts"
-               ng-change="$ctrl.checkPalindrome()"
+               ng-change="$ctrl.checkPistelaskundrome()"
                ng-trim="false"
                placeholder="{{::$ctrl.inputplaceholder}}"
                size="{{::$ctrl.cols}}"></span></label>

@@ -4,4 +4,4 @@ IFS=$'\n\t'
 
 # This build the run environment images
 
-docker build --tag "pali" .
+docker build --tag "pistelasku" .

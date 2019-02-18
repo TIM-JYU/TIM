@@ -1,5 +1,5 @@
-# Aloitetaan palin:n imagesta
-from timimages/pali:compose
+# Aloitetaan pistelaskun:n imagesta
+from timimages/pistelasku:compose
 USER root
 RUN bash -c "${APT_INSTALL} openssh-server && ${APT_CLEANUP}"
 RUN mkdir /var/run/sshd

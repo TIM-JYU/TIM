@@ -1,10 +1,10 @@
 7 kirjainta
-Palindromi seitsemällä kirjaimella
-``` {#tokapali plugin="pali"}
-header: Kirjoita palindromi
-stem: Kirjoita palindromi jossa 7 kirjainta
+Pistelaskundromi seitsemällä kirjaimella
+``` {#tokapistelasku plugin="pistelasku"}
+header: Kirjoita pistelaskundromi
+stem: Kirjoita pistelaskundromi jossa 7 kirjainta
 -points_array: [[0, 0.1], [0.6, 1]]
-inputstem: "Palindromisi:"
+inputstem: "Pistelaskundromisi:"
 needed_len: 7
 max_tries: 4
 initword: muikku

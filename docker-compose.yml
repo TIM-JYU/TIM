@@ -8,6 +8,7 @@ services:
    - postgresql
    - csplugin
    - pali
+   - pistelasku
    - showfile
    - haskellplugins
    - imagex
@@ -87,6 +88,17 @@ services:
   working_dir: /pali
   environment:
     PYTHONPATH: /pali:/py:/usr/local/lib/python3.6/dist-packages
+  command: ./startAll.sh
+  restart: unless-stopped
+ pistelasku:
+  image: timimages/tim:${TIM_IMAGE_TAG}
+  # build: ./timApp/modules/pistelasku
+  volumes:
+   - ./timApp/modules/pistelasku:/pistelasku:ro
+   - ./timApp/modules/py:/py:ro
+  working_dir: /pistelasku
+  environment:
+   PYTHONPATH: /pistelasku:/py:/usr/local/lib/python3.6/dist-packages
   command: ./startAll.sh
   restart: unless-stopped
  uploader:

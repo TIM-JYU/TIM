@@ -1,2 +1,2 @@
-Longer palindromes
-Short palindromes
+Kahden muuttujan pistelasku
+Kolmen muuttujan pistelasku

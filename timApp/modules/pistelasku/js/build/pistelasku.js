@@ -83,9 +83,9 @@ System.register(["angular", "io-ts", "tim/plugin/util", "tim/util/ngimport", "ti
             pistelaskuApp = angular_1.default.module("pistelaskuApp", ["ngSanitize"]);
             PistelaskuMarkup = t.intersection([
                 t.partial({
-                    initword: t.number,
-                    inputplaceholder: util_1.nullable(t.number),
-                    inputstem: t.number,
+                    initword: t.string,
+                    inputplaceholder: util_1.nullable(t.string),
+                    inputstem: t.string,
                 }),
                 util_1.GenericPluginMarkup,
                 t.type({
@@ -95,7 +95,7 @@ System.register(["angular", "io-ts", "tim/plugin/util", "tim/util/ngimport", "ti
             ]);
             PistelaskuAll = t.intersection([
                 t.partial({
-                    userword: t.number,
+                    userword: t.string,
                 }),
                 t.type({ markup: PistelaskuMarkup }),
             ]);
@@ -112,7 +112,7 @@ System.register(["angular", "io-ts", "tim/plugin/util", "tim/util/ngimport", "ti
                     return {};
                 };
                 PistelaskuController.prototype.buttonText = function () {
-                    return _super.prototype.buttonText.call(this) || "Save";
+                    return _super.prototype.buttonText.call(this) || "Generate";
                 };
                 PistelaskuController.prototype.$onInit = function () {
                     _super.prototype.$onInit.call(this);
@@ -182,7 +182,7 @@ System.register(["angular", "io-ts", "tim/plugin/util", "tim/util/ngimport", "ti
                         return __generator(this, function (_a) {
                             switch (_a.label) {
                                 case 0:
-                                    this.error = "... saving ...";
+                                    this.error = "... generating ...";
                                     this.isRunning = true;
                                     this.result = undefined;
                                     params = {
@@ -223,7 +223,16 @@ System.register(["angular", "io-ts", "tim/plugin/util", "tim/util/ngimport", "ti
                     json: "@",
                 },
                 controller: PistelaskuController,
-                template: "\n<div class=\"csRunDiv no-popup-menu\">\n    <h4 ng-if=\"::$ctrl.header\" ng-bind-html=\"::$ctrl.header\"></h4>\n    <p ng-if=\"::$ctrl.stem\">{{::$ctrl.stem}}</p>\n    <div class=\"form-inline\"><label>{{::$ctrl.inputstem}} <span>\n        <input type=\"text\"\n               class=\"form-control\"\n               ng-model=\"$ctrl.userword\"\n               ng-model-options=\"::$ctrl.modelOpts\"\n               ng-change=\"$ctrl.checkPistelaskundrome()\"\n               ng-trim=\"false\"\n               placeholder=\"{{::$ctrl.inputplaceholder}}\"\n               size=\"{{::$ctrl.cols}}\"></span></label>\n        <span class=\"unitTestGreen\" ng-if=\"$ctrl.runTestGreen && $ctrl.userword\">OK</span>\n        <span class=\"unitTestRed\" ng-if=\"!$ctrl.runTestGreen\">Wrong</span>\n    </div>\n    <button class=\"timButton\"\n            ng-if=\"::$ctrl.buttonText()\"\n            ng-disabled=\"$ctrl.isRunning || !$ctrl.userword\"\n            ng-click=\"$ctrl.saveText()\">\n        {{::$ctrl.buttonText()}}\n    </button>\n    <a href=\"\" ng-if=\"$ctrl.edited\" ng-click=\"$ctrl.initCode()\">{{::$ctrl.resetText}}</a>\n    <div ng-if=\"$ctrl.error\" ng-bind-html=\"$ctrl.error\"></div>\n    <pre ng-if=\"$ctrl.result\">{{$ctrl.result}}</pre>\n    <p ng-if=\"::$ctrl.footer\" ng-bind=\"::$ctrl.footer\" class=\"plgfooter\"></p>\n</div>\n",
+                template: "\n<div class=\"csRunDiv no-popup-menu\">\n    <h4 ng-if=\"::$ctrl.header\" ng-bind-html=\"::$ctrl.header\"></h4>\n    " +
+                    "<p ng-if=\"::$ctrl.stem\">{{::$ctrl.stem}}</p>\n    <div class=\"form-inline\"><label>{{::$ctrl.inputstem}} <span>\n        " +
+                    "<input type=\"text\"\n  class=\"form-control\"\n  ng-model=\"$ctrl.userword\"\n  ng-model-options=\"::$ctrl.modelOpts\"\n  " +
+                    "ng-change=\"$ctrl.checkPistelaskundrome()\"\n  ng-trim=\"false\"\n placeholder=\"{{::$ctrl.inputplaceholder}}\"\n  " +
+                    "size=\"{{::$ctrl.cols}}\"></span></label>\n  <span class=\"unitTestGreen\" ng-if=\"$ctrl.runTestGreen && $ctrl.userword\">OK</span>\n " +
+                    "<span class=\"unitTestRed\" ng-if=\"!$ctrl.runTestGreen\">Wrong</span>\n </div>\n  <button class=\"timButton\"\n     " +
+                    "ng-if=\"::$ctrl.buttonText()\"\n  ng-disabled=\"$ctrl.isRunning || !$ctrl.userword\"\n  ng-click=\"$ctrl.saveText()\">\n  " +
+                    "{{::$ctrl.buttonText()}}\n  </button>\n  <a href=\"\" ng-if=\"$ctrl.edited\" ng-click=\"$ctrl.initCode()\">{{::$ctrl.resetText}}</a>\n  " +
+                    "<div ng-if=\"$ctrl.error\" ng-bind-html=\"$ctrl.error\"></div>\n  <pre ng-if=\"$ctrl.result\">{{$ctrl.result}}</pre>\n  " +
+                    "<p ng-if=\"::$ctrl.footer\" ng-bind=\"::$ctrl.footer\" class=\"plgfooter\"></p>\n</div>\n",
             });
         }
     };
