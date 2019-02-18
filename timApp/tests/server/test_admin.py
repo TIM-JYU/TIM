@@ -112,3 +112,8 @@ class MergeTest(TimRouteTest):
                          'velps': 0,
                      }
                  })
+        self.get('/users/softDelete/testuser2')
+        self.assertIsNone(User.get_by_name('testuser2'))
+        self.assertIsNotNone(User.get_by_name('testuser2_deleted'))
+        self.get('/users/softDelete/testuser2', expect_status=404)
+        self.get('/users/softDelete/testuser2_deleted', expect_status=400)
