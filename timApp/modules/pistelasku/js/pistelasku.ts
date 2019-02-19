@@ -7,6 +7,7 @@ import {GenericPluginMarkup, nullable, PluginBase, withDefault} from "tim/plugin
 import {$http} from "tim/util/ngimport";
 import {to} from "tim/util/utils";
 import {valueDefu} from "tim/util/utils";
+import {number} from "../../../static/scripts/jspm_packages/npm/io-ts@1.4.1/lib";
 
 const pistelaskuApp = angular.module("pistelaskuApp", ["ngSanitize"]);
 export const moduleDefs = [pistelaskuApp];
@@ -16,6 +17,9 @@ const PistelaskuMarkup = t.intersection([
         initword: t.string,
         inputplaceholder: nullable(t.string),
         inputstem: t.string,
+        initword2: t.number,
+        inputplaceholder2: nullable(t.number),
+        inputstem2: t.number,
     }),
     GenericPluginMarkup,
     t.type({
@@ -27,6 +31,7 @@ const PistelaskuMarkup = t.intersection([
 const PistelaskuAll = t.intersection([
     t.partial({
         userword: t.string,
+        userword2: t.number,
     }),
     t.type({markup: PistelaskuMarkup}),
 ]);
@@ -47,6 +52,7 @@ class PistelaskuController extends PluginBase<t.TypeOf<typeof PistelaskuMarkup>,
     private error?: string;
     private isRunning = false;
     private userword = "";
+    private userword2 = number;
     private runTestGreen = false;
     private modelOpts!: INgModelOptions; // initialized in $onInit, so need to assure TypeScript with "!"
 
@@ -81,6 +87,10 @@ class PistelaskuController extends PluginBase<t.TypeOf<typeof PistelaskuMarkup>,
         return this.attrs.inputstem || null;
     }
 
+    get inputstem2() {
+        return this.attrs.inputstem2 || null;
+    }
+
     get cols() {
         return this.attrs.cols;
     }
@@ -97,6 +107,7 @@ class PistelaskuController extends PluginBase<t.TypeOf<typeof PistelaskuMarkup>,
 
     initCode() {
         this.userword = this.attrs.initword || "";
+        this.userword2 = number;
         this.error = undefined;
         this.result = undefined;
         this.checkPistelaskundrome();
@@ -115,6 +126,7 @@ class PistelaskuController extends PluginBase<t.TypeOf<typeof PistelaskuMarkup>,
                 nosave: false,
                 pistelaskuOK: this.checkPistelaskundrome(),
                 userword: this.userword,
+                userword2: this.userword2,
             },
         };
 
@@ -157,11 +169,23 @@ pistelaskuApp.component("pistelaskuRunner", {
                placeholder="{{::$ctrl.inputplaceholder}}"
                size="{{::$ctrl.cols}}"></span></label>
         <span class="unitTestGreen" ng-if="$ctrl.runTestGreen && $ctrl.userword">OK</span>
+        <span class="unitTestRed" ng-if="!$ctrl.runTestGreen">Wrong</span><br>
+    </div>
+    <div class="form-inline"><label>{{::$ctrl.inputstem2}} <span>   
+        <input type="number"
+               class="form-control"
+               ng-model="$ctrl.userword2"
+               ng-model-options="::$ctrl.modelOpts"
+               ng-change="$ctrl.checkPistelaskundrome()"
+               ng-trim="false"
+               placeholder="{{::$ctrl.inputplaceholder2}}"
+               size="{{::$ctrl.cols}}"></span></label>
+        <span class="unitTestGreen" ng-if="$ctrl.runTestGreen && $ctrl.userword2">OK</span>
         <span class="unitTestRed" ng-if="!$ctrl.runTestGreen">Wrong</span>
     </div>
     <button class="timButton"
             ng-if="::$ctrl.buttonText()"
-            ng-disabled="$ctrl.isRunning || !$ctrl.userword"
+            ng-disabled="$ctrl.isRunning || !$ctrl.userword || !$ctrl.userword2"
             ng-click="$ctrl.saveText()">
         {{::$ctrl.buttonText()}}
     </button>

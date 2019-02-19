@@ -19,10 +19,12 @@ from pluginserver_flask import GenericMarkupModel, GenericMarkupSchema, GenericH
 class PistelaskuStateModel:
     """Model for the information that is stored in TIM database for each answer."""
     userword: str
+    userword2: int
 
 
 class PistelaskuStateSchema(Schema):
     userword = fields.Str(required=True)
+    userword2 = fields.Number(required=True)
 
     @post_load
     def make_obj(self, data):
@@ -36,19 +38,25 @@ class PistelaskuStateSchema(Schema):
 class PistelaskuMarkupModel(GenericMarkupModel):
     points_array: Union[str, Missing] = missing
     inputstem: Union[str, Missing] = missing
+    inputstem2: Union[int, Missing] = missing
     needed_len: Union[int, Missing] = missing
     initword: Union[str, Missing] = missing
+    initword2 = Union[int, Missing] = missing
     cols: Union[int, Missing] = missing
     inputplaceholder: Union[str, Missing] = missing
+    inputplaceholder2: Union[int, Missing] = missing
 
 
 class PistelaskuMarkupSchema(GenericMarkupSchema):
     points_array = fields.List(fields.List(fields.Number()))
     inputstem = fields.Str()
+    inputstem2 = fields.Number()
     needed_len = fields.Int()
     initword = fields.Str()
+    initword2 = fields.Number()
     cols = fields.Int()
     inputplaceholder = fields.Str()
+    inputplaceholder2: Union[int, Missing] = missing
 
     @validates('points_array')
     def validate_points_array(self, value):
@@ -67,17 +75,24 @@ class PistelaskuMarkupSchema(GenericMarkupSchema):
 class PistelaskuInputModel:
     """Model for the information that is sent from browser (plugin AngularJS component)."""
     userword: str
+    userword2: int
     pistelaskuOK: bool
     nosave: bool = missing
 
 
 class PistelaskuInputSchema(Schema):
     userword = fields.Str(required=True)
+    userword2 = fields.Number(required=True)
     pistelaskuOK = fields.Bool(required=True)
     nosave = fields.Bool()
 
     @validates('userword')
     def validate_userword(self, word):
+        if not word:
+            raise ValidationError('Must not be empty.')
+
+    @validates('userword2')
+    def validate_userword2(self, word):
         if not word:
             raise ValidationError('Must not be empty.')
 
@@ -105,8 +120,11 @@ class PistelaskuHtmlModel(GenericHtmlModel[PistelaskuInputModel, PistelaskuMarku
 
     def get_browser_json(self):
         r = super().get_browser_json()
+        r2 = super().get_browser_json()
         if self.state:
             r['userword'] = self.state.userword
+            # r2['userword2'] = self.state.userword2
+            # r = r+r2
         return r
 
     class Meta:
@@ -175,6 +193,7 @@ def answer(args: PistelaskuAnswerModel):
     result = {'web': web}
     needed_len = args.markup.needed_len
     userword = args.input.userword
+    userword2 = args.input.userword2
     pistelasku_ok = args.input.pistelaskuOK
     len_ok = True
     if needed_len:
@@ -190,10 +209,10 @@ def answer(args: PistelaskuAnswerModel):
     nosave = args.input.nosave
     if not nosave:
         tim_info = {"points": points}
-        save = {"userword": userword}
+        save = {"userword": userword, "userword2": userword2}
         result["save"] = save
         result["tim_info"] = tim_info
-        web['result'] = "saved"
+        web['result'] = {userword, userword2}
 
     return jsonify(result)
 
@@ -216,9 +235,10 @@ def reqs():
     templates = ["""
 ``` {#ekapistelasku plugin="pistelasku"}
 header: Kirjoita pistelasku
-stem: Kirjoita pistelasku, jossa on 5 kirjainta.
+stem: Anna demolomakkeen nimi ja demokenttien lukumäärä.
 -points_array: [[0, 0.1], [0.6, 1]]
 inputstem: "Pistelaskusi:"
+inputstem2: "Demotehtävien määrä:"
 needed_len: 5
 answerLimit: 3
 initword: muikku
@@ -226,9 +246,10 @@ cols: 20
 ```""", """
 ``` {#tokapistelasku plugin="pistelasku"}
 header: Kirjoita pistelasku
-stem: Kirjoita pistelasku, jossa on 7 kirjainta.
+stem: Anna demolomakkeen nimi ja demokenttien lukumäärä.
 -points_array: [[0, 0.1], [0.6, 1]]
 inputstem: "Pistelaskusi:"
+inputstem2: "Demotehtävien määrä:"
 needed_len: 7
 answerLimit: 4
 initword: muikku
