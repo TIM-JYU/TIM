@@ -897,7 +897,7 @@ ${backTicks}
         let attachmentParams;
         let macroParams;
 
-        // To identify attachment-macro. // TODO: jos editorissa monta liitettä, tekee väärin
+        // To identify attachment-macro. // TODO: If editor has multiple attachments, this may go wrong
         const macroStringBegin = "%%liite(";
         const macroStringEnd = ")%%";
 
@@ -907,9 +907,10 @@ ${backTicks}
         if (editorText.length > 0 && editorText.lastIndexOf(macroStringBegin) > 0 && this.docSettings) {
             autostamp = true;
             try {
-                const macroText = editorText.substring(
+                let macroText = editorText.substring(
                     editorText.lastIndexOf(macroStringBegin) + macroStringBegin.length,
                     editorText.lastIndexOf(macroStringEnd));
+                macroText = macroText.replace(/(\r\n|\n|\r)/gm, ""); // Line breaks confuse parse
                 macroParams = JSON.parse(`[${macroText}]`);
             } catch {
                 this.file.error = "Parsing stamp parameters failed";
