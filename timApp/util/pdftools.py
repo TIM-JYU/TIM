@@ -3,7 +3,8 @@ Stamping and merging pdf-files with pdftk and pdflatex.
 
 Visa Naukkarinen
 """
-
+import random
+import uuid
 from subprocess import Popen, PIPE, run as subprocess_run
 from os import remove, path as os_path
 from typing import Union, List
@@ -420,7 +421,7 @@ def create_stamp(
         try:
             for line in stamp_model:
                 if "%TEXT_HERE" in line:
-                    stamp_temp.write(text)
+                    stamp_temp.write(line.replace("%TEXT_HERE", text))
                 else:
                     stamp_temp.write(line)
         # If stamp_model file is broken.
@@ -573,6 +574,18 @@ def get_base_filename(path: str, no_extension: bool = False) -> str:
         return os_path.splitext(os_path.basename(path))[0]
     else:
         return os_path.basename(path)
+
+
+def create_custom_stamp_model(content: str, folder: str = temp_folder_default_path) -> str:
+    """
+    :param content:
+    :param folder:
+    :return:
+    """
+    path = os_path.join(folder, str(uuid.uuid4()) + ".tex")
+    with open(path, "w") as file:
+        file.write(content)
+    return path
 
 
 def stamp_pdfs(

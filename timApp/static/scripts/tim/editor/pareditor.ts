@@ -147,7 +147,7 @@ export class PareditorController extends DialogController<{params: IEditorParams
     private touchDevice: boolean;
     private autocomplete!: boolean; // $onInit
     private citeText!: string; // $onInit
-    private docSettings?: {macros: {dates: string[], knro: number, stampformat: string}};
+    private docSettings?: {macros: {dates: string[], knro: number, stampformat: string}, custom_stamp_model?: string};
     private uploadedFile?: string;
     private activeTab?: string;
     private lastTab?: string;
@@ -910,7 +910,7 @@ ${backTicks}
                 let macroText = editorText.substring(
                     editorText.lastIndexOf(macroStringBegin) + macroStringBegin.length,
                     editorText.lastIndexOf(macroStringEnd));
-                macroText = macroText.replace(/(\r\n|\n|\r)/gm, ""); // Line breaks confuse parse
+                macroText = macroText.replace(/(\r\n|\n|\r)/gm, "");  // Line breaks confuse parse
                 macroParams = JSON.parse(`[${macroText}]`);
             } catch {
                 this.file.error = "Parsing stamp parameters failed";
@@ -920,7 +920,7 @@ ${backTicks}
             // Knro usage starts from 1 but dates starts from 0 but there is dummy item first
             const knro = this.docSettings.macros.knro;
             const dates = this.docSettings.macros.dates;
-            // dates = ["ERROR", ...dates];
+            // dates = ["ERROR", ...dates];  // Start from index 1; unnecessary now.
             const kokousDate = dates[knro][0];  // dates is 2-dim array
 
             // If stampFormat isn't set in preamble,
@@ -928,7 +928,8 @@ ${backTicks}
             if (stampFormat === undefined) {
                 stampFormat = "";
             }
-            attachmentParams = [kokousDate, stampFormat, ...macroParams, autostamp];
+            const customStampModel = this.docSettings.custom_stamp_model;
+            attachmentParams = [kokousDate, stampFormat, ...macroParams, customStampModel, autostamp];
         }
         if (file) {
             this.file.progress = 0;
