@@ -1,7 +1,0 @@
-Pistelasku
-Pistelasku with width and height
-``` {plugin="showImage"}
-width: 300
-height: 200
-file: IMAGEURLHERE
-```
