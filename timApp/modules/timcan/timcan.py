@@ -208,11 +208,53 @@ def check_letters(word: str, needed_len: int) -> bool:
 @app.route('/reqs/')
 @app.route('/reqs')
 def reqs():
+    templates = ["""
+``` {#ekapali plugin="timcan"}
+header: Kirjoita palindromi
+stem: Kirjoita palindromi, jossa on 5 kirjainta.
+-points_array: [[0, 0.1], [0.6, 1]]
+inputstem: "Palindromisi:"
+needed_len: 5
+answerLimit: 3
+initword: muikku
+cols: 20
+```""", """
+``` {#tokapali plugin="timcan"}
+header: Kirjoita palindromi
+stem: Kirjoita palindromi, jossa on 7 kirjainta.
+-points_array: [[0, 0.1], [0.6, 1]]
+inputstem: "Palindromisi:"
+needed_len: 7
+answerLimit: 4
+initword: muikku
+cols: 20
+```"""]
     return jsonify({
-        "js": ["js/build/pali.js"],
-        "angularModule": ["paliApp"],
+        "js": ["js/build/timcan.js"],
         "multihtml": True,
         "css": ["css/timcan.css"],
+        'editor_tabs': [
+            {
+                'text': 'Plugins',
+                'items': [
+                    {
+                        'text': 'TIMCAN',
+                        'items': [
+                            {
+                                'data': templates[0].strip(),
+                                'text': '5 letters',
+                                'expl': 'Add a 5-letter palindrome task',
+                            },
+                            {
+                                'data': templates[1].strip(),
+                                'text': '7 letters',
+                                'expl': 'Add a 7-letter palindrome task',
+                            },
+                        ],
+                    },
+                ],
+            },
+        ],
     })
 
 
