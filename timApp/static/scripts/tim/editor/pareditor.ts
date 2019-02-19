@@ -912,6 +912,7 @@ ${backTicks}
                     editorText.lastIndexOf(macroStringEnd));
                 macroParams = JSON.parse(`[${macroText}]`);
             } catch {
+                this.file.error = "Parsing stamp parameters failed";
                 throw new Error("Parsing stamp parameters failed");
             }
 
