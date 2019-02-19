@@ -45,7 +45,6 @@ def qst_mcq_reqs():
         "js": [
             # "tim/controllers/qstController",
                ],
-        "angularModule": [],
         "multihtml": True,
         "multimd": True
     }
@@ -61,7 +60,6 @@ def qst_mmcq_reqs():
         "js": [
             # "tim/controllers/qstController",
                ],
-        "angularModule": [],
         "multihtml": True,
         "multimd": True
     }
@@ -77,7 +75,6 @@ def qst_reqs():
         "js": [
             # "tim/controllers/qstController",
                ],
-        "angularModule": [],
         "multihtml": True,
         "multimd": True
     }

@@ -36,7 +36,7 @@ import * as bootstrapPanel from "tim/ui/bootstrapPanel";
 import * as markupError from "tim/ui/markuperror";
 import * as loginMenu from "tim/user/loginMenu";
 import * as settingsCtrl from "tim/user/settingsCtrl";
-import {markAsUsed} from "tim/util/utils";
+import {markAsUsed, ModuleArray, StringArray} from "tim/util/utils";
 import * as annotation from "tim/velp/annotation";
 import * as reviewController from "tim/velp/reviewController";
 import * as velpSelection from "tim/velp/velpSelection";
@@ -85,13 +85,32 @@ markAsUsed(
     viewctrl,
 );
 
-if ( document.location)
+if (document.location) {
     timLogInit(document.location.search.slice(1));
+}
 
-$(() => {
+$(async () => {
     timLogTime("DOM ready", "main.ts");
     insertLogDivIfEnabled();
-    angular.bootstrap(document, ["timApp"], {strictDi: false});
+    const jsmodules = (window as any).JSMODULES;
+    const moduleLoads = [];
+    for (const mname of jsmodules) {
+        const m = import(mname);
+        moduleLoads.push(m);
+    }
+    const angularModules: string[] = [];
+    for (const m of moduleLoads) {
+        const loaded = await m;
+        const mods = loaded.moduleDefs;
+        if (ModuleArray.is(mods)) {
+            angularModules.push(...mods.map((mm) => mm.name));
+        }
+    }
+    const extraAngularModules = (window as any).ANGULARMODULES;
+    if (StringArray.is(extraAngularModules)) {
+        angularModules.push(...extraAngularModules);
+    }
+    angular.bootstrap(document, ["timApp", ...angularModules], {strictDi: false});
     timLogTime("Angular bootstrap done", "main.ts");
     ParCompiler.processAllMathDelayed($("body"), 1500);
 

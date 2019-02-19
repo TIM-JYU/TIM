@@ -1,10 +1,11 @@
 ﻿import angular from "angular";
 import * as t from "io-ts";
-import {GenericPluginMarkup, PluginBase, withDefault, nullable} from "tim/plugin/util";
 import {ViewCtrl} from "tim/document/viewctrl";
+import {GenericPluginMarkup, nullable, PluginBase, withDefault} from "tim/plugin/util";
 import {valueDefu, valueOr} from "tim/util/utils";
 
 const videoApp = angular.module("videoApp", ["ngSanitize"]);
+export const moduleDefs = [videoApp];
 
 function muunna(value: string | number | undefined): number | undefined {
     if (!value) {

@@ -86,7 +86,7 @@ class PluginTest(TimRouteTest):
 
         answer_list = self.get_task_answers(task_id)
 
-        self.assertListEqual(
+        self.assertEqual(
             [{'users': [{'real_name': TEST_USER_1_NAME, 'email': 'test1@example.com', 'id': TEST_USER_1_ID, 'name': TEST_USER_1_USERNAME}],
               'content': '[true, false, true]',
               'points': 9.0, 'task_id': task_id, 'valid': True, 'last_points_modifier': None},
@@ -105,7 +105,7 @@ class PluginTest(TimRouteTest):
              {'users': [{'real_name': TEST_USER_1_NAME, 'email': 'test1@example.com', 'id': TEST_USER_1_ID, 'name': TEST_USER_1_USERNAME}],
               'content': '[true, false, false]',
               'points': 2.0, 'task_id': task_id, 'valid': True, 'last_points_modifier': None}],
-            [{k: v for k, v in ans.items() if k not in ('answered_on', 'id')} for ans in answer_list])
+            self.exclude_answered_on_id(answer_list))
         for ans in answer_list:
             d = dateutil.parser.parse(ans['answered_on'])
             self.assertLess(d - get_current_time(), timedelta(seconds=5))
@@ -175,7 +175,7 @@ class PluginTest(TimRouteTest):
               'task_id': task_id,
               'valid': True,
               'last_points_modifier': None}],
-            [{k: v for k, v in ans.items() if k not in ('answered_on', 'id')} for ans in anon_answers])
+            self.exclude_answered_on_id(anon_answers))
 
         self.get('/getState', query_string={'user_id': anon_id,
                                             'answer_id': answer_list[0]['id'],
@@ -208,6 +208,9 @@ class PluginTest(TimRouteTest):
                                   'real_name': 'Test user 1'}])
 
         self.get(doc.get_url_for_view('teacher'))
+
+    def exclude_answered_on_id(self, answer_list):
+        return [{k: v for k, v in ans.items() if k not in ('answered_on', 'id')} for ans in answer_list]
 
     def test_idless_plugin(self):
         self.login_test1()
@@ -1030,3 +1033,44 @@ needed_len: 6
         self.assertFalse(e)
         e = h.cssselect('.csRunDiv')
         self.assertTrue(e)
+
+    def test_hide_names(self):
+        self.login_test1()
+        d = self.create_doc(initial_par="""
+#- {plugin=pali #t}
+""")
+        task_id = f'{d.id}.t'
+        a = self.post_answer(plugin_type='pali', task_id=task_id, user_input={'userword': 'aaaaaa', 'paliOK': True})
+        self.mark_as_read(d, d.document.get_paragraphs()[0].get_id())
+        r = self.get(d.get_url_for_view('teacher'), query_string={'hide_names': True})
+        self.assertNotIn('users = [{"email": "test1@example.com"', r)
+        r = self.get(d.get_url_for_view('teacher'))
+        self.assertNotIn('users = [{"email": "test1@example.com"', r)
+
+        answer_list = self.get_task_answers(task_id)
+        self.assertEqual([{'content': '{"userword": "aaaaaa"}',
+                           'last_points_modifier': None,
+                           'points': 1.0,
+                           'task_id': task_id,
+                           'users': [{'email': 'user2@example.com',
+                                      'id': 2,
+                                      'name': 'user2',
+                                      'real_name': 'User 2'}],
+                           'valid': True}], self.exclude_answered_on_id(answer_list))
+        self.get(f'/getTaskUsers/{task_id}',
+                 expect_content=[{'email': 'user2@example.com',
+                                  'id': 2,
+                                  'name': 'user2',
+                                  'real_name': 'User 2'}])
+        self.get(f'/read/stats/{d.path}',
+                 expect_content=[{'any_of_phs': 0,
+                                  'click_par': 0,
+                                  'click_red': 1,
+                                  'hover_par': 0,
+                                  'on_screen': 0,
+                                  'username': 'user'}])
+
+        r = self.get(d.get_url_for_view('teacher'), query_string={'hide_names': False})
+        self.assertIn('users = [{"email": "test1@example.com"', r)
+        r = self.get(d.get_url_for_view('teacher'))
+        self.assertIn('users = [{"email": "test1@example.com"', r)

@@ -9,7 +9,7 @@ from timApp.document.docinfo import move_document
 from timApp.tim_app import app
 from timApp.timdb.sqa import db
 from timApp.user.user import User
-from timApp.util.flask.responsehelper import safe_redirect, json_response
+from timApp.util.flask.responsehelper import safe_redirect, json_response, ok_response
 
 admin_bp = Blueprint('admin',
                      __name__,
@@ -79,6 +79,14 @@ def merge_users(primary, secondary):
     This does not delete accounts.
     """
     verify_admin()
+    moved_data = do_merge(primary, secondary)
+    db.session.commit()
+    return json_response({
+        'moved': moved_data,
+    })
+
+
+def do_merge(primary, secondary):
     u_prim = User.get_by_name(primary)
     u_sec = User.get_by_name(secondary)
     if not u_prim:
@@ -93,7 +101,7 @@ def merge_users(primary, secondary):
         return abort(400, 'Users cannot be the same')
     if not has_anything_in_common(u_prim, u_sec):
         return abort(400, f'Users {primary} and {secondary} do not appear to be duplicates. '
-                          f'Merging not allowed to prevent accidental errors.')
+        f'Merging not allowed to prevent accidental errors.')
 
     moved_data = {}
     for a in ('owned_lectures', 'lectureanswers', 'messages', 'answers', 'annotations', 'velps'):
@@ -126,8 +134,18 @@ def merge_users(primary, secondary):
             u_prim_group.accesses.remove(a)
             u_sec_group.accesses.append(a)
             break
+    return moved_data
 
+
+@admin_bp.route('/users/softDelete/<name>', methods=['post'])
+def soft_delete(name: str):
+    verify_admin()
+    u = User.get_by_name(name)
+    if not u:
+        abort(404)
+    d_suffix = '_deleted'
+    if u.name.endswith(d_suffix) or u.email.endswith(d_suffix):
+        return abort(400, 'User is already soft-deleted.')
+    u.update_info(name=u.name + d_suffix, email=u.email + d_suffix, real_name=u.real_name)
     db.session.commit()
-    return json_response({
-        'moved': moved_data,
-    })
+    return ok_response()

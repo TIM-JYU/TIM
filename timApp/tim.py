@@ -251,18 +251,6 @@ def get_index(doc_id):
                                headers=index)
 
 
-@app.route("/sessionsetting/<setting>/<value>", methods=['POST'])
-def set_session_setting(setting, value):
-    try:
-        if 'settings' not in session:
-            session['settings'] = {}
-        session['settings'][setting] = value
-        session.modified = True
-        return json_response(session['settings'])
-    except (NameError, KeyError):
-        abort(404)
-
-
 @app.route("/getServerTime", methods=['GET'])
 def get_server_time():
     t2 = int(time.time() * 1000)

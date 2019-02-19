@@ -6,6 +6,7 @@ import {fixDefExport, markAsUsed} from "tim/util/utils";
 import {timApp} from "../app";
 import {IExtraData, ITags} from "../document/editing/edittypes";
 import {getElementByParId, getParAttributes} from "../document/parhelpers";
+import {ViewCtrl} from "../document/viewctrl";
 import {IDocument} from "../item/IItem";
 import {DialogController, IModalInstance, registerDialogComponent, showDialog, showMessageDialog} from "../ui/dialog";
 import {$http, $injector, $localStorage, $timeout, $upload, $window} from "../util/ngimport";
@@ -13,16 +14,10 @@ import {IAceEditor} from "./ace-types";
 import {AceParEditor} from "./AceParEditor";
 import {IPluginInfoResponse, ParCompiler} from "./parCompiler";
 import {TextAreaParEditor} from "./TextAreaParEditor";
-import {ViewCtrl} from "../document/viewctrl";
-import DroppableEvent = JQueryUI.DroppableEvent;
 
 markAsUsed(rangyinputs);
 
 const TIM_TABLE_CELL = "timTableCell";
-
-export interface IPreviewResult {
-    html: string;
-}
 
 export interface ITag {
     name: keyof ITags;
@@ -415,17 +410,17 @@ ${backTicks}
                         name: "CSS",
                     },
                     {
-                        title: "Macro values fo document",
+                        title: "Macro values for document",
                         func: () => this.editor!.insertTemplate("macros:\n  key: value\n"),
                         name: "Macros",
                     },
                     {
-                        title: "Show task summary in the begining of the doc",
+                        title: "Show task summary in the beginning of the doc",
                         func: () => this.editor!.insertTemplate("show_task_summary: true\n"),
                         name: "Task summary",
                     },
                     {
-                        title: "Update documetn automatically in this interval (sec)",
+                        title: "Update document automatically at this interval (seconds)",
                         func: () => this.editor!.insertTemplate("live_updates: 5\n"),
                         name: "Live update",
                     },

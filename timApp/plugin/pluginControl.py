@@ -60,7 +60,7 @@ def find_task_ids(blocks: List[DocParagraph]) -> Tuple[List[str], int]:
 def pluginify(doc: Document,
               pars: List[DocParagraph],
               user: Optional[User],
-              custom_answer: Optional[Answer]=None,
+              custom_answer: Optional[Answer] = None,
               sanitize=True,
               do_lazy=False,
               edit_window=False,
@@ -69,9 +69,10 @@ def pluginify(doc: Document,
               wrap_in_div=True,
               output_format: PluginOutputFormat = PluginOutputFormat.HTML,
               user_print: bool = False,
-              target_format: PrintFormat=PrintFormat.LATEX,
-              dereference=True) -> Tuple[List[DocParagraph], List[str], List[str], List[str]]:
-    """"Pluginifies" or sanitizes the specified DocParagraphs by calling the corresponding plugin route for each plugin
+              target_format: PrintFormat = PrintFormat.LATEX,
+              dereference=True) -> Tuple[List[DocParagraph], List[str], List[str]]:
+    """
+    "Pluginifies" the specified DocParagraphs by calling the corresponding plugin route for each plugin
     paragraph.
 
     :param doc Document / DocumentVersion object.
@@ -106,16 +107,12 @@ def pluginify(doc: Document,
 
     html_pars = [par.get_final_dict(use_md=md_out) for par in pars]
 
-    # taketime("answ", "sansitize")
-
     if custom_answer is not None:
         if len(pars) != 1:
             raise PluginException('len(blocks) must be 1 if custom state is specified')
     plugins: Dict[str, Dict[int, Plugin]] = {}
-    task_ids = []
 
     answer_map = {}
-    # enum_pars = enumerate(pars)
     plugin_opts = PluginRenderOptions(do_lazy=do_lazy,
                                       user_print=user_print,
                                       preview=edit_window,
@@ -127,23 +124,17 @@ def pluginify(doc: Document,
                                       )
 
     if load_states and custom_answer is None and user is not None:
-        for idx, block in enumerate(pars):  # find taskid's
-            attr_taskid = block.get_attr('taskId')
-            plugin_name = block.get_attr('plugin')
-            if plugin_name and attr_taskid:
-                task_id = f"{block.get_doc_id()}.{attr_taskid or ''}"
-                if not task_id.endswith('.'):
-                    task_ids.append(task_id)
+        task_ids, _ = find_task_ids(pars)
         col = func.max(Answer.id).label('col')
         cnt = func.count(Answer.id).label('cnt')
         sub = (user
-                .answers
-                .filter(Answer.task_id.in_(task_ids) & Answer.valid == True)
-                .add_columns(col, cnt)
-                .with_entities(col, cnt)
-                .group_by(Answer.task_id).subquery())
+               .answers
+               .filter(Answer.task_id.in_(task_ids) & Answer.valid == True)
+               .add_columns(col, cnt)
+               .with_entities(col, cnt)
+               .group_by(Answer.task_id).subquery())
         answers: List[Tuple[Answer, int]] = (
-                Answer.query.join(sub, Answer.id == sub.c.col)
+            Answer.query.join(sub, Answer.id == sub.c.col)
                 .with_entities(Answer, sub.c.cnt)
                 .all()
         )
@@ -171,9 +162,9 @@ def pluginify(doc: Document,
                                    settings=settings,
                                    macro_delimiter=macro_delimiter)
 
-                gamified_data = YamlBlock.from_markdown(md).values
+                gd = YamlBlock.from_markdown(md).values
                 runner = 'gamification-map'
-                html_pars[idx][output_format.value] = f'<{runner} data={quoteattr(json.dumps(gamified_data))}></{runner}>'
+                html_pars[idx][output_format.value] = f'<{runner} data={quoteattr(json.dumps(gd))}></{runner}>'
             except yaml.YAMLError as e:
                 html_pars[idx][output_format.value] = '<div class="error"><p>Gamification error:</p><pre>' + \
                                                       str(e) + \
@@ -194,7 +185,10 @@ def pluginify(doc: Document,
                     answer_and_cnt = answer_map.get(task_id, None)
 
             if rnd_seed is None:
-                rnd_seed = get_simple_hash_from_par_and_user(block, user) # TODO: RND_SEED: get users seed for this plugin
+                rnd_seed = get_simple_hash_from_par_and_user(
+                    block,
+                    user,
+                )  # TODO: RND_SEED: get users seed for this plugin
                 new_seed = True
 
             try:
@@ -213,20 +207,6 @@ def pluginify(doc: Document,
                                                       macro_delimiter)
                 if plugin_name == 'qst':
                     plugin.values['isTask'] = not block.is_question()
-
-                # Create min and max height for div
-                style = ''
-                mh = plugin.values.get('-min-height',0)
-                if mh:
-                    style = (f'min-height:{str(mh)};')
-                mh = plugin.values.get('-max-height', 0)
-                if mh:
-                    style += f'max-height:{str(mh)};overflow-y:auto'
-                if style:
-                    style = 'style=' + style
-                    # block.set_style(style)
-                    plugin.set_style(style)
-
             except Exception as e:
                 html_pars[idx][output_format.value] = get_error_plugin(plugin_name, str(e),
                                                                        plugin_output_format=output_format)
@@ -234,7 +214,8 @@ def pluginify(doc: Document,
             if plugin_name not in plugins:
                 plugins[plugin_name] = OrderedDict()
 
-            plugin.set_render_options(answer_and_cnt if load_states and answer_and_cnt is not None else None, plugin_opts)
+            plugin.set_render_options(answer_and_cnt if load_states and answer_and_cnt is not None else None,
+                                      plugin_opts)
             plugins[plugin_name][idx] = plugin
         else:
             if block.nocache and not is_gamified:  # get_nocache():
@@ -247,7 +228,6 @@ def pluginify(doc: Document,
 
     js_paths = []
     css_paths = []
-    modules = []
 
     # taketime("answ", "done", len(answers))
 
@@ -276,7 +256,7 @@ def pluginify(doc: Document,
                     plugin_name, f'Failed to parse JSON from plugin reqs route: {e}', resp,
                     plugin_output_format=output_format)
             continue
-        plugin_js_files, plugin_css_files, plugin_modules = plugin_deps(reqs)
+        plugin_js_files, plugin_css_files = plugin_deps(reqs)
         for src in plugin_js_files:
             if src.startswith("http") or src.startswith("/"):  # absolute URL
                 js_paths.append(src)
@@ -289,13 +269,10 @@ def pluginify(doc: Document,
                 css_paths.append(src)
             else:
                 css_paths.append(f"/{plugin_name}/{src}")
-        for mod in plugin_modules:
-            modules.append(mod)
 
         # Remove duplicates, preserving order
         js_paths = list(OrderedDict.fromkeys(js_paths))
         css_paths = list(OrderedDict.fromkeys(css_paths))
-        modules = list(OrderedDict.fromkeys(modules))
 
         default_auto_md = reqs.get('default_automd', False)
 
@@ -356,7 +333,7 @@ def pluginify(doc: Document,
 
     # taketime("phtml done")
 
-    return pars, js_paths, css_paths, modules
+    return pars, js_paths, css_paths
 
 
 def get_markup_value(markup, key, default):
@@ -380,14 +357,13 @@ def get_all_reqs():
     return allreqs
 
 
-def plugin_deps(p: Dict) -> Tuple[List[str], List[str], List[str]]:
+def plugin_deps(p: Dict) -> Tuple[List[str], List[str]]:
     """
 
     :param p: is json of plugin requirements of the form:
-              {"js": ["js.js"], "css":["css.css"], "angularModule":["module"]}
+              {"js": ["js.js"], "css":["css.css"]}
     """
     js_files = []
-    modules = []
     css_files = []
     if "css" in p:
         for cssF in p['css']:
@@ -395,7 +371,4 @@ def plugin_deps(p: Dict) -> Tuple[List[str], List[str], List[str]]:
     if "js" in p:
         for jsF in p['js']:
             js_files.append(jsF)
-    if "angularModule" in p:
-        for ng in p['angularModule']:
-            modules.append(ng)
-    return js_files, css_files, modules
+    return js_files, css_files

@@ -20,6 +20,7 @@ from timApp.document.document import Document
 from timApp.document.specialnames import TEMPLATE_FOLDER_NAME, PREAMBLE_FOLDER_NAME
 from timApp.document.timjsonencoder import TimJsonEncoder
 from timApp.auth.login import log_in_as_anonymous
+from timApp.readmark.readparagraphtype import ReadParagraphType
 from timApp.tests.db.timdbtest import TimDbTest
 from timApp.document.docinfo import DocInfo
 from timApp.document.docentry import DocEntry
@@ -718,6 +719,12 @@ class TimRouteTest(TimDbTest):
 
     def upload_file(self, d: DocInfo, content: bytes, filename: str):
         return self.post('/upload/', data={'doc_id': str(d.id), 'file': (io.BytesIO(content), filename)})
+
+    def mark_as_unread(self, doc: DocInfo, par_id):
+        self.json_put(f'/unread/{doc.id}/{par_id}')
+
+    def mark_as_read(self, doc: DocInfo, par_id, read_type=ReadParagraphType.click_red, **kwargs):
+        self.json_put(f'/read/{doc.id}/{par_id}/{read_type.value}', **kwargs)
 
 
 if __name__ == '__main__':

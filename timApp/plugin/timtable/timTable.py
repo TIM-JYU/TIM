@@ -82,7 +82,6 @@ def tim_table_reqs():
             # "js/timTable.js"
             # "tim/controllers/qstController",
         ],
-        "angularModule": [],
         "multihtml": True,
         "multimd": True,
         "default_automd": True,

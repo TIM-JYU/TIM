@@ -181,7 +181,7 @@ def get_module_ids(js_paths: List[str]):
 
 
 def view(item_path, template_name, usergroup=None, route="view"):
-    taketime("view begin",zero=True)
+    taketime("view begin", zero=True)
     if has_special_chars(item_path):
         return redirect(remove_path_special_chars(request.path) + '?' + request.query_string.decode('utf8'))
 
@@ -196,6 +196,9 @@ def view(item_path, template_name, usergroup=None, route="view"):
     edit_mode = request.args.get('edit', None) if has_edit_access(doc_info) else None
     create_environment("%%")  # TODO get macroinf
 
+    hide_names = get_option(request, 'hide_names', None, cast=bool)
+    if hide_names is not None:
+        session['hide_names'] = hide_names
     if route == 'teacher':
         if not verify_teacher_access(doc_info, require=False, check_duration=True):
             if verify_view_access(doc_info):
@@ -255,7 +258,9 @@ def view(item_path, template_name, usergroup=None, route="view"):
             DocParagraph.preload_htmls(src_doc.get_paragraphs(), src_doc.get_settings(), clear_cache)
 
     rights = doc_info.rights
-    word_list = doc_info.document.get_word_list() if rights['editable'] and current_user and current_user.get_prefs().use_document_word_list else []
+    word_list = (doc_info.document.get_word_list()
+                 if rights['editable'] and current_user and current_user.get_prefs().use_document_word_list
+                 else [])
     # We need to deference paragraphs at this point already to get the correct task ids
     xs = dereference_pars(xs, context_doc=doc)
     total_points = None
@@ -304,7 +309,8 @@ def view(item_path, template_name, usergroup=None, route="view"):
     slide_background_url = None
     slide_background_color = None
 
-    if template_name == 'show_slide.html':
+    is_slide = template_name == 'show_slide.html'
+    if is_slide:
         slide_background_url = doc_settings.get_slide_background_url()
         slide_background_color = doc_settings.get_slide_background_color()
         do_lazy = False
@@ -312,23 +318,22 @@ def view(item_path, template_name, usergroup=None, route="view"):
         do_lazy = get_option(request, "lazy", doc_settings.lazy(
             default=plugin_count >= current_app.config['PLUGIN_COUNT_LAZY_LIMIT']))
 
-    texts, js_paths, css_paths, modules = post_process_pars(doc,
-                                                            xs,
-                                                            current_list_user or current_user,
-                                                            sanitize=False,
-                                                            do_lazy=do_lazy,
-                                                            load_plugin_states=not hide_answers)
+    texts, js_paths, css_paths = post_process_pars(
+        doc,
+        xs,
+        current_list_user or current_user,
+        sanitize=False,
+        do_lazy=do_lazy,
+        load_plugin_states=not hide_answers,
+    )
 
     index = get_index_from_html_list(t['html'] for t in texts)
 
-    if hide_names_in_teacher(doc_id):
+    if hide_names_in_teacher():
         for user in user_list:
-            u: User = user_dict[user['id']] if user_dict else User.query.get(user['id'])
-            if not u.has_ownership(doc_info) \
-                    and user['id'] != get_current_user_id():
-                user['name'] = '-'
-                user['real_name'] = f'Someone {user["id"]}'
-                user['email'] = f'someone_{user["id"]}@example.com'
+            user['name'] = f'user{user["id"]}'
+            user['real_name'] = f'User {user["id"]}'
+            user['email'] = f'user{user["id"]}@example.com'
 
     settings = get_user_settings()
     # settings['add_button_text'] = doc_settings.get_dict().get('addParButtonText', 'Add paragraph')
@@ -352,6 +357,18 @@ def view(item_path, template_name, usergroup=None, route="view"):
         ]
         }
         '''
+    if is_slide:
+        js_paths.append('tim/document/slide')
+    angular_module_names = []
+    if teacher_or_see_answers:
+        js_paths.append('angular-ui-grid')
+        angular_module_names += [
+            "ui.grid",
+            "ui.grid.cellNav",
+            "ui.grid.selection",
+            "ui.grid.exporter",
+            "ui.grid.autoResize",
+        ]
 
     return render_template(template_name,
                            access=access,
@@ -366,7 +383,7 @@ def view(item_path, template_name, usergroup=None, route="view"):
                            version=doc.get_version(),
                            js=js_paths,
                            cssFiles=css_paths,
-                           jsMods=modules,
+                           jsMods=angular_module_names,
                            jsModuleIds=get_module_ids(js_paths),
                            doc_css=doc_css,
                            start_index=start_index,
@@ -383,7 +400,7 @@ def view(item_path, template_name, usergroup=None, route="view"):
                            task_info={'total_points': total_points,
                                       'tasks_done': tasks_done,
                                       'total_tasks': total_tasks,
-                                      'show' : show_task_info,
+                                      'show': show_task_info,
                                       'groups': task_groups},
                            doc_settings=doc_settings,
                            word_list=word_list,
@@ -443,17 +460,20 @@ def check_updated_pars(doc_id, major, minor):
     # taketime("after rights")
     for diff in diffs:  # about < 1 ms
         if diff.get('content'):
-            pars, js_paths, css_paths, modules = post_process_pars(d,
-                                                                   diff['content'],
-                                                                   get_current_user_object(),
-                                                                   edit_window=False)
-            diff['content'] = {'texts': render_template('partials/paragraphs.html',
-                                                        text=pars,
-                                                        item={'rights': rights},
-                                                        preview=False),
-                               'js': js_paths,
-                               'css': css_paths,
-                               'angularModule': modules}
+            pars, js_paths, css_paths = post_process_pars(
+                d,
+                diff['content'],
+                get_current_user_object(),
+                edit_window=False,
+            )
+            diff['content'] = {
+                'texts': render_template('partials/paragraphs.html',
+                                         text=pars,
+                                         item={'rights': rights},
+                                         preview=False),
+                'js': js_paths,
+                'css': css_paths,
+            }
     # taketime("after for diffs")
     return json_response({'diff': diffs,
                           'version': d.get_version(),

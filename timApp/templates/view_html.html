@@ -68,25 +68,6 @@
 
 {% block mainctrl %}tim-view{% endblock %}
 
-{% block extramoduledefinitions %}
-    {{ super() }}
-    {% if teacher_mode %}
-        SystemJS.amdDefine("tim/teachermode.ts", ["tim/angularmodules", "angular-ui-grid"], function (angularmodules) {
-        angularmodules.push.apply(angularmodules, ["ui.grid",
-        "ui.grid.cellNav",
-        "ui.grid.selection",
-        "ui.grid.exporter",
-        "ui.grid.autoResize"]);
-        });
-    {% endif %}
-{% endblock %}
-{% block extramodules %}
-    {{ super() }}
-    {% if teacher_mode %}
-        {{ (["tim/teachermode"])|map('map_format', "'%s'")|join(', ')|safe }}
-    {% endif %}
-{% endblock %}
-
 {% block rightside %}
     {% if access.accessible_to %}
         <span class="label label-default">

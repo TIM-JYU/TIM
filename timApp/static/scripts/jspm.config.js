@@ -133,21 +133,6 @@ SystemJS.config({
       ],
       "format": "global"
     },
-    "tim/show_slide_vars.ts": {
-      "build": false
-    },
-    "tim/angularmodules.ts": {
-      "build": false
-    },
-    "tim/plugins.ts": {
-      "build": false
-    },
-    "tim/extramodules.ts": {
-      "build": false
-    },
-    "tim/session.ts": {
-      "build": false
-    },
     "/static/scripts/mathjax/mathjax.js": {
       "format": "global",
       "exports": "MathJax"

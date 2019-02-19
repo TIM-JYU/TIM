@@ -1,7 +1,7 @@
 import angular, {IHttpResponse, IPromise} from "angular";
+import * as t from "io-ts";
 import moment from "moment";
-import sessionsettings from "tim/session";
-import {$http, $timeout} from "./ngimport";
+import {$timeout} from "./ngimport";
 
 export function checkBindings(controller: any, bindings: {[name: string]: string}) {
     for (const k of Object.keys(bindings)) {
@@ -146,14 +146,6 @@ export function getURLParameter(sParam: string): string | undefined {
         }
     }
     return undefined;
-}
-
-export async function setSetting(setting: "timelimit", value: string) {
-    await $http({
-        method: "POST",
-        url: "/sessionsetting/" + setting + "/" + value,
-    });
-    sessionsettings[setting] = value;
 }
 
 /**
@@ -427,3 +419,6 @@ export function valueDefu(s: string | undefined | null, def: string): string {
     if (s === null) return "";
     return s;
 }
+
+export const StringArray = t.array(t.string);
+export const ModuleArray = t.array(t.type({name: t.string, requires: StringArray}));

@@ -14,6 +14,7 @@ from flask import request
 from timApp.auth.accesshelper import verify_logged_in, get_doc_or_abort, verify_manage_access
 from timApp.auth.accesshelper import verify_task_access, verify_teacher_access, verify_seeanswers_access, has_teacher_access, \
     verify_view_access, get_par_from_request
+from timApp.document.docinfo import DocInfo
 from timApp.document.post_process import hide_names_in_teacher
 from timApp.plugin.containerLink import call_plugin_answer
 from timApp.timdb.dbaccess import get_timdb
@@ -281,10 +282,14 @@ def get_hidden_name(user_id):
     return 'Student %d' % user_id
 
 
-def should_hide_name(doc_id, user_id):
-    u: User = User.query.get(user_id)
-    d = DocEntry.find_by_id(doc_id)
-    return not u.has_teacher_access(d) and user_id != get_current_user_id()
+def should_hide_name(d: DocInfo, user: User):
+    return True
+    # return not user.has_teacher_access(d) and user.id != get_current_user_id()
+
+
+def maybe_hide_name(d: DocInfo, u: User):
+    if should_hide_name(d, u):
+        u.hide_name = True
 
 
 @answers.route("/taskinfo/<task_id>")
@@ -324,11 +329,10 @@ def get_answers(task_id, user_id):
         abort(400, 'Non-existent user')
     try:
         user_answers: List[Answer] = user.get_answers_for_task(task_id).all()
-        if hide_names_in_teacher(doc_id):
+        if hide_names_in_teacher():
             for answer in user_answers:
                 for u in answer.users_all:
-                    if should_hide_name(doc_id, u.id):
-                        u.hide_name = True
+                    maybe_hide_name(d, u)
         return json_response(user_answers)
     except Exception as e:
         return abort(400, str(e))
@@ -423,8 +427,7 @@ def get_all_answers_as_list(task_ids: List[str]):
         usergroup = None
 
     hide_names = name_opt == 'anonymous'
-    for doc_id in doc_ids:
-        hide_names = hide_names or hide_names_in_teacher(doc_id)
+    hide_names = hide_names or hide_names_in_teacher()
     all_answers = timdb.answers.get_all_answers(task_ids,
                                                 usergroup,
                                                 hide_names,
@@ -464,19 +467,19 @@ def get_state():
     if user is None:
         abort(400, 'Non-existent user')
 
-    texts, js_paths, css_paths, modules = pluginify(doc,
-                                                    [block],
-                                                    user,
-                                                    custom_answer=answer)
+    texts, js_paths, css_paths = pluginify(doc,
+                                           [block],
+                                           user,
+                                           custom_answer=answer)
     html = texts[0].get_final_dict()['html']
     if review:
         block.final_dict = None
-        review_pars, _, _, _ = pluginify(doc,
-                                         [block],
-                                         user,
-                                         custom_answer=answer,
-                                         review=review,
-                                         wrap_in_div=False)
+        review_pars, _, _ = pluginify(doc,
+                                      [block],
+                                      user,
+                                      custom_answer=answer,
+                                      review=review,
+                                      wrap_in_div=False)
         return json_response({'html': html, 'reviewHtml': review_pars[0].get_final_dict()['html']})
     else:
         return json_response({'html': html, 'reviewHtml': None})
@@ -510,10 +513,9 @@ def get_task_users(task_id):
     if usergroup is not None:
         q = q.filter(UserGroup.name.in_([usergroup]))
     users = q.all()
-    if hide_names_in_teacher(doc_id):
+    if hide_names_in_teacher():
         for user in users:
-            if should_hide_name(doc_id, user.id):
-                user.hide_name = True
+            maybe_hide_name(d, user)
     return json_response(users)
 
 

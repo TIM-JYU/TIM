@@ -5,15 +5,8 @@ import {CellInfo} from "sagecell";
 import {IAce, IAceEditor} from "tim/editor/ace-types";
 import {ParCompiler} from "tim/editor/parCompiler";
 import {GenericPluginMarkup, nullable, PluginBase, withDefault} from "tim/plugin/util";
-import {lazyLoadMany} from "tim/util/lazyLoad";
 import {$compile, $http, $sce, $timeout, $upload, $window} from "tim/util/ngimport";
 import {fixDefExport, to, valueDefu, valueOr} from "tim/util/utils";
-
-interface Simcir {
-    setupSimcir(element: JQuery, data: {}): void;
-
-    controller(element: JQuery): {data(): {connectors: any[], devices: any[]}};
-}
 
 interface GlowScriptWindow extends Window {
     runJavaScript(text: string, args: string, input: string, wantsConsole: boolean): string;
@@ -227,8 +220,10 @@ function resizeIframe(obj: HTMLFrameElement) {
 }
 
 async function loadSimcir() {
-    const modules = await lazyLoadMany(["simcir", "simcir/basicset", "simcir/library", "simcir/oma-kirjasto"]);
-    return modules[0] as Simcir;
+    import("simcir/basicset");
+    import("simcir/library");
+    import("simcir/oma-kirjasto");
+    return await import("simcir");
 }
 
 // =================================================================================================================
@@ -3325,3 +3320,5 @@ export function truthTable(sentence: string, topbottomLines: boolean) {
         return result + "\n" + err + "\n";
     }
 }
+
+export const moduleDefs = [csApp, csConsoleApp];

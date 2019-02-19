@@ -410,9 +410,9 @@ def par_response(pars,
                             old_exported = old_par.get_exported_markdown()
                     trdiff = {'old': old_exported, 'new': newest_exported}
 
-    pars, js_paths, css_paths, modules = post_process_pars(doc, pars, current_user, edit_window=preview)
+    pars, js_paths, css_paths = post_process_pars(doc, pars, current_user, edit_window=preview)
 
-    changed_pars, _, _, _ = post_process_pars(doc, changed_pars, current_user, edit_window=preview)
+    changed_pars, _, _ = post_process_pars(doc, changed_pars, current_user, edit_window=preview)
     original_par = edit_request.original_par if edit_request else None
 
     r = json_response({'texts': render_template('partials/paragraphs.html',
@@ -423,7 +423,6 @@ def par_response(pars,
                        'jsModuleIds': list(get_module_ids(js_paths)),
                        'css': css_paths,
                        'trdiff': trdiff,
-                       'angularModule': modules,  # not used in JS at all, maybe not needed at all
                        'changed_pars': {p['id']: render_template('partials/paragraphs.html',
                                                                  text=[p],
                                                                  item={'rights': get_rights(doc.get_docinfo())}) for p

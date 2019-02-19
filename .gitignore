@@ -19,9 +19,6 @@
 /timApp/modules/cs/data/
 /timApp/modules/cs/generated
 /timApp/modules/cs/java/cs/ComTest.jar
-/timApp/modules/cs/js/build/
-/timApp/modules/pali/js/build/
-/timApp/modules/svn/js/build/
 /timApp/modules/cs/mathcheck/mc.exe
 /timApp/modules/cs/nohup.out
 /timApp/modules/cs/static/glowscript
@@ -33,7 +30,6 @@
 /timApp/Output.txt
 /timApp/static/gen/
 /timApp/static/scripts/build-ide/
-/timApp/static/scripts/build/
 /timApp/static/scripts/decls/
 /timApp/static/scripts/jspm_packages/
 /timApp/static/scripts/node_modules/
@@ -44,6 +40,7 @@
 /timApp/tim_files/
 /variables.sh
 _build/
+build/
 bower_components/
 cargo-cache/
 dist/

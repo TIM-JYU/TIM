@@ -89,6 +89,10 @@
                 <input type="radio" ng-model="$ctrl.selected.name" value="PLAIN">
                 Plain
             </label>
+            <label class="footerLabel" ng-show="$ctrl.showPaths">
+                <input type="radio" ng-model="$ctrl.selected.name" value="RST">
+                RST
+            </label>
         </div>
         <div ng-show="$ctrl.showPaths">
             <label class="footerLabel" title="If you think images have changed after last print">

@@ -194,7 +194,7 @@ class DocumentPrinter:
             tformat = PrintFormat.LATEX
 
         # render markdown for plugins
-        pars_to_print, _, _, _ = pluginify(
+        pars_to_print, _, _ = pluginify(
             doc=self._doc_entry.document,
             pars=pars_to_print,
             user=get_current_user_object(),
@@ -212,7 +212,8 @@ class DocumentPrinter:
                                                                                                           par_infos):
             md = p.get_final_dict()['md']
             if not p.is_plugin() and not p.is_question():
-                md = expand_macros(text=md,
+                if  not self.texplain:
+                    md = expand_macros(text=md,
                                    macros=pdoc_macros,
                                    settings=settings,
                                    macro_delimiter=pdoc_macro_delimiter,
@@ -444,10 +445,13 @@ class DocumentPrinter:
 
     @staticmethod
     def get_templates_as_dict(doc_entry: DocEntry, current_user: User):
-
+        settings = doc_entry.document.get_settings()
+        tex_template = settings.get("texTemplate", "")
         try:
             user_templates = DocumentPrinter.get_user_templates(doc_entry=doc_entry, current_user=current_user)
             all_templates = DocumentPrinter.get_all_templates(doc_entry=doc_entry, current_user=current_user)
+            if tex_template:
+                all_templates.append(DocEntry.find_by_path(tex_template))
         except PrintingError as err:
             raise PrintingError(str(err))
 

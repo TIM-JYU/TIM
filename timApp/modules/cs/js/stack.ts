@@ -6,6 +6,7 @@ import {$http, $sce} from "tim/util/ngimport";
 import {to} from "tim/util/utils";
 
 const stackApp = angular.module("stackApp", ["ngSanitize"]);
+export const moduleDefs = [stackApp];
 const STACK_VARIABLE_PREFIX = "stackapi_";
 
 // this.attrs

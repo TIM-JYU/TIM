@@ -27,23 +27,8 @@
         {% endif %}
         <script>
             var IS_TESTING = {{ config.TESTING|tojson }};
-            SystemJS.amdDefine("tim/angularmodules.ts", ["exports"], function () {
-                return [];
-            });
-            SystemJS.amdDefine("tim/plugins.ts", [{{ (["tim/angularmodules"] + (js or []))|map('map_format', "'%s'")|join(', ')|safe }}],
-                function (angularmodules) {
-                    var mods = {{ (jsMods or [])|tojson }};
-                    angularmodules.push.apply(angularmodules, mods);
-                });
-            {% block extramoduledefinitions %}
-
-            {% endblock %}
-            SystemJS.amdDefine("tim/extramodules.ts", ["exports", {% block extramodules %}{% endblock %}], function () {
-
-            });
-            SystemJS.amdDefine("tim/session.ts", ["exports"], function () {
-                return {{(session.settings or {})|tojson}};
-            });
+            var ANGULARMODULES = {{ (jsMods or [])|tojson }};
+            var JSMODULES = {{ (js or [])|tojson }};
             SystemJS.import("tim");
         </script>
         {% block stylesheet %}
@@ -63,7 +48,6 @@
             var current_user = {{ current_user.to_json(full=True)|tojson }};
             var other_users = {{ other_users|tojson }};
             var bookmarks = {{ bookmarks|tojson }};
-            var sessionsettings = {{(session.settings or {})|tojson}};
         </script>
         <script type="text/x-mathjax-config">
             MathJax.Hub.Config({
