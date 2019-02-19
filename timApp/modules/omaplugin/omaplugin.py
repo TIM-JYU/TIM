@@ -180,7 +180,7 @@ def answer(args: omapluginAnswerModel):
     if needed_len:
         len_ok = check_letters(userword, needed_len)
     if not len_ok:
-        web['error'] = "Wrong length"
+        web['error'] = "aaa Wrong length asdf"
     if not needed_len and not omaplugin_ok:
         len_ok = False
     points_array = args.markup.points_array or [[0, 0.25], [0.5, 1]]

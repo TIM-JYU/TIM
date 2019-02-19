@@ -157,7 +157,7 @@ omapluginApp.component("omapluginRunner", {
                placeholder="{{::$ctrl.inputplaceholder}}"
                size="{{::$ctrl.cols}}"></span></label>
         <span class="unitTestGreen" ng-if="$ctrl.runTestGreen && $ctrl.userword">OK</span>
-        <span class="unitTestRed" ng-if="!$ctrl.runTestGreen">Wrong</span>
+        <span class="unitTestRed" ng-if="!$ctrl.runTestGreen">Wrong lol</span>
     </div>
     <button class="timButton"
             ng-if="::$ctrl.buttonText()"
