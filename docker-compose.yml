@@ -22,7 +22,7 @@ services:
   working_dir: /service/timApp
   command: python3 launch.py --with-gunicorn
   environment:
-   FLASK_APP: tim_app.py
+   FLASK_APP: tim.py
    PYTHONPATH: /service:/usr/local/lib/python3.6/dist-packages
    COMPOSE_PROJECT_NAME: ${COMPOSE_PROJECT_NAME}
    TIM_SETTINGS: ${CONFIG_FILE}
@@ -145,7 +145,7 @@ services:
    - postgresql
    - redis
   environment:
-   FLASK_APP: tim_app.py
+   FLASK_APP: tim.py
    PYTHONPATH: /service:/usr/local/lib/python3.6/dist-packages
    COMPOSE_PROJECT_NAME: ${COMPOSE_PROJECT_NAME}
    TIM_SETTINGS: ${CONFIG_FILE}

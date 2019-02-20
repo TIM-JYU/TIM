@@ -23,6 +23,7 @@ from timApp.document.preloadoption import PreloadOption
 from timApp.document.validationresult import ValidationResult
 from timApp.document.version import Version
 from timApp.document.yamlblock import YamlBlock
+from timApp.plugin.taskid import TaskId
 from timApp.timdb.exceptions import TimDbException, PreambleException, InvalidReferenceException
 from timApp.timtypes import UserType, DocInfoType
 from timApp.util.utils import get_error_html, trim_markdown
@@ -86,12 +87,6 @@ class Document:
 
     def __repr__(self):
         return f'Document(id={self.doc_id})'
-
-    def __len__(self):
-        count = 0
-        for _ in self:
-            count += 1
-        return count
 
     def __iter__(self) -> 'Union[DocParagraphIter, CacheIterator]':
         if self.par_cache is None:
@@ -870,22 +865,6 @@ class Document:
                 lc -= 1
 
         return log
-
-    def get_paragraph_by_task(self, task_id_name) -> DocParagraph:
-        with self.__iter__() as it:
-            for p in it:
-                if p.get_attr('taskId') == task_id_name:
-                    return p
-                if p.is_reference():
-                    try:
-                        ref_pars = p.get_referenced_pars()
-                    except TimDbException:  # Ignore invalid references
-                        continue
-                    else:
-                        for rp in ref_pars:
-                            if rp.get_attr('taskId') == task_id_name:
-                                return rp
-        raise TimDbException(f'Task not found in the document: {task_id_name}')
 
     def delete_section(self, area_start, area_end) -> DocumentEditResult:
         result = DocumentEditResult()
