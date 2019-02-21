@@ -1,7 +1,10 @@
 import os
 import shutil
+from pprint import pprint
 
+import click
 from flask import flash, url_for, Blueprint, abort
+from flask.cli import AppGroup
 
 from timApp.auth.accesshelper import verify_admin
 from timApp.auth.accesstype import AccessType
@@ -9,7 +12,7 @@ from timApp.document.docinfo import move_document
 from timApp.tim_app import app
 from timApp.timdb.sqa import db
 from timApp.user.user import User
-from timApp.util.flask.responsehelper import safe_redirect, json_response, ok_response
+from timApp.util.flask.responsehelper import safe_redirect, json_response
 
 admin_bp = Blueprint('admin',
                      __name__,
@@ -72,21 +75,25 @@ def has_anything_in_common(u1: User, u2: User):
     return bool(set(n[:-1] for n in u1_set) & set(n[:-1] for n in u2_set))
 
 
-@admin_bp.route('/users/merge/<primary>/<secondary>')
+user_cli = AppGroup('user')
+
+
+@user_cli.command('merge')
+@click.argument('primary')
+@click.argument('secondary')
 def merge_users(primary, secondary):
     """Merges two users by moving data from secondary account to primary account.
 
     This does not delete accounts.
     """
-    verify_admin()
-    moved_data = do_merge(primary, secondary)
-    db.session.commit()
-    return json_response({
-        'moved': moved_data,
-    })
+    with app.test_request_context():
+        moved_data = do_merge(primary, secondary)
+        db.session.commit()
+    pprint(moved_data)
+    return moved_data
 
 
-def do_merge(primary, secondary):
+def do_merge(primary: str, secondary: str):
     u_prim = User.get_by_name(primary)
     u_sec = User.get_by_name(secondary)
     if not u_prim:
@@ -137,15 +144,21 @@ def do_merge(primary, secondary):
     return moved_data
 
 
-@admin_bp.route('/users/softDelete/<name>', methods=['post'])
+@user_cli.command('soft_delete')
+@click.argument('name')
 def soft_delete(name: str):
-    verify_admin()
+    do_soft_delete(name)
+
+
+def do_soft_delete(name):
     u = User.get_by_name(name)
     if not u:
-        abort(404)
+        abort(404, 'User not found.')
     d_suffix = '_deleted'
     if u.name.endswith(d_suffix) or u.email.endswith(d_suffix):
         return abort(400, 'User is already soft-deleted.')
     u.update_info(name=u.name + d_suffix, email=u.email + d_suffix, real_name=u.real_name)
     db.session.commit()
-    return ok_response()
+
+
+app.cli.add_command(user_cli)

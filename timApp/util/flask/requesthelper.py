@@ -1,8 +1,8 @@
 import itertools
-
-from flask import Request, current_app, request
-from flask import request, abort
 from typing import Optional
+
+from flask import Request, current_app
+from flask import request, abort
 from werkzeug.wrappers import BaseRequest
 
 from timApp.timdb.exceptions import InvalidReferenceException

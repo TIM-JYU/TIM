@@ -24,6 +24,7 @@ from timApp.item.block import Block
 from timApp.item.block import BlockType
 from timApp.item.validation import validate_item_and_create_intermediate_folders, validate_uploaded_document_content
 from timApp.plugin.plugin import Plugin
+from timApp.plugin.taskid import TaskId
 from timApp.timdb.sqa import db
 from timApp.upload.uploadedfile import UploadedFile, PluginUpload, PluginUploadInfo, StampedPDF
 from timApp.util.flask.responsehelper import json_response
@@ -78,8 +79,8 @@ def get_upload(relfilename: str):
         if answerupload is None:
             abort(403)
         answer = answerupload.answer
-        doc_id, task_name, _ = Plugin.parse_task_id(answer.task_id)
-        d = get_doc_or_abort(doc_id)
+        tid = TaskId.parse(answer.task_id)
+        d = get_doc_or_abort(tid.doc_id)
         verify_seeanswers_access(d)
 
     up = PluginUpload(block)
