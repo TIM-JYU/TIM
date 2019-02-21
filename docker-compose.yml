@@ -92,7 +92,7 @@ services:
   restart: unless-stopped
  omaplugin:
    image: timimages/tim:${TIM_IMAGE_TAG}
-   # build: ./timApp/modules/omaplugin
+   build: ./timApp/modules/omaplugin
    volumes:
     - ./timApp/modules/omaplugin:/omaplugin:ro
     - ./timApp/modules/py:/py:ro

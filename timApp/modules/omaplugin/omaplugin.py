@@ -36,6 +36,7 @@ class omapluginStateSchema(Schema):
 class omapluginMarkupModel(GenericMarkupModel):
     points_array: Union[str, Missing] = missing
     inputstem: Union[str, Missing] = missing
+    inputstem2: Union[str, Missing] = missing
     needed_len: Union[int, Missing] = missing
     initword: Union[str, Missing] = missing
     cols: Union[int, Missing] = missing
@@ -45,6 +46,7 @@ class omapluginMarkupModel(GenericMarkupModel):
 class omapluginMarkupSchema(GenericMarkupSchema):
     points_array = fields.List(fields.List(fields.Number()))
     inputstem = fields.Str()
+    inputstem2 = fields.Str()
     needed_len = fields.Int()
     initword = fields.Str()
     cols = fields.Int()
