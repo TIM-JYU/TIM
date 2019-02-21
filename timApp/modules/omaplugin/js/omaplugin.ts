@@ -16,6 +16,7 @@ const omapluginMarkup = t.intersection([
         initword: t.string,
         inputplaceholder: nullable(t.string),
         inputstem: t.string,
+        inputstem2: t.string,
     }),
     GenericPluginMarkup,
     t.type({
@@ -79,6 +80,10 @@ class omapluginController extends PluginBase<t.TypeOf<typeof omapluginMarkup>, t
 
     get inputstem() {
         return this.attrs.inputstem || null;
+    }
+
+    get inputstem2() {
+        return this.attrs.inputstem2 || null;
     }
 
     get cols() {
@@ -147,7 +152,7 @@ omapluginApp.component("omapluginRunner", {
 <div class="csRunDiv no-popup-menu">
     <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
     <p ng-if="::$ctrl.stem">{{::$ctrl.stem}}</p>
-    <div class="form-inline"><label>{{::$ctrl.inputstem}} <span>
+    <div class="form-inline"><label>{{::$ctrl.inputstem}} , {{::$ctrl.inputstem2}}<span>
         <input type="text"
                class="form-control"
                ng-model="$ctrl.userword"
@@ -163,7 +168,7 @@ omapluginApp.component("omapluginRunner", {
             ng-if="::$ctrl.buttonText()"
             ng-disabled="$ctrl.isRunning || !$ctrl.userword"
             ng-click="$ctrl.saveText()">
-        {{::$ctrl.buttonText()}}
+        {{::$ctrl.buttonText()}} aa
     </button>
     <a href="" ng-if="$ctrl.edited" ng-click="$ctrl.initCode()">{{::$ctrl.resetText}}</a>
     <div ng-if="$ctrl.error" ng-bind-html="$ctrl.error"></div>
