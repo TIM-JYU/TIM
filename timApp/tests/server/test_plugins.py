@@ -1021,8 +1021,8 @@ needed_len: 6
         """)
         e = self.get(d.url, as_tree=True).cssselect('pali-runner')
         self.assertTrue(e)
-        a = self.post_answer(plugin_type='pali', task_id=f'{d.id}.t', user_input={'userword': 'aaaa'})
-        self.assertEqual('paliOK: Missing data for required field.',
+        a = self.post_answer(plugin_type='pali', task_id=f'{d.id}.t', user_input={'userwordx': 'aaaa'})
+        self.assertEqual('userword: Missing data for required field.',
                          html.fromstring(a['web']['error']).cssselect('li')[0].text)
         a = self.post_answer(plugin_type='pali', task_id=f'{d.id}.t', user_input={'paliOK': True, 'userword': 'aaaa'})
         self.assertEqual({'error': 'Wrong length', 'result': 'saved'}, a['web'])
@@ -1120,7 +1120,7 @@ Hi {#t3} $x$
 """)
         a = self.post_answer_no_abdata(
             plugin_type='pali', task_id=f'{d.id}.t2',
-            user_input={'userword': 'aaaaaa', 'paliOK': True},
+            user_input={'userword': 'aaaaaa'},
         )
         aid = a['savedNew']
         self.assertEqual({'savedNew': aid, 'web': {'result': 'saved'}}, a)
@@ -1197,7 +1197,7 @@ Hi {#t3} $x$
         a = self.post_answer_no_abdata(
             plugin_type='pali',
             task_id=f'{d.id}.t5',
-            user_input={'userword': 'aaaaaa', 'paliOK': True},
+            user_input={'userword': 'aaaaaa'},
             expect_content={},
         )
 
@@ -1270,7 +1270,7 @@ Hi {#t3} $x$
         self.post_answer_no_abdata(
             plugin_type='pali',
             task_id=f'{d.id}.t5',
-            user_input={'userword': 'bbbb', 'paliOK': True},
+            user_input={'userword': 'bbbb'},
         )
 
         d2 = self.create_doc(initial_par=f"""
@@ -1280,10 +1280,42 @@ Hi {#t3} $x$
         r = self.get(d2.url, as_tree=True)
         s = {'userword': 'bbbb'}
         self.assert_plugin_json(r.cssselect('.parContent pali-runner')[0],
-                                self.create_plugin_json(d, 't5', state=s, toplevel=s,
-                                                        info={'current_user_id': 'testuser1',
-                                                            'earlier_answers': 1,
-                                                            'look_answer': False,
-                                                            'max_answers': None,
-                                                            'user_id': 'testuser1',
-                                                            'valid': True}))
+                                self.create_plugin_json(
+                                    d, 't5', state=s, toplevel=s,
+                                    info={'current_user_id': 'testuser1',
+                                          'earlier_answers': 1,
+                                          'look_answer': False,
+                                          'max_answers': None,
+                                          'user_id': 'testuser1',
+                                          'valid': True},
+                                ))
+        r = self.post_answer('pali', f'{d.id}.t5', {'userword': 'xxx'},
+                             ref_from=[d2.id, d2.document.get_paragraphs()[0].get_id()])
+        self.check_ok_answer(r)
+
+        self.login_test2()
+        d3 = self.create_doc(initial_par=f"""
+#- {{defaultplugin=pali}}
+{{#{d.id}.t5}}
+
+#- {{#{d.id}.t5 plugin=pali}}
+
+#- {{#1234.t5 plugin=pali}}
+""")
+        self.post_answer(
+            'pali',
+            f'{d.id}.t5',
+            user_input={'userword': 'xxx'},
+            ref_from=[d3.id, d3.document.get_paragraphs()[0].get_id()],
+            expect_status=403,
+        )
+        r = self.get(d3.url, as_tree=True)
+        access_err = 'Plugin pali error: Task id refers to another document, ' \
+                     'but you do not have access to that document.'
+        self.assert_content(
+            r,
+            [access_err,
+             access_err,
+             'Plugin pali error: Task id refers to a non-existent document.'
+             ],
+        )

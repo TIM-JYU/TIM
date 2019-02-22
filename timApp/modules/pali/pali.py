@@ -67,13 +67,13 @@ class PaliMarkupSchema(GenericMarkupSchema):
 class PaliInputModel:
     """Model for the information that is sent from browser (plugin AngularJS component)."""
     userword: str
-    paliOK: bool
+    paliOK: bool = missing
     nosave: bool = missing
 
 
 class PaliInputSchema(Schema):
     userword = fields.Str(required=True)
-    paliOK = fields.Bool(required=True)
+    paliOK = fields.Bool()
     nosave = fields.Bool()
 
     @validates('userword')
@@ -175,7 +175,7 @@ def answer(args: PaliAnswerModel):
     result = {'web': web}
     needed_len = args.markup.needed_len
     userword = args.input.userword
-    pali_ok = args.input.paliOK
+    pali_ok = args.input.paliOK or False
     len_ok = True
     if needed_len:
         len_ok = check_letters(userword, needed_len)
