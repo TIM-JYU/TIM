@@ -239,6 +239,7 @@ def get_plugin_from_request(doc: Document, task_id: TaskId, u: User) -> Tuple[Do
     plug = find_plugin_from_document(doc, task_id, u)
     par_id = plug.par.get_id()
     if orig_doc_id is None or orig_par_id is None:
+        # TODO this if is possibly unnecessary
         if not doc.has_paragraph(par_id):
             return abort(400)
         return doc, plug
@@ -253,7 +254,7 @@ def get_plugin_from_request(doc: Document, task_id: TaskId, u: User) -> Tuple[Do
     for p in pars:
         if p.get_id() == par_id:
             return ctx_doc, maybe_get_plugin_from_par(p, task_id, u)
-    abort(404)
+    return doc, plug
 
 
 def get_orig_doc_and_par_id_from_request() -> Tuple[int, str]:
