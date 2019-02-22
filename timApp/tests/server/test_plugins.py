@@ -1,12 +1,15 @@
+import base64
 import io
 import json
 import re
 from collections import OrderedDict
 from datetime import timedelta
 from itertools import product
+from typing import Dict, Any
 
 import dateutil.parser
 from lxml import html
+from lxml.html import HtmlElement
 
 from timApp.answer.answer import Answer
 from timApp.answer.pointsumrule import PointSumRule, PointType
@@ -14,7 +17,8 @@ from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docinfo import DocInfo
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.randutils import random_id
-from timApp.plugin.plugin import Plugin
+from timApp.plugin.plugin import Plugin, find_plugin_from_document
+from timApp.plugin.taskid import TaskId
 from timApp.tests.db.timdbtest import TEST_USER_1_ID, TEST_USER_2_ID, TEST_USER_1_NAME, TEST_USER_1_USERNAME, \
     TEST_USER_2_USERNAME
 from timApp.tests.server.timroutetest import TimRouteTest
@@ -43,7 +47,9 @@ class PluginTest(TimRouteTest):
         task_name = 'mmcqexample'
         plugin_type = 'mmcq'
         task_id = f'{doc.id}.{task_name}'
-        par_id = doc.document.get_paragraph_by_task(task_name).get_id()
+        tid = TaskId.parse(task_id)
+        u = self.test_user_1
+        par_id = find_plugin_from_document(doc.document, tid, u).par.get_id()
         task_id_ext = task_id + '.' + par_id
         task_id_ext_wrong = task_id + '.' + par_id + 'x'
 
@@ -120,14 +126,14 @@ class PluginTest(TimRouteTest):
                                 user_id=self.current_user_id())
         self.check_ok_answer(resp, is_new=False)
 
-        par_id = doc.document.get_paragraph_by_task(task_name).get_id()
+        par_id = find_plugin_from_document(doc.document, tid, u).par.get_id()
         aid = answer_list[0]['id']
         j = self.get('/getState',
                      query_string={'user_id': self.current_user_id(),
                                    'answer_id': aid,
                                    'par_id': par_id,
                                    'doc_id': doc.id})
-        self.assertEqual({'html': "<div id='" + task_id_ext + f"' answer-id='{aid}' data-plugin='/mmcq' class=pluginmmcq ><mmcq "
+        self.assertEqual({'html': "<div id='" + task_id_ext + f"' answer-id='{aid}' data-plugin='/mmcq' class=\"pluginmmcq\" ><mmcq "
                                                                   "data-content='{&quot;state&quot;:[true,false,true],&quot;question&quot;:{&quot;falseText&quot;:null,&quot;button&quot;:null,&quot;wrongText&quot;:null,&quot;onTry&quot;:null,&quot;header&quot;:null,&quot;stem&quot;:&quot;Answer "
                                                                   'yes or no to the following '
                                                                   'questions.&quot;,&quot;headerText&quot;:null,&quot;choices&quot;:[{&quot;text&quot;:&quot;&lt;span '
@@ -635,24 +641,24 @@ class PluginTest(TimRouteTest):
         p.set_value('starttime', '2000-01-01 00:00:00')
         p.set_value('deadline',  '2100-01-01 00:00:00')
         p.save()
-        resp = self.post_answer(p.type, p.full_task_id, [])
+        resp = self.post_answer(p.type, p.task_id.doc_task, [])
         self.assertNotIn('error', resp)
 
         p.set_value('starttime', '2099-01-01 00:00:00')
         p.save()
-        resp = self.post_answer(p.type, p.full_task_id, [])
+        resp = self.post_answer(p.type, p.task_id.doc_task, [])
         self.assertEqual(resp['error'], 'You cannot submit answers yet.')
 
         p.set_value('starttime', '2000-01-01 00:00:00')
         p.set_value('deadline', '2000-01-02 00:00:00')
         p.save()
-        resp = self.post_answer(p.type, p.full_task_id, [])
+        resp = self.post_answer(p.type, p.task_id.doc_task, [])
         self.assertEqual(resp['error'], 'The deadline for submitting answers has passed.')
 
         p.set_value('starttime', 'asdasd')
         p.save()
-        self.post_answer(p.type, p.full_task_id, [], expect_status=400, expect_content={'error': 'Invalid date format: asdasd'})
-        self.get(f'/taskinfo/{p.full_task_id}', expect_status=400, expect_content={'error': 'Invalid date format: asdasd'})
+        self.post_answer(p.type, p.task_id.doc_task, [], expect_status=400, expect_content={'error': 'Invalid date format: asdasd'})
+        self.get(f'/taskinfo/{p.task_id.doc_task}', expect_status=400, expect_content={'error': 'Invalid date format: asdasd'})
 
     def test_deadline_datetime(self):
         self.login_test1()
@@ -668,7 +674,7 @@ choices:
 ```
 """)
         p = Plugin.from_paragraph(d.document.get_paragraphs()[0])
-        resp = self.post_answer(p.type, p.full_task_id, [])
+        resp = self.post_answer(p.type, p.task_id.doc_task, [])
         self.assertEqual(resp['error'], 'The deadline for submitting answers has passed.')
         self.get(d.url_relative)
 
@@ -685,12 +691,12 @@ deadline:
 ```
 """)
         p = Plugin.from_paragraph(d.document.get_paragraphs()[0])
-        self.post_answer(p.type, p.full_task_id, [],
+        self.post_answer(p.type, p.task_id.doc_task, [],
                          expect_status=400,
                          expect_content='Invalid date format: 15',
                          json_key='error')
         p = Plugin.from_paragraph(d.document.get_paragraphs()[1])
-        self.post_answer(p.type, p.full_task_id, [])
+        self.post_answer(p.type, p.task_id.doc_task, [])
 
     def test_invalid_yaml(self):
         self.login_test1()
@@ -745,7 +751,7 @@ lazy: true
         """)
         e = self.get(d.url, as_tree=True)
         ablazy = e.cssselect('tim-plugin-loader')
-        self.assertEqual({'type': 'full', 'task-id': f'{d.id}.'}, ablazy[0].attrib)
+        self.assertEqual({'type': 'full', 'task-id': ''}, ablazy[0].attrib)
 
     def test_cache_no_browser(self):
         self.login_test1()
@@ -772,16 +778,15 @@ choices:
 ```
 """)
         par = d.document.get_paragraphs()[0]
-        p = Plugin.from_paragraph(par)
-        self.post_answer(p.type, f'{d.id}.t1.1.{par.get_id()}', [],
+        self.post_answer('mmcq', f'{d.id}.t1.1.{par.get_id()}', [],
                          expect_content='The format of task id is invalid. Dot characters are not allowed.',
                          json_key='error', expect_status=400)
 
         # TODO These two need better error messages.
-        self.post_answer(p.type, f't1.1.{par.get_id()}', [],
+        self.post_answer('mmcq', f't1.1.{par.get_id()}', [],
                          expect_content='The format of task id is invalid. Dot characters are not allowed.',
                          json_key='error', expect_status=400)
-        self.post_answer(p.type, f'{par.get_id()}', [],
+        self.post_answer('mmcq', f'{par.get_id()}', [],
                          expect_content='The format of task id is invalid. Dot characters are not allowed.',
                          json_key='error', expect_status=400)
 
@@ -806,8 +811,8 @@ choices:
         d.document.insert_preamble_pars()
         par = d.document.get_paragraphs()[0]
         plug = Plugin.from_paragraph(par)
-        self.assertEqual(f'{d.id}.t', plug.full_task_id)
-        resp = self.post_answer(plug.type, plug.task_id_ext, [True])
+        self.assertEqual(f'{d.id}.t', plug.task_id.doc_task)
+        resp = self.post_answer(plug.type, plug.task_id.extended, [True])
         a: Answer = Answer.query.get(resp['savedNew'])
         self.assertEqual(1, a.points)
         self.assertEqual(f'{d.id}.t', a.task_id)
@@ -825,7 +830,7 @@ choices:
 
         resp = self.post_answer(
             plug.type,
-            plug.task_id_ext,
+            plug.task_id.extended,
             [False],
             ref_from=(tr.id, tr.document.get_paragraphs()[0].get_id()))
         a: Answer = Answer.query.get(resp['savedNew'])
@@ -860,11 +865,11 @@ choices:
                          expect_content=PLUGIN_NOT_EXIST_ERROR,
                          )
 
-        resp = self.post_answer(plug.type, plug.task_id_ext, [True],
+        resp = self.post_answer(plug.type, plug.task_id.extended, [True],
                                 ref_from=(d.id, d.document.get_paragraphs()[0].get_id()))
         a: Answer = Answer.query.get(resp['savedNew'])
         self.assertEqual(1, a.points)
-        self.assertEqual(plug.full_task_id, a.task_id)
+        self.assertEqual(plug.task_id.doc_task, a.task_id)
 
         if create_preamble_translation:
             tr_p = self.create_translation(p)
@@ -876,12 +881,12 @@ choices:
 
         resp = self.post_answer(
             plug.type,
-            plug.task_id_ext,
+            plug.task_id.extended,
             [False],
             ref_from=(tr.id, tr.document.get_paragraphs()[0].get_id()))
         a: Answer = Answer.query.get(resp['savedNew'])
         self.assertEqual(0, a.points)
-        self.assertEqual(plug.full_task_id, a.task_id)
+        self.assertEqual(plug.task_id.doc_task, a.task_id)
         self.check_plugin_ref_correct(tr, plugin_doc, plugin_par, preamble_doc=tr_p)
 
     def test_reference_to_preamble(self):
@@ -953,31 +958,31 @@ choices:
         """)
         p = Plugin.from_paragraph(d.document.get_paragraphs()[0])
         p2 = Plugin.from_paragraph(d.document.get_paragraphs()[1])
-        self.post_answer(p.type, p.full_task_id, [True, False, False])
-        self.post_answer(p.type, p.full_task_id, [True, True, False])
-        self.assertEqual(2, Answer.query.filter_by(task_id=p.full_task_id).count())
-        self.get(f'/renameAnswers/{p.task_id}/ä/{d.id}',
+        self.post_answer(p.type, p.task_id.doc_task, [True, False, False])
+        self.post_answer(p.type, p.task_id.doc_task, [True, True, False])
+        self.assertEqual(2, Answer.query.filter_by(task_id=p.task_id.doc_task).count())
+        self.get(f'/renameAnswers/{p.task_id.task_name}/ä/{d.id}',
                  expect_status=400,
                  expect_content={'error': 'Invalid task name: ä'})
-        self.get(f'/renameAnswers/{p.task_id}/t_new/{d.id}', expect_content={'modified': 2, 'conflicts': 0})
-        self.get(f'/renameAnswers/{p.task_id}/t_new/{d.id}',
+        self.get(f'/renameAnswers/{p.task_id.task_name}/t_new/{d.id}', expect_content={'modified': 2, 'conflicts': 0})
+        self.get(f'/renameAnswers/{p.task_id.task_name}/t_new/{d.id}',
                  expect_status=400,
                  expect_content={"error": "The new name conflicts with 2 other answers with the same task name."})
-        self.assertEqual(0, Answer.query.filter_by(task_id=p.full_task_id).count())
+        self.assertEqual(0, Answer.query.filter_by(task_id=p.task_id.doc_task).count())
         self.assertEqual(2, Answer.query.filter_by(task_id=f'{d.id}.t_new').count())
-        self.post_answer(p2.type, p2.full_task_id, [True, True, False])
-        self.get(f'/renameAnswers/t_new/{p2.task_id}/{d.id}',
+        self.post_answer(p2.type, p2.task_id.doc_task, [True, True, False])
+        self.get(f'/renameAnswers/t_new/{p2.task_id.task_name}/{d.id}',
                  expect_status=400,
                  expect_content={"error": "The new name conflicts with 1 other answers with the same task name."})
         self.get(f'/renameAnswers/t_new/t_new2/{d.id}', expect_content={'modified': 2, 'conflicts': 0})
-        self.get(f'/renameAnswers/t_new2/{p2.task_id}/{d.id}',
+        self.get(f'/renameAnswers/t_new2/{p2.task_id.task_name}/{d.id}',
                  expect_status=400,
                  expect_content={"error": "The new name conflicts with 1 other answers with the same task name."})
-        self.get(f'/renameAnswers/t_new2/{p2.task_id}/{d.id}',
+        self.get(f'/renameAnswers/t_new2/{p2.task_id.task_name}/{d.id}',
                  query_string={'force': 'true'}, expect_content={'modified': 2, 'conflicts': 1})
-        self.assertEqual(3, Answer.query.filter_by(task_id=p2.full_task_id).count())
+        self.assertEqual(3, Answer.query.filter_by(task_id=p2.task_id.doc_task).count())
         self.login_test2()
-        self.get(f'/renameAnswers/t_new/{p2.task_id}/{d.id}', expect_status=403)
+        self.get(f'/renameAnswers/t_new/{p2.task_id.task_name}/{d.id}', expect_status=403)
 
     def test_timtable_nonexistent_route(self):
         """Calling non-existent timTable route won't result in an infinite request loop."""
@@ -1016,8 +1021,8 @@ needed_len: 6
         """)
         e = self.get(d.url, as_tree=True).cssselect('pali-runner')
         self.assertTrue(e)
-        a = self.post_answer(plugin_type='pali', task_id=f'{d.id}.t', user_input={'userword': 'aaaa'})
-        self.assertEqual('paliOK: Missing data for required field.',
+        a = self.post_answer(plugin_type='pali', task_id=f'{d.id}.t', user_input={'userwordx': 'aaaa'})
+        self.assertEqual('userword: Missing data for required field.',
                          html.fromstring(a['web']['error']).cssselect('li')[0].text)
         a = self.post_answer(plugin_type='pali', task_id=f'{d.id}.t', user_input={'paliOK': True, 'userword': 'aaaa'})
         self.assertEqual({'error': 'Wrong length', 'result': 'saved'}, a['web'])
@@ -1074,3 +1079,243 @@ needed_len: 6
         self.assertIn('users = [{"email": "test1@example.com"', r)
         r = self.get(d.get_url_for_view('teacher'))
         self.assertIn('users = [{"email": "test1@example.com"', r)
+
+    def make_base64(self, d: dict):
+        """Converts the given dict to a base64-encoded JSON string."""
+        return base64.b64encode(json.dumps(d, sort_keys=True).encode()).decode()
+
+    def test_inline_plugins(self):
+        self.login_test1()
+        d = self.create_doc(initial_par="""
+#- {defaultplugin=pali id=Lm7y6R7n5XIb}
+*Hello* {#t1}, {#tx:nonexistent} and {#t2} $x$
+
+#- {defaultplugin=pali math_type=svg id=spOMcE20X2aX}
+Hi {#t3} $x$
+
+#- {defaultplugin=pali id=Se0s8FDLbhOp}
+{#t4 header: hi, footer: ho}
+        """)
+        r = self.get(d.url, as_tree=True)
+        e = r.cssselect('.par')[0]
+        expected_json = self.create_plugin_json(
+            d,
+            't1',
+            'Lm7y6R7n5XIb',
+        )
+        expected_json2 = self.create_plugin_json(
+            d,
+            't2',
+            'Lm7y6R7n5XIb',
+        )
+        self.assert_same_html(e, f"""
+<div class="par" id="Lm7y6R7n5XIb" t="LTB4NDMxYzFjN2M=" attrs='{{"defaultplugin": "pali"}}'>
+<div class="parContent">
+                <em>Hello</em> <div id="{d.id}.t1.Lm7y6R7n5XIb" data-plugin="/pali" class="pluginpali inlineplugin"><pali-runner json="{self.make_base64(expected_json)}"></pali-runner></div>, <div class="error">Plugin nonexistent error: Plugin does not exist.</div> and <div id="{d.id}.t2.Lm7y6R7n5XIb" data-plugin="/pali" class="pluginpali inlineplugin"><pali-runner json="{self.make_base64(expected_json2)}"></pali-runner></div>
+            <p><span class="math inline">\(x\)</span></p>
+            </div>
+<div class="editline" title="Click to edit this paragraph"></div>
+<div class="readline" title="Click to mark this paragraph as read"></div>
+</div>
+""")
+        a = self.post_answer_no_abdata(
+            plugin_type='pali', task_id=f'{d.id}.t2',
+            user_input={'userword': 'aaaaaa'},
+        )
+        aid = a['savedNew']
+        self.assertEqual({'savedNew': aid, 'web': {'result': 'saved'}}, a)
+        self.assertIsInstance(aid, int)
+
+        r = self.get(d.url, as_tree=True)
+        e = r.cssselect('.par')[0]
+        s = {'userword': 'aaaaaa'}
+        expected_json2 = self.create_plugin_json(
+            d,
+            't2',
+            'Lm7y6R7n5XIb',
+            info={
+                "current_user_id": "testuser1",
+                "earlier_answers": 1,
+                "look_answer": False,
+                "max_answers": None,
+                "user_id": "testuser1",
+                "valid": True,
+            },
+            state=s,
+            toplevel=s,
+        )
+        self.assert_same_html(e, f"""
+<div class="par" id="Lm7y6R7n5XIb" t="LTB4NDMxYzFjN2M=" attrs='{{"defaultplugin": "pali"}}'>
+<div class="parContent">
+                <em>Hello</em> <div id="{d.id}.t1.Lm7y6R7n5XIb" data-plugin="/pali" class="pluginpali inlineplugin"><pali-runner json="{self.make_base64(
+    expected_json)}"></pali-runner></div>, <div class="error">Plugin nonexistent error: Plugin does not exist.</div> and <div id="{d.id}.t2.Lm7y6R7n5XIb" data-answer-id="{aid}" data-plugin="/pali" class="pluginpali inlineplugin"><pali-runner json="{self.make_base64(
+    expected_json2)}"></pali-runner></div>
+<p><span class="math inline">\(x\)</span></p>
+            </div>
+<div class="editline" title="Click to edit this paragraph"></div>
+<div class="readline" title="Click to mark this paragraph as read"></div>
+</div>
+        """)
+        expected_json = self.create_plugin_json(
+            d,
+            't3',
+            'spOMcE20X2aX',
+        )
+        self.assert_same_html(r.cssselect('.par')[1], f"""
+<div class="par" id="spOMcE20X2aX" t="LTB4NTRjM2E3ZmE=" attrs='{{"defaultplugin": "pali", "math_type": "svg"}}'>
+<div class="parContent">
+                Hi
+<div id="{d.id}.t3.spOMcE20X2aX" class="pluginpali inlineplugin" data-plugin="/pali">
+<pali-runner json="{self.make_base64(expected_json)}"></pali-runner>
+</div>
+<p><span class="mathp inline"><img style="width:0.80327em; vertical-align:-0.06000em" src="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0nMS4wJyBlbmNvZGluZz0nVVRGLTgnPz4KPCEtLSBUaGlzIGZpbGUgd2FzIGdlbmVyYXRlZCBieSBkdmlzdmdtIDIuNCAtLT4KPHN2ZyBoZWlnaHQ9JzUuMjg5NDZwdCcgdmVyc2lvbj0nMS4xJyB2aWV3Qm94PSctMC41MDAwMDIgLTQuNzg5NDU4IDYuNjkzOTIyIDUuMjg5NDYnIHdpZHRoPSc2LjY5MzkyMnB0JyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHhtbG5zOnhsaW5rPSdodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rJz4KPGRlZnM+PHN0eWxlIHR5cGU9InRleHQvY3NzIj48IVtDREFUQVtwYXRoIHtzdHJva2U6IGN1cnJlbnRDb2xvcjtzdHJva2Utd2lkdGg6IDAuMDVwdDt9XV0+PC9zdHlsZT48cGF0aCBkPSdNMy4zMjc1MjIgLTMuMDA4NzE3QzMuMzg3Mjk4IC0zLjI2Nzc0NiAzLjYxNjQzOCAtNC4xODQzMDkgNC4zMTM4MjMgLTQuMTg0MzA5QzQuMzYzNjM2IC00LjE4NDMwOSA0LjYwMjc0IC00LjE4NDMwOSA0LjgxMTk1NSAtNC4wNTQ3OTVDNC41MzMwMDEgLTQuMDA0OTgxIDQuMzMzNzQ4IC0zLjc1NTkxNSA0LjMzMzc0OCAtMy41MTY4MTJDNC4zMzM3NDggLTMuMzU3NDEgNC40NDMzMzcgLTMuMTY4MTIgNC43MTIzMjkgLTMuMTY4MTJDNC45MzE1MDcgLTMuMTY4MTIgNS4yNTAzMTEgLTMuMzQ3NDQ3IDUuMjUwMzExIC0zLjc0NTk1M0M1LjI1MDMxMSAtNC4yNjQwMSA0LjY2MjUxNiAtNC40MDM0ODcgNC4zMjM3ODYgLTQuNDAzNDg3QzMuNzQ1OTUzIC00LjQwMzQ4NyAzLjM5NzI2IC0zLjg3NTQ2NyAzLjI3NzcwOSAtMy42NDYzMjZDMy4wMjg2NDMgLTQuMzAzODYxIDIuNDkwNjYgLTQuNDAzNDg3IDIuMjAxNzQzIC00LjQwMzQ4N0MxLjE2NTYyOSAtNC40MDM0ODcgMC41OTc3NTggLTMuMTE4MzA2IDAuNTk3NzU4IC0yLjg2OTI0QzAuNTk3NzU4IC0yLjc2OTYxNCAwLjY5NzM4NSAtMi43Njk2MTQgMC43MTczMSAtMi43Njk2MTRDMC43OTcwMTEgLTIuNzY5NjE0IDAuODI2ODk5IC0yLjc4OTUzOSAwLjg0NjgyNCAtMi44NzkyMDNDMS4xODU1NTQgLTMuOTM1MjQzIDEuODQzMDg4IC00LjE4NDMwOSAyLjE4MTgxOCAtNC4xODQzMDlDMi4zNzExMDggLTQuMTg0MzA5IDIuNzE5ODAxIC00LjA5NDY0NSAyLjcxOTgwMSAtMy41MTY4MTJDMi43MTk4MDEgLTMuMjA3OTcgMi41NTA0MzYgLTIuNTQwNDczIDIuMTgxODE4IC0xLjE0NTcwNEMyLjAyMjQxNiAtMC41MjgwMiAxLjY3MzcyNCAtMC4xMDk1ODkgMS4yMzUzNjcgLTAuMTA5NTg5QzEuMTc1NTkyIC0wLjEwOTU4OSAwLjk0NjQ1MSAtMC4xMDk1ODkgMC43MzcyMzUgLTAuMjM5MTAzQzAuOTg2MzAxIC0wLjI4ODkxNyAxLjIwNTQ3OSAtMC40OTgxMzIgMS4yMDU0NzkgLTAuNzc3MDg2QzEuMjA1NDc5IC0xLjA0NjA3NyAwLjk4NjMwMSAtMS4xMjU3NzggMC44MzY4NjIgLTEuMTI1Nzc4QzAuNTM3OTgzIC0xLjEyNTc3OCAwLjI4ODkxNyAtMC44NjY3NSAwLjI4ODkxNyAtMC41NDc5NDVDMC4yODg5MTcgLTAuMDg5NjY0IDAuNzg3MDQ5IDAuMTA5NTg5IDEuMjI1NDA1IDAuMTA5NTg5QzEuODgyOTM5IDAuMTA5NTg5IDIuMjQxNTk0IC0wLjU4Nzc5NiAyLjI3MTQ4MiAtMC42NDc1NzJDMi4zOTEwMzQgLTAuMjc4OTU0IDIuNzQ5Njg5IDAuMTA5NTg5IDMuMzQ3NDQ3IDAuMTA5NTg5QzQuMzczNTk5IDAuMTA5NTg5IDQuOTQxNDY5IC0xLjE3NTU5MiA0Ljk0MTQ2OSAtMS40MjQ2NThDNC45NDE0NjkgLTEuNTI0Mjg0IDQuODUxODA2IC0xLjUyNDI4NCA0LjgyMTkxOCAtMS41MjQyODRDNC43MzIyNTQgLTEuNTI0Mjg0IDQuNzEyMzI5IC0xLjQ4NDQzMyA0LjY5MjQwMyAtMS40MTQ2OTVDNC4zNjM2MzYgLTAuMzQ4NjkyIDMuNjg2MTc3IC0wLjEwOTU4OSAzLjM2NzM3MiAtMC4xMDk1ODlDMi45Nzg4MjkgLTAuMTA5NTg5IDIuODE5NDI3IC0wLjQyODM5NCAyLjgxOTQyNyAtMC43NjcxMjNDMi44MTk0MjcgLTAuOTg2MzAxIDIuODc5MjAzIC0xLjIwNTQ3OSAyLjk4ODc5MiAtMS42NDM4MzZMMy4zMjc1MjIgLTMuMDA4NzE3WicgaWQ9J2cwLTEyMCcvPgo8L2RlZnM+CjxnIGlkPSdwYWdlMSc+Cjx1c2UgeD0nMCcgeGxpbms6aHJlZj0nI2cwLTEyMCcgeT0nMCcvPgo8L2c+Cjwvc3ZnPg==" title="x"></span></p>
+            </div>
+<div class="editline" title="Click to edit this paragraph"></div>
+<div class="readline" title="Click to mark this paragraph as read"></div>
+</div>
+        """)
+
+        expected_json = self.create_plugin_json(
+            d,
+            't4',
+            'Se0s8FDLbhOp',
+            markup={"header": "hi",
+                    "footer": "ho", }
+        )
+        self.assert_same_html(r.cssselect('.par')[2], f"""
+<div class="par" id="Se0s8FDLbhOp" t="LTB4MzJmOWU4MGI=" attrs='{{"defaultplugin": "pali"}}'>
+<div class="parContent">
+<div id="{d.id}.t4.Se0s8FDLbhOp" class="pluginpali inlineplugin" data-plugin="/pali">
+<pali-runner json="{self.make_base64(expected_json)}"></pali-runner>
+</div>
+            </div>
+<div class="editline" title="Click to edit this paragraph"></div>
+<div class="readline" title="Click to mark this paragraph as read"></div>
+</div>
+                """)
+
+        a = self.post_answer_no_abdata(
+            plugin_type='pali',
+            task_id=f'{d.id}.t5',
+            user_input={'userword': 'aaaaaa'},
+            expect_content={},
+        )
+
+    def create_plugin_json(self, d: DocInfo,
+                           task_name: str,
+                           par_id: str = None,
+                           markup=None,
+                           state=None,
+                           toplevel=None,
+                           info=None):
+        if not toplevel:
+            toplevel = {}
+        if not markup:
+            markup = {}
+        basic_task_id = f"{d.id}.{task_name}"
+        expected_json = {
+            **toplevel,
+            "info": info,
+            "markup": {
+                "hidden_keys": [],
+                **markup,
+            },
+            "state": state,
+            "taskID": basic_task_id,
+            "anonymous": True,
+            "doLazy": False,
+            "preview": False,
+            "review": False,
+            "targetFormat": "latex",
+            "taskIDExt": f"{d.id}.{task_name}.{par_id}" if par_id else basic_task_id,
+            "user_id": "testuser1",
+            "userPrint": False
+        }
+        return expected_json
+
+    def test_inline_plugin_no_html_escape(self):
+        self.login_test1()
+        d = self.create_doc(initial_par="""
+#- {defaultplugin=pali id=a3Xuyg1PF1l1}
+{#t5 initword: }
+        """)
+        r = self.get(d.url, as_tree=True)
+        # Make sure Dumbo won't escape plugin's error HTML.
+        self.assert_same_html(r.cssselect('.parContent')[0], f"""
+<div class="parContent">
+    <div id="{d.id}.t5.a3Xuyg1PF1l1" class="pluginpali inlineplugin" data-plugin="/pali">
+        <div class="pluginError">
+            The following fields have invalid values:
+            <ul>
+                <li>
+                    initword: Field may not be null.
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+        """)
+
+    def assert_plugin_json(self, e: HtmlElement, content: Dict[str, Any]):
+        b64str = e.attrib['json']
+        json_str = base64.b64decode(b64str)
+        self.assertEqual(content, json.loads(json_str))
+
+    def test_taskid_reference(self):
+        self.login_test1()
+        d = self.create_doc(initial_par="""
+#- {defaultplugin=pali id=a3Xuyg1PF1l1}
+{#t5}
+        """)
+        self.post_answer_no_abdata(
+            plugin_type='pali',
+            task_id=f'{d.id}.t5',
+            user_input={'userword': 'bbbb'},
+        )
+
+        d2 = self.create_doc(initial_par=f"""
+#- {{defaultplugin=pali}}
+{{#{d.id}.t5}}
+                """)
+        r = self.get(d2.url, as_tree=True)
+        s = {'userword': 'bbbb'}
+        self.assert_plugin_json(r.cssselect('.parContent pali-runner')[0],
+                                self.create_plugin_json(
+                                    d, 't5', state=s, toplevel=s,
+                                    info={'current_user_id': 'testuser1',
+                                          'earlier_answers': 1,
+                                          'look_answer': False,
+                                          'max_answers': None,
+                                          'user_id': 'testuser1',
+                                          'valid': True},
+                                ))
+        r = self.post_answer('pali', f'{d.id}.t5', {'userword': 'xxx'},
+                             ref_from=[d2.id, d2.document.get_paragraphs()[0].get_id()])
+        self.check_ok_answer(r)
+
+        self.login_test2()
+        d3 = self.create_doc(initial_par=f"""
+#- {{defaultplugin=pali}}
+{{#{d.id}.t5}}
+
+#- {{#{d.id}.t5 plugin=pali}}
+
+#- {{#1234.t5 plugin=pali}}
+""")
+        self.post_answer(
+            'pali',
+            f'{d.id}.t5',
+            user_input={'userword': 'xxx'},
+            ref_from=[d3.id, d3.document.get_paragraphs()[0].get_id()],
+            expect_status=403,
+        )
+        r = self.get(d3.url, as_tree=True)
+        access_err = 'Plugin pali error: Task id refers to another document, ' \
+                     'but you do not have access to that document.'
+        self.assert_content(
+            r,
+            [access_err,
+             access_err,
+             'Plugin pali error: Task id refers to a non-existent document.'
+             ],
+        )

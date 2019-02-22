@@ -6,9 +6,11 @@ import json
 import numbers
 import time
 from random import Random
-from typing import List, Dict, Tuple, Optional
+from typing import List, Dict, Tuple, Optional, Union
 
 MAX_RND_LIST_LEN = 100
+
+SeedType = Union[str, int]
 
 
 def fix_jso(jso: str) -> str:
@@ -177,7 +179,7 @@ def repeat_rnd(list_func, myrandom: Random, jso:str) -> Optional[List[int]]:
     return ret
 
 
-def get_rnds(attrs: Dict, name: str ="rnd", rnd_seed: Optional[int]=None) -> Tuple[Optional[List[int]], int]:
+def get_rnds(attrs: Dict, name: str = "rnd", rnd_seed: Optional[int]=None) -> Tuple[Optional[List[int]], int]:
     """
     Returns list of random numbers based on attribute name (def: rnd) and rnd_seed.
     :param attrs: dict of attributes
@@ -196,7 +198,7 @@ def get_rnds(attrs: Dict, name: str ="rnd", rnd_seed: Optional[int]=None) -> Tup
     if not rnd_seed:
         rnd_seed = time.clock()*1000
 
-    if type(rnd_seed) is str:
+    if isinstance(rnd_seed, str):
         rnd_seed = myhash(rnd_seed)
 
     # noinspection PyBroadException
@@ -210,13 +212,13 @@ def get_rnds(attrs: Dict, name: str ="rnd", rnd_seed: Optional[int]=None) -> Tup
     if jso.startswith('s'):  # s10:[1,7,2], s10, s10:50, s10:[0,50]
         return get_sample_list(myrandom, jso[1:]), rnd_seed
     if jso.startswith('u'):  # u[[0,1],[100,110],[-30,-20],[0.001,0.002]], u6
-        return repeat_rnd(get_uniform_list,myrandom, jso[1:]), rnd_seed
+        return repeat_rnd(get_uniform_list, myrandom, jso[1:]), rnd_seed
 
     ret = repeat_rnd(get_int_list, myrandom, jso)
     return ret, rnd_seed
 
 
-def get_rands_as_dict(attrs: Dict, rnd_seed: int) -> Tuple[Optional[dict], int]:
+def get_rands_as_dict(attrs: Dict, rnd_seed: SeedType) -> Tuple[Optional[dict], SeedType]:
     """
     Returns a dict of random numbers variables (each is a list of random numbers).
     :param attrs: dict where may be attrinute rndnames:"rnd1,rnd2,..,rndn".  Of no names, "rnd"
@@ -239,7 +241,7 @@ def get_rands_as_dict(attrs: Dict, rnd_seed: int) -> Tuple[Optional[dict], int]:
     return ret, rnd_seed
 
 
-def get_rands_as_str(attrs: Dict, rnd_seed) -> Tuple[str, int]:
+def get_rands_as_str(attrs: Dict, rnd_seed: SeedType) -> Tuple[str, SeedType]:
     """
     Returns a Jinja2 str of random numbers variables (each is a list of random numbers).
     :param attrs: dict where may be attrinute rndnames:"rnd1,rnd2,..,rndn".  Of no names, "rnd"

@@ -18,7 +18,7 @@ class QuestionTest(TimLiveServer, TimRouteTest):
          id="{first_id}"
          t="{pars[0].get_hash()}"
          attrs="{{&#34;plugin&#34;: &#34;qst&#34;, &#34;question&#34;: &#34;true&#34;, &#34;taskId&#34;: &#34;test1&#34;}}">
-        <tim-plugin-loader type="full" task-id="{d.id}.test1"/>
+        <tim-plugin-loader type="full" task-id="{d.id}.test1.{first_id}"/>
         <a href="#test1" title="Permlink" class="headerlink">#</a>
         <div class="parContent" id="test1">
             <div id="{d.id}.test1.{first_id}" data-plugin="/qst" class="pluginqst">

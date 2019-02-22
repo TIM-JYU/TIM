@@ -16,7 +16,7 @@ from timApp.document.randutils import random_id, hashfunc
 from timApp.markdown.dumboclient import DumboOptions, MathType
 from timApp.markdown.htmlSanitize import sanitize_html, strip_div
 from timApp.markdown.markdownconverter import par_list_to_html_list, expand_macros
-from timApp.util.rndutils import get_rands_as_dict, get_rands_as_str
+from timApp.util.rndutils import get_rands_as_dict, get_rands_as_str, SeedType
 from timApp.timdb.exceptions import TimDbException, InvalidReferenceException
 from timApp.timtypes import DocumentType
 from timApp.util.utils import count_chars_from_beginning, get_error_html, title_to_id
@@ -293,7 +293,7 @@ class DocParagraph:
         # Need to check for gamification attribute to avoid ng-non-bindable directive being added in the par.
         # As an AngularJS component it needs to be processed by AngularJS. is_plugin also shouldn't return True
         # for gamification because it isn't a proper plugin.
-        self.final_dict['is_plugin'] = self.is_plugin() or self.get_attr('gamification') is not None
+        self.final_dict['is_plugin'] = self.is_plugin() or self.has_plugins() or self.get_attr('gamification') is not None
         if preamble:
             self.final_dict['from_preamble'] = preamble.path
         self.final_dict['is_question'] = self.is_question()
@@ -351,7 +351,7 @@ class DocParagraph:
         """Returns the markdown of this paragraph."""
         return self.__data['md']
 
-    def get_rands_str(self, rnd_seed) ->str:
+    def get_rands_str(self, rnd_seed: SeedType) -> str:
         ret, self.__rnd_seed = get_rands_as_str(self.attrs, rnd_seed)
         return ret
 
@@ -363,7 +363,7 @@ class DocParagraph:
         else:
             self.__data['md'] = s + self.__data['md']
 
-    def insert_rnds(self, rnd_seed: int) ->bool:
+    def insert_rnds(self, rnd_seed: Optional[SeedType]) ->bool:
         """ Inserts Jinja rnd variable as a list of random numbers based to attribute rnd and rnd_seed
             return True if attribute rnd found and OK, else False
         """
@@ -402,7 +402,7 @@ class DocParagraph:
             macroinfo = settings.get_macroinfo()
         macros = macroinfo.get_macros(nocache=self.get_nocache())
 
-        if self.insert_rnds(md+macros.get("username","")): # TODO: RND_SEED: check what seed should be used, is this used to plugins?
+        if self.insert_rnds(md + macros.get("username", "")):  # TODO: RND_SEED: check what seed should be used, is this used to plugins?
             macros = {**macros, **self.__rands}
         return expand_macros(md, macros, settings, macroinfo.get_macro_delimiter(), ignore_errors=ignore_errors)
 
@@ -1008,6 +1008,7 @@ class DocParagraph:
 
         """
         return self.is_plugin() \
+            or self.has_plugins() \
             or (self.__is_ref and not self.is_translation()) \
             or self.__is_setting
 
@@ -1015,6 +1016,10 @@ class DocParagraph:
         """Returns whether this paragraph is a plugin."""
 
         return bool(self.get_attr('plugin'))
+
+    def has_plugins(self) -> bool:
+        """Returns whether this paragraph has inline plugins."""
+        return bool(self.get_attr('defaultplugin'))
 
     def is_yaml(self) -> bool:
         """Returns whether this paragraph is YAML markup."""

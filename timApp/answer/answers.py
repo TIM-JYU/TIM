@@ -12,6 +12,7 @@ from sqlalchemy.orm import selectinload, defaultload
 from timApp.answer.answer import Answer
 from timApp.answer.answer_models import AnswerTag, UserAnswer
 from timApp.answer.pointsumrule import PointSumRule, PointType
+from timApp.plugin.taskid import TaskId
 from timApp.timdb.sqa import db
 from timApp.timdb.timdbbase import TimDbBase
 from timApp.user.user import Consent, User
@@ -22,7 +23,7 @@ class Answers(TimDbBase):
 
     def save_answer(self,
                     users: List[User],
-                    task_id: str,
+                    task_id: TaskId,
                     content: str,
                     points: Optional[float],
                     tags: Optional[List[str]] = None,
@@ -48,7 +49,7 @@ class Answers(TimDbBase):
             a.last_points_modifier = points_given_by
             return None
 
-        a = Answer(task_id=task_id, content=content, points=points, valid=valid, last_points_modifier=points_given_by)
+        a = Answer(task_id=task_id.doc_task, content=content, points=points, valid=valid, last_points_modifier=points_given_by)
         self.session.add(a)
         self.session.flush()
         answer_id = a.id
@@ -175,8 +176,8 @@ class Answers(TimDbBase):
             result.append(res)
         return result
 
-    def get_common_answers(self, users: List[User], task_id: str) -> List[Answer]:
-        q = Answer.query.filter_by(task_id=task_id).join(User, Answer.users).filter(
+    def get_common_answers(self, users: List[User], task_id: TaskId) -> List[Answer]:
+        q = Answer.query.filter_by(task_id=task_id.doc_task).join(User, Answer.users).filter(
             User.id.in_([u.id for u in users])).order_by(Answer.id.desc())
 
         def g():

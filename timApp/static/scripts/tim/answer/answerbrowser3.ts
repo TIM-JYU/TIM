@@ -85,7 +85,7 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
      * @returns {boolean} True if the task id is valid, false otherwise.
      */
     isValidTaskId(taskId: string) {
-        return taskId.slice(-1) !== ".";
+        return taskId && taskId.slice(-1) !== "."; // TODO should check more accurately
     }
 
     async loadPlugin() {
@@ -100,7 +100,12 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
         if (!this.viewctrl.noBrowser && this.isValidTaskId(this.taskId) && this.type !== "lazyonly") {
             const currClass = this.element.attr("class");
             const ab = document.createElement("answerbrowser");
-            ab.setAttribute("task-id", this.taskId);
+            const taskPieces = this.taskId.split(".");
+            let taskId = this.taskId;
+            if (taskPieces.length > 2) {
+                taskId = `${taskPieces[0]}.${taskPieces[1]}`;
+            }
+            ab.setAttribute("task-id", taskId);
             if (currClass) {
                 // This retains has-answers class if it exists.
                 // It is needed to reduce the amount of vertical jumping.

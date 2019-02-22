@@ -1,3 +1,6 @@
+from werkzeug.exceptions import BadRequest, NotFound
+
+from timApp.admin.routes import do_merge, do_soft_delete
 from timApp.document.docentry import DocEntry
 from timApp.tests.db.timdbtest import TEST_USER_1_ID, TEST_USER_2_ID, TEST_USER_3_ID
 from timApp.tests.server.timroutetest import TimRouteTest
@@ -29,91 +32,79 @@ class SearchTest(TimRouteTest):
 class MergeTest(TimRouteTest):
     def test_user_merge(self):
         self.login_test1()
-        self.get('/users/merge/testuser1/testuser2', expect_status=403)
-        self.make_admin(self.current_user)
-        self.get('/users/merge/testuser1/testuser1',
-                 expect_status=400,
-                 expect_content='Users cannot be the same',
-                 json_key='error')
+        with self.assertRaises(BadRequest):
+            do_merge('testuser1', 'testuser1')
         User.create_with_group('someguy', 'Some Guy', 'some.guy@example.com')
         db.session.commit()
-        self.get('/users/merge/testuser1/someguy',
-                 expect_status=400,
-                 expect_content=f'Users testuser1 and someguy do not appear to be duplicates. '
-                                f'Merging not allowed to prevent accidental errors.',
-                 json_key='error')
-        self.get('/users/merge/testuser1/x',
-                 expect_status=404,
-                 expect_content='User x not found',
-                 json_key='error')
+        with self.assertRaises(BadRequest):
+            do_merge('testuser1', 'someguy')
+        with self.assertRaises(NotFound):
+            do_merge('testuser1', 'x')
         for u in SPECIAL_USERNAMES:
-            self.get(f'/users/merge/testuser1/{u}',
-                     expect_status=400,
-                     expect_content=f'User {u} is a special user',
-                     json_key='error')
+            with self.assertRaises(BadRequest):
+                do_merge('testuser1', u)
 
         d = self.create_doc()
         path = d.path
-        self.get('/users/merge/testuser2/testuser1',
-                 expect_content={
-                     'moved': {
-                         'accesses': 3,
-                         'annotations': 0,
-                         'answers': 0,
-                         'lectureanswers': 0,
-                         'messages': 0,
-                         'notes': 0,
-                         'owned_lectures': 0,
-                         'readparagraphs': 0,
-                         'velps': 0,
-                     }
-                 })
+        r = do_merge('testuser2', 'testuser1')
+        self.assertEqual({
+            'accesses': 3,
+            'annotations': 0,
+            'answers': 0,
+            'lectureanswers': 0,
+            'messages': 0,
+            'notes': 0,
+            'owned_lectures': 0,
+            'readparagraphs': 0,
+            'velps': 0,
+        }, r)
+        db.session.commit()
         self.assertIsNone(DocEntry.find_by_path(path))
-        self.get('/users/merge/testuser2/testuser1',
-                 expect_content={
-                     'moved': {
-                         'accesses': 0,
-                         'annotations': 0,
-                         'answers': 0,
-                         'lectureanswers': 0,
-                         'messages': 0,
-                         'notes': 0,
-                         'owned_lectures': 0,
-                         'readparagraphs': 0,
-                         'velps': 0,
-                     }
-                 })
-        self.get('/users/merge/testuser1/testuser2',
-                 expect_content={
-                     'moved': {
-                         'accesses': 3,
-                         'annotations': 0,
-                         'answers': 0,
-                         'lectureanswers': 0,
-                         'messages': 0,
-                         'notes': 0,
-                         'owned_lectures': 0,
-                         'readparagraphs': 0,
-                         'velps': 0,
-                     }
-                 })
+        r = do_merge('testuser2', 'testuser1')
+        self.assertEqual({
+            'accesses': 0,
+            'annotations': 0,
+            'answers': 0,
+            'lectureanswers': 0,
+            'messages': 0,
+            'notes': 0,
+            'owned_lectures': 0,
+            'readparagraphs': 0,
+            'velps': 0,
+        }, r)
+        db.session.commit()
+        r = do_merge('testuser1', 'testuser2')
+        self.assertEqual({
+            'accesses': 3,
+            'annotations': 0,
+            'answers': 0,
+            'lectureanswers': 0,
+            'messages': 0,
+            'notes': 0,
+            'owned_lectures': 0,
+            'readparagraphs': 0,
+            'velps': 0,
+        }, r)
+        db.session.commit()
         self.assertIsNotNone(DocEntry.find_by_path(path))
-        self.get('/users/merge/testuser1/testuser2',
-                 expect_content={
-                     'moved': {
-                         'accesses': 0,
-                         'annotations': 0,
-                         'answers': 0,
-                         'lectureanswers': 0,
-                         'messages': 0,
-                         'notes': 0,
-                         'owned_lectures': 0,
-                         'readparagraphs': 0,
-                         'velps': 0,
-                     }
-                 })
-        self.json_post('/users/softDelete/testuser2')
+        r = do_merge('testuser1', 'testuser2')
+        self.assertEqual({
+            'accesses': 0,
+            'annotations': 0,
+            'answers': 0,
+            'lectureanswers': 0,
+            'messages': 0,
+            'notes': 0,
+            'owned_lectures': 0,
+            'readparagraphs': 0,
+            'velps': 0,
+        }, r)
+        db.session.commit()
+
+        do_soft_delete('testuser2')
         self.assertIsNone(User.get_by_name('testuser2'))
         self.assertIsNotNone(User.get_by_name('testuser2_deleted'))
-        self.json_post('/users/softDelete/testuser2', expect_status=404)
-        self.json_post('/users/softDelete/testuser2_deleted', expect_status=400)
+        with self.assertRaises(NotFound):
+            do_soft_delete('testuser2')
+        with self.assertRaises(BadRequest):
+            do_soft_delete('testuser2_deleted')

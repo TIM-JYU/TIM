@@ -16,9 +16,10 @@ from timApp.document.docparagraph import DocParagraph
 from timApp.document.document import Document, dereference_pars
 from timApp.folder.folder import Folder
 from timApp.item.item import Item, ItemBase
+from timApp.plugin.plugin import Plugin, find_plugin_from_document, maybe_get_plugin_from_par
+from timApp.plugin.taskid import TaskId
 from timApp.timdb.exceptions import TimDbException
 from timApp.timdb.sqa import db
-from timApp.timdb.timdb import TimDb
 from timApp.user.user import ItemOrBlock, User
 from timApp.user.usergroup import UserGroup
 from timApp.user.userutils import get_access_type_id, grant_access
@@ -233,18 +234,15 @@ def verify_comment_right(b: ItemOrBlock):
         abort(403)
 
 
-def get_par_from_request(doc: Document, par_id=None, task_id_name=None) -> Tuple[Document, DocParagraph]:
+def get_plugin_from_request(doc: Document, task_id: TaskId, u: User) -> Tuple[Document, Plugin]:
     orig_doc_id, orig_par_id = get_orig_doc_and_par_id_from_request()
-    if par_id is None:
-        try:
-            par_id = doc.get_paragraph_by_task(task_id_name).get_id()
-        except TimDbException as e:
-            abort(400, str(e))
+    plug = find_plugin_from_document(doc, task_id, u)
+    par_id = plug.par.get_id()
     if orig_doc_id is None or orig_par_id is None:
-        try:
-            return doc, doc.get_paragraph(par_id)
-        except TimDbException as e:
-            abort(400, str(e))
+        # TODO this if is possibly unnecessary
+        if not doc.has_paragraph(par_id):
+            return abort(400)
+        return doc, plug
     if orig_doc_id != doc.doc_id:
         orig_doc = Document(orig_doc_id)
     else:
@@ -255,8 +253,8 @@ def get_par_from_request(doc: Document, par_id=None, task_id_name=None) -> Tuple
     ctx_doc = orig_doc if (not orig_doc.get_docinfo().is_original_translation and orig_par.is_translation()) else doc
     for p in pars:
         if p.get_id() == par_id:
-            return ctx_doc, p
-    abort(404)
+            return ctx_doc, maybe_get_plugin_from_par(p, task_id, u)
+    return doc, plug
 
 
 def get_orig_doc_and_par_id_from_request() -> Tuple[int, str]:

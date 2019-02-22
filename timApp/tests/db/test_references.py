@@ -70,7 +70,7 @@ class RefTest(TimDbTest):
 
     def test_simpleref(self):
         ref_par = add_ref_paragraph(self.ref_doc, self.src_par)
-        self.assertEqual(1, len(self.ref_doc))
+        self.assertEqual(1, len(self.ref_doc.get_paragraphs()))
         self.assertEqual(ref_par.get_id(), self.ref_doc.get_paragraphs()[0].get_id())
         self.assertEqual('', ref_par.get_markdown())
 
@@ -84,7 +84,7 @@ class RefTest(TimDbTest):
     def test_translation(self):
         ref_attrs = {'foo': 'fffoooo', 'bar': 'baaaa'}
         ref_par = add_ref_paragraph(self.ref_doc, self.src_par, "translation", attrs=ref_attrs)
-        self.assertEqual(1, len(self.ref_doc))
+        self.assertEqual(1, len(self.ref_doc.get_paragraphs()))
         self.assertEqual(ref_par.get_id(), self.ref_doc.get_paragraphs()[0].get_id())
         self.assertEqual("translation", ref_par.get_markdown())
 
@@ -97,7 +97,7 @@ class RefTest(TimDbTest):
 
     def test_circular(self):
         ref_par = add_ref_paragraph(self.ref_doc, self.src_par)
-        self.assertEqual(1, len(self.ref_doc))
+        self.assertEqual(1, len(self.ref_doc.get_paragraphs()))
         self.assertEqual(ref_par.get_id(), self.ref_doc.get_paragraphs()[0].get_id())
         self.assertEqual('', ref_par.get_markdown())
 
@@ -111,14 +111,14 @@ class RefTest(TimDbTest):
     def test_transitive(self):
         # Reference to the original paragraph
         ref_par1 = add_ref_paragraph(self.ref_doc, self.src_par)
-        self.assertEqual(1, len(self.ref_doc))
+        self.assertEqual(1, len(self.ref_doc.get_paragraphs()))
         self.assertEqual(ref_par1.get_id(), self.ref_doc.get_paragraphs()[0].get_id())
         self.assertEqual('', ref_par1.get_markdown())
 
         # Reference to the reference above
         ref_doc2 = self.create_doc().document
         ref_par2 = add_ref_paragraph(ref_doc2, ref_par1)
-        self.assertEqual(1, len(ref_doc2))
+        self.assertEqual(1, len(ref_doc2.get_paragraphs()))
         self.assertEqual(ref_par2.get_id(), ref_doc2.get_paragraphs()[0].get_id())
         self.assertEqual('', ref_par2.get_markdown())
 
@@ -148,7 +148,7 @@ class RefTest(TimDbTest):
         self.assertRegex(src_md, '^#- *\\{([ab]="[21]" ?){2}\\}\ntestpar\n$')
 
         ref_par = add_ref_paragraph(self.ref_doc, self.src_par)
-        self.assertEqual(1, len(self.ref_doc))
+        self.assertEqual(1, len(self.ref_doc.get_paragraphs()))
         self.assertEqual(ref_par.get_id(), self.ref_doc.get_paragraphs()[0].get_id())
         self.assertEqual('', ref_par.get_markdown())
 
@@ -193,7 +193,7 @@ class RefTest(TimDbTest):
         self.assertRegex(src_md, '^#- *\\{([ab]="[21]" ?){2}\\}\ntestpar\n$')
 
         empty_refpar = add_ref_paragraph(self.ref_doc, self.src_par, "")
-        self.assertEqual(1, len(self.ref_doc))
+        self.assertEqual(1, len(self.ref_doc.get_paragraphs()))
         self.assertEqual(empty_refpar.get_id(), self.ref_doc.get_paragraphs()[0].get_id())
         self.assertEqual("", empty_refpar.get_markdown())
 
@@ -212,7 +212,7 @@ class RefTest(TimDbTest):
 
         ref_attrs = {'foo': 'fffoooo', 'bar': 'baaaa'}
         ref_par = add_ref_paragraph(self.ref_doc, self.src_par, "translation", attrs=ref_attrs)
-        self.assertEqual(2, len(self.ref_doc))
+        self.assertEqual(2, len(self.ref_doc.get_paragraphs()))
         self.assertEqual(ref_par.get_id(), self.ref_doc.get_paragraphs()[1].get_id())
         self.assertEqual("translation", ref_par.get_markdown())
 

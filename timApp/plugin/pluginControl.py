@@ -1,31 +1,37 @@
 # -*- coding: utf-8 -*-
 """Functions for dealing with plugin paragraphs."""
 import json
-from collections import OrderedDict
-from typing import List, Tuple, Optional, Dict
+from collections import OrderedDict, defaultdict
+from itertools import chain
+from typing import List, Tuple, Optional, Dict, Union, DefaultDict
 from xml.sax.saxutils import quoteattr
 
+import attr
 import yaml
 import yaml.parser
 from sqlalchemy import func
 
 from timApp.answer.answer import Answer
-from timApp.auth.accesshelper import has_edit_access
+from timApp.auth.accesshelper import has_edit_access, verify_view_access
 from timApp.document.docparagraph import DocParagraph
+from timApp.document.docsettings import DocSettings
 from timApp.document.document import dereference_pars, Document
+from timApp.document.macroinfo import MacroInfo
 from timApp.document.yamlblock import YamlBlock
+from timApp.item.block import Block
 from timApp.markdown.dumboclient import call_dumbo
-from timApp.markdown.markdownconverter import expand_macros
 from timApp.plugin.containerLink import plugin_reqs, get_plugin
 from timApp.plugin.containerLink import render_plugin_multi, render_plugin, get_plugins
-from timApp.plugin.plugin import Plugin, PluginRenderOptions
+from timApp.plugin.plugin import Plugin, PluginRenderOptions, load_markup_from_yaml, expand_macros_for_plugin, \
+    find_inline_plugins, InlinePlugin, finalize_inline_yaml
 from timApp.plugin.pluginOutputFormat import PluginOutputFormat
 from timApp.plugin.pluginexception import PluginException
+from timApp.plugin.taskid import TaskId
 from timApp.printing.printsettings import PrintFormat
 from timApp.user.user import User
 from timApp.util.rndutils import get_simple_hash_from_par_and_user
 from timApp.util.timtiming import taketime
-from timApp.util.utils import get_error_html, get_error_tex
+from timApp.util.utils import get_error_html, get_error_tex, Range
 
 
 def get_error_plugin(plugin_name, message, response=None,
@@ -51,10 +57,198 @@ def find_task_ids(blocks: List[DocParagraph]) -> Tuple[List[str], int]:
         plugin = block.get_attr('plugin')
         if plugin:
             plugin_count += 1
-        # Need "and plugin" to ignore e.g. manual heading ids
-        if task_id and plugin:
-            task_ids.append(f"{block.doc.doc_id}.{task_id}")
+            if task_id:
+                tid = TaskId.parse(task_id, require_doc_id=False)
+                if not tid.doc_id:
+                    tid.doc_id = block.doc.doc_id
+                task_ids.append(tid.doc_task)
+        elif block.get_attr('defaultplugin'):
+            # TODO maybe pass user to get_macroinfo
+            for task_id, _, _, _, _ in find_inline_plugins(block, block.doc.get_settings().get_macroinfo()):
+                plugin_count += 1
+                task_ids.append(task_id.doc_task)  # TODO check permission if task_id refers to some other doc
     return task_ids, plugin_count
+
+
+PluginOrError = Union[Plugin, str]  # str represent HTML markup of error
+AnswerMap = Dict[str, Tuple[Answer, int]]
+ErrorMap = Dict[Range, Tuple[str, str]]
+
+
+@attr.s
+class PluginPlacement:
+    """Represents the position(s) of plugin(s) in a block.
+
+    Can be either:
+     * a block-level (traditional) plugin, or
+     * one or more inlineplugins.
+
+    In case of a block-level plugin, the range spans the entire block's expanded markdown.
+    """
+    plugins: Dict[Range, Plugin] = attr.ib(kw_only=True)  # ordered
+
+    errors: ErrorMap = attr.ib(kw_only=True)  # ordered
+    block: DocParagraph = attr.ib(kw_only=True)
+    """The block where the plugins are."""
+
+    expanded_md: str = attr.ib(kw_only=True)
+    """Expanded markdown of the containing block."""
+
+    is_block_plugin: bool = attr.ib(kw_only=True)
+    """Whether this is a block-level plugin."""
+
+    output_format: PluginOutputFormat = attr.ib(kw_only=True)
+
+    def get_block_plugin(self):
+        if not self.is_block_plugin:
+            return None
+        try:
+            return next(iter(self.plugins.values()))
+        except StopIteration:
+            return None
+
+    def set_error(self, r: Range, err: str):
+        p = self.plugins.pop(r)
+        self.errors[r] = err, p.type
+
+    def set_output(self, r: Range, out: str):
+        self.plugins[r].set_output(out)
+
+    def get_block_output(self):
+        sorted_ranges = sorted(chain(self.plugins.keys(), self.errors.keys()), key=lambda r: r[0], reverse=True)
+        out_md = self.expanded_md
+        for sr in sorted_ranges:
+            p = self.plugins.get(sr)
+            if not p:
+                err, name = self.errors[sr]
+                h = get_error_plugin(name, err, plugin_output_format=self.output_format)
+            else:
+                h = p.get_final_output()
+            start, end = sr
+            out_md = out_md[:start] + h + out_md[end:]
+        return out_md
+
+    @staticmethod
+    def from_par(
+            block: DocParagraph,
+            load_states: bool,
+            macroinfo: MacroInfo,
+            plugin_opts: PluginRenderOptions,
+            user: User,
+            settings: DocSettings,
+            answer_map: AnswerMap,
+            custom_answer: Optional[Answer],
+            output_format: PluginOutputFormat,
+    ) -> Optional['PluginPlacement']:
+        plugin_name = block.get_attr('plugin')
+        defaultplugin = block.get_attr('defaultplugin')
+        if not plugin_name and not defaultplugin:
+            return None
+        new_seed = False
+        rnd_seed = None
+        answer_and_cnt = None
+
+        if rnd_seed is None:
+            rnd_seed = get_simple_hash_from_par_and_user(
+                block,
+                user,
+            )  # TODO: RND_SEED: get users seed for this plugin
+            new_seed = True
+
+        rnd_error = None
+        try:
+            if block.insert_rnds(rnd_seed) and new_seed:  # do not change order!  inserts must be done
+                # TODO: RND_SEED save rnd_seed to user data
+                pass
+        except ValueError as e:
+            rnd_error = str(e)
+
+        errs = OrderedDict()
+        plugs = OrderedDict()
+        is_block_plugin = bool(plugin_name)
+        if rnd_error:
+            md = block.get_expanded_markdown(macroinfo)
+            errs[0, len(md)] = rnd_error, plugin_name or defaultplugin
+        elif plugin_name:
+            # We want the expanded markdown here, so can't call Plugin.from_paragraph[_macros] directly.
+            macros = macroinfo.get_macros()
+            macro_delimiter = macroinfo.get_macro_delimiter()
+            md = expand_macros_for_plugin(block, macros, macro_delimiter)
+            p_range = 0, len(md)
+            try:
+                vals = load_markup_from_yaml(md, settings.global_plugin_attrs(), block.get_attr('plugin'))
+            except PluginException as e:
+                errs[p_range] = str(e), plugin_name
+            else:
+                taskid = block.get_attr('taskId')
+                tid = TaskId.parse(taskid, require_doc_id=False) if taskid else None
+                if check_task_access(errs, p_range, plugin_name, tid):
+                    plugs[p_range] = Plugin(
+                        tid,
+                        vals,
+                        plugin_name,
+                        par=block,
+                    )
+        else:
+            md = None
+            for task_id, p_yaml, p_range, plugin_type, md in find_inline_plugins(block, macroinfo):
+                plugin_type = plugin_type or defaultplugin
+                if not check_task_access(errs, p_range, plugin_type, task_id):
+                    continue
+                try:
+                    y = load_markup_from_yaml(finalize_inline_yaml(p_yaml), settings.global_plugin_attrs(), plugin_type)
+                except PluginException as e:
+                    errs[p_range] = str(e), plugin_type
+                    continue
+                plug = InlinePlugin(
+                    task_id=task_id,
+                    values=y,
+                    plugin_type=plugin_type,
+                    p_range=p_range,
+                    par=block,
+                )
+                plugs[p_range] = plug
+        if not md:
+            # Can happen if inline plugin block has no plugins.
+            md = block.get_expanded_markdown(macroinfo)
+        for p in plugs.values():
+            if p.type == 'qst':
+                p.values['isTask'] = not block.is_question()
+
+            if load_states:
+                if custom_answer is not None:
+                    answer_and_cnt = custom_answer, custom_answer.get_answer_number()
+                elif p.task_id:
+                    answer_and_cnt = answer_map.get(p.task_id.doc_task, None)
+
+            p.set_render_options(answer_and_cnt if load_states and answer_and_cnt is not None else None,
+                                 plugin_opts)
+        return PluginPlacement(
+            block=block,
+            errors=errs,
+            expanded_md=md,
+            plugins=plugs,
+            is_block_plugin=is_block_plugin,
+            output_format=output_format,
+        )
+
+
+def check_task_access(errs: ErrorMap, p_range: Range, plugin_name: str, tid: TaskId):
+    if tid and tid.doc_id:
+        b = Block.query.get(tid.doc_id)
+        if b:
+            has_access = verify_view_access(b, require=False)
+            if not has_access:
+                errs[p_range] = ('Task id refers to another document, '
+                                 'but you do not have access to that document.'), plugin_name
+                return False
+        else:
+            errs[p_range] = 'Task id refers to a non-existent document.', plugin_name
+            return False
+    return True
+
+
+KeyType = Tuple[int, Range]
 
 
 def pluginify(doc: Document,
@@ -87,7 +281,7 @@ def pluginify(doc: Document,
     :param user_print: Whether the plugins should output the original values or user's input (when exporting markdown).
     :param target_format: for MD-print what exact format to use
     :param dereference: should pars be checked id dereference is needed
-    :return: Processed HTML blocks along with JavaScript, CSS stylesheet and AngularJS module dependencies.
+    :return: Processed HTML blocks along with JavaScript and CSS stylesheet dependencies.
     """
 
     taketime("answ", "start")
@@ -110,9 +304,9 @@ def pluginify(doc: Document,
     if custom_answer is not None:
         if len(pars) != 1:
             raise PluginException('len(blocks) must be 1 if custom state is specified')
-    plugins: Dict[str, Dict[int, Plugin]] = {}
+    plugins: DefaultDict[str, Dict[KeyType, Plugin]] = defaultdict(OrderedDict)
 
-    answer_map = {}
+    answer_map: AnswerMap = {}
     plugin_opts = PluginRenderOptions(do_lazy=do_lazy,
                                       user_print=user_print,
                                       preview=edit_window,
@@ -139,29 +333,20 @@ def pluginify(doc: Document,
                 .all()
         )
         # TODO: RND_SEED get all users rand_seeds for this doc's tasks. New table?
-        for answer_and_cnt, cnt in answers:
-            answer_map[answer_and_cnt.task_id] = answer_and_cnt, cnt
+        for answer, cnt in answers:
+            answer_map[answer.task_id] = answer, cnt
 
+    placements = {}
+    dumbo_opts = OrderedDict()
     for idx, block in enumerate(pars):
-        attr_taskid = block.get_attr('taskId')
-        plugin_name = block.get_attr('plugin')
         is_gamified = block.get_attr('gamification')
         is_gamified = not not is_gamified
         settings = block.doc.get_settings()
         macroinfo = settings.get_macroinfo(user=user)
-        macros = macroinfo.get_macros()
-        macro_delimiter = macroinfo.get_macro_delimiter()
 
         if is_gamified:
-            # md = block.get_expanded_markdown()  # not enough macros
-            md = block.get_markdown()
+            md = block.get_expanded_markdown(macroinfo=macroinfo)
             try:
-                # md = Plugin.from_paragraph_macros(md, global_attrs, macros, macro_delimiter)
-                md = expand_macros(md,
-                                   macros=macros,
-                                   settings=settings,
-                                   macro_delimiter=macro_delimiter)
-
                 gd = YamlBlock.from_markdown(md).values
                 runner = 'gamification-map'
                 html_pars[idx][output_format.value] = f'<{runner} data={quoteattr(json.dumps(gd))}></{runner}>'
@@ -172,51 +357,23 @@ def pluginify(doc: Document,
                                                       md + \
                                                       '</pre></div>'
 
-        if plugin_name:
-            task_id = f"{block.get_doc_id()}.{attr_taskid or ''}"
-            new_seed = False
-            rnd_seed = None
-            answer_and_cnt = None
-
-            if load_states:
-                if custom_answer is not None:
-                    answer_and_cnt = custom_answer, custom_answer.get_answer_number()
-                else:
-                    answer_and_cnt = answer_map.get(task_id, None)
-
-            if rnd_seed is None:
-                rnd_seed = get_simple_hash_from_par_and_user(
-                    block,
-                    user,
-                )  # TODO: RND_SEED: get users seed for this plugin
-                new_seed = True
-
-            try:
-                if block.insert_rnds(rnd_seed) and new_seed:  # do not change order!  inserts must be done
-                    # TODO: RND_SEED save rnd_seed to user data
-                    pass
-
-                # plugin = Plugin.from_paragraph(block, user)
-                joint_macros = macros
-                rands = block.get_rands()
-                if rands:
-                    joint_macros = {**macros, **rands}
-                plugin = Plugin.from_paragraph_macros(block,
-                                                      settings.global_plugin_attrs(),
-                                                      joint_macros,
-                                                      macro_delimiter)
-                if plugin_name == 'qst':
-                    plugin.values['isTask'] = not block.is_question()
-            except Exception as e:
-                html_pars[idx][output_format.value] = get_error_plugin(plugin_name, str(e),
-                                                                       plugin_output_format=output_format)
-                continue
-            if plugin_name not in plugins:
-                plugins[plugin_name] = OrderedDict()
-
-            plugin.set_render_options(answer_and_cnt if load_states and answer_and_cnt is not None else None,
-                                      plugin_opts)
-            plugins[plugin_name][idx] = plugin
+        pplace = PluginPlacement.from_par(
+            block=block,
+            plugin_opts=plugin_opts,
+            answer_map=answer_map,
+            load_states=load_states,
+            macroinfo=macroinfo,
+            settings=settings,
+            user=user,
+            custom_answer=custom_answer,
+            output_format=output_format,
+        )
+        if pplace:
+            placements[idx] = pplace
+            for r, p in pplace.plugins.items():
+                plugins[p.type][idx, r] = p
+            if not pplace.is_block_plugin:
+                dumbo_opts[idx] = block.get_dumbo_options(base_opts=settings.get_dumbo_options())
         else:
             if block.nocache and not is_gamified:  # get_nocache():
                 # if block.get_nocache():
@@ -239,9 +396,8 @@ def pluginify(doc: Document,
             plugin["canGiveTask"] = False
             resp = plugin_reqs(plugin_name)
         except PluginException as e:
-            for idx in plugin_block_map.keys():
-                html_pars[idx][output_format.value] = get_error_plugin(plugin_name, str(e),
-                                                                       plugin_output_format=output_format)
+            for idx, r in plugin_block_map.keys():
+                placements[idx].set_error(r, str(e))
             continue
         # taketime("plg e", plugin_name)
         try:
@@ -251,10 +407,8 @@ def pluginify(doc: Document,
                 reqs['multihtml'] = True
                 reqs['multimd'] = True
         except ValueError as e:
-            for idx in plugin_block_map.keys():
-                html_pars[idx][output_format.value] = get_error_plugin(
-                    plugin_name, f'Failed to parse JSON from plugin reqs route: {e}', resp,
-                    plugin_output_format=output_format)
+            for idx, r in plugin_block_map.keys():
+                placements[idx].set_error(r, f'Failed to parse JSON from plugin reqs route: {e}')
             continue
         plugin_js_files, plugin_css_files = plugin_deps(reqs)
         for src in plugin_js_files:
@@ -282,62 +436,64 @@ def pluginify(doc: Document,
                 response = render_plugin_multi(
                     doc,
                     plugin_name,
-                    [val for _, val in plugin_block_map.items()],
+                    list(plugin_block_map.values()),
                     plugin_output_format=output_format,
                     default_auto_md=default_auto_md)
                 # taketime("plg e", plugin_name)
             except PluginException as e:
-                for idx in plugin_block_map.keys():
-                    html_pars[idx][output_format.value] = get_error_plugin(plugin_name, str(e),
-                                                                           plugin_output_format=output_format)
+                for idx, r in plugin_block_map.keys():
+                    placements[idx].set_error(r, str(e))
                 continue
             try:
                 plugin_htmls = json.loads(response)
             except ValueError as e:
-                for idx in plugin_block_map.keys():
-                    html_pars[idx][output_format.value] = \
-                        get_error_plugin(plugin_name,
-                                         f'Failed to parse plugin response from multihtml route: {e}',
-                                         response, plugin_output_format=output_format)
+                for idx, r in plugin_block_map.keys():
+                    placements[idx].set_error(r, f'Failed to parse plugin response from multihtml route: {e}')
                 continue
-
-            for idx, plugin, html in zip(plugin_block_map.keys(), plugin_block_map.values(), plugin_htmls):
+            for ((idx, r), plugin), html in zip(plugin_block_map.items(), plugin_htmls):
                 plugin.plugin_lazy = plugin_lazy
-                plugin.set_output(html)
-                html_pars[idx]['answerbrowser_type'] = plugin.get_answerbrowser_type()
-                html_pars[idx]['answer_count'] = plugin.answer_count
-                html_pars[idx][output_format.value] = plugin.get_final_output()
+                placements[idx].set_output(r, html)
         else:
-            for idx, plugin in plugin_block_map.items():
+            for (idx, r), plugin in plugin_block_map.items():
                 if md_out:
                     err_msg_md = "Plugin does not support printing yet. " \
                                  "Please refer to TIM help pages if you want to learn how you can manually " \
                                  "define what to print here."
-                    html_pars[idx][output_format.value] = get_error_plugin(plugin_name,
-                                                                           err_msg_md,
-                                                                           plugin_output_format=output_format)
+                    placements[idx].set_error(r, err_msg_md)
                 else:
                     try:
                         html = render_plugin(doc=doc,
                                              plugin=plugin,
                                              output_format=output_format)
                     except PluginException as e:
-                        html_pars[idx][output_format.value] = get_error_plugin(plugin_name, str(e),
-                                                                               plugin_output_format=output_format)
+                        placements[idx].set_error(r, str(e))
                         continue
+                    placements[idx].set_output(r, html)
+    for idx, place in placements.items():
+        par = html_pars[idx]
+        par[output_format.value] = place.get_block_output()
+        bp = place.get_block_plugin()
+        if bp:
+            par['answerbrowser_type'] = bp.get_answerbrowser_type()
+            par['answer_count'] = bp.answer_count
+            if bp.task_id:
+                attrs = par.get('ref_attrs', par['attrs'])
+                attrs['taskIdObj'] = bp.task_id
 
-                    plugin.set_output(html)
-                    html_pars[idx]['answerbrowser_type'] = plugin.get_answerbrowser_type()
-                    html_pars[idx]['answer_count'] = plugin.answer_count
-                    html_pars[idx][output_format.value] = plugin.get_final_output()
-
+    # inline plugin blocks need to go through Dumbo to process MD
+    if output_format == PluginOutputFormat.HTML:
+        htmls_to_dumbo = []
+        settings_to_dumbo = []
+        for k, v in dumbo_opts.items():
+            htmls_to_dumbo.append({'content': html_pars[k][output_format.value], **v.dict()})
+            settings_to_dumbo.append(v)
+        for h, (idx, s) in zip(call_dumbo(htmls_to_dumbo,
+                                          options=doc.get_settings().get_dumbo_options()),
+                               dumbo_opts.items()):
+            html_pars[idx][output_format.value] = h
     # taketime("phtml done")
 
     return pars, js_paths, css_paths
-
-
-def get_markup_value(markup, key, default):
-    return markup.get(key, default)
 
 
 def get_all_reqs():

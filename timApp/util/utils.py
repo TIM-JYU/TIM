@@ -249,3 +249,6 @@ def get_error_message(e: Exception) -> str:
     :return: String 'ErrorClass: reason'.
     """
     return f"{str(e.__class__.__name__)}: {str(e)}"
+
+
+Range = Tuple[int, int]

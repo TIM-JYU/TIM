@@ -189,15 +189,15 @@ def render_validationerror(e: ValidationError):
     """Renders a validation error as HTML indicating which fields were erroneous."""
     return render_template_string(
         """
-        <div class="pluginError">
-        The following fields have invalid values:
-        <ul>
-        {% for k, v in errors.items() %}
-        <li>{{k}}: {{v[0]}}</li>
-        {% endfor %}
-        </ul>
-        </div>
-        """,
+<div class="pluginError">
+The following fields have invalid values:
+<ul>
+{%- for k, v in errors.items() -%}
+<li>{{k}}: {{v[0]}}</li>
+{%- endfor -%}
+</ul>
+</div>
+        """.strip(),
         errors=e.messages.get('markup', e.messages.get('input', e.messages)))
 
 
@@ -215,7 +215,7 @@ def render_plugin_with_login_request(m: GenericHtmlModel[PluginInput, PluginMark
 
 def make_base64(d: dict):
     """Converts the given dict to a base64-encoded JSON string."""
-    return base64.b64encode(json.dumps(d).encode()).decode()
+    return base64.b64encode(json.dumps(d, sort_keys=True).encode()).decode()
 
 
 def is_lazy(q: GenericHtmlModel):
