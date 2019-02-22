@@ -196,14 +196,13 @@ def upload_and_stamp_attachment(d: DocInfo, file, stamp_data: AttachmentStampDat
     # Add the uploaded file path (the one to stamp) to stamp data.
 
     stamp_data.file = os_path.join(attachment_folder, f"{f.id}/{f.filename}")
-    #print(custom_stamp_model_content)
     if custom_stamp_model_content:
         stamp_model_path = create_custom_stamp_model(custom_stamp_model_content)
         output = stamp_pdfs(
             [stamp_data],
             dir_path=os_path.join(attachment_folder, str(f.id) + "/"),
             stamp_text_format=stampformat,
-            stamp_model_path=stamp_model_path)[0]
+            stamp_model_path=stamp_model_path.absolute().as_posix())[0]
     else:
         output = stamp_pdfs(
             [stamp_data],

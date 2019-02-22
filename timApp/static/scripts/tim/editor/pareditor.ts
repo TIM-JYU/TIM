@@ -910,7 +910,9 @@ ${backTicks}
                 let macroText = editorText.substring(
                     editorText.lastIndexOf(macroStringBegin) + macroStringBegin.length,
                     editorText.lastIndexOf(macroStringEnd));
-                macroText = macroText.replace(/(\r\n|\n|\r)/gm, "");  // Line breaks confuse parse
+                // Normal line breaks cause exception with JSON.parse, and replacing them with ones parse understands
+                // causes exceptions if line breaks are outside parameters, so just remove them before parsing.
+                macroText = macroText.replace(/(\r\n|\n|\r)/gm, "");
                 macroParams = JSON.parse(`[${macroText}]`);
             } catch {
                 this.file.error = "Parsing stamp parameters failed";

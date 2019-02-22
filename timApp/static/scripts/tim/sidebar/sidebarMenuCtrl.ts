@@ -7,7 +7,7 @@ import {showCourseDialog} from "../document/course/courseDialogCtrl";
 import {getActiveDocument} from "../document/document";
 import {showMergePdfDialog} from "../document/minutes/mergePdfCtrl";
 import {ViewCtrl} from "../document/viewctrl";
-import {IDocument, isRootFolder, redirectToItem} from "../item/IItem";
+import {DocumentOrFolder, IDocument, isRootFolder, redirectToItem} from "../item/IItem";
 import {IRelevanceResponse} from "../item/relevanceEdit";
 import {showRelevanceEditDialog} from "../item/relevanceEditDialog";
 import {showTagDialog} from "../item/tagCtrl";
@@ -58,6 +58,8 @@ export class SidebarMenuCtrl implements IController {
     private storage: ngStorage.StorageService & {consent: null | undefined | number};
     private currentRelevance?: number;
     private showRelevance: boolean = true;
+    private showFolderSettings: boolean = false;
+    private item?: DocumentOrFolder = $window.item;
 
     constructor() {
         this.currentLecturesList = [];
@@ -88,6 +90,9 @@ export class SidebarMenuCtrl implements IController {
         this.documentMemoMinutes = $window.memoMinutes;
         this.docSettings = $window.docSettings;
         void this.getCurrentRelevance();
+        if (this.item) {
+            this.showFolderSettings = this.users.isLoggedIn() && this.item.isFolder;
+        }
         // await this.processConsent();
     }
 
@@ -241,9 +246,6 @@ export class SidebarMenuCtrl implements IController {
         }
     }
 
-    stampPdf() {
-    }
-
     mergePdf() {
         if (!this.vctrl) {
             return;
@@ -275,14 +277,18 @@ export class SidebarMenuCtrl implements IController {
      * Start page specific version of the tag search opening.
      */
     searchWithTagsStart() {
-        void showTagSearchDialog($window.item);
+        if (this.item) {
+            void showTagSearchDialog(this.item);
+        }
     }
 
     /**
      * Open relevance edit dialog.
      */
     openRelevanceEditDialog() {
-        void showRelevanceEditDialog($window.item);
+        if (this.item) {
+            void showRelevanceEditDialog(this.item);
+        }
     }
 
     /**
@@ -397,8 +403,8 @@ export class SidebarMenuCtrl implements IController {
      * Fetches active relevance value. If root dir (id = -1), skip and hide relevance dir.
      */
     private async getCurrentRelevance() {
-        if ($window.item && !isRootFolder($window.item)) {
-            const r = await to($http.get<IRelevanceResponse>(`/items/relevance/get/${$window.item.id}`));
+        if (this.item && !isRootFolder(this.item)) {
+            const r = await to($http.get<IRelevanceResponse>(`/items/relevance/get/${this.item.id}`));
             if (r.ok) {
                 this.currentRelevance = r.result.data.relevance.relevance;
             }
@@ -466,10 +472,9 @@ timApp.component("timSidebarMenu", {
             <h5>Customize</h5>
             <a href="/settings">Customize TIM</a>
         </div>
-        <div ng-if="$ctrl.users.isLoggedIn() && !($ctrl.vctrl.item && !$ctrl.vctrl.item.isFolder)
-             && $ctrl.showRelevance">
+        <div ng-if="$ctrl.showFolderSettings && $ctrl.showRelevance">
             <h5>Folder settings</h5>
-            <button class="timButton btn-block" title="Set item relevance value"
+            <button class="timButton btn-block" title="Set item relevance value" ng-if="$ctrl.showRelevance"
                     ng-click="$ctrl.openRelevanceEditDialog()">
                     Edit relevance (<span uib-tooltip="Current relevance value">{{$ctrl.currentRelevance}}</span>)
             </button>

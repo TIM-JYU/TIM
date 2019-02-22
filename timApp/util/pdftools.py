@@ -5,6 +5,7 @@ Visa Naukkarinen
 """
 import random
 import uuid
+from pathlib import Path
 from subprocess import Popen, PIPE, run as subprocess_run
 from os import remove, path as os_path
 from typing import Union, List
@@ -410,7 +411,7 @@ def create_stamp(
     :return: Complete path of the created stamp pdf-file.
     """
     try:
-        stamp_model = open(model_path, "r")
+        stamp_model = open(model_path, "r", encoding='utf8')
 
     # Raises custom error if stamp_model is missing.
     except FileNotFoundError:
@@ -431,7 +432,7 @@ def create_stamp(
     args = ["pdflatex", stamp_name]
     # print(args)
     # Directs pdflatex text flood to the log-file pdflatex will create anyway.
-    with open(os_path.join(work_dir, stamp_name + ".log"), "a") as pdflatex_log:
+    with open(os_path.join(work_dir, stamp_name + ".log"), "a", encoding='utf8') as pdflatex_log:
         try:
             # Pdflatex can't write files outside of the work dir so uses cwd.
             rc = subprocess_run(
@@ -576,14 +577,14 @@ def get_base_filename(path: str, no_extension: bool = False) -> str:
         return os_path.basename(path)
 
 
-def create_custom_stamp_model(content: str, folder: str = temp_folder_default_path) -> str:
+def create_custom_stamp_model(content: str, folder: Path = Path(temp_folder_default_path)) -> Path:
     """
     :param content:
     :param folder:
     :return:
     """
-    path = os_path.join(folder, str(uuid.uuid4()) + ".tex")
-    with open(path, "w") as file:
+    path = folder / f'{uuid.uuid4()}.tex'
+    with path.open("w", encoding='utf8') as file:
         file.write(content)
     return path
 

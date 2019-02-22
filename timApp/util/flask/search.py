@@ -795,10 +795,7 @@ def is_timeouted(start_time: float, timeout: float) -> bool:
     :return: True if timeout has been passed, false if not.
     """
     elapsed_time = time.time() - start_time
-    if elapsed_time > timeout:
-        return True
-    else:
-        return False
+    return elapsed_time > timeout
 
 
 @search_routes.route("")
@@ -884,7 +881,6 @@ def search():
 
     for line in title_output:
         try:
-            time.sleep(1)
             if is_timeouted(start_time, timeout):
                 incomplete_search_reason = f"title search exceeded the timeout ({timeout} seconds)"
                 raise TimeoutError("title search timeout")
@@ -942,7 +938,6 @@ def search():
 
     for line in content_output:
         try:
-            time.sleep(1)
             if is_timeouted(start_time, timeout):
                 incomplete_search_reason = f"content search exceeded the timeout ({timeout} seconds)"
                 raise TimeoutError("content search timeout")
