@@ -1296,11 +1296,26 @@ Hi {#t3} $x$
         self.login_test2()
         d3 = self.create_doc(initial_par=f"""
 #- {{defaultplugin=pali}}
-{{#{d.id}.t5}}""")
+{{#{d.id}.t5}}
+
+#- {{#{d.id}.t5 plugin=pali}}
+
+#- {{#1234.t5 plugin=pali}}
+""")
         self.post_answer(
             'pali',
             f'{d.id}.t5',
             user_input={'userword': 'xxx'},
             ref_from=[d3.id, d3.document.get_paragraphs()[0].get_id()],
             expect_status=403,
+        )
+        r = self.get(d3.url, as_tree=True)
+        access_err = 'Plugin pali error: Task id refers to another document, ' \
+                     'but you do not have access to that document.'
+        self.assert_content(
+            r,
+            [access_err,
+             access_err,
+             'Plugin pali error: Task id refers to a non-existent document.'
+             ],
         )

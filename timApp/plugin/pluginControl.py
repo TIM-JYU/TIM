@@ -12,12 +12,13 @@ import yaml.parser
 from sqlalchemy import func
 
 from timApp.answer.answer import Answer
-from timApp.auth.accesshelper import has_edit_access
+from timApp.auth.accesshelper import has_edit_access, verify_view_access
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.docsettings import DocSettings
 from timApp.document.document import dereference_pars, Document
 from timApp.document.macroinfo import MacroInfo
 from timApp.document.yamlblock import YamlBlock
+from timApp.item.block import Block
 from timApp.markdown.dumboclient import call_dumbo
 from timApp.plugin.containerLink import plugin_reqs, get_plugin
 from timApp.plugin.containerLink import render_plugin_multi, render_plugin, get_plugins
@@ -71,6 +72,7 @@ def find_task_ids(blocks: List[DocParagraph]) -> Tuple[List[str], int]:
 
 PluginOrError = Union[Plugin, str]  # str represent HTML markup of error
 AnswerMap = Dict[str, Tuple[Answer, int]]
+ErrorMap = Dict[Range, Tuple[str, str]]
 
 
 @attr.s
@@ -84,7 +86,8 @@ class PluginPlacement:
     In case of a block-level plugin, the range spans the entire block's expanded markdown.
     """
     plugins: Dict[Range, Plugin] = attr.ib(kw_only=True)  # ordered
-    errors: Dict[Range, Tuple[str, str]] = attr.ib(kw_only=True)  # ordered
+
+    errors: ErrorMap = attr.ib(kw_only=True)  # ordered
     block: DocParagraph = attr.ib(kw_only=True)
     """The block where the plugins are."""
 
@@ -171,23 +174,27 @@ class PluginPlacement:
             macros = macroinfo.get_macros()
             macro_delimiter = macroinfo.get_macro_delimiter()
             md = expand_macros_for_plugin(block, macros, macro_delimiter)
-            yaml_len = len(md)
+            p_range = 0, len(md)
             try:
                 vals = load_markup_from_yaml(md, settings.global_plugin_attrs(), block.get_attr('plugin'))
             except PluginException as e:
-                errs[0, yaml_len] = str(e), plugin_name
+                errs[p_range] = str(e), plugin_name
             else:
                 taskid = block.get_attr('taskId')
-                plugs[0, yaml_len] = Plugin(
-                    TaskId.parse(taskid, require_doc_id=False) if taskid else None,
-                    vals,
-                    plugin_name,
-                    par=block,
-                )
+                tid = TaskId.parse(taskid, require_doc_id=False) if taskid else None
+                if check_task_access(errs, p_range, plugin_name, tid):
+                    plugs[p_range] = Plugin(
+                        tid,
+                        vals,
+                        plugin_name,
+                        par=block,
+                    )
         else:
             md = None
             for task_id, p_yaml, p_range, plugin_type, md in find_inline_plugins(block, macroinfo):
                 plugin_type = plugin_type or defaultplugin
+                if not check_task_access(errs, p_range, plugin_type, task_id):
+                    continue
                 try:
                     y = load_markup_from_yaml(finalize_inline_yaml(p_yaml), settings.global_plugin_attrs(), plugin_type)
                 except PluginException as e:
@@ -224,6 +231,21 @@ class PluginPlacement:
             is_block_plugin=is_block_plugin,
             output_format=output_format,
         )
+
+
+def check_task_access(errs: ErrorMap, p_range: Range, plugin_name: str, tid: TaskId):
+    if tid and tid.doc_id:
+        b = Block.query.get(tid.doc_id)
+        if b:
+            has_access = verify_view_access(b, require=False)
+            if not has_access:
+                errs[p_range] = ('Task id refers to another document, '
+                                 'but you do not have access to that document.'), plugin_name
+                return False
+        else:
+            errs[p_range] = 'Task id refers to a non-existent document.', plugin_name
+            return False
+    return True
 
 
 KeyType = Tuple[int, Range]
