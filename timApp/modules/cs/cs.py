@@ -672,10 +672,11 @@ def check_fullprogram(query, cut_errors=False):
             by_code = m.group(1)
             by_code_replace = [{'replace': "((\n|)[^\\n]*BYCODEBEGIN.*)", 'by': "\nREPLACEBYCODE"}]
         else:
-            m = re.search("[^\\n]*\n(.*)\n.*?BYCODEEND", program, flags=re.S)
-            if m:
-                by_code = m.group(1)
-                by_code_replace = [{'replace': "((\n|)[^\\n]*.*?BYCODEEND[^\\n]*)", 'by': "\nREPLACEBYCODE"}]
+            if program.find("BYCODEEND") >= 0:  # TODO: for some reason next regexp is slow in not found case
+                m = re.search("[^\\n]*\n(.*)\n.*?BYCODEEND", program, flags=re.S)
+                if m:
+                    by_code = m.group(1)
+                    by_code_replace = [{'replace': "((\n|)[^\\n]*.*?BYCODEEND[^\\n]*)", 'by': "\nREPLACEBYCODE"}]
             else:
                 by_code = fullprogram
                 program = "REPLACEBYCODE"
