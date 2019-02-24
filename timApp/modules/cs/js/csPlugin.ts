@@ -511,6 +511,7 @@ function makeTemplate() {
                     ng-click="$ctrl.runUnitTest()">UTest
             </button>
             &nbsp&nbsp<span ng-if="::$ctrl.isDocument">
+          
             <a href="" ng-disabled="$ctrl.isRunning"
                ng-click="$ctrl.runDocument()">{{$ctrl.docLink}}</a>&nbsp&nbsp</span>
             <a href=""
@@ -538,6 +539,7 @@ function makeTemplate() {
                                                           ng-pattern="/[-0-9]*/"
                                                           ng-model="$ctrl.wrap"
                                                           size="2"/></label></span></p>
+          
     </div>
     <div ng-if="::$ctrl.isSage" class="outputSage no-popup-menu"></div>
     <pre ng-if="$ctrl.viewCode && $ctrl.codeunder">{{$ctrl.code}}</pre>
@@ -2644,7 +2646,9 @@ class CsController extends CsBase implements IController {
                 });
             });
         } else {
-            editorDiv.empty().append(this.edit);
+            await 1; // TODO:  Miksi tässä pitää olla tämä?  Muuten tuo editorDiv.empty() aiheuttaa poikkeuksen
+            editorDiv.empty();
+            editorDiv.append(this.edit);
             if (eindex === 2) {
                 this.showCsParsons(otherEditDiv.children[0]);
             }
