@@ -1173,12 +1173,31 @@ def int_to_datablock_index(i: int) -> str:
 
 def parse_size_attribute(attribute) -> str:
     """
-    Converts numeric attribute to string and removes px and spaces.
+    Converts numeric attributes to pts and removes the unit sign.
     :param attribute: Size attribute.
     :return: Parsed string.
     """
-    return str(attribute).replace('px', '').strip()
-
+    mm = 2.84526
+    cm = 28.45274
+    ex = 4.30554
+    em = 10.00002
+    # TODO: Handling px properly, since px size depends on screen resolution etc.
+    if not attribute:
+        return "0"
+    converted = 0
+    try:
+        if "pt" in attribute or "px" in attribute:
+            converted = str(attribute).replace('pt', '').replace('px', '')
+        if "mm" in attribute:
+            converted = float(str(attribute).replace('mm', '').strip())*mm
+        if "cm" in attribute:
+            converted = float(str(attribute).replace('cm', '').strip())*cm
+        if "ex" in attribute:
+            converted = float(str(attribute).replace('ex', '').strip())*ex
+        if "em" in attribute:
+            converted = float(str(attribute).replace('em', '').strip())*em
+    finally:
+        return str(converted)
 
 def get_table_size(table_data):
     """
@@ -1233,7 +1252,7 @@ def decide_format_size(format_levels):
     for level in format_levels:
         if level and default_width not in level:
             try:
-                size = float(parse_size_attribute(level))
+                size = float(level)
                 if size > final_size:
                     final_size = size
             except ValueError:
@@ -1357,6 +1376,12 @@ def convert_table(table_json, draw_html_borders: bool = False) -> Table:
     column_h_align_list = get_column_format_list(table_json, f=get_text_horizontal_align)
     column_font_family_list = get_column_format_list(table_json, f=get_font_family)
 
+    try:
+        table_default_row_data = table_json['defrows']
+        table_default_row_height = get_size(table_default_row_data, key="height", default=None)
+    except KeyError:
+        table_default_row_height = None
+
     table_json_rows = table_json['rows']
     for i in range(0, len(table_json_rows)):
         table_row = table.get_or_create_row(i)
@@ -1437,6 +1462,7 @@ def convert_table(table_json, draw_html_borders: bool = False) -> Table:
                 (datablock_text_color, datablock_text_color_html),
             ])
             height = decide_format_size([
+                table_default_row_height,
                 row_height,
                 cell_height,
                 datablock_cell_height])
