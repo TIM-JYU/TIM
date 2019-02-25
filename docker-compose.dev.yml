@@ -31,8 +31,12 @@ services:
   command: ${PALI_DEV_COMMAND:-/usr/sbin/sshd -D}
   ports:
    - "49997:22"
- pistelasku:
-  command: ${PISTELASKU_DEV_COMMAND:-/usr/sbin/sshd -D}
+ textfield:
+ # image: timimages/cs3sudo:rust
+ # build:
+ #  context: ./timApp/modules/cs
+ #  dockerfile: DockerfileS
+  command: ${TEXTFIELD_DEV_COMMAND:-/usr/sbin/sshd -D}
   ports:
    - "49990:22"
  csplugin:

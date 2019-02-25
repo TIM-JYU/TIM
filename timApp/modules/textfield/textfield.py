@@ -1,7 +1,8 @@
 """
-TIM example plugin: a palindrome checker.
+TIM example plugin: a textfieldndrome checker.
 """
 import re
+import sys
 from typing import Union
 
 import attr
@@ -14,27 +15,27 @@ from pluginserver_flask import GenericMarkupModel, GenericMarkupSchema, GenericH
     GenericAnswerSchema, GenericAnswerModel, Missing, \
     InfoSchema, create_app
 
-
+sys.path.insert(0, '/py')  # /py on mountattu docker kontissa /opt/tim/timApp/modules/py -hakemistoon
 
 @attr.s(auto_attribs=True)
-class PaliStateModel:
+class TextfieldStateModel:
     """Model for the information that is stored in TIM database for each answer."""
-    userword: str
+    demopisteet: float
 
 
-class PaliStateSchema(Schema):
-    userword = fields.Str(required=True)
+class TextfieldStateSchema(Schema):
+    demopisteet = fields.Number(required=True)
 
     @post_load
     def make_obj(self, data):
-        return PaliStateModel(**data)
+        return TextfieldStateModel(**data)
 
     class Meta:
         strict = True
 
 
 @attr.s(auto_attribs=True)
-class PaliMarkupModel(GenericMarkupModel):
+class TextfieldMarkupModel(GenericMarkupModel):
     points_array: Union[str, Missing] = missing
     inputstem: Union[str, Missing] = missing
     needed_len: Union[int, Missing] = missing
@@ -43,13 +44,12 @@ class PaliMarkupModel(GenericMarkupModel):
     inputplaceholder: Union[str, Missing] = missing
 
 
-class PaliMarkupSchema(GenericMarkupSchema):
+class TextfieldMarkupSchema(GenericMarkupSchema):
     points_array = fields.List(fields.List(fields.Number()))
-    inputstem = fields.Str()
-    needed_len = fields.Int()
-    initword = fields.Str()
+    inputstem2 = fields.Number()
+    initword2 = fields.Number()
     cols = fields.Int()
-    inputplaceholder = fields.Str()
+    inputplaceholder2: Union[int, Missing] = missing
 
     @validates('points_array')
     def validate_points_array(self, value):
@@ -58,92 +58,90 @@ class PaliMarkupSchema(GenericMarkupSchema):
 
     @post_load
     def make_obj(self, data):
-        return PaliMarkupModel(**data)
+        return TextfieldMarkupModel(**data)
 
     class Meta:
         strict = True
 
 
 @attr.s(auto_attribs=True)
-class PaliInputModel:
+class TextfieldInputModel:
     """Model for the information that is sent from browser (plugin AngularJS component)."""
-    userword: str
-    paliOK: bool = missing
+    demopisteet: float
     nosave: bool = missing
 
 
-class PaliInputSchema(Schema):
-    userword = fields.Str(required=True)
-    paliOK = fields.Bool()
+class TextfieldInputSchema(Schema):
+    demopisteet = fields.Number(required=True)
     nosave = fields.Bool()
 
-    @validates('userword')
-    def validate_userword(self, word):
-        if not word:
-            raise ValidationError('Must not be empty.')
+    @validates('demopisteet')
+    def validate_demopisteet(self, number):
+        if not number:
+            raise ValidationError('Must be a number.')
 
     @post_load
     def make_obj(self, data):
-        return PaliInputModel(**data)
+        return TextfieldInputModel(**data)
 
 
-class PaliAttrs(Schema):
+class TextfieldAttrs(Schema):
     """Common fields for HTML and answer routes."""
-    markup = fields.Nested(PaliMarkupSchema)
-    state = fields.Nested(PaliStateSchema, allow_none=True, required=True)
+    markup = fields.Nested(TextfieldMarkupSchema)
+    state = fields.Nested(TextfieldStateSchema, allow_none=True, required=True)
 
     class Meta:
         strict = True
 
 
 @attr.s(auto_attribs=True)
-class PaliHtmlModel(GenericHtmlModel[PaliInputModel, PaliMarkupModel, PaliStateModel]):
+class TextfieldHtmlModel(GenericHtmlModel[TextfieldInputModel, TextfieldMarkupModel, TextfieldStateModel]):
     def get_component_html_name(self) -> str:
-        return 'pali-runner'
+        return 'textfield-runner'
 
     def get_static_html(self) -> str:
-        return render_static_pali(self)
+        return render_static_textfield(self)
 
     def get_browser_json(self):
         r = super().get_browser_json()
         if self.state:
-            r['userword'] = self.state.userword
+            r['demopisteet'] = self.state.demopisteet
         return r
 
     class Meta:
         strict = True
 
 
-class PaliHtmlSchema(PaliAttrs, GenericHtmlSchema):
+class TextfieldHtmlSchema(TextfieldAttrs, GenericHtmlSchema):
     info = fields.Nested(InfoSchema, allow_none=True, required=True)
 
     @post_load
     def make_obj(self, data):
         # noinspection PyArgumentList
-        return PaliHtmlModel(**data)
+        return TextfieldHtmlModel(**data)
 
     class Meta:
         strict = True
 
 
 @attr.s(auto_attribs=True)
-class PaliAnswerModel(GenericAnswerModel[PaliInputModel, PaliMarkupModel, PaliStateModel]):
+class TextfieldAnswerModel(GenericAnswerModel[TextfieldInputModel, TextfieldMarkupModel, TextfieldStateModel]):
     pass
 
 
-class PaliAnswerSchema(PaliAttrs, GenericAnswerSchema):
-    input = fields.Nested(PaliInputSchema, required=True)
+class TextfieldAnswerSchema(TextfieldAttrs, GenericAnswerSchema):
+    input = fields.Nested(TextfieldInputSchema, required=True)
 
     @post_load
     def make_obj(self, data):
         # noinspection PyArgumentList
-        return PaliAnswerModel(**data)
+        return TextfieldAnswerModel(**data)
 
     class Meta:
         strict = True
 
 
-def render_static_pali(m: PaliHtmlModel):
+def render_static_textfield(m: TextfieldHtmlModel):
     return render_template_string(
         """
 <div class="csRunDiv no-popup-menu">
@@ -166,95 +164,62 @@ def render_static_pali(m: PaliHtmlModel):
     )
 
 
-app = create_app(__name__, PaliHtmlSchema())
+app = create_app(__name__, TextfieldHtmlSchema())
 
 
 @app.route('/answer/', methods=['put'])
-@use_args(PaliAnswerSchema(strict=True), locations=("json",))
-def answer(args: PaliAnswerModel):
+@use_args(TextfieldAnswerSchema(strict=True), locations=("json",))
+def answer(args: TextfieldAnswerModel):
     web = {}
     result = {'web': web}
-    needed_len = args.markup.needed_len
-    userword = args.input.userword
-    pali_ok = args.input.paliOK or False
-    len_ok = True
-    if needed_len:
-        len_ok = check_letters(userword, needed_len)
-    if not len_ok:
-        web['error'] = "Wrong length"
-    if not needed_len and not pali_ok:
-        len_ok = False
-    points_array = args.markup.points_array or [[0, 0.25], [0.5, 1]]
-    points = points_array[pali_ok][len_ok]
-
-    # plugin can ask not to save the word
-    nosave = args.input.nosave
-    if not nosave:
-        tim_info = {"points": points}
-        save = {"userword": userword}
-        result["save"] = save
-        result["tim_info"] = tim_info
-        web['result'] = "saved"
+    demopisteet = args.input.demopisteet
 
     return jsonify(result)
-
-
-def check_letters(word: str, needed_len: int) -> bool:
-    """Checks if word has needed amount of chars.
-
-    :param word: word to check
-    :param needed_len: how many letters needed
-    :return: true if len match
-
-    """
-    s = word.upper()
-    return len(re.sub("[^[A-ZÅÄÖ]", "", s)) == needed_len
 
 
 @app.route('/reqs/')
 @app.route('/reqs')
 def reqs():
     templates = ["""
-``` {#ekapali plugin="pali"}
-header: Kirjoita palindromi
-stem: Kirjoita palindromi, jossa on 5 kirjainta.
+``` {#ekatextfield plugin="textfield"}
+header: Luo lomake
+stem: Anna lomakkeen nimi ja kenttien lukumäärä.
 -points_array: [[0, 0.1], [0.6, 1]]
-inputstem: "Palindromisi:"
-needed_len: 5
-answerLimit: 3
-initword: muikku
+inputstem: "Lomakkeen nimi:"
+inputstem2: "Lomakkeen kenttien lukumäärä:"
+needed_len: 1
+initword: nimi
 cols: 20
 ```""", """
-``` {#tokapali plugin="pali"}
-header: Kirjoita palindromi
-stem: Kirjoita palindromi, jossa on 7 kirjainta.
+``` {#tokatextfield plugin="textfield"}
+header: Demopisteet
+stem: Anna lomakkeen nimi ja kenttien lukumäärä.
 -points_array: [[0, 0.1], [0.6, 1]]
-inputstem: "Palindromisi:"
-needed_len: 7
-answerLimit: 4
-initword: muikku
+inputstem2: 0
+needed_len: 1
+initword: nimi
 cols: 20
 ```"""]
     return jsonify({
-        "js": ["js/build/pali.js"],
+        "js": ["js/build/textfield.js"],
         "multihtml": True,
-        "css": ["css/pali.css"],
+        "css": ["css/textfield.css"],
         'editor_tabs': [
             {
                 'text': 'Plugins',
                 'items': [
                     {
-                        'text': 'Pali',
+                        'text': 'Textfield:',
                         'items': [
                             {
                                 'data': templates[0].strip(),
-                                'text': '5 letters',
-                                'expl': 'Add a 5-letter palindrome task',
+                                'text': 'Lomake ',
+                                'expl': 'Luo lomake demokentille',
                             },
                             {
                                 'data': templates[1].strip(),
-                                'text': '7 letters',
-                                'expl': 'Add a 7-letter palindrome task',
+                                'text': 'Lomake (laajempi) ',
+                                'expl': 'Laajempi lomake demokentille',
                             },
                         ],
                     },

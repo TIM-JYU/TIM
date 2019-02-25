@@ -1,0 +1,15 @@
+/* Empty for now. */
+.textfieldTinyDiv .stem {
+    padding-left: 8px;
+}
+
+.textfieldTinyText {
+    margin-top: 4px;
+    margin-left: 1em;
+    margin-right: 1em;
+}
+
+.gradient {
+    background: red;
+    background: linear-gradient(to bottom right, red,blue);
+}

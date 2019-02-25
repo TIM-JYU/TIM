@@ -8,7 +8,7 @@ services:
    - postgresql
    - csplugin
    - pali
-   - pistelasku
+   - textfield
    - showfile
    - haskellplugins
    - imagex
@@ -90,15 +90,15 @@ services:
     PYTHONPATH: /pali:/py:/usr/local/lib/python3.6/dist-packages
   command: ./startAll.sh
   restart: unless-stopped
- pistelasku:
+ textfield:
   image: timimages/tim:${TIM_IMAGE_TAG}
-  # build: ./timApp/modules/pistelasku
+  # build: ./timApp/modules/textfield
   volumes:
-   - ./timApp/modules/pistelasku:/pistelasku:ro
+   - ./timApp/modules/textfield:/textfield:ro
    - ./timApp/modules/py:/py:ro
-  working_dir: /pistelasku
+  working_dir: /textfield
   environment:
-   PYTHONPATH: /pistelasku:/py:/usr/local/lib/python3.6/dist-packages
+   PYTHONPATH: /textfield:/py:/usr/local/lib/python3.6/dist-packages
   command: ./startAll.sh
   restart: unless-stopped
  uploader:
