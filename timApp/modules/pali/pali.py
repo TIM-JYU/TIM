@@ -218,7 +218,7 @@ def reqs():
 header: Kirjoita palindromi
 stem: Kirjoita palindromi, jossa on 5 kirjainta.
 -points_array: [[0, 0.1], [0.6, 1]]
-inputstem: "Palindromisi:"
+inputstem: "Palindromisi 5 kirjainta inputstem:"
 needed_len: 5
 answerLimit: 3
 initword: muikku

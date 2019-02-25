@@ -39,6 +39,7 @@ class omapluginMarkupModel(GenericMarkupModel):
     inputstem2: Union[str, Missing] = missing
     needed_len: Union[int, Missing] = missing
     initword: Union[str, Missing] = missing
+    followid: Union[str, Missing] = missing
     cols: Union[int, Missing] = missing
     inputplaceholder: Union[str, Missing] = missing
 
@@ -49,6 +50,7 @@ class omapluginMarkupSchema(GenericMarkupSchema):
     inputstem2 = fields.Str()
     needed_len = fields.Int()
     initword = fields.Str()
+    followid = fields.Str()
     cols = fields.Int()
     inputplaceholder = fields.Str()
 
@@ -69,7 +71,7 @@ class omapluginMarkupSchema(GenericMarkupSchema):
 class omapluginInputModel:
     """Model for the information that is sent from browser (plugin AngularJS component)."""
     userword: str
-    omapluginOK: bool
+    omapluginOK: bool = missing
     nosave: bool = missing
 
 
@@ -182,7 +184,7 @@ def answer(args: omapluginAnswerModel):
     if needed_len:
         len_ok = check_letters(userword, needed_len)
     if not len_ok:
-        web['error'] = "aaa Wrong length asdf"
+        web['error'] = "aaa Wrong length asdf2"
     if not needed_len and not omaplugin_ok:
         len_ok = False
     points_array = args.markup.points_array or [[0, 0.25], [0.5, 1]]
@@ -221,6 +223,7 @@ header: Kirjoita omapluginndromi
 stem: Kirjoita omapluginndromi, jossa on 5 kirjainta.
 -points_array: [[0, 0.1], [0.6, 1]]
 inputstem: "omapluginndromisi:"
+followid: "FOLLOWID"
 needed_len: 5
 answerLimit: 3
 initword: muikku
@@ -231,6 +234,7 @@ header: Kirjoita omapluginndromi
 stem: Kirjoita omapluginndromi, jossa on 7 kirjainta.
 -points_array: [[0, 0.1], [0.6, 1]]
 inputstem: "omapluginndromisi:"
+followid: "FOLLOWID"
 needed_len: 7
 answerLimit: 4
 initword: muikku

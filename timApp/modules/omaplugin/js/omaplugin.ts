@@ -3,6 +3,7 @@
  */
 import angular, {INgModelOptions} from "angular";
 import * as t from "io-ts";
+import {ViewCtrl} from "tim/document/viewctrl";
 import {GenericPluginMarkup, nullable, PluginBase, withDefault} from "tim/plugin/util";
 import {$http} from "tim/util/ngimport";
 import {to} from "tim/util/utils";
@@ -15,6 +16,7 @@ const omapluginMarkup = t.intersection([
     t.partial({
         initword: t.string,
         inputplaceholder: nullable(t.string),
+        followid: t.string,
         inputstem: t.string,
         inputstem2: t.string,
     }),
@@ -43,13 +45,14 @@ function isomapluginndrome(s: string) {
     return true;
 }
 
-class omapluginController extends PluginBase<t.TypeOf<typeof omapluginMarkup>, t.TypeOf<typeof omapluginAll>, typeof omapluginAll> {
+export class omapluginController extends PluginBase<t.TypeOf<typeof omapluginMarkup>, t.TypeOf<typeof omapluginAll>, typeof omapluginAll> {
     private result?: string;
     private error?: string;
     private isRunning = false;
     private userword = "";
     private runTestGreen = false;
     private modelOpts!: INgModelOptions; // initialized in $onInit, so need to assure TypeScript with "!"
+    private vctrl!: ViewCtrl;
 
     getDefaultMarkup() {
         return {};
@@ -64,6 +67,17 @@ class omapluginController extends PluginBase<t.TypeOf<typeof omapluginMarkup>, t
         this.userword = this.attrsall.userword || this.attrs.initword || "";
         this.modelOpts = {debounce: this.autoupdate};
         this.checkomapluginndrome();
+        if (this.attrs.followid) {
+            this.vctrl.addOmaplugin(this, this.attrs.followid);
+        }
+    }
+
+    get userword1(): string {
+        return this.userword;
+    }
+
+    get initword(): string {
+        return this.initword;
     }
 
     get edited() {
@@ -112,6 +126,7 @@ class omapluginController extends PluginBase<t.TypeOf<typeof omapluginMarkup>, t
     }
 
     async doSaveText(nosave: boolean) {
+
         this.error = "... saving ...";
         this.isRunning = true;
         this.result = undefined;
@@ -133,6 +148,9 @@ class omapluginController extends PluginBase<t.TypeOf<typeof omapluginMarkup>, t
             const data = r.result.data;
             this.error = data.web.error;
             this.result = data.web.result;
+            if (!this.attrs.followid) {
+                this.error = this.vctrl.getOmapluginControllerFromName("FOLLOWID").userword1;//jotain toiselta pluginilta?
+            }
         } else {
             this.error = "Infinite loop or some other error?";
         }
@@ -148,6 +166,9 @@ omapluginApp.component("omapluginRunner", {
         json: "@",
     },
     controller: omapluginController,
+    require: {
+        vctrl: "^timView",
+    },
     template: `
 <div class="csRunDiv no-popup-menu">
     <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
