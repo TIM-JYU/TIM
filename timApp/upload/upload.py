@@ -24,6 +24,7 @@ from timApp.item.block import Block
 from timApp.item.block import BlockType
 from timApp.item.validation import validate_item_and_create_intermediate_folders, validate_uploaded_document_content
 from timApp.plugin.plugin import Plugin
+from timApp.tim_app import app
 from timApp.timdb.sqa import db
 from timApp.upload.uploadedfile import UploadedFile, PluginUpload, PluginUploadInfo, StampedPDF
 from timApp.util.flask.responsehelper import json_response
@@ -45,7 +46,7 @@ PIC_EXTENSIONS = ['png', 'jpg', 'jpeg', 'gif']
 ALLOWED_EXTENSIONS = set(PIC_EXTENSIONS + DOC_EXTENSIONS)
 
 # The folder for stamped and original pdf-files.
-default_attachment_folder = "/tim_files/blocks/files"
+default_attachment_folder = os.path.join(app.config['FILES_PATH'], "blocks/files")
 
 
 def get_mimetype(p):
