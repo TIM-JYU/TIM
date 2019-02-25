@@ -1,5 +1,5 @@
 """
-TIM example plugin: a textfieldndrome checker.
+TIM example plugin: a saveareandrome checker.
 """
 import re
 import sys
@@ -18,24 +18,24 @@ from pluginserver_flask import GenericMarkupModel, GenericMarkupSchema, GenericH
 sys.path.insert(0, '/py')  # /py on mountattu docker kontissa /opt/tim/timApp/modules/py -hakemistoon
 
 @attr.s(auto_attribs=True)
-class TextfieldStateModel:
+class SaveareaStateModel:
     """Model for the information that is stored in TIM database for each answer."""
     demopisteet: float
 
 
-class TextfieldStateSchema(Schema):
+class SaveareaStateSchema(Schema):
     demopisteet = fields.Number(required=True)
 
     @post_load
     def make_obj(self, data):
-        return TextfieldStateModel(**data)
+        return SaveareaStateModel(**data)
 
     class Meta:
         strict = True
 
 
 @attr.s(auto_attribs=True)
-class TextfieldMarkupModel(GenericMarkupModel):
+class SaveareaMarkupModel(GenericMarkupModel):
     points_array: Union[str, Missing] = missing
     inputstem: Union[str, Missing] = missing
     needed_len: Union[int, Missing] = missing
@@ -44,11 +44,9 @@ class TextfieldMarkupModel(GenericMarkupModel):
     inputplaceholder: Union[str, Missing] = missing
 
 
-class TextfieldMarkupSchema(GenericMarkupSchema):
+class SaveareaMarkupSchema(GenericMarkupSchema):
     points_array = fields.List(fields.List(fields.Number()))
-    inputstem = fields.String()
     inputstem2 = fields.Number()
-    initword = fields.String()
     initword2 = fields.Number()
     cols = fields.Int()
     inputplaceholder2: Union[int, Missing] = missing
@@ -60,20 +58,20 @@ class TextfieldMarkupSchema(GenericMarkupSchema):
 
     @post_load
     def make_obj(self, data):
-        return TextfieldMarkupModel(**data)
+        return SaveareaMarkupModel(**data)
 
     class Meta:
         strict = True
 
 
 @attr.s(auto_attribs=True)
-class TextfieldInputModel:
+class SaveareaInputModel:
     """Model for the information that is sent from browser (plugin AngularJS component)."""
     demopisteet: float
     nosave: bool = missing
 
 
-class TextfieldInputSchema(Schema):
+class SaveareaInputSchema(Schema):
     demopisteet = fields.Number(required=True)
     nosave = fields.Bool()
 
@@ -84,25 +82,25 @@ class TextfieldInputSchema(Schema):
 
     @post_load
     def make_obj(self, data):
-        return TextfieldInputModel(**data)
+        return SaveareaInputModel(**data)
 
 
-class TextfieldAttrs(Schema):
+class SaveareaAttrs(Schema):
     """Common fields for HTML and answer routes."""
-    markup = fields.Nested(TextfieldMarkupSchema)
-    state = fields.Nested(TextfieldStateSchema, allow_none=True, required=True)
+    markup = fields.Nested(SaveareaMarkupSchema)
+    state = fields.Nested(SaveareaStateSchema, allow_none=True, required=True)
 
     class Meta:
         strict = True
 
 
 @attr.s(auto_attribs=True)
-class TextfieldHtmlModel(GenericHtmlModel[TextfieldInputModel, TextfieldMarkupModel, TextfieldStateModel]):
+class SaveareaHtmlModel(GenericHtmlModel[SaveareaInputModel, SaveareaMarkupModel, SaveareaStateModel]):
     def get_component_html_name(self) -> str:
-        return 'textfield-runner'
+        return 'savearea-runner'
 
     def get_static_html(self) -> str:
-        return render_static_textfield(self)
+        return render_static_savearea(self)
 
     def get_browser_json(self):
         r = super().get_browser_json()
@@ -114,36 +112,36 @@ class TextfieldHtmlModel(GenericHtmlModel[TextfieldInputModel, TextfieldMarkupMo
         strict = True
 
 
-class TextfieldHtmlSchema(TextfieldAttrs, GenericHtmlSchema):
+class SaveareaHtmlSchema(SaveareaAttrs, GenericHtmlSchema):
     info = fields.Nested(InfoSchema, allow_none=True, required=True)
 
     @post_load
     def make_obj(self, data):
         # noinspection PyArgumentList
-        return TextfieldHtmlModel(**data)
+        return SaveareaHtmlModel(**data)
 
     class Meta:
         strict = True
 
 
 @attr.s(auto_attribs=True)
-class TextfieldAnswerModel(GenericAnswerModel[TextfieldInputModel, TextfieldMarkupModel, TextfieldStateModel]):
+class SaveareaAnswerModel(GenericAnswerModel[SaveareaInputModel, SaveareaMarkupModel, SaveareaStateModel]):
     pass
 
 
-class TextfieldAnswerSchema(TextfieldAttrs, GenericAnswerSchema):
-    input = fields.Nested(TextfieldInputSchema, required=True)
+class SaveareaAnswerSchema(SaveareaAttrs, GenericAnswerSchema):
+    input = fields.Nested(SaveareaInputSchema, required=True)
 
     @post_load
     def make_obj(self, data):
         # noinspection PyArgumentList
-        return TextfieldAnswerModel(**data)
+        return SaveareaAnswerModel(**data)
 
     class Meta:
         strict = True
 
 
-def render_static_textfield(m: TextfieldHtmlModel):
+def render_static_savearea(m: SaveareaHtmlModel):
     return render_template_string(
         """
 <div class="csRunDiv no-popup-menu">
@@ -166,12 +164,12 @@ def render_static_textfield(m: TextfieldHtmlModel):
     )
 
 
-app = create_app(__name__, TextfieldHtmlSchema())
+app = create_app(__name__, SaveareaHtmlSchema())
 
 
 @app.route('/answer/', methods=['put'])
-@use_args(TextfieldAnswerSchema(strict=True), locations=("json",))
-def answer(args: TextfieldAnswerModel):
+@use_args(SaveareaAnswerSchema(strict=True), locations=("json",))
+def answer(args: SaveareaAnswerModel):
     web = {}
     result = {'web': web}
     demopisteet = args.input.demopisteet
@@ -183,7 +181,7 @@ def answer(args: TextfieldAnswerModel):
 @app.route('/reqs')
 def reqs():
     templates = ["""
-``` {#ekatextfield plugin="textfield"}
+``` {#ekasavearea plugin="savearea"}
 header: Luo lomake
 stem: Anna lomakkeen nimi ja kenttien lukumäärä.
 -points_array: [[0, 0.1], [0.6, 1]]
@@ -193,7 +191,7 @@ needed_len: 1
 initword: nimi
 cols: 20
 ```""", """
-``` {#tokatextfield plugin="textfield"}
+``` {#tokasavearea plugin="savearea"}
 header: Demopisteet
 stem: Anna lomakkeen nimi ja kenttien lukumäärä.
 -points_array: [[0, 0.1], [0.6, 1]]
@@ -203,15 +201,15 @@ initword: nimi
 cols: 20
 ```"""]
     return jsonify({
-        "js": ["js/build/textfield.js"],
+        "js": ["js/build/savearea.js"],
         "multihtml": True,
-        "css": ["css/textfield.css"],
+        "css": ["css/savearea.css"],
         'editor_tabs': [
             {
                 'text': 'Plugins',
                 'items': [
                     {
-                        'text': 'Textfield:',
+                        'text': 'Savearea:',
                         'items': [
                             {
                                 'data': templates[0].strip(),

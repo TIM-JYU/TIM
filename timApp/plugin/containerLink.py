@@ -26,6 +26,7 @@ SVNPLUGIN_NAME = 'showfile'
 HASKELLPLUGIN_NAME = 'haskellplugins'
 PALIPLUGIN_NAME = 'pali'
 TEXTFIELDPLUGIN_NAME = 'textfield'
+SAVEAREAPLUGIN_NAME = 'savearea'
 IMAGEXPLUGIN_NAME = 'imagex'
 MARKUP = 'markup'
 REGEXATTRS = 'regexattrs'
@@ -66,6 +67,7 @@ def get_plugins():
             "graphviz": {"host": "http://" + CSPLUGIN_NAME + ":5000/cs/graphviz/"},
             "pali": {"host": "http://" + PALIPLUGIN_NAME + ":5000/"},
             "textfield": {"host": "http://" + TEXTFIELDPLUGIN_NAME + ":5000/"},
+            "savearea": {"host": "http://" + SAVEAREAPLUGIN_NAME + ":5000/"},
             "imagex": {"host": "http://" + IMAGEXPLUGIN_NAME + ":5000/"},
             "qst": {"host": "http://" + "localhost" + f":{current_app.config['QST_PLUGIN_PORT']}/qst/", REGEXATTRS: QSTMDATTRS, AUTOMDATTRS: True},
             "timTable": {"host": "http://" + "localhost" + f":{current_app.config['QST_PLUGIN_PORT']}/timTable/", "instance": timTable.TimTable(), 'lazy': False},

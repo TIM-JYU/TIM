@@ -1,5 +1,5 @@
 /**
- * Defines the client-side implementation of an example plugin (a textfieldndrome checker).
+ * Defines the client-side implementation of an example plugin (a saveareandrome checker).
  */
 import angular, {INgModelOptions} from "angular";
 import * as t from "io-ts";
@@ -9,17 +9,14 @@ import {to} from "tim/util/utils";
 import {valueDefu} from "tim/util/utils";
 import {number} from "../../../static/scripts/jspm_packages/npm/io-ts@1.4.1/lib";
 
-const textfieldApp = angular.module("textfieldApp", ["ngSanitize"]);
-export const moduleDefs = [textfieldApp];
+const saveareaApp = angular.module("saveareaApp", ["ngSanitize"]);
+export const moduleDefs = [saveareaApp];
 
-const TextfieldMarkup = t.intersection([
+const SaveareaMarkup = t.intersection([
     t.partial({
-        initword: t.string,
         initword2: t.number,
-        inputplaceholder: nullable(t.string),
         inputplaceholder2: nullable(t.number),
-        inputstem: t.string,
-        inputstem2: t.number,
+        inputstem2: t.string,
     }),
     GenericPluginMarkup,
     t.type({
@@ -28,19 +25,17 @@ const TextfieldMarkup = t.intersection([
         cols: withDefault(t.number, 20),
     }),
 ]);
-const TextfieldAll = t.intersection([
+const SaveareaAll = t.intersection([
     t.partial({
-        userword: t.string,
         demopisteet: t.number,
     }),
-    t.type({markup: TextfieldMarkup}),
+    t.type({markup: SaveareaMarkup}),
 ]);
 
-class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t.TypeOf<typeof TextfieldAll>, typeof TextfieldAll> {
+class SaveareaController extends PluginBase<t.TypeOf<typeof SaveareaMarkup>, t.TypeOf<typeof SaveareaAll>, typeof SaveareaAll> {
     private result?: string;
     private error?: string;
     private isRunning = false;
-    private userword = "";
     private demopisteet = number;
     private modelOpts!: INgModelOptions; // initialized in $onInit, so need to assure TypeScript with "!"
 
@@ -49,7 +44,7 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
     }
 
     buttonText() {
-        return super.buttonText() || "Tallenna kaikki Demopisteet";
+        return super.buttonText() || "Tallenna";
     }
 
     $onInit() {
@@ -61,10 +56,6 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
         return this.attrs.autoupdate;
     }
 
-    get inputstem() {
-        return this.attrs.inputstem || "";
-    }
-
     get inputstem2() {
         return this.attrs.inputstem2 || null;
     }
@@ -74,7 +65,6 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
     }
 
     initCode() {
-        this.userword = this.attrs.initword || "";
         this.demopisteet = number;
         this.error = undefined;
         this.result = undefined;
@@ -111,31 +101,31 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
     }
 
     protected getAttributeType() {
-        return TextfieldAll;
+        return SaveareaAll;
     }
 }
 
-textfieldApp.component("textfieldRunner", {
+saveareaApp.component("saveareaRunner", {
     bindings: {
         json: "@",
     },
-    controller: TextfieldController,
+    controller: SaveareaController,
     template: `
 <div class="no-popup-menu">
     <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
     <p ng-if="::$ctrl.stem">{{::$ctrl.stem}}</p>
-    <div class="form-inline"><label>{{::$ctrl.inputstem}} <span>   
-        <input type="string"
-               class="form-control"
-               ng-model="$ctrl.userword"
-               ng-model-options="::$ctrl.modelOpts"
-               ng-change="$ctrl.checkTextfieldndrome()"
-               ng-trim="false"
-               placeholder="{{::$ctrl.inputplaceholder}}"
-               size="{{::$ctrl.cols}}"></span></label>
+    <div class="form-inline">
+    <button class="timButton"
+            ng-if="::$ctrl.buttonText()"
+            ng-click="$ctrl.saveText()">
+        {{::$ctrl.buttonText()}}
+    </button>
     </div>
+    <a href="" ng-if="$ctrl.edited" ng-click="$ctrl.initCode()">{{::$ctrl.resetText}}</a>
+    <div ng-if="$ctrl.error" ng-bind-html="$ctrl.error"></div>
     <pre ng-if="$ctrl.result">{{$ctrl.result}}</pre>
     <p ng-if="::$ctrl.footer" ng-bind="::$ctrl.footer" class="plgfooter"></p>
 </div>
+
 `,
 });

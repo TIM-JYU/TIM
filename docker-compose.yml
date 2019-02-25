@@ -101,6 +101,17 @@ services:
    PYTHONPATH: /textfield:/py:/usr/local/lib/python3.6/dist-packages
   command: ./startAll.sh
   restart: unless-stopped
+ savearea:
+  image: timimages/tim:${TIM_IMAGE_TAG}
+  # build: ./timApp/modules/savearea
+  volumes:
+   - ./timApp/modules/savearea:/savearea:ro
+   - ./timApp/modules/py:/py:ro
+  working_dir: /savearea
+  environment:
+   PYTHONPATH: /savearea:/py:/usr/local/lib/python3.6/dist-packages
+  command: ./startAll.sh
+  restart: unless-stopped
  uploader:
   image: villet/uploaderplugin:13_10_16_15
   command: ${UPLOADER_COMMAND}
