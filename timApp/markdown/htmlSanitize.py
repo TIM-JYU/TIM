@@ -4,51 +4,57 @@ import lxml.etree
 from lxml.html import fromstring, tostring
 from lxml.html.clean import Cleaner
 
-TIM_SAFE_TAGS = ['a',
-                 'abbr',
-                 'acronym',
-                 'b',
-                 'blockquote',
-                 'code',
-                 'em',
-                 'figcaption',
-                 'figure',
-                 'i',
-                 'li',
-                 'ol',
-                 'strong',
-                 'ul',
-                 'video',
-                 'p',
-                 'code',
-                 'div',
-                 'span',
-                 'br',
-                 'pre',
-                 'img',
-                 'h1',
-                 'h2',
-                 'h3',
-                 'h4',
-                 'h5',
-                 'h6',
-                 'h7',
-                 'hr',
-                 'table',
-                 'tbody',
-                 'thead',
-                 'tfoot',
-                 'td',
-                 'tr',
-                 'th',
-                 'caption',
-                 'colgroup',
-                 'col',
-                 'sub',
-                 'sup',
-                 'u',
-                 's',
-                 'style']
+TIM_SAFE_TAGS = [
+    'a',
+    'abbr',
+    'acronym',
+    'b',
+    'blockquote',
+    'code',
+    'em',
+    'figcaption',
+    'figure',
+    'i',
+    'li',
+    'ol',
+    'strong',
+    'ul',
+    'video',
+    'p',
+    'code',
+    'div',
+    'span',
+    'br',
+    'pre',
+    'img',
+    'h1',
+    'h2',
+    'h3',
+    'h4',
+    'h5',
+    'h6',
+    'h7',
+    'hr',
+    'table',
+    'tbody',
+    'thead',
+    'tfoot',
+    'td',
+    'tr',
+    'th',
+    'caption',
+    'colgroup',
+    'col',
+    'sub',
+    'sup',
+    'u',
+    's',
+    'style',
+    # plugins:
+    'pali-runner',
+    'cs-runner',
+    'cs-text-runner',
+]
 
 TIM_SAFE_ATTRS_MAP = {'*': ['class', 'id', 'align'],
                       'video': ['src', 'controls'],
@@ -67,7 +73,8 @@ TIM_SAFE_ATTRS = frozenset([
     'multiple', 'name', 'nohref', 'noshade', 'nowrap', 'prompt', 'readonly',
     'rel', 'rev', 'rows', 'rowspan', 'rules', 'scope', 'selected', 'shape',
     'size', 'span', 'src', 'start', 'style', 'summary', 'tabindex', 'target', 'title',
-    'type', 'usemap', 'valign', 'value', 'vspace', 'width', 'controls', 'plugin'])
+    'type', 'usemap', 'valign', 'value', 'vspace', 'width', 'controls', 'plugin',
+    'json', 'data-plugin', 'data-answer-id'])
 
 c = Cleaner(allow_tags=TIM_SAFE_TAGS, remove_unknown_tags=False, safe_attrs=TIM_SAFE_ATTRS)
 
@@ -88,7 +95,7 @@ def sanitize_html(html_string):
 
 
 def strip_div(s: str):
-    if s.startswith('<div>'):
+    if s.startswith('<div>') and s.endswith('</div>'):
         return s[5:-6]
     else:
         return s

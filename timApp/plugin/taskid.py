@@ -1,3 +1,4 @@
+import re
 from typing import Optional
 
 import attr
@@ -5,35 +6,39 @@ import attr
 from timApp.plugin.pluginexception import PluginException
 
 
+KNOWN_FIELD_NAMES = {'points'}
+
+
 @attr.s(auto_attribs=True)
 class TaskId:
     doc_id: Optional[int]
     task_name: str
     block_id_hint: Optional[str]
+    field: Optional[str] = None
 
     @staticmethod
     def parse(s: str, require_doc_id=True) -> 'TaskId':
-        pieces = s.split('.')
-        required_pieces = 2 if require_doc_id else 1
-        num_pieces = len(pieces)
-        if not required_pieces <= num_pieces <= 3:
-            raise PluginException(f'The format of task_id is invalid. Expected {required_pieces - 1}-2 dot characters.')
-        if num_pieces == 1:
-            return TaskId(
-                doc_id=None,
-                task_name=pieces[0],
-                block_id_hint=None,
-            )
-        try:
-            doc_id = int(pieces[0])
-        except ValueError:
-            raise PluginException(f'The format of task_id is invalid. Expected integral doc id but got {pieces[0]}.')
-        task_id_name = pieces[1] if pieces[1] else None
-        par_id = pieces[2] if num_pieces == 3 else None
+        m = re.fullmatch(r'((\d+)\.)?([a-zA-Z0-9_-]+)(\.([a-zA-Z0-9_-]+))?', s)
+        if not m:
+            raise PluginException('The format of task id is invalid.')
+        doc_id = m.group(2)
+        if require_doc_id and not doc_id:
+            raise PluginException('The format of task id is invalid. Missing doc id.')
+        task_id_name = m.group(3)
+        if task_id_name.isdigit():
+            raise PluginException('Task name cannot be only a number.')
+        block_hint_or_field_access = m.group(5)
+        par_id = None
+        field = None
+        if block_hint_or_field_access in KNOWN_FIELD_NAMES:
+            field = block_hint_or_field_access
+        else:
+            par_id = block_hint_or_field_access
         return TaskId(
-            doc_id=doc_id,
+            doc_id=int(doc_id) if doc_id else None,
             task_name=task_id_name,
             block_id_hint=par_id,
+            field=field,
         )
 
     @property

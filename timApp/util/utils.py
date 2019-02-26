@@ -70,8 +70,9 @@ def get_error_html(message: Union[str, Exception], response: Optional[str]=None)
     :return: The sanitized error message HTML.
     """
 
-    return sanitize_html('<div class="error">{}{}</div>'.format(str(message),
-                                                                f'<pre>---Full response string start---\n{response}\n---Full response string end---</pre>' if response is not None else ''))
+    return sanitize_html(
+        '<span class="error">{}{}</span>'.format(str(message),
+                                                 f'<pre>---Full response string start---\n{response}\n---Full response string end---</pre>' if response is not None else ''))
 
 
 def get_error_tex(title, message: Union[str, Exception], response: Optional[str]=None):

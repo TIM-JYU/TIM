@@ -463,7 +463,7 @@ class PluginTest(TimRouteTest):
         d = self.create_doc(from_file=f'{EXAMPLE_DOCS_PATH}/mmcq_example.md').document
         timdb = self.get_db()
         grant_view_access(self.get_test_user_2_group_id(), d.doc_id)
-        task_ids = [f'{d.doc_id}.{a}-{b}' for a, b in product(('t1', 't2', 't3'), ('a', 'b', 'c'))]
+        task_ids = [TaskId.parse(f'{d.doc_id}.{a}-{b}') for a, b in product(('t1', 't2', 't3'), ('a', 'b', 'c'))]
         answers = [
             [True, False, True],    # U1: 3 p + 3 v =  6, U2: 0 p + 3 v = 3
             [True, True, False],    # U1: 1 p + 1 v =  2, U2: 2 p + 1 v = 3
@@ -486,12 +486,12 @@ class PluginTest(TimRouteTest):
         for t, a in zip(task_ids, answers):
             new = new.clone()
             new.set_id(random_id())
-            new.set_attr('taskId', t.split('.')[1])
+            new.set_attr('taskId', t.task_name)
             new.save(add=True)
-            answer_ids.append(self.post_answer('mmcq', t, a)['savedNew'])
+            answer_ids.append(self.post_answer('mmcq', t.doc_task, a)['savedNew'])
         self.login_test2()
         for t, a in zip(task_ids, answers):
-            answer_ids2.append(self.post_answer('mmcq', t, [not b for b in a])['savedNew'])
+            answer_ids2.append(self.post_answer('mmcq', t.doc_task, [not b for b in a])['savedNew'])
         _, velp_ver_id = timdb.velps.create_new_velp(TEST_USER_1_ID, 'Test velp')
         # add a 1-point annotation to every answer except the last three
         for ans in answer_ids[:-3] + answer_ids2[:-3]:
@@ -1111,8 +1111,8 @@ Hi {#t3} $x$
         self.assert_same_html(e, f"""
 <div class="par" id="Lm7y6R7n5XIb" t="LTB4NDMxYzFjN2M=" attrs='{{"defaultplugin": "pali"}}'>
 <div class="parContent">
-                <em>Hello</em> <div id="{d.id}.t1.Lm7y6R7n5XIb" data-plugin="/pali" class="pluginpali inlineplugin"><pali-runner json="{self.make_base64(expected_json)}"></pali-runner></div>, <div class="error">Plugin nonexistent error: Plugin does not exist.</div> and <div id="{d.id}.t2.Lm7y6R7n5XIb" data-plugin="/pali" class="pluginpali inlineplugin"><pali-runner json="{self.make_base64(expected_json2)}"></pali-runner></div>
-            <p><span class="math inline">\(x\)</span></p>
+                <em>Hello</em> <span id="{d.id}.t1.Lm7y6R7n5XIb" data-plugin="/pali" class="pluginpali inlineplugin"><pali-runner json="{self.make_base64(expected_json)}"></pali-runner></span>, <span class="error">Plugin nonexistent error: Plugin does not exist.</span> and <span id="{d.id}.t2.Lm7y6R7n5XIb" data-plugin="/pali" class="pluginpali inlineplugin"><pali-runner json="{self.make_base64(expected_json2)}"></pali-runner></span>
+            <span class="math inline">\(x\)</span>
             </div>
 <div class="editline" title="Click to edit this paragraph"></div>
 <div class="readline" title="Click to mark this paragraph as read"></div>
@@ -1147,10 +1147,10 @@ Hi {#t3} $x$
         self.assert_same_html(e, f"""
 <div class="par" id="Lm7y6R7n5XIb" t="LTB4NDMxYzFjN2M=" attrs='{{"defaultplugin": "pali"}}'>
 <div class="parContent">
-                <em>Hello</em> <div id="{d.id}.t1.Lm7y6R7n5XIb" data-plugin="/pali" class="pluginpali inlineplugin"><pali-runner json="{self.make_base64(
-    expected_json)}"></pali-runner></div>, <div class="error">Plugin nonexistent error: Plugin does not exist.</div> and <div id="{d.id}.t2.Lm7y6R7n5XIb" data-answer-id="{aid}" data-plugin="/pali" class="pluginpali inlineplugin"><pali-runner json="{self.make_base64(
-    expected_json2)}"></pali-runner></div>
-<p><span class="math inline">\(x\)</span></p>
+                <em>Hello</em> <span id="{d.id}.t1.Lm7y6R7n5XIb" data-plugin="/pali" class="pluginpali inlineplugin"><pali-runner json="{self.make_base64(
+    expected_json)}"></pali-runner></span>, <span class="error">Plugin nonexistent error: Plugin does not exist.</span> and <span id="{d.id}.t2.Lm7y6R7n5XIb" data-answer-id="{aid}" data-plugin="/pali" class="pluginpali inlineplugin"><pali-runner json="{self.make_base64(
+    expected_json2)}"></pali-runner></span>
+<span class="math inline">\(x\)</span>
             </div>
 <div class="editline" title="Click to edit this paragraph"></div>
 <div class="readline" title="Click to mark this paragraph as read"></div>
@@ -1165,11 +1165,11 @@ Hi {#t3} $x$
 <div class="par" id="spOMcE20X2aX" t="LTB4NTRjM2E3ZmE=" attrs='{{"defaultplugin": "pali", "math_type": "svg"}}'>
 <div class="parContent">
                 Hi
-<div id="{d.id}.t3.spOMcE20X2aX" class="pluginpali inlineplugin" data-plugin="/pali">
+<span id="{d.id}.t3.spOMcE20X2aX" class="pluginpali inlineplugin" data-plugin="/pali">
 <pali-runner json="{self.make_base64(expected_json)}"></pali-runner>
-</div>
-<p><span class="mathp inline"><img style="width:0.80327em; vertical-align:-0.06000em" src="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0nMS4wJyBlbmNvZGluZz0nVVRGLTgnPz4KPCEtLSBUaGlzIGZpbGUgd2FzIGdlbmVyYXRlZCBieSBkdmlzdmdtIDIuNCAtLT4KPHN2ZyBoZWlnaHQ9JzUuMjg5NDZwdCcgdmVyc2lvbj0nMS4xJyB2aWV3Qm94PSctMC41MDAwMDIgLTQuNzg5NDU4IDYuNjkzOTIyIDUuMjg5NDYnIHdpZHRoPSc2LjY5MzkyMnB0JyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHhtbG5zOnhsaW5rPSdodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rJz4KPGRlZnM+PHN0eWxlIHR5cGU9InRleHQvY3NzIj48IVtDREFUQVtwYXRoIHtzdHJva2U6IGN1cnJlbnRDb2xvcjtzdHJva2Utd2lkdGg6IDAuMDVwdDt9XV0+PC9zdHlsZT48cGF0aCBkPSdNMy4zMjc1MjIgLTMuMDA4NzE3QzMuMzg3Mjk4IC0zLjI2Nzc0NiAzLjYxNjQzOCAtNC4xODQzMDkgNC4zMTM4MjMgLTQuMTg0MzA5QzQuMzYzNjM2IC00LjE4NDMwOSA0LjYwMjc0IC00LjE4NDMwOSA0LjgxMTk1NSAtNC4wNTQ3OTVDNC41MzMwMDEgLTQuMDA0OTgxIDQuMzMzNzQ4IC0zLjc1NTkxNSA0LjMzMzc0OCAtMy41MTY4MTJDNC4zMzM3NDggLTMuMzU3NDEgNC40NDMzMzcgLTMuMTY4MTIgNC43MTIzMjkgLTMuMTY4MTJDNC45MzE1MDcgLTMuMTY4MTIgNS4yNTAzMTEgLTMuMzQ3NDQ3IDUuMjUwMzExIC0zLjc0NTk1M0M1LjI1MDMxMSAtNC4yNjQwMSA0LjY2MjUxNiAtNC40MDM0ODcgNC4zMjM3ODYgLTQuNDAzNDg3QzMuNzQ1OTUzIC00LjQwMzQ4NyAzLjM5NzI2IC0zLjg3NTQ2NyAzLjI3NzcwOSAtMy42NDYzMjZDMy4wMjg2NDMgLTQuMzAzODYxIDIuNDkwNjYgLTQuNDAzNDg3IDIuMjAxNzQzIC00LjQwMzQ4N0MxLjE2NTYyOSAtNC40MDM0ODcgMC41OTc3NTggLTMuMTE4MzA2IDAuNTk3NzU4IC0yLjg2OTI0QzAuNTk3NzU4IC0yLjc2OTYxNCAwLjY5NzM4NSAtMi43Njk2MTQgMC43MTczMSAtMi43Njk2MTRDMC43OTcwMTEgLTIuNzY5NjE0IDAuODI2ODk5IC0yLjc4OTUzOSAwLjg0NjgyNCAtMi44NzkyMDNDMS4xODU1NTQgLTMuOTM1MjQzIDEuODQzMDg4IC00LjE4NDMwOSAyLjE4MTgxOCAtNC4xODQzMDlDMi4zNzExMDggLTQuMTg0MzA5IDIuNzE5ODAxIC00LjA5NDY0NSAyLjcxOTgwMSAtMy41MTY4MTJDMi43MTk4MDEgLTMuMjA3OTcgMi41NTA0MzYgLTIuNTQwNDczIDIuMTgxODE4IC0xLjE0NTcwNEMyLjAyMjQxNiAtMC41MjgwMiAxLjY3MzcyNCAtMC4xMDk1ODkgMS4yMzUzNjcgLTAuMTA5NTg5QzEuMTc1NTkyIC0wLjEwOTU4OSAwLjk0NjQ1MSAtMC4xMDk1ODkgMC43MzcyMzUgLTAuMjM5MTAzQzAuOTg2MzAxIC0wLjI4ODkxNyAxLjIwNTQ3OSAtMC40OTgxMzIgMS4yMDU0NzkgLTAuNzc3MDg2QzEuMjA1NDc5IC0xLjA0NjA3NyAwLjk4NjMwMSAtMS4xMjU3NzggMC44MzY4NjIgLTEuMTI1Nzc4QzAuNTM3OTgzIC0xLjEyNTc3OCAwLjI4ODkxNyAtMC44NjY3NSAwLjI4ODkxNyAtMC41NDc5NDVDMC4yODg5MTcgLTAuMDg5NjY0IDAuNzg3MDQ5IDAuMTA5NTg5IDEuMjI1NDA1IDAuMTA5NTg5QzEuODgyOTM5IDAuMTA5NTg5IDIuMjQxNTk0IC0wLjU4Nzc5NiAyLjI3MTQ4MiAtMC42NDc1NzJDMi4zOTEwMzQgLTAuMjc4OTU0IDIuNzQ5Njg5IDAuMTA5NTg5IDMuMzQ3NDQ3IDAuMTA5NTg5QzQuMzczNTk5IDAuMTA5NTg5IDQuOTQxNDY5IC0xLjE3NTU5MiA0Ljk0MTQ2OSAtMS40MjQ2NThDNC45NDE0NjkgLTEuNTI0Mjg0IDQuODUxODA2IC0xLjUyNDI4NCA0LjgyMTkxOCAtMS41MjQyODRDNC43MzIyNTQgLTEuNTI0Mjg0IDQuNzEyMzI5IC0xLjQ4NDQzMyA0LjY5MjQwMyAtMS40MTQ2OTVDNC4zNjM2MzYgLTAuMzQ4NjkyIDMuNjg2MTc3IC0wLjEwOTU4OSAzLjM2NzM3MiAtMC4xMDk1ODlDMi45Nzg4MjkgLTAuMTA5NTg5IDIuODE5NDI3IC0wLjQyODM5NCAyLjgxOTQyNyAtMC43NjcxMjNDMi44MTk0MjcgLTAuOTg2MzAxIDIuODc5MjAzIC0xLjIwNTQ3OSAyLjk4ODc5MiAtMS42NDM4MzZMMy4zMjc1MjIgLTMuMDA4NzE3WicgaWQ9J2cwLTEyMCcvPgo8L2RlZnM+CjxnIGlkPSdwYWdlMSc+Cjx1c2UgeD0nMCcgeGxpbms6aHJlZj0nI2cwLTEyMCcgeT0nMCcvPgo8L2c+Cjwvc3ZnPg==" title="x"></span></p>
-            </div>
+</span>
+<span class="mathp inline"><img style="width:0.80327em; vertical-align:-0.06000em" src="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0nMS4wJyBlbmNvZGluZz0nVVRGLTgnPz4KPCEtLSBUaGlzIGZpbGUgd2FzIGdlbmVyYXRlZCBieSBkdmlzdmdtIDIuNCAtLT4KPHN2ZyBoZWlnaHQ9JzUuMjg5NDZwdCcgdmVyc2lvbj0nMS4xJyB2aWV3Qm94PSctMC41MDAwMDIgLTQuNzg5NDU4IDYuNjkzOTIyIDUuMjg5NDYnIHdpZHRoPSc2LjY5MzkyMnB0JyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHhtbG5zOnhsaW5rPSdodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rJz4KPGRlZnM+PHN0eWxlIHR5cGU9InRleHQvY3NzIj48IVtDREFUQVtwYXRoIHtzdHJva2U6IGN1cnJlbnRDb2xvcjtzdHJva2Utd2lkdGg6IDAuMDVwdDt9XV0+PC9zdHlsZT48cGF0aCBkPSdNMy4zMjc1MjIgLTMuMDA4NzE3QzMuMzg3Mjk4IC0zLjI2Nzc0NiAzLjYxNjQzOCAtNC4xODQzMDkgNC4zMTM4MjMgLTQuMTg0MzA5QzQuMzYzNjM2IC00LjE4NDMwOSA0LjYwMjc0IC00LjE4NDMwOSA0LjgxMTk1NSAtNC4wNTQ3OTVDNC41MzMwMDEgLTQuMDA0OTgxIDQuMzMzNzQ4IC0zLjc1NTkxNSA0LjMzMzc0OCAtMy41MTY4MTJDNC4zMzM3NDggLTMuMzU3NDEgNC40NDMzMzcgLTMuMTY4MTIgNC43MTIzMjkgLTMuMTY4MTJDNC45MzE1MDcgLTMuMTY4MTIgNS4yNTAzMTEgLTMuMzQ3NDQ3IDUuMjUwMzExIC0zLjc0NTk1M0M1LjI1MDMxMSAtNC4yNjQwMSA0LjY2MjUxNiAtNC40MDM0ODcgNC4zMjM3ODYgLTQuNDAzNDg3QzMuNzQ1OTUzIC00LjQwMzQ4NyAzLjM5NzI2IC0zLjg3NTQ2NyAzLjI3NzcwOSAtMy42NDYzMjZDMy4wMjg2NDMgLTQuMzAzODYxIDIuNDkwNjYgLTQuNDAzNDg3IDIuMjAxNzQzIC00LjQwMzQ4N0MxLjE2NTYyOSAtNC40MDM0ODcgMC41OTc3NTggLTMuMTE4MzA2IDAuNTk3NzU4IC0yLjg2OTI0QzAuNTk3NzU4IC0yLjc2OTYxNCAwLjY5NzM4NSAtMi43Njk2MTQgMC43MTczMSAtMi43Njk2MTRDMC43OTcwMTEgLTIuNzY5NjE0IDAuODI2ODk5IC0yLjc4OTUzOSAwLjg0NjgyNCAtMi44NzkyMDNDMS4xODU1NTQgLTMuOTM1MjQzIDEuODQzMDg4IC00LjE4NDMwOSAyLjE4MTgxOCAtNC4xODQzMDlDMi4zNzExMDggLTQuMTg0MzA5IDIuNzE5ODAxIC00LjA5NDY0NSAyLjcxOTgwMSAtMy41MTY4MTJDMi43MTk4MDEgLTMuMjA3OTcgMi41NTA0MzYgLTIuNTQwNDczIDIuMTgxODE4IC0xLjE0NTcwNEMyLjAyMjQxNiAtMC41MjgwMiAxLjY3MzcyNCAtMC4xMDk1ODkgMS4yMzUzNjcgLTAuMTA5NTg5QzEuMTc1NTkyIC0wLjEwOTU4OSAwLjk0NjQ1MSAtMC4xMDk1ODkgMC43MzcyMzUgLTAuMjM5MTAzQzAuOTg2MzAxIC0wLjI4ODkxNyAxLjIwNTQ3OSAtMC40OTgxMzIgMS4yMDU0NzkgLTAuNzc3MDg2QzEuMjA1NDc5IC0xLjA0NjA3NyAwLjk4NjMwMSAtMS4xMjU3NzggMC44MzY4NjIgLTEuMTI1Nzc4QzAuNTM3OTgzIC0xLjEyNTc3OCAwLjI4ODkxNyAtMC44NjY3NSAwLjI4ODkxNyAtMC41NDc5NDVDMC4yODg5MTcgLTAuMDg5NjY0IDAuNzg3MDQ5IDAuMTA5NTg5IDEuMjI1NDA1IDAuMTA5NTg5QzEuODgyOTM5IDAuMTA5NTg5IDIuMjQxNTk0IC0wLjU4Nzc5NiAyLjI3MTQ4MiAtMC42NDc1NzJDMi4zOTEwMzQgLTAuMjc4OTU0IDIuNzQ5Njg5IDAuMTA5NTg5IDMuMzQ3NDQ3IDAuMTA5NTg5QzQuMzczNTk5IDAuMTA5NTg5IDQuOTQxNDY5IC0xLjE3NTU5MiA0Ljk0MTQ2OSAtMS40MjQ2NThDNC45NDE0NjkgLTEuNTI0Mjg0IDQuODUxODA2IC0xLjUyNDI4NCA0LjgyMTkxOCAtMS41MjQyODRDNC43MzIyNTQgLTEuNTI0Mjg0IDQuNzEyMzI5IC0xLjQ4NDQzMyA0LjY5MjQwMyAtMS40MTQ2OTVDNC4zNjM2MzYgLTAuMzQ4NjkyIDMuNjg2MTc3IC0wLjEwOTU4OSAzLjM2NzM3MiAtMC4xMDk1ODlDMi45Nzg4MjkgLTAuMTA5NTg5IDIuODE5NDI3IC0wLjQyODM5NCAyLjgxOTQyNyAtMC43NjcxMjNDMi44MTk0MjcgLTAuOTg2MzAxIDIuODc5MjAzIC0xLjIwNTQ3OSAyLjk4ODc5MiAtMS42NDM4MzZMMy4zMjc1MjIgLTMuMDA4NzE3WicgaWQ9J2cwLTEyMCcvPgo8L2RlZnM+CjxnIGlkPSdwYWdlMSc+Cjx1c2UgeD0nMCcgeGxpbms6aHJlZj0nI2cwLTEyMCcgeT0nMCcvPgo8L2c+Cjwvc3ZnPg==" title="x"></span></div>
+            
 <div class="editline" title="Click to edit this paragraph"></div>
 <div class="readline" title="Click to mark this paragraph as read"></div>
 </div>
@@ -1185,10 +1185,9 @@ Hi {#t3} $x$
         self.assert_same_html(r.cssselect('.par')[2], f"""
 <div class="par" id="Se0s8FDLbhOp" t="LTB4MzJmOWU4MGI=" attrs='{{"defaultplugin": "pali"}}'>
 <div class="parContent">
-<div id="{d.id}.t4.Se0s8FDLbhOp" class="pluginpali inlineplugin" data-plugin="/pali">
+<span id="{d.id}.t4.Se0s8FDLbhOp" class="pluginpali inlineplugin" data-plugin="/pali">
 <pali-runner json="{self.make_base64(expected_json)}"></pali-runner>
-</div>
-            </div>
+</span></div>
 <div class="editline" title="Click to edit this paragraph"></div>
 <div class="readline" title="Click to mark this paragraph as read"></div>
 </div>
@@ -1243,7 +1242,7 @@ Hi {#t3} $x$
         # Make sure Dumbo won't escape plugin's error HTML.
         self.assert_same_html(r.cssselect('.parContent')[0], f"""
 <div class="parContent">
-    <div id="{d.id}.t5.a3Xuyg1PF1l1" class="pluginpali inlineplugin" data-plugin="/pali">
+    <span id="{d.id}.t5.a3Xuyg1PF1l1" class="pluginpali inlineplugin" data-plugin="/pali">
         <div class="pluginError">
             The following fields have invalid values:
             <ul>
@@ -1252,7 +1251,7 @@ Hi {#t3} $x$
                 </li>
             </ul>
         </div>
-    </div>
+    </span>
 </div>
         """)
 
@@ -1319,3 +1318,50 @@ Hi {#t3} $x$
              'Plugin pali error: Task id refers to a non-existent document.'
              ],
         )
+
+    def test_taskid_reference_teacher(self):
+        self.login_test1()
+        d = self.create_doc(initial_par="""
+#- {plugin=pali #t}
+        """)
+        d_id = d.id
+        grant_view_access(self.get_test_user_2_group_id(), d.id)
+        self.login_test2()
+        d2 = self.create_doc(initial_par=f"""
+#- {{plugin=pali #{d_id}.t}}
+        """)
+        r = self.get(d2.get_url_for_view('teacher'), as_tree=True)
+        alert: HtmlElement = r.cssselect('.alert-info')[0]
+        self.assertEqual(f'You do not have full access to the following tasks: {d_id}.t', alert.text_content().strip())
+
+    def test_inline_plugin_error_html_no_p(self):
+        self.login_test1()
+        d = self.create_doc(initial_par="""
+#- {defaultplugin="pali" id=a3Xuyg1PF1l1}
+a {#x initword: } b
+        """)
+        r = self.get(d.url, as_tree=True)
+        self.assert_same_html(r.cssselect('.parContent')[0], f"""
+<div class="parContent">
+    a
+    <span id="{d.id}.x.a3Xuyg1PF1l1" class="pluginpali inlineplugin" data-plugin="/pali">
+        <div class="pluginError">
+            The following fields have invalid values:
+            <ul>
+                <li>
+                    initword: Field may not be null.
+                </li>
+            </ul>
+        </div>
+    </span>
+    b
+</div>""")
+
+    def test_inline_plugin_sanitize(self):
+        self.login_test1()
+        d = self.create_doc(initial_par="""
+#- {defaultplugin=pali}
+<script>alert('hello')</script>
+        """)
+        r = self.get(d.url, as_tree=True)
+        self.assertFalse(r.cssselect('.parContent script'))

@@ -338,16 +338,16 @@ def get_answers(task_id, user_id):
 def get_document_answers(doc_path):
     d = DocEntry.find_by_path(doc_path, fallback_to_id=True)
     pars = d.document.get_dereferenced_paragraphs()
-    task_ids, _ = find_task_ids(pars)
+    task_ids, _, _ = find_task_ids(pars)
     return get_all_answers_list_plain(task_ids)
 
 
 @answers.route("/allAnswersPlain/<task_id>")
 def get_all_answers_plain(task_id):
-    return get_all_answers_list_plain([task_id])
+    return get_all_answers_list_plain([TaskId.parse(task_id)])
 
 
-def get_all_answers_list_plain(task_ids: List[str]):
+def get_all_answers_list_plain(task_ids: List[TaskId]):
     all_answers = get_all_answers_as_list(task_ids)
     jointext = "\n"
     print_opt = get_option(request, 'print', 'all')
@@ -358,14 +358,13 @@ def get_all_answers_list_plain(task_ids: List[str]):
     return Response(text, mimetype='text/plain')
 
 
-def get_all_answers_as_list(task_ids: List[str]):
+def get_all_answers_as_list(task_ids: List[TaskId]):
     verify_logged_in()
     if not task_ids:
         return []
     timdb = get_timdb()
     doc_ids = set()
-    for t in task_ids:
-        tid = TaskId.parse(t)
+    for tid in task_ids:
         doc_ids.add(tid.doc_id)
         d = get_doc_or_abort(tid.doc_id)
         # Require full teacher rights for getting all answers
@@ -383,7 +382,7 @@ def get_all_answers_as_list(task_ids: List[str]):
     period_from = datetime.min.replace(tzinfo=timezone.utc)
 
     # TODO: The key will be wrong when getting answers to a document that has only one task
-    since_last_key = task_ids[0]
+    since_last_key = task_ids[0].doc_task
     if len(task_ids) > 1:
         since_last_key = str(next(d for d in doc_ids))
         if len(doc_ids) > 1:
@@ -462,6 +461,7 @@ def get_state():
     user = User.query.get(user_id)
     if user is None:
         abort(400, 'Non-existent user')
+    doc.insert_preamble_pars()
     doc, plug = get_plugin_from_request(doc, task_id=tid, u=user)
     block = plug.par
 
