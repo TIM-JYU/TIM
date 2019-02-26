@@ -3,7 +3,7 @@
  */
 import angular, {INgModelOptions} from "angular";
 import * as t from "io-ts";
-import {ViewCtrl} from "tim/document/viewctrl";
+import {ITimComponent, ViewCtrl} from "tim/document/viewctrl";
 import {GenericPluginMarkup, nullable, PluginBase, withDefault} from "tim/plugin/util";
 import {$http} from "tim/util/ngimport";
 import {to} from "tim/util/utils";
@@ -45,7 +45,7 @@ function isomapluginndrome(s: string) {
     return true;
 }
 
-export class OmapluginController extends PluginBase<t.TypeOf<typeof omapluginMarkup>, t.TypeOf<typeof omapluginAll>, typeof omapluginAll> {
+export class OmapluginController extends PluginBase<t.TypeOf<typeof omapluginMarkup>, t.TypeOf<typeof omapluginAll>, typeof omapluginAll> implements ITimComponent{
     private result?: string;
     private error?: string;
     private isRunning = false;
@@ -68,7 +68,8 @@ export class OmapluginController extends PluginBase<t.TypeOf<typeof omapluginMar
         this.modelOpts = {debounce: this.autoupdate};
         this.checkomapluginndrome();
         if (this.attrs.followid) {
-            this.vctrl.addOmaplugin(this, this.attrs.followid);
+            //this.vctrl.addOmaplugin(this, this.attrs.followid);
+            this.vctrl.addTimComponent(this, this.attrs.followid || this.pluginMeta.getTaskId() || "");
         }
     }
 
@@ -148,8 +149,10 @@ export class OmapluginController extends PluginBase<t.TypeOf<typeof omapluginMar
             const data = r.result.data;
             this.error = data.web.error;
             this.result = data.web.result;
-            if (!this.attrs.followid) {
-                this.error = this.vctrl.getOmapluginControllerFromName("FOLLOWID").userword1;//jotain toiselta pluginilta?
+            const timComponent = this.vctrl.getTimComponent("FOLLOWID");
+            if (!this.attrs.followid && timComponent) {
+                //this.error = this.vctrl.getOmapluginControllerFromName("FOLLOWID").userword1;//jotain toiselta pluginilta?
+                this.error = timComponent.getContent();
             }
         } else {
             this.error = "Infinite loop or some other error?";
@@ -158,6 +161,14 @@ export class OmapluginController extends PluginBase<t.TypeOf<typeof omapluginMar
 
     protected getAttributeType() {
         return omapluginAll;
+    }
+
+    getContent(): string {
+        return this.userword;
+    }
+
+    save(): string {
+        return "";
     }
 }
 

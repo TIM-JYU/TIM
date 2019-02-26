@@ -20,7 +20,6 @@ import {IPluginInfoResponse, ParCompiler} from "../editor/parCompiler";
 import {IDocument, ITag, TagType} from "../item/IItem";
 import {LectureController} from "../lecture/lectureController";
 import {TimTableController} from "../plugin/timTable";
-import {OmapluginController} from "../../../../modules/omaplugin/js/omaplugin";
 import {initCssPrint} from "../printing/cssPrint";
 import {showMessageDialog} from "../ui/dialog";
 import {IUser} from "../user/IUser";
@@ -35,6 +34,11 @@ import {RefPopupHandler} from "./refpopup";
 import {MenuFunctionEntry} from "./viewutils";
 
 markAsUsed(ngs, popupMenu, interceptor);
+
+export interface ITimComponent {
+    getContent: () => string;
+    save: () => string | undefined;
+}
 
 export interface IInsertDiffResult {
     type: "insert";
@@ -92,7 +96,8 @@ export class ViewCtrl implements IController {
     private velpMode: boolean;
 
     private timTables: {[parId: string]: TimTableController} = {};
-    private omapluginit: {[name: string]: OmapluginController} = {};
+    // private omapluginit: {[name: string]: OmapluginController} = {};
+    private timComponents: {[name: string]: ITimComponent | undefined} = {};
 
     private pendingUpdates: PendingCollection;
     private document: Document;
@@ -429,14 +434,18 @@ export class ViewCtrl implements IController {
         return this.timTables[parId];
     }
     /**
-     * Registers a table controller to the view controller.
-     * All table controllers need to register for toggling edit mode of
-     * the table to work.
-     * @param {TimTableController} controller The table controller.
-     * @param {string} parId The ID of the table paragraph.
+     *TODO
      */
-    public addOmaplugin(controller: OmapluginController, name: string) {
-        this.omapluginit[name] = controller;
+    // public addOmaplugin(controller: OmapluginController, name: string) {
+    //     this.omapluginit[name] = controller;
+    // }
+
+    public addTimComponent(component: ITimComponent, name: string) {
+        this.timComponents[name] = component;
+    }
+
+    public getTimComponent(name: string) {
+        return this.timComponents[name];
     }
 
     /**
@@ -444,9 +453,9 @@ export class ViewCtrl implements IController {
      * @param {string} parId The paragraph's ID.
      * @returns {TimTableController} The table controller related to the given table paragraph, or undefined.
      */
-    public getOmapluginControllerFromName(name: string) {
-        return this.omapluginit[name];
-    }
+    // public getOmapluginControllerFromName(name: string) {
+    //     return this.omapluginit[name];
+    // }
 
     isEmptyDocument() {
         return this.docVersion[0] === 0 && this.docVersion[1] === 0; // TODO can be empty otherwise too
