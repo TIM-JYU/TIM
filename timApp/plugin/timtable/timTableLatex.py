@@ -1312,7 +1312,7 @@ def decide_colspan_rowspan(cell_colspan, cell_rowspan, datablock_colspan, databl
         colspan = datablock_colspan
     if not colspan:
         colspan = default_colspan
-    if datablock_colspan:
+    if datablock_rowspan:
         rowspan = datablock_rowspan
     if not rowspan:
         rowspan = default_rowspan
