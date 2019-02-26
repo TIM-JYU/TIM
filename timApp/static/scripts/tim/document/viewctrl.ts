@@ -20,8 +20,7 @@ import {IPluginInfoResponse, ParCompiler} from "../editor/parCompiler";
 import {IDocument, ITag, TagType} from "../item/IItem";
 import {LectureController} from "../lecture/lectureController";
 import {TimTableController} from "../plugin/timTable";
-//import {omapluginController} from "../plugin/timTable";
-import {omapluginController} from "../../../../modules/omaplugin/js/omaplugin";
+import {OmapluginController} from "../../../../modules/omaplugin/js/omaplugin";
 import {initCssPrint} from "../printing/cssPrint";
 import {showMessageDialog} from "../ui/dialog";
 import {IUser} from "../user/IUser";
@@ -93,7 +92,7 @@ export class ViewCtrl implements IController {
     private velpMode: boolean;
 
     private timTables: {[parId: string]: TimTableController} = {};
-    private omapluginit: {[name: string]: omapluginController} = {};
+    private omapluginit: {[name: string]: OmapluginController} = {};
 
     private pendingUpdates: PendingCollection;
     private document: Document;
@@ -436,7 +435,7 @@ export class ViewCtrl implements IController {
      * @param {TimTableController} controller The table controller.
      * @param {string} parId The ID of the table paragraph.
      */
-    public addOmaplugin(controller: omapluginController, name: string) {
+    public addOmaplugin(controller: OmapluginController, name: string) {
         this.omapluginit[name] = controller;
     }
 

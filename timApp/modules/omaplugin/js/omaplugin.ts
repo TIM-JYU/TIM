@@ -45,7 +45,7 @@ function isomapluginndrome(s: string) {
     return true;
 }
 
-export class omapluginController extends PluginBase<t.TypeOf<typeof omapluginMarkup>, t.TypeOf<typeof omapluginAll>, typeof omapluginAll> {
+export class OmapluginController extends PluginBase<t.TypeOf<typeof omapluginMarkup>, t.TypeOf<typeof omapluginAll>, typeof omapluginAll> {
     private result?: string;
     private error?: string;
     private isRunning = false;
@@ -165,7 +165,7 @@ omapluginApp.component("omapluginRunner", {
     bindings: {
         json: "@",
     },
-    controller: omapluginController,
+    controller: OmapluginController,
     require: {
         vctrl: "^timView",
     },

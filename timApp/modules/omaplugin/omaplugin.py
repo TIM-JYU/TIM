@@ -16,7 +16,7 @@ from pluginserver_flask import GenericMarkupModel, GenericMarkupSchema, GenericH
 
 
 @attr.s(auto_attribs=True)
-class omapluginStateModel:
+class OmapluginStateModel:
     """Model for the information that is stored in TIM database for each answer."""
     userword: str
 
@@ -26,14 +26,14 @@ class omapluginStateSchema(Schema):
 
     @post_load
     def make_obj(self, data):
-        return omapluginStateModel(**data)
+        return OmapluginStateModel(**data)
 
     class Meta:
         strict = True
 
 
 @attr.s(auto_attribs=True)
-class omapluginMarkupModel(GenericMarkupModel):
+class OmapluginMarkupModel(GenericMarkupModel):
     points_array: Union[str, Missing] = missing
     inputstem: Union[str, Missing] = missing
     inputstem2: Union[str, Missing] = missing
@@ -44,7 +44,7 @@ class omapluginMarkupModel(GenericMarkupModel):
     inputplaceholder: Union[str, Missing] = missing
 
 
-class omapluginMarkupSchema(GenericMarkupSchema):
+class OmapluginMarkupSchema(GenericMarkupSchema):
     points_array = fields.List(fields.List(fields.Number()))
     inputstem = fields.Str()
     inputstem2 = fields.Str()
@@ -61,21 +61,21 @@ class omapluginMarkupSchema(GenericMarkupSchema):
 
     @post_load
     def make_obj(self, data):
-        return omapluginMarkupModel(**data)
+        return OmapluginMarkupModel(**data)
 
     class Meta:
         strict = True
 
 
 @attr.s(auto_attribs=True)
-class omapluginInputModel:
+class OmapluginInputModel:
     """Model for the information that is sent from browser (plugin AngularJS component)."""
     userword: str
     omapluginOK: bool = missing
     nosave: bool = missing
 
 
-class omapluginInputSchema(Schema):
+class OmapluginInputSchema(Schema):
     userword = fields.Str(required=True)
     omapluginOK = fields.Bool(required=True)
     nosave = fields.Bool()
@@ -87,12 +87,12 @@ class omapluginInputSchema(Schema):
 
     @post_load
     def make_obj(self, data):
-        return omapluginInputModel(**data)
+        return OmapluginInputModel(**data)
 
 
-class omapluginAttrs(Schema):
+class OmapluginAttrs(Schema):
     """Common fields for HTML and answer routes."""
-    markup = fields.Nested(omapluginMarkupSchema)
+    markup = fields.Nested(OmapluginMarkupSchema)
     state = fields.Nested(omapluginStateSchema, allow_none=True, required=True)
 
     class Meta:
@@ -100,7 +100,7 @@ class omapluginAttrs(Schema):
 
 
 @attr.s(auto_attribs=True)
-class omapluginHtmlModel(GenericHtmlModel[omapluginInputModel, omapluginMarkupModel, omapluginStateModel]):
+class OmapluginHtmlModel(GenericHtmlModel[OmapluginInputModel, OmapluginMarkupModel, OmapluginStateModel]):
     def get_component_html_name(self) -> str:
         return 'omaplugin-runner'
 
@@ -117,36 +117,36 @@ class omapluginHtmlModel(GenericHtmlModel[omapluginInputModel, omapluginMarkupMo
         strict = True
 
 
-class omapluginHtmlSchema(omapluginAttrs, GenericHtmlSchema):
+class OmapluginHtmlSchema(OmapluginAttrs, GenericHtmlSchema):
     info = fields.Nested(InfoSchema, allow_none=True, required=True)
 
     @post_load
     def make_obj(self, data):
         # noinspection PyArgumentList
-        return omapluginHtmlModel(**data)
+        return OmapluginHtmlModel(**data)
 
     class Meta:
         strict = True
 
 
 @attr.s(auto_attribs=True)
-class omapluginAnswerModel(GenericAnswerModel[omapluginInputModel, omapluginMarkupModel, omapluginStateModel]):
+class OmapluginAnswerModel(GenericAnswerModel[OmapluginInputModel, OmapluginMarkupModel, OmapluginStateModel]):
     pass
 
 
-class omapluginAnswerSchema(omapluginAttrs, GenericAnswerSchema):
-    input = fields.Nested(omapluginInputSchema, required=True)
+class OmapluginAnswerSchema(OmapluginAttrs, GenericAnswerSchema):
+    input = fields.Nested(OmapluginInputSchema, required=True)
 
     @post_load
     def make_obj(self, data):
         # noinspection PyArgumentList
-        return omapluginAnswerModel(**data)
+        return OmapluginAnswerModel(**data)
 
     class Meta:
         strict = True
 
 
-def render_static_omaplugin(m: omapluginHtmlModel):
+def render_static_omaplugin(m: OmapluginHtmlModel):
     return render_template_string(
         """
 <div class="csRunDiv no-popup-menu">
@@ -169,12 +169,12 @@ def render_static_omaplugin(m: omapluginHtmlModel):
     )
 
 
-app = create_app(__name__, omapluginHtmlSchema())
+app = create_app(__name__, OmapluginHtmlSchema())
 
 
 @app.route('/answer/', methods=['put'])
-@use_args(omapluginAnswerSchema(strict=True), locations=("json",))
-def answer(args: omapluginAnswerModel):
+@use_args(OmapluginAnswerSchema(strict=True), locations=("json",))
+def answer(args: OmapluginAnswerModel):
     web = {}
     result = {'web': web}
     needed_len = args.markup.needed_len
