@@ -1376,11 +1376,30 @@ def convert_table(table_json, draw_html_borders: bool = False) -> Table:
     column_h_align_list = get_column_format_list(table_json, f=get_text_horizontal_align)
     column_font_family_list = get_column_format_list(table_json, f=get_font_family)
 
+    table_default_row_data = None
+    table_default_col_data = None
+    table_default_cell_data = None
     try:
         table_default_row_data = table_json['defrows']
-        table_default_row_height = get_size(table_default_row_data, key="height", default=None)
     except KeyError:
-        table_default_row_height = None
+        pass
+    try:
+        table_default_col_data = table_json['defcols']
+    except KeyError:
+        pass
+    try:
+        table_default_col_data = table_json['defcells']
+    except KeyError:
+        pass
+    try:
+        table_default_cell_data = table_json['defcells']
+    except KeyError:
+        pass
+
+    table_default_row_height = get_size(table_default_row_data, key="height", default=None)
+    table_default_col_height = get_size(table_default_col_data, key="width", default=None)
+    table_default_cell_bgcolor = get_color(table_default_cell_data, key="backgroundColor")
+    table_default_cell_textcolor = get_color(table_default_cell_data, key="color")
 
     table_json_rows = table_json['rows']
     for i in range(0, len(table_json_rows)):
@@ -1448,6 +1467,7 @@ def convert_table(table_json, draw_html_borders: bool = False) -> Table:
             # Decide which styles to use (from table, column, row, cell or datablock)
             (bg_color, bg_color_html) = decide_format_tuple([
                 (table_bg_color, table_bg_color_html),
+                table_default_cell_bgcolor,
                 column_bg_color_list[j],
                 (row_bg_color, row_bg_color_html),
                 (cell_bg_color, cell_bg_color_html),
@@ -1455,7 +1475,7 @@ def convert_table(table_json, draw_html_borders: bool = False) -> Table:
             ])
             (text_color, text_color_html) = decide_format_tuple([
                 (table_text_color, table_text_color_html),
-
+                table_default_cell_textcolor,
                 column_text_color_list[j],
                 (row_text_color, row_text_color_html),
                 (cell_text_color, cell_text_color_html),
@@ -1467,6 +1487,7 @@ def convert_table(table_json, draw_html_borders: bool = False) -> Table:
                 cell_height,
                 datablock_cell_height])
             width = decide_format_size([
+                table_default_col_height,
                 column_width_list[j],
                 row_width,
                 cell_width,
