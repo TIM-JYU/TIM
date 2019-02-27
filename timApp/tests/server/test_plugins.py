@@ -61,8 +61,9 @@ class PluginTest(TimRouteTest):
         resp = self.post_answer(plugin_type, task_id_ext, [True, False, False])
         self.check_failed_answer(resp)
         self.post_answer(plugin_type, task_id_ext_wrong, [True, False, False],
-                         expect_status=200,  # TODO
-                         expect_content=PLUGIN_NOT_EXIST_ERROR)
+                         expect_status=400,
+                         json_key='error',
+                         expect_content=f'Task id error: Invalid field access: {par_id}x')
 
         wrongname = 'mmcqexamplez'
         self.post_answer(plugin_type, str(doc.id) + '.' + wrongname, [True, False, False],
@@ -776,19 +777,27 @@ choices:
     reason: ""
     text: ""
 ```
+
+#- {defaultplugin=pali}
+{#1}
 """)
         par = d.document.get_paragraphs()[0]
         self.post_answer('mmcq', f'{d.id}.t1.1.{par.get_id()}', [],
-                         expect_content='The format of task id is invalid. Dot characters are not allowed.',
+                         expect_content='Task id error: Task name can only have characters a-z, 0-9, "_" and "-".',
                          json_key='error', expect_status=400)
 
         # TODO These two need better error messages.
         self.post_answer('mmcq', f't1.1.{par.get_id()}', [],
-                         expect_content='The format of task id is invalid. Dot characters are not allowed.',
+                         expect_content='Task id error: Task name can only have characters a-z, 0-9, "_" and "-".',
                          json_key='error', expect_status=400)
         self.post_answer('mmcq', f'{par.get_id()}', [],
-                         expect_content='The format of task id is invalid. Dot characters are not allowed.',
+                         expect_content='Task id error: The format of task id is invalid. Missing doc id.',
                          json_key='error', expect_status=400)
+        r = self.get(d.url, as_tree=True)
+        self.assert_content(r, [
+            'Plugin mmcq error: Invalid field access: 1',
+            'Plugin pali error: Task name cannot be only a number.'
+        ])
 
     def test_plugin_in_preamble(self):
         self.run_plugin_in_preamble('a/a', create_preamble_translation=True)

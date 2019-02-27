@@ -1,8 +1,9 @@
 import re
-from typing import Optional
+from typing import Optional, Union
 
 import attr
 
+from timApp.document.randutils import is_valid_id
 from timApp.plugin.pluginexception import PluginException
 
 
@@ -10,30 +11,55 @@ KNOWN_FIELD_NAMES = {'points'}
 
 
 @attr.s(auto_attribs=True)
-class TaskId:
+class UnvalidatedTaskId:
+    doc_id: Optional[int]
+    task_name: str = attr.ib()
+    block_id_hint: Optional[str] = None
+    field: Optional[str] = None
+
+    @task_name.validator
+    def _check_name(self, attribute, value):
+        if not isinstance(self, TaskId):
+            return
+        self.do_validate(value)
+
+    def do_validate(self, value):
+        if '.' in value:
+            raise PluginException('Task name cannot contain dots.')
+        if value.isdigit():
+            raise PluginException('Task name cannot be only a number.')
+
+    def validate(self):
+        self.do_validate(self.task_name)
+
+
+@attr.s
+class TaskId(UnvalidatedTaskId):
     doc_id: Optional[int]
     task_name: str
     block_id_hint: Optional[str]
-    field: Optional[str] = None
+    field: Optional[str]
 
     @staticmethod
-    def parse(s: str, require_doc_id=True) -> 'TaskId':
+    def parse(s: str, require_doc_id=True, allow_block_hint=True) -> 'TaskId':
         m = re.fullmatch(r'((\d+)\.)?([a-zA-Z0-9_-]+)(\.([a-zA-Z0-9_-]+))?', s)
         if not m:
-            raise PluginException('The format of task id is invalid.')
+            raise PluginException('Task name can only have characters a-z, 0-9, "_" and "-".')
         doc_id = m.group(2)
         if require_doc_id and not doc_id:
             raise PluginException('The format of task id is invalid. Missing doc id.')
         task_id_name = m.group(3)
-        if task_id_name.isdigit():
-            raise PluginException('Task name cannot be only a number.')
         block_hint_or_field_access = m.group(5)
         par_id = None
         field = None
         if block_hint_or_field_access in KNOWN_FIELD_NAMES:
             field = block_hint_or_field_access
-        else:
+        elif allow_block_hint:
+            if block_hint_or_field_access and not is_valid_id(block_hint_or_field_access):
+                raise PluginException(f'Invalid field access: {block_hint_or_field_access}')
             par_id = block_hint_or_field_access
+        elif block_hint_or_field_access:
+            raise PluginException(f'Invalid field access: {block_hint_or_field_access}')
         return TaskId(
             doc_id=int(doc_id) if doc_id else None,
             task_name=task_id_name,
@@ -58,3 +84,9 @@ class TaskId:
         if self.block_id_hint:
             return self.extended
         return self.doc_task
+
+    def validate(self):
+        pass  # already validated at __init__
+
+
+MaybeUnvalidatedTaskId = Union[UnvalidatedTaskId, TaskId]

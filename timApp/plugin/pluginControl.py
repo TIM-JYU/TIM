@@ -79,12 +79,19 @@ def find_task_ids(
         if plugin:
             plugin_count += 1
             if task_id:
-                tid = TaskId.parse(task_id, require_doc_id=False)
+                try:
+                    tid = TaskId.parse(task_id, require_doc_id=False, allow_block_hint=False)
+                except PluginException:
+                    continue
                 if handle_taskid(tid):
                     continue
                 task_ids.append(tid)
         elif block.get_attr('defaultplugin'):
             for task_id, _, _, _, _ in find_inline_plugins(block, block.doc.get_settings().get_macroinfo()):
+                try:
+                    task_id.validate()
+                except PluginException:
+                    continue
                 plugin_count += 1
                 if handle_taskid(task_id):
                     continue
@@ -203,14 +210,18 @@ class PluginPlacement:
                 errs[p_range] = str(e), plugin_name
             else:
                 taskid = block.get_attr('taskId')
-                tid = TaskId.parse(taskid, require_doc_id=False) if taskid else None
-                if check_task_access(errs, p_range, plugin_name, tid):
-                    plugs[p_range] = Plugin(
-                        tid,
-                        vals,
-                        plugin_name,
-                        par=block,
-                    )
+                try:
+                    tid = TaskId.parse(taskid, require_doc_id=False, allow_block_hint=False) if taskid else None
+                except PluginException as e:
+                    errs[p_range] = str(e), plugin_name
+                else:
+                    if check_task_access(errs, p_range, plugin_name, tid):
+                        plugs[p_range] = Plugin(
+                            tid,
+                            vals,
+                            plugin_name,
+                            par=block,
+                        )
         else:
             md = None
             for task_id, p_yaml, p_range, plugin_type, md in find_inline_plugins(block, macroinfo):
@@ -218,6 +229,7 @@ class PluginPlacement:
                 if not check_task_access(errs, p_range, plugin_type, task_id):
                     continue
                 try:
+                    task_id.validate()
                     y = load_markup_from_yaml(finalize_inline_yaml(p_yaml), settings.global_plugin_attrs(), plugin_type)
                 except PluginException as e:
                     errs[p_range] = str(e), plugin_type

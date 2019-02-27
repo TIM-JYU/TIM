@@ -88,8 +88,8 @@ def post_answer(plugintype: str, task_id_ext: str):
     timdb = get_timdb()
     try:
         tid = TaskId.parse(task_id_ext)
-    except PluginException:
-        return abort(400, 'The format of task id is invalid. Dot characters are not allowed.')
+    except PluginException as e:
+        return abort(400, f'Task id error: {e}')
     task_id = str(tid.doc_id) + '.' + str(tid.task_name)
     d = get_doc_or_abort(tid.doc_id)
     d.document.insert_preamble_pars()
