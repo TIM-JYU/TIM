@@ -166,9 +166,8 @@ class TimTest(TimRouteTest):
         doc = self.create_doc(settings={'macros': {}, 'macro_delimiter': '%%'},
                               initial_par="""```{atom=true}\nTest {!!! }\n```""").document
         tree = self.get(f'/view/{doc.doc_id}', as_tree=True)
-        syntax_errors = tree.findall(r'.//div[@class="par"]/div[@class="parContent"]/div[@class="error"]')
-        self.assertEqual(1, len(syntax_errors))
-        self.assertIn('Syntax error in template:', syntax_errors[0].text)
+        e = tree.cssselect('.parContent > p > span.error')[0]
+        self.assertIn('Syntax error in template:', e.text)
 
     def test_windows_eol(self):
         """Windows-style EOLs should work with Dumbo.
