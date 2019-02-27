@@ -3,7 +3,7 @@ from collections import defaultdict
 from operator import itemgetter, attrgetter
 
 import timApp.plugin.pluginControl
-from timApp.auth.sessioninfo import get_current_user_id
+from timApp.auth.sessioninfo import get_current_user_id, get_current_user_object
 from timApp.document.docentry import DocEntry
 from timApp.document.yamlblock import YamlBlock
 from timApp.timdb.dbaccess import get_timdb

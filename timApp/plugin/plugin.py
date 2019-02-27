@@ -15,7 +15,7 @@ from timApp.document.yamlblock import strip_code_block, YamlBlock, merge
 from timApp.markdown.markdownconverter import expand_macros
 from timApp.plugin.pluginOutputFormat import PluginOutputFormat
 from timApp.plugin.pluginexception import PluginException
-from timApp.plugin.taskid import TaskId
+from timApp.plugin.taskid import TaskId, UnvalidatedTaskId, MaybeUnvalidatedTaskId
 from timApp.printing.printsettings import PrintFormat
 from timApp.timdb.exceptions import TimDbException
 from timApp.user.user import User
@@ -148,7 +148,7 @@ class Plugin:
                                           global_attrs=doc.get_settings().global_plugin_attrs(),
                                           macroinfo=doc.get_settings().get_macroinfo(user))
         p = Plugin(
-            TaskId.parse(task_id_name, require_doc_id=False) if task_id_name else None,
+            TaskId.parse(task_id_name, require_doc_id=False, allow_block_hint=False) if task_id_name else None,
             plugin_data,
             plugin_name,
             par=par,
@@ -334,6 +334,9 @@ class Plugin:
     def get_container_class(self):
         return f'plugin{self.type}'
 
+    def get_wrapper_tag(self):
+        return 'div'
+
     def get_final_output(self):
         out = self.output
         if self.is_lazy() and out.find(LAZYSTART) < 0:
@@ -360,7 +363,8 @@ class Plugin:
         if self.answer:
             answer_attr = f""" answer-id='{self.answer.id}'"""
         html_task_id = self.task_id.extended_or_doc_task if self.task_id else self.fake_task_id
-        return f"<div id='{html_task_id}'{answer_attr} data-plugin='/{self.type}' {plgclass} {style}>{out}</div>" if self.options.wrap_in_div else out
+        tag = self.get_wrapper_tag()
+        return f"<{tag} id='{html_task_id}'{answer_attr} data-plugin='/{self.type}' {plgclass} {style}>{out}</{tag}>" if self.options.wrap_in_div else out
 
 
 def parse_plugin_values_macros(par: DocParagraph,
@@ -417,18 +421,32 @@ def parse_plugin_values(par: DocParagraph,
 
 
 def find_inline_plugins(block: DocParagraph, macroinfo: MacroInfo) -> Generator[
-    Tuple[TaskId, Optional[str], Range, Optional[str], str], None, None]:
+    Tuple[MaybeUnvalidatedTaskId, Optional[str], Range, Optional[str], str], None, None]:
     md = block.get_expanded_markdown(macroinfo=macroinfo)
 
     # "}" not allowed in inlineplugins for now
     # TODO make task id optional
-    matches: List[Match] = re.finditer(r'{#((\d+)\.)?([a-zA-Z0-9_-]+)(:([a-zA-Z]+))?([ \n][^}]+)?}', md)
+    matches: List[Match] = re.finditer(r'{#((\d+)\.)?([a-zA-Z0-9_-]+)(\.([a-z]+))?(:([a-zA-Z]+))?([ \n][^}]+)?}', md)
     for m in matches:
         task_doc = m.group(2)
         task_name = m.group(3)
-        task_id = TaskId(doc_id=int(task_doc) if task_doc else block.doc.doc_id, task_name=task_name, block_id_hint=None)
-        plugin_type = m.group(5)
-        p_yaml = m.group(6)
+        field_access = m.group(5)
+        try:
+            task_id = TaskId(
+                doc_id=int(task_doc) if task_doc else None,
+                task_name=task_name,
+                block_id_hint=None,
+                field=field_access,
+            )
+        except PluginException:
+            task_id = UnvalidatedTaskId(
+                doc_id=int(task_doc) if task_doc else None,
+                task_name=task_name,
+                block_id_hint=None,
+                field=field_access,
+            )
+        plugin_type = m.group(7)
+        p_yaml = m.group(8)
         p_range = (m.start(), m.end())
         yield task_id, p_yaml, p_range, plugin_type, md
 
@@ -442,6 +460,7 @@ def maybe_get_plugin_from_par(p: DocParagraph, task_id: TaskId, u: User) -> Opti
         settings = p.doc.get_settings()
         for p_task_id, p_yaml, p_range, plugin_type, md in find_inline_plugins(block=p,
                                                                                macroinfo=settings.get_macroinfo(user=u)):
+            p_task_id.validate()
             if p_task_id.task_name != task_id.task_name:
                 continue
             plugin_type = plugin_type or def_plug
@@ -492,6 +511,9 @@ class InlinePlugin(Plugin):
 
     def get_container_class(self):
         return f'{super().get_container_class()} inlineplugin'
+
+    def get_wrapper_tag(self):
+        return 'span'
 
 
 def finalize_inline_yaml(p_yaml: Optional[str]):
