@@ -111,6 +111,16 @@ services:
    PYTHONPATH: /dropdown:/py:/usr/local/lib/python3.6/dist-packages
   command: ./startAll.sh
   restart: unless-stopped
+ feedback:
+  image: timimages/tim:${TIM_IMAGE_TAG}
+  volumes:
+   - ./timApp/modules/feedback:/feedback:ro
+   - ./timApp/modules/py:/py:ro
+  working_dir: /feedback
+  environment:
+   PYTHONPATH: /feedback:/py:/usr/local/lib/python3.6/dist-packages
+  command: ./startAll.sh
+  restart: unless-stopped
  uploader:
   image: villet/uploaderplugin:13_10_16_15
   command: ${UPLOADER_COMMAND}

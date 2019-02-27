@@ -1,5 +1,5 @@
 /**
- * Defines the client-side implementation of a dropdown plugin.
+ * Defines the client-side implementation of a feedback-plugin.
  */
 import angular, {INgModelOptions} from "angular";
 import * as t from "io-ts";
@@ -9,16 +9,16 @@ import {$http} from "tim/util/ngimport";
 import {to} from "tim/util/utils";
 import {valueDefu} from "tim/util/utils";
 
-const dropdownApp = angular.module("dropdownApp", ["ngSanitize"]);
-export const moduleDefs = [dropdownApp];
+const feedbackApp = angular.module("feedbackApp", ["ngSanitize"]);
+export const moduleDefs = [feedbackApp];
 
-const DropdownMarkup = t.intersection([
+const FeedbackMarkup = t.intersection([
     t.partial({
         initword: t.string,
         inputplaceholder: nullable(t.string),
         inputstem: t.string,
-        words: t.array(t.string),
         followid: t.string,
+        field: t.string,
     }),
     GenericPluginMarkup,
     t.type({
@@ -27,33 +27,34 @@ const DropdownMarkup = t.intersection([
         cols: withDefault(t.number, 20),
     }),
 ]);
-const DropdownAll = t.intersection([
+const FeedbackAll = t.intersection([
     t.partial({
         userword: t.string,
     }),
-    t.type({markup: DropdownMarkup}),
+    t.type({markup: FeedbackMarkup}),
 ]);
 
-class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.TypeOf<typeof DropdownAll>, typeof DropdownAll> implements ITimComponent {
+class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.TypeOf<typeof FeedbackAll>, typeof FeedbackAll> implements ITimComponent {
     private result?: string;
     private error?: string;
     private isRunning = false;
     private userword = "";
     private runTestGreen = false;
     private modelOpts!: INgModelOptions; // initialized in $onInit, so need to assure TypeScript with "!"
-    private wordlist?: string[];
-    private selectedWord?: string;
     private vctrl!: ViewCtrl;
 
     getDefaultMarkup() {
         return {};
     }
 
+    buttonText() {
+        return "OK";
+    }
+
     $onInit() {
         super.$onInit();
         this.userword = this.attrsall.userword || this.attrs.initword || "";
         this.modelOpts = {debounce: this.autoupdate};
-        this.wordlist = this.attrs.words || [];
         this.addToCtrl();
     }
 
@@ -63,67 +64,90 @@ class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.T
         this.vctrl.addTimComponent(this, this.attrs.followid || name[1] || "");
     }
 
+    get edited() {
+        return this.attrs.initword !== this.userword;
+    }
+
     get autoupdate(): number {
         return this.attrs.autoupdate;
+    }
+
+    get inputplaceholder() {
+        return this.attrs.inputplaceholder || null;
     }
 
     get inputstem() {
         return this.attrs.inputstem || null;
     }
 
-    initCode() {
-        this.userword = this.attrs.initword || "";
-        this.error = undefined;
+    get cols() {
+        return this.attrs.cols;
+    }
+
+    get resetText() {
+        return valueDefu(this.attrs.resetText, "Reset");
+    }
+
+    saveText() {
+        this.doSaveText(false);
+    }
+
+    async doSaveText(nosave: boolean) {
+        this.error = "... saving ...";
+        this.isRunning = true;
         this.result = undefined;
-        this.selectedWord = undefined;
-        //this.wordlist = this.attrs.words || [];
+        const params = {
+            input: {
+                nosave: false,
+                paliOK: true,
+                userword: this.userword,
+            },
+        };
+
+        if (nosave) {
+            params.input.nosave = true;
+        }
+        const url = this.pluginMeta.getAnswerUrl();
+        const r = await to($http.put<{web: {result: string, error?: string}}>(url, params));
+        this.isRunning = false;
+        if (r.ok) {
+            const data = r.result.data;
+            this.error = data.web.error;
+            this.result = data.web.result;
+        } else {
+            this.error = "Infinite loop or some other error?";
+        }
     }
 
     getContent(): string {
-      return this.selectedWord || "Nothing selected";
+      return "";
     }
 
     save(): string {
       return "";
     }
 
-    getSelectedWord() {
-        const timComponent = this.vctrl.getTimComponent("item1");
+    getFeedback() {
+        const timComponent = this.vctrl.getTimComponent(this.attrs.field || "");
         if(timComponent) {
-            //this.error = this.pluginMeta.getTaskId();
-            this.error = timComponent.getContent();
+            this.userword = timComponent.getContent();
         }
         return;
     }
 
     protected getAttributeType() {
-        return DropdownAll;
+        return FeedbackAll;
     }
 }
 
-dropdownApp.component("dropdownRunner", {
+feedbackApp.component("feedbackRunner", {
     bindings: {
         json: "@",
     },
-    controller: DropdownController,
+    controller: FeedbackController,
     require: {
         vctrl: "^timView",
     },
-    template: `
-<div>
-    <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
-    <p ng-if="::$ctrl.stem">{{::$ctrl.stem}}</p>
-    <div class="form-inline"><label>{{::$ctrl.inputstem}} <span>
-        <select ng-model="$ctrl.selectedWord" ng-options="item for item in $ctrl.wordlist">
-        </select>
-        </span></label>
-    </div>
-    <div ng-if="$ctrl.error" ng-bind-html="$ctrl.error"></div>
-    <pre ng-if="$ctrl.result">{{$ctrl.result}}</pre>
-    <p ng-if="::$ctrl.footer" ng-bind="::$ctrl.footer" class="plgfooter"></p>
-</div>
-`,
-/*
     template: `
 <div class="csRunDiv no-popup-menu">
     <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
@@ -133,23 +157,16 @@ dropdownApp.component("dropdownRunner", {
                class="form-control"
                ng-model="$ctrl.userword"
                ng-model-options="::$ctrl.modelOpts"
-               ng-change="$ctrl.checkPalindrome()"
-               ng-trim="false"
-               placeholder="{{::$ctrl.inputplaceholder}}"
                size="{{::$ctrl.cols}}"></span></label>
-        <span class="unitTestGreen" ng-if="$ctrl.runTestGreen && $ctrl.userword">OK</span>
-        <span class="unitTestRed" ng-if="!$ctrl.runTestGreen">Wrong</span>
     </div>
     <button class="timButton"
             ng-if="::$ctrl.buttonText()"
-            ng-disabled="$ctrl.isRunning || !$ctrl.userword"
-            ng-click="$ctrl.saveText()">
+            ng-click="$ctrl.getFeedback()">
         {{::$ctrl.buttonText()}}
     </button>
-    <a href="" ng-if="$ctrl.edited" ng-click="$ctrl.initCode()">{{::$ctrl.resetText}}</a>
     <div ng-if="$ctrl.error" ng-bind-html="$ctrl.error"></div>
     <pre ng-if="$ctrl.result">{{$ctrl.result}}</pre>
     <p ng-if="::$ctrl.footer" ng-bind="::$ctrl.footer" class="plgfooter"></p>
 </div>
-`, */
+`,
 });

@@ -31,6 +31,7 @@ REGEXATTRS = 'regexattrs'
 AUTOMDATTRS = 'automdattrs'
 TIMCANPLUGIN_NAME = 'timcan'
 DROPDOWNPLUGIN_NAME = 'dropdown'
+FEEDBACKPLUGIN_NAME = 'feedback'
 
 PLUGINS = None
 PLUGIN_REGEX_OBJS = {}
@@ -72,7 +73,8 @@ def get_plugins():
             "tape": {"host": "http://" + "localhost" + f":{current_app.config['QST_PLUGIN_PORT']}/tape/"},
             "echo": {"host": "http://" + "tim" + ":5000/echoRequest/", "skip_reqs": True},
             # "timcan": {"host": "http://" + TIMCANPLUGIN_NAME + ":5000/"},
-            "dropdown": {"host": "http://" + DROPDOWNPLUGIN_NAME + ":5000/"}
+            "dropdown": {"host": "http://" + DROPDOWNPLUGIN_NAME + ":5000/"},
+            "feedback": {"host": "http://" + FEEDBACKPLUGIN_NAME + ":5000/"}
         }
     return PLUGINS
 
