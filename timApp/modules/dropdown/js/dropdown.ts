@@ -85,7 +85,7 @@ class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.T
         const timComponent = this.vctrl.getTimComponent("1");
         if(timComponent) {
             //this.error = this.pluginMeta.getTaskId();
-            this.error = timComponent.getContent();
+            //this.error = timComponent.getContent();
         }
         return;
     }

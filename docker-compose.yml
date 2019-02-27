@@ -14,6 +14,7 @@ services:
    - uploader
    - dumbo
    - timcan
+   - dropdown
   volumes:
    - .:/service
    - ${LOG_DIR}:/service/tim_logs
@@ -98,6 +99,16 @@ services:
   working_dir: /timcan
   environment:
    PYTHONPATH: /timcan:/py:/usr/local/lib/python3.6/dist-packages
+  command: ./startAll.sh
+  restart: unless-stopped
+ dropdown:
+  image: timimages/tim:${TIM_IMAGE_TAG}
+  volumes:
+   - ./timApp/modules/dropdown:/dropdown:ro
+   - ./timApp/modules/py:/py:ro
+  working_dir: /dropdown
+  environment:
+   PYTHONPATH: /dropdown:/py:/usr/local/lib/python3.6/dist-packages
   command: ./startAll.sh
   restart: unless-stopped
  uploader:

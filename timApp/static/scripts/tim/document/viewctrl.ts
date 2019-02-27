@@ -35,6 +35,11 @@ import {MenuFunctionEntry} from "./viewutils";
 
 markAsUsed(ngs, popupMenu, interceptor);
 
+export interface ITimComponent {
+    getContent: () => string;
+    save: () => string | undefined;
+}
+
 export interface IInsertDiffResult {
     type: "insert";
     after_id: string | null;
@@ -91,6 +96,8 @@ export class ViewCtrl implements IController {
     private velpMode: boolean;
 
     private timTables: {[parId: string]: TimTableController} = {};
+    // private omapluginit: {[name: string]: OmapluginController} = {};
+    private timComponents: {[name: string]: ITimComponent | undefined} = {};
 
     private pendingUpdates: PendingCollection;
     private document: Document;
@@ -426,6 +433,29 @@ export class ViewCtrl implements IController {
     public getTableControllerFromParId(parId: string) {
         return this.timTables[parId];
     }
+    /**
+     *TODO
+     */
+    // public addOmaplugin(controller: OmapluginController, name: string) {
+    //     this.omapluginit[name] = controller;
+    // }
+
+    public addTimComponent(component: ITimComponent, name: string) {
+        this.timComponents[name] = component;
+    }
+
+    public getTimComponent(name: string) {
+        return this.timComponents[name];
+    }
+
+    /**
+     * Returns a table controller related to a specific table paragraph.
+     * @param {string} parId The paragraph's ID.
+     * @returns {TimTableController} The table controller related to the given table paragraph, or undefined.
+     */
+    // public getOmapluginControllerFromName(name: string) {
+    //     return this.omapluginit[name];
+    // }
 
     isEmptyDocument() {
         return this.docVersion[0] === 0 && this.docVersion[1] === 0; // TODO can be empty otherwise too
