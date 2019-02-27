@@ -9,6 +9,7 @@ services:
    - csplugin
    - pali
    - omaplugin
+   - multisave
    - showfile
    - haskellplugins
    - imagex
@@ -101,6 +102,17 @@ services:
     PYTHONPATH: /omaplugin:/py:/usr/local/lib/python3.6/dist-packages
    command: ./startAll.sh
    restart: unless-stopped
+ multisave:
+  image: timimages/tim:${TIM_IMAGE_TAG}
+  #build: ./timApp/modules/multisave
+  volumes:
+   - ./timApp/modules/multisave:/multisave:ro
+   - ./timApp/modules/py:/py:ro
+  working_dir: /multisave
+  environment:
+   PYTHONPATH: /multisave:/py:/usr/local/lib/python3.6/dist-packages
+  command: ./startAll.sh
+  restart: unless-stopped
  uploader:
   image: villet/uploaderplugin:13_10_16_15
   command: ${UPLOADER_COMMAND}

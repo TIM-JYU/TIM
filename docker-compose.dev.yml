@@ -35,6 +35,10 @@ services:
   command: ${OMAPLUGIN_DEV_COMMAND:-/usr/sbin/sshd -D}
   ports:
    - "49990:22"
+ multisave:
+  command: ${OMAPLUGIN_DEV_COMMAND:-/usr/sbin/sshd -D}
+  ports:
+   - "49961:22"
  csplugin:
   image: timimages/cs3sudo:rust
   build:
