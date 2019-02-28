@@ -1,5 +1,5 @@
 """
-TIM example plugin: a omapluginndrome checker.
+TIM example plugin: a multisavendrome checker.
 """
 import re
 from typing import Union
@@ -16,139 +16,139 @@ from pluginserver_flask import GenericMarkupModel, GenericMarkupSchema, GenericH
 
 
 @attr.s(auto_attribs=True)
-class OmapluginStateModel:
+class MultisaveStateModel:
     """Model for the information that is stored in TIM database for each answer."""
-    userword: str
+    #userword: str
 
 
-class omapluginStateSchema(Schema):
-    userword = fields.Str(required=True)
+class multisaveStateSchema(Schema):
+    #userword = fields.Str(required=True)
 
     @post_load
     def make_obj(self, data):
-        return OmapluginStateModel(**data)
+        return MultisaveStateModel(**data)
 
     class Meta:
         strict = True
 
 
 @attr.s(auto_attribs=True)
-class OmapluginMarkupModel(GenericMarkupModel):
-    points_array: Union[str, Missing] = missing
-    inputstem: Union[str, Missing] = missing
-    inputstem2: Union[str, Missing] = missing
-    needed_len: Union[int, Missing] = missing
-    initword: Union[str, Missing] = missing
+class MultisaveMarkupModel(GenericMarkupModel):
+    #points_array: Union[str, Missing] = missing
+    #inputstem: Union[str, Missing] = missing
+    #inputstem2: Union[str, Missing] = missing
+    #needed_len: Union[int, Missing] = missing
+    #initword: Union[str, Missing] = missing
     followid: Union[str, Missing] = missing
-    fields1: Union[list, Missing] = missing
-    cols: Union[int, Missing] = missing
-    inputplaceholder: Union[str, Missing] = missing
+    fields: Union[list, Missing] = missing
+    #cols: Union[int, Missing] = missing
+    #inputplaceholder: Union[str, Missing] = missing
 
 
-class OmapluginMarkupSchema(GenericMarkupSchema):
-    points_array = fields.List(fields.List(fields.Number()))
-    inputstem = fields.Str()
-    inputstem2 = fields.Str()
-    needed_len = fields.Int()
-    initword = fields.Str()
+class MultisaveMarkupSchema(GenericMarkupSchema):
+    #points_array = fields.List(fields.List(fields.Number()))
+    #inputstem = fields.Str()
+    #inputstem2 = fields.Str()
+    #needed_len = fields.Int()
+    #initword = fields.Str()
     followid = fields.Str()
-    fields1 = fields.List(fields.Str())
-    cols = fields.Int()
-    inputplaceholder = fields.Str()
+    fields = fields.List(fields.Str())
+    ####cols = fields.Int()
+    ####inputplaceholder = fields.Str()
 
-    @validates('points_array')
-    def validate_points_array(self, value):
-        if len(value) != 2 or not all(len(v) == 2 for v in value):
-            raise ValidationError('Must be of size 2 x 2.')
+    ###@validates('points_array')####
+    ###def validate_points_array(self, value):
+    ###    if len(value) != 2 or not all(len(v) == 2 for v in value):
+    ###        raise ValidationError('Must be of size 2 x 2.')
 
     @post_load
     def make_obj(self, data):
-        return OmapluginMarkupModel(**data)
+        return MultisaveMarkupModel(**data)
 
     class Meta:
         strict = True
 
 
 @attr.s(auto_attribs=True)
-class OmapluginInputModel:
+class MultisaveInputModel:
     """Model for the information that is sent from browser (plugin AngularJS component)."""
-    userword: str
-    omapluginOK: bool = missing
-    nosave: bool = missing
+    ##userword: str
+    ##multisaveOK: bool = missing
+    ##nosave: bool = missing
 
 
-class OmapluginInputSchema(Schema):
-    userword = fields.Str(required=True)
-    omapluginOK = fields.Bool(required=True)
-    nosave = fields.Bool()
+class MultisaveInputSchema(Schema):
+    #userword = fields.Str(required=True)
+    #multisaveOK = fields.Bool(required=True)
+    #nosave = fields.Bool()
 
-    @validates('userword')
-    def validate_userword(self, word):
-        if not word:
-            raise ValidationError('Must not be empty.')
+    ##@validates('userword')
+    ##def validate_userword(self, word):
+    ##    if not word:
+    ##        raise ValidationError('Must not be empty.')
 
     @post_load
     def make_obj(self, data):
-        return OmapluginInputModel(**data)
+        return MultisaveInputModel(**data)
 
 
-class OmapluginAttrs(Schema):
+class MultisaveAttrs(Schema):
     """Common fields for HTML and answer routes."""
-    markup = fields.Nested(OmapluginMarkupSchema)
-    state = fields.Nested(omapluginStateSchema, allow_none=True, required=True)
+    markup = fields.Nested(MultisaveMarkupSchema)
+    state = fields.Nested(multisaveStateSchema, allow_none=True, required=True)
 
     class Meta:
         strict = True
 
 
 @attr.s(auto_attribs=True)
-class OmapluginHtmlModel(GenericHtmlModel[OmapluginInputModel, OmapluginMarkupModel, OmapluginStateModel]):
+class MultisaveHtmlModel(GenericHtmlModel[MultisaveInputModel, MultisaveMarkupModel, MultisaveStateModel]):
     def get_component_html_name(self) -> str:
-        return 'omaplugin-runner'
+        return 'multisave-runner'
 
     def get_static_html(self) -> str:
-        return render_static_omaplugin(self)
+        return render_static_multisave(self)
 
     def get_browser_json(self):
         r = super().get_browser_json()
-        if self.state:
-            r['userword'] = self.state.userword
+        #if self.state:
+        #    r['userword'] = self.state.userword
         return r
 
     class Meta:
         strict = True
 
 
-class OmapluginHtmlSchema(OmapluginAttrs, GenericHtmlSchema):
+class MultisaveHtmlSchema(MultisaveAttrs, GenericHtmlSchema):
     info = fields.Nested(InfoSchema, allow_none=True, required=True)
 
     @post_load
     def make_obj(self, data):
         # noinspection PyArgumentList
-        return OmapluginHtmlModel(**data)
+        return MultisaveHtmlModel(**data)
 
     class Meta:
         strict = True
 
 
 @attr.s(auto_attribs=True)
-class OmapluginAnswerModel(GenericAnswerModel[OmapluginInputModel, OmapluginMarkupModel, OmapluginStateModel]):
+class MultisaveAnswerModel(GenericAnswerModel[MultisaveInputModel, MultisaveMarkupModel, MultisaveStateModel]):
     pass
 
 
-class OmapluginAnswerSchema(OmapluginAttrs, GenericAnswerSchema):
-    input = fields.Nested(OmapluginInputSchema, required=True)
+class MultisaveAnswerSchema(MultisaveAttrs, GenericAnswerSchema):
+    input = fields.Nested(MultisaveInputSchema, required=True)
 
     @post_load
     def make_obj(self, data):
         # noinspection PyArgumentList
-        return OmapluginAnswerModel(**data)
+        return MultisaveAnswerModel(**data)
 
     class Meta:
         strict = True
 
 
-def render_static_omaplugin(m: OmapluginHtmlModel):
+def render_static_multisave(m: MultisaveHtmlModel):
     return render_template_string(
         """
 <div class="csRunDiv no-popup-menu">
@@ -171,26 +171,26 @@ def render_static_omaplugin(m: OmapluginHtmlModel):
     )
 
 
-app = create_app(__name__, OmapluginHtmlSchema())
+app = create_app(__name__, MultisaveHtmlSchema())
 
 
 @app.route('/answer/', methods=['put'])
-@use_args(OmapluginAnswerSchema(strict=True), locations=("json",))
-def answer(args: OmapluginAnswerModel):
+@use_args(MultisaveAnswerSchema(strict=True), locations=("json",))
+def answer(args: MultisaveAnswerModel):
     web = {}
     result = {'web': web}
     needed_len = args.markup.needed_len
     userword = args.input.userword
-    omaplugin_ok = args.input.omapluginOK
+    multisave_ok = args.input.multisaveOK
     len_ok = True
     if needed_len:
         len_ok = check_letters(userword, needed_len)
     if not len_ok:
         web['error'] = "aaa Wrong length asdf2"
-    if not needed_len and not omaplugin_ok:
+    if not needed_len and not multisave_ok:
         len_ok = False
     points_array = args.markup.points_array or [[0, 0.25], [0.5, 1]]
-    points = points_array[omaplugin_ok][len_ok]
+    points = points_array[multisave_ok][len_ok]
 
     # plugin can ask not to save the word
     nosave = args.input.nosave
@@ -220,48 +220,50 @@ def check_letters(word: str, needed_len: int) -> bool:
 @app.route('/reqs')
 def reqs():
     templates = ["""
-``` {#ekaomaplugin plugin="omaplugin"}
-header: Kirjoita omapluginndromi
-stem: Kirjoita omapluginndromi, jossa on 5 kirjainta.
+``` {#ekamultisave plugin="multisave"}
+header: Kirjoita multisavendromi
+stem: Kirjoita multisavendromi, jossa on 5 kirjainta.
 -points_array: [[0, 0.1], [0.6, 1]]
-inputstem: "omapluginndromisi:"
+fields:
+ - d1
+ - d2
+ - d3
+inputstem: "multisavendromisi:"
 followid: "FOLLOWID"
 needed_len: 5
-answerLimit: 3
 initword: muikku
 cols: 20
 ```""", """
-``` {#tokaomaplugin plugin="omaplugin"}
-header: Kirjoita omapluginndromi
-stem: Kirjoita omapluginndromi, jossa on 7 kirjainta.
+``` {#tokamultisave plugin="multisave"}
+header: Kirjoita multisavendromi
+stem: Kirjoita multisavendromi, jossa on 7 kirjainta.
 -points_array: [[0, 0.1], [0.6, 1]]
-inputstem: "omapluginndromisi:"
+inputstem: "multisavendromisi:"
 followid: "FOLLOWID"
 needed_len: 7
-answerLimit: 4
 initword: muikku
 cols: 20
 ```"""]
     return jsonify({
-        "js": ["js/build/omaplugin.js"],
+        "js": ["js/build/multisave.js"],
         "multihtml": True,
-        "css": ["css/omaplugin.css"],
+        "css": ["css/multisave.css"],
         'editor_tabs': [
             {
                 'text': 'Plugins',
                 'items': [
                     {
-                        'text': 'omaplugin',
+                        'text': 'multisave',
                         'items': [
                             {
                                 'data': templates[0].strip(),
                                 'text': '5 letters',
-                                'expl': 'Add a 5-letter omapluginndrome task',
+                                'expl': 'Add a 5-letter multisavendrome task',
                             },
                             {
                                 'data': templates[1].strip(),
                                 'text': '7 letters',
-                                'expl': 'Add a 7-letter omapluginndrome task',
+                                'expl': 'Add a 7-letter multisavendrome task',
                             },
                         ],
                     },

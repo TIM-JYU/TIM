@@ -451,6 +451,28 @@ export class ViewCtrl implements IController {
     public getTimComponent(name: string) {
         return this.timComponents[name];
     }
+
+    public getTimComponents(list: string[]){
+        let returnList = new Array;
+        for(let i in list){
+            if(list[i].endsWith("*")){
+                for(let j in this.timComponents){
+                    //if(j.startsWith(list[i].slice(0,-1))){alert(list[i] + " " + list[i].slice(0,-1) + " " + j)}
+                    //alert ("EI listassa?" + !(returnList.indexOf(this.getTimComponent(j))>-1));
+                    if(j.startsWith(list[i].slice(0,-1)) && !(returnList.indexOf(this.getTimComponent(j))>-1)){
+                        returnList.push(this.getTimComponent(j));
+                    }
+                //var j = 0; j < Object.keys(this.timComponents).length; j++
+                }
+            }
+            else returnList.push(this.getTimComponent(list[i]));
+            //returnList[list[i]] = this.getTimComponent();
+            //const tim = this.getTimComponent(list[i])
+            //if (tim) alert(tim.getContent);
+        }
+        return returnList;
+    }
+
     /**
      *TODO
      */
