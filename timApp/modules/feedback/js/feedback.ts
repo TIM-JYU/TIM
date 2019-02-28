@@ -132,7 +132,6 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
         if(timComponent) {
             this.userword = timComponent.getContent();
         }
-        return;
     }
 
     protected getAttributeType() {
@@ -153,11 +152,7 @@ feedbackApp.component("feedbackRunner", {
     <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
     <p ng-if="::$ctrl.stem">{{::$ctrl.stem}}</p>
     <div class="form-inline"><label>{{::$ctrl.inputstem}} <span>
-        <input type="text"
-               class="form-control"
-               ng-model="$ctrl.userword"
-               ng-model-options="::$ctrl.modelOpts"
-               size="{{::$ctrl.cols}}"></span></label>
+        {{$ctrl.userword}}</span></label>
     </div>
     <button class="timButton"
             ng-if="::$ctrl.buttonText()"

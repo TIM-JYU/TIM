@@ -8,6 +8,7 @@ import {GenericPluginMarkup, nullable, PluginBase, withDefault} from "tim/plugin
 import {$http} from "tim/util/ngimport";
 import {to} from "tim/util/utils";
 import {valueDefu} from "tim/util/utils";
+import {concat} from "../../../static/scripts/jspm_packages/npm/fp-ts@1.11.1/lib/function";
 
 const dropdownApp = angular.module("dropdownApp", ["ngSanitize"]);
 export const moduleDefs = [dropdownApp];
@@ -19,6 +20,7 @@ const DropdownMarkup = t.intersection([
         inputstem: t.string,
         words: t.array(t.string),
         followid: t.string,
+        item: t.string,
     }),
     GenericPluginMarkup,
     t.type({
@@ -37,13 +39,13 @@ const DropdownAll = t.intersection([
 class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.TypeOf<typeof DropdownAll>, typeof DropdownAll> implements ITimComponent {
     private result?: string;
     private error?: string;
-    private isRunning = false;
     private userword = "";
-    private runTestGreen = false;
     private modelOpts!: INgModelOptions; // initialized in $onInit, so need to assure TypeScript with "!"
     private wordlist?: string[];
+    private item = "";
     private selectedWord?: string;
     private vctrl!: ViewCtrl;
+    private parts!: string[];
 
     getDefaultMarkup() {
         return {};
@@ -55,12 +57,19 @@ class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.T
         this.modelOpts = {debounce: this.autoupdate};
         this.wordlist = this.attrs.words || [];
         this.addToCtrl();
+        this.item = this.attrs.item || "";
+        this.makeSentence();
     }
 
     addToCtrl() {
         const taskid = this.pluginMeta.getTaskId() || ""; // TODO: fix this dirty stuff
         const name = taskid.split(".");
         this.vctrl.addTimComponent(this, this.attrs.followid || name[1] || "");
+    }
+
+    makeSentence() {
+        this.parts = this.item.split("$choice");
+
     }
 
     get autoupdate(): number {
@@ -80,7 +89,12 @@ class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.T
     }
 
     getContent(): string {
-      return this.selectedWord || "Nothing selected";
+        const part1 = this.parts[0];
+        const part2 = this.parts[1];
+        const selected = this.selectedWord || "";
+        return part1 + selected + part2;
+
+        // return this.selectedWord || "Nothing selected";
     }
 
     save(): string {
@@ -114,8 +128,10 @@ dropdownApp.component("dropdownRunner", {
     <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
     <p ng-if="::$ctrl.stem">{{::$ctrl.stem}}</p>
     <div class="form-inline"><label>{{::$ctrl.inputstem}} <span>
+        {{$ctrl.parts[0]}}
         <select ng-model="$ctrl.selectedWord" ng-options="item for item in $ctrl.wordlist">
         </select>
+        {{$ctrl.parts[1]}}
         </span></label>
     </div>
     <div ng-if="$ctrl.error" ng-bind-html="$ctrl.error"></div>

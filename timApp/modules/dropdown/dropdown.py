@@ -39,6 +39,7 @@ class DropdownMarkupModel(GenericMarkupModel):
     cols: Union[int, Missing] = missing
     words: Union[List[str], Missing] = missing
     followid: Union[str, Missing] = missing
+    item: Union[str, Missing] = missing
 
 
 class DropdownMarkupSchema(GenericMarkupSchema):
@@ -49,6 +50,7 @@ class DropdownMarkupSchema(GenericMarkupSchema):
     cols = fields.Int()
     words = fields.List(fields.Str)
     followid = fields.String()
+    item = fields.String()
 
     @validates('points_array')
     def validate_points_array(self, value):
