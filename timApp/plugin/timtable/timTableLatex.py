@@ -343,16 +343,6 @@ class Row:
         return custom_repr(self)
 
 
-def pt_to_float(pt: str) -> float:
-    """
-    Parses a float from LaTeX pt units;
-    for example "12.333pt" -> 12.333.
-    :param pt: Parses points to float number.
-    :return: Point's number without pt and as float.
-    """
-    return float(pt.replace("pt", "").strip())
-
-
 class HorizontalBorder:
     """
     Horizontal line between rows.
@@ -943,6 +933,7 @@ def add_missing_elements(table_json, datablock):
 
     empty_cell = {'cell': ''}
 
+    # TODO: If table has only datablocks, crashes here.
     table_row_count = len(table_json['rows'])
     # Add missing rows.
     for i in range(0, max_row_count - table_row_count):
@@ -1171,33 +1162,33 @@ def int_to_datablock_index(i: int) -> str:
     return (a + 1) * str(chr(ord("A") + b))
 
 
-def parse_size_attribute(attribute) -> str:
+def parse_size_attribute(attribute: str) -> str:
     """
     Converts numeric attributes to pts and removes the unit sign.
     :param attribute: Size attribute.
     :return: Parsed string.
     """
-    mm = 2.84526
-    cm = 28.45274
-    ex = 4.30554
-    em = 10.00002
-    # TODO: Handling px properly, since px size depends on screen resolution etc.
+    # All units are converted to pt.
+    conv_to_pt = {'mm': 2.83464566929,
+                  'cm': 28.3464566929,
+                  'in': 72,
+                  'px': 1.33333333333,
+                  'pt': 1,
+                  'pc': 12,
+                  'ex': 4.30554,
+                  'em': 10.00002}
     if not attribute:
         return "0"
-    converted = 0
-    try:
-        if "pt" in attribute or "px" in attribute:
-            converted = str(attribute).replace('pt', '').replace('px', '')
-        if "mm" in attribute:
-            converted = float(str(attribute).replace('mm', '').strip())*mm
-        if "cm" in attribute:
-            converted = float(str(attribute).replace('cm', '').strip())*cm
-        if "ex" in attribute:
-            converted = float(str(attribute).replace('ex', '').strip())*ex
-        if "em" in attribute:
-            converted = float(str(attribute).replace('em', '').strip())*em
-    finally:
-        return str(converted)
+    for key, value in conv_to_pt.items():
+        if key in attribute:
+            try:
+                return str(float(str(attribute).replace(key, '').strip())*value)
+            except Exception as e:
+                # TODO: Tell user about conversion errors.
+                pass
+    # If not recognized, return zero.
+    return "0"
+
 
 def get_table_size(table_data):
     """
