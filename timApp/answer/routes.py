@@ -90,17 +90,13 @@ def post_answer(plugintype: str, task_id_ext: str):
         tid = TaskId.parse(task_id_ext)
     except PluginException as e:
         return abort(400, f'Task id error: {e}')
-    task_id = str(tid.doc_id) + '.' + str(tid.task_name)
     d = get_doc_or_abort(tid.doc_id)
     d.document.insert_preamble_pars()
     verify_task_access(d, tid.task_name, AccessType.view)
     doc = d.document
     curr_user = get_current_user_object()
     try:
-        if tid.block_id_hint is None:
-            _, plugin = get_plugin_from_request(doc, task_id=tid, u=curr_user)
-        else:
-            _, plugin = get_plugin_from_request(doc, task_id=tid, u=curr_user)
+        _, plugin = get_plugin_from_request(doc, task_id=tid, u=curr_user)
     except PluginException as e:
         return abort(400, str(e))
     except TimDbException as e:
@@ -120,6 +116,33 @@ def post_answer(plugintype: str, task_id_ext: str):
     is_teacher = answer_browser_data.get('teacher', False)
     save_teacher = answer_browser_data.get('saveTeacher', False)
     save_answer = answer_browser_data.get('saveAnswer', True) and tid.task_name
+
+    if tid.is_points_ref:
+        verify_teacher_access(d)
+        given_points = answerdata.get(plugin.get_content_field_name())
+        if given_points is not None:
+            try:
+                given_points = float(given_points)
+            except ValueError:
+                return abort(400, 'Points must be a number.')
+        a = curr_user.answers.filter_by(task_id=tid.doc_task).order_by(Answer.id.desc()).first()
+        if a:
+            a.points = given_points
+            s = None
+        else:
+            a = Answer(
+                content=json.dumps({plugin.get_content_field_name(): ''}),
+                points=given_points,
+                task_id=tid.doc_task,
+                users_all=[curr_user],
+                valid=True,
+            )
+            db.session.add(a)
+            db.session.flush()
+            s = a.id
+        db.session.commit()
+        return json_response({'savedNew': s, 'web': {'result': 'points saved'}})
+
     if save_teacher:
         verify_teacher_access(d)
     users = None
@@ -138,7 +161,7 @@ def post_answer(plugintype: str, task_id_ext: str):
             if not answer:
                 return abort(404, f'Answer not found: {answer_id}')
             expected_task_id = answer.task_id
-            if expected_task_id != task_id:
+            if expected_task_id != tid.doc_task:
                 return abort(400, 'Task ids did not match')
             users = answer.users_all
             if not users:
@@ -185,7 +208,7 @@ def post_answer(plugintype: str, task_id_ext: str):
     answer_call_data = {'markup': plugin.values,
                         'state': state,
                         'input': answerdata,
-                        'taskID': task_id,
+                        'taskID': tid.doc_task,
                         'info': info}
 
     plugin_response = call_plugin_answer(plugintype, answer_call_data)
@@ -457,7 +480,7 @@ def get_state():
     #     abort(400, 'Bad document id')
 
     tid = TaskId.parse(answer.task_id)
-    tid.block_id_hint = par_id
+    tid.maybe_set_hint(par_id)
     user = User.query.get(user_id)
     if user is None:
         abort(400, 'Non-existent user')

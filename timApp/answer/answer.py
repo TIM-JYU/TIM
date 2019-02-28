@@ -1,6 +1,7 @@
+from sqlalchemy import func
+
 from timApp.answer.answer_models import UserAnswer
 from timApp.timdb.sqa import db, include_if_loaded
-from timApp.util.utils import get_current_time
 
 
 class Answer(db.Model):
@@ -18,7 +19,7 @@ class Answer(db.Model):
     points = db.Column(db.Float)
     """Points."""
 
-    answered_on = db.Column(db.DateTime(timezone=True), nullable=False)
+    answered_on = db.Column(db.DateTime(timezone=True), nullable=False, default=func.now())
     """Answer timestamp."""
 
     valid = db.Column(db.Boolean, nullable=False)
@@ -33,14 +34,6 @@ class Answer(db.Model):
     users_all = db.relationship('User', secondary=UserAnswer.__table__,
                                 back_populates='answers_alt', lazy='select')
     annotations = db.relationship('Annotation', back_populates='answer')
-
-    def __init__(self, task_id, content, points, valid, last_points_modifier=None):
-        self.task_id = task_id
-        self.content = content
-        self.points = points
-        self.valid = valid
-        self.last_points_modifier = last_points_modifier
-        self.answered_on = get_current_time()
 
     def get_answer_number(self):
         u = self.users.first()

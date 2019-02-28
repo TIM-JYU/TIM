@@ -75,15 +75,23 @@ class TaskId(UnvalidatedTaskId):
 
     @property
     def extended(self):
-        if not self.block_id_hint:
+        if not self.block_id_hint and not self.field:
             raise PluginException('Task id does not have block id hint.')
-        return f'{self.doc_task}.{self.block_id_hint}'
+        return f'{self.doc_task}.{self.block_id_hint or self.field}'
 
     @property
     def extended_or_doc_task(self):
-        if self.block_id_hint:
+        if self.block_id_hint or self.field:
             return self.extended
         return self.doc_task
+
+    def maybe_set_hint(self, hint: str):
+        if not self.field:
+            self.block_id_hint = hint
+
+    @property
+    def is_points_ref(self):
+        return self.field == 'points'
 
     def validate(self):
         pass  # already validated at __init__

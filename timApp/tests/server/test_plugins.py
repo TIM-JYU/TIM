@@ -1374,3 +1374,58 @@ a {#x initword: } b
         """)
         r = self.get(d.url, as_tree=True)
         self.assertFalse(r.cssselect('.parContent script'))
+
+    def test_taskid_field(self):
+        self.login_test1()
+        d = self.create_doc(initial_par="""
+#- {plugin=pali #tx.1}
+
+#- {plugin=pali #t.points id=a3Xuyg1PF1l1}
+        """)
+        grant_view_access(self.get_test_user_2_group_id(), d.id)
+        r = self.post_answer('pali', f'{d.id}.t.points', user_input={'userword': 4})
+        aid = r['savedNew']
+        self.assertIsInstance(aid, int)
+        a = Answer.query.get(aid)
+        self.assertEqual(4, a.points)
+        r = self.post_answer('pali', f'{d.id}.t.points', user_input={'userword': 5})
+        self.assertIsNone(r['savedNew'])
+        a = Answer.query.get(aid)
+        self.assertEqual(5, a.points)
+
+        r = self.post_answer('pali', f'{d.id}.t.points', user_input={'userword': '6'})
+        self.assertIsNone(r['savedNew'])
+        a = Answer.query.get(aid)
+        self.assertEqual(6, a.points)
+
+        r = self.post_answer('pali', f'{d.id}.t.points',
+                             user_input={'userword': 'hi'},
+                             expect_status=400,
+                             json_key='error',
+                             expect_content='Points must be a number.')
+
+        r = self.get(d.url, as_tree=True)
+        s = {'userword': '6'}
+        expected_json = self.create_plugin_json(d, 't', state=s, toplevel=s, par_id='points',
+                                                info={'current_user_id': 'testuser1', 'earlier_answers': 1,
+                                                      'look_answer': False,
+                                                      'max_answers': None, 'user_id': 'testuser1', 'valid': True}, )
+        self.assert_same_html(r.cssselect('.parContent')[1], f"""
+<div class="parContent" id="t.points">
+    <div id="{d.id}.t.points" answer-id="{aid}" data-plugin="/pali" class="pluginpali"><pali-runner json="{self.make_base64(expected_json)}"></pali-runner></div>
+</div>""")
+
+        self.assert_plugin_json(
+            r.cssselect('.parContent pali-runner')[0],
+            expected_json)
+        r = self.post_answer('pali', f'{d.id}.t.points', user_input={'userword': None})
+        self.assertIsNone(r['savedNew'])
+        a = Answer.query.get(aid)
+        self.assertEqual(None, a.points)
+
+        # ensure these routes won't throw exceptions
+        self.get(d.url)
+        self.get(f'/taskinfo/{d.id}.t')
+
+        self.login_test2()
+        self.post_answer('pali', f'{d.id}.t.points', user_input={'userword': 2}, expect_status=403)

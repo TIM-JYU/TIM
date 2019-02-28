@@ -31,6 +31,15 @@ NOLAZY = "<!--nolazy-->"
 NEVERLAZY = "NEVERLAZY"
 
 
+# Maintains a mapping of plugin types to names of plugins' content field.
+# Required if plugin wants to refer to a non-content field (such as points)
+# because TIM does not know the structure of plugin state.
+CONTENT_FIELD_NAME_MAP = {
+    'csPlugin': 'usercode',
+    'pali': 'userword',
+}
+
+
 class PluginRenderOptions(NamedTuple):
     user: Optional[User]
     do_lazy: bool
@@ -99,7 +108,7 @@ class Plugin:
             # self.task_id = TaskId.parse(task_id, require_doc_id=False)
             # TODO check if par can be None here
             self.task_id.doc_id = par.ref_doc.doc_id if par.ref_doc else par.doc.doc_id
-            self.task_id.block_id_hint = par.get_id()
+            self.task_id.maybe_set_hint(par.get_id())
         assert isinstance(values, dict)
         self.values = values
         self.type = plugin_type
@@ -238,7 +247,11 @@ class Plugin:
     def render_json(self):
         options = self.options
         if self.answer is not None:
-            state = try_load_json(self.answer.content)
+            if self.task_id.is_points_ref:
+                p = f'{self.answer.points:g}' if self.answer.points is not None else ''
+                state = {self.get_content_field_name(): p}
+            else:
+                state = try_load_json(self.answer.content)
             # if isinstance(state, dict) and options.user is not None:
             if options.user is not None:
                 info = self.get_info([options.user], old_answers=self.answer_count, valid=self.answer.valid)
@@ -262,6 +275,9 @@ class Plugin:
                 "targetFormat": options.target_format.value,
                 "review": options.review,
                 }
+
+    def get_content_field_name(self):
+        return CONTENT_FIELD_NAME_MAP.get(self.type, 'content')
 
     def is_answer_valid(self, old_answers, tim_info):
         """Determines whether the currently posted answer should be considered valid.
@@ -452,9 +468,15 @@ def find_inline_plugins(block: DocParagraph, macroinfo: MacroInfo) -> Generator[
 
 
 def maybe_get_plugin_from_par(p: DocParagraph, task_id: TaskId, u: User) -> Optional[Plugin]:
-    tid_attr = p.get_attr('taskId')
-    if (tid_attr == task_id.task_name or (task_id.doc_id and tid_attr == task_id.doc_task)) and p.get_attr('plugin'):
-        return Plugin.from_paragraph(p, user=u)
+    t_attr = p.get_attr('taskId')
+    if t_attr and p.get_attr('plugin'):
+        try:
+            p_tid = TaskId.parse(t_attr, allow_block_hint=False, require_doc_id=False)
+        except PluginException:
+            return None
+        if (p_tid.task_name == task_id.task_name or
+                (task_id.doc_id and p_tid.doc_id and p_tid.doc_task == task_id.doc_task)):
+            return Plugin.from_paragraph(p, user=u)
     def_plug = p.get_attr('defaultplugin')
     if def_plug:
         settings = p.doc.get_settings()
