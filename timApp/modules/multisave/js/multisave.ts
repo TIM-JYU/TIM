@@ -169,13 +169,26 @@ export class MultisaveController extends PluginBase<t.TypeOf<typeof multisaveMar
     }
 
     save(): string {
+        //Vie listan nimi joka palauttaa listan
         if(this.attrs.fields){
-            let list = this.vctrl.getTimComponents(this.attrs.fields)
-            for(let i of list)
-            {
-               if(i) i.save();
+            for (let i of this.attrs.fields){
+                alert("asd" + i);
+                let list = this.vctrl.getTimComponentByList(i);
+                for(let j of list)
+                {
+                   if(j) j.save();
+                }
             }
         }
+        // Vie lista ja saa takaisin lista componenteista
+        //if(this.attrs.fields){
+        //    let list = this.vctrl.getTimComponents(this.attrs.fields)
+        //    for(let i of list)
+        //    {
+        //       if(i) i.save();
+        //    }
+        //}
+        //Käy lista itse ja kysy jokainen erikseen
         //for(let i of this.attrs.fields)
         //{
         //    let timComponent = this.vctrl.getTimComponent(i);

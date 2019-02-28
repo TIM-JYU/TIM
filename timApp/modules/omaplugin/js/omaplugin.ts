@@ -69,7 +69,8 @@ export class OmapluginController extends PluginBase<t.TypeOf<typeof omapluginMar
         this.checkomapluginndrome();
         if (this.attrs.followid) {
             //this.vctrl.addOmaplugin(this, this.attrs.followid);
-            this.vctrl.addTimComponent(this, this.attrs.followid || this.pluginMeta.getTaskId() || "");
+            //this.vctrl.addTimComponent(this, this.attrs.followid || this.pluginMeta.getTaskId() || "");
+            this.vctrl.addTimComponentToList(this, this.attrs.followid);
         }
     }
 

@@ -99,6 +99,7 @@ export class ViewCtrl implements IController {
     private timTables: {[parId: string]: TimTableController} = {};
     // private omapluginit: {[name: string]: OmapluginController} = {};
     private timComponents: {[name: string]: ITimComponent | undefined} = {};
+    private timComponentsList:{[name: string]: [ITimComponent | undefined]} = {};
 
     private pendingUpdates: PendingCollection;
     private document: Document;
@@ -442,6 +443,24 @@ export class ViewCtrl implements IController {
      */
     public addTimComponent(component: ITimComponent, name: string) {
         this.timComponents[name] = component;
+        //lisää yhden timcompon nimettynä listaan
+        //{d1: timcmp1, d2:timcmp...
+    }
+
+    //Kommentit siivotaan kun datan rakenne selkenee
+
+
+    public addTimComponentToList(component: ITimComponent, name: string) {
+        //lisää timcompin nimensä mukaiseen listaan
+        // {demot: [itimc1, imic2], harkat: [itimc...}
+        if(this.timComponentsList[name]) this.timComponentsList[name].push(component);
+        else this.timComponentsList[name] = [component];
+    }
+
+    public getTimComponentByList(name:string){
+        //palauttaa nimetyn listan
+        // {demot: [itimc1, imic2], harkat: [itimc...}
+        return this.timComponentsList[name];
     }
 
     /**
@@ -449,10 +468,15 @@ export class ViewCtrl implements IController {
      * @param name
      */
     public getTimComponent(name: string) {
+        //palauttaa nimetyn timcompin
+        //{d1: timcmp1, d2:timcmp...
         return this.timComponents[name];
     }
 
     public getTimComponents(list: string[]){
+        //ottaa listan nimistä ja palauttaa listan nimetyistä timcompeista
+        //input: [d1,d2,d3]
+        //out: [timcp1,timcmp2..
         let returnList = new Array;
         for(let i in list){
             if(list[i].endsWith("*")){
