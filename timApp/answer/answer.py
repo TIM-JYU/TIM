@@ -39,7 +39,7 @@ class Answer(db.Model):
         u = self.users.first()
         if not u:
             return 1
-        return u.get_answers_for_task(self.task_id).filter(Answer.answered_on <= self.answered_on).count()
+        return u.get_answers_for_task(self.task_id).filter(Answer.id <= self.id).count()
 
     def to_json(self):
         return {
