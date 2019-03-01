@@ -215,7 +215,11 @@ def check_letters(word: str, needed_len: int) -> bool:
 def reqs():
     templates = ["""
 #- {defaultplugin="dropdown"}
-Ikkunasta näkyy {#item1 words: [kissa,koira,hevonen]}.
+{#question1 item: "The weather [choice] nice today.", words: [is,do,are]}
+""","""
+#- {defaultplugin="dropdown"}
+{#question2 item: "Näin tänään [choice],", words: [kissan,koiran,hevosen]}
+{#question3 item: "joka jahtasi [choice].", words: [hiirtä,autoa,omenaa]}
 """]
     return jsonify({
         "js": ["js/build/dropdown.js"],
@@ -230,8 +234,13 @@ Ikkunasta näkyy {#item1 words: [kissa,koira,hevonen]}.
                         'items': [
                             {
                                 'data': templates[0].strip(),
-                                'text': 'Inline dropdown',
-                                'expl': 'Add an inline dropdown task'
+                                'text': 'One question',
+                                'expl': 'Add an inline dropdown-question'
+                            },
+                            {
+                                'data': templates[1].strip(),
+                                'text': 'Two questions',
+                                'expl': 'Add an inline dropdown-question with two questions'
                             },
                         ],
                     },

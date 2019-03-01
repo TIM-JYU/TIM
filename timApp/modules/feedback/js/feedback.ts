@@ -58,6 +58,9 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
         this.addToCtrl();
     }
 
+    /**
+     * Adds this plugin to ViewCtrl so other plugins can get information about the plugin though it.
+     */
     addToCtrl() {
         const taskid = this.pluginMeta.getTaskId() || ""; // TODO: fix this dirty stuff
         const name = taskid.split(".");
@@ -119,15 +122,25 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
         }
     }
 
+    /**
+     * Returns the content inside this plugin
+     * @returns {string} The content inside this plugin
+     */
     getContent(): string {
       return "";
     }
 
+    /**
+     * Does nothing at the moment
+     */
     save(): string {
       return "";
     }
 
-    getFeedback() {
+    /**
+     * Gets the user's answer from the plugin this feedback-plugin is assigned to.
+     */
+    getAnswer() {
         const timComponent = this.vctrl.getTimComponent(this.attrs.field || "");
         if(timComponent) {
             this.userword = timComponent.getContent();
@@ -156,7 +169,7 @@ feedbackApp.component("feedbackRunner", {
     </div>
     <button class="timButton"
             ng-if="::$ctrl.buttonText()"
-            ng-click="$ctrl.getFeedback()">
+            ng-click="$ctrl.getAnswer()">
         {{::$ctrl.buttonText()}}
     </button>
     <div ng-if="$ctrl.error" ng-bind-html="$ctrl.error"></div>

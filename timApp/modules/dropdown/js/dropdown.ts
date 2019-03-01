@@ -60,14 +60,21 @@ class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.T
         this.makeSentence();
     }
 
+    /**
+     * Adds this plugin to ViewCtrl so other plugins can get information about the plugin though it.
+     */
     addToCtrl() {
         const taskid = this.pluginMeta.getTaskId() || ""; // TODO: fix this dirty stuff
         const name = taskid.split(".");
         this.vctrl.addTimComponent(this, this.attrs.followid || name[1] || "");
     }
 
+    /**
+     * Splits the sentence given to this plugin in the item-attribute at the point the dropdown-box should appear.
+     * This way the whole answer can be presented inside the plugin and it is easier for others to get it.
+     */
     makeSentence() {
-        this.parts = this.item.split("$choice");
+        this.parts = this.item.split("[choice]");
 
     }
 
@@ -87,26 +94,22 @@ class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.T
         //this.wordlist = this.attrs.words || [];
     }
 
+    /**
+     * Returns the whole text inside the plugin with the choice the user selected added.
+     * @returns {string} The text inside the plugin with user selection added.
+     */
     getContent(): string {
         const part1 = this.parts[0];
         const part2 = this.parts[1];
-        const selected = this.selectedWord || "";
+        let selected = this.selectedWord || "";
         return part1 + selected + part2;
-
-        // return this.selectedWord || "Nothing selected";
     }
 
+    /**
+     * Does nothing at the moment
+     */
     save(): string {
       return "";
-    }
-
-    getSelectedWord() {
-        const timComponent = this.vctrl.getTimComponent("item1");
-        if(timComponent) {
-            //this.error = this.pluginMeta.getTaskId();
-            this.error = timComponent.getContent();
-        }
-        return;
     }
 
     protected getAttributeType() {

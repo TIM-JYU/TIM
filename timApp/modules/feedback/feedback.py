@@ -219,20 +219,9 @@ def check_letters(word: str, needed_len: int) -> bool:
 def reqs():
     templates = ["""
 ``` {#feedback1 plugin="feedback"}
-header: Vastauksesi
-inputstem: "Vastauksesi:"
-cols: 20
+header: Your answer
+inputstem: "Your choice:"
 field: item1
-```""", """
-``` {#tokapali plugin="feedback"}
-header: Kirjoita palindromi
-stem: Kirjoita palindromi, jossa on 7 kirjainta.
--points_array: [[0, 0.1], [0.6, 1]]
-inputstem: "Palindromisi:"
-needed_len: 7
-answerLimit: 4
-initword: muikku
-cols: 20
 ```"""]
     return jsonify({
         "js": ["js/build/feedback.js"],
@@ -249,11 +238,6 @@ cols: 20
                                 'data': templates[0].strip(),
                                 'text': 'One task',
                                 'expl': 'Add a plugin to show feedback',
-                            },
-                            {
-                                'data': templates[1].strip(),
-                                'text': '7 letters',
-                                'expl': 'Add a 7-letter palindrome task',
                             },
                         ],
                     },
