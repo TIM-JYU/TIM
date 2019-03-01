@@ -38,6 +38,7 @@ markAsUsed(ngs, popupMenu, interceptor);
 export interface ITimComponent {
     getContent: () => string;
     save: () => string | undefined;
+    getPar: () => Paragraph;
 }
 
 export interface IInsertDiffResult {

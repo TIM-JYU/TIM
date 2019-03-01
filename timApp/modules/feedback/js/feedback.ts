@@ -8,6 +8,7 @@ import {GenericPluginMarkup, nullable, PluginBase, withDefault} from "tim/plugin
 import {$http} from "tim/util/ngimport";
 import {to} from "tim/util/utils";
 import {valueDefu} from "tim/util/utils";
+import {find} from "../../../static/scripts/jspm_packages/npm/fp-ts@1.11.1/lib/Foldable";
 
 const feedbackApp = angular.module("feedbackApp", ["ngSanitize"]);
 export const moduleDefs = [feedbackApp];
@@ -39,7 +40,6 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
     private error?: string;
     private isRunning = false;
     private userword = "";
-    private runTestGreen = false;
     private modelOpts!: INgModelOptions; // initialized in $onInit, so need to assure TypeScript with "!"
     private vctrl!: ViewCtrl;
 
@@ -139,11 +139,28 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
 
     /**
      * Gets the user's answer from the plugin this feedback-plugin is assigned to.
+     * Doesn't work for paragraphs with multiple plugins at the moment.
      */
     getAnswer() {
         const timComponent = this.vctrl.getTimComponent(this.attrs.field || "");
         if(timComponent) {
-            this.userword = timComponent.getContent();
+            const par = timComponent.getPar();
+            const content = par.children(".parContent");
+            const nodes = content[0].childNodes;
+            // console.log(nodes);
+            let answer = "";
+            for (let n in nodes) {
+                let node = nodes[n];
+                if(node.nodeName == "#text") {
+                    let text = node.textContent || "";
+                    text.trim();
+                    answer = answer + text;
+                }
+                if(node.nodeName == "SPAN") {
+                    answer = answer + timComponent.getContent();
+                }
+            }
+            this.userword = answer;
         }
     }
 
