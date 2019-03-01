@@ -13,8 +13,8 @@ services:
    - imagex
    - uploader
    - dumbo
-   - timcan
    - dropdown
+   - feedback
   volumes:
    - .:/service
    - ${LOG_DIR}:/service/tim_logs
@@ -97,16 +97,6 @@ services:
   working_dir: /pali
   environment:
     PYTHONPATH: /pali:/py:/usr/local/lib/python3.6/dist-packages
-  command: ./startAll.sh
-  restart: unless-stopped
- timcan:
-  image: timimages/tim:${TIM_IMAGE_TAG}
-  volumes:
-   - ./timApp/modules/timcan:/timcan:ro
-   - ./timApp/modules/py:/py:ro
-  working_dir: /timcan
-  environment:
-   PYTHONPATH: /timcan:/py:/usr/local/lib/python3.6/dist-packages
   command: ./startAll.sh
   restart: unless-stopped
  dropdown:

@@ -8,7 +8,6 @@ import {GenericPluginMarkup, nullable, PluginBase, withDefault} from "tim/plugin
 import {$http} from "tim/util/ngimport";
 import {to} from "tim/util/utils";
 import {valueDefu} from "tim/util/utils";
-import {concat} from "../../../static/scripts/jspm_packages/npm/fp-ts@1.11.1/lib/function";
 
 const dropdownApp = angular.module("dropdownApp", ["ngSanitize"]);
 export const moduleDefs = [dropdownApp];

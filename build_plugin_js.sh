@@ -2,7 +2,5 @@
 # Builds JavaScript of all plugins.
 # Currently only needed for csPlugin and showfile.
 
-./run_command_workdir.sh . tsc --build timApp/modules/cs/js timApp/modules/svn/js timApp/modules/pali/js
-./run_command_workdir.sh . tsc --build timApp/modules/cs/js timApp/modules/svn/js timApp/modules/timcan/js
-./run_command_workdir.sh . tsc --build timApp/modules/cs/js timApp/modules/svn/js timApp/modules/dropdown/js
-./run_command_workdir.sh . tsc --build timApp/modules/cs/js timApp/modules/svn/js timApp/modules/feedback/js
+./run_command_workdir.sh . tsc --build timApp/modules/cs/js timApp/modules/svn/js timApp/modules/pali/js timApp/modules/timcan/js \
+timApp/modules/dropdown/js timApp/modules/feedback/js

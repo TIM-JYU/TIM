@@ -31,10 +31,6 @@ services:
   command: ${PALI_DEV_COMMAND:-/usr/sbin/sshd -D}
   ports:
    - "49997:22"
- timcan:
-  command: ${TIMCAN_DEV_COMMAND:-/usr/sbin/sshd -D}
-  ports:
-   - "49990:22"
  dropdown:
   command: ${DROPDOWN_DEV_COMMAND:-/usr/sbin/sshd -D}
   ports:
