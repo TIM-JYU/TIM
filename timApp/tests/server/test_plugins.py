@@ -1429,3 +1429,19 @@ a {#x initword: } b
 
         self.login_test2()
         self.post_answer('pali', f'{d.id}.t.points', user_input={'userword': 2}, expect_status=403)
+
+    def test_translation_plugin_state(self):
+        self.login_test1()
+        d = self.create_doc(initial_par="""
+#- {plugin=pali #t id=SSYigUyqdb7p}
+        """)
+        tr = self.create_translation(d)
+        s = {'userword': 'test'}
+        self.post_answer('pali', f'{d.id}.t', user_input=s)
+        r = self.get(tr.url, as_tree=True)
+        self.assert_plugin_json(
+            r.cssselect('.parContent pali-runner')[0],
+            self.create_plugin_json(d, 't', state=s, toplevel=s, par_id='SSYigUyqdb7p',
+                                    info={'current_user_id': 'testuser1', 'earlier_answers': 1,
+                                          'look_answer': False,
+                                          'max_answers': None, 'user_id': 'testuser1', 'valid': True}, ))

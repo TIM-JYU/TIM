@@ -3,6 +3,7 @@ from typing import Optional, Union
 
 import attr
 
+from timApp.document.docparagraph import DocParagraph
 from timApp.document.randutils import is_valid_id
 from timApp.plugin.pluginexception import PluginException
 
@@ -95,6 +96,9 @@ class TaskId(UnvalidatedTaskId):
 
     def validate(self):
         pass  # already validated at __init__
+
+    def update_doc_id_from_block(self, par: DocParagraph):
+        self.doc_id = par.ref_doc.doc_id if par.ref_doc else par.doc.doc_id
 
 
 MaybeUnvalidatedTaskId = Union[UnvalidatedTaskId, TaskId]

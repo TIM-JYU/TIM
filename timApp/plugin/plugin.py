@@ -107,7 +107,7 @@ class Plugin:
         if task_id and (task_id.doc_id == par.doc.doc_id or not task_id.doc_id):
             # self.task_id = TaskId.parse(task_id, require_doc_id=False)
             # TODO check if par can be None here
-            self.task_id.doc_id = par.ref_doc.doc_id if par.ref_doc else par.doc.doc_id
+            self.task_id.update_doc_id_from_block(par)
             self.task_id.maybe_set_hint(par.get_id())
         assert isinstance(values, dict)
         self.values = values

@@ -66,7 +66,7 @@ def find_task_ids(
 
     def handle_taskid(t: TaskId):
         if not t.doc_id:
-            t.doc_id = block.doc.doc_id
+            t.update_doc_id_from_block(block)
         elif check_access:
             b = DocEntry.find_by_id(t.doc_id)
             if b and not curr_user.has_seeanswers_access(b):
