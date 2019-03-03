@@ -220,9 +220,9 @@ function resizeIframe(obj: HTMLFrameElement) {
 }
 
 async function loadSimcir() {
-    import("simcir/basicset");
-    import("simcir/library");
-    import("simcir/oma-kirjasto");
+    await import("simcir/basicset");
+    await import("simcir/library");
+    await import("simcir/oma-kirjasto");
     return await import("simcir");
 }
 
