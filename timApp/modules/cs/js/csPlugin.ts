@@ -1240,14 +1240,8 @@ class CsController extends CsBase implements IController {
         const isText = this.isText;
         const isArgs = this.type.indexOf("args") >= 0;
 
-        if ( typeof this.attrsall.userinput === 'undefined')
-            this.userinput = (this.attrs.userinput || "").toString();
-        else
-            this.userinput = this.attrsall.userinput.toString();
-        if ( typeof this.attrsall.userargs === 'undefined')
-            this.userargs = (this.attrs.userargs || (isText && isArgs ? this.attrs.filename || "" : "")).toString();
-        else
-            this.userargs = this.attrsall.userargs.toString();
+        this.userinput = valueOr(this.attrsall.userinput, (this.attrs.userinput || "").toString());
+        this.userargs = valueOr(this.attrsall.userargs, (this.attrs.userargs || (isText && isArgs ? this.attrs.filename || "" : "")).toString());
         this.selectedLanguage = this.attrs.selectedLanguage || rt;
         this.noeditor = valueOr(this.attrs.noeditor, this.isSimcir || (this.type === "upload"));
         this.wrap = this.attrs.wrap || (isText ? 70 : -1);
