@@ -50,6 +50,7 @@ TIM_SAFE_TAGS = [
     'u',
     's',
     'style',
+    'tim-plugin-loader',
     # plugin components:
     'cs-comtest-runner',
     'cs-comtest-runner-input',
@@ -95,7 +96,7 @@ TIM_SAFE_ATTRS = frozenset([
     'rel', 'rev', 'rows', 'rowspan', 'rules', 'scope', 'selected', 'shape',
     'size', 'span', 'src', 'start', 'style', 'summary', 'tabindex', 'target', 'title',
     'type', 'usemap', 'valign', 'value', 'vspace', 'width', 'controls', 'plugin',
-    'json', 'data-plugin', 'data-answer-id'])
+    'json', 'data-plugin', 'data-answer-id', 'answer-id', 'task-id'])
 
 c = Cleaner(allow_tags=TIM_SAFE_TAGS, remove_unknown_tags=False, safe_attrs=TIM_SAFE_ATTRS)
 

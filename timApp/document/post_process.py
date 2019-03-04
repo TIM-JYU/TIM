@@ -31,13 +31,15 @@ def hide_names_in_teacher():
 def post_process_pars(doc: Document, pars, user: User, sanitize=True, do_lazy=False, edit_window=False,
                       load_plugin_states=True) -> Tuple[List[dict], List[str], List[str]]:
     taketime("start pluginify")
-    final_pars, js_paths, css_paths = pluginify(doc,
-                                                pars,
-                                                user,
-                                                sanitize=sanitize,
-                                                do_lazy=do_lazy,
-                                                edit_window=edit_window,
-                                                load_states=load_plugin_states)
+    final_pars, js_paths, css_paths, _ = pluginify(
+        doc,
+        pars,
+        user,
+        sanitize=sanitize,
+        do_lazy=do_lazy,
+        edit_window=edit_window,
+        load_states=load_plugin_states,
+    )
     taketime("end pluginify")
     settings = doc.get_settings()
     macroinfo = settings.get_macroinfo()

@@ -75,6 +75,12 @@ class TaskId(UnvalidatedTaskId):
         return f'{self.doc_id}.{self.task_name}'
 
     @property
+    def doc_task_with_field(self):
+        if not self.field:
+            return self.doc_task
+        return f'{self.doc_task}.{self.field}'
+
+    @property
     def extended(self):
         if not self.block_id_hint and not self.field:
             raise PluginException('Task id does not have block id hint.')

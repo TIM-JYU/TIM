@@ -41,8 +41,8 @@ class PluginTest(TimRouteTest):
         doc = self.create_doc(from_file=f'{EXAMPLE_DOCS_PATH}/mmcq_example.md')
         resp = self.get(f'/view/{doc.id}')
         tree = html.fromstring(resp)
-        mmcq_xpath = fr'.//div[@class="par mmcq"]/div[@class="parContent"]/div[@id="{doc.id}.mmcqexample.{doc.document.get_paragraphs()[0].get_id()}"]'
-        plugs = tree.findall(mmcq_xpath)
+        mmcq_xpath = fr'.par.mmcq > .parContent > tim-plugin-loader > div[id="{doc.id}.mmcqexample.{doc.document.get_paragraphs()[0].get_id()}"]'
+        plugs = tree.cssselect(mmcq_xpath)
         self.assertEqual(1, len(plugs))
         task_name = 'mmcqexample'
         plugin_type = 'mmcq'
@@ -134,37 +134,37 @@ class PluginTest(TimRouteTest):
                                    'answer_id': aid,
                                    'par_id': par_id,
                                    'doc_id': doc.id})
-        self.assertEqual({'html': "<div id='" + task_id_ext + f"' answer-id='{aid}' data-plugin='/mmcq' class=\"pluginmmcq\" ><mmcq "
-                                                                  "data-content='{&quot;state&quot;:[true,false,true],&quot;question&quot;:{&quot;falseText&quot;:null,&quot;button&quot;:null,&quot;wrongText&quot;:null,&quot;onTry&quot;:null,&quot;header&quot;:null,&quot;stem&quot;:&quot;Answer "
-                                                                  'yes or no to the following '
-                                                                  'questions.&quot;,&quot;headerText&quot;:null,&quot;choices&quot;:[{&quot;text&quot;:&quot;&lt;span '
-                                                                  'class=\\&quot;math '
-                                                                  'inline\\&quot;&gt;\\\\(2^2=4\\\\)&lt;/span&gt;&quot;,&quot;correct&quot;:true,&quot;reason&quot;:&quot;This '
-                                                                  'is true.&quot;},{&quot;text&quot;:&quot;All '
-                                                                  'cats are '
-                                                                  'black.&quot;,&quot;correct&quot;:false,&quot;reason&quot;:&quot;No '
-                                                                  'way.&quot;},{&quot;text&quot;:&quot;Guess.&quot;,&quot;correct&quot;:true,&quot;reason&quot;:&quot;No '
-                                                                  "reason.&quot;}],&quot;trueText&quot;:null,&quot;buttonText&quot;:null,&quot;correctText&quot;:null}}'></mmcq></div>",
-                              'reviewHtml': None}, j)
+        self.assertEqual({
+                             'html': "<mmcq data-content='{&quot;state&quot;:[true,false,true],&quot;question&quot;:{&quot;falseText&quot;:null,&quot;button&quot;:null,&quot;wrongText&quot;:null,&quot;onTry&quot;:null,&quot;header&quot;:null,&quot;stem&quot;:&quot;Answer "
+                                     'yes or no to the following '
+                                     'questions.&quot;,&quot;headerText&quot;:null,&quot;choices&quot;:[{&quot;text&quot;:&quot;&lt;span '
+                                     'class=\\&quot;math '
+                                     'inline\\&quot;&gt;\\\\(2^2=4\\\\)&lt;/span&gt;&quot;,&quot;correct&quot;:true,&quot;reason&quot;:&quot;This '
+                                     'is true.&quot;},{&quot;text&quot;:&quot;All '
+                                     'cats are '
+                                     'black.&quot;,&quot;correct&quot;:false,&quot;reason&quot;:&quot;No '
+                                     'way.&quot;},{&quot;text&quot;:&quot;Guess.&quot;,&quot;correct&quot;:true,&quot;reason&quot;:&quot;No '
+                                     "reason.&quot;}],&quot;trueText&quot;:null,&quot;buttonText&quot;:null,&quot;correctText&quot;:null}}'></mmcq>",
+                             'reviewHtml': None}, j)
 
         grant_access(get_anon_group_id(), doc.id, 'view')
 
         tree = self.get(f'/view/{doc.id}', as_tree=True, query_string={'lazy': False})
-        plugs = tree.findall(mmcq_xpath)
+        plugs = tree.cssselect(mmcq_xpath)
         self.assertEqual(1, len(plugs))
         self.assertEqual([True, False, True], json.loads(plugs[0].find('mmcq').get('data-content'))['state'])
 
         # Testing noanswers parameter: There should be no answers in the document
         tree = self.get(f'/view/{doc.id}', as_tree=True, query_string={'lazy': False, 'noanswers': True})
-        plugs = tree.findall(mmcq_xpath)
+        plugs = tree.cssselect(mmcq_xpath)
         self.assertEqual(1, len(plugs))
         self.assertIsNone(json.loads(plugs[0].find('mmcq').get('data-content')).get('state'))
 
-        summary = tree.findall('.//div[@class="taskSummary"]')
+        summary = tree.cssselect('div.taskSummary')
         self.assertEqual(0, len(summary))
         doc.document.add_setting('show_task_summary', True)
         tree = self.get(f'/view/{doc.id}', as_tree=True, query_string={'lazy': False})
-        summary = tree.findall('.//div[@class="taskSummary"]')
+        summary = tree.cssselect('div.taskSummary')
         self.assertEqual(1, len(summary))
 
         self.logout()
@@ -193,8 +193,8 @@ class PluginTest(TimRouteTest):
                                             'par_id': par_id,
                                             'doc_id': doc.id}, expect_status=403)
         tree = self.get(f'/view/{doc.id}', as_tree=True, query_string={'lazy': False})
-        plugs = tree.findall(mmcq_xpath)
-        summary = tree.findall('.//div[@class="taskSummary"]')
+        plugs = tree.cssselect(mmcq_xpath)
+        summary = tree.cssselect('div.taskSummary')
         self.assertEqual(1, len(plugs))
         self.assertEqual(0, len(summary))
         # Anonymous users can't see their answers
@@ -222,11 +222,9 @@ class PluginTest(TimRouteTest):
     def test_idless_plugin(self):
         self.login_test1()
         doc = self.create_doc(from_file=f'{EXAMPLE_DOCS_PATH}/idless_plugin.md').document
-        resp = self.get(f'/view/{doc.doc_id}')
-        tree = html.fromstring(resp)
-        mmcq_xpath = fr'.//div[@class="par csPlugin"]/div[@class="parContent"]/div[@id="{doc.doc_id}..{doc.get_paragraphs()[0].get_id()}"]'
-        plugs = tree.findall(mmcq_xpath)
-        self.assertEqual(1, len(plugs))
+        resp = self.get(f'/view/{doc.doc_id}', as_tree=True)
+        tree = resp.cssselect(f'.parContent > tim-plugin-loader > div[id="{doc.doc_id}..{doc.get_paragraphs()[0].get_id()}"]')[0]
+        self.assertEqual(1, len(tree))
 
     def test_upload(self):
         self.login_test1()
@@ -752,7 +750,7 @@ lazy: true
         """)
         e = self.get(d.url, as_tree=True)
         ablazy = e.cssselect('tim-plugin-loader')
-        self.assertEqual({'type': 'full', 'task-id': ''}, ablazy[0].attrib)
+        self.assertEqual({'type': 'full', 'task-id': '', 'class': 'plugingraphviz', 'answer-id': ''}, ablazy[0].attrib)
 
     def test_cache_no_browser(self):
         self.login_test1()
@@ -931,7 +929,7 @@ choices:
     def check_plugin_ref_correct(self, doc_to_check: DocInfo, expected_doc: DocInfo, expected_par: DocParagraph,
                                  text_to_check='',
                                  preamble_doc: DocInfo = None):
-        par = self.get(doc_to_check.url, as_tree=True).cssselect('mmcq')[0].getparent().getparent().getparent()
+        par = self.get(doc_to_check.url, as_tree=True).cssselect('mmcq')[0].getparent().getparent().getparent().getparent()
         # print(html.tostring(par, pretty_print=True).decode())
         if preamble_doc:
             self.assertEqual(preamble_doc.path, par.attrib['data-from-preamble'])
@@ -1120,7 +1118,8 @@ Hi {#t3} $x$
         self.assert_same_html(e, f"""
 <div class="par" id="Lm7y6R7n5XIb" t="LTB4NDMxYzFjN2M=" attrs='{{"defaultplugin": "pali"}}'>
 <div class="parContent">
-                <em>Hello</em> <span id="{d.id}.t1.Lm7y6R7n5XIb" data-plugin="/pali" class="pluginpali inlineplugin"><pali-runner json="{self.make_base64(expected_json)}"></pali-runner></span>, <span class="error">Plugin nonexistent error: Plugin does not exist.</span> and <span id="{d.id}.t2.Lm7y6R7n5XIb" data-plugin="/pali" class="pluginpali inlineplugin"><pali-runner json="{self.make_base64(expected_json2)}"></pali-runner></span>
+                <em>Hello</em> <tim-plugin-loader type="full" answer-id="" class="pluginpali inlineplugin" task-id="{d.id}.t1"><span id="{d.id}.t1.Lm7y6R7n5XIb" data-plugin="/pali">
+                <pali-runner json="{self.make_base64(expected_json)}"></pali-runner></span></tim-plugin-loader>, <span class="error">Plugin nonexistent error: Plugin does not exist.</span> and <tim-plugin-loader type="full" answer-id="" class="pluginpali inlineplugin" task-id="{d.id}.t2"><span id="{d.id}.t2.Lm7y6R7n5XIb" data-plugin="/pali"><pali-runner json="{self.make_base64(expected_json2)}"></pali-runner></span></tim-plugin-loader>
             <span class="math inline">\(x\)</span>
             </div>
 <div class="editline" title="Click to edit this paragraph"></div>
@@ -1156,9 +1155,14 @@ Hi {#t3} $x$
         self.assert_same_html(e, f"""
 <div class="par" id="Lm7y6R7n5XIb" t="LTB4NDMxYzFjN2M=" attrs='{{"defaultplugin": "pali"}}'>
 <div class="parContent">
-                <em>Hello</em> <span id="{d.id}.t1.Lm7y6R7n5XIb" data-plugin="/pali" class="pluginpali inlineplugin"><pali-runner json="{self.make_base64(
-    expected_json)}"></pali-runner></span>, <span class="error">Plugin nonexistent error: Plugin does not exist.</span> and <span id="{d.id}.t2.Lm7y6R7n5XIb" data-answer-id="{aid}" data-plugin="/pali" class="pluginpali inlineplugin"><pali-runner json="{self.make_base64(
-    expected_json2)}"></pali-runner></span>
+<em>Hello</em>
+<tim-plugin-loader type="full" answer-id="" class="pluginpali inlineplugin" task-id="{d.id}.t1">
+<span id="{d.id}.t1.Lm7y6R7n5XIb" data-plugin="/pali">
+<pali-runner json="{self.make_base64(expected_json)}"></pali-runner></span></tim-plugin-loader>,
+<span class="error">Plugin nonexistent error: Plugin does not exist.</span> and 
+<tim-plugin-loader type="full" answer-id="{aid}" class="pluginpali inlineplugin" task-id="{d.id}.t2">
+<span id="{d.id}.t2.Lm7y6R7n5XIb" data-plugin="/pali"><pali-runner json="{self.make_base64(
+    expected_json2)}"></pali-runner></span></tim-plugin-loader>
 <span class="math inline">\(x\)</span>
             </div>
 <div class="editline" title="Click to edit this paragraph"></div>
@@ -1174,9 +1178,11 @@ Hi {#t3} $x$
 <div class="par" id="spOMcE20X2aX" t="LTB4NTRjM2E3ZmE=" attrs='{{"defaultplugin": "pali", "math_type": "svg"}}'>
 <div class="parContent">
                 Hi
-<span id="{d.id}.t3.spOMcE20X2aX" class="pluginpali inlineplugin" data-plugin="/pali">
+<tim-plugin-loader type="full" answer-id="" class="pluginpali inlineplugin" task-id="{d.id}.t3">
+<span id="{d.id}.t3.spOMcE20X2aX" data-plugin="/pali">
 <pali-runner json="{self.make_base64(expected_json)}"></pali-runner>
 </span>
+</tim-plugin-loader>
 <span class="mathp inline"><img style="width:0.80327em; vertical-align:-0.06000em" src="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0nMS4wJyBlbmNvZGluZz0nVVRGLTgnPz4KPCEtLSBUaGlzIGZpbGUgd2FzIGdlbmVyYXRlZCBieSBkdmlzdmdtIDIuNCAtLT4KPHN2ZyBoZWlnaHQ9JzUuMjg5NDZwdCcgdmVyc2lvbj0nMS4xJyB2aWV3Qm94PSctMC41MDAwMDIgLTQuNzg5NDU4IDYuNjkzOTIyIDUuMjg5NDYnIHdpZHRoPSc2LjY5MzkyMnB0JyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHhtbG5zOnhsaW5rPSdodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rJz4KPGRlZnM+PHN0eWxlIHR5cGU9InRleHQvY3NzIj48IVtDREFUQVtwYXRoIHtzdHJva2U6IGN1cnJlbnRDb2xvcjtzdHJva2Utd2lkdGg6IDAuMDVwdDt9XV0+PC9zdHlsZT48cGF0aCBkPSdNMy4zMjc1MjIgLTMuMDA4NzE3QzMuMzg3Mjk4IC0zLjI2Nzc0NiAzLjYxNjQzOCAtNC4xODQzMDkgNC4zMTM4MjMgLTQuMTg0MzA5QzQuMzYzNjM2IC00LjE4NDMwOSA0LjYwMjc0IC00LjE4NDMwOSA0LjgxMTk1NSAtNC4wNTQ3OTVDNC41MzMwMDEgLTQuMDA0OTgxIDQuMzMzNzQ4IC0zLjc1NTkxNSA0LjMzMzc0OCAtMy41MTY4MTJDNC4zMzM3NDggLTMuMzU3NDEgNC40NDMzMzcgLTMuMTY4MTIgNC43MTIzMjkgLTMuMTY4MTJDNC45MzE1MDcgLTMuMTY4MTIgNS4yNTAzMTEgLTMuMzQ3NDQ3IDUuMjUwMzExIC0zLjc0NTk1M0M1LjI1MDMxMSAtNC4yNjQwMSA0LjY2MjUxNiAtNC40MDM0ODcgNC4zMjM3ODYgLTQuNDAzNDg3QzMuNzQ1OTUzIC00LjQwMzQ4NyAzLjM5NzI2IC0zLjg3NTQ2NyAzLjI3NzcwOSAtMy42NDYzMjZDMy4wMjg2NDMgLTQuMzAzODYxIDIuNDkwNjYgLTQuNDAzNDg3IDIuMjAxNzQzIC00LjQwMzQ4N0MxLjE2NTYyOSAtNC40MDM0ODcgMC41OTc3NTggLTMuMTE4MzA2IDAuNTk3NzU4IC0yLjg2OTI0QzAuNTk3NzU4IC0yLjc2OTYxNCAwLjY5NzM4NSAtMi43Njk2MTQgMC43MTczMSAtMi43Njk2MTRDMC43OTcwMTEgLTIuNzY5NjE0IDAuODI2ODk5IC0yLjc4OTUzOSAwLjg0NjgyNCAtMi44NzkyMDNDMS4xODU1NTQgLTMuOTM1MjQzIDEuODQzMDg4IC00LjE4NDMwOSAyLjE4MTgxOCAtNC4xODQzMDlDMi4zNzExMDggLTQuMTg0MzA5IDIuNzE5ODAxIC00LjA5NDY0NSAyLjcxOTgwMSAtMy41MTY4MTJDMi43MTk4MDEgLTMuMjA3OTcgMi41NTA0MzYgLTIuNTQwNDczIDIuMTgxODE4IC0xLjE0NTcwNEMyLjAyMjQxNiAtMC41MjgwMiAxLjY3MzcyNCAtMC4xMDk1ODkgMS4yMzUzNjcgLTAuMTA5NTg5QzEuMTc1NTkyIC0wLjEwOTU4OSAwLjk0NjQ1MSAtMC4xMDk1ODkgMC43MzcyMzUgLTAuMjM5MTAzQzAuOTg2MzAxIC0wLjI4ODkxNyAxLjIwNTQ3OSAtMC40OTgxMzIgMS4yMDU0NzkgLTAuNzc3MDg2QzEuMjA1NDc5IC0xLjA0NjA3NyAwLjk4NjMwMSAtMS4xMjU3NzggMC44MzY4NjIgLTEuMTI1Nzc4QzAuNTM3OTgzIC0xLjEyNTc3OCAwLjI4ODkxNyAtMC44NjY3NSAwLjI4ODkxNyAtMC41NDc5NDVDMC4yODg5MTcgLTAuMDg5NjY0IDAuNzg3MDQ5IDAuMTA5NTg5IDEuMjI1NDA1IDAuMTA5NTg5QzEuODgyOTM5IDAuMTA5NTg5IDIuMjQxNTk0IC0wLjU4Nzc5NiAyLjI3MTQ4MiAtMC42NDc1NzJDMi4zOTEwMzQgLTAuMjc4OTU0IDIuNzQ5Njg5IDAuMTA5NTg5IDMuMzQ3NDQ3IDAuMTA5NTg5QzQuMzczNTk5IDAuMTA5NTg5IDQuOTQxNDY5IC0xLjE3NTU5MiA0Ljk0MTQ2OSAtMS40MjQ2NThDNC45NDE0NjkgLTEuNTI0Mjg0IDQuODUxODA2IC0xLjUyNDI4NCA0LjgyMTkxOCAtMS41MjQyODRDNC43MzIyNTQgLTEuNTI0Mjg0IDQuNzEyMzI5IC0xLjQ4NDQzMyA0LjY5MjQwMyAtMS40MTQ2OTVDNC4zNjM2MzYgLTAuMzQ4NjkyIDMuNjg2MTc3IC0wLjEwOTU4OSAzLjM2NzM3MiAtMC4xMDk1ODlDMi45Nzg4MjkgLTAuMTA5NTg5IDIuODE5NDI3IC0wLjQyODM5NCAyLjgxOTQyNyAtMC43NjcxMjNDMi44MTk0MjcgLTAuOTg2MzAxIDIuODc5MjAzIC0xLjIwNTQ3OSAyLjk4ODc5MiAtMS42NDM4MzZMMy4zMjc1MjIgLTMuMDA4NzE3WicgaWQ9J2cwLTEyMCcvPgo8L2RlZnM+CjxnIGlkPSdwYWdlMSc+Cjx1c2UgeD0nMCcgeGxpbms6aHJlZj0nI2cwLTEyMCcgeT0nMCcvPgo8L2c+Cjwvc3ZnPg==" title="x"></span></div>
             
 <div class="editline" title="Click to edit this paragraph"></div>
@@ -1194,9 +1200,12 @@ Hi {#t3} $x$
         self.assert_same_html(r.cssselect('.par')[2], f"""
 <div class="par" id="Se0s8FDLbhOp" t="LTB4MzJmOWU4MGI=" attrs='{{"defaultplugin": "pali"}}'>
 <div class="parContent">
-<span id="{d.id}.t4.Se0s8FDLbhOp" class="pluginpali inlineplugin" data-plugin="/pali">
+<tim-plugin-loader type="full" answer-id="" class="pluginpali inlineplugin" task-id="{d.id}.t4">
+<span id="{d.id}.t4.Se0s8FDLbhOp" data-plugin="/pali">
 <pali-runner json="{self.make_base64(expected_json)}"></pali-runner>
-</span></div>
+</span>
+</tim-plugin-loader>
+</div>
 <div class="editline" title="Click to edit this paragraph"></div>
 <div class="readline" title="Click to mark this paragraph as read"></div>
 </div>
@@ -1251,7 +1260,8 @@ Hi {#t3} $x$
         # Make sure Dumbo won't escape plugin's error HTML.
         self.assert_same_html(r.cssselect('.parContent')[0], f"""
 <div class="parContent">
-    <span id="{d.id}.t5.a3Xuyg1PF1l1" class="pluginpali inlineplugin" data-plugin="/pali">
+    <tim-plugin-loader type="full" answer-id="" class="pluginpali inlineplugin" task-id="{d.id}.t5">
+    <span id="{d.id}.t5.a3Xuyg1PF1l1" data-plugin="/pali">
         <div class="pluginError">
             The following fields have invalid values:
             <ul>
@@ -1261,6 +1271,7 @@ Hi {#t3} $x$
             </ul>
         </div>
     </span>
+    </tim-plugin-loader>
 </div>
         """)
 
@@ -1353,7 +1364,8 @@ a {#x initword: } b
         self.assert_same_html(r.cssselect('.parContent')[0], f"""
 <div class="parContent">
     a
-    <span id="{d.id}.x.a3Xuyg1PF1l1" class="pluginpali inlineplugin" data-plugin="/pali">
+    <tim-plugin-loader type="full" answer-id="" class="pluginpali inlineplugin" task-id="{d.id}.x">
+    <span id="{d.id}.x.a3Xuyg1PF1l1" data-plugin="/pali">
         <div class="pluginError">
             The following fields have invalid values:
             <ul>
@@ -1363,6 +1375,7 @@ a {#x initword: } b
             </ul>
         </div>
     </span>
+    </tim-plugin-loader>
     b
 </div>""")
 
@@ -1412,7 +1425,9 @@ a {#x initword: } b
                                                       'max_answers': None, 'user_id': 'testuser1', 'valid': True}, )
         self.assert_same_html(r.cssselect('.parContent')[1], f"""
 <div class="parContent" id="t.points">
-    <div id="{d.id}.t.points" answer-id="{aid}" data-plugin="/pali" class="pluginpali"><pali-runner json="{self.make_base64(expected_json)}"></pali-runner></div>
+    <tim-plugin-loader type="full" answer-id="{aid}" class="pluginpali" task-id="{d.id}.t.points">
+    <div id="{d.id}.t.points" data-plugin="/pali"><pali-runner json="{self.make_base64(expected_json)}"></pali-runner></div>
+    </tim-plugin-loader>
 </div>""")
 
         self.assert_plugin_json(

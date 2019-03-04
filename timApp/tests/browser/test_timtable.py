@@ -9,7 +9,7 @@ class TimTableTest(BrowserTest):
 
     def find_and_save_timtable(self, name: str):
         while True:
-            t = self.find_element_and_move_to('tim-table')
+            t = self.find_element_avoid_staleness('tim-table')
             try:
                 self.save_element_screenshot(t, name)
                 break

@@ -2,9 +2,11 @@ import html
 import re
 from copy import deepcopy
 from datetime import datetime, timezone
+from enum import Enum
 from typing import Tuple, Optional, Union, Iterable, Dict, NamedTuple, Generator, List, Match
 
 import yaml
+from flask import render_template_string
 
 import timApp
 from timApp.answer.answer import Answer
@@ -40,6 +42,12 @@ CONTENT_FIELD_NAME_MAP = {
 }
 
 
+class PluginWrap(Enum):
+    Nothing = 1
+    NoLoader = 2
+    Full = 3
+
+
 class PluginRenderOptions(NamedTuple):
     user: Optional[User]
     do_lazy: bool
@@ -48,7 +56,7 @@ class PluginRenderOptions(NamedTuple):
     target_format: PrintFormat
     output_format: PluginOutputFormat
     review: bool
-    wrap_in_div: bool
+    wraptype: PluginWrap
 
     @property
     def is_html(self):
@@ -361,7 +369,6 @@ class Plugin:
             stem = str(markup.get("stem", "Open plugin"))
             out = out.replace("<!--", "<!-LAZY-").replace("-->", "-LAZY->")
             out = f'{LAZYSTART}{out}{LAZYEND}<span style="font-weight:bold">{header}</span><div><p>{stem}</p></div>'
-        answer_attr = ''
 
         # Create min and max height for div
         style = ''
@@ -374,13 +381,38 @@ class Plugin:
         if style:
             style = f'style="{style}"'
 
-        plgclass = f'class="{self.get_container_class()}"'
-
-        if self.answer:
-            answer_attr = f""" answer-id='{self.answer.id}'"""
         html_task_id = self.task_id.extended_or_doc_task if self.task_id else self.fake_task_id
+        doc_task_id = self.task_id.doc_task_with_field if self.task_id else None
         tag = self.get_wrapper_tag()
-        return f"<{tag} id='{html_task_id}'{answer_attr} data-plugin='/{self.type}' {plgclass} {style}>{out}</{tag}>" if self.options.wrap_in_div else out
+        if self.options.wraptype != PluginWrap.Nothing:
+            abtype = self.get_answerbrowser_type()
+            cont = f"""
+<{tag} id='{html_task_id}' data-plugin='/{self.type}' {style}>
+{out}
+</{tag}>
+            """
+            if abtype and self.options.wraptype == PluginWrap.Full:
+                return render_template_string(
+                    """
+<tim-plugin-loader type="{{abtype}}"
+                   answer-id="{{aid or ''}}"
+                   class="{{plgclass}}"
+                   task-id="{{doc_task_id or ''}}">{{cont|safe}}</tim-plugin-loader>""",
+                    abtype=abtype,
+                    answer_count=self.answer_count,
+                    html_task_id=html_task_id,
+                    out=out,
+                    plgclass=self.get_container_class(),
+                    style=style,
+                    tag=tag,
+                    type=self.type,
+                    doc_task_id=doc_task_id,
+                    cont=cont,
+                    aid=self.answer.id if self.answer else None,
+                )
+            else:
+                return cont
+        return out
 
 
 def parse_plugin_values_macros(par: DocParagraph,

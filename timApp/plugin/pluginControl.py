@@ -25,7 +25,7 @@ from timApp.markdown.htmlSanitize import sanitize_html
 from timApp.plugin.containerLink import plugin_reqs, get_plugin
 from timApp.plugin.containerLink import render_plugin_multi, render_plugin, get_plugins
 from timApp.plugin.plugin import Plugin, PluginRenderOptions, load_markup_from_yaml, expand_macros_for_plugin, \
-    find_inline_plugins, InlinePlugin, finalize_inline_yaml
+    find_inline_plugins, InlinePlugin, finalize_inline_yaml, PluginWrap
 from timApp.plugin.pluginOutputFormat import PluginOutputFormat
 from timApp.plugin.pluginexception import PluginException
 from timApp.plugin.taskid import TaskId
@@ -250,7 +250,7 @@ class PluginPlacement:
                 p.values['isTask'] = not block.is_question()
 
             if load_states:
-                if custom_answer is not None:
+                if custom_answer is not None and custom_answer.task_id == p.task_id.doc_task:
                     answer_and_cnt = custom_answer, custom_answer.get_answer_number()
                 elif p.task_id:
                     answer_and_cnt = answer_map.get(p.task_id.doc_task, None)
@@ -294,11 +294,11 @@ def pluginify(doc: Document,
               edit_window=False,
               load_states=True,
               review=False,
-              wrap_in_div=True,
+              pluginwrap=PluginWrap.Full,
               output_format: PluginOutputFormat = PluginOutputFormat.HTML,
               user_print: bool = False,
               target_format: PrintFormat = PrintFormat.LATEX,
-              dereference=True) -> Tuple[List[DocParagraph], List[str], List[str]]:
+              dereference=True) -> Tuple[List[DocParagraph], List[str], List[str], Optional[Plugin]]:
     """
     "Pluginifies" the specified DocParagraphs by calling the corresponding plugin route for each plugin
     paragraph.
@@ -341,15 +341,16 @@ def pluginify(doc: Document,
     plugins: DefaultDict[str, Dict[KeyType, Plugin]] = defaultdict(OrderedDict)
 
     answer_map: AnswerMap = {}
-    plugin_opts = PluginRenderOptions(do_lazy=do_lazy,
-                                      user_print=user_print,
-                                      preview=edit_window,
-                                      target_format=target_format,
-                                      output_format=output_format,
-                                      user=user,
-                                      review=review,
-                                      wrap_in_div=wrap_in_div
-                                      )
+    plugin_opts = PluginRenderOptions(
+        do_lazy=do_lazy,
+        user_print=user_print,
+        preview=edit_window,
+        target_format=target_format,
+        output_format=output_format,
+        user=user,
+        review=review,
+        wraptype=pluginwrap,
+    )
 
     if load_states and custom_answer is None and user is not None:
         task_ids, _, _ = find_task_ids(pars, check_access=user != get_current_user_object())
@@ -372,6 +373,7 @@ def pluginify(doc: Document,
 
     placements = {}
     dumbo_opts = OrderedDict()
+    custom_answer_plugin = None
     for idx, block in enumerate(pars):
         is_gamified = block.get_attr('gamification')
         is_gamified = not not is_gamified
@@ -406,6 +408,8 @@ def pluginify(doc: Document,
             placements[idx] = pplace
             for r, p in pplace.plugins.items():
                 plugins[p.type][idx, r] = p
+                if custom_answer and p.task_id.doc_task == custom_answer.task_id:
+                    custom_answer_plugin = p
             if not pplace.is_block_plugin:
                 dumbo_opts[idx] = block.get_dumbo_options(base_opts=settings.get_dumbo_options())
         else:
@@ -511,13 +515,6 @@ def pluginify(doc: Document,
     for idx, place in placements.items():
         par = html_pars[idx]
         par[output_format.value] = place.get_block_output()
-        bp = place.get_block_plugin()
-        if bp:
-            par['answerbrowser_type'] = bp.get_answerbrowser_type()
-            par['answer_count'] = bp.answer_count
-            if bp.task_id:
-                attrs = par.get('ref_attrs', par['attrs'])
-                attrs['taskIdObj'] = bp.task_id
 
     # inline plugin blocks need to go through Dumbo to process MD
     if output_format == PluginOutputFormat.HTML:
@@ -533,7 +530,7 @@ def pluginify(doc: Document,
             html_pars[idx][output_format.value] = sanitize_html(h)
     # taketime("phtml done")
 
-    return pars, js_paths, css_paths
+    return pars, js_paths, css_paths, custom_answer_plugin
 
 
 def get_all_reqs():
