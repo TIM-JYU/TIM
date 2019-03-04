@@ -67,11 +67,10 @@ export class OmapluginController extends PluginBase<t.TypeOf<typeof omapluginMar
         this.userword = this.attrsall.userword || this.attrs.initword || "";
         this.modelOpts = {debounce: this.autoupdate};
         this.checkomapluginndrome();
-        if (this.attrs.followid) {
             //this.vctrl.addOmaplugin(this, this.attrs.followid);
             //this.vctrl.addTimComponent(this, this.attrs.followid || this.pluginMeta.getTaskId() || "");
-            this.vctrl.addTimComponentToList(this, this.attrs.followid);
-        }
+            //this.vctrl.addTimComponentToList(this, this.attrs.followid);
+        this.vctrl.addTimComponent(this);
     }
 
     get userword1(): string {
@@ -150,7 +149,7 @@ export class OmapluginController extends PluginBase<t.TypeOf<typeof omapluginMar
             const data = r.result.data;
             this.error = data.web.error;
             this.result = data.web.result;
-            const timComponent = this.vctrl.getTimComponent("FOLLOWID");
+            const timComponent = this.vctrl.getTimComponentByName("FOLLOWID");
             if (!this.attrs.followid && timComponent) {
                 //this.error = this.vctrl.getOmapluginControllerFromName("FOLLOWID").userword1;//jotain toiselta pluginilta?
                 this.error = timComponent.getContent();
@@ -164,6 +163,10 @@ export class OmapluginController extends PluginBase<t.TypeOf<typeof omapluginMar
         return omapluginAll;
     }
 
+    getName(): string | undefined {
+        return this.attrs.followid || this.pluginMeta.getTaskId(); //TODO parse taskid / followid
+    }
+
     getContent(): string {
         return this.userword;
     }
@@ -172,6 +175,25 @@ export class OmapluginController extends PluginBase<t.TypeOf<typeof omapluginMar
         this.userword = "I'm saved";
         return "";
     }
+
+    getGroups(): string[]{
+        let returnList: string[] = [];
+        const parents = this.element.parents('.area'); //Palauttaa vain yhden koska divit ei sisäkkäin?
+        //Parsetaan toistaiseksi manuaalisesti "area area_ulompi area_sisempi"
+        if(parents[0]){
+            let areaList = parents[0].classList;
+            areaList.forEach(
+                function(value){
+                    if(value.match("area_")){
+                        returnList.push(value.replace("area_", ""));
+                    }
+                }
+            )
+        }
+        //console.log(this.attrs.followid + ": " + returnList);
+        return returnList;
+    }
+
 }
 
 omapluginApp.component("omapluginRunner", {

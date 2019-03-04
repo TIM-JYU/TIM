@@ -37,7 +37,9 @@ import {MenuFunctionEntry} from "./viewutils";
 markAsUsed(ngs, popupMenu, interceptor);
 
 export interface ITimComponent {
+    getName: () => string | undefined;
     getContent: () => string;
+    getGroups: () => string[];
     save: () => string | undefined;
 }
 
@@ -98,8 +100,9 @@ export class ViewCtrl implements IController {
 
     private timTables: {[parId: string]: TimTableController} = {};
     // private omapluginit: {[name: string]: OmapluginController} = {};
-    private timComponents: {[name: string]: ITimComponent | undefined} = {};
-    private timComponentsList:{[name: string]: [ITimComponent | undefined]} = {};
+    //private timComponents: {[name: string]: ITimComponent | undefined} = {};
+    //private timComponentsList:{[name: string]: [ITimComponent | undefined]} = {};
+    private timComponents: Map<string, ITimComponent> = new Map();
 
     private pendingUpdates: PendingCollection;
     private document: Document;
@@ -441,8 +444,10 @@ export class ViewCtrl implements IController {
      * @param component
      * @param name
      */
-    public addTimComponent(component: ITimComponent, name: string) {
-        this.timComponents[name] = component;
+    public addTimComponent(component: ITimComponent) {
+        let name = component.getName();
+        if (name) this.timComponents.set(name, component);
+        //this.timComponents[name] = component;
         //lisää yhden timcompon nimettynä listaan
         //{d1: timcmp1, d2:timcmp...
     }
@@ -450,55 +455,83 @@ export class ViewCtrl implements IController {
     //Kommentit siivotaan kun datan rakenne selkenee
 
 
-    public addTimComponentToList(component: ITimComponent, name: string) {
-        //lisää timcompin nimensä mukaiseen listaan
-        // {demot: [itimc1, imic2], harkat: [itimc...}
-        if(this.timComponentsList[name]) this.timComponentsList[name].push(component);
-        else this.timComponentsList[name] = [component];
-    }
-
-    public getTimComponentByList(name:string){
-        //palauttaa nimetyn listan
-        // {demot: [itimc1, imic2], harkat: [itimc...}
-        return this.timComponentsList[name];
-    }
+    // public addTimComponentToList(component: ITimComponent, name: string) {
+    //     //lisää timcompin nimensä mukaiseen listaan
+    //     // {demot: [itimc1, imic2], harkat: [itimc...}
+    //     if(this.timComponentsList[name]) this.timComponentsList[name].push(component);
+    //     else this.timComponentsList[name] = [component];
+    // }
+    //
+    // public getTimComponentByList(name:string){
+    //     //palauttaa nimetyn listan
+    //     // {demot: [itimc1, imic2], harkat: [itimc...}
+    //     return this.timComponentsList[name];
+    // }
 
     /**
      * TODO add comment
      * @param name
      */
-    public getTimComponent(name: string) {
+    public getTimComponentByName(name: string): ITimComponent | undefined {
         //palauttaa nimetyn timcompin
         //{d1: timcmp1, d2:timcmp...
-        return this.timComponents[name];
+        return this.timComponents.get(name);
     }
 
-    public getTimComponents(list: string[]){
-        //ottaa listan nimistä ja palauttaa listan nimetyistä timcompeista
-        //input: [d1,d2,d3]
-        //out: [timcp1,timcmp2..
-        let returnList = new Array;
-        for(let i in list){
-            if(list[i].endsWith("*")){
-                for(let j in this.timComponents){
-                    //if(j.startsWith(list[i].slice(0,-1))){alert(list[i] + " " + list[i].slice(0,-1) + " " + j)}
-                    //alert ("EI listassa?" + !(returnList.indexOf(this.getTimComponent(j))>-1));
-                    if(j.startsWith(list[i].slice(0,-1)) && !(returnList.indexOf(this.getTimComponent(j))>-1)){
-                        returnList.push(this.getTimComponent(j));
-                    }
-                //var j = 0; j < Object.keys(this.timComponents).length; j++
-                }
-            }
-            else returnList.push(this.getTimComponent(list[i]));
-            //returnList[list[i]] = this.getTimComponent();
-            //const tim = this.getTimComponent(list[i])
-            //if (tim) alert(tim.getContent);
+    /**
+     * TODO
+     * @param group
+     */
+    public getTimComponentsByGroup(group: string): ITimComponent[] {
+        return [];
+    }
+
+    /**
+     * TODO ^ ja $ pois? - riippuu käyttötapauksesta
+     * vrt lomakkeet "demot" ja "demotuusiperiodi" - pitääkö käyttäjän antaa ^demot$ vai pelkkä demot,
+     * kun haluaa viitata vain ensimmäiseen
+     * TODO otetaanko lista regexeistä
+     * ja poistetaan duplikaatit palautuslistasta vs
+     * hoitaako plugin/käyttäjä itse ettei kutsu esim saman lomakkeen savea kahdesti,
+     * kun fieldsissä kaksi regexiä joihin lomakkeen followid sopii
+     * @param re
+     */
+    public getTimComponentsByRegex(re: string): ITimComponent[]{
+        let returnList: ITimComponent[] = [];
+        let reg = new RegExp("^" + re + "$")
+        for(const [k, v] of this.timComponents)
+        {
+            if(reg.test(k)) returnList.push(v);
         }
         return returnList;
     }
 
+    // public getTimComponents(list: string[]){
+    //     //ottaa listan nimistä ja palauttaa listan nimetyistä timcompeista
+    //     //input: [d1,d2,d3]
+    //     //out: [timcp1,timcmp2..
+    //     let returnList = new Array;
+    //     for(let i in list){
+    //         if(list[i].endsWith("*")){
+    //             for(let j in this.timComponents){
+    //                 //if(j.startsWith(list[i].slice(0,-1))){alert(list[i] + " " + list[i].slice(0,-1) + " " + j)}
+    //                 //alert ("EI listassa?" + !(returnList.indexOf(this.getTimComponent(j))>-1));
+    //                 if(j.startsWith(list[i].slice(0,-1)) && !(returnList.indexOf(this.getTimComponent(j))>-1)){
+    //                     returnList.push(this.getTimComponent(j));
+    //                 }
+    //             //var j = 0; j < Object.keys(this.timComponents).length; j++
+    //             }
+    //         }
+    //         else returnList.push(this.getTimComponent(list[i]));
+    //         //returnList[list[i]] = this.getTimComponent();
+    //         //const tim = this.getTimComponent(list[i])
+    //         //if (tim) alert(tim.getContent);
+    //     }
+    //     return returnList;
+    // }
+
     /**
-     *TODO
+     *TODO poista
      */
     // public addOmaplugin(controller: OmapluginController, name: string) {
     //     this.omapluginit[name] = controller;

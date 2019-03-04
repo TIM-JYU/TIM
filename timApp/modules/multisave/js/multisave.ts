@@ -46,7 +46,7 @@ function ismultisavendrome(s: string) {
     return true;
 }
 
-export class MultisaveController extends PluginBase<t.TypeOf<typeof multisaveMarkup>, t.TypeOf<typeof multisaveAll>, typeof multisaveAll> implements ITimComponent{
+export class MultisaveController extends PluginBase<t.TypeOf<typeof multisaveMarkup>, t.TypeOf<typeof multisaveAll>, typeof multisaveAll> {
    // private result?: string;
    // private error?: string;
    // pr//ivate isRunning = false;
@@ -68,10 +68,10 @@ export class MultisaveController extends PluginBase<t.TypeOf<typeof multisaveMar
         //this.userword = this.attrsall.userword || this.attrs.initword || "";
         this.modelOpts = {debounce: this.autoupdate};
         //this.checkmultisavendrome();
-        if (this.attrs.followid) {
-            //this.vctrl.addMultisave(this, this.attrs.followid);
-            this.vctrl.addTimComponent(this, this.attrs.followid || this.pluginMeta.getTaskId() || "");
-        }
+        // if (this.attrs.followid) {
+        //     //this.vctrl.addMultisave(this, this.attrs.followid);
+        //     this.vctrl.addTimComponent(this, this.attrs.followid || this.pluginMeta.getTaskId() || "");
+        // }
     }
 
     //get userword1(): string {
@@ -169,17 +169,29 @@ export class MultisaveController extends PluginBase<t.TypeOf<typeof multisaveMar
     }
 
     save(): string {
-        //Vie listan nimi joka palauttaa listan
+
         if(this.attrs.fields){
             for (let i of this.attrs.fields){
-                alert("asd" + i);
-                let list = this.vctrl.getTimComponentByList(i);
-                for(let j of list)
+                let timComponents = this.vctrl.getTimComponentsByRegex(i);
+                for (const v of timComponents)
                 {
-                   if(j) j.save();
+                    v.save();
+                    v.getGroups();
                 }
             }
         }
+
+        // //Vie listan nimi joka palauttaa listan
+        // if(this.attrs.fields){
+        //     for (let i of this.attrs.fields){
+        //         alert("asd" + i);
+        //         let list = this.vctrl.getTimComponentByList(i);
+        //         for(let j of list)
+        //         {
+        //            if(j) j.save();
+        //         }
+        //     }
+        //}
         // Vie lista ja saa takaisin lista componenteista
         //if(this.attrs.fields){
         //    let list = this.vctrl.getTimComponents(this.attrs.fields)
