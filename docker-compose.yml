@@ -9,6 +9,7 @@ services:
    - csplugin
    - pali
    - textfield
+   - numericfield
    - showfile
    - haskellplugins
    - imagex
@@ -101,15 +102,15 @@ services:
    PYTHONPATH: /textfield:/py:/usr/local/lib/python3.6/dist-packages
   command: ./startAll.sh
   restart: unless-stopped
- savearea:
+ numericfield:
   image: timimages/tim:${TIM_IMAGE_TAG}
-  # build: ./timApp/modules/savearea
+  # build: ./timApp/modules/numericfield
   volumes:
-   - ./timApp/modules/savearea:/savearea:ro
+   - ./timApp/modules/numericfield:/numericfield:ro
    - ./timApp/modules/py:/py:ro
-  working_dir: /savearea
+  working_dir: /numericfield
   environment:
-   PYTHONPATH: /savearea:/py:/usr/local/lib/python3.6/dist-packages
+   PYTHONPATH: /numericfield:/py:/usr/local/lib/python3.6/dist-packages
   command: ./startAll.sh
   restart: unless-stopped
  uploader:

@@ -1,24 +1,29 @@
 /**
- * Defines the client-side implementation of an example plugin (a textfieldndrome checker).
+ * Defines the client-side implementation of an example plugin (a numericfield checker).
  */
 import angular, {INgModelOptions} from "angular";
 import * as t from "io-ts";
+import {ITimComponent, ViewCtrl} from "tim/document/viewctrl"
 import {GenericPluginMarkup, nullable, PluginBase, withDefault} from "tim/plugin/util";
 import {$http} from "tim/util/ngimport";
 import {to} from "tim/util/utils";
-import {valueDefu} from "tim/util/utils";
+import {valueDefu} from "tim/util/utils"; //reset-metodille
+import {fieldNumber} from "../../../static/scripts/jspm_packages/npm/fp-ts@1.11.1/lib/Field";
 import {number} from "../../../static/scripts/jspm_packages/npm/io-ts@1.4.1/lib";
-import {ITimComponent, ViewCtrl} from "tim/document/viewctrl";
+import * as ts from "../../../static/scripts/jspm_packages/npm/typescript@3.0.1/lib/tsserverlibrary";
+import emptyArray = ts.server.emptyArray;
 
-const textfieldApp = angular.module("textfieldApp", ["ngSanitize"]);
-export const moduleDefs = [textfieldApp];
+const numericfieldApp = angular.module("numericfieldApp", ["ngSanitize"]);
+export const moduleDefs = [numericfieldApp];
 
-const TextfieldMarkup = t.intersection([
+const NumericfieldMarkup = t.intersection([
     t.partial({
-        initword: t.string,
-        inputplaceholder: nullable(t.string),
-        inputstem: t.string,
-        followid: t.string //maybe not needed
+        initnumber: t.number,
+        inputplaceholder: nullable(t.number),
+        inputstem: t.number,
+        followid: t.string,
+        onefield: t.string,
+        manyfields: t.array(t.string)
     }),
     GenericPluginMarkup,
     t.type({
@@ -27,18 +32,18 @@ const TextfieldMarkup = t.intersection([
         cols: withDefault(t.number, 20),
     }),
 ]);
-const TextfieldAll = t.intersection([
+const NumericfieldAll = t.intersection([
     t.partial({
-        userword: t.string,
+        numericvalue: t.number,
     }),
-    t.type({markup: TextfieldMarkup}),
+    t.type({markup: NumericfieldMarkup}),
 ]);
 
-class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t.TypeOf<typeof TextfieldAll>, typeof TextfieldAll> implements ITimComponent {
+class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMarkup>, t.TypeOf<typeof NumericfieldAll>, typeof NumericfieldAll> implements ITimComponent {
     private result?: string;
     private error?: string;
     private isRunning = false;
-    private userword = "";
+    private numericvalue?: number;
     private modelOpts!: INgModelOptions; // initialized in $onInit, so need to assure TypeScript with "!"
     private vctrl!: ViewCtrl;
 
@@ -52,7 +57,7 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
 
     $onInit() {
         super.$onInit();
-        this.userword = this.attrsall.userword || this.attrs.initword || "";
+        this.numericvalue = this.attrsall.numericvalue || this.attrs.initnumber || undefined;
         this.modelOpts = {debounce: this.autoupdate};
         if (this.attrs.followid) {
             this.vctrl.addTimComponent(this, this.attrs.followid || this.pluginMeta.getTaskId() || "");
@@ -60,15 +65,15 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
     }
 
     getContent(): string {
-        return this.userword;
+        return; // not used with numericfield plugin, but promised to implement in ITimComponent
     }
 
     getNumericContent(): number {
-        return -1; // not used with textfield plugin, but promised to implement in ITimComponent
+        return this.numericvalue;
     }
 
     save(): string {
-        return this.userword; // not used with textfield plugin, but promised to implement in ITimComponent
+        return this.numericvalue.toString(); // not used with textfield plugin, but promised to implement in ITimComponent
     }
 
     get autoupdate(): number {
@@ -76,7 +81,7 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
     }
 
     get inputstem() {
-        return this.attrs.inputstem || "";
+        return this.attrs.inputstem || null;
     }
 
     get cols() {
@@ -84,7 +89,7 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
     }
 
     initCode() {
-        this.userword = this.attrs.initword || "";
+        this.numericvalue = undefined;
         this.error = undefined;
         this.result = undefined;
     }
@@ -100,7 +105,7 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
         const params = {
             input: {
                 nosave: false,
-                userword: this.userword,
+                numericvalue: this.numericvalue,
             },
         };
 
@@ -120,62 +125,58 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
     }
 
     protected getAttributeType() {
-        return TextfieldAll;
+        return NumericfieldAll;
     }
 }
 
-textfieldApp.component("textfieldRunner", {
+numericfieldApp.component("numericfieldRunner", {
     bindings: {
         json: "@",
     },
-    controller: TextfieldController,
+    controller: NumericfieldController,
     template: `
-<div class="textfieldNoSaveDiv">
+<div class="numericfieldNoSaveDiv">
     <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
     <p ng-if="::$ctrl.stem">{{::$ctrl.stem}}</p>
     <div class="form-inline"><label>{{::$ctrl.inputstem}} <span>   
-        <input type="string"
+        <input type="number"
                class="form-control"
-               ng-model="$ctrl.userword"
+               ng-model="$ctrl.numericvalue"
                ng-model-options="::$ctrl.modelOpts"
-               ng-change="$ctrl.checkTextfield()"
                ng-trim="false"
                placeholder="{{::$ctrl.inputplaceholder}}"
                size="{{::$ctrl.cols}}"></span></label>
     </div>
     <pre ng-if="$ctrl.result">{{$ctrl.result}}</pre>
     <p ng-if="::$ctrl.footer" ng-bind="::$ctrl.footer" class="plgfooter"></p>
-</div>
-`,
+</div> `,
 });
 
-textfieldApp.component("textfieldRunner2", {
+numericfieldApp.component("numericfieldRunner2", {
     bindings: {
         json: "@",
     },
-    controller: TextfieldController,
+    controller: NumericfieldController,
     template: `
-<div class="textfieldSaveDiv">
+<div class="numericfieldSaveDiv">
     <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
     <p ng-if="::$ctrl.stem">{{::$ctrl.stem}}</p>
     <div class="form-inline"><label>{{::$ctrl.inputstem}} <span>   
-        <input type="string"
+        <input type="number"
                class="form-control"
-               ng-model="$ctrl.userword"
+               ng-model="$ctrl.numericvalue"
                ng-model-options="::$ctrl.modelOpts"
-               ng-change="$ctrl.checkTextfield()"
                ng-trim="false"
                placeholder="{{::$ctrl.inputplaceholder}}"
                size="{{::$ctrl.cols}}"></span></label>
     </div>
     <button class="timButton"
             ng-if="::$ctrl.buttonText()"
-            ng-disabled="$ctrl.isRunning || !$ctrl.userword"
+            ng-disabled="$ctrl.isRunning || !$ctrl.numericvalue"
             ng-click="$ctrl.saveText()">
         {{::$ctrl.buttonText()}}
     </button>
     <pre ng-if="$ctrl.result">{{$ctrl.result}}</pre>
     <p ng-if="::$ctrl.footer" ng-bind="::$ctrl.footer" class="plgfooter"></p>
-</div>
-`,
+</div> `,
 });

@@ -1,7 +1,7 @@
 """
-TIM example plugin: a textfieldndrome checker.
+TIM example plugin: a numericfieldndrome checker.
 """
-import re
+
 import sys
 from typing import Union
 
@@ -18,38 +18,43 @@ from pluginserver_flask import GenericMarkupModel, GenericMarkupSchema, GenericH
 sys.path.insert(0, '/py')  # /py on mountattu docker kontissa /opt/tim/timApp/modules/py -hakemistoon
 
 @attr.s(auto_attribs=True)
-class TextfieldStateModel:
+class NumericfieldStateModel:
     """Model for the information that is stored in TIM database for each answer."""
-    userword: str
+    numericvalue: float
 
 
-class TextfieldStateSchema(Schema):
-    userword = fields.Str(required=True)
+class NumericfieldStateSchema(Schema):
+    numericvalue = fields.Number(required=True)
 
     @post_load
     def make_obj(self, data):
-        return TextfieldStateModel(**data)
+        return NumericfieldStateModel(**data)
 
     class Meta:
         strict = True
 
 
 @attr.s(auto_attribs=True)
-class TextfieldMarkupModel(GenericMarkupModel):
+class NumericfieldMarkupModel(GenericMarkupModel):
     points_array: Union[str, Missing] = missing
+    header: Union[str, Missing] = missing
     inputstem: Union[str, Missing] = missing
     needed_len: Union[int, Missing] = missing
-    initword: Union[str, Missing] = missing
+    initnumber: Union[int, Missing] = missing
+    followid: Union[str, Missing] = missing
     cols: Union[int, Missing] = missing
     inputplaceholder: Union[str, Missing] = missing
 
 
-class TextfieldMarkupSchema(GenericMarkupSchema):
+class NumericfieldMarkupSchema(GenericMarkupSchema):
     points_array = fields.List(fields.List(fields.Number()))
-    inputstem = fields.String()
-    initword = fields.String()
+    header = fields.Str()
+    inputstem = fields.Str()
+    initnumber = fields.Number()
+    needed_len = fields.Number()
+    followid = fields.Str()
     cols = fields.Int()
-    inputplaceholder: Union[str, Missing] = missing
+    inputplaceholder: Union[int, Missing] = missing
 
     @validates('points_array')
     def validate_points_array(self, value):
@@ -58,90 +63,90 @@ class TextfieldMarkupSchema(GenericMarkupSchema):
 
     @post_load
     def make_obj(self, data):
-        return TextfieldMarkupModel(**data)
+        return NumericfieldMarkupModel(**data)
 
     class Meta:
         strict = True
 
 
 @attr.s(auto_attribs=True)
-class TextfieldInputModel:
+class NumericfieldInputModel:
     """Model for the information that is sent from browser (plugin AngularJS component)."""
-    userword: str
+    numericvalue: float
     nosave: bool = missing
 
 
-class TextfieldInputSchema(Schema):
-    userword = fields.Str(required=True)
+class NumericfieldInputSchema(Schema):
+    numericvalue = fields.Number(required=True)
     nosave = fields.Bool()
 
-    @validates('userword')
-    def validate_userword(self, word):
-        if not word:
+    @validates('numericvalue')
+    def validate_numericvalue(self, number):
+        if not number:
             raise ValidationError('Must be a number.')
 
     @post_load
     def make_obj(self, data):
-        return TextfieldInputModel(**data)
+        return NumericfieldInputModel(**data)
 
 
-class TextfieldAttrs(Schema):
+class NumericfieldAttrs(Schema):
     """Common fields for HTML and answer routes."""
-    markup = fields.Nested(TextfieldMarkupSchema)
-    state = fields.Nested(TextfieldStateSchema, allow_none=True, required=True)
+    markup = fields.Nested(NumericfieldMarkupSchema)
+    state = fields.Nested(NumericfieldStateSchema, allow_none=True, required=True)
 
     class Meta:
         strict = True
 
 
 @attr.s(auto_attribs=True)
-class TextfieldHtmlModel(GenericHtmlModel[TextfieldInputModel, TextfieldMarkupModel, TextfieldStateModel]):
+class NumericfieldHtmlModel(GenericHtmlModel[NumericfieldInputModel, NumericfieldMarkupModel, NumericfieldStateModel]):
     def get_component_html_name(self) -> str:
-        return 'textfield-runner'
+        return 'numericfield-runner'
 
     def get_static_html(self) -> str:
-        return render_static_textfield(self)
+        return render_static_numericfield(self)
 
     def get_browser_json(self):
         r = super().get_browser_json()
         if self.state:
-            r['userword'] = self.state.userword
+            r['numericvalue'] = self.state.numericvalue
         return r
 
     class Meta:
         strict = True
 
 
-class TextfieldHtmlSchema(TextfieldAttrs, GenericHtmlSchema):
+class NumericfieldHtmlSchema(NumericfieldAttrs, GenericHtmlSchema):
     info = fields.Nested(InfoSchema, allow_none=True, required=True)
 
     @post_load
     def make_obj(self, data):
         # noinspection PyArgumentList
-        return TextfieldHtmlModel(**data)
+        return NumericfieldHtmlModel(**data)
 
     class Meta:
         strict = True
 
 
 @attr.s(auto_attribs=True)
-class TextfieldAnswerModel(GenericAnswerModel[TextfieldInputModel, TextfieldMarkupModel, TextfieldStateModel]):
+class NumericfieldAnswerModel(GenericAnswerModel[NumericfieldInputModel, NumericfieldMarkupModel, NumericfieldStateModel]):
     pass
 
 
-class TextfieldAnswerSchema(TextfieldAttrs, GenericAnswerSchema):
-    input = fields.Nested(TextfieldInputSchema, required=True)
+class NumericfieldAnswerSchema(NumericfieldAttrs, GenericAnswerSchema):
+    input = fields.Nested(NumericfieldInputSchema, required=True)
 
     @post_load
     def make_obj(self, data):
         # noinspection PyArgumentList
-        return TextfieldAnswerModel(**data)
+        return NumericfieldAnswerModel(**data)
 
     class Meta:
         strict = True
 
 
-def render_static_textfield(m: TextfieldHtmlModel):
+def render_static_numericfield(m: NumericfieldHtmlModel):
     return render_template_string(
         """
 <div class="csRunDiv no-popup-menu">
@@ -164,15 +169,23 @@ def render_static_textfield(m: TextfieldHtmlModel):
     )
 
 
-app = create_app(__name__, TextfieldHtmlSchema())
+app = create_app(__name__, NumericfieldHtmlSchema())
 
 
 @app.route('/answer/', methods=['put'])
-@use_args(TextfieldAnswerSchema(strict=True), locations=("json",))
-def answer(args: TextfieldAnswerModel):
+@use_args(NumericfieldAnswerSchema(strict=True), locations=("json",))
+def answer(args: NumericfieldAnswerModel):
     web = {}
     result = {'web': web}
-    userword = args.input.userword
+    numericvalue = args.input.numericvalue
+
+    nosave = args.input.nosave
+    if not nosave:
+        # tim_info = {"points": points}
+        save = {"numericvalue": numericvalue}
+        result["save"] = save
+        # result["tim_info"] = tim_info
+        web['result'] = "saved"
 
     return jsonify(result)
 
@@ -181,34 +194,33 @@ def answer(args: TextfieldAnswerModel):
 @app.route('/reqs')
 def reqs():
     templates = ["""
-    ``` {#textfield_1 plugin="textfield"}
-    header: OTSIKKO -TAI- TYHJÄ
-    stem: KYSYMYS -TAI- TYHJÄ
-    inputstem: VASTAUS -TAI- TYHJÄ
-    followid: <!-- SEURANTAID -TAI- TYHJÄ -->
-    needed_len: 1 <!-- MINIMIPITUUS, NUMERAALINEN -->
-    initword: ALKUARVO, NUMERAALINEN -TAI- TYHJÄ
-    ```""", """
-    ``` {#numericfield_2 plugin="numericfield"}
-    header: OTSIKKO -TAI- TYHJÄ
-    stem: KYSYMYS -TAI- TYHJÄ
-    inputstem: VASTAUS -TAI- TYHJÄ
-    followid: <!-- SEURANTAID -TAI- TYHJÄ -->
-    fields: <!-- KENTTÄVIITTAUKSET -TAI- TYHJÄ -->
-    needed_len: 1 <!-- MINIMIPITUUS, NUMERAALINEN -->
-    initword: ALKUARVO, NUMERAALINEN -TAI- TYHJÄ
-    ```"""
-                 ]
+``` {#numericfield_1 plugin="numericfield"}
+header: OTSIKKO -TAI- TYHJÄ
+stem: KYSYMYS -TAI- TYHJÄ
+inputstem: VASTAUS -TAI- TYHJÄ
+followid: <!-- SEURANTAID -TAI- TYHJÄ -->
+needed_len: 1 <!-- MINIMIPITUUS, NUMERAALINEN -->
+initnumber: 0 <!-- ALKUARVO, NUMERAALINEN -->
+```""", """
+``` {#numericfield_2 plugin="numericfield"}
+header: OTSIKKO -TAI- TYHJÄ
+stem: KYSYMYS -TAI- TYHJÄ
+inputstem: VASTAUS -TAI- TYHJÄ
+followid: <!-- SEURANTAID -TAI- TYHJÄ -->
+needed_len: 1 <!-- MINIMIPITUUS, NUMERAALINEN -->
+initnumber: 0 <!-- ALKUARVO, NUMERAALINEN -->
+```"""
+]
     return jsonify({
-        "js": ["js/build/textfield.js"],
+        "js": ["js/build/numericfield.js"],
         "multihtml": True,
-        "css": ["css/textfield.css"],
+        "css": ["css/numericfield.css"],
         'editor_tabs': [
             {
                 'text': 'Plugins',
                 'items': [
                     {
-                        'text': 'Textfield:',
+                        'text': 'Numericfield:',
                         'items': [
                             {
                                 'data': templates[0].strip(),
