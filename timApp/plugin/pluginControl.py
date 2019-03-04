@@ -484,9 +484,14 @@ def pluginify(doc: Document,
                 for idx, r in plugin_block_map.keys():
                     placements[idx].set_error(r, f'Failed to parse plugin response from multihtml route: {e}')
                 continue
-            for ((idx, r), plugin), html in zip(plugin_block_map.items(), plugin_htmls):
-                plugin.plugin_lazy = plugin_lazy
-                placements[idx].set_output(r, html)
+            if not isinstance(plugin_htmls, list):
+                for ((idx, r), plugin) in plugin_block_map.items():
+                    plugin.plugin_lazy = plugin_lazy
+                    placements[idx].set_error(r, f'Multihtml response of {plugin_name} was not a list: {plugin_htmls}')
+            else:
+                for ((idx, r), plugin), html in zip(plugin_block_map.items(), plugin_htmls):
+                    plugin.plugin_lazy = plugin_lazy
+                    placements[idx].set_output(r, html)
         else:
             for (idx, r), plugin in plugin_block_map.items():
                 if md_out:
