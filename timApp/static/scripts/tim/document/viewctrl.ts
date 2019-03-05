@@ -487,18 +487,12 @@ export class ViewCtrl implements IController {
     }
 
     /**
-     * TODO ^ ja $ pois? - riippuu käyttötapauksesta
-     * vrt lomakkeet "demot" ja "demotuusiperiodi" - pitääkö käyttäjän antaa ^demot$ vai pelkkä demot,
-     * kun haluaa viitata vain ensimmäiseen
-     * TODO otetaanko lista regexeistä
-     * ja poistetaan duplikaatit palautuslistasta vs
-     * hoitaako plugin/käyttäjä itse ettei kutsu esim saman lomakkeen savea kahdesti,
-     * kun fieldsissä kaksi regexiä joihin lomakkeen followid sopii
+     *
      * @param re
      */
     public getTimComponentsByRegex(re: string): ITimComponent[]{
         let returnList: ITimComponent[] = [];
-        let reg = new RegExp("^" + re + "$")
+        let reg = new RegExp(re)
         for(const [k, v] of this.timComponents)
         {
             if(reg.test(k)) returnList.push(v);
