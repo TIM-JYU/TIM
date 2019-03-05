@@ -36,7 +36,10 @@ import {MenuFunctionEntry} from "./viewutils";
 markAsUsed(ngs, popupMenu, interceptor);
 
 export interface ITimComponent {
+    getName: () => string | undefined;
     getContent: () => string;
+    getGroups: () => string[];
+    belongsToGroup(group: string): boolean;
     save: () => string | undefined;
 }
 
@@ -96,7 +99,7 @@ export class ViewCtrl implements IController {
     private velpMode: boolean;
 
     private timTables: {[parId: string]: TimTableController} = {};
-    private timComponents: {[name: string]: ITimComponent | undefined} = {};
+    private timComponents: Map<string, ITimComponent> = new Map();
 
     private pendingUpdates: PendingCollection;
     private document: Document;
@@ -434,20 +437,50 @@ export class ViewCtrl implements IController {
     }
 
     /**
-     * TODO add comment
-     * @param component
-     * @param name
+     * Registers an ITimComponent to the view controller by its name attribute if it has one
+     * @param {ITimComponent} component The component to be registered
      */
-    public addTimComponent(component: ITimComponent, name: string) {
-        this.timComponents[name] = component;
+    public addTimComponent(component: ITimComponent) {
+        let name = component.getName();
+        if (name) this.timComponents.set(name, component);
     }
 
     /**
-     * TODO add comment
-     * @param name
+     * Returns an ITimComponent where register ID matches the given string
+     * @param {string} name The register ID of the ITimComponent
+     * @returns {ITimComponent | undefined} Matching component if there was one
      */
-    public getTimComponent(name: string) {
-        return this.timComponents[name];
+    public getTimComponentByName(name: string): ITimComponent | undefined {
+        return this.timComponents.get(name);
+    }
+
+    /**
+     * Gets ITimComponents nested within specified area component
+     * @param{string} group name of the area object
+     * @returns {ITimComponent[]} List of ITimComponents nested within the area
+     */
+    public getTimComponentsByGroup(group: string): ITimComponent[] {
+        let returnList: ITimComponent[] = [];
+        for(const [k, v] of this.timComponents)
+        {
+            if (v.belongsToGroup(group)) returnList.push(v);
+        }
+        return returnList;
+    }
+
+    /**
+     * Searches for registered ITimComponent whose ID matches the given regexp
+     * @param {string} re The RegExp to be used in search
+     * @returns {ITimComponent[]} List of ITimComponents where the ID matches the regexp
+     */
+    public getTimComponentsByRegex(re: string): ITimComponent[]{
+        let returnList: ITimComponent[] = [];
+        let reg = new RegExp(re)
+        for(const [k, v] of this.timComponents)
+        {
+            if (reg.test(k)) returnList.push(v);
+        }
+        return returnList;
     }
 
     isEmptyDocument() {
