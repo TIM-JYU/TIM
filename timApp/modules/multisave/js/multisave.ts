@@ -169,14 +169,16 @@ export class MultisaveController extends PluginBase<t.TypeOf<typeof multisaveMar
     }
 
     save(): string {
-
         if(this.attrs.fields){
             for (let i of this.attrs.fields){
-                let timComponents = this.vctrl.getTimComponentsByRegex("^" + i + "$");
+                //TODO tarkista ettei kutsuta olion tallennusta kahdesti
+                //Tee oma lista johon keräät uniikit oliot, save oman listan pohjalta
+                //let timComponents = this.vctrl.getTimComponentsByRegex("^" + i + "$");
+                let timComponents = this.vctrl.getTimComponentsByGroup(i);
                 for (const v of timComponents)
                 {
                     v.save();
-                    v.getGroups();
+                    //v.getGroups();
                 }
             }
         }

@@ -173,6 +173,7 @@ export class OmapluginController extends PluginBase<t.TypeOf<typeof omapluginMar
 
     save(): string {
         this.userword = "I'm saved";
+        this.getGroups();
         return "";
     }
 
