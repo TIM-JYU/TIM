@@ -39,7 +39,7 @@ class MultisaveMarkupModel(GenericMarkupModel):
     #inputstem2: Union[str, Missing] = missing
     #needed_len: Union[int, Missing] = missing
     #initword: Union[str, Missing] = missing
-    followid: Union[str, Missing] = missing
+    areas: Union[list, Missing] = missing
     fields: Union[list, Missing] = missing
     #cols: Union[int, Missing] = missing
     #inputplaceholder: Union[str, Missing] = missing
@@ -51,7 +51,7 @@ class MultisaveMarkupSchema(GenericMarkupSchema):
     #inputstem2 = fields.Str()
     #needed_len = fields.Int()
     #initword = fields.Str()
-    followid = fields.Str()
+    areas = fields.List(fields.Str())
     fields = fields.List(fields.Str())
     ####cols = fields.Int()
     ####inputplaceholder = fields.Str()

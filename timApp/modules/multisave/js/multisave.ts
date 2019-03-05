@@ -17,7 +17,8 @@ const multisaveMarkup = t.intersection([
         //initword: t.string,
         //inputplaceholder: nullable(t.string),
         followid: t.string,
-        fields: t.array(t.string)
+        fields: t.array(t.string),
+        areas: t.array(t.string)
         //inputstem: t.string,
         //inputstem2: t.string,
     }),
@@ -168,21 +169,79 @@ export class MultisaveController extends PluginBase<t.TypeOf<typeof multisaveMar
         return "";
     }
 
+    //tarkista ettei kutsuta olion tallennusta kahdesti:
+    //Tee oma lista johon keräät uniikit oliot, save oman listan pohjalta
+    //jos fields tai areas sisältää jotain kutsu niiden komponentit
+    //jos kumpiakaan ei annettu etsi oma area (kaikki vai lähin?) ja kutsu sen komponentit
+    //vai save oma area vain jos erikseen annettu markupissa saveown tjsp?
+    //jos ei annettuja fieldsejä tai areoita tai omaa areaa niin kutsu kaikki?
     save(): string {
+        let componentsToSave: ITimComponent[] = [];
+        //TODO: componentsToSave Mappina?
+        //let componentsToSave:  Map<string, ITimComponent> = new Map();
         if(this.attrs.fields){
-            for (let i of this.attrs.fields){
-                //TODO tarkista ettei kutsuta olion tallennusta kahdesti
-                //Tee oma lista johon keräät uniikit oliot, save oman listan pohjalta
-                //let timComponents = this.vctrl.getTimComponentsByRegex("^" + i + "$");
-                let timComponents = this.vctrl.getTimComponentsByGroup(i);
+            console.log("SAVE FIELDS :" + this.attrs.fields);
+            for (const i of this.attrs.fields){
+                let timComponents = this.vctrl.getTimComponentsByRegex("^" + i + "$");
+                //let timComponents = this.vctrl.getTimComponentsByGroup(i);
                 for (const v of timComponents)
                 {
-                    v.save();
-                    //v.getGroups();
+                    if (!componentsToSave.includes(v)) componentsToSave.push(v)
+                    //v.save();
+
                 }
             }
         }
 
+        if(this.attrs.areas)
+        {
+            console.log("SAVE AREAS: " + this.attrs.areas);
+            for(const i of this.attrs.areas){
+                let timComponents = this.vctrl.getTimComponentsByGroup(i);
+                for(const v of timComponents)
+                {
+                    if (!componentsToSave.includes(v)) componentsToSave.push(v)
+                    //v.save();
+                }
+            }
+        }
+        //if(componentsToSave.length > 0) console.log("componentsToSave true");
+        // if (this.attrs.fields) console.log("attrs fields true");
+        // if (!this.attrs.fields) console.log("attrs fields false");
+        // if (this.attrs.areas) console.log("attrs areas true");
+        // if (!this.attrs.areas) console.log("attrs areas false");
+        //fieldsiä tai areaa ei annettu (vai ei täsmännyt mihinkään?) -> get oma area
+        //jos annettu mutta ei matchannut niin ehkei kannata tallentaa jotain mitä ei ollut tarkoitus
+        let ownArea: string | null = null;
+        const parents = this.element.parents('.area');
+        //Palauttaa vain yhden koska divit ei sisäkkäin?
+        //Parsetaan toistaiseksi manuaalisesti "area area_ulompi area_sisempi"
+        if(parents[0]){
+            ownArea = parents[0].classList[parents[0].classList.length - 1].replace("area_","");
+        }
+        // if (ownArea) console.log("ownArea true");
+        // if (!ownArea) console.log("ownArea false");
+        if(!this.attrs.fields && !this.attrs.areas && ownArea){
+            console.log("SAVE OWNAREA: " + ownArea);
+            componentsToSave = this.vctrl.getTimComponentsByGroup(ownArea);
+        }
+
+
+        //ei annettu fieldsiä/areoita
+        //omaa areaa ei löytynyt
+        if(!this.attrs.fields && !this.attrs.areas && !ownArea){
+            console.log("SAVE ALL, ei fields/areas/omaa areaa ");
+            componentsToSave = this.vctrl.getTimComponentsByRegex(".*"); //getAllITimComponents?
+        }
+        console.log("TALLENNETTAVA:");
+        console.log(componentsToSave);
+
+        for(const v of componentsToSave)
+        {
+            v.save();
+        }
+
+        //componentsToSave.save();
         // //Vie listan nimi joka palauttaa listan
         // if(this.attrs.fields){
         //     for (let i of this.attrs.fields){
