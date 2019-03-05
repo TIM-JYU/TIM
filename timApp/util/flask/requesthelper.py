@@ -72,7 +72,7 @@ def get_option(req: Request, name: str, default, cast=None):
             return default
     if cast is not None:
         try:
-            result = cast(lresult)
+            result = cast(result)
         except ValueError:
             return default
     return result

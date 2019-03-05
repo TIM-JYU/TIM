@@ -228,12 +228,12 @@ class LectureTest(TimRouteTest):
 
         resp = self.json_post('/askQuestion',
                               query_string=dict(doc_id=doc.id, par_id=par_id))
-        aid = resp['asked_id']
-        q = get_asked_question(aid)
+        aid2 = resp['asked_id']
+        q = get_asked_question(aid2)
         self.assertIsNotNone(q.running_question)
 
         sleep(1)  # the second question has a timelimit of 1 second
-        q = get_asked_question(aid)
+        q = get_asked_question(aid2)
         db.session.refresh(q)
         self.assertFalse(q.is_running)
         l: Lecture = Lecture.query.get(lecture_id)
@@ -244,7 +244,16 @@ class LectureTest(TimRouteTest):
                                 'new_end_time': (current_time + datetime.timedelta(hours=3))})
 
         self.post('/joinLecture', query_string=lecture_q)
-        self.get('/getLectureAnswers', query_string=dict(asked_id=aid))
+        r = self.get('/getLectureAnswers', query_string=dict(asked_id=aid2))
+        self.assertEqual([], r)
+        r = self.get('/getLectureAnswers', query_string=dict(asked_id=aid))
+        self.assertEqual(2, len(r))
+        timestr = get_current_time().isoformat().replace("+00:00", "Z")
+        self.assertTrue(timestr.endswith('Z'))
+        r = self.get('/getLectureAnswers',
+                     query_string=dict(asked_id=aid,
+                                       after=timestr))
+        self.assertEqual(0, len(r))
         self.post('/endLecture', query_string=lecture_q)
         self.post('/leaveLecture', query_string=lecture_q)
 
