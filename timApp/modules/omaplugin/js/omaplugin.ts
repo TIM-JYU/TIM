@@ -195,6 +195,10 @@ export class OmapluginController extends PluginBase<t.TypeOf<typeof omapluginMar
         return returnList;
     }
 
+    belongsToGroup(group: string): boolean {
+        return (this.getGroups().includes(group));
+    }
+
 }
 
 omapluginApp.component("omapluginRunner", {

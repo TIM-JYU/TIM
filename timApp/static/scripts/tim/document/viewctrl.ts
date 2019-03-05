@@ -20,7 +20,6 @@ import {IPluginInfoResponse, ParCompiler} from "../editor/parCompiler";
 import {IDocument, ITag, TagType} from "../item/IItem";
 import {LectureController} from "../lecture/lectureController";
 import {TimTableController} from "../plugin/timTable";
-//import {omapluginController} from "../../../../modules/omaplugin/js/omaplugin";
 import {initCssPrint} from "../printing/cssPrint";
 import {showMessageDialog} from "../ui/dialog";
 import {IUser} from "../user/IUser";
@@ -40,6 +39,7 @@ export interface ITimComponent {
     getName: () => string | undefined;
     getContent: () => string;
     getGroups: () => string[];
+    belongsToGroup(group: string): boolean;
     save: () => string | undefined;
 }
 
@@ -99,9 +99,6 @@ export class ViewCtrl implements IController {
     private velpMode: boolean;
 
     private timTables: {[parId: string]: TimTableController} = {};
-    // private omapluginit: {[name: string]: OmapluginController} = {};
-    //private timComponents: {[name: string]: ITimComponent | undefined} = {};
-    //private timComponentsList:{[name: string]: [ITimComponent | undefined]} = {};
     private timComponents: Map<string, ITimComponent> = new Map();
 
     private pendingUpdates: PendingCollection;
@@ -466,7 +463,7 @@ export class ViewCtrl implements IController {
         let returnList: ITimComponent[] = [];
         for(const [k, v] of this.timComponents)
         {
-            if (v.getGroups().includes(group)) returnList.push(v);
+            if (v.belongsToGroup(group)) returnList.push(v);
         }
         return returnList;
     }
