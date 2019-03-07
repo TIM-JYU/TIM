@@ -27,24 +27,28 @@ def get_all_feedback_answers(task_ids: List[TaskId],
                              period_from: datetime,
                              period_to: datetime) -> List[str]:
     """Gets all answers for "Dynamic Assessment" -typed tasks
-    :param task_ids:
+    :param task_ids: The ids of the tasks needed in report.
     :param usergroup:
     :param hide_names:
     :param age:
     :param printname:
-    :param sort:
+    :param sort: The sorting needed in output, ie. 'username'.
     :param print_opt:
-    :param period_from:
-    :param period_to:
+    :param period_from: The minimum answering time for answers.
+    :param period_to: The maximum answering time for answers.
     :param consent:
     :return:
     """
+
+    # EN - query from answer-table for the given time period and TaskId:s
     q = (Answer
          .query
          .filter((period_from <= Answer.answered_on) & (Answer.answered_on < period_to))
          .filter(Answer.task_id.in_(task_ids_to_strlist(task_ids))))
+    # EN - also joins with user table to get user information
     q = q.join(User, Answer.users)
-    q = q.options(defaultload(Answer.users).lazyload(User.groups))
+    # EN - not clear what this does
+    # q = q.options(defaultload(Answer.users).lazyload(User.groups))
 
     ''' käytetään myöhemmin jos käytetään 
     if age == "min":
@@ -58,19 +62,22 @@ def get_all_feedback_answers(task_ids: List[TaskId],
         counts = func.count(Answer.answered_on).label('count')
     '''
     #minmax = Answer.id.label('minmax')
-    counts = Answer.valid.label('count')
+    counts = Answer.valid.label('count')  # EN - not really used TODO: check and remove
 
-    q = q.group_by(Answer.task_id, User.id)
-    # sub = q.subquery()
-    q = Answer.query.join(User, Answer.users)
+    # EN - sorts the answers first with user then by time and last by task_id (task_id sort not necessary?)
     if sort == 'username':
         q = q.order_by(User.name, Answer.answered_on, Answer.task_id)
+    # EN - for a report this option not necessary for now at least - depends what type reports needed in research
     else:
         q = q.order_by(Answer.task_id, User.name, Answer.answered_on)
 
+    # EN - q with Answer, User and count data - not really used... TODO: remove counts if not needed
     q = q.with_entities(Answer, User, counts)
-    results = []
 
+    # TODO: clean up for loop logic to get wanted answers out in correct format
+    # results list that gets returned
+    results = []
+    # makes q query an iterable qq for for-loop
     qq: Iterable[Tuple[Answer, User, int]] = q
     cnt = 0
     #pt_dt = datetime(1, 1, 1, tzinfo='UTC')    #muistiinmenevä tehtävän tekoaiku
@@ -112,12 +119,43 @@ def get_all_feedback_answers(task_ids: List[TaskId],
     return results
 
 
+# EN - Route to test feedback output at feedback/test
 @feedback.route("/test")
 def test():
-    taskids = Answer.query.add_column("task_id").all()
-    #taskids = ["19.Plugin1", "19.diibadaaba"]
-    #id = TaskId([19],"Plugin1")
-    period1 = datetime.today()
-    period2 = datetime.today()
-    answers = get_all_feedback_answers([], 'username', "all", period1, period2)
-    return json_response({'answers' : answers})
+    #taskids = Answer.query.add_column("task_id").all() TODO: a query from database would help testing
+
+    period1 = datetime.min
+    period2 = datetime.max
+
+    # EN - filtering now works so this will not return any answers
+    answers0 = get_all_feedback_answers([], 'username', "all", period1, period2)
+
+    # EN - For choosing specific tasks for the report a list of tasks is given
+    # TODO: check real call to see how task_ids from different pages can be called
+    taskid1 = TaskId(19, "sample_item")  # generating TaskIds - (pageid int, taskname string)
+    taskid2 = TaskId(19, "item1")
+    taskid3 = TaskId(19, "feedback1")
+    taskid4 = TaskId(19, "item2")
+    taskid5 = TaskId(19, "feedback2")
+    taskids_test = [taskid1, taskid2, taskid3, taskid4, taskid5]
+    ids_as_string1 = task_ids_to_strlist(taskids_test)
+    answers1 = get_all_feedback_answers(taskids_test,
+                                        'username', "all", period1, period2)
+
+    # EN - Testing with taskIds from two documents
+    taskid21 = TaskId(20, "sample_item")
+    taskid22 = TaskId(20, "item1")
+    taskid23 = TaskId(20, "feedback1")
+    taskid24 = TaskId(20, "item2")
+    taskid25 = TaskId(20, "feedback2")
+    taskids_test2 = [taskid1, taskid2, taskid3, taskid4, taskid5, taskid21, taskid22, taskid23, taskid24, taskid25]
+    ids_as_string2 = task_ids_to_strlist(taskids_test2)
+    answers2 = get_all_feedback_answers(taskids_test2,
+                                        'username', "all", period1, period2)
+
+    # First returns empty, then from document 19 and then document 20 (change above if different)
+    return json_response({'answers0': answers0,
+                          'taskids1': ids_as_string1,
+                          'answers1': answers1,
+                          'taskids2': ids_as_string2,
+                          'answers2': answers2})
