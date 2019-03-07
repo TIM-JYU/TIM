@@ -1,3 +1,5 @@
+from typing import List
+
 from timApp.plugin.taskid import TaskId
 from timApp.tests.db.timdbtest import TimDbTest
 from timApp.user.user import User
@@ -5,7 +7,7 @@ from timApp.user.user import User
 
 class AnswerTest(TimDbTest):
 
-    def check_totals(self, db, user: User, task_ids, task_count, total_points):
+    def check_totals(self, db, user: User, task_ids: List[TaskId], task_count, total_points):
         self.assertEqual([{**user.basic_info_dict,
                            'user': user,
                            'task_count': task_count,
@@ -13,7 +15,7 @@ class AnswerTest(TimDbTest):
                            'total_points': total_points,
                            'velp_points': 0,
                            'velped_task_count': 0
-                           }], db.answers.get_users_for_tasks([t.doc_task for t in task_ids], [user.id]))
+                           }], db.answers.get_users_for_tasks(task_ids, [user.id]))
 
     def test_summary(self):
         db = self.get_db()
@@ -29,7 +31,7 @@ class AnswerTest(TimDbTest):
 
     def check_user(self, db, u: User, task_id1: TaskId, task_id2: TaskId):
         uid = u.id
-        self.assertListEqual([], db.answers.get_users_for_tasks([task_id1.doc_task], [uid]))
+        self.assertListEqual([], db.answers.get_users_for_tasks([task_id1], [uid]))
         db.answers.save_answer([u], task_id1, 'content', 1.00001, [], True)
         self.check_totals(db, u, [task_id1], 1, 1.0)
         db.answers.save_answer([u], task_id1, 'content1', 10, [], False)
