@@ -8,6 +8,7 @@ import {GenericPluginMarkup, nullable, PluginBase, withDefault} from "tim/plugin
 import {$http} from "tim/util/ngimport";
 import {to} from "tim/util/utils";
 import {valueDefu} from "tim/util/utils";
+import {string} from "../../../static/scripts/jspm_packages/npm/io-ts@1.4.1/lib";
 
 const omapluginApp = angular.module("omapluginApp", ["ngSanitize"]);
 export const moduleDefs = [omapluginApp];
@@ -164,7 +165,10 @@ export class OmapluginController extends PluginBase<t.TypeOf<typeof omapluginMar
     }
 
     getName(): string | undefined {
-        return this.attrs.followid || this.pluginMeta.getTaskId(); //TODO parse taskid / followid
+        //return this.attrs.followid || this.pluginMeta.getTaskId().split('.')[1];
+        if (this.attrs.followid) return this.attrs.followid;
+        const taskId = this.pluginMeta.getTaskId();
+        if (taskId) return taskId.split(".")[1];
     }
 
     getContent(): string {
