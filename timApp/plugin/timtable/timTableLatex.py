@@ -34,7 +34,7 @@ default_max_col_count = 250
 # Pixels; 595px is the width of 72 dpi (web) a4 and minus 35px is for the margins.
 resizing_px_threshold = 595 - 35
 # Minimum number of columns (checked when table width is estimated by cell content width).
-resizing_col_threshold = 3
+resizing_col_threshold = 2
 
 # TODO: Add more.
 # HTML font families and their closest corresponding LaTeX-codes:
@@ -189,6 +189,8 @@ class Cell:
             cell_color = fr"\cellcolor{cell_color}"
 
         content = self.content
+        # Minipage doesn't handle cell width always properly even if it's given,
+        # and when using auto like \linewidth it's blind to what other cells are doing.
         if "\[" in content:
             minipage_width = self.cell_width
             if "*" in str(minipage_width):
