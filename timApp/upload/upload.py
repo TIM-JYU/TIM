@@ -29,7 +29,7 @@ from timApp.timdb.sqa import db
 from timApp.upload.uploadedfile import UploadedFile, PluginUpload, PluginUploadInfo, StampedPDF
 from timApp.util.flask.responsehelper import json_response
 from timApp.util.pdftools import StampDataInvalidError, default_stamp_format, AttachmentStampData, \
-    PdfError, stamp_pdfs, get_base_filename, create_custom_stamp_model
+    PdfError, stamp_pdfs, get_base_filename, create_new_tex_file
 
 upload = Blueprint('upload',
                    __name__,
@@ -198,19 +198,19 @@ def upload_and_stamp_attachment(d: DocInfo, file, stamp_data: AttachmentStampDat
 
     stamp_data.file = os_path.join(attachment_folder, f"{f.id}/{f.filename}")
     if custom_stamp_model_content:
-        stamp_model_path = create_custom_stamp_model(custom_stamp_model_content)
+        stamp_model_path = create_new_tex_file(custom_stamp_model_content)
         output = stamp_pdfs(
             [stamp_data],
-            dir_path=os_path.join(attachment_folder, str(f.id) + "/"),
+            dir_path=(Path(attachment_folder) / f"{str(f.id)}/"),
             stamp_text_format=stampformat,
-            stamp_model_path=stamp_model_path.absolute().as_posix())[0]
+            stamp_model_path=stamp_model_path)[0]
     else:
         output = stamp_pdfs(
             [stamp_data],
-            dir_path=os_path.join(attachment_folder, str(f.id) + "/"),
+            dir_path=(Path(attachment_folder) / f"{str(f.id)}/"),
             stamp_text_format=stampformat)[0]
 
-    stamped_filename = get_base_filename(output)
+    stamped_filename = get_base_filename(output.absolute().as_posix())
     db.session.commit()
 
     # TODO: In case of raised errors give proper no-upload response?
