@@ -132,28 +132,30 @@ def test():
 
     # EN - For choosing specific tasks for the report a list of tasks is given
     # TODO: check real call to see how task_ids from different pages can be called
-    taskid1 = TaskId(19, "sample_item")  # generating TaskIds - (pageid int, taskname string)
-    taskid2 = TaskId(19, "item1")
-    taskid3 = TaskId(19, "feedback1")
-    taskid4 = TaskId(19, "item2")
-    taskid5 = TaskId(19, "feedback2")
+    nro1 = 19
+    taskid1 = TaskId(nro1, "sample_item")  # generating TaskIds - (pageid int, taskname string)
+    taskid2 = TaskId(nro1, "item1")
+    taskid3 = TaskId(nro1, "feedback1")
+    taskid4 = TaskId(nro1, "item2")
+    taskid5 = TaskId(nro1, "feedback2")
     taskids_test = [taskid1, taskid2, taskid3, taskid4, taskid5]
     ids_as_string1 = task_ids_to_strlist(taskids_test)
     answers1 = get_all_feedback_answers(taskids_test,
                                         'username', "all", period1, period2)
 
     # EN - Testing with taskIds from two documents
-    taskid21 = TaskId(20, "sample_item")
-    taskid22 = TaskId(20, "item1")
-    taskid23 = TaskId(20, "feedback1")
-    taskid24 = TaskId(20, "item2")
-    taskid25 = TaskId(20, "feedback2")
+    nro2 = 20
+    taskid21 = TaskId(nro2, "sample_item")
+    taskid22 = TaskId(nro2, "item1")
+    taskid23 = TaskId(nro2, "feedback1")
+    taskid24 = TaskId(nro2, "item2")
+    taskid25 = TaskId(nro2, "feedback2")
     taskids_test2 = [taskid1, taskid2, taskid3, taskid4, taskid5, taskid21, taskid22, taskid23, taskid24, taskid25]
     ids_as_string2 = task_ids_to_strlist(taskids_test2)
     answers2 = get_all_feedback_answers(taskids_test2,
                                         'username', "all", period1, period2)
 
-    # First returns empty, then from document 19 and then document 20 (change above if different)
+    # First returns empty, then from document nro1 and then document nro2 (change above if different)
     return json_response({'answers0': answers0,
                           'taskids1': ids_as_string1,
                           'answers1': answers1,
