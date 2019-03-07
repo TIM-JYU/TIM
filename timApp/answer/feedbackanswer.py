@@ -79,12 +79,13 @@ def get_all_feedback_answers(task_ids: List[TaskId],
     results = []
     # makes q query an iterable qq for for-loop
     qq: Iterable[Tuple[Answer, User, int]] = q
-    cnt = 0
+
     #pt_dt = datetime(1, 1, 1, tzinfo='UTC')    #muistiinmenevä tehtävän tekoaiku
-    pt_dt = None    #Previous Datetime
+    pt_dt = None    #Previous Datetime of previous answer
     prev_ans = None     #Previous Answer
     prev_user = None     #Previous User
-    temp_bool = True    #Temporary answer combination condition
+    temp_bool = True    #Temporary answer combination condition, now it is every even
+    exclude_first = True #Temporary setting for excluding the first
 
     #FOR STARTS FROM HERE
     for answer, user, n in qq:
@@ -128,7 +129,8 @@ def get_all_feedback_answers(task_ids: List[TaskId],
         if prev_user == None: prev_user = user
         if prev_ans == None: prev_ans = answer
         if temp_bool:
-            result += f"{prev_user};"
+            result += f"{prev_user.name};"
+            result += f"{answer.points};"
             line = json.loads(prev_ans.content)
             result += f"{line};"
             line = json.loads(answer.content)
@@ -143,7 +145,8 @@ def get_all_feedback_answers(task_ids: List[TaskId],
 
             result += f"{str(math.floor(tasksecs))};"
             result += f"{str(math.floor(fbsecs))};"
-            if pt_dt != None : results.append(result)   #IF-CONDITION temporary for the sake of excluding the first sample item
+            if exclude_first and pt_dt != None:
+                results.append(result)   #IF-CONDITION temporary for the sake of excluding the first sample item
         pt_dt = prev_ans.answered_on
         prev_ans = answer
         temp_bool = not temp_bool
