@@ -17,10 +17,10 @@ from pluginserver_flask import GenericMarkupModel, GenericMarkupSchema, GenericH
 
 @attr.s(auto_attribs=True)
 class DropdownStateModel:
-    userword: str
+    selectedWord: str
 
 class DropdownStateSchema(Schema):
-    userword = fields.Str(required=True)
+    selectedWord = fields.Str(required=True)
 
     @post_load
     def make_obj(self, data):
@@ -65,18 +65,18 @@ class DropdownMarkupSchema(GenericMarkupSchema):
 
 @attr.s(auto_attribs=True)
 class DropdownInputModel:
-    userword: str
+    selectedWord: str
     #paliOK: bool
-    #nosave: bool = missing
+    nosave: bool = missing
 
 
 class DropdownInputSchema(Schema):
-    #nosave = fields.Bool()
+    nosave = fields.Bool()
     #paliOK = fields.Bool(required=True)
-    userword = fields.Str(required=True)
+    selectedWord = fields.Str(required=True)
 
-    @validates('userword')
-    def validate_userword(self, word):
+    @validates('selectedWord')
+    def validate_selectedWord(self, word):
         if not word:
             raise ValidationError('Must not be empty.')
 
@@ -98,7 +98,7 @@ class DropdownHtmlModel(GenericHtmlModel[DropdownInputModel, DropdownMarkupModel
     def get_browser_json(self):
         r = super().get_browser_json()
         if self.state:
-            r['userword'] = self.state.userword
+            r['selectedWord'] = self.state.selectedWord
         return r
 
     def get_real_html(self):
@@ -171,53 +171,27 @@ app = create_app(__name__, DropdownHtmlSchema())
 def answer(args: DropdownAnswerModel):
     web = {}
     result = {'web': web}
-    needed_len = args.markup.needed_len
-    userword = args.input.userword
-    pali_ok = args.input.paliOK
-    len_ok = True
-    if needed_len:
-        len_ok = check_letters(userword, needed_len)
-    if not len_ok:
-        web['error'] = "Wrong length"
-    if not needed_len and not pali_ok:
-        len_ok = False
-    points_array = args.markup.points_array or [[0, 0.25], [0.5, 1]]
-    points = points_array[pali_ok][len_ok]
+    selectedWord = args.input.selectedWord
 
     # plugin can ask not to save the word
     nosave = args.input.nosave
     if not nosave:
-        tim_info = {"points": points}
-        save = {"userword": userword}
+        save = {"selectedWord": selectedWord}
         result["save"] = save
-        result["tim_info"] = tim_info
         web['result'] = "saved"
 
     return jsonify(result)
-
-
-def check_letters(word: str, needed_len: int) -> bool:
-    """Checks if word has needed amount of chars.
-
-    :param word: word to check
-    :param needed_len: how many letters needed
-    :return: true if len match
-
-    """
-    s = word.upper()
-    return len(re.sub("[^[A-ZÅÄÖ]", "", s)) == needed_len
-
 
 @app.route('/reqs/')
 @app.route('/reqs')
 def reqs():
     templates = ["""
 #- {defaultplugin="dropdown"}
-The weather {#question1 words: [is,do,are]} nice today.
+The weather {#item1 words: [is,do,are]} nice today.
 ""","""
 #- {defaultplugin="dropdown"}
-"Näin tänään {#question2 words: [kissan,koiran,hevosen]}
-joka jahtasi {#question3 words: [hiirtä,autoa,omenaa]}
+"Näin tänään {#item2 words: [kissan,koiran,hevosen]}
+joka jahtasi {#item3 words: [hiirtä,autoa,omenaa]}
 """]
     return jsonify({
         "js": ["js/build/dropdown.js"],

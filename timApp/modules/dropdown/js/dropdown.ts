@@ -5,6 +5,8 @@ import angular, {INgModelOptions} from "angular";
 import * as t from "io-ts";
 import {ITimComponent, ViewCtrl} from "tim/document/viewctrl";
 import {GenericPluginMarkup, nullable, PluginBase, withDefault} from "tim/plugin/util";
+import {to} from "../../../static/scripts/tim/util/utils";
+import {$http} from "../../../static/scripts/tim/util/ngimport";
 
 const dropdownApp = angular.module("dropdownApp", ["ngSanitize"]);
 export const moduleDefs = [dropdownApp];
@@ -71,10 +73,35 @@ class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.T
     }
 
     /**
-     * Does nothing at the moment
+     * TODO: koko lause, valittu vaihtoehto, pluginin tyyppi?,
      */
     save(): string {
+      this.doSave(false);
       return "";
+    }
+
+    async doSave(nosave: false) {
+        const params = {
+            input: {
+                nosave: false,
+                selectedWord: this.selectedWord,
+            },
+        };
+
+        if (nosave) {
+            params.input.nosave = true;
+        }
+
+        const url = this.pluginMeta.getAnswerUrl();
+        const r = await to($http.put<{ web: { result: string, error?: string } }>(url, params));
+
+        if (r.ok) {
+            const data = r.result.data;
+            this.error = data.web.error;
+            // this.result = data.web.result;
+        } else {
+            this.error = "Infinite loop or some other error?";
+        }
     }
 
     protected getAttributeType() {
@@ -95,7 +122,7 @@ dropdownApp.component("dropdownRunner", {
     <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
     <p ng-if="::$ctrl.stem">{{::$ctrl.stem}}</p>
     <div class="form-inline"><label>{{::$ctrl.inputstem}} <span>
-        <select ng-model="$ctrl.selectedWord" ng-options="item for item in $ctrl.wordlist">
+        <select ng-model="$ctrl.selectedWord" ng-options="item for item in $ctrl.wordlist" ng-change="$ctrl.save()">
         </select>
         </span></label>
     </div>
