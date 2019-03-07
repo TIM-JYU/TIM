@@ -61,7 +61,7 @@ def get_all_feedback_answers(task_ids: List[TaskId],
     counts = Answer.valid.label('count')
 
     q = q.group_by(Answer.task_id, User.id)
-    sub = q.subquery()
+    # sub = q.subquery()
     q = Answer.query.join(User, Answer.users)
     if sort == 'username':
         q = q.order_by(User.name, Answer.answered_on, Answer.task_id)
@@ -75,31 +75,39 @@ def get_all_feedback_answers(task_ids: List[TaskId],
     cnt = 0
     #pt_dt = datetime(1, 1, 1, tzinfo='UTC')    #muistiinmenevä tehtävän tekoaiku
     pt_dt = None
+    result = ""
     for answer, user, n in qq:
-        cnt += 1
+
         points = str(answer.points)
         if points == "None":
             points = ""
         name = user.name
         n = str(int(n))
-        header = name + ";" + answer.task_id + ";" + str(answer.answered_on) + ";" + n + ";" + points
+        # header = f"{name};{answer.task_id};{str(answer.answered_on)};{n};{points}"
         line = json.loads(answer.content)
         answer_str = str(line)
 
-        if cnt > 1:
+        if cnt > 0:
             tasksecs = (answer.answered_on - pt_dt).total_seconds()
         else:
             tasksecs = 0.0
 
 
         pt_dt = answer.answered_on
-        result = name + ";"
+
+        if (cnt % 2 == 1):
+            result = f"{name};"
+        elif cnt % 2 == 0 and cnt > 0:
+            result += ";"
+
         taskid = answer.task_id
         i = taskid.find(".")
         if i >= 0:
             taskid = taskid[i + 1:]
-        result += taskid + ";" + answer_str.replace("\n", "\\n") + ";" + str(math.floor(tasksecs))
-        results.append(result)
+        result += f"{taskid};{answer_str};{str(math.floor(tasksecs))}"
+        if (cnt % 2 == 0 and cnt > 0):
+            results.append(result)
+        cnt += 1
 
     return results
 
