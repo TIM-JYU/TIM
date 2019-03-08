@@ -1184,7 +1184,7 @@ def parse_size_attribute(attribute: str) -> str:
     for key, value in conv_to_pt.items():
         if key in attribute:
             try:
-                return str(float(str(attribute).replace(key, '').strip())*value)
+                return str(round(float(str(attribute).replace(key, '').strip())*value, 2))
             except Exception as e:
                 # TODO: Tell user about conversion errors.
                 pass
