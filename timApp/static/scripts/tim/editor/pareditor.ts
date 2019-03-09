@@ -434,6 +434,11 @@ ${backTicks}
                         func: () => this.editor!.insertTemplate("global_plugin_attrs:\n csPlugin:\n   stem: value\n all:\n   stem: value\n"),
                         name: "Global plugin",
                     },
+                    {
+                        title: "SVG images for math",
+                        func: () => this.editor!.insertTemplate("math_type: svg\n"),
+                        name: "Math SVG",
+                    },
                 ],
                 name: "Settings",
                 show: () => this.getOptions().showSettings,
