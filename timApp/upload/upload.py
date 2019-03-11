@@ -29,7 +29,7 @@ from timApp.timdb.sqa import db
 from timApp.upload.uploadedfile import UploadedFile, PluginUpload, PluginUploadInfo, StampedPDF
 from timApp.util.flask.responsehelper import json_response
 from timApp.util.pdftools import StampDataInvalidError, default_stamp_format, AttachmentStampData, \
-    PdfError, stamp_pdfs, get_base_filename, create_new_tex_file
+    PdfError, stamp_pdfs, get_path_base_filename, create_new_tex_file
 
 upload = Blueprint('upload',
                    __name__,
@@ -46,7 +46,7 @@ PIC_EXTENSIONS = ['png', 'jpg', 'jpeg', 'gif']
 ALLOWED_EXTENSIONS = set(PIC_EXTENSIONS + DOC_EXTENSIONS)
 
 # The folder for stamped and original pdf-files.
-default_attachment_folder = os.path.join(app.config['FILES_PATH'], "blocks/files")
+default_attachment_folder = Path(app.config['FILES_PATH']) / "blocks/files"
 
 
 def get_mimetype(p):
@@ -196,7 +196,7 @@ def upload_and_stamp_attachment(d: DocInfo, file, stamp_data: AttachmentStampDat
 
     # Add the uploaded file path (the one to stamp) to stamp data.
 
-    stamp_data.file = os_path.join(attachment_folder, f"{f.id}/{f.filename}")
+    stamp_data.file = attachment_folder / f"{f.id}/{f.filename}"
     if custom_stamp_model_content:
         stamp_model_path = create_new_tex_file(custom_stamp_model_content)
         output = stamp_pdfs(
@@ -210,7 +210,7 @@ def upload_and_stamp_attachment(d: DocInfo, file, stamp_data: AttachmentStampDat
             dir_path=(Path(attachment_folder) / f"{str(f.id)}/"),
             stamp_text_format=stampformat)[0]
 
-    stamped_filename = get_base_filename(output.absolute().as_posix())
+    stamped_filename = get_path_base_filename(output)
     db.session.commit()
 
     # TODO: In case of raised errors give proper no-upload response?
