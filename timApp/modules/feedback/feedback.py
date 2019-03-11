@@ -34,30 +34,15 @@ class FeedbackStateSchema(Schema):
 
 @attr.s(auto_attribs=True)
 class FeedbackMarkupModel(GenericMarkupModel):
-    points_array: Union[str, Missing] = missing
     inputstem: Union[str, Missing] = missing
-    needed_len: Union[int, Missing] = missing
-    initword: Union[str, Missing] = missing
-    cols: Union[int, Missing] = missing
-    inputplaceholder: Union[str, Missing] = missing
     followid: Union[str, Missing] = missing
     field: Union[str, Missing] = missing
 
 
 class FeedbackMarkupSchema(GenericMarkupSchema):
-    points_array = fields.List(fields.List(fields.Number()))
     inputstem = fields.Str()
-    needed_len = fields.Int()
-    initword = fields.Str()
-    cols = fields.Int()
-    inputplaceholder = fields.Str()
     followid = fields.Str()
     field = fields.Str()
-
-    @validates('points_array')
-    def validate_points_array(self, value):
-        if len(value) != 2 or not all(len(v) == 2 for v in value):
-            raise ValidationError('Must be of size 2 x 2.')
 
     @post_load
     def make_obj(self, data):
@@ -71,13 +56,11 @@ class FeedbackMarkupSchema(GenericMarkupSchema):
 class FeedbackInputModel:
     """Model for the information that is sent from browser (plugin AngularJS component)."""
     userword: str
-    paliOK: bool = missing
     nosave: bool = missing
 
 
 class FeedbackInputSchema(Schema):
     userword = fields.Str(required=True)
-    paliOK = fields.Bool()
     nosave = fields.Bool()
 
     @validates('userword')
@@ -171,47 +154,24 @@ def render_static_feedback(m: FeedbackHtmlModel):
 
 app = create_app(__name__, FeedbackHtmlSchema())
 
+# TODO: Need to remake the saving for this plugin
+
 
 @app.route('/answer/', methods=['put'])
 @use_args(FeedbackAnswerSchema(strict=True), locations=("json",))
 def answer(args: FeedbackAnswerModel):
     web = {}
     result = {'web': web}
-    needed_len = args.markup.needed_len
     userword = args.input.userword
-    pali_ok = args.input.paliOK or False
-    len_ok = True
-    if needed_len:
-        len_ok = check_letters(userword, needed_len)
-    if not len_ok:
-        web['error'] = "Wrong length"
-    if not needed_len and not pali_ok:
-        len_ok = False
-    points_array = args.markup.points_array or [[0, 0.25], [0.5, 1]]
-    points = points_array[pali_ok][len_ok]
 
     # plugin can ask not to save the word
     nosave = args.input.nosave
     if not nosave:
-        tim_info = {"points": points}
         save = {"userword": userword}
         result["save"] = save
-        result["tim_info"] = tim_info
         web['result'] = "saved"
 
     return jsonify(result)
-
-
-def check_letters(word: str, needed_len: int) -> bool:
-    """Checks if word has needed amount of chars.
-
-    :param word: word to check
-    :param needed_len: how many letters needed
-    :return: true if len match
-
-    """
-    s = word.upper()
-    return len(re.sub("[^[A-ZÅÄÖ]", "", s)) == needed_len
 
 
 @app.route('/reqs/')

@@ -15,11 +15,11 @@ export const moduleDefs = [feedbackApp];
 
 const FeedbackMarkup = t.intersection([
     t.partial({
-        initword: t.string,
-        inputplaceholder: nullable(t.string),
         inputstem: t.string,
         followid: t.string,
         field: t.string,
+        feedbackLevel: t.Integer,
+        userword: t.string
     }),
     GenericPluginMarkup,
     t.type({
@@ -38,10 +38,8 @@ const FeedbackAll = t.intersection([
 class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.TypeOf<typeof FeedbackAll>, typeof FeedbackAll> implements ITimComponent {
     private result?: string;
     private error?: string;
-    private isRunning = false;
-    private userword = "";
-    private modelOpts!: INgModelOptions; // initialized in $onInit, so need to assure TypeScript with "!"
     private vctrl!: ViewCtrl;
+    private userword = "";
 
     getDefaultMarkup() {
         return {};
@@ -53,8 +51,6 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
 
     $onInit() {
         super.$onInit();
-        this.userword = this.attrsall.userword || this.attrs.initword || "";
-        this.modelOpts = {debounce: this.autoupdate};
         this.addToCtrl();
     }
 
@@ -67,43 +63,17 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
         this.vctrl.addTimComponent(this, this.attrs.followid || name[1] || "");
     }
 
-    get edited() {
-        return this.attrs.initword !== this.userword;
-    }
-
     get autoupdate(): number {
         return this.attrs.autoupdate;
     }
 
-    get inputplaceholder() {
-        return this.attrs.inputplaceholder || null;
-    }
-
-    get inputstem() {
-        return this.attrs.inputstem || null;
-    }
-
-    get cols() {
-        return this.attrs.cols;
-    }
-
-    get resetText() {
-        return valueDefu(this.attrs.resetText, "Reset");
-    }
-
-    saveText() {
-        this.doSaveText(false);
-    }
-
-    async doSaveText(nosave: boolean) {
+    async doSave(nosave: boolean) {
         this.error = "... saving ...";
-        this.isRunning = true;
+
         this.result = undefined;
         const params = {
             input: {
                 nosave: false,
-                paliOK: true,
-                userword: this.userword,
             },
         };
 
@@ -112,7 +82,6 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
         }
         const url = this.pluginMeta.getAnswerUrl();
         const r = await to($http.put<{web: {result: string, error?: string}}>(url, params));
-        this.isRunning = false;
         if (r.ok) {
             const data = r.result.data;
             this.error = data.web.error;
@@ -134,7 +103,8 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
      * Does nothing at the moment
      */
     save(): string {
-      return "";
+        this.doSave(false);
+        return "";
     }
 
     /**
@@ -156,7 +126,8 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
                     text.trim();
                     answer = answer + text;
                 }
-                if(node.nodeName == "SPAN") {
+                if(node.nodeName == "TIM-PLUGIN-LOADER") {
+                    // ei toimi usean lohkon sisäisen inline pluginin kanssa
                     answer = answer + timComponent.getContent();
                 }
             }
@@ -195,3 +166,22 @@ feedbackApp.component("feedbackRunner", {
 </div>
 `,
 });
+
+/*
+
+<div class="csRunDiv no-popup-menu">
+    <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
+    <p ng-if="::$ctrl.stem">{{::$ctrl.stem}}</p>
+    <div class="form-inline"><label>{{::$ctrl.inputstem}} <span>
+        {{$ctrl.userword}}</span></label>
+    </div>
+    <button class="timButton"
+            ng-if="::$ctrl.buttonText()"
+            ng-click="$ctrl.getAnswer()">
+        {{::$ctrl.buttonText()}}
+    </button>
+    <div ng-if="$ctrl.error" ng-bind-html="$ctrl.error"></div>
+    <pre ng-if="$ctrl.result">{{$ctrl.result}}</pre>
+    <p ng-if="::$ctrl.footer" ng-bind="::$ctrl.footer" class="plgfooter"></p>
+</div>
+ */
