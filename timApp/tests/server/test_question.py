@@ -18,13 +18,14 @@ class QuestionTest(TimLiveServer, TimRouteTest):
          id="{first_id}"
          t="{pars[0].get_hash()}"
          attrs="{{&#34;plugin&#34;: &#34;qst&#34;, &#34;question&#34;: &#34;true&#34;, &#34;taskId&#34;: &#34;test1&#34;}}">
-        <tim-plugin-loader type="full" task-id="{d.id}.test1.{first_id}"/>
         <a href="#test1" title="Permlink" class="headerlink">#</a>
         <div class="parContent" id="test1">
-            <div id="{d.id}.test1.{first_id}" data-plugin="/qst" class="pluginqst">
+            <tim-plugin-loader type="full" task-id="{d.id}.test1" class="pluginqst" answer-id="">
+            <div id="{d.id}.test1.{first_id}" data-plugin="/qst">
                 <qst-runner
                         json="{{&quot;markup&quot;: {{&quot;timeLimit&quot;: 90, &quot;questionText&quot;: &quot;What day is it today?&quot;, &quot;questionType&quot;: &quot;radio-vertical&quot;, &quot;questionTitle&quot;: &quot;Today&quot;, &quot;rows&quot;: [&quot;Monday&quot;, &quot;Wednesday&quot;, &quot;Friday&quot;], &quot;headers&quot;: [], &quot;answerFieldType&quot;: &quot;radio&quot;, &quot;isTask&quot;: false}}, &quot;state&quot;: null, &quot;taskID&quot;: &quot;3.test1&quot;, &quot;taskIDExt&quot;: &quot;{d.id}.test1.{first_id}&quot;, &quot;doLazy&quot;: false, &quot;userPrint&quot;: false, &quot;preview&quot;: false, &quot;anonymous&quot;: true, &quot;info&quot;: null, &quot;user_id&quot;: &quot;testuser1&quot;, &quot;targetFormat&quot;: &quot;latex&quot;, &quot;review&quot;: false, &quot;show_result&quot;: false}}"/>
             </div>
+            </tim-plugin-loader>
         </div>
         <div class="editline" title="Click to edit this paragraph"></div>
         <div class="readline"

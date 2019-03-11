@@ -22,7 +22,7 @@ from timApp.document.randutils import hashfunc
 from timApp.document.specialnames import TEMPLATE_FOLDER_NAME, PRINT_FOLDER_NAME
 from timApp.document.yamlblock import strip_code_block
 from timApp.markdown.markdownconverter import expand_macros, create_environment
-from timApp.plugin.plugin import get_value
+from timApp.plugin.plugin import get_value, PluginWrap
 from timApp.plugin.plugin import parse_plugin_values_macros
 from timApp.plugin.pluginControl import pluginify
 from timApp.plugin.pluginOutputFormat import PluginOutputFormat
@@ -198,12 +198,12 @@ class DocumentPrinter:
             tformat = PrintFormat.LATEX
 
         # render markdown for plugins
-        pars_to_print, _, _ = pluginify(
+        pars_to_print, _, _, _ = pluginify(
             doc=self._doc_entry.document,
             pars=pars_to_print,
             user=get_current_user_object(),
             output_format=PluginOutputFormat.MD,
-            wrap_in_div=False,
+            pluginwrap=PluginWrap.Nothing,
             user_print=plugins_user_print,
             target_format=tformat,
             dereference=False,

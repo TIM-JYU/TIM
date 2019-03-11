@@ -95,12 +95,6 @@
         {% if not t.is_plugin %}ng-non-bindable{% endif %}>
         {% set attrs = t.ref_attrs or t.attrs %}
         {% set task_id = attrs['taskId'] %}
-            {%- if t.answerbrowser_type and not preview -%}
-                <tim-plugin-loader type="{{ t.answerbrowser_type }}"
-                                   {% if t.answer_count %}class="has-answers"{% endif %}
-                                   task-id="{{ attrs.get('taskIdObj').extended_or_doc_task }}">
-                </tim-plugin-loader>
-            {%- endif -%}
         {%- if task_id and not preview -%}
             <a href="#{{ task_id }}" title="Permlink" class="headerlink">#</a>
         {%- endif -%}

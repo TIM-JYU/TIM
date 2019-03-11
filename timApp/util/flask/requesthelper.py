@@ -32,16 +32,6 @@ def verify_json_params(*args: str, require=True, default=None, error_msgs=None):
     return result
 
 
-def unpack_args(*args, types):
-    result = ()
-    json_params = request.args
-    for idx, arg in enumerate(args):
-        if arg not in json_params:
-            abort(400, f'Missing required parameter in request: {arg}')
-        result += types[idx](json_params[arg]),
-    return result
-
-
 def get_referenced_pars_from_req(par):
     if par.is_reference() and not par.is_translation():
         try:
