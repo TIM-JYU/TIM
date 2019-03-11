@@ -13,6 +13,7 @@
 /Dumbo/**/*.iml
 /Dumbo/cache/
 /Dumbo/out/
+/Dumbo/tmp/
 /screenshots
 /tim_logs/
 /timApp/celerybeat-schedule.db
