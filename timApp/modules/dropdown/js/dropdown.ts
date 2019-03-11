@@ -13,8 +13,6 @@ export const moduleDefs = [dropdownApp];
 
 const DropdownMarkup = t.intersection([
     t.partial({
-        initword: t.string,
-        inputplaceholder: nullable(t.string),
         inputstem: t.string,
         words: t.array(t.string),
         followid: t.string,

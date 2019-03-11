@@ -32,28 +32,15 @@ class DropdownStateSchema(Schema):
 
 @attr.s(auto_attribs=True)
 class DropdownMarkupModel(GenericMarkupModel):
-    points_array: Union[str, Missing] = missing
     inputstem: Union[str, Missing] = missing
-    needed_len: Union[int, Missing] = missing
-    initword: Union[str, Missing] = missing
-    cols: Union[int, Missing] = missing
     words: Union[List[str], Missing] = missing
     followid: Union[str, Missing] = missing
 
 
 class DropdownMarkupSchema(GenericMarkupSchema):
-    points_array = fields.List(fields.List(fields.Number()))
     inputstem = fields.Str()
-    needed_len = fields.Int()
-    initword = fields.Str()
-    cols = fields.Int()
     words = fields.List(fields.Str)
     followid = fields.String()
-
-    @validates('points_array')
-    def validate_points_array(self, value):
-        if len(value) != 2 or not all(len(v) == 2 for v in value):
-            raise ValidationError('Must be of size 2 x 2.')
 
     @post_load
     def make_obj(self, data):
@@ -66,13 +53,11 @@ class DropdownMarkupSchema(GenericMarkupSchema):
 @attr.s(auto_attribs=True)
 class DropdownInputModel:
     selectedWord: str
-    #paliOK: bool
     nosave: bool = missing
 
 
 class DropdownInputSchema(Schema):
     nosave = fields.Bool()
-    #paliOK = fields.Bool(required=True)
     selectedWord = fields.Str(required=True)
 
     @validates('selectedWord')
