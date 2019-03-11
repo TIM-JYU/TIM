@@ -137,10 +137,9 @@ export class SearchBoxCtrl implements IController {
         optionsStorage: null | boolean[]};
     private folderSuggestions: string[] = []; // A list of folder path suggestions.
     private resultsDialog: ShowSearchResultController | undefined; // The most recent search result dialog.
-    private timeWarningLimit: number = 20;
     private maxDocResults: number = 1000;
-
-    // Gives a warning about long search time if over this.
+    private timeWarningLimit: number = 20; // Gives a warning about long search time if over this.
+    private timeout: number = 120; // Default timeout for search.
 
     /**
      * SearchBox constructor.
@@ -339,6 +338,7 @@ export class SearchBoxCtrl implements IController {
             relevanceThreshold: this.relevanceThreshold,
             searchOwned: this.searchOwned,
             searchWholeWords: this.searchWholeWords,
+            timeout: this.timeout,
         };
     }
 

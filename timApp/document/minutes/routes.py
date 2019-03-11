@@ -1,6 +1,7 @@
 """
 Routes related to handling faculty council documents, such as meeting invitations and minutes
 """
+from pathlib import Path
 
 from flask import Blueprint, send_file, request
 from flask import abort
@@ -251,14 +252,14 @@ def merge_attachments(doc):
 
         # Uses document name as the base for the merged file name and tmp as folder.
         doc_name = timApp.util.pdftools.get_base_filename(doc)
-        merged_pdf_path = timApp.util.pdftools.temp_folder_default_path + "/" + f"{doc_name}_merged.pdf"
+        merged_pdf_path = Path(timApp.util.pdftools.temp_folder_default_path) / f"{doc_name}_merged.pdf"
         timApp.util.pdftools.merge_pdf(pdf_paths, merged_pdf_path)
 
     except Exception as err:
         message = str(err)
         abort(404, message)
     else:
-        return send_file(merged_pdf_path, mimetype="application/pdf")
+        return send_file(merged_pdf_path.absolute().as_posix(), mimetype="application/pdf")
 
 
 @minutes_blueprint.route('/mergeAttachments/<path:doc>', methods=['POST'])

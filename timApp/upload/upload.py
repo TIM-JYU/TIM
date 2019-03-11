@@ -23,13 +23,13 @@ from timApp.document.documents import import_document
 from timApp.item.block import Block
 from timApp.item.block import BlockType
 from timApp.item.validation import validate_item_and_create_intermediate_folders, validate_uploaded_document_content
-from timApp.plugin.plugin import Plugin
 from timApp.plugin.taskid import TaskId
+from timApp.tim_app import app
 from timApp.timdb.sqa import db
 from timApp.upload.uploadedfile import UploadedFile, PluginUpload, PluginUploadInfo, StampedPDF
 from timApp.util.flask.responsehelper import json_response
 from timApp.util.pdftools import StampDataInvalidError, default_stamp_format, AttachmentStampData, \
-    PdfError, stamp_pdfs, get_base_filename
+    PdfError, stamp_pdfs, get_path_base_filename, create_new_tex_file
 
 upload = Blueprint('upload',
                    __name__,
@@ -46,7 +46,7 @@ PIC_EXTENSIONS = ['png', 'jpg', 'jpeg', 'gif']
 ALLOWED_EXTENSIONS = set(PIC_EXTENSIONS + DOC_EXTENSIONS)
 
 # The folder for stamped and original pdf-files.
-default_attachment_folder = "/tim_files/blocks/files"
+default_attachment_folder = Path(app.config['FILES_PATH']) / "blocks/files"
 
 
 def get_mimetype(p):
@@ -159,7 +159,8 @@ def upload_file():
                 stamp_data = AttachmentStampData(date=attachment_params[0],
                                                  attachment=attachment_params[3],
                                                  issue=attachment_params[4])
-                return upload_and_stamp_attachment(d, file, stamp_data, stampformat)
+                custom_stamp_model = attachment_params[len(attachment_params) - 2]
+                return upload_and_stamp_attachment(d, file, stamp_data, stampformat, custom_stamp_model)
             # If attachment isn't a pdf, gives an error too (since it's in 'showPdf' plugin)
             except PdfError as e:
                 abort(400, str(e))
@@ -176,13 +177,15 @@ def upload_document(folder, file):
     return json_response({'id': doc.doc_id})
 
 
-def upload_and_stamp_attachment(d: DocInfo, file, stamp_data: AttachmentStampData, stampformat: str):
+def upload_and_stamp_attachment(d: DocInfo, file, stamp_data: AttachmentStampData, stampformat: str,
+                                custom_stamp_model_content: str = None):
     """
     Uploads the file and makes a stamped version of it into the same folder.
     :param d: Document info.
     :param file: The file to upload and stamp.
     :param stamp_data: Stamp data object (attachment and list ids) without the path.
     :param stampformat: Formatting of stamp text.
+    :param custom_stamp_model_content: LaTeX-string for a custom stamp.
     :return: Json response containing the stamped file path.
     """
 
@@ -193,14 +196,21 @@ def upload_and_stamp_attachment(d: DocInfo, file, stamp_data: AttachmentStampDat
 
     # Add the uploaded file path (the one to stamp) to stamp data.
 
-    stamp_data.file = os_path.join(attachment_folder, f"{f.id}/{f.filename}")
+    stamp_data.file = attachment_folder / f"{f.id}/{f.filename}"
+    if custom_stamp_model_content:
+        stamp_model_path = create_new_tex_file(custom_stamp_model_content)
+        output = stamp_pdfs(
+            [stamp_data],
+            dir_path=(Path(attachment_folder) / f"{str(f.id)}/"),
+            stamp_text_format=stampformat,
+            stamp_model_path=stamp_model_path)[0]
+    else:
+        output = stamp_pdfs(
+            [stamp_data],
+            dir_path=(Path(attachment_folder) / f"{str(f.id)}/"),
+            stamp_text_format=stampformat)[0]
 
-    output = stamp_pdfs(
-        [stamp_data],
-        dir_path=os_path.join(attachment_folder, str(f.id) + "/"),
-        stamp_text_format=stampformat)[0]
-
-    stamped_filename = get_base_filename(output)
+    stamped_filename = get_path_base_filename(output)
     db.session.commit()
 
     # TODO: In case of raised errors give proper no-upload response?

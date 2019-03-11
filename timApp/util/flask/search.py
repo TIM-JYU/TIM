@@ -3,6 +3,7 @@ import os
 import re
 import sre_constants
 import subprocess
+import time
 from datetime import datetime
 from pathlib import Path
 from typing import Match, Union, Tuple
@@ -103,7 +104,7 @@ def log_search_error(error: str, query: str, doc: str, tag: str = "", par: str =
         title_part = " title"
     if path:
         path_part = " path"
-    log_error(common_part + tag_part + par_part + title_part + par_part)
+    log_error(common_part + tag_part + par_part + title_part + path_part)
 
 
 def preview_result(md: str, query, m: Match[str], snippet_length: int = PREVIEW_LENGTH,
@@ -786,6 +787,17 @@ def is_excluded(relevance: int, relevance_threshold: int) -> bool:
     return False
 
 
+def is_timeouted(start_time: float, timeout: float) -> bool:
+    """
+    Compares elapsed time and timeout limit.
+    :param start_time: The time comparison starts from.
+    :param timeout: Maximum allowed elapsed time.
+    :return: True if timeout has been passed, false if not.
+    """
+    elapsed_time = time.time() - start_time
+    return elapsed_time > timeout
+
+
 @search_routes.route("")
 def search():
     """
@@ -804,11 +816,14 @@ def search():
     search_content = get_option(request, 'searchContent', default=True, cast=bool)
     relevance_threshold = get_option(request, 'relevanceThreshold', default=1, cast=int)
     ignore_relevance = get_option(request, 'ignoreRelevance', default=False, cast=bool)
+    timeout = get_option(request, 'timeout', default=120, cast=int)
 
     if search_content and not Path(dir_path / content_search_file_name).exists():
         abort(404, f"Combined content file '{content_search_file_name}' not found, unable to perform content search!")
     if search_titles and not Path(dir_path / title_search_file_name).exists():
         abort(404, f"Combined title file '{title_search_file_name}' not found, unable to perform title search!")
+
+    start_time = time.time()
 
     validate_query(query, search_whole_words)
 
@@ -866,6 +881,10 @@ def search():
 
     for line in title_output:
         try:
+            if is_timeouted(start_time, timeout):
+                incomplete_search_reason = f"title search exceeded the timeout ({timeout} seconds)"
+                raise TimeoutError("title search timeout")
+
             # Any line shorter than this is broken.
             if line and len(line) > 10:
                 line_info = json.loads(line)
@@ -906,12 +925,23 @@ def search():
 
                 if doc_result.has_results():
                     title_results.append(doc_result)
-
+        except TimeoutError as e:
+            log_search_error(get_error_message(e), query, current_doc, title=True)
+            return json_response({'title_result_count': title_result_count,
+                                  'word_result_count': word_result_count,
+                                  'errors': [],
+                                  'incomplete_search_reason': incomplete_search_reason,
+                                  'title_results': title_results,
+                                  'content_results': content_results})
         except Exception as e:
             log_search_error(get_error_message(e), query, current_doc, title=True)
 
     for line in content_output:
         try:
+            if is_timeouted(start_time, timeout):
+                incomplete_search_reason = f"content search exceeded the timeout ({timeout} seconds)"
+                raise TimeoutError("content search timeout")
+
             # Any line shorter than this is broken.
             if line and len(line) > 10:
 
@@ -1003,7 +1033,14 @@ def search():
                 if word_result_count > max_results:
                     incomplete_search_reason = f"more than maximum of {max_results} results"
                     break
-
+        except TimeoutError as e:
+            log_search_error(get_error_message(e), query, current_doc, title=True)
+            return json_response({'title_result_count': title_result_count,
+                                  'word_result_count': word_result_count,
+                                  'errors': [],
+                                  'incomplete_search_reason': incomplete_search_reason,
+                                  'title_results': title_results,
+                                  'content_results': content_results})
         except Exception as e:
             log_search_error(get_error_message(e), query, current_doc, par=current_par)
 

@@ -147,7 +147,7 @@ export class PareditorController extends DialogController<{params: IEditorParams
     private touchDevice: boolean;
     private autocomplete!: boolean; // $onInit
     private citeText!: string; // $onInit
-    private docSettings?: {macros: {dates: string[], knro: number, stampformat: string}};
+    private docSettings?: {macros: {dates: string[], knro: number, stampformat: string}, custom_stamp_model?: string};
     private uploadedFile?: string;
     private activeTab?: string;
     private lastTab?: string;
@@ -433,6 +433,11 @@ ${backTicks}
                         title: "Global values for the plugins",
                         func: () => this.editor!.insertTemplate("global_plugin_attrs:\n csPlugin:\n   stem: value\n all:\n   stem: value\n"),
                         name: "Global plugin",
+                    },
+                    {
+                        title: "SVG images for math",
+                        func: () => this.editor!.insertTemplate("math_type: svg\n"),
+                        name: "Math SVG",
                     },
                 ],
                 name: "Settings",
@@ -892,7 +897,7 @@ ${backTicks}
         let attachmentParams;
         let macroParams;
 
-        // To identify attachment-macro. // TODO: jos editorissa monta liitettä, tekee väärin
+        // To identify attachment-macro. // TODO: If editor has multiple attachments, this may go wrong
         const macroStringBegin = "%%liite(";
         const macroStringEnd = ")%%";
 
@@ -902,18 +907,22 @@ ${backTicks}
         if (editorText.length > 0 && editorText.lastIndexOf(macroStringBegin) > 0 && this.docSettings) {
             autostamp = true;
             try {
-                const macroText = editorText.substring(
+                let macroText = editorText.substring(
                     editorText.lastIndexOf(macroStringBegin) + macroStringBegin.length,
                     editorText.lastIndexOf(macroStringEnd));
+                // Normal line breaks cause exception with JSON.parse, and replacing them with ones parse understands
+                // causes exceptions if line breaks are outside parameters, so just remove them before parsing.
+                macroText = macroText.replace(/(\r\n|\n|\r)/gm, "");
                 macroParams = JSON.parse(`[${macroText}]`);
             } catch {
+                this.file.error = "Parsing stamp parameters failed";
                 throw new Error("Parsing stamp parameters failed");
             }
 
             // Knro usage starts from 1 but dates starts from 0 but there is dummy item first
             const knro = this.docSettings.macros.knro;
             const dates = this.docSettings.macros.dates;
-            // dates = ["ERROR", ...dates];
+            // dates = ["ERROR", ...dates];  // Start from index 1; unnecessary now.
             const kokousDate = dates[knro][0];  // dates is 2-dim array
 
             // If stampFormat isn't set in preamble,
@@ -921,7 +930,8 @@ ${backTicks}
             if (stampFormat === undefined) {
                 stampFormat = "";
             }
-            attachmentParams = [kokousDate, stampFormat, ...macroParams, autostamp];
+            const customStampModel = this.docSettings.custom_stamp_model;
+            attachmentParams = [kokousDate, stampFormat, ...macroParams, customStampModel, autostamp];
         }
         if (file) {
             this.file.progress = 0;
