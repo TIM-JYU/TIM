@@ -40,14 +40,14 @@ def get_all_feedback_answers(task_ids: List[TaskId],
     :return:
     """
 
-    # EN - query from answer-table for the given time period and TaskId:s
+    # Query from answer-table for the given time period and TaskId:s
     q = (Answer
          .query
          .filter((period_from <= Answer.answered_on) & (Answer.answered_on < period_to))
          .filter(Answer.task_id.in_(task_ids_to_strlist(task_ids))))
-    # EN - also joins with user table to get user information
+    # Also joins with user table to get user information
     q = q.join(User, Answer.users)
-    # EN - not clear what this does
+    # Not clear what this does TODO: figure out and remove if not needed
     # q = q.options(defaultload(Answer.users).lazyload(User.groups))
 
     ''' käytetään myöhemmin jos käytetään 
@@ -62,16 +62,16 @@ def get_all_feedback_answers(task_ids: List[TaskId],
         counts = func.count(Answer.answered_on).label('count')
     '''
     #minmax = Answer.id.label('minmax')
-    counts = Answer.valid.label('count')  # EN - not really used TODO: check and remove
+    counts = Answer.valid.label('count')  # Not really used TODO: check and remove
 
-    # EN - sorts the answers first with user then by time and last by task_id (task_id sort not necessary?)
+    # Sorts the answers first with user then by time and last by task_id (task_id sort not necessary?)
     if sort == 'username':
         q = q.order_by(User.name, Answer.answered_on, Answer.task_id)
-    # EN - for a report this option not necessary for now at least - depends what type reports needed in research
+    # For a report this option not necessary for now at least - depends what type reports needed in research
     else:
         q = q.order_by(Answer.task_id, User.name, Answer.answered_on)
 
-    # EN - q with Answer, User and count data - not really used... TODO: remove counts if not needed
+    # q with Answer, User and count data - counts not really used... TODO: remove counts if not needed
     q = q.with_entities(Answer, User, counts)
 
     # TODO: clean up for loop logic to get wanted answers out in correct format
@@ -163,10 +163,10 @@ def test():
     period1 = datetime.min
     period2 = datetime.max
 
-    # EN - filtering now works so this will not return any answers
+    # Filtering now works so this will not return any answers
     answers0 = get_all_feedback_answers([], 'username', "all", period1, period2)
 
-    # EN - For choosing specific tasks for the report a list of tasks is given
+    # For choosing specific tasks for the report a list of tasks is given
     # TODO: check real call to see how task_ids from different pages can be called
     nro1 = 19
     taskid1 = TaskId(nro1, "sample_item")  # generating TaskIds - (pageid int, taskname string)
@@ -179,7 +179,7 @@ def test():
     answers1 = get_all_feedback_answers(taskids_test,
                                         'username', "all", period1, period2)
 
-    # EN - Testing with taskIds from two documents
+    # Testing with taskIds from two documents
     nro2 = 20
     taskid21 = TaskId(nro2, "sample_item")
     taskid22 = TaskId(nro2, "item1")
