@@ -295,10 +295,6 @@ a .glyphicon {
         }
     }
 
-    .answerBrowser {
-        text-align: left;
-    }
-
     p.plgfooter {
         text-align: center;
     }
@@ -1225,6 +1221,7 @@ body > .footer {
 
 answerbrowser {
     display: block;
+    text-align: left;
 
     &.has-answers {
         min-height: 23px;
