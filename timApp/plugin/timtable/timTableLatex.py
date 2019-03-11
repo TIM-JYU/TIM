@@ -1369,25 +1369,10 @@ def convert_table(table_json, draw_html_borders: bool = False) -> Table:
     column_h_align_list = get_column_format_list(table_json, f=get_text_horizontal_align)
     column_font_family_list = get_column_format_list(table_json, f=get_font_family)
 
-    table_default_row_data = None
-    table_default_col_data = None
-    table_default_cell_data = None
-    try:
-        table_default_row_data = table_json['defrows']
-    except KeyError:
-        pass
-    try:
-        table_default_col_data = table_json['defcols']
-    except KeyError:
-        pass
-    try:
-        table_default_col_data = table_json['defcells']
-    except KeyError:
-        pass
-    try:
-        table_default_cell_data = table_json['defcells']
-    except KeyError:
-        pass
+    # Get default (applied to all of same type) attributes:
+    table_default_row_data = table_json.get('defrows')
+    table_default_col_data = table_json.get('defcols')
+    table_default_cell_data = table_json.get('defcells')
 
     table_default_row_height = get_size(table_default_row_data, key="height", default=None)
     table_default_col_height = get_size(table_default_col_data, key="width", default=None)
