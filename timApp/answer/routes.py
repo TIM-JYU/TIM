@@ -2,42 +2,47 @@
 import json
 import re
 from datetime import timezone, timedelta, datetime
-from typing import Union, List, Tuple
+from typing import Union, List, Tuple, Optional
 
+import attr
 import dateutil.parser
 import dateutil.relativedelta
 from flask import Blueprint
 from flask import Response
 from flask import abort
 from flask import request
+from marshmallow import Schema, fields, post_load
+from marshmallow.utils import _Missing, missing
+from webargs.flaskparser import use_args
 
+from timApp.answer.answer import Answer
+from timApp.answer.answer_models import AnswerUpload
 from timApp.auth.accesshelper import verify_logged_in, get_doc_or_abort, verify_manage_access
-from timApp.auth.accesshelper import verify_task_access, verify_teacher_access, verify_seeanswers_access, has_teacher_access, \
+from timApp.auth.accesshelper import verify_task_access, verify_teacher_access, verify_seeanswers_access, \
+    has_teacher_access, \
     verify_view_access, get_plugin_from_request
-from timApp.document.docinfo import DocInfo
-from timApp.document.post_process import hide_names_in_teacher
-from timApp.plugin.containerLink import call_plugin_answer
-from timApp.timdb.dbaccess import get_timdb
-from timApp.document.document import Document
-from timApp.markdown.dumboclient import call_dumbo
-from timApp.plugin.plugin import Plugin
-from timApp.plugin.taskid import TaskId
-from timApp.plugin.pluginControl import find_task_ids, pluginify
-from timApp.user.usergroup import UserGroup
-from timApp.util.utils import try_load_json, get_current_time
-from timApp.plugin.pluginexception import PluginException
-from timApp.util.flask.requesthelper import verify_json_params, unpack_args, get_option, get_consent_opt
-from timApp.util.flask.responsehelper import json_response, ok_response
+from timApp.auth.accesstype import AccessType
 from timApp.auth.sessioninfo import get_current_user_id, logged_in
 from timApp.auth.sessioninfo import get_current_user_object, get_session_users, get_current_user_group
-from timApp.auth.accesstype import AccessType
-from timApp.timdb.exceptions import TimDbException
-from timApp.item.block import Block, BlockType
 from timApp.document.docentry import DocEntry
-from timApp.user.user import User
+from timApp.document.docinfo import DocInfo
+from timApp.document.document import Document
+from timApp.document.post_process import hide_names_in_teacher
+from timApp.item.block import Block, BlockType
+from timApp.markdown.dumboclient import call_dumbo
+from timApp.plugin.containerLink import call_plugin_answer
+from timApp.plugin.plugin import Plugin, PluginWrap
+from timApp.plugin.pluginControl import find_task_ids, pluginify
+from timApp.plugin.pluginexception import PluginException
+from timApp.plugin.taskid import TaskId
+from timApp.timdb.dbaccess import get_timdb
+from timApp.timdb.exceptions import TimDbException
 from timApp.timdb.sqa import db
-from timApp.answer.answer_models import AnswerUpload
-from timApp.answer.answer import Answer
+from timApp.user.user import User
+from timApp.user.usergroup import UserGroup
+from timApp.util.flask.requesthelper import verify_json_params, get_option, get_consent_opt
+from timApp.util.flask.responsehelper import json_response, ok_response
+from timApp.util.utils import try_load_json, get_current_time
 
 answers = Blueprint('answers',
                     __name__,
@@ -90,17 +95,13 @@ def post_answer(plugintype: str, task_id_ext: str):
         tid = TaskId.parse(task_id_ext)
     except PluginException as e:
         return abort(400, f'Task id error: {e}')
-    task_id = str(tid.doc_id) + '.' + str(tid.task_name)
     d = get_doc_or_abort(tid.doc_id)
     d.document.insert_preamble_pars()
     verify_task_access(d, tid.task_name, AccessType.view)
     doc = d.document
     curr_user = get_current_user_object()
     try:
-        if tid.block_id_hint is None:
-            _, plugin = get_plugin_from_request(doc, task_id=tid, u=curr_user)
-        else:
-            _, plugin = get_plugin_from_request(doc, task_id=tid, u=curr_user)
+        _, plugin = get_plugin_from_request(doc, task_id=tid, u=curr_user)
     except PluginException as e:
         return abort(400, str(e))
     except TimDbException as e:
@@ -120,6 +121,33 @@ def post_answer(plugintype: str, task_id_ext: str):
     is_teacher = answer_browser_data.get('teacher', False)
     save_teacher = answer_browser_data.get('saveTeacher', False)
     save_answer = answer_browser_data.get('saveAnswer', True) and tid.task_name
+
+    if tid.is_points_ref:
+        verify_teacher_access(d)
+        given_points = answerdata.get(plugin.get_content_field_name())
+        if given_points is not None:
+            try:
+                given_points = float(given_points)
+            except ValueError:
+                return abort(400, 'Points must be a number.')
+        a = curr_user.answers.filter_by(task_id=tid.doc_task).order_by(Answer.id.desc()).first()
+        if a:
+            a.points = given_points
+            s = None
+        else:
+            a = Answer(
+                content=json.dumps({plugin.get_content_field_name(): ''}),
+                points=given_points,
+                task_id=tid.doc_task,
+                users_all=[curr_user],
+                valid=True,
+            )
+            db.session.add(a)
+            db.session.flush()
+            s = a.id
+        db.session.commit()
+        return json_response({'savedNew': s, 'web': {'result': 'points saved'}})
+
     if save_teacher:
         verify_teacher_access(d)
     users = None
@@ -138,7 +166,7 @@ def post_answer(plugintype: str, task_id_ext: str):
             if not answer:
                 return abort(404, f'Answer not found: {answer_id}')
             expected_task_id = answer.task_id
-            if expected_task_id != task_id:
+            if expected_task_id != tid.doc_task:
                 return abort(400, 'Task ids did not match')
             users = answer.users_all
             if not users:
@@ -185,7 +213,7 @@ def post_answer(plugintype: str, task_id_ext: str):
     answer_call_data = {'markup': plugin.values,
                         'state': state,
                         'input': answerdata,
-                        'taskID': task_id,
+                        'taskID': tid.doc_task,
                         'info': info}
 
     plugin_response = call_plugin_answer(plugintype, answer_call_data)
@@ -443,13 +471,34 @@ def get_all_answers(task_id):
     return json_response(all_answers)
 
 
+class GetStateSchema(Schema):
+    answer_id = fields.Int(required=True)
+    doc_id = fields.Int(required=True)
+    par_id = fields.Str()
+    user_id = fields.Int(required=True)
+    review = fields.Bool(missing=False)
+
+    @post_load
+    def make_obj(self, data):
+        return GetStateModel(**data)
+
+    class Meta:
+        strict = True
+
+
+@attr.s(auto_attribs=True)
+class GetStateModel:
+    answer_id: int
+    doc_id: int
+    user_id: int
+    review: bool
+    par_id: Union[str, _Missing] = missing
+
+
 @answers.route("/getState")
-def get_state():
-    d_id, par_id, user_id, answer_id = unpack_args('doc_id',
-                                                   'par_id',
-                                                   'user_id',
-                                                   'answer_id', types=[int, str, int, int])
-    review = get_option(request, 'review', False)
+@use_args(GetStateSchema())
+def get_state(args: GetStateModel):
+    d_id, par_id, user_id, answer_id, review = args.doc_id, args.par_id, args.user_id, args.answer_id, args.review
 
     answer, doc_id = verify_answer_access(answer_id, user_id)
     doc = Document(d_id)
@@ -457,7 +506,8 @@ def get_state():
     #     abort(400, 'Bad document id')
 
     tid = TaskId.parse(answer.task_id)
-    tid.block_id_hint = par_id
+    if par_id:
+        tid.maybe_set_hint(par_id)
     user = User.query.get(user_id)
     if user is None:
         abort(400, 'Non-existent user')
@@ -465,20 +515,25 @@ def get_state():
     doc, plug = get_plugin_from_request(doc, task_id=tid, u=user)
     block = plug.par
 
-    texts, js_paths, css_paths = pluginify(doc,
-                                           [block],
-                                           user,
-                                           custom_answer=answer)
-    html = texts[0].get_final_dict()['html']
+    _, _, _, plug = pluginify(
+        doc,
+        [block],
+        user,
+        custom_answer=answer,
+        pluginwrap=PluginWrap.Nothing,
+    )
+    html = plug.get_final_output()
     if review:
         block.final_dict = None
-        review_pars, _, _ = pluginify(doc,
-                                      [block],
-                                      user,
-                                      custom_answer=answer,
-                                      review=review,
-                                      wrap_in_div=False)
-        return json_response({'html': html, 'reviewHtml': review_pars[0].get_final_dict()['html']})
+        _, _, _, rplug = pluginify(
+            doc,
+            [block],
+            user,
+            custom_answer=answer,
+            review=review,
+            pluginwrap=PluginWrap.Nothing,
+        )
+        return json_response({'html': html, 'reviewHtml': rplug.get_final_output()})
     else:
         return json_response({'html': html, 'reviewHtml': None})
 

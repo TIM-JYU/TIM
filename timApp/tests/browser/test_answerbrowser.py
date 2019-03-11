@@ -22,8 +22,7 @@ class AnswerBrowserTest(BrowserTest):
 
     def check_reference_answerbrowser_ok(self, d: DocEntry):
         self.goto_document(d)
-        selector = '#mmcqexample button'
-        submitbutton = self.find_element_and_move_to(selector, times=2)
-        submitbutton.click()
+        selector = '#mmcqexample mmcq button'
+        self.find_element_avoid_staleness(selector, click=True)
         self.wait_and_click(PREV_ANSWER)
         self.should_not_exist('answerbrowser .alert-danger')

@@ -3,6 +3,7 @@ from typing import Optional, Union
 
 import attr
 
+from timApp.document.docparagraph import DocParagraph
 from timApp.document.randutils import is_valid_id
 from timApp.plugin.pluginexception import PluginException
 
@@ -74,19 +75,36 @@ class TaskId(UnvalidatedTaskId):
         return f'{self.doc_id}.{self.task_name}'
 
     @property
+    def doc_task_with_field(self):
+        if not self.field:
+            return self.doc_task
+        return f'{self.doc_task}.{self.field}'
+
+    @property
     def extended(self):
-        if not self.block_id_hint:
+        if not self.block_id_hint and not self.field:
             raise PluginException('Task id does not have block id hint.')
-        return f'{self.doc_task}.{self.block_id_hint}'
+        return f'{self.doc_task}.{self.block_id_hint or self.field}'
 
     @property
     def extended_or_doc_task(self):
-        if self.block_id_hint:
+        if self.block_id_hint or self.field:
             return self.extended
         return self.doc_task
 
+    def maybe_set_hint(self, hint: str):
+        if not self.field:
+            self.block_id_hint = hint
+
+    @property
+    def is_points_ref(self):
+        return self.field == 'points'
+
     def validate(self):
         pass  # already validated at __init__
+
+    def update_doc_id_from_block(self, par: DocParagraph):
+        self.doc_id = par.ref_doc.doc_id if par.ref_doc else par.doc.doc_id
 
 
 MaybeUnvalidatedTaskId = Union[UnvalidatedTaskId, TaskId]
