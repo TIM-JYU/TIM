@@ -181,7 +181,7 @@ class cached_property:
         return value
 
 
-def try_load_json(json_str: str):
+def try_load_json(json_str: Optional[str]):
     """"""
     try:
         if json_str is not None:

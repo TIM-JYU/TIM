@@ -374,7 +374,7 @@ def par_response(pars,
     if edit_result:
         preview = False
     else:
-        preview = edit_request and edit_request.preview
+        preview = bool(edit_request and edit_request.preview)
     trdiff = None
     # Do not check for duplicates for preview because the operation is heavy
     if not preview:
