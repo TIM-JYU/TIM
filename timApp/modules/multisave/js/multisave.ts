@@ -283,14 +283,14 @@ multisaveApp.component("multisaveRunner", {
 <div class="no-popup-menu">
     <!-- <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
     <p ng-if="::$ctrl.stem">{{::$ctrl.stem}}</p>-->
-    <div class="form-inline"><label>{{::$ctrl.inputstem}}</label>
-    </div>
     <button class="timButton"
             ng-if="::$ctrl.buttonText()"
             ng-click="$ctrl.save()">
         {{::$ctrl.buttonText()}}
     </button>
     <pre ng-if="$ctrl.result">{{$ctrl.result}}</pre>
+    <div class="form-inline"><label>{{::$ctrl.inputstem}}</label>
+    </div>
     <p ng-if="::$ctrl.footer" ng-bind="::$ctrl.footer" class="plgfooter"></p>
 </div>
 `,

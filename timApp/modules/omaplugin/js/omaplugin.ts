@@ -67,7 +67,7 @@ export class OmapluginController extends PluginBase<t.TypeOf<typeof omapluginMar
         super.$onInit();
         this.userword = this.attrsall.userword || this.attrs.initword || "";
         this.modelOpts = {debounce: this.autoupdate};
-        this.checkomapluginndrome();
+        //this.checkomapluginndrome();
             //this.vctrl.addOmaplugin(this, this.attrs.followid);
             //this.vctrl.addTimComponent(this, this.attrs.followid || this.pluginMeta.getTaskId() || "");
             //this.vctrl.addTimComponentToList(this, this.attrs.followid);
@@ -214,10 +214,10 @@ omapluginApp.component("omapluginRunner", {
         vctrl: "^timView",
     },
     template: `
-<div class="csRunDiv no-popup-menu">
+<div class="no-popup-menu">
     <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
     <p ng-if="::$ctrl.stem">{{::$ctrl.stem}}</p>
-    <div class="form-inline"><label>{{::$ctrl.inputstem}} , {{::$ctrl.inputstem2}}<span>
+    <div class="form-inline"><label>{{::$ctrl.inputstem}}{{::$ctrl.inputstem2}}<span>
         <input type="text"
                class="form-control"
                ng-model="$ctrl.userword"
@@ -226,9 +226,12 @@ omapluginApp.component("omapluginRunner", {
                ng-trim="false"
                placeholder="{{::$ctrl.inputplaceholder}}"
                size="{{::$ctrl.cols}}"></span></label>
+               <!--
         <span class="unitTestGreen" ng-if="$ctrl.runTestGreen && $ctrl.userword">OK</span>
         <span class="unitTestRed" ng-if="!$ctrl.runTestGreen">Wrong lol</span>
+        -->
     </div>
+    <!--
     <button class="timButton"
             ng-if="::$ctrl.buttonText()"
             ng-disabled="$ctrl.isRunning || !$ctrl.userword"
@@ -239,6 +242,7 @@ omapluginApp.component("omapluginRunner", {
     <div ng-if="$ctrl.error" ng-bind-html="$ctrl.error"></div>
     <pre ng-if="$ctrl.result">{{$ctrl.result}}</pre>
     <p ng-if="::$ctrl.footer" ng-bind="::$ctrl.footer" class="plgfooter"></p>
+    -->
 </div>
 `,
 });
