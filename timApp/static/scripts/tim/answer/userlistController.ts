@@ -5,9 +5,10 @@ import uiGrid, {IFilterOptions, IGridColumnOf, IGridRowOf} from "ui-grid";
 import {ViewCtrl} from "../document/viewctrl";
 import {DialogController, registerDialogComponent, showDialog, showMessageDialog} from "../ui/dialog";
 import {IUser} from "../user/IUser";
-import {$timeout} from "../util/ngimport";
-import {Binding, getURLParameter, markAsUsed, Require} from "../util/utils";
+import {$http, $timeout} from "../util/ngimport";
+import {Binding, getURLParameter, markAsUsed, Require, to} from "../util/utils";
 import {showAllAnswers} from "./allAnswersController";
+import {IRelevanceResponse} from "../item/relevanceEdit";
 
 markAsUsed(allanswersctrl);
 
@@ -209,6 +210,23 @@ export class UserListController implements IController {
                         });
                     },
                     order: 40,
+                },
+                { // Feedback report output TODO: Should only be visible if page is a feedback giving test
+                    title: "Feedback answer report",
+                    action: async ($event: IAngularEvent) => {
+                        // TODO: remove "link" later as just for demo testing
+                        const minne = 'http://192.168.99.100/feedback/test';
+                        window.location.assign(minne);
+                        // gets r as result json of said form TODO: form change to csv when csv done
+                        // const r = await to($http.get<{'answers0': string,
+                        //     'taskids1': string,
+                        //     'answers1': string,
+                        //     'taskids2': string,
+                        //     'answers2': string}>(`/feedback/test`));
+                        // console.log(r.result.data);
+                        // TODO: we want a showAllAnswers type selection dialog after which a "save as csv"
+                    },
+                    order: 50,
                 },
             ],
             rowTemplate: "<div ng-dblclick=\"grid.appScope.fireUserChange(row, true)\" ng-repeat=\"(colRenderIndex, col) in colContainer.renderedColumns track by col.colDef.name\" class=\"ui-grid-cell\" ng-class=\"{ 'ui-grid-row-header-cell': col.isRowHeader }\" ui-grid-cell></div>",
