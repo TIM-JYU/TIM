@@ -7,9 +7,6 @@ import {ITimComponent, ViewCtrl} from "tim/document/viewctrl";
 import {GenericPluginMarkup, nullable, PluginBase, withDefault} from "tim/plugin/util";
 import {$http} from "tim/util/ngimport";
 import {to} from "tim/util/utils";
-import {valueDefu} from "tim/util/utils";
-import {find} from "../../../static/scripts/jspm_packages/npm/fp-ts@1.11.1/lib/Foldable";
-import {string} from "../../../static/scripts/jspm_packages/npm/io-ts@1.4.1/lib";
 
 const feedbackApp = angular.module("feedbackApp", ["ngSanitize"]);
 export const moduleDefs = [feedbackApp];

@@ -5,8 +5,8 @@ import angular, {INgModelOptions} from "angular";
 import * as t from "io-ts";
 import {ITimComponent, ViewCtrl} from "tim/document/viewctrl";
 import {GenericPluginMarkup, nullable, PluginBase, withDefault} from "tim/plugin/util";
-import {to} from "../../../static/scripts/tim/util/utils";
-import {$http} from "../../../static/scripts/tim/util/ngimport";
+import {to} from "tim/util/utils";
+import {$http} from "tim/util/ngimport";
 
 const dropdownApp = angular.module("dropdownApp", ["ngSanitize"]);
 export const moduleDefs = [dropdownApp];
