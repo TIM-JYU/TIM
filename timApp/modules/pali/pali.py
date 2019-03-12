@@ -182,7 +182,7 @@ def answer(args: PaliAnswerModel):
     if needed_len:
         len_ok = check_letters(userword, needed_len)
     if not len_ok:
-        web['error'] = "Wrong length koira"
+        web['error'] = "Wrong length"
     if not needed_len and not pali_ok:
         len_ok = False
     points_array = args.markup.points_array or [[0, 0.25], [0.5, 1]]
