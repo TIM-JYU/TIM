@@ -17,7 +17,7 @@
             </span>
             </div>
         </div>
-        <div>
+        <div class="no-shrink">
             <span>
                 {{ $ctrl.findSelectedUserIndex() + 1 }}/{{ $ctrl.users.length }}
             </span>
@@ -40,7 +40,7 @@
                 </span>
                     </div>
                 </div>
-                <div>
+                <div class="no-shrink">
                     <span>{{ $ctrl.filteredAnswers.length - $ctrl.findSelectedAnswerIndex() }}/<a
                             ng-click="$ctrl.setNewest()">{{ $ctrl.filteredAnswers.length }}</a></span>
                     <label class="checkbox-inline" ng-show="$ctrl.anyInvalid">
