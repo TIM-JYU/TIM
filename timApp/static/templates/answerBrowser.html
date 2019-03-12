@@ -1,4 +1,4 @@
-<div class="answerBrowser">
+<div>
     <div uib-alert ng-repeat="alert in $ctrl.alerts" ng-class="'alert-' + (alert.type || 'warning')"
      data-close="$ctrl.closeAlert($index)"><div ng-bind-html="alert.msg"></div></div>
     <div ng-show="$ctrl.viewctrl.teacherMode && $ctrl.users.length > 0" class="flex">
