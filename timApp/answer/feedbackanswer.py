@@ -1,5 +1,7 @@
 import json
 import math
+import csv
+from io import StringIO
 from typing import List, Optional, Dict, Tuple, Iterable
 
 from flask import Blueprint
@@ -25,7 +27,7 @@ def get_all_feedback_answers(task_ids: List[TaskId],
                              sort: str,
                              age: str,
                              period_from: datetime,
-                             period_to: datetime) -> List[str]:
+                             period_to: datetime) -> str:
     """Gets all answers for "Dynamic Assessment" -typed tasks
     :param task_ids: The ids of the tasks needed in report.
     :param usergroup:
@@ -87,8 +89,12 @@ def get_all_feedback_answers(task_ids: List[TaskId],
     temp_bool = True    #Temporary answer combination condition, now it is every even
     exclude_first = True #Temporary setting for excluding the first
 
+
+    writerIO = StringIO()
+    writer = csv.writer(writerIO, delimiter = ";", lineterminator = ";")
+
     #FOR STARTS FROM HERE
-    for answer, user, n in qq:
+    for answer, user, n in qq:  #TODO: resolve .csv and str
 
         """
         points = str(answer.points)
@@ -126,15 +132,20 @@ def get_all_feedback_answers(task_ids: List[TaskId],
         cnt += 1
         """
         result = ""
+
         if prev_user == None: prev_user = user
         if prev_ans == None: prev_ans = answer
         if temp_bool:
             result += f"{prev_user.name};"
-            result += f"{answer.points};"
+            writer.writerow([prev_user.name])
+            result += f"{answer.points};"       #Temporary "result", waiting for the feedback plugin
+            writer.writerow(["wrong!"])
             line = json.loads(prev_ans.content)
             result += f"{line};"
-            line = json.loads(answer.content)
-            result += f"{line};"
+            writer.writerow([line])
+            line2 = json.loads(answer.content)
+            result += f"{line2};"
+            writer.writerow([line2])
 
             if pt_dt != None:
                 tasksecs = (prev_ans.answered_on - pt_dt).total_seconds()
@@ -144,7 +155,9 @@ def get_all_feedback_answers(task_ids: List[TaskId],
             fbsecs = (answer.answered_on - prev_ans.answered_on).total_seconds()
 
             result += f"{str(math.floor(tasksecs))};"
+            writer.writerow(str(math.floor(tasksecs)) )
             result += f"{str(math.floor(fbsecs))};"
+            writer.writerow(str(math.floor(fbsecs)))
             if exclude_first and pt_dt != None:
                 results.append(result)   #IF-CONDITION temporary for the sake of excluding the first sample item
         pt_dt = prev_ans.answered_on
@@ -152,10 +165,10 @@ def get_all_feedback_answers(task_ids: List[TaskId],
         temp_bool = not temp_bool
 
 
-    return results
+    return writerIO.getvalue()
 
 
-# EN - Route to test feedback output at feedback/test
+# Route to test feedback output at feedback/test
 @feedback.route("/test")
 def test():
     #taskids = Answer.query.add_column("task_id").all() TODO: a query from database would help testing
