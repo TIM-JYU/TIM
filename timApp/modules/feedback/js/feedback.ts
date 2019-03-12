@@ -9,16 +9,50 @@ import {$http} from "tim/util/ngimport";
 import {to} from "tim/util/utils";
 import {valueDefu} from "tim/util/utils";
 import {find} from "../../../static/scripts/jspm_packages/npm/fp-ts@1.11.1/lib/Foldable";
+import {string} from "../../../static/scripts/jspm_packages/npm/io-ts@1.4.1/lib";
 
 const feedbackApp = angular.module("feedbackApp", ["ngSanitize"]);
 export const moduleDefs = [feedbackApp];
+
+
+
+const Choice = t.type({
+    choice: t.string,
+    feedbackLevels:t.array(t.string)
+});
+
+
+const QuestionItem = t.type({
+    pluginNames: t.string,
+    dropdownWords: t.array(t.array(t.string)),
+    dragWords: t.array(t.string),
+    correctAnswer: t.string,
+    correctAnswerFeedback: t.string,
+    choices: t.array(Choice),
+});
+
+const Feedback = t.type({
+    feedbackLevel: t.number,
+    toNextTaskRule: t.string,
+    questionItems: t.array(QuestionItem)
+
+});
+
 
 const FeedbackMarkup = t.intersection([
     t.partial({
         inputstem: t.string,
         followid: t.string,
         field: t.string,
-        feedbackLevel: t.Integer,
+        feedbackLevel: t.number, // tarkasta integer
+        toNextTaskRule: t.string,
+        instructionID: t.string,
+        sampleItemID: t.string,
+        nextTask: t.string,
+        pluginID: t.string,
+        words: t.string,
+        correctAnswer: t.string,
+        correctAnswerFeedback: t.string,
         userword: t.string
     }),
     GenericPluginMarkup,
@@ -26,6 +60,7 @@ const FeedbackMarkup = t.intersection([
         // all withDefaults should come here; NOT in t.partial
         autoupdate: withDefault(t.number, 500),
         cols: withDefault(t.number, 20),
+        //questionItems: t.array(QuestionItem),
     }),
 ]);
 const FeedbackAll = t.intersection([
@@ -34,6 +69,46 @@ const FeedbackAll = t.intersection([
     }),
     t.type({markup: FeedbackMarkup}),
 ]);
+/*
+class Choice{
+    private choice?: string;
+    private feedback?: string[];
+
+
+}
+
+class QuestionItem extends Choice{
+    private pluginID?: string;  //tarkasta
+    private words?: string[];
+    private correctAnswer?: string;
+    private correctAnswerFeedback?: string;
+    private choise?: Choice;    // miksi herjaa jos choice
+
+
+
+
+
+}
+
+
+class Feedback extends QuestionItem{
+    private nextTaskRule?: string;
+    private nextTask?: string;
+    private instructionID?: string;
+    private feedbackLevel?: number;
+    //private feedbackLevelRise?: boolean;
+    private QuestionItems?: QuestionItem[];
+    //private answerList?: string[];
+    private answer?: string;
+    private questionPluginID?: string;  // tarkasta
+    private currentFeedbackLevel?: number;
+    private listOfValidQuestionItems?: string[];
+
+}
+
+
+
+*/
 
 class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.TypeOf<typeof FeedbackAll>, typeof FeedbackAll> implements ITimComponent {
     private result?: string;
@@ -58,9 +133,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
      * Adds this plugin to ViewCtrl so other plugins can get information about the plugin though it.
      */
     addToCtrl() {
-        const taskid = this.pluginMeta.getTaskId() || ""; // TODO: fix this dirty stuff
-        const name = taskid.split(".");
-        this.vctrl.addTimComponent(this, this.attrs.followid || name[1] || "");
+        this.vctrl.addTimComponent(this);
     }
 
     get autoupdate(): number {
@@ -112,7 +185,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
      * Doesn't work for paragraphs with multiple plugins at the moment.
      */
     getAnswer() {
-        const timComponent = this.vctrl.getTimComponent(this.attrs.field || "");
+        const timComponent = this.vctrl.getTimComponentByName(this.attrs.field || "");
         if(timComponent) {
             const par = timComponent.getPar();
             const content = par.children(".parContent");
@@ -137,6 +210,19 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
 
     protected getAttributeType() {
         return FeedbackAll;
+    }
+
+    getGroups():string[] {
+        return [""];
+    }
+    getName(): (string | undefined) {
+        if (this.attrs.followid) { return this.attrs.followid; }
+        const taskId = this.pluginMeta.getTaskId();
+        if (taskId) { return taskId.split(".")[1]; }
+    }
+
+    belongsToGroup(group: string): boolean {
+        return false;
     }
 }
 
