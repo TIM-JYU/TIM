@@ -51,15 +51,12 @@ class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.T
      * Adds this plugin to ViewCtrl so other plugins can get information about the plugin though it.
      */
     addToCtrl() {
-        const taskid = this.pluginMeta.getTaskId() || ""; // TODO: fix this dirty stuff
-        const name = taskid.split(".");
-        this.vctrl.addTimComponent(this, this.attrs.followid || name[1] || "");
+        this.vctrl.addTimComponent(this);
     }
 
     initCode() {
         this.error = undefined;
         this.selectedWord = undefined;
-        //this.wordlist = this.attrs.words || [];
     }
 
     /**
@@ -71,7 +68,7 @@ class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.T
     }
 
     /**
-     * TODO: koko lause, valittu vaihtoehto, pluginin tyyppi?,
+     * TODO: whole sentence, selected option, plugin type?,
      */
     save(): string {
       this.doSave(false);
@@ -102,6 +99,33 @@ class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.T
         }
     }
 
+    /**
+     *
+     */
+    getGroups(): string[] {
+        return [""];
+    }
+
+    /**
+     *
+     */
+    getName(): (string | undefined) {
+        if (this.attrs.followid) { return this.attrs.followid; }
+        const taskId = this.pluginMeta.getTaskId();
+        if (taskId) { return taskId.split(".")[1]; }
+    }
+
+    /**
+     *
+     * @param group
+     */
+    belongsToGroup(group: string): boolean {
+        return false;
+    }
+
+    /**
+     *
+     */
     protected getAttributeType() {
         return DropdownAll;
     }

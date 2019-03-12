@@ -36,7 +36,10 @@ import {MenuFunctionEntry} from "./viewutils";
 markAsUsed(ngs, popupMenu, interceptor);
 
 export interface ITimComponent {
+    getName: () => string | undefined;
     getContent: () => string;
+    getGroups: () => string[];
+    belongsToGroup(group: string): boolean;
     save: () => string | undefined;
     getPar: () => Paragraph;
 }
@@ -97,8 +100,7 @@ export class ViewCtrl implements IController {
     private velpMode: boolean;
 
     private timTables: {[parId: string]: TimTableController} = {};
-    // private omapluginit: {[name: string]: OmapluginController} = {};
-    private timComponents: {[name: string]: ITimComponent | undefined} = {};
+    private timComponents: Map<string, ITimComponent> = new Map();
 
     private pendingUpdates: PendingCollection;
     private document: Document;
@@ -434,29 +436,53 @@ export class ViewCtrl implements IController {
     public getTableControllerFromParId(parId: string) {
         return this.timTables[parId];
     }
+
     /**
-     *TODO
+     * Registers an ITimComponent to the view controller by its name attribute if it has one
+     * @param {ITimComponent} component The component to be registered
      */
-    // public addOmaplugin(controller: OmapluginController, name: string) {
-    //     this.omapluginit[name] = controller;
-    // }
-
-    public addTimComponent(component: ITimComponent, name: string) {
-        this.timComponents[name] = component;
-    }
-
-    public getTimComponent(name: string) {
-        return this.timComponents[name];
+    public addTimComponent(component: ITimComponent) {
+        let name = component.getName();
+        if (name) this.timComponents.set(name, component);
     }
 
     /**
-     * Returns a table controller related to a specific table paragraph.
-     * @param {string} parId The paragraph's ID.
-     * @returns {TimTableController} The table controller related to the given table paragraph, or undefined.
+     * Returns an ITimComponent where register ID matches the given string
+     * @param {string} name The register ID of the ITimComponent
+     * @returns {ITimComponent | undefined} Matching component if there was one
      */
-    // public getOmapluginControllerFromName(name: string) {
-    //     return this.omapluginit[name];
-    // }
+    public getTimComponentByName(name: string): ITimComponent | undefined {
+        return this.timComponents.get(name);
+    }
+
+    /**
+     * Gets ITimComponents nested within specified area component
+     * @param{string} group name of the area object
+     * @returns {ITimComponent[]} List of ITimComponents nested within the area
+     */
+    public getTimComponentsByGroup(group: string): ITimComponent[] {
+        let returnList: ITimComponent[] = [];
+        for(const [k, v] of this.timComponents)
+        {
+            if (v.belongsToGroup(group)) returnList.push(v);
+        }
+        return returnList;
+    }
+
+    /**
+     * Searches for registered ITimComponent whose ID matches the given regexp
+     * @param {string} re The RegExp to be used in search
+     * @returns {ITimComponent[]} List of ITimComponents where the ID matches the regexp
+     */
+    public getTimComponentsByRegex(re: string): ITimComponent[]{
+        let returnList: ITimComponent[] = [];
+        let reg = new RegExp(re)
+        for(const [k, v] of this.timComponents)
+        {
+            if (reg.test(k)) returnList.push(v);
+        }
+        return returnList;
+    }
 
     isEmptyDocument() {
         return this.docVersion[0] === 0 && this.docVersion[1] === 0; // TODO can be empty otherwise too
