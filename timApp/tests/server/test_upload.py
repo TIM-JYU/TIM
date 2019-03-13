@@ -1,8 +1,11 @@
 import io
+import json
 
 from timApp.document.docentry import DocEntry
 from timApp.document.document import Document
+from timApp.item.block import BlockType
 from timApp.tests.server.timroutetest import TimRouteTest
+from timApp.upload.uploadedfile import StampedPDF, UploadedFile
 from timApp.user.usergroup import UserGroup
 from timApp.timdb.sqa import db
 from timApp.user.userutils import grant_access
@@ -103,3 +106,47 @@ class UploadTest(TimRouteTest):
         d_id = d.id
         j = self.upload_file(d, b'GIF87a', 'test.jpg')
         return d_id, j['image']
+
+    def test_upload_and_stamp(self):
+        self.login_test1()
+        # Document does not really need any macros for stamping to work, but might in the future.
+        d = self.create_doc(initial_par=r"""
+{% macro liite(selitys,liiteNro,lista,linkki) -%}
+{% set server = "https://tim.jyu.fi" %}
+{% if linkki.startswith('http') %}
+{% set server = "" %}
+{% endif %}
+iframe: true
+open: false
+videoicon: false
+xdocicon: false
+stem: "%%selitys%%"
+hidetext: Piilota liite
+type: list
+videoname: "(LIITE %%liiteNro%% / lista %%lista%%,"
+text: Kokous %%dates[knro][0]%% \newline LIITE %%liiteNro%% / lista %%lista%%
+doctext: ")"
+doclink: %%linkki%%
+stamped-file:
+width: 800
+height: 600
+file: %%linkki%%
+texprint: "- %%selitys%% ([LIITE %%liiteNro%% / lista %%lista%%](%%server+linkki%%))"
+{%- endmacro %}
+
+%%liite("Tutkinnot 2018", "A", "3", "")%%
+        """)
+        with open('tests/server/expected/printing/hello_1_2.pdf', 'rb') as f:
+            content = f.read()
+            file_len = len(content)
+            r = self.upload_file(
+                d,
+                content,
+                'test.pdf',
+                attachmentParams=json.dumps(["30.1.2019", "", "Tutkinnot 2018", "A", "3", "", True]),
+            )
+        file_id = int(r['file'].split('/')[0])
+        pdf = UploadedFile.find_by_id_and_type(file_id, BlockType.File)
+        pdf = StampedPDF(pdf.block)
+        self.assertEqual(15985, len(pdf.data))
+        self.assertGreater(len(pdf.data), file_len)

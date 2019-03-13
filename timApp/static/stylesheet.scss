@@ -204,7 +204,7 @@ a .glyphicon {
         content: "Translation is out of date";
         color: red;
         position: absolute;
-        top: 0;
+        top: -0.8em;
         right: 0;
     }
 
@@ -293,10 +293,6 @@ a .glyphicon {
             margin-left: 0.3em;
             margin-bottom: 0.1em;
         }
-    }
-
-    .answerBrowser {
-        text-align: left;
     }
 
     p.plgfooter {
@@ -1225,10 +1221,13 @@ body > .footer {
 
 answerbrowser {
     display: block;
+    text-align: left;
 
     &.has-answers {
         min-height: 23px;
     }
+
+    font-size: 14px;
 }
 
 .color-picker-input-wrapper {

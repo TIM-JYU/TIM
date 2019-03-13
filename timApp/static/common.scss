@@ -134,6 +134,9 @@ tim-duration-picker {
     &.align-center {
         align-items: center;
     }
+    & > .no-shrink {
+        flex-shrink: 0;
+    }
 }
 
 .flex-grow-5 {

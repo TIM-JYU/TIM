@@ -726,8 +726,8 @@ class TimRouteTest(TimDbTest):
             data['par'] = par
         return self.json_post(f'/preview/{d.id}', data, **kwargs)
 
-    def upload_file(self, d: DocInfo, content: bytes, filename: str):
-        return self.post('/upload/', data={'doc_id': str(d.id), 'file': (io.BytesIO(content), filename)})
+    def upload_file(self, d: DocInfo, content: bytes, filename: str, **extra_data):
+        return self.post('/upload/', data={'doc_id': str(d.id), 'file': (io.BytesIO(content), filename), **extra_data})
 
     def mark_as_unread(self, doc: DocInfo, par_id):
         self.json_put(f'/unread/{doc.id}/{par_id}')
