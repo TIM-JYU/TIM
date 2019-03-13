@@ -2,7 +2,7 @@
 TIM feedback-plugin.
 """
 import re
-from typing import Union
+from typing import Union, Any
 
 import attr
 from flask import jsonify, render_template_string
@@ -37,12 +37,14 @@ class FeedbackMarkupModel(GenericMarkupModel):
     inputstem: Union[str, Missing] = missing
     followid: Union[str, Missing] = missing
     field: Union[str, Missing] = missing
+    questionItems: Union[Any, Missing] = missing
 
 
 class FeedbackMarkupSchema(GenericMarkupSchema):
     inputstem = fields.Str()
     followid = fields.Str()
     field = fields.Str()
+    questionItems = fields.Raw()
 
     @post_load
     def make_obj(self, data):

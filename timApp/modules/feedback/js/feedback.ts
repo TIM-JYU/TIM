@@ -11,29 +11,26 @@ import {to} from "tim/util/utils";
 const feedbackApp = angular.module("feedbackApp", ["ngSanitize"]);
 export const moduleDefs = [feedbackApp];
 
-
+const MatchElement = t.type({
+    index: t.Integer,
+    answer: t.string,
+})
 
 const Choice = t.type({
-    choice: t.string,
-    feedbackLevels:t.array(t.string)
+    match: t.union ([t.array(t.string),t.array(MatchElement)]),
+    levels:t.array(t.string)
 });
 
 
 const QuestionItem = t.type({
-    pluginNames: t.string,
+    pluginNames: t.array(t.string),
     dropdownWords: t.array(t.array(t.string)),
     dragWords: t.array(t.string),
-    correctAnswer: t.string,
+    correctAnswer: t.array(t.string),
     correctAnswerFeedback: t.string,
     choices: t.array(Choice),
 });
 
-const Feedback = t.type({
-    feedbackLevel: t.number,
-    toNextTaskRule: t.string,
-    questionItems: t.array(QuestionItem)
-
-});
 
 
 const FeedbackMarkup = t.intersection([
@@ -41,8 +38,10 @@ const FeedbackMarkup = t.intersection([
         inputstem: t.string,
         followid: t.string,
         field: t.string,
-        feedbackLevel: t.number, // tarkasta integer
+        feedbackLevel: t.number,
         toNextTaskRule: t.string,
+        questionItems: t.array(QuestionItem),
+
         instructionID: t.string,
         sampleItemID: t.string,
         nextTask: t.string,
@@ -113,6 +112,132 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
     private vctrl!: ViewCtrl;
     private userword = "";
 
+
+
+    private answer = ["is", "today"];
+    private questionPluginID?: string;  // tarkasta
+    private currentFeedbackLevel = 0;
+    private listOfValidQuestionItems?: string[];
+
+
+
+    /*
+    private feedback = {
+            feedbackLevel: 5,
+            feedbackLevelRise: false,
+            toNextTaskRule:"",
+            questionItems: [{
+                pluginNames: ["x", "y"],
+                dropdownWords: [["is", "do", "are"], ["yesterday", "today"]],
+                dragwords:["what", "does", "the", "fox", "say?"],
+                correctAnswer: ["is", "today"],
+                correctAnswerFeedback: "vastasit [answer] vastaus on oikein",
+                choices:[{
+                    match:[
+                        {
+                            index: 0,
+                            answer: "do",
+                        },
+                        {
+                            index: 2,
+                            answer: "do",
+                        }
+                    ],
+                    fblevels: [
+                        "vastasit [answer]. vastaus on hiukan väärin",
+                        "vastasit [answer]. vastaus on hiukan väärin, mieti vielä"
+                    ]
+                }]
+            }]
+        };
+
+
+    setFeedback(){
+
+        let fb={
+            feedbackLevel: 5,
+            feedbackLevelRise: false,
+            toNextTaskRule:"",
+            questionItems: [{
+                pluginNames: ["x", "y"],
+                dropdownWords: [["is", "do", "are"], ["yesterday", "today"]],
+                dragwords:["what", "does", "the", "fox", "say?"],
+                correctAnswer: ["is", "today"],
+                correctAnswerFeedback: "vastasit [answer] vastaus on oikein",
+                choices:[{
+                    match:[
+                        {
+                            index: 0,
+                            answer: "do",
+                        },
+                        {
+                            index: 2,
+                            answer: "do",
+                        }
+                    ],
+                    fblevels: [
+                        "vastasit [answer]. vastaus on hiukan väärin",
+                        "vastasit [answer]. vastaus on hiukan väärin, mieti vielä"
+                    ]
+                }]
+            }]
+        }
+        this.feedback = fb;
+    }
+
+
+
+    handleAnswer(answer: string[], pluginNames: string[]){                              //vai lohko parametrinä
+        for(let i = 0; i< this.feedback.questionItems.length; i++){
+            if(this.feedback.questionItems[i].pluginNames === pluginNames){             //
+                for(let j = 0; j< this.feedback.questionItems[i].correctAnswer.length; j++){
+                    if(this.feedback.questionItems[i].correctAnswer[j] !== answer[j]){
+                        if(this.currentFeedbackLevel < this.feedback.feedbackLevel) this.currentFeedbackLevel++;
+                        //this.compareChoices(this.feedback.questionItems[i].choices, answer, pluginNames)
+                        for (let k = 0; k<this.feedback.questionItems[i].choices.length; k++){
+                            if(this.feedback.questionItems[i].choices[k])
+                        }
+
+
+
+                    }
+                    else{
+                        if(this.feedback.feedbackLevelRise){
+                            if(this.currentFeedbackLevel > 0) this.currentFeedbackLevel--
+                        }
+                        this.hideBlock();
+                        this.printFeedback();
+                        this.openBlock();
+                    }
+                }
+            }
+        }
+
+    }
+
+    compareChoices(choices: object[], answer:string[], pluginNames:string[]){
+        for(let i =0; i<choices.length; i++){
+            for(let j = 0; j<choices[i].match.length; j++){
+                if(choices[i].match[j] !== answer[j]) break;
+                if(j === choices[i].match.length-1)
+            }
+        }
+    }
+
+    hideBlock(){
+        return;
+    }
+
+    printFeedback(){
+        return;
+    }
+
+    openBlock(){
+        return;
+    }
+
+
+*/
     getDefaultMarkup() {
         return {};
     }
@@ -123,8 +248,11 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
 
     $onInit() {
         super.$onInit();
+        this.attrs.questionItems[0].choices
         this.addToCtrl();
     }
+
+
 
     /**
      * Adds this plugin to ViewCtrl so other plugins can get information about the plugin though it.
@@ -205,6 +333,8 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
         }
     }
 
+
+
     protected getAttributeType() {
         return FeedbackAll;
     }
@@ -233,6 +363,7 @@ feedbackApp.component("feedbackRunner", {
     },
     template: `
 <div class="csRunDiv no-popup-menu">
+    <tim-markup-error ng-if="::$ctrl.markupError" data="::$ctrl.markupError"></tim-markup-error>
     <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
     <p ng-if="::$ctrl.stem">{{::$ctrl.stem}}</p>
     <div class="form-inline"><label>{{::$ctrl.inputstem}} <span>
