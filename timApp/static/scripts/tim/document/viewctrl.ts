@@ -41,7 +41,8 @@ export interface ITimComponent {
     getGroups: () => string[];
     belongsToGroup(group: string): boolean;
     save: () => string | undefined;
-    getPar: () => Paragraph;
+    getPar: () => Paragraph
+    setPluginWords?: (words: string[]) => void;
 }
 
 export interface IInsertDiffResult {

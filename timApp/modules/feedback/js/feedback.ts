@@ -1,10 +1,10 @@
 /**
  * Defines the client-side implementation of a feedback-plugin.
  */
-import angular, {INgModelOptions} from "angular";
+import angular from "angular";
 import * as t from "io-ts";
 import {ITimComponent, ViewCtrl} from "tim/document/viewctrl";
-import {GenericPluginMarkup, nullable, PluginBase, withDefault} from "tim/plugin/util";
+import {GenericPluginMarkup, PluginBase, withDefault} from "tim/plugin/util";
 import {$http} from "tim/util/ngimport";
 import {to} from "tim/util/utils";
 
@@ -49,7 +49,7 @@ const FeedbackMarkup = t.intersection([
         words: t.string,
         correctAnswer: t.string,
         correctAnswerFeedback: t.string,
-        userword: t.string
+        userword: t.string,
     }),
     GenericPluginMarkup,
     t.type({
@@ -246,13 +246,14 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
         return "OK";
     }
 
-    $onInit() {
-        super.$onInit();
-        this.attrs.questionItems[0].choices
-        this.addToCtrl();
+    wordButtonText() {
+        return "Words";
     }
 
-
+    $onInit() {
+        super.$onInit();
+        this.addToCtrl();
+    }
 
     /**
      * Adds this plugin to ViewCtrl so other plugins can get information about the plugin though it.
@@ -325,7 +326,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
                     answer = answer + text;
                 }
                 if(node.nodeName == "TIM-PLUGIN-LOADER") {
-                    // ei toimi usean lohkon sisäisen inline pluginin kanssa
+                    // Doesn't work with multiple plugins inside a paragraph at the moment
                     answer = answer + timComponent.getContent();
                 }
             }
@@ -333,10 +334,28 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
         }
     }
 
+    /**
+     * Sets the list of words used in a dropdown plugin (drag&drop target tba). Goes through every question
+     * item and every plugin inside the question item. It is assumed for now that the list of words and list
+     * of plugins are in the same order and that there are the same amount of them both.
+     *
+     * TODO: drag&drop
+     */
+    setPluginWords() {
+        if (this.attrs.questionItems) {
+            const items = this.attrs.questionItems;
+            for (let item of items) {
+                let i = 0;
+                for(let plugin of item.pluginNames) {
+                    const timComponent = this.vctrl.getTimComponentByName(plugin);
+                    if (timComponent) {
+                        timComponent.setPluginWords!(item.dropdownWords[i]);
+                        i++;
+                    }
+                }
+            }
 
-
-    protected getAttributeType() {
-        return FeedbackAll;
+        }
     }
 
     getGroups():string[] {
@@ -350,6 +369,10 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
 
     belongsToGroup(group: string): boolean {
         return false;
+    }
+
+    protected getAttributeType() {
+        return FeedbackAll;
     }
 }
 
@@ -373,6 +396,11 @@ feedbackApp.component("feedbackRunner", {
             ng-if="::$ctrl.buttonText()"
             ng-click="$ctrl.getAnswer()">
         {{::$ctrl.buttonText()}}
+    </button>
+    <button class="timButton"
+            ng-if="::$ctrl.wordButtonText()"
+            ng-click="$ctrl.setPluginWords()">
+        {{::$ctrl.wordButtonText()}}
     </button>
     <div ng-if="$ctrl.error" ng-bind-html="$ctrl.error"></div>
     <pre ng-if="$ctrl.result">{{$ctrl.result}}</pre>
