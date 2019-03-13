@@ -13,11 +13,13 @@ markAsUsed(createItem);
 export class StartCtrl implements IController {
     private creatingNew: boolean;
     private docListOpen: boolean;
+    private language: string; // Page language
     private item: IItem = $window.item;
 
     constructor() {
         this.creatingNew = false;
         this.docListOpen = false;
+        this.language = "fi";
     }
 
     $onInit() {
@@ -30,6 +32,15 @@ export class StartCtrl implements IController {
 
     enableCreate() {
         this.creatingNew = true;
+    }
+
+    /**
+     * Change page language.
+     * Currently supported: fi, en.
+     * @param changeTo
+     */
+    changeLanguage(changeTo: string) {
+        this.language = changeTo;
     }
 
     /**
