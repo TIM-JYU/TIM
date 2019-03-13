@@ -1,6 +1,7 @@
 import json
 import math
 import csv
+import os
 from io import StringIO
 from typing import List, Optional, Dict, Tuple, Iterable
 
@@ -89,9 +90,12 @@ def get_all_feedback_answers(task_ids: List[TaskId],
     temp_bool = True    #Temporary answer combination condition, now it is every even
     exclude_first = True #Temporary setting for excluding the first
 
-
+    #Initialize stringIO and csv-writer for it
     writerIO = StringIO()
-    writer = csv.writer(writerIO, delimiter = ";", lineterminator = ";")
+    writer = csv.writer(writerIO, delimiter = ";", lineterminator = os.linesep)
+
+    #First line are the headers
+    writer.writerow(['user', 'result', 'answer', 'feedback','time spent on item','time spent on feedback']);
 
     #FOR STARTS FROM HERE
     for answer, user, n in qq:  #TODO: resolve .csv and str
@@ -137,15 +141,11 @@ def get_all_feedback_answers(task_ids: List[TaskId],
         if prev_ans == None: prev_ans = answer
         if temp_bool:
             result += f"{prev_user.name};"
-            writer.writerow([prev_user.name])
             result += f"{answer.points};"       #Temporary "result", waiting for the feedback plugin
-            writer.writerow(["wrong!"])
-            line = json.loads(prev_ans.content)
-            result += f"{line};"
-            writer.writerow([line])
-            line2 = json.loads(answer.content)
-            result += f"{line2};"
-            writer.writerow([line2])
+            answer_content = json.loads(prev_ans.content)
+            result += f"{answer_content};"
+            feedback_content = json.loads(answer.content)
+            result += f"{feedback_content};"
 
             if pt_dt != None:
                 tasksecs = (prev_ans.answered_on - pt_dt).total_seconds()
@@ -153,17 +153,21 @@ def get_all_feedback_answers(task_ids: List[TaskId],
                 tasksecs = 0.0
 
             fbsecs = (answer.answered_on - prev_ans.answered_on).total_seconds()
-
             result += f"{str(math.floor(tasksecs))};"
-            writer.writerow(str(math.floor(tasksecs)) )
             result += f"{str(math.floor(fbsecs))};"
-            writer.writerow(str(math.floor(fbsecs)))
+
             if exclude_first and pt_dt != None:
                 results.append(result)   #IF-CONDITION temporary for the sake of excluding the first sample item
+                writer.writerow([prev_user.name]
+                                + ['WRONG!!!']
+                                + [answer_content]
+                                + [feedback_content]
+                                + [str(math.floor(tasksecs))]
+                                + [str(math.floor(fbsecs))])
+
         pt_dt = prev_ans.answered_on
         prev_ans = answer
         temp_bool = not temp_bool
-
 
     return writerIO.getvalue()
 
@@ -206,7 +210,5 @@ def test():
 
     # First returns empty, then from document nro1 and then document nro2 (change above if different)
     return json_response({'answers0': answers0,
-                          'taskids1': ids_as_string1,
                           'answers1': answers1,
-                          'taskids2': ids_as_string2,
                           'answers2': answers2})
