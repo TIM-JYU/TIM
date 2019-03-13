@@ -267,10 +267,7 @@ export class SidebarMenuCtrl implements IController {
      * Opens tag search dialog.
      */
     searchWithTags() {
-        if (!this.vctrl) {
-            return;
-        }
-        void showTagSearchDialog(this.vctrl.item);
+        void showTagSearchDialog();
     }
 
     /**
@@ -468,6 +465,12 @@ timApp.component("timSidebarMenu", {
             <button class="timButton btn-block" title="Set item relevance value" ng-if="$ctrl.showRelevance"
                     ng-click="$ctrl.openRelevanceEditDialog()">
                     Edit relevance (<span uib-tooltip="Current relevance value">{{$ctrl.currentRelevance}}</span>)
+            </button>
+        </div>
+        <div ng-show="!($ctrl.vctrl.item && !$ctrl.vctrl.item.isFolder)">
+            <h5>Search</h5>
+            <button class="timButton btn-block" title="Search with tags"
+                    ng-click="$ctrl.searchWithTags()">Search with tags
             </button>
         </div>
         <div ng-if="$ctrl.users.isLoggedIn() && $ctrl.vctrl && !$ctrl.vctrl.item.isFolder">
