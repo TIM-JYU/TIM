@@ -8,11 +8,18 @@ plugin_bp = Blueprint('plugin',
                       url_prefix='')
 
 
+def return_resource_response(resp):
+    headers = {k: v for k, v in resp.headers.items() if k not in (
+        'transfer-encoding',
+    )}
+    return resp.raw.read(), resp.status_code, headers
+
+
 @plugin_bp.route("/<plugin>/<path:filename>")
 def plugin_call(plugin, filename):
     try:
         resp = call_plugin_resource(plugin, filename, request.args)
-        return resp.raw.read(), resp.status_code, resp.headers.items()
+        return return_resource_response(resp)
     except PluginException as e:
         abort(404, str(e))
 
@@ -31,6 +38,6 @@ def echo_request(filename):
 def view_template(plugin, template, index):
     try:
         resp = call_plugin_resource(plugin, "template?file=" + template + "&idx=" + index)
-        return resp.raw.read(), resp.status_code, resp.headers.items()
+        return return_resource_response(resp)
     except PluginException:
         abort(404)
