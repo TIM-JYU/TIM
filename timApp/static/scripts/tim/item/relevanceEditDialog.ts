@@ -15,6 +15,7 @@ markAsUsed(focusMe);
  */
 export class ShowRelevanceEditDialog extends DialogController<{ params: IItem }, {}, "relevanceEditDialog"> {
     private static $inject = ["$element", "$scope"];
+    private item!: IItem;
 
     constructor(protected element: IRootElementService, protected scope: IScope) {
         super(element, scope);
@@ -22,6 +23,7 @@ export class ShowRelevanceEditDialog extends DialogController<{ params: IItem },
 
     async $onInit() {
         super.$onInit();
+        this.item = this.resolve.params;
     }
 
     /*
@@ -42,7 +44,7 @@ registerDialogComponent("relevanceEditDialog",
     </dialog-header>
     <dialog-body>
         <h4>{{$ctrl.header}}</h4>
-        <relevance-edit></relevance-edit>
+        <relevance-edit item="$ctrl.item"></relevance-edit>
     </dialog-body>
     <dialog-footer>
         <button class="timButton" ng-click="$ctrl.dismiss()">Close</button>

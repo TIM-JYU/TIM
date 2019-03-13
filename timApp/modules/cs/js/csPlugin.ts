@@ -220,10 +220,16 @@ function resizeIframe(obj: HTMLFrameElement) {
 }
 
 async function loadSimcir() {
-    import("simcir/basicset");
-    import("simcir/library");
-    import("simcir/oma-kirjasto");
-    return await import("simcir");
+    const simcir = import("simcir");
+    const loads = [
+        import("simcir/basicset"),
+        import("simcir/library"),
+        import("simcir/oma-kirjasto"),
+    ];
+    for (const p of loads) {
+        await p;
+    }
+    return await simcir;
 }
 
 // =================================================================================================================
@@ -511,6 +517,7 @@ function makeTemplate() {
                     ng-click="$ctrl.runUnitTest()">UTest
             </button>
             &nbsp&nbsp<span ng-if="::$ctrl.isDocument">
+          
             <a href="" ng-disabled="$ctrl.isRunning"
                ng-click="$ctrl.runDocument()">{{$ctrl.docLink}}</a>&nbsp&nbsp</span>
             <a href=""
@@ -538,6 +545,7 @@ function makeTemplate() {
                                                           ng-pattern="/[-0-9]*/"
                                                           ng-model="$ctrl.wrap"
                                                           size="2"/></label></span></p>
+          
     </div>
     <div ng-if="::$ctrl.isSage" class="outputSage no-popup-menu"></div>
     <pre ng-if="$ctrl.viewCode && $ctrl.codeunder">{{$ctrl.code}}</pre>
@@ -1232,8 +1240,8 @@ class CsController extends CsBase implements IController {
         const isText = this.isText;
         const isArgs = this.type.indexOf("args") >= 0;
 
-        this.userinput = (this.attrsall.userinput || this.attrs.userinput || "").toString();
-        this.userargs = (this.attrsall.userargs || this.attrs.userargs || (isText && isArgs ? this.attrs.filename || "" : "")).toString();
+        this.userinput = valueOr(this.attrsall.userinput, (this.attrs.userinput || "").toString());
+        this.userargs = valueOr(this.attrsall.userargs, (this.attrs.userargs || (isText && isArgs ? this.attrs.filename || "" : "")).toString());
         this.selectedLanguage = this.attrs.selectedLanguage || rt;
         this.noeditor = valueOr(this.attrs.noeditor, this.isSimcir || (this.type === "upload"));
         this.wrap = this.attrs.wrap || (isText ? 70 : -1);
@@ -2638,7 +2646,9 @@ class CsController extends CsBase implements IController {
                 });
             });
         } else {
-            editorDiv.empty().append(this.edit);
+            await 1; // TODO:  Miksi tässä pitää olla tämä?  Muuten tuo editorDiv.empty() aiheuttaa poikkeuksen
+            editorDiv.empty();
+            editorDiv.append(this.edit);
             if (eindex === 2) {
                 this.showCsParsons(otherEditDiv.children[0]);
             }

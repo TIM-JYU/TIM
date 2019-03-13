@@ -1,4 +1,4 @@
-<div class="answerBrowser">
+<div>
     <div uib-alert ng-repeat="alert in $ctrl.alerts" ng-class="'alert-' + (alert.type || 'warning')"
      data-close="$ctrl.closeAlert($index)"><div ng-bind-html="alert.msg"></div></div>
     <div ng-show="$ctrl.viewctrl.teacherMode && $ctrl.users.length > 0" class="flex">
@@ -17,7 +17,7 @@
             </span>
             </div>
         </div>
-        <div>
+        <div class="no-shrink">
             <span>
                 {{ $ctrl.findSelectedUserIndex() + 1 }}/{{ $ctrl.users.length }}
             </span>
@@ -40,7 +40,7 @@
                 </span>
                     </div>
                 </div>
-                <div>
+                <div class="no-shrink">
                     <span>{{ $ctrl.filteredAnswers.length - $ctrl.findSelectedAnswerIndex() }}/<a
                             ng-click="$ctrl.setNewest()">{{ $ctrl.filteredAnswers.length }}</a></span>
                     <label class="checkbox-inline" ng-show="$ctrl.anyInvalid">

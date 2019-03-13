@@ -11,8 +11,8 @@ plugin_bp = Blueprint('plugin',
 @plugin_bp.route("/<plugin>/<path:filename>")
 def plugin_call(plugin, filename):
     try:
-        req = call_plugin_resource(plugin, filename, request.args)
-        return Response(stream_with_context(req.iter_content()), content_type=req.headers['content-type'])
+        resp = call_plugin_resource(plugin, filename, request.args)
+        return resp.raw.read(), resp.status_code, resp.headers.items()
     except PluginException as e:
         abort(404, str(e))
 
@@ -30,7 +30,7 @@ def echo_request(filename):
 @plugin_bp.route("/<plugin>/template/<template>/<index>")
 def view_template(plugin, template, index):
     try:
-        req = call_plugin_resource(plugin, "template?file=" + template + "&idx=" + index)
-        return Response(stream_with_context(req.iter_content()), content_type=req.headers['content-type'])
+        resp = call_plugin_resource(plugin, "template?file=" + template + "&idx=" + index)
+        return resp.raw.read(), resp.status_code, resp.headers.items()
     except PluginException:
         abort(404)

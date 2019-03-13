@@ -399,11 +399,11 @@ class FileParams:
 
         usercode = get_json_param(query.jso, "input" + nr, "usercode", None)
         # if ( query.jso != None and query.jso.has_key("input") and query.jso["input"].has_key("usercode") ):
-        if usercode:
+        if isinstance(usercode, str):
             self.by = usercode
         else:
             usercode = get_json_param(query.jso, "state" + nr, "usercode", None)
-            if usercode:
+            if isinstance(usercode, str):
                 self.by = usercode
 
         u = get_param(query, "url" + nr, "")
