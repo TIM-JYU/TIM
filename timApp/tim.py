@@ -265,6 +265,8 @@ def get_server_time():
 
 
 @app.route("/")
+@app.route("/en")
+@app.route("/fi")
 def start_page():
     in_lecture = current_user_in_lecture()
     return render_template('start.html',

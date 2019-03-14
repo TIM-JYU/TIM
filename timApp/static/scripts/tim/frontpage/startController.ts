@@ -15,7 +15,6 @@ export class StartCtrl implements IController {
     private creatingNew: boolean;
     private docListOpen: boolean;
     private language: string; // Page language
-    private item: IItem = $window.item;
     private bookmarks = {};
     private userPersonalFolderPath?: string;
 
@@ -28,7 +27,26 @@ export class StartCtrl implements IController {
     }
 
     $onInit() {
+        this.setLanguage();
+    }
 
+    setLanguage() {
+        const urlSuffix: string = window.location.pathname;
+        switch (urlSuffix) {
+            case "/fi": {
+                this.language = "fi";
+                break;
+            }
+            case "/en": {
+                this.language = "en";
+                break;
+            }
+            default: {
+                this.language = "fi";
+                //TODO: Local storage.
+                break;
+            }
+        }
     }
 
     isLoggedIn() {
@@ -58,7 +76,7 @@ export class StartCtrl implements IController {
     async openCourseListDialog() {
         const r = await to($http.get<ICourseSettings>(`/courses/settings`));
         if (r.ok) {
-            void showCourseListDialog({item: this.item, settings: r.result.data});
+            void showCourseListDialog({settings: r.result.data});
             return;
         }
         void showMessageDialog(`Course settings not found: ${r.result.data.error}`);
