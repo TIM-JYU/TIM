@@ -174,11 +174,10 @@ def answer(args: DropdownAnswerModel):
 def reqs():
     templates = ["""
 #- {defaultplugin="dropdown"}
-The weather {#item1 words: [is,do,are]} nice today.
+The weather {#drop1 words: [is,do,are]} nice today.
 ""","""
 #- {defaultplugin="dropdown"}
-"Näin tänään {#item2 words: [kissan,koiran,hevosen]}
-joka jahtasi {#item3 words: [hiirtä,autoa,omenaa]}
+The weather {#drop2} terrible {#drop3}, don't you think?
 """]
     return jsonify({
         "js": ["js/build/dropdown.js"],
@@ -193,12 +192,12 @@ joka jahtasi {#item3 words: [hiirtä,autoa,omenaa]}
                         'items': [
                             {
                                 'data': templates[0].strip(),
-                                'text': 'One question',
+                                'text': 'One dropdown',
                                 'expl': 'Add an inline dropdown-question'
                             },
                             {
                                 'data': templates[1].strip(),
-                                'text': 'Two questions',
+                                'text': 'Two dropdowns',
                                 'expl': 'Add an inline dropdown-question with two questions'
                             },
                         ],

@@ -188,7 +188,34 @@ def reqs():
 header: Your answer
 inputstem: "Your choice:"
 field: item1
-```"""]
+```""","""
+``` {#feedback2 plugin="feedback"}
+header: Feedback
+feedbackLevel: 3
+toNextTaskRule: 2 correct answers in row
+instructionID: InstructionsID
+sampleItemID: sampleItemID
+nextTask: linkki tähän
+questionItems:
+- pluginNames: [drop2, drop3]
+  dropdownWords: [[is, do, are], [yesterday, today]]
+  dragWords: [cat, mouse, dog, cat]
+  correctAnswer: [is, today]
+  correctAnswerFeedback: "Your answer was: [answer] which is correct."
+  choices:
+    - match:
+        - index: 0
+          answer: do
+        - index: 2
+          answer: asd
+      levels:
+        - vastasit [answer]. vastaus on hiukan väärin
+        - vastasit [answer]. vastaus on hiukan väärin, mieti vielä
+    - match: [are, yesterday]
+      levels:
+        - vastasit [answer]. vastaus on aivan pielessä
+```
+"""]
     return jsonify({
         "js": ["js/build/feedback.js"],
         "multihtml": True,
@@ -202,7 +229,12 @@ field: item1
                         'items': [
                             {
                                 'data': templates[0].strip(),
-                                'text': 'One task',
+                                'text': 'Feedback without items',
+                                'expl': 'Add a plugin to show feedback',
+                            },
+                            {
+                                'data': templates[1].strip(),
+                                'text': 'Feedback with question items',
                                 'expl': 'Add a plugin to show feedback',
                             },
                         ],
