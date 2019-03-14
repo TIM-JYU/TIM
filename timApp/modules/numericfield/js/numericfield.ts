@@ -9,9 +9,6 @@ import {$http} from "tim/util/ngimport";
 import {to} from "tim/util/utils";
 import {valueDefu} from "tim/util/utils"; //reset-metodille
 import {fieldNumber} from "../../../static/scripts/jspm_packages/npm/fp-ts@1.11.1/lib/Field";
-import {number} from "../../../static/scripts/jspm_packages/npm/io-ts@1.4.1/lib";
-import * as ts from "../../../static/scripts/jspm_packages/npm/typescript@3.0.1/lib/tsserverlibrary";
-import emptyArray = ts.server.emptyArray;
 
 const numericfieldApp = angular.module("numericfieldApp", ["ngSanitize"]);
 export const moduleDefs = [numericfieldApp];

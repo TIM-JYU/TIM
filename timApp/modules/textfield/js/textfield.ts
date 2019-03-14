@@ -15,10 +15,11 @@ export const moduleDefs = [textfieldApp];
 
 const TextfieldMarkup = t.intersection([
     t.partial({
-        initword: t.string,
+        followid: t.string, //maybe not needed
         inputplaceholder: nullable(t.string),
         inputstem: t.string,
-        followid: t.string //maybe not needed
+        initword: t.string,
+        buttonText: nullable(t.string),
     }),
     GenericPluginMarkup,
     t.type({
@@ -47,7 +48,7 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
     }
 
     buttonText() {
-        return super.buttonText() || "Save";
+       return super.buttonText() || null;
     }
 
     $onInit() {
@@ -131,31 +132,7 @@ textfieldApp.component("textfieldRunner", {
     controller: TextfieldController,
     template: `
 <div class="textfieldNoSaveDiv">
-    <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
-    <p ng-if="::$ctrl.stem">{{::$ctrl.stem}}</p>
-    <div class="form-inline"><label>{{::$ctrl.inputstem}} <span>   
-        <input type="string"
-               class="form-control"
-               ng-model="$ctrl.userword"
-               ng-model-options="::$ctrl.modelOpts"
-               ng-change="$ctrl.checkTextfield()"
-               ng-trim="false"
-               placeholder="{{::$ctrl.inputplaceholder}}"
-               size="{{::$ctrl.cols}}"></span></label>
-    </div>
-    <pre ng-if="$ctrl.result">{{$ctrl.result}}</pre>
-    <p ng-if="::$ctrl.footer" ng-bind="::$ctrl.footer" class="plgfooter"></p>
-</div>
-`,
-});
-
-textfieldApp.component("textfieldRunner2", {
-    bindings: {
-        json: "@",
-    },
-    controller: TextfieldController,
-    template: `
-<div class="textfieldSaveDiv">
+    <tim-markup-error ng-if="::$ctrl.markupError" data="::$ctrl.markupError"></tim-markup-error>
     <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
     <p ng-if="::$ctrl.stem">{{::$ctrl.stem}}</p>
     <div class="form-inline"><label>{{::$ctrl.inputstem}} <span>   
@@ -169,7 +146,7 @@ textfieldApp.component("textfieldRunner2", {
                size="{{::$ctrl.cols}}"></span></label>
     </div>
     <button class="timButton"
-            ng-if="::$ctrl.buttonText()"
+            ng-if="$ctrl.buttonText()"
             ng-disabled="$ctrl.isRunning || !$ctrl.userword"
             ng-click="$ctrl.saveText()">
         {{::$ctrl.buttonText()}}

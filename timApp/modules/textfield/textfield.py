@@ -174,6 +174,13 @@ def answer(args: TextfieldAnswerModel):
     result = {'web': web}
     userword = args.input.userword
 
+    nosave = args.input.nosave
+
+    if not nosave:
+        save = {"userword": userword}
+        result["save"] = save
+        web['result'] = "saved"
+
     return jsonify(result)
 
 
@@ -181,23 +188,16 @@ def answer(args: TextfieldAnswerModel):
 @app.route('/reqs')
 def reqs():
     templates = ["""
-    ``` {#textfield_1 plugin="textfield"}
-    header: OTSIKKO -TAI- TYHJÄ
-    stem: KYSYMYS -TAI- TYHJÄ
-    inputstem: VASTAUS -TAI- TYHJÄ
-    followid: <!-- SEURANTAID -TAI- TYHJÄ -->
-    needed_len: 1 <!-- MINIMIPITUUS, NUMERAALINEN -->
-    initword: ALKUARVO, NUMERAALINEN -TAI- TYHJÄ
-    ```""", """
-    ``` {#numericfield_2 plugin="numericfield"}
-    header: OTSIKKO -TAI- TYHJÄ
-    stem: KYSYMYS -TAI- TYHJÄ
-    inputstem: VASTAUS -TAI- TYHJÄ
-    followid: <!-- SEURANTAID -TAI- TYHJÄ -->
-    fields: <!-- KENTTÄVIITTAUKSET -TAI- TYHJÄ -->
-    needed_len: 1 <!-- MINIMIPITUUS, NUMERAALINEN -->
-    initword: ALKUARVO, NUMERAALINEN -TAI- TYHJÄ
-    ```"""
+``` {#textfield_1 plugin="textfield"}
+header: #OTSIKKO -TAI- TYHJÄ
+stem: #KYSYMYS -TAI- TYHJÄ
+inputstem: #VASTAUS, TYHJÄ = EI VASTAUSTA
+followid: #SEURANTAID, TYHJÄ = EI SEURANTAID:tä
+fields: #KENTTÄVIITTAUKSET, TYHJÄ = EI VIITTAUKSIA
+needed_len: 1 #MINIMIPITUUS, NUMERAALINEN 
+initword: #ALKUARVO, TYHJÄ = EI ALKUARVOA
+buttonText: Save #TYHJÄ = EI NAPPIA
+```"""
                  ]
     return jsonify({
         "js": ["js/build/textfield.js"],
@@ -212,13 +212,8 @@ def reqs():
                         'items': [
                             {
                                 'data': templates[0].strip(),
-                                'text': 'Numeraalinen kenttä (koottu tallennus)',
-                                'expl': 'Luo kenttä jonka syötteet ovat vain numeroita',
-                            },
-                            {
-                                'data': templates[1].strip(),
-                                'text': 'Numeraalinen kenttä (oma tallennus)',
-                                'expl': 'Luo kenttä jonka syötteet ovat vain numeroita',
+                                'text': 'Tekstikenttä (koottu tai oma tallennus)',
+                                'expl': 'Luo kenttä jonka syötteet ovat tekstiä',
                             },
                         ],
                     },

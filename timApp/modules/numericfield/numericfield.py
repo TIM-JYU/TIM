@@ -224,12 +224,12 @@ initnumber: 0 <!-- ALKUARVO, NUMERAALINEN -->
                         'items': [
                             {
                                 'data': templates[0].strip(),
-                                'text': 'Numeraalinen kenttä (koottu tallennus)',
+                                'text': 'Numeerinen kenttä (koottu tai oma tallennus)',
                                 'expl': 'Luo kenttä jonka syötteet ovat vain numeroita',
                             },
                             {
                                 'data': templates[1].strip(),
-                                'text': 'Numeraalinen kenttä (oma tallennus)',
+                                'text': 'Numeerinen kenttä (laajennettu)',
                                 'expl': 'Luo kenttä jonka syötteet ovat vain numeroita',
                             },
                         ],

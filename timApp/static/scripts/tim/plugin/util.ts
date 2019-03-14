@@ -22,7 +22,7 @@ export interface IPluginAttributes<Markup extends IGenericPluginMarkup, State> {
 export const GenericPluginMarkup = t.partial({
     answerLimit: t.Integer,
     button: nullable(t.string),
-    buttonText: t.string,
+    buttonText: nullable(t.string),
     footer: t.string,
     header: nullable(t.string),
     lazy: t.boolean,

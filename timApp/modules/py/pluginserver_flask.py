@@ -70,6 +70,7 @@ class GenericMarkupModel:
     footer: Union[str, Missing] = missing
     stem: Union[str, Missing] = missing
     lazy: Union[bool, Missing] = missing
+    buttonText: Union[str, None, Missing] = missing
 
     def get_visible_data(self):
         return {k: v for k, v in attr.asdict(self).items() if k not in self.hidden_keys and v is not missing}
@@ -81,6 +82,7 @@ class GenericMarkupSchema(Schema):
     footer = fields.Str()
     hidden_keys = fields.List(fields.Str(), required=True)
     stem = fields.Str()
+    buttonText = fields.Str(allow_none=True)
 
     @pre_load
     def process_minus(self, data):
