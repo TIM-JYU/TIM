@@ -109,6 +109,16 @@ services:
    PYTHONPATH: /dropdown:/py:/usr/local/lib/python3.6/dist-packages
   command: ./startAll.sh
   restart: unless-stopped
+ drag:
+  image: timimages/tim:${TIM_IMAGE_TAG}
+  volumes:
+   - ./timApp/modules/drag:/drag:ro
+   - ./timApp/modules/py:/py:ro
+  working_dir: /drag
+  environment:
+   PYTHONPATH: /drag:/py:/usr/local/lib/python3.6/dist-packages
+  command: ./startAll.sh
+  restart: unless-stopped
  feedback:
   image: timimages/tim:${TIM_IMAGE_TAG}
   volumes:

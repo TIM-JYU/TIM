@@ -35,6 +35,10 @@ services:
   command: ${DROPDOWN_DEV_COMMAND:-/usr/sbin/sshd -D}
   ports:
    - "49989:22"
+ drag:
+  command: ${DRAG_DEV_COMMAND:-/usr/sbin/sshd -D}
+  ports:
+   - "49990:22"
  feedback:
   command: ${FEEDBACK_DEV_COMMAND:-/usr/sbin/sshd -D}
   ports:
