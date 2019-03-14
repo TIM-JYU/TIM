@@ -34,7 +34,7 @@ default_max_col_count = 250
 # Pixels; 595px is the width of 72 dpi (web) a4 and minus 35px is for the margins.
 resizing_px_threshold = 595 - 35
 # Minimum number of columns (checked when table width is estimated by cell content width).
-resizing_col_threshold = 3
+resizing_col_threshold = 2
 
 # TODO: Add more.
 # HTML font families and their closest corresponding LaTeX-codes:
@@ -189,6 +189,8 @@ class Cell:
             cell_color = fr"\cellcolor{cell_color}"
 
         content = self.content
+        # Minipage doesn't handle cell width always properly even if it's given,
+        # and when using auto like \linewidth it's blind to what other cells are doing.
         if "\[" in content:
             minipage_width = self.cell_width
             if "*" in str(minipage_width):
@@ -341,16 +343,6 @@ class Row:
 
     def __repr__(self):
         return custom_repr(self)
-
-
-def pt_to_float(pt: str) -> float:
-    """
-    Parses a float from LaTeX pt units;
-    for example "12.333pt" -> 12.333.
-    :param pt: Parses points to float number.
-    :return: Point's number without pt and as float.
-    """
-    return float(pt.replace("pt", "").strip())
 
 
 class HorizontalBorder:
@@ -943,6 +935,7 @@ def add_missing_elements(table_json, datablock):
 
     empty_cell = {'cell': ''}
 
+    # TODO: If table has only datablocks, crashes here.
     table_row_count = len(table_json['rows'])
     # Add missing rows.
     for i in range(0, max_row_count - table_row_count):
@@ -1171,13 +1164,32 @@ def int_to_datablock_index(i: int) -> str:
     return (a + 1) * str(chr(ord("A") + b))
 
 
-def parse_size_attribute(attribute) -> str:
+def parse_size_attribute(attribute: str) -> str:
     """
-    Converts numeric attribute to string and removes px and spaces.
+    Converts numeric attributes to pts and removes the unit sign.
     :param attribute: Size attribute.
     :return: Parsed string.
     """
-    return str(attribute).replace('px', '').strip()
+    # All units are converted to pt.
+    conv_to_pt = {'mm': 2.83464566929,
+                  'cm': 28.3464566929,
+                  'in': 72,
+                  'px': 1.33333333333,
+                  'pt': 1,
+                  'pc': 12,
+                  'ex': 4.30554,
+                  'em': 10.00002}
+    if not attribute:
+        return "0"
+    for key, value in conv_to_pt.items():
+        if key in attribute:
+            try:
+                return str(round(float(str(attribute).replace(key, '').strip())*value, 2))
+            except Exception as e:
+                # TODO: Tell user about conversion errors.
+                pass
+    # If not recognized, return zero.
+    return "0"
 
 
 def get_table_size(table_data):
@@ -1233,7 +1245,7 @@ def decide_format_size(format_levels):
     for level in format_levels:
         if level and default_width not in level:
             try:
-                size = float(parse_size_attribute(level))
+                size = float(level)
                 if size > final_size:
                     final_size = size
             except ValueError:
@@ -1293,7 +1305,7 @@ def decide_colspan_rowspan(cell_colspan, cell_rowspan, datablock_colspan, databl
         colspan = datablock_colspan
     if not colspan:
         colspan = default_colspan
-    if datablock_colspan:
+    if datablock_rowspan:
         rowspan = datablock_rowspan
     if not rowspan:
         rowspan = default_rowspan
@@ -1356,6 +1368,16 @@ def convert_table(table_json, draw_html_borders: bool = False) -> Table:
     column_font_size_list = get_column_style_list(table_json, "fontSize")
     column_h_align_list = get_column_format_list(table_json, f=get_text_horizontal_align)
     column_font_family_list = get_column_format_list(table_json, f=get_font_family)
+
+    # Get default (applied to all of same type) attributes:
+    table_default_row_data = table_json.get('defrows')
+    table_default_col_data = table_json.get('defcols')
+    table_default_cell_data = table_json.get('defcells')
+
+    table_default_row_height = get_size(table_default_row_data, key="height", default=None)
+    table_default_col_height = get_size(table_default_col_data, key="width", default=None)
+    table_default_cell_bgcolor = get_color(table_default_cell_data, key="backgroundColor")
+    table_default_cell_textcolor = get_color(table_default_cell_data, key="color")
 
     table_json_rows = table_json['rows']
     for i in range(0, len(table_json_rows)):
@@ -1423,6 +1445,7 @@ def convert_table(table_json, draw_html_borders: bool = False) -> Table:
             # Decide which styles to use (from table, column, row, cell or datablock)
             (bg_color, bg_color_html) = decide_format_tuple([
                 (table_bg_color, table_bg_color_html),
+                table_default_cell_bgcolor,
                 column_bg_color_list[j],
                 (row_bg_color, row_bg_color_html),
                 (cell_bg_color, cell_bg_color_html),
@@ -1430,17 +1453,19 @@ def convert_table(table_json, draw_html_borders: bool = False) -> Table:
             ])
             (text_color, text_color_html) = decide_format_tuple([
                 (table_text_color, table_text_color_html),
-
+                table_default_cell_textcolor,
                 column_text_color_list[j],
                 (row_text_color, row_text_color_html),
                 (cell_text_color, cell_text_color_html),
                 (datablock_text_color, datablock_text_color_html),
             ])
             height = decide_format_size([
+                table_default_row_height,
                 row_height,
                 cell_height,
                 datablock_cell_height])
             width = decide_format_size([
+                table_default_col_height,
                 column_width_list[j],
                 row_width,
                 cell_width,

@@ -629,11 +629,11 @@ class TimRouteTest(TimDbTest):
             self.assertEqual((e1.text or '').strip(), (e2.text or '').strip())
             self.assertEqual((e1.tail or '').strip(), (e2.tail or '').strip())
             self.assertEqual(e1.attrib, e2.attrib)
-            self.assertEqual(len(e1), len(e2), msg=html.tostring(e2, pretty_print=True).decode('utf-8'))
+            self.assertEqual(len(e1), len(e2))
         except AssertionError:
-            print(html.tostring(e1).decode('utf8'))
-            print()
-            print(html.tostring(e2).decode('utf8'))
+            print(html.tostring(e1, pretty_print=True).decode('utf8'))
+            print('--------------------------------------')
+            print(html.tostring(e2, pretty_print=True).decode('utf8'))
             raise
 
         for c1, c2 in zip(e1, e2):
@@ -726,8 +726,8 @@ class TimRouteTest(TimDbTest):
             data['par'] = par
         return self.json_post(f'/preview/{d.id}', data, **kwargs)
 
-    def upload_file(self, d: DocInfo, content: bytes, filename: str):
-        return self.post('/upload/', data={'doc_id': str(d.id), 'file': (io.BytesIO(content), filename)})
+    def upload_file(self, d: DocInfo, content: bytes, filename: str, **extra_data):
+        return self.post('/upload/', data={'doc_id': str(d.id), 'file': (io.BytesIO(content), filename), **extra_data})
 
     def mark_as_unread(self, doc: DocInfo, par_id):
         self.json_put(f'/unread/{doc.id}/{par_id}')

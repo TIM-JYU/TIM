@@ -57,7 +57,7 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
         this.numericvalue = this.attrsall.numericvalue || this.attrs.initnumber || undefined;
         this.modelOpts = {debounce: this.autoupdate};
         if (this.attrs.followid) {
-            this.vctrl.addTimComponent(this, this.attrs.followid || this.pluginMeta.getTaskId() || "");
+            this.vctrl.addTimComponent(this);
         }
     }
 

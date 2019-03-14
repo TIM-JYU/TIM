@@ -359,7 +359,8 @@ export class DraggableController implements IController {
             this.areaWidth = this.getWidth();
             this.element.height(15);
             this.element.width(200);
-            this.element.css("left", this.getCss("left") + (this.areaWidth - this.getWidth()));
+            // Do not set left here - it will make dialogs appear hidden in some scenarios.
+            // this.element.css("left", this.getCss("left") + (this.areaWidth - this.getWidth()));
 
             base.css("visibility", "hidden");
             this.element.css("min-height", "0");
@@ -367,7 +368,8 @@ export class DraggableController implements IController {
         } else {
             base.css("visibility", "");
             this.element.css("min-height", "");
-            this.element.css("left", this.getCss("left") - (this.areaWidth - this.getWidth()));
+            // Do not set left here - it will make dialogs appear hidden in some scenarios.
+            // this.element.css("left", this.getCss("left") - (this.areaWidth - this.getWidth()));
             if (this.autoHeight) {
                 this.element.height("auto");
             } else {

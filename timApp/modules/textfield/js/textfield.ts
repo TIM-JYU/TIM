@@ -56,7 +56,7 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
         this.userword = this.attrsall.userword || this.attrs.initword || "";
         this.modelOpts = {debounce: this.autoupdate};
         if (this.attrs.followid) {
-            this.vctrl.addTimComponent(this, this.attrs.followid || this.pluginMeta.getTaskId() || "");
+            this.vctrl.addTimComponent(this);
         }
     }
 

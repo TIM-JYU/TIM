@@ -145,8 +145,9 @@ paliApp.component("paliRunner", {
     controller: PaliController,
     template: `
 <div class="csRunDiv no-popup-menu">
+    <tim-markup-error ng-if="::$ctrl.markupError" data="::$ctrl.markupError"></tim-markup-error>
     <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
-    <p ng-if="::$ctrl.stem">{{::$ctrl.stem}}</p>
+    <p ng-if="::$ctrl.stem" ng-bind-html="::$ctrl.stem"></p>
     <div class="form-inline"><label>{{::$ctrl.inputstem}} <span>
         <input type="text"
                class="form-control"

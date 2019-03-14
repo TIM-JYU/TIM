@@ -267,7 +267,9 @@ def view(item_path, template_name, usergroup=None, route="view"):
     task_groups = None
     show_task_info = False
     user_list = []
-    task_ids, plugin_count = find_task_ids(xs)
+    task_ids, plugin_count, no_accesses = find_task_ids(xs, check_access=teacher_or_see_answers)
+    if teacher_or_see_answers and no_accesses:
+        flash('You do not have full access to the following tasks: ' + ', '.join([t.doc_task for t in no_accesses]))
     points_sum_rule = doc_settings.point_sum_rule(default={})
     try:
         total_tasks = len(points_sum_rule['groups'])

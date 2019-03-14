@@ -141,22 +141,14 @@ $(() => {
             pollTimeout = window.setTimeout(refresh, pollInterval);
         }
     };
-    setTimeout(function() {
-        initReveal();
-        Reveal.slide();
-    }, 1000);
+    initReveal();
+    Reveal.slide();
 
     if (background_url) {
-        if (background_url == "none") {
-            $(".backgrounds").css("background-image", "None");
-        } else {
-            $(".backgrounds").css("background-image", "url('" + background_url + "')");
-        }
+        $(".backgrounds").css("background-image", "url('" + background_url + "')");
     }
 
     if (background_color) {
-        if (background_color != "none") {
-            $(".backgrounds").css("background-color", background_color);
-        }
+        $(".backgrounds").css("background-color", background_color);
     }
 });

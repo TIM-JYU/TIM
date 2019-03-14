@@ -254,11 +254,14 @@ class BrowserTest(TimLiveServer, TimRouteTest):
     def find_element(self, selector: str) -> WebElement:
         return self.drv.find_element_by_css_selector(selector)
 
-    def find_element_avoid_staleness(self, selector: str, tries: int = 10) -> WebElement:
+    def find_element_avoid_staleness(self, selector: str, tries: int = 10, click=False) -> WebElement:
         while True:
             e = self.find_element(selector)
             try:
-                self.touch(e)
+                if click:
+                    e.click()
+                else:
+                    self.touch(e)
             except StaleElementReferenceException:
                 tries -= 1
                 if tries == 0:

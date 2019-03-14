@@ -13,17 +13,19 @@ from sqlalchemy import func
 
 from timApp.answer.answer import Answer
 from timApp.auth.accesshelper import has_edit_access, verify_view_access
+from timApp.auth.sessioninfo import get_current_user_object
+from timApp.document.docentry import DocEntry
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.docsettings import DocSettings
 from timApp.document.document import dereference_pars, Document
 from timApp.document.macroinfo import MacroInfo
 from timApp.document.yamlblock import YamlBlock
-from timApp.item.block import Block
 from timApp.markdown.dumboclient import call_dumbo
+from timApp.markdown.htmlSanitize import sanitize_html
 from timApp.plugin.containerLink import plugin_reqs, get_plugin
 from timApp.plugin.containerLink import render_plugin_multi, render_plugin, get_plugins
 from timApp.plugin.plugin import Plugin, PluginRenderOptions, load_markup_from_yaml, expand_macros_for_plugin, \
-    find_inline_plugins, InlinePlugin, finalize_inline_yaml
+    find_inline_plugins, InlinePlugin, finalize_inline_yaml, PluginWrap
 from timApp.plugin.pluginOutputFormat import PluginOutputFormat
 from timApp.plugin.pluginexception import PluginException
 from timApp.plugin.taskid import TaskId
@@ -48,26 +50,53 @@ def get_error_plugin(plugin_name, message, response=None,
     return get_error_html(f'Plugin {plugin_name} error: {message}', response)
 
 
-def find_task_ids(blocks: List[DocParagraph]) -> Tuple[List[str], int]:
+def task_ids_to_strlist(ids: List[TaskId]):
+    return [t.doc_task for t in ids]
+
+
+def find_task_ids(
+        blocks: List[DocParagraph],
+        check_access=True,
+) -> Tuple[List[TaskId], int, List[TaskId]]:
     """Finds all task plugins from the given list of paragraphs and returns their ids."""
     task_ids = []
     plugin_count = 0
+    access_missing = []
+    curr_user = get_current_user_object()
+
+    def handle_taskid(t: TaskId):
+        if not t.doc_id:
+            t.update_doc_id_from_block(block)
+        elif check_access:
+            b = DocEntry.find_by_id(t.doc_id)
+            if b and not curr_user.has_seeanswers_access(b):
+                access_missing.append(t)
+                return True
+
     for block in blocks:
         task_id = block.get_attr('taskId')
         plugin = block.get_attr('plugin')
         if plugin:
             plugin_count += 1
             if task_id:
-                tid = TaskId.parse(task_id, require_doc_id=False)
-                if not tid.doc_id:
-                    tid.doc_id = block.doc.doc_id
-                task_ids.append(tid.doc_task)
+                try:
+                    tid = TaskId.parse(task_id, require_doc_id=False, allow_block_hint=False)
+                except PluginException:
+                    continue
+                if handle_taskid(tid):
+                    continue
+                task_ids.append(tid)
         elif block.get_attr('defaultplugin'):
-            # TODO maybe pass user to get_macroinfo
             for task_id, _, _, _, _ in find_inline_plugins(block, block.doc.get_settings().get_macroinfo()):
+                try:
+                    task_id.validate()
+                except PluginException:
+                    continue
                 plugin_count += 1
-                task_ids.append(task_id.doc_task)  # TODO check permission if task_id refers to some other doc
-    return task_ids, plugin_count
+                if handle_taskid(task_id):
+                    continue
+                task_ids.append(task_id)
+    return task_ids, plugin_count, access_missing
 
 
 PluginOrError = Union[Plugin, str]  # str represent HTML markup of error
@@ -181,14 +210,18 @@ class PluginPlacement:
                 errs[p_range] = str(e), plugin_name
             else:
                 taskid = block.get_attr('taskId')
-                tid = TaskId.parse(taskid, require_doc_id=False) if taskid else None
-                if check_task_access(errs, p_range, plugin_name, tid):
-                    plugs[p_range] = Plugin(
-                        tid,
-                        vals,
-                        plugin_name,
-                        par=block,
-                    )
+                try:
+                    tid = TaskId.parse(taskid, require_doc_id=False, allow_block_hint=False) if taskid else None
+                except PluginException as e:
+                    errs[p_range] = str(e), plugin_name
+                else:
+                    if check_task_access(errs, p_range, plugin_name, tid):
+                        plugs[p_range] = Plugin(
+                            tid,
+                            vals,
+                            plugin_name,
+                            par=block,
+                        )
         else:
             md = None
             for task_id, p_yaml, p_range, plugin_type, md in find_inline_plugins(block, macroinfo):
@@ -196,6 +229,7 @@ class PluginPlacement:
                 if not check_task_access(errs, p_range, plugin_type, task_id):
                     continue
                 try:
+                    task_id.validate()
                     y = load_markup_from_yaml(finalize_inline_yaml(p_yaml), settings.global_plugin_attrs(), plugin_type)
                 except PluginException as e:
                     errs[p_range] = str(e), plugin_type
@@ -216,7 +250,7 @@ class PluginPlacement:
                 p.values['isTask'] = not block.is_question()
 
             if load_states:
-                if custom_answer is not None:
+                if custom_answer is not None and custom_answer.task_id == p.task_id.doc_task:
                     answer_and_cnt = custom_answer, custom_answer.get_answer_number()
                 elif p.task_id:
                     answer_and_cnt = answer_map.get(p.task_id.doc_task, None)
@@ -235,7 +269,7 @@ class PluginPlacement:
 
 def check_task_access(errs: ErrorMap, p_range: Range, plugin_name: str, tid: TaskId):
     if tid and tid.doc_id:
-        b = Block.query.get(tid.doc_id)
+        b = DocEntry.find_by_id(tid.doc_id)
         if b:
             has_access = verify_view_access(b, require=False)
             if not has_access:
@@ -260,11 +294,11 @@ def pluginify(doc: Document,
               edit_window=False,
               load_states=True,
               review=False,
-              wrap_in_div=True,
+              pluginwrap=PluginWrap.Full,
               output_format: PluginOutputFormat = PluginOutputFormat.HTML,
               user_print: bool = False,
               target_format: PrintFormat = PrintFormat.LATEX,
-              dereference=True) -> Tuple[List[DocParagraph], List[str], List[str]]:
+              dereference=True) -> Tuple[List[DocParagraph], List[str], List[str], Optional[Plugin]]:
     """
     "Pluginifies" the specified DocParagraphs by calling the corresponding plugin route for each plugin
     paragraph.
@@ -307,23 +341,24 @@ def pluginify(doc: Document,
     plugins: DefaultDict[str, Dict[KeyType, Plugin]] = defaultdict(OrderedDict)
 
     answer_map: AnswerMap = {}
-    plugin_opts = PluginRenderOptions(do_lazy=do_lazy,
-                                      user_print=user_print,
-                                      preview=edit_window,
-                                      target_format=target_format,
-                                      output_format=output_format,
-                                      user=user,
-                                      review=review,
-                                      wrap_in_div=wrap_in_div
-                                      )
+    plugin_opts = PluginRenderOptions(
+        do_lazy=do_lazy,
+        user_print=user_print,
+        preview=edit_window,
+        target_format=target_format,
+        output_format=output_format,
+        user=user,
+        review=review,
+        wraptype=pluginwrap,
+    )
 
     if load_states and custom_answer is None and user is not None:
-        task_ids, _ = find_task_ids(pars)
+        task_ids, _, _ = find_task_ids(pars, check_access=user != get_current_user_object())
         col = func.max(Answer.id).label('col')
         cnt = func.count(Answer.id).label('cnt')
         sub = (user
                .answers
-               .filter(Answer.task_id.in_(task_ids) & Answer.valid == True)
+               .filter(Answer.task_id.in_(task_ids_to_strlist(task_ids)) & Answer.valid == True)
                .add_columns(col, cnt)
                .with_entities(col, cnt)
                .group_by(Answer.task_id).subquery())
@@ -338,6 +373,7 @@ def pluginify(doc: Document,
 
     placements = {}
     dumbo_opts = OrderedDict()
+    custom_answer_plugin = None
     for idx, block in enumerate(pars):
         is_gamified = block.get_attr('gamification')
         is_gamified = not not is_gamified
@@ -372,6 +408,8 @@ def pluginify(doc: Document,
             placements[idx] = pplace
             for r, p in pplace.plugins.items():
                 plugins[p.type][idx, r] = p
+                if custom_answer and p.task_id.doc_task == custom_answer.task_id:
+                    custom_answer_plugin = p
             if not pplace.is_block_plugin:
                 dumbo_opts[idx] = block.get_dumbo_options(base_opts=settings.get_dumbo_options())
         else:
@@ -450,9 +488,14 @@ def pluginify(doc: Document,
                 for idx, r in plugin_block_map.keys():
                     placements[idx].set_error(r, f'Failed to parse plugin response from multihtml route: {e}')
                 continue
-            for ((idx, r), plugin), html in zip(plugin_block_map.items(), plugin_htmls):
-                plugin.plugin_lazy = plugin_lazy
-                placements[idx].set_output(r, html)
+            if not isinstance(plugin_htmls, list):
+                for ((idx, r), plugin) in plugin_block_map.items():
+                    plugin.plugin_lazy = plugin_lazy
+                    placements[idx].set_error(r, f'Multihtml response of {plugin_name} was not a list: {plugin_htmls}')
+            else:
+                for ((idx, r), plugin), html in zip(plugin_block_map.items(), plugin_htmls):
+                    plugin.plugin_lazy = plugin_lazy
+                    placements[idx].set_output(r, html)
         else:
             for (idx, r), plugin in plugin_block_map.items():
                 if md_out:
@@ -472,28 +515,22 @@ def pluginify(doc: Document,
     for idx, place in placements.items():
         par = html_pars[idx]
         par[output_format.value] = place.get_block_output()
-        bp = place.get_block_plugin()
-        if bp:
-            par['answerbrowser_type'] = bp.get_answerbrowser_type()
-            par['answer_count'] = bp.answer_count
-            if bp.task_id:
-                attrs = par.get('ref_attrs', par['attrs'])
-                attrs['taskIdObj'] = bp.task_id
 
     # inline plugin blocks need to go through Dumbo to process MD
     if output_format == PluginOutputFormat.HTML:
         htmls_to_dumbo = []
         settings_to_dumbo = []
         for k, v in dumbo_opts.items():
-            htmls_to_dumbo.append({'content': html_pars[k][output_format.value], **v.dict()})
+            # Need to wrap in div because otherwise dumbo might generate invalid HTML
+            htmls_to_dumbo.append({'content': '<div>' + html_pars[k][output_format.value] + '</div>', **v.dict()})
             settings_to_dumbo.append(v)
         for h, (idx, s) in zip(call_dumbo(htmls_to_dumbo,
                                           options=doc.get_settings().get_dumbo_options()),
                                dumbo_opts.items()):
-            html_pars[idx][output_format.value] = h
+            html_pars[idx][output_format.value] = sanitize_html(h)
     # taketime("phtml done")
 
-    return pars, js_paths, css_paths
+    return pars, js_paths, css_paths, custom_answer_plugin
 
 
 def get_all_reqs():

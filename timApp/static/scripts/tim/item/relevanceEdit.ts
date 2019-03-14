@@ -7,7 +7,7 @@
  */
 
 import {IController} from "angular";
-import {to} from "tim/util/utils";
+import {Binding, to} from "tim/util/utils";
 import {timApp} from "../app";
 import {$http, $window} from "../util/ngimport";
 import {IItem, IRelevance} from "./IItem";
@@ -28,7 +28,7 @@ export interface IRelevanceResponse {
 
 class RelevanceCtrl implements IController {
     private static $inject = ["$element", "$scope"];
-    private item: IItem = $window.item;
+    private item!: Binding<IItem, "<">;
     private relevance: number|undefined;
     private isDefault: boolean = false;
     private isInherited: boolean = false;
@@ -100,6 +100,7 @@ class RelevanceCtrl implements IController {
 timApp.component("relevanceEdit", {
     bindings: {
         focusField: "<",
+        item: "<",
     },
     controller: RelevanceCtrl,
     template: `

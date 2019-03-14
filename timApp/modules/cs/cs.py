@@ -424,7 +424,7 @@ def get_html(self: 'TIMServer', ttype, query: QueryClass):
             s = s + '<p>Args:</p><pre>' + userargs + '</pre>'
         if uploaded_file is not None:
             s = s + '<p>File:</p><pre>' + os.path.basename(uploaded_file) + '</pre>'
-        if usercode:
+        if isinstance(usercode, str):
             s = '<pre>' + usercode + '</ pre>' + s
         if not s:
             s = "No answer"
@@ -445,7 +445,7 @@ def get_html(self: 'TIMServer', ttype, query: QueryClass):
     if do_lazy:
         # r = LAZYWORD + r;
         code = bycode
-        if usercode:
+        if isinstance(usercode, str):
             code = usercode
         if not isinstance(code, str):
             print("Ei ollut string: ", code, jso)
@@ -672,10 +672,11 @@ def check_fullprogram(query, cut_errors=False):
             by_code = m.group(1)
             by_code_replace = [{'replace': "((\n|)[^\\n]*BYCODEBEGIN.*)", 'by': "\nREPLACEBYCODE"}]
         else:
-            m = re.search("[^\\n]*\n(.*)\n.*?BYCODEEND", program, flags=re.S)
-            if m:
-                by_code = m.group(1)
-                by_code_replace = [{'replace': "((\n|)[^\\n]*.*?BYCODEEND[^\\n]*)", 'by': "\nREPLACEBYCODE"}]
+            if program.find("BYCODEEND") >= 0:  # TODO: for some reason next regexp is slow in not found case
+                m = re.search("[^\\n]*\n(.*)\n.*?BYCODEEND", program, flags=re.S)
+                if m:
+                    by_code = m.group(1)
+                    by_code_replace = [{'replace': "((\n|)[^\\n]*.*?BYCODEEND[^\\n]*)", 'by': "\nREPLACEBYCODE"}]
             else:
                 by_code = fullprogram
                 program = "REPLACEBYCODE"
@@ -776,7 +777,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             # print(query.jso)
             # print(str(query))
             usercode = get_json_param(query.jso, "state", "usercode", None)
-            if usercode:
+            if isinstance(usercode, str):
                 query.query["usercode"] = [usercode]
             userinput = get_json_param(query.jso, "state", "userinput", None)
             if userinput is None:
@@ -1022,7 +1023,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 save["uploadedFile"] = uploaded_file
                 save["uploadedType"] = uploaded_type
             usercode = get_json_param(query.jso, "state", "usercode", None)
-            if usercode:
+            if isinstance(usercode, str):
                 query.query["usercode"] = [usercode]
 
             userinput = get_json_param(query.jso, "input", "userinput", None)
@@ -1133,7 +1134,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
             # /answer-path comes here
             usercode = get_json_param(query.jso, "input", "usercode", None)
-            if usercode:
+            if isinstance(usercode, str):
                 save["usercode"] = usercode
 
             nosave = get_param(query, "nosave", None)
