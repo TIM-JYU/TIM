@@ -18,11 +18,11 @@ from pluginserver_flask import GenericMarkupModel, GenericMarkupSchema, GenericH
 @attr.s(auto_attribs=True)
 class FeedbackStateModel:
     """Model for the information that is stored in TIM database for each answer."""
-    userword: str
+    userAnswer: str
 
 
 class FeedbackStateSchema(Schema):
-    userword = fields.Str(required=True)
+    userAnswer = fields.Str(required=True)
 
     @post_load
     def make_obj(self, data):

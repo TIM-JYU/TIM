@@ -41,15 +41,10 @@ const FeedbackMarkup = t.intersection([
         feedbackLevel: t.number,
         toNextTaskRule: t.string,
         questionItems: t.array(QuestionItem),
-
         instructionID: t.string,
         sampleItemID: t.string,
         nextTask: t.string,
         pluginID: t.string,
-        words: t.string,
-        correctAnswer: t.string,
-        correctAnswerFeedback: t.string,
-        userword: t.string,
     }),
     GenericPluginMarkup,
     t.type({
@@ -61,7 +56,7 @@ const FeedbackMarkup = t.intersection([
 ]);
 const FeedbackAll = t.intersection([
     t.partial({
-        userword: t.string,
+        // userword: t.string,
     }),
     t.type({markup: FeedbackMarkup}),
 ]);
@@ -110,11 +105,9 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
     private result?: string;
     private error?: string;
     private vctrl!: ViewCtrl;
-    private userword = "";
+    private userAnswer = "";
+    private feedback = "";
 
-
-
-    private answer = ["is", "today"];
     private questionPluginID?: string;  // tarkasta
     private currentFeedbackLevel = 0;
     private listOfValidQuestionItems?: string[];
@@ -247,7 +240,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
     }
 
     wordButtonText() {
-        return "Words";
+        return "Get words";
     }
 
     $onInit() {
@@ -307,31 +300,68 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
     }
 
     /**
-     * Gets the user's answer from the plugin this feedback-plugin is assigned to.
-     * Doesn't work for paragraphs with multiple plugins at the moment.
+     * Handles the checking of user's answer's correctness.
      */
-    getAnswer() {
-        const timComponent = this.vctrl.getTimComponentByName(this.attrs.field || "");
-        if(timComponent) {
-            const par = timComponent.getPar();
-            const content = par.children(".parContent");
-            const nodes = content[0].childNodes;
-            // console.log(nodes);
-            let answer = "";
-            for (let n in nodes) {
-                let node = nodes[n];
-                if(node.nodeName == "#text") {
-                    let text = node.textContent || "";
-                    text.trim();
-                    answer = answer + text;
-                }
-                if(node.nodeName == "TIM-PLUGIN-LOADER") {
-                    // Doesn't work with multiple plugins inside a paragraph at the moment
-                    answer = answer + timComponent.getContent();
-                }
+    handleAnswer() {
+        const selections = this.getAnswerFromPlugin();
+
+        if(this.attrs.questionItems) {
+            const correct = this.attrs.questionItems[0].correctAnswer;
+            const comparison:string[] = selections.filter(selection => correct.indexOf(selection) < 0);
+            if (comparison.length === 0) {
+                this.feedback = this.attrs.questionItems[0].correctAnswerFeedback;
+                this.feedback = this.feedback.replace("[answer]",this.userAnswer);
             }
-            this.userword = answer;
+            else {
+                this.feedback = "Wrong!";
+            }
         }
+    }
+
+    /**
+     * Gets the user's answer from the visible question item this feedback-plugin is assigned to.
+     * TODO: Refactor, add a way to get the answer from the visible question item
+     * TODO: Maybe add getting answers in an area and with regexp?
+     *
+     * @returns(string[]) Returns the user's selections to the question item
+     */
+    getAnswerFromPlugin(): string[] {
+        if (this.attrs.questionItems) {
+            const plugins = this.attrs.questionItems[0].pluginNames;
+            const selections: string[] = new Array<string>(plugins.length);
+            const timComponent = this.vctrl.getTimComponentByName(plugins[0]);
+
+            if (timComponent) {
+                const par = timComponent.getPar();
+                const content = par.children(".parContent");
+                const nodes = content[0].childNodes;
+                // console.log(nodes);
+                let answer = "";
+                let i = 0;
+
+                for (let n in nodes) {
+                    let node = nodes[n];
+                    if (node.nodeName === "#text") {
+                        let text = node.textContent || "";
+                        text.trim();
+                        answer = answer + text;
+                    }
+                    if (node.nodeName === "TIM-PLUGIN-LOADER") {
+                        // Makeshift way to go through all the plugins in a paragraph
+                        let plugin = this.vctrl.getTimComponentByName(plugins[i]);
+                        if (plugin) {
+                            let content = plugin.getContent().trim();
+                            selections[i] = content;
+                            answer = answer + content;
+                            i++;
+                        }
+                    }
+                }
+                this.userAnswer = answer;
+            }
+            return selections;
+        }
+        return [];
     }
 
     /**
@@ -390,11 +420,11 @@ feedbackApp.component("feedbackRunner", {
     <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
     <p ng-if="::$ctrl.stem">{{::$ctrl.stem}}</p>
     <div class="form-inline"><label>{{::$ctrl.inputstem}} <span>
-        {{$ctrl.userword}}</span></label>
+        {{$ctrl.feedback}}</span></label>
     </div>
     <button class="timButton"
             ng-if="::$ctrl.buttonText()"
-            ng-click="$ctrl.getAnswer()">
+            ng-click="$ctrl.handleAnswer()">
         {{::$ctrl.buttonText()}}
     </button>
     <button class="timButton"
