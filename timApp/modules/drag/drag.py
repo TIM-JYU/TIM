@@ -181,14 +181,17 @@ def answer(args: DragAnswerModel):
 @app.route('/reqs/')
 @app.route('/reqs')
 def reqs():
-    templates = ["""
-    #- {defaultplugin="drag"}
-    The weather {#item1 word: is} nice today.
-    """, """
-    #- {defaultplugin="drag"}
-    "Näin tänään {#item2 word: kissan}
-    joka jahtasi {#item3 word: hiirtä}
-    """]
+    templates = [
+"""
+#- {defaultplugin="drag"}
+The weather {#item1 word: is} nice today.
+""",
+"""
+#- {defaultplugin="drag"}
+Näin tänään {#item2 word: kissan}
+joka jahtasi {#item3 word: hiirtä}
+"""
+]
     return jsonify({
         "js": ["js/build/drag.js"],
         "multihtml": True,
