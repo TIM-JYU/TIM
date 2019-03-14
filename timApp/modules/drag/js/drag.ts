@@ -122,6 +122,7 @@ class DragController extends PluginBase<t.TypeOf<typeof DragMarkup>, t.TypeOf<ty
     }
 
     onDragged() {
+        console.log("dragging");
         // TODO: Tämä ei toimi, tarvitaan eventtikuuntelijoita.
 
     }
