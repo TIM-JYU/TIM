@@ -1,10 +1,10 @@
 /**
  * Defines the client-side implementation of a feedback-plugin.
  */
-import angular from "angular";
+import angular, {INgModelOptions} from "angular";
 import * as t from "io-ts";
 import {ITimComponent, ViewCtrl} from "tim/document/viewctrl";
-import {GenericPluginMarkup, PluginBase, withDefault} from "tim/plugin/util";
+import {GenericPluginMarkup, nullable, PluginBase, withDefault} from "tim/plugin/util";
 import {$http} from "tim/util/ngimport";
 import {to} from "tim/util/utils";
 
@@ -45,6 +45,7 @@ const FeedbackMarkup = t.intersection([
         sampleItemID: t.string,
         nextTask: t.string,
         pluginID: t.string,
+
     }),
     GenericPluginMarkup,
     t.type({
@@ -60,46 +61,6 @@ const FeedbackAll = t.intersection([
     }),
     t.type({markup: FeedbackMarkup}),
 ]);
-/*
-class Choice{
-    private choice?: string;
-    private feedback?: string[];
-
-
-}
-
-class QuestionItem extends Choice{
-    private pluginID?: string;  //tarkasta
-    private words?: string[];
-    private correctAnswer?: string;
-    private correctAnswerFeedback?: string;
-    private choise?: Choice;    // miksi herjaa jos choice
-
-
-
-
-
-}
-
-
-class Feedback extends QuestionItem{
-    private nextTaskRule?: string;
-    private nextTask?: string;
-    private instructionID?: string;
-    private feedbackLevel?: number;
-    //private feedbackLevelRise?: boolean;
-    private QuestionItems?: QuestionItem[];
-    //private answerList?: string[];
-    private answer?: string;
-    private questionPluginID?: string;  // tarkasta
-    private currentFeedbackLevel?: number;
-    private listOfValidQuestionItems?: string[];
-
-}
-
-
-
-*/
 
 class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.TypeOf<typeof FeedbackAll>, typeof FeedbackAll> implements ITimComponent {
     private result?: string;
@@ -109,111 +70,37 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
     private feedback = "";
 
     private questionPluginID?: string;  // tarkasta
+    private feedbackLevel = 3;
     private currentFeedbackLevel = 0;
     private listOfValidQuestionItems?: string[];
+    private feedbackLevelRise = false;
 
-
-
-    /*
-    private feedback = {
-            feedbackLevel: 5,
-            feedbackLevelRise: false,
-            toNextTaskRule:"",
-            questionItems: [{
-                pluginNames: ["x", "y"],
-                dropdownWords: [["is", "do", "are"], ["yesterday", "today"]],
-                dragwords:["what", "does", "the", "fox", "say?"],
-                correctAnswer: ["is", "today"],
-                correctAnswerFeedback: "vastasit [answer] vastaus on oikein",
-                choices:[{
-                    match:[
-                        {
-                            index: 0,
-                            answer: "do",
-                        },
-                        {
-                            index: 2,
-                            answer: "do",
-                        }
-                    ],
-                    fblevels: [
-                        "vastasit [answer]. vastaus on hiukan väärin",
-                        "vastasit [answer]. vastaus on hiukan väärin, mieti vielä"
-                    ]
-                }]
-            }]
-        };
-
-
-    setFeedback(){
-
-        let fb={
-            feedbackLevel: 5,
-            feedbackLevelRise: false,
-            toNextTaskRule:"",
-            questionItems: [{
-                pluginNames: ["x", "y"],
-                dropdownWords: [["is", "do", "are"], ["yesterday", "today"]],
-                dragwords:["what", "does", "the", "fox", "say?"],
-                correctAnswer: ["is", "today"],
-                correctAnswerFeedback: "vastasit [answer] vastaus on oikein",
-                choices:[{
-                    match:[
-                        {
-                            index: 0,
-                            answer: "do",
-                        },
-                        {
-                            index: 2,
-                            answer: "do",
-                        }
-                    ],
-                    fblevels: [
-                        "vastasit [answer]. vastaus on hiukan väärin",
-                        "vastasit [answer]. vastaus on hiukan väärin, mieti vielä"
-                    ]
-                }]
-            }]
-        }
-        this.feedback = fb;
+    setCurrentFeedbackLevel(number: number){
+        this.currentFeedbackLevel === number;
     }
 
+    findQuestionplugin(pluginNames:string[]){
+        if(this.attrs.questionItems) {
+            for (let i = 0; i < this.attrs.questionItems.length; i++) {
+                if (this.attrs.questionItems[i].pluginNames.length !== pluginNames.length) continue;
+                for (let j = 0; j < pluginNames.length; j++) {
+                    if (this.attrs.questionItems[i].pluginNames[j] !== pluginNames[j]) break;
+                    if (j === pluginNames.length - 1) return i
 
-
-    handleAnswer(answer: string[], pluginNames: string[]){                              //vai lohko parametrinä
-        for(let i = 0; i< this.feedback.questionItems.length; i++){
-            if(this.feedback.questionItems[i].pluginNames === pluginNames){             //
-                for(let j = 0; j< this.feedback.questionItems[i].correctAnswer.length; j++){
-                    if(this.feedback.questionItems[i].correctAnswer[j] !== answer[j]){
-                        if(this.currentFeedbackLevel < this.feedback.feedbackLevel) this.currentFeedbackLevel++;
-                        //this.compareChoices(this.feedback.questionItems[i].choices, answer, pluginNames)
-                        for (let k = 0; k<this.feedback.questionItems[i].choices.length; k++){
-                            if(this.feedback.questionItems[i].choices[k])
-                        }
-
-
-
-                    }
-                    else{
-                        if(this.feedback.feedbackLevelRise){
-                            if(this.currentFeedbackLevel > 0) this.currentFeedbackLevel--
-                        }
-                        this.hideBlock();
-                        this.printFeedback();
-                        this.openBlock();
-                    }
                 }
             }
+            return -1;
         }
-
     }
 
-    compareChoices(choices: object[], answer:string[], pluginNames:string[]){
-        for(let i =0; i<choices.length; i++){
-            for(let j = 0; j<choices[i].match.length; j++){
-                if(choices[i].match[j] !== answer[j]) break;
-                if(j === choices[i].match.length-1)
+    checkCorrectAnswer(index: number, answer: string[]){
+        if(this.attrs.questionItems) {
+            if (this.attrs.questionItems[index].correctAnswer.length !== answer.length) return false;
+            for (let i = 0; i < answer.length; i++) {
+                if (this.attrs.questionItems[index].correctAnswer[i] !== answer[i]) return false;
+                if (i === answer.length - 1) return true;
             }
+            return false;
         }
     }
 
@@ -229,8 +116,6 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
         return;
     }
 
-
-*/
     getDefaultMarkup() {
         return {};
     }
@@ -318,6 +203,33 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
         }
     }
 
+    /*
+    handleAnswer(answer: string[], pluginNames: string[]) {
+        let questionItemIndex = findQuestionplugin(pluginNames);
+        let correctAnswer = checkCorrectAnswer(questionItemIndex, answer);
+        if (correctAnswer){
+            if(this.feedbackLevelRise){
+                if (this.currentFeedbackLevel > 0) this.setCurrentFeedbackLevel(this.currentFeedbackLevel -1);
+            }
+            this.hideBlock();
+            this.printFeedback();
+            this.openBlock();
+        }
+        else{
+            if (this.currentFeedbackLevel < this.feedbackLevel) this.setCurrentFeedbackLevel(this.currentFeedbackLevel + 1);
+            let choiceIndex = this.compareChoices(questionItemIndex, answer);
+
+        }
+    }
+
+    compareChoices(index: number, answer:string[], pluginNames:string[], dropdownwords: string[][]){
+        if(this.attrs.questionItems[index].choices.length === 0) return-1;
+        for(let i= 0; i< this.attrs.questionItems[index].choices.length; i++){
+            if(typeof(this.attrs.questionItems[index].choices[i].match) === )
+
+        }
+    }
+*/
     /**
      * Gets the user's answer from the visible question item this feedback-plugin is assigned to.
      * TODO: Refactor, add a way to get the answer from the visible question item
@@ -384,7 +296,6 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
                     }
                 }
             }
-
         }
     }
 

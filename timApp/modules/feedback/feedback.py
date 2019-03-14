@@ -38,6 +38,8 @@ class FeedbackMarkupModel(GenericMarkupModel):
     followid: Union[str, Missing] = missing
     field: Union[str, Missing] = missing
     questionItems: Union[Any, Missing] = missing
+    choice: Union[Any, Missing] = missing
+    matchElement: Union[Any, Missing] = missing
 
 
 class FeedbackMarkupSchema(GenericMarkupSchema):
@@ -45,6 +47,8 @@ class FeedbackMarkupSchema(GenericMarkupSchema):
     followid = fields.Str()
     field = fields.Str()
     questionItems = fields.Raw()
+    choice= fields.Raw()
+    matchElement= fields.Raw()
 
     @post_load
     def make_obj(self, data):
