@@ -106,11 +106,11 @@ timApp.component("timStart", {
     <div class="row">
         <div ng-switch="$ctrl.language" ng-cloak class="pull-right">
             <div ng-switch-when="en">
-                <button class="timButton" ng-click="$ctrl.changeLanguage('fi')"
+                <button class="timButton btn-sm" ng-click="$ctrl.changeLanguage('fi')"
                         title="Vaihda sivun kieli suomeksi">Suomeksi</button>
             </div>
             <div ng-switch-when="fi">
-                <button class="timButton" ng-click="$ctrl.changeLanguage('en')"
+                <button class="timButton btn-sm" ng-click="$ctrl.changeLanguage('en')"
                 title="Change page language to English">In English</button>
             </div>
         </div>
