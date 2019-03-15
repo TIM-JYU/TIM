@@ -6,6 +6,7 @@ from timApp.tests.db.timdbtest import TimDbTest, TEST_USER_1_ID
 from timApp.timdb.sqa import db
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
+from timApp.user.users import remove_access
 from timApp.user.userutils import get_anon_group_id
 from timApp.user.userutils import grant_access
 from timApp.util.utils import get_current_time
@@ -45,7 +46,7 @@ class UserTest(TimDbTest):
         self.assertFalse(user.has_teacher_access(test_block))
         self.assertFalse(user.has_manage_access(test_block))
         self.assertFalse(user.has_seeanswers_access(test_block))
-        timdb.users.remove_access(gid3, test_block_id, 'view')
+        remove_access(gid3, test_block_id, 'view')
         db.session.commit()
         self.assertFalse(user.has_view_access(test_block))
         grant_access(anonymous_usergroup_id, test_block_id, 'view')
@@ -54,7 +55,7 @@ class UserTest(TimDbTest):
         self.assertFalse(user.has_teacher_access(test_block))
         self.assertFalse(user.has_manage_access(test_block))
         self.assertFalse(user.has_seeanswers_access(test_block))
-        timdb.users.remove_access(anonymous_usergroup_id, test_block_id, 'view')
+        remove_access(anonymous_usergroup_id, test_block_id, 'view')
         db.session.commit()
         self.assertFalse(user.has_view_access(test_block))
 
@@ -66,7 +67,7 @@ class UserTest(TimDbTest):
         self.assertFalse(user.has_teacher_access(test_block))
         self.assertFalse(user.has_manage_access(test_block))
         self.assertFalse(user.has_seeanswers_access(test_block))
-        timdb.users.remove_access(gid3, test_block_id, 'edit')
+        remove_access(gid3, test_block_id, 'edit')
         db.session.commit()
         self.assertFalse(user.has_edit_access(test_block))
         self.assertFalse(user.has_view_access(test_block))
@@ -76,7 +77,7 @@ class UserTest(TimDbTest):
         self.assertFalse(user.has_teacher_access(test_block))
         self.assertFalse(user.has_manage_access(test_block))
         self.assertFalse(user.has_seeanswers_access(test_block))
-        timdb.users.remove_access(anonymous_usergroup_id, test_block_id, 'edit')
+        remove_access(anonymous_usergroup_id, test_block_id, 'edit')
         db.session.commit()
         self.assertFalse(user.has_edit_access(test_block))
         self.assertFalse(user.has_view_access(test_block))
@@ -89,7 +90,7 @@ class UserTest(TimDbTest):
         self.assertTrue(user.has_view_access(test_block))
         self.assertTrue(user.has_teacher_access(test_block))
         self.assertTrue(user.has_seeanswers_access(test_block))
-        timdb.users.remove_access(gid3, test_block_id, 'manage')
+        remove_access(gid3, test_block_id, 'manage')
         db.session.commit()
         self.assertFalse(user.has_manage_access(test_block))
         self.assertFalse(user.has_edit_access(test_block))
@@ -102,7 +103,7 @@ class UserTest(TimDbTest):
         self.assertTrue(user.has_view_access(test_block))
         self.assertTrue(user.has_teacher_access(test_block))
         self.assertTrue(user.has_seeanswers_access(test_block))
-        timdb.users.remove_access(anonymous_usergroup_id, test_block_id, 'manage')
+        remove_access(anonymous_usergroup_id, test_block_id, 'manage')
         db.session.commit()
         self.assertFalse(user.has_manage_access(test_block))
         self.assertFalse(user.has_edit_access(test_block))
@@ -118,7 +119,7 @@ class UserTest(TimDbTest):
         self.assertTrue(user.has_view_access(test_block))
         self.assertTrue(user.has_teacher_access(test_block))
         self.assertTrue(user.has_seeanswers_access(test_block))
-        timdb.users.remove_access(gid3, test_block_id, 'teacher')
+        remove_access(gid3, test_block_id, 'teacher')
         db.session.commit()
         self.assertFalse(user.has_manage_access(test_block))
         self.assertFalse(user.has_edit_access(test_block))
@@ -131,7 +132,7 @@ class UserTest(TimDbTest):
         self.assertTrue(user.has_view_access(test_block))
         self.assertTrue(user.has_teacher_access(test_block))
         self.assertTrue(user.has_seeanswers_access(test_block))
-        timdb.users.remove_access(anonymous_usergroup_id, test_block_id, 'teacher')
+        remove_access(anonymous_usergroup_id, test_block_id, 'teacher')
         db.session.commit()
         self.assertFalse(user.has_manage_access(test_block))
         self.assertFalse(user.has_edit_access(test_block))
@@ -146,7 +147,7 @@ class UserTest(TimDbTest):
         self.assertTrue(user.has_view_access(test_block))
         self.assertFalse(user.has_teacher_access(test_block))
         self.assertTrue(user.has_seeanswers_access(test_block))
-        timdb.users.remove_access(gid3, test_block_id, 'see answers')
+        remove_access(gid3, test_block_id, 'see answers')
         db.session.commit()
         self.assertFalse(user.has_manage_access(test_block))
         self.assertFalse(user.has_edit_access(test_block))
@@ -159,7 +160,7 @@ class UserTest(TimDbTest):
         self.assertTrue(user.has_view_access(test_block))
         self.assertFalse(user.has_teacher_access(test_block))
         self.assertTrue(user.has_seeanswers_access(test_block))
-        timdb.users.remove_access(anonymous_usergroup_id, test_block_id, 'see answers')
+        remove_access(anonymous_usergroup_id, test_block_id, 'see answers')
         db.session.commit()
         self.assertFalse(user.has_manage_access(test_block))
         self.assertFalse(user.has_edit_access(test_block))
@@ -188,23 +189,23 @@ class UserTest(TimDbTest):
         grant_access(self.get_test_user_1_group_id(), b, v,
                      accessible_from=get_current_time() + timedelta(days=1))
         self.assertFalse(user.has_view_access(block))
-        db.users.remove_access(self.get_test_user_1_group_id(), b, v)
+        remove_access(self.get_test_user_1_group_id(), b, v)
 
         ba = grant_access(self.get_test_user_1_group_id(), b, v,
                           accessible_from=get_current_time() - timedelta(days=1))
         self.assertTrue(user.has_view_access(block))
-        db.users.remove_access(self.get_test_user_1_group_id(), b, v)
+        remove_access(self.get_test_user_1_group_id(), b, v)
 
         grant_access(self.get_test_user_1_group_id(), b, v,
                      accessible_from=get_current_time() - timedelta(days=1),
                      accessible_to=get_current_time() - timedelta(seconds=1))
         self.assertFalse(user.has_view_access(block))
-        db.users.remove_access(self.get_test_user_1_group_id(), b, v)
+        remove_access(self.get_test_user_1_group_id(), b, v)
 
         grant_access(self.get_test_user_1_group_id(), b, v,
                      duration=timedelta(days=1))
         self.assertFalse(user.has_view_access(block))
-        db.users.remove_access(self.get_test_user_1_group_id(), b, v)
+        remove_access(self.get_test_user_1_group_id(), b, v)
 
 
 if __name__ == '__main__':

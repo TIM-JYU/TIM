@@ -87,9 +87,9 @@ def find_task_ids(
                     continue
                 task_ids.append(tid)
         elif block.get_attr('defaultplugin'):
-            for task_id, _, _, _, _ in find_inline_plugins(block, block.doc.get_settings().get_macroinfo()):
+            for task_id, _, _, _ in find_inline_plugins(block, block.doc.get_settings().get_macroinfo()):
                 try:
-                    task_id.validate()
+                    task_id = task_id.validate()
                 except PluginException:
                     continue
                 plugin_count += 1
@@ -224,15 +224,16 @@ class PluginPlacement:
                         )
         else:
             md = None
-            for task_id, p_yaml, p_range, plugin_type, md in find_inline_plugins(block, macroinfo):
-                plugin_type = plugin_type or defaultplugin
-                if not check_task_access(errs, p_range, plugin_type, task_id):
-                    continue
+            for task_id, p_yaml, p_range, md in find_inline_plugins(block, macroinfo):
+                plugin_type = ''
                 try:
-                    task_id.validate()
+                    task_id = task_id.validate()
+                    plugin_type = task_id.plugin_type or defaultplugin
                     y = load_markup_from_yaml(finalize_inline_yaml(p_yaml), settings.global_plugin_attrs(), plugin_type)
                 except PluginException as e:
                     errs[p_range] = str(e), plugin_type
+                    continue
+                if not check_task_access(errs, p_range, plugin_type, task_id):
                     continue
                 plug = InlinePlugin(
                     task_id=task_id,

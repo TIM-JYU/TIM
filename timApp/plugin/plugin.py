@@ -17,7 +17,7 @@ from timApp.document.yamlblock import strip_code_block, YamlBlock, merge
 from timApp.markdown.markdownconverter import expand_macros
 from timApp.plugin.pluginOutputFormat import PluginOutputFormat
 from timApp.plugin.pluginexception import PluginException
-from timApp.plugin.taskid import TaskId, UnvalidatedTaskId, MaybeUnvalidatedTaskId
+from timApp.plugin.taskid import TaskId, UnvalidatedTaskId, TaskIdAccess
 from timApp.printing.printsettings import PrintFormat
 from timApp.timdb.exceptions import TimDbException
 from timApp.user.user import User
@@ -117,6 +117,8 @@ class Plugin:
             # TODO check if par can be None here
             self.task_id.update_doc_id_from_block(par)
             self.task_id.maybe_set_hint(par.get_id())
+            if par.get_attr('readonly') == 'view' and not self.task_id.access_specifier:
+                self.task_id.access_specifier = TaskIdAccess.ReadOnly
         assert isinstance(values, dict)
         self.values = values
         self.type = plugin_type
@@ -268,7 +270,12 @@ class Plugin:
         else:
             state = None
             info = None
+        access = {}
+        if self.task_id and self.task_id.access_specifier == TaskIdAccess.ReadOnly and \
+                options.user and not options.user.has_teacher_access(self.par.doc.get_docinfo()):
+            access = {'access': self.task_id.access_specifier.value}
         return {"markup": self.values,
+                **access,
                 "state": state,
                 "taskID": self.task_id.doc_task if self.task_id else self.fake_task_id,
                 "taskIDExt": self.task_id.extended_or_doc_task if self.task_id else self.fake_task_id,
@@ -469,34 +476,18 @@ def parse_plugin_values(par: DocParagraph,
 
 
 def find_inline_plugins(block: DocParagraph, macroinfo: MacroInfo) -> Generator[
-    Tuple[MaybeUnvalidatedTaskId, Optional[str], Range, Optional[str], str], None, None]:
+    Tuple[UnvalidatedTaskId, Optional[str], Range, str], None, None]:
     md = block.get_expanded_markdown(macroinfo=macroinfo)
 
     # "}" not allowed in inlineplugins for now
     # TODO make task id optional
-    matches: List[Match] = re.finditer(r'{#((\d+)\.)?([a-zA-Z0-9_-]+)(\.([a-z]+))?(:([a-zA-Z]+))?([ \n][^}]+)?}', md)
+    matches: List[Match] = re.finditer(r'{#([^ }]+)([ \n][^}]+)?}', md)
     for m in matches:
-        task_doc = m.group(2)
-        task_name = m.group(3)
-        field_access = m.group(5)
-        try:
-            task_id = TaskId(
-                doc_id=int(task_doc) if task_doc else None,
-                task_name=task_name,
-                block_id_hint=None,
-                field=field_access,
-            )
-        except PluginException:
-            task_id = UnvalidatedTaskId(
-                doc_id=int(task_doc) if task_doc else None,
-                task_name=task_name,
-                block_id_hint=None,
-                field=field_access,
-            )
-        plugin_type = m.group(7)
-        p_yaml = m.group(8)
+        task_str = m.group(1)
+        task_id = UnvalidatedTaskId(task_str)
+        p_yaml = m.group(2)
         p_range = (m.start(), m.end())
-        yield task_id, p_yaml, p_range, plugin_type, md
+        yield task_id, p_yaml, p_range, md
 
 
 def maybe_get_plugin_from_par(p: DocParagraph, task_id: TaskId, u: User) -> Optional[Plugin]:
@@ -512,12 +503,12 @@ def maybe_get_plugin_from_par(p: DocParagraph, task_id: TaskId, u: User) -> Opti
     def_plug = p.get_attr('defaultplugin')
     if def_plug:
         settings = p.doc.get_settings()
-        for p_task_id, p_yaml, p_range, plugin_type, md in find_inline_plugins(block=p,
-                                                                               macroinfo=settings.get_macroinfo(user=u)):
-            p_task_id.validate()
+        for p_task_id, p_yaml, p_range, md in find_inline_plugins(block=p,
+                                                                  macroinfo=settings.get_macroinfo(user=u)):
+            p_task_id = p_task_id.validate()
             if p_task_id.task_name != task_id.task_name:
                 continue
-            plugin_type = plugin_type or def_plug
+            plugin_type = p_task_id.plugin_type or def_plug
             y = load_markup_from_yaml(finalize_inline_yaml(p_yaml), settings.global_plugin_attrs(), plugin_type)
             return InlinePlugin(
                 task_id=p_task_id,

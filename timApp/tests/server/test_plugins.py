@@ -67,8 +67,9 @@ class PluginTest(TimRouteTest):
 
         wrongname = 'mmcqexamplez'
         self.post_answer(plugin_type, str(doc.id) + '.' + wrongname, [True, False, False],
-                         expect_status=200,  # TODO
-                         expect_content=PLUGIN_NOT_EXIST_ERROR)
+                         expect_status=400,
+                         json_key='error',
+                         expect_content='Task not found in the document: mmcqexamplez')
 
         doc.document.set_settings({'global_plugin_attrs': {'all': {'answerLimit': 2}}})
         resp = self.post_answer(plugin_type, task_id, [True, True, False])
@@ -218,6 +219,15 @@ class PluginTest(TimRouteTest):
 
     def exclude_answered_on_id(self, answer_list):
         return [{k: v for k, v in ans.items() if k not in ('answered_on', 'id')} for ans in answer_list]
+
+    def get_state(self, aid: int, **kwargs):
+        self.get('/getState',
+                 query_string={
+                     'user_id': self.current_user_id(),
+                     'answer_id': aid,
+                 },
+                 **kwargs,
+                 )
 
     def test_idless_plugin(self):
         self.login_test1()
@@ -794,7 +804,7 @@ choices:
         r = self.get(d.url, as_tree=True)
         self.assert_content(r, [
             'Plugin mmcq error: Invalid field access: 1',
-            'Plugin pali error: Task name cannot be only a number.'
+            'Plugin error: Task name cannot be only a number.'
         ])
 
     def test_plugin_in_preamble(self):
@@ -868,8 +878,9 @@ choices:
         d.document.insert_preamble_pars()
         # The plugin is a reference, so it exists only in the original document.
         self.post_answer(plug.type, f'{d.id}.t', [True],
-                         expect_status=200,  # TODO
-                         expect_content=PLUGIN_NOT_EXIST_ERROR,
+                         expect_status=400,
+                         json_key='error',
+                         expect_content='Plugin not found',
                          )
 
         resp = self.post_answer(plug.type, plug.task_id.extended, [True],
@@ -1215,7 +1226,9 @@ Hi {#t3} $x$
             plugin_type='pali',
             task_id=f'{d.id}.t5',
             user_input={'userword': 'aaaaaa'},
-            expect_content={},
+            expect_status=400,
+            json_key='error',
+            expect_content='Task not found in the document: t5',
         )
 
     def create_plugin_json(self, d: DocInfo,
@@ -1245,8 +1258,8 @@ Hi {#t3} $x$
             "review": False,
             "targetFormat": "latex",
             "taskIDExt": f"{d.id}.{task_name}.{par_id}" if par_id else basic_task_id,
-            "user_id": "testuser1",
-            "userPrint": False
+            "user_id": self.current_user.name,
+            "userPrint": False,
         }
         return expected_json
 
@@ -1460,3 +1473,38 @@ a {#x initword: } b
                                     info={'current_user_id': 'testuser1', 'earlier_answers': 1,
                                           'look_answer': False,
                                           'max_answers': None, 'user_id': 'testuser1', 'valid': True}, ))
+
+    def test_readonly_specifier(self):
+        for md in ["""
+#- {plugin=pali #t::readonly id=SSYigUyqdb7p}
+        """, """#- {defaultplugin=pali readonly=view id=SSYigUyqdb7p}\n{#t}"""
+                   ]:
+            self.login_test1()
+            d = self.create_doc(initial_par=md)
+            self.post_answer('pali', f'{d.id}.t', user_input={'userword': '2'})
+            self.post_answer('pali', f'{d.id}.t::readonly', user_input={'userword': '3'})
+            self.post_answer('pali', f'{d.id}.t::readonlyz', user_input={'userword': '3'}, expect_status=400)
+            grant_view_access(self.get_test_user_2_group_id(), d.id)
+
+            self.login_test2()
+            self.post_answer(
+                'pali', f'{d.id}.t', user_input={'userword': '2'},
+                expect_status=403,
+                json_key='error',
+                expect_content='This task/field is readonly and thus only writable for teachers.',
+            )
+            self.post_answer('pali', f'{d.id}.t::readonly', user_input={'userword': '3'}, expect_status=403)
+            r = self.get(d.url, as_tree=True)
+            self.assert_plugin_json(
+                r.cssselect('.parContent pali-runner')[0],
+                self.create_plugin_json(d, 't', toplevel={'access': 'readonly'}, par_id='SSYigUyqdb7p',))
+            grant_access(self.get_test_user_2_group_id(), d.id, 'teacher')
+            r = self.get(d.url, as_tree=True)
+            self.assert_plugin_json(
+                r.cssselect('.parContent pali-runner')[0],
+                self.create_plugin_json(d, 't', par_id='SSYigUyqdb7p', ))
+            r = self.post_answer('pali', f'{d.id}.t', user_input={'userword': '2'})
+            self.post_answer('pali', f'{d.id}.t::readonly', user_input={'userword': '3'})
+            self.test_user_2.remove_access(d.id, 'teacher')
+            db.session.commit()
+            self.get_state(r['savedNew'])

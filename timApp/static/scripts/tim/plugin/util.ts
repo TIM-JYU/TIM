@@ -30,6 +30,22 @@ export const GenericPluginMarkup = t.partial({
     stem: nullable(t.string),
 });
 
+export const GenericPluginTopLevelFields = t.intersection([
+    t.partial({
+        access: t.keyof({
+            readonly: null,
+            readwrite: null,
+        }),
+    }),
+    t.type({
+        // TODO fill these
+    }),
+]);
+
+export interface IGenericPluginTopLevelFields<MarkupType> extends t.TypeOf<typeof GenericPluginTopLevelFields> {
+    markup: MarkupType;
+}
+
 export interface IGenericPluginMarkup extends t.TypeOf<typeof GenericPluginMarkup> {
     // should be empty
 }
@@ -139,7 +155,7 @@ export class PluginMeta {
  * All properties or fields having a one-time binding in template should eventually return a non-undefined value.
  * That's why there are "|| null"s in several places.
  */
-export abstract class PluginBase<MarkupType extends IGenericPluginMarkup, A extends {markup: MarkupType}, T extends Type<A>> implements IController {
+export abstract class PluginBase<MarkupType extends IGenericPluginMarkup, A extends IGenericPluginTopLevelFields<MarkupType>, T extends Type<A>> implements IController {
     private static $inject = ["$scope", "$element"];
 
     buttonText() {
@@ -160,6 +176,13 @@ export abstract class PluginBase<MarkupType extends IGenericPluginMarkup, A exte
 
     get stem() {
         return this.attrs.stem || null;
+    }
+
+    /**
+     * Returns if this plugin is readonly for the current user.
+     */
+    get readonly(): boolean {
+        return this.attrsall.access === "readonly";
     }
 
     // Parsed form of json binding or default value if json was not valid.
