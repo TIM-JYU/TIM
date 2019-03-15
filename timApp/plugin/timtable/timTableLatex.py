@@ -466,11 +466,15 @@ class HorizontalBorder:
 
 def estimate_cell_width(cell):
     """
-    Give estimation of cell width based on content.
+    Give estimation of cell width based on content and font size.
     :param cell: Cell to estimate.
     :return: Width of cell.
     """
-    return len(cell.content) * float(cell.font_size) / 2
+    try:
+        return len(cell.content) * float(cell.font_size) / 2
+    except (TypeError, ValueError):
+        # If for some reason font size is not a number, use default.
+        return len(cell.content) * default_font_size / 2
 
 
 def estimate_cell_height(cell, width_constraint):
