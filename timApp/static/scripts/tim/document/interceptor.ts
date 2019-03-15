@@ -26,7 +26,7 @@ timApp.config([() => {
                         const taskName = parts[1];
                         const taskId = docId + "." + taskName;
                         if (taskName !== "") {
-                            const ab = angular.element("answerbrowser[task-id='" + taskId + "']");
+                            const ab = angular.element(`tim-plugin-loader[task-id='${taskId}'] answerbrowser`);
                             if (ab.isolateScope()) {
                                 const browserScope = ab.isolateScope<any>();
                                 angular.extend(config.data, {abData: browserScope.$ctrl.getBrowserData()});
