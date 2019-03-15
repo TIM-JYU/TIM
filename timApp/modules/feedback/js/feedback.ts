@@ -1,7 +1,7 @@
 /**
  * Defines the client-side implementation of a feedback-plugin.
  */
-import angular, {INgModelOptions} from "angular";
+import angular from "angular";
 import * as t from "io-ts";
 import {ITimComponent, ViewCtrl} from "tim/document/viewctrl";
 import {GenericPluginMarkup, nullable, PluginBase, withDefault} from "tim/plugin/util";
@@ -12,8 +12,8 @@ const feedbackApp = angular.module("feedbackApp", ["ngSanitize"]);
 export const moduleDefs = [feedbackApp];
 
 const MatchElement = t.type({
-    index: t.Integer,
     answer: t.string,
+    index: t.Integer,
 });
 
 interface MatchElementT extends t.TypeOf<typeof MatchElement> {
@@ -22,13 +22,12 @@ interface MatchElementT extends t.TypeOf<typeof MatchElement> {
 
 // type MatchElementT = t.TypeOf<typeof MatchElement>;
 
-const MatchelementArray = t.array(MatchElement);
+const MatchElementArray = t.array(MatchElement);
 
 const Choice = t.type({
-    match: t.union ([t.array(t.string),MatchelementArray]),
-    levels:t.array(t.string)
+    levels:t.array(t.string),
+    match: t.union ([t.array(t.string), MatchElementArray]),
 });
-
 
 const QuestionItem = t.type({
     pluginNames: t.array(t.string),
@@ -38,8 +37,6 @@ const QuestionItem = t.type({
     correctAnswerFeedback: t.string,
     choices: t.array(Choice),
 });
-
-
 
 const FeedbackMarkup = t.intersection([
     t.partial({
@@ -60,7 +57,7 @@ const FeedbackMarkup = t.intersection([
         // all withDefaults should come here; NOT in t.partial
         autoupdate: withDefault(t.number, 500),
         cols: withDefault(t.number, 20),
-        //questionItems: t.array(QuestionItem),
+        // questionItems: t.array(QuestionItem),
     }),
 ]);
 const FeedbackAll = t.intersection([
@@ -194,13 +191,16 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
             if (isCorrect) {
                 this.feedback = this.attrs.questionItems[this.index].correctAnswerFeedback;
                 this.feedback = this.feedback.replace("[answer]", this.userAnswer);
-            }
-            else {
+            } else {
                 const matchIndex = this.compareChoices(this.index, selections);
-                console.log(this.attrs.questionItems[this.index].choices[matchIndex]);
-                console.log(matchIndex);
-                this.feedback = this.attrs.questionItems[this.index].choices[matchIndex].levels[this.currentFeedbackLevel!-1];
-                this.feedback = this.feedback.replace("[answer]", this.userAnswer);
+                if (matchIndex === -1) {
+                    this.feedback = "You have no choices, got no matches or using match objects";
+                } else {
+                    // TODO: Stop when there are no levels or maximum feedback level reached.
+                    this.feedback = this.attrs.questionItems[this.index].choices[matchIndex].
+                        levels[this.currentFeedbackLevel! - 1];
+                    this.feedback = this.feedback.replace("[answer]", this.userAnswer);
+                }
             }
         }
     }
@@ -229,14 +229,15 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
 
         for (let i = 0; i < choices.length; i++) {
             const match = choices[i].match;
-            if (!MatchelementArray.is(match)) {
+            if (!MatchElementArray.is(match)) {
                 if (this.checkMatchStringArray(match, answer)) {
                     return i;
                 }
             }
             // Oliotaulukon tapauksessa
             else {
-                this.checkMatchObjectArray(answer, match)
+                this.checkMatchObjectArray(answer, match);
+                return -1;
             }
         }
         return -1;
@@ -267,8 +268,8 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
      */
     getAnswerFromPlugin(): string[] {
         if (this.attrs.questionItems) {
-            const plugins = this.attrs.questionItems[0].pluginNames;
-            const selections: string[] = new Array<string>(plugins.length);
+            const plugins = this.attrs.questionItems[this.index].pluginNames;
+            const selections: string[] = [];
             const timComponent = this.vctrl.getTimComponentByName(plugins[0]);
 
             if (timComponent) {
@@ -277,7 +278,6 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
                 const nodes = content[0].childNodes;
                 // console.log(nodes);
                 let answer = "";
-                let i = 0;
 
                 for (let n in nodes) {
                     let node = nodes[n];
@@ -288,12 +288,16 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
                     }
                     if (node.nodeName === "TIM-PLUGIN-LOADER") {
                         // Makeshift way to go through all the plugins in a paragraph
-                        let plugin = this.vctrl.getTimComponentByName(plugins[i]);
-                        if (plugin) {
-                            let content = plugin.getContent().trim();
-                            selections[i] = content;
-                            answer = answer + content;
-                            i++;
+                        if (node instanceof Element) {
+                            let name = node!.getAttribute("task-id")!.split(".")[1];
+                            if (name) {
+                                let plugin = this.vctrl.getTimComponentByName(name);
+                                if (plugin) {
+                                    let content = plugin.getContent().trim();
+                                    selections.push(content);
+                                    answer = answer + content;
+                                }
+                            }
                         }
                     }
                 }
