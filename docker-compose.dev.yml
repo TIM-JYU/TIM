@@ -44,7 +44,7 @@ services:
   # build:
   #  context: ./timApp/modules/cs
   #  dockerfile: DockerfileS
-  command: ${SAVEAREA_DEV_COMMAND:-/usr/sbin/sshd -D}
+  command: ${NUMERICFIELD_DEV_COMMAND:-/usr/sbin/sshd -D}
   ports:
    - "49989:22"
  omaplugin:
