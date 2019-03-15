@@ -351,6 +351,7 @@ def pluginify(doc: Document,
         user=user,
         review=review,
         wraptype=pluginwrap,
+        current_user=get_current_user_object(),
     )
 
     if load_states and custom_answer is None and user is not None:

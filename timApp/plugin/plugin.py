@@ -57,6 +57,7 @@ class PluginRenderOptions(NamedTuple):
     output_format: PluginOutputFormat
     review: bool
     wraptype: PluginWrap
+    current_user: User
 
     @property
     def is_html(self):
@@ -272,7 +273,7 @@ class Plugin:
             info = None
         access = {}
         if self.task_id and self.task_id.access_specifier == TaskIdAccess.ReadOnly and \
-                options.user and not options.user.has_teacher_access(self.par.doc.get_docinfo()):
+                not options.current_user.has_teacher_access(self.par.doc.get_docinfo()):
             access = {'access': self.task_id.access_specifier.value}
         return {"markup": self.values,
                 **access,
