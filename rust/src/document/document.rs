@@ -63,11 +63,11 @@ pub struct DocumentStore {
     pub block_lists: HashMap<DocId, BlockList>,
 }
 
-fn get_area<T>(result: &mut Vec<T>, pars: &mut impl Iterator<Item = T>, area_name: &str)
+fn get_area<T>(result: &mut Vec<T>, blocks: &mut impl Iterator<Item = T>, area_name: &str)
 where
     T: AttributeContainer,
 {
-    for p in pars {
+    for p in blocks {
         if !p
             .get_attr("area_end")
             .map_or(true, |name| name != area_name)
@@ -102,11 +102,11 @@ impl DocumentStore {
 
     pub fn load_area(&mut self, id: DocId, area_name: &str) -> Result<Vec<DocBlock>, Error> {
         let doc = self.load_document(id)?;
-        let mut pars = Vec::new();
+        let mut blocks = Vec::new();
         get_area(
-            &mut pars,
+            &mut blocks,
             &mut doc
-                .pars
+                .blocks
                 .iter()
                 .skip_while(|p| {
                     p.attrs
@@ -117,7 +117,7 @@ impl DocumentStore {
                 .cloned(),
             area_name,
         );
-        Ok(pars)
+        Ok(blocks)
     }
 
     pub fn new() -> Self {
@@ -142,14 +142,14 @@ impl DocId {
 
 #[derive(Eq, PartialEq, Hash, Clone, Debug)]
 pub enum DocRef {
-    Par(DocId, BlockId),
+    Block(DocId, BlockId),
     Area(DocId, String),
 }
 
 #[derive(Debug)]
 pub struct Document<T = DocBlock> {
     pub id: DocId,
-    pub pars: Vec<T>,
+    pub blocks: Vec<T>,
 }
 
 #[derive(Deserialize, Debug)]
@@ -236,22 +236,22 @@ impl Document {
 
     pub fn load_newest(id: DocId) -> Result<Document, Error> {
         let lines = Self::load_lines(id)?;
-        let pars = lines
+        let blocks = lines
             .entries
             .iter()
             .collect::<Vec<_>>() // TODO indexmap doesn't support rayon yet
             .into_par_iter()
-            .map(|parhash| {
-                let p = DocBlock::from_path(parhash.get_block_path(id));
+            .map(|blockhash| {
+                let p = DocBlock::from_path(blockhash.get_block_path(id));
                 p
             })
             .collect::<Result<_, _>>()?;
-        Ok(Document { id, pars })
+        Ok(Document { id, blocks })
     }
 
     pub fn gen_block_list(&self) -> BlockList {
         BlockList::new(
-            self.pars
+            self.blocks
                 .iter()
                 .map(|p| (p.id.clone(), p.t.clone()))
                 .collect(),
