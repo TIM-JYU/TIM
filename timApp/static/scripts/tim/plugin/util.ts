@@ -202,9 +202,40 @@ export abstract class PluginBase<MarkupType extends IGenericPluginMarkup, A exte
         return this.element[0];
     }
 
+    getGroups(): string[]{
+        let returnList: string[] = [];
+        const parents = this.element.parents('.area'); //Palauttaa vain yhden koska divit ei sisäkkäin?
+        //Parsetaan toistaiseksi manuaalisesti "area area_ulompi area_sisempi"
+        if(parents[0]){
+            let areaList = parents[0].classList;
+            areaList.forEach(
+                function(value){
+                    if(value.match("area_")){
+                        returnList.push(value.replace("area_", ""));
+                    }
+                }
+            )
+        }
+        //console.log(this.attrs.followid + ": " + returnList);
+        return returnList;
+    }
+
+    belongsToGroup(group: string): boolean {
+        return (this.getGroups().includes(group));
+    }
+
+    /**
+     * Returns the name given to the plugin
+     */
+    getName(): string | undefined {
+        const taskId = this.pluginMeta.getTaskId();
+        if (taskId) return taskId.split(".")[1];
+    }
+
     public getPar() {
         return this.element.parents(".par");
     }
+
 }
 
 // from https://github.com/teamdigitale/italia-ts-commons/blob/de4d85a2a1502da54f78aace8c6d7b263803f115/src/types.ts
