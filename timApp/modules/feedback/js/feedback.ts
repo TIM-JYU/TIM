@@ -33,8 +33,7 @@ const Choice = t.type({
 
 const QuestionItem = t.type({
     pluginNames: t.array(t.string),
-    dropdownWords: t.array(t.array(t.string)),
-    dragWords: t.array(t.string),
+    words: t.array(t.array(t.string)),
     correctAnswer: t.array(t.string),
     correctAnswerFeedback: t.string,
     choices: t.array(Choice),
@@ -42,9 +41,6 @@ const QuestionItem = t.type({
 
 const FeedbackMarkup = t.intersection([
     t.partial({
-        inputstem: t.string,
-        followid: t.string,
-        field: t.string,
         feedbackLevel: t.number,
         toNextTaskRule: t.string,
         instructionID: t.string,
@@ -97,7 +93,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
     }
 
     getDefaultMarkup() {
-        return {};
+        return {questionItems: []};
     }
 
     buttonText() {
@@ -169,46 +165,46 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
      * Handles the checking of user's answer's correctness.
      */
     handleAnswer() {
-        if (this.attrs.questionItems) {
-            const selections = this.getAnswerFromPlugin();
-            const isCorrect = this.checkCorrectAnswer(this.index, selections);
-            if (isCorrect) {
-                this.feedback = this.attrs.questionItems[this.index].correctAnswerFeedback;
-                this.feedback = this.feedback.replace(answerPlaceHolder, this.userAnswer);
+        const selections = this.getAnswerFromPlugin();
+        const isCorrect = this.checkCorrectAnswer(this.index, selections);
+        if (isCorrect) {
+            this.feedback = this.attrs.questionItems[this.index].correctAnswerFeedback;
+            this.feedback = this.feedback.replace(answerPlaceHolder, this.userAnswer);
+        } else {
+            const matchIndex = this.compareChoices(this.index, selections);
+            if (matchIndex === -1) {
+                this.feedback = "You have no choices defined, got no matches or using match objects";
             } else {
-                const matchIndex = this.compareChoices(this.index, selections);
-                if (matchIndex === -1) {
-                    this.feedback = "You have no choices, got no matches or using match objects";
-                } else {
-                    const feedbackLevels = this.attrs.questionItems[this.index].choices[matchIndex].levels;
-                    if (feedbackLevels.length > (this.currentFeedbackLevel! - 1)) {
-                        this.feedback = feedbackLevels[feedbackLevels.length - 1];
-                    } else {
-                        this.feedback = feedbackLevels[this.currentFeedbackLevel! - 1];
-                    }
-                    this.feedback = this.feedback.replace(answerPlaceHolder, this.userAnswer);
+                const feedbackLevels = this.attrs.questionItems[this.index].choices[matchIndex].levels;
+                if (this.currentFeedbackLevel > (feedbackLevels.length)) {
+                    this.feedback = feedbackLevels[feedbackLevels.length - 1]
+                        .replace(answerPlaceHolder, this.userAnswer);
+                } else if (this.currentFeedbackLevel < this.feedbackLevel) {
+                    this.feedback = feedbackLevels[this.currentFeedbackLevel - 1]
+                        .replace(answerPlaceHolder, this.userAnswer);
                 }
             }
         }
     }
 
     checkCorrectAnswer(index: number, answer: string[]): boolean {
-        if (this.attrs.questionItems![index].correctAnswer.length === answer.length) {
-            const correct = this.attrs.questionItems![index].correctAnswer;
-            const comparison: string[] = answer.filter(selection => correct.indexOf(selection) < 0);
-            if (comparison.length === 0) {
-                return true;
-            } else {
-                if (this.currentFeedbackLevel < this.feedbackLevel) {
-                    this.currentFeedbackLevel++;
+        const correct = this.attrs.questionItems[index].correctAnswer;
+        if (correct.length === answer.length) {
+            for (let i = 0; i < correct.length; i++) {
+                if (correct[i] !== answer[i]) {
+                    if (this.currentFeedbackLevel < this.feedbackLevel) {
+                        this.currentFeedbackLevel++;
+                    }
+                    return false;
                 }
             }
+            return true;
         }
         return false;
     }
 
     compareChoices(index: number, answer: string[]): number {
-        const choices = this.attrs.questionItems![index].choices;
+        const choices = this.attrs.questionItems[index].choices;
         if (choices.length === 0) {
             return -1;
         }
@@ -222,7 +218,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
             }
             // Oliotaulukon tapauksessa
             else {
-                this.checkMatchObjectArray(answer, match);
+                this.checkMatchObjectArray(match, answer);
                 return -1;
             }
         }
@@ -230,19 +226,27 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
     }
 
     checkMatchStringArray(match: string[], answer: string[]): boolean {
+        if (match[0] === "defaultFeedback") {
+            return true;
+        }
         if (match.length === answer.length) {
-            const comparison: string[] = answer.filter(selection => match.indexOf(selection) < 0);
-            if (comparison.length === 0) {
-                return true;
+            for(let i=0; i < match.length; i++ ) {
+                if(match[i] !== answer[i]) {
+                    return false;
+                }
             }
+            return true;
         }
         return false;
     }
 
-    checkMatchObjectArray(answer: string[], match: MatchElementT[]): number {
+    checkMatchObjectArray(match: MatchElementT[], answer: string[]): number {
         return -1;
     }
 
+    compareAnswers(): boolean {
+        return false;
+    }
 
     /**
      * Gets the user's answer from the visible question item this feedback-plugin is assigned to.
@@ -252,7 +256,6 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
      * @returns(string[]) Returns the user's selections to the question item
      */
     getAnswerFromPlugin(): string[] {
-        if (this.attrs.questionItems) {
             const plugins = this.attrs.questionItems[this.index].pluginNames;
             const selections: string[] = [];
             const timComponent = this.vctrl.getTimComponentByName(plugins[0]);
@@ -289,7 +292,6 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
                 this.userAnswer = answer;
             }
             return selections;
-        }
         return [];
     }
 
@@ -301,40 +303,19 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
      * TODO: drag&drop
      */
     setPluginWords() {
-        if (this.attrs.questionItems) {
             const items = this.attrs.questionItems;
             for (const item of items) {
                 let i = 0;
                 for (const plugin of item.pluginNames) {
                     const timComponent = this.vctrl.getTimComponentByName(plugin);
                     if (timComponent && timComponent.setPluginWords) {
-                        timComponent.setPluginWords(item.dropdownWords[i]);
+                        timComponent.setPluginWords(item.words[i]);
                         i++;
                     } else {
-                        this.error = "Component not found or no setPluginWords-method"
+                        this.error = "Component not found or no setPluginWords-method";
                     }
                 }
             }
-        }
-    }
-
-    getGroups(): string[] {
-        return [""];
-    }
-
-    getName(): string {
-        if (this.attrs.followid) {
-            return this.attrs.followid;
-        }
-        const taskId = this.pluginMeta.getTaskId();
-        if (taskId) {
-            return taskId.split(".")[1];
-        }
-        return "";
-    }
-
-    belongsToGroup(group: string): boolean {
-        return false;
     }
 
     protected getAttributeType() {
@@ -355,7 +336,7 @@ feedbackApp.component("feedbackRunner", {
     <tim-markup-error ng-if="::$ctrl.markupError" data="::$ctrl.markupError"></tim-markup-error>
     <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
     <p ng-if="::$ctrl.stem">{{::$ctrl.stem}}</p>
-    <div class="form-inline"><label>{{::$ctrl.inputstem}} <span>
+    <div class="form-inline"><label><span>
         {{$ctrl.feedback}}</span></label>
     </div>
     <button class="timButton"

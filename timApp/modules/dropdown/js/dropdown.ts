@@ -13,9 +13,7 @@ export const moduleDefs = [dropdownApp];
 
 const DropdownMarkup = t.intersection([
     t.partial({
-        inputstem: t.string,
         words: t.array(t.string),
-        followid: t.string,
     }),
     GenericPluginMarkup,
     t.type({
@@ -34,7 +32,7 @@ const DropdownAll = t.intersection([
 
 class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.TypeOf<typeof DropdownAll>, typeof DropdownAll> implements ITimComponent {
     private error?: string;
-    private wordlist?: string[];
+    private wordList?: string[];
     private selectedWord?: string;
     private vctrl!: ViewCtrl;
 
@@ -44,7 +42,7 @@ class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.T
 
     $onInit() {
         super.$onInit();
-        this.wordlist = this.attrs.words || [];
+        this.wordList = this.attrs.words || [];
         this.addToCtrl();
     }
 
@@ -96,43 +94,12 @@ class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.T
     }
 
     /**
-     *
-     */
-    getGroups(): string[] {
-        return [""];
-    }
-
-    /**
-     * Returns either the followid-attribute or the name given to the plugin
-     */
-    getName(): (string | undefined) {
-        if (this.attrs.followid) {
-            return this.attrs.followid;
-        }
-        const taskId = this.pluginMeta.getTaskId();
-        if (taskId) {
-            return taskId.split(".")[1];
-        }
-    }
-
-    /**
-     *
-     * @param group
-     */
-    belongsToGroup(group: string): boolean {
-        return false;
-    }
-
-    /**
      * Sets the words visible in the plugin
      */
     setPluginWords(words: string[]) {
-        this.wordlist = words;
+        this.wordList = words;
     }
 
-    /**
-     *
-     */
     protected getAttributeType() {
         return DropdownAll;
     }
@@ -151,8 +118,8 @@ dropdownApp.component("dropdownRunner", {
     <tim-markup-error ng-if="::$ctrl.markupError" data="::$ctrl.markupError"></tim-markup-error>
     <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
     <p ng-if="::$ctrl.stem">{{::$ctrl.stem}}</p>
-    <div class="form-inline"><label>{{::$ctrl.inputstem}} <span>
-        <select ng-model="$ctrl.selectedWord" ng-options="item for item in $ctrl.wordlist" ng-change="$ctrl.save()">
+    <div class="form-inline"><label><span>
+        <select ng-model="$ctrl.selectedWord" ng-options="item for item in $ctrl.wordList" ng-change="$ctrl.save()">
         </select>
         </span></label>
     </div>

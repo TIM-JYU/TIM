@@ -32,16 +32,12 @@ class DropdownStateSchema(Schema):
 
 @attr.s(auto_attribs=True)
 class DropdownMarkupModel(GenericMarkupModel):
-    inputstem: Union[str, Missing] = missing
     words: Union[List[str], Missing] = missing
-    followid: Union[str, Missing] = missing
     nosave: Union[bool, Missing] = missing
 
 
 class DropdownMarkupSchema(GenericMarkupSchema):
-    inputstem = fields.Str()
     words = fields.List(fields.Str)
-    followid = fields.String()
     nosave = fields.Bool()
 
     @post_load

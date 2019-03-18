@@ -34,18 +34,12 @@ class FeedbackStateSchema(Schema):
 
 @attr.s(auto_attribs=True)
 class FeedbackMarkupModel(GenericMarkupModel):
-    inputstem: Union[str, Missing] = missing
-    followid: Union[str, Missing] = missing
-    field: Union[str, Missing] = missing
     questionItems: Union[Any, Missing] = missing
     choice: Union[Any, Missing] = missing
     matchElement: Union[Any, Missing] = missing
 
 
 class FeedbackMarkupSchema(GenericMarkupSchema):
-    inputstem = fields.Str()
-    followid = fields.Str()
-    field = fields.Str()
     questionItems = fields.Raw()
     choice= fields.Raw()
     matchElement= fields.Raw()
