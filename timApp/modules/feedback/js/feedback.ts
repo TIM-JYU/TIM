@@ -26,15 +26,16 @@ interface MatchElementT extends t.TypeOf<typeof MatchElement> {
 
 const MatchElementArray = t.array(MatchElement);
 
+let StringArray = t.array(t.string);
 const Choice = t.type({
-    levels: t.array(t.string),
-    match: t.union([t.array(t.string), MatchElementArray]),
+    levels: StringArray,
+    match: t.union([StringArray, MatchElementArray]),
 });
 
 const QuestionItem = t.type({
-    pluginNames: t.array(t.string),
-    words: t.array(t.array(t.string)),
-    correctAnswer: t.array(t.string),
+    pluginNames: StringArray,
+    words: t.array(StringArray),
+    correctAnswer: StringArray,
     correctAnswerFeedback: t.string,
     choices: t.array(Choice),
 });
@@ -211,7 +212,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
 
         for (let i = 0; i < choices.length; i++) {
             const match = choices[i].match;
-            if (!MatchElementArray.is(match)) {
+            if (StringArray.is(match)) {
                 if (this.checkMatchStringArray(match, answer)) {
                     return i;
                 }
@@ -226,7 +227,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
     }
 
     checkMatchStringArray(match: string[], answer: string[]): boolean {
-        if (match[0] === "defaultFeedback") {
+        if (match.length === 0) {
             return true;
         }
         if (match.length === answer.length) {
