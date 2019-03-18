@@ -8,6 +8,7 @@ import {IUser} from "../user/IUser";
 import {$http, $timeout} from "../util/ngimport";
 import {Binding, getURLParameter, markAsUsed, Require, to} from "../util/utils";
 import {showAllAnswers} from "./allAnswersController";
+import {showFeedbackAnswers} from "./feedbackAnswersController";
 import {IRelevanceResponse} from "../item/relevanceEdit";
 
 markAsUsed(allanswersctrl);
@@ -214,9 +215,13 @@ export class UserListController implements IController {
                 { // Feedback report output TODO: Should only be visible if page is a feedback giving test
                     title: "Feedback answer report",
                     action: async ($event: IAngularEvent) => {
-                        // TODO: remove "link" later as just for demo testing
+                        await showFeedbackAnswers({
+                            url: 'http://192.168.99.100/feedback/test/' + this.viewctrl.item.id,
+                            identifier: this.viewctrl.item.id.toString(),
+                            allTasks: true,
+                        });
                         const minne = 'http://192.168.99.100/feedback/test';
-                        window.location.assign(minne);
+                        //window.location.assign(minne);
                         // gets r as result json of said form TODO: form change to csv when csv done
                         // const r = await to($http.get<{'answers0': string,
                         //     'taskids1': string,

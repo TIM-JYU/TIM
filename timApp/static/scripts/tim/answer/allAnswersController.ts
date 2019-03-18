@@ -94,6 +94,7 @@ export class AllAnswersCtrl extends DialogController<{params: IAllAnswersParams}
     }
 }
 
+
 registerDialogComponent("timAllAnswers", AllAnswersCtrl, {templateUrl: "/static/templates/allAnswersOptions.html"});
 
 export function showAllAnswers(p: IAllAnswersParams): IPromise<AllAnswersCtrl["ret"]> {

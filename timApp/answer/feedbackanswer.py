@@ -25,15 +25,15 @@ feedback = Blueprint('feedback',
 
 
 def get_all_feedback_answers(task_ids: List[TaskId],
+                             hide_names: bool,
+                             printname: bool,
                              sort: str,
-                             age: str,
                              period_from: datetime,
                              period_to: datetime) -> str:
     """Gets all answers for "Dynamic Assessment" -typed tasks
     :param task_ids: The ids of the tasks needed in report.
     :param usergroup:
     :param hide_names:
-    :param age:
     :param printname:
     :param sort: The sorting needed in output, ie. 'username'.
     :param print_opt:
@@ -51,20 +51,8 @@ def get_all_feedback_answers(task_ids: List[TaskId],
     # Also joins with user table to get user information
     q = q.join(User, Answer.users)
     # Not clear what this does TODO: figure out and remove if not needed
-    # q = q.options(defaultload(Answer.users).lazyload(User.groups))
+    #q = q.options(defaultload(Answer.users).lazyload(User.groups))
 
-    ''' käytetään myöhemmin jos käytetään 
-    if age == "min":
-        minmax = func.min(Answer.id).label('minmax')
-        counts = func.count(Answer.answered_on).label('count')
-    elif age == "all":
-        minmax = Answer.id.label('minmax')
-        counts = Answer.valid.label('count')
-    else:
-        minmax = func.max(Answer.id).label('minmax')
-        counts = func.count(Answer.answered_on).label('count')
-    '''
-    #minmax = Answer.id.label('minmax')
     counts = Answer.valid.label('count')  # Not really used TODO: check and remove
 
     # Sorts the answers first with user then by time and last by task_id (task_id sort not necessary?)
@@ -77,9 +65,6 @@ def get_all_feedback_answers(task_ids: List[TaskId],
     # q with Answer, User and count data - counts not really used... TODO: remove counts if not needed
     q = q.with_entities(Answer, User, counts)
 
-    # TODO: clean up for loop logic to get wanted answers out in correct format
-    # results list that gets returned
-    results = []
     # makes q query an iterable qq for for-loop
     qq: Iterable[Tuple[Answer, User, int]] = q
 
@@ -92,10 +77,17 @@ def get_all_feedback_answers(task_ids: List[TaskId],
 
     #Initialize stringIO and csv-writer for it
     writerIO = StringIO()
-    writer = csv.writer(writerIO, delimiter = ";", lineterminator = os.linesep)
+    writer = csv.writer(writerIO, delimiter=";", lineterminator=os.linesep)
 
     #First line are the headers
-    writer.writerow(['user', 'result', 'answer', 'feedback','time spent on item','time spent on feedback']);
+    if (printname and not hide_names):
+        writer.writerow(['Full Name','Username', 'Result', 'Answer', 'Feedback', 'Time spent on item', 'Time spent on feedback']);
+    else:
+        writer.writerow(['Username', 'Result', 'Answer', 'Feedback','Time spent on item','Time spent on feedback']);
+
+    #Dictionary and counting for anons
+    anons = {}
+    cnt = 0
 
     #FOR STARTS FROM HERE
     for answer, user, n in qq:  #TODO: resolve .csv and str
@@ -135,17 +127,16 @@ def get_all_feedback_answers(task_ids: List[TaskId],
             results.append(result)
         cnt += 1
         """
-        result = ""
 
         if prev_user == None: prev_user = user
         if prev_ans == None: prev_ans = answer
         if temp_bool:
-            result += f"{prev_user.name};"
-            result += f"{answer.points};"       #Temporary "result", waiting for the feedback plugin
+            if not (prev_user in anons):
+                anons[prev_user] = f"user{cnt}"
+                cnt += 1
+            anonuser = anons[prev_user]
             answer_content = json.loads(prev_ans.content)
-            result += f"{answer_content};"
             feedback_content = json.loads(answer.content)
-            result += f"{feedback_content};"
 
             if pt_dt != None:
                 tasksecs = (prev_ans.answered_on - pt_dt).total_seconds()
@@ -153,12 +144,23 @@ def get_all_feedback_answers(task_ids: List[TaskId],
                 tasksecs = 0.0
 
             fbsecs = (answer.answered_on - prev_ans.answered_on).total_seconds()
-            result += f"{str(math.floor(tasksecs))};"
-            result += f"{str(math.floor(fbsecs))};"
 
-            if exclude_first and pt_dt != None:
-                results.append(result)   #IF-CONDITION temporary for the sake of excluding the first sample item
-                writer.writerow([prev_user.name]
+            if (hide_names):
+                shown_user = anonuser
+            else:
+                shown_user = prev_user.name
+
+            if exclude_first and pt_dt != None:   #IF-CONDITION temporary for the sake of excluding the first sample item
+                if printname and not hide_names:
+                    writer.writerow([shown_user]
+                                + [prev_user.real_name]
+                                + ['WRONG!!!']
+                                + [answer_content]
+                                + [feedback_content]
+                                + [str(math.floor(tasksecs))]
+                                + [str(math.floor(fbsecs))])
+                else:
+                    writer.writerow([shown_user]
                                 + ['WRONG!!!']
                                 + [answer_content]
                                 + [feedback_content]
@@ -181,7 +183,7 @@ def test():
     period2 = datetime.max
 
     # Filtering now works so this will not return any answers
-    answers0 = get_all_feedback_answers([], 'username', "all", period1, period2)
+    answers0 = get_all_feedback_answers([], True, True, 'username', period1, period2)
 
     # For choosing specific tasks for the report a list of tasks is given
     # TODO: check real call to see how task_ids from different pages can be called
@@ -193,11 +195,11 @@ def test():
     taskid5 = TaskId(nro1, "feedback2")
     taskids_test = [taskid1, taskid2, taskid3, taskid4, taskid5]
     ids_as_string1 = task_ids_to_strlist(taskids_test)
-    answers1 = get_all_feedback_answers(taskids_test,
-                                        'username', "all", period1, period2)
+    answers1 = get_all_feedback_answers(taskids_test, False, True,
+                                        'username', period1, period2)
 
     # Testing with taskIds from two documents
-    nro2 = 20
+    nro2 = 22
     taskid21 = TaskId(nro2, "sample_item")
     taskid22 = TaskId(nro2, "item1")
     taskid23 = TaskId(nro2, "feedback1")
@@ -205,8 +207,8 @@ def test():
     taskid25 = TaskId(nro2, "feedback2")
     taskids_test2 = [taskid1, taskid2, taskid3, taskid4, taskid5, taskid21, taskid22, taskid23, taskid24, taskid25]
     ids_as_string2 = task_ids_to_strlist(taskids_test2)
-    answers2 = get_all_feedback_answers(taskids_test2,
-                                        'username', "all", period1, period2)
+    answers2 = get_all_feedback_answers(taskids_test2, True, True,
+                                        'username', period1, period2)
 
     # First returns empty, then from document nro1 and then document nro2 (change above if different)
     return json_response({'answers0': answers0,
