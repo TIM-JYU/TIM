@@ -5,10 +5,10 @@ import {timApp} from "../app";
 import {showCourseListDialog} from "../document/course/courseListDialogCtrl";
 import {ICourseSettings, IItem} from "../item/IItem";
 import {showMessageDialog} from "../ui/dialog";
-import {$http, $window, $localStorage} from "../util/ngimport";
+import {$http, $localStorage, $window} from "../util/ngimport";
 import {to} from "../util/utils";
-import {Users} from "../user/userService";
 import {ngStorage} from "ngstorage";
+import {Users} from "../user/userService";
 
 markAsUsed(createItem);
 
@@ -16,8 +16,8 @@ export class StartCtrl implements IController {
     private creatingNew: boolean;
     private docListOpen: boolean;
     private defaultLanguage: string = "fi"; // Page default language.
-    private language: string = this.defaultLanguage;
-    private bookmarks = {};
+    private language: string = this.defaultLanguage; // Language to use.
+    private bookmarks = {}; // For My courses.
     private storage: ngStorage.StorageService & {languageStorage: null | string};
 
     constructor() {
@@ -32,22 +32,26 @@ export class StartCtrl implements IController {
     }
 
     /**
-     * Picks the page language from url suffix or local storage, otherwise use default.
+     * Pick the page language from urlPathName or localstorage, otherwise use default.
      * Currently supported: fi, en.
      */
     setLanguage() {
-        const urlSuffix: string = window.location.pathname;
-        switch (urlSuffix) {
+        const urlPathName: string = window.location.pathname;
+        switch (urlPathName) {
             case "/fi": {
                 this.language = "fi";
+                // Save to localstorage so the language is remembered when using start page without urlPathName.
+                this.storage.languageStorage = "fi";
                 break;
             }
             case "/en": {
                 this.language = "en";
+                this.storage.languageStorage = "en";
                 break;
             }
+            // For a new language add another case here and button and translations into HTML.
             default: {
-                // Try local storage, otherwise use default.
+                // Try local storage, otherwise use default language.
                 if (this.storage.languageStorage) {
                     this.language = this.storage.languageStorage;
                 } else {
