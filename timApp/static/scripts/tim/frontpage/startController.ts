@@ -188,29 +188,23 @@ timApp.component("timStart", {
                         <div class="col-md-4 col-md-offset-2">
                             <h4>TIM</h4>
                             <ul class="list-unstyled">
-                                <li><a href="/view/tim/TIM-esittely">Introduction</a> <sup>(F)</sup></li>
-                                <li><a href="/view/tim/TIM-ohjeet">User guide</a> <sup>(F)</sup></li>
+                                <li><a href="/view/tim/TIM-esittely">Introduction</a><sup> (F)</sup></li>
+                                <li><a href="/view/tim/TIM-ohjeet">User guide</a><sup> (F)</sup></li>
                             </ul>
                         </div>
                         <div class="col-md-4">
                             <h4>Examples <sup>(F)</sup></h4>
                             <ul class="list-unstyled">
                                 <li><a href="/view/tim/Esimerkkeja-TIMin-mahdollisuuksista">TIM's possibilities</a></li>
-                                <li>
-                                    <a href="/view/tim/Eri-ohjelmointikielia">Programming languages</a>
-                                    <sup ng-if="!$ctrl.isLoggedIn()"> (*)</sup>
-                                </li>
-                                <li>
-                                    <a href="/view/tim/muita-esimerkkeja">Usage in different subjects</a>
-                                    <sup ng-if="!$ctrl.isLoggedIn()"> (*)</sup>
-                                </li>
+                                <li><a ng-if="$ctrl.isLoggedIn()" href="/view/tim/Eri-ohjelmointikielia">
+                                        Programming languages</a></li>
+                                <li><a ng-if="$ctrl.isLoggedIn()" href="/view/tim/muita-esimerkkeja">
+                                        Usage in different subjects</a></li>
                             </ul>
                         </div>
                     </div>
                     <div class="row">
                         <div class="col-md-4 col-md-offset-4 text-muted text-center">
-                            <span ng-if="!$ctrl.isLoggedIn()"><sup>(*)</sup> requires login</span>
-                            <br>
                             <sup>(F)</sup> in Finnish
                         </div>
                     </div>
@@ -227,23 +221,13 @@ timApp.component("timStart", {
                         <div class="col-md-4">
                             <h4>Esimerkkejä</h4>
                             <ul class="list-unstyled">
-                                <li>
-                                    <a href="/view/tim/Esimerkkeja-TIMin-mahdollisuuksista">TIMin mahdollisuuksia</a>
-                                </li>
-                                <li>
-                                    <a href="/view/tim/Eri-ohjelmointikielia">Ohjelmointikieliä</a>
-                                    <sup ng-if="!$ctrl.isLoggedIn()"> (*)</sup>
-                                </li>
-                                <li>
-                                    <a href="/view/tim/muita-esimerkkeja">Käyttö eri oppiaineissa</a>
-                                    <sup ng-if="!$ctrl.isLoggedIn()"> (*)</sup>
-                                </li>
+                                <li><a href="/view/tim/Esimerkkeja-TIMin-mahdollisuuksista">
+                                    TIMin mahdollisuuksia</a></li>
+                                <li><a ng-if="$ctrl.isLoggedIn()" href="/view/tim/Eri-ohjelmointikielia">
+                                    Ohjelmointikieliä</a></li>
+                                <li><a ng-if="$ctrl.isLoggedIn()" href="/view/tim/muita-esimerkkeja">
+                                    Käyttö eri oppiaineissa</a></li>
                             </ul>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-4 col-md-offset-4 text-muted text-center">
-                            <span ng-if="!$ctrl.isLoggedIn()"><sup>(*)</sup>vaatii sisään kirjautumisen</span>
                         </div>
                     </div>
                 </div>
