@@ -1,5 +1,12 @@
-/* Empty for now. */
-.form-control {
-    height: 30px;
-    max-width: 70px;
+.plugintextfield answerbrowser {
+    display: none;
+}
+
+textfield-runner .stem {
+    text-align: center;
+    height: 6px;
+}
+
+.plugintextfield .answerBrowserPlaceholder {
+    display: none;
 }

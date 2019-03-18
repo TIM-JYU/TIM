@@ -1,5 +1,5 @@
 """
-TIM example plugin: a textfieldndrome checker.
+TIM plugin: a textfield
 """
 import re
 import sys
@@ -38,7 +38,6 @@ class TextfieldStateSchema(Schema):
 class TextfieldMarkupModel(GenericMarkupModel):
     points_array: Union[str, Missing] = missing
     inputstem: Union[str, Missing] = missing
-    needed_len: Union[int, Missing] = missing
     initword: Union[str, Missing] = missing
     cols: Union[int, Missing] = missing
     inputplaceholder: Union[str, Missing] = missing

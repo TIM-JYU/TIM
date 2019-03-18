@@ -114,7 +114,7 @@ services:
   restart: unless-stopped
  numericfield:
   image: timimages/tim:${TIM_IMAGE_TAG}
-  # build: ./timApp/modules/numericfield
+  build: ./timApp/modules/numericfield
   volumes:
    - ./timApp/modules/numericfield:/numericfield:ro
    - ./timApp/modules/py:/py:ro
