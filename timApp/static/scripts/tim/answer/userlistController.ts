@@ -221,7 +221,7 @@ export class UserListController implements IController {
                             allTasks: true,
                         });
                         const minne = 'http://192.168.99.100/feedback/test';
-                        //window.location.assign(minne);
+                        window.location.assign(minne);
                         // gets r as result json of said form TODO: form change to csv when csv done
                         // const r = await to($http.get<{'answers0': string,
                         //     'taskids1': string,
