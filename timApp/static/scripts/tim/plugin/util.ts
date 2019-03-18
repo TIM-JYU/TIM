@@ -180,6 +180,7 @@ export abstract class PluginBase<MarkupType extends IGenericPluginMarkup, A exte
     abstract getDefaultMarkup(): Partial<MarkupType>;
 
     $postLink() {
+
     }
 
     $onInit() {

@@ -195,20 +195,15 @@ def answer(args: NumericfieldAnswerModel):
 def reqs():
     templates = ["""
 ``` {#numericfield_1 plugin="numericfield"}
-header: OTSIKKO -TAI- TYHJÄ
-stem: KYSYMYS -TAI- TYHJÄ
-inputstem: VASTAUS -TAI- TYHJÄ
-followid: <!-- SEURANTAID -TAI- TYHJÄ -->
-needed_len: 1 <!-- MINIMIPITUUS, NUMERAALINEN -->
-initnumber: 0 <!-- ALKUARVO, NUMERAALINEN -->
-```""", """
-``` {#numericfield_2 plugin="numericfield"}
-header: OTSIKKO -TAI- TYHJÄ
-stem: KYSYMYS -TAI- TYHJÄ
-inputstem: VASTAUS -TAI- TYHJÄ
-followid: <!-- SEURANTAID -TAI- TYHJÄ -->
-needed_len: 1 <!-- MINIMIPITUUS, NUMERAALINEN -->
-initnumber: 0 <!-- ALKUARVO, NUMERAALINEN -->
+header: #OTSIKKO, TYHJÄ = EI OTSIKKOA
+stem: #KYSYMYS, TYHJÄ = EI KYSYMYSTÄ
+inputstem: #VASTAUS, TYHJÄ = EI VASTAUSTA
+followid: #SEURANTAID, TYHJÄ = EI SEURANTAID:tä
+fields: #KENTTÄVIITTAUKSET, TYHJÄ = EI VIITTAUKSIA
+needed_len: 1 #MINIMIPITUUS, NUMERAALINEN 
+initnumber: #ALKUARVO, TYHJÄ = EI ALKUARVOA
+buttonText: Save #PAINIKKEEN NIMI, TYHJÄ = EI PAINIKETTA
+cols: 1 #KENTÄN KOKO, NUMERAALINEN
 ```"""
 ]
     return jsonify({
@@ -225,11 +220,6 @@ initnumber: 0 <!-- ALKUARVO, NUMERAALINEN -->
                             {
                                 'data': templates[0].strip(),
                                 'text': 'Numeerinen kenttä (koottu tai oma tallennus)',
-                                'expl': 'Luo kenttä jonka syötteet ovat vain numeroita',
-                            },
-                            {
-                                'data': templates[1].strip(),
-                                'text': 'Numeerinen kenttä (laajennettu)',
                                 'expl': 'Luo kenttä jonka syötteet ovat vain numeroita',
                             },
                         ],

@@ -15,11 +15,12 @@ export const moduleDefs = [textfieldApp];
 
 const TextfieldMarkup = t.intersection([
     t.partial({
-        followid: t.string, //maybe not needed
+        followid: t.string,
         inputplaceholder: nullable(t.string),
-        inputstem: t.string,
-        initword: t.string,
+        inputstem: nullable(t.string),
+        initword: nullable(t.string),
         buttonText: nullable(t.string),
+        autosave: t.boolean
     }),
     GenericPluginMarkup,
     t.type({
@@ -60,6 +61,17 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
         }
     }
 
+    /* TOTEUTETAAN NG-BLURILLA?
+    $postLink() {
+        this.element.find("input").on("autosave", () => {});
+    }
+
+    get autoSave() {
+        console.log(this.attrs.autosave);
+        return this.attrs.autosave;
+    }
+    */
+
     getContent(): string {
         return this.userword;
     }
@@ -91,6 +103,7 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
     }
 
     saveText() {
+        if (this.attrs.autosave == false) return;
         this.doSaveText(false);
     }
 
@@ -139,6 +152,8 @@ textfieldApp.component("textfieldRunner", {
         <input type="string"
                class="form-control"
                ng-model="$ctrl.userword"
+               ng-blur="$ctrl.saveText()"
+               ng-keydown="$event.keyCode === 13 && $ctrl.saveText()"
                ng-model-options="::$ctrl.modelOpts"
                ng-change="$ctrl.checkTextfield()"
                ng-trim="false"

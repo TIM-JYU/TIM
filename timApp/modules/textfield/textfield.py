@@ -41,14 +41,20 @@ class TextfieldMarkupModel(GenericMarkupModel):
     initword: Union[str, Missing] = missing
     cols: Union[int, Missing] = missing
     inputplaceholder: Union[str, Missing] = missing
+    followid: Union[str, Missing] = missing
+    autosave: Union[bool, Missing] = missing
 
 
 class TextfieldMarkupSchema(GenericMarkupSchema):
     points_array = fields.List(fields.List(fields.Number()))
-    inputstem = fields.String()
-    initword = fields.String()
+    header = fields.String(allow_none=True)
+    inputstem = fields.String(allow_none=True)
+    stem = fields.String(allow_none=True)
+    initword = fields.String(allow_none=True)
     cols = fields.Int()
     inputplaceholder: Union[str, Missing] = missing
+    followid = fields.String(allow_none=True)
+    autosave = fields.Boolean()
 
     @validates('points_array')
     def validate_points_array(self, value):
@@ -187,16 +193,24 @@ def answer(args: TextfieldAnswerModel):
 @app.route('/reqs')
 def reqs():
     templates = ["""
-``` {#textfield_1 plugin="textfield"}
-header: #OTSIKKO -TAI- TYHJÄ
-stem: #KYSYMYS -TAI- TYHJÄ
+``` {#textfield_normal plugin="textfield"}
+needed_len: 1 #MINIMIPITUUS, NUMERAALINEN
+cols: 1 #KENTÄN KOKO, NUMERAALINEN
+autosave=TRUE #AUTOSAVE
+```""", """
+``` {#textfield_extended plugin="textfield"}
+header: #OTSIKKO, TYHJÄ = EI OTSIKKOA
+stem: #KYSYMYS, TYHJÄ = EI KYSYMYSTÄ
 inputstem: #VASTAUS, TYHJÄ = EI VASTAUSTA
 followid: #SEURANTAID, TYHJÄ = EI SEURANTAID:tä
 fields: #KENTTÄVIITTAUKSET, TYHJÄ = EI VIITTAUKSIA
 needed_len: 1 #MINIMIPITUUS, NUMERAALINEN 
 initword: #ALKUARVO, TYHJÄ = EI ALKUARVOA
-buttonText: Save #TYHJÄ = EI NAPPIA
+buttonText: Save #PAINIKKEEN NIMI, TYHJÄ = EI PAINIKETTA
+cols: 1 #KENTÄN KOKO, NUMERAALINEN
+autosave=FALSE #AUTOSAVE
 ```"""
+
                  ]
     return jsonify({
         "js": ["js/build/textfield.js"],
@@ -212,6 +226,11 @@ buttonText: Save #TYHJÄ = EI NAPPIA
                             {
                                 'data': templates[0].strip(),
                                 'text': 'Tekstikenttä (koottu tai oma tallennus)',
+                                'expl': 'Luo kenttä jonka syötteet ovat tekstiä',
+                            },
+                            {
+                                'data': templates[1].strip(),
+                                'text': 'Tekstikenttä (automaattinen tallennus)',
                                 'expl': 'Luo kenttä jonka syötteet ovat tekstiä',
                             },
                         ],
