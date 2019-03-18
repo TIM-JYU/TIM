@@ -6,7 +6,8 @@ import * as t from "io-ts";
 import {ITimComponent, ViewCtrl} from "tim/document/viewctrl";
 import {GenericPluginMarkup, nullable, PluginBase, withDefault} from "tim/plugin/util";
 import {$http} from "../../../static/scripts/tim/util/ngimport";
-import {to} from "../../../static/scripts/tim/util/utils";
+import {to} from "tim/util/utils";
+import "../../../cs/js/cs-parsons/jquery.ui.touch-punch.min.js";
 
 const dragApp = angular.module("dragApp", ["ngSanitize"]);
 export const moduleDefs = [dragApp];
@@ -121,15 +122,24 @@ class DragController extends PluginBase<t.TypeOf<typeof DragMarkup>, t.TypeOf<ty
         }
     }
 
-    onDragged() {
-        console.log("dragging");
-        // TODO: Tämä ei toimi, tarvitaan eventtikuuntelijoita.
-
+    onDragged(e: JQuery.Event) {
+        const d = e.originalEvent as DragEvent;
+        d.dataTransfer!.setData("Text", "moi");
+        //d.dataTransfer!.effectAllowed = "move";
+        //console.log(d.dataTransfer!.getData("Name"));
     }
+
+    onDragStart(e: JQuery.Event) {
+        const d = e.originalEvent as DragEvent;
+        d.dataTransfer!.setData("Text", "moi");
+        //d.dataTransfer!.setDragImage();
+        //d.dataTransfer!.effectAllowed = "move";
+        //console.log(d.dataTransfer!.getData("Name"));
+    }
+
     protected getAttributeType() {
         return DragAll;
     }
-
 
 }
 
@@ -146,8 +156,13 @@ dragApp.component("dragRunner", {
     <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
     <p ng-if="::$ctrl.stem">{{::$ctrl.stem}}</p>
     <div class="form-inline"><label>{{::$ctrl.inputstem}} <span>
-        <div class="dragword" draggable="true" ng-on-dragstart="$ctrl.onDragged()">
-        {{::$ctrl.word}}
+        <div class="dragword"
+             draggable="true"
+             ng-on-dragstart="$ctrl.onDragStart($event)"
+             <!--ng-on-drag="$ctrl.onDragged($event)"-->
+             <!--ng-on-touchmove="$ctrl.onDragged($event)"-->
+             >
+        {{$ctrl.word}}
         </div>
         </span></label>
     </div>
