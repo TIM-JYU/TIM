@@ -26,7 +26,7 @@ const TextfieldMarkup = t.intersection([
     t.type({
         // all withDefaults should come here; NOT in t.partial
         autoupdate: withDefault(t.number, 500),
-        cols: withDefault(t.number, 20),
+        cols: withDefault(t.number, 1),
     }),
 ]);
 const TextfieldAll = t.intersection([
