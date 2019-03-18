@@ -11,6 +11,8 @@ import {to} from "tim/util/utils";
 const feedbackApp = angular.module("feedbackApp", ["ngSanitize"]);
 export const moduleDefs = [feedbackApp];
 
+const answerPlaceHolder = "[answer]";
+
 const MatchElement = t.type({
     answer: t.string,
     index: t.Integer,
@@ -25,8 +27,8 @@ interface MatchElementT extends t.TypeOf<typeof MatchElement> {
 const MatchElementArray = t.array(MatchElement);
 
 const Choice = t.type({
-    levels:t.array(t.string),
-    match: t.union ([t.array(t.string), MatchElementArray]),
+    levels: t.array(t.string),
+    match: t.union([t.array(t.string), MatchElementArray]),
 });
 
 const QuestionItem = t.type({
@@ -45,7 +47,6 @@ const FeedbackMarkup = t.intersection([
         field: t.string,
         feedbackLevel: t.number,
         toNextTaskRule: t.string,
-        questionItems: t.array(QuestionItem),
         instructionID: t.string,
         sampleItemID: t.string,
         nextTask: t.string,
@@ -57,7 +58,7 @@ const FeedbackMarkup = t.intersection([
         // all withDefaults should come here; NOT in t.partial
         autoupdate: withDefault(t.number, 500),
         cols: withDefault(t.number, 20),
-        // questionItems: t.array(QuestionItem),
+        questionItems: t.array(QuestionItem),
     }),
 ]);
 const FeedbackAll = t.intersection([
@@ -77,38 +78,21 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
     private questionPluginID?: string;  // tarkasta
     private feedbackLevel = 5;
     private currentFeedbackLevel = 0;
-    private listOfValidQuestionItems?: string[];
     private feedbackLevelRise = false;
 
-    setCurrentFeedbackLevel(number: number){
+    setCurrentFeedbackLevel(number: number) {
         this.currentFeedbackLevel === number;
     }
-
-    /*
-    findQuestionplugin(pluginNames:string[]){
-        if(this.attrs.questionItems) {
-            for (let i = 0; i < this.attrs.questionItems.length; i++) {
-                if (this.attrs.questionItems[i].pluginNames.length !== pluginNames.length) continue;
-                for (let j = 0; j < pluginNames.length; j++) {
-                    if (this.attrs.questionItems[i].pluginNames[j] !== pluginNames[j]) break;
-                    if (j === pluginNames.length - 1) return i
-
-                }
-            }
-            return -1;
-        }
-    }
-*/
 
     openBlock() {
         return;
     }
 
-    hideBlock(){
+    hideBlock() {
         return;
     }
 
-    printFeedback(){
+    printFeedback() {
         return;
     }
 
@@ -155,7 +139,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
             params.input.nosave = true;
         }
         const url = this.pluginMeta.getAnswerUrl();
-        const r = await to($http.put<{web: {result: string, error?: string}}>(url, params));
+        const r = await to($http.put<{ web: { result: string, error?: string } }>(url, params));
         if (r.ok) {
             const data = r.result.data;
             this.error = data.web.error;
@@ -170,7 +154,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
      * @returns {string} The content inside this plugin
      */
     getContent(): string {
-      return "";
+        return "";
     }
 
     /**
@@ -190,16 +174,19 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
             const isCorrect = this.checkCorrectAnswer(this.index, selections);
             if (isCorrect) {
                 this.feedback = this.attrs.questionItems[this.index].correctAnswerFeedback;
-                this.feedback = this.feedback.replace("[answer]", this.userAnswer);
+                this.feedback = this.feedback.replace(answerPlaceHolder, this.userAnswer);
             } else {
                 const matchIndex = this.compareChoices(this.index, selections);
                 if (matchIndex === -1) {
                     this.feedback = "You have no choices, got no matches or using match objects";
                 } else {
-                    // TODO: Stop when there are no levels or maximum feedback level reached.
-                    this.feedback = this.attrs.questionItems[this.index].choices[matchIndex].
-                        levels[this.currentFeedbackLevel! - 1];
-                    this.feedback = this.feedback.replace("[answer]", this.userAnswer);
+                    const feedbackLevels = this.attrs.questionItems[this.index].choices[matchIndex].levels;
+                    if (feedbackLevels.length > (this.currentFeedbackLevel! - 1)) {
+                        this.feedback = feedbackLevels[feedbackLevels.length - 1];
+                    } else {
+                        this.feedback = feedbackLevels[this.currentFeedbackLevel! - 1];
+                    }
+                    this.feedback = this.feedback.replace(answerPlaceHolder, this.userAnswer);
                 }
             }
         }
@@ -211,9 +198,8 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
             const comparison: string[] = answer.filter(selection => correct.indexOf(selection) < 0);
             if (comparison.length === 0) {
                 return true;
-            }
-            else {
-                if(this.currentFeedbackLevel < this.feedbackLevel) {
+            } else {
+                if (this.currentFeedbackLevel < this.feedbackLevel) {
                     this.currentFeedbackLevel++;
                 }
             }
@@ -253,10 +239,9 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
         return false;
     }
 
-    checkMatchObjectArray(answer: string[], match: MatchElementT[]): number{
+    checkMatchObjectArray(answer: string[], match: MatchElementT[]): number {
         return -1;
     }
-
 
 
     /**
@@ -279,8 +264,8 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
                 // console.log(nodes);
                 let answer = "";
 
-                for (let n in nodes) {
-                    let node = nodes[n];
+                for (let n = 0; n < nodes.length; ++n) {
+                    const node = nodes[n];
                     if (node.nodeName === "#text") {
                         let text = node.textContent || "";
                         text.trim();
@@ -289,7 +274,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
                     if (node.nodeName === "TIM-PLUGIN-LOADER") {
                         // Makeshift way to go through all the plugins in a paragraph
                         if (node instanceof Element) {
-                            let name = node!.getAttribute("task-id")!.split(".")[1];
+                            let name = node.getAttribute("task-id")!.split(".")[1];
                             if (name) {
                                 let plugin = this.vctrl.getTimComponentByName(name);
                                 if (plugin) {
@@ -318,26 +303,34 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
     setPluginWords() {
         if (this.attrs.questionItems) {
             const items = this.attrs.questionItems;
-            for (let item of items) {
+            for (const item of items) {
                 let i = 0;
-                for(let plugin of item.pluginNames) {
+                for (const plugin of item.pluginNames) {
                     const timComponent = this.vctrl.getTimComponentByName(plugin);
-                    if (timComponent) {
-                        timComponent.setPluginWords!(item.dropdownWords[i]);
+                    if (timComponent && timComponent.setPluginWords) {
+                        timComponent.setPluginWords(item.dropdownWords[i]);
                         i++;
+                    } else {
+                        this.error = "Component not found or no setPluginWords-method"
                     }
                 }
             }
         }
     }
 
-    getGroups():string[] {
+    getGroups(): string[] {
         return [""];
     }
-    getName(): (string | undefined) {
-        if (this.attrs.followid) { return this.attrs.followid; }
+
+    getName(): string {
+        if (this.attrs.followid) {
+            return this.attrs.followid;
+        }
         const taskId = this.pluginMeta.getTaskId();
-        if (taskId) { return taskId.split(".")[1]; }
+        if (taskId) {
+            return taskId.split(".")[1];
+        }
+        return "";
     }
 
     belongsToGroup(group: string): boolean {
@@ -381,22 +374,3 @@ feedbackApp.component("feedbackRunner", {
 </div>
 `,
 });
-
-/*
-
-<div class="csRunDiv no-popup-menu">
-    <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
-    <p ng-if="::$ctrl.stem">{{::$ctrl.stem}}</p>
-    <div class="form-inline"><label>{{::$ctrl.inputstem}} <span>
-        {{$ctrl.userword}}</span></label>
-    </div>
-    <button class="timButton"
-            ng-if="::$ctrl.buttonText()"
-            ng-click="$ctrl.getAnswer()">
-        {{::$ctrl.buttonText()}}
-    </button>
-    <div ng-if="$ctrl.error" ng-bind-html="$ctrl.error"></div>
-    <pre ng-if="$ctrl.result">{{$ctrl.result}}</pre>
-    <p ng-if="::$ctrl.footer" ng-bind="::$ctrl.footer" class="plgfooter"></p>
-</div>
- */
