@@ -482,7 +482,7 @@ def find_inline_plugins(block: DocParagraph, macroinfo: MacroInfo) -> Generator[
 
     # "}" not allowed in inlineplugins for now
     # TODO make task id optional
-    matches: List[Match] = re.finditer(r'{#([^ }]+)([ \n][^}]+)?}', md)
+    matches: List[Match] = re.finditer(r'{#([^ }\n]+)([ \n][^}]+)?}', md)
     for m in matches:
         task_str = m.group(1)
         task_id = UnvalidatedTaskId(task_str)

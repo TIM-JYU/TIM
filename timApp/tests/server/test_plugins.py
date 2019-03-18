@@ -1508,3 +1508,24 @@ a {#x initword: } b
             self.test_user_2.remove_access(d.id, 'teacher')
             db.session.commit()
             self.get_state(r['savedNew'])
+
+    def test_multiline_inlineplugin(self):
+        self.login_test1()
+        d = self.create_doc(initial_par="""
+#- {defaultplugin=pali id=SSYigUyqdb7p}
+{#t
+initword: hi
+}
+        """)
+        r = self.get(d.url, as_tree=True)
+        e = r.cssselect(f'.parContent > tim-plugin-loader[task-id="{d.id}.t"] > span > pali-runner')
+        self.assertTrue(e)
+        self.assert_plugin_json(
+            e[0],
+            self.create_plugin_json(
+                d,
+                't',
+                par_id='SSYigUyqdb7p',
+                markup={'initword': 'hi'},
+            ),
+        )
