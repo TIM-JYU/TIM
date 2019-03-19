@@ -4,7 +4,7 @@
 import angular, {INgModelOptions} from "angular";
 import * as t from "io-ts";
 import {ITimComponent, ViewCtrl} from "tim/document/viewctrl";
-import {GenericPluginMarkup, nullable, PluginBase, withDefault} from "tim/plugin/util";
+import {GenericPluginMarkup, Info, nullable, PluginBase, withDefault} from "tim/plugin/util";
 import {$http} from "tim/util/ngimport";
 import {to} from "tim/util/utils";
 import {valueDefu} from "tim/util/utils";
@@ -33,7 +33,11 @@ const multisaveAll = t.intersection([
     t.partial({
         //userword: t.string,
     }),
-    t.type({markup: multisaveMarkup}),
+    t.type({
+        info: Info,
+        markup: multisaveMarkup,
+        preview: t.boolean,
+    }),
 ]);
 
 function ismultisavendrome(s: string) {

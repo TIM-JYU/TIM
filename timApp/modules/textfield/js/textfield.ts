@@ -3,7 +3,7 @@
  */
 import angular, {INgModelOptions} from "angular";
 import * as t from "io-ts";
-import {GenericPluginMarkup, nullable, PluginBase, withDefault} from "tim/plugin/util";
+import {GenericPluginMarkup, Info, nullable, PluginBase, withDefault} from "tim/plugin/util";
 import {$http} from "tim/util/ngimport";
 import {to} from "tim/util/utils";
 import {ITimComponent, ViewCtrl} from "tim/document/viewctrl";
@@ -32,7 +32,11 @@ const TextfieldAll = t.intersection([
     t.partial({
         userword: t.string,
     }),
-    t.type({markup: TextfieldMarkup}),
+    t.type({
+        info: Info,
+        markup: TextfieldMarkup,
+        preview: t.boolean,
+    }),
 ]);
 
 class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t.TypeOf<typeof TextfieldAll>, typeof TextfieldAll> implements ITimComponent {

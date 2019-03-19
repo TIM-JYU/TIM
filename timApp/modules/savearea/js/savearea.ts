@@ -3,7 +3,7 @@
  */
 import angular, {INgModelOptions} from "angular";
 import * as t from "io-ts";
-import {GenericPluginMarkup, nullable, PluginBase, withDefault} from "tim/plugin/util";
+import {GenericPluginMarkup, Info, nullable, PluginBase, withDefault} from "tim/plugin/util";
 import {$http} from "tim/util/ngimport";
 import {to} from "tim/util/utils";
 import {valueDefu} from "tim/util/utils";
@@ -29,7 +29,11 @@ const SaveareaAll = t.intersection([
     t.partial({
         demopisteet: t.number,
     }),
-    t.type({markup: SaveareaMarkup}),
+    t.type({
+        info: Info,
+        markup: SaveareaMarkup,
+        preview: t.boolean,
+    }),
 ]);
 
 class SaveareaController extends PluginBase<t.TypeOf<typeof SaveareaMarkup>, t.TypeOf<typeof SaveareaAll>, typeof SaveareaAll> {

@@ -4,7 +4,7 @@
 import angular, {INgModelOptions} from "angular";
 import * as t from "io-ts";
 import {ITimComponent, ViewCtrl} from "tim/document/viewctrl"
-import {GenericPluginMarkup, nullable, PluginBase, withDefault} from "tim/plugin/util";
+import {GenericPluginMarkup, Info, nullable, PluginBase, withDefault} from "tim/plugin/util";
 import {$http} from "tim/util/ngimport";
 import {to} from "tim/util/utils";
 import {valueDefu} from "tim/util/utils"; //tarvitaan reset-metodille, jos halutaan toteuttaa
@@ -32,7 +32,11 @@ const NumericfieldAll = t.intersection([
     t.partial({
         numericvalue: t.number,
     }),
-    t.type({markup: NumericfieldMarkup}),
+    t.type({
+        info: Info,
+        markup: NumericfieldMarkup,
+        preview: t.boolean,
+    }),
 ]);
 
 class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMarkup>, t.TypeOf<typeof NumericfieldAll>, typeof NumericfieldAll> implements ITimComponent {
