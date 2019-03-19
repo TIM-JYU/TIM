@@ -10,3 +10,7 @@ textfield-runner .stem {
 .plugintextfield .answerBrowserPlaceholder {
     display: none;
 }
+
+.hidepre {
+    display: none;
+}
