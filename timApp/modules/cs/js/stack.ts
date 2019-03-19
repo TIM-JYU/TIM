@@ -1,7 +1,7 @@
 ﻿import angular from "angular";
 import * as t from "io-ts";
 import {ParCompiler} from "tim/editor/parCompiler";
-import {GenericPluginMarkup, PluginBase, withDefault} from "tim/plugin/util";
+import {GenericPluginMarkup, Info, PluginBase, withDefault} from "tim/plugin/util";
 import {$http, $sce} from "tim/util/ngimport";
 import {to} from "tim/util/utils";
 
@@ -36,7 +36,9 @@ const StackAll = t.intersection([
         usercode: t.string,
     }),
     t.type({
+        info: Info,
         markup: StackMarkup,
+        preview: t.boolean,
     }),
 ]);
 

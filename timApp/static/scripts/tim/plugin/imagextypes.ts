@@ -1,5 +1,5 @@
 import * as t from "io-ts";
-import {GenericPluginMarkup, nullable, withDefault} from "./util";
+import {GenericPluginMarkup, nullable, withDefault, Info} from "./util";
 
 export interface IPoint {
     x: number;
@@ -264,7 +264,6 @@ export interface RightAnswerT extends t.TypeOf<typeof RightAnswer> {
 
 export const ImageXAll = t.clean(t.intersection([
     t.partial({
-        preview: t.boolean,
         state: nullable(t.partial({
             freeHandData: t.array(LineSegment),
             userAnswer: t.partial({
@@ -277,8 +276,9 @@ export const ImageXAll = t.clean(t.intersection([
         })),
     }),
     t.type({
-        info: nullable(t.type({earlier_answers: t.Integer})),
+        info: Info,
         markup: ImageXMarkup,
+        preview: t.boolean,
     }),
 ]));
 

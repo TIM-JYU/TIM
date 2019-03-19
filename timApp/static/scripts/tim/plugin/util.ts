@@ -30,6 +30,11 @@ export const GenericPluginMarkup = t.partial({
     stem: nullable(t.string),
 });
 
+export const Info = nullable(t.type({
+    // TODO add the rest of the fields
+    earlier_answers: t.Integer,
+}));
+
 export const GenericPluginTopLevelFields = t.intersection([
     t.partial({
         access: t.keyof({
@@ -38,7 +43,8 @@ export const GenericPluginTopLevelFields = t.intersection([
         }),
     }),
     t.type({
-        // TODO fill these
+        info: Info,
+        preview: t.boolean,
     }),
 ]);
 
@@ -51,9 +57,14 @@ export interface IGenericPluginMarkup extends t.TypeOf<typeof GenericPluginMarku
 }
 
 export function getDefaults<MarkupType extends IGenericPluginMarkup,
-    A extends {markup: MarkupType},
+    A extends IGenericPluginTopLevelFields<MarkupType>,
     T extends Type<A>>(runtimeType: T, defaultMarkup: MarkupType) {
-    const d = runtimeType.decode({markup: defaultMarkup, info: null});
+    const defaults: IGenericPluginTopLevelFields<MarkupType> = {
+        info: null,
+        markup: defaultMarkup,
+        preview: true,
+    };
+    const d = runtimeType.decode(defaults);
     if (d.isLeft()) {
         throw new Error("Could not get default markup");
     }
@@ -116,7 +127,7 @@ function getErrors<A>(v: Left<t.Errors, A>): MarkupError {
 }
 
 export class PluginMeta {
-    constructor(private element: IRootElementService) {
+    constructor(private element: IRootElementService, private preview = false) {
 
     }
 
@@ -146,6 +157,10 @@ export class PluginMeta {
         }
         url += `/${this.getTaskId()}/answer/`;
         return url;
+    }
+
+    public isPreview() {
+        return this.preview;
     }
 }
 
@@ -197,7 +212,7 @@ export abstract class PluginBase<MarkupType extends IGenericPluginMarkup, A exte
         protected scope: IScope,
         protected element: IRootElementService) {
         this.attrsall = getDefaults(this.getAttributeType(), this.getDefaultMarkup());
-        this.pluginMeta = new PluginMeta(element);
+        this.pluginMeta = new PluginMeta(element, this.attrsall.preview);
     }
 
     abstract getDefaultMarkup(): Partial<MarkupType>;
@@ -212,6 +227,7 @@ export abstract class PluginBase<MarkupType extends IGenericPluginMarkup, A exte
             this.markupError = getErrors(validated);
         } else {
             this.attrsall = validated.value;
+            this.pluginMeta = new PluginMeta(this.element, this.attrsall.preview);
         }
 
         // These can be uncommented for debugging:
