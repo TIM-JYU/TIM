@@ -1,5 +1,6 @@
 import re
-from typing import Optional, Union
+from enum import Enum
+from typing import Optional
 
 import attr
 
@@ -7,43 +8,41 @@ from timApp.document.docparagraph import DocParagraph
 from timApp.document.randutils import is_valid_id
 from timApp.plugin.pluginexception import PluginException
 
-
 KNOWN_FIELD_NAMES = {'points'}
 
 
 @attr.s(auto_attribs=True)
 class UnvalidatedTaskId:
+    s: str
+
+    def validate(self):
+        return TaskId.parse(self.s, require_doc_id=False, allow_block_hint=False)
+
+
+class TaskIdAccess(Enum):
+    ReadWrite = 'readwrite'
+    ReadOnly = 'readonly'
+
+
+@attr.s(auto_attribs=True)
+class TaskId:
     doc_id: Optional[int]
     task_name: str = attr.ib()
-    block_id_hint: Optional[str] = None
-    field: Optional[str] = None
+    block_id_hint: Optional[str]
+    field: Optional[str]
+    plugin_type: Optional[str] = None
+    access_specifier: Optional[TaskIdAccess] = None
 
     @task_name.validator
     def _check_name(self, attribute, value):
-        if not isinstance(self, TaskId):
-            return
-        self.do_validate(value)
-
-    def do_validate(self, value):
         if '.' in value:
             raise PluginException('Task name cannot contain dots.')
         if value.isdigit():
             raise PluginException('Task name cannot be only a number.')
 
-    def validate(self):
-        self.do_validate(self.task_name)
-
-
-@attr.s
-class TaskId(UnvalidatedTaskId):
-    doc_id: Optional[int]
-    task_name: str
-    block_id_hint: Optional[str]
-    field: Optional[str]
-
     @staticmethod
     def parse(s: str, require_doc_id=True, allow_block_hint=True) -> 'TaskId':
-        m = re.fullmatch(r'((\d+)\.)?([a-zA-Z0-9_-]+)(\.([a-zA-Z0-9_-]+))?', s)
+        m = re.fullmatch(r'((\d+)\.)?([a-zA-Z0-9_-]+)(\.([a-zA-Z0-9_-]+))?(:([a-zA-Z]*)(:(readonly|readwrite))?)?', s)
         if not m:
             raise PluginException('Task name can only have characters a-z, 0-9, "_" and "-".')
         doc_id = m.group(2)
@@ -51,6 +50,8 @@ class TaskId(UnvalidatedTaskId):
             raise PluginException('The format of task id is invalid. Missing doc id.')
         task_id_name = m.group(3)
         block_hint_or_field_access = m.group(5)
+        plugin_type = m.group(7)
+        access = m.group(9)
         par_id = None
         field = None
         if block_hint_or_field_access in KNOWN_FIELD_NAMES:
@@ -66,6 +67,8 @@ class TaskId(UnvalidatedTaskId):
             task_name=task_id_name,
             block_id_hint=par_id,
             field=field,
+            plugin_type=plugin_type,
+            access_specifier=TaskIdAccess(access) if access else None,
         )
 
     @property
@@ -105,6 +108,3 @@ class TaskId(UnvalidatedTaskId):
 
     def update_doc_id_from_block(self, par: DocParagraph):
         self.doc_id = par.ref_doc.doc_id if par.ref_doc else par.doc.doc_id
-
-
-MaybeUnvalidatedTaskId = Union[UnvalidatedTaskId, TaskId]

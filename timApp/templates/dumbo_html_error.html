@@ -1,0 +1,12 @@
+{% extends "error.html" %}
+{% block content %}
+<p>
+    The markdown server failed to render markdown to HTML. This usually means that the mathematical formulas
+    in this document are still being processed. This page will refresh periodically. Please wait.
+</p>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        window.location.reload();
+    });
+</script>
+{% endblock %}

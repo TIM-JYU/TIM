@@ -13,6 +13,15 @@ from timApp.user.usergroup import UserGroup
 from timApp.user.userutils import get_access_type_id, get_default_right_document
 
 
+def remove_access(group_id: int, block_id: int, access_type: str):
+    access_type_id = get_access_type_id(access_type)
+    i = Block.query.get(block_id)
+    for a in i.accesses:  # type: BlockAccess
+        if a.usergroup_id == group_id and a.type == access_type_id:
+            db.session.delete(a)
+            break
+
+
 class Users(TimDbBase):
     """Handles saving and retrieving user-related information to/from the database."""
 
@@ -82,12 +91,4 @@ class Users(TimDbBase):
 
     def remove_default_access(self, group_id: int, folder_id: int, access_type: str, object_type: BlockType):
         doc = get_default_right_document(folder_id, object_type, create_if_not_exist=True)
-        self.remove_access(group_id, doc.id, access_type)
-
-    def remove_access(self, group_id: int, block_id: int, access_type: str):
-        access_type_id = get_access_type_id(access_type)
-        i = Block.query.get(block_id)
-        for a in i.accesses:  # type: BlockAccess
-            if a.usergroup_id == group_id and a.type == access_type_id:
-                db.session.delete(a)
-                break
+        remove_access(group_id, doc.id, access_type)

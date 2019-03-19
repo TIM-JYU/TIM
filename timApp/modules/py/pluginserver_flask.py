@@ -17,6 +17,7 @@ If validation fails, the plugin returns an error with status code 422.
 """
 import base64
 import json
+from pprint import pprint
 from typing import Optional, Set, Union, TypeVar, Generic, Dict, List
 
 import attr
@@ -55,6 +56,10 @@ class InfoSchema(Schema):
         strict = True
 
 
+def list_not_missing_fields(inst):
+    return ((k, v) for k, v in attr.asdict(inst).items() if v is not missing)
+
+
 @attr.s(auto_attribs=True)
 class GenericMarkupModel:
     """Specifies which fields the editor can use in the plugin markup.
@@ -73,7 +78,7 @@ class GenericMarkupModel:
     buttonText: Union[str, None, Missing] = missing
 
     def get_visible_data(self):
-        return {k: v for k, v in attr.asdict(self).items() if k not in self.hidden_keys and v is not missing}
+        return {k: v for k, v in list_not_missing_fields(self) if k not in self.hidden_keys}
 
 
 class GenericMarkupSchema(Schema):
@@ -98,6 +103,7 @@ class GenericMarkupSchema(Schema):
 
 
 class GenericHtmlSchema(Schema):
+    access = fields.Str()
     anonymous = fields.Bool(required=True)
     doLazy = fields.Bool(required=True)  # TODO this can also be string "NEVERLAZY" which now fails validation
     info = fields.Dict(allow_none=True, required=True)
@@ -157,9 +163,11 @@ class GenericHtmlModel(GenericRouteModel[PluginInput, PluginMarkup, PluginState]
     taskIDExt: str
     user_id: str
     userPrint: bool
+    access: Union[str, Missing] = missing
 
     def get_browser_json(self) -> Dict:
-        r = attr.asdict(self)
+        r = dict(list_not_missing_fields(self))
+        pprint(r)
         r['markup'] = self.markup.get_visible_data()
         return r
 

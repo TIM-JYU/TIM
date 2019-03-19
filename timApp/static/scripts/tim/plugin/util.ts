@@ -30,14 +30,41 @@ export const GenericPluginMarkup = t.partial({
     stem: nullable(t.string),
 });
 
+export const Info = nullable(t.type({
+    // TODO add the rest of the fields
+    earlier_answers: t.Integer,
+}));
+
+export const GenericPluginTopLevelFields = t.intersection([
+    t.partial({
+        access: t.keyof({
+            readonly: null,
+            readwrite: null,
+        }),
+    }),
+    t.type({
+        info: Info,
+        preview: t.boolean,
+    }),
+]);
+
+export interface IGenericPluginTopLevelFields<MarkupType> extends t.TypeOf<typeof GenericPluginTopLevelFields> {
+    markup: MarkupType;
+}
+
 export interface IGenericPluginMarkup extends t.TypeOf<typeof GenericPluginMarkup> {
     // should be empty
 }
 
 export function getDefaults<MarkupType extends IGenericPluginMarkup,
-    A extends {markup: MarkupType},
+    A extends IGenericPluginTopLevelFields<MarkupType>,
     T extends Type<A>>(runtimeType: T, defaultMarkup: MarkupType) {
-    const d = runtimeType.decode({markup: defaultMarkup, info: null});
+    const defaults: IGenericPluginTopLevelFields<MarkupType> = {
+        info: null,
+        markup: defaultMarkup,
+        preview: true,
+    };
+    const d = runtimeType.decode(defaults);
     if (d.isLeft()) {
         throw new Error("Could not get default markup");
     }
@@ -100,7 +127,7 @@ function getErrors<A>(v: Left<t.Errors, A>): MarkupError {
 }
 
 export class PluginMeta {
-    constructor(private element: IRootElementService) {
+    constructor(private element: IRootElementService, private preview = false) {
 
     }
 
@@ -131,6 +158,10 @@ export class PluginMeta {
         url += `/${this.getTaskId()}/answer/`;
         return url;
     }
+
+    public isPreview() {
+        return this.preview;
+    }
 }
 
 /**
@@ -139,7 +170,7 @@ export class PluginMeta {
  * All properties or fields having a one-time binding in template should eventually return a non-undefined value.
  * That's why there are "|| null"s in several places.
  */
-export abstract class PluginBase<MarkupType extends IGenericPluginMarkup, A extends {markup: MarkupType}, T extends Type<A>> implements IController {
+export abstract class PluginBase<MarkupType extends IGenericPluginMarkup, A extends IGenericPluginTopLevelFields<MarkupType>, T extends Type<A>> implements IController {
     private static $inject = ["$scope", "$element"];
 
     buttonText() {
@@ -162,6 +193,13 @@ export abstract class PluginBase<MarkupType extends IGenericPluginMarkup, A exte
         return this.attrs.stem || null;
     }
 
+    /**
+     * Returns if this plugin is readonly for the current user.
+     */
+    get readonly(): boolean {
+        return this.attrsall.access === "readonly";
+    }
+
     // Parsed form of json binding or default value if json was not valid.
     public attrsall: Readonly<A>;
     // Binding that has all the data as a JSON string.
@@ -174,7 +212,7 @@ export abstract class PluginBase<MarkupType extends IGenericPluginMarkup, A exte
         protected scope: IScope,
         protected element: IRootElementService) {
         this.attrsall = getDefaults(this.getAttributeType(), this.getDefaultMarkup());
-        this.pluginMeta = new PluginMeta(element);
+        this.pluginMeta = new PluginMeta(element, this.attrsall.preview);
     }
 
     abstract getDefaultMarkup(): Partial<MarkupType>;
@@ -190,6 +228,7 @@ export abstract class PluginBase<MarkupType extends IGenericPluginMarkup, A exte
             this.markupError = getErrors(validated);
         } else {
             this.attrsall = validated.value;
+            this.pluginMeta = new PluginMeta(this.element, this.attrsall.preview);
         }
 
         // These can be uncommented for debugging:

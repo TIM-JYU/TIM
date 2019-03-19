@@ -4,7 +4,7 @@ import $ from "jquery";
 import {CellInfo} from "sagecell";
 import {IAce, IAceEditor} from "tim/editor/ace-types";
 import {ParCompiler} from "tim/editor/parCompiler";
-import {GenericPluginMarkup, nullable, PluginBase, withDefault} from "tim/plugin/util";
+import {GenericPluginMarkup, Info, nullable, PluginBase, withDefault} from "tim/plugin/util";
 import {$compile, $http, $sce, $timeout, $upload, $window} from "tim/util/ngimport";
 import {fixDefExport, to, valueDefu, valueOr} from "tim/util/utils";
 
@@ -765,9 +765,9 @@ const CsAll = t.intersection([
     t.type({
         // anonymous: t.boolean,
         // doLazy: t.boolean,
-        // info: t.null,
+        info: Info,
         markup: t.readonly(CsMarkup),
-        // preview: t.boolean,
+        preview: t.boolean,
         // review: t.boolean,
         // targetFormat: t.literal("latex"),
         // taskID: t.string,
@@ -1712,6 +1712,12 @@ class CsController extends CsBase implements IController {
             params.input.nosave = true;
         }
         const url = this.pluginMeta.getAnswerUrl();
+        if (this.pluginMeta.isPreview()) {
+            this.error = "Cannot run plugin while previewing.";
+            this.runError = this.error;
+            this.isRunning = false;
+            return;
+        }
         const t0run = performance.now();
         const r = await to($http<{
             web: {
