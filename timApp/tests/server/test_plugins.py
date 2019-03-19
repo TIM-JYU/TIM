@@ -1459,6 +1459,7 @@ a {#x initword: } b
         self.post_answer('pali', f'{d.id}.t.points', user_input={'userword': 2}, expect_status=403)
 
     def test_translation_plugin_state(self):
+        """Plugin's initial state is correctly loaded in a translated document."""
         self.login_test1()
         d = self.create_doc(initial_par="""
 #- {plugin=pali #t id=SSYigUyqdb7p}
@@ -1510,6 +1511,7 @@ a {#x initword: } b
             self.get_state(r['savedNew'])
 
     def test_multiline_inlineplugin(self):
+        """Multiline markup in inlineplugins works."""
         self.login_test1()
         d = self.create_doc(initial_par="""
 #- {defaultplugin=pali id=SSYigUyqdb7p}
