@@ -137,6 +137,7 @@ def get_all_feedback_answers(task_ids: List[TaskId],
             prev_user = None
             prev_ans = None
             pt_dt = None
+            temp_bool = True
         if prev_user == None: prev_user = user
         if prev_ans == None: prev_ans = answer
         if temp_bool:
