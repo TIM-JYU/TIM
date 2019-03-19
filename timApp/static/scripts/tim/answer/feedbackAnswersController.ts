@@ -7,6 +7,7 @@ import {to} from "../util/utils";
 import {IExportOptions} from "./userlistController";
 
 interface IFBOptions {
+    period: any
     valid: string;
     name: string;
     sort: string;
@@ -23,11 +24,13 @@ export interface IFeedbackAnswersParams {
 }
 
 export class FeedbackAnswersCtrl extends DialogController<{params: IFeedbackAnswersParams}, {}, "timFeedbackAnswers"> {
+    private static $inject = ["$element", "$scope"];
     private options!: IFBOptions; // $onInit
     private $storage!: ngStorage.StorageService & {feedbackAnswersOptions: IFBOptions}; // $onInit
     private showSort: boolean = false;
     private datePickerOptionsFrom!: EonasdanBootstrapDatetimepicker.SetOptions; // $onInit
     private datePickerOptionsTo!: EonasdanBootstrapDatetimepicker.SetOptions; // $onInit
+    private lastFetch: any;
 
     protected getTitle() {
         return "Export to csv";
@@ -41,13 +44,14 @@ export class FeedbackAnswersCtrl extends DialogController<{params: IFeedbackAnsw
         });
         this.showSort = options.allTasks;
         this.options = {
+            period: "whenever",
             valid: "1",
             name: "both",
             sort: "username",
             periodFrom: null,
             periodTo: null,
             scope: "task",
-            answers: ""
+            answers: "all"
         };
         this.$storage = $localStorage.$default({
             feedbackAnswersOptions: this.options,
@@ -66,6 +70,15 @@ export class FeedbackAnswersCtrl extends DialogController<{params: IFeedbackAnsw
             defaultDate: moment(this.options.periodTo),
             showTodayButton: true,
         };
+
+        this.lastFetch = null;
+        const r = await to($http.get<{last_answer_fetch: {[index: string]: string}}>("/settings/get/last_answer_fetch"));
+        if (r.ok && r.result.data.last_answer_fetch) {
+            this.lastFetch = r.result.data.last_answer_fetch[options.identifier];
+            if (!this.lastFetch) {
+                this.lastFetch = "no fetches yet";
+            }
+        }
     }
 
     ok() {

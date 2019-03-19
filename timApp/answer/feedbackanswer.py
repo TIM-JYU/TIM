@@ -8,6 +8,7 @@ from typing import List, Optional, Dict, Tuple, Iterable
 from flask import Blueprint
 
 from timApp.user.user import Consent, User
+from timApp.util.flask.responsehelper import csv_response
 from timApp.plugin.taskid import TaskId
 from datetime import datetime
 from datetime import timedelta
@@ -29,7 +30,7 @@ def get_all_feedback_answers(task_ids: List[TaskId],
                              printname: bool,
                              sort: str,
                              period_from: datetime,
-                             period_to: datetime) -> str:
+                             period_to: datetime) -> List[str]:
     """Gets all answers for "Dynamic Assessment" -typed tasks
     :param task_ids: The ids of the tasks needed in report.
     :param usergroup:
@@ -75,22 +76,27 @@ def get_all_feedback_answers(task_ids: List[TaskId],
     temp_bool = True    #Temporary answer combination condition, now it is every even
     exclude_first = True #Temporary setting for excluding the first
 
+    #Back to string format
+    results = []
+
     #Initialize stringIO and csv-writer for it
     writerIO = StringIO()
     writer = csv.writer(writerIO, delimiter=";", lineterminator=os.linesep)
 
     #First line are the headers
     if (printname and not hide_names):
-        writer.writerow(['Full Name','Username', 'Result', 'Answer', 'Feedback', 'Time spent on item', 'Time spent on feedback']);
+        writer.writerow(['Full Name','Username', 'Result', 'Answer', 'Feedback', 'Time spent on item', 'Time spent on feedback'])
+        results.append(['Full Name','Username', 'Result', 'Answer', 'Feedback', 'Time spent on item', 'Time spent on feedback'])
     else:
-        writer.writerow(['Username', 'Result', 'Answer', 'Feedback','Time spent on item','Time spent on feedback']);
+        writer.writerow(['Username', 'Result', 'Answer', 'Feedback','Time spent on item','Time spent on feedback'])
+        results.append(['Username', 'Result', 'Answer', 'Feedback', 'Time spent on item', 'Time spent on feedback'])
 
     #Dictionary and counting for anons
     anons = {}
     cnt = 0
 
     #FOR STARTS FROM HERE
-    for answer, user, n in qq:  #TODO: resolve .csv and str
+    for answer, user, n in qq:  #TODO: back to the string-format
 
         """
         points = str(answer.points)
@@ -135,8 +141,8 @@ def get_all_feedback_answers(task_ids: List[TaskId],
                 anons[prev_user] = f"user{cnt}"
                 cnt += 1
             anonuser = anons[prev_user]
-            answer_content = json.loads(prev_ans.content)
-            feedback_content = json.loads(answer.content)
+            answer_content = json.loads(prev_ans.content) # .get(prev_ans.content) #json.loads(prev_ans.content)
+            feedback_content = json.loads(answer.content)  #json.loads(answer.content)
 
             if pt_dt != None:
                 tasksecs = (prev_ans.answered_on - pt_dt).total_seconds()
@@ -152,15 +158,32 @@ def get_all_feedback_answers(task_ids: List[TaskId],
 
             if exclude_first and pt_dt != None:   #IF-CONDITION temporary for the sake of excluding the first sample item
                 if printname and not hide_names:
-                    writer.writerow([shown_user]
-                                + [prev_user.real_name]
+                    """
+                    writer.writerow([prev_user.real_name]
+                                + [shown_user]
+                                + ['WRONG!!!']
+                                + [answer_content]
+                                + [feedback_content]
+                                + [str(math.floor(tasksecs))]
+                                + [str(math.floor(fbsecs))])
+                                """
+                    results.append([prev_user.real_name]
+                                + [shown_user]
                                 + ['WRONG!!!']
                                 + [answer_content]
                                 + [feedback_content]
                                 + [str(math.floor(tasksecs))]
                                 + [str(math.floor(fbsecs))])
                 else:
+                    """
                     writer.writerow([shown_user]
+                                + ['WRONG!!!']
+                                + [answer_content]
+                                + [feedback_content]
+                                + [str(math.floor(tasksecs))]
+                                + [str(math.floor(fbsecs))])
+                                """
+                    results.append([shown_user]
                                 + ['WRONG!!!']
                                 + [answer_content]
                                 + [feedback_content]
@@ -171,7 +194,7 @@ def get_all_feedback_answers(task_ids: List[TaskId],
         prev_ans = answer
         temp_bool = not temp_bool
 
-    return writerIO.getvalue()
+    return results
 
 
 # Route to test feedback output at feedback/test
@@ -211,6 +234,7 @@ def test():
                                         'username', period1, period2)
 
     # First returns empty, then from document nro1 and then document nro2 (change above if different)
-    return json_response({'answers0': answers0,
+    return csv_response(answers1, 'excel')
+    """ return json_response({'answers0': answers0,
                           'answers1': answers1,
-                          'answers2': answers2})
+                          'answers2': answers2})"""
