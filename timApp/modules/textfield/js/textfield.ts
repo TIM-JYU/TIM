@@ -6,16 +6,15 @@ import * as t from "io-ts";
 import {GenericPluginMarkup, nullable, PluginBase, withDefault} from "tim/plugin/util";
 import {$http} from "tim/util/ngimport";
 import {to} from "tim/util/utils";
-import {valueDefu} from "tim/util/utils";
-import {number} from "../../../static/scripts/jspm_packages/npm/io-ts@1.4.1/lib";
 import {ITimComponent, ViewCtrl} from "tim/document/viewctrl";
+import {valueDefu} from "tim/util/utils"; //tarvitaan reset-metodille, jos halutaan toteuttaa
 
 const textfieldApp = angular.module("textfieldApp", ["ngSanitize"]);
 export const moduleDefs = [textfieldApp];
 
 const TextfieldMarkup = t.intersection([
     t.partial({
-        followid: t.string,
+        followid: nullable(t.string),
         inputplaceholder: nullable(t.string),
         inputstem: nullable(t.string),
         initword: nullable(t.string),
@@ -61,14 +60,11 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
         }
     }
 
-    /* TOTEUTETAAN NG-BLURILLA?
+    /* EI KÄYTETÄ, MUTTA VARATAAN TOISTAISEKSI MAHDOLLISIA EVENTHANDLEREITÄ VARTEN
     $postLink() {
-        this.element.find("input").on("autosave", () => {});
-    }
-
-    get autoSave() {
-        console.log(this.attrs.autosave);
-        return this.attrs.autosave;
+        if (this.userword == "") {
+            this.userword = this.attrs.initword || "";
+        }
     }
     */
 

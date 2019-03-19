@@ -7,20 +7,19 @@ import {ITimComponent, ViewCtrl} from "tim/document/viewctrl"
 import {GenericPluginMarkup, nullable, PluginBase, withDefault} from "tim/plugin/util";
 import {$http} from "tim/util/ngimport";
 import {to} from "tim/util/utils";
-import {valueDefu} from "tim/util/utils"; //reset-metodille
-import {fieldNumber} from "../../../static/scripts/jspm_packages/npm/fp-ts@1.11.1/lib/Field";
+import {valueDefu} from "tim/util/utils"; //tarvitaan reset-metodille, jos halutaan toteuttaa
 
 const numericfieldApp = angular.module("numericfieldApp", ["ngSanitize"]);
 export const moduleDefs = [numericfieldApp];
 
 const NumericfieldMarkup = t.intersection([
     t.partial({
-        initnumber: t.number,
+        followid: nullable(t.string),
         inputplaceholder: nullable(t.number),
-        inputstem: t.number,
-        followid: t.string,
-        onefield: t.string,
-        manyfields: t.array(t.string)
+        inputstem: nullable(t.string),
+        initnumber: nullable(t.number),
+        buttonText: nullable(t.string),
+        autosave: t.boolean
     }),
     GenericPluginMarkup,
     t.type({
@@ -49,7 +48,7 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
     }
 
     buttonText() {
-        return super.buttonText() || "Save";
+        return super.buttonText() || null;
     }
 
     $onInit() {
@@ -70,7 +69,7 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
     }
 
     save(): string {
-        return this.numericvalue.toString(); // not used with textfield plugin, but promised to implement in ITimComponent
+        return this.numericvalue.toString(); // not used with numericfield plugin, but promised to implement in ITimComponent
     }
 
     get autoupdate(): number {
@@ -86,12 +85,13 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
     }
 
     initCode() {
-        this.numericvalue = undefined;
+        this.numericvalue = this.attrs.initnumber || undefined;
         this.error = undefined;
         this.result = undefined;
     }
 
     saveText() {
+        if (this.attrs.autosave == false) return;
         this.doSaveText(false);
     }
 
@@ -139,36 +139,16 @@ numericfieldApp.component("numericfieldRunner", {
         <input type="number"
                class="form-control"
                ng-model="$ctrl.numericvalue"
+               ng-blur="$ctrl.saveText()"
+               ng-keydown="$event.keyCode === 13 && $ctrl.saveText()"
                ng-model-options="::$ctrl.modelOpts"
-               ng-trim="false"
-               placeholder="{{::$ctrl.inputplaceholder}}"
-               size="{{::$ctrl.cols}}"></span></label>
-    </div>
-    <pre ng-if="$ctrl.result">{{$ctrl.result}}</pre>
-    <p ng-if="::$ctrl.footer" ng-bind="::$ctrl.footer" class="plgfooter"></p>
-</div> `,
-});
-
-numericfieldApp.component("numericfieldRunner2", {
-    bindings: {
-        json: "@",
-    },
-    controller: NumericfieldController,
-    template: `
-<div class="numericfieldSaveDiv">
-    <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
-    <p ng-if="::$ctrl.stem">{{::$ctrl.stem}}</p>
-    <div class="form-inline"><label>{{::$ctrl.inputstem}} <span>   
-        <input type="number"
-               class="form-control"
-               ng-model="$ctrl.numericvalue"
-               ng-model-options="::$ctrl.modelOpts"
+               ng-change="$ctrl.checkNumericfield()"
                ng-trim="false"
                placeholder="{{::$ctrl.inputplaceholder}}"
                size="{{::$ctrl.cols}}"></span></label>
     </div>
     <button class="timButton"
-            ng-if="::$ctrl.buttonText()"
+            ng-if="$ctrl.buttonText()"
             ng-disabled="$ctrl.isRunning || !$ctrl.numericvalue"
             ng-click="$ctrl.saveText()">
         {{::$ctrl.buttonText()}}

@@ -37,29 +37,31 @@ class NumericfieldStateSchema(Schema):
 @attr.s(auto_attribs=True)
 class NumericfieldMarkupModel(GenericMarkupModel):
     points_array: Union[str, Missing] = missing
-    header: Union[str, Missing] = missing
     inputstem: Union[str, Missing] = missing
-    needed_len: Union[int, Missing] = missing
     initnumber: Union[int, Missing] = missing
-    followid: Union[str, Missing] = missing
     cols: Union[int, Missing] = missing
     inputplaceholder: Union[str, Missing] = missing
+    followid: Union[str, Missing] = missing
+    autosave: Union[bool, Missing] = missing
 
 
 class NumericfieldMarkupSchema(GenericMarkupSchema):
     points_array = fields.List(fields.List(fields.Number()))
-    header = fields.Str()
-    inputstem = fields.Str()
-    initnumber = fields.Number()
-    needed_len = fields.Number()
-    followid = fields.Str()
+    header = fields.String(allow_none=True)
+    inputstem = fields.String(allow_none=True)
+    stem = fields.String(allow_none=True)
+    initnumber = fields.Number(allow_none=True)
     cols = fields.Int()
     inputplaceholder: Union[int, Missing] = missing
+    followid = fields.String(allow_none=True)
+    autosave = fields.Boolean()
 
+    '''
     @validates('points_array')
     def validate_points_array(self, value):
-        if len(value) != 2 or not all(len(v) == 2 for v in value):
+        if (value == 0):
             raise ValidationError('Must be of size 2 x 2.')
+    ''' # MOST LIKELY WILL NOT BE IMPLEMENTED IN NUMERICFIELD
 
     @post_load
     def make_obj(self, data):
@@ -83,7 +85,7 @@ class NumericfieldInputSchema(Schema):
     @validates('numericvalue')
     def validate_numericvalue(self, number):
         if not number:
-            raise ValidationError('Must be a number.')
+            raise ValidationError('Syntax Error: Must be a number.')
 
     @post_load
     def make_obj(self, data):
@@ -194,7 +196,12 @@ def answer(args: NumericfieldAnswerModel):
 @app.route('/reqs')
 def reqs():
     templates = ["""
-``` {#numericfield_1 plugin="numericfield"}
+``` {#numericfield_normal plugin="numericfield"}
+needed_len: 1 #MINIMIPITUUS, NUMERAALINEN
+cols: 1 #KENTÄN KOKO, NUMERAALINEN
+autosave: true #AUTOSAVE, PÄÄLLÄ
+```""", """
+``` {#textfield_extended plugin="textfield"}
 header: #OTSIKKO, TYHJÄ = EI OTSIKKOA
 stem: #KYSYMYS, TYHJÄ = EI KYSYMYSTÄ
 inputstem: #VASTAUS, TYHJÄ = EI VASTAUSTA
@@ -204,6 +211,7 @@ needed_len: 1 #MINIMIPITUUS, NUMERAALINEN
 initnumber: #ALKUARVO, TYHJÄ = EI ALKUARVOA
 buttonText: Save #PAINIKKEEN NIMI, TYHJÄ = EI PAINIKETTA
 cols: 1 #KENTÄN KOKO, NUMERAALINEN
+autosave: false #AUTOSAVE, POIS PÄÄLTÄ
 ```"""
 ]
     return jsonify({
@@ -219,7 +227,12 @@ cols: 1 #KENTÄN KOKO, NUMERAALINEN
                         'items': [
                             {
                                 'data': templates[0].strip(),
-                                'text': 'Numeerinen kenttä (koottu tai oma tallennus)',
+                                'text': 'Numeerinen kenttä (autosave)',
+                                'expl': 'Luo kenttä jonka syötteet ovat vain numeroita',
+                            },
+                            {
+                                'data': templates[1].strip(),
+                                'text': 'Numeerinen kenttä (laajennettu)',
                                 'expl': 'Luo kenttä jonka syötteet ovat vain numeroita',
                             },
                         ],

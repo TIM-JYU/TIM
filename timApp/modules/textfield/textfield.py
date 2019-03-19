@@ -56,10 +56,12 @@ class TextfieldMarkupSchema(GenericMarkupSchema):
     followid = fields.String(allow_none=True)
     autosave = fields.Boolean()
 
+    '''
     @validates('points_array')
     def validate_points_array(self, value):
-        if len(value) != 2 or not all(len(v) == 2 for v in value):
+        if (value == 0):
             raise ValidationError('Must be of size 2 x 2.')
+   ''' # MOST LIKELY WILL NOT BE IMPLEMENTED IN TEXTFIELD
 
     @post_load
     def make_obj(self, data):
@@ -83,7 +85,7 @@ class TextfieldInputSchema(Schema):
     @validates('userword')
     def validate_userword(self, word):
         if not word:
-            raise ValidationError('Must be a number.')
+            raise ValidationError('Syntax Error: Not allowed character.')
 
     @post_load
     def make_obj(self, data):
@@ -196,7 +198,7 @@ def reqs():
 ``` {#textfield_normal plugin="textfield"}
 needed_len: 1 #MINIMIPITUUS, NUMERAALINEN
 cols: 1 #KENTÄN KOKO, NUMERAALINEN
-autosave=TRUE #AUTOSAVE
+autosave: true #AUTOSAVE, PÄÄLLÄ
 ```""", """
 ``` {#textfield_extended plugin="textfield"}
 header: #OTSIKKO, TYHJÄ = EI OTSIKKOA
@@ -208,10 +210,20 @@ needed_len: 1 #MINIMIPITUUS, NUMERAALINEN
 initword: #ALKUARVO, TYHJÄ = EI ALKUARVOA
 buttonText: Save #PAINIKKEEN NIMI, TYHJÄ = EI PAINIKETTA
 cols: 1 #KENTÄN KOKO, NUMERAALINEN
-autosave=FALSE #AUTOSAVE
+autosave: false #AUTOSAVE, POIS PÄÄLTÄ
+```""", """
+``` {#textfield_label plugin="textfield"}
+header: #OTSIKKO, TYHJÄ = EI OTSIKKOA
+stem: #SELITE (YLLÄ), TYHJÄ = EI SELITETTÄ
+inputstem: #SELITE (EDESSÄ), TYHJÄ = EI SELITETTÄ
+followid: #SEURANTAID, TYHJÄ = EI SEURANTAID:tä
+fields: #KENTTÄVIITTAUKSET, TYHJÄ = EI VIITTAUKSIA
+needed_len: 1 #MINIMIPITUUS, NUMERAALINEN 
+initword: #ALKUARVO, TYHJÄ = EI ALKUARVOA
+buttonText: Save #PAINIKKEEN NIMI, TYHJÄ = EI PAINIKETTA
+cols: 1 #KENTÄN KOKO, NUMERAALINEN
 ```"""
-
-                 ]
+]
     return jsonify({
         "js": ["js/build/textfield.js"],
         "multihtml": True,
@@ -225,12 +237,12 @@ autosave=FALSE #AUTOSAVE
                         'items': [
                             {
                                 'data': templates[0].strip(),
-                                'text': 'Tekstikenttä (koottu tai oma tallennus)',
+                                'text': 'Tekstikenttä (autosave)',
                                 'expl': 'Luo kenttä jonka syötteet ovat tekstiä',
                             },
                             {
                                 'data': templates[1].strip(),
-                                'text': 'Tekstikenttä (automaattinen tallennus)',
+                                'text': 'Tekstikenttä (laajennettu)',
                                 'expl': 'Luo kenttä jonka syötteet ovat tekstiä',
                             },
                         ],
