@@ -90,7 +90,12 @@ class DragController extends PluginBase<t.TypeOf<typeof DragMarkup>, t.TypeOf<ty
      * @returns {string} The word..
      */
     getContent(): string {
-        return this.word || "Nothing here";
+        return this.word || "";
+    }
+
+    setPluginWords(words: string []) {
+        if (words.length === 0) this.word = "";
+        this.word = words[0];
     }
 
     save(): string {
@@ -122,19 +127,31 @@ class DragController extends PluginBase<t.TypeOf<typeof DragMarkup>, t.TypeOf<ty
         }
     }
 
-    onDragged(e: JQuery.Event) {
-        const d = e.originalEvent as DragEvent;
-        d.dataTransfer!.setData("Text", "moi");
-        //d.dataTransfer!.effectAllowed = "move";
-        //console.log(d.dataTransfer!.getData("Name"));
-    }
-
     onDragStart(e: JQuery.Event) {
         const d = e.originalEvent as DragEvent;
-        d.dataTransfer!.setData("Text", "moi");
-        //d.dataTransfer!.setDragImage();
-        //d.dataTransfer!.effectAllowed = "move";
-        //console.log(d.dataTransfer!.getData("Name"));
+        d.dataTransfer!.setData("text", this.word!);
+        d.dataTransfer!.setData("name", this.getName()!);
+        d.dataTransfer!.effectAllowed = "move";
+    }
+
+    onDragOver(e: JQuery.Event) {
+        const d = e.originalEvent as DragEvent;
+        d.preventDefault();
+        d.dataTransfer!.dropEffect = "move";
+    }
+
+    onDrop(e: JQuery.Event) {
+        const d = e.originalEvent as DragEvent;
+        d.preventDefault();
+        const component = this.vctrl.getTimComponentByName(d.dataTransfer!.getData("name"));
+        if (component && component.setPluginWords) {
+            if (this.word && this.word.length > 0){
+                return;
+            }
+            component.setPluginWords([]);
+            this.word! = d.dataTransfer!.getData("text");
+        }
+
     }
 
     protected getAttributeType() {
@@ -153,18 +170,14 @@ dragApp.component("dragRunner", {
     },
     template: `
 <div>
-    <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
-    <p ng-if="::$ctrl.stem">{{::$ctrl.stem}}</p>
-    <div class="form-inline"><label>{{::$ctrl.inputstem}} <span>
-        <div class="dragword"
+    <div class="form-inline">
+     <div class="dropword" ng-on-dragover="$ctrl.onDragOver($event)" ng-on-drop="$ctrl.onDrop($event)">
+        <span class="dragword" ng-show="$ctrl.word.length > 0" 
              draggable="true"
-             ng-on-dragstart="$ctrl.onDragStart($event)"
-             <!--ng-on-drag="$ctrl.onDragged($event)"-->
-             <!--ng-on-touchmove="$ctrl.onDragged($event)"-->
-             >
+             ng-on-dragstart="$ctrl.onDragStart($event)">
         {{$ctrl.word}}
-        </div>
-        </span></label>
+        </span>
+     </div>
     </div>
     <div ng-if="$ctrl.error" ng-bind-html="$ctrl.error"></div>
     <p ng-if="::$ctrl.footer" ng-bind="::$ctrl.footer" class="plgfooter"></p>

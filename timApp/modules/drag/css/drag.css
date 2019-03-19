@@ -1,3 +1,13 @@
 .dragword {
-    padding:4px;border:2px solid #aaaaaa;
+    padding:4px;
+    border:2px solid #aaaaaa;
+    background: #ffffff;
+    text-align:center;
+}
+
+.dropword {
+    display: inline-block;
+    padding:20px;
+    background-color: #ffea9d;
+    border:2px solid #aaaaaa;
 }
