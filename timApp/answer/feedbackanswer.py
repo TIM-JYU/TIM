@@ -198,9 +198,11 @@ def get_all_feedback_answers(task_ids: List[TaskId],
 
 
 # Route to test feedback output at feedback/test
-@feedback.route("/test")
-def test():
+@feedback.route("/test/<number>")
+def test(number):
     #taskids = Answer.query.add_column("task_id").all() TODO: a query from database would help testing
+
+    nro = int(number)
 
     period1 = datetime.min
     period2 = datetime.max
@@ -211,17 +213,18 @@ def test():
     # For choosing specific tasks for the report a list of tasks is given
     # TODO: check real call to see how task_ids from different pages can be called
     nro1 = 19
-    taskid1 = TaskId(nro1, "sample_item")  # generating TaskIds - (pageid int, taskname string)
-    taskid2 = TaskId(nro1, "item1")
-    taskid3 = TaskId(nro1, "feedback1")
-    taskid4 = TaskId(nro1, "item2")
-    taskid5 = TaskId(nro1, "feedback2")
+    taskid1 = TaskId(nro, "sample_item")  # generating TaskIds - (pageid int, taskname string)
+    taskid2 = TaskId(nro, "item1")
+    taskid3 = TaskId(nro, "feedback1")
+    taskid4 = TaskId(nro, "item2")
+    taskid5 = TaskId(nro, "feedback2")
     taskids_test = [taskid1, taskid2, taskid3, taskid4, taskid5]
     ids_as_string1 = task_ids_to_strlist(taskids_test)
-    answers1 = get_all_feedback_answers(taskids_test, False, True,
+    answers = get_all_feedback_answers(taskids_test, False, True,
                                         'username', period1, period2)
 
     # Testing with taskIds from two documents
+    """
     nro2 = 22
     taskid21 = TaskId(nro2, "sample_item")
     taskid22 = TaskId(nro2, "item1")
@@ -231,10 +234,10 @@ def test():
     taskids_test2 = [taskid1, taskid2, taskid3, taskid4, taskid5, taskid21, taskid22, taskid23, taskid24, taskid25]
     ids_as_string2 = task_ids_to_strlist(taskids_test2)
     answers2 = get_all_feedback_answers(taskids_test2, True, True,
-                                        'username', period1, period2)
+                                        'username', period1, period2)"""
 
     # First returns empty, then from document nro1 and then document nro2 (change above if different)
-    return csv_response(answers1, 'excel')
+    return csv_response(answers, 'excel')
     """ return json_response({'answers0': answers0,
                           'answers1': answers1,
                           'answers2': answers2})"""
