@@ -310,6 +310,10 @@ class StackController extends PluginBase<t.TypeOf<typeof StackMarkup>,
     }
 
     async runValidationPeek(data: IStackData) {
+        if (this.pluginMeta.isPreview()) {
+            this.error = "Cannot run plugin while previewing.";
+            return;
+        }
         this.isRunning = true;
         if (!this.stackpeek) { // remove extra fields from sceen
             let divinput = this.element.find(".stackinputfeedback");
@@ -364,6 +368,10 @@ class StackController extends PluginBase<t.TypeOf<typeof StackMarkup>,
     }
 
     async runSend(getTask = false) {
+        if (this.pluginMeta.isPreview()) {
+            this.error = "Cannot run plugin while previewing.";
+            return;
+        }
         this.stackpeek = false;
         this.error = "";
         this.isRunning = true;
