@@ -245,6 +245,11 @@ cols: 1 #KENTÄN KOKO, NUMERAALINEN
                                 'text': 'Tekstikenttä (laajennettu)',
                                 'expl': 'Luo kenttä jonka syötteet ovat tekstiä',
                             },
+                            {
+                                'data': templates[2].strip(),
+                                'text': 'Label kenttä (read only)',
+                                'expl': 'Luo kenttä jonka syötteitä ei voi muokata',
+                            },
                         ],
                     },
                 ],

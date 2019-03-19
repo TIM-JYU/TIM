@@ -99,6 +99,10 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
     }
 
     saveText() {
+        this.doSaveText(false);
+    }
+
+    autoSave() {
         if (this.attrs.autosave == false) return;
         this.doSaveText(false);
     }
@@ -148,7 +152,7 @@ textfieldApp.component("textfieldRunner", {
         <input type="string"
                class="form-control"
                ng-model="$ctrl.userword"
-               ng-blur="$ctrl.saveText()"
+               ng-blur="$ctrl.autoSave()"
                ng-keydown="$event.keyCode === 13 && $ctrl.saveText()"
                ng-model-options="::$ctrl.modelOpts"
                ng-change="$ctrl.checkTextfield()"

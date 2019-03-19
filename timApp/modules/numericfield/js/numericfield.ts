@@ -95,6 +95,11 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
         this.doSaveText(false);
     }
 
+    autoSave() {
+        if (this.attrs.autosave == false) return;
+        this.doSaveText(false);
+    }
+
     async doSaveText(nosave: boolean) {
         this.error = "... saving ...";
         this.isRunning = true;
