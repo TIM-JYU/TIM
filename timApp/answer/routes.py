@@ -34,7 +34,7 @@ from timApp.plugin.containerLink import call_plugin_answer
 from timApp.plugin.plugin import Plugin, PluginWrap
 from timApp.plugin.pluginControl import find_task_ids, pluginify
 from timApp.plugin.pluginexception import PluginException
-from timApp.plugin.taskid import TaskId
+from timApp.plugin.taskid import TaskId, TaskIdAccess
 from timApp.timdb.dbaccess import get_timdb
 from timApp.timdb.exceptions import TimDbException
 from timApp.timdb.sqa import db
@@ -51,7 +51,11 @@ answers = Blueprint('answers',
 
 @answers.route("/savePoints/<int:user_id>/<int:answer_id>", methods=['PUT'])
 def save_points(answer_id, user_id):
-    answer, _ = verify_answer_access(answer_id, user_id, require_teacher_if_not_own=True)
+    answer, _ = verify_answer_access(
+        answer_id,
+        user_id,
+        require_teacher_if_not_own=True,
+    )
     tid = TaskId.parse(answer.task_id)
     d = get_doc_or_abort(tid.doc_id)
     points, = verify_json_params('points')
@@ -97,22 +101,12 @@ def post_answer(plugintype: str, task_id_ext: str):
         return abort(400, f'Task id error: {e}')
     d = get_doc_or_abort(tid.doc_id)
     d.document.insert_preamble_pars()
-    verify_task_access(d, tid.task_name, AccessType.view)
-    doc = d.document
+
     curr_user = get_current_user_object()
     try:
-        _, plugin = get_plugin_from_request(doc, task_id=tid, u=curr_user)
-    except PluginException as e:
+        plugin = verify_task_access(d, tid, AccessType.view, TaskIdAccess.ReadWrite)
+    except (PluginException, TimDbException) as e:
         return abort(400, str(e))
-    except TimDbException as e:
-        # This happens when plugin tries to call answer route when previewing because the preview par is temporary
-        # and not part of the document.
-        result = {}
-        return json_response(result)  # TODO: do only when in preview
-        # return abort(400, str(e))
-    except Exception as e:  # when in preview and do not get block id
-        result = {}
-        return json_response(result)  # TODO: do only when in preview
     if 'input' not in request.get_json():
         return json_response({'error': 'The key "input" was not found from the request.'}, 400)
     answerdata = request.get_json()['input']
@@ -473,7 +467,6 @@ def get_all_answers(task_id):
 
 class GetStateSchema(Schema):
     answer_id = fields.Int(required=True)
-    doc_id = fields.Int(required=True)
     par_id = fields.Str()
     user_id = fields.Int(required=True)
     review = fields.Bool(missing=False)
@@ -489,7 +482,6 @@ class GetStateSchema(Schema):
 @attr.s(auto_attribs=True)
 class GetStateModel:
     answer_id: int
-    doc_id: int
     user_id: int
     review: bool
     par_id: Union[str, _Missing] = missing
@@ -498,10 +490,10 @@ class GetStateModel:
 @answers.route("/getState")
 @use_args(GetStateSchema())
 def get_state(args: GetStateModel):
-    d_id, par_id, user_id, answer_id, review = args.doc_id, args.par_id, args.user_id, args.answer_id, args.review
+    par_id, user_id, answer_id, review = args.par_id, args.user_id, args.answer_id, args.review
 
     answer, doc_id = verify_answer_access(answer_id, user_id)
-    doc = Document(d_id)
+    doc = Document(doc_id)
     # if doc_id != d_id and doc_id not in doc.get_referenced_document_ids():
     #     abort(400, 'Bad document id')
 
@@ -538,7 +530,12 @@ def get_state(args: GetStateModel):
         return json_response({'html': html, 'reviewHtml': None})
 
 
-def verify_answer_access(answer_id, user_id, require_teacher_if_not_own=False) -> Tuple[Answer, int]:
+def verify_answer_access(
+        answer_id: int,
+        user_id: int,
+        require_teacher_if_not_own=False,
+        required_task_access_level: TaskIdAccess = TaskIdAccess.ReadOnly,
+) -> Tuple[Answer, int]:
     answer: Answer = Answer.query.get(answer_id)
     if answer is None:
         abort(400, 'Non-existent answer')
@@ -546,11 +543,11 @@ def verify_answer_access(answer_id, user_id, require_teacher_if_not_own=False) -
     d = get_doc_or_abort(tid.doc_id)
     if user_id != get_current_user_id() or not logged_in():
         if require_teacher_if_not_own:
-            verify_task_access(d, tid.task_name, AccessType.teacher)
+            verify_task_access(d, tid, AccessType.teacher, required_task_access_level)
         else:
-            verify_task_access(d, tid.task_name, AccessType.see_answers)
+            verify_task_access(d, tid, AccessType.see_answers, required_task_access_level)
     else:
-        verify_task_access(d, tid.task_name, AccessType.view)
+        verify_task_access(d, tid, AccessType.view, required_task_access_level)
         if not any(a.id == user_id for a in answer.users_all):
             abort(403, "You don't have access to this answer.")
     return answer, tid.doc_id

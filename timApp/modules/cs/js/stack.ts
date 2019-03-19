@@ -1,7 +1,7 @@
 ﻿import angular from "angular";
 import * as t from "io-ts";
 import {ParCompiler} from "tim/editor/parCompiler";
-import {GenericPluginMarkup, PluginBase, withDefault} from "tim/plugin/util";
+import {GenericPluginMarkup, Info, PluginBase, withDefault} from "tim/plugin/util";
 import {$http, $sce} from "tim/util/ngimport";
 import {to} from "tim/util/utils";
 
@@ -36,7 +36,9 @@ const StackAll = t.intersection([
         usercode: t.string,
     }),
     t.type({
+        info: Info,
         markup: StackMarkup,
+        preview: t.boolean,
     }),
 ]);
 
@@ -308,6 +310,10 @@ class StackController extends PluginBase<t.TypeOf<typeof StackMarkup>,
     }
 
     async runValidationPeek(data: IStackData) {
+        if (this.pluginMeta.isPreview()) {
+            this.error = "Cannot run plugin while previewing.";
+            return;
+        }
         this.isRunning = true;
         if (!this.stackpeek) { // remove extra fields from sceen
             let divinput = this.element.find(".stackinputfeedback");
@@ -362,6 +368,10 @@ class StackController extends PluginBase<t.TypeOf<typeof StackMarkup>,
     }
 
     async runSend(getTask = false) {
+        if (this.pluginMeta.isPreview()) {
+            this.error = "Cannot run plugin while previewing.";
+            return;
+        }
         this.stackpeek = false;
         this.error = "";
         this.isRunning = true;

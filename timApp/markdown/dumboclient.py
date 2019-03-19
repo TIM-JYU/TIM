@@ -8,6 +8,11 @@ import requests
 from timApp.document.timjsonencoder import TimJsonEncoder
 
 
+class DumboHTMLException(Exception):
+    code = 400
+    description = ""
+
+
 class MathType(Enum):
     SVG = 'svg'
     MathJax = 'mathjax'
@@ -71,7 +76,7 @@ def call_dumbo(data: Union[List[str], Dict, List[Dict]], path='',
     except requests.ConnectionError:
         raise Exception('Failed to connect to Dumbo')
     if r.status_code != 200:
-        raise Exception(f'Failed to get HTML from Dumbo, status code={r.status_code}, text:\n{r.text}')
+        raise DumboHTMLException()
     returned = r.json()
     if is_dict:
         return returned[0]

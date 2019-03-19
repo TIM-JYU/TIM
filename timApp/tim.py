@@ -42,6 +42,7 @@ from timApp.item.manage import manage_page
 from timApp.item.routes import view_page
 from timApp.item.routes_tags import tags_blueprint
 from timApp.lecture.routes import lecture_routes
+from timApp.markdown.dumboclient import DumboHTMLException
 from timApp.note.routes import notes
 from timApp.notification.notify import notify, send_email
 from timApp.plugin.qst.qst import qst_plugin
@@ -154,6 +155,11 @@ def forbidden(error):
 @app.errorhandler(ItemAlreadyExistsException)
 def already_exists(error: ItemAlreadyExistsException):
     return error_generic(Forbidden(description=str(error)), 403)
+
+
+@app.errorhandler(DumboHTMLException)
+def handle_dumbo_html_except(error: DumboHTMLException):
+    return error_generic(error, 400, template='dumbo_html_error.html')
 
 
 @app.errorhandler(500)

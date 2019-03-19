@@ -14,7 +14,7 @@ from isodate import parse_duration
 from timApp.auth.accesshelper import verify_manage_access, verify_ownership, verify_view_access, has_ownership, \
     verify_edit_access, get_doc_or_abort, get_item_or_abort, get_folder_or_abort
 from timApp.auth.auth_models import AccessType
-from timApp.auth.sessioninfo import get_current_user_group, get_current_user_group_object
+from timApp.auth.sessioninfo import get_current_user_group_object
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.create_item import copy_document_and_enum_translations
 from timApp.document.docentry import DocEntry
@@ -26,6 +26,7 @@ from timApp.item.validation import validate_item, validate_item_and_create_inter
 from timApp.timdb.dbaccess import get_timdb
 from timApp.timdb.sqa import db
 from timApp.user.usergroup import UserGroup
+from timApp.user.users import remove_access
 from timApp.user.userutils import grant_access, grant_default_access, get_access_type_id
 from timApp.util.flask.requesthelper import verify_json_params, get_option
 from timApp.util.flask.responsehelper import json_response, ok_response
@@ -104,11 +105,10 @@ def remove_permission_recursive(group_name, perm_type, folder_path):
     item_id = folder.id
     _, group_ids, _, _, _, _, _ = verify_and_get_params(
         item_id, group_name, perm_type)
-    timdb = get_timdb()
     for d in folder.get_all_documents(include_subdirs=True):
         _, is_owner = verify_permission_edit_access(d.id, perm_type)
         for group in group_ids:
-            timdb.users.remove_access(group, d.id, perm_type)
+            remove_access(group, d.id, perm_type)
         check_ownership_loss(is_owner, d, perm_type)
     db.session.commit()
     return ok_response()

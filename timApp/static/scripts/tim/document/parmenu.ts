@@ -13,6 +13,13 @@ function selectionToStr(selection: JQuery) {
     return selection.toArray().map((e) => "#" + e.id).join(",");
 }
 
+function checkIfIgnored(ignoredTags: string[], ignoredClasses: string[], element: JQuery) {
+    const classSelector = ignoredClasses.map((c) => "." + c).join(",");
+    const tagSelector = ignoredTags.join(",");
+    return element.parents(tagSelector).addBack(tagSelector).length > 0
+        || element.parents(classSelector).addBack(classSelector).length > 0;
+}
+
 export class ParmenuHandler {
     public sc: IScope;
     public viewctrl: ViewCtrl;
@@ -27,18 +34,18 @@ export class ParmenuHandler {
                 return false;
             }
 
-            const target = $(e.target);
-            const tag = target.prop("tagName");
+            const target = $(e.target) as JQuery;
             const par = $this.parents(".par");
             if (!isActionablePar(par)) {
                 return;
             }
 
             // Don't show paragraph menu on these specific tags or classes
-            const ignoredTags = ["BUTTON", "INPUT", "TEXTAREA", "A", "QUESTIONADDEDNEW"];
-            const ignoredClasses = ["no-popup-menu", "ace_editor"];
-            const classSelector = ignoredClasses.map((c) => "." + c).join(",");
-            if (ignoredTags.indexOf(tag) > -1 || target.parents(classSelector).length > 0) {
+            if (checkIfIgnored(
+                ["button", "input", "textarea", "a", "answerbrowser"],
+                ["no-popup-menu", "ace_editor"],
+                target,
+            )) {
                 return false;
             }
 
@@ -127,10 +134,12 @@ To comment or edit this, go to the corresponding <a href="/view/${getPreambleDoc
             return;
         }
 
-        const target = $(e.target);
-        const ignoredClasses = ["no-highlight"];
-        const classSelector = ignoredClasses.map((c) => "." + c).join(",");
-        if (target.parents(classSelector).length > 0) {
+        const target = $(e.target) as JQuery;
+        if (checkIfIgnored(
+            ["answerbrowser"],
+            ["no-highlight"],
+            target,
+        )) {
             return false;
         }
 
