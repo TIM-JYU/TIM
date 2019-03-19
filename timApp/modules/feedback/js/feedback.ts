@@ -76,6 +76,8 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
     private feedbackLevel = 5;
     private currentFeedbackLevel = 0;
     private feedbackLevelRise = false;
+    private pluginMode = 0;
+    private showMode = "Instruction paragraph"; // for demo
 
     setCurrentFeedbackLevel(number: number) {
         this.currentFeedbackLevel === number;
@@ -109,6 +111,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
         super.$onInit();
         this.addToCtrl();
         this.feedbackLevel = this.attrs.feedbackLevel || 5;
+        this.setPluginWords();
     }
 
     /**
@@ -166,25 +169,49 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
      * Handles the checking of user's answer's correctness.
      */
     handleAnswer() {
-        const selections = this.getAnswerFromPlugin();
-        const isCorrect = this.checkCorrectAnswer(this.index, selections);
-        if (isCorrect) {
-            this.feedback = this.attrs.questionItems[this.index].correctAnswerFeedback;
-            this.feedback = this.feedback.replace(answerPlaceHolder, this.userAnswer);
-        } else {
-            const matchIndex = this.compareChoices(this.index, selections);
-            if (matchIndex === -1) {
-                this.feedback = "You have no choices defined, got no matches or using match objects";
+        if (this.pluginMode === 0) {
+            this.pluginMode = 1;
+            this.showMode = "Question item paragraph";
+            return;
+        }
+
+        if (this.pluginMode === 1) {
+            if (this.index === this.attrs.questionItems.length) {
+                this.feedback = "No more question items, thanks for playing";
+                this.pluginMode = 4;
+                return;
+            }
+
+            const selections = this.getAnswerFromPlugins();
+            const isCorrect = this.checkCorrectAnswer(this.index, selections);
+            if (isCorrect) {
+                this.feedback = this.attrs.questionItems[this.index].correctAnswerFeedback;
+                this.feedback = this.feedback.replace(answerPlaceHolder, this.userAnswer);
             } else {
-                const feedbackLevels = this.attrs.questionItems[this.index].choices[matchIndex].levels;
-                if (this.currentFeedbackLevel > (feedbackLevels.length)) {
-                    this.feedback = feedbackLevels[feedbackLevels.length - 1]
-                        .replace(answerPlaceHolder, this.userAnswer);
-                } else if (this.currentFeedbackLevel < this.feedbackLevel) {
-                    this.feedback = feedbackLevels[this.currentFeedbackLevel - 1]
-                        .replace(answerPlaceHolder, this.userAnswer);
+                const matchIndex = this.compareChoices(this.index, selections);
+                if (matchIndex === -1) {
+                    this.feedback = "You have no choices defined, got no matches or using match objects";
+                } else {
+                    const feedbackLevels = this.attrs.questionItems[this.index].choices[matchIndex].levels;
+                    if (this.currentFeedbackLevel > (feedbackLevels.length)) {
+                        this.feedback = feedbackLevels[feedbackLevels.length - 1]
+                            .replace(answerPlaceHolder, this.userAnswer);
+                    } else if (this.currentFeedbackLevel < this.feedbackLevel) {
+                        this.feedback = feedbackLevels[this.currentFeedbackLevel - 1]
+                            .replace(answerPlaceHolder, this.userAnswer);
+                    }
                 }
             }
+            this.index++;
+            this.pluginMode = 2;
+            this.showMode = "Feedback paragraph";
+            return;
+        }
+
+        if (this.pluginMode === 2) {
+            this.pluginMode = 1;
+            this.feedback = "";
+            this.showMode = "Question item paragraph";
         }
     }
 
@@ -231,8 +258,8 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
             return true;
         }
         if (match.length === answer.length) {
-            for(let i=0; i < match.length; i++ ) {
-                if(match[i] !== answer[i]) {
+            for (let i = 0; i < match.length; i++) {
+                if (match[i] !== answer[i]) {
                     return false;
                 }
             }
@@ -245,7 +272,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
         return -1;
     }
 
-    compareAnswers(): boolean {
+    compareAnswers(match: string[], answer: string[]): boolean {
         return false;
     }
 
@@ -256,44 +283,44 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
      *
      * @returns(string[]) Returns the user's selections to the question item
      */
-    getAnswerFromPlugin(): string[] {
-            const plugins = this.attrs.questionItems[this.index].pluginNames;
-            const selections: string[] = [];
-            const timComponent = this.vctrl.getTimComponentByName(plugins[0]);
+    getAnswerFromPlugins(): string[] {
+        const plugins = this.attrs.questionItems[this.index].pluginNames;
+        const selections: string[] = [];
+        const timComponent = this.vctrl.getTimComponentByName(plugins[0]);
 
-            if (timComponent) {
-                const par = timComponent.getPar();
-                const content = par.children(".parContent");
-                const nodes = content[0].childNodes;
-                // console.log(nodes);
-                let answer = "";
+        if (timComponent) {
+            const par = timComponent.getPar();
+            const content = par.children(".parContent");
+            const nodes = content[0].childNodes;
+            // console.log(nodes);
+            let answer = "";
 
-                for (let n = 0; n < nodes.length; ++n) {
-                    const node = nodes[n];
-                    if (node.nodeName === "#text") {
-                        let text = node.textContent || "";
-                        text.trim();
-                        answer = answer + text;
-                    }
-                    if (node.nodeName === "TIM-PLUGIN-LOADER") {
-                        // Makeshift way to go through all the plugins in a paragraph
-                        if (node instanceof Element) {
-                            let name = node.getAttribute("task-id")!.split(".")[1];
-                            if (name) {
-                                let plugin = this.vctrl.getTimComponentByName(name);
-                                if (plugin) {
-                                    let content = plugin.getContent().trim();
-                                    selections.push(content);
-                                    answer = answer + content;
-                                }
+            for (let n = 0; n < nodes.length; ++n) {
+                const node = nodes[n];
+                if (node.nodeName === "#text") {
+                    let text = node.textContent || "";
+                    text.trim();
+                    answer = answer + text;
+                }
+                if (node.nodeName === "TIM-PLUGIN-LOADER") {
+                    // Makeshift way to go through all the plugins in a paragraph
+                    // TODO: Check for later to skip drag sources in paragraph node.getAttribute("class") === "plugindragsource"
+                    if (node instanceof Element) {
+                        let name = node.getAttribute("task-id")!.split(".")[1];
+                        if (name) {
+                            let plugin = this.vctrl.getTimComponentByName(name);
+                            if (plugin) {
+                                let content = plugin.getContent().trim();
+                                selections.push(content);
+                                answer = answer + content;
                             }
                         }
                     }
                 }
-                this.userAnswer = answer;
             }
-            return selections;
-        return [];
+            this.userAnswer = answer;
+        }
+        return selections;
     }
 
     /**
@@ -304,19 +331,19 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
      * TODO: drag&drop
      */
     setPluginWords() {
-            const items = this.attrs.questionItems;
-            for (const item of items) {
-                let i = 0;
-                for (const plugin of item.pluginNames) {
-                    const timComponent = this.vctrl.getTimComponentByName(plugin);
-                    if (timComponent && timComponent.setPluginWords) {
-                        timComponent.setPluginWords(item.words[i]);
-                        i++;
-                    } else {
-                        this.error = "Component not found or no setPluginWords-method";
-                    }
+        const items = this.attrs.questionItems;
+        for (const item of items) {
+            let i = 0;
+            for (const plugin of item.pluginNames) {
+                const timComponent = this.vctrl.getTimComponentByName(plugin);
+                if (timComponent && timComponent.setPluginWords) {
+                    timComponent.setPluginWords(item.words[i]);
+                    i++;
+                } else {
+                    this.error = "No plugin with such a name or missing setPluginWords-method";
                 }
             }
+        }
     }
 
     protected getAttributeType() {
@@ -337,6 +364,7 @@ feedbackApp.component("feedbackRunner", {
     <tim-markup-error ng-if="::$ctrl.markupError" data="::$ctrl.markupError"></tim-markup-error>
     <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
     <p ng-if="::$ctrl.stem">{{::$ctrl.stem}}</p>
+    <div>{{$ctrl.showMode}}</div>
     <div class="form-inline"><label><span>
         {{$ctrl.feedback}}</span></label>
     </div>
@@ -345,14 +373,16 @@ feedbackApp.component("feedbackRunner", {
             ng-click="$ctrl.handleAnswer()">
         {{::$ctrl.buttonText()}}
     </button>
-    <button class="timButton"
-            ng-if="::$ctrl.wordButtonText()"
-            ng-click="$ctrl.setPluginWords()">
-        {{::$ctrl.wordButtonText()}}
-    </button>
     <div ng-if="$ctrl.error" ng-bind-html="$ctrl.error"></div>
     <pre ng-if="$ctrl.result">{{$ctrl.result}}</pre>
     <p ng-if="::$ctrl.footer" ng-bind="::$ctrl.footer" class="plgfooter"></p>
 </div>
 `,
 });
+/*
+<button class="timButton"
+            ng-if="::$ctrl.wordButtonText()"
+            ng-click="$ctrl.setPluginWords()">
+        {{::$ctrl.wordButtonText()}}
+    </button>
+ */
