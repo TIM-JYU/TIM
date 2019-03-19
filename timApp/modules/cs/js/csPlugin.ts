@@ -1715,6 +1715,7 @@ class CsController extends CsBase implements IController {
         if (this.pluginMeta.isPreview()) {
             this.error = "Cannot run plugin while previewing.";
             this.runError = this.error;
+            this.isRunning = false;
             return;
         }
         const t0run = performance.now();
