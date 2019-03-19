@@ -4,7 +4,7 @@
 import angular from "angular";
 import * as t from "io-ts";
 import {ITimComponent, ViewCtrl} from "tim/document/viewctrl";
-import {GenericPluginMarkup, nullable, PluginBase, withDefault} from "tim/plugin/util";
+import {GenericPluginMarkup, nullable, PluginBase, withDefault, Info} from "tim/plugin/util";
 import {$http} from "tim/util/ngimport";
 import {to} from "tim/util/utils";
 
@@ -62,7 +62,11 @@ const FeedbackAll = t.intersection([
     t.partial({
         // userword: t.string,
     }),
-    t.type({markup: FeedbackMarkup}),
+    t.type({
+        info: Info,
+        markup: FeedbackMarkup,
+        preview: t.boolean,
+    }),
 ]);
 
 class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.TypeOf<typeof FeedbackAll>, typeof FeedbackAll> implements ITimComponent {

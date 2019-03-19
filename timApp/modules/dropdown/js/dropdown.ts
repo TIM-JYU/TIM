@@ -4,7 +4,7 @@
 import angular from "angular";
 import * as t from "io-ts";
 import {ITimComponent, ViewCtrl} from "tim/document/viewctrl";
-import {GenericPluginMarkup, PluginBase, withDefault} from "tim/plugin/util";
+import {GenericPluginMarkup, Info, PluginBase, withDefault} from "tim/plugin/util";
 import {to} from "tim/util/utils";
 import {$http} from "tim/util/ngimport";
 
@@ -27,7 +27,11 @@ const DropdownAll = t.intersection([
     t.partial({
         userword: t.string,
     }),
-    t.type({markup: DropdownMarkup}),
+    t.type({
+        info: Info,
+        markup: DropdownMarkup,
+        preview: t.boolean,
+    }),
 ]);
 
 class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.TypeOf<typeof DropdownAll>, typeof DropdownAll> implements ITimComponent {

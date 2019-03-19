@@ -4,7 +4,7 @@
 import angular, {INgModelOptions} from "angular";
 import * as t from "io-ts";
 import {ITimComponent, ViewCtrl} from "tim/document/viewctrl";
-import {GenericPluginMarkup, nullable, PluginBase, withDefault} from "tim/plugin/util";
+import {GenericPluginMarkup, Info, nullable, PluginBase, withDefault} from "tim/plugin/util";
 import {$http} from "../../../static/scripts/tim/util/ngimport";
 import {to} from "tim/util/utils";
 import "../../../cs/js/cs-parsons/jquery.ui.touch-punch.min.js";
@@ -29,7 +29,11 @@ const DragAll = t.intersection([
     t.partial({
         word: t.string,
     }),
-    t.type({markup: DragMarkup}),
+    t.type({
+        info: Info,
+        markup: DragMarkup,
+        preview: t.boolean,
+    }),
 ]);
 
 class DragController extends PluginBase<t.TypeOf<typeof DragMarkup>, t.TypeOf<typeof DragAll>, typeof DragAll> implements ITimComponent {
