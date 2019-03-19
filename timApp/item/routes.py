@@ -34,7 +34,7 @@ from timApp.plugin.pluginControl import find_task_ids, get_all_reqs
 from timApp.timdb.sqa import db
 from timApp.util.flask.requesthelper import get_option, verify_json_params
 from timApp.util.flask.responsehelper import json_response, ok_response
-from timApp.auth.sessioninfo import get_current_user_object, get_current_user_id, logged_in, current_user_in_lecture, \
+from timApp.auth.sessioninfo import get_current_user_object, logged_in, current_user_in_lecture, \
     get_user_settings, save_last_page
 from timApp.document.docinfo import DocInfo
 from timApp.timdb.exceptions import TimDbException, PreambleException
@@ -43,11 +43,10 @@ from timApp.folder.folder import Folder
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
 from timApp.util.timtiming import taketime
-from timApp.util.utils import remove_path_special_chars
+from timApp.util.utils import remove_path_special_chars, Range
 from timApp.util.utils import get_error_message
 
 DEFAULT_RELEVANCE = 10
-Range = Tuple[int, int]
 
 view_page = Blueprint('view_page',
                       __name__,
@@ -268,8 +267,9 @@ def view(item_path, template_name, usergroup=None, route="view"):
     task_groups = None
     show_task_info = False
     user_list = []
-    user_dict = None
-    task_ids, plugin_count = find_task_ids(xs)
+    task_ids, plugin_count, no_accesses = find_task_ids(xs, check_access=teacher_or_see_answers)
+    if teacher_or_see_answers and no_accesses:
+        flash('You do not have full access to the following tasks: ' + ', '.join([t.doc_task for t in no_accesses]))
     points_sum_rule = doc_settings.point_sum_rule(default={})
     try:
         total_tasks = len(points_sum_rule['groups'])

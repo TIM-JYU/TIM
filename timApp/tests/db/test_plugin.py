@@ -17,9 +17,9 @@ class PluginTest(TimDbTest):
             break
         a_ids = []
         for i in range(1, 5):
-            aid = db.answers.save_answer([self.test_user_1], p.full_task_id,
+            aid = db.answers.save_answer([self.test_user_1], p.task_id,
                                          f'content{i}', points=None, valid=True)
-            aid2 = db.answers.save_answer([self.test_user_2], p.full_task_id,
+            aid2 = db.answers.save_answer([self.test_user_2], p.task_id,
                                           f'content{i}', points=None, valid=True)
             a_ids.append((aid, aid2))
         for i, (aid, aid2) in enumerate(a_ids, start=1):
@@ -27,7 +27,7 @@ class PluginTest(TimDbTest):
             self.assert_dict_subset(to_dict(a), {
                 'content': f'content{i}',
                 'points': None,
-                'task_id': p.full_task_id,
+                'task_id': p.task_id.doc_task,
                 'valid': True
             })
             self.assertEqual(i, a.get_answer_number())
@@ -35,7 +35,7 @@ class PluginTest(TimDbTest):
             self.assert_dict_subset(to_dict(a), {
                 'content': f'content{i}',
                 'points': None,
-                'task_id': p.full_task_id,
+                'task_id': p.task_id.doc_task,
                 'valid': True
             })
             self.assertEqual(i, a.get_answer_number())

@@ -3,7 +3,7 @@
  */
 import angular, {INgModelOptions} from "angular";
 import * as t from "io-ts";
-import {GenericPluginMarkup, nullable, PluginBase, withDefault} from "tim/plugin/util";
+import {GenericPluginMarkup, GenericPluginTopLevelFields, nullable, PluginBase, withDefault} from "tim/plugin/util";
 import {$http} from "tim/util/ngimport";
 import {to} from "tim/util/utils";
 import {valueDefu} from "tim/util/utils";
@@ -28,6 +28,7 @@ const PaliAll = t.intersection([
     t.partial({
         userword: t.string,
     }),
+    GenericPluginTopLevelFields,
     t.type({markup: PaliMarkup}),
 ]);
 
@@ -145,8 +146,9 @@ paliApp.component("paliRunner", {
     controller: PaliController,
     template: `
 <div class="csRunDiv no-popup-menu">
+    <tim-markup-error ng-if="::$ctrl.markupError" data="::$ctrl.markupError"></tim-markup-error>
     <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
-    <p ng-if="::$ctrl.stem">{{::$ctrl.stem}}</p>
+    <p ng-if="::$ctrl.stem" ng-bind-html="::$ctrl.stem"></p>
     <div class="form-inline"><label>{{::$ctrl.inputstem}} <span>
         <input type="text"
                class="form-control"
@@ -154,6 +156,7 @@ paliApp.component("paliRunner", {
                ng-model-options="::$ctrl.modelOpts"
                ng-change="$ctrl.checkPalindrome()"
                ng-trim="false"
+               ng-readonly="::$ctrl.readonly"
                placeholder="{{::$ctrl.inputplaceholder}}"
                size="{{::$ctrl.cols}}"></span></label>
         <span class="unitTestGreen" ng-if="$ctrl.runTestGreen && $ctrl.userword">OK</span>
@@ -161,7 +164,7 @@ paliApp.component("paliRunner", {
     </div>
     <button class="timButton"
             ng-if="::$ctrl.buttonText()"
-            ng-disabled="$ctrl.isRunning || !$ctrl.userword"
+            ng-disabled="$ctrl.isRunning || !$ctrl.userword || $ctrl.readonly"
             ng-click="$ctrl.saveText()">
         {{::$ctrl.buttonText()}}
     </button>

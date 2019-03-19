@@ -1,8 +1,12 @@
+import html
+import re
 from copy import deepcopy
 from datetime import datetime, timezone
-from typing import Tuple, Optional, Union, Iterable, Dict, NamedTuple
+from enum import Enum
+from typing import Tuple, Optional, Union, Iterable, Dict, NamedTuple, Generator, List, Match
 
 import yaml
+from flask import render_template_string
 
 import timApp
 from timApp.answer.answer import Answer
@@ -13,11 +17,12 @@ from timApp.document.yamlblock import strip_code_block, YamlBlock, merge
 from timApp.markdown.markdownconverter import expand_macros
 from timApp.plugin.pluginOutputFormat import PluginOutputFormat
 from timApp.plugin.pluginexception import PluginException
+from timApp.plugin.taskid import TaskId, UnvalidatedTaskId, TaskIdAccess
 from timApp.printing.printsettings import PrintFormat
 from timApp.timdb.exceptions import TimDbException
 from timApp.user.user import User
 from timApp.util.rndutils import get_simple_hash_from_par_and_user
-from timApp.util.utils import try_load_json, get_current_time
+from timApp.util.utils import try_load_json, get_current_time, Range
 
 date_format = '%Y-%m-%d %H:%M:%S'
 AUTOMD = 'automd'
@@ -28,6 +33,21 @@ NOLAZY = "<!--nolazy-->"
 NEVERLAZY = "NEVERLAZY"
 
 
+# Maintains a mapping of plugin types to names of plugins' content field.
+# Required if plugin wants to refer to a non-content field (such as points)
+# because TIM does not know the structure of plugin state.
+CONTENT_FIELD_NAME_MAP = {
+    'csPlugin': 'usercode',
+    'pali': 'userword',
+}
+
+
+class PluginWrap(Enum):
+    Nothing = 1
+    NoLoader = 2
+    Full = 3
+
+
 class PluginRenderOptions(NamedTuple):
     user: Optional[User]
     do_lazy: bool
@@ -36,7 +56,8 @@ class PluginRenderOptions(NamedTuple):
     target_format: PrintFormat
     output_format: PluginOutputFormat
     review: bool
-    wrap_in_div: bool
+    wraptype: PluginWrap
+    current_user: User
 
     @property
     def is_html(self):
@@ -77,14 +98,6 @@ def get_num_value(values, key, default=None):
     return value
 
 
-def handle_plugin_error(plugin_data, task_id_name):
-    if 'error' in plugin_data:
-        task_id_error = ' Task id: ' + task_id_name if task_id_name else ''
-        if isinstance(plugin_data, str):
-            raise PluginException(plugin_data + task_id_error)
-        raise PluginException(plugin_data['error'] + task_id_error)
-
-
 class Plugin:
     deadline_key = 'deadline'
     starttime_key = 'starttime'
@@ -92,31 +105,34 @@ class Plugin:
     answer_limit_key = 'answerLimit'
     limit_defaults = {'mmcq': 1, 'mmcq2': 1, 'mcq': 1, 'mcq2': 1}
 
-    def __init__(self, task_id: Optional[str], values: dict, plugin_type: str,
-                 plugin_class: dict, par: Optional[DocParagraph] = None):
+    def __init__(self, task_id: Optional[TaskId],
+                 values: dict,
+                 plugin_type: str,
+                 par: Optional[DocParagraph] = None):
         self.answer: Optional[Answer] = None
         self.answer_count = None
         self.options: PluginRenderOptions = None
         self.task_id = task_id
+        if task_id and (task_id.doc_id == par.doc.doc_id or not task_id.doc_id):
+            # self.task_id = TaskId.parse(task_id, require_doc_id=False)
+            # TODO check if par can be None here
+            self.task_id.update_doc_id_from_block(par)
+            self.task_id.maybe_set_hint(par.get_id())
+            if par.get_attr('readonly') == 'view' and not self.task_id.access_specifier:
+                self.task_id.access_specifier = TaskIdAccess.ReadOnly
         assert isinstance(values, dict)
         self.values = values
         self.type = plugin_type
-        self.plugin_class = plugin_class
         self.par = par
         self.points_rule_cache = None  # cache for points rule
         self.output = None
         self.plugin_lazy = None
 
+    # TODO don't set task_id in HTML or JSON at all if there isn't one.
+    #  Currently at least csPlugin cannot handle taskID being None.
     @property
-    def full_task_id(self):
-        if self.par.ref_doc is not None:
-            return f'{self.par.ref_doc.doc_id}.{self.task_id or ""}'
-        else:
-            return f'{self.par.doc.doc_id}.{self.task_id or ""}'
-
-    @property
-    def task_id_ext(self):
-        return f'{self.full_task_id}.{self.par.get_id()}'
+    def fake_task_id(self):
+        return f'{self.par.doc.doc_id}..{self.par.get_id()}'
 
     @staticmethod
     def get_date(d):
@@ -133,37 +149,11 @@ class Plugin:
         return d
 
     @staticmethod
-    def from_task_id(task_id: str, user: Optional[User] = None):
-        doc_id, task_id_name, par_id = Plugin.parse_task_id(task_id)
-        doc = Document(doc_id)
+    def from_task_id(task_id: str, user: User):
+        tid = TaskId.parse(task_id)
+        doc = Document(tid.doc_id)
         doc.insert_preamble_pars()
-        if par_id is not None:
-            try:
-                par = doc.get_paragraph(par_id)
-            except TimDbException as e:
-                raise PluginException(e)
-        else:
-            try:
-                par = doc.get_paragraph_by_task(task_id_name)
-            except TimDbException as e:
-                raise PluginException(e)
-        if par is None:
-            raise PluginException('Task not found in the document: ' + task_id_name)
-        return Plugin.from_paragraph(par, user)
-
-    @staticmethod
-    def from_paragraph_macros(par: DocParagraph, global_attrs: Dict[str, str],
-                              macros: Dict[str, object],
-                              macro_delimiter: str):
-        if not par.is_plugin():
-            raise PluginException(f'The paragraph {par.get_id()} is not a plugin.')
-        task_id_name = par.get_attr('taskId')
-        plugin_name = par.get_attr('plugin')
-        plugin_class = timApp.plugin.containerLink.get_plugin(plugin_name)
-        plugin_data = parse_plugin_values_macros(par, global_attrs, macros, macro_delimiter)
-        handle_plugin_error(plugin_data, task_id_name)
-        p = Plugin(task_id_name, plugin_data['markup'], par.get_attrs()['plugin'], par=par, plugin_class= plugin_class)
-        return p
+        return find_plugin_from_document(doc, tid, user)
 
     @staticmethod
     def from_paragraph(par: DocParagraph, user: Optional[User] = None):
@@ -172,36 +162,18 @@ class Plugin:
             raise PluginException(f'The paragraph {par.get_id()} is not a plugin.')
         task_id_name = par.get_attr('taskId')
         plugin_name = par.get_attr('plugin')
-        plugin_class = timApp.plugin.containerLink.get_plugin(plugin_name)
         rnd_seed = get_simple_hash_from_par_and_user(par, user)  # TODO: RND_SEED get users rnd_seed for this plugin
         par.insert_rnds(rnd_seed)
         plugin_data = parse_plugin_values(par,
                                           global_attrs=doc.get_settings().global_plugin_attrs(),
                                           macroinfo=doc.get_settings().get_macroinfo(user))
-        handle_plugin_error(plugin_data, task_id_name)
-        p = Plugin(task_id_name, plugin_data['markup'], par.get_attrs()['plugin'], par=par, plugin_class= plugin_class)
+        p = Plugin(
+            TaskId.parse(task_id_name, require_doc_id=False, allow_block_hint=False) if task_id_name else None,
+            plugin_data,
+            plugin_name,
+            par=par,
+        )
         return p
-
-    @staticmethod
-    def parse_task_id(task_id: str) -> Tuple[int, Optional[str], Optional[str]]:
-        """Splits task id into document id and task name.
-
-        :rtype: tuple[int, str]
-        :type task_id: str
-        :param task_id: task_id that is of the form "22.palindrome"
-        :return: tuple of the form (22, "palindrome")
-
-        """
-        pieces = task_id.split('.')
-        if not 2 <= len(pieces) <= 3:
-            raise PluginException('The format of task_id is invalid. Expected 1 or 2 dot characters.')
-        try:
-            doc_id = int(pieces[0])
-        except ValueError:
-            raise PluginException(f'The format of task_id is invalid. Expected integral doc id but got {pieces[0]}.')
-        task_id_name = pieces[1] if pieces[1] else None
-        par_id = pieces[2] if len(pieces) == 3 else None
-        return doc_id, task_id_name, par_id
 
     def deadline(self, default=None):
         return self.get_date(get_value(self.values, self.deadline_key, default)) or default
@@ -250,7 +222,7 @@ class Plugin:
         if self.par:
             attrs = self.par.attrs
         if self.task_id:
-            attrs['task_id'] = self.task_id
+            attrs['task_id'] = self.task_id.task_name
         attrs['plugin'] = self.type
 
         return DocParagraph.create(self.par.doc, par_id=self.par.get_id(), md=text, attrs=attrs)
@@ -284,10 +256,13 @@ class Plugin:
         self.options = options
 
     def render_json(self):
-        task_id = self.full_task_id
         options = self.options
         if self.answer is not None:
-            state = try_load_json(self.answer.content)
+            if self.task_id.is_points_ref:
+                p = f'{self.answer.points:g}' if self.answer.points is not None else ''
+                state = {self.get_content_field_name(): p}
+            else:
+                state = try_load_json(self.answer.content)
             # if isinstance(state, dict) and options.user is not None:
             if options.user is not None:
                 info = self.get_info([options.user], old_answers=self.answer_count, valid=self.answer.valid)
@@ -296,10 +271,15 @@ class Plugin:
         else:
             state = None
             info = None
+        access = {}
+        if self.task_id and self.task_id.access_specifier == TaskIdAccess.ReadOnly and \
+                not options.current_user.has_teacher_access(self.par.doc.get_docinfo()):
+            access = {'access': self.task_id.access_specifier.value}
         return {"markup": self.values,
+                **access,
                 "state": state,
-                "taskID": task_id,
-                "taskIDExt": self.task_id_ext,
+                "taskID": self.task_id.doc_task if self.task_id else self.fake_task_id,
+                "taskIDExt": self.task_id.extended_or_doc_task if self.task_id else self.fake_task_id,
                 "doLazy": options.do_lazy,
                 "userPrint": options.user_print,
                 # added preview here so that whether or not the window is in preview can be
@@ -311,6 +291,9 @@ class Plugin:
                 "targetFormat": options.target_format.value,
                 "review": options.review,
                 }
+
+    def get_content_field_name(self):
+        return CONTENT_FIELD_NAME_MAP.get(self.type, 'content')
 
     def is_answer_valid(self, old_answers, tim_info):
         """Determines whether the currently posted answer should be considered valid.
@@ -330,6 +313,10 @@ class Plugin:
         if tim_info.get('notValid', None):
             return False, 'Answer is not valid'
         return True, 'ok'
+
+    def can_give_task(self):
+        plugin_class = timApp.plugin.containerLink.get_plugin(self.type)
+        return plugin_class.get('canGiveTask', False)
 
     def is_cached(self):
         cached = self.values.get('cache', None)
@@ -361,7 +348,7 @@ class Plugin:
             return False
         return True
 
-    def is_automd_enabled(self, default = False):
+    def is_automd_enabled(self, default=False):
         return self.values.get(AUTOMD, default)
 
     def set_output(self, output: str):
@@ -376,32 +363,64 @@ class Plugin:
             return 'lazyonly' if self.is_lazy() else None
         return 'full'
 
+    def get_container_class(self):
+        return f'plugin{self.type}'
+
+    def get_wrapper_tag(self):
+        return 'div'
+
     def get_final_output(self):
-        html = self.output
-        if self.is_lazy() and html.find(LAZYSTART) < 0:
+        out = self.output
+        if self.is_lazy() and out.find(LAZYSTART) < 0:
             markup = self.values
             header = str(markup.get("header", markup.get("headerText", "")))
             stem = str(markup.get("stem", "Open plugin"))
-            html = html.replace("<!--", "<!-LAZY-").replace("-->", "-LAZY->")
-            html = f'{LAZYSTART}{html}{LAZYEND}<span style="font-weight:bold">{header}</span><div><p>{stem}</p></div>'
-        answer_attr = ''
+            out = out.replace("<!--", "<!-LAZY-").replace("-->", "-LAZY->")
+            out = f'{LAZYSTART}{out}{LAZYEND}<span style="font-weight:bold">{header}</span><div><p>{stem}</p></div>'
 
         # Create min and max height for div
         style = ''
         mh = self.values.get('-min-height', 0)
         if mh:
-            style = (f'min-height:{str(mh)};')
+            style = f'min-height:{html.escape(str(mh))};'
         mh = self.values.get('-max-height', 0)
         if mh:
-            style += f'max-height:{str(mh)};overflow-y:auto;'
+            style += f'max-height:{html.escape(str(mh))};overflow-y:auto;'
         if style:
-            style = 'style=' + style
+            style = f'style="{style}"'
 
-        plgclass = f"class=plugin{self.type}"
-
-        if self.answer:
-            answer_attr = f""" answer-id='{self.answer.id}'"""
-        return f"<div id='{self.task_id_ext}'{answer_attr} data-plugin='/{self.type}' {plgclass} {style}>{html}</div>" if self.options.wrap_in_div else html
+        html_task_id = self.task_id.extended_or_doc_task if self.task_id else self.fake_task_id
+        doc_task_id = self.task_id.doc_task_with_field if self.task_id else None
+        tag = self.get_wrapper_tag()
+        if self.options.wraptype != PluginWrap.Nothing:
+            abtype = self.get_answerbrowser_type()
+            cont = f"""
+<{tag} id='{html_task_id}' data-plugin='/{self.type}' {style}>
+{out}
+</{tag}>
+            """
+            if abtype and self.options.wraptype == PluginWrap.Full:
+                return render_template_string(
+                    """
+<tim-plugin-loader type="{{abtype}}"
+                   answer-id="{{aid or ''}}"
+                   class="{{plgclass}}"
+                   task-id="{{doc_task_id or ''}}">{{cont|safe}}</tim-plugin-loader>""",
+                    abtype=abtype,
+                    answer_count=self.answer_count,
+                    html_task_id=html_task_id,
+                    out=out,
+                    plgclass=self.get_container_class(),
+                    style=style,
+                    tag=tag,
+                    type=self.type,
+                    doc_task_id=doc_task_id,
+                    cont=cont,
+                    aid=self.answer.id if self.answer else None,
+                )
+            else:
+                return cont
+        return out
 
 
 def parse_plugin_values_macros(par: DocParagraph,
@@ -417,37 +436,135 @@ def parse_plugin_values_macros(par: DocParagraph,
     :type macro_delimiter: delimiter for macros
     :return: The parsed markup values.
     """
+    yaml_str = expand_macros_for_plugin(par, macros, macro_delimiter)
+    return load_markup_from_yaml(yaml_str, global_attrs, par.get_attr('plugin'))
+
+
+def expand_macros_for_plugin(par: DocParagraph, macros, macro_delimiter):
+    par_md = par.get_markdown()
+    rnd_macros = par.get_rands()
+    if rnd_macros:
+        macros = {**macros, **rnd_macros}
+    yaml_str = strip_code_block(par_md)
+    if not par.get_nomacros():
+        yaml_str = expand_macros(yaml_str,
+                                 macros=macros,
+                                 settings=par.doc.get_settings(),
+                                 macro_delimiter=macro_delimiter)
+    return yaml_str
+
+
+def load_markup_from_yaml(yaml_str: str, global_attrs: Dict[str, str], plugin_type: str):
     try:
-        # We get the yaml str by removing the first and last lines of the paragraph markup
-        par_md = par.get_markdown()
-        rnd_macros = par.get_rands()
-        if rnd_macros:
-            macros = {**macros, **rnd_macros}
-        yaml_str = strip_code_block(par_md)
-        if not par.get_nomacros():
-            yaml_str = expand_macros(yaml_str,
-                                     macros=macros,
-                                     settings=par.doc.get_settings(),
-                                     macro_delimiter=macro_delimiter)
-        try:
-            values = YamlBlock.from_markdown(yaml_str).values
-        except Exception:
-            return {'error': "YAML is malformed: " + yaml_str}
-        else:
-            if global_attrs:
-                if type(global_attrs) is str:
-                    return {'error': 'global_plugin_attrs should be a dict, not str'}
-                global_attrs = deepcopy(global_attrs)
-                final_values = global_attrs.get('all', {})
-                merge(final_values, global_attrs.get(par.get_attrs()['plugin'], {}))
-                merge(final_values, values)
-                values = final_values
-            return {"markup": values}
-    except Exception as e:
-        return {'error': "Unknown error: " + str(e)}
+        values = YamlBlock.from_markdown(yaml_str).values
+    except Exception:
+        raise PluginException("YAML is malformed: " + yaml_str)
+    if global_attrs:
+        if isinstance(global_attrs, str):
+            raise PluginException('global_plugin_attrs should be a dict, not str')
+        global_attrs = deepcopy(global_attrs)
+        final_values = global_attrs.get('all', {})
+        merge(final_values, global_attrs.get(plugin_type, {}))
+        merge(final_values, values)
+        values = final_values
+    return values
 
 
 def parse_plugin_values(par: DocParagraph,
                         global_attrs: Dict[str, str],
                         macroinfo: MacroInfo) -> Dict:
     return parse_plugin_values_macros(par, global_attrs, macroinfo.get_macros(), macroinfo.get_macro_delimiter())
+
+
+def find_inline_plugins(block: DocParagraph, macroinfo: MacroInfo) -> Generator[
+    Tuple[UnvalidatedTaskId, Optional[str], Range, str], None, None]:
+    md = block.get_expanded_markdown(macroinfo=macroinfo)
+
+    # "}" not allowed in inlineplugins for now
+    # TODO make task id optional
+    matches: List[Match] = re.finditer(r'{#([^ }\n]+)([ \n][^}]+)?}', md)
+    for m in matches:
+        task_str = m.group(1)
+        task_id = UnvalidatedTaskId(task_str)
+        p_yaml = m.group(2)
+        p_range = (m.start(), m.end())
+        yield task_id, p_yaml, p_range, md
+
+
+def maybe_get_plugin_from_par(p: DocParagraph, task_id: TaskId, u: User) -> Optional[Plugin]:
+    t_attr = p.get_attr('taskId')
+    if t_attr and p.get_attr('plugin'):
+        try:
+            p_tid = TaskId.parse(t_attr, allow_block_hint=False, require_doc_id=False)
+        except PluginException:
+            return None
+        if (p_tid.task_name == task_id.task_name or
+                (task_id.doc_id and p_tid.doc_id and p_tid.doc_task == task_id.doc_task)):
+            return Plugin.from_paragraph(p, user=u)
+    def_plug = p.get_attr('defaultplugin')
+    if def_plug:
+        settings = p.doc.get_settings()
+        for p_task_id, p_yaml, p_range, md in find_inline_plugins(block=p,
+                                                                  macroinfo=settings.get_macroinfo(user=u)):
+            p_task_id = p_task_id.validate()
+            if p_task_id.task_name != task_id.task_name:
+                continue
+            plugin_type = p_task_id.plugin_type or def_plug
+            y = load_markup_from_yaml(finalize_inline_yaml(p_yaml), settings.global_plugin_attrs(), plugin_type)
+            return InlinePlugin(
+                task_id=p_task_id,
+                values=y,
+                plugin_type=plugin_type,
+                p_range=p_range,
+                par=p,
+            )
+    return None
+
+
+def find_plugin_from_document(d: Document, task_id: TaskId, u: User):
+    with d.__iter__() as it:
+        for p in it:
+            if task_id.block_id_hint and p.get_id() != task_id.block_id_hint:
+                continue
+            if p.is_reference():
+                try:
+                    ref_pars = p.get_referenced_pars()
+                except TimDbException:  # Ignore invalid references
+                    continue
+                else:
+                    for rp in ref_pars:
+                        plug = maybe_get_plugin_from_par(rp, task_id, u)
+                        if plug:
+                            return plug
+            plug = maybe_get_plugin_from_par(p, task_id, u)
+            if plug:
+                return plug
+
+    raise TimDbException(f'Task not found in the document: {task_id.task_name}')
+
+
+class InlinePlugin(Plugin):
+    def __init__(
+            self,
+            task_id: Optional[TaskId],
+            values: dict,
+            plugin_type: str,
+            p_range: Range,
+            par: Optional[DocParagraph] = None,
+    ):
+        super().__init__(task_id, values, plugin_type, par)
+        self.range = p_range
+
+    def get_container_class(self):
+        return f'{super().get_container_class()} inlineplugin'
+
+    def get_wrapper_tag(self):
+        return 'span'
+
+
+def finalize_inline_yaml(p_yaml: Optional[str]):
+    if not p_yaml:
+        return ''
+    if '\n' not in p_yaml:
+        return f'{{{p_yaml}}}'
+    return p_yaml

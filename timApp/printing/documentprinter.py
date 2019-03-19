@@ -5,7 +5,7 @@ import os
 import re
 import subprocess
 import tempfile
-from typing import Optional, List, Tuple, Dict
+from typing import Optional, List, Tuple, Dict, Any
 
 from flask import current_app
 from jinja2 import Environment
@@ -22,10 +22,11 @@ from timApp.document.randutils import hashfunc
 from timApp.document.specialnames import TEMPLATE_FOLDER_NAME, PRINT_FOLDER_NAME
 from timApp.document.yamlblock import strip_code_block
 from timApp.markdown.markdownconverter import expand_macros, create_environment
-from timApp.plugin.plugin import get_value
+from timApp.plugin.plugin import get_value, PluginWrap
 from timApp.plugin.plugin import parse_plugin_values_macros
 from timApp.plugin.pluginControl import pluginify
 from timApp.plugin.pluginOutputFormat import PluginOutputFormat
+from timApp.plugin.pluginexception import PluginException
 from timApp.printing.printsettings import PrintFormat
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docinfo import DocInfo
@@ -163,23 +164,26 @@ class DocumentPrinter:
             # Replace plugin- and question pars with regular docpars with the md defined in the 'print' block
             # of their yaml as the md content of the replacement par
             if par.is_plugin():
-                plugin_yaml = parse_plugin_values_macros(par=par,
-                                                         global_attrs=pdoc_plugin_attrs,
-                                                         macros=pdoc_macros,
-                                                         macro_delimiter=pdoc_macro_delimiter)
-                plugin_yaml_beforeprint = get_value(plugin_yaml.get('markup'), 'texbeforeprint')
+                try:
+                    plugin_yaml = parse_plugin_values_macros(par=par,
+                                                             global_attrs=pdoc_plugin_attrs,
+                                                             macros=pdoc_macros,
+                                                             macro_delimiter=pdoc_macro_delimiter)
+                except PluginException:
+                    plugin_yaml = {}
+                plugin_yaml_beforeprint = get_value(plugin_yaml, 'texbeforeprint')
                 if plugin_yaml_beforeprint is not None:
                     bppar = DocParagraph.create(doc=self._doc_entry.document, md=plugin_yaml_beforeprint)
                     par_infos.append(p_info)
                     pars_to_print.append(bppar)
 
-                plugin_yaml_print = get_value(plugin_yaml.get('markup'), 'texprint')
+                plugin_yaml_print = get_value(plugin_yaml, 'texprint')
                 if plugin_yaml_print is not None:
                     ppar = DocParagraph.create(doc=self._doc_entry.document, md=plugin_yaml_print)
                 par_infos.append(p_info)
                 pars_to_print.append(ppar)
 
-                plugin_yaml_afterprint = get_value(plugin_yaml.get('markup'), 'texafterprint')
+                plugin_yaml_afterprint = get_value(plugin_yaml, 'texafterprint')
                 if plugin_yaml_afterprint is not None:
                     appar = DocParagraph.create(doc=self._doc_entry.document, md=plugin_yaml_afterprint)
                     par_infos.append(p_info)
@@ -194,12 +198,12 @@ class DocumentPrinter:
             tformat = PrintFormat.LATEX
 
         # render markdown for plugins
-        pars_to_print, _, _ = pluginify(
+        pars_to_print, _, _, _ = pluginify(
             doc=self._doc_entry.document,
             pars=pars_to_print,
             user=get_current_user_object(),
             output_format=PluginOutputFormat.MD,
-            wrap_in_div=False,
+            pluginwrap=PluginWrap.Nothing,
             user_print=plugins_user_print,
             target_format=tformat,
             dereference=False,

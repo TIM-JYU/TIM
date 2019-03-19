@@ -1,7 +1,7 @@
 ﻿import angular from "angular";
 import * as t from "io-ts";
 import {ViewCtrl} from "tim/document/viewctrl";
-import {GenericPluginMarkup, nullable, PluginBase, withDefault} from "tim/plugin/util";
+import {GenericPluginMarkup, Info, nullable, PluginBase, withDefault} from "tim/plugin/util";
 import {valueDefu, valueOr} from "tim/util/utils";
 
 const videoApp = angular.module("videoApp", ["ngSanitize"]);
@@ -111,7 +111,11 @@ const ShowFileMarkup = t.intersection([
         open: withDefault(t.boolean, false),
     }),
 ]);
-const ShowFileAll = t.type({markup: ShowFileMarkup});
+const ShowFileAll = t.type({
+    info: Info,
+    markup: ShowFileMarkup,
+    preview: t.boolean,
+});
 
 class ShowFileController extends PluginBase<t.TypeOf<typeof ShowFileMarkup>,
     t.TypeOf<typeof ShowFileAll>,

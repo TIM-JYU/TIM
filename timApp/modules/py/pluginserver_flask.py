@@ -17,6 +17,7 @@ If validation fails, the plugin returns an error with status code 422.
 """
 import base64
 import json
+from pprint import pprint
 from typing import Optional, Set, Union, TypeVar, Generic, Dict, List
 
 import attr
@@ -55,6 +56,10 @@ class InfoSchema(Schema):
         strict = True
 
 
+def list_not_missing_fields(inst):
+    return ((k, v) for k, v in attr.asdict(inst).items() if v is not missing)
+
+
 @attr.s(auto_attribs=True)
 class GenericMarkupModel:
     """Specifies which fields the editor can use in the plugin markup.
@@ -72,7 +77,7 @@ class GenericMarkupModel:
     lazy: Union[bool, Missing] = missing
 
     def get_visible_data(self):
-        return {k: v for k, v in attr.asdict(self).items() if k not in self.hidden_keys and v is not missing}
+        return {k: v for k, v in list_not_missing_fields(self) if k not in self.hidden_keys}
 
 
 class GenericMarkupSchema(Schema):
@@ -96,6 +101,7 @@ class GenericMarkupSchema(Schema):
 
 
 class GenericHtmlSchema(Schema):
+    access = fields.Str()
     anonymous = fields.Bool(required=True)
     doLazy = fields.Bool(required=True)  # TODO this can also be string "NEVERLAZY" which now fails validation
     info = fields.Dict(allow_none=True, required=True)
@@ -155,9 +161,11 @@ class GenericHtmlModel(GenericRouteModel[PluginInput, PluginMarkup, PluginState]
     taskIDExt: str
     user_id: str
     userPrint: bool
+    access: Union[str, Missing] = missing
 
     def get_browser_json(self) -> Dict:
-        r = attr.asdict(self)
+        r = dict(list_not_missing_fields(self))
+        pprint(r)
         r['markup'] = self.markup.get_visible_data()
         return r
 
@@ -189,15 +197,15 @@ def render_validationerror(e: ValidationError):
     """Renders a validation error as HTML indicating which fields were erroneous."""
     return render_template_string(
         """
-        <div class="pluginError">
-        The following fields have invalid values:
-        <ul>
-        {% for k, v in errors.items() %}
-        <li>{{k}}: {{v[0]}}</li>
-        {% endfor %}
-        </ul>
-        </div>
-        """,
+<div class="pluginError">
+The following fields have invalid values:
+<ul>
+{%- for k, v in errors.items() -%}
+<li>{{k}}: {{v[0]}}</li>
+{%- endfor -%}
+</ul>
+</div>
+        """.strip(),
         errors=e.messages.get('markup', e.messages.get('input', e.messages)))
 
 
@@ -215,7 +223,7 @@ def render_plugin_with_login_request(m: GenericHtmlModel[PluginInput, PluginMark
 
 def make_base64(d: dict):
     """Converts the given dict to a base64-encoded JSON string."""
-    return base64.b64encode(json.dumps(d).encode()).decode()
+    return base64.b64encode(json.dumps(d, sort_keys=True).encode()).decode()
 
 
 def is_lazy(q: GenericHtmlModel):

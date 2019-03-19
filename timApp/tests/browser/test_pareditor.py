@@ -77,8 +77,7 @@ class ParEditorTest(BrowserTest):
         return pareditor
 
     def click_add_bottom(self):
-        add_bottom = self.drv.find_element_by_css_selector('.addBottom')
-        add_bottom.click()
+        self.find_element_avoid_staleness('.addBottom', click=True)
 
     def test_autocomplete(self):
         self.login_browser_quick_test1()

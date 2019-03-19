@@ -1,8 +1,8 @@
 import itertools
-
-from flask import Request, current_app, request
-from flask import request, abort
 from typing import Optional
+
+from flask import Request, current_app
+from flask import request, abort
 from werkzeug.wrappers import BaseRequest
 
 from timApp.timdb.exceptions import InvalidReferenceException
@@ -29,16 +29,6 @@ def verify_json_params(*args: str, require=True, default=None, error_msgs=None):
             return ()
 
         result += (val,)
-    return result
-
-
-def unpack_args(*args, types):
-    result = ()
-    json_params = request.args
-    for idx, arg in enumerate(args):
-        if arg not in json_params:
-            abort(400, f'Missing required parameter in request: {arg}')
-        result += types[idx](json_params[arg]),
     return result
 
 

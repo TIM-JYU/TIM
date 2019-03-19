@@ -70,8 +70,9 @@ def get_error_html(message: Union[str, Exception], response: Optional[str]=None)
     :return: The sanitized error message HTML.
     """
 
-    return sanitize_html('<div class="error">{}{}</div>'.format(str(message),
-                                                                f'<pre>---Full response string start---\n{response}\n---Full response string end---</pre>' if response is not None else ''))
+    return sanitize_html(
+        '<span class="error">{}{}</span>'.format(str(message),
+                                                 f'<pre>---Full response string start---\n{response}\n---Full response string end---</pre>' if response is not None else ''))
 
 
 def get_error_tex(title, message: Union[str, Exception], response: Optional[str]=None):
@@ -180,7 +181,7 @@ class cached_property:
         return value
 
 
-def try_load_json(json_str: str):
+def try_load_json(json_str: Optional[str]):
     """"""
     try:
         if json_str is not None:
@@ -249,3 +250,6 @@ def get_error_message(e: Exception) -> str:
     :return: String 'ErrorClass: reason'.
     """
     return f"{str(e.__class__.__name__)}: {str(e)}"
+
+
+Range = Tuple[int, int]

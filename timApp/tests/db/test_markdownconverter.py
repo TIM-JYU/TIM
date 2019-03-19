@@ -3,7 +3,6 @@ import unittest
 
 import timApp.markdown.dumboclient
 from timApp.document.docparagraph import DocParagraph
-from timApp.document.docsettings import DocSettings
 from timApp.markdown.markdownconverter import md_to_html, par_list_to_html_list
 from timApp.tests.db.timdbtest import TimDbTest
 
@@ -45,9 +44,7 @@ class MarkdownConverterTest(TimDbTest):
 
     def test_unsafe_not_allowed(self):
         self.assertEqual("""
-<div class="error">
-Syntax error in template: access to attribute &#8216;<strong>class</strong>&#8217; of &#8216;str&#8217; object is unsafe.
-</div>
+<p><span class="error">Syntax error in template: access to attribute &#8216;<strong>class</strong>&#8217; of &#8216;str&#8217; object is unsafe.</span></p>
         """.strip(), md_to_html("""%%''.__class__.__mro__%%""", macro_delimiter='%%', macros={}))
 
     def test_markup_md_conversion(self):

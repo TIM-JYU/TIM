@@ -23,7 +23,8 @@ from timApp.document.documents import import_document
 from timApp.item.block import Block
 from timApp.item.block import BlockType
 from timApp.item.validation import validate_item_and_create_intermediate_folders, validate_uploaded_document_content
-from timApp.plugin.plugin import Plugin
+from timApp.plugin.pluginexception import PluginException
+from timApp.plugin.taskid import TaskId, TaskIdAccess
 from timApp.tim_app import app
 from timApp.timdb.sqa import db
 from timApp.upload.uploadedfile import UploadedFile, PluginUpload, PluginUploadInfo, StampedPDF
@@ -79,8 +80,8 @@ def get_upload(relfilename: str):
         if answerupload is None:
             abort(403)
         answer = answerupload.answer
-        doc_id, task_name, _ = Plugin.parse_task_id(answer.task_id)
-        d = get_doc_or_abort(doc_id)
+        tid = TaskId.parse(answer.task_id)
+        d = get_doc_or_abort(tid.doc_id)
         verify_seeanswers_access(d)
 
     up = PluginUpload(block)
@@ -98,7 +99,12 @@ def pluginupload_file2(doc_id: int, task_id: str, user_id):
 @upload.route('/pluginUpload/<int:doc_id>/<task_id>/', methods=['POST'])
 def pluginupload_file(doc_id: int, task_id: str):
     d = get_doc_or_abort(doc_id)
-    verify_task_access(d, task_id, AccessType.view)
+    try:
+        tid = TaskId.parse(task_id, require_doc_id=False, allow_block_hint=False)
+    except PluginException:
+        return abort(400)
+    tid.doc_id = d.id
+    verify_task_access(d, tid, AccessType.view, TaskIdAccess.ReadWrite)
     file = request.files.get('file')
     if file is None:
         abort(400, 'Missing file')

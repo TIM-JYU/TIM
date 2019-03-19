@@ -41,7 +41,6 @@ def is_redirect(response: Response):
 
 orig_getaddrinfo = socket.getaddrinfo
 
-
 TEXTUAL_MIMETYPES = {'text/html', 'application/json', 'text/plain'}
 LOCALHOST = 'http://localhost/'
 
@@ -59,7 +58,7 @@ testclient: FlaskClient = timApp.tim.app.test_client()
 testclient = testclient.__enter__()
 
 
-def get_content(element: HtmlElement, selector: str='.parContent') -> List[str]:
+def get_content(element: HtmlElement, selector: str = '.parContent') -> List[str]:
     return [r.text_content().strip() for r in element.cssselect(selector)]
 
 
@@ -445,10 +444,12 @@ class TimRouteTest(TimDbTest):
 
     def update_whole_doc(self, doc: DocInfo, text: str, **kwargs):
         doc.document.clear_mem_cache()
-        return self.json_post(f'/update/{doc.id}', {'fulltext': text, 'original': doc.document.export_markdown()}, **kwargs)
+        return self.json_post(f'/update/{doc.id}', {'fulltext': text, 'original': doc.document.export_markdown()},
+                              **kwargs)
 
     def post_answer(self, plugin_type, task_id, user_input,
-                    save_teacher=False, teacher=False, user_id=None, answer_id=None, ref_from=None, **kwargs):
+                    save_teacher=False, teacher=False, user_id=None, answer_id=None, ref_from=None,
+                    **kwargs):
         return self.json_put(f'/{plugin_type}/{task_id}/answer/',
                              {"input": user_input,
                               "ref_from": {'docId': ref_from[0], 'par': ref_from[1]} if ref_from else None,
@@ -457,6 +458,12 @@ class TimRouteTest(TimDbTest):
                                          "userId": user_id,
                                          "answer_id": answer_id,
                                          "saveAnswer": True}}, **kwargs)
+
+    def post_answer_no_abdata(self, plugin_type, task_id, user_input, ref_from=None, **kwargs):
+        return self.json_put(f'/{plugin_type}/{task_id}/answer/',
+                             {"input": user_input,
+                              "ref_from": {'docId': ref_from[0], 'par': ref_from[1]} if ref_from else None,
+                              }, **kwargs)
 
     def get_task_answers(self, task_id):
         answer_list = self.get(f'/answers/{task_id}/{self.current_user_id()}')
@@ -527,7 +534,8 @@ class TimRouteTest(TimDbTest):
         """
         return self.json_post('/logout', json_data={'user_id': user_id})
 
-    def login(self, email: str, passw: str, username: Optional[str]=None, force: bool = False, clear_last_doc: bool = True,
+    def login(self, email: str, passw: str, username: Optional[str] = None, force: bool = False,
+              clear_last_doc: bool = True,
               add: bool = False, **kwargs):
         """Logs a user in.
 
@@ -621,19 +629,19 @@ class TimRouteTest(TimDbTest):
             self.assertEqual((e1.text or '').strip(), (e2.text or '').strip())
             self.assertEqual((e1.tail or '').strip(), (e2.tail or '').strip())
             self.assertEqual(e1.attrib, e2.attrib)
-            self.assertEqual(len(e1), len(e2), msg=html.tostring(e2, pretty_print=True).decode('utf-8'))
+            self.assertEqual(len(e1), len(e2))
         except AssertionError:
-            print(html.tostring(e1).decode('utf8'))
-            print()
-            print(html.tostring(e2).decode('utf8'))
+            print(html.tostring(e1, pretty_print=True).decode('utf8'))
+            print('--------------------------------------')
+            print(html.tostring(e2, pretty_print=True).decode('utf8'))
             raise
 
         for c1, c2 in zip(e1, e2):
             self.assert_elements_equal(c1, c2)
 
     def create_translation(self, doc: DocEntry,
-                           doc_title: str='title',
-                           lang: str='en',
+                           doc_title: str = 'title',
+                           lang: str = 'en',
                            expect_contains=None,
                            expect_content=None,
                            expect_status=200,
@@ -642,7 +650,8 @@ class TimRouteTest(TimDbTest):
             expect_contains = {'title': doc_title, 'path': doc.name + '/' + lang, 'name': doc.short_name}
         j = self.json_post(f'/translate/{doc.id}/{lang}',
                            {'doc_title': doc_title},
-                           expect_contains=expect_contains, expect_content=expect_content, expect_status=expect_status, **kwargs)
+                           expect_contains=expect_contains, expect_content=expect_content, expect_status=expect_status,
+                           **kwargs)
         return Translation.query.get(j['id']) if expect_status == 200 else None
 
     def assert_content(self, element: HtmlElement, expected: List[str]):
@@ -725,6 +734,9 @@ class TimRouteTest(TimDbTest):
 
     def mark_as_read(self, doc: DocInfo, par_id, read_type=ReadParagraphType.click_red, **kwargs):
         self.json_put(f'/read/{doc.id}/{par_id}/{read_type.value}', **kwargs)
+
+    def print_html(self, e: HtmlElement):
+        print(html.tostring(e, pretty_print=True).decode())
 
 
 if __name__ == '__main__':

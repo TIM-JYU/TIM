@@ -1,6 +1,5 @@
 """"""
 import json
-import math
 from collections import defaultdict, OrderedDict
 from datetime import datetime
 from operator import itemgetter
@@ -12,6 +11,8 @@ from sqlalchemy.orm import selectinload, defaultload
 from timApp.answer.answer import Answer
 from timApp.answer.answer_models import AnswerTag, UserAnswer
 from timApp.answer.pointsumrule import PointSumRule, PointType
+from timApp.plugin.pluginControl import task_ids_to_strlist
+from timApp.plugin.taskid import TaskId
 from timApp.timdb.sqa import db
 from timApp.timdb.timdbbase import TimDbBase
 from timApp.user.user import Consent, User
@@ -22,7 +23,7 @@ class Answers(TimDbBase):
 
     def save_answer(self,
                     users: List[User],
-                    task_id: str,
+                    task_id: TaskId,
                     content: str,
                     points: Optional[float],
                     tags: Optional[List[str]] = None,
@@ -48,7 +49,7 @@ class Answers(TimDbBase):
             a.last_points_modifier = points_given_by
             return None
 
-        a = Answer(task_id=task_id, content=content, points=points, valid=valid, last_points_modifier=points_given_by)
+        a = Answer(task_id=task_id.doc_task, content=content, points=points, valid=valid, last_points_modifier=points_given_by)
         self.session.add(a)
         self.session.flush()
         answer_id = a.id
@@ -65,7 +66,7 @@ class Answers(TimDbBase):
         return answer_id
 
     def get_all_answers(self,
-                        task_ids: List[str],
+                        task_ids: List[TaskId],
                         usergroup: Optional[int],
                         hide_names: bool,
                         age: str,
@@ -96,7 +97,7 @@ class Answers(TimDbBase):
         q = (Answer
              .query
              .filter((period_from <= Answer.answered_on) & (Answer.answered_on < period_to))
-             .filter(Answer.task_id.in_(task_ids)))
+             .filter(Answer.task_id.in_(task_ids_to_strlist(task_ids))))
         if valid == 'all':
             pass
         elif valid == '0':
@@ -175,8 +176,8 @@ class Answers(TimDbBase):
             result.append(res)
         return result
 
-    def get_common_answers(self, users: List[User], task_id: str) -> List[Answer]:
-        q = Answer.query.filter_by(task_id=task_id).join(User, Answer.users).filter(
+    def get_common_answers(self, users: List[User], task_id: TaskId) -> List[Answer]:
+        q = Answer.query.filter_by(task_id=task_id.doc_task).join(User, Answer.users).filter(
             User.id.in_([u.id for u in users])).order_by(Answer.id.desc())
 
         def g():
@@ -187,7 +188,7 @@ class Answers(TimDbBase):
 
         return list(g())
 
-    def get_users_for_tasks(self, task_ids: List[str], user_ids: Optional[List[int]] = None, group_by_user=True,
+    def get_users_for_tasks(self, task_ids: List[TaskId], user_ids: Optional[List[int]] = None, group_by_user=True,
                             group_by_doc=False) -> List[Dict[str, str]]:
         if not task_ids:
             return []
@@ -201,7 +202,7 @@ class Answers(TimDbBase):
         a2 = Answer.query.with_entities(Answer.id, Answer.points).subquery()
         a1 = (Answer.query
               .join(UserAnswer, UserAnswer.answer_id == Answer.id)
-              .filter(Answer.task_id.in_(task_ids) & (Answer.valid == True))
+              .filter(Answer.task_id.in_(task_ids_to_strlist(task_ids)) & (Answer.valid == True))
               .group_by(UserAnswer.user_id, Answer.task_id)
               .with_entities(Answer.task_id,
                              UserAnswer.user_id.label('uid'),
@@ -257,7 +258,7 @@ class Answers(TimDbBase):
         return result
 
     def get_points_by_rule(self, points_rule: Optional[Dict],
-                           task_ids: List[str],
+                           task_ids: List[TaskId],
                            user_ids: Optional[List[int]] = None,
                            flatten: bool = False):
         """Computes the point sum from given tasks accoring to the given point rule.

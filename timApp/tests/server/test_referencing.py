@@ -47,7 +47,7 @@ class ReferencingTest(TimRouteTest):
         p3 = doc1.add_paragraph(text='', attrs={'rd': doc1.doc_id, 'rp': p2.get_id()})
         doc1.modify_paragraph(p1.get_id(), '', new_attrs={'rd': doc1.doc_id, 'rp': p3.get_id()})
         tree = self.get(f'/view/{doc1.doc_id}', as_tree=True)
-        result = tree.findall(r'.//div[@class="par"]/div[@class="parContent"]/div[@class="error"]')
+        result = tree.cssselect('.parContent > span.error')
         self.assertEqual(3, len(result))
         self.assertEqual(
             f'Infinite referencing loop detected: {doc1.doc_id}:{p1.get_id()} -> {doc1.doc_id}:{p3.get_id()} -> {doc1.doc_id}:{p2.get_id()} -> {doc1.doc_id}:{p1.get_id()}',
@@ -60,8 +60,7 @@ class ReferencingTest(TimRouteTest):
         doc1.add_paragraph(text='', attrs={'rd': doc1.doc_id, 'ra': 'test'})
         doc1.add_paragraph(text='', attrs={'area_end': 'test'})
         tree = self.get(f'/view/{doc1.doc_id}', as_tree=True)
-        result = tree.findall(r'.//div[@class="par"]/div[@class="parContent"]/div[@class="error"]')
-        self.assertEqual(1, len(result))
+        self.assertTrue(tree.cssselect('.parContent > span.error'))
 
     def test_reference_self(self):
         self.login_test1()
@@ -69,8 +68,7 @@ class ReferencingTest(TimRouteTest):
         p1 = doc1.add_paragraph('par')
         doc1.modify_paragraph(p1.get_id(), '', new_attrs={'rd': doc1.doc_id, 'rp': p1.get_id()})
         tree = self.get(f'/view/{doc1.doc_id}', as_tree=True)
-        result = tree.findall(r'.//div[@class="par"]/div[@class="parContent"]/div[@class="error"]')
-        self.assertEqual(1, len(result))
+        self.assertTrue(tree.cssselect('.parContent > span.error'))
 
     def test_invalid_reference_translation(self):
         self.login_test1()

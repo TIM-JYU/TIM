@@ -12,13 +12,12 @@ from timApp.auth.sessioninfo import logged_in, get_other_users_as_list, \
     get_current_user_group, get_current_user_object
 from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import DocInfo
-from timApp.document.docparagraph import DocParagraph
 from timApp.document.document import Document, dereference_pars
 from timApp.folder.folder import Folder
 from timApp.item.item import Item, ItemBase
-from timApp.timdb.exceptions import TimDbException
+from timApp.plugin.plugin import Plugin, find_plugin_from_document, maybe_get_plugin_from_par
+from timApp.plugin.taskid import TaskId, TaskIdAccess
 from timApp.timdb.sqa import db
-from timApp.timdb.timdb import TimDb
 from timApp.user.user import ItemOrBlock, User
 from timApp.user.usergroup import UserGroup
 from timApp.user.userutils import get_access_type_id, grant_access
@@ -233,18 +232,15 @@ def verify_comment_right(b: ItemOrBlock):
         abort(403)
 
 
-def get_par_from_request(doc: Document, par_id=None, task_id_name=None) -> Tuple[Document, DocParagraph]:
+def get_plugin_from_request(doc: Document, task_id: TaskId, u: User) -> Tuple[Document, Plugin]:
+    assert doc.doc_id == task_id.doc_id
     orig_doc_id, orig_par_id = get_orig_doc_and_par_id_from_request()
-    if par_id is None:
-        try:
-            par_id = doc.get_paragraph_by_task(task_id_name).get_id()
-        except TimDbException as e:
-            abort(400, str(e))
+    plug = find_plugin_from_document(doc, task_id, u)
+    par_id = plug.par.get_id()
     if orig_doc_id is None or orig_par_id is None:
-        try:
-            return doc, doc.get_paragraph(par_id)
-        except TimDbException as e:
-            abort(400, str(e))
+        if not doc.has_paragraph(par_id):
+            return abort(400, 'Plugin not found')
+        return doc, plug
     if orig_doc_id != doc.doc_id:
         orig_doc = Document(orig_doc_id)
     else:
@@ -255,8 +251,8 @@ def get_par_from_request(doc: Document, par_id=None, task_id_name=None) -> Tuple
     ctx_doc = orig_doc if (not orig_doc.get_docinfo().is_original_translation and orig_par.is_translation()) else doc
     for p in pars:
         if p.get_id() == par_id:
-            return ctx_doc, p
-    abort(404)
+            return ctx_doc, maybe_get_plugin_from_par(p, task_id, u)
+    return doc, plug
 
 
 def get_orig_doc_and_par_id_from_request() -> Tuple[int, str]:
@@ -268,23 +264,21 @@ def get_orig_doc_and_par_id_from_request() -> Tuple[int, str]:
     return doc_id, par_id
 
 
-def verify_task_access(d: DocInfo, task_id_name, access_type):
-    # If the user doesn't have access to the document, we need to check if the plugin was referenced
-    # from another document
-    if not verify_access(d, access_type, require=False):
-        orig_doc, par_id = get_orig_doc_and_par_id_from_request()
-        if orig_doc is None or par_id is None:
-            abort(403)
-        od = get_doc_or_abort(orig_doc)
-        verify_access(od, access_type)
-        par = od.document.get_paragraph(par_id)
-        if not par.is_reference():
-            abort(403)
-        pars = dereference_pars([par], context_doc=d.document)
-        found_par = next((p for p in pars if p.get_attr('taskId') == task_id_name and p.doc.doc_id == d.id), None)
-        if found_par is None:
-            abort(403)
-        return found_par
+def verify_task_access(
+        d: DocInfo,
+        task_id: TaskId,
+        access_type: AccessType,
+        required_task_access_level: TaskIdAccess,
+) -> Plugin:
+    assert d.id == task_id.doc_id
+    u = get_current_user_object()
+    doc, found_plugin = get_plugin_from_request(d.document, task_id, u)
+    verify_access(doc.get_docinfo(), access_type)
+    if found_plugin.task_id.access_specifier == TaskIdAccess.ReadOnly and \
+            required_task_access_level == TaskIdAccess.ReadWrite and \
+            not u.has_teacher_access(doc.get_docinfo()):
+        abort(403, 'This task/field is readonly and thus only writable for teachers.')
+    return found_plugin
 
 
 def grant_access_to_session_users(block_id: int):
