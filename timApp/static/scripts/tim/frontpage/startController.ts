@@ -134,7 +134,7 @@ timApp.component("timStart", {
                     <div ng-switch="$ctrl.language" ng-cloak>
                         <div ng-switch-when="en">
                             <h3>Get started</h3>
-                            <p ng-if="!$ctrl.isLoggedIn()">To log in or sign up, use the "Log in" button at the top.</p>
+                            <login-menu ng-if="!$ctrl.isLoggedIn()"></login-menu>
                             <ul class="list-unstyled">
                                 <li ng-if="$ctrl.isLoggedIn()" class="h5">
                                     <a href="/view/{{$ctrl.getCurrentUserFolderPath()}}">My documents</a>
@@ -159,8 +159,7 @@ timApp.component("timStart", {
                         </div>
                         <div ng-switch-when="fi">
                             <h3>Aloitus</h3>
-                            <p ng-if="!$ctrl.isLoggedIn()">Kirjautuaksesi sisään käytä "Log in"
-                             -painiketta sivun ylälaidassa.</p>
+                            <login-menu ng-if="!$ctrl.isLoggedIn()"></login-menu>
                             <ul class="list-unstyled">
                                 <li ng-if="$ctrl.isLoggedIn()" class="h5">
                                     <a href="/view/{{$ctrl.getCurrentUserFolderPath()}}">Omat dokumentit</a>
@@ -189,6 +188,10 @@ timApp.component("timStart", {
             <div ng-switch="$ctrl.language" ng-cloak>
                 <div ng-switch-when="en">
                     <div class="row">
+                        <div class="col-md-8 col-md-offset-2">
+                            <h4>What is TIM?</h4>
+                            <p>TIM is a document-based cloud service for producing interactive materials.</p>
+                        </div>
                         <div class="col-md-4 col-md-offset-2">
                             <h4>TIM</h4>
                             <ul class="list-unstyled">
@@ -215,6 +218,10 @@ timApp.component("timStart", {
                 </div>
                 <div ng-switch-when="fi">
                     <div class="row">
+                        <div class="col-md-8 col-md-offset-2">
+                            <h4>Mikä on TIM?</h4>
+                            <p>TIM on dokumenttipohjainen pilvipalvelu interaktiivisten materiaalien tuottamiseksi.</p>
+                        </div>
                         <div class="col-md-4 col-md-offset-2">
                             <h4>TIM</h4>
                             <ul class="list-unstyled">
