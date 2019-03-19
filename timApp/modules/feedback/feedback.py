@@ -184,30 +184,51 @@ inputstem: "Your choice:"
 field: item1
 ```""","""
 ``` {#feedback2 plugin="feedback"}
-header: Feedback
 feedbackLevel: 3
 toNextTaskRule: 2 correct answers in row
-instructionID: InstructionsID
-sampleItemID: sampleItemID
 nextTask: linkki tähän
 questionItems:
-- pluginNames: [drop2, drop3]
-  dropdownWords: [[is, do, are], [yesterday, today]]
-  dragWords: [cat, mouse, dog, cat]
-  correctAnswer: [is, today]
-  correctAnswerFeedback: "Your answer was: [answer] which is correct."
+- pluginNames: [drop1]
+  words: [[is, do, are]]
+  correctAnswer: [is]
+  correctAnswerFeedback: vastasit [answer] vastaus on oikein, drop1 feedback
   choices:
-    - match:
-        - index: 0
-          answer: do
-        - index: 2
-          answer: asd
+    - match: [do]
       levels:
-        - vastasit [answer]. vastaus on hiukan väärin
-        - vastasit [answer]. vastaus on hiukan väärin, mieti vielä
+        - vastasit [answer]. vastaus on aivan pielessä, level1 drop1 feedback
+        - vastasit [answer]. vastaus on aivan plääh, level2 drop1 feedback
+        - "oikea vastaus: is, level3 drop1 feedback"
+    - match: [are]
+      levels:
+        - vastasit [answer]. aika lähellä
+        - vastasit [answer]. mietipä vielä hetki
+        - "oikea vastaus: is, level2 drop1 feedback"
+    - match: []
+      levels:
+        - default feedback for drop1
+- pluginNames: [drop2, drop3]
+  words: [[is, do, are], [yesterday, today]]
+  correctAnswer: [is, today]
+  correctAnswerFeedback: vastasit [answer] vastaus on oikein, drop2 feedback
+  choices:
     - match: [are, yesterday]
       levels:
-        - vastasit [answer]. vastaus on aivan pielessä
+        - vastasit [answer]. vastaus on aivan pielessä, level1 drop2 feedback
+        - vastasit [answer]. vastaus on aivan plääh, level2 drop2 feedback
+        - "oikea vastaus: is, today, level3 drop2 feedback"
+    - match: [is, yesterday]
+      levels:
+        - vastasit [answer]. aika lähellä, level1 drop2 feedback
+        - vastasit [answer]. mietipä vielä hetki, level2 drop2 feedback
+        - "oikea vastaus: is, today, level3 drop2 feedback"
+    - match: [do, today]
+      levels:
+        - vastasit [answer]. virhe, level1 drop2 feedback
+        - vastasit [answer]. töttöröö, level2 drop2 feedback
+        - "oikea vastaus: is, today, level3 drop2 feedback"
+    - match: []
+      levels:
+        - default feedback for drop2,drop3
 ```
 """]
     return jsonify({

@@ -170,7 +170,7 @@ def answer(args: DropdownAnswerModel):
 def reqs():
     templates = ["""
 #- {defaultplugin="dropdown"}
-The weather {#drop1 words: [is,do,are]} nice today.
+The weather {#drop1} nice today.
 ""","""
 #- {defaultplugin="dropdown"}
 The weather {#drop2} terrible {#drop3}, don't you think?
