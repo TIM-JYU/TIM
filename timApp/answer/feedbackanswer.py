@@ -192,6 +192,7 @@ def get_all_feedback_answers(task_ids: List[TaskId],
 
         pt_dt = prev_ans.answered_on
         prev_ans = answer
+        prev_user = user
         temp_bool = not temp_bool
 
     return results

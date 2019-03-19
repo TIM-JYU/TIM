@@ -216,12 +216,12 @@ export class UserListController implements IController {
                     title: "Feedback answer report",
                     action: async ($event: IAngularEvent) => {
                         await showFeedbackAnswers({
-                            url: 'http://192.168.99.100/feedback/test/' + this.viewctrl.item.id,
+                            url: '/feedback/test/' + this.viewctrl.item.id,
                             identifier: this.viewctrl.item.id.toString(),
                             allTasks: true,
                         });
-                        const minne = 'http://192.168.99.100/feedback/test';
-                        window.location.assign(minne);
+                        const minne = 'http://192.168.99.100/feedback/test/19';
+                        //window.location.assign(minne);
                         // gets r as result json of said form TODO: form change to csv when csv done
                         // const r = await to($http.get<{'answers0': string,
                         //     'taskids1': string,
