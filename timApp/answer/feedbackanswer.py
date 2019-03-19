@@ -133,7 +133,8 @@ def get_all_feedback_answers(task_ids: List[TaskId],
             results.append(result)
         cnt += 1
         """
-
+        if (prev_user != user):
+            break
         if prev_user == None: prev_user = user
         if prev_ans == None: prev_ans = answer
         if temp_bool:
