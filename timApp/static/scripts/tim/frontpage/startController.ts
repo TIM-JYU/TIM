@@ -123,7 +123,7 @@ timApp.component("timStart", {
     <div class="row">
         <div class="col-md-8 col-md-offset-2">
             <div class="row">
-                <div class="col-md-8">
+                <div class="col-md-6 col-md-offset-2">
                     <bookmark-folder-box bookmarks="$ctrl.bookmarks" bookmark-folder-name="My courses">
                     </bookmark-folder-box>
                     <a href="/view/tim/TIM-esittely">
@@ -139,10 +139,10 @@ timApp.component("timStart", {
                                 <li ng-if="$ctrl.isLoggedIn()" class="h5">
                                     <a href="/view/{{$ctrl.getCurrentUserFolderPath()}}">My documents</a>
                                 </li>
+                                <li class="h5"><a href="/view/">All documents</a></li>
                                 <li class="h5">
                                     <a ng-click="$ctrl.openCourseListDialog()" href="#">Available courses</a>
                                 </li>
-                                <li class="h5"><a href="/view/">All documents</a></li>
                                 <li ng-if="$ctrl.isLoggedIn()" class="h5">
                                     <a ng-click="$ctrl.enableCreate()" href="#">Create a new document</a>
                                 </li>
@@ -164,10 +164,10 @@ timApp.component("timStart", {
                                 <li ng-if="$ctrl.isLoggedIn()" class="h5">
                                     <a href="/view/{{$ctrl.getCurrentUserFolderPath()}}">Omat dokumentit</a>
                                 </li>
+                                <li class="h5"><a href="/view/">Kaikki dokumentit</a></li>
                                 <li class="h5">
                                     <a ng-click="$ctrl.openCourseListDialog()" href="#">Saatavilla olevat kurssit</a>
                                 </li>
-                                <li class="h5"><a href="/view/">Selaa dokumentteja</a></li>
                                 <li ng-if="$ctrl.isLoggedIn()" class="h5">
                                     <a ng-click="$ctrl.enableCreate()" href="#">Luo uusi dokumentti</a>
                                 </li>
@@ -188,11 +188,11 @@ timApp.component("timStart", {
             <div ng-switch="$ctrl.language" ng-cloak>
                 <div ng-switch-when="en">
                     <div class="row">
-                        <div class="col-md-12">
+                        <div class="col-md-8 col-md-offset-2">
                             <h4>What is TIM?</h4>
                             <p>TIM is a document-based cloud service for producing interactive materials.</p>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-4 col-md-offset-2">
                             <h4>TIM</h4>
                             <ul class="list-unstyled">
                                 <li><a href="/view/tim/TIM-esittely">Introduction</a><sup> (F)</sup></li>
@@ -211,18 +211,18 @@ timApp.component("timStart", {
                         </div>
                     </div>
                     <div class="row">
-                        <div class="col-md-4 col-md-offset-2 text-muted text-center">
+                        <div class="col-md-4 col-md-offset-4 text-muted text-center">
                             <sup>(F)</sup> in Finnish
                         </div>
                     </div>
                 </div>
                 <div ng-switch-when="fi">
                     <div class="row">
-                        <div class="col-md-12">
+                        <div class="col-md-8 col-md-offset-2">
                             <h4>Mikä on TIM?</h4>
                             <p>TIM on dokumenttipohjainen pilvipalvelu interaktiivisten materiaalien tuottamiseksi.</p>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-4 col-md-offset-2">
                             <h4>TIM</h4>
                             <ul class="list-unstyled">
                                 <li><a href="/view/tim/TIM-esittely">Esittely</a></li>
