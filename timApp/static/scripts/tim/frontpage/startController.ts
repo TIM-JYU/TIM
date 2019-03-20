@@ -110,12 +110,12 @@ timApp.component("timStart", {
     <div class="row">
         <div ng-switch="$ctrl.language" ng-cloak class="pull-right">
             <div ng-switch-when="en">
-                <button class="timButton btn-sm" ng-click="$ctrl.changeLanguage('fi')"
-                        title="Vaihda sivun kieli suomeksi">Suomeksi</button>
+                <button class="btn btn-default btn-sm" ng-click="$ctrl.changeLanguage('fi')"
+                        title="Vaihda etusivun kieli suomeksi">Suomeksi</button>
             </div>
             <div ng-switch-when="fi">
-                <button class="timButton btn-sm" ng-click="$ctrl.changeLanguage('en')"
-                title="Change page language to English">In English</button>
+                <button class="btn btn-default btn-sm" ng-click="$ctrl.changeLanguage('en')"
+                title="Change start page language to English">In English</button>
             </div>
         </div>
         <h1 class="text-center">TIM - The Interactive Material</h1>
@@ -188,11 +188,11 @@ timApp.component("timStart", {
             <div ng-switch="$ctrl.language" ng-cloak>
                 <div ng-switch-when="en">
                     <div class="row">
-                        <div class="col-md-8 col-md-offset-2">
+                        <div class="col-md-12">
                             <h4>What is TIM?</h4>
                             <p>TIM is a document-based cloud service for producing interactive materials.</p>
                         </div>
-                        <div class="col-md-4 col-md-offset-2">
+                        <div class="col-md-4">
                             <h4>TIM</h4>
                             <ul class="list-unstyled">
                                 <li><a href="/view/tim/TIM-esittely">Introduction</a><sup> (F)</sup></li>
@@ -211,18 +211,18 @@ timApp.component("timStart", {
                         </div>
                     </div>
                     <div class="row">
-                        <div class="col-md-4 col-md-offset-4 text-muted text-center">
+                        <div class="col-md-4 col-md-offset-2 text-muted text-center">
                             <sup>(F)</sup> in Finnish
                         </div>
                     </div>
                 </div>
                 <div ng-switch-when="fi">
                     <div class="row">
-                        <div class="col-md-8 col-md-offset-2">
+                        <div class="col-md-12">
                             <h4>Mikä on TIM?</h4>
                             <p>TIM on dokumenttipohjainen pilvipalvelu interaktiivisten materiaalien tuottamiseksi.</p>
                         </div>
-                        <div class="col-md-4 col-md-offset-2">
+                        <div class="col-md-4">
                             <h4>TIM</h4>
                             <ul class="list-unstyled">
                                 <li><a href="/view/tim/TIM-esittely">Esittely</a></li>
