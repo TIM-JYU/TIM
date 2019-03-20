@@ -289,6 +289,7 @@ multisaveApp.component("multisaveRunner", {
     },
     template: `
 <div class="no-popup-menu">
+    <tim-markup-error ng-if="::$ctrl.markupError" data="::$ctrl.markupError"></tim-markup-error>
     <!-- <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
     <p ng-if="::$ctrl.stem">{{::$ctrl.stem}}</p>-->
     <button class="timButton"

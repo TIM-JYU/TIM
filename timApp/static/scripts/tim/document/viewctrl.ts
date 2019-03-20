@@ -20,7 +20,6 @@ import {IPluginInfoResponse, ParCompiler} from "../editor/parCompiler";
 import {IDocument, ITag, TagType} from "../item/IItem";
 import {LectureController} from "../lecture/lectureController";
 import {TimTableController} from "../plugin/timTable";
-//import {omapluginController} from "../../../../modules/omaplugin/js/omaplugin";
 import {initCssPrint} from "../printing/cssPrint";
 import {showMessageDialog} from "../ui/dialog";
 import {IUser} from "../user/IUser";
@@ -484,40 +483,6 @@ export class ViewCtrl implements IController {
         }
         return returnList;
     }
-
-    // public getTimComponents(list: string[]){
-    //     //ottaa listan nimistä ja palauttaa listan nimetyistä timcompeista
-    //     //input: [d1,d2,d3]
-    //     //out: [timcp1,timcmp2..
-    //     let returnList = new Array;
-    //     for(let i in list){
-    //         if(list[i].endsWith("*")){
-    //             for(let j in this.timComponents){
-    //                 //if(j.startsWith(list[i].slice(0,-1))){alert(list[i] + " " + list[i].slice(0,-1) + " " + j)}
-    //                 //alert ("EI listassa?" + !(returnList.indexOf(this.getTimComponent(j))>-1));
-    //                 if(j.startsWith(list[i].slice(0,-1)) && !(returnList.indexOf(this.getTimComponent(j))>-1)){
-    //                     returnList.push(this.getTimComponent(j));
-    //                 }
-    //             //var j = 0; j < Object.keys(this.timComponents).length; j++
-    //             }
-    //         }
-    //         else returnList.push(this.getTimComponent(list[i]));
-    //         //returnList[list[i]] = this.getTimComponent();
-    //         //const tim = this.getTimComponent(list[i])
-    //         //if (tim) alert(tim.getContent);
-    //     }
-    //     return returnList;
-    // }
-
-    /**
-     *TODO
-     */
-    // public addOmaplugin(controller: OmapluginController, name: string) {
-    //     this.omapluginit[name] = controller;
-    // }
-    // public getOmapluginControllerFromName(name: string) {
-    //     return this.omapluginit[name];
-    // }
 
     isEmptyDocument() {
         return this.docVersion[0] === 0 && this.docVersion[1] === 0; // TODO can be empty otherwise too

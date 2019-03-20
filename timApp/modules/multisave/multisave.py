@@ -2,7 +2,7 @@
 TIM example plugin: a multisavendrome checker.
 """
 import re
-from typing import Union
+from typing import Union, List
 
 import attr
 from flask import jsonify, render_template_string
@@ -39,8 +39,8 @@ class MultisaveMarkupModel(GenericMarkupModel):
     #inputstem2: Union[str, Missing] = missing
     #needed_len: Union[int, Missing] = missing
     #initword: Union[str, Missing] = missing
-    areas: Union[list, Missing] = missing
-    fields: Union[list, Missing] = missing
+    areas: Union[List[str], Missing] = missing
+    fields: Union[List[str], Missing] = missing
     #cols: Union[int, Missing] = missing
     #inputplaceholder: Union[str, Missing] = missing
 
