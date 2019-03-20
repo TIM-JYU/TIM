@@ -107,18 +107,22 @@ export class StartCtrl implements IController {
 timApp.component("timStart", {
     controller: StartCtrl,
     template: `
-    <div class="row">
-        <div ng-switch="$ctrl.language" ng-cloak class="pull-right">
-            <div ng-switch-when="en">
-                <button class="btn btn-default btn-sm" ng-click="$ctrl.changeLanguage('fi')"
-                        title="Vaihda etusivun kieli suomeksi">Suomeksi</button>
-            </div>
-            <div ng-switch-when="fi">
-                <button class="btn btn-default btn-sm" ng-click="$ctrl.changeLanguage('en')"
-                title="Change start page language to English">In English</button>
+    <div class="row col-lg-offset-2">
+        <div class="col-lg-10">
+            <h1 class="text-center">TIM - The Interactive Material</h1>
+        </div>
+        <div class="col-lg-2">
+            <div ng-switch="$ctrl.language" ng-cloak class="pull-right">
+                <div ng-switch-when="en">
+                    <button class="btn btn-default btn-sm" ng-click="$ctrl.changeLanguage('fi')"
+                            title="Vaihda etusivun kieli suomeksi">Suomeksi</button>
+                </div>
+                <div ng-switch-when="fi">
+                    <button class="btn btn-default btn-sm" ng-click="$ctrl.changeLanguage('en')"
+                    title="Change start page language to English">In English</button>
+                </div>
             </div>
         </div>
-        <h1 class="text-center">TIM - The Interactive Material</h1>
     </div>
     <div class="row">
         <div class="col-md-8 col-md-offset-2">
