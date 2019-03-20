@@ -243,16 +243,21 @@ export abstract class PluginBase<MarkupType extends IGenericPluginMarkup, A exte
     }
 
     getGroups(): string[]{
-        let returnList: string[] = [];
+        const returnList: string[] = [];
         const parents = this.element.parents('.area'); //Palauttaa vain yhden koska divit ei sisäkkäin?
-        //Parsetaan toistaiseksi manuaalisesti "area area_ulompi area_sisempi"
         if(parents[0]){
-            let areaList = parents[0].classList;
+            const areaList = parents[0].classList;
             areaList.forEach(
-                function(value){
-                    if(value.match("area_")){
-                        returnList.push(value.replace("area_", ""));
+                (value) => {
+                    const m = value.match(/^area_(\S+)$/);
+                    if (m) {
+                        returnList.push(m[1]);
+                        console.log(m[1]);
                     }
+
+                    /*if(value.match("area_")){
+                        returnList.push(value.replace("area_", ""));
+                    }*/
                 }
             )
         }
@@ -261,7 +266,7 @@ export abstract class PluginBase<MarkupType extends IGenericPluginMarkup, A exte
     }
 
     belongsToGroup(group: string): boolean {
-        return (this.getGroups().includes(group));
+        return this.getGroups().includes(group);
     }
 
     getName(): string | undefined {
