@@ -15,6 +15,7 @@ interface IFBOptions {
     periodTo: any;
     scope: string;
     answers: string;
+    format: string;
 }
 
 export interface IFeedbackAnswersParams {
@@ -51,7 +52,8 @@ export class FeedbackAnswersCtrl extends DialogController<{params: IFeedbackAnsw
             periodFrom: null,
             periodTo: null,
             scope: "task",
-            answers: "all"
+            answers: "all",
+            format: "comma"
         };
         this.$storage = $localStorage.$default({
             feedbackAnswersOptions: this.options,
@@ -89,7 +91,8 @@ export class FeedbackAnswersCtrl extends DialogController<{params: IFeedbackAnsw
         if (this.options.periodTo){
             this.options.periodTo = this.options.periodTo.toDate();
         }
-        this.close(this.options);
+        window.open(this.resolve.params.url + "?" + $httpParamSerializer(this.options), "_blank");
+        this.close({});
     }
     cancel()
     {
