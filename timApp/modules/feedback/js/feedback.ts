@@ -11,7 +11,7 @@ import {to} from "tim/util/utils";
 const feedbackApp = angular.module("feedbackApp", ["ngSanitize"]);
 export const moduleDefs = [feedbackApp];
 
-const answerPlaceHolder = "[answer]";
+const answerPlaceHolder = "@@answer@@";
 
 const MatchElement = t.type({
     answer: t.string,
@@ -28,6 +28,7 @@ const MatchElementArray = t.array(MatchElement);
 
 let StringArray = t.array(t.string);
 const Choice = t.type({
+    correct: withDefault(t.boolean, false),
     levels: StringArray,
     match: t.union([StringArray, MatchElementArray]),
 });
@@ -82,6 +83,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
     private feedbackLevelRise = false;
     private pluginMode = 0;
     private showMode = "Instruction paragraph"; // for demo
+    private taskEnd = false;
 
     setCurrentFeedbackLevel(number: number) {
         this.currentFeedbackLevel === number;
@@ -95,8 +97,8 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
         return;
     }
 
-    printFeedback() {
-        return;
+    printFeedback(feedback: string) {
+        this.feedback = feedback.replace(answerPlaceHolder, this.userAnswer);
     }
 
     getDefaultMarkup() {
@@ -175,66 +177,64 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
     handleAnswer() {
         if (this.pluginMode === 0) {
             this.pluginMode = 1;
+            // For demonstration
             this.showMode = "Question item paragraph";
+            // TODO: instruction time saving here?
             return;
         }
 
         if (this.pluginMode === 1) {
-            if (this.index === this.attrs.questionItems.length) {
+            if (this.index > this.attrs.questionItems.length) {
                 this.feedback = "No more question items, thanks for playing";
                 this.pluginMode = 4;
                 return;
             }
 
             const selections = this.getAnswerFromPlugins();
-            const isCorrect = this.checkCorrectAnswer(this.index, selections);
-            if (isCorrect) {
-                this.feedback = this.attrs.questionItems[this.index].correctAnswerFeedback;
-                this.feedback = this.feedback.replace(answerPlaceHolder, this.userAnswer);
+            const matchIndex = this.compareChoices(this.index, selections);
+
+            if (matchIndex === -1) {
+                this.error = "You have no choices defined, got no matches or using match objects";
             } else {
-                const matchIndex = this.compareChoices(this.index, selections);
-                if (matchIndex === -1) {
-                    this.feedback = "You have no choices defined, got no matches or using match objects";
+                const choice = this.attrs.questionItems[this.index].choices[matchIndex];
+                const feedbackLevels = choice.levels;
+                if (choice.correct) {
+                    // TODO: Do you want to make more than one correct feedback?
+                    this.printFeedback(feedbackLevels[feedbackLevels.length - 1]);
+                    this.taskEnd = true;
                 } else {
-                    const feedbackLevels = this.attrs.questionItems[this.index].choices[matchIndex].levels;
-                    if (this.currentFeedbackLevel > (feedbackLevels.length)) {
-                        this.feedback = feedbackLevels[feedbackLevels.length - 1]
-                            .replace(answerPlaceHolder, this.userAnswer);
-                    } else if (this.currentFeedbackLevel < this.feedbackLevel) {
-                        this.feedback = feedbackLevels[this.currentFeedbackLevel - 1]
-                            .replace(answerPlaceHolder, this.userAnswer);
+                    if (this.currentFeedbackLevel < feedbackLevels.length) {
+                        this.printFeedback(feedbackLevels[this.currentFeedbackLevel++]);
+                    } else {
+                        this.printFeedback(feedbackLevels[feedbackLevels.length - 1]);
+                        this.taskEnd = true;
                     }
                 }
             }
-            this.index++;
+            // this.index++;
             this.pluginMode = 2;
+            // For demonstration
             this.showMode = "Feedback paragraph";
+            // TODO: plugin saving here?
             return;
         }
 
         if (this.pluginMode === 2) {
             this.pluginMode = 1;
+            //TODO: feedback saving here?
             this.feedback = "";
+            // For demonstration
             this.showMode = "Question item paragraph";
         }
     }
 
-    checkCorrectAnswer(index: number, answer: string[]): boolean {
-        const correct = this.attrs.questionItems[index].correctAnswer;
-        if (correct.length === answer.length) {
-            for (let i = 0; i < correct.length; i++) {
-                if (correct[i] !== answer[i]) {
-                    if (this.currentFeedbackLevel < this.feedbackLevel) {
-                        this.currentFeedbackLevel++;
-                    }
-                    return false;
-                }
-            }
-            return true;
-        }
-        return false;
-    }
-
+    /**
+     * Returns the index of the choice matching the selections the user made to the plugins of the question item.
+     *
+     * @param index The index of the question item
+     * @param answer Array of the answers the user has selected
+     * @returns(number) The index of the choice that matches user selections
+     */
     compareChoices(index: number, answer: string[]): number {
         const choices = this.attrs.questionItems[index].choices;
         if (choices.length === 0) {
@@ -248,7 +248,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
                     return i;
                 }
             }
-            // Oliotaulukon tapauksessa
+            // If the match is a MatchObjectArray instead of a string array
             else {
                 this.checkMatchObjectArray(match, answer);
                 return -1;
@@ -276,16 +276,12 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
         return -1;
     }
 
-    compareAnswers(match: string[], answer: string[]): boolean {
-        return false;
-    }
-
     /**
      * Gets the user's answer from the visible question item this feedback-plugin is assigned to.
      * TODO: Refactor, add a way to get the answer from the visible question item
      * TODO: Maybe add getting answers in an area and with regexp?
      *
-     * @returns(string[]) Returns the user's selections to the question item
+     * @returns(string[]) The user's selections to the question item
      */
     getAnswerFromPlugins(): string[] {
         const plugins = this.attrs.questionItems[this.index].pluginNames;

@@ -20,7 +20,7 @@ const DropdownMarkup = t.intersection([
         // all withDefaults should come here; NOT in t.partial
         autoupdate: withDefault(t.number, 500),
         cols: withDefault(t.number, 20),
-        nosave: withDefault(t.boolean, false),
+        instruction: withDefault(t.boolean, false),
     }),
 ]);
 const DropdownAll = t.intersection([
@@ -69,7 +69,7 @@ class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.T
      * TODO: whole sentence, selected option, plugin type?,
      */
     save(): string {
-        this.doSave(this.attrs.nosave);
+        this.doSave(this.attrs.instruction);
         return "";
     }
 

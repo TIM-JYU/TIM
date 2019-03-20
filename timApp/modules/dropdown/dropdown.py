@@ -33,12 +33,12 @@ class DropdownStateSchema(Schema):
 @attr.s(auto_attribs=True)
 class DropdownMarkupModel(GenericMarkupModel):
     words: Union[List[str], Missing] = missing
-    nosave: Union[bool, Missing] = missing
+    instruction: Union[bool, Missing] = missing
 
 
 class DropdownMarkupSchema(GenericMarkupSchema):
     words = fields.List(fields.Str)
-    nosave = fields.Bool()
+    instruction = fields.Bool()
 
     @post_load
     def make_obj(self, data):
@@ -154,12 +154,16 @@ app = create_app(__name__, DropdownHtmlSchema())
 def answer(args: DropdownAnswerModel):
     web = {}
     result = {'web': web}
-    selectedWord = args.input.selectedWord
+    selectedword = args.input.selectedWord
 
     # plugin can ask not to save the word
     nosave = args.input.nosave
     if not nosave:
-        save = {"selectedWord": selectedWord}
+        save = {"selectedWord": selectedword}
+        result["save"] = save
+        web['result'] = "saved"
+    else:
+        save = {"selectedWord": ""}
         result["save"] = save
         web['result'] = "saved"
 
