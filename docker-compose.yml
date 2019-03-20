@@ -103,7 +103,7 @@ services:
   restart: unless-stopped
  textfield:
   image: timimages/tim:${TIM_IMAGE_TAG}
-  build: ./timApp/modules/textfield
+  #build: ./timApp/modules/textfield
   volumes:
    - ./timApp/modules/textfield:/textfield:ro
    - ./timApp/modules/py:/py:ro

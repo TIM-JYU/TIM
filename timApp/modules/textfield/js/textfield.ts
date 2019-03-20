@@ -59,9 +59,8 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
         super.$onInit();
         this.userword = this.attrsall.userword || this.attrs.initword || "";
         this.modelOpts = {debounce: this.autoupdate};
-        if (this.attrs.followid) {
-            this.vctrl.addTimComponent(this);
-        }
+        this.vctrl.addTimComponent(this);
+
     }
 
     /* EI KÄYTETÄ, MUTTA VARATAAN TOISTAISEKSI MAHDOLLISIA EVENTHANDLEREITÄ VARTEN
@@ -80,8 +79,11 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
         return -1; // not used with textfield plugin, but promised to implement in ITimComponent
     }
 
-    save(): string {
-        return this.userword; // not used with textfield plugin, but promised to implement in ITimComponent
+    save(): undefined {
+
+        this.saveText();
+        return undefined;
+        //return this.userword; // not used with textfield plugin, but promised to implement in ITimComponent
     }
 
     get autoupdate(): number {
@@ -147,6 +149,9 @@ textfieldApp.component("textfieldRunner", {
         json: "@",
     },
     controller: TextfieldController,
+    require: {
+        vctrl: "^timView",
+    },
     template: `
 <div class="textfieldNoSaveDiv">
     <tim-markup-error ng-if="::$ctrl.markupError" data="::$ctrl.markupError"></tim-markup-error>

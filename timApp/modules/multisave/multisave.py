@@ -221,28 +221,16 @@ def check_letters(word: str, needed_len: int) -> bool:
 def reqs():
     templates = ["""
 ``` {#ekamultisave plugin="multisave"}
-header: Kirjoita multisavendromi
-stem: Kirjoita multisavendromi, jossa on 5 kirjainta.
--points_array: [[0, 0.1], [0.6, 1]]
 fields:
  - d1
  - d2
  - d3
-inputstem: "multisavendromisi:"
-followid: "FOLLOWID"
-needed_len: 5
-initword: muikku
-cols: 20
 ```""", """
 ``` {#tokamultisave plugin="multisave"}
-header: Kirjoita multisavendromi
-stem: Kirjoita multisavendromi, jossa on 7 kirjainta.
--points_array: [[0, 0.1], [0.6, 1]]
-inputstem: "multisavendromisi:"
-followid: "FOLLOWID"
-needed_len: 7
-initword: muikku
-cols: 20
+areas:
+ - d1
+ - d2
+ - d3
 ```"""]
     return jsonify({
         "js": ["js/build/multisave.js"],
