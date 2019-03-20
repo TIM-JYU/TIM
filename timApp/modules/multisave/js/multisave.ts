@@ -52,11 +52,12 @@ function ismultisavendrome(s: string) {
 }
 
 export class MultisaveController extends PluginBase<t.TypeOf<typeof multisaveMarkup>, t.TypeOf<typeof multisaveAll>, typeof multisaveAll> {
-   // private result?: string;
+   private result?: string;
    // private error?: string;
    // pr//ivate isRunning = false;
    // private userword = "";
    // private runTestGreen = false;
+    private isSaved = false;
     private modelOpts!: INgModelOptions; // initialized in $onInit, so need to assure TypeScript with "!"
     private vctrl!: ViewCtrl;
 
@@ -209,6 +210,9 @@ export class MultisaveController extends PluginBase<t.TypeOf<typeof multisaveMar
                 }
             }
         }
+
+        this.isSaved = true;
+
         //if(componentsToSave.length > 0) console.log("componentsToSave true");
         // if (this.attrs.fields) console.log("attrs fields true");
         // if (!this.attrs.fields) console.log("attrs fields false");
@@ -292,9 +296,10 @@ multisaveApp.component("multisaveRunner", {
             ng-click="$ctrl.save()">
         {{::$ctrl.buttonText()}}
     </button>
-    <pre ng-if="$ctrl.result">{{$ctrl.result}}</pre>
-    <div class="form-inline"><label>{{::$ctrl.inputstem}}</label>
-    </div>
+    <!-- <pre ng-if="$ctrl.result">{{$ctrl.result}}</pre> -->
+    <pre class="savedtext" ng-if="$ctrl.isSaved"> Saved! </pre>
+    <!--  <div class="form-inline"><label>{{::$ctrl.inputstem}}</label>
+    </div> -->
     <p ng-if="::$ctrl.footer" ng-bind="::$ctrl.footer" class="plgfooter"></p>
 </div>
 `,

@@ -245,13 +245,13 @@ areas:
                         'items': [
                             {
                                 'data': templates[0].strip(),
-                                'text': '5 letters',
-                                'expl': 'Add a 5-letter multisavendrome task',
+                                'text': 'Multisave arealle',
+                                'expl': 'Multisave arealle',
                             },
                             {
                                 'data': templates[1].strip(),
-                                'text': '7 letters',
-                                'expl': 'Add a 7-letter multisavendrome task',
+                                'text': 'Multisave fieldseille',
+                                'expl': 'Multisave fieldseille',
                             },
                         ],
                     },
