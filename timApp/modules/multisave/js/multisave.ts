@@ -4,10 +4,8 @@
 import angular, {INgModelOptions} from "angular";
 import * as t from "io-ts";
 import {ITimComponent, ViewCtrl} from "tim/document/viewctrl";
-import {GenericPluginMarkup, Info, nullable, PluginBase, withDefault} from "tim/plugin/util";
-import {$http} from "tim/util/ngimport";
-import {to} from "tim/util/utils";
-import {valueDefu} from "tim/util/utils";
+import {GenericPluginMarkup, Info, PluginBase, withDefault} from "tim/plugin/util";
+import {escapeRegExp, valueDefu} from "tim/util/utils";
 
 const multisaveApp = angular.module("multisaveApp", ["ngSanitize"]);
 export const moduleDefs = [multisaveApp];
@@ -187,7 +185,7 @@ export class MultisaveController extends PluginBase<t.TypeOf<typeof multisaveMar
         if(this.attrs.fields){
             console.log("SAVE FIELDS :" + this.attrs.fields);
             for (const i of this.attrs.fields){
-                let timComponents = this.vctrl.getTimComponentsByRegex("^" + i + "$");
+                let timComponents = this.vctrl.getTimComponentsByRegex("^" + escapeRegExp(i) + "$");
                 //let timComponents = this.vctrl.getTimComponentsByGroup(i);
                 for (const v of timComponents)
                 {
@@ -220,7 +218,7 @@ export class MultisaveController extends PluginBase<t.TypeOf<typeof multisaveMar
         // if (!this.attrs.areas) console.log("attrs areas false");
         //fieldsiä tai areaa ei annettu (vai ei täsmännyt mihinkään?) -> get oma area
         //jos annettu mutta ei matchannut niin ehkei kannata tallentaa jotain mitä ei ollut tarkoitus
-        let ownArea: string | null = null;
+        let ownArea: string | undefined;
         const parents = this.element.parents('.area');
         //Palauttaa vain yhden koska divit ei sisäkkäin?
         //Parsetaan toistaiseksi manuaalisesti "area area_ulompi area_sisempi"
