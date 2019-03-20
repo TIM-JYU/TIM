@@ -42,17 +42,12 @@ def restart_server():
 def reset_css():
     """Removes CSS cache directories and thereby forces SASS to regenerate them the next time they are needed.
 
-    Requires admin privilege.
-    :return: ok_response
+    This does not have to be called anymore because webassets watches the SCSS changes.
 
+    Requires admin privilege.
     """
     verify_admin()
-    assets_dir = os.path.join('static', '.webassets-cache')
-    if os.path.exists(assets_dir):
-        shutil.rmtree(assets_dir)
-    gen_dir = os.path.join('static', app.config['SASS_GEN_PATH'])
-    if os.path.exists(gen_dir):
-        shutil.rmtree(gen_dir)
+    flash('The resetcss route does not have to be called anymore.')
     return safe_redirect(url_for('start_page'))
 
 
