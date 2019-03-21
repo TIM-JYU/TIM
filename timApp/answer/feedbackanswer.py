@@ -37,6 +37,7 @@ def get_all_feedback_answers(task_ids: List[TaskId],
     :param hide_names: names are displayed anonymously
     :param printname: full name and username or just username
     :param sort: sort by task or by
+    :param valid: 0, 1 or all
     :param period_from: don't return dates before this date
     :param period_to: don't return dates after this date
     :return: returns string in csv-form of results of adaptive feedback test
@@ -47,6 +48,7 @@ def get_all_feedback_answers(task_ids: List[TaskId],
          .query
          .filter((period_from <= Answer.answered_on) & (Answer.answered_on < period_to))
          .filter(Answer.task_id.in_(task_ids_to_strlist(task_ids))))
+    # Checks validity of answers and filters if needed.
     if valid == 'all':
         pass
     elif valid == '0':
@@ -55,28 +57,28 @@ def get_all_feedback_answers(task_ids: List[TaskId],
         q = q.filter_by(valid=True)
     # Also joins with user table to get user information
     q = q.join(User, Answer.users)
-    # Not clear what this does TODO: figure out and remove if not needed
-    #q = q.options(defaultload(Answer.users).lazyload(User.groups))
 
-    counts = Answer.valid.label('count')  # Not really used TODO: check and remove
+    # TODO: figure out what the following does and remove if not needed
+    # q = q.options(defaultload(Answer.users).lazyload(User.groups))
 
-    # Sorts the answers first with user then by time and last by task_id (task_id sort not necessary?)
+    # Sorts the answers first with user then by time - for a report of whole test result by one user
     if sort == 'username':
-        q = q.order_by(User.name, Answer.answered_on, Answer.task_id)
-    # For a report this option not necessary for now at least - depends what type reports needed in research
+        q = q.order_by(User.name, Answer.answered_on)
+    # Sorts first by task_id (actually document number) for a report where each task in the test is looked at separately
+    # TODO: check sorting as test documents may not be made in order resulting in document id:s not in right order
     else:
         q = q.order_by(Answer.task_id, User.name, Answer.answered_on)
 
-    # q with Answer, User and count data - counts not really used... TODO: remove counts if not needed
-    q = q.with_entities(Answer, User, counts)
+    # q with Answer and User data
+    q = q.with_entities(Answer, User)
 
     # makes q query an iterable qq for for-loop
-    qq: Iterable[Tuple[Answer, User, int]] = q
+    qq: Iterable[Tuple[Answer, User]] = q
 
-    return compile_csv(qq, printname, hide_names) #results
+    return compile_csv(qq, printname, hide_names)  # results
 
 
-def compile_csv(qq: Iterable[Tuple[Answer, User, int]], printname: bool, hide_names: bool):
+def compile_csv(qq: Iterable[Tuple[Answer, User]], printname: bool, hide_names: bool):
     """
 
     :param qq: database data of answers
@@ -104,7 +106,7 @@ def compile_csv(qq: Iterable[Tuple[Answer, User, int]], printname: bool, hide_na
     cnt = 0
 
     #FOR STARTS FROM HERE
-    for answer, user, n in qq:
+    for answer, user in qq:
 
         """
         points = str(answer.points)
