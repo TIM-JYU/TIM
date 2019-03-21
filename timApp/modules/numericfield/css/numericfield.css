@@ -1,7 +1,12 @@
-/*
-.form-control {
-    height: 30px;
-    size: 4px;
-    max-width: 70px;
+.pluginnumericfield answerbrowser {
+    display: none;
 }
-*/
+
+textfield-runner .stem {
+    text-align: center;
+    height: 6px;
+}
+
+.pluginnumericfield .answerBrowserPlaceholder {
+    display: none;
+}

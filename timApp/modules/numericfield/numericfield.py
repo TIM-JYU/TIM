@@ -183,10 +183,8 @@ def answer(args: NumericfieldAnswerModel):
 
     nosave = args.input.nosave
     if not nosave:
-        # tim_info = {"points": points}
         save = {"numericvalue": numericvalue}
         result["save"] = save
-        # result["tim_info"] = tim_info
         web['result'] = "saved"
 
     return jsonify(result)
@@ -198,10 +196,10 @@ def reqs():
     templates = ["""
 ``` {#numericfield_normal plugin="numericfield"}
 needed_len: 1 #MINIMIPITUUS, NUMERAALINEN
-cols: 1 #KENTÄN KOKO, NUMERAALINEN
+cols: 5 #KENTÄN KOKO, NUMERAALINEN
 autosave: true #AUTOSAVE, PÄÄLLÄ
 ```""", """
-``` {#textfield_extended plugin="textfield"}
+``` {#numericfield_extended plugin="numericfield"}
 header: #OTSIKKO, TYHJÄ = EI OTSIKKOA
 stem: #KYSYMYS, TYHJÄ = EI KYSYMYSTÄ
 inputstem: #VASTAUS, TYHJÄ = EI VASTAUSTA
@@ -210,7 +208,7 @@ fields: #KENTTÄVIITTAUKSET, TYHJÄ = EI VIITTAUKSIA
 needed_len: 1 #MINIMIPITUUS, NUMERAALINEN 
 initnumber: #ALKUARVO, TYHJÄ = EI ALKUARVOA
 buttonText: Save #PAINIKKEEN NIMI, TYHJÄ = EI PAINIKETTA
-cols: 1 #KENTÄN KOKO, NUMERAALINEN
+cols: 5 #KENTÄN KOKO, NUMERAALINEN
 autosave: false #AUTOSAVE, POIS PÄÄLTÄ
 ```"""
 ]

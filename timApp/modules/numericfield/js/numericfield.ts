@@ -25,7 +25,7 @@ const NumericfieldMarkup = t.intersection([
     t.type({
         // all withDefaults should come here; NOT in t.partial
         autoupdate: withDefault(t.number, 500),
-        cols: withDefault(t.number, 20),
+        cols: withDefault(t.number, 1),
     }),
 ]);
 const NumericfieldAll = t.intersection([
@@ -65,9 +65,7 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
         super.$onInit();
         this.numericvalue = this.attrsall.numericvalue || this.attrs.initnumber || undefined;
         this.modelOpts = {debounce: this.autoupdate};
-        if (this.attrs.followid) {
-            this.vctrl.addTimComponent(this);
-        }
+        this.vctrl.addTimComponent(this);
     }
 
     /**
@@ -140,7 +138,6 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
      * Used as e.g. timButton ng-click event.
      */
     saveText() {
-        if (this.attrs.autosave == false) return;
         this.doSaveText(false);
     }
 
@@ -192,18 +189,25 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
 
 /**
  * numericfieldRunner as HTML component.
+ * Attribute style used to force user given cols to determine size.
+ * If needed, attribute step="0.01" can determine lower step size between scroll-up/down.
  */
 numericfieldApp.component("numericfieldRunner", {
     bindings: {
         json: "@",
     },
     controller: NumericfieldController,
+    require: {
+        vctrl: "^timView",
+    },
     template: `
 <div class="numericfieldNoSaveDiv">
+    <tim-markup-error ng-if="::$ctrl.markupError" data="::$ctrl.markupError"></tim-markup-error>
     <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
     <p ng-if="::$ctrl.stem">{{::$ctrl.stem}}</p>
-    <div class="form-inline"><label>{{::$ctrl.inputstem}} <span>   
+    <div class="form-inline"><label>{{::$ctrl.inputstem}} <span>
         <input type="number"
+               style="width: {{::$ctrl.cols}}em"
                class="form-control"
                ng-model="$ctrl.numericvalue"
                ng-blur="$ctrl.saveText()"
@@ -211,8 +215,8 @@ numericfieldApp.component("numericfieldRunner", {
                ng-model-options="::$ctrl.modelOpts"
                ng-change="$ctrl.checkNumericfield()"
                ng-trim="false"
-               placeholder="{{::$ctrl.inputplaceholder}}"
-               size="{{::$ctrl.cols}}"></span></label>
+               placeholder="{{::$ctrl.inputplaceholder}}">
+        </span></label>
     </div>
     <button class="timButton"
             ng-if="$ctrl.buttonText()"
