@@ -1,6 +1,7 @@
 import os
 import re
 import sre_constants
+from pathlib import Path
 from typing import Dict
 
 import attr
@@ -10,6 +11,9 @@ from timApp.item.item import Item
 from timApp.user.settings.theme import Theme
 from timApp.user.settings.theme_css import generate_theme_scss, ThemeNotFoundException, get_combined_css_filename
 from timApp.util.utils import cached_property
+
+
+static_folder = Path('static')
 
 
 @attr.s(auto_attribs=True)
@@ -32,10 +36,10 @@ class Preferences:
         css_file_list.sort()
         theme_list = [Theme(f) for f in css_file_list]
         try:
-            generate_theme_scss(theme_list, os.path.join('static', current_app.config['SASS_GEN_PATH']))
+            generate_theme_scss(theme_list, static_folder / current_app.config['SASS_GEN_PATH'])
         except ThemeNotFoundException:
             theme_list = []
-            generate_theme_scss(theme_list, os.path.join('static', current_app.config['SASS_GEN_PATH']))
+            generate_theme_scss(theme_list, static_folder / current_app.config['SASS_GEN_PATH'])
         self.css_combined = get_combined_css_filename(theme_list)
 
     @cached_property

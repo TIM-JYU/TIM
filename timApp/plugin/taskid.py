@@ -42,7 +42,7 @@ class TaskId:
 
     @staticmethod
     def parse(s: str, require_doc_id=True, allow_block_hint=True) -> 'TaskId':
-        m = re.fullmatch(r'((\d+)\.)?([a-zA-Z0-9_-]+)(\.([a-zA-Z0-9_-]+))?(:([a-zA-Z]*)(:(readonly|readwrite))?)?', s)
+        m = re.fullmatch(r'((\d+)\.)?([a-zåäöA-ZÅÄÖ0-9_-]+)(\.([a-zA-Z0-9_-]+))?(:([a-zA-Z]*)(:(readonly|readwrite))?)?', s)
         if not m:
             raise PluginException('Task name can only have characters a-z, 0-9, "_" and "-".')
         doc_id = m.group(2)

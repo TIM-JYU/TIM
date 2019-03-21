@@ -1,0 +1,26 @@
+@media print {
+    .parContent p {
+        font-size: 16px;
+        font-family: Verdana;
+    }
+
+    .parContent h1 {
+        font-size: 32px;
+        font-family: Verdana;
+    }
+
+    .parContent h2 {
+        font-size: 24px;
+        font-family: Verdana;
+    }
+
+    .parContent h3 {
+        font-size: 21px;
+        font-family: Verdana;
+    }
+
+    .parContent h4 {
+        font-size: 18px;
+        font-family: Verdana;
+    }
+}
