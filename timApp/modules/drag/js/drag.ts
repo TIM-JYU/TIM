@@ -8,9 +8,10 @@ import {GenericPluginMarkup, Info, nullable, PluginBase, withDefault} from "tim/
 import {$http} from "../../../static/scripts/tim/util/ngimport";
 
 import {to} from "tim/util/utils";
-import "../../../cs/js/cs-parsons/jquery.ui.touch-punch.min.js";
+// import "../../../cs/js/cs-parsons/jquery.ui.touch-punch.min.js";
+import ad from "angularjs-dragula";
 
-const dragApp = angular.module("dragApp", ["ngSanitize"]);
+const dragApp = angular.module("dragApp", ["ngSanitize", ad(angular)]);
 export const moduleDefs = [dragApp];
 
 const DragMarkup = t.intersection([
@@ -182,10 +183,8 @@ dragApp.component("dragRunner", {
     template: `
 <div>
     <div class="form-inline">
-     <div class="dropword" ng-on-dragover="$ctrl.onDragOver($event)" ng-on-drop="$ctrl.onDrop($event)">
-        <span class="dragword" ng-show="$ctrl.word.length > 0" 
-             draggable="true"
-             ng-on-dragstart="$ctrl.onDragStart($event)">
+     <div class="dropword" dragula-scope="$ctrl.vctrl.scope" dragula='"dropzone"'>
+        <span class="dragword" ng-if="$ctrl.word.length > 0" >
         {{$ctrl.word}}
         </span>
      </div>
@@ -193,5 +192,5 @@ dragApp.component("dragRunner", {
     <div ng-if="$ctrl.error" ng-bind-html="$ctrl.error"></div>
     <p ng-if="::$ctrl.footer" ng-bind="::$ctrl.footer" class="plgfooter"></p>
 </div>
-`
+`,
 });

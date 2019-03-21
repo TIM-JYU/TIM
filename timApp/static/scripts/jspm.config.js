@@ -172,6 +172,7 @@ SystemJS.config({
     "github:*/*.json"
   ],
   map: {
+    "angularjs-dragula": "npm:angularjs-dragula@2.0.0",
     "deepmerge": "npm:deepmerge@3.0.0",
     "io-ts": "npm:io-ts@1.4.1",
     "angular-diff-match-patch": "npm:angular-diff-match-patch@0.7.4",
@@ -589,6 +590,29 @@ SystemJS.config({
     "npm:io-ts@1.4.1": {
       "map": {
         "fp-ts": "npm:fp-ts@1.11.1"
+      }
+    },
+    "npm:angularjs-dragula@2.0.0": {
+      "map": {
+        "atoa": "npm:atoa@1.0.0",
+        "dragula": "npm:dragula@3.7.2"
+      }
+    },
+    "npm:dragula@3.7.2": {
+      "map": {
+        "crossvent": "npm:crossvent@1.5.4",
+        "contra": "npm:contra@1.9.4"
+      }
+    },
+    "npm:contra@1.9.4": {
+      "map": {
+        "atoa": "npm:atoa@1.0.0",
+        "ticky": "npm:ticky@1.0.1"
+      }
+    },
+    "npm:crossvent@1.5.4": {
+      "map": {
+        "custom-event": "npm:custom-event@1.0.0"
       }
     }
   }
