@@ -4,9 +4,9 @@
 import angular, {INgModelOptions} from "angular";
 import * as t from "io-ts";
 import {ITimComponent, ViewCtrl} from "tim/document/viewctrl";
-
 import {GenericPluginMarkup, Info, nullable, PluginBase, withDefault} from "tim/plugin/util";
 import {$http} from "../../../static/scripts/tim/util/ngimport";
+
 import {to} from "tim/util/utils";
 import "../../../cs/js/cs-parsons/jquery.ui.touch-punch.min.js";
 
