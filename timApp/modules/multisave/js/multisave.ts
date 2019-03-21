@@ -69,9 +69,8 @@ export class MultisaveController extends PluginBase<t.TypeOf<typeof multisaveMar
         let componentsToSave: ITimComponent[] = [];
         //TODO: componentsToSave as a map?
         if(this.attrs.fields){
-            console.log("SAVE FIELDS :" + this.attrs.fields);
             for (const i of this.attrs.fields){
-                let timComponents = this.vctrl.getTimComponentsByRegex("^" + escapeRegExp(i) + "$");
+                let timComponents = this.vctrl.getTimComponentsByRegex("^" + i + "$");
                 for (const v of timComponents)
                 {
                     if (!componentsToSave.includes(v)) componentsToSave.push(v)
