@@ -1,17 +1,21 @@
 import json
 from typing import List, Tuple, Iterable
+import dateutil.relativedelta
 
 from flask import Blueprint, request
 
 from timApp.user.user import User
 from timApp.util.flask.responsehelper import csv_response
 from timApp.plugin.taskid import TaskId
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from timApp.answer.answer import Answer
 from timApp.plugin.pluginControl import task_ids_to_strlist
 
 from timApp.document.docentry import DocEntry
 from timApp.util.flask.requesthelper import get_option
+from timApp.util.utils import get_current_time
+from timApp.auth.accesshelper import verify_logged_in, verify_teacher_access
+from timApp.plugin.pluginControl import find_task_ids
 
 feedback = Blueprint('feedback',
                      __name__,
@@ -184,9 +188,12 @@ def compile_csv(qq: Iterable[Tuple[Answer, User, int]], printname: bool, hide_na
 # Route to test feedback output at feedback/test
 @feedback.route("/test/<path:doc_path>")
 def test(doc_path):
-    #taskids = Answer.query.add_column("task_id").all() TODO: a query from database would help testing
-
+    verify_logged_in()
     d = DocEntry.find_by_path(doc_path, fallback_to_id=True)
+
+    pars = d.document.get_dereferenced_paragraphs()
+    task_ids, _, _ = find_task_ids(pars)
+
     nro = int(d.id)#int(number)
     name = get_option(request, 'name', 'both')
     hidename = False
@@ -203,8 +210,31 @@ def test(doc_path):
     else:
         dialect = 'excel'
 
-    period1 = datetime.min
-    period2 = datetime.max
+    period = get_option(request, 'period', 'whenever')
+    period_from = datetime.min.replace(tzinfo=timezone.utc)
+    period_to = get_current_time()
+
+    if period == 'whenever':
+        pass
+    elif period == 'sincelast':
+        pass    # TODO: last fetch
+    elif period == 'day':
+        period_from = period_to - timedelta(days=1)
+    elif period == 'week':
+        period_from = period_to - timedelta(weeks=1)
+    elif period == 'month':
+        period_from = period_to - dateutil.relativedelta.relativedelta(months=1)
+    elif period == 'other':
+        period_from_str = get_option(request, 'periodFrom', period_from.isoformat())
+        period_to_str = get_option(request, 'periodTo', period_to.isoformat())
+        try:
+            period_from = dateutil.parser.parse(period_from_str)
+        except (ValueError, OverflowError):
+            pass
+        try:
+            period_to = dateutil.parser.parse(period_to_str)
+        except (ValueError, OverflowError):
+            pass
 
     # For choosing specific tasks for the report a list of tasks is given
     # TODO: check real call to see how task_ids from different pages can be called
@@ -214,22 +244,11 @@ def test(doc_path):
     taskid4 = TaskId(nro, "item2")
     taskid5 = TaskId(nro, "feedback2")
     taskids_test = [taskid1, taskid2, taskid3, taskid4, taskid5]
-    ids_as_string1 = task_ids_to_strlist(taskids_test)
-    answers = get_all_feedback_answers(taskids_test, hidename, fullname,
-                                        'username', period1, period2)
 
-    # Testing with taskIds from two documents
-    """
-    nro2 = 22
-    taskid21 = TaskId(nro2, "sample_item")
-    taskid22 = TaskId(nro2, "item1")
-    taskid23 = TaskId(nro2, "feedback1")
-    taskid24 = TaskId(nro2, "item2")
-    taskid25 = TaskId(nro2, "feedback2")
-    taskids_test2 = [taskid1, taskid2, taskid3, taskid4, taskid5, taskid21, taskid22, taskid23, taskid24, taskid25]
-    ids_as_string2 = task_ids_to_strlist(taskids_test2)
-    answers2 = get_all_feedback_answers(taskids_test2, True, True,
-                                        'username', period1, period2)"""
+
+
+    answers = get_all_feedback_answers(task_ids, hidename, fullname,
+                                        'username', period_from, period_to)
 
     # First returns empty, then from document nro1 and then document nro2 (change above if different)
     return csv_response(answers, dialect)
