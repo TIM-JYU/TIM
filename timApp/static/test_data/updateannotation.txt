@@ -1,4 +1,0 @@
-{
-    "annotation_id": 1,
-    "visible_to": "1e1"
-}

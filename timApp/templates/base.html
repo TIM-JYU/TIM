@@ -1,5 +1,9 @@
 {% macro scss(name) -%}
-    {% assets filters="libsass", output="{}.css".format(name), name + ".scss" %}
+    {% assets
+depends=(
+"stylesheets/*.scss",
+"stylesheets/**/*.scss",
+), filters="libsass", output="{}.css".format(name), name|string + ".scss" %}
         <link rel="stylesheet" href="{{ ASSET_URL }}">
     {% endassets %}
 {%- endmacro %}
@@ -32,7 +36,7 @@
             SystemJS.import("tim");
         </script>
         {% block stylesheet %}
-            {{ scss(config.SASS_GEN_PATH + '/' + prefs.css_combined) }}
+            {{ scss(config.SASS_GEN_PATH / prefs.css_combined) }}
         {% endblock %}
         <link rel="stylesheet" href="{{ url_for('3rdparty.static', filename='npm/angular-ui-grid@4.6.3/ui-grid.min.css') }}">
         <link rel="stylesheet" href="{{ url_for('3rdparty.static', filename='npm/katex@0.7.1/dist/katex.min.css') }}">
