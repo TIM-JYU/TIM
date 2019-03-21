@@ -28,6 +28,7 @@ def get_all_feedback_answers(task_ids: List[TaskId],
                              hide_names: bool,
                              printname: bool,
                              sort: str,
+                             valid: str,
                              period_from: datetime,
                              period_to: datetime) -> List[str]:
     """
@@ -46,6 +47,12 @@ def get_all_feedback_answers(task_ids: List[TaskId],
          .query
          .filter((period_from <= Answer.answered_on) & (Answer.answered_on < period_to))
          .filter(Answer.task_id.in_(task_ids_to_strlist(task_ids))))
+    if valid == 'all':
+        pass
+    elif valid == '0':
+        q = q.filter_by(valid=False)
+    else:
+        q = q.filter_by(valid=True)
     # Also joins with user table to get user information
     q = q.join(User, Answer.users)
     # Not clear what this does TODO: figure out and remove if not needed
@@ -191,10 +198,10 @@ def compile_csv(qq: Iterable[Tuple[Answer, User, int]], printname: bool, hide_na
 @feedback.route("/test/<path:doc_path>")
 def test(doc_path):
     verify_logged_in()
-    d = DocEntry.find_by_path(doc_path, fallback_to_id=True)
-
-    pars = d.document.get_dereferenced_paragraphs()
-    task_ids, _, _ = find_task_ids(pars)
+    d = DocEntry.find_by_path(doc_path, fallback_to_id=True)    #return task from URL
+    verify_teacher_access(d)
+    pars = d.document.get_dereferenced_paragraphs()     # TODO: add documentation
+    task_ids, _, _ = find_task_ids(pars)                # 
 
 
     filtered_task_ids = filterPlugin(task_ids, 'csPlugin')  #filteröi muut paitsi feedback
@@ -204,6 +211,7 @@ def test(doc_path):
     hidename = False
     fullname = False
     format = get_option(request, 'format', 'excel')
+    validity = get_option(request, 'valid', 'all')
 
     if name == 'anonymous':
         hidename = True
@@ -253,7 +261,7 @@ def test(doc_path):
 
 
     answers = get_all_feedback_answers(filtered_task_ids, hidename, fullname,
-                                        'username', period_from, period_to)
+                                        'username', validity, period_from, period_to)
 
     # First returns empty, then from document nro1 and then document nro2 (change above if different)
     return csv_response(answers, dialect)
