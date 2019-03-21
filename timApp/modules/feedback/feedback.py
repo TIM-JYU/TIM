@@ -18,11 +18,14 @@ from pluginserver_flask import GenericMarkupModel, GenericMarkupSchema, GenericH
 @attr.s(auto_attribs=True)
 class FeedbackStateModel:
     """Model for the information that is stored in TIM database for each answer."""
-    userAnswer: str
-
+    correct: bool
+    feedback: str
+    sentence: str
 
 class FeedbackStateSchema(Schema):
-    userAnswer = fields.Str(required=True)
+    correct = fields.Bool(required=True)
+    feedback = fields.Str(required=True)
+    sentence = fields.Str(required=True)
 
     @post_load
     def make_obj(self, data):
@@ -37,12 +40,14 @@ class FeedbackMarkupModel(GenericMarkupModel):
     questionItems: Union[Any, Missing] = missing
     choice: Union[Any, Missing] = missing
     matchElement: Union[Any, Missing] = missing
+    instructionID: Union[Any, Missing] = missing
 
 
 class FeedbackMarkupSchema(GenericMarkupSchema):
     questionItems = fields.Raw()
     choice= fields.Raw()
     matchElement= fields.Raw()
+    instructionID = fields.Str()
 
     @post_load
     def make_obj(self, data):
@@ -55,18 +60,16 @@ class FeedbackMarkupSchema(GenericMarkupSchema):
 @attr.s(auto_attribs=True)
 class FeedbackInputModel:
     """Model for the information that is sent from browser (plugin AngularJS component)."""
-    userword: str
+    correct: bool
+    feedback: str
+    sentence: str
     nosave: bool = missing
 
-
 class FeedbackInputSchema(Schema):
-    userword = fields.Str(required=True)
+    correct = fields.Bool(required=True)
+    feedback = fields.Str(required=True)
+    sentence = fields.Str(required=True)
     nosave = fields.Bool()
-
-    @validates('userword')
-    def validate_userword(self, word):
-        if not word:
-            raise ValidationError('Must not be empty.')
 
     @post_load
     def make_obj(self, data):
@@ -92,8 +95,6 @@ class FeedbackHtmlModel(GenericHtmlModel[FeedbackInputModel, FeedbackMarkupModel
 
     def get_browser_json(self):
         r = super().get_browser_json()
-        if self.state:
-            r['userword'] = self.state.userword
         return r
 
     class Meta:
@@ -162,12 +163,14 @@ app = create_app(__name__, FeedbackHtmlSchema())
 def answer(args: FeedbackAnswerModel):
     web = {}
     result = {'web': web}
-    userword = args.input.userword
+    sentence = args.input.sentence
+    feedback = args.input.feedback
+    correct = args.input.correct
 
     # plugin can ask not to save the word
     nosave = args.input.nosave
     if not nosave:
-        save = {"userword": userword}
+        save = {"sentence": sentence, "correct": correct, "feedback": feedback}
         result["save"] = save
         web['result'] = "saved"
 

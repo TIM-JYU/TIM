@@ -7,6 +7,7 @@ import {ITimComponent, ViewCtrl} from "tim/document/viewctrl";
 import {GenericPluginMarkup, Info, PluginBase, withDefault} from "tim/plugin/util";
 import {to} from "tim/util/utils";
 import {$http} from "tim/util/ngimport";
+import {string} from "../../../static/scripts/jspm_packages/npm/io-ts@1.4.1/lib";
 
 const dropdownApp = angular.module("dropdownApp", ["ngSanitize"]);
 export const moduleDefs = [dropdownApp];
@@ -62,15 +63,15 @@ class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.T
      * @returns {string} The selected choice..
      */
     getContent(): string {
-        return this.selectedWord || "Nothing selected";
+        return this.selectedWord || "";
     }
 
     /**
      * TODO: whole sentence, selected option, plugin type?,
      */
-    save(): string {
-        this.doSave(this.attrs.instruction);
-        return "";
+    async save() {
+        const success = await this.doSave(this.attrs.instruction);
+        return success;
     }
 
     async doSave(nosave: boolean) {
@@ -91,6 +92,9 @@ class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.T
         if (r.ok) {
             const data = r.result.data;
             this.error = data.web.error;
+            if (data.web.error) {
+                return data.web.error;
+            }
             // this.result = data.web.result;
         } else {
             this.error = "Infinite loop or some other error?";
@@ -123,7 +127,7 @@ dropdownApp.component("dropdownRunner", {
     <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
     <p ng-if="::$ctrl.stem">{{::$ctrl.stem}}</p>
     <div class="form-inline"><label><span>
-        <select ng-model="$ctrl.selectedWord" ng-options="item for item in $ctrl.wordList" ng-change="$ctrl.save()">
+        <select ng-model="$ctrl.selectedWord" ng-options="item for item in $ctrl.wordList">
         </select>
         </span></label>
     </div>

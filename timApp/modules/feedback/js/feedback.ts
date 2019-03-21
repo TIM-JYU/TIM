@@ -49,7 +49,6 @@ const FeedbackMarkup = t.intersection([
         sampleItemID: t.string,
         nextTask: t.string,
         pluginID: t.string,
-
     }),
     GenericPluginMarkup,
     t.type({
@@ -84,10 +83,6 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
     private pluginMode = 0;
     private showMode = "Instruction paragraph"; // for demo
     private taskEnd = false;
-
-    setCurrentFeedbackLevel(number: number) {
-        this.currentFeedbackLevel === number;
-    }
 
     openBlock() {
         return;
@@ -131,13 +126,16 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
         return this.attrs.autoupdate;
     }
 
-    async doSave(nosave: boolean) {
+    async doSave(nosave: boolean, correct: boolean, sentence: string) {
         this.error = "... saving ...";
 
         this.result = undefined;
         const params = {
             input: {
                 nosave: false,
+                feedback: this.feedback,
+                correct: true,
+                sentence: sentence,
             },
         };
 
@@ -149,7 +147,10 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
         if (r.ok) {
             const data = r.result.data;
             this.error = data.web.error;
-            this.result = data.web.result;
+            if (data.web.error) {
+                return data.web.error;
+            }
+            // this.result = data.web.result;
         } else {
             this.error = "Infinite loop or some other error?";
         }
@@ -164,22 +165,36 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
     }
 
     /**
-     * Does nothing at the moment
+     * Handles saving of the feedback plugin. To get the correct answer to the database, replace user selections
+     * with the ones that are correct.
      */
-    save(): string {
-        this.doSave(false);
-        return "";
+    async save() {
+        // TODO: finish this, can you replace just one instance?
+        const choices = this.attrs.questionItems[this.index].choices;
+        let re = this.userAnswer;
+        for (const choice of choices) {
+            if (choice.correct && StringArray.is(choice.match[0])) {
+                re.replace(new RegExp("(/{1}[a-zA-Z0-9]*/{1}){1}"),"");
+                console.log();
+            }
+        }
+        return this.doSave(false, true ,re);
     }
 
     /**
      * Handles the checking of user's answer's correctness.
      */
-    handleAnswer() {
+    async handleAnswer() {
         if (this.pluginMode === 0) {
             this.pluginMode = 1;
             // For demonstration
             this.showMode = "Question item paragraph";
             // TODO: instruction time saving here?
+            const instructionQuestion = this.vctrl.getTimComponentByName(this.attrs.instructionID || "");
+            if (this.attrs.instructionID && instructionQuestion) {
+                // TODO: need to use this in something?
+                const success = this.savePlugin(instructionQuestion);
+            }
             return;
         }
 
@@ -201,31 +216,64 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
                 if (choice.correct) {
                     // TODO: Do you want to make more than one correct feedback?
                     this.printFeedback(feedbackLevels[feedbackLevels.length - 1]);
-                    this.taskEnd = true;
+                    // this.taskEnd = true;
                 } else {
                     if (this.currentFeedbackLevel < feedbackLevels.length) {
                         this.printFeedback(feedbackLevels[this.currentFeedbackLevel++]);
                     } else {
                         this.printFeedback(feedbackLevels[feedbackLevels.length - 1]);
-                        this.taskEnd = true;
+                        // this.taskEnd = true;
                     }
                 }
             }
+            // TODO: plugin saving here?
+            const plugins = this.attrs.questionItems[this.index];
+            for (const p of plugins.pluginNames) {
+                const plugin = this.vctrl.getTimComponentByName(p);
+                if (plugin) {
+                    const success = await this.savePlugin(plugin);
+                    if (!success) {
+                        this.error = "You need to select something";
+                        return;
+                    }
+                    this.error = "";
+                }
+            }
+
             // this.index++;
             this.pluginMode = 2;
             // For demonstration
             this.showMode = "Feedback paragraph";
-            // TODO: plugin saving here?
             return;
         }
 
         if (this.pluginMode === 2) {
-            this.pluginMode = 1;
             //TODO: feedback saving here?
+            const success = this.save();
+            if (!success) {
+                this.error = success;
+                return;
+            }
+
+            this.pluginMode = 1;
             this.feedback = "";
             // For demonstration
             this.showMode = "Question item paragraph";
         }
+    }
+
+    /**
+     * Saves the selected plugin's content to the database
+     *
+     * @param plugin The plugin to be saved
+     * @returns{boolean} Whether the saving was succesful
+     */
+    async savePlugin(plugin: ITimComponent) {
+        const success = await plugin.save();
+        if (success) {
+            return false;
+        }
+        return true;
     }
 
     /**
@@ -312,7 +360,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
                             if (plugin) {
                                 let content = plugin.getContent().trim();
                                 selections.push(content);
-                                answer = answer + content;
+                                answer = answer + '/' + content + '/';
                             }
                         }
                     }
@@ -365,8 +413,8 @@ feedbackApp.component("feedbackRunner", {
     <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
     <p ng-if="::$ctrl.stem">{{::$ctrl.stem}}</p>
     <div>{{$ctrl.showMode}}</div>
-    <div class="form-inline"><label><span>
-        {{$ctrl.feedback}}</span></label>
+    <div class="form-inline"><span>
+        {{$ctrl.feedback}}</span>
     </div>
     <button class="timButton"
             ng-if="::$ctrl.buttonText()"
