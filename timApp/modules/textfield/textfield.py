@@ -56,13 +56,6 @@ class TextfieldMarkupSchema(GenericMarkupSchema):
     followid = fields.String(allow_none=True)
     autosave = fields.Boolean()
 
-    '''
-    @validates('points_array')
-    def validate_points_array(self, value):
-        if (value == 0):
-            raise ValidationError('Must be of size 2 x 2.')
-   ''' # MOST LIKELY WILL NOT BE IMPLEMENTED IN TEXTFIELD
-
     @post_load
     def make_obj(self, data):
         return TextfieldMarkupModel(**data)
@@ -104,6 +97,9 @@ class TextfieldAttrs(Schema):
 @attr.s(auto_attribs=True)
 class TextfieldHtmlModel(GenericHtmlModel[TextfieldInputModel, TextfieldMarkupModel, TextfieldStateModel]):
     def get_component_html_name(self) -> str:
+        # HOW TO CHOOSE A NEW RUNNER BY CHOOSING TEMPLATE[2] ???
+        # chosentemplate = super().get_browser_json()
+        # if chosentemplate['templates[2]']: return 'label-runner'
         return 'textfield-runner'
 
     def get_static_html(self) -> str:
@@ -212,16 +208,13 @@ buttonText: Save #PAINIKKEEN NIMI, TYHJÄ = EI PAINIKETTA
 cols: 1 #KENTÄN KOKO, NUMERAALINEN
 autosave: false #AUTOSAVE, POIS PÄÄLTÄ
 ```""", """
-``` {#textfield_label plugin="textfield"}
-header: #OTSIKKO, TYHJÄ = EI OTSIKKOA
-stem: #SELITE (YLLÄ), TYHJÄ = EI SELITETTÄ
-inputstem: #SELITE (EDESSÄ), TYHJÄ = EI SELITETTÄ
+``` {#label plugin="textfield" readonly=view}
 followid: #SEURANTAID, TYHJÄ = EI SEURANTAID:tä
 fields: #KENTTÄVIITTAUKSET, TYHJÄ = EI VIITTAUKSIA
 needed_len: 1 #MINIMIPITUUS, NUMERAALINEN 
 initword: #ALKUARVO, TYHJÄ = EI ALKUARVOA
-buttonText: Save #PAINIKKEEN NIMI, TYHJÄ = EI PAINIKETTA
 cols: 1 #KENTÄN KOKO, NUMERAALINEN
+autosave: false #AUTOSAVE, POIS PÄÄLTÄ
 ```"""
 ]
     return jsonify({

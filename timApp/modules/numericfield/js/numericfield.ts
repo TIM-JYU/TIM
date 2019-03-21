@@ -1,5 +1,5 @@
 /**
- * Defines the client-side implementation of an example plugin (a numericfield checker).
+ * Defines the client-side implementation of numericfield plugin.
  */
 import angular, {INgModelOptions} from "angular";
 import * as t from "io-ts";
@@ -51,10 +51,16 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
         return {};
     }
 
+    /**
+     * Method returning (user) defined text for the button
+     */
     buttonText() {
         return super.buttonText() || null;
     }
 
+    /**
+     * Settings on every new page load
+     */
     $onInit() {
         super.$onInit();
         this.numericvalue = this.attrsall.numericvalue || this.attrs.initnumber || undefined;
@@ -64,46 +70,95 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
         }
     }
 
+    /**
+     * Will run after $onInit - reserved for possible eventhandlers OR to be removed
+     */
+    /*
+    $postLink() {
+        if (this.userword == "") {
+            this.userword = this.attrs.initword || "";
+        }
+    }
+    */
+
+    /**
+     * Method to return (user) content in string form.
+     * Not used in textfield plugin, but promised to be implemented in ITimComponent.
+     */
     getContent(): string {
-        return; // not used with numericfield plugin, but promised to implement in ITimComponent
+        return;
     }
 
+    // noinspection JSUnusedGlobalSymbols
+    /**
+     * Method to return (user) content in numeric form.
+     */
     getNumericContent(): number {
         return this.numericvalue;
     }
 
-    save(): string {
-        return this.numericvalue.toString(); // not used with numericfield plugin, but promised to implement in ITimComponent
+    /**
+     * Save method for other plguins, needed by e.g. multisave plugin
+     */
+    save(): undefined {
+        this.saveText();
+        return undefined;
     }
 
+    /**
+     * Method used for autoupdating
+     */
     get autoupdate(): number {
         return this.attrs.autoupdate;
     }
 
+    /**
+     * Method to return (user) set inputstem (textfeed before userinput box)
+     */
     get inputstem() {
         return this.attrs.inputstem || null;
     }
 
+    /**
+     * Method to return (user) set col size (size of the field)
+     */
     get cols() {
         return this.attrs.cols;
     }
 
+    /**
+     * Method to initialize content
+     */
     initCode() {
         this.numericvalue = this.attrs.initnumber || undefined;
         this.error = undefined;
         this.result = undefined;
     }
 
+    /**
+     * Method to (re)direct save request to actual save method.
+     * Used as e.g. timButton ng-click event.
+     */
     saveText() {
         if (this.attrs.autosave == false) return;
         this.doSaveText(false);
     }
 
+    // noinspection JSUnusedGlobalSymbols
+    /**
+     * Autosave method is used by ng-blur in textfieldApp component.
+     * Needed to seperate from other save methods because of the if-structure.
+     * Unused method warning is suppressed, as the method is only called in template.
+     */
     autoSave() {
         if (this.attrs.autosave == false) return;
         this.doSaveText(false);
     }
 
+    /**
+     * Actual save method, called by different save alternatives implemented above.
+     * @param true/false parameter boolean checker for the need to save
+     */
     async doSaveText(nosave: boolean) {
         this.error = "... saving ...";
         this.isRunning = true;
@@ -135,6 +190,9 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
     }
 }
 
+/**
+ * numericfieldRunner as HTML component.
+ */
 numericfieldApp.component("numericfieldRunner", {
     bindings: {
         json: "@",

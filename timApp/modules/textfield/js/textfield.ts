@@ -1,5 +1,5 @@
 /**
- * Defines the client-side implementation of an example plugin (a textfieldndrome checker).
+ * Defines the client-side implementation of textfield/label plugin.
  */
 import angular, {INgModelOptions} from "angular";
 import * as t from "io-ts";
@@ -51,10 +51,16 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
         return {};
     }
 
+    /**
+     * Method returning (user) defined text for the button
+     */
     buttonText() {
        return super.buttonText() || null;
     }
 
+    /**
+     * Settings on every new page load
+     */
     $onInit() {
         super.$onInit();
         this.userword = this.attrsall.userword || this.attrs.initword || "";
@@ -63,7 +69,10 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
 
     }
 
-    /* EI KÄYTETÄ, MUTTA VARATAAN TOISTAISEKSI MAHDOLLISIA EVENTHANDLEREITÄ VARTEN
+    /**
+     *  Will run after $onInit - reserved for possible eventhandlers OR to be removed
+     */
+    /*
     $postLink() {
         if (this.userword == "") {
             this.userword = this.attrs.initword || "";
@@ -71,48 +80,82 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
     }
     */
 
+    /**
+     * Method to return (user) content in string form
+     */
     getContent(): string {
         return this.userword;
     }
 
+    /**
+     * Method to return (user) content in numeric form.
+     * Not used in textfield plugin, but promised to be implemented in ITimComponent
+     */
     getNumericContent(): number {
-        return -1; // not used with textfield plugin, but promised to implement in ITimComponent
+        return -1;
     }
 
+    /**
+     * Save method for other plugins, needed by e.g. multisave plugin
+     */
     save(): undefined {
-
         this.saveText();
         return undefined;
-        //return this.userword; // not used with textfield plugin, but promised to implement in ITimComponent
     }
 
+    /**
+     * Method used for autoupdating
+     */
     get autoupdate(): number {
         return this.attrs.autoupdate;
     }
 
+    /**
+     * Method to return (user) set inputstem (textfeed before userinput box)
+     */
     get inputstem() {
         return this.attrs.inputstem || "";
     }
 
+    /**
+     * Method to return (user) set col size (size of the field)
+     */
     get cols() {
         return this.attrs.cols;
     }
 
+    /**
+     * Method to initialize content
+     */
     initCode() {
         this.userword = this.attrs.initword || "";
         this.error = undefined;
         this.result = undefined;
     }
 
+    /**
+     * Method to (re)direct save request to actual save method.
+     * Used as e.g. timButton ng-click event.
+     */
     saveText() {
         this.doSaveText(false);
     }
 
+    // noinspection JSUnusedGlobalSymbols
+    /**
+     * Autosave method is used by ng-blur in textfieldApp component.
+     * Needed to seperate from other save methods because of the if-structure.
+     * Unused method warning is suppressed, as the method is only called in template.
+     */
     autoSave() {
         if (this.attrs.autosave == false) return;
         this.doSaveText(false);
     }
 
+    /**
+     * Actual save method, called by different save alternatives implemented above.
+     * @param true/false parameter boolean checker for the need to save
+     */
     async doSaveText(nosave: boolean) {
         this.error = "... saving ...";
         this.isRunning = true;
@@ -144,6 +187,9 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
     }
 }
 
+/**
+ * textfieldRunner as HTML component.
+ */
 textfieldApp.component("textfieldRunner", {
     bindings: {
         json: "@",
@@ -180,3 +226,47 @@ textfieldApp.component("textfieldRunner", {
 </div>
 `,
 });
+
+
+/**
+ * TODO: create alternative component for label version of textfield?
+ * label runner as HTML component.
+ */
+/*
+textfieldApp.component("labelRunner", {
+    bindings: {
+        json: "@",
+    },
+    controller: TextfieldController,
+    require: {
+        vctrl: "^timView",
+    },
+    template: `
+<div class="labelNoSaveDiv">
+    <tim-markup-error ng-if="::$ctrl.markupError" data="::$ctrl.markupError"></tim-markup-error>
+    <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
+    <p class="stem" ng-if="::$ctrl.stem">{{::$ctrl.stem}}</p>
+    <div class="form-inline"><label>{{::$ctrl.inputstem}} <span>   
+        <input type="string"
+               class="form-control"
+               ng-model="$ctrl.userword"
+               ng-blur="$ctrl.autoSave()"
+               ng-keydown="$event.keyCode === 13 && $ctrl.saveText()"
+               ng-model-options="::$ctrl.modelOpts"
+               ng-change="$ctrl.checkTextfield()"
+               ng-trim="false"
+               placeholder="{{::$ctrl.inputplaceholder}}"
+               size="{{::$ctrl.cols}}"></span></label>
+    </div>
+    <button class="timButton"
+            ng-if="$ctrl.buttonText()"
+            ng-disabled="$ctrl.isRunning || !$ctrl.userword"
+            ng-click="$ctrl.saveText()">
+        {{::$ctrl.buttonText()}}
+    </button>
+    <!-- <pre class="hidepre" ng-if="$ctrl.result">{{$ctrl.result}}</pre> -->
+    <p ng-if="::$ctrl.footer" ng-bind="::$ctrl.footer" class="plgfooter"></p>
+</div>
+`,
+});
+*/
