@@ -70,7 +70,7 @@ export class SettingsCtrl implements IController {
     }
 
     updateCss() {
-        $('link[rel="stylesheet"]').first().attr("href", "/static/gen/" + this.settings.css_combined + ".css");
+        $('link[rel="stylesheet"]').first().attr("href", `/static/generated/${this.settings.css_combined}.css`);
     }
 
     async clearLocalStorage() {
@@ -81,7 +81,7 @@ export class SettingsCtrl implements IController {
     }
 
     async addPrintSettings() {
-        const resp = await $http.get<string>("/static/userPrintSettings.css");
+        const resp = await $http.get<string>("/static/stylesheets/userPrintSettings.css");
         this.settings.custom_css = resp.data;
     }
 }
@@ -101,7 +101,7 @@ timApp.component("timSettings", {
                    ng-model="$ctrl.settings.css_files[css_file.name]"
                    ng-change="$ctrl.submit()"
                    ng-disabled="$ctrl.saving">
-            <a href="/static/css/{{ css_file.name }}.scss">
+            <a href="/static/stylesheets/themes/{{ css_file.name }}.scss">
                 {{ css_file.name }}</a> - {{ css_file.desc }}
         </label></div>
         <div class="form-group">

@@ -18,7 +18,6 @@ LOG_PATH = os.path.join(LOG_DIR, LOG_FILE)
 TESTING = True
 OLD_SQLITE_DATABASE = None
 SQLALCHEMY_DATABASE_URI = DATABASE
-SASS_GEN_PATH = 'testgen'
 
 # Webassets seems to have a weird bug that it cannot find the cache files if the paths are not default,
 # so we cannot modify them. And without the cache, running the tests is twice as slow.

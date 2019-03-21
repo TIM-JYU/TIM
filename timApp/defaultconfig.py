@@ -2,6 +2,7 @@ import logging
 import os
 import subprocess
 from datetime import timedelta
+from pathlib import Path
 
 from celery.schedules import crontab
 
@@ -32,7 +33,7 @@ TIM_HOST = os.environ.get('TIM_HOST', 'http://localhost')
 OLD_SQLITE_DATABASE = '/tim_files/tim.db'
 DB_HOST = 'postgresql'
 DATABASE = f"postgresql://postgres@{DB_HOST}:5432/{TIM_NAME}"
-SASS_GEN_PATH = 'gen'
+SASS_GEN_PATH = Path('generated')
 TEMPLATES_AUTO_RELOAD = True
 SQLALCHEMY_DATABASE_URI = DATABASE
 SQLALCHEMY_POOL_SIZE = 2

@@ -1,10 +1,11 @@
 import os
 import re
+from pathlib import Path
 from typing import List
 
 from werkzeug.utils import secure_filename
 
-THEME_DIR = 'static/css'
+THEME_DIR = Path('static/stylesheets/themes')
 
 
 class Theme:
@@ -14,10 +15,13 @@ class Theme:
         self.description = 'No description.'
 
     def exists(self):
-        return os.path.exists(os.path.join(THEME_DIR, self.filename + '.scss'))
+        return self.get_path().exists()
+
+    def get_path(self):
+        return THEME_DIR / f'{self.filename}.scss'
 
     def load(self):
-        with open(os.path.join('static/css', self.filename + '.scss'), 'r', encoding='utf-8') as f:
+        with open(self.get_path(), 'r', encoding='utf-8') as f:
             comment = f.readline()
             if comment.startswith('@charset'):
                 comment = f.readline()
