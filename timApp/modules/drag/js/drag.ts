@@ -138,7 +138,7 @@ class DragController extends PluginBase<t.TypeOf<typeof DragMarkup>, t.TypeOf<ty
         if (this.word) {
         d.dataTransfer!.setData("jsondata", JSON.stringify([this.word, n]));
         }
-        d.dataTransfer!.effectAllowed = "move";
+        //d.dataTransfer!.effectAllowed = "move";
     }
 
     onDragOver(e: JQuery.Event) {
@@ -154,7 +154,7 @@ class DragController extends PluginBase<t.TypeOf<typeof DragMarkup>, t.TypeOf<ty
         if (component === this) {
             return;
         }
-        d.dataTransfer!.dropEffect = "move";
+        //d.dataTransfer!.dropEffect = "move";
         if (component && component.setPluginWords) {
             if (this.word && this.word.length > 0) {
                 return;
