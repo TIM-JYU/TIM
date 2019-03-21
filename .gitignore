@@ -30,6 +30,7 @@
 /timApp/modules/Haskell/PluginConstructionKit/
 /timApp/Output.txt
 /timApp/static/gen/
+/timApp/static/generated/
 /timApp/static/scripts/build-ide/
 /timApp/static/scripts/decls/
 /timApp/static/scripts/jspm_packages/

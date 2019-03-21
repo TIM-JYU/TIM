@@ -1,4 +1,4 @@
-import os
+from pathlib import Path
 from typing import List
 
 from timApp.user.settings.theme import Theme
@@ -8,7 +8,7 @@ class ThemeNotFoundException(Exception):
     pass
 
 
-def generate_theme_scss(themes: List[Theme], gen_dir: str) -> None:
+def generate_theme_scss(themes: List[Theme], gen_dir: Path) -> None:
     """Generates an SCSS file based on the given theme names.
 
     .. note::
@@ -38,17 +38,17 @@ def generate_theme_scss(themes: List[Theme], gen_dir: str) -> None:
         if not t.exists():
             raise ThemeNotFoundException(t.filename)
     combined = get_combined_css_filename(themes)
-    if os.path.exists(os.path.join(gen_dir, combined + '.scss')):
+    file_path = gen_dir / f'{combined}.scss'
+    if file_path.exists():
         return
-    if not os.path.exists(gen_dir):
-        os.mkdir(gen_dir)
-    with open(os.path.join(gen_dir, combined + '.scss'), encoding='utf-8', mode='w') as f:
+    gen_dir.mkdir(exist_ok=True)
+    with file_path.open(encoding='utf-8', mode='w') as f:
         f.write('@charset "UTF-8";\n')
-        f.write('@import "variables";\n')
+        f.write('@import "stylesheets/variables";\n')
         for t in themes:
             f.write(f'@mixin {t.filename} {{}}\n')
-            f.write(f'@import "css/{t.filename}";\n')
-        f.write('@import "all.scss";\n')  # "all" conflicts with a jQuery CSS file, so we must add the .scss extension
+            f.write(f'@import "stylesheets/themes/{t.filename}";\n')
+        f.write('@import "stylesheets/all.scss";\n')  # "all" conflicts with a jQuery CSS file, so we must add the .scss extension
         for t in themes:
             f.write(f'@include {t.filename};\n')
 
