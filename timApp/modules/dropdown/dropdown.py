@@ -55,8 +55,8 @@ class DropdownInputModel:
 
 
 class DropdownInputSchema(Schema):
-    nosave = fields.Bool()
     selectedWord = fields.Str(required=True)
+    nosave = fields.Bool()
 
     @validates('selectedWord')
     def validate_selectedWord(self, word):

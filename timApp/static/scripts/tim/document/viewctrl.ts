@@ -40,7 +40,7 @@ export interface ITimComponent {
     getContent: () => string;
     getGroups: () => string[];
     belongsToGroup(group: string): boolean;
-    save: () => string | undefined;
+    save: () => Promise<string | undefined>;
     getPar: () => Paragraph
     setPluginWords?: (words: string[]) => void;
 }

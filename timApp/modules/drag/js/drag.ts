@@ -103,7 +103,7 @@ class DragController extends PluginBase<t.TypeOf<typeof DragMarkup>, t.TypeOf<ty
         this.word = words[0];
     }
 
-    save(): string {
+    async save() {
         this.doSave(false);
         return "";
     }
