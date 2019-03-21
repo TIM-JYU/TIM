@@ -4,6 +4,8 @@ import dateutil.relativedelta
 
 from flask import Blueprint, request
 
+from timApp.auth.sessioninfo import get_current_user, get_current_user_object
+from timApp.plugin.plugin import Plugin
 from timApp.user.user import User
 from timApp.util.flask.responsehelper import csv_response
 from timApp.plugin.taskid import TaskId
@@ -194,6 +196,9 @@ def test(doc_path):
     pars = d.document.get_dereferenced_paragraphs()
     task_ids, _, _ = find_task_ids(pars)
 
+
+    filtered_task_ids = filterPlugin(task_ids, 'csPlugin')  #filteröi muut paitsi feedback
+
     nro = int(d.id)#int(number)
     name = get_option(request, 'name', 'both')
     hidename = False
@@ -247,7 +252,7 @@ def test(doc_path):
 
 
 
-    answers = get_all_feedback_answers(task_ids, hidename, fullname,
+    answers = get_all_feedback_answers(filtered_task_ids, hidename, fullname,
                                         'username', period_from, period_to)
 
     # First returns empty, then from document nro1 and then document nro2 (change above if different)
@@ -258,5 +263,15 @@ def test(doc_path):
 
 
 
+def filterPlugin(task_ids: List[TaskId], plugin_name: str):
+    filtered_task_ids = []
 
+    for tid in task_ids:
+        p = Plugin.from_task_id(tid.doc_task, user=get_current_user_object())
+        ptype = p.type
+        if ptype == plugin_name:
+            filtered_task_ids.append(tid)
+    return filtered_task_ids
 
+#-
+# {#t1}
