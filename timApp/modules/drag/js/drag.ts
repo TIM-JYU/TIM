@@ -4,6 +4,7 @@
 import angular, {INgModelOptions} from "angular";
 import * as t from "io-ts";
 import {ITimComponent, ViewCtrl} from "tim/document/viewctrl";
+
 import {GenericPluginMarkup, Info, nullable, PluginBase, withDefault} from "tim/plugin/util";
 import {$http} from "../../../static/scripts/tim/util/ngimport";
 import {to} from "tim/util/utils";
@@ -133,27 +134,33 @@ class DragController extends PluginBase<t.TypeOf<typeof DragMarkup>, t.TypeOf<ty
 
     onDragStart(e: JQuery.Event) {
         const d = e.originalEvent as DragEvent;
-        d.dataTransfer!.setData("text", this.word!);
-        d.dataTransfer!.setData("name", this.getName()!);
+        const n = this.getName()!;
+        if (this.word) {
+        d.dataTransfer!.setData("jsondata", JSON.stringify([this.word, n]));
+        }
         d.dataTransfer!.effectAllowed = "move";
     }
 
     onDragOver(e: JQuery.Event) {
         const d = e.originalEvent as DragEvent;
         d.preventDefault();
-        d.dataTransfer!.dropEffect = "move";
     }
 
     onDrop(e: JQuery.Event) {
         const d = e.originalEvent as DragEvent;
         d.preventDefault();
-        const component = this.vctrl.getTimComponentByName(d.dataTransfer!.getData("name"));
+        const json = JSON.parse(d.dataTransfer!.getData("jsondata"));
+        const component = this.vctrl.getTimComponentByName(json[1]);
+        if (component === this) {
+            return;
+        }
+        d.dataTransfer!.dropEffect = "move";
         if (component && component.setPluginWords) {
-            if (this.word && this.word.length > 0){
+            if (this.word && this.word.length > 0) {
                 return;
             }
             component.setPluginWords([]);
-            this.word! = d.dataTransfer!.getData("text");
+            this.word! = json[0];
         }
 
     }
