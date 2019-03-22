@@ -172,12 +172,16 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
         // TODO: finish this, can you replace just one instance?
         const choices = this.attrs.questionItems[this.index].choices;
         let re = this.userAnswer;
-        for (const choice of choices) {
-            if (choice.correct && StringArray.is(choice.match[0])) {
-                re.replace(new RegExp("(/{1}[a-zA-Z0-9]*/{1}){1}"),"");
-                console.log();
-            }
-        }
+        let correct = false;
+        console.log(re);
+        // for (const choice of choices) {
+        //     const match = choice.match[0];
+        //     if (choice.correct && StringArray.is(match)) {
+        //         correct = true;
+        //         re.replace(new RegExp("(/{1}[a-zA-Z0-9]*/{1}){1}"),match[0]);
+        //         console.log(re);
+        //     }
+        // }
         return this.doSave(false, true ,re);
     }
 
@@ -335,6 +339,8 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
         const plugins = this.attrs.questionItems[this.index].pluginNames;
         const selections: string[] = [];
         const timComponent = this.vctrl.getTimComponentByName(plugins[0]);
+        // const values = {drop1: "is", "drop2": "cat"}
+        // getSentence(values)
 
         if (timComponent) {
             const par = timComponent.getPar();
@@ -347,8 +353,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
                 const node = nodes[n];
                 if (node.nodeName === "#text") {
                     let text = node.textContent || "";
-                    text.trim();
-                    answer = answer + text;
+                    answer = answer + text.trim();
                 }
                 if (node.nodeName === "TIM-PLUGIN-LOADER") {
                     // Makeshift way to go through all the plugins in a paragraph
