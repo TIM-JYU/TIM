@@ -206,7 +206,7 @@ def test(doc_path):
     task_ids, _, _ = find_task_ids(pars)                # 
 
 
-    filtered_task_ids = filterPlugin(task_ids, 'csPlugin')  #filteröi muut paitsi feedback
+    filtered_task_ids = filterPlugin(task_ids, 'all')  #filteröi muut paitsi feedback
 
     nro = int(d.id)#int(number)
     name = get_option(request, 'name', 'both')
@@ -251,17 +251,7 @@ def test(doc_path):
         except (ValueError, OverflowError):
             pass
 
-    # For choosing specific tasks for the report a list of tasks is given
-    # TODO: check real call to see how task_ids from different pages can be called
-    taskid1 = TaskId(nro, "sample_item")  # generating TaskIds - (pageid int, taskname string)
-    taskid2 = TaskId(nro, "item1")
-    taskid3 = TaskId(nro, "feedback1")
-    taskid4 = TaskId(nro, "item2")
-    taskid5 = TaskId(nro, "feedback2")
-    taskids_test = [taskid1, taskid2, taskid3, taskid4, taskid5]
-
-
-
+    #get answers for the task ids with the proper parameters
     answers = get_all_feedback_answers(filtered_task_ids, hidename, fullname,
                                         'username', validity, period_from, period_to)
 
@@ -275,7 +265,8 @@ def test(doc_path):
 
 def filterPlugin(task_ids: List[TaskId], plugin_name: str):
     filtered_task_ids = []
-
+    if plugin_name == 'all':
+        return task_ids
     for tid in task_ids:
         p = Plugin.from_task_id(tid.doc_task, user=get_current_user_object())
         ptype = p.type
