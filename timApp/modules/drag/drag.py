@@ -17,11 +17,11 @@ from pluginserver_flask import GenericMarkupModel, GenericMarkupSchema, GenericH
 
 @attr.s(auto_attribs=True)
 class DragStateModel:
-    words: str
+    words: List[str]
 
 
 class DragStateSchema(Schema):
-    words = fields.Str(required=True)
+    words = fields.List(fields.Str(required=True))
 
     @post_load
     def make_obj(self, data):
@@ -63,13 +63,13 @@ class DragMarkupSchema(GenericMarkupSchema):
 
 @attr.s(auto_attribs=True)
 class DragInputModel:
-    words: str
+    words: List[str]
     nosave: bool = missing
 
 
 class DragInputSchema(Schema):
     nosave = fields.Bool()
-    words = fields.Str(required=True)
+    words = fields.List(fields.Str(required=True))
 
     @validates('words')
     def validate_words(self, words):
@@ -172,7 +172,7 @@ def answer(args: DragAnswerModel):
     # plugin can ask not to save the word
     nosave = args.input.nosave
     if not nosave:
-        save = {"word: word"}
+        save = {"words": words}
         result["save"] = save
         web['result'] = "saved"
 
@@ -183,12 +183,11 @@ def answer(args: DragAnswerModel):
 def reqs():
     templates = ["""
 #- {defaultplugin="drag"}
-{#drag1 words=[kissa, koira, kani]}
+{#drag1}
 """,
 """
 #- {defaultplugin="drag"}
-{#drag2 words=[peruna, porkkana, kurkku]}
-{#drag3 words=[omena, päärynä, banaani]}
+{#drag2 words: [peruna, porkkana, kurkku]}
 """]
     return jsonify({
         "js": ["js/build/drag.js"],
@@ -203,13 +202,13 @@ def reqs():
                         'items': [
                             {
                                 'data': templates[0].strip(),
-                                'text': 'One question',
-                                'expl': 'Add draggable words'
+                                'text': 'Drag container with words',
+                                'expl': 'Add drag container with words'
                             },
                             {
                                 'data': templates[1].strip(),
-                                'text': 'Two questions',
-                                'expl': 'Add two draggable words'
+                                'text': 'Drag container without words',
+                                'expl': 'Add drag container without words'
                             },
                         ],
                     },

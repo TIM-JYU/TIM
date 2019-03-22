@@ -17,7 +17,7 @@ export const moduleDefs = [dragApp];
 const DragMarkup = t.intersection([
     t.partial({
         inputstem: t.string,
-        word: t.string,
+        words: t.array(t.string),
         followid: t.string,
     }),
     GenericPluginMarkup,
@@ -29,7 +29,7 @@ const DragMarkup = t.intersection([
 ]);
 const DragAll = t.intersection([
     t.partial({
-        word: t.string,
+        words: t.array(t.string),
     }),
     t.type({
         info: Info,
@@ -112,7 +112,7 @@ class DragController extends PluginBase<t.TypeOf<typeof DragMarkup>, t.TypeOf<ty
         const params = {
             input: {
                 nosave: false,
-                word: this.word,
+                words: this.words,
             },
         };
 
@@ -150,8 +150,8 @@ dragApp.component("dragRunner", {
     template: `
 <div>
     <div class="form-inline">
-     <div class="dropword" dragula-scope="$ctrl.vctrl.scope" dragula='"dropzone"' >
-        <span class="dragword" ng-if="$ctrl.word.length > 0" dragula-model='$ctrl.words'  ng-repeat='text in $ctrl.words'>
+     <div class="dropword" dragula-scope="$ctrl.vctrl.scope" dragula='"dropzone"' dragula-model='$ctrl.words'>
+        <span class="dragword" ng-bind='item'  ng-repeat='item in $ctrl.words' ng-if="$ctrl.words.length >0">
         </span>
      </div>
     </div>
