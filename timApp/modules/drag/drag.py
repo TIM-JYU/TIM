@@ -202,13 +202,13 @@ def reqs():
                         'items': [
                             {
                                 'data': templates[0].strip(),
-                                'text': 'Drag container with words',
-                                'expl': 'Add drag container with words'
+                                'text': 'Drag container without words',
+                                'expl': 'Add drag container without words'
                             },
                             {
                                 'data': templates[1].strip(),
-                                'text': 'Drag container without words',
-                                'expl': 'Add drag container without words'
+                                'text': 'Drag container with words',
+                                'expl': 'Add drag container with words'
                             },
                         ],
                     },
