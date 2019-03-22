@@ -17,11 +17,11 @@ from pluginserver_flask import GenericMarkupModel, GenericMarkupSchema, GenericH
 
 @attr.s(auto_attribs=True)
 class DragStateModel:
-    word: str
+    words: str
 
 
 class DragStateSchema(Schema):
-    word = fields.Str(required=True)
+    words = fields.Str(required=True)
 
     @post_load
     def make_obj(self, data):
@@ -36,7 +36,7 @@ class DragMarkupModel(GenericMarkupModel):
     points_array: Union[str, Missing] = missing
     inputstem: Union[str, Missing] = missing
     needed_len: Union[int, Missing] = missing
-    word: Union[str, Missing] = missing
+    words: Union[List[str], Missing] = missing
     followid: Union[str, Missing] = missing
 
 
@@ -45,7 +45,7 @@ class DragMarkupSchema(GenericMarkupSchema):
     inputstem = fields.Str()
     needed_len = fields.Int()
     cols = fields.Int()
-    word = fields.Str()
+    words = fields.List(fields.Str)
     followid = fields.String()
 
     @validates('points_array')
@@ -63,17 +63,17 @@ class DragMarkupSchema(GenericMarkupSchema):
 
 @attr.s(auto_attribs=True)
 class DragInputModel:
-    word: str
+    words: str
     nosave: bool = missing
 
 
 class DragInputSchema(Schema):
     nosave = fields.Bool()
-    word = fields.Str(required=True)
+    words = fields.Str(required=True)
 
-    @validates('word')
-    def validate_word(self, word):
-        if not word:
+    @validates('words')
+    def validate_words(self, words):
+        if not words:
             raise ValidationError('Must not be empty.')
 
     @post_load
@@ -94,7 +94,7 @@ class DragHtmlModel(GenericHtmlModel[DragInputModel, DragMarkupModel, DragStateM
     def get_browser_json(self):
         r = super().get_browser_json()
         if self.state:
-            r['word'] = self.state.word
+            r['words'] = self.state.words
         return r
 
     def get_real_html(self):
@@ -167,7 +167,7 @@ app = create_app(__name__, DragHtmlSchema())
 def answer(args: DragAnswerModel):
     web = {}
     result = {'web': web}
-    word = args.input.word
+    words = args.input.words
 
     # plugin can ask not to save the word
     nosave = args.input.nosave
@@ -183,12 +183,12 @@ def answer(args: DragAnswerModel):
 def reqs():
     templates = ["""
 #- {defaultplugin="drag"}
-The weather {#drag1 word: is} nice today.
+{#drag1 words=[kissa, koira, kani]}
 """,
 """
 #- {defaultplugin="drag"}
-Näin tänään {#drag2 word: kissan}
-joka jahtasi {#drag3 word: hiirtä}
+{#drag2 words=[peruna, porkkana, kurkku]}
+{#drag3 words=[omena, päärynä, banaani]}
 """]
     return jsonify({
         "js": ["js/build/drag.js"],
@@ -204,7 +204,7 @@ joka jahtasi {#drag3 word: hiirtä}
                             {
                                 'data': templates[0].strip(),
                                 'text': 'One question',
-                                'expl': 'Add a draggable word'
+                                'expl': 'Add draggable words'
                             },
                             {
                                 'data': templates[1].strip(),

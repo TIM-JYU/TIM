@@ -40,7 +40,7 @@ const DragAll = t.intersection([
 
 class DragController extends PluginBase<t.TypeOf<typeof DragMarkup>, t.TypeOf<typeof DragAll>, typeof DragAll> implements ITimComponent {
     private error?: string;
-    private word?: string;
+    private words?: string [];
     private vctrl!: ViewCtrl;
 
     getDefaultMarkup() {
@@ -74,7 +74,7 @@ class DragController extends PluginBase<t.TypeOf<typeof DragMarkup>, t.TypeOf<ty
 
     $onInit() {
         super.$onInit();
-        this.word = this.attrs.word;
+        this.words = this.attrs.words || [];
         this.addToCtrl();
     }
 
@@ -96,12 +96,11 @@ class DragController extends PluginBase<t.TypeOf<typeof DragMarkup>, t.TypeOf<ty
      * @returns {string} The word..
      */
     getContent(): string {
-        return this.word || "";
+        return this.words!.toString() || "No draggable words";
     }
 
     setPluginWords(words: string []) {
-        if (words.length === 0) this.word = "";
-        this.word = words[0];
+        this.words = words;
     }
 
     async save() {
@@ -133,38 +132,6 @@ class DragController extends PluginBase<t.TypeOf<typeof DragMarkup>, t.TypeOf<ty
         }
     }
 
-    onDragStart(e: JQuery.Event) {
-        const d = e.originalEvent as DragEvent;
-        const n = this.getName()!;
-        if (this.word) {
-        d.dataTransfer!.setData("jsondata", JSON.stringify([this.word, n]));
-        }
-        //d.dataTransfer!.effectAllowed = "move";
-    }
-
-    onDragOver(e: JQuery.Event) {
-        const d = e.originalEvent as DragEvent;
-        d.preventDefault();
-    }
-
-    onDrop(e: JQuery.Event) {
-        const d = e.originalEvent as DragEvent;
-        d.preventDefault();
-        const json = JSON.parse(d.dataTransfer!.getData("jsondata"));
-        const component = this.vctrl.getTimComponentByName(json[1]);
-        if (component === this) {
-            return;
-        }
-        //d.dataTransfer!.dropEffect = "move";
-        if (component && component.setPluginWords) {
-            if (this.word && this.word.length > 0) {
-                return;
-            }
-            component.setPluginWords([]);
-            this.word! = json[0];
-        }
-
-    }
 
     protected getAttributeType() {
         return DragAll;
@@ -183,9 +150,8 @@ dragApp.component("dragRunner", {
     template: `
 <div>
     <div class="form-inline">
-     <div class="dropword" dragula-scope="$ctrl.vctrl.scope" dragula='"dropzone"'>
-        <span class="dragword" ng-if="$ctrl.word.length > 0" >
-        {{$ctrl.word}}
+     <div class="dropword" dragula-scope="$ctrl.vctrl.scope" dragula='"dropzone"' >
+        <span class="dragword" ng-if="$ctrl.word.length > 0" dragula-model='$ctrl.words'  ng-repeat='text in $ctrl.words'>
         </span>
      </div>
     </div>
