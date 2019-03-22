@@ -6,9 +6,7 @@ import * as t from "io-ts";
 import {ITimComponent, ViewCtrl} from "tim/document/viewctrl";
 import {GenericPluginMarkup, Info, nullable, PluginBase, withDefault} from "tim/plugin/util";
 import {$http} from "../../../static/scripts/tim/util/ngimport";
-
 import {to} from "tim/util/utils";
-// import "../../../cs/js/cs-parsons/jquery.ui.touch-punch.min.js";
 import ad from "angularjs-dragula";
 
 const dragApp = angular.module("dragApp", ["ngSanitize", ad(angular)]);
@@ -151,7 +149,7 @@ dragApp.component("dragRunner", {
 <div>
     <div class="form-inline">
      <div class="dropword" dragula-scope="$ctrl.vctrl.scope" dragula='"dropzone"' dragula-model='$ctrl.words'>
-        <span class="dragword" ng-bind='item'  ng-repeat='item in $ctrl.words' ng-if="$ctrl.words.length >0">
+        <span class="dragword"  ng-bind='item'  ng-repeat='item in $ctrl.words'>
         </span>
      </div>
     </div>
