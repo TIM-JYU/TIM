@@ -492,7 +492,10 @@ class GetStateModel:
 def get_state(args: GetStateModel):
     par_id, user_id, answer_id, review = args.par_id, args.user_id, args.answer_id, args.review
 
-    answer, doc_id = verify_answer_access(answer_id, user_id)
+    try:
+        answer, doc_id = verify_answer_access(answer_id, user_id)
+    except PluginException as e:
+        return abort(400, str(e))
     doc = Document(doc_id)
     # if doc_id != d_id and doc_id not in doc.get_referenced_document_ids():
     #     abort(400, 'Bad document id')
@@ -504,7 +507,10 @@ def get_state(args: GetStateModel):
     if user is None:
         abort(400, 'Non-existent user')
     doc.insert_preamble_pars()
-    doc, plug = get_plugin_from_request(doc, task_id=tid, u=user)
+    try:
+        doc, plug = get_plugin_from_request(doc, task_id=tid, u=user)
+    except PluginException as e:
+        return abort(400, str(e))
     block = plug.par
 
     _, _, _, plug = pluginify(

@@ -1529,3 +1529,47 @@ initword: hi
                 markup={'initword': 'hi'},
             ),
         )
+
+    def test_invalid_getstate(self):
+        self.login_test1()
+        d = self.create_doc(initial_par="""
+#- {#t plugin=pali}
+initword: a""")
+        a = self.post_answer('pali', f'{d.id}.t', user_input={'userword': '3'})
+        aid = a['savedNew']
+        self.get(
+            '/getState',
+            query_string={
+                'user_id': self.current_user_id(),
+                'answer_id': 12345,
+                'par_id': 'xxx',
+            },
+            expect_status=400,
+            expect_content='Non-existent answer',
+            json_key='error',
+        )
+        # not found because of wrong hint
+        self.get(
+            '/getState',
+            query_string={
+                'user_id': self.current_user_id(),
+                'answer_id': aid,
+                'par_id': 'xxx',
+            },
+            expect_status=400,
+            expect_content='Task not found in the document: t (potentially because of wrong block id hint)',
+            json_key='error',
+        )
+        self.get(
+            '/getState',
+            query_string={
+                'user_id': self.current_user_id(),
+                'answer_id': aid,
+                'par_id': 'xxx',
+                'ref_from_par_id': 'yyy',
+                'ref_from_doc_id': d.id,
+            },
+            expect_status=400,
+            expect_content='Plugin paragraph not found: yyy',
+            json_key='error',
+        )
