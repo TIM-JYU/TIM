@@ -30,8 +30,6 @@ from timApp.util.flask.responsehelper import to_dict
 from timApp.util.utils import EXAMPLE_DOCS_PATH, get_current_time
 from timApp.velp.velp_models import Annotation
 
-PLUGIN_NOT_EXIST_ERROR = {}  # TODO the error value should be better
-
 
 class PluginTest(TimRouteTest):
     answer_error = {'error': "You don't have access to this answer."}
