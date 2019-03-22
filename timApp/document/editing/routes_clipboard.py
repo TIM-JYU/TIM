@@ -9,12 +9,14 @@ from timApp.auth.accesshelper import verify_logged_in, get_doc_or_abort
 from timApp.auth.accesshelper import verify_view_access, verify_edit_access
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docparagraph import DocParagraph
-from timApp.document.document import Document
+from timApp.document.document import Document, par_list_to_text
 from timApp.document.editing.clipboard import Clipboard
 from timApp.document.editing.documenteditresult import DocumentEditResult
 from timApp.document.editing.routes import par_response, verify_par_edit_access
 from timApp.document.translation.synchronize_translations import synchronize_translations
 from timApp.note.notes import move_notes
+from timApp.notification.notification import NotificationType
+from timApp.notification.notify import notify_doc_watchers
 from timApp.readmark.readings import copy_readings
 from timApp.timdb.dbaccess import get_timdb
 from timApp.timdb.exceptions import TimDbException
@@ -48,6 +50,7 @@ def cut_to_clipboard(doc_id, from_par, to_par):
 
     timdb = get_timdb()
     doc: Document = g.docentry.document_as_current_user
+    version_before = doc.get_version()
     clip = Clipboard(timdb.files_root_path).get(get_current_user_object())
     try:
         for p in doc.get_section(from_par, to_par):
@@ -58,7 +61,8 @@ def cut_to_clipboard(doc_id, from_par, to_par):
     g.docentry.update_last_modified()
     db.session.commit()
     synchronize_translations(g.docentry, DocumentEditResult(deleted=pars))
-
+    notify_doc_watchers(g.docentry, par_list_to_text(pars), NotificationType.ParDeleted, old_version=version_before)
+    db.session.commit()
     return json_response({'doc_ver': doc.get_version(), 'pars': [{'id': p.get_id()} for p in pars]})
 
 
@@ -90,6 +94,7 @@ def paste_from_clipboard(doc_id):
 
     timdb = get_timdb()
     doc = g.docentry.document_as_current_user
+    version_before = doc.get_version()
     clip = Clipboard(timdb.files_root_path).get(get_current_user_object())
     meta = clip.read_metadata()
     was_cut = meta.get('last_action') == 'cut'
@@ -131,6 +136,13 @@ def paste_from_clipboard(doc_id):
 
     edit_result = DocumentEditResult(added=pars)
     synchronize_translations(g.docentry, edit_result)
+    notify_doc_watchers(
+        g.docentry,
+        par_list_to_text(pars),
+        NotificationType.ParAdded,
+        old_version=version_before,
+        par=pars[0],
+    )
     return par_response(pars, doc, edit_result=edit_result)
 
 

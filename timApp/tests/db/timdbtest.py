@@ -77,15 +77,15 @@ class TimDbTest(unittest.TestCase):
             doc.set_settings(settings)
 
     @property
-    def test_user_1(self):
+    def test_user_1(self) -> User:
         return User.get_by_name('testuser1')
 
     @property
-    def test_user_2(self):
+    def test_user_2(self) -> User:
         return User.get_by_name('testuser2')
 
     @property
-    def test_user_3(self):
+    def test_user_3(self) -> User:
         return User.get_by_name('testuser3')
 
     def get_test_user_1_group_id(self):
