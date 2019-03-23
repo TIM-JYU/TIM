@@ -1,9 +1,9 @@
-import {IController, IPromise, IRootElementService, IScope, ITranscludeFunction} from "angular";
+import {IController, IPromise, IRootElementService, IScope, ITranscludeFunction, IDeferred} from "angular";
 import "angular-ui-bootstrap";
 import {IModalInstanceService} from "angular-ui-bootstrap";
 import {timApp} from "../app";
 import {KEY_ESC} from "../util/keycodes";
-import {$rootScope, $templateCache, $uibModal} from "../util/ngimport";
+import {$q, $rootScope, $templateCache, $uibModal} from "../util/ngimport";
 import {Binding, debugTextToHeader, markAsUsed, Require} from "../util/utils";
 import * as dg from "./draggable";
 import {DraggableController, VisibilityFix} from "./draggable";
@@ -16,7 +16,7 @@ export abstract class DialogController<T, Ret, ComponentName extends string> imp
     public readonly resolve!: Binding<T, "<">;
     protected closed = false;
     protected readonly draggable!: Require<DraggableController>;
-    private readonly modalInstance!: Binding<IModalInstanceService, "<">;
+    private readonly modalInstance!: Binding<IModalInstance<DialogController<T, Ret, ComponentName>>, "<">;
 
     protected abstract getTitle(): string;
 
@@ -25,6 +25,7 @@ export abstract class DialogController<T, Ret, ComponentName extends string> imp
     }
 
     $onInit() {
+        this.modalInstance.dialogInstance.resolve(this);
         this.draggable.setModal(this.modalInstance);
         this.draggable.setCloseFn(() => this.dismiss());
         this.draggable.setCaption(this.getTitle());
@@ -197,10 +198,10 @@ export async function showMessageDialog(message: string) {
     return showDialog<MessageDialogController>("timMessageDialog", {message: () => message});
 }
 
-export interface IModalInstance<Result> extends IModalInstanceService {
-    result: IPromise<Result>;
-
-    close(result: Result): void;
+export interface IModalInstance<T extends Dialog<T>> extends IModalInstanceService {
+    result: IPromise<T["ret"]>;
+    dialogInstance: IDeferred<T>;
+    close(result: T["ret"]): void;
 }
 
 export function showDialog<T extends Dialog<T>>(component: T["component"],
@@ -213,7 +214,7 @@ export function showDialog<T extends Dialog<T>>(component: T["component"],
                                                     absolute?: boolean,
                                                     forceMaximized?: boolean,
                                                     backdrop?: boolean,
-                                                } = {}): IModalInstance<T["ret"]> {
+                                                } = {}): IModalInstance<T> {
     $templateCache.put("uib/template/modal/window.html", `
 <div tim-draggable-fixed
      click="${opts.showMinimizeButton !== undefined ? opts.showMinimizeButton : true}"
@@ -237,5 +238,7 @@ export function showDialog<T extends Dialog<T>>(component: T["component"],
         windowClass: (opts.classes || ["no-pointer-events"]).join(" "), // no-pointer-events enables clicking things outside dialog
         size: opts.size || "md",
     });
-    return instance;
+    const custom = instance as IModalInstance<T>;
+    custom.dialogInstance = $q.defer<T>();
+    return custom;
 }

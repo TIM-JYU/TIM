@@ -1294,7 +1294,7 @@ registerDialogComponent("pareditor",
     PareditorController,
     {templateUrl: "/static/templates/parEditor.html"});
 
-export function openEditor(p: IEditorParams): IModalInstance<IEditorResult> {
+export function openEditor(p: IEditorParams): IModalInstance<PareditorController> {
     return showDialog<PareditorController>(
         "pareditor",
         {params: () => p},

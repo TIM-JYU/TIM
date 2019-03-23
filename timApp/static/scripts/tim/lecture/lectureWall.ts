@@ -5,7 +5,7 @@ import {$http, $timeout} from "../util/ngimport";
 import {ILectureMessage} from "./lecturetypes";
 import {KEY_ENTER} from "../util/keycodes";
 
-class LectureWallController extends DialogController<{params: {messages: ILectureMessage[]}}, {}, "timLectureWall"> {
+export class LectureWallController extends DialogController<{params: {messages: ILectureMessage[]}}, {}, "timLectureWall"> {
     private static $inject = ["$element", "$scope"];
     private messageName = true;
     private messageTime = true;
@@ -157,7 +157,7 @@ registerDialogComponent(
         `,
     });
 
-export function showLectureWall(messages: ILectureMessage[]): IModalInstance<{}> {
+export function showLectureWall(messages: ILectureMessage[]) {
     return showDialog<LectureWallController>("timLectureWall",
         {params: () => ({messages})},
         {size: "sm"});

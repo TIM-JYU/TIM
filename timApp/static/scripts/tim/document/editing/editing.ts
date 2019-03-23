@@ -111,6 +111,7 @@ export function wrapText(s: string, n: number) {
 export class EditingHandler {
     public viewctrl: ViewCtrl;
     public sc: IScope;
+    private currentEditor?: PareditorController;
 
     constructor(sc: IScope, view: ViewCtrl) {
         this.sc = sc;
@@ -252,7 +253,7 @@ export class EditingHandler {
             }
         }
         this.viewctrl.editing = true;
-        await to(openEditor({
+        const inst = openEditor({
             viewCtrl: this.viewctrl,
             extraData,
             initialText,
@@ -309,7 +310,9 @@ This will delete the whole ${options.area ? "area" : "paragraph"} from the docum
             unreadCb: async () => {
                 await handleUnread(this.viewctrl.item, extraData, params);
             },
-        }).result);
+        });
+        this.currentEditor = await inst.dialogInstance.promise;
+        await to(inst.result);
         this.viewctrl.editing = false;
     }
 
@@ -462,11 +465,7 @@ This will delete the whole ${options.area ? "area" : "paragraph"} from the docum
     }
 
     getParEditor(): PareditorController | undefined {
-        const elem = $("pareditor");
-        if (elem.length === 0) {
-            return;
-        }
-        return elem.isolateScope<any>().$ctrl;
+        return this.currentEditor;
     }
 
     goToEditor() {

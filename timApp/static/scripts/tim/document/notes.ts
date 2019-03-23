@@ -2,7 +2,7 @@ import {IScope} from "angular";
 import $ from "jquery";
 import {Moment} from "moment";
 import {IPluginInfoResponse} from "../editor/parCompiler";
-import {IEditorResult, openEditor} from "../editor/pareditor";
+import {IEditorResult, openEditor, PareditorController} from "../editor/pareditor";
 import {IModalInstance, showMessageDialog} from "../ui/dialog";
 import {$compile, $http, $timeout, $window} from "../util/ngimport";
 import {getElementParent, isMobileDevice, to} from "../util/utils";
@@ -36,7 +36,7 @@ export class NotesHandler {
     public viewctrl: ViewCtrl;
     public noteBadgePar: JQuery | undefined;
     public noteBadge: HTMLElement | undefined;
-    private editorInstance?: IModalInstance<IEditorResult>;
+    private editorInstance?: IModalInstance<PareditorController>;
 
     constructor(sc: IScope, view: ViewCtrl) {
         this.sc = sc;
