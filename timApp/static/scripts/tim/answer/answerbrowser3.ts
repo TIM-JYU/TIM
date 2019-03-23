@@ -164,15 +164,14 @@ interface ITaskInfo {
     answerLimit: number;
 }
 
-interface IAnswerSaveEvent {
-    taskId: string;
+export interface IAnswerSaveEvent {
     savedNew: number | false;
     error?: string;
 }
 
 export class AnswerBrowserController extends DestroyScope implements IController {
     private static $inject = ["$scope", "$element"];
-    private taskId!: Binding<string, "<">;
+    public taskId!: Binding<string, "<">;
     private loading: number;
     private viewctrl!: Require<ViewCtrl>;
     private rctrl!: Require<ReviewController>;
@@ -201,7 +200,22 @@ export class AnswerBrowserController extends DestroyScope implements IController
         this.checkKeyPress = this.checkKeyPress.bind(this);
     }
 
+    registerNewAnswer(args: IAnswerSaveEvent) {
+        if (args.savedNew) {
+            this.loadedAnswer.id = args.savedNew;
+            this.review = false;
+            this.loadedAnswer.review = false;
+            this.getAnswersAndUpdate();
+            // HACK: for some reason the math mode is lost because of the above call, so we restore it here
+            ParCompiler.processAllMathDelayed(this.loader.getPluginElement());
+        }
+        if (args.error) {
+            this.alerts.push({msg: args.error, type: "warning"});
+        }
+    }
+
     async $onInit() {
+        this.viewctrl.registerAnswerBrowser(this);
         this.scope.$watch(() => this.taskId, (newValue, oldValue) => {
             if (newValue === oldValue) {
                 return;
@@ -216,22 +230,6 @@ export class AnswerBrowserController extends DestroyScope implements IController
             // ng-keypress will not fire if the textbox has focus
             this.element[0].addEventListener("keydown", this.checkKeyPress);
         }
-
-        this.scope.$on("answerSaved", (event, args: IAnswerSaveEvent) => {
-            if (args.taskId === this.taskId) {
-                if (args.savedNew) {
-                    this.loadedAnswer.id = args.savedNew;
-                    this.review = false;
-                    this.loadedAnswer.review = false;
-                    this.getAnswersAndUpdate();
-                    // HACK: for some reason the math mode is lost because of the above call, so we restore it here
-                    ParCompiler.processAllMathDelayed(this.loader.getPluginElement());
-                }
-                if (args.error) {
-                    this.alerts.push({msg: args.error, type: "warning"});
-                }
-            }
-        });
 
         if (this.viewctrl.selectedUser) {
             this.user = this.viewctrl.selectedUser;

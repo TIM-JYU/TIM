@@ -15,6 +15,7 @@ import {QuestionHandler} from "tim/document/question/questions";
 import {initReadings} from "tim/document/readings";
 import {timLogTime} from "tim/util/timTiming";
 import {isPageDirty, markAsUsed, markPageNotDirty, to} from "tim/util/utils";
+import {AnswerBrowserController} from "../answer/answerbrowser3";
 import {BookmarksController, IBookmarkGroup} from "../bookmark/bookmarks";
 import {IPluginInfoResponse, ParCompiler} from "../editor/parCompiler";
 import {IDocument, ITag, TagType} from "../item/IItem";
@@ -64,6 +65,8 @@ export interface IChangeDiffResult {
 export type DiffResult = IInsertDiffResult | IReplaceDiffResult | IDeleteDiffResult | IChangeDiffResult;
 
 const courseFolder = "My courses";
+
+export let vctrlInstance: ViewCtrl | undefined;
 
 export class ViewCtrl implements IController {
     private notification: string = "";
@@ -343,6 +346,7 @@ export class ViewCtrl implements IController {
     }
 
     $onInit() {
+        vctrlInstance = this;
         this.scope.$watchGroup([
             () => this.lectureMode,
             () => this.selection.start,
@@ -569,6 +573,16 @@ export class ViewCtrl implements IController {
             headers.first().addClass("no-page-break-before");
             return;
         }
+    }
+
+    private abs = new Map<string, AnswerBrowserController>();
+
+    registerAnswerBrowser(ab: AnswerBrowserController) {
+        this.abs.set(ab.taskId, ab);
+    }
+
+    getAnswerBrowser(taskId: string) {
+        return this.abs.get(taskId);
     }
 }
 
