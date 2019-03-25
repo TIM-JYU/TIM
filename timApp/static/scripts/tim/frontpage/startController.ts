@@ -107,8 +107,8 @@ export class StartCtrl implements IController {
 timApp.component("timStart", {
     controller: StartCtrl,
     template: `
-    <div class="row col-lg-offset-2">
-        <div class="col-lg-10">
+    <div class="row">
+        <div class="col-lg-8 col-lg-offset-2">
             <h1 class="text-center">TIM - The Interactive Material</h1>
         </div>
         <div class="col-lg-2">
@@ -125,126 +125,130 @@ timApp.component("timStart", {
         </div>
     </div>
     <div class="row">
-        <div class="col-md-8 col-md-offset-2">
-            <div class="row">
-                <div class="col-md-6 col-md-offset-2">
-                    <bookmark-folder-box bookmarks="$ctrl.bookmarks" bookmark-folder-name="My courses">
-                    </bookmark-folder-box>
-                    <a href="/view/tim/TIM-esittely">
-                        <img class="img-responsive" alt="TIM-esittely" src="/static/images/responsive.jpg"/>
-                    </a>
-                </div>
-                <div class="col-md-4">
-                    <div ng-switch="$ctrl.language" ng-cloak>
-                        <div ng-switch-when="en">
-                            <h3>Get started</h3>
-                            <login-menu ng-if="!$ctrl.isLoggedIn()"></login-menu>
-                            <ul class="list-unstyled">
-                                <li ng-if="$ctrl.isLoggedIn()" class="h5">
-                                    <a href="/view/{{$ctrl.getCurrentUserFolderPath()}}">My documents</a>
-                                </li>
-                                <li class="h5"><a href="/view/">All documents</a></li>
-                                <li class="h5">
-                                    <a ng-click="$ctrl.openCourseListDialog()" href="#">Available courses</a>
-                                </li>
-                                <li ng-if="$ctrl.isLoggedIn()" class="h5">
-                                    <a ng-click="$ctrl.enableCreate()" href="#">Create a new document</a>
-                                </li>
-                            </ul>
-                            <bootstrap-panel ng-if="$ctrl.creatingNew"
-                                             title="Create a new document"
-                                             show-close="true"
-                                             close-fn="$ctrl.cancelCreate()">
-                                <create-item item-title="My document"
-                                             item-location="{{$ctrl.getCurrentUserFolderPath()}}"
-                                             item-type="document">
-                                </create-item>
-                            </bootstrap-panel>
-                        </div>
-                        <div ng-switch-when="fi">
-                            <h3>Aloitus</h3>
-                            <login-menu ng-if="!$ctrl.isLoggedIn()"></login-menu>
-                            <ul class="list-unstyled">
-                                <li ng-if="$ctrl.isLoggedIn()" class="h5">
-                                    <a href="/view/{{$ctrl.getCurrentUserFolderPath()}}">Omat dokumentit</a>
-                                </li>
-                                <li class="h5"><a href="/view/">Kaikki dokumentit</a></li>
-                                <li class="h5">
-                                    <a ng-click="$ctrl.openCourseListDialog()" href="#">Saatavilla olevat kurssit</a>
-                                </li>
-                                <li ng-if="$ctrl.isLoggedIn()" class="h5">
-                                    <a ng-click="$ctrl.enableCreate()" href="#">Luo uusi dokumentti</a>
-                                </li>
-                            </ul>
-                            <bootstrap-panel ng-if="$ctrl.creatingNew"
-                                             title="Create a new document"
-                                             show-close="true"
-                                             close-fn="$ctrl.cancelCreate()">
-                                <create-item item-title="My document"
-                                             item-location="{{$ctrl.getCurrentUserFolderPath()}}"
-                                             item-type="document">
-                                </create-item>
-                            </bootstrap-panel>
-                        </div>
-                    </div>
-                </div>
-            </div>
+        <div class="col-md-7 col-md-offset-3">
+            <bookmark-folder-box bookmarks="$ctrl.bookmarks" bookmark-folder-name="My courses">
+            </bookmark-folder-box>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-5 col-md-offset-2">
+            <a href="/view/tim/TIM-esittely">
+                <img class="img-responsive" alt="TIM-esittely" src="/static/images/responsive.jpg"/>
+            </a>
+        </div>
+        <div class="col-md-4">
             <div ng-switch="$ctrl.language" ng-cloak>
                 <div ng-switch-when="en">
-                    <div class="row">
-                        <div class="col-md-8 col-md-offset-2">
-                            <h4>What is TIM?</h4>
-                            <p>TIM is a document-based cloud service for producing interactive materials.</p>
-                        </div>
-                        <div class="col-md-4 col-md-offset-2">
-                            <h4>TIM</h4>
-                            <ul class="list-unstyled">
-                                <li><a href="/view/tim/TIM-esittely">Introduction</a><sup> (F)</sup></li>
-                                <li><a href="/view/tim/TIM-ohjeet">User guide</a><sup> (F)</sup></li>
-                            </ul>
-                        </div>
-                        <div class="col-md-4">
-                            <h4>Examples <sup>(F)</sup></h4>
-                            <ul class="list-unstyled">
-                                <li><a href="/view/tim/Esimerkkeja-TIMin-mahdollisuuksista">TIM's possibilities</a></li>
-                                <li><a ng-if="$ctrl.isLoggedIn()" href="/view/tim/Eri-ohjelmointikielia">
-                                        Programming languages</a></li>
-                                <li><a ng-if="$ctrl.isLoggedIn()" href="/view/tim/muita-esimerkkeja">
-                                        Usage in different subjects</a></li>
-                            </ul>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-4 col-md-offset-4 text-muted text-center">
-                            <sup>(F)</sup> in Finnish
-                        </div>
-                    </div>
+                    <h3>Get started</h3>
+                    <login-menu ng-if="!$ctrl.isLoggedIn()"></login-menu>
+                    <ul class="list-unstyled">
+                        <li ng-if="$ctrl.isLoggedIn()" class="h5">
+                            <a href="/view/{{$ctrl.getCurrentUserFolderPath()}}">My documents</a>
+                        </li>
+                        <li class="h5"><a href="/view/">All documents</a></li>
+                        <li class="h5">
+                            <a ng-click="$ctrl.openCourseListDialog()" href="#">Available courses</a>
+                        </li>
+                        <li ng-if="$ctrl.isLoggedIn()" class="h5">
+                            <a ng-click="$ctrl.enableCreate()" href="#">Create a new document</a>
+                        </li>
+                    </ul>
+                    <bootstrap-panel ng-if="$ctrl.creatingNew"
+                                     title="Create a new document"
+                                     show-close="true"
+                                     close-fn="$ctrl.cancelCreate()">
+                        <create-item item-title="My document"
+                                     item-location="{{$ctrl.getCurrentUserFolderPath()}}"
+                                     item-type="document">
+                        </create-item>
+                    </bootstrap-panel>
                 </div>
                 <div ng-switch-when="fi">
-                    <div class="row">
-                        <div class="col-md-8 col-md-offset-2">
-                            <h4>Mikä on TIM?</h4>
-                            <p>TIM on dokumenttipohjainen pilvipalvelu interaktiivisten materiaalien tuottamiseksi.</p>
-                        </div>
-                        <div class="col-md-4 col-md-offset-2">
-                            <h4>TIM</h4>
-                            <ul class="list-unstyled">
-                                <li><a href="/view/tim/TIM-esittely">Esittely</a></li>
-                                <li><a href="/view/tim/TIM-ohjeet">Ohjeet</a></li>
-                            </ul>
-                        </div>
-                        <div class="col-md-4">
-                            <h4>Esimerkkejä</h4>
-                            <ul class="list-unstyled">
-                                <li><a href="/view/tim/Esimerkkeja-TIMin-mahdollisuuksista">
-                                    TIMin mahdollisuuksia</a></li>
-                                <li><a ng-if="$ctrl.isLoggedIn()" href="/view/tim/Eri-ohjelmointikielia">
-                                    Ohjelmointikieliä</a></li>
-                                <li><a ng-if="$ctrl.isLoggedIn()" href="/view/tim/muita-esimerkkeja">
-                                    Käyttö eri oppiaineissa</a></li>
-                            </ul>
-                        </div>
-                    </div>
+                    <h3>Aloitus</h3>
+                    <login-menu ng-if="!$ctrl.isLoggedIn()"></login-menu>
+                    <ul class="list-unstyled">
+                        <li ng-if="$ctrl.isLoggedIn()" class="h5">
+                            <a href="/view/{{$ctrl.getCurrentUserFolderPath()}}">Omat dokumentit</a>
+                        </li>
+                        <li class="h5"><a href="/view/">Kaikki dokumentit</a></li>
+                        <li class="h5">
+                            <a ng-click="$ctrl.openCourseListDialog()" href="#">Saatavilla olevat kurssit</a>
+                        </li>
+                        <li ng-if="$ctrl.isLoggedIn()" class="h5">
+                            <a ng-click="$ctrl.enableCreate()" href="#">Luo uusi dokumentti</a>
+                        </li>
+                    </ul>
+                    <bootstrap-panel ng-if="$ctrl.creatingNew"
+                                     title="Create a new document"
+                                     show-close="true"
+                                     close-fn="$ctrl.cancelCreate()">
+                        <create-item item-title="My document"
+                                     item-location="{{$ctrl.getCurrentUserFolderPath()}}"
+                                     item-type="document">
+                        </create-item>
+                    </bootstrap-panel>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div ng-switch="$ctrl.language" ng-cloak>
+        <div ng-switch-when="en">
+            <div class="row">
+                <div class="col-md-7 col-md-offset-3">
+                    <h4>What is TIM?</h4>
+                    <p>TIM is a document-based cloud service for producing interactive materials.</p>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-3 col-md-offset-3">
+                    <h4>TIM</h4>
+                    <ul class="list-unstyled">
+                        <li><a href="/view/tim/TIM-esittely">Introduction</a><sup> (F)</sup></li>
+                        <li><a href="/view/tim/TIM-ohjeet">User guide</a><sup> (F)</sup></li>
+                    </ul>
+                </div>
+                <div class="col-md-4">
+                    <h4>Examples <sup>(F)</sup></h4>
+                    <ul class="list-unstyled">
+                        <li><a href="/view/tim/Esimerkkeja-TIMin-mahdollisuuksista">TIM's possibilities</a></li>
+                        <li><a ng-if="$ctrl.isLoggedIn()" href="/view/tim/Eri-ohjelmointikielia">
+                                Programming languages</a></li>
+                        <li><a ng-if="$ctrl.isLoggedIn()" href="/view/tim/muita-esimerkkeja">
+                                Usage in different subjects</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-4 col-md-offset-4 text-muted text-center">
+                    <sup>(F)</sup> in Finnish
+                </div>
+            </div>
+        </div>
+        <div ng-switch-when="fi">
+            <div class="row">
+                <div class="col-md-8 col-md-offset-3">
+                    <h4>Mikä on TIM?</h4>
+                    <p>TIM on dokumenttipohjainen pilvipalvelu interaktiivisten materiaalien tuottamiseksi.</p>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-3 col-md-offset-3">
+                    <h4>TIM</h4>
+                    <ul class="list-unstyled">
+                        <li><a href="/view/tim/TIM-esittely">Esittely</a></li>
+                        <li><a href="/view/tim/TIM-ohjeet">Ohjeet</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4">
+                    <h4>Esimerkkejä</h4>
+                    <ul class="list-unstyled">
+                        <li><a href="/view/tim/Esimerkkeja-TIMin-mahdollisuuksista">
+                            TIMin mahdollisuuksia</a></li>
+                        <li><a ng-if="$ctrl.isLoggedIn()" href="/view/tim/Eri-ohjelmointikielia">
+                            Ohjelmointikieliä</a></li>
+                        <li><a ng-if="$ctrl.isLoggedIn()" href="/view/tim/muita-esimerkkeja">
+                            Käyttö eri oppiaineissa</a></li>
+                    </ul>
                 </div>
             </div>
         </div>
