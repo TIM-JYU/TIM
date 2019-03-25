@@ -28,7 +28,6 @@ export class VelpSummaryController implements IController {
 
     /**
      * Gets total number of points.
-     * @method getTotalPoints
      * @returns {number} Total number of points
      */
     getTotalPoints(annotations: IAnnotation[]) {
@@ -48,7 +47,6 @@ export class VelpSummaryController implements IController {
 
     /**
      * Checks all checkboxes linked to the annotations in the velp summary.
-     * @method checkAll
      */
     checkAll() {
         angular.forEach(this.annotations, (a) => {

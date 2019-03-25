@@ -167,7 +167,6 @@ export class NotesHandler {
 
     /**
      * Creates the note badge button (the button with letter 'C' on it).
-     * @method createNoteBadge
      * @param par - Element where the badge needs to be attached
      */
     createNoteBadge(par: Paragraph) {
@@ -218,7 +217,6 @@ export class NotesHandler {
 
     /**
      * Moves the note badge to the correct element.
-     * @method updateNoteBadge
      * @param par - Element where the badge needs to be attached
      */
     updateNoteBadge(par: Paragraph) {

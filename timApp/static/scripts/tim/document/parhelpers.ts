@@ -181,7 +181,6 @@ export function dereferencePar(par: Paragraph) {
 
 /**
  * Adds an element to the paragraph margin.
- * @method addElementToParagraphMargin
  * @param par - Paragraph where the element will be added
  * @param el - Element to add
  */

@@ -294,7 +294,6 @@ export class VelpSelectionController implements IController {
 
     /**
      * Get color for the object from colorPalette variable.
-     * @method getColor
      * @param index - Index of the color in the colorPalette variable (modulo by length of color palette)
      * @returns {string} String representation of the color
      */
@@ -304,7 +303,6 @@ export class VelpSelectionController implements IController {
 
     /**
      * Toggles the label's selected attribute.
-     * @method toggleLabel
      * @param label - Label to toggle
      */
     toggleLabel(label: ILabelUI) {
@@ -321,7 +319,6 @@ export class VelpSelectionController implements IController {
 
     /**
      * Toggles the label's edit attribute.
-     * @method toggleLabelToEdit
      * @param label - Label to edit
 
      this.toggleLabelToEdit = function (label) {
@@ -335,7 +332,6 @@ export class VelpSelectionController implements IController {
 
     /**
      * Adds new label tp the specified velp.
-     * @method addLabel
      * @param velp - Velp where the label is to be added.
      */
     async addLabel(velp: IVelp) {
@@ -363,7 +359,6 @@ export class VelpSelectionController implements IController {
 
     /**
      * Deselects all the labels.
-     * @method deselectLabels
      */
     deselectLabels() {
         for (let i = 0; i < this.labels.length; i++) {
@@ -379,7 +374,6 @@ export class VelpSelectionController implements IController {
 
     /**
      * Selects velp to edit
-     * @method selectVelpToEdit
      */
     openCreateNewVelpWindow() {
         if (!this.newVelpCtrl) {
@@ -395,7 +389,6 @@ export class VelpSelectionController implements IController {
 
     /**
      * Generates the default velp group.
-     * @method generateDefaultVelpGroup
      */
     async generateDefaultVelpGroup(): Promise<IVelpGroup | null> {
         if (this.default_velp_group.edit_access) {
@@ -432,7 +425,6 @@ export class VelpSelectionController implements IController {
      * Initially resets this.velpToEdit variable to the original (empty) state.
      * NOTE! this function is replaced in 'setVelpToEdit'. When replaced
      * this mehtod resets the velp that is being edited to its original state.
-     * @method resetEditVelp
      */
     resetEditVelp() {
         this.velpToEdit = {
@@ -463,7 +455,6 @@ export class VelpSelectionController implements IController {
      * Edits the label according to the this.labelToedit variable.
      * All required data exists in the this.labelToedit variable,
      * including the ID of the label.
-     * @method editLabel
      */
     editLabel() {
         if (this.labelToEdit.content.length < 1) {
@@ -487,7 +478,6 @@ export class VelpSelectionController implements IController {
 
     /**
      * Reset new velp information to the initial (empty) state.
-     * @method resetNewVelp
      */
     resetNewVelp() {
         this.newVelp = {
@@ -508,7 +498,6 @@ export class VelpSelectionController implements IController {
 
     /**
      * Reset new label information to the initial (empty) state.
-     * @method resetNewLabel
      */
     resetNewLabel() {
         this.newLabel = {content: "", selected: true, valid: true, id: null};
@@ -526,7 +515,6 @@ export class VelpSelectionController implements IController {
 
     /**
      * Updates the velp list according to how the velp groups are selected in the area.
-     * @method updateVelpList
      */
     updateVelpList() {
         this.velpGroups.forEach((g) => {
@@ -542,7 +530,6 @@ export class VelpSelectionController implements IController {
 
     /**
      * Return whether the group is shown based on the various selected and default values.
-     * @method isVelpGroupShownHere
      * @param groupId - VelpGroup ID
      * @param paragraphId - Paragraph ID or "0" for the document
      * @returns {boolean} Whether the velp group is shown here or not
@@ -578,7 +565,6 @@ export class VelpSelectionController implements IController {
 
     /**
      * Returns whether the velp group is default in specified paragraph (or document) or not.
-     * @method isVelpGroupDefaultHere
      * @param groupId - Velp group ID
      * @param paragraphId - Paragraph ID or "0" for the document
      * @returns {boolean} Whether the velp group is default here or not.
@@ -602,7 +588,6 @@ export class VelpSelectionController implements IController {
      * Checks whether the given velp group is either personal default or document default group.
      * Personal default group and the document default group have always default, unless the user has
      * specified otherwise.
-     * @method isVelpGroupDefaultFallBack
      * @param groupId - Velp group ID
      * @returns {boolean} Whether the group is personal default or document default group or not.
      */
@@ -613,7 +598,6 @@ export class VelpSelectionController implements IController {
     /**
      * Helper function for checking if the velp group is shown in the paragraph or not.
      * Despite the name, can check document selections as well.
-     * @method lazyIsVelpGroupSelectedInParagraph
      * @param groupId - Velp group ID
      * @param paragraphId - Paragraph ID or "0" for the document
      * @returns true/false/null
@@ -625,7 +609,6 @@ export class VelpSelectionController implements IController {
     /**
      * Helper function for checking if the velp group is default in the paragraph or not.
      * Despite the name, can check document selections as well.
-     * @method lazyIsVelpGroupDefaultInParagraph
      * @param groupId - Velp group ID
      * @param paragraphId - Paragraph ID or "0" for the document
      * @returns true/false/null
@@ -636,7 +619,6 @@ export class VelpSelectionController implements IController {
 
     /**
      * Checks whether the collection is selected or not.
-     * @method checkCollectionForSelected
      * @param groupId - Velp group ID
      * @param paragraphId - Paragraph ID or document "0".
      * @param collection - Shows or defaults
@@ -656,7 +638,6 @@ export class VelpSelectionController implements IController {
 
     /**
      * Adds a velp group on form submit event.
-     * @method addVelpGroup
      * @param form - Velp group form
      */
     async addVelpGroup(form: IFormController) {
@@ -680,7 +661,6 @@ export class VelpSelectionController implements IController {
 
     /**
      * Changes velp group (default or show) selection in the current element or in the document.
-     * @method changeVelpGroupSelection
      * @param group - Velp group
      * @param type - "show" or "default"
      */
@@ -755,7 +735,6 @@ export class VelpSelectionController implements IController {
 
     /**
      * Changes all velp group selections (defaults and shows).
-     * @method changeAllVelpGroupSelections
      * @param type - "show" or "default"
      */
     changeAllVelpGroupSelections(type: VelpGroupSelectionType) {
@@ -824,7 +803,6 @@ export class VelpSelectionController implements IController {
 
     /**
      * Sets all velp group show selections to defaults in the current element or in the document.
-     * @method resetCurrentShowsToDefaults
      */
     async resetCurrentShowsToDefaults() {
 
@@ -842,7 +820,6 @@ export class VelpSelectionController implements IController {
 
     /**
      * Sets all the show-checkbox values according to the default-checkboxes.
-     * @method resetAllShowsToDefaults
      */
     async resetAllShowsToDefaults() {
         this.groupSelections = clone(this.groupDefaults);
@@ -853,7 +830,6 @@ export class VelpSelectionController implements IController {
 
     /**
      * Changes default and show checkboxes according to selected element or document.
-     * @method checkCheckBoxes
      * @param type - Paragraph ID or "0" for the document
      * @returns {boolean} Whether all velp groups are used in the selected element or document
      */
@@ -875,7 +851,6 @@ export class VelpSelectionController implements IController {
 
     /**
      * Gets all the velp groups of the specific velp.
-     * @method getVelpsVelpGroups
      * @param velp - Velp whose velp groups are retrieved
      * @returns {Array} - Array of the velp's velp groups
      */
@@ -893,7 +868,6 @@ export class VelpSelectionController implements IController {
 
     /**
      * Checks if the velp has any velp groups selected.
-     * @method isSomeVelpGroupSelected
      * @param velp - Velp whose velp groups are checked
      * @returns {boolean} Whether velp has any groups selected or not
      */
@@ -907,7 +881,6 @@ export class VelpSelectionController implements IController {
     /**
      * Checks if the velp can be added or modified. The velp has to have a name and
      * it has to be included in at least one velp group.
-     * @method isVelpValid
      * @param velp - Velp to check
      * @returns {boolean} Whether the added or modified velp is valid or not.
      */
@@ -920,7 +893,6 @@ export class VelpSelectionController implements IController {
 
     /**
      * Checks whether the velp contains the velp group.
-     * @method isGroupInVelp
      * @param velp - Velp to check
      * @param group - Velp group to check
      * @returns {boolean} Whether the velp contains the velp group or not
@@ -934,7 +906,6 @@ export class VelpSelectionController implements IController {
 
     /**
      * Updates velp groups of the specified velp.
-     * @method updateVelpGroups
      * @param velp - Velp to update
      * @param group - Group to be added or removed from the velp
      */

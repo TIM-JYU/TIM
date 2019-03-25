@@ -139,7 +139,6 @@ export class AnnotationController implements IController {
 
     /**
      * Toggles the visibility of the annotation.
-     * @method toggleAnnotation
      */
     toggleAnnotation() {
         if (this.velpElement.parentElement == null) {
@@ -172,7 +171,6 @@ export class AnnotationController implements IController {
 
     /**
      * Updates the z-index attribute of the annotation.
-     * @method updateVelpZIndex
      */
     updateVelpZIndex() {
         this.velpElement.style.zIndex = this.rctrl.zIndex.toString();
@@ -181,7 +179,6 @@ export class AnnotationController implements IController {
 
     /**
      * Shows the annotation.
-     * @method showAnnotation
      */
     showAnnotation() {
         this.setShowFull(false);
@@ -194,7 +191,6 @@ export class AnnotationController implements IController {
     /**
      * Deletes the selected annotation. Queries parent this and deletes
      * the corresponding annotation from there.
-     * @method deleteAnnotation
      */
     deleteAnnotation() {
 
@@ -208,7 +204,6 @@ export class AnnotationController implements IController {
 
     /**
      * Updates the annotation and toggles its visibility in the margin.
-     * @method updateAnnotation
      */
     updateAnnotation() {
         let margin = false;
@@ -224,7 +219,6 @@ export class AnnotationController implements IController {
     /**
      * Changes points of the selected annotation. Qeries parent this
      * and changes the points of the corresponding annotation.
-     * @method changePoints
      */
     changePoints() {
         if (this.annotation.points != null) {
@@ -243,7 +237,6 @@ export class AnnotationController implements IController {
     /**
      * Saves the changes made to the annotation. Queries parent this
      * and updates the changes of the corresponding annotation.
-     * @method saveChanges
      */
     async saveChanges() {
         const id = this.rctrl.getRealAnnotationId(this.annotation.id);
@@ -289,7 +282,6 @@ export class AnnotationController implements IController {
 
     /**
      * Checks if the user has rights to edit the annotation.
-     * @method checkRights
      * @returns {boolean} Whether the user has rights or not
      */
     checkRights() {
@@ -306,7 +298,6 @@ export class AnnotationController implements IController {
 
     /**
      * Checks if the annotation is changed compared to its last saved state.
-     * @method checkIfChanged
      * @returns {boolean} - Whether any modifications were made or not
      */
     checkIfChanged() {
@@ -323,7 +314,6 @@ export class AnnotationController implements IController {
 
     /**
      * Detects the `Ctrl + S` and `Ctrl+Enter` key strokes on the text area.
-     * @method keyDownFunc
      * @param event - Current event
      */
     keyDownFunc(event: KeyboardEvent) {
@@ -343,7 +333,6 @@ export class AnnotationController implements IController {
 
     /**
      * Detects if `Ctrl`-key is released.
-     * @method keyUpFunc
      * @param event - Current event
      */
     keyUpFunc(event: KeyboardEvent) {

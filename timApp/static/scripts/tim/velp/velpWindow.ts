@@ -176,7 +176,6 @@ export class VelpWindowController implements IController {
 
     /**
      * Returns whether the velp contains the label or not.
-     * @method isLabelInVelp
      * @param label - Label to check
      * @returns {boolean} Whether the velp contains the label or not.
      */
@@ -189,7 +188,6 @@ export class VelpWindowController implements IController {
 
     /**
      * Checks whether the velp contains the velp group.
-     * @method isGroupInVelp
      * @param group - Velp group to check
      * @returns {boolean} Whether the velp contains the velp group or not
      */
@@ -202,7 +200,6 @@ export class VelpWindowController implements IController {
 
     /**
      * Updates the labels of the velp.
-     * @method updateVelpLabels
      * @param label - Label to be added or removed from the velp
      */
     updateVelpLabels(label: ILabel) {
@@ -219,7 +216,6 @@ export class VelpWindowController implements IController {
 
     /**
      * Updates velp groups of this velp.
-     * @method updateVelpGroups
      * @param group - Group to be added or removed from the velp
      */
     updateVelpGroups(group: IVelpGroup) {
@@ -236,7 +232,6 @@ export class VelpWindowController implements IController {
 
     /**
      * Checks if the velp has any velp groups selected.
-     * @method isSomeVelpGroupSelected
      * @returns {boolean} Whether velp has any groups selected or not
      */
     isSomeVelpGroupSelected() {
@@ -263,7 +258,6 @@ export class VelpWindowController implements IController {
 
     /**
      * Adds new label to this velp.
-     * @method addLabel
      */
     async addLabel() {
 
@@ -291,7 +285,6 @@ export class VelpWindowController implements IController {
 
     /**
      * Selects the label for editing.
-     * @method toggleLabelToEdit
      * @param label - Label to edit
      */
     toggleLabelToEdit(label: INewLabel) {
@@ -338,7 +331,6 @@ export class VelpWindowController implements IController {
      * All required data exists in the this.labelToedit variable,
      * including the ID of the label.
      * TODO: This can be simplified
-     * @method editLabel
      */
     editLabel() {
         if (this.labelToEdit.content.length < 1) {
@@ -361,7 +353,6 @@ export class VelpWindowController implements IController {
 
     /**
      * Reset new label information to the initial (empty) state.
-     * @method resetNewLabel
      */
     resetNewLabel() {
         this.newLabel = {content: "", selected: true, valid: true, id: null};
@@ -394,7 +385,6 @@ export class VelpWindowController implements IController {
 
     /**
      * Adds a new velp on form submit event.
-     * @method addVelp
      */
     async addVelp() {
         const defaultVelpGroup = this.velpSelection.getDefaultVelpGroup();
@@ -409,7 +399,6 @@ export class VelpWindowController implements IController {
 
     /**
      * Adds a new velp to the database. Requires values in `this.newVelp` variable.
-     * @method addNewVelpToDatabase
      */
     async addNewVelpToDatabase() {
 
@@ -483,7 +472,6 @@ export class VelpWindowController implements IController {
 
     /**
      * Get color for the object from colorPalette variable.
-     * @method getColor
      * @param index - Index of the color in the colorPalette variable (modulo by length of color palette)
      * @returns {string} String representation of the color
      */
