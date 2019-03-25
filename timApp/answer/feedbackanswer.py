@@ -18,6 +18,7 @@ from timApp.util.flask.requesthelper import get_option
 from timApp.util.utils import get_current_time
 from timApp.auth.accesshelper import verify_logged_in, verify_teacher_access
 from timApp.plugin.pluginControl import find_task_ids
+import csv
 
 feedback = Blueprint('feedback',
                      __name__,
@@ -150,13 +151,21 @@ def compile_csv(qq: Iterable[Tuple[Answer, User]], printname: bool, hide_names: 
             temp_bool = True
         if prev_user == None: prev_user = user
         if prev_ans == None: prev_ans = answer
-        if temp_bool:
+
+        # find type of the plugin
+
+        answer_task_id = answer.task_id
+        p = Plugin.from_task_id(answer_task_id, user=get_current_user_object())
+        ptype = p.type
+
+        if ptype == 'feedback':
             if not (prev_user in anons):
                 anons[prev_user] = f"user{cnt}"
                 cnt += 1
             anonuser = anons[prev_user]
-            answer_content = json.loads(prev_ans.content)   # .get(prev_ans.content) #json.loads(prev_ans.content)
-            feedback_content = json.loads(answer.content)   # json.loads(answer.content)
+            correct = json.loads(answer.content)['correct']
+            answer_content = json.loads(answer.content)['sentence']   # .get(prev_ans.content) #json.loads(prev_ans.content)
+            feedback_content = json.loads(answer.content)['feedback']   # json.loads(answer.content)
 
             if pt_dt != None:
                 tasksecs = (prev_ans.answered_on - pt_dt).total_seconds()
@@ -172,20 +181,19 @@ def compile_csv(qq: Iterable[Tuple[Answer, User]], printname: bool, hide_names: 
 
             if exclude_first and pt_dt:   # IF-CONDITION temporary for the sake of excluding the first sample item
                 if printname and not hide_names:
-                    results.append([prev_user.real_name]
-                                + [shown_user]
-                                + ['WRONG!!!']
-                                + [answer_content]
-                                + [feedback_content]
-                                + [str(round(tasksecs, 1))]
-                                + [str(round(fbsecs, 1))])
+                    results.append([prev_user.real_name,
+                                    shown_user,correct,
+                                    answer_content,
+                                    feedback_content,
+                                    str(round(tasksecs, 1)),
+                                    str(round(fbsecs, 1))])
                 else:
-                    results.append([shown_user]
-                                + ['WRONG!!!']
-                                + [answer_content]
-                                + [feedback_content]
-                                + [str(round(tasksecs, 1))]
-                                + [str(round(fbsecs, 1))])
+                    results.append([shown_user,
+                                correct,
+                                answer_content,
+                                feedback_content,
+                                str(round(tasksecs, 1)),
+                                str(round(fbsecs, 1))])
 
         pt_dt = prev_ans.answered_on
         prev_ans = answer
@@ -222,8 +230,12 @@ def test(doc_path):
 
     if format == 'tab':
         dialect = 'excel-tab'
-    else:
+    elif format == 'comma':
         dialect = 'excel'
+    else:
+        dialect = csv.excel
+        dialect.delimiter = ';'
+
 
     period = get_option(request, 'period', 'whenever')
     period_from = datetime.min.replace(tzinfo=timezone.utc)
