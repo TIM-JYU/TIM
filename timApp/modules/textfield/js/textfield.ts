@@ -211,12 +211,13 @@ textfieldApp.component("textfieldRunner", {
                ng-model-options="::$ctrl.modelOpts"
                ng-change="$ctrl.checkTextfield()"
                ng-trim="false"
+               ng-readonly="::$ctrl.readonly"
                placeholder="{{::$ctrl.inputplaceholder}}"
                size="{{::$ctrl.cols}}"></span></label>
     </div>
     <button class="timButton"
             ng-if="$ctrl.buttonText()"
-            ng-disabled="$ctrl.isRunning || !$ctrl.userword"
+            ng-disabled="$ctrl.isRunning || !$ctrl.userword || $ctrl.readonly"
             ng-click="$ctrl.saveText()">
         {{::$ctrl.buttonText()}}
     </button>
@@ -225,47 +226,3 @@ textfieldApp.component("textfieldRunner", {
 </div>
 `,
 });
-
-
-/**
- * TODO: create alternative component for label version of textfield?
- * label runner as HTML component.
- */
-/*
-textfieldApp.component("labelRunner", {
-    bindings: {
-        json: "@",
-    },
-    controller: TextfieldController,
-    require: {
-        vctrl: "^timView",
-    },
-    template: `
-<div class="labelNoSaveDiv">
-    <tim-markup-error ng-if="::$ctrl.markupError" data="::$ctrl.markupError"></tim-markup-error>
-    <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
-    <p class="stem" ng-if="::$ctrl.stem">{{::$ctrl.stem}}</p>
-    <div class="form-inline"><label>{{::$ctrl.inputstem}} <span>   
-        <input type="string"
-               class="form-control"
-               ng-model="$ctrl.userword"
-               ng-blur="$ctrl.autoSave()"
-               ng-keydown="$event.keyCode === 13 && $ctrl.saveText()"
-               ng-model-options="::$ctrl.modelOpts"
-               ng-change="$ctrl.checkTextfield()"
-               ng-trim="false"
-               placeholder="{{::$ctrl.inputplaceholder}}"
-               size="{{::$ctrl.cols}}"></span></label>
-    </div>
-    <button class="timButton"
-            ng-if="$ctrl.buttonText()"
-            ng-disabled="$ctrl.isRunning || !$ctrl.userword"
-            ng-click="$ctrl.saveText()">
-        {{::$ctrl.buttonText()}}
-    </button>
-    <!-- <pre class="hidepre" ng-if="$ctrl.result">{{$ctrl.result}}</pre> -->
-    <p ng-if="::$ctrl.footer" ng-bind="::$ctrl.footer" class="plgfooter"></p>
-</div>
-`,
-});
-*/

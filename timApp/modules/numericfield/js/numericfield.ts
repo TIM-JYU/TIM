@@ -210,17 +210,18 @@ numericfieldApp.component("numericfieldRunner", {
                style="width: {{::$ctrl.cols}}em"
                class="form-control"
                ng-model="$ctrl.numericvalue"
-               ng-blur="$ctrl.saveText()"
+               ng-blur="$ctrl.autoSave()"
                ng-keydown="$event.keyCode === 13 && $ctrl.saveText()"
                ng-model-options="::$ctrl.modelOpts"
                ng-change="$ctrl.checkNumericfield()"
                ng-trim="false"
+               ng-readonly="::$ctrl.readonly"
                placeholder="{{::$ctrl.inputplaceholder}}">
         </span></label>
     </div>
     <button class="timButton"
             ng-if="$ctrl.buttonText()"
-            ng-disabled="$ctrl.isRunning || !$ctrl.numericvalue"
+            ng-disabled="$ctrl.isRunning || !$ctrl.numericvalue || $ctrl.readonly"
             ng-click="$ctrl.saveText()">
         {{::$ctrl.buttonText()}}
     </button>

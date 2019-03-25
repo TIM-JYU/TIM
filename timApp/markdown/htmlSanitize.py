@@ -75,6 +75,7 @@ TIM_SAFE_TAGS = [
     'savearea-runner',
     'small-video-runner',
     'textfield-runner',
+    'numericfield-runner',
     'video-runner',
 ]
 
