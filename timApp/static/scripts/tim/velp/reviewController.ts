@@ -1,7 +1,5 @@
-import angular, {IController, IScope} from "angular";
+import angular, {IScope} from "angular";
 import $ from "jquery";
-import {timApp} from "tim/app";
-import {AnswerBrowserController, PluginLoaderCtrl} from "../answer/answerbrowser3";
 import {IAnswer} from "../answer/IAnswer";
 import {addElementToParagraphMargin} from "../document/parhelpers";
 import {ViewCtrl} from "../document/viewctrl";
@@ -11,11 +9,9 @@ import {$compile, $http, $timeout, $window} from "../util/ngimport";
 import {
     angularWait,
     assertIsText,
-    Binding,
     checkIfElement,
     getElementParent,
     isInViewport,
-    Require,
     scrollToElement,
     stringOrNull,
 } from "../util/utils";
@@ -35,15 +31,12 @@ import {IAnnotation, IAnnotationCoordless, IAnnotationInterval, isFullCoord, IVe
  * @copyright 2016 Timber project members
  */
 
-const UNDEFINED = "undefined";
 const illegalClasses = ["annotation-element", "highlighted", "editorArea", "previewcontent"];
 
 /**
- * Angular controller for handling annotations.
- * @lends module:reviewController
+ * A class for handling annotations.
  */
-export class ReviewController implements IController {
-    private static $inject = ["$scope"];
+export class ReviewController {
     private annotationsAdded: boolean;
     private selectedArea?: Range;
     public selectedElement?: Element;
@@ -51,32 +44,21 @@ export class ReviewController implements IController {
     private annotations: IAnnotation[];
     private annotationids: {[i: number]: number};
     public zIndex: number;
-    public docId: number;
     private scope: IScope;
     private velpBadge?: HTMLElementTagNameMap["input"];
     private velpBadgePar?: string;
-    private vctrl!: Require<ViewCtrl>;
     private velpSelection!: VelpSelectionController; // initialized through onInit
-    private onInit!: Binding<(params: {$SCOPE: IScope}) => void, "&">;
     private velpMode: boolean;
     public velps?: IVelpUI[];
 
-    constructor(scope: IScope) {
-        this.scope = scope;
+    constructor(public vctrl: ViewCtrl) {
+        this.scope = vctrl.scope;
         this.annotationsAdded = false;
         this.velpMode = $window.velpMode;
         this.item = $window.item;
-        this.docId = this.item.id;
         this.annotations = [];
         this.annotationids = {0: 0};
         this.zIndex = 1;
-    }
-
-    async $onInit() {
-        this.onInit({$SCOPE: this.scope});
-        const response = await $http.get<IAnnotation[]>("/{0}/get_annotations".replace("{0}", this.docId.toString()));
-        this.annotations = response.data;
-        this.loadDocumentAnnotations();
     }
 
     initVelpSelection(velpSelection: VelpSelectionController) {
@@ -87,7 +69,9 @@ export class ReviewController implements IController {
      * Loads the document annotations into the view.
      * @method loadDocumentAnnotations
      */
-    loadDocumentAnnotations(): void {
+    async loadDocumentAnnotations() {
+        const response = await $http.get<IAnnotation[]>("/{0}/get_annotations".replace("{0}", this.item.id.toString()));
+        this.annotations = response.data;
         const annotationsToRemove = [];
 
         for (let i = 0; i < this.annotations.length; i++) {
@@ -190,7 +174,7 @@ export class ReviewController implements IController {
     }
 
     getFirstChildUntilNull(element: Node): Node {
-        if (typeof element.firstChild === UNDEFINED || element.firstChild == null) {
+        if (element.firstChild == null) {
             return element;
         }
         return this.getFirstChildUntilNull(element.firstChild);
@@ -202,7 +186,7 @@ export class ReviewController implements IController {
      * @returns Element
      */
     getLastChildUntilNull(element: Node): Node {
-        if (typeof element.lastChild === UNDEFINED || element.lastChild == null) {
+        if (element.lastChild == null) {
             return element;
         }
         return this.getFirstChildUntilNull(element.lastChild);
@@ -510,7 +494,7 @@ export class ReviewController implements IController {
      * @param id - Annotation ID
      * @param points - Annotation points
      */
-    changeAnnotationPoints(id: number, points: number | null): void {
+    changeAnnotationPoints(id: number, points: number): void {
         for (let i = 0; i < this.annotations.length; i++) {
             if (this.annotations[i].id === id) {
                 this.annotations[i].points = points;
@@ -819,7 +803,7 @@ export class ReviewController implements IController {
             id: -(this.annotations.length + 1),
             velp: velp.id,
             points: velp.points,
-            doc_id: this.docId,
+            doc_id: this.item.id,
             visible_to: velp.visible_to,
             content: velp.content,
             annotator_name: "me",
@@ -942,6 +926,20 @@ export class ReviewController implements IController {
         this.annotationids[newAnnotation.id] = json.data.id;
     }
 
+    getAnswerBrowserFromPluginLoader(first: Element) {
+        const taskId = first.getAttribute("task-id");
+        if (!taskId) {
+            console.warn("tim-plugin-loader did not have task-id?");
+            return;
+        }
+        const ctrl = this.vctrl.getAnswerBrowser(taskId);
+        if (!ctrl) {
+            console.warn(`answerbrowser with task id ${taskId} was not found`);
+            return;
+        }
+        return ctrl;
+    }
+
     /**
      * Gets the answer info of the element. Returns null if no answer found.
      * @method getAnswerInfo
@@ -951,29 +949,29 @@ export class ReviewController implements IController {
     getAnswerInfo(start: Element): IAnswer | undefined {
 
         if (start.hasAttribute("attrs") && start.hasAttribute("t")) {
-            const answ = start.getElementsByTagName("answerbrowser");
+            const answ = start.getElementsByTagName("tim-plugin-loader");
             if (answ.length > 0) {
-                const ctrl = angular.element(answ[0]).isolateScope<any>().$ctrl as AnswerBrowserController;
-                return ctrl.selectedAnswer;
+                const first = answ[0];
+                const isInline = first.classList.contains("inlineplugin");
+                if (isInline && answ.length > 1) {
+                    console.warn("Paragraph has multiple plugins but the first of them was not inlineplugin?");
+                    return;
+                }
+                if (isInline) {
+                    return;
+                }
+                const ctrl = this.getAnswerBrowserFromPluginLoader(first);
+                return ctrl && ctrl.selectedAnswer;
             }
-            return undefined;
+            return;
         }
 
-        const myparent = getElementParent(start);
-        if (myparent == null) {
-            return undefined;
+        const loader = $(start).parents("tim-plugin-loader")[0];
+        if (!loader) {
+            return;
         }
-
-        if (myparent.tagName === "ANSWERBROWSER") {
-            const ctrl = angular.element(myparent).isolateScope<any>().$ctrl as AnswerBrowserController;
-            return ctrl.selectedAnswer;
-        }
-
-        if (myparent.hasAttribute("t")) {
-            return undefined;
-        }
-
-        return this.getAnswerInfo(myparent);
+        const ctrl = this.getAnswerBrowserFromPluginLoader(loader);
+        return ctrl && ctrl.selectedAnswer;
     }
 
     /**
@@ -1207,13 +1205,13 @@ export class ReviewController implements IController {
             return;
         }
 
-        let annotationElement = parent.querySelectorAll(`annotation[aid='${annotation.id}']`)[0];
-        const isolateScope = angular.element(annotationElement).isolateScope<any>();
-        if (isolateScope) {
-            const actrl: AnnotationController | undefined = isolateScope.actrl;
-            if (actrl && (annotation.coord.start == null || actrl.show || !annotation.user_id)) {
+        const prefix = isFullCoord(annotation.coord.start) && isFullCoord(annotation.coord.end) ? "t" : "m";
+        const actrl = this.vctrl.getAnnotation(prefix + annotation.id);
+        if (actrl) {
+            if ((annotation.coord.start == null || actrl.show || !annotation.user_id)) {
                 if (actrl.show) { scrollToWindow = false; }
                 actrl.toggleAnnotationShow();
+                const annotationElement = actrl.element[0];
                 if (scrollToWindow && !isInViewport(annotationElement)) {
                     scrollToElement(annotationElement);
                 }
@@ -1222,15 +1220,29 @@ export class ReviewController implements IController {
             }
         }
 
+        if (!annotation.answer_id) {
+            return;
+        }
         // Find answer browser and its scope
         // set answer id -> change answer to that
         // query selector element -> toggle annotation
-        let ab: any = parent.getElementsByTagName("ANSWERBROWSER")[0];
+        const loader = parent.getElementsByTagName("TIM-PLUGIN-LOADER")[0];
+        if (!loader) {
+            return;
+        }
+        const taskId = loader.getAttribute("task-id");
+        if (!taskId) {
+            return;
+        }
+        let ab = this.getAnswerBrowserFromPluginLoader(loader);
 
-        if (typeof ab === UNDEFINED) {
-            const abl = angular.element(parent.getElementsByTagName("TIM-PLUGIN-LOADER")[0]);
-            const ablis: PluginLoaderCtrl = abl.isolateScope<any>().$ctrl;
-            ablis.loadPlugin();
+        if (!ab) {
+            const loaderCtrl = this.vctrl.getPluginLoader(taskId);
+            if (!loaderCtrl) {
+                return;
+            }
+            loaderCtrl.loadPlugin();
+            ab = await loaderCtrl.abLoad.promise;
         }
         if (this.vctrl.selectedUser.id !== annotation.user_id) {
             for (let i = 0; i < this.vctrl.users.length; i++) {
@@ -1239,51 +1251,27 @@ export class ReviewController implements IController {
                     break;
                 }
             }
-
         }
 
-        let abtimeout = 300;
-        if (ab) { abtimeout = 1; }
-
-        await $timeout(abtimeout);
-
-        ab = angular.element(parent.getElementsByTagName("ANSWERBROWSER")[0]);
-        const abscope = ab.isolateScope().$ctrl;
         let abscopetimeout = 500;
-        if (abscope.review && abscope.selectedAnswer && abscope.selectedAnswer.id === annotation.answer_id) { abscopetimeout = 1; } else { abscope.setAnswerById(annotation.answer_id); }
-        abscope.review = true;
+        if (ab.review && ab.selectedAnswer && ab.selectedAnswer.id === annotation.answer_id) {
+            abscopetimeout = 1;
+        } else {
+            ab.setAnswerById(annotation.answer_id);
+        }
+        ab.review = true;
 
         await $timeout(abscopetimeout);
 
-        annotationElement = parent.querySelectorAll(`annotation[aid='${annotation.id}']`)[0];
-        const ae = angular.element(annotationElement).isolateScope<any>().actrl;
+        const actrl2 = this.vctrl.getAnnotation(prefix + annotation.id);
+        if (!actrl2) {
+            return;
+        }
+        const annotationElement = actrl2.element[0];
         // ae.toggleAnnotationShow();
         // TODO: tutki ylimääräinen show ja miten saadaan toggleksi.
-        ae.showAnnotation();
+        actrl2.showAnnotation();
         // if ( abscopetimeout > 1 && scrollToWindow) scrollToElement(annotationElement);
         if (scrollToWindow && !isInViewport(annotationElement)) { scrollToElement(annotationElement); }
     }
 }
-
-timApp.component("timReview", {
-    controller: ReviewController,
-    bindings: {
-        onInit: "&",
-    },
-    require: {
-        vctrl: "^timView",
-    },
-    template: `
-<div ng-transclude></div>
-<velp-selection
- ng-if="$ctrl.velpMode || $ctrl.vctrl.teacherMode"
- id="velpMenu"
- teacher-right="$ctrl.vctrl.item.rights.teacher"
- on-init="$ctrl.initVelpSelection($API)"
- doc-id="$ctrl.docId"
- >
-
-</velp-selection>
-`,
-    transclude: true,
-});

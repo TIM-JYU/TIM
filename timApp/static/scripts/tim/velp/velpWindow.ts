@@ -13,7 +13,6 @@ import {ILabel, ILabelUI, INewLabel, IVelp, IVelpGroup, IVelpGroupUI, IVelpUI} f
  * @licence MIT
  */
 
-const UNDEFINED = "undefined";
 export let colorPalette = ["blueviolet", "darkcyan", "orange", "darkgray", "cornflowerblue", "coral", "goldenrod", "blue"];
 
 // TODO: add keyboard shortcuts to velps
@@ -42,15 +41,16 @@ export class VelpWindowController implements IController {
     private teacherRight!: Binding<boolean, "<">;
 
     $onInit() {
-        this.velpLocal = JSON.parse(JSON.stringify(this.velp)); // clone object
+        this.velpLocal = clone(this.velp);
 
-        if (typeof this.velp.visible_to === UNDEFINED) {
+        if (this.velp.visible_to == null) {
             this.velp.visible_to = 4; // Everyone by default
         }
 
         // declare edit rights
         if (this.new) {
             this.hasEditAccess = true;
+            this.velpSelection.registerNewVelp(this);
         } else {
             this.hasEditAccess = this.velpGroups.some((g) => g.edit_access && this.isGroupInVelp(g) || false);
         }
@@ -100,7 +100,7 @@ export class VelpWindowController implements IController {
             this.cancelEdit();
         } else {
             if (this.new) {
-                this.velpLocal = JSON.parse(JSON.stringify(this.velp));
+                this.velpLocal = clone(this.velp);
                 // TODO: focus velp content textarea
             }
             this.velpSelection.setVelpToEdit(this.velp, this.cancelEdit);
@@ -131,7 +131,7 @@ export class VelpWindowController implements IController {
      * TODO: new velp reset does not work
      */
     cancelEdit() {
-        this.velp = JSON.parse(JSON.stringify(this.velpLocal));
+        this.velp = clone(this.velpLocal);
         this.velp.edit = false;
     }
 
@@ -160,7 +160,7 @@ export class VelpWindowController implements IController {
     }
 
     isVelpValid() {
-        if (typeof this.velp.content === UNDEFINED) {
+        if (this.velp.content == null) {
             return false;
         }
         // check if still original
@@ -240,14 +240,14 @@ export class VelpWindowController implements IController {
      * @returns {boolean} Whether velp has any groups selected or not
      */
     isSomeVelpGroupSelected() {
-        if (typeof this.velp.velp_groups === UNDEFINED) {
+        if (this.velp.velp_groups == null) {
             return false;
         }
         return this.velp.velp_groups.length > 0;
     }
 
     isSomeVelpGroupShown() {
-        if (typeof this.velp.velp_groups === UNDEFINED || this.velp.velp_groups.length === 0) {
+        if (this.velp.velp_groups == null || this.velp.velp_groups.length === 0) {
             return true;
         }
 
@@ -388,7 +388,7 @@ export class VelpWindowController implements IController {
 
     async updateVelpInDatabase() {
         await $http.post("/{0}/update_velp".replace("{0}", this.docId.toString()), this.velp);
-        this.velpLocal = JSON.parse(JSON.stringify(this.velp));
+        this.velpLocal = clone(this.velp);
         this.toggleVelpToEdit();
     }
 
@@ -425,7 +425,7 @@ export class VelpWindowController implements IController {
             valid_until: null,
             color: this.velp.color,
             visible_to: this.velp.visible_to,
-            velp_groups: JSON.parse(JSON.stringify(this.velp.velp_groups)),
+            velp_groups: clone(this.velp.velp_groups),
         };
         const json = await $http.post<number>("/add_velp", data);
         const velpToAdd: IVelp = {
@@ -443,8 +443,8 @@ export class VelpWindowController implements IController {
         this.toggleVelpToEdit();
         this.velpSelection.updateVelpList();
 
-        // this.velp =  JSON.parse(JSON.stringify(this.velpLocal));
-        // this.velpLocal = JSON.parse(JSON.stringify(this.velp));
+        // this.velp =  clone(this.velpLocal);
+        // this.velpLocal = clone(this.velp);
         /*
          velpToAdd.id = parseInt(json.data);
 
@@ -492,9 +492,7 @@ export class VelpWindowController implements IController {
     }
 
     getCustomColor() {
-        if (typeof this.velp.color !== UNDEFINED || this.velp.color != null) {
-            return this.velp.color;
-        }
+        return this.velp.color;
     }
 }
 

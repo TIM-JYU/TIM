@@ -15,7 +15,7 @@ import {QuestionHandler} from "tim/document/question/questions";
 import {initReadings} from "tim/document/readings";
 import {timLogTime} from "tim/util/timTiming";
 import {isPageDirty, markAsUsed, markPageNotDirty, to} from "tim/util/utils";
-import {AnswerBrowserController} from "../answer/answerbrowser3";
+import {AnswerBrowserController, PluginLoaderCtrl} from "../answer/answerbrowser3";
 import {BookmarksController, IBookmarkGroup} from "../bookmark/bookmarks";
 import {IPluginInfoResponse, ParCompiler} from "../editor/parCompiler";
 import {IDocument, ITag, TagType} from "../item/IItem";
@@ -33,6 +33,7 @@ import {onClick} from "./eventhandlers";
 import {PopupMenuController} from "./popupMenu";
 import {RefPopupHandler} from "./refpopup";
 import {MenuFunctionEntry} from "./viewutils";
+import {AnnotationController} from "../velp/annotation";
 
 markAsUsed(ngs, popupMenu, interceptor);
 
@@ -104,7 +105,7 @@ export class ViewCtrl implements IController {
     private liveUpdates: number;
     private oldWidth: number;
     public defaultAction: MenuFunctionEntry | undefined;
-    public reviewCtrlScope?: IScope & {$ctrl: ReviewController};
+    public reviewCtrl: ReviewController;
     public lectureCtrl?: LectureController;
     public questionHandler: QuestionHandler;
     public areaHandler: AreaHandler;
@@ -262,6 +263,7 @@ export class ViewCtrl implements IController {
             }
         } catch (e) {
         }
+        this.reviewCtrl = new ReviewController(this);
         timLogTime("ViewCtrl end", "view");
     }
 
@@ -366,6 +368,7 @@ export class ViewCtrl implements IController {
         });
         void this.checkIfTaggedAsCourse();
         void this.checkIfBookmarked();
+        this.reviewCtrl.loadDocumentAnnotations();
     }
 
     /**
@@ -433,10 +436,6 @@ export class ViewCtrl implements IController {
 
     isEmptyDocument() {
         return this.docVersion[0] === 0 && this.docVersion[1] === 0; // TODO can be empty otherwise too
-    }
-
-    setReviewCtrlScope(scope: IScope & {$ctrl: ReviewController}) {
-        this.reviewCtrlScope = scope;
     }
 
     reload() {
@@ -583,6 +582,43 @@ export class ViewCtrl implements IController {
 
     getAnswerBrowser(taskId: string) {
         return this.abs.get(taskId);
+    }
+
+    private ldrs = new Map<string, PluginLoaderCtrl>();
+
+    registerPluginLoader(loader: PluginLoaderCtrl) {
+        this.ldrs.set(loader.taskId, loader);
+    }
+
+    getPluginLoader(taskId: string) {
+        return this.ldrs.get(taskId);
+    }
+
+    private anns = new Map<string, AnnotationController>();
+
+    registerAnnotation(loader: AnnotationController) {
+        // This assumes that the associated DOM element for annotation is attached in the page because we need to check
+        // whether it's in the right margin or not (i.e. in text).
+        const e = loader.element;
+        const isInMargin = e.parent().hasClass("notes") && e.parent().parent().hasClass("par");
+        const prefix = isInMargin ? "m" : "t"; // as in "margin" or "text"
+        this.anns.set(prefix + loader.annotation.id, loader);
+    }
+
+    getAnnotation(id: string) {
+        return this.anns.get(id);
+    }
+}
+
+class EntityRegistry<K, V> {
+    private entities = new Map<K, V>();
+
+    registerEntity(k: K, e: V) {
+        this.entities.set(k, e);
+    }
+
+    getEntity(k: K) {
+        return this.entities.get(k);
     }
 }
 

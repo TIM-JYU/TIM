@@ -1,10 +1,10 @@
 import angular, {IController, IFormController} from "angular";
 import {timApp} from "tim/app";
-import {Binding, markAsUsed, Require} from "tim/util/utils";
+import {Binding, clone, markAsUsed, Require} from "tim/util/utils";
 import * as velpSummary from "tim/velp/velpSummary";
 import {colorPalette, VelpWindowController} from "tim/velp/velpWindow";
+import {ViewCtrl} from "../document/viewctrl";
 import {$http, $log} from "../util/ngimport";
-import {ReviewController} from "./reviewController";
 import {
     ILabel,
     ILabelUI,
@@ -17,6 +17,7 @@ import {
     IVelpGroupUI,
     VelpGroupSelectionType,
 } from "./velptypes";
+import {showMessageDialog} from "../ui/dialog";
 
 markAsUsed(velpSummary);
 
@@ -31,8 +32,6 @@ markAsUsed(velpSummary);
  * @licence MIT
  * @copyright 2016 Timber project members
  */
-
-const UNDEFINED = "undefined";
 
 // TODO: show velps with same name side by side. Make changes to the template.
 
@@ -52,7 +51,6 @@ export class VelpSelectionController implements IController {
     private groupAttachment: {target_type: number; id: number | null};
     private groupSelections: IVelpGroupCollection;
     private groupDefaults: IVelpGroupCollection;
-    private docId!: Binding<number, "<">;
     private order!: string; // $onInit
     private selectedLabels: number[] = [];
     private advancedOn: boolean = false;
@@ -61,10 +59,10 @@ export class VelpSelectionController implements IController {
     private advancedOnKey!: string; // $onInit
     private default_velp_group: IVelpGroupUI;
     private labelAdded: boolean = false;
-    public rctrl!: Require<ReviewController>;
+    public vctrl!: Require<ViewCtrl>;
     private default_personal_velp_group: IVelpGroup;
-    private teacherRight!: Binding<boolean, "<">;
     private onInit!: Binding<(params: {$API: VelpSelectionController}) => void, "&">;
+    private newVelpCtrl?: VelpWindowController;
 
     // Data
     constructor() {
@@ -122,7 +120,12 @@ export class VelpSelectionController implements IController {
         this.default_personal_velp_group = {id: -2, name: "Personal-default", target_type: null, default: true};
     }
 
+    get rctrl() {
+        return this.vctrl.reviewCtrl;
+    }
+
     async $onInit() {
+        this.rctrl.initVelpSelection(this);
         this.rctrl.velps = [];
         // Dictionaries for easier searching: Velp ids? Label ids? Annotation ids?
         const docId = this.docId;
@@ -202,7 +205,7 @@ export class VelpSelectionController implements IController {
         this.rctrl.velps.forEach((v) => {
             v.used = 0;
             v.edit = false;
-            if (typeof v.labels === UNDEFINED) {
+            if (v.labels == null) {
                 v.labels = [];
             }
         });
@@ -286,7 +289,7 @@ export class VelpSelectionController implements IController {
      */
 
     allowChangePoints() {
-        return this.teacherRight;
+        return this.vctrl.item.rights.teacher;
     }
 
     /**
@@ -370,117 +373,25 @@ export class VelpSelectionController implements IController {
         }
     }
 
-    /**
-     * Selects the label for editing.
-     * @method toggleLabelToEdit
-     * @param label - Label to edit
-
-     this.toggleLabelToEdit = function (label) {
-        if (label.id === this.labelToEdit.id && label.edit) {
-            label.edit = false;
-            this.labelToEdit = {content: "", selected: false, edit: false};
-            return;
-        }
-
-        if (this.labelToEdit.edit) {
-            this.labelToEdit.edit = false;
-            for (var i = 0; i < this.labels.length; i++) {
-                this.labels[i].edit = false;
-            }
-        }
-
-        label.edit = true;
-        this.labelToEdit = Object.create(label);
-    };
-     */
+    registerNewVelp(v: VelpWindowController) {
+        this.newVelpCtrl = v;
+    }
 
     /**
      * Selects velp to edit
      * @method selectVelpToEdit
      */
     openCreateNewVelpWindow() {
-        const newVelpWindow = document.getElementById("newVelp");
-        if (newVelpWindow == null) {
-            $log.error("Couldn't find newVelp element");
+        if (!this.newVelpCtrl) {
+            showMessageDialog("New velp controller is not registered");
             return;
         }
-        const velp: VelpWindowController = angular.element(
-            newVelpWindow,
-        ).isolateScope<any>().$ctrl;
-        velp.toggleVelpToEdit();
-
-        // if (this.getVelpUnderEdit().id !== this.newVelp.id)
-        //    this.resetEditVelp();
-
-        // this.resetEditVelp = this.resetNewVelp;
-
-        /*
-         if (velp.id === this.velpToEdit.id && velp.edit) {
-         velp.edit = false;
-         this.velpToEdit = {content: "", points: "", labels: [], edit: false};
-         return;
-         }
-
-         if (this.velpToEdit.edit) {
-         this.velpToEdit.edit = false;
-         for (var i = 0; i < this.velps.length; i++) {
-         this.velps[i].edit = false;
-         }
-         this.newVelp.edit = false;
-         }
-
-         velp.edit = true;
-
-         this.velpToEdit = (JSON.parse(JSON.stringify(velp)));
-         */
+        this.newVelpCtrl.toggleVelpToEdit();
     }
 
-    /**
-     * Edits velp according to the this.velpToEdit variable.
-     * All required data exists in the this.velpToedit variable,
-     * including the ID of the velp.
-     * @method editVelp
-     * @param form - Velp form
-
-     this.editVelp = function (form) {
-        var valid = form.$valid;
-        this.submitted.velp = true;
-        if (!valid) return;
-
-        form.$setPristine();
-
-        // TODO: Make velpGroups to [{'id':1, 'selected':'True'}]
-
-        if (this.isGroupInVelp(this.velpToEdit, default_velp_group) && default_velp_group.id === -1) {
-
-            var old_default_group = default_velp_group;
-            this.generateDefaultVelpGroup(function () {
-
-                var oldGroupIndex = this.velpToEdit.velp_groups.indexOf(old_default_group.id); // -1 = old
-                if (oldGroupIndex >= 0)
-                    this.velpToEdit.velp_groups.splice(oldGroupIndex, 1);
-                this.velpToEdit.velp_groups.push(default_velp_group.id);
-
-                this.makePostRequest("/{0}/update_velp".replace('{0}', doc_id), this.velpToEdit, function (json) {
-                });
-            });
-
-        } else if (this.velpToEdit.velp_groups.length > 0) {
-            this.makePostRequest("/{0}/update_velp".replace('{0}', doc_id), this.velpToEdit, function (json) {
-            });
-        }
-
-        for (var i = 0; i < this.velps.length; i++) {
-            if (this.velps[i].id === this.velpToEdit.id) {
-                this.velpToEdit.edit = false;
-                this.velps[i] = this.velpToEdit;
-                break;
-            }
-        }
-
-        this.resetEditVelp();
-    };
-     */
+    get docId() {
+        return this.rctrl.item.id;
+    }
 
     /**
      * Generates the default velp group.
@@ -924,7 +835,7 @@ export class VelpSelectionController implements IController {
             targetID = "0";
         }
 
-        this.groupSelections[targetID] = JSON.parse(JSON.stringify(this.groupDefaults[targetID]));
+        this.groupSelections[targetID] = clone(this.groupDefaults[targetID]);
         await $http.post("/{0}/reset_target_area_selections_to_defaults".replace("{0}", this.docId.toString()), {target_id: targetID});
         this.updateVelpList();
     }
@@ -934,7 +845,7 @@ export class VelpSelectionController implements IController {
      * @method resetAllShowsToDefaults
      */
     async resetAllShowsToDefaults() {
-        this.groupSelections = JSON.parse(JSON.stringify(this.groupDefaults));
+        this.groupSelections = clone(this.groupDefaults);
 
         await $http.post("/{0}/reset_all_selections_to_defaults".replace("{0}", this.docId.toString()), null);
         this.updateVelpList();
@@ -955,9 +866,9 @@ export class VelpSelectionController implements IController {
             targetID = "0";
         }
 
-        if (type === "show" && typeof this.groupSelections[targetID] !== UNDEFINED) {
+        if (type === "show" && typeof this.groupSelections[targetID] != null) {
             return this.groupSelections[targetID].length === this.velpGroups.length;
-        } else if (type === "default" && typeof this.groupDefaults[targetID] !== UNDEFINED) {
+        } else if (type === "default" && typeof this.groupDefaults[targetID] != null) {
             return this.groupDefaults[targetID].length === this.velpGroups.length;
         }
     }
@@ -987,7 +898,7 @@ export class VelpSelectionController implements IController {
      * @returns {boolean} Whether velp has any groups selected or not
      */
     isSomeVelpGroupSelected(velp: IVelp) {
-        if (typeof velp.velp_groups === UNDEFINED) {
+        if (velp.velp_groups == null) {
             return false;
         }
         return velp.velp_groups.length > 0;
@@ -1001,7 +912,7 @@ export class VelpSelectionController implements IController {
      * @returns {boolean} Whether the added or modified velp is valid or not.
      */
     isVelpValid(velp: IVelp) {
-        if (typeof velp.content === UNDEFINED) {
+        if (velp.content == null) {
             return false;
         }
         return this.isSomeVelpGroupSelected(velp) && velp.content.length > 0;
@@ -1015,7 +926,7 @@ export class VelpSelectionController implements IController {
      * @returns {boolean} Whether the velp contains the velp group or not
      */
     isGroupInVelp(velp: IVelp, group: IVelpGroup) {
-        if (typeof velp.velp_groups === UNDEFINED || typeof group.id === UNDEFINED) {
+        if (velp.velp_groups == null || group.id === null) {
             return false;
         }
         return velp.velp_groups.indexOf(group.id) >= 0;
@@ -1071,7 +982,7 @@ timApp.filter("filterByLabels", () => {
             for (let j = 0; j < velps.length; j++) {
 
                 for (let k = 0; k < selectedLabels.length; k++) {
-                    if (typeof velps[j].labels !== UNDEFINED && velps[j].labels.indexOf(selectedLabels[k]) !== -1) {
+                    if (velps[j].labels != null && velps[j].labels.indexOf(selectedLabels[k]) !== -1) {
                         if (!(j in selectedVelps)) {
                             selectedVelps[j] = [velps[j], 1];
                         } else {
@@ -1191,12 +1102,10 @@ timApp.filter("orderByWhenNotEditing", () => {
  */
 timApp.component("velpSelection", {
     bindings: {
-        docId: "<",
         onInit: "&",
-        teacherRight: "<",
     },
     require: {
-        rctrl: "^timReview",
+        vctrl: "^timView",
     },
     controller: VelpSelectionController,
     templateUrl: "/static/templates/velpSelection.html",

@@ -10,9 +10,8 @@ import {showMessageDialog} from "../ui/dialog";
 import {IUser} from "../user/IUser";
 import {Users} from "../user/userService";
 import {KEY_DOWN, KEY_LEFT, KEY_RIGHT, KEY_UP} from "../util/keycodes";
-import {$filter, $http, $httpParamSerializer, $timeout, $window} from "../util/ngimport";
+import {$filter, $http, $httpParamSerializer, $q, $timeout, $window} from "../util/ngimport";
 import {Binding, getURLParameter, markAsUsed, Require, to} from "../util/utils";
-import {ReviewController} from "../velp/reviewController";
 import {showAllAnswers} from "./allAnswersController";
 import {IAnswer} from "./IAnswer";
 
@@ -51,11 +50,12 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
     private static $inject = ["$element", "$scope", "$transclude"];
     private compiled = false;
     private viewctrl!: Require<ViewCtrl>;
-    private taskId!: Binding<string, "@">;
+    public taskId!: Binding<string, "@">;
     private type!: Binding<string, "@">;
     private showBrowser: boolean = false;
     private pluginElement?: JQuery;
     public showPlaceholder = true;
+    public abLoad = $q.defer<AnswerBrowserController>();
 
     constructor(private element: IRootElementService, private scope: IScope, private transclude: ITranscludeFunction) {
         super(scope, element);
@@ -69,6 +69,7 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
     }
 
     $onInit() {
+        this.viewctrl.registerPluginLoader(this);
         if (this.isValidTaskId(this.taskId)) {
             const [id, name] = this.taskId.split(".");
             if (getURLParameter("task") === name) {
@@ -174,7 +175,6 @@ export class AnswerBrowserController extends DestroyScope implements IController
     public taskId!: Binding<string, "<">;
     private loading: number;
     private viewctrl!: Require<ViewCtrl>;
-    private rctrl!: Require<ReviewController>;
     private user: IUser | undefined;
     private fetchedUser: IUser | undefined;
     private saveTeacher: boolean = false;
@@ -185,7 +185,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
     public selectedAnswer: IAnswer | undefined;
     private anyInvalid: boolean = false;
     private giveCustomPoints: boolean = false;
-    private review: boolean = false;
+    public review: boolean = false;
     private shouldFocus: boolean = false;
     private alerts: Array<{}> = [];
     private taskInfo: ITaskInfo | undefined;
@@ -286,6 +286,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
                 }
             },
         );
+        this.loader.abLoad.resolve(this);
     }
 
     private unDimPlugin() {
@@ -376,7 +377,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
                 this.element.find(".review").html(r.result.data.reviewHtml);
             }
         }
-        this.rctrl.loadAnnotationsToAnswer(this.selectedAnswer.id, par[0], this.review);
+        this.viewctrl.reviewCtrl.loadAnnotationsToAnswer(this.selectedAnswer.id, par[0], this.review);
     }
 
     nextAnswer() {
@@ -748,7 +749,6 @@ timApp.component("answerbrowser", {
         // the paragraph to the compile call.
         // par: "^timPar",
 
-        rctrl: "^timReview",
         viewctrl: "^timView",
     },
     templateUrl: "/static/templates/answerBrowser.html",

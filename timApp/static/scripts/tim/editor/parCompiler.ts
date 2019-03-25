@@ -20,7 +20,6 @@ export function compileWithViewctrl(html: string | Element,
         view ? {
             transcludeControllers: {
                 timView: {instance: view},
-                timReview: {instance: view.reviewCtrlScope!.$ctrl},
                 ...extraCtrls,
             },
         } : {});

@@ -12,15 +12,13 @@
 import {IController, IRootElementService, IScope} from "angular";
 import {timApp} from "tim/app";
 import * as focusme from "tim/ui/focusMe";
+import {ViewCtrl} from "../document/viewctrl";
 import {showMessageDialog} from "../ui/dialog";
 import {IUser} from "../user/IUser";
+import {KEY_ENTER} from "../util/keycodes";
 import {$http} from "../util/ngimport";
 import {Binding, markAsUsed, Require} from "../util/utils";
-import {ReviewController} from "./reviewController";
 import {IAnnotationCoordless} from "./velptypes";
-import {KEY_ENTER} from "../util/keycodes";
-
-const UNDEFINED = "undefined";
 
 markAsUsed(focusme);
 
@@ -51,11 +49,11 @@ export class AnnotationController implements IController {
         doc_id: number | null
     }; // $onInit
     private velp!: Binding<string, "@">;
-    private rctrl!: Require<ReviewController>;
+    private vctrl!: Require<ViewCtrl>;
     private annotationdata!: Binding<string, "@">;
-    private annotation!: IAnnotationCoordless; // $onInit
+    public annotation!: IAnnotationCoordless; // $onInit
 
-    constructor(private scope: IScope, private element: IRootElementService) {
+    constructor(private scope: IScope, public element: IRootElementService) {
         this.ctrlDown = false;
         this.ctrlKey = 17;
         this.newcomment = "";
@@ -98,6 +96,7 @@ export class AnnotationController implements IController {
             comment: "", // this.newcomment,
             aid: this.annotation.id,
         };
+        this.vctrl.registerAnnotation(this);
     }
 
     $postLink() {
@@ -134,6 +133,10 @@ export class AnnotationController implements IController {
         }, 0);
     }
 
+    get rctrl() {
+        return this.vctrl.reviewCtrl;
+    }
+
     /**
      * Toggles the visibility of the annotation.
      * @method toggleAnnotation
@@ -144,7 +147,7 @@ export class AnnotationController implements IController {
         }
         const a = this.rctrl.getAnnotationById(this.annotation.id);
         if (!a) {
-            showMessageDialog(`Could not annotation with id ${this.annotation.id}`);
+            showMessageDialog(`Could not find annotation with id ${this.annotation.id}`);
             return;
         }
         this.rctrl.toggleAnnotation(a, false);
@@ -224,7 +227,7 @@ export class AnnotationController implements IController {
      * @method changePoints
      */
     changePoints() {
-        if (typeof this.annotation.points !== UNDEFINED) {
+        if (this.annotation.points != null) {
             this.isvalid.points.value = true;
             this.rctrl.changeAnnotationPoints(this.annotation.id, this.annotation.points);
         } else {
@@ -274,16 +277,14 @@ export class AnnotationController implements IController {
             velp: this.velp,
             color: this.annotation.color,
             comment: this.newcomment,
-            doc_id: this.rctrl.docId,
+            doc_id: this.vctrl.docId,
         };
 
         $http.post("/update_annotation", this.original);
     }
 
     getCustomColor() {
-        if (typeof this.annotation.color !== UNDEFINED || this.annotation.color != null) {
-            return this.annotation.color;
-        }
+        return this.annotation.color;
     }
 
     /**
@@ -364,7 +365,7 @@ timApp.component("annotation", {
     controller: AnnotationController,
     controllerAs: "actrl",
     require: {
-        rctrl: "^timReview",
+        vctrl: "^timView",
     },
     templateUrl: "/static/templates/annotation.html",
     transclude: true,

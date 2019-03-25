@@ -440,13 +440,9 @@ This will delete the whole ${options.area ? "area" : "paragraph"} from the docum
             const endpar = position.pars.last();
             par.nextUntil(endpar).add(endpar).remove();
         }
-        if (!this.viewctrl.reviewCtrlScope) {
-            throw new Error("reviewCtrlScope was undefined");
-        }
-        const newPars = $($compile(data.texts)(this.viewctrl.reviewCtrlScope, undefined,
+        const newPars = $($compile(data.texts)(this.viewctrl.scope, undefined,
             {
                 transcludeControllers: {
-                    timReview: {instance: this.viewctrl.reviewCtrlScope.$ctrl},
                     timView: {instance: this.viewctrl},
                     ...(this.viewctrl.lectureCtrl != null ? {timLecture: {instance: this.viewctrl.lectureCtrl}} : {}),
                 },
