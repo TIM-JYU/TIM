@@ -149,7 +149,7 @@ dragApp.component("dragRunner", {
 <div>
     <div class="form-inline">
      <div class="dropword" dragula-scope="$ctrl.vctrl.scope" dragula='"dropzone"' dragula-model='$ctrl.words'>
-        <span class="dragword"  ng-bind='item'  ng-repeat='item in $ctrl.words'>
+        <span class="dragword"  ng-bind='item'  ng-repeat='item in $ctrl.words track by $index'>
         </span>
      </div>
     </div>
