@@ -831,6 +831,7 @@ choices:
         a: Answer = Answer.query.get(resp['savedNew'])
         self.assertEqual(1, a.points)
         self.assertEqual(f'{d.id}.t', a.task_id)
+        self.get_state(a.id)
 
         if create_preamble_translation:
             tr_p = self.create_translation(p)

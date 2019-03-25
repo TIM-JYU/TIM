@@ -547,6 +547,7 @@ def verify_answer_access(
         abort(400, 'Non-existent answer')
     tid = TaskId.parse(answer.task_id)
     d = get_doc_or_abort(tid.doc_id)
+    d.document.insert_preamble_pars()
     if user_id != get_current_user_id() or not logged_in():
         if require_teacher_if_not_own:
             verify_task_access(d, tid, AccessType.teacher, required_task_access_level)
