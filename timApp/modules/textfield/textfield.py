@@ -241,7 +241,7 @@ autosave: false #AUTOSAVE, POIS PÄÄLTÄ
                             {
                                 'data': templates[2].strip(),
                                 'text': 'Label kenttä (read only)',
-                                'expl': 'Luo kenttä jonka syötteitä ei voi muokata',
+                                'expl': 'Luo kenttä jonka syötteitä käyttäjä ei voi muokata',
                             },
                         ],
                     },

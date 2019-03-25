@@ -210,6 +210,14 @@ initnumber: #ALKUARVO, TYHJÄ = EI ALKUARVOA
 buttonText: Save #PAINIKKEEN NIMI, TYHJÄ = EI PAINIKETTA
 cols: 5 #KENTÄN KOKO, NUMERAALINEN
 autosave: false #AUTOSAVE, POIS PÄÄLTÄ
+```""", """
+``` {#label plugin="numericfield" readonly=view}
+followid: #SEURANTAID, TYHJÄ = EI SEURANTAID:tä
+fields: #KENTTÄVIITTAUKSET, TYHJÄ = EI VIITTAUKSIA
+needed_len: 1 #MINIMIPITUUS, NUMERAALINEN 
+initnumber: #ALKUARVO, TYHJÄ = EI ALKUARVOA
+cols: 5 #KENTÄN KOKO, NUMERAALINEN
+autosave: false #AUTOSAVE, POIS PÄÄLTÄ
 ```"""
 ]
     return jsonify({
@@ -232,6 +240,11 @@ autosave: false #AUTOSAVE, POIS PÄÄLTÄ
                                 'data': templates[1].strip(),
                                 'text': 'Numeerinen kenttä (laajennettu)',
                                 'expl': 'Luo kenttä jonka syötteet ovat vain numeroita',
+                            },
+                            {
+                                'data': templates[2].strip(),
+                                'text': 'Label kenttä (read only)',
+                                'expl': 'Luo kenttä jonka syötteitä käyttäjä ei voi muokata',
                             },
                         ],
                     },
