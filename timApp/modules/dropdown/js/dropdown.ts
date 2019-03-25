@@ -7,7 +7,6 @@ import {ITimComponent, ViewCtrl} from "tim/document/viewctrl";
 import {GenericPluginMarkup, Info, PluginBase, withDefault} from "tim/plugin/util";
 import {to} from "tim/util/utils";
 import {$http} from "tim/util/ngimport";
-import {string} from "../../../static/scripts/jspm_packages/npm/io-ts@1.4.1/lib";
 
 const dropdownApp = angular.module("dropdownApp", ["ngSanitize"]);
 export const moduleDefs = [dropdownApp];
@@ -18,9 +17,7 @@ const DropdownMarkup = t.intersection([
     }),
     GenericPluginMarkup,
     t.type({
-        // all withDefaults should come here; NOT in t.partial
-        autoupdate: withDefault(t.number, 500),
-        cols: withDefault(t.number, 20),
+        // all withDefaults should come here; NOT in t.partial,
         instruction: withDefault(t.boolean, false),
     }),
 ]);

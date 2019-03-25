@@ -12,7 +12,15 @@ const feedbackApp = angular.module("feedbackApp", ["ngSanitize"]);
 export const moduleDefs = [feedbackApp];
 
 const answerPlaceHolder = "@@answer@@";
-// const answerPlaceHolder = "@@answer[^@]*@@";
+const answerPlaceHolderRegExp = RegExp(/@@answer\[[0-9]+\]@@/g);
+const wordPlaceHolderRegExp = RegExp(/@@word\[[0-9]+\]@@/g);
+
+enum Mode {
+    Instruction = 0,
+    QuestionItem = 1,
+    Feedback = 2,
+    EndTask = 3,
+}
 
 const MatchElement = t.type({
     answer: t.string,
@@ -75,19 +83,29 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
     private result?: string;
     private error?: string;
     private vctrl!: ViewCtrl;
-    private userAnswer = "";
+    private userAnswer: string[] = [];
     private feedback = "";
     private index = 0;
-    private questionPluginID?: string;  // tarkasta
-    private feedbackLevel = 5;
     private currentFeedbackLevel = 0;
     private feedbackLevelRise = false;
-    private pluginMode = 0;
+    private pluginMode = Mode.Instruction;
     private showMode = "Instruction paragraph"; // for demo
-    private taskEnd = false;
-    private answer: string[] = [];
+    private answerArray: string[] = [];
+    private userSelections: string[] = [];
+    private correctAnswer = false;
 
-    openBlock() {
+    /**
+     * Show the block for the current question item
+     * TODO: finish this
+     */
+    showBlock() {
+        const name = this.attrs.questionItems[this.index].pluginNames[0];
+        const plugin = this.vctrl.getTimComponentByName(name);
+        if (plugin) {
+            const test = plugin.getPar().children(".parContent");
+            if (test instanceof Element) {
+            }
+        }
         return;
     }
 
@@ -95,6 +113,12 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
         return;
     }
 
+    /**
+     * Gets the match that is correct for the question item
+     *
+     * @param item question item that the choices are being checked from
+     * @returns{number} the index of the correct match
+     */
     getCorrectChoice(item: QuestionItemT): number {
         for (let i = 0; i < item.choices.length; i++) {
             if (item.choices[i].correct) {
@@ -104,8 +128,39 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
         return -1;
     }
 
+    /**
+     * Prints the feedback the user should see for their answer.
+     *
+     *
+     * @param feedback what feedback should be presented to the user
+     */
     printFeedback(feedback: string) {
-        this.feedback = feedback.replace(answerPlaceHolder, this.userAnswer);
+        const answer = this.userAnswer.toString().replace(/,/g, " ");
+        this.feedback = feedback.replace(answerPlaceHolder, answer);
+
+        const reanswer = feedback.match(answerPlaceHolderRegExp);
+        if (reanswer) {
+            this.replacePlaceHolder(reanswer, this.userAnswer);
+        }
+
+        const reword = feedback.match(wordPlaceHolderRegExp);
+        if (reword) {
+            this.replacePlaceHolder(reword, this.userSelections);
+        }
+    }
+
+    /**
+     * Replace the placeholders found in feedback with words from the given array.
+     *
+     * @param re array of regexp-matches
+     * @param wordarray words that should be replace the placeholders
+     */
+    replacePlaceHolder(re: RegExpMatchArray, wordarray: string[]) {
+        for (const placeholder of re) {
+            const index = placeholder.match(/[0-9]/)!.toString();
+            const replacement = wordarray[parseInt(index)];
+            this.feedback = this.feedback.replace(placeholder, replacement);
+        }
     }
 
     getDefaultMarkup() {
@@ -145,7 +200,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
             input: {
                 nosave: false,
                 feedback: this.feedback,
-                correct: true,
+                correct: correct,
                 sentence: sentence,
             },
         };
@@ -192,16 +247,16 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
                 values[plugins[i]] = words[i];
             }
         }
-        const sentence = this.getSentence(this.answer, values);
-        return this.doSave(false, true, sentence);
+        const sentence = this.getSentence(this.answerArray, values).toString().replace(/,/g, " ");
+        return this.doSave(false, this.correctAnswer, sentence);
     }
 
     /**
      * Handles the checking of user's answer's correctness.
      */
     async handleAnswer() {
-        if (this.pluginMode === 0) {
-            this.pluginMode = 1;
+        if (this.pluginMode === Mode.Instruction) {
+            this.pluginMode = Mode.QuestionItem;
             // For demonstration
             this.showMode = "Question item paragraph";
             // TODO: instruction time saving here?
@@ -213,10 +268,10 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
             return;
         }
 
-        if (this.pluginMode === 1) {
+        if (this.pluginMode === Mode.QuestionItem) {
             if (this.index > this.attrs.questionItems.length) {
-                this.feedback = "No more question items, thanks for playing";
-                this.pluginMode = 4;
+                this.printFeedback("No more question items, thanks for playing");
+                this.pluginMode = Mode.EndTask;
                 return;
             }
 
@@ -231,13 +286,17 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
                 if (choice.correct) {
                     // TODO: Do you want to make more than one correct feedback?
                     this.printFeedback(feedbackLevels[feedbackLevels.length - 1]);
-                    // this.taskEnd = true;
+                    // TODO: How many times one has to answer correctly to end the task
+                    this.correctAnswer = true;
+                    this.pluginMode = Mode.Feedback;
                 } else {
                     if (this.currentFeedbackLevel < feedbackLevels.length) {
                         this.printFeedback(feedbackLevels[this.currentFeedbackLevel++]);
+                        this.correctAnswer = false;
+                        this.pluginMode = Mode.Feedback;
                     } else {
-                        this.printFeedback(feedbackLevels[feedbackLevels.length - 1]);
-                        // this.taskEnd = true;
+                        // this.printFeedback(feedbackLevels[feedbackLevels.length - 1]);
+                        this.pluginMode = Mode.EndTask;
                     }
                 }
             }
@@ -256,24 +315,31 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
             }
 
             // this.index++;
-            this.pluginMode = 2;
+            // this.pluginMode = Mode.Feedback;
             // For demonstration
             this.showMode = "Feedback paragraph";
             return;
         }
 
-        if (this.pluginMode === 2) {
-            //TODO: feedback saving here?
+        if (this.pluginMode === Mode.Feedback) {
             const success = this.save();
             if (!success) {
                 this.error = success;
                 return;
             }
-
-            this.pluginMode = 1;
-            this.feedback = "";
+            if (this.correctAnswer) {
+                this.pluginMode = Mode.EndTask; // end the task for now
+                return;
+            }
+            this.pluginMode = Mode.QuestionItem;
+            this.printFeedback("");
             // For demonstration
             this.showMode = "Question item paragraph";
+            return;
+        }
+
+        if (this.pluginMode === Mode.EndTask) {
+            this.feedback = "The task has ended";
         }
     }
 
@@ -320,6 +386,14 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
         return -1;
     }
 
+    /**
+     * Checks if the answers selected in the question item plugins match any of the match arrays defined
+     * in the choices for the current question item.
+     *
+     * @param match array defined in the markup for question item's choices
+     * @param answer array of selections the user has made as the answers for the question item
+     * @returns{boolean} whether a match was found or not
+     */
     checkMatchStringArray(match: string[], answer: string[]): boolean {
         if (match.length === 0) {
             return true;
@@ -348,54 +422,64 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
      */
     getAnswerFromPlugins(): string[] {
         const plugins = this.attrs.questionItems[this.index].pluginNames;
-        const selections: string[] = [];
+        this.userSelections = [];
         const timComponent = this.vctrl.getTimComponentByName(plugins[0]);
 
         if (timComponent) {
             const par = timComponent.getPar();
             const content = par.children(".parContent");
             const nodes = content[0].childNodes;
-            // console.log(nodes);
-            let answer: string[] = [];
+            const answer: string[] = [];
             const values: { [id: string]: string } = {};
             for (let n = 0; n < nodes.length; ++n) {
                 const node = nodes[n];
                 if (node.nodeName === "#text") {
                     let text = node.textContent || "";
-                    answer.push(text.trim());
+                    const words = text.trim().split(" ");
+                    for (const word of words) {
+                        answer.push(word);
+                    }
                 }
+
                 if (node.nodeName === "TIM-PLUGIN-LOADER") {
-                    // Makeshift way to go through all the plugins in a paragraph
                     // TODO: Check for later to skip drag sources in paragraph node.getAttribute("class") === "plugindragsource"
                     if (node instanceof Element) {
                         let name = node.getAttribute("task-id")!.split(".")[1];
                         if (name) {
                             let plugin = this.vctrl.getTimComponentByName(name);
                             if (plugin) {
-                                // values[name] = timComponent.getContent().trim();
                                 let content = plugin.getContent().trim();
                                 values[name] = content;
-                                selections.push(content);
+                                this.userSelections.push(content);
                                 answer.push(name);
                             }
                         }
                     }
                 }
             }
-            this.answer = answer;
+            this.answerArray = answer;
             this.userAnswer = this.getSentence(answer, values);
         }
-        return selections;
+        return this.userSelections;
     }
 
-    getSentence(sentence: string[], choices: { [id: string]: string }): string {
+    /**
+     * Goes through the sentence it is given and replaces words with the ones in the dictionary it is given
+     *
+     * @param sentence the sentence where words are being replaced
+     * @param choices dictionary that tells which word you want to replace and with what
+     * @returns{string[]} Array with the words replaced
+     */
+    getSentence(sentence: string[], choices: { [id: string]: string }): string[] {
         const temp = [...sentence];
         for (let c in choices) {
             const choice = choices[c];
             const index = temp.indexOf(c);
-            temp[index] = choice;
+            if (index >= 0) {
+                temp[index] = choice;
+            }
         }
-        return temp.toString().replace(/,/g, " ");
+        return temp;
     }
 
     /**
