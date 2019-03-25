@@ -11,9 +11,9 @@ import {to} from "tim/util/utils";
 const feedbackApp = angular.module("feedbackApp", ["ngSanitize"]);
 export const moduleDefs = [feedbackApp];
 
-const answerPlaceHolder = "@@answer@@";
-const answerPlaceHolderRegExp = RegExp(/@@answer\[[0-9]+\]@@/g);
-const wordPlaceHolderRegExp = RegExp(/@@word\[[0-9]+\]@@/g);
+const answerPlaceHolder = "|answer|";
+const answerPlaceHolderRegExp = /\|answer\[[0-9]+\]\|/g;
+const wordPlaceHolderRegExp = /\|word\[[0-9]+\]\|/g;
 
 enum Mode {
     Instruction = 0,
@@ -524,8 +524,8 @@ feedbackApp.component("feedbackRunner", {
     <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
     <p ng-if="::$ctrl.stem">{{::$ctrl.stem}}</p>
     <div>{{$ctrl.showMode}}</div>
-    <div class="form-inline"><span>
-        {{$ctrl.feedback}}</span>
+    <div class="form-inline">
+    <span ng-bind-html="$ctrl.feedback"></span>
     </div>
     <button class="timButton"
             ng-if="::$ctrl.buttonText()"
