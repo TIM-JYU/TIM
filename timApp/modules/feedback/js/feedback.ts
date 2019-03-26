@@ -7,6 +7,7 @@ import {ITimComponent, ViewCtrl} from "tim/document/viewctrl";
 import {GenericPluginMarkup, nullable, PluginBase, withDefault, Info} from "tim/plugin/util";
 import {$http} from "tim/util/ngimport";
 import {to} from "tim/util/utils";
+import {number} from "../../../static/scripts/jspm_packages/npm/io-ts@1.4.1/lib";
 
 const feedbackApp = angular.module("feedbackApp", ["ngSanitize"]);
 export const moduleDefs = [feedbackApp];
@@ -54,7 +55,7 @@ const QuestionItem = t.type({
 
 const FeedbackMarkup = t.intersection([
     t.partial({
-        toNextTaskRule: t.string,
+        correctStreak: t.number,
         instructionID: t.string,
         sampleItemID: t.string,
         nextTask: t.string,
@@ -85,7 +86,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
     private vctrl!: ViewCtrl;
     private userAnswer: string[] = [];
     private feedback = "";
-    private index = 0;
+    private index: number = -2;
     private currentFeedbackLevel = 0;
     private feedbackLevelRise = false;
     private pluginMode = Mode.Instruction;
@@ -93,25 +94,62 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
     private answerArray: string[] = [];
     private userSelections: string[] = [];
     private correctAnswer = false;
+    private questionCount?: number;
+    private correctArray?: boolean[];
+    private streak = 0;
 
     /**
-     * Show the block for the current question item
-     * TODO: finish this
+     * Make a block visible to the user
+     *
+     * @param index The question item block to be shown
      */
-    showBlock() {
+    showBlock(index: number) {
+
         const name = this.attrs.questionItems[this.index].pluginNames[0];
         const plugin = this.vctrl.getTimComponentByName(name);
         if (plugin) {
-            const test = plugin.getPar().children(".parContent");
-            if (test instanceof Element) {
+            const node = plugin.getPar().children(".parContent")[0];
+            if (node instanceof Element) {
+                this.hide(node, true)
             }
         }
-        return;
     }
 
-    hideBlock() {
-        return;
+    /**
+     * Hide a block from the user
+     *
+     * @param index The question item block to be hidden
+     */
+    hideBlock(index: number) {
+        const name = this.attrs.questionItems[index].pluginNames[0];
+        const plugin = this.vctrl.getTimComponentByName(name);
+        if (plugin) {
+            const node = plugin.getPar().children(".parContent")[0];
+            if (node instanceof Element) {
+                this.hide(node, false)
+            }
+        }
     }
+
+    /**
+     * Hide all the question items from the user
+     */
+    hideQuestionItems() {
+        const items = this.attrs.questionItems;
+        for (let i = 0; i < items.length; i++) {
+            this.hideBlock(i);
+        }
+    }
+
+    hide(node: Element, visibility: boolean) {
+        if (visibility) {
+            node.classList.remove("hidden");
+        }
+        if (!visibility) {
+            node.classList.add("hidden");
+        }
+    }
+
 
     /**
      * Gets the match that is correct for the question item
@@ -163,6 +201,43 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
         }
     }
 
+    /**
+     * Returns a random array index from the question items that are not correctly answered to, excluding the current
+     * question item if it is not the only possibility
+     *
+     * @param arr Array of the correctness state of question items
+     * @returns{number} Index of the question to be shown
+     */
+    getRandomQuestion(arr: boolean[]): number {
+        const falses: number[] = [];
+        for (let i = 0; i < arr.length; i++) {
+            if (!arr[i]) {
+                falses.push(i);
+            }
+        }
+
+        if (falses.length === 0) {
+            return -1;
+        }
+
+        if (falses.length === 1) {
+            return falses[0];
+        }
+
+        if (this.index !== -2) {
+            for (let i = 0; i < falses.length; i++) {
+                if (falses[i] === this.index) {
+                    falses.splice(i, 1);
+                }
+            }
+        }
+
+        const r = Math.random() * falses.length;
+        console.log(r);
+        const index = Math.floor(r);
+        return falses[index];
+    }
+
     getDefaultMarkup() {
         return {questionItems: []};
     }
@@ -179,6 +254,12 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
         super.$onInit();
         this.addToCtrl();
         this.setPluginWords();
+        this.questionCount = this.attrs.questionItems.length;
+        this.correctArray = new Array(this.questionCount).fill(false);
+        this.index = this.getRandomQuestion(this.correctArray);
+        this.hideQuestionItems();
+        // TODO: hide stuff if not teacher
+        this.vctrl.item.rights.teacher;
     }
 
     /**
@@ -193,7 +274,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
     }
 
     async doSave(nosave: boolean, correct: boolean, sentence: string) {
-        this.error = "... saving ...";
+        // this.error = "... saving ...";
 
         this.result = undefined;
         const params = {
@@ -258,13 +339,14 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
         if (this.pluginMode === Mode.Instruction) {
             this.pluginMode = Mode.QuestionItem;
             // For demonstration
-            this.showMode = "Question item paragraph";
+            this.showMode = "Question item paragraph, question " + this.index;
             // TODO: instruction time saving here?
             const instructionQuestion = this.vctrl.getTimComponentByName(this.attrs.instructionID || "");
             if (this.attrs.instructionID && instructionQuestion) {
                 // TODO: need to use this in something?
                 const success = this.savePlugin(instructionQuestion);
             }
+            this.showBlock(this.index);
             return;
         }
 
@@ -276,6 +358,13 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
             }
 
             const selections = this.getAnswerFromPlugins();
+            for (const s of selections) {
+                if (s === "") {
+                    this.error = "You need to select something!";
+                    return;
+                }
+            }
+
             const matchIndex = this.compareChoices(this.index, selections);
 
             if (matchIndex === -1) {
@@ -286,13 +375,15 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
                 if (choice.correct) {
                     // TODO: Do you want to make more than one correct feedback?
                     this.printFeedback(feedbackLevels[feedbackLevels.length - 1]);
-                    // TODO: How many times one has to answer correctly to end the task
                     this.correctAnswer = true;
+                    this.correctArray![this.index] = true;
+                    this.streak++;
                     this.pluginMode = Mode.Feedback;
                 } else {
                     if (this.currentFeedbackLevel < feedbackLevels.length) {
                         this.printFeedback(feedbackLevels[this.currentFeedbackLevel++]);
                         this.correctAnswer = false;
+                        this.streak = 0;
                         this.pluginMode = Mode.Feedback;
                     } else {
                         // this.printFeedback(feedbackLevels[feedbackLevels.length - 1]);
@@ -307,14 +398,15 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
                 if (plugin) {
                     const success = await this.savePlugin(plugin);
                     if (!success) {
-                        this.error = "You need to select something";
+                        this.error = "Error while saving plugins";
                         return;
                     }
                     this.error = "";
                 }
             }
 
-            // this.index++;
+            // TODO: hide block
+            this.hideBlock(this.index);
             // this.pluginMode = Mode.Feedback;
             // For demonstration
             this.showMode = "Feedback paragraph";
@@ -327,14 +419,19 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
                 this.error = success;
                 return;
             }
-            if (this.correctAnswer) {
-                this.pluginMode = Mode.EndTask; // end the task for now
-                return;
-            }
+
             this.pluginMode = Mode.QuestionItem;
             this.printFeedback("");
+
+            this.index = this.getRandomQuestion(this.correctArray || []);
+            if (this.index === -1 || this.streak === this.attrs.correctStreak) {
+                this.pluginMode = Mode.EndTask;
+                return;
+            }
             // For demonstration
-            this.showMode = "Question item paragraph";
+            this.showMode = "Question item paragraph, question " + this.index;
+            this.showBlock(this.index);
+            // TODO: openblock
             return;
         }
 
@@ -417,11 +514,14 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
      * Gets the user's answer from the visible question item this feedback-plugin is assigned to.
      * TODO: Refactor, add a way to get the answer from the visible question item
      * TODO: Maybe add getting answers in an area and with regexp?
+     * TODO: Add some recursive stuff to go through p-elements and whatnot, low prio
      *
      * @returns(string[]) The user's selections to the question item
      */
     getAnswerFromPlugins(): string[] {
         const plugins = this.attrs.questionItems[this.index].pluginNames;
+
+
         this.userSelections = [];
         const timComponent = this.vctrl.getTimComponentByName(plugins[0]);
 
@@ -532,7 +632,7 @@ feedbackApp.component("feedbackRunner", {
             ng-click="$ctrl.handleAnswer()">
         {{::$ctrl.buttonText()}}
     </button>
-    <div ng-if="$ctrl.error" ng-bind-html="$ctrl.error"></div>
+    <div class="wrong" ng-if="$ctrl.error" ng-bind-html="$ctrl.error"></div>
     <pre ng-if="$ctrl.result">{{$ctrl.result}}</pre>
     <p ng-if="::$ctrl.footer" ng-bind="::$ctrl.footer" class="plgfooter"></p>
 </div>
