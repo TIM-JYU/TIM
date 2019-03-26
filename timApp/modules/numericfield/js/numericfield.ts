@@ -204,7 +204,7 @@ numericfieldApp.component("numericfieldRunner", {
 <div class="numericfieldNoSaveDiv">
     <tim-markup-error ng-if="::$ctrl.markupError" data="::$ctrl.markupError"></tim-markup-error>
     <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
-    <p ng-if="::$ctrl.stem">{{::$ctrl.stem}}</p>
+    <p class="stem" ng-if="::$ctrl.stem">{{::$ctrl.stem}}</p>
     <div class="form-inline"><label>{{::$ctrl.inputstem}} <span>
         <input type="number"
                style="width: {{::$ctrl.cols}}em"
@@ -225,7 +225,7 @@ numericfieldApp.component("numericfieldRunner", {
             ng-click="$ctrl.saveText()">
         {{::$ctrl.buttonText()}}
     </button>
-    <pre ng-if="$ctrl.result">{{$ctrl.result}}</pre>
+    <!-- <pre ng-if="$ctrl.result">{{$ctrl.result}}</pre> -->
     <p ng-if="::$ctrl.footer" ng-bind="::$ctrl.footer" class="plgfooter"></p>
 </div> `,
 });

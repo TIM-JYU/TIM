@@ -2,8 +2,8 @@
     display: none;
 }
 
-textfield-runner .stem {
-    text-align: center;
+numericfield-runner .stem {
+    text-align: left;
     height: 6px;
 }
 
