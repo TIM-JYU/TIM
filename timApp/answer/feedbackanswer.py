@@ -6,6 +6,8 @@ from flask import Blueprint, request
 
 from timApp.auth.sessioninfo import get_current_user, get_current_user_object
 from timApp.plugin.plugin import Plugin
+from timApp.timdb.dbaccess import get_timdb
+from timApp.timdb.sqa import db
 from timApp.user.user import User
 from timApp.util.flask.responsehelper import csv_response
 from timApp.plugin.taskid import TaskId
@@ -16,7 +18,7 @@ from timApp.plugin.pluginControl import task_ids_to_strlist
 from timApp.document.docentry import DocEntry
 from timApp.util.flask.requesthelper import get_option
 from timApp.util.utils import get_current_time
-from timApp.auth.accesshelper import verify_logged_in, verify_teacher_access
+from timApp.auth.accesshelper import verify_logged_in, verify_teacher_access, get_doc_or_abort
 from timApp.plugin.pluginControl import find_task_ids
 import csv
 
@@ -28,10 +30,9 @@ feedback = Blueprint('feedback',
 def get_all_feedback_answers(task_ids: List[TaskId],
                              hide_names: bool,
                              printname: bool,
-                             sort: str,
                              valid: str,
                              period_from: datetime,
-                             period_to: datetime) -> List[str]:
+                             period_to: datetime):
     """
 
     :param task_ids: ids of tasks
@@ -63,12 +64,7 @@ def get_all_feedback_answers(task_ids: List[TaskId],
     # q = q.options(defaultload(Answer.users).lazyload(User.groups))
 
     # Sorts the answers first with user then by time - for a report of whole test result by one user
-    if sort == 'username':
-        q = q.order_by(User.name, Answer.answered_on)
-    # Sorts first by task_id (actually document number) for a report where each task in the test is looked at separately
-    # TODO: check sorting as test documents may not be made in order resulting in document id:s not in right order
-    else:
-        q = q.order_by(Answer.task_id, User.name, Answer.answered_on)
+    q = q.order_by(User.name, Answer.answered_on)
 
     # q with Answer and User data
     q = q.with_entities(Answer, User)
@@ -214,9 +210,7 @@ def test(doc_path):
     task_ids, _, _ = find_task_ids(pars)                # 
 
 
-    filtered_task_ids = filterPlugin(task_ids, 'all')  #filteröi muut paitsi feedback
-
-    nro = int(d.id)#int(number)
+    #filtered_task_ids = filterPlugin(task_ids, 'all')  #filteröi muut paitsi feedback
     name = get_option(request, 'name', 'both')
     hidename = False
     fullname = False
@@ -241,10 +235,31 @@ def test(doc_path):
     period_from = datetime.min.replace(tzinfo=timezone.utc)
     period_to = get_current_time()
 
+    # Some fetch-copypasta
+    doc_ids = set()
+    for tid in task_ids:
+        doc_ids.add(tid.doc_id)
+        d = get_doc_or_abort(tid.doc_id)
+
+    # moar fetch-copypasta
+    since_last_key = task_ids[0].doc_task
+    if len(task_ids) > 1:
+        since_last_key = str(next(d for d in doc_ids))
+        if len(doc_ids) > 1:
+            since_last_key = None
+
+
     if period == 'whenever':
         pass
     elif period == 'sincelast':
-        pass    # TODO: last fetch
+        u = get_current_user_object()
+        prefs = u.get_prefs()
+        last_answer_fetch = prefs.last_answer_fetch
+        period_from = last_answer_fetch.get(since_last_key, datetime.min.replace(tzinfo=timezone.utc))
+        last_answer_fetch[since_last_key] = get_current_time()
+        prefs.last_answer_fetch = last_answer_fetch
+        u.set_prefs(prefs)
+        db.session.commit()
     elif period == 'day':
         period_from = period_to - timedelta(days=1)
     elif period == 'week':
@@ -264,8 +279,8 @@ def test(doc_path):
             pass
 
     #get answers for the task ids with the proper parameters
-    answers = get_all_feedback_answers(filtered_task_ids, hidename, fullname,
-                                        'username', validity, period_from, period_to)
+    answers = get_all_feedback_answers(task_ids, hidename, fullname, validity, period_from, period_to)
+
 
     # First returns empty, then from document nro1 and then document nro2 (change above if different)
     return csv_response(answers, dialect)
@@ -275,6 +290,7 @@ def test(doc_path):
 
 
 
+"""
 def filterPlugin(task_ids: List[TaskId], plugin_name: str):
     filtered_task_ids = []
     if plugin_name == 'all':
@@ -285,6 +301,6 @@ def filterPlugin(task_ids: List[TaskId], plugin_name: str):
         if ptype == plugin_name:
             filtered_task_ids.append(tid)
     return filtered_task_ids
-
+"""
 #-
 # {#t1}
