@@ -204,7 +204,6 @@ header: #OTSIKKO, TYHJÄ = EI OTSIKKOA
 stem: #KYSYMYS, TYHJÄ = EI KYSYMYSTÄ
 inputstem: #VASTAUS, TYHJÄ = EI VASTAUSTA
 followid: #SEURANTAID, TYHJÄ = EI SEURANTAID:tä
-fields: #KENTTÄVIITTAUKSET, TYHJÄ = EI VIITTAUKSIA
 needed_len: 1 #MINIMIPITUUS, NUMERAALINEN 
 initnumber: #ALKUARVO, TYHJÄ = EI ALKUARVOA
 buttonText: Save #PAINIKKEEN NIMI, TYHJÄ = EI PAINIKETTA
@@ -213,7 +212,6 @@ autosave: false #AUTOSAVE, POIS PÄÄLTÄ
 ```""", """
 ``` {#label plugin="numericfield" readonly=view}
 followid: #SEURANTAID, TYHJÄ = EI SEURANTAID:tä
-fields: #KENTTÄVIITTAUKSET, TYHJÄ = EI VIITTAUKSIA
 needed_len: 1 #MINIMIPITUUS, NUMERAALINEN 
 initnumber: #ALKUARVO, TYHJÄ = EI ALKUARVOA
 cols: 5 #KENTÄN KOKO, NUMERAALINEN
