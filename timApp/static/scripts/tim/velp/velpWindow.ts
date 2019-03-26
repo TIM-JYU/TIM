@@ -13,7 +13,16 @@ import {ILabel, ILabelUI, INewLabel, IVelp, IVelpGroup, IVelpGroupUI, IVelpUI} f
  * @licence MIT
  */
 
-export let colorPalette = ["blueviolet", "darkcyan", "orange", "darkgray", "cornflowerblue", "coral", "goldenrod", "blue"];
+export const colorPalette = [
+    "blueviolet",
+    "darkcyan",
+    "orange",
+    "darkgray",
+    "cornflowerblue",
+    "coral",
+    "goldenrod",
+    "blue",
+];
 
 // TODO: add keyboard shortcuts to velps
 // TODO: add min and max values for points
@@ -21,7 +30,6 @@ export let colorPalette = ["blueviolet", "darkcyan", "orange", "darkgray", "corn
 
 /**
  * Controller for velp Window
- * @lends module:velpWindow
  */
 export class VelpWindowController implements IController {
     private onVelpSelect!: Binding<(params: {$VELP: IVelp}) => void, "&">;

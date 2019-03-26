@@ -240,8 +240,7 @@ export class NotesHandler {
     clearNoteBadge(e: Event) {
         const btn = this.noteBadge;
         if (btn) {
-            const parent = getElementParent(btn);
-            if (parent) { parent.removeChild(btn); }
+            $(btn).remove();
         }
 
         if (e != null) {

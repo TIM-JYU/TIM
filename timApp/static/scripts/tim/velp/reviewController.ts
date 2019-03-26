@@ -69,7 +69,7 @@ export class ReviewController {
      * Loads the document annotations into the view.
      */
     async loadDocumentAnnotations() {
-        const response = await $http.get<IAnnotation[]>("/{0}/get_annotations".replace("{0}", this.item.id.toString()));
+        const response = await $http.get<IAnnotation[]>(`/${this.item.id}/get_annotations`);
         this.annotations = response.data;
         const annotationsToRemove = [];
 
@@ -211,14 +211,7 @@ export class ReviewController {
         const annotations = this.getAnnotationsByAnswerId(answerId);
 
         const oldAnnotations = par.querySelectorAll(".notes [aid]");
-        if (oldAnnotations.length > 0) {
-            const annotationParent = getElementParent(oldAnnotations[0]);
-            if (annotationParent) {
-                for (let a = 0; a < oldAnnotations.length; a++) {
-                    annotationParent.removeChild(oldAnnotations[a]);
-                }
-            }
-        }
+        angular.element(oldAnnotations).remove();
 
         for (let i = 0; i < annotations.length; i++) {
             const placeInfo = annotations[i].coord;
@@ -372,10 +365,7 @@ export class ReviewController {
     clearVelpBadge(e: Event | null): void {
         const btn = this.velpBadge;
         if (btn) {
-            const parent = getElementParent(btn);
-            if (parent) {
-                parent.removeChild(btn);
-            }
+            $(btn).remove();
         }
 
         if (e != null) {
@@ -403,7 +393,7 @@ export class ReviewController {
      * @param id - Annotation ID
      */
     async deleteAnnotation(id: number): Promise<void> {
-        const annotationParents = document.querySelectorAll('[aid="{0}"]'.replace("{0}", id.toString()));
+        const annotationParents = document.querySelectorAll(`[aid="${id}"]`);
         const annotationHighlights = annotationParents[0].getElementsByClassName("highlighted");
 
         if (annotationParents.length > 1) {
@@ -414,15 +404,9 @@ export class ReviewController {
                 savedHTML += addHTML;
             }
             annotationParents[0].outerHTML = savedHTML;
-            const node = annotationParents[1].parentNode;
-            if (node) {
-                node.removeChild(annotationParents[1]);
-            }
+            $(annotationParents[1]).remove();
         } else {
-            const node = annotationParents[0].parentNode;
-            if (node) {
-                node.removeChild(annotationParents[0]);
-            }
+            $(annotationParents[0]).remove();
         }
 
         for (let a = 0; a < this.annotations.length; a++) {
@@ -442,17 +426,14 @@ export class ReviewController {
      * @param inmargin - Whether the annotation is to be placed in the margin or not
      */
     updateAnnotation(id: number, inmargin: boolean): void {
-        const annotationParents = document.querySelectorAll('[aid="{0}"]'.replace("{0}", id.toString()));
-        const annotationElement = $('[aid="{0}"]'.replace("{0}", id.toString()));
+        const annotationParents = document.querySelectorAll(`[aid="${id}"]`);
+        const annotationElement = $(`[aid="${id}"]`);
         const par = annotationElement.parents(".par");
         const annotationHighlights = annotationElement[0].getElementsByClassName("highlighted");
         if (!inmargin) {
             for (let a = 0; a < this.annotations.length; a++) {
                 if (id === this.annotations[a].id) {
-                    const node = annotationElement[1].parentNode;
-                    if (node) {
-                        node.removeChild(annotationElement[1]);
-                    }
+                    $(annotationElement[1]).remove();
                     this.addAnnotationToElement(par[0], this.annotations[a], false, "Added also margin annotation");
                     // addAnnotationToElement(this.annotations[a], false, "Added also margin annotation");
                 }
@@ -715,38 +696,6 @@ export class ReviewController {
             highlightStyle = "negative";
         }
         return highlightStyle;
-    }
-
-    /**
-     <<<<<<< HEAD
-     =======
-     * Detect user right to annotation to document.
-     * @param points - Points given in velp or annotation
-     * @returns {boolean} - Right to make annotations
-
-     $scope.notAnnotationRights = function(points) {
-        if ($scope.item.rights.teacher) {
-            return false;
-        } else {
-            if (points === null) {
-                return false;
-            } else {
-                return true;
-            }
-        }
-    };
-     */
-    /**
-     >>>>>>> master
-     * Return caption text if the user has no rights to the annotation.
-     * @param state - Whether the annotation is disabled to the user or not
-     * @returns {string} - Caption text
-     */
-
-    showDisabledText(state: boolean): string | undefined {
-        if (state) {
-            return "You need to have teacher rights to make annotations with points.";
-        }
     }
 
     /**
@@ -1165,22 +1114,24 @@ export class ReviewController {
      * Shows the annotation (despite the name).
      * @todo If the annotation should be toggled, change all `showAnnotation()` methods to `toggleAnnotation()`.
      * @param annotation - Annotation to be showed.
+     * @param scrollToAnnotation Whether to scroll to annotation if it is not in viewport.
      */
-    async toggleAnnotation(annotation: IAnnotation, scrollToWindow: boolean) {
+    async toggleAnnotation(annotation: IAnnotation, scrollToAnnotation: boolean) {
         const parent = document.getElementById(annotation.coord.start.par_id);
         if (parent == null) {
             return;
         }
 
+        // We might click a margin annotation, but we still want to open the corresponding inline annotation,
+        // if it exists.
         const prefix = isFullCoord(annotation.coord.start) && isFullCoord(annotation.coord.end) ? "t" : "m";
         const actrl = this.vctrl.getAnnotation(prefix + annotation.id);
         if (actrl) {
             if ((annotation.coord.start == null || actrl.show || !annotation.user_id)) {
-                if (actrl.show) { scrollToWindow = false; }
+                if (actrl.show) { scrollToAnnotation = false; }
                 actrl.toggleAnnotationShow();
-                const annotationElement = actrl.element[0];
-                if (scrollToWindow && !isInViewport(annotationElement)) {
-                    scrollToElement(annotationElement);
+                if (scrollToAnnotation) {
+                    actrl.scrollToIfNotInViewport();
                 }
                 // addAnnotationToElement(par, annotation, false, "Added also margin annotation");
                 return;
@@ -1212,33 +1163,29 @@ export class ReviewController {
             ab = await loaderCtrl.abLoad.promise;
         }
         if (this.vctrl.selectedUser.id !== annotation.user_id) {
-            for (let i = 0; i < this.vctrl.users.length; i++) {
-                if (this.vctrl.users[i].id === annotation.user_id) {
-                    this.vctrl.changeUser(this.vctrl.users[i], false);
+            for (const u of this.vctrl.users) {
+                if (u.id === annotation.user_id) {
+                    this.vctrl.changeUser(u, false);
                     break;
                 }
             }
         }
 
-        let abscopetimeout = 500;
-        if (ab.review && ab.selectedAnswer && ab.selectedAnswer.id === annotation.answer_id) {
-            abscopetimeout = 1;
-        } else {
-            ab.setAnswerById(annotation.answer_id);
+        if (!(ab.review && ab.selectedAnswer && ab.selectedAnswer.id === annotation.answer_id)) {
+            // If review is false, setting review to true will eventually update the answer,
+            // and we don't want to do it twice. Therefore setAnswerById shall only update the answer if review
+            // is already true.
+            ab.setAnswerById(annotation.answer_id, ab.review);
+            ab.review = true;
         }
-        ab.review = true;
 
-        await $timeout(abscopetimeout);
-
-        const actrl2 = this.vctrl.getAnnotation(prefix + annotation.id);
+        const actrl2 = await this.vctrl.getAnnotationAsync(prefix + annotation.id);
         if (!actrl2) {
             return;
         }
-        const annotationElement = actrl2.element[0];
-        // ae.toggleAnnotationShow();
-        // TODO: tutki ylimääräinen show ja miten saadaan toggleksi.
         actrl2.showAnnotation();
-        // if ( abscopetimeout > 1 && scrollToWindow) scrollToElement(annotationElement);
-        if (scrollToWindow && !isInViewport(annotationElement)) { scrollToElement(annotationElement); }
+        if (scrollToAnnotation) {
+            actrl2.scrollToIfNotInViewport();
+        }
     }
 }

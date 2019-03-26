@@ -13,18 +13,18 @@ import {IController, IRootElementService, IScope} from "angular";
 import {timApp} from "tim/app";
 import * as focusme from "tim/ui/focusMe";
 import {ViewCtrl} from "../document/viewctrl";
+import {DestroyScope} from "../ui/destroyScope";
 import {showMessageDialog} from "../ui/dialog";
 import {IUser} from "../user/IUser";
-import {KEY_ENTER} from "../util/keycodes";
+import {KEY_CTRL, KEY_ENTER} from "../util/keycodes";
 import {$http} from "../util/ngimport";
-import {Binding, markAsUsed, Require} from "../util/utils";
+import {Binding, isInViewport, markAsUsed, Require, scrollToElement} from "../util/utils";
 import {IAnnotationCoordless} from "./velptypes";
 
 markAsUsed(focusme);
 
-export class AnnotationController implements IController {
+export class AnnotationController extends DestroyScope implements IController {
     private static $inject = ["$scope", "$element"];
-    private ctrlKey: number;
     private ctrlDown: boolean;
     private visible_options!: {
         type: string; value: number; title: string;
@@ -52,10 +52,11 @@ export class AnnotationController implements IController {
     private vctrl!: Require<ViewCtrl>;
     private annotationdata!: Binding<string, "@">;
     public annotation!: IAnnotationCoordless; // $onInit
+    private prefix = "x";
 
     constructor(private scope: IScope, public element: IRootElementService) {
+        super(scope, element);
         this.ctrlDown = false;
-        this.ctrlKey = 17;
         this.newcomment = "";
         this.isvalid = {
             points: {value: true, msg: ""},
@@ -65,6 +66,14 @@ export class AnnotationController implements IController {
     setShowFull(v: boolean) {
         this.showFull = v;
         this.focus = v;
+    }
+
+    $onDestroy() {
+        this.vctrl.unRegisterAnnotation(this);
+    }
+
+    getKeyPrefix() {
+        return this.prefix;
     }
 
     $onInit() {
@@ -96,6 +105,9 @@ export class AnnotationController implements IController {
             comment: "", // this.newcomment,
             aid: this.annotation.id,
         };
+        const e = this.element;
+        const isInMargin = e.parent().hasClass("notes") && e.parent().parent().hasClass("par");
+        this.prefix = isInMargin ? "m" : "t"; // as in "margin" or "text"
         this.vctrl.registerAnnotation(this);
     }
 
@@ -186,6 +198,13 @@ export class AnnotationController implements IController {
         this.show = true;
 
         this.updateVelpZIndex();
+    }
+
+    scrollToIfNotInViewport() {
+        const e = this.element[0];
+        if (!isInViewport(e)) {
+            scrollToElement(e);
+        }
     }
 
     /**
@@ -317,7 +336,7 @@ export class AnnotationController implements IController {
      * @param event - Current event
      */
     keyDownFunc(event: KeyboardEvent) {
-        if (event.keyCode === this.ctrlKey) {
+        if (event.keyCode === KEY_CTRL) {
             this.ctrlDown = true;
         }
         if (this.ctrlDown && (String.fromCharCode(event.which).toLowerCase() === "s" || event.keyCode === KEY_ENTER)) {
@@ -336,14 +355,14 @@ export class AnnotationController implements IController {
      * @param event - Current event
      */
     keyUpFunc(event: KeyboardEvent) {
-        if (event.keyCode === this.ctrlKey) {
+        if (event.keyCode === KEY_CTRL) {
             this.ctrlDown = false;
         }
     }
 }
 
-/** Directive for a single annotation.
- * @lends module:reviewController
+/**
+ * Directive for a single annotation.
  */
 timApp.component("annotation", {
     bindings: {

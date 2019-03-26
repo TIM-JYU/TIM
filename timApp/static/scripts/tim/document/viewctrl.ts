@@ -1,4 +1,4 @@
-import angular, {IController, IPromise, IScope} from "angular";
+import angular, {IController, IPromise, IScope, IDeferred} from "angular";
 import $ from "jquery";
 import moment from "moment";
 import ngs, {ngStorage} from "ngstorage";
@@ -25,7 +25,7 @@ import {initCssPrint} from "../printing/cssPrint";
 import {showMessageDialog} from "../ui/dialog";
 import {IUser} from "../user/IUser";
 import {Users} from "../user/userService";
-import {$compile, $filter, $http, $interval, $localStorage, $timeout, $window} from "../util/ngimport";
+import {$compile, $filter, $http, $interval, $localStorage, $q, $timeout, $window} from "../util/ngimport";
 import {ReviewController} from "../velp/reviewController";
 import {EditingHandler} from "./editing/editing";
 import {PendingCollection} from "./editing/edittypes";
@@ -595,18 +595,39 @@ export class ViewCtrl implements IController {
     }
 
     private anns = new Map<string, AnnotationController>();
+    private annsDefers = new Map<string, IDeferred<AnnotationController>>();
 
     registerAnnotation(loader: AnnotationController) {
         // This assumes that the associated DOM element for annotation is attached in the page because we need to check
         // whether it's in the right margin or not (i.e. in text).
-        const e = loader.element;
-        const isInMargin = e.parent().hasClass("notes") && e.parent().parent().hasClass("par");
-        const prefix = isInMargin ? "m" : "t"; // as in "margin" or "text"
-        this.anns.set(prefix + loader.annotation.id, loader);
+        const prefix = loader.getKeyPrefix();
+        const key = prefix + loader.annotation.id;
+        this.anns.set(key, loader);
+        const defer = this.annsDefers.get(key);
+        if (defer) {
+            defer.resolve(loader);
+        }
     }
 
     getAnnotation(id: string) {
         return this.anns.get(id);
+    }
+
+    getAnnotationAsync(id: string): IPromise<AnnotationController> {
+        const a = this.getAnnotation(id);
+        if (a) {
+            return $q.resolve(a);
+        }
+        const value = $q.defer<AnnotationController>();
+        this.annsDefers.set(id, value);
+        return value.promise;
+    }
+
+    unRegisterAnnotation(a: AnnotationController) {
+        const prefix = a.getKeyPrefix();
+        const key = prefix + a.annotation.id;
+        this.anns.delete(key);
+        this.annsDefers.delete(key);
     }
 }
 

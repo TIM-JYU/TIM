@@ -57,7 +57,6 @@ export class VelpSummaryController implements IController {
 
 /**
  * Angular directive for phrase selection
- * @lends module:velpSummary
  */
 timApp.component("velpSummary", {
         bindings: {

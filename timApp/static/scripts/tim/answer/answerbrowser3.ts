@@ -193,6 +193,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
     private loadedAnswer: {id: number | undefined, review: boolean} = {review: false, id: undefined};
     private answerId?: Binding<number, "<?">;
     private loader!: PluginLoaderCtrl;
+    private reviewHtml?: string;
 
     constructor(private scope: IScope, private element: IRootElementService) {
         super(scope, element);
@@ -374,7 +375,8 @@ export class AnswerBrowserController extends DestroyScope implements IController
             this.loadedAnswer.review = this.review;
             void loadPlugin(r.result.data.html, this.loader.getPluginElement(), this.scope, this.viewctrl);
             if (this.review) {
-                this.element.find(".review").html(r.result.data.reviewHtml);
+                this.reviewHtml = r.result.data.reviewHtml;
+                await $timeout();
             }
         }
         this.viewctrl.reviewCtrl.loadAnnotationsToAnswer(this.selectedAnswer.id, par[0], this.review);
@@ -483,11 +485,13 @@ export class AnswerBrowserController extends DestroyScope implements IController
         }
     }
 
-    setAnswerById(id: number) {
+    setAnswerById(id: number, updateImmediately: boolean) {
         for (let i = 0; i < this.filteredAnswers.length; i++) {
             if (this.filteredAnswers[i].id === id) {
                 this.selectedAnswer = this.filteredAnswers[i];
-                this.changeAnswer();
+                if (updateImmediately) {
+                    this.changeAnswer();
+                }
                 break;
             }
         }

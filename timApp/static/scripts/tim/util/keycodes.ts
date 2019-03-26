@@ -16,6 +16,7 @@ export const KEY_TAB = 9;
 export const KEY_UP = 38;
 export const KEY_Y = 89;
 export const KEY_F2 = 113;
+export const KEY_CTRL = 17;
 
 export function isArrowKey(keyCode: number) {
     switch (keyCode) {
