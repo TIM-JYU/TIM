@@ -140,7 +140,7 @@ timApp.component("timStart", {
             <div ng-switch="$ctrl.language" ng-cloak>
                 <div ng-switch-when="en">
                     <h3>Get started</h3>
-                    <login-menu ng-if="!$ctrl.isLoggedIn()"></login-menu>
+                    <login-menu ng-if="!$ctrl.isLoggedIn()" button-text="Log in / Sign up"></login-menu>
                     <ul class="list-unstyled">
                         <li ng-if="$ctrl.isLoggedIn()" class="h5">
                             <a href="/view/{{$ctrl.getCurrentUserFolderPath()}}">My documents</a>
@@ -165,7 +165,7 @@ timApp.component("timStart", {
                 </div>
                 <div ng-switch-when="fi">
                     <h3>Aloitus</h3>
-                    <login-menu ng-if="!$ctrl.isLoggedIn()"></login-menu>
+                    <login-menu ng-if="!$ctrl.isLoggedIn()" button-text="Kirjaudu / Rekisteröidy"></login-menu>
                     <ul class="list-unstyled">
                         <li ng-if="$ctrl.isLoggedIn()" class="h5">
                             <a href="/view/{{$ctrl.getCurrentUserFolderPath()}}">Omat dokumentit</a>
