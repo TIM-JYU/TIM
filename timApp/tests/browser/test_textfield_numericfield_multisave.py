@@ -50,7 +50,7 @@ autosave: false
         # post a second answer because otherwise clicking previous answer does not do anything
         input.send_keys(' ')
         input2.send_keys(' ')
-        runbutton.click()
+        runbutton.click() 
         self.wait_until_hidden('.csRunError')  # this has the "...running..." text
 
         self.wait_and_click(PREV_ANSWER)
