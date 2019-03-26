@@ -201,6 +201,7 @@ omapluginApp.component("omapluginRunner", {
     <p ng-if="::$ctrl.stem">{{::$ctrl.stem}}</p>
     <div class="form-inline"><label>{{::$ctrl.inputstem}}{{::$ctrl.inputstem2}}<span>
         <input type="text"
+               style="width: {{::$ctrl.cols}}em"
                class="form-control"
                ng-model="$ctrl.userword"
                ng-model-options="::$ctrl.modelOpts"
