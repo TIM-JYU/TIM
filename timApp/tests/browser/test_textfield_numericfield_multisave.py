@@ -6,14 +6,19 @@ from selenium.webdriver.support import expected_conditions
 from timApp.tests.browser.browsertest import BrowserTest, PREV_ANSWER
 
 
-class CsPluginTest(BrowserTest):
-    def test_csplugin_translation(self):
+class TextfieldPluginTest(BrowserTest):
+    def test_textfield_translation(self):
         self.login_browser_quick_test1()
         self.login_test1()
         self.accept_consent()
         d = self.create_doc(initial_par="""
-#- {plugin=csPlugin #py}
-type: python
+#- {plugin=textfield #t1} 
+cols: 7
+autosave: false
+#- {plugin=numericfield #t2}
+cols: 7
+autosave: false
+#- {plugin=multisave #t3}
         """)
         dt = self.create_translation(d)
         dt.document.set_settings({
@@ -22,24 +27,29 @@ type: python
             'css': '.tr-outofdate::before { display: none; }',
         })
         self.goto_document(dt)
-        par = self.find_element_avoid_staleness('#py')
+        par = self.find_element_avoid_staleness('#t1')
         # self.wait_until_hidden('tim-plugin-loader')
 
-        self.wait_until_present('#py textarea')
-        textarea = self.find_element_and_move_to('#py textarea')
+        self.wait_until_present('#t1 input')
+        input = self.find_element_and_move_to('#t1 input')
         # sleep(0.5)
-        textarea.send_keys('print("Hello world!")')
+        input.send_keys('Aku Ankka')
+        self.wait_until_present('#t2 input')
+        input2 = self.find_element_and_move_to('#t2 input')
+        input2.send_keys('2.75')
         self.find_element('.breadcrumb .active').click()
-        par = self.find_element_avoid_staleness('#py > tim-plugin-loader > div')
+        par = self.find_element_avoid_staleness('#py > tim-plugin-loader > div') # maybe no?
         self.assert_same_screenshot(par, ['csplugin/python_before_answer', 'csplugin/python_before_answer_alt'])
-        runbutton = par.find_element_by_css_selector('button')
+        runbutton = par.find_element_by_name('button', self) # par.find_element_by_css_selector('button')
         runbutton.click()
-        self.wait_until_present('.console')
-        self.wait_until_present('answerbrowser')
+        self.wait(2)
+        self.refresh()
+        self.wait_until_present('#t1 input', '#t2 input')
         self.assert_same_screenshot(par, 'csplugin/python_after_answer')
 
         # post a second answer because otherwise clicking previous answer does not do anything
-        textarea.send_keys(' ')
+        input.send_keys(' ')
+        input2.send_keys(' ')
         runbutton.click()
         self.wait_until_hidden('.csRunError')  # this has the "...running..." text
 
