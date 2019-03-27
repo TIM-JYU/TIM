@@ -42,6 +42,7 @@ class FeedbackMarkupModel(GenericMarkupModel):
     matchElement: Union[Any, Missing] = missing
     instructionID: Union[Any, Missing] = missing
     correctStreak: Union[Any, Missing] = missing
+    teacherHide: Union[Any, Missing] = missing
 
 
 class FeedbackMarkupSchema(GenericMarkupSchema):
@@ -50,6 +51,7 @@ class FeedbackMarkupSchema(GenericMarkupSchema):
     matchElement= fields.Raw()
     instructionID = fields.Str()
     correctStreak = fields.Int()
+    teacherHide = fields.Bool()
 
     @post_load
     def make_obj(self, data):

@@ -48,18 +48,18 @@ interface QuestionItemT extends t.TypeOf<typeof QuestionItem> {
 }
 
 const QuestionItem = t.type({
+    choices: t.array(Choice),
     pluginNames: StringArray,
     words: t.array(StringArray),
-    choices: t.array(Choice),
 });
 
 const FeedbackMarkup = t.intersection([
     t.partial({
         correctStreak: t.number,
         instructionID: t.string,
-        sampleItemID: t.string,
         nextTask: t.string,
         pluginID: t.string,
+        sampleItemID: t.string,
     }),
     GenericPluginMarkup,
     t.type({
@@ -67,6 +67,7 @@ const FeedbackMarkup = t.intersection([
         autoupdate: withDefault(t.number, 500),
         cols: withDefault(t.number, 20),
         questionItems: t.array(QuestionItem),
+        teacherHide: withDefault(t.boolean, false),
     }),
 ]);
 const FeedbackAll = t.intersection([
@@ -97,6 +98,49 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
     private questionCount?: number;
     private correctArray?: boolean[];
     private streak = 0;
+    private teacherRight: boolean = false;
+
+    $onInit() {
+        super.$onInit();
+        this.addToCtrl();
+        this.setPluginWords();
+        this.questionCount = this.attrs.questionItems.length;
+        this.correctArray = new Array(this.questionCount).fill(false);
+        this.index = this.getRandomQuestion(this.correctArray);
+        this.teacherRight = this.vctrl.item.rights.teacher;
+        if (!this.teacherRight || this.attrs.teacherHide) {
+            this.hideQuestionItems();
+        }
+    }
+
+    /**
+     * Adds this plugin to ViewCtrl so other plugins can get information about the plugin though it.
+     */
+    addToCtrl() {
+        this.vctrl.addTimComponent(this);
+    }
+
+    get autoupdate(): number {
+        return this.attrs.autoupdate;
+    }
+
+    getDefaultMarkup() {
+        return {questionItems: []};
+    }
+
+    buttonText() {
+        return "OK";
+    }
+
+    /**
+     * Hide all the question items from the user
+     */
+    hideQuestionItems() {
+        const items = this.attrs.questionItems;
+        for (let i = 0; i < items.length; i++) {
+            this.hideBlock(i);
+        }
+    }
 
     /**
      * Make a block visible to the user
@@ -110,7 +154,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
         if (plugin) {
             const node = plugin.getPar().children(".parContent")[0];
             if (node instanceof Element) {
-                this.hide(node, true)
+                this.changeVisibility(node, true)
             }
         }
     }
@@ -126,30 +170,37 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
         if (plugin) {
             const node = plugin.getPar().children(".parContent")[0];
             if (node instanceof Element) {
-                this.hide(node, false)
+                this.changeVisibility(node, false)
             }
         }
     }
 
     /**
-     * Hide all the question items from the user
+     * Hide a component and it's paragraph
+     *
+     * @param component the component and paragraph around it you want to hide
      */
-    hideQuestionItems() {
-        const items = this.attrs.questionItems;
-        for (let i = 0; i < items.length; i++) {
-            this.hideBlock(i);
+    hideComponent(component: ITimComponent) {
+        const node = component.getPar().children(".parContent")[0];
+        if (node instanceof Element) {
+            this.changeVisibility(node, false);
         }
     }
 
-    hide(node: Element, visibility: boolean) {
-        if (visibility) {
+    /**
+     * Hides a HTML element from the user
+     *
+     * @param node Node to be hidden
+     * @param visible Whether the node should be visible or hidden
+     */
+    changeVisibility(node: Element, visible: boolean) {
+        if (visible) {
             node.classList.remove("hidden");
         }
-        if (!visibility) {
+        if (!visible) {
             node.classList.add("hidden");
         }
     }
-
 
     /**
      * Gets the match that is correct for the question item
@@ -167,37 +218,189 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
     }
 
     /**
-     * Prints the feedback the user should see for their answer.
-     *
-     *
-     * @param feedback what feedback should be presented to the user
+     * Handles saving of the feedback plugin. To get the correct answer to the database, replaces user selections
+     * with the ones that are correct.
      */
-    printFeedback(feedback: string) {
-        const answer = this.userAnswer.toString().replace(/,/g, " ");
-        this.feedback = feedback.replace(answerPlaceHolder, answer);
+    async save() {
+        // TODO: finish this, can you replace just one instance?
+        const values: { [id: string]: string } = {};
+        const item = this.attrs.questionItems[this.index];
+        const plugins = item.pluginNames;
+        const index = this.getCorrectChoice(item);
+        const words = item.choices[index].match;
 
-        const reanswer = feedback.match(answerPlaceHolderRegExp);
-        if (reanswer) {
-            this.replacePlaceHolder(reanswer, this.userAnswer);
+        for (let i = 0; i < plugins.length; i++) {
+            if (StringArray.is(words)) {
+                values[plugins[i]] = words[i];
+            }
         }
+        const sentence = this.getSentence(this.answerArray, values).toString().replace(/,/g, " ");
+        return this.doSave(false, this.correctAnswer, sentence);
+    }
 
-        const reword = feedback.match(wordPlaceHolderRegExp);
-        if (reword) {
-            this.replacePlaceHolder(reword, this.userSelections);
+    async doSave(nosave: boolean, correct: boolean, sentence: string) {
+        this.error = "... saving ...";
+
+        this.result = undefined;
+        const params = {
+            input: {
+                nosave: false,
+                feedback: this.feedback,
+                correct: correct,
+                sentence: sentence,
+            },
+        };
+
+        if (nosave) {
+            params.input.nosave = true;
+        }
+        const url = this.pluginMeta.getAnswerUrl();
+        const r = await to($http.put<{ web: { result: string, error?: string } }>(url, params));
+        if (r.ok) {
+            const data = r.result.data;
+            this.error = data.web.error;
+            if (data.web.error) {
+                return data.web.error;
+            }
+            // this.result = data.web.result;
+        } else {
+            this.error = "Infinite loop or some other error?";
         }
     }
 
     /**
-     * Replace the placeholders found in feedback with words from the given array.
+     * Saves all the plugins in the question item to the database
      *
-     * @param re array of regexp-matches
-     * @param wordarray words that should be replace the placeholders
+     * @param plugins plugins to be saved
      */
-    replacePlaceHolder(re: RegExpMatchArray, wordarray: string[]) {
-        for (const placeholder of re) {
-            const index = placeholder.match(/[0-9]/)!.toString();
-            const replacement = wordarray[parseInt(index)];
-            this.feedback = this.feedback.replace(placeholder, replacement);
+    async savePlugins(plugins: QuestionItemT) {
+        for (const p of plugins.pluginNames) {
+            const plugin = this.vctrl.getTimComponentByName(p);
+            if (plugin) {
+                const success = await this.savePlugin(plugin);
+                if (!success) {
+                    this.error = "Error while saving plugins";
+                    return false;
+                }
+                this.error = "";
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Saves the selected plugin's content to the database
+     *
+     * @param plugin The plugin to be saved
+     * @returns{boolean} Whether the saving was succesful
+     */
+    async savePlugin(plugin: ITimComponent) {
+        const success = await plugin.save();
+        if (success) {
+            return false;
+        }
+        return true;
+    }
+
+
+    /**
+     * Handles the checking of user's answer's correctness.
+     *
+     * TODO: fix the task end logic in this....
+     */
+    async handleAnswer() {
+        if (this.pluginMode === Mode.EndTask) {
+            this.feedback = "The task has ended";
+        }
+
+        if (this.pluginMode === Mode.Instruction) {
+            this.pluginMode = Mode.QuestionItem;
+            // For demonstration
+            this.showMode = "Question item paragraph, question " + this.index;
+            // TODO: instruction time saving here?
+            const instructionQuestion = this.vctrl.getTimComponentByName(this.attrs.instructionID || "");
+            if (this.attrs.instructionID && instructionQuestion) {
+                // TODO: need to use this in something?
+                const success = await this.savePlugin(instructionQuestion);
+                if (!this.teacherRight || this.attrs.teacherHide) {
+                    this.hideComponent(instructionQuestion);
+                }
+
+            }
+            this.showBlock(this.index);
+
+            return;
+        }
+
+        if (this.pluginMode === Mode.QuestionItem) {
+            if (this.index > this.attrs.questionItems.length) {
+                this.printFeedback("No more question items, thanks for playing");
+                this.pluginMode = Mode.EndTask;
+                return;
+            }
+
+            const selections = this.getAnswerFromPlugins();
+            const matchIndex = this.compareChoices(this.index, selections);
+
+            if (matchIndex === -1) {
+                this.error = "You have no choices defined, got no matches or using match objects";
+            } else {
+                const choice = this.attrs.questionItems[this.index].choices[matchIndex];
+                const feedbackLevels = choice.levels;
+                if (this.currentFeedbackLevel === feedbackLevels.length) {
+                    this.pluginMode = Mode.EndTask;
+                    return;
+                }
+                if (choice.correct) {
+                    // TODO: Do you want to make more than one correct feedback?
+                    this.printFeedback(feedbackLevels[feedbackLevels.length - 1]);
+                    this.correctAnswer = true;
+                    this.correctArray![this.index] = true;
+                    this.streak++;
+                    this.pluginMode = Mode.Feedback;
+                } else {
+                    this.printFeedback(feedbackLevels[this.currentFeedbackLevel++]);
+                    this.correctAnswer = false;
+                    this.streak = 0;
+                    this.pluginMode = Mode.Feedback;
+
+                }
+            }
+
+            const plugins = this.attrs.questionItems[this.index];
+
+            if (!this.savePlugins(plugins)) {
+                return;
+            }
+
+            if (!this.teacherRight || this.attrs.teacherHide) {
+                this.hideBlock(this.index);
+            }
+            // For demonstration
+            this.showMode = "Feedback paragraph";
+            return;
+        }
+
+        // TODO: set the plugin words again so a choice is not visible when getting the same item again
+        if (this.pluginMode === Mode.Feedback) {
+            const success = this.save();
+            if (!success) {
+                this.error = success;
+                return;
+            }
+
+            this.pluginMode = Mode.QuestionItem;
+            this.printFeedback("");
+
+            this.index = this.getRandomQuestion(this.correctArray || []);
+            if (this.index === -1 || this.streak === this.attrs.correctStreak) {
+                this.pluginMode = Mode.EndTask;
+                return;
+            }
+            // For demonstration
+            this.showMode = "Question item paragraph, question " + this.index;
+            this.showBlock(this.index);
+            return;
         }
     }
 
@@ -233,225 +436,8 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
         }
 
         const r = Math.random() * falses.length;
-        console.log(r);
         const index = Math.floor(r);
         return falses[index];
-    }
-
-    getDefaultMarkup() {
-        return {questionItems: []};
-    }
-
-    buttonText() {
-        return "OK";
-    }
-
-    wordButtonText() {
-        return "Get words";
-    }
-
-    $onInit() {
-        super.$onInit();
-        this.addToCtrl();
-        this.setPluginWords();
-        this.questionCount = this.attrs.questionItems.length;
-        this.correctArray = new Array(this.questionCount).fill(false);
-        this.index = this.getRandomQuestion(this.correctArray);
-        this.hideQuestionItems();
-        // TODO: hide stuff if not teacher
-        this.vctrl.item.rights.teacher;
-    }
-
-    /**
-     * Adds this plugin to ViewCtrl so other plugins can get information about the plugin though it.
-     */
-    addToCtrl() {
-        this.vctrl.addTimComponent(this);
-    }
-
-    get autoupdate(): number {
-        return this.attrs.autoupdate;
-    }
-
-    async doSave(nosave: boolean, correct: boolean, sentence: string) {
-        // this.error = "... saving ...";
-
-        this.result = undefined;
-        const params = {
-            input: {
-                nosave: false,
-                feedback: this.feedback,
-                correct: correct,
-                sentence: sentence,
-            },
-        };
-
-        if (nosave) {
-            params.input.nosave = true;
-        }
-        const url = this.pluginMeta.getAnswerUrl();
-        const r = await to($http.put<{ web: { result: string, error?: string } }>(url, params));
-        if (r.ok) {
-            const data = r.result.data;
-            this.error = data.web.error;
-            if (data.web.error) {
-                return data.web.error;
-            }
-            // this.result = data.web.result;
-        } else {
-            this.error = "Infinite loop or some other error?";
-        }
-    }
-
-    /**
-     * Returns the content inside this plugin
-     * @returns {string} The content inside this plugin
-     */
-    getContent(): string {
-        return "";
-    }
-
-    /**
-     * Handles saving of the feedback plugin. To get the correct answer to the database, replace user selections
-     * with the ones that are correct.
-     */
-    async save() {
-        // TODO: finish this, can you replace just one instance?
-        const values: { [id: string]: string } = {};
-        const item = this.attrs.questionItems[this.index];
-        const plugins = item.pluginNames;
-        const index = this.getCorrectChoice(item);
-        const words = item.choices[index].match;
-
-        for (let i = 0; i < plugins.length; i++) {
-            if (StringArray.is(words)) {
-                values[plugins[i]] = words[i];
-            }
-        }
-        const sentence = this.getSentence(this.answerArray, values).toString().replace(/,/g, " ");
-        return this.doSave(false, this.correctAnswer, sentence);
-    }
-
-    /**
-     * Handles the checking of user's answer's correctness.
-     */
-    async handleAnswer() {
-        if (this.pluginMode === Mode.Instruction) {
-            this.pluginMode = Mode.QuestionItem;
-            // For demonstration
-            this.showMode = "Question item paragraph, question " + this.index;
-            // TODO: instruction time saving here?
-            const instructionQuestion = this.vctrl.getTimComponentByName(this.attrs.instructionID || "");
-            if (this.attrs.instructionID && instructionQuestion) {
-                // TODO: need to use this in something?
-                const success = this.savePlugin(instructionQuestion);
-            }
-            this.showBlock(this.index);
-            return;
-        }
-
-        if (this.pluginMode === Mode.QuestionItem) {
-            if (this.index > this.attrs.questionItems.length) {
-                this.printFeedback("No more question items, thanks for playing");
-                this.pluginMode = Mode.EndTask;
-                return;
-            }
-
-            const selections = this.getAnswerFromPlugins();
-            for (const s of selections) {
-                if (s === "") {
-                    this.error = "You need to select something!";
-                    return;
-                }
-            }
-
-            const matchIndex = this.compareChoices(this.index, selections);
-
-            if (matchIndex === -1) {
-                this.error = "You have no choices defined, got no matches or using match objects";
-            } else {
-                const choice = this.attrs.questionItems[this.index].choices[matchIndex];
-                const feedbackLevels = choice.levels;
-                if (choice.correct) {
-                    // TODO: Do you want to make more than one correct feedback?
-                    this.printFeedback(feedbackLevels[feedbackLevels.length - 1]);
-                    this.correctAnswer = true;
-                    this.correctArray![this.index] = true;
-                    this.streak++;
-                    this.pluginMode = Mode.Feedback;
-                } else {
-                    if (this.currentFeedbackLevel < feedbackLevels.length) {
-                        this.printFeedback(feedbackLevels[this.currentFeedbackLevel++]);
-                        this.correctAnswer = false;
-                        this.streak = 0;
-                        this.pluginMode = Mode.Feedback;
-                    } else {
-                        // this.printFeedback(feedbackLevels[feedbackLevels.length - 1]);
-                        this.pluginMode = Mode.EndTask;
-                    }
-                }
-            }
-            // TODO: plugin saving here?
-            const plugins = this.attrs.questionItems[this.index];
-            for (const p of plugins.pluginNames) {
-                const plugin = this.vctrl.getTimComponentByName(p);
-                if (plugin) {
-                    const success = await this.savePlugin(plugin);
-                    if (!success) {
-                        this.error = "Error while saving plugins";
-                        return;
-                    }
-                    this.error = "";
-                }
-            }
-
-            // TODO: hide block
-            this.hideBlock(this.index);
-            // this.pluginMode = Mode.Feedback;
-            // For demonstration
-            this.showMode = "Feedback paragraph";
-            return;
-        }
-
-        if (this.pluginMode === Mode.Feedback) {
-            const success = this.save();
-            if (!success) {
-                this.error = success;
-                return;
-            }
-
-            this.pluginMode = Mode.QuestionItem;
-            this.printFeedback("");
-
-            this.index = this.getRandomQuestion(this.correctArray || []);
-            if (this.index === -1 || this.streak === this.attrs.correctStreak) {
-                this.pluginMode = Mode.EndTask;
-                return;
-            }
-            // For demonstration
-            this.showMode = "Question item paragraph, question " + this.index;
-            this.showBlock(this.index);
-            // TODO: openblock
-            return;
-        }
-
-        if (this.pluginMode === Mode.EndTask) {
-            this.feedback = "The task has ended";
-        }
-    }
-
-    /**
-     * Saves the selected plugin's content to the database
-     *
-     * @param plugin The plugin to be saved
-     * @returns{boolean} Whether the saving was succesful
-     */
-    async savePlugin(plugin: ITimComponent) {
-        const success = await plugin.save();
-        if (success) {
-            return false;
-        }
-        return true;
     }
 
     /**
@@ -506,8 +492,48 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
         return false;
     }
 
+    /**
+     * TODO
+     * @param match
+     * @param answer
+     */
     checkMatchObjectArray(match: MatchElementT[], answer: string[]): number {
         return -1;
+    }
+
+    /**
+     * Prints the feedback the user should see for their answer.
+     *
+     *
+     * @param feedback what feedback should be presented to the user
+     */
+    printFeedback(feedback: string) {
+        const answer = this.userAnswer.toString().replace(/,/g, " ");
+        this.feedback = feedback.replace(answerPlaceHolder, answer);
+
+        const reanswer = feedback.match(answerPlaceHolderRegExp);
+        if (reanswer) {
+            this.replacePlaceHolder(reanswer, this.userAnswer);
+        }
+
+        const reword = feedback.match(wordPlaceHolderRegExp);
+        if (reword) {
+            this.replacePlaceHolder(reword, this.userSelections);
+        }
+    }
+
+    /**
+     * Replace the placeholders found in feedback with words from the given array.
+     *
+     * @param re array of regexp-matches
+     * @param wordarray words that should be replace the placeholders
+     */
+    replacePlaceHolder(re: RegExpMatchArray, wordarray: string[]) {
+        for (const placeholder of re) {
+            const index = placeholder.match(/[0-9]/)!.toString();
+            const replacement = wordarray[parseInt(index)];
+            this.feedback = this.feedback.replace(placeholder, replacement);
+        }
     }
 
     /**
@@ -520,24 +546,42 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
      */
     getAnswerFromPlugins(): string[] {
         const plugins = this.attrs.questionItems[this.index].pluginNames;
-
-
         this.userSelections = [];
         const timComponent = this.vctrl.getTimComponentByName(plugins[0]);
 
         if (timComponent) {
             const par = timComponent.getPar();
             const content = par.children(".parContent");
-            const nodes = content[0].childNodes;
+            const treeWalker = document.createTreeWalker(content[0], NodeFilter.SHOW_ALL,
+                {
+                    acceptNode: function (node) {
+                        if (node.nodeName === "#text") {
+                            return NodeFilter.FILTER_ACCEPT;
+                        }
+                        if (node.nodeName === "TIM-PLUGIN-LOADER") {
+                            return NodeFilter.FILTER_ACCEPT;
+                        }
+                        if (node.nodeName === "P") {
+                            return NodeFilter.FILTER_ACCEPT;
+                        }
+                        return NodeFilter.FILTER_REJECT;
+                    }
+                });
+
+            const nodeList = [];
+            while (treeWalker.nextNode()) {
+                nodeList.push(treeWalker.currentNode);
+            }
             const answer: string[] = [];
             const values: { [id: string]: string } = {};
-            for (let n = 0; n < nodes.length; ++n) {
-                const node = nodes[n];
-                if (node.nodeName === "#text") {
-                    let text = node.textContent || "";
-                    const words = text.trim().split(" ");
+            for (let n = 0; n < nodeList.length; ++n) {
+                const node = nodeList[n];
+                if (node.nodeName === "#text" && node.textContent !== null) {
+                    const words = node.textContent.trim().split(" ");
                     for (const word of words) {
-                        answer.push(word);
+                        if (word !== "") {
+                            answer.push(word);
+                        }
                     }
                 }
 
@@ -588,6 +632,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
      * of plugins are in the same order and that there are the same amount of them both.
      *
      * TODO: drag&drop
+     * TODO: randomize words
      */
     setPluginWords() {
         const items = this.attrs.questionItems;
@@ -603,6 +648,14 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
                 }
             }
         }
+    }
+
+    /**
+     * Returns the content inside this plugin
+     * @returns {string} The content inside this plugin
+     */
+    getContent(): string {
+        return "";
     }
 
     protected getAttributeType() {
