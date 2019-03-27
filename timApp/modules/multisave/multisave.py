@@ -150,7 +150,7 @@ fields:
                                 'expl': 'Multisave for areas',
                             },
                             {
-                                'data': templates[1].strip(),
+                                'data': templates[2].strip(),
                                 'text': 'Multisave for specific IDs',
                                 'expl': 'Multisave for specific IDs',
                             },
