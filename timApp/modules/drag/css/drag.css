@@ -1,18 +1,23 @@
 .dragword {
-    padding:4px;
-    border:2px solid #aaaaaa;
+    padding: 4px;
+    border: 2px solid #aaaaaa;
     background: #ffffff;
     cursor: grab;
     text-align: center;
     touch-action: none
 }
 
+
 .dropword {
-    touch-action: none;
+    touch-action: none; /* prevents scrolling while dragging on touchscreen */
     padding:0px;
     background-color: #ffea9d;
     border:2px solid #aaaaaa;
     min-width: 20px;
     min-height: 30px;
     text-align: center;
+}
+
+.inlineplugin answerbrowser {
+    display: none;
 }

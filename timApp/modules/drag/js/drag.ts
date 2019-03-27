@@ -2,9 +2,10 @@
  * Defines the client-side implementation of a drag plugin.
  */
 import angular, {INgModelOptions} from "angular";
+import {IRootElementService, IScope} from "angular";
 import * as t from "io-ts";
 import {ITimComponent, ViewCtrl} from "tim/document/viewctrl";
-import {GenericPluginMarkup, Info, nullable, PluginBase, withDefault} from "tim/plugin/util";
+import {GenericPluginMarkup, getDefaults, Info, nullable, PluginBase, PluginMeta, withDefault} from "tim/plugin/util";
 import {$http} from "../../../static/scripts/tim/util/ngimport";
 import {to} from "tim/util/utils";
 import ad from "angularjs-dragula";
@@ -37,9 +38,18 @@ const DragAll = t.intersection([
 ]);
 
 class DragController extends PluginBase<t.TypeOf<typeof DragMarkup>, t.TypeOf<typeof DragAll>, typeof DragAll> implements ITimComponent {
+    protected static $inject = ["$scope", "$element", "dragulaService"];
     private error?: string;
     private words?: string [];
     private vctrl!: ViewCtrl;
+
+
+    constructor(
+        protected scope: IScope,
+        protected element: IRootElementService,
+        protected dragulaService: any) {
+        super(scope, element);
+    }
 
     getDefaultMarkup() {
         return {};
@@ -73,6 +83,29 @@ class DragController extends PluginBase<t.TypeOf<typeof DragMarkup>, t.TypeOf<ty
     $onInit() {
         super.$onInit();
         this.words = this.attrs.words || [];
+        const scope = this.vctrl.scope;
+        // console.log(scope);
+        // console.log(this.scope.$parent);
+        // console.log(this.scope.$parent.$parent);
+        // console.log(this.scope.$parent.$parent.$parent);
+
+        // this calls method from viewctrl, but for some reason dragula does seemingly the same but it doesn't call
+        // console.log(this.vctrl.scope.$eval("$ctrl.getName()"));
+
+        this.dragulaService.options(scope, this.getName(), {
+            direction: "horizontal",
+            copy: true,                        // elements are moved by default, not copied
+        });
+
+        scope.$on(`drag`, (e, el: JQuery) => {
+            console.log("raahataan sanaa " + el);
+        });
+        scope.$on(`${this.getName()}.drag`, (e, el: JQuery) => {
+            console.log("raahataan sanaa " + el);
+        });
+        scope.$on(`drop`, (e, el: JQuery) => {
+            console.log("dropzone " + el);
+        });
         this.addToCtrl();
     }
 
@@ -90,15 +123,34 @@ class DragController extends PluginBase<t.TypeOf<typeof DragMarkup>, t.TypeOf<ty
     }
 
     /**
-     * Returns the word as a string
-     * @returns {string} The word..
+     * Returns contained words separated with a comma
+     * @returns {string} The words..
      */
     getContent(): string {
         return this.words!.toString() || "No draggable words";
     }
 
+     /**
+     * Returns contained words as a string array
+     * @returns {string} The word..
+     */
+    getContentArray(): string[] {
+        return this.words!;
+    }
+
     setPluginWords(words: string []) {
-        this.words = words;
+        // shuffle algorithm from csparsons.ts
+        const result = words.slice();
+        const n = words.length;
+        for (let i = n - 1; i >= 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            const tmp = result[i];
+            result[i] = result[j];
+            result[j] = tmp;
+        }
+
+        this.words = result;
+        console.log("setPluginWords", this.words, this.getName());
     }
 
     async save() {
@@ -148,8 +200,8 @@ dragApp.component("dragRunner", {
     template: `
 <div>
     <div class="form-inline">
-     <div class="dropword" dragula-scope="$ctrl.vctrl.scope" dragula='"dropzone"' dragula-model='$ctrl.words'>
-        <span class="dragword"  ng-bind='item'  ng-repeat='item in $ctrl.words track by $index'>
+     <div class="dropword" dragula-scope="$ctrl.vctrl.scope" dragula="$ctrl.getName()" dragula-model='$ctrl.words'>
+        <span class="dragword"  ng-bind-html='item'  ng-repeat='item in $ctrl.words track by $index'>
         </span>
      </div>
     </div>
