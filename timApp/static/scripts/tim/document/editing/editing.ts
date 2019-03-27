@@ -2,10 +2,10 @@ import {IScope} from "angular";
 import $ from "jquery";
 import {markPageDirty} from "tim/util/utils";
 import {CURSOR} from "../../editor/BaseParEditor";
-import {IPluginInfoResponse, ParCompiler} from "../../editor/parCompiler";
+import {compileWithViewctrl, IPluginInfoResponse, ParCompiler} from "../../editor/parCompiler";
 import {openEditor, PareditorController} from "../../editor/pareditor";
 import {showMessageDialog} from "../../ui/dialog";
-import {$compile, $http, $window} from "../../util/ngimport";
+import {$compile, $http, $timeout, $window} from "../../util/ngimport";
 import {empty, isMobileDevice, to} from "../../util/utils";
 import {onClick} from "../eventhandlers";
 import {
@@ -19,7 +19,7 @@ import {
     getParId,
     getParIndex,
     getPars,
-    getRefAttrs,
+    getRefAttrs, isActionablePar, isHelpPar,
     isPreamble,
     isReference,
     isSettingsPar,
@@ -316,16 +316,50 @@ This will delete the whole ${options.area ? "area" : "paragraph"} from the docum
         this.viewctrl.editing = false;
     }
 
-    async editSettingsPars(recursiveCall: boolean) {
-        const pars: HTMLElement[] = [];
+    findSettingsPars() {
+        const pars = $(".par");
+        return pars.filter((index, elem) => {
+            const p = $(elem);
+            return isActionablePar(p) && isSettingsPar(p);
+        });
+    }
+
+    hasNonSettingsPars() {
+        let has = false;
         $(".par").each((index, elem) => {
-            if (isPreamble($(elem))) {
-                return;
-            }
-            if (getParAttributes($(elem)).hasOwnProperty("settings")) {
-                pars.push(elem);
+            const p = $(elem);
+            if (isActionablePar(p) && !isSettingsPar(p) && !isHelpPar(p)) {
+                has = true;
+                return false;
             }
         });
+        return has;
+    }
+
+    async insertHelpPar() {
+        await $timeout();
+        const spars = this.findSettingsPars();
+        const helpPar = $(`
+<div class="par"
+     id="HELP_PAR"
+     t=""
+     attrs="{}">
+    <div class="parContent">
+        <tim-help-par-content></tim-help-par-content>
+    </div>
+    <div class="editline" title="Click to edit this paragraph"></div>
+</div>
+`);
+        if (spars.length === 0) {
+            $("#pars").prepend(helpPar);
+        } else {
+            spars.last().after(helpPar);
+        }
+        compileWithViewctrl(helpPar, this.viewctrl.scope, this.viewctrl);
+    }
+
+    async editSettingsPars(recursiveCall: boolean = false) {
+        const pars = this.findSettingsPars();
         if (pars.length === 0) {
             if (recursiveCall) {
                 throw new Error("Faulty recursion stopped, there should be a settings paragraph already");
@@ -349,15 +383,15 @@ This will delete the whole ${options.area ? "area" : "paragraph"} from the docum
             this.addSavedParToDom(r.result.data, {type: EditType.AddBottom});
             this.editSettingsPars(true);
         } else if (pars.length === 1) {
-            this.toggleParEditor({type: EditType.Edit, pars: $(pars[0])}, {area: false});
+            this.toggleParEditor({type: EditType.Edit, pars: pars.first()}, {area: false});
         } else {
-            const start = pars[0];
-            const end = pars[pars.length - 1];
-            this.viewctrl.selection.start = $(start);
-            this.viewctrl.selection.end = $(end);
-            $(pars).addClass("selected");
-            this.toggleParEditor({type: EditType.Edit, pars: $(pars)}, {area: true});
-            $(pars).removeClass("selected");
+            const start = pars.first();
+            const end = pars.last();
+            this.viewctrl.selection.start = start;
+            this.viewctrl.selection.end = end;
+            pars.addClass("selected");
+            this.toggleParEditor({type: EditType.Edit, pars: pars}, {area: true});
+            pars.removeClass("selected");
             this.viewctrl.areaHandler.cancelArea();
         }
     }
@@ -556,7 +590,7 @@ This will delete the whole ${options.area ? "area" : "paragraph"} from the docum
                 {
                     func: (e: JQuery.Event, p: Paragraph) => this.viewctrl.notesHandler.showNoteWindow(e, p),
                     desc: "Comment/note",
-                    show: this.viewctrl.item.rights.can_comment,
+                    show: this.viewctrl.item.rights.can_comment && par && !isHelpPar(par),
                 },
                 {
                     func: (e, p) => {
@@ -584,7 +618,7 @@ This will delete the whole ${options.area ? "area" : "paragraph"} from the docum
                 {
                     func: (e: JQuery.Event, p: Paragraph) => this.viewctrl.clipboardHandler.copyPar(e, p),
                     desc: "Copy paragraph",
-                    show: $window.editMode !== "area",
+                    show: $window.editMode !== "area" && par && !isHelpPar(par),
                 },
                 // {func: (e, par) => this.cutArea(e, par), desc: 'Cut area', show: $window.editMode === 'area'},
                 // {func: (e, par) => this.copyArea(e, par), desc: 'Copy area', show: $window.editMode === 'area'},

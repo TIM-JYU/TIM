@@ -1,4 +1,4 @@
-import angular, {IController, IPromise, IScope, IDeferred} from "angular";
+import angular, {IController, IDeferred, IPromise, IScope} from "angular";
 import $ from "jquery";
 import moment from "moment";
 import ngs, {ngStorage} from "ngstorage";
@@ -26,16 +26,17 @@ import {showMessageDialog} from "../ui/dialog";
 import {IUser} from "../user/IUser";
 import {Users} from "../user/userService";
 import {$compile, $filter, $http, $interval, $localStorage, $q, $timeout, $window} from "../util/ngimport";
+import {AnnotationController} from "../velp/annotation";
 import {ReviewController} from "../velp/reviewController";
 import {EditingHandler} from "./editing/editing";
 import {PendingCollection} from "./editing/edittypes";
+import * as helpPar from "./editing/helpPar";
 import {onClick} from "./eventhandlers";
 import {PopupMenuController} from "./popupMenu";
 import {RefPopupHandler} from "./refpopup";
 import {MenuFunctionEntry} from "./viewutils";
-import {AnnotationController} from "../velp/annotation";
 
-markAsUsed(ngs, popupMenu, interceptor);
+markAsUsed(ngs, popupMenu, interceptor, helpPar);
 
 export interface IInsertDiffResult {
     type: "insert";
@@ -369,6 +370,7 @@ export class ViewCtrl implements IController {
         void this.checkIfTaggedAsCourse();
         void this.checkIfBookmarked();
         this.reviewCtrl.loadDocumentAnnotations();
+        this.editingHandler.insertHelpPar();
     }
 
     /**

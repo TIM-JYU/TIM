@@ -204,6 +204,10 @@ export function isPreamble(par: Paragraph) {
     return par.hasClass("preamble");
 }
 
+export function isHelpPar(par: Paragraph) {
+    return getParId(par) === "HELP_PAR";
+}
+
 export function getPreambleDocId(par: Paragraph) {
     return par.attr("data-from-preamble");
 }
