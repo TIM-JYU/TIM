@@ -31,6 +31,8 @@ def get_all_feedback_answers(task_ids: List[TaskId],
                              hide_names: bool,
                              printname: bool,
                              valid: str,
+                             answers: str,
+                             user: List[str],
                              period_from: datetime,
                              period_to: datetime):
     """
@@ -72,10 +74,10 @@ def get_all_feedback_answers(task_ids: List[TaskId],
     # makes q query an iterable qq for for-loop
     qq: Iterable[Tuple[Answer, User]] = q
 
-    return compile_csv(qq, printname, hide_names)  # results
+    return compile_csv(qq, printname, hide_names, answers, user)  # results
 
 
-def compile_csv(qq: Iterable[Tuple[Answer, User]], printname: bool, hide_names: bool):
+def compile_csv(qq: Iterable[Tuple[Answer, User]], printname: bool, hide_names: bool, answers: str, s_user: [str]):
     """
 
     :param qq: database data of answers
@@ -140,6 +142,7 @@ def compile_csv(qq: Iterable[Tuple[Answer, User]], printname: bool, hide_names: 
             results.append(result)
         cnt += 1
         """
+
         if prev_user != user:
             prev_user = None
             prev_ans = None
@@ -154,12 +157,30 @@ def compile_csv(qq: Iterable[Tuple[Answer, User]], printname: bool, hide_names: 
         p = Plugin.from_task_id(answer_task_id, user=get_current_user_object())
         ptype = p.type
 
-        if ptype == 'feedback':
+        # boolean to check whether to filter out current user by name
+        is_correct_user_s = False
+        if answers == 'selected':
+            is_correct_user_s = user.name == s_user[0]
+        elif answers == 'visible':
+            if user.name in s_user:
+                is_correct_user_s = True
+        else:
+            is_correct_user_s = True
+
+        # if plugin is feedback then record the data into report
+        if ptype == 'feedback' and is_correct_user_s:
             if not (prev_user in anons):
                 anons[prev_user] = f"user{cnt}"
                 cnt += 1
             anonuser = anons[prev_user]
             correct = json.loads(answer.content)['correct']
+
+            #if we need it in right/wrong format
+            if correct:
+                answer_result = 'right'
+            else:
+                answer_result = 'wrong'
+
             answer_content = json.loads(answer.content)['sentence']   # .get(prev_ans.content) #json.loads(prev_ans.content)
             feedback_content = json.loads(answer.content)['feedback']   # json.loads(answer.content)
 
@@ -178,14 +199,15 @@ def compile_csv(qq: Iterable[Tuple[Answer, User]], printname: bool, hide_names: 
             if exclude_first and pt_dt:   # IF-CONDITION temporary for the sake of excluding the first sample item
                 if printname and not hide_names:
                     results.append([prev_user.real_name,
-                                    shown_user,correct,
+                                    shown_user,
+                                    answer_result,
                                     answer_content,
                                     feedback_content,
                                     str(round(tasksecs, 1)),
                                     str(round(fbsecs, 1))])
                 else:
                     results.append([shown_user,
-                                correct,
+                                answer_result,
                                 answer_content,
                                 feedback_content,
                                 str(round(tasksecs, 1)),
@@ -216,6 +238,9 @@ def test(doc_path):
     fullname = False
     format = get_option(request, 'format', 'excel')
     validity = get_option(request, 'valid', 'all')
+    answers = get_option(request, 'answers', 'all')
+    user = get_option(request, 'user', 'none')
+    list_of_users = user.split(",")
 
     if name == 'anonymous':
         hidename = True
@@ -279,10 +304,13 @@ def test(doc_path):
             pass
 
     #get answers for the task ids with the proper parameters
-    answers = get_all_feedback_answers(task_ids, hidename, fullname, validity, period_from, period_to)
+    answers = get_all_feedback_answers(task_ids, hidename, fullname, validity, answers, list_of_users, period_from, period_to)
 
 
     # First returns empty, then from document nro1 and then document nro2 (change above if different)
+
+
+
     return csv_response(answers, dialect)
     """ return json_response({'answers0': answers0,
                           'answers1': answers1,
