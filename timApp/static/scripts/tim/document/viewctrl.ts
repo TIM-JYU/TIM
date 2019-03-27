@@ -38,10 +38,11 @@ markAsUsed(ngs, popupMenu, interceptor);
 export interface ITimComponent {
     getName: () => string | undefined;
     getContent: () => string;
+    getContentArray?: () => string[];
     getGroups: () => string[];
     belongsToGroup(group: string): boolean;
     save: () => Promise<string | undefined>;
-    getPar: () => Paragraph
+    getPar: () => Paragraph;
     setPluginWords?: (words: string[]) => void;
 }
 
