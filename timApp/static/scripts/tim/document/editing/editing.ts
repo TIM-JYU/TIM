@@ -364,11 +364,8 @@ This will delete the whole ${options.area ? "area" : "paragraph"} from the docum
             if (recursiveCall) {
                 throw new Error("Faulty recursion stopped, there should be a settings paragraph already");
             }
-            const first = $(".par:not(.preamble):first");
-            let parNext = getParId(first);
-            if (parNext === "HELP_PAR") {
-                parNext = undefined;
-            }
+            const first = $(".par:not(.preamble):not(#HELP_PAR):first");
+            const parNext = getParId(first);
 
             const r = await
                 to($http.post<IParResponse>("/newParagraph/", {
