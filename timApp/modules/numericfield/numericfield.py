@@ -84,8 +84,9 @@ class NumericfieldInputSchema(Schema):
 
     @validates('numericvalue')
     def validate_numericvalue(self, number):
-        if not number:
-            raise ValidationError('Syntax Error: Must be a number.')
+        pass
+        # if not number:
+        #     raise ValidationError('Syntax Error: Must be a number.')
 
     @post_load
     def make_obj(self, data):
