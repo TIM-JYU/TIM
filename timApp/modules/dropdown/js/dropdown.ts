@@ -19,6 +19,7 @@ const DropdownMarkup = t.intersection([
     t.type({
         // all withDefaults should come here; NOT in t.partial,
         instruction: withDefault(t.boolean, false),
+        radio: withDefault(t.boolean, false),
     }),
 ]);
 const DropdownAll = t.intersection([
@@ -99,10 +100,23 @@ class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.T
     }
 
     /**
-     * Sets the words visible in the plugin
+     * Sets the words visible in the plugin and randomizes their order
+     *
+     * @param words List of words to be shown in the plugin
      */
     setPluginWords(words: string[]) {
-        this.wordList = words;
+        // shuffle algorithm from csparsons.ts
+        const result = words.slice();
+        const n = words.length;
+        for (let i = n - 1; i >= 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            const tmp = result[i];
+            result[i] = result[j];
+            result[j] = tmp;
+        }
+
+        this.wordList = result;
+        this.selectedWord = "";
     }
 
     protected getAttributeType() {
@@ -125,7 +139,7 @@ dropdownApp.component("dropdownRunner", {
     <p ng-if="::$ctrl.stem">{{::$ctrl.stem}}</p>
     <div class="form-inline"><label><span>
         <select ng-model="$ctrl.selectedWord" ng-options="item for item in $ctrl.wordList">
-        </select>
+        </select>        
         </span></label>
     </div>
     <div ng-if="$ctrl.error" ng-bind-html="$ctrl.error"></div>
@@ -133,3 +147,8 @@ dropdownApp.component("dropdownRunner", {
 </div>
 `,
 });
+
+
+// <span ng-if="$ctrl.radio" ng-repeat="item in $ctrl.words">
+//         <input type="radio" name="radio" ng-value="item" ng-model="$ctrl.selectedWord">{{item}}
+//         </span>

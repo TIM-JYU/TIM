@@ -34,11 +34,13 @@ class DropdownStateSchema(Schema):
 class DropdownMarkupModel(GenericMarkupModel):
     words: Union[List[str], Missing] = missing
     instruction: Union[bool, Missing] = missing
+    radio: Union[bool, Missing] = missing
 
 
 class DropdownMarkupSchema(GenericMarkupSchema):
     words = fields.List(fields.Str)
     instruction = fields.Bool()
+    radio = fields.Bool()
 
     @post_load
     def make_obj(self, data):

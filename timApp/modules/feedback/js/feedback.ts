@@ -239,7 +239,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
     }
 
     async doSave(nosave: boolean, correct: boolean, sentence: string) {
-        this.error = "... saving ...";
+        //this.error = "... saving ...";
 
         this.result = undefined;
         const params = {
@@ -302,7 +302,6 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
         return true;
     }
 
-
     /**
      * Handles the checking of user's answer's correctness.
      *
@@ -311,40 +310,46 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
     async handleAnswer() {
         if (this.pluginMode === Mode.EndTask) {
             this.feedback = "The task has ended";
+            return;
         }
 
         if (this.pluginMode === Mode.Instruction) {
-            this.pluginMode = Mode.QuestionItem;
-            // For demonstration
-            this.showMode = "Question item paragraph, question " + this.index;
-            // TODO: instruction time saving here?
             const instructionQuestion = this.vctrl.getTimComponentByName(this.attrs.instructionID || "");
             if (this.attrs.instructionID && instructionQuestion) {
                 // TODO: need to use this in something?
                 const success = await this.savePlugin(instructionQuestion);
+                if (!success) {
+                    this.printFeedback("Please select a choice");
+                    return;
+                }
                 if (!this.teacherRight || this.attrs.teacherHide) {
                     this.hideComponent(instructionQuestion);
                 }
-
             }
+            this.printFeedback("");
+            this.pluginMode = Mode.QuestionItem;
+            // For demonstration
+            this.showMode = "Question item paragraph, question " + this.index;
             this.showBlock(this.index);
-
             return;
         }
 
         if (this.pluginMode === Mode.QuestionItem) {
+            //TODO: Is this actually ever triggered
             if (this.index > this.attrs.questionItems.length) {
                 this.printFeedback("No more question items, thanks for playing");
                 this.pluginMode = Mode.EndTask;
                 return;
             }
 
+            // Gets all the plugins from the visible question item and compares to choices-array to check which matches
             const selections = this.getAnswerFromPlugins();
             const matchIndex = this.compareChoices(this.index, selections);
 
             if (matchIndex === -1) {
                 this.error = "You have no choices defined, got no matches or using match objects";
             } else {
+                // Get the choice in matchIndex and the feedbacks assigned to it
                 const choice = this.attrs.questionItems[this.index].choices[matchIndex];
                 const feedbackLevels = choice.levels;
                 if (this.currentFeedbackLevel === feedbackLevels.length) {
@@ -363,13 +368,13 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
                     this.correctAnswer = false;
                     this.streak = 0;
                     this.pluginMode = Mode.Feedback;
-
                 }
             }
 
             const plugins = this.attrs.questionItems[this.index];
 
             if (!this.savePlugins(plugins)) {
+                this.error = "Error saving plugins";
                 return;
             }
 
@@ -381,7 +386,6 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
             return;
         }
 
-        // TODO: set the plugin words again so a choice is not visible when getting the same item again
         if (this.pluginMode === Mode.Feedback) {
             const success = this.save();
             if (!success) {
@@ -397,6 +401,8 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
                 this.pluginMode = Mode.EndTask;
                 return;
             }
+
+            this.setPluginWords();
             // For demonstration
             this.showMode = "Question item paragraph, question " + this.index;
             this.showBlock(this.index);
@@ -538,9 +544,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
 
     /**
      * Gets the user's answer from the visible question item this feedback-plugin is assigned to.
-     * TODO: Refactor, add a way to get the answer from the visible question item
      * TODO: Maybe add getting answers in an area and with regexp?
-     * TODO: Add some recursive stuff to go through p-elements and whatnot, low prio
      *
      * @returns(string[]) The user's selections to the question item
      */
