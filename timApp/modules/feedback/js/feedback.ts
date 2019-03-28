@@ -7,7 +7,6 @@ import {ITimComponent, ViewCtrl} from "tim/document/viewctrl";
 import {GenericPluginMarkup, nullable, PluginBase, withDefault, Info} from "tim/plugin/util";
 import {$http} from "tim/util/ngimport";
 import {to} from "tim/util/utils";
-import {number} from "../../../static/scripts/jspm_packages/npm/io-ts@1.4.1/lib";
 
 const feedbackApp = angular.module("feedbackApp", ["ngSanitize"]);
 export const moduleDefs = [feedbackApp];
@@ -99,6 +98,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
     private correctArray?: boolean[];
     private streak = 0;
     private teacherRight: boolean = false;
+    private feedbackMax = 0;
 
     $onInit() {
         super.$onInit();
@@ -111,6 +111,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
         if (!this.teacherRight || this.attrs.teacherHide) {
             this.hideQuestionItems();
         }
+        this.feedbackMax = this.checkFeedbackLevels();
     }
 
     /**
@@ -130,6 +131,29 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
 
     buttonText() {
         return "OK";
+    }
+
+    /**
+     * Checks that the question items have the same amount of feedbacklevels apart from the correct choice
+     *
+     * @returns{number} The maximum level of feedback
+     */
+    checkFeedbackLevels(): number {
+        const items = this.attrs.questionItems;
+        const levels: number[] = [];
+        for (const item of items) {
+            for (const choice of item.choices) {
+                if (!choice.correct) {
+                    levels.push(choice.levels.length);
+                }
+            }
+        }
+        for (let i = 1; i < levels.length; i++) {
+            if (levels[0] !== levels[i]) {
+                this.error = "Different number of feedback levels";
+            }
+        }
+        return levels[0];
     }
 
     /**
@@ -235,7 +259,8 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
             }
         }
         const sentence = this.getSentence(this.answerArray, values).toString().replace(/,/g, " ");
-        return this.doSave(false, this.correctAnswer, sentence);
+        const failure = await this.doSave(false, this.correctAnswer, sentence);
+        return failure;
     }
 
     async doSave(nosave: boolean, correct: boolean, sentence: string) {
@@ -248,6 +273,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
                 feedback: this.feedback,
                 correct: correct,
                 sentence: sentence,
+                id: Date.now(),
             },
         };
 
@@ -295,8 +321,8 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
      * @returns{boolean} Whether the saving was succesful
      */
     async savePlugin(plugin: ITimComponent) {
-        const success = await plugin.save();
-        if (success) {
+        const failure = await plugin.save();
+        if (failure) {
             return false;
         }
         return true;
@@ -329,7 +355,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
             this.printFeedback("");
             this.pluginMode = Mode.QuestionItem;
             // For demonstration
-            this.showMode = "Question item paragraph, question " + this.index;
+            this.showMode = "Question item paragraph, question " + (this.index + 1);
             this.showBlock(this.index);
             return;
         }
@@ -352,10 +378,6 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
                 // Get the choice in matchIndex and the feedbacks assigned to it
                 const choice = this.attrs.questionItems[this.index].choices[matchIndex];
                 const feedbackLevels = choice.levels;
-                if (this.currentFeedbackLevel === feedbackLevels.length) {
-                    this.pluginMode = Mode.EndTask;
-                    return;
-                }
                 if (choice.correct) {
                     // TODO: Do you want to make more than one correct feedback?
                     this.printFeedback(feedbackLevels[feedbackLevels.length - 1]);
@@ -364,6 +386,8 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
                     this.streak++;
                     this.pluginMode = Mode.Feedback;
                 } else {
+                    // TODO: put this somewhere else maybe, also problems if the choice numbers differ in question items
+                    this.feedbackMax = feedbackLevels.length;
                     this.printFeedback(feedbackLevels[this.currentFeedbackLevel++]);
                     this.correctAnswer = false;
                     this.streak = 0;
@@ -373,7 +397,8 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
 
             const plugins = this.attrs.questionItems[this.index];
 
-            if (!this.savePlugins(plugins)) {
+            const success = await this.savePlugins(plugins);
+            if (!success) {
                 this.error = "Error saving plugins";
                 return;
             }
@@ -387,24 +412,25 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
         }
 
         if (this.pluginMode === Mode.Feedback) {
-            const success = this.save();
-            if (!success) {
-                this.error = success;
+            const failure = await this.save();
+            if (failure) {
+                this.error = "Error saving plugin";
                 return;
             }
 
-            this.pluginMode = Mode.QuestionItem;
             this.printFeedback("");
 
             this.index = this.getRandomQuestion(this.correctArray || []);
-            if (this.index === -1 || this.streak === this.attrs.correctStreak) {
+            if (this.index === -1 || this.streak === this.attrs.correctStreak || this.currentFeedbackLevel === this.feedbackMax) {
                 this.pluginMode = Mode.EndTask;
                 return;
             }
 
             this.setPluginWords();
+
             // For demonstration
-            this.showMode = "Question item paragraph, question " + this.index;
+            this.showMode = "Question item paragraph, question " + (this.index + 1);
+            this.pluginMode = Mode.QuestionItem;
             this.showBlock(this.index);
             return;
         }
@@ -596,10 +622,22 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
                         if (name) {
                             let plugin = this.vctrl.getTimComponentByName(name);
                             if (plugin) {
-                                let content = plugin.getContent().trim();
-                                values[name] = content;
-                                this.userSelections.push(content);
-                                answer.push(name);
+                                if (plugin.getContentArray) {
+                                    let content = plugin.getContentArray();
+                                    let contentString = "";
+                                    for (const c of content) {
+                                        contentString = contentString + " " + c;
+                                    }
+                                    contentString = contentString.trim();
+                                    values[name] = contentString;
+                                    this.userSelections.push(contentString);
+                                    answer.push(name);
+                                } else {
+                                    let content = plugin.getContent().trim();
+                                    values[name] = content;
+                                    this.userSelections.push(content);
+                                    answer.push(name);
+                                }
                             }
                         }
                     }
@@ -677,7 +715,7 @@ feedbackApp.component("feedbackRunner", {
     },
     template: `
 <div class="csRunDiv no-popup-menu">
-    <tim-markup-error ng-if="::$ctrl.markupError" data="::$ctrl.markupError"></tim-markup-error>
+    <tim-markup-error ng-if="::$ctrl.markupError && !$ctrl.teacherRight" data="::$ctrl.markupError"></tim-markup-error>
     <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
     <p ng-if="::$ctrl.stem">{{::$ctrl.stem}}</p>
     <div>{{$ctrl.showMode}}</div>

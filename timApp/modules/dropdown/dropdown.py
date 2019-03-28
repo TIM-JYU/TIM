@@ -18,9 +18,11 @@ from pluginserver_flask import GenericMarkupModel, GenericMarkupSchema, GenericH
 @attr.s(auto_attribs=True)
 class DropdownStateModel:
     selectedWord: str
+    id: int
 
 class DropdownStateSchema(Schema):
     selectedWord = fields.Str(required=True)
+    id = fields.Int(required=True)
 
     @post_load
     def make_obj(self, data):
@@ -53,11 +55,13 @@ class DropdownMarkupSchema(GenericMarkupSchema):
 @attr.s(auto_attribs=True)
 class DropdownInputModel:
     selectedWord: str
+    id: int
     nosave: bool = missing
 
 
 class DropdownInputSchema(Schema):
     selectedWord = fields.Str(required=True)
+    id = fields.Int(required=True)
     nosave = fields.Bool()
 
     @validates('selectedWord')
@@ -157,11 +161,11 @@ def answer(args: DropdownAnswerModel):
     web = {}
     result = {'web': web}
     selectedword = args.input.selectedWord
-
+    id = args.input.id
     # plugin can ask not to save the word
     nosave = args.input.nosave
     if not nosave:
-        save = {"selectedWord": selectedword}
+        save = {"selectedWord": selectedword, "id": id}
         result["save"] = save
         web['result'] = "saved"
     else:

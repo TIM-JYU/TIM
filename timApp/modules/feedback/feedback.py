@@ -21,11 +21,13 @@ class FeedbackStateModel:
     correct: bool
     feedback: str
     sentence: str
+    id: int
 
 class FeedbackStateSchema(Schema):
     correct = fields.Bool(required=True)
     feedback = fields.Str(required=True)
     sentence = fields.Str(required=True)
+    id = fields.Int(required=True)
 
     @post_load
     def make_obj(self, data):
@@ -67,12 +69,14 @@ class FeedbackInputModel:
     correct: bool
     feedback: str
     sentence: str
+    id: int
     nosave: bool = missing
 
 class FeedbackInputSchema(Schema):
     correct = fields.Bool(required=True)
     feedback = fields.Str(required=True)
     sentence = fields.Str(required=True)
+    id = fields.Int(required=True)
     nosave = fields.Bool()
 
     @post_load
@@ -170,11 +174,12 @@ def answer(args: FeedbackAnswerModel):
     sentence = args.input.sentence
     feedback = args.input.feedback
     correct = args.input.correct
+    id = args.input.id
 
     # plugin can ask not to save the word
     nosave = args.input.nosave
     if not nosave:
-        save = {"sentence": sentence, "correct": correct, "feedback": feedback}
+        save = {"sentence": sentence, "correct": correct, "feedback": feedback, "id": id}
         result["save"] = save
         web['result'] = "saved"
 

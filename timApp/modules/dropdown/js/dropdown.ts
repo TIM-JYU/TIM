@@ -68,8 +68,8 @@ class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.T
      * TODO: whole sentence, selected option, plugin type?,
      */
     async save() {
-        const success = await this.doSave(this.attrs.instruction);
-        return success;
+        const failure = await this.doSave(this.attrs.instruction);
+        return failure;
     }
 
     async doSave(nosave: boolean) {
@@ -77,6 +77,7 @@ class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.T
             input: {
                 nosave: false,
                 selectedWord: this.selectedWord,
+                id: Date.now(),
             },
         };
 
@@ -134,12 +135,12 @@ dropdownApp.component("dropdownRunner", {
     },
     template: `
 <div>
-    <tim-markup-error ng-if="::$ctrl.markupError" data="::$ctrl.markupError"></tim-markup-error>
+    <tim-markup-error ng-if="::$ctrl.markupError && !$ctrl.teacherRight" data="::$ctrl.markupError"></tim-markup-error>
     <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
     <p ng-if="::$ctrl.stem">{{::$ctrl.stem}}</p>
     <div class="form-inline"><label><span>
         <select ng-model="$ctrl.selectedWord" ng-options="item for item in $ctrl.wordList">
-        </select>        
+        </select>
         </span></label>
     </div>
     <div ng-if="$ctrl.error" ng-bind-html="$ctrl.error"></div>
