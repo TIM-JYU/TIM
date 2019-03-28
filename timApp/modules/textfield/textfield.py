@@ -224,7 +224,7 @@ autosave: false #AUTOSAVE, POIS PÄÄLTÄ
                 'text': 'Plugins',
                 'items': [
                     {
-                        'text': 'Textfield:',
+                        'text': 'Textfield',
                         'items': [
                             {
                                 'data': templates[0].strip(),

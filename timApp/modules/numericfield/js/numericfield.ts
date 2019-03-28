@@ -208,6 +208,7 @@ numericfieldApp.component("numericfieldRunner", {
         <input type="number"
                style="width: {{::$ctrl.cols}}em"
                class="form-control"
+               ng-class="{'error': $ctrl.error != null}"
                ng-model="$ctrl.numericvalue"
                ng-blur="$ctrl.autoSave()"
                ng-keydown="$event.keyCode === 13 && $ctrl.saveText()"

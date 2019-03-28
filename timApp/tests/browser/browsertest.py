@@ -116,6 +116,10 @@ class BrowserTest(TimLiveServer, TimRouteTest):
         logs = self.drv.get_log("browser")
         pprint(logs)
 
+    """Added refresh functionality that is called in test_textfield_numericfield_multisave.py"""
+    def refresh(self):
+        self.drv.refresh()
+
     def save_screenshot(self, filename: str='screenshot'):
         """Saves the current browser screen to a PNG file in screenshots directory.
 

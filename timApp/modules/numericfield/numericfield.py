@@ -228,7 +228,7 @@ autosave: false #AUTOSAVE, POIS PÄÄLTÄ
                 'text': 'Plugins',
                 'items': [
                     {
-                        'text': 'Numericfield:',
+                        'text': 'Numericfield',
                         'items': [
                             {
                                 'data': templates[0].strip(),

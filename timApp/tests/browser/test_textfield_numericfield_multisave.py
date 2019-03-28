@@ -12,7 +12,7 @@ class TextfieldPluginTest(BrowserTest):
         self.login_test1()
         self.accept_consent()
         d = self.create_doc(initial_par="""
-#- {plugin=textfield #t1} 
+#- {plugin="textfield" #t1}
 cols: 7
 autosave: false
 #- {plugin=numericfield #t2}
@@ -20,38 +20,37 @@ cols: 7
 autosave: false
 #- {plugin=multisave #t3}
         """)
-        dt = self.create_translation(d)
-        dt.document.set_settings({
-            'global_plugin_attrs': {'all': {'lang': 'en'}},
-            # Hide the out-of-date decoration so we don't have to update the screenshot because of it.
-            'css': '.tr-outofdate::before { display: none; }',
-        })
-        self.goto_document(dt)
-        par = self.find_element_avoid_staleness('#t1')
-        ## self.wait_until_hidden('tim-plugin-loader')
 
-        self.wait_until_present('#t1 input')
+        self.goto_document(d)
+        par = self.find_element_avoid_staleness('#t1')
+
+        # self.wait_until_present('#t1 input') # maybe no?
         input = self.find_element_and_move_to('#t1 input')
-        # sleep(0.5)
         input.send_keys('Aku Ankka')
         self.wait_until_present('#t2 input')
         input2 = self.find_element_and_move_to('#t2 input')
         input2.send_keys('2.75')
         self.find_element('.breadcrumb .active').click()
-        par = self.find_element_avoid_staleness('#t3 > tim-plugin-loader > div') # maybe no?
-        self.assert_same_screenshot(par, ['textfield/numericfield_before_answer', 'textfield/numericfield_before_answer_alt'])
-        runbutton = par.find_element_by_name('button', self) # par.find_element_by_css_selector('button')
+        par = self.find_element_avoid_staleness('#pars') # maybe no?
+        self.save_element_screenshot(par, 'fields_before_answer') # is not needed once taken
+        self.assert_same_screenshot(par, ['textfield/fields_before_answer'])
+        runbutton = par.find_element_by_id('t3') # Find multisave element, defined here as #t3
+        sleep(3)
         runbutton.click()
-        self.wait(2)
-        self.refresh()
-        self.wait_until_present('#t1 input', '#t2 input')
-        self.assert_same_screenshot(par, 'textfield/numericfield_after_answer')
+        sleep(2)
+        self.save_screenshot('AAA')
+        self.refresh() # refresh is created in browsertext.py
+        sleep(2)
+        par = self.find_element_avoid_staleness('#pars') # recall for save screenshot
+        self.wait_until_present('#t1 input' and '#t2 input')
+        self.save_element_screenshot(par, 'fields_after_answer') # is not needed once taken (again)
+        self.assert_same_screenshot(par, ['textfield/fields_after_answer'])
 
         # post a second answer because otherwise clicking previous answer does not do anything
         input.send_keys(' ')
         input2.send_keys(' ')
         runbutton.click()
-        self.wait(2)
+        self.wait_until_present('#pars')
         self.refresh()
         self.wait_until_present('#t1 input', '#t2 input')
         self.assert_same_screenshot(par, 'textfield/numericfield_after_answer_switch')
