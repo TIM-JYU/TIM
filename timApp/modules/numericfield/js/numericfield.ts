@@ -152,6 +152,13 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
     }
 
     /**
+     * error() {
+     *   // DO MAKE THE INPUT GO BE RED!
+     * }
+     */
+
+
+    /**
      * Actual save method, called by different save alternatives implemented above.
      * @param true/false parameter boolean checker for the need to save
      */
@@ -208,7 +215,6 @@ numericfieldApp.component("numericfieldRunner", {
         <input type="number"
                style="width: {{::$ctrl.cols}}em"
                class="form-control"
-               ng-class="{'error': $ctrl.error != null}"
                ng-model="$ctrl.numericvalue"
                ng-blur="$ctrl.autoSave()"
                ng-keydown="$event.keyCode === 13 && $ctrl.saveText()"

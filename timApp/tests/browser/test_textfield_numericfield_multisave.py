@@ -3,7 +3,7 @@ from time import sleep
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions
 
-from timApp.tests.browser.browsertest import BrowserTest, PREV_ANSWER
+from timApp.tests.browser.browsertest import BrowserTest
 
 
 class TextfieldPluginTest(BrowserTest):
@@ -21,49 +21,54 @@ autosave: false
 #- {plugin=multisave #t3}
         """)
 
-        self.goto_document(d)
-        par = self.find_element_avoid_staleness('#t1')
+        # Test Case 1 - expected success in both fields after Save-button click and page refresh (= db get)
 
-        # self.wait_until_present('#t1 input') # maybe no?
+        self.goto_document(d)
+        self.wait_until_present('#t1 input')
         input = self.find_element_and_move_to('#t1 input')
         input.send_keys('Aku Ankka')
         self.wait_until_present('#t2 input')
         input2 = self.find_element_and_move_to('#t2 input')
         input2.send_keys('2.75')
         self.find_element('.breadcrumb .active').click()
-        par = self.find_element_avoid_staleness('#pars') # maybe no?
+        par = self.find_element_avoid_staleness('#pars')  # par for save screenshot
+        buttonPar = self.find_element_avoid_staleness('#t3 > tim-plugin-loader > div') # for button click
         self.save_element_screenshot(par, 'fields_before_answer') # is not needed once taken
         self.assert_same_screenshot(par, ['textfield/fields_before_answer'])
-        runbutton = par.find_element_by_id('t3') # Find multisave element, defined here as #t3
-        sleep(3)
+        runbutton = buttonPar.find_element_by_css_selector('button') # Find multisave button element
+        sleep(3) # sleep to ensure db put
         runbutton.click()
-        sleep(2)
-        self.save_screenshot('AAA')
+        sleep(2) # sleep to ensure db put
         self.refresh() # refresh is created in browsertext.py
-        sleep(2)
+        sleep(2) # sleep to ensure screenshot to match reload
         par = self.find_element_avoid_staleness('#pars') # recall for save screenshot
         self.wait_until_present('#t1 input' and '#t2 input')
         self.save_element_screenshot(par, 'fields_after_answer') # is not needed once taken (again)
         self.assert_same_screenshot(par, ['textfield/fields_after_answer'])
 
-        # post a second answer because otherwise clicking previous answer does not do anything
+
+        # Test Case 2 - expected previously saved value in numericField, as it refuses to save empty input
+
+        self.goto_document(d)
+        self.refresh()  # refresh is created in browsertext.py
+        sleep(2)  # sleep to ensure screenshot to match reload
+        self.wait_until_present('#t1 input')
+        input = self.find_element_and_move_to('#t1 input')
+        input.clear()
         input.send_keys(' ')
+        self.wait_until_present('#t2 input')
+        input2 = self.find_element_and_move_to('#t2 input')
+        input2.clear()
         input2.send_keys(' ')
+        self.find_element('.breadcrumb .active').click()
+        buttonPar = self.find_element_avoid_staleness('#t3 > tim-plugin-loader > div')
+        runbutton = buttonPar.find_element_by_css_selector('button') # Find multisave button element
+        sleep(3)  # sleep to ensure db put
         runbutton.click()
-        self.wait_until_present('#pars')
-        self.refresh()
-        self.wait_until_present('#t1 input', '#t2 input')
-        self.assert_same_screenshot(par, 'textfield/numericfield_after_answer_switch')
-        ## self.wait_until_hidden('.csRunError')  # this has the "...running..." text
-
-        ## self.wait_and_click(PREV_ANSWER)
-        ## self.wait_until_hidden('.console')
-        # Wait until answer is replaced in HTML
-        # self.wait.until(ec.staleness_of(par.find_element_by_css_selector('*')))
-        ## par = self.find_element('#py > tim-plugin-loader > div')
-
-        # Wait until the height workaround completes (see answerbrowser3.ts)
-        # self.wait.until(expected_conditions.presence_of_element_located((By.XPATH, "//*[@id='py'][@style='opacity: 1;']")))
-
-        # TODO: Why is this slightly different from python_before_answer ?
-        ## self.assert_same_screenshot(par, 'csplugin/python_after_answer_switch')
+        sleep(2)  # sleep to ensure db put
+        self.refresh()  # refresh is created in browsertext.py
+        sleep(2)  # sleep to ensure screenshot to match reload
+        par = self.find_element_avoid_staleness('#pars')  # recall for save screenshot
+        self.wait_until_present('#t1 input' and '#t2 input')
+        self.save_element_screenshot(par, 'fields_after_answer_switch')  # is not needed once taken (again)
+        self.assert_same_screenshot(par, ['textfield/fields_after_answer_switch'])
