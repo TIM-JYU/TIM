@@ -1574,3 +1574,10 @@ initword: a""")
             expect_content='Plugin paragraph not found: yyy',
             json_key='error',
         )
+
+    def test_plugin_empty_markup(self):
+        self.login_test1()
+        d = self.create_doc(initial_par="""
+``` {plugin=pali #t}
+```""")
+        self.assert_content(self.get(d.url, as_tree=True), [''])

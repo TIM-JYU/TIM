@@ -243,7 +243,7 @@ class PluginPlacement:
                     par=block,
                 )
                 plugs[p_range] = plug
-        if not md:
+        if md is None:
             # Can happen if inline plugin block has no plugins.
             md = block.get_expanded_markdown(macroinfo)
         for p in plugs.values():
