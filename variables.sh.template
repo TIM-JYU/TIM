@@ -19,6 +19,7 @@ export TEXTFIELD_DEV_COMMAND=./startAll.sh     # Same as above but for textfield
 export NUMERICFIELD_DEV_COMMAND=./startAll.sh    # Same as above but for savearea plugin
 export OMAPLUGIN_DEV_COMMAND=./startAll.sh     # Same as above but for pali plugin
 export MULTISAVE_DEV_COMMAND=./startAll.sh     # Same as above but for pali plugin
+export JSRUNNER_DEV_COMMAND=./startAll.sh     # Same as above but for jsrunner plugin
 export IMAGEX_DEV_COMMAND=./startAll.sh        # Same as above but for imagex plugin
 export IS_DEVELOPMENT=false                    # Whether this is a local development instance (needed for e.g. PyCharm)
 export CONFIG_FILE=''                          # Location of config file to use; OK to be empty when running locally;

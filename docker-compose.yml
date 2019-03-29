@@ -143,6 +143,14 @@ services:
    PYTHONPATH: /multisave:/py:/usr/local/lib/python3.6/dist-packages
   command: ./startAll.sh
   restart: unless-stopped
+ jsrunner:
+  image: timimages/tim:${TIM_IMAGE_TAG}
+  #build: ./timApp/modules/multisave
+  volumes:
+   - ./timApp/modules/jsrunner:/jsrunner:ro
+  working_dir: /jsrunner
+  command: ./startAll.sh
+  restart: unless-stopped
  uploader:
   image: villet/uploaderplugin:13_10_16_15
   command: ${UPLOADER_COMMAND}

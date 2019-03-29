@@ -85,6 +85,12 @@ def points_to_float(points: Union[str, float]):
     return points
 
 
+def get_fields_and_users(values, d: DocInfo):
+    print(values)
+    values.get('fields')
+    return {}  # TODO
+
+
 @answers.route("/<plugintype>/<task_id_ext>/answer/", methods=['PUT'])
 def post_answer(plugintype: str, task_id_ext: str):
     """Saves the answer submitted by user for a plugin in the database.
@@ -203,6 +209,9 @@ def post_answer(plugintype: str, task_id_ext: str):
 
     # Get the newest answer (state). Only for logged in users.
     state = try_load_json(old_answers[0].content) if logged_in() and len(old_answers) > 0 else None
+
+    if plugin.type == 'jsrunner':
+        answerdata['data'] = get_fields_and_users(plugin.values, d)
 
     answer_call_data = {'markup': plugin.values,
                         'state': state,

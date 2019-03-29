@@ -29,6 +29,7 @@ TEXTFIELDPLUGIN_NAME = 'textfield'
 NUMERICFIELDPLUGIN_NAME = 'numericfield'
 OMAPLUGINPLUGIN_NAME = 'omaplugin'
 MULTISAVEPLUGIN_NAME = 'multisave'
+JSRUNNERPLUGIN_NAME = 'jsrunner'
 IMAGEXPLUGIN_NAME = 'imagex'
 MARKUP = 'markup'
 REGEXATTRS = 'regexattrs'
@@ -72,6 +73,7 @@ def get_plugins():
             "numericfield": {"host": "http://" + NUMERICFIELDPLUGIN_NAME + ":5000/"},
             "omaplugin": {"host": "http://" + OMAPLUGINPLUGIN_NAME + ":5000/"},
             "multisave": {"host": "http://" + MULTISAVEPLUGIN_NAME + ":5000/"},
+            "jsrunner": {"host": "http://" + JSRUNNERPLUGIN_NAME + ":5000/"},
             "imagex": {"host": "http://" + IMAGEXPLUGIN_NAME + ":5000/"},
             "qst": {"host": "http://" + "localhost" + f":{current_app.config['QST_PLUGIN_PORT']}/qst/", REGEXATTRS: QSTMDATTRS, AUTOMDATTRS: True},
             "timTable": {"host": "http://" + "localhost" + f":{current_app.config['QST_PLUGIN_PORT']}/timTable/", "instance": timTable.TimTable(), 'lazy': False},

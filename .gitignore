@@ -49,6 +49,7 @@ dist/
 dist_*/
 log.txt
 MIRToolbox/
+node_modules/
 pg_backup
 redate-settings
 temp
