@@ -46,7 +46,7 @@ class BrowserTest(TimLiveServer, TimRouteTest):
         self.skip_screenshot_tests = False
 
     def get_screenshot_tolerance(self) -> float:
-        return 0.001
+        return 0.1
 
     def setUp(self):
         TimLiveServer.setUp(self)
@@ -115,6 +115,10 @@ class BrowserTest(TimLiveServer, TimRouteTest):
     def print_console(self):
         logs = self.drv.get_log("browser")
         pprint(logs)
+
+    """Added refresh functionality that is called in test_textfield_numericfield_multisave.py"""
+    def refresh(self):
+        self.drv.refresh()
 
     def save_screenshot(self, filename: str='screenshot'):
         """Saves the current browser screen to a PNG file in screenshots directory.

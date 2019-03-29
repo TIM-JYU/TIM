@@ -121,6 +121,8 @@ services:
   working_dir: /numericfield
   environment:
    PYTHONPATH: /numericfield:/py:/usr/local/lib/python3.6/dist-packages
+  command: ./startAll.sh
+  restart: unless-stopped
  omaplugin:
    image: timimages/tim:${TIM_IMAGE_TAG}
    #build: ./timApp/modules/omaplugin

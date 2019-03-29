@@ -11,7 +11,7 @@ export interface IPluginInfoResponse {
     trdiff?: {old: string, new: string};
 }
 
-export function compileWithViewctrl(html: string | Element,
+export function compileWithViewctrl(html: string | Element | JQuery<HTMLElement>,
                                     scope: IScope,
                                     view: ViewCtrl | undefined,
                                     extraCtrls: {[name: string]: {instance: unknown}} = {}) {
@@ -20,7 +20,6 @@ export function compileWithViewctrl(html: string | Element,
         view ? {
             transcludeControllers: {
                 timView: {instance: view},
-                timReview: {instance: view.reviewCtrlScope!.$ctrl},
                 ...extraCtrls,
             },
         } : {});

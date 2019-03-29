@@ -522,9 +522,11 @@ def maybe_get_plugin_from_par(p: DocParagraph, task_id: TaskId, u: User) -> Opti
 
 
 def find_plugin_from_document(d: Document, task_id: TaskId, u: User):
+    used_hint = False
     with d.__iter__() as it:
         for p in it:
             if task_id.block_id_hint and p.get_id() != task_id.block_id_hint:
+                used_hint = True
                 continue
             if p.is_reference():
                 try:
@@ -540,7 +542,10 @@ def find_plugin_from_document(d: Document, task_id: TaskId, u: User):
             if plug:
                 return plug
 
-    raise TimDbException(f'Task not found in the document: {task_id.task_name}')
+    err_msg = f'Task not found in the document: {task_id.task_name}'
+    if used_hint:
+        err_msg += ' (potentially because of wrong block id hint)'
+    raise PluginException(err_msg)
 
 
 class InlinePlugin(Plugin):

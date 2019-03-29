@@ -201,7 +201,6 @@ header: #OTSIKKO, TYHJÄ = EI OTSIKKOA
 stem: #KYSYMYS, TYHJÄ = EI KYSYMYSTÄ
 inputstem: #VASTAUS, TYHJÄ = EI VASTAUSTA
 followid: #SEURANTAID, TYHJÄ = EI SEURANTAID:tä
-fields: #KENTTÄVIITTAUKSET, TYHJÄ = EI VIITTAUKSIA
 needed_len: 1 #MINIMIPITUUS, NUMERAALINEN 
 initword: #ALKUARVO, TYHJÄ = EI ALKUARVOA
 buttonText: Save #PAINIKKEEN NIMI, TYHJÄ = EI PAINIKETTA
@@ -210,7 +209,6 @@ autosave: false #AUTOSAVE, POIS PÄÄLTÄ
 ```""", """
 ``` {#label plugin="textfield" readonly=view}
 followid: #SEURANTAID, TYHJÄ = EI SEURANTAID:tä
-fields: #KENTTÄVIITTAUKSET, TYHJÄ = EI VIITTAUKSIA
 needed_len: 1 #MINIMIPITUUS, NUMERAALINEN 
 initword: #ALKUARVO, TYHJÄ = EI ALKUARVOA
 cols: 1 #KENTÄN KOKO, NUMERAALINEN
@@ -226,7 +224,7 @@ autosave: false #AUTOSAVE, POIS PÄÄLTÄ
                 'text': 'Plugins',
                 'items': [
                     {
-                        'text': 'Textfield:',
+                        'text': 'Textfield',
                         'items': [
                             {
                                 'data': templates[0].strip(),

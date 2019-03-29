@@ -11,6 +11,9 @@ from timApp.user.usergroup import UserGroup
 from timApp.user.userutils import create_password_hash
 
 
+test_pw = 'somepwd123'
+
+
 class TestSignUp(TimRouteTest):
     def setUp(self):
         super().setUp()
@@ -31,8 +34,8 @@ class TestSignUp(TimRouteTest):
             {'realname': 'Testing Signup',
              'email': email,
              'token': test_pws[-1],
-             'password': 'somepwd',
-             'passconfirm': 'somepwd'},
+             'password': test_pw,
+             'passconfirm': test_pw},
             expect_contains='registered',
             json_key='status')
         self.assertEqual(NewUser.query.with_entities(NewUser.email).all(), [])
@@ -44,8 +47,8 @@ class TestSignUp(TimRouteTest):
             {'realname': 'Testing Signup',
              'token': test_pws[-1],
              'email': email,
-             'password': 'somepwd',
-             'passconfirm': 'somepwd'},
+             'password': test_pw,
+             'passconfirm': test_pw},
             expect_contains='Wrong temporary password. Please re-check your email to see the password.',
             expect_status=400,
             json_key='error')
@@ -58,8 +61,8 @@ class TestSignUp(TimRouteTest):
             {'realname': 'Testing Signup2',
              'email': email,
              'token': test_pws[-1],
-             'password': 'somepwd',
-             'passconfirm': 'somepwd'},
+             'password': test_pw,
+             'passconfirm': test_pw},
             expect_contains='updated',
             json_key='status')
         self.assertEqual('Testing Signup2', self.current_user.real_name)
@@ -74,8 +77,8 @@ class TestSignUp(TimRouteTest):
             {'realname': 'Testing Signup',
              'email': email,
              'token': test_pws[-1],
-             'password': 'somepwd',
-             'passconfirm': 'somepwd2'},
+             'password': test_pw,
+             'passconfirm': 'somepwd1232'},
             expect_contains='Passwords do not match.',
             json_key='error',
             expect_status=400)
@@ -93,7 +96,7 @@ class TestSignUp(TimRouteTest):
              'token': test_pws[-1],
              'password': 'test',
              'passconfirm': 'test'},
-            expect_contains='A password should contain at least six characters.',
+            expect_contains='A password should contain at least 10 characters.',
             json_key='error',
             expect_status=400,
         )
@@ -109,8 +112,8 @@ class TestSignUp(TimRouteTest):
             {'realname': 'Testing Signup',
              'email': email,
              'token': 'asdasd',
-             'password': 'somepwd',
-             'passconfirm': 'somepwd'},
+             'password': test_pw,
+             'passconfirm': test_pw},
             expect_contains='Wrong temporary password. Please re-check your email to see the password.',
             json_key='error',
             expect_status=400,
@@ -219,7 +222,7 @@ class TestSignUp(TimRouteTest):
         self.json_post(
             '/altsignup',
             {'email': curr_email})
-        pw = 'somepwd'
+        pw = test_pw
         self.json_post(
             '/altsignup2',
             {'realname': 'Johnny John',
@@ -281,7 +284,7 @@ class TestSignUp(TimRouteTest):
         self.json_post(
             '/altsignup',
             {'email': curr_name})
-        pw = 'somepwd'
+        pw = test_pw
         self.json_post(
             '/altsignup2',
             {'realname': 'Johnny John',

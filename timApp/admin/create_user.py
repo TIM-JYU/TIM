@@ -23,7 +23,12 @@ def query_admin():
         email = input("Email: ")
         password = input("Password: ")
 
-        User.create_with_group(email, realname, email, password, is_admin=True)
+        print('Add created user to the administrators?')
+        yesno = input('y/n: ')
+        isadmin = False
+        if yesno == 'y':
+            isadmin = True
+        User.create_with_group(email, realname, email, password, is_admin=isadmin)
 
         print('UserAccount ', email, " created")
         print('Use ', email, " and password you entered to login.")

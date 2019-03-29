@@ -6,7 +6,7 @@ import * as t from "io-ts";
 import {ITimComponent, ViewCtrl} from "tim/document/viewctrl"
 import {GenericPluginMarkup, Info, nullable, PluginBase, withDefault} from "tim/plugin/util";
 import {$http} from "tim/util/ngimport";
-import {to} from "tim/util/utils";
+import {to, valueOr} from "tim/util/utils";
 import {valueDefu} from "tim/util/utils"; //tarvitaan reset-metodille, jos halutaan toteuttaa
 
 const numericfieldApp = angular.module("numericfieldApp", ["ngSanitize"]);
@@ -63,7 +63,7 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
      */
     $onInit() {
         super.$onInit();
-        this.numericvalue = this.attrsall.numericvalue || this.attrs.initnumber || undefined;
+        this.numericvalue = valueOr(this.attrsall.numericvalue, this.attrs.initnumber || undefined);
         this.modelOpts = {debounce: this.autoupdate};
         this.vctrl.addTimComponent(this);
     }
@@ -148,9 +148,15 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
      * Unused method warning is suppressed, as the method is only called in template.
      */
     autoSave() {
-        if (this.attrs.autosave == false) return;
-        this.doSaveText(false);
+        if (this.attrs.autosave) this.doSaveText(false);
     }
+
+    /**
+     * error() {
+     *   // DO MAKE THE INPUT GO BE RED!
+     * }
+     */
+
 
     /**
      * Actual save method, called by different save alternatives implemented above.
@@ -210,6 +216,7 @@ numericfieldApp.component("numericfieldRunner", {
                style="width: {{::$ctrl.cols}}em"
                class="form-control"
                ng-model="$ctrl.numericvalue"
+               ng-model-options="{ debounce: {'blur': 0} } "
                ng-blur="$ctrl.autoSave()"
                ng-keydown="$event.keyCode === 13 && $ctrl.saveText()"
                ng-model-options="::$ctrl.modelOpts"

@@ -53,7 +53,7 @@
                 </div>
 
                 <button class="timButton margin-4"
-                        ng-click="$ctrl.openCreateNewVelpWindow(newVelp)"
+                        ng-click="$ctrl.openCreateNewVelpWindow()"
                         value="">Create new velp</button>
 
                 <div save="%%PAGEID%%selectVelpsDiv"
@@ -63,13 +63,12 @@
                      resize="true"
                      caption="Available velps">
                     <div class="velp-stack draggable-content">
-                        <velp-window id="newVelp"
-                                     class="velp" ng-style="{top: 0}"
+                        <velp-window class="velp" ng-style="{top: 0}"
                                      ng-show="$ctrl.newVelp.edit"
                                      velp="$ctrl.newVelp"
                                      index="-1"
                                      velp-groups="$ctrl.velpGroups"
-                                     teacher-right="$ctrl.teacherRight"
+                                     teacher-right="$ctrl.vctrl.item.rights.teacher"
                                      labels="$ctrl.labels"
                                      new="true"
                                      advanced-on="$ctrl.advancedOn"></velp-window>
@@ -82,7 +81,7 @@
                                 labels="$ctrl.labels"
                                 new="false"
                                 on-velp-select="$ctrl.rctrl.useVelp($VELP)"
-                                teacher-right="$ctrl.teacherRight"
+                                teacher-right="$ctrl.vctrl.item.rights.teacher"
                                 velp-groups="$ctrl.velpGroups"
                                 velp="velp"></velp-window>
                     </div>
@@ -115,9 +114,9 @@
                                                                             ng-model="$ctrl.settings.selectedAllShows"
                                                                             ng-change="$ctrl.changeAllVelpGroupSelections('show')">Show</label>
                                 </th>
-                                <th><label ng-class="['comment-info', 'small', {disabled: !$ctrl.rctrl.vctrl.item.rights.manage}]"><input type="checkbox"
+                                <th><label ng-class="['comment-info', 'small', {disabled: !$ctrl.vctrl.item.rights.manage}]"><input type="checkbox"
                                                                             ng-model="$ctrl.settings.selectedAllDefault"
-                                                                            ng-disabled="!$ctrl.rctrl.vctrl.item.rights.manage"
+                                                                            ng-disabled="!$ctrl.vctrl.item.rights.manage"
                                                                             ng-change="$ctrl.changeAllVelpGroupSelections('default')">Default</label>
                                 </th>
                                 <th><span class="small">Velp group</span></th>
@@ -129,7 +128,7 @@
                                            ng-change="$ctrl.changeVelpGroupSelection(group, 'show')">
                                 </td>
                                 <td>
-                                    <input type="checkbox" ng-model="group.default" ng-disabled="!$ctrl.rctrl.vctrl.item.rights.manage"
+                                    <input type="checkbox" ng-model="group.default" ng-disabled="!$ctrl.vctrl.item.rights.manage"
                                            ng-change="$ctrl.changeVelpGroupSelection(group, 'default')">
                                 </td>
                                 <td>
@@ -152,9 +151,9 @@
                                       ng-value="0" checked="checked"> <label for="radioPar">Personal
                                 collection</label><br>
                                 <input type="radio" name="group1" ng-model="$ctrl.newVelpGroup.target_type" id="radioDoc"
-                                       ng-value="1" ng-disabled="!$ctrl.rctrl.vctrl.item.rights.editable"> <label for="radioDoc" ng-class="{'disabled':!$ctrl.rctrl.vctrl.item.rights.editable}">Document</label><br>
+                                       ng-value="1" ng-disabled="!$ctrl.vctrl.item.rights.editable"> <label for="radioDoc" ng-class="{'disabled':!$ctrl.vctrl.item.rights.editable}">Document</label><br>
                                 <input type="radio" name="group1" ng-model="$ctrl.newVelpGroup.target_type" id="radioFolder"
-                                       ng-value="2" ng-disabled="!$ctrl.rctrl.vctrl.item.rights.editable"> <label for="radioFolder" ng-class="{'disabled':!$ctrl.rctrl.vctrl.item.rights.editable}">Folder</label></p>
+                                       ng-value="2" ng-disabled="!$ctrl.vctrl.item.rights.editable"> <label for="radioFolder" ng-class="{'disabled':!$ctrl.vctrl.item.rights.editable}">Folder</label></p>
                         </fieldset>
 
                         <p><input type="submit" class="timButton" value="Create velp group"></p>
@@ -172,7 +171,7 @@
             <velp-summary
                     annotations="$ctrl.rctrl.annotations"
                     toggle-annotation="$ctrl.rctrl.toggleAnnotation($ANNOTATION, true)"
-                    selected-user="$ctrl.rctrl.vctrl.selectedUser"
+                    selected-user="$ctrl.vctrl.selectedUser"
             >
             </velp-summary>
         </uib-tab>

@@ -118,13 +118,15 @@ app = create_app(__name__, MultisaveHtmlSchema())
 @app.route('/reqs')
 def reqs():
     templates = ["""
-``` {#ekamultisave plugin="multisave"}
-fields:
- - 
+``` {plugin="multisave"}
 ```""", """
-``` {#tokamultisave plugin="multisave"}
+``` {plugin="multisave"}
 areas:
- - 
+- 
+```""", """
+``` {plugin="multisave"}
+fields:
+- 
 ```"""]
     return jsonify({
         "js": ["js/build/multisave.js"],
@@ -135,17 +137,22 @@ areas:
                 'text': 'Plugins',
                 'items': [
                     {
-                        'text': 'multisave',
+                        'text': 'Multisave',
                         'items': [
                             {
                                 'data': templates[0].strip(),
-                                'text': 'Multisave for specific IDs',
-                                'expl': 'Multisave for specific IDs',
+                                'text': 'Multisave for entire document',
+                                'expl': 'Multisave for entire document',
                             },
                             {
                                 'data': templates[1].strip(),
                                 'text': 'Multisave for areas',
                                 'expl': 'Multisave for areas',
+                            },
+                            {
+                                'data': templates[2].strip(),
+                                'text': 'Multisave for specific IDs',
+                                'expl': 'Multisave for specific IDs',
                             },
                         ],
                     },

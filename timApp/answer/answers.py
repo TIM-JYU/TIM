@@ -16,6 +16,7 @@ from timApp.plugin.taskid import TaskId
 from timApp.timdb.sqa import db
 from timApp.timdb.timdbbase import TimDbBase
 from timApp.user.user import Consent, User
+from timApp.user.usergroup import UserGroup
 from timApp.velp.velp_models import Annotation
 
 
@@ -49,7 +50,8 @@ class Answers(TimDbBase):
             a.last_points_modifier = points_given_by
             return None
 
-        a = Answer(task_id=task_id.doc_task, content=content, points=points, valid=valid, last_points_modifier=points_given_by)
+        a = Answer(task_id=task_id.doc_task, content=content, points=points, valid=valid,
+                   last_points_modifier=points_given_by)
         self.session.add(a)
         self.session.flush()
         answer_id = a.id
@@ -233,7 +235,8 @@ class Answers(TimDbBase):
         main = main.options(selectinload(User.groups))
 
         task_sum = func.round(func.sum(tmp.c.points).cast(Numeric), 4).cast(Float).label('task_points')
-        velp_sum = func.round(func.coalesce(func.sum(tmp.c.velp_points).cast(Numeric), 0), 4).cast(Float).label('velp_points')
+        velp_sum = func.round(func.coalesce(func.sum(tmp.c.velp_points).cast(Numeric), 0), 4).cast(Float).label(
+            'velp_points')
 
         main = main.with_entities(
             User,
@@ -327,3 +330,29 @@ class Answers(TimDbBase):
                 result_list.append(row)
             return result_list
         return result
+
+
+def add_missing_users_from_group(result: List, usergroup: UserGroup):
+    users = set(usergroup.users.all())
+    existing_users = set()
+    for d in result:
+        existing_users.add(d['user'])
+
+    missing = users - existing_users
+
+    for d in missing:
+        result.append({'task_count': 0,
+                       'task_points': None,
+                       'velp_points': 0.0,
+                       'total_points': None,
+                       'velped_task_count': 0,
+                       'user': d,
+                       'id': d.id,
+                       'name': d.name,
+                       'real_name': d.real_name,
+                       'email': d.email})
+
+    # {'task_count': 1, 'task_points': None, 'velp_points': 0.0, 'total_points': None, 'velped_task_count': 0,
+    # 'user': <User 6>, 'id': 6, 'name': 'testiuser@testi.fi', 'real_name': 'Testi User', 'email': 'testiuser@testi.fi'}
+
+    return result

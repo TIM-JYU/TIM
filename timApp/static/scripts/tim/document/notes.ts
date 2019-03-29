@@ -2,7 +2,7 @@ import {IScope} from "angular";
 import $ from "jquery";
 import {Moment} from "moment";
 import {IPluginInfoResponse} from "../editor/parCompiler";
-import {IEditorResult, openEditor} from "../editor/pareditor";
+import {IEditorResult, openEditor, PareditorController} from "../editor/pareditor";
 import {IModalInstance, showMessageDialog} from "../ui/dialog";
 import {$compile, $http, $timeout, $window} from "../util/ngimport";
 import {getElementParent, isMobileDevice, to} from "../util/utils";
@@ -36,7 +36,7 @@ export class NotesHandler {
     public viewctrl: ViewCtrl;
     public noteBadgePar: JQuery | undefined;
     public noteBadge: HTMLElement | undefined;
-    private editorInstance?: IModalInstance<IEditorResult>;
+    private editorInstance?: IModalInstance<PareditorController>;
 
     constructor(sc: IScope, view: ViewCtrl) {
         this.sc = sc;
@@ -167,7 +167,6 @@ export class NotesHandler {
 
     /**
      * Creates the note badge button (the button with letter 'C' on it).
-     * @method createNoteBadge
      * @param par - Element where the badge needs to be attached
      */
     createNoteBadge(par: Paragraph) {
@@ -218,7 +217,6 @@ export class NotesHandler {
 
     /**
      * Moves the note badge to the correct element.
-     * @method updateNoteBadge
      * @param par - Element where the badge needs to be attached
      */
     updateNoteBadge(par: Paragraph) {
@@ -242,8 +240,7 @@ export class NotesHandler {
     clearNoteBadge(e: Event) {
         const btn = this.noteBadge;
         if (btn) {
-            const parent = getElementParent(btn);
-            if (parent) { parent.removeChild(btn); }
+            $(btn).remove();
         }
 
         if (e != null) {

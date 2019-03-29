@@ -12,21 +12,19 @@
 import {IController, IRootElementService, IScope} from "angular";
 import {timApp} from "tim/app";
 import * as focusme from "tim/ui/focusMe";
+import {ViewCtrl} from "../document/viewctrl";
+import {DestroyScope} from "../ui/destroyScope";
 import {showMessageDialog} from "../ui/dialog";
 import {IUser} from "../user/IUser";
+import {KEY_CTRL, KEY_ENTER} from "../util/keycodes";
 import {$http} from "../util/ngimport";
-import {Binding, markAsUsed, Require} from "../util/utils";
-import {ReviewController} from "./reviewController";
+import {Binding, isInViewport, markAsUsed, Require, scrollToElement} from "../util/utils";
 import {IAnnotationCoordless} from "./velptypes";
-import {KEY_ENTER} from "../util/keycodes";
-
-const UNDEFINED = "undefined";
 
 markAsUsed(focusme);
 
-export class AnnotationController implements IController {
+export class AnnotationController extends DestroyScope implements IController {
     private static $inject = ["$scope", "$element"];
-    private ctrlKey: number;
     private ctrlDown: boolean;
     private visible_options!: {
         type: string; value: number; title: string;
@@ -51,13 +49,14 @@ export class AnnotationController implements IController {
         doc_id: number | null
     }; // $onInit
     private velp!: Binding<string, "@">;
-    private rctrl!: Require<ReviewController>;
+    private vctrl!: Require<ViewCtrl>;
     private annotationdata!: Binding<string, "@">;
-    private annotation!: IAnnotationCoordless; // $onInit
+    public annotation!: IAnnotationCoordless; // $onInit
+    private prefix = "x";
 
-    constructor(private scope: IScope, private element: IRootElementService) {
+    constructor(private scope: IScope, public element: IRootElementService) {
+        super(scope, element);
         this.ctrlDown = false;
-        this.ctrlKey = 17;
         this.newcomment = "";
         this.isvalid = {
             points: {value: true, msg: ""},
@@ -67,6 +66,14 @@ export class AnnotationController implements IController {
     setShowFull(v: boolean) {
         this.showFull = v;
         this.focus = v;
+    }
+
+    $onDestroy() {
+        this.vctrl.unRegisterAnnotation(this);
+    }
+
+    getKeyPrefix() {
+        return this.prefix;
     }
 
     $onInit() {
@@ -98,6 +105,10 @@ export class AnnotationController implements IController {
             comment: "", // this.newcomment,
             aid: this.annotation.id,
         };
+        const e = this.element;
+        const isInMargin = e.parent().hasClass("notes") && e.parent().parent().hasClass("par");
+        this.prefix = isInMargin ? "m" : "t"; // as in "margin" or "text"
+        this.vctrl.registerAnnotation(this);
     }
 
     $postLink() {
@@ -134,9 +145,12 @@ export class AnnotationController implements IController {
         }, 0);
     }
 
+    get rctrl() {
+        return this.vctrl.reviewCtrl;
+    }
+
     /**
      * Toggles the visibility of the annotation.
-     * @method toggleAnnotation
      */
     toggleAnnotation() {
         if (this.velpElement.parentElement == null) {
@@ -144,7 +158,7 @@ export class AnnotationController implements IController {
         }
         const a = this.rctrl.getAnnotationById(this.annotation.id);
         if (!a) {
-            showMessageDialog(`Could not annotation with id ${this.annotation.id}`);
+            showMessageDialog(`Could not find annotation with id ${this.annotation.id}`);
             return;
         }
         this.rctrl.toggleAnnotation(a, false);
@@ -169,7 +183,6 @@ export class AnnotationController implements IController {
 
     /**
      * Updates the z-index attribute of the annotation.
-     * @method updateVelpZIndex
      */
     updateVelpZIndex() {
         this.velpElement.style.zIndex = this.rctrl.zIndex.toString();
@@ -178,7 +191,6 @@ export class AnnotationController implements IController {
 
     /**
      * Shows the annotation.
-     * @method showAnnotation
      */
     showAnnotation() {
         this.setShowFull(false);
@@ -188,10 +200,16 @@ export class AnnotationController implements IController {
         this.updateVelpZIndex();
     }
 
+    scrollToIfNotInViewport() {
+        const e = this.element[0];
+        if (!isInViewport(e)) {
+            scrollToElement(e);
+        }
+    }
+
     /**
      * Deletes the selected annotation. Queries parent this and deletes
      * the corresponding annotation from there.
-     * @method deleteAnnotation
      */
     deleteAnnotation() {
 
@@ -205,7 +223,6 @@ export class AnnotationController implements IController {
 
     /**
      * Updates the annotation and toggles its visibility in the margin.
-     * @method updateAnnotation
      */
     updateAnnotation() {
         let margin = false;
@@ -221,10 +238,9 @@ export class AnnotationController implements IController {
     /**
      * Changes points of the selected annotation. Qeries parent this
      * and changes the points of the corresponding annotation.
-     * @method changePoints
      */
     changePoints() {
-        if (typeof this.annotation.points !== UNDEFINED) {
+        if (this.annotation.points != null) {
             this.isvalid.points.value = true;
             this.rctrl.changeAnnotationPoints(this.annotation.id, this.annotation.points);
         } else {
@@ -240,7 +256,6 @@ export class AnnotationController implements IController {
     /**
      * Saves the changes made to the annotation. Queries parent this
      * and updates the changes of the corresponding annotation.
-     * @method saveChanges
      */
     async saveChanges() {
         const id = this.rctrl.getRealAnnotationId(this.annotation.id);
@@ -274,21 +289,18 @@ export class AnnotationController implements IController {
             velp: this.velp,
             color: this.annotation.color,
             comment: this.newcomment,
-            doc_id: this.rctrl.docId,
+            doc_id: this.vctrl.docId,
         };
 
         $http.post("/update_annotation", this.original);
     }
 
     getCustomColor() {
-        if (typeof this.annotation.color !== UNDEFINED || this.annotation.color != null) {
-            return this.annotation.color;
-        }
+        return this.annotation.color;
     }
 
     /**
      * Checks if the user has rights to edit the annotation.
-     * @method checkRights
      * @returns {boolean} Whether the user has rights or not
      */
     checkRights() {
@@ -305,7 +317,6 @@ export class AnnotationController implements IController {
 
     /**
      * Checks if the annotation is changed compared to its last saved state.
-     * @method checkIfChanged
      * @returns {boolean} - Whether any modifications were made or not
      */
     checkIfChanged() {
@@ -322,11 +333,10 @@ export class AnnotationController implements IController {
 
     /**
      * Detects the `Ctrl + S` and `Ctrl+Enter` key strokes on the text area.
-     * @method keyDownFunc
      * @param event - Current event
      */
     keyDownFunc(event: KeyboardEvent) {
-        if (event.keyCode === this.ctrlKey) {
+        if (event.keyCode === KEY_CTRL) {
             this.ctrlDown = true;
         }
         if (this.ctrlDown && (String.fromCharCode(event.which).toLowerCase() === "s" || event.keyCode === KEY_ENTER)) {
@@ -342,18 +352,17 @@ export class AnnotationController implements IController {
 
     /**
      * Detects if `Ctrl`-key is released.
-     * @method keyUpFunc
      * @param event - Current event
      */
     keyUpFunc(event: KeyboardEvent) {
-        if (event.keyCode === this.ctrlKey) {
+        if (event.keyCode === KEY_CTRL) {
             this.ctrlDown = false;
         }
     }
 }
 
-/** Directive for a single annotation.
- * @lends module:reviewController
+/**
+ * Directive for a single annotation.
  */
 timApp.component("annotation", {
     bindings: {
@@ -364,7 +373,7 @@ timApp.component("annotation", {
     controller: AnnotationController,
     controllerAs: "actrl",
     require: {
-        rctrl: "^timReview",
+        vctrl: "^timView",
     },
     templateUrl: "/static/templates/annotation.html",
     transclude: true,

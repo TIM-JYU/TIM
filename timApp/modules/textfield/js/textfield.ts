@@ -19,6 +19,7 @@ const TextfieldMarkup = t.intersection([
         inputstem: nullable(t.string),
         initword: nullable(t.string),
         buttonText: nullable(t.string),
+        inputchecker: nullable(t.string),
         autosave: t.boolean
     }),
     GenericPluginMarkup,
@@ -140,6 +141,11 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
         this.doSaveText(false);
     }
 
+    checkInputRegex(re: string) {
+        let regExpChecker = new RegExp(re);
+        return regExpChecker.test(this.userword);
+    }
+
     // noinspection JSUnusedGlobalSymbols
     /**
      * Autosave method is used by ng-blur in textfieldApp component.
@@ -147,8 +153,7 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
      * Unused method warning is suppressed, as the method is only called in template.
      */
     autoSave() {
-        if (this.attrs.autosave == false) return;
-        this.doSaveText(false);
+        if (this.attrs.autosave) this.doSaveText(false);
     }
 
     /**
@@ -156,6 +161,12 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
      * @param true/false parameter boolean checker for the need to save
      */
     async doSaveText(nosave: boolean) {
+        if (this.attrs.inputchecker) {
+            if(!this.checkInputRegex(this.attrs.inputchecker)) {
+                this.error = "Input does not pass the RegExp checker!";
+                return;
+            }
+        }
         this.error = "... saving ...";
         this.isRunning = true;
         this.result = undefined;
@@ -206,6 +217,7 @@ textfieldApp.component("textfieldRunner", {
         <input type="string"
                class="form-control"
                ng-model="$ctrl.userword"
+               ng-model-options="{ debounce: {'blur': 0} } "
                ng-blur="$ctrl.autoSave()"
                ng-keydown="$event.keyCode === 13 && $ctrl.saveText()"
                ng-model-options="::$ctrl.modelOpts"
@@ -213,7 +225,7 @@ textfieldApp.component("textfieldRunner", {
                ng-trim="false"
                ng-readonly="::$ctrl.readonly"
                placeholder="{{::$ctrl.inputplaceholder}}"
-               size="{{::$ctrl.cols}}"></span></label>
+               size="{{::$ctrl.cols}}"> </span></label>
     </div>
     <button class="timButton"
             ng-if="$ctrl.buttonText()"

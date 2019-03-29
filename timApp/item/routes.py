@@ -11,6 +11,7 @@ from flask import redirect
 from flask import request
 from flask import session
 
+from timApp.answer.answers import add_missing_users_from_group
 from timApp.auth.accesshelper import verify_view_access, verify_teacher_access, verify_seeanswers_access, \
     get_rights, has_edit_access, get_doc_or_abort, verify_manage_access
 from timApp.item.block import BlockType
@@ -278,6 +279,7 @@ def view(item_path, template_name, usergroup=None, route="view"):
         points_sum_rule = None
     if teacher_or_see_answers:
         user_list = None
+        ug = None
         if usergroup is not None:
             ug = UserGroup.get_by_name(usergroup)
             if not ug:
@@ -285,6 +287,8 @@ def view(item_path, template_name, usergroup=None, route="view"):
             user_dict = {u.id: u for u in ug.users}
             user_list = list(user_dict.keys())
         user_list = timdb.answers.get_points_by_rule(points_sum_rule, task_ids, user_list, flatten=True)
+        if ug:
+            user_list = add_missing_users_from_group(user_list, ug)
     elif doc_settings.show_task_summary() and logged_in():
         info = timdb.answers.get_points_by_rule(points_sum_rule, task_ids, [current_user.id], flatten=True)
         if info:
