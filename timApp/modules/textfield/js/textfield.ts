@@ -217,7 +217,7 @@ textfieldApp.component("textfieldRunner", {
         <input type="string"
                class="form-control"
                ng-model="$ctrl.userword"
-               ng-model-options="{ debounce: 0} "
+               ng-model-options="{ debounce: {'blur': 0} } "
                ng-blur="$ctrl.autoSave()"
                ng-keydown="$event.keyCode === 13 && $ctrl.saveText()"
                ng-model-options="::$ctrl.modelOpts"
