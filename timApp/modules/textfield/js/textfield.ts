@@ -217,6 +217,7 @@ textfieldApp.component("textfieldRunner", {
         <input type="string"
                class="form-control"
                ng-model="$ctrl.userword"
+               ng-model-options="{ debounce: 0} "
                ng-blur="$ctrl.autoSave()"
                ng-keydown="$event.keyCode === 13 && $ctrl.saveText()"
                ng-model-options="::$ctrl.modelOpts"
@@ -224,7 +225,7 @@ textfieldApp.component("textfieldRunner", {
                ng-trim="false"
                ng-readonly="::$ctrl.readonly"
                placeholder="{{::$ctrl.inputplaceholder}}"
-               size="{{::$ctrl.cols}}"></span></label>
+               size="{{::$ctrl.cols}}"> </span></label>
     </div>
     <button class="timButton"
             ng-if="$ctrl.buttonText()"
