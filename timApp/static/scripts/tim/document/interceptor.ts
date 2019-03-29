@@ -1,15 +1,27 @@
 import angular, {IHttpResponse, IRequestConfig} from "angular";
 import {timApp} from "tim/app";
 import {timLogTime} from "tim/util/timTiming";
-import {$httpProvider, $q, $rootScope, $window} from "../util/ngimport";
+import {IAnswerSaveEvent} from "../answer/answerbrowser3";
+import {$httpProvider, $q, $window} from "../util/ngimport";
+import {vctrlInstance} from "./viewctrl";
+
+function handleResponse(taskIdFull: string, response: IHttpResponse<any>, params: IAnswerSaveEvent) {
+    const parts = taskIdFull.split(".");
+    const docId = parseInt(parts[0], 10);
+    const taskName = parts[1];
+    const taskId = docId + "." + taskName;
+    const v = vctrlInstance;
+    if (!v) {
+        throw new Error("ViewCtrl was undefined");
+    }
+    const ab = v.getAnswerBrowser(taskId);
+    if (ab) {
+        ab.registerNewAnswer(params);
+    }
+}
 
 timApp.config([() => {
     timLogTime("timApp config", "view");
-
-    function escapeId(id: string) {
-        return "#" + id.replace(/(:|\.|\[|\]|,|=)/g, "\\$1");
-    }
-
     const interceptor = [
         () => {
             const re = /\/[^/]+\/([^/]+)\/answer\/$/;
@@ -25,15 +37,21 @@ timApp.config([() => {
                         const docId = parseInt(parts[0], 10);
                         const taskName = parts[1];
                         const taskId = docId + "." + taskName;
+                        const v = vctrlInstance;
+                        if (!v) {
+                            throw new Error("ViewCtrl was undefined");
+                        }
                         if (taskName !== "") {
-                            const ab = angular.element(`tim-plugin-loader[task-id='${taskId}'] answerbrowser`);
-                            if (ab.isolateScope()) {
-                                const browserScope = ab.isolateScope<any>();
-                                angular.extend(config.data, {abData: browserScope.$ctrl.getBrowserData()});
+                            const ab = v.getAnswerBrowser(taskId);
+                            if (ab) {
+                                config.data.abData = ab.getBrowserData();
                             }
                         }
-                        const par = angular.element(escapeId(taskIdFull)).parents(".par");
-                        angular.extend(config.data, {ref_from: {docId: $window.item.id, par: par.attr("id")}});
+                        const e = document.getElementById(taskIdFull);
+                        if (e) {
+                            const par = angular.element(e).parents(".par");
+                            angular.extend(config.data, {ref_from: {docId: $window.item.id, par: par.attr("id")}});
+                        }
                     }
                     return config;
                 },
@@ -43,15 +61,9 @@ timApp.config([() => {
                         if (!match) {
                             return response;
                         }
-                        const taskIdFull = match[1];
-                        const parts = taskIdFull.split(".");
-                        const docId = parseInt(parts[0], 10);
-                        const taskName = parts[1];
-                        const taskId = docId + "." + taskName;
-                        $rootScope.$broadcast("answerSaved", {
-                            taskId,
-                            savedNew: response.data.savedNew,
+                        handleResponse(match[1], response, {
                             error: response.data.error,
+                            savedNew: response.data.savedNew,
                         });
                     }
                     return response;
@@ -62,15 +74,9 @@ timApp.config([() => {
                         if (!match) {
                             return $q.reject(response);
                         }
-                        const taskIdFull = match[1];
-                        const parts = taskIdFull.split(".");
-                        const docId = parseInt(parts[0], 10);
-                        const taskName = parts[1];
-                        const taskId = docId + "." + taskName;
-                        $rootScope.$broadcast("answerSaved", {
-                            taskId,
-                            savedNew: false,
+                        handleResponse(match[1], response, {
                             error: response.data.error,
+                            savedNew: false,
                         });
                     }
                     return $q.reject(response);

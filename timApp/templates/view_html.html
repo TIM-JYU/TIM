@@ -134,18 +134,18 @@
                 <a id="showSlidesLink" href="/show_slide/{{ item.path }}">Show slides only</a>
             </div>
         {% else %}
-            <tim-review on-init="$ctrl.setReviewCtrlScope($SCOPE)">
-                <div id="pars" {% if velp_mode or teacher_mode %}ng-click="$parent.$ctrl.selectText($event)"{% endif %}>
-                    {% include 'partials/paragraphs.html' %}
-                    <div class="addBottomContainer hidden-print" ng-show="$ctrl.item.rights.editable"
-                         ng-class="{'height-35': $ctrl.editing}">
-                        {% set btntext = doc_settings.add_par_button_text() %}
-                        {% if btntext %}
-                            <button class="addBottom timButton">{{ btntext }}</button>
-                        {% endif %}
-                    </div>
+            <div id="pars" {% if velp_mode or teacher_mode %}ng-click="$ctrl.reviewCtrl.selectText($event)"{% endif %}>
+                {% include 'partials/paragraphs.html' %}
+                <div class="addBottomContainer hidden-print" ng-show="$ctrl.item.rights.editable"
+                     ng-class="{'height-35': $ctrl.editing}">
+                    {% set btntext = doc_settings.add_par_button_text() %}
+                    {% if btntext %}
+                        <button class="addBottom timButton">{{ btntext }}</button>
+                    {% endif %}
                 </div>
-            </tim-review>
+            </div>
+            <velp-selection ng-if="$ctrl.reviewCtrl.velpMode || $ctrl.teacherMode">
+            </velp-selection>
         {% endif %}
     </div>
     <tim-template-list ng-if="$ctrl.item.rights.editable" ng-show="$ctrl.isEmptyDocument()" doc="$ctrl.item"></tim-template-list>

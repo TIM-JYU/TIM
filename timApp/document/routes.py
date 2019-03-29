@@ -1,4 +1,7 @@
+import attr
 from flask import Response, abort, request, Blueprint
+from marshmallow import Schema, fields, post_load
+from webargs.flaskparser import use_args
 
 from timApp.auth.accesshelper import get_doc_or_abort, verify_edit_access
 from timApp.document.document import Document
@@ -50,12 +53,49 @@ def diff_document(doc_id, major1, minor1, major2, minor2):
     return Response(DocumentVersion.get_diff(doc1, doc2), mimetype="text/html")
 
 
+@attr.s(auto_attribs=True)
+class GetBlockModel:
+    doc_id: int = None
+    par_id: str = None
+    area_start: str = None
+    area_end: str = None
+    use_exported: bool = True
+
+
+class GetBlockSchema(Schema):
+    doc_id = fields.Int()
+    par_id = fields.Str()
+    area_start = fields.Str()
+    area_end = fields.Str()
+    use_exported = fields.Bool(missing=True)
+
+    @post_load
+    def make_obj(self, data):
+        # noinspection PyArgumentList
+        return GetBlockModel(**data)
+
+
 @doc_bp.route("/getBlock/<int:doc_id>/<par_id>")
 def get_block(doc_id, par_id):
-    d = get_doc_or_abort(doc_id)
+    return get_block_2(GetBlockModel(
+        area_end=request.args.get('area_end'),
+        area_start=request.args.get('area_start'),
+        doc_id=doc_id,
+        par_id=par_id,
+    ))
+
+
+@doc_bp.route("/getBlock")
+@use_args(GetBlockSchema(strict=True))
+def get_block_schema(args: GetBlockModel):
+    return get_block_2(args)
+
+
+def get_block_2(args: GetBlockModel):
+    d = get_doc_or_abort(args.doc_id)
     verify_edit_access(d)
-    area_start = request.args.get('area_start')
-    area_end = request.args.get('area_end')
+    area_start = args.area_start
+    area_end = args.area_end
     if area_start and area_end:
         try:
             section = d.document.export_section(area_start, area_end)
@@ -64,7 +104,10 @@ def get_block(doc_id, par_id):
         return json_response({"text": section})
     else:
         try:
-            par = d.document.get_paragraph(par_id)
+            par = d.document.get_paragraph(args.par_id)
         except TimDbException as e:
             return abort(404, 'Paragraph not found. It may have been deleted.')
-        return json_response({"text": par.get_exported_markdown()})
+        if args.use_exported:
+            return json_response({"text": par.get_exported_markdown()})
+        else:
+            return json_response({"text": par.get_markdown()})

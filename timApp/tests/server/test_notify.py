@@ -1,3 +1,7 @@
+from typing import Tuple
+
+from timApp.document.docinfo import DocInfo
+from timApp.document.randutils import random_id
 from timApp.notification.notify import sent_mails_in_testing, process_pending_notifications
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.document.docentry import DocEntry
@@ -12,7 +16,7 @@ class NotifyTestBase(TimRouteTest):
     def update_notify_settings(self, d, new_settings):
         self.json_post(f'/notify/{d.id}', new_settings)
 
-    def prepare_doc(self):
+    def prepare_doc(self, add_new_par=True) -> Tuple[DocInfo, str, str]:
         self.login_test1()
         d = self.create_doc()
         doc_id = d.id
@@ -29,7 +33,8 @@ class NotifyTestBase(TimRouteTest):
         self.update_notify_settings(d, {'email_comment_add': True, 'email_comment_modify': False,
                                         'email_doc_modify': True})
         self.login_test1()
-        self.new_par(d.document, 'test')
+        if add_new_par:
+            self.new_par(d.document, 'test')
         return d, title, url
 
 
@@ -81,10 +86,10 @@ class NotifyTest(NotifyTestBase):
         self.assertEqual({
             'mail_from': mail_from,
             'msg': f'Paragraph added: {url}#{pars[2].get_id()}'
-                   ' '
-                   f'(changes: http://localhost/diff/{d.id}/2/1/3/0 )\n'
-                   '\n'
-                   f'{pars[2].get_markdown()}',
+            ' '
+            f'(changes: http://localhost/diff/{d.id}/2/1/3/0 )\n'
+            '\n'
+            f'{pars[2].get_markdown()}',
             'rcpt': self.test_user_2.email,
             'reply_to': None,
             'subject': f'Someone added a paragraph to the document {title}'
@@ -97,10 +102,10 @@ class NotifyTest(NotifyTestBase):
         self.assertEqual({
             'mail_from': mail_from,
             'msg': f'Paragraph modified: {url}#{pars[1].get_id()}'
-                   ' '
-                   f'(changes: http://localhost/diff/{d.id}/3/0/3/1 )\n'
-                   '\n'
-                   f'{par_md}',
+            ' '
+            f'(changes: http://localhost/diff/{d.id}/3/0/3/1 )\n'
+            '\n'
+            f'{par_md}',
             'rcpt': self.test_user_2.email,
             'reply_to': None,
             'subject': f'Someone modified a paragraph in the document {title}'
@@ -111,10 +116,10 @@ class NotifyTest(NotifyTestBase):
         self.assertEqual({
             'mail_from': mail_from,
             'msg': f'Paragraph deleted: {url}'
-                   ' '
-                   f'(changes: http://localhost/diff/{d.id}/3/1/4/0 )\n'
-                   '\n'
-                   f'{par_md}',
+            ' '
+            f'(changes: http://localhost/diff/{d.id}/3/1/4/0 )\n'
+            '\n'
+            f'{par_md}',
             'rcpt': self.test_user_2.email,
             'reply_to': None,
             'subject': f'Someone deleted a paragraph from the document {title}'
@@ -127,10 +132,10 @@ class NotifyTest(NotifyTestBase):
         self.assertEqual({
             'mail_from': mail_from,
             'msg': f'Paragraph added by Test user 1: {url}#{pars[-1].get_id()}'
-                   ' '
-                   f'(changes: http://localhost/diff/{d.id}/4/0/5/0 )\n'
-                   '\n'
-                   f'{pars[-1].get_markdown()}',
+            ' '
+            f'(changes: http://localhost/diff/{d.id}/4/0/5/0 )\n'
+            '\n'
+            f'{pars[-1].get_markdown()}',
             'rcpt': self.test_user_2.email,
             'reply_to': self.test_user_1.email,
             'subject': f'Test user 1 added a paragraph to the document {title}'
@@ -160,7 +165,7 @@ stem: test
         self.assertEqual(
             {'mail_from': 'tim@jyu.fi',
              'msg': 'Comment posted by Test user 1: '
-                    f'http://localhost/answers/{d.path}?task=t&user=testuser1\n'
+             f'http://localhost/answers/{d.path}?task=t&user=testuser1\n'
                     '\n'
                     'Hello',
              'rcpt': 'test2@example.com',
@@ -213,3 +218,56 @@ class NotifyFolderTest(NotifyTestBase):
         self.new_par(d.document, 'test')
         process_pending_notifications()
         self.assertEqual(3, len(sent_mails_in_testing))
+
+
+class CutPasteNotifyTest(NotifyTestBase):
+
+    def test_cut_paste(self):
+        self.login_test1()
+        d, _, _ = self.prepare_doc()
+        par = d.document.get_paragraphs()[0]
+        par2 = d.document.get_paragraphs()[1]
+        par3 = par2.clone()
+        par3.set_id(random_id())
+        par3.set_markdown('hello')
+        par3.save(add=True)
+        process_pending_notifications()
+        # d.document.clear_mem_cache()
+        self.test_user_2.grant_access(d.id, 'teacher')
+        self.test_user_2.grant_access(d.id, 'edit')
+        self.cut(d, par_start=par, par_end=par2)
+        # print(d.document.export_markdown())
+        process_pending_notifications()
+        mail_from = 'tim@jyu.fi'
+        self.assertEqual({
+            'mail_from': mail_from,
+            'msg': 'Paragraph deleted by Test user 1: '
+                   f'{d.url} (changes: '
+                   f'http://localhost/diff/{d.id}/3/0/5/0 )\n'
+                   '\n'
+            f'#- {{id="{par.get_id()}"}}\n'
+                   'test\n'
+                   '\n'
+            f'#- {{id="{par2.get_id()}"}}\n'
+                   'test',
+            'rcpt': 'test2@example.com',
+            'reply_to': 'test1@example.com',
+            'subject': 'Test user 1 deleted a paragraph from the document document 2'},
+            sent_mails_in_testing[-1])
+        self.paste(d, par_after=par3)
+        process_pending_notifications()
+        self.assertEqual({
+            'mail_from': mail_from,
+            'msg': 'Paragraph added by Test user 1: '
+            f'http://localhost/view/users/test-user-1/doc1#{par.get_id()} (changes: '
+                   f'http://localhost/diff/{d.id}/5/0/7/0 )\n'
+                   '\n'
+            f'#- {{id="{par.get_id()}"}}\n'
+                   'test\n'
+                   '\n'
+            f'#- {{id="{par2.get_id()}"}}\n'
+                   'test',
+            'rcpt': 'test2@example.com',
+            'reply_to': 'test1@example.com',
+            'subject': 'Test user 1 added a paragraph to the document document 2'},
+            sent_mails_in_testing[-1])

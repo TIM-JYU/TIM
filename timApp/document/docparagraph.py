@@ -6,6 +6,7 @@ from copy import copy
 from typing import Optional, Dict, List, Tuple, Any
 
 import filelock
+from jinja2.sandbox import SandboxedEnvironment
 
 from timApp.document.documentparser import DocumentParser
 from timApp.document.documentparseroptions import DocumentParserOptions
@@ -16,12 +17,15 @@ from timApp.document.randutils import random_id, hashfunc
 from timApp.markdown.dumboclient import DumboOptions, MathType
 from timApp.markdown.htmlSanitize import sanitize_html, strip_div
 from timApp.markdown.markdownconverter import par_list_to_html_list, expand_macros
-from timApp.util.rndutils import get_rands_as_dict, get_rands_as_str, SeedType
 from timApp.timdb.exceptions import TimDbException, InvalidReferenceException
 from timApp.timtypes import DocumentType
+from timApp.util.rndutils import get_rands_as_dict, get_rands_as_str, SeedType
 from timApp.util.utils import count_chars_from_beginning, get_error_html, title_to_id
 
 SKIPPED_ATTRS = {'r', 'rd', 'rp', 'ra', 'rt', 'settings'}
+
+
+se = SandboxedEnvironment()
 
 
 class DocParagraph:
@@ -297,6 +301,7 @@ class DocParagraph:
         if preamble:
             self.final_dict['from_preamble'] = preamble.path
         self.final_dict['is_question'] = self.is_question()
+        self.final_dict['is_setting'] = self.is_setting()
         self.final_dict['style'] = None
 
     def _cache_props(self):
@@ -449,7 +454,7 @@ class DocParagraph:
             DocSettings.from_paragraph(self)
         except TimDbException as e:
             return f'<div class="pluginError">Invalid settings: {e}</div>'
-        return '<p class="docsettings">&nbsp;</p>'
+        return se.from_string('<pre>{{yml}}</pre>').render(yml=self.get_markdown())
 
     def get_html(self, from_preview: bool = True) -> str:
         """Returns the html for the paragraph.

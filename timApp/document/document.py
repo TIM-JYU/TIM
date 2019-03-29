@@ -33,6 +33,11 @@ def get_duplicate_id_msg(conflicting_ids):
     return f'Duplicate paragraph id(s): {", ".join(conflicting_ids)}'
 
 
+def par_list_to_text(sect: List[DocParagraph], export_hashes=False):
+    return DocumentWriter([par.dict() for par in sect],
+                          export_hashes=export_hashes).get_text()
+
+
 class Document:
     default_files_root = '/tim_files'
 
@@ -289,8 +294,8 @@ class Document:
         return [par.dict() for par in self]
 
     def export_section(self, par_id_start: Optional[str], par_id_end: Optional[str], export_hashes=False) -> str:
-        return DocumentWriter([par.dict() for par in self.get_section(par_id_start, par_id_end)],
-                              export_hashes=export_hashes).get_text()
+        sect = self.get_section(par_id_start, par_id_end)
+        return par_list_to_text(sect, export_hashes)
 
     def get_section(self, par_id_start: Optional[str], par_id_end: Optional[str]) -> List[DocParagraph]:
         if par_id_start is None and par_id_end is None:

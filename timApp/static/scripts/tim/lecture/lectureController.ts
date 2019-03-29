@@ -57,7 +57,7 @@ import {
     questionHasAnswer,
 } from "./lecturetypes";
 import * as wall from "./lectureWall";
-import {showLectureWall} from "./lectureWall";
+import {LectureWallController, showLectureWall} from "./lectureWall";
 import {askQuestion} from "./questionAskController";
 import ifvisible from "ifvisible.js";
 
@@ -91,7 +91,7 @@ export class LectureController implements IController {
     viewctrl: Require<ViewCtrl | undefined>;
     private wallMessages: ILectureMessage[];
     private wallName: string;
-    private wallInstance: IModalInstance<{}> | undefined;
+    private wallInstance: IModalInstance<LectureWallController> | undefined;
     // The last asked question that was initiated *from this tab* by the lecturer.
     // So this field should NOT be updated in the poll method.
     lastQuestion: IAskedQuestion | undefined;
