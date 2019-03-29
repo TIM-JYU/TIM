@@ -16,10 +16,12 @@ interface IFBOptions {
     scope: string;
     answers: string;
     format: string;
+    user: string;
 }
 
 export interface IFeedbackAnswersParams {
     identifier: string;
+    user: string;
     url: string;
     allTasks: boolean;
 }
@@ -53,13 +55,15 @@ export class FeedbackAnswersCtrl extends DialogController<{params: IFeedbackAnsw
             periodTo: null,
             scope: "task",
             answers: "all",
-            format: "comma"
+            format: "comma",
+            user: options.user,
         };
         this.$storage = $localStorage.$default({
             feedbackAnswersOptions: this.options,
         });
 
         this.options = this.$storage.feedbackAnswersOptions;
+        this.options.user = options.user;
         this.options.periodFrom = this.options.periodFrom || Date.now();
         this.options.periodTo = this.options.periodTo || Date.now();
         this.datePickerOptionsFrom = {
