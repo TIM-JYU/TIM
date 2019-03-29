@@ -99,6 +99,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
     private streak = 0;
     private teacherRight: boolean = false;
     private feedbackMax = 0;
+    private selectionMap: Map<string, string> = new Map();
 
     $onInit() {
         super.$onInit();
@@ -106,7 +107,10 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
         this.setPluginWords();
         this.questionCount = this.attrs.questionItems.length;
         this.correctArray = new Array(this.questionCount).fill(false);
-        this.index = this.getRandomQuestion(this.correctArray);
+        const questionIndex = this.getRandomQuestion(this.correctArray);
+        if (questionIndex !== undefined) {
+            this.index = questionIndex;
+        }
         this.teacherRight = this.vctrl.item.rights.teacher;
         if (!this.teacherRight || this.attrs.teacherHide) {
             this.hideQuestionItems();
@@ -148,10 +152,9 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
                 }
             }
         }
-        for (let i = 1; i < levels.length; i++) {
-            if (levels[0] !== levels[i]) {
-                this.error = "Different number of feedback levels";
-            }
+
+        if (!levels.every(x => x === levels[0])) {
+            this.error = "Different number of feedback levels";
         }
         return levels[0];
     }
@@ -162,7 +165,22 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
     hideQuestionItems() {
         const items = this.attrs.questionItems;
         for (let i = 0; i < items.length; i++) {
-            this.hideBlock(i);
+            this.setBlockVisibility(i, false);
+        }
+    }
+
+    /**
+     * Changes the visibility of the block of text that has the question items of the given index.
+     *
+     * @param index The question items to be shown or hidden
+     * @param show Whether to show or hide the question item
+     */
+    setBlockVisibility(index: number, show: boolean) {
+        const name = this.attrs.questionItems[index].pluginNames[0];
+        const plugin = this.vctrl.getTimComponentByName(name);
+        if (plugin) {
+            const node = plugin.getPar().children(".parContent")[0];
+            this.changeVisibility(node, show);
         }
     }
 
@@ -172,15 +190,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
      * @param index The question item block to be shown
      */
     showBlock(index: number) {
-
-        const name = this.attrs.questionItems[this.index].pluginNames[0];
-        const plugin = this.vctrl.getTimComponentByName(name);
-        if (plugin) {
-            const node = plugin.getPar().children(".parContent")[0];
-            if (node instanceof Element) {
-                this.changeVisibility(node, true)
-            }
-        }
+        this.setBlockVisibility(index, true);
     }
 
     /**
@@ -189,26 +199,17 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
      * @param index The question item block to be hidden
      */
     hideBlock(index: number) {
-        const name = this.attrs.questionItems[index].pluginNames[0];
-        const plugin = this.vctrl.getTimComponentByName(name);
-        if (plugin) {
-            const node = plugin.getPar().children(".parContent")[0];
-            if (node instanceof Element) {
-                this.changeVisibility(node, false)
-            }
-        }
+        this.setBlockVisibility(index, false);
     }
 
     /**
-     * Hide a component and it's paragraph
+     * Hide a component and its paragraph
      *
      * @param component the component and paragraph around it you want to hide
      */
     hideComponent(component: ITimComponent) {
         const node = component.getPar().children(".parContent")[0];
-        if (node instanceof Element) {
-            this.changeVisibility(node, false);
-        }
+        this.changeVisibility(node, false);
     }
 
     /**
@@ -232,13 +233,13 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
      * @param item question item that the choices are being checked from
      * @returns{number} the index of the correct match
      */
-    getCorrectChoice(item: QuestionItemT): number {
+    getCorrectChoice(item: QuestionItemT): number | undefined {
         for (let i = 0; i < item.choices.length; i++) {
             if (item.choices[i].correct) {
                 return i;
             }
         }
-        return -1;
+        return;
     }
 
     /**
@@ -247,23 +248,26 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
      */
     async save() {
         // TODO: finish this, can you replace just one instance?
-        const values: { [id: string]: string } = {};
+        const values = new Map<string, string>();
         const item = this.attrs.questionItems[this.index];
         const plugins = item.pluginNames;
         const index = this.getCorrectChoice(item);
-        const words = item.choices[index].match;
-
-        for (let i = 0; i < plugins.length; i++) {
-            if (StringArray.is(words)) {
-                values[plugins[i]] = words[i];
+        if (index !== undefined) {
+            const words = item.choices[index].match;
+            for (let i = 0; i < plugins.length; i++) {
+                if (StringArray.is(words)) {
+                    values.set(plugins[i], words[i]);
+                }
             }
         }
+        // TODO: make better names
         const sentence = this.getSentence(this.answerArray, values).toString().replace(/,/g, " ");
-        const failure = await this.doSave(false, this.correctAnswer, sentence);
+        const answer = this.getSentence(this.answerArray, this.selectionMap).toString().replace(/,/g, " ");
+        const failure = await this.doSave(false, this.correctAnswer, sentence, answer);
         return failure;
     }
 
-    async doSave(nosave: boolean, correct: boolean, sentence: string) {
+    async doSave(nosave: boolean, correct: boolean, sentence: string, answer: string) {
         //this.error = "... saving ...";
 
         this.result = undefined;
@@ -273,7 +277,10 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
                 feedback: this.feedback,
                 correct: correct,
                 sentence: sentence,
-                id: Date.now(),
+                answer: answer,
+            },
+            options: {
+                forceSave: true,
             },
         };
 
@@ -321,11 +328,15 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
      * @returns{boolean} Whether the saving was succesful
      */
     async savePlugin(plugin: ITimComponent) {
-        const failure = await plugin.save();
-        if (failure) {
-            return false;
+        if (plugin.setForceAnswerSave) {
+            plugin.setForceAnswerSave(true);
+            const failure = await plugin.save();
+            if (failure) {
+                return false;
+            }
+            return true;
         }
-        return true;
+
     }
 
     /**
@@ -335,7 +346,9 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
      */
     async handleAnswer() {
         if (this.pluginMode === Mode.EndTask) {
-            this.feedback = "The task has ended";
+            if(this.attrs.nextTask) {
+                this.printFeedback(this.attrs.nextTask!);
+            }
             return;
         }
 
@@ -376,22 +389,24 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
                 this.error = "You have no choices defined, got no matches or using match objects";
             } else {
                 // Get the choice in matchIndex and the feedbacks assigned to it
-                const choice = this.attrs.questionItems[this.index].choices[matchIndex];
-                const feedbackLevels = choice.levels;
-                if (choice.correct) {
-                    // TODO: Do you want to make more than one correct feedback?
-                    this.printFeedback(feedbackLevels[feedbackLevels.length - 1]);
-                    this.correctAnswer = true;
-                    this.correctArray![this.index] = true;
-                    this.streak++;
-                    this.pluginMode = Mode.Feedback;
-                } else {
-                    // TODO: put this somewhere else maybe, also problems if the choice numbers differ in question items
-                    this.feedbackMax = feedbackLevels.length;
-                    this.printFeedback(feedbackLevels[this.currentFeedbackLevel++]);
-                    this.correctAnswer = false;
-                    this.streak = 0;
-                    this.pluginMode = Mode.Feedback;
+                if (matchIndex !== undefined) {
+                    const choice = this.attrs.questionItems[this.index].choices[matchIndex];
+                    const feedbackLevels = choice.levels;
+                    if (choice.correct) {
+                        // TODO: Do you want to make more than one correct feedback?
+                        this.printFeedback(feedbackLevels[feedbackLevels.length - 1]);
+                        this.correctAnswer = true;
+                        this.correctArray![this.index] = true;
+                        this.streak++;
+                        this.pluginMode = Mode.Feedback;
+                    } else {
+                        // TODO: put this somewhere else maybe, also problems if the choice numbers differ in question items
+                        this.feedbackMax = feedbackLevels.length;
+                        this.printFeedback(feedbackLevels[this.currentFeedbackLevel++]);
+                        this.correctAnswer = false;
+                        this.streak = 0;
+                        this.pluginMode = Mode.Feedback;
+                    }
                 }
             }
 
@@ -420,7 +435,11 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
 
             this.printFeedback("");
 
-            this.index = this.getRandomQuestion(this.correctArray || []);
+            const questionIndex = this.getRandomQuestion(this.correctArray || []);
+            if (questionIndex !== undefined) {
+                this.index = questionIndex;
+            }
+
             if (this.index === -1 || this.streak === this.attrs.correctStreak || this.currentFeedbackLevel === this.feedbackMax) {
                 this.pluginMode = Mode.EndTask;
                 return;
@@ -443,7 +462,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
      * @param arr Array of the correctness state of question items
      * @returns{number} Index of the question to be shown
      */
-    getRandomQuestion(arr: boolean[]): number {
+    getRandomQuestion(arr: boolean[]): number | undefined {
         const falses: number[] = [];
         for (let i = 0; i < arr.length; i++) {
             if (!arr[i]) {
@@ -452,7 +471,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
         }
 
         if (falses.length === 0) {
-            return -1;
+            return;
         }
 
         if (falses.length === 1) {
@@ -479,10 +498,10 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
      * @param answer Array of the answers the user has selected
      * @returns(number) The index of the choice that matches user selections
      */
-    compareChoices(index: number, answer: string[]): number {
+    compareChoices(index: number, answer: string[]): number | undefined {
         const choices = this.attrs.questionItems[index].choices;
         if (choices.length === 0) {
-            return -1;
+            return;
         }
 
         for (let i = 0; i < choices.length; i++) {
@@ -495,10 +514,10 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
             // If the match is a MatchObjectArray instead of a string array
             else {
                 this.checkMatchObjectArray(match, answer);
-                return -1;
+                return;
             }
         }
-        return -1;
+        return;
     }
 
     /**
@@ -529,8 +548,8 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
      * @param match
      * @param answer
      */
-    checkMatchObjectArray(match: MatchElementT[], answer: string[]): number {
-        return -1;
+    checkMatchObjectArray(match: MatchElementT[], answer: string[]): number | undefined {
+        return;
     }
 
     /**
@@ -584,7 +603,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
             const content = par.children(".parContent");
             const treeWalker = document.createTreeWalker(content[0], NodeFilter.SHOW_ALL,
                 {
-                    acceptNode: function (node) {
+                    acceptNode: (node) => {
                         if (node.nodeName === "#text") {
                             return NodeFilter.FILTER_ACCEPT;
                         }
@@ -595,17 +614,13 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
                             return NodeFilter.FILTER_ACCEPT;
                         }
                         return NodeFilter.FILTER_REJECT;
-                    }
+                    },
                 });
 
-            const nodeList = [];
-            while (treeWalker.nextNode()) {
-                nodeList.push(treeWalker.currentNode);
-            }
             const answer: string[] = [];
-            const values: { [id: string]: string } = {};
-            for (let n = 0; n < nodeList.length; ++n) {
-                const node = nodeList[n];
+            const values = new Map<string, string>();
+            while (treeWalker.nextNode()) {
+                const node = treeWalker.currentNode;
                 if (node.nodeName === "#text" && node.textContent !== null) {
                     const words = node.textContent.trim().split(" ");
                     for (const word of words) {
@@ -629,12 +644,12 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
                                         contentString = contentString + " " + c;
                                     }
                                     contentString = contentString.trim();
-                                    values[name] = contentString;
+                                    values.set(name, contentString);
                                     this.userSelections.push(contentString);
                                     answer.push(name);
                                 } else {
                                     let content = plugin.getContent().trim();
-                                    values[name] = content;
+                                    values.set(name, content);
                                     this.userSelections.push(content);
                                     answer.push(name);
                                 }
@@ -643,6 +658,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
                     }
                 }
             }
+            this.selectionMap = values;
             this.answerArray = answer;
             this.userAnswer = this.getSentence(answer, values);
         }
@@ -656,13 +672,12 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
      * @param choices dictionary that tells which word you want to replace and with what
      * @returns{string[]} Array with the words replaced
      */
-    getSentence(sentence: string[], choices: { [id: string]: string }): string[] {
+    getSentence(sentence: string[], choices: Map<string, string>): string[] {
         const temp = [...sentence];
-        for (let c in choices) {
-            const choice = choices[c];
-            const index = temp.indexOf(c);
+        for (const [k, v] of choices) {
+            const index = temp.indexOf(k);
             if (index >= 0) {
-                temp[index] = choice;
+                temp[index] = v;
             }
         }
         return temp;
@@ -715,7 +730,7 @@ feedbackApp.component("feedbackRunner", {
     },
     template: `
 <div class="csRunDiv no-popup-menu">
-    <tim-markup-error ng-if="::$ctrl.markupError && !$ctrl.teacherRight" data="::$ctrl.markupError"></tim-markup-error>
+    <tim-markup-error ng-if="::$ctrl.markupError" data="::$ctrl.markupError"></tim-markup-error>
     <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
     <p ng-if="::$ctrl.stem">{{::$ctrl.stem}}</p>
     <div>{{$ctrl.showMode}}</div>

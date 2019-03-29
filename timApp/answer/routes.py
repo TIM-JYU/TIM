@@ -107,11 +107,14 @@ def post_answer(plugintype: str, task_id_ext: str):
         plugin = verify_task_access(d, tid, AccessType.view, TaskIdAccess.ReadWrite)
     except (PluginException, TimDbException) as e:
         return abort(400, str(e))
-    if 'input' not in request.get_json():
+    json_data = request.get_json()
+    if 'input' not in json_data:
         return json_response({'error': 'The key "input" was not found from the request.'}, 400)
-    answerdata = request.get_json()['input']
+    answerdata = json_data['input']
+    answer_options = json_data.get('options', {})
+    force_answer = answer_options.get('forceSave', False)
 
-    answer_browser_data = request.get_json().get('abData', {})
+    answer_browser_data = json_data.get('abData', {})
     is_teacher = answer_browser_data.get('teacher', False)
     save_teacher = answer_browser_data.get('saveTeacher', False)
     save_answer = answer_browser_data.get('saveAnswer', True) and tid.task_name
@@ -269,7 +272,8 @@ def post_answer(plugintype: str, task_id_ext: str):
                                                                points,
                                                                tags,
                                                                is_valid,
-                                                               points_given_by)
+                                                               points_given_by,
+                                                               force_answer)
             else:
                 result['savedNew'] = None
             if not is_valid:

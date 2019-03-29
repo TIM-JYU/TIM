@@ -38,6 +38,7 @@ class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.T
     private wordList?: string[];
     private selectedWord?: string;
     private vctrl!: ViewCtrl;
+    private forceSave = false;
 
     getDefaultMarkup() {
         return {};
@@ -77,7 +78,9 @@ class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.T
             input: {
                 nosave: false,
                 selectedWord: this.selectedWord,
-                id: Date.now(),
+            },
+            options: {
+                forceSave: this.forceSave,
             },
         };
 
@@ -98,6 +101,15 @@ class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.T
         } else {
             this.error = "Infinite loop or some other error?";
         }
+    }
+
+    /**
+     * Force the plugin to save its information
+     *
+     * @param force Whether to force a save
+     */
+    setForceAnswerSave(force: boolean) {
+        this.forceSave = force;
     }
 
     /**

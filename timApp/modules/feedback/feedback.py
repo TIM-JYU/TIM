@@ -18,16 +18,16 @@ from pluginserver_flask import GenericMarkupModel, GenericMarkupSchema, GenericH
 @attr.s(auto_attribs=True)
 class FeedbackStateModel:
     """Model for the information that is stored in TIM database for each answer."""
+    answer: str
     correct: bool
     feedback: str
     sentence: str
-    id: int
 
 class FeedbackStateSchema(Schema):
+    answer = fields.Str(required=True)
     correct = fields.Bool(required=True)
     feedback = fields.Str(required=True)
     sentence = fields.Str(required=True)
-    id = fields.Int(required=True)
 
     @post_load
     def make_obj(self, data):
@@ -45,6 +45,7 @@ class FeedbackMarkupModel(GenericMarkupModel):
     instructionID: Union[Any, Missing] = missing
     correctStreak: Union[Any, Missing] = missing
     teacherHide: Union[Any, Missing] = missing
+    nextTask: Union[Any, Missing] = missing
 
 
 class FeedbackMarkupSchema(GenericMarkupSchema):
@@ -54,6 +55,7 @@ class FeedbackMarkupSchema(GenericMarkupSchema):
     instructionID = fields.Str()
     correctStreak = fields.Int()
     teacherHide = fields.Bool()
+    nextTask = fields.Str()
 
     @post_load
     def make_obj(self, data):
@@ -66,17 +68,17 @@ class FeedbackMarkupSchema(GenericMarkupSchema):
 @attr.s(auto_attribs=True)
 class FeedbackInputModel:
     """Model for the information that is sent from browser (plugin AngularJS component)."""
+    answer: str
     correct: bool
     feedback: str
     sentence: str
-    id: int
     nosave: bool = missing
 
 class FeedbackInputSchema(Schema):
+    answer = fields.Str(required=True)
     correct = fields.Bool(required=True)
     feedback = fields.Str(required=True)
     sentence = fields.Str(required=True)
-    id = fields.Int(required=True)
     nosave = fields.Bool()
 
     @post_load
@@ -174,12 +176,12 @@ def answer(args: FeedbackAnswerModel):
     sentence = args.input.sentence
     feedback = args.input.feedback
     correct = args.input.correct
-    id = args.input.id
+    answer = args.input.answer
 
     # plugin can ask not to save the word
     nosave = args.input.nosave
     if not nosave:
-        save = {"sentence": sentence, "correct": correct, "feedback": feedback, "id": id}
+        save = {"sentence": sentence, "correct": correct, "feedback": feedback, "answer": answer}
         result["save"] = save
         web['result'] = "saved"
 
@@ -190,58 +192,215 @@ def answer(args: FeedbackAnswerModel):
 @app.route('/reqs')
 def reqs():
     templates = ["""
-``` {#feedback1 plugin="feedback"}
-header: Your answer
-inputstem: "Your choice:"
-field: item1
-```""","""
-``` {#feedback2 plugin="feedback"}
-feedbackLevel: 3
-toNextTaskRule: 2 correct answers in row
+``` {#fb1⁞ plugin="feedback"}
+correctStreak: 2
 nextTask: linkki tähän
+instructionID: instruction
+teacherHide: false
 questionItems:
 - pluginNames: [drop1]
   words: [[is, do, are]]
-  correctAnswer: [is]
-  correctAnswerFeedback: vastasit [answer] vastaus on oikein, drop1 feedback
   choices:
+    - match: [is]
+      correct: true
+      levels:
+        - "md: **Correct!** You answered: |answer|"
     - match: [do]
       levels:
-        - vastasit [answer]. vastaus on aivan pielessä, level1 drop1 feedback
-        - vastasit [answer]. vastaus on aivan plääh, level2 drop1 feedback
-        - "oikea vastaus: is, level3 drop1 feedback"
+        - "md: Level 1 feedback: You answered: *|answer|* Answer is wrong. Try **thinking**. "
+        - "md: Level 2 feedback: You answered: *|answer|* Answer is wrong. Try thinking *a bit* harder. "
+        - "md: Level 3 feedback: You answered: *|answer|* Answer is wrong. Try thinking **much more** harder. "
+        - "md: Level 4 feedback: You answered: *|answer|* Answer is wrong. Just think about what the answer **is**. "
+        - "md: Level 5 feedback: Please note the correct answer: 'What **is** love?'  
+                               'What time **is** it?' 
+                               'What **is** your favourite colour?'
+                               'What **is** the purpose of all this?"
     - match: [are]
       levels:
-        - vastasit [answer]. aika lähellä
-        - vastasit [answer]. mietipä vielä hetki
-        - "oikea vastaus: is, level2 drop1 feedback"
+        - "md: Level 1 feedback: You answered: *|answer|* Answer is wrong. Try **thinking**. "
+        - "md: Level 2 feedback: You answered: *|answer|* Answer is wrong. Try thinking *a bit* harder. "
+        - "md: Level 3 feedback: You answered: *|answer|* Answer is wrong. Try thinking **much more** harder. "
+        - "md: Level 4 feedback: You answered: *|answer|* Answer is wrong. Just think about what the answer **is**. "
+        - "md: Level 5 feedback: Please note the correct answer: 'What **is** love?'  
+                               'What time **is** it?' 
+                               'What **is** your favourite colour?'
+                               'What **is** the purpose of all this?"
     - match: []
       levels:
-        - default feedback for drop1
-- pluginNames: [drop2, drop3]
-  words: [[is, do, are], [yesterday, today]]
-  correctAnswer: [is, today]
-  correctAnswerFeedback: vastasit [answer] vastaus on oikein, drop2 feedback
+        - "md: Level 1 feedback: default feedback for drop4"
+        - "md: Level 2 feedback: default feedback for drop4"
+        - "md: Level 3 feedback: default feedback for drop4"
+        - "md: Level 4 feedback: default feedback for drop4"
+        - "md: Level 5 feedback: Please note the correct answer: 'What **is** love?'  
+                               'What time **is** it?' 
+                               'What **is** your favourite colour?'
+                               'What **is** the purpose of all this?"
+- pluginNames: [drop2]
+  words: [[is, do, are]]
   choices:
-    - match: [are, yesterday]
+    - match: [is]
+      correct: true
       levels:
-        - vastasit [answer]. vastaus on aivan pielessä, level1 drop2 feedback
-        - vastasit [answer]. vastaus on aivan plääh, level2 drop2 feedback
-        - "oikea vastaus: is, today, level3 drop2 feedback"
-    - match: [is, yesterday]
+        - "md: **Correct!** Great job! You answered: |answer|"
+    - match: [do]
       levels:
-        - vastasit [answer]. aika lähellä, level1 drop2 feedback
-        - vastasit [answer]. mietipä vielä hetki, level2 drop2 feedback
-        - "oikea vastaus: is, today, level3 drop2 feedback"
-    - match: [do, today]
+        - "md: Level 1 feedback: You answered: *|answer|* Answer is wrong. Try **thinking**. "
+        - "md: Level 2 feedback: You answered: *|answer|* Answer is wrong. Try thinking *a bit* harder. "
+        - "md: Level 3 feedback: You answered: *|answer|* Answer is wrong. Try thinking **much more** harder. "
+        - "md: Level 4 feedback: You answered: *|answer|* Answer is wrong. Just think about what the answer **is**. "
+        - "md: Level 5 feedback: Please note the correct answer: 'What **is** love?'  
+                               'What time **is** it?' 
+                               'What **is** your favourite colour?'
+                               'What **is** the purpose of all this?"
+    - match: [are]
       levels:
-        - vastasit [answer]. virhe, level1 drop2 feedback
-        - vastasit [answer]. töttöröö, level2 drop2 feedback
-        - "oikea vastaus: is, today, level3 drop2 feedback"
+        - "md: Level 1 feedback: You answered: *|answer|* Answer is wrong. Try **thinking**. "
+        - "md: Level 2 feedback: You answered: *|answer|* Answer is wrong. Try thinking *a bit* harder. "
+        - "md: Level 3 feedback: You answered: *|answer|* Answer is wrong. Try thinking **much more** harder. "
+        - "md: Level 4 feedback: You answered: *|answer|* Answer is wrong. Just think about what the answer **is**. "
+        - "md: Level 5 feedback: Please note the correct answer: 'What **is** love?'  
+                               'What time **is** it?' 
+                               'What **is** your favourite colour?'
+                               'What **is** the purpose of all this?"
     - match: []
       levels:
-        - default feedback for drop2,drop3
+        - "md: Level 1 feedback: default feedback for drop4"
+        - "md: Level 2 feedback: default feedback for drop4"
+        - "md: Level 3 feedback: default feedback for drop4"
+        - "md: Level 4 feedback: default feedback for drop4"
+        - "md: Level 5 feedback: Please note the correct answer: 'What **is** love?'  
+                               'What time **is** it?' 
+                               'What **is** your favourite colour?'
+                               'What **is** the purpose of all this?"
+- pluginNames: [drop3]
+  words: [[is, do, are]]
+  choices:
+    - match: [is]
+      correct: true
+      levels:
+        - "md: **Correct!** Good! You answered: |answer|"
+    - match: [do]
+      levels:
+        - "md: Level 1 feedback: You answered: *|answer|* Answer is wrong. Try **thinking**. "
+        - "md: Level 2 feedback: You answered: *|answer|* Answer is wrong. Try thinking *a bit* harder. "
+        - "md: Level 3 feedback: You answered: *|answer|* Answer is wrong. Try thinking **much more** harder. "
+        - "md: Level 4 feedback: You answered: *|answer|* Answer is wrong. Just think about what the answer **is**. "
+        - "md: Level 5 feedback: Please note the correct answer: 'What **is** love?'  
+                               'What time **is** it?' 
+                               'What **is** your favourite colour?'
+                               'What **is** the purpose of all this?"
+    - match: [are]
+      levels:
+        - "md: Level 1 feedback: You answered: *|answer|* Answer is wrong. Try **thinking**. "
+        - "md: Level 2 feedback: You answered: *|answer|* Answer is wrong. Try thinking a bit harder. "
+        - "md: Level 3 feedback: You answered: *|answer|* Answer is wrong. Try thinking **much more** harder. "
+        - "md: Level 4 feedback: You answered: *|answer|* Answer is wrong. Just think about what the answer **is**. "
+        - "md: Level 5 feedback: Please note the correct answer: 'What **is** love?'  
+                               'What time **is** it?' 
+                               'What **is** your favourite colour?'
+                               'What **is** the purpose of all this?"
+    - match: []
+      levels:
+        - "md: Level 1 feedback: default feedback for drop4"
+        - "md: Level 2 feedback: default feedback for drop4"
+        - "md: Level 3 feedback: default feedback for drop4"
+        - "md: Level 4 feedback: default feedback for drop4"
+        - "md: Level 5 feedback: Please note the correct answer: 'What **is** love?'  
+                               'What time **is** it?' 
+                               'What **is** your favourite colour?'
+                               'What **is** the purpose of all this?"
+- pluginNames: [drop4]
+  words: [[is, do, are]]
+  choices:
+    - match: [is]
+      correct: true
+      levels:
+        - "md: **Correct!** Good! You answered: |answer|"
+    - match: [do]
+      levels:
+        - "md: Level 1 feedback: You answered: *|answer|* Answer is wrong. Try **thinking**. "
+        - "md: Level 2 feedback: You answered: *|answer|* Answer is wrong. Try thinking *a bit* harder. "
+        - "md: Level 3 feedback: You answered: *|answer|* Answer is wrong. Try thinking **much more** harder. "
+        - "md: Level 4 feedback: You answered: *|answer|* Answer is wrong. Just think about what the answer **is**. "
+        - "md: Level 5 feedback: Please note the correct answer: 'What **is** love?'  
+                               'What time **is** it?' 
+                               'What **is** your favourite colour?'
+                               'What **is** the purpose of all this?"
+    - match: [are]
+      levels:
+        - "md: Level 1 feedback: You answered: *|answer|* Answer is wrong. Try **thinking**. "
+        - "md: Level 2 feedback: You answered: *|answer|* Answer is wrong. Try thinking *a bit* harder. "
+        - "md: Level 3 feedback: You answered: *|answer|* Answer is wrong. Try thinking **much more** harder. "
+        - "md: Level 4 feedback: You answered: *|answer|* Answer is wrong. Just think about what the answer **is**. "
+        - "md: Level 5 feedback: Please note the correct answer: 'What **is** love?'  
+                               'What time **is** it?' 
+                               'What **is** your favourite colour?'
+                               'What **is** the purpose of all this?"
+    - match: []
+      levels:
+        - "md: Level 1 feedback: default feedback for drop4"
+        - "md: Level 2 feedback: default feedback for drop4"
+        - "md: Level 3 feedback: default feedback for drop4"
+        - "md: Level 4 feedback: default feedback for drop4"
+        - "md: Level 5 feedback: Please note the correct answer: 'What **is** love?'  
+                               'What time **is** it?' 
+                               'What **is** your favourite colour?'
+                               'What **is** the purpose of all this?"
 ```
+""","""
+- pluginNames: [#PLUGINNAMEHERE]
+  words: [[is, do, are]]
+  choices:
+    - match: [is]
+      correct: true
+      levels:
+        - "md: **Correct!** You answered: |answer|"
+    - match: [do]
+      levels:
+        - "md: Level 1 feedback: You answered: *|answer|* Answer is wrong. Try **thinking**. "
+        - "md: Level 2 feedback: You answered: *|answer|* Answer is wrong. Try thinking *a bit* harder. "
+        - "md: Level 3 feedback: You answered: *|answer|* Answer is wrong. Try thinking **much more** harder. "
+        - "md: Level 4 feedback: You answered: *|answer|* Answer is wrong. Just think about what the answer **is**. "
+        - "md: Level 5 feedback: Please note the correct answer: 'What **is** love?'  
+                               'What time **is** it?' 
+                               'What **is** your favourite colour?'
+                               'What **is** the purpose of all this?"
+    - match: [are]
+      levels:
+        - "md: Level 1 feedback: You answered: *|answer|* Answer is wrong. Try **thinking**. "
+        - "md: Level 2 feedback: You answered: *|answer|* Answer is wrong. Try thinking *a bit* harder. "
+        - "md: Level 3 feedback: You answered: *|answer|* Answer is wrong. Try thinking **much more** harder. "
+        - "md: Level 4 feedback: You answered: *|answer|* Answer is wrong. Just think about what the answer **is**. "
+        - "md: Level 5 feedback: Please note the correct answer: 'What **is** love?'  
+                               'What time **is** it?' 
+                               'What **is** your favourite colour?'
+                               'What **is** the purpose of all this?"
+    - match: []
+      levels:
+        - "md: Level 1 feedback: default feedback for drop4"
+        - "md: Level 2 feedback: default feedback for drop4"
+        - "md: Level 3 feedback: default feedback for drop4"
+        - "md: Level 4 feedback: default feedback for drop4"
+        - "md: Level 5 feedback: Please note the correct answer: 'What **is** love?'  
+                               'What time **is** it?' 
+                               'What **is** your favourite colour?'
+                               'What **is** the purpose of all this?"
+""","""
+- match: [is⁞]
+  correct: true
+  levels:
+    - "md: **Correct!** You answered: |answer|"
+""","""
+- match: [do⁞]
+  levels:
+    - "md: Level 1 feedback: You answered: *|answer|* Answer is wrong. Try **thinking**. "
+    - "md: Level 2 feedback: You answered: *|answer|* Answer is wrong. Try thinking *a bit* harder. "
+    - "md: Level 3 feedback: You answered: *|answer|* Answer is wrong. Try thinking **much more** harder. "
+    - "md: Level 4 feedback: You answered: *|answer|* Answer is wrong. Just think about what the answer **is**. "
+    - "md: Level 5 feedback: Please note the correct answer: 'What **is** love?'  
+                           'What time **is** it?' 
+                           'What **is** your favourite colour?'
+                           'What **is** the purpose of all this?"
 """]
     return jsonify({
         "js": ["js/build/feedback.js"],
@@ -256,13 +415,23 @@ questionItems:
                         'items': [
                             {
                                 'data': templates[0].strip(),
-                                'text': 'Feedback without items',
-                                'expl': 'Add a plugin to show feedback',
+                                'text': 'Example with 4 items',
+                                'expl': 'Add a feedback-plugin with 4 items',
                             },
                             {
                                 'data': templates[1].strip(),
-                                'text': 'Feedback with question items',
-                                'expl': 'Add a plugin to show feedback',
+                                'text': 'Question item',
+                                'expl': 'Add a question item',
+                            },
+                            {
+                                'data': templates[2].strip(),
+                                'text': 'Correct match',
+                                'expl': 'Add a correct match with feedback-levels',
+                            },
+                            {
+                                'data': templates[3].strip(),
+                                'text': 'Match',
+                                'expl': 'Add a match with feedback-levels',
                             },
                         ],
                     },
