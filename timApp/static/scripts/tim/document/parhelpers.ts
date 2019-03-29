@@ -181,7 +181,6 @@ export function dereferencePar(par: Paragraph) {
 
 /**
  * Adds an element to the paragraph margin.
- * @method addElementToParagraphMargin
  * @param par - Paragraph where the element will be added
  * @param el - Element to add
  */
@@ -203,6 +202,10 @@ export function isSettingsPar(par: Paragraph) {
 
 export function isPreamble(par: Paragraph) {
     return par.hasClass("preamble");
+}
+
+export function isHelpPar(par: Paragraph) {
+    return getParId(par) === "HELP_PAR";
 }
 
 export function getPreambleDocId(par: Paragraph) {

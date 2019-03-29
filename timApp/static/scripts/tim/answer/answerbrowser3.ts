@@ -10,9 +10,8 @@ import {showMessageDialog} from "../ui/dialog";
 import {IUser} from "../user/IUser";
 import {Users} from "../user/userService";
 import {KEY_DOWN, KEY_LEFT, KEY_RIGHT, KEY_UP} from "../util/keycodes";
-import {$filter, $http, $httpParamSerializer, $timeout, $window} from "../util/ngimport";
+import {$filter, $http, $httpParamSerializer, $q, $timeout, $window} from "../util/ngimport";
 import {Binding, getURLParameter, markAsUsed, Require, to} from "../util/utils";
-import {ReviewController} from "../velp/reviewController";
 import {showAllAnswers} from "./allAnswersController";
 import {IAnswer} from "./IAnswer";
 
@@ -51,11 +50,12 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
     private static $inject = ["$element", "$scope", "$transclude"];
     private compiled = false;
     private viewctrl!: Require<ViewCtrl>;
-    private taskId!: Binding<string, "@">;
+    public taskId!: Binding<string, "@">;
     private type!: Binding<string, "@">;
     private showBrowser: boolean = false;
     private pluginElement?: JQuery;
     public showPlaceholder = true;
+    public abLoad = $q.defer<AnswerBrowserController | null>();
 
     constructor(private element: IRootElementService, private scope: IScope, private transclude: ITranscludeFunction) {
         super(scope, element);
@@ -69,6 +69,7 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
     }
 
     $onInit() {
+        this.viewctrl.registerPluginLoader(this);
         if (this.isValidTaskId(this.taskId)) {
             const [id, name] = this.taskId.split(".");
             if (getURLParameter("task") === name) {
@@ -100,15 +101,16 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
     }
 
     loadPlugin() {
+        if (this.compiled) {
+            return;
+        }
         this.scope.$evalAsync(async () => {
-            if (this.compiled) {
-                console.warn(`Plugin ${this.taskId} was already compiled`);
-                return;
-            }
             const plugin = this.getPluginElement();
             this.compiled = true;
             if (!this.viewctrl.noBrowser && this.isValidTaskId(this.taskId) && this.type !== "lazyonly") {
                 this.showBrowser = true;
+            } else {
+                this.abLoad.resolve(null); // this plugin instance doesn't have answer browser
             }
             const origHtml = plugin[0].innerHTML;
             if (origHtml.indexOf(LAZYSTART) < 0) {
@@ -164,18 +166,16 @@ interface ITaskInfo {
     answerLimit: number;
 }
 
-interface IAnswerSaveEvent {
-    taskId: string;
+export interface IAnswerSaveEvent {
     savedNew: number | false;
     error?: string;
 }
 
 export class AnswerBrowserController extends DestroyScope implements IController {
     private static $inject = ["$scope", "$element"];
-    private taskId!: Binding<string, "<">;
+    public taskId!: Binding<string, "<">;
     private loading: number;
     private viewctrl!: Require<ViewCtrl>;
-    private rctrl!: Require<ReviewController>;
     private user: IUser | undefined;
     private fetchedUser: IUser | undefined;
     private saveTeacher: boolean = false;
@@ -186,7 +186,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
     public selectedAnswer: IAnswer | undefined;
     private anyInvalid: boolean = false;
     private giveCustomPoints: boolean = false;
-    private review: boolean = false;
+    public review: boolean = false;
     private shouldFocus: boolean = false;
     private alerts: Array<{}> = [];
     private taskInfo: ITaskInfo | undefined;
@@ -194,6 +194,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
     private loadedAnswer: {id: number | undefined, review: boolean} = {review: false, id: undefined};
     private answerId?: Binding<number, "<?">;
     private loader!: PluginLoaderCtrl;
+    private reviewHtml?: string;
 
     constructor(private scope: IScope, private element: IRootElementService) {
         super(scope, element);
@@ -201,7 +202,22 @@ export class AnswerBrowserController extends DestroyScope implements IController
         this.checkKeyPress = this.checkKeyPress.bind(this);
     }
 
+    registerNewAnswer(args: IAnswerSaveEvent) {
+        if (args.savedNew) {
+            this.loadedAnswer.id = args.savedNew;
+            this.review = false;
+            this.loadedAnswer.review = false;
+            this.getAnswersAndUpdate();
+            // HACK: for some reason the math mode is lost because of the above call, so we restore it here
+            ParCompiler.processAllMathDelayed(this.loader.getPluginElement());
+        }
+        if (args.error) {
+            this.alerts.push({msg: args.error, type: "warning"});
+        }
+    }
+
     async $onInit() {
+        this.viewctrl.registerAnswerBrowser(this);
         this.scope.$watch(() => this.taskId, (newValue, oldValue) => {
             if (newValue === oldValue) {
                 return;
@@ -216,22 +232,6 @@ export class AnswerBrowserController extends DestroyScope implements IController
             // ng-keypress will not fire if the textbox has focus
             this.element[0].addEventListener("keydown", this.checkKeyPress);
         }
-
-        this.scope.$on("answerSaved", (event, args: IAnswerSaveEvent) => {
-            if (args.taskId === this.taskId) {
-                if (args.savedNew) {
-                    this.loadedAnswer.id = args.savedNew;
-                    this.review = false;
-                    this.loadedAnswer.review = false;
-                    this.getAnswersAndUpdate();
-                    // HACK: for some reason the math mode is lost because of the above call, so we restore it here
-                    ParCompiler.processAllMathDelayed(this.loader.getPluginElement());
-                }
-                if (args.error) {
-                    this.alerts.push({msg: args.error, type: "warning"});
-                }
-            }
-        });
 
         if (this.viewctrl.selectedUser) {
             this.user = this.viewctrl.selectedUser;
@@ -276,18 +276,18 @@ export class AnswerBrowserController extends DestroyScope implements IController
         this.loader.getPluginElement().on("mouseenter touchstart", () => {
             void this.checkUsers();
         });
+        this.loader.abLoad.resolve(this);
+    }
 
-        this.scope.$on("userChanged", async (event, args) => {
-                this.user = args.user;
-                if (args.updateAll) {
-                    await this.loadUserAnswersIfChanged();
-                } else if (this.hasUserChanged()) {
-                    this.dimPlugin();
-                } else {
-                    this.unDimPlugin();
-                }
-            },
-        );
+    async changeUser(user: IUser, updateAll: boolean) {
+        this.user = user;
+        if (updateAll) {
+            await this.loadUserAnswersIfChanged();
+        } else if (this.hasUserChanged()) {
+            this.dimPlugin();
+        } else {
+            this.unDimPlugin();
+        }
     }
 
     private unDimPlugin() {
@@ -375,10 +375,11 @@ export class AnswerBrowserController extends DestroyScope implements IController
             this.loadedAnswer.review = this.review;
             void loadPlugin(r.result.data.html, this.loader.getPluginElement(), this.scope, this.viewctrl);
             if (this.review) {
-                this.element.find(".review").html(r.result.data.reviewHtml);
+                this.reviewHtml = r.result.data.reviewHtml;
+                await $timeout();
             }
         }
-        this.rctrl.loadAnnotationsToAnswer(this.selectedAnswer.id, par[0], this.review);
+        this.viewctrl.reviewCtrl.loadAnnotationsToAnswer(this.selectedAnswer.id, par[0], this.review);
     }
 
     nextAnswer() {
@@ -484,11 +485,13 @@ export class AnswerBrowserController extends DestroyScope implements IController
         }
     }
 
-    setAnswerById(id: number) {
+    setAnswerById(id: number, updateImmediately: boolean) {
         for (let i = 0; i < this.filteredAnswers.length; i++) {
             if (this.filteredAnswers[i].id === id) {
                 this.selectedAnswer = this.filteredAnswers[i];
-                this.changeAnswer();
+                if (updateImmediately) {
+                    this.changeAnswer();
+                }
                 break;
             }
         }
@@ -750,7 +753,6 @@ timApp.component("answerbrowser", {
         // the paragraph to the compile call.
         // par: "^timPar",
 
-        rctrl: "^timReview",
         viewctrl: "^timView",
     },
     templateUrl: "/static/templates/answerBrowser.html",

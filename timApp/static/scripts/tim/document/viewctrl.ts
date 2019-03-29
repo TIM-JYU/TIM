@@ -1,4 +1,4 @@
-import angular, {IController, IPromise, IScope} from "angular";
+import angular, {IController, IDeferred, IPromise, IScope} from "angular";
 import $ from "jquery";
 import moment from "moment";
 import ngs, {ngStorage} from "ngstorage";
@@ -15,6 +15,7 @@ import {QuestionHandler} from "tim/document/question/questions";
 import {initReadings} from "tim/document/readings";
 import {timLogTime} from "tim/util/timTiming";
 import {isPageDirty, markAsUsed, markPageNotDirty, to} from "tim/util/utils";
+import {AnswerBrowserController, PluginLoaderCtrl} from "../answer/answerbrowser3";
 import {BookmarksController, IBookmarkGroup} from "../bookmark/bookmarks";
 import {IPluginInfoResponse, ParCompiler} from "../editor/parCompiler";
 import {IDocument, ITag, TagType} from "../item/IItem";
@@ -24,16 +25,18 @@ import {initCssPrint} from "../printing/cssPrint";
 import {showMessageDialog} from "../ui/dialog";
 import {IUser} from "../user/IUser";
 import {Users} from "../user/userService";
-import {$compile, $filter, $http, $interval, $localStorage, $timeout, $window} from "../util/ngimport";
+import {$compile, $filter, $http, $interval, $localStorage, $q, $timeout, $window} from "../util/ngimport";
+import {AnnotationController} from "../velp/annotation";
 import {ReviewController} from "../velp/reviewController";
 import {EditingHandler} from "./editing/editing";
 import {PendingCollection} from "./editing/edittypes";
+import * as helpPar from "./editing/helpPar";
 import {onClick} from "./eventhandlers";
 import {PopupMenuController} from "./popupMenu";
 import {RefPopupHandler} from "./refpopup";
 import {MenuFunctionEntry} from "./viewutils";
 
-markAsUsed(ngs, popupMenu, interceptor);
+markAsUsed(ngs, popupMenu, interceptor, helpPar);
 
 export interface ITimComponent {
     getName: () => string | undefined;
@@ -76,6 +79,8 @@ export type DiffResult = IInsertDiffResult | IReplaceDiffResult | IDeleteDiffRes
 
 const courseFolder = "My courses";
 
+export let vctrlInstance: ViewCtrl | undefined;
+
 export class ViewCtrl implements IController {
     private notification: string = "";
     private videoElements: {[name: string]: HTMLVideoElement | undefined} = {};
@@ -113,7 +118,7 @@ export class ViewCtrl implements IController {
     private liveUpdates: number;
     private oldWidth: number;
     public defaultAction: MenuFunctionEntry | undefined;
-    public reviewCtrlScope?: IScope & {$ctrl: ReviewController};
+    public reviewCtrl: ReviewController;
     public lectureCtrl?: LectureController;
     public questionHandler: QuestionHandler;
     public areaHandler: AreaHandler;
@@ -271,6 +276,7 @@ export class ViewCtrl implements IController {
             }
         } catch (e) {
         }
+        this.reviewCtrl = new ReviewController(this);
         timLogTime("ViewCtrl end", "view");
     }
 
@@ -355,6 +361,7 @@ export class ViewCtrl implements IController {
     }
 
     $onInit() {
+        vctrlInstance = this;
         this.scope.$watchGroup([
             () => this.lectureMode,
             () => this.selection.start,
@@ -374,6 +381,8 @@ export class ViewCtrl implements IController {
         });
         void this.checkIfTaggedAsCourse();
         void this.checkIfBookmarked();
+        this.reviewCtrl.loadDocumentAnnotations();
+        this.editingHandler.insertHelpPar();
     }
 
     /**
@@ -490,10 +499,6 @@ export class ViewCtrl implements IController {
         return this.docVersion[0] === 0 && this.docVersion[1] === 0; // TODO can be empty otherwise too
     }
 
-    setReviewCtrlScope(scope: IScope & {$ctrl: ReviewController}) {
-        this.reviewCtrlScope = scope;
-    }
-
     reload() {
         markPageNotDirty();
         window.location.reload();
@@ -503,9 +508,17 @@ export class ViewCtrl implements IController {
         this.showRefresh = false;
     }
 
-    changeUser(user: IUser, updateAll: boolean) {
+    async changeUser(user: IUser, updateAll: boolean) {
         this.selectedUser = user;
-        this.scope.$broadcast("userChanged", {user, updateAll});
+        if (updateAll) {
+            for (const lo of this.ldrs.values()) {
+                lo.loadPlugin();
+                await lo.abLoad.promise;
+            }
+        }
+        for (const ab of this.abs.values()) {
+            ab.changeUser(user, updateAll);
+        }
     }
 
     async beginUpdate() {
@@ -628,6 +641,74 @@ export class ViewCtrl implements IController {
             headers.first().addClass("no-page-break-before");
             return;
         }
+    }
+
+    private abs = new Map<string, AnswerBrowserController>();
+
+    registerAnswerBrowser(ab: AnswerBrowserController) {
+        this.abs.set(ab.taskId, ab);
+    }
+
+    getAnswerBrowser(taskId: string) {
+        return this.abs.get(taskId);
+    }
+
+    private ldrs = new Map<string, PluginLoaderCtrl>();
+
+    registerPluginLoader(loader: PluginLoaderCtrl) {
+        this.ldrs.set(loader.taskId, loader);
+    }
+
+    getPluginLoader(taskId: string) {
+        return this.ldrs.get(taskId);
+    }
+
+    private anns = new Map<string, AnnotationController>();
+    private annsDefers = new Map<string, IDeferred<AnnotationController>>();
+
+    registerAnnotation(loader: AnnotationController) {
+        // This assumes that the associated DOM element for annotation is attached in the page because we need to check
+        // whether it's in the right margin or not (i.e. in text).
+        const prefix = loader.getKeyPrefix();
+        const key = prefix + loader.annotation.id;
+        this.anns.set(key, loader);
+        const defer = this.annsDefers.get(key);
+        if (defer) {
+            defer.resolve(loader);
+        }
+    }
+
+    getAnnotation(id: string) {
+        return this.anns.get(id);
+    }
+
+    getAnnotationAsync(id: string): IPromise<AnnotationController> {
+        const a = this.getAnnotation(id);
+        if (a) {
+            return $q.resolve(a);
+        }
+        const value = $q.defer<AnnotationController>();
+        this.annsDefers.set(id, value);
+        return value.promise;
+    }
+
+    unRegisterAnnotation(a: AnnotationController) {
+        const prefix = a.getKeyPrefix();
+        const key = prefix + a.annotation.id;
+        this.anns.delete(key);
+        this.annsDefers.delete(key);
+    }
+}
+
+class EntityRegistry<K, V> {
+    private entities = new Map<K, V>();
+
+    registerEntity(k: K, e: V) {
+        this.entities.set(k, e);
+    }
+
+    getEntity(k: K) {
+        return this.entities.get(k);
     }
 }
 

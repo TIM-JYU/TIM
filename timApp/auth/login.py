@@ -306,8 +306,9 @@ def alt_signup_after():
     if password != confirm:
         return abort(400, 'Passwords do not match.')
 
-    if len(password) < 6:
-        return abort(400, 'A password should contain at least six characters.')
+    min_pass_len = current_app.config['MIN_PASSWORD_LENGTH']
+    if len(password) < min_pass_len:
+        return abort(400, f'A password should contain at least {min_pass_len} characters.')
 
     save_came_from()
 

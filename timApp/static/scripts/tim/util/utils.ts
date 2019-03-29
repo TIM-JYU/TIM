@@ -61,7 +61,6 @@ export function checkIfElement(x: any): x is Element {
 
 /**
  * Check if element is in view
- * @method isInViewport
  * @param el - Element to check
  * @returns {boolean} true if in view
  */
@@ -78,7 +77,6 @@ export function isInViewport(el: Element) {
 
 /**
  * Scroll window to the given element.
- * @method scrollToElement
  * @param element - Element to scroll to.
  */
 export function scrollToElement(element: Element) {
@@ -89,7 +87,6 @@ export function scrollToElement(element: Element) {
 
 /**
  * Gets the parent element of the given element.
- * @method getElementParent
  * @param element - Element whose parent is queried for
  * @returns {Element} Element parent
  */

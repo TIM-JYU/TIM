@@ -16,7 +16,9 @@ from timApp.document.document import Document, dereference_pars
 from timApp.folder.folder import Folder
 from timApp.item.item import Item, ItemBase
 from timApp.plugin.plugin import Plugin, find_plugin_from_document, maybe_get_plugin_from_par
+from timApp.plugin.pluginexception import PluginException
 from timApp.plugin.taskid import TaskId, TaskIdAccess
+from timApp.timdb.exceptions import TimDbException
 from timApp.timdb.sqa import db
 from timApp.user.user import ItemOrBlock, User
 from timApp.user.usergroup import UserGroup
@@ -246,7 +248,10 @@ def get_plugin_from_request(doc: Document, task_id: TaskId, u: User) -> Tuple[Do
     else:
         orig_doc = doc
     orig_doc.insert_preamble_pars()
-    orig_par = orig_doc.get_paragraph(orig_par_id)
+    try:
+        orig_par = orig_doc.get_paragraph(orig_par_id)
+    except TimDbException:
+        raise PluginException(f'Plugin paragraph not found: {orig_par_id}')
     pars = dereference_pars([orig_par], context_doc=orig_doc)
     ctx_doc = orig_doc if (not orig_doc.get_docinfo().is_original_translation and orig_par.is_translation()) else doc
     for p in pars:

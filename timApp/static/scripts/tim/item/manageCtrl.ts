@@ -5,7 +5,7 @@ import {isManageResponse, showRenameDialog} from "../document/editing/pluginRena
 import * as copyFolder from "../folder/copyFolder";
 import {showMessageDialog} from "../ui/dialog";
 import {$http, $timeout, $upload, $window} from "../util/ngimport";
-import {markAsUsed, to} from "../util/utils";
+import {clone, markAsUsed, to} from "../util/utils";
 import {IDocument, IFolder, IFullDocument, IItem, redirectToItem} from "./IItem";
 
 markAsUsed(copyFolder);
@@ -127,13 +127,13 @@ export class PermCtrl implements IController {
             return [];
         }
 
-        const r = await to($http.get<Array<{lang_id: string, title: string}>>("/translations/" + this.item.id, {}));
+        const r = await to($http.get<Array<IItem & {old_title: string, old_langid: string, lang_id: string}>>("/translations/" + this.item.id, {}));
         if (r.ok) {
             const data = r.result.data;
             this.translations = [];
 
             for (const tr of data) {
-                const trnew = JSON.parse(JSON.stringify(tr));
+                const trnew = clone(tr);
                 trnew.old_langid = tr.lang_id;
                 trnew.old_title = tr.title;
                 this.translations.push(trnew);

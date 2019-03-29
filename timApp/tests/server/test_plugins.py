@@ -30,8 +30,6 @@ from timApp.util.flask.responsehelper import to_dict
 from timApp.util.utils import EXAMPLE_DOCS_PATH, get_current_time
 from timApp.velp.velp_models import Annotation
 
-PLUGIN_NOT_EXIST_ERROR = {}  # TODO the error value should be better
-
 
 class PluginTest(TimRouteTest):
     answer_error = {'error': "You don't have access to this answer."}
@@ -833,6 +831,7 @@ choices:
         a: Answer = Answer.query.get(resp['savedNew'])
         self.assertEqual(1, a.points)
         self.assertEqual(f'{d.id}.t', a.task_id)
+        self.get_state(a.id)
 
         if create_preamble_translation:
             tr_p = self.create_translation(p)
@@ -1531,3 +1530,54 @@ initword: hi
                 markup={'initword': 'hi'},
             ),
         )
+
+    def test_invalid_getstate(self):
+        self.login_test1()
+        d = self.create_doc(initial_par="""
+#- {#t plugin=pali}
+initword: a""")
+        a = self.post_answer('pali', f'{d.id}.t', user_input={'userword': '3'})
+        aid = a['savedNew']
+        self.get(
+            '/getState',
+            query_string={
+                'user_id': self.current_user_id(),
+                'answer_id': 12345,
+                'par_id': 'xxx',
+            },
+            expect_status=400,
+            expect_content='Non-existent answer',
+            json_key='error',
+        )
+        # not found because of wrong hint
+        self.get(
+            '/getState',
+            query_string={
+                'user_id': self.current_user_id(),
+                'answer_id': aid,
+                'par_id': 'xxx',
+            },
+            expect_status=400,
+            expect_content='Task not found in the document: t (potentially because of wrong block id hint)',
+            json_key='error',
+        )
+        self.get(
+            '/getState',
+            query_string={
+                'user_id': self.current_user_id(),
+                'answer_id': aid,
+                'par_id': 'xxx',
+                'ref_from_par_id': 'yyy',
+                'ref_from_doc_id': d.id,
+            },
+            expect_status=400,
+            expect_content='Plugin paragraph not found: yyy',
+            json_key='error',
+        )
+
+    def test_plugin_empty_markup(self):
+        self.login_test1()
+        d = self.create_doc(initial_par="""
+``` {plugin=pali #t}
+```""")
+        self.assert_content(self.get(d.url, as_tree=True), [''])

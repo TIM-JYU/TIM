@@ -103,7 +103,7 @@
                     </ul>
                 </div>
             </div>
-            <div ng-show="$ctrl.review" class="review">
+            <div ng-if="$ctrl.review" class="review" ng-bind-html="$ctrl.reviewHtml">
 
             </div>
         </div>
