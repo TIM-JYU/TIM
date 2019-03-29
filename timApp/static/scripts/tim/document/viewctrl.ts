@@ -449,9 +449,17 @@ export class ViewCtrl implements IController {
         this.showRefresh = false;
     }
 
-    changeUser(user: IUser, updateAll: boolean) {
+    async changeUser(user: IUser, updateAll: boolean) {
         this.selectedUser = user;
-        this.scope.$broadcast("userChanged", {user, updateAll});
+        if (updateAll) {
+            for (const lo of this.ldrs.values()) {
+                lo.loadPlugin();
+                await lo.abLoad.promise;
+            }
+        }
+        for (const ab of this.abs.values()) {
+            ab.changeUser(user, updateAll);
+        }
     }
 
     async beginUpdate() {

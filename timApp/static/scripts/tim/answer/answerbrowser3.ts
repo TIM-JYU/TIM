@@ -55,7 +55,7 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
     private showBrowser: boolean = false;
     private pluginElement?: JQuery;
     public showPlaceholder = true;
-    public abLoad = $q.defer<AnswerBrowserController>();
+    public abLoad = $q.defer<AnswerBrowserController | null>();
 
     constructor(private element: IRootElementService, private scope: IScope, private transclude: ITranscludeFunction) {
         super(scope, element);
@@ -101,15 +101,16 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
     }
 
     loadPlugin() {
+        if (this.compiled) {
+            return;
+        }
         this.scope.$evalAsync(async () => {
-            if (this.compiled) {
-                console.warn(`Plugin ${this.taskId} was already compiled`);
-                return;
-            }
             const plugin = this.getPluginElement();
             this.compiled = true;
             if (!this.viewctrl.noBrowser && this.isValidTaskId(this.taskId) && this.type !== "lazyonly") {
                 this.showBrowser = true;
+            } else {
+                this.abLoad.resolve(null); // this plugin instance doesn't have answer browser
             }
             const origHtml = plugin[0].innerHTML;
             if (origHtml.indexOf(LAZYSTART) < 0) {
@@ -275,19 +276,18 @@ export class AnswerBrowserController extends DestroyScope implements IController
         this.loader.getPluginElement().on("mouseenter touchstart", () => {
             void this.checkUsers();
         });
-
-        this.scope.$on("userChanged", async (event, args) => {
-                this.user = args.user;
-                if (args.updateAll) {
-                    await this.loadUserAnswersIfChanged();
-                } else if (this.hasUserChanged()) {
-                    this.dimPlugin();
-                } else {
-                    this.unDimPlugin();
-                }
-            },
-        );
         this.loader.abLoad.resolve(this);
+    }
+
+    async changeUser(user: IUser, updateAll: boolean) {
+        this.user = user;
+        if (updateAll) {
+            await this.loadUserAnswersIfChanged();
+        } else if (this.hasUserChanged()) {
+            this.dimPlugin();
+        } else {
+            this.unDimPlugin();
+        }
     }
 
     private unDimPlugin() {

@@ -1152,7 +1152,7 @@ export class ReviewController {
         if (!taskId) {
             return;
         }
-        let ab = this.getAnswerBrowserFromPluginLoader(loader);
+        let ab = this.getAnswerBrowserFromPluginLoader(loader) || null;
 
         if (!ab) {
             const loaderCtrl = this.vctrl.getPluginLoader(taskId);
@@ -1161,6 +1161,9 @@ export class ReviewController {
             }
             loaderCtrl.loadPlugin();
             ab = await loaderCtrl.abLoad.promise;
+            if (!ab) {
+                return;
+            }
         }
         if (this.vctrl.selectedUser.id !== annotation.user_id) {
             for (const u of this.vctrl.users) {
