@@ -39,6 +39,7 @@ class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.T
     private selectedWord?: string;
     private vctrl!: ViewCtrl;
     private forceSave = false;
+    private radio?: boolean;
 
     getDefaultMarkup() {
         return {};
@@ -48,6 +49,7 @@ class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.T
         super.$onInit();
         this.wordList = this.attrs.words || [];
         this.addToCtrl();
+        this.radio = this.attrs.radio || false;
     }
 
     /**
@@ -151,7 +153,10 @@ dropdownApp.component("dropdownRunner", {
     <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
     <p ng-if="::$ctrl.stem">{{::$ctrl.stem}}</p>
     <div class="form-inline"><label><span>
-        <select ng-model="$ctrl.selectedWord" ng-options="item for item in $ctrl.wordList">
+        <li class="dropradio" ng-if="::$ctrl.radio" ng-repeat="item in $ctrl.wordList">
+        <input type="radio" name="selection" ng-value="{{item}}" ng-model="$ctrl.selectedWord">{{item}}
+        </li>
+        <select ng-if="::!$ctrl.radio" ng-model="$ctrl.selectedWord" ng-options="item for item in $ctrl.wordList">
         </select>
         </span></label>
     </div>
@@ -160,8 +165,3 @@ dropdownApp.component("dropdownRunner", {
 </div>
 `,
 });
-
-
-// <span ng-if="$ctrl.radio" ng-repeat="item in $ctrl.words">
-//         <input type="radio" name="radio" ng-value="item" ng-model="$ctrl.selectedWord">{{item}}
-//         </span>

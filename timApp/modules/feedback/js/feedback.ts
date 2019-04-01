@@ -748,10 +748,3 @@ feedbackApp.component("feedbackRunner", {
 </div>
 `,
 });
-/*
-<button class="timButton"
-            ng-if="::$ctrl.wordButtonText()"
-            ng-click="$ctrl.setPluginWords()">
-        {{::$ctrl.wordButtonText()}}
-    </button>
- */

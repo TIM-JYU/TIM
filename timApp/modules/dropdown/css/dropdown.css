@@ -1,3 +1,7 @@
 .plugindropdown answerbrowser {
     display: none;
 }
+
+.plugindropdown li {
+    list-style-type: none;
+}

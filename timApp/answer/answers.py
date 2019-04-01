@@ -45,7 +45,7 @@ class Answers(TimDbBase):
         if tags is None:
             tags = []
         existing_answers = self.get_common_answers(users, task_id)
-        if len(existing_answers) > 0 and existing_answers[0].content == content and not force_save:
+        if existing_answers and existing_answers[0].content == content and not force_save:
             a = existing_answers[0]
             a.points = points
             a.last_points_modifier = points_given_by
