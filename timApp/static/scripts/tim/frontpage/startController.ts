@@ -38,19 +38,17 @@ export class StartCtrl implements IController {
     setLanguage() {
         const urlPathName: string = window.location.pathname;
         switch (urlPathName) {
-            case "/fi": {
+            case "/fi":
                 this.language = "fi";
                 // Save to localstorage so the language is remembered when using start page without urlPathName.
                 this.storage.languageStorage = "fi";
                 break;
-            }
-            case "/en": {
+            case "/en":
                 this.language = "en";
                 this.storage.languageStorage = "en";
                 break;
-            }
             // For a new language add another case here and button and translations into HTML.
-            default: {
+            default:
                 // Try local storage, otherwise use default language.
                 if (this.storage.languageStorage) {
                     this.language = this.storage.languageStorage;
@@ -58,7 +56,6 @@ export class StartCtrl implements IController {
                     this.language = this.defaultLanguage;
                 }
                 break;
-            }
         }
     }
 

@@ -239,7 +239,7 @@ class LoginMenuController implements IController {
 
 timApp.component("loginMenu", {
     bindings: {
-        buttonText: "@",
+        buttonText: "@?",
     },
     controller: LoginMenuController,
     templateUrl: "/static/templates/loginMenu.html",
