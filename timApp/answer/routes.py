@@ -295,6 +295,19 @@ def post_answer(plugintype: str, task_id_ext: str):
                                                            tags,
                                                            valid=True,
                                                            points_given_by=get_current_user_group())
+        elif is_teacher:
+            user_id = answer_browser_data.get('userId')
+            if user_id:
+                users = [User.query.get(user_id)]
+                points = answer_browser_data.get('points', points)
+                points = points_to_float(points)
+                result['savedNew'] = timdb.answers.save_answer(users,
+                                                               tid,
+                                                               json.dumps(save_object),
+                                                               points,
+                                                               tags,
+                                                               valid=True,
+                                                               points_given_by=get_current_user_group())
         else:
             result['savedNew'] = None
         if result['savedNew'] is not None and upload is not None:

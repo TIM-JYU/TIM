@@ -508,7 +508,19 @@ export class AnswerBrowserController extends DestroyScope implements IController
                 userId: this.user.id,
                 saveAnswer: !this.viewctrl.noBrowser,
             };
-        } else {
+        }
+        else if (this.user) {
+            return {
+                //answer_id: this.selectedAnswer.id,
+                saveTeacher: this.saveTeacher,
+                teacher: this.viewctrl.teacherMode,
+                points: this.points,
+                giveCustomPoints: this.giveCustomPoints,
+                userId: this.user.id,
+                saveAnswer: !this.viewctrl.noBrowser,
+            };
+        }
+        else {
             return {
                 saveTeacher: false,
                 teacher: this.viewctrl.teacherMode,
