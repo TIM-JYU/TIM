@@ -1,5 +1,5 @@
 #!/usr/bin/env stack
--- stack --resolver lts-11.7 script --ghc-options -threaded --package typed-process --package directory --package filepath --package tasty --package tasty-golden --package dhall --package text
+-- stack --resolver lts-13.9 script --ghc-options -threaded --package typed-process --package directory --package filepath --package tasty --package tasty-golden --package dhall --package text
 
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
@@ -18,7 +18,7 @@ import System.Directory
 import Data.Monoid
 import Control.Monad
 import Control.Applicative
-import qualified Data.Text.Lazy as LT
+import qualified Data.Text as T
 import Dhall
 
 main :: IO ()
@@ -47,7 +47,7 @@ goldenTests = do
  where
   openTests :: FilePath -> IO [CurlCase]
   openTests curlFile = do
-    let dexp = LT.concat ["./", LT.pack curlFile]
+    let dexp = T.concat ["./", T.pack curlFile]
     tcs <- input auto dexp `catch` (\(e::SomeException) -> (\x->[x]) <$> input auto dexp)
                            `catch` (\(e::SomeException) -> error (show e))
     return tcs

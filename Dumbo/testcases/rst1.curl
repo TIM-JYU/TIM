@@ -1,0 +1,7 @@
+{ route =
+    "markdown/"
+, body =
+    "{\"content\":[\"`foo <bar>`__\"],\"inputFormat\":\"rst\"}"
+, name =
+    "rst-test-1"
+}

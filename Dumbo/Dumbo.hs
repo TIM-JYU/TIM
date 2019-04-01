@@ -9,20 +9,21 @@
 {-#LANGUAGE DeriveTraversable #-}
 module Main where
 import Text.Pandoc.Walk
-import GHC.Generics
 import qualified Text.Pandoc as PDC
 import qualified Text.Pandoc.Options as PDC_Opt
+import GHC.Generics
 import System.Directory
 import qualified Data.Vector as V
 import Control.Monad.Trans
 import Control.Monad
 import Data.Maybe
 import qualified Data.Text as T
+import qualified Data.Text.Encoding as T
 import qualified Data.Text.Lazy as LT
 import Control.Lens (transformM)
 import qualified Data.ByteString.Lazy as LBS
 import System.FilePath
-import Snap.Core
+import Snap.Core hiding (pass)
 import Data.Aeson
 import Data.Aeson.Types
 import Data.Aeson.Lens()
@@ -36,9 +37,10 @@ import Text.LaTeX.Base.Syntax
 import Text.LaTeX.Base.Parser
 import qualified Data.Set as Set
 
-type WalkType = PDC.Block
+defaultReader :: PDC.Reader PDC.PandocIO
+defaultReader = PDC.TextReader PDC.readMarkdown
 
-tex2SvgPass :: DumboRTC -> T.Text -> (WalkType -> IO WalkType)
+tex2SvgPass :: DumboRTC -> T.Text -> (PDC.Block -> IO PDC.Block)
 tex2SvgPass drtc preamble = walkM (tex2svg (tex2svgRtc drtc) preamble . rawInlinePass) . rawBlockPass
 
 latexMathPass :: (String -> a) -> String -> a -> a
@@ -62,10 +64,13 @@ isMath (TeXEnv name _ _) = Set.member name mathEnvsSet
 isMath (TeXSeq l1 l2) = isMath l1 || isMath l2
 isMath _ = False
 
-convertBlock :: Conversion -> (WalkType -> IO WalkType) -> T.Text -> IO LT.Text
-convertBlock target ms txt =
-    fmap (either (LT.pack . show) id) <$> PDC.runIO $
-        PDC.readMarkdown readerOpts txt >>= make
+convertBlock :: PDC.Reader PDC.PandocIO -> PDC.ReaderOptions -> OutputFormat -> (PDC.Block -> IO PDC.Block) -> T.Text -> IO LT.Text
+convertBlock reader rOpts target ms txt = do
+    pdc <- PDC.runIO $  
+        case reader of
+            PDC.TextReader parseIt -> (parseIt rOpts txt) >>= make
+            PDC.ByteStringReader parseIt -> (parseIt rOpts (LBS.fromStrict (T.encodeUtf8 txt))) >>= make
+    pure (either (LT.pack . show) id pdc)
  where
   make :: (PDC.PandocMonad m, MonadIO m) => PDC.Pandoc -> m LT.Text
   make x = case target of
@@ -105,7 +110,7 @@ stripSome f piece str = fromMaybe str (f piece str)
 stripP :: T.Text -> T.Text
 stripP = stripSome T.stripSuffix "</p>" . stripSome T.stripPrefix "<p>"
 
-data Conversion = ToHTML | ToLatex deriving (Eq,Show)
+data OutputFormat = ToHTML | ToLatex deriving (Eq,Show)
 
 data DumboArgs f = DC {latex     :: f ::: Maybe FilePath <?> "Absolute path to latex binary"
                       ,dvisvgm   :: f ::: Maybe FilePath <?> "Absolute path to dvisvgm binary"
@@ -162,19 +167,31 @@ main = do
           ]
     <|> ifTop (method POST (transformMD rtc ToHTML))
 
+transformKeys :: MonadSnap m0 => DumboRTC -> OutputFormat -> m0 ()
 transformKeys rtc target = conversion (keysConvert rtc target)
+
+transformMD :: MonadSnap m0 => DumboRTC -> OutputFormat -> m0 ()
 transformMD rtc target   = conversion (plainConvert rtc target)
--- conversion :: (TIMIFace (V.Vector a0) -> a0 -> IO b0) -> m0 ()
-keysConvert :: DumboRTC -> Conversion -> TIMIFace a -> ConversionElement Value -> IO Value
+
+keysConvert :: DumboRTC -> OutputFormat -> TIMIFace a -> ConversionElement Value -> IO Value
 keysConvert rtc target timInput
  = (\(pass,obj) -> transformM (jsonEditing target pass) obj) . convertElement rtc (mathOption timInput) (mathPreamble timInput)
 
-plainConvert rtc target timInput
- = uncurry (convertBlock target) . convertElement rtc (mathOption timInput) (mathPreamble timInput)
+plainConvert :: DumboRTC -> OutputFormat -> TIMIFace el -> ConversionElement Text -> IO LT.Text
+plainConvert rtc target timInput cel
+ = do
+    let converted = convertElement rtc (mathOption timInput) (mathPreamble timInput) $ cel
+        (currentReader,exts) = case inputFormat timInput of
+            Nothing -> (defaultReader,readerOpts)
+            Just readerStr -> case (PDC.getReader (T.unpack readerStr)) of
+                Left err -> error err
+                Right (rdr,exts) -> (rdr,readerOpts{PDC.readerExtensions = exts <> PDC.readerExtensions readerOpts })
+    uncurry (convertBlock currentReader exts target) converted
 
-modifyJSON target pass str = String . stripP . LT.toStrict <$> convertBlock target pass str
+modifyJSON :: OutputFormat -> (PDC.Block -> IO PDC.Block) -> Text -> IO Value
+modifyJSON target pass str = String . stripP . LT.toStrict <$> convertBlock defaultReader readerOpts target pass str
 
-jsonEditing :: Conversion -> (WalkType -> IO WalkType) -> Value -> IO Value
+jsonEditing :: OutputFormat -> (PDC.Block -> IO PDC.Block) -> Value -> IO Value
 jsonEditing target pass (String str)
   | "md:" `T.isPrefixOf` str
     -- ^ Convert field from markdown to target
@@ -238,15 +255,17 @@ instance FromJSON el => FromJSON (ConversionElement el) where
     parseJSON invalid    = typeMismatch "ConversionElement" invalid
 
 data TIMIFace el = TIF {content      :: el
+                       ,inputFormat  :: Maybe T.Text
                        ,mathOption   :: Maybe MathOption
                        ,mathPreamble :: Maybe T.Text}
                        deriving (Eq,Show,Functor,Foldable,Traversable)
 
 instance FromJSON el => FromJSON (TIMIFace el) where
     parseJSON (Object v) = do
-                            content <- v .: "content"
-                            mathOpt <- optional (v .: "mathOption")
-                            mathPre <- optional (v .: "mathPreamble")
-                            return (TIF content mathOpt mathPre)
+      content     <- v .: "content"
+      inputFormat <- optional (v .: "inputFormat")
+      mathOpt     <- optional (v .: "mathOption")
+      mathPre     <- optional (v .: "mathPreamble")
+      return (TIF content inputFormat mathOpt mathPre)
 
     parseJSON invalid    = typeMismatch "TIMIFace" invalid

@@ -19,7 +19,7 @@ executable Dumbo
   main-is:             Dumbo.hs
   build-depends:
         base
-      , pandoc >= 2.1
+      , pandoc >= 2.6
       , pandoc-types
       , text
       , filepath
