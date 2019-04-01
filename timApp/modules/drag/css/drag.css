@@ -1,23 +1,32 @@
 .dragword {
     padding: 4px;
-    border: 2px solid #aaaaaa;
+    border: 1px solid grey;
     background: #ffffff;
-    cursor: grab;
+    /* cursor: grab; */
     text-align: center;
-    touch-action: none
+    touch-action: none;
+    display: inline;
+    box-shadow: 4px 4px 1px grey;
 }
 
-
-.dropword {
+.dropword{
+    align-content: flex-start;
+    display: inline-flex;
     touch-action: none; /* prevents scrolling while dragging on touchscreen */
     padding:0px;
     background-color: #ffea9d;
     border:2px solid #aaaaaa;
-    min-width: 20px;
+    min-width: 10px;
     min-height: 30px;
-    text-align: center;
+
+    list-style-type: none;
+
 }
 
-.inlineplugin answerbrowser {
+.plugindrag answerbrowser {
     display: none;
+}
+
+.dndDraggingSource {
+  display: none;
 }

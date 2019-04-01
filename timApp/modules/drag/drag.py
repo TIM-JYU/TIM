@@ -37,6 +37,7 @@ class DragMarkupModel(GenericMarkupModel):
     inputstem: Union[str, Missing] = missing
     needed_len: Union[int, Missing] = missing
     words: Union[List[str], Missing] = missing
+    copy: Union[bool, Missing] = missing
     followid: Union[str, Missing] = missing
 
 
@@ -45,7 +46,8 @@ class DragMarkupSchema(GenericMarkupSchema):
     inputstem = fields.Str()
     needed_len = fields.Int()
     cols = fields.Int()
-    words = fields.List(fields.Str)
+    words = fields.List(fields.Str())
+    copy = fields.Bool()
     followid = fields.String()
 
     @validates('points_array')
@@ -64,12 +66,14 @@ class DragMarkupSchema(GenericMarkupSchema):
 @attr.s(auto_attribs=True)
 class DragInputModel:
     words: List[str]
+    copy: bool = missing
     nosave: bool = missing
 
 
 class DragInputSchema(Schema):
     nosave = fields.Bool()
     words = fields.List(fields.Str(required=True))
+    copy = fields.Bool()
 
     @validates('words')
     def validate_words(self, words):

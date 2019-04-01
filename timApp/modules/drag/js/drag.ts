@@ -16,16 +16,24 @@ import {
     withDefault
 } from "tim/plugin/util";
 import {$http} from "../../../static/scripts/tim/util/ngimport";
-import {to} from "tim/util/utils";
-import ad from "angularjs-dragula";
+import {markAsUsed, to} from "tim/util/utils";
+//import ad from "angularjs-dragula";
+import {polyfill} from "mobile-drag-drop";
+import drag from "angular-drag-and-drop-lists";
 
-const dragApp = angular.module("dragApp", ["ngSanitize", ad(angular)]);
+markAsUsed(drag);
+
+// optional import of scroll behaviour
+import {scrollBehaviourDragImageTranslateOverride} from "mobile-drag-drop/scroll-behaviour";
+
+const dragApp = angular.module("dragApp", ["ngSanitize", "dndLists"]); // ad(angular)
 export const moduleDefs = [dragApp];
 
 const DragMarkup = t.intersection([
     t.partial({
         inputstem: t.string,
         words: t.array(t.string),
+        copy: t.boolean,
         followid: t.string,
     }),
     GenericPluginMarkup,
@@ -47,16 +55,18 @@ const DragAll = t.intersection([
 ]);
 
 class DragController extends PluginBase<t.TypeOf<typeof DragMarkup>, t.TypeOf<typeof DragAll>, typeof DragAll> implements ITimComponent {
-    protected static $inject = ["$scope", "$element", "dragulaService"];
+    protected static $inject = ["$scope", "$element"];
     private error?: string;
     private words?: string [];
+    private copy?: boolean;
+    private effectAllowed?: string;
     private vctrl!: ViewCtrl;
-
+    private wordObjs?: {id: number, word: string}[];
 
     constructor(
         protected scope: IScope,
         protected element: IRootElementService,
-        protected dragulaService: any) {
+        ) {
         super(scope, element);
     }
 
@@ -92,29 +102,41 @@ class DragController extends PluginBase<t.TypeOf<typeof DragMarkup>, t.TypeOf<ty
     $onInit() {
         super.$onInit();
         this.words = this.attrs.words || [];
-        const scope = this.vctrl.scope;
-        // console.log(scope);
-        // console.log(this.scope.$parent);
-        // console.log(this.scope.$parent.$parent);
-        // console.log(this.scope.$parent.$parent.$parent);
+        this.copy = this.attrs.copy || false;
+        if (this.copy) {
+            this.effectAllowed = "copy";
+            this.wordObjs = this.words.map((x, i) => ({id: i, word: x, effectAllowed: "copy"}));
+        } else {
+            this.effectAllowed = "move";
+            this.wordObjs = this.words.map((x, i) => ({id: i, word: x, effectAllowed: "move"}));
+        }
 
-        // this calls method from viewctrl, but for some reason dragula does seemingly the same but it doesn't call
-        // console.log(this.vctrl.scope.$eval("$ctrl.getName()"));
+        // const kaikki = this.vctrl.getTimComponentsByRegex(".*");
+        // for (let item of kaikki) {
+        //    if (item instanceof DragController) {
+        //        if (item.dragulaService) {
+        //            this.dragulaService = item.dragulaService;
+        //        }
+        //    }
+        // }
+       // ////this.dragulaService.setOptions(this.vctrl.scope, 'dropzone');
+        // if(this.dragulaService) {
+        // this.dragulaService.options(this.vctrl.scope, 'dropzone', {
+        //    direction: "horizontal",
+        //    copy: (el: Element, source: DragController) => { return true; }
+        // });
+        // }
 
-        this.dragulaService.options(scope, this.getName(), {
-            direction: "horizontal",
-            copy: true,                        // elements are moved by default, not copied
+        polyfill({
+            // use this to make use of the scroll behaviour
+            dragImageTranslateOverride: scrollBehaviourDragImageTranslateOverride
         });
 
-        scope.$on(`drag`, (e, el: JQuery) => {
-            console.log("raahataan sanaa " + el);
-        });
-        scope.$on(`${this.getName()}.drag`, (e, el: JQuery) => {
-            console.log("raahataan sanaa " + el);
-        });
-        scope.$on(`drop`, (e, el: JQuery) => {
-            console.log("dropzone " + el);
-        });
+        // console.log(this.dragulaService);
+        // const drake = this.dragulaService.find(this.vctrl.scope,'dropzone');
+        //// if scope is vctrl.scope then there is only one dragulaservice and all use the same service
+        //// therefore the options are the same for all the plugins
+
         this.addToCtrl();
     }
 
@@ -136,15 +158,26 @@ class DragController extends PluginBase<t.TypeOf<typeof DragMarkup>, t.TypeOf<ty
      * @returns {string} The words..
      */
     getContent(): string {
-        return this.words!.toString() || "No draggable words";
+        if (this.wordObjs) {
+            return this.wordObjs.map((el) => {
+                return el.word;
+            }).toString();
+        } else {
+            return "";
+        }
     }
 
-     /**
+    /**
      * Returns contained words as a string array
      * @returns {string} The word..
      */
     getContentArray(): string[] {
-        return this.words!;
+        if (this.wordObjs) {
+            return this.wordObjs.map((el) => {
+                return el.word;
+            });
+        }
+        return [];
     }
 
     setPluginWords(words: string []) {
@@ -157,9 +190,18 @@ class DragController extends PluginBase<t.TypeOf<typeof DragMarkup>, t.TypeOf<ty
             result[i] = result[j];
             result[j] = tmp;
         }
-
         this.words = result;
+
+        this.wordObjs = result.map((x, i) => ({id: i, word: x}));
         console.log("setPluginWords", this.words, this.getName());
+    }
+
+    setCopyOrMove(): string {
+        if (this.copy === true) {
+            return "copy";
+        } else {
+            return "move";
+        }
     }
 
     async save() {
@@ -191,6 +233,38 @@ class DragController extends PluginBase<t.TypeOf<typeof DragMarkup>, t.TypeOf<ty
         }
     }
 
+    onDragStart(e: JQuery.Event) {
+        const d = e.originalEvent as DragEvent;
+        //e.
+        const n = this.getName()!;
+        d.dataTransfer!.setData("text", "kissa");
+        d.dataTransfer!.effectAllowed = "move";
+    }
+
+    onDragOver(e: JQuery.Event) {
+        const d = e.originalEvent as DragEvent;
+        d.preventDefault();
+    }
+
+    onDrop(e: JQuery.Event) {
+        const d = e.originalEvent as DragEvent;
+        d.preventDefault();
+
+        // const component = this.vctrl.getTimComponentByName(json[1]);
+        // if (component === this) {
+        //    return;
+        // }
+        // d.dataTransfer!.dropEffect = "move";
+        // component!.setPluginWords!([]);
+        // console.log(d.dataTransfer!.getData("sana"));
+        // if (d.dataTransfer && this.wordObjs)
+        {//
+
+        //    this.words.push(d.dataTransfer.getData("text"));
+        //    this.setPluginWords(this.words);
+        }
+
+    }
 
     protected getAttributeType() {
         return DragAll;
@@ -207,13 +281,20 @@ dragApp.component("dragRunner", {
     template: `
 <div>
     <div class="form-inline">
-     <div class="dropword" dragula-scope="$ctrl.vctrl.scope" dragula="$ctrl.getName()" dragula-model='$ctrl.words'>
-        <span class="dragword"  ng-bind-html='item'  ng-repeat='item in $ctrl.words track by $index'>
-        </span>
-     </div>
+    <div class="draggingarea">
+     <ul class="dropword" dnd-list="$ctrl.wordObjs" dnd-horizontal-list="true" dnd-effect-allowed="{{$ctrl.effectAllowed}}">
+        <li ng-repeat='item in $ctrl.wordObjs' class="dragword"
+                    dnd-draggable="item"
+                    dnd-moved="$ctrl.wordObjs.splice($index, 1)"
+                    dnd-effect-allowed="{{item.effectAllowed}}">
+        {{item.word}}
+        </li>
+     </ul>
+    </div>
     </div>
     <div ng-if="$ctrl.error" ng-bind-html="$ctrl.error"></div>
     <p ng-if="::$ctrl.footer" ng-bind="::$ctrl.footer" class="plgfooter"></p>
 </div>
+
 `,
 });
