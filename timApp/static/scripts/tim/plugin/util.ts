@@ -127,7 +127,12 @@ function getErrors<A>(v: Left<t.Errors, A>): MarkupError {
 }
 
 export class PluginMeta {
-    constructor(private element: IRootElementService, private preview = false) {
+    constructor(
+        private element: IRootElementService,
+        private preview = false,
+        private plugintype?: string,
+        private taskid?: string,
+    ) {
 
     }
 
@@ -136,11 +141,11 @@ export class PluginMeta {
     }
 
     public getTaskId() {
-        return this.getParentAttr("id");
+        return this.taskid || this.getParentAttr("id");
     }
 
     protected getPlugin() {
-        return this.getParentAttr("data-plugin");
+        return this.plugintype || this.getParentAttr("data-plugin");
     }
 
     public getAnswerUrl() {
@@ -205,6 +210,12 @@ export abstract class PluginBase<MarkupType extends IGenericPluginMarkup, A exte
     // Binding that has all the data as a JSON string.
     protected json!: Binding<string, "@">;
 
+    // Optional bindings that are used when the plugin is compiled without being attached to document.
+    // In that case, the plugin element does not have the parent where to fetch the type and task id, so they
+    // are provided when compiling.
+    protected plugintype?: Binding<string, "@?">;
+    protected taskid?: Binding<string, "@?">;
+
     protected markupError?: Array<{name: string, type: string}>;
     protected pluginMeta: PluginMeta;
 
@@ -227,7 +238,12 @@ export abstract class PluginBase<MarkupType extends IGenericPluginMarkup, A exte
             this.markupError = getErrors(validated);
         } else {
             this.attrsall = validated.value;
-            this.pluginMeta = new PluginMeta(this.element, this.attrsall.preview);
+            this.pluginMeta = new PluginMeta(
+                this.element,
+                this.attrsall.preview,
+                this.plugintype,
+                this.taskid,
+            );
         }
 
         // These can be uncommented for debugging:

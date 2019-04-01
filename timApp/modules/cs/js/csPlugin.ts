@@ -2951,6 +2951,8 @@ Object.getPrototypeOf(document.createElement("canvas").getContext("2d")).fillCir
 const commonComponentOptions = {
     bindings: {
         json: "@",
+        plugintype: "@?",
+        taskid: "@?",
     },
     controller: CsController,
 };
