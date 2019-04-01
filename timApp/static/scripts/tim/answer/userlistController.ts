@@ -213,23 +213,41 @@ export class UserListController implements IController {
                     order: 40,
                 },
                 { // Feedback report output TODO: Should only be visible if page is a feedback giving test
+
                     title: "Feedback answer report",
                     action: async ($event: IAngularEvent) => {
+                        let selectedUser = "";
+                        let visibleUsers = "";
+                        if (this.gridApi)
+                        {
+                            selectedUser = this.gridApi.selection.getSelectedRows()[0].name;
+
+                            let data = this.gridApi.core.getVisibleRows(this.gridApi.grid);
+                            let dataAsStrings: string[];
+                            dataAsStrings = [];
+
+                            for (var dat of data) dataAsStrings.push(dat.entity.name);   // create string array of visible items
+
+                            visibleUsers = selectedUser;    // first one is always the selected one
+                            if (dataAsStrings.length > 0)
+                            {
+                                if (dataAsStrings.indexOf(selectedUser) == -1) visibleUsers = "";
+                                for (var visible of dataAsStrings)
+                                {
+                                    if (visible != selectedUser) visibleUsers += "," + visible;
+                                }
+                            }
+                            else {
+                                visibleUsers = "";
+                                // needs to be emptied since there is always one selected even if it is invisible
+                            }
+                        }
                         await showFeedbackAnswers({
-                            url: '/feedback/test/' + this.viewctrl.item.id,
+                            url: "/feedback/test/" + this.viewctrl.item.id,
+                            user: visibleUsers,
                             identifier: this.viewctrl.item.id.toString(),
                             allTasks: true,
                         });
-                        //const minne = 'http://192.168.99.100/feedback/test/19';
-                        //window.location.assign(minne);
-                        // gets r as result json of said form TODO: form change to csv when csv done
-                        // const r = await to($http.get<{'answers0': string,
-                        //     'taskids1': string,
-                        //     'answers1': string,
-                        //     'taskids2': string,
-                        //     'answers2': string}>(`/feedback/test`));
-                        // console.log(r.result.data);
-                        // TODO: we want a showAllAnswers type selection dialog after which a "save as csv"
                     },
                     order: 50,
                 },

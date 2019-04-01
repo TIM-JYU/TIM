@@ -15,7 +15,7 @@ from datetime import datetime, timedelta, timezone
 from timApp.answer.answer import Answer
 from timApp.plugin.pluginControl import task_ids_to_strlist
 
-from timApp.document.docentry import DocEntry
+from timApp.document.docentry import DocEntry, get_documents_in_folder
 from timApp.util.flask.requesthelper import get_option
 from timApp.util.utils import get_current_time
 from timApp.auth.accesshelper import verify_logged_in, verify_teacher_access, get_doc_or_abort
@@ -31,12 +31,12 @@ def get_all_feedback_answers(task_ids: List[TaskId],
                              hide_names: bool,
                              printname: bool,
                              valid: str,
-                             answers: str,
+                             exp_answers: str,
                              user: List[str],
                              period_from: datetime,
                              period_to: datetime):
     """
-
+    Get feedback answer resutls
     :param task_ids: ids of tasks
     :param hide_names: names are displayed anonymously
     :param printname: full name and username or just username
@@ -74,12 +74,12 @@ def get_all_feedback_answers(task_ids: List[TaskId],
     # makes q query an iterable qq for for-loop
     qq: Iterable[Tuple[Answer, User]] = q
 
-    return compile_csv(qq, printname, hide_names, answers, user)  # results
+    return compile_csv(qq, printname, hide_names, exp_answers, user)  # results
 
 
-def compile_csv(qq: Iterable[Tuple[Answer, User]], printname: bool, hide_names: bool, answers: str, s_user: [str]):
+def compile_csv(qq: Iterable[Tuple[Answer, User]], printname: bool, hide_names: bool, exp_answers: str, s_user: [str]):
     """
-
+    compile data into more csv friendly form
     :param qq: database data of answers
     :param printname: full name and username or just username
     :param hide_names: names are displayed anonymously
@@ -94,11 +94,15 @@ def compile_csv(qq: Iterable[Tuple[Answer, User]], printname: bool, hide_names: 
 
     results = []
 
-    #First line are the headers
-    if printname and not hide_names:
-        results.append(['Full Name','Username', 'Result', 'Answer', 'Feedback', 'Time spent on item(sec)', 'Time spent on feedback(sec)'])
+    """
+    #First line are the headers TODO: these could be moved to test()-function
+    if printname and not hide_names and use_headers:
+        results.append(['Full Name','Username', 'Result', 'Item', 'Selected option', 'Feedback', 'Time spent on item(sec)', 'Time spent on feedback(sec)'])
+    elif use_headers:
+        results.append(['Username', 'Result', 'Item', 'Selected option', 'Feedback', 'Time spent on item(sec)', 'Time spent on feedback(sec)'])
     else:
-        results.append(['Username', 'Result', 'Answer', 'Feedback', 'Time spent on item(sec)', 'Time spent on feedback(sec)'])
+        results.append([])
+    """
 
     #Dictionary and counting for anons
     anons = {}
@@ -106,7 +110,7 @@ def compile_csv(qq: Iterable[Tuple[Answer, User]], printname: bool, hide_names: 
 
     #FOR STARTS FROM HERE
     for answer, user in qq:
-
+        # TODO: remove documented code snippets when absolutely is known they are no longer needed
         """
         points = str(answer.points)
         if points == "None":
@@ -143,13 +147,16 @@ def compile_csv(qq: Iterable[Tuple[Answer, User]], printname: bool, hide_names: 
         cnt += 1
         """
 
-        if prev_user != user:
+        if prev_user != user:   # resets if previous is different user
             prev_user = None
             prev_ans = None
             pt_dt = None
             temp_bool = True
-        if prev_user == None: prev_user = user
-        if prev_ans == None: prev_ans = answer
+
+        if prev_user is None:
+            prev_user = user
+        if prev_ans is None:
+            prev_ans = answer
 
         # find type of the plugin
 
@@ -159,9 +166,9 @@ def compile_csv(qq: Iterable[Tuple[Answer, User]], printname: bool, hide_names: 
 
         # boolean to check whether to filter out current user by name
         is_correct_user_s = False
-        if answers == 'selected':
+        if exp_answers == 'selected':
             is_correct_user_s = user.name == s_user[0]
-        elif answers == 'visible':
+        elif exp_answers == 'visible':
             if user.name in s_user:
                 is_correct_user_s = True
         else:
@@ -175,17 +182,18 @@ def compile_csv(qq: Iterable[Tuple[Answer, User]], printname: bool, hide_names: 
             anonuser = anons[prev_user]
             correct = json.loads(answer.content)['correct']
 
-            #if we need it in right/wrong format
+            # if we need it in right/wrong format
             if correct:
                 answer_result = 'right'
             else:
                 answer_result = 'wrong'
 
-            answer_content = json.loads(answer.content)['sentence']   # .get(prev_ans.content) #json.loads(prev_ans.content)
-            feedback_content = json.loads(answer.content)['feedback']   # json.loads(answer.content)
+            answer_content = json.loads(answer.content)['sentence']
+            feedback_content = json.loads(answer.content)['feedback']
+            # sel_opt = json.loads(prev_ans.content)[] TODO: when selected option is included inb the fb-plugin add this
 
             if pt_dt != None:
-                tasksecs = (prev_ans.answered_on - pt_dt).total_seconds()
+                tasksecs = (prev_ans.answered_on - pt_dt).total_seconds()   # get time subtracted by previous
             else:
                 tasksecs = 0.0
 
@@ -196,7 +204,8 @@ def compile_csv(qq: Iterable[Tuple[Answer, User]], printname: bool, hide_names: 
             else:
                 shown_user = prev_user.name
 
-            if exclude_first and pt_dt:   # IF-CONDITION temporary for the sake of excluding the first sample item
+            # IF-CONDITION temporary for the sake of excluding the first sample item
+            if exclude_first and pt_dt:   # TODO: replace with more stable system
                 if printname and not hide_names:
                     results.append([prev_user.real_name,
                                     shown_user,
@@ -216,21 +225,23 @@ def compile_csv(qq: Iterable[Tuple[Answer, User]], printname: bool, hide_names: 
         pt_dt = prev_ans.answered_on
         prev_ans = answer
         prev_user = user
-        temp_bool = not temp_bool
+        temp_bool = not temp_bool       # TODO: remove
 
     return results
 
 
 
-# Route to test feedback output at feedback/test
+# Route to feedback report  TODO: change path name
 @feedback.route("/test/<path:doc_path>")
 def test(doc_path):
     verify_logged_in()
     d = DocEntry.find_by_path(doc_path, fallback_to_id=True)    #return task from URL
-    verify_teacher_access(d)
-    pars = d.document.get_dereferenced_paragraphs()     # TODO: add documentation
-    task_ids, _, _ = find_task_ids(pars)                # 
 
+    all_id = get_documents_in_folder(d.location)    # finds all doc in the folder
+
+    verify_teacher_access(d)
+    pars = d.document.get_dereferenced_paragraphs()     # get dereferenced paragraphs from document
+    task_ids, _, _ = find_task_ids(pars)                # find task ids from the derefenced paragraphs
 
     #filtered_task_ids = filterPlugin(task_ids, 'all')  #filteröi muut paitsi feedback
     name = get_option(request, 'name', 'both')
@@ -238,15 +249,18 @@ def test(doc_path):
     fullname = False
     format = get_option(request, 'format', 'excel')
     validity = get_option(request, 'valid', 'all')
-    answers = get_option(request, 'answers', 'all')
+    exp_answers = get_option(request, 'answers', 'all')
     user = get_option(request, 'user', 'none')
+    scope = get_option(request, 'scope', 'task')
     list_of_users = user.split(",")
 
+    # Booleans for how to show user names
     if name == 'anonymous':
         hidename = True
     elif name == 'both':
         fullname = True
 
+    # dialect names for the csv-writer delimitors
     if format == 'tab':
         dialect = 'excel-tab'
     elif format == 'comma':
@@ -273,7 +287,7 @@ def test(doc_path):
         if len(doc_ids) > 1:
             since_last_key = None
 
-
+    # Period from which to take results
     if period == 'whenever':
         pass
     elif period == 'sincelast':
@@ -303,18 +317,25 @@ def test(doc_path):
         except (ValueError, OverflowError):
             pass
 
+    answers = []
+
+    if fullname and not hidename:
+        answers.append(['Full Name','Username', 'Result', 'Item', 'Selected option', 'Feedback', 'Time spent on item(sec)', 'Time spent on feedback(sec)'])
+    else:
+        answers.append(['Username', 'Result', 'Item', 'Selected option', 'Feedback', 'Time spent on item(sec)', 'Time spent on feedback(sec)'])
+
     #get answers for the task ids with the proper parameters
-    answers = get_all_feedback_answers(task_ids, hidename, fullname, validity, answers, list_of_users, period_from, period_to)
 
-
-    # First returns empty, then from document nro1 and then document nro2 (change above if different)
-
-
+    if scope == 'task':
+        answers += get_all_feedback_answers(task_ids, hidename, fullname, validity, exp_answers, list_of_users, period_from, period_to)
+    elif scope == 'test':
+        for id in all_id:
+            pars2 = id.document.get_dereferenced_paragraphs()   # TODO: rename
+            task_ids2,_ ,_ = find_task_ids(pars2)   # TODO: rename
+            answers += get_all_feedback_answers(task_ids2, hidename, fullname, validity, exp_answers, list_of_users, period_from, period_to)
+            answers.append([])
 
     return csv_response(answers, dialect)
-    """ return json_response({'answers0': answers0,
-                          'answers1': answers1,
-                          'answers2': answers2})"""
 
 
 
@@ -330,5 +351,3 @@ def filterPlugin(task_ids: List[TaskId], plugin_name: str):
             filtered_task_ids.append(tid)
     return filtered_task_ids
 """
-#-
-# {#t1}
