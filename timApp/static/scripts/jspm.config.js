@@ -172,6 +172,7 @@ SystemJS.config({
     "github:*/*.json"
   ],
   map: {
+    "angular-drag-and-drop-lists": "npm:angular-drag-and-drop-lists@2.1.0",
     "angularjs-dragula": "npm:angularjs-dragula@2.0.0",
     "deepmerge": "npm:deepmerge@3.0.0",
     "io-ts": "npm:io-ts@1.4.1",
@@ -204,6 +205,7 @@ SystemJS.config({
     "humanize-duration": "github:EvanHahn/HumanizeDuration.js@3.15.1",
     "jquery": "npm:jquery@2.2.4",
     "katex": "npm:katex@0.7.1",
+    "mobile-drag-drop": "npm:mobile-drag-drop@2.3.0-rc.1",
     "module": "npm:jspm-nodelibs-module@0.2.1",
     "moment": "npm:moment@2.22.2",
     "moment-timezone": "npm:moment-timezone@0.5.21",
