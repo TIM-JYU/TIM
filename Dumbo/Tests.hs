@@ -1,5 +1,5 @@
 #!/usr/bin/env stack
--- stack --resolver lts-13.9 script --ghc-options -threaded --package typed-process --package directory --package filepath --package tasty --package tasty-golden --package dhall --package text
+-- stack --resolver lts-13.15 script --ghc-options -threaded --package typed-process --package directory --package filepath --package tasty --package tasty-golden --package dhall --package text
 
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}

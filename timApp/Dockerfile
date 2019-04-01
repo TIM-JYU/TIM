@@ -160,7 +160,7 @@ yubico-client \
 && ${PIP_INSTALL} requests --upgrade && ${APT_CLEANUP}"
 
 # Install Pandoc
-RUN FILE=`mktemp`; wget "https://github.com/jgm/pandoc/releases/download/2.1.2/pandoc-2.1.2-1-amd64.deb" -qO $FILE && \
+RUN FILE=`mktemp`; wget "https://github.com/jgm/pandoc/releases/download/2.7.1/pandoc-2.7.1-1-amd64.deb" -qO $FILE && \
  dpkg -i $FILE && rm $FILE && bash -c "${APT_CLEANUP}"
 
 # Set name and email for git.
