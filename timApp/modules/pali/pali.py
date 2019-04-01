@@ -163,7 +163,7 @@ def render_static_pali(m: PaliHtmlModel):
 </div>
         """,
         **attr.asdict(m.markup),
-        userword=m.state.userword,
+        userword=m.state.userword if m.state else '',
     )
 
 
