@@ -203,7 +203,7 @@ timApp.component("timStart", {
                 <div class="col-md-3 col-md-offset-3">
                     <h4>TIM</h4>
                     <ul class="list-unstyled">
-                        <li><a href="/view/tim/TIM-esittely">Introduction</a><sup> (F)</sup></li>
+                        <li><a href="/view/tim/TIM-esittely/en">Introduction</a></li>
                         <li><a href="/view/tim/TIM-ohjeet">User guide</a><sup> (F)</sup></li>
                     </ul>
                 </div>
