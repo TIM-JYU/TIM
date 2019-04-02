@@ -56,7 +56,7 @@ rawInlinePass b@(PDC.RawInline "tex" s) = latexMathPass (PDC.Math PDC.DisplayMat
 rawInlinePass b = b
 
 rawBlockPass :: PDC.Block -> PDC.Block
-rawBlockPass b@(PDC.RawBlock "latex" tex) = latexMathPass (\s -> PDC.Plain [PDC.Math PDC.DisplayMath s]) tex b
+rawBlockPass b@(PDC.RawBlock "tex" tex) = latexMathPass (\s -> PDC.Plain [PDC.Math PDC.DisplayMath s]) tex b
 rawBlockPass b = b
 
 isMath :: LaTeX -> Bool
