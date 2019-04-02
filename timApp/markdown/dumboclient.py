@@ -26,20 +26,39 @@ class MathType(Enum):
             return MathType.MathJax
 
 
+class InputFormat(Enum):
+    CommonMark = 'commonmark'
+    GitHubMarkdown = 'gfm'
+    Markdown = 'markdown'
+    MediaWiki = 'mediawiki'
+    RST = 'rst'
+
+    @staticmethod
+    def from_string(s: str):
+        try:
+            return InputFormat(s)
+        except ValueError:
+            return InputFormat.Markdown
+
+
 class DumboOptions(NamedTuple):
     math_type: MathType
     math_preamble: str
-    input_format: str
+    input_format: InputFormat
 
     @staticmethod
     def default():
-        return DumboOptions(math_type=MathType.MathJax, math_preamble='', input_format='markdown')
+        return DumboOptions(
+            math_type=MathType.MathJax,
+            math_preamble='',
+            input_format=InputFormat.Markdown,
+        )
 
     def dict(self):
         return {
             'mathOption': self.math_type.value,
             'mathPreamble': self.math_preamble,
-            'inputFormat': self.input_format,
+            'inputFormat': self.input_format.value,
         }
 
 

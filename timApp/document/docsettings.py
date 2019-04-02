@@ -8,7 +8,7 @@ from timApp.document.macroinfo import MacroInfo
 from timApp.document.randutils import hashfunc
 from timApp.document.specialnames import DEFAULT_PREAMBLE_DOC
 from timApp.document.yamlblock import YamlBlock
-from timApp.markdown.dumboclient import MathType, DumboOptions
+from timApp.markdown.dumboclient import MathType, DumboOptions, InputFormat
 from timApp.timdb.exceptions import TimDbException, InvalidReferenceException
 
 
@@ -245,7 +245,7 @@ class DocSettings:
         return self.__dict.get(self.math_preamble_key, '')
 
     def input_format(self):
-        return self.__dict.get(self.input_format_key, 'markdown')
+        return InputFormat.from_string(self.__dict.get(self.input_format_key, 'markdown'))
 
     def get_dumbo_options(self):
         return DumboOptions(

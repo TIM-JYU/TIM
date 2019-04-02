@@ -14,7 +14,7 @@ from timApp.document.documentwriter import DocumentWriter
 from timApp.document.macroinfo import MacroInfo
 from timApp.document.preloadoption import PreloadOption
 from timApp.document.randutils import random_id, hashfunc
-from timApp.markdown.dumboclient import DumboOptions, MathType
+from timApp.markdown.dumboclient import DumboOptions, MathType, InputFormat
 from timApp.markdown.htmlSanitize import sanitize_html, strip_div
 from timApp.markdown.markdownconverter import par_list_to_html_list, expand_macros
 from timApp.timdb.exceptions import TimDbException, InvalidReferenceException
@@ -1079,7 +1079,7 @@ class DocParagraph:
         return DumboOptions(
             math_type=MathType.from_string(self.get_attr('math_type') or base_opts.math_type),
             math_preamble=self.get_attr('math_preamble') or base_opts.math_preamble,
-            input_format=self.get_attr('input_format') or base_opts.input_format,
+            input_format=InputFormat.from_string(self.get_attr('input_format')) or base_opts.input_format,
         )
 
     def is_translation_out_of_date(self):

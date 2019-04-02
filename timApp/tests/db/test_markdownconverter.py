@@ -61,6 +61,14 @@ input_format: rst
                           '<p>.. image:: images/hi.png</p>'],
                          par_list_to_html_list(p, settings=d.document.get_settings()))
 
+    def test_invalid_inputformat(self):
+        d = self.create_doc(initial_par="""
+#- {input_format=xxx}
+.. image:: images/hi.png""")
+        p = d.document.get_paragraphs()[0]
+        self.assertEqual(['<p>.. image:: images/hi.png</p>'],
+                         par_list_to_html_list([p], settings=d.document.get_settings()))
+
     def test_bracketed_spans(self):
         self.assertEqual('<p><span class="testing">test</span></p>', md_to_html('[test]{.testing}'),
                          msg='If this test fails, you probably do not have up-to-date Dumbo. '
