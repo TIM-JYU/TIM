@@ -20,7 +20,8 @@ const TextfieldMarkup = t.intersection([
         initword: nullable(t.string),
         buttonText: nullable(t.string),
         inputchecker: nullable(t.string),
-        autosave: t.boolean
+        autosave: t.boolean,
+        notSaved: t.boolean,
     }),
     GenericPluginMarkup,
     t.type({
@@ -47,6 +48,7 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
     private userword = "";
     private modelOpts!: INgModelOptions; // initialized in $onInit, so need to assure TypeScript with "!"
     private vctrl!: ViewCtrl;
+    private notSavedWord = "";
 
     getDefaultMarkup() {
         return {};
@@ -67,6 +69,7 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
         this.userword = this.attrsall.userword || this.attrs.initword || "";
         this.modelOpts = {debounce: this.autoupdate};
         this.vctrl.addTimComponent(this);
+        this.notSavedWord = this.userword;
     }
 
     /**
@@ -141,9 +144,25 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
         this.doSaveText(false);
     }
 
+    /**
+     * Method to check grading input type for textfield.
+     * Used as e.g. grading checker for hyv | hyl | 1 | 2 | 3 | 4 | 5.
+     * @param re TODO!
+     */
     checkInputRegex(re: string) {
         let regExpChecker = new RegExp(re);
         return regExpChecker.test(this.userword);
+    }
+
+    // noinspection JSUnusedGlobalSymbols
+    /**
+     * Method to check if input has been changed since the last Save or initialization.
+     * Displays a red thick marker at the right side of the inputfield to notify users
+     * about unsaved changes.
+     * Unused method warning is suppressed, as the method is only called in template.
+     */
+    notSaved() {
+        return (this.notSavedWord != this.userword);
     }
 
     // noinspection JSUnusedGlobalSymbols
@@ -187,6 +206,7 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
             const data = r.result.data;
             this.error = data.web.error;
             this.result = data.web.result;
+            this.notSavedWord = this.userword;
         } else {
             this.error = "Infinite loop or some other error?";
         }
@@ -221,11 +241,12 @@ textfieldApp.component("textfieldRunner", {
                ng-blur="$ctrl.autoSave()"
                ng-keydown="$event.keyCode === 13 && $ctrl.saveText()"
                ng-model-options="::$ctrl.modelOpts"
-               ng-change="$ctrl.checkTextfield()"
                ng-trim="false"
                ng-readonly="::$ctrl.readonly"
                placeholder="{{::$ctrl.inputplaceholder}}"
-               size="{{::$ctrl.cols}}"> </span></label>
+               size="{{::$ctrl.cols}}" 
+               ng-class="{warnFrame: $ctrl.notSaved()}">
+               </span></label>
     </div>
     <button class="timButton"
             ng-if="$ctrl.buttonText()"
