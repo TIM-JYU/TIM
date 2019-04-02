@@ -181,11 +181,9 @@ plainConvert :: DumboRTC -> OutputFormat -> TIMIFace el -> ConversionElement Tex
 plainConvert rtc target timInput cel
  = do
     let converted = convertElement rtc (mathOption timInput) (mathPreamble timInput) $ cel
-        (currentReader,exts) = case inputFormat timInput of
-            Nothing -> (defaultReader,readerOpts)
-            Just readerStr -> case (PDC.getReader (T.unpack readerStr)) of
-                Left err -> error err
-                Right (rdr,exts) -> (rdr,readerOpts{PDC.readerExtensions = exts <> PDC.readerExtensions readerOpts })
+        (currentReader,exts) = case (PDC.getReader (T.unpack (getInputFormat timInput cel))) of
+            Left err -> error err
+            Right (rdr,exts) -> (rdr,readerOpts{PDC.readerExtensions = exts <> PDC.readerExtensions readerOpts })
     uncurry (convertBlock currentReader exts target) converted
 
 modifyJSON :: OutputFormat -> (PDC.Block -> IO PDC.Block) -> Text -> IO Value
@@ -207,6 +205,11 @@ convertAsciiMath x = pure x
 
 mkErr :: String -> String -> Value
 mkErr s e = object ["error" .= e, "stage" .= s]
+
+getInputFormat timInput ce
+  = case ce of
+      CEBare txt -> defInputFormat ?: inputFormat timInput
+      CEWrapped obj -> defInputFormat ?: inputFormat timInput ?: inputFormat obj
 
 convertElement rtc globalMath globalPreamble ce
   = case ce of
@@ -237,6 +240,9 @@ defMathOption = MathJAX
 
 defPreamble :: T.Text
 defPreamble = ""
+
+defInputFormat :: T.Text
+defInputFormat = "markdown"
 
 instance FromJSON MathOption where
     parseJSON (String txt) = case txt of
