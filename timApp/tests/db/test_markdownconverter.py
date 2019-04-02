@@ -37,6 +37,30 @@ class MarkdownConverterTest(TimDbTest):
         for html, md, macros in macrotests:
             self.check_conversion(html, md, macros, delimiter='%%')
 
+    def test_rst(self):
+        d = self.create_doc(initial_par="""
+#- {settings=""}
+input_format: markdown
+#- {input_format=rst}
+.. image:: images/hi.png
+        """)
+        p = d.document.get_paragraphs()[1]
+        self.assertEqual(['<p><img src="images/hi.png" alt="image" /></p>'],
+                         par_list_to_html_list([p], settings=d.document.get_settings()))
+
+        d = self.create_doc(initial_par="""
+#- {settings=""}
+input_format: rst
+#-
+.. image:: images/hi.png
+#- {input_format=markdown}
+.. image:: images/hi.png
+            """)
+        p = d.document.get_paragraphs()[1:]
+        self.assertEqual(['<p><img src="images/hi.png" alt="image" /></p>',
+                          '<p>.. image:: images/hi.png</p>'],
+                         par_list_to_html_list(p, settings=d.document.get_settings()))
+
     def test_bracketed_spans(self):
         self.assertEqual('<p><span class="testing">test</span></p>', md_to_html('[test]{.testing}'),
                          msg='If this test fails, you probably do not have up-to-date Dumbo. '

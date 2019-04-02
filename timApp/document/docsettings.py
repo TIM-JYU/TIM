@@ -43,6 +43,7 @@ class DocSettings:
     add_par_button_text_key = 'add_par_button_text'
     mathtype_key = 'math_type'
     math_preamble_key = 'math_preamble'
+    input_format_key = 'input_format'
     memo_minutes_key = 'memo_minutes'
     comments_key = 'comments'
 
@@ -243,8 +244,15 @@ class DocSettings:
     def math_preamble(self):
         return self.__dict.get(self.math_preamble_key, '')
 
+    def input_format(self):
+        return self.__dict.get(self.input_format_key, 'markdown')
+
     def get_dumbo_options(self):
-        return DumboOptions(math_type=self.mathtype(), math_preamble=self.math_preamble())
+        return DumboOptions(
+            math_type=self.mathtype(),
+            math_preamble=self.math_preamble(),
+            input_format=self.input_format(),
+        )
 
     def memo_minutes(self) -> bool:
         return self.__dict.get(self.memo_minutes_key, '')

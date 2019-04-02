@@ -29,13 +29,19 @@ class MathType(Enum):
 class DumboOptions(NamedTuple):
     math_type: MathType
     math_preamble: str
+    input_format: str
 
     @staticmethod
     def default():
-        return DumboOptions(math_type=MathType.MathJax, math_preamble='')
+        return DumboOptions(math_type=MathType.MathJax, math_preamble='', input_format='markdown')
 
     def dict(self):
-        return {'mathOption': self.math_type.value, 'mathPreamble': self.math_preamble}
+        return {
+            'mathOption': self.math_type.value,
+            'mathPreamble': self.math_preamble,
+            'inputFormat': self.input_format,
+        }
+
 
 DUMBO_URL = 'http://dumbo:5000'
 

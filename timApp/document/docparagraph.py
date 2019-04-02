@@ -1073,11 +1073,14 @@ class DocParagraph:
         return self.get_attr('area') is not None or self.get_attr('area_end') is not None
 
     def has_dumbo_options(self):
-        return bool(self.get_attr('math_type') or self.get_attr('math_preamble'))
+        return bool(self.get_attr('math_type') or self.get_attr('math_preamble') or self.get_attr('input_format'))
 
     def get_dumbo_options(self, base_opts: DumboOptions=DumboOptions.default()):
-        return DumboOptions(math_type=MathType.from_string(self.get_attr('math_type') or base_opts.math_type),
-                            math_preamble=self.get_attr('math_preamble') or base_opts.math_preamble)
+        return DumboOptions(
+            math_type=MathType.from_string(self.get_attr('math_type') or base_opts.math_type),
+            math_preamble=self.get_attr('math_preamble') or base_opts.math_preamble,
+            input_format=self.get_attr('input_format') or base_opts.input_format,
+        )
 
     def is_translation_out_of_date(self):
         if not self.ref_chain:
