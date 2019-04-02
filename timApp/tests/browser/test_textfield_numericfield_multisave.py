@@ -33,7 +33,7 @@ autosave: false
         self.find_element('.breadcrumb .active').click()
         par = self.find_element_avoid_staleness('#pars')  # par for save screenshot
         buttonPar = self.find_element_avoid_staleness('#t3 > tim-plugin-loader > div') # for button click
-        self.save_element_screenshot(par, 'fields_before_answer') # is not needed once taken
+        #self.save_element_screenshot(par, 'fields_before_answer') # is not needed once taken
         self.assert_same_screenshot(par, ['textfield/fields_before_answer'])
         runbutton = buttonPar.find_element_by_css_selector('button') # Find multisave button element
         runbutton.click()
@@ -42,7 +42,7 @@ autosave: false
         par = self.find_element_avoid_staleness('#pars') # recall for save screenshot
         self.wait_until_present('#t1 input') # Wait for first input (textfield)
         self.wait_until_present('#t2 input') # Wait for second input (numericfield)
-        self.save_element_screenshot(par, 'fields_after_answer') # is not needed once taken (again)
+        #self.save_element_screenshot(par, 'fields_after_answer') # is not needed once taken (again)
         self.assert_same_screenshot(par, ['textfield/fields_after_answer'])
 
 
@@ -67,5 +67,5 @@ autosave: false
         par = self.find_element_avoid_staleness('#pars')  # recall for save screenshot
         self.wait_until_present('#t1 input') # Wait for first input (textfield)
         self.wait_until_present('#t2 input') # Wait for second input (numericfield)
-        self.save_element_screenshot(par, 'fields_after_answer_switch')  # is not needed once taken (again)
+        #self.save_element_screenshot(par, 'fields_after_answer_switch')  # is not needed once taken (again)
         self.assert_same_screenshot(par, ['textfield/fields_after_answer_switch'])
