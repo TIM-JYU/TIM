@@ -7,6 +7,7 @@ import {ITimComponent, ViewCtrl} from "tim/document/viewctrl"
 import {GenericPluginMarkup, Info, nullable, PluginBase, pluginBindings, withDefault} from "tim/plugin/util";
 import {$http} from "tim/util/ngimport";
 import {to, valueOr} from "tim/util/utils";
+import {valueDefu} from "tim/util/utils"; //tarvitaan reset-metodille, jos halutaan toteuttaa
 
 const numericfieldApp = angular.module("numericfieldApp", ["ngSanitize"]);
 export const moduleDefs = [numericfieldApp];
@@ -100,6 +101,11 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
      */
     save(): undefined {
         this.saveText();
+        return undefined;
+    }
+
+    resetField(): undefined {
+        this.initCode();
         return undefined;
     }
 

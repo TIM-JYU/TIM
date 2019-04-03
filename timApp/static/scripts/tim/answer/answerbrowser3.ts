@@ -506,6 +506,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
             return {
                 answer_id: this.selectedAnswer.id,
                 saveTeacher: this.saveTeacher,
+                saveTeacherWithoutCollaboration: this.saveTeacherWithoutCollaboration,
                 teacher: this.viewctrl.teacherMode,
                 points: this.points,
                 giveCustomPoints: this.giveCustomPoints,
@@ -648,7 +649,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
             if (!answers || answers.length === 0) {
                 const c = this.viewctrl.getTimComponentByName(this.taskId.split(".")[1]);
                 if (c) {
-                   // c.resetField();
+                    c.resetField();
                 }
             }
             await this.loadInfo();

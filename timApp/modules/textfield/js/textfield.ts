@@ -7,6 +7,7 @@ import {GenericPluginMarkup, Info, nullable, PluginBase, pluginBindings, withDef
 import {$http} from "tim/util/ngimport";
 import {to} from "tim/util/utils";
 import {ITimComponent, ViewCtrl} from "tim/document/viewctrl";
+import {valueDefu} from "tim/util/utils"; //tarvitaan reset-metodille, jos halutaan toteuttaa
 
 const textfieldApp = angular.module("textfieldApp", ["ngSanitize"]);
 export const moduleDefs = [textfieldApp];
@@ -102,6 +103,11 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
      */
     save(): undefined {
         this.saveText();
+        return undefined;
+    }
+
+    resetField(): undefined {
+        this.initCode();
         return undefined;
     }
 
