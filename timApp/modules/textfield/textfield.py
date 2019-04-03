@@ -1,8 +1,6 @@
 """
 TIM plugin: a textfield
 """
-import re
-import sys
 from typing import Union
 
 import attr
@@ -15,7 +13,6 @@ from pluginserver_flask import GenericMarkupModel, GenericMarkupSchema, GenericH
     GenericAnswerSchema, GenericAnswerModel, Missing, \
     InfoSchema, create_app
 
-sys.path.insert(0, '/py')  # /py on mountattu docker kontissa /opt/tim/timApp/modules/py -hakemistoon
 
 @attr.s(auto_attribs=True)
 class TextfieldStateModel:
@@ -97,9 +94,6 @@ class TextfieldAttrs(Schema):
 @attr.s(auto_attribs=True)
 class TextfieldHtmlModel(GenericHtmlModel[TextfieldInputModel, TextfieldMarkupModel, TextfieldStateModel]):
     def get_component_html_name(self) -> str:
-        # HOW TO CHOOSE A NEW RUNNER BY CHOOSING TEMPLATE[2] ???
-        # chosentemplate = super().get_browser_json()
-        # if chosentemplate['templates[2]']: return 'label-runner'
         return 'textfield-runner'
 
     def get_static_html(self) -> str:
@@ -190,6 +184,7 @@ def answer(args: TextfieldAnswerModel):
 @app.route('/reqs/')
 @app.route('/reqs')
 def reqs():
+    """Introducing templates for textfield plugin"""
     templates = ["""
 ``` {#textfield_normal plugin="textfield"}
 needed_len: 1 #MINIMIPITUUS, NUMERAALINEN

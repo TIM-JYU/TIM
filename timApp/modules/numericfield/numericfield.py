@@ -1,13 +1,12 @@
 """
-TIM example plugin: a numericfieldndrome checker.
+TIM plugin: a numericfield
 """
 
-import sys
 from typing import Union
 
 import attr
 from flask import jsonify, render_template_string
-from marshmallow import Schema, fields, post_load, validates, ValidationError
+from marshmallow import Schema, fields, post_load, validates
 from marshmallow.utils import missing
 from webargs.flaskparser import use_args
 
@@ -15,7 +14,6 @@ from pluginserver_flask import GenericMarkupModel, GenericMarkupSchema, GenericH
     GenericAnswerSchema, GenericAnswerModel, Missing, \
     InfoSchema, create_app
 
-sys.path.insert(0, '/py')  # /py on mountattu docker kontissa /opt/tim/timApp/modules/py -hakemistoon
 
 @attr.s(auto_attribs=True)
 class NumericfieldStateModel:
@@ -33,7 +31,6 @@ class NumericfieldStateSchema(Schema):
     class Meta:
         strict = True
 
-
 @attr.s(auto_attribs=True)
 class NumericfieldMarkupModel(GenericMarkupModel):
     points_array: Union[str, Missing] = missing
@@ -43,7 +40,6 @@ class NumericfieldMarkupModel(GenericMarkupModel):
     inputplaceholder: Union[str, Missing] = missing
     followid: Union[str, Missing] = missing
     autosave: Union[bool, Missing] = missing
-
 
 class NumericfieldMarkupSchema(GenericMarkupSchema):
     points_array = fields.List(fields.List(fields.Number()))
@@ -55,13 +51,6 @@ class NumericfieldMarkupSchema(GenericMarkupSchema):
     inputplaceholder: Union[int, Missing] = missing
     followid = fields.String(allow_none=True)
     autosave = fields.Boolean()
-
-    '''
-    @validates('points_array')
-    def validate_points_array(self, value):
-        if (value == 0):
-            raise ValidationError('Must be of size 2 x 2.')
-    ''' # MOST LIKELY WILL NOT BE IMPLEMENTED IN NUMERICFIELD
 
     @post_load
     def make_obj(self, data):
@@ -194,6 +183,7 @@ def answer(args: NumericfieldAnswerModel):
 @app.route('/reqs/')
 @app.route('/reqs')
 def reqs():
+    """Introducing templates for numericfield plugin"""
     templates = ["""
 ``` {#numericfield_normal plugin="numericfield"}
 needed_len: 1 #MINIMIPITUUS, NUMERAALINEN

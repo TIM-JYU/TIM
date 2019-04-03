@@ -7,7 +7,6 @@ import {GenericPluginMarkup, Info, nullable, PluginBase, pluginBindings, withDef
 import {$http} from "tim/util/ngimport";
 import {to} from "tim/util/utils";
 import {ITimComponent, ViewCtrl} from "tim/document/viewctrl";
-import {valueDefu} from "tim/util/utils"; //tarvitaan reset-metodille, jos halutaan toteuttaa
 
 const textfieldApp = angular.module("textfieldApp", ["ngSanitize"]);
 export const moduleDefs = [textfieldApp];
@@ -21,11 +20,9 @@ const TextfieldMarkup = t.intersection([
         buttonText: nullable(t.string),
         inputchecker: nullable(t.string),
         autosave: t.boolean,
-        notSaved: t.boolean,
     }),
     GenericPluginMarkup,
     t.type({
-        // all withDefaults should come here; NOT in t.partial
         autoupdate: withDefault(t.number, 500),
         cols: withDefault(t.number, 1),
     }),
@@ -55,14 +52,14 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
     }
 
     /**
-     * Method returning (user) defined text for the button
+     * Returns (user) defined text for the button.
      */
     buttonText() {
        return super.buttonText() || null;
     }
 
     /**
-     * Settings on every new page load
+     * Settings on every new page load.
      */
     $onInit() {
         super.$onInit();
@@ -73,7 +70,7 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
     }
 
     /**
-     *  Will run after $onInit - reserved for possible eventhandlers OR to be removed
+     *  Will run after $onInit - reserved for possible eventhandlers OR to be removed.
      */
     /*
     $postLink() {
@@ -84,22 +81,24 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
     */
 
     /**
-     * Method to return (user) content in string form
+     * Returns (user) content in string form.
      */
     getContent(): string {
         return this.userword;
     }
 
+    // noinspection JSUnusedGlobalSymbols
     /**
-     * Method to return (user) content in numeric form.
-     * Not used in textfield plugin, but promised to be implemented in ITimComponent
+     * Returns (user) content in numeric form.
+     * Not used in textfield plugin, but promised to be implemented in ITimComponent.
+     * Unused method warning is suppressed.
      */
     getNumericContent(): number {
         return -1;
     }
 
     /**
-     * Save method for other plugins, needed by e.g. multisave plugin
+     * Save method for other plugins, needed by e.g. multisave plugin.
      */
     save(): undefined {
         this.saveText();
@@ -107,28 +106,28 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
     }
 
     /**
-     * Method used for autoupdating
+     * Method for autoupdating.
      */
     get autoupdate(): number {
         return this.attrs.autoupdate;
     }
 
     /**
-     * Method to return (user) set inputstem (textfeed before userinput box)
+     * Returns (user) set inputstem (textfeed before userinput box).
      */
     get inputstem() {
         return this.attrs.inputstem || "";
     }
 
     /**
-     * Method to return (user) set col size (size of the field)
+     * Returns (user) set col size (size of the field).
      */
     get cols() {
         return this.attrs.cols;
     }
 
     /**
-     * Method to initialize content
+     * Initialize content.
      */
     initCode() {
         this.userword = this.attrs.initword || "";
@@ -137,7 +136,7 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
     }
 
     /**
-     * Method to (re)direct save request to actual save method.
+     * Redirects save request to actual save method.
      * Used as e.g. timButton ng-click event.
      */
     saveText() {
@@ -145,18 +144,21 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
     }
 
     /**
+     * NOTE: This functionality is defined as low-priority and therefore TODO.
      * Method to check grading input type for textfield.
      * Used as e.g. grading checker for hyv | hyl | 1 | 2 | 3 | 4 | 5.
      * @param re TODO!
      */
+    /*
     checkInputRegex(re: string) {
         let regExpChecker = new RegExp(re);
         return regExpChecker.test(this.userword);
     }
+    */
 
     // noinspection JSUnusedGlobalSymbols
     /**
-     * Method to check if input has been changed since the last Save or initialization.
+     * Checking if input has been changed since the last Save or initialization.
      * Displays a red thick marker at the right side of the inputfield to notify users
      * about unsaved changes.
      * Unused method warning is suppressed, as the method is only called in template.
@@ -167,7 +169,7 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
 
     // noinspection JSUnusedGlobalSymbols
     /**
-     * Autosave method is used by ng-blur in textfieldApp component.
+     * Autosaver used by ng-blur in textfieldApp component.
      * Needed to seperate from other save methods because of the if-structure.
      * Unused method warning is suppressed, as the method is only called in template.
      */
@@ -180,12 +182,12 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
      * @param true/false parameter boolean checker for the need to save
      */
     async doSaveText(nosave: boolean) {
-        if (this.attrs.inputchecker) {
+        /* if (this.attrs.inputchecker) {
             if(!this.checkInputRegex(this.attrs.inputchecker)) {
                 this.error = "Input does not pass the RegExp checker!";
                 return;
             }
-        }
+        } */
         this.error = "... saving ...";
         this.isRunning = true;
         this.result = undefined;
@@ -218,7 +220,7 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
 }
 
 /**
- * textfieldRunner as HTML component.
+ * Introducing textfieldRunner as HTML component.
  */
 textfieldApp.component("textfieldRunner", {
     bindings: pluginBindings,
@@ -252,7 +254,6 @@ textfieldApp.component("textfieldRunner", {
             ng-click="$ctrl.saveText()">
         {{::$ctrl.buttonText()}}
     </button>
-    <!-- <pre class="hidepre" ng-if="$ctrl.result">{{$ctrl.result}}</pre> -->
     <p ng-if="::$ctrl.footer" ng-bind="::$ctrl.footer" class="plgfooter"></p>
 </div>
 `,
