@@ -2,7 +2,7 @@
 import json
 import re
 from datetime import timezone, timedelta, datetime
-from typing import Union, List, Tuple, Optional
+from typing import Union, List, Tuple, Optional, Dict
 
 import attr
 import dateutil.parser
@@ -13,6 +13,7 @@ from flask import abort
 from flask import request
 from marshmallow import Schema, fields, post_load
 from marshmallow.utils import _Missing, missing
+from sqlalchemy import func
 from webargs.flaskparser import use_args
 
 from timApp.answer.answer import Answer
@@ -32,7 +33,7 @@ from timApp.item.block import Block, BlockType
 from timApp.markdown.dumboclient import call_dumbo
 from timApp.plugin.containerLink import call_plugin_answer
 from timApp.plugin.plugin import Plugin, PluginWrap
-from timApp.plugin.pluginControl import find_task_ids, pluginify
+from timApp.plugin.pluginControl import find_task_ids, pluginify, task_ids_to_strlist
 from timApp.plugin.pluginexception import PluginException
 from timApp.plugin.taskid import TaskId, TaskIdAccess
 from timApp.timdb.dbaccess import get_timdb
@@ -87,8 +88,41 @@ def points_to_float(points: Union[str, float]):
 
 def get_fields_and_users(values, d: DocInfo):
     print(values)
-    values.get('fields')
-    return {}  # TODO
+    print(d.id)
+    user = get_current_user_object()
+    fields = values['fields']
+    task_ids = []
+
+    for field in fields:
+        task_id = TaskId.parse(field, False, False)
+        task_ids.append(task_id)
+        if not task_id.doc_id:
+            task_id.doc_id = d.id
+    answer_ids = (
+        user.answers
+            .filter(Answer.task_id.in_(task_ids_to_strlist(task_ids)))
+            .group_by(Answer.task_id)
+            .with_entities(func.max(Answer.id)).all()
+    )
+    answer_list = Answer.query.filter(Answer.id.in_(answer_ids)).all()
+    answer_dict: Dict[str, Answer] = {}
+    for answer in answer_list:
+        answer_dict[answer.task_id] = answer
+    # s = User.query.join(Answer, User.answers)
+    user_tasks = {}
+    for task in task_ids:
+        a = answer_dict.get(task.doc_task)
+        if not a:
+            value = ""
+        elif task.field == "points":
+            value = a.points
+        else:
+            json_str = a.content
+            p = json.loads(json_str)
+            values = list(p.values())
+            value = values[0]
+        user_tasks[task.extended_or_doc_task] = value
+    return [{'user': user, 'fields': user_tasks}]  # TODO
 
 
 @answers.route("/<plugintype>/<task_id_ext>/answer/", methods=['PUT'])
@@ -100,6 +134,7 @@ def post_answer(plugintype: str, task_id_ext: str):
     :return: JSON
 
     """
+
     timdb = get_timdb()
     try:
         tid = TaskId.parse(task_id_ext)

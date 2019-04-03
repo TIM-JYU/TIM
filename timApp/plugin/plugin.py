@@ -39,6 +39,7 @@ NEVERLAZY = "NEVERLAZY"
 CONTENT_FIELD_NAME_MAP = {
     'csPlugin': 'usercode',
     'pali': 'userword',
+    'numericfield': 'numericvalue',
 }
 
 
