@@ -15,8 +15,8 @@ export const durationTypes: DurationChoice[] = ["seconds", "minutes", "hours", "
 timApp.component("timDurationPicker", {
     bindings: {
         amount: "=",
-        disabled: "<",
-        required: "<",
+        disabled: "<?",
+        required: "<?",
         type: "=",
     },
     controller: DurationPickerCtrl,

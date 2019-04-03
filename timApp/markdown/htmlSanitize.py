@@ -35,6 +35,7 @@ TIM_SAFE_TAGS = [
     'h6',
     'h7',
     'hr',
+    'login-menu',
     'table',
     'tbody',
     'thead',

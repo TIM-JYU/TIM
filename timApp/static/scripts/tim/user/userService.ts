@@ -22,6 +22,10 @@ export class UserService {
         return this.current;
     }
 
+    public getCurrentPersonalFolderPath(): string {
+        return this.getCurrent().folder.path;
+    }
+
     public getSessionUsers() {
         return this.group;
     }

@@ -1,6 +1,7 @@
 """
 TIM example plugin: a palindrome checker.
 """
+import os
 import re
 from typing import Union
 
@@ -163,7 +164,7 @@ def render_static_pali(m: PaliHtmlModel):
 </div>
         """,
         **attr.asdict(m.markup),
-        userword=m.state.userword,
+        userword=m.state.userword if m.state else '',
     )
 
 
@@ -236,11 +237,7 @@ answerLimit: 4
 initword: muikku
 cols: 20
 ```"""]
-    return jsonify({
-        "js": ["js/build/pali.js"],
-        "multihtml": True,
-        "css": ["css/pali.css"],
-        'editor_tabs': [
+    editor_tabs = [
             {
                 'text': 'Plugins',
                 'items': [
@@ -261,7 +258,14 @@ cols: 20
                     },
                 ],
             },
-        ],
+        ]
+    if os.environ.get('SHOW_TEMPLATES', "True") == "False":
+        editor_tabs = None
+    return jsonify({
+        "js": ["js/build/pali.js"],
+        "multihtml": True,
+        "css": ["css/pali.css"],
+        'editor_tabs': editor_tabs,
     },
     )
 
