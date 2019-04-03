@@ -46,7 +46,7 @@ class BrowserTest(TimLiveServer, TimRouteTest):
         self.skip_screenshot_tests = False
 
     def get_screenshot_tolerance(self) -> float:
-        return 0.1
+        return 0.001
 
     def setUp(self):
         TimLiveServer.setUp(self)

@@ -19,7 +19,8 @@ const NumericfieldMarkup = t.intersection([
         inputstem: nullable(t.string),
         initnumber: nullable(t.number),
         buttonText: nullable(t.string),
-        autosave: t.boolean
+        autosave: t.boolean,
+        notSaved: t.boolean,
     }),
     GenericPluginMarkup,
     t.type({
@@ -46,6 +47,7 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
     private numericvalue?: number;
     private modelOpts!: INgModelOptions; // initialized in $onInit, so need to assure TypeScript with "!"
     private vctrl!: ViewCtrl;
+    private notSavedNumber?: number;
 
     getDefaultMarkup() {
         return {};
@@ -66,6 +68,7 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
         this.numericvalue = valueOr(this.attrsall.numericvalue, this.attrs.initnumber || undefined);
         this.modelOpts = {debounce: this.autoupdate};
         this.vctrl.addTimComponent(this);
+        this.notSavedNumber = this.numericvalue;
     }
 
     /**
@@ -151,11 +154,16 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
         if (this.attrs.autosave) this.doSaveText(false);
     }
 
+    // noinspection JSUnusedGlobalSymbols
     /**
-     * error() {
-     *   // DO MAKE THE INPUT GO BE RED!
-     * }
+     * Method to check if input has been changed since the last Save or initialization.
+     * Displays a red thick marker at the right side of the inputfield to notify users
+     * about unsaved changes.
+     * Unused method warning is suppressed, as the method is only called in template.
      */
+    notSaved() {
+        return (this.notSavedNumber != this.numericvalue);
+    }
 
 
     /**
@@ -183,6 +191,7 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
             const data = r.result.data;
             this.error = data.web.error;
             this.result = data.web.result;
+            this.notSavedNumber = this.numericvalue;
         } else {
             this.error = "Infinite loop or some other error?";
         }
@@ -223,7 +232,8 @@ numericfieldApp.component("numericfieldRunner", {
                ng-change="$ctrl.checkNumericfield()"
                ng-trim="false"
                ng-readonly="::$ctrl.readonly"
-               placeholder="{{::$ctrl.inputplaceholder}}">
+               placeholder="{{::$ctrl.inputplaceholder}}"
+               ng-class="{warnFrame: $ctrl.notSaved()}">
         </span></label>
     </div>
     <button class="timButton"

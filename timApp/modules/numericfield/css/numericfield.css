@@ -10,3 +10,12 @@ numericfield-runner .stem {
 .pluginnumericfield .answerBrowserPlaceholder {
     display: none;
 }
+
+.warnFrame {
+    border-right-color: red;
+    border-right-width: thick;
+}
+
+input:focus.warnFrame {
+    border-right-color: red !important;
+}
