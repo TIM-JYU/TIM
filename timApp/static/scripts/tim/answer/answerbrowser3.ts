@@ -179,6 +179,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
     private user: IUser | undefined;
     private fetchedUser: IUser | undefined;
     private saveTeacher: boolean = false;
+    private saveTeacherWithoutCollaboration: boolean = true;
     private users: IUser[] | undefined;
     private answers: IAnswer[] = [];
     private filteredAnswers: IAnswer[] = [];
@@ -509,9 +510,10 @@ export class AnswerBrowserController extends DestroyScope implements IController
                 saveAnswer: !this.viewctrl.noBrowser,
             };
         }
-        else if (this.user) {
+        else if (this.user && this.saveTeacherWithoutCollaboration) {
             return {
                 // answer_id: this.selectedAnswer.id,
+                saveTeacherWithoutCollaboration: this.saveTeacherWithoutCollaboration,
                 saveTeacher: this.saveTeacher,
                 teacher: this.viewctrl.teacherMode,
                 points: this.points,
