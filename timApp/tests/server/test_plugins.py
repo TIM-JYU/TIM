@@ -25,6 +25,7 @@ from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.timdb.sqa import db
 from timApp.user.special_group_names import ANONYMOUS_USERNAME
 from timApp.user.user import User
+from timApp.user.usergroup import UserGroup
 from timApp.user.userutils import grant_view_access, grant_access, get_anon_group_id, get_anon_user_id
 from timApp.util.flask.responsehelper import to_dict
 from timApp.util.utils import EXAMPLE_DOCS_PATH, get_current_time
@@ -1581,3 +1582,15 @@ initword: a""")
 ``` {plugin=pali #t}
 ```""")
         self.assert_content(self.get(d.url, as_tree=True), [''])
+
+    def test_inline_plugin_login(self):
+        self.login_test1()
+        d = self.create_doc(initial_par="""
+#- {defaultplugin=pali}
+{#t}
+""")
+        u = d.url
+        grant_view_access(UserGroup.get_anonymous_group().id, d.id)
+        self.logout()
+        r = self.get(u, as_tree=True).cssselect('.parContent login-menu')
+        self.assertTrue(r)

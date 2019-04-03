@@ -26,7 +26,7 @@ class BootstrapPanelController implements IController {
 
 timApp.component("bootstrapPanel", {
     bindings: {
-        closeFn: "&",
+        closeFn: "&?",
         show: "=?",
         showClose: "=?",
         title: "@?",

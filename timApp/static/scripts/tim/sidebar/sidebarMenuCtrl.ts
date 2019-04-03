@@ -267,19 +267,7 @@ export class SidebarMenuCtrl implements IController {
      * Opens tag search dialog.
      */
     searchWithTags() {
-        if (!this.vctrl) {
-            return;
-        }
-        void showTagSearchDialog(this.vctrl.item);
-    }
-
-    /**
-     * Start page specific version of the tag search opening.
-     */
-    searchWithTagsStart() {
-        if (this.item) {
-            void showTagSearchDialog(this.item);
-        }
+        void showTagSearchDialog();
     }
 
     /**
@@ -466,7 +454,7 @@ timApp.component("timSidebarMenu", {
         </uib-tab-heading>
         <div>
             <h5>Help</h5>
-            <a title="Open TIM-ohjeet" href="/view/tim/tim-ohjeet">User guide</a>
+            <a title="Open TIM-ohjeet" href="/view/tim/TIM-ohjeet">User guide</a>
         </div>
         <div ng-if="$ctrl.users.isLoggedIn()">
             <h5>Customize</h5>
@@ -482,7 +470,7 @@ timApp.component("timSidebarMenu", {
         <div ng-show="!($ctrl.vctrl.item && !$ctrl.vctrl.item.isFolder)">
             <h5>Search</h5>
             <button class="timButton btn-block" title="Search with tags"
-                    ng-click="$ctrl.searchWithTagsStart()">Search with tags
+                    ng-click="$ctrl.searchWithTags()">Search with tags
             </button>
         </div>
         <div ng-if="$ctrl.users.isLoggedIn() && $ctrl.vctrl && !$ctrl.vctrl.item.isFolder">

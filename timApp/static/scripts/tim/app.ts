@@ -1,4 +1,5 @@
 import angular, {
+    ICompileProvider,
     IFilterService,
     IHttpProvider,
     IHttpResponseTransformer,
@@ -51,6 +52,15 @@ timApp.config(["$provide", ($provide: IModule) => {
         };
         return $delegate;
     }]);
+}]);
+
+timApp.config(["$compileProvider", (cp: ICompileProvider) => {
+    cp.debugInfoEnabled(false);
+    cp.commentDirectivesEnabled(false);
+    cp.cssClassDirectivesEnabled(false);
+
+    // many 3rd party libs break if this is enabled
+    // cp.strictComponentBindingsEnabled(true);
 }]);
 
 timApp.config(["$httpProvider", ($httpProvider: IHttpProvider) => {

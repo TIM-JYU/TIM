@@ -39,7 +39,7 @@ import {
     ValidCoord,
     VideoPlayer,
 } from "./imagextypes";
-import {PluginBase} from "./util";
+import {PluginBase, pluginBindings} from "./util";
 
 markAsUsed(ngSanitize, colorpicker);
 
@@ -1929,9 +1929,7 @@ class ImageXController extends PluginBase<t.TypeOf<typeof ImageXMarkup>,
 }
 
 imagexApp.component("imagexRunner", {
-    bindings: {
-        json: "@",
-    },
+    bindings: pluginBindings,
     controller: ImageXController,
     require: {
         vctrl: "^timView",

@@ -33,3 +33,15 @@ replace.sync({
     from: 'f instanceof katex.ParseError',
     to: 'false'
 });
+
+// This was an attempt to make some uib-bootstrap component attributes optional so that they work with
+// strictComponentBindingsEnabled, but it wasn't enough.
+// replace.sync({
+//     files: [
+//         'jspm_packages/npm/angular-ui-bootstrap@2.5.0/dist/ui-bootstrap-tpls.js',
+//         'jspm_packages/npm/angular-ui-bootstrap@2.5.0/dist/ui-bootstrap.js',
+//         'jspm_packages/npm/angular-ui-bootstrap@2.5.0/src/tabs/tabs.js',
+//     ],
+//     from: [/'@'/g, /'='/g, /'&'/g, /'&select'/g, /'&deselect'/g],
+//     to: ["'@?'", "'=?'", "'&?'", "'&?select'", "'&?deselect'"]
+// });

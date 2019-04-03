@@ -61,8 +61,8 @@ def search_users(term: str):
 
 
 def has_anything_in_common(u1: User, u2: User):
-    u1_set = {u1.name.lower(), u1.real_name.lower(), u1.email_name_part.lower()}
-    u2_set = {u2.name.lower(), u2.real_name.lower(), u2.email_name_part.lower()}
+    u1_set = {u1.name.lower(), *u1.real_name.lower().split(' '), u1.email_name_part.lower()}
+    u2_set = {u2.name.lower(), *u2.real_name.lower().split(' '), u2.email_name_part.lower()}
     if u1_set & u2_set:
         return True
     # This allows e.g. testuser1 and testuser2 to be merged.

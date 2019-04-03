@@ -123,7 +123,7 @@ class Cell:
             colspan: int = default_colspan, rowspan: int = default_rowspan,
             text_color: Union[None, str] = default_text_color, text_color_html: Union[None, bool] = False,
             bg_color: Union[None, str] = default_transparent_color, bg_color_html: Union[None, bool] = False,
-            h_align=default_text_h_align, font_size=default_font_size,
+            h_align=default_text_h_align, font_size: float=default_font_size,
             cell_width=default_width, cell_height=default_height,
             line_space=0, pbox="10cm", font_family=default_font_family,
             borders: CellBorders = CellBorders(), font_weight=None):
@@ -466,11 +466,15 @@ class HorizontalBorder:
 
 def estimate_cell_width(cell):
     """
-    Give estimation of cell width based on content.
+    Give estimation of cell width based on content and font size.
     :param cell: Cell to estimate.
     :return: Width of cell.
     """
-    return len(cell.content) * cell.font_size / 2
+    try:
+        return len(cell.content) * float(cell.font_size) / 2
+    except (TypeError, ValueError):
+        # If for some reason font size is not a number, use default.
+        return len(cell.content) * default_font_size / 2
 
 
 def estimate_cell_height(cell, width_constraint):
@@ -1024,11 +1028,7 @@ def get_font_size(item, default_size):
     :param default_size: Size to be used if no set font size.
     :return: Font size or default font size.
     """
-    try:
-        a = item['fontSize']
-    except:
-        a = default_size
-    return a
+    return get_size(item, 'fontSize', default_size)
 
 
 def get_key_value(item, key, default=None):

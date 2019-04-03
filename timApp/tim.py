@@ -264,6 +264,8 @@ def get_server_time():
     return json_response({'t1': t1, 't2': t2, 't3': int(time.time() * 1000)})
 
 
+@app.route("/en")
+@app.route("/fi")
 @app.route("/")
 def start_page():
     in_lecture = current_user_in_lecture()
