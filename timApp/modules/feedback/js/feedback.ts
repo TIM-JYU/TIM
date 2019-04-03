@@ -4,7 +4,7 @@
 import angular from "angular";
 import * as t from "io-ts";
 import {ITimComponent, ViewCtrl} from "tim/document/viewctrl";
-import {GenericPluginMarkup, nullable, PluginBase, withDefault, Info} from "tim/plugin/util";
+import {GenericPluginMarkup, nullable, PluginBase, withDefault, Info, pluginBindings} from "tim/plugin/util";
 import {$http} from "tim/util/ngimport";
 import {to} from "tim/util/utils";
 
@@ -721,9 +721,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
 }
 
 feedbackApp.component("feedbackRunner", {
-    bindings: {
-        json: "@",
-    },
+    bindings: pluginBindings,
     controller: FeedbackController,
     require: {
         vctrl: "^timView",

@@ -5,7 +5,16 @@ import angular, {INgModelOptions} from "angular";
 import {IRootElementService, IScope} from "angular";
 import * as t from "io-ts";
 import {ITimComponent, ViewCtrl} from "tim/document/viewctrl";
-import {GenericPluginMarkup, getDefaults, Info, nullable, PluginBase, PluginMeta, withDefault} from "tim/plugin/util";
+import {
+    GenericPluginMarkup,
+    getDefaults,
+    Info,
+    nullable,
+    PluginBase,
+    pluginBindings,
+    PluginMeta,
+    withDefault
+} from "tim/plugin/util";
 import {$http} from "../../../static/scripts/tim/util/ngimport";
 import {to} from "tim/util/utils";
 import ad from "angularjs-dragula";
@@ -190,9 +199,7 @@ class DragController extends PluginBase<t.TypeOf<typeof DragMarkup>, t.TypeOf<ty
 }
 
 dragApp.component("dragRunner", {
-    bindings: {
-        json: "@",
-    },
+    bindings: pluginBindings,
     controller: DragController,
     require: {
         vctrl: "^timView",
