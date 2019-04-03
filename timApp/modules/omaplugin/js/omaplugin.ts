@@ -4,7 +4,7 @@
 import angular, {INgModelOptions} from "angular";
 import * as t from "io-ts";
 import {ITimComponent, ViewCtrl} from "tim/document/viewctrl";
-import {GenericPluginMarkup, Info, nullable, PluginBase, withDefault} from "tim/plugin/util";
+import {GenericPluginMarkup, Info, nullable, PluginBase, pluginBindings, withDefault} from "tim/plugin/util";
 import {$http} from "tim/util/ngimport";
 import {to} from "tim/util/utils";
 import {valueDefu} from "tim/util/utils";
@@ -188,9 +188,7 @@ export class OmapluginController extends PluginBase<t.TypeOf<typeof omapluginMar
 }
 
 omapluginApp.component("omapluginRunner", {
-    bindings: {
-        json: "@",
-    },
+    bindings: pluginBindings,
     controller: OmapluginController,
     require: {
         vctrl: "^timView",

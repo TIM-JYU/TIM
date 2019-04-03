@@ -4,7 +4,7 @@
 import angular, {INgModelOptions} from "angular";
 import * as t from "io-ts";
 import {ITimComponent, ViewCtrl} from "tim/document/viewctrl";
-import {GenericPluginMarkup, Info, PluginBase, withDefault} from "tim/plugin/util";
+import {GenericPluginMarkup, Info, PluginBase, pluginBindings, withDefault} from "tim/plugin/util";
 import {escapeRegExp, valueDefu} from "tim/util/utils";
 
 const multisaveApp = angular.module("multisaveApp", ["ngSanitize"]);
@@ -119,9 +119,7 @@ export class MultisaveController extends PluginBase<t.TypeOf<typeof multisaveMar
 }
 
 multisaveApp.component("multisaveRunner", {
-    bindings: {
-        json: "@",
-    },
+    bindings: pluginBindings,
     controller: MultisaveController,
     require: {
         vctrl: "^timView",

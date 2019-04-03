@@ -3,7 +3,7 @@
  */
 import angular, {INgModelOptions} from "angular";
 import * as t from "io-ts";
-import {GenericPluginMarkup, Info, nullable, PluginBase, withDefault} from "tim/plugin/util";
+import {GenericPluginMarkup, Info, nullable, PluginBase, pluginBindings, withDefault} from "tim/plugin/util";
 import {$http} from "tim/util/ngimport";
 import {to} from "tim/util/utils";
 import {ITimComponent, ViewCtrl} from "tim/document/viewctrl";
@@ -221,9 +221,7 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
  * textfieldRunner as HTML component.
  */
 textfieldApp.component("textfieldRunner", {
-    bindings: {
-        json: "@",
-    },
+    bindings: pluginBindings,
     controller: TextfieldController,
     require: {
         vctrl: "^timView",
