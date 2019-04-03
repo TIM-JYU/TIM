@@ -275,3 +275,9 @@ export function withDefault<T extends t.Any>(
 export function nullable<T extends t.Any>(type: T) {
     return t.union([t.null, type]);
 }
+
+export const pluginBindings = {
+    json: "@",
+    plugintype: "@?",
+    taskid: "@?",
+};

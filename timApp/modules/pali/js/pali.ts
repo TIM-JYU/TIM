@@ -3,7 +3,14 @@
  */
 import angular, {INgModelOptions} from "angular";
 import * as t from "io-ts";
-import {GenericPluginMarkup, GenericPluginTopLevelFields, nullable, PluginBase, withDefault} from "tim/plugin/util";
+import {
+    GenericPluginMarkup,
+    GenericPluginTopLevelFields,
+    nullable,
+    PluginBase,
+    pluginBindings,
+    withDefault,
+} from "tim/plugin/util";
 import {$http} from "tim/util/ngimport";
 import {to} from "tim/util/utils";
 import {valueDefu} from "tim/util/utils";
@@ -140,9 +147,7 @@ class PaliController extends PluginBase<t.TypeOf<typeof PaliMarkup>, t.TypeOf<ty
 }
 
 paliApp.component("paliRunner", {
-    bindings: {
-        json: "@",
-    },
+    bindings: pluginBindings,
     controller: PaliController,
     template: `
 <div class="csRunDiv no-popup-menu">
