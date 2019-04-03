@@ -402,7 +402,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
 
     findSelectedUserIndex() {
         if (!this.users || !this.user) {
-            return -1;
+             return -1;
         }
         for (let i = 0; i < this.users.length; i++) {
             if (this.users[i].id === this.user.id) {
@@ -511,7 +511,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
         }
         else if (this.user) {
             return {
-                //answer_id: this.selectedAnswer.id,
+                // answer_id: this.selectedAnswer.id,
                 saveTeacher: this.saveTeacher,
                 teacher: this.viewctrl.teacherMode,
                 points: this.points,
@@ -581,6 +581,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
             return;
         }
         this.handleAnswerFetch(data);
+        return data;
     }
 
     private handleAnswerFetch(data: IAnswer[]) {
@@ -638,7 +639,13 @@ export class AnswerBrowserController extends DestroyScope implements IController
 
     async loadUserAnswersIfChanged() {
         if (this.hasUserChanged()) {
-            await this.getAnswersAndUpdate();
+            const answers = await this.getAnswersAndUpdate();
+            if (!answers || answers.length === 0) {
+                const c = this.viewctrl.getTimComponentByName(this.taskId.split(".")[1]);
+                if (c) {
+                   // c.resetField();
+                }
+            }
             await this.loadInfo();
         }
     }

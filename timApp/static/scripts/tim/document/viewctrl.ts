@@ -44,6 +44,7 @@ export interface ITimComponent {
     getGroups: () => string[];
     belongsToGroup(group: string): boolean;
     save: () => string | undefined;
+    resetField: () => string | undefined;
 }
 
 export interface IInsertDiffResult {

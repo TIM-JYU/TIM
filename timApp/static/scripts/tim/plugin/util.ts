@@ -273,6 +273,11 @@ export abstract class PluginBase<MarkupType extends IGenericPluginMarkup, A exte
         const taskId = this.pluginMeta.getTaskId();
         if (taskId) return taskId.split(".")[1];
     }
+
+    resetField(): undefined {
+        // this.$onInit()
+        return undefined;
+    }
 }
 
 // from https://github.com/teamdigitale/italia-ts-commons/blob/de4d85a2a1502da54f78aace8c6d7b263803f115/src/types.ts
