@@ -645,6 +645,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
 
     async loadUserAnswersIfChanged() {
         if (this.hasUserChanged()) {
+            this.fetchedUser = this.user;
             const answers = await this.getAnswersAndUpdate();
             if (!answers || answers.length === 0) {
                 const c = this.viewctrl.getTimComponentByName(this.taskId.split(".")[1]);
