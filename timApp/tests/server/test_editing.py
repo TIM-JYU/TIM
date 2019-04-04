@@ -2,6 +2,8 @@ from lxml import html
 from lxml.html import HtmlElement
 
 from timApp.document.docparagraph import DocParagraph
+from timApp.plugin.plugin import Plugin
+from timApp.tests.browser.browsertest import BrowserTest
 from timApp.tests.server.timroutetest import TimRouteTest
 
 
@@ -311,3 +313,52 @@ macros:
         p2: HtmlElement = content[1].getchildren()[0]
         self.assertEqual('x', p1.get('id'))
         self.assertEqual('x-1', p2.get('id'))
+
+
+class TimTableEditTest(BrowserTest):
+    def test_timtable_edit(self):
+        self.login_test1()
+        d = self.create_doc(initial_par="""
+``` {plugin="timTable"}
+table:
+    countRow: 1
+    countCol: 1
+    rows:
+      - row:
+        - cell: 'hi'
+```""")
+        par = d.document.get_paragraphs()[0]
+        par_id = par.get_id()
+        ver1 = d.document.get_version()
+        self.json_post(
+            f'/timTable/saveCell',
+            {
+                "cellContent": "hey",
+                "docId": d.id,
+                "parId": par_id,
+                "row": 0,
+                "col": 0,
+            })
+        d.document.clear_mem_cache()
+        ver2 = d.document.get_version()
+        self.assertNotEqual(ver1, ver2)
+        par = d.document.get_paragraphs()[0]
+        p = Plugin.from_paragraph(par)
+        self.assertEqual(
+            {'table': {'countCol': 1,
+                       'countRow': 1,
+                       'rows': [{'row': [{'cell': 'hi'}]}],
+                       'tabledatablock': {'cells': {'A1': 'hey'}, 'type': 'relative'}}},
+            p.values)
+        self.json_post(
+            f'/timTable/saveCell',
+            {
+                "cellContent": "hey",
+                "docId": d.id,
+                "parId": par_id,
+                "row": 0,
+                "col": 0,
+            })
+        d.document.clear_mem_cache()
+        ver3 = d.document.get_version()
+        self.assertEqual(ver2, ver3)
