@@ -679,7 +679,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
 
     async loadInfo() {
         if (this.taskInfo != null) {
-            //return;
+            return;
         }
         this.loading++;
         const r = await to($http.get<ITaskInfo>("/taskinfo/" + this.taskId));
