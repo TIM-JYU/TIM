@@ -1,5 +1,5 @@
 /**
- * Defines the client-side implementation of numericfield plugin.
+ * Defines the client-side implementation of numericfield/label plugin.
  */
 import angular, {INgModelOptions} from "angular";
 import * as t from "io-ts";
@@ -244,7 +244,6 @@ numericfieldApp.component("numericfieldRunner", {
             ng-click="$ctrl.saveText()">
         {{::$ctrl.buttonText()}}
     </button>
-    <!-- <pre ng-if="$ctrl.result">{{$ctrl.result}}</pre> -->
     <p ng-if="::$ctrl.footer" ng-bind="::$ctrl.footer" class="plgfooter"></p>
 </div> `,
 });
