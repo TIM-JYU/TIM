@@ -40,7 +40,7 @@ markAsUsed(ngs, popupMenu, interceptor, helpPar);
 
 export interface ITimComponent {
     getName: () => string | undefined;
-    getContent: () => string;
+    getContent: () => string | undefined;
     getContentArray?: () => string[];
     getGroups: () => string[];
     belongsToGroup(group: string): boolean;

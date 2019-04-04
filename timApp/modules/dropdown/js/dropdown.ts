@@ -49,7 +49,7 @@ class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.T
         super.$onInit();
         this.wordList = this.attrs.words || [];
         this.addToCtrl();
-        this.radio = this.attrs.radio || false;
+        this.radio = this.attrs.radio;
     }
 
     /**
@@ -63,8 +63,8 @@ class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.T
      * Returns the selected choice from the dropdown-list.
      * @returns {string} The selected choice..
      */
-    getContent(): string {
-        return this.selectedWord || "";
+    getContent() {
+        return this.selectedWord;
     }
 
     /**
@@ -131,7 +131,7 @@ class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.T
         }
 
         this.wordList = result;
-        this.selectedWord = "";
+        this.selectedWord = undefined;
     }
 
     protected getAttributeType() {
@@ -147,12 +147,14 @@ dropdownApp.component("dropdownRunner", {
     },
     template: `
 <div>
-    <tim-markup-error ng-if="::$ctrl.markupError && !$ctrl.teacherRight" data="::$ctrl.markupError"></tim-markup-error>
+    <tim-markup-error ng-if="::$ctrl.markupError" data="::$ctrl.markupError"></tim-markup-error>
     <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
     <p ng-if="::$ctrl.stem">{{::$ctrl.stem}}</p>
     <div class="form-inline"><label><span>
         <li class="dropradio" ng-if="::$ctrl.radio" ng-repeat="item in $ctrl.wordList">
-        <input type="radio" name="selection" ng-value="{{item}}" ng-model="$ctrl.selectedWord">{{item}}
+        <label><input type="radio" name="selection" value="{{item}}" ng-model="$ctrl.selectedWord">
+        {{item}}
+        </label>
         </li>
         <select ng-if="::!$ctrl.radio" ng-model="$ctrl.selectedWord" ng-options="item for item in $ctrl.wordList">
         </select>
