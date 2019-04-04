@@ -620,7 +620,8 @@ export class AnswerBrowserController extends DestroyScope implements IController
             this.showError(r.result);
             return undefined;
         }
-        if (!r.ok) this.fetchedUser = this.user; //TODO
+        this.fetchedUser = this.user;
+        //if (!r.ok) this.fetchedUser = this.user; //TODO
         return r.result.data;
     }
 
