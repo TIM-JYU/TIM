@@ -8,6 +8,9 @@ from flask import request
 from timApp.auth.accesshelper import verify_edit_access
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.document import Document
+from timApp.document.editing.documenteditresult import DocumentEditResult
+from timApp.notification.notification import NotificationType
+from timApp.notification.notify import notify_doc_watchers
 from timApp.plugin.plugin import Plugin
 from timApp.plugin.timtable.row_owner_info import RowOwnerInfo
 from timApp.tim_app import csrf
@@ -293,8 +296,27 @@ def add_row(plug: Plugin, row_id: int):
             if entry.row >= row_id:
                 entry.row = entry.row + 1
         apply_datablock_from_entry_list(plug, datablock_entries)
-    plug.save()
+    save_plugin(plug)
     return unique_id
+
+
+def save_plugin(p: Plugin):
+    old_ver = p.par.doc.get_version()
+    p.save()
+    new_ver = p.par.doc.get_version()
+    if old_ver == new_ver:
+        return
+    edit_result = DocumentEditResult()
+    edit_result.changed.append(p.par)
+    docinfo = p.par.doc.get_docinfo()
+    docinfo.update_last_modified()
+    notify_doc_watchers(
+        docinfo,
+        p.to_paragraph().get_markdown(),
+        NotificationType.ParModified, par=p.par,
+        old_version=old_ver,
+    )
+    db.session.commit()
 
 
 def pop_unique_row_id(plug: Plugin) -> int:
@@ -349,7 +371,7 @@ def tim_table_add_datablock_row():
         new_datablock_entries.append(entry)
 
     apply_datablock_from_entry_list(plug, new_datablock_entries)
-    plug.save()
+    save_plugin(plug)
 
     return json_response(prepare_for_and_call_dumbo(plug))
 
@@ -409,7 +431,7 @@ def tim_table_add_column():
                 entry.column += 1
         apply_datablock_from_entry_list(plug, datablock_entries)
 
-    plug.save()
+    save_plugin(plug)
     return json_response(prepare_for_and_call_dumbo(plug))
 
 
@@ -445,7 +467,7 @@ def tim_table_add_datablock_column():
                 datablock_entries.append(RelativeDataBlockValue(row_index, col_id, ''))
 
     apply_datablock_from_entry_list(plug, datablock_entries)
-    plug.save()
+    save_plugin(plug)
     return json_response(prepare_for_and_call_dumbo(plug))
 
 
@@ -509,7 +531,7 @@ def tim_table_remove_row():
 
         apply_datablock_from_entry_list(plug, new_datablock_entries)
 
-    plug.save()
+    save_plugin(plug)
     return json_response(prepare_for_and_call_dumbo(plug))
 
 
@@ -550,7 +572,7 @@ def tim_table_remove_column():
             new_datablock_entries.append(entry)
         apply_datablock_from_entry_list(plug, new_datablock_entries)
 
-    plug.save()
+    save_plugin(plug)
     return json_response(prepare_for_and_call_dumbo(plug))
 
 #############################
@@ -680,8 +702,7 @@ def set_cell_style_attribute(doc_id, par_id, y1, y2, x1, x2, attribute, value):
                         except:
                             pass
 
-
-    plug.save()
+    save_plugin(plug)
     return json_response(prepare_for_and_call_dumbo(plug))
 
 
@@ -761,7 +782,7 @@ def tim_table_save_cell_value(cell_content, docid, parid, row, col):
         cc = MD + cc
     settings = d.document.get_settings()
     html = call_dumbo([cc], DUMBO_PARAMS, options=plug.par.get_dumbo_options(base_opts=settings.get_dumbo_options()))
-    plug.save()
+    save_plugin(plug)
     multi.append(html[0])
     return json_response(multi)
 
