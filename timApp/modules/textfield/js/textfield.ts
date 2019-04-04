@@ -156,12 +156,10 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
      * Used as e.g. grading checker for hyv | hyl | 1 | 2 | 3 | 4 | 5.
      * @param re TODO!
      */
-    /*
     checkInputRegex(re: string) {
         let regExpChecker = new RegExp(re);
         return regExpChecker.test(this.userword);
     }
-    */
 
     // noinspection JSUnusedGlobalSymbols
     /**
@@ -189,12 +187,12 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
      * @param true/false parameter boolean checker for the need to save
      */
     async doSaveText(nosave: boolean) {
-        /* if (this.attrs.inputchecker) {
+        if (this.attrs.inputchecker) {
             if(!this.checkInputRegex(this.attrs.inputchecker)) {
-                this.error = "Input does not pass the RegExp checker!";
+                this.error = "Input does not pass the RegExp checker, input is not saved!";
                 return;
             }
-        } */
+        }
         this.error = "... saving ...";
         this.isRunning = true;
         this.result = undefined;
@@ -261,6 +259,7 @@ textfieldApp.component("textfieldRunner", {
             ng-click="$ctrl.saveText()">
         {{::$ctrl.buttonText()}}
     </button>
+    <div ng-if="$ctrl.error" ng-bind-html="$ctrl.error"></div>
     <p ng-if="::$ctrl.footer" ng-bind="::$ctrl.footer" class="plgfooter"></p>
 </div>
 `,

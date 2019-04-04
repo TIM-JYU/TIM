@@ -40,6 +40,7 @@ class TextfieldMarkupModel(GenericMarkupModel):
     inputplaceholder: Union[str, Missing] = missing
     followid: Union[str, Missing] = missing
     autosave: Union[bool, Missing] = missing
+    inputchecker: Union[str, Missing] = missing
 
 
 class TextfieldMarkupSchema(GenericMarkupSchema):
@@ -52,6 +53,7 @@ class TextfieldMarkupSchema(GenericMarkupSchema):
     inputplaceholder: Union[str, Missing] = missing
     followid = fields.String(allow_none=True)
     autosave = fields.Boolean()
+    inputchecker = fields.String(allow_none=True)
 
     @post_load
     def make_obj(self, data):
@@ -201,6 +203,7 @@ initword: #ALKUARVO, TYHJÄ = EI ALKUARVOA
 buttonText: Save #PAINIKKEEN NIMI, TYHJÄ = EI PAINIKETTA
 cols: 1 #KENTÄN KOKO, NUMERAALINEN
 autosave: false #AUTOSAVE, POIS PÄÄLTÄ
+inputchecker: ^hyv$|^hyl$|^1$|^2$|^3$|^4$|^5$ #KÄYTTÄJÄSYÖTTEEN RAJOITIN, TYHJÄ = EI RAJOITUSTA
 ```""", """
 ``` {#label plugin="textfield" readonly=view}
 followid: #SEURANTAID, TYHJÄ = EI SEURANTAID:tä
