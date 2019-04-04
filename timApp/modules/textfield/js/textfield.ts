@@ -137,6 +137,7 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
      */
     initCode() {
         this.userword = this.attrs.initword || "";
+        this.notSavedWord = this.userword;
         this.error = undefined;
         this.result = undefined;
     }

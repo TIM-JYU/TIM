@@ -620,7 +620,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
             this.showError(r.result);
             return undefined;
         }
-        this.fetchedUser = this.user;
+        if (!r.ok) this.fetchedUser = this.user; //TODO
         return r.result.data;
     }
 
@@ -652,6 +652,10 @@ export class AnswerBrowserController extends DestroyScope implements IController
                     c.resetField();
                 }
             }
+            else {
+                this.loadedAnswer = {review: false, id: undefined};
+                this.changeAnswer();
+            }
             await this.loadInfo();
         }
     }
@@ -674,7 +678,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
 
     async loadInfo() {
         if (this.taskInfo != null) {
-            return;
+            //return;
         }
         this.loading++;
         const r = await to($http.get<ITaskInfo>("/taskinfo/" + this.taskId));
