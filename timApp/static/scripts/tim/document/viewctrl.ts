@@ -72,7 +72,7 @@ export let vctrlInstance: ViewCtrl | undefined;
 
 export class ViewCtrl implements IController {
     private notification: string = "";
-    private videoElements: {[name: string]: HTMLVideoElement | undefined} = {};
+    private videoElements = new Map<string, HTMLVideoElement>();
     clipMeta: IClipboardMeta = {allowPasteContent: false, allowPasteRef: false, empty: true};
     selection: {pars?: JQuery; start?: Paragraph; end?: Paragraph} = {};
     public par: JQuery | undefined;
@@ -95,9 +95,9 @@ export class ViewCtrl implements IController {
     public teacherMode: boolean;
     private velpMode: boolean;
 
-    private timTables: {[parId: string]: TimTableController} = {};
+    private timTables = new Map<string, TimTableController>();
 
-    private pendingUpdates: PendingCollection;
+    private pendingUpdates: PendingCollection = new Map<string, string>();
     private document: Document;
     private showRefresh: boolean;
     public selectedUser: IUser;
@@ -152,7 +152,6 @@ export class ViewCtrl implements IController {
             this.selectedUser = Users.getCurrent();
         }
         this.hidePending = false;
-        this.pendingUpdates = {};
 
         $($window).resize((e) => {
             if (e.target === $window as any) {
@@ -272,12 +271,12 @@ export class ViewCtrl implements IController {
         return this.item.src_docid != null && this.item.src_docid !== this.item.id;
     }
 
-    getVideo(followid: string): HTMLVideoElement | undefined {
-        return this.videoElements[followid];
+    getVideo(followid: string) {
+        return this.videoElements.get(followid);
     }
 
     registerVideo(followid: string, v: HTMLVideoElement): void {
-        this.videoElements[followid] = v;
+        this.videoElements.set(followid, v);
     }
 
     startLiveUpdates() {
@@ -424,7 +423,7 @@ export class ViewCtrl implements IController {
      * @param {string} parId The ID of the table paragraph.
      */
     public addTable(controller: TimTableController, parId: string) {
-        this.timTables[parId] = controller;
+        this.timTables.set(parId, controller);
     }
 
     /**
@@ -433,7 +432,7 @@ export class ViewCtrl implements IController {
      * @returns {TimTableController} The table controller related to the given table paragraph, or undefined.
      */
     public getTableControllerFromParId(parId: string) {
-        return this.timTables[parId];
+        return this.timTables.get(parId);
     }
 
     isEmptyDocument() {
@@ -463,12 +462,12 @@ export class ViewCtrl implements IController {
     }
 
     async beginUpdate() {
-        const response = await $http.get<{changed_pars: PendingCollection}>("/getUpdatedPars/" + this.docId);
-        this.updatePendingPars(response.data.changed_pars);
+        const response = await $http.get<{changed_pars: {[id: string]: string}}>("/getUpdatedPars/" + this.docId);
+        this.updatePendingPars(new Map<string, string>(Object.entries(response.data.changed_pars)));
     }
 
     pendingUpdatesCount() {
-        return Object.keys(this.pendingUpdates).length;
+        return this.pendingUpdates.size;
     }
 
     showUpdateDialog() {
@@ -476,7 +475,9 @@ export class ViewCtrl implements IController {
     }
 
     updatePendingPars(pars: PendingCollection) {
-        angular.extend(this.pendingUpdates, pars);
+        for (const [k, v] of pars) {
+            this.pendingUpdates.set(k, v);
+        }
         this.hidePending = false;
         if (this.pendingUpdatesCount() < 10) {
             this.updatePending();
@@ -484,18 +485,16 @@ export class ViewCtrl implements IController {
     }
 
     updatePending() {
-        for (const key in this.pendingUpdates) {
-            if (this.pendingUpdates.hasOwnProperty(key)) {
-                const par = getElementByParId(key);
-                const n = $(this.pendingUpdates[key]);
-                par.replaceWith(n);
-                const compiled = $($compile(n)(this.scope));
-                this.applyDynamicStyles(compiled);
-                ParCompiler.processAllMathDelayed(compiled);
-            }
+        for (const [key, val] of this.pendingUpdates) {
+            const par = getElementByParId(key);
+            const n = $(val);
+            par.replaceWith(n);
+            const compiled = $($compile(n)(this.scope));
+            this.applyDynamicStyles(compiled);
+            ParCompiler.processAllMathDelayed(compiled);
         }
         this.document.rebuildSections();
-        this.pendingUpdates = {};
+        this.pendingUpdates.clear();
         this.questionHandler.processQuestions();
     }
 

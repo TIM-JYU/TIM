@@ -230,13 +230,13 @@ export class UserListController implements IController {
         let dataKorppi = "";
 
         const fields = ["total_points", "task_points", "velp_points"];
-        const fieldNames: {[index: string]: string} = {};
-        fieldNames[fields[0]] = options.totalPointField;
-        fieldNames[fields[1]] = options.taskPointField;
-        fieldNames[fields[2]] = options.velpPointField;
+        const fieldNames = new Map<string, string>();
+        fieldNames.set(fields[0], options.totalPointField);
+        fieldNames.set(fields[1], options.taskPointField);
+        fieldNames.set(fields[2], options.velpPointField);
         let filename;
         for (let i = 0; i < fields.length; ++i) {
-            const fieldName = fieldNames[fields[i]];
+            const fieldName = fieldNames.get(fields[i]);
             if (fieldName) {
                 filename = (filename || fieldName + ".txt");
                 if (dataKorppi !== "") {
