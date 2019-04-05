@@ -11,7 +11,7 @@ class TimTableTest(BrowserTest):
         while True:
             t = self.find_element_avoid_staleness('tim-table')
             try:
-                self.save_element_screenshot(t, name)
+                self.assert_same_screenshot(t, f'timtable/{name}', attempts=2)
                 break
             except StaleElementReferenceException:
                 continue
@@ -43,6 +43,7 @@ table:
         """
         self.login_browser_quick_test1()
         self.login_test1()
+        # TODO: borderRight on first column doesn't work?
         d = self.create_doc(initial_par="""
 ``` {plugin="timTable"}
 table:
@@ -93,6 +94,7 @@ table:
         """
         self.login_browser_quick_test1()
         self.login_test1()
+        # TODO: borderRight on first row doesn't work?
         d = self.create_doc(initial_par="""
 ``` {plugin="timTable"}
 table:
@@ -109,7 +111,7 @@ table:
       borderBottom: 3px solid orange
       height: 100px
       width: 500px
-      fontFamily: "Arial"
+      fontFamily: Arial
     - row:
       - cell: "5"
       - cell: "Testi"
@@ -128,7 +130,7 @@ table:
       - cell: "14"
       - cell: "15"
       - cell: "16"
-      backgroundColor: #367890
+      backgroundColor: '#367890'
       border: 10px solid purple
 
 ```
@@ -159,7 +161,7 @@ table:
         borderBottom: 3px solid orange
         height: 100px
         width: 100px
-        fontFamily:"Times"
+        fontFamily: Times
         textAlign: right
         verticalAlign: bottom
     - row:
@@ -220,7 +222,7 @@ table:
       - cell: "ad"
       - cell: "astra."
       
-  fontFamily:"Times"
+  fontFamily: Times
   fontSize: 25
   color: green
   backgroundColor: yellow
@@ -305,7 +307,7 @@ table:
       - cell: "ad"
       - cell: "astra."
       
-  fontFamily:"Helvetica"
+  fontFamily: Helvetica
   fontSize: 25
   color: black
   backgroundColor: yellow
@@ -630,7 +632,7 @@ table:
 table:
   columns:
     - column:
-      span:1
+      span: 1
       backgroundColor: magenta
     - column:
       span: 2
