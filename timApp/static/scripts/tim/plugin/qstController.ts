@@ -2,7 +2,6 @@
  * Created by vesal on 28.12.2016.
  */
 import {IController, IRootElementService} from "angular";
-import * as timHelper from "tim/util/timHelper";
 import {timApp as qstApp} from "../app";
 import {getParId} from "../document/parhelpers";
 import {IPreviewParams, makePreview} from "../document/question/dynamicAnswerSheet";
@@ -73,11 +72,11 @@ class QstController implements IController {
     }
 
     private getHeader() {
-        return timHelper.toHeading(this.attrs.markup.header || "", "h4");
+        return this.attrs.markup.header;
     }
 
     private getFooter() {
-        return timHelper.toHeading(this.attrs.markup.footer || "", 'p class="plgfooter"');
+        return this.attrs.markup.footer;
     }
 
     private isTask() {
@@ -202,8 +201,8 @@ qstApp.component("qstRunner", {
     },
     template: `
 <div class="csRunDiv qst no-popup-menu" ng-if="$ctrl.isTask()">
-<p ng-bind-html="$ctrl.getHeader()"></p>
-    <p ng-if="$ctrl.stem" class="stem" ng-bind-html="$ctrl.stem"></p>
+    <h4 ng-if="::$ctrl.getHeader()" ng-bind-html="::$ctrl.getHeader()"></h4>
+    <p ng-if="::$ctrl.stem" class="stem" ng-bind-html="::$ctrl.stem"></p>
     <dynamic-answer-sheet
             questiondata="$ctrl.preview"
             on-answer-change="$ctrl.updateAnswer"></dynamic-answer-sheet>
@@ -214,7 +213,7 @@ qstApp.component("qstRunner", {
         <span class="glyphicon glyphicon-question-sign" title="Ask question"></span>
     </a>
     <span ng-show="$ctrl.result">{{$ctrl.result}}</span>
-    <p class="plgfooter" ng-bind-html="$ctrl.getFooter()"></p>
+    <p class="plgfooter" ng-bind-html="::$ctrl.getFooter()"></p>
 </div>
 <div ng-if="!$ctrl.isTask()">
     <a class="questionAddedNew" ng-click="$ctrl.questionClicked()">
