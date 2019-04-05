@@ -178,7 +178,7 @@ class QuestionTest(BrowserTest):
         d = self.create_doc(initial_par='test')
         self.goto_document(d, view='lecture')
         self.find_element('.glyphicon-menu-hamburger').click()
-        par: WebElement = self.find_element_and_move_to('.editline')
+        par = self.drv.find_elements_by_css_selector('.editline')[1]
         par.click()
         find_button_by_text(par, 'Add question above').click()
         sleep(0.5)
