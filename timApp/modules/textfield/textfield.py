@@ -53,7 +53,7 @@ class TextfieldMarkupSchema(GenericMarkupSchema):
     inputplaceholder: Union[str, Missing] = missing
     followid = fields.String(allow_none=True)
     autosave = fields.Boolean()
-    inputchecker = fields.String(allow_none=True)
+    #inputchecker = fields.String(allow_none=True)
 
     @post_load
     def make_obj(self, data):
@@ -76,8 +76,7 @@ class TextfieldInputSchema(Schema):
 
     @validates('userword')
     def validate_userword(self, word):
-        if not word:
-            raise ValidationError('Syntax Error: Not allowed character.')
+        pass
 
     @post_load
     def make_obj(self, data):
