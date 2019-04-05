@@ -6,3 +6,7 @@
 .pluginmultisave answerbrowser {
     display: none;
 }
+
+[data-plugin="/multisave"] {
+    opacity: 1 !important;
+}
