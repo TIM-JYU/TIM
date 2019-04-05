@@ -50,7 +50,7 @@ timApp.config([() => {
                         const e = document.getElementById(taskIdFull);
                         if (e) {
                             const par = angular.element(e).parents(".par");
-                            angular.extend(config.data, {ref_from: {docId: $window.item.id, par: par.attr("id")}});
+                            config.data.ref_from = {docId: $window.item.id, par: par.attr("id")};
                         }
                     }
                     return config;

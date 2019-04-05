@@ -1,4 +1,4 @@
-import angular, {IFormController, IRootElementService, IScope} from "angular";
+import {IFormController, IRootElementService, IScope} from "angular";
 import $ from "jquery";
 import moment from "moment";
 import {
@@ -867,9 +867,9 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
 
     private async updatePreview() {
         const mdStr = JSON.stringify(this.question, null, 4);
-        const response = await $http.post<{md: IAskedJsonJson}>("/qst/getQuestionMD/", angular.extend({
+        const response = await $http.post<{md: IAskedJsonJson}>("/qst/getQuestionMD/", {
             text: mdStr,
-        }));
+        });
         this.previewParams = makePreview(response.data.md, {
             enabled: false,
             showCorrectChoices: true,

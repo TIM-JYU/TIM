@@ -1,7 +1,7 @@
-import angular, {IController, IFormController, IPromise, IRootElementService, IScope} from "angular";
+import {IController, IFormController, IPromise, IRootElementService, IScope} from "angular";
 import {timApp} from "tim/app";
 import * as focusMe from "tim/ui/focusMe";
-import {Binding, markAsUsed, to} from "tim/util/utils";
+import {Binding, clone, markAsUsed, to} from "tim/util/utils";
 import {ViewCtrl} from "../document/viewctrl";
 import {DialogController, registerDialogComponent, showDialog, showMessageDialog} from "../ui/dialog";
 import {$http, $timeout, $window} from "../util/ngimport";
@@ -32,7 +32,7 @@ export class BookmarksController implements IController {
 
     $onInit() {
         if ($window.bookmarks && !this.data) {
-            this.data = angular.copy($window.bookmarks);
+            this.data = clone($window.bookmarks);
         }
         if (this.userId && !this.data) {
             void this.refresh();

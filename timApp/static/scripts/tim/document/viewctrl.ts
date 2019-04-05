@@ -1,4 +1,4 @@
-import angular, {IController, IDeferred, IPromise, IScope} from "angular";
+import {IController, IDeferred, IPromise, IScope} from "angular";
 import $ from "jquery";
 import moment from "moment";
 import ngs, {ngStorage} from "ngstorage";
@@ -514,7 +514,7 @@ export class ViewCtrl implements IController {
             p.find("h1, h2, h3, h4, h5, h6").each((i, e) => {
                 const h = $(e);
                 const id = h.attr("id");
-                if (angular.isDefined(id)) {
+                if (id) {
                     h.append($("<a>", {
                         text: "#",
                         href: "#" + id,

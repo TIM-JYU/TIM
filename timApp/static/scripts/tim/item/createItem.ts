@@ -1,4 +1,4 @@
-import angular, {IController} from "angular";
+import {IController} from "angular";
 import {timApp} from "tim/app";
 import * as formErrorMessage from "tim/ui/formErrorMessage";
 import * as shortNameValidator from "tim/ui/shortNameValidator";
@@ -69,11 +69,12 @@ class CreateItemController implements IController {
 
     async createItem() {
         this.creating = true;
-        const r = await to($http.post<{path: string}>("/createItem", angular.extend({
+        const r = await to($http.post<{path: string}>("/createItem", {
             item_path: this.itemLocation + "/" + this.itemName,
             item_type: this.itemType,
             item_title: this.itemTitle,
-        }, this.params)));
+            ...this.params,
+        }));
 
         if (!r.ok) {
             this.alerts = [];

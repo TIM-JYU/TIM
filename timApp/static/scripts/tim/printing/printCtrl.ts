@@ -1,4 +1,4 @@
-import angular, {IRootElementService, IScope} from "angular";
+import {IRootElementService, IScope} from "angular";
 import {ngStorage} from "ngstorage";
 import {IItem} from "../item/IItem";
 import {DialogController, registerDialogComponent, showDialog} from "../ui/dialog";
@@ -62,7 +62,7 @@ export class PrintCtrl extends DialogController<{params: IPrintParams}, {}, "tim
 
         if (this.storage.timPrintingTemplateId && this.templates) {
 
-            angular.forEach(this.templates, (template, key) => {
+            this.templates.forEach((template) => {
                 if (template.id === this.storage.timPrintingTemplateId) {
                     t = template;
                 }

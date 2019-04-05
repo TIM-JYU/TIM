@@ -9,7 +9,7 @@
  * @copyright 2016 Timber project members
  */
 
-import angular, {IController} from "angular";
+import {IController} from "angular";
 import {timApp} from "tim/app";
 import {Binding} from "../util/utils";
 import {IAnnotation, IUIFields} from "./velptypes";
@@ -49,7 +49,7 @@ export class VelpSummaryController implements IController {
      * Checks all checkboxes linked to the annotations in the velp summary.
      */
     checkAll() {
-        angular.forEach(this.annotations, (a) => {
+        this.annotations.forEach((a) => {
             a.selected = this.settings.selectedAll;
         });
     }
