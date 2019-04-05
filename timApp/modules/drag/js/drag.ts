@@ -17,7 +17,6 @@ import {
 } from "tim/plugin/util";
 import {$http} from "../../../static/scripts/tim/util/ngimport";
 import {markAsUsed, to} from "tim/util/utils";
-//import ad from "angularjs-dragula";
 import {polyfill} from "mobile-drag-drop";
 import drag from "angular-drag-and-drop-lists";
 
@@ -26,14 +25,17 @@ markAsUsed(drag);
 // optional import of scroll behaviour
 import {scrollBehaviourDragImageTranslateOverride} from "mobile-drag-drop/scroll-behaviour";
 
-const dragApp = angular.module("dragApp", ["ngSanitize", "dndLists"]); // ad(angular)
+const dragApp = angular.module("dragApp", ["ngSanitize", "dndLists"]);
 export const moduleDefs = [dragApp];
 
 const DragMarkup = t.intersection([
     t.partial({
         inputstem: t.string,
         words: t.array(t.string),
-        copy: t.boolean,
+        copy: t.keyof({target: null, source: null}),
+        type: t.string,
+        max: t.number,
+        trash: t.boolean,
         followid: t.string,
     }),
     GenericPluginMarkup,
@@ -54,11 +56,14 @@ const DragAll = t.intersection([
     }),
 ]);
 
+
 class DragController extends PluginBase<t.TypeOf<typeof DragMarkup>, t.TypeOf<typeof DragAll>, typeof DragAll> implements ITimComponent {
     protected static $inject = ["$scope", "$element"];
     private error?: string;
-    private words?: string [];
-    private copy?: boolean;
+    private type?: string;
+    private max?: number;
+    private copy?: string;
+    private trash?: boolean;
     private effectAllowed?: string;
     private vctrl!: ViewCtrl;
     private wordObjs?: {id: number, word: string}[];
@@ -101,43 +106,51 @@ class DragController extends PluginBase<t.TypeOf<typeof DragMarkup>, t.TypeOf<ty
 
     $onInit() {
         super.$onInit();
-        this.words = this.attrs.words || [];
-        this.copy = this.attrs.copy || false;
-        if (this.copy) {
-            this.effectAllowed = "copy";
-            this.wordObjs = this.words.map((x, i) => ({id: i, word: x, effectAllowed: "copy"}));
-        } else {
-            this.effectAllowed = "move";
-            this.wordObjs = this.words.map((x, i) => ({id: i, word: x, effectAllowed: "move"}));
-        }
-
-        // const kaikki = this.vctrl.getTimComponentsByRegex(".*");
-        // for (let item of kaikki) {
-        //    if (item instanceof DragController) {
-        //        if (item.dragulaService) {
-        //            this.dragulaService = item.dragulaService;
-        //        }
-        //    }
-        // }
-       // ////this.dragulaService.setOptions(this.vctrl.scope, 'dropzone');
-        // if(this.dragulaService) {
-        // this.dragulaService.options(this.vctrl.scope, 'dropzone', {
-        //    direction: "horizontal",
-        //    copy: (el: Element, source: DragController) => { return true; }
-        // });
-        // }
+        this.max = this.attrs.max || Number.MAX_VALUE;
+        this.copy = this.attrs.copy || "";
+        this.type = this.attrs.type || "";
+        this.trash = this.attrs.trash || false;
+        this.wordObjs = [];
+        this.createWordobjs(this.attrs.words || []);
 
         polyfill({
             // use this to make use of the scroll behaviour
             dragImageTranslateOverride: scrollBehaviourDragImageTranslateOverride
         });
 
-        // console.log(this.dragulaService);
-        // const drake = this.dragulaService.find(this.vctrl.scope,'dropzone');
-        //// if scope is vctrl.scope then there is only one dragulaservice and all use the same service
-        //// therefore the options are the same for all the plugins
-
         this.addToCtrl();
+    }
+
+    createWordobjs(words: string[]){
+        if (!words) return;
+        this.wordObjs = [];
+        if (this.copy === "source") {
+            this.effectAllowed = "copy";
+            this.wordObjs = words.map((x, i) => ({
+                id: i,
+                word: x,
+                effectAllowed: "copy",
+                type: this.type
+            }));
+            this.max = this.wordObjs.length;
+        } else if (this.copy === "target") {
+            this.effectAllowed = "copy";
+            this.wordObjs = words.map((x, i) => ({
+                id: i,
+                word: x,
+                effectAllowed: "copy",
+                type: this.type
+            }));
+        } else {
+            if (this.effectAllowed === "copy") return;  // TODO: make better if-elses to remove this bubblegum fix
+            this.effectAllowed = "move";
+            this.wordObjs = words.map((x, i) => ({
+                id: i,
+                word: x,
+                effectAllowed: "move",
+                type: this.type
+            }));
+        }
     }
 
     /**
@@ -158,13 +171,15 @@ class DragController extends PluginBase<t.TypeOf<typeof DragMarkup>, t.TypeOf<ty
      * @returns {string} The words..
      */
     getContent(): string {
+        let s: string;
+        s = "";
         if (this.wordObjs) {
-            return this.wordObjs.map((el) => {
-                return el.word;
-            }).toString();
-        } else {
-            return "";
+            this.wordObjs.map((el) => {
+                s = s + "," + el.word;
+            });
         }
+        return s;
+        console.log(s);
     }
 
     /**
@@ -172,12 +187,14 @@ class DragController extends PluginBase<t.TypeOf<typeof DragMarkup>, t.TypeOf<ty
      * @returns {string} The word..
      */
     getContentArray(): string[] {
+        let words: string[];
+        words = [];
         if (this.wordObjs) {
-            return this.wordObjs.map((el) => {
-                return el.word;
+            this.wordObjs.map((el) => {
+                words.push(el.word);
             });
         }
-        return [];
+        return words;
     }
 
     setPluginWords(words: string []) {
@@ -190,19 +207,9 @@ class DragController extends PluginBase<t.TypeOf<typeof DragMarkup>, t.TypeOf<ty
             result[i] = result[j];
             result[j] = tmp;
         }
-        this.words = result;
-
-        this.wordObjs = result.map((x, i) => ({id: i, word: x}));
-        console.log("setPluginWords", this.words, this.getName());
+        this.createWordobjs(result);
     }
 
-    setCopyOrMove(): string {
-        if (this.copy === true) {
-            return "copy";
-        } else {
-            return "move";
-        }
-    }
 
     async save() {
         this.doSave(false);
@@ -213,7 +220,7 @@ class DragController extends PluginBase<t.TypeOf<typeof DragMarkup>, t.TypeOf<ty
         const params = {
             input: {
                 nosave: false,
-                words: this.words,
+                words: this.getContentArray(),
             },
         };
 
@@ -233,38 +240,8 @@ class DragController extends PluginBase<t.TypeOf<typeof DragMarkup>, t.TypeOf<ty
         }
     }
 
-    onDragStart(e: JQuery.Event) {
-        const d = e.originalEvent as DragEvent;
-        //e.
-        const n = this.getName()!;
-        d.dataTransfer!.setData("text", "kissa");
-        d.dataTransfer!.effectAllowed = "move";
-    }
 
-    onDragOver(e: JQuery.Event) {
-        const d = e.originalEvent as DragEvent;
-        d.preventDefault();
-    }
 
-    onDrop(e: JQuery.Event) {
-        const d = e.originalEvent as DragEvent;
-        d.preventDefault();
-
-        // const component = this.vctrl.getTimComponentByName(json[1]);
-        // if (component === this) {
-        //    return;
-        // }
-        // d.dataTransfer!.dropEffect = "move";
-        // component!.setPluginWords!([]);
-        // console.log(d.dataTransfer!.getData("sana"));
-        // if (d.dataTransfer && this.wordObjs)
-        {//
-
-        //    this.words.push(d.dataTransfer.getData("text"));
-        //    this.setPluginWords(this.words);
-        }
-
-    }
 
     protected getAttributeType() {
         return DragAll;
@@ -280,12 +257,19 @@ dragApp.component("dragRunner", {
     },
     template: `
 <div>
+    <tim-markup-error ng-if="::$ctrl.markupError" data="::$ctrl.markupError"></tim-markup-error>
     <div class="form-inline">
     <div class="draggingarea">
-     <ul class="dropword" dnd-list="$ctrl.wordObjs" dnd-horizontal-list="true" dnd-effect-allowed="{{$ctrl.effectAllowed}}">
+     <ul ng-if="::$ctrl.trash" class="dropword" dnd-list="[]" dnd-effect-allowed="all"><li> TRASHCAN </li></ul>
+     <ul ng-if="::!$ctrl.trash" class="dropword" dnd-list="$ctrl.wordObjs" dnd-allowed-types="[$ctrl.type]"
+        dnd-horizontal-list="true"
+        dnd-disable-if="$ctrl.wordObjs.length >= $ctrl.max"
+        dnd-effect-allowed="{{$ctrl.effectAllowed}}">
         <li ng-repeat='item in $ctrl.wordObjs' class="dragword"
                     dnd-draggable="item"
+                    dnd-type = "item.type"
                     dnd-moved="$ctrl.wordObjs.splice($index, 1)"
+                    dnd-canceled="($ctrl.copy !== 'target' )|| $ctrl.wordObjs.splice($index, 1)"
                     dnd-effect-allowed="{{item.effectAllowed}}">
         {{item.word}}
         </li>

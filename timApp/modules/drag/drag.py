@@ -37,7 +37,10 @@ class DragMarkupModel(GenericMarkupModel):
     inputstem: Union[str, Missing] = missing
     needed_len: Union[int, Missing] = missing
     words: Union[List[str], Missing] = missing
-    copy: Union[bool, Missing] = missing
+    max: Union[int, Missing] = missing
+    copy: Union[str, Missing] = missing
+    type: Union[str, Missing] = missing
+    trash: Union[bool, Missing] = missing
     followid: Union[str, Missing] = missing
 
 
@@ -47,7 +50,10 @@ class DragMarkupSchema(GenericMarkupSchema):
     needed_len = fields.Int()
     cols = fields.Int()
     words = fields.List(fields.Str())
-    copy = fields.Bool()
+    copy = fields.String()
+    type = fields.String()
+    max = fields.Int()
+    trash = fields.Bool()
     followid = fields.String()
 
     @validates('points_array')
@@ -66,19 +72,20 @@ class DragMarkupSchema(GenericMarkupSchema):
 @attr.s(auto_attribs=True)
 class DragInputModel:
     words: List[str]
-    copy: bool = missing
+    copy: str = missing
+    type: str = missing
+    max: int = missing
+    trash: bool = missing
     nosave: bool = missing
 
 
 class DragInputSchema(Schema):
     nosave = fields.Bool()
     words = fields.List(fields.Str(required=True))
-    copy = fields.Bool()
-
-    @validates('words')
-    def validate_words(self, words):
-        if not words:
-            raise ValidationError('Must not be empty.')
+    copy = fields.String()
+    type = fields.String()
+    max = fields.Int()
+    trash = fields.Bool()
 
     @post_load
     def make_obj(self, data):
@@ -191,7 +198,10 @@ def reqs():
 """,
 """
 #- {defaultplugin="drag"}
-{#drag2 words: [peruna, porkkana, kurkku]}
+{#drag2 words: [weather, is, lovely, almost, always]}
+""","""
+#- {defaultplugin="drag"}
+{#dragtrash trash: true}
 """]
     return jsonify({
         "js": ["js/build/drag.js"],
@@ -213,6 +223,11 @@ def reqs():
                                 'data': templates[1].strip(),
                                 'text': 'Drag container with words',
                                 'expl': 'Add drag container with words'
+                            },
+                            {
+                                'data': templates[2].strip(),
+                                'text': 'Trashcontainer',
+                                'expl': 'Add drag trashcontainer for deleting non-copyable words'
                             },
                         ],
                     },
