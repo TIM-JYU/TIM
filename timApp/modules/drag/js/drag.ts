@@ -66,7 +66,7 @@ class DragController extends PluginBase<t.TypeOf<typeof DragMarkup>, t.TypeOf<ty
     private trash?: boolean;
     private effectAllowed?: string;
     private vctrl!: ViewCtrl;
-    private wordObjs?: {id: number, word: string}[];
+    private wordObjs?: Array<{id: number, word: string}>;
 
     constructor(
         protected scope: IScope,
@@ -121,37 +121,25 @@ class DragController extends PluginBase<t.TypeOf<typeof DragMarkup>, t.TypeOf<ty
         this.addToCtrl();
     }
 
-    createWordobjs(words: string[]){
-        if (!words) return;
-        this.wordObjs = [];
-        if (this.copy === "source") {
-            this.effectAllowed = "copy";
-            this.wordObjs = words.map((x, i) => ({
-                id: i,
-                word: x,
-                effectAllowed: "copy",
-                type: this.type
-            }));
-            this.max = this.wordObjs.length;
-        } else if (this.copy === "target") {
-            this.effectAllowed = "copy";
-            this.wordObjs = words.map((x, i) => ({
-                id: i,
-                word: x,
-                effectAllowed: "copy",
-                type: this.type
-            }));
-        } else {
-            if (this.effectAllowed === "copy") return;  // TODO: make better if-elses to remove this bubblegum fix
-            this.effectAllowed = "move";
-            this.wordObjs = words.map((x, i) => ({
-                id: i,
-                word: x,
-                effectAllowed: "move",
-                type: this.type
-            }));
+   createWordobjs(words: string[]){
+        if (!words){
+            return;
         }
-    }
+        this.wordObjs = [];
+        this.effectAllowed = "move";
+        if (this.copy === "source" || this.copy === "target") {
+            this.effectAllowed = "copy";
+        }
+       this.wordObjs = words.map((x, i) => ({
+           effectAllowed: this.effectAllowed,
+           id: i,
+           type: this.type,
+           word: x,
+       }));
+        if (this.copy === "source") {
+            this.max = this.wordObjs.length;
+        }
+        }
 
     /**
      * Adds this plugin to ViewCtrl so other plugins can get information about the plugin though it.
@@ -179,7 +167,6 @@ class DragController extends PluginBase<t.TypeOf<typeof DragMarkup>, t.TypeOf<ty
             });
         }
         return s;
-        console.log(s);
     }
 
     /**
