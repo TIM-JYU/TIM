@@ -16,26 +16,24 @@ from flask import redirect
 from flask import request
 from flask import session
 from flask import url_for
-from yubico_client import Yubico
-from yubico_client.yubico_exceptions import YubicoError
 
-from timApp.auth.accesshelper import verify_logged_in, verify_admin
-from timApp.timdb.dbaccess import get_timdb
-from timApp.korppi.openid import KorppiOpenIDResponse
-from timApp.util.logger import log_error, log_warning
-from timApp.util.flask.requesthelper import verify_json_params, get_option, is_xhr
-from timApp.util.flask.responsehelper import safe_redirect, json_response, ok_response, error_generic
-from timApp.notification.notify import send_email
-from timApp.auth.sessioninfo import get_current_user, get_other_users, get_session_users_ids, get_other_users_as_list, \
-    get_current_user_object
+from timApp.auth.accesshelper import verify_admin
 from timApp.auth.sessioninfo import get_current_user_id, logged_in
+from timApp.auth.sessioninfo import get_other_users, get_session_users_ids, get_other_users_as_list, \
+    get_current_user_object
+from timApp.korppi.openid import KorppiOpenIDResponse
+from timApp.notification.notify import send_email
 from timApp.tim_app import oid
+from timApp.timdb.dbaccess import get_timdb
 from timApp.timdb.exceptions import TimDbException
+from timApp.timdb.sqa import db
 from timApp.user.newuser import NewUser
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
-from timApp.timdb.sqa import db
 from timApp.user.userutils import create_password_hash, check_password_hash
+from timApp.util.flask.requesthelper import verify_json_params, get_option, is_xhr
+from timApp.util.flask.responsehelper import safe_redirect, json_response, ok_response, error_generic
+from timApp.util.logger import log_error, log_warning
 
 login_page = Blueprint('login_page',
                        __name__,
