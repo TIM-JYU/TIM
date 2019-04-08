@@ -108,7 +108,7 @@ class DragController extends PluginBase<t.TypeOf<typeof DragMarkup>, t.TypeOf<ty
         super.$onInit();
         this.max = this.attrs.max || Number.MAX_VALUE;
         this.copy = this.attrs.copy || "";
-        this.type = this.attrs.type || "";
+        this.type = this.attrs.type || " ";
         this.trash = this.attrs.trash || false;
         this.wordObjs = [];
         this.createWordobjs(this.attrs.words || []);
