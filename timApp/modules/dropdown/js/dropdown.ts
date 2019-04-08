@@ -61,7 +61,7 @@ class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.T
 
     /**
      * Returns the selected choice from the dropdown-list.
-     * @returns {string} The selected choice..
+     * @returns {string} The selected choice.
      */
     getContent() {
         return this.selectedWord;
