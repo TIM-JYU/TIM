@@ -19,3 +19,7 @@ textfield-runner .stem {
 input:focus.warnFrame {
     border-right-color: red !important;
 }
+
+[data-plugin="/textfield"] {
+    opacity: 1 !important;
+}
