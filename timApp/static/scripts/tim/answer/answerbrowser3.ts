@@ -195,7 +195,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
     private alerts: Array<{}> = [];
     private taskInfo: ITaskInfo | undefined;
     private points: number | undefined;
-    private loadedAnswer: {id: number | undefined, review: boolean} = {review: false, id: undefined};
+    private loadedAnswer: { id: number | undefined, review: boolean } = {review: false, id: undefined};
     private answerId?: Binding<number, "<?">;
     private loader!: PluginLoaderCtrl;
     private reviewHtml?: string;
@@ -267,13 +267,17 @@ export class AnswerBrowserController extends DestroyScope implements IController
         ], (newValues, oldValues, scope) => this.updateFilteredAndSetNewest());
 
         const answs = await this.getAnswers();
-        if (answs) {
+        if (answs && (answs.length > 0)) {
             this.answers = answs;
             const updated = this.updateAnswerFromURL();
             if (!updated) {
                 this.handleAnswerFetch(this.answers);
             }
+
+        } else {
+            this.resetITimComponent();
         }
+
         await this.loadInfo();
         await this.checkUsers(); // load users, answers have already been loaded for the currently selected user
 
@@ -362,7 +366,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
         };
         if (this.selectedAnswer.id !== this.loadedAnswer.id || this.loadedAnswer.review !== this.review) {
             this.loading++;
-            const r = await to($http.get<{html: string, reviewHtml: string}>("/getState", {
+            const r = await to($http.get<{ html: string, reviewHtml: string }>("/getState", {
                 params: {
                     ...parParams,
                     answer_id: this.selectedAnswer.id,
@@ -406,7 +410,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
 
     findSelectedUserIndex() {
         if (!this.users || !this.user) {
-             return -1;
+            return -1;
         }
         for (let i = 0; i < this.users.length; i++) {
             if (this.users[i].id === this.user.id) {
@@ -513,8 +517,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
                 userId: this.user.id,
                 saveAnswer: !this.viewctrl.noBrowser,
             };
-        }
-        else if (this.user && this.saveTeacherWithoutCollaboration) {
+        } else if (this.user && this.saveTeacherWithoutCollaboration) {
             return {
                 // answer_id: this.selectedAnswer.id,
                 saveTeacherWithoutCollaboration: this.saveTeacherWithoutCollaboration,
@@ -525,8 +528,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
                 userId: this.user.id,
                 saveAnswer: !this.viewctrl.noBrowser,
             };
-        }
-        else {
+        } else {
             return {
                 saveTeacher: false,
                 teacher: this.viewctrl.teacherMode,
@@ -546,7 +548,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
         this.users = r.result.data;
     }
 
-    showError(response: {data: {error: string}}) {
+    showError(response: { data: { error: string } }) {
         this.alerts.push({msg: "Error: " + response.data.error, type: "danger"});
     }
 
@@ -621,7 +623,6 @@ export class AnswerBrowserController extends DestroyScope implements IController
             return undefined;
         }
         this.fetchedUser = this.user;
-        //if (!r.ok) this.fetchedUser = this.user; //TODO
         return r.result.data;
     }
 
@@ -644,17 +645,19 @@ export class AnswerBrowserController extends DestroyScope implements IController
         return this.taskInfo.userMin != null && this.taskInfo.userMax != null;
     }
 
+    resetITimComponent() {
+        const c = this.viewctrl.getTimComponentByName(this.taskId.split(".")[1]);
+        if (c) {
+            c.resetField();
+        }
+    }
+
     async loadUserAnswersIfChanged() {
         if (this.hasUserChanged()) {
-            this.fetchedUser = this.user;
             const answers = await this.getAnswersAndUpdate();
             if (!answers || answers.length === 0) {
-                const c = this.viewctrl.getTimComponentByName(this.taskId.split(".")[1]);
-                if (c) {
-                    c.resetField();
-                }
-            }
-            else {
+                this.resetITimComponent();
+            } else {
                 this.loadedAnswer = {review: false, id: undefined};
                 this.changeAnswer();
             }
