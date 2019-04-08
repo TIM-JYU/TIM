@@ -250,7 +250,7 @@ dragApp.component("dragRunner", {
      <ul ng-if="::$ctrl.trash" class="dropword" dnd-list="[]" dnd-effect-allowed="all"><li> TRASHCAN </li></ul>
      <ul ng-if="::!$ctrl.trash" class="dropword" dnd-list="$ctrl.wordObjs" dnd-allowed-types="[$ctrl.type]"
         dnd-horizontal-list="true"
-        dnd-disable-if="$ctrl.wordObjs.length >= $ctrl.max"
+        dnd-disable-if="{{$ctrl.wordObjs.length >= $ctrl.max}}"
         dnd-effect-allowed="{{$ctrl.effectAllowed}}">
         <li ng-repeat='item in $ctrl.wordObjs' class="dragword"
                     dnd-draggable="item"
