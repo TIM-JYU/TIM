@@ -450,8 +450,8 @@ export class ViewCtrl implements IController {
     }
 
     /**
-     * Registers an ITimComponent to the view controller by its name attribute if it has one
-     * @param {ITimComponent} component The component to be registered
+     * Registers an ITimComponent to the view controller by its name attribute if it has one.
+     * @param {ITimComponent} component The component to be registered.
      */
     public addTimComponent(component: ITimComponent) {
         let name = component.getName();
@@ -459,18 +459,18 @@ export class ViewCtrl implements IController {
     }
 
     /**
-     * Returns an ITimComponent where register ID matches the given string
-     * @param {string} name The register ID of the ITimComponent
-     * @returns {ITimComponent | undefined} Matching component if there was one
+     * Returns an ITimComponent where register ID matches the given string.
+     * @param {string} name The register ID of the ITimComponent.
+     * @returns {ITimComponent | undefined} Matching component if there was one.
      */
     public getTimComponentByName(name: string): ITimComponent | undefined {
         return this.timComponents.get(name);
     }
 
     /**
-     * Gets ITimComponents nested within specified area component
-     * @param{string} group name of the area object
-     * @returns {ITimComponent[]} List of ITimComponents nested within the area
+     * Gets ITimComponents nested within specified area component.
+     * @param{string} group name of the area object.
+     * @returns {ITimComponent[]} List of ITimComponents nested within the area.
      */
     public getTimComponentsByGroup(group: string): ITimComponent[] {
         let returnList: ITimComponent[] = [];
@@ -482,9 +482,9 @@ export class ViewCtrl implements IController {
     }
 
     /**
-     * Searches for registered ITimComponent whose ID matches the given regexp
-     * @param {string} re The RegExp to be used in search
-     * @returns {ITimComponent[]} List of ITimComponents where the ID matches the regexp
+     * Searches for registered ITimComponent whose ID matches the given regexp.
+     * @param {string} re The RegExp to be used in search.
+     * @returns {ITimComponent[]} List of ITimComponents where the ID matches the regexp.
      */
     public getTimComponentsByRegex(re: string): ITimComponent[]{
         let returnList: ITimComponent[] = [];

@@ -259,8 +259,8 @@ export abstract class PluginBase<MarkupType extends IGenericPluginMarkup, A exte
 
     getGroups(): string[]{
         let returnList: string[] = [];
-        const parents = this.element.parents('.area'); //Palauttaa vain yhden koska divit ei sisäkkäin?
-        //Parsetaan toistaiseksi manuaalisesti "area area_ulompi area_sisempi"
+        const parents = this.element.parents('.area'); // Only returns one because the divs are not inside each other?
+        // Manual parsing for now: "area area_outer area_inner"
         if(parents[0]){
             let areaList = parents[0].classList;
             areaList.forEach(
@@ -280,13 +280,16 @@ export abstract class PluginBase<MarkupType extends IGenericPluginMarkup, A exte
     }
 
     /**
-     * Returns the name given to the plugin
+     * Returns the name given to the plugin.
      */
     getName(): string | undefined {
         const taskId = this.pluginMeta.getTaskId();
         if (taskId) return taskId.split(".")[1];
     }
 
+    /**
+     * Returns the plugin's parent paragraph.
+     */
     public getPar() {
         return this.element.parents(".par");
     }

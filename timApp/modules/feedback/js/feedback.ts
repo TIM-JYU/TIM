@@ -123,6 +123,8 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
             this.hideQuestionItems();
         }
         this.feedbackMax = this.checkFeedbackLevels();
+        this.checkCorrectAnswersCount();
+        this.checkInstructions();
     }
 
     /**
@@ -164,6 +166,41 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
             this.error = "Different number of feedback levels";
         }
         return levels[0];
+    }
+
+    /**
+     * Checks that the tasks question items correct choices have a match for every plugin.
+     *
+     * TODO: should this be for every match? Now they go to default feedback
+     */
+    checkCorrectAnswersCount() {
+        const items = this.attrs.questionItems;
+        for (const item of items) {
+            for (const choice of item.choices) {
+                if (choice.correct) {
+                    if (item.pluginNames.length !== choice.match.length) {
+                        this.error = `${item.pluginNames}'s correct answer is missing a match for some of its plugins`
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Check that the task has a practice item or a TIM block with instructions.
+     */
+    checkInstructions() {
+        const id = this.attrs.instructionID;
+        const instruction = document.querySelectorAll(".par.instruction");
+
+        if (id) {
+            const instruction = this.vctrl.getTimComponentByName(id);
+            if (!instruction)
+                this.error = "Feedback plugin has instruction plugin defined but it cannot be found from the page."
+        }
+        if (!id && instruction.length < 1) {
+            this.error = "Missing an instruction block or it has no .instruction-class defined.";
+        }
     }
 
     /**
@@ -217,6 +254,15 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
     hideComponent(component: ITimComponent) {
         const node = component.getPar().children(".parContent")[0];
         this.changeVisibility(node, false);
+    }
+
+    /**
+     * Hide a paragraph from the page.
+     *
+     * @param paragraph The paragraph to hide.
+     */
+    hideParagraph(paragraph: Element) {
+        this.changeVisibility(paragraph, false);
     }
 
     /**
@@ -377,7 +423,18 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
                 if (!this.teacherRight || this.attrs.teacherHide) {
                     this.hideComponent(instructionQuestion);
                 }
+            } else {
+                const instruction = document.querySelectorAll(".par.instruction");
+                if (instruction) {
+                    this.hideParagraph(instruction[0]);
+                }
+                const failure = await this.doSave(false, false, "", "");
+                if (failure) {
+                    this.error = "Error saving a plugin";
+                    return;
+                }
             }
+
             this.printFeedback("");
             this.pluginMode = Mode.QuestionItem;
             // For demonstration
