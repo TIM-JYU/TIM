@@ -1,10 +1,10 @@
 /**
- * Defines the client-side implementation of numericfield plugin.
+ * Defines the client-side implementation of numericfield/label plugin.
  */
 import angular, {INgModelOptions} from "angular";
 import * as t from "io-ts";
 import {ITimComponent, ViewCtrl} from "tim/document/viewctrl"
-import {GenericPluginMarkup, Info, nullable, PluginBase, withDefault} from "tim/plugin/util";
+import {GenericPluginMarkup, Info, nullable, PluginBase, pluginBindings, withDefault} from "tim/plugin/util";
 import {$http} from "tim/util/ngimport";
 import {to, valueOr} from "tim/util/utils";
 import {valueDefu} from "tim/util/utils"; //tarvitaan reset-metodille, jos halutaan toteuttaa
@@ -20,11 +20,9 @@ const NumericfieldMarkup = t.intersection([
         initnumber: nullable(t.number),
         buttonText: nullable(t.string),
         autosave: t.boolean,
-        notSaved: t.boolean,
     }),
     GenericPluginMarkup,
     t.type({
-        // all withDefaults should come here; NOT in t.partial
         autoupdate: withDefault(t.number, 500),
         cols: withDefault(t.number, 1),
     }),
@@ -54,14 +52,14 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
     }
 
     /**
-     * Method returning (user) defined text for the button
+     * Returns (user) defined text for the button.
      */
     buttonText() {
         return super.buttonText() || null;
     }
 
     /**
-     * Settings on every new page load
+     * Settings on every new page load.
      */
     $onInit() {
         super.$onInit();
@@ -72,7 +70,7 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
     }
 
     /**
-     * Will run after $onInit - reserved for possible eventhandlers OR to be removed
+     * Will run after $onInit - reserved for possible eventhandlers OR to be removed.
      */
     /*
     $postLink() {
@@ -83,61 +81,67 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
     */
 
     /**
-     * Method to return (user) content in string form.
-     * Not used in textfield plugin, but promised to be implemented in ITimComponent.
+     * Returns (user) content in string form.
+     * Not used in numericfield plugin, but promised to be implemented in ITimComponent.
      */
     getContent(): string {
-        return;
+        return this.numericvalue.toString();
     }
 
     // noinspection JSUnusedGlobalSymbols
     /**
-     * Method to return (user) content in numeric form.
+     * Returns (user) content in numeric form.
      */
     getNumericContent(): number {
         return this.numericvalue;
     }
 
     /**
-     * Save method for other plguins, needed by e.g. multisave plugin
+     * Save method for other plguins, needed by e.g. multisave plugin.
      */
     save(): undefined {
         this.saveText();
         return undefined;
     }
 
+    resetField(): undefined {
+        this.initCode();
+        return undefined;
+    }
+
     /**
-     * Method used for autoupdating
+     * Method for autoupdating.
      */
     get autoupdate(): number {
         return this.attrs.autoupdate;
     }
 
     /**
-     * Method to return (user) set inputstem (textfeed before userinput box)
+     * Returns (user) set inputstem (textfeed before userinput box).
      */
     get inputstem() {
         return this.attrs.inputstem || null;
     }
 
     /**
-     * Method to return (user) set col size (size of the field)
+     * Returns (user) set col size (size of the field).
      */
     get cols() {
         return this.attrs.cols;
     }
 
     /**
-     * Method to initialize content
+     * Initialize content.
      */
     initCode() {
         this.numericvalue = this.attrs.initnumber || undefined;
+        this.notSavedNumber = this.numericvalue;
         this.error = undefined;
         this.result = undefined;
     }
 
     /**
-     * Method to (re)direct save request to actual save method.
+     * Redirects save request to actual save method.
      * Used as e.g. timButton ng-click event.
      */
     saveText() {
@@ -146,7 +150,7 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
 
     // noinspection JSUnusedGlobalSymbols
     /**
-     * Autosave method is used by ng-blur in textfieldApp component.
+     * Autosaver used by ng-blur in textfieldApp component.
      * Needed to seperate from other save methods because of the if-structure.
      * Unused method warning is suppressed, as the method is only called in template.
      */
@@ -156,7 +160,7 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
 
     // noinspection JSUnusedGlobalSymbols
     /**
-     * Method to check if input has been changed since the last Save or initialization.
+     * Checking if input has been changed since the last Save or initialization.
      * Displays a red thick marker at the right side of the inputfield to notify users
      * about unsaved changes.
      * Unused method warning is suppressed, as the method is only called in template.
@@ -167,7 +171,7 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
 
 
     /**
-     * Actual save method, called by different save alternatives implemented above.
+     * Actual saver, called by different save alternatives implemented above.
      * @param true/false parameter boolean checker for the need to save
      */
     async doSaveText(nosave: boolean) {
@@ -203,14 +207,12 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
 }
 
 /**
- * numericfieldRunner as HTML component.
+ * Introducing numericfieldRunner as HTML component.
  * Attribute style used to force user given cols to determine size.
- * If needed, attribute step="0.01" can determine lower step size between scroll-up/down.
+ * Developers note: attribute step="0.01" can determine lower step size between scroll-up/down.
  */
 numericfieldApp.component("numericfieldRunner", {
-    bindings: {
-        json: "@",
-    },
+    bindings: pluginBindings,
     controller: NumericfieldController,
     require: {
         vctrl: "^timView",
@@ -242,7 +244,6 @@ numericfieldApp.component("numericfieldRunner", {
             ng-click="$ctrl.saveText()">
         {{::$ctrl.buttonText()}}
     </button>
-    <!-- <pre ng-if="$ctrl.result">{{$ctrl.result}}</pre> -->
     <p ng-if="::$ctrl.footer" ng-bind="::$ctrl.footer" class="plgfooter"></p>
 </div> `,
 });

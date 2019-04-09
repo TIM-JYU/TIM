@@ -14,3 +14,6 @@ services:
   working_dir: /service/timApp/static/scripts
   command: jspm bundle tim/main + tim/document/slide - "(tim/main + tim/document/slide - [tim/**/*])" build/tim.js -wm
   restart: unless-stopped
+ pali:
+  environment:
+    SHOW_TEMPLATES: "False"

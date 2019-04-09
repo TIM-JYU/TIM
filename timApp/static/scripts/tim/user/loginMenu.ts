@@ -3,7 +3,7 @@ import {timApp} from "tim/app";
 import * as loading from "tim/ui/loadingIndicator";
 import * as onEnter from "tim/ui/onEnter";
 import {$http} from "../util/ngimport";
-import {capitalizeFirstLetter, IOkResponse, markAsUsed, to, ToReturn} from "../util/utils";
+import {Binding, capitalizeFirstLetter, IOkResponse, markAsUsed, to, ToReturn} from "../util/utils";
 import {IUser} from "./IUser";
 import {Users} from "./userService";
 import {saveCurrentScreenPar} from "../document/parhelpers";
@@ -43,11 +43,18 @@ class LoginMenuController implements IController {
     private signUpRequestInProgress = false;
     private tempPassword: string | undefined;
     private tempPasswordProvided = false;
+    private buttonText?: Binding<string, "@">;
 
     constructor() {
         this.loginForm = {email: "", password: ""};
         this.loggingout = false;
         this.addingToSession = false;
+    }
+
+    $onInit(): void {
+        if (this.buttonText === undefined) {
+            this.buttonText = "Log in";
+        }
     }
 
     getCurrentUser = () => Users.getCurrent();
@@ -231,7 +238,9 @@ class LoginMenuController implements IController {
 }
 
 timApp.component("loginMenu", {
-    bindings: {},
+    bindings: {
+        buttonText: "@?",
+    },
     controller: LoginMenuController,
     templateUrl: "/static/templates/loginMenu.html",
 });

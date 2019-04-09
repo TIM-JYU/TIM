@@ -156,6 +156,7 @@ def post_answer(plugintype: str, task_id_ext: str):
     answer_browser_data = request.get_json().get('abData', {})
     is_teacher = answer_browser_data.get('teacher', False)
     save_teacher = answer_browser_data.get('saveTeacher', False)
+    save_teacher_without_collaboration = answer_browser_data.get('saveTeacherWithoutCollaboration', False)
     save_answer = answer_browser_data.get('saveAnswer', True) and tid.task_name
 
     if tid.is_points_ref:
@@ -337,7 +338,7 @@ def post_answer(plugintype: str, task_id_ext: str):
                                                            tags,
                                                            valid=True,
                                                            points_given_by=get_current_user_group())
-        elif is_teacher:
+        elif is_teacher and save_teacher_without_collaboration:
             user_id = answer_browser_data.get('userId')
             if user_id:
                 users = [User.query.get(user_id)]

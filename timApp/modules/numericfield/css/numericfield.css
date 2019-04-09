@@ -19,3 +19,7 @@ numericfield-runner .stem {
 input:focus.warnFrame {
     border-right-color: red !important;
 }
+
+[data-plugin="/numericfield"] {
+    opacity: 1 !important;
+}

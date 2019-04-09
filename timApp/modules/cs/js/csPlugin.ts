@@ -4,7 +4,7 @@ import $ from "jquery";
 import {CellInfo} from "sagecell";
 import {IAce, IAceEditor} from "tim/editor/ace-types";
 import {ParCompiler} from "tim/editor/parCompiler";
-import {GenericPluginMarkup, Info, nullable, PluginBase, withDefault} from "tim/plugin/util";
+import {GenericPluginMarkup, Info, nullable, PluginBase, pluginBindings, withDefault} from "tim/plugin/util";
 import {$compile, $http, $sce, $timeout, $upload, $window} from "tim/util/ngimport";
 import {fixDefExport, to, valueDefu, valueOr} from "tim/util/utils";
 
@@ -2949,9 +2949,7 @@ Object.getPrototypeOf(document.createElement("canvas").getContext("2d")).fillCir
     };
 
 const commonComponentOptions = {
-    bindings: {
-        json: "@",
-    },
+    bindings: pluginBindings,
     controller: CsController,
 };
 
@@ -3221,9 +3219,7 @@ class CsConsoleController extends CsBase implements IController {
 }
 
 csConsoleApp.component("csConsole", {
-    bindings: {
-        json: "@",
-    },
+    bindings: pluginBindings,
     controller: CsConsoleController,
     template: `
 <div class="web-console no-popup-menu {{$ctrl.currentSize}} " ng-keydown="$ctrl.handleKey($event)"><code

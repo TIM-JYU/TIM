@@ -18,7 +18,6 @@ import {$http, $localStorage} from "../../util/ngimport";
 import {KEY_ENTER} from "../../util/keycodes";
 
 export interface ICourseListParams {
-    item: IItem;
     settings: ICourseSettings;
 }
 

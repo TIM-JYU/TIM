@@ -3,7 +3,14 @@
  */
 import angular, {INgModelOptions} from "angular";
 import * as t from "io-ts";
-import {GenericPluginMarkup, GenericPluginTopLevelFields, nullable, PluginBase, withDefault} from "tim/plugin/util";
+import {
+    GenericPluginMarkup,
+    GenericPluginTopLevelFields,
+    nullable,
+    PluginBase,
+    pluginBindings,
+    withDefault
+} from "tim/plugin/util";
 import {$http} from "tim/util/ngimport";
 import {to} from "tim/util/utils";
 
@@ -57,7 +64,7 @@ class JsrunnerController extends PluginBase<t.TypeOf<typeof JsrunnerMarkup>, t.T
     }
 
     async doCheckFields(nosave: boolean) {
-        this.error = "... undefined or no rights to fiels ...";
+        this.error = "... undefined or no rights to fields ...";
         this.isRunning = true;
         const params = {
             input: {
@@ -86,9 +93,7 @@ class JsrunnerController extends PluginBase<t.TypeOf<typeof JsrunnerMarkup>, t.T
 }
 
 jsrunnerApp.component("jsRunner", {
-    bindings: {
-        json: "@",
-    },
+    bindings: pluginBindings,
     controller: JsrunnerController,
     require: {
         vctrl: "^timView",

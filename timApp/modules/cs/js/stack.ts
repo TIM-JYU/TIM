@@ -1,7 +1,7 @@
 ﻿import angular from "angular";
 import * as t from "io-ts";
 import {ParCompiler} from "tim/editor/parCompiler";
-import {GenericPluginMarkup, Info, PluginBase, withDefault} from "tim/plugin/util";
+import {GenericPluginMarkup, Info, PluginBase, pluginBindings, withDefault} from "tim/plugin/util";
 import {$http, $sce} from "tim/util/ngimport";
 import {to} from "tim/util/utils";
 
@@ -435,9 +435,7 @@ class StackController extends PluginBase<t.TypeOf<typeof StackMarkup>,
 }
 
 const common = {
-    bindings: {
-        json: "@",
-    },
+    bindings: pluginBindings,
     controller: StackController,
 };
 
