@@ -6,7 +6,6 @@ import * as t from "io-ts";
 import {GenericPluginMarkup, GenericPluginTopLevelFields, nullable, PluginBase, withDefault} from "tim/plugin/util";
 import {$http} from "tim/util/ngimport";
 import {to} from "tim/util/utils";
-import {valueDefu} from "tim/util/utils";
 
 const jsrunnerApp = angular.module("jsrunnerApp", ["ngSanitize"]);
 export const moduleDefs = [jsrunnerApp];
@@ -23,9 +22,6 @@ const JsrunnerMarkup = t.intersection([
     }),
 ]);
 const JsrunnerAll = t.intersection([
-    t.partial({
-        markup: JsrunnerMarkup,
-    }),
     GenericPluginTopLevelFields,
     t.type({markup: JsrunnerMarkup}),
 ]);

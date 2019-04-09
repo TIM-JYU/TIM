@@ -98,6 +98,8 @@ def get_fields_and_users(values, d: DocInfo):
         task_ids.append(task_id)
         if not task_id.doc_id:
             task_id.doc_id = d.id
+        dib = get_doc_or_abort(task_id.doc_id)
+        verify_teacher_access(dib)
     answer_ids = (
         user.answers
             .filter(Answer.task_id.in_(task_ids_to_strlist(task_ids)))
@@ -108,7 +110,6 @@ def get_fields_and_users(values, d: DocInfo):
     answer_dict: Dict[str, Answer] = {}
     for answer in answer_list:
         answer_dict[answer.task_id] = answer
-    # s = User.query.join(Answer, User.answers)
     user_tasks = {}
     for task in task_ids:
         a = answer_dict.get(task.doc_task)
@@ -266,6 +267,12 @@ def post_answer(plugintype: str, task_id_ext: str):
     if 'web' not in jsonresp:
         return json_response({'error': 'The key "web" is missing in plugin response.'}, 400)
     result = {'web': jsonresp['web']}
+
+    if plugin.type == 'jsrunner':
+        save_object = jsonresp['save']
+        print("jsrunner save")
+        print(save_object)
+        return json_response(result)
 
     def add_reply(obj, key, runMarkDown = False):
         if key not in plugin.values:
