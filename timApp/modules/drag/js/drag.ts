@@ -36,6 +36,7 @@ const DragMarkup = t.intersection([
         type: t.string,
         max: t.number,
         trash: t.boolean,
+        shuffle: t.boolean,
         followid: t.string,
     }),
     GenericPluginMarkup,
@@ -65,6 +66,7 @@ class DragController extends PluginBase<t.TypeOf<typeof DragMarkup>, t.TypeOf<ty
     private max?: number;
     private copy?: string;
     private trash?: boolean;
+    private shuffle?: boolean;
     private effectAllowed?: string;
     private vctrl!: ViewCtrl;
     private wordObjs?: Array<{id: number, word: string}>;
@@ -111,20 +113,32 @@ class DragController extends PluginBase<t.TypeOf<typeof DragMarkup>, t.TypeOf<ty
         this.copy = this.attrs.copy || "";
         this.type = this.attrs.type || " ";
         this.trash = this.attrs.trash || false;
+        this.shuffle = this.attrs.shuffle || false;
         this.wordObjs = [];
-        this.createWordobjs(this.attrs.words || []);
+        if (this.shuffle && this.attrs.words) {
+            const words = this.shuffleWords(this.attrs.words);
+            this.createWordobjs(words);
+        } else {
+            this.createWordobjs(this.attrs.words || []);
+        }
 
         polyfill({
             // use this to make use of the scroll behaviour
-            dragImageTranslateOverride: scrollBehaviourDragImageTranslateOverride
+            dragImageTranslateOverride: scrollBehaviourDragImageTranslateOverride,
         });
 
         this.addToCtrl();
     }
 
-   createWordobjs(words: string[]){
+    /**
+     * Creates word-object-models that have attributes essential to the functionality of drag and drop actions.
+     * In addition, initializes program logic.
+     * @param words Array of strings to be transformed into draggable models.
+     */
+    createWordobjs(words: string[]){
         if (!words){
             return;
+            //TODO: error message or default word objects?
         }
         this.wordObjs = [];
         this.effectAllowed = "move";
@@ -156,8 +170,8 @@ class DragController extends PluginBase<t.TypeOf<typeof DragMarkup>, t.TypeOf<ty
     }
 
     /**
-     * Returns contained words separated with a comma
-     * @returns {string} The words..
+     * Returns contained words as a string separated with a comma
+     * @returns {string} The words.
      */
     getContent(): string {
         let s: string;
@@ -172,7 +186,7 @@ class DragController extends PluginBase<t.TypeOf<typeof DragMarkup>, t.TypeOf<ty
 
     /**
      * Returns contained words as a string array
-     * @returns {string} The word..
+     * @returns {string} The words
      */
     getContentArray(): string[] {
         let words: string[];
@@ -187,13 +201,30 @@ class DragController extends PluginBase<t.TypeOf<typeof DragMarkup>, t.TypeOf<ty
     /**
      * Force the plugin to save its information
      *
-     * @param force Whether to force a save
+     * @param force Whether to force a save.
      */
     setForceAnswerSave(force: boolean) {
         this.forceSave = force;
     }
 
+    /**
+     * Sets words in plugin.
+     * @param words The words to be set as draggable words in plugin.
+     * @param shuffle Whether to shuffle words.
+     */
     setPluginWords(words: string []) {
+        if (this.shuffle) {
+            this.createWordobjs(this.shuffleWords(words));
+        } else {
+            this.createWordobjs(words);
+        }
+    }
+
+    /**
+     * Shuffles string array
+     * @param words Array of strings to be shuffled.
+     */
+    shuffleWords(words: string []): string []{
         // shuffle algorithm from csparsons.ts
         const result = words.slice();
         const n = words.length;
@@ -203,9 +234,8 @@ class DragController extends PluginBase<t.TypeOf<typeof DragMarkup>, t.TypeOf<ty
             result[i] = result[j];
             result[j] = tmp;
         }
-        this.createWordobjs(result);
+        return result;
     }
-
 
     async save() {
         const failure = await this.doSave(false);
@@ -240,9 +270,6 @@ class DragController extends PluginBase<t.TypeOf<typeof DragMarkup>, t.TypeOf<ty
             this.error = "Infinite loop or some other error?";
         }
     }
-
-
-
 
     protected getAttributeType() {
         return DragAll;
