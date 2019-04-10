@@ -1,6 +1,5 @@
-Stack-esimerrki
-Stack-esimerkki funktion integroimiskesi
-``` {plugin="csPlugin" #PLUGINNAMEHERE rnd="1,20000"}
+Stack-esimerkki
+Stack-esimerkki funktion integroimiseksi
 ``` {plugin="csPlugin" #stack3}
 type: stack
 -pointsRule: {}
