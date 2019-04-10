@@ -398,15 +398,16 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
      * @param plugin The plugin to be saved
      * @returns{boolean} Whether the saving was succesful
      */
-    async savePlugin(plugin: ITimComponent) {
+    async savePlugin(plugin: ITimComponent): boolean {
         if (plugin.setForceAnswerSave) {
             plugin.setForceAnswerSave(true);
-            const failure = await plugin.save();
-            if (failure) {
-                return false;
-            }
-            return true;
         }
+        const failure = await plugin.save();
+        if (failure) {
+            return false;
+        }
+        return true;
+
 
     }
 

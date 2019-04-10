@@ -60,6 +60,7 @@ const DragAll = t.intersection([
 class DragController extends PluginBase<t.TypeOf<typeof DragMarkup>, t.TypeOf<typeof DragAll>, typeof DragAll> implements ITimComponent {
     protected static $inject = ["$scope", "$element"];
     private error?: string;
+    private forceSave = false;
     private type?: string;
     private max?: number;
     private copy?: string;
@@ -183,6 +184,14 @@ class DragController extends PluginBase<t.TypeOf<typeof DragMarkup>, t.TypeOf<ty
         }
         return words;
     }
+    /**
+     * Force the plugin to save its information
+     *
+     * @param force Whether to force a save
+     */
+    setForceAnswerSave(force: boolean) {
+        this.forceSave = force;
+    }
 
     setPluginWords(words: string []) {
         // shuffle algorithm from csparsons.ts
@@ -199,8 +208,8 @@ class DragController extends PluginBase<t.TypeOf<typeof DragMarkup>, t.TypeOf<ty
 
 
     async save() {
-        this.doSave(false);
-        return "";
+        const failure = await this.doSave(false);
+        return failure;
     }
 
     async doSave(nosave: false) {
@@ -208,6 +217,9 @@ class DragController extends PluginBase<t.TypeOf<typeof DragMarkup>, t.TypeOf<ty
             input: {
                 nosave: false,
                 words: this.getContentArray(),
+            },
+            options: {
+                forceSave: this.forceSave,
             },
         };
 
@@ -221,7 +233,9 @@ class DragController extends PluginBase<t.TypeOf<typeof DragMarkup>, t.TypeOf<ty
         if (r.ok) {
             const data = r.result.data;
             this.error = data.web.error;
-            // this.result = data.web.result;
+            if (data.web.error) {
+                return data.web.error;
+            }
         } else {
             this.error = "Infinite loop or some other error?";
         }
