@@ -11,7 +11,7 @@ class TimTableTest(BrowserTest):
         while True:
             t = self.find_element_avoid_staleness('tim-table')
             try:
-                self.assert_same_screenshot(t, f'timtable/{name}', attempts=2)
+                self.assert_same_screenshot(t, f'timtable/{name}', attempts=3)
                 break
             except StaleElementReferenceException:
                 continue
