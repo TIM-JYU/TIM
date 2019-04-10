@@ -1,6 +1,6 @@
 Stack-esimerkki
 Stack-esimerkki funktion integroimiseksi
-``` {plugin="csPlugin" #stack3}
+``` {plugin="csPlugin" #PLUGINNAMEHERE}
 type: stack
 -pointsRule: {}
 header: "Stack esimerkki"
