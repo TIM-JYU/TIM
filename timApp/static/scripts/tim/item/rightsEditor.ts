@@ -28,7 +28,7 @@ export interface IAccessType {
 }
 
 class RightsEditorController implements IController {
-    private static $inject = ["$scope"];
+    static $inject = ["$scope"];
     private timeOpt: {
         type: string,
         durationType: moment.unitOfTime.Base,

@@ -59,8 +59,9 @@ export async function askQuestion(p: AskParams) {
     return response.data;
 }
 
-export class QuestionPreviewController extends DialogController<{params: QuestionPreviewParams}, IAskedQuestion, "timAskQuestion"> {
-    private static $inject = ["$element", "$scope"];
+export class QuestionPreviewController extends DialogController<{params: QuestionPreviewParams}, IAskedQuestion> {
+    static component = "timAskQuestion";
+    static $inject = ["$element", "$scope"] as const;
     private questiondata?: IPreviewParams;
 
     constructor(protected element: IRootElementService, protected scope: IScope) {
@@ -128,7 +129,7 @@ export class QuestionPreviewController extends DialogController<{params: Questio
     }
 }
 
-registerDialogComponent("timAskQuestion", QuestionPreviewController, {
+registerDialogComponent(QuestionPreviewController, {
     template: `
 <tim-dialog>
     <dialog-header>
@@ -154,5 +155,5 @@ registerDialogComponent("timAskQuestion", QuestionPreviewController, {
 });
 
 export async function showQuestionAskDialog(p: QuestionPreviewParams) {
-    return await showDialog<QuestionPreviewController>("timAskQuestion", {params: () => p}).result;
+    return await showDialog(QuestionPreviewController, {params: () => p}).result;
 }

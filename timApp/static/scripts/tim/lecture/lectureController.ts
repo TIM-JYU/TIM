@@ -74,7 +74,7 @@ const AUTOJOIN_CODE = "autojoin";
 // TODO: Painike, josta voisi hakea kysymyksiä.
 // TODO: Button, to get questions and wall.
 export class LectureController implements IController {
-    private static $inject = ["$scope"];
+    static $inject = ["$scope"];
     public isLecturer: boolean;
     public lecture: ILecture | undefined;
     public lectures: ILecture[];

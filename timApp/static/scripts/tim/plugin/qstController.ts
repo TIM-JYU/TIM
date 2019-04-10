@@ -23,7 +23,7 @@ interface IQstExtraInfo {
 type IQstAttributes = IPluginAttributes<IQuestionMarkup & IQstExtraInfo, AnswerTable>;
 
 class QstController implements IController {
-    private static $inject = ["$element"];
+    static $inject = ["$element"];
     private error?: string;
     private isRunning: boolean = false;
     private result?: string;

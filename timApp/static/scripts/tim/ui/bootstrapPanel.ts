@@ -3,7 +3,7 @@ import {timApp} from "tim/app";
 import {Binding, Require} from "../util/utils";
 
 class BootstrapPanelController implements IController {
-    private static $inject = ["$element"];
+    static $inject = ["$element"];
     private element: IRootElementService;
     private closeFn?: Binding<() => void, "&">;
     private show: Binding<boolean | undefined, "<">;

@@ -30,7 +30,7 @@ function filterFn(term: string, cellValue: any, row: IGridRowOf<any>, column: IG
 }
 
 export class UserListController implements IController {
-    private static $inject = ["$scope", "$element"];
+    static $inject = ["$scope", "$element"];
     private gridOptions?: uiGrid.IGridOptions & {gridMenuCustomItems: any};
     private scope: IScope;
     private gridApi?: uiGrid.IGridApiOf<IUser>;
@@ -296,8 +296,9 @@ timApp.component("timUserList", {
 </div>`,
 });
 
-export class KorppiExportCtrl extends DialogController<{}, IExportOptions, "timKorppiExport"> {
-    private static $inject = ["$element", "$scope"];
+export class KorppiExportCtrl extends DialogController<{}, IExportOptions> {
+    static component = "timKorppiExport";
+    static $inject = ["$element", "$scope"] as const;
     private options: IExportOptions = {totalPointField: "", velpPointField: "", taskPointField: ""};
 
     protected getTitle() {
@@ -309,8 +310,8 @@ export class KorppiExportCtrl extends DialogController<{}, IExportOptions, "timK
     }
 }
 
-registerDialogComponent("timKorppiExport", KorppiExportCtrl, {templateUrl: "/static/templates/korppiExport.html"});
+registerDialogComponent(KorppiExportCtrl, {templateUrl: "/static/templates/korppiExport.html"});
 
 function showKorppiExportDialog() {
-    return showDialog<KorppiExportCtrl>("timKorppiExport", {}).result;
+    return showDialog(KorppiExportCtrl, {}).result;
 }

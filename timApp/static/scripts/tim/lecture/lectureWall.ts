@@ -5,8 +5,9 @@ import {$http, $timeout} from "../util/ngimport";
 import {ILectureMessage} from "./lecturetypes";
 import {KEY_ENTER} from "../util/keycodes";
 
-export class LectureWallController extends DialogController<{params: {messages: ILectureMessage[]}}, {}, "timLectureWall"> {
-    private static $inject = ["$element", "$scope"];
+export class LectureWallController extends DialogController<{params: {messages: ILectureMessage[]}}, {}> {
+    static component = "timLectureWall";
+    static $inject = ["$element", "$scope"] as const;
     private messageName = true;
     private messageTime = true;
     private newMsg: string = "";
@@ -106,7 +107,6 @@ timApp.component("timLectureWallContent", {
 });
 
 registerDialogComponent(
-    "timLectureWall",
     LectureWallController,
     {
         template: `
@@ -158,7 +158,7 @@ registerDialogComponent(
     });
 
 export function showLectureWall(messages: ILectureMessage[]) {
-    return showDialog<LectureWallController>("timLectureWall",
+    return showDialog(LectureWallController,
         {params: () => ({messages})},
         {size: "sm"});
 }

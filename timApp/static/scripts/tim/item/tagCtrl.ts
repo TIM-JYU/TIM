@@ -20,8 +20,9 @@ const tagParsingSeparator = ",";
 /*
  * Tag editing dialog's controller.
  */
-export class ShowTagController extends DialogController<{ params: IItem }, {}, "timEditTags"> {
-    private static $inject = ["$element", "$scope"];
+export class ShowTagController extends DialogController<{ params: IItem }, {}> {
+    static component = "timEditTags";
+    static $inject = ["$element", "$scope"] as const;
     private tagName: string = "";
     private tagsList: ITag[] = []; // List of tags the document has.
     private expires?: Moment;
@@ -273,8 +274,7 @@ function arrayDifference(a1: any[], a2: any[]) {
     return a1.filter((item) => a2.indexOf(item) < 0);
 }
 
-registerDialogComponent("timEditTags",
-    ShowTagController,
+registerDialogComponent(ShowTagController,
     {
         template:
             `<tim-dialog class="overflow-visible">
@@ -346,7 +346,7 @@ registerDialogComponent("timEditTags",
     });
 
 export async function showTagDialog(d: IItem) {
-    return await showDialog<ShowTagController>("timEditTags", {params: () => d}).result;
+    return await showDialog(ShowTagController, {params: () => d}).result;
 }
 
 /**

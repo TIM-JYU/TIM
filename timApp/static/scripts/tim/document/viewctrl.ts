@@ -77,7 +77,7 @@ export class ViewCtrl implements IController {
     selection: {pars?: JQuery; start?: Paragraph; end?: Paragraph} = {};
     public par: JQuery | undefined;
 
-    private static $inject = ["$scope"];
+    static $inject = ["$scope"];
 
     public lectureMode: boolean;
     public inLecture: boolean;

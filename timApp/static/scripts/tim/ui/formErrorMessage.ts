@@ -3,7 +3,7 @@ import {timApp} from "tim/app";
 import {$timeout} from "../util/ngimport";
 
 class ErrorStateCtrl implements IController {
-    private static $inject = ["$element"];
+    static $inject = ["$element"];
     private lastInvalid = false;
     private element: IRootElementService;
     public for: INgModelController | undefined;

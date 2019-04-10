@@ -52,7 +52,7 @@ timApp.component("timHelpParContent", {
 timApp.component("timSettingsPar", {
     bindings: {},
     controller: class implements IController {
-        private static $inject = ["$element"];
+        static $inject = ["$element"];
         private vctrl!: Require<ViewCtrl>;
         private showSettingsYaml = false;
         private yaml?: string;

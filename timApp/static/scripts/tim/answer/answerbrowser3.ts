@@ -50,7 +50,7 @@ async function loadPlugin(html: string, plugin: JQuery, scope: IScope, viewctrl:
 }
 
 export class PluginLoaderCtrl extends DestroyScope implements IController {
-    private static $inject = ["$element", "$scope", "$transclude"];
+    static $inject = ["$element", "$scope", "$transclude"];
     private compiled = false;
     private viewctrl!: Require<ViewCtrl>;
     public taskId!: Binding<string, "@">;
@@ -175,7 +175,7 @@ export interface IAnswerSaveEvent {
 }
 
 export class AnswerBrowserController extends DestroyScope implements IController {
-    private static $inject = ["$scope", "$element"];
+    static $inject = ["$scope", "$element"];
     public taskId!: Binding<string, "<">;
     private loading: number;
     private viewctrl!: Require<ViewCtrl>;

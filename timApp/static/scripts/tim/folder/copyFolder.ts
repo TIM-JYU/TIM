@@ -8,7 +8,7 @@ import {Binding, to} from "../util/utils";
 type PreviewList = Array<{from: string, to: string}>;
 
 class CopyFolderCtrl implements IController {
-    private static $inject = ["$scope"];
+    static $inject = ["$scope"];
     private copyingFolder: "notcopying" | "copying" | "finished";
     private item!: Binding<IItem, "<">;
     private copyPreviewList: PreviewList | undefined;

@@ -319,7 +319,7 @@ function scrollElementVisibleInParent(el:Element, par:Element, extraY: number) {
  * The tape machine controller.
  */
 export class TapeController implements IController {
-    private static $inject = ["$scope", "$element"]; // do not remove this even PyCharm says it is not used
+    static $inject = ["$scope", "$element"]; // do not remove this even PyCharm says it is not used
 
     constructor(protected scope: IScope, protected element: IRootElementService) {
         this.state = new TapeState();

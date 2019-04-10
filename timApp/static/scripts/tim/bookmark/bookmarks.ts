@@ -177,8 +177,9 @@ timApp.component("bookmarks", {
     templateUrl: "/static/templates/bookmarks.html",
 });
 
-class CreateBookmarkCtrl extends DialogController<{params: IBookmark}, IBookmark, "timBookmarksDialog"> {
-    private static $inject = ["$element", "$scope"];
+class CreateBookmarkCtrl extends DialogController<{params: IBookmark}, IBookmark> {
+    static component = "timBookmarksDialog";
+    static $inject = ["$element", "$scope"] as const;
     private f!: IFormController; // initialized in the template
     private focusName?: boolean;
     private focusGroup?: boolean;
@@ -227,7 +228,7 @@ class CreateBookmarkCtrl extends DialogController<{params: IBookmark}, IBookmark
     }
 }
 
-registerDialogComponent("timBookmarksDialog", CreateBookmarkCtrl,
+registerDialogComponent(CreateBookmarkCtrl,
     {
         template: `
 <tim-dialog>
@@ -292,5 +293,5 @@ registerDialogComponent("timBookmarksDialog", CreateBookmarkCtrl,
     });
 
 export function showBookmarkDialog(bookmark: IBookmark): IPromise<IBookmark> {
-    return showDialog<CreateBookmarkCtrl>("timBookmarksDialog", {params: () => bookmark}).result;
+    return showDialog(CreateBookmarkCtrl, {params: () => bookmark}).result;
 }

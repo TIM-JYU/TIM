@@ -233,7 +233,7 @@ export function makePreview(markup: IAskedJsonJson, {
 type MatrixElement = string | number;
 
 class AnswerSheetController implements IController {
-    private static $inject = ["$element"];
+    static $inject = ["$element"];
     private element: IRootElementService;
     private questiondata?: Binding<IPreviewParams, "<">;
     private json!: IAskedJsonJson; // TODO decide if undefined should be valid
