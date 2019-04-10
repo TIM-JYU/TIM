@@ -20,6 +20,7 @@ export const moduleDefs = [jsrunnerApp];
 const JsrunnerMarkup = t.intersection([
     t.partial({
         fields: t.array(t.string),
+
         program: nullable(t.string),
     }),
     GenericPluginMarkup,

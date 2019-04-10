@@ -1,15 +1,10 @@
 class Tools {
 
-
     constructor(data) {
         const s = JSON.stringify(data[0]);
         const usersAndFields = JSON.parse(s);
         this.data = usersAndFields;
         this.final_result = {};
-    }
-
-    sayHi() {
-        return "hi";
     }
 
     getDouble(fieldName, def=0) {
@@ -28,15 +23,12 @@ class Tools {
     }
 
     setDouble(fieldName, content) {
-        //let result = {'user': this.data.user};
-        //result[fieldName] = content;
-        this.final_result[fieldName] = content;
-       // return result;
-        //{'user': this.data.user, 'd1': content};
+        var tidFN = '46.'+fieldName;
+        this.final_result[tidFN] = content;
     }
 
     getResult() {
-        return {'user': this.data.user.id, fields:  this.final_result};
+        return {'user': this.data.user.id, 'fields':  this.final_result};
     }
 }
 

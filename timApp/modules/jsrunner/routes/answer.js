@@ -21,9 +21,6 @@ router.put('/', function (req, res, next) {
         `
         const Tools = require('./tools');
         const tools = new Tools(data);
-        const s = tools.sayHi();
-        console.log(s);
-        console.log(tools.setDouble("pisteet", 4));
         function runProgram() {
             ${program}
         }

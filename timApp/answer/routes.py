@@ -273,6 +273,24 @@ def post_answer(plugintype: str, task_id_ext: str):
         save_object = jsonresp['save']
         print("jsrunner save")
         print(save_object)
+        fieldss = save_object['fields']
+        task_ids = fieldss.keys()
+        for task in task_ids:
+            tid = TaskId.parse(task, False, False)
+            dib = get_doc_or_abort(tid.doc_id)
+            verify_teacher_access(dib)
+        user_id = save_object['user']
+        u = User.get_by_id(user_id)
+        result = Answer(
+            content=fieldss['46.pisteet'],
+            task_id=tid.doc_task,
+            users=[u],
+            valid=True,
+        )
+        db.session.add(result)
+        db.session.flush()
+        #s = result.id
+        db.session.commit()
         return json_response(result)
 
     def add_reply(obj, key, runMarkDown = False):
