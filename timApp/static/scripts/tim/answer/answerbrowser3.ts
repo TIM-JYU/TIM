@@ -598,7 +598,11 @@ export class AnswerBrowserController extends DestroyScope implements IController
             return undefined;
         }
         this.loading++;
-        const r = await to($http.get<IAnswer[]>(`/answers/${this.taskId}/${this.user.id}`));
+        const r = await to($http.get<IAnswer[]>(`/answers/${this.taskId}/${this.user.id}`, {
+            params: {
+                _: Date.now(),
+            },
+        }));
         this.loading--;
         if (!r.ok) {
             this.showError(r.result);
