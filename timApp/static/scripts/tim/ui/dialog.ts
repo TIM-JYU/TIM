@@ -97,8 +97,18 @@ class MessageDialogController extends DialogController<{message: string}, {}> {
     }
 }
 
-export function registerDialogComponent<T extends DialogController<unknown, unknown>>(
-    controller: (new (r: IRootElementService, s: IScope, ...args: unknown[]) => T) & {component: string, $inject: readonly ["$element", "$scope"]},
+interface IServiceMap {
+    $element: IRootElementService;
+    $scope: IScope;
+}
+
+type ServiceName = keyof IServiceMap;
+type MapServiceNames<Names extends readonly [...ServiceName[]]> = {
+    [K in keyof Names]: Names[K] extends keyof IServiceMap ? IServiceMap[Names[K]] : never;
+};
+
+export function registerDialogComponent<T extends DialogController<unknown, unknown>, ServiceNames extends readonly [...ServiceName[]]>(
+    controller: {component: string, $inject: ServiceNames} & (new (...args: MapServiceNames<ServiceNames>) => T),
     tmpl: {template: string, templateUrl?: never}
         | {templateUrl: string, template?: never},
     controllerAs: string = "$ctrl") {
@@ -107,7 +117,7 @@ export function registerDialogComponent<T extends DialogController<unknown, unkn
             modalInstance: "<",
             resolve: "<",
         },
-        controller,
+        controller: controller as any,
         controllerAs,
         require: {
             draggable: "^timDraggableFixed",
@@ -202,8 +212,8 @@ export interface IModalInstance<T extends DialogController<unknown, unknown>> ex
     close(result: T["ret"]): void;
 }
 
-export function showDialog<T extends DialogController<any, any>>(
-    component: (new (r: IRootElementService, s: IScope, ...args: any[]) => T) & {component: string},
+export function showDialog<T extends DialogController<unknown, unknown>, ServiceNames extends readonly [...ServiceName[]]>(
+    component: {component: string, $inject: ServiceNames} & (new (...args: MapServiceNames<ServiceNames>) => T),
     resolve: { [K in keyof T["resolve"]]: () => T["resolve"][K] },
     opts: {
         saveKey?: string,

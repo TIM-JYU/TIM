@@ -84,5 +84,5 @@ registerDialogComponent(InputDialogCtrl,
     });
 
 export function showInputDialog<T>(p: InputDialogParams<T>) {
-    return showDialog<InputDialogCtrl<T>>(InputDialogCtrl, {params: () => p}).result;
+    return showDialog<InputDialogCtrl<T>, readonly ["$element", "$scope"]>(InputDialogCtrl, {params: () => p}).result;
 }
