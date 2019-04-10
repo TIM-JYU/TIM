@@ -107,6 +107,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
     private teacherRight: boolean = false;
     private feedbackMax = 0;
     private selectionMap: Map<string, string> = new Map();
+    private correctMap: Map<string, string> = new Map();
 
     $onInit() {
         super.$onInit();
@@ -122,9 +123,11 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
         if (!this.teacherRight || this.attrs.teacherHide) {
             this.hideQuestionItems();
         }
+        this.checkCorrectAnswers();
         this.feedbackMax = this.checkFeedbackLevels();
         this.checkCorrectAnswersCount();
         this.checkInstructions();
+        this.checkDefaultMatch();
     }
 
     /**
@@ -162,7 +165,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
             }
         }
 
-        if (!levels.every(x => x === levels[0])) {
+        if (!levels.every(x => x === levels[0]) && this.error === undefined) {
             this.error = "Different number of feedback levels";
         }
         return levels[0];
@@ -178,7 +181,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
         for (const item of items) {
             for (const choice of item.choices) {
                 if (choice.correct) {
-                    if (item.pluginNames.length !== choice.match.length) {
+                    if (item.pluginNames.length !== choice.match.length && this.error === undefined) {
                         this.error = `${item.pluginNames}'s correct answer is missing a match for some of its plugins`
                     }
                 }
@@ -195,11 +198,39 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
 
         if (id) {
             const instruction = this.vctrl.getTimComponentByName(id);
-            if (!instruction)
+            if (!instruction && this.error === undefined)
                 this.error = "Feedback plugin has instruction plugin defined but it cannot be found from the page."
         }
-        if (!id && instruction.length < 1) {
+        if (!id && instruction.length < 1 && this.error === undefined) {
             this.error = "Missing an instruction block or it has no .instruction-class defined.";
+        }
+    }
+
+    /**
+     * Check that all the question items have correct answers defined.
+     */
+    checkCorrectAnswers() {
+        const items = this.attrs.questionItems;
+        for(const item of items) {
+            const missing = item.choices.every(x => x.correct === false);
+            if(missing && this.error === undefined) {
+                this.error = `Question item (${item.pluginNames}) is missing the correct answer.`
+            }
+        }
+    }
+
+    /**
+     * Check that all the question items have a default match defined.
+     *
+     * TODO: Relevant? Should all the checks be in one function?
+     */
+    checkDefaultMatch() {
+        const items = this.attrs.questionItems;
+        for(const item of items) {
+            const defaultMatch = item.choices.filter(x => x.match.length === 0);
+            if(defaultMatch.length === 0 && this.error === undefined) {
+                this.error = `Question item (${item.pluginNames}) is missing default feedback.`
+            }
         }
     }
 
@@ -299,25 +330,10 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
      * with the ones that are correct.
      */
     async save() {
-        // TODO: finish this, can you replace just one instance?
-        // TODO: some safeguard against forgetting to put something from all plugins to correct answer?
-        const values = new Map<string, string>();
-        const item = this.attrs.questionItems[this.index];
-        const plugins = item.pluginNames;
-        const index = this.getCorrectChoice(item);
-        if (index !== undefined) {
-            const words = item.choices[index].match;
-            for (let i = 0; i < plugins.length; i++) {
-                if (StringArray.is(words)) {
-                    values.set(plugins[i], words[i]);
-                }
-            }
-        }
         // TODO: make better names
-        const sentence = this.getSentence(this.answerArray, values).join(" ");
         const answer = this.getSentence(this.answerArray, this.selectionMap).join(" ");
-        const failure = await this.doSave(false, this.correctAnswer, sentence, answer);
-        console.log(sentence);
+        const failure = await this.doSave(false, this.correctAnswer, this.correctAnswerString, answer);
+        console.log(this.correctAnswerString);
         console.log(this.correctAnswer);
         return failure;
     }
@@ -453,6 +469,8 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
 
             // Gets all the plugins from the visible question item and compares to choices-array to check which matches
             const selections = this.getAnswerFromPlugins();
+            this.correctMap = this.getCorrectValues();
+            this.correctAnswerString = this.getSentence(this.answerArray, this.correctMap).join(" ");
             const matchIndex = this.compareChoices(this.index, selections);
             const plugins = this.attrs.questionItems[this.index];
 
@@ -650,7 +668,9 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
      */
     printFeedback(feedback: string) {
         const answer = this.userAnswer.join(" ");
-        this.feedback = feedback.replace(answerPlaceHolder, answer);
+        this.feedback = feedback;
+        this.feedback = this.feedback.replace(answerPlaceHolder, answer);
+        this.feedback = this.feedback.replace(correctPlaceHolder, this.correctAnswerString);
 
         for (const placeholder of answerRegExpArray) {
             const re = feedback.match(placeholder);
@@ -723,7 +743,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
         let result = "";
         for (let i = start; i <= end; i++) {
             if (array[i]) {
-                result = result + " " + array[i];
+                result += ` ${array[i]}`;
             }
         }
         return result.trim();
@@ -838,6 +858,26 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
             }
         }
         return temp;
+    }
+
+    /**
+     *
+     * @returns{Map<string, string>}
+     */
+    getCorrectValues(): Map<string, string> {
+        const values = new Map<string, string>();
+        const item = this.attrs.questionItems[this.index];
+        const plugins = item.pluginNames;
+        const index = this.getCorrectChoice(item);
+        if (index !== undefined) {
+            const words = item.choices[index].match;
+            for (let i = 0; i < plugins.length; i++) {
+                if (StringArray.is(words)) {
+                    values.set(plugins[i], words[i]);
+                }
+            }
+        }
+        return values;
     }
 
     /**
