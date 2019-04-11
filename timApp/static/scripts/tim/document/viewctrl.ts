@@ -185,7 +185,7 @@ export class ViewCtrl implements IController {
             window.addEventListener("beforeunload", (e) => {
                 saveCurrentScreenPar();
 
-                if (!this.editing) {
+                if (!this.editing || $window.IS_TESTING) {
                     return undefined;
                 }
 
