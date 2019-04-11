@@ -220,7 +220,7 @@ class QuestionTest(BrowserTest):
         self.assert_same_screenshot(matrix, f'questions/question_matrix_{questiontype}',
                                     move_to_element=True, attempts=2)
         self.assert_same_screenshot(answersheet, f'questions/answer_sheet_{questiontype}',
-                                    move_to_element=True)
+                                    move_to_element=True, attempts=2)
         find_button_by_text(dialog, 'Save').click()
         self.wait_until_hidden('tim-edit-question')
         qst = self.find_element_and_move_to('qst-runner')
