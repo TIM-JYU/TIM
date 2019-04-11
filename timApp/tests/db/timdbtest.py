@@ -118,7 +118,6 @@ TEST_USER_3_USERNAME = 'testuser3'
 
 
 GITLAB_SKIP_TESTS = {
-    'tests.browser.test_questions.QuestionTest.test_questions',
 }
 
 

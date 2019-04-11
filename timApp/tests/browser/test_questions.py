@@ -57,7 +57,6 @@ def adjust_matrix_size(dialog: WebElement, missing_choices: int, rowcol: str):
 
 
 class QuestionTest(BrowserTest):
-    @ignore_timeout
     def test_questions(self):
         """Create document questions and answer them."""
         self.login_browser_quick_test1()
