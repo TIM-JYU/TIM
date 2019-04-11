@@ -21,7 +21,7 @@ from pprint import pprint
 from typing import Optional, Set, Union, TypeVar, Generic, Dict, List
 
 import attr
-from flask import render_template_string, jsonify, Flask
+from flask import render_template_string, jsonify, Flask, Blueprint
 from marshmallow import Schema, fields, post_load, missing, pre_load, ValidationError
 # noinspection PyProtectedMember
 from marshmallow.utils import _Missing as Missing
@@ -298,7 +298,11 @@ def create_app(name: str, html_schema: GenericHtmlSchema):
     :return: The app.
     """
     app = Flask(name, static_folder=".", static_url_path="")
+    register_routes(app, html_schema)
+    return app
 
+
+def register_routes(app, html_schema: GenericHtmlSchema, csrf=None):
     @app.errorhandler(422)
     def handle_invalid_request(error: UnprocessableEntity):
         return jsonify({'web': {'error': render_validationerror(ValidationError(message=error.data['messages']))}})
@@ -308,9 +312,20 @@ def create_app(name: str, html_schema: GenericHtmlSchema):
     def multihtml(args: List[GenericHtmlSchema]):
         return render_multihtml(html_schema, args)
 
+    if csrf:
+        csrf.exempt(multihtml)
+
     @app.before_request
     def print_rq():
         pass
         # pprint(request.get_json(silent=True))
 
     return app
+
+
+def create_blueprint(name: str, plugin_name: str, html_schema: GenericHtmlSchema, csrf=None):
+    bp = Blueprint(f'{plugin_name}_plugin',
+                   name,
+                   url_prefix=f'/{plugin_name}')
+    register_routes(bp, html_schema, csrf)
+    return bp
