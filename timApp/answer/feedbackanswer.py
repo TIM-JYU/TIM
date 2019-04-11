@@ -104,7 +104,7 @@ def compile_csv(qq: Iterable[Tuple[Answer, User]], printname: bool, hide_names: 
             prev_user = None
             prev_ans = None
             pt_dt = None
-            temp_bool = True
+            results.append([])
 
         if prev_user is None:
             prev_user = user
@@ -143,9 +143,18 @@ def compile_csv(qq: Iterable[Tuple[Answer, User]], printname: bool, hide_names: 
 
             json_content = json.loads(answer.content)
 
-            sel_opt_content = json_content['answer']
-            item_content = json_content['sentence']
-            feedback_content = json_content['feedback']
+            if 'answer' in json_content:
+                sel_opt_content = json_content['answer']
+            else:
+                sel_opt_content = "<JSON error; answer-key not found>"
+            if 'sentence' in json_content:
+                item_content = json_content['sentence']
+            else:
+                item_content = "<JSON error; sentence-key not found>"
+            if 'feedback' in json_content:
+                feedback_content = json_content['feedback']
+            else:
+                feedback_content = "<JSON error; feedback-key not found>"
 
             if pt_dt != None:
                 tasksecs = (prev_ans.answered_on - pt_dt).total_seconds()   # Get time subtracted by previous.
@@ -211,9 +220,9 @@ def test(doc_path):
     format = get_option(request, 'format', 'excel')
     validity = get_option(request, 'valid', 'all')
     exp_answers = get_option(request, 'answers', 'all')
-    user = get_option(request, 'user', 'none')
+    users = get_option(request, 'users', 'none')
     scope = get_option(request, 'scope', 'task')
-    list_of_users = user.split(",")
+    list_of_users = users.split(",")
 
     # Booleans for how to show user names.
     if name == 'anonymous':
@@ -240,7 +249,8 @@ def test(doc_path):
         doc_ids.add(tid.doc_id)
 
     #
-    since_last_key = task_ids[0].doc_task
+    if len(task_ids) > 0:
+        since_last_key = task_ids[0].doc_task
     if len(task_ids) > 1:
         since_last_key = str(next(d for d in doc_ids))
         if len(doc_ids) > 1:
@@ -307,6 +317,21 @@ def test(doc_path):
                                             period_from,
                                             period_to)
     elif scope == 'test':
+        all_tasks = []
+        for did in all_id:
+            did_pars = did.document.get_dereferenced_paragraphs()
+            task_dids, _ , _ = find_task_ids(did_pars)
+            all_tasks += task_dids
+        answers += get_all_feedback_answers(all_tasks,
+                                                hidename,
+                                                fullname,
+                                                validity,
+                                                exp_answers,
+                                                list_of_users,
+                                                period_from,
+                                                period_to)
+
+        """
         for did in all_id:
             did_pars = did.document.get_dereferenced_paragraphs()
             task_dids, _ , _ = find_task_ids(did_pars)
@@ -319,5 +344,6 @@ def test(doc_path):
                                                 period_from,
                                                 period_to)
             answers.append([])
+        """
 
     return csv_response(answers, dialect)

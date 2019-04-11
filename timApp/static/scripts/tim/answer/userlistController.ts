@@ -212,39 +212,43 @@ export class UserListController implements IController {
                     },
                     order: 40,
                 },
-                { // Feedback report output TODO: Should only be visible if page is a feedback giving test
+                { // Feedback report output TODO: May only be visible if page is a feedback giving test
 
                     title: "Feedback answer report",
                     action: async ($event: IAngularEvent) => {
-                        let selectedUser = "";
-                        let visibleUsers = "";
-                        if (this.gridApi)
-                        {
-                            selectedUser = this.gridApi.selection.getSelectedRows()[0].name;
+                        // let selectedUser = "";
+                        // let visibleUsers = "";
+                        let iusers: IUser[];
+                        iusers = [];
+                        if (this.gridApi) {
+                            const selectedUser = this.gridApi.selection.getSelectedRows()[0];
+                            iusers.push(selectedUser);
+                            // selectedUser = this.gridApi.selection.getSelectedRows()[0].name;
 
-                            let data = this.gridApi.core.getVisibleRows(this.gridApi.grid);
-                            let dataAsStrings: string[];
-                            dataAsStrings = [];
+                            const visibleRows = this.gridApi.core.getVisibleRows(this.gridApi.grid);
+                            // let dataAsStrings: string[];
+                            // dataAsStrings = [];
 
-                            for (var dat of data) dataAsStrings.push(dat.entity.name);   // create string array of visible items
-
-                            visibleUsers = selectedUser;    // first one is always the selected one
-                            if (dataAsStrings.length > 0)
-                            {
-                                if (dataAsStrings.indexOf(selectedUser) == -1) visibleUsers = "";
-                                for (var visible of dataAsStrings)
-                                {
-                                    if (visible != selectedUser) visibleUsers += "," + visible;
-                                }
+                            for (const row of visibleRows) { // create string array of visible item
+                                if (row.entity != selectedUser) iusers.push(row.entity);
+                                // dataAsStrings.push(dat.entity.name);
                             }
-                            else {
+                            /*
+                            visibleUsers = selectedUser;    // first one is always the selected one
+                            if (dataAsStrings.length > 0) {
+                                if (dataAsStrings.includes(selectedUser)) { visibleUsers = ""; }
+                                for (const visible of dataAsStrings) {
+                                    if (visible !== selectedUser) { visibleUsers += "," + visible; }
+                                }
+                            } else {
                                 visibleUsers = "";
                                 // needs to be emptied since there is always one selected even if it is invisible
-                            }
+                            } */
                         }
+                        console.log(iusers);
                         await showFeedbackAnswers({
                             url: "/feedback/test/" + this.viewctrl.item.id,
-                            user: visibleUsers,
+                            users: iusers,
                             identifier: this.viewctrl.item.id.toString(),
                             allTasks: true,
                         });
