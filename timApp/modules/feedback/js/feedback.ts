@@ -20,6 +20,7 @@ const matchWordPlaceHolderRegExp = /\|match\[[0-9]+:[0-9]+\]\|/g;
 const matchWordsPlaceHolderRegExp = /\|match\[[0-9]+:[0-9]+-[0-9]+\]\|/g;
 const answerRegExpArray = [answerPlaceHolderRegExp, answerWordsPlaceHolderRegExp];
 const matchRegExpArray = [matchPlaceHolderRegExp, matchWordPlaceHolderRegExp, matchWordsPlaceHolderRegExp];
+const keywordPlaceHolder = /\|kw:.*\|/;
 
 enum Mode {
     Instruction = 0,
@@ -211,9 +212,9 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
      */
     checkCorrectAnswers() {
         const items = this.attrs.questionItems;
-        for(const item of items) {
+        for (const item of items) {
             const missing = item.choices.every(x => x.correct === false);
-            if(missing && this.error === undefined) {
+            if (missing && this.error === undefined) {
                 this.error = `Question item (${item.pluginNames}) is missing the correct answer.`
             }
         }
@@ -226,9 +227,9 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
      */
     checkDefaultMatch() {
         const items = this.attrs.questionItems;
-        for(const item of items) {
+        for (const item of items) {
             const defaultMatch = item.choices.filter(x => x.match.length === 0);
-            if(defaultMatch.length === 0 && this.error === undefined) {
+            if (defaultMatch.length === 0 && this.error === undefined) {
                 this.error = `Question item (${item.pluginNames}) is missing default feedback.`
             }
         }
@@ -333,8 +334,6 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
         // TODO: make better names
         const answer = this.getSentence(this.answerArray, this.selectionMap).join(" ");
         const failure = await this.doSave(false, this.correctAnswer, this.correctAnswerString, answer);
-        console.log(this.correctAnswerString);
-        console.log(this.correctAnswer);
         return failure;
     }
 
@@ -398,7 +397,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
      * @param plugin The plugin to be saved
      * @returns{boolean} Whether the saving was succesful
      */
-    async savePlugin(plugin: ITimComponent): boolean {
+    async savePlugin(plugin: ITimComponent) {
         if (plugin.setForceAnswerSave) {
             plugin.setForceAnswerSave(true);
         }
@@ -407,8 +406,6 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
             return false;
         }
         return true;
-
-
     }
 
     /**
@@ -467,18 +464,17 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
                 this.pluginMode = Mode.EndTask;
                 return;
             }
+            const plugins = this.attrs.questionItems[this.index];
+            if (!this.hasContent(plugins)) {
+                this.printFeedback("You need to select something");
+                return;
+            }
 
             // Gets all the plugins from the visible question item and compares to choices-array to check which matches
             const selections = this.getAnswerFromPlugins();
             this.correctMap = this.getCorrectValues();
             this.correctAnswerString = this.getSentence(this.answerArray, this.correctMap).join(" ");
             const matchIndex = this.compareChoices(this.index, selections);
-            const plugins = this.attrs.questionItems[this.index];
-
-            if (!this.hasContent(plugins)) {
-                this.printFeedback("You need to select something");
-                return;
-            }
 
             if (matchIndex === undefined) {
                 this.error = "You have no choices defined, got no matches or using match objects";
@@ -642,8 +638,16 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
         if (match.length === 0) {
             return true;
         }
+
         if (match.length === answer.length) {
             for (let i = 0; i < match.length; i++) {
+                const kw = match[i].match(keywordPlaceHolder);
+                if (kw && kw.length > 0) {
+                    const word = kw[0].split(':')[1].replace('|', "");
+                    if (answer[i].includes(word)) {
+                        return true;
+                    }
+                }
                 if (match[i] !== answer[i]) {
                     return false;
                 }
@@ -764,6 +768,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
         if (timComponent) {
             const par = timComponent.getPar();
             const content = par.children(".parContent");
+            // Add additional nodes to be accepted if the need arises.
             const treeWalker = document.createTreeWalker(content[0], NodeFilter.SHOW_ALL,
                 {
                     acceptNode: (node) => {
@@ -839,16 +844,27 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
      * @returns{string[]} Array with the words replaced.
      */
     getSentence(sentence: string[], choices: Map<string, string>): string[] {
-        // const temp = [...sentence];
         const temp = [];
         let i = 0;
         for (const [k, v] of choices) {
+            let value = v;
+            const kw = value.match(keywordPlaceHolder);
+            if(kw && kw.length > 0) {
+                const keyword = kw[0].split(':')[1].replace('|', "");
+                const wordlists = this.attrs.questionItems[this.index].words;
+                for(const wordlist of wordlists) {
+                    const word = wordlist.filter(x => x.includes(keyword));
+                    if(word.length > 0) {
+                        value = word[0];
+                    }
+                }
 
+            }
             while (sentence[i] !== k) {
                 temp.push(sentence[i]);
                 i++;
             }
-            const choice = v.split(" ");
+            const choice = value.split(" ");
             for (const c of choice) {
                 temp.push(c);
             }
@@ -862,8 +878,9 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
     }
 
     /**
+     * Goes through the plugins of the current question item's correct answer and forms a map from them.
      *
-     * @returns{Map<string, string>}
+     * @returns{Map<string, string>} Correct answer for every plugin in the question item
      */
     getCorrectValues(): Map<string, string> {
         const values = new Map<string, string>();
