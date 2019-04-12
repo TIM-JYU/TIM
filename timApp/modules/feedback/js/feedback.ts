@@ -735,11 +735,11 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
     }
 
     /**
+     * Returns the strings between the given indices from a string array.
      *
-     *
-     * @param array
-     * @param indices
-     * @returns{string}
+     * @param array String array to go through.
+     * @param indices The indices that should be returned.
+     * @returns{string} A string from the given indices in the array.
      */
     replaceMultipleWords(array: string[], indices: string[]): string {
         const wordString = indices.toString().split("-");
@@ -755,7 +755,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
     }
 
     /**
-     * Gets the user's answer from the visible question item this feedback-plugin is assigned to.
+     * Gets the user's answer from the currently visible question item of those this feedback-plugin is assigned to.
      * TODO: Maybe add getting answers in an area and with regexp?
      *
      * @returns(string[]) The user's selections to the question item.
@@ -781,6 +781,8 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
                         if (node.nodeName === "P") {
                             return NodeFilter.FILTER_ACCEPT;
                         }
+                        // Note, currently hiding stuff from question item answers by putting them inside a <div>,
+                        // need to be modified if div is ever changed to be accepted
                         return NodeFilter.FILTER_REJECT;
                     },
                 });
@@ -799,10 +801,9 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
                 }
 
                 if (node.nodeName === "TIM-PLUGIN-LOADER") {
-                    // TODO: Check for later to skip drag sources in paragraph node.getAttribute("class") === "plugindragsource"
                     if (node instanceof Element) {
                         let name = node.getAttribute("task-id")!.split(".")[1];
-                        if (name) {
+                        if (name && plugins.includes(name)) {
                             let plugin = this.vctrl.getTimComponentByName(name);
                             if (plugin) {
                                 if (plugin.getContentArray) {

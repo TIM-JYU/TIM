@@ -174,13 +174,18 @@ def answer(args: DropdownAnswerModel):
 @app.route('/reqs')
 def reqs():
     templates = ["""
-#- {defaultplugin="dropdown"}
+#- {.instruction defaultplugin="dropdown"}
+
+Type your instructions here.
+
 The weather {#instruction words: [is,do,are⁞]} nice today.
 ""","""
 #- {defaultplugin="dropdown"}
+
 The weather {#drop1⁞} nice today.
 ""","""
 #- {defaultplugin="dropdown"}
+
 The weather {#drop2⁞} terrible {#drop3}, don't you think?
 """]
     return jsonify({
@@ -196,8 +201,8 @@ The weather {#drop2⁞} terrible {#drop3}, don't you think?
                         'items': [
                             {
                                 'data': templates[0].strip(),
-                                'text': 'Instruction',
-                                'expl': 'Add an inline dropdown instruction question'
+                                'text': 'Instructions with dropdown',
+                                'expl': 'Add an instruction block with a dropdown practice item'
                             },
                             {
                                 'data': templates[1].strip(),

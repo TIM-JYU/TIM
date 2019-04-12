@@ -192,6 +192,13 @@ def answer(args: FeedbackAnswerModel):
 @app.route('/reqs')
 def reqs():
     templates = ["""
+::: {.info}
+Type your info text here.⁞
+:::
+""","""
+#- {.instruction}
+Type your task instructions here.⁞
+""","""
 ``` {#fb1⁞ plugin="feedback"}
 correctStreak: 2
 nextTask: linkki tähän
@@ -415,21 +422,31 @@ questionItems:
                         'items': [
                             {
                                 'data': templates[0].strip(),
+                                'text': 'Info text',
+                                'expl': 'Add info text to a question item block',
+                            },
+                            {
+                                'data': templates[1].strip(),
+                                'text': 'Instruction block',
+                                'expl': 'Add an instruction block without practice item to your task',
+                            },
+                            {
+                                'data': templates[2].strip(),
                                 'text': 'Example with 4 items',
                                 'expl': 'Add a feedback-plugin with 4 items',
                             },
                             {
-                                'data': templates[1].strip(),
+                                'data': templates[3].strip(),
                                 'text': 'Question item',
                                 'expl': 'Add a question item',
                             },
                             {
-                                'data': templates[2].strip(),
+                                'data': templates[4].strip(),
                                 'text': 'Correct match',
                                 'expl': 'Add a correct match with feedback-levels',
                             },
                             {
-                                'data': templates[3].strip(),
+                                'data': templates[5].strip(),
                                 'text': 'Match',
                                 'expl': 'Add a match with feedback-levels',
                             },
