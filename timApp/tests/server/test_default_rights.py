@@ -2,6 +2,7 @@ from operator import itemgetter
 
 from dateutil import parser
 
+from timApp.document.specialnames import TEMPLATE_FOLDER_NAME
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.item.block import BlockType
 from timApp.document.docentry import DocEntry
@@ -19,7 +20,8 @@ class DefaultRightTest(TimRouteTest):
         doc = self.create_doc().document
         timdb = self.get_db()
         docentry = DocEntry.query.filter_by(id=doc.doc_id).one()
-        folder = docentry.parent
+        folder: Folder = docentry.parent
+        folder_owner_id = folder.owner.id
         korppi_id = UserGroup.get_korppi_group().id
         users_folder = Folder.find_by_path('users')
         grant_default_access([korppi_id], users_folder.id, 'view',
@@ -74,6 +76,9 @@ class DefaultRightTest(TimRouteTest):
                 d['accessible_to'] = parser.parse(d['accessible_to']) if d['accessible_to'] else None
             rights_doc = folder.get_document(default_right_paths[obj_type])
             self.assertIsNotNone(rights_doc)
+            t_f = folder.get_all_folders()[0]
+            self.assertEqual(TEMPLATE_FOLDER_NAME, t_f.short_name)
+            self.assertEqual(folder_owner_id, t_f.owner.id)
 
             if obj_type == BlockType.Document:
                 new_doc = self.create_doc().document
