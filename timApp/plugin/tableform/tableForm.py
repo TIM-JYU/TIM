@@ -3,7 +3,7 @@ TIM example plugin: a tableFormndrome checker.
 """
 import os
 import re
-from typing import Union
+from typing import Union, List
 
 import attr
 from flask import jsonify, render_template_string, Blueprint
@@ -36,26 +36,13 @@ class TableFormStateSchema(Schema):
 
 @attr.s(auto_attribs=True)
 class TableFormMarkupModel(GenericMarkupModel):
-    points_array: Union[str, Missing] = missing
-    inputstem: Union[str, Missing] = missing
-    needed_len: Union[int, Missing] = missing
     initword: Union[str, Missing] = missing
-    cols: Union[int, Missing] = missing
-    inputplaceholder: Union[str, Missing] = missing
+    groups: Union[List[str], Missing] = missing
 
 
 class TableFormMarkupSchema(GenericMarkupSchema):
-    points_array = fields.List(fields.List(fields.Number()))
-    inputstem = fields.Str()
-    needed_len = fields.Int()
     initword = fields.Str()
-    cols = fields.Int()
-    inputplaceholder = fields.Str()
-
-    @validates('points_array')
-    def validate_points_array(self, value):
-        if len(value) != 2 or not all(len(v) == 2 for v in value):
-            raise ValidationError('Must be of size 2 x 2.')
+    groups = fields.List(fields.Str())
 
     @post_load
     def make_obj(self, data):
@@ -177,16 +164,9 @@ tableForm_plugin = create_blueprint(__name__, 'tableForm', TableFormHtmlSchema()
 def answer(args: TableFormAnswerModel):
     web = {}
     result = {'web': web}
-    needed_len = args.markup.needed_len
     userword = args.input.userword
     tableForm_ok = args.input.tableFormOK or False
     len_ok = True
-    if needed_len:
-        len_ok = check_letters(userword, needed_len)
-    if not len_ok:
-        web['error'] = "Wrong length"
-    if not needed_len and not tableForm_ok:
-        len_ok = False
     points_array = args.markup.points_array or [[0, 0.25], [0.5, 1]]
     points = points_array[tableForm_ok][len_ok]
 

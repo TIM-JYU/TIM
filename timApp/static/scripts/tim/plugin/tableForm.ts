@@ -15,15 +15,14 @@ import {$http} from "tim/util/ngimport";
 import {to} from "tim/util/utils";
 import {valueDefu} from "tim/util/utils";
 import {timApp} from "../app";
+import {None} from "../../jspm_packages/npm/fp-ts@1.11.1/lib/Option";
 
 const paliApp = angular.module("paliApp", ["ngSanitize"]);
 export const moduleDefs = [paliApp];
 
 const PaliMarkup = t.intersection([
     t.partial({
-        initword: t.string,
-        inputplaceholder: nullable(t.string),
-        inputstem: t.string,
+        initword: t.string
     }),
     GenericPluginMarkup,
     t.type({
@@ -40,16 +39,6 @@ const PaliAll = t.intersection([
     t.type({markup: PaliMarkup}),
 ]);
 
-function isPalindrome(s: string) {
-    let sc = s.toLowerCase();
-    sc = sc.replace(/[^a-zåöä]/g, "");
-    for (let i1 = 0, i2 = sc.length - 1; i1 < i2; i1++, i2--) {
-        if (sc[i1] !== sc[i2]) {
-            return false;
-        }
-    }
-    return true;
-}
 
 class PaliController extends PluginBase<t.TypeOf<typeof PaliMarkup>, t.TypeOf<typeof PaliAll>, typeof PaliAll> {
     private result?: string;
@@ -57,6 +46,8 @@ class PaliController extends PluginBase<t.TypeOf<typeof PaliMarkup>, t.TypeOf<ty
     private isRunning = false;
     private userword = "";
     private runTestGreen = false;
+    private data!: {};
+    private userdata!: {};
     private modelOpts!: INgModelOptions; // initialized in $onInit, so need to assure TypeScript with "!"
 
     getDefaultMarkup() {
@@ -64,7 +55,7 @@ class PaliController extends PluginBase<t.TypeOf<typeof PaliMarkup>, t.TypeOf<ty
     }
 
     buttonText() {
-        return super.buttonText() || "Save";
+        return super.buttonText() || "TODO";
     }
 
 
@@ -72,45 +63,70 @@ class PaliController extends PluginBase<t.TypeOf<typeof PaliMarkup>, t.TypeOf<ty
     $onInit() {
         super.$onInit();
         this.userword = this.attrsall.userword || this.attrs.initword || "";
-        this.modelOpts = {debounce: this.autoupdate};
-        this.checkPalindrome();
+        this.data = this.setData();
     }
 
-    get edited() {
-        return this.attrs.initword !== this.userword;
-    }
-
-    get autoupdate(): number {
-        return this.attrs.autoupdate;
-    }
-
-    get inputplaceholder() {
-        return this.attrs.inputplaceholder || null;
-    }
-
-    get inputstem() {
-        return this.attrs.inputstem || null;
-    }
-
-    get cols() {
-        return this.attrs.cols;
-    }
-
-    get resetText() {
-        return valueDefu(this.attrs.resetText, "Reset");
-    }
-
-    checkPalindrome() {
-        const is = isPalindrome(this.userword);
-        this.runTestGreen = is;
-        return is;
+    /**
+     * Temporary default TimTable data for demonstartion purposes
+     */
+    setData(){
+        return {
+  "task": true,
+  "table": {
+    "rows": [
+      {
+        "backgroundColor": "gray"
+      },
+      {
+        "row": [
+          {
+            "color": "white",
+            "backgroundColor": "black",
+            "cell": "Erilaisia sisältöjä",
+            "colspan": 5
+          }
+        ]
+      },
+      {
+        "row": [
+          {
+            "height": "250px",
+            "width": "300px",
+            "cell": "<figure>\n<img src=\"/images/157964/C360_2010-12-22_12-49-34-SNOW.gif\" alt=\"Kaunis talvimaisema\" /><figcaption>Kaunis talvimaisema</figcaption>\n</figure>"
+          },
+          {
+            "cell": "kaava <span class=\"math display\">\\[\\int f(x^6) dx\\]</span>",
+            "colspan": 2,
+            "horizontal-align": "right"
+          }
+        ]
+      },
+      {
+        "row": [
+          "<figure>\n<img src=\"/images/157965/IMAG1226.jpg\" alt=\"Sumuinen aamu\" /><figcaption>Sumuinen aamu</figcaption>\n</figure>",
+          {
+            "textAlign": "middle",
+            "cell": "<span class=\"timButton\">Painike<span>"
+          }
+        ]
+      },
+      {
+        "row": [
+          {
+            "cell": "<table>\n<thead>\n<tr class=\"header\">\n<th>Kissat vai koirat</th>\n<th style=\"text-align: left;\">Kissat</th>\n<th style=\"text-align: right;\">Koirat</th>\n</tr>\n</thead>\n<tbody>\n<tr class=\"odd\">\n<td>1. äänestys</td>\n<td style=\"text-align: left;\">14</td>\n<td style=\"text-align: right;\">5</td>\n</tr>\n<tr class=\"even\">\n<td>2. äänestys</td>\n<td style=\"text-align: left;\">6</td>\n<td style=\"text-align: right;\">6</td>\n</tr>\n</tbody>\n</table>",
+            "colspan": null
+          }
+        ]
+      }
+    ]
+  }
+}
     }
 
     initCode() {
         this.userword = this.attrs.initword || "";
         this.error = undefined;
         this.result = undefined;
-        this.checkPalindrome();
     }
 
     saveText() {
@@ -124,7 +140,6 @@ class PaliController extends PluginBase<t.TypeOf<typeof PaliMarkup>, t.TypeOf<ty
         const params = {
             input: {
                 nosave: false,
-                paliOK: this.checkPalindrome(),
                 userword: this.userword,
             },
         };
@@ -151,6 +166,7 @@ class PaliController extends PluginBase<t.TypeOf<typeof PaliMarkup>, t.TypeOf<ty
 
 timApp.component("tableformRunner", {
     bindings: pluginBindings,
+
     controller: PaliController,
     template: `
 <div class="csRunDiv no-popup-menu">
@@ -162,13 +178,11 @@ timApp.component("tableformRunner", {
                class="form-control"
                ng-model="$ctrl.userword"
                ng-model-options="::$ctrl.modelOpts"
-               ng-change="$ctrl.checkPalindrome()"
                ng-trim="false"
                ng-readonly="::$ctrl.readonly"
-               placeholder="{{::$ctrl.inputplaceholder}}"
                size="{{::$ctrl.cols}}"></span></label>
-        <span class="unitTestGreen" ng-if="$ctrl.runTestGreen && $ctrl.userword">OK</span>
-        <span class="unitTestRed" ng-if="!$ctrl.runTestGreen">Wrong</span>
+        <tim-table data="$ctrl.data" userdata="$ctrl.userdata" ></tim-table>
+        <!-- TODO: taskid="{{ $ctrl.pluginm }}", vie pluginmeta & taskid-->
     </div>
     <button class="timButton"
             ng-if="::$ctrl.buttonText()"
@@ -176,7 +190,6 @@ timApp.component("tableformRunner", {
             ng-click="$ctrl.saveText()">
         {{::$ctrl.buttonText()}}
     </button>
-    <a href="" ng-if="$ctrl.edited" ng-click="$ctrl.initCode()">{{::$ctrl.resetText}}</a>
     <div ng-if="$ctrl.error" ng-bind-html="$ctrl.error"></div>
     <pre ng-if="$ctrl.result">{{$ctrl.result}}</pre>
     <p ng-if="::$ctrl.footer" ng-bind="::$ctrl.footer" class="plgfooter"></p>
