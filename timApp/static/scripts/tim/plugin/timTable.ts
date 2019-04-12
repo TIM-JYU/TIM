@@ -2190,6 +2190,8 @@ timApp.component("timTable", {
     controller: TimTableController,
     bindings: {
         data: "<",
+        plugintype: "@?",
+        taskid: "@?",
     },
     require: {
         viewctrl: "?^timView",
