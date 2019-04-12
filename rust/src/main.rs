@@ -1,15 +1,9 @@
-#![allow(proc_macro_derive_resolution_fallback)]
-#![feature(try_from, box_patterns)]
-#![feature(futures_api, async_await, await_macro, pin)]
+#![feature(box_patterns)]
+#![feature(futures_api, async_await, await_macro)]
 #![recursion_limit = "128"]
 
-extern crate log;
-extern crate serde_derive;
 #[macro_use]
 extern crate diesel;
-extern crate config;
-extern crate core;
-extern crate diesel_derive_enum;
 
 mod db;
 mod document;
@@ -42,7 +36,7 @@ use diesel::pg::PgConnection;
 use diesel::r2d2::{ConnectionManager, Pool};
 use failure::Fail;
 use failure::ResultExt;
-use futures::compat::Future01CompatExt;
+use actix_web_async_await::{await, compat};
 use futures::executor::block_on;
 use rayon;
 
@@ -97,12 +91,11 @@ async fn view_item_impl(req: &HttpRequest<AppState>) -> Result<HttpResponse, Tim
         .db
         .send(GetItem {
             path: path.to_string()
-        })
-        .compat())
+        }))
     .context(TimErrorKind::Db)??;
     match res {
         ItemKind::Folder(f) => {
-            let items = await!(state.db.send(GetItems { path: f.get_path() }).compat())
+            let items = await!(state.db.send(GetItems { path: f.get_path() }))
                 .context(TimErrorKind::Db)??;
             Ok(HttpResponse::Ok()
                 .content_type("text/html; charset=utf-8")
