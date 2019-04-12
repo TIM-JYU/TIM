@@ -36,7 +36,7 @@ use diesel::pg::PgConnection;
 use diesel::r2d2::{ConnectionManager, Pool};
 use failure::Fail;
 use failure::ResultExt;
-use actix_web_async_await::{await, compat};
+use actix_web_async_await::{await};
 use futures::executor::block_on;
 use rayon;
 
