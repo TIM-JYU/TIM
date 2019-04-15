@@ -88,7 +88,7 @@ const defaultButtonText: string = "Show map";
 
 export class GamificationMapCtrl implements IController {
     // noinspection JSUnusedLocalSymbols
-    private static $inject = ["$element"];
+    static $inject = ["$element"];
     private displayMap: boolean = false;
     private sources: string[] = [];
     private scaleInput = scale;

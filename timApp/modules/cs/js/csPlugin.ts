@@ -618,7 +618,7 @@ function countChars(s: string, c: string) {
     return n;
 }
 
-function ifIs(value: number | undefined, name: string, def: string | number) {
+function ifIs(value: number | string | undefined, name: string, def: string | number) {
     if (!value && !def) {
         return "";
     }
@@ -675,7 +675,7 @@ const CsMarkupOptional = t.partial({
     file: t.string,
     filename: t.string,
     fullhtml: t.string,
-    height: t.number,
+    height: t.union([t.number, t.string]),
     highlight: nullable(t.string),
     html: t.string,
     indices: t.string,
@@ -702,7 +702,7 @@ const CsMarkupOptional = t.partial({
     userargs: t.union([t.string, t.number]),
     userinput: t.union([t.string, t.number]),
     variables: t.string,
-    width: t.number,
+    width: t.union([t.number, t.string]),
     wrap: t.Integer,
 });
 
@@ -800,6 +800,13 @@ class CsBase extends PluginBase<t.TypeOf<typeof CsMarkup>, t.TypeOf<typeof CsAll
 }
 
 let copyHelperElement: HTMLTextAreaElement | undefined;
+
+function numOrDef(val: string | number | undefined, def: number) {
+    if (typeof val === "number") {
+        return val;
+    }
+    return def;
+}
 
 class CsController extends CsBase implements IController {
     private aceEditor?: IAceEditor;
@@ -1946,8 +1953,9 @@ class CsController extends CsBase implements IController {
             this.runError = true;
         }
 
-        data.width = this.attrs.width || 800;
-        data.height = this.attrs.height || 400;
+        // width and height are passed to svg viewBox attribute that needs numbers
+        data.width = numOrDef(this.attrs.width, 800);
+        data.height = numOrDef(this.attrs.height, 400);
         this.simcir.children().remove();
         const simcir = await loadSimcir();
         simcir.setupSimcir(this.simcir, data);

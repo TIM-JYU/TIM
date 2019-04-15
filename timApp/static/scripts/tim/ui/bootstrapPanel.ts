@@ -3,9 +3,9 @@ import {timApp} from "tim/app";
 import {Binding, Require} from "../util/utils";
 
 class BootstrapPanelController implements IController {
-    private static $inject = ["$element"];
+    static $inject = ["$element"];
     private element: IRootElementService;
-    private closeFn!: Require<() => void>;
+    private closeFn?: Binding<() => void, "&">;
     private show: Binding<boolean | undefined, "<">;
     private showClose: Binding<boolean | undefined, "<">;
     private title: Binding<string | undefined, "<">;
@@ -20,7 +20,9 @@ class BootstrapPanelController implements IController {
 
     public close() {
         this.show = false;
-        this.closeFn();
+        if (this.closeFn) {
+            this.closeFn();
+        }
     }
 }
 

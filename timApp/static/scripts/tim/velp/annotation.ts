@@ -24,7 +24,7 @@ import {IAnnotationCoordless} from "./velptypes";
 markAsUsed(focusme);
 
 export class AnnotationController extends DestroyScope implements IController {
-    private static $inject = ["$scope", "$element"];
+    static $inject = ["$scope", "$element"];
     private ctrlDown: boolean;
     private visible_options!: {
         type: string; value: number; title: string;

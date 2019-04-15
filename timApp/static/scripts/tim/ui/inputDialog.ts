@@ -10,8 +10,9 @@ interface InputDialogParams<T> {
     cancelText?: string;
 }
 
-class InputDialogCtrl<T> extends DialogController<{params: InputDialogParams<T>}, T, "timInputDialog"> {
-    private static $inject = ["$element", "$scope"];
+class InputDialogCtrl<T> extends DialogController<{params: InputDialogParams<T>}, T> {
+    static component = "timInputDialog";
+    static $inject = ["$element", "$scope"] as const;
     private value = "";
     private error?: string;
     private focus = false;
@@ -56,8 +57,7 @@ class InputDialogCtrl<T> extends DialogController<{params: InputDialogParams<T>}
     }
 }
 
-registerDialogComponent("timInputDialog",
-    InputDialogCtrl,
+registerDialogComponent(InputDialogCtrl,
     {
         template: `
 <tim-dialog>
@@ -84,5 +84,5 @@ registerDialogComponent("timInputDialog",
     });
 
 export function showInputDialog<T>(p: InputDialogParams<T>) {
-    return showDialog<InputDialogCtrl<T>>("timInputDialog", {params: () => p}).result;
+    return showDialog<InputDialogCtrl<T>, readonly ["$element", "$scope"]>(InputDialogCtrl, {params: () => p}).result;
 }

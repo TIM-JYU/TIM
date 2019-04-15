@@ -168,7 +168,7 @@ type ChartConfig = Overwrite<Chart.ChartConfiguration, {data: TimChartData}>;
 type TimChart = Overwrite<Chart, {data: TimChartData}>;
 
 class ShowChartController implements IController {
-    private static $inject = ["$scope", "$element"];
+    static $inject = ["$scope", "$element"];
     private isText = true;
     private div?: JQuery<HTMLDivElement>;
     private charts: [string, string];

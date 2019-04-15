@@ -1,4 +1,4 @@
-import angular, {IRootElementService, IScope} from "angular";
+import {IRootElementService, IScope} from "angular";
 import {ngStorage} from "ngstorage";
 import {IItem} from "../item/IItem";
 import {DialogController, registerDialogComponent, showDialog} from "../ui/dialog";
@@ -14,8 +14,9 @@ export interface IPrintParams {
     templates: ITemplate[];
 }
 
-export class PrintCtrl extends DialogController<{params: IPrintParams}, {}, "timPrint"> {
-    private static $inject = ["$element", "$scope"];
+export class PrintCtrl extends DialogController<{params: IPrintParams}, {}> {
+    static component = "timPrint";
+    static $inject = ["$element", "$scope"] as const;
     private storage: ngStorage.StorageService & {timPrintingTemplateId: null | number};
     private errormsg?: string;
     private notificationmsg?: string;
@@ -62,7 +63,7 @@ export class PrintCtrl extends DialogController<{params: IPrintParams}, {}, "tim
 
         if (this.storage.timPrintingTemplateId && this.templates) {
 
-            angular.forEach(this.templates, (template, key) => {
+            this.templates.forEach((template) => {
                 if (template.id === this.storage.timPrintingTemplateId) {
                     t = template;
                 }
@@ -166,10 +167,9 @@ export class PrintCtrl extends DialogController<{params: IPrintParams}, {}, "tim
     }
 }
 
-registerDialogComponent("timPrint",
-    PrintCtrl,
+registerDialogComponent(PrintCtrl,
     {templateUrl: "/static/templates/printDialog.html"});
 
 export async function showPrintDialog(p: IPrintParams) {
-    return await showDialog<PrintCtrl>("timPrint", {params: () => p}).result;
+    return await showDialog(PrintCtrl, {params: () => p}).result;
 }

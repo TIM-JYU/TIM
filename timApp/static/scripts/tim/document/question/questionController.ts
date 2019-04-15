@@ -1,4 +1,4 @@
-import angular, {IFormController, IRootElementService, IScope} from "angular";
+import {IFormController, IRootElementService, IScope} from "angular";
 import $ from "jquery";
 import moment from "moment";
 import {
@@ -132,8 +132,9 @@ export async function deleteQuestionWithConfirm(docId: number, parId: string): P
     return null;
 }
 
-export class QuestionController extends DialogController<{params: IQuestionDialogParams}, IQuestionDialogResult, "timEditQuestion"> {
-    private static $inject = ["$element", "$scope"];
+export class QuestionController extends DialogController<{params: IQuestionDialogParams}, IQuestionDialogResult> {
+    static component = "timEditQuestion";
+    static $inject = ["$element", "$scope"] as const;
     private answerFieldTypes: IAnswerField[];
     private dateTimeOptions: EonasdanBootstrapDatetimepicker.SetOptions;
     private question: IAskedJsonJson;
@@ -867,9 +868,9 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
 
     private async updatePreview() {
         const mdStr = JSON.stringify(this.question, null, 4);
-        const response = await $http.post<{md: IAskedJsonJson}>("/qst/getQuestionMD/", angular.extend({
+        const response = await $http.post<{md: IAskedJsonJson}>("/qst/getQuestionMD/", {
             text: mdStr,
-        }));
+        });
         this.previewParams = makePreview(response.data.md, {
             enabled: false,
             showCorrectChoices: true,
@@ -985,13 +986,12 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
     }
 }
 
-registerDialogComponent("timEditQuestion",
-    QuestionController,
+registerDialogComponent(QuestionController,
     {templateUrl: "/static/templates/question.html"},
     "qctrl");
 
 export async function showQuestionEditDialog(params: IQuestionDialogParams): Promise<IQuestionDialogResult> {
-    return showDialog<QuestionController>("timEditQuestion", {
+    return showDialog(QuestionController, {
         params: () => params,
     }).result;
 }

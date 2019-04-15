@@ -27,8 +27,9 @@ export interface IAttachmentParams {
     incomplete_list: boolean;
 }
 
-export class ShowMergePdfController extends DialogController<{ params: IMergeParams }, {}, "timMergePdf"> {
-    private static $inject = ["$element", "$scope"];
+export class ShowMergePdfController extends DialogController<{ params: IMergeParams }, {}> {
+    static component = "timMergePdf";
+    static $inject = ["$element", "$scope"] as const;
     private docUrl?: string;
     private loading: boolean = false;
     private attachmentList: string[] = [];
@@ -98,8 +99,7 @@ export class ShowMergePdfController extends DialogController<{ params: IMergePar
 /**
  * HTML Template for merge dialog.
  */
-registerDialogComponent("timMergePdf",
-    ShowMergePdfController,
+registerDialogComponent(ShowMergePdfController,
     {
         template:
             `<tim-dialog>
@@ -141,5 +141,5 @@ registerDialogComponent("timMergePdf",
     });
 
 export async function showMergePdfDialog(p: IMergeParams) {
-    return await showDialog<ShowMergePdfController>("timMergePdf", {params: () => p}).result;
+    return await showDialog(ShowMergePdfController, {params: () => p}).result;
 }

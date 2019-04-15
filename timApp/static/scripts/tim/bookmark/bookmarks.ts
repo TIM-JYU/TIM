@@ -1,7 +1,7 @@
-import angular, {IController, IFormController, IPromise, IRootElementService, IScope} from "angular";
+import {IController, IFormController, IPromise, IRootElementService, IScope} from "angular";
 import {timApp} from "tim/app";
 import * as focusMe from "tim/ui/focusMe";
-import {Binding, markAsUsed, to} from "tim/util/utils";
+import {Binding, clone, markAsUsed, to} from "tim/util/utils";
 import {ViewCtrl} from "../document/viewctrl";
 import {DialogController, registerDialogComponent, showDialog, showMessageDialog} from "../ui/dialog";
 import {$http, $timeout, $window} from "../util/ngimport";
@@ -32,7 +32,7 @@ export class BookmarksController implements IController {
 
     $onInit() {
         if ($window.bookmarks && !this.data) {
-            this.data = angular.copy($window.bookmarks);
+            this.data = clone($window.bookmarks);
         }
         if (this.userId && !this.data) {
             void this.refresh();
@@ -177,8 +177,9 @@ timApp.component("bookmarks", {
     templateUrl: "/static/templates/bookmarks.html",
 });
 
-class CreateBookmarkCtrl extends DialogController<{params: IBookmark}, IBookmark, "timBookmarksDialog"> {
-    private static $inject = ["$element", "$scope"];
+class CreateBookmarkCtrl extends DialogController<{params: IBookmark}, IBookmark> {
+    static component = "timBookmarksDialog";
+    static $inject = ["$element", "$scope"] as const;
     private f!: IFormController; // initialized in the template
     private focusName?: boolean;
     private focusGroup?: boolean;
@@ -227,7 +228,7 @@ class CreateBookmarkCtrl extends DialogController<{params: IBookmark}, IBookmark
     }
 }
 
-registerDialogComponent("timBookmarksDialog", CreateBookmarkCtrl,
+registerDialogComponent(CreateBookmarkCtrl,
     {
         template: `
 <tim-dialog>
@@ -292,5 +293,5 @@ registerDialogComponent("timBookmarksDialog", CreateBookmarkCtrl,
     });
 
 export function showBookmarkDialog(bookmark: IBookmark): IPromise<IBookmark> {
-    return showDialog<CreateBookmarkCtrl>("timBookmarksDialog", {params: () => bookmark}).result;
+    return showDialog(CreateBookmarkCtrl, {params: () => bookmark}).result;
 }

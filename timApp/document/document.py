@@ -676,6 +676,8 @@ class Document:
         p.set_latest()
         old_ver = self.get_version()
         old_hash = p_src.get_hash()
+        if p.is_same_as(p_src):
+            return p
         new_ver = self.__increment_version('Modified', par_id, increment_major=False,
                                            op_params={'old_hash': old_hash, 'new_hash': new_hash})
 

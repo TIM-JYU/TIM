@@ -15,8 +15,9 @@ markAsUsed(focusMe);
 /*
  * Tag search dialog's controller.
  */
-export class ShowTagSearchController extends DialogController<{}, {}, "timSearchTags"> {
-    private static $inject = ["$element", "$scope"];
+export class ShowTagSearchController extends DialogController<{}, {}> {
+    static component = "timSearchTags";
+    static $inject = ["$element", "$scope"] as const;
     private enableSearch = true;
     private header = "";
     private advancedOptions = false;
@@ -58,8 +59,7 @@ export class ShowTagSearchController extends DialogController<{}, {}, "timSearch
 
 }
 
-registerDialogComponent("timSearchTags",
-    ShowTagSearchController,
+registerDialogComponent(ShowTagSearchController,
     {
         template:
             `<tim-dialog>
@@ -89,5 +89,5 @@ registerDialogComponent("timSearchTags",
     });
 
 export async function showTagSearchDialog() {
-    return await showDialog<ShowTagSearchController>("timSearchTags", {}).result;
+    return await showDialog(ShowTagSearchController, {}).result;
 }

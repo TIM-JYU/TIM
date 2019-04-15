@@ -244,16 +244,19 @@ def is_lazy(q: GenericHtmlModel):
 def render_plugin_lazy(m: GenericHtmlModel[PluginInput, PluginMarkup, PluginState]):
     """Renders lazy HTML for a plugin.
 
-    The lazy HTML displays the static version of the plugin and has the real HTML as a hidden HTML comment
+    The lazy HTML displays the static version of the plugin and has the real HTML in an attribute
     that will be activated on mouse hover.
+
+    The end "<!--lazy" is needed because it is the old style of storing the real HTML and TIM does not recognize the
+    new style yet, so otherwise TIM would wrap this inside <!--lazy ... lazy-->.
 
     :param m: The plugin HTML schema.
     :return: HTML.
     """
     return render_template_string(
         """
-<!--lazy {{ real_html|safe }} lazy-->
-{{ static_html|safe }}""",
+<div class="lazy" data-html="{{ real_html }}"></div>
+{{ static_html|safe }} <!--lazy -->""".strip(),
         static_html=m.get_static_html(),
         real_html=m.get_real_html(),
     )

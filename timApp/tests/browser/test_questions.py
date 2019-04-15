@@ -57,7 +57,6 @@ def adjust_matrix_size(dialog: WebElement, missing_choices: int, rowcol: str):
 
 
 class QuestionTest(BrowserTest):
-    @ignore_timeout
     def test_questions(self):
         """Create document questions and answer them."""
         self.login_browser_quick_test1()
@@ -178,7 +177,7 @@ class QuestionTest(BrowserTest):
         d = self.create_doc(initial_par='test')
         self.goto_document(d, view='lecture')
         self.find_element('.glyphicon-menu-hamburger').click()
-        par: WebElement = self.find_element_and_move_to('.editline')
+        par = self.drv.find_elements_by_css_selector('.editline')[1]
         par.click()
         find_button_by_text(par, 'Add question above').click()
         sleep(0.5)
@@ -221,7 +220,7 @@ class QuestionTest(BrowserTest):
         self.assert_same_screenshot(matrix, f'questions/question_matrix_{questiontype}',
                                     move_to_element=True, attempts=2)
         self.assert_same_screenshot(answersheet, f'questions/answer_sheet_{questiontype}',
-                                    move_to_element=True)
+                                    move_to_element=True, attempts=2)
         find_button_by_text(dialog, 'Save').click()
         self.wait_until_hidden('tim-edit-question')
         qst = self.find_element_and_move_to('qst-runner')

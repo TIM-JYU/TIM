@@ -27,7 +27,7 @@ export interface IRelevanceResponse {
 }
 
 class RelevanceCtrl implements IController {
-    private static $inject = ["$element", "$scope"];
+    static $inject = ["$element", "$scope"];
     private item!: Binding<IItem, "<">;
     private relevance: number|undefined;
     private isDefault: boolean = false;

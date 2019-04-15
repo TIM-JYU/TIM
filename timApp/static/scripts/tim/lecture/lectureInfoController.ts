@@ -26,7 +26,7 @@ markAsUsed(showChart);
  */
 
 export class LectureInfoController implements IController {
-    private static $inject = ["$element"];
+    static $inject = ["$element"];
     private element: IRootElementService;
     private lecture: ILecture;
     private inLecture: boolean;

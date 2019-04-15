@@ -4,4 +4,9 @@ packages:
 - './AsciiMath'
 extra-deps: 
 - html-entities-1.1.4.2
-resolver: lts-11.7
+- HaTeX-3.20.0.0@sha256:734e4a017c1c18c332a67be7139b1099a805ddbeeaae11fade723076e4077805
+- wl-pprint-extras-3.5.0.5@sha256:fcccabbab059e15ad3816998dc1f1f750afb480164bd116b147cc8a35a5da0b8
+- containers-0.5.11.0@sha256:28ad7337057442f75bc689315ab4ec7bdf5e6b2c39668f306672cecd82c02798
+- pandoc-2.7.1
+- ipynb-0.1@sha256:5b5240a9793781da557f82891d49cea63d71c8c5d3500fa3eac9fd702046b520
+resolver: lts-13.15

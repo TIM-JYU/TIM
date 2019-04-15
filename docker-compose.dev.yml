@@ -103,6 +103,8 @@ services:
   tmpfs:
    - /tmp
    - /home/seluser
+  volumes:
+   - /dev/shm:/dev/shm
  nginx:
   image: timimages/local_nginx_dev:compose
   build:

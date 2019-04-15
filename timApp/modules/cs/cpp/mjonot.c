@@ -100,7 +100,7 @@ char                      /* = jonon kopion osoite                          */
 {
   char *uusi;
   if ( jono == NULL ) return NULL;
-  if ( (uusi = malloc(strlen(jono)+1)) == NULL ) return NULL;
+  if ( (uusi = (char *)(malloc(strlen(jono)+1))) == NULL ) return NULL;
   return (strcpy(uusi,jono));
 }
 
@@ -1071,8 +1071,9 @@ arvosana_jonoksi(         /*                                                */
   double ero    = dp - koko; /* Paljonko d heitt‰‰ kokonaisluvusta.         */
   char   merkki = 0;         /* Jos merkki‰ ei lˆyd. -> jono 5 NUL NUL -> OK*/
   static char   jono[20];    /* Tarkkana jotta 20 riitt‰‰ sprintf:ss‰       */
+  strcpy(jono,"0");
 
-  if ( d == 0 ) return ( nolla ? nolla : "0" );
+  if ( d == 0 ) return ( nolla ? nolla : jono ); 
 
   for (i=0; MUUNNOS[i].ero != 0.0; i++)
     if ( fabs(MUUNNOS[i].ero - ero ) <= 0.000001  ) {

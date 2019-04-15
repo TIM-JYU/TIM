@@ -396,26 +396,37 @@ def mcq_get_md(jso):
     if cstr and texhline:
         cstr += texhline + '\n'
 
+    result = format_qst_or_mcq(printlikeqst, header, stem, texcolumns, cstr, footer)
+
+    return result
+
+
+def format_qst_or_mcq(printlikeqst, header, stem, texcolumns, cstr, footer):
     if printlikeqst:
-        result = f'''
-\\qsty{{{header}}}{{{stem}}}
-{{{''}}}
-{{{texcolumns}}}
-{{
-{cstr}
-}}
-{{{footer}}}
-'''
+        result = format_qst_tex(header, stem, '', texcolumns, cstr, footer)
     else:
-        result = f'''
-\\mcq{{{header}}}{{{stem}}}
-{{{texcolumns}}}
-{{
+        result = format_mcq_tex(header, stem, texcolumns, cstr)
+    return result
+
+
+def format_mcq_tex(header, stem, texcolumns, cstr):
+    # IMPORTANT: only add linebreaks when there are open curly braces. Required for Pandoc to parse TeX correctly.
+    return f'''
+\\mcq{{{header}}}{{{stem}}}{{{texcolumns}}}{{
 {cstr}
 }}
 '''
 
-    return result
+
+def format_qst_tex(header, stem, question_text, texcolumns, cstr, footer):
+    # IMPORTANT: only add linebreaks when there are open curly braces. Required for Pandoc to parse TeX correctly.
+    return f'''
+\\qsty{{{header}}}{{{stem}}}{{{question_text}}}{{{texcolumns}}}{{
+{cstr}
+}}{{
+{footer}
+}}
+'''
 
 
 def mmcq_get_md(jso):
@@ -485,25 +496,7 @@ def mmcq_get_md(jso):
     if cstr and texhline:
         cstr += texhline + '\n'
 
-    if printlikeqst:
-        result = f'''
-\\qsty{{{header}}}{{{stem}}}
-{{{''}}}
-{{{texcolumns}}}
-{{
-{cstr}
-}}
-{{{footer}}}
-    '''
-    else:
-        result = f'''
-\\mcq{{{header}}}{{{stem}}}
-{{{texcolumns}}}
-{{
-{cstr}
-}}
-'''
-
+    result = format_qst_or_mcq(printlikeqst, header, stem, texcolumns, cstr, footer)
     return result
 
 
@@ -674,16 +667,7 @@ def qst_get_md(jso):
     if not empty_theader:
         cstr = theader + ' \\\\\n' + texhline + '\n' + cstr
 
-    result = f'''
-\\qsty{{{header}}}{{{stem}}}
-{{{question_text}}}
-{{{texcolumns}}}
-{{
-{cstr}
-}}
-{{{footer}}}
-    '''
-
+    result = format_qst_tex(header, stem, question_text, texcolumns, cstr, footer)
     return result
 
 
