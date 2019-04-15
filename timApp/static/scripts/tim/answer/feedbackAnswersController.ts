@@ -27,8 +27,9 @@ export interface IFeedbackAnswersParams {
     allTasks: boolean;
 }
 
-export class FeedbackAnswersCtrl extends DialogController<{params: IFeedbackAnswersParams}, {}, "timFeedbackAnswers"> {
-    private static $inject = ["$element", "$scope"];
+export class FeedbackAnswersCtrl extends DialogController<{params: IFeedbackAnswersParams}, {}> {
+    static component = "timFeedbackAnswers";
+    static $inject = ["$element", "$scope"] as const;
     private options!: IFBOptions; // $onInit
     private $storage!: ngStorage.StorageService & {feedbackAnswersOptions: IFBOptions}; // $onInit
     private showSort: boolean = false;
@@ -109,10 +110,9 @@ export class FeedbackAnswersCtrl extends DialogController<{params: IFeedbackAnsw
     }
 }
 
-registerDialogComponent("timFeedbackAnswers",
-    FeedbackAnswersCtrl,
+registerDialogComponent(FeedbackAnswersCtrl,
     {templateUrl: "/static/templates/allFeedbackAnswersOptions.html"});
 
 export function showFeedbackAnswers(p: IFeedbackAnswersParams): IPromise<FeedbackAnswersCtrl["ret"]> {
-    return showDialog<FeedbackAnswersCtrl>("timFeedbackAnswers", {params: () => p}).result;
+    return showDialog(FeedbackAnswersCtrl, {params: () => p}).result;
 }
