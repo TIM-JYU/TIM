@@ -59,7 +59,7 @@ const DragAll = t.intersection([
 
 
 class DragController extends PluginBase<t.TypeOf<typeof DragMarkup>, t.TypeOf<typeof DragAll>, typeof DragAll> implements ITimComponent {
-    protected static $inject = ["$scope", "$element"];
+    static $inject = ["$scope", "$element"];
     private error?: string;
     private forceSave = false;
     private type?: string;
