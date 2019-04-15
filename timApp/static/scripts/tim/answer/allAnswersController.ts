@@ -21,8 +21,9 @@ export interface IAllAnswersParams {
     allTasks: boolean;
 }
 
-export class AllAnswersCtrl extends DialogController<{params: IAllAnswersParams}, {}, "timAllAnswers"> {
-    private static $inject = ["$element", "$scope"];
+export class AllAnswersCtrl extends DialogController<{params: IAllAnswersParams}, {}> {
+    static component = "timAllAnswers";
+    static $inject = ["$element", "$scope"] as const;
     private showSort: boolean = false;
     private options!: IOptions; // $onInit
     private $storage!: ngStorage.StorageService & {allAnswersOptions: IOptions}; // $onInit
@@ -94,9 +95,8 @@ export class AllAnswersCtrl extends DialogController<{params: IAllAnswersParams}
     }
 }
 
-
-registerDialogComponent("timAllAnswers", AllAnswersCtrl, {templateUrl: "/static/templates/allAnswersOptions.html"});
+registerDialogComponent(AllAnswersCtrl, {templateUrl: "/static/templates/allAnswersOptions.html"});
 
 export function showAllAnswers(p: IAllAnswersParams): IPromise<AllAnswersCtrl["ret"]> {
-    return showDialog<AllAnswersCtrl>("timAllAnswers", {params: () => p}).result;
+    return showDialog(AllAnswersCtrl, {params: () => p}).result;
 }

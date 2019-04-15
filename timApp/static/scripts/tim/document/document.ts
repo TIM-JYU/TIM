@@ -2,8 +2,10 @@ import moment from "moment";
 import {$window} from "../util/ngimport";
 import {getParAttributes, getParId, getRefAttrs, Paragraph} from "./parhelpers";
 
+type SectionMap = Map<string, JQuery[]>;
+
 export class Document {
-    get sections(): {[p: string]: JQuery[]} {
+    get sections(): SectionMap {
         return this._sections;
     }
 
@@ -11,7 +13,7 @@ export class Document {
         return this._id;
     }
 
-    private _sections: {[name: string]: JQuery[]} = {};
+    private _sections = new Map<string, JQuery[]>();
     private _id: number;
 
     constructor(id: number) {
@@ -23,7 +25,7 @@ export class Document {
      */
     public rebuildSections() {
         $(".readsection").remove();
-        this._sections = {};
+        this._sections = new Map();
         this.buildSections([], $("#pars"));
         this.refreshSectionReadMarks();
     }
@@ -33,20 +35,17 @@ export class Document {
      */
     public refreshSectionReadMarks() {
         $(".readsection").remove();
-        for (const key in this._sections) {
-            if (this._sections.hasOwnProperty(key)) {
-                const sectionPars = this._sections[key];
-                const readlines = $(sectionPars.map((p) => p[0])).children(".readline");
-                const modifiedCount = readlines.filter(".read-modified").not(".read").length;
-                const unreadCount = readlines.not(".read-modified").not(".read").length;
-                if (modifiedCount + unreadCount > 0) {
-                    sectionPars[sectionPars.length - 1].append($("<div>", {
-                        class: "readsection",
-                        title: "Mark preceding section as read (" +
+        for (const sectionPars of this._sections.values()) {
+            const readlines = $(sectionPars.map((p) => p[0])).children(".readline");
+            const modifiedCount = readlines.filter(".read-modified").not(".read").length;
+            const unreadCount = readlines.not(".read-modified").not(".read").length;
+            if (modifiedCount + unreadCount > 0) {
+                sectionPars[sectionPars.length - 1].append($("<div>", {
+                    class: "readsection",
+                    title: "Mark preceding section as read (" +
                         sectionPars.length + " paragraphs - " + unreadCount +
                         " unread, " + modifiedCount + " modified)",
-                    }).html('<i class="glyphicon glyphicon-align-left"></i><i class="glyphicon glyphicon-ok"></i>'));
-                }
+                }).html('<i class="glyphicon glyphicon-align-left"></i><i class="glyphicon glyphicon-ok"></i>'));
             }
         }
     }
@@ -71,7 +70,7 @@ export class Document {
                     if (content.children("h1, h2, h3").length > 0) {
                         if (currentSectionPars.length > 0) {
                             const parId = getParId(currentSectionPars[currentSectionPars.length - 1])!;
-                            this._sections[parId] = currentSectionPars;
+                            this._sections.set(parId, currentSectionPars);
                         }
                         currentSectionPars = [child];
                     } else if (!attrs.hasOwnProperty("settings") && !attrs.hasOwnProperty("area") && !attrs.hasOwnProperty("area_end") && !refAttrs.hasOwnProperty("area") && !refAttrs.hasOwnProperty("area_end")) {
@@ -80,7 +79,7 @@ export class Document {
                 }
             } else if (child.hasClass("addBottomContainer")) {
                 if (currentSectionPars.length > 0) {
-                    this._sections[getParId(currentSectionPars[currentSectionPars.length - 1])!] = currentSectionPars;
+                    this._sections.set(getParId(currentSectionPars[currentSectionPars.length - 1])!, currentSectionPars);
                 }
             }
             child = child.next();

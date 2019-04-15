@@ -19,8 +19,9 @@ export interface ITimTableEditorToolbarParams {
 let instance: TimTableEditorToolbarController | undefined;
 
 export class TimTableEditorToolbarController extends DialogController<{params: ITimTableEditorToolbarParams},
-    {}, "timTableEditorToolbar"> {
-    private static $inject = ["$scope", "$element"];
+    {}> {
+    static component = "timTableEditorToolbar";
+    static $inject = ["$element", "$scope"] as const;
     private colorOpts = {
         format: "hex",
         inputClass: "form-control input-xs",
@@ -30,7 +31,7 @@ export class TimTableEditorToolbarController extends DialogController<{params: I
 
     readonly DEFAULT_CELL_BGCOLOR = "yellow"; // "#EEEEEE";
 
-    constructor(protected scope: IScope, protected element: IRootElementService) {
+    constructor(protected element: IRootElementService, protected scope: IScope) {
         super(element, scope);
         instance = this;
     }
@@ -210,8 +211,8 @@ export function openTableEditorToolbar(p: ITimTableEditorToolbarParams) {
     if (instance) {
         instance.show(p.callbacks, p.activeTable);
     } else {
-        showDialog<TimTableEditorToolbarController>(
-            "timTableEditorToolbar",
+        showDialog(
+            TimTableEditorToolbarController,
             {params: () => p},
             {
                 forceMaximized: false,
@@ -227,8 +228,7 @@ export function hideToolbar(closingTable: object) {
     }
 }
 
-registerDialogComponent("timTableEditorToolbar",
-    TimTableEditorToolbarController,
+registerDialogComponent(TimTableEditorToolbarController,
     {
         template: `
 <tim-dialog class="overflow-visible">

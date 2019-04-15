@@ -19,27 +19,15 @@ markAsUsed(allanswersctrl);
 
 timLogTime("answerbrowser3 load", "answ");
 
-const LAZYWORD = "lazylazylazy";
-const LAZYSTART = "<!--lazy ";
-const LAZYEND = " lazy-->";
-const RLAZYSTART = new RegExp(LAZYSTART, "g");
-const RLAZYEND = new RegExp(LAZYEND, "g");
+const LAZY_MARKER = "lazy";
+const LAZY_MARKER_LENGTH = LAZY_MARKER.length;
 
-function makeNotLazy(html: string) {
-    let s = html.replace(RLAZYSTART, "");
-    const i = s.lastIndexOf(LAZYEND);
-    if (i >= 0) {
-        s = s.substring(0, i);
-    }
-    s = s.replace(RLAZYEND, "");
-    s = s.replace(/-LAZY->/g, "-->");
-    s = s.replace(/<!-LAZY-/g, "<!--");
-    return s;
+function isElement(n: Node): n is Element {
+    return n.nodeType === Node.ELEMENT_NODE;
 }
 
 async function loadPlugin(html: string, plugin: JQuery, scope: IScope, viewctrl: ViewCtrl) {
-    const newhtml = makeNotLazy(html);
-    const elementToCompile = $(newhtml);
+    const elementToCompile = $(html);
     elementToCompile.attr("plugintype", plugin.attr("data-plugin") || null);
     elementToCompile.attr("taskid", plugin.attr("id") || null);
     const compiled = compileWithViewctrl(elementToCompile, scope, viewctrl);
@@ -50,7 +38,7 @@ async function loadPlugin(html: string, plugin: JQuery, scope: IScope, viewctrl:
 }
 
 export class PluginLoaderCtrl extends DestroyScope implements IController {
-    private static $inject = ["$element", "$scope", "$transclude"];
+    static $inject = ["$element", "$scope", "$transclude"];
     private compiled = false;
     private viewctrl!: Require<ViewCtrl>;
     public taskId!: Binding<string, "@">;
@@ -115,14 +103,36 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
             } else {
                 this.abLoad.resolve(null); // this plugin instance doesn't have answer browser
             }
-            const origHtml = plugin[0].innerHTML;
-            if (origHtml.indexOf(LAZYSTART) < 0) {
-                // plugin is not lazy; it is already loaded
-            } else {
-                await loadPlugin(origHtml, plugin, this.viewctrl.scope, this.viewctrl);
+            const h = this.getNonLazyHtml();
+            if (h) {
+                await loadPlugin(h, plugin, this.viewctrl.scope, this.viewctrl);
             }
             this.removeActivationHandler();
         });
+    }
+
+    /**
+     * Returns the non-lazy HTML for the plugin if the plugin is lazy.
+     * If the plugin is not lazy, returns nothing.
+     */
+    getNonLazyHtml() {
+        const pe = this.getPluginElement();
+        const cns = pe[0].childNodes;
+        let nonLazyHtml;
+        for (let i = 0; i < cns.length; ++i) {
+            const n = cns[i];
+            if (n.nodeType === Node.COMMENT_NODE &&
+                n.nodeValue &&
+                n.nodeValue.startsWith(LAZY_MARKER) &&
+                n.nodeValue.endsWith(LAZY_MARKER)) {
+                nonLazyHtml = n.nodeValue.slice(LAZY_MARKER_LENGTH, n.nodeValue.length - LAZY_MARKER_LENGTH);
+                break;
+            } else if (isElement(n) && n.tagName === "DIV" && n.className === LAZY_MARKER) {
+                nonLazyHtml = n.getAttribute("data-html");
+                break;
+            }
+        }
+        return nonLazyHtml;
     }
 
     getPluginElement(): JQuery {
@@ -175,7 +185,7 @@ export interface IAnswerSaveEvent {
 }
 
 export class AnswerBrowserController extends DestroyScope implements IController {
-    private static $inject = ["$scope", "$element"];
+    static $inject = ["$scope", "$element"];
     public taskId!: Binding<string, "<">;
     private loading: number;
     private viewctrl!: Require<ViewCtrl>;
@@ -598,7 +608,11 @@ export class AnswerBrowserController extends DestroyScope implements IController
             return undefined;
         }
         this.loading++;
-        const r = await to($http.get<IAnswer[]>(`/answers/${this.taskId}/${this.user.id}`));
+        const r = await to($http.get<IAnswer[]>(`/answers/${this.taskId}/${this.user.id}`, {
+            params: {
+                _: Date.now(),
+            },
+        }));
         this.loading--;
         if (!r.ok) {
             this.showError(r.result);

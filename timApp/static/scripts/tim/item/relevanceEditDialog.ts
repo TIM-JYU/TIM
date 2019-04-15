@@ -13,8 +13,9 @@ markAsUsed(focusMe);
 /*
  * Dialog displaying relevance editing component.
  */
-export class ShowRelevanceEditDialog extends DialogController<{ params: IItem }, {}, "relevanceEditDialog"> {
-    private static $inject = ["$element", "$scope"];
+export class ShowRelevanceEditDialog extends DialogController<{ params: IItem }, {}> {
+    static component = "relevanceEditDialog";
+    static $inject = ["$element", "$scope"] as const;
     private item!: IItem;
 
     constructor(protected element: IRootElementService, protected scope: IScope) {
@@ -35,8 +36,7 @@ export class ShowRelevanceEditDialog extends DialogController<{ params: IItem },
 
 }
 
-registerDialogComponent("relevanceEditDialog",
-    ShowRelevanceEditDialog,
+registerDialogComponent(ShowRelevanceEditDialog,
     {
         template:
             `<tim-dialog class="overflow-visible">
@@ -54,5 +54,5 @@ registerDialogComponent("relevanceEditDialog",
     });
 
 export async function showRelevanceEditDialog(d: IItem) {
-    return await showDialog<ShowRelevanceEditDialog>("relevanceEditDialog", {params: () => d}).result;
+    return await showDialog(ShowRelevanceEditDialog, {params: () => d}).result;
 }

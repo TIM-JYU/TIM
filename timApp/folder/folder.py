@@ -1,6 +1,7 @@
 from typing import List, Iterable
 from typing import Optional
 
+from timApp.document.specialnames import TEMPLATE_FOLDER_NAME
 from timApp.timdb.exceptions import ItemAlreadyExistsException
 from timApp.item.item import Item
 from timApp.item.block import Block, insert_block, copy_default_rights, BlockType
@@ -224,14 +225,20 @@ class Folder(db.Model, Item):
         if folder is not None:
             return folder
 
+        # Make sure that the parent folder exists
+        p_f = Folder.create(rel_path, owner_group_id)
+
+        # Templates is a special folder, so it should have the same owner as its parent,
+        # except if we're in users folder.
+        owner_group_id = (p_f.owner.id
+                          if rel_name == TEMPLATE_FOLDER_NAME and
+                             rel_path != 'users' and
+                             p_f.owner else owner_group_id)
         block_id = insert_block(BlockType.Folder, title or rel_name, owner_group_id).id
 
         # noinspection PyArgumentList
         f = Folder(id=block_id, name=rel_name, location=rel_path)
         db.session.add(f)
-
-        # Make sure that the parent folder exists
-        Folder.create(rel_path, owner_group_id)
 
         if apply_default_rights:
             copy_default_rights(f.id, BlockType.Folder)

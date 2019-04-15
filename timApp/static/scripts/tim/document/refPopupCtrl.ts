@@ -4,7 +4,7 @@ import {$http} from "../util/ngimport";
 import {Binding, to} from "../util/utils";
 
 class RefPopupController implements IController {
-    private static $inject = ["$element"];
+    static $inject = ["$element"];
     private loaded: boolean;
     private ref_loaded: boolean = false;
     private docid!: Binding<string, "@">;

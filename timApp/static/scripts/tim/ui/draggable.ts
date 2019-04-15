@@ -91,7 +91,7 @@ export enum VisibilityFix {
 type CssDir = "left" | "right" | "bottom" | "top";
 
 export class DraggableController implements IController {
-    private static $inject = ["$scope", "$element"];
+    static $inject = ["$scope", "$element"];
 
     private posKey?: string;
     private areaMinimized: boolean = false;

@@ -27,8 +27,9 @@ export interface INameAreaOptions {
     title?: string;
 }
 
-class NameAreaController extends DialogController<{}, {areaName: string, options: INameAreaOptions}, "timNameArea"> {
-    private static $inject = ["$element", "$scope"];
+class NameAreaController extends DialogController<{}, {areaName: string, options: INameAreaOptions}> {
+    static component = "timNameArea";
+    static $inject = ["$element", "$scope"] as const;
     private areaName: string;
     private options: INameAreaOptions;
     private datePickerOptions: {format: string; showTodayButton: boolean};
@@ -59,10 +60,10 @@ class NameAreaController extends DialogController<{}, {areaName: string, options
     }
 }
 
-registerDialogComponent("timNameArea",
+registerDialogComponent(
     NameAreaController,
     {templateUrl: "/static/templates/nameArea.html"});
 
 export async function showNameAreaDialog() {
-    return await showDialog<NameAreaController>("timNameArea", {}).result;
+    return await showDialog(NameAreaController, {}).result;
 }

@@ -176,7 +176,7 @@ export class PluginMeta {
  * That's why there are "|| null"s in several places.
  */
 export abstract class PluginBase<MarkupType extends IGenericPluginMarkup, A extends IGenericPluginTopLevelFields<MarkupType>, T extends Type<A>> implements IController {
-    protected static $inject = ["$scope", "$element"];
+    static $inject = ["$scope", "$element"];
 
     buttonText() {
         return this.attrs.button || this.attrs.buttonText || null;

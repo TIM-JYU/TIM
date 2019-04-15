@@ -4,17 +4,18 @@ import unittest
 from typing import Union, List
 
 import sqlalchemy.exc
+from sqlalchemy.orm import close_all_sessions
 
 import timApp.markdown.dumboclient
 import timApp.timdb.init
-from timApp.document.document import Document
-from timApp.util.filemodehelper import change_permission_and_retry
-from timApp.tim_app import app
-from timApp.document.docinfo import DocInfo
 from timApp.document.docentry import DocEntry
-from timApp.user.user import User
+from timApp.document.docinfo import DocInfo
+from timApp.document.document import Document
+from timApp.tim_app import app
 from timApp.timdb.sqa import db
 from timApp.timdb.timdb import TimDb
+from timApp.user.user import User
+from timApp.util.filemodehelper import change_permission_and_retry
 from timApp.util.utils import del_content, remove_prefix
 
 
@@ -54,7 +55,7 @@ class TimDbTest(unittest.TestCase):
         self.db = TimDb(files_root_path=self.test_files_path)
 
     def tearDown(self):
-        db.session.close_all()
+        close_all_sessions()
         self.db.close()
 
     def create_doc(self, from_file=None, initial_par: Union[str, List[str]]=None, settings=None) -> DocInfo:
@@ -117,7 +118,6 @@ TEST_USER_3_USERNAME = 'testuser3'
 
 
 GITLAB_SKIP_TESTS = {
-    'tests.browser.test_questions.QuestionTest.test_questions',
 }
 
 
