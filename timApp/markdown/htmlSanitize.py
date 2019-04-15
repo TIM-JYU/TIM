@@ -10,6 +10,7 @@ TIM_SAFE_TAGS = [
     'acronym',
     'b',
     'blockquote',
+    'button',
     'code',
     'em',
     'figcaption',
@@ -35,6 +36,8 @@ TIM_SAFE_TAGS = [
     'h6',
     'h7',
     'hr',
+    'input',
+    'label',
     'login-menu',
     'table',
     'tbody',
@@ -97,9 +100,15 @@ TIM_SAFE_ATTRS = frozenset([
     'rel', 'rev', 'rows', 'rowspan', 'rules', 'scope', 'selected', 'shape',
     'size', 'span', 'src', 'start', 'style', 'summary', 'tabindex', 'target', 'title',
     'type', 'usemap', 'valign', 'value', 'vspace', 'width', 'controls', 'plugin',
-    'json', 'data-plugin', 'data-answer-id', 'answer-id', 'task-id'])
+    'json', 'data-plugin', 'data-answer-id', 'answer-id', 'task-id', 'placeholder', 'data-html'])
 
-c = Cleaner(allow_tags=TIM_SAFE_TAGS, remove_unknown_tags=False, safe_attrs=TIM_SAFE_ATTRS)
+c = Cleaner(
+    allow_tags=TIM_SAFE_TAGS,
+    comments=False,
+    forms=False,
+    remove_unknown_tags=False,
+    safe_attrs=TIM_SAFE_ATTRS,
+)
 
 
 # NOTE: lxml cleaner is a LOT faster than bleach.

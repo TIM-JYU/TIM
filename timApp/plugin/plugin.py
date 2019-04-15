@@ -375,7 +375,6 @@ class Plugin:
             markup = self.values
             header = str(markup.get("header", markup.get("headerText", "")))
             stem = str(markup.get("stem", "Open plugin"))
-            out = out.replace("<!--", "<!-LAZY-").replace("-->", "-LAZY->")
             out = f'{LAZYSTART}{out}{LAZYEND}<span style="font-weight:bold">{header}</span><div><p>{stem}</p></div>'
 
         # Create min and max height for div
