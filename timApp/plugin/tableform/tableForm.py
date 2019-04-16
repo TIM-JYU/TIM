@@ -6,7 +6,7 @@ import re
 from typing import Union, List
 
 import attr
-from flask import jsonify, render_template_string, Blueprint
+from flask import jsonify, render_template_string, Blueprint, request
 from marshmallow import Schema, fields, post_load, validates, ValidationError
 from marshmallow.utils import missing
 from webargs.flaskparser import use_args
@@ -15,6 +15,7 @@ from pluginserver_flask import GenericMarkupModel, GenericMarkupSchema, GenericH
     GenericAnswerSchema, GenericAnswerModel, Missing, \
     InfoSchema, create_blueprint
 from timApp.tim_app import csrf
+from timApp.user.usergroup import UserGroup
 
 
 @attr.s(auto_attribs=True)
@@ -55,6 +56,7 @@ class TableFormMarkupSchema(GenericMarkupSchema):
 @attr.s(auto_attribs=True)
 class TableFormInputModel:
     """Model for the information that is sent from browser (plugin AngularJS component)."""
+    #answers:
     userword: str
     tableFormOK: bool = missing
     nosave: bool = missing
@@ -94,8 +96,13 @@ class TableFormHtmlModel(GenericHtmlModel[TableFormInputModel, TableFormMarkupMo
 
     def get_browser_json(self):
         r = super().get_browser_json()
-        if self.state:
-            r['userword'] = self.state.userword
+        # if self.state:
+        #     r['userword'] = self.state.userword
+        if self.markup.groups:
+            # ug = UserGroup.get_by_name(self.markup.groups[0])
+            # members = ug.users.all()
+            # r['GroupMembers'] = ug.users.all()
+            pass
         return r
 
     class Meta:
@@ -160,26 +167,29 @@ tableForm_plugin = create_blueprint(__name__, 'tableForm', TableFormHtmlSchema()
 
 
 @tableForm_plugin.route('/answer/', methods=['put'])
-@use_args(TableFormAnswerSchema(strict=True), locations=("json",))
-def answer(args: TableFormAnswerModel):
-    web = {}
-    result = {'web': web}
-    userword = args.input.userword
-    tableForm_ok = args.input.tableFormOK or False
-    len_ok = True
-    points_array = args.markup.points_array or [[0, 0.25], [0.5, 1]]
-    points = points_array[tableForm_ok][len_ok]
+@csrf.exempt
+def answer():
+    args2 = request.get_json() #TODO: Schema/Model
+    #args2.input.userdata.cells....
+    #args2 = <class 'dict'>: {'markup': {'answerLimit': 3, 'initword': 'muikku'}, 'state': None, 'input': {'answers': {'userdata': {'type': 'Relative', 'cells': {'A4': 'koira', 'A5': 'kissa', 'B5': 'kana'}}}}, 'taskID': '92.ekatableForm', 'info': {'earlier_answers': 0, 'max_answers': 3, 'current_user_id': 'sijualle', 'user_id': 'sijualle', 'look_answer': False, 'valid': True}}
 
-    # plugin can ask not to save the word
-    nosave = args.input.nosave
-    if not nosave:
-        tim_info = {"points": points}
-        save = {"userword": userword}
-        result["save"] = save
-        result["tim_info"] = tim_info
-        web['result'] = "saved"
+    # web = {}
+    # result = {'web': web}
+    # userword = args.input.userword
+    # len_ok = True
+    # points_array = [[0, 0.25], [0.5, 1]]
+    # points = points_array[0][0]
+    #
+    # # plugin can ask not to save the word
+    # nosave = args.input.nosave
+    # if not nosave:
+    #     tim_info = {"points": points}
+    #     save = {"userword": userword}
+    #     result["save"] = save
+    #     result["tim_info"] = tim_info
+    #     web['result'] = "saved"
 
-    return jsonify(result)
+    return jsonify("aaa")
 
 
 def check_letters(word: str, needed_len: int) -> bool:
@@ -199,24 +209,8 @@ def check_letters(word: str, needed_len: int) -> bool:
 def reqs():
     templates = ["""
 ``` {#ekatableForm plugin="tableForm"}
-header: Kirjoita tableFormndromi
-stem: Kirjoita tableFormndromi, jossa on 5 kirjainta.
--points_array: [[0, 0.1], [0.6, 1]]
-inputstem: "TableFormndromisi 5 kirjainta inputstem:"
-needed_len: 5
-answerLimit: 3
-initword: muikku
-cols: 20
-```""", """
-``` {#tokatableForm plugin="tableForm"}
-header: Kirjoita tableFormndromi
-stem: Kirjoita tableFormndromi, jossa on 7 kirjainta.
--points_array: [[0, 0.1], [0.6, 1]]
-inputstem: "TableFormndromisi:"
-needed_len: 7
-answerLimit: 4
-initword: muikku
-cols: 20
+groups: 
+ - Group Name #TODO ryhmä listana vai max 1 ryhmä?
 ```"""]
     editor_tabs = [
             {
@@ -228,12 +222,7 @@ cols: 20
                             {
                                 'data': templates[0].strip(),
                                 'text': '5 letters',
-                                'expl': 'Add a 5-letter tableFormndrome task',
-                            },
-                            {
-                                'data': templates[1].strip(),
-                                'text': '7 letters',
-                                'expl': 'Add a 7-letter tableFormndrome task',
+                                'expl': 'Add a table for editing forms',
                             },
                         ],
                     },

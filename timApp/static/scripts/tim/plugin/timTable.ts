@@ -2191,7 +2191,8 @@ timApp.component("timTable", {
     bindings: {
         data: "<",
         plugintype: "@?",
-        taskid: "@?",
+        //taskid: "@?",
+        taskUrl: "@?",
     },
     require: {
         viewctrl: "?^timView",

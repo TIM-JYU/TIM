@@ -181,7 +181,7 @@ timApp.component("tableformRunner", {
                ng-trim="false"
                ng-readonly="::$ctrl.readonly"
                size="{{::$ctrl.cols}}"></span></label>
-        <tim-table data="$ctrl.data" userdata="$ctrl.userdata" ></tim-table>
+        <tim-table data="$ctrl.data" userdata="$ctrl.userdata" task-url="{{$ctrl.pluginMeta.getAnswerUrl()}}"></tim-table>
         <!-- TODO: taskid="{{ $ctrl.pluginm }}", vie pluginmeta & taskid-->
     </div>
     <button class="timButton"
