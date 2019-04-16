@@ -97,7 +97,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
     private currentFeedbackLevel = 0;
     private feedbackLevelRise = false;
     private pluginMode = Mode.Instruction;
-    private showMode = "Instruction paragraph"; // for demo
+    // private showMode = "Instruction paragraph"; // for demo
     private answerArray: string[] = [];
     private userSelections: string[] = [];
     private correctAnswer = false;
@@ -452,7 +452,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
             this.printFeedback("");
             this.pluginMode = Mode.QuestionItem;
             // For demonstration
-            this.showMode = "Question item paragraph, question " + (this.index + 1);
+            // this.showMode = "Question item paragraph, question " + (this.index + 1);
             this.showBlock(this.index);
             return;
         }
@@ -510,7 +510,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
                 this.hideBlock(this.index);
             }
             // For demonstration
-            this.showMode = "Feedback paragraph";
+            // this.showMode = "Feedback paragraph";
             return;
         }
 
@@ -530,7 +530,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
 
             if (questionIndex === undefined || this.streak === this.attrs.correctStreak || this.currentFeedbackLevel === this.feedbackMax) {
                 this.pluginMode = Mode.EndTask;
-                this.showMode = "End Task";
+                // this.showMode = "End Task";
                 // this.printFeedback("The task has ended");
                 this.handleAnswer();
                 return;
@@ -539,7 +539,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
             this.setPluginWords();
 
             // For demonstration
-            this.showMode = "Question item paragraph, question " + (this.index + 1);
+            // this.showMode = "Question item paragraph, question " + (this.index + 1);
             this.pluginMode = Mode.QuestionItem;
             this.showBlock(this.index);
             return;
@@ -943,7 +943,7 @@ feedbackApp.component("feedbackRunner", {
         vctrl: "^timView",
     },
     template: `
-<div class="csRunDiv no-popup-menu">
+<div>
     <tim-markup-error ng-if="::$ctrl.markupError" data="::$ctrl.markupError"></tim-markup-error>
     <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
     <p ng-if="::$ctrl.stem">{{::$ctrl.stem}}</p>
@@ -958,7 +958,7 @@ feedbackApp.component("feedbackRunner", {
     </button>
     <div class="wrong" ng-if="$ctrl.error" ng-bind-html="$ctrl.error"></div>
     <pre ng-if="$ctrl.result">{{$ctrl.result}}</pre>
-    <p ng-if="::$ctrl.footer" ng-bind="::$ctrl.footer" class="plgfooter"></p>
+    <p ng-if="::$ctrl.footer" ng-bind="::$ctrl.footer"></p>
 </div>
 `,
 });
