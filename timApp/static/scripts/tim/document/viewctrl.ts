@@ -35,6 +35,7 @@ import {onClick} from "./eventhandlers";
 import {PopupMenuController} from "./popupMenu";
 import {RefPopupHandler} from "./refpopup";
 import {MenuFunctionEntry} from "./viewutils";
+import {initSlideView} from "./slide";
 
 markAsUsed(ngs, popupMenu, interceptor, helpPar);
 
@@ -173,7 +174,11 @@ export class ViewCtrl implements IController {
         this.notesHandler = new NotesHandler(sc, this);
         this.parmenuHandler = new ParmenuHandler(sc, this);
         this.refpopupHandler = new RefPopupHandler(sc, this);
-        initReadings(this);
+        if (!this.isSlideView()) {
+            initReadings(this);
+        } else {
+            initSlideView(this.item);
+        }
         initCssPrint();
 
         // from https://stackoverflow.com/a/7317311
@@ -277,6 +282,11 @@ export class ViewCtrl implements IController {
 
     registerVideo(followid: string, v: HTMLVideoElement): void {
         this.videoElements.set(followid, v);
+    }
+
+    isSlideView() {
+        const p = document.location.pathname;
+        return p.startsWith("/slidefff/") || p.startsWith("/show_slide/");
     }
 
     startLiveUpdates() {
