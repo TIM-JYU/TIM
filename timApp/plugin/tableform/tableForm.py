@@ -3,6 +3,7 @@ TIM example plugin: a tableFormndrome checker.
 """
 import os
 import re
+import string
 from typing import Union, List
 
 import attr
@@ -14,6 +15,7 @@ from webargs.flaskparser import use_args
 from pluginserver_flask import GenericMarkupModel, GenericMarkupSchema, GenericHtmlSchema, GenericHtmlModel, \
     GenericAnswerSchema, GenericAnswerModel, Missing, \
     InfoSchema, create_blueprint
+from timApp.plugin.timtable.timTable import colnum_to_letters
 from timApp.tim_app import csrf
 from timApp.user.usergroup import UserGroup
 
@@ -39,11 +41,13 @@ class TableFormStateSchema(Schema):
 class TableFormMarkupModel(GenericMarkupModel):
     initword: Union[str, Missing] = missing
     groups: Union[List[str], Missing] = missing
+    tasks: Union[List[str], Missing] = missing
 
 
 class TableFormMarkupSchema(GenericMarkupSchema):
     initword = fields.Str()
     groups = fields.List(fields.Str())
+    tasks = fields.List(fields.Str())
 
     @post_load
     def make_obj(self, data):
@@ -99,10 +103,25 @@ class TableFormHtmlModel(GenericHtmlModel[TableFormInputModel, TableFormMarkupMo
         # if self.state:
         #     r['userword'] = self.state.userword
         if self.markup.groups:
-            # ug = UserGroup.get_by_name(self.markup.groups[0])
-            # members = ug.users.all()
-            # r['GroupMembers'] = ug.users.all()
-            pass
+            ug = UserGroup.get_by_name(self.markup.groups[0]) #! Lista vs 1 ryhmä
+            members = ug.users.all()
+            # TODO: Check if user has right to see group members
+            userdata = {'type': "Relative", 'cells': {}}
+            for i, m in enumerate(members):
+                #colnum_to_letters()
+                #100.textfield_A1.IN4wKoImZc5b - 100.textfield_A6.IN4wKoImZc5b
+                userdata['cells']["A" + str(i+2)] = m.name
+                if self.markup.tasks:
+                    for j, t in enumerate(self.markup.tasks):
+                        ans = m.get_answers_for_task(t).first()
+                        # TODO: Check if user has right to see answers for task/user
+                        # TODO: Save cells (user/task) as matrix in global variable?
+                        if ans:
+                            userdata['cells'][colnum_to_letters(j+1) + str(i+2)] = ans.content
+                            # TODO: Parse content? {"userword": "2"}
+            r['data'] = {'userdata': userdata, 'task': 'true', 'table': {'rows': {}}}
+            #TODO: Check if timtable rows should match userdata or are empty rows enough when in task mode (works for now)
+
         return r
 
     class Meta:
@@ -170,6 +189,9 @@ tableForm_plugin = create_blueprint(__name__, 'tableForm', TableFormHtmlSchema()
 @csrf.exempt
 def answer():
     args2 = request.get_json() #TODO: Schema/Model
+    # TODO: Calculate cells (user/task), or use previous calculation from TableFormHtmlModel
+    # TODO: Save incoming userdata by sending cell data to right task/user
+    #{"userdata": {"type": "Relative", "cells": {"C6": "kissa", "C7": "asd"}}}
     #args2.input.userdata.cells....
     #args2 = <class 'dict'>: {'markup': {'answerLimit': 3, 'initword': 'muikku'}, 'state': None, 'input': {'answers': {'userdata': {'type': 'Relative', 'cells': {'A4': 'koira', 'A5': 'kissa', 'B5': 'kana'}}}}, 'taskID': '92.ekatableForm', 'info': {'earlier_answers': 0, 'max_answers': 3, 'current_user_id': 'sijualle', 'user_id': 'sijualle', 'look_answer': False, 'valid': True}}
 
@@ -189,6 +211,7 @@ def answer():
     #     result["tim_info"] = tim_info
     #     web['result'] = "saved"
 
+    #TODO: Return result for (un)succesful save
     return jsonify("aaa")
 
 

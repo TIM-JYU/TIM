@@ -1,5 +1,5 @@
 /**
- * Defines the client-side implementation of an example plugin (a palindrome checker).
+ * Defines the client-side implementation of an example plugin (a tableFormndrome checker).
  */
 import angular, {INgModelOptions, IRootElementService, IScope} from "angular";
 import * as t from "io-ts";
@@ -17,10 +17,10 @@ import {valueDefu} from "tim/util/utils";
 import {timApp} from "../app";
 import {None} from "../../jspm_packages/npm/fp-ts@1.11.1/lib/Option";
 
-const paliApp = angular.module("paliApp", ["ngSanitize"]);
-export const moduleDefs = [paliApp];
+const tableFormApp = angular.module("tableFormApp", ["ngSanitize"]);
+export const moduleDefs = [tableFormApp];
 
-const PaliMarkup = t.intersection([
+const TableFormMarkup = t.intersection([
     t.partial({
         initword: t.string
     }),
@@ -31,22 +31,23 @@ const PaliMarkup = t.intersection([
         cols: withDefault(t.number, 20),
     }),
 ]);
-const PaliAll = t.intersection([
+const TableFormAll = t.intersection([
     t.partial({
         userword: t.string,
+        data: t.Dictionary,
     }),
     GenericPluginTopLevelFields,
-    t.type({markup: PaliMarkup}),
+    t.type({markup: TableFormMarkup}),
 ]);
 
 
-class PaliController extends PluginBase<t.TypeOf<typeof PaliMarkup>, t.TypeOf<typeof PaliAll>, typeof PaliAll> {
+class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t.TypeOf<typeof TableFormAll>, typeof TableFormAll> {
     private result?: string;
     private error?: string;
     private isRunning = false;
     private userword = "";
     private runTestGreen = false;
-    private data!: {};
+    private data: any = {};
     private userdata!: {};
     private modelOpts!: INgModelOptions; // initialized in $onInit, so need to assure TypeScript with "!"
 
@@ -63,7 +64,7 @@ class PaliController extends PluginBase<t.TypeOf<typeof PaliMarkup>, t.TypeOf<ty
     $onInit() {
         super.$onInit();
         this.userword = this.attrsall.userword || this.attrs.initword || "";
-        this.data = this.setData();
+        this.data = this.attrsall.data;
     }
 
     /**
@@ -160,14 +161,14 @@ class PaliController extends PluginBase<t.TypeOf<typeof PaliMarkup>, t.TypeOf<ty
     }
 
     protected getAttributeType() {
-        return PaliAll;
+        return TableFormAll;
     }
 }
 
 timApp.component("tableformRunner", {
     bindings: pluginBindings,
 
-    controller: PaliController,
+    controller: TableFormController,
     template: `
 <div class="csRunDiv no-popup-menu">
     <tim-markup-error ng-if="::$ctrl.markupError" data="::$ctrl.markupError"></tim-markup-error>
