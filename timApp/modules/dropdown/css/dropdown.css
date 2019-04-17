@@ -2,6 +2,10 @@
     display: none;
 }
 
+.pluginfeedback .answerBrowserPlaceHolder {
+    display: none;
+}
+
 .plugindropdown li {
     list-style-type: none;
 }
