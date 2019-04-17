@@ -191,224 +191,384 @@ def answer(args: FeedbackAnswerModel):
 @app.route('/reqs/')
 @app.route('/reqs')
 def reqs():
-    templates = ["""
-::: {.info}
-Type your info text here.⁞
-:::
-""","""
-#- {.instruction}
-Type your task instructions here.⁞
-""","""
-``` {#fb1⁞ plugin="feedback"}
+    templates = ["""## Instructions {defaultplugin="dropdown"}
+
+Welcome to the test. Read the question carefully. If you get the answer wrong, please read the feedback carefully.
+
+
+Please try out a practice question:
+
+
+I {#instruction words: [will think, won't think, might think]} before answering.
+
+
+## Item: {defaultplugin="dropdown"}
+
+What {#drop1} on the stove?
+
+
+## Item: {defaultplugin="dropdown"}
+
+Who {#drop2} the cake?
+
+
+## Item: {defaultplugin="dropdown"}
+
+What {#drop3} on the roof?
+
+
+## Item: {defaultplugin="dropdown"}
+
+Who {#drop4} the 3 mile swim in the race?
+ 
+
+``` {#fb1 plugin="feedback"}
 correctStreak: 2
-nextTask: linkki tähän
+nextTask: nonexttaskdefined
 instructionID: instruction
-teacherHide: false
+teacherHide: true
 questionItems:
 - pluginNames: [drop1]
-  words: [[is, do, are]]
+  words: [[is cooking, do cooking, are cooking]]
   choices:
-    - match: [is]
+    - match: [is cooking]
       correct: true
-      levels:
-        - "md: **Correct!** You answered: |answer|"
-    - match: [do]
-      levels:
-        - "md: Level 1 feedback: You answered: *|answer|* Answer is wrong. Try **thinking**. "
-        - "md: Level 2 feedback: You answered: *|answer|* Answer is wrong. Try thinking *a bit* harder. "
-        - "md: Level 3 feedback: You answered: *|answer|* Answer is wrong. Try thinking **much more** harder. "
-        - "md: Level 4 feedback: You answered: *|answer|* Answer is wrong. Just think about what the answer **is**. "
-        - "md: Level 5 feedback: Please note the correct answer: 'What **is** love?'  
-                               'What time **is** it?' 
-                               'What **is** your favourite colour?'
-                               'What **is** the purpose of all this?"
-    - match: [are]
-      levels:
-        - "md: Level 1 feedback: You answered: *|answer|* Answer is wrong. Try **thinking**. "
-        - "md: Level 2 feedback: You answered: *|answer|* Answer is wrong. Try thinking *a bit* harder. "
-        - "md: Level 3 feedback: You answered: *|answer|* Answer is wrong. Try thinking **much more** harder. "
-        - "md: Level 4 feedback: You answered: *|answer|* Answer is wrong. Just think about what the answer **is**. "
-        - "md: Level 5 feedback: Please note the correct answer: 'What **is** love?'  
-                               'What time **is** it?' 
-                               'What **is** your favourite colour?'
-                               'What **is** the purpose of all this?"
+      levels: &ismatch
+        - "**Correct!** You answered: |answer|"
+    - match: [do cooking]
+      levels: &domatch
+        - "Level 1 feedback: You answered: *|answer|* Answer is wrong. Try **thinking**. "
+        - "Level 2 feedback: You answered: *|answer|* Answer is wrong. Try thinking *a bit* harder. "
+        - "Level 3 feedback: You answered: *|answer|* Answer is wrong. Try thinking **much more** harder. "
+        - "Level 4 feedback: You answered: *|answer|* Answer is wrong. Just think about what the answer **is**. "
+        - "Level 5 feedback: Please note the correct answer: 'What **is** / Who **is**'"
+    - match: [are cooking]
+      levels: &arematch
+        - "Level 1 feedback: You answered: *|answer|* Answer is wrong. Try **thinking**. "
+        - "Level 2 feedback: You answered: *|answer|* Answer is wrong. Try thinking *a bit* harder. "
+        - "Level 3 feedback: You answered: *|answer|* Answer is wrong. Try thinking **much more** harder. "
+        - "Level 4 feedback: You answered: *|answer|* Answer is wrong. Just think about what the answer **is**. "
+        - "Level 5 feedback: Please note the correct answer: 'What **is** / Who **is**'"
     - match: []
-      levels:
-        - "md: Level 1 feedback: default feedback for drop4"
-        - "md: Level 2 feedback: default feedback for drop4"
-        - "md: Level 3 feedback: default feedback for drop4"
-        - "md: Level 4 feedback: default feedback for drop4"
-        - "md: Level 5 feedback: Please note the correct answer: 'What **is** love?'  
-                               'What time **is** it?' 
-                               'What **is** your favourite colour?'
-                               'What **is** the purpose of all this?"
+      levels: &defaultmatch
+        - "Level 1 feedback: default feedback for drop4"
+        - "Level 2 feedback: default feedback for drop4"
+        - "Level 3 feedback: default feedback for drop4"
+        - "Level 4 feedback: default feedback for drop4"
+        - "Level 5 feedback: Please note the correct answer: 'What **is** / Who **is**'"
 - pluginNames: [drop2]
-  words: [[is, do, are]]
+  words: [[is baking, do baking, are baking]]
   choices:
-    - match: [is]
+    - match: [is baking]
       correct: true
-      levels:
-        - "md: **Correct!** Great job! You answered: |answer|"
-    - match: [do]
-      levels:
-        - "md: Level 1 feedback: You answered: *|answer|* Answer is wrong. Try **thinking**. "
-        - "md: Level 2 feedback: You answered: *|answer|* Answer is wrong. Try thinking *a bit* harder. "
-        - "md: Level 3 feedback: You answered: *|answer|* Answer is wrong. Try thinking **much more** harder. "
-        - "md: Level 4 feedback: You answered: *|answer|* Answer is wrong. Just think about what the answer **is**. "
-        - "md: Level 5 feedback: Please note the correct answer: 'What **is** love?'  
-                               'What time **is** it?' 
-                               'What **is** your favourite colour?'
-                               'What **is** the purpose of all this?"
-    - match: [are]
-      levels:
-        - "md: Level 1 feedback: You answered: *|answer|* Answer is wrong. Try **thinking**. "
-        - "md: Level 2 feedback: You answered: *|answer|* Answer is wrong. Try thinking *a bit* harder. "
-        - "md: Level 3 feedback: You answered: *|answer|* Answer is wrong. Try thinking **much more** harder. "
-        - "md: Level 4 feedback: You answered: *|answer|* Answer is wrong. Just think about what the answer **is**. "
-        - "md: Level 5 feedback: Please note the correct answer: 'What **is** love?'  
-                               'What time **is** it?' 
-                               'What **is** your favourite colour?'
-                               'What **is** the purpose of all this?"
+      levels: *ismatch
+    - match: [do baking]
+      levels: *domatch
+    - match: [are baking]
+      levels: *arematch
     - match: []
-      levels:
-        - "md: Level 1 feedback: default feedback for drop4"
-        - "md: Level 2 feedback: default feedback for drop4"
-        - "md: Level 3 feedback: default feedback for drop4"
-        - "md: Level 4 feedback: default feedback for drop4"
-        - "md: Level 5 feedback: Please note the correct answer: 'What **is** love?'  
-                               'What time **is** it?' 
-                               'What **is** your favourite colour?'
-                               'What **is** the purpose of all this?"
+      levels: *defaultmatch
 - pluginNames: [drop3]
-  words: [[is, do, are]]
+  words: [[is jumping, do jumping, are jumping]]
   choices:
-    - match: [is]
+    - match: [is jumping]
       correct: true
-      levels:
-        - "md: **Correct!** Good! You answered: |answer|"
-    - match: [do]
-      levels:
-        - "md: Level 1 feedback: You answered: *|answer|* Answer is wrong. Try **thinking**. "
-        - "md: Level 2 feedback: You answered: *|answer|* Answer is wrong. Try thinking *a bit* harder. "
-        - "md: Level 3 feedback: You answered: *|answer|* Answer is wrong. Try thinking **much more** harder. "
-        - "md: Level 4 feedback: You answered: *|answer|* Answer is wrong. Just think about what the answer **is**. "
-        - "md: Level 5 feedback: Please note the correct answer: 'What **is** love?'  
-                               'What time **is** it?' 
-                               'What **is** your favourite colour?'
-                               'What **is** the purpose of all this?"
-    - match: [are]
-      levels:
-        - "md: Level 1 feedback: You answered: *|answer|* Answer is wrong. Try **thinking**. "
-        - "md: Level 2 feedback: You answered: *|answer|* Answer is wrong. Try thinking a bit harder. "
-        - "md: Level 3 feedback: You answered: *|answer|* Answer is wrong. Try thinking **much more** harder. "
-        - "md: Level 4 feedback: You answered: *|answer|* Answer is wrong. Just think about what the answer **is**. "
-        - "md: Level 5 feedback: Please note the correct answer: 'What **is** love?'  
-                               'What time **is** it?' 
-                               'What **is** your favourite colour?'
-                               'What **is** the purpose of all this?"
+      levels: *ismatch
+    - match: [do jumping]
+      levels: *domatch
+    - match: [are jumping]
+      levels: *arematch
     - match: []
-      levels:
-        - "md: Level 1 feedback: default feedback for drop4"
-        - "md: Level 2 feedback: default feedback for drop4"
-        - "md: Level 3 feedback: default feedback for drop4"
-        - "md: Level 4 feedback: default feedback for drop4"
-        - "md: Level 5 feedback: Please note the correct answer: 'What **is** love?'  
-                               'What time **is** it?' 
-                               'What **is** your favourite colour?'
-                               'What **is** the purpose of all this?"
+      levels: *defaultmatch
 - pluginNames: [drop4]
-  words: [[is, do, are]]
+  words: [[is swimming, do swimming, are swimming]]
   choices:
-    - match: [is]
+    - match: [is swimming]
       correct: true
-      levels:
-        - "md: **Correct!** Good! You answered: |answer|"
-    - match: [do]
-      levels:
-        - "md: Level 1 feedback: You answered: *|answer|* Answer is wrong. Try **thinking**. "
-        - "md: Level 2 feedback: You answered: *|answer|* Answer is wrong. Try thinking *a bit* harder. "
-        - "md: Level 3 feedback: You answered: *|answer|* Answer is wrong. Try thinking **much more** harder. "
-        - "md: Level 4 feedback: You answered: *|answer|* Answer is wrong. Just think about what the answer **is**. "
-        - "md: Level 5 feedback: Please note the correct answer: 'What **is** love?'  
-                               'What time **is** it?' 
-                               'What **is** your favourite colour?'
-                               'What **is** the purpose of all this?"
-    - match: [are]
-      levels:
-        - "md: Level 1 feedback: You answered: *|answer|* Answer is wrong. Try **thinking**. "
-        - "md: Level 2 feedback: You answered: *|answer|* Answer is wrong. Try thinking *a bit* harder. "
-        - "md: Level 3 feedback: You answered: *|answer|* Answer is wrong. Try thinking **much more** harder. "
-        - "md: Level 4 feedback: You answered: *|answer|* Answer is wrong. Just think about what the answer **is**. "
-        - "md: Level 5 feedback: Please note the correct answer: 'What **is** love?'  
-                               'What time **is** it?' 
-                               'What **is** your favourite colour?'
-                               'What **is** the purpose of all this?"
+      levels: *ismatch
+    - match: [do swimming]
+      levels: *domatch
+    - match: [are swimming]
+      levels: *arematch
     - match: []
-      levels:
-        - "md: Level 1 feedback: default feedback for drop4"
-        - "md: Level 2 feedback: default feedback for drop4"
-        - "md: Level 3 feedback: default feedback for drop4"
-        - "md: Level 4 feedback: default feedback for drop4"
-        - "md: Level 5 feedback: Please note the correct answer: 'What **is** love?'  
-                               'What time **is** it?' 
-                               'What **is** your favourite colour?'
-                               'What **is** the purpose of all this?"
-```
-""","""
-- pluginNames: [#PLUGINNAMEHERE]
-  words: [[is, do, are]]
+      levels: *defaultmatch
+```""", """## Instructions {defaultplugin="drag"}
+
+Welcome to the test. Read the question carefully. If you get the answer wrong, please read the feedback carefully.
+
+
+Please try out a practice question:
+
+Order the words correctly into the sentence below.
+
+\
+Drag from here: {#instructiondrag words: [I, before, will think, answering]}
+
+
+To here: {#instruction}.
+
+
+## Item {defaultplugin="drag"}
+::: {.info}
+Please order the words correctly into the sentence below.
+
+
+\
+{#drag1 words: [I, when, around, come]}
+
+\
+:::
+ You know where I'll be found {#drop1}.
+
+
+## Item {defaultplugin="drag"}
+::: {.info}
+Please order the words correctly into the sentence below.
+
+
+\
+{#drag2 words: [I, if, a mile, run]}
+
+\
+:::
+ I will be quite tired {#drop2}.
+
+
+## Item {defaultplugin="drag"}
+::: {.info}
+Please order the words correctly into the sentence below.
+
+
+\
+{#drag3 words: [I, who, at work, see]}
+
+\
+:::
+ I will tell you {#drop3}.
+
+
+## Item {defaultplugin="drag"}
+::: {.info}
+Please order the words correctly into the sentence below.
+
+
+\
+{#drag4 words: [I, whether, a computer, had]}
+
+\
+:::
+He wanted to know {#drop4}.
+
+
+
+``` {#fb1 plugin="feedback"}
+
+correctStreak: 2
+nextTask: nonexttaskdefined
+instructionID: instruction
+teacherHide: true
+questionItems:
+- pluginNames: [drop1]
+  words: []
   choices:
-    - match: [is]
+    - match: [when I come around]
       correct: true
-      levels:
-        - "md: **Correct!** You answered: |answer|"
-    - match: [do]
-      levels:
-        - "md: Level 1 feedback: You answered: *|answer|* Answer is wrong. Try **thinking**. "
-        - "md: Level 2 feedback: You answered: *|answer|* Answer is wrong. Try thinking *a bit* harder. "
-        - "md: Level 3 feedback: You answered: *|answer|* Answer is wrong. Try thinking **much more** harder. "
-        - "md: Level 4 feedback: You answered: *|answer|* Answer is wrong. Just think about what the answer **is**. "
-        - "md: Level 5 feedback: Please note the correct answer: 'What **is** love?'  
-                               'What time **is** it?' 
-                               'What **is** your favourite colour?'
-                               'What **is** the purpose of all this?"
-    - match: [are]
-      levels:
-        - "md: Level 1 feedback: You answered: *|answer|* Answer is wrong. Try **thinking**. "
-        - "md: Level 2 feedback: You answered: *|answer|* Answer is wrong. Try thinking *a bit* harder. "
-        - "md: Level 3 feedback: You answered: *|answer|* Answer is wrong. Try thinking **much more** harder. "
-        - "md: Level 4 feedback: You answered: *|answer|* Answer is wrong. Just think about what the answer **is**. "
-        - "md: Level 5 feedback: Please note the correct answer: 'What **is** love?'  
-                               'What time **is** it?' 
-                               'What **is** your favourite colour?'
-                               'What **is** the purpose of all this?"
+      levels: &rightmatch
+        - "**Correct!** You answered: |answer|"
+    - match: [when around I come]
+      levels: &asvmatch
+        - "Level 1 feedback: You answered: *|answer|* Answer is wrong. Try **thinking**. "
+        - "Level 2 feedback: You answered: *|answer|* Answer is wrong. Try thinking *a bit* harder. "
+        - "Level 3 feedback: You answered: *|answer|* Answer is wrong. Try thinking **much more** harder. "
+        - "Level 4 feedback: You answered: *|answer|* Answer is wrong. Just think about **what the answer is**. "
+        - "Level 5 feedback: Please note the correct word order: 'conjuction subject verb the rest'"
+    - match: [when come I around]
+      levels: &vsamatch
+        - "Level 1 feedback: You answered: *|answer|* Answer is wrong. Try **thinking**. "
+        - "Level 2 feedback: You answered: *|answer|* Answer is wrong. Try thinking *a bit* harder. "
+        - "Level 3 feedback: You answered: *|answer|* Answer is wrong. Try thinking **much more** harder. "
+        - "Level 4 feedback: You answered: *|answer|* Answer is wrong. Just think about **what the answer is** "
+        - "Level 5 feedback: Please note the correct word order: 'conjuction subject verb the rest'"
     - match: []
-      levels:
-        - "md: Level 1 feedback: default feedback for drop4"
-        - "md: Level 2 feedback: default feedback for drop4"
-        - "md: Level 3 feedback: default feedback for drop4"
-        - "md: Level 4 feedback: default feedback for drop4"
-        - "md: Level 5 feedback: Please note the correct answer: 'What **is** love?'  
-                               'What time **is** it?' 
-                               'What **is** your favourite colour?'
-                               'What **is** the purpose of all this?"
-""","""
-- match: [is⁞]
-  correct: true
-  levels:
-    - "md: **Correct!** You answered: |answer|"
-""","""
-- match: [do⁞]
-  levels:
-    - "md: Level 1 feedback: You answered: *|answer|* Answer is wrong. Try **thinking**. "
-    - "md: Level 2 feedback: You answered: *|answer|* Answer is wrong. Try thinking *a bit* harder. "
-    - "md: Level 3 feedback: You answered: *|answer|* Answer is wrong. Try thinking **much more** harder. "
-    - "md: Level 4 feedback: You answered: *|answer|* Answer is wrong. Just think about what the answer **is**. "
-    - "md: Level 5 feedback: Please note the correct answer: 'What **is** love?'  
-                           'What time **is** it?' 
-                           'What **is** your favourite colour?'
-                           'What **is** the purpose of all this?"
-"""]
+      levels: &defaultmatch
+        - "Level 1 feedback: You answered: *|answer|* Answer is wrong. Try **thinking**."
+        - "Level 2 feedback: You answered: *|answer|* Answer is wrong. Think about what comes first."
+        - "Level 3 feedback: You answered: *|answer|* Answer is wrong. Think about what word comes first."
+        - "Level 4 feedback: You answered: *|answer|* Answer is wrong. The conjunction should come first."
+        - "Level 5 feedback: Please note the correct word order: 'conjuction subject verb the rest'"
+- pluginNames: [drop2]
+  words: []
+  choices:
+    - match: [if I run a mile]
+      correct: true
+      levels: *rightmatch
+    - match: [if a mile I run]
+      levels: *asvmatch
+    - match: [if run I a mile]
+      levels: *vsamatch
+    - match: []
+      levels: *defaultmatch
+- pluginNames: [drop3]
+  words: []
+  choices:
+    - match: [who I see at work]
+      correct: true
+      levels: *rightmatch
+    - match: [who at work I see]
+      levels: *asvmatch
+    - match: [who see I at work]
+      levels: *vsamatch
+    - match: []
+      levels: *defaultmatch
+- pluginNames: [drop4]
+  words: []
+  choices:
+    - match: [whether I had a computer]
+      correct: true
+      levels: *rightmatch
+    - match: [whether a computer I had]
+      levels: *asvmatch
+    - match: [whether had I a computer]
+      levels: *vsamatch
+    - match: []
+      levels: *defaultmatch
+
+```""","""## Instructions {defaultplugin="dropdown"}
+
+Welcome to the test. Read the question carefully. If you get the answer wrong, please read the feedback carefully.
+
+
+Please try out a practice question:
+
+
+I {#instruction words: [will think, won't think, might think]} before answering.
+
+""", """## Instructions {defaultplugin="drag"}
+
+Welcome to the test. Read the question carefully. If you get the answer wrong, please read the feedback carefully.
+
+
+Please try out a practice question:
+
+Order the words correctly into the sentence below.
+
+\
+Drag from here: {#instructiondrag words: [I, before, will think, answering]}
+
+
+To here: {#instruction}.
+
+""", """## Item: {defaultplugin="dropdown"}
+
+What {#drop1} on the stove?
+
+""", """## Item {defaultplugin="drag"}
+::: {.info}
+Please order the words correctly into the sentence below.
+
+
+\
+{#drag1 words: [I, when, around, come]}
+
+\
+:::
+ You know where I'll be found {#drop1}.
+""", """``` {#fb1 plugin="feedback"}
+correctStreak: 2
+nextTask: nonexttaskdefined
+instructionID: instruction
+teacherHide: true
+questionItems:
+- pluginNames: [drop1]
+  words: [[is cooking, do cooking, are cooking]]
+  choices:
+    - match: [is cooking]
+      correct: true
+      levels: &ismatch
+        - "**Correct!** You answered: |answer|"
+    - match: [do cooking]
+      levels: &domatch
+        - "Level 1 feedback: You answered: *|answer|* Answer is wrong. Try **thinking**. "
+        - "Level 2 feedback: You answered: *|answer|* Answer is wrong. Try thinking *a bit* harder. "
+        - "Level 3 feedback: You answered: *|answer|* Answer is wrong. Try thinking **much more** harder. "
+        - "Level 4 feedback: You answered: *|answer|* Answer is wrong. Just think about what the answer **is**. "
+        - "Level 5 feedback: Please note the correct answer: 'What **is** / Who **is**'"
+    - match: [are cooking]
+      levels: &arematch
+        - "Level 1 feedback: You answered: *|answer|* Answer is wrong. Try **thinking**. "
+        - "Level 2 feedback: You answered: *|answer|* Answer is wrong. Try thinking *a bit* harder. "
+        - "Level 3 feedback: You answered: *|answer|* Answer is wrong. Try thinking **much more** harder. "
+        - "Level 4 feedback: You answered: *|answer|* Answer is wrong. Just think about what the answer **is**. "
+        - "Level 5 feedback: Please note the correct answer: 'What **is** / Who **is**'"
+    - match: []
+      levels: &defaultmatch
+        - "Level 1 feedback: default feedback for drop4"
+        - "Level 2 feedback: default feedback for drop4"
+        - "Level 3 feedback: default feedback for drop4"
+        - "Level 4 feedback: default feedback for drop4"
+        - "Level 5 feedback: Please note the correct answer: 'What **is** / Who **is**'"
+- pluginNames: [drop2]
+  words: [[is baking, do baking, are baking]]
+  choices:
+    - match: [is baking]
+      correct: true
+      levels: *ismatch
+    - match: [do baking]
+      levels: *domatch
+    - match: [are baking]
+      levels: *arematch
+    - match: []
+      levels: *defaultmatch
+      
+```""", """``` {#fb1 plugin="feedback"}
+
+correctStreak: 2
+nextTask: nonexttaskdefined
+instructionID: instruction
+teacherHide: true
+questionItems:
+- pluginNames: [drop1]
+  words: []
+  choices:
+    - match: [when I come around]
+      correct: true
+      levels: &rightmatch
+        - "**Correct!** You answered: |answer|"
+    - match: [when around I come]
+      levels: &asvmatch
+        - "Level 1 feedback: You answered: *|answer|* Answer is wrong. Try **thinking**. "
+        - "Level 2 feedback: You answered: *|answer|* Answer is wrong. Try thinking *a bit* harder. "
+        - "Level 3 feedback: You answered: *|answer|* Answer is wrong. Try thinking **much more** harder. "
+        - "Level 4 feedback: You answered: *|answer|* Answer is wrong. Just think about **what the answer is**. "
+        - "Level 5 feedback: Please note the correct word order: 'conjuction subject verb the rest'"
+    - match: [when come I around]
+      levels: &vsamatch
+        - "Level 1 feedback: You answered: *|answer|* Answer is wrong. Try **thinking**. "
+        - "Level 2 feedback: You answered: *|answer|* Answer is wrong. Try thinking *a bit* harder. "
+        - "Level 3 feedback: You answered: *|answer|* Answer is wrong. Try thinking **much more** harder. "
+        - "Level 4 feedback: You answered: *|answer|* Answer is wrong. Just think about **what the answer is** "
+        - "Level 5 feedback: Please note the correct word order: 'conjuction subject verb the rest'"
+    - match: []
+      levels: &defaultmatch
+        - "Level 1 feedback: You answered: *|answer|* Answer is wrong. Try **thinking**."
+        - "Level 2 feedback: You answered: *|answer|* Answer is wrong. Think about what comes first."
+        - "Level 3 feedback: You answered: *|answer|* Answer is wrong. Think about what word comes first."
+        - "Level 4 feedback: You answered: *|answer|* Answer is wrong. The conjunction should come first."
+        - "Level 5 feedback: Please note the correct word order: 'conjuction subject verb the rest'"
+- pluginNames: [drop2]
+  words: []
+  choices:
+    - match: [if I run a mile]
+      correct: true
+      levels: *rightmatch
+    - match: [if a mile I run]
+      levels: *asvmatch
+    - match: [if run I a mile]
+      levels: *vsamatch
+    - match: []
+      levels: *defaultmatch
+      
+```"""]
     return jsonify({
         "js": ["js/build/feedback.js"],
         "multihtml": True,
@@ -422,33 +582,43 @@ questionItems:
                         'items': [
                             {
                                 'data': templates[0].strip(),
-                                'text': 'Info text',
-                                'expl': 'Add info text to a question item block',
+                                'text': 'Task with dropdown questions',
+                                'expl': 'Add a whole task with instructions, dropdown items and feedback',
                             },
                             {
                                 'data': templates[1].strip(),
-                                'text': 'Instruction block',
-                                'expl': 'Add an instruction block without practice item to your task',
+                                'text': 'Task with drag & drop questions',
+                                'expl': 'Add a whole task with instructions, drag & drop items and feedback',
                             },
                             {
                                 'data': templates[2].strip(),
-                                'text': 'Example with 4 items',
-                                'expl': 'Add a feedback-plugin with 4 items',
+                                'text': 'Instruction block for dropdown task',
+                                'expl': 'Add an instruction block with a dropdown question item',
                             },
                             {
                                 'data': templates[3].strip(),
-                                'text': 'Question item',
-                                'expl': 'Add a question item',
+                                'text': 'Instruction block for drag & drop task',
+                                'expl': 'Add an instruction block with a drag & drop question item',
                             },
                             {
                                 'data': templates[4].strip(),
-                                'text': 'Correct match',
-                                'expl': 'Add a correct match with feedback-levels',
+                                'text': 'Question item block with dropdown ',
+                                'expl': 'Add a question item block with a dropdown question',
                             },
                             {
                                 'data': templates[5].strip(),
-                                'text': 'Match',
-                                'expl': 'Add a match with feedback-levels',
+                                'text': 'Question item block with drag & drop',
+                                'expl': 'Add a question item block with a drag & drop question',
+                            },
+                            {
+                                'data': templates[6].strip(),
+                                'text': 'Feedback block for dropdown',
+                                'expl': 'Add a feedback block for dropdown task',
+                            },
+                            {
+                                'data': templates[7].strip(),
+                                'text': 'Feedback block for drag & drop ',
+                                'expl': 'Add a feedback block for drag & drop task',
                             },
                         ],
                     },
