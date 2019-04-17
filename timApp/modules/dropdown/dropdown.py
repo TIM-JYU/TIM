@@ -173,20 +173,14 @@ def answer(args: DropdownAnswerModel):
 @app.route('/reqs/')
 @app.route('/reqs')
 def reqs():
-    templates = ["""
-#- {.instruction defaultplugin="dropdown"}
-
-Type your instructions here.
-
-The weather {#instruction words: [is,do,are⁞]} nice today.
-""","""
+    templates = ["""{#test:dropdown words: [option 1, option 2, option 3]}""", """
 #- {defaultplugin="dropdown"}
 
-The weather {#drop1⁞} nice today.
-""","""
+The weather {#drop1 words: [is,do,are⁞]} nice today.
+""", """
 #- {defaultplugin="dropdown"}
 
-The weather {#drop2⁞} terrible {#drop3}, don't you think?
+The weather {#drop2 words: [is,do,are⁞]} terrible {#drop3 words: [yesterday, today, tomorrow]}, don't you think?
 """]
     return jsonify({
         "js": ["js/build/dropdown.js"],
@@ -201,18 +195,18 @@ The weather {#drop2⁞} terrible {#drop3}, don't you think?
                         'items': [
                             {
                                 'data': templates[0].strip(),
-                                'text': 'Instructions with dropdown',
-                                'expl': 'Add an instruction block with a dropdown practice item'
+                                'text': 'Dropdown plugin',
+                                'expl': 'Add a single inline dropdown-plugin'
                             },
                             {
                                 'data': templates[1].strip(),
-                                'text': 'One dropdown',
-                                'expl': 'Add an inline dropdown-question'
+                                'text': 'Block with one dropdown-plugin',
+                                'expl': 'Add a block with one inline dropdown-plugin (defaultplugin="dropdown")'
                             },
                             {
                                 'data': templates[2].strip(),
-                                'text': 'Two dropdowns',
-                                'expl': 'Add an inline dropdown-question with two questions'
+                                'text': 'Block with two dropdown-plugins',
+                                'expl': 'Add a block with two inline dropdown-plugins (defaultplugin="dropdown")'
                             },
                         ],
                     },
