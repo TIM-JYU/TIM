@@ -77,7 +77,7 @@ async function updateSlideStatus(h: number, v: number, f: number) {
     receiving = true;
 }
 
-async function initReveal(rv: IFixedReveal) {
+function initReveal(rv: IFixedReveal) {
     // Full list of configuration options available here:
     // https://github.com/hakimel/reveal.js#configuration
     const w = window as any;
@@ -89,7 +89,6 @@ async function initReveal(rv: IFixedReveal) {
 
     rv.initialize({
         fragments: true,
-        width: 1150,
         controls: true,
         progress: true,
         history: true,
@@ -99,15 +98,16 @@ async function initReveal(rv: IFixedReveal) {
         theme: rv.getQueryHash().theme, // available themes are in /css/theme
         transition: rv.getQueryHash().transition || "linear", // default/cube/page/concave/zoom/linear/fade/none
         dependencies: [
-            // {
-            //     async: true,
-            //     src: `${pluginPath}/zoom-js/zoom.js`,
-            // },
+            {
+                async: true,
+                src: `${pluginPath}/zoom-js/zoom.js`,
+            },
             {
                 async: true,
                 src: `${pluginPath}/notes/notes.js`,
             },
         ],
+        maxScale: 1, // csplugins become too wide in fullscreen view without this
     });
 }
 
@@ -116,6 +116,8 @@ export async function initSlideView(d: IDocument) {
     const bgUrl = w.background_url;
     const bgColor = w.background_color;
     const hasManage = d.rights.manage;
+    const revealCss = import("reveal/css/reveal.css" as any);
+    const jyuCss = import("./jyu.css" as any);
     const rv = await import("reveal");
     if (getURLParameter("controls") == null && hasManage) {
         refresh(rv);
@@ -125,29 +127,63 @@ export async function initSlideView(d: IDocument) {
             refresh(rv);
         }
     };
-    await import("reveal/css/reveal.css" as any);
-    await import("./jyu.css" as any);
+    await revealCss;
+    await jyuCss;
 
     initReveal(rv);
+    const ctrls = document.querySelector("aside.controls");
+    if (!ctrls) {
+        return;
+    }
+    const btn = document.createElement("button");
+    btn.classList.add("enabled");
+    btn.style.right = ".7em";
+    btn.style.bottom = "6em";
+    btn.innerHTML = `<i title="Toggle fullscreen mode" class="glyphicon glyphicon-fullscreen" style="font-size: x-large"></i>`;
+    ctrls.appendChild(btn);
+    btn.addEventListener("click", () => {
+        if (document.fullscreenElement) {
+            document.exitFullscreen();
+        } else {
+            document.documentElement.requestFullscreen();
+        }
+    });
     rv.addEventListener("slidechanged", () => {
         fitCurrentSlide();
     });
     fitCurrentSlide();
-    if (bgUrl) {
-        $(".backgrounds").css("background-image", `url('${bgUrl}')`);
+    const bgElem = document.querySelector(".backgrounds");
+    if (bgElem instanceof HTMLElement) {
+        if (bgUrl) {
+            bgElem.style.backgroundImage = `url('${bgUrl}')`;
+            bgElem.style.backgroundRepeat = "no-repeat";
+            bgElem.style.backgroundSize = "contain";
+        }
+        if (bgColor) {
+            bgElem.style.backgroundColor = bgColor;
+        }
+    } else {
+        console.error("Did not find backgrounds element");
     }
-
-    if (bgColor) {
-        $(".backgrounds").css("background-color", bgColor);
+    const rElem = document.querySelector(".reveal");
+    if (rElem instanceof HTMLElement) {
+        // The slides are initially hidden to avoid showing style changes.
+        rElem.style.visibility = null;
+    } else {
+        console.error("Did not find reveal element");
     }
 }
 
 function fitCurrentSlide() {
     const slide = $("section.present").first();
     const show = $("div.slides").first();
-    const inner = slide.innerHeight()!;
-    const base = show.height()!;
-    const scale = (base * 1.0) / (inner * 1.0);
+    const innerH = slide.innerHeight()!;
+    const baseH = show.height()!;
+    const innerW = slide.innerWidth()!;
+    const baseW = show.width()!;
+    const scaleH = (baseH * 1.0) / (innerH * 1.0);
+    const scaleW = (baseW * 1.0) / (innerW * 1.0); // this seems to be always 1
+    const scale = Math.min(scaleH, scaleW);
     const oldscale = $(slide).css("transform");
     if (scale < 1 && (true || oldscale === "none" || oldscale === "matrix(1, 0, 0, 1, 0, 0)")) {
         $(slide).css("transform", "scale(" + scale + ")");
