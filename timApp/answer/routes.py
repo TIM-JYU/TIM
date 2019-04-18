@@ -41,6 +41,7 @@ from timApp.timdb.exceptions import TimDbException
 from timApp.timdb.sqa import db
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
+from timApp.user.usergroupmember import UserGroupMember
 from timApp.util.flask.requesthelper import verify_json_params, get_option, get_consent_opt
 from timApp.util.flask.responsehelper import json_response, ok_response
 from timApp.util.utils import try_load_json, get_current_time
@@ -88,42 +89,54 @@ def points_to_float(points: Union[str, float]):
 
 def get_fields_and_users(values, d: DocInfo):
     print(values)
-    print(d.id)
-    user = get_current_user_object()
-    fields = values['fields']
+    group = UserGroup.get_by_name(values['group'])
+    users = []
+    for user_id in UserGroupMember.query.filter(UserGroupMember.usergroup_id == group.id).all():
+        users.append(user_id.user_id)
+    # Onko parempaa keinoa tehdä yllä oleva?
+
+    u_fields = values['fields']
     task_ids = []
 
-    for field in fields:
+    for field in u_fields:
         task_id = TaskId.parse(field, False, False)
         task_ids.append(task_id)
         if not task_id.doc_id:
             task_id.doc_id = d.id
         dib = get_doc_or_abort(task_id.doc_id)
         verify_teacher_access(dib)
-    answer_ids = (
-        user.answers
-            .filter(Answer.task_id.in_(task_ids_to_strlist(task_ids)))
-            .group_by(Answer.task_id)
-            .with_entities(func.max(Answer.id)).all()
-    )
-    answer_list = Answer.query.filter(Answer.id.in_(answer_ids)).all()
-    answer_dict: Dict[str, Answer] = {}
-    for answer in answer_list:
-        answer_dict[answer.task_id] = answer
-    user_tasks = {}
-    for task in task_ids:
-        a = answer_dict.get(task.doc_task)
-        if not a:
-            value = ""
-        elif task.field == "points":
-            value = a.points
-        else:
-            json_str = a.content
-            p = json.loads(json_str)
-            values = list(p.values())
-            value = values[0]
-        user_tasks[task.extended_or_doc_task] = value
-    return [{'user': user, 'fields': user_tasks}]  # TODO
+    res = []
+    # user = get_current_user_object()
+
+    for user in users:
+        user_obj = User.get_by_id(user)
+
+        answer_ids = (
+            user_obj.answers
+                .filter(Answer.task_id.in_(task_ids_to_strlist(task_ids)))
+                .group_by(Answer.task_id)
+                .with_entities(func.max(Answer.id)).all()
+        )
+        answer_list = Answer.query.filter(Answer.id.in_(answer_ids)).all()
+        answer_dict: Dict[str, Answer] = {}
+        for answer in answer_list:
+            answer_dict[answer.task_id] = answer
+        user_tasks = {}
+        for task in task_ids:
+            a = answer_dict.get(task.doc_task)
+            if not a:
+                value = ""
+            elif task.field == "points":
+                value = a.points
+            else:
+                json_str = a.content
+                p = json.loads(json_str)
+                values_p = list(p.values())
+                value = values_p[0]
+            user_tasks[task.extended_or_doc_task] = value
+        res.append({'user': user_obj, 'fields': user_tasks})
+    print(res)
+    return res
 
 
 @answers.route("/<plugintype>/<task_id_ext>/answer/", methods=['PUT'])
@@ -271,7 +284,6 @@ def post_answer(plugintype: str, task_id_ext: str):
 
     if plugin.type == 'jsrunner':
         save_object = jsonresp['save']
-        print("jsrunner save")
         print(save_object)
         fieldss = save_object['fields']
         task_ids = fieldss.keys()
@@ -281,19 +293,19 @@ def post_answer(plugintype: str, task_id_ext: str):
             verify_teacher_access(dib)
         user_id = save_object['user']
         u = User.get_by_id(user_id)
+        val = fieldss['46.pisteet']
+        c = {"numericvalue": val}
         result = Answer(
-            content=fieldss['46.pisteet'],
+            content=json.dumps(c),
             task_id=tid.doc_task,
             users=[u],
             valid=True,
         )
         db.session.add(result)
-        db.session.flush()
-        #s = result.id
         db.session.commit()
         return json_response(result)
 
-    def add_reply(obj, key, runMarkDown = False):
+    def add_reply(obj, key, runMarkDown=False):
         if key not in plugin.values:
             return
         text_to_add = plugin.values[key]
@@ -649,7 +661,8 @@ def get_task_users(task_id):
     d = get_doc_or_abort(tid.doc_id)
     verify_seeanswers_access(d)
     usergroup = request.args.get('group')
-    q = User.query.join(Answer, User.answers).filter_by(task_id=task_id).join(UserGroup, User.groups).order_by(User.real_name.asc())
+    q = User.query.join(Answer, User.answers).filter_by(task_id=task_id).join(UserGroup, User.groups).order_by(
+        User.real_name.asc())
     if usergroup is not None:
         q = q.filter(UserGroup.name.in_([usergroup]))
     users = q.all()

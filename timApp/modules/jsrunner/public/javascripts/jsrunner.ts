@@ -65,7 +65,9 @@ class JsrunnerController extends PluginBase<t.TypeOf<typeof JsrunnerMarkup>, t.T
     }
 
     async doCheckFields(nosave: boolean) {
-        this.error = "... undefined or no rights to fields ...";
+        if (this.error) {
+            this.error =  "... undefined or no rights to fields ..."; //teemun lisäys, voi olla paskaa
+        }
         this.isRunning = true;
         const params = {
             input: {
