@@ -1,13 +1,11 @@
-export interface PendingCollection {
-    [parId: string]: string;
-}
+export type PendingCollection = Map<string, string>;
 
 export interface IParResponse {
     texts: string;
     js: string[];
     jsModuleIds: string[];
     css: string[];
-    changed_pars: PendingCollection;
+    changed_pars: {[id: string]: string};
     version: [number, number];
     duplicates?: Duplicate[];
     original_par?: {md: string, attrs: any};

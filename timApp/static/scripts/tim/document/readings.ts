@@ -175,7 +175,10 @@ export async function initReadings(sc: ViewCtrl) {
             void showMessageDialog("Unable to mark this section as read");
             return;
         }
-        const pars = doc.sections[parId];
+        const pars = doc.sections.get(parId);
+        if (!pars) {
+            return;
+        }
         markParsRead($(pars.map((p: JQuery) => p[0])));
         $readsection.remove();
     });

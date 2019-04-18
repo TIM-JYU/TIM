@@ -129,8 +129,9 @@ function isV3Format(d: any): d is IEditorTemplateFormatV3 {
 
 type MenuNameAndItems = [string, MenuItemEntries][];
 
-export class PareditorController extends DialogController<{params: IEditorParams}, IEditorResult, "pareditor"> {
-    private static $inject = ["$scope", "$element"];
+export class PareditorController extends DialogController<{params: IEditorParams}, IEditorResult> {
+    static component = "pareditor";
+    static $inject = ["$element", "$scope"] as const;
     private deleting = false;
     private editor?: TextAreaParEditor | AceParEditor; // $onInit
     private isACE : boolean = false;
@@ -154,7 +155,7 @@ export class PareditorController extends DialogController<{params: IEditorParams
     private tabs: IEditorTab[];
     private trdiff?: {old: string, new: string};
 
-    constructor(protected scope: IScope, protected element: IRootElementService) {
+    constructor(protected element: IRootElementService, protected scope: IScope) {
         super(element, scope);
         this.storage = localStorage;
 
@@ -854,7 +855,11 @@ ${backTicks}
     }
 
     onPaste(e: JQuery.Event) {
-        const items = (e.originalEvent as ClipboardEvent).clipboardData.items;
+        const clipboardData = (e.originalEvent as ClipboardEvent).clipboardData;
+        if (!clipboardData) {
+            return;
+        }
+        const items = clipboardData.items;
         // find pasted image among pasted items
         let blobs = 0;
         for (let i = 0; i < items.length; i++) {
@@ -1290,13 +1295,12 @@ timApp.component("timEditorEntry", {
     `,
 });
 
-registerDialogComponent("pareditor",
-    PareditorController,
+registerDialogComponent(PareditorController,
     {templateUrl: "/static/templates/parEditor.html"});
 
 export function openEditor(p: IEditorParams): IModalInstance<PareditorController> {
-    return showDialog<PareditorController>(
-        "pareditor",
+    return showDialog(
+        PareditorController,
         {params: () => p},
         {saveKey: p.options.localSaveTag, absolute: true, size: p.defaultSize, forceMaximized: true});
 }

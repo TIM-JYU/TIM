@@ -215,7 +215,7 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
             this.result = data.web.result;
             this.notSavedWord = this.userword;
         } else {
-            this.error = "Infinite loop or some other error?";
+            this.error = r.result.data.error || "Infinite loop or some other error?";
         }
     }
 
@@ -259,7 +259,7 @@ textfieldApp.component("textfieldRunner", {
             ng-click="$ctrl.saveText()">
         {{::$ctrl.buttonText()}}
     </button>
-    <div ng-if="$ctrl.error" ng-bind-html="$ctrl.error"></div>
+    <div ng-if="$ctrl.error" style="font-size: 12px" ng-bind-html="$ctrl.error"></div>
     <p ng-if="::$ctrl.footer" ng-bind="::$ctrl.footer" class="plgfooter"></p>
 </div>
 `,

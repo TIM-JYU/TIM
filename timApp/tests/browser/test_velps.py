@@ -6,7 +6,6 @@ from timApp.tests.browser.browsertest import BrowserTest, ignore_timeout, find_b
 
 
 class VelpTest(BrowserTest):
-    @ignore_timeout
     def test_velps(self):
         """Ensures:
 

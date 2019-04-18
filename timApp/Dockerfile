@@ -152,15 +152,14 @@ python-magic \
 pytz \
 recommonmark \
 responses \
-selenium==3.8.1 \
+selenium==3.141.0 \
 sphinx \
 sqlalchemy \
 wand \
-yubico-client \
 && ${PIP_INSTALL} requests --upgrade && ${APT_CLEANUP}"
 
 # Install Pandoc
-RUN FILE=`mktemp`; wget "https://github.com/jgm/pandoc/releases/download/2.1.2/pandoc-2.1.2-1-amd64.deb" -qO $FILE && \
+RUN FILE=`mktemp`; wget "https://github.com/jgm/pandoc/releases/download/2.7.1/pandoc-2.7.1-1-amd64.deb" -qO $FILE && \
  dpkg -i $FILE && rm $FILE && bash -c "${APT_CLEANUP}"
 
 # Set name and email for git.
@@ -177,7 +176,7 @@ RUN bash -c "${APT_INSTALL} curl pdftk gpg-agent && ${APT_CLEANUP} && pdftk --ve
 
 RUN (curl -sL https://deb.nodesource.com/setup_10.x | bash -) && bash -c "${APT_INSTALL} nodejs && ${APT_CLEANUP}"
 RUN npm i npm@latest -g && bash -c "${APT_CLEANUP}"
-RUN npm install -g typescript@3.2 typedoc tslint jspm typescript-formatter && npm cache clean --force && bash -c "${APT_CLEANUP}"
+RUN npm install -g typescript@3.4 typedoc tslint jspm typescript-formatter && npm cache clean --force && bash -c "${APT_CLEANUP}"
 
 RUN mkdir /var/run/sshd
 RUN echo 'root:test' | chpasswd

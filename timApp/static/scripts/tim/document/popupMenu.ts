@@ -25,8 +25,9 @@ export interface IPopupParams {
 /**
  * A popup menu component that is used in the document view.
  */
-export class PopupMenuController extends DialogController<{params: IPopupParams}, {}, "popupMenu"> {
-    private static $inject = ["$scope", "$element"];
+export class PopupMenuController extends DialogController<{params: IPopupParams}, {}> {
+    static component = "popupMenu";
+    static $inject = ["$element", "$scope"] as const;
     public editState: EditMode | null;
     private content?: string;
     private olds: Partial<IPopupParams> & {editState?: EditMode | null} = {
@@ -35,7 +36,7 @@ export class PopupMenuController extends DialogController<{params: IPopupParams}
     };
     private p!: IPopupParams;
 
-    constructor(scope: IScope, element: IRootElementService) {
+    constructor(element: IRootElementService, scope: IScope) {
         super(element, scope);
         this.editState = $window.editMode;
     }
@@ -156,8 +157,7 @@ export class PopupMenuController extends DialogController<{params: IPopupParams}
     }
 }
 
-registerDialogComponent("popupMenu",
-    PopupMenuController,
+registerDialogComponent(PopupMenuController,
     {
         template: `
 <tim-dialog>
@@ -202,7 +202,7 @@ registerDialogComponent("popupMenu",
 
 export function showPopupMenu(p: IPopupParams) {
     // debugTextToHeader("showPopupMenu" + JSON.stringify(p.pos));
-    return showDialog<PopupMenuController>("popupMenu", {params: () => p},
+    return showDialog(PopupMenuController, {params: () => p},
     // return showDialog<PopupMenuController>(null, {params: () => p},
         {
             absolute: true,

@@ -196,7 +196,7 @@ function isPrimitiveCell(cell: CellEntity): cell is CellType {
 }
 
 export class TimTableController extends DestroyScope implements IController {
-    private static $inject = ["$scope", "$element"];
+    static $inject = ["$scope", "$element"];
     private error: string = "";
     private taskUrl: string = "";
 
@@ -2190,6 +2190,9 @@ timApp.component("timTable", {
     controller: TimTableController,
     bindings: {
         data: "<",
+        plugintype: "@?",
+        //taskid: "@?",
+        taskUrl: "@?",
     },
     require: {
         viewctrl: "?^timView",

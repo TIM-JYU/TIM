@@ -32,8 +32,9 @@ function isLecture(item: any): item is ILecture {
         l.start_time !== undefined;
 }
 
-export class CreateLectureCtrl extends DialogController<{params: ILectureFormParams}, ILecture, "timCreateLecture"> {
-    private static $inject = ["$element", "$scope"];
+export class CreateLectureCtrl extends DialogController<{params: ILectureFormParams}, ILecture> {
+    static component = "timCreateLecture";
+    static $inject = ["$element", "$scope"] as const;
     private useDate: boolean;
     private durationAmount: number = 2;
     private durationType: DurationChoice = "hours";
@@ -237,13 +238,12 @@ export class CreateLectureCtrl extends DialogController<{params: ILectureFormPar
     }
 }
 
-registerDialogComponent("timCreateLecture",
-    CreateLectureCtrl,
+registerDialogComponent(CreateLectureCtrl,
     {templateUrl: "/static/templates/start_lecture.html"},
     "clctrl");
 
 export async function showLectureDialog(item: IItem | ILecture): Promise<ILecture> {
-    return showDialog<CreateLectureCtrl>("timCreateLecture", {
+    return showDialog(CreateLectureCtrl, {
         params: () => item,
     }).result;
 }

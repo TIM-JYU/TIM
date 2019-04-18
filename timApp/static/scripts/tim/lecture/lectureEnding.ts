@@ -6,8 +6,9 @@ export interface ILectureEndingDialogResult {
     result: "extend" | "dontextend" | "end";
 }
 
-class LectureEndingCtrl extends DialogController<{lecture: ILecture}, ILectureEndingDialogResult, "timLectureEnding"> {
-    private static $inject = ["$element", "$scope"];
+class LectureEndingCtrl extends DialogController<{lecture: ILecture}, ILectureEndingDialogResult> {
+    static component = "timLectureEnding";
+    static $inject = ["$element", "$scope"] as const;
     private extendTimes = [5, 10, 15, 30, 45, 60];
     private selectedTime = 15;
 
@@ -32,8 +33,7 @@ class LectureEndingCtrl extends DialogController<{lecture: ILecture}, ILectureEn
     }
 }
 
-registerDialogComponent("timLectureEnding",
-    LectureEndingCtrl,
+registerDialogComponent(LectureEndingCtrl,
     {
         template: `
 <tim-dialog>
@@ -68,5 +68,5 @@ registerDialogComponent("timLectureEnding",
     });
 
 export async function showLectureEnding(lecture: ILecture) {
-    return await showDialog<LectureEndingCtrl>("timLectureEnding", {lecture: () => lecture}).result;
+    return await showDialog(LectureEndingCtrl, {lecture: () => lecture}).result;
 }

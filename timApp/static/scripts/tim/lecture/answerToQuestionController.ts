@@ -54,8 +54,9 @@ export let currentQuestion: AnswerToQuestionController | undefined;
 
 export const QUESTION_STORAGE = "lectureQuestion";
 
-export class AnswerToQuestionController extends DialogController<{params: IAnswerQuestionParams}, IAnswerQuestionResult, "timAnswerQuestion"> {
-    private static $inject = ["$element", "$scope"];
+export class AnswerToQuestionController extends DialogController<{params: IAnswerQuestionParams}, IAnswerQuestionResult> {
+    static component = "timAnswerQuestion";
+    static $inject = ["$element", "$scope"] as const;
     private barFilled?: number;
     private progressText?: string;
     private isLecturer = false;
@@ -298,8 +299,7 @@ export class AnswerToQuestionController extends DialogController<{params: IAnswe
     }
 }
 
-registerDialogComponent("timAnswerQuestion",
-    AnswerToQuestionController,
+registerDialogComponent(AnswerToQuestionController,
     {
         template: `
 <tim-dialog>
@@ -350,7 +350,7 @@ registerDialogComponent("timAnswerQuestion",
     });
 
 export async function showQuestionAnswerDialog(p: IAnswerQuestionParams) {
-    return await showDialog<AnswerToQuestionController>("timAnswerQuestion", {params: () => p}).result;
+    return await showDialog(AnswerToQuestionController, {params: () => p}).result;
 }
 
 export function isOpenInAnotherTab(qa: QuestionOrAnswer) {

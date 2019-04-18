@@ -1,4 +1,3 @@
-import angular from "angular";
 import $ from "jquery";
 import {getActiveDocument} from "tim/document/document";
 import {IItem} from "../item/IItem";
@@ -123,7 +122,7 @@ export function getElementByRefId(ref: string) {
 }
 
 export function isReference(par: Paragraph) {
-    return angular.isDefined(par.attr("ref-id"));
+    return par.attr("ref-id") != null;
 }
 
 export function getParIndex(par: Paragraph) {

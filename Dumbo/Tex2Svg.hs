@@ -75,6 +75,7 @@ latexTemplate preamble mt eqn env = unlines
   , "\\end{document}"
   ]
 
+mathEnvs :: [T.Text]
 mathEnvs =
   [ "split"
   , "eqnarray"
@@ -87,8 +88,10 @@ mathEnvs =
   , "tikzpicture"
   ]
 
+mathEnvsWithStarred :: [T.Text]
 mathEnvsWithStarred = map (<> "*") mathEnvs <> mathEnvs
 
+mathEnvsSet :: S.Set String
 mathEnvsSet = S.fromList $ map T.unpack mathEnvsWithStarred
 
 parseMathEnv :: Parser MathEnv

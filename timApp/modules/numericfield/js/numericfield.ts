@@ -3,11 +3,10 @@
  */
 import angular, {INgModelOptions} from "angular";
 import * as t from "io-ts";
-import {ITimComponent, ViewCtrl} from "tim/document/viewctrl"
+import {ITimComponent, ViewCtrl} from "tim/document/viewctrl";
 import {GenericPluginMarkup, Info, nullable, PluginBase, pluginBindings, withDefault} from "tim/plugin/util";
 import {$http} from "tim/util/ngimport";
 import {to, valueOr} from "tim/util/utils";
-import {valueDefu} from "tim/util/utils"; //tarvitaan reset-metodille, jos halutaan toteuttaa
 
 const numericfieldApp = angular.module("numericfieldApp", ["ngSanitize"]);
 export const moduleDefs = [numericfieldApp];
@@ -197,7 +196,8 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
             this.result = data.web.result;
             this.notSavedNumber = this.numericvalue;
         } else {
-            this.error = "Infinite loop or some other error?";
+            // TODO: why error here without any?
+            this.error = (r.result.data as any).error || "Infinite loop or some other error?";
         }
     }
 
@@ -238,6 +238,7 @@ numericfieldApp.component("numericfieldRunner", {
                ng-class="{warnFrame: $ctrl.notSaved()}">
         </span></label>
     </div>
+    <div ng-if="$ctrl.error" style="font-size: 12px" ng-bind-html="$ctrl.error"></div>
     <button class="timButton"
             ng-if="$ctrl.buttonText()"
             ng-disabled="$ctrl.isRunning || !$ctrl.numericvalue || $ctrl.readonly"

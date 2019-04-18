@@ -30,8 +30,9 @@ export function isManageResponse(r: RenameResult): r is IManageResponse {
     return (r as IManageResponse).fulltext != null;
 }
 
-class PluginRenameForm extends DialogController<{params: IRenameParams}, RenameResult, "timPluginRename"> {
-    private static $inject = ["$element", "$scope"];
+class PluginRenameForm extends DialogController<{params: IRenameParams}, RenameResult> {
+    static component = "timPluginRename";
+    static $inject = ["$element", "$scope"] as const;
     private newNames: string[] = [];
 
     protected getTitle(): string {
@@ -117,8 +118,7 @@ class PluginRenameForm extends DialogController<{params: IRenameParams}, RenameR
     }
 }
 
-registerDialogComponent("timPluginRename",
-    PluginRenameForm,
+registerDialogComponent(PluginRenameForm,
     {
         template: `<tim-dialog>
     <dialog-header>
@@ -160,5 +160,5 @@ registerDialogComponent("timPluginRename",
     });
 
 export function showRenameDialog(p: IRenameParams): IPromise<RenameResult> {
-    return showDialog<PluginRenameForm>("timPluginRename", {params: () => p}).result;
+    return showDialog(PluginRenameForm, {params: () => p}).result;
 }
