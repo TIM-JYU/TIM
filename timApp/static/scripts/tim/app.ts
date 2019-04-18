@@ -55,7 +55,7 @@ timApp.config(["$provide", ($provide: IModule) => {
 }]);
 
 timApp.config(["$compileProvider", (cp: ICompileProvider) => {
-    cp.debugInfoEnabled(true);
+    cp.debugInfoEnabled(false);
     cp.commentDirectivesEnabled(false);
     cp.cssClassDirectivesEnabled(false);
 
