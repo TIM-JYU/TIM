@@ -191,7 +191,7 @@ def answer(args: FeedbackAnswerModel):
 @app.route('/reqs/')
 @app.route('/reqs')
 def reqs():
-    templates = ["""## Instructions {defaultplugin="dropdown"}
+    templates = ["""## Instructions {.instruction defaultplugin="dropdown"}
 
 Welcome to the test. Read the question carefully. If you get the answer wrong, please read the feedback carefully.
 
@@ -199,7 +199,7 @@ Welcome to the test. Read the question carefully. If you get the answer wrong, p
 Please try out a practice question:
 
 
-I {#instruction words: [will think, won't think, might think]} before answering.
+I {#practice words: [will think, won't think, might think]} before answering.
 
 
 ## Item: {defaultplugin="dropdown"}
@@ -225,7 +225,6 @@ Who {#drop4} the 3 mile swim in the race?
 ``` {#fb1 plugin="feedback"}
 correctStreak: 2
 nextTask: nonexttaskdefined
-instructionID: instruction
 teacherHide: true
 questionItems:
 - pluginNames: [drop1]
@@ -292,7 +291,7 @@ questionItems:
       levels: *arematch
     - match: []
       levels: *defaultmatch
-```""", """## Instructions {defaultplugin="drag"}
+```""", """## Instructions {.instruction defaultplugin="drag"}
 
 Welcome to the test. Read the question carefully. If you get the answer wrong, please read the feedback carefully.
 
@@ -302,10 +301,10 @@ Please try out a practice question:
 Order the words correctly into the sentence below.
 
 \
-Drag from here: {#instructiondrag words: [I, before, will think, answering]}
+Drag from here: {#practice1 words: [I, before, will think, answering]}
 
 
-To here: {#instruction}.
+To here: {#practice2}.
 
 
 ## Item {defaultplugin="drag"}
@@ -365,7 +364,6 @@ He wanted to know {#drop4}.
 
 correctStreak: 2
 nextTask: nonexttaskdefined
-instructionID: instruction
 teacherHide: true
 questionItems:
 - pluginNames: [drop1]
@@ -433,7 +431,7 @@ questionItems:
     - match: []
       levels: *defaultmatch
 
-```""","""## Instructions {defaultplugin="dropdown"}
+```""", """## Instructions {.instruction defaultplugin="dropdown"}
 
 Welcome to the test. Read the question carefully. If you get the answer wrong, please read the feedback carefully.
 
@@ -441,9 +439,9 @@ Welcome to the test. Read the question carefully. If you get the answer wrong, p
 Please try out a practice question:
 
 
-I {#instruction words: [will think, won't think, might think]} before answering.
+I {#practice words: [will think, won't think, might think]} before answering.
 
-""", """## Instructions {defaultplugin="drag"}
+""", """## Instructions {.instruction defaultplugin="drag"}
 
 Welcome to the test. Read the question carefully. If you get the answer wrong, please read the feedback carefully.
 
@@ -453,10 +451,10 @@ Please try out a practice question:
 Order the words correctly into the sentence below.
 
 \
-Drag from here: {#instructiondrag words: [I, before, will think, answering]}
+Drag from here: {#practice1 words: [I, before, will think, answering]}
 
 
-To here: {#instruction}.
+To here: {#practice2}.
 
 """, """## Item: {defaultplugin="dropdown"}
 
@@ -476,7 +474,6 @@ Please order the words correctly into the sentence below.
 """, """``` {#fb1 plugin="feedback"}
 correctStreak: 2
 nextTask: nonexttaskdefined
-instructionID: instruction
 teacherHide: true
 questionItems:
 - pluginNames: [drop1]
@@ -524,7 +521,6 @@ questionItems:
 
 correctStreak: 2
 nextTask: nonexttaskdefined
-instructionID: instruction
 teacherHide: true
 questionItems:
 - pluginNames: [drop1]
