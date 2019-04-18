@@ -28,8 +28,13 @@ declare module "katex-auto-render" {
     export = renderMathInElement;
 }
 
+interface INotesPlugin {
+    open(filePath?: string): void;
+}
+
 interface IFixedReveal extends RevealStatic {
     slide(indexh: number, indexv?: number, f?: number, o?: unknown): void;
+    getPlugin(id: "notes"): INotesPlugin;
 }
 
 declare module "reveal" {

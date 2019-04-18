@@ -93,7 +93,7 @@ function initReveal(rv: IFixedReveal) {
         progress: true,
         history: true,
         center: true,
-        showNotes: hasManage,
+        showNotes: false,
         viewDistance: 10,
         theme: rv.getQueryHash().theme, // available themes are in /css/theme
         transition: rv.getQueryHash().transition || "linear", // default/cube/page/concave/zoom/linear/fade/none
@@ -109,6 +109,28 @@ function initReveal(rv: IFixedReveal) {
         ],
         maxScale: 1, // csplugins become too wide in fullscreen view without this
     });
+}
+
+function addControl(
+    controlContainer: Element,
+    iconName: string,
+    right: string,
+    bottom: string,
+    title: string,
+    clickHandler: () => void,
+) {
+    const btn = document.createElement("button");
+    btn.classList.add("enabled");
+    btn.style.right = right;
+    btn.style.bottom = bottom;
+    const i = document.createElement("i");
+    i.title = title;
+    i.classList.add("glyphicon");
+    i.classList.add(`glyphicon-${iconName}`);
+    i.style.fontSize = "x-large";
+    btn.appendChild(i);
+    controlContainer.appendChild(btn);
+    btn.addEventListener("click", clickHandler);
 }
 
 export async function initSlideView(d: IDocument) {
@@ -135,20 +157,30 @@ export async function initSlideView(d: IDocument) {
     if (!ctrls) {
         return;
     }
-    const btn = document.createElement("button");
-    btn.classList.add("enabled");
-    btn.style.right = ".7em";
-    btn.style.bottom = "6em";
-    btn.innerHTML = `<i title="Toggle fullscreen mode" class="glyphicon glyphicon-fullscreen" style="font-size: x-large"></i>`;
-    ctrls.appendChild(btn);
-    btn.addEventListener("click", () => {
-        if (document.fullscreenElement) {
-            document.exitFullscreen();
-        } else {
-            document.documentElement.requestFullscreen();
-        }
+
+    const isSpeakerWindow = window.parent.document.location.pathname.endsWith("/notes.html");
+    if (!isSpeakerWindow) {
+        addControl(ctrls, "fullscreen", ".7em", "6em", "Toggle fullscreen mode (F / ESC)", () => {
+            if (document.fullscreenElement) {
+                document.exitFullscreen();
+            } else {
+                document.documentElement.requestFullscreen();
+            }
+        });
+        addControl(ctrls, "list-alt", ".7em", "9.4em", "Open speaker notes (S)", () => {
+            rv.getPlugin("notes").open();
+        });
+    }
+    document.addEventListener("fullscreenchange", () => {
+        fitCurrentSlide();
     });
     rv.addEventListener("slidechanged", () => {
+        fitCurrentSlide();
+    });
+    rv.addEventListener("fragmentshown", (event) => {
+        fitCurrentSlide();
+    });
+    rv.addEventListener("fragmenthidden", (event) => {
         fitCurrentSlide();
     });
     fitCurrentSlide();
