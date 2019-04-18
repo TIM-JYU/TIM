@@ -127,6 +127,9 @@ class DragController extends PluginBase<t.TypeOf<typeof DragMarkup>, t.TypeOf<ty
             dragImageTranslateOverride: scrollBehaviourDragImageTranslateOverride,
         });
 
+        window.addEventListener("touchmove", () => { // this dummy event will prevent browser scroll in ios 10
+        });
+
         this.addToCtrl();
     }
 
