@@ -11,7 +11,6 @@ interface IFBOptions {
     period: any;
     valid: string;
     name: string;
-    sort: string;
     periodFrom: any;
     periodTo: any;
     scope: string;
@@ -52,7 +51,6 @@ export class FeedbackAnswersCtrl extends DialogController<{params: IFeedbackAnsw
             period: "whenever",
             valid: "1",
             name: "both",
-            sort: "username",
             periodFrom: null,
             periodTo: null,
             scope: "task",
@@ -91,7 +89,6 @@ export class FeedbackAnswersCtrl extends DialogController<{params: IFeedbackAnsw
         for (const user of options.users)
         {
             this.options.users += user.name + ",";
-            console.log(this.options.users);
         }
     }
 

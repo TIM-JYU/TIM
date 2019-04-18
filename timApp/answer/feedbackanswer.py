@@ -196,9 +196,8 @@ def compile_csv(qq: Iterable[Tuple[Answer, User]], printname: bool, hide_names: 
 
 
 
-# TODO: change path name
-@feedback.route("/test/<path:doc_path>")
-def test(doc_path):
+@feedback.route("/report/<path:doc_path>")
+def print_feedback_report(doc_path):
     """
     Route to Feedback report.
     :param doc_path: URL for the document.

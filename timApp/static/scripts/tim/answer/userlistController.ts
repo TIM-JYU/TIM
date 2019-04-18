@@ -230,8 +230,13 @@ export class UserListController implements IController {
                             // dataAsStrings = [];
 
                             for (const row of visibleRows) { // create string array of visible item
-                                if (row.entity != selectedUser) iusers.push(row.entity);
+                                if (row.entity !== selectedUser) {
+                                    iusers.push(row.entity);
+                                }
                                 // dataAsStrings.push(dat.entity.name);
+                            }
+                            if (visibleRows.length <= 0) {
+                                iusers = [];
                             }
                             /*
                             visibleUsers = selectedUser;    // first one is always the selected one
@@ -245,9 +250,8 @@ export class UserListController implements IController {
                                 // needs to be emptied since there is always one selected even if it is invisible
                             } */
                         }
-                        console.log(iusers);
                         await showFeedbackAnswers({
-                            url: "/feedback/test/" + this.viewctrl.item.id,
+                            url: "/feedback/report/" + this.viewctrl.item.id,
                             users: iusers,
                             identifier: this.viewctrl.item.id.toString(),
                             allTasks: true,
