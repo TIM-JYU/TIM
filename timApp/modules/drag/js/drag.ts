@@ -34,7 +34,7 @@ const DragMarkup = t.intersection([
         words: t.array(t.string),
         copy: t.keyof({target: null, source: null}),
         type: t.string,
-        max: t.number,
+        max: t.refinement(t.number, (x) => x > 0, "a positive number value"),
         trash: t.boolean,
         shuffle: t.boolean,
         followid: t.string,
@@ -302,7 +302,7 @@ dragApp.component("dragRunner", {
         {{item.word}}
         </li>
      </ul>
-    </div>
+    </div
     </div>
     <div ng-if="$ctrl.error" ng-bind-html="$ctrl.error"></div>
     <p ng-if="::$ctrl.footer" ng-bind="::$ctrl.footer" class="plgfooter"></p>
