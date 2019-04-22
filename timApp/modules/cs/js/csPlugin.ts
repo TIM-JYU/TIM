@@ -240,13 +240,13 @@ class LanguageTypes {
     runTypes = ["pascal", "fortran", "css", "jypeli", "scala", "java", "graphics", "cc", "c++", "shell", "vpython", "py2", "py", "fs", "clisp",
         "jjs", "psql", "sql", "alloy", "text", "cs", "run", "md", "js", "glowscript", "sage", "simcir",
         "xml", "octave", "lua", "swift", "mathcheck", "html", "processing", "rust", "r", "wescheme", "ping", "kotlin",
-        "smalltalk"];
+        "smalltalk", "upload"];
 
     // For editor modes see: http://ace.c9.io/build/kitchen-sink.html ja sieltä http://ace.c9.io/build/demo/kitchen-sink/demo.js
     aceModes = ["pascal", "fortran", "css", "csharp", "scala", "java", "java", "c_cpp", "c_cpp", "sh", "python", "python", "python", "fsharp", "lisp",
         "javascript", "sql", "sql", "alloy", "text", "csharp", "run", "text", "javascript", "javascript", "python", "json",
         "xml", "matlab", "lua", "swift", "text", "html", "javascript", "text", "r", "scheme", "text", "kotlin",
-        "text"];
+        "text", "text"];
 
     // What are known test types (be careful not to include partial word):
     testTypes = ["ccomtest", "jcomtest", "comtest", "scomtest"];
@@ -479,6 +479,8 @@ function makeTemplate() {
                       ng-attr-placeholder="{{$ctrl.placeholder}}"></textarea>
             </div>
             <div class="csRunChanged" ng-if="$ctrl.usercode !== $ctrl.byCode"></div>
+            <!--<div class="csRunNotSaved" ng-if="$ctrl.usercode !== $ctrl.byCode"></div>-->
+            <div class="csRunNotSaved" ng-show="$ctrl.notSaved"></div>
         </div>
         <pre class="csRunPost" ng-if="$ctrl.viewCode && !$ctrl.codeunder && !$ctrl.codeover">{{$ctrl.postcode}}</pre>
     </div>
@@ -698,6 +700,7 @@ const CsMarkupOptional = t.partial({
     taunotype: t.string,
     treplace: t.string,
     uploadbycode: t.boolean,
+    uploadautosave: t.boolean,
     uploadstem: t.string,
     userargs: t.union([t.string, t.number]),
     userinput: t.union([t.string, t.number]),
@@ -809,6 +812,7 @@ function numOrDef(val: string | number | undefined, def: number) {
 }
 
 class CsController extends CsBase implements IController {
+    private notSaved: boolean = true;
     private aceEditor?: IAceEditor;
     private canvas?: HTMLCanvasElement;
     private canvasConsole: {log: (...args: string[]) => void};
@@ -885,7 +889,10 @@ class CsController extends CsBase implements IController {
     private dochecks: {
         userinput?: string;
         userargs?: string;
-        usercode?: string
+        usercode?: string;
+        savedcode?: string;
+        savedargs?: string;
+        savedinput?: string;
     } = {};
 
     private editorText: string[] = [];
@@ -1035,7 +1042,7 @@ class CsController extends CsBase implements IController {
     }
 
     get forcedupload() {
-        return this.type === "upload";
+        return this.type === "upload" && !this.buttonText() ;
     }
 
     get upload() {
@@ -1311,6 +1318,7 @@ class CsController extends CsBase implements IController {
         csLogTime(this.pluginMeta.getTaskId() || "taskId missing");
 
         this.showUploaded(this.attrsall.uploadedFile, this.attrsall.uploadedType);
+        this.initSaved();
     }
 
     async $postLink() {
@@ -1367,9 +1375,19 @@ class CsController extends CsBase implements IController {
         this.rows = n;
     }
 
+    initSaved() {
+        this.dochecks.savedcode = this.usercode;
+        this.dochecks.savedargs = this.userargs;
+        this.dochecks.savedinput = this.userinput;
+    }
+
     async $doCheck() {
         let anyChanged = false;
+        this.notSaved = this.usercode !== this.dochecks.savedcode ||
+                        this.userinput != this.dochecks.savedinput ||
+                        this.userargs != this.dochecks.savedargs;
         if (this.usercode !== this.dochecks.usercode) {
+
             this.checkByCodeRemove();
             if (this.aceEditor && this.aceEditor.getSession().getValue() !== this.usercode) {
                 this.aceEditor.getSession().setValue(this.usercode);
@@ -1428,6 +1446,7 @@ class CsController extends CsBase implements IController {
                 reader.onload = ((e) => {
                     this.scope.$evalAsync(() => {
                         this.usercode = reader.result as string;
+                        if ( this.attrs.uploadautosave ) this.runCode();
                     });
                 });
                 reader.readAsText(file);
@@ -1454,7 +1473,7 @@ class CsController extends CsBase implements IController {
             upload.then((response) => {
                 $timeout(() => {
                     this.showUploaded(response.data.file, response.data.type);
-                    this.doRunCode("upload", false);
+                    if ( this.attrs.uploadautosave ) this.doRunCode("upload", false);
                 });
             }, (response) => {
                 if (response.status > 0) {
@@ -1746,6 +1765,7 @@ class CsController extends CsBase implements IController {
         ));
         if (r.ok) {
             this.isRunning = false;
+            this.initSaved();
             const data = r.result.data;
             const tsruntime = ((performance.now() - t0run) / 1000).toFixed(3);
             const runtime = (data.web.runtime || "").trim();

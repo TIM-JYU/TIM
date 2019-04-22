@@ -1082,8 +1082,24 @@ class Mathcheck(Language):
 
 
 class Upload(Language):
+    def __init__(self, query, sourcecode):
+        super().__init__(query, sourcecode)
+        self.sourcefilename = "/tmp/%s/%s.txt" % (self.basename, self.filename)
+        fn = self.query.jso["input"]["uploadedFile"]
+        dn = os.path.dirname(fn)
+        ldn = "/tmp/"+self.basename+dn
+        lfn = "/tmp/"+self.basename+"/"+fn
+        mkdirs(ldn)
+        # os.symlink(fn,"/tmp/"+self.basename+"/"+fn)
+        if not os.path.isfile(lfn):
+            shutil.copyfile(fn,)
+        self.filename = "." + fn
+        self.pure_exename = "/home/agent" + fn
     pass
 
+    def run(self, result, sourcelines, points_rule):
+        out = "saved: " + self.filename
+        return 0, out, "", ""
 
 class Octave(Language):
     def __init__(self, query, sourcecode):

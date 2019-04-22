@@ -176,7 +176,8 @@ def post_answer(plugintype: str, task_id_ext: str):
     if isinstance(answerdata, dict):
         file = answerdata.get('uploadedFile', '')
         trimmed_file = file.replace('/uploads/', '')
-        if trimmed_file:
+        type = answerdata.get('type', '')
+        if trimmed_file and type == 'upload':
             # The initial upload entry was created in /pluginUpload route, so we need to check that the owner matches
             # what the browser is saying. Additionally, we'll associate the answer with the uploaded file later
             # in this route.
@@ -186,8 +187,8 @@ def post_answer(plugintype: str, task_id_ext: str):
                 abort(400, f'Non-existent upload: {trimmed_file}')
             verify_view_access(block, message="You don't have permission to touch this file.")
             upload = AnswerUpload.query.filter(AnswerUpload.upload_block_id == block.id).first()
-            if upload.answer_id is not None:
-                abort(400, f'File was already uploaded: {file}')
+            # if upload.answer_id is not None:
+            #    abort(400, f'File was already uploaded: {file}')
 
     # Load old answers
 
