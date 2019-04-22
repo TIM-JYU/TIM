@@ -479,7 +479,6 @@ function makeTemplate() {
                       ng-attr-placeholder="{{$ctrl.placeholder}}"></textarea>
             </div>
             <div class="csRunChanged" ng-if="$ctrl.usercode !== $ctrl.byCode"></div>
-            <!--<div class="csRunNotSaved" ng-if="$ctrl.usercode !== $ctrl.byCode"></div>-->
             <div class="csRunNotSaved" ng-show="$ctrl.notSaved"></div>
         </div>
         <pre class="csRunPost" ng-if="$ctrl.viewCode && !$ctrl.codeunder && !$ctrl.codeover">{{$ctrl.postcode}}</pre>
@@ -1042,7 +1041,7 @@ class CsController extends CsBase implements IController {
     }
 
     get forcedupload() {
-        return this.type === "upload" && !this.buttonText() ;
+        return this.type === "upload" && !this.attrs.button ;
     }
 
     get upload() {
