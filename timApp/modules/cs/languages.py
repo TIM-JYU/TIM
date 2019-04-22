@@ -1088,11 +1088,11 @@ class Upload(Language):
         fn = self.query.jso["input"]["uploadedFile"]
         dn = os.path.dirname(fn)
         ldn = "/tmp/"+self.basename+dn
-        lfn = "/tmp/"+self.basename+"/"+fn
+        lfn = "/tmp/"+self.basename+fn
         mkdirs(ldn)
         # os.symlink(fn,"/tmp/"+self.basename+"/"+fn)
         if not os.path.isfile(lfn):
-            shutil.copyfile(fn,)
+            shutil.copyfile(fn, lfn)
         self.filename = "." + fn
         self.pure_exename = "/home/agent" + fn
     pass
