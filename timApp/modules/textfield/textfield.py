@@ -53,7 +53,7 @@ class TextfieldMarkupSchema(GenericMarkupSchema):
     inputplaceholder: Union[str, Missing] = missing
     followid = fields.String(allow_none=True)
     autosave = fields.Boolean()
-    #inputchecker = fields.String(allow_none=True)
+    inputchecker = fields.String(allow_none=True)
 
     @post_load
     def make_obj(self, data):
@@ -140,24 +140,22 @@ class TextfieldAnswerSchema(TextfieldAttrs, GenericAnswerSchema):
 
 
 def render_static_textfield(m: TextfieldHtmlModel):
-    return render_template_string(
-        """
+    return render_template_string("""
 <div class="csRunDiv no-popup-menu">
-    <h4>{{ header }}</h4>
-    <p class="stem">{{ stem }}</p>
-    <div><label>{{ inputstem or '' }} <span>
-        <input type="text"
-               class="form-control"
-               placeholder="{{inputplaceholder}}"
-               size="{{cols}}"></span></label>
-    </div>
-    <button class="timButton">
-        {{ buttonText or button or "Save" }}
-    </button>
-    <a>{{ resetText }}</a>
-    <p class="plgfooter">{{ footer }}</p>
+<h4>{{ header }}</h4>
+<p class="stem">{{ stem }}</p>
+<div><label>{{ inputstem or '' }} <span>
+<input type="text"
+       class="form-control"
+       placeholder="{{inputplaceholder}}"
+       size="{{cols}}"></span></label>
 </div>
-        """,
+<button class="timButton">
+{{ buttonText or button or "Save" }}
+</button>
+<a>{{ resetText }}</a>
+<p class="plgfooter">{{ footer }}</p>
+</div>""".strip(),
         **attr.asdict(m.markup),
     )
 
@@ -202,7 +200,7 @@ initword: #ALKUARVO, TYHJÄ = EI ALKUARVOA
 buttonText: Save #PAINIKKEEN NIMI, TYHJÄ = EI PAINIKETTA
 cols: 1 #KENTÄN KOKO, NUMERAALINEN
 autosave: false #AUTOSAVE, POIS PÄÄLTÄ
-inputchecker: ^hyv$|^hyl$|^1$|^2$|^3$|^4$|^5$ #KÄYTTÄJÄSYÖTTEEN RAJOITIN, TYHJÄ = EI RAJOITUSTA
+inputchecker: ^(hyv|hyl|[12345])$ #KÄYTTÄJÄSYÖTTEEN RAJOITIN, TYHJÄ = EI RAJOITUSTA
 ```""", """
 ``` {#label plugin="textfield" readonly=view}
 followid: #SEURANTAID, TYHJÄ = EI SEURANTAID:tä

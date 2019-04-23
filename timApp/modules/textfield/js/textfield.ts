@@ -193,7 +193,8 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
                 return;
             }
         }
-        this.error = "... saving ...";
+        /* No visible text version
+        this.error = "... saving ..."; */
         this.isRunning = true;
         this.result = undefined;
         const params = {
@@ -215,7 +216,10 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
             this.result = data.web.result;
             this.notSavedWord = this.userword;
         } else {
-            this.error = r.result.data.error || "Infinite loop or some other error?";
+            this.error = r.result.data.error;
+            /* No visible text version
+            this.error = r.result.data.error|| "Infinite loop or some other error?";
+            */
         }
     }
 
