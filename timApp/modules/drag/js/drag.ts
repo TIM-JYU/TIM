@@ -169,15 +169,12 @@ class DragController extends PluginBase<t.TypeOf<typeof DragMarkup>, t.TypeOf<ty
         this.vctrl.addTimComponent(this);
     }
 
-    initCode() {
-        this.error = undefined;
-    }
 
     /**
      * Returns contained words as a string separated with a comma
      * @returns {string} The words.
      */
-    getContent(): string {
+    getContent(): string | undefined {
         let s: string;
         s = "";
         if (this.wordObjs) {
@@ -185,6 +182,7 @@ class DragController extends PluginBase<t.TypeOf<typeof DragMarkup>, t.TypeOf<ty
                 s = s + "," + el.word;
             });
         }
+        if (s.length < 1) return undefined;
         return s;
     }
 
@@ -192,7 +190,7 @@ class DragController extends PluginBase<t.TypeOf<typeof DragMarkup>, t.TypeOf<ty
      * Returns contained words as a string array
      * @returns {string} The words
      */
-    getContentArray(): string[] {
+    getContentArray(): string[] | undefined {
         let words: string[];
         words = [];
         if (this.wordObjs) {
@@ -200,6 +198,7 @@ class DragController extends PluginBase<t.TypeOf<typeof DragMarkup>, t.TypeOf<ty
                 words.push(el.word);
             });
         }
+        if (words.length === 0) return undefined;
         return words;
     }
     /**
