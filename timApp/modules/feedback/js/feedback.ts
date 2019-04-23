@@ -5,8 +5,9 @@ import angular from "angular";
 import * as t from "io-ts";
 import {ITimComponent, ViewCtrl} from "tim/document/viewctrl";
 import {GenericPluginMarkup, nullable, PluginBase, withDefault, Info, pluginBindings} from "tim/plugin/util";
-import {$http} from "tim/util/ngimport";
+import {$http, $timeout, $window} from "tim/util/ngimport";
 import {to} from "tim/util/utils";
+import {EditMode} from "tim/document/popupMenu";
 
 const feedbackApp = angular.module("feedbackApp", ["ngSanitize"]);
 export const moduleDefs = [feedbackApp];
@@ -109,6 +110,8 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
     private feedbackMax = 0;
     private selectionMap: Map<string, string> = new Map();
     private correctMap: Map<string, string> = new Map();
+    private editMode?: EditMode | null;
+    private edited = false;
 
     $onInit() {
         super.$onInit();
@@ -129,6 +132,10 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
         this.checkCorrectAnswersCount();
         this.checkInstructions();
         this.checkDefaultMatch();
+        this.editMode = $window.editMode;
+        if(this.editMode !== null) {
+            this.edited = true;
+        }
     }
 
     /**
@@ -295,6 +302,15 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
      */
     hideParagraph(paragraph: Element) {
         this.changeVisibility(paragraph, false);
+    }
+
+    /**
+     * Show a paragraph in the page.
+     *
+     * @param paragraph The paragraph to show.
+     */
+    showParagraph(paragraph: Element) {
+        this.changeVisibility(paragraph, true);
     }
 
     /**
@@ -850,12 +866,12 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
         for (const [k, v] of choices) {
             let value = v;
             const kw = value.match(keywordPlaceHolder);
-            if(kw && kw.length > 0) {
+            if (kw && kw.length > 0) {
                 const keyword = kw[0].split(':')[1].replace('|', "");
                 const wordlists = this.attrs.questionItems[this.index].words;
-                for(const wordlist of wordlists) {
+                for (const wordlist of wordlists) {
                     const word = wordlist.filter(x => x.includes(keyword));
-                    if(word.length > 0) {
+                    if (word.length > 0) {
                         value = word[0];
                     }
                 }
@@ -919,6 +935,43 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
                 } else {
                     this.error = `No plugin with such a name (${plugin}) or missing setPluginWords-method`;
                 }
+            }
+        }
+    }
+
+    async $doCheck() {
+        if (this.editMode != $window.editMode) {
+            this.editMode = $window.editMode;
+
+            const instructions = document.querySelectorAll(".par.instruction");
+
+            if (!this.edited) {
+                this.showParagraph(instructions[0]);
+                const items = this.attrs.questionItems;
+                for (const item of items) {
+                    for (const plugin of item.pluginNames) {
+                        const timComponent = this.vctrl.getTimComponentByName(plugin);
+                        if (timComponent) {
+                            const par = timComponent.getPar();
+                            this.showParagraph(par.children(".parContent")[0]);
+                        }
+                    }
+                }
+                this.edited = true;
+
+            } else {
+                this.hideParagraph(instructions[0]);
+                const items = this.attrs.questionItems;
+                for (const item of items) {
+                    for (const plugin of item.pluginNames) {
+                        const timComponent = this.vctrl.getTimComponentByName(plugin);
+                        if (timComponent) {
+                            const par = timComponent.getPar();
+                            this.hideParagraph(par.children(".parContent")[0]);
+                        }
+                    }
+                }
+                this.edited = false;
             }
         }
     }
