@@ -174,7 +174,7 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
      * @param true/false parameter boolean checker for the need to save
      */
     async doSaveText(nosave: boolean) {
-        this.error = "... saving ...";
+        /* No visible text  this.error = "... saving ..."; */
         this.isRunning = true;
         this.result = undefined;
         const params = {

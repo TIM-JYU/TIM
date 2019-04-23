@@ -12,12 +12,12 @@ textfield-runner .stem {
 }
 
 .warnFrame {
-    border-right-color: red;
+    border-right-color: gold;
     border-right-width: thick;
 }
 
 input:focus.warnFrame {
-    border-right-color: red !important;
+    border-right-color: gold !important;
 }
 
 [data-plugin="/textfield"] {
