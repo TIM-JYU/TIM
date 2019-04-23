@@ -20,6 +20,7 @@ const DropdownMarkup = t.intersection([
         // all withDefaults should come here; NOT in t.partial,
         instruction: withDefault(t.boolean, false),
         radio: withDefault(t.boolean, false),
+        shuffle: withDefault(t.boolean, false),
     }),
 ]);
 const DropdownAll = t.intersection([
@@ -40,6 +41,8 @@ class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.T
     private vctrl!: ViewCtrl;
     private forceSave = false;
     private radio?: boolean;
+    private shuffle?: boolean;
+
 
     getDefaultMarkup() {
         return {};
@@ -47,7 +50,12 @@ class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.T
 
     $onInit() {
         super.$onInit();
-        this.wordList = this.attrs.words || [];
+        this.shuffle = this.attrs.shuffle;
+        if (this.shuffle && this.attrs.words) {
+            this.wordList = this.shuffleWords(this.attrs.words);
+        } else {
+            this.wordList = this.attrs.words || [];
+        }
         this.addToCtrl();
         this.radio = this.attrs.radio;
     }
@@ -120,6 +128,20 @@ class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.T
      * @param words List of words to be shown in the plugin
      */
     setPluginWords(words: string[]) {
+        if (this.shuffle) {
+            this.wordList = this.shuffleWords(words);
+        } else {
+            this.wordList = words;
+        }
+
+        this.selectedWord = undefined;
+    }
+
+    /**
+     * Shuffles string array
+     * @param words Array of strings to be shuffled.
+     */
+    shuffleWords(words: string []): string [] {
         // shuffle algorithm from csparsons.ts
         const result = words.slice();
         const n = words.length;
@@ -129,9 +151,7 @@ class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.T
             result[i] = result[j];
             result[j] = tmp;
         }
-
-        this.wordList = result;
-        this.selectedWord = undefined;
+        return result;
     }
 
     protected getAttributeType() {

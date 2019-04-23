@@ -482,7 +482,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
             }
             const plugins = this.attrs.questionItems[this.index];
             if (!this.hasContent(plugins)) {
-                this.printFeedback("You need to select something");
+                this.printFeedback("You need to provide an answer");
                 return;
             }
 

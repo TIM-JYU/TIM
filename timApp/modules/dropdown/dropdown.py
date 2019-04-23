@@ -35,12 +35,14 @@ class DropdownMarkupModel(GenericMarkupModel):
     words: Union[List[str], Missing] = missing
     instruction: Union[bool, Missing] = missing
     radio: Union[bool, Missing] = missing
+    shuffle: Union[bool, Missing] = missing
 
 
 class DropdownMarkupSchema(GenericMarkupSchema):
     words = fields.List(fields.Str)
     instruction = fields.Bool()
     radio = fields.Bool()
+    shuffle = fields.Bool()
 
     @post_load
     def make_obj(self, data):
@@ -54,11 +56,13 @@ class DropdownMarkupSchema(GenericMarkupSchema):
 class DropdownInputModel:
     selectedWord: str
     nosave: bool = missing
+    shuffle: bool = missing
 
 
 class DropdownInputSchema(Schema):
     selectedWord = fields.Str(required=True)
     nosave = fields.Bool()
+    shuffle = fields.Bool()
 
     @validates('selectedWord')
     def validate_selectedWord(self, word):
