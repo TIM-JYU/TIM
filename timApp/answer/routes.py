@@ -31,7 +31,7 @@ from timApp.document.post_process import hide_names_in_teacher
 from timApp.item.block import Block, BlockType
 from timApp.markdown.dumboclient import call_dumbo
 from timApp.plugin.containerLink import call_plugin_answer
-from timApp.plugin.plugin import Plugin, PluginWrap
+from timApp.plugin.plugin import Plugin, PluginWrap, NEVERLAZY
 from timApp.plugin.pluginControl import find_task_ids, pluginify
 from timApp.plugin.pluginexception import PluginException
 from timApp.plugin.taskid import TaskId, TaskIdAccess
@@ -520,6 +520,7 @@ def get_state(args: GetStateModel):
         user,
         custom_answer=answer,
         pluginwrap=PluginWrap.Nothing,
+        do_lazy=NEVERLAZY,
     )
     html = plug.get_final_output()
     if review:
@@ -531,6 +532,7 @@ def get_state(args: GetStateModel):
             custom_answer=answer,
             review=review,
             pluginwrap=PluginWrap.Nothing,
+            do_lazy=NEVERLAZY,
         )
         return json_response({'html': html, 'reviewHtml': rplug.get_final_output()})
     else:
