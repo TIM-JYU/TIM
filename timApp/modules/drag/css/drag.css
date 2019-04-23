@@ -29,3 +29,9 @@
 .dndDraggingSource {
   display: none;
 }
+
+.dndPlaceholder {
+    min-width: 1em;
+    min-height: 2em;
+    background: gray;
+}
