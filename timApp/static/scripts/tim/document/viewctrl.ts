@@ -48,6 +48,7 @@ export interface ITimComponent {
     getPar: () => Paragraph;
     setPluginWords?: (words: string[]) => void;
     setForceAnswerSave?: (force: boolean) => void;
+    resetField: () => string | undefined;
 }
 
 export interface IInsertDiffResult {

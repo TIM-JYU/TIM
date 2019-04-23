@@ -240,6 +240,11 @@ class DragController extends PluginBase<t.TypeOf<typeof DragMarkup>, t.TypeOf<ty
         return result;
     }
 
+    resetField(): undefined {
+        this.setPluginWords(this.attrs.words || []);
+        return undefined;
+    }
+
     async save() {
         const failure = await this.doSave(false);
         return failure;

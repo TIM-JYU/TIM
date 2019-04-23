@@ -56,6 +56,7 @@ interface QuestionItemT extends t.TypeOf<typeof QuestionItem> {
 
 const QuestionItem = t.type({
     choices: t.array(Choice),
+    dragSource: t.string,
     pluginNames: StringArray,
     words: t.array(StringArray),
 });
@@ -74,7 +75,7 @@ const FeedbackMarkup = t.intersection([
         autoupdate: withDefault(t.number, 500),
         cols: withDefault(t.number, 20),
         questionItems: t.array(QuestionItem),
-        teacherHide: withDefault(t.boolean, false),
+        teacherHide: withDefault(t.boolean, true),
     }),
 ]);
 const FeedbackAll = t.intersection([
@@ -932,15 +933,29 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
             for (const plugin of item.pluginNames) {
                 const timComponent = this.vctrl.getTimComponentByName(plugin);
                 if (timComponent && timComponent.setPluginWords) {
-                    timComponent.setPluginWords(item.words[i]);
+                    if (item.words.length === 0) {
+                        timComponent.setPluginWords([]);
+                    } else {
+                        timComponent.setPluginWords(item.words[i]);
+                    }
                     i++;
                 } else {
                     this.error = `No plugin with such a name (${plugin}) or missing setPluginWords-method`;
                 }
             }
+            if (item.dragSource) {
+                const timComponent = this.vctrl.getTimComponentByName(item.dragSource);
+                if (timComponent) {
+                    timComponent.resetField();
+                }
+            }
         }
     }
 
+    /**
+     * Check whether edit mode is on and show or hide instructions and question items based on it
+     * TODO: refactor
+     */
     async $doCheck() {
         if (this.editMode != $window.editMode) {
             this.editMode = $window.editMode;

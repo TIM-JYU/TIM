@@ -80,7 +80,7 @@ function getEssentialContext(c: t.Context) {
     return c;
 }
 
-type MarkupError = Array<{name: string, type: string}>;
+type MarkupError = Array<{ name: string, type: string }>;
 
 function isPrefixOfSome(s: string, others: string[]) {
     for (const o of others) {
@@ -216,7 +216,7 @@ export abstract class PluginBase<MarkupType extends IGenericPluginMarkup, A exte
     protected plugintype?: Binding<string, "@?">;
     protected taskid?: Binding<string, "@?">;
 
-    protected markupError?: Array<{name: string, type: string}>;
+    protected markupError?: Array<{ name: string, type: string }>;
     protected pluginMeta: PluginMeta;
 
     constructor(
@@ -257,15 +257,15 @@ export abstract class PluginBase<MarkupType extends IGenericPluginMarkup, A exte
         return this.element[0];
     }
 
-    getGroups(): string[]{
+    getGroups(): string[] {
         let returnList: string[] = [];
         const parents = this.element.parents('.area'); // Only returns one because the divs are not inside each other?
         // Manual parsing for now: "area area_outer area_inner"
-        if(parents[0]){
+        if (parents[0]) {
             let areaList = parents[0].classList;
             areaList.forEach(
-                function(value){
-                    if(value.match("area_")){
+                function (value) {
+                    if (value.match("area_")) {
                         returnList.push(value.replace("area_", ""));
                     }
                 }
@@ -292,6 +292,11 @@ export abstract class PluginBase<MarkupType extends IGenericPluginMarkup, A exte
      */
     public getPar() {
         return this.element.parents(".par");
+    }
+
+    resetField(): undefined {
+        // this.$onInit()
+        return undefined;
     }
 
 }
