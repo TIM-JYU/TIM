@@ -133,7 +133,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
         this.checkInstructions();
         this.checkDefaultMatch();
         this.editMode = $window.editMode;
-        if(this.editMode !== null) {
+        if (this.editMode !== null) {
             this.edited = true;
         }
     }
@@ -824,14 +824,16 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
                             if (plugin) {
                                 if (plugin.getContentArray) {
                                     let content = plugin.getContentArray();
-                                    let contentString = "";
-                                    for (const c of content) {
-                                        contentString += ` ${c}`;
+                                    if (content !== undefined) {
+                                        let contentString = "";
+                                        for (const c of content) {
+                                            contentString += ` ${c}`;
+                                        }
+                                        contentString = contentString.trim();
+                                        values.set(name, contentString);
+                                        this.userSelections.push(contentString);
+                                        answer.push(name);
                                     }
-                                    contentString = contentString.trim();
-                                    values.set(name, contentString);
-                                    this.userSelections.push(contentString);
-                                    answer.push(name);
                                 } else {
                                     let content = plugin.getContent();
                                     if (content !== undefined) {
