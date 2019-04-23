@@ -27,11 +27,12 @@
 }
 
 .dndDraggingSource {
-  display: none;
+  opacity: 0.6; 
 }
+
 
 .dndPlaceholder {
     min-width: 1em;
     min-height: 2em;
-    background: gray;
+
 }
