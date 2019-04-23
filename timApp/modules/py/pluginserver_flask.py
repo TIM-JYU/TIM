@@ -217,7 +217,7 @@ def render_plugin_with_login_request(m: GenericHtmlModel[PluginInput, PluginMark
 <p class="pluginError">
     Please <login-menu></login-menu> to interact with this component.
 </p>
-{{ static_html }}""", static_html=m.get_static_html(),
+{{ static_html|safe }}""", static_html=m.get_static_html(),
     )
 
 
