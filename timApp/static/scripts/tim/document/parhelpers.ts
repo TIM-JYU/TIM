@@ -172,10 +172,10 @@ export function dereferencePar(par: Paragraph) {
         return null;
     }
     if (par.attr("ref-id") && par.attr("ref-doc-id")) {
-        return [par.attr("ref-doc-id"), par.attr("ref-id")];
+        return [par.attr("ref-doc-id"), par.attr("ref-id"), par.attr("ref-t")] as const;
     }
     const doc = getActiveDocument();
-    return [doc.id, par.attr("id")];
+    return [doc.id, par.attr("id"), par.attr("t")] as const;
 }
 
 /**
@@ -224,6 +224,17 @@ export function canEditPar(item: IItem, par: JQuery) {
         return item.rights.editable;
     }
     return right;
+}
+
+export function canSeeSource(item: IItem, par: Paragraph) {
+    if (item.rights.editable) {
+        return true;
+    }
+    const attrs = getParAttributes(par);
+    if (attrs.plugin || attrs.defaultplugin) {
+        return false;
+    }
+    return true;
 }
 
 export const EDITOR_CLASS = "editorArea";

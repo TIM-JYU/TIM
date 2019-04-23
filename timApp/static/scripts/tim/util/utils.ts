@@ -419,3 +419,15 @@ export function valueDefu(s: string | undefined | null, def: string): string {
 
 export const StringArray = t.array(t.string);
 export const ModuleArray = t.array(t.type({name: t.string, requires: StringArray}));
+
+export type MouseOrTouch = MouseEvent | Touch;
+
+export function posToRelative(e: Element, p: MouseOrTouch) {
+    const rect = e.getBoundingClientRect();
+    const posX = p.clientX;
+    const posY = p.clientY;
+    return {
+        x: posX - rect.left,
+        y: posY - rect.top,
+    };
+}

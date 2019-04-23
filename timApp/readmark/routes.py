@@ -4,10 +4,10 @@ from sqlalchemy import func, distinct, true
 from sqlalchemy.exc import IntegrityError
 
 from timApp.auth.accesshelper import verify_read_marking_right, get_doc_or_abort, verify_teacher_access
-from timApp.auth.sessioninfo import get_session_usergroup_ids, get_current_user_group
+from timApp.auth.sessioninfo import get_session_usergroup_ids
 from timApp.document.docentry import DocEntry
 from timApp.document.post_process import hide_names_in_teacher
-from timApp.readmark.readings import mark_read, get_readings, mark_all_read
+from timApp.readmark.readings import mark_read, mark_all_read, get_common_readings
 from timApp.readmark.readparagraph import ReadParagraph
 from timApp.readmark.readparagraphtype import ReadParagraphType
 from timApp.timdb.exceptions import TimDbException
@@ -26,12 +26,25 @@ readings = Blueprint('readings',
 
 @readings.route("/read/<int:doc_id>", methods=['GET'])
 def get_read_paragraphs(doc_id):
+    return get_readings_response(true(), doc_id)
+
+
+@readings.route("/read/<int:doc_id>/<block_id>", methods=['GET'])
+def get_read_paragraph(doc_id, block_id):
+    cond = ReadParagraph.par_id.in_([block_id]) & (ReadParagraph.type == ReadParagraphType.click_red)
+    return get_readings_response(cond, doc_id)
+
+
+def get_readings_response(cond, doc_id):
     d = get_doc_or_abort(doc_id)
     verify_read_marking_right(d)
     doc = d.document
-    # TODO: Get the intersection of read markings of all session users
-    result = get_readings(get_current_user_group(), doc)
-    return json_response(result)
+    result = get_common_readings(
+        get_session_usergroup_ids(),
+        doc,
+        filter_condition=cond,
+    )
+    return json_response(list(result))
 
 
 @readings.route("/unread/<int:doc_id>/<par_id>", methods=['PUT'])

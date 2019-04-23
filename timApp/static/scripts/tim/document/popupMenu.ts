@@ -4,7 +4,7 @@ import {watchEditMode} from "tim/document/editing/editmode";
 import {DialogController, registerDialogComponent, showDialog} from "../ui/dialog";
 import {Pos} from "../ui/draggable";
 import {$http, $timeout, $window} from "../util/ngimport";
-import {debugTextToHeader, to} from "../util/utils";
+import {to} from "../util/utils";
 import {ViewCtrl} from "./viewctrl";
 import {MenuFunctionEntry, MenuFunctionList} from "./viewutils";
 
@@ -75,11 +75,10 @@ export class PopupMenuController extends DialogController<{params: IPopupParams}
     async $onInit() {
         super.$onInit();
         this.p = this.resolve.params;
-        this.vctrl.registerPopupMenu(this);
         await this.draggable.makeHeightAutomatic();
-        if (this.p.pos) {
-            await this.draggable.moveTo(this.p.pos);
-            this.draggable.ensureFullyInViewport();
+        const p = this.p.pos;
+        if (p) {
+            await this.moveTo(p);
         }
     }
 
@@ -208,5 +207,5 @@ export function showPopupMenu(p: IPopupParams) {
             absolute: true,
             showMinimizeButton: false,
             size: "xs",
-        }).result;
+        });
 }
