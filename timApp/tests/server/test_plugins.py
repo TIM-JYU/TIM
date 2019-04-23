@@ -1594,3 +1594,13 @@ initword: a""")
         self.logout()
         r = self.get(u, as_tree=True).cssselect('.parContent login-menu')
         self.assertTrue(r)
+
+    def test_inline_plugin_ref(self):
+        self.login_test1()
+        d = self.create_doc(initial_par="""
+#-  {defaultplugin=pali id=SSYigUyqdb7p}
+{#t}
+        """)
+        d2 = self.create_doc()
+        d2.document.add_paragraph_obj(d.document.get_paragraphs()[0].create_reference(d2.document))
+        self.get(d2.url)
