@@ -248,15 +248,15 @@ class PluginTest(TimRouteTest):
         self.do_plugin_upload(doc, file_content, filename, task_id, task_name2)
         self.do_plugin_upload(doc, file_content, filename, task_id, task_name, expect_version=3)
         self.do_plugin_upload(doc, file_content, filename, task_id, task_name2, expect_version=2)
-        self.post_answer('csPlugin', task_id, user_input,
-                         expect_status=400,
-                         expect_content={'error': f'File was already uploaded: {ur["file"]}'})
+        # self.post_answer('csPlugin', task_id, user_input,
+        #                  expect_status=400,
+        #                  expect_content={'error': f'File was already uploaded: {ur["file"]}'})
         invalid_file = '/test/test'
         resp = self.post_answer('csPlugin',
                                 task_id,
                                 {"uploadedFile": invalid_file,
                                  "uploadedType": mimetype,
-                                 "markup": {"type": "upload"}},
+                                 "type": "upload"},
                                 expect_status=400,
                                 expect_content={'error': f'Non-existent upload: {invalid_file}'}
                                 )
@@ -300,7 +300,7 @@ class PluginTest(TimRouteTest):
                               'type': mimetype,
                               'block': ur['block']}, ur)
         self.assertIsInstance(ur['block'], int)
-        user_input = {"uploadedFile": ur['file'], "uploadedType": mimetype, "markup": {"type": "upload"}}
+        user_input = {"uploadedFile": ur['file'], "uploadedType": mimetype, "type": "upload"}
         resp = self.post_answer('csPlugin', task_id, user_input)
         self.check_ok_answer(resp)
         return mimetype, ur, user_input
