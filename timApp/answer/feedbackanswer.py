@@ -33,8 +33,10 @@ def get_all_feedback_answers(task_ids: List[TaskId],
                              exp_answers: str,
                              users: List[str],
                              period_from: datetime,
-                             period_to: datetime):
+                             period_to: datetime,
+                             dec: str):
     """
+
     Get feedback answer results.
     :param task_ids: List of task ids.
     :param hide_names: Parameter for whether to show users anonymously.
@@ -44,6 +46,7 @@ def get_all_feedback_answers(task_ids: List[TaskId],
     :param users: List of visible users with selected user always first.
     :param period_from: The minimum answering time for answers.
     :param period_to: The maximum answering time for answers.
+    :param dec: decimal separator
     :return:
     """
 
@@ -73,18 +76,20 @@ def get_all_feedback_answers(task_ids: List[TaskId],
     # Makes q query an iterable qq for for-loop.
     qq: Iterable[Tuple[Answer, User]] = q
 
-    return compile_csv(qq, printname, hide_names, exp_answers, users)
+    return compile_csv(qq, printname, hide_names, exp_answers, users, dec)
 
 
-def compile_csv(qq: Iterable[Tuple[Answer, User]], printname: bool, hide_names: bool, exp_answers: str, s_user: [str]):
+def compile_csv(qq: Iterable[Tuple[Answer, User]], printname: bool, hide_names: bool, exp_answers: str, s_user: [str], dec: str):
     """
+
     Compile data into more csv friendly form.
     :param qq: List of Tuples containing Answers and Users.
     :param printname: Parameter whether to show full name.
     :param hide_names: Parameter whether to show users anonymously.
     :param exp_answers: Parameter for filtering users.
     :param s_user: Visible users with first one always being the selected user.
-    :return: List of task results.
+    :param dec: Decimal pointers
+    :return:
     """
 
     pt_dt = None    # Previous Datetime of previous answer.
@@ -163,6 +168,15 @@ def compile_csv(qq: Iterable[Tuple[Answer, User]], printname: bool, hide_names: 
 
             fbsecs = (answer.answered_on - prev_ans.answered_on).total_seconds()
 
+            if (dec == "comma"):
+                fbsecs_str = str(round(fbsecs, 1)).replace(".", ",")
+                tasksecs_str = str(round(tasksecs, 1)).replace(".", ",")
+            else:
+                fbsecs_str = str(round(fbsecs, 1))
+                tasksecs_str = str(round(tasksecs, 1))
+
+
+
             if hide_names:
                 shown_user = anonuser
             else:
@@ -177,16 +191,16 @@ def compile_csv(qq: Iterable[Tuple[Answer, User]], printname: bool, hide_names: 
                                     item_content,
                                     sel_opt_content,
                                     feedback_content,
-                                    str(round(tasksecs, 1)),
-                                    str(round(fbsecs, 1))])
+                                    tasksecs_str,
+                                    fbsecs_str])
                 else:
                     results.append([shown_user,
                                 answer_result,
                                 item_content,
                                 sel_opt_content,
                                 feedback_content,
-                                str(round(tasksecs, 1)),
-                                str(round(fbsecs, 1))])
+                                tasksecs_str,
+                                fbsecs_str])
 
         pt_dt = prev_ans.answered_on
         prev_ans = answer
@@ -221,6 +235,7 @@ def print_feedback_report(doc_path):
     exp_answers = get_option(request, 'answers', 'all')
     users = get_option(request, 'users', 'none')
     scope = get_option(request, 'scope', 'task')
+    decimal = get_option(request, 'decimal', 'point')
     list_of_users = users.split(",")
 
     # Booleans for how to show user names.
@@ -234,9 +249,12 @@ def print_feedback_report(doc_path):
         dialect = 'excel-tab'
     elif format == 'comma':
         dialect = 'excel'
-    else:
+    elif format == 'semicolon':
         dialect = csv.excel
         dialect.delimiter = ';'
+    elif format == 'bar':
+        dialect = csv.excel
+        dialect.delimiter = '|'
 
     period = get_option(request, 'period', 'whenever')
     period_from = datetime.min.replace(tzinfo=timezone.utc)
@@ -314,7 +332,8 @@ def print_feedback_report(doc_path):
                                             exp_answers,
                                             list_of_users,
                                             period_from,
-                                            period_to)
+                                            period_to,
+                                            decimal)
     elif scope == 'test':
         all_tasks = []
         for did in all_id:
@@ -328,7 +347,8 @@ def print_feedback_report(doc_path):
                                                 exp_answers,
                                                 list_of_users,
                                                 period_from,
-                                                period_to)
+                                                period_to,
+                                                decimal)
 
         """
         for did in all_id:

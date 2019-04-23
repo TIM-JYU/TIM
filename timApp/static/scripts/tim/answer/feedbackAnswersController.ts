@@ -17,6 +17,7 @@ interface IFBOptions {
     answers: string;
     format: string;
     users: string;
+    decimal: string;
 }
 
 export interface IFeedbackAnswersParams {
@@ -55,8 +56,9 @@ export class FeedbackAnswersCtrl extends DialogController<{params: IFeedbackAnsw
             periodTo: null,
             scope: "task",
             answers: "all",
-            format: "comma",
+            format: "semicolon",
             users: "",
+            decimal: "point",
         };
         this.$storage = $localStorage.$default({
             feedbackAnswersOptions: this.options,

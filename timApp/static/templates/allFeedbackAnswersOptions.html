@@ -151,13 +151,13 @@
             </div>
             <div class="form-group">
                 <div class="col-sm-3">
-                    <label class="radio-inline"> Format </label>
+                    <label class="radio-inline"> Delimiter </label>
                 </div>
                 <div class="col-sm-9">
                     <div class="radio">
                         <label>
-                            <input type="radio" ng-model="$ctrl.options.format" value="comma">
-                            Comma
+                            <input type="radio" ng-model="$ctrl.options.format" value="semicolon">
+                            Semicolon(;)
                         </label>
                     </div>
                     <div class="radio">
@@ -168,8 +168,33 @@
                     </div>
                     <div class="radio">
                         <label>
-                            <input type="radio" ng-model="$ctrl.options.format" value="semicolon">
-                            Semicolon
+                            <input type="radio" ng-model="$ctrl.options.format" value="bar">
+                            Vertical bar(|)
+                        </label>
+                    </div>
+                    <div class="radio">
+                        <label>
+                            <input type="radio" ng-model="$ctrl.options.format" value="comma">
+                            Comma(,)
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-sm-3">
+                    <label class="radio-inline"> Decimal </label>
+                </div>
+                <div class="col-sm-9">
+                    <div class="radio">
+                        <label>
+                            <input type="radio" ng-model="$ctrl.options.decimal" value="point">
+                            Decimal point
+                        </label>
+                    </div>
+                    <div class="radio">
+                        <label>
+                            <input type="radio" ng-model="$ctrl.options.decimal" value="comma">
+                            Decimal comma
                         </label>
                     </div>
                 </div>
