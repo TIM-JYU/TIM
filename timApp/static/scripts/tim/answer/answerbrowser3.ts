@@ -98,7 +98,7 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
         this.scope.$evalAsync(async () => {
             const plugin = this.getPluginElement();
             this.compiled = true;
-            if (!this.viewctrl.noBrowser && this.isValidTaskId(this.taskId) && this.type !== "lazyonly") {
+            if (!this.viewctrl.noBrowser && this.isValidTaskId(this.taskId) && this.type !== "lazyonly" && Users.isLoggedIn()) {
                 this.showBrowser = true;
             } else {
                 this.abLoad.resolve(null); // this plugin instance doesn't have answer browser

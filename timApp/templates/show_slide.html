@@ -5,11 +5,6 @@
     {{ super() }}
     <meta name="apple-mobile-web-app-capable" content="yes"/>
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
-    <link rel="stylesheet" href="{{ url_for('static', filename='scripts/reveal/css/reveal.min.css') }}"/>
-    <link rel="stylesheet" href="{{ url_for('static', filename='scripts/reveal/css/theme/jyu.css') }}" id="theme">
-    {% if request.args['print-pdf'] %}
-        <link rel="stylesheet" href="{{ url_for('static', filename='scripts/reveal/css/print/pdf.css') }}" />
-    {% endif %}
     {% include 'partials/doc_customcss.html' %}
     <script>
         var background_url = {{ (slide_background_url or None)|tojson }};
@@ -18,7 +13,8 @@
 {% endblock %}
 
 {% block body %}
-    <div class="reveal">
+    <tim-view>
+    <div class="reveal" style="visibility: hidden">
         <div class="slides paragraphs">
             <section>
                 {# Because of Jinja2 scoping rules, we need to use a single-element array #}
@@ -50,4 +46,5 @@
             </section>
         </div>
     </div>
+    </tim-view>
 {% endblock %}

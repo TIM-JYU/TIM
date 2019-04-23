@@ -8,6 +8,7 @@ TIM_SAFE_TAGS = [
     'a',
     'abbr',
     'acronym',
+    'aside',
     'b',
     'blockquote',
     'button',

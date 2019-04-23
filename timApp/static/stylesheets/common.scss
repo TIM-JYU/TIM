@@ -142,3 +142,16 @@ tim-duration-picker {
 .flex-grow-5 {
     flex: 5 0 auto;
 }
+
+tim-view > div {
+    // display: block;
+    height: 100%;
+}
+
+.reveal {
+    // Bootstrap progress style conflicts with Reveal, so we need to fix it.
+    .progress {
+        margin-bottom: unset;
+        border-radius: unset;
+    }
+}

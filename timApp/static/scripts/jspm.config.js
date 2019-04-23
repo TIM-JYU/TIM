@@ -2,8 +2,6 @@ SystemJS.config({
   paths: {
     "github:": "jspm_packages/github/",
     "npm:": "jspm_packages/npm/",
-    "reveal": "reveal/js/reveal.js",
-    "head": "reveal/lib/js/head.min.js",
     "simcir": "/cs/simcir/simcir.js",
     "simcir/basicset": "/cs/simcir/simcir-basicset.js",
     "simcir/library": "/cs/simcir/simcir-library.js",
@@ -75,6 +73,7 @@ SystemJS.config({
     }
   },
   meta: {
+    "*.css": { loader: "css" },
     "npm:angular-eonasdan-datetimepicker@0.3.9/dist/angular-eonasdan-datetimepicker.js": {
       "deps": [
         "angular",
@@ -139,15 +138,13 @@ SystemJS.config({
     }
   },
   map: {
-    "katex-auto-render": "npm:katex@0.7.1/dist/contrib/auto-render.min"
+    "katex-auto-render": "npm:katex@0.7.1/dist/contrib/auto-render.min",
+    "reveal": "npm:reveal.js@3.8.0"
   },
   bundles: {
     "build/ace.js": [
       "tim/editor/ace.ts",
       "github:ajaxorg/ace-builds@1.2.6/ext-language_tools.js"
-    ],
-    "build/slide.js": [
-      "tim/document/slide.ts"
     ],
     "build/chart.js": [
       "npm:chart.js@2.7.2/src/chart.js"
@@ -168,6 +165,7 @@ SystemJS.config({
   map: {
     "angular-drag-and-drop-lists": "npm:angular-drag-and-drop-lists@2.1.0",
     "angularjs-dragula": "npm:angularjs-dragula@2.0.0",
+    "css": "github:systemjs/plugin-css@0.1.37",
     "deepmerge": "npm:deepmerge@3.0.0",
     "io-ts": "npm:io-ts@1.4.1",
     "angular-diff-match-patch": "npm:angular-diff-match-patch@0.7.4",
@@ -211,6 +209,7 @@ SystemJS.config({
     "process": "npm:jspm-nodelibs-process@0.2.1",
     "rangyinputs": "github:jigargosar/rangyinputs@1.2.0",
     "readline": "npm:jspm-nodelibs-readline@0.2.1",
+    "reveal.js": "npm:reveal.js@3.8.0",
     "stream": "npm:jspm-nodelibs-stream@0.2.1",
     "string_decoder": "npm:jspm-nodelibs-string_decoder@0.2.2",
     "text": "github:systemjs/plugin-text@0.0.9",
@@ -282,16 +281,7 @@ SystemJS.config({
     },
     "npm:jspm-nodelibs-http@0.2.0": {
       "map": {
-        "http-browserify": "npm:stream-http@2.7.0"
-      }
-    },
-    "npm:stream-http@2.7.0": {
-      "map": {
-        "inherits": "npm:inherits@2.0.3",
-        "readable-stream": "npm:readable-stream@2.3.6",
-        "builtin-status-codes": "npm:builtin-status-codes@3.0.0",
-        "to-arraybuffer": "npm:to-arraybuffer@1.0.1",
-        "xtend": "npm:xtend@4.0.1"
+        "http-browserify": "npm:stream-http@2.8.3"
       }
     },
     "npm:jspm-nodelibs-url@0.2.1": {
@@ -623,6 +613,15 @@ SystemJS.config({
       "map": {
         "inherits": "npm:inherits@2.0.3",
         "minimalistic-assert": "npm:minimalistic-assert@1.0.1"
+      }
+    },
+    "npm:stream-http@2.8.3": {
+      "map": {
+        "inherits": "npm:inherits@2.0.3",
+        "to-arraybuffer": "npm:to-arraybuffer@1.0.1",
+        "builtin-status-codes": "npm:builtin-status-codes@3.0.0",
+        "xtend": "npm:xtend@4.0.1",
+        "readable-stream": "npm:readable-stream@2.3.6"
       }
     }
   }

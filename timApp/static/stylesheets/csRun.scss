@@ -29,6 +29,15 @@ p.stem {
   left: -0.5em;
 }
 
+.csRunNotSaved {
+  background-color: rgb(255, 255, 0);
+  width: 0.3em;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: -0.5em;
+}
+
 .csRunError {
   white-space: pre-wrap;
   text-align: left;
@@ -110,6 +119,7 @@ p.stem {
 
   h2, h3, h4 {
     margin-left: 0;
+    text-align: left;
   }
 
   h4 {

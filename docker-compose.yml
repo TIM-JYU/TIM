@@ -47,6 +47,7 @@ services:
   image: timimages/cs3:rust
   build: ./timApp/modules/cs
   volumes:
+   - ${FILES_ROOT}/blocks/uploads:/uploads:ro
    - ./timApp/modules/cs:/cs
    - /var/run/docker.sock:/var/run/docker.sock
    - ./timApp/modules/cs/generated:/csgenerated

@@ -467,7 +467,7 @@ class DocParagraph:
         """
         if self.html is not None:
             return self.html
-        if self.is_plugin():
+        if self.is_plugin() or self.has_plugins():
             return self._set_html('')
         if self.is_setting():
             return self._set_html(self.__get_setting_html())
