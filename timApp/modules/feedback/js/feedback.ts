@@ -56,7 +56,7 @@ interface QuestionItemT extends t.TypeOf<typeof QuestionItem> {
 
 const QuestionItem = t.type({
     choices: t.array(Choice),
-    dragSource: t.string,
+    dragSource: withDefault(t.string,""),
     pluginNames: StringArray,
     words: t.array(StringArray),
 });
@@ -947,6 +947,8 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
                 const timComponent = this.vctrl.getTimComponentByName(item.dragSource);
                 if (timComponent) {
                     timComponent.resetField();
+                } else {
+                    this.error = `No plugin with such a name(${item.dragSource})`;
                 }
             }
         }
