@@ -39,6 +39,7 @@ class FeedbackStateSchema(Schema):
 
 @attr.s(auto_attribs=True)
 class FeedbackMarkupModel(GenericMarkupModel):
+    points_array: Union[str, Missing] = missing
     questionItems: Union[Any, Missing] = missing
     choice: Union[Any, Missing] = missing
     matchElement: Union[Any, Missing] = missing
@@ -49,6 +50,7 @@ class FeedbackMarkupModel(GenericMarkupModel):
 
 
 class FeedbackMarkupSchema(GenericMarkupSchema):
+    points_array = fields.List(fields.Number())
     questionItems = fields.Raw()
     choice= fields.Raw()
     matchElement= fields.Raw()
@@ -56,6 +58,12 @@ class FeedbackMarkupSchema(GenericMarkupSchema):
     correctStreak = fields.Int()
     teacherHide = fields.Bool()
     nextTask = fields.Str()
+
+    @validates('points_array')
+    def validate_points_array(self, value):
+        #or not all(len(v) == 1 for v in value)
+        if len(value) != 2:
+            raise ValidationError('Must be of size 1 x 2.')
 
     @post_load
     def make_obj(self, data):
@@ -177,12 +185,16 @@ def answer(args: FeedbackAnswerModel):
     feedback = args.input.feedback
     correct = args.input.correct
     answer = args.input.answer
+    points_array = args.markup.points_array or [0, 1]
+    points = points_array[correct]
 
     # plugin can ask not to save the word
     nosave = args.input.nosave
     if not nosave:
+        tim_info = {"points": points}
         save = {"sentence": sentence, "correct": correct, "feedback": feedback, "answer": answer}
         result["save"] = save
+        result["tim_info"] = tim_info
         web['result'] = "saved"
 
     return jsonify(result)
