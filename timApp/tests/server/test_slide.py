@@ -41,7 +41,7 @@ New paragraph
         pars = [p for p in d.document.get_paragraphs() if not p.is_setting()]
         # TODO get rid of the empty <p></p> tags
         expected_html = f"""
-<div class="reveal">
+<div class="reveal" style="visibility: hidden">
     <div class="slides paragraphs">
         <section>
             <div class="par" id="{pars[0].get_id()}" t="{pars[0].get_hash()}" attrs="{{}}">
