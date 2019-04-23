@@ -127,9 +127,9 @@ class DragController extends PluginBase<t.TypeOf<typeof DragMarkup>, t.TypeOf<ty
             dragImageTranslateOverride: scrollBehaviourDragImageTranslateOverride,
         });
 
-        window.addEventListener("touchmove", () => {passive: false // this dummy event will prevent browser scroll in ios 10
+        window.addEventListener("touchmove", () => {
             // TODO: Find a proper fix or another shim since this is a tmp fix
-        });
+        }, {passive: false});
 
         this.addToCtrl();
     }
@@ -279,6 +279,7 @@ class DragController extends PluginBase<t.TypeOf<typeof DragMarkup>, t.TypeOf<ty
         return DragAll;
     }
 
+
 }
 
 dragApp.component("dragRunner", {
@@ -306,7 +307,7 @@ dragApp.component("dragRunner", {
         {{item.word}}
         </li>
      </ul>
-    </div
+    </div>
     </div>
     <div ng-if="$ctrl.error" ng-bind-html="$ctrl.error"></div>
     <p ng-if="::$ctrl.footer" ng-bind="::$ctrl.footer" class="plgfooter"></p>
