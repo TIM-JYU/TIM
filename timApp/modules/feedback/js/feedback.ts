@@ -56,7 +56,7 @@ interface QuestionItemT extends t.TypeOf<typeof QuestionItem> {
 
 const QuestionItem = t.type({
     choices: t.array(Choice),
-    dragSource: withDefault(t.string,""),
+    dragSource: withDefault(t.string, ""),
     pluginNames: StringArray,
     words: t.array(StringArray),
 });
@@ -76,6 +76,7 @@ const FeedbackMarkup = t.intersection([
         cols: withDefault(t.number, 20),
         questionItems: t.array(QuestionItem),
         teacherHide: withDefault(t.boolean, true),
+        shuffle: withDefault(t.boolean, true),
     }),
 ]);
 const FeedbackAll = t.intersection([
@@ -120,10 +121,15 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
         this.setPluginWords();
         this.questionCount = this.attrs.questionItems.length;
         this.correctArray = new Array(this.questionCount).fill(false);
-        const questionIndex = this.getRandomQuestion(this.correctArray);
-        if (questionIndex !== undefined) {
-            this.index = questionIndex;
+        if (this.attrs.shuffle) {
+            const questionIndex = this.getRandomQuestion(this.correctArray);
+            if (questionIndex !== undefined) {
+                this.index = questionIndex;
+            }
+        } else {
+            this.index = 0;
         }
+
         this.teacherRight = this.vctrl.item.rights.teacher;
         if (!this.teacherRight || this.attrs.teacherHide) {
             this.hideQuestionItems();
@@ -534,18 +540,25 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
         if (this.pluginMode === Mode.Feedback) {
             const failure = await this.save();
             if (failure) {
-                this.error = "Error saving a plugin";
+                this.error = "Error saving feedback";
                 return;
             }
 
             this.printFeedback("");
 
-            const questionIndex = this.getRandomQuestion(this.correctArray || []);
-            if (questionIndex !== undefined) {
-                this.index = questionIndex;
+            let questionIndex = undefined;
+            if (this.attrs.shuffle) {
+                questionIndex = this.getRandomQuestion(this.correctArray || []);
+                if (questionIndex !== undefined) {
+                    this.index = questionIndex;
+                }
+            } else {
+                this.index++;
+                questionIndex = this.index;
             }
 
-            if (questionIndex === undefined || this.streak === this.attrs.correctStreak || this.currentFeedbackLevel === this.feedbackMax) {
+            if (questionIndex === undefined || this.streak === this.attrs.correctStreak ||
+                this.currentFeedbackLevel === this.feedbackMax || this.index >= this.attrs.questionItems.length) {
                 this.pluginMode = Mode.EndTask;
                 // this.showMode = "End Task";
                 // this.printFeedback("The task has ended");
@@ -661,11 +674,11 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
                 const kw = match[i].match(keywordPlaceHolder);
                 if (kw && kw.length > 0) {
                     const word = kw[0].split(':')[1].replace('|', "");
-                    if (answer[i].includes(word)) {
+                    if (answer[i].toLowerCase().includes(word.toLowerCase())) {
                         return true;
                     }
                 }
-                if (match[i] !== answer[i]) {
+                if (match[i].toLowerCase() !== answer[i].toLowerCase()) {
                     return false;
                 }
             }

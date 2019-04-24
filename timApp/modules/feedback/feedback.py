@@ -48,6 +48,7 @@ class FeedbackMarkupModel(GenericMarkupModel):
     teacherHide: Union[Any, Missing] = missing
     nextTask: Union[Any, Missing] = missing
     dragSource: Union[str, Missing] = missing
+    shuffle: Union[bool, Missing] = missing
 
 
 class FeedbackMarkupSchema(GenericMarkupSchema):
@@ -60,6 +61,7 @@ class FeedbackMarkupSchema(GenericMarkupSchema):
     teacherHide = fields.Bool()
     nextTask = fields.Str()
     dragSource = fields.Str()
+    shuffle = fields.Bool()
 
     @validates('points_array')
     def validate_points_array(self, value):
