@@ -171,7 +171,7 @@ dropdownApp.component("dropdownRunner", {
     <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
     <p ng-if="::$ctrl.stem">{{::$ctrl.stem}}</p>
     <div class="form-inline"><label><span>
-        <li class="dropradio" ng-if="::$ctrl.radio" ng-repeat="item in $ctrl.wordList">
+        <li class="dropradio" ng-if="::$ctrl.radio" ng-repeat="item in $ctrl.wordList" ng-change="::$ctrl.selfSave()">
         <label><input type="radio" name="selection" value="{{item}}" ng-model="$ctrl.selectedWord">
         {{item}}
         </label>

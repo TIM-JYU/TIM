@@ -55,6 +55,7 @@ interface QuestionItemT extends t.TypeOf<typeof QuestionItem> {
 }
 
 const QuestionItem = t.type({
+    area: withDefault(t.string, ""),
     choices: t.array(Choice),
     dragSource: withDefault(t.string, ""),
     pluginNames: StringArray,
@@ -114,6 +115,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
     private correctMap: Map<string, string> = new Map();
     private editMode?: EditMode | null;
     private edited = false;
+    private btnText = "OK";
 
     $onInit() {
         super.$onInit();
@@ -140,9 +142,10 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
         this.checkInstructions();
         this.checkDefaultMatch();
         this.editMode = $window.editMode;
-        if (this.editMode !== null) {
+        if (this.editMode !== null && !this.attrsall.preview) {
             this.edited = true;
         }
+        this.showDocument();
     }
 
     /**
@@ -161,7 +164,18 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
     }
 
     buttonText() {
-        return "OK";
+        return this.btnText;
+    }
+
+    setButtonText(text: string) {
+        this.btnText = text;
+    }
+
+    showDocument() {
+        const doc = document.querySelectorAll(".paragraphs");
+        if (doc.length > 0) {
+            doc[0].setAttribute("style", "display:block");
+        }
     }
 
     /**
@@ -255,7 +269,12 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
     hideQuestionItems() {
         const items = this.attrs.questionItems;
         for (let i = 0; i < items.length; i++) {
-            this.setBlockVisibility(i, false);
+            const area = this.attrs.questionItems[i].area;
+            if (area !== "") {
+                this.hideArea(area);
+            } else {
+                this.hideBlock(i);
+            }
         }
     }
 
@@ -318,6 +337,26 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
      */
     showParagraph(paragraph: Element) {
         this.changeVisibility(paragraph, true);
+    }
+
+    /**
+     * Hide a TIM area from the page
+     */
+    hideArea(area: string) {
+        const areaElement = document.querySelectorAll(`.${area}`);
+        if (areaElement.length > 0) {
+            this.hideParagraph(areaElement[0])
+        }
+    }
+
+    /**
+     * Show a TIM area in the page
+     */
+    showArea(area: string) {
+        const areaElement = document.querySelectorAll(`.${area}`);
+        if (areaElement.length > 0) {
+            this.showParagraph(areaElement[0])
+        }
     }
 
     /**
@@ -438,6 +477,10 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
      */
     async handleAnswer() {
         if (this.pluginMode === Mode.EndTask) {
+            const button = document.querySelectorAll(".fbButton");
+            if (button.length > 0) {
+                this.hideParagraph(button[0]);
+            }
             if (this.attrs.nextTask) {
                 const next = this.attrs.nextTask;
                 this.printFeedback(next);
@@ -476,7 +519,12 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
             this.pluginMode = Mode.QuestionItem;
             // For demonstration
             // this.showMode = "Question item paragraph, question " + (this.index + 1);
-            this.showBlock(this.index);
+            const area = this.attrs.questionItems[this.index].area;
+            if (area !== "") {
+                this.showArea(area);
+            } else {
+                this.showBlock(this.index);
+            }
             return;
         }
 
@@ -498,6 +546,15 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
             this.correctMap = this.getCorrectValues();
             this.correctAnswerString = this.getSentence(this.answerArray, this.correctMap).join(" ");
             const matchIndex = this.compareChoices(this.index, selections);
+
+            if (!this.teacherRight || this.attrs.teacherHide) {
+                const area = this.attrs.questionItems[this.index].area;
+                if (area !== "") {
+                    this.hideArea(area);
+                } else {
+                    this.hideBlock(this.index);
+                }
+            }
 
             if (matchIndex === undefined) {
                 this.error = "You have no choices defined, got no matches or using match objects";
@@ -529,11 +586,9 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
                 return;
             }
 
-            if (!this.teacherRight || this.attrs.teacherHide) {
-                this.hideBlock(this.index);
-            }
             // For demonstration
             // this.showMode = "Feedback paragraph";
+            this.setButtonText("Continue");
             return;
         }
 
@@ -571,7 +626,13 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
             // For demonstration
             // this.showMode = "Question item paragraph, question " + (this.index + 1);
             this.pluginMode = Mode.QuestionItem;
-            this.showBlock(this.index);
+            const area = this.attrs.questionItems[this.index].area;
+            if (area !== "") {
+                this.showArea(area);
+            } else {
+                this.showBlock(this.index);
+            }
+            this.setButtonText("OK")
             return;
         }
     }
@@ -1036,10 +1097,10 @@ feedbackApp.component("feedbackRunner", {
     <div class="form-inline">
     <span ng-bind-html="$ctrl.feedback"></span>
     </div>
-    <button class="timButton"
+    <button class="timButton fbButton"
             ng-if="::$ctrl.buttonText()"
             ng-click="$ctrl.handleAnswer()">
-        {{::$ctrl.buttonText()}}
+        {{$ctrl.buttonText()}}
     </button>
     <div class="wrong" ng-if="$ctrl.error" ng-bind-html="$ctrl.error"></div>
     <pre ng-if="$ctrl.result">{{$ctrl.result}}</pre>

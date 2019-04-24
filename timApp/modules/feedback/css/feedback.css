@@ -23,12 +23,23 @@ feedback-runner {
 .readline {
     display: none;
 }
+
+/*
 div#pars {
     border-color: #33CCCC;
     border-style: solid;
     border-radius: 10px;
     padding: 50px;
     min-height: 85vh;
+}
+*/
+
+.task {
+    border-color: #33CCCC;
+    border-style: solid;
+    border-radius: 10px;
+    padding: 50px;
+    min-height: 30vh;
 }
 
 .pluginfeedback button {
