@@ -308,7 +308,7 @@ class LanguageTypes {
         if (!type.startsWith("all")) {
             return false;
         }
-        if (type.match(/^all[^a-z0-9]/)) {
+        if (type.match(/^all[^a-z0-9]?/)) {
             return true;
         }
         return false;
@@ -1219,9 +1219,9 @@ class CsController extends CsBase implements IController {
         if (this.isAll) {
             const langs = this.attrs.languages;
             if (langs) {
-                return langs.split(/[\n;\/]/);
+                return langs.split(/[\n;, \/]/);
             } else {
-                return languageTypes.runTypes;
+                return languageTypes.runTypes.sort();
             }
         }
     }
@@ -1255,7 +1255,7 @@ class CsController extends CsBase implements IController {
 
         this.userinput = valueOr(this.attrsall.userinput, (this.attrs.userinput || "").toString());
         this.userargs = valueOr(this.attrsall.userargs, (this.attrs.userargs || (isText && isArgs ? this.attrs.filename || "" : "")).toString());
-        this.selectedLanguage = this.attrs.selectedLanguage || rt;
+        this.selectedLanguage = this.attrsall.selectedLanguage || rt;
         this.noeditor = valueOr(this.attrs.noeditor, this.isSimcir || (this.type === "upload"));
         this.wrap = this.attrs.wrap || (isText ? 70 : -1);
         this.editorMode = this.attrs.editorMode;
@@ -1472,8 +1472,8 @@ class CsController extends CsBase implements IController {
             upload.then((response) => {
                 $timeout(() => {
                     this.showUploaded(response.data.file, response.data.type);
-                    //if ( this.attrs.uploadautosave )
-                    this.doRunCode("upload", false);
+                    if ( this.attrs.uploadautosave || !this.attrs.button )
+                        this.doRunCode("upload", false);
                 });
             }, (response) => {
                 if (response.status > 0) {
