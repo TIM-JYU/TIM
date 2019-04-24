@@ -162,3 +162,19 @@ class CommentTest(NotifyTestBase):
                                      'docId': d.id,
                                      'par': par.get_id()},
                        expect_status=403)
+
+    def test_comment_at_area_start(self):
+        self.login_test1()
+        d = self.create_doc(initial_par="""
+#- {area=a collapse=true}
+
+#-
+hi
+
+#- {area_end=a}
+        """)
+        par = d.document.get_paragraphs()[0]
+        self.post_comment(par, public=True, text='test')
+        r = self.get(d.url, as_tree=True)
+        comments = r.cssselect('.notes > .note')
+        self.assertTrue(comments)
