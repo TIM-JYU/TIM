@@ -1472,7 +1472,8 @@ class CsController extends CsBase implements IController {
             upload.then((response) => {
                 $timeout(() => {
                     this.showUploaded(response.data.file, response.data.type);
-                    if ( this.attrs.uploadautosave ) this.doRunCode("upload", false);
+                    //if ( this.attrs.uploadautosave )
+                    this.doRunCode("upload", false);
                 });
             }, (response) => {
                 if (response.status > 0) {

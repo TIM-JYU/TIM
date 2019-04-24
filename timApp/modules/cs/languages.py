@@ -1084,6 +1084,10 @@ class Mathcheck(Language):
 class Upload(Language):
     def __init__(self, query, sourcecode):
         super().__init__(query, sourcecode)
+        cmds = get_param(query, "cmds", "")
+        if not cmds:
+            self.filename = None
+            return
         self.sourcefilename = "/tmp/%s/%s.txt" % (self.basename, self.filename)
         fn = self.query.jso["input"]["uploadedFile"]
         dn = os.path.dirname(fn)
@@ -1098,7 +1102,9 @@ class Upload(Language):
     pass
 
     def run(self, result, sourcelines, points_rule):
-        out = "saved: " + self.filename
+        out = ""
+        if self.filename:
+            out = "saved: " + self.filename
         return 0, out, "", ""
 
 class Octave(Language):
