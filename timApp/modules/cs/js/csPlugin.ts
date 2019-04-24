@@ -763,6 +763,7 @@ const CsAll = t.intersection([
         userargs: t.string,
         usercode: t.string,
         userinput: t.string,
+        selectedLanguage: t.string,
     }),
     t.type({
         // anonymous: t.boolean,
