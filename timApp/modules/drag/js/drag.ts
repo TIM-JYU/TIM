@@ -182,7 +182,9 @@ class DragController extends PluginBase<t.TypeOf<typeof DragMarkup>, t.TypeOf<ty
                 s = s + "," + el.word;
             });
         }
-        if (s.length < 1) return undefined;
+        if (s.length < 1) {
+            return undefined;
+        }
         return s;
     }
 
@@ -302,7 +304,7 @@ dragApp.component("dragRunner", {
         dnd-horizontal-list="true"
         dnd-disable-if="{{$ctrl.wordObjs.length >= $ctrl.max}}"
         dnd-effect-allowed="{{$ctrl.effectAllowed}}">
-        <li ng-repeat='item in $ctrl.wordObjs' class="dragword"
+        <li ng-repeat='item in $ctrl.wordObjs' ng-bind-html="item.word" class="dragword"
                     dnd-draggable="item"
                     dnd-type = "item.type"
                     dnd-moved="$ctrl.wordObjs.splice($index, 1)"

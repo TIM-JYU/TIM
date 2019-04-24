@@ -37,6 +37,7 @@ PLUGINS = None
 PLUGIN_REGEX_OBJS = {}
 QSTMDATTRS = ["rows", "choices", "[0-9]", ".*[Tt]ext"]
 FBMDATTRS = ["nextTask","questionItems","choices","levels"]
+DRAGATTRS = ["words"]
 
 """
 plugin class attributes
@@ -75,7 +76,7 @@ def get_plugins():
             "echo": {"host": "http://" + "tim" + ":5000/echoRequest/", "skip_reqs": True},
             "dropdown": {"host": "http://" + DROPDOWNPLUGIN_NAME + ":5000/"},
             "feedback": {"host": "http://" + FEEDBACKPLUGIN_NAME + ":5000/", REGEXATTRS: FBMDATTRS, AUTOMDATTRS: True},
-            "drag": {"host": "http://" + DRAGPLUGIN_NAME + ":5000/"}
+            "drag": {"host": "http://" + DRAGPLUGIN_NAME + ":5000/", REGEXATTRS: DRAGATTRS, AUTOMDATTRS: True},
         }
     return PLUGINS
 
