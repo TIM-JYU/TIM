@@ -32,7 +32,7 @@ from timApp.document.post_process import hide_names_in_teacher
 from timApp.item.block import Block, BlockType
 from timApp.markdown.dumboclient import call_dumbo
 from timApp.plugin.containerLink import call_plugin_answer
-from timApp.plugin.plugin import Plugin, PluginWrap
+from timApp.plugin.plugin import Plugin, PluginWrap, find_plugin_from_document
 from timApp.plugin.pluginControl import find_task_ids, pluginify, task_ids_to_strlist
 from timApp.plugin.pluginexception import PluginException
 from timApp.plugin.taskid import TaskId, TaskIdAccess
@@ -285,22 +285,34 @@ def post_answer(plugintype: str, task_id_ext: str):
     if plugin.type == 'jsrunner':
         save_object = jsonresp['save']
         print(save_object)
-        fieldss = save_object['fields']
-        task_ids = fieldss.keys()
-        for task in task_ids:
+        doc_set = set()
+        for item in save_object:
+            doc_set = item['fields'].keys()
+        task_content = {}
+        for task in doc_set:
             tid = TaskId.parse(task, False, False)
             dib = get_doc_or_abort(tid.doc_id)
+            plug = find_plugin_from_document(dib.document, tid, get_current_user_object())
+            content_field = plug.get_content_field_name()
+            task_content[task] = content_field
             verify_teacher_access(dib)
-        user_id = save_object['user']
-        u = User.get_by_id(user_id)
-        val = fieldss['46.pisteet']
-        c = {"numericvalue": val}
-        result = Answer(
-            content=json.dumps(c),
-            task_id=tid.doc_task,
-            users=[u],
-            valid=True,
-        )
+        for user in save_object:
+            user_id = user['user']
+            u = User.get_by_id(user_id)
+            user_fields = user['fields']
+            keys = list(user_fields)
+            for key in keys:
+                content_type = task_content[key]
+                print(content_type)
+                c = {content_type: user_fields[key]}
+                print(c)
+                task_id = TaskId.parse(key, False, False)
+                result = Answer(
+                    content=json.dumps(c),
+                    task_id=task_id.doc_task,
+                    users=[u],
+                    valid=True,
+                )
         db.session.add(result)
         db.session.commit()
         return json_response(result)

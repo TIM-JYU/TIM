@@ -5,6 +5,7 @@ var router = express.Router();
 router.put('/', function (req, res, next) {
 
     const uAndF = req.body.input.data;
+    //console.log(uAndF);
     // poista doc id:t uAndF
     const program = req.body.markup.program;
 
@@ -17,20 +18,28 @@ router.put('/', function (req, res, next) {
         },
         timeout: 1000,
     });
-    const result = vm.run(
+    let result = vm.run(
         `
         const Tools = require('./tools');
-        const tools = new Tools(data);
-        function runProgram() {
-            ${program}
+        const s = JSON.stringify(data)
+        const usersAndFields = JSON.parse(s);
+        let r = [];
+        for (let user of usersAndFields) {
+            const tools = new Tools(user);
+            function runProgram() {
+                ${program}
+            }
+            runProgram(); 
+            // module.exports = {result: tools.getResult()};
+            // console.log("hei");
+            r.push(tools.getResult());
         }
-        runProgram();
-        module.exports = {result: tools.getResult()};
+        module.exports = r;
         `,
         "/jsrunner/routes/vm.js",
         );
     console.log(result);
-    res.send({'save': result.result, 'web': {'result': 'points saved'}});
+    res.send({'save': result, 'web': {'result': 'points saved'}});
 
 });
 

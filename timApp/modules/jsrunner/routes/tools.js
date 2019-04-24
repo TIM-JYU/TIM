@@ -1,25 +1,28 @@
 class Tools {
 
     constructor(data) {
-        const s = JSON.stringify(data[0]);
-        const usersAndFields = JSON.parse(s);
-        this.data = usersAndFields;
+        this.data = data;
         this.final_result = {};
     }
 
     getDouble(fieldName, def=0) {
-        console.log(fieldName);
+        //console.log(fieldName);
         var fn = '46.'+fieldName;
         var s = this.data.fields[fn];
-        console.log(fn + " => " +s);
-        console.log(this.data);
-        var r = parseFloat(s);
+        //console.log(fn + " => " +s);
+        let r = parseFloat(s);
         if (r === NaN) r = def;
         return r;
     }
 
     getSum(a, b) {
         return a + b;
+    }
+
+    setString(fieldName, content) {
+        var tidFN = '46.'+fieldName;
+        console.log(tidFN);
+        this.final_result[tidFN] = content;
     }
 
     setDouble(fieldName, content) {
