@@ -128,7 +128,9 @@ class DragController extends PluginBase<t.TypeOf<typeof DragMarkup>, t.TypeOf<ty
         });
 
         window.addEventListener("touchmove", () => {
-            // TODO: Find a proper fix or another shim since this is a tmp fix
+            // this is a fix for ios problems arising in safari 10+
+            // this is also used for detecting touchscreen to change css layout
+            this.element.addClass("touchdrag");
         }, {passive: false});
 
         this.addToCtrl();
