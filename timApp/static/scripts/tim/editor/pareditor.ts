@@ -902,14 +902,16 @@ ${backTicks}
         let attachmentParams;
         let macroParams;
 
-        // To identify attachment-macro. // TODO: If editor has multiple attachments, this may go wrong
+        // To identify attachment-macro.
+        // TODO: If editor has multiple attachments, this may go wrong?
         const macroStringBegin = "%%liite(";
         const macroStringEnd = ")%%";
+        const isAttachmentMacro = editorText.length > 0 && editorText.lastIndexOf(macroStringBegin) > 0;
 
         // If there's an attachment macro in editor, assume need to stamp.
         // Also requires data from preamble to work correctly (dates and knro).
         // If there's no stampFormat set in preamble, uses hard coded default format.
-        if (editorText.length > 0 && editorText.lastIndexOf(macroStringBegin) > 0 && this.docSettings) {
+        if (isAttachmentMacro && this.docSettings) {
             autostamp = true;
             try {
                 let macroText = editorText.substring(
@@ -951,24 +953,22 @@ ${backTicks}
                 url: "/upload/",
             });
 
-            // TODO: Better plugin check.
-            // May fail when there are non-plugin-paragraphs before a plugin-paragraph in editor.
             upload.then((response) => {
                 $timeout(() => {
                     const editor = this.editor!;
                     const isplugin = (editor.editorStartsWith("``` {"));
                     let start = "[File](";
-                    let savedir = '/files/'
+                    let savedir = "/files/";
                     if (response.data.image  || response.data.file.toString().indexOf(".svg") >= 0 ) {
                         start = "![Image](";
                     }
                     if (response.data.image ) {
-                        savedir = "/images/"
+                        savedir = "/images/";
                         this.uploadedFile = savedir + response.data.image;
                     } else {
                         this.uploadedFile = savedir + response.data.file;
                     }
-                    if (isplugin) {
+                    if (isplugin || isAttachmentMacro) {
                         editor.insertTemplate(this.uploadedFile);
                     } else {
                         editor.insertTemplate(start + this.uploadedFile + ")");
