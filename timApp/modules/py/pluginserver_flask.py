@@ -21,8 +21,9 @@ from pprint import pprint
 from typing import Optional, Set, Union, TypeVar, Generic, Dict, List
 
 import attr
-from flask import render_template_string, jsonify, Flask, Blueprint
-from marshmallow import Schema, fields, post_load, missing, pre_load, ValidationError
+from flask import Blueprint
+from flask import render_template_string, jsonify, Flask
+from marshmallow import Schema, fields, post_load, missing, pre_load, ValidationError, validates
 # noinspection PyProtectedMember
 from marshmallow.utils import _Missing as Missing
 from webargs.flaskparser import use_args
@@ -105,7 +106,7 @@ class GenericMarkupSchema(Schema):
 class GenericHtmlSchema(Schema):
     access = fields.Str()
     anonymous = fields.Bool(required=True)
-    doLazy = fields.Bool(required=True)  # TODO this can also be string "NEVERLAZY" which now fails validation
+    doLazy = fields.Raw(required=True)  # boolean or "NEVERLAZY"
     info = fields.Dict(allow_none=True, required=True)
     markup = fields.Dict(required=True)
     preview = fields.Bool(required=True)
@@ -116,6 +117,11 @@ class GenericHtmlSchema(Schema):
     taskIDExt = fields.Str(required=True)
     user_id = fields.Str(required=True)
     userPrint = fields.Bool(required=True)
+
+    @validates('doLazy')
+    def validate_do_lazy(self, value):
+        if value != 'NEVERLAZY' and not isinstance(value, bool):
+            raise ValidationError('do_lazy must be bool or "NEVERLAZY"')
 
     class Meta:
         strict = True
@@ -219,7 +225,7 @@ def render_plugin_with_login_request(m: GenericHtmlModel[PluginInput, PluginMark
 <p class="pluginError">
     Please <login-menu></login-menu> to interact with this component.
 </p>
-{{ static_html }}""", static_html=m.get_static_html(),
+{{ static_html|safe }}""", static_html=m.get_static_html(),
     )
 
 
@@ -231,7 +237,7 @@ def make_base64(d: dict):
 def is_lazy(q: GenericHtmlModel):
     """Determines if the server should render a lazy version of the plugin."""
     if q.doLazy == 'NEVERLAZY':
-        return False  # TODO currently unreachable because doLazy is validated as bool
+        return False
     if q.markup.lazy:
         return True
     if q.markup.lazy is False:

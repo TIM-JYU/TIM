@@ -67,62 +67,6 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
         this.data = this.attrsall.data;
     }
 
-    /**
-     * Temporary default TimTable data for demonstartion purposes
-     */
-    setData(){
-        return {
-  "task": true,
-  "table": {
-    "rows": [
-      {
-        "backgroundColor": "gray"
-      },
-      {
-        "row": [
-          {
-            "color": "white",
-            "backgroundColor": "black",
-            "cell": "Erilaisia sisältöjä",
-            "colspan": 5
-          }
-        ]
-      },
-      {
-        "row": [
-          {
-            "height": "250px",
-            "width": "300px",
-            "cell": "<figure>\n<img src=\"/images/157964/C360_2010-12-22_12-49-34-SNOW.gif\" alt=\"Kaunis talvimaisema\" /><figcaption>Kaunis talvimaisema</figcaption>\n</figure>"
-          },
-          {
-            "cell": "kaava <span class=\"math display\">\\[\\int f(x^6) dx\\]</span>",
-            "colspan": 2,
-            "horizontal-align": "right"
-          }
-        ]
-      },
-      {
-        "row": [
-          "<figure>\n<img src=\"/images/157965/IMAG1226.jpg\" alt=\"Sumuinen aamu\" /><figcaption>Sumuinen aamu</figcaption>\n</figure>",
-          {
-            "textAlign": "middle",
-            "cell": "<span class=\"timButton\">Painike<span>"
-          }
-        ]
-      },
-      {
-        "row": [
-          {
-            "cell": "<table>\n<thead>\n<tr class=\"header\">\n<th>Kissat vai koirat</th>\n<th style=\"text-align: left;\">Kissat</th>\n<th style=\"text-align: right;\">Koirat</th>\n</tr>\n</thead>\n<tbody>\n<tr class=\"odd\">\n<td>1. äänestys</td>\n<td style=\"text-align: left;\">14</td>\n<td style=\"text-align: right;\">5</td>\n</tr>\n<tr class=\"even\">\n<td>2. äänestys</td>\n<td style=\"text-align: left;\">6</td>\n<td style=\"text-align: right;\">6</td>\n</tr>\n</tbody>\n</table>",
-            "colspan": null
-          }
-        ]
-      }
-    ]
-  }
-}
-    }
 
     initCode() {
         this.userword = this.attrs.initword || "";

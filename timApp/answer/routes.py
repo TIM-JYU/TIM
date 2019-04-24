@@ -2,7 +2,7 @@
 import json
 import re
 from datetime import timezone, timedelta, datetime
-from typing import Union, List, Tuple, Optional, Dict
+from typing import Union, List, Tuple, Dict
 
 import attr
 import dateutil.parser
@@ -32,8 +32,10 @@ from timApp.document.post_process import hide_names_in_teacher
 from timApp.item.block import Block, BlockType
 from timApp.markdown.dumboclient import call_dumbo
 from timApp.plugin.containerLink import call_plugin_answer
-from timApp.plugin.plugin import Plugin, PluginWrap, find_plugin_from_document
-from timApp.plugin.pluginControl import find_task_ids, pluginify, task_ids_to_strlist
+from timApp.plugin.plugin import Plugin, PluginWrap, NEVERLAZY
+from timApp.plugin.plugin import find_plugin_from_document
+from timApp.plugin.pluginControl import find_task_ids, pluginify
+from timApp.plugin.pluginControl import task_ids_to_strlist
 from timApp.plugin.pluginexception import PluginException
 from timApp.plugin.taskid import TaskId, TaskIdAccess
 from timApp.timdb.dbaccess import get_timdb
@@ -232,7 +234,8 @@ def post_answer(plugintype: str, task_id_ext: str):
     if isinstance(answerdata, dict):
         file = answerdata.get('uploadedFile', '')
         trimmed_file = file.replace('/uploads/', '')
-        if trimmed_file:
+        type = answerdata.get('type', '')
+        if trimmed_file and type == 'upload':
             # The initial upload entry was created in /pluginUpload route, so we need to check that the owner matches
             # what the browser is saying. Additionally, we'll associate the answer with the uploaded file later
             # in this route.
@@ -242,8 +245,8 @@ def post_answer(plugintype: str, task_id_ext: str):
                 abort(400, f'Non-existent upload: {trimmed_file}')
             verify_view_access(block, message="You don't have permission to touch this file.")
             upload = AnswerUpload.query.filter(AnswerUpload.upload_block_id == block.id).first()
-            if upload.answer_id is not None:
-                abort(400, f'File was already uploaded: {file}')
+            # if upload.answer_id is not None:
+            #    abort(400, f'File was already uploaded: {file}')
 
     # Load old answers
 
@@ -626,6 +629,7 @@ def get_state(args: GetStateModel):
         user,
         custom_answer=answer,
         pluginwrap=PluginWrap.Nothing,
+        do_lazy=NEVERLAZY,
     )
     html = plug.get_final_output()
     if review:
@@ -637,6 +641,7 @@ def get_state(args: GetStateModel):
             custom_answer=answer,
             review=review,
             pluginwrap=PluginWrap.Nothing,
+            do_lazy=NEVERLAZY,
         )
         return json_response({'html': html, 'reviewHtml': rplug.get_final_output()})
     else:

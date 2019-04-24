@@ -27,7 +27,20 @@ declare module "katex-auto-render" {
     const renderMathInElement: (e: Element, options?: KatexRenderOptions) => void;
     export = renderMathInElement;
 }
-declare module "reveal";
+
+interface INotesPlugin {
+    open(filePath?: string): void;
+}
+
+interface IFixedReveal extends RevealStatic {
+    slide(indexh: number, indexv?: number, f?: number, o?: unknown): void;
+    getPlugin(id: "notes"): INotesPlugin;
+}
+
+declare module "reveal" {
+    const x: IFixedReveal;
+    export = x;
+}
 declare module "ace" {
     import Ace = AceAjax.Ace;
     let ace: Ace;
