@@ -224,29 +224,29 @@ I {#practice words: [will think, won't think, might think]} before answering.
 
 ## Item: {defaultplugin="dropdown"}
 
-What {#drop1} on the stove?
+What {#dropdown1} on the stove?
 
 
 ## Item: {defaultplugin="dropdown"}
 
-Who {#drop2} the cake?
+Who {#dropdown2} the cake?
 
 
 ## Item: {defaultplugin="dropdown"}
 
-What {#drop3} on the roof?
+What {#dropdown3} on the roof?
 
 
 ## Item: {defaultplugin="dropdown"}
 
-Who {#drop4} the 3 mile swim in the race?
+Who {#dropdown4} the 3 mile swim in the race?
  
 
 ``` {#fb1 plugin="feedback"}
 correctStreak: 2
 nextTask: nonexttaskdefined
 questionItems:
-- pluginNames: [drop1]
+- pluginNames: [dropdown1]
   words: [[is cooking, do cooking, are cooking]]
   choices:
     - match: [is cooking]
@@ -274,7 +274,7 @@ questionItems:
         - "Level 3 feedback: default feedback for drop4"
         - "Level 4 feedback: default feedback for drop4"
         - "Level 5 feedback: Please note the correct answer: 'What **is** / Who **is**'"
-- pluginNames: [drop2]
+- pluginNames: [dropdown2]
   words: [[is baking, do baking, are baking]]
   choices:
     - match: [is baking]
@@ -286,7 +286,7 @@ questionItems:
       levels: *arematch
     - match: []
       levels: *defaultmatch
-- pluginNames: [drop3]
+- pluginNames: [dropdown3]
   words: [[is jumping, do jumping, are jumping]]
   choices:
     - match: [is jumping]
@@ -298,7 +298,7 @@ questionItems:
       levels: *arematch
     - match: []
       levels: *defaultmatch
-- pluginNames: [drop4]
+- pluginNames: [dropdown4]
   words: [[is swimming, do swimming, are swimming]]
   choices:
     - match: [is swimming]

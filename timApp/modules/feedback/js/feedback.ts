@@ -1044,9 +1044,9 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
             this.editMode = $window.editMode;
 
             const instructions = document.querySelectorAll(".par.instruction");
-            this.showParagraph(instructions[0]);
 
             if (!this.edited) {
+                this.showParagraph(instructions[0]);
                 const items = this.attrs.questionItems;
                 for (const item of items) {
                     if (item.pluginNames.length > 0) {

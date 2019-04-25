@@ -21,6 +21,10 @@ feedback-runner {
 .item {
 }
 
+.readline {
+    display: none;
+}
+
 /*
 div#pars {
     border-color: #33CCCC;
