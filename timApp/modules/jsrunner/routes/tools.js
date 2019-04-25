@@ -6,12 +6,11 @@ class Tools {
     }
 
     getDouble(fieldName, def=0) {
-        //console.log(fieldName);
         var fn = '46.'+fieldName;
         var s = this.data.fields[fn];
         //console.log(fn + " => " +s);
         let r = parseFloat(s);
-        if (r === NaN) r = def;
+        if (r === NaN) r = def; // TODO: korjaa
         return r;
     }
 

@@ -5,7 +5,7 @@ var router = express.Router();
 router.put('/', function (req, res, next) {
 
     const uAndF = req.body.input.data;
-    //console.log(uAndF);
+    console.log(uAndF);
     // poista doc id:t uAndF
     const program = req.body.markup.program;
 
