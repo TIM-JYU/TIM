@@ -298,8 +298,6 @@ def view(item_path, template_name, usergroup=None, route="view"):
             task_groups = info[0].get('groups')
             show_task_info = tasks_done > 0 or total_points != 0
 
-    ## ug.users.all() <- palautetaan kaikki käyttäjät sen jälkeen kun on haettu käyttäjät vastauksilla
-
     no_question_auto_numbering = None
 
     if route == 'lecture' and has_edit_access(doc_info):

@@ -7,7 +7,7 @@ class Tools {
 
     getDouble(fieldName, def=0) {
         //console.log(fieldName);
-        var fn = '46.'+fieldName;
+        var fn = '71.'+fieldName;
         var s = this.data.fields[fn];
         //console.log(fn + " => " +s);
         let r = parseFloat(s);
@@ -20,13 +20,13 @@ class Tools {
     }
 
     setString(fieldName, content) {
-        var tidFN = '46.'+fieldName;
+        var tidFN = '71.'+fieldName;
         console.log(tidFN);
         this.final_result[tidFN] = content;
     }
 
     setDouble(fieldName, content) {
-        var tidFN = '46.'+fieldName;
+        var tidFN = '71.'+fieldName;
         this.final_result[tidFN] = content;
     }
 
