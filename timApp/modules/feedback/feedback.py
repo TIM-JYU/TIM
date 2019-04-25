@@ -245,7 +245,6 @@ Who {#drop4} the 3 mile swim in the race?
 ``` {#fb1 plugin="feedback"}
 correctStreak: 2
 nextTask: nonexttaskdefined
-teacherHide: true
 questionItems:
 - pluginNames: [drop1]
   words: [[is cooking, do cooking, are cooking]]
@@ -387,9 +386,9 @@ He wanted to know {#drop4}.
 
 correctStreak: 2
 nextTask: nonexttaskdefined
-teacherHide: true
 questionItems:
 - pluginNames: [drop1]
+  dragSource: drag1
   words: []
   choices:
     - match: [when I come around]
@@ -418,6 +417,7 @@ questionItems:
         - "Level 4 feedback: You answered: *|answer|* Answer is wrong. The conjunction should come first."
         - "Level 5 feedback: Please note the correct word order: 'conjuction subject verb the rest'"
 - pluginNames: [drop2]
+  dragSource: drag2
   words: []
   choices:
     - match: [if I run a mile]
@@ -430,6 +430,7 @@ questionItems:
     - match: []
       levels: *defaultmatch
 - pluginNames: [drop3]
+  dragSource: drag3
   words: []
   choices:
     - match: [who I see at work]
@@ -442,6 +443,7 @@ questionItems:
     - match: []
       levels: *defaultmatch
 - pluginNames: [drop4]
+  dragSource: drag4
   words: []
   choices:
     - match: [whether I had a computer]
@@ -498,7 +500,6 @@ Please order the words correctly into the sentence below.
 """, """``` {#fb1 plugin="feedback"}
 correctStreak: 2
 nextTask: nonexttaskdefined
-teacherHide: true
 questionItems:
 - pluginNames: [drop1]
   words: [[is cooking, do cooking, are cooking]]
@@ -545,9 +546,9 @@ questionItems:
 
 correctStreak: 2
 nextTask: nonexttaskdefined
-teacherHide: true
 questionItems:
 - pluginNames: [drop1]
+  dragSource: drag1
   words: []
   choices:
     - match: [when I come around]
