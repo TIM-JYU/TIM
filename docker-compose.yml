@@ -4,7 +4,7 @@ services:
   image: timimages/tim:${TIM_IMAGE_TAG}
   build: ./timApp
   depends_on:
-   - stack-api-server
+   # - stack-api-server
    - postgresql
    - csplugin
    - pali

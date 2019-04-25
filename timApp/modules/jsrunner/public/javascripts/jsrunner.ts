@@ -88,6 +88,7 @@ class JsrunnerController extends PluginBase<t.TypeOf<typeof JsrunnerMarkup>, t.T
         } else {
             this.error = "Infinite loop or some other error?";
         }
+
     }
 
     protected getAttributeType() {

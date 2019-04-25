@@ -290,7 +290,11 @@ def post_answer(plugintype: str, task_id_ext: str):
         print(save_object)
         doc_set = set()
         for item in save_object:
-            doc_set = item['fields'].keys()
+            a = item['fields']
+            d = list(a)
+            for i in d:
+                doc_set.add(i)
+        print(doc_set, "setti")
         task_content = {}
         for task in doc_set:
             tid = TaskId.parse(task, False, False)
@@ -305,6 +309,8 @@ def post_answer(plugintype: str, task_id_ext: str):
             user_fields = user['fields']
             keys = list(user_fields)
             for key in keys:
+                print(key)
+                print(task_content)
                 content_type = task_content[key]
                 print(content_type)
                 c = {content_type: user_fields[key]}

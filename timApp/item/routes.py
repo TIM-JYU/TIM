@@ -284,6 +284,7 @@ def view(item_path, template_name, usergroup=None, route="view"):
             ug = UserGroup.get_by_name(usergroup)
             if not ug:
                 abort(404, 'User group not found')
+            
             user_dict = {u.id: u for u in ug.users}
             user_list = list(user_dict.keys())
         user_list = timdb.answers.get_points_by_rule(points_sum_rule, task_ids, user_list, flatten=True)
