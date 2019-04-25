@@ -21,6 +21,7 @@ const DropdownMarkup = t.intersection([
         instruction: withDefault(t.boolean, false),
         radio: withDefault(t.boolean, false),
         shuffle: withDefault(t.boolean, false),
+        autosave: withDefault(t.boolean, false),
     }),
 ]);
 const DropdownAll = t.intersection([
@@ -113,6 +114,12 @@ class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.T
         }
     }
 
+    selfSave() {
+        if(this.attrs.autosave) {
+            this.save();
+        }
+    }
+
     /**
      * Force the plugin to save its information
      *
@@ -171,12 +178,12 @@ dropdownApp.component("dropdownRunner", {
     <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
     <p ng-if="::$ctrl.stem">{{::$ctrl.stem}}</p>
     <div class="form-inline"><label><span>
-        <li class="dropradio" ng-if="::$ctrl.radio" ng-repeat="item in $ctrl.wordList" ng-change="::$ctrl.selfSave()">
-        <label><input type="radio" name="selection" value="{{item}}" ng-model="$ctrl.selectedWord">
+        <li class="dropradio" ng-if="::$ctrl.radio" ng-repeat="item in $ctrl.wordList">
+        <label><input type="radio" name="selection" value="{{item}}" ng-model="$ctrl.selectedWord" ng-change="::$ctrl.selfSave()">
         {{item}}
         </label>
         </li>
-        <select ng-if="::!$ctrl.radio" ng-model="$ctrl.selectedWord" ng-options="item for item in $ctrl.wordList">
+        <select ng-if="::!$ctrl.radio" ng-model="$ctrl.selectedWord" ng-options="item for item in $ctrl.wordList" ng-change="::$ctrl.selfSave()">
         </select>
         </span></label>
     </div>

@@ -339,7 +339,7 @@ Please order the words correctly into the sentence below.
 
 \
 :::
- You know where I'll be found {#drop1}.
+You know where I'll be found {#drop1}.
 
 
 ## Item {defaultplugin="drag"}
@@ -352,7 +352,7 @@ Please order the words correctly into the sentence below.
 
 \
 :::
- I will be quite tired {#drop2}.
+I will be quite tired {#drop2}.
 
 
 ## Item {defaultplugin="drag"}
@@ -365,7 +365,7 @@ Please order the words correctly into the sentence below.
 
 \
 :::
- I will tell you {#drop3}.
+I will tell you {#drop3}.
 
 
 ## Item {defaultplugin="drag"}
@@ -496,7 +496,7 @@ Please order the words correctly into the sentence below.
 
 \
 :::
- You know where I'll be found {#drop1}.
+You know where I'll be found {#drop1}.
 """, """``` {#fb1 plugin="feedback"}
 correctStreak: 2
 nextTask: nonexttaskdefined
