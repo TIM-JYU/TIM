@@ -48,6 +48,7 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
     private vctrl!: ViewCtrl;
     private notSavedWord = "";
     private errormessage = "";
+    private isSaved = false;
 
     getDefaultMarkup() {
         return {};
@@ -149,6 +150,7 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
      */
     saveText() {
         this.doSaveText(false);
+        this.isSaved = true;
     }
 
     // noinspection JSUnusedGlobalSymbols
@@ -200,6 +202,7 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
      */
     async doSaveText(nosave: boolean) {
         this.errormessage = "";
+        this.isSaved = false;
         if (this.attrs.inputchecker) {
             if(!this.validityCheck(this.attrs.inputchecker)) {
                 this.errormessage = "Input does not pass the RegExp checker: " + this.attrs.inputchecker;
@@ -253,7 +256,7 @@ textfieldApp.component("textfieldRunner", {
     <tim-markup-error ng-if="::$ctrl.markupError" data="::$ctrl.markupError"></tim-markup-error>
     <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
     <p class="stem" ng-if="::$ctrl.stem">{{::$ctrl.stem}}</p>
-    <form name="$ctrl.f" class="form-inline"><label>{{::$ctrl.inputstem}} <span>   
+    <form name="$ctrl.f" class="form-inline"><label>{{::$ctrl.inputstem}}<span>   
         <input type="string"
                class="form-control"
                ng-model="$ctrl.userword"
@@ -271,15 +274,14 @@ textfieldApp.component("textfieldRunner", {
                size="{{::$ctrl.cols}}" 
                ng-class="{warnFrame: $ctrl.notSaved()}">
                </span></label>
-    
+        </form>
     <button class="timButton"
             ng-if="$ctrl.buttonText()"
             ng-disabled="$ctrl.isRunning || $ctrl.readonly"
             ng-click="$ctrl.saveText()">
         {{::$ctrl.buttonText()}}
-    </button>
-    </form>
-    <!-- <div ng-if="$ctrl.error" style="font-size: 12px" ng-bind-html="$ctrl.error"></div> -->
+    </button> 
+    <pre class="savedtext" ng-if="$ctrl.isSaved && $ctrl.buttonText()">Saved!</pre> 
     <p ng-if="::$ctrl.footer" ng-bind="::$ctrl.footer" class="plgfooter"></p>
 </div>
 `,
