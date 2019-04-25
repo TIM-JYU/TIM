@@ -209,7 +209,9 @@ def answer(args: FeedbackAnswerModel):
 @app.route('/reqs/')
 @app.route('/reqs')
 def reqs():
-    templates = ["""## Instructions {.instruction defaultplugin="dropdown"}
+    templates = ["""#- {area="dropdowntask1" .task}
+
+## Instructions {.instruction defaultplugin="dropdown"}
 
 Welcome to the test. Read the question carefully. If you get the answer wrong, please read the feedback carefully.
 
@@ -309,7 +311,10 @@ questionItems:
       levels: *arematch
     - match: []
       levels: *defaultmatch
-```""", """## Instructions {.instruction defaultplugin="drag"}
+```
+#- {area_end="dropdowntask1"}""", """#- {area="dragtask1" .task}
+
+## Instructions {.instruction defaultplugin="drag"}
 
 Welcome to the test. Read the question carefully. If you get the answer wrong, please read the feedback carefully.
 
@@ -449,7 +454,8 @@ questionItems:
     - match: []
       levels: *defaultmatch
 
-```""", """## Instructions {.instruction defaultplugin="dropdown"}
+```
+#- {area_end="dragtask1"}""", """## Instructions {.instruction defaultplugin="dropdown"}
 
 Welcome to the test. Read the question carefully. If you get the answer wrong, please read the feedback carefully.
 

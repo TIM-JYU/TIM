@@ -20,9 +20,6 @@ feedback-runner {
 
 .item {
 }
-.readline {
-    display: none;
-}
 
 /*
 div#pars {
@@ -34,12 +31,16 @@ div#pars {
 }
 */
 
+/*.pull-right {
+    display: block;
+}*/
 .task {
     border-color: #33CCCC;
     border-style: solid;
     border-radius: 10px;
     padding: 50px;
     min-height: 30vh;
+    margin-bottom: 1em;
 }
 
 .pluginfeedback button {

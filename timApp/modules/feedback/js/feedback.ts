@@ -116,6 +116,8 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
     private editMode?: EditMode | null;
     private edited = false;
     private btnText = "OK";
+    private instrHidden = false;
+    private itemHidden = true;
 
     $onInit() {
         super.$onInit();
@@ -133,7 +135,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
         }
 
         this.teacherRight = this.vctrl.item.rights.teacher;
-        if (!this.teacherRight || this.attrs.teacherHide) {
+        if (!this.attrsall.preview && (!this.teacherRight || this.attrs.teacherHide)) {
             this.hideQuestionItems();
         }
         this.checkCorrectAnswers();
@@ -142,7 +144,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
         this.checkInstructions();
         this.checkDefaultMatch();
         this.editMode = $window.editMode;
-        if (this.editMode !== null && !this.attrsall.preview) {
+        if (this.editMode != null) {
             this.edited = true;
         }
         this.showDocument();
@@ -502,11 +504,13 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
                 }
                 if (!this.teacherRight || this.attrs.teacherHide) {
                     this.hideComponent(instructionQuestion);
+                    this.instrHidden = true;
                 }
             } else {
                 const instruction = document.querySelectorAll(".par.instruction");
                 if (instruction) {
                     this.hideParagraph(instruction[0]);
+                    this.instrHidden = true;
                 }
                 const failure = await this.doSave(false, false, "", "");
                 if (failure) {
@@ -524,6 +528,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
                 this.showArea(area);
             } else {
                 this.showBlock(this.index);
+                this.itemHidden = false;
             }
             return;
         }
@@ -553,6 +558,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
                     this.hideArea(area);
                 } else {
                     this.hideBlock(this.index);
+                    this.itemHidden = true;
                 }
             }
 
@@ -631,6 +637,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
                 this.showArea(area);
             } else {
                 this.showBlock(this.index);
+                this.itemHidden = false;
             }
             this.setButtonText("OK")
             return;
@@ -1033,19 +1040,19 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
      * TODO: refactor
      */
     async $doCheck() {
-        if (this.editMode != $window.editMode) {
+        if (!this.attrsall.preview && this.editMode != $window.editMode) {
             this.editMode = $window.editMode;
 
             const instructions = document.querySelectorAll(".par.instruction");
-
+            this.showParagraph(instructions[0]);
+            
             if (!this.edited) {
-                this.showParagraph(instructions[0]);
                 const items = this.attrs.questionItems;
                 for (const item of items) {
-                    for (const plugin of item.pluginNames) {
-                        const timComponent = this.vctrl.getTimComponentByName(plugin);
-                        if (timComponent) {
-                            const par = timComponent.getPar();
+                    if (item.pluginNames.length > 0) {
+                        const plugin = this.vctrl.getTimComponentByName(item.pluginNames[0]);
+                        if (plugin) {
+                            const par = plugin.getPar();
                             this.showParagraph(par.children(".parContent")[0]);
                         }
                     }
@@ -1053,15 +1060,22 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
                 this.edited = true;
 
             } else {
-                this.hideParagraph(instructions[0]);
                 const items = this.attrs.questionItems;
                 for (const item of items) {
-                    for (const plugin of item.pluginNames) {
-                        const timComponent = this.vctrl.getTimComponentByName(plugin);
-                        if (timComponent) {
-                            const par = timComponent.getPar();
+                    if (item.pluginNames.length > 0) {
+                        const plugin = this.vctrl.getTimComponentByName(item.pluginNames[0]);
+                        if (plugin) {
+                            const par = plugin.getPar();
                             this.hideParagraph(par.children(".parContent")[0]);
                         }
+                    }
+                }
+                if (!this.instrHidden) {
+                    this.showParagraph(instructions[0]);
+                } else {
+                    this.hideParagraph(instructions[0]);
+                    if (!this.itemHidden) {
+                        this.showBlock(this.index);
                     }
                 }
                 this.edited = false;
