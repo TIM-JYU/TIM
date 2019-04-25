@@ -133,7 +133,8 @@ multisaveApp.component("multisaveRunner", {
             ng-click="$ctrl.save()">
         {{::$ctrl.buttonText()}}
     </button>
-    <!-- No visible text  <pre class="savedtext" ng-if="$ctrl.isSaved">Saved!</pre> -->
+    <pre class="savedtext" ng-if="$ctrl.isSaved">Saved!</pre>
+    <!-- <pre class="savedtext" ng-if="$ctrl.isSaved">Saved!</pre> -->
     <p ng-if="::$ctrl.footer" ng-bind="::$ctrl.footer" class="plgfooter"></p>
 </div>
 `,

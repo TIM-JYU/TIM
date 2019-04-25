@@ -7,7 +7,7 @@ import {GenericPluginMarkup, Info, nullable, PluginBase, pluginBindings, withDef
 import {$http} from "tim/util/ngimport";
 import {to} from "tim/util/utils";
 import {ITimComponent, ViewCtrl} from "tim/document/viewctrl";
-import {valueDefu} from "tim/util/utils"; //tarvitaan reset-metodille, jos halutaan toteuttaa
+import {valueDefu} from "tim/util/utils"; // Authors note: needed for Reset-method, if ever wanted.
 
 const textfieldApp = angular.module("textfieldApp", ["ngSanitize"]);
 export const moduleDefs = [textfieldApp];
@@ -47,6 +47,7 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
     private modelOpts!: INgModelOptions; // initialized in $onInit, so need to assure TypeScript with "!"
     private vctrl!: ViewCtrl;
     private notSavedWord = "";
+    private errormessage = "";
 
     getDefaultMarkup() {
         return {};
@@ -150,13 +151,24 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
         this.doSaveText(false);
     }
 
+    // noinspection JSUnusedGlobalSymbols
     /**
-     * NOTE: This functionality is defined as low-priority and therefore TODO.
+     * Returns inputchecker attribute, if one is defined.
+     * Used by pattern checker in angular.
+     * Unused method warning is suppressed, as the method is only called in template.
+     */
+    getPattern() {
+        if (this.attrs.inputchecker) {
+            return this.attrs.inputchecker;
+        }
+    }
+
+    /**
      * Method to check grading input type for textfield.
      * Used as e.g. grading checker for hyv | hyl | 1 | 2 | 3 | 4 | 5.
-     * @param re TODO!
+     * @param re inputchecker defined by given attribute.
      */
-    checkInputRegex(re: string) {
+    validityCheck(re: string) {
         let regExpChecker = new RegExp(re);
         return regExpChecker.test(this.userword);
     }
@@ -187,9 +199,10 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
      * @param true/false parameter boolean checker for the need to save
      */
     async doSaveText(nosave: boolean) {
+        this.errormessage = "";
         if (this.attrs.inputchecker) {
-            if(!this.checkInputRegex(this.attrs.inputchecker)) {
-                this.error = "Input does not pass the RegExp checker, input is not saved!";
+            if(!this.validityCheck(this.attrs.inputchecker)) {
+                this.errormessage = "Input does not pass the RegExp checker: " + this.attrs.inputchecker;
                 return;
             }
         }
@@ -217,9 +230,7 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
             this.notSavedWord = this.userword;
         } else {
             this.error = r.result.data.error;
-            /* No visible text version
-            this.error = r.result.data.error|| "Infinite loop or some other error?";
-            */
+            this.errormessage = r.result.data.error || "Infinite loop or some other error?";
         }
     }
 
@@ -242,7 +253,7 @@ textfieldApp.component("textfieldRunner", {
     <tim-markup-error ng-if="::$ctrl.markupError" data="::$ctrl.markupError"></tim-markup-error>
     <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
     <p class="stem" ng-if="::$ctrl.stem">{{::$ctrl.stem}}</p>
-    <div class="form-inline"><label>{{::$ctrl.inputstem}} <span>   
+    <form name="$ctrl.f" class="form-inline"><label>{{::$ctrl.inputstem}} <span>   
         <input type="string"
                class="form-control"
                ng-model="$ctrl.userword"
@@ -251,19 +262,24 @@ textfieldApp.component("textfieldRunner", {
                ng-keydown="$event.keyCode === 13 && $ctrl.saveText()"
                ng-model-options="::$ctrl.modelOpts"
                ng-trim="false"
+               pattern="{{ $ctrl.getPattern() }}"
                ng-readonly="::$ctrl.readonly"
+               uib-tooltip="{{ $ctrl.errormessage }}"
+               tooltip-is-open="$ctrl.f.$invalid && $ctrl.f.$dirty"
+               tooltip-trigger="none"
                placeholder="{{::$ctrl.inputplaceholder}}"
                size="{{::$ctrl.cols}}" 
                ng-class="{warnFrame: $ctrl.notSaved()}">
                </span></label>
-    </div>
+    
     <button class="timButton"
             ng-if="$ctrl.buttonText()"
-            ng-disabled="$ctrl.isRunning || !$ctrl.userword || $ctrl.readonly"
+            ng-disabled="$ctrl.isRunning || $ctrl.readonly"
             ng-click="$ctrl.saveText()">
         {{::$ctrl.buttonText()}}
     </button>
-    <div ng-if="$ctrl.error" style="font-size: 12px" ng-bind-html="$ctrl.error"></div>
+    </form>
+    <!-- <div ng-if="$ctrl.error" style="font-size: 12px" ng-bind-html="$ctrl.error"></div> -->
     <p ng-if="::$ctrl.footer" ng-bind="::$ctrl.footer" class="plgfooter"></p>
 </div>
 `,
