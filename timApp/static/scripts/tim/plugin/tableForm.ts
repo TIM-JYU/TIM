@@ -16,6 +16,7 @@ import {to} from "tim/util/utils";
 import {valueDefu} from "tim/util/utils";
 import {timApp} from "../app";
 import {None} from "../../jspm_packages/npm/fp-ts@1.11.1/lib/Option";
+import enumerate = Reflect.enumerate;
 
 const tableFormApp = angular.module("tableFormApp", ["ngSanitize"]);
 export const moduleDefs = [tableFormApp];
@@ -33,8 +34,8 @@ const TableFormMarkup = t.intersection([
 ]);
 const TableFormAll = t.intersection([
     t.partial({
-        userword: t.string,
-        data: t.Dictionary,
+        rows: t.Dictionary,
+        fields: t.Dictionary,
     }),
     GenericPluginTopLevelFields,
     t.type({markup: TableFormMarkup}),
@@ -45,10 +46,12 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
     private result?: string;
     private error?: string;
     private isRunning = false;
-    private userword = "";
+    private userfilter = "";
     private runTestGreen = false;
     private data: any = {};
-    private userdata!: {};
+    private rows: any = {};
+    private tabledata: any
+    private timTableData!: {};
     private modelOpts!: INgModelOptions; // initialized in $onInit, so need to assure TypeScript with "!"
 
     getDefaultMarkup() {
@@ -60,22 +63,70 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
     }
 
 
-
     $onInit() {
         super.$onInit();
-        this.userword = this.attrsall.userword || this.attrs.initword || "";
-        this.data = this.attrsall.data;
+        this.userfilter = "";
+        this.rows = this.attrsall.rows;
+        //this.fields = this.attrsall.fields;
+        this.setDataMatrix();
     }
 
+    setDataMatrix() {
+        this.timTableData = {'task': 'true'}
+        // for (const row in this.rows){
+        //      console.log("eaa");
+        //  }
+        this.data.userdata = {};
+        // for (let i = 0; i < Object.keys(this.rows).length; i++){ // TODO parempi silmukka - object.keys pois
+        //     this.data.userdata['A' + (i+1).toString()] = Object.keys(this.rows)[i];
+        //     for (let j = 0; j < Object.keys(Object.keys(this.rows)[i]).length; j++)
+        //     {
+        //         if(Object.keys(Object.keys(this.rows)[i])[j]){
+        //             this.data.userdata[this.colnumToLetters(j+1) + (i+2).toString()] = Object.keys(Object.values(this.rows)[i])[j]
+        //         }
+        //     }
+        // }
+        for (const f in this.attrsall.fields) {
+            for(const r in this.rows){
+                console.log("ea");
+            }
+        }
+
+        console.log("asd");
+    }
+
+    /** TODO SIIRRÄ jonnekin
+     * Transforms column index to letter.
+     * @param colIndex ex. 2
+     * @return column index as letter
+     */
+    public colnumToLetters(colIndex: number): string {
+        const ASCII_OF_A = 65;
+        const ASCII_CHAR_COUNT = 26;
+        const lastChar = String.fromCharCode(ASCII_OF_A + (colIndex % ASCII_CHAR_COUNT));
+        const remainder = Math.floor(colIndex / ASCII_CHAR_COUNT);
+
+        if (remainder == 0) {
+            return lastChar;
+        } else if (remainder <= ASCII_CHAR_COUNT) {
+            return String.fromCharCode(ASCII_OF_A + remainder - 1) + lastChar;
+        }
+        // recursive call to figure out the rest of the letters
+        return this.colnumToLetters(remainder - 1) + lastChar;
+    }
 
     initCode() {
-        this.userword = this.attrs.initword || "";
+        this.userfilter = "";
         this.error = undefined;
         this.result = undefined;
     }
 
     saveText() {
         this.doSaveText(false);
+    }
+
+    updateFilter() {
+        console.log("asdd");
     }
 
     async doSaveText(nosave: boolean) {
@@ -85,7 +136,7 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
         const params = {
             input: {
                 nosave: false,
-                userword: this.userword,
+                userfilter: this.userfilter,
             },
         };
 
@@ -93,7 +144,7 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
             params.input.nosave = true;
         }
         const url = this.pluginMeta.getAnswerUrl();
-        const r = await to($http.put<{web: {result: string, error?: string}}>(url, params));
+        const r = await to($http.put<{ web: { result: string, error?: string } }>(url, params));
         this.isRunning = false;
         if (r.ok) {
             const data = r.result.data;
@@ -121,9 +172,10 @@ timApp.component("tableformRunner", {
     <div class="form-inline"><label>{{::$ctrl.inputstem}} <span>
         <input type="text"
                class="form-control"
-               ng-model="$ctrl.userword"
+               ng-model="$ctrl.userfilter"
                ng-model-options="::$ctrl.modelOpts"
                ng-trim="false"
+               ng-change="$ctrl.updateFilter()"
                ng-readonly="::$ctrl.readonly"
                size="{{::$ctrl.cols}}"></span></label>
         <tim-table data="$ctrl.data" userdata="$ctrl.userdata" task-url="{{$ctrl.pluginMeta.getAnswerUrl()}}"></tim-table>
@@ -131,7 +183,7 @@ timApp.component("tableformRunner", {
     </div>
     <button class="timButton"
             ng-if="::$ctrl.buttonText()"
-            ng-disabled="$ctrl.isRunning || !$ctrl.userword || $ctrl.readonly"
+            ng-disabled="$ctrl.isRunning || !$ctrl.userfilter || $ctrl.readonly"
             ng-click="$ctrl.saveText()">
         {{::$ctrl.buttonText()}}
     </button>
