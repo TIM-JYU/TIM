@@ -115,7 +115,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
     private correctMap: Map<string, string> = new Map();
     private editMode?: EditMode | null;
     private edited = false;
-    private btnText = "OK";
+    private btnText = "Begin";
     private instrHidden = false;
     private itemHidden = true;
 
@@ -518,7 +518,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
                     return;
                 }
             }
-
+            this.setButtonText("OK");
             this.printFeedback("");
             this.pluginMode = Mode.QuestionItem;
             // For demonstration
@@ -580,6 +580,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
                         // TODO: put this somewhere else maybe, also problems if the choice numbers differ in question items
                         this.printFeedback(feedbackLevels[this.currentFeedbackLevel++]);
                         this.correctAnswer = false;
+                        this.correctArray![this.index] = true;
                         this.streak = 0;
                         this.pluginMode = Mode.Feedback;
                     }
@@ -639,7 +640,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
                 this.showBlock(this.index);
                 this.itemHidden = false;
             }
-            this.setButtonText("OK")
+            this.setButtonText("OK");
             return;
         }
     }
@@ -669,7 +670,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
     getRandomQuestion(arr: boolean[]): number | undefined {
         const falses: number[] = [];
         for (let i = 0; i < arr.length; i++) {
-            if (!arr[i]) {
+            if (!arr[i] || arr.length === 1) {
                 falses.push(i);
             }
         }
@@ -736,18 +737,32 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
         if (match.length === 0) {
             return true;
         }
-
+        // TODO: Add wildcards for different indices of the match, not just the trailing stuff
+        const wildcard = match.indexOf(".*");
+        const map = match.map(x => x.indexOf(".*"));
+        console.log(match.map(x => x.indexOf(".*")));
+        if (wildcard > 0 && match.length !== answer.length) {
+            let length = match.length;
+            while (length < answer.length) {
+                match.push(".*");
+                length++;
+            }
+        }
         if (match.length === answer.length) {
-            for (let i = 0; i < match.length; i++) {
+            for (let i = 0; i < answer.length; i++) {
                 const kw = match[i].match(keywordPlaceHolder);
                 if (kw && kw.length > 0) {
                     const word = kw[0].split(':')[1].replace('|', "");
-                    if (answer[i].toLowerCase().includes(word.toLowerCase())) {
-                        return true;
+                    if (!answer[i].toLowerCase().includes(word.toLowerCase())) {
+                        return false;
                     }
+                    continue;
                 }
                 if (match[i].toLowerCase() !== answer[i].toLowerCase()) {
                     return false;
+                }
+                if((wildcard > 0 && match[i] !== ".*")) {
+                    return true;
                 }
             }
             return true;
