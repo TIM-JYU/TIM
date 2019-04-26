@@ -373,6 +373,7 @@ def view(item_path, template_name, usergroup=None, route="view"):
     return render_template(template_name,
                            access=access,
                            hide_links=should_hide_links(doc_settings, rights),
+                           hide_top_buttons=should_hide_top_buttons(doc_settings, rights),
                            show_unpublished_bg=show_unpublished_bg,
                            route=route,
                            edit_mode=edit_mode,
@@ -430,6 +431,14 @@ def get_items(folder: str):
 
 def should_hide_links(settings: DocSettings, rights: dict):
     hide_type = settings.hide_links()
+    return {'view': not rights['editable'] and not rights['see_answers'],
+            'edit': not rights['see_answers'],
+            'see_answers': not rights['teacher'],
+            'teacher': not rights['manage']}.get(hide_type, False)
+
+
+def should_hide_top_buttons(settings: DocSettings, rights: dict):
+    hide_type = settings.hide_top_buttons()
     return {'view': not rights['editable'] and not rights['see_answers'],
             'edit': not rights['see_answers'],
             'see_answers': not rights['teacher'],

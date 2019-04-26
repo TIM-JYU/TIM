@@ -141,6 +141,9 @@ export class ViewCtrl implements IController {
     // For search box.
     private displaySearch = false;
 
+    // To hide actions on both sides of the page
+    public actionsDisabled = false;
+
     constructor(sc: IScope) {
         timLogTime("ViewCtrl start", "view");
 

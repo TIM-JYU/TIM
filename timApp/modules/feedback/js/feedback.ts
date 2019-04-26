@@ -147,6 +147,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
         if (this.editMode != null) {
             this.edited = true;
         }
+        this.vctrl.actionsDisabled = true;
         this.showDocument();
     }
 

@@ -30,6 +30,7 @@ class DocSettings:
     bookmark_key = 'bookmarks'
     lazy_key = 'lazy'
     hide_links_key = 'hide_links'
+    hide_top_buttons_key = 'hide_top_buttons'
     point_sum_rule_key = 'point_sum_rule'
     max_points_key = 'max_points'
     nomacros_key = 'nomacros'
@@ -189,6 +190,9 @@ class DocSettings:
 
     def hide_links(self, default=None):
         return self.__dict.get(self.hide_links_key, default)
+
+    def hide_top_buttons(self, default=None):
+        return self.__dict.get(self.hide_top_buttons_key, default)
 
     def point_sum_rule(self, default=None):
         return self.__dict.get(self.point_sum_rule_key, default)

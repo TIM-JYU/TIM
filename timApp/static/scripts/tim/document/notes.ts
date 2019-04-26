@@ -206,7 +206,7 @@ export class NotesHandler {
     }
 
     setNotePadge($event: Event) {
-        if (!$event.target) {
+        if (!$event.target || this.viewctrl.actionsDisabled) {
             return;
         }
         $event.stopPropagation();

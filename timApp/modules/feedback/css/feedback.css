@@ -1,10 +1,3 @@
-/*
-#feedback{
-    border-top: 2px solid #33CCCC;
-    padding-top: 10px;
-}
-*/
-
 feedback-runner {
     margin-bottom: 15px;
     display: block;
@@ -18,32 +11,25 @@ feedback-runner {
     display: none;
 }
 
-.item {
-}
-
 .readline {
     display: none;
 }
 
-/*
-div#pars {
-    border-color: #33CCCC;
-    border-style: solid;
-    border-radius: 10px;
-    padding: 50px;
-    min-height: 85vh;
+.editline {
+    display: none;
 }
-*/
 
-/*.pull-right {
-    display: block;
-}*/
+.areaeditline {
+    display: none;
+}
+
 .task {
     border-color: #33CCCC;
     border-style: solid;
     border-radius: 10px;
     padding: 50px;
     min-height: 30vh;
+    margin-top: 1em;
     margin-bottom: 1em;
 }
 
