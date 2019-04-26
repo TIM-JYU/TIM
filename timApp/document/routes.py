@@ -111,7 +111,10 @@ def get_block_2(args: GetBlockModel):
             p = d.document.get_paragraph(args.par_id)
             if not can_see_par_source(get_current_user_object(), p):
                 abort(403)
-            par = DocParagraph.get(d.document, args.par_id, args.par_hash or p.get_hash())
+            if args.par_hash:
+                par = DocParagraph.get(d.document, args.par_id, args.par_hash or p.get_hash())
+            else:
+                par = p
         except TimDbException as e:
             return abort(404, 'Paragraph not found. It may have been deleted.')
         if args.use_exported:
