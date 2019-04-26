@@ -14,6 +14,7 @@ import {IAceEditor} from "./ace-types";
 import {AceParEditor} from "./AceParEditor";
 import {IPluginInfoResponse, ParCompiler} from "./parCompiler";
 import {TextAreaParEditor} from "./TextAreaParEditor";
+import {SelectionRange} from "./BaseParEditor";
 
 markAsUsed(rangyinputs);
 
@@ -893,6 +894,40 @@ ${backTicks}
         e.preventDefault();
     }
 
+    /**
+     * Get start and end indices of a macro nearest to the cursor.
+     * For example (|= selected area, ^ = found indices, x = intervening macro):
+     * something %%liite("attachment_stuff")%% more stuff
+     *           ^        |              |   ^
+     * -> return indices
+     * something %%liite("attachment")%% something in between %%liite("another_attachment")%% even more something
+     *           ^                     x      |                x                            ^
+     * -> error, return undefined
+     * @param str
+     * @param beginStr
+     * @param endStr
+     * @param selectionRange
+     * @returns Macro start and end indices in SelectionRange, or undefined if selection is not inside the macro.
+     */
+    getMacroRange(str: string, beginStr: string, endStr: string,
+                    selectionRange: SelectionRange): SelectionRange | undefined {
+        const selectIndexA = selectionRange[0];
+        const selectIndexB = selectionRange[1];
+        const partA = str.substring(0, selectIndexA);
+        const partB = str.substring(selectIndexB);
+        const indexA = partA.lastIndexOf(beginStr);
+        const indexB = partB.indexOf(endStr);
+        const interveningIndexA = partA.substring(indexA).lastIndexOf(endStr);
+        const interveningIndexB = partB.substring(0, indexB).indexOf(beginStr);
+
+        // If there are any extra macro parts in between or either marcro part wasn't found at all,
+        // return undefined.
+        if (interveningIndexA !== -1 || interveningIndexB !== -1 || indexA === -1 || indexB === -1) {
+            return undefined;
+        }
+        return [indexA, selectIndexB + indexB + endStr.length];
+    }
+
     onFileSelect(file: File) {
         const editor = this.editor!;
         this.focusEditor();
@@ -903,20 +938,21 @@ ${backTicks}
         let macroParams;
 
         // To identify attachment-macro.
-        // TODO: If editor has multiple attachments, this may go wrong?
         const macroStringBegin = "%%liite(";
-        const macroStringEnd = ")%%";
-        const isAttachmentMacro = editorText.length > 0 && editorText.lastIndexOf(macroStringBegin) > 0;
+        const macroStringEnd = ")%%";  // TODO: May be confused with other macro endings.
+        const selectionRange = editor.getPosition(); // Selected area in the editor
+        const macroRange = this.getMacroRange(editorText, macroStringBegin, macroStringEnd, selectionRange);
 
-        // If there's an attachment macro in editor, assume need to stamp.
+        // If there's an attachment macro in the editor (i.e. macroRange is defined), assume need to stamp.
         // Also requires data from preamble to work correctly (dates and knro).
         // If there's no stampFormat set in preamble, uses hard coded default format.
-        if (isAttachmentMacro && this.docSettings) {
+        if (macroRange && this.docSettings) {
             autostamp = true;
             try {
+                // Macro begin and end not included:
                 let macroText = editorText.substring(
-                    editorText.lastIndexOf(macroStringBegin) + macroStringBegin.length,
-                    editorText.lastIndexOf(macroStringEnd));
+                    macroRange[0] + macroStringBegin.length,
+                    macroRange[1] - macroStringEnd.length);
                 // Normal line breaks cause exception with JSON.parse, and replacing them with ones parse understands
                 // causes exceptions if line breaks are outside parameters, so just remove them before parsing.
                 macroText = macroText.replace(/(\r\n|\n|\r)/gm, "");
@@ -968,7 +1004,7 @@ ${backTicks}
                     } else {
                         this.uploadedFile = savedir + response.data.file;
                     }
-                    if (isplugin || isAttachmentMacro) {
+                    if (isplugin || macroRange) {
                         editor.insertTemplate(this.uploadedFile);
                     } else {
                         editor.insertTemplate(start + this.uploadedFile + ")");
