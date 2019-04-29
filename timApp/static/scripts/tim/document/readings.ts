@@ -6,7 +6,7 @@ import {IItem} from "../item/IItem";
 import {showMessageDialog} from "../ui/dialog";
 import {Users} from "../user/userService";
 import {$http, $log, $timeout, $window} from "../util/ngimport";
-import {getPageXY, isInViewport, markPageDirty, posToRelative, to} from "../util/utils";
+import {getPageXY, IOkResponse, isInViewport, markPageDirty, posToRelative, to} from "../util/utils";
 import {showDiffDialog} from "./diffDialog";
 import {EditPosition, EditType} from "./editing/editing";
 import {IExtraData} from "./editing/edittypes";
@@ -258,7 +258,11 @@ export async function handleUnread(item: IItem, extraData: IExtraData, pos: Edit
     if (pos.type !== EditType.Edit) {
         return;
     }
-    await $http.put(`/unread/${item.id}/${extraData.par}`, {});
-    pos.pars.first().find(".readline").removeClass("read read-modified");
+    const result = await $http.put<IOkResponse & {latest?: unknown}>(`/unread/${item.id}/${extraData.par}`, {});
+    const rline = pos.pars.first().find(".readline");
+    rline.removeClass("read read-modified");
+    if (result.data.latest) {
+        rline.addClass("read-modified");
+    }
     getActiveDocument().refreshSectionReadMarks();
 }

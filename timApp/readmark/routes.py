@@ -76,14 +76,23 @@ def set_read_paragraph(doc_id, par_id, read_type=None, unread=False):
                     rp = ReadParagraph.query.filter_by(usergroup_id=group_id,
                                                        doc_id=p.get_doc_id(),
                                                        par_id=p.get_id(),
-                                                       type=paragraph_type)
-                    rp.delete()
+                                                       type=paragraph_type).order_by(ReadParagraph.timestamp.desc()).first()
+                    db.session.delete(rp)
                 else:
                     mark_read(group_id, p.doc, p, paragraph_type)
     try:
         db.session.commit()
     except IntegrityError:
         abort(400, 'Paragraph was already marked read')
+    if unread:
+        latest_readings = get_common_readings(
+            get_session_usergroup_ids(),
+            doc,
+            ReadParagraph.par_id.in_([par_id]) & (ReadParagraph.type == paragraph_type)
+        )
+        for r in latest_readings:
+            # We only need the first.
+            return json_response({'status': 'ok', 'latest': r})
     return ok_response()
 
 
