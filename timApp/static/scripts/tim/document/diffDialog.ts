@@ -13,6 +13,7 @@ export interface IDiffParams {
 export class DiffController extends DialogController<{params: IDiffParams}, {}> {
     static component = "timDiff";
     static $inject = ["$element", "$scope"] as const;
+    private options = {editCost: 4};
 
     async $onInit() {
         super.$onInit();
@@ -43,7 +44,7 @@ registerDialogComponent(DiffController,
 <tim-dialog>
     <dialog-body>
         <div class="diff border">
-            <pre diff left-obj="$ctrl.left()" right-obj="$ctrl.right()"></pre>
+            <pre processing-diff options="$ctrl.options" left-obj="$ctrl.left()" right-obj="$ctrl.right()"></pre>
         </div>
     </dialog-body>
 </tim-dialog>
