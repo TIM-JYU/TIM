@@ -430,20 +430,19 @@ def get_items(folder: str):
 
 
 def should_hide_links(settings: DocSettings, rights: dict):
-    hide_type = settings.hide_links()
-    return {'view': not rights['editable'] and not rights['see_answers'],
-            'edit': not rights['see_answers'],
-            'see_answers': not rights['teacher'],
-            'teacher': not rights['manage']}.get(hide_type, False)
+    return check_rights(settings, rights)
 
 
 def should_hide_top_buttons(settings: DocSettings, rights: dict):
+    return check_rights(settings, rights)
+
+
+def check_rights(settings: DocSettings, rights: dict):
     hide_type = settings.hide_top_buttons()
     return {'view': not rights['editable'] and not rights['see_answers'],
             'edit': not rights['see_answers'],
             'see_answers': not rights['teacher'],
             'teacher': not rights['manage']}.get(hide_type, False)
-
 
 @view_page.route('/getParDiff/<int:doc_id>/<int:major>/<int:minor>')
 def check_updated_pars(doc_id, major, minor):

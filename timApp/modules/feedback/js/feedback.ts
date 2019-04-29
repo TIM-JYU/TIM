@@ -54,13 +54,16 @@ interface QuestionItemT extends t.TypeOf<typeof QuestionItem> {
 
 }
 
-const QuestionItem = t.type({
-    area: withDefault(t.string, ""),
-    choices: t.array(Choice),
-    dragSource: withDefault(t.string, ""),
-    pluginNames: StringArray,
-    words: t.array(StringArray),
-});
+const QuestionItem = t.intersection([
+    t.partial({
+        area: t.string,
+        dragSource: t.string,
+    }), t.type({
+        choices: t.array(Choice),
+        pluginNames: StringArray,
+        words: t.array(StringArray),
+    }),
+]);
 
 const FeedbackMarkup = t.intersection([
     t.partial({
@@ -119,7 +122,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
     private instrHidden = false;
     private itemHidden = true;
 
-    $onInit() {
+    async $onInit() {
         super.$onInit();
         this.addToCtrl();
         this.setPluginWords();
@@ -147,7 +150,10 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
         if (this.editMode != null) {
             this.edited = true;
         }
-        this.vctrl.actionsDisabled = true;
+        if (!this.vctrl.item.rights.editable || !this.vctrl.item.rights.teacher) {
+            await import("/feedback/css/viewhide.css" as any);
+            this.vctrl.actionsDisabled = true;
+        }
         this.showDocument();
     }
 
@@ -273,7 +279,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
         const items = this.attrs.questionItems;
         for (let i = 0; i < items.length; i++) {
             const area = this.attrs.questionItems[i].area;
-            if (area !== "") {
+            if (area) {
                 this.hideArea(area);
             } else {
                 this.hideBlock(i);
@@ -525,7 +531,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
             // For demonstration
             // this.showMode = "Question item paragraph, question " + (this.index + 1);
             const area = this.attrs.questionItems[this.index].area;
-            if (area !== "") {
+            if (area) {
                 this.showArea(area);
             } else {
                 this.showBlock(this.index);
@@ -555,7 +561,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
 
             if (!this.teacherRight || this.attrs.teacherHide) {
                 const area = this.attrs.questionItems[this.index].area;
-                if (area !== "") {
+                if (area) {
                     this.hideArea(area);
                 } else {
                     this.hideBlock(this.index);
@@ -635,7 +641,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
             // this.showMode = "Question item paragraph, question " + (this.index + 1);
             this.pluginMode = Mode.QuestionItem;
             const area = this.attrs.questionItems[this.index].area;
-            if (area !== "") {
+            if (area) {
                 this.showArea(area);
             } else {
                 this.showBlock(this.index);
@@ -741,7 +747,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
         // TODO: Add wildcards for different indices of the match, not just the trailing stuff
         const wildcard = match.indexOf(".*");
         const map = match.map(x => x.indexOf(".*"));
-        console.log(match.map(x => x.indexOf(".*")));
+        // console.log(match.map(x => x.indexOf(".*")));
         if (wildcard > 0 && match.length !== answer.length) {
             let length = match.length;
             while (length < answer.length) {
@@ -762,7 +768,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
                 if (match[i].toLowerCase() !== answer[i].toLowerCase()) {
                     return false;
                 }
-                if((wildcard > 0 && match[i] !== ".*")) {
+                if ((wildcard > 0 && match[i] !== ".*")) {
                     return true;
                 }
             }

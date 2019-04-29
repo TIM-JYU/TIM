@@ -3,23 +3,8 @@ feedback-runner {
     display: block;
 
 }
-.pluginfeedback answerbrowser {
-    display: none;
-}
 
 .pluginfeedback .answerBrowserPlaceHolder {
-    display: none;
-}
-
-.readline {
-    display: none;
-}
-
-.editline {
-    display: none;
-}
-
-.areaeditline {
     display: none;
 }
 
