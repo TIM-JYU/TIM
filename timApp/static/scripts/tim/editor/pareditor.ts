@@ -81,6 +81,14 @@ interface IMenuItemObject {
     file?: string;
 }
 
+interface IAttachmentData {
+    meetingDate: string;
+    issueNumber: string | number;
+    attachmentLetter: string;
+    filePath: string;  // Could be empty string or placeholder.
+    upToDate: boolean;
+}
+
 type MenuItem = IMenuItemObject | string;
 
 type MenuItemEntries = MenuItem | MenuItem[];
@@ -135,7 +143,7 @@ export class PareditorController extends DialogController<{params: IEditorParams
     static $inject = ["$element", "$scope"] as const;
     private deleting = false;
     private editor?: TextAreaParEditor | AceParEditor; // $onInit
-    private isACE : boolean = false;
+    private isACE: boolean = false;
     private file?: File & {progress?: number, error?: string};
     private isIE: boolean = false;
     private oldmeta?: HTMLMetaElement;
@@ -155,6 +163,9 @@ export class PareditorController extends DialogController<{params: IEditorParams
     private lastTab?: string;
     private tabs: IEditorTab[];
     private trdiff?: {old: string, new: string};
+    private activeAttachments?: IAttachmentData[]; // Attachments currently in the editor.
+    private macroStringBegin = "%%liite(";
+    private macroStringEnd = ")%%";  // TODO: May be confused with other macro endings.
 
     constructor(protected element: IRootElementService, protected scope: IScope) {
         super(element, scope);
@@ -524,6 +535,9 @@ ${backTicks}
             n = -90;
         }
 
+        this.activeAttachments = this.updateAttachments(true, undefined, undefined);
+        console.log(this.activeAttachments);
+
         this.wrap = {n: n};
 
         if (this.getOptions().touchDevice) {
@@ -837,6 +851,12 @@ ${backTicks}
             this.saving = false;
             return;
         }
+
+        this.activeAttachments = this.updateAttachments(false, this.activeAttachments, undefined);
+        console.log(this.activeAttachments);
+        if (!this.allAttachmentsUpToDate()) {
+            await showMessageDialog("Some attachments may not be up to date!");
+        }
         const result = await this.resolve.params.saveCb(text, this.getExtraData());
         if (result.error) {
             await showMessageDialog(result.error);
@@ -936,37 +956,27 @@ ${backTicks}
         let autostamp = false;
         let attachmentParams;
         let macroParams;
+        let stamped: IAttachmentData;
 
-        // To identify attachment-macro.
-        const macroStringBegin = "%%liite(";
-        const macroStringEnd = ")%%";  // TODO: May be confused with other macro endings.
+        const kokousDate = this.getCurrentMeetingDate();
         const selectionRange = editor.getPosition(); // Selected area in the editor
-        const macroRange = this.getMacroRange(editorText, macroStringBegin, macroStringEnd, selectionRange);
+        const macroRange = this.getMacroRange(editorText, this.macroStringBegin, this.macroStringEnd, selectionRange);
 
         // If there's an attachment macro in the editor (i.e. macroRange is defined), assume need to stamp.
         // Also requires data from preamble to work correctly (dates and knro).
         // If there's no stampFormat set in preamble, uses hard coded default format.
-        if (macroRange && this.docSettings) {
+        if (macroRange && this.docSettings && kokousDate) {
             autostamp = true;
             try {
                 // Macro begin and end not included:
                 let macroText = editorText.substring(
-                    macroRange[0] + macroStringBegin.length,
-                    macroRange[1] - macroStringEnd.length);
-                // Normal line breaks cause exception with JSON.parse, and replacing them with ones parse understands
-                // causes exceptions if line breaks are outside parameters, so just remove them before parsing.
-                macroText = macroText.replace(/(\r\n|\n|\r)/gm, "");
-                macroParams = JSON.parse(`[${macroText}]`);
+                    macroRange[0] + this.macroStringBegin.length,
+                    macroRange[1] - this.macroStringEnd.length);
+                macroParams = this.getMacroParamsFromString(macroText);
             } catch {
                 this.file.error = "Parsing stamp parameters failed";
                 throw new Error("Parsing stamp parameters failed");
             }
-
-            // Knro usage starts from 1 but dates starts from 0 but there is dummy item first
-            const knro = this.docSettings.macros.knro;
-            const dates = this.docSettings.macros.dates;
-            // dates = ["ERROR", ...dates];  // Start from index 1; unnecessary now.
-            const kokousDate = dates[knro][0];  // dates is 2-dim array
 
             // If stampFormat isn't set in preamble,
             let stampFormat = this.docSettings.macros.stampformat;
@@ -975,6 +985,13 @@ ${backTicks}
             }
             const customStampModel = this.docSettings.custom_stamp_model;
             attachmentParams = [kokousDate, stampFormat, ...macroParams, customStampModel, autostamp];
+            stamped = {
+                attachmentLetter: macroParams[1],
+                filePath: macroParams[3],
+                issueNumber: macroParams[2],
+                meetingDate: kokousDate,
+                upToDate: true,
+            };
         }
         if (file) {
             this.file.progress = 0;
@@ -1008,6 +1025,10 @@ ${backTicks}
                         editor.insertTemplate(this.uploadedFile);
                     } else {
                         editor.insertTemplate(start + this.uploadedFile + ")");
+                    }
+                    if (macroRange && kokousDate) { // Separate from isPlugin so this is ran only when there are attachments.
+                        this.activeAttachments = this.updateAttachments(false, this.activeAttachments, stamped);
+                        console.log(this.activeAttachments);
                     }
                 });
             }, (response) => {
@@ -1286,6 +1307,108 @@ ${backTicks}
             this.setLocalValue("acewrap", this.editor.editor.getSession().getUseWrapMode().toString());
             this.setLocalValue("acebehaviours", this.editor.editor.getBehavioursEnabled().toString()); // some of these are in editor and some in session?
         }
+    }
+
+    /**
+     * Returns the current meeting date from document settings, if any.
+     */
+    private getCurrentMeetingDate() {
+        if (this.docSettings) {
+            // Knro usage starts from 1 but dates starts from 0 but there is dummy item first
+            const knro = this.docSettings.macros.knro;
+            const dates = this.docSettings.macros.dates;
+            // dates = ["ERROR", ...dates];  // Start from index 1; unnecessary now.
+            return dates[knro][0];  // dates is 2-dim array
+        } else {
+            return undefined;
+        }
+    }
+
+    private attachmentsUpToDate() {
+        const previousAttachments = this.activeAttachments;
+        if (previousAttachments) {
+            // TODO:
+        } else {
+            return true;
+        }
+    }
+
+    private updateAttachments(firstCheck: boolean,
+                             previousAttachments: IAttachmentData[] | undefined,
+                             stamped: IAttachmentData | undefined) {
+        const attachments = [];
+        const date = this.getCurrentMeetingDate();
+        if (this.editor && date) {
+            const editorText = this.editor.getEditorText();
+            const pluginSplit = editorText.split("```");
+            for (const part of pluginSplit) {
+                if (part.length > (this.macroStringBegin.length + this.macroStringEnd.length)
+                    && part.includes('{plugin="showPdf"}')) {
+                    const macroText = part.substring(
+                        part.lastIndexOf(this.macroStringBegin) + this.macroStringBegin.length,
+                        part.lastIndexOf(this.macroStringEnd));
+                    const macroParams = this.getMacroParamsFromString(macroText);
+                    const current: IAttachmentData = {
+                        attachmentLetter: macroParams[1],
+                        filePath: macroParams[3],
+                        issueNumber: macroParams[2],
+                        meetingDate: date,
+                        upToDate: false,
+                    };
+                    let upToDate;
+                    // On first editor load attachment is up to date.
+                    if (firstCheck) {
+                        current.upToDate = true;
+                    } else {
+                        // Others are up to date if they have a match from check.
+                        // TODO: Changing attachment order?
+                        if (previousAttachments) {
+                            upToDate = false;
+                            for (const previous of previousAttachments) {
+                                if (previous.filePath === current.filePath &&
+                                    previous.attachmentLetter === current.attachmentLetter &&
+                                    previous.issueNumber === current.issueNumber) {
+                                    current.upToDate = true;
+                                }
+                            }
+                        } else {
+                            // If there were no attachments before, these are up to date.
+                            current.upToDate = true;
+                        }
+                    }
+                    // Stamped attachment is always up to date.
+                    // TODO: May get it wrong if another attachment has same variables.
+                    if (stamped) {
+                        if (stamped.attachmentLetter === current.attachmentLetter &&
+                            stamped.issueNumber === current.issueNumber) {
+                            current.upToDate = true;
+                        }
+                    }
+                    attachments.push(current);
+                }
+            }
+            return attachments;
+        } else {
+            return undefined;
+        }
+    }
+
+    private getMacroParamsFromString(macroText: string) {
+        // Normal line breaks cause exception with JSON.parse, and replacing them with ones parse understands
+        // causes exceptions if line breaks are outside parameters, so just remove them before parsing.
+        macroText = macroText.replace(/(\r\n|\n|\r)/gm, "");
+        return JSON.parse(`[${macroText}]`);
+    }
+
+    private allAttachmentsUpToDate() {
+        if (this.activeAttachments) {
+            for (const att of this.activeAttachments) {
+                if (!att.upToDate) {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 }
 
