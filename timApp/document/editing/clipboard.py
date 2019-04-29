@@ -3,6 +3,7 @@ import os
 import shutil
 from typing import Dict, List, Optional, Any
 
+from timApp.auth.accesshelper import can_see_par_source
 from timApp.document.docparagraph import DocParagraph, is_real_id
 from timApp.document.document import Document
 from timApp.document.documentparser import DocumentParser
@@ -10,17 +11,6 @@ from timApp.document.documentwriter import DocumentWriter
 from timApp.document.randutils import random_id
 from timApp.timdb.exceptions import TimDbException
 from timApp.user.user import User
-
-
-def can_see_par_source(u: User, p: DocParagraph):
-    d = p.doc.get_docinfo()
-    if u.has_edit_access(d):
-        return True
-    if not u.has_view_access(d):
-        return False
-    if not p.is_plugin():
-        return True
-    return False
 
 
 class Clipboard:

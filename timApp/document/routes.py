@@ -3,7 +3,9 @@ from flask import Response, abort, request, Blueprint
 from marshmallow import Schema, fields, post_load
 from webargs.flaskparser import use_args
 
-from timApp.auth.accesshelper import get_doc_or_abort, verify_edit_access
+from timApp.auth.accesshelper import get_doc_or_abort, verify_edit_access, can_see_par_source
+from timApp.auth.sessioninfo import get_current_user_object
+from timApp.document.docparagraph import DocParagraph
 from timApp.document.document import Document
 from timApp.document.documentversion import DocumentVersion
 from timApp.timdb.exceptions import TimDbException
@@ -60,6 +62,7 @@ class GetBlockModel:
     area_start: str = None
     area_end: str = None
     use_exported: bool = True
+    par_hash: str = None
 
 
 class GetBlockSchema(Schema):
@@ -68,6 +71,7 @@ class GetBlockSchema(Schema):
     area_start = fields.Str()
     area_end = fields.Str()
     use_exported = fields.Bool(missing=True)
+    par_hash = fields.Str(missing=None)
 
     @post_load
     def make_obj(self, data):
@@ -93,10 +97,10 @@ def get_block_schema(args: GetBlockModel):
 
 def get_block_2(args: GetBlockModel):
     d = get_doc_or_abort(args.doc_id)
-    verify_edit_access(d)
     area_start = args.area_start
     area_end = args.area_end
     if area_start and area_end:
+        verify_edit_access(d)
         try:
             section = d.document.export_section(area_start, area_end)
         except TimDbException as e:
@@ -104,7 +108,13 @@ def get_block_2(args: GetBlockModel):
         return json_response({"text": section})
     else:
         try:
-            par = d.document.get_paragraph(args.par_id)
+            p = d.document.get_paragraph(args.par_id)
+            if not can_see_par_source(get_current_user_object(), p):
+                abort(403)
+            if args.par_hash:
+                par = DocParagraph.get(d.document, args.par_id, args.par_hash or p.get_hash())
+            else:
+                par = p
         except TimDbException as e:
             return abort(404, 'Paragraph not found. It may have been deleted.')
         if args.use_exported:

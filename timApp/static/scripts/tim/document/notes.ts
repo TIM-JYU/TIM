@@ -10,7 +10,7 @@ import {EditPosition, EditType} from "./editing/editing";
 import {IExtraData, IParResponse} from "./editing/edittypes";
 import {onClick} from "./eventhandlers";
 import {addElementToParagraphMargin, getFirstParId, isActionablePar, Paragraph, ParOrArea} from "./parhelpers";
-import {handleUnread, markParRead, readingTypes} from "./readings";
+import {handleUnread, markParRead, ReadingType} from "./readings";
 import {ViewCtrl} from "./viewctrl";
 
 export interface INoteEditorOptions {
@@ -227,7 +227,7 @@ export class NotesHandler {
         if (par.parents(".previewcontent").length > 0) {
             return;
         }
-        markParRead(par, readingTypes.clickPar);
+        markParRead(par, ReadingType.ClickPar);
         const newElement = par[0];
         if (!newElement) { return; }
         addElementToParagraphMargin(newElement, this.createNoteBadge(par));
