@@ -1,0 +1,14 @@
+Tallennanappi:
+
+fields:
+ - d1
+ - d2
+ - d*
+
+Get fieldsin kenttien mukaan regexpillä
+d1 palauttaa taulukon jossa yksi elementti [itimc]
+d* palauttaa taulukon jossa ehkä useampi [itim, itim]
+
+Jos ei fieldsiä niin get samassa areassa ovat
+
+jos ei fieldisä eikä areaa niin get kaikki

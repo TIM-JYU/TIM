@@ -1,0 +1,35 @@
+import * as t from "io-ts";
+import { ITimComponent } from "tim/document/viewctrl";
+import { PluginBase } from "tim/plugin/util";
+export declare const moduleDefs: any[];
+declare const omapluginMarkup: any;
+declare const omapluginAll: any;
+export declare class OmapluginController extends PluginBase<t.TypeOf<typeof omapluginMarkup>, t.TypeOf<typeof omapluginAll>, typeof omapluginAll> implements ITimComponent {
+    private result?;
+    private error?;
+    private isRunning;
+    private userword;
+    private runTestGreen;
+    private modelOpts;
+    private vctrl;
+    getDefaultMarkup(): {};
+    buttonText(): any;
+    $onInit(): void;
+    readonly userword1: string;
+    readonly initword: string;
+    readonly edited: boolean;
+    readonly autoupdate: number;
+    readonly inputplaceholder: any;
+    readonly inputstem: any;
+    readonly inputstem2: any;
+    readonly cols: any;
+    readonly resetText: string;
+    checkomapluginndrome(): boolean;
+    initCode(): void;
+    saveText(): void;
+    doSaveText(nosave: boolean): Promise<void>;
+    protected getAttributeType(): any;
+    getContent(): string;
+    save(): string;
+}
+export {};

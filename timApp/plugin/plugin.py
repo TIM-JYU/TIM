@@ -43,6 +43,12 @@ CONTENT_FIELD_NAME_MAP = {
     'textfield': 'userword',
 }
 
+NEVERLAZY_PLUGINS = {
+    'textfield',
+    'multisave',
+    'numericfield'
+}
+
 
 class PluginWrap(Enum):
     Nothing = 1
@@ -282,7 +288,7 @@ class Plugin:
                 "state": state,
                 "taskID": self.task_id.doc_task if self.task_id else self.fake_task_id,
                 "taskIDExt": self.task_id.extended_or_doc_task if self.task_id else self.fake_task_id,
-                "doLazy": options.do_lazy,
+                "doLazy": options.do_lazy and self.type not in NEVERLAZY_PLUGINS,
                 "userPrint": options.user_print,
                 # added preview here so that whether or not the window is in preview can be
                 # checked in python so that decisions on what data is sent can be made.
@@ -329,6 +335,8 @@ class Plugin:
         return self.values.get('gvData', False)  # Graphviz is cached if not cacahe: false attribute
 
     def is_lazy(self) -> bool:
+        if self.type in NEVERLAZY_PLUGINS:
+            return False
         do_lazy = self.options.do_lazy
         plugin_lazy = self.plugin_lazy
         html = self.output

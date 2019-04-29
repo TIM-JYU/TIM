@@ -1,0 +1,16 @@
+#jätä pluginin command tyhjäksi variables.sh:ssa
+#https://tim.jyu.fi/view/tim/TIMin-kehitys/PyCharm#pycharmin-asetukset <- tee oma interpreter,
+#katso portti docker-compose.dev.yml:ista
+#Edit configurations: tee oma debug pluginille: 
+#script path: oman plugininin .py
+#lisää environment variablesiin:
+#Name:PYTHONPATH, Value: /pali:/py:/usr/local/lib/python3.6/dist-packages
+#Path mappings:
+#C:/Users/sijualle/tim/timApp/modules/pali	/pali
+#C:/Users/sijualle/tim/timApp/modules/py	/py
+#käynnistä oma debuggeri pluginille 
+
+#putty: timin ip, portti pluginin oma portti, user root, pass testi
+
+
+63342

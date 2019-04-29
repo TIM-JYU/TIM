@@ -1,0 +1,35 @@
+import * as t from "io-ts";
+import { ITimComponent } from "tim/document/viewctrl";
+import { PluginBase } from "tim/plugin/util";
+export declare const moduleDefs: any[];
+declare const multisaveMarkup: any;
+declare const multisaveAll: any;
+export declare class MultisaveController extends PluginBase<t.TypeOf<typeof multisaveMarkup>, t.TypeOf<typeof multisaveAll>, typeof multisaveAll> implements ITimComponent {
+    private result?;
+    private error?;
+    private isRunning;
+    private userword;
+    private runTestGreen;
+    private modelOpts;
+    private vctrl;
+    getDefaultMarkup(): {};
+    buttonText(): any;
+    $onInit(): void;
+    readonly userword1: string;
+    readonly initword: string;
+    readonly edited: boolean;
+    readonly autoupdate: number;
+    readonly inputplaceholder: any;
+    readonly inputstem: any;
+    readonly inputstem2: any;
+    readonly cols: any;
+    readonly resetText: string;
+    checkmultisavendrome(): boolean;
+    initCode(): void;
+    saveText(): void;
+    doSaveText(nosave: boolean): Promise<void>;
+    protected getAttributeType(): any;
+    getContent(): string;
+    save(): string;
+}
+export {};
