@@ -187,7 +187,7 @@ export async function initReadings(sc: ViewCtrl) {
             x.style.top = pos.y + "px";
             p.append(x);
         } else if (children.length > 0) {
-            children[0].style.top = pos.y + "px";
+            // children[0].style.top = pos.y + "px";
         }
     });
 
