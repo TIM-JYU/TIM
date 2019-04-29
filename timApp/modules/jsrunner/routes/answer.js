@@ -6,13 +6,15 @@ router.put('/', function (req, res, next) {
 
     const uAndF = req.body.input.data;
     console.log(uAndF);
-    // poista doc id:t uAndF
+    const doc = req.body.taskID;
+    const regex = /[0-9]+\./;
+    const currDoc = doc.match(regex);
     const program = req.body.markup.program;
 
     const {NodeVM} = require('vm2');
     const vm = new NodeVM({
         console: 'inherit',
-        sandbox: {data: uAndF},
+        sandbox: {data: uAndF, currDoc},
         require: {
             external: true, // TODO allow only tools.js
         },
@@ -25,13 +27,11 @@ router.put('/', function (req, res, next) {
         const usersAndFields = JSON.parse(s);
         let r = [];
         for (let user of usersAndFields) {
-            const tools = new Tools(user);
+            const tools = new Tools(user, currDoc[0]); // onko parempaa keinoa viedä currDoc toolsille?
             function runProgram() {
                 ${program}
             }
             runProgram(); 
-            // module.exports = {result: tools.getResult()};
-            // console.log("hei");
             r.push(tools.getResult());
         }
         module.exports = r;

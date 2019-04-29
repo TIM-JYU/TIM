@@ -294,27 +294,22 @@ def post_answer(plugintype: str, task_id_ext: str):
             d = list(a)
             for i in d:
                 doc_set.add(i)
-        print(doc_set, "setti")
         task_content = {}
         for task in doc_set:
             tid = TaskId.parse(task, False, False)
             dib = get_doc_or_abort(tid.doc_id)
+            verify_teacher_access(dib)
             plug = find_plugin_from_document(dib.document, tid, get_current_user_object())
             content_field = plug.get_content_field_name()
             task_content[task] = content_field
-            verify_teacher_access(dib)
         for user in save_object:
             user_id = user['user']
             u = User.get_by_id(user_id)
             user_fields = user['fields']
             keys = list(user_fields)
             for key in keys:
-                print(key)
-                print(task_content)
                 content_type = task_content[key]
-                print(content_type)
                 c = {content_type: user_fields[key]}
-                print(c)
                 task_id = TaskId.parse(key, False, False)
                 result = Answer(
                     content=json.dumps(c),
