@@ -36,6 +36,7 @@ import {PopupMenuController} from "./popupMenu";
 import {RefPopupHandler} from "./refpopup";
 import {MenuFunctionEntry} from "./viewutils";
 import {initSlideView} from "./slide";
+import {DiffController} from "./diffDialog";
 
 markAsUsed(ngs, popupMenu, interceptor, helpPar);
 
@@ -136,6 +137,7 @@ export class ViewCtrl implements IController {
 
     // For search box.
     private displaySearch = false;
+    diffDialog?: DiffController;
 
     constructor(sc: IScope) {
         timLogTime("ViewCtrl start", "view");
@@ -244,6 +246,9 @@ export class ViewCtrl implements IController {
             }
 
             this.closePopupIfOpen();
+            if (this.diffDialog) {
+                this.diffDialog.close();
+            }
 
             return false;
 

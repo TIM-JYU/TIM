@@ -12,6 +12,7 @@ from timApp.auth.sessioninfo import logged_in, get_other_users_as_list, \
     get_current_user_group, get_current_user_object
 from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import DocInfo
+from timApp.document.docparagraph import DocParagraph
 from timApp.document.document import Document, dereference_pars
 from timApp.folder.folder import Folder
 from timApp.item.item import Item, ItemBase
@@ -308,3 +309,14 @@ def reset_request_access_cache():
 def del_attr_if_exists(obj, attr_name: str):
     if hasattr(obj, attr_name):
         delattr(obj, attr_name)
+
+
+def can_see_par_source(u: User, p: DocParagraph):
+    d = p.doc.get_docinfo()
+    if u.has_edit_access(d):
+        return True
+    if not u.has_view_access(d):
+        return False
+    if not p.is_plugin() and not p.has_plugins():
+        return True
+    return False
