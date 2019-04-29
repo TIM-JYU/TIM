@@ -3,7 +3,7 @@ class Tools {
     constructor(data, currDoc) {
         this.data = data;
         this.currDoc = currDoc;
-        this.final_result = {};
+        this.result = {};
         this.regex = /^[0-9]+\./; //TODO: onko oikein?
     }
 
@@ -69,7 +69,7 @@ class Tools {
         } else {
             tidFN = this.currDoc + fieldName;
         }
-        this.final_result[tidFN] = content;
+        this.result[tidFN] = content;
     }
 
     setDouble(fieldName, content) {
@@ -78,11 +78,11 @@ class Tools {
         } else {
             tidFN = this.currDoc + fieldName;
         }
-        this.final_result[tidFN] = content;
+        this.result[tidFN] = content;
     }
 
     getResult() {
-        return {'user': this.data.user.id, 'fields':  this.final_result};
+        return {'user': this.data.user.id, 'fields':  this.result};
     }
 }
 

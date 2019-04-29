@@ -92,10 +92,7 @@ def points_to_float(points: Union[str, float]):
 def get_fields_and_users(values, d: DocInfo):
     print(values)
     group = UserGroup.get_by_name(values['group'])
-    users = []
-    for user_id in UserGroupMember.query.filter(UserGroupMember.usergroup_id == group.id).all():
-        users.append(user_id.user_id)
-    # Onko parempaa keinoa tehdä yllä oleva?
+    users = group.users.all()
 
     u_fields = values['fields']
     task_ids = []
@@ -108,13 +105,10 @@ def get_fields_and_users(values, d: DocInfo):
         dib = get_doc_or_abort(task_id.doc_id)
         verify_teacher_access(dib)
     res = []
-    # user = get_current_user_object()
 
     for user in users:
-        user_obj = User.get_by_id(user)
-
         answer_ids = (
-            user_obj.answers
+            user.answers
                 .filter(Answer.task_id.in_(task_ids_to_strlist(task_ids)))
                 .group_by(Answer.task_id)
                 .with_entities(func.max(Answer.id)).all()
@@ -136,7 +130,7 @@ def get_fields_and_users(values, d: DocInfo):
                 values_p = list(p.values())
                 value = values_p[0]
             user_tasks[task.extended_or_doc_task] = value
-        res.append({'user': user_obj, 'fields': user_tasks})
+        res.append({'user': user, 'fields': user_tasks})
     print(res)
     return res
 
@@ -306,8 +300,7 @@ def post_answer(plugintype: str, task_id_ext: str):
             user_id = user['user']
             u = User.get_by_id(user_id)
             user_fields = user['fields']
-            keys = list(user_fields)
-            for key in keys:
+            for key in user_fields.keys():
                 content_type = task_content[key]
                 c = {content_type: user_fields[key]}
                 task_id = TaskId.parse(key, False, False)
@@ -317,7 +310,7 @@ def post_answer(plugintype: str, task_id_ext: str):
                     users=[u],
                     valid=True,
                 )
-        db.session.add(result)
+                db.session.add(result)
         db.session.commit()
         return json_response(result)
 
