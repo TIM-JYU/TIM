@@ -150,7 +150,6 @@ async function handleSeeChanges(elem: JQuery, e: JQuery.Event) {
         if (oldr.ok && newbr.ok) {
             const mi = await showDiffDialog({
                 left: oldr.result.data.text,
-                pos: getPageXY(e),
                 right: newbr.result.data.text,
                 title: "Changes",
             });

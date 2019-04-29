@@ -7,7 +7,7 @@ export interface IDiffParams {
     left: string;
     right: string;
     title: string;
-    pos: Pos;
+    pos?: Pos;
 }
 
 export class DiffController extends DialogController<{params: IDiffParams}, {}> {
@@ -18,7 +18,9 @@ export class DiffController extends DialogController<{params: IDiffParams}, {}> 
     async $onInit() {
         super.$onInit();
         await this.draggable.makeHeightAutomatic();
-        this.moveTo(this.resolve.params.pos);
+        if (this.resolve.params.pos) {
+            this.moveTo(this.resolve.params.pos);
+        }
     }
 
     close() {
@@ -57,7 +59,7 @@ export async function showDiffDialog(p: IDiffParams) {
     $injector.loadNewModules([module]);
     return showDialog(DiffController, {params: () => p},
         {
-            absolute: true,
+            absolute: false,
             showMinimizeButton: false,
             size: "xs",
         });
