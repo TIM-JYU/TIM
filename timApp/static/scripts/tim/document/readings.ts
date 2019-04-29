@@ -178,13 +178,16 @@ export async function initReadings(sc: ViewCtrl) {
     onMouseOver(".readline.read-modified", (p, e) => {
         const ev = e.originalEvent as MouseEvent | TouchEvent;
         const pos = posToRelative(p[0], ev);
-        if (p.children().length === 0 && canSeeSource(sc.item, p.parents(".par"))) {
+        const children = p.children();
+        if (children.length === 0 && canSeeSource(sc.item, p.parents(".par"))) {
             const x = document.createElement("button");
             x.classList.add("timButton", "btn-xs");
             x.title = "See changes";
             x.textContent = "Changes";
             x.style.top = pos.y + "px";
             p.append(x);
+        } else if (children.length > 0) {
+            children[0].style.top = pos.y + "px";
         }
     });
 
