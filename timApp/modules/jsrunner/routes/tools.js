@@ -1,31 +1,83 @@
 class Tools {
 
-    constructor(data) {
+    constructor(data, currDoc) {
         this.data = data;
+        this.currDoc = currDoc;
         this.final_result = {};
+        this.regex = /^[0-9]+\./; //TODO: onko oikein?
+    }
+
+    getStudentName() {
+        return this.data.user['real_name'];
     }
 
     getDouble(fieldName, def=0) {
-        var fn = '46.'+fieldName;
-        var s = this.data.fields[fn];
-        //console.log(fn + " => " +s);
+        if (this.regex.test(fieldName)) {
+            var fn = fieldName;
+        } else {
+            fn = this.currDoc + fieldName;
+        }
+        let s = this.data.fields[fn];
         let r = parseFloat(s);
-        if (r === NaN) r = def; // TODO: korjaa
+        if (isNaN(r)) r = def;
         return r;
     }
 
-    getSum(a, b) {
-        return a + b;
+    getInt(fieldName, def=0) {
+        if (this.regex.test(fieldName)) {
+            var fn = fieldName;
+        } else {
+            fn = this.currDoc + fieldName;
+        }
+        let s = this.data.fields[fn];
+        let r = parseInt(s); // TODO: katkaisee, ei pyöristä, onko OK?
+        if (isNaN(r)) r = def;
+        return r;
+    }
+
+    /*
+    getSum() {
+        let sum = 0;
+        for (let i = 0; i < arguments.length; i++) {
+            sum += arguments[i];
+        }
+        return sum;
+    }
+    */
+
+    // TODO: tarpeettoman monimutkainen
+    getSum(fieldName, start, end, def=0) {
+        if (this.regex.test(fieldName)) {
+                var fn = fieldName;
+            } else {
+                fn = this.currDoc + fieldName;
+            }
+        let sum = 0;
+        for (let i = start; i <= end; i++) {
+            let fnn = fn + i.toString();
+            let s = this.data.fields[fnn];
+            let r = parseFloat(s);
+            if (isNaN(r)) r = def;
+            sum += r;
+        }
+        return sum;
     }
 
     setString(fieldName, content) {
-        var tidFN = '46.'+fieldName;
-        console.log(tidFN);
+        if (this.regex.test(fieldName)) {
+            var tidFN = fieldName;
+        } else {
+            tidFN = this.currDoc + fieldName;
+        }
         this.final_result[tidFN] = content;
     }
 
     setDouble(fieldName, content) {
-        var tidFN = '46.'+fieldName;
+        if (this.regex.test(fieldName)) {
+            var tidFN = fieldName;
+        } else {
+            tidFN = this.currDoc + fieldName;
+        }
         this.final_result[tidFN] = content;
     }
 
