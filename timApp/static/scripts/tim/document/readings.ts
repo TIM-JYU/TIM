@@ -169,20 +169,14 @@ async function readlineHandler(elem: JQuery, e: JQuery.Event) {
     if ((e.target as HTMLElement).tagName === "BUTTON") {
         return;
     }
-    const ev = e.originalEvent;
-    if ((ev instanceof MouseEvent) || (ev instanceof Touch)) {
-        markParRead(elem.parents(".par"), ReadingType.ClickRed);
-        return true;
-    } else {
-        console.error("readline event was neither mouse nor touch");
-    }
+    markParRead(elem.parents(".par"), ReadingType.ClickRed);
 }
 
 export async function initReadings(sc: ViewCtrl) {
     onClick(".readline > button", handleSeeChanges);
     onClick(".readline", readlineHandler);
     onMouseOver(".readline.read-modified", (p, e) => {
-        const ev = e.originalEvent as MouseEvent | Touch;
+        const ev = e.originalEvent as MouseEvent | TouchEvent;
         const pos = posToRelative(p[0], ev);
         if (p.children().length === 0 && canSeeSource(sc.item, p.parents(".par"))) {
             const x = document.createElement("button");
