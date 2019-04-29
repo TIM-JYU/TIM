@@ -6,7 +6,7 @@ import {IItem} from "../item/IItem";
 import {showMessageDialog} from "../ui/dialog";
 import {Users} from "../user/userService";
 import {$http, $log, $timeout, $window} from "../util/ngimport";
-import {getPageXY, isInViewport, markPageDirty, to} from "../util/utils";
+import {getPageXY, isInViewport, markPageDirty, posToRelative, to} from "../util/utils";
 import {showDiffDialog} from "./diffDialog";
 import {EditPosition, EditType} from "./editing/editing";
 import {IExtraData} from "./editing/edittypes";
@@ -182,11 +182,14 @@ export async function initReadings(sc: ViewCtrl) {
     onClick(".readline > button", handleSeeChanges);
     onClick(".readline", readlineHandler);
     onMouseOver(".readline.read-modified", (p, e) => {
+        const ev = e.originalEvent as MouseEvent | Touch;
+        const pos = posToRelative(p[0], ev);
         if (p.children().length === 0 && canSeeSource(sc.item, p.parents(".par"))) {
             const x = document.createElement("button");
             x.classList.add("timButton", "btn-xs");
             x.title = "See changes";
             x.textContent = "Changes";
+            x.style.top = pos.y + "px";
             p.append(x);
         }
     });
