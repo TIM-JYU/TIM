@@ -520,7 +520,7 @@ ${backTicks}
         }
     }
 
-    $onInit() {
+    async $onInit() {
         super.$onInit();
         this.autocomplete = this.getLocalBool("autocomplete", false);
         const saveTag = this.getSaveTag();
@@ -534,10 +534,6 @@ ${backTicks}
         if (isNaN(n)) {
             n = -90;
         }
-
-        this.activeAttachments = this.updateAttachments(true, undefined, undefined);
-        console.log(this.activeAttachments);
-
         this.wrap = {n: n};
 
         if (this.getOptions().touchDevice) {
@@ -550,13 +546,16 @@ ${backTicks}
         }
         this.draggable.makeHeightAutomatic();
         const oldMode = window.localStorage.getItem("oldMode" + this.getOptions().localSaveTag) || (this.getOptions().touchDevice ? "text" : "ace");
-        this.changeEditor(oldMode);
+        await this.changeEditor(oldMode);
         this.scope.$watch(() => this.autocomplete, () => {
             if (this.isAce(this.editor)) {
                 this.editor.setAutoCompletion(this.autocomplete);
             }
         });
         this.docSettings = $window.docSettings;
+
+        this.activeAttachments = this.updateAttachments(true, undefined, undefined);
+        console.log(this.activeAttachments);
     }
 
     $postLink() {
@@ -1338,6 +1337,7 @@ ${backTicks}
                              stamped: IAttachmentData | undefined) {
         const attachments = [];
         const date = this.getCurrentMeetingDate();
+        console.log(date + " " + this.editor);
         if (this.editor && date) {
             const editorText = this.editor.getEditorText();
             const pluginSplit = editorText.split("```");
