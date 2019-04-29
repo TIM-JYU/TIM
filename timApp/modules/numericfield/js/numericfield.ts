@@ -45,6 +45,8 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
     private modelOpts!: INgModelOptions; // initialized in $onInit, so need to assure TypeScript with "!"
     private vctrl!: ViewCtrl;
     private notSavedNumber?: number;
+    private errormessage = "";
+    private isSaved = false;
 
     getDefaultMarkup() {
         return {};
@@ -145,6 +147,7 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
      */
     saveText() {
         this.doSaveText(false);
+        this.isSaved = true;
     }
 
     // noinspection JSUnusedGlobalSymbols
@@ -174,7 +177,10 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
      * @param true/false parameter boolean checker for the need to save
      */
     async doSaveText(nosave: boolean) {
-        /* No visible text  this.error = "... saving ..."; */
+        /* No visible text
+        this.error = "... saving ..."; */
+        this.errormessage = "";
+        this.isSaved = false;
         this.isRunning = true;
         this.result = undefined;
         const params = {
@@ -196,8 +202,7 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
             this.result = data.web.result;
             this.notSavedNumber = this.numericvalue;
         } else {
-            // TODO: why error here without any?
-            this.error = (r.result.data as any).error || "Infinite loop or some other error?";
+            this.errormessage = "Infinite loop or some other error?";
         }
     }
 
@@ -245,6 +250,7 @@ numericfieldApp.component("numericfieldRunner", {
             ng-click="$ctrl.saveText()">
         {{::$ctrl.buttonText()}}
     </button>
+    <pre class="savedtext" ng-if="$ctrl.isSaved && $ctrl.buttonText() && !$ctrl.readonly">Saved!</pre> 
     <p ng-if="::$ctrl.footer" ng-bind="::$ctrl.footer" class="plgfooter"></p>
 </div> `,
 });

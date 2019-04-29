@@ -50,3 +50,10 @@ input:focus.warnFrame {
     99% { opacity: 0.01; height: 100%; }
     100% { opacity: 0; height: 0; }
 }
+
+.plugintextfield pre {
+    padding-top: 0px;
+    padding-bottom: 0px;
+    margin-bottom: 0px;
+    margin-top: 0px;
+}

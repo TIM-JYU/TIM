@@ -41,13 +41,13 @@ class TableFormStateSchema(Schema):
 class TableFormMarkupModel(GenericMarkupModel):
     initword: Union[str, Missing] = missing
     groups: Union[List[str], Missing] = missing
-    tasks: Union[List[str], Missing] = missing
+    fields: Union[List[str], Missing] = missing
 
 
 class TableFormMarkupSchema(GenericMarkupSchema):
     initword = fields.Str()
     groups = fields.List(fields.Str())
-    tasks = fields.List(fields.Str())
+    fields = fields.List(fields.Str())
 
     @post_load
     def make_obj(self, data):
@@ -106,21 +106,39 @@ class TableFormHtmlModel(GenericHtmlModel[TableFormInputModel, TableFormMarkupMo
             ug = UserGroup.get_by_name(self.markup.groups[0]) #! Lista vs 1 ryhmä
             members = ug.users.all()
             # TODO: Check if user has right to see group members
-            userdata = {'type': "Relative", 'cells': {}}
+            rows = {}
+            # for i, m in enumerate(members):
+            #     #colnum_to_letters()
+            #     #100.textfield_A1.IN4wKoImZc5b - 100.textfield_A6.IN4wKoImZc5b
+            #     userdata['cells']["A" + str(i+2)] = m.name
+            #     if self.markup.fields:
+            #         for j, t in enumerate(self.markup.fields):
+            #             ans = m.get_answers_for_task(t).first()
+            #             # TODO: Check if user has right to see answers for task/user
+            #             # TODO: Save cells (user/task) as matrix in global variable?
+            #             if ans:
+            #                 userdata['cells'][colnum_to_letters(j+1) + str(i+2)] = ans.content
+            #                 # TODO: Parse content? {"userword": "2"}
             for i, m in enumerate(members):
                 #colnum_to_letters()
                 #100.textfield_A1.IN4wKoImZc5b - 100.textfield_A6.IN4wKoImZc5b
-                userdata['cells']["A" + str(i+2)] = m.name
-                if self.markup.tasks:
-                    for j, t in enumerate(self.markup.tasks):
-                        ans = m.get_answers_for_task(t).first()
+                rows[m.name] = {}
+                if self.markup.fields:
+                    for j, t in enumerate(self.markup.fields):
+                        ans = m.get_answers_for_task(t).first() # TODO Check optimal request
+                        # TODO: ^Make custom db request with arrays of users and tasks?
+                        ans2 = m.get_answers_for_task(t)
                         # TODO: Check if user has right to see answers for task/user
                         # TODO: Save cells (user/task) as matrix in global variable?
                         if ans:
-                            userdata['cells'][colnum_to_letters(j+1) + str(i+2)] = ans.content
+                            #TODO: 204.textfield_d1.args, 204.textfield_d1.usercode
+                            #^ check for multiple fields in answerstable, use first field if not given specific field
+                            rows[m.name][t] = ans.content
                             # TODO: Parse content? {"userword": "2"}
-            r['data'] = {'userdata': userdata, 'task': 'true', 'table': {'rows': {}}}
-            #TODO: Check if timtable rows should match userdata or are empty rows enough when in task mode (works for now)
+            # if self.markup.fields:
+            #     userdata['tasks'] = self.markup.fields
+            r['rows'] = rows
+            r['fields'] = self.markup.fields
 
         return r
 
@@ -244,7 +262,7 @@ groups:
                         'items': [
                             {
                                 'data': templates[0].strip(),
-                                'text': '5 letters',
+                                'text': 'TableForm',
                                 'expl': 'Add a table for editing forms',
                             },
                         ],

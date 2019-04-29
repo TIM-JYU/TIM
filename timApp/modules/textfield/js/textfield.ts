@@ -48,7 +48,7 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
     private vctrl!: ViewCtrl;
     private notSavedWord = "";
     private errormessage = "";
-    private isSaved = false;
+    private isSaved = true;
 
     getDefaultMarkup() {
         return {};
@@ -150,7 +150,6 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
      */
     saveText() {
         this.doSaveText(false);
-        this.isSaved = true;
     }
 
     // noinspection JSUnusedGlobalSymbols
@@ -183,6 +182,9 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
      * Unused method warning is suppressed, as the method is only called in template.
      */
     notSaved() {
+        if (this.notSavedWord != this.userword) {
+            this.isSaved = true;
+        }
         return (this.notSavedWord != this.userword);
     }
 
@@ -202,10 +204,9 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
      */
     async doSaveText(nosave: boolean) {
         this.errormessage = "";
-        this.isSaved = false;
         if (this.attrs.inputchecker) {
             if(!this.validityCheck(this.attrs.inputchecker)) {
-                this.errormessage = "Input does not pass the RegExp checker: " + this.attrs.inputchecker;
+                this.errormessage = "Input does not pass the RegEx: " + this.attrs.inputchecker;
                 return;
             }
         }
@@ -231,6 +232,7 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
             this.error = data.web.error;
             this.result = data.web.result;
             this.notSavedWord = this.userword;
+            this.isSaved = false;
         } else {
             this.error = r.result.data.error;
             this.errormessage = r.result.data.error || "Infinite loop or some other error?";
@@ -269,7 +271,7 @@ textfieldApp.component("textfieldRunner", {
                ng-readonly="::$ctrl.readonly"
                uib-tooltip="{{ $ctrl.errormessage }}"
                tooltip-is-open="$ctrl.f.$invalid && $ctrl.f.$dirty"
-               tooltip-trigger="none"
+               tooltip-trigger="mouseenter"
                placeholder="{{::$ctrl.inputplaceholder}}"
                size="{{::$ctrl.cols}}" 
                ng-class="{warnFrame: $ctrl.notSaved()}">
@@ -281,7 +283,7 @@ textfieldApp.component("textfieldRunner", {
             ng-click="$ctrl.saveText()">
         {{::$ctrl.buttonText()}}
     </button> 
-    <pre class="savedtext" ng-if="$ctrl.isSaved && $ctrl.buttonText()">Saved!</pre> 
+    <pre class="savedtext" ng-if="!$ctrl.isSaved && $ctrl.buttonText()">Saved!</pre> 
     <p ng-if="::$ctrl.footer" ng-bind="::$ctrl.footer" class="plgfooter"></p>
 </div>
 `,
