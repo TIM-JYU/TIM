@@ -1655,8 +1655,8 @@ dependencies = [
 
 [[package]]
 name = "tera"
-version = "0.11.17"
-source = "git+https://gitlab.com/tim-jyu/tera#0fbdfb2a9b766d7d8434cc58e97dbfdabd0c3ec0"
+version = "0.11.20"
+source = "git+https://gitlab.com/tim-jyu/tera#94c113f8ab28df336457a8acdbb957bb07525132"
 dependencies = [
  "chrono 0.4.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "error-chain 0.12.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1702,7 +1702,7 @@ dependencies = [
  "serde_derive 1.0.90 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_json 1.0.39 (registry+https://github.com/rust-lang/crates.io-index)",
  "simple_logger 1.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "tera 0.11.17 (git+https://gitlab.com/tim-jyu/tera)",
+ "tera 0.11.20 (git+https://gitlab.com/tim-jyu/tera)",
  "yaml-rust 0.4.3 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
@@ -2432,7 +2432,7 @@ dependencies = [
 "checksum syn 0.15.33 (registry+https://github.com/rust-lang/crates.io-index)" = "ec52cd796e5f01d0067225a5392e70084acc4c0013fa71d55166d38a8b307836"
 "checksum synom 0.11.3 (registry+https://github.com/rust-lang/crates.io-index)" = "a393066ed9010ebaed60b9eafa373d4b1baac186dd7e008555b0f702b51945b6"
 "checksum synstructure 0.10.1 (registry+https://github.com/rust-lang/crates.io-index)" = "73687139bf99285483c96ac0add482c3776528beac1d97d444f6e91f203a2015"
-"checksum tera 0.11.17 (git+https://gitlab.com/tim-jyu/tera)" = "<none>"
+"checksum tera 0.11.20 (git+https://gitlab.com/tim-jyu/tera)" = "<none>"
 "checksum thread_local 0.3.6 (registry+https://github.com/rust-lang/crates.io-index)" = "c6b53e329000edc2b34dbe8545fd20e55a333362d0a321909685a19bd28c3f1b"
 "checksum time 0.1.42 (registry+https://github.com/rust-lang/crates.io-index)" = "db8dcfca086c1143c9270ac42a2bbd8a7ee477b78ac8e45b19abfb0cbede4b6f"
 "checksum tokio 0.1.19 (registry+https://github.com/rust-lang/crates.io-index)" = "cec6c34409089be085de9403ba2010b80e36938c9ca992c4f67f407bb13db0b1"
