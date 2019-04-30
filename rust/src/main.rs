@@ -1,5 +1,5 @@
 #![feature(box_patterns)]
-#![feature(futures_api, async_await, await_macro)]
+#![feature(async_await, await_macro)]
 #![recursion_limit = "128"]
 
 #[macro_use]
