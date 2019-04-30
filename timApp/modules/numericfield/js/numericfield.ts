@@ -101,9 +101,8 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
     /**
      * Save method for other plguins, needed by e.g. multisave plugin.
      */
-    save(): undefined {
-        this.saveText();
-        return undefined;
+    async save() {
+        return this.saveText();
     }
 
     resetField(): undefined {
@@ -148,7 +147,7 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
      */
     saveText() {
         if (this.notSaved()) {
-            this.doSaveText(false);
+            return this.doSaveText(false);
         }
         else {
             return undefined;
@@ -199,7 +198,7 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
         if (this.attrs.inputchecker) {
             if(!this.validityCheck(this.attrs.inputchecker)) {
                 this.errormessage = "Input does not pass the RegEx: " + this.attrs.inputchecker;
-                return;
+                return this.errormessage;
             }
         }
         /* No visible text
@@ -229,6 +228,7 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
         } else {
             this.errormessage = "Infinite loop or some other error?";
         }
+        return this.error;
     }
 
     protected getAttributeType() {
@@ -268,7 +268,7 @@ numericfieldApp.component("numericfieldRunner", {
                tooltip-is-open="$ctrl.f.$invalid && $ctrl.f.$dirty"
                tooltip-trigger="mouseenter"
                placeholder="{{::$ctrl.inputplaceholder}}"
-               ng-class="{warnFrame: $ctrl.notSaved()}">
+               ng-class="{warnFrame: $ctrl.notSaved() errorFrame: }">
         </span></label>
     </div>
     <div ng-if="$ctrl.error" style="font-size: 12px" ng-bind-html="$ctrl.error"></div>

@@ -103,7 +103,7 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
     /**
      * Save method for other plugins, needed by e.g. multisave plugin.
      */
-    save() {
+    async save() {
         return this.saveText();
     }
 
@@ -148,7 +148,12 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
      * Used as e.g. timButton ng-click event.
      */
     saveText() {
-        return this.doSaveText(false);
+        if (this.notSaved()) {
+            return this.doSaveText(false);
+        }
+        else {
+            return undefined;
+        }
     }
 
     // noinspection JSUnusedGlobalSymbols
@@ -282,7 +287,7 @@ textfieldApp.component("textfieldRunner", {
             ng-click="$ctrl.saveText()">
         {{::$ctrl.buttonText()}}
     </button> 
-    <pre class="savedtext" ng-if="!$ctrl.isSaved && $ctrl.buttonText()">Saved!</pre> 
+    <p class="savedtext" ng-if="!$ctrl.isSaved && $ctrl.buttonText()">Saved!</p> 
     <p ng-if="::$ctrl.footer" ng-bind="::$ctrl.footer" class="plgfooter"></p>
 </div>
 `,
