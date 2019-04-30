@@ -1125,15 +1125,16 @@ export class ReviewController {
         // We might click a margin annotation, but we still want to open the corresponding inline annotation,
         // if it exists.
         const prefix = isFullCoord(annotation.coord.start) && isFullCoord(annotation.coord.end) ? "t" : "m";
-        const actrl = this.vctrl.getAnnotation(prefix + annotation.id);
+        let actrl = this.vctrl.getAnnotation(prefix + annotation.id);
+        if (!annotation.answer_id && !actrl) {
+            actrl = this.vctrl.getAnnotation("m" + annotation.id);
+        }
         if (actrl) {
             if ((annotation.coord.start == null || actrl.show || !annotation.user_id)) {
-                if (actrl.show) { scrollToAnnotation = false; }
                 actrl.toggleAnnotationShow();
-                if (scrollToAnnotation) {
+                if (scrollToAnnotation && actrl.show) {
                     actrl.scrollToIfNotInViewport();
                 }
-                // addAnnotationToElement(par, annotation, false, "Added also margin annotation");
                 return;
             }
         }
