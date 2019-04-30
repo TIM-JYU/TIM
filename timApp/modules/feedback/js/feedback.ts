@@ -79,13 +79,14 @@ const FeedbackMarkup = t.intersection([
         autoupdate: withDefault(t.number, 500),
         cols: withDefault(t.number, 20),
         questionItems: t.array(QuestionItem),
-        teacherHide: withDefault(t.boolean, true),
         shuffle: withDefault(t.boolean, true),
+        teacherHide: withDefault(t.boolean, true),
     }),
 ]);
 const FeedbackAll = t.intersection([
     t.partial({
         // userword: t.string,
+        state: nullable(t.type({answer: t.string, correct: t.boolean, feedback: t.string, sentence: t.string})),
     }),
     t.type({
         info: Info,
@@ -97,6 +98,7 @@ const FeedbackAll = t.intersection([
 class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.TypeOf<typeof FeedbackAll>, typeof FeedbackAll> implements ITimComponent {
     private result?: string;
     private error?: string;
+    private errormessage = "";
     private vctrl!: ViewCtrl;
     private userAnswer: string[] = [];
     private feedback = "";
@@ -121,6 +123,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
     private btnText = "Begin";
     private instrHidden = false;
     private itemHidden = true;
+    private savedAnswer?: string;
 
     async $onInit() {
         super.$onInit();
@@ -153,6 +156,8 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
         if (!this.vctrl.item.rights.editable || !this.vctrl.item.rights.teacher) {
             await import("/feedback/css/viewhide.css" as any);
             this.vctrl.actionsDisabled = true;
+        } else {
+            this.savedAnswer = this.getSavedAnswer();
         }
         this.showDocument();
     }
@@ -162,6 +167,25 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
      */
     addToCtrl() {
         this.vctrl.addTimComponent(this);
+    }
+
+    /**
+     * Get the current saved answer.
+      */
+    getSavedAnswer(): string | undefined {
+        let answer = undefined;
+        if(this.attrsall.state != null) {
+            answer = "";
+            answer += `${this.attrsall.state.answer}\n`;
+            console.log(answer);
+            answer += `${this.attrsall.state.correct}\n`;
+            console.log(answer);
+            answer += `${this.attrsall.state.feedback}\n`;
+            console.log(answer);
+            answer += this.attrsall.state.sentence;
+            console.log(answer);
+        }
+        return answer;
     }
 
     get autoupdate(): number {
@@ -203,8 +227,8 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
             }
         }
 
-        if (!levels.every(x => x === levels[0]) && this.error === undefined) {
-            this.error = "Different number of feedback levels";
+        if (!levels.every(x => x === levels[0]) && this.errormessage === "") {
+            this.errormessage = "Different number of feedback levels";
         }
         return levels[0];
     }
@@ -219,8 +243,8 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
         for (const item of items) {
             for (const choice of item.choices) {
                 if (choice.correct) {
-                    if (item.pluginNames.length !== choice.match.length && this.error === undefined) {
-                        this.error = `${item.pluginNames}'s correct answer is missing a match for some of its plugins`
+                    if (item.pluginNames.length !== choice.match.length && this.errormessage === "") {
+                        this.errormessage = `${item.pluginNames}'s correct answer is missing a match for some of its plugins`
                     }
                 }
             }
@@ -236,11 +260,11 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
 
         if (id) {
             const instruction = this.vctrl.getTimComponentByName(id);
-            if (!instruction && this.error === undefined)
-                this.error = "Feedback plugin has instruction plugin defined but it cannot be found from the page."
+            if (!instruction && this.errormessage === "")
+                this.errormessage = "Feedback plugin has instruction plugin defined but it cannot be found from the page."
         }
-        if (!id && instruction.length < 1 && this.error === undefined) {
-            this.error = "Missing an instruction block or it has no .instruction-class defined.";
+        if (!id && instruction.length < 1 && this.errormessage === "") {
+            this.errormessage = "Missing an instruction block or it has no .instruction-class defined.";
         }
     }
 
@@ -251,8 +275,8 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
         const items = this.attrs.questionItems;
         for (const item of items) {
             const missing = item.choices.every(x => x.correct === false);
-            if (missing && this.error === undefined) {
-                this.error = `Question item (${item.pluginNames}) is missing the correct answer.`
+            if (missing && this.errormessage === "") {
+                this.errormessage = `Question item (${item.pluginNames}) is missing the correct answer.`
             }
         }
     }
@@ -266,8 +290,8 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
         const items = this.attrs.questionItems;
         for (const item of items) {
             const defaultMatch = item.choices.filter(x => x.match.length === 0);
-            if (defaultMatch.length === 0 && this.error === undefined) {
-                this.error = `Question item (${item.pluginNames}) is missing default feedback.`
+            if (defaultMatch.length === 0 && this.errormessage === "") {
+                this.errormessage = `Question item (${item.pluginNames}) is missing default feedback.`
             }
         }
     }
@@ -485,6 +509,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
      * TODO: fix the task end logic in this....
      */
     async handleAnswer() {
+        this.savedAnswer = undefined;
         if (this.pluginMode === Mode.EndTask) {
             const button = document.querySelectorAll(".fbButton");
             if (button.length > 0) {
@@ -570,7 +595,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
             }
 
             if (matchIndex === undefined) {
-                this.error = "You have no choices defined, got no matches or using match objects";
+                this.errormessage = "You have no choices defined, got no matches or using match objects";
             } else {
                 // Get the choice in matchIndex and the feedbacks assigned to it
                 if (matchIndex !== undefined) {
@@ -1043,7 +1068,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
                     }
                     i++;
                 } else {
-                    this.error = `No plugin with such a name (${plugin}) or missing setPluginWords-method`;
+                    this.errormessage = `No plugin with such a name (${plugin}) or missing setPluginWords-method`;
                 }
             }
             if (item.dragSource) {
@@ -1051,7 +1076,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
                 if (timComponent) {
                     timComponent.resetField();
                 } else {
-                    this.error = `No plugin with such a name(${item.dragSource})`;
+                    this.errormessage = `No plugin with such a name(${item.dragSource})`;
                 }
             }
         }
@@ -1125,7 +1150,9 @@ feedbackApp.component("feedbackRunner", {
         vctrl: "^timView",
     },
     template: `
-<div>
+<div uib-tooltip="{{$ctrl.errormessage}}"
+     tooltip-is-open="$ctrl.f.$invalid && $ctrl.f.$dirty"
+     tooltip-trigger="mouseenter">
     <tim-markup-error ng-if="::$ctrl.markupError" data="::$ctrl.markupError"></tim-markup-error>
     <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
     <p ng-if="::$ctrl.stem">{{::$ctrl.stem}}</p>
@@ -1138,6 +1165,7 @@ feedbackApp.component("feedbackRunner", {
             ng-click="$ctrl.handleAnswer()">
         {{$ctrl.buttonText()}}
     </button>
+    <p class="fbanswer" ng-bind-html="$ctrl.savedAnswer" ng-model="$ctrl.savedAnswer"></p>
     <div class="wrong" ng-if="$ctrl.error" ng-bind-html="$ctrl.error"></div>
     <pre ng-if="$ctrl.result">{{$ctrl.result}}</pre>
     <p ng-if="::$ctrl.footer" ng-bind="::$ctrl.footer"></p>

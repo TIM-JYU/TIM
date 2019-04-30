@@ -37,6 +37,7 @@ class DropdownMarkupModel(GenericMarkupModel):
     radio: Union[bool, Missing] = missing
     shuffle: Union[bool, Missing] = missing
     autosave: Union[bool, Missing] = missing
+    answers: Union[bool, Missing] = missing
 
 
 class DropdownMarkupSchema(GenericMarkupSchema):
@@ -44,6 +45,7 @@ class DropdownMarkupSchema(GenericMarkupSchema):
     instruction = fields.Bool()
     radio = fields.Bool()
     autosave = fields.Bool()
+    answers = fields.Bool()
 
     @post_load
     def make_obj(self, data):

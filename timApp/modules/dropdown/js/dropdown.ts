@@ -4,7 +4,7 @@
 import angular from "angular";
 import * as t from "io-ts";
 import {ITimComponent, ViewCtrl} from "tim/document/viewctrl";
-import {GenericPluginMarkup, Info, PluginBase, pluginBindings, withDefault} from "tim/plugin/util";
+import {GenericPluginMarkup, Info, nullable, PluginBase, pluginBindings, withDefault} from "tim/plugin/util";
 import {to} from "tim/util/utils";
 import {$http} from "tim/util/ngimport";
 
@@ -18,15 +18,16 @@ const DropdownMarkup = t.intersection([
     GenericPluginMarkup,
     t.type({
         // all withDefaults should come here; NOT in t.partial,
+        answers: withDefault(t.boolean, false),
+        autosave: withDefault(t.boolean, false),
         instruction: withDefault(t.boolean, false),
         radio: withDefault(t.boolean, false),
         shuffle: withDefault(t.boolean, false),
-        autosave: withDefault(t.boolean, false),
     }),
 ]);
 const DropdownAll = t.intersection([
     t.partial({
-        userword: t.string,
+        selectedWord: t.string,
     }),
     t.type({
         info: Info,
@@ -51,6 +52,7 @@ class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.T
 
     $onInit() {
         super.$onInit();
+        this.selectedWord = this.attrsall.selectedWord;
         this.shuffle = this.attrs.shuffle;
         if (this.shuffle && this.attrs.words) {
             this.wordList = this.shuffleWords(this.attrs.words);
@@ -59,6 +61,9 @@ class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.T
         }
         this.addToCtrl();
         this.radio = this.attrs.radio;
+        if(this.attrs.answers) {
+            // TODO: Show the answer browser if so desired.
+        }
     }
 
     /**

@@ -430,15 +430,14 @@ def get_items(folder: str):
 
 
 def should_hide_links(settings: DocSettings, rights: dict):
-    return check_rights(settings, rights)
+    return check_rights(settings.hide_links(), rights)
 
 
 def should_hide_top_buttons(settings: DocSettings, rights: dict):
-    return check_rights(settings, rights)
+    return check_rights(settings.hide_top_buttons(), rights)
 
 
-def check_rights(settings: DocSettings, rights: dict):
-    hide_type = settings.hide_top_buttons()
+def check_rights(hide_type: str, rights: dict):
     return {'view': not rights['editable'] and not rights['see_answers'],
             'edit': not rights['see_answers'],
             'see_answers': not rights['teacher'],

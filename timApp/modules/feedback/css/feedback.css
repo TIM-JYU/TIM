@@ -1,11 +1,14 @@
 feedback-runner {
     margin-bottom: 15px;
     display: block;
-
 }
 
 .pluginfeedback .answerBrowserPlaceholder {
     display: none;
+}
+
+.fbanswer {
+    display: table;
 }
 
 .task {
@@ -20,7 +23,7 @@ feedback-runner {
 
 .pluginfeedback button {
     display: block;
-    margin-top: 2em;
+    /* margin-top: 2em; */
     margin-left: auto;
     margin-right: 130px;
 }
