@@ -15,6 +15,7 @@ import {AceParEditor} from "./AceParEditor";
 import {IPluginInfoResponse, ParCompiler} from "./parCompiler";
 import {TextAreaParEditor} from "./TextAreaParEditor";
 import {SelectionRange} from "./BaseParEditor";
+import {showRestampDialog} from "./restampDialog";
 
 markAsUsed(rangyinputs);
 
@@ -81,12 +82,18 @@ interface IMenuItemObject {
     file?: string;
 }
 
-interface IAttachmentData {
+export interface IAttachmentData {
     meetingDate: string;
     issueNumber: string | number;
     attachmentLetter: string;
     filePath: string;  // Could be empty string or placeholder.
-    upToDate: boolean;
+    upToDate: boolean; // Whether the stamp data hasn't changed after previous stamping.
+}
+
+export interface IStampingData {
+    attachments: IAttachmentData[];
+    customStampModel: string | undefined;
+    stampFormat: string;
 }
 
 type MenuItem = IMenuItemObject | string;
@@ -853,8 +860,18 @@ ${backTicks}
 
         this.activeAttachments = this.updateAttachments(false, this.activeAttachments, undefined);
         console.log(this.activeAttachments);
-        if (!this.allAttachmentsUpToDate()) {
-            await showMessageDialog("Some attachments may not be up to date!");
+        if (this.activeAttachments && this.docSettings && !this.allAttachmentsUpToDate()) {
+            let stampFormat = this.docSettings.macros.stampformat;
+            if (stampFormat === undefined) {
+                stampFormat = "";
+            }
+            const customStampModel = this.docSettings.custom_stamp_model;
+            // TODO: Return bool telling whether to cancel or continue saving.
+            void showRestampDialog({
+                attachments: this.activeAttachments,
+                customStampModel: customStampModel,
+                stampFormat: stampFormat,
+            });
         }
         const result = await this.resolve.params.saveCb(text, this.getExtraData());
         if (result.error) {
@@ -1323,21 +1340,18 @@ ${backTicks}
         }
     }
 
-    private attachmentsUpToDate() {
-        const previousAttachments = this.activeAttachments;
-        if (previousAttachments) {
-            // TODO:
-        } else {
-            return true;
-        }
-    }
-
+    /**
+     * Updates list of attachments and their data in open editor, including whether they
+     * have been changed since previous check.
+     * @param firstCheck Check is during initialization (up-to-date by default).
+     * @param previousAttachments Previous check's data (if there is any).
+     * @param stamped Attachment-to-stamp (if there is one).
+     */
     private updateAttachments(firstCheck: boolean,
                              previousAttachments: IAttachmentData[] | undefined,
                              stamped: IAttachmentData | undefined) {
         const attachments = [];
         const date = this.getCurrentMeetingDate();
-        console.log(date + " " + this.editor);
         if (this.editor && date) {
             const editorText = this.editor.getEditorText();
             const pluginSplit = editorText.split("```");
