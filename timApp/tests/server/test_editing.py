@@ -5,6 +5,7 @@ from timApp.document.docparagraph import DocParagraph
 from timApp.plugin.plugin import Plugin
 from timApp.tests.browser.browsertest import BrowserTest
 from timApp.tests.server.timroutetest import TimRouteTest
+from timApp.user.userutils import grant_view_access
 
 
 class EditTest(TimRouteTest):
@@ -313,6 +314,22 @@ macros:
         p2: HtmlElement = content[1].getchildren()[0]
         self.assertEqual('x', p1.get('id'))
         self.assertEqual('x-1', p2.get('id'))
+
+    def test_getblock(self):
+        self.login_test1()
+        d = self.create_doc(initial_par="""
+#- {plugin=pali}
+#- {defaultplugin=pali}
+#-
+test
+        """)
+        d_id = d.id
+        grant_view_access(self.get_test_user_2_group_id(), d_id)
+        par_ids = [p.get_id() for p in d.document.get_paragraphs()]
+        self.login_test2()
+        self.get(f'/getBlock/{d_id}/{par_ids[0]}', expect_status=403)
+        self.get(f'/getBlock/{d_id}/{par_ids[1]}', expect_status=403)
+        self.get(f'/getBlock/{d_id}/{par_ids[2]}')
 
 
 class TimTableEditTest(BrowserTest):

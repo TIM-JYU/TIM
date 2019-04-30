@@ -27,6 +27,30 @@
     {{ caller() }}
 {%- endmacro -%}
 
+{%- macro notes(t) -%}
+{%- if t.notes and not t.from_preamble -%}
+<div class="notes">
+    {%- for note in t.notes -%}
+    <div class="{{ ['note', 'editable' if note.editable else '', 'private' if note.private else '']|join(' ')|trim }}"
+         note-id="{{ note.note.id }}">
+        {{ note.note.html|safe }}
+        &mdash;
+        {%- if item.rights.teacher %}
+        <a class="username" title="{{ note.user.real_name }}" href="mailto:{{ note.user.email }}"
+        >{{ note.user.name }}</a>
+        {%- endif %}
+        <span class="timestamp" title="{{ note.note.created }}">{{ note.note.created|datestr_to_relative }}</span>
+        {%- if note.note.modified -%}
+        <span class="timestamp" title="{{ note.note.modified }}">
+                                (edited {{ note.note.modified|datestr_to_relative }})
+                            </span>
+        {%- endif -%}
+    </div>
+    {%- endfor -%}
+</div>
+{%- endif -%}
+{%- endmacro -%}
+
 {%- for t in text -%}
     {%- if t.end_areas -%}
         {% call end_area(t.end_areas) %}
@@ -56,7 +80,8 @@
             {% if t.status %}
             <div class="{{ t.status.class_str() }}" title="Click to mark this area as read"></div>
             {% endif %}
-           {{ editline|safe }}
+            {{ editline|safe }}
+            {{ notes(t) }}
         </div>
 
     {%- else -%}
@@ -143,27 +168,7 @@
             ></div>
         {%- endif -%}
 
-        {%- if t.notes and not t.from_preamble -%}
-            <div class="notes">
-                {%- for note in t.notes -%}
-                    <div class="{{ ['note', 'editable' if note.editable else '', 'private' if note.private else '']|join(' ')|trim }}"
-                         note-id="{{ note.note.id }}">
-                        {{ note.note.html|safe }}
-                        &mdash;
-                        {%- if item.rights.teacher %}
-                            <a class="username" title="{{ note.user.real_name }}" href="mailto:{{ note.user.email }}"
-                            >{{ note.user.name }}</a>
-                        {%- endif %}
-                        <span class="timestamp" title="{{ note.note.created }}">{{ note.note.created|datestr_to_relative }}</span>
-                        {%- if note.note.modified -%}
-                            <span class="timestamp" title="{{ note.note.modified }}">
-                                (edited {{ note.note.modified|datestr_to_relative }})
-                            </span>
-                        {%- endif -%}
-                    </div>
-                {%- endfor -%}
-            </div>
-        {%- endif -%}
+        {{ notes(t) }}
         </div>
     {%- endif -%}
 {%- endfor -%}

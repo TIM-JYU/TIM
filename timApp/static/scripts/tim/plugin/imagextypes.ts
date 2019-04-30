@@ -25,7 +25,6 @@ export interface IFakeVideo {
 }
 
 export type VideoPlayer = IFakeVideo | HTMLVideoElement;
-export type MouseOrTouch = MouseEvent | Touch;
 
 // pin begin (non-dot) position = align place + start
 // pin end (dot) position = begin + coord

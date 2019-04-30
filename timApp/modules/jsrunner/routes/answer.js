@@ -1,7 +1,6 @@
 var express = require('express');
 var router = express.Router();
 
-/* GET users listing. */
 router.put('/', function (req, res, next) {
 
     const uAndF = req.body.input.data;
@@ -23,10 +22,8 @@ router.put('/', function (req, res, next) {
     let result = vm.run(
         `
         const Tools = require('./tools');
-        const s = JSON.stringify(data)
-        const usersAndFields = JSON.parse(s);
         let r = [];
-        for (let user of usersAndFields) {
+        for (const user of data) {
             const tools = new Tools(user, currDoc[0]); // onko parempaa keinoa viedä currDoc toolsille?
             function runProgram() {
                 ${program}
