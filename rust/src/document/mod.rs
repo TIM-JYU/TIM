@@ -2,6 +2,7 @@ pub mod docblock;
 pub mod docinfo;
 pub mod document;
 pub mod processing;
+pub mod yamlblock;
 
 pub use self::docblock::BlockId;
 pub use self::docblock::DocBlock;

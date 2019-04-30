@@ -50,6 +50,7 @@ impl BlockList {
         BlockList { entries }
     }
 
+    #[allow(dead_code)]
     pub fn get_entry(&self, p: &BlockId) -> Option<&str> {
         match self.entries.get(p) {
             None => None,
@@ -249,6 +250,7 @@ impl Document {
         Ok(Document { id, blocks })
     }
 
+    #[allow(dead_code)]
     pub fn gen_block_list(&self) -> BlockList {
         BlockList::new(
             self.blocks
