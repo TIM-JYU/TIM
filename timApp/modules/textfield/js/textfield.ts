@@ -206,7 +206,7 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
         if (this.attrs.inputchecker) {
             if(!this.validityCheck(this.attrs.inputchecker)) {
                 this.errormessage = "Input does not pass the RegEx: " + this.attrs.inputchecker;
-                return "fail";
+                return this.errormessage;
             }
         }
         /* No visible text version
