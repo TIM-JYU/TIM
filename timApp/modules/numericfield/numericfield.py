@@ -140,14 +140,14 @@ class NumericfieldAnswerSchema(NumericfieldAttrs, GenericAnswerSchema):
 
 def render_static_numericfield(m: NumericfieldHtmlModel):
     return render_template_string("""
-<div class="csRunDiv no-popup-menu">
+<div>
 <h4>{{ header or '' }}</h4>
 <p class="stem">{{ stem or '' }}</p>
 <div><label>{{ inputstem or '' }} <span>
 <input type="text"
-        class="form-control"
-        placeholder="{{ '' }}"
-        size="{{cols}}"></span></label>
+class="form-control"
+placeholder="{{ inputplaceholder or '' }}"
+size="{{cols}}"></span></label>
 </div>
 <button class="timButton">
 {{ buttonText or button or "Save" }}

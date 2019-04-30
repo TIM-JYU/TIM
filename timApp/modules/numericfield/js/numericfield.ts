@@ -147,7 +147,12 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
      * Used as e.g. timButton ng-click event.
      */
     saveText() {
-        this.doSaveText(false);
+        if (this.notSaved()) {
+            this.doSaveText(false);
+        }
+        else {
+            return undefined;
+        }
     }
 
     // noinspection JSUnusedGlobalSymbols
@@ -254,7 +259,7 @@ numericfieldApp.component("numericfieldRunner", {
                ng-model="$ctrl.numericvalue"
                ng-model-options="{ debounce: {'blur': 0} } "
                ng-blur="$ctrl.autoSave()"
-               ng-keydown="$event.keyCode === 13 && $ctrl.saveText()"
+               ng-keydown="$event.keyCode === 13 && $ctrl.saveText() && elem.next().focus()"
                ng-model-options="::$ctrl.modelOpts"
                ng-change="$ctrl.checkNumericfield()"
                ng-trim="false"

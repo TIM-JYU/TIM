@@ -101,9 +101,9 @@ class MultisaveHtmlSchema(MultisaveAttrs, GenericHtmlSchema):
 
 def render_static_multisave(m: MultisaveHtmlModel):
     return render_template_string("""
-<div class="csRunDiv no-popup-menu">
+<div>
 <button class="timButton">
-    {{ buttonText or button or "Save" }}
+{{ buttonText or button or "Save" }}
 </button>
 </div>""".strip(),
         **attr.asdict(m.markup),
