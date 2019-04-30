@@ -234,7 +234,6 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
             this.notSavedWord = this.userword;
             this.isSaved = false;
         } else {
-            this.error = r.result.data.error;
             this.errormessage = r.result.data.error || "Infinite loop or some other error?";
         }
     }
@@ -267,7 +266,7 @@ textfieldApp.component("textfieldRunner", {
                ng-keydown="$event.keyCode === 13 && $ctrl.saveText()"
                ng-model-options="::$ctrl.modelOpts"
                ng-trim="false"
-               pattern="{{ $ctrl.getPattern() }}"
+               ng-pattern="$ctrl.getPattern()"
                ng-readonly="::$ctrl.readonly"
                uib-tooltip="{{ $ctrl.errormessage }}"
                tooltip-is-open="$ctrl.f.$invalid && $ctrl.f.$dirty"

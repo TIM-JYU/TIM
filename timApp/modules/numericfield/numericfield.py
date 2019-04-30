@@ -139,24 +139,22 @@ class NumericfieldAnswerSchema(NumericfieldAttrs, GenericAnswerSchema):
 
 
 def render_static_numericfield(m: NumericfieldHtmlModel):
-    return render_template_string(
-        """
+    return render_template_string("""
 <div class="csRunDiv no-popup-menu">
-    <h4>{{ header }}</h4>
-    <p class="stem">{{ stem }}</p>
-    <div><label>{{ inputstem or '' }} <span>
-        <input type="text"
-               class="form-control"
-               placeholder="{{inputplaceholder}}"
-               size="{{cols}}"></span></label>
-    </div>
-    <button class="timButton">
-        {{ buttonText or button or "Save" }}
-    </button>
-    <a>{{ resetText }}</a>
-    <p class="plgfooter">{{ footer }}</p>
+<h4>{{ header or '' }}</h4>
+<p class="stem">{{ stem or '' }}</p>
+<div><label>{{ inputstem or '' }} <span>
+<input type="text"
+        class="form-control"
+        placeholder="{{ '' }}"
+        size="{{cols}}"></span></label>
 </div>
-        """,
+<button class="timButton">
+{{ buttonText or button or "Save" }}
+</button>
+<a>{{ resetText }}</a>
+<p class="plgfooter">{{ '' }}</p>
+</div>""".strip(),
         **attr.asdict(m.markup),
     )
 

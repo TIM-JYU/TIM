@@ -18,6 +18,7 @@ const NumericfieldMarkup = t.intersection([
         inputstem: nullable(t.string),
         initnumber: nullable(t.number),
         buttonText: nullable(t.string),
+        inputchecker: nullable(t.string),
         autosave: t.boolean,
     }),
     GenericPluginMarkup,
@@ -46,7 +47,7 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
     private vctrl!: ViewCtrl;
     private notSavedNumber?: number;
     private errormessage = "";
-    private isSaved = false;
+    private isSaved = true;
 
     getDefaultMarkup() {
         return {};
@@ -147,7 +148,6 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
      */
     saveText() {
         this.doSaveText(false);
-        this.isSaved = true;
     }
 
     // noinspection JSUnusedGlobalSymbols
@@ -160,6 +160,16 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
         if (this.attrs.autosave) this.doSaveText(false);
     }
 
+    /**
+     * Method to check numeric input type for stringified numericfield.
+     * Used as e.g. to define negative or positive numeric input [0-9]+.
+     * @param re inputchecker defined by given attribute.
+     */
+    validityCheck(re: string) {
+        let regExpChecker = new RegExp(re);
+        return regExpChecker.test(this.numericvalue.toString());
+    }
+
     // noinspection JSUnusedGlobalSymbols
     /**
      * Checking if input has been changed since the last Save or initialization.
@@ -168,6 +178,9 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
      * Unused method warning is suppressed, as the method is only called in template.
      */
     notSaved() {
+        if (this.notSavedNumber != this.numericvalue) {
+            this.isSaved = true;
+        }
         return (this.notSavedNumber != this.numericvalue);
     }
 
@@ -177,10 +190,16 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
      * @param true/false parameter boolean checker for the need to save
      */
     async doSaveText(nosave: boolean) {
+        this.errormessage = "";
+        if (this.attrs.inputchecker) {
+            if(!this.validityCheck(this.attrs.inputchecker)) {
+                this.errormessage = "Input does not pass the RegEx: " + this.attrs.inputchecker;
+                return;
+            }
+        }
         /* No visible text
         this.error = "... saving ..."; */
         this.errormessage = "";
-        this.isSaved = false;
         this.isRunning = true;
         this.result = undefined;
         const params = {
@@ -201,6 +220,7 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
             this.error = data.web.error;
             this.result = data.web.result;
             this.notSavedNumber = this.numericvalue;
+            this.isSaved = false;
         } else {
             this.errormessage = "Infinite loop or some other error?";
         }
@@ -239,6 +259,9 @@ numericfieldApp.component("numericfieldRunner", {
                ng-change="$ctrl.checkNumericfield()"
                ng-trim="false"
                ng-readonly="::$ctrl.readonly"
+               uib-tooltip="{{ $ctrl.errormessage }}"
+               tooltip-is-open="$ctrl.f.$invalid && $ctrl.f.$dirty"
+               tooltip-trigger="mouseenter"
                placeholder="{{::$ctrl.inputplaceholder}}"
                ng-class="{warnFrame: $ctrl.notSaved()}">
         </span></label>
@@ -250,7 +273,7 @@ numericfieldApp.component("numericfieldRunner", {
             ng-click="$ctrl.saveText()">
         {{::$ctrl.buttonText()}}
     </button>
-    <pre class="savedtext" ng-if="$ctrl.isSaved && $ctrl.buttonText() && !$ctrl.readonly">Saved!</pre> 
+    <pre class="savedtext" ng-if="$ctrl.isSaved && $ctrl.buttonText()">Saved!</pre> 
     <p ng-if="::$ctrl.footer" ng-bind="::$ctrl.footer" class="plgfooter"></p>
 </div> `,
 });
