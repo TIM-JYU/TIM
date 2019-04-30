@@ -183,7 +183,7 @@ def compile_csv(qq: Iterable[Tuple[Answer, User]], printname: bool, hide_names: 
                 shown_user = prev_user.name
 
             # IF-CONDITION temporary for the sake of excluding the first sample item.
-            if (exclude_first and pt_dt) or (sel_opt_content != "" and feedback_content != "" and item_content != ""):
+            if pt_dt and sel_opt_content != "" and feedback_content != "" and item_content != "":
                 if printname and not hide_names:
                     results.append([prev_user.real_name,
                                     shown_user,
