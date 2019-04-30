@@ -258,25 +258,25 @@ export abstract class PluginBase<MarkupType extends IGenericPluginMarkup, A exte
     }
 
     getGroups(): string[] {
-        let returnList: string[] = [];
-        const parents = this.element.parents('.area'); // Only returns one because the divs are not inside each other?
-        // Manual parsing for now: "area area_outer area_inner"
+        const returnList: string[] = [];
+        const parents = this.element.parents(".area");
         if (parents[0]) {
-            let areaList = parents[0].classList;
+            const areaList = parents[0].classList;
             areaList.forEach(
-                function (value) {
-                    if (value.match("area_")) {
-                        returnList.push(value.replace("area_", ""));
+                (value) => {
+                    const m = value.match(/^area_(\S+)$/);
+                    if (m) {
+                        returnList.push(m[1]);
+                        console.log(m[1]);
                     }
                 }
-            )
+            );
         }
-        //console.log(this.attrs.followid + ": " + returnList);
         return returnList;
     }
 
     belongsToGroup(group: string): boolean {
-        return (this.getGroups().includes(group));
+        return this.getGroups().includes(group);
     }
 
     /**
@@ -298,7 +298,6 @@ export abstract class PluginBase<MarkupType extends IGenericPluginMarkup, A exte
         // this.$onInit()
         return undefined;
     }
-
 }
 
 // from https://github.com/teamdigitale/italia-ts-commons/blob/de4d85a2a1502da54f78aace8c6d7b263803f115/src/types.ts
