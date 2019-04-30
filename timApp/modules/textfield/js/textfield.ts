@@ -103,9 +103,8 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
     /**
      * Save method for other plugins, needed by e.g. multisave plugin.
      */
-    save(): undefined {
-        this.saveText();
-        return undefined;
+    save() {
+        return this.saveText();
     }
 
     resetField(): undefined {
@@ -149,7 +148,7 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
      * Used as e.g. timButton ng-click event.
      */
     saveText() {
-        this.doSaveText(false);
+        return this.doSaveText(false);
     }
 
     // noinspection JSUnusedGlobalSymbols
@@ -207,7 +206,7 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
         if (this.attrs.inputchecker) {
             if(!this.validityCheck(this.attrs.inputchecker)) {
                 this.errormessage = "Input does not pass the RegEx: " + this.attrs.inputchecker;
-                return;
+                return "fail";
             }
         }
         /* No visible text version
@@ -237,6 +236,7 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
             this.error = r.result.data.error;
             this.errormessage = r.result.data.error || "Infinite loop or some other error?";
         }
+        return this.error;
     }
 
     protected getAttributeType() {

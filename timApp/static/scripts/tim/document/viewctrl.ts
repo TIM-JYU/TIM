@@ -45,7 +45,7 @@ export interface ITimComponent {
     getContent: () => string;
     getGroups: () => string[];
     belongsToGroup(group: string): boolean;
-    save: () => string | undefined;
+    save: () => Promise<string | undefined>;
     resetField: () => string | undefined;
 }
 
