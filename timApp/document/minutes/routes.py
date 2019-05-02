@@ -82,7 +82,8 @@ def create_minute_extracts(doc):
 
             new_extract_index = 0
             try:
-                new_extract_index = int(markdown[macro_position + len(markdown_to_find):comma_position])
+                new_extract_index = int(markdown[macro_position + len(markdown_to_find):comma_position].
+                                        replace("'", "").replace('"','').strip())
             except ValueError:
                 abort(400, f"Failed to parse extract index from macro, from paragraph: \n{markdown}")
 
