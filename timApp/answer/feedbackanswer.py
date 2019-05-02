@@ -95,7 +95,6 @@ def compile_csv(qq: Iterable[Tuple[Answer, User]], printname: bool, hide_names: 
     pt_dt = None    # Previous Datetime of previous answer.
     prev_ans = None     # Previous Answer.
     prev_user = None     # Previous User.
-    exclude_first = True  # Temporary setting for excluding the first.
 
     results = []
 
