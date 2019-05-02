@@ -35,7 +35,7 @@ const TableFormMarkup = t.intersection([
 const TableFormAll = t.intersection([
     t.partial({
         rows: t.Dictionary,
-        fields: t.Dictionary,
+        fields: t.array(t.string)
     }),
     GenericPluginTopLevelFields,
     t.type({markup: TableFormMarkup}),
@@ -49,7 +49,7 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
     private userfilter = "";
     private runTestGreen = false;
     private data: any = {};
-    private rows: any = {};
+    private rows!: {};
     private tabledata: any
     private timTableData!: {};
     private modelOpts!: INgModelOptions; // initialized in $onInit, so need to assure TypeScript with "!"
@@ -66,17 +66,18 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
     $onInit() {
         super.$onInit();
         this.userfilter = "";
-        this.rows = this.attrsall.rows;
+        this.rows = this.attrsall.rows || {};
+        this.data.task = true;
         //this.fields = this.attrsall.fields;
         this.setDataMatrix();
     }
 
     setDataMatrix() {
-        this.timTableData = {'task': 'true'}
+        this.timTableData = {'tableForm': 'true'}
         // for (const row in this.rows){
         //      console.log("eaa");
         //  }
-        this.data.userdata = {};
+        this.data.userdata = {'cells':{}};
         // for (let i = 0; i < Object.keys(this.rows).length; i++){ // TODO parempi silmukka - object.keys pois
         //     this.data.userdata['A' + (i+1).toString()] = Object.keys(this.rows)[i];
         //     for (let j = 0; j < Object.keys(Object.keys(this.rows)[i]).length; j++)
@@ -86,10 +87,35 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
         //         }
         //     }
         // }
-        for (const f in this.attrsall.fields) {
-            for(const r in this.rows){
-                console.log("ea");
+        // if(this.attrsall.fields){
+        //     for(const r in this.rows){
+        //         for (const f of this.attrsall.fields) {
+        //             console.log(this.rows[r][f])
+        //             if(this.rows[r][f] != undefined){
+        //                 console.log("asd");
+        //             }
+        //         }
+        //     }
+        // }
+        if (this.attrsall.fields) {
+            for (var y = 0; y < this.attrsall.fields.length; y++) {
+                this.data.userdata['cells'][this.colnumToLetters(y + 1) + 1] = this.attrsall.fields[y]
+                var x = 0;
+                for (const r of Object.values(this.rows)) {
+                    // @ts-ignore //TODO fix ignores
+                    if (r[this.attrsall.fields[y]]) {
+                        // @ts-ignore
+                        this.data.userdata['cells'][this.colnumToLetters(y + 1) + (x + 2)] = r[this.attrsall.fields[y]]
+                    }
+                    x++;
+                }
             }
+        }
+        var x = 2;
+        for (const r of Object.keys(this.rows)) {
+            // @ts-ignore //TODO fix ignores
+            this.data.userdata['cells']['A' + x] = r
+            x++;
         }
 
         console.log("asd");
@@ -178,12 +204,11 @@ timApp.component("tableformRunner", {
                ng-change="$ctrl.updateFilter()"
                ng-readonly="::$ctrl.readonly"
                size="{{::$ctrl.cols}}"></span></label>
-        <tim-table data="$ctrl.data" userdata="$ctrl.userdata" task-url="{{$ctrl.pluginMeta.getAnswerUrl()}}"></tim-table>
+        <tim-table data="::$ctrl.data" taskid="{{$ctrl.pluginMeta.getTaskId()}}" plugintype="{{$ctrl.pluginMeta.getPlugin()}}" ></tim-table>
         <!-- TODO: taskid="{{ $ctrl.pluginm }}", vie pluginmeta & taskid-->
     </div>
     <button class="timButton"
             ng-if="::$ctrl.buttonText()"
-            ng-disabled="$ctrl.isRunning || !$ctrl.userfilter || $ctrl.readonly"
             ng-click="$ctrl.saveText()">
         {{::$ctrl.buttonText()}}
     </button>

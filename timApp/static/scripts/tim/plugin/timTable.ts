@@ -209,6 +209,7 @@ export class TimTableController extends DestroyScope implements IController {
     private editing: boolean = false;
     private forcedEditMode: boolean = false;
     private task: boolean = false;
+    private tableForm: boolean = true;
     private isRunning: boolean = false;
     public taskBorders: boolean = false;
     private editedCellContent: string | undefined;
@@ -750,6 +751,7 @@ export class TimTableController extends DestroyScope implements IController {
      */
     private initializeCellDataMatrix() {
         this.cellDataMatrix = [];
+        if(!this.data.table) this.data.table = {}
         if (!this.data.table.rows) {
             this.data.table.rows = [];
         }
@@ -2191,8 +2193,8 @@ timApp.component("timTable", {
     bindings: {
         data: "<",
         plugintype: "@?",
-        //taskid: "@?",
-        taskUrl: "@?",
+        taskid: "@?",
+        //taskUrl: "@?",
     },
     require: {
         viewctrl: "?^timView",
