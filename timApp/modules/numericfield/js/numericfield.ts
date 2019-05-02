@@ -19,6 +19,7 @@ const NumericfieldMarkup = t.intersection([
         initnumber: nullable(t.number),
         buttonText: nullable(t.string),
         inputchecker: nullable(t.string),
+        userDefinedErrormsg: nullable(t.string),
         autosave: t.boolean,
     }),
     GenericPluginMarkup,
@@ -48,9 +49,10 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
     private notSavedNumber?: number;
     private errormessage = "";
     private isSaved = true;
+    private redAlert = false;
 
     getDefaultMarkup() {
-        return {};
+        return { };
     }
 
     /**
@@ -197,13 +199,13 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
         this.errormessage = "";
         if (this.attrs.inputchecker) {
             if(!this.validityCheck(this.attrs.inputchecker)) {
-                this.errormessage = "Input does not pass the RegEx: " + this.attrs.inputchecker;
+                this.errormessage = this.attrs.userDefinedErrormsg || "Input does not pass the RegEx: " + this.attrs.inputchecker;
+                this.redAlert = true;
                 return this.errormessage;
             }
         }
         /* No visible text
         this.error = "... saving ..."; */
-        this.errormessage = "";
         this.isRunning = true;
         this.result = undefined;
         const params = {
@@ -225,6 +227,7 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
             this.result = data.web.result;
             this.notSavedNumber = this.numericvalue;
             this.isSaved = false;
+            this.redAlert = false;
         } else {
             this.errormessage = "Infinite loop or some other error?";
         }
@@ -268,7 +271,7 @@ numericfieldApp.component("numericfieldRunner", {
                tooltip-is-open="$ctrl.f.$invalid && $ctrl.f.$dirty"
                tooltip-trigger="mouseenter"
                placeholder="{{::$ctrl.inputplaceholder}}"
-               ng-class="{warnFrame: $ctrl.notSaved() errorFrame: }">
+               ng-class="{warnFrame: ($ctrl.notSaved() && !$ctrl.redAlert), alertFrame: $ctrl.redAlert}">
         </span></label>
     </div>
     <div ng-if="$ctrl.error" style="font-size: 12px" ng-bind-html="$ctrl.error"></div>
@@ -278,7 +281,7 @@ numericfieldApp.component("numericfieldRunner", {
             ng-click="$ctrl.saveText()">
         {{::$ctrl.buttonText()}}
     </button>
-    <pre class="savedtext" ng-if="$ctrl.isSaved && $ctrl.buttonText()">Saved!</pre> 
+    <p class="savedtext" ng-if="$ctrl.isSaved && $ctrl.buttonText()">Saved!</p> 
     <p ng-if="::$ctrl.footer" ng-bind="::$ctrl.footer" class="plgfooter"></p>
 </div> `,
 });

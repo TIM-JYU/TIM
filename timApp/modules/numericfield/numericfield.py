@@ -40,6 +40,8 @@ class NumericfieldMarkupModel(GenericMarkupModel):
     inputplaceholder: Union[str, Missing] = missing
     followid: Union[str, Missing] = missing
     autosave: Union[bool, Missing] = missing
+    inputchecker: Union[str, Missing] = missing
+    userDefinedErrormsg: Union[str, Missing] = missing
 
 class NumericfieldMarkupSchema(GenericMarkupSchema):
     points_array = fields.List(fields.List(fields.Number()))
@@ -51,6 +53,8 @@ class NumericfieldMarkupSchema(GenericMarkupSchema):
     inputplaceholder: Union[int, Missing] = missing
     followid = fields.String(allow_none=True)
     autosave = fields.Boolean()
+    inputchecker = fields.String(allow_none=True)
+    userDefinedErrormsg = fields.String(allow_none=True)
 
     @post_load
     def make_obj(self, data):
@@ -158,7 +162,6 @@ size="{{cols}}"></span></label>
         **attr.asdict(m.markup),
     )
 
-
 app = create_app(__name__, NumericfieldHtmlSchema())
 
 
@@ -198,6 +201,8 @@ initnumber: #ALKUARVO, TYHJÄ = EI ALKUARVOA
 buttonText: Save #PAINIKKEEN NIMI, TYHJÄ = EI PAINIKETTA
 cols: 5 #KENTÄN KOKO, NUMERAALINEN
 autosave: false #AUTOSAVE, POIS PÄÄLTÄ
+inputchecker: ^\d{0,3}(\.\d{0,3})?$ #KÄYTTÄJÄSYÖTTEEN RAJOITIN, TYHJÄ = EI RAJOITUSTA
+userDefinedErrormsg: #INPUTCHECKERIN VIRHESELITE, TYHJÄ = SELITE ON INPUTCHECKER
 ```""", """
 ``` {#label plugin="numericfield" readonly=view}
 followid: #SEURANTAID, TYHJÄ = EI SEURANTAID:tä

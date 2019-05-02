@@ -41,7 +41,7 @@ class TextfieldMarkupModel(GenericMarkupModel):
     followid: Union[str, Missing] = missing
     autosave: Union[bool, Missing] = missing
     inputchecker: Union[str, Missing] = missing
-
+    userDefinedErrormsg: Union[str, Missing] = missing
 
 class TextfieldMarkupSchema(GenericMarkupSchema):
     points_array = fields.List(fields.List(fields.Number()))
@@ -54,6 +54,7 @@ class TextfieldMarkupSchema(GenericMarkupSchema):
     followid = fields.String(allow_none=True)
     autosave = fields.Boolean()
     inputchecker = fields.String(allow_none=True)
+    userDefinedErrormsg = fields.String(allow_none=True)
 
     @post_load
     def make_obj(self, data):
@@ -201,6 +202,7 @@ buttonText: Save #PAINIKKEEN NIMI, TYHJÄ = EI PAINIKETTA
 cols: 1 #KENTÄN KOKO, NUMERAALINEN
 autosave: false #AUTOSAVE, POIS PÄÄLTÄ
 inputchecker: ^(hyv|hyl|[12345])$ #KÄYTTÄJÄSYÖTTEEN RAJOITIN, TYHJÄ = EI RAJOITUSTA
+userDefinedErrormsg: #INPUTCHECKERIN VIRHESELITE, TYHJÄ = SELITE ON INPUTCHECKER
 ```""", """
 ``` {#label plugin="textfield" readonly=view}
 followid: #SEURANTAID, TYHJÄ = EI SEURANTAID:tä
