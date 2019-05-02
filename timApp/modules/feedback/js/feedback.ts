@@ -98,7 +98,7 @@ const FeedbackAll = t.intersection([
 class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.TypeOf<typeof FeedbackAll>, typeof FeedbackAll> implements ITimComponent {
     private result?: string;
     private error?: string;
-    private errormessage = "";
+    private errormessage?: string;
     private vctrl!: ViewCtrl;
     private userAnswer: string[] = [];
     private feedback = "";
@@ -146,6 +146,8 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
         }
         this.checkCorrectAnswers();
         this.feedbackMax = this.checkFeedbackLevels();
+        this.checkFeedback();
+        this.checkPlugins();
         this.checkCorrectAnswersCount();
         this.checkInstructions();
         this.checkDefaultMatch();
@@ -171,10 +173,10 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
 
     /**
      * Get the current saved answer.
-      */
+     */
     getSavedAnswer(): string | undefined {
         let answer = undefined;
-        if(this.attrsall.state != null) {
+        if (this.attrsall.state != null) {
             answer = "";
             answer += `${this.attrsall.state.answer}\n`;
             console.log(answer);
@@ -212,6 +214,19 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
     }
 
     /**
+     * Check that the question items have plugins defined in them.
+     */
+    checkPlugins() {
+        const items = this.attrs.questionItems;
+        console.log(items);
+        for (let i = 0; i < items.length; i++) {
+            if (items[i].pluginNames.length === 0 && !this.errormessage) {
+                this.errormessage = `Question item in index ${i} does not have any plugins defined`;
+            }
+        }
+    }
+
+    /**
      * Checks that the question items have the same amount of feedbacklevels apart from the correct choice.
      *
      * @returns{number} The maximum level of feedback.
@@ -227,10 +242,28 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
             }
         }
 
-        if (!levels.every(x => x === levels[0]) && this.errormessage === "") {
+        if (!levels.every(x => x === levels[0]) && !this.errormessage) {
             this.errormessage = "Different number of feedback levels";
         }
         return levels[0];
+    }
+
+    /**
+     * Check that question items do not have feedback with no levels.
+     *
+     * TODO: Can this be checked because YAML warnings precede it?
+     */
+    checkFeedback() {
+        const items = this.attrs.questionItems;
+        for (const item of items) {
+            const levelok = item.choices.map(x => x.levels.length > 0);
+            console.log(levelok);
+            if (!levelok.every(x => x)) {
+                const index = levelok.indexOf(false);
+                this.errormessage = `${item} is missing feedback in index ${index}`
+            }
+        }
+
     }
 
     /**
@@ -243,7 +276,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
         for (const item of items) {
             for (const choice of item.choices) {
                 if (choice.correct) {
-                    if (item.pluginNames.length !== choice.match.length && this.errormessage === "") {
+                    if (item.pluginNames.length !== choice.match.length && !this.errormessage) {
                         this.errormessage = `${item.pluginNames}'s correct answer is missing a match for some of its plugins`
                     }
                 }
@@ -260,10 +293,10 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
 
         if (id) {
             const instruction = this.vctrl.getTimComponentByName(id);
-            if (!instruction && this.errormessage === "")
+            if (!instruction && !this.errormessage)
                 this.errormessage = "Feedback plugin has instruction plugin defined but it cannot be found from the page."
         }
-        if (!id && instruction.length < 1 && this.errormessage === "") {
+        if (!id && instruction.length < 1 && !this.errormessage) {
             this.errormessage = "Missing an instruction block or it has no .instruction-class defined.";
         }
     }
@@ -275,7 +308,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
         const items = this.attrs.questionItems;
         for (const item of items) {
             const missing = item.choices.every(x => x.correct === false);
-            if (missing && this.errormessage === "") {
+            if (missing && !this.errormessage) {
                 this.errormessage = `Question item (${item.pluginNames}) is missing the correct answer.`
             }
         }
@@ -290,7 +323,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
         const items = this.attrs.questionItems;
         for (const item of items) {
             const defaultMatch = item.choices.filter(x => x.match.length === 0);
-            if (defaultMatch.length === 0 && this.errormessage === "") {
+            if (defaultMatch.length === 0 && !this.errormessage) {
                 this.errormessage = `Question item (${item.pluginNames}) is missing default feedback.`
             }
         }
@@ -770,16 +803,17 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
             return true;
         }
         // TODO: Add wildcards for different indices of the match, not just the trailing stuff
-        const wildcard = match.indexOf(".*");
+        // TODO: Use regexp in this.
+        /* const wildcard = match.indexOf(".*");
         const map = match.map(x => x.indexOf(".*"));
-        // console.log(match.map(x => x.indexOf(".*")));
+        console.log(match.map(x => x.indexOf(".*")));
         if (wildcard > 0 && match.length !== answer.length) {
             let length = match.length;
             while (length < answer.length) {
                 match.push(".*");
                 length++;
             }
-        }
+        } */
         if (match.length === answer.length) {
             for (let i = 0; i < answer.length; i++) {
                 const kw = match[i].match(keywordPlaceHolder);
@@ -790,11 +824,11 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
                     }
                     continue;
                 }
+                if (match[i] === ".*") {
+                    continue;
+                }
                 if (match[i].toLowerCase() !== answer[i].toLowerCase()) {
                     return false;
-                }
-                if ((wildcard > 0 && match[i] !== ".*")) {
-                    return true;
                 }
             }
             return true;
@@ -1150,9 +1184,10 @@ feedbackApp.component("feedbackRunner", {
         vctrl: "^timView",
     },
     template: `
-<div uib-tooltip="{{$ctrl.errormessage}}"
+<div uib-tooltip="{{$ctrl.errormessage}}"     
      tooltip-is-open="$ctrl.f.$invalid && $ctrl.f.$dirty"
-     tooltip-trigger="mouseenter">
+     tooltip-placement="bottom"
+     tooltip-trigger="none">
     <tim-markup-error ng-if="::$ctrl.markupError" data="::$ctrl.markupError"></tim-markup-error>
     <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
     <p ng-if="::$ctrl.stem">{{::$ctrl.stem}}</p>
@@ -1162,7 +1197,8 @@ feedbackApp.component("feedbackRunner", {
     </div>
     <button class="timButton fbButton"
             ng-if="::$ctrl.buttonText()"
-            ng-click="$ctrl.handleAnswer()">
+            ng-click="$ctrl.handleAnswer()"
+            ng-disabled="$ctrl.errormessage || $ctrl.markupError">
         {{$ctrl.buttonText()}}
     </button>
     <p class="fbanswer" ng-bind-html="$ctrl.savedAnswer" ng-model="$ctrl.savedAnswer"></p>

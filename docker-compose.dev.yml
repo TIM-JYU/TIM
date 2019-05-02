@@ -34,15 +34,15 @@ services:
  dropdown:
   command: ${DROPDOWN_DEV_COMMAND:-/usr/sbin/sshd -D}
   ports:
-   - "49989:22"
+   - "49979:22"
  drag:
   command: ${DRAG_DEV_COMMAND:-/usr/sbin/sshd -D}
   ports:
-   - "49990:22"
+   - "49980:22"
  feedback:
   command: ${FEEDBACK_DEV_COMMAND:-/usr/sbin/sshd -D}
   ports:
-   - "49988:22"
+   - "49978:22"
  csplugin:
   image: timimages/cs3sudo:rust
   build:
