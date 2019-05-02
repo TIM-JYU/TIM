@@ -26,9 +26,11 @@ from timApp.plugin.taskid import TaskId, TaskIdAccess
 from timApp.tim_app import app
 from timApp.timdb.sqa import db
 from timApp.upload.uploadedfile import UploadedFile, PluginUpload, PluginUploadInfo, StampedPDF
-from timApp.util.flask.responsehelper import json_response
+from timApp.util.flask.requesthelper import verify_json_params
+from timApp.util.flask.responsehelper import json_response, ok_response
 from timApp.util.pdftools import StampDataInvalidError, default_stamp_format, AttachmentStampData, \
-    PdfError, stamp_pdfs, get_path_base_filename, create_new_tex_file
+    PdfError, stamp_pdfs, get_path_base_filename, create_new_tex_file, restamp_pdfs
+from timApp.util.utils import get_error_message
 
 upload = Blueprint('upload',
                    __name__,
@@ -204,18 +206,63 @@ def upload_file():
             if len(attachment_params) < 6:
                 raise StampDataInvalidError("Request missing parameters", attachment_params)
             try:
-                stampformat = attachment_params[1]
+                stamp_format = attachment_params[1]
                 # If stampformat is empty (as it's set to be if undefined in pareditor.ts), use default.
-                if not stampformat:
-                    stampformat = default_stamp_format
+                if not stamp_format:
+                    stamp_format = default_stamp_format
                 stamp_data = AttachmentStampData(date=attachment_params[0],
                                                  attachment=attachment_params[3],
                                                  issue=attachment_params[4])
                 custom_stamp_model = attachment_params[len(attachment_params) - 2]
-                return upload_and_stamp_attachment(d, file, stamp_data, stampformat, custom_stamp_model)
+                return upload_and_stamp_attachment(d, file, stamp_data, stamp_format, custom_stamp_model)
             # If attachment isn't a pdf, gives an error too (since it's in 'showPdf' plugin)
             except PdfError as e:
                 abort(400, str(e))
+
+
+@upload.route('/upload/restamp', methods=['POST'])
+def restamp_attachments():
+    """
+    this.stampingData.meetingDate
+    this.stampingData.stampFormat
+    this.stampingData.attachments
+    this.stampingData.customStampModel
+    :return:
+    """
+    attachments, = verify_json_params('attachments')
+    meeting_date, = verify_json_params('meetingDate')
+    stamp_format, = verify_json_params('stampFormat')
+    custom_stamp_model_content, = verify_json_params('customStampModel', require=False)
+    if not stamp_format:
+        stamp_format = default_stamp_format
+    try:
+        stamp_data_list = []
+        attachment_folder = default_attachment_folder
+        for a in attachments:
+            stamp_data = AttachmentStampData(date=meeting_date,
+                                             attachment=a["attachmentLetter"],
+                                             issue=a["issueNumber"])
+            # Parse link path and find unstamped attachment.
+            stamp_data.file = attachment_folder / a["filePath"].replace("/files/","").replace("_stamped","")
+            stamp_data_list.append(stamp_data)
+            print(stamp_data)
+
+        if custom_stamp_model_content:
+            stamp_model_path = create_new_tex_file(custom_stamp_model_content)
+            output = restamp_pdfs(
+                stamp_data_list,
+                stamp_text_format=stamp_format,
+                stamp_model_path=stamp_model_path)[0]
+            print(output)
+        else:
+            output = restamp_pdfs(
+                stamp_data_list,
+                stamp_text_format=stamp_format)[0]
+            print(output)
+
+    except Exception as e:
+        abort(400, get_error_message(e))
+    return ok_response()
 
 
 def upload_document(folder, file):

@@ -631,3 +631,51 @@ def stamp_pdfs(
         stamped_pdfs.append(item_stamped_path)
 
     return stamped_pdfs
+
+def restamp_pdfs(
+        stamp_data: List[AttachmentStampData],
+        stamp_model_path: Path = stamp_model_default_path,
+        stamp_text_format: str = default_stamp_format) -> List[Path]:
+    """
+    Update stamps for a list of attachments.
+    :param stamp_data: List of objects containing pdf-paths (non-stamped) and stamp-attributes.
+    :param stamp_model_path: Tex-file to be used as model for stamps.
+    :param stamp_text_format: Formatting for stamp text, with attributes:
+            file, date, attachment and issue.
+    :return: List of stamped pdf paths.
+    """
+    stamped_pdfs = []
+    # Check if model stamp exists.
+    if not stamp_model_path.exists():
+        raise ModelStampMissingError(stamp_model_path)
+    # Checks multiple potential problems and raises error if invalid.
+    check_stamp_data_validity(stamp_data)
+
+    for item in stamp_data:
+        current_attachment_folder = item.file.parent
+        print(item.file.parent)
+        # Check if current folder exists and is a folder:
+        if not (current_attachment_folder.exists() and current_attachment_folder.is_dir()):
+            raise TempFolderNotFoundError(current_attachment_folder)
+
+
+        # Names and paths of new files to use as params.
+        item_basename = get_path_base_filename(item.file, True)
+        item_stamp_name_no_ext = item_basename + "_stamp"
+        item_stamp_path = current_attachment_folder / f"{item_stamp_name_no_ext}.pdf"
+        item_stamped_name = item_basename + "_stamped.pdf"
+        item_stamped_path = current_attachment_folder / item_stamped_name
+
+        create_stamp(stamp_model_path,
+                     Path(current_attachment_folder),
+                     item_stamp_name_no_ext,
+                     get_stamp_text(item, stamp_text_format),
+                     remove_pdflatex_files=True)
+        stamp_pdf(Path(item.file),
+                  item_stamp_path,
+                  item_stamped_path,
+                  remove_stamp=True)
+
+        stamped_pdfs.append(item_stamped_path)
+
+    return stamped_pdfs

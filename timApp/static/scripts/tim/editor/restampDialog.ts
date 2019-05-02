@@ -5,8 +5,9 @@
 import {IRootElementService, IScope} from "angular";
 import * as focusMe from "tim/ui/focusMe";
 import {DialogController, registerDialogComponent, showDialog} from "../ui/dialog";
-import {markAsUsed} from "../util/utils";
-import {IAttachmentData, IStampingData} from "./pareditor";
+import {markAsUsed, to} from "../util/utils";
+import {IStampingData} from "./pareditor";
+import {$http} from "../util/ngimport";
 
 markAsUsed(focusMe);
 
@@ -18,7 +19,10 @@ export class ShowRestampDialogController extends DialogController<{params: IStam
     static $inject = ["$element", "$scope"] as const;
     private header = "";
     private stampingData?: IStampingData;
+    private stamping: boolean = false;
     private stampingDone: boolean = false;
+    private errorMessage?: string;
+    private successMessage?: string;
 
     constructor(protected element: IRootElementService, protected scope: IScope) {
         super(element, scope);
@@ -34,12 +38,39 @@ export class ShowRestampDialogController extends DialogController<{params: IStam
         console.log(this.stampingData.attachments.length);
     }
 
-    $onDestroy() {
-    }
+    /**
+     * Restamps all attachments in open editor.
+     */
+    async restamp() {
+        if (this.stamping) {
+            return;
+        }
+        this.stamping = true;
+        if (this.stampingData && this.stampingData.attachments.length > 0) {
+            const stampingParams = {
+                attachments: this.stampingData.attachments,
+                customStampModel: this.stampingData.customStampModel,
+                meetingDate: this.stampingData.meetingDate,
+                stampFormat: this.stampingData.stampFormat
+            };
+            const r = await to($http.post(`/upload/restamp`, stampingParams));
 
-    restamp() {
-        // TODO: Stamping & error handling.
-        this.stampingDone = true;
+            if (!r.ok) {
+                this.errorMessage = r.result.data.error;
+                this.successMessage = undefined;
+                if (!this.errorMessage) {
+                    this.errorMessage = "Unknown error while updating stamps";
+                }
+            } else {
+                this.errorMessage = undefined;
+                this.successMessage = `Stamps successfully updated.`;
+
+        }
+    } else {
+            this.errorMessage = "Unable to find attachments!";
+        }
+        // this.stampingDone = true;
+        this.stamping = false;
     }
 
     /*
@@ -47,6 +78,10 @@ export class ShowRestampDialogController extends DialogController<{params: IStam
      */
     public getTitle() {
         return "Update stamps";
+    }
+
+    private returnToEditor() {
+        //TODO:
     }
 
 }
@@ -66,22 +101,28 @@ registerDialogComponent(ShowRestampDialogController,
              that may not have been updated to the stamps yet!
         </div>
         <div ng-if="!$ctrl.stampingDone">
-            You can update the stamps by pressing the <ng-pluralize count="$ctrl.stampingData.attachments.length"
+            <p>You can update the stamps by pressing the <ng-pluralize count="$ctrl.stampingData.attachments.length"
             when="{'1': 'Restamp', 'other': 'Restamp all'}"></ng-pluralize> button below. Alternatively you can
-            reupload the attachments manually in the editor.
+            reupload the attachments manually in the editor.</p>
             <div>
                 <button class="timButton" ng-click="$ctrl.restamp()">
-                <ng-pluralize count="$ctrl.stampingData.attachments.length"
+                <span ng-if="$ctrl.stamping" class="glyphicon glyphicon-refresh glyphicon-refresh-animate"></span>
+                <span ng-if="$ctrl.stamping">Stamping...</span>
+                <ng-pluralize ng-if="!$ctrl.stamping" count="$ctrl.stampingData.attachments.length"
                 when="{'1': 'Restamp', 'other': 'Restamp all'}"></ng-pluralize>
                 </button>
             </div>
         </div>
-        <div ng-if="$ctrl.stampingDone">
-            <span>Stamps updated!</span>
+        <div ng-show="$ctrl.successMessage" class="alert alert-success">
+            <span class="glyphicon glyphicon-ok"></span> {{$ctrl.successMessage}}
+        </div>
+        <div ng-show="$ctrl.errorMessage" class="alert alert-warning">
+            <span class="glyphicon glyphicon-exclamation-sign"></span> {{$ctrl.errorMessage}}
         </div>
     </dialog-body>
     <dialog-footer>
-        <button class="timButton" ng-click="$ctrl.dismiss()">Continue</button>
+        <button class="timButton" ng-click="$ctrl.returnToEditor()">Return to editor</button>
+        <button class="timButton" ng-click="$ctrl.dismiss()">Save and exit</button>
     </dialog-footer>
 </tim-dialog>
 `,

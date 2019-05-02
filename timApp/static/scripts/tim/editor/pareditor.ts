@@ -83,7 +83,6 @@ interface IMenuItemObject {
 }
 
 export interface IAttachmentData {
-    meetingDate: string;
     issueNumber: string | number;
     attachmentLetter: string;
     filePath: string;  // Could be empty string or placeholder.
@@ -94,6 +93,7 @@ export interface IStampingData {
     attachments: IAttachmentData[];
     customStampModel: string | undefined;
     stampFormat: string;
+       meetingDate: string;
 }
 
 type MenuItem = IMenuItemObject | string;
@@ -562,7 +562,6 @@ ${backTicks}
         this.docSettings = $window.docSettings;
 
         this.activeAttachments = this.updateAttachments(true, undefined, undefined);
-        console.log(this.activeAttachments);
     }
 
     $postLink() {
@@ -850,17 +849,10 @@ ${backTicks}
         if (this.saving) {
             return;
         }
-        this.saving = true;
-        const text = this.editor!.getEditorText();
-        if (text.trim() === "") {
-            this.deleteClicked();
-            this.saving = false;
-            return;
-        }
 
         this.activeAttachments = this.updateAttachments(false, this.activeAttachments, undefined);
-        console.log(this.activeAttachments);
-        if (this.activeAttachments && this.docSettings && !this.allAttachmentsUpToDate()) {
+        const date = this.getCurrentMeetingDate();
+        if (this.activeAttachments && this.docSettings && !this.allAttachmentsUpToDate() && date) {
             let stampFormat = this.docSettings.macros.stampformat;
             if (stampFormat === undefined) {
                 stampFormat = "";
@@ -870,8 +862,17 @@ ${backTicks}
             void showRestampDialog({
                 attachments: this.activeAttachments,
                 customStampModel: customStampModel,
+                meetingDate: date,
                 stampFormat: stampFormat,
             });
+        }
+
+        this.saving = true;
+        const text = this.editor!.getEditorText();
+        if (text.trim() === "") {
+            this.deleteClicked();
+            this.saving = false;
+            return;
         }
         const result = await this.resolve.params.saveCb(text, this.getExtraData());
         if (result.error) {
@@ -1005,7 +1006,6 @@ ${backTicks}
                 attachmentLetter: macroParams[1],
                 filePath: macroParams[3],
                 issueNumber: macroParams[2],
-                meetingDate: kokousDate,
                 upToDate: true,
             };
         }
@@ -1042,9 +1042,9 @@ ${backTicks}
                     } else {
                         editor.insertTemplate(start + this.uploadedFile + ")");
                     }
-                    if (macroRange && kokousDate) { // Separate from isPlugin so this is ran only when there are attachments.
+                    // Separate from isPlugin so this is ran only when there are attachments.
+                    if (macroRange && kokousDate) {
                         this.activeAttachments = this.updateAttachments(false, this.activeAttachments, stamped);
-                        console.log(this.activeAttachments);
                     }
                 });
             }, (response) => {
@@ -1351,8 +1351,7 @@ ${backTicks}
                              previousAttachments: IAttachmentData[] | undefined,
                              stamped: IAttachmentData | undefined) {
         const attachments = [];
-        const date = this.getCurrentMeetingDate();
-        if (this.editor && date) {
+        if (this.editor) {
             const editorText = this.editor.getEditorText();
             const pluginSplit = editorText.split("```");
             for (const part of pluginSplit) {
@@ -1366,7 +1365,6 @@ ${backTicks}
                         attachmentLetter: macroParams[1],
                         filePath: macroParams[3],
                         issueNumber: macroParams[2],
-                        meetingDate: date,
                         upToDate: false,
                     };
                     let upToDate;
