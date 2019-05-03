@@ -18,6 +18,7 @@ from webargs.flaskparser import use_args
 
 from timApp.answer.answer import Answer
 from timApp.answer.answer_models import AnswerUpload
+from timApp.answer.answers import get_latest_answers_query
 from timApp.auth.accesshelper import verify_logged_in, get_doc_or_abort, verify_manage_access
 from timApp.auth.accesshelper import verify_task_access, verify_teacher_access, verify_seeanswers_access, \
     has_teacher_access, \
@@ -43,7 +44,6 @@ from timApp.timdb.exceptions import TimDbException
 from timApp.timdb.sqa import db
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
-from timApp.user.usergroupmember import UserGroupMember
 from timApp.util.flask.requesthelper import verify_json_params, get_option, get_consent_opt
 from timApp.util.flask.responsehelper import json_response, ok_response
 from timApp.util.utils import try_load_json, get_current_time
@@ -89,21 +89,26 @@ def points_to_float(points: Union[str, float]):
     return points
 
 
-def get_fields_and_users(values, d: DocInfo):
-    print(values)
-    group = UserGroup.get_by_name(values['group'])
-    users = group.users.all()
+def get_fields_and_users(u_fields: List[str], groups: List[UserGroup], d: DocInfo, current_user: User):
+    print(u_fields)
+    users = set()
+    for group in groups:
+        g = group.users.all()
+        for u in g:
+            users.add(u)
 
-    u_fields = values['fields']
     task_ids = []
-
+    # TODO support aliases e.g. 55.d1=d1
+    # alias_map = {}
     for field in u_fields:
         task_id = TaskId.parse(field, False, False)
         task_ids.append(task_id)
         if not task_id.doc_id:
             task_id.doc_id = d.id
         dib = get_doc_or_abort(task_id.doc_id)
-        verify_teacher_access(dib)
+        if not current_user.has_teacher_access(dib):
+            abort(403, f'Missing teacher access for document {dib.id}')
+
     res = []
 
     for user in users:
@@ -258,7 +263,11 @@ def post_answer(plugintype: str, task_id_ext: str):
     state = try_load_json(old_answers[0].content) if logged_in() and len(old_answers) > 0 else None
 
     if plugin.type == 'jsrunner':
-        answerdata['data'] = get_fields_and_users(plugin.values, d)
+        groups = plugin.values['groups']
+        g = []
+        for group in groups:
+            g.append(UserGroup.get_by_name(group))
+        answerdata['data'] = get_fields_and_users(plugin.values['fields'], g, d, get_current_user_object())
 
     answer_call_data = {'markup': plugin.values,
                         'state': state,
@@ -304,13 +313,18 @@ def post_answer(plugintype: str, task_id_ext: str):
                 content_type = task_content[key]
                 c = {content_type: user_fields[key]}
                 task_id = TaskId.parse(key, False, False)
-                result = Answer(
-                    content=json.dumps(c),
-                    task_id=task_id.doc_task,
-                    users=[u],
-                    valid=True,
-                )
-                db.session.add(result)
+                a: Answer = get_latest_answers_query(task_id, [u]).first()
+                content = json.dumps(c)
+                if a and a.content == content:
+                    pass
+                else:
+                    result = Answer(
+                        content=content,
+                        task_id=task_id.doc_task,
+                        users=[u],
+                        valid=True,
+                    )
+                    db.session.add(result)
         db.session.commit()
         return json_response(result)
 

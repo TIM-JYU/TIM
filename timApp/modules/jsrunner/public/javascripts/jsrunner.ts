@@ -20,7 +20,7 @@ export const moduleDefs = [jsrunnerApp];
 const JsrunnerMarkup = t.intersection([
     t.partial({
         fields: t.array(t.string),
-
+        groups: t.array(t.string),
         program: nullable(t.string),
     }),
     GenericPluginMarkup,
@@ -64,6 +64,7 @@ class JsrunnerController extends PluginBase<t.TypeOf<typeof JsrunnerMarkup>, t.T
         const params = {
             input: {
                 fields: this.attrs.fields,
+                groups: this.attrs.groups,
                 nosave: false,
             },
         };

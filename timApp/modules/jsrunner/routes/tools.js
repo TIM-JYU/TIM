@@ -39,6 +39,7 @@ class Tools {
         let fn = this.normalizeField(fieldName);
         let r = this.data.fields[fn];
         // TODO: default on jo ""
+        this.markup.gradingScale[1]
         return r;
     }
 

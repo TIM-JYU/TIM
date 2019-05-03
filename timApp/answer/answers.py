@@ -20,6 +20,12 @@ from timApp.user.usergroup import UserGroup
 from timApp.velp.velp_models import Annotation
 
 
+def get_latest_answers_query(task_id: TaskId, users: List[User]):
+    q = Answer.query.filter_by(task_id=task_id.doc_task).join(User, Answer.users).filter(
+        User.id.in_([u.id for u in users])).order_by(Answer.id.desc())
+    return q
+
+
 class Answers(TimDbBase):
 
     def save_answer(self,
@@ -179,8 +185,7 @@ class Answers(TimDbBase):
         return result
 
     def get_common_answers(self, users: List[User], task_id: TaskId) -> List[Answer]:
-        q = Answer.query.filter_by(task_id=task_id.doc_task).join(User, Answer.users).filter(
-            User.id.in_([u.id for u in users])).order_by(Answer.id.desc())
+        q = get_latest_answers_query(task_id, users)
 
         def g():
             user_set = set(users)
