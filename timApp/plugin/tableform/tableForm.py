@@ -15,10 +15,16 @@ from webargs.flaskparser import use_args
 from pluginserver_flask import GenericMarkupModel, GenericMarkupSchema, GenericHtmlSchema, GenericHtmlModel, \
     GenericAnswerSchema, GenericAnswerModel, Missing, \
     InfoSchema, create_blueprint
+
+from timApp.auth.accesshelper import get_doc_or_abort
+from timApp.auth.sessioninfo import get_current_user_object, get_current_user, get_current_user_id
+from timApp.plugin.pluginexception import PluginException
+from timApp.plugin.taskid import TaskId
 from timApp.plugin.timtable.timTable import colnum_to_letters
 from timApp.tim_app import csrf
+from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
-
+from timApp.answer.routes import get_fields_and_users
 
 @attr.s(auto_attribs=True)
 class TableFormStateModel:
@@ -102,41 +108,58 @@ class TableFormHtmlModel(GenericHtmlModel[TableFormInputModel, TableFormMarkupMo
         r = super().get_browser_json()
         # if self.state:
         #     r['userword'] = self.state.userword
-        if self.markup.groups:
-            ug = UserGroup.get_by_name(self.markup.groups[0]) #! Lista vs 1 ryhmä
-            members = ug.users.all()
-            # TODO: Check if user has right to see group members
-            rows = {}
+        # if self.markup.groups:
+            # ug = UserGroup.get_by_name(self.markup.groups[0]) #! Lista vs 1 ryhmä
+            # members = ug.users.all()
+            # # TODO: Check if user has right to see group members
+            # rows = {}
+            # # for i, m in enumerate(members):
+            # #     #colnum_to_letters()
+            # #     #100.textfield_A1.IN4wKoImZc5b - 100.textfield_A6.IN4wKoImZc5b
+            # #     userdata['cells']["A" + str(i+2)] = m.name
+            # #     if self.markup.fields:
+            # #         for j, t in enumerate(self.markup.fields):
+            # #             ans = m.get_answers_for_task(t).first()
+            # #             # TODO: Check if user has right to see answers for task/user
+            # #             # TODO: Save cells (user/task) as matrix in global variable?
+            # #             if ans:
+            # #                 userdata['cells'][colnum_to_letters(j+1) + str(i+2)] = ans.content
+            # #                 # TODO: Parse content? {"userword": "2"}
             # for i, m in enumerate(members):
             #     #colnum_to_letters()
             #     #100.textfield_A1.IN4wKoImZc5b - 100.textfield_A6.IN4wKoImZc5b
-            #     userdata['cells']["A" + str(i+2)] = m.name
+            #     rows[m.name] = {}
             #     if self.markup.fields:
             #         for j, t in enumerate(self.markup.fields):
-            #             ans = m.get_answers_for_task(t).first()
+            #             ans = m.get_answers_for_task(t).first() # TODO Check optimal request
+            #             # TODO: ^Make custom db request with arrays of users and tasks?
+            #             ans2 = m.get_answers_for_task(t)
             #             # TODO: Check if user has right to see answers for task/user
             #             # TODO: Save cells (user/task) as matrix in global variable?
             #             if ans:
-            #                 userdata['cells'][colnum_to_letters(j+1) + str(i+2)] = ans.content
+            #                 #TODO: 204.textfield_d1.args, 204.textfield_d1.usercode
+            #                 #^ check for multiple fields in answerstable, use first field if not given specific field
+            #                 rows[m.name][t] = ans.content
             #                 # TODO: Parse content? {"userword": "2"}
-            for i, m in enumerate(members):
-                #colnum_to_letters()
-                #100.textfield_A1.IN4wKoImZc5b - 100.textfield_A6.IN4wKoImZc5b
-                rows[m.name] = {}
-                if self.markup.fields:
-                    for j, t in enumerate(self.markup.fields):
-                        ans = m.get_answers_for_task(t).first() # TODO Check optimal request
-                        # TODO: ^Make custom db request with arrays of users and tasks?
-                        ans2 = m.get_answers_for_task(t)
-                        # TODO: Check if user has right to see answers for task/user
-                        # TODO: Save cells (user/task) as matrix in global variable?
-                        if ans:
-                            #TODO: 204.textfield_d1.args, 204.textfield_d1.usercode
-                            #^ check for multiple fields in answerstable, use first field if not given specific field
-                            rows[m.name][t] = ans.content
-                            # TODO: Parse content? {"userword": "2"}
-            # if self.markup.fields:
-            #     userdata['tasks'] = self.markup.fields
+            # # if self.markup.fields:
+            # #     userdata['tasks'] = self.markup.fields
+        if self.markup.groups and self.markup.fields:
+            groups = []
+            for g in self.markup.groups:
+                groups.append(UserGroup.get_by_name(g))
+            #print(self.taskID)
+            try:
+                tid = TaskId.parse(self.taskID)
+            except PluginException as e:
+                return
+            d = get_doc_or_abort(tid.doc_id)
+            # user1= get_current_user()
+            # user2 = get_current_user_object()
+            user = User.get_by_name(self.user_id)
+            userfields = get_fields_and_users(self.markup.fields, groups, d, user)
+            rows = {}
+            for f in userfields:
+                rows[f['user'].name] = f['fields']
             r['rows'] = rows
             r['fields'] = self.markup.fields
 
