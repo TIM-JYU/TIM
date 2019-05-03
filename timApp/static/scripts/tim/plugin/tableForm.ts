@@ -184,10 +184,10 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
         // }
         this.data.hiderows = [];
         if (this.userfilter != "" && this.userfilter != undefined) {
-            const reg = new RegExp(this.userfilter)
+            const reg = new RegExp(this.userfilter.toLowerCase())
             let rowi = 1;
             for (const [key, value] of Object.entries(this.allRows)) {
-                if (!reg.test(key)) {
+                if (!reg.test(key.toLowerCase())) {
                     this.data.hiderows.push(rowi);
                 }
                 rowi++;
