@@ -50,6 +50,7 @@ export interface TimTable {
     editorButtonsRight?: boolean;
     toolbarTemplates?: any;
     hid: {edit?: boolean};
+    hiderows: number[];
 }
 
 export interface ITable { // extends ITableStyles
@@ -844,7 +845,7 @@ export class TimTableController extends DestroyScope implements IController {
      * Combines datablock data
      * @param {CellDataEntity} cells: cells part of tabledatablock
      */
-    private processDataBlock(cells: CellDataEntity) {
+    public processDataBlock(cells: CellDataEntity) {
         for (const item in cells) {
 
             const alphaRegExp = new RegExp("([A-Z]*)");
@@ -1952,7 +1953,7 @@ export class TimTableController extends DestroyScope implements IController {
      * to the cell data matrix and processes all math.
      * Call this when the whole table's content is refreshed.
      */
-    private reInitialize() {
+    public reInitialize() {
         this.initializeCellDataMatrix();
         this.processDataBlockAndCellDataMatrix();
         ParCompiler.processAllMathDelayed(this.element);
@@ -2186,6 +2187,10 @@ export class TimTableController extends DestroyScope implements IController {
     private showCell(cell: ICell) {
         return !cell.underSpanOf;
     }
+
+    private showRow(index: number){
+        return !this.data.hiderows.includes(index);
+    }
 }
 
 timApp.component("timTable", {
@@ -2215,7 +2220,7 @@ timApp.component("timTable", {
         <col ng-repeat="c in $ctrl.columns" ng-attr-span="{{c.span}}}" id={{c.id}}
              ng-style="$ctrl.stylingForColumn(c, $index)"/>
         <tr ng-repeat="r in $ctrl.cellDataMatrix" ng-init="rowi = $index"
-            ng-style="$ctrl.stylingForRow(rowi)">
+            ng-style="$ctrl.stylingForRow(rowi)" ng-show="$ctrl.showRow(rowi)">
                 <td ng-class="{'activeCell': $ctrl.isActiveCell(rowi, coli)}"
                  ng-repeat="td in r" ng-init="coli = $index" ng-if="$ctrl.showCell(td)"
                  colspan="{{td.colspan}}" rowspan="{{td.rowspan}}"

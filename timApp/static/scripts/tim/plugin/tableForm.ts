@@ -53,6 +53,7 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
     private runTestGreen = false;
     private data: any = {};
     private rows!: {};
+    // private hiderows: number[] = [];
     private allRows!: {};
     private tabledata: any
     private timTableData!: {};
@@ -73,6 +74,7 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
         this.allRows = this.attrsall.rows || {};
         this.rows = this.allRows;
         this.data.task = true;
+        this.data.hiderows = [];
         //this.fields = this.attrsall.fields;
         this.setDataMatrix();
     }
@@ -157,24 +159,40 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
     }
 
     updateFilter() {
-        if (this.userfilter == "") {
-            this.rows = this.allRows;
-        } else {
-            this.rows = {}
+        // if (this.userfilter == "") {
+        //     this.rows = this.allRows;
+        // } else {
+        //     this.rows = {}
+        //     const reg = new RegExp(this.userfilter)
+        //     for (const [key, value] of Object.entries(this.allRows)) {
+        //         if (reg.test(key)) {
+        //             // @ts-ignore
+        //             this.rows[key] = value;
+        //         }
+        //     }
+        // }
+        //
+        // this.setDataMatrix();
+        //
+        // const parId = getParId(this.element.parents(".par"));
+        // if (parId != null && this.viewctrl != null) {
+        //     const table = this.viewctrl.getTableControllerFromParId(parId);
+        //     if(!table) return;
+        //     table.reInitialize();
+        //     table.processDataBlock(this.data.userdata.cells);
+        //     //TODO: Re-initalize table
+        // }
+        this.data.hiderows = [];
+        if (this.userfilter != "" && this.userfilter != undefined) {
             const reg = new RegExp(this.userfilter)
+            let rowi = 1;
             for (const [key, value] of Object.entries(this.allRows)) {
-                if (reg.test(key)) {
-                    // @ts-ignore
-                    this.rows[key] = value;
+                if (!reg.test(key)) {
+                    this.data.hiderows.push(rowi);
                 }
+                rowi++;
             }
         }
-        const parId = getParId(this.element.parents(".par"));
-        if (parId != null && this.viewctrl != null) {
-            const table = this.viewctrl.getTableControllerFromParId(parId);
-            //TODO: Re-initalize table
-        }
-        this.setDataMatrix();
     }
 
     async doSaveText(nosave: boolean) {
