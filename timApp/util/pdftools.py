@@ -324,7 +324,6 @@ def get_attachments_from_paragraphs(paragraphs):
             par_plugin = timApp.plugin.plugin.Plugin.from_paragraph(par)
             par_data = par_plugin.values
             par_file = par_data["file"]
-            print(par_file)
 
             # Checks if attachment is TIM-upload and adds prefix.
             # Changes in upload folder need to be updated here as well.
@@ -334,9 +333,8 @@ def get_attachments_from_paragraphs(paragraphs):
             elif is_url(par_file):
                 attachments_with_errors = True
                 # par_file = download_file_from_url(par_file)
-
             try:
-                check_pdf_validity(par_file)
+                check_pdf_validity(Path(par_file))
             # If file is invalid, mark it as a partial error.
             except PdfError:
                 attachments_with_errors = True

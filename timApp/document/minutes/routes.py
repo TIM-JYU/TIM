@@ -254,7 +254,7 @@ def merge_attachments(doc):
         pdf_paths, attachments_with_errors = timApp.util.pdftools.get_attachments_from_paragraphs(paragraphs)
 
         # Uses document name as the base for the merged file name and tmp as folder.
-        doc_name = timApp.util.pdftools.get_base_filename(doc)
+        doc_name = Path(doc).name
         merged_pdf_path = Path(timApp.util.pdftools.temp_folder_default_path) / f"{doc_name}_merged.pdf"
         timApp.util.pdftools.merge_pdf(pdf_paths, merged_pdf_path)
 
