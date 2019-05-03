@@ -17,8 +17,6 @@ from timApp.plugin.pluginexception import PluginException
 from timApp.timtypes import DocumentType as Document
 
 from timApp.plugin.timtable import timTable
-from timApp.plugin.tableform import tableForm
-
 
 TIM_URL = ""
 
