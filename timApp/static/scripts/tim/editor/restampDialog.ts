@@ -107,12 +107,12 @@ registerDialogComponent(RestampDialogController,
              when="{'1': ' the contents of the macro ', 'other': ' the macro contents '}"></ng-pluralize>
              that may not have been updated to the stamps yet!
         </tim-alert>
-        <tim-alert severity="info" ng-if="$ctrl.successMessage">{{$ctrl.successMessage}}</tim-alert>
+        <tim-alert severity="success" ng-if="$ctrl.successMessage">{{$ctrl.successMessage}}</tim-alert>
         <tim-alert severity="error" ng-if="$ctrl.errorMessage">{{$ctrl.errorMessage}}</tim-alert>
         <div ng-if="!$ctrl.stampingDone">
             <p>You can update the stamps by pressing the <ng-pluralize count="$ctrl.stampingData.attachments.length"
-            when="{'1': 'Restamp', 'other': 'Restamp all'}"></ng-pluralize> button below. Alternatively you can
-            reupload the attachments manually in the editor.</p>
+            when="{'1': 'Restamp', 'other': 'Restamp all'}"></ng-pluralize> button below. You can also return to the
+            editor to manually check and reupload the attachments.</p>
             <div>
                 <button class="timButton" ng-click="$ctrl.restamp()">
                 <span ng-if="$ctrl.stamping" class="glyphicon glyphicon-refresh glyphicon-refresh-animate"></span>
