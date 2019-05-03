@@ -8,7 +8,7 @@ import {timApp} from "../app";
 import {DocumentOrFolder, IItem, ITag, ITaggedItem} from "../item/IItem";
 import {$http, $localStorage, $window} from "../util/ngimport";
 import {Binding, to} from "../util/utils";
-import {ShowSearchResultController, showSearchResultDialog} from "./searchResultsCtrl";
+import {SearchResultController, showSearchResultDialog} from "./searchResultsCtrl";
 import {KEY_ENTER} from "../util/keycodes";
 import {relevanceSuggestions} from "../item/relevanceEdit";
 
@@ -136,7 +136,7 @@ export class SearchBoxCtrl implements IController {
         searchWordStorage: null | string,
         optionsStorage: null | boolean[]};
     private folderSuggestions: string[] = []; // A list of folder path suggestions.
-    private resultsDialog: ShowSearchResultController | undefined; // The most recent search result dialog.
+    private resultsDialog: SearchResultController | undefined; // The most recent search result dialog.
     private maxDocResults: number = 1000;
     private timeWarningLimit: number = 20; // Gives a warning about long search time if over this.
     private timeout: number = 120; // Default timeout for search.
@@ -229,9 +229,9 @@ export class SearchBoxCtrl implements IController {
 
     /**
      * Sets a search result controller.
-     * @param {ShowSearchResultController} resultsDialog The currently active search result window.
+     * @param {SearchResultController} resultsDialog The currently active search result window.
      */
-    registerResultsDialog(resultsDialog: ShowSearchResultController | undefined) {
+    registerResultsDialog(resultsDialog: SearchResultController | undefined) {
         this.resultsDialog = resultsDialog;
     }
 

@@ -14,7 +14,7 @@ export interface ISearchResultDisplay {
     num_tag_results: number; // Same tag may contain the search word more than once.
 }
 
-export class ShowSearchResultController extends DialogController<{ ctrl: SearchBoxCtrl }, {}> {
+export class SearchResultController extends DialogController<{ ctrl: SearchBoxCtrl }, {}> {
     static component = "timSearchResults";
     static $inject = ["$element", "$scope"] as const;
     private results: IDocSearchResult[] = [];
@@ -282,7 +282,7 @@ export class ShowSearchResultController extends DialogController<{ ctrl: SearchB
     }
 }
 
-registerDialogComponent(ShowSearchResultController,
+registerDialogComponent(SearchResultController,
     {
         template:
             `<tim-dialog class="search-result-dialog">
@@ -347,7 +347,7 @@ registerDialogComponent(ShowSearchResultController,
 
 export async function showSearchResultDialog(r: SearchBoxCtrl) {
     return await showDialog(
-        ShowSearchResultController,
+        SearchResultController,
         {ctrl: () => r},
         {showMinimizeButton: false}).result;
 }

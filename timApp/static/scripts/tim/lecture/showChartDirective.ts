@@ -167,7 +167,7 @@ type TimChartData = Overwrite<ChartData, {datasets: IDataSet[]}>;
 type ChartConfig = Overwrite<Chart.ChartConfiguration, {data: TimChartData}>;
 type TimChart = Overwrite<Chart, {data: TimChartData}>;
 
-class ShowChartController implements IController {
+class ChartController implements IController {
     static $inject = ["$scope", "$element"];
     private isText = true;
     private div?: JQuery<HTMLDivElement>;
@@ -617,7 +617,7 @@ timApp.component("showChartDirective", {
         divresize: "<",
         question: "<",
     },
-    controller: ShowChartController,
+    controller: ChartController,
     template: `
 <div ng-show="!$ctrl.isText" style="overflow: hidden" class="canvasContainer">
 
