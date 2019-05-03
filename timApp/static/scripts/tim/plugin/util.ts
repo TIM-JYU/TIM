@@ -258,10 +258,10 @@ export abstract class PluginBase<MarkupType extends IGenericPluginMarkup, A exte
         return this.element[0];
     }
 
-    getGroups(): string[]{
+    getGroups(): string[] {
         const returnList: string[] = [];
-        const parents = this.element.parents('.area'); //Palauttaa vain yhden koska divit ei sisäkkäin?
-        if(parents[0]){
+        const parents = this.element.parents(".area");
+        if (parents[0]) {
             const areaList = parents[0].classList;
             areaList.forEach(
                 (value) => {
@@ -270,14 +270,9 @@ export abstract class PluginBase<MarkupType extends IGenericPluginMarkup, A exte
                         returnList.push(m[1]);
                         console.log(m[1]);
                     }
-
-                    /*if(value.match("area_")){
-                        returnList.push(value.replace("area_", ""));
-                    }*/
                 }
-            )
+            );
         }
-        //console.log(this.attrs.followid + ": " + returnList);
         return returnList;
     }
 
@@ -285,9 +280,19 @@ export abstract class PluginBase<MarkupType extends IGenericPluginMarkup, A exte
         return this.getGroups().includes(group);
     }
 
+    /**
+     * Returns the name given to the plugin.
+     */
     getName(): string | undefined {
         const taskId = this.pluginMeta.getTaskId();
         if (taskId) return taskId.split(".")[1];
+    }
+
+    /**
+     * Returns the plugin's parent paragraph.
+     */
+    public getPar() {
+        return this.element.parents(".par");
     }
 
     resetField(): undefined {

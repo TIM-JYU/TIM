@@ -124,7 +124,9 @@ To comment or edit this, go to the corresponding <a href="/view/${getPreambleDoc
         if (this.updatePopupMenuIfOpen(p)) {
             return;
         }
-        await to(showPopupMenu(p));
+        const mi = showPopupMenu(p);
+        this.viewctrl.registerPopupMenu(await mi.dialogInstance.promise);
+        await to(mi.result);
         const editline = $(".menuopen");
         editline.removeClass("menuopen");
     }

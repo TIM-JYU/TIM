@@ -36,15 +36,20 @@ import {PopupMenuController} from "./popupMenu";
 import {RefPopupHandler} from "./refpopup";
 import {MenuFunctionEntry} from "./viewutils";
 import {initSlideView} from "./slide";
+import {DiffController} from "./diffDialog";
 
 markAsUsed(ngs, popupMenu, interceptor, helpPar);
 
 export interface ITimComponent {
     getName: () => string | undefined;
-    getContent: () => string;
+    getContent: () => string | undefined;
+    getContentArray?: () => string[] | undefined;
     getGroups: () => string[];
     belongsToGroup(group: string): boolean;
-    save: () => string | undefined;
+    save: () => Promise<string | undefined>;
+    getPar: () => Paragraph;
+    setPluginWords?: (words: string[]) => void;
+    setForceAnswerSave?: (force: boolean) => void;
     resetField: () => string | undefined;
 }
 
@@ -136,6 +141,7 @@ export class ViewCtrl implements IController {
 
     // For search box.
     private displaySearch = false;
+    diffDialog?: DiffController;
 
     constructor(sc: IScope) {
         timLogTime("ViewCtrl start", "view");
@@ -244,6 +250,9 @@ export class ViewCtrl implements IController {
             }
 
             this.closePopupIfOpen();
+            if (this.diffDialog) {
+                this.diffDialog.close();
+            }
 
             return false;
 
@@ -456,28 +465,27 @@ export class ViewCtrl implements IController {
     }
 
     /**
-     * Registers an ITimComponent to the view controller by its name attribute if it has one
-     * @param {ITimComponent} component The component to be registered
+     * Registers an ITimComponent to the view controller by its name attribute if it has one.
+     * @param {ITimComponent} component The component to be registered.
      */
     public addTimComponent(component: ITimComponent) {
         let name = component.getName();
         if (name) this.timComponents.set(name, component);
-
     }
 
     /**
-     * Returns an ITimComponent where register ID matches the given string
-     * @param {string} name The register ID of the ITimComponent
-     * @returns {ITimComponent | undefined} Matching component if there was one
+     * Returns an ITimComponent where register ID matches the given string.
+     * @param {string} name The register ID of the ITimComponent.
+     * @returns {ITimComponent | undefined} Matching component if there was one.
      */
     public getTimComponentByName(name: string): ITimComponent | undefined {
         return this.timComponents.get(name);
     }
 
     /**
-     * Gets ITimComponents nested within specified area component
-     * @param{string} group name of the area object
-     * @returns {ITimComponent[]} List of ITimComponents nested within the area
+     * Gets ITimComponents nested within specified area component.
+     * @param{string} group name of the area object.
+     * @returns {ITimComponent[]} List of ITimComponents nested within the area.
      */
     public getTimComponentsByGroup(group: string): ITimComponent[] {
         let returnList: ITimComponent[] = [];
@@ -489,9 +497,9 @@ export class ViewCtrl implements IController {
     }
 
     /**
-     * Searches for registered ITimComponent whose ID matches the given regexp
-     * @param {string} re The RegExp to be used in search
-     * @returns {ITimComponent[]} List of ITimComponents where the ID matches the regexp
+     * Searches for registered ITimComponent whose ID matches the given regexp.
+     * @param {string} re The RegExp to be used in search.
+     * @returns {ITimComponent[]} List of ITimComponents where the ID matches the regexp.
      */
     public getTimComponentsByRegex(re: string): ITimComponent[]{
         let returnList: ITimComponent[] = [];

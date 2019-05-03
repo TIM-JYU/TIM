@@ -40,6 +40,8 @@ class NumericfieldMarkupModel(GenericMarkupModel):
     inputplaceholder: Union[str, Missing] = missing
     followid: Union[str, Missing] = missing
     autosave: Union[bool, Missing] = missing
+    inputchecker: Union[str, Missing] = missing
+    userDefinedErrormsg: Union[str, Missing] = missing
 
 class NumericfieldMarkupSchema(GenericMarkupSchema):
     points_array = fields.List(fields.List(fields.Number()))
@@ -51,6 +53,8 @@ class NumericfieldMarkupSchema(GenericMarkupSchema):
     inputplaceholder: Union[int, Missing] = missing
     followid = fields.String(allow_none=True)
     autosave = fields.Boolean()
+    inputchecker = fields.String(allow_none=True)
+    userDefinedErrormsg = fields.String(allow_none=True)
 
     @post_load
     def make_obj(self, data):
@@ -139,27 +143,24 @@ class NumericfieldAnswerSchema(NumericfieldAttrs, GenericAnswerSchema):
 
 
 def render_static_numericfield(m: NumericfieldHtmlModel):
-    return render_template_string(
-        """
-<div class="csRunDiv no-popup-menu">
-    <h4>{{ header }}</h4>
-    <p class="stem">{{ stem }}</p>
-    <div><label>{{ inputstem or '' }} <span>
-        <input type="text"
-               class="form-control"
-               placeholder="{{inputplaceholder}}"
-               size="{{cols}}"></span></label>
-    </div>
-    <button class="timButton">
-        {{ buttonText or button or "Save" }}
-    </button>
-    <a>{{ resetText }}</a>
-    <p class="plgfooter">{{ footer }}</p>
+    return render_template_string("""
+<div>
+<h4>{{ header or '' }}</h4>
+<p class="stem">{{ stem or '' }}</p>
+<div><label>{{ inputstem or '' }} <span>
+<input type="text"
+class="form-control"
+placeholder="{{ inputplaceholder or '' }}"
+size="{{cols}}"></span></label>
 </div>
-        """,
+<button class="timButton">
+{{ buttonText or button or "Save" }}
+</button>
+<a>{{ resetText }}</a>
+<p class="plgfooter">{{ '' }}</p>
+</div>""".strip(),
         **attr.asdict(m.markup),
     )
-
 
 app = create_app(__name__, NumericfieldHtmlSchema())
 
@@ -200,6 +201,8 @@ initnumber: #ALKUARVO, TYHJÄ = EI ALKUARVOA
 buttonText: Save #PAINIKKEEN NIMI, TYHJÄ = EI PAINIKETTA
 cols: 5 #KENTÄN KOKO, NUMERAALINEN
 autosave: false #AUTOSAVE, POIS PÄÄLTÄ
+inputchecker: ^\d{0,3}(\.\d{0,3})?$ #KÄYTTÄJÄSYÖTTEEN RAJOITIN, TYHJÄ = EI RAJOITUSTA
+userDefinedErrormsg: #INPUTCHECKERIN VIRHESELITE, TYHJÄ = SELITE ON INPUTCHECKER
 ```""", """
 ``` {#label plugin="numericfield" readonly=view}
 followid: #SEURANTAID, TYHJÄ = EI SEURANTAID:tä

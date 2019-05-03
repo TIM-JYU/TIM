@@ -20,6 +20,7 @@ const TextfieldMarkup = t.intersection([
         initword: nullable(t.string),
         buttonText: nullable(t.string),
         inputchecker: nullable(t.string),
+        userDefinedErrormsg: nullable(t.string),
         autosave: t.boolean,
     }),
     GenericPluginMarkup,
@@ -49,6 +50,7 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
     private notSavedWord = "";
     private errormessage = "";
     private isSaved = true;
+    private redAlert = false;
 
     getDefaultMarkup() {
         return {};
@@ -103,9 +105,8 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
     /**
      * Save method for other plugins, needed by e.g. multisave plugin.
      */
-    save(): undefined {
-        this.saveText();
-        return undefined;
+    async save() {
+        return this.saveText();
     }
 
     resetField(): undefined {
@@ -149,7 +150,12 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
      * Used as e.g. timButton ng-click event.
      */
     saveText() {
-        this.doSaveText(false);
+        if (this.notSaved()) {
+            return this.doSaveText(false);
+        }
+        else {
+            return undefined;
+        }
     }
 
     // noinspection JSUnusedGlobalSymbols
@@ -206,8 +212,9 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
         this.errormessage = "";
         if (this.attrs.inputchecker) {
             if(!this.validityCheck(this.attrs.inputchecker)) {
-                this.errormessage = "Input does not pass the RegEx: " + this.attrs.inputchecker;
-                return;
+                this.errormessage = this.attrs.userDefinedErrormsg || "Input does not pass the RegEx: " + this.attrs.inputchecker;
+                this.redAlert = true;
+                return this.errormessage;
             }
         }
         /* No visible text version
@@ -233,10 +240,11 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
             this.result = data.web.result;
             this.notSavedWord = this.userword;
             this.isSaved = false;
+            this.redAlert = false;
         } else {
-            this.error = r.result.data.error;
             this.errormessage = r.result.data.error || "Infinite loop or some other error?";
         }
+        return this.error;
     }
 
     protected getAttributeType() {
@@ -267,14 +275,14 @@ textfieldApp.component("textfieldRunner", {
                ng-keydown="$event.keyCode === 13 && $ctrl.saveText()"
                ng-model-options="::$ctrl.modelOpts"
                ng-trim="false"
-               pattern="{{ $ctrl.getPattern() }}"
+               ng-pattern="$ctrl.getPattern()"
                ng-readonly="::$ctrl.readonly"
                uib-tooltip="{{ $ctrl.errormessage }}"
                tooltip-is-open="$ctrl.f.$invalid && $ctrl.f.$dirty"
                tooltip-trigger="mouseenter"
                placeholder="{{::$ctrl.inputplaceholder}}"
                size="{{::$ctrl.cols}}" 
-               ng-class="{warnFrame: $ctrl.notSaved()}">
+               ng-class="{warnFrame: ($ctrl.notSaved() && !$ctrl.redAlert), alertFrame: $ctrl.redAlert }">
                </span></label>
         </form>
     <button class="timButton"
@@ -283,7 +291,7 @@ textfieldApp.component("textfieldRunner", {
             ng-click="$ctrl.saveText()">
         {{::$ctrl.buttonText()}}
     </button> 
-    <pre class="savedtext" ng-if="!$ctrl.isSaved && $ctrl.buttonText()">Saved!</pre> 
+    <p class="savedtext" ng-if="!$ctrl.isSaved && $ctrl.buttonText()">Saved!</p> 
     <p ng-if="::$ctrl.footer" ng-bind="::$ctrl.footer" class="plgfooter"></p>
 </div>
 `,

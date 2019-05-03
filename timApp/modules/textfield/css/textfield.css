@@ -28,6 +28,15 @@ input:focus.warnFrame {
     opacity: 1 !important;
 }
 
+.alertFrame {
+    border-color: red;
+    border-width: 2px;
+}
+
+input:focus.alertframe {
+    border-color: red !important;
+}
+
 /*
 / Showing "Saved!" text until fadeOut.
 / Existing issue: can't redo Saved! text without page refresh.
@@ -51,7 +60,7 @@ input:focus.warnFrame {
     100% { opacity: 0; height: 0; }
 }
 
-.plugintextfield pre {
+.plugintextfield p {
     padding-top: 0px;
     padding-bottom: 0px;
     margin-bottom: 0px;

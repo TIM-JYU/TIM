@@ -6,7 +6,7 @@ import {KEY_ESC} from "../util/keycodes";
 import {$q, $rootScope, $templateCache, $uibModal} from "../util/ngimport";
 import {Binding, markAsUsed, Require} from "../util/utils";
 import * as dg from "./draggable";
-import {DraggableController, VisibilityFix} from "./draggable";
+import {DraggableController, Pos, VisibilityFix} from "./draggable";
 
 markAsUsed(dg);
 
@@ -73,6 +73,11 @@ export abstract class DialogController<T, Ret> implements IController {
 
     protected confirmDismiss() {
         return true;
+    }
+
+    public async moveTo(p: Pos) {
+        await this.draggable.moveTo(p);
+        this.draggable.ensureFullyInViewport();
     }
 }
 

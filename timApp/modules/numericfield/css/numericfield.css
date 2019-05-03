@@ -2,6 +2,10 @@
     display: none;
 }
 
+.plugintextfield .timButton {
+    margin-bottom: 5px;
+}
+
 numericfield-runner .stem {
     text-align: left;
     height: 6px;
@@ -22,6 +26,15 @@ input:focus.warnFrame {
 
 [data-plugin="/numericfield"] {
     opacity: 1 !important;
+}
+
+.alertFrame {
+    border-color: red;
+    border-width: 2px;
+}
+
+input:focus.alertframe {
+    border-color: red !important;
 }
 
 /*
@@ -45,4 +58,11 @@ input:focus.warnFrame {
     0% { opacity: 1; height: 100%; }
     99% { opacity: 0.01; height: 100%; }
     100% { opacity: 0; height: 0; }
+}
+
+.plugintextfield p {
+    padding-top: 0px;
+    padding-bottom: 0px;
+    margin-bottom: 0px;
+    margin-top: 0px;
 }

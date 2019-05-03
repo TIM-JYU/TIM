@@ -6,12 +6,13 @@ import {IItem} from "../item/IItem";
 import {showMessageDialog} from "../ui/dialog";
 import {Users} from "../user/userService";
 import {$http, $log, $timeout, $window} from "../util/ngimport";
-import {isInViewport, markPageDirty, to} from "../util/utils";
+import {getPageXY, IOkResponse, isInViewport, markPageDirty, posToRelative, to} from "../util/utils";
+import {showDiffDialog} from "./diffDialog";
 import {EditPosition, EditType} from "./editing/editing";
 import {IExtraData} from "./editing/edittypes";
-import {onClick, onMouseOverOut} from "./eventhandlers";
-import {getArea, getParId, getRefAttrs, isReference} from "./parhelpers";
-import {ViewCtrl} from "./viewctrl";
+import {onClick, onMouseOver, onMouseOverOut} from "./eventhandlers";
+import {canSeeSource, dereferencePar, getArea, getParId, getRefAttrs, isReference} from "./parhelpers";
+import {vctrlInstance, ViewCtrl} from "./viewctrl";
 
 export const readClasses = {
     1: "screen",
@@ -20,14 +21,14 @@ export const readClasses = {
     4: "read",
 };
 
-export enum readingTypes {
-    onScreen = 1,
-    hoverPar = 2,
-    clickPar = 3,
-    clickRed = 4,
+export enum ReadingType {
+    OnScreen = 1,
+    HoverPar = 2,
+    ClickPar = 3,
+    ClickRed = 4,
 }
 
-function isAlreadyRead(readline: JQuery, readingType: readingTypes) {
+function isAlreadyRead(readline: JQuery, readingType: ReadingType) {
     const readClassName = readClasses[readingType];
     if (!readline.hasClass(readClassName)) {
         return false;
@@ -37,7 +38,7 @@ function isAlreadyRead(readline: JQuery, readingType: readingTypes) {
     return timeSinceLastRead < getActiveDocument().readExpiry();
 }
 
-export async function markParRead(par: JQuery, readingType: readingTypes) {
+export async function markParRead(par: JQuery, readingType: ReadingType) {
     const readline = par.find(".readline");
     const readClassName = readClasses[readingType];
     if (isAlreadyRead(readline, readingType)) {
@@ -68,7 +69,7 @@ export async function markParRead(par: JQuery, readingType: readingTypes) {
         return;
     }
     readline.removeClass(readClassName + "-modified");
-    if (readingType === readingTypes.clickRed) {
+    if (readingType === ReadingType.ClickRed) {
         markPageDirty();
         getActiveDocument().refreshSectionReadMarks();
     }
@@ -78,9 +79,9 @@ async function markParsRead($pars: JQuery) {
     const parIds = $pars.map((i, e) => {
         return getParId($(e));
     }).get();
-    $pars.find(".readline").addClass(readClasses[readingTypes.clickRed]);
+    $pars.find(".readline").addClass(readClasses[ReadingType.ClickRed]);
     const doc = getActiveDocument();
-    const r = await to($http.put("/read/" + doc.id + "/" + "null" + "/" + readingTypes.clickRed, {pars: parIds}));
+    const r = await to($http.put("/read/" + doc.id + "/" + "null" + "/" + ReadingType.ClickRed, {pars: parIds}));
     if (!r.ok) {
         $log.error("Could not save the read markings");
         return;
@@ -103,7 +104,7 @@ let readingParId: string | undefined;
 
 function queueParagraphForReading() {
     //noinspection CssInvalidPseudoSelector
-    const visiblePars = $(".par:not('.preamble'):onScreen").find(".readline").not((i, e) => isAlreadyRead($(e), readingTypes.onScreen));
+    const visiblePars = $(".par:not('.preamble'):onScreen").find(".readline").not((i, e) => isAlreadyRead($(e), ReadingType.OnScreen));
     const parToRead = visiblePars.first().parents(".par");
     const parId = getParId(parToRead);
 
@@ -119,18 +120,76 @@ function queueParagraphForReading() {
     readingParId = parId;
     const numWords = parToRead.find(".parContent").text().trim().split(/[\s\n]+/).length;
     readPromise = $timeout((async () => {
-        await markParRead(parToRead, readingTypes.onScreen);
+        await markParRead(parToRead, ReadingType.OnScreen);
         queueParagraphForReading();
     }) as any, 300 * numWords);
 }
 
-function readlineHandler($this: JQuery, e: JQuery.Event) {
-    markParRead($this.parents(".par"), readingTypes.clickRed);
-    return true;
+async function handleSeeChanges(elem: JQuery, e: JQuery.Event) {
+    const par = elem.parents(".par");
+    const [id, blockId, t] = dereferencePar(par);
+    const parData = await to($http.get<Array<{par_hash: string}>>(`/read/${id}/${blockId}`));
+    if (!parData.ok) {
+    } else {
+        const oldb = $http.get<{text: string}>("/getBlock", {
+            params: {
+                doc_id: id,
+                par_hash: parData.result.data[0].par_hash,
+                par_id: blockId,
+            },
+        });
+        const newb = $http.get<{text: string}>("/getBlock", {
+            params: {
+                doc_id: id,
+                par_hash: t,
+                par_id: blockId,
+            },
+        });
+        const oldr = await to(oldb);
+        const newbr = await to(newb);
+        if (oldr.ok && newbr.ok) {
+            const mi = await showDiffDialog({
+                left: oldr.result.data.text,
+                right: newbr.result.data.text,
+                title: "Changes",
+            });
+            if (vctrlInstance) {
+                if (vctrlInstance.diffDialog) {
+                    vctrlInstance.diffDialog.close();
+                }
+                vctrlInstance.diffDialog = await mi.dialogInstance.promise;
+                await to(mi.result);
+                vctrlInstance.diffDialog = undefined;
+            }
+        }
+    }
+}
+
+async function readlineHandler(elem: JQuery, e: JQuery.Event) {
+    if ((e.target as HTMLElement).tagName === "BUTTON") {
+        return;
+    }
+    markParRead(elem.parents(".par"), ReadingType.ClickRed);
 }
 
 export async function initReadings(sc: ViewCtrl) {
+    onClick(".readline > button", handleSeeChanges);
     onClick(".readline", readlineHandler);
+    onMouseOver(".readline.read-modified", (p, e) => {
+        const ev = e.originalEvent as MouseEvent | TouchEvent;
+        const pos = posToRelative(p[0], ev);
+        const children = p.children();
+        if (children.length === 0 && canSeeSource(sc.item, p.parents(".par"))) {
+            const x = document.createElement("button");
+            x.classList.add("timButton", "btn-xs");
+            x.title = "See changes";
+            x.textContent = "Changes";
+            x.style.top = pos.y + "px";
+            p.append(x);
+        } else if (children.length > 0) {
+            // children[0].style.top = pos.y + "px";
+        }
+    });
 
     onClick(".areareadline", function areareadlineHandler($this, e) {
         const oldClass = $this.attr("class") || null;
@@ -185,7 +244,7 @@ export async function initReadings(sc: ViewCtrl) {
 
     onMouseOverOut(".par:not('.preamble')", function mouseOverHandler($this, e, select) {
         if (select) {
-            markParRead($this, readingTypes.hoverPar);
+            markParRead($this, ReadingType.HoverPar);
         }
     });
 
@@ -199,7 +258,11 @@ export async function handleUnread(item: IItem, extraData: IExtraData, pos: Edit
     if (pos.type !== EditType.Edit) {
         return;
     }
-    await $http.put(`/unread/${item.id}/${extraData.par}`, {});
-    pos.pars.first().find(".readline").removeClass("read read-modified");
+    const result = await $http.put<IOkResponse & {latest?: unknown}>(`/unread/${item.id}/${extraData.par}`, {});
+    const rline = pos.pars.first().find(".readline");
+    rline.removeClass("read read-modified");
+    if (result.data.latest) {
+        rline.addClass("read-modified");
+    }
     getActiveDocument().refreshSectionReadMarks();
 }

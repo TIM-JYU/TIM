@@ -8,7 +8,6 @@ import {GenericPluginMarkup, Info, nullable, PluginBase, pluginBindings, withDef
 import {$http} from "tim/util/ngimport";
 import {to} from "tim/util/utils";
 import {valueDefu} from "tim/util/utils";
-import {string} from "../../../static/scripts/jspm_packages/npm/io-ts@1.4.1/lib";
 
 const omapluginApp = angular.module("omapluginApp", ["ngSanitize"]);
 export const moduleDefs = [omapluginApp];
@@ -179,12 +178,10 @@ export class OmapluginController extends PluginBase<t.TypeOf<typeof omapluginMar
         return this.userword;
     }
 
-    save(): string {
+    async save() {
         this.userword = "I'm saved";
-        this.getGroups();
-        return "";
+        return undefined;
     }
-
 }
 
 omapluginApp.component("omapluginRunner", {

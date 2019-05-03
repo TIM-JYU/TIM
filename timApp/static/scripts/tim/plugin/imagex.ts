@@ -5,7 +5,7 @@ import * as t from "io-ts";
 import {ViewCtrl} from "../document/viewctrl";
 import {editorChangeValue} from "../editor/editorScope";
 import {$http, $q, $sce, $timeout} from "../util/ngimport";
-import {markAsUsed, numOrStringToNumber, Require, to, valueOr} from "../util/utils";
+import {markAsUsed, numOrStringToNumber, Require, to, valueOr, posToRelative, MouseOrTouch} from "../util/utils";
 import * as colorpicker from "angular-bootstrap-colorpicker";
 import {
     CommonPropsT,
@@ -20,7 +20,6 @@ import {
     IPoint,
     ISized,
     ISizedPartial,
-    MouseOrTouch,
     ObjectTypeT,
     OptionalCommonPropNames,
     OptionalDragObjectPropNames,
@@ -498,16 +497,6 @@ function toRange(range: TuplePoint, p: number) {
     return p;
 }
 
-function getPos(canvas: Element, p: MouseOrTouch) {
-    const rect = canvas.getBoundingClientRect();
-    const posX = p.clientX;
-    const posY = p.clientY;
-    return {
-        x: posX - rect.left,
-        y: posY - rect.top,
-    };
-}
-
 function isObjectOnTopOf(position: IPoint, object: DrawObject, grabOffset: number) {
     return object.isPointInside(position, grabOffset);
 }
@@ -727,7 +716,7 @@ class DragTask {
 
     downEvent(event: Event, p: MouseOrTouch) {
         event.preventDefault();
-        this.mousePosition = getPos(this.canvas, p);
+        this.mousePosition = posToRelative(this.canvas, p);
         let active = areObjectsOnTopOf(this.mousePosition, this.dragobjects, 0);
         if (!active) {
             active = areObjectsOnTopOf(this.mousePosition, this.dragobjects, this.imgx.grabOffset);
@@ -772,7 +761,7 @@ class DragTask {
             if (event != p) {
                 event.preventDefault();
             }
-            this.mousePosition = getPos(this.canvas, p);
+            this.mousePosition = posToRelative(this.canvas, p);
             if (!this.imgx.emotion) {
                 this.draw();
             }
@@ -781,7 +770,7 @@ class DragTask {
                 event.preventDefault();
             }
             if (!this.imgx.emotion) {
-                this.freeHand.addPointDraw(this.ctx, getPos(this.canvas, p));
+                this.freeHand.addPointDraw(this.ctx, posToRelative(this.canvas, p));
             }
         }
     }
@@ -792,7 +781,7 @@ class DragTask {
             if (event != p) {
                 event.preventDefault();
             }
-            this.mousePosition = getPos(this.canvas, p);
+            this.mousePosition = posToRelative(this.canvas, p);
 
             const isTarget = areObjectsOnTopOf(this.activeDragObject.obj,
                 this.targets, undefined);

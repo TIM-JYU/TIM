@@ -67,7 +67,7 @@ export class MultisaveController extends PluginBase<t.TypeOf<typeof multisaveMar
     }
 
 
-    save(): string {
+    async save() {
         let componentsToSave: ITimComponent[] = [];
         //TODO: componentsToSave as a map?
         if(this.attrs.fields){
@@ -108,11 +108,24 @@ export class MultisaveController extends PluginBase<t.TypeOf<typeof multisaveMar
             componentsToSave = this.vctrl.getTimComponentsByRegex(".*");
         }
 
+        const promises = [];
         for(const v of componentsToSave)
         {
-            v.save();
+            const result = v.save();
+            promises.push(result);
         }
-        this.isSaved = true;
+
+        this.isSaved = false;
+        let saveFailed = false;
+        for(const p of promises){
+            const result = await p;
+            if (result != undefined){
+                saveFailed = true;
+            }
+        }
+        if(!saveFailed){
+            this.isSaved = true;
+        }
 
         return this.attrs.followid || this.pluginMeta.getTaskId() || "";
     }
