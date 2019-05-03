@@ -76,6 +76,7 @@ class JsrunnerController extends PluginBase<t.TypeOf<typeof JsrunnerMarkup>, t.T
         this.isRunning = false;
         if (r.ok) {
             const data = r.result.data;
+            window.location.reload(); // TODO: ei toimi aina
             this.error = data.web.error;
         } else {
             r.result.data.error = "Infinite loop or some other error?"; // TODO: näinkö?

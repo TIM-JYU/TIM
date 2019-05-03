@@ -4,7 +4,15 @@ class Tools {
         this.data = data;
         this.currDoc = currDoc;
         this.result = {};
-        this.regex = /^[0-9]+\./; //TODO: onko oikein?
+        this.regex = /^[0-9]+\./;
+    }
+
+    normalizeField(fieldName) {
+        if (this.regex.test(fieldName)) {
+            return fieldName;
+        } else {
+            return this.currDoc + fieldName;
+        }
     }
 
     getStudentName() {
@@ -12,11 +20,7 @@ class Tools {
     }
 
     getDouble(fieldName, def=0) {
-        if (this.regex.test(fieldName)) {
-            var fn = fieldName;
-        } else {
-            fn = this.currDoc + fieldName;
-        }
+        let fn = this.normalizeField(fieldName);
         let s = this.data.fields[fn];
         let r = parseFloat(s);
         if (isNaN(r)) r = def;
@@ -24,14 +28,24 @@ class Tools {
     }
 
     getInt(fieldName, def=0) {
-        if (this.regex.test(fieldName)) {
-            var fn = fieldName;
-        } else {
-            fn = this.currDoc + fieldName;
-        }
+        let fn = this.normalizeField(fieldName);
         let s = this.data.fields[fn];
         let r = parseInt(s); // TODO: katkaisee, ei pyöristä, onko OK?
         if (isNaN(r)) r = def;
+        return r;
+    }
+
+    getString(fieldName, def="") {
+        let fn = this.normalizeField(fieldName);
+        let r = this.data.fields[fn];
+        // TODO: default on jo ""
+        return r;
+    }
+
+    getValue(fieldName, def="") {
+        let fn = this.normalizeField(fieldName);
+        let r = this.data.fields[fn];
+        // TODO: default on jo ""
         return r;
     }
 
@@ -45,13 +59,8 @@ class Tools {
     }
     */
 
-    // TODO: tarpeettoman monimutkainen
     getSum(fieldName, start, end, def=0) {
-        if (this.regex.test(fieldName)) {
-                var fn = fieldName;
-            } else {
-                fn = this.currDoc + fieldName;
-            }
+        let fn = this.normalizeField(fieldName);
         let sum = 0;
         for (let i = start; i <= end; i++) {
             let fnn = fn + i.toString();
@@ -64,21 +73,22 @@ class Tools {
     }
 
     setString(fieldName, content) {
-        if (this.regex.test(fieldName)) {
-            var tidFN = fieldName;
-        } else {
-            tidFN = this.currDoc + fieldName;
-        }
-        this.result[tidFN] = content;
+        let fn = this.normalizeField(fieldName);
+        this.result[fn] = content;
+    }
+
+    setInt(fieldName, content) {
+        let fn = this.normalizeField(fieldName);
+        let r = parseInt(content);
+        // TODO: if (isNaN(r)) error
+        this.result[fn] = r;
     }
 
     setDouble(fieldName, content) {
-        if (this.regex.test(fieldName)) {
-            var tidFN = fieldName;
-        } else {
-            tidFN = this.currDoc + fieldName;
-        }
-        this.result[tidFN] = content;
+        let fn = this.normalizeField(fieldName);
+        let r = parseFloat(content);
+        // TODO: if (isNaN(r)) error
+        this.result[fn] = r;
     }
 
     getResult() {
