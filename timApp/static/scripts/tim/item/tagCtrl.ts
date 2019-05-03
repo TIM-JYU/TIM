@@ -332,10 +332,10 @@ registerDialogComponent(TagController,
         <button class="timButton" data-ng-disabled="!$ctrl.selected" title="Return to adding new tags"
         ng-click="$ctrl.selected = null">Unselect</button>
         <button class="timButton" ng-click="$ctrl.dismiss()">Close</button>
-        <div ng-show="$ctrl.successMessage" class="alert alert-success">
+        <div ng-if="$ctrl.successMessage" class="alert alert-success">
             <span class="glyphicon glyphicon-ok"></span> {{$ctrl.successMessage}}
         </div>
-        <div ng-show="$ctrl.errorMessage" class="alert alert-warning">
+        <div ng-if="$ctrl.errorMessage" class="alert alert-warning">
             <span class="glyphicon glyphicon-exclamation-sign"></span> {{$ctrl.errorMessage}}
         </div>
     </dialog-body>

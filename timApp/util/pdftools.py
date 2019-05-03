@@ -1,9 +1,7 @@
 """
 Stamping and merging pdf-files with pdftk and pdflatex.
-
 Visa Naukkarinen
 """
-import random
 import uuid
 from pathlib import Path
 from subprocess import Popen, PIPE, run as subprocess_run
@@ -326,16 +324,17 @@ def get_attachments_from_paragraphs(paragraphs):
             par_plugin = timApp.plugin.plugin.Plugin.from_paragraph(par)
             par_data = par_plugin.values
             par_file = par_data["file"]
+            print(par_file)
 
             # Checks if attachment is TIM-upload and adds prefix.
             # Changes in upload folder need to be updated here as well.
             if par_file.startswith("/files/"):
                 par_file = "/tim_files/blocks" + par_file
-
             # If attachment is an url link, mark as a partial error.
             elif is_url(par_file):
                 attachments_with_errors = True
                 # par_file = download_file_from_url(par_file)
+
             try:
                 check_pdf_validity(par_file)
             # If file is invalid, mark it as a partial error.
@@ -370,7 +369,7 @@ def get_stamp_text(item: AttachmentStampData, text_format: str) -> str:
     # Normal formatted stamp data takes precedence.
     try:
         return text_format.format(
-            file=get_path_base_filename(Path(escape_tex(item.file.absolute().as_posix()))),
+            file=Path(escape_tex(item.file.absolute().as_posix())).name,
             date=escape_tex(item.date),
             attachment=escape_tex(item.attachment),
             issue=escape_tex(item.issue))
@@ -557,19 +556,6 @@ def download_file_from_url(
     except HTTPError:
         raise AttachmentNotFoundError(url)
 
-def get_path_base_filename(path: Path, no_extension: bool = False) -> str:
-    """
-    Returns filename with or without file extension from url or path, i.e.
-    "C:/some dir/another dir/cats_and_dogs.txt" -> "cats_and_dogs.txt".
-    :param path: Url or path to parse.
-    :param no_extension: Keep the extension included.
-    :return: File basename, extension is optional
-    """
-    if no_extension:
-        return path.stem
-    else:
-        return path.name
-
 
 def create_new_tex_file(content: str, folder: Path = temp_folder_default_path) -> Path:
     """
@@ -612,7 +598,7 @@ def stamp_pdfs(
 
     for item in stamp_data:
         # Names and paths of new files to use as params.
-        item_basename = get_path_base_filename(item.file, True)
+        item_basename = item.file.stem
         item_stamp_name_no_ext = item_basename + "_stamp"
         item_stamp_path = dir_path / f"{item_stamp_name_no_ext}.pdf"
         item_stamped_name = item_basename + "_stamped.pdf"
@@ -653,14 +639,13 @@ def restamp_pdfs(
 
     for item in stamp_data:
         current_attachment_folder = item.file.parent
-        print(item.file.parent)
         # Check if current folder exists and is a folder:
         if not (current_attachment_folder.exists() and current_attachment_folder.is_dir()):
             raise TempFolderNotFoundError(current_attachment_folder)
 
 
         # Names and paths of new files to use as params.
-        item_basename = get_path_base_filename(item.file, True)
+        item_basename = item.file.stem
         item_stamp_name_no_ext = item_basename + "_stamp"
         item_stamp_path = current_attachment_folder / f"{item_stamp_name_no_ext}.pdf"
         item_stamped_name = item_basename + "_stamped.pdf"

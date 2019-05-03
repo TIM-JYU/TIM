@@ -3,7 +3,8 @@ import io
 import json
 import os
 import posixpath
-from pathlib import Path
+from pathlib import Path, PurePosixPath
+from urllib.parse import unquote, urlparse
 
 import magic
 from flask import Blueprint, request, send_file, Response
@@ -29,8 +30,7 @@ from timApp.upload.uploadedfile import UploadedFile, PluginUpload, PluginUploadI
 from timApp.util.flask.requesthelper import verify_json_params
 from timApp.util.flask.responsehelper import json_response, ok_response
 from timApp.util.pdftools import StampDataInvalidError, default_stamp_format, AttachmentStampData, \
-    PdfError, stamp_pdfs, get_path_base_filename, create_new_tex_file, restamp_pdfs
-from timApp.util.utils import get_error_message
+    PdfError, stamp_pdfs, create_new_tex_file, restamp_pdfs, stamp_model_default_path
 
 upload = Blueprint('upload',
                    __name__,
@@ -223,11 +223,8 @@ def upload_file():
 @upload.route('/upload/restamp', methods=['POST'])
 def restamp_attachments():
     """
-    this.stampingData.meetingDate
-    this.stampingData.stampFormat
-    this.stampingData.attachments
-    this.stampingData.customStampModel
-    :return:
+    Route for updating stamps for one or more uploaded attachments.
+    :return: Ok response or an error in stamping process.
     """
     attachments, = verify_json_params('attachments')
     meeting_date, = verify_json_params('meetingDate')
@@ -235,33 +232,24 @@ def restamp_attachments():
     custom_stamp_model_content, = verify_json_params('customStampModel', require=False)
     if not stamp_format:
         stamp_format = default_stamp_format
-    try:
-        stamp_data_list = []
-        attachment_folder = default_attachment_folder
-        for a in attachments:
-            stamp_data = AttachmentStampData(date=meeting_date,
-                                             attachment=a["attachmentLetter"],
-                                             issue=a["issueNumber"])
-            # Parse link path and find unstamped attachment.
-            stamp_data.file = attachment_folder / a["filePath"].replace("/files/","").replace("_stamped","")
-            stamp_data_list.append(stamp_data)
-            print(stamp_data)
+    stamp_data_list = []
+    attachment_folder = default_attachment_folder
+    for a in attachments:
+        stamp_data = AttachmentStampData(date=meeting_date,
+                                         attachment=a["attachmentLetter"],
+                                         issue=a["issueNumber"])
+        # Parse link path and find unstamped attachment.
+        attachment_path = PurePosixPath(unquote(urlparse(a["uploadUrl"]).path))
+        stamp_data.file = attachment_folder / attachment_path.parts[-2] / attachment_path.parts[-1].replace("_stamped","")
+        verify_edit_access(UploadedFile.find_by_id_and_type(attachment_path.parts[-2], BlockType.File), check_parents=True)
+        stamp_data_list.append(stamp_data)
 
-        if custom_stamp_model_content:
-            stamp_model_path = create_new_tex_file(custom_stamp_model_content)
-            output = restamp_pdfs(
-                stamp_data_list,
-                stamp_text_format=stamp_format,
-                stamp_model_path=stamp_model_path)[0]
-            print(output)
-        else:
-            output = restamp_pdfs(
-                stamp_data_list,
-                stamp_text_format=stamp_format)[0]
-            print(output)
+    stamp_model_path = create_new_tex_file(custom_stamp_model_content) if custom_stamp_model_content else stamp_model_default_path
+    output = restamp_pdfs(
+        stamp_data_list,
+        stamp_text_format=stamp_format,
+        stamp_model_path=stamp_model_path)[0]
 
-    except Exception as e:
-        abort(400, get_error_message(e))
     return ok_response()
 
 
@@ -296,20 +284,16 @@ def upload_and_stamp_attachment(d: DocInfo, file, stamp_data: AttachmentStampDat
     # Add the uploaded file path (the one to stamp) to stamp data.
 
     stamp_data.file = attachment_folder / f"{f.id}/{f.filename}"
-    if custom_stamp_model_content:
-        stamp_model_path = create_new_tex_file(custom_stamp_model_content)
-        output = stamp_pdfs(
-            [stamp_data],
-            dir_path=(Path(attachment_folder) / f"{str(f.id)}/"),
-            stamp_text_format=stampformat,
-            stamp_model_path=stamp_model_path)[0]
-    else:
-        output = stamp_pdfs(
-            [stamp_data],
-            dir_path=(Path(attachment_folder) / f"{str(f.id)}/"),
-            stamp_text_format=stampformat)[0]
 
-    stamped_filename = get_path_base_filename(output)
+    stamp_model_path = create_new_tex_file(
+        custom_stamp_model_content) if custom_stamp_model_content else stamp_model_default_path
+    output = stamp_pdfs(
+        [stamp_data],
+        dir_path=(Path(attachment_folder) / f"{str(f.id)}/"),
+        stamp_text_format=stampformat,
+        stamp_model_path=stamp_model_path)[0]
+
+    stamped_filename = output.name
     db.session.commit()
 
     # TODO: In case of raised errors give proper no-upload response?

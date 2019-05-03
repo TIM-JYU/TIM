@@ -15,7 +15,7 @@ import {AceParEditor} from "./AceParEditor";
 import {IPluginInfoResponse, ParCompiler} from "./parCompiler";
 import {TextAreaParEditor} from "./TextAreaParEditor";
 import {SelectionRange} from "./BaseParEditor";
-import {showRestampDialog} from "./restampDialog";
+import {RestampDialogClose, showRestampDialog} from "./restampDialog";
 
 markAsUsed(rangyinputs);
 
@@ -85,7 +85,7 @@ interface IMenuItemObject {
 export interface IAttachmentData {
     issueNumber: string | number;
     attachmentLetter: string;
-    filePath: string;  // Could be empty string or placeholder.
+    uploadUrl: string;  // Could be empty string or placeholder.
     upToDate: boolean; // Whether the stamp data hasn't changed after previous stamping.
 }
 
@@ -93,7 +93,7 @@ export interface IStampingData {
     attachments: IAttachmentData[];
     customStampModel: string | undefined;
     stampFormat: string;
-       meetingDate: string;
+    meetingDate: string;
 }
 
 type MenuItem = IMenuItemObject | string;
@@ -852,19 +852,22 @@ ${backTicks}
 
         this.activeAttachments = this.updateAttachments(false, this.activeAttachments, undefined);
         const date = this.getCurrentMeetingDate();
-        if (this.activeAttachments && this.docSettings && !this.allAttachmentsUpToDate() && date) {
+        if (date && this.activeAttachments && this.docSettings && !this.allAttachmentsUpToDate()) {
             let stampFormat = this.docSettings.macros.stampformat;
             if (stampFormat === undefined) {
                 stampFormat = "";
             }
             const customStampModel = this.docSettings.custom_stamp_model;
-            // TODO: Return bool telling whether to cancel or continue saving.
-            void showRestampDialog({
+            const r = await showRestampDialog({
                 attachments: this.activeAttachments,
                 customStampModel: customStampModel,
                 meetingDate: date,
                 stampFormat: stampFormat,
             });
+            if (r.valueOf() === RestampDialogClose.ReturnToEditor.valueOf()) {
+                this.saving = false;
+                return;
+            }
         }
 
         this.saving = true;
@@ -1004,7 +1007,7 @@ ${backTicks}
             attachmentParams = [kokousDate, stampFormat, ...macroParams, customStampModel, autostamp];
             stamped = {
                 attachmentLetter: macroParams[1],
-                filePath: macroParams[3],
+                uploadUrl: macroParams[3],
                 issueNumber: macroParams[2],
                 upToDate: true,
             };
@@ -1044,6 +1047,7 @@ ${backTicks}
                     }
                     // Separate from isPlugin so this is ran only when there are attachments.
                     if (macroRange && kokousDate) {
+                        stamped.uploadUrl = this.uploadedFile;
                         this.activeAttachments = this.updateAttachments(false, this.activeAttachments, stamped);
                     }
                 });
@@ -1329,13 +1333,17 @@ ${backTicks}
      * Returns the current meeting date from document settings, if any.
      */
     private getCurrentMeetingDate() {
-        if (this.docSettings) {
-            // Knro usage starts from 1 but dates starts from 0 but there is dummy item first
-            const knro = this.docSettings.macros.knro;
-            const dates = this.docSettings.macros.dates;
-            // dates = ["ERROR", ...dates];  // Start from index 1; unnecessary now.
-            return dates[knro][0];  // dates is 2-dim array
-        } else {
+        try {
+            if (this.docSettings) {
+                // Knro usage starts from 1 but dates starts from 0 but there is dummy item first
+                const knro = this.docSettings.macros.knro;
+                const dates = this.docSettings.macros.dates;
+                // dates = ["ERROR", ...dates];  // Start from index 1; unnecessary now.
+                return dates[knro][0];  // dates is 2-dim array
+            } else {
+                return undefined;
+            }
+        } catch (e) {
             return undefined;
         }
     }
@@ -1363,8 +1371,8 @@ ${backTicks}
                     const macroParams = this.getMacroParamsFromString(macroText);
                     const current: IAttachmentData = {
                         attachmentLetter: macroParams[1],
-                        filePath: macroParams[3],
                         issueNumber: macroParams[2],
+                        uploadUrl: macroParams[3],
                         upToDate: false,
                     };
                     let upToDate;
@@ -1377,7 +1385,7 @@ ${backTicks}
                         if (previousAttachments) {
                             upToDate = false;
                             for (const previous of previousAttachments) {
-                                if (previous.filePath === current.filePath &&
+                                if (previous.uploadUrl === current.uploadUrl &&
                                     previous.attachmentLetter === current.attachmentLetter &&
                                     previous.issueNumber === current.issueNumber) {
                                     current.upToDate = true;
@@ -1389,10 +1397,10 @@ ${backTicks}
                         }
                     }
                     // Stamped attachment is always up to date.
-                    // TODO: May get it wrong if another attachment has same variables.
                     if (stamped) {
                         if (stamped.attachmentLetter === current.attachmentLetter &&
-                            stamped.issueNumber === current.issueNumber) {
+                            stamped.issueNumber === current.issueNumber &&
+                            stamped.uploadUrl === current.uploadUrl) {
                             current.upToDate = true;
                         }
                     }

@@ -9,12 +9,17 @@ import {markAsUsed, to} from "../util/utils";
 import {IStampingData} from "./pareditor";
 import {$http} from "../util/ngimport";
 
+export enum RestampDialogClose {
+    ReturnToEditor,
+    SaveAndExit,
+}
+
 markAsUsed(focusMe);
 
 /*
  * Tag search dialog's controller.
  */
-export class ShowRestampDialogController extends DialogController<{params: IStampingData}, {}> {
+export class RestampDialogController extends DialogController<{params: IStampingData}, RestampDialogClose> {
     static component = "restampDialog";
     static $inject = ["$element", "$scope"] as const;
     private header = "";
@@ -34,8 +39,8 @@ export class ShowRestampDialogController extends DialogController<{params: IStam
     async $onInit() {
         super.$onInit();
         this.stampingData = this.resolve.params;
-        console.log(this.stampingData);
-        console.log(this.stampingData.attachments.length);
+        //console.log(this.stampingData);
+        //console.log(this.stampingData.attachments.length);
     }
 
     /**
@@ -51,7 +56,7 @@ export class ShowRestampDialogController extends DialogController<{params: IStam
                 attachments: this.stampingData.attachments,
                 customStampModel: this.stampingData.customStampModel,
                 meetingDate: this.stampingData.meetingDate,
-                stampFormat: this.stampingData.stampFormat
+                stampFormat: this.stampingData.stampFormat,
             };
             const r = await to($http.post(`/upload/restamp`, stampingParams));
 
@@ -81,25 +86,29 @@ export class ShowRestampDialogController extends DialogController<{params: IStam
     }
 
     private returnToEditor() {
-        //TODO:
+        this.close(RestampDialogClose.ReturnToEditor);
+    }
+
+    private saveAndExit() {
+        this.close(RestampDialogClose.SaveAndExit);
     }
 
 }
 
-registerDialogComponent(ShowRestampDialogController,
+registerDialogComponent(RestampDialogController,
     {
         template:
             `<tim-dialog>
     <dialog-header>
     </dialog-header>
     <dialog-body>
-        <b>Attachment stamps may not be up-to-date</b>
-        <div class="alert alert-warning">
-            <span class="glyphicon glyphicon-exclamation-sign"></span> There are changes in
+        <tim-alert ng-if="!$ctrl.successMessage && !$ctrl.errorMessage" severity="info">There are changes in
              <ng-pluralize count="$ctrl.stampingData.attachments.length"
              when="{'1': ' the contents of the macro ', 'other': ' the macro contents '}"></ng-pluralize>
              that may not have been updated to the stamps yet!
-        </div>
+        </tim-alert>
+        <tim-alert severity="info" ng-if="$ctrl.successMessage">{{$ctrl.successMessage}}</tim-alert>
+        <tim-alert severity="error" ng-if="$ctrl.errorMessage">{{$ctrl.errorMessage}}</tim-alert>
         <div ng-if="!$ctrl.stampingDone">
             <p>You can update the stamps by pressing the <ng-pluralize count="$ctrl.stampingData.attachments.length"
             when="{'1': 'Restamp', 'other': 'Restamp all'}"></ng-pluralize> button below. Alternatively you can
@@ -113,21 +122,15 @@ registerDialogComponent(ShowRestampDialogController,
                 </button>
             </div>
         </div>
-        <div ng-show="$ctrl.successMessage" class="alert alert-success">
-            <span class="glyphicon glyphicon-ok"></span> {{$ctrl.successMessage}}
-        </div>
-        <div ng-show="$ctrl.errorMessage" class="alert alert-warning">
-            <span class="glyphicon glyphicon-exclamation-sign"></span> {{$ctrl.errorMessage}}
-        </div>
     </dialog-body>
     <dialog-footer>
         <button class="timButton" ng-click="$ctrl.returnToEditor()">Return to editor</button>
-        <button class="timButton" ng-click="$ctrl.dismiss()">Save and exit</button>
+        <button class="timButton" ng-click="$ctrl.saveAndExit()">Save and exit</button>
     </dialog-footer>
 </tim-dialog>
 `,
     });
 
 export async function showRestampDialog(stampingData: IStampingData) {
-    return await showDialog(ShowRestampDialogController, {params: () => stampingData}).result;
+    return await showDialog(RestampDialogController, {params: () => stampingData}).result;
 }

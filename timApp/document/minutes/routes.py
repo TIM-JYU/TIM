@@ -228,7 +228,7 @@ def get_attachment_list(doc):
         pdf_paths, attachments_with_errors = timApp.util.pdftools.get_attachments_from_paragraphs(paragraphs)
 
         for i in range(0, len(pdf_paths)):
-            pdf_paths[i] = timApp.util.pdftools.get_base_filename(pdf_paths[i])
+            pdf_paths[i] = Path(pdf_paths[i]).name
 
     except Exception as err:
         message = str(err)
