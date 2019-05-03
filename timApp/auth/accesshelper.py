@@ -54,8 +54,12 @@ def verify_admin():
         abort(403, 'This action requires administrative rights.')
 
 
-def verify_edit_access(b: ItemOrBlock, require=True, message=None, check_duration=False):
+def verify_edit_access(b: ItemOrBlock, require=True, message=None, check_duration=False, check_parents=False):
     u = get_current_user_object()
+    has_access = u.has_edit_access(b)
+    if not has_access and check_parents:
+        # Only uploaded files and images have a parent so far.
+        has_access = any(u.has_edit_access(p) for p in b.parents)
     return abort_if_not_access_and_required(u.has_edit_access(b), b.id, 'edit', require, message,
                                             check_duration)
 
