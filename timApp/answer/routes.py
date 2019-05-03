@@ -263,10 +263,19 @@ def post_answer(plugintype: str, task_id_ext: str):
     state = try_load_json(old_answers[0].content) if logged_in() and len(old_answers) > 0 else None
 
     if plugin.type == 'jsrunner':
-        groups = plugin.values['groups']
         g = []
-        for group in groups:
-            g.append(UserGroup.get_by_name(group))
+        try:
+            groups = plugin.values['groups']
+            for group in groups:
+                g.append(UserGroup.get_by_name(group))
+        except KeyError:
+            pass
+        if not g:
+            try:
+                g.append(UserGroup.get_by_name(plugin.values['group']))
+            except KeyError:
+                abort(403, f'Missing group in jsrunner')
+
         answerdata['data'] = get_fields_and_users(plugin.values['fields'], g, d, get_current_user_object())
 
     answer_call_data = {'markup': plugin.values,

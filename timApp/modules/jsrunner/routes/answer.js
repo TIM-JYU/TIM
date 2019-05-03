@@ -9,11 +9,12 @@ router.put('/', function (req, res, next) {
     const regex = /[0-9]+\./;
     const currDoc = doc.match(regex);
     const program = req.body.markup.program;
+    const markup = req.body.markup;
 
     const {NodeVM} = require('vm2');
     const vm = new NodeVM({
         console: 'inherit',
-        sandbox: {data: uAndF, currDoc},
+        sandbox: {data: uAndF, currDoc, markup},
         require: {
             external: true, // TODO allow only tools.js
         },
@@ -24,7 +25,7 @@ router.put('/', function (req, res, next) {
         const Tools = require('./tools');
         let r = [];
         for (const user of data) {
-            const tools = new Tools(user, currDoc[0]); // onko parempaa keinoa viedä currDoc toolsille?
+            const tools = new Tools(user, currDoc[0], markup);
             function runProgram() {
                 ${program}
             }

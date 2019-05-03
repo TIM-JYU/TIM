@@ -1,8 +1,9 @@
 class Tools {
 
-    constructor(data, currDoc) {
+    constructor(data, currDoc, markup) {
         this.data = data;
         this.currDoc = currDoc;
+        this.markup = markup;
         this.result = {};
         this.regex = /^[0-9]+\./;
     }
