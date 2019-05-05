@@ -15,6 +15,7 @@ export UPLOADER_COMMAND=./StartAll.sh          # Startup command for uploader pl
 export CSPLUGIN_DEV_COMMAND=./startPlugins.sh  # Command to start csplugin when IS_DEVELOPMENT is true; use empty command if you want to debug it with SSH
 export SVNPLUGIN_DEV_COMMAND=./startAll.sh     # Same as above but for svn plugin
 export PALI_DEV_COMMAND=./startAll.sh          # Same as above but for pali plugin
+export JSAV_DEV_COMMAND=./startAll.sh          # Same as above but for jsav plugin
 export IMAGEX_DEV_COMMAND=./startAll.sh        # Same as above but for imagex plugin
 export IS_DEVELOPMENT=false                    # Whether this is a local development instance (needed for e.g. PyCharm)
 export CONFIG_FILE=''                          # Location of config file to use; OK to be empty when running locally;

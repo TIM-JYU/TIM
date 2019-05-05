@@ -73,6 +73,7 @@ TIM_SAFE_TAGS = [
     'dropdown-runner',
     'feedback-runner',
     'imagex-runner',
+    'jsav-runner',
     'list-video-runner',
     'mcq',
     'mmcq',
