@@ -10,7 +10,8 @@ import {IStampingData} from "./pareditor";
 import {$http} from "../util/ngimport";
 
 export enum RestampDialogClose {
-    ReturnToEditor,
+    RestampedReturnToEditor,
+    NoRestampingReturnToEditor,
     SaveAndExit,
 }
 
@@ -39,8 +40,6 @@ export class RestampDialogController extends DialogController<{params: IStamping
     async $onInit() {
         super.$onInit();
         this.stampingData = this.resolve.params;
-        //console.log(this.stampingData);
-        //console.log(this.stampingData.attachments.length);
     }
 
     /**
@@ -74,7 +73,7 @@ export class RestampDialogController extends DialogController<{params: IStamping
     } else {
             this.errorMessage = "Unable to find attachments!";
         }
-        // this.stampingDone = true;
+        this.stampingDone = true;
         this.stamping = false;
     }
 
@@ -86,7 +85,11 @@ export class RestampDialogController extends DialogController<{params: IStamping
     }
 
     private returnToEditor() {
-        this.close(RestampDialogClose.ReturnToEditor);
+        if (this.stampingDone) {
+            this.close(RestampDialogClose.RestampedReturnToEditor);
+        } else {
+            this.close(RestampDialogClose.NoRestampingReturnToEditor);
+        }
     }
 
     private saveAndExit() {
@@ -108,8 +111,8 @@ registerDialogComponent(RestampDialogController,
              that may not have been updated to the stamps yet!
         </tim-alert>
         <tim-alert severity="success" ng-if="$ctrl.successMessage">{{$ctrl.successMessage}}</tim-alert>
-        <tim-alert severity="error" ng-if="$ctrl.errorMessage">{{$ctrl.errorMessage}}</tim-alert>
-        <div ng-if="!$ctrl.stampingDone">
+        <tim-alert severity="warning" ng-if="$ctrl.errorMessage">{{$ctrl.errorMessage}}</tim-alert>
+        <div>
             <p>You can update the stamps by pressing the <ng-pluralize count="$ctrl.stampingData.attachments.length"
             when="{'1': 'Restamp', 'other': 'Restamp all'}"></ng-pluralize> button below. You can also return to the
             editor to manually check and reupload the attachments.</p>

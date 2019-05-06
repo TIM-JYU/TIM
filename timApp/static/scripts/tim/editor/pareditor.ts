@@ -849,27 +849,37 @@ ${backTicks}
         if (this.saving) {
             return;
         }
-
-        this.activeAttachments = this.updateAttachments(false, this.activeAttachments, undefined);
+        // Start checking attachments only if the document has a minutes date.
         const date = this.getCurrentMeetingDate();
-        if (date && this.activeAttachments && this.docSettings && !this.allAttachmentsUpToDate()) {
-            let stampFormat = this.docSettings.macros.stampformat;
-            if (stampFormat === undefined) {
-                stampFormat = "";
-            }
-            const customStampModel = this.docSettings.custom_stamp_model;
-            const r = await showRestampDialog({
-                attachments: this.activeAttachments,
-                customStampModel: customStampModel,
-                meetingDate: date,
-                stampFormat: stampFormat,
-            });
-            if (r.valueOf() === RestampDialogClose.ReturnToEditor.valueOf()) {
-                this.saving = false;
-                return;
+        if (date) {
+            const tempAttachments = this.activeAttachments;
+            this.activeAttachments = this.updateAttachments(false, this.activeAttachments, undefined);
+            if (this.activeAttachments && this.docSettings && !this.allAttachmentsUpToDate()) {
+                let stampFormat = this.docSettings.macros.stampformat;
+                if (stampFormat === undefined) {
+                    stampFormat = "";
+                }
+                const customStampModel = this.docSettings.custom_stamp_model;
+                const r = await showRestampDialog({
+                    attachments: this.activeAttachments,
+                    customStampModel: customStampModel,
+                    meetingDate: date,
+                    stampFormat: stampFormat,
+                });
+                if (r.valueOf() === RestampDialogClose.RestampedReturnToEditor.valueOf()) {
+                    // If restamped and then returned, all are up-to-date.
+                    this.saving = false;
+                    this.activeAttachments.every((att) => att.upToDate = true);
+                    return;
+                }
+                if (r.valueOf() === RestampDialogClose.NoRestampingReturnToEditor.valueOf()) {
+                    this.saving = false;
+                    // If returned to editor without restamping, return to state prior to saving.
+                    this.activeAttachments = tempAttachments;
+                    return;
+                }
             }
         }
-
         this.saving = true;
         const text = this.editor!.getEditorText();
         if (text.trim() === "") {
@@ -937,16 +947,18 @@ ${backTicks}
     /**
      * Get start and end indices of a macro nearest to the cursor.
      * For example (|= selected area, ^ = found indices, x = intervening macro):
+     *
      * something %%liite("attachment_stuff")%% more stuff
      *           ^        |              |   ^
      * -> return indices
+     *
      * something %%liite("attachment")%% something in between %%liite("another_attachment")%% even more something
      *           ^                     x      |                x                            ^
      * -> error, return undefined
-     * @param str
-     * @param beginStr
-     * @param endStr
-     * @param selectionRange
+     * @param str The string where the selection and possible macro are.
+     * @param beginStr Macro beginning.
+     * @param endStr Macro end.
+     * @param selectionRange The index range "painted" by the user. Can start and end at same index.
      * @returns Macro start and end indices in SelectionRange, or undefined if selection is not inside the macro.
      */
     getMacroRange(str: string, beginStr: string, endStr: string,
@@ -984,33 +996,28 @@ ${backTicks}
 
         // If there's an attachment macro in the editor (i.e. macroRange is defined), assume need to stamp.
         // Also requires data from preamble to work correctly (dates and knro).
-        // If there's no stampFormat set in preamble, uses hard coded default format.
+        // If there's no stampFormat set in preamble, uses hard-coded default format.
         if (macroRange && this.docSettings && kokousDate) {
             autostamp = true;
             try {
-                // Macro begin and end not included:
-                let macroText = editorText.substring(
+                // Macro begin and end not included.
+                const macroText = editorText.substring(
                     macroRange[0] + this.macroStringBegin.length,
                     macroRange[1] - this.macroStringEnd.length);
                 macroParams = this.getMacroParamsFromString(macroText);
             } catch {
-                this.file.error = "Parsing stamp parameters failed";
-                throw new Error("Parsing stamp parameters failed");
+                const errorMessage = "Parsing stamp parameters failed";
+                this.file.error = errorMessage;
+                throw new Error(errorMessage);
             }
-
-            // If stampFormat isn't set in preamble,
             let stampFormat = this.docSettings.macros.stampformat;
             if (stampFormat === undefined) {
                 stampFormat = "";
             }
             const customStampModel = this.docSettings.custom_stamp_model;
             attachmentParams = [kokousDate, stampFormat, ...macroParams, customStampModel, autostamp];
-            stamped = {
-                attachmentLetter: macroParams[1],
-                uploadUrl: macroParams[3],
-                issueNumber: macroParams[2],
-                upToDate: true,
-            };
+            stamped = this.macroParamsToAttachmentData(macroParams);
+            stamped.upToDate = true;
         }
         if (file) {
             this.file.progress = 0;
@@ -1330,7 +1337,7 @@ ${backTicks}
     }
 
     /**
-     * Returns the current meeting date from document settings, if any.
+     * Returns the current meeting date from document settings, if it exists.
      */
     private getCurrentMeetingDate() {
         try {
@@ -1338,8 +1345,8 @@ ${backTicks}
                 // Knro usage starts from 1 but dates starts from 0 but there is dummy item first
                 const knro = this.docSettings.macros.knro;
                 const dates = this.docSettings.macros.dates;
-                // dates = ["ERROR", ...dates];  // Start from index 1; unnecessary now.
-                return dates[knro][0];  // dates is 2-dim array
+                // dates = ["ERROR", ...dates];  // Start from index 1; unnecessary now?
+                return dates[knro][0];  // Dates is 2-dim array.
             } else {
                 return undefined;
             }
@@ -1349,86 +1356,98 @@ ${backTicks}
     }
 
     /**
-     * Updates list of attachments and their data in open editor, including whether they
-     * have been changed since previous check.
-     * @param firstCheck Check is during initialization (up-to-date by default).
-     * @param previousAttachments Previous check's data (if there is any).
-     * @param stamped Attachment-to-stamp (if there is one).
+     * Updates list of attachments and their data present in the open editor,
+     * including whether they have changed since previous check.
+     * @param firstCheck Check during initialization (i.e. up-to-date by default).
+     * @param previousAttachments Previous check's data (if there's any).
+     * @param stamped Attachment-to-stamp (if there's one), which is up-to-date by default.
      */
     private updateAttachments(firstCheck: boolean,
                              previousAttachments: IAttachmentData[] | undefined,
                              stamped: IAttachmentData | undefined) {
         const attachments = [];
-        if (this.editor) {
-            const editorText = this.editor.getEditorText();
-            const pluginSplit = editorText.split("```");
-            for (const part of pluginSplit) {
-                if (part.length > (this.macroStringBegin.length + this.macroStringEnd.length)
-                    && part.includes('{plugin="showPdf"}')) {
-                    const macroText = part.substring(
-                        part.lastIndexOf(this.macroStringBegin) + this.macroStringBegin.length,
-                        part.lastIndexOf(this.macroStringEnd));
-                    const macroParams = this.getMacroParamsFromString(macroText);
-                    const current: IAttachmentData = {
-                        attachmentLetter: macroParams[1],
-                        issueNumber: macroParams[2],
-                        uploadUrl: macroParams[3],
-                        upToDate: false,
-                    };
-                    let upToDate;
-                    // On first editor load attachment is up to date.
-                    if (firstCheck) {
-                        current.upToDate = true;
-                    } else {
-                        // Others are up to date if they have a match from check.
-                        // TODO: Changing attachment order?
-                        if (previousAttachments) {
-                            upToDate = false;
-                            for (const previous of previousAttachments) {
-                                if (previous.uploadUrl === current.uploadUrl &&
-                                    previous.attachmentLetter === current.attachmentLetter &&
-                                    previous.issueNumber === current.issueNumber) {
-                                    current.upToDate = true;
-                                }
-                            }
-                        } else {
-                            // If there were no attachments before, these are up to date.
-                            current.upToDate = true;
-                        }
-                    }
-                    // Stamped attachment is always up to date.
-                    if (stamped) {
-                        if (stamped.attachmentLetter === current.attachmentLetter &&
-                            stamped.issueNumber === current.issueNumber &&
-                            stamped.uploadUrl === current.uploadUrl) {
-                            current.upToDate = true;
-                        }
-                    }
-                    attachments.push(current);
-                }
-            }
-            return attachments;
-        } else {
+        if (!this.editor) {
             return undefined;
         }
+        const editorText = this.editor.getEditorText();
+        const pluginSplit = editorText.split("```");
+        for (const part of pluginSplit) {
+            // Do closer check only on paragraphs with showPdf-plugins.
+            if (part.length > (this.macroStringBegin.length + this.macroStringEnd.length)
+                && part.includes('plugin="showPdf"')) {
+                const macroText = part.substring(
+                    part.lastIndexOf(this.macroStringBegin) + this.macroStringBegin.length,
+                    part.lastIndexOf(this.macroStringEnd));
+                const macroParams = this.getMacroParamsFromString(macroText);
+                const current = this.macroParamsToAttachmentData(macroParams);
+                let upToDate;
+                // On first editor load attachment is up-to-date.
+                if (firstCheck) {
+                    current.upToDate = true;
+                } else {
+                    // Others are up to date if they have a match from check.
+                    // TODO: Does changing attachment order cause problems?
+                    if (previousAttachments) {
+                        upToDate = false;
+                        for (const previous of previousAttachments) {
+                            if (previous.uploadUrl === current.uploadUrl &&
+                                previous.attachmentLetter === current.attachmentLetter &&
+                                previous.issueNumber === current.issueNumber) {
+                                current.upToDate = true;
+                            }
+                        }
+                    } else {
+                        // If there were no attachments before, all are assumed to be up-to-date.
+                        current.upToDate = true;
+                    }
+                }
+                // Stamped attachment is always up-to-date.
+                if (stamped) {
+                    if (stamped.attachmentLetter === current.attachmentLetter &&
+                        stamped.issueNumber === current.issueNumber &&
+                        stamped.uploadUrl === current.uploadUrl) {
+                        current.upToDate = true;
+                    }
+                }
+                attachments.push(current);
+            }
+        }
+        return attachments;
     }
 
+    /**
+     * Removes line breaks and parses macro string into a dictionary.
+     * @param macroText String in JSON-compatible format.
+     */
     private getMacroParamsFromString(macroText: string) {
         // Normal line breaks cause exception with JSON.parse, and replacing them with ones parse understands
-        // causes exceptions if line breaks are outside parameters, so just remove them before parsing.
+        // causes exceptions when line breaks are outside parameters, so just remove them before parsing.
         macroText = macroText.replace(/(\r\n|\n|\r)/gm, "");
         return JSON.parse(`[${macroText}]`);
     }
 
+    /**
+     * Check whether all attachments in open editor are up-to-date.
+     * @returns True if none have changed since previous check.
+     */
     private allAttachmentsUpToDate() {
         if (this.activeAttachments) {
-            for (const att of this.activeAttachments) {
-                if (!att.upToDate) {
-                    return false;
-                }
-            }
+            return this.activeAttachments.every((att) => att.upToDate);
         }
         return true;
+    }
+
+    /**
+     * Picks data relevant for restamping from an array and returns it as an object.
+     * @param macroParams Array with attachment letter at index 1, issue number 2 and upload url 3.
+     */
+    private macroParamsToAttachmentData(macroParams: any): IAttachmentData {
+        return {
+            attachmentLetter: macroParams[1],
+            issueNumber: macroParams[2],
+            upToDate: false,
+            uploadUrl: macroParams[3],
+        };
     }
 }
 

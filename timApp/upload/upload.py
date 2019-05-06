@@ -240,7 +240,10 @@ def restamp_attachments():
                                          issue=a["issueNumber"])
         # Parse link path and find unstamped attachment.
         attachment_path = PurePosixPath(unquote(urlparse(a["uploadUrl"]).path))
-        stamp_data.file = attachment_folder / attachment_path.parts[-2] / attachment_path.parts[-1].replace("_stamped","")
+        try:
+            stamp_data.file = attachment_folder / attachment_path.parts[-2] / attachment_path.parts[-1].replace("_stamped","")
+        except IndexError:
+            abort(400, f'Invalid attachment url: "{attachment_path}"')
         verify_edit_access(UploadedFile.find_by_id_and_type(attachment_path.parts[-2], BlockType.File), check_parents=True)
         stamp_data_list.append(stamp_data)
 
