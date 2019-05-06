@@ -7,17 +7,20 @@ export interface IDiffParams {
     left: string;
     right: string;
     title: string;
-    pos: Pos;
+    pos?: Pos;
 }
 
 export class DiffController extends DialogController<{params: IDiffParams}, {}> {
     static component = "timDiff";
     static $inject = ["$element", "$scope"] as const;
+    private options = {editCost: 4};
 
     async $onInit() {
         super.$onInit();
         await this.draggable.makeHeightAutomatic();
-        this.moveTo(this.resolve.params.pos);
+        if (this.resolve.params.pos) {
+            this.moveTo(this.resolve.params.pos);
+        }
     }
 
     close() {
@@ -43,7 +46,7 @@ registerDialogComponent(DiffController,
 <tim-dialog>
     <dialog-body>
         <div class="diff border">
-            <pre diff left-obj="$ctrl.left()" right-obj="$ctrl.right()"></pre>
+            <pre processing-diff options="$ctrl.options" left-obj="$ctrl.left()" right-obj="$ctrl.right()"></pre>
         </div>
     </dialog-body>
 </tim-dialog>
@@ -56,7 +59,7 @@ export async function showDiffDialog(p: IDiffParams) {
     $injector.loadNewModules([module]);
     return showDialog(DiffController, {params: () => p},
         {
-            absolute: true,
+            absolute: false,
             showMinimizeButton: false,
             size: "xs",
         });

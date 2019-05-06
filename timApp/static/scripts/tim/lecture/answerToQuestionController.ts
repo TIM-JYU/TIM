@@ -14,7 +14,7 @@ import {
     questionAsked,
     QuestionOrAnswer,
 } from "./lecturetypes";
-import {showStatisticsDialog} from "./showStatisticsToQuestionController";
+import {showStatisticsDialog} from "./statisticsToQuestionController";
 import {getStorage, setStorage} from "../util/utils";
 
 /**

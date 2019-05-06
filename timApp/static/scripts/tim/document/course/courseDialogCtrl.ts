@@ -9,7 +9,7 @@ import {DialogController, registerDialogComponent, showDialog} from "../../ui/di
 import {$http} from "../../util/ngimport";
 import {to} from "../../util/utils";
 
-export class ShowCourseDialogController extends DialogController<{ params: IItem }, {}> {
+export class CourseDialogController extends DialogController<{ params: IItem }, {}> {
     static component = "timCourseDialog";
     static $inject = ["$element", "$scope"] as const;
     private f!: IFormController; // initialized in the template
@@ -181,7 +181,7 @@ export class ShowCourseDialogController extends DialogController<{ params: IItem
     }
 }
 
-registerDialogComponent(ShowCourseDialogController,
+registerDialogComponent(CourseDialogController,
     {
         template:
             `<tim-dialog class="overflow-visible">
@@ -247,5 +247,5 @@ registerDialogComponent(ShowCourseDialogController,
     });
 
 export async function showCourseDialog(d: IItem) {
-    return await showDialog(ShowCourseDialogController, {params: () => d}).result;
+    return await showDialog(CourseDialogController, {params: () => d}).result;
 }

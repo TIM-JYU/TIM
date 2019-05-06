@@ -148,6 +148,7 @@ PÖYTÄKIRJANOTE - Lista {extract_number} -  {extract_title}
         for par in paragraphs:
             docentry.document.add_paragraph_obj(par.create_reference(docentry.document, add_rd=True))
         docentry.document.add_paragraph("%%ALLEKIRJOITUKSET%%")
+        docentry.update_last_modified()
 
         # add into the composite document a link leading to the new extract document
         composite_paragraph.set_markdown(f"{composite_paragraph.get_markdown()}\n" +
@@ -156,6 +157,7 @@ PÖYTÄKIRJANOTE - Lista {extract_number} -  {extract_title}
 
     composite_paragraph.save()
     composite_docentry.document.add_paragraph("", attrs=dict([("area_end", f"kokous{minute_number}")]))
+    composite_docentry.update_last_modified()
     db.session.commit()
     return safe_redirect(f"/view/{composite_docentry.path_without_lang}")
 

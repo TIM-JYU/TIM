@@ -6,7 +6,7 @@ import {IItem} from "../item/IItem";
 import {showMessageDialog} from "../ui/dialog";
 import {Users} from "../user/userService";
 import {$http, $log, $timeout, $window} from "../util/ngimport";
-import {getPageXY, isInViewport, markPageDirty, to} from "../util/utils";
+import {getPageXY, IOkResponse, isInViewport, markPageDirty, posToRelative, to} from "../util/utils";
 import {showDiffDialog} from "./diffDialog";
 import {EditPosition, EditType} from "./editing/editing";
 import {IExtraData} from "./editing/edittypes";
@@ -150,7 +150,6 @@ async function handleSeeChanges(elem: JQuery, e: JQuery.Event) {
         if (oldr.ok && newbr.ok) {
             const mi = await showDiffDialog({
                 left: oldr.result.data.text,
-                pos: getPageXY(e),
                 right: newbr.result.data.text,
                 title: "Changes",
             });
@@ -170,25 +169,25 @@ async function readlineHandler(elem: JQuery, e: JQuery.Event) {
     if ((e.target as HTMLElement).tagName === "BUTTON") {
         return;
     }
-    const ev = e.originalEvent;
-    if ((ev instanceof MouseEvent) || (ev instanceof Touch)) {
-        markParRead(elem.parents(".par"), ReadingType.ClickRed);
-        return true;
-    } else {
-        console.error("readline event was neither mouse nor touch");
-    }
+    markParRead(elem.parents(".par"), ReadingType.ClickRed);
 }
 
 export async function initReadings(sc: ViewCtrl) {
     onClick(".readline > button", handleSeeChanges);
     onClick(".readline", readlineHandler);
     onMouseOver(".readline.read-modified", (p, e) => {
-        if (p.children().length === 0 && canSeeSource(sc.item, p.parents(".par"))) {
+        const ev = e.originalEvent as MouseEvent | TouchEvent;
+        const pos = posToRelative(p[0], ev);
+        const children = p.children();
+        if (children.length === 0 && canSeeSource(sc.item, p.parents(".par"))) {
             const x = document.createElement("button");
             x.classList.add("timButton", "btn-xs");
             x.title = "See changes";
             x.textContent = "Changes";
+            x.style.top = pos.y + "px";
             p.append(x);
+        } else if (children.length > 0) {
+            // children[0].style.top = pos.y + "px";
         }
     });
 
@@ -259,7 +258,11 @@ export async function handleUnread(item: IItem, extraData: IExtraData, pos: Edit
     if (pos.type !== EditType.Edit) {
         return;
     }
-    await $http.put(`/unread/${item.id}/${extraData.par}`, {});
-    pos.pars.first().find(".readline").removeClass("read read-modified");
+    const result = await $http.put<IOkResponse & {latest?: unknown}>(`/unread/${item.id}/${extraData.par}`, {});
+    const rline = pos.pars.first().find(".readline");
+    rline.removeClass("read read-modified");
+    if (result.data.latest) {
+        rline.addClass("read-modified");
+    }
     getActiveDocument().refreshSectionReadMarks();
 }

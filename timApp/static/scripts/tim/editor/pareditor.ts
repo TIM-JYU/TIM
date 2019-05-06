@@ -1333,15 +1333,3 @@ export function openEditorSimple(docId: number, text: string, caption: string, l
         },
     }).result;
 }
-
-export function test() {
-    const fns = [];
-    let i = -1;
-    for (const x of "hi") {
-        i++;
-        fns.push(() => console.log(i));
-    }
-    for (const f of fns) {
-        f();
-    }
-}

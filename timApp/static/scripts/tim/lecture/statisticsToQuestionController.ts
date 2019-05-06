@@ -17,7 +17,7 @@ function getQuestionEndTime(q: IAskedQuestion) {
     return q.asked_time.clone().add(moment.duration(q.json.json.timeLimit || 999999, "seconds"));
 }
 
-export class ShowStatisticsToQuestionController extends DialogController<{params: IStatisticsParams}, IStatisticsResult> {
+export class StatisticsToQuestionController extends DialogController<{params: IStatisticsParams}, IStatisticsResult> {
     static component = "timQuestionStatistics";
     static $inject = ["$element", "$scope"] as const;
     private answers: IQuestionAnswer[] = [];
@@ -71,7 +71,7 @@ export class ShowStatisticsToQuestionController extends DialogController<{params
     }
 }
 
-registerDialogComponent(ShowStatisticsToQuestionController,
+registerDialogComponent(StatisticsToQuestionController,
     {
         template: `
 <tim-dialog>
@@ -93,5 +93,5 @@ registerDialogComponent(ShowStatisticsToQuestionController,
     });
 
 export async function showStatisticsDialog(p: IStatisticsParams) {
-    return await showDialog(ShowStatisticsToQuestionController, {params: () => p}).result;
+    return await showDialog(StatisticsToQuestionController, {params: () => p}).result;
 }

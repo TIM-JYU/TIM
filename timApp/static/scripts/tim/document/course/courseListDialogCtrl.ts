@@ -31,7 +31,7 @@ export interface IGroupedCourses {
 /**
  * Tag search dialog's controller.
  */
-export class ShowCourseListDialogController extends DialogController<{ params: ICourseListParams }, {}> {
+export class CourseListDialogController extends DialogController<{ params: ICourseListParams }, {}> {
     static component = "timCourseListDialog";
     static $inject = ["$element", "$scope"] as const;
     private docList: ITaggedItem[] = [];
@@ -230,7 +230,7 @@ export class ShowCourseListDialogController extends DialogController<{ params: I
     }
 }
 
-registerDialogComponent(ShowCourseListDialogController,
+registerDialogComponent(CourseListDialogController,
     {
         template:
             `<tim-dialog>
@@ -282,5 +282,5 @@ registerDialogComponent(ShowCourseListDialogController,
     });
 
 export async function showCourseListDialog(d: ICourseListParams) {
-    return await showDialog(ShowCourseListDialogController, {params: () => d}).result;
+    return await showDialog(CourseListDialogController, {params: () => d}).result;
 }

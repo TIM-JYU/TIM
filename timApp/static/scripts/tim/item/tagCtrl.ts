@@ -20,7 +20,7 @@ const tagParsingSeparator = ",";
 /*
  * Tag editing dialog's controller.
  */
-export class ShowTagController extends DialogController<{ params: IItem }, {}> {
+export class TagController extends DialogController<{ params: IItem }, {}> {
     static component = "timEditTags";
     static $inject = ["$element", "$scope"] as const;
     private tagName: string = "";
@@ -274,7 +274,7 @@ function arrayDifference(a1: any[], a2: any[]) {
     return a1.filter((item) => a2.indexOf(item) < 0);
 }
 
-registerDialogComponent(ShowTagController,
+registerDialogComponent(TagController,
     {
         template:
             `<tim-dialog class="overflow-visible">
@@ -346,7 +346,7 @@ registerDialogComponent(ShowTagController,
     });
 
 export async function showTagDialog(d: IItem) {
-    return await showDialog(ShowTagController, {params: () => d}).result;
+    return await showDialog(TagController, {params: () => d}).result;
 }
 
 /**

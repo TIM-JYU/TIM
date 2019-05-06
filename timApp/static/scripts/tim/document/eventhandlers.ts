@@ -71,7 +71,7 @@ export function onClick(className: string,
 }
 
 export function onMouseOver(className: string, func: MouseFn) {
-    $document.on("mouseover", className, (e: JQuery.Event) => {
+    $document.on("mouseover touchstart", className, (e: JQuery.Event) => {
         func($(e.currentTarget as HTMLElement), fixPageCoords(e));
     });
 }
