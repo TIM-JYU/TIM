@@ -36,6 +36,7 @@ const DragMarkup = t.intersection([
         type: t.string,
         max: t.refinement(t.number, (x) => x > 0, "a positive number value"),
         trash: t.boolean,
+        savebutton: t.boolean,
         shuffle: t.boolean,
         followid: t.string,
     }),
@@ -66,6 +67,7 @@ class DragController extends PluginBase<t.TypeOf<typeof DragMarkup>, t.TypeOf<ty
     private max?: number;
     private copy?: string;
     private trash?: boolean;
+    private saveButton?: boolean
     private shuffle?: boolean;
     private effectAllowed?: string;
     private vctrl!: ViewCtrl;
@@ -114,12 +116,17 @@ class DragController extends PluginBase<t.TypeOf<typeof DragMarkup>, t.TypeOf<ty
         this.type = this.attrs.type || " ";
         this.trash = this.attrs.trash || false;
         this.shuffle = this.attrs.shuffle || false;
+        this.saveButton = this.attrs.savebutton || false;
         this.wordObjs = [];
-        if (this.shuffle && this.attrs.words) {
-            const words = this.shuffleWords(this.attrs.words);
-            this.createWordobjs(words);
+        if (this.attrsall.words) {
+            this.createWordobjs(this.attrsall.words);
         } else {
-            this.createWordobjs(this.attrs.words || []);
+            if (this.shuffle && this.attrs.words) {
+                const words = this.shuffleWords(this.attrs.words);
+                this.createWordobjs(words);
+            } else {
+                this.createWordobjs(this.attrs.words || []);
+            }
         }
 
         polyfill({
@@ -217,7 +224,6 @@ class DragController extends PluginBase<t.TypeOf<typeof DragMarkup>, t.TypeOf<ty
     /**
      * Sets words in plugin.
      * @param words The words to be set as draggable words in plugin.
-     * @param shuffle Whether to shuffle words.
      */
     setPluginWords(words: string []) {
         if (this.shuffle) {
@@ -279,7 +285,7 @@ class DragController extends PluginBase<t.TypeOf<typeof DragMarkup>, t.TypeOf<ty
                 return data.web.error;
             }
         } else {
-            this.error = "Infinite loop or some other error?";
+            this.error = "Saving error, no saveable content or some other error.";
         }
     }
 
@@ -312,10 +318,14 @@ dragApp.component("dragRunner", {
                     dnd-moved="$ctrl.wordObjs.splice($index, 1)"
                     dnd-canceled="($ctrl.copy !== 'target' )|| $ctrl.wordObjs.splice($index, 1)"
                     dnd-effect-allowed="{{item.effectAllowed}}">
-        {{item.word}}
         </li>
      </ul>
     </div>
+        <button class="timButton"
+            ng-if="::$ctrl.saveButton"
+            ng-click="$ctrl.save()">
+        Save
+    </button>
     </div>
     <div ng-if="$ctrl.error" ng-bind-html="$ctrl.error"></div>
     <p ng-if="::$ctrl.footer" ng-bind="::$ctrl.footer" class="plgfooter"></p>

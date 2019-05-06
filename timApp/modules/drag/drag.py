@@ -41,6 +41,7 @@ class DragMarkupModel(GenericMarkupModel):
     copy: Union[str, Missing] = missing
     type: Union[str, Missing] = missing
     trash: Union[bool, Missing] = missing
+    savebutton: Union[bool, Missing] = missing
     shuffle: Union[bool, Missing] = missing
     followid: Union[str, Missing] = missing
 
@@ -55,6 +56,7 @@ class DragMarkupSchema(GenericMarkupSchema):
     type = fields.String()
     max = fields.Int()
     trash = fields.Bool()
+    savebutton = fields.Bool()
     shuffle = fields.Bool()
     followid = fields.String()
 
@@ -78,6 +80,7 @@ class DragInputModel:
     type: str = missing
     max: int = missing
     trash: bool = missing
+    savebutton: bool = missing
     shuffle: bool = missing
     nosave: bool = missing
 
@@ -89,6 +92,7 @@ class DragInputSchema(Schema):
     type = fields.String()
     max = fields.Int()
     trash = fields.Bool()
+    savebutton = fields.Bool()
     shuffle = fields.Bool()
 
     @post_load
