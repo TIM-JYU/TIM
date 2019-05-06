@@ -239,12 +239,17 @@ def restamp_attachments():
                                          attachment=a["attachmentLetter"],
                                          issue=a["issueNumber"])
         # Parse link path and find unstamped attachment.
+        # In case of errors abort the whole process.
         attachment_path = PurePosixPath(unquote(urlparse(a["uploadUrl"]).path))
         try:
             stamp_data.file = attachment_folder / attachment_path.parts[-2] / attachment_path.parts[-1].replace("_stamped","")
         except IndexError:
             abort(400, f'Invalid attachment url: "{attachment_path}"')
-        verify_edit_access(UploadedFile.find_by_id_and_type(attachment_path.parts[-2], BlockType.File), check_parents=True)
+        file = UploadedFile.find_by_id_and_type(attachment_path.parts[-2], BlockType.File)
+        if not file:
+            abort(400, f'Attachment not found: "{attachment_path}"')
+
+        verify_edit_access(file, check_parents=True)
         stamp_data_list.append(stamp_data)
 
     stamp_model_path = create_new_tex_file(custom_stamp_model_content) if custom_stamp_model_content else stamp_model_default_path
