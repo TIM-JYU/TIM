@@ -162,6 +162,7 @@ class TimRouteTest(TimDbTest):
                 expect_status: Optional[int] = 200,
                 expect_content: Union[None, str, Dict, List] = None,
                 expect_contains: Union[None, str, List[str]] = None,
+                expect_mimetype: Optional[str] = None,
                 expect_xpath: Optional[str] = None,
                 json_key: Optional[str] = None,
                 headers: Optional[List[Tuple[str, str]]] = None,
@@ -202,6 +203,8 @@ class TimRouteTest(TimDbTest):
         is_textual = resp.mimetype in TEXTUAL_MIMETYPES
         if expect_status is not None:
             self.assertEqual(expect_status, resp.status_code, msg=resp.get_data(as_text=True) if is_textual else None)
+        if expect_mimetype is not None:
+            self.assertEqual(expect_mimetype, resp.mimetype)
         if is_redirect(resp) and expect_content is not None:
             self.assertEqual(expect_content, remove_prefix(resp.location, LOCALHOST))
         resp_data = resp.get_data(as_text=is_textual)

@@ -1,14 +1,12 @@
 import imghdr
 import io
 import json
-import mimetypes
 import os
 import posixpath
-from os import path as os_path
 from pathlib import Path
 
 import magic
-from flask import Blueprint, request, send_file
+from flask import Blueprint, request, send_file, Response
 from flask import abort
 from werkzeug.utils import secure_filename
 
@@ -37,6 +35,13 @@ upload = Blueprint('upload',
                    url_prefix='')
 
 
+@upload.after_request
+def set_csp(resp: Response):
+    resp.headers['Content-Security-Policy'] = "sandbox"
+    resp.headers['X-Content-Security-Policy'] = "sandbox"  # For IE
+    return resp
+
+
 def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -49,14 +54,53 @@ ALLOWED_EXTENSIONS = set(PIC_EXTENSIONS + DOC_EXTENSIONS)
 # The folder for stamped and original pdf-files.
 default_attachment_folder = Path(app.config['FILES_PATH']) / "blocks/files"
 
+WHITELIST_MIMETYPES = {
+    'application/pdf',
+    'image/gif',
+    'image/jpeg',
+    'image/jpg',
+    'image/png',
+    'image/svg+xml',
+    'text/plain',
+    'text/xml',
+    'application/octet-stream',
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.template',
+    'application/vnd.ms-word.document.macroEnabled.12',
+    'application/vnd.ms-word.template.macroEnabled.12',
+    'application/vnd.ms-excel',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.template',
+    'application/vnd.ms-excel.sheet.macroEnabled.12',
+    'application/vnd.ms-excel.template.macroEnabled.12',
+    'application/vnd.ms-excel.addin.macroEnabled.12',
+    'application/vnd.ms-excel.sheet.binary.macroEnabled.12',
+    'application/vnd.ms-powerpoint',
+    'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+    'application/vnd.openxmlformats-officedocument.presentationml.template',
+    'application/vnd.openxmlformats-officedocument.presentationml.slideshow',
+    'application/vnd.ms-powerpoint.addin.macroEnabled.12',
+    'application/vnd.ms-powerpoint.presentation.macroEnabled.12',
+    'application/vnd.ms-powerpoint.template.macroEnabled.12',
+    'application/vnd.ms-powerpoint.slideshow.macroEnabled.12',
+    'application/vnd.ms-access',
+}
+
 
 def get_mimetype(p):
-    mt, code = mimetypes.guess_type(p)
-    if not mt:
-        mt = "text/plain"
+    mime = magic.Magic(mime=True)
+    mt = mime.from_file(p)
+    if mt == 'image/svg':
+        mt += '+xml'
+    if isinstance(mt, bytes):
+        mt = mt.decode('utf-8')
+    if mt not in WHITELIST_MIMETYPES:
+        if mt.startswith('text/'):
+            mt = 'text/plain'
+        else:
+            mt = 'application/octet-stream'
     return mt
-    # mime = magic.Magic(mime=True)
-    # mt = mime.from_file(p).decode('utf-8')
 
 
 @upload.route('/uploads/<path:relfilename>')
@@ -245,7 +289,6 @@ def get_file(file_id, file_filename):
     if not f:
         abort(404, 'File not found')
     verify_view_access(f, check_parents=True)
-    mime = magic.Magic(mime=True)
     if file_filename != f.filename:
         # try to find stamped PDF file
         s = StampedPDF(f.block)
@@ -255,12 +298,7 @@ def get_file(file_id, file_filename):
             abort(404, 'File not found')
         f = s
     file_path = f.filesystem_path.as_posix()
-    mt = mime.from_file(file_path)
-    if mt == 'image/svg':
-        mt += '+xml'
-    if isinstance(mt, bytes):
-        mt = mt.decode('utf-8')
-    return send_file(file_path, mimetype=mt)
+    return send_file(file_path, mimetype=get_mimetype(file_path))
 
 
 @upload.route('/images/<int:image_id>/<image_filename>')

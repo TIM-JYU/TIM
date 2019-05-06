@@ -64,7 +64,7 @@ class UploadTest(TimRouteTest):
         d = DocEntry.find_by_id(d_id)
         up_id = d.block.children[0].id
         self.assertEqual(f'{up_id}/test.md', j['file'])
-        self.get_no_warn(f'/files/{j["file"]}', expect_content='test file')
+        self.get_no_warn(f'/files/{j["file"]}', expect_content='test file', expect_mimetype='text/plain')
         self.get(f'/files/1{j["file"]}', expect_status=404)
         self.get(f'/files/{j["file"]}x', expect_status=404)
 
@@ -83,7 +83,7 @@ class UploadTest(TimRouteTest):
         self.login_test2()
         self.get(f'/images/{j}', expect_status=403)
         grant_access(self.get_test_user_2_group_id(), d_id, 'view')
-        self.get_no_warn(f'/images/{j}', expect_content='GIF87a')
+        self.get_no_warn(f'/images/{j}', expect_content='GIF87a', expect_mimetype='image/gif')
 
     def test_upload_copy_doc(self):
         self.login_test1()
@@ -150,3 +150,25 @@ texprint: "- %%selitys%% ([LIITE %%liiteNro%% / lista %%lista%%](%%server+linkki
         pdf = StampedPDF(pdf.block)
         self.assertEqual(15985, len(pdf.data))
         self.assertGreater(len(pdf.data), file_len)
+        self.check_mime(pdf.relative_filesystem_path, 'application/pdf')
+
+    def check_mime(self, f, expected):
+        self.get_no_warn(f'/files/{f}', expect_mimetype=expected)
+
+    def test_upload_mimetype(self):
+        self.login_test1()
+        d = self.create_doc()
+        r = self.upload_file(d, b"""
+<!doctype html>
+<html>
+<head>
+<title>Surprise</title>
+</head>
+<body>
+<script>alert('hi')</script>
+</body>
+</html>
+        """, 'test.html')
+        self.check_mime(r['file'], 'text/plain')
+        r = self.upload_file(d, b"""<svg xmlns="http://www.w3.org/2000/svg"></svg>""", 'test.svg')
+        self.check_mime(r['file'], 'image/svg+xml')
