@@ -2,7 +2,7 @@
 import json
 import re
 from datetime import timezone, timedelta, datetime
-from typing import Union, List, Tuple, Dict
+from typing import Union, List, Tuple, Dict, Set
 
 import attr
 import dateutil.parser
@@ -297,43 +297,53 @@ def post_answer(plugintype: str, task_id_ext: str):
         return json_response({'error': 'The key "web" is missing in plugin response.'}, 400)
     result = {'web': jsonresp['web']}
 
-    if plugin.type == 'jsrunner':
-        save_object = jsonresp['save']
-        print(save_object)
-        doc_set = set()
-        for item in save_object:
-            a = item['fields']
-            d = list(a)
-            for i in d:
-                doc_set.add(i)
+    def handle_jsrunner_response():
+        save_obj = jsonresp['save']
+        print(save_obj)
+        tasks = set()
+        doc_map: Dict[int, DocInfo] = {}
+        for item in save_obj:
+            task_u = item['fields']
+            doc_task = list(task_u)
+            for i in doc_task:
+                tasks.add(i)
+                id_split = i.split(".")
+                id_num = int(id_split[0])
+                if id_num not in doc_map:
+                    doc_map[id_num] = get_doc_or_abort(id_num)
+        print(doc_map)
         task_content = {}
-        for task in doc_set:
-            tid = TaskId.parse(task, False, False)
-            dib = get_doc_or_abort(tid.doc_id)
+        for task in tasks:
+            t_id = TaskId.parse(task, False, False)
+            # dib = get_doc_or_abort(t_id.doc_id)
+            dib = doc_map[t_id.doc_id]
             verify_teacher_access(dib)
-            plug = find_plugin_from_document(dib.document, tid, get_current_user_object())
+            plug = find_plugin_from_document(dib.document, t_id, get_current_user_object())
             content_field = plug.get_content_field_name()
             task_content[task] = content_field
-        for user in save_object:
-            user_id = user['user']
-            u = User.get_by_id(user_id)
+        for user in save_obj:
+            u_id = user['user']
+            u = User.get_by_id(u_id)
             user_fields = user['fields']
             for key in user_fields.keys():
                 content_type = task_content[key]
                 c = {content_type: user_fields[key]}
                 task_id = TaskId.parse(key, False, False)
-                a: Answer = get_latest_answers_query(task_id, [u]).first()
+                an: Answer = get_latest_answers_query(task_id, [u]).first()
                 content = json.dumps(c)
-                if a and a.content == content:
+                if an and an.content == content:
                     pass
                 else:
-                    result = Answer(
+                    a_result = Answer(
                         content=content,
                         task_id=task_id.doc_task,
                         users=[u],
                         valid=True,
                     )
-                    db.session.add(result)
+                    db.session.add(a_result)
+
+    if plugin.type == 'jsrunner':
+        handle_jsrunner_response()
         db.session.commit()
         return json_response(result)
 

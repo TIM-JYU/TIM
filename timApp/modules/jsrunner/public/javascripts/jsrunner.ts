@@ -17,10 +17,23 @@ import {to} from "tim/util/utils";
 const jsrunnerApp = angular.module("jsrunnerApp", ["ngSanitize"]);
 export const moduleDefs = [jsrunnerApp];
 
+// interface IGradingScale {
+//     1:
+// }
+
 const JsrunnerMarkup = t.intersection([
     t.partial({
         fields: t.array(t.string),
         groups: t.array(t.string),
+        defaultCredits: t.number,
+        defaultPoints: t.number,
+        gradingScale: t.type({
+            1: t.number,
+            2: t.number,
+            3: t.number,
+            4: t.number,
+            5: t.number,
+        }),
         program: nullable(t.string),
     }),
     GenericPluginMarkup,
