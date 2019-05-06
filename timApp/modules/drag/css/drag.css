@@ -4,6 +4,11 @@
 
 .touchdrag .dropword{
     padding: 1em;
+    min-height: calc(4em + 8px);
+}
+
+.touchdrag .dndPlaceholder {
+    min-height: calc(2.25em);
 }
 
 .dragword {
