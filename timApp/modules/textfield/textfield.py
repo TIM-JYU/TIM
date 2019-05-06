@@ -42,6 +42,7 @@ class TextfieldMarkupModel(GenericMarkupModel):
     autosave: Union[bool, Missing] = missing
     inputchecker: Union[str, Missing] = missing
     userDefinedErrormsg: Union[str, Missing] = missing
+    labelStyle: Union[str, Missing] = missing
 
 class TextfieldMarkupSchema(GenericMarkupSchema):
     points_array = fields.List(fields.List(fields.Number()))
@@ -55,6 +56,7 @@ class TextfieldMarkupSchema(GenericMarkupSchema):
     autosave = fields.Boolean()
     inputchecker = fields.String(allow_none=True)
     userDefinedErrormsg = fields.String(allow_none=True)
+    labelStyle = fields.String(allow_none=True)
 
     @post_load
     def make_obj(self, data):
@@ -210,6 +212,7 @@ needed_len: 1 #MINIMIPITUUS, NUMERAALINEN
 initword: #ALKUARVO, TYHJÄ = EI ALKUARVOA
 cols: 1 #KENTÄN KOKO, NUMERAALINEN
 autosave: false #AUTOSAVE, POIS PÄÄLTÄ
+labelStyle: plaintext #LABELSTYLE, TYHJÄ = KENTTÄMUOTO, PLAINTEXT = TEKSTIMUOTO
 ```"""
 ]
     return jsonify({
