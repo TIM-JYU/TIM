@@ -20,6 +20,7 @@ const NumericfieldMarkup = t.intersection([
         buttonText: nullable(t.string),
         inputchecker: nullable(t.string),
         userDefinedErrormsg: nullable(t.string),
+        labelStyle: nullable(t.string),
         autosave: t.boolean,
     }),
     GenericPluginMarkup,
@@ -166,6 +167,16 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
         if (this.attrs.autosave) this.doSaveText(false);
     }
 
+    // noinspection JSUnusedGlobalSymbols
+    /**
+     * Returns true value, if label is set to plaintext.
+     * Used to define labelstyle in angular, either input or span.
+     * Unused method warning is suppressed, as the method is only called in template.
+     */
+    isPlainText() {
+        return (this.attrs.labelStyle == "plaintext");
+    }
+
     /**
      * Method to check numeric input type for stringified numericfield.
      * Used as e.g. to define negative or positive numeric input [0-9]+.
@@ -255,8 +266,10 @@ numericfieldApp.component("numericfieldRunner", {
     <tim-markup-error ng-if="::$ctrl.markupError" data="::$ctrl.markupError"></tim-markup-error>
     <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
     <p class="stem" ng-if="::$ctrl.stem">{{::$ctrl.stem}}</p>
-    <div class="form-inline"><label>{{::$ctrl.inputstem}} <span>
+    <div class="form-inline">
+    <label>{{::$ctrl.inputstem}} <span>
         <input type="number"
+               ng-if="::!$ctrl.isPlainText()"
                style="width: {{::$ctrl.cols}}em"
                class="form-control"
                ng-model="$ctrl.numericvalue"
@@ -272,7 +285,8 @@ numericfieldApp.component("numericfieldRunner", {
                tooltip-trigger="mouseenter"
                placeholder="{{::$ctrl.inputplaceholder}}"
                ng-class="{warnFrame: ($ctrl.notSaved() && !$ctrl.redAlert), alertFrame: $ctrl.redAlert}">
-        </span></label>
+               </span></label>
+        <span ng-if="::$ctrl.isPlainText()" style="font-weight:bold">{{$ctrl.numericvalue}}</span>
     </div>
     <div ng-if="$ctrl.error" style="font-size: 12px" ng-bind-html="$ctrl.error"></div>
     <button class="timButton"

@@ -178,10 +178,10 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
     // noinspection JSUnusedGlobalSymbols
     /**
      * Returns true value, if label is set to plaintext.
-     * Used to define labelstyles in angular.
+     * Used to define labelstyle in angular, either input or span.
      * Unused method warning is suppressed, as the method is only called in template.
      */
-    getLabelStyle() {
+    isPlainText() {
         return (this.attrs.labelStyle == "plaintext");
     }
 
@@ -286,17 +286,19 @@ textfieldApp.component("textfieldRunner", {
     <tim-markup-error ng-if="::$ctrl.markupError" data="::$ctrl.markupError"></tim-markup-error>
     <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
     <p class="stem" ng-if="::$ctrl.stem">{{::$ctrl.stem}}</p>
-    <form name="$ctrl.f" class="form-inline"><label>{{::$ctrl.inputstem}}<span>   
+    <form name="$ctrl.f" class="form-inline">
+    <label>{{::$ctrl.inputstem}}<span>   
         <input type="string"
+               ng-if="::!$ctrl.isPlainText()"
                class="form-control"
                ng-model="$ctrl.userword"
                ng-model-options="{ debounce: {'blur': 0} } "
-               ng-blur="$ctrl.autoSave()"
+               ng-blur="::$ctrl.autoSave()"
                ng-keydown="$event.keyCode === 13 && $ctrl.saveText()"
                ng-model-options="::$ctrl.modelOpts"
                ng-trim="false"
                ng-pattern="$ctrl.getPattern()"
-               ng-readonly="plaintextFrame: $ctrl.getLabelstyle || $ctrl.readonly"
+               ng-readonly="::$ctrl.readonly"
                uib-tooltip="{{ $ctrl.errormessage }}"
                tooltip-is-open="$ctrl.f.$invalid && $ctrl.f.$dirty"
                tooltip-trigger="mouseenter"
@@ -304,7 +306,8 @@ textfieldApp.component("textfieldRunner", {
                size="{{::$ctrl.cols}}" 
                ng-class="{warnFrame: ($ctrl.notSaved() && !$ctrl.redAlert), alertFrame: $ctrl.redAlert }">
                </span></label>
-        </form>
+         <span ng-if="::$ctrl.isPlainText()" style="font-weight:bold">{{$ctrl.userword}}</span>
+    </form>
     <button class="timButton"
             ng-if="$ctrl.buttonText()"
             ng-disabled="$ctrl.isRunning || $ctrl.readonly"

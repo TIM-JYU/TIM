@@ -37,6 +37,11 @@ input:focus.alertframe {
     border-color: red !important;
 }
 
+.plaintextFrame {
+    border: none;
+    box-shadow: none;
+}
+
 /*
 / Showing "Saved!" text until fadeOut.
 / Existing issue: can't redo Saved! text without page refresh.

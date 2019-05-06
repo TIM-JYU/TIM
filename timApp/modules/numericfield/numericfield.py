@@ -42,6 +42,7 @@ class NumericfieldMarkupModel(GenericMarkupModel):
     autosave: Union[bool, Missing] = missing
     inputchecker: Union[str, Missing] = missing
     userDefinedErrormsg: Union[str, Missing] = missing
+    labelStyle: Union[str, Missing] = missing
 
 class NumericfieldMarkupSchema(GenericMarkupSchema):
     points_array = fields.List(fields.List(fields.Number()))
@@ -55,6 +56,7 @@ class NumericfieldMarkupSchema(GenericMarkupSchema):
     autosave = fields.Boolean()
     inputchecker = fields.String(allow_none=True)
     userDefinedErrormsg = fields.String(allow_none=True)
+    labelStyle = fields.String(allow_none=True)
 
     @post_load
     def make_obj(self, data):
@@ -204,12 +206,13 @@ autosave: false #AUTOSAVE, POIS PÄÄLTÄ
 inputchecker: ^\d{0,3}(\.\d{0,3})?$ #KÄYTTÄJÄSYÖTTEEN RAJOITIN, TYHJÄ = EI RAJOITUSTA
 userDefinedErrormsg: #INPUTCHECKERIN VIRHESELITE, TYHJÄ = SELITE ON INPUTCHECKER
 ```""", """
-``` {#label plugin="numericfield" readonly=view}
+``` {#numericfield_label plugin="numericfield" readonly=view}
 followid: #SEURANTAID, TYHJÄ = EI SEURANTAID:tä
 needed_len: 1 #MINIMIPITUUS, NUMERAALINEN 
 initnumber: #ALKUARVO, TYHJÄ = EI ALKUARVOA
 cols: 5 #KENTÄN KOKO, NUMERAALINEN
 autosave: false #AUTOSAVE, POIS PÄÄLTÄ
+labelStyle: plaintext #LABELSTYLE, TYHJÄ = KENTTÄMUOTO, PLAINTEXT = TEKSTIMUOTO
 ```"""
 ]
     return jsonify({

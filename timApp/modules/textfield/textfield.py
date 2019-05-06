@@ -206,7 +206,7 @@ autosave: false #AUTOSAVE, POIS PÄÄLTÄ
 inputchecker: ^(hyv|hyl|[12345])$ #KÄYTTÄJÄSYÖTTEEN RAJOITIN, TYHJÄ = EI RAJOITUSTA
 userDefinedErrormsg: #INPUTCHECKERIN VIRHESELITE, TYHJÄ = SELITE ON INPUTCHECKER
 ```""", """
-``` {#label plugin="textfield" readonly=view}
+``` {#textfield_label plugin="textfield" readonly=view}
 followid: #SEURANTAID, TYHJÄ = EI SEURANTAID:tä
 needed_len: 1 #MINIMIPITUUS, NUMERAALINEN 
 initword: #ALKUARVO, TYHJÄ = EI ALKUARVOA
