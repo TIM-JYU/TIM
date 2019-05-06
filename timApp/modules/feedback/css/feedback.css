@@ -7,10 +7,6 @@ feedback-runner {
     display: none;
 }
 
-.fbanswer {
-    display: table;
-}
-
 .task {
     border-color: #33CCCC;
     border-style: solid;
@@ -23,7 +19,6 @@ feedback-runner {
 
 .pluginfeedback button {
     display: block;
-    /* margin-top: 2em; */
     margin-left: auto;
     margin-right: 130px;
 }

@@ -45,7 +45,6 @@ class FeedbackMarkupModel(GenericMarkupModel):
     matchElement: Union[Any, Missing] = missing
     instructionID: Union[Any, Missing] = missing
     correctStreak: Union[Any, Missing] = missing
-    teacherHide: Union[Any, Missing] = missing
     nextTask: Union[Any, Missing] = missing
     dragSource: Union[str, Missing] = missing
     shuffle: Union[bool, Missing] = missing
@@ -55,11 +54,10 @@ class FeedbackMarkupModel(GenericMarkupModel):
 class FeedbackMarkupSchema(GenericMarkupSchema):
     points_array = fields.List(fields.Number())
     questionItems = fields.Raw()
-    choice= fields.Raw()
-    matchElement= fields.Raw()
+    choice = fields.Raw()
+    matchElement = fields.Raw()
     instructionID = fields.Str()
     correctStreak = fields.Int()
-    teacherHide = fields.Bool()
     nextTask = fields.Str()
     dragSource = fields.Str()
     shuffle = fields.Bool()

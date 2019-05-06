@@ -5,7 +5,7 @@ import angular from "angular";
 import * as t from "io-ts";
 import {ITimComponent, ViewCtrl} from "tim/document/viewctrl";
 import {GenericPluginMarkup, nullable, PluginBase, withDefault, Info, pluginBindings} from "tim/plugin/util";
-import {$http, $timeout, $window} from "tim/util/ngimport";
+import {$http, $window} from "tim/util/ngimport";
 import {to} from "tim/util/utils";
 import {EditMode} from "tim/document/popupMenu";
 
@@ -35,11 +35,11 @@ const MatchElement = t.type({
     index: t.Integer,
 });
 
-interface MatchElementT extends t.TypeOf<typeof MatchElement> {
+interface IMatchElementT extends t.TypeOf<typeof MatchElement> {
 
 }
 
-// type MatchElementT = t.TypeOf<typeof MatchElement>;
+// type IMatchElementT = t.TypeOf<typeof MatchElement>;
 
 const MatchElementArray = t.array(MatchElement);
 
@@ -50,7 +50,7 @@ const Choice = t.type({
     match: t.union([StringArray, MatchElementArray]),
 });
 
-interface QuestionItemT extends t.TypeOf<typeof QuestionItem> {
+interface IQuestionItemT extends t.TypeOf<typeof QuestionItem> {
 
 }
 
@@ -70,7 +70,6 @@ const FeedbackMarkup = t.intersection([
         correctStreak: t.number,
         instructionID: t.string,
         nextTask: t.string,
-        pluginID: t.string,
         sampleItemID: t.string,
     }),
     GenericPluginMarkup,
@@ -80,12 +79,10 @@ const FeedbackMarkup = t.intersection([
         cols: withDefault(t.number, 20),
         questionItems: t.array(QuestionItem),
         shuffle: withDefault(t.boolean, true),
-        teacherHide: withDefault(t.boolean, true),
     }),
 ]);
 const FeedbackAll = t.intersection([
     t.partial({
-        // userword: t.string,
         state: nullable(t.type({answer: t.string, correct: t.boolean, feedback: t.string, sentence: t.string})),
     }),
     t.type({
@@ -96,7 +93,6 @@ const FeedbackAll = t.intersection([
 ]);
 
 class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.TypeOf<typeof FeedbackAll>, typeof FeedbackAll> implements ITimComponent {
-    private result?: string;
     private error?: string;
     private errormessage?: string;
     private vctrl!: ViewCtrl;
@@ -104,15 +100,13 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
     private feedback = "";
     private index: number = -2;
     private currentFeedbackLevel = 0;
-    private feedbackLevelRise = false;
     private pluginMode = Mode.Instruction;
-    // private showMode = "Instruction paragraph"; // for demo
     private answerArray: string[] = [];
     private userSelections: string[] = [];
     private correctAnswer = false;
     private correctAnswerString = "";
     private questionCount?: number;
-    private correctArray?: boolean[];
+    private isAnsweredArray?: boolean[];
     private streak = 0;
     private teacherRight: boolean = false;
     private feedbackMax = 0;
@@ -123,16 +117,20 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
     private btnText = "Begin";
     private instrHidden = false;
     private itemHidden = true;
-    private savedAnswer?: string;
+    private stateAnswer?: string;
+    private stateFeedback?: string;
+    private stateSentence?: string;
+    private stateCorrect?: boolean;
+    private saving = false;
 
     async $onInit() {
         super.$onInit();
         this.addToCtrl();
         this.setPluginWords();
         this.questionCount = this.attrs.questionItems.length;
-        this.correctArray = new Array(this.questionCount).fill(false);
+        this.isAnsweredArray = new Array(this.questionCount).fill(false);
         if (this.attrs.shuffle) {
-            const questionIndex = this.getRandomQuestion(this.correctArray);
+            const questionIndex = this.getRandomQuestion(this.isAnsweredArray);
             if (questionIndex !== undefined) {
                 this.index = questionIndex;
             }
@@ -141,7 +139,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
         }
 
         this.teacherRight = this.vctrl.item.rights.teacher;
-        if (!this.attrsall.preview && (!this.teacherRight || this.attrs.teacherHide)) {
+        if (!this.attrsall.preview) {
             this.hideQuestionItems();
         }
         this.checkCorrectAnswers();
@@ -159,7 +157,12 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
             await import("/feedback/css/viewhide.css" as any);
             this.vctrl.actionsDisabled = true;
         } else {
-            this.savedAnswer = this.getSavedAnswer();
+            if (this.attrsall.state != null) {
+                this.stateAnswer = this.attrsall.state.answer;
+                this.stateFeedback = this.attrsall.state.feedback;
+                this.stateSentence = this.attrsall.state.sentence;
+                this.stateCorrect = this.attrsall.state.correct;
+            }
         }
         this.showDocument();
     }
@@ -169,25 +172,6 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
      */
     addToCtrl() {
         this.vctrl.addTimComponent(this);
-    }
-
-    /**
-     * Get the current saved answer.
-     */
-    getSavedAnswer(): string | undefined {
-        let answer = undefined;
-        if (this.attrsall.state != null) {
-            answer = "";
-            answer += `${this.attrsall.state.answer}\n`;
-            console.log(answer);
-            answer += `${this.attrsall.state.correct}\n`;
-            console.log(answer);
-            answer += `${this.attrsall.state.feedback}\n`;
-            console.log(answer);
-            answer += this.attrsall.state.sentence;
-            console.log(answer);
-        }
-        return answer;
     }
 
     get autoupdate(): number {
@@ -218,7 +202,6 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
      */
     checkPlugins() {
         const items = this.attrs.questionItems;
-        console.log(items);
         for (let i = 0; i < items.length; i++) {
             if (items[i].pluginNames.length === 0 && !this.errormessage) {
                 this.errormessage = `Question item in index ${i} does not have any plugins defined`;
@@ -260,7 +243,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
             console.log(levelok);
             if (!levelok.every(x => x)) {
                 const index = levelok.indexOf(false);
-                this.errormessage = `${item} is missing feedback in index ${index}`
+                this.errormessage = `${item} is missing feedback in index ${index}`;
             }
         }
 
@@ -268,8 +251,6 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
 
     /**
      * Checks that the tasks question items correct choices have a match for every plugin.
-     *
-     * TODO: should this be for every match? Now they go to default feedback
      */
     checkCorrectAnswersCount() {
         const items = this.attrs.questionItems;
@@ -277,7 +258,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
             for (const choice of item.choices) {
                 if (choice.correct) {
                     if (item.pluginNames.length !== choice.match.length && !this.errormessage) {
-                        this.errormessage = `${item.pluginNames}'s correct answer is missing a match for some of its plugins`
+                        this.errormessage = `${item.pluginNames}'s correct answer is missing a match for some of its plugins`;
                     }
                 }
             }
@@ -294,7 +275,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
         if (id) {
             const instruction = this.vctrl.getTimComponentByName(id);
             if (!instruction && !this.errormessage)
-                this.errormessage = "Feedback plugin has instruction plugin defined but it cannot be found from the page."
+                this.errormessage = "Feedback plugin has instruction plugin defined but it cannot be found from the document.";
         }
         if (!id && instruction.length < 1 && !this.errormessage) {
             this.errormessage = "Missing an instruction block or it has no .instruction-class defined.";
@@ -309,7 +290,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
         for (const item of items) {
             const missing = item.choices.every(x => x.correct === false);
             if (missing && !this.errormessage) {
-                this.errormessage = `Question item (${item.pluginNames}) is missing the correct answer.`
+                this.errormessage = `A question item (${item.pluginNames}) is missing the correct answer.`;
             }
         }
     }
@@ -324,7 +305,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
         for (const item of items) {
             const defaultMatch = item.choices.filter(x => x.match.length === 0);
             if (defaultMatch.length === 0 && !this.errormessage) {
-                this.errormessage = `Question item (${item.pluginNames}) is missing default feedback.`
+                this.errormessage = `A question item (${item.pluginNames}) is missing default feedback.`;
             }
         }
     }
@@ -411,7 +392,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
     hideArea(area: string) {
         const areaElement = document.querySelectorAll(`.${area}`);
         if (areaElement.length > 0) {
-            this.hideParagraph(areaElement[0])
+            this.hideParagraph(areaElement[0]);
         }
     }
 
@@ -421,7 +402,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
     showArea(area: string) {
         const areaElement = document.querySelectorAll(`.${area}`);
         if (areaElement.length > 0) {
-            this.showParagraph(areaElement[0])
+            this.showParagraph(areaElement[0]);
         }
     }
 
@@ -445,7 +426,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
      * @param item Question item that the choices are being checked from.
      * @returns{number} The index of the correct match.
      */
-    getCorrectChoice(item: QuestionItemT): number | undefined {
+    getCorrectChoice(item: IQuestionItemT): number | undefined {
         for (let i = 0; i < item.choices.length; i++) {
             if (item.choices[i].correct) {
                 return i;
@@ -466,9 +447,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
     }
 
     async doSave(nosave: boolean, correct: boolean, sentence: string, answer: string) {
-        //this.error = "... saving ...";
-
-        this.result = undefined;
+        this.saving = true;
         const params = {
             input: {
                 nosave: false,
@@ -491,12 +470,13 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
             const data = r.result.data;
             this.error = data.web.error;
             if (data.web.error) {
+                this.saving = false;
                 return data.web.error;
             }
-            // this.result = data.web.result;
         } else {
             this.error = "Error connecting to the backend";
         }
+        this.saving = false;
     }
 
     /**
@@ -504,7 +484,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
      *
      * @param plugins plugins to be saved
      */
-    async savePlugins(plugins: QuestionItemT) {
+    async savePlugins(plugins: IQuestionItemT) {
         for (const p of plugins.pluginNames) {
             const plugin = this.vctrl.getTimComponentByName(p);
             if (plugin) {
@@ -526,25 +506,30 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
      * @returns{boolean} Whether the saving was succesful
      */
     async savePlugin(plugin: ITimComponent) {
+        this.saving = true;
         if (plugin.setForceAnswerSave) {
             plugin.setForceAnswerSave(true);
         }
         const failure = await plugin.save();
         if (failure) {
+            this.saving = false;
             return false;
         }
+        this.saving = false;
         return true;
     }
 
     /**
-     * Handles the checking of user's answer's correctness.
+     * Handles the checking of user's answer's correctness and cycles through the different modes in the plugin.
      *
-     * TODO: fix the task end logic in this....
      */
     async handleAnswer() {
-        this.savedAnswer = undefined;
+        const answer = document.querySelectorAll(".feedbackAnswer");
+        if (answer.length > 0) {
+            answer[0].setAttribute("style", "display:none");
+        }
         if (this.pluginMode === Mode.EndTask) {
-            const button = document.querySelectorAll(".fbButton");
+            const button = document.querySelectorAll(".feedbackButton");
             if (button.length > 0) {
                 this.hideParagraph(button[0]);
             }
@@ -567,7 +552,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
                     this.error = "Error saving a plugin";
                     return;
                 }
-                if (!this.teacherRight || this.attrs.teacherHide) {
+                if (!this.teacherRight || this.editMode == null) {
                     this.hideComponent(instructionQuestion);
                     this.instrHidden = true;
                 }
@@ -586,8 +571,6 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
             this.setButtonText("OK");
             this.printFeedback("");
             this.pluginMode = Mode.QuestionItem;
-            // For demonstration
-            // this.showMode = "Question item paragraph, question " + (this.index + 1);
             const area = this.attrs.questionItems[this.index].area;
             if (area) {
                 this.showArea(area);
@@ -599,12 +582,6 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
         }
 
         if (this.pluginMode === Mode.QuestionItem) {
-            //TODO: Is this actually ever triggered
-            if (this.index > this.attrs.questionItems.length) {
-                this.printFeedback("No more question items, thanks for playing");
-                this.pluginMode = Mode.EndTask;
-                return;
-            }
             const plugins = this.attrs.questionItems[this.index];
             if (!this.hasContent(plugins)) {
                 this.printFeedback("You need to provide an answer");
@@ -617,7 +594,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
             this.correctAnswerString = this.getSentence(this.answerArray, this.correctMap).join(" ");
             const matchIndex = this.compareChoices(this.index, selections);
 
-            if (!this.teacherRight || this.attrs.teacherHide) {
+            if (!this.teacherRight || this.editMode == null) {
                 const area = this.attrs.questionItems[this.index].area;
                 if (area) {
                     this.hideArea(area);
@@ -635,20 +612,17 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
                     const choice = plugins.choices[matchIndex];
                     const feedbackLevels = choice.levels;
                     if (choice.correct) {
-                        // TODO: Do you want to make more than one correct feedback?
                         this.printFeedback(feedbackLevels[feedbackLevels.length - 1]);
                         this.correctAnswer = true;
-                        this.correctArray![this.index] = true;
+                        this.isAnsweredArray![this.index] = true;
                         this.streak++;
-                        this.pluginMode = Mode.Feedback;
                     } else {
-                        // TODO: put this somewhere else maybe, also problems if the choice numbers differ in question items
                         this.printFeedback(feedbackLevels[this.currentFeedbackLevel++]);
                         this.correctAnswer = false;
-                        this.correctArray![this.index] = true;
+                        this.isAnsweredArray![this.index] = true;
                         this.streak = 0;
-                        this.pluginMode = Mode.Feedback;
                     }
+                    this.pluginMode = Mode.Feedback;
                 }
             }
 
@@ -658,8 +632,6 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
                 return;
             }
 
-            // For demonstration
-            // this.showMode = "Feedback paragraph";
             this.setButtonText("Continue");
             return;
         }
@@ -673,9 +645,10 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
 
             this.printFeedback("");
 
+            // Whether to give a question item in a random index or give consecutive ones.
             let questionIndex = undefined;
             if (this.attrs.shuffle) {
-                questionIndex = this.getRandomQuestion(this.correctArray || []);
+                questionIndex = this.getRandomQuestion(this.isAnsweredArray || []);
                 if (questionIndex !== undefined) {
                     this.index = questionIndex;
                 }
@@ -687,16 +660,12 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
             if (questionIndex === undefined || this.streak === this.attrs.correctStreak ||
                 this.currentFeedbackLevel === this.feedbackMax || this.index >= this.attrs.questionItems.length) {
                 this.pluginMode = Mode.EndTask;
-                // this.showMode = "End Task";
-                // this.printFeedback("The task has ended");
                 this.handleAnswer();
                 return;
             }
 
             this.setPluginWords();
 
-            // For demonstration
-            // this.showMode = "Question item paragraph, question " + (this.index + 1);
             this.pluginMode = Mode.QuestionItem;
             const area = this.attrs.questionItems[this.index].area;
             if (area) {
@@ -715,7 +684,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
      *
      * @param plugins Plugins to check.
      */
-    hasContent(plugins: QuestionItemT): boolean {
+    hasContent(plugins: IQuestionItemT): boolean {
         for (const p of plugins.pluginNames) {
             const plugin = this.vctrl.getTimComponentByName(p);
             if (plugin && plugin.getContent() === undefined) {
@@ -841,7 +810,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
      * @param match
      * @param answer
      */
-    checkMatchObjectArray(match: MatchElementT[], answer: string[]): number | undefined {
+    checkMatchObjectArray(match: IMatchElementT[], answer: string[]): number | undefined {
         return;
     }
 
@@ -986,7 +955,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
                             let plugin = this.vctrl.getTimComponentByName(name);
                             if (plugin) {
                                 if (plugin.getContentArray) {
-                                    let content = plugin.getContentArray();
+                                    const content = plugin.getContentArray();
                                     if (content !== undefined) {
                                         let contentString = "";
                                         for (const c of content) {
@@ -998,7 +967,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
                                         answer.push(name);
                                     }
                                 } else {
-                                    let content = plugin.getContent();
+                                    const content = plugin.getContent();
                                     if (content !== undefined) {
                                         values.set(name, content.trim());
                                         this.userSelections.push(content);
@@ -1110,15 +1079,15 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
                 if (timComponent) {
                     timComponent.resetField();
                 } else {
-                    this.errormessage = `No plugin with such a name(${item.dragSource})`;
+                    this.errormessage = `No drag source with such a name (${item.dragSource})`;
                 }
             }
         }
     }
 
     /**
-     * Check whether edit mode is on and show or hide instructions and question items based on it
-     * TODO: refactor
+     * Check whether edit mode is on and show or hide instructions and question items based on it.
+     * TODO: refactor?
      */
     async $doCheck() {
         if (!this.attrsall.preview && this.editMode != $window.editMode) {
@@ -1184,10 +1153,9 @@ feedbackApp.component("feedbackRunner", {
         vctrl: "^timView",
     },
     template: `
-<div uib-tooltip="{{$ctrl.errormessage}}"     
+<div uib-tooltip="{{$ctrl.errormessage}}"
      tooltip-is-open="$ctrl.f.$invalid && $ctrl.f.$dirty"
-     tooltip-placement="bottom"
-     tooltip-trigger="none">
+     tooltip-placement="bottom">
     <tim-markup-error ng-if="::$ctrl.markupError" data="::$ctrl.markupError"></tim-markup-error>
     <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
     <p ng-if="::$ctrl.stem">{{::$ctrl.stem}}</p>
@@ -1195,15 +1163,18 @@ feedbackApp.component("feedbackRunner", {
     <div class="form-inline">
     <span ng-bind-html="$ctrl.feedback"></span>
     </div>
-    <button class="timButton fbButton"
+    <button class="timButton feedbackButton"
             ng-if="::$ctrl.buttonText()"
             ng-click="$ctrl.handleAnswer()"
-            ng-disabled="$ctrl.errormessage || $ctrl.markupError">
+            ng-disabled="$ctrl.errormessage || $ctrl.markupError || $ctrl.saving">
         {{$ctrl.buttonText()}}
     </button>
-    <p class="fbanswer" ng-bind-html="$ctrl.savedAnswer" ng-model="$ctrl.savedAnswer"></p>
+    <div class="feedbackAnswer">
+    <p ng-bind-html="$ctrl.stateAnswer"></p>
+    <p ng-bind-html="$ctrl.stateFeedback"></p>
+    <p ng-bind-html="$ctrl.stateSentence"></p>
+    </div>
     <div class="wrong" ng-if="$ctrl.error" ng-bind-html="$ctrl.error"></div>
-    <pre ng-if="$ctrl.result">{{$ctrl.result}}</pre>
     <p ng-if="::$ctrl.footer" ng-bind="::$ctrl.footer"></p>
 </div>
 `,
