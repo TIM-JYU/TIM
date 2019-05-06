@@ -4,11 +4,16 @@ import json
 import os
 import posixpath
 from pathlib import Path, PurePosixPath
+from typing import List, Union
 from urllib.parse import unquote, urlparse
 
 import magic
 from flask import Blueprint, request, send_file, Response
+import attr
 from flask import abort
+from marshmallow import Schema, fields, post_load
+from marshmallow.utils import _Missing, missing
+from webargs.flaskparser import use_args
 from werkzeug.utils import secure_filename
 
 from timApp.auth.accesshelper import verify_view_access, verify_seeanswers_access, verify_task_access, \
@@ -27,7 +32,6 @@ from timApp.plugin.taskid import TaskId, TaskIdAccess
 from timApp.tim_app import app
 from timApp.timdb.sqa import db
 from timApp.upload.uploadedfile import UploadedFile, PluginUpload, PluginUploadInfo, StampedPDF
-from timApp.util.flask.requesthelper import verify_json_params
 from timApp.util.flask.responsehelper import json_response, ok_response
 from timApp.util.pdftools import StampDataInvalidError, default_stamp_format, AttachmentStampData, \
     PdfError, stamp_pdfs, create_new_tex_file, restamp_pdfs, stamp_model_default_path
@@ -220,27 +224,79 @@ def upload_file():
                 abort(400, str(e))
 
 
+class RestampAttachmentData():
+    def __init__(self, uploadUrl: str,
+                 issueNumber: int,
+                 attachmentLetter: str,
+                 upToDate: bool,):
+
+        self.uploadUrl = uploadUrl
+        self.issueNumber = issueNumber
+        self.attachmentLetter = attachmentLetter
+        self.upToDate = upToDate
+
+
+@attr.s(auto_attribs=True)
+class AttachmentModel:
+    issueNumber: int
+    attachmentLetter: str
+    uploadUrl: str
+    upToDate: bool
+
+
+@attr.s(auto_attribs=True)
+class RestampModel:
+    attachments: List[RestampAttachmentData]
+    meetingDate: str
+    stampFormat: Union[str, _Missing] = missing
+    customStampModel: Union[str, _Missing] = missing
+
+
+class AttachmentSchema(Schema):
+    uploadUrl = fields.Str(required=True)
+    issueNumber = fields.Int(required=True)
+    attachmentLetter = fields.Str(required=True)
+    upToDate = fields.Bool(required=False)
+
+    @post_load
+    def make_obj(self, data):
+        return AttachmentModel(**data)
+
+
+class RestampSchema(Schema):
+    attachments = fields.List(fields.Nested(AttachmentSchema, required=True))
+    meetingDate = fields.Str(required=True)
+    stampFormat = fields.Str(required=False)
+    customStampModel = fields.Str(required=False)
+
+    @post_load
+    def make_obj(self, data):
+        return RestampModel(**data)
+
+    class Meta:
+        strict = True
+
+
 @upload.route('/upload/restamp', methods=['POST'])
-def restamp_attachments():
+@use_args(RestampSchema())
+def restamp_attachments(args: RestampModel):
     """
     Route for updating stamps for one or more uploaded attachments.
     :return: Ok response or an error in stamping process.
     """
-    attachments, = verify_json_params('attachments')
-    meeting_date, = verify_json_params('meetingDate')
-    stamp_format, = verify_json_params('stampFormat')
-    custom_stamp_model_content, = verify_json_params('customStampModel', require=False)
+    attachments, meeting_date, stamp_format, custom_stamp_model_content = args.attachments, args.meetingDate, args.stampFormat, args.customStampModel
+
     if not stamp_format:
         stamp_format = default_stamp_format
     stamp_data_list = []
     attachment_folder = default_attachment_folder
     for a in attachments:
         stamp_data = AttachmentStampData(date=meeting_date,
-                                         attachment=a["attachmentLetter"],
-                                         issue=a["issueNumber"])
+                                         attachment=a.attachmentLetter,
+                                         issue=a.issueNumber)
         # Parse link path and find unstamped attachment.
         # In case of errors abort the whole process.
-        attachment_path = PurePosixPath(unquote(urlparse(a["uploadUrl"]).path))
+        attachment_path = PurePosixPath(unquote(urlparse(a.uploadUrl).path))
         try:
             stamp_data.file = attachment_folder / attachment_path.parts[-2] / attachment_path.parts[-1].replace("_stamped","")
         except IndexError:
