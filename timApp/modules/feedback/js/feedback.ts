@@ -78,6 +78,7 @@ const FeedbackMarkup = t.intersection([
         autoupdate: withDefault(t.number, 500),
         cols: withDefault(t.number, 20),
         questionItems: t.array(QuestionItem),
+        showAnswers: withDefault(t.boolean, false),
         shuffle: withDefault(t.boolean, true),
     }),
 ]);
@@ -94,7 +95,6 @@ const FeedbackAll = t.intersection([
 
 class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.TypeOf<typeof FeedbackAll>, typeof FeedbackAll> implements ITimComponent {
     private error?: string;
-    private errormessage?: string;
     private vctrl!: ViewCtrl;
     private userAnswer: string[] = [];
     private feedback = "";
@@ -122,6 +122,8 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
     private stateSentence?: string;
     private stateCorrect?: boolean;
     private saving = false;
+    private correctStreak = 3;
+    private showAnswers?: boolean;
 
     async $onInit() {
         super.$onInit();
@@ -137,14 +139,15 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
         } else {
             this.index = 0;
         }
-
+        if (this.attrs.correctStreak) {
+            this.correctStreak = this.attrs.correctStreak;
+        }
         this.teacherRight = this.vctrl.item.rights.teacher;
         if (!this.attrsall.preview) {
             this.hideQuestionItems();
         }
         this.checkCorrectAnswers();
         this.feedbackMax = this.checkFeedbackLevels();
-        this.checkFeedback();
         this.checkPlugins();
         this.checkCorrectAnswersCount();
         this.checkInstructions();
@@ -153,9 +156,15 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
         if (this.editMode != null) {
             this.edited = true;
         }
+        this.showAnswers = this.attrs.showAnswers;
+        if (!this.showAnswers) {
+            await import("/feedback/css/hideanswerbrowser.css" as any);
+        }
         if (!this.vctrl.item.rights.editable || !this.vctrl.item.rights.teacher) {
             await import("/feedback/css/viewhide.css" as any);
+            await import("/feedback/css/hideanswerbrowser.css" as any);
             this.vctrl.actionsDisabled = true;
+            this.vctrl.doingTask = true;
         } else {
             if (this.attrsall.state != null) {
                 this.stateAnswer = this.attrsall.state.answer;
@@ -203,8 +212,8 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
     checkPlugins() {
         const items = this.attrs.questionItems;
         for (let i = 0; i < items.length; i++) {
-            if (items[i].pluginNames.length === 0 && !this.errormessage) {
-                this.errormessage = `Question item in index ${i} does not have any plugins defined`;
+            if (items[i].pluginNames.length === 0 && !this.error) {
+                this.error = `Question item in index ${i} does not have any plugins defined`;
             }
         }
     }
@@ -225,28 +234,10 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
             }
         }
 
-        if (!levels.every(x => x === levels[0]) && !this.errormessage) {
-            this.errormessage = "Different number of feedback levels";
+        if (!levels.every(x => x === levels[0]) && !this.error) {
+            this.error = "Different number of feedback levels";
         }
         return levels[0];
-    }
-
-    /**
-     * Check that question items do not have feedback with no levels.
-     *
-     * TODO: Can this be checked because YAML warnings precede it?
-     */
-    checkFeedback() {
-        const items = this.attrs.questionItems;
-        for (const item of items) {
-            const levelok = item.choices.map(x => x.levels.length > 0);
-            console.log(levelok);
-            if (!levelok.every(x => x)) {
-                const index = levelok.indexOf(false);
-                this.errormessage = `${item} is missing feedback in index ${index}`;
-            }
-        }
-
     }
 
     /**
@@ -257,8 +248,8 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
         for (const item of items) {
             for (const choice of item.choices) {
                 if (choice.correct) {
-                    if (item.pluginNames.length !== choice.match.length && !this.errormessage) {
-                        this.errormessage = `${item.pluginNames}'s correct answer is missing a match for some of its plugins`;
+                    if (item.pluginNames.length !== choice.match.length && !this.error) {
+                        this.error = `${item.pluginNames}'s correct answer is missing a match for some of its plugins`;
                     }
                 }
             }
@@ -274,11 +265,11 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
 
         if (id) {
             const instruction = this.vctrl.getTimComponentByName(id);
-            if (!instruction && !this.errormessage)
-                this.errormessage = "Feedback plugin has instruction plugin defined but it cannot be found from the document.";
+            if (!instruction && !this.error)
+                this.error = "Feedback plugin has instruction plugin defined but it cannot be found from the document.";
         }
-        if (!id && instruction.length < 1 && !this.errormessage) {
-            this.errormessage = "Missing an instruction block or it has no .instruction-class defined.";
+        if (!id && instruction.length < 1 && !this.error) {
+            this.error = "Missing an instruction block or it has no .instruction-class defined.";
         }
     }
 
@@ -289,8 +280,8 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
         const items = this.attrs.questionItems;
         for (const item of items) {
             const missing = item.choices.every(x => x.correct === false);
-            if (missing && !this.errormessage) {
-                this.errormessage = `A question item (${item.pluginNames}) is missing the correct answer.`;
+            if (missing && !this.error) {
+                this.error = `A question item (${item.pluginNames}) is missing the correct answer.`;
             }
         }
     }
@@ -304,8 +295,8 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
         const items = this.attrs.questionItems;
         for (const item of items) {
             const defaultMatch = item.choices.filter(x => x.match.length === 0);
-            if (defaultMatch.length === 0 && !this.errormessage) {
-                this.errormessage = `A question item (${item.pluginNames}) is missing default feedback.`;
+            if (defaultMatch.length === 0 && !this.error) {
+                this.error = `A question item (${item.pluginNames}) is missing default feedback.`;
             }
         }
     }
@@ -605,7 +596,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
             }
 
             if (matchIndex === undefined) {
-                this.errormessage = "You have no choices defined, got no matches or using match objects";
+                this.error = "You have no choices defined, got no matches or using match objects";
             } else {
                 // Get the choice in matchIndex and the feedbacks assigned to it
                 if (matchIndex !== undefined) {
@@ -1071,7 +1062,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
                     }
                     i++;
                 } else {
-                    this.errormessage = `No plugin with such a name (${plugin}) or missing setPluginWords-method`;
+                    this.error = `No plugin with such a name (${plugin}) or missing setPluginWords-method`;
                 }
             }
             if (item.dragSource) {
@@ -1079,7 +1070,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
                 if (timComponent) {
                     timComponent.resetField();
                 } else {
-                    this.errormessage = `No drag source with such a name (${item.dragSource})`;
+                    this.error = `No drag source with such a name (${item.dragSource})`;
                 }
             }
         }
@@ -1153,10 +1144,9 @@ feedbackApp.component("feedbackRunner", {
         vctrl: "^timView",
     },
     template: `
-<div uib-tooltip="{{$ctrl.errormessage}}"
-     tooltip-is-open="$ctrl.f.$invalid && $ctrl.f.$dirty"
-     tooltip-placement="bottom">
+<div>
     <tim-markup-error ng-if="::$ctrl.markupError" data="::$ctrl.markupError"></tim-markup-error>
+    <div class="error" ng-if="$ctrl.error" ng-bind-html="$ctrl.error"></div>
     <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
     <p ng-if="::$ctrl.stem">{{::$ctrl.stem}}</p>
     <div>{{$ctrl.showMode}}</div>
@@ -1166,15 +1156,14 @@ feedbackApp.component("feedbackRunner", {
     <button class="timButton feedbackButton"
             ng-if="::$ctrl.buttonText()"
             ng-click="$ctrl.handleAnswer()"
-            ng-disabled="$ctrl.errormessage || $ctrl.markupError || $ctrl.saving">
+            ng-disabled="$ctrl.error || $ctrl.markupError || $ctrl.saving">
         {{$ctrl.buttonText()}}
     </button>
-    <div class="feedbackAnswer">
+    <div class="feedbackAnswer" ng-if="$ctrl.showAnswers">
     <p ng-bind-html="$ctrl.stateAnswer"></p>
     <p ng-bind-html="$ctrl.stateFeedback"></p>
     <p ng-bind-html="$ctrl.stateSentence"></p>
-    </div>
-    <div class="wrong" ng-if="$ctrl.error" ng-bind-html="$ctrl.error"></div>
+    </div>    
     <p ng-if="::$ctrl.footer" ng-bind="::$ctrl.footer"></p>
 </div>
 `,

@@ -49,6 +49,7 @@ class FeedbackMarkupModel(GenericMarkupModel):
     dragSource: Union[str, Missing] = missing
     shuffle: Union[bool, Missing] = missing
     area: Union[str, Missing] = missing
+    showAnswers: Union[bool, Missing] = missing
 
 
 class FeedbackMarkupSchema(GenericMarkupSchema):
@@ -62,6 +63,7 @@ class FeedbackMarkupSchema(GenericMarkupSchema):
     dragSource = fields.Str()
     shuffle = fields.Bool()
     area = fields.Str()
+    showAnswers = fields.Bool()
 
     @validates('points_array')
     def validate_points_array(self, value):
