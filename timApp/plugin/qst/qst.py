@@ -534,7 +534,7 @@ def qst_get_html(jso, review):
         result = NOLAZY + '<div class="review" ng-non-bindable><pre>' + usercode + '</pre>' + s + '</div>'
         return result
 
-    attrs = json.dumps(jso)
+    attrs = json.dumps(jso, sort_keys=True)
 
     runner = 'qst-runner'
     s = f'<{runner} json={quoteattr(attrs)}></{runner}>'
