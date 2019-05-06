@@ -1,0 +1,49 @@
+{
+  "name": "JSAV",
+  "version": "1.0.1",
+  "description": "JSAV - The JavaScript Algorithm Visualization Library",
+  "homepage": "http://jsav.io/",
+  "license": "MIT",
+  "author": "Ville Karavirta <ville@villekaravirta.com>",
+  "contributors": [
+    {
+      "name": "Cliff Shaffer"
+    },
+    {
+      "name": "Ville Karavirta",
+      "email": "ville@villekaravirta.com"
+    },
+    {
+      "name": "Matthew Micallef",
+      "email": "mattmicallef@outlook.com"
+    }
+  ],
+  "directories": {
+    "example": "Example usages of JSAV",
+    "test": "Unittests",
+    "src": "The JS sourcefiles"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/vkaravir/JSAV.git"
+  },
+  "bugs": {
+    "url": "https://github.com/vkaravir/JSAV/issues"
+  },
+  "scripts": {
+    "test": "grunt test"
+  },
+  "devDependencies": {
+    "grunt": "^1.0.1",
+    "grunt-contrib-concat": "^1.0.1",
+    "grunt-contrib-copy": "^1.0.0",
+    "grunt-contrib-csslint": "^2.0.0",
+    "grunt-contrib-jshint": "^1.1.0",
+    "grunt-contrib-qunit": "^2.0.0",
+    "grunt-contrib-uglify": "^3.2.1",
+    "grunt-contrib-watch": "^1.0.0",
+    "grunt-exec": "^3.0.0",
+    "grunt-gitinfo": "^0.1.8",
+    "load-grunt-tasks": "^3.5.2"
+  }
+}
