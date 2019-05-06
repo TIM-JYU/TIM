@@ -1,6 +1,7 @@
 """
 Routes related to handling faculty council documents, such as meeting invitations and minutes
 """
+import ast
 from pathlib import Path
 
 from flask import Blueprint, send_file, request
@@ -82,8 +83,7 @@ def create_minute_extracts(doc):
 
             new_extract_index = 0
             try:
-                new_extract_index = int(markdown[macro_position + len(markdown_to_find):comma_position].
-                                        replace("'", "").replace('"','').strip())
+                new_extract_index = int(ast.literal_eval(markdown[macro_position + len(markdown_to_find):comma_position]))
             except ValueError:
                 abort(400, f"Failed to parse extract index from macro, from paragraph: \n{markdown}")
 
