@@ -51,6 +51,7 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
     private errormessage = "";
     private isSaved = true;
     private redAlert = false;
+    private saveResponse: {saved:boolean, message: (string | undefined)} = {saved:false, message:undefined}
 
     getDefaultMarkup() {
         return { };
@@ -153,7 +154,9 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
             return this.doSaveText(false);
         }
         else {
-            return undefined;
+            this.saveResponse.saved = false;
+            this.saveResponse.message = undefined;
+            return this.saveResponse;
         }
     }
 
@@ -212,7 +215,8 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
             if(!this.validityCheck(this.attrs.inputchecker)) {
                 this.errormessage = this.attrs.userDefinedErrormsg || "Input does not pass the RegEx: " + this.attrs.inputchecker;
                 this.redAlert = true;
-                return this.errormessage;
+                this.saveResponse.message = this.errormessage;
+                return this.saveResponse;
             }
         }
         /* No visible text
@@ -239,10 +243,12 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
             this.notSavedNumber = this.numericvalue;
             this.isSaved = false;
             this.redAlert = false;
+            this.saveResponse.saved = true;
+            this.saveResponse.message = this.error;
         } else {
             this.errormessage = "Infinite loop or some other error?";
         }
-        return this.error;
+        return this.saveResponse;
     }
 
     protected getAttributeType() {

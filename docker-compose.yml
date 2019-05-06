@@ -10,7 +10,6 @@ services:
    - pali
    - textfield
    - numericfield
-   - omaplugin
    - multisave
    - showfile
    - haskellplugins
@@ -124,17 +123,6 @@ services:
    PYTHONPATH: /numericfield:/py:/usr/local/lib/python3.6/dist-packages
   command: ./startAll.sh
   restart: unless-stopped
- omaplugin:
-   image: timimages/tim:${TIM_IMAGE_TAG}
-   #build: ./timApp/modules/omaplugin
-   volumes:
-    - ./timApp/modules/omaplugin:/omaplugin:ro
-    - ./timApp/modules/py:/py:ro
-   working_dir: /omaplugin
-   environment:
-    PYTHONPATH: /omaplugin:/py:/usr/local/lib/python3.6/dist-packages
-   command: ./startAll.sh
-   restart: unless-stopped
  multisave:
   image: timimages/tim:${TIM_IMAGE_TAG}
   #build: ./timApp/modules/multisave

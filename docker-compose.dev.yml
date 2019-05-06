@@ -47,12 +47,8 @@ services:
   command: ${NUMERICFIELD_DEV_COMMAND:-/usr/sbin/sshd -D}
   ports:
    - "49989:22"
- omaplugin:
-  command: ${OMAPLUGIN_DEV_COMMAND:-/usr/sbin/sshd -D}
-  ports:
-   - "49910:22"
  multisave:
-  command: ${OMAPLUGIN_DEV_COMMAND:-/usr/sbin/sshd -D}
+  command: ${MULTISAVE_DEV_COMMAND:-/usr/sbin/sshd -D}
   ports:
    - "49961:22"
  jsrunner:

@@ -15,7 +15,6 @@ export UPLOADER_COMMAND=./StartAll.sh          # Startup command for uploader pl
 export CSPLUGIN_DEV_COMMAND=./startPlugins.sh  # Command to start csplugin when IS_DEVELOPMENT is true; use empty command if you want to debug it with SSH
 export TEXTFIELD_DEV_COMMAND=./startAll.sh     # Same as above but for textfield plugin
 export NUMERICFIELD_DEV_COMMAND=./startAll.sh    # Same as above but for savearea plugin
-export OMAPLUGIN_DEV_COMMAND=./startAll.sh     # Same as above but for pali plugin
 export MULTISAVE_DEV_COMMAND=./startAll.sh     # Same as above but for pali plugin
 export JSRUNNER_DEV_COMMAND=./startAll.sh     # Same as above but for jsrunner plugin
 export SVNPLUGIN_DEV_COMMAND=./startAll.sh     # Same as above but for svn plugin
