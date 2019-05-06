@@ -39,6 +39,7 @@ export class MultisaveController extends PluginBase<t.TypeOf<typeof multisaveMar
     private isSaved = false;
     private modelOpts!: INgModelOptions; // initialized in $onInit, so need to assure TypeScript with "!"
     private vctrl!: ViewCtrl;
+    private savedFields: number = 0;
 
     getDefaultMarkup() {
         return {};
@@ -117,18 +118,18 @@ export class MultisaveController extends PluginBase<t.TypeOf<typeof multisaveMar
 
         this.isSaved = false;
         let saveFailed = false;
-        let saves = 0;
+        this.savedFields = 0;
         for(const p of promises){
             const result = await p;
             if (result.saved){
-                saves++;
+                this.savedFields++;
             }
             if(result.message)
             {
                 saveFailed = true;
             }
         }
-        if(!saveFailed && saves!=0 ){
+        if(!saveFailed && this.savedFields!=0 ){
             this.isSaved = true;
         }
 
@@ -151,7 +152,7 @@ multisaveApp.component("multisaveRunner", {
             ng-click="$ctrl.save()">
         {{::$ctrl.buttonText()}}
     </button>
-    <pre class="savedtext" ng-if="$ctrl.isSaved">Saved!</pre>
+    <pre class="savedtext" ng-if="$ctrl.isSaved">Saved {{$ctrl.savedFields}} fields!</pre>
     <p ng-if="::$ctrl.footer" ng-bind="::$ctrl.footer" class="plgfooter"></p>
 </div>
 `,
