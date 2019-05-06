@@ -51,7 +51,7 @@ def post_process_pars(doc: Document, pars, user: User, sanitize=True, do_lazy=Fa
     # We define the environment here because it stays the same for each paragraph. This improves performance.
     env = create_environment(delimiter)
     for p in final_pars:  # update only user specific, because others are done in a cache pahes
-        if not p.is_plugin():  # TODO: Think if plugins still needs to expand macros?
+        if not p.is_plugin() and not p.is_setting():  # TODO: Think if plugins still needs to expand macros?
             # p.insert_rnds(0)
             no_macros = DocParagraph.is_no_macros(p.get_attrs(), doc_nomacros)
             if not no_macros:

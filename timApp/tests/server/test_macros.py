@@ -139,3 +139,16 @@ stem: Hi, %%username%%!
         tree = self.get(d.url, as_tree=True)
         plugins = tree.cssselect('cs-runner')
         self.assertEqual('Hi, testuser1!', decode_csplugin(plugins[0])['stem'])
+
+    def test_addforevery_only_settings(self):
+        self.login_test1()
+        x = self.create_doc(self.get_personal_item_path('x/y'))
+        d = self.create_preamble_for(x)
+        d.document.add_text("""
+#- {settings=""}
+#{%
+globalmacros:
+ ADDFOREVERY: hi
+        """)
+        r = self.get(d.url, as_tree=True)
+        self.assert_content(r, ['#{%\nglobalmacros:\n ADDFOREVERY: hi'])
