@@ -46,7 +46,6 @@ export interface ITimComponent {
     getContentArray?: () => string[] | undefined;
     getGroups: () => string[];
     belongsToGroup(group: string): boolean;
-    // save: () => Promise<string | undefined>;
     save: () => Promise<{saved: boolean, message: (string | undefined)}>;
     getPar: () => Paragraph;
     setPluginWords?: (words: string[]) => void;
