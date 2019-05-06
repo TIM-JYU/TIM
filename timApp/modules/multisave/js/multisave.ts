@@ -117,13 +117,18 @@ export class MultisaveController extends PluginBase<t.TypeOf<typeof multisaveMar
 
         this.isSaved = false;
         let saveFailed = false;
+        let saves = 0;
         for(const p of promises){
             const result = await p;
-            if (result != undefined){
+            if (result.saved){
+                saves++;
+            }
+            if(result.message)
+            {
                 saveFailed = true;
             }
         }
-        if(!saveFailed){
+        if(!saveFailed && saves!=0 ){
             this.isSaved = true;
         }
 

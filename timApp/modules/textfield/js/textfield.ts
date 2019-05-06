@@ -51,6 +51,7 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
     private errormessage = "";
     private isSaved = true;
     private redAlert = false;
+    private saveResponse: {saved:boolean, message: (string | undefined)} = {saved:false, message:undefined}
 
     getDefaultMarkup() {
         return {};
@@ -149,12 +150,15 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
      * Redirects save request to actual save method.
      * Used as e.g. timButton ng-click event.
      */
-    saveText() {
+    async saveText() {
         if (this.notSaved()) {
             return this.doSaveText(false);
         }
         else {
-            return undefined;
+            // return {saved: false, message:undefined};
+            this.saveResponse.saved = false;
+            this.saveResponse.message = undefined;
+            return this.saveResponse;
         }
     }
 
@@ -214,7 +218,8 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
             if(!this.validityCheck(this.attrs.inputchecker)) {
                 this.errormessage = this.attrs.userDefinedErrormsg || "Input does not pass the RegEx: " + this.attrs.inputchecker;
                 this.redAlert = true;
-                return this.errormessage;
+                this.saveResponse.message = this.errormessage;
+                return this.saveResponse;
             }
         }
         /* No visible text version
@@ -234,6 +239,7 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
         const url = this.pluginMeta.getAnswerUrl();
         const r = await to($http.put<{web: {result: string, error?: string}}>(url, params));
         this.isRunning = false;
+        // let saveResponse:   = {"saved":false, "message": undefined};
         if (r.ok) {
             const data = r.result.data;
             this.error = data.web.error;
@@ -241,10 +247,13 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
             this.notSavedWord = this.userword;
             this.isSaved = false;
             this.redAlert = false;
+            this.saveResponse.saved = true;
+            this.saveResponse.message = this.error;
         } else {
             this.errormessage = r.result.data.error || "Infinite loop or some other error?";
         }
-        return this.error;
+        // return this.error;
+        return this.saveResponse;
     }
 
     protected getAttributeType() {
