@@ -872,7 +872,8 @@ ${backTicks}
                     this.activeAttachments.every((att) => att.upToDate = true);
                     return;
                 }
-                if (r.valueOf() === RestampDialogClose.NoRestampingReturnToEditor.valueOf()) {
+                if (r.valueOf() === RestampDialogClose.NoRestampingReturnToEditor.valueOf() ||
+                    r.valueOf() === RestampDialogClose.RestampingFailedReturnToEditor.valueOf()) {
                     this.saving = false;
                     // If returned to editor without restamping, return to state prior to saving.
                     this.activeAttachments = tempAttachments;

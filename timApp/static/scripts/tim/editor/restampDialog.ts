@@ -12,6 +12,7 @@ import {$http} from "../util/ngimport";
 export enum RestampDialogClose {
     RestampedReturnToEditor,
     NoRestampingReturnToEditor,
+    RestampingFailedReturnToEditor,
     SaveAndExit,
 }
 
@@ -85,11 +86,15 @@ export class RestampDialogController extends DialogController<{params: IStamping
     }
 
     private returnToEditor() {
+        if (this.stampingDone && this.errorMessage) {
+            this.close(RestampDialogClose.RestampingFailedReturnToEditor);
+            return;
+        }
         if (this.stampingDone) {
             this.close(RestampDialogClose.RestampedReturnToEditor);
-        } else {
-            this.close(RestampDialogClose.NoRestampingReturnToEditor);
+            return;
         }
+        this.close(RestampDialogClose.NoRestampingReturnToEditor);
     }
 
     private saveAndExit() {
