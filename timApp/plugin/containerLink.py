@@ -69,7 +69,6 @@ def get_plugins():
             "pali": {"host": "http://" + PALIPLUGIN_NAME + ":5000/"},
             "textfield": {"host": "http://" + TEXTFIELDPLUGIN_NAME + ":5000/"},
             "numericfield": {"host": "http://" + NUMERICFIELDPLUGIN_NAME + ":5000/"},
-            "omaplugin": {"host": "http://" + OMAPLUGINPLUGIN_NAME + ":5000/"},
             "multisave": {"host": "http://" + MULTISAVEPLUGIN_NAME + ":5000/"},
             "jsrunner": {"host": "http://" + JSRUNNERPLUGIN_NAME + ":5000/"},
             "imagex": {"host": "http://" + IMAGEXPLUGIN_NAME + ":5000/"},
