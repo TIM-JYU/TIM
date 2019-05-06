@@ -1,5 +1,5 @@
 """
-The JSAV animations plugin
+TIM example plugin: a palindrome checker.
 """
 import os
 import re
@@ -17,24 +17,24 @@ from pluginserver_flask import GenericMarkupModel, GenericMarkupSchema, GenericH
 
 
 @attr.s(auto_attribs=True)
-class JsavStateModel:
+class PaliStateModel:
     """Model for the information that is stored in TIM database for each answer."""
     userword: str
 
 
-class JsavStateSchema(Schema):
+class PaliStateSchema(Schema):
     userword = fields.Str(required=True)
 
     @post_load
     def make_obj(self, data):
-        return JsavStateModel(**data)
+        return PaliStateModel(**data)
 
     class Meta:
         strict = True
 
 
 @attr.s(auto_attribs=True)
-class JsavMarkupModel(GenericMarkupModel):
+class PaliMarkupModel(GenericMarkupModel):
     points_array: Union[str, Missing] = missing
     inputstem: Union[str, Missing] = missing
     needed_len: Union[int, Missing] = missing
@@ -43,7 +43,7 @@ class JsavMarkupModel(GenericMarkupModel):
     inputplaceholder: Union[str, Missing] = missing
 
 
-class JsavMarkupSchema(GenericMarkupSchema):
+class PaliMarkupSchema(GenericMarkupSchema):
     points_array = fields.List(fields.List(fields.Number()))
     inputstem = fields.Str()
     needed_len = fields.Int()
@@ -58,21 +58,21 @@ class JsavMarkupSchema(GenericMarkupSchema):
 
     @post_load
     def make_obj(self, data):
-        return JsavMarkupModel(**data)
+        return PaliMarkupModel(**data)
 
     class Meta:
         strict = True
 
 
 @attr.s(auto_attribs=True)
-class JsavInputModel:
+class PaliInputModel:
     """Model for the information that is sent from browser (plugin AngularJS component)."""
     userword: str
     paliOK: bool = missing
     nosave: bool = missing
 
 
-class JsavInputSchema(Schema):
+class PaliInputSchema(Schema):
     userword = fields.Str(required=True)
     paliOK = fields.Bool()
     nosave = fields.Bool()
@@ -84,25 +84,25 @@ class JsavInputSchema(Schema):
 
     @post_load
     def make_obj(self, data):
-        return JsavInputModel(**data)
+        return PaliInputModel(**data)
 
 
 class PaliAttrs(Schema):
     """Common fields for HTML and answer routes."""
-    markup = fields.Nested(JsavMarkupSchema)
-    state = fields.Nested(JsavStateSchema, allow_none=True, required=True)
+    markup = fields.Nested(PaliMarkupSchema)
+    state = fields.Nested(PaliStateSchema, allow_none=True, required=True)
 
     class Meta:
         strict = True
 
 
 @attr.s(auto_attribs=True)
-class JsavHtmlModel(GenericHtmlModel[JsavInputModel, JsavMarkupModel, JsavStateModel]):
+class PaliHtmlModel(GenericHtmlModel[PaliInputModel, PaliMarkupModel, PaliStateModel]):
     def get_component_html_name(self) -> str:
         return 'jsav-runner'
 
     def get_static_html(self) -> str:
-        return render_static_jsav(self)
+        return render_static_pali(self)
 
     def get_browser_json(self):
         r = super().get_browser_json()
@@ -114,36 +114,36 @@ class JsavHtmlModel(GenericHtmlModel[JsavInputModel, JsavMarkupModel, JsavStateM
         strict = True
 
 
-class JsavHtmlSchema(PaliAttrs, GenericHtmlSchema):
+class PaliHtmlSchema(PaliAttrs, GenericHtmlSchema):
     info = fields.Nested(InfoSchema, allow_none=True, required=True)
 
     @post_load
     def make_obj(self, data):
         # noinspection PyArgumentList
-        return JsavHtmlModel(**data)
+        return PaliHtmlModel(**data)
 
     class Meta:
         strict = True
 
 
 @attr.s(auto_attribs=True)
-class JsavAnswerModel(GenericAnswerModel[JsavInputModel, JsavMarkupModel, JsavStateModel]):
+class PaliAnswerModel(GenericAnswerModel[PaliInputModel, PaliMarkupModel, PaliStateModel]):
     pass
 
 
-class JsavAnswerSchema(PaliAttrs, GenericAnswerSchema):
-    input = fields.Nested(JsavInputSchema, required=True)
+class PaliAnswerSchema(PaliAttrs, GenericAnswerSchema):
+    input = fields.Nested(PaliInputSchema, required=True)
 
     @post_load
     def make_obj(self, data):
         # noinspection PyArgumentList
-        return JsavAnswerModel(**data)
+        return PaliAnswerModel(**data)
 
     class Meta:
         strict = True
 
 
-def render_static_jsav(m: JsavHtmlModel):
+def render_static_pali(m: PaliHtmlModel):
     return render_template_string(
         """
 <div class="csRunDiv no-popup-menu">
@@ -163,12 +163,12 @@ def render_static_jsav(m: JsavHtmlModel):
     )
 
 
-app = create_app(__name__, JsavHtmlSchema())
+app = create_app(__name__, PaliHtmlSchema())
 
 
 @app.route('/answer/', methods=['put'])
-@use_args(JsavAnswerSchema(strict=True), locations=("json",))
-def answer(args: JsavAnswerModel):
+@use_args(PaliAnswerSchema(strict=True), locations=("json",))
+def answer(args: PaliAnswerModel):
     web = {}
     result = {'web': web}
     needed_len = args.markup.needed_len
@@ -213,10 +213,10 @@ def check_letters(word: str, needed_len: int) -> bool:
 def reqs():
     templates = ["""
 ``` {#ekapali plugin="jsav"}
-header: Kirjoita testi
+header: Kirjoita palindromi
 stem: Kirjoita palindromi, jossa on 5 kirjainta.
 -points_array: [[0, 0.1], [0.6, 1]]
-inputstem: "Testisi:"
+inputstem: "Palindromisi:"
 needed_len: 5
 answerLimit: 3
 initword: muikku

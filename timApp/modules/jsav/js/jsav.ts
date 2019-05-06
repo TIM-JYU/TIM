@@ -15,10 +15,10 @@ import {$http} from "tim/util/ngimport";
 import {to} from "tim/util/utils";
 import {valueDefu} from "tim/util/utils";
 
-const jsavApp = angular.module("jsavApp", ["ngSanitize"]);
-export const moduleDefs = [jsavApp];
+const paliApp = angular.module("paliApp", ["ngSanitize"]);
+export const moduleDefs = [paliApp];
 
-const JsavMarkup = t.intersection([
+const PaliMarkup = t.intersection([
     t.partial({
         initword: t.string,
         inputplaceholder: nullable(t.string),
@@ -31,12 +31,12 @@ const JsavMarkup = t.intersection([
         cols: withDefault(t.number, 20),
     }),
 ]);
-const JsavAll = t.intersection([
+const PaliAll = t.intersection([
     t.partial({
         userword: t.string,
     }),
     GenericPluginTopLevelFields,
-    t.type({markup: JsavMarkup}),
+    t.type({markup: PaliMarkup}),
 ]);
 
 function isPalindrome(s: string) {
@@ -50,7 +50,7 @@ function isPalindrome(s: string) {
     return true;
 }
 
-class JsavController extends PluginBase<t.TypeOf<typeof JsavMarkup>, t.TypeOf<typeof JsavAll>, typeof JsavAll> {
+class PaliController extends PluginBase<t.TypeOf<typeof PaliMarkup>, t.TypeOf<typeof PaliAll>, typeof PaliAll> {
     private result?: string;
     private error?: string;
     private isRunning = false;
@@ -142,13 +142,13 @@ class JsavController extends PluginBase<t.TypeOf<typeof JsavMarkup>, t.TypeOf<ty
     }
 
     protected getAttributeType() {
-        return JsavAll;
+        return PaliAll;
     }
 }
 
-jsavApp.component("jsavRunner", {
+paliApp.component("paliRunner", {
     bindings: pluginBindings,
-    controller: JsavController,
+    controller: PaliController,
     template: `
 <div class="csRunDiv no-popup-menu">
     <tim-markup-error ng-if="::$ctrl.markupError" data="::$ctrl.markupError"></tim-markup-error>
