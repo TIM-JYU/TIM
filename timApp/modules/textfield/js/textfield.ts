@@ -21,6 +21,7 @@ const TextfieldMarkup = t.intersection([
         buttonText: nullable(t.string),
         inputchecker: nullable(t.string),
         userDefinedErrormsg: nullable(t.string),
+        labelStyle: nullable(t.string),
         autosave: t.boolean,
     }),
     GenericPluginMarkup,
@@ -174,6 +175,16 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
         }
     }
 
+    // noinspection JSUnusedGlobalSymbols
+    /**
+     * Returns true value, if label is set to plaintext.
+     * Used to define labelstyles in angular.
+     * Unused method warning is suppressed, as the method is only called in template.
+     */
+    getLabelStyle() {
+        return (this.attrs.labelStyle == "plaintext");
+    }
+
     /**
      * Method to check grading input type for textfield.
      * Used as e.g. grading checker for hyv | hyl | 1 | 2 | 3 | 4 | 5.
@@ -285,7 +296,7 @@ textfieldApp.component("textfieldRunner", {
                ng-model-options="::$ctrl.modelOpts"
                ng-trim="false"
                ng-pattern="$ctrl.getPattern()"
-               ng-readonly="::$ctrl.readonly"
+               ng-readonly="plaintextFrame: $ctrl.getLabelstyle || $ctrl.readonly"
                uib-tooltip="{{ $ctrl.errormessage }}"
                tooltip-is-open="$ctrl.f.$invalid && $ctrl.f.$dirty"
                tooltip-trigger="mouseenter"

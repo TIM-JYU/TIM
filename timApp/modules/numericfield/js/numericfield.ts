@@ -281,7 +281,7 @@ numericfieldApp.component("numericfieldRunner", {
             ng-click="$ctrl.saveText()">
         {{::$ctrl.buttonText()}}
     </button>
-    <p class="savedtext" ng-if="$ctrl.isSaved && $ctrl.buttonText()">Saved!</p> 
+    <p class="savedtext" ng-if="!$ctrl.isSaved && $ctrl.buttonText()">Saved!</p> 
     <p ng-if="::$ctrl.footer" ng-bind="::$ctrl.footer" class="plgfooter"></p>
 </div> `,
 });
