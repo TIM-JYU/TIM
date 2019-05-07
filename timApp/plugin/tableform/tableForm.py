@@ -161,7 +161,7 @@ class TableFormHtmlModel(GenericHtmlModel[TableFormInputModel, TableFormMarkupMo
             for f in userfields:
                 rows[f['user'].name] = f['fields']
             r['rows'] = rows
-            r['fields'] = [];
+            r['fields'] = []
             for field in self.markup.fields: #Todo check if simpler way to simply add missing docid prefix to field
                 task_id = TaskId.parse(field, False, False)
                 if not task_id.doc_id:

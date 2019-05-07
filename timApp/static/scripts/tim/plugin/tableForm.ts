@@ -79,6 +79,7 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
         this.setDataMatrix();
     }
 
+
     setDataMatrix() {
         this.timTableData = {'tableForm': 'true'}
         // for (const row in this.rows){
@@ -104,26 +105,27 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
         //         }
         //     }
         // }
+        var x = 2;
+        for (const r of Object.keys(this.rows)) {
+            this.data.userdata['cells']['A' + x] = r;
+            x++;
+        }
         if (this.attrsall.fields) {
             for (var y = 0; y < this.attrsall.fields.length; y++) {
-                this.data.userdata['cells'][this.colnumToLetters(y + 1) + 1] = this.attrsall.fields[y]
-                var x = 0;
-                for (const r of Object.values(this.rows)) {
-                    // @ts-ignore //TODO fix ignores
+                this.data.userdata['cells'][this.colnumToLetters(y + 1) + 1] = this.attrsall.fields[y];
+                x = 0;
+                for (const [u,r] of Object.entries(this.rows)) {
+                    // @ts-ignore
                     if (r[this.attrsall.fields[y]]) {
                         // @ts-ignore
-                        this.data.userdata['cells'][this.colnumToLetters(y + 1) + (x + 2)] = r[this.attrsall.fields[y]]
+                        this.data.userdata['cells'][this.colnumToLetters(y + 1) + (x + 2)] = r[this.attrsall.fields[y]];
+
                     }
                     x++;
                 }
             }
         }
-        var x = 2;
-        for (const r of Object.keys(this.rows)) {
-            // @ts-ignore //TODO fix ignores
-            this.data.userdata['cells']['A' + x] = r
-            x++;
-        }
+
 
         console.log("asd");
     }
@@ -197,28 +199,60 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
 
     async doSaveText(nosave: boolean) {
         this.error = "... saving ...";
-        this.isRunning = true;
-        this.result = undefined;
+        const keys = Object.keys(this.data.userdata.cells)
+        keys.sort();
+        const userLocations = {}
+        const taskLocations = {}
+        const replyRow = {}
+        for(const coord of keys)
+        {
+            const alphaRegExp = new RegExp("([A-Z]*)");
+            const alpha = alphaRegExp.exec(coord);
+            const value = coord;
+
+            if (alpha == null) {
+                continue;
+            }
+            const columnPlace = alpha[0];
+            const numberPlace = coord.substring(columnPlace.length);
+            if (columnPlace === "A"){
+                // @ts-ignore
+                userLocations[numberPlace] = this.data.userdata.cells[coord];
+                // @ts-ignore
+                replyRow[this.data.userdata.cells[coord]] = {};
+            }
+            else if (numberPlace === "1"){
+                // @ts-ignore
+                taskLocations[columnPlace] = this.data.userdata.cells[coord];
+            }
+            else{
+                // @ts-ignore
+                replyRow[userLocations[numberPlace]][taskLocations[columnPlace]] = this.data.userdata.cells[coord];
+            }
+        }
+        console.log("asd");
+        // this.isRunning = true;
+        // this.result = undefined;
         const params = {
             input: {
                 nosave: false,
-                userfilter: this.userfilter,
+                replyRow: replyRow,
             },
         };
-
-        if (nosave) {
-            params.input.nosave = true;
-        }
+        //
+        // if (nosave) {
+        //     params.input.nosave = true;
+        // }
         const url = this.pluginMeta.getAnswerUrl();
         const r = await to($http.put<{ web: { result: string, error?: string } }>(url, params));
-        this.isRunning = false;
-        if (r.ok) {
-            const data = r.result.data;
-            this.error = data.web.error;
-            this.result = data.web.result;
-        } else {
-            this.error = "Infinite loop or some other error?";
-        }
+        // this.isRunning = false;
+        // if (r.ok) {
+        //     const data = r.result.data;
+        //     this.error = data.web.error;
+        //     this.result = data.web.result;
+        // } else {
+        //     this.error = "Infinite loop or some other error?";
+        // }
     }
 
     protected getAttributeType() {
