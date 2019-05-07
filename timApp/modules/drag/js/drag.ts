@@ -67,7 +67,7 @@ class DragController extends PluginBase<t.TypeOf<typeof DragMarkup>, t.TypeOf<ty
     private max?: number;
     private copy?: string;
     private trash?: boolean;
-    private saveButton?: boolean
+    private saveButton?: boolean;
     private shuffle?: boolean;
     private effectAllowed?: string;
     private vctrl!: ViewCtrl;
@@ -149,7 +149,7 @@ class DragController extends PluginBase<t.TypeOf<typeof DragMarkup>, t.TypeOf<ty
      * @param words Array of strings to be transformed into draggable models.
      */
     createWordobjs(words: string[]){
-        if (!words){
+        if (!words) {
             return;
             //TODO: error message or default word objects?
         }
@@ -201,7 +201,7 @@ class DragController extends PluginBase<t.TypeOf<typeof DragMarkup>, t.TypeOf<ty
      * Returns contained words as a string array
      * @returns {string} The words
      */
-    getContentArray(): string[] | undefined {
+    getContentArray(): string[] {
         let words: string[];
         words = [];
         if (this.wordObjs) {
@@ -209,7 +209,7 @@ class DragController extends PluginBase<t.TypeOf<typeof DragMarkup>, t.TypeOf<ty
                 words.push(el.word);
             });
         }
-        if (words.length === 0) return undefined;
+        // if (words.length === 0) return undefined;
         return words;
     }
     /**
@@ -285,7 +285,7 @@ class DragController extends PluginBase<t.TypeOf<typeof DragMarkup>, t.TypeOf<ty
                 return data.web.error;
             }
         } else {
-            this.error = "Saving error, no saveable content or some other error.";
+            this.error = "Saving error.";
         }
     }
 
@@ -321,10 +321,10 @@ dragApp.component("dragRunner", {
         </li>
      </ul>
     </div>
-        <button class="timButton"
+    <button class="timButton"
             ng-if="::$ctrl.saveButton"
             ng-click="$ctrl.save()">
-        Save
+            Save
     </button>
     </div>
     <div ng-if="$ctrl.error" ng-bind-html="$ctrl.error"></div>
