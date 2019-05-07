@@ -10,6 +10,7 @@ router.put('/', function (req, res, next) {
     const currDoc = doc.match(regex);
     const program = req.body.markup.program;
     const markup = req.body.markup;
+    console.log(markup);
 
     const {NodeVM} = require('vm2');
     const vm = new NodeVM({
