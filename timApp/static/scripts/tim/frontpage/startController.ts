@@ -9,6 +9,7 @@ import {$http, $localStorage, $window} from "../util/ngimport";
 import {to} from "../util/utils";
 import {ngStorage} from "ngstorage";
 import {Users} from "../user/userService";
+import {showLoginDialog} from "../user/loginDialog";
 
 markAsUsed(createItem);
 
@@ -88,6 +89,24 @@ export class StartCtrl implements IController {
         this.storage.languageStorage = changeTo;
     }
 
+    openLoginDialog() {
+        if (!this.isLoggedIn()) {
+            void showLoginDialog(false);
+        }
+        else {
+            void showMessageDialog(`You are already logged in`);
+        }
+    }
+
+    openSignupDialog() {
+        if (!this.isLoggedIn()) {
+            void showLoginDialog(true);
+        }
+        else {
+            void showMessageDialog(`You are already logged in`);
+        }
+    }
+
     /**
      * Opens 'Available courses' dialog.
      */
@@ -162,7 +181,10 @@ timApp.component("timStart", {
                 </div>
                 <div ng-switch-when="fi">
                     <h3>Aloitus</h3>
-                    <login-menu ng-if="!$ctrl.isLoggedIn()" button-text="Kirjaudu / Rekisteröidy"></login-menu>
+                    <button ng-if="!$ctrl.isLoggedIn()" ng-click="$ctrl.openLoginDialog()" type="button"
+                        class="timButton margin-4">Kirjaudu</button>
+                    <button ng-if="!$ctrl.isLoggedIn()" ng-click="$ctrl.openSignupDialog()" type="button"
+                        class="timButton margin-4">Luo TIM-tili</button>
                     <ul class="list-unstyled">
                         <li ng-if="$ctrl.isLoggedIn()" class="h5">
                             <a href="/view/{{$ctrl.getCurrentUserFolderPath()}}">Omat dokumentit</a>

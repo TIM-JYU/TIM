@@ -37,6 +37,7 @@ import {RefPopupHandler} from "./refpopup";
 import {MenuFunctionEntry} from "./viewutils";
 import {initSlideView} from "./slide";
 import {DiffController} from "./diffDialog";
+import {showLoginDialog} from "../user/loginDialog";
 
 markAsUsed(ngs, popupMenu, interceptor, helpPar);
 
@@ -652,6 +653,13 @@ export class ViewCtrl implements IController {
         const key = prefix + a.annotation.id;
         this.anns.delete(key);
         this.annsDefers.delete(key);
+    }
+
+    /**
+     * Check whether the current user is logged in.
+     */
+    isLoggedIn() {
+        return Users.isLoggedIn();
     }
 }
 
