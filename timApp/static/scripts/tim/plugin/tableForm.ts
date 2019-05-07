@@ -203,7 +203,7 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
         keys.sort();
         const userLocations = {}
         const taskLocations = {}
-        const replyRow = {}
+        const replyRows = {}
         for(const coord of keys)
         {
             const alphaRegExp = new RegExp("([A-Z]*)");
@@ -219,7 +219,7 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
                 // @ts-ignore
                 userLocations[numberPlace] = this.data.userdata.cells[coord];
                 // @ts-ignore
-                replyRow[this.data.userdata.cells[coord]] = {};
+                replyRows[this.data.userdata.cells[coord]] = {};
             }
             else if (numberPlace === "1"){
                 // @ts-ignore
@@ -227,7 +227,7 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
             }
             else{
                 // @ts-ignore
-                replyRow[userLocations[numberPlace]][taskLocations[columnPlace]] = this.data.userdata.cells[coord];
+                replyRows[userLocations[numberPlace]][taskLocations[columnPlace]] = this.data.userdata.cells[coord];
             }
         }
         console.log("asd");
@@ -236,7 +236,7 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
         const params = {
             input: {
                 nosave: false,
-                replyRow: replyRow,
+                replyRows: replyRows,
             },
         };
         //

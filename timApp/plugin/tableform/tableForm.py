@@ -67,20 +67,18 @@ class TableFormMarkupSchema(GenericMarkupSchema):
 class TableFormInputModel:
     """Model for the information that is sent from browser (plugin AngularJS component)."""
     #answers:
-    userword: str
-    tableFormOK: bool = missing
+    replyRows: dict
     nosave: bool = missing
 
 
 class TableFormInputSchema(Schema):
-    userword = fields.Str(required=True)
-    tableFormOK = fields.Bool()
     nosave = fields.Bool()
+    replyRows = fields.Dict();
 
-    @validates('userword')
-    def validate_userword(self, word):
-        if not word:
-            raise ValidationError('Must not be empty.')
+    # @validates('userword')
+    # def validate_userword(self, word):
+    #     if not word:
+    #         raise ValidationError('Must not be empty.')
 
     @post_load
     def make_obj(self, data):
@@ -234,10 +232,14 @@ tableForm_plugin = create_blueprint(__name__, 'tableForm', TableFormHtmlSchema()
 
 @tableForm_plugin.route('/answer/', methods=['put'])
 @csrf.exempt
-def answer():
+@use_args(TableFormAnswerSchema(strict=True), locations=("json",))
+def answer(args: TableFormInputModel):
     args2 = request.get_json() #TODO: Schema/Model
-    # TODO: Calculate cells (user/task), or use previous calculation from TableFormHtmlModel
-    # TODO: Save incoming userdata by sending cell data to right task/user
+    rows = args.input.replyRows
+    saveRows = []
+    for u, r in rows.items():
+        user = User.get_by_name(u)
+        saveRows.append({'user':user.id, 'fields':r})
     #{"userdata": {"type": "Relative", "cells": {"C6": "kissa", "C7": "asd"}}}
     #args2.input.userdata.cells....
     #args2 = <class 'dict'>: {'markup': {'answerLimit': 3, 'initword': 'muikku'}, 'state': None, 'input': {'answers': {'userdata': {'type': 'Relative', 'cells': {'A4': 'koira', 'A5': 'kissa', 'B5': 'kana'}}}}, 'taskID': '92.ekatableForm', 'info': {'earlier_answers': 0, 'max_answers': 3, 'current_user_id': 'sijualle', 'user_id': 'sijualle', 'look_answer': False, 'valid': True}}
