@@ -776,6 +776,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
         } */
         if (match.length === answer.length) {
             for (let i = 0; i < answer.length; i++) {
+                // TODO: Keyword not really needed with RegExp, but leave it in anyway
                 const kw = match[i].match(keywordPlaceHolder);
                 if (kw && kw.length > 0) {
                     const word = kw[0].split(':')[1].replace('|', "");
@@ -784,10 +785,14 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
                     }
                     continue;
                 }
-                if (match[i] === ".*") {
+                /* if (match[i] === ".*") {
                     continue;
-                }
-                if (match[i].toLowerCase() !== answer[i].toLowerCase()) {
+                } */
+                const re = new RegExp(match[i]);
+                console.log(re);
+                const b = re.test(answer[i]);
+                console.log(b);
+                if (!re.test(answer[i])) {
                     return false;
                 }
             }
@@ -949,8 +954,10 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
                                     const content = plugin.getContentArray();
                                     if (content !== undefined) {
                                         let contentString = "";
-                                        for (const c of content) {
-                                            contentString += ` ${c}`;
+                                        if (content.length > 0) {
+                                            for (const c of content) {
+                                                contentString += ` ${c}`;
+                                            }
                                         }
                                         contentString = contentString.trim();
                                         values.set(name, contentString);
@@ -1162,7 +1169,7 @@ feedbackApp.component("feedbackRunner", {
     <p ng-bind-html="$ctrl.stateAnswer"></p>
     <p ng-bind-html="$ctrl.stateFeedback"></p>
     <p ng-bind-html="$ctrl.stateSentence"></p>
-    </div>    
+    </div>
     <p ng-if="::$ctrl.footer" ng-bind="::$ctrl.footer"></p>
 </div>
 `,
