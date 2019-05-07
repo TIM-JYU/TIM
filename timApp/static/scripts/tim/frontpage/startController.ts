@@ -156,7 +156,11 @@ timApp.component("timStart", {
             <div ng-switch="$ctrl.language" ng-cloak>
                 <div ng-switch-when="en">
                     <h3>Get started</h3>
-                    <login-menu ng-if="!$ctrl.isLoggedIn()" button-text="Log in / Sign up"></login-menu>
+                    <button ng-if="!$ctrl.isLoggedIn()" ng-click="$ctrl.openLoginDialog()" type="button"
+                        class="timButton margin-4" title="Log in with Korppi or TIM">Log in</button>
+                    <button ng-if="!$ctrl.isLoggedIn()" ng-click="$ctrl.openSignupDialog()" type="button"
+                        class="timButton margin-4"
+                        title="Create a TIM account (for those who aren't staff or Korppi-users)">Sign up</button>
                     <ul class="list-unstyled">
                         <li ng-if="$ctrl.isLoggedIn()" class="h5">
                             <a href="/view/{{$ctrl.getCurrentUserFolderPath()}}">My documents</a>
@@ -182,9 +186,10 @@ timApp.component("timStart", {
                 <div ng-switch-when="fi">
                     <h3>Aloitus</h3>
                     <button ng-if="!$ctrl.isLoggedIn()" ng-click="$ctrl.openLoginDialog()" type="button"
-                        class="timButton margin-4">Kirjaudu</button>
+                        class="timButton margin-4" title="Kirjaudu sisään Korppi- tai TIM-tunnuksilla">Kirjaudu</button>
                     <button ng-if="!$ctrl.isLoggedIn()" ng-click="$ctrl.openSignupDialog()" type="button"
-                        class="timButton margin-4">Luo TIM-tili</button>
+                        class="timButton margin-4"
+                        title="Luo TIM-tili (jos et ole Korppi-käyttäjä tai henkilökunnan jäsen)">Luo TIM-tili</button>
                     <ul class="list-unstyled">
                         <li ng-if="$ctrl.isLoggedIn()" class="h5">
                             <a href="/view/{{$ctrl.getCurrentUserFolderPath()}}">Omat dokumentit</a>

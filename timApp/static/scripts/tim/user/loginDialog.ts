@@ -57,10 +57,22 @@ export class LoginDialogController extends DialogController<{params: boolean | u
     }
 
     async $onInit() {
-        super.$onInit();
         this.showSignup = this.resolve.params;
         if (this.showSignup === undefined) {
             this.showSignup = false;
+        }
+        super.$onInit();
+
+    }
+
+    /*
+     * Dialog title.
+     */
+    public getTitle() {
+        if (this.showSignup) {
+            return "Sign up";
+        } else {
+            return "Log in";
         }
     }
 
@@ -196,17 +208,6 @@ export class LoginDialogController extends DialogController<{params: boolean | u
     public forgotPassword() {
         this.resetPassword = true;
         this.beginSignup();
-    }
-
-    /*
-     * Dialog title.
-     */
-    public getTitle() {
-        if (this.showSignup) {
-            return "Sign up";
-        } else {
-            return "Log in";
-        }
     }
 
     public cancelSignup() {
