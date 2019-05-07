@@ -177,6 +177,23 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
 
     // noinspection JSUnusedGlobalSymbols
     /**
+     * Returns focus on next HTML field.
+     * Used by keydown (Enter) in angular.
+     * Unused method warning is suppressed, as the method is only called in template.
+     */
+    changeFocus() {
+        const inputfields = document.querySelectorAll("textfield-runner input, numericfield-runner input");
+        for (let i = 0; i < inputfields.length; ++i) {
+            const selectedfield = inputfields[i] as HTMLInputElement;
+            if (selectedfield === document.activeElement && inputfields[i+1]) {
+                let nextfield = inputfields[i+1] as HTMLInputElement;
+                return nextfield.focus();
+            }
+        }
+    }
+
+    // noinspection JSUnusedGlobalSymbols
+    /**
      * Returns true value, if label is set to plaintext.
      * Used to define labelstyle in angular, either input or span.
      * Unused method warning is suppressed, as the method is only called in template.
@@ -294,7 +311,7 @@ textfieldApp.component("textfieldRunner", {
                ng-model="$ctrl.userword"
                ng-model-options="{ debounce: {'blur': 0} } "
                ng-blur="::$ctrl.autoSave()"
-               ng-keydown="$event.keyCode === 13 && $ctrl.saveText()"
+               ng-keydown="$event.keyCode === 13 && $ctrl.saveText() && $ctrl.changeFocus()"
                ng-model-options="::$ctrl.modelOpts"
                ng-trim="false"
                ng-pattern="$ctrl.getPattern()"
@@ -306,7 +323,7 @@ textfieldApp.component("textfieldRunner", {
                size="{{::$ctrl.cols}}" 
                ng-class="{warnFrame: ($ctrl.notSaved() && !$ctrl.redAlert), alertFrame: $ctrl.redAlert }">
                </span></label>
-         <span ng-if="::$ctrl.isPlainText()" style="font-weight:bold">{{$ctrl.userword}}</span>
+         <span ng-if="::$ctrl.isPlainText()" style="font-weight:bold; float:left;">{{$ctrl.userword}}</span>
     </form>
     <button class="timButton"
             ng-if="$ctrl.buttonText()"
