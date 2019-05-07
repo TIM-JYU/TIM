@@ -17,8 +17,8 @@ feedback-runner {
     margin-bottom: 1em;
 }
 
-.pluginfeedback button {
+.pluginfeedback .feedbackButton {
     display: block;
     margin-left: auto;
-    margin-right: 130px;
+    /* margin-right: 130px; */
 }

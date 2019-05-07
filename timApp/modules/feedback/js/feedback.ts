@@ -156,7 +156,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
         if (this.editMode != null) {
             this.edited = true;
         }
-        this.showAnswers = this.attrs.showAnswers;
+        this.showAnswers = this.vctrl.teacherMode;
         if (!this.showAnswers) {
             await import("/feedback/css/hideanswerbrowser.css" as any);
         }
@@ -549,7 +549,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
                 }
             } else {
                 const instruction = document.querySelectorAll(".par.instruction");
-                if (instruction) {
+                if (instruction && (!this.teacherRight || this.editMode == null)) {
                     this.hideParagraph(instruction[0]);
                     this.instrHidden = true;
                 }
@@ -1149,7 +1149,6 @@ feedbackApp.component("feedbackRunner", {
     <div class="error" ng-if="$ctrl.error" ng-bind-html="$ctrl.error"></div>
     <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
     <p ng-if="::$ctrl.stem">{{::$ctrl.stem}}</p>
-    <div>{{$ctrl.showMode}}</div>
     <div class="form-inline">
     <span ng-bind-html="$ctrl.feedback"></span>
     </div>

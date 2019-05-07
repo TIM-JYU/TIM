@@ -1,3 +1,7 @@
 .pluginfeedback answerbrowser {
     display: none;
 }
+
+.plugindropdown answerbrowser {
+    display: none;
+}
