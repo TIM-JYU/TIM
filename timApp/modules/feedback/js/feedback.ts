@@ -164,7 +164,6 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
             await import("/feedback/css/viewhide.css" as any);
             await import("/feedback/css/hideanswerbrowser.css" as any);
             this.vctrl.actionsDisabled = true;
-            this.vctrl.doingTask = true;
         } else {
             if (this.attrsall.state != null) {
                 this.stateAnswer = this.attrsall.state.answer;
@@ -569,6 +568,9 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
                 this.showBlock(this.index);
                 this.itemHidden = false;
             }
+            if (!this.vctrl.item.rights.editable || !this.vctrl.item.rights.teacher) {
+                this.vctrl.doingTask = true;
+            }
             return;
         }
 
@@ -651,6 +653,9 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
             if (questionIndex === undefined || this.streak === this.attrs.correctStreak ||
                 this.currentFeedbackLevel === this.feedbackMax || this.index >= this.attrs.questionItems.length) {
                 this.pluginMode = Mode.EndTask;
+                if (!this.vctrl.item.rights.editable || !this.vctrl.item.rights.teacher) {
+                    this.vctrl.doingTask = false;
+                }
                 this.handleAnswer();
                 return;
             }
