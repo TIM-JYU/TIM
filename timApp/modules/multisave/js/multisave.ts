@@ -129,7 +129,7 @@ export class MultisaveController extends PluginBase<t.TypeOf<typeof multisaveMar
                 saveFailed = true;
             }
         }
-        if(!saveFailed && this.savedFields!=0 ){
+        if(this.savedFields!=0 ){
             this.isSaved = true;
         }
 
@@ -152,7 +152,7 @@ multisaveApp.component("multisaveRunner", {
             ng-click="$ctrl.save()">
         {{::$ctrl.buttonText()}}
     </button>
-    <pre class="savedtext" ng-if="$ctrl.isSaved">Saved {{$ctrl.savedFields}} fields!</pre>
+    <p class="savedtext" ng-if="$ctrl.isSaved">Saved {{$ctrl.savedFields}} fields!</p>
     <p ng-if="::$ctrl.footer" ng-bind="::$ctrl.footer" class="plgfooter"></p>
 </div>
 `,

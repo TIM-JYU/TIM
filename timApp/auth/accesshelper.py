@@ -283,9 +283,7 @@ def verify_task_access(
     if found_plugin.task_id.access_specifier == TaskIdAccess.ReadOnly and \
             required_task_access_level == TaskIdAccess.ReadWrite and \
             not u.has_teacher_access(doc.get_docinfo()):
-        abort()
-        # No visible text version
-        # abort(403, 'This task/field is readonly and thus only writable for teachers.')
+        abort(403, 'This task/field is readonly and thus only writable for teachers.')
     return found_plugin
 
 

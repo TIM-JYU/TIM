@@ -192,6 +192,23 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
 
     // noinspection JSUnusedGlobalSymbols
     /**
+     * Returns focus on next HTML field.
+     * Used by keydown (Enter) in angular.
+     * Unused method warning is suppressed, as the method is only called in template.
+     */
+    changeFocus() {
+        const inputfields = document.querySelectorAll("numericfield-runner input, textfield-runner input");
+        for (let i = 0; i < inputfields.length; ++i) {
+            const selectedfield = inputfields[i] as HTMLInputElement;
+            if (selectedfield === document.activeElement && inputfields[i+1]) {
+                let nextfield = inputfields[i+1] as HTMLInputElement;
+                return nextfield.focus();
+            }
+        }
+    }
+
+    // noinspection JSUnusedGlobalSymbols
+    /**
      * Checking if input has been changed since the last Save or initialization.
      * Displays a red thick marker at the right side of the inputfield to notify users
      * about unsaved changes.
@@ -281,7 +298,7 @@ numericfieldApp.component("numericfieldRunner", {
                ng-model="$ctrl.numericvalue"
                ng-model-options="{ debounce: {'blur': 0} } "
                ng-blur="$ctrl.autoSave()"
-               ng-keydown="$event.keyCode === 13 && $ctrl.saveText() && elem.next().focus()"
+               ng-keydown="$event.keyCode === 13 && $ctrl.saveText() && $ctrl.changeFocus()"
                ng-model-options="::$ctrl.modelOpts"
                ng-change="$ctrl.checkNumericfield()"
                ng-trim="false"
