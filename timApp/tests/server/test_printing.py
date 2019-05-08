@@ -3,10 +3,9 @@ import json
 import urllib.parse
 
 from timApp.document.docentry import DocEntry
-from timApp.document.docparagraph import DocParagraph
 from timApp.document.specialnames import TEMPLATE_FOLDER_NAME, PRINT_FOLDER_NAME
-from timApp.util.flask.responsehelper import to_json_str
 from timApp.tests.server.timroutetest import TimRouteTest
+from timApp.util.flask.responsehelper import to_json_str
 from timApp.util.utils import exclude_keys, EXAMPLE_DOCS_PATH
 
 
@@ -78,6 +77,60 @@ class PrintingTest(TimRouteTest):
         self.assertTrue(2842 <= pdf_length <= 2854, msg=f'Unexpected file length: {pdf_length}')
         self.login_test2()
         self.get(expected_url, expect_status=403)
+
+    def test_print_latex_autonumber(self):
+        self.login_test1()
+        d = self.create_doc(initial_par="""
+# first
+
+```
+# I'm not a header!
+```
+
+# second
+#-
+# third
+        """, settings={'auto_number_headings': 1})
+        t = self.create_empty_print_template()
+        params_url = {'file_type': 'latex', 'template_doc_id': t.id, 'plugins_user_code': False, 'force': True}
+        self.get(d.url, as_tree=True)
+        r = self.get(f'/print/{d.path}', query_string=params_url)
+        self.assertEqual(r"""
+\hypertarget{first}{%
+\section{1. first}\label{first}}
+
+\begin{verbatim}
+# I'm not a header!
+\end{verbatim}
+
+\hypertarget{second}{%
+\section{2. second}\label{second}}
+
+\hypertarget{third}{%
+\section{3. third}\label{third}}
+        """.strip(), r)
+        d.document.add_setting('texmacros', {'texautonumber': 1})
+        self.get(d.url, as_tree=True)
+        r = self.get(f'/print/{d.path}', query_string=params_url)
+        no_numbers = r"""
+\hypertarget{first}{%
+\section{first}\label{first}}
+
+\begin{verbatim}
+# I'm not a header!
+\end{verbatim}
+
+\hypertarget{second}{%
+\section{second}\label{second}}
+
+\hypertarget{third}{%
+\section{third}\label{third}}
+        """
+        self.assertEqual(no_numbers.strip(), r)
+        d.document.set_settings({})
+        self.get(d.url, as_tree=True)
+        r = self.get(f'/print/{d.path}', query_string=params_url)
+        self.assertEqual(no_numbers.strip(), r)
 
     def create_empty_print_template(self):
         p = f'{self.current_user.get_personal_folder().path}/{TEMPLATE_FOLDER_NAME}/{PRINT_FOLDER_NAME}/empty'

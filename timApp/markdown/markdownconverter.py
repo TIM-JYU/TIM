@@ -344,25 +344,27 @@ def insert_heading_numbers(html_str: str, heading_info, auto_number_headings: bo
             except KeyError:
                 e.set('id', f'{curr_id}-{hcount}')
         if auto_number_headings:
-            level = int(e.tag[1])
-            counts[level] += 1
-            for i in range(level + 1, 7):
-                counts[i] = 0
-            for i in range(6, 0, -1):
-                if counts[i] != 0:
-                    break
-            values = {'text': e.text}
-            # noinspection PyUnboundLocalVariable
-            for i in range(1, i + 1):
-                values['h' + str(i)] = counts[i]
-            try:
-                formatted = heading_format[level].format(**values)
-            except (KeyError, ValueError, IndexError):
-                formatted = '[ERROR] ' + e.text
-
-            e.text = formatted
+            e.text = format_heading(e.text, int(e.tag[1]), counts, heading_format)
     final_html = etree.tostring(tree)
     return final_html
+
+
+def format_heading(text, level, counts, heading_format):
+    counts[level] += 1
+    for i in range(level + 1, 7):
+        counts[i] = 0
+    for i in range(6, 0, -1):
+        if counts[i] != 0:
+            break
+    values = {'text': text}
+    # noinspection PyUnboundLocalVariable
+    for i in range(1, i + 1):
+        values['h' + str(i)] = counts[i]
+    try:
+        formatted = heading_format[level].format(**values)
+    except (KeyError, ValueError, IndexError):
+        formatted = '[ERROR] ' + text
+    return formatted
 
 
 HEADING_TAGS = {'h1', 'h2', 'h3', 'h4', 'h5', 'h6'}

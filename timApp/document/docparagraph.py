@@ -5,7 +5,9 @@ from collections import defaultdict
 from copy import copy
 from typing import Optional, Dict, List, Tuple, Any
 
+import commonmark
 import filelock
+from commonmark.node import Node
 from jinja2.sandbox import SandboxedEnvironment
 
 from timApp.document.documentparser import DocumentParser
@@ -16,7 +18,7 @@ from timApp.document.preloadoption import PreloadOption
 from timApp.document.randutils import random_id, hashfunc
 from timApp.markdown.dumboclient import DumboOptions, MathType, InputFormat
 from timApp.markdown.htmlSanitize import sanitize_html, strip_div
-from timApp.markdown.markdownconverter import par_list_to_html_list, expand_macros
+from timApp.markdown.markdownconverter import par_list_to_html_list, expand_macros, format_heading
 from timApp.timdb.exceptions import TimDbException, InvalidReferenceException
 from timApp.timtypes import DocumentType
 from timApp.util.rndutils import get_rands_as_dict, get_rands_as_str, SeedType
@@ -504,9 +506,9 @@ class DocParagraph:
         if not pars:
             return []
 
-        doc_id_str = str(pars[0].doc.doc_id)
-        macro_cache_file = '/tmp/tim_auto_macros_' + doc_id_str
-        heading_cache_file = '/tmp/heading_cache_' + doc_id_str
+        doc_id = pars[0].doc.doc_id
+        macro_cache_file = f'/tmp/tim_auto_macros_{doc_id}'
+        heading_cache_file = f'/tmp/heading_cache_{doc_id}'
 
         first_pars = []
         if context_par is not None:
@@ -531,7 +533,7 @@ class DocParagraph:
                         heading_cache[par.get_id()] = value
             unloaded_pars = cls.get_unloaded_pars(pars, settings, cache, heading_cache, clear_cache)
         else:
-            with filelock.FileLock(f"/tmp/cache_lock_{doc_id_str}"):
+            with filelock.FileLock(f"/tmp/cache_lock_{doc_id}"):
                 if clear_cache:
                     try:
                         os.remove(macro_cache_file + '.db')
@@ -1195,3 +1197,24 @@ def create_final_par(reached_par: DocParagraph, set_html: bool) -> DocParagraph:
             html = reached_par.get_html(from_preview=False)
         final_par._set_html(html)
     return final_par
+
+
+def add_heading_numbers(s: str, ctx: DocParagraph, heading_format):
+    d = ctx.doc
+    macro_cache_file = f'/tmp/tim_auto_macros_{ctx.doc.doc_id}'
+    ps = commonmark.Parser()
+    parsed = ps.parse(s)
+    with shelve.open(macro_cache_file) as cache:
+        vals = cache.get(str((ctx.get_id(), d.get_version())), {}).get('h')
+    if not vals:
+        return s
+    lines = s.splitlines(keepends=False)
+    curr: Node = parsed.first_child
+    while curr:
+        if curr.t == 'heading':
+            level = curr.level
+            line_idx = curr.sourcepos[0][0] - 1
+            line = lines[line_idx][level + 1:]
+            lines[line_idx] = '#' * level + ' ' + format_heading(line, level, vals, heading_format)
+        curr = curr.nxt
+    return '\n'.join(lines)

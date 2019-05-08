@@ -5,7 +5,7 @@ import os
 import re
 import subprocess
 import tempfile
-from typing import Optional, List, Tuple, Dict, Any
+from typing import Optional, List, Tuple, Dict
 
 from flask import current_app
 from jinja2 import Environment
@@ -13,26 +13,26 @@ from pypandoc import _as_unicode, _validate_formats
 from pypandoc.py3compat import string_types, cast_bytes
 
 from timApp.auth.accesshelper import has_view_access
+from timApp.auth.sessioninfo import get_current_user_object
+from timApp.document.docentry import DocEntry
+from timApp.document.docinfo import DocInfo
+from timApp.document.docparagraph import DocParagraph, add_heading_numbers
 from timApp.document.docsettings import DocSettings
-from timApp.document.docparagraph import DocParagraph
 from timApp.document.document import dereference_pars, Document
 from timApp.document.macroinfo import MacroInfo
 from timApp.document.preloadoption import PreloadOption
 from timApp.document.randutils import hashfunc
 from timApp.document.specialnames import TEMPLATE_FOLDER_NAME, PRINT_FOLDER_NAME
 from timApp.document.yamlblock import strip_code_block
+from timApp.folder.folder import Folder
 from timApp.markdown.markdownconverter import expand_macros, create_environment
 from timApp.plugin.plugin import get_value, PluginWrap
 from timApp.plugin.plugin import parse_plugin_values_macros
 from timApp.plugin.pluginControl import pluginify
 from timApp.plugin.pluginOutputFormat import PluginOutputFormat
 from timApp.plugin.pluginexception import PluginException
-from timApp.printing.printsettings import PrintFormat
-from timApp.auth.sessioninfo import get_current_user_object
-from timApp.document.docinfo import DocInfo
-from timApp.document.docentry import DocEntry
-from timApp.folder.folder import Folder
 from timApp.printing.printeddoc import PrintedDoc
+from timApp.printing.printsettings import PrintFormat
 from timApp.user.user import User
 
 FILES_ROOT = '/tim_files'
@@ -216,13 +216,15 @@ class DocumentPrinter:
                                                                                                           par_infos):
             md = p.get_final_dict()['md']
             if not p.is_plugin() and not p.is_question():
-                if  not self.texplain:
-                    md = expand_macros(text=md,
-                                   macros=pdoc_macros,
-                                   settings=settings,
-                                   macro_delimiter=pdoc_macro_delimiter,
-                                   env=pdoc_macro_env,
-                                   ignore_errors=False)
+                if not self.texplain:
+                    md = expand_macros(
+                        text=md,
+                        macros=pdoc_macros,
+                        settings=settings,
+                        macro_delimiter=pdoc_macro_delimiter,
+                        env=pdoc_macro_env,
+                        ignore_errors=False,
+                    )
                 classes = p.get_classes()
                 if classes:
                     endraw = ""
@@ -249,6 +251,8 @@ class DocumentPrinter:
                 if self.texplain:
                     if md.startswith('```'):
                         md = md[3:-3]
+                if not pdoc_macros.get('texautonumber') and settings.auto_number_headings():
+                    md = add_heading_numbers(md, p, settings.heading_format())
 
                 '''
                 if pd['md'].startswith('#'):
