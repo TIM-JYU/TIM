@@ -1,56 +1,25 @@
 /*
- * Dialog for log in and sign up.
+ * Dialog for user menu.
  */
 
 import {IRootElementService, IScope} from "angular";
 import * as focusMe from "tim/ui/focusMe";
 import {DialogController, registerDialogComponent, showDialog} from "../ui/dialog";
-import {markAsUsed, to, ToReturn} from "../util/utils";
-import {$http} from "../util/ngimport";
+import {markAsUsed} from "../util/utils";
 import {IUser} from "./IUser";
 import {Users} from "./userService";
 import {showLoginDialog} from "./loginDialog";
-
-interface INameResponse {
-    status: "name";
-    name: string;
-    can_change_name: boolean;
-}
 
 markAsUsed(focusMe);
 
 export class UserMenuDialogController extends DialogController<{}, {}> {
     static component = "userMenuDialog";
     static $inject = ["$element", "$scope"] as const;
-    private showSignup?: boolean;
     private loggingout: boolean;
-    private loginForm: {email: string, password: string};
     private addingToSession: boolean;
-    private korppiLoading: boolean = false;
-
-    // fields related to signup
-    private canChangeName = true;
-    private email: string | undefined;
-    private emailSent = false;
-    private finishStatus: undefined | "registered" | "updated";
-    private focusEmail = false;
-    private focusLink = false;
-    private focusName = false;
-    private focusNewPassword = false;
-    private focusPassword = false;
-    private name: string | undefined;
-    private nameProvided = false;
-    private newPassword: string | undefined;
-    private rePassword: string | undefined;
-    private resetPassword = false;
-    private signUpError: string | undefined;
-    private signUpRequestInProgress = false;
-    private tempPassword: string | undefined;
-    private tempPasswordProvided = false;
 
     constructor(protected element: IRootElementService, protected scope: IScope) {
         super(element, scope);
-        this.loginForm = {email: "", password: ""};
         this.loggingout = false;
         this.addingToSession = false;
     }
@@ -60,7 +29,7 @@ export class UserMenuDialogController extends DialogController<{}, {}> {
     }
 
     getCurrentUser = () => Users.getCurrent();
-    getSessionUsers = () => Users.getSessionUsers();
+    getSessionUsers = () => Users.getSessionUsers(); // Used in html
 
     addUser($event: Event) {
         $event.stopPropagation();
@@ -72,44 +41,12 @@ export class UserMenuDialogController extends DialogController<{}, {}> {
 
     isKorppi = () => Users.isKorppi();
 
-    // noinspection JSMethodCanBeStatic
-    public stopClick($event: Event) {
-        $event.stopPropagation();
-    }
-
-    public toggled(open: boolean) {
-        if (!open) {
-            this.addingToSession = false;
-        }
-    }
-
     beginLogout($event: Event) {
         if (Users.isKorppi()) {
             this.loggingout = true;
             $event.stopPropagation();
         } else {
             this.logout(this.getCurrentUser());
-        }
-    }
-
-    public async provideName() {
-        if (!this.name || this.signUpRequestInProgress) {
-            return;
-        }
-        const r = await this.sendRequest<{status: "registered" | "updated"}>("/altsignup2", {
-            email: this.email,
-            passconfirm: this.rePassword,
-            password: this.newPassword,
-            realname: this.name,
-            token: this.tempPassword,
-        });
-        if (!r.ok) {
-            this.signUpError = r.result.data.error;
-        } else {
-            this.finishStatus = r.result.data.status;
-            this.signUpError = undefined;
-            this.nameProvided = true;
-            this.focusLink = true;
         }
     }
 
@@ -120,12 +57,7 @@ export class UserMenuDialogController extends DialogController<{}, {}> {
         return "User menu";
     }
 
-    private async sendRequest<T>(url: string, data: any): ToReturn<T> {
-        this.signUpRequestInProgress = true;
-        const r = await to($http.post<T>(url, data));
-        this.signUpRequestInProgress = false;
-        return r;
-    }
+    // TODO: Change this into a component: a dropdown menu instead of dialog!
 }
 
 registerDialogComponent(UserMenuDialogController,
