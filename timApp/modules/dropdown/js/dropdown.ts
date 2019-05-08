@@ -59,7 +59,9 @@ class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.T
         } else {
             this.wordList = this.attrs.words || [];
         }
-        this.addToCtrl();
+        if (!this.attrsall.preview) {
+            this.addToCtrl();
+        }
         this.radio = this.attrs.radio;
         if(this.attrs.answers) {
             // TODO: Show the answer browser if so desired.
