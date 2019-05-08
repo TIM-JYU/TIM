@@ -164,7 +164,7 @@ export class PareditorController extends DialogController<{params: IEditorParams
     private touchDevice: boolean;
     private autocomplete!: boolean; // $onInit
     private citeText!: string; // $onInit
-    private docSettings?: {macros: {dates: string[], knro: number, stampformat: string}, custom_stamp_model?: string};
+    private docSettings?: {macros?: {dates: string[], knro: number, stampformat: string}, custom_stamp_model?: string};
     private uploadedFile?: string;
     private activeTab?: string;
     private lastTab?: string;
@@ -854,7 +854,8 @@ ${backTicks}
         if (date) {
             const tempAttachments = this.activeAttachments;
             this.activeAttachments = this.updateAttachments(false, this.activeAttachments, undefined);
-            if (this.activeAttachments && this.docSettings && !this.allAttachmentsUpToDate()) {
+            if (this.activeAttachments && this.docSettings &&
+                this.docSettings.macros && !this.allAttachmentsUpToDate()) {
                 let stampFormat = this.docSettings.macros.stampformat;
                 if (stampFormat === undefined) {
                     stampFormat = "";
@@ -879,6 +880,7 @@ ${backTicks}
                     this.activeAttachments = tempAttachments;
                     return;
                 }
+                // If Save and exit was chosen, falls through to normal saving process.
             }
         }
         this.saving = true;
@@ -998,7 +1000,7 @@ ${backTicks}
         // If there's an attachment macro in the editor (i.e. macroRange is defined), assume need to stamp.
         // Also requires data from preamble to work correctly (dates and knro).
         // If there's no stampFormat set in preamble, uses hard-coded default format.
-        if (macroRange && this.docSettings && kokousDate) {
+        if (macroRange && this.docSettings && this.docSettings.macros && kokousDate) {
             autostamp = true;
             try {
                 // Macro begin and end not included.
@@ -1341,17 +1343,13 @@ ${backTicks}
      * Returns the current meeting date from document settings, if it exists.
      */
     private getCurrentMeetingDate() {
-        try {
-            if (this.docSettings) {
-                // Knro usage starts from 1 but dates starts from 0 but there is dummy item first
-                const knro = this.docSettings.macros.knro;
-                const dates = this.docSettings.macros.dates;
-                // dates = ["ERROR", ...dates];  // Start from index 1; unnecessary now?
-                return dates[knro][0];  // Dates is 2-dim array.
-            } else {
-                return undefined;
-            }
-        } catch (e) {
+        if (this.docSettings && this.docSettings.macros) {
+            // Knro usage starts from 1 but dates starts from 0 but there is dummy item first
+            const knro = this.docSettings.macros.knro;
+            const dates = this.docSettings.macros.dates;
+            // dates = ["ERROR", ...dates];  // Start from index 1; unnecessary now?
+            return dates[knro][0];  // Dates is 2-dim array.
+        } else {
             return undefined;
         }
     }
