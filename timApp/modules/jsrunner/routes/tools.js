@@ -31,7 +31,7 @@ class Tools {
     getInt(fieldName, def=0) {
         let fn = this.normalizeField(fieldName);
         let s = this.data.fields[fn];
-        let r = parseInt(s); // TODO: katkaisee, ei pyöristä, onko OK?
+        let r = parseInt(s);
         if (isNaN(r)) r = def;
         return r;
     }
@@ -39,14 +39,18 @@ class Tools {
     getString(fieldName, def="") {
         let fn = this.normalizeField(fieldName);
         let r = this.data.fields[fn];
-        // TODO: default on jo ""
+        if (r === null) {
+            r = def;
+        }
         return r;
     }
 
     getValue(fieldName, def="") {
         let fn = this.normalizeField(fieldName);
         let r = this.data.fields[fn];
-        // TODO: default on jo ""
+        if (r === null) {
+            r = def;
+        }
         return r;
     }
 
@@ -109,11 +113,10 @@ class Tools {
         let grade = "";
         for (let i = 0; i < values.length; i++) {
             if (points >= values[i]) {
-                // grade = scale[points[i]];
                 grade = Object.keys(scale).find(key => scale[key] === values[i]);
                 break;
             }
-            grade = this.markup.failGrade;
+            grade = this.markup.failGrade; //TODO: oletus = ""
         }
         console.log(grade);
         return grade;
