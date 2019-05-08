@@ -40,7 +40,6 @@ class Tools {
         let fn = this.normalizeField(fieldName);
         let r = this.data.fields[fn];
         // TODO: default on jo ""
-        this.markup.gradingScale[1]
         return r;
     }
 
@@ -92,6 +91,41 @@ class Tools {
         // TODO: if (isNaN(r)) error
         this.result[fn] = r;
     }
+
+    getDefaultPoints(def=this.markup.defaultPoints) {
+        // TODO: error if default not set
+        return def;
+    }
+
+    getDefaultCredits(def=this.markup.defaultCredits) {
+        // TODO: error if default not set
+        return def;
+    }
+
+    getGrade(points) {
+        const scale = this.markup.gradingScale;
+        const values = Object.values(scale);
+        values.sort(function(a, b){return b-a});
+        let grade = "";
+        for (let i = 0; i < values.length; i++) {
+            if (points >= values[i]) {
+                // grade = scale[points[i]];
+                grade = Object.keys(scale).find(key => scale[key] === values[i]);
+                break;
+            }
+            grade = this.markup.failGrade;
+        }
+        console.log(grade);
+        return grade;
+    }
+
+    saveGrade(grade, def=this.getDefaultPoints(), defa=this.getDefaultCredits()) {
+        let fn = this.normalizeField(this.markup.gradeField);
+        // TODO: fix
+        this.result[fn] = grade;
+    }
+
+    // TODO: print
 
     getResult() {
         return {'user': this.data.user.id, 'fields':  this.result};

@@ -1,45 +1,29 @@
 /**
  * Defines the client-side implementation of an example plugin (a palindrome checker).
  */
-import angular, {INgModelOptions} from "angular";
+import angular from "angular";
 import * as t from "io-ts";
-import {
-    GenericPluginMarkup,
-    GenericPluginTopLevelFields,
-    nullable,
-    PluginBase,
-    pluginBindings,
-    withDefault
-} from "tim/plugin/util";
+import {GenericPluginMarkup, GenericPluginTopLevelFields, nullable, PluginBase, pluginBindings} from "tim/plugin/util";
 import {$http} from "tim/util/ngimport";
 import {to} from "tim/util/utils";
 
 const jsrunnerApp = angular.module("jsrunnerApp", ["ngSanitize"]);
 export const moduleDefs = [jsrunnerApp];
 
-// interface IGradingScale {
-//     1:
-// }
-
 const JsrunnerMarkup = t.intersection([
     t.partial({
-        fields: t.array(t.string),
-        groups: t.array(t.string),
         defaultCredits: t.number,
         defaultPoints: t.number,
-        gradingScale: t.type({
-            1: t.number,
-            2: t.number,
-            3: t.number,
-            4: t.number,
-            5: t.number,
-        }),
+        failGrade: t.string,
+        fields: t.array(t.string),
+        gradeField: t.string,
+        gradingScale: t.dictionary(t.string, t.number),
+        groups: t.array(t.string),
         program: nullable(t.string),
     }),
     GenericPluginMarkup,
     t.type({
         // all withDefaults should come here; NOT in t.partial
-        autoupdate: withDefault(t.number, 500),
     }),
 ]);
 const JsrunnerAll = t.intersection([
@@ -55,12 +39,8 @@ class JsrunnerController extends PluginBase<t.TypeOf<typeof JsrunnerMarkup>, t.T
         return {};
     }
 
-    get program() {
-        return this.attrs.program;
-    }
-
     buttonText() {
-        return super.buttonText() || "Laske";
+        return super.buttonText() || "Count";
     }
 
     $onInit() {
@@ -76,8 +56,6 @@ class JsrunnerController extends PluginBase<t.TypeOf<typeof JsrunnerMarkup>, t.T
         this.isRunning = true;
         const params = {
             input: {
-                fields: this.attrs.fields,
-                groups: this.attrs.groups,
                 nosave: false,
             },
         };

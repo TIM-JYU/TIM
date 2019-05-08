@@ -311,11 +311,9 @@ def post_answer(plugintype: str, task_id_ext: str):
                 id_num = int(id_split[0])
                 if id_num not in doc_map:
                     doc_map[id_num] = get_doc_or_abort(id_num)
-        print(doc_map)
         task_content = {}
         for task in tasks:
             t_id = TaskId.parse(task, False, False)
-            # dib = get_doc_or_abort(t_id.doc_id)
             dib = doc_map[t_id.doc_id]
             verify_teacher_access(dib)
             plug = find_plugin_from_document(dib.document, t_id, get_current_user_object())
@@ -338,7 +336,7 @@ def post_answer(plugintype: str, task_id_ext: str):
                         content=content,
                         task_id=task_id.doc_task,
                         users=[u],
-                        valid=True,
+                        valid=True,  # TODO: last points modifyer
                     )
                     db.session.add(a_result)
 
