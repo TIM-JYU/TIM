@@ -43,6 +43,13 @@ export class RestampDialogController extends DialogController<{params: IStamping
     }
 
     /**
+     * Dismiss is same as returning to editor.
+     */
+    protected dismiss() {
+        this.returnToEditor();
+    }
+
+    /**
      * Restamps all attachments in the open editor.
      */
     async restamp() {

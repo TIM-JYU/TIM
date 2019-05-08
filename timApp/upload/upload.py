@@ -353,7 +353,7 @@ def upload_and_stamp_attachment(d: DocInfo, file, stamp_data: AttachmentStampDat
         custom_stamp_model_content) if custom_stamp_model_content else stamp_model_default_path
     output = stamp_pdfs(
         [stamp_data],
-        dir_path=(Path(attachment_folder) / f"{str(f.id)}/"),
+        dir_path=(Path(attachment_folder) / f"{f.id}/"),
         stamp_text_format=stampformat,
         stamp_model_path=stamp_model_path)[0]
 

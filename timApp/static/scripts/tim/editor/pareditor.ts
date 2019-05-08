@@ -849,6 +849,8 @@ ${backTicks}
         if (this.saving) {
             return;
         }
+        this.saving = true;
+
         // Start checking attachments only if the document has a minutes date.
         const date = this.getCurrentMeetingDate();
         if (date) {
@@ -871,7 +873,7 @@ ${backTicks}
                     if (r.result === RestampDialogClose.RestampedReturnToEditor) {
                         // If restamped and then returned, all are up-to-date.
                         this.saving = false;
-                        this.activeAttachments.every((att) => att.upToDate = true);
+                        this.activeAttachments.forEach((att) => att.upToDate = true);
                         return;
                     }
                     if (r.result === RestampDialogClose.NoRestampingReturnToEditor ||
@@ -886,7 +888,6 @@ ${backTicks}
                 // Dismiss (pressing x to close) is considered the same as Save and exit.
             }
         }
-        this.saving = true;
         const text = this.editor!.getEditorText();
         if (text.trim() === "") {
             this.deleteClicked();
