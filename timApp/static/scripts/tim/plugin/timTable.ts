@@ -49,8 +49,10 @@ export interface TimTable {
     editorButtonsBottom?: boolean;
     editorButtonsRight?: boolean;
     toolbarTemplates?: any;
+    tableForm: boolean;
     hid: {edit?: boolean};
     hiderows: number[];
+    lockedCells: string[];
 }
 
 export interface ITable { // extends ITableStyles
@@ -1346,6 +1348,9 @@ export class TimTableController extends DestroyScope implements IController {
             }
         }
 
+        const cellCoordinate = this.colnumToLetters(coli) + (rowi + 1);
+        if (this.data.lockedCells.includes(cellCoordinate)) return;
+
         const activeCell = this.activeCell;
         this.setActiveCell(rowi, coli);
         if (this.getHid().edit) {
@@ -2262,7 +2267,7 @@ timApp.component("timTable", {
 
 
     </div>
-<div class="csRunMenuArea ng-show="::$ctrl.task">
+<div class="csRunMenuArea" ng-show="::($ctrl.task && !$ctrl.data.tableForm)">
   <p class="csRunMenu"><button class="timButton" ng-show="::$ctrl.task" ng-click="$ctrl.sendDataBlock()" >Tallenna</button></p>
 </div>
   <p class="plgfooter" ng-if="::$ctrl.data.footer" ng-bind-html="::$ctrl.data.footer"></p>

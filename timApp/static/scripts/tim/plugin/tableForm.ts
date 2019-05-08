@@ -64,7 +64,7 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
     }
 
     buttonText() {
-        return super.buttonText() || "TODO";
+        return super.buttonText() || "Save table";
     }
 
 
@@ -75,13 +75,14 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
         this.rows = this.allRows;
         this.data.task = true;
         this.data.hiderows = [];
+        this.data.tableForm = true;
+        this.data.lockedCells = ["A1"];
         //this.fields = this.attrsall.fields;
         this.setDataMatrix();
     }
 
 
     setDataMatrix() {
-        this.timTableData = {'tableForm': 'true'}
         // for (const row in this.rows){
         //      console.log("eaa");
         //  }
@@ -108,11 +109,13 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
         var x = 2;
         for (const r of Object.keys(this.rows)) {
             this.data.userdata['cells']['A' + x] = r;
+            this.data.lockedCells.push('A' + x);
             x++;
         }
         if (this.attrsall.fields) {
             for (var y = 0; y < this.attrsall.fields.length; y++) {
                 this.data.userdata['cells'][this.colnumToLetters(y + 1) + 1] = this.attrsall.fields[y];
+                this.data.lockedCells.push(this.colnumToLetters(y + 1) + 1)
                 x = 0;
                 for (const [u,r] of Object.entries(this.rows)) {
                     // @ts-ignore
@@ -215,19 +218,23 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
             }
             const columnPlace = alpha[0];
             const numberPlace = coord.substring(columnPlace.length);
+            var cellContent = this.data.userdata.cells[coord];
+            //TODO: Save cell attributes (e.g backgroundColor) as plugin's own answer
+            if(typeof cellContent != "string") cellContent = cellContent.cell;
             if (columnPlace === "A"){
+                if (numberPlace === "1") continue;
                 // @ts-ignore
-                userLocations[numberPlace] = this.data.userdata.cells[coord];
+                userLocations[numberPlace] = cellContent;
                 // @ts-ignore
-                replyRows[this.data.userdata.cells[coord]] = {};
+                replyRows[cellContent] = {};
             }
             else if (numberPlace === "1"){
                 // @ts-ignore
-                taskLocations[columnPlace] = this.data.userdata.cells[coord];
+                taskLocations[columnPlace] = cellContent;
             }
             else{
                 // @ts-ignore
-                replyRows[userLocations[numberPlace]][taskLocations[columnPlace]] = this.data.userdata.cells[coord];
+                replyRows[userLocations[numberPlace]][taskLocations[columnPlace]] = cellContent;
             }
         }
         console.log("asd");
@@ -245,14 +252,14 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
         // }
         const url = this.pluginMeta.getAnswerUrl();
         const r = await to($http.put<{ web: { result: string, error?: string } }>(url, params));
-        // this.isRunning = false;
-        // if (r.ok) {
-        //     const data = r.result.data;
-        //     this.error = data.web.error;
-        //     this.result = data.web.result;
-        // } else {
-        //     this.error = "Infinite loop or some other error?";
-        // }
+        this.isRunning = false;
+        if (r.ok) {
+            const data = r.result.data;
+            this.error = data.web.error;
+            this.result = data.web.result;
+        } else {
+            this.error = "Infinite loop or some other error?";
+        }
     }
 
     protected getAttributeType() {

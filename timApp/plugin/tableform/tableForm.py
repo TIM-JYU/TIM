@@ -29,11 +29,12 @@ from timApp.answer.routes import get_fields_and_users
 @attr.s(auto_attribs=True)
 class TableFormStateModel:
     """Model for the information that is stored in TIM database for each answer."""
-    userword: str
+    #userword: str
+    #TODO: Tallenna taulukon data sellaisenaan / tallenna käyttäjän taulukkomäärityksiä?
 
 
 class TableFormStateSchema(Schema):
-    userword = fields.Str(required=True)
+    #userword = fields.Str(required=True)
 
     @post_load
     def make_obj(self, data):
@@ -261,7 +262,15 @@ def answer(args: TableFormInputModel):
     #     web['result'] = "saved"
 
     #TODO: Return result for (un)succesful save
-    return jsonify("aaa")
+    web = {}
+    result = {'web': web}
+
+    nosave = args.input.nosave
+    if not nosave:
+        save = saveRows
+        result["save"] = save
+        web['result'] = "saved"
+    return jsonify(result)
 
 
 def check_letters(word: str, needed_len: int) -> bool:
