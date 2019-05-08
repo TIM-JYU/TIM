@@ -18,11 +18,11 @@ from pluginserver_flask import GenericMarkupModel, GenericMarkupSchema, GenericH
 @attr.s(auto_attribs=True)
 class NumericfieldStateModel:
     """Model for the information that is stored in TIM database for each answer."""
-    numericvalue: float
+    numericvalue: float = missing
 
 
 class NumericfieldStateSchema(Schema):
-    numericvalue = fields.Number(required=True)
+    numericvalue = fields.Number(allow_none=True)
 
     @post_load
     def make_obj(self, data):
@@ -40,8 +40,8 @@ class NumericfieldMarkupModel(GenericMarkupModel):
     inputplaceholder: Union[str, Missing] = missing
     followid: Union[str, Missing] = missing
     autosave: Union[bool, Missing] = missing
-    inputchecker: Union[str, Missing] = missing
-    userDefinedErrormsg: Union[str, Missing] = missing
+    validinput: Union[str, Missing] = missing
+    errormessage: Union[str, Missing] = missing
     labelStyle: Union[str, Missing] = missing
 
 class NumericfieldMarkupSchema(GenericMarkupSchema):
@@ -54,8 +54,8 @@ class NumericfieldMarkupSchema(GenericMarkupSchema):
     inputplaceholder: Union[int, Missing] = missing
     followid = fields.String(allow_none=True)
     autosave = fields.Boolean()
-    inputchecker = fields.String(allow_none=True)
-    userDefinedErrormsg = fields.String(allow_none=True)
+    validinput = fields.String(allow_none=True)
+    errormessage = fields.String(allow_none=True)
     labelStyle = fields.String(allow_none=True)
 
     @post_load
@@ -69,12 +69,12 @@ class NumericfieldMarkupSchema(GenericMarkupSchema):
 @attr.s(auto_attribs=True)
 class NumericfieldInputModel:
     """Model for the information that is sent from browser (plugin AngularJS component)."""
-    numericvalue: float
+    numericvalue: float = missing
     nosave: bool = missing
 
 
 class NumericfieldInputSchema(Schema):
-    numericvalue = fields.Number(required=True)
+    numericvalue = fields.Number(allow_none=True)
     nosave = fields.Bool()
 
     @validates('numericvalue')
@@ -106,9 +106,13 @@ class NumericfieldHtmlModel(GenericHtmlModel[NumericfieldInputModel, Numericfiel
         return render_static_numericfield(self)
 
     def get_browser_json(self):
+        """Allowing null values to dataBase"""
         r = super().get_browser_json()
         if self.state:
-            r['numericvalue'] = self.state.numericvalue
+            if self.state.numericvalue is not None:
+                r['numericvalue'] = self.state.numericvalue
+            # if self.state.numericvalue is None:
+            #     r['numericvalue'] = ""
         return r
 
     class Meta:
@@ -189,7 +193,6 @@ def reqs():
     """Introducing templates for numericfield plugin"""
     templates = ["""
 ``` {#numericfield_normal plugin="numericfield"}
-needed_len: 1 #MINIMIPITUUS, NUMERAALINEN
 cols: 5 #KENTÄN KOKO, NUMERAALINEN
 autosave: true #AUTOSAVE, PÄÄLLÄ
 ```""", """
@@ -198,17 +201,15 @@ header: #OTSIKKO, TYHJÄ = EI OTSIKKOA
 stem: #KYSYMYS, TYHJÄ = EI KYSYMYSTÄ
 inputstem: #VASTAUS, TYHJÄ = EI VASTAUSTA
 followid: #SEURANTAID, TYHJÄ = EI SEURANTAID:tä
-needed_len: 1 #MINIMIPITUUS, NUMERAALINEN 
 initnumber: #ALKUARVO, TYHJÄ = EI ALKUARVOA
 buttonText: Save #PAINIKKEEN NIMI, TYHJÄ = EI PAINIKETTA
 cols: 5 #KENTÄN KOKO, NUMERAALINEN
 autosave: false #AUTOSAVE, POIS PÄÄLTÄ
-inputchecker: ^\d{0,3}(\.\d{0,3})?$ #KÄYTTÄJÄSYÖTTEEN RAJOITIN, TYHJÄ = EI RAJOITUSTA
-userDefinedErrormsg: #INPUTCHECKERIN VIRHESELITE, TYHJÄ = SELITE ON INPUTCHECKER
+validinput: ^\d{0,3}(\.\d{0,3})?$ #KÄYTTÄJÄSYÖTTEEN RAJOITIN, TYHJÄ = EI RAJOITUSTA
+errormessage: #INPUTCHECKERIN VIRHESELITE, TYHJÄ = SELITE ON INPUTCHECKER
 ```""", """
 ``` {#numericfield_label plugin="numericfield" readonly=view}
 followid: #SEURANTAID, TYHJÄ = EI SEURANTAID:tä
-needed_len: 1 #MINIMIPITUUS, NUMERAALINEN 
 initnumber: #ALKUARVO, TYHJÄ = EI ALKUARVOA
 cols: 5 #KENTÄN KOKO, NUMERAALINEN
 autosave: false #AUTOSAVE, POIS PÄÄLTÄ

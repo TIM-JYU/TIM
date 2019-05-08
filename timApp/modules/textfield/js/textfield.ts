@@ -19,8 +19,8 @@ const TextfieldMarkup = t.intersection([
         inputstem: nullable(t.string),
         initword: nullable(t.string),
         buttonText: nullable(t.string),
-        inputchecker: nullable(t.string),
-        userDefinedErrormsg: nullable(t.string),
+        validinput: nullable(t.string),
+        errormessage: nullable(t.string),
         labelStyle: nullable(t.string),
         autosave: t.boolean,
     }),
@@ -165,13 +165,13 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
 
     // noinspection JSUnusedGlobalSymbols
     /**
-     * Returns inputchecker attribute, if one is defined.
+     * Returns validinput attribute, if one is defined.
      * Used by pattern checker in angular.
      * Unused method warning is suppressed, as the method is only called in template.
      */
     getPattern() {
-        if (this.attrs.inputchecker) {
-            return this.attrs.inputchecker;
+        if (this.attrs.validinput) {
+            return this.attrs.validinput;
         }
     }
 
@@ -205,10 +205,13 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
     /**
      * Method to check grading input type for textfield.
      * Used as e.g. grading checker for hyv | hyl | 1 | 2 | 3 | 4 | 5.
-     * @param re inputchecker defined by given attribute.
+     * @param re validinput defined by given attribute.
      */
     validityCheck(re: string) {
         let regExpChecker = new RegExp(re);
+        if (this.userword === "") {
+            return new RegExp("").test(this.userword);
+        }
         return regExpChecker.test(this.userword);
     }
 
@@ -242,12 +245,12 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
      */
     async doSaveText(nosave: boolean) {
         this.errormessage = "";
-        if (this.attrs.inputchecker) {
-            if(!this.validityCheck(this.attrs.inputchecker)) {
-                this.errormessage = this.attrs.userDefinedErrormsg || "Input does not pass the RegEx: " + this.attrs.inputchecker;
+        if (this.attrs.validinput) {
+            if(!this.validityCheck(this.attrs.validinput)) {
+                this.errormessage = this.attrs.errormessage || "Input does not pass the RegEx: " + this.attrs.validinput;
                 this.redAlert = true;
                 this.saveResponse.message = this.errormessage;
-                return this.saveResponse;
+                return this.saveResponse
             }
         }
         /* No visible text version
@@ -257,7 +260,7 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
         const params = {
             input: {
                 nosave: false,
-                userword: this.userword,
+                userword: this.userword.trim(),
             },
         };
 
@@ -278,7 +281,7 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
             this.saveResponse.saved = true;
             this.saveResponse.message = this.error;
         } else {
-            this.errormessage = r.result.data.error || "Infinite loop or some other error?";
+            this.errormessage = r.result.data.error || "Syntax error, infinite loop or some other error?";
         }
         // return this.error;
         return this.saveResponse;
@@ -323,7 +326,7 @@ textfieldApp.component("textfieldRunner", {
                size="{{::$ctrl.cols}}" 
                ng-class="{warnFrame: ($ctrl.notSaved() && !$ctrl.redAlert), alertFrame: $ctrl.redAlert }">
                </span></label>
-         <span ng-if="::$ctrl.isPlainText()" style="font-weight:bold; float:left;">{{$ctrl.userword}}</span>
+         <span ng-if="::$ctrl.isPlainText()" style="float:left;">{{$ctrl.userword}}</span>
     </form>
     <button class="timButton"
             ng-if="$ctrl.buttonText()"
