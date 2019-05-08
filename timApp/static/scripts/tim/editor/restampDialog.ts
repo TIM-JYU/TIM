@@ -1,5 +1,5 @@
 /**
- * Controller and HTML template for tag search dialog.
+ * Controller and HTML template for attachment restamping dialog.
  */
 
 import {IRootElementService, IScope} from "angular";
@@ -9,6 +9,7 @@ import {markAsUsed, to} from "../util/utils";
 import {IStampingData} from "./pareditor";
 import {$http} from "../util/ngimport";
 
+// The close states dialog can return.
 export enum RestampDialogClose {
     RestampedReturnToEditor,
     NoRestampingReturnToEditor,
@@ -19,7 +20,7 @@ export enum RestampDialogClose {
 markAsUsed(focusMe);
 
 /*
- * Tag search dialog's controller.
+ * Restamping dialog's controller.
  */
 export class RestampDialogController extends DialogController<{params: IStampingData}, RestampDialogClose> {
     static component = "restampDialog";
@@ -35,16 +36,13 @@ export class RestampDialogController extends DialogController<{params: IStamping
         super(element, scope);
     }
 
-    /*
-     * Show tag list when dialog loads and focus on tag-field.
-     */
     async $onInit() {
         super.$onInit();
         this.stampingData = this.resolve.params;
     }
 
     /**
-     * Restamps all attachments in open editor.
+     * Restamps all attachments in the open editor.
      */
     async restamp() {
         if (this.stamping) {
@@ -72,6 +70,7 @@ export class RestampDialogController extends DialogController<{params: IStamping
 
         }
     } else {
+            // This should never show up.
             this.errorMessage = "Unable to find attachments!";
         }
         this.stampingDone = true;
@@ -85,6 +84,10 @@ export class RestampDialogController extends DialogController<{params: IStamping
         return "Update stamps";
     }
 
+    /**
+     * Returns an appropriate close state when returning to editor
+     * based on whether restamping was done and whether it was successful.
+     */
     private returnToEditor() {
         if (this.stampingDone && this.errorMessage) {
             this.close(RestampDialogClose.RestampingFailedReturnToEditor);
@@ -97,12 +100,17 @@ export class RestampDialogController extends DialogController<{params: IStamping
         this.close(RestampDialogClose.NoRestampingReturnToEditor);
     }
 
+    /**
+     * When continuing exiting from editor.
+     * Whether restamping was done or not doesn't matter here.
+     */
     private saveAndExit() {
         this.close(RestampDialogClose.SaveAndExit);
     }
 
 }
 
+// TODO: Dismiss (pressing x to close) doesn't give any close state.
 registerDialogComponent(RestampDialogController,
     {
         template:
