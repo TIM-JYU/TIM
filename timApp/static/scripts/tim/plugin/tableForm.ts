@@ -1,5 +1,5 @@
 /**
- * Defines the client-side implementation of an example plugin (a tableFormndrome checker).
+ * Defines the client-side implementation of an example plugin (tableForm).
  */
 import angular, {INgModelOptions, IRootElementService, IScope} from "angular";
 import * as t from "io-ts";
@@ -25,7 +25,16 @@ export const moduleDefs = [tableFormApp];
 
 const TableFormMarkup = t.intersection([
     t.partial({
-        initword: t.string
+        initword: t.string,
+        table: nullable(t.boolean),
+        report: nullable(t.boolean),
+        seperator: nullable(t.string), /* TODO! Seperate columns with user given character for report */
+        usednames: nullable(t.string), /* TODO! username and full name, username or anonymous */
+        sortBy: nullable(t.string), /* TODO! Username and task, or task and username -- what about points? */
+        /* answerAge: nullable(t.string), /* TODO! Define time range from which answers are fetched. Maybe not to be implemented! */
+        dataCollection: nullable(t.string), /* TODO! Filter by data collection consent: allowed, denied or both */
+        print: nullable(t.string), /* TODO! Headers and answers, headers, answers, answers w/o separator line, (or Korppi export?) */
+
     }),
     GenericPluginMarkup,
     t.type({
@@ -50,7 +59,6 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
     private error?: string;
     private isRunning = false;
     private userfilter = "";
-    private runTestGreen = false;
     private data: any = {};
     private rows!: {};
     // private hiderows: number[] = [];
@@ -58,14 +66,19 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
     private tabledata: any
     private timTableData!: {};
     private modelOpts!: INgModelOptions; // initialized in $onInit, so need to assure TypeScript with "!"
+    //private table = false;
+    //private report = false;
 
     getDefaultMarkup() {
         return {};
     }
+    
+    // THIS WILL BE REMOVED AS WE IMPLEMENT A 2 BUTTON SOLUTION
+    //
+    // buttonText() {
+    //     return super.buttonText() || "Tallenna taulukko";
+    // }
 
-    buttonText() {
-        return super.buttonText() || "Save table";
-    }
 
 
     $onInit() {
@@ -161,6 +174,35 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
 
     saveText() {
         this.doSaveText(false);
+    }
+
+    // noinspection JSUnusedGlobalSymbols
+    /**
+     * Returns true value, if table attribute is true.
+     * Used to define table view & relative save button in angular, true or false.
+     * Unused method warning is suppressed, as the method is only called in template.
+     */
+    tableCheck() {
+        return (this.attrs.table == true);
+    }
+
+    // noinspection JSUnusedGlobalSymbols
+    /**
+     * Returns true value, if report attribute is true.
+     * Used to define create report button in angular, true or false.
+     * Unused method warning is suppressed, as the method is only called in template.
+     */
+    reportCheck() {
+        return (this.attrs.report == true);
+    }
+
+    /**
+     * Generates report based on the table. TODO!
+     * Used if report report is set to true and create report button is clicked.
+     * Unused method warning is suppressed, as the method is only called in template.
+     */
+    generateReport() {
+        console.log("Will Generate actual report based on the table!")
     }
 
     updateFilter() {
@@ -279,7 +321,7 @@ timApp.component("tableformRunner", {
     <tim-markup-error ng-if="::$ctrl.markupError" data="::$ctrl.markupError"></tim-markup-error>
     <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
     <p ng-if="::$ctrl.stem" ng-bind-html="::$ctrl.stem"></p>
-    <div class="form-inline"><label>{{::$ctrl.inputstem}} <span>
+    <div class="form-inline" ng-if="::$ctrl.tableCheck()"><label>{{::$ctrl.inputstem}} <span> &nbsp;
         <input type="text"
                class="form-control"
                ng-model="$ctrl.userfilter"
@@ -290,11 +332,16 @@ timApp.component("tableformRunner", {
                size="{{::$ctrl.cols}}"></span></label>
         <tim-table data="::$ctrl.data" taskid="{{$ctrl.pluginMeta.getTaskId()}}" plugintype="{{$ctrl.pluginMeta.getPlugin()}}" ></tim-table>
         <!-- TODO: taskid="{{ $ctrl.pluginm }}", vie pluginmeta & taskid-->
-    </div>
+    </div> &nbsp;
     <button class="timButton"
-            ng-if="::$ctrl.buttonText()"
+            ng-if="::$ctrl.tableCheck()"
             ng-click="$ctrl.saveText()">
-        {{::$ctrl.buttonText()}}
+        Tallenna taulukko
+    </button> &nbsp;
+    <button class="timButton"
+            ng-if="::$ctrl.reportCheck()"
+            ng-click="$ctrl.generateReport()">
+        Luo Raportti 
     </button>
     <div ng-if="$ctrl.error" ng-bind-html="$ctrl.error"></div>
     <pre ng-if="$ctrl.result">{{$ctrl.result}}</pre>

@@ -126,7 +126,7 @@ def get_fields_and_users(u_fields: List[str], groups: List[UserGroup], d: DocInf
         for task in task_ids:
             a = answer_dict.get(task.doc_task)
             if not a:
-                value = ""
+                value = None
             elif task.field == "points":
                 value = a.points
             else:
