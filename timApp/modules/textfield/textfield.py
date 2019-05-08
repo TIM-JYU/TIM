@@ -40,8 +40,8 @@ class TextfieldMarkupModel(GenericMarkupModel):
     inputplaceholder: Union[str, Missing] = missing
     followid: Union[str, Missing] = missing
     autosave: Union[bool, Missing] = missing
-    inputchecker: Union[str, Missing] = missing
-    userDefinedErrormsg: Union[str, Missing] = missing
+    validinput: Union[str, Missing] = missing
+    errormessage: Union[str, Missing] = missing
     labelStyle: Union[str, Missing] = missing
 
 class TextfieldMarkupSchema(GenericMarkupSchema):
@@ -54,8 +54,8 @@ class TextfieldMarkupSchema(GenericMarkupSchema):
     inputplaceholder: Union[str, Missing] = missing
     followid = fields.String(allow_none=True)
     autosave = fields.Boolean()
-    inputchecker = fields.String(allow_none=True)
-    userDefinedErrormsg = fields.String(allow_none=True)
+    validinput = fields.String(allow_none=True)
+    errormessage = fields.String(allow_none=True)
     labelStyle = fields.String(allow_none=True)
 
     @post_load
@@ -189,7 +189,6 @@ def reqs():
     """Introducing templates for textfield plugin"""
     templates = ["""
 ``` {#textfield_normal plugin="textfield"}
-needed_len: 1 #MINIMIPITUUS, NUMERAALINEN
 cols: 1 #KENTÄN KOKO, NUMERAALINEN
 autosave: true #AUTOSAVE, PÄÄLLÄ
 ```""", """
@@ -198,17 +197,15 @@ header: #OTSIKKO, TYHJÄ = EI OTSIKKOA
 stem: #KYSYMYS, TYHJÄ = EI KYSYMYSTÄ
 inputstem: #VASTAUS, TYHJÄ = EI VASTAUSTA
 followid: #SEURANTAID, TYHJÄ = EI SEURANTAID:tä
-needed_len: 1 #MINIMIPITUUS, NUMERAALINEN 
 initword: #ALKUARVO, TYHJÄ = EI ALKUARVOA
 buttonText: Save #PAINIKKEEN NIMI, TYHJÄ = EI PAINIKETTA
 cols: 1 #KENTÄN KOKO, NUMERAALINEN
 autosave: false #AUTOSAVE, POIS PÄÄLTÄ
-inputchecker: ^(hyv|hyl|[12345])$ #KÄYTTÄJÄSYÖTTEEN RAJOITIN, TYHJÄ = EI RAJOITUSTA
-userDefinedErrormsg: #INPUTCHECKERIN VIRHESELITE, TYHJÄ = SELITE ON INPUTCHECKER
+validinputchecker: ^(hyv|hyl|[12345])$ #KÄYTTÄJÄSYÖTTEEN RAJOITIN, TYHJÄ = EI RAJOITUSTA
+errormessage: #INPUTCHECKERIN VIRHESELITE, TYHJÄ = SELITE ON INPUTCHECKER
 ```""", """
 ``` {#textfield_label plugin="textfield" readonly=view}
 followid: #SEURANTAID, TYHJÄ = EI SEURANTAID:tä
-needed_len: 1 #MINIMIPITUUS, NUMERAALINEN 
 initword: #ALKUARVO, TYHJÄ = EI ALKUARVOA
 cols: 1 #KENTÄN KOKO, NUMERAALINEN
 autosave: false #AUTOSAVE, POIS PÄÄLTÄ

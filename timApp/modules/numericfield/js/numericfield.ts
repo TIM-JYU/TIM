@@ -18,8 +18,8 @@ const NumericfieldMarkup = t.intersection([
         inputstem: nullable(t.string),
         initnumber: nullable(t.number),
         buttonText: nullable(t.string),
-        inputchecker: nullable(t.string),
-        userDefinedErrormsg: nullable(t.string),
+        validinput: nullable(t.string),
+        errormessage: nullable(t.string),
         labelStyle: nullable(t.string),
         autosave: t.boolean,
     }),
@@ -183,10 +183,13 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
     /**
      * Method to check numeric input type for stringified numericfield.
      * Used as e.g. to define negative or positive numeric input [0-9]+.
-     * @param re inputchecker defined by given attribute.
+     * @param re validinput defined by given attribute.
      */
     validityCheck(re: string) {
         let regExpChecker = new RegExp(re);
+        if (this.numericvalue === null) {
+            return true;
+        }
         return regExpChecker.test(this.numericvalue.toString());
     }
 
@@ -228,9 +231,9 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
      */
     async doSaveText(nosave: boolean) {
         this.errormessage = "";
-        if (this.attrs.inputchecker) {
-            if(!this.validityCheck(this.attrs.inputchecker)) {
-                this.errormessage = this.attrs.userDefinedErrormsg || "Input does not pass the RegEx: " + this.attrs.inputchecker;
+        if (this.attrs.validinput) {
+            if(!this.validityCheck(this.attrs.validinput)) {
+                this.errormessage = this.attrs.errormessage || "Input does not pass the RegEx: " + this.attrs.validinput;
                 this.redAlert = true;
                 this.saveResponse.message = this.errormessage;
                 return this.saveResponse;
@@ -309,12 +312,12 @@ numericfieldApp.component("numericfieldRunner", {
                placeholder="{{::$ctrl.inputplaceholder}}"
                ng-class="{warnFrame: ($ctrl.notSaved() && !$ctrl.redAlert), alertFrame: $ctrl.redAlert}">
                </span></label>
-        <span ng-if="::$ctrl.isPlainText()" style="font-weight:bold">{{$ctrl.numericvalue}}</span>
+        <span ng-if="::$ctrl.isPlainText()" style="float:left;">{{$ctrl.numericvalue}}</span>
     </div>
     <div ng-if="$ctrl.error" style="font-size: 12px" ng-bind-html="$ctrl.error"></div>
     <button class="timButton"
             ng-if="$ctrl.buttonText()"
-            ng-disabled="$ctrl.isRunning || !$ctrl.numericvalue || $ctrl.readonly"
+            ng-disabled="$ctrl.isRunning || $ctrl.readonly"
             ng-click="$ctrl.saveText()">
         {{::$ctrl.buttonText()}}
     </button>
