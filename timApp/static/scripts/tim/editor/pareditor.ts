@@ -2,7 +2,7 @@ import angular, {IRootElementService, IScope} from "angular";
 import $ from "jquery";
 import rangyinputs from "rangyinputs";
 import {setEditorScope} from "tim/editor/editorScope";
-import {fixDefExport, markAsUsed} from "tim/util/utils";
+import {fixDefExport, markAsUsed, to} from "tim/util/utils";
 import {timApp} from "../app";
 import {IExtraData, ITags} from "../document/editing/edittypes";
 import {getElementByParId, getParAttributes} from "../document/parhelpers";
@@ -861,26 +861,29 @@ ${backTicks}
                     stampFormat = "";
                 }
                 const customStampModel = this.docSettings.custom_stamp_model;
-                const r = await showRestampDialog({
+                const r = await to(showRestampDialog({
                     attachments: this.activeAttachments,
                     customStampModel: customStampModel,
                     meetingDate: date,
                     stampFormat: stampFormat,
-                });
-                if (r.valueOf() === RestampDialogClose.RestampedReturnToEditor.valueOf()) {
-                    // If restamped and then returned, all are up-to-date.
-                    this.saving = false;
-                    this.activeAttachments.every((att) => att.upToDate = true);
-                    return;
-                }
-                if (r.valueOf() === RestampDialogClose.NoRestampingReturnToEditor.valueOf() ||
-                    r.valueOf() === RestampDialogClose.RestampingFailedReturnToEditor.valueOf()) {
-                    this.saving = false;
-                    // If returned to editor without restamping, return to state prior to saving.
-                    this.activeAttachments = tempAttachments;
-                    return;
+                }));
+                if (r.ok) {
+                    if (r.result === RestampDialogClose.RestampedReturnToEditor) {
+                        // If restamped and then returned, all are up-to-date.
+                        this.saving = false;
+                        this.activeAttachments.every((att) => att.upToDate = true);
+                        return;
+                    }
+                    if (r.result === RestampDialogClose.NoRestampingReturnToEditor ||
+                        r.result === RestampDialogClose.RestampingFailedReturnToEditor) {
+                        this.saving = false;
+                        // If returned to editor without restamping, return to state prior to saving.
+                        this.activeAttachments = tempAttachments;
+                        return;
+                    }
                 }
                 // If Save and exit was chosen, falls through to normal saving process.
+                // Dismiss (pressing x to close) is considered the same as Save and exit.
             }
         }
         this.saving = true;

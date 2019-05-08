@@ -2,12 +2,13 @@
  * Controller and HTML template for attachment restamping dialog.
  */
 
-import {IRootElementService, IScope} from "angular";
+import {IPromise, IRootElementService, IScope} from "angular";
 import * as focusMe from "tim/ui/focusMe";
 import {DialogController, registerDialogComponent, showDialog} from "../ui/dialog";
 import {markAsUsed, to} from "../util/utils";
 import {IStampingData} from "./pareditor";
 import {$http} from "../util/ngimport";
+import {RenameResult} from "../document/editing/pluginRenameForm";
 
 // The close states dialog can return.
 export enum RestampDialogClose {
@@ -110,7 +111,6 @@ export class RestampDialogController extends DialogController<{params: IStamping
 
 }
 
-// TODO: Dismiss (pressing x to close) doesn't give any close state.
 registerDialogComponent(RestampDialogController,
     {
         template:
@@ -147,6 +147,6 @@ registerDialogComponent(RestampDialogController,
 `,
     });
 
-export async function showRestampDialog(stampingData: IStampingData) {
-    return await showDialog(RestampDialogController, {params: () => stampingData}).result;
+export function showRestampDialog(stampingData: IStampingData): IPromise<RestampDialogClose> {
+    return showDialog(RestampDialogController, {params: () => stampingData}).result;
 }
