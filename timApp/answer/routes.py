@@ -340,7 +340,7 @@ def post_answer(plugintype: str, task_id_ext: str):
                     )
                     db.session.add(a_result)
 
-    if plugin.type == 'jsrunner':
+    if plugin.type == 'jsrunner' or plugin.type == 'tableForm':
         handle_jsrunner_response()
         db.session.commit()
         return json_response(result)
