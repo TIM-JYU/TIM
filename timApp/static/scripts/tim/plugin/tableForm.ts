@@ -28,7 +28,7 @@ const TableFormMarkup = t.intersection([
         initword: t.string,
         table: nullable(t.boolean),
         report: nullable(t.boolean),
-        seperator: nullable(t.string), /* TODO! Seperate columns with user given character for report */
+        separator: nullable(t.string), /* TODO! Separate columns with user given character for report */
         usednames: nullable(t.string), /* TODO! username and full name, username or anonymous */
         sortBy: nullable(t.string), /* TODO! Username and task, or task and username -- what about points? */
         /* answerAge: nullable(t.string), /* TODO! Define time range from which answers are fetched. Maybe not to be implemented! */
@@ -66,8 +66,6 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
     private tabledata: any
     private timTableData!: {};
     private modelOpts!: INgModelOptions; // initialized in $onInit, so need to assure TypeScript with "!"
-    //private table = false;
-    //private report = false;
 
     getDefaultMarkup() {
         return {};
@@ -141,9 +139,6 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
                 }
             }
         }
-
-
-        console.log("asd");
     }
 
     /** TODO SIIRRÄ jonnekin
@@ -176,21 +171,17 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
         this.doSaveText(false);
     }
 
-    // noinspection JSUnusedGlobalSymbols
     /**
      * Returns true value, if table attribute is true.
      * Used to define table view & relative save button in angular, true or false.
-     * Unused method warning is suppressed, as the method is only called in template.
      */
     tableCheck() {
         return (this.attrs.table == true);
     }
 
-    // noinspection JSUnusedGlobalSymbols
     /**
      * Returns true value, if report attribute is true.
      * Used to define create report button in angular, true or false.
-     * Unused method warning is suppressed, as the method is only called in template.
      */
     reportCheck() {
         return (this.attrs.report == true);
@@ -198,11 +189,35 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
 
     /**
      * Generates report based on the table. TODO!
-     * Used if report report is set to true and create report button is clicked.
-     * Unused method warning is suppressed, as the method is only called in template.
+     * Used if report is set to true and create report button is clicked.
      */
     generateReport() {
-        console.log("Will Generate actual report based on the table!")
+        console.log(this.separator(), this.names());
+    }
+
+    /**
+     * String (or character) to separate fields in report.
+     * Used in report to define how fields/values are separated.
+     */
+    separator() {
+        return (this.attrs.separator || ";");
+    }
+
+    /**
+     * String to determinate how user names are viewed in report.
+     * Choises are username, username and full name and anonymous.
+     */
+    names() {
+        return (this.attrs.usednames || "username");
+    }
+
+    /**
+     * TODO! VERY MUCH !!
+     * String to determinate how user names are viewed in report.
+     * Choises are username, username and full name and anonymous.
+     */
+    sortBy() {
+        return (this.attrs.sortBy || "username");
     }
 
     updateFilter() {
@@ -279,7 +294,6 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
                 replyRows[userLocations[numberPlace]][taskLocations[columnPlace]] = cellContent;
             }
         }
-        console.log("asd");
         // this.isRunning = true;
         // this.result = undefined;
         const params = {

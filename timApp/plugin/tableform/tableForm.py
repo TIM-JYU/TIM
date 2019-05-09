@@ -50,6 +50,11 @@ class TableFormMarkupModel(GenericMarkupModel):
     groups: Union[List[str], Missing] = missing
     table: Union[bool, Missing] = missing
     report: Union[bool, Missing] = missing
+    separator: Union[str, Missing] = missing
+    usednames: Union[str, Missing] = missing
+    sortBy: Union[str, Missing] = missing
+    dataCollection: Union[str, Missing] = missing
+    print: Union[str, Missing] = missing
     fields: Union[List[str], Missing] = missing
 
 
@@ -58,6 +63,11 @@ class TableFormMarkupSchema(GenericMarkupSchema):
     groups = fields.List(fields.Str())
     table = fields.Boolean()
     report = fields.Boolean()
+    separator = fields.Str(allow_none=True)
+    usednames = fields.Str(allow_none=True)
+    sortBy = fields.Str(allow_none=True)
+    dataCollection: fields.Str(allow_none=True)
+    print: fields.Str(allow_none=True)
     fields = fields.List(fields.Str())
 
 
