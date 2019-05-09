@@ -17,15 +17,20 @@ interface INameResponse {
     can_change_name: boolean;
 }
 
+interface ILoginParams {
+    showSignup?: boolean;
+    addingToSession?: boolean;
+}
+
 markAsUsed(focusMe);
 
-export class LoginDialogController extends DialogController<{params: boolean | undefined}, {}> {
+export class LoginDialogController extends DialogController<{params: ILoginParams}, {}> {
     static component = "loginDialog";
     static $inject = ["$element", "$scope"] as const;
-    private showSignup?: boolean;
+    private showSignup?: boolean; // Show sign up form instead of log in.
     private loggingout: boolean;
     private loginForm: {email: string, password: string};
-    private addingToSession: boolean;
+    private addingToSession: boolean; // Adding another user.
     private korppiLoading: boolean = false;
 
     // fields related to signup
@@ -57,9 +62,17 @@ export class LoginDialogController extends DialogController<{params: boolean | u
     }
 
     async $onInit() {
-        this.showSignup = this.resolve.params;
-        if (this.showSignup === undefined) {
-            this.showSignup = false;
+        const params = this.resolve.params;
+        if (params) {
+            if (params.addingToSession !== undefined) {
+                this.addingToSession = params.addingToSession;
+            }
+            // By default show log in instead of sign up.
+            if (params.showSignup !== undefined) {
+                this.showSignup = params.showSignup;
+            } else {
+                this.showSignup = false;
+            }
         }
         super.$onInit();
 
@@ -306,7 +319,7 @@ registerDialogComponent(LoginDialogController,
         <div class="form" ng-show="$ctrl.showSignup">
             <p class="text-center">
                 If you don't have an existing TIM or Korppi account,
-                create a new TIM account here.
+                create a new TIM account here. A temporary password will be sent to the provided email address.
             </p>
             <p class="text-center" ng-if="$ctrl.resetPassword && !$ctrl.emailSent">
                 To reset password, enter your email or username first.
@@ -434,6 +447,7 @@ registerDialogComponent(LoginDialogController,
 `,
     });
 
-export async function showLoginDialog(showSignup?: boolean) {
-    return await showDialog(LoginDialogController, {params: () => showSignup}).result;
+export async function showLoginDialog(showSignup?: boolean, addingToSession?: boolean) {
+    const params: ILoginParams = {showSignup: showSignup, addingToSession: addingToSession};
+    return await showDialog(LoginDialogController, {params: () => params}).result;
 }

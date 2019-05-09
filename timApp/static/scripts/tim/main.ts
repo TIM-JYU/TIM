@@ -35,6 +35,7 @@ import * as sidebarMenuCtrl from "tim/sidebar/sidebarMenuCtrl";
 import * as bootstrapPanel from "tim/ui/bootstrapPanel";
 import * as markupError from "tim/ui/markuperror";
 import * as loginMenu from "tim/user/loginMenu";
+import * as userMenu from "tim/user/userMenu";
 import * as settingsCtrl from "tim/user/settingsCtrl";
 import {markAsUsed, ModuleArray, StringArray} from "tim/util/utils";
 import * as annotation from "tim/velp/annotation";
@@ -81,6 +82,7 @@ markAsUsed(
     templateList,
     timTable,
     userlistController,
+    userMenu,
     velpSelection,
     viewctrl,
 );
