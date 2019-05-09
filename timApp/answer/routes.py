@@ -337,6 +337,7 @@ def post_answer(plugintype: str, task_id_ext: str):
                         task_id=task_id.doc_task,
                         users=[u],
                         valid=True,  # TODO: last points modifyer
+                        last_points_modifier=get_current_user_group()
                     )
                     db.session.add(a_result)
 
