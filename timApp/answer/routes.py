@@ -132,8 +132,13 @@ def get_fields_and_users(u_fields: List[str], groups: List[UserGroup], d: DocInf
             else:
                 json_str = a.content
                 p = json.loads(json_str)
-                values_p = list(p.values())
-                value = values_p[0]
+                if len(p) > 1:
+                    plug = find_plugin_from_document(dib.document, task, get_current_user_object())
+                    content_field = plug.get_content_field_name()
+                    value = p[content_field]
+                else:
+                    values_p = list(p.values())
+                    value = values_p[0]
             user_tasks[task.extended_or_doc_task] = value
         res.append({'user': user, 'fields': user_tasks})
     print(res)
@@ -331,16 +336,30 @@ def post_answer(plugintype: str, task_id_ext: str):
                 content = json.dumps(c)
                 if an and an.content == content:
                     pass
+                elif an:
+                    an_content = json.loads(an.content)
+                    an_content[content_type] = user_fields[key]
+                    an_content = json.dumps(an_content)
+                    a_result = Answer(
+                        content=an_content,
+                        task_id=task_id.doc_task,
+                        users=[u],
+                        valid=True,
+                        last_points_modifier=get_current_user_group()
+                    )
+                    db.session.add(a_result)
                 else:
                     a_result = Answer(
                         content=content,
                         task_id=task_id.doc_task,
                         users=[u],
-                        valid=True,  # TODO: last points modifyer
+                        valid=True,  
+                        last_points_modifier=get_current_user_group()
                     )
                     db.session.add(a_result)
 
-    if plugin.type == 'jsrunner':
+
+    if plugin.type == 'jsrunner' or plugin.type == 'tableForm':
         handle_jsrunner_response()
         db.session.commit()
         return json_response(result)

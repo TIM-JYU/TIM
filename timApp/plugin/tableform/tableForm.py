@@ -29,11 +29,12 @@ from timApp.answer.routes import get_fields_and_users
 @attr.s(auto_attribs=True)
 class TableFormStateModel:
     """Model for the information that is stored in TIM database for each answer."""
-    userword: str
+    #userword: str
+    #TODO: Tallenna taulukon data sellaisenaan / tallenna käyttäjän taulukkomäärityksiä?
 
 
 class TableFormStateSchema(Schema):
-    userword = fields.Str(required=True)
+    #userword = fields.Str(required=True)
 
     @post_load
     def make_obj(self, data):
@@ -47,13 +48,18 @@ class TableFormStateSchema(Schema):
 class TableFormMarkupModel(GenericMarkupModel):
     initword: Union[str, Missing] = missing
     groups: Union[List[str], Missing] = missing
+    table: Union[bool, Missing] = missing
+    report: Union[bool, Missing] = missing
     fields: Union[List[str], Missing] = missing
 
 
 class TableFormMarkupSchema(GenericMarkupSchema):
     initword = fields.Str()
     groups = fields.List(fields.Str())
+    table = fields.Boolean()
+    report = fields.Boolean()
     fields = fields.List(fields.Str())
+
 
     @post_load
     def make_obj(self, data):
@@ -206,20 +212,20 @@ def render_static_tableForm(m: TableFormHtmlModel):
     return render_template_string(
         """
 <div class="csRunDiv no-popup-menu">
-    <h4>{{ header }}</h4>
-    <p class="stem">{{ stem }}</p>
-    <div><label>{{ inputstem or '' }} <span>
-        <input type="text"
-               class="form-control"
-               placeholder="{{inputplaceholder or ''}}"
-               value="{{userword or ''}}"
-               size="{{cols}}"></span></label>
-    </div>
-    <button class="timButton">
-        {{ buttonText or button or "Save" }}
-    </button>
-    <a>{{ resetText }}</a>
-    <p class="plgfooter">{{ footer }}</p>
+<h4>{{ header }}</h4>
+<p class="stem">{{ stem }}</p>
+<div><label>{{ inputstem or '' }} <span>
+<input type="text"
+    class="form-control"
+    placeholder="{{inputplaceholder or ''}}"
+    value="{{userword or ''}}"
+    size="{{cols}}"></span></label>
+</div>
+<button class="timButton">
+    {{ buttonText or button or "Save" }}
+</button>
+<a>{{ resetText }}</a>
+<p class="plgfooter">{{ footer }}</p>
 </div>
         """,
         **attr.asdict(m.markup),
@@ -261,7 +267,15 @@ def answer(args: TableFormInputModel):
     #     web['result'] = "saved"
 
     #TODO: Return result for (un)succesful save
-    return jsonify("aaa")
+    web = {}
+    result = {'web': web}
+
+    nosave = args.input.nosave
+    if not nosave:
+        save = saveRows
+        result["save"] = save
+        web['result'] = "saved"
+    return jsonify(result)
 
 
 def check_letters(word: str, needed_len: int) -> bool:
@@ -279,10 +293,25 @@ def check_letters(word: str, needed_len: int) -> bool:
 @tableForm_plugin.route('/reqs/')
 @tableForm_plugin.route('/reqs')
 def reqs():
+    """Introducing templates for tableForm plugin"""
     templates = ["""
-``` {#ekatableForm plugin="tableForm"}
+``` {#tableForm_table plugin="tableForm"}
 groups: 
  - Group Name #TODO ryhmä listana vai max 1 ryhmä?
+table: true
+report: false
+```""", """
+``` {#tableForm_table_report plugin="tableForm"}
+groups: 
+ - Group Name #TODO ryhmä listana vai max 1 ryhmä?
+table: true
+report: true
+```""", """
+``` {#tableForm_report plugin="tableForm"}
+groups: 
+ - Group Name #TODO ryhmä listana vai max 1 ryhmä?
+table: false
+report: true
 ```"""]
     editor_tabs = [
             {
@@ -293,8 +322,18 @@ groups:
                         'items': [
                             {
                                 'data': templates[0].strip(),
-                                'text': 'TableForm',
-                                'expl': 'Add a table for editing forms',
+                                'text': 'Table only',
+                                'expl': 'Form a table for editing forms',
+                            },
+                            {
+                                'data': templates[1].strip(),
+                                'text': 'Table and report',
+                                'expl': 'Form a table for editing forms, that can be converted to report',
+                            },
+                            {
+                                'data': templates[2].strip(),
+                                'text': 'Report only',
+                                'expl': 'Form a report',
                             },
                         ],
                     },
