@@ -206,7 +206,6 @@ export class ViewCtrl implements IController {
             this.document.rebuildSections();
             window.addEventListener("beforeunload", (e) => {
                 saveCurrentScreenPar();
-                console.log(this.timComponents);
                 var unsavedTimComponents = false;
                 for (const t of this.timComponents.values()) {
                     if (t.isUnSaved()) {
