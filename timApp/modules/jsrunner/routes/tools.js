@@ -39,18 +39,14 @@ class Tools {
     getString(fieldName, def="") {
         let fn = this.normalizeField(fieldName);
         let r = this.data.fields[fn];
-        if (r === null) {
-            r = def;
-        }
+        if (r === null) r = def;
         return r;
     }
 
     getValue(fieldName, def="") {
         let fn = this.normalizeField(fieldName);
         let r = this.data.fields[fn];
-        if (r === null) {
-            r = def;
-        }
+        if (r === null) r = def;
         return r;
     }
 
@@ -101,13 +97,8 @@ class Tools {
         return def;
     }
 
-    getDefaultCredits(def=this.markup.defaultCredits) {
-        // TODO: error if default not set
-        return def;
-    }
-
     getGrade(points) {
-        const scale = this.markup.gradingScale;
+        const scale = this.markup.gradingScale; // TODO: error if gardingScale not set
         const values = Object.values(scale);
         values.sort(function(a, b){return b-a});
         let grade = "";
@@ -116,16 +107,18 @@ class Tools {
                 grade = Object.keys(scale).find(key => scale[key] === values[i]);
                 break;
             }
-            grade = this.markup.failGrade; //TODO: oletus = ""
+            grade = this.markup.failGrade || "";
         }
         console.log(grade);
         return grade;
     }
 
-    saveGrade(grade, def=this.getDefaultPoints(), defa=this.getDefaultCredits()) {
-        let fn = this.normalizeField(this.markup.gradeField);
+    saveGrade(gradeVal, points) {
+        let d = this.markup.gradeField || "grade";
+        let fn = this.normalizeField(d);
         // TODO: fix
-        this.result[fn] = grade;
+        this.result[fn] = gradeVal;
+
     }
 
     // TODO: print

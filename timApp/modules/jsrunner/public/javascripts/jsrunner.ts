@@ -12,7 +12,6 @@ export const moduleDefs = [jsrunnerApp];
 
 const JsrunnerMarkup = t.intersection([
     t.partial({
-        defaultCredits: t.number,
         defaultPoints: t.number,
         failGrade: t.string,
         fields: t.array(t.string),
