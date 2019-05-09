@@ -72,7 +72,7 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
     getDefaultMarkup() {
         return {};
     }
-    
+
     // THIS WILL BE REMOVED AS WE IMPLEMENT A 2 BUTTON SOLUTION
     //
     // buttonText() {
@@ -100,34 +100,16 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
         //      console.log("eaa");
         //  }
         this.data.userdata = {'cells': {}};
-        // for (let i = 0; i < Object.keys(this.rows).length; i++){ // TODO parempi silmukka - object.keys pois
-        //     this.data.userdata['A' + (i+1).toString()] = Object.keys(this.rows)[i];
-        //     for (let j = 0; j < Object.keys(Object.keys(this.rows)[i]).length; j++)
-        //     {
-        //         if(Object.keys(Object.keys(this.rows)[i])[j]){
-        //             this.data.userdata[this.colnumToLetters(j+1) + (i+2).toString()] = Object.keys(Object.values(this.rows)[i])[j]
-        //         }
-        //     }
-        // }
-        // if(this.attrsall.fields){
-        //     for(const r in this.rows){
-        //         for (const f of this.attrsall.fields) {
-        //             console.log(this.rows[r][f])
-        //             if(this.rows[r][f] != undefined){
-        //                 console.log("asd");
-        //             }
-        //         }
-        //     }
-        // }
         var x = 2;
         for (const r of Object.keys(this.rows)) {
-            this.data.userdata['cells']['A' + x] = r;
+            this.data.userdata['cells']['A' + x] = {"cell":r, "backgroundColor":"#efecf1"};
             this.data.lockedCells.push('A' + x);
             x++;
         }
+        //TODO: Load default cell colors from tableForm's private answer?
         if (this.attrsall.fields) {
             for (var y = 0; y < this.attrsall.fields.length; y++) {
-                this.data.userdata['cells'][this.colnumToLetters(y + 1) + 1] = this.attrsall.fields[y];
+                this.data.userdata['cells'][this.colnumToLetters(y + 1) + 1] =  {"cell":this.attrsall.fields[y], "backgroundColor":"#efecf1"};
                 this.data.lockedCells.push(this.colnumToLetters(y + 1) + 1)
                 x = 0;
                 for (const [u,r] of Object.entries(this.rows)) {
