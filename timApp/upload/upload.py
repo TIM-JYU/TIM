@@ -37,8 +37,10 @@ upload = Blueprint('upload',
 
 @upload.after_request
 def set_csp(resp: Response):
-    resp.headers['Content-Security-Policy'] = "sandbox"
-    resp.headers['X-Content-Security-Policy'] = "sandbox"  # For IE
+    # Chrome refuses to render PDFs with "CSP: sandbox" header
+    if resp.mimetype != 'application/pdf':
+        resp.headers['Content-Security-Policy'] = "sandbox"
+        resp.headers['X-Content-Security-Policy'] = "sandbox"  # For IE
     return resp
 
 
