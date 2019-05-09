@@ -15,7 +15,7 @@ import {
     PluginMeta,
     withDefault
 } from "tim/plugin/util";
-import {$http} from "../../../static/scripts/tim/util/ngimport";
+import {$http} from "tim/util/ngimport";
 import {markAsUsed, to} from "tim/util/utils";
 import {polyfill} from "mobile-drag-drop";
 import drag from "angular-drag-and-drop-lists";
@@ -71,12 +71,12 @@ class DragController extends PluginBase<t.TypeOf<typeof DragMarkup>, t.TypeOf<ty
     private shuffle?: boolean;
     private effectAllowed?: string;
     private vctrl!: ViewCtrl;
-    private wordObjs?: Array<{id: number, word: string}>;
+    private wordObjs?: Array<{ id: number, word: string }>;
 
     constructor(
         protected scope: IScope,
         protected element: IRootElementService,
-        ) {
+    ) {
         super(scope, element);
     }
 
@@ -140,7 +140,9 @@ class DragController extends PluginBase<t.TypeOf<typeof DragMarkup>, t.TypeOf<ty
             this.element.addClass("touchdrag");
         }, {passive: false});
 
-        this.addToCtrl();
+        if (!this.attrsall.preview) {
+            this.addToCtrl();
+        }
     }
 
     /**
@@ -148,7 +150,7 @@ class DragController extends PluginBase<t.TypeOf<typeof DragMarkup>, t.TypeOf<ty
      * In addition, initializes program logic.
      * @param words Array of strings to be transformed into draggable models.
      */
-    createWordobjs(words: string[]){
+    createWordobjs(words: string[]) {
         if (!words) {
             return;
             //TODO: error message or default word objects?
@@ -158,16 +160,16 @@ class DragController extends PluginBase<t.TypeOf<typeof DragMarkup>, t.TypeOf<ty
         if (this.copy === "source" || this.copy === "target") {
             this.effectAllowed = "copy";
         }
-       this.wordObjs = words.map((x, i) => ({
-           effectAllowed: this.effectAllowed,
-           id: i,
-           type: this.type,
-           word: x,
-       }));
+        this.wordObjs = words.map((x, i) => ({
+            effectAllowed: this.effectAllowed,
+            id: i,
+            type: this.type,
+            word: x,
+        }));
         if (this.copy === "source") {
             this.max = this.wordObjs.length;
         }
-        }
+    }
 
     /**
      * Adds this plugin to ViewCtrl so other plugins can get information about the plugin though it.
@@ -212,6 +214,7 @@ class DragController extends PluginBase<t.TypeOf<typeof DragMarkup>, t.TypeOf<ty
         // if (words.length === 0) return undefined;
         return words;
     }
+
     /**
      * Force the plugin to save its information
      *
@@ -237,7 +240,7 @@ class DragController extends PluginBase<t.TypeOf<typeof DragMarkup>, t.TypeOf<ty
      * Shuffles string array
      * @param words Array of strings to be shuffled.
      */
-    shuffleWords(words: string []): string []{
+    shuffleWords(words: string []): string [] {
         // shuffle algorithm from csparsons.ts
         const result = words.slice();
         const n = words.length;
@@ -330,6 +333,5 @@ dragApp.component("dragRunner", {
     <div ng-if="$ctrl.error" ng-bind-html="$ctrl.error"></div>
     <p ng-if="::$ctrl.footer" ng-bind="::$ctrl.footer" class="plgfooter"></p>
 </div>
-
 `,
 });
