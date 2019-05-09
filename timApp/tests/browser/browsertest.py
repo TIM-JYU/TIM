@@ -47,7 +47,7 @@ global_drv.implicitly_wait(10)
 
 
 class BrowserTest(TimLiveServer, TimRouteTest):
-    login_dropdown_path = '//login-menu/div/button'
+    login_dropdown_path = '//login-menu/user-menu/div/button'
     screenshot_dir = '/service/screenshots'
 
     def __init__(self, *args, **kwargs):
@@ -82,6 +82,7 @@ class BrowserTest(TimLiveServer, TimRouteTest):
         # self.save_screenshot('adsasd')
         elem = self.drv.find_element_by_xpath('//login-menu/button')
         elem.click()
+        elem = self.find_element("login-dialog")
         elem.find_element_by_xpath("//input[@type='text']").send_keys(email)
         elem.find_element_by_xpath("//input[@type='password']").send_keys(password)
         elem.find_element_by_xpath("//button[@type='submit']").click()
