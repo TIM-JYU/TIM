@@ -150,7 +150,7 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
      * Used as e.g. timButton ng-click event.
      */
     saveText() {
-        if (this.notSaved()) {
+        if (this.isUnSaved()) {
             return this.doSaveText(false);
         }
         else {
@@ -217,7 +217,7 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
      * about unsaved changes.
      * Unused method warning is suppressed, as the method is only called in template.
      */
-    notSaved() {
+    isUnSaved() {
         if (this.notSavedNumber != this.numericvalue) {
             this.isSaved = true;
         }
@@ -310,7 +310,7 @@ numericfieldApp.component("numericfieldRunner", {
                tooltip-is-open="$ctrl.f.$invalid && $ctrl.f.$dirty"
                tooltip-trigger="mouseenter"
                placeholder="{{::$ctrl.inputplaceholder}}"
-               ng-class="{warnFrame: ($ctrl.notSaved() && !$ctrl.redAlert), alertFrame: $ctrl.redAlert}">
+               ng-class="{warnFrame: ($ctrl.isUnSaved() && !$ctrl.redAlert), alertFrame: $ctrl.redAlert}">
                </span></label>
         <span ng-if="::$ctrl.isPlainText()" style="float:left;">{{$ctrl.numericvalue}}</span>
     </div>

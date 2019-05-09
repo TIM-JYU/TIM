@@ -152,7 +152,7 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
      * Used as e.g. timButton ng-click event.
      */
     async saveText() {
-        if (this.notSaved()) {
+        if (this.isUnSaved()) {
             return this.doSaveText(false);
         }
         else {
@@ -222,7 +222,7 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
      * about unsaved changes.
      * Unused method warning is suppressed, as the method is only called in template.
      */
-    notSaved() {
+    isUnSaved() {
         if (this.notSavedWord != this.userword) {
             this.isSaved = true;
         }
@@ -324,7 +324,7 @@ textfieldApp.component("textfieldRunner", {
                tooltip-trigger="mouseenter"
                placeholder="{{::$ctrl.inputplaceholder}}"
                size="{{::$ctrl.cols}}" 
-               ng-class="{warnFrame: ($ctrl.notSaved() && !$ctrl.redAlert), alertFrame: $ctrl.redAlert }">
+               ng-class="{warnFrame: ($ctrl.isUnSaved() && !$ctrl.redAlert), alertFrame: $ctrl.redAlert }">
                </span></label>
          <span ng-if="::$ctrl.isPlainText()" style="float:left;">{{$ctrl.userword}}</span>
     </form>
