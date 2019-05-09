@@ -100,6 +100,7 @@ def get_fields_and_users(u_fields: List[str], groups: List[UserGroup], d: DocInf
     task_ids = []
     # TODO support aliases e.g. 55.d1=d1
     # alias_map = {}
+    docMap = {}
     for field in u_fields:
         task_id = TaskId.parse(field, False, False)
         task_ids.append(task_id)
@@ -108,6 +109,7 @@ def get_fields_and_users(u_fields: List[str], groups: List[UserGroup], d: DocInf
         dib = get_doc_or_abort(task_id.doc_id)
         if not current_user.has_teacher_access(dib):
             abort(403, f'Missing teacher access for document {dib.id}')
+        docMap[task_id.doc_id] = dib.document
 
     res = []
 
@@ -133,7 +135,7 @@ def get_fields_and_users(u_fields: List[str], groups: List[UserGroup], d: DocInf
                 json_str = a.content
                 p = json.loads(json_str)
                 if len(p) > 1:
-                    plug = find_plugin_from_document(dib.document, task, get_current_user_object())
+                    plug = find_plugin_from_document(docMap[task.doc_id], task, get_current_user_object())
                     content_field = plug.get_content_field_name()
                     value = p[content_field]
                 else:
