@@ -6,6 +6,8 @@ class Tools {
         this.markup = markup;
         this.result = {};
         this.regex = /^[0-9]+\./;
+        this.printP = "";
+        this.error = "";
     }
 
     normalizeField(fieldName) {
@@ -17,10 +19,10 @@ class Tools {
     }
 
     getStudentName() {
-        return this.data.user['real_name'];
+        return this.data.user.real_name;
     }
 
-    getDouble(fieldName, def=0) {
+    getDouble(fieldName, def = 0) {
         let fn = this.normalizeField(fieldName);
         let s = this.data.fields[fn];
         let r = parseFloat(s);
@@ -28,7 +30,7 @@ class Tools {
         return r;
     }
 
-    getInt(fieldName, def=0) {
+    getInt(fieldName, def = 0) {
         let fn = this.normalizeField(fieldName);
         let s = this.data.fields[fn];
         let r = parseInt(s);
@@ -36,14 +38,14 @@ class Tools {
         return r;
     }
 
-    getString(fieldName, def="") {
+    getString(fieldName, def = "") {
         let fn = this.normalizeField(fieldName);
         let r = this.data.fields[fn];
         if (r === null) r = def;
         return r;
     }
 
-    getValue(fieldName, def="") {
+    getValue(fieldName, def = "") {
         let fn = this.normalizeField(fieldName);
         let r = this.data.fields[fn];
         if (r === null) r = def;
@@ -60,7 +62,7 @@ class Tools {
     }
     */
 
-    getSum(fieldName, start, end, def=0) {
+    getSum(fieldName, start, end, def = 0) {
         let fn = this.normalizeField(fieldName);
         let sum = 0;
         for (let i = start; i <= end; i++) {
@@ -92,15 +94,18 @@ class Tools {
         this.result[fn] = r;
     }
 
-    getDefaultPoints(def=this.markup.defaultPoints) {
+    getDefaultPoints(def = this.markup.defaultPoints) {
         // TODO: error if default not set
+        if (!this.markup.defaultPoints) this.error = "Default points have not been set";
         return def;
     }
 
     getGrade(points) {
         const scale = this.markup.gradingScale; // TODO: error if gardingScale not set
         const values = Object.values(scale);
-        values.sort(function(a, b){return b-a});
+        values.sort(function (a, b) {
+            return b - a
+        });
         let grade = "";
         for (let i = 0; i < values.length; i++) {
             if (points >= values[i]) {
@@ -109,22 +114,41 @@ class Tools {
             }
             grade = this.markup.failGrade || "";
         }
-        console.log(grade);
         return grade;
     }
 
+    //TODO: fix
     saveGrade(gradeVal, points) {
         let d = this.markup.gradeField || "grade";
         let fn = this.normalizeField(d);
-        // TODO: fix
         this.result[fn] = gradeVal;
+        if (arguments.length === 2) { // TODO: ?
+            let c = this.markup.creditField || "credit";
+            let fnc = this.normalizeField(c);
+            this.result[fnc] = points;
+        }
 
     }
 
-    // TODO: print
+    print() {
+        for (let i = 0; i < arguments.length; i++) {
+            let a = arguments[i].toString();
+            this.printP += a + " "; // TODO: millä merkillä halutaan erotella
+
+        }
+        this.printP += "\n";
+    }
 
     getResult() {
-        return {'user': this.data.user.id, 'fields':  this.result};
+        return {'user': this.data.user.id, 'fields': this.result};
+    }
+
+    getPrint() {
+        return this.printP;
+    }
+
+    getError() {
+        return this.error;
     }
 }
 

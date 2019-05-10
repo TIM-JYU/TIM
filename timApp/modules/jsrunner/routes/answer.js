@@ -25,6 +25,8 @@ router.put('/', function (req, res, next) {
         `
         const Tools = require('./tools');
         let r = [];
+        let plsfusakdfb = "";
+        let errrrrrrrrrrrror = "";
         for (const user of data) {
             const tools = new Tools(user, currDoc[0], markup);
             function runProgram() {
@@ -32,13 +34,15 @@ router.put('/', function (req, res, next) {
             }
             runProgram(); 
             r.push(tools.getResult());
+            plsfusakdfb += tools.getPrint();
+            errrrrrrrrrrrror = tools.getError();
         }
-        module.exports = r;
+        module.exports = {"res": r, "pr": plsfusakdfb, "err": errrrrrrrrrrrror};
         `,
         "/jsrunner/routes/vm.js",
         );
     console.log(result);
-    res.send({'save': result, 'web': {'result': 'points saved'}});
+    res.send({'save': result.res, 'web': {'result': 'points saved', 'print': result.pr, 'error': result.err}});
 
 });
 

@@ -12,6 +12,7 @@ export const moduleDefs = [jsrunnerApp];
 
 const JsrunnerMarkup = t.intersection([
     t.partial({
+        creditField: t.string,
         defaultPoints: t.number,
         failGrade: t.string,
         fields: t.array(t.string),
@@ -33,6 +34,7 @@ const JsrunnerAll = t.intersection([
 class JsrunnerController extends PluginBase<t.TypeOf<typeof JsrunnerMarkup>, t.TypeOf<typeof JsrunnerAll>, typeof JsrunnerAll> {
     private error?: string;
     private isRunning = false;
+    private print: string = "";
 
     getDefaultMarkup() {
         return {};
@@ -63,12 +65,13 @@ class JsrunnerController extends PluginBase<t.TypeOf<typeof JsrunnerMarkup>, t.T
             params.input.nosave = true;
         }
         const url = this.pluginMeta.getAnswerUrl();
-        const r = await to($http.put<{web: {result: string, error?: string}}>(url, params));
+        const r = await to($http.put<{web: {result: string, error?: string, print: string}}>(url, params));
         this.isRunning = false;
         if (r.ok) {
             const data = r.result.data;
-            window.location.reload(); // TODO: ei toimi aina
+            // window.location.reload(); // TODO: ei tehdä jos print
             this.error = data.web.error;
+            this.print = data.web.print;
         } else {
             r.result.data.error = "Infinite loop or some other error?"; // TODO: näinkö?
         }
@@ -100,6 +103,7 @@ jsrunnerApp.component("jsRunner", {
     <a href="" ng-if="$ctrl.edited" ng-click="$ctrl.initCode()">{{::$ctrl.resetText}}</a>
     <div ng-if="$ctrl.error" ng-bind-html="$ctrl.error"></div>
     <pre ng-if="$ctrl.result">{{$ctrl.result}}</pre>
+    <pre ng-if="$ctrl.print">{{$ctrl.print}}</pre>
     <p ng-if="::$ctrl.footer" ng-bind="::$ctrl.footer" class="plgfooter"></p>
 </div>
 `,
