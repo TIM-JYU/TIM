@@ -76,7 +76,8 @@ export class LoginDialogController extends DialogController<{params: ILoginParam
                 this.showSignup = false;
             }
         }
-        super.$onInit(); // If this is first, attributes from params may be wrong.
+        // Parameters related to the dialog title need to be decided before this, because getTitle() is called here.
+        super.$onInit();
     }
 
     /*

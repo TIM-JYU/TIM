@@ -3,12 +3,16 @@ import {timApp} from "tim/app";
 import {showLoginDialog} from "./loginDialog";
 import {Users} from "./userService";
 
+/**
+ * A component that displays either button for opening login dialog or the user menu component
+ * depending on whether the user is logged in.
+ */
 class LoginMenuController implements IController {
 
     isLoggedIn = () => Users.isLoggedIn();
 
     openLoginDialog() {
-        void showLoginDialog(false);
+        void showLoginDialog({showSignup: false, addingToSession: false});
     }
 }
 

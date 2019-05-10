@@ -4,6 +4,10 @@ import {showLoginDialog} from "./loginDialog";
 import {Users} from "./userService";
 import {IUser} from "./IUser";
 
+/**
+ * User menu component with a button that displays current user name and the number of additional
+ * users logged in the session and opens a dropdown menu with log out and other options.
+ */
 class UserMenuController implements IController {
     static component = "userMenu";
     static $inject = ["$element", "$scope"] as const;
