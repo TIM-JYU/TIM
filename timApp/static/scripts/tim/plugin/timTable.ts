@@ -1195,11 +1195,21 @@ export class TimTableController extends DestroyScope implements IController {
                     }
                 }
             }
-            const nextCellCoords = this.getNextCell(x, y, direction);
+
+            var nextCellCoords = this.getNextCell(x, y, direction);
+
+            //Iterate through rows until next non-hidden row is found
+            //TODO: this.hidecolums?
+            while(nextCellCoords && this.data.hiderows.includes(nextCellCoords.row))
+            {
+                if(nextCellCoords.row == y) break;
+                nextCellCoords = this.getNextCell(x, nextCellCoords.row, direction)
+            }
 
             if (!nextCellCoords) {
                 return true;
             }
+
 
             if (this.currentCell) {
                 this.openCell(nextCellCoords.row, nextCellCoords.col);
