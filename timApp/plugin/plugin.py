@@ -43,6 +43,10 @@ CONTENT_FIELD_NAME_MAP = {
     'textfield': 'userword',
 }
 
+CONTENT_FIELD_TYPE_MAP = {
+    'numericfield': float,
+}
+
 NEVERLAZY_PLUGINS = {
     'textfield',
     'multisave',
@@ -302,6 +306,9 @@ class Plugin:
 
     def get_content_field_name(self):
         return CONTENT_FIELD_NAME_MAP.get(self.type, 'content')
+
+    #TODO: def get content field type (for numericfield save number) -
+    #if value not in contentfieldtypemap use string as default
 
     def is_answer_valid(self, old_answers, tim_info):
         """Determines whether the currently posted answer should be considered valid.

@@ -297,8 +297,8 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
         this.isRunning = false;
         if (r.ok) {
             const data = r.result.data;
-            this.error = data.web.error;
-            this.result = data.web.result;
+            this.error = "Errors: \n" + data.web.error;
+            //this.result = "Saved";
         } else {
             this.error = "Infinite loop or some other error?";
         }
@@ -343,8 +343,8 @@ timApp.component("tableformRunner", {
             ng-click="$ctrl.generateReport()">
         Luo Raportti 
     </button>
-    <div ng-if="$ctrl.error" ng-bind-html="$ctrl.error"></div>
     <pre ng-if="$ctrl.result">{{$ctrl.result}}</pre>
+    <pre ng-if="$ctrl.error" ng-bind-html="$ctrl.error"></pre>
     <p ng-if="::$ctrl.footer" ng-bind="::$ctrl.footer" class="plgfooter"></p>
 </div>
 `,

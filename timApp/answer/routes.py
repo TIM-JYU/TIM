@@ -323,42 +323,54 @@ def post_answer(plugintype: str, task_id_ext: str):
             t_id = TaskId.parse(task, False, False)
             dib = doc_map[t_id.doc_id]
             verify_teacher_access(dib)
-            plug = find_plugin_from_document(dib.document, t_id, get_current_user_object())
-            content_field = plug.get_content_field_name()
-            task_content[task] = content_field
+            try:
+                plug = find_plugin_from_document(dib.document, t_id, get_current_user_object())
+                content_field = plug.get_content_field_name()
+                # TODO: check plug content type ^
+                task_content[task] = content_field
+            except PluginException as e:
+                errormsg = str(t_id.doc_id) + ": " +  str(e) + " \n"
+                try:
+                    result['web']['error'] = result['web']['error'] + errormsg
+                except KeyError:
+                    result['web'] = {"error": errormsg}
+                pass
         for user in save_obj:
             u_id = user['user']
             u = User.get_by_id(u_id)
             user_fields = user['fields']
             for key in user_fields.keys():
-                content_type = task_content[key]
-                c = {content_type: user_fields[key]}
-                task_id = TaskId.parse(key, False, False)
-                an: Answer = get_latest_answers_query(task_id, [u]).first()
-                content = json.dumps(c)
-                if an and an.content == content:
+                try:
+                    content_type = task_content[key]
+                    c = {content_type: user_fields[key]}
+                    task_id = TaskId.parse(key, False, False)
+                    an: Answer = get_latest_answers_query(task_id, [u]).first()
+                    content = json.dumps(c)
+                    if an and an.content == content:
+                        pass
+                    elif an:
+                        an_content = json.loads(an.content)
+                        an_content[content_type] = user_fields[key]
+                        an_content = json.dumps(an_content)
+                        a_result = Answer(
+                            content=an_content,
+                            task_id=task_id.doc_task,
+                            users=[u],
+                            valid=True,
+                            last_points_modifier=get_current_user_group()
+                        )
+                        db.session.add(a_result)
+                    else:
+                        a_result = Answer(
+                            content=content,
+                            task_id=task_id.doc_task,
+                            users=[u],
+                            valid=True,
+                            last_points_modifier=get_current_user_group()
+                        )
+                        db.session.add(a_result)
+                except KeyError:
                     pass
-                elif an:
-                    an_content = json.loads(an.content)
-                    an_content[content_type] = user_fields[key]
-                    an_content = json.dumps(an_content)
-                    a_result = Answer(
-                        content=an_content,
-                        task_id=task_id.doc_task,
-                        users=[u],
-                        valid=True,
-                        last_points_modifier=get_current_user_group()
-                    )
-                    db.session.add(a_result)
-                else:
-                    a_result = Answer(
-                        content=content,
-                        task_id=task_id.doc_task,
-                        users=[u],
-                        valid=True,  
-                        last_points_modifier=get_current_user_group()
-                    )
-                    db.session.add(a_result)
 
 
     if plugin.type == 'jsrunner' or plugin.type == 'tableForm':
