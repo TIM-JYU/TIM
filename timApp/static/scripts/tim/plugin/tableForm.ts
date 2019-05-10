@@ -44,7 +44,7 @@ const TableFormMarkup = t.intersection([
         cols: withDefault(t.number, 20),
     }),
 ]);
-const Rows = t.dictionary(t.string, t.dictionary(t.string, t.union([t.string, t.null])));
+const Rows = t.dictionary(t.string, t.dictionary(t.string, t.union([t.string, t.null, t.number])));
 
 interface RowsType extends t.TypeOf<typeof Rows> {
 }
@@ -297,7 +297,7 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
         this.isRunning = false;
         if (r.ok) {
             const data = r.result.data;
-            this.error = "Errors: \n" + data.web.error;
+            this.error = data.web.error;
             //this.result = "Saved";
         } else {
             this.error = "Infinite loop or some other error?";
