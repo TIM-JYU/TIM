@@ -26,8 +26,7 @@ class UserMenuController implements IController {
      * Add another user to the session using login dialog.
      * @param $event
      */
-    addUser($event: Event) {
-        $event.stopPropagation();
+    addUser() {
         void showLoginDialog({showSignup: false, addingToSession: true});
     }
 
@@ -64,7 +63,7 @@ timApp.component("userMenu", {
         aria-labelledby="single-button">
         <li role="menuitem"><a ng-href="/view/{{ $ctrl.getCurrentUser().folder.path }}">My documents</a></li>
         <li role="menuitem"><a
-                ng-click="$ctrl.addUser($event)"
+                ng-click="$ctrl.addUser()"
                 href="#">Add a user to this session...</a></li>
         <li class="divider"></li>
         <li ng-show="!$ctrl.loggingout" role="menuitem">

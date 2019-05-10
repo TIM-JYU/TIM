@@ -119,6 +119,7 @@ export class LoginDialogController extends DialogController<{params: ILoginParam
                 saveCurrentScreenPar();
                 window.location.reload();
             }
+            this.close({});
         }
     }
 
@@ -297,7 +298,7 @@ registerDialogComponent(LoginDialogController,
             </button>
         </form>
         <div class="form" ng-show="$ctrl.showSignup">
-            <div class="text-center" ng-if="!$ctrl.resetPassword"></div>
+            <div class="text-center" ng-if="!$ctrl.resetPassword">
                 <p>If you don't have an existing TIM or Korppi account, you can create a new TIM account here.</p>
                 <p>Please input your email address to receive a temporary password.</p>
             </div>
