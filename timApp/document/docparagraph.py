@@ -1215,6 +1215,7 @@ def add_heading_numbers(s: str, ctx: DocParagraph, heading_format):
             level = curr.level
             line_idx = curr.sourcepos[0][0] - 1
             line = lines[line_idx][level + 1:]
-            lines[line_idx] = '#' * level + ' ' + format_heading(line, level, vals, heading_format)
+            if not line.endswith('{.unnumbered}'):
+                lines[line_idx] = '#' * level + ' ' + format_heading(line, level, vals, heading_format)
         curr = curr.nxt
     return '\n'.join(lines)

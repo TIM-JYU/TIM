@@ -89,7 +89,9 @@ class PrintingTest(TimRouteTest):
 
 # second
 #-
-# third
+# third {.nonumber}
+#-
+# fourth
         """, settings={'auto_number_headings': 1})
         t = self.create_empty_print_template()
         params_url = {'file_type': 'latex', 'template_doc_id': t.id, 'plugins_user_code': False, 'force': True}
@@ -107,7 +109,11 @@ class PrintingTest(TimRouteTest):
 \section{2. second}\label{second}}
 
 \hypertarget{third}{%
-\section{3. third}\label{third}}
+\section*{third}\label{third}}
+\addcontentsline{toc}{section}{third}
+
+\hypertarget{fourth}{%
+\section{3. fourth}\label{fourth}}
         """.strip(), r)
         d.document.add_setting('texmacros', {'texautonumber': 1})
         self.get(d.url, as_tree=True)
@@ -124,7 +130,11 @@ class PrintingTest(TimRouteTest):
 \section{second}\label{second}}
 
 \hypertarget{third}{%
-\section{third}\label{third}}
+\section*{third}\label{third}}
+\addcontentsline{toc}{section}{third}
+
+\hypertarget{fourth}{%
+\section{fourth}\label{fourth}}
         """
         self.assertEqual(no_numbers.strip(), r)
         d.document.set_settings({})
