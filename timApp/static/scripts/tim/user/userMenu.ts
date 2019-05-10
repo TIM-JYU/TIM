@@ -3,37 +3,33 @@ import {timApp} from "tim/app";
 import {showLoginDialog} from "./loginDialog";
 import {Users} from "./userService";
 import {IUser} from "./IUser";
-import {saveCurrentScreenPar} from "../document/parhelpers";
 
 class UserMenuController implements IController {
     static component = "userMenu";
     static $inject = ["$element", "$scope"] as const;
     private loggingout: boolean;
-    private addingToSession: boolean;
 
     constructor() {
         this.loggingout = false;
-        this.addingToSession = false;
-
     }
 
     isLoggedIn = () => Users.isLoggedIn();
 
-    $onInit(): void {
-    }
-
     getCurrentUser = () => Users.getCurrent();
-    getSessionUsers = () => Users.getSessionUsers(); // Used in html
+    getSessionUsers = () => Users.getSessionUsers(); // Used in html.
 
+    /**
+     * Add another user to the session using login dialog.
+     * @param $event
+     */
     addUser($event: Event) {
         $event.stopPropagation();
-        this.addingToSession = !this.addingToSession;
-        void showLoginDialog(false, this.addingToSession);
+        void showLoginDialog({showSignup: false, addingToSession: true});
     }
 
     logout = (user: IUser, logoutFromKorppi = false) => Users.logout(user, logoutFromKorppi);
 
-    isKorppi = () => Users.isKorppi();
+    isKorppi = () => Users.isKorppi(); // Used in html.
 
     beginLogout($event: Event) {
         if (Users.isKorppi()) {

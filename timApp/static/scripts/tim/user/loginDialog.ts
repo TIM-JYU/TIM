@@ -35,7 +35,7 @@ export class LoginDialogController extends DialogController<{params: ILoginParam
     private addingToSession: boolean; // Adding another user.
     private korppiLoading: boolean = false;
 
-    // fields related to signup
+    // Fields related to signup.
     private canChangeName = true;
     private email: string | undefined;
     private emailSent = false;
@@ -76,27 +76,21 @@ export class LoginDialogController extends DialogController<{params: ILoginParam
                 this.showSignup = false;
             }
         }
-        super.$onInit();
-
+        super.$onInit(); // If this is first, attributes from params may be wrong.
     }
 
     /*
      * Dialog title.
      */
     public getTitle() {
+        if (this.addingToSession) {
+            return "Add a user to this session";
+        }
         if (this.showSignup) {
             return "Sign up";
         } else {
             return "Log in";
         }
-    }
-
-    getCurrentUser = () => Users.getCurrent();
-    getSessionUsers = () => Users.getSessionUsers();
-
-    addUser($event: Event) {
-        $event.stopPropagation();
-        this.addingToSession = !this.addingToSession;
     }
 
     logout = (user: IUser, logoutFromKorppi = false) => Users.logout(user, logoutFromKorppi);
@@ -106,17 +100,9 @@ export class LoginDialogController extends DialogController<{params: ILoginParam
         Users.korppiLogin(addingToSession);
     }
 
-    isKorppi = () => Users.isKorppi();
-
     // noinspection JSMethodCanBeStatic
     public stopClick($event: Event) {
         $event.stopPropagation();
-    }
-
-    public toggled(open: boolean) {
-        if (!open) {
-            this.addingToSession = false;
-        }
     }
 
     public async loginWithEmail() {
@@ -132,15 +118,6 @@ export class LoginDialogController extends DialogController<{params: ILoginParam
                 saveCurrentScreenPar();
                 window.location.reload();
             }
-        }
-    }
-
-    beginLogout($event: Event) {
-        if (Users.isKorppi()) {
-            this.loggingout = true;
-            $event.stopPropagation();
-        } else {
-            this.logout(this.getCurrentUser());
         }
     }
 
@@ -319,10 +296,10 @@ registerDialogComponent(LoginDialogController,
             </button>
         </form>
         <div class="form" ng-show="$ctrl.showSignup">
-            <p class="text-center">
-                If you don't have an existing TIM or Korppi account,
-                create a new TIM account here. A temporary password will be sent to the provided email address.
-            </p>
+            <div class="text-center" ng-if="!$ctrl.resetPassword"></div>
+                <p>If you don't have an existing TIM or Korppi account, you can create a new TIM account here.</p>
+                <p>Please input your email address to receive a temporary password.</p>
+            </div>
             <p class="text-center" ng-if="$ctrl.resetPassword && !$ctrl.emailSent">
                 To reset password, enter your email or username first.
             </p>
@@ -353,7 +330,8 @@ registerDialogComponent(LoginDialogController,
             <div ng-show="$ctrl.emailSent">
                 <div class="form-group" ng-show="!$ctrl.tempPasswordProvided">
                     <label for="password-signup" class="control-label">
-                        TIM sent you a temporary password. Please check your email and type the password below.
+                        TIM sent you a temporary password. Please check your email and type the password below to
+                        continue creating your account.
                     </label>
                     <input class="form-control"
                            id="password-signup"
@@ -449,11 +427,14 @@ registerDialogComponent(LoginDialogController,
 `,
     });
 
-export async function showLoginDialog(showSignup?: boolean, addingToSession?: boolean) {
+/**
+ * Open login dialog if no other instances are opened.
+ * @param params Contains showSignup and addingToSession.
+ */
+export async function showLoginDialog(params: ILoginParams) {
     if (instance) {
         return;
     }
-    const params: ILoginParams = {showSignup: showSignup, addingToSession: addingToSession};
     const dialog = showDialog(LoginDialogController, {params: () => params});
     instance = await dialog.dialogInstance.promise;
     await to(dialog.result);

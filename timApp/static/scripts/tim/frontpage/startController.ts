@@ -3,7 +3,7 @@ import * as createItem from "tim/item/createItem";
 import {markAsUsed} from "tim/util/utils";
 import {timApp} from "../app";
 import {showCourseListDialog} from "../document/course/courseListDialogCtrl";
-import {ICourseSettings, IItem} from "../item/IItem";
+import {ICourseSettings} from "../item/IItem";
 import {showMessageDialog} from "../ui/dialog";
 import {$http, $localStorage, $window} from "../util/ngimport";
 import {to} from "../util/utils";
@@ -89,18 +89,9 @@ export class StartCtrl implements IController {
         this.storage.languageStorage = changeTo;
     }
 
-    openLoginDialog() {
+    openLoginDialog(signup: boolean) {
         if (!this.isLoggedIn()) {
-            void showLoginDialog(false);
-        }
-        else {
-            void showMessageDialog(`You are already logged in`);
-        }
-    }
-
-    openSignupDialog() {
-        if (!this.isLoggedIn()) {
-            void showLoginDialog(true);
+            void showLoginDialog({showSignup: signup, addingToSession: false});
         }
         else {
             void showMessageDialog(`You are already logged in`);
@@ -156,9 +147,9 @@ timApp.component("timStart", {
             <div ng-switch="$ctrl.language" ng-cloak>
                 <div ng-switch-when="en">
                     <h3>Get started</h3>
-                    <button ng-if="!$ctrl.isLoggedIn()" ng-click="$ctrl.openLoginDialog()" type="button"
+                    <button ng-if="!$ctrl.isLoggedIn()" ng-click="$ctrl.openLoginDialog(false)" type="button"
                         class="timButton margin-4" title="Log in with Korppi or TIM">Log in</button>
-                    <button ng-if="!$ctrl.isLoggedIn()" ng-click="$ctrl.openSignupDialog()" type="button"
+                    <button ng-if="!$ctrl.isLoggedIn()" ng-click="$ctrl.openLoginDialog(true)" type="button"
                         class="timButton margin-4"
                         title="Create a TIM account (for those who aren't staff or Korppi-users)">Sign up</button>
                     <ul class="list-unstyled">
@@ -185,9 +176,9 @@ timApp.component("timStart", {
                 </div>
                 <div ng-switch-when="fi">
                     <h3>Aloitus</h3>
-                    <button ng-if="!$ctrl.isLoggedIn()" ng-click="$ctrl.openLoginDialog()" type="button"
+                    <button ng-if="!$ctrl.isLoggedIn()" ng-click="$ctrl.openLoginDialog(false)" type="button"
                         class="timButton margin-4" title="Kirjaudu sisään Korppi- tai TIM-tunnuksilla">Kirjaudu</button>
-                    <button ng-if="!$ctrl.isLoggedIn()" ng-click="$ctrl.openSignupDialog()" type="button"
+                    <button ng-if="!$ctrl.isLoggedIn()" ng-click="$ctrl.openLoginDialog(true)" type="button"
                         class="timButton margin-4"
                         title="Luo TIM-tili (jos et ole Korppi-käyttäjä tai henkilökunnan jäsen)">Luo TIM-tili</button>
                     <ul class="list-unstyled">

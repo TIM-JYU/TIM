@@ -8,7 +8,6 @@ import {DialogController, registerDialogComponent, showDialog} from "../ui/dialo
 import {markAsUsed, to} from "../util/utils";
 import {IStampingData} from "./pareditor";
 import {$http} from "../util/ngimport";
-import {RenameResult} from "../document/editing/pluginRenameForm";
 
 // The close states dialog can return.
 export enum RestampDialogClose {
