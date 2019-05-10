@@ -1200,12 +1200,13 @@ export class TimTableController extends DestroyScope implements IController {
 
             //Iterate through rows until next non-hidden row is found
             //TODO: this.hidecolums?
-            while(nextCellCoords && this.data.hiderows.includes(nextCellCoords.row))
-            {
-                if(nextCellCoords.row == y) break;
-                nextCellCoords = this.getNextCell(x, nextCellCoords.row, direction)
+            if (this.data.hiderows){
+                while(nextCellCoords && this.data.hiderows.includes(nextCellCoords.row))
+                {
+                  if(nextCellCoords.row == y) break;
+                    nextCellCoords = this.getNextCell(x, nextCellCoords.row, direction)
+                }
             }
-
             if (!nextCellCoords) {
                 return true;
             }
@@ -1359,7 +1360,7 @@ export class TimTableController extends DestroyScope implements IController {
         }
 
         const cellCoordinate = this.colnumToLetters(coli) + (rowi + 1);
-        if (this.data.lockedCells.includes(cellCoordinate)) return;
+        if (this.data.lockedCells && this.data.lockedCells.includes(cellCoordinate)) return;
 
         const activeCell = this.activeCell;
         this.setActiveCell(rowi, coli);
