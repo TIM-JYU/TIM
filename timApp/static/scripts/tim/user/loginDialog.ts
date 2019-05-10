@@ -24,6 +24,8 @@ interface ILoginParams {
 
 markAsUsed(focusMe);
 
+let instance: LoginDialogController | undefined;
+
 export class LoginDialogController extends DialogController<{params: ILoginParams}, {}> {
     static component = "loginDialog";
     static $inject = ["$element", "$scope"] as const;
@@ -448,6 +450,13 @@ registerDialogComponent(LoginDialogController,
     });
 
 export async function showLoginDialog(showSignup?: boolean, addingToSession?: boolean) {
+    if (instance) {
+        return;
+    }
     const params: ILoginParams = {showSignup: showSignup, addingToSession: addingToSession};
-    return await showDialog(LoginDialogController, {params: () => params}).result;
+    const dialog = showDialog(LoginDialogController, {params: () => params});
+    instance = await dialog.dialogInstance.promise;
+    await to(dialog.result);
+    instance = undefined;
+    return;
 }

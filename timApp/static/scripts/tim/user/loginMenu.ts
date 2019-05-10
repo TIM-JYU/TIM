@@ -8,7 +8,6 @@ class LoginMenuController implements IController {
     isLoggedIn = () => Users.isLoggedIn();
 
     openLoginDialog() {
-        // TODO: Allow only one dialog open at a time.
         void showLoginDialog(false);
     }
 }
