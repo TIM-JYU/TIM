@@ -164,7 +164,7 @@ export class PareditorController extends DialogController<{params: IEditorParams
     private touchDevice: boolean;
     private autocomplete!: boolean; // $onInit
     private citeText!: string; // $onInit
-    private docSettings?: {macros?: {dates: string[], knro: number, stampformat: string}, custom_stamp_model?: string};
+    private docSettings?: {macros?: {dates?: Array<[string, string, string]>, knro?: number, stampformat?: string}, custom_stamp_model?: string};
     private uploadedFile?: string;
     private activeTab?: string;
     private lastTab?: string;
@@ -1346,15 +1346,15 @@ ${backTicks}
     /**
      * Returns the current meeting date from document settings, if it exists.
      */
-    private getCurrentMeetingDate() {
+    private getCurrentMeetingDate(): string | undefined {
         if (this.docSettings && this.docSettings.macros) {
             // Knro usage starts from 1 but dates starts from 0 but there is dummy item first
             const knro = this.docSettings.macros.knro;
             const dates = this.docSettings.macros.dates;
             // dates = ["ERROR", ...dates];  // Start from index 1; unnecessary now?
-            return dates[knro][0];  // Dates is 2-dim array.
-        } else {
-            return undefined;
+            if (dates != null && knro != null) {
+                return dates[knro][0];  // Dates is 2-dim array.
+            }
         }
     }
 
