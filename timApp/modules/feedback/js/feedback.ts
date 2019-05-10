@@ -124,6 +124,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
     private saving = false;
     private correctStreak = 3;
     private showAnswers?: boolean;
+    private forceSave = false;
 
     async $onInit() {
         super.$onInit();
@@ -447,7 +448,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
                 answer: answer,
             },
             options: {
-                forceSave: true,
+                forceSave: this.forceSave,
             },
         };
 
@@ -467,6 +468,15 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
             this.error = "Error connecting to the backend";
         }
         this.saving = false;
+    }
+
+    /**
+     * Force the plugin to save its information
+     *
+     * @param force Whether to force a save
+     */
+    setForceAnswerSave(force: boolean) {
+        this.forceSave = force;
     }
 
     /**

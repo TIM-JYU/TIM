@@ -63,7 +63,7 @@ class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.T
             this.addToCtrl();
         }
         this.radio = this.attrs.radio;
-        if(this.attrs.answers) {
+        if (this.attrs.answers) {
             // TODO: Show the answer browser if so desired.
         }
     }
@@ -122,7 +122,7 @@ class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.T
     }
 
     selfSave() {
-        if(this.attrs.autosave) {
+        if (this.attrs.autosave) {
             this.save();
         }
     }
