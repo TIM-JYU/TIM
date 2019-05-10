@@ -50,7 +50,13 @@ class TableFormMarkupModel(GenericMarkupModel):
     groups: Union[List[str], Missing] = missing
     table: Union[bool, Missing] = missing
     report: Union[bool, Missing] = missing
+    separator: Union[str, Missing] = missing
+    usednames: Union[str, Missing] = missing
+    sortBy: Union[str, Missing] = missing
+    dataCollection: Union[str, Missing] = missing
+    print: Union[str, Missing] = missing
     fields: Union[List[str], Missing] = missing
+    autosave: Union[bool, Missing] = missing
 
 
 class TableFormMarkupSchema(GenericMarkupSchema):
@@ -58,8 +64,13 @@ class TableFormMarkupSchema(GenericMarkupSchema):
     groups = fields.List(fields.Str())
     table = fields.Boolean()
     report = fields.Boolean()
+    separator = fields.Str(allow_none=True)
+    usednames = fields.Str(allow_none=True)
+    sortBy = fields.Str(allow_none=True)
+    dataCollection: fields.Str(allow_none=True)
+    print: fields.Str(allow_none=True)
+    autosave = fields.Boolean()
     fields = fields.List(fields.Str())
-
 
     @post_load
     def make_obj(self, data):
@@ -246,30 +257,9 @@ def answer(args: TableFormInputModel):
     for u, r in rows.items():
         user = User.get_by_name(u)
         saveRows.append({'user':user.id, 'fields':r})
-    #{"userdata": {"type": "Relative", "cells": {"C6": "kissa", "C7": "asd"}}}
-    #args2.input.userdata.cells....
-    #args2 = <class 'dict'>: {'markup': {'answerLimit': 3, 'initword': 'muikku'}, 'state': None, 'input': {'answers': {'userdata': {'type': 'Relative', 'cells': {'A4': 'koira', 'A5': 'kissa', 'B5': 'kana'}}}}, 'taskID': '92.ekatableForm', 'info': {'earlier_answers': 0, 'max_answers': 3, 'current_user_id': 'sijualle', 'user_id': 'sijualle', 'look_answer': False, 'valid': True}}
 
-    # web = {}
-    # result = {'web': web}
-    # userword = args.input.userword
-    # len_ok = True
-    # points_array = [[0, 0.25], [0.5, 1]]
-    # points = points_array[0][0]
-    #
-    # # plugin can ask not to save the word
-    # nosave = args.input.nosave
-    # if not nosave:
-    #     tim_info = {"points": points}
-    #     save = {"userword": userword}
-    #     result["save"] = save
-    #     result["tim_info"] = tim_info
-    #     web['result'] = "saved"
-
-    #TODO: Return result for (un)succesful save
     web = {}
     result = {'web': web}
-
     nosave = args.input.nosave
     if not nosave:
         save = saveRows

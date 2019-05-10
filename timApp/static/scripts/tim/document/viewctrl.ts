@@ -46,6 +46,7 @@ export interface ITimComponent {
     getContentArray?: () => string[] | undefined;
     getGroups: () => string[];
     belongsToGroup(group: string): boolean;
+    isUnSaved: () => boolean;
     save: () => Promise<{saved: boolean, message: (string | undefined)}>;
     getPar: () => Paragraph;
     setPluginWords?: (words: string[]) => void;
@@ -205,8 +206,14 @@ export class ViewCtrl implements IController {
             this.document.rebuildSections();
             window.addEventListener("beforeunload", (e) => {
                 saveCurrentScreenPar();
-
-                if (!this.editing || $window.IS_TESTING) {
+                var unsavedTimComponents = false;
+                for (const t of this.timComponents.values()) {
+                    if (t.isUnSaved()) {
+                        unsavedTimComponents = true;
+                        break;
+                    }
+                }
+                if ((!this.editing && !unsavedTimComponents) || $window.IS_TESTING) {
                     return undefined;
                 }
 
