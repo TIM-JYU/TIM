@@ -529,6 +529,8 @@ def handle_common_params(query: QueryClass, tiny, ttype):
         runner = 'cs-wescheme-runner'
     if "stack" in ttype:
         runner = 'stack-runner'
+    if "geogebra" in ttype:
+        runner = 'geogebra-runner'
     return bycode, is_input, js, runner, tiny
 
 
@@ -970,6 +972,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 templs = get_all_templates('templates')
             result_json = {"js": ["/cs/js/build/csPlugin.js",
                                   "/cs/js/build/stack.js",
+                                  "/cs/js/build/geogebra.js",
                                   "/cs/stack/ServerSyncValues.js"
                                   ],
                            "css": ["/cs/css/cs.css",
@@ -1331,6 +1334,15 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             pwddir = ""
 
             t1startrun = time.time()
+
+            if get_param(query, "iframehtml", False):
+                rs = language.iframehtml(result, slines, points_rule)
+                rjson = {'iframehtml' : rs}
+                sresult = json.dumps(rjson)
+                if is_cache:
+                    return rjson
+                self.wout(sresult)
+                return
 
             if is_doc:
                 pass  # jos doc ei ajeta

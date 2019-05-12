@@ -970,6 +970,9 @@ class CsController extends CsBase implements IController {
             case "cs-sage-runner":
                 kind = "sage";
                 break;
+            case "cs-geogebra-runner":
+                kind = "geogebra";
+                break;
             case "cs-simcir-runner":
                 kind = "simcir";
                 break;

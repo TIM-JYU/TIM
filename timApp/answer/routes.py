@@ -85,6 +85,73 @@ def points_to_float(points: Union[str, float]):
     return points
 
 
+@answers.route("/iframehtml/<plugintype>/<task_id_ext>/<anr>")
+def get_iframehtml(plugintype: str, task_id_ext: str, anr: int):
+     """
+     Get html to be used in iframe
+     :param plugintype: plugin type
+     :param task_id_ext: task id
+     :paran anr: answer number from answer browser, 0 = newest
+     :return: html to be used in iframe
+     """
+     timdb = get_timdb()
+     try:
+         tid = TaskId.parse(task_id_ext)
+     except PluginException as e:
+         return abort(400, f'Task id error: {e}')
+     d = get_doc_or_abort(tid.doc_id)
+     d.document.insert_preamble_pars()
+
+     curr_user = get_current_user_object()
+     try:
+         tid.block_id_hint = None  # TODO: tämä pitäisi tehdä vain kun preview?
+         plugin = verify_task_access(d, tid, AccessType.view, TaskIdAccess.ReadWrite)
+     except (PluginException, TimDbException) as e:
+         return abort(400, str(e))
+
+
+
+     get_task = False
+
+     if plugin.type != plugintype:
+         abort(400, f'Plugin type mismatch: {plugin.type} != {plugintype}')
+
+     users = [User.query.get(u['id']) for u in get_session_users()]
+
+     old_answers = timdb.answers.get_common_answers(users, tid)
+
+     info = plugin.get_info(users, len(old_answers), look_answer=False and not False, valid=True)
+
+     if anr:
+         anr = int(anr)
+
+     if not anr or anr < 0:
+         anr = 0
+     # Get the newest answer (state). Only for logged in users.
+     state = try_load_json(old_answers[anr].content) if logged_in() and len(old_answers) > 0 else None
+
+     answer_call_data = {'markup': plugin.values,
+                         'state': state,
+                         'taskID': tid.doc_task,
+                         'info': info,
+                         'iframehtml': True}
+
+     plugin_response = call_plugin_answer(plugintype, answer_call_data)
+     try:
+         jsonresp = json.loads(plugin_response)
+     except ValueError:
+         return json_response({'error': 'The plugin response was not a valid JSON string. The response was: ' +
+                                        plugin_response}, 400)
+     except PluginException:
+         return json_response({'error': 'The plugin response took too long'}, 400)
+
+     if 'iframehtml' not in jsonresp:
+         return json_response({'error': 'The key "iframehtml" is missing in plugin response.'}, 400)
+     result = jsonresp['iframehtml']
+     db.session.commit()
+     return result
+
+
 @answers.route("/<plugintype>/<task_id_ext>/answer/", methods=['PUT'])
 def post_answer(plugintype: str, task_id_ext: str):
     """Saves the answer submitted by user for a plugin in the database.
@@ -597,3 +664,5 @@ def rename_answers(old_name: str, new_name: str, doc_path: str):
         a.task_id = f'{d.id}.{new_name}'
     db.session.commit()
     return json_response({'modified': len(answers_to_rename), 'conflicts': conflicts})
+
+

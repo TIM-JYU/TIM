@@ -1,5 +1,5 @@
 from subprocess import check_output
-from typing import Optional
+from typing import Optional, re
 
 import requests
 
@@ -209,6 +209,9 @@ class Language:
 
     def can_give_task(self):
         return False
+
+    def iframehtml(self, result, sourcelines, points_rule):
+        return ""
 
     def runself(self, args, cwd=None, shell=None, kill_tree=None, timeout=None, env=None, stdin=None, uargs=None,
                 code=None, extra=None, ulimit=None, no_x11=None, savestate=None, dockercontainer=None,
@@ -1013,6 +1016,51 @@ class Stack(Language):
         return 0, r.get('yaml'), "", ""
 
 
+class Geogebra(Language):
+    def can_give_task(self):
+        return True
+
+    def __init__(self, query, sourcecode):
+        super().__init__(query, sourcecode)
+        self.sourcefilename = "/tmp/%s/%s.txt" % (self.basename, self.filename)
+        self.fileext = "txt"
+        self.readpoints_default = 'Score: (.*)'
+        self.delete_tmp = False
+
+    def modify_usercode(self, s):
+        if not s.startswith("{"):
+            return s
+        s = s.replace("&quot;",'"')
+        js = json.loads(s)
+        res = ''
+        for key in js:
+            res += js[key] + "\n"
+        return res
+
+    def run(self, result, sourcelines, points_rule):
+        data = self.query.jso["input"].get("jsData", None)
+        if data:
+            result["save"] = {'jsData': data}
+        return 0, "Geogebra run", "", ""
+
+    def iframehtml(self, result, sourcelines, points_rule):
+        srchtml = self.query.jso['markup']['srchtml']
+        data = ""
+        state = self.query.jso.get("state",None)
+        if state:
+            data = state.get("jsData", "")
+        srchtml = srchtml.replace('JSDATA', '"'+ data + '"')
+        return srchtml
+
+
+    def convert(self, sourcelines):
+        url = "http://stack-api-server/api/xmltoyaml.php"
+        data = {'xml' : sourcelines}
+        r = requests.post(url=url, data=json.dumps(data))
+        r = r.json()
+        return 0, r.get('yaml'), "", ""
+
+
 class R(Language):
     def __init__(self, query, sourcecode):
         super().__init__(query, sourcecode)
@@ -1264,3 +1312,4 @@ languages["fortran"] = Fortran
 languages["rust"] = Rust
 languages["pascal"] = Pascal
 languages["stack"] = Stack
+languages["geogebra"] = Geogebra
