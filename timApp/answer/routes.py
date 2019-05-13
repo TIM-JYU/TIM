@@ -346,20 +346,21 @@ def post_answer(plugintype: str, task_id_ext: str):
                     task_id = TaskId.parse(key, False, False)
                     an: Answer = get_latest_answers_query(task_id, [u]).first()
                     content = json.dumps(c)
-                    if an and an.content == content:
+                    if an and an.content == content: #TODO check if redundant
                         pass
                     elif an:
                         an_content = json.loads(an.content)
-                        an_content[content_type] = user_fields[key]
-                        an_content = json.dumps(an_content)
-                        a_result = Answer(
-                            content=an_content,
-                            task_id=task_id.doc_task,
-                            users=[u],
-                            valid=True,
-                            last_points_modifier=get_current_user_group()
-                        )
-                        db.session.add(a_result)
+                        if an_content[content_type] != user_fields[key]:
+                            an_content[content_type] = user_fields[key]
+                            an_content = json.dumps(an_content)
+                            a_result = Answer(
+                                content=an_content,
+                                task_id=task_id.doc_task,
+                                users=[u],
+                                valid=True,
+                                last_points_modifier=get_current_user_group()
+                            )
+                            db.session.add(a_result)
                     else:
                         a_result = Answer(
                             content=content,
