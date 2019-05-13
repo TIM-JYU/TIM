@@ -4,6 +4,8 @@ import {ParCompiler} from "tim/editor/parCompiler";
 import {GenericPluginMarkup, Info, PluginBase, pluginBindings, withDefault} from "tim/plugin/util";
 import {$http, $sce} from "tim/util/ngimport";
 import {to} from "tim/util/utils";
+import {ViewCtrl} from "tim/document/viewctrl";
+
 
 const geogebraApp = angular.module("geogebraApp", ["ngSanitize"]);
 export const moduleDefs = [geogebraApp];
@@ -92,6 +94,7 @@ class GeogebraController extends PluginBase<t.TypeOf<typeof GeogebraMarkup>,
         return this.english ? "Send" : "Lähetä";
     }
 
+    public viewctrl?: ViewCtrl;
     private span: string = "";
     private error: string = "";
     private userCode: string = "";
@@ -132,6 +135,8 @@ class GeogebraController extends PluginBase<t.TypeOf<typeof GeogebraMarkup>,
 
     outputAsHtml() {
         if ( !this.attrs.srchtml ) return "";
+        // let taskId = this.pluginMeta.getTaskId().split(".",1)[1] || "";
+        // let ab = this.viewctrl.getAnswerBrowser(taskId);
         let anr = 0
         const html:string = this.attrs.srchtml;
         const datasrc = btoa(html);
@@ -253,6 +258,9 @@ const common = {
 
 geogebraApp.component("geogebraRunner", {
     ...common,
+    require: {
+        viewctrl: "?^timView",
+    },
     template: `
 <div ng-cloak class="csRunDiv math que geogebra no-popup-menu" >
     <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
