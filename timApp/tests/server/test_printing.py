@@ -92,10 +92,15 @@ class PrintingTest(TimRouteTest):
 # third {.nonumber}
 #-
 # fourth
+
+---------- --
+not header x
+-------------
         """, settings={'auto_number_headings': 1})
         t = self.create_empty_print_template()
         params_url = {'file_type': 'latex', 'template_doc_id': t.id, 'plugins_user_code': False, 'force': True}
-        self.get(d.url, as_tree=True)
+        r = self.get(d.url, as_tree=True)
+        self.assertTrue(r.cssselect('.parContent table'))
         r = self.get(f'/print/{d.path}', query_string=params_url)
         self.assertEqual(r"""
 \hypertarget{first}{%
@@ -114,6 +119,13 @@ class PrintingTest(TimRouteTest):
 
 \hypertarget{fourth}{%
 \section{3. fourth}\label{fourth}}
+
+\begin{longtable}[]{@{}ll@{}}
+\toprule
+\endhead
+not header & x\tabularnewline
+\bottomrule
+\end{longtable}
         """.strip(), r)
         d.document.add_setting('texmacros', {'texautonumber': 1})
         self.get(d.url, as_tree=True)
@@ -135,6 +147,13 @@ class PrintingTest(TimRouteTest):
 
 \hypertarget{fourth}{%
 \section{fourth}\label{fourth}}
+
+\begin{longtable}[]{@{}ll@{}}
+\toprule
+\endhead
+not header & x\tabularnewline
+\bottomrule
+\end{longtable}
         """
         self.assertEqual(no_numbers.strip(), r)
         d.document.set_settings({})

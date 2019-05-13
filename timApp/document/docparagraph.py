@@ -1214,8 +1214,14 @@ def add_heading_numbers(s: str, ctx: DocParagraph, heading_format):
         if curr.t == 'heading':
             level = curr.level
             line_idx = curr.sourcepos[0][0] - 1
-            line = lines[line_idx][level + 1:]
-            if not line.endswith('{.unnumbered}'):
-                lines[line_idx] = '#' * level + ' ' + format_heading(line, level, vals, heading_format)
+            heading_line = lines[line_idx]
+            heading_start = '#' * level
+
+            # Pandoc's table syntax can conflict with CommonMark heading syntax, so we need an extra check.
+            # This could be more accurate, but it's enough for now.
+            if heading_line.startswith(heading_start + ' '):
+                line = heading_line[level + 1:]
+                if not line.endswith('{.unnumbered}'):
+                    lines[line_idx] = heading_start + ' ' + format_heading(line, level, vals, heading_format)
         curr = curr.nxt
     return '\n'.join(lines)
