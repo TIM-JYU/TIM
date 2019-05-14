@@ -250,7 +250,7 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
                 this.errormessage = this.attrs.errormessage || "Input does not pass the RegEx: " + this.attrs.validinput;
                 this.redAlert = true;
                 this.saveResponse.message = this.errormessage;
-                return this.saveResponse
+                return this.saveResponse;
             }
         }
         /* No visible text version
