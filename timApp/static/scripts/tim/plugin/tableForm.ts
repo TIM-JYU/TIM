@@ -16,7 +16,9 @@ import {to} from "tim/util/utils";
 import {timApp} from "../app";
 import {getParId} from "../document/parhelpers";
 import {ViewCtrl} from "../document/viewctrl";
-import {CellEntity, CellType, colnumToLetters, DataEntity, ICell, isPrimitiveCell, TimTable} from "./timTable";
+import {CellType, colnumToLetters, DataEntity, isPrimitiveCell, TimTable, TimTableController} from "./timTable";
+import "./tableForm.css";
+
 
 const tableFormApp = angular.module("tableFormApp", ["ngSanitize"]);
 export const moduleDefs = [tableFormApp];
@@ -75,6 +77,7 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
     private allRows!: {};
     private modelOpts!: INgModelOptions;
     private oldCellValues!: string;
+    private timTable?: TimTableController;
 
     getDefaultMarkup() {
         return {};
@@ -96,6 +99,7 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
         if (parId && this.viewctrl) {
             await $timeout(0);
             const t = this.viewctrl.getTableControllerFromParId(parId);
+            if (t) this.timTable = t;
             //console.log(t);
         }
         this.oldCellValues = JSON.stringify(this.data.userdata.cells);
@@ -119,6 +123,7 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
     }
 
     setDataMatrix() {
+        this.data.lockedCells.push("A1");
         if(this.attrsall.fields) this.data.table.countCol = this.attrsall.fields.length + 1;
         this.data.table.countRow = Object.keys(this.rows).length + 1;
         let x = 2;
@@ -220,6 +225,8 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
     }
 
     updateFilter() {
+        //TODO check if better way to save than just making saveAndCloseSmallEditor public and calling it
+        if(this.timTable) this.timTable.saveAndCloseSmallEditor();
         this.data.hiderows = [];
         if (this.userfilter != "" && this.userfilter != undefined) {
             const reg = new RegExp(this.userfilter.toLowerCase());
@@ -231,10 +238,10 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
                 rowi++;
             }
         }
-        //TODO: Call timTable and close the editor if open
     }
 
     async doSaveText(nosave: boolean) {
+        if(this.timTable) this.timTable.saveAndCloseSmallEditor();
         this.error = "... saving ...";
         const keys = Object.keys(this.data.userdata.cells);
         keys.sort();
@@ -312,11 +319,11 @@ timApp.component("tableformRunner", {
         viewctrl: "?^timView",
     },
     template: `
-<div class="tableFormDiv no-popup-menu">
+<div class="tableform" style="overflow-x: scroll">
     <tim-markup-error ng-if="::$ctrl.markupError" data="::$ctrl.markupError"></tim-markup-error>
     <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
     <p ng-if="::$ctrl.stem" ng-bind-html="::$ctrl.stem"></p>
-    <div class="form-inline" ng-if="::$ctrl.tableCheck()"><label>{{::$ctrl.inputstem}} <span>
+    <div class="form-inline" ng-if="::$ctrl.tableCheck()"><label> Suodata {{::$ctrl.inputstem}} <span>
         <input type="text"
                class="form-control"
                ng-model="$ctrl.userfilter"
@@ -332,7 +339,7 @@ timApp.component("tableformRunner", {
             ng-if="::$ctrl.tableCheck()"
             ng-click="$ctrl.saveText()">
         Tallenna taulukko
-    </button> &nbsp;
+    </button>
     <button class="timButton"
             ng-if="::$ctrl.reportCheck()"
             ng-click="$ctrl.generateReport()">
