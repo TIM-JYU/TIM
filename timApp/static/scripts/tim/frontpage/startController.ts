@@ -91,7 +91,7 @@ export class StartCtrl implements IController {
 
     openLoginDialog(signup: boolean) {
         if (!this.isLoggedIn()) {
-            void showLoginDialog({showSignup: signup, addingToSession: false});
+            void showLoginDialog({showSignup: signup, addingToSession: false, language: this.language});
         }
         else {
             void showMessageDialog(`You are already logged in`);

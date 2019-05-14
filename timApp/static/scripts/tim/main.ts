@@ -1,4 +1,5 @@
 import angular from "angular";
+import * as translate from "angular-translate";
 import bootstrap from "bootstrap";
 import $ from "jquery";
 import * as answerbrowser from "tim/answer/answerbrowser3";
@@ -81,6 +82,7 @@ markAsUsed(
     tape,
     templateList,
     timTable,
+    translate,
     userlistController,
     userMenu,
     velpSelection,
