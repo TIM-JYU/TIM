@@ -24,21 +24,21 @@ router.put('/', function (req, res, next) {
     let result = vm.run(
         `
         const Tools = require('./tools');
-        let r = [];
-        let plsfusakdfb = "";
-        let errrrrrrrrrrrror = "";
+        let saveUsersFields = [];
+        let output = "";
+        let error = "";
         for (const user of data) {
             const tools = new Tools(user, currDoc[0], markup);
-            function runProgram() {
+            function runProgram(saveUsersFields, output, error) {
                 ${program}
             }
             // TODO: try for errors
             runProgram(); 
-            r.push(tools.getResult());
-            plsfusakdfb += tools.getPrint();
-            errrrrrrrrrrrror = tools.getError();
+            saveUsersFields.push(tools.getResult());
+            output += tools.getPrint();
+            error = tools.getError();
         }
-        module.exports = {"res": r, "pr": plsfusakdfb, "err": errrrrrrrrrrrror};
+        module.exports = {"res": saveUsersFields, "pr": output, "err": error};
         `,
         "/jsrunner/routes/vm.js",
         );

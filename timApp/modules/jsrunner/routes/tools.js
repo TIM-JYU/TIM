@@ -103,14 +103,12 @@ class Tools {
 
     getGrade(points) {
         const scale = this.markup.gradingScale; // TODO: error if gardingScale not set
-        const values = Object.values(scale);
-        values.sort(function (a, b) {
-            return b - a
-        });
+        const values = Object.entries(scale);
+        values.sort((a, b) => {return b[1] - a[1]});
         let grade = "";
-        for (let i = 0; i < values.length; i++) {
-            if (points >= values[i]) {
-                grade = Object.keys(scale).find(key => scale[key] === values[i]);
+        for (const [currGrade, requiredPoints] of values) {
+            if (points >= requiredPoints) {
+                grade = currGrade;
                 break;
             }
             grade = this.markup.failGrade || "";
@@ -134,7 +132,7 @@ class Tools {
     print() {
         for (let i = 0; i < arguments.length; i++) {
             let a = arguments[i].toString();
-            this.printP += a + " "; // TODO: millä merkillä halutaan erotella
+            this.printP += a + " ";
 
         }
         this.printP += "\n";

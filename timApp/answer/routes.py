@@ -100,7 +100,7 @@ def get_fields_and_users(u_fields: List[str], groups: List[UserGroup], d: DocInf
     task_ids = []
     # TODO support aliases e.g. 55.d1=d1
     # alias_map = {}
-    docMap = {}
+    doc_map = {}
     for field in u_fields:
         task_id = TaskId.parse(field, False, False)
         task_ids.append(task_id)
@@ -109,7 +109,7 @@ def get_fields_and_users(u_fields: List[str], groups: List[UserGroup], d: DocInf
         dib = get_doc_or_abort(task_id.doc_id)
         if not current_user.has_teacher_access(dib):
             abort(403, f'Missing teacher access for document {dib.id}')
-        docMap[task_id.doc_id] = dib.document
+        doc_map[task_id.doc_id] = dib.document
 
     res = []
 
@@ -135,7 +135,7 @@ def get_fields_and_users(u_fields: List[str], groups: List[UserGroup], d: DocInf
                 json_str = a.content
                 p = json.loads(json_str)
                 if len(p) > 1:
-                    plug = find_plugin_from_document(docMap[task.doc_id], task, get_current_user_object())
+                    plug = find_plugin_from_document(doc_map[task.doc_id], task, get_current_user_object())
                     content_field = plug.get_content_field_name()
                     value = p[content_field]
                 else:
@@ -270,18 +270,10 @@ def post_answer(plugintype: str, task_id_ext: str):
     state = try_load_json(old_answers[0].content) if logged_in() and len(old_answers) > 0 else None
 
     if plugin.type == 'jsrunner':
-        g = []
-        try:
-            groups = plugin.values['groups']
-            for group in groups:
-                g.append(UserGroup.get_by_name(group))
-        except KeyError:
-            pass
-        if not g:
-            try:
-                g.append(UserGroup.get_by_name(plugin.values['group']))
-            except KeyError:
-                abort(403, f'Missing group in jsrunner')
+        groupnames = plugin.values.get('groups', [plugin.values.get('group')])
+        g = UserGroup.query.filter(UserGroup.name.in_(groupnames))
+        if len(g.all()) < 1:  # TODO: miten pitäisi tarkistaa?
+            abort(403, f'Missing group in jsrunner')
 
         answerdata['data'] = get_fields_and_users(plugin.values['fields'], g, d, get_current_user_object())
 
@@ -311,13 +303,11 @@ def post_answer(plugintype: str, task_id_ext: str):
         doc_map: Dict[int, DocInfo] = {}
         for item in save_obj:
             task_u = item['fields']
-            doc_task = list(task_u)
-            for i in doc_task:
-                tasks.add(i)
-                id_split = i.split(".")
-                id_num = int(id_split[0])
-                if id_num not in doc_map:
-                    doc_map[id_num] = get_doc_or_abort(id_num)
+            for key in task_u.keys():
+                tasks.add(key)
+                id_num = TaskId.parse(key, False, False)
+                if id_num.doc_id not in doc_map:
+                    doc_map[id_num.doc_id] = get_doc_or_abort(id_num.doc_id)
         task_content = {}
         for task in tasks:
             t_id = TaskId.parse(task, False, False)
@@ -329,20 +319,19 @@ def post_answer(plugintype: str, task_id_ext: str):
                 # TODO: check plug content type ^
                 task_content[task] = content_field
             except PluginException as e:
-                errormsg = str(t_id.doc_id) + ": " +  str(e) + " \n"
+                errormsg = str(t_id.doc_id) + ": " + str(e) + " \n"
                 try:
                     result['web']['error'] = result['web']['error'] + errormsg
                 except KeyError:
                     result['web'] = {"error": errormsg}
-                pass
         for user in save_obj:
             u_id = user['user']
             u = User.get_by_id(u_id)
             user_fields = user['fields']
-            for key in user_fields.keys():
+            for key, value in user_fields.items():
                 try:
                     content_type = task_content[key]
-                    c = {content_type: user_fields[key]}
+                    c = {content_type: value}
                     task_id = TaskId.parse(key, False, False)
                     an: Answer = get_latest_answers_query(task_id, [u]).first()
                     content = json.dumps(c)
@@ -350,8 +339,8 @@ def post_answer(plugintype: str, task_id_ext: str):
                         pass
                     elif an:
                         an_content = json.loads(an.content)
-                        if an_content[content_type] != user_fields[key]:
-                            an_content[content_type] = user_fields[key]
+                        if an_content[content_type] != value:
+                            an_content[content_type] = value
                             an_content = json.dumps(an_content)
                             a_result = Answer(
                                 content=an_content,
