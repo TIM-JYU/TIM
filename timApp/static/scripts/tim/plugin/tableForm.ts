@@ -17,6 +17,7 @@ import {timApp} from "../app";
 import {getParId} from "../document/parhelpers";
 import {ViewCtrl} from "../document/viewctrl";
 import {CellEntity, CellType, colnumToLetters, DataEntity, ICell, isPrimitiveCell, TimTable} from "./timTable";
+import "./tableForm.css";
 
 const tableFormApp = angular.module("tableFormApp", ["ngSanitize"]);
 export const moduleDefs = [tableFormApp];
@@ -65,7 +66,7 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
     private data: TimTable & {userdata: DataEntity} = {
         hiderows:[],
         table:{countRow:0, countCol:0},
-        hideSaveButton:false,
+        hideSaveButton:true,
         lockedCells:[],
         hid:{edit:false},
         userdata:{type:"Relative", cells:{}},
@@ -313,11 +314,11 @@ timApp.component("tableformRunner", {
         viewctrl: "?^timView",
     },
     template: `
-<div class="csRunDiv no-popup-menu">
+<div class="tableform" style="overflow-x: scroll">
     <tim-markup-error ng-if="::$ctrl.markupError" data="::$ctrl.markupError"></tim-markup-error>
     <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
     <p ng-if="::$ctrl.stem" ng-bind-html="::$ctrl.stem"></p>
-    <div class="form-inline" ng-if="::$ctrl.tableCheck()"><label>{{::$ctrl.inputstem}} <span> &nbsp;
+    <div class="form-inline" ng-if="::$ctrl.tableCheck()"><label> Suodata {{::$ctrl.inputstem}} <span>
         <input type="text"
                class="form-control"
                ng-model="$ctrl.userfilter"
@@ -326,14 +327,14 @@ timApp.component("tableformRunner", {
                ng-change="$ctrl.updateFilter()"
                ng-readonly="::$ctrl.readonly"
                size="{{::$ctrl.cols}}"></span></label>
-        <tim-table data="::$ctrl.data" taskid="{{$ctrl.pluginMeta.getTaskId()}}" plugintype="{{$ctrl.pluginMeta.getPlugin()}}" ></tim-table>
+        <tim-table data="::$ctrl.data" taskid="{{$ctrl.pluginMeta.getTaskId()}}" plugintype="{{$ctrl.pluginMeta.getPlugin()}}"></tim-table>
         <!-- TODO: taskid="{{ $ctrl.pluginm }}", vie pluginmeta & taskid-->
-    </div> &nbsp;
+    </div>
     <button class="timButton"
             ng-if="::$ctrl.tableCheck()"
             ng-click="$ctrl.saveText()">
         Tallenna taulukko
-    </button> &nbsp;
+    </button>
     <button class="timButton"
             ng-if="::$ctrl.reportCheck()"
             ng-click="$ctrl.generateReport()">
