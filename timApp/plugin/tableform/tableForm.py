@@ -67,8 +67,8 @@ class TableFormMarkupSchema(GenericMarkupSchema):
     separator = fields.Str(allow_none=True)
     usednames = fields.Str(allow_none=True)
     sortBy = fields.Str(allow_none=True)
-    dataCollection: fields.Str(allow_none=True)
-    print: fields.Str(allow_none=True)
+    dataCollection = fields.Str(allow_none=True)
+    print = fields.Str(allow_none=True)
     autosave = fields.Boolean()
     fields = fields.List(fields.Str())
 
