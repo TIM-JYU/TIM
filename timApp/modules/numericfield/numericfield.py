@@ -6,7 +6,7 @@ from typing import Union
 
 import attr
 from flask import jsonify, render_template_string
-from marshmallow import Schema, fields, post_load, validates
+from marshmallow import Schema, fields, post_load, validates, ValidationError
 from marshmallow.utils import missing
 from webargs.flaskparser import use_args
 
@@ -18,18 +18,34 @@ from pluginserver_flask import GenericMarkupModel, GenericMarkupSchema, GenericH
 @attr.s(auto_attribs=True)
 class NumericfieldStateModel:
     """Model for the information that is stored in TIM database for each answer."""
+    # numericvalue: float(str) = missing
+    # if (numericvalue: str) numericvalue: float(null) = missing
     numericvalue: float = missing
 
 
+def convert_to_float(value):
+    if value is None or value == "":
+        return None
+    try:
+        return float(value)
+    except ValueError:
+        raise ValidationError('Must be float.')
+
+
 class NumericfieldStateSchema(Schema):
-    numericvalue = fields.Number(allow_none=True)
+    numericvalue = fields.Raw()
+
+    @validates('numericvalue')
+    def validate_numericvalue(self, value):
+        convert_to_float(value)
 
     @post_load
     def make_obj(self, data):
-        return NumericfieldStateModel(**data)
+        return NumericfieldStateModel(numericvalue=convert_to_float(data['numericvalue']))
 
     class Meta:
         strict = True
+
 
 @attr.s(auto_attribs=True)
 class NumericfieldMarkupModel(GenericMarkupModel):

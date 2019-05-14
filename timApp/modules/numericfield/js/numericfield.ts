@@ -31,7 +31,7 @@ const NumericfieldMarkup = t.intersection([
 ]);
 const NumericfieldAll = t.intersection([
     t.partial({
-        numericvalue: t.number,
+        numericvalue: (t.number),
     }),
     t.type({
         info: Info,
