@@ -233,6 +233,7 @@ export class TimTableController extends DestroyScope implements IController {
     private forcedEditMode: boolean = false;
     private task: boolean = false;
     private hideSaveButton: boolean = false;
+    private hiderows: number[] = [];
     private isRunning: boolean = false;
     public taskBorders: boolean = false;
     private editedCellContent: string | undefined;
@@ -1193,16 +1194,17 @@ export class TimTableController extends DestroyScope implements IController {
             }
 
             let nextCellCoords = this.getNextCell(x, y, direction);
-
-            //Iterate through rows until next non-hidden row is found
-            //TODO: this.hidecolums?
-            if (this.data.hiderows){
-                while(nextCellCoords && this.data.hiderows.includes(nextCellCoords.row))
-                {
-                  if(nextCellCoords.row == y) break;
-                  nextCellCoords = this.getNextCell(x, nextCellCoords.row, direction)
-                }
+            /*
+            Iterate towards direction until next non-locked cell in a non-hidden row is found
+            or until iterator arrives at the same cell
+             */
+            while(nextCellCoords){
+                if(nextCellCoords.row == y && nextCellCoords.col == x) break;
+                if(!(this.data.hiderows && this.data.hiderows.includes(nextCellCoords.row))
+                && !(this.data.lockedCells && this.data.lockedCells.includes(colnumToLetters(nextCellCoords.col) + (nextCellCoords.row + 1)))) break;
+                nextCellCoords = this.getNextCell(nextCellCoords.col, nextCellCoords.row, direction)
             }
+
             if (!nextCellCoords) {
                 return true;
             }

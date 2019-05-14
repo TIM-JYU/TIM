@@ -119,6 +119,7 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
     }
 
     setDataMatrix() {
+        this.data.lockedCells.push("A1");
         if(this.attrsall.fields) this.data.table.countCol = this.attrsall.fields.length + 1;
         this.data.table.countRow = Object.keys(this.rows).length + 1;
         let x = 2;
