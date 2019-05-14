@@ -307,6 +307,7 @@ export class TimTableController extends DestroyScope implements IController {
      */
     $onInit() {
         this.initializeCellDataMatrix();
+        this.processDataBlockAndCellDataMatrix();
         this.userdata = this.data.userdata;
         if (this.userdata) {
             this.processDataBlock(this.userdata.cells);
@@ -316,13 +317,6 @@ export class TimTableController extends DestroyScope implements IController {
                 cells: {},
             };
         }
-        /*
-        processDataBlockAndCellDataMatrix moved here so datamatrix positions from data.userdata.cells gets calculated
-        after initialization(e.g for tableForm plugin)
-        //TODO Check if it breaks anything
-         */
-
-        this.processDataBlockAndCellDataMatrix();
         let tb = false;
         if (this.data.taskBorders) {
             tb = true;
