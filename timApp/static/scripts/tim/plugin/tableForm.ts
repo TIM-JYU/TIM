@@ -172,16 +172,8 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
     }
 
     /**
-     * Generates report based on the table. TODO!
-     * Used if report is set to true and create report button is clicked.
-     */
-    generateReport() {
-        console.log(this.separator(), this.names());
-    }
-
-    /**
      * String (or character) to separate fields in report.
-     * Used in report to define how fields/values are separated.
+     * Used in report to define how fields/values are separated, ';' as default.
      */
     separator() {
         return (this.attrs.separator || ";");
@@ -189,19 +181,42 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
 
     /**
      * String to determinate how user names are viewed in report.
-     * Choises are username, username and full name and anonymous.
+     * Choises are username, username and full name and anonymous. Username as default.
      */
     names() {
         return (this.attrs.usednames || "username");
     }
 
     /**
-     * TODO! VERY MUCH !!
      * String to determinate how user names are viewed in report.
-     * Choises are username, username and full name and anonymous.
+     * Choises are username, username and full name and anonymous. Username as default.
      */
     sortBy() {
         return (this.attrs.sortBy || "username");
+    }
+
+    /**
+     * String to determinate what kind of data can be collected to the report.
+     * Choises are allowed, denied and both. Allowed as default.
+     */
+    dataCollection() {
+        return (this.attrs.dataCollection || "any");
+    }
+
+    /**
+     * String to determinate how the CSV is printed.
+     * Choises are all, headers only, answers only, answers only w/o separator line. All as default.
+     */
+    print() {
+        return (this.attrs.print || "all");
+    }
+
+    /**
+     * Generates report based on the table. TODO!
+     * Used if report is set to true and create report button is clicked.
+     */
+    generateReport() {
+        console.log(this.separator(), this.names(), this.sortBy(), this.dataCollection(), this.print());
     }
 
     updateFilter() {
