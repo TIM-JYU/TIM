@@ -43,14 +43,13 @@ const TextfieldAll = t.intersection([
 
 class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t.TypeOf<typeof TextfieldAll>, typeof TextfieldAll> implements ITimComponent {
     private result?: string;
-    private error?: string;
     private isRunning = false;
     private userword = "";
     private modelOpts!: INgModelOptions; // initialized in $onInit, so need to assure TypeScript with "!"
     private vctrl!: ViewCtrl;
-    private notSavedWord = "";
+    private initialValue = "";
     private errormessage = "";
-    private isSaved = true;
+    private hideSavedText = true;
     private redAlert = false;
     private saveResponse: {saved:boolean, message: (string | undefined)} = {saved:false, message:undefined}
 
@@ -73,7 +72,7 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
         this.userword = this.attrsall.userword || this.attrs.initword || "";
         this.modelOpts = {debounce: this.autoupdate};
         this.vctrl.addTimComponent(this);
-        this.notSavedWord = this.userword;
+        this.initialValue = this.userword;
     }
 
     /**
@@ -142,8 +141,7 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
      */
     initCode() {
         this.userword = this.attrs.initword || "";
-        this.notSavedWord = this.userword;
-        this.error = undefined;
+        this.initialValue = this.userword;
         this.result = undefined;
     }
 
@@ -208,10 +206,10 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
      * @param re validinput defined by given attribute.
      */
     validityCheck(re: string) {
-        let regExpChecker = new RegExp(re);
         if (this.userword === "") {
             return new RegExp("").test(this.userword);
         }
+        const regExpChecker = new RegExp(re);
         return regExpChecker.test(this.userword);
     }
 
@@ -223,10 +221,10 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
      * Unused method warning is suppressed, as the method is only called in template.
      */
     isUnSaved() {
-        if (this.notSavedWord != this.userword) {
-            this.isSaved = true;
+        if (this.initialValue != this.userword) {
+            this.hideSavedText = true;
         }
-        return (this.notSavedWord != this.userword);
+        return (this.initialValue != this.userword);
     }
 
     // noinspection JSUnusedGlobalSymbols
@@ -253,8 +251,6 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
                 return this.saveResponse;
             }
         }
-        /* No visible text version
-        this.error = "... saving ..."; */
         this.isRunning = true;
         this.result = undefined;
         const params = {
@@ -270,20 +266,18 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
         const url = this.pluginMeta.getAnswerUrl();
         const r = await to($http.put<{web: {result: string, error?: string}}>(url, params));
         this.isRunning = false;
-        // let saveResponse:   = {"saved":false, "message": undefined};
         if (r.ok) {
             const data = r.result.data;
-            this.error = data.web.error;
+            this.errormessage = data.web.error || "Input does not pass the RegEx: " + this.attrs.validinput;
             this.result = data.web.result;
-            this.notSavedWord = this.userword;
-            this.isSaved = false;
+            this.initialValue = this.userword;
+            this.hideSavedText = false;
             this.redAlert = false;
             this.saveResponse.saved = true;
-            this.saveResponse.message = this.error;
+            this.saveResponse.message = this.errormessage;
         } else {
             this.errormessage = r.result.data.error || "Syntax error, infinite loop or some other error?";
         }
-        // return this.error;
         return this.saveResponse;
     }
 
@@ -334,7 +328,7 @@ textfieldApp.component("textfieldRunner", {
             ng-click="$ctrl.saveText()">
         {{::$ctrl.buttonText()}}
     </button> 
-    <p class="savedtext" ng-if="!$ctrl.isSaved && $ctrl.buttonText()">Saved!</p> 
+    <p class="savedtext" ng-if="!$ctrl.hideSavedText && $ctrl.buttonText()">Saved!</p> 
     <p ng-if="::$ctrl.footer" ng-bind="::$ctrl.footer" class="plgfooter"></p>
 </div>
 `,

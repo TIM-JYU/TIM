@@ -54,7 +54,7 @@ class TableFormMarkupModel(GenericMarkupModel):
     usednames: Union[str, Missing] = missing
     sortBy: Union[str, Missing] = missing
     dataCollection: Union[str, Missing] = missing
-    print: Union[str, Missing] = missing
+    print: Union[bool, Missing] = missing
     fields: Union[List[str], Missing] = missing
     autosave: Union[bool, Missing] = missing
 
@@ -68,7 +68,7 @@ class TableFormMarkupSchema(GenericMarkupSchema):
     usednames = fields.Str(allow_none=True)
     sortBy = fields.Str(allow_none=True)
     dataCollection = fields.Str(allow_none=True)
-    print = fields.Str(allow_none=True)
+    print = fields.Boolean()
     autosave = fields.Boolean()
     fields = fields.List(fields.Str())
 

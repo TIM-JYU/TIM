@@ -42,14 +42,13 @@ const NumericfieldAll = t.intersection([
 
 class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMarkup>, t.TypeOf<typeof NumericfieldAll>, typeof NumericfieldAll> implements ITimComponent {
     private result?: string;
-    private error?: string;
     private isRunning = false;
     private numericvalue?: number;
     private modelOpts!: INgModelOptions; // initialized in $onInit, so need to assure TypeScript with "!"
     private vctrl!: ViewCtrl;
-    private notSavedNumber?: number;
+    private initialValue?: number;
     private errormessage = "";
-    private isSaved = true;
+    private hideSavedText = true;
     private redAlert = false;
     private saveResponse: {saved:boolean, message: (string | undefined)} = {saved:false, message:undefined}
 
@@ -72,7 +71,7 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
         this.numericvalue = valueOr(this.attrsall.numericvalue, this.attrs.initnumber || undefined);
         this.modelOpts = {debounce: this.autoupdate};
         this.vctrl.addTimComponent(this);
-        this.notSavedNumber = this.numericvalue;
+        this.initialValue = this.numericvalue;
     }
 
     /**
@@ -140,8 +139,7 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
      */
     initCode() {
         this.numericvalue = this.attrs.initnumber || undefined;
-        this.notSavedNumber = this.numericvalue;
-        this.error = undefined;
+        this.initialValue = this.numericvalue;
         this.result = undefined;
     }
 
@@ -186,10 +184,10 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
      * @param re validinput defined by given attribute.
      */
     validityCheck(re: string) {
-        let regExpChecker = new RegExp(re);
         if (this.numericvalue === null) {
             return true;
         }
+        const regExpChecker = new RegExp(re);
         return regExpChecker.test(this.numericvalue.toString());
     }
 
@@ -218,10 +216,10 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
      * Unused method warning is suppressed, as the method is only called in template.
      */
     isUnSaved() {
-        if (this.notSavedNumber != this.numericvalue) {
-            this.isSaved = true;
+        if (this.initialValue != this.numericvalue) {
+            this.hideSavedText = true;
         }
-        return (this.notSavedNumber != this.numericvalue);
+        return (this.initialValue != this.numericvalue);
     }
 
 
@@ -258,13 +256,13 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
         this.isRunning = false;
         if (r.ok) {
             const data = r.result.data;
-            this.error = data.web.error;
+            this.errormessage = data.web.error;
             this.result = data.web.result;
-            this.notSavedNumber = this.numericvalue;
-            this.isSaved = false;
+            this.initialValue = this.numericvalue;
+            this.hideSavedText = false;
             this.redAlert = false;
             this.saveResponse.saved = true;
-            this.saveResponse.message = this.error;
+            this.saveResponse.message = this.errormessage;
         } else {
             this.errormessage = "Infinite loop or some other error?";
         }
@@ -321,7 +319,7 @@ numericfieldApp.component("numericfieldRunner", {
             ng-click="$ctrl.saveText()">
         {{::$ctrl.buttonText()}}
     </button>
-    <p class="savedtext" ng-if="!$ctrl.isSaved && $ctrl.buttonText()">Saved!</p> 
+    <p class="savedtext" ng-if="!$ctrl.hideSavedText && $ctrl.buttonText()">Saved!</p> 
     <p ng-if="::$ctrl.footer" ng-bind="::$ctrl.footer" class="plgfooter"></p>
 </div> `,
 });

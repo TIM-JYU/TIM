@@ -51,7 +51,7 @@ class TextfieldMarkupSchema(GenericMarkupSchema):
     stem = fields.String(allow_none=True)
     initword = fields.String(allow_none=True)
     cols = fields.Int()
-    inputplaceholder: Union[str, Missing] = missing
+    inputplaceholder: fields.Str(allow_none=True)
     followid = fields.String(allow_none=True)
     autosave = fields.Boolean()
     validinput = fields.String(allow_none=True)

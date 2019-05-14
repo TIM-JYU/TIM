@@ -2220,7 +2220,6 @@ timApp.component("timTable", {
         data: "<",
         plugintype: "@?",
         taskid: "@?",
-        //taskUrl: "@?",
     },
     require: {
         viewctrl: "?^timView",

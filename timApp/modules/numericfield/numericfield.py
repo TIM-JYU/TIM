@@ -53,7 +53,7 @@ class NumericfieldMarkupModel(GenericMarkupModel):
     inputstem: Union[str, Missing] = missing
     initnumber: Union[int, Missing] = missing
     cols: Union[int, Missing] = missing
-    inputplaceholder: Union[str, Missing] = missing
+    inputplaceholder: Union[int, Missing] = missing
     followid: Union[str, Missing] = missing
     autosave: Union[bool, Missing] = missing
     validinput: Union[str, Missing] = missing
@@ -67,7 +67,7 @@ class NumericfieldMarkupSchema(GenericMarkupSchema):
     stem = fields.String(allow_none=True)
     initnumber = fields.Number(allow_none=True)
     cols = fields.Int()
-    inputplaceholder: Union[int, Missing] = missing
+    inputplaceholder: fields.Number(allow_none=True)
     followid = fields.String(allow_none=True)
     autosave = fields.Boolean()
     validinput = fields.String(allow_none=True)

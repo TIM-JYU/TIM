@@ -16,9 +16,7 @@ import {to} from "tim/util/utils";
 import {timApp} from "../app";
 import {getParId} from "../document/parhelpers";
 import {ViewCtrl} from "../document/viewctrl";
-import {CellType, colnumToLetters, DataEntity, isPrimitiveCell, TimTable, TimTableController} from "./timTable";
-import "./tableForm.css";
-
+import {CellEntity, CellType, colnumToLetters, DataEntity, ICell, isPrimitiveCell, TimTable} from "./timTable";
 
 const tableFormApp = angular.module("tableFormApp", ["ngSanitize"]);
 export const moduleDefs = [tableFormApp];
@@ -33,7 +31,7 @@ const TableFormMarkup = t.intersection([
         sortBy: nullable(t.string), /* TODO! Username and task, or task and username -- what about points? */
         /* answerAge: nullable(t.string), /* TODO! Define time range from which answers are fetched. Maybe not to be implemented! */
         dataCollection: nullable(t.string), /* TODO! Filter by data collection consent: allowed, denied or both */
-        print: nullable(t.string), /* TODO! Headers and answers, headers, answers, answers w/o separator line, (or Korppi export?) */
+        print: t.boolean, /* TODO! Headers and answers, headers, answers, answers w/o separator line, (or Korppi export?) */
         autosave: t.boolean,
 
     }),
@@ -77,7 +75,6 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
     private allRows!: {};
     private modelOpts!: INgModelOptions;
     private oldCellValues!: string;
-    private timTable?: TimTableController;
 
     getDefaultMarkup() {
         return {};
@@ -99,7 +96,6 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
         if (parId && this.viewctrl) {
             await $timeout(0);
             const t = this.viewctrl.getTableControllerFromParId(parId);
-            if (t) this.timTable = t;
             //console.log(t);
         }
         this.oldCellValues = JSON.stringify(this.data.userdata.cells);
@@ -123,7 +119,6 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
     }
 
     setDataMatrix() {
-        this.data.lockedCells.push("A1");
         if(this.attrsall.fields) this.data.table.countCol = this.attrsall.fields.length + 1;
         this.data.table.countRow = Object.keys(this.rows).length + 1;
         let x = 2;
@@ -213,7 +208,7 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
      * Choises are all, headers only, answers only, answers only w/o separator line. All as default.
      */
     print() {
-        return (this.attrs.print || "all");
+        return (this.attrs.print || true);
     }
 
     /**
@@ -225,8 +220,6 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
     }
 
     updateFilter() {
-        //TODO check if better way to save than just making saveAndCloseSmallEditor public and calling it
-        if(this.timTable) this.timTable.saveAndCloseSmallEditor();
         this.data.hiderows = [];
         if (this.userfilter != "" && this.userfilter != undefined) {
             const reg = new RegExp(this.userfilter.toLowerCase());
@@ -238,10 +231,10 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
                 rowi++;
             }
         }
+        //TODO: Call timTable and close the editor if open
     }
 
     async doSaveText(nosave: boolean) {
-        if(this.timTable) this.timTable.saveAndCloseSmallEditor();
         this.error = "... saving ...";
         const keys = Object.keys(this.data.userdata.cells);
         keys.sort();
@@ -319,11 +312,11 @@ timApp.component("tableformRunner", {
         viewctrl: "?^timView",
     },
     template: `
-<div class="tableform" style="overflow-x: scroll">
+<div class="tableFormDiv no-popup-menu">
     <tim-markup-error ng-if="::$ctrl.markupError" data="::$ctrl.markupError"></tim-markup-error>
     <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
     <p ng-if="::$ctrl.stem" ng-bind-html="::$ctrl.stem"></p>
-    <div class="form-inline" ng-if="::$ctrl.tableCheck()"><label> Suodata {{::$ctrl.inputstem}} <span>
+    <div class="form-inline" ng-if="::$ctrl.tableCheck()"><label>{{::$ctrl.inputstem}} <span>
         <input type="text"
                class="form-control"
                ng-model="$ctrl.userfilter"
@@ -339,7 +332,7 @@ timApp.component("tableformRunner", {
             ng-if="::$ctrl.tableCheck()"
             ng-click="$ctrl.saveText()">
         Tallenna taulukko
-    </button>
+    </button> &nbsp;
     <button class="timButton"
             ng-if="::$ctrl.reportCheck()"
             ng-click="$ctrl.generateReport()">
