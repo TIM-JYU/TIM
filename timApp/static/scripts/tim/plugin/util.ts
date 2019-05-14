@@ -267,7 +267,6 @@ export abstract class PluginBase<MarkupType extends IGenericPluginMarkup, A exte
                     const m = value.match(/^area_(\S+)$/);
                     if (m) {
                         returnList.push(m[1]);
-                        console.log(m[1]);
                     }
                 }
             );

@@ -39,8 +39,6 @@ interface IMatchElementT extends t.TypeOf<typeof MatchElement> {
 
 }
 
-// type IMatchElementT = t.TypeOf<typeof MatchElement>;
-
 const MatchElementArray = t.array(MatchElement);
 
 let StringArray = t.array(t.string);
@@ -74,7 +72,7 @@ const FeedbackMarkup = t.intersection([
     }),
     GenericPluginMarkup,
     t.type({
-        // all withDefaults should come here; NOT in t.partial
+        // All withDefaults should come here, NOT in t.partial.
         autoupdate: withDefault(t.number, 500),
         cols: withDefault(t.number, 20),
         questionItems: t.array(QuestionItem),
@@ -122,7 +120,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
     private stateSentence?: string;
     private stateCorrect?: boolean;
     private saving = false;
-    private correctStreak = 3;
+    private correctStreak = 1;
     private showAnswers?: boolean;
     private forceSave = false;
 
@@ -378,7 +376,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
     }
 
     /**
-     * Hide a TIM area from the page
+     * Hide a TIM area from the page.
      */
     hideArea(area: string) {
         const areaElement = document.querySelectorAll(`.${area}`);
@@ -388,7 +386,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
     }
 
     /**
-     * Show a TIM area in the page
+     * Show a TIM area in the page.
      */
     showArea(area: string) {
         const areaElement = document.querySelectorAll(`.${area}`);
@@ -431,21 +429,20 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
      * with the ones that are correct.
      */
     async save() {
-        // TODO: make better names
-        const answer = this.getSentence(this.answerArray, this.selectionMap).join(" ");
-        const failure = await this.doSave(false, this.correctAnswer, this.correctAnswerString, answer);
+        const userAnswer = this.getSentence(this.answerArray, this.selectionMap).join(" ");
+        const failure = await this.doSave(false, this.correctAnswer, this.correctAnswerString, userAnswer);
         return failure;
     }
 
-    async doSave(nosave: boolean, correct: boolean, sentence: string, answer: string) {
+    async doSave(nosave: boolean, correct: boolean, correctAnswer: string, userAnswer: string) {
         this.saving = true;
         const params = {
             input: {
                 nosave: false,
                 feedback: this.feedback,
                 correct: correct,
-                sentence: sentence,
-                answer: answer,
+                correct_answer: correctAnswer,
+                user_answer: userAnswer,
             },
             options: {
                 forceSave: this.forceSave,
@@ -471,18 +468,18 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
     }
 
     /**
-     * Force the plugin to save its information
+     * Force the plugin to save its information.
      *
-     * @param force Whether to force a save
+     * @param force Whether to force the plugin to always save itself when the answer route is called.
      */
     setForceAnswerSave(force: boolean) {
         this.forceSave = force;
     }
 
     /**
-     * Saves all the plugins in the question item to the database
+     * Saves all the plugins in the question item to the database.
      *
-     * @param plugins plugins to be saved
+     * @param plugins Plugins to be saved.
      */
     async savePlugins(plugins: IQuestionItemT) {
         for (const p of plugins.pluginNames) {
@@ -500,10 +497,10 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
     }
 
     /**
-     * Saves the selected plugin's content to the database
+     * Saves the selected plugin's content to the database.
      *
-     * @param plugin The plugin to be saved
-     * @returns{boolean} Whether the saving was succesful
+     * @param plugin The plugin to be saved.
+     * @returns{boolean} Whether the save was succesful.
      */
     async savePlugin(plugin: ITimComponent) {
         this.saving = true;
@@ -591,7 +588,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
                 return;
             }
 
-            // Gets all the plugins from the visible question item and compares to choices-array to check which matches
+            // Gets all the plugins from the visible question item and compares to choices-array to check which matches.
             const selections = this.getAnswerFromPlugins();
             this.correctMap = this.getCorrectValues();
             this.correctAnswerString = this.getSentence(this.answerArray, this.correctMap).join(" ");
@@ -610,7 +607,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
             if (matchIndex === undefined) {
                 this.error = "You have no choices defined, got no matches or using match objects";
             } else {
-                // Get the choice in matchIndex and the feedbacks assigned to it
+                // Get the choice in matchIndex and the feedbacks assigned to it.
                 if (matchIndex !== undefined) {
                     const choice = plugins.choices[matchIndex];
                     const feedbackLevels = choice.levels;
@@ -660,7 +657,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
                 questionIndex = this.index;
             }
 
-            if (questionIndex === undefined || this.streak === this.attrs.correctStreak ||
+            if (questionIndex === undefined || this.streak === this.correctStreak ||
                 this.currentFeedbackLevel === this.feedbackMax || this.index >= this.attrs.questionItems.length) {
                 this.pluginMode = Mode.EndTask;
                 if (!this.vctrl.item.rights.editable || !this.vctrl.item.rights.teacher) {
@@ -756,7 +753,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
                     return i;
                 }
             }
-            // If the match is a MatchObjectArray instead of a string array
+            // If the match is a MatchObjectArray instead of a string array.
             else {
                 this.checkMatchObjectArray(match, answer);
                 return;
@@ -777,21 +774,10 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
         if (match.length === 0) {
             return true;
         }
-        // TODO: Add wildcards for different indices of the match, not just the trailing stuff
-        // TODO: Use regexp in this.
-        /* const wildcard = match.indexOf(".*");
-        const map = match.map(x => x.indexOf(".*"));
-        console.log(match.map(x => x.indexOf(".*")));
-        if (wildcard > 0 && match.length !== answer.length) {
-            let length = match.length;
-            while (length < answer.length) {
-                match.push(".*");
-                length++;
-            }
-        } */
+
         if (match.length === answer.length) {
             for (let i = 0; i < answer.length; i++) {
-                // TODO: Keyword not really needed with RegExp, but leave it in anyway
+                // Keyword not really needed with RegExp, but leave it in anyway if it happens to be easier to use.
                 const kw = match[i].match(keywordPlaceHolder);
                 if (kw && kw.length > 0) {
                     const word = kw[0].split(':')[1].replace('|', "");
@@ -800,13 +786,8 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
                     }
                     continue;
                 }
-                /* if (match[i] === ".*") {
-                    continue;
-                } */
+
                 const re = new RegExp(match[i]);
-                console.log(re);
-                const b = re.test(answer[i]);
-                console.log(b);
                 if (!re.test(answer[i])) {
                     return false;
                 }
@@ -817,9 +798,9 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
     }
 
     /**
-     * TODO
-     * @param match
-     * @param answer
+     * TODO: This function needs to be implemented at some point if the matches are ever used as MatchElement-types
+     * @param match MatchElement defined in the markup for question item's choices.
+     * @param answer Array of selections the user has made as the answers for the question item.
      */
     checkMatchObjectArray(match: IMatchElementT[], answer: string[]): number | undefined {
         return;
@@ -871,7 +852,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
 
             if (word) {
                 const wordString = word.toString();
-                const wordIndex = parseInt(wordString.split(':')[1]);
+                const wordIndex = parseInt(wordString.split(":")[1]);
 
                 this.feedback = this.feedback.replace(placeholder, replacementArray[wordIndex]);
                 return;
@@ -915,7 +896,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
 
     /**
      * Gets the user's answer from the currently visible question item of those this feedback-plugin is assigned to.
-     * TODO: Maybe add getting answers in an area and with regexp?
+     * TODO: Maybe add getting answers in an area and with regexp.
      *
      * @returns(string[]) The user's selections to the question item.
      */
@@ -941,7 +922,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
                             return NodeFilter.FILTER_ACCEPT;
                         }
                         // Note, currently hiding stuff from question item answers by putting them inside a <div>,
-                        // need to be modified if div is ever changed to be accepted
+                        // need to be modified if div is ever changed to be accepted.
                         return NodeFilter.FILTER_REJECT;
                     },
                 });
@@ -1014,7 +995,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
             let value = v;
             const kw = value.match(keywordPlaceHolder);
             if (kw && kw.length > 0) {
-                const keyword = kw[0].split(':')[1].replace('|', "");
+                const keyword = kw[0].split(":")[1].replace("|", "");
                 const wordlists = this.attrs.questionItems[this.index].words;
                 for (const wordlist of wordlists) {
                     const word = wordlist.filter(x => x.includes(keyword));
@@ -1044,7 +1025,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
     /**
      * Goes through the plugins of the current question item's correct answer and forms a map from them.
      *
-     * @returns{Map<string, string>} Correct answer for every plugin in the question item
+     * @returns{Map<string, string>} Correct answer for every plugin in the question item.
      */
     getCorrectValues(): Map<string, string> {
         const values = new Map<string, string>();
@@ -1181,9 +1162,9 @@ feedbackApp.component("feedbackRunner", {
         {{$ctrl.buttonText()}}
     </button>
     <div class="feedbackAnswer" ng-if="$ctrl.showAnswers">
-    <p ng-bind-html="$ctrl.stateAnswer"></p>
-    <p ng-bind-html="$ctrl.stateFeedback"></p>
-    <p ng-bind-html="$ctrl.stateSentence"></p>
+    <p ng-bind-html="$ctrl.attrsall.state.user_answer"></p>
+    <p ng-bind-html="$ctrl.attrsall.state.feedback"></p>
+    <p ng-bind-html="$ctrl.attrsall.state.correct_answer"></p>
     </div>
     <p ng-if="::$ctrl.footer" ng-bind="::$ctrl.footer"></p>
 </div>

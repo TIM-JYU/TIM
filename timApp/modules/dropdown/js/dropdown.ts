@@ -17,7 +17,7 @@ const DropdownMarkup = t.intersection([
     }),
     GenericPluginMarkup,
     t.type({
-        // all withDefaults should come here; NOT in t.partial,
+        // All withDefaults should come here, NOT in t.partial.
         answers: withDefault(t.boolean, false),
         autosave: withDefault(t.boolean, false),
         instruction: withDefault(t.boolean, false),
@@ -84,7 +84,7 @@ class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.T
     }
 
     /**
-     * TODO: whole sentence, selected option, plugin type?,
+     * Saves the selection that in the plugin.
      */
     async save() {
         const failure = await this.doSave(this.attrs.instruction);
@@ -115,9 +115,8 @@ class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.T
             if (data.web.error) {
                 return data.web.error;
             }
-            // this.result = data.web.result;
         } else {
-            this.error = "Infinite loop or some other error?";
+            this.error = "Error connecting to the backend";
         }
     }
 
@@ -128,18 +127,18 @@ class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.T
     }
 
     /**
-     * Force the plugin to save its information
+     * Force the plugin to save its information.
      *
-     * @param force Whether to force a save
+     * @param force Whether to force the plugin to always save itself when the answer route is called.
      */
     setForceAnswerSave(force: boolean) {
         this.forceSave = force;
     }
 
     /**
-     * Sets the words visible in the plugin and randomizes their order
+     * Sets the words visible in the plugin and randomizes their order if desired.
      *
-     * @param words List of words to be shown in the plugin
+     * @param words List of words to be shown in the plugin.
      */
     setPluginWords(words: string[]) {
         if (this.shuffle) {
@@ -152,11 +151,11 @@ class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.T
     }
 
     /**
-     * Shuffles string array
+     * Shuffles a string array.
      * @param words Array of strings to be shuffled.
      */
     shuffleWords(words: string []): string [] {
-        // shuffle algorithm from csparsons.ts
+        // Shuffle algorithm from csparsons.ts
         const result = words.slice();
         const n = words.length;
         for (let i = n - 1; i >= 0; i--) {

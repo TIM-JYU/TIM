@@ -145,10 +145,10 @@ export class ViewCtrl implements IController {
     private displaySearch = false;
     diffDialog?: DiffController;
 
-    // To hide actions on both sides of the page
+    // To hide actions on both sides of the page.
     public actionsDisabled = false;
 
-    // To give an alert if trying to go to another page when doing an adaptive feedback task
+    // To give an alert if trying to go to another page when doing an adaptive feedback task.
     public doingTask = false;
 
     constructor(sc: IScope) {

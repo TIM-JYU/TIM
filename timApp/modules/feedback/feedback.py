@@ -18,16 +18,16 @@ from pluginserver_flask import GenericMarkupModel, GenericMarkupSchema, GenericH
 @attr.s(auto_attribs=True)
 class FeedbackStateModel:
     """Model for the information that is stored in TIM database for each answer."""
-    answer: str
+    user_answer: str
     correct: bool
     feedback: str
-    sentence: str
+    correct_answer: str
 
 class FeedbackStateSchema(Schema):
-    answer = fields.Str(required=True)
+    user_answer = fields.Str(required=True)
     correct = fields.Bool(required=True)
     feedback = fields.Str(required=True)
-    sentence = fields.Str(required=True)
+    correct_answer = fields.Str(required=True)
 
     @post_load
     def make_obj(self, data):
@@ -67,7 +67,6 @@ class FeedbackMarkupSchema(GenericMarkupSchema):
 
     @validates('points_array')
     def validate_points_array(self, value):
-        #or not all(len(v) == 1 for v in value)
         if len(value) != 2:
             raise ValidationError('Must be of size 1 x 2.')
 
@@ -82,17 +81,17 @@ class FeedbackMarkupSchema(GenericMarkupSchema):
 @attr.s(auto_attribs=True)
 class FeedbackInputModel:
     """Model for the information that is sent from browser (plugin AngularJS component)."""
-    answer: str
+    user_answer: str
     correct: bool
     feedback: str
-    sentence: str
+    correct_answer: str
     nosave: bool = missing
 
 class FeedbackInputSchema(Schema):
-    answer = fields.Str(required=True)
+    user_answer = fields.Str(required=True)
     correct = fields.Bool(required=True)
     feedback = fields.Str(required=True)
-    sentence = fields.Str(required=True)
+    correct_answer = fields.Str(required=True)
     nosave = fields.Bool()
 
     @post_load
@@ -179,26 +178,23 @@ def render_static_feedback(m: FeedbackHtmlModel):
 
 app = create_app(__name__, FeedbackHtmlSchema())
 
-# TODO: Need to remake the saving for this plugin
-
-
 @app.route('/answer/', methods=['put'])
 @use_args(FeedbackAnswerSchema(strict=True), locations=("json",))
 def answer(args: FeedbackAnswerModel):
     web = {}
     result = {'web': web}
-    sentence = args.input.sentence
+    correct_answer = args.input.correct_answer
     feedback = args.input.feedback
     correct = args.input.correct
-    answer = args.input.answer
+    user_answer = args.input.user_answer
     points_array = args.markup.points_array or [0, 1]
     points = points_array[correct]
 
-    # plugin can ask not to save the word
+    # Plugin can ask not to save the word.
     nosave = args.input.nosave
     if not nosave:
         tim_info = {"points": points}
-        save = {"sentence": sentence, "correct": correct, "feedback": feedback, "answer": answer}
+        save = {"correct_answer": correct_answer, "correct": correct, "feedback": feedback, "user_answer": user_answer}
         result["save"] = save
         result["tim_info"] = tim_info
         web['result'] = "saved"
