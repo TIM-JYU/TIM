@@ -335,7 +335,6 @@ report: true
     return jsonify({
         "js": [],
         "multihtml": True,
-        "css": ["css/tableForm.css"],
         'editor_tabs': editor_tabs,
     },
     )
