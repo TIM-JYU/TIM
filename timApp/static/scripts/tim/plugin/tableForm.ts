@@ -1,24 +1,22 @@
 /**
  * Defines the client-side implementation of an example plugin (tableForm).
  */
-import angular, {INgModelOptions, IRootElementService, IScope} from "angular";
+import angular, {INgModelOptions} from "angular";
 import * as t from "io-ts";
 import {
     GenericPluginMarkup,
     GenericPluginTopLevelFields,
     nullable,
     PluginBase,
-    pluginBindings, PluginMeta,
+    pluginBindings,
     withDefault,
 } from "tim/plugin/util";
 import {$http, $timeout} from "tim/util/ngimport";
 import {to} from "tim/util/utils";
-import {valueDefu} from "tim/util/utils";
-import {None} from "../../jspm_packages/npm/fp-ts@1.11.1/lib/Option";
 import {timApp} from "../app";
-import enumerate = Reflect.enumerate;
 import {getParId} from "../document/parhelpers";
 import {ViewCtrl} from "../document/viewctrl";
+import {CellEntity, CellType, colnumToLetters, DataEntity, ICell, isPrimitiveCell, TimTable} from "./timTable";
 
 const tableFormApp = angular.module("tableFormApp", ["ngSanitize"]);
 export const moduleDefs = [tableFormApp];
@@ -64,16 +62,18 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
     private error?: string;
     private isRunning = false;
     private userfilter = "";
-    private data: any = {};
+    private data: TimTable & {userdata: DataEntity} = {
+        hiderows:[],
+        table:{},
+        hideSaveButton:false,
+        lockedCells:[],
+        hid:{edit:false},
+        userdata:{type:"Relative", cells:{}}
+    };
     private rows!: RowsType;
-    // private hiderows: number[] = [];
     private allRows!: {};
-    private tabledata: any;
-    private timTableData!: {};
     private modelOpts!: INgModelOptions;
     private oldCellValues!: string;
-
-    // initialized in $onInit, so need to assure TypeScript with "!"
 
     getDefaultMarkup() {
         return {};
@@ -90,11 +90,6 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
         this.userfilter = "";
         this.allRows = this.attrsall.rows || {};
         this.rows = this.allRows;
-        this.data.task = true;
-        this.data.hiderows = [];
-        this.data.tableForm = true;
-        this.data.lockedCells = ["A1"];
-        // this.fields = this.attrsall.fields;
         this.setDataMatrix();
         const parId = getParId(this.getPar());
         if (parId && this.viewctrl) {
@@ -123,10 +118,6 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
     }
 
     setDataMatrix() {
-        // for (const row in this.rows){
-        //      console.log("eaa");
-        //  }
-        this.data.userdata = {cells: {}};
         let x = 2;
         for (const r of Object.keys(this.rows)) {
             this.data.userdata.cells["A" + x] = {cell: r, backgroundColor: "#efecf1"};
@@ -136,14 +127,12 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
         // TODO: Load default cell colors from tableForm's private answer?
         if (this.attrsall.fields) {
             for (let y = 0; y < this.attrsall.fields.length; y++) {
-                this.data.userdata.cells[this.colnumToLetters(y + 1) + 1] =  {cell: this.attrsall.fields[y], backgroundColor: "#efecf1"};
-                this.data.lockedCells.push(this.colnumToLetters(y + 1) + 1);
+                this.data.userdata.cells[colnumToLetters(y + 1) + 1] =  {cell: this.attrsall.fields[y], backgroundColor: "#efecf1"};
+                this.data.lockedCells.push(colnumToLetters(y + 1) + 1);
                 x = 0;
                 for (const [u, r] of Object.entries(this.rows)) {
-
                     if (r[this.attrsall.fields[y]]) {
-                        // @ts-ignore
-                        this.data.userdata.cells[this.colnumToLetters(y + 1) + (x + 2)] = r[this.attrsall.fields[y]];
+                        this.data.userdata.cells[colnumToLetters(y + 1) + (x + 2)] = r[this.attrsall.fields[y]];
 
                     }
                     x++;
@@ -152,25 +141,6 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
         }
     }
 
-    /** TODO SIIRRÄ jonnekin
-     * Transforms column index to letter.
-     * @param colIndex ex. 2
-     * @return column index as letter
-     */
-    public colnumToLetters(colIndex: number): string {
-        const ASCII_OF_A = 65;
-        const ASCII_CHAR_COUNT = 26;
-        const lastChar = String.fromCharCode(ASCII_OF_A + (colIndex % ASCII_CHAR_COUNT));
-        const remainder = Math.floor(colIndex / ASCII_CHAR_COUNT);
-
-        if (remainder == 0) {
-            return lastChar;
-        } else if (remainder <= ASCII_CHAR_COUNT) {
-            return String.fromCharCode(ASCII_OF_A + remainder - 1) + lastChar;
-        }
-        // recursive call to figure out the rest of the letters
-        return this.colnumToLetters(remainder - 1) + lastChar;
-    }
 
     initCode() {
         this.userfilter = "";
@@ -250,33 +220,40 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
         this.error = "... saving ...";
         const keys = Object.keys(this.data.userdata.cells);
         keys.sort();
-        const userLocations = {};
-        const taskLocations = {};
-        const replyRows = {};
+        const userLocations: {[index: string]: string} = {};
+        const taskLocations: {[index: string]: string} = {};
+        const replyRows: {[index: string]: {[index: string]: CellType}} = {};
         for (const coord of keys) {
             const alphaRegExp = new RegExp("([A-Z]*)");
             const alpha = alphaRegExp.exec(coord);
-            const value = coord;
 
             if (alpha == null) {
                 continue;
             }
             const columnPlace = alpha[0];
             const numberPlace = coord.substring(columnPlace.length);
-            let cellContent = this.data.userdata.cells[coord];
+            const cell = this.data.userdata.cells[coord];
+            let cellContent;
             // TODO: Save cell attributes (e.g backgroundColor) as plugin's own answer
-            if (typeof cellContent != "string") { cellContent = cellContent.cell; }
+            if (!isPrimitiveCell(cell)) {
+                cellContent = cell.cell;
+            } else {
+                cellContent = cell;
+            }
+            if (cellContent === null) {
+                cellContent = "";
+            } else if (typeof cellContent === "boolean") {
+                throw new Error("cell was boolean?");
+            } else if (typeof cellContent === "number") {
+                cellContent = cellContent.toString();
+            }
             if (columnPlace === "A") {
                 if (numberPlace === "1") { continue; }
-                // @ts-ignore
                 userLocations[numberPlace] = cellContent;
-                // @ts-ignore
                 replyRows[cellContent] = {};
             } else if (numberPlace === "1") {
-                // @ts-ignore
                 taskLocations[columnPlace] = cellContent;
             } else {
-                // @ts-ignore
                 replyRows[userLocations[numberPlace]][taskLocations[columnPlace]] = cellContent;
             }
         }

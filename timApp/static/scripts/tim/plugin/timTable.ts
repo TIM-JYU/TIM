@@ -49,7 +49,7 @@ export interface TimTable {
     editorButtonsBottom?: boolean;
     editorButtonsRight?: boolean;
     toolbarTemplates?: any;
-    tableForm: boolean;
+    hideSaveButton: boolean;
     hid: {edit?: boolean};
     hiderows: number[];
     lockedCells: string[];
@@ -194,8 +194,28 @@ enum Direction {
     LeftAndRight = 12,
 }
 
-function isPrimitiveCell(cell: CellEntity): cell is CellType {
+export function isPrimitiveCell(cell: CellEntity): cell is CellType {
     return cell == null || (cell as ICell).cell === undefined;
+}
+
+/**
+ * Transforms column index to letter.
+ * @param colIndex ex. 2
+ * @return column index as letter
+ */
+export function colnumToLetters(colIndex: number): string {
+    const ASCII_OF_A = 65;
+    const ASCII_CHAR_COUNT = 26;
+    const lastChar = String.fromCharCode(ASCII_OF_A + (colIndex % ASCII_CHAR_COUNT));
+    const remainder = Math.floor(colIndex / ASCII_CHAR_COUNT);
+
+    if (remainder == 0) {
+        return lastChar;
+    } else if (remainder <= ASCII_CHAR_COUNT) {
+        return String.fromCharCode(ASCII_OF_A + remainder - 1) + lastChar;
+    }
+    // recursive call to figure out the rest of the letters
+    return colnumToLetters(remainder - 1) + lastChar;
 }
 
 export class TimTableController extends DestroyScope implements IController {
@@ -212,7 +232,7 @@ export class TimTableController extends DestroyScope implements IController {
     private editing: boolean = false;
     private forcedEditMode: boolean = false;
     private task: boolean = false;
-    private tableForm: boolean = true;
+    private hideSaveButton: boolean = false;
     private isRunning: boolean = false;
     public taskBorders: boolean = false;
     private editedCellContent: string | undefined;
@@ -524,25 +544,6 @@ export class TimTableController extends DestroyScope implements IController {
         */
     }
 
-    /**
-     * Transforms column index to letter.
-     * @param colIndex ex. 2
-     * @return column index as letter
-     */
-    public colnumToLetters(colIndex: number): string {
-        const ASCII_OF_A = 65;
-        const ASCII_CHAR_COUNT = 26;
-        const lastChar = String.fromCharCode(ASCII_OF_A + (colIndex % ASCII_CHAR_COUNT));
-        const remainder = Math.floor(colIndex / ASCII_CHAR_COUNT);
-
-        if (remainder == 0) {
-            return lastChar;
-        } else if (remainder <= ASCII_CHAR_COUNT) {
-            return String.fromCharCode(ASCII_OF_A + remainder - 1) + lastChar;
-        }
-        // recursive call to figure out the rest of the letters
-        return this.colnumToLetters(remainder - 1) + lastChar;
-    }
 
     /*
      * Set attribute to user object.  If key == CLEAR, remove attribute in value
@@ -555,7 +556,7 @@ export class TimTableController extends DestroyScope implements IController {
         if (!this.userdata) {
             return;
         }
-        const coordinate = this.colnumToLetters(col) + "" + (row + 1);
+        const coordinate = colnumToLetters(col) + "" + (row + 1);
         if (!this.userdata.cells[coordinate]) {
             if (key == "CLEAR") {
                 return;
@@ -600,7 +601,7 @@ export class TimTableController extends DestroyScope implements IController {
         if (!this.userdata) {
             return;
         }
-        const coordinate = this.colnumToLetters(col) + "" + (row + 1);
+        const coordinate = colnumToLetters(col) + "" + (row + 1);
         if (!this.userdata.cells[coordinate]) {
             this.userdata.cells[coordinate] = content;
             return;
@@ -624,6 +625,7 @@ export class TimTableController extends DestroyScope implements IController {
     async saveCells(cellContent: string, docId: number, parId: string, row: number, col: number) {
         if (this.task) {
             this.setUserContent(row, col, cellContent);
+            //TODO: Callback external save funtion (if given)
             return;
         }
         const response = await $http.post<string[]>("/timTable/saveCell", {
@@ -1196,7 +1198,7 @@ export class TimTableController extends DestroyScope implements IController {
                 }
             }
 
-            var nextCellCoords = this.getNextCell(x, y, direction);
+            let nextCellCoords = this.getNextCell(x, y, direction);
 
             //Iterate through rows until next non-hidden row is found
             //TODO: this.hidecolums?
@@ -1204,7 +1206,7 @@ export class TimTableController extends DestroyScope implements IController {
                 while(nextCellCoords && this.data.hiderows.includes(nextCellCoords.row))
                 {
                   if(nextCellCoords.row == y) break;
-                    nextCellCoords = this.getNextCell(x, nextCellCoords.row, direction)
+                  nextCellCoords = this.getNextCell(x, nextCellCoords.row, direction)
                 }
             }
             if (!nextCellCoords) {
@@ -1359,7 +1361,7 @@ export class TimTableController extends DestroyScope implements IController {
             }
         }
 
-        const cellCoordinate = this.colnumToLetters(coli) + (rowi + 1);
+        const cellCoordinate = colnumToLetters(coli) + (rowi + 1);
         if (this.data.lockedCells && this.data.lockedCells.includes(cellCoordinate)) return;
 
         const activeCell = this.activeCell;
@@ -2278,7 +2280,7 @@ timApp.component("timTable", {
 
 
     </div>
-<div class="csRunMenuArea" ng-show="::($ctrl.task && !$ctrl.data.tableForm)">
+<div class="csRunMenuArea" ng-show="::($ctrl.task && !$ctrl.data.hideSaveButton)">
   <p class="csRunMenu"><button class="timButton" ng-show="::$ctrl.task" ng-click="$ctrl.sendDataBlock()" >Tallenna</button></p>
 </div>
   <p class="plgfooter" ng-if="::$ctrl.data.footer" ng-bind-html="::$ctrl.data.footer"></p>
