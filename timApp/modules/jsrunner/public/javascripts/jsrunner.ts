@@ -41,7 +41,7 @@ class JsrunnerController extends PluginBase<t.TypeOf<typeof JsrunnerMarkup>, t.T
     }
 
     buttonText() {
-        return super.buttonText() || "Count";
+        return super.buttonText() || "Run script";
     }
 
     $onInit() {
@@ -69,11 +69,11 @@ class JsrunnerController extends PluginBase<t.TypeOf<typeof JsrunnerMarkup>, t.T
         this.isRunning = false;
         if (r.ok) {
             const data = r.result.data;
-            window.location.reload(); // TODO: ei tehdä jos print
+            // window.location.reload(); // TODO: ei tehdä jos print
             this.error = data.web.error;
             this.print = data.web.print;
         } else {
-            r.result.data.error = "Infinite loop or some other error?"; // TODO: näinkö?
+            this.error = r.result.data.error || "Unknown error occurred";
         }
 
     }
