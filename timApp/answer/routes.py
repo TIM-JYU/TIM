@@ -373,7 +373,6 @@ def post_answer(plugintype: str, task_id_ext: str):
                 except KeyError:
                     pass
 
-
     if plugin.type == 'jsrunner' or plugin.type == 'tableForm':
         handle_jsrunner_response()
         db.session.commit()
