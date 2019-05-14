@@ -2,8 +2,9 @@ import json
 from typing import List, Tuple, Iterable
 import dateutil.relativedelta
 
-from flask import Blueprint, request
+from flask import Blueprint, request, abort
 
+from timApp.answer.routes import period_handling
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.plugin.plugin import Plugin
 from timApp.timdb.sqa import db
@@ -46,8 +47,8 @@ def get_all_feedback_answers(task_ids: List[TaskId],
     :param users: List of visible users with selected user always first.
     :param period_from: The minimum answering time for answers.
     :param period_to: The maximum answering time for answers.
-    :param dec: decimal separator
-    :return:
+    :param dec: Format for the decimal separator.
+    :return: Compiled list of test results.
     """
 
     # Query from answer-table for the given time period and TaskId:s.
@@ -88,8 +89,8 @@ def compile_csv(qq: Iterable[Tuple[Answer, User]], printname: bool, hide_names: 
     :param hide_names: Parameter whether to show users anonymously.
     :param exp_answers: Parameter for filtering users.
     :param s_user: Visible users with first one always being the selected user.
-    :param dec: Decimal pointers
-    :return:
+    :param dec: Format for the decimal separator.
+    :return: Returns test results as list.
     """
 
     pt_dt = None    # Previous Datetime of previous answer.
@@ -137,7 +138,8 @@ def compile_csv(qq: Iterable[Tuple[Answer, User]], printname: bool, hide_names: 
                 anons[prev_user] = f"user{cnt}"
                 cnt += 1
             anonuser = anons[prev_user]
-            correct = json.loads(answer.content)['correct']
+            json_content = json.loads(answer.content)
+            correct = json_content.get('correct')
 
             # If we need it in right/wrong format.
             if correct:
@@ -145,20 +147,11 @@ def compile_csv(qq: Iterable[Tuple[Answer, User]], printname: bool, hide_names: 
             else:
                 answer_result = 'wrong'
 
-            json_content = json.loads(answer.content)
 
-            if 'answer' in json_content:
-                sel_opt_content = json_content['answer']
-            else:
-                sel_opt_content = "<JSON error; answer-key not found>"
-            if 'sentence' in json_content:
-                item_content = json_content['sentence']
-            else:
-                item_content = "<JSON error; sentence-key not found>"
-            if 'feedback' in json_content:
-                feedback_content = json_content['feedback']
-            else:
-                feedback_content = "<JSON error; feedback-key not found>"
+
+            sel_opt_content = json_content.get('user_answer', "<JSON error: key 'user_answer' not found>")
+            item_content = json_content.get('correct_answer', "<JSON error: key 'correct_answer' not found>")
+            feedback_content = json_content.get('feedback', "<JSON error: key 'feedback' not found>")
 
             if pt_dt != None:
                 tasksecs = (prev_ans.answered_on - pt_dt).total_seconds()   # Get time subtracted by previous.
@@ -173,8 +166,6 @@ def compile_csv(qq: Iterable[Tuple[Answer, User]], printname: bool, hide_names: 
             else:
                 fbsecs_str = str(round(fbsecs, 1))
                 tasksecs_str = str(round(tasksecs, 1))
-
-
 
             if hide_names:
                 shown_user = anonuser
@@ -208,7 +199,6 @@ def compile_csv(qq: Iterable[Tuple[Answer, User]], printname: bool, hide_names: 
     return results
 
 
-
 @feedback.route("/report/<path:doc_path>")
 def print_feedback_report(doc_path):
     """
@@ -217,14 +207,16 @@ def print_feedback_report(doc_path):
     :return: report in a CSV-form.
     """
 
-    verify_logged_in()
     d = DocEntry.find_by_path(doc_path, fallback_to_id=True)    # Return task from URL.
 
     all_id = get_documents_in_folder(d.location)    # Finds all doc in the folder.
 
     verify_teacher_access(d)
     pars = d.document.get_dereferenced_paragraphs()     # Get dereferenced paragraphs from document.
-    task_ids, _, _ = find_task_ids(pars)                # Find task ids from the derefenced paragraphs.
+    task_ids, _, vaihda_tama_nimi = find_task_ids(pars)                # Find task ids from the derefenced paragraphs.
+
+    if len(vaihda_tama_nimi) > 0:
+        abort(403, 'Access missing for task_ids: ' + vaihda_tama_nimi)
 
     name = get_option(request, 'name', 'both')
     hidename = False
@@ -264,43 +256,7 @@ def print_feedback_report(doc_path):
     for tid in task_ids:
         doc_ids.add(tid.doc_id)
 
-    #
-    if len(task_ids) > 0:
-        since_last_key = task_ids[0].doc_task
-    if len(task_ids) > 1:
-        since_last_key = str(next(d for d in doc_ids))
-        if len(doc_ids) > 1:
-            since_last_key = None
-
-    # Period from which to take results.
-    if period == 'whenever':
-        pass
-    elif period == 'sincelast':
-        u = get_current_user_object()
-        prefs = u.get_prefs()
-        last_answer_fetch = prefs.last_answer_fetch
-        period_from = last_answer_fetch.get(since_last_key, datetime.min.replace(tzinfo=timezone.utc))
-        last_answer_fetch[since_last_key] = get_current_time()
-        prefs.last_answer_fetch = last_answer_fetch
-        u.set_prefs(prefs)
-        db.session.commit()
-    elif period == 'day':
-        period_from = period_to - timedelta(days=1)
-    elif period == 'week':
-        period_from = period_to - timedelta(weeks=1)
-    elif period == 'month':
-        period_from = period_to - dateutil.relativedelta.relativedelta(months=1)
-    elif period == 'other':
-        period_from_str = get_option(request, 'periodFrom', period_from.isoformat())
-        period_to_str = get_option(request, 'periodTo', period_to.isoformat())
-        try:
-            period_from = dateutil.parser.parse(period_from_str)
-        except (ValueError, OverflowError):
-            pass
-        try:
-            period_to = dateutil.parser.parse(period_to_str)
-        except (ValueError, OverflowError):
-            pass
+    period_from, period_to = period_handling(task_ids, doc_ids, period)
 
     answers = []
 
@@ -337,7 +293,9 @@ def print_feedback_report(doc_path):
         all_tasks = []
         for did in all_id:
             did_pars = did.document.get_dereferenced_paragraphs()
-            task_dids, _ , _ = find_task_ids(did_pars)
+            task_dids, _ , vaihda_tama_nimi2 = find_task_ids(did_pars)
+            if len(vaihda_tama_nimi2) > 0:
+                abort(403, 'Access missing for task_ids: ' + vaihda_tama_nimi2)
             all_tasks += task_dids
         answers += get_all_feedback_answers(all_tasks,
                                                 hidename,
@@ -348,20 +306,4 @@ def print_feedback_report(doc_path):
                                                 period_from,
                                                 period_to,
                                                 decimal)
-
-        """
-        for did in all_id:
-            did_pars = did.document.get_dereferenced_paragraphs()
-            task_dids, _ , _ = find_task_ids(did_pars)
-            answers += get_all_feedback_answers(task_dids,
-                                                hidename,
-                                                fullname,
-                                                validity,
-                                                exp_answers,
-                                                list_of_users,
-                                                period_from,
-                                                period_to)
-            answers.append([])
-        """
-
     return csv_response(answers, dialect)

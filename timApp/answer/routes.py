@@ -403,9 +403,13 @@ def get_all_answers_as_list(task_ids: List[TaskId]):
     name_opt = get_option(request, 'name', 'both')
     sort_opt = get_option(request, 'sort', 'task')
     print_opt = get_option(request, 'print', 'all')
+    period_opt = get_option(request, 'period', 'whenever')
     consent = get_consent_opt()
     printname = name_opt == 'both'
 
+    period_from, period_to = period_handling(task_ids, doc_ids, period_opt)
+
+    """
     period_from = datetime.min.replace(tzinfo=timezone.utc)
 
     # TODO: The key will be wrong when getting answers to a document that has only one task
@@ -445,6 +449,7 @@ def get_all_answers_as_list(task_ids: List[TaskId]):
             period_to = dateutil.parser.parse(period_to_str)
         except (ValueError, OverflowError):
             pass
+    """
     if not usergroup:
         usergroup = None
 
@@ -601,3 +606,54 @@ def rename_answers(old_name: str, new_name: str, doc_path: str):
         a.task_id = f'{d.id}.{new_name}'
     db.session.commit()
     return json_response({'modified': len(answers_to_rename), 'conflicts': conflicts})
+
+
+# TODO: Re-evaluate the function name, and implement
+def period_handling(task_ids, doc_ids, period):
+    """
+    Returns start and end of an period for answer results.
+    :param task_ids: Task ids containing the answers.
+    :param doc_ids: Documents containing the answers.
+    :param period: Period options: whenever, sincelast, day, week, month, other.
+    :return: Return "from"-period and "to"-period.
+    """
+    period_from = datetime.min.replace(tzinfo=timezone.utc)
+    period_to = get_current_time()
+
+    since_last_key = task_ids[0].doc_task
+    if len(task_ids) > 1:
+        since_last_key = str(next(d for d in doc_ids))
+        if len(doc_ids) > 1:
+            since_last_key = None
+
+        # Period from which to take results.
+    if period == 'whenever':
+        pass
+    elif period == 'sincelast':
+        u = get_current_user_object()
+        prefs = u.get_prefs()
+        last_answer_fetch = prefs.last_answer_fetch
+        period_from = last_answer_fetch.get(since_last_key, datetime.min.replace(tzinfo=timezone.utc))
+        last_answer_fetch[since_last_key] = get_current_time()
+        prefs.last_answer_fetch = last_answer_fetch
+        u.set_prefs(prefs)
+        db.session.commit()
+    elif period == 'day':
+        period_from = period_to - timedelta(days=1)
+    elif period == 'week':
+        period_from = period_to - timedelta(weeks=1)
+    elif period == 'month':
+        period_from = period_to - dateutil.relativedelta.relativedelta(months=1)
+    elif period == 'other':
+        period_from_str = get_option(request, 'periodFrom', period_from.isoformat())
+        period_to_str = get_option(request, 'periodTo', period_to.isoformat())
+        try:
+            period_from = dateutil.parser.parse(period_from_str)
+        except (ValueError, OverflowError):
+            pass
+        try:
+            period_to = dateutil.parser.parse(period_to_str)
+        except (ValueError, OverflowError):
+            pass
+
+    return period_from, period_to

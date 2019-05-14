@@ -214,41 +214,24 @@ export class UserListController implements IController {
                 },
                 { // Feedback report output TODO: May only be visible if page is a feedback giving test
 
-                    title: "Feedback answer report",
+                    title: "Create Feedback report",
                     action: async ($event: IAngularEvent) => {
-                        // let selectedUser = "";
-                        // let visibleUsers = "";
                         let iusers: IUser[];
                         iusers = [];
                         if (this.gridApi) {
                             const selectedUser = this.gridApi.selection.getSelectedRows()[0];
                             iusers.push(selectedUser);
-                            // selectedUser = this.gridApi.selection.getSelectedRows()[0].name;
 
                             const visibleRows = this.gridApi.core.getVisibleRows(this.gridApi.grid);
-                            // let dataAsStrings: string[];
-                            // dataAsStrings = [];
 
                             for (const row of visibleRows) { // create string array of visible item
                                 if (row.entity !== selectedUser) {
                                     iusers.push(row.entity);
                                 }
-                                // dataAsStrings.push(dat.entity.name);
                             }
                             if (visibleRows.length <= 0) {
                                 iusers = [];
                             }
-                            /*
-                            visibleUsers = selectedUser;    // first one is always the selected one
-                            if (dataAsStrings.length > 0) {
-                                if (dataAsStrings.includes(selectedUser)) { visibleUsers = ""; }
-                                for (const visible of dataAsStrings) {
-                                    if (visible !== selectedUser) { visibleUsers += "," + visible; }
-                                }
-                            } else {
-                                visibleUsers = "";
-                                // needs to be emptied since there is always one selected even if it is invisible
-                            } */
                         }
                         await showFeedbackAnswers({
                             url: "/feedback/report/" + this.viewctrl.item.id,
