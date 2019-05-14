@@ -32,6 +32,7 @@ router.put('/', function (req, res, next) {
             function runProgram() {
                 ${program}
             }
+            // TODO: try for errors
             runProgram(); 
             r.push(tools.getResult());
             plsfusakdfb += tools.getPrint();

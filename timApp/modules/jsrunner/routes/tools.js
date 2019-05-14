@@ -18,38 +18,39 @@ class Tools {
         }
     }
 
+    normalizeAndGet(fieldName) {
+        let fn = this.normalizeField(fieldName);
+        return this.data.fields[fn];
+    }
+
     getStudentName() {
         return this.data.user.real_name;
     }
 
     getDouble(fieldName, def = 0) {
-        let fn = this.normalizeField(fieldName);
-        let s = this.data.fields[fn];
+        let s= this.normalizeAndGet(fieldName);
         let r = parseFloat(s);
         if (isNaN(r)) r = def;
         return r;
     }
 
     getInt(fieldName, def = 0) {
-        let fn = this.normalizeField(fieldName);
-        let s = this.data.fields[fn];
+        let s= this.normalizeAndGet(fieldName);
         let r = parseInt(s);
         if (isNaN(r)) r = def;
         return r;
     }
 
     getString(fieldName, def = "") {
-        let fn = this.normalizeField(fieldName);
-        let r = this.data.fields[fn];
-        if (r === null) r = def;
-        return r;
+        let s= this.normalizeAndGet(fieldName);
+        if (s === null) s = def;
+        return s.toString();
     }
 
     getValue(fieldName, def = "") {
-        let fn = this.normalizeField(fieldName);
-        let r = this.data.fields[fn];
-        if (r === null) r = def;
-        return r;
+        let s= this.normalizeAndGet(fieldName);
+        if (s === null) s = def;
+        return s;
     }
 
     /*
@@ -77,7 +78,7 @@ class Tools {
 
     setString(fieldName, content) {
         let fn = this.normalizeField(fieldName);
-        this.result[fn] = content;
+        this.result[fn] = content.toString();
     }
 
     setInt(fieldName, content) {
