@@ -64,11 +64,12 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
     private userfilter = "";
     private data: TimTable & {userdata: DataEntity} = {
         hiderows:[],
-        table:{},
+        table:{countRow:0, countCol:0},
         hideSaveButton:false,
         lockedCells:[],
         hid:{edit:false},
-        userdata:{type:"Relative", cells:{}}
+        userdata:{type:"Relative", cells:{}},
+        task: true
     };
     private rows!: RowsType;
     private allRows!: {};
@@ -118,6 +119,8 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
     }
 
     setDataMatrix() {
+        if(this.attrsall.fields) this.data.table.countCol = this.attrsall.fields.length + 1;
+        this.data.table.countRow = Object.keys(this.rows).length + 1;
         let x = 2;
         for (const r of Object.keys(this.rows)) {
             this.data.userdata.cells["A" + x] = {cell: r, backgroundColor: "#efecf1"};
