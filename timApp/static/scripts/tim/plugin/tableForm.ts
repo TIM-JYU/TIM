@@ -16,7 +16,7 @@ import {to} from "tim/util/utils";
 import {timApp} from "../app";
 import {getParId} from "../document/parhelpers";
 import {ViewCtrl} from "../document/viewctrl";
-import {CellEntity, CellType, colnumToLetters, DataEntity, ICell, isPrimitiveCell, TimTable} from "./timTable";
+import {CellType, colnumToLetters, DataEntity, isPrimitiveCell, TimTable, TimTableController} from "./timTable";
 
 const tableFormApp = angular.module("tableFormApp", ["ngSanitize"]);
 export const moduleDefs = [tableFormApp];
@@ -75,6 +75,7 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
     private allRows!: {};
     private modelOpts!: INgModelOptions;
     private oldCellValues!: string;
+    private timTable?: TimTableController;
 
     getDefaultMarkup() {
         return {};
@@ -96,6 +97,7 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
         if (parId && this.viewctrl) {
             await $timeout(0);
             const t = this.viewctrl.getTableControllerFromParId(parId);
+            if (t) this.timTable = t;
             //console.log(t);
         }
         this.oldCellValues = JSON.stringify(this.data.userdata.cells);
@@ -221,6 +223,8 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
     }
 
     updateFilter() {
+        //TODO check if better way to save than just making saveAndCloseSmallEditor public and calling it
+        if(this.timTable) this.timTable.saveAndCloseSmallEditor();
         this.data.hiderows = [];
         if (this.userfilter != "" && this.userfilter != undefined) {
             const reg = new RegExp(this.userfilter.toLowerCase());
@@ -232,10 +236,10 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
                 rowi++;
             }
         }
-        //TODO: Call timTable and close the editor if open
     }
 
     async doSaveText(nosave: boolean) {
+        if(this.timTable) this.timTable.saveAndCloseSmallEditor();
         this.error = "... saving ...";
         const keys = Object.keys(this.data.userdata.cells);
         keys.sort();

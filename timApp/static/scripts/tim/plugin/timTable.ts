@@ -2035,7 +2035,7 @@ export class TimTableController extends DestroyScope implements IController {
     /**
      * Saves the currently edited cell and closes the simple cell content editor.
      */
-    private saveAndCloseSmallEditor() {
+    public saveAndCloseSmallEditor() {
         this.saveCurrentCell();
         this.closeSmallEditor();
     }
