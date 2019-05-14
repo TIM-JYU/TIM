@@ -213,10 +213,10 @@ def print_feedback_report(doc_path):
 
     verify_teacher_access(d)
     pars = d.document.get_dereferenced_paragraphs()     # Get dereferenced paragraphs from document.
-    task_ids, _, vaihda_tama_nimi = find_task_ids(pars)                # Find task ids from the derefenced paragraphs.
+    task_ids, _, access_missing = find_task_ids(pars)                # Find task ids from the derefenced paragraphs.
 
-    if len(vaihda_tama_nimi) > 0:
-        abort(403, 'Access missing for task_ids: ' + vaihda_tama_nimi)
+    if len(access_missing) > 0:
+        abort(403, 'Access missing for task_ids: ' + access_missing)
 
     name = get_option(request, 'name', 'both')
     hidename = False
@@ -293,9 +293,9 @@ def print_feedback_report(doc_path):
         all_tasks = []
         for did in all_id:
             did_pars = did.document.get_dereferenced_paragraphs()
-            task_dids, _ , vaihda_tama_nimi2 = find_task_ids(did_pars)
-            if len(vaihda_tama_nimi2) > 0:
-                abort(403, 'Access missing for task_ids: ' + vaihda_tama_nimi2)
+            task_dids, _ , access_missing2 = find_task_ids(did_pars)
+            if len(access_missing2) > 0:
+                abort(403, 'Access missing for task_ids: ' + access_missing2)
             all_tasks += task_dids
         answers += get_all_feedback_answers(all_tasks,
                                                 hidename,
