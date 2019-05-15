@@ -226,7 +226,7 @@ errormessage: #INPUTCHECKERIN VIRHESELITE, TYHJÄ = SELITE ON INPUTCHECKER
 ```""", """
 ``` {#numericfield_label plugin="numericfield" readonly=view}
 followid: #SEURANTAID, TYHJÄ = EI SEURANTAID:tä
-initnumber: #ALKUARVO, TYHJÄ = EI ALKUARVOA
+initnumber: 0 #ALKUARVO, TYHJÄ = EI ALKUARVOA
 cols: 5 #KENTÄN KOKO, NUMERAALINEN
 autosave: false #AUTOSAVE, POIS PÄÄLTÄ
 labelStyle: plaintext #LABELSTYLE, TYHJÄ = KENTTÄMUOTO, PLAINTEXT = TEKSTIMUOTO
