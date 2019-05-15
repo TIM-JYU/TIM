@@ -53,6 +53,7 @@ export interface TimTable {
     hid: {edit?: boolean};
     hiderows: number[];
     lockedCells: string[];
+    saveCallBack?: () => void;
 }
 
 export interface ITable { // extends ITableStyles
@@ -233,6 +234,8 @@ export class TimTableController extends DestroyScope implements IController {
     private forcedEditMode: boolean = false;
     private task: boolean = false;
     private hideSaveButton: boolean = false;
+    private hiderows: number[] = [];
+    //private saveCallBack: () => void;
     private isRunning: boolean = false;
     public taskBorders: boolean = false;
     private editedCellContent: string | undefined;
@@ -1193,16 +1196,17 @@ export class TimTableController extends DestroyScope implements IController {
             }
 
             let nextCellCoords = this.getNextCell(x, y, direction);
-
-            //Iterate through rows until next non-hidden row is found
-            //TODO: this.hidecolums?
-            if (this.data.hiderows){
-                while(nextCellCoords && this.data.hiderows.includes(nextCellCoords.row))
-                {
-                  if(nextCellCoords.row == y) break;
-                  nextCellCoords = this.getNextCell(x, nextCellCoords.row, direction)
-                }
+            /*
+            Iterate towards direction until next non-locked cell in a non-hidden row is found
+            or until iterator arrives at the same cell
+             */
+            while(nextCellCoords){
+                if(nextCellCoords.row == y && nextCellCoords.col == x) break;
+                if(!(this.data.hiderows && this.data.hiderows.includes(nextCellCoords.row))
+                && !(this.data.lockedCells && this.data.lockedCells.includes(colnumToLetters(nextCellCoords.col) + (nextCellCoords.row + 1)))) break;
+                nextCellCoords = this.getNextCell(nextCellCoords.col, nextCellCoords.row, direction)
             }
+
             if (!nextCellCoords) {
                 return true;
             }
@@ -1384,6 +1388,7 @@ export class TimTableController extends DestroyScope implements IController {
      * Saves the possible currently edited cell.
      */
     private async saveCurrentCell() {
+        if(this.data.saveCallBack) this.data.saveCallBack();
         const parId = getParId(this.element.parents(".par"));
 
         if (this.viewctrl &&
@@ -2033,7 +2038,7 @@ export class TimTableController extends DestroyScope implements IController {
     /**
      * Saves the currently edited cell and closes the simple cell content editor.
      */
-    private saveAndCloseSmallEditor() {
+    public saveAndCloseSmallEditor() {
         this.saveCurrentCell();
         this.closeSmallEditor();
     }
@@ -2218,7 +2223,6 @@ timApp.component("timTable", {
         data: "<",
         plugintype: "@?",
         taskid: "@?",
-        //taskUrl: "@?",
     },
     require: {
         viewctrl: "?^timView",
@@ -2226,7 +2230,7 @@ timApp.component("timTable", {
     template: `<div ng-mouseenter="$ctrl.mouseInsideTable()"
      ng-mouseleave="$ctrl.mouseOutTable()">
 <div ng-cloak ng-class="{
-          'csRunDiv': $ctrl.taskBorders}" class=" no-popup-menu" >
+          'csRunDiv': $ctrl.taskBorders}" class=" no-popup-menu" style="border: none" >
     <h4 ng-if="::$ctrl.data.header" ng-bind-html="::$ctrl.data.header"></h4>
     <p ng-if="::$ctrl.data.stem" class="stem" ng-bind-html="::$ctrl.data.stem"></p>
     <div class="timTableContentDiv no-highlight">

@@ -6,7 +6,7 @@ from typing import Union
 
 import attr
 from flask import jsonify, render_template_string
-from marshmallow import Schema, fields, post_load, validates, ValidationError
+from marshmallow import Schema, fields, post_load, validates, ValidationError, pre_load
 from marshmallow.utils import missing
 from webargs.flaskparser import use_args
 
@@ -39,8 +39,15 @@ class NumericfieldStateSchema(Schema):
     def validate_numericvalue(self, value):
         convert_to_float(value)
 
-    @post_load
-    def make_obj(self, data):
+    @pre_load()
+    def remove_null(self, data):
+        # data['numericvalue'] = convert_to_float(data['numericvalue'])
+        if not data['numericvalue']:
+            data['numericvalue'] = ""
+        #     #pass
+
+    @post_load()
+    def make_obj(self, data,):
         return NumericfieldStateModel(numericvalue=convert_to_float(data['numericvalue']))
 
     class Meta:
@@ -53,7 +60,7 @@ class NumericfieldMarkupModel(GenericMarkupModel):
     inputstem: Union[str, Missing] = missing
     initnumber: Union[int, Missing] = missing
     cols: Union[int, Missing] = missing
-    inputplaceholder: Union[str, Missing] = missing
+    inputplaceholder: Union[int, Missing] = missing
     followid: Union[str, Missing] = missing
     autosave: Union[bool, Missing] = missing
     validinput: Union[str, Missing] = missing
@@ -67,7 +74,7 @@ class NumericfieldMarkupSchema(GenericMarkupSchema):
     stem = fields.String(allow_none=True)
     initnumber = fields.Number(allow_none=True)
     cols = fields.Int()
-    inputplaceholder: Union[int, Missing] = missing
+    inputplaceholder: fields.Number(allow_none=True)
     followid = fields.String(allow_none=True)
     autosave = fields.Boolean()
     validinput = fields.String(allow_none=True)
@@ -226,7 +233,7 @@ errormessage: #INPUTCHECKERIN VIRHESELITE, TYHJÄ = SELITE ON INPUTCHECKER
 ```""", """
 ``` {#numericfield_label plugin="numericfield" readonly=view}
 followid: #SEURANTAID, TYHJÄ = EI SEURANTAID:tä
-initnumber: #ALKUARVO, TYHJÄ = EI ALKUARVOA
+initnumber: 0 #ALKUARVO, TYHJÄ = EI ALKUARVOA
 cols: 5 #KENTÄN KOKO, NUMERAALINEN
 autosave: false #AUTOSAVE, POIS PÄÄLTÄ
 labelStyle: plaintext #LABELSTYLE, TYHJÄ = KENTTÄMUOTO, PLAINTEXT = TEKSTIMUOTO
