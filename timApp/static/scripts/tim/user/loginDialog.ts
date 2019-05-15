@@ -20,7 +20,7 @@ interface INameResponse {
 interface ILoginParams {
     showSignup?: boolean;
     addingToSession?: boolean;
-    language?: string;
+    language?: string | null;
 }
 
 markAsUsed(focusMe);
@@ -77,7 +77,7 @@ export class LoginDialogController extends DialogController<{params: ILoginParam
             } else {
                 this.showSignup = false;
             }
-            if (params.language !== undefined) {
+            if (params.language) {
                 this.language = params.language;
             } else {
                 this.language = "en"; // English is default language.

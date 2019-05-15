@@ -19,13 +19,13 @@ export class StartCtrl implements IController {
     private defaultLanguage: string = "fi"; // Page default language.
     private language: string = this.defaultLanguage; // Language to use.
     private bookmarks = {}; // For My courses.
-    private storage: ngStorage.StorageService & {languageStorage: null | string};
+    private storage: ngStorage.StorageService & {language: null | string};
 
     constructor() {
         this.creatingNew = false;
         this.docListOpen = false;
         this.bookmarks = $window.bookmarks; // from base.html
-        this.storage = $localStorage.$default({languageStorage: null});
+        this.storage = $localStorage.$default({language: null});
     }
 
     $onInit() {
@@ -42,17 +42,17 @@ export class StartCtrl implements IController {
             case "/fi":
                 this.language = "fi";
                 // Save to localstorage so the language is remembered when using start page without urlPathName.
-                this.storage.languageStorage = "fi";
+                this.storage.language = "fi";
                 break;
             case "/en":
                 this.language = "en";
-                this.storage.languageStorage = "en";
+                this.storage.language = "en";
                 break;
             // For a new language add another case here and button and translations into HTML.
             default:
                 // Try local storage, otherwise use default language.
-                if (this.storage.languageStorage) {
-                    this.language = this.storage.languageStorage;
+                if (this.storage.language) {
+                    this.language = this.storage.language;
                 } else {
                     this.language = this.defaultLanguage;
                 }
@@ -86,7 +86,7 @@ export class StartCtrl implements IController {
      */
     changeLanguage(changeTo: string) {
         this.language = changeTo;
-        this.storage.languageStorage = changeTo;
+        this.storage.language = changeTo;
     }
 
     openLoginDialog(signup: boolean) {
@@ -122,11 +122,11 @@ timApp.component("timStart", {
             <div ng-switch="$ctrl.language" ng-cloak class="pull-right">
                 <div ng-switch-when="en">
                     <button class="btn btn-default btn-sm" ng-click="$ctrl.changeLanguage('fi')"
-                            title="Vaihda etusivun kieli suomeksi">Suomeksi</button>
+                            title="Vaihda etusivun ja kirjautumisen kieli suomeksi">Suomeksi</button>
                 </div>
                 <div ng-switch-when="fi">
                     <button class="btn btn-default btn-sm" ng-click="$ctrl.changeLanguage('en')"
-                    title="Change start page language to English">In English</button>
+                    title="Change start page and login menu language to English">In English</button>
                 </div>
             </div>
         </div>
