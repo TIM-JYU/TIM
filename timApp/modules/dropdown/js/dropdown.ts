@@ -150,23 +150,6 @@ class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.T
         this.selectedWord = undefined;
     }
 
-    /**
-     * Shuffles a string array.
-     * @param words Array of strings to be shuffled.
-     */
-    shuffleWords(words: string []): string [] {
-        // Shuffle algorithm from csparsons.ts
-        const result = words.slice();
-        const n = words.length;
-        for (let i = n - 1; i >= 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            const tmp = result[i];
-            result[i] = result[j];
-            result[j] = tmp;
-        }
-        return result;
-    }
-
     protected getAttributeType() {
         return DropdownAll;
     }

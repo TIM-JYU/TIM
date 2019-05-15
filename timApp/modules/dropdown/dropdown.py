@@ -46,6 +46,7 @@ class DropdownMarkupSchema(GenericMarkupSchema):
     radio = fields.Bool()
     autosave = fields.Bool()
     answers = fields.Bool()
+    shuffle = fields.Bool()
 
     @post_load
     def make_obj(self, data):
