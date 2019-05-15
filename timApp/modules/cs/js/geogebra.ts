@@ -2,14 +2,13 @@
 import * as t from "io-ts";
 import {ParCompiler} from "tim/editor/parCompiler";
 import {GenericPluginMarkup, Info, PluginBase, pluginBindings, withDefault} from "tim/plugin/util";
-import {$http, $sce} from "tim/util/ngimport";
+import {$http, $sce, $timeout} from "tim/util/ngimport";
 import {to} from "tim/util/utils";
 import {ViewCtrl} from "tim/document/viewctrl";
 
 
 const geogebraApp = angular.module("geogebraApp", ["ngSanitize"]);
 export const moduleDefs = [geogebraApp];
-const STACK_VARIABLE_PREFIX = "geogebraapi_";
 
 // this.attrs
 const GeogebraMarkup = t.intersection([
@@ -94,7 +93,7 @@ class GeogebraController extends PluginBase<t.TypeOf<typeof GeogebraMarkup>,
         return this.english ? "Send" : "Lähetä";
     }
 
-    public viewctrl?: ViewCtrl;
+    public viewctrl!: ViewCtrl;
     private span: string = "";
     private error: string = "";
     private userCode: string = "";
@@ -135,9 +134,16 @@ class GeogebraController extends PluginBase<t.TypeOf<typeof GeogebraMarkup>,
 
     outputAsHtml() {
         if ( !this.attrs.srchtml ) return "";
-        // let taskId = this.pluginMeta.getTaskId().split(".",1)[1] || "";
-        // let ab = this.viewctrl.getAnswerBrowser(taskId);
-        let anr = 0
+        $timeout(0);
+        let t = this.pluginMeta.getTaskId()!.split(".") || ["",""];
+        let taskId = t[0] + "." + t[1];
+        let ab = this.viewctrl.getAnswerBrowser(taskId);
+        let anr = 0;
+        if ( ab ) {
+            anr = ab.findSelectedAnswerIndex();
+        }
+        const selectedUser = this.viewctrl.selectedUser;
+        const user_id = selectedUser.id;
         const html:string = this.attrs.srchtml;
         const datasrc = btoa(html);
         const w = this.attrs.width || 800;
@@ -149,7 +155,7 @@ class GeogebraController extends PluginBase<t.TypeOf<typeof GeogebraMarkup>,
             // "        src=\"data:text/html;base64," + datasrc + "\">\n" +
             // "src=\"https://www.geogebra.org/material/iframe/id/23587/width/1600/height/715/border/888888/rc/false/ai/false/sdz/false/smb/false/stb/false/stbh/true/ld/false/sri/false\"" +
             // 'src="'+ '/cs/reqs' + '"' +
-            'src="'+ this.getHtmlUrl() + '/' + anr + '"' +
+            'src="'+ this.getHtmlUrl() + '/' + user_id + '/' + anr + '"' +
             "</iframe>";
         const s = $sce.trustAsHtml(this.geogebraoutput);
         return s;
@@ -259,7 +265,7 @@ const common = {
 geogebraApp.component("geogebraRunner", {
     ...common,
     require: {
-        viewctrl: "?^timView",
+        viewctrl: "^timView",
     },
     template: `
 <div ng-cloak class="csRunDiv math que geogebra no-popup-menu" >

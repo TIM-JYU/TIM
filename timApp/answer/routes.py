@@ -85,12 +85,13 @@ def points_to_float(points: Union[str, float]):
     return points
 
 
-@answers.route("/iframehtml/<plugintype>/<task_id_ext>/<anr>")
-def get_iframehtml(plugintype: str, task_id_ext: str, anr: int):
+@answers.route("/iframehtml/<plugintype>/<task_id_ext>/<int:user_id>/<anr>")
+def get_iframehtml(plugintype: str, task_id_ext: str, user_id:int, anr: int):
      """
      Get html to be used in iframe
      :param plugintype: plugin type
      :param task_id_ext: task id
+     :param user_id: käyttäjä, jonka tiedot halutaan
      :paran anr: answer number from answer browser, 0 = newest
      :return: html to be used in iframe
      """
@@ -116,7 +117,7 @@ def get_iframehtml(plugintype: str, task_id_ext: str, anr: int):
      if plugin.type != plugintype:
          abort(400, f'Plugin type mismatch: {plugin.type} != {plugintype}')
 
-     users = [User.query.get(u['id']) for u in get_session_users()]
+     users = [User.query.get(user_id)]  # [User.query.get(u['id']) for u in get_session_users()]
 
      old_answers = timdb.answers.get_common_answers(users, tid)
 

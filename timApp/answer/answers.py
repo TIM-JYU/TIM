@@ -176,6 +176,16 @@ class Answers(TimDbBase):
             result.append(res)
         return result
 
+    def get_common_answers_id(self, user_id: int, task_id: TaskId) -> List[Answer]:
+        q = Answer.query.filter_by(task_id=task_id.doc_task).join(User, Answer.users).filter(
+            user_id=user_id).order_by(Answer.id.desc())
+
+        def g():
+            for a in q:  # type: Answer
+                yield a
+
+        return list(g())
+
     def get_common_answers(self, users: List[User], task_id: TaskId) -> List[Answer]:
         q = Answer.query.filter_by(task_id=task_id.doc_task).join(User, Answer.users).filter(
             User.id.in_([u.id for u in users])).order_by(Answer.id.desc())
