@@ -438,6 +438,7 @@ def should_hide_top_buttons(settings: DocSettings, rights: dict):
 
 
 def check_rights(hide_type: str, rights: dict):
+    # Checks whether the user has high enough rights not to hide links or the buttons in the top of the page from them.
     return {'view': not rights['editable'] and not rights['see_answers'],
             'edit': not rights['see_answers'],
             'see_answers': not rights['teacher'],

@@ -65,7 +65,6 @@ const QuestionItem = t.intersection([
 
 const FeedbackMarkup = t.intersection([
     t.partial({
-        correctStreak: t.number,
         instructionID: t.string,
         nextTask: t.string,
         sampleItemID: t.string,
@@ -75,6 +74,7 @@ const FeedbackMarkup = t.intersection([
         // All withDefaults should come here, NOT in t.partial.
         autoupdate: withDefault(t.number, 500),
         cols: withDefault(t.number, 20),
+        correctStreak: withDefault(t.number, 1),
         questionItems: t.array(QuestionItem),
         showAnswers: withDefault(t.boolean, false),
         shuffle: withDefault(t.boolean, true),
@@ -82,7 +82,12 @@ const FeedbackMarkup = t.intersection([
 ]);
 const FeedbackAll = t.intersection([
     t.partial({
-        state: nullable(t.type({answer: t.string, correct: t.boolean, feedback: t.string, sentence: t.string})),
+        state: nullable(t.type({
+            correct: t.boolean,
+            correct_answer: t.string,
+            feedback: t.string,
+            user_answer: t.string,
+        })),
     }),
     t.type({
         info: Info,
@@ -96,15 +101,14 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
     private vctrl!: ViewCtrl;
     private userAnswer: string[] = [];
     private feedback = "";
-    private index: number = -2;
+    private questionItemIndex!: number;
     private currentFeedbackLevel = 0;
     private pluginMode = Mode.Instruction;
     private answerArray: string[] = [];
     private userSelections: string[] = [];
     private correctAnswer = false;
     private correctAnswerString = "";
-    private questionCount?: number;
-    private isAnsweredArray?: boolean[];
+    private isAnsweredArray!: boolean[];
     private streak = 0;
     private teacherRight: boolean = false;
     private feedbackMax = 0;
@@ -115,12 +119,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
     private btnText = "Begin";
     private instrHidden = false;
     private itemHidden = true;
-    private stateAnswer?: string;
-    private stateFeedback?: string;
-    private stateSentence?: string;
-    private stateCorrect?: boolean;
     private saving = false;
-    private correctStreak = 1;
     private showAnswers?: boolean;
     private forceSave = false;
 
@@ -128,18 +127,14 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
         super.$onInit();
         this.addToCtrl();
         this.setPluginWords();
-        this.questionCount = this.attrs.questionItems.length;
-        this.isAnsweredArray = new Array(this.questionCount).fill(false);
+        this.isAnsweredArray = new Array(this.attrs.questionItems.length).fill(false);
         if (this.attrs.shuffle) {
             const questionIndex = this.getRandomQuestion(this.isAnsweredArray);
             if (questionIndex !== undefined) {
-                this.index = questionIndex;
+                this.questionItemIndex = questionIndex;
             }
         } else {
-            this.index = 0;
-        }
-        if (this.attrs.correctStreak) {
-            this.correctStreak = this.attrs.correctStreak;
+            this.questionItemIndex = 0;
         }
         this.teacherRight = this.vctrl.item.rights.teacher;
         if (!this.attrsall.preview) {
@@ -155,7 +150,9 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
         if (this.editMode != null) {
             this.edited = true;
         }
-        this.showAnswers = this.vctrl.teacherMode;
+        if (this.vctrl.teacherMode || this.attrs.showAnswers) {
+            this.showAnswers = true;
+        }
         if (!this.showAnswers) {
             await import("/feedback/css/hideanswerbrowser.css" as any);
         }
@@ -163,13 +160,6 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
             await import("/feedback/css/viewhide.css" as any);
             await import("/feedback/css/hideanswerbrowser.css" as any);
             this.vctrl.actionsDisabled = true;
-        } else {
-            if (this.attrsall.state != null) {
-                this.stateAnswer = this.attrsall.state.answer;
-                this.stateFeedback = this.attrsall.state.feedback;
-                this.stateSentence = this.attrsall.state.sentence;
-                this.stateCorrect = this.attrsall.state.correct;
-            }
         }
         this.showDocument();
     }
@@ -321,11 +311,13 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
      * @param show Whether to show or hide the question item.
      */
     setBlockVisibility(index: number, show: boolean) {
-        const name = this.attrs.questionItems[index].pluginNames[0];
-        const plugin = this.vctrl.getTimComponentByName(name);
-        if (plugin) {
-            const node = plugin.getPar().children(".parContent")[0];
-            this.changeVisibility(node, show);
+        if (index < this.attrs.questionItems.length) {
+            const name = this.attrs.questionItems[index].pluginNames[0];
+            const plugin = this.vctrl.getTimComponentByName(name);
+            if (plugin) {
+                const node = plugin.getPar().children(".parContent")[0];
+                this.changeVisibility(node, show);
+            }
         }
     }
 
@@ -551,13 +543,11 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
                 }
                 if (!this.teacherRight || this.editMode == null) {
                     this.hideComponent(instructionQuestion);
-                    this.instrHidden = true;
                 }
             } else {
                 const instruction = document.querySelectorAll(".par.instruction");
                 if (instruction && (!this.teacherRight || this.editMode == null)) {
                     this.hideParagraph(instruction[0]);
-                    this.instrHidden = true;
                 }
                 const failure = await this.doSave(false, false, "", "");
                 if (failure) {
@@ -565,14 +555,15 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
                     return;
                 }
             }
+            this.instrHidden = true;
             this.setButtonText("OK");
             this.printFeedback("");
             this.pluginMode = Mode.QuestionItem;
-            const area = this.attrs.questionItems[this.index].area;
+            const area = this.attrs.questionItems[this.questionItemIndex].area;
             if (area) {
                 this.showArea(area);
             } else {
-                this.showBlock(this.index);
+                this.showBlock(this.questionItemIndex);
                 this.itemHidden = false;
             }
             if (!this.vctrl.item.rights.editable || !this.vctrl.item.rights.teacher) {
@@ -582,7 +573,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
         }
 
         if (this.pluginMode === Mode.QuestionItem) {
-            const plugins = this.attrs.questionItems[this.index];
+            const plugins = this.attrs.questionItems[this.questionItemIndex];
             if (!this.hasContent(plugins)) {
                 this.printFeedback("You need to provide an answer");
                 return;
@@ -592,14 +583,14 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
             const selections = this.getAnswerFromPlugins();
             this.correctMap = this.getCorrectValues();
             this.correctAnswerString = this.getSentence(this.answerArray, this.correctMap).join(" ");
-            const matchIndex = this.compareChoices(this.index, selections);
+            const matchIndex = this.compareChoices(this.questionItemIndex, selections);
 
             if (!this.teacherRight || this.editMode == null) {
-                const area = this.attrs.questionItems[this.index].area;
+                const area = this.attrs.questionItems[this.questionItemIndex].area;
                 if (area) {
                     this.hideArea(area);
                 } else {
-                    this.hideBlock(this.index);
+                    this.hideBlock(this.questionItemIndex);
                     this.itemHidden = true;
                 }
             }
@@ -614,12 +605,12 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
                     if (choice.correct) {
                         this.printFeedback(feedbackLevels[feedbackLevels.length - 1]);
                         this.correctAnswer = true;
-                        this.isAnsweredArray![this.index] = true;
+                        this.isAnsweredArray[this.questionItemIndex] = true;
                         this.streak++;
                     } else {
                         this.printFeedback(feedbackLevels[this.currentFeedbackLevel++]);
                         this.correctAnswer = false;
-                        this.isAnsweredArray![this.index] = true;
+                        this.isAnsweredArray[this.questionItemIndex] = true;
                         this.streak = 0;
                     }
                     this.pluginMode = Mode.Feedback;
@@ -648,21 +639,22 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
             // Whether to give a question item in a random index or give consecutive ones.
             let questionIndex = undefined;
             if (this.attrs.shuffle) {
-                questionIndex = this.getRandomQuestion(this.isAnsweredArray || []);
+                questionIndex = this.getRandomQuestion(this.isAnsweredArray);
                 if (questionIndex !== undefined) {
-                    this.index = questionIndex;
+                    this.questionItemIndex = questionIndex;
                 }
             } else {
-                this.index++;
-                questionIndex = this.index;
+                this.questionItemIndex++;
+                questionIndex = this.questionItemIndex;
             }
 
-            if (questionIndex === undefined || this.streak === this.correctStreak ||
-                this.currentFeedbackLevel === this.feedbackMax || this.index >= this.attrs.questionItems.length) {
+            if (questionIndex === undefined || this.streak === this.attrs.correctStreak || this.isAnsweredArray.every(x => x === true) ||
+                this.currentFeedbackLevel === this.feedbackMax || this.questionItemIndex >= this.attrs.questionItems.length) {
                 this.pluginMode = Mode.EndTask;
                 if (!this.vctrl.item.rights.editable || !this.vctrl.item.rights.teacher) {
                     this.vctrl.doingTask = false;
                 }
+                this.itemHidden = true;
                 this.handleAnswer();
                 return;
             }
@@ -670,11 +662,11 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
             this.setPluginWords();
 
             this.pluginMode = Mode.QuestionItem;
-            const area = this.attrs.questionItems[this.index].area;
+            const area = this.attrs.questionItems[this.questionItemIndex].area;
             if (area) {
                 this.showArea(area);
             } else {
-                this.showBlock(this.index);
+                this.showBlock(this.questionItemIndex);
                 this.itemHidden = false;
             }
             this.setButtonText("OK");
@@ -720,9 +712,9 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
             return falses[0];
         }
 
-        if (this.index !== -2) {
+        if (this.questionItemIndex) {
             for (let i = 0; i < falses.length; i++) {
-                if (falses[i] === this.index) {
+                if (falses[i] === this.questionItemIndex) {
                     falses.splice(i, 1);
                 }
             }
@@ -780,7 +772,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
                 // Keyword not really needed with RegExp, but leave it in anyway if it happens to be easier to use.
                 const kw = match[i].match(keywordPlaceHolder);
                 if (kw && kw.length > 0) {
-                    const word = kw[0].split(':')[1].replace('|', "");
+                    const word = kw[0].split(":")[1].replace("|", "");
                     if (!answer[i].toLowerCase().includes(word.toLowerCase())) {
                         return false;
                     }
@@ -901,7 +893,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
      * @returns(string[]) The user's selections to the question item.
      */
     getAnswerFromPlugins(): string[] {
-        const plugins = this.attrs.questionItems[this.index].pluginNames;
+        const plugins = this.attrs.questionItems[this.questionItemIndex].pluginNames;
         this.userSelections = [];
         const timComponent = this.vctrl.getTimComponentByName(plugins[0]);
 
@@ -990,21 +982,29 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
      */
     getSentence(sentence: string[], choices: Map<string, string>): string[] {
         const temp = [];
+        const wordlists = this.attrs.questionItems[this.questionItemIndex].words;
         let i = 0;
+        let j = 0;
         for (const [k, v] of choices) {
+            const re = new RegExp(v);
             let value = v;
-            const kw = value.match(keywordPlaceHolder);
-            if (kw && kw.length > 0) {
-                const keyword = kw[0].split(":")[1].replace("|", "");
-                const wordlists = this.attrs.questionItems[this.index].words;
-                for (const wordlist of wordlists) {
-                    const word = wordlist.filter(x => x.includes(keyword));
-                    if (word.length > 0) {
-                        value = word[0];
-                    }
+            if (j < wordlists.length) {
+                const word = wordlists[j].filter(x => re.test((x)));
+                if (word.length > 0) {
+                    value = word[0];
                 }
-
             }
+
+            // TODO: Might be removable if users rather use regexp to match long sentences.
+            const kw = v.match(keywordPlaceHolder);
+            if (kw && kw.length > 0 && j < wordlists.length) {
+                const keyword = kw[0].split(":")[1].replace("|", "");
+                const word = wordlists[j].filter(x => x.includes(keyword));
+                if (word.length > 0) {
+                    value = word[0];
+                }
+            }
+            j++;
             while (sentence[i] !== k) {
                 temp.push(sentence[i]);
                 i++;
@@ -1029,7 +1029,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
      */
     getCorrectValues(): Map<string, string> {
         const values = new Map<string, string>();
-        const item = this.attrs.questionItems[this.index];
+        const item = this.attrs.questionItems[this.questionItemIndex];
         const plugins = item.pluginNames;
         const index = this.getCorrectChoice(item);
         if (index !== undefined) {
@@ -1044,12 +1044,9 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
     }
 
     /**
-     * Sets the list of words used in a dropdown plugin (drag&drop target tba). Goes through every question
-     * item and every plugin inside the question item. It is assumed for now that the list of words and list
+     * Sets the list of words used in a dropdown plugin and resets a drag source if one is defined. Goes through every
+     * question item and every plugin inside the question item. It is assumed for now that the list of words and list
      * of plugins are in the same order and that there are the same amount of them both.
-     *
-     * TODO: drag&drop
-     * TODO: randomize words
      */
     setPluginWords() {
         const items = this.attrs.questionItems;
@@ -1081,14 +1078,12 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
 
     /**
      * Check whether edit mode is on and show or hide instructions and question items based on it.
-     * TODO: refactor?
+     *
      */
     async $doCheck() {
         if (!this.attrsall.preview && this.editMode != $window.editMode) {
             this.editMode = $window.editMode;
-
             const instructions = document.querySelectorAll(".par.instruction");
-
             if (!this.edited) {
                 this.showParagraph(instructions[0]);
                 const items = this.attrs.questionItems;
@@ -1118,9 +1113,9 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
                     this.showParagraph(instructions[0]);
                 } else {
                     this.hideParagraph(instructions[0]);
-                    if (!this.itemHidden) {
-                        this.showBlock(this.index);
-                    }
+                }
+                if (!this.itemHidden) {
+                    this.showBlock(this.questionItemIndex);
                 }
                 this.edited = false;
             }
@@ -1130,6 +1125,8 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
     /**
      * Returns the content inside this plugin.
      * @returns {string} The content inside this plugin.
+     *
+     * TODO: Make the function return something if needed.
      */
     getContent() {
         return undefined;
@@ -1161,10 +1158,10 @@ feedbackApp.component("feedbackRunner", {
             ng-disabled="$ctrl.error || $ctrl.markupError || $ctrl.saving">
         {{$ctrl.buttonText()}}
     </button>
-    <div class="feedbackAnswer" ng-if="$ctrl.showAnswers">
-    <p ng-bind-html="$ctrl.attrsall.state.user_answer"></p>
-    <p ng-bind-html="$ctrl.attrsall.state.feedback"></p>
-    <p ng-bind-html="$ctrl.attrsall.state.correct_answer"></p>
+    <div class="feedbackAnswer" ng-if="$ctrl.showAnswers && $ctrl.attrsall.state">
+        <p>User answer: <span ng-bind-html="$ctrl.attrsall.state.user_answer"></span></p>
+        <p>Feedback: <span ng-bind-html="$ctrl.attrsall.state.feedback"></span></p>
+        <p>Correct answer: <span ng-bind-html="$ctrl.attrsall.state.correct_answer"></span></p>
     </div>
     <p ng-if="::$ctrl.footer" ng-bind="::$ctrl.footer"></p>
 </div>

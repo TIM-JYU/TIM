@@ -44,7 +44,7 @@ class FeedbackMarkupModel(GenericMarkupModel):
     choice: Union[Any, Missing] = missing
     matchElement: Union[Any, Missing] = missing
     instructionID: Union[Any, Missing] = missing
-    correctStreak: Union[Any, Missing] = missing
+    correctStreak: Union[int, Missing] = missing
     nextTask: Union[Any, Missing] = missing
     dragSource: Union[str, Missing] = missing
     shuffle: Union[bool, Missing] = missing
@@ -159,11 +159,7 @@ def render_static_feedback(m: FeedbackHtmlModel):
 <div class="csRunDiv no-popup-menu">
     <h4>{{ header }}</h4>
     <p class="stem">{{ stem }}</p>
-    <div><label>{{ inputstem or '' }} <span>
-        <input type="text"
-               class="form-control"
-               placeholder="{{inputplaceholder}}"
-               size="{{cols}}"></span></label>
+    <div><label>{{ inputstem or '' }}</label>
     </div>
     <button class="timButton">
         {{ buttonText or button or "Save" }}
