@@ -6,7 +6,7 @@ from typing import Union
 
 import attr
 from flask import jsonify, render_template_string
-from marshmallow import Schema, fields, post_load, validates, ValidationError
+from marshmallow import Schema, fields, post_load, validates, ValidationError, pre_load
 from marshmallow.utils import missing
 from webargs.flaskparser import use_args
 
@@ -39,8 +39,15 @@ class NumericfieldStateSchema(Schema):
     def validate_numericvalue(self, value):
         convert_to_float(value)
 
-    @post_load
-    def make_obj(self, data):
+    @pre_load()
+    def remove_null(self, data):
+        # data['numericvalue'] = convert_to_float(data['numericvalue'])
+        if not data['numericvalue']:
+            data['numericvalue'] = ""
+        #     #pass
+
+    @post_load()
+    def make_obj(self, data,):
         return NumericfieldStateModel(numericvalue=convert_to_float(data['numericvalue']))
 
     class Meta:
