@@ -53,6 +53,7 @@ export interface TimTable {
     hid: {edit?: boolean};
     hiderows: number[];
     lockedCells: string[];
+    saveCallBack?: () => void;
 }
 
 export interface ITable { // extends ITableStyles
@@ -234,6 +235,7 @@ export class TimTableController extends DestroyScope implements IController {
     private task: boolean = false;
     private hideSaveButton: boolean = false;
     private hiderows: number[] = [];
+    //private saveCallBack: () => void;
     private isRunning: boolean = false;
     public taskBorders: boolean = false;
     private editedCellContent: string | undefined;
@@ -1386,6 +1388,7 @@ export class TimTableController extends DestroyScope implements IController {
      * Saves the possible currently edited cell.
      */
     private async saveCurrentCell() {
+        if(this.data.saveCallBack) this.data.saveCallBack();
         const parId = getParId(this.element.parents(".par"));
 
         if (this.viewctrl &&

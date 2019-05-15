@@ -71,7 +71,8 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
         lockedCells:[],
         hid:{edit:false},
         userdata:{type:"Relative", cells:{}},
-        task: true
+        task: true,
+        //saveCallBack: this.singleCellSave
     };
     private rows!: RowsType;
     private allRows!: {};
@@ -103,10 +104,12 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
             //console.log(t);
         }
         this.oldCellValues = JSON.stringify(this.data.userdata.cells);
-
+        if(this.attrs.autosave) this.data.saveCallBack = this.singleCellSave;
+        console.log("eaaa");
     }
 
     $doCheck() {
+        //TODO: Possibly obsolete after this.singleCellSave() implemented and data.saveCallback given to timtable
         if(this.attrs.autosave && this.oldCellValues)
         {
            //TODO: Create proper object for comparing new and old celldata
@@ -238,6 +241,10 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
                 rowi++;
             }
         }
+    }
+
+    singleCellSave(){
+        console.log("fgsdsfd");
     }
 
     async doSaveText(nosave: boolean) {
