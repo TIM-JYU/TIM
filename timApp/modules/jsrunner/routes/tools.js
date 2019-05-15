@@ -7,7 +7,7 @@ class Tools {
         this.result = {};
         this.regex = /^[0-9]+\./;
         this.printP = "";
-        this.error = "";
+        this.error = ""; // TODO: map for errors
     }
 
     normalizeField(fieldName) {
@@ -53,16 +53,6 @@ class Tools {
         return s;
     }
 
-    /*
-    getSum() {
-        let sum = 0;
-        for (let i = 0; i < arguments.length; i++) {
-            sum += arguments[i];
-        }
-        return sum;
-    }
-    */
-
     getSum(fieldName, start, end, def = 0) {
         let fn = this.normalizeField(fieldName);
         let sum = 0;
@@ -96,22 +86,21 @@ class Tools {
     }
 
     getDefaultPoints(def = this.markup.defaultPoints) {
-        // TODO: error if default not set
         if (!this.markup.defaultPoints) this.error = "Default points have not been set";
         return def;
     }
 
     getGrade(points) {
-        const scale = this.markup.gradingScale; // TODO: error if gardingScale not set
+        if (!this.markup.gradingScale) this.error = "Grading scale has not been set";
+        const scale = this.markup.gradingScale;
         const values = Object.entries(scale);
         values.sort((a, b) => {return b[1] - a[1]});
-        let grade = "";
+        let grade = this.markup.failGrade || "";
         for (const [currGrade, requiredPoints] of values) {
             if (points >= requiredPoints) {
                 grade = currGrade;
                 break;
             }
-            grade = this.markup.failGrade || "";
         }
         return grade;
     }
@@ -127,6 +116,16 @@ class Tools {
             this.result[fnc] = points;
         }
 
+    }
+
+    defineTime(s) {
+        // 2019-05-11 12:13:14
+        return Date.parse(s) / 1000;
+    }
+
+    getDateTime(fieldName) {
+        return this.getInt(fieldName);
+        // TODO: default?? ei voi olla 0
     }
 
     print() {
