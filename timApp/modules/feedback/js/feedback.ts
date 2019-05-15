@@ -253,8 +253,9 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
 
         if (id) {
             const instruction = this.vctrl.getTimComponentByName(id);
-            if (!instruction && !this.error)
+            if (!instruction && !this.error) {
                 this.error = "Feedback plugin has instruction plugin defined but it cannot be found from the document.";
+            }
         }
         if (!id && instruction.length < 1 && !this.error) {
             this.error = "Missing an instruction block or it has no .instruction-class defined.";
@@ -277,7 +278,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
     /**
      * Check that all the question items have a default match defined.
      *
-     * TODO: Relevant? Should all the checks be in one function?
+     * TODO: Should all the YAML checks be in one function?
      */
     checkDefaultMatch() {
         const items = this.attrs.questionItems;
@@ -430,10 +431,10 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
         this.saving = true;
         const params = {
             input: {
-                nosave: false,
-                feedback: this.feedback,
                 correct: correct,
                 correct_answer: correctAnswer,
+                feedback: this.feedback,
+                nosave: false,
                 user_answer: userAnswer,
             },
             options: {
@@ -582,6 +583,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
             // Gets all the plugins from the visible question item and compares to choices-array to check which matches.
             const selections = this.getAnswerFromPlugins();
             this.correctMap = this.getCorrectValues();
+            // TODO: Fix this so that if there is a dot after the plugin in a paragraph, there is no space between the word and the dot.
             this.correctAnswerString = this.getSentence(this.answerArray, this.correctMap).join(" ");
             const matchIndex = this.compareChoices(this.questionItemIndex, selections);
 
@@ -605,6 +607,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
                     if (choice.correct) {
                         this.printFeedback(feedbackLevels[feedbackLevels.length - 1]);
                         this.correctAnswer = true;
+                        // TODO: Might be useful, if the incorrect answers were presented to the user again. Maybe add an attribute for it.
                         this.isAnsweredArray[this.questionItemIndex] = true;
                         this.streak++;
                     } else {
@@ -648,8 +651,9 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
                 questionIndex = this.questionItemIndex;
             }
 
-            if (questionIndex === undefined || this.streak === this.attrs.correctStreak || this.isAnsweredArray.every(x => x === true) ||
-                this.currentFeedbackLevel === this.feedbackMax || this.questionItemIndex >= this.attrs.questionItems.length) {
+            if (questionIndex === undefined || this.streak === this.attrs.correctStreak ||
+                this.isAnsweredArray.every(x => x) || this.currentFeedbackLevel === this.feedbackMax
+                || this.questionItemIndex >= this.attrs.questionItems.length) {
                 this.pluginMode = Mode.EndTask;
                 if (!this.vctrl.item.rights.editable || !this.vctrl.item.rights.teacher) {
                     this.vctrl.doingTask = false;
@@ -744,9 +748,8 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
                 if (this.checkMatchStringArray(match, answer)) {
                     return i;
                 }
-            }
-            // If the match is a MatchObjectArray instead of a string array.
-            else {
+            } else {
+                // If the match is a MatchObjectArray instead of a string array.
                 this.checkMatchObjectArray(match, answer);
                 return;
             }
@@ -769,7 +772,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
 
         if (match.length === answer.length) {
             for (let i = 0; i < answer.length; i++) {
-                // Keyword not really needed with RegExp, but leave it in anyway if it happens to be easier to use.
+                // TODO: Keyword not really needed with RegExp, but leave it in anyway for now if users happen to use it.
                 const kw = match[i].match(keywordPlaceHolder);
                 if (kw && kw.length > 0) {
                     const word = kw[0].split(":")[1].replace("|", "");
@@ -888,7 +891,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
 
     /**
      * Gets the user's answer from the currently visible question item of those this feedback-plugin is assigned to.
-     * TODO: Maybe add getting answers in an area and with regexp.
+     * TODO: Maybe add getting answers in an area if needed.
      *
      * @returns(string[]) The user's selections to the question item.
      */
