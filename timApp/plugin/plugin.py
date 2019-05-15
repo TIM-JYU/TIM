@@ -292,7 +292,7 @@ class Plugin:
                 "state": state,
                 "taskID": self.task_id.doc_task if self.task_id else self.fake_task_id,
                 "taskIDExt": self.task_id.extended_or_doc_task if self.task_id else self.fake_task_id,
-                "doLazy": options.do_lazy,
+                "doLazy": (options.do_lazy and self.type not in NEVERLAZY_PLUGINS) if isinstance(options.do_lazy, bool) else options.do_lazy,
                 "userPrint": options.user_print,
                 # added preview here so that whether or not the window is in preview can be
                 # checked in python so that decisions on what data is sent can be made.
