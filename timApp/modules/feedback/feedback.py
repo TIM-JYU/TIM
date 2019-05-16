@@ -331,7 +331,7 @@ questionItems:
 
 #- {area_end="dropdowntask1"}""", """#- {area="draganddroptask1" .task}
 
-## Instructions {.instruction defaultplugin="drag"}
+## Instruction header {.instruction defaultplugin="drag"}
 
 Here you can write general instructions for the test. Pictures can also be inserted. The
 "Instruction header" can also be changed, but do not change the `.instructions` in the
@@ -339,7 +339,7 @@ brackets.
 
 The next is a practice question. It can be edited or deleted.
 
-Drag from here: {#practicedrag1 words: [I, before, will think, answering]}
+Drag from here: {#practicedrag1 words: ["I", "before", "will think", "answering"]}
 
 To here: {#practicedrop2}.
 
@@ -348,7 +348,7 @@ To here: {#practicedrop2}.
 Anything inside this `.info` section will not be a part of the actual question/answer.
 Here you can place extra instructions and the draggable words in "drag1".
 
-{#drag1 words: [I, when, around, come]}
+{#drag1 words: ["I, "when", "around", "come"]}
 
 The question ID `#drop1` should be unique. It refers to the feedback and should be
 edited in both. 
@@ -360,7 +360,7 @@ You know where I'll be found {#drop1}.
 ::: {.info}
 This is the `.info` section with draggable words.
 
-{#drag2 words: [I, if, a mile, run]}
+{#drag2 words: ["I", "if", "a mile", "run"]}
 :::
 
 I will be quite tired {#drop2}.
@@ -369,7 +369,7 @@ I will be quite tired {#drop2}.
 ::: {.info}
 This is the `.info` section with draggable words.
 
-{#drag3 words: [I, who, at work, see]}
+{#drag3 words: ["I", "who", "at work", "see"]}
 :::
 
 I will tell you {#drop3}.
@@ -378,7 +378,7 @@ I will tell you {#drop3}.
 ::: {.info}
 This is the `.info` section with draggable words.
 
-{#drag4 words: [I, whether, a computer, had]}
+{#drag4 words: ["I", "whether", "a computer", "had"]}
 :::
 
 He wanted to know {#drop4}.
@@ -407,17 +407,17 @@ questionItems:
 - pluginNames: [drop1]
   words: []
   choices:
-    - match: [when I come around]
+    - match: ["when I come around"]
       correct: true
       levels: &rightmatch
         - "**Correct!** You answered: |answer|"
-    - match: [when around I come]
+    - match: ["when around I come"]
       levels: &match1
         - "You can write the level 1 feedback for the match choice here."
         - "You can write the level 2 feedback for the match choice here."
         - "You can write the level 3 feedback for the match choice here."
         - "You can write the level 4 feedback for the match choice here."
-    - match: [when come I around]
+    - match: ["when come I around"]
       levels: &match2
         - "Level 1: |answer| is a placeholder for the given answer."
         - "Level 2: |answer[0-1]| refers to the 1st and 2nd words of |answer|"
@@ -432,36 +432,36 @@ questionItems:
 - pluginNames: [drop2]
   words: []
   choices:
-    - match: [if I run a mile]
+    - match: ["if I run a mile"]
       correct: true
       levels: *rightmatch
-    - match: [if a mile I run]
+    - match: ["if a mile I run"]
       levels: *match1
-    - match: [if run I a mile]
+    - match: ["if run I a mile"]
       levels: *match2
     - match: []
       levels: *defaultmatch
 - pluginNames: [drop3]
   words: []
   choices:
-    - match: [who I see at work]
+    - match: ["who I see at work"]
       correct: true
       levels: *rightmatch
-    - match: [who at work I see]
+    - match: ["who at work I see"]
       levels: *match1
-    - match: [who see I at work]
+    - match: ["who see I at work"]
       levels: *match2
     - match: []
       levels: *defaultmatch
 - pluginNames: [drop4]
   words: []
   choices:
-    - match: [whether I had a computer]
+    - match: ["whether I had a computer"]
       correct: true
       levels: *rightmatch
-    - match: [whether a computer I had]
+    - match: ["whether a computer I had"]
       levels: *match1
-    - match: [whether had I a computer]
+    - match: ["whether had I a computer"]
       levels: *match2
     - match: []
       levels: *defaultmatch
@@ -478,7 +478,7 @@ The next is a practice question. It can be edited or deleted.
 
 I {#practice words: ["will think", "won't think", "might think"]} before answering.
 
-""", """## Instructions {.instruction defaultplugin="drag"}
+""", """## Instruction header {.instruction defaultplugin="drag"}
 
 Here you can write general instructions for the test. Pictures can also be inserted. The
 "Instruction header" can also be changed, but do not change the `.instructions` in the
@@ -486,7 +486,7 @@ brackets.
 
 The next is a practice question. It can be edited or deleted.
 
-Drag from here: {#practicedrag1 words: [I, before, will think, answering]}
+Drag from here: {#practicedrag1 words: ["I", "before", "will think", "answering"]}
 
 To here: {#practicedrop2}.
 
@@ -506,7 +506,7 @@ What {#dropdown1} on the stove?
 Anything inside this `.info` section will not be a part of the actual question/answer.
 Here you can place extra instructions and the draggable words in "drag1".
 
-{#drag1 words: [I, when, around, come]}
+{#drag1 words: ["I", "when", "around", "come"]}
 
 The question ID `#drop1` should be unique. It refers to the feedback and should be
 edited in both. 
@@ -620,17 +620,17 @@ questionItems:
 - pluginNames: [drop1]
   words: []
   choices:
-    - match: [when I come around]
+    - match: ["when I come around"]
       correct: true
       levels: &rightmatch
         - "**Correct!** You answered: |answer|"
-    - match: [when around I come]
+    - match: ["when around I come"]
       levels: &match1
         - "You can write the level 1 feedback for the match choice here."
         - "You can write the level 2 feedback for the match choice here."
         - "You can write the level 3 feedback for the match choice here."
         - "You can write the level 4 feedback for the match choice here."
-    - match: [when come I around]
+    - match: ["when come I around"]
       levels: &match2
         - "Level 1: |answer| is a placeholder for the given answer."
         - "Level 2: |answer[0-1]| refers to the 1st and 2nd words of |answer|"
@@ -645,36 +645,36 @@ questionItems:
 - pluginNames: [drop2]
   words: []
   choices:
-    - match: [if I run a mile]
+    - match: ["if I run a mile"]
       correct: true
       levels: *rightmatch
-    - match: [if a mile I run]
+    - match: ["if a mile I run"]
       levels: *match1
-    - match: [if run I a mile]
+    - match: ["if run I a mile"]
       levels: *match2
     - match: []
       levels: *defaultmatch
 - pluginNames: [drop3]
   words: []
   choices:
-    - match: [who I see at work]
+    - match: ["who I see at work"]
       correct: true
       levels: *rightmatch
-    - match: [who at work I see]
+    - match: ["who at work I see"]
       levels: *match1
-    - match: [who see I at work]
+    - match: ["who see I at work"]
       levels: *match2
     - match: []
       levels: *defaultmatch
 - pluginNames: [drop4]
   words: []
   choices:
-    - match: [whether I had a computer]
+    - match: ["whether I had a computer"]
       correct: true
       levels: *rightmatch
-    - match: [whether a computer I had]
+    - match: ["whether a computer I had"]
       levels: *match1
-    - match: [whether had I a computer]
+    - match: ["whether had I a computer"]
       levels: *match2
     - match: []
       levels: *defaultmatch
