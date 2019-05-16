@@ -5,7 +5,7 @@ from typing import Union
 
 import attr
 from flask import jsonify, render_template_string
-from marshmallow import Schema, fields, post_load, validates, ValidationError
+from marshmallow import Schema, fields, post_load, validates, ValidationError, pre_load
 from marshmallow.utils import missing
 from webargs.flaskparser import use_args
 
@@ -22,6 +22,13 @@ class TextfieldStateModel:
 
 class TextfieldStateSchema(Schema):
     userword = fields.Str(required=True)
+
+    @pre_load()
+    def numeric_to_text(self, data):
+        if not data.get("userword", False) and (data.get("numericvalue") is not None):
+            data["userword"] = str(data.get("numericvalue"))
+            pass
+        pass
 
     @post_load
     def make_obj(self, data):
