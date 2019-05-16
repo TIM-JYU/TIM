@@ -203,184 +203,208 @@ def answer(args: FeedbackAnswerModel):
 def reqs():
     templates = ["""#- {area="dropdowntask1" .task}
 
-## Instructions {.instruction defaultplugin="dropdown"}
+## Instruction header {.instruction defaultplugin="dropdown"}
 
-Welcome to the test. Read the question carefully. If you get the answer wrong, please read the feedback carefully.
+Here you can write general instructions for the test. Pictures can also be inserted. The
+"Instruction header" can also be changed, but do not change the `.instructions` in the
+brackets.
 
+The next is a practice question. It can be edited or deleted.
 
-Please try out a practice question:
+I {#practice words: ["will think", "won't think", "might think"]} before answering.
 
+## Item header {defaultplugin="dropdown"}
+::: {.info}
+Anything inside this `.info` section will not be a part of the actual question/answer.
+Here you can place extra instructions or you may delete the section.
 
-I {#practice words: [will think, won't think, might think]} before answering.
-
-
-## Item: {defaultplugin="dropdown"}
+The question ID `#dropdown1` should be unique. It refers to the feedback and should be
+edited in both. 
+:::
 
 What {#dropdown1} on the stove?
 
-
-## Item: {defaultplugin="dropdown"}
+## Item header {defaultplugin="dropdown"}
+::: {.info}
+This is the `.info` section.
+:::
 
 Who {#dropdown2} the cake?
 
-
-## Item: {defaultplugin="dropdown"}
+## Item header {defaultplugin="dropdown"}
+::: {.info}
+This is the `.info` section.
+:::
 
 What {#dropdown3} on the roof?
 
-
-## Item: {defaultplugin="dropdown"}
+## Item header {defaultplugin="dropdown"}
+::: {.info}
+This is the `.info` section.
+:::
 
 Who {#dropdown4} the 3 mile swim in the race?
- 
 
 ``` {#fb1 plugin="feedback"}
-correctStreak: 2
-nextTask: nonexttaskdefined
+# Quick reference for feedback options:
+#  correctStreak: number of correct answers in a row to advance to next task.
+#  nextTask: the address of next task in the TIM file system.
+#  shuffle: (true or false) whether question items are given in random order.
+#  questionItems: contains the question items and the feedback for them.
+#  - pluginNames: names of the target question item plugins.
+#    words: list of words to be set as choices to the plugin(s) in pluginNames.
+#    choices: defines the possible match choices and the feedback for each.
+#     - match: defines a choice to match to trigger the defined feedback.
+#       correct: true, indicates that the choice is the correct answer.
+#       levels: defines the feedback levels for the matching choice.
+#
+# Using & + word (example: &match1) after "levels:" you can create a reference. 
+# You can later refer to the defined reference levels with * + word (*match1).
+#
+correctStreak: 2  
+nextTask: "[Click here](next_task_document_name) to move to the next task."
+shuffle: true
 questionItems:
 - pluginNames: [dropdown1]
-  words: [[is cooking, do cooking, are cooking]]
+  words: [["is cooking", "do cooking", "are cooking"]]
   choices:
-    - match: [is cooking]
+    - match: ["is cooking"]
       correct: true
-      levels: &ismatch
-        - "**Correct!** You answered: |answer|"
-    - match: [do cooking]
-      levels: &domatch
-        - "Level 1 feedback: You answered: *|answer|* Answer is wrong. Try **thinking**. "
-        - "Level 2 feedback: You answered: *|answer|* Answer is wrong. Try thinking *a bit* harder. "
-        - "Level 3 feedback: You answered: *|answer|* Answer is wrong. Try thinking **much more** harder. "
-        - "Level 4 feedback: You answered: *|answer|* Answer is wrong. Just think about what the answer **is**. "
-        - "Level 5 feedback: Please note the correct answer: 'What **is** / Who **is**'"
-    - match: [are cooking]
-      levels: &arematch
-        - "Level 1 feedback: You answered: *|answer|* Answer is wrong. Try **thinking**. "
-        - "Level 2 feedback: You answered: *|answer|* Answer is wrong. Try thinking *a bit* harder. "
-        - "Level 3 feedback: You answered: *|answer|* Answer is wrong. Try thinking **much more** harder. "
-        - "Level 4 feedback: You answered: *|answer|* Answer is wrong. Just think about what the answer **is**. "
-        - "Level 5 feedback: Please note the correct answer: 'What **is** / Who **is**'"
-    - match: []
+      levels: &rightmatch
+        - "**Correct!** You answered: *|answer|*"
+    - match: ["do cooking"]
+      levels: &match1
+        - "You can write the level 1 feedback for the match choice here."
+        - "You can write the level 2 feedback for the match choice here."
+        - "You can write the level 3 feedback for the match choice here."
+        - "You can write the level 4 feedback for the match choice here."
+    - match: ["are cooking"]
+      levels: &match2
+        - "Level 1: |answer| is a placeholder for the given answer."
+        - "Level 2: |answer[0-1]| refers to the 1st and 2nd words of |answer|"
+        - "Level 3: |match| is a placeholder for the current match choice."
+        - "Level 4: |correct| is a placeholder for the correct answer."
+    - match: []  # Empty brackets for default feedback.
       levels: &defaultmatch
-        - "Level 1 feedback: default feedback for drop4"
-        - "Level 2 feedback: default feedback for drop4"
-        - "Level 3 feedback: default feedback for drop4"
-        - "Level 4 feedback: default feedback for drop4"
-        - "Level 5 feedback: Please note the correct answer: 'What **is** / Who **is**'"
+        - "*Level 1 default feedback* in italics with *"
+        - "**Level 2 default feedback** in bold with **."
+        - "<u>Level 3 default feedback</u> now underlined."
+        - "[Level 4 default feedback]{.red} now in red color."
 - pluginNames: [dropdown2]
-  words: [[is baking, do baking, are baking]]
+  words: [["is baking", "do baking", "are baking"]]
   choices:
-    - match: [is baking]
+    - match: ["is baking"]
       correct: true
-      levels: *ismatch
-    - match: [do baking]
-      levels: *domatch
-    - match: [are baking]
-      levels: *arematch
+      levels: *rightmatch
+    - match: ["do baking"]
+      levels: *match1
+    - match: ["are baking"]
+      levels: *match2
     - match: []
       levels: *defaultmatch
 - pluginNames: [dropdown3]
-  words: [[is jumping, do jumping, are jumping]]
+  words: [["is jumping", "do jumping", "are jumping"]]
   choices:
-    - match: [is jumping]
+    - match: ["is jumping"]
       correct: true
-      levels: *ismatch
-    - match: [do jumping]
-      levels: *domatch
-    - match: [are jumping]
-      levels: *arematch
+      levels: *rightmatch
+    - match: ["do jumping"]
+      levels: *match1
+    - match: ["are jumping"]
+      levels: *match2
     - match: []
       levels: *defaultmatch
 - pluginNames: [dropdown4]
-  words: [[is swimming, do swimming, are swimming]]
+  words: [["is swimming", "do swimming", "are swimming"]]
   choices:
-    - match: [is swimming]
+    - match: ["is swimming"]
       correct: true
-      levels: *ismatch
-    - match: [do swimming]
-      levels: *domatch
-    - match: [are swimming]
-      levels: *arematch
+      levels: *rightmatch
+    - match: ["do swimming"]
+      levels: *match1
+    - match: ["are swimming"]
+      levels: *match2
     - match: []
       levels: *defaultmatch
+
 ```
-#- {area_end="dropdowntask1"}""", """#- {area="dragtask1" .task}
+
+#- {area_end="dropdowntask1"}""", """#- {area="draganddroptask1" .task}
 
 ## Instructions {.instruction defaultplugin="drag"}
 
-Welcome to the test. Read the question carefully. If you get the answer wrong, please read the feedback carefully.
+Here you can write general instructions for the test. Pictures can also be inserted. The
+"Instruction header" can also be changed, but do not change the `.instructions` in the
+brackets.
 
+The next is a practice question. It can be edited or deleted.
 
-Please try out a practice question:
+Drag from here: {#practicedrag1 words: [I, before, will think, answering]}
 
-Order the words correctly into the sentence below.
+To here: {#practicedrop2}.
 
-\
-Drag from here: {#practice1 words: [I, before, will think, answering]}
-
-
-To here: {#practice2}.
-
-
-## Item {defaultplugin="drag"}
+## Item header {defaultplugin="drag"}
 ::: {.info}
-Please order the words correctly into the sentence below.
+Anything inside this `.info` section will not be a part of the actual question/answer.
+Here you can place extra instructions and the draggable words in "drag1".
 
-
-\
 {#drag1 words: [I, when, around, come]}
 
-\
+The question ID `#drop1` should be unique. It refers to the feedback and should be
+edited in both. 
 :::
+
 You know where I'll be found {#drop1}.
 
-
-## Item {defaultplugin="drag"}
+## Item header {defaultplugin="drag"}
 ::: {.info}
-Please order the words correctly into the sentence below.
+This is the `.info` section with draggable words.
 
-
-\
 {#drag2 words: [I, if, a mile, run]}
-
-\
 :::
+
 I will be quite tired {#drop2}.
 
-
-## Item {defaultplugin="drag"}
+## Item header {defaultplugin="drag"}
 ::: {.info}
-Please order the words correctly into the sentence below.
+This is the `.info` section with draggable words.
 
-
-\
 {#drag3 words: [I, who, at work, see]}
-
-\
 :::
+
 I will tell you {#drop3}.
 
-
-## Item {defaultplugin="drag"}
+## Item header {defaultplugin="drag"}
 ::: {.info}
-Please order the words correctly into the sentence below.
+This is the `.info` section with draggable words.
 
-
-\
 {#drag4 words: [I, whether, a computer, had]}
-
-\
 :::
+
 He wanted to know {#drop4}.
 
-
-
 ``` {#fb1 plugin="feedback"}
-
+# Quick reference for feedback options:
+#  correctStreak: number of correct answers in a row to advance to next task.
+#  nextTask: the address of next task in the TIM file system.
+#  shuffle: (true or false) whether question items are given in random order.
+#  questionItems: contains the question items and the feedback for them.
+#  - pluginNames: names of the target question item plugins.
+#    dragSource: drag1, used only for case with one repeating question.
+#    words: [] for drag and drop questions.
+#    choices: defines the possible match choices and the feedback for each.
+#     - match: defines a choice to match to trigger the defined feedback.
+#       correct: true, indicates that the choice is the correct answer.
+#       levels: defines the feedback levels for the matching choice.
+#
+# Using & + word (example: &match1) after "levels:" you can create a reference. 
+# You can later refer to the defined reference levels with * + word (*match1).
+#
 correctStreak: 2
-nextTask: nonexttaskdefined
+nextTask: "[Click here](next_task_document_name) to move to the next task."
+shuffle: true
 questionItems:
 - pluginNames: [drop1]
-  dragSource: drag1
   words: []
   choices:
     - match: [when I come around]
@@ -388,159 +412,212 @@ questionItems:
       levels: &rightmatch
         - "**Correct!** You answered: |answer|"
     - match: [when around I come]
-      levels: &asvmatch
-        - "Level 1 feedback: You answered: *|answer|* Answer is wrong. Try **thinking**. "
-        - "Level 2 feedback: You answered: *|answer|* Answer is wrong. Try thinking *a bit* harder. "
-        - "Level 3 feedback: You answered: *|answer|* Answer is wrong. Try thinking **much more** harder. "
-        - "Level 4 feedback: You answered: *|answer|* Answer is wrong. Just think about **what the answer is**. "
-        - "Level 5 feedback: Please note the correct word order: 'conjuction subject verb the rest'"
+      levels: &match1
+        - "You can write the level 1 feedback for the match choice here."
+        - "You can write the level 2 feedback for the match choice here."
+        - "You can write the level 3 feedback for the match choice here."
+        - "You can write the level 4 feedback for the match choice here."
     - match: [when come I around]
-      levels: &vsamatch
-        - "Level 1 feedback: You answered: *|answer|* Answer is wrong. Try **thinking**. "
-        - "Level 2 feedback: You answered: *|answer|* Answer is wrong. Try thinking *a bit* harder. "
-        - "Level 3 feedback: You answered: *|answer|* Answer is wrong. Try thinking **much more** harder. "
-        - "Level 4 feedback: You answered: *|answer|* Answer is wrong. Just think about **what the answer is** "
-        - "Level 5 feedback: Please note the correct word order: 'conjuction subject verb the rest'"
-    - match: []
+      levels: &match2
+        - "Level 1: |answer| is a placeholder for the given answer."
+        - "Level 2: |answer[0-1]| refers to the 1st and 2nd words of |answer|"
+        - "Level 3: |match| is a placeholder for the current match choice."
+        - "Level 4: |correct| is a placeholder for the correct answer."
+    - match: [] # Empty brackets for default feedback.
       levels: &defaultmatch
-        - "Level 1 feedback: You answered: *|answer|* Answer is wrong. Try **thinking**."
-        - "Level 2 feedback: You answered: *|answer|* Answer is wrong. Think about what comes first."
-        - "Level 3 feedback: You answered: *|answer|* Answer is wrong. Think about what word comes first."
-        - "Level 4 feedback: You answered: *|answer|* Answer is wrong. The conjunction should come first."
-        - "Level 5 feedback: Please note the correct word order: 'conjuction subject verb the rest'"
+        - "*Level 1 default feedback* in italics with *"
+        - "**Level 2 default feedback** in bold with **."
+        - "<u>Level 3 default feedback</u> now underlined."
+        - "[Level 4 default feedback]{.red} now in red color."
 - pluginNames: [drop2]
-  dragSource: drag2
   words: []
   choices:
     - match: [if I run a mile]
       correct: true
       levels: *rightmatch
     - match: [if a mile I run]
-      levels: *asvmatch
+      levels: *match1
     - match: [if run I a mile]
-      levels: *vsamatch
+      levels: *match2
     - match: []
       levels: *defaultmatch
 - pluginNames: [drop3]
-  dragSource: drag3
   words: []
   choices:
     - match: [who I see at work]
       correct: true
       levels: *rightmatch
     - match: [who at work I see]
-      levels: *asvmatch
+      levels: *match1
     - match: [who see I at work]
-      levels: *vsamatch
+      levels: *match2
     - match: []
       levels: *defaultmatch
 - pluginNames: [drop4]
-  dragSource: drag4
   words: []
   choices:
     - match: [whether I had a computer]
       correct: true
       levels: *rightmatch
     - match: [whether a computer I had]
-      levels: *asvmatch
+      levels: *match1
     - match: [whether had I a computer]
-      levels: *vsamatch
+      levels: *match2
     - match: []
       levels: *defaultmatch
 
 ```
-#- {area_end="dragtask1"}""", """## Instructions {.instruction defaultplugin="dropdown"}
 
-Welcome to the test. Read the question carefully. If you get the answer wrong, please read the feedback carefully.
+#- {area_end="draganddroptask1"}""", """## Instruction header {.instruction defaultplugin="dropdown"}
 
+Here you can write general instructions for the test. Pictures can also be inserted. The
+"Instruction header" can also be changed, but do not change the `.instructions` in the
+brackets.
 
-Please try out a practice question:
+The next is a practice question. It can be edited or deleted.
 
-
-I {#practice words: [will think, won't think, might think]} before answering.
+I {#practice words: ["will think", "won't think", "might think"]} before answering.
 
 """, """## Instructions {.instruction defaultplugin="drag"}
 
-Welcome to the test. Read the question carefully. If you get the answer wrong, please read the feedback carefully.
+Here you can write general instructions for the test. Pictures can also be inserted. The
+"Instruction header" can also be changed, but do not change the `.instructions` in the
+brackets.
 
+The next is a practice question. It can be edited or deleted.
 
-Please try out a practice question:
+Drag from here: {#practicedrag1 words: [I, before, will think, answering]}
 
-Order the words correctly into the sentence below.
+To here: {#practicedrop2}.
 
-\
-Drag from here: {#practice1 words: [I, before, will think, answering]}
-
-
-To here: {#practice2}.
-
-""", """## Item: {defaultplugin="dropdown"}
-
-What {#drop1} on the stove?
-
-""", """## Item {defaultplugin="drag"}
+""", """## Item header {defaultplugin="dropdown"}
 ::: {.info}
-Please order the words correctly into the sentence below.
+Anything inside this `.info` section will not be a part of the actual question/answer.
+Here you can place extra instructions or you may delete the section.
 
+The question ID `#dropdown1` should be unique. It refers to the feedback and should be
+edited in both. 
+:::
 
-\
+What {#dropdown1} on the stove?
+
+""", """## Item header {defaultplugin="drag"}
+::: {.info}
+Anything inside this `.info` section will not be a part of the actual question/answer.
+Here you can place extra instructions and the draggable words in "drag1".
+
 {#drag1 words: [I, when, around, come]}
 
-\
+The question ID `#drop1` should be unique. It refers to the feedback and should be
+edited in both. 
 :::
+
 You know where I'll be found {#drop1}.
+
 """, """``` {#fb1 plugin="feedback"}
-correctStreak: 2
-nextTask: nonexttaskdefined
+# Quick reference for feedback options:
+#  correctStreak: number of correct answers in a row to advance to next task.
+#  nextTask: the address of next task in the TIM file system.
+#  shuffle: (true or false) whether question items are given in random order.
+#  questionItems: contains the question items and the feedback for them.
+#  - pluginNames: names of the target question item plugins.
+#    words: list of words to be set as choices to the plugin(s) in pluginNames.
+#    choices: defines the possible match choices and the feedback for each.
+#     - match: defines a choice to match to trigger the defined feedback.
+#       correct: true, indicates that the choice is the correct answer.
+#       levels: defines the feedback levels for the matching choice.
+#
+# Using & + word (example: &match1) after "levels:" you can create a reference. 
+# You can later refer to the defined reference levels with * + word (*match1).
+#
+correctStreak: 2  
+nextTask: "[Click here](next_task_document_name) to move to the next task."
+shuffle: true
 questionItems:
-- pluginNames: [drop1]
-  words: [[is cooking, do cooking, are cooking]]
+- pluginNames: [dropdown1]
+  words: [["is cooking", "do cooking", "are cooking"]]
   choices:
-    - match: [is cooking]
+    - match: ["is cooking"]
       correct: true
-      levels: &ismatch
-        - "**Correct!** You answered: |answer|"
-    - match: [do cooking]
-      levels: &domatch
-        - "Level 1 feedback: You answered: *|answer|* Answer is wrong. Try **thinking**. "
-        - "Level 2 feedback: You answered: *|answer|* Answer is wrong. Try thinking *a bit* harder. "
-        - "Level 3 feedback: You answered: *|answer|* Answer is wrong. Try thinking **much more** harder. "
-        - "Level 4 feedback: You answered: *|answer|* Answer is wrong. Just think about what the answer **is**. "
-        - "Level 5 feedback: Please note the correct answer: 'What **is** / Who **is**'"
-    - match: [are cooking]
-      levels: &arematch
-        - "Level 1 feedback: You answered: *|answer|* Answer is wrong. Try **thinking**. "
-        - "Level 2 feedback: You answered: *|answer|* Answer is wrong. Try thinking *a bit* harder. "
-        - "Level 3 feedback: You answered: *|answer|* Answer is wrong. Try thinking **much more** harder. "
-        - "Level 4 feedback: You answered: *|answer|* Answer is wrong. Just think about what the answer **is**. "
-        - "Level 5 feedback: Please note the correct answer: 'What **is** / Who **is**'"
-    - match: []
+      levels: &rightmatch
+        - "**Correct!** You answered: *|answer|*"
+    - match: ["do cooking"]
+      levels: &match1
+        - "You can write the level 1 feedback for the match choice here."
+        - "You can write the level 2 feedback for the match choice here."
+        - "You can write the level 3 feedback for the match choice here."
+        - "You can write the level 4 feedback for the match choice here."
+    - match: ["are cooking"]
+      levels: &match2
+        - "Level 1: |answer| is a placeholder for the given answer."
+        - "Level 2: |answer[0-1]| refers to the 1st and 2nd words of |answer|"
+        - "Level 3: |match| is a placeholder for the current match choice."
+        - "Level 4: |correct| is a placeholder for the correct answer."
+    - match: []  # Empty brackets for default feedback.
       levels: &defaultmatch
-        - "Level 1 feedback: default feedback for drop4"
-        - "Level 2 feedback: default feedback for drop4"
-        - "Level 3 feedback: default feedback for drop4"
-        - "Level 4 feedback: default feedback for drop4"
-        - "Level 5 feedback: Please note the correct answer: 'What **is** / Who **is**'"
-- pluginNames: [drop2]
-  words: [[is baking, do baking, are baking]]
+        - "*Level 1 default feedback* in italics with *"
+        - "**Level 2 default feedback** in bold with **."
+        - "<u>Level 3 default feedback</u> now underlined."
+        - "[Level 4 default feedback]{.red} now in red color."
+- pluginNames: [dropdown2]
+  words: [["is baking", "do baking", "are baking"]]
   choices:
-    - match: [is baking]
+    - match: ["is baking"]
       correct: true
-      levels: *ismatch
-    - match: [do baking]
-      levels: *domatch
-    - match: [are baking]
-      levels: *arematch
+      levels: *rightmatch
+    - match: ["do baking"]
+      levels: *match1
+    - match: ["are baking"]
+      levels: *match2
     - match: []
       levels: *defaultmatch
-      
-```""", """``` {#fb1 plugin="feedback"}
+- pluginNames: [dropdown3]
+  words: [["is jumping", "do jumping", "are jumping"]]
+  choices:
+    - match: ["is jumping"]
+      correct: true
+      levels: *rightmatch
+    - match: ["do jumping"]
+      levels: *match1
+    - match: ["are jumping"]
+      levels: *match2
+    - match: []
+      levels: *defaultmatch
+- pluginNames: [dropdown4]
+  words: [["is swimming", "do swimming", "are swimming"]]
+  choices:
+    - match: ["is swimming"]
+      correct: true
+      levels: *rightmatch
+    - match: ["do swimming"]
+      levels: *match1
+    - match: ["are swimming"]
+      levels: *match2
+    - match: []
+      levels: *defaultmatch
 
+```""", """``` {#fb1 plugin="feedback"}
+# Quick reference for feedback options:
+#  correctStreak: number of correct answers in a row to advance to next task.
+#  nextTask: the address of next task in the TIM file system.
+#  shuffle: (true or false) whether question items are given in random order.
+#  questionItems: contains the question items and the feedback for them.
+#  - pluginNames: names of the target question item plugins.
+#    dragSource: drag1, used only for case with one repeating question.
+#    words: [] for drag and drop questions.
+#    choices: defines the possible match choices and the feedback for each.
+#     - match: defines a choice to match to trigger the defined feedback.
+#       correct: true, indicates that the choice is the correct answer.
+#       levels: defines the feedback levels for the matching choice.
+#
+# Using & + word (example: &match1) after "levels:" you can create a reference. 
+# You can later refer to the defined reference levels with * + word (*match1).
+#
 correctStreak: 2
-nextTask: nonexttaskdefined
+nextTask: "[Click here](next_task_document_name) to move to the next task."
+shuffle: true
 questionItems:
 - pluginNames: [drop1]
-  dragSource: drag1
   words: []
   choices:
     - match: [when I come around]
@@ -548,26 +625,23 @@ questionItems:
       levels: &rightmatch
         - "**Correct!** You answered: |answer|"
     - match: [when around I come]
-      levels: &asvmatch
-        - "Level 1 feedback: You answered: *|answer|* Answer is wrong. Try **thinking**. "
-        - "Level 2 feedback: You answered: *|answer|* Answer is wrong. Try thinking *a bit* harder. "
-        - "Level 3 feedback: You answered: *|answer|* Answer is wrong. Try thinking **much more** harder. "
-        - "Level 4 feedback: You answered: *|answer|* Answer is wrong. Just think about **what the answer is**. "
-        - "Level 5 feedback: Please note the correct word order: 'conjuction subject verb the rest'"
+      levels: &match1
+        - "You can write the level 1 feedback for the match choice here."
+        - "You can write the level 2 feedback for the match choice here."
+        - "You can write the level 3 feedback for the match choice here."
+        - "You can write the level 4 feedback for the match choice here."
     - match: [when come I around]
-      levels: &vsamatch
-        - "Level 1 feedback: You answered: *|answer|* Answer is wrong. Try **thinking**. "
-        - "Level 2 feedback: You answered: *|answer|* Answer is wrong. Try thinking *a bit* harder. "
-        - "Level 3 feedback: You answered: *|answer|* Answer is wrong. Try thinking **much more** harder. "
-        - "Level 4 feedback: You answered: *|answer|* Answer is wrong. Just think about **what the answer is** "
-        - "Level 5 feedback: Please note the correct word order: 'conjuction subject verb the rest'"
-    - match: []
+      levels: &match2
+        - "Level 1: |answer| is a placeholder for the given answer."
+        - "Level 2: |answer[0-1]| refers to the 1st and 2nd words of |answer|"
+        - "Level 3: |match| is a placeholder for the current match choice."
+        - "Level 4: |correct| is a placeholder for the correct answer."
+    - match: [] # Empty brackets for default feedback.
       levels: &defaultmatch
-        - "Level 1 feedback: You answered: *|answer|* Answer is wrong. Try **thinking**."
-        - "Level 2 feedback: You answered: *|answer|* Answer is wrong. Think about what comes first."
-        - "Level 3 feedback: You answered: *|answer|* Answer is wrong. Think about what word comes first."
-        - "Level 4 feedback: You answered: *|answer|* Answer is wrong. The conjunction should come first."
-        - "Level 5 feedback: Please note the correct word order: 'conjuction subject verb the rest'"
+        - "*Level 1 default feedback* in italics with *"
+        - "**Level 2 default feedback** in bold with **."
+        - "<u>Level 3 default feedback</u> now underlined."
+        - "[Level 4 default feedback]{.red} now in red color."
 - pluginNames: [drop2]
   words: []
   choices:
@@ -575,12 +649,36 @@ questionItems:
       correct: true
       levels: *rightmatch
     - match: [if a mile I run]
-      levels: *asvmatch
+      levels: *match1
     - match: [if run I a mile]
-      levels: *vsamatch
+      levels: *match2
     - match: []
       levels: *defaultmatch
-      
+- pluginNames: [drop3]
+  words: []
+  choices:
+    - match: [who I see at work]
+      correct: true
+      levels: *rightmatch
+    - match: [who at work I see]
+      levels: *match1
+    - match: [who see I at work]
+      levels: *match2
+    - match: []
+      levels: *defaultmatch
+- pluginNames: [drop4]
+  words: []
+  choices:
+    - match: [whether I had a computer]
+      correct: true
+      levels: *rightmatch
+    - match: [whether a computer I had]
+      levels: *match1
+    - match: [whether had I a computer]
+      levels: *match2
+    - match: []
+      levels: *defaultmatch
+
 ```"""]
     return jsonify({
         "js": ["js/build/feedback.js"],
