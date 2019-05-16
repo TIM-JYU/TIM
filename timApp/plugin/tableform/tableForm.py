@@ -25,6 +25,8 @@ from timApp.tim_app import csrf
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
 from timApp.answer.routes import get_fields_and_users
+from timApp.util.flask.responsehelper import ok_response, json_response
+
 
 @attr.s(auto_attribs=True)
 class TableFormStateModel:
@@ -51,10 +53,9 @@ class TableFormMarkupModel(GenericMarkupModel):
     table: Union[bool, Missing] = missing
     report: Union[bool, Missing] = missing
     separator: Union[str, Missing] = missing
-    usednames: Union[str, Missing] = missing
+    shownames: Union[bool, Missing] = missing
     sortBy: Union[str, Missing] = missing
     dataCollection: Union[str, Missing] = missing
-    print: Union[bool, Missing] = missing
     fields: Union[List[str], Missing] = missing
     autosave: Union[bool, Missing] = missing
 
@@ -65,10 +66,9 @@ class TableFormMarkupSchema(GenericMarkupSchema):
     table = fields.Boolean()
     report = fields.Boolean()
     separator = fields.Str(allow_none=True)
-    usednames = fields.Str(allow_none=True)
+    shownames = fields.Boolean()
     sortBy = fields.Str(allow_none=True)
     dataCollection = fields.Str(allow_none=True)
-    print = fields.Boolean()
     autosave = fields.Boolean()
     fields = fields.List(fields.Str())
 
@@ -245,6 +245,11 @@ def render_static_tableForm(m: TableFormHtmlModel):
 
 
 tableForm_plugin = create_blueprint(__name__, 'tableForm', TableFormHtmlSchema(), csrf)
+
+
+@tableForm_plugin.route('/generateCSV')
+def gen_csv():
+    return json_response(request.args.get('data'))
 
 
 @tableForm_plugin.route('/answer/', methods=['put'])

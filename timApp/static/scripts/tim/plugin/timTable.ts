@@ -308,7 +308,7 @@ export class TimTableController extends DestroyScope implements IController {
     /**
      * Set listener and initializes tabledatablock
      */
-    $onInit() {
+    async $onInit() {
         this.initializeCellDataMatrix();
         this.processDataBlockAndCellDataMatrix();
         this.userdata = this.data.userdata;
@@ -355,8 +355,10 @@ export class TimTableController extends DestroyScope implements IController {
                 }
             }
 
+            await $timeout(500);
             const parId = getParId(this.element.parents(".par"));
             if (parId == null) {
+                console.log("parid null in timtable");
                 return;
             }
             this.viewctrl.addTable(this, parId);
