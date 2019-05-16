@@ -11,7 +11,7 @@ import {
     pluginBindings,
     withDefault,
 } from "tim/plugin/util";
-import {$http, $timeout} from "tim/util/ngimport";
+import {$http, $httpParamSerializer, $timeout} from "tim/util/ngimport";
 import {to} from "tim/util/utils";
 import {timApp} from "../app";
 import {getParId} from "../document/parhelpers";
@@ -85,8 +85,7 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
     private rows!: RowsType;
     private allRows!: {};
     private modelOpts!: INgModelOptions;
-    //private oldCellValues!: string;
-    private timTable?: TimTableController;
+    private oldCellValues!: string;
 
     getDefaultMarkup() {
         return {};
@@ -104,34 +103,33 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
         this.allRows = this.attrsall.rows || {};
         this.rows = this.allRows;
         this.setDataMatrix();
-        const parId = getParId(this.getPar());
-        if (parId && this.viewctrl) {
-            await $timeout(0);
-            const t = this.viewctrl.getTableControllerFromParId(parId);
-            if (t) this.timTable = t;
-            //console.log(t);
-        }
-        //this.oldCellValues = JSON.stringify(this.data.userdata.cells);
-        if(this.attrs.autosave) this.data.saveCallBack = (rowi, coli, content) => this.singleCellSave(rowi, coli, content);
+        this.oldCellValues = JSON.stringify(this.data.userdata.cells);
+        if(this.attrs.autosave) this.data.saveCallBack = this.singleCellSave;
         console.log("eaaa");
     }
 
-    // $doCheck() {
-    //     //TODO: Possibly obsolete after this.singleCellSave() implemented and data.saveCallback given to timtable
-    //     if(this.attrs.autosave && this.oldCellValues)
-    //     {
-    //        //TODO: Create proper object for comparing new and old celldata
-    //        const currAsString = JSON.stringify(this.data.userdata.cells);
-    //        if(this.oldCellValues != currAsString)
-    //        {
-    //            this.oldCellValues = currAsString
-    //            //TODO: Find cell difference and send only minimum amount of data to the server
-    //            //this.saveCells(~);
-    //            this.doSaveText(false);
-    //        }
-    //
-    //     }
-    // }
+    getTimTable() {
+        const parId = getParId(this.getPar());
+        if (this.viewctrl && parId) {
+            return this.viewctrl.getTableControllerFromParId(parId);
+        }
+    }
+
+    //$doCheck() {
+    //    //TODO: Possibly obsolete after this.singleCellSave() implemented and data.saveCallback given to timtable
+    //    if(this.attrs.autosave && this.oldCellValues)
+    //    {
+    //       //TODO: Create proper object for comparing new and old celldata
+    //       const currAsString = JSON.stringify(this.data.userdata.cells);
+    //       if(this.oldCellValues != currAsString)
+    //       {
+    //           this.oldCellValues = currAsString
+    //           //TODO: Find cell difference and send only minimum amount of data to the server
+    //           this.doSaveText(false);
+    //       }
+
+    //    }
+    //}
 
     setDataMatrix() {
         this.data.lockedCells.push("A1");
@@ -168,7 +166,7 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
     }
 
     saveText() {
-        if(this.timTable) this.timTable.saveAndCloseSmallEditor();
+        if(this.getTimTable()) this.timTable.saveAndCloseSmallEditor();
         this.doSaveText([]);
     }
 
@@ -262,7 +260,6 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
         if (timTable == null) {
             return;
         }
->>>>>>> f5a61fcd275f10930dbce183bb0a159996979fad
         //TODO check if better way to save than just making saveAndCloseSmallEditor public and calling it
         if(this.timTable) this.timTable.saveAndCloseSmallEditor();
         this.data.hiderows = [];
@@ -374,7 +371,7 @@ timApp.component("tableformRunner", {
                ng-change="$ctrl.updateFilter()"
                ng-readonly="::$ctrl.readonly"
                size="{{::$ctrl.cols}}"></span></label>
-        <tim-table data="::$ctrl.data" on-save="$ctrl.singleCellSave()" taskid="{{$ctrl.pluginMeta.getTaskId()}}" plugintype="{{$ctrl.pluginMeta.getPlugin()}}"></tim-table>
+        <tim-table data="::$ctrl.data" taskid="{{$ctrl.pluginMeta.getTaskId()}}" plugintype="{{$ctrl.pluginMeta.getPlugin()}}"></tim-table>
         <!-- TODO: taskid="{{ $ctrl.pluginm }}", vie pluginmeta & taskid-->
     </div>
     <button class="timButton"
