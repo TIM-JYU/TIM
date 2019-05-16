@@ -8,7 +8,7 @@ from timApp.document.docparagraph import DocParagraph
 from timApp.document.randutils import is_valid_id
 from timApp.plugin.pluginexception import PluginException
 
-KNOWN_FIELD_NAMES = {'points'}
+KNOWN_FIELD_NAMES = {'points', 'datetime'}
 
 
 @attr.s(auto_attribs=True)

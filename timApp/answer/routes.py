@@ -1,6 +1,7 @@
 """Answer-related routes."""
 import json
 import re
+import time
 from datetime import timezone, timedelta, datetime
 from typing import Union, List, Tuple, Dict, Set
 
@@ -131,6 +132,8 @@ def get_fields_and_users(u_fields: List[str], groups: List[UserGroup], d: DocInf
                 value = None
             elif task.field == "points":
                 value = a.points
+            elif task.field == "datetime":
+                value = time.mktime(a.answered_on.timetuple())
             else:
                 json_str = a.content
                 p = json.loads(json_str)

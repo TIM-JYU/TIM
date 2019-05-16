@@ -69,7 +69,7 @@ class JsrunnerController extends PluginBase<t.TypeOf<typeof JsrunnerMarkup>, t.T
         this.isRunning = false;
         if (r.ok) {
             const data = r.result.data;
-            // window.location.reload(); // TODO: ei tehdä jos print
+            // window.location.reload(); // TODO: ei tehdä jos print tai error
             this.error = data.web.error;
             this.print = data.web.print;
         } else {
