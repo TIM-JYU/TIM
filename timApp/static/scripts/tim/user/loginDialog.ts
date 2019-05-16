@@ -223,17 +223,29 @@ export class LoginDialogController extends DialogController<{params: ILoginParam
         this.beginSignup();
     }
 
+    /**
+     * Move to log in from sign up.
+     */
     public cancelSignup() {
         this.showSignup = false;
         this.resetPassword = false;
+        this.updateTitle();
     }
 
     public getEmailOrUserText(capitalize?: boolean) {
         let txt;
         if (this.resetPassword) {
-            txt = "email or username";
+            if (this.language === "fi") {
+                txt = "sähköpostiosoite tai käyttäjänimi";
+            } else {
+                txt = "email or username";
+            }
         } else {
-            txt = "email";
+            if (this.language === "fi") {
+                txt = "sähköpostiosoite";
+            } else {
+                txt = "email";
+            }
         }
         if (capitalize) {
             return capitalizeFirstLetter(txt);
@@ -242,12 +254,23 @@ export class LoginDialogController extends DialogController<{params: ILoginParam
         }
     }
 
+    /**
+     * Move to sign up from login.
+     */
     public beginSignup() {
         this.showSignup = true;
         this.focusEmail = true;
         if (this.loginForm.email) {
             this.email = this.loginForm.email;
         }
+        this.updateTitle();
+    }
+
+    /**
+     * Updates dialog title.
+     */
+    private updateTitle() {
+        this.draggable.setCaption(this.getTitle());
     }
 
     private async sendRequest<T>(url: string, data: any): ToReturn<T> {
@@ -320,7 +343,8 @@ registerDialogComponent(LoginDialogController,
         </form>
         <div class="form" ng-show="$ctrl.showSignup">
             <div class="text-center" ng-if="!$ctrl.resetPassword">
-                <p>If you don't have an existing TIM or Korppi account, you can create a new TIM account here.</p>
+                <p>If you don't have an existing TIM or Korppi account, you can create a new TIM account here.
+                Otherwise use <i>Cancel</i> to go to log in.</p>
                 <p>Please input your email address to receive a temporary password.</p>
             </div>
             <p class="text-center" ng-if="$ctrl.resetPassword && !$ctrl.emailSent">
@@ -445,7 +469,7 @@ registerDialogComponent(LoginDialogController,
         <div ng-switch-when="fi" class="col-sm-12">
         <form ng-submit="$ctrl.loginWithEmail()" ng-show="!$ctrl.showSignup">
             <p class="text-center">
-                JYU opiskelijat ja henkilökunta, olkaa hyvät ja kirjautukaa sisään Korppi-tunnuksilla:
+                JYU opiskelijat ja henkilökunta, kirjautukaa sisään Korppi-tunnuksilla:
             </p>
 
             <button class="timButton center-block" type="button"
@@ -457,7 +481,7 @@ registerDialogComponent(LoginDialogController,
             <img class="center-block" ng-show="$ctrl.korppiLoading" src="/static/images/loading.gif">
             <hr>
             <p class="text-center">
-                Muut, olkaa hyvät ja kirjautukaa sisään TIM-tunnuksilla:
+                Muut, kirjautukaa sisään TIM-tunnuksilla:
             </p>
 
             <div class="form-group">
@@ -494,7 +518,8 @@ registerDialogComponent(LoginDialogController,
         </form>
         <div class="form" ng-show="$ctrl.showSignup">
             <div class="text-center" ng-if="!$ctrl.resetPassword">
-                <p>Jos sinulla ei ole TIM- tai Korppi-tiliä, voit luoda uuden TIM-tilin täällä.</p>
+                <p>Jos sinulla ei vielä ole TIM- tai Korppi-tiliä, luo uusi TIM-tili täällä.
+                Muutoin valitse <i>Kumoa</i> siirtyäksesi kirjautumiseen.</p>
                 <p>Anna sähköpostiosoitteesi saadaksesi väliaikaisen salasanan.</p>
             </div>
             <p class="text-center" ng-if="$ctrl.resetPassword && !$ctrl.emailSent">
@@ -510,19 +535,19 @@ registerDialogComponent(LoginDialogController,
                        on-enter="$ctrl.provideEmail()"
                        name="email"
                        required
-                       placeholder="Enter your {{ $ctrl.getEmailOrUserText() }}"
+                       placeholder="Syötä {{ $ctrl.getEmailOrUserText() }}"
                        type="text"/>
             </div>
             <button ng-click="$ctrl.provideEmail()"
                     ng-disabled="!$ctrl.email"
                     ng-show="!$ctrl.emailSent"
                     class="timButton">
-                Continue
+                Jatka
             </button>
             <button ng-click="$ctrl.cancelSignup()"
                     ng-show="!$ctrl.emailSent"
                     class="btn btn-default">
-                Cancel
+                Kumoa
             </button>
             <div ng-show="$ctrl.emailSent">
                 <div class="form-group" ng-show="!$ctrl.tempPasswordProvided">
@@ -537,13 +562,13 @@ registerDialogComponent(LoginDialogController,
                            on-enter="$ctrl.provideTempPassword()"
                            name="tempPassword"
                            required
-                           placeholder="Password you received"
+                           placeholder="Vastaanottamasi salasana"
                            type="password"/>
                 </div>
                 <button ng-click="$ctrl.provideTempPassword()"
                         ng-disabled="!$ctrl.tempPassword"
                         ng-show="!$ctrl.tempPasswordProvided"
-                        class="center-block timButton">Continue
+                        class="center-block timButton">Jatka
                 </button>
                 <div ng-show="$ctrl.tempPasswordProvided">
                     <div class="form-group">
@@ -558,7 +583,7 @@ registerDialogComponent(LoginDialogController,
                                on-enter="$ctrl.focusNewPassword = true"
                                name="name"
                                required
-                               placeholder="Your name"
+                               placeholder="Sukunimi Etunimi"
                                type="text"/>
                     </div>
                     <div class="form-group">
@@ -573,7 +598,7 @@ registerDialogComponent(LoginDialogController,
                                on-enter="$ctrl.focusRePassword = true"
                                name="newPassword"
                                required
-                               placeholder="Password"
+                               placeholder="Salasana"
                                type="password"/>
                     </div>
                     <div class="form-group">
@@ -588,7 +613,7 @@ registerDialogComponent(LoginDialogController,
                                on-enter="$ctrl.provideName()"
                                name="rePassword"
                                required
-                               placeholder="Retype password"
+                               placeholder="Salasana uudelleen"
                                type="password"/>
                     </div>
                     <button ng-click="$ctrl.provideName()"
@@ -618,7 +643,8 @@ registerDialogComponent(LoginDialogController,
 </div>
     </dialog-body>
     <dialog-footer>
-        <button class="timButton" ng-click="$ctrl.dismiss()">Close</button>
+        <button ng-if="$ctrl.language === 'fi'" class="timButton" ng-click="$ctrl.dismiss()">Sulje</button>
+        <button ng-if="$ctrl.language !== 'fi'" class="timButton" ng-click="$ctrl.dismiss()">Close</button>
     </dialog-footer>
 </tim-dialog>
 `,
