@@ -177,13 +177,13 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
         return (this.attrs.report == true);
     }
 
-    /**
-     * String (or character) to separate fields in report.
-     * Used in report to define how fields/values are separated, ';' as default.
-     */
-    separator() {
-        return (this.attrs.separator || ";");
-    }
+    // /**
+    //  * String (or character) to separate fields in report.
+    //  * Used in report to define how fields/values are separated, ';' as default.
+    //  */
+    // separator() {
+    //     return (this.attrs.separator || ";");
+    // }
 
     /**
      * Boolean to determinate if usernames are viewed in report.
@@ -209,51 +209,44 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
         return (this.attrs.dataCollection || "any");
     }
 
-    // /**
-    //  * String to determinate how the CSV is printed.
-    //  * Choises are true to show name. All as default.
-    //  */
-    // print() {
-    //     return (this.attrs.print || true);
-    // }
-
     /**
      * Generates report based on the table. TODO!
      * Used if report is set to true and create report button is clicked.
      */
     generateReport() {
-        console.log(this.separator(), this.shownames(), this.sortBy());
+        console.log(this.shownames(), this.sortBy());
         const dataTable = this.generateCSVTable();
-        console.log(dataTable);
-        // window.open(this.pluginMeta.getAnswerUrl() + "/report.csv");
-        const win = window.open("/tableForm/generateCSV?" + $httpParamSerializer({data: dataTable}), "WINDOWID");
-        if (win != null) {
-            const doc = win.document;
-            // doc.open("text/plain");
-            // doc.close();
+        const win = window.open("/tableForm/generateCSV?" + $httpParamSerializer({data: JSON.stringify(dataTable), separator: (this.attrs.separator || ",")}), "WINDOWID");
+        if (win == null) {
+            this.error;
         }
-        else (this.error);
     }
 
     generateCSVTable() {
         const timTable = this.getTimTable();
         if (timTable == null) {
-            console.log("timtable was undefined");
             return;
         }
-        var rowcount = Object.keys(this.allRows).length + 1;
-        var colcount = 0;
+        let result: CellType[][] = [];
+        let rowcount = Object.keys(this.allRows).length + 1;
+        let colcount = 0;
         if (this.attrsall.fields && this.attrsall.fields.length) {
             colcount = this.attrsall.fields.length +1;
         }
-        console.log(timTable.cellDataMatrix);
-        return timTable.cellDataMatrix[1][0].cell;
+        for (let i = 0; i < rowcount; i++) {
+            const row: CellType[] = [];
+            result.push(row);
+            for(let j = 0; j < colcount; j++) {
+                console.log(timTable.cellDataMatrix[i][j].cell);
+                row.push(timTable.cellDataMatrix[i][j].cell);
+            }
+        }
+        return result;
     }
 
     updateFilter() {
         const timTable = this.getTimTable();
         if (timTable == null) {
-            console.log("timtable was undefined");
             return;
         }
         //TODO check if better way to save than just making saveAndCloseSmallEditor public and calling it

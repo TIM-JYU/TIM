@@ -1,6 +1,7 @@
 """
 TIM example plugin: a tableFormndrome checker.
 """
+import json
 import os
 import re
 import string
@@ -25,7 +26,7 @@ from timApp.tim_app import csrf
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
 from timApp.answer.routes import get_fields_and_users
-from timApp.util.flask.responsehelper import ok_response, json_response
+from timApp.util.flask.responsehelper import ok_response, json_response, csv_response
 
 
 @attr.s(auto_attribs=True)
@@ -249,7 +250,8 @@ tableForm_plugin = create_blueprint(__name__, 'tableForm', TableFormHtmlSchema()
 
 @tableForm_plugin.route('/generateCSV')
 def gen_csv():
-    return json_response(request.args.get('data'))
+    temp = json.loads(request.args.get('data'))
+    return csv_response(temp, 'excel', request.args.get('separator'))
 
 
 @tableForm_plugin.route('/answer/', methods=['put'])
