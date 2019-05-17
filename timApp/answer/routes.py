@@ -101,24 +101,25 @@ def get_fields_and_users(u_fields: List[str], groups: List[UserGroup], d: DocInf
     task_ids = []
     # TODO support aliases e.g. 55.d1=d1
     alias_map = {}  # {'13.oikeanimi': 'alias'}
+    print(alias_map)
     jsrunner_alias_map = {}  # jsrunnerissa tarvitsee {'alias': '13.oikeanimi'}
     doc_map = {}
     for field in u_fields:
         field_alias = field.split("=")
-        if len(field_alias) == 2:
-            alias_map[field_alias[0]] = field_alias[1]
-            jsrunner_alias_map[field_alias[1]] = field_alias[0]
-        task_id = TaskId.parse(field_alias[0], False, False)
+        task_id = TaskId.parse(field_alias[0].strip(), False, False)
         task_ids.append(task_id)
         if not task_id.doc_id:
             task_id.doc_id = d.id
+        if len(field_alias) == 2:
+            alias_map[task_id.extended_or_doc_task] = field_alias[1].strip()
+            jsrunner_alias_map[field_alias[1].strip()] = task_id.extended_or_doc_task
         dib = get_doc_or_abort(task_id.doc_id)
         if not current_user.has_teacher_access(dib):
             abort(403, f'Missing teacher access for document {dib.id}')
         doc_map[task_id.doc_id] = dib.document
 
     res = []
-
+    print(task_ids)
     for user in users:
         answer_ids = (
             user.answers

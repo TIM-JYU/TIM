@@ -11,6 +11,7 @@ class Tools {
         this.error = ""; // TODO: map for errors
     }
 
+    //TODO: fix for all set-things
     normalizeField(fieldName) {
         if (fieldName in this.aliases) {
             return fieldName;
@@ -25,6 +26,10 @@ class Tools {
     normalizeAndGet(fieldName) {
         let fn = this.normalizeField(fieldName);
         return this.data.fields[fn];
+    }
+
+    normalizeAndSet(fieldName) {
+
     }
 
     getStudentName() {
