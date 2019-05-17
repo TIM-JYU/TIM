@@ -37,7 +37,7 @@ const TableFormMarkup = t.intersection([
         table: nullable(t.boolean),
         report: nullable(t.boolean),
         separator: nullable(t.string), /* TODO! Separate columns with user given character for report */
-        shownames: t.boolean,
+        shownames: nullable(t.boolean),
         sortBy: nullable(t.string), /* TODO! Username and task, or task and username -- what about points? */
         /* answerAge: nullable(t.string), /* TODO! Define time range from which answers are fetched. Maybe not to be implemented! */
         dataCollection: nullable(t.string), /* TODO! Filter by data collection consent: allowed, denied or both */
@@ -174,6 +174,7 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
         this.doSaveText([]);
     }
 
+    // noinspection JSUnusedGlobalSymbols
     /**
      * Returns true value, if table attribute is true.
      * Used to define table view & relative save button in angular, true or false.
@@ -182,6 +183,7 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
         return (this.attrs.table == true);
     }
 
+    // noinspection JSUnusedGlobalSymbols
     /**
      * Returns true value, if report attribute is true.
      * Used to define create report button in angular, true or false.
@@ -190,20 +192,15 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
         return (this.attrs.report == true);
     }
 
-    // /**
-    //  * String (or character) to separate fields in report.
-    //  * Used in report to define how fields/values are separated, ';' as default.
-    //  */
-    // separator() {
-    //     return (this.attrs.separator || ";");
-    // }
-
     /**
      * Boolean to determinate if usernames are viewed in report.
      * Choises are true for username and false for anonymous. Username/true as default.
      */
     shownames() {
-        return (this.attrs.shownames || true);
+        if (this.attrs.shownames) {
+            return this.attrs.shownames;
+        }
+        else return false;
     }
 
     /**
@@ -213,16 +210,6 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
     sortBy() {
         return (this.attrs.sortBy || "username");
     }
-
-    /**
-     * String to determinate what kind of data can be collected to the report.
-     * Choises are allowed, denied and both. Allowed as default.
-     */
-    taskIDs() {
-        return (this.attrs.dataCollection || "any");
-    }
-
-
 
     /**
      * Generates report based on the table. TODO!
@@ -252,7 +239,14 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
             const row: CellType[] = [];
             result.push(row);
             for(let j = 0; j < colcount; j++) {
-                console.log(timTable.cellDataMatrix[i][j].cell);
+                if (j == 0 && i == 0) {
+                    row.push("Henkilön Nimi");
+                    continue;
+                }
+                if (!this.shownames() && j == 0 && i > 0) {
+                    row.push("Anonymous" + [i]);
+                    continue;
+                }
                 row.push(timTable.cellDataMatrix[i][j].cell);
             }
         }
@@ -369,7 +363,7 @@ timApp.component("tableformRunner", {
     <tim-markup-error ng-if="::$ctrl.markupError" data="::$ctrl.markupError"></tim-markup-error>
     <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
     <p ng-if="::$ctrl.stem" ng-bind-html="::$ctrl.stem"></p>
-    <div class="form-inline" ng-if="::$ctrl.tableCheck()"><label> Suodata {{::$ctrl.inputstem}} <span>
+    <div class="form-inline" ng-if="::$ctrl.tableCheck()"><label>Suodata {{::$ctrl.inputstem}} <span>
         <input type="text"
                class="form-control"
                ng-model="$ctrl.userfilter"
