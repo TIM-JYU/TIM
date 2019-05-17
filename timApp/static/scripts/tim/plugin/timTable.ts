@@ -228,6 +228,7 @@ export class TimTableController extends DestroyScope implements IController {
     public cellDataMatrix: ICell[][] = [];
     public columns: IColumn[] = [];
     public data!: Binding<TimTable, "<">;
+    public disabled?: Binding<boolean, "<?">;
     private editRight: boolean = false;
     private userdata?: DataEntity = undefined;
     private editing: boolean = false;
@@ -2224,11 +2225,12 @@ timApp.component("timTable", {
         data: "<",
         plugintype: "@?",
         taskid: "@?",
+        disabled: "<?",
     },
     require: {
         viewctrl: "?^timView",
     },
-    template: `<div ng-mouseenter="$ctrl.mouseInsideTable()"
+    template: `<div ng-if="!$ctrl.disabled" ng-mouseenter="$ctrl.mouseInsideTable()"
      ng-mouseleave="$ctrl.mouseOutTable()">
 <div ng-cloak ng-class="{
           'csRunDiv': $ctrl.taskBorders}" class=" no-popup-menu" style="border: none" >

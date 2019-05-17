@@ -132,7 +132,7 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
     //}
 
     setDataMatrix() {
-        this.data.lockedCells.push("A1");
+        this.data.userdata.cells["A1"] = {cell: "Henkilön Nimi", backgroundColor: "#efecf1"};
         if(this.attrsall.fields) this.data.table.countCol = this.attrsall.fields.length + 1;
         this.data.table.countRow = Object.keys(this.rows).length + 1;
         let x = 2;
@@ -216,7 +216,6 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
      * Used if report is set to true and create report button is clicked.
      */
     generateReport() {
-        console.log(this.shownames(), this.sortBy());
         const dataTable = this.generateCSVTable();
         const win = window.open("/tableForm/generateCSV?" + $httpParamSerializer({data: JSON.stringify(dataTable), separator: (this.attrs.separator || ",")}), "WINDOWID");
         if (win == null) {
@@ -239,10 +238,6 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
             const row: CellType[] = [];
             result.push(row);
             for(let j = 0; j < colcount; j++) {
-                if (j == 0 && i == 0) {
-                    row.push("Henkilön Nimi");
-                    continue;
-                }
                 if (!this.shownames() && j == 0 && i > 0) {
                     row.push("Anonymous" + [i]);
                     continue;
@@ -363,7 +358,7 @@ timApp.component("tableformRunner", {
     <tim-markup-error ng-if="::$ctrl.markupError" data="::$ctrl.markupError"></tim-markup-error>
     <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
     <p ng-if="::$ctrl.stem" ng-bind-html="::$ctrl.stem"></p>
-    <div class="form-inline" ng-if="::$ctrl.tableCheck()"><label>Suodata {{::$ctrl.inputstem}} <span>
+    <div class="form-inline"><label ng-if="::$ctrl.tableCheck()">Suodata {{::$ctrl.inputstem}} <span>
         <input type="text"
                class="form-control"
                ng-model="$ctrl.userfilter"
@@ -372,7 +367,7 @@ timApp.component("tableformRunner", {
                ng-change="$ctrl.updateFilter()"
                ng-readonly="::$ctrl.readonly"
                size="{{::$ctrl.cols}}"></span></label>
-        <tim-table data="::$ctrl.data" taskid="{{$ctrl.pluginMeta.getTaskId()}}" plugintype="{{$ctrl.pluginMeta.getPlugin()}}"></tim-table>
+        <tim-table disabled="!$ctrl.tableCheck()" data="::$ctrl.data" taskid="{{$ctrl.pluginMeta.getTaskId()}}" plugintype="{{$ctrl.pluginMeta.getPlugin()}}"></tim-table>
         <!-- TODO: taskid="{{ $ctrl.pluginm }}", vie pluginmeta & taskid-->
     </div>
     <button class="timButton"

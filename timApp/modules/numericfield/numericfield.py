@@ -70,6 +70,7 @@ class NumericfieldMarkupModel(GenericMarkupModel):
     validinput: Union[str, Missing] = missing
     errormessage: Union[str, Missing] = missing
     labelStyle: Union[str, Missing] = missing
+    step: Union[int, Missing] = missing
 
 class NumericfieldMarkupSchema(GenericMarkupSchema):
     points_array = fields.List(fields.List(fields.Number()))
@@ -84,6 +85,7 @@ class NumericfieldMarkupSchema(GenericMarkupSchema):
     validinput = fields.String(allow_none=True)
     errormessage = fields.String(allow_none=True)
     labelStyle = fields.String(allow_none=True)
+    step = fields.Number(allow_none=True)
 
     @post_load
     def make_obj(self, data):

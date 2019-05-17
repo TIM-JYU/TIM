@@ -21,6 +21,7 @@ const NumericfieldMarkup = t.intersection([
         validinput: nullable(t.string),
         errormessage: nullable(t.string),
         labelStyle: nullable(t.string),
+        step: nullable(t.number),
         autosave: t.boolean,
     }),
     GenericPluginMarkup,
@@ -160,12 +161,22 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
 
     // noinspection JSUnusedGlobalSymbols
     /**
-     * Autosaver used by ng-blur in textfieldApp component.
-     * Needed to seperate from other save methods because of the if-structure.
+     * Autosaver used by ng-blur in numericfield-Runner component.
+     * Needed to separate from other save methods because of the if-structure.
      * Unused method warning is suppressed, as the method is only called in template.
      */
     autoSave() {
         if (this.attrs.autosave) this.doSaveText(false);
+    }
+
+    // noinspection JSUnusedGlobalSymbols
+    /**
+     * Stepper used by step in numericfield-Runner component.
+     * Needed to seperate from other save methods because of the if-structure.
+     * Unused method warning is suppressed, as the method is only called in template.
+     */
+    step() {
+        if (this.attrs.step) return this.attrs.step;
     }
 
     // noinspection JSUnusedGlobalSymbols
@@ -295,6 +306,7 @@ numericfieldApp.component("numericfieldRunner", {
         <input type="number"
                ng-if="::!$ctrl.isPlainText()"
                style="width: {{::$ctrl.cols}}em"
+               step="$ctrl.step"
                class="form-control"
                ng-model="$ctrl.numericvalue"
                ng-model-options="{ debounce: {'blur': 0} } "
