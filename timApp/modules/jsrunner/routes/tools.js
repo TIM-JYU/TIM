@@ -11,11 +11,7 @@ class Tools {
         this.error = ""; // TODO: map for errors
     }
 
-    //TODO: fix for all set-things
     normalizeField(fieldName) {
-        if (fieldName in this.aliases) {
-            return fieldName;
-        }
         if (this.regex.test(fieldName)) {
             return fieldName;
         } else {
@@ -24,12 +20,18 @@ class Tools {
     }
 
     normalizeAndGet(fieldName) {
+        if (fieldName in this.aliases) {
+            return this.data.fields[fieldName];
+        }
         let fn = this.normalizeField(fieldName);
         return this.data.fields[fn];
     }
 
     normalizeAndSet(fieldName) {
-
+        if (fieldName in this.aliases) {
+            return this.normalizeField(this.aliases[fieldName]);
+        }
+        return this.normalizeField(fieldName);
     }
 
     getStudentName() {
@@ -76,19 +78,19 @@ class Tools {
     }
 
     setString(fieldName, content) {
-        let fn = this.normalizeField(fieldName);
+        let fn = this.normalizeAndSet(fieldName);
         this.result[fn] = content.toString();
     }
 
     setInt(fieldName, content) {
-        let fn = this.normalizeField(fieldName);
+        let fn = this.normalizeAndSet(fieldName);
         let r = parseInt(content);
         // TODO: if (isNaN(r)) error
         this.result[fn] = r;
     }
 
     setDouble(fieldName, content) {
-        let fn = this.normalizeField(fieldName);
+        let fn = this.normalizeAndSet(fieldName);
         let r = parseFloat(content);
         // TODO: if (isNaN(r)) error
         this.result[fn] = r;
@@ -114,14 +116,14 @@ class Tools {
         return grade;
     }
 
-    //TODO: fix
+    //TODO: fix!! also nomalize
     saveGrade(gradeVal, points) {
         let d = this.markup.gradeField || "grade";
         let fn = this.normalizeField(d);
         this.result[fn] = gradeVal;
         if (arguments.length === 2) { // TODO: ?
             let c = this.markup.creditField || "credit";
-            let fnc = this.normalizeField(c);
+            let fnc = this.normalizeAndSet(c);
             this.result[fnc] = points;
         }
 
