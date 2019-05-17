@@ -135,16 +135,18 @@ class TableFormHtmlModel(GenericHtmlModel[TableFormInputModel, TableFormMarkupMo
             for f in userfields[0]:
                 rows[f['user'].name] = f['fields']
             r['rows'] = rows
-            r['fields'] = []
-            for field in self.markup.fields:
-                task = field.split('=', 1)[0]
-                task_id = TaskId.parse(task, False, False)  # Todo check if simpler way to simply add missing docid prefix to field
-                if not task_id.doc_id:
-                    task_id.doc_id = d.id
-                if task_id.extended_or_doc_task in userfields[1].values():
-                    r['fields'].append(list(userfields[1].keys())[list(userfields[1].values()).index(task_id.extended_or_doc_task)])
-                else:
-                    r['fields'].append(task_id.extended_or_doc_task)
+            #r['fields'] = []
+            # for field in self.markup.fields: #TODO: Read fieldnames from first row of userfields response
+            #     task = field.split('=', 1)[0]
+            #     task = task.split('>', 1)[0]
+            #     task_id = TaskId.parse(task, False, False)  # Todo check if simpler way to simply add missing docid prefix to field
+            #     if not task_id.doc_id:
+            #         task_id.doc_id = d.id
+            #     if task_id.extended_or_doc_task in userfields[1].values():
+            #         r['fields'].append(list(userfields[1].keys())[list(userfields[1].values()).index(task_id.extended_or_doc_task)])
+            #     else:
+            #         r['fields'].append(task_id.extended_or_doc_task)
+            r['fields'] = list(userfields[0][0]['fields'].keys())
             r['aliases'] = userfields[1]
             #TODO else return "no groups/no fields"
 
