@@ -45,7 +45,9 @@ class NumericfieldStateSchema(Schema):
                 data['numericvalue'] = float(data.get("userword"))
             except ValueError:
                 pass
-        if not data.get('numericvalue'):
+        try:
+            data['numericvalue'] = float(data.get("numericvalue"))
+        except (ValueError, TypeError):
             data['numericvalue'] = "" #TODO: Why "None" is no longer valid state?
 
     @post_load()
