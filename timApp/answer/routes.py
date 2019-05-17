@@ -100,10 +100,15 @@ def get_fields_and_users(u_fields: List[str], groups: List[UserGroup], d: DocInf
 
     task_ids = []
     # TODO support aliases e.g. 55.d1=d1
-    # alias_map = {}
+    alias_map = {}  # {'13.oikeanimi': 'alias'}
+    jsrunner_alias_map = {}  # jsrunnerissa tarvitsee {'alias': '13.oikeanimi'}
     doc_map = {}
     for field in u_fields:
-        task_id = TaskId.parse(field, False, False)
+        field_alias = field.split("=")
+        if len(field_alias) == 2:
+            alias_map[field_alias[0]] = field_alias[1]
+            jsrunner_alias_map[field_alias[1]] = field_alias[0]
+        task_id = TaskId.parse(field_alias[0], False, False)
         task_ids.append(task_id)
         if not task_id.doc_id:
             task_id.doc_id = d.id
@@ -144,10 +149,13 @@ def get_fields_and_users(u_fields: List[str], groups: List[UserGroup], d: DocInf
                 else:
                     values_p = list(p.values())
                     value = values_p[0]
-            user_tasks[task.extended_or_doc_task] = value
+            if task.extended_or_doc_task in alias_map:
+                user_tasks[alias_map.get(task.extended_or_doc_task)] = value
+            else:
+                user_tasks[task.extended_or_doc_task] = value
         res.append({'user': user, 'fields': user_tasks})
     print(res)
-    return res
+    return res, jsrunner_alias_map
 
 
 @answers.route("/<plugintype>/<task_id_ext>/answer/", methods=['PUT'])
@@ -278,7 +286,8 @@ def post_answer(plugintype: str, task_id_ext: str):
         if len(g.all()) < 1:  # TODO: miten pitäisi tarkistaa?
             abort(403, f'Missing group in jsrunner')
 
-        answerdata['data'] = get_fields_and_users(plugin.values['fields'], g, d, get_current_user_object())
+        answerdata['data'], answerdata['aliases'] = get_fields_and_users(plugin.values['fields'], g, d,
+                                                                         get_current_user_object())
 
     answer_call_data = {'markup': plugin.values,
                         'state': state,

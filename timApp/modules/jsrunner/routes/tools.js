@@ -1,9 +1,10 @@
 class Tools {
 
-    constructor(data, currDoc, markup) {
+    constructor(data, currDoc, markup, aliases) {
         this.data = data;
         this.currDoc = currDoc;
         this.markup = markup;
+        this.aliases = aliases;
         this.result = {};
         this.regex = /^[0-9]+\./;
         this.printP = "";
@@ -11,6 +12,9 @@ class Tools {
     }
 
     normalizeField(fieldName) {
+        if (fieldName in this.aliases) {
+            return fieldName;
+        }
         if (this.regex.test(fieldName)) {
             return fieldName;
         } else {
@@ -119,13 +123,15 @@ class Tools {
     }
 
     defineTime(s) {
-        // 2019-05-11 12:13:14
+        // TODO: fix so that user can give datetime without offset (2019-05-11 12:13:14)
         return Date.parse(s) / 1000;
     }
 
-    getDateTime(fieldName) {
-        return this.getInt(fieldName);
-        // TODO: default?? ei voi olla 0
+    getDateTime(fieldName, def=NaN) {
+        let s= this.normalizeAndGet(fieldName);
+        let r = parseInt(s);
+        if (isNaN(r)) r = def;
+        return r;
     }
 
     print() {
