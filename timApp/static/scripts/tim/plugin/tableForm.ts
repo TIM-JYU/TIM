@@ -326,7 +326,10 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
                 userLocations[numberPlace] = cellContent;
                 replyRows[cellContent] = {};
             } else if (numberPlace === "1") {
-                taskLocations[columnPlace] = cellContent;
+                if (this.attrsall.aliases && cellContent in this.attrsall.aliases)
+                    taskLocations[columnPlace] = this.attrsall.aliases[cellContent]
+                else
+                    taskLocations[columnPlace] = cellContent;
             } else {
                 replyRows[userLocations[numberPlace]][taskLocations[columnPlace]] = cellContent;
             }

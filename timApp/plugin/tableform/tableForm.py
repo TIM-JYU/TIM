@@ -141,8 +141,10 @@ class TableFormHtmlModel(GenericHtmlModel[TableFormInputModel, TableFormMarkupMo
                 task_id = TaskId.parse(task, False, False)  # Todo check if simpler way to simply add missing docid prefix to field
                 if not task_id.doc_id:
                     task_id.doc_id = d.id
-                r['fields'].append(task_id.extended_or_doc_task)
-            #TODO: create list of fields in docid.task form, parse out = and |
+                if task_id.extended_or_doc_task in userfields[1].values():
+                    r['fields'].append(list(userfields[1].keys())[list(userfields[1].values()).index(task_id.extended_or_doc_task)])
+                else:
+                    r['fields'].append(task_id.extended_or_doc_task)
             r['aliases'] = userfields[1]
             #TODO else return "no groups/no fields"
 
