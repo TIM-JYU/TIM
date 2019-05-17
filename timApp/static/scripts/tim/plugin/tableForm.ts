@@ -11,12 +11,20 @@ import {
     pluginBindings,
     withDefault,
 } from "tim/plugin/util";
-import {$http, $timeout} from "tim/util/ngimport";
+import {$http, $httpParamSerializer, $timeout} from "tim/util/ngimport";
 import {to} from "tim/util/utils";
 import {timApp} from "../app";
 import {getParId} from "../document/parhelpers";
 import {ViewCtrl} from "../document/viewctrl";
-import {CellType, colnumToLetters, DataEntity, isPrimitiveCell, TimTable, TimTableController} from "./timTable";
+import {
+    CellDataEntity,
+    CellType,
+    colnumToLetters,
+    DataEntity,
+    isPrimitiveCell,
+    TimTable,
+    TimTableController
+} from "./timTable";
 import "./tableForm.css";
 
 
@@ -29,11 +37,10 @@ const TableFormMarkup = t.intersection([
         table: nullable(t.boolean),
         report: nullable(t.boolean),
         separator: nullable(t.string), /* TODO! Separate columns with user given character for report */
-        usednames: nullable(t.string), /* TODO! username and full name, username or anonymous */
+        shownames: t.boolean,
         sortBy: nullable(t.string), /* TODO! Username and task, or task and username -- what about points? */
         /* answerAge: nullable(t.string), /* TODO! Define time range from which answers are fetched. Maybe not to be implemented! */
         dataCollection: nullable(t.string), /* TODO! Filter by data collection consent: allowed, denied or both */
-        print: t.boolean, /* TODO! Headers and answers, headers, answers, answers w/o separator line, (or Korppi export?) */
         autosave: t.boolean,
 
     }),
@@ -78,7 +85,6 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
     private allRows!: {};
     private modelOpts!: INgModelOptions;
     private oldCellValues!: string;
-    private timTable?: TimTableController;
 
     getDefaultMarkup() {
         return {};
@@ -96,34 +102,33 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
         this.allRows = this.attrsall.rows || {};
         this.rows = this.allRows;
         this.setDataMatrix();
-        const parId = getParId(this.getPar());
-        if (parId && this.viewctrl) {
-            await $timeout(0);
-            const t = this.viewctrl.getTableControllerFromParId(parId);
-            if (t) this.timTable = t;
-            //console.log(t);
-        }
         this.oldCellValues = JSON.stringify(this.data.userdata.cells);
-        if(this.attrs.autosave) this.data.saveCallBack = this.singleCellSave;
+        if (this.attrs.autosave) this.data.saveCallBack = (rowi, coli, content) => this.singleCellSave(rowi, coli, content);
         console.log("eaaa");
     }
 
-    $doCheck() {
-        //TODO: Possibly obsolete after this.singleCellSave() implemented and data.saveCallback given to timtable
-        if(this.attrs.autosave && this.oldCellValues)
-        {
-           //TODO: Create proper object for comparing new and old celldata
-           const currAsString = JSON.stringify(this.data.userdata.cells);
-           if(this.oldCellValues != currAsString)
-           {
-               this.oldCellValues = currAsString
-               //TODO: Find cell difference and send only minimum amount of data to the server
-               //this.saveCells(~);
-               this.doSaveText(false);
-           }
-
+    getTimTable() {
+        const parId = getParId(this.getPar());
+        if (this.viewctrl && parId) {
+            return this.viewctrl.getTableControllerFromParId(parId);
         }
     }
+
+    //$doCheck() {
+    //    //TODO: Possibly obsolete after this.singleCellSave() implemented and data.saveCallback given to timtable
+    //    if(this.attrs.autosave && this.oldCellValues)
+    //    {
+    //       //TODO: Create proper object for comparing new and old celldata
+    //       const currAsString = JSON.stringify(this.data.userdata.cells);
+    //       if(this.oldCellValues != currAsString)
+    //       {
+    //           this.oldCellValues = currAsString
+    //           //TODO: Find cell difference and send only minimum amount of data to the server
+    //           this.doSaveText(false);
+    //       }
+
+    //    }
+    //}
 
     setDataMatrix() {
         this.data.lockedCells.push("A1");
@@ -160,7 +165,12 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
     }
 
     saveText() {
-        this.doSaveText(false);
+        const timTable = this.getTimTable();
+        if (timTable == null) {
+            return;
+        }
+        timTable.saveAndCloseSmallEditor();
+        this.doSaveText([]);
     }
 
     /**
@@ -179,24 +189,24 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
         return (this.attrs.report == true);
     }
 
+    // /**
+    //  * String (or character) to separate fields in report.
+    //  * Used in report to define how fields/values are separated, ';' as default.
+    //  */
+    // separator() {
+    //     return (this.attrs.separator || ";");
+    // }
+
     /**
-     * String (or character) to separate fields in report.
-     * Used in report to define how fields/values are separated, ';' as default.
+     * Boolean to determinate if usernames are viewed in report.
+     * Choises are true for username and false for anonymous. Username/true as default.
      */
-    separator() {
-        return (this.attrs.separator || ";");
+    shownames() {
+        return (this.attrs.shownames || true);
     }
 
     /**
-     * String to determinate how user names are viewed in report.
-     * Choises are username, username and full name and anonymous. Username as default.
-     */
-    names() {
-        return (this.attrs.usednames || "username");
-    }
-
-    /**
-     * String to determinate how user names are viewed in report.
+     * String to determinate how usernames are filtered in report.
      * Choises are username, username and full name and anonymous. Username as default.
      */
     sortBy() {
@@ -207,29 +217,54 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
      * String to determinate what kind of data can be collected to the report.
      * Choises are allowed, denied and both. Allowed as default.
      */
-    dataCollection() {
+    taskIDs() {
         return (this.attrs.dataCollection || "any");
     }
 
-    /**
-     * String to determinate how the CSV is printed.
-     * Choises are all, headers only, answers only, answers only w/o separator line. All as default.
-     */
-    print() {
-        return (this.attrs.print || true);
-    }
+
 
     /**
      * Generates report based on the table. TODO!
      * Used if report is set to true and create report button is clicked.
      */
     generateReport() {
-        console.log(this.separator(), this.names(), this.sortBy(), this.dataCollection(), this.print());
+        console.log(this.shownames(), this.sortBy());
+        const dataTable = this.generateCSVTable();
+        const win = window.open("/tableForm/generateCSV?" + $httpParamSerializer({data: JSON.stringify(dataTable), separator: (this.attrs.separator || ",")}), "WINDOWID");
+        if (win == null) {
+            this.error;
+        }
+    }
+
+    generateCSVTable() {
+        const timTable = this.getTimTable();
+        if (timTable == null) {
+            return;
+        }
+        let result: CellType[][] = [];
+        let rowcount = Object.keys(this.allRows).length + 1;
+        let colcount = 0;
+        if (this.attrsall.fields && this.attrsall.fields.length) {
+            colcount = this.attrsall.fields.length +1;
+        }
+        for (let i = 0; i < rowcount; i++) {
+            const row: CellType[] = [];
+            result.push(row);
+            for(let j = 0; j < colcount; j++) {
+                console.log(timTable.cellDataMatrix[i][j].cell);
+                row.push(timTable.cellDataMatrix[i][j].cell);
+            }
+        }
+        return result;
     }
 
     updateFilter() {
+        const timTable = this.getTimTable();
+        if (timTable == null) {
+            return;
+        }
         //TODO check if better way to save than just making saveAndCloseSmallEditor public and calling it
-        if(this.timTable) this.timTable.saveAndCloseSmallEditor();
+        timTable.saveAndCloseSmallEditor();
         this.data.hiderows = [];
         if (this.userfilter != "" && this.userfilter != undefined) {
             const reg = new RegExp(this.userfilter.toLowerCase());
@@ -242,15 +277,21 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
             }
         }
     }
-
-    singleCellSave(){
-        console.log("fgsdsfd");
+    // singleCellSave(rowi: number, coli: number, content: string)
+    singleCellSave(rowi: number, coli: number, content: string){
+        const cells = ["A" + (rowi+1),colnumToLetters(coli) + 1,colnumToLetters(coli)+(rowi+1)]
+        this.doSaveText(cells)
     }
 
-    async doSaveText(nosave: boolean) {
-        if(this.timTable) this.timTable.saveAndCloseSmallEditor();
+    async doSaveText(cells: string[]) {
+        //TODO: Optimise save? (keep track of userLocations and taskLocations at SetDataMatrix)
+        // would need new location info if timtable implements sort
         this.error = "... saving ...";
-        const keys = Object.keys(this.data.userdata.cells);
+        let keys;
+        if(cells && cells.length > 0)
+            keys = cells;
+        else
+            keys = Object.keys(this.data.userdata.cells);
         keys.sort();
         const userLocations: {[index: string]: string} = {};
         const taskLocations: {[index: string]: string} = {};
@@ -289,18 +330,12 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
                 replyRows[userLocations[numberPlace]][taskLocations[columnPlace]] = cellContent;
             }
         }
-        // this.isRunning = true;
-        // this.result = undefined;
         const params = {
             input: {
                 nosave: false,
                 replyRows: replyRows,
             },
         };
-        //
-        // if (nosave) {
-        //     params.input.nosave = true;
-        // }
         const url = this.pluginMeta.getAnswerUrl();
         const r = await to($http.put<{ web: { result: string, error?: string } }>(url, params));
         this.isRunning = false;

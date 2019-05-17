@@ -1,6 +1,7 @@
 """
 TIM example plugin: a tableFormndrome checker.
 """
+import json
 import os
 import re
 import string
@@ -25,6 +26,8 @@ from timApp.tim_app import csrf
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
 from timApp.answer.routes import get_fields_and_users
+from timApp.util.flask.responsehelper import ok_response, json_response, csv_response
+
 
 @attr.s(auto_attribs=True)
 class TableFormStateModel:
@@ -51,10 +54,9 @@ class TableFormMarkupModel(GenericMarkupModel):
     table: Union[bool, Missing] = missing
     report: Union[bool, Missing] = missing
     separator: Union[str, Missing] = missing
-    usednames: Union[str, Missing] = missing
+    shownames: Union[bool, Missing] = missing
     sortBy: Union[str, Missing] = missing
     dataCollection: Union[str, Missing] = missing
-    print: Union[bool, Missing] = missing
     fields: Union[List[str], Missing] = missing
     autosave: Union[bool, Missing] = missing
 
@@ -65,10 +67,9 @@ class TableFormMarkupSchema(GenericMarkupSchema):
     table = fields.Boolean()
     report = fields.Boolean()
     separator = fields.Str(allow_none=True)
-    usednames = fields.Str(allow_none=True)
+    shownames = fields.Boolean()
     sortBy = fields.Str(allow_none=True)
     dataCollection = fields.Str(allow_none=True)
-    print = fields.Boolean()
     autosave = fields.Boolean()
     fields = fields.List(fields.Str())
 
@@ -121,55 +122,13 @@ class TableFormHtmlModel(GenericHtmlModel[TableFormInputModel, TableFormMarkupMo
 
     def get_browser_json(self):
         r = super().get_browser_json()
-        # if self.state:
-        #     r['userword'] = self.state.userword
-        # if self.markup.groups:
-            # ug = UserGroup.get_by_name(self.markup.groups[0]) #! Lista vs 1 ryhmä
-            # members = ug.users.all()
-            # # TODO: Check if user has right to see group members
-            # rows = {}
-            # # for i, m in enumerate(members):
-            # #     #colnum_to_letters()
-            # #     #100.textfield_A1.IN4wKoImZc5b - 100.textfield_A6.IN4wKoImZc5b
-            # #     userdata['cells']["A" + str(i+2)] = m.name
-            # #     if self.markup.fields:
-            # #         for j, t in enumerate(self.markup.fields):
-            # #             ans = m.get_answers_for_task(t).first()
-            # #             # TODO: Check if user has right to see answers for task/user
-            # #             # TODO: Save cells (user/task) as matrix in global variable?
-            # #             if ans:
-            # #                 userdata['cells'][colnum_to_letters(j+1) + str(i+2)] = ans.content
-            # #                 # TODO: Parse content? {"userword": "2"}
-            # for i, m in enumerate(members):
-            #     #colnum_to_letters()
-            #     #100.textfield_A1.IN4wKoImZc5b - 100.textfield_A6.IN4wKoImZc5b
-            #     rows[m.name] = {}
-            #     if self.markup.fields:
-            #         for j, t in enumerate(self.markup.fields):
-            #             ans = m.get_answers_for_task(t).first() # TODO Check optimal request
-            #             # TODO: ^Make custom db request with arrays of users and tasks?
-            #             ans2 = m.get_answers_for_task(t)
-            #             # TODO: Check if user has right to see answers for task/user
-            #             # TODO: Save cells (user/task) as matrix in global variable?
-            #             if ans:
-            #                 #TODO: 204.textfield_d1.args, 204.textfield_d1.usercode
-            #                 #^ check for multiple fields in answerstable, use first field if not given specific field
-            #                 rows[m.name][t] = ans.content
-            #                 # TODO: Parse content? {"userword": "2"}
-            # # if self.markup.fields:
-            # #     userdata['tasks'] = self.markup.fields
         if self.markup.groups and self.markup.fields:
-            groups = []
-            for g in self.markup.groups:
-                groups.append(UserGroup.get_by_name(g))
-            #print(self.taskID)
+            groups = UserGroup.query.filter(UserGroup.name.in_(self.markup.groups))
             try:
                 tid = TaskId.parse(self.taskID)
             except PluginException as e:
                 return
             d = get_doc_or_abort(tid.doc_id)
-            # user1= get_current_user()
-            # user2 = get_current_user_object()
             user = User.get_by_name(self.user_id)
             userfields = get_fields_and_users(self.markup.fields, groups, d, user)
             rows = {}
@@ -245,6 +204,12 @@ def render_static_tableForm(m: TableFormHtmlModel):
 
 
 tableForm_plugin = create_blueprint(__name__, 'tableForm', TableFormHtmlSchema(), csrf)
+
+
+@tableForm_plugin.route('/generateCSV')
+def gen_csv():
+    temp = json.loads(request.args.get('data'))
+    return csv_response(temp, 'excel', request.args.get('separator'))
 
 
 @tableForm_plugin.route('/answer/', methods=['put'])

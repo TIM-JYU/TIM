@@ -53,7 +53,7 @@ export interface TimTable {
     hid: {edit?: boolean};
     hiderows: number[];
     lockedCells: string[];
-    saveCallBack?: () => void;
+    saveCallBack?: (rowi: number, coli: number, content: string) => void;
 }
 
 export interface ITable { // extends ITableStyles
@@ -308,7 +308,7 @@ export class TimTableController extends DestroyScope implements IController {
     /**
      * Set listener and initializes tabledatablock
      */
-    $onInit() {
+    async $onInit() {
         this.initializeCellDataMatrix();
         this.processDataBlockAndCellDataMatrix();
         this.userdata = this.data.userdata;
@@ -355,8 +355,10 @@ export class TimTableController extends DestroyScope implements IController {
                 }
             }
 
+            await $timeout(500);
             const parId = getParId(this.element.parents(".par"));
             if (parId == null) {
+                console.log("parid null in timtable");
                 return;
             }
             this.viewctrl.addTable(this, parId);
@@ -622,7 +624,7 @@ export class TimTableController extends DestroyScope implements IController {
     async saveCells(cellContent: string, docId: number, parId: string, row: number, col: number) {
         if (this.task) {
             this.setUserContent(row, col, cellContent);
-            //TODO: Callback external save funtion (if given)
+            if(this.data.saveCallBack) this.data.saveCallBack(row, col, cellContent);
             return;
         }
         const response = await $http.post<string[]>("/timTable/saveCell", {
@@ -1388,7 +1390,6 @@ export class TimTableController extends DestroyScope implements IController {
      * Saves the possible currently edited cell.
      */
     private async saveCurrentCell() {
-        if(this.data.saveCallBack) this.data.saveCallBack();
         const parId = getParId(this.element.parents(".par"));
 
         if (this.viewctrl &&
