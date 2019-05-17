@@ -4,12 +4,14 @@
 
 import {IRootElementService, IScope} from "angular";
 import * as focusMe from "tim/ui/focusMe";
+import * as onEnter from "tim/ui/onEnter";
 import {DialogController, registerDialogComponent, showDialog} from "../ui/dialog";
 import {capitalizeFirstLetter, IOkResponse, markAsUsed, to, ToReturn} from "../util/utils";
 import {$http} from "../util/ngimport";
 import {IUser} from "./IUser";
 import {Users} from "./userService";
 import {saveCurrentScreenPar} from "../document/parhelpers";
+import {LOGIN_DEFAULT_LANGUAGE} from "../ui/language";
 
 interface INameResponse {
     status: "name";
@@ -18,12 +20,12 @@ interface INameResponse {
 }
 
 interface ILoginParams {
-    showSignup?: boolean;
-    addingToSession?: boolean;
-    language?: string | null;
+    showSignup: boolean;
+    addingToSession: boolean;
+    language: string | null; // Null because of local storage.
 }
 
-markAsUsed(focusMe);
+markAsUsed(focusMe, onEnter);
 
 let instance: LoginDialogController | undefined;
 
@@ -35,7 +37,7 @@ export class LoginDialogController extends DialogController<{params: ILoginParam
     private loginForm: {email: string, password: string};
     private addingToSession: boolean; // Adding another user.
     private korppiLoading: boolean = false;
-    private language: string = "en";
+    private language: string = LOGIN_DEFAULT_LANGUAGE;
 
     // Fields related to signup.
     private canChangeName = true;
@@ -80,7 +82,7 @@ export class LoginDialogController extends DialogController<{params: ILoginParam
             if (params.language) {
                 this.language = params.language;
             } else {
-                this.language = "en"; // English is default language.
+                this.language = LOGIN_DEFAULT_LANGUAGE;
             }
         }
         // Parameters related to the dialog title need to be decided before this, because getTitle() is called here.
@@ -88,18 +90,18 @@ export class LoginDialogController extends DialogController<{params: ILoginParam
     }
 
     /*
-     * Dialog title.
+     * Dialog title, currently either in Finnish or English.
      */
     public getTitle() {
         if (this.language === "fi") {
             if (this.addingToSession) {
-            return "Lisää käyttäjä istuntoon";
-        }
-        if (this.showSignup) {
-            return "Luo uusi tili";
-        } else {
-            return "Kirjaudu sisään";
-        }
+                return "Lisää käyttäjä istuntoon";
+            }
+            if (this.showSignup) {
+                return "Luo TIM-tili";
+            } else {
+                return "Kirjaudu sisään";
+            }
         } else {
             if (this.addingToSession) {
                 return "Add a user to this session";
@@ -110,7 +112,6 @@ export class LoginDialogController extends DialogController<{params: ILoginParam
                 return "Log in";
             }
         }
-
     }
 
     logout = (user: IUser, logoutFromKorppi = false) => Users.logout(user, logoutFromKorppi);
@@ -224,7 +225,7 @@ export class LoginDialogController extends DialogController<{params: ILoginParam
     }
 
     /**
-     * Move to log in from sign up.
+     * Return to login from sign up.
      */
     public cancelSignup() {
         this.showSignup = false;
@@ -232,6 +233,10 @@ export class LoginDialogController extends DialogController<{params: ILoginParam
         this.updateTitle();
     }
 
+    /**
+     * Labeling text for UI (currently) either in Finnish or English.
+     * @param capitalize First letter is capitalized.
+     */
     public getEmailOrUserText(capitalize?: boolean) {
         let txt;
         if (this.resetPassword) {
@@ -255,7 +260,7 @@ export class LoginDialogController extends DialogController<{params: ILoginParam
     }
 
     /**
-     * Move to sign up from login.
+     * Move on to sign up from login.
      */
     public beginSignup() {
         this.showSignup = true;
@@ -291,7 +296,7 @@ registerDialogComponent(LoginDialogController,
 <div class="row" ng-click="$ctrl.stopClick($event)">
     <div ng-switch="$ctrl.language" ng-cloak>
         <!-- English -->
-        <div ng-switch-when="en" class="col-sm-12">
+        <div ng-switch-default class="col-sm-12">
         <form ng-submit="$ctrl.loginWithEmail()" ng-show="!$ctrl.showSignup">
             <p class="text-center">
                 JYU students and staff, please log in with Korppi:
@@ -519,7 +524,7 @@ registerDialogComponent(LoginDialogController,
         <div class="form" ng-show="$ctrl.showSignup">
             <div class="text-center" ng-if="!$ctrl.resetPassword">
                 <p>Jos sinulla ei vielä ole TIM- tai Korppi-tiliä, luo uusi TIM-tili täällä.
-                Muutoin valitse <i>Kumoa</i> siirtyäksesi kirjautumiseen.</p>
+                Muutoin valitse <i>Peruuta</i> siirtyäksesi kirjautumiseen.</p>
                 <p>Anna sähköpostiosoitteesi saadaksesi väliaikaisen salasanan.</p>
             </div>
             <p class="text-center" ng-if="$ctrl.resetPassword && !$ctrl.emailSent">
@@ -547,7 +552,7 @@ registerDialogComponent(LoginDialogController,
             <button ng-click="$ctrl.cancelSignup()"
                     ng-show="!$ctrl.emailSent"
                     class="btn btn-default">
-                Kumoa
+                Peruuta
             </button>
             <div ng-show="$ctrl.emailSent">
                 <div class="form-group" ng-show="!$ctrl.tempPasswordProvided">

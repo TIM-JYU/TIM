@@ -29,7 +29,7 @@ class UserMenuController implements IController {
      * @param $event
      */
     addUser() {
-        void showLoginDialog({showSignup: false, addingToSession: true});
+        void showLoginDialog({showSignup: false, addingToSession: true, language: this.language});
     }
 
     logout = (user: IUser, logoutFromKorppi = false) => Users.logout(user, logoutFromKorppi);

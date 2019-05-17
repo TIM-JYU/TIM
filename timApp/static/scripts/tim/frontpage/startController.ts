@@ -10,14 +10,14 @@ import {to} from "../util/utils";
 import {ngStorage} from "ngstorage";
 import {Users} from "../user/userService";
 import {showLoginDialog} from "../user/loginDialog";
+import {FRONT_PAGE_DEFAULT_LANGUAGE} from "../ui/language";
 
 markAsUsed(createItem);
 
 export class StartCtrl implements IController {
     private creatingNew: boolean;
     private docListOpen: boolean;
-    private defaultLanguage: string = "fi"; // Page default language.
-    private language: string = this.defaultLanguage; // Language to use.
+    private language: string = FRONT_PAGE_DEFAULT_LANGUAGE; // Language to use.
     private bookmarks = {}; // For My courses.
     private storage: ngStorage.StorageService & {language: null | string};
 
@@ -54,7 +54,7 @@ export class StartCtrl implements IController {
                 if (this.storage.language) {
                     this.language = this.storage.language;
                 } else {
-                    this.language = this.defaultLanguage;
+                    this.language = FRONT_PAGE_DEFAULT_LANGUAGE;
                 }
                 break;
         }
@@ -145,7 +145,8 @@ timApp.component("timStart", {
         </div>
         <div class="col-md-4">
             <div ng-switch="$ctrl.language" ng-cloak>
-                <div ng-switch-when="en">
+                <!-- English -->
+                <div ng-switch-default>
                     <h3>Get started</h3>
                     <button ng-if="!$ctrl.isLoggedIn()" ng-click="$ctrl.openLoginDialog(false)" type="button"
                         class="timButton margin-4" title="Log in with Korppi or TIM">Log in</button>
@@ -174,6 +175,7 @@ timApp.component("timStart", {
                         </create-item>
                     </bootstrap-panel>
                 </div>
+                <!-- Finnish -->
                 <div ng-switch-when="fi">
                     <h3>Aloitus</h3>
                     <button ng-if="!$ctrl.isLoggedIn()" ng-click="$ctrl.openLoginDialog(false)" type="button"
@@ -206,8 +208,9 @@ timApp.component("timStart", {
             </div>
         </div>
     </div>
+    <!-- English -->
     <div ng-switch="$ctrl.language" ng-cloak>
-        <div ng-switch-when="en">
+        <div ng-switch-default>
             <div class="row">
                 <div class="col-md-7 col-md-offset-3">
                     <h4>What is TIM?</h4>
@@ -239,6 +242,7 @@ timApp.component("timStart", {
                 </div>
             </div>
         </div>
+        <!-- Finnish -->
         <div ng-switch-when="fi">
             <div class="row">
                 <div class="col-md-8 col-md-offset-3">
@@ -268,5 +272,5 @@ timApp.component("timStart", {
             </div>
         </div>
     </div>
-    `
+    `,
 });
