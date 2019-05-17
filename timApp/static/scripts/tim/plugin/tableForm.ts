@@ -37,11 +37,10 @@ const TableFormMarkup = t.intersection([
         table: nullable(t.boolean),
         report: nullable(t.boolean),
         separator: nullable(t.string), /* TODO! Separate columns with user given character for report */
-        usednames: nullable(t.string), /* TODO! username and full name, username or anonymous */
+        shownames: t.boolean,
         sortBy: nullable(t.string), /* TODO! Username and task, or task and username -- what about points? */
         /* answerAge: nullable(t.string), /* TODO! Define time range from which answers are fetched. Maybe not to be implemented! */
         dataCollection: nullable(t.string), /* TODO! Filter by data collection consent: allowed, denied or both */
-        print: t.boolean, /* TODO! Headers and answers, headers, answers, answers w/o separator line, (or Korppi export?) */
         autosave: t.boolean,
 
     }),
@@ -104,7 +103,7 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
         this.rows = this.allRows;
         this.setDataMatrix();
         this.oldCellValues = JSON.stringify(this.data.userdata.cells);
-        if(this.attrs.autosave) this.data.saveCallBack = this.singleCellSave;
+        if (this.attrs.autosave) this.data.saveCallBack = (rowi, coli, content) => this.singleCellSave(rowi, coli, content);
         console.log("eaaa");
     }
 
@@ -166,7 +165,11 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
     }
 
     saveText() {
-        if(this.getTimTable()) this.timTable.saveAndCloseSmallEditor();
+        const timTable = this.getTimTable();
+        if (timTable == null) {
+            return;
+        }
+        timTable.saveAndCloseSmallEditor();
         this.doSaveText([]);
     }
 
@@ -195,15 +198,15 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
     // }
 
     /**
-     * String to determinate how user names are viewed in report.
-     * Choises are username, username and full name and anonymous. Username as default.
+     * Boolean to determinate if usernames are viewed in report.
+     * Choises are true for username and false for anonymous. Username/true as default.
      */
-    names() {
-        return (this.attrs.usednames || "username");
+    shownames() {
+        return (this.attrs.shownames || true);
     }
 
     /**
-     * String to determinate how user names are viewed in report.
+     * String to determinate how usernames are filtered in report.
      * Choises are username, username and full name and anonymous. Username as default.
      */
     sortBy() {
@@ -214,7 +217,7 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
      * String to determinate what kind of data can be collected to the report.
      * Choises are allowed, denied and both. Allowed as default.
      */
-    dataCollection() {
+    taskIDs() {
         return (this.attrs.dataCollection || "any");
     }
 
@@ -261,7 +264,7 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
             return;
         }
         //TODO check if better way to save than just making saveAndCloseSmallEditor public and calling it
-        if(this.timTable) this.timTable.saveAndCloseSmallEditor();
+        timTable.saveAndCloseSmallEditor();
         this.data.hiderows = [];
         if (this.userfilter != "" && this.userfilter != undefined) {
             const reg = new RegExp(this.userfilter.toLowerCase());
