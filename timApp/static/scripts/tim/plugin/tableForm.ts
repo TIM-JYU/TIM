@@ -60,6 +60,7 @@ const TableFormAll = t.intersection([
     t.partial({
         rows: Rows,
         fields: t.array(t.string),
+        aliases: t.dictionary(t.string,t.string),
     }),
     GenericPluginTopLevelFields,
     t.type({markup: TableFormMarkup}),
@@ -325,7 +326,10 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
                 userLocations[numberPlace] = cellContent;
                 replyRows[cellContent] = {};
             } else if (numberPlace === "1") {
-                taskLocations[columnPlace] = cellContent;
+                if (this.attrsall.aliases && cellContent in this.attrsall.aliases)
+                    taskLocations[columnPlace] = this.attrsall.aliases[cellContent]
+                else
+                    taskLocations[columnPlace] = cellContent;
             } else {
                 replyRows[userLocations[numberPlace]][taskLocations[columnPlace]] = cellContent;
             }
