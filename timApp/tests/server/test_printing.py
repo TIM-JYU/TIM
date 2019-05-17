@@ -44,8 +44,12 @@ class PrintingTest(TimRouteTest):
         folder = self.current_user.get_personal_folder().path
         t = self.create_empty_print_template()
         tj = json.loads(to_json_str(t))
-        self.get(f'/print/templates/{d.path}',
-                 expect_content=[tj])
+
+        # Reduce test flakiness by removing timestamp.
+        tj.pop('modified')
+        tmpl = self.get(f'/print/templates/{d.path}')
+        tmpl[0].pop('modified')
+        self.assertEqual([tj], tmpl)
         params_post = {'fileType': 'latex', 'templateDocId': t.id, 'printPluginsUserCode': False}
         params_url = {'file_type': 'latex', 'template_doc_id': t.id, 'plugins_user_code': False}
         expected_url = f'http://localhost/print/{d.path}?{urllib.parse.urlencode(params_url)}'
