@@ -60,6 +60,7 @@ const TableFormAll = t.intersection([
     t.partial({
         rows: Rows,
         fields: t.array(t.string),
+        aliases: t.dictionary(t.string,t.string),
     }),
     GenericPluginTopLevelFields,
     t.type({markup: TableFormMarkup}),
