@@ -18,8 +18,6 @@ from pluginserver_flask import GenericMarkupModel, GenericMarkupSchema, GenericH
 @attr.s(auto_attribs=True)
 class NumericfieldStateModel:
     """Model for the information that is stored in TIM database for each answer."""
-    # numericvalue: float(str) = missing
-    # if (numericvalue: str) numericvalue: float(null) = missing
     numericvalue: float = missing
 
 
@@ -42,9 +40,13 @@ class NumericfieldStateSchema(Schema):
     @pre_load()
     def remove_null(self, data):
         # data['numericvalue'] = convert_to_float(data['numericvalue'])
-        if not data['numericvalue']:
-            data['numericvalue'] = ""
-        #     #pass
+        if not data.get("numericvalue", False) and (data.get("userword") is not None):
+            try:
+                data['numericvalue'] = float(data.get("userword"))
+            except ValueError:
+                pass
+        if not data.get('numericvalue'):
+            data['numericvalue'] = "" #TODO: Why "None" is no longer valid state?
 
     @post_load()
     def make_obj(self, data,):
