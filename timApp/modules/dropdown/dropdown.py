@@ -168,11 +168,11 @@ def answer(args: DropdownAnswerModel):
     # plugin can ask not to save the word
     nosave = args.input.nosave
     if not nosave:
-        save = {"selectedWord": selectedword}
+        save = {"c": selectedword}
         result["save"] = save
         web['result'] = "saved"
     else:
-        save = {"selectedWord": ""}
+        save = {"c": ""}
         result["save"] = save
         web['result'] = "saved"
 

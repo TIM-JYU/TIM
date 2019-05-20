@@ -54,7 +54,7 @@ const Choice = t.type({
 interface IQuestionItemT extends t.TypeOf<typeof QuestionItem> {
 
 }
-
+// TODO: Change words to optional so it works with plugins that set their own words. Check that getSentence() doesn't break at the same time.
 const QuestionItem = t.intersection([
     t.partial({
         area: t.string,
@@ -162,7 +162,6 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
         }
         if (!this.vctrl.item.rights.editable || !this.vctrl.item.rights.teacher) {
             await import("/feedback/css/viewhide.css" as any);
-            await import("/feedback/css/hideanswerbrowser.css" as any);
             this.vctrl.actionsDisabled = true;
         }
         this.showDocument();
