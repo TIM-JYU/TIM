@@ -39,16 +39,14 @@ class NumericfieldStateSchema(Schema):
 
     @pre_load()
     def remove_null(self, data):
-        # data['numericvalue'] = convert_to_float(data['numericvalue'])
+        previous = str(data.get("numericvalue", False))
         if not data.get("numericvalue", False) and (data.get("userword") is not None):
-            try:
-                data['numericvalue'] = float(data.get("userword"))
-            except ValueError:
-                pass
+            previous = str(data.get("userword"))
+        previous = previous.replace(',','.')
         try:
-            data['numericvalue'] = float(data.get("numericvalue"))
+            data['numericvalue'] = float(previous)
         except (ValueError, TypeError):
-            data['numericvalue'] = "" #TODO: Why "None" is no longer valid state?
+            data['numericvalue'] = ""
 
     @post_load()
     def make_obj(self, data,):
