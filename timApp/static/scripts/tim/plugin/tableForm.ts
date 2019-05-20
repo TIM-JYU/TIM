@@ -87,6 +87,7 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
     private allRows!: {};
     private modelOpts!: INgModelOptions;
     private oldCellValues!: string;
+    private realnames = false;
 
     getDefaultMarkup() {
         return {};
@@ -102,6 +103,8 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
         super.$onInit();
         this.userfilter = "";
         this.allRows = this.attrsall.rows || {};
+        this.realnames = true;
+        if (this.attrs.realnames == false) this.realnames = false;
         this.rows = this.allRows;
         this.setDataMatrix();
         this.oldCellValues = JSON.stringify(this.data.userdata.cells);
@@ -133,14 +136,16 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
     //}
 
     setDataMatrix() {
-        this.data.userdata.cells["A1"] = {cell: "Henkilön Nimi", backgroundColor: "#efecf1"};
-        if(this.attrsall.fields) this.data.table.countCol = this.attrsall.fields.length + 1;
+        this.data.userdata.cells["A1"] = {cell: "Käyttäjänimi", backgroundColor: "#efecf1"};
+        if (this.realnames) this.data.userdata.cells["B1"] = {cell: "Henkilön Nimi", backgroundColor: "#efecf1"};
+        if(this.attrsall.fields && this.realnames) this.data.table.countCol = this.attrsall.fields.length + 2;
+        else if(this.attrsall.fields) this.data.table.countCol = this.attrsall.fields.length + 1;
         this.data.table.countRow = Object.keys(this.rows).length + 1;
         let y = 2;
         for (const r of Object.keys(this.rows)) {
             this.data.userdata.cells["A" + y] = {cell: r, backgroundColor: "#efecf1"};
             this.data.lockedCells.push("A" + y);
-            if (this.attrs.realnames) {
+            if (this.realnames) {
                 this.data.userdata.cells["B" + y] = {cell: this.rows[r]['realname'], backgroundColor: "#efecf1"};
                 this.data.lockedCells.push("B" + y);
             }
@@ -148,16 +153,15 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
         }
         // TODO: Load default cell colors from tableForm's private answer?
         let xOffset = 1;
-        if(this.attrs.realnames) xOffset = 2
+        if(this.realnames) xOffset = 2
         if (this.attrsall.fields) {
             for (let x = 0; x < this.attrsall.fields.length; x++) {
                 this.data.userdata.cells[colnumToLetters(x + xOffset) + 1] =  {cell: this.attrsall.fields[x], backgroundColor: "#efecf1"};
                 this.data.lockedCells.push(colnumToLetters(x + xOffset) + 1);
                 y = 0;
                 for (const [u, r] of Object.entries(this.rows)) {
-                    if (r[this.attrsall.fields[y]]) {
+                    if (r[this.attrsall.fields[x]]) {
                         this.data.userdata.cells[colnumToLetters(x + xOffset) + (y + 2)] = r[this.attrsall.fields[x]];
-
                     }
                     y++;
                 }
@@ -321,7 +325,10 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
                 if (numberPlace === "1") { continue; }
                 userLocations[numberPlace] = cellContent;
                 replyRows[cellContent] = {};
-            } else if (numberPlace === "1") {
+            } else if(this.realnames && columnPlace === "B") {
+                continue;
+            }
+            else if (numberPlace === "1") {
                 if (this.attrsall.aliases && cellContent in this.attrsall.aliases)
                     taskLocations[columnPlace] = this.attrsall.aliases[cellContent]
                 else
@@ -365,7 +372,7 @@ timApp.component("tableformRunner", {
     <tim-markup-error ng-if="::$ctrl.markupError" data="::$ctrl.markupError"></tim-markup-error>
     <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
     <p ng-if="::$ctrl.stem" ng-bind-html="::$ctrl.stem"></p>
-    <div class="form-inline"><label ng-if="::$ctrl.tableCheck()">Suodata {{::$ctrl.inputstem}} <span>
+    <div class="form-inline"><label ng-if="::$ctrl.tableCheck()">Suodata{{::$ctrl.inputstem}} <span>
         <input type="text"
                class="form-control"
                ng-model="$ctrl.userfilter"
