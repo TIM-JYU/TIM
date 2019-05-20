@@ -26,7 +26,6 @@ class UserMenuController implements IController {
 
     /**
      * Add another user to the session using login dialog.
-     * @param $event
      */
     addUser() {
         void showLoginDialog({showSignup: false, addingToSession: true, language: this.language});
