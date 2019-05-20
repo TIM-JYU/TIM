@@ -128,6 +128,7 @@ flask-assets \
 flask-caching \
 flask-compress \
 flask-migrate \
+flask-oidc \
 flask-openid \
 flask-sqlalchemy \
 flask-testing \
