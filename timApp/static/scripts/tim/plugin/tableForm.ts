@@ -39,7 +39,7 @@ const TableFormMarkup = t.intersection([
         separator: nullable(t.string),
         shownames: nullable(t.boolean),
         sortBy: nullable(t.string), /* TODO! Username and task, or task and username -- what about points? */
-        tableButton: nullable(t.string),
+        buttonText: nullable(t.string),
         reportButton: nullable(t.string),
         autosave: t.boolean,
         realnames: t.boolean,
@@ -97,8 +97,8 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
     /**
     * Used to define table view & relative save button in angular, true or false.
     */
-     tableButton() {
-        return (this.attrs.tableButton || "Tallenna taulukko");
+     buttonText() {
+        return (this.attrs.buttonText || "Tallenna taulukko");
     }
 
     // noinspection JSUnusedGlobalSymbols
@@ -399,7 +399,7 @@ timApp.component("tableformRunner", {
     <button class="timButton"
             ng-if="::$ctrl.tableCheck()"
             ng-click="$ctrl.saveText()">
-            {{ ::$ctrl.tableButton() }}
+            {{ ::$ctrl.buttonText() }}
     </button>
     <button class="timButton"
             ng-if="::$ctrl.reportCheck()"
