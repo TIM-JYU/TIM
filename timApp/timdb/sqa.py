@@ -8,10 +8,15 @@ Use Flask-Migrate for database migrations. See <http://flask-migrate.readthedocs
 """
 
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import func
 from sqlalchemy.orm.base import instance_state
 
 db = SQLAlchemy()
 
+
+class TimeStampMixin:
+    created = db.Column(db.DateTime(timezone=True), nullable=True, default=func.now())
+    modified = db.Column(db.DateTime(timezone=True), nullable=True, default=func.now(), onupdate=func.now())
 
 # UserGroupMember = db.Table('usergroupmember',
 #                            db.Column('usergroup_id', db.Integer, db.ForeignKey('usergroup.id'), primary_key=True),

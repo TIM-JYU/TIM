@@ -1,13 +1,13 @@
 from typing import List
 
+from timApp.timdb.sqa import db, TimeStampMixin
 from timApp.user.special_group_names import ANONYMOUS_GROUPNAME, LARGE_GROUPS, KORPPI_GROUPNAME, LOGGED_IN_GROUPNAME, \
     ADMIN_GROUPNAME, GROUPADMIN_GROUPNAME, TEACHERS_GROUPNAME
-from timApp.timdb.sqa import db
 from timApp.user.usergroupdoc import UserGroupDoc
 from timApp.user.usergroupmember import UserGroupMember
 
 
-class UserGroup(db.Model):
+class UserGroup(db.Model, TimeStampMixin):
     """A usergroup. Each User should belong to a personal UserGroup that has the same name as the User name. No one
     else should belong to a personal UserGroup.
 
@@ -24,7 +24,10 @@ class UserGroup(db.Model):
     """Usergroup identifier."""
 
     name = db.Column(db.Text, nullable=False, unique=True)
-    """Usergroup name."""
+    """Usergroup name (textual identifier)."""
+
+    display_name = db.Column(db.Text, nullable=True)
+    """Usergroup display name."""
 
     users = db.relationship('User', secondary=UserGroupMember.__table__,
                             back_populates='groups', lazy='dynamic')
@@ -56,7 +59,7 @@ class UserGroup(db.Model):
         return self.name
 
     @staticmethod
-    def create(name: str, commit: bool = True) -> 'UserGroup':
+    def create(name: str) -> 'UserGroup':
         """Creates a new user group.
 
         :param name: The name of the user group.
@@ -69,8 +72,6 @@ class UserGroup(db.Model):
         db.session.flush()
         group_id = ug.id
         assert group_id is not None and group_id != 0, 'group_id was None'
-        if commit:
-            db.session.commit()
         return ug
 
     @staticmethod

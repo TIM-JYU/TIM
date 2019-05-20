@@ -12,7 +12,6 @@ import * as pareditor from "tim/editor/pareditor";
 import * as indexCtrl from "tim/folder/indexCtrl";
 import * as startController from "tim/frontpage/startController";
 import * as loadMap from "tim/gamification/loadMap";
-import * as breadcrumbs from "tim/item/breadcrumbs";
 import * as createItem from "tim/item/createItem";
 import * as manageCtrl from "tim/item/manageCtrl";
 import * as relevanceEdit from "tim/item/relevanceEdit";
@@ -34,6 +33,7 @@ import * as searchBox from "tim/search/searchBox";
 import * as sidebarMenuCtrl from "tim/sidebar/sidebarMenuCtrl";
 import * as bootstrapPanel from "tim/ui/bootstrapPanel";
 import * as markupError from "tim/ui/markuperror";
+import * as header from "tim/header/header";
 import * as loginMenu from "tim/user/loginMenu";
 import * as userMenu from "tim/user/userMenu";
 import * as settingsCtrl from "tim/user/settingsCtrl";
@@ -52,9 +52,9 @@ markAsUsed(
     bookmarks,
     bootstrap,
     bootstrapPanel,
-    breadcrumbs,
     createItem,
     createLectureCtrl,
+    header,
     imagex,
     indexCtrl,
     lectureController,

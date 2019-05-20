@@ -2,11 +2,13 @@ from typing import Tuple, List
 
 from flask import Blueprint, abort
 
-from timApp.auth.accesshelper import verify_admin, check_admin_access
+from timApp.auth.accesshelper import verify_admin, check_admin_access, get_doc_or_abort, verify_view_access
 from timApp.auth.accesstype import AccessType
 from timApp.auth.auth_models import BlockAccess
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.create_item import apply_template, create_document
+from timApp.document.docinfo import DocInfo
+from timApp.item.tag import TagType
 from timApp.item.validation import ItemValidationRule
 from timApp.timdb.dbaccess import get_timdb
 from timApp.timdb.sqa import db
@@ -22,6 +24,7 @@ groups = Blueprint('groups',
 
 USER_NOT_FOUND = 'User not found'
 USERGROUP_NOT_FOUND = 'User group not found'
+SISU_PREFIX = 'sisu-'
 
 
 def verify_groupadmin():
@@ -97,7 +100,7 @@ def create_group(groupname):
         has_non_alnum = has_non_alnum or not (c.isalnum() or c.isspace())
     if not has_digits or not has_letters or has_non_alnum:
         abort(400, 'Usergroup must contain at least one digit and one letter and must be alphanumeric.')
-    u = UserGroup.create(groupname, commit=False)
+    u = UserGroup.create(groupname)
     doc = create_document(
         f'groups/{remove_path_special_chars(groupname)}',
         groupname,
@@ -119,28 +122,29 @@ def create_group(groupname):
     return json_response(doc)
 
 
-def verify_group_access(ug: UserGroup, access_set):
+def verify_group_access(ug: UserGroup, access_set, u=None):
     if ug.name in PRIVILEGED_GROUPS:
         verify_admin()
     b = ug.admin_doc
     if not b:
         verify_groupadmin()
     else:
-        u = get_current_user_object()
+        if not u:
+            u = get_current_user_object()
         if not u.has_some_access(b, access_set):
             verify_groupadmin()
 
 
-def verify_group_edit_access(ug: UserGroup):
+def verify_group_edit_access(ug: UserGroup, user=None):
     if ug.name in SPECIAL_GROUPS:
         abort(400, 'Cannot edit special groups.')
     if User.get_by_name(ug.name):
         abort(400, 'Cannot edit personal groups.')
-    verify_group_access(ug, edit_access_set)
+    verify_group_access(ug, edit_access_set, user)
 
 
-def verify_group_view_access(ug: UserGroup):
-    verify_group_access(ug, view_access_set)
+def verify_group_view_access(ug: UserGroup, user=None):
+    verify_group_access(ug, view_access_set, user)
 
 
 @groups.route('/addmember/<groupname>/<usernames>')
@@ -181,6 +185,30 @@ def remove_member(usernames, groupname):
         removed.append(u.name)
     timdb.commit()
     return json_response({'removed': removed, 'does_not_belong': does_not_belong, 'not_exist': not_exist})
+
+
+def is_course(d: DocInfo):
+    return any(t.type == TagType.CourseCode for t in d.block.tags)
+
+
+@groups.route('/enrollToCourse/<int:doc_id>')
+def enroll_to_course(doc_id: int):
+    d = get_doc_or_abort(doc_id)
+    verify_view_access(d)
+    if is_course(d):
+        course_group = d.document.get_settings().course_group()
+        if isinstance(course_group, str):
+            ug = UserGroup.get_by_name(course_group)
+            if not ug:
+                return abort(400, 'The specified course group does not exist')
+            verify_group_edit_access(ug, d.owner.users.first())  # TODO assuming only 1 owner which is a person
+            ug.users_all.append(get_current_user_object())
+            db.session.commit()
+            return ok_response()
+        else:
+            return abort(400, 'Document does not have associated course group')
+    else:
+        return abort(400, 'Document is not tagged as a course')
 
 
 def get_usernames(usernames):

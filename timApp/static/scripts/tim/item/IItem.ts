@@ -139,3 +139,11 @@ export function getViewUrl(data: IItem) {
 export function redirectToItem(data: IItem) {
     location.href = getViewUrl(data);
 }
+
+export interface ITranslation {
+    id: number;
+    old_langid: string;
+    lang_id: string;
+    old_title: string;
+    title: string;
+}

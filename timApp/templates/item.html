@@ -1,41 +1,8 @@
 {% extends 'base.html' %}
-{%- macro active(endpoint) -%}
-    {%- if request.endpoint == endpoint -%}
-        class="active"
-    {%- endif -%}
-{%- endmacro -%}
 {% block head %}
     {{ super() }}
     <script>
         var item = {{item|tojson}};
         var breadcrumbs = {{item.parents_to_root()|tojson}};
     </script>
-{% endblock %}
-{% block header %}
-    {{ super() }}
-    {% if not hide_links %}
-        <div class="pull-right">
-                    <button ng-cloak
-                            ng-if="$ctrl.taggedAsCourse && !$ctrl.bookmarked"
-                            ng-click="$ctrl.addToBookmarkFolder()"
-                            title="Add this page to 'My courses' bookmark folder"
-                            class="timButton label">
-                        Add to My courses
-                    </button>
-                {% block languages %}
-                {% endblock %}
-        </div>
-    <div class="nav nav-tabs">    {% block itemlinks %}
-        <li role="presentation" {{ active('view_page.view_document') }}><a id="headerView" href="/view/{{ item.path }}">View</a></li>
-        <li role="presentation" {{ active('manage_page.manage') }}><a id="headerManage" href="/manage/{{ item.path }}">Manage</a></li>
-    {% endblock %}</div>
-        <tim-breadcrumbs ng-cloak>
-            <ol ng-init="bc = $parent.$ctrl" class="breadcrumb">
-                <li ng-repeat="c in bc.crumbs | orderBy:'-'">
-                    <a href="/{{ route or 'view' }}/{{ '{{ c.path | escape }}' }}">{{ '{{ c.title }}' }}</a>
-                </li>
-                <li class="active">{{ '{{ bc.item.title }}' }}</li>
-            </ol>
-        </tim-breadcrumbs>
-    {% endif %}
 {% endblock %}

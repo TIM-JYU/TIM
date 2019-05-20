@@ -1,15 +1,12 @@
-import responses
 from flask import session
 
-from timApp.auth.login import test_pws
+from timApp.auth.login import test_pws, create_or_update_user
 from timApp.tests.server.timroutetest import TimRouteTest
-from timApp.tim_app import app
-from timApp.user.newuser import NewUser
-from timApp.user.user import User
 from timApp.timdb.sqa import db
+from timApp.user.newuser import NewUser
+from timApp.user.user import User, UserOrigin
 from timApp.user.usergroup import UserGroup
 from timApp.user.userutils import create_password_hash
-
 
 test_pw = 'somepwd123'
 
@@ -40,6 +37,7 @@ class TestSignUp(TimRouteTest):
             json_key='status')
         self.assertEqual(NewUser.query.with_entities(NewUser.email).all(), [])
         self.assertEqual('Testing Signup', self.current_user.real_name)
+        self.assertEqual(UserOrigin.Email, self.current_user.origin)
 
         # TODO needs a better error message
         self.json_post(
@@ -128,64 +126,57 @@ class TestSignUp(TimRouteTest):
         self.assertFalse(self.is_logged_in)
         self.assertEqual(old_len, len(test_pws))
 
-    @property
-    def korppi_auth_url(self):
-        return app.config['KORPPI_AUTHORIZE_URL']
-
     def test_korppi_signup(self):
         """Korppi signup succeeds."""
-        auth_url = self.korppi_auth_url
-        with responses.RequestsMock() as m:
-            m.add('GET', auth_url,
-                  body='')
-            r = self.get('/korppiLogin', expect_status=303)
-            self.assertEqual(r, f'{auth_url}?authorize={session["appcookie"]}&returnTo=http://localhost/korppiLogin')
-
-        # ... user logs in with Korppi at this point ...
-
-        with responses.RequestsMock() as m:
-            m.add('GET', auth_url + '?request=' + session['appcookie'],
-                  body='johmadoenew\nDoe John Matt\njohn.m.doenew@student.jyu.fi',
-                  match_querystring=True)
-            self.get('/korppiLogin', follow_redirects=True)
+        self.create_or_update_test_user(
+            'johmadoenew',
+            'Doe John Matt',
+            'john.m.doenew@student.jyu.fi',
+        )
         self.assertEqual('Doe John Matt', self.current_user.real_name)
         self.assertEqual('johmadoenew', self.current_user.name)
         self.assertEqual('john.m.doenew@student.jyu.fi', self.current_user.email)
         self.assertEqual(set(g.name for g in self.current_user.groups),
                          {'johmadoenew', 'Korppi users'})
 
-    def register_user_with_korppi(self, username='johmadoe', real_name='Doe John Matt',
-                                  email='john.m.doe@student.jyu.fi'):
-        auth_url = self.korppi_auth_url
-        with responses.RequestsMock() as m:
-            m.add('GET', auth_url,
-                  body=f'{username}\n{real_name}\n{email}')
-            self.get('/korppiLogin', follow_redirects=True)
+    def create_or_update_test_user(self, username='johmadoe', real_name='Doe John Matt',
+                                   email='john.m.doe@student.jyu.fi'):
+        u = create_or_update_user(
+            email,
+            real_name,
+            username,
+            group_to_add=UserGroup.get_korppi_group(),
+            origin=UserOrigin.Korppi,
+        )
+        db.session.commit()
+        session['user_id'] = u.id
 
     def test_korppi_info_change(self):
         """TIM can handle cases where some information about the user changes in Korppi."""
-        auth_url = self.korppi_auth_url
-        self.register_user_with_korppi()
+        self.create_or_update_test_user()
         curr_id = self.current_user.id
         curr_name = self.current_user.name
         curr_email = self.current_user.email
 
         # real name changes
-        with responses.RequestsMock() as m:
-            m.add('GET', auth_url,
-                  body='johmadoe\nDoe John Matthew\njohn.m.doe@student.jyu.fi')
-            self.get('/korppiLogin', follow_redirects=True)
+        self.create_or_update_test_user(
+            real_name='Doe John Matthew',
+            username='johmadoe',
+            email='john.m.doe@student.jyu.fi',
+        )
 
         self.assertEqual(self.current_user.id, curr_id)
         self.assertEqual(self.current_user.name, curr_name)
         self.assertEqual(self.current_user.email, curr_email)
         self.assertEqual(self.current_user.real_name, 'Doe John Matthew')
+        self.assertEqual(UserOrigin.Korppi, self.current_user.origin)
 
         # email changes
-        with responses.RequestsMock() as m:
-            m.add('GET', auth_url,
-                  body='johmadoe\nDoe John Matthew\njohn.doe@student.jyu.fi')
-            self.get('/korppiLogin', follow_redirects=True)
+        self.create_or_update_test_user(
+            real_name='Doe John Matthew',
+            username='johmadoe',
+            email='john.doe@student.jyu.fi',
+        )
 
         self.assertEqual(self.current_user.id, curr_id)
         self.assertEqual(self.current_user.name, curr_name)
@@ -193,10 +184,11 @@ class TestSignUp(TimRouteTest):
         self.assertEqual(self.current_user.real_name, 'Doe John Matthew')
 
         # username changes
-        with responses.RequestsMock() as m:
-            m.add('GET', auth_url,
-                  body='johmadoz\nDoe John Matthew\njohn.doe@student.jyu.fi')
-            self.get('/korppiLogin', follow_redirects=True)
+        self.create_or_update_test_user(
+            real_name='Doe John Matthew',
+            username='johmadoz',
+            email='john.doe@student.jyu.fi',
+        )
 
         self.assertEqual(self.current_user.id, curr_id)
         self.assertEqual(self.current_user.name, 'johmadoz')
@@ -206,15 +198,16 @@ class TestSignUp(TimRouteTest):
                          {'johmadoz', 'Korppi users'})
 
         # If both username and email is different, there's no way to identify the user.
-        with responses.RequestsMock() as m:
-            m.add('GET', auth_url,
-                  body='johmadox\nDoe John Matthew\njohn.doex@student.jyu.fi')
-            self.get('/korppiLogin', follow_redirects=True)
+        self.create_or_update_test_user(
+            real_name='Doe John Matthew',
+            username='johmadox',
+            email='john.doex@student.jyu.fi',
+        )
         self.assertNotEqual(self.current_user.id, curr_id)
 
     def test_korppi_email_signup(self):
         """A Korppi user can update their password (and real name) by signing up."""
-        self.register_user_with_korppi()
+        self.create_or_update_test_user()
         curr_id = self.current_user.id
         curr_name = self.current_user.name
         curr_real_name = self.current_user.real_name
@@ -243,7 +236,7 @@ class TestSignUp(TimRouteTest):
         self.login(email=curr_email, passw=pw, force=True)
         self.assertEqual(self.current_user.id, curr_id)
 
-        self.register_user_with_korppi()
+        self.create_or_update_test_user()
         self.assertEqual(self.current_user.id, curr_id)
         self.assertEqual(self.current_user.name, curr_name)
         self.assertEqual(self.current_user.email, curr_email)
@@ -256,7 +249,7 @@ class TestSignUp(TimRouteTest):
         curr_id = self.current_user.id
         curr_pw = self.current_user.pass_
         self.assertFalse(UserGroup.get_korppi_group() in self.current_user.groups)
-        self.register_user_with_korppi('t3', 'Mr Test User 3', email=self.current_user.email)
+        self.create_or_update_test_user('t3', 'Mr Test User 3', email=self.current_user.email)
         self.assertEqual(self.current_user.id, curr_id)
         self.assertEqual(self.current_user.name, 't3')
         self.assertEqual(self.current_user.real_name, 'Mr Test User 3')
@@ -264,14 +257,14 @@ class TestSignUp(TimRouteTest):
         self.assertTrue(UserGroup.get_korppi_group() in self.current_user.groups)
 
     def test_email_login_without_pass(self):
-        self.register_user_with_korppi('someone', 'Some One', 'someone@example.com')
+        self.create_or_update_test_user('someone', 'Some One', 'someone@example.com')
         u = User.get_by_name('someone')
         u.pass_ = None
         db.session.commit()
         self.login(email='someone@example.com', passw='something', force=True, expect_status=403)
 
     def test_email_login_with_korppi_username(self):
-        self.register_user_with_korppi('someone2', 'Some One', 'someone2@example.com')
+        self.create_or_update_test_user('someone2', 'Some One', 'someone2@example.com')
         u = User.get_by_name('someone2')
         u.pass_ = create_password_hash('somepass')
         db.session.commit()
@@ -279,7 +272,7 @@ class TestSignUp(TimRouteTest):
 
     def test_korppi_user_reset_pass_with_username(self):
         """A Korppi user can reset their password using their username."""
-        self.register_user_with_korppi()
+        self.create_or_update_test_user()
         curr_name = self.current_user.name
         self.json_post(
             '/altsignup',

@@ -1,6 +1,5 @@
 import {IController, IDeferred, IPromise, IScope} from "angular";
 import $ from "jquery";
-import moment from "moment";
 import ngs, {ngStorage} from "ngstorage";
 import {timApp} from "tim/app";
 import {AreaHandler} from "tim/document/areas";
@@ -14,29 +13,28 @@ import * as popupMenu from "tim/document/popupMenu";
 import {QuestionHandler} from "tim/document/question/questions";
 import {initReadings} from "tim/document/readings";
 import {timLogTime} from "tim/util/timTiming";
-import {isPageDirty, markAsUsed, markPageNotDirty, to} from "tim/util/utils";
+import {isPageDirty, markAsUsed, markPageNotDirty} from "tim/util/utils";
 import {AnswerBrowserController, PluginLoaderCtrl} from "../answer/answerbrowser3";
 import {BookmarksController, IBookmarkGroup} from "../bookmark/bookmarks";
 import {IPluginInfoResponse, ParCompiler} from "../editor/parCompiler";
-import {IDocument, ITag, TagType} from "../item/IItem";
+import {IDocument} from "../item/IItem";
 import {LectureController} from "../lecture/lectureController";
 import {TimTableController} from "../plugin/timTable";
 import {initCssPrint} from "../printing/cssPrint";
-import {showMessageDialog} from "../ui/dialog";
 import {IUser} from "../user/IUser";
 import {Users} from "../user/userService";
 import {$compile, $filter, $http, $interval, $localStorage, $q, $timeout, $window} from "../util/ngimport";
 import {AnnotationController} from "../velp/annotation";
 import {ReviewController} from "../velp/reviewController";
+import {DiffController} from "./diffDialog";
 import {EditingHandler} from "./editing/editing";
 import {PendingCollection} from "./editing/edittypes";
 import * as helpPar from "./editing/helpPar";
 import {onClick} from "./eventhandlers";
 import {PopupMenuController} from "./popupMenu";
 import {RefPopupHandler} from "./refpopup";
-import {MenuFunctionEntry} from "./viewutils";
 import {initSlideView} from "./slide";
-import {DiffController} from "./diffDialog";
+import {MenuFunctionEntry} from "./viewutils";
 
 markAsUsed(ngs, popupMenu, interceptor, helpPar);
 
@@ -67,8 +65,6 @@ export interface IChangeDiffResult {
 }
 
 export type DiffResult = IInsertDiffResult | IReplaceDiffResult | IDeleteDiffResult | IChangeDiffResult;
-
-const courseFolder = "My courses";
 
 export let vctrlInstance: ViewCtrl | undefined;
 
@@ -119,11 +115,7 @@ export class ViewCtrl implements IController {
     public refpopupHandler: RefPopupHandler;
     public popupmenu?: PopupMenuController;
 
-    // To show a button that adds the document to bookmark folder 'My courses'.
-    private taggedAsCourse: boolean = false;
-    private bookmarksCtrl: BookmarksController | undefined;
-    private bookmarked: boolean = false;
-    private bookmarks: IBookmarkGroup[] = [];
+    public bookmarksCtrl: BookmarksController | undefined;
 
     // For search box.
     private displaySearch = false;
@@ -385,53 +377,8 @@ export class ViewCtrl implements IController {
                 this.notification = "";
             }
         });
-        void this.checkIfTaggedAsCourse();
-        void this.checkIfBookmarked();
         this.reviewCtrl.loadDocumentAnnotations();
         this.editingHandler.insertHelpPar();
-    }
-
-    /**
-     * Checks if the document has been tagged as a course and the tag hasn't expired.
-     */
-    private async checkIfTaggedAsCourse() {
-        this.taggedAsCourse = false;
-        const r = await to($http.get<ITag[]>(`/tags/getTags/${this.item.path}`));
-        if (r.ok) {
-            for (const tag of r.result.data) {
-                if (isCourse(tag)) {
-                    if (isExpired(tag)) {
-                        return;
-                    } else {
-                        this.taggedAsCourse = true;
-                        return;
-                    }
-                }
-            }
-        }
-    }
-
-    /**
-     * Marks page as bookmarked if it's in the course bookmark folder.
-     * @returns {Promise<void>}
-     */
-    private async checkIfBookmarked() {
-        this.bookmarked = false;
-        if (!Users.isLoggedIn()) {
-            return;
-        }
-        const response = await $http.get<IBookmarkGroup[]>("/bookmarks/get");
-        this.bookmarks = response.data;
-        for (const folder of this.bookmarks) {
-            if (folder.name === courseFolder) {
-                for (const bookmark of folder.items) {
-                    if (bookmark.link === "/view/" + this.item.path) {
-                        this.bookmarked = true;
-                        return;
-                    }
-                }
-            }
-        }
     }
 
     /**
@@ -566,24 +513,6 @@ export class ViewCtrl implements IController {
     }
 
     /**
-     * Adds the current page to course bookmark folder.
-     * @returns {Promise<void>}
-     */
-    async addToBookmarkFolder() {
-        if (!Users.isLoggedIn()) {
-            showMessageDialog("Log in to bookmark this course");
-            return;
-        }
-        if (!this.bookmarksCtrl) {
-            throw new Error("Bookmarkscontroller not registered");
-        }
-        const bookmark = {group: courseFolder, name: this.item.title, link: "/view/" + this.item.path};
-        const response = await $http.post<IBookmarkGroup[]>("/bookmarks/add", bookmark);
-        await this.bookmarksCtrl.refresh();
-        this.checkIfBookmarked(); // Instead of directly changing boolean this checks if it really was added.
-    }
-
-    /**
      * Add bookmark controller.
      * @param {BookmarksController} bookmarksCtrl
      */
@@ -672,29 +601,7 @@ class EntityRegistry<K, V> {
     }
 }
 
-/**
- * Checks if the tag type is course code.
- * @param {string} tag
- * @returns {boolean} Whether the tag has course code tag.
- */
-function isCourse(tag: ITag) {
-    return (tag.type === TagType.CourseCode);
-}
 
-/**
- * Checks if the tag has expired.
- * @param {string} tag
- * @returns {boolean} False if the tag has no expiration or hasn't yet expired.
- */
-function isExpired(tag: ITag) {
-    if (tag.expires) {
-        if (tag.expires.diff(moment.now()) < 0) {
-            return true;
-        }
-    } else {
-        return false;
-    }
-}
 
 timApp.component("timView", {
     controller: ViewCtrl,

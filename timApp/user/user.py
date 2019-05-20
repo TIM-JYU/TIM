@@ -75,6 +75,22 @@ class Consent(Enum):
     CookieAndData = 2
 
 
+class UserOrigin(Enum):
+    """Indicates how the user originally registered to TIM.
+
+    Only Email, Korppi and Sisu are used so far; the others are speculative.
+    """
+    Email = 1
+    Korppi = 2
+    Sisu = 3
+    Haka = 4
+    OpenID = 5
+    OpenIDConnect = 6
+    Facebook = 7
+    Google = 8
+    Twitter = 9
+
+
 class User(db.Model):
     """A user account.
 
@@ -90,7 +106,7 @@ class User(db.Model):
     real_name = db.Column(db.Text)
     """Real name. This may be in the form "Lastname Firstname" or "Firstname Lastname"."""
 
-    email = db.Column(db.Text)
+    email = db.Column(db.Text, unique=True)
     """Email address."""
 
     prefs = db.Column(db.Text)
@@ -101,6 +117,9 @@ class User(db.Model):
 
     consent = db.Column(db.Enum(Consent), nullable=True)
     """Current consent for cookie/data collection."""
+
+    origin = db.Column(db.Enum(UserOrigin), nullable=True)
+    """How the user registered to TIM."""
 
     consents = db.relationship('ConsentChange', back_populates='user', lazy='select')
     notifications = db.relationship('Notification', back_populates='user', lazy='dynamic')
@@ -159,12 +178,14 @@ class User(db.Model):
         return self.real_name
 
     @staticmethod
-    def create(name: str,
-               real_name: str,
-               email: str,
-               password: str = '',
-               uid: int=None,
-               commit: bool = True) -> 'User':
+    def create(
+            name: str,
+            real_name: str,
+            email: str,
+            password: str = '',
+            uid: int = None,
+            origin: UserOrigin = None,
+    ) -> 'User':
         """Creates a new user with the specified name.
 
         :param email: The email address of the user.
@@ -176,11 +197,9 @@ class User(db.Model):
         """
 
         p_hash = create_password_hash(password) if password != '' else ''
-        user = User(id=uid, name=name, real_name=real_name, email=email, pass_=p_hash)
+        user = User(id=uid, name=name, real_name=real_name, email=email, pass_=p_hash, origin=origin)
         db.session.add(user)
         db.session.flush()
-        if commit:
-            db.session.commit()
         assert user.id != 0
         return user
 
@@ -190,11 +209,12 @@ class User(db.Model):
                           email: Optional[str] = None,
                           password: Optional[str] = None,
                           is_admin: bool = False,
+                          origin: UserOrigin = None,
                           uid: Optional[int] = None):
         user = User.create(name, real_name or name, email or name + '@example.com', password=password or '',
                            uid=uid,
-                           commit=False)
-        group = UserGroup.create(name, commit=False)
+                           origin=origin)
+        group = UserGroup.create(name)
         user.groups.append(group)
         if is_admin:
             user.groups.append(UserGroup.get_admin_group())

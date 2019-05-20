@@ -46,6 +46,7 @@ class DocSettings:
     input_format_key = 'input_format'
     memo_minutes_key = 'memo_minutes'
     comments_key = 'comments'
+    course_group_key = 'course_group'
 
     @classmethod
     def from_paragraph(cls, par: DocParagraph):
@@ -123,6 +124,9 @@ class DocSettings:
         if default is None:
             default = []
         return self.__dict.get(self.print_settings_key, default)
+
+    def course_group(self):
+        return self.__dict.get(self.course_group_key)
 
     def lazy(self, default=False):
         return self.__dict.get(self.lazy_key, default)

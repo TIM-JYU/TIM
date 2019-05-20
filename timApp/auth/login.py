@@ -1,13 +1,9 @@
 """Routes for login view."""
-import codecs
-import os
 import random
 import re
 import string
 import urllib.parse
 
-import requests
-import requests.exceptions
 from flask import Blueprint, render_template
 from flask import abort
 from flask import current_app
@@ -28,7 +24,7 @@ from timApp.timdb.dbaccess import get_timdb
 from timApp.timdb.exceptions import TimDbException
 from timApp.timdb.sqa import db
 from timApp.user.newuser import NewUser
-from timApp.user.user import User
+from timApp.user.user import User, UserOrigin
 from timApp.user.usergroup import UserGroup
 from timApp.user.userutils import create_password_hash, check_password_hash
 from timApp.util.flask.requesthelper import verify_json_params, get_option, is_xhr
@@ -89,37 +85,16 @@ def login():
 
 @login_page.route("/korppiLogin")
 def login_with_korppi():
-    add_user = get_option(request, 'add_user', False)
-    if not logged_in() and add_user:
-        return abort(403, 'You must be logged in before adding users to session.')
-    if session.get('adding_user') is None:
-        session['adding_user'] = add_user
-    urlfile = request.url_root + "korppiLogin"
-    save_came_from()
-
-    if not session.get('appcookie'):
-        random_hex = codecs.encode(os.urandom(24), 'hex').decode('utf-8')
-        session['appcookie'] = random_hex
-    url = current_app.config['KORPPI_AUTHORIZE_URL']
-    korppi_down_text = 'Korppi seems to be down, so login is currently not possible. Try again later.'
-    try:
-        r = requests.get(url, params={'request': session['appcookie']}, verify=True)
-    except (requests.exceptions.SSLError, requests.exceptions.ConnectionError):
-        return abort(503, korppi_down_text)
-
-    if r.status_code != 200:
-        return abort(503, korppi_down_text)
-    korppi_response = r.text.strip()
-    if not korppi_response:
-        return redirect(url + "?authorize=" + session['appcookie'] + "&returnTo=" + urlfile, code=303)
-    pieces = (korppi_response + "\n\n").split('\n')
-    user_name = pieces[0]
-    real_name = pieces[1]
-    email = pieces[2]
-    return create_or_update_user(email, real_name, user_name)
+    return safe_redirect('/openIDLogin?provider=korppi')
 
 
-def create_or_update_user(email: str, real_name: str, user_name: str):
+def create_or_update_user(
+        email: str,
+        real_name: str,
+        user_name: str,
+        group_to_add: UserGroup,
+        origin: UserOrigin,
+):
     user: User = User.query.filter_by(name=user_name).first()
 
     if user is None:
@@ -132,19 +107,14 @@ def create_or_update_user(email: str, real_name: str, user_name: str):
             # 2) Korppi username has been changed (rare but it can happen).
             # In this case, we must not re-add the user to the Korppi group.
             user.update_info(name=user_name, real_name=real_name, email=email)
-            korppi_group = UserGroup.get_korppi_group()
-            if korppi_group not in user.groups:
-                user.groups.append(korppi_group)
         else:
-            user, _ = User.create_with_group(user_name, real_name, email)
-            user.groups.append(UserGroup.get_korppi_group())
+            user, _ = User.create_with_group(user_name, real_name, email, origin=origin)
     else:
         if real_name:
             user.update_info(name=user_name, real_name=real_name, email=email)
-
-    db.session.commit()
-    set_user_to_session(user)
-    return finish_login()
+    if group_to_add not in user.groups:
+        user.groups.append(group_to_add)
+    return user
 
 
 @login_page.route("/openIDLogin")
@@ -199,7 +169,10 @@ def openid_success_handler(resp: KorppiOpenIDResponse):
     if not resp.lastname:
         return abort(400, 'Missing lastname')
     fullname = f'{resp.lastname} {resp.firstname}'
-    return create_or_update_user(resp.email, fullname, username)
+    user = create_or_update_user(resp.email, fullname, username, UserGroup.get_korppi_group(), UserOrigin.Korppi)
+    db.session.commit()
+    set_user_to_session(user)
+    return finish_login()
 
 
 def set_user_to_session(user: User):
@@ -337,7 +310,7 @@ def alt_signup_after():
         if User.get_by_name(username) is not None:
             return abort(400, 'User name already exists. Please try another one.')
         success_status = 'registered'
-        user, _ = User.create_with_group(username, real_name, email, password=password)
+        user, _ = User.create_with_group(username, real_name, email, password=password, origin=UserOrigin.Email)
         user_id = user.id
 
     db.session.delete(nu)

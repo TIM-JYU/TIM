@@ -6,6 +6,7 @@ import re
 import socket
 import unittest
 import warnings
+from base64 import b64encode
 from functools import lru_cache
 from typing import Union, Optional, List, Dict, Tuple, Any
 
@@ -45,6 +46,7 @@ orig_getaddrinfo = socket.getaddrinfo
 TEXTUAL_MIMETYPES = {'text/html', 'application/json', 'text/plain'}
 LOCALHOST = 'http://localhost/'
 
+BasicAuthParams = Tuple[str, str]
 
 # noinspection PyIncorrectDocstring
 @lru_cache(maxsize=100)
@@ -87,6 +89,7 @@ class TimRouteTest(TimDbTest):
             expect_xpath: Optional[str] = None,
             json_key: Optional[str] = None,
             headers: Optional[List[Tuple[str, str]]] = None,
+            auth: Optional[BasicAuthParams] = None,
             **kwargs):
         """Performs a GET request.
 
@@ -102,6 +105,7 @@ class TimRouteTest(TimDbTest):
                             expect_xpath=expect_xpath,
                             json_key=json_key,
                             headers=headers,
+                            auth=auth,
                             **kwargs)
 
     def post(self,
@@ -168,6 +172,7 @@ class TimRouteTest(TimDbTest):
                 json_key: Optional[str] = None,
                 headers: Optional[List[Tuple[str, str]]] = None,
                 xhr=True,
+                auth: Optional[BasicAuthParams] = None,
                 **kwargs) -> Union[Response, str, Dict]:
         """Performs a request.
 
@@ -200,6 +205,10 @@ class TimRouteTest(TimDbTest):
             headers = []
         if xhr:
             headers.append(('X-Requested-With', 'XMLHttpRequest'))
+        if auth:
+            u, p = auth
+            up = f'{u}:{p}'.encode()
+            headers.append(('Authorization', f'Basic {b64encode(up).decode()}'))
         resp = self.client.open(url, method=method, headers=headers, **kwargs)
         is_textual = resp.mimetype in TEXTUAL_MIMETYPES
         if expect_status is not None:
@@ -289,6 +298,7 @@ class TimRouteTest(TimDbTest):
                     expect_xpath: Optional[str] = None,
                     json_key: Optional[str] = None,
                     headers: Optional[List[Tuple[str, str]]] = None,
+                    auth: Optional[BasicAuthParams] = None,
                     **kwargs):
         """Performs a JSON DELETE request.
 
@@ -308,6 +318,7 @@ class TimRouteTest(TimDbTest):
                              expect_xpath=expect_xpath,
                              json_key=json_key,
                              headers=headers,
+                             auth=auth,
                              **kwargs)
 
     def json_post(self,
@@ -320,6 +331,7 @@ class TimRouteTest(TimDbTest):
                   expect_xpath: Optional[str] = None,
                   json_key: Optional[str] = None,
                   headers: Optional[List[Tuple[str, str]]] = None,
+                  auth: Optional[BasicAuthParams]=None,
                   **kwargs):
         """Performs a JSON POST request.
 
@@ -339,6 +351,7 @@ class TimRouteTest(TimDbTest):
                              expect_xpath=expect_xpath,
                              json_key=json_key,
                              headers=headers,
+                             auth=auth,
                              **kwargs)
 
     def json_req(self,
@@ -352,6 +365,7 @@ class TimRouteTest(TimDbTest):
                  expect_xpath: Optional[str] = None,
                  json_key: Optional[str] = None,
                  headers: Optional[List[Tuple[str, str]]] = None,
+                 auth: Optional[BasicAuthParams] = None,
                  **kwargs):
         """Performs a JSON request.
 
@@ -373,6 +387,7 @@ class TimRouteTest(TimDbTest):
                             expect_xpath=expect_xpath,
                             json_key=json_key,
                             headers=headers,
+                            auth=auth,
                             **kwargs)
 
     def post_par(self, doc: Document, text: str, par_id: str, extra_data=None, **kwargs):

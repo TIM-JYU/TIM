@@ -6,17 +6,9 @@ import * as copyFolder from "../folder/copyFolder";
 import {showMessageDialog} from "../ui/dialog";
 import {$http, $timeout, $upload, $window} from "../util/ngimport";
 import {clone, markAsUsed, to} from "../util/utils";
-import {IDocument, IFolder, IFullDocument, IItem, redirectToItem} from "./IItem";
+import {IDocument, IFolder, IFullDocument, IItem, ITranslation, redirectToItem} from "./IItem";
 
 markAsUsed(copyFolder);
-
-export interface ITranslation {
-    id: number;
-    old_langid: string;
-    lang_id: string;
-    old_title: string;
-    title: string;
-}
 
 export interface IAlias {
     name: string;

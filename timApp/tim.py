@@ -50,6 +50,7 @@ from timApp.plugin.timtable.timTable import timTable_plugin
 from timApp.printing.print import print_blueprint
 from timApp.plugin.tape.tape import tape_plugin
 from timApp.readmark.routes import readings
+from timApp.sisu.scim import scim
 from timApp.tim_app import app, default_secret
 from timApp.timdb.exceptions import ItemAlreadyExistsException
 from timApp.timdb.sqa import db
@@ -101,6 +102,7 @@ app.register_blueprint(admin_bp)
 app.register_blueprint(plugin_bp)
 app.register_blueprint(tags_blueprint)
 app.register_blueprint(course_blueprint)
+app.register_blueprint(scim)
 
 app.wsgi_app = ReverseProxied(app.wsgi_app)
 

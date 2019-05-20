@@ -41,8 +41,8 @@ class MinutesHandling(BrowserTest):
     def test_minute_extracts(self):
         # Tests creation of extracts from a full minutes document
         self.login_test1()
-        ug1 = UserGroup.create('ittdk18', commit=False)
-        ug2 = UserGroup.create('ittdk1', commit=False)
+        ug1 = UserGroup.create('ittdk18')
+        ug2 = UserGroup.create('ittdk1')
         u = self.current_user
         u.groups.append(ug1)
         u.groups.append(ug2)

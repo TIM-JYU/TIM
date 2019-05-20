@@ -39,3 +39,5 @@ CELERYBEAT_SCHEDULE = {
     # don't schedule anything while testing
 }
 WTF_CSRF_METHODS = []
+SCIM_USERNAME = 't'
+SCIM_PASSWORD = 'pass'
