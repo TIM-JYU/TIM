@@ -348,7 +348,7 @@ To here: {#practicedrop2}.
 Anything inside this `.info` section will not be a part of the actual question/answer.
 Here you can place extra instructions and the draggable words in "drag1".
 
-{#drag1 words: ["I, "when", "around", "come"]}
+{#drag1 words: ["I", "when", "around", "come"]}
 
 The question ID `#drop1` should be unique. It refers to the feedback and should be
 edited in both. 
