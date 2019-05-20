@@ -57,8 +57,10 @@ class TableFormMarkupModel(GenericMarkupModel):
     shownames: Union[bool, Missing] = missing
     sortBy: Union[str, Missing] = missing
     dataCollection: Union[str, Missing] = missing
-    fields: Union[List[str], Missing] = missing
     autosave: Union[bool, Missing] = missing
+    tableButton: Union[str, Missing] = missing
+    reportButton: Union[str, Missing] = missing
+    fields: Union[List[str], Missing] = missing
     realnames: Union[bool, Missing] = missing
 
 
@@ -72,9 +74,10 @@ class TableFormMarkupSchema(GenericMarkupSchema):
     sortBy = fields.Str(allow_none=True)
     dataCollection = fields.Str(allow_none=True)
     autosave = fields.Boolean()
+    tableButton = fields.Str(allow_none=True)
+    reportButton = fields.Str(allow_none=True)
     realnames = fields.Boolean()
-    fields = fields.List(fields.Str()) #Always keep this last
-
+    fields = fields.List(fields.Str())
 
     @post_load
     def make_obj(self, data):
