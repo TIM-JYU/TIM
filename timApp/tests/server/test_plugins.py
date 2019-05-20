@@ -1023,13 +1023,17 @@ choices:
         a = self.post_answer('mmcq', f'{did}.t', [False, False, False])
         self.login_test1()
         aid = a['savedNew']
-        self.post_answer('mmcq', f'{did}.t', [False, False, True],
-                         save_teacher=True,
-                         teacher=True,
-                         user_id=self.test_user_2.id,
-                         answer_id=aid)
-        a: Answer = Answer.query.get(aid)
+        fix_id = self.post_answer(
+            'mmcq', f'{did}.t', [False, False, True],
+            save_teacher=True,
+            teacher=True,
+            user_id=self.test_user_2.id,
+            answer_id=aid,
+        )['savedNew']
+        a: Answer = Answer.query.get(fix_id)
         self.assertEqual(2, len(a.users_all))
+        a: Answer = Answer.query.get(aid)
+        self.assertEqual(1, len(a.users_all))
 
     def test_pali(self):
         self.login_test1()

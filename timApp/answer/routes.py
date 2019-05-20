@@ -223,7 +223,11 @@ def post_answer(plugintype: str, task_id_ext: str):
             expected_task_id = answer.task_id
             if expected_task_id != tid.doc_task:
                 return abort(400, 'Task ids did not match')
-            users = answer.users_all
+
+            # Later on, we may call users.append, but we don't want to modify the users of the existing
+            # answer. Therefore, we make a copy of the user list so that SQLAlchemy no longer associates
+            # the user list with the answer.
+            users = list(answer.users_all)
             if not users:
                 return abort(400, 'No users found for the specified answer')
             user_id = answer_browser_data.get('userId', None)
