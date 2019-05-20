@@ -17,18 +17,23 @@ from pluginserver_flask import GenericMarkupModel, GenericMarkupSchema, GenericH
 @attr.s(auto_attribs=True)
 class TextfieldStateModel:
     """Model for the information that is stored in TIM database for each answer."""
-    userword: str
+    c: str
 
 
 class TextfieldStateSchema(Schema):
-    userword = fields.Str(required=True)
+    c = fields.Str(required=True)
 
     @pre_load()
     def numeric_to_text(self, data):
-        if not data.get("userword", False) and (data.get("numericvalue") is not None):
-            data["userword"] = str(data.get("numericvalue"))
-            pass
-        pass
+        data["c"] = str(data.get("c", ""))
+    #     # if not data.get("userword", False) and (data.get("numericvalue") is not None):
+    #     #     data["userword"] = str(data.get("numericvalue"))
+    #     #     pass
+    #     # pass
+    #     if 'userword' in data:
+    #         pass
+    #     else:
+    #         data["userword"] = data.get("numericvalue", "")
 
     @post_load
     def make_obj(self, data):
@@ -113,7 +118,7 @@ class TextfieldHtmlModel(GenericHtmlModel[TextfieldInputModel, TextfieldMarkupMo
     def get_browser_json(self):
         r = super().get_browser_json()
         if self.state:
-            r['userword'] = self.state.userword
+            r['userword'] = self.state.c
         return r
 
     class Meta:
@@ -183,7 +188,7 @@ def answer(args: TextfieldAnswerModel):
     nosave = args.input.nosave
 
     if not nosave:
-        save = {"userword": userword}
+        save = {"c": userword}
         result["save"] = save
         web['result'] = "saved"
 
