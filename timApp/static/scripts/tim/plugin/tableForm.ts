@@ -42,6 +42,7 @@ const TableFormMarkup = t.intersection([
         /* answerAge: nullable(t.string), /* TODO! Define time range from which answers are fetched. Maybe not to be implemented! */
         dataCollection: nullable(t.string), /* TODO! Filter by data collection consent: allowed, denied or both */
         autosave: t.boolean,
+        realnames: t.boolean,
 
     }),
     GenericPluginMarkup,
@@ -135,24 +136,30 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
         this.data.userdata.cells["A1"] = {cell: "Henkilön Nimi", backgroundColor: "#efecf1"};
         if(this.attrsall.fields) this.data.table.countCol = this.attrsall.fields.length + 1;
         this.data.table.countRow = Object.keys(this.rows).length + 1;
-        let x = 2;
+        let y = 2;
         for (const r of Object.keys(this.rows)) {
-            this.data.userdata.cells["A" + x] = {cell: r, backgroundColor: "#efecf1"};
-            this.data.lockedCells.push("A" + x);
-            x++;
+            this.data.userdata.cells["A" + y] = {cell: r, backgroundColor: "#efecf1"};
+            this.data.lockedCells.push("A" + y);
+            if (this.attrs.realnames) {
+                this.data.userdata.cells["B" + y] = {cell: this.rows[r]['realname'], backgroundColor: "#efecf1"};
+                this.data.lockedCells.push("B" + y);
+            }
+            y++;
         }
         // TODO: Load default cell colors from tableForm's private answer?
+        let xOffset = 1;
+        if(this.attrs.realnames) xOffset = 2
         if (this.attrsall.fields) {
-            for (let y = 0; y < this.attrsall.fields.length; y++) {
-                this.data.userdata.cells[colnumToLetters(y + 1) + 1] =  {cell: this.attrsall.fields[y], backgroundColor: "#efecf1"};
-                this.data.lockedCells.push(colnumToLetters(y + 1) + 1);
-                x = 0;
+            for (let x = 0; x < this.attrsall.fields.length; x++) {
+                this.data.userdata.cells[colnumToLetters(x + xOffset) + 1] =  {cell: this.attrsall.fields[x], backgroundColor: "#efecf1"};
+                this.data.lockedCells.push(colnumToLetters(x + xOffset) + 1);
+                y = 0;
                 for (const [u, r] of Object.entries(this.rows)) {
                     if (r[this.attrsall.fields[y]]) {
-                        this.data.userdata.cells[colnumToLetters(y + 1) + (x + 2)] = r[this.attrsall.fields[y]];
+                        this.data.userdata.cells[colnumToLetters(x + xOffset) + (y + 2)] = r[this.attrsall.fields[x]];
 
                     }
-                    x++;
+                    y++;
                 }
             }
         }

@@ -59,6 +59,7 @@ class TableFormMarkupModel(GenericMarkupModel):
     dataCollection: Union[str, Missing] = missing
     fields: Union[List[str], Missing] = missing
     autosave: Union[bool, Missing] = missing
+    realnames: Union[bool, Missing] = missing
 
 
 class TableFormMarkupSchema(GenericMarkupSchema):
@@ -71,7 +72,9 @@ class TableFormMarkupSchema(GenericMarkupSchema):
     sortBy = fields.Str(allow_none=True)
     dataCollection = fields.Str(allow_none=True)
     autosave = fields.Boolean()
-    fields = fields.List(fields.Str())
+    realnames = fields.Boolean()
+    fields = fields.List(fields.Str()) #Always keep this last
+
 
     @post_load
     def make_obj(self, data):
@@ -133,7 +136,8 @@ class TableFormHtmlModel(GenericHtmlModel[TableFormInputModel, TableFormMarkupMo
             userfields = get_fields_and_users(self.markup.fields, groups, d, user)
             rows = {}
             for f in userfields[0]:
-                rows[f['user'].name] = f['fields']
+                rows[f['user'].name] = dict(f['fields'])
+                rows[f['user'].name]['realname'] = f['user'].real_name
             r['rows'] = rows
             #r['fields'] = []
             # for field in self.markup.fields: #TODO: Read fieldnames from first row of userfields response
