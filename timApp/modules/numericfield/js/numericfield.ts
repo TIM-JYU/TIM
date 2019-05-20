@@ -172,11 +172,11 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
     // noinspection JSUnusedGlobalSymbols
     /**
      * Stepper used by step in numericfield-Runner component.
-     * Needed to seperate from other save methods because of the if-structure.
+     * Used to define range of each numeric step for scroll up/down, e.g. 0.25 or 1.0.
      * Unused method warning is suppressed, as the method is only called in template.
      */
-    step() {
-        if (this.attrs.step) return this.attrs.step;
+    stepCheck() {
+        return (this.attrs.step);
     }
 
     // noinspection JSUnusedGlobalSymbols
@@ -306,7 +306,7 @@ numericfieldApp.component("numericfieldRunner", {
         <input type="number"
                ng-if="::!$ctrl.isPlainText()"
                style="width: {{::$ctrl.cols}}em"
-               step="$ctrl.step"
+               step="{{ $ctrl.stepCheck() }}"
                class="form-control"
                ng-model="$ctrl.numericvalue"
                ng-model-options="{ debounce: {'blur': 0} } "

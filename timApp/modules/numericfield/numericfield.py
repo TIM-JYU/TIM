@@ -60,7 +60,7 @@ class NumericfieldStateSchema(Schema):
 class NumericfieldMarkupModel(GenericMarkupModel):
     points_array: Union[str, Missing] = missing
     inputstem: Union[str, Missing] = missing
-    initnumber: Union[int, Missing] = missing
+    initnumber: Union[float, Missing] = missing
     cols: Union[int, Missing] = missing
     inputplaceholder: Union[int, Missing] = missing
     followid: Union[str, Missing] = missing
@@ -68,7 +68,7 @@ class NumericfieldMarkupModel(GenericMarkupModel):
     validinput: Union[str, Missing] = missing
     errormessage: Union[str, Missing] = missing
     labelStyle: Union[str, Missing] = missing
-    step: Union[int, Missing] = missing
+    step: Union[float, Missing] = missing
 
 class NumericfieldMarkupSchema(GenericMarkupSchema):
     points_array = fields.List(fields.List(fields.Number()))

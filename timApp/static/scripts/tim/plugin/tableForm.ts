@@ -36,11 +36,11 @@ const TableFormMarkup = t.intersection([
         initword: t.string,
         table: nullable(t.boolean),
         report: nullable(t.boolean),
-        separator: nullable(t.string), /* TODO! Separate columns with user given character for report */
+        separator: nullable(t.string),
         shownames: nullable(t.boolean),
         sortBy: nullable(t.string), /* TODO! Username and task, or task and username -- what about points? */
-        /* answerAge: nullable(t.string), /* TODO! Define time range from which answers are fetched. Maybe not to be implemented! */
-        dataCollection: nullable(t.string), /* TODO! Filter by data collection consent: allowed, denied or both */
+        tableButton: nullable(t.string),
+        reportButton: nullable(t.string),
         autosave: t.boolean,
         realnames: t.boolean,
 
@@ -93,11 +93,21 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
         return {};
     }
 
-    // THIS WILL BE REMOVED AS WE IMPLEMENT A 2 BUTTON SOLUTION
-    //
-    // buttonText() {
-    //     return super.buttonText() || "Tallenna taulukko";
-    // }
+    // noinspection JSUnusedGlobalSymbols
+    /**
+    * Used to define table view & relative save button in angular, true or false.
+    */
+     tableButton() {
+        return (this.attrs.tableButton || "Tallenna taulukko");
+    }
+
+    // noinspection JSUnusedGlobalSymbols
+    /**
+    * Used to define table view & relative save button in angular, true or false.
+    */
+     reportButton() {
+        return (this.attrs.reportButton || "Luo Raportti");
+    }
 
     async $onInit() {
         super.$onInit();
@@ -222,9 +232,11 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
         return (this.attrs.sortBy || "username");
     }
 
+    // noinspection JSUnusedGlobalSymbols
     /**
-     * Generates report based on the table. TODO!
+     * Generates report based on the table.
      * Used if report is set to true and create report button is clicked.
+     * Used to define table view & relative save button in angular, true or false.
      */
     generateReport() {
         const dataTable = this.generateCSVTable();
@@ -372,7 +384,7 @@ timApp.component("tableformRunner", {
     <tim-markup-error ng-if="::$ctrl.markupError" data="::$ctrl.markupError"></tim-markup-error>
     <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
     <p ng-if="::$ctrl.stem" ng-bind-html="::$ctrl.stem"></p>
-    <div class="form-inline"><label ng-if="::$ctrl.tableCheck()">Suodata{{::$ctrl.inputstem}} <span>
+    <div class="form-inline" ng-if="::$ctrl.tableCheck()"><label>Suodata {{::$ctrl.inputstem}} <span>
         <input type="text"
                class="form-control"
                ng-model="$ctrl.userfilter"
@@ -387,12 +399,12 @@ timApp.component("tableformRunner", {
     <button class="timButton"
             ng-if="::$ctrl.tableCheck()"
             ng-click="$ctrl.saveText()">
-        Tallenna taulukko
+            {{ ::$ctrl.tableButton() }}
     </button>
     <button class="timButton"
             ng-if="::$ctrl.reportCheck()"
             ng-click="$ctrl.generateReport()">
-        Luo Raportti 
+            {{ ::$ctrl.reportButton() }}
     </button>
     <pre ng-if="$ctrl.result">{{$ctrl.result}}</pre>
     <pre ng-if="$ctrl.error" ng-bind-html="$ctrl.error"></pre>
