@@ -5,13 +5,13 @@
 import {IRootElementService, IScope} from "angular";
 import * as focusMe from "tim/ui/focusMe";
 import * as onEnter from "tim/ui/onEnter";
+import {saveCurrentScreenPar} from "../document/parhelpers";
 import {DialogController, registerDialogComponent, showDialog} from "../ui/dialog";
-import {capitalizeFirstLetter, IOkResponse, markAsUsed, to, ToReturn} from "../util/utils";
+import {LOGIN_DEFAULT_LANGUAGE} from "../ui/language";
 import {$http} from "../util/ngimport";
+import {capitalizeFirstLetter, IOkResponse, markAsUsed, to, ToReturn} from "../util/utils";
 import {IUser} from "./IUser";
 import {Users} from "./userService";
-import {saveCurrentScreenPar} from "../document/parhelpers";
-import {LOGIN_DEFAULT_LANGUAGE} from "../ui/language";
 
 interface INameResponse {
     status: "name";

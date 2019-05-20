@@ -4,15 +4,7 @@
 
 import {IRootElementService, IScope} from "angular";
 import {ngStorage} from "ngstorage";
-import {
-    getCourseCode,
-    ICourseSettings,
-    IItem,
-    ISubjectList,
-    ITaggedItem,
-    tagIsExpired,
-    TagType,
-} from "../../item/IItem";
+import {getCourseCode, ICourseSettings, ISubjectList, ITaggedItem, tagIsExpired, TagType,} from "../../item/IItem";
 import {DialogController, registerDialogComponent, showDialog} from "../../ui/dialog";
 import {$http, $localStorage} from "../../util/ngimport";
 import {KEY_ENTER} from "../../util/keycodes";

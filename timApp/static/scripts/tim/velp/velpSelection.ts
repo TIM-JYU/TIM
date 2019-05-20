@@ -1,10 +1,10 @@
-import angular, {IController, IFormController} from "angular";
+import {IController, IFormController} from "angular";
 import {timApp} from "tim/app";
 import {Binding, clone, markAsUsed, Require} from "tim/util/utils";
 import * as velpSummary from "tim/velp/velpSummary";
 import {colorPalette, VelpWindowController} from "tim/velp/velpWindow";
 import {ViewCtrl} from "../document/viewctrl";
-import {$http, $log} from "../util/ngimport";
+import {$http} from "../util/ngimport";
 import {
     ILabel,
     ILabelUI,

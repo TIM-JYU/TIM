@@ -1,9 +1,9 @@
 import {IController} from "angular";
+import {ngStorage} from "ngstorage";
 import {timApp} from "tim/app";
+import {$localStorage} from "../util/ngimport";
 import {showLoginDialog} from "./loginDialog";
 import {Users} from "./userService";
-import {ngStorage} from "ngstorage";
-import {$localStorage, $window} from "../util/ngimport";
 
 /**
  * A component that displays either button for opening login dialog or the user menu component

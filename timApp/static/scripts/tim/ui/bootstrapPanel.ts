@@ -1,6 +1,6 @@
 import {IController, IRootElementService} from "angular";
 import {timApp} from "tim/app";
-import {Binding, Require} from "../util/utils";
+import {Binding} from "../util/utils";
 
 class BootstrapPanelController implements IController {
     static $inject = ["$element"];

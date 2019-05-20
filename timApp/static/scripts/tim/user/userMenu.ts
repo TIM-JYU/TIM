@@ -1,9 +1,9 @@
 import {IController} from "angular";
 import {timApp} from "tim/app";
+import {Binding} from "../util/utils";
+import {IUser} from "./IUser";
 import {showLoginDialog} from "./loginDialog";
 import {Users} from "./userService";
-import {IUser} from "./IUser";
-import {Binding} from "../util/utils";
 
 /**
  * User menu component with a button that displays current user name and the number of additional
@@ -13,7 +13,7 @@ class UserMenuController implements IController {
     static component = "userMenu";
     static $inject = ["$element", "$scope"] as const;
     private loggingout: boolean;
-    public language!: Binding<string, "<">;
+    public language!: Binding<string, "@">;
 
     constructor() {
         this.loggingout = false;

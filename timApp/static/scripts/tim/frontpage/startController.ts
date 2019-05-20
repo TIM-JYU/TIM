@@ -1,16 +1,16 @@
 import {IController} from "angular";
+import {ngStorage} from "ngstorage";
 import * as createItem from "tim/item/createItem";
 import {markAsUsed} from "tim/util/utils";
 import {timApp} from "../app";
 import {showCourseListDialog} from "../document/course/courseListDialogCtrl";
 import {ICourseSettings} from "../item/IItem";
 import {showMessageDialog} from "../ui/dialog";
+import {FRONT_PAGE_DEFAULT_LANGUAGE} from "../ui/language";
+import {showLoginDialog} from "../user/loginDialog";
+import {Users} from "../user/userService";
 import {$http, $localStorage, $window} from "../util/ngimport";
 import {to} from "../util/utils";
-import {ngStorage} from "ngstorage";
-import {Users} from "../user/userService";
-import {showLoginDialog} from "../user/loginDialog";
-import {FRONT_PAGE_DEFAULT_LANGUAGE} from "../ui/language";
 
 markAsUsed(createItem);
 

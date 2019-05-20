@@ -5,17 +5,8 @@ import {addElementToParagraphMargin} from "../document/parhelpers";
 import {ViewCtrl} from "../document/viewctrl";
 import {IItem} from "../item/IItem";
 import {showMessageDialog} from "../ui/dialog";
-import {$compile, $http, $timeout, $window} from "../util/ngimport";
-import {
-    angularWait,
-    assertIsText,
-    checkIfElement,
-    getElementParent,
-    isInViewport,
-    scrollToElement,
-    stringOrNull,
-} from "../util/utils";
-import {AnnotationController} from "./annotation";
+import {$compile, $http, $window} from "../util/ngimport";
+import {angularWait, assertIsText, checkIfElement, getElementParent, stringOrNull,} from "../util/utils";
 import {VelpSelectionController} from "./velpSelection";
 import {IAnnotation, IAnnotationCoordless, IAnnotationInterval, isFullCoord, IVelp, IVelpUI} from "./velptypes";
 

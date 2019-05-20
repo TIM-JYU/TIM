@@ -9,7 +9,7 @@
 import {IController} from "angular";
 import {Binding, to} from "tim/util/utils";
 import {timApp} from "../app";
-import {$http, $window} from "../util/ngimport";
+import {$http} from "../util/ngimport";
 import {IItem, IRelevance} from "./IItem";
 
 export const relevanceSuggestions = [

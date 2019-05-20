@@ -6,7 +6,7 @@ import {IItem} from "../item/IItem";
 import {showMessageDialog} from "../ui/dialog";
 import {Users} from "../user/userService";
 import {$http, $log, $timeout, $window} from "../util/ngimport";
-import {getPageXY, IOkResponse, isInViewport, markPageDirty, posToRelative, to} from "../util/utils";
+import {IOkResponse, isInViewport, markPageDirty, posToRelative, to} from "../util/utils";
 import {showDiffDialog} from "./diffDialog";
 import {EditPosition, EditType} from "./editing/editing";
 import {IExtraData} from "./editing/edittypes";

@@ -1,6 +1,6 @@
 import {IRootElementService, IScope} from "angular";
 import {timApp} from "../app";
-import {DialogController, IModalInstance, registerDialogComponent, showDialog} from "../ui/dialog";
+import {DialogController, registerDialogComponent, showDialog} from "../ui/dialog";
 import {$http, $timeout} from "../util/ngimport";
 import {ILectureMessage} from "./lecturetypes";
 import {KEY_ENTER} from "../util/keycodes";

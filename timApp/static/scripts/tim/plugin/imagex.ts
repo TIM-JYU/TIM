@@ -5,7 +5,7 @@ import * as t from "io-ts";
 import {ViewCtrl} from "../document/viewctrl";
 import {editorChangeValue} from "../editor/editorScope";
 import {$http, $q, $sce, $timeout} from "../util/ngimport";
-import {markAsUsed, numOrStringToNumber, Require, to, valueOr, posToRelative, MouseOrTouch} from "../util/utils";
+import {markAsUsed, MouseOrTouch, numOrStringToNumber, posToRelative, Require, to, valueOr} from "../util/utils";
 import * as colorpicker from "angular-bootstrap-colorpicker";
 import {
     CommonPropsT,
@@ -27,8 +27,9 @@ import {
     OptionalPropNames,
     OptionalTargetPropNames,
     PinAlign,
-    PinPropsT, RequiredNonNull,
-    RequireExcept, RequireNonNullExcept,
+    PinPropsT,
+    RequiredNonNull,
+    RequireExcept,
     RightAnswerT,
     SingleSize,
     SizeT,
