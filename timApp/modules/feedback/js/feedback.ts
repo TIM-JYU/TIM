@@ -1,5 +1,6 @@
 /**
  * Defines the client-side implementation of a feedback-plugin.
+ *
  */
 import angular from "angular";
 import * as t from "io-ts";
@@ -22,8 +23,10 @@ const matchWordsPlaceHolderRegExp = /\|match\[[0-9]+:[0-9]+-[0-9]+\]\|/g;
 const answerRegExpArray = [answerPlaceHolderRegExp, answerWordsPlaceHolderRegExp];
 const matchRegExpArray = [matchPlaceHolderRegExp, matchWordPlaceHolderRegExp, matchWordsPlaceHolderRegExp];
 const keywordPlaceHolder = /\|kw:.*\|/;
+// TODO: A placeholder for the level the learner currently is to be shown back to them.
 
 enum Mode {
+    // TODO: Make it so that the instructions and practice item are not presented at the same time.
     Instruction = 0,
     QuestionItem = 1,
     Feedback = 2,
@@ -137,6 +140,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
             this.questionItemIndex = 0;
         }
         this.teacherRight = this.vctrl.item.rights.teacher;
+        // TODO: Add an attribute that prevents the hiding of elements as an alternative to the edit mode prevention, maybe only in init?
         if (!this.attrsall.preview) {
             this.hideQuestionItems();
         }
