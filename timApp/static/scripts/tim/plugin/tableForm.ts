@@ -265,6 +265,10 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
                     row.push("Anonymous" + [i]);
                     continue;
                 }
+                if(!this.shownames() && this.realnames && j == 1 && i > 0) {
+                    row.push("Unknown" + [i]);
+                    continue;
+                }
                 row.push(timTable.cellDataMatrix[i][j].cell);
             }
         }

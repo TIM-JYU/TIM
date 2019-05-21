@@ -90,17 +90,17 @@ services:
   working_dir: /imagex
   command: ./startAll.sh
   restart: unless-stopped
- pali:
-  image: timimages/tim:${TIM_IMAGE_TAG}
-  build: ./timApp/modules/pali
-  volumes:
-   - ./timApp/modules/pali:/pali:ro
-   - ./timApp/modules/py:/py:ro
-  working_dir: /pali
-  environment:
-    PYTHONPATH: /pali:/py:/usr/local/lib/python3.6/dist-packages
-  command: ./startAll.sh
-  restart: unless-stopped
+# pali:
+#  image: timimages/tim:${TIM_IMAGE_TAG}
+#  build: ./timApp/modules/pali
+#  volumes:
+#   - ./timApp/modules/pali:/pali:ro
+#   - ./timApp/modules/py:/py:ro
+#  working_dir: /pali
+#  environment:
+#    PYTHONPATH: /pali:/py:/usr/local/lib/python3.6/dist-packages
+#  command: ./startAll.sh
+#  restart: unless-stopped
  textfield:
   image: timimages/tim:${TIM_IMAGE_TAG}
   #build: ./timApp/modules/textfield
