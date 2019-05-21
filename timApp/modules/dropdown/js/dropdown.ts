@@ -27,7 +27,7 @@ const DropdownMarkup = t.intersection([
 ]);
 const DropdownAll = t.intersection([
     t.partial({
-        selectedWord: t.string,
+        c: t.string,
     }),
     t.type({
         info: Info,
@@ -52,7 +52,7 @@ class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.T
 
     $onInit() {
         super.$onInit();
-        this.selectedWord = this.attrsall.selectedWord;
+        this.selectedWord = this.attrsall.c;
         this.shuffle = this.attrs.shuffle;
         if (this.shuffle && this.attrs.words) {
             this.wordList = this.shuffleWords(this.attrs.words);

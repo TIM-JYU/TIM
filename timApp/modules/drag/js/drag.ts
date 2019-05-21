@@ -49,7 +49,7 @@ const DragMarkup = t.intersection([
 ]);
 const DragAll = t.intersection([
     t.partial({
-        words: t.array(t.string),
+        c: t.array(t.string),
     }),
     t.type({
         info: Info,
@@ -118,8 +118,8 @@ class DragController extends PluginBase<t.TypeOf<typeof DragMarkup>, t.TypeOf<ty
         this.shuffle = this.attrs.shuffle || false;
         this.saveButton = this.attrs.savebutton || false;
         this.wordObjs = [];
-        if (this.attrsall.words) {
-            this.createWordobjs(this.attrsall.words);
+        if (this.attrsall.c) {
+            this.createWordobjs(this.attrsall.c);
         } else {
             if (this.shuffle && this.attrs.words) {
                 const words = this.shuffleWords(this.attrs.words);

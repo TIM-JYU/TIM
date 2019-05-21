@@ -17,10 +17,10 @@ from pluginserver_flask import GenericMarkupModel, GenericMarkupSchema, GenericH
 
 @attr.s(auto_attribs=True)
 class DropdownStateModel:
-    selectedWord: str
+    c: str
 
 class DropdownStateSchema(Schema):
-    selectedWord = fields.Str(required=True)
+    c = fields.Str(required=True)
 
     @post_load
     def make_obj(self, data):
@@ -91,7 +91,7 @@ class DropdownHtmlModel(GenericHtmlModel[DropdownInputModel, DropdownMarkupModel
     def get_browser_json(self):
         r = super().get_browser_json()
         if self.state:
-            r['selectedWord'] = self.state.selectedWord
+            r['c'] = self.state.c
         return r
 
     def get_real_html(self):

@@ -17,11 +17,11 @@ from pluginserver_flask import GenericMarkupModel, GenericMarkupSchema, GenericH
 
 @attr.s(auto_attribs=True)
 class DragStateModel:
-    words: List[str]
+    c: List[str]
 
 
 class DragStateSchema(Schema):
-    words = fields.List(fields.Str(required=True))
+    c = fields.List(fields.Str(required=True))
 
     @post_load
     def make_obj(self, data):
@@ -113,7 +113,7 @@ class DragHtmlModel(GenericHtmlModel[DragInputModel, DragMarkupModel, DragStateM
     def get_browser_json(self):
         r = super().get_browser_json()
         if self.state:
-            r['words'] = self.state.words
+            r['c'] = self.state.c
         return r
 
     def get_real_html(self):
