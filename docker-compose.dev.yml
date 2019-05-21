@@ -27,10 +27,10 @@ services:
   command: ${IMAGEX_DEV_COMMAND:-/usr/sbin/sshd -D}
   ports:
    - "49995:22"
-# pali:
-#  command: ${PALI_DEV_COMMAND:-/usr/sbin/sshd -D}
-#  ports:
-#   - "49997:22"
+ pali:
+  command: ${PALI_DEV_COMMAND:-/usr/sbin/sshd -D}
+  ports:
+   - "49997:22"
  textfield:
  # image: timimages/cs3sudo:rust
  # build:
