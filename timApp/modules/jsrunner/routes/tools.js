@@ -40,7 +40,10 @@ class Tools {
 
     getDouble(fieldName, def = 0) {
         let s= this.normalizeAndGet(fieldName);
-        let r = parseFloat(s);
+        if (!s) return def;
+        if (typeof s == 'number') return s;
+        let sp = s.toString().replace(",", ".");
+        let r = parseFloat(sp);
         if (isNaN(r)) r = def;
         return r;
     }
@@ -67,11 +70,16 @@ class Tools {
     getSum(fieldName, start, end, def = 0) {
         let fn = this.normalizeField(fieldName);
         let sum = 0;
+        let r = 0;
         for (let i = start; i <= end; i++) {
             let fnn = fn + i.toString();
             let s = this.data.fields[fnn];
-            let r = parseFloat(s);
-            if (isNaN(r)) r = def;
+            if (s) {
+                let sp = s.toString().replace(",", ".");
+                r = parseFloat(sp);
+                if (isNaN(r)) r = def;
+            }
+            else r = def;
             sum += r;
         }
         return sum;
@@ -91,7 +99,8 @@ class Tools {
 
     setDouble(fieldName, content) {
         let fn = this.normalizeAndSet(fieldName);
-        let r = parseFloat(content);
+        let cont = content.toString().replace(",", ".");
+        let r = parseFloat(cont);
         // TODO: if (isNaN(r)) error
         this.result[fn] = r;
     }
@@ -130,8 +139,10 @@ class Tools {
     }
 
     defineTime(s) {
-        // TODO: fix so that user can give datetime without offset (2019-05-11 12:13:14)
-        return Date.parse(s) / 1000;
+        // TODO: fix timezone to work locally
+        let localDateTime = new Date(s);
+        let offset = localDateTime.getTimezoneOffset() * 60;
+        return (localDateTime.getTime() / 1000) + offset;
     }
 
     getDateTime(fieldName, def=NaN) {

@@ -99,9 +99,7 @@ def get_fields_and_users(u_fields: List[str], groups: List[UserGroup], d: DocInf
             users.add(u)
 
     task_ids = []
-    # TODO support aliases e.g. 55.d1=d1
     alias_map = {}  # {'13.oikeanimi': 'alias'}
-    print(alias_map)
     jsrunner_alias_map = {}  # jsrunnerissa tarvitsee {'alias': '13.oikeanimi'}
     doc_map = {}
     for field in u_fields:
@@ -119,7 +117,6 @@ def get_fields_and_users(u_fields: List[str], groups: List[UserGroup], d: DocInf
         doc_map[task_id.doc_id] = dib.document
 
     res = []
-    print(task_ids)
     for user in users:
         answer_ids = (
             user.answers
