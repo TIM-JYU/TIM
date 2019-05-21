@@ -36,12 +36,13 @@ const TableFormMarkup = t.intersection([
         initword: t.string,
         table: nullable(t.boolean),
         report: nullable(t.boolean),
-        separator: nullable(t.string), /* TODO! Separate columns with user given character for report */
+        separator: nullable(t.string),
         shownames: nullable(t.boolean),
         sortBy: nullable(t.string), /* TODO! Username and task, or task and username -- what about points? */
-        /* answerAge: nullable(t.string), /* TODO! Define time range from which answers are fetched. Maybe not to be implemented! */
-        dataCollection: nullable(t.string), /* TODO! Filter by data collection consent: allowed, denied or both */
+        buttonText: nullable(t.string),
+        reportButton: nullable(t.string),
         autosave: t.boolean,
+        realnames: t.boolean,
 
     }),
     GenericPluginMarkup,
@@ -86,21 +87,34 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
     private allRows!: {};
     private modelOpts!: INgModelOptions;
     private oldCellValues!: string;
+    private realnames = false;
 
     getDefaultMarkup() {
         return {};
     }
 
-    // THIS WILL BE REMOVED AS WE IMPLEMENT A 2 BUTTON SOLUTION
-    //
-    // buttonText() {
-    //     return super.buttonText() || "Tallenna taulukko";
-    // }
+    // noinspection JSUnusedGlobalSymbols
+    /**
+    * Used to define table view & relative save button in angular, true or false.
+    */
+     buttonText() {
+        return (this.attrs.buttonText || "Tallenna taulukko");
+    }
+
+    // noinspection JSUnusedGlobalSymbols
+    /**
+    * Used to define table view & relative save button in angular, true or false.
+    */
+     reportButton() {
+        return (this.attrs.reportButton || "Luo Raportti");
+    }
 
     async $onInit() {
         super.$onInit();
         this.userfilter = "";
         this.allRows = this.attrsall.rows || {};
+        this.realnames = true;
+        if (this.attrs.realnames == false) this.realnames = false;
         this.rows = this.allRows;
         this.setDataMatrix();
         this.oldCellValues = JSON.stringify(this.data.userdata.cells);
@@ -132,27 +146,34 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
     //}
 
     setDataMatrix() {
-        this.data.lockedCells.push("A1");
-        if(this.attrsall.fields) this.data.table.countCol = this.attrsall.fields.length + 1;
+        this.data.userdata.cells["A1"] = {cell: "Käyttäjänimi", backgroundColor: "#efecf1"};
+        if (this.realnames) this.data.userdata.cells["B1"] = {cell: "Henkilön Nimi", backgroundColor: "#efecf1"};
+        if(this.attrsall.fields && this.realnames) this.data.table.countCol = this.attrsall.fields.length + 2;
+        else if(this.attrsall.fields) this.data.table.countCol = this.attrsall.fields.length + 1;
         this.data.table.countRow = Object.keys(this.rows).length + 1;
-        let x = 2;
+        let y = 2;
         for (const r of Object.keys(this.rows)) {
-            this.data.userdata.cells["A" + x] = {cell: r, backgroundColor: "#efecf1"};
-            this.data.lockedCells.push("A" + x);
-            x++;
+            this.data.userdata.cells["A" + y] = {cell: r, backgroundColor: "#efecf1"};
+            this.data.lockedCells.push("A" + y);
+            if (this.realnames) {
+                this.data.userdata.cells["B" + y] = {cell: this.rows[r]['realname'], backgroundColor: "#efecf1"};
+                this.data.lockedCells.push("B" + y);
+            }
+            y++;
         }
         // TODO: Load default cell colors from tableForm's private answer?
+        let xOffset = 1;
+        if(this.realnames) xOffset = 2
         if (this.attrsall.fields) {
-            for (let y = 0; y < this.attrsall.fields.length; y++) {
-                this.data.userdata.cells[colnumToLetters(y + 1) + 1] =  {cell: this.attrsall.fields[y], backgroundColor: "#efecf1"};
-                this.data.lockedCells.push(colnumToLetters(y + 1) + 1);
-                x = 0;
+            for (let x = 0; x < this.attrsall.fields.length; x++) {
+                this.data.userdata.cells[colnumToLetters(x + xOffset) + 1] =  {cell: this.attrsall.fields[x], backgroundColor: "#efecf1"};
+                this.data.lockedCells.push(colnumToLetters(x + xOffset) + 1);
+                y = 0;
                 for (const [u, r] of Object.entries(this.rows)) {
-                    if (r[this.attrsall.fields[y]]) {
-                        this.data.userdata.cells[colnumToLetters(y + 1) + (x + 2)] = r[this.attrsall.fields[y]];
-
+                    if (r[this.attrsall.fields[x]]) {
+                        this.data.userdata.cells[colnumToLetters(x + xOffset) + (y + 2)] = r[this.attrsall.fields[x]];
                     }
-                    x++;
+                    y++;
                 }
             }
         }
@@ -211,12 +232,13 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
         return (this.attrs.sortBy || "username");
     }
 
+    // noinspection JSUnusedGlobalSymbols
     /**
-     * Generates report based on the table. TODO!
+     * Generates report based on the table.
      * Used if report is set to true and create report button is clicked.
+     * Used to define table view & relative save button in angular, true or false.
      */
     generateReport() {
-        console.log(this.shownames(), this.sortBy());
         const dataTable = this.generateCSVTable();
         const win = window.open("/tableForm/generateCSV?" + $httpParamSerializer({data: JSON.stringify(dataTable), separator: (this.attrs.separator || ",")}), "WINDOWID");
         if (win == null) {
@@ -239,10 +261,6 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
             const row: CellType[] = [];
             result.push(row);
             for(let j = 0; j < colcount; j++) {
-                if (j == 0 && i == 0) {
-                    row.push("Henkilön Nimi");
-                    continue;
-                }
                 if (!this.shownames() && j == 0 && i > 0) {
                     row.push("Anonymous" + [i]);
                     continue;
@@ -319,7 +337,10 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
                 if (numberPlace === "1") { continue; }
                 userLocations[numberPlace] = cellContent;
                 replyRows[cellContent] = {};
-            } else if (numberPlace === "1") {
+            } else if(this.realnames && columnPlace === "B") {
+                continue;
+            }
+            else if (numberPlace === "1") {
                 if (this.attrsall.aliases && cellContent in this.attrsall.aliases)
                     taskLocations[columnPlace] = this.attrsall.aliases[cellContent]
                 else
@@ -372,18 +393,18 @@ timApp.component("tableformRunner", {
                ng-change="$ctrl.updateFilter()"
                ng-readonly="::$ctrl.readonly"
                size="{{::$ctrl.cols}}"></span></label>
-        <tim-table data="::$ctrl.data" taskid="{{$ctrl.pluginMeta.getTaskId()}}" plugintype="{{$ctrl.pluginMeta.getPlugin()}}"></tim-table>
+        <tim-table disabled="!$ctrl.tableCheck()" data="::$ctrl.data" taskid="{{$ctrl.pluginMeta.getTaskId()}}" plugintype="{{$ctrl.pluginMeta.getPlugin()}}"></tim-table>
         <!-- TODO: taskid="{{ $ctrl.pluginm }}", vie pluginmeta & taskid-->
     </div>
     <button class="timButton"
             ng-if="::$ctrl.tableCheck()"
             ng-click="$ctrl.saveText()">
-        Tallenna taulukko
+            {{ ::$ctrl.buttonText() }}
     </button>
     <button class="timButton"
             ng-if="::$ctrl.reportCheck()"
             ng-click="$ctrl.generateReport()">
-        Luo Raportti 
+            {{ ::$ctrl.reportButton() }}
     </button>
     <pre ng-if="$ctrl.result">{{$ctrl.result}}</pre>
     <pre ng-if="$ctrl.error" ng-bind-html="$ctrl.error"></pre>

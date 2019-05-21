@@ -57,8 +57,12 @@ class TableFormMarkupModel(GenericMarkupModel):
     shownames: Union[bool, Missing] = missing
     sortBy: Union[str, Missing] = missing
     dataCollection: Union[str, Missing] = missing
-    fields: Union[List[str], Missing] = missing
     autosave: Union[bool, Missing] = missing
+    buttonText: Union[str, Missing] = missing
+    reportButton: Union[str, Missing] = missing
+    realnames: Union[bool, Missing] = missing
+    fields: Union[List[str], Missing] = missing
+
 
 
 class TableFormMarkupSchema(GenericMarkupSchema):
@@ -71,6 +75,9 @@ class TableFormMarkupSchema(GenericMarkupSchema):
     sortBy = fields.Str(allow_none=True)
     dataCollection = fields.Str(allow_none=True)
     autosave = fields.Boolean()
+    buttonText = fields.Str(allow_none=True)
+    reportButton = fields.Str(allow_none=True)
+    realnames = fields.Boolean()
     fields = fields.List(fields.Str())
 
     @post_load
@@ -133,7 +140,8 @@ class TableFormHtmlModel(GenericHtmlModel[TableFormInputModel, TableFormMarkupMo
             userfields = get_fields_and_users(self.markup.fields, groups, d, user)
             rows = {}
             for f in userfields[0]:
-                rows[f['user'].name] = f['fields']
+                rows[f['user'].name] = dict(f['fields'])
+                rows[f['user'].name]['realname'] = f['user'].real_name
             r['rows'] = rows
             #r['fields'] = []
             # for field in self.markup.fields: #TODO: Read fieldnames from first row of userfields response

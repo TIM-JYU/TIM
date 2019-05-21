@@ -18,7 +18,7 @@ from pluginserver_flask import GenericMarkupModel, GenericMarkupSchema, GenericH
 @attr.s(auto_attribs=True)
 class NumericfieldStateModel:
     """Model for the information that is stored in TIM database for each answer."""
-    numericvalue: float = missing
+    c: float = missing
 
 
 def convert_to_float(value):
@@ -31,28 +31,22 @@ def convert_to_float(value):
 
 
 class NumericfieldStateSchema(Schema):
-    numericvalue = fields.Raw()
+    c = fields.Raw()
 
-    @validates('numericvalue')
-    def validate_numericvalue(self, value):
-        convert_to_float(value)
+    # @validates('numericvalue')
+    # def validate_numericvalue(self, value):
+    #     convert_to_float(value)
 
     @pre_load()
     def remove_null(self, data):
-        # data['numericvalue'] = convert_to_float(data['numericvalue'])
-        if not data.get("numericvalue", False) and (data.get("userword") is not None):
-            try:
-                data['numericvalue'] = float(data.get("userword"))
-            except ValueError:
-                pass
         try:
-            data['numericvalue'] = float(data.get("numericvalue"))
+            data["c"] = float(str(data.get("c", "")).replace(',', '.'))
         except (ValueError, TypeError):
-            data['numericvalue'] = "" #TODO: Why "None" is no longer valid state?
+            data["c"] = ""
 
     @post_load()
     def make_obj(self, data,):
-        return NumericfieldStateModel(numericvalue=convert_to_float(data['numericvalue']))
+        return NumericfieldStateModel(c=convert_to_float(data['c']))
 
     class Meta:
         strict = True
@@ -62,7 +56,7 @@ class NumericfieldStateSchema(Schema):
 class NumericfieldMarkupModel(GenericMarkupModel):
     points_array: Union[str, Missing] = missing
     inputstem: Union[str, Missing] = missing
-    initnumber: Union[int, Missing] = missing
+    initnumber: Union[float, Missing] = missing
     cols: Union[int, Missing] = missing
     inputplaceholder: Union[int, Missing] = missing
     followid: Union[str, Missing] = missing
@@ -70,6 +64,7 @@ class NumericfieldMarkupModel(GenericMarkupModel):
     validinput: Union[str, Missing] = missing
     errormessage: Union[str, Missing] = missing
     labelStyle: Union[str, Missing] = missing
+    step: Union[float, Missing] = missing
 
 class NumericfieldMarkupSchema(GenericMarkupSchema):
     points_array = fields.List(fields.List(fields.Number()))
@@ -84,6 +79,7 @@ class NumericfieldMarkupSchema(GenericMarkupSchema):
     validinput = fields.String(allow_none=True)
     errormessage = fields.String(allow_none=True)
     labelStyle = fields.String(allow_none=True)
+    step = fields.Number(allow_none=True)
 
     @post_load
     def make_obj(self, data):
@@ -136,8 +132,8 @@ class NumericfieldHtmlModel(GenericHtmlModel[NumericfieldInputModel, Numericfiel
         """Allowing null values to dataBase"""
         r = super().get_browser_json()
         if self.state:
-            if self.state.numericvalue is not None:
-                r['numericvalue'] = self.state.numericvalue
+            if self.state.c is not None:
+                r['numericvalue'] = self.state.c
             # if self.state.numericvalue is None:
             #     r['numericvalue'] = ""
         return r
@@ -204,10 +200,15 @@ def answer(args: NumericfieldAnswerModel):
     web = {}
     result = {'web': web}
     numericvalue = args.input.numericvalue
-
     nosave = args.input.nosave
+
+    if isinstance(numericvalue, Missing):
+        web['result'] = "unsaved"
+        web['error'] = "Please enter a number"
+        nosave = True
+
     if not nosave:
-        save = {"numericvalue": numericvalue}
+        save = {"c": numericvalue}
         result["save"] = save
         web['result'] = "saved"
 

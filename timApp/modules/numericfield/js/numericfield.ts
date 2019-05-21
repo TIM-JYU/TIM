@@ -21,6 +21,7 @@ const NumericfieldMarkup = t.intersection([
         validinput: nullable(t.string),
         errormessage: nullable(t.string),
         labelStyle: nullable(t.string),
+        step: nullable(t.number),
         autosave: t.boolean,
     }),
     GenericPluginMarkup,
@@ -160,12 +161,22 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
 
     // noinspection JSUnusedGlobalSymbols
     /**
-     * Autosaver used by ng-blur in textfieldApp component.
-     * Needed to seperate from other save methods because of the if-structure.
+     * Autosaver used by ng-blur in numericfield-Runner component.
+     * Needed to separate from other save methods because of the if-structure.
      * Unused method warning is suppressed, as the method is only called in template.
      */
     autoSave() {
         if (this.attrs.autosave) this.doSaveText(false);
+    }
+
+    // noinspection JSUnusedGlobalSymbols
+    /**
+     * Stepper used by step in numericfield-Runner component.
+     * Used to define range of each numeric step for scroll up/down, e.g. 0.25 or 1.0.
+     * Unused method warning is suppressed, as the method is only called in template.
+     */
+    stepCheck() {
+        return (this.attrs.step);
     }
 
     // noinspection JSUnusedGlobalSymbols
@@ -258,10 +269,12 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
             const data = r.result.data;
             this.errormessage = data.web.error;
             this.result = data.web.result;
-            this.initialValue = this.numericvalue;
-            this.hideSavedText = false;
-            this.redAlert = false;
-            this.saveResponse.saved = true;
+            if (this.result == "saved") {
+                this.initialValue = this.numericvalue;
+                this.hideSavedText = false;
+                this.redAlert = false;
+                this.saveResponse.saved = true;
+            }
             this.saveResponse.message = this.errormessage;
         } else {
             this.errormessage = "Infinite loop or some other error?";
@@ -295,6 +308,7 @@ numericfieldApp.component("numericfieldRunner", {
         <input type="number"
                ng-if="::!$ctrl.isPlainText()"
                style="width: {{::$ctrl.cols}}em"
+               step="{{ $ctrl.stepCheck() }}"
                class="form-control"
                ng-model="$ctrl.numericvalue"
                ng-model-options="{ debounce: {'blur': 0} } "
