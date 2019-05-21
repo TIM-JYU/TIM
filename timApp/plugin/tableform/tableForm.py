@@ -267,21 +267,39 @@ def reqs():
     templates = ["""
 ``` {#tableForm_table plugin="tableForm"}
 groups: 
- - Group Name #TODO ryhmä listana vai max 1 ryhmä?
+ - Group Name #Use Group Name here
+fields:
+ - d1=demo1 #List your fields here, = for alias
 table: true
 report: false
+realnames: true #Show full name in 2nd column, true or false
+buttonText: #Name your save button here
+autosave: true #autosave, true or false
 ```""", """
 ``` {#tableForm_table_report plugin="tableForm"}
 groups: 
- - Group Name #TODO ryhmä listana vai max 1 ryhmä?
+ - Group Name #Use Group Name here
+fields:
+ - d1=demo1 #List your fields here, = for alias
 table: true
 report: true
+realnames: true #Show full name in 2nd column, true or false
+buttonText: #Name your save table button here
+autosave: true #autosave, true or false
+separator: ";" #Define your report value separator here, ";" by default
+shownames: true #To show or hide user (and full) names in report, true or false
+reportButton: "Name your generate report button here
 ```""", """
 ``` {#tableForm_report plugin="tableForm"}
 groups: 
- - Group Name #TODO ryhmä listana vai max 1 ryhmä?
+ - Group Name #Use Group Name here
+fields:
+ - d1=demo1 #List your fields here, = for alias
 table: false
 report: true
+separator: ";" #Define your value separator here, ";" as default
+shownames: true #To show or hide user (and full) names in report, true or false
+reportButton: "Name your generate report button here
 ```"""]
     editor_tabs = [
             {
