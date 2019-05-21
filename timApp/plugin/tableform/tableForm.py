@@ -156,6 +156,7 @@ class TableFormHtmlModel(GenericHtmlModel[TableFormInputModel, TableFormMarkupMo
             #         r['fields'].append(task_id.extended_or_doc_task)
             r['fields'] = list(userfields[0][0]['fields'].keys())
             r['aliases'] = userfields[1]
+            r['contentMap'] = userfields[2]
             #TODO else return "no groups/no fields"
 
         return r
@@ -231,7 +232,6 @@ def gen_csv():
 @csrf.exempt
 @use_args(TableFormAnswerSchema(strict=True), locations=("json",))
 def answer(args: TableFormInputModel):
-    args2 = request.get_json() #TODO: Schema/Model
     rows = args.input.replyRows
     saveRows = []
     for u, r in rows.items():

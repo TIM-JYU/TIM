@@ -62,6 +62,7 @@ const TableFormAll = t.intersection([
         rows: Rows,
         fields: t.array(t.string),
         aliases: t.dictionary(t.string,t.string),
+        contentMap: t.dictionary(t.string,t.string),
     }),
     GenericPluginTopLevelFields,
     t.type({markup: TableFormMarkup}),
@@ -341,12 +342,20 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
                 continue;
             }
             else if (numberPlace === "1") {
+                let contentalias;
                 if (this.attrsall.aliases && cellContent in this.attrsall.aliases)
-                    taskLocations[columnPlace] = this.attrsall.aliases[cellContent]
-                else
-                    taskLocations[columnPlace] = cellContent;
+                    contentalias = this.attrsall.aliases[cellContent]
+                else contentalias = cellContent
+                let contentfield = "";
+                if (this.attrsall.contentMap && contentalias in this.attrsall.contentMap)
+                    contentfield = "|" + this.attrsall.contentMap[contentalias]
+                taskLocations[columnPlace] = contentalias + contentfield;
             } else {
-                replyRows[userLocations[numberPlace]][taskLocations[columnPlace]] = cellContent;
+                // let contentAlias = "";
+                // if (this.attrsall.contentMap && taskLocations[columnPlace] in this.attrsall.contentMap)
+                //     contentAlias = "|" + this.attrsall.contentMap[taskLocations[columnPlace]]
+                // replyRows[userLocations[numberPlace]][taskLocations[columnPlace]] = cellContent + contentAlias;
+                replyRows[userLocations[numberPlace]][taskLocations[columnPlace]] = cellContent
             }
         }
         const params = {

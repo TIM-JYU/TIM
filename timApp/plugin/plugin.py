@@ -305,7 +305,7 @@ class Plugin:
                 }
 
     def get_content_field_name(self):
-        return CONTENT_FIELD_NAME_MAP.get(self.type, 'content')
+        return CONTENT_FIELD_NAME_MAP.get(self.type, 'c')
 
     #TODO: def get content field type (for numericfield save number) -
     #if value not in contentfieldtypemap use string as default

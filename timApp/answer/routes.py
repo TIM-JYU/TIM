@@ -101,15 +101,19 @@ def get_fields_and_users(u_fields: List[str], groups: List[UserGroup], d: DocInf
     task_ids = []
     # TODO support aliases e.g. 55.d1=d1
     alias_map = {}  # {'13.oikeanimi': 'alias'}
+    content_map = {}
     print(alias_map)
     jsrunner_alias_map = {}  # jsrunnerissa tarvitsee {'alias': '13.oikeanimi'}
     doc_map = {}
     for field in u_fields:
-        field_alias = field.split("=")
+        field_content = field.split("|")
+        field_alias = field_content[0].split("=")
         task_id = TaskId.parse(field_alias[0].strip(), False, False)
         task_ids.append(task_id)
         if not task_id.doc_id:
             task_id.doc_id = d.id
+        if len(field_content) == 2:
+            content_map[task_id.extended_or_doc_task] = field_content[1].strip()
         if len(field_alias) == 2:
             alias_map[task_id.extended_or_doc_task] = field_alias[1].strip()
             jsrunner_alias_map[field_alias[1].strip()] = task_id.extended_or_doc_task
@@ -143,20 +147,24 @@ def get_fields_and_users(u_fields: List[str], groups: List[UserGroup], d: DocInf
             else:
                 json_str = a.content
                 p = json.loads(json_str)
-                if len(p) > 1:
-                    plug = find_plugin_from_document(doc_map[task.doc_id], task, get_current_user_object())
-                    content_field = plug.get_content_field_name()
-                    value = p[content_field]
+                if(task.extended_or_doc_task in content_map):
+                    #value = p[content_map[task.extended_or_doc_task]]
+                    value = p.get(content_map[task.extended_or_doc_task])
                 else:
-                    values_p = list(p.values())
-                    value = values_p[0]
+                    if len(p) > 1:
+                        plug = find_plugin_from_document(doc_map[task.doc_id], task, get_current_user_object())
+                        content_field = plug.get_content_field_name()
+                        value = p[content_field]
+                    else:
+                        values_p = list(p.values())
+                        value = values_p[0]
             if task.extended_or_doc_task in alias_map:
                 user_tasks[alias_map.get(task.extended_or_doc_task)] = value
             else:
                 user_tasks[task.extended_or_doc_task] = value
         res.append({'user': user, 'fields': user_tasks})
     print(res)
-    return res, jsrunner_alias_map
+    return res, jsrunner_alias_map, content_map
 
 
 @answers.route("/<plugintype>/<task_id_ext>/answer/", methods=['PUT'])
@@ -313,12 +321,17 @@ def post_answer(plugintype: str, task_id_ext: str):
         save_obj = jsonresp['save']
         print(save_obj)
         tasks = set()
+        # content_map = {}
         doc_map: Dict[int, DocInfo] = {}
         for item in save_obj:
             task_u = item['fields']
             for key in task_u.keys():
-                tasks.add(key)
-                id_num = TaskId.parse(key, False, False)
+                key_content = key.split("|")
+                # #TODO: Parse content tässä
+                # if len(key_content) == 2:
+                #     content_map[key_content[0]] = key_content[1].strip()
+                tasks.add(key_content[0])
+                id_num = TaskId.parse(key_content[0], False, False)
                 if id_num.doc_id not in doc_map:
                     doc_map[id_num.doc_id] = get_doc_or_abort(id_num.doc_id)
         task_content = {}
@@ -329,6 +342,10 @@ def post_answer(plugintype: str, task_id_ext: str):
             try:
                 plug = find_plugin_from_document(dib.document, t_id, get_current_user_object())
                 content_field = plug.get_content_field_name()
+                # key_content = key.split("|")
+                # #TODO: Parse content tässä
+                # if len(key_content) == 2:
+                #     content_map[key_content[0]] = key_content[1].strip()
                 # TODO: check plug content type ^
                 task_content[task] = content_field
             except PluginException as e:
@@ -343,16 +360,20 @@ def post_answer(plugintype: str, task_id_ext: str):
             user_fields = user['fields']
             for key, value in user_fields.items():
                 try:
-                    content_type = task_content[key]
+                    content_list = key.split("|")
+                    if len(content_list) == 2:
+                        content_type = content_list[1].strip()
+                    else:
+                        content_type = task_content[content_list[0]]
                     c = {content_type: value}
-                    task_id = TaskId.parse(key, False, False)
+                    task_id = TaskId.parse(content_list[0], False, False)
                     an: Answer = get_latest_answers_query(task_id, [u]).first()
                     content = json.dumps(c)
                     if an and an.content == content: #TODO check if redundant
                         pass
                     elif an:
                         an_content = json.loads(an.content)
-                        if an_content[content_type] != value:
+                        if an_content.get(content_type) != value:
                             an_content[content_type] = value
                             an_content = json.dumps(an_content)
                             a_result = Answer(
