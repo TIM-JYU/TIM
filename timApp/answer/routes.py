@@ -99,7 +99,6 @@ def get_fields_and_users(u_fields: List[str], groups: List[UserGroup], d: DocInf
             users.add(u)
 
     task_ids = []
-    # TODO support aliases e.g. 55.d1=d1
     alias_map = {}  # {'13.oikeanimi': 'alias'}
     content_map = {}
     print(alias_map)
@@ -123,7 +122,6 @@ def get_fields_and_users(u_fields: List[str], groups: List[UserGroup], d: DocInf
         doc_map[task_id.doc_id] = dib.document
 
     res = []
-    print(task_ids)
     for user in users:
         answer_ids = (
             user.answers
@@ -339,6 +337,9 @@ def post_answer(plugintype: str, task_id_ext: str):
             t_id = TaskId.parse(task, False, False)
             dib = doc_map[t_id.doc_id]
             verify_teacher_access(dib)
+            if t_id.task_name == "grade" or t_id.task_name == "credit":
+                task_content[task] = 'c'
+                continue
             try:
                 plug = find_plugin_from_document(dib.document, t_id, get_current_user_object())
                 content_field = plug.get_content_field_name()
@@ -354,6 +355,7 @@ def post_answer(plugintype: str, task_id_ext: str):
                     result['web']['error'] = result['web']['error'] + errormsg
                 except KeyError:
                     result['web'] = {"error": errormsg}
+        print(task_content)
         for user in save_obj:
             u_id = user['user']
             u = User.get_by_id(u_id)

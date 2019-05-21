@@ -6,6 +6,7 @@ import * as t from "io-ts";
 import {GenericPluginMarkup, GenericPluginTopLevelFields, nullable, PluginBase, pluginBindings} from "tim/plugin/util";
 import {$http} from "tim/util/ngimport";
 import {to} from "tim/util/utils";
+import "../../stylesheets/jsrunner.css";
 
 const jsrunnerApp = angular.module("jsrunnerApp", ["ngSanitize"]);
 export const moduleDefs = [jsrunnerApp];
@@ -90,7 +91,7 @@ jsrunnerApp.component("jsRunner", {
         vctrl: "^timView",
     },
     template: `
-<div class="csRunDiv no-popup-menu">
+<div class="jsRunnerDiv">
     <tim-markup-error ng-if="::$ctrl.markupError" data="::$ctrl.markupError"></tim-markup-error>
     <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
     <p ng-if="::$ctrl.stem" ng-bind-html="::$ctrl.stem"></p>
