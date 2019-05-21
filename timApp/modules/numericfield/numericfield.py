@@ -200,8 +200,13 @@ def answer(args: NumericfieldAnswerModel):
     web = {}
     result = {'web': web}
     numericvalue = args.input.numericvalue
-
     nosave = args.input.nosave
+
+    if isinstance(numericvalue, Missing):
+        web['result'] = "unsaved"
+        web['error'] = "Please enter a number"
+        nosave = True
+
     if not nosave:
         save = {"c": numericvalue}
         result["save"] = save

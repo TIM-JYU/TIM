@@ -269,10 +269,12 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
             const data = r.result.data;
             this.errormessage = data.web.error;
             this.result = data.web.result;
-            this.initialValue = this.numericvalue;
-            this.hideSavedText = false;
-            this.redAlert = false;
-            this.saveResponse.saved = true;
+            if (this.result == "saved") {
+                this.initialValue = this.numericvalue;
+                this.hideSavedText = false;
+                this.redAlert = false;
+                this.saveResponse.saved = true;
+            }
             this.saveResponse.message = this.errormessage;
         } else {
             this.errormessage = "Infinite loop or some other error?";
