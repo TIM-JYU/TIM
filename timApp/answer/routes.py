@@ -293,7 +293,7 @@ def post_answer(plugintype: str, task_id_ext: str):
         if len(g.all()) < 1:  # TODO: miten pitäisi tarkistaa?
             abort(403, f'Missing group in jsrunner')
 
-        answerdata['data'], answerdata['aliases'] = get_fields_and_users(plugin.values['fields'], g, d,
+        answerdata['data'], answerdata['aliases'], trash = get_fields_and_users(plugin.values['fields'], g, d,
                                                                          get_current_user_object())
 
     answer_call_data = {'markup': plugin.values,
