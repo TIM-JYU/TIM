@@ -125,12 +125,11 @@ class Tools {
         return grade;
     }
 
-    //TODO: fix!! also nomalize
     saveGrade(gradeVal, points) {
         let d = this.markup.gradeField || "grade";
-        let fn = this.normalizeField(d);
+        let fn = this.normalizeAndSet(d);
         this.result[fn] = gradeVal;
-        if (arguments.length === 2) { // TODO: ?
+        if (arguments.length === 2) {
             let c = this.markup.creditField || "credit";
             let fnc = this.normalizeAndSet(c);
             this.result[fnc] = points;

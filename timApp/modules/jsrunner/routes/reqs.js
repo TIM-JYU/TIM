@@ -5,11 +5,23 @@ const backTicks = "```";
 
 const templates = [`
 ${backTicks} {#pistelasku plugin="jsrunner"}
+groups:
+ -
 fields:
  - 
-program:
-header: Laske pisteet
-stem: Laske sivun pisteet.
+gradingScale:
+  1: 10
+  2: 20
+  3: 30
+  4: 40
+  5: 50
+failGrade: hyl
+gradeField: arvosana
+creditField: opintopisteet
+defaultPoints: 5
+program: |!!
+
+!!
 ${backTicks} `, `
 ${backTicks}{#pistelasku1 plugin="pali"}
 header: Kirjoita palindromi
@@ -38,8 +50,8 @@ router.get('/', function (req, res, next) {
                         'items': [
                             {
                                 'data': templates[0].trim(),
-                                'text': '5 letters',
-                                'expl': 'Add a 5-letter palindrome task',
+                                'text': 'JavaScript runner',
+                                'expl': 'Add JavaScript runner task',
                             }
                         ],
                     },
