@@ -620,7 +620,7 @@ def period_handling(task_ids, doc_ids, period):
     period_from = datetime.min.replace(tzinfo=timezone.utc)
     period_to = get_current_time()
 
-    since_last_key = task_ids[0].doc_task
+    since_last_key = task_ids[0].doc_task if task_ids else None
     if len(task_ids) > 1:
         since_last_key = str(next(d for d in doc_ids))
         if len(doc_ids) > 1:
