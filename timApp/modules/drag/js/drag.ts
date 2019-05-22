@@ -171,12 +171,15 @@ class DragController extends PluginBase<t.TypeOf<typeof DragMarkup>, t.TypeOf<ty
 
 
     /**
-     * Returns undefined since it is not used. Please use getContentArray().
-     * @returns {string} Returns undefined.
+     * Returns content separated by a comma or undefined if no content is contained.
+     * @returns {string} Returns content as a string separated by comma.
      */
     getContent() {
-        /// TODO: Implement if necessary.
-        return undefined;
+        let cont = this.getContentArray().join(",");
+        if (cont.length < 1) {
+            return undefined;
+        }
+        return cont;
     }
 
     /**
