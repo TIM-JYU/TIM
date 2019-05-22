@@ -188,7 +188,6 @@ def answer(args: DragAnswerModel):
     result = {'web': web}
     words = args.input.words
 
-    # plugin can ask not to save the word
     nosave = args.input.nosave
     if not nosave:
         save = {"c": words}

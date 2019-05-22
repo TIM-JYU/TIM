@@ -22,7 +22,7 @@ import drag from "angular-drag-and-drop-lists";
 
 markAsUsed(drag);
 
-// optional import of scroll behaviour
+// Optional import of scroll behaviour.
 import {scrollBehaviourDragImageTranslateOverride} from "mobile-drag-drop/scroll-behaviour";
 
 const dragApp = angular.module("dragApp", ["ngSanitize", "dndLists"]);
@@ -42,7 +42,7 @@ const DragMarkup = t.intersection([
     }),
     GenericPluginMarkup,
     t.type({
-        // all withDefaults should come here; NOT in t.partial
+        // All withDefaults should come here; NOT in t.partial.
         autoupdate: withDefault(t.number, 500),
         cols: withDefault(t.number, 20),
     }),
@@ -89,7 +89,7 @@ class DragController extends PluginBase<t.TypeOf<typeof DragMarkup>, t.TypeOf<ty
     }
 
     /**
-     * Returns either the followid-attribute or the name given to the plugin
+     * Returns either the followid-attribute or the name given to the plugin.
      */
     getName(): (string | undefined) {
         if (this.attrs.followid) {
@@ -99,14 +99,6 @@ class DragController extends PluginBase<t.TypeOf<typeof DragMarkup>, t.TypeOf<ty
         if (taskId) {
             return taskId.split(".")[1];
         }
-    }
-
-    /**
-     *
-     * @param group
-     */
-    belongsToGroup(group: string): boolean {
-        return false;
     }
 
     $onInit() {
@@ -130,13 +122,13 @@ class DragController extends PluginBase<t.TypeOf<typeof DragMarkup>, t.TypeOf<ty
         }
 
         polyfill({
-            // use this to make use of the scroll behaviour
+            // Use this to make use of the scroll behaviour.
             dragImageTranslateOverride: scrollBehaviourDragImageTranslateOverride,
         });
 
         window.addEventListener("touchmove", () => {
-            // this is a fix for ios problems arising in safari 10+
-            // this is also used for detecting touchscreen to change css layout
+            // This is a fix for ios problems arising in safari 10+.
+            // This is also used for detecting touchscreen to change css layout.
             this.element.addClass("touchdrag");
         }, {passive: false});
 
@@ -153,7 +145,6 @@ class DragController extends PluginBase<t.TypeOf<typeof DragMarkup>, t.TypeOf<ty
     createWordobjs(words: string[]) {
         if (!words) {
             return;
-            //TODO: error message or default word objects?
         }
         this.wordObjs = [];
         this.effectAllowed = "move";
@@ -175,33 +166,22 @@ class DragController extends PluginBase<t.TypeOf<typeof DragMarkup>, t.TypeOf<ty
      * Adds this plugin to ViewCtrl so other plugins can get information about the plugin though it.
      */
     addToCtrl() {
-        const taskid = this.pluginMeta.getTaskId() || ""; // TODO: fix this dirty stuff
-        const name = taskid.split(".");
         this.vctrl.addTimComponent(this);
     }
 
 
     /**
-     * Returns contained words as a string separated with a comma
-     * @returns {string} The words.
+     * Returns undefined since it is not used. Please use getContentArray().
+     * @returns {string} Returns undefined.
      */
-    getContent(): string | undefined {
-        let s: string;
-        s = "";
-        if (this.wordObjs) {
-            this.wordObjs.map((el) => {
-                s = s + "," + el.word;
-            });
-        }
-        if (s.length < 1) {
-            return undefined;
-        }
-        return s;
+    getContent() {
+        /// TODO: Implement if necessary.
+        return undefined;
     }
 
     /**
-     * Returns contained words as a string array
-     * @returns {string} The words
+     * Returns contained words as a string array.
+     * @returns {string} Plugin content in a string array.
      */
     getContentArray(): string[] {
         let words: string[];
@@ -211,12 +191,11 @@ class DragController extends PluginBase<t.TypeOf<typeof DragMarkup>, t.TypeOf<ty
                 words.push(el.word);
             });
         }
-        // if (words.length === 0) return undefined;
         return words;
     }
 
     /**
-     * Force the plugin to save its information
+     * Force the plugin to save its information.
      *
      * @param force Whether to force a save.
      */
