@@ -177,3 +177,4 @@ class TagTest(TimRouteTest):
         new_tag = {'name': 'dog', 'expires': None, 'type': TagType.Regular}
         self.json_post(f'/tags/add/{d.path}', {'tags': [old_tag]})
         self.json_post(f'/tags/edit/{d.path}', {'oldTag': old_tag, 'newTag': new_tag}, expect_status=200)
+

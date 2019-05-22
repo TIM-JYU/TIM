@@ -7,18 +7,17 @@ from flask import Blueprint, request, abort
 from timApp.answer.routes import period_handling
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.plugin.plugin import Plugin
-from timApp.timdb.sqa import db
 from timApp.user.user import User
 from timApp.util.flask.responsehelper import csv_response
 from timApp.plugin.taskid import TaskId
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 from timApp.answer.answer import Answer
 from timApp.plugin.pluginControl import task_ids_to_strlist
 
 from timApp.document.docentry import DocEntry, get_documents_in_folder
 from timApp.util.flask.requesthelper import get_option
 from timApp.util.utils import get_current_time
-from timApp.auth.accesshelper import verify_logged_in, verify_teacher_access
+from timApp.auth.accesshelper import verify_teacher_access
 from timApp.plugin.pluginControl import find_task_ids
 import csv
 
@@ -37,7 +36,6 @@ def get_all_feedback_answers(task_ids: List[TaskId],
                              period_to: datetime,
                              dec: str):
     """
-
     Get feedback answer results.
     :param task_ids: List of task ids.
     :param hide_names: Parameter for whether to show users anonymously.
@@ -82,7 +80,6 @@ def get_all_feedback_answers(task_ids: List[TaskId],
 
 def compile_csv(qq: Iterable[Tuple[Answer, User]], printname: bool, hide_names: bool, exp_answers: str, s_user: [str], dec: str):
     """
-
     Compile data into more csv friendly form.
     :param qq: List of Tuples containing Answers and Users.
     :param printname: Parameter whether to show full name.
@@ -246,10 +243,11 @@ def print_feedback_report(doc_path):
     elif format == 'bar':
         dialect = csv.excel
         dialect.delimiter = '|'
+    else:
+        dialect = csv.excel
+        dialect == 'semicolon'
 
     period = get_option(request, 'period', 'whenever')
-    period_from = datetime.min.replace(tzinfo=timezone.utc)
-    period_to = get_current_time()
 
     # Creates list of document ids from task ids.
     doc_ids = set()
@@ -307,3 +305,4 @@ def print_feedback_report(doc_path):
                                                 period_to,
                                                 decimal)
     return csv_response(answers, dialect)
+
