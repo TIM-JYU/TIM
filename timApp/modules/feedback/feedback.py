@@ -222,28 +222,28 @@ The question ID `#dropdown1` should be unique. It refers to the feedback and sho
 edited in both. 
 :::
 
-What {#dropdown1} on the stove?
+What {#dropdown1 shuffle: true} on the stove?
 
 ## Item header {defaultplugin="dropdown"}
 ::: {.info}
 This is the `.info` section.
 :::
 
-Who {#dropdown2} the cake?
+Who {#dropdown2 shuffle: true} the cake?
 
 ## Item header {defaultplugin="dropdown"}
 ::: {.info}
 This is the `.info` section.
 :::
 
-What {#dropdown3} on the roof?
+What {#dropdown3 shuffle: true} on the roof?
 
 ## Item header {defaultplugin="dropdown"}
 ::: {.info}
 This is the `.info` section.
 :::
 
-Who {#dropdown4} the 3 mile swim in the race?
+Who {#dropdown4 shuffle: true} the 3 mile swim in the race?
 
 ``` {#fb1 plugin="feedback"}
 # Quick reference for feedback options:
@@ -265,7 +265,7 @@ correctStreak: 2
 nextTask: "[Click here](next_task_document_name) to move to the next task."
 shuffle: true
 questionItems:
-- pluginNames: [dropdown1]
+- pluginNames: ["dropdown1"]
   words: [["is cooking", "do cooking", "are cooking"]]
   choices:
     - match: ["is cooking"]
@@ -290,7 +290,7 @@ questionItems:
         - "**Level 2 default feedback** in bold with **."
         - "<u>Level 3 default feedback</u> now underlined."
         - "[Level 4 default feedback]{.red} now in red color."
-- pluginNames: [dropdown2]
+- pluginNames: ["dropdown2"]
   words: [["is baking", "do baking", "are baking"]]
   choices:
     - match: ["is baking"]
@@ -302,7 +302,7 @@ questionItems:
       levels: *match2
     - match: []
       levels: *defaultmatch
-- pluginNames: [dropdown3]
+- pluginNames: ["dropdown3"]
   words: [["is jumping", "do jumping", "are jumping"]]
   choices:
     - match: ["is jumping"]
@@ -314,7 +314,7 @@ questionItems:
       levels: *match2
     - match: []
       levels: *defaultmatch
-- pluginNames: [dropdown4]
+- pluginNames: ["dropdown4"]
   words: [["is swimming", "do swimming", "are swimming"]]
   choices:
     - match: ["is swimming"]
@@ -348,7 +348,7 @@ To here: {#practicedrop2}.
 Anything inside this `.info` section will not be a part of the actual question/answer.
 Here you can place extra instructions and the draggable words in "drag1".
 
-{#drag1 words: ["I", "when", "around", "come"]}
+{#drag1 shuffle: true, words: ["I", "when", "around", "come"]}
 
 The question ID `#drop1` should be unique. It refers to the feedback and should be
 edited in both. 
@@ -360,7 +360,7 @@ You know where I'll be found {#drop1}.
 ::: {.info}
 This is the `.info` section with draggable words.
 
-{#drag2 words: ["I", "if", "a mile", "run"]}
+{#drag2 shuffle: true, words: ["I", "if", "a mile", "run"]}
 :::
 
 I will be quite tired {#drop2}.
@@ -369,7 +369,7 @@ I will be quite tired {#drop2}.
 ::: {.info}
 This is the `.info` section with draggable words.
 
-{#drag3 words: ["I", "who", "at work", "see"]}
+{#drag3 shuffle: true, words: ["I", "who", "at work", "see"]}
 :::
 
 I will tell you {#drop3}.
@@ -378,7 +378,7 @@ I will tell you {#drop3}.
 ::: {.info}
 This is the `.info` section with draggable words.
 
-{#drag4 words: ["I", "whether", "a computer", "had"]}
+{#drag4 shuffle: true, words: ["I", "whether", "a computer", "had"]}
 :::
 
 He wanted to know {#drop4}.
@@ -404,7 +404,7 @@ correctStreak: 2
 nextTask: "[Click here](next_task_document_name) to move to the next task."
 shuffle: true
 questionItems:
-- pluginNames: [drop1]
+- pluginNames: ["drop1"]
   words: []
   choices:
     - match: ["when I come around"]
@@ -429,7 +429,7 @@ questionItems:
         - "**Level 2 default feedback** in bold with **."
         - "<u>Level 3 default feedback</u> now underlined."
         - "[Level 4 default feedback]{.red} now in red color."
-- pluginNames: [drop2]
+- pluginNames: ["drop2"]
   words: []
   choices:
     - match: ["if I run a mile"]
@@ -441,7 +441,7 @@ questionItems:
       levels: *match2
     - match: []
       levels: *defaultmatch
-- pluginNames: [drop3]
+- pluginNames: ["drop3"]
   words: []
   choices:
     - match: ["who I see at work"]
@@ -453,7 +453,7 @@ questionItems:
       levels: *match2
     - match: []
       levels: *defaultmatch
-- pluginNames: [drop4]
+- pluginNames: ["drop4"]
   words: []
   choices:
     - match: ["whether I had a computer"]
@@ -499,14 +499,14 @@ The question ID `#dropdown1` should be unique. It refers to the feedback and sho
 edited in both. 
 :::
 
-What {#dropdown1} on the stove?
+What {#dropdown1 shuffle: true} on the stove?
 
 """, """## Item header {defaultplugin="drag"}
 ::: {.info}
 Anything inside this `.info` section will not be a part of the actual question/answer.
 Here you can place extra instructions and the draggable words in "drag1".
 
-{#drag1 words: ["I", "when", "around", "come"]}
+{#drag1 shuffle: true , words: ["I", "when", "around", "come"]}
 
 The question ID `#drop1` should be unique. It refers to the feedback and should be
 edited in both. 
@@ -534,7 +534,7 @@ correctStreak: 2
 nextTask: "[Click here](next_task_document_name) to move to the next task."
 shuffle: true
 questionItems:
-- pluginNames: [dropdown1]
+- pluginNames: ["dropdown1"]
   words: [["is cooking", "do cooking", "are cooking"]]
   choices:
     - match: ["is cooking"]
@@ -559,7 +559,7 @@ questionItems:
         - "**Level 2 default feedback** in bold with **."
         - "<u>Level 3 default feedback</u> now underlined."
         - "[Level 4 default feedback]{.red} now in red color."
-- pluginNames: [dropdown2]
+- pluginNames: ["dropdown2"]
   words: [["is baking", "do baking", "are baking"]]
   choices:
     - match: ["is baking"]
@@ -571,7 +571,7 @@ questionItems:
       levels: *match2
     - match: []
       levels: *defaultmatch
-- pluginNames: [dropdown3]
+- pluginNames: ["dropdown3"]
   words: [["is jumping", "do jumping", "are jumping"]]
   choices:
     - match: ["is jumping"]
@@ -583,7 +583,7 @@ questionItems:
       levels: *match2
     - match: []
       levels: *defaultmatch
-- pluginNames: [dropdown4]
+- pluginNames: ["dropdown4"]
   words: [["is swimming", "do swimming", "are swimming"]]
   choices:
     - match: ["is swimming"]
@@ -617,7 +617,7 @@ correctStreak: 2
 nextTask: "[Click here](next_task_document_name) to move to the next task."
 shuffle: true
 questionItems:
-- pluginNames: [drop1]
+- pluginNames: ["drop1"]
   words: []
   choices:
     - match: ["when I come around"]
@@ -642,7 +642,7 @@ questionItems:
         - "**Level 2 default feedback** in bold with **."
         - "<u>Level 3 default feedback</u> now underlined."
         - "[Level 4 default feedback]{.red} now in red color."
-- pluginNames: [drop2]
+- pluginNames: ["drop2"]
   words: []
   choices:
     - match: ["if I run a mile"]
@@ -654,7 +654,7 @@ questionItems:
       levels: *match2
     - match: []
       levels: *defaultmatch
-- pluginNames: [drop3]
+- pluginNames: ["drop3"]
   words: []
   choices:
     - match: ["who I see at work"]
@@ -666,7 +666,7 @@ questionItems:
       levels: *match2
     - match: []
       levels: *defaultmatch
-- pluginNames: [drop4]
+- pluginNames: ["drop4"]
   words: []
   choices:
     - match: ["whether I had a computer"]

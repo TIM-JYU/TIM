@@ -80,7 +80,7 @@ const FeedbackMarkup = t.intersection([
         correctStreak: withDefault(t.number, 1),
         questionItems: t.array(QuestionItem),
         showAnswers: withDefault(t.boolean, false),
-        shuffle: withDefault(t.boolean, true),
+        shuffle: withDefault(t.boolean, false),
     }),
 ]);
 const FeedbackAll = t.intersection([
@@ -1150,7 +1150,7 @@ feedbackApp.component("feedbackRunner", {
         vctrl: "^timView",
     },
     template: `
-<div>
+<div class="feedbackContent">
     <tim-markup-error ng-if="::$ctrl.markupError" data="::$ctrl.markupError"></tim-markup-error>
     <div class="error" ng-if="$ctrl.error" ng-bind-html="$ctrl.error"></div>
     <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
