@@ -120,7 +120,6 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
         this.setDataMatrix();
         this.oldCellValues = JSON.stringify(this.data.userdata.cells);
         if (this.attrs.autosave) this.data.saveCallBack = (rowi, coli, content) => this.singleCellSave(rowi, coli, content);
-        console.log("eaaa");
     }
 
     getTimTable() {
@@ -258,6 +257,7 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
         if (this.attrsall.fields && this.attrsall.fields.length) {
             colcount = this.attrsall.fields.length +1;
         }
+        if (this.realnames) { colcount += 1; }
         for (let i = 0; i < rowcount; i++) {
             const row: CellType[] = [];
             result.push(row);
