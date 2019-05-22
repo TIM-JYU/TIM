@@ -785,7 +785,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
                     continue;
                 }
 
-                const re = new RegExp(match[i]);
+                const re = new RegExp(`\\b${match[i]}\\b`);
                 if (!re.test(answer[i])) {
                     return false;
                 }
@@ -995,7 +995,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
             const re = new RegExp(v);
             let value = v;
             if (j < wordlists.length) {
-                const word = wordlists[j].filter(x => re.test((x)));
+                const word = wordlists[j].filter(x => re.test((`\\b${x}\\b`)));
                 if (word.length > 0) {
                     value = word[0];
                 }
