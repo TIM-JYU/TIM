@@ -170,9 +170,11 @@ export class PareditorController extends DialogController<{params: IEditorParams
     private lastTab?: string;
     private tabs: IEditorTab[];
     private trdiff?: {old: string, new: string};
-    private activeAttachments?: IAttachmentData[]; // Attachments currently in the editor.
-    private macroStringBegin = "%%liite(";
-    private macroStringEnd = ")%%";  // TODO: May be confused with other macro endings.
+    private activeAttachments?: IAttachmentData[]; // Attachments (with stamps) currently in the editor.
+    private liiteMacroStringBegin = "%%liite(";  // Attachment macro with stamping.
+    private liiteMacroStringEnd = ")%%";  // TODO: May be confused with other macro endings.
+    private perusliiteMacroStringBegin = "%%perusliite(";  // Attachment macro without stamping.
+    private perusliiteMacroStringEnd = ")%%";
 
     constructor(protected element: IRootElementService, protected scope: IScope) {
         super(element, scope);
@@ -999,7 +1001,12 @@ ${backTicks}
 
         const kokousDate = this.getCurrentMeetingDate();
         const selectionRange = editor.getPosition(); // Selected area in the editor
-        const macroRange = this.getMacroRange(editorText, this.macroStringBegin, this.macroStringEnd, selectionRange);
+        // For attachments with stamps:
+        const macroRange = this.getMacroRange(
+            editorText,
+            this.liiteMacroStringBegin,
+            this.liiteMacroStringEnd,
+            selectionRange);
 
         // If there's an attachment macro in the editor (i.e. macroRange is defined), assume need to stamp.
         // Also requires data from preamble to work correctly (dates and knro).
@@ -1009,8 +1016,8 @@ ${backTicks}
             try {
                 // Macro begin and end not included.
                 const macroText = editorText.substring(
-                    macroRange[0] + this.macroStringBegin.length,
-                    macroRange[1] - this.macroStringEnd.length);
+                    macroRange[0] + this.liiteMacroStringBegin.length,
+                    macroRange[1] - this.liiteMacroStringEnd.length);
                 macroParams = this.getMacroParamsFromString(macroText);
             } catch {
                 const errorMessage = "Parsing stamp parameters failed";
@@ -1054,7 +1061,16 @@ ${backTicks}
                     } else {
                         this.uploadedFile = savedir + response.data.file;
                     }
-                    if (isplugin || macroRange) {
+                    // For attachments without stamps (only look for this if stamped version wasn't found):
+                    let macroRange2;
+                    if (!macroRange) {
+                        macroRange2 = this.getMacroRange(
+                            editorText,
+                            this.perusliiteMacroStringBegin,
+                            this.perusliiteMacroStringEnd,
+                            selectionRange);
+                    }
+                    if (isplugin || macroRange || macroRange2) {
                         editor.insertTemplate(this.uploadedFile);
                     } else {
                         editor.insertTemplate(start + this.uploadedFile + ")");
@@ -1376,11 +1392,11 @@ ${backTicks}
         const pluginSplit = editorText.split("```");
         for (const part of pluginSplit) {
             // Do closer check only on paragraphs with showPdf-plugins.
-            if (part.length > (this.macroStringBegin.length + this.macroStringEnd.length)
-                && part.includes('plugin="showPdf"')) {
+            if (part.length > (this.liiteMacroStringBegin.length + this.liiteMacroStringEnd.length)
+                && part.includes('plugin="showPdf"') && part.includes(this.liiteMacroStringBegin)) {
                 const macroText = part.substring(
-                    part.lastIndexOf(this.macroStringBegin) + this.macroStringBegin.length,
-                    part.lastIndexOf(this.macroStringEnd));
+                    part.lastIndexOf(this.liiteMacroStringBegin) + this.liiteMacroStringBegin.length,
+                    part.lastIndexOf(this.liiteMacroStringEnd));
                 const macroParams = this.getMacroParamsFromString(macroText);
                 const current = this.macroParamsToAttachmentData(macroParams);
                 let upToDate;
