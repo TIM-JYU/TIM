@@ -206,22 +206,12 @@ class TableFormAnswerSchema(TableFormAttrs, GenericAnswerSchema):
 def render_static_tableForm(m: TableFormHtmlModel):
     return render_template_string(
         """
-<div class="csRunDiv no-popup-menu">
-<h4>{{ header }}</h4>
-<p class="stem">{{ stem }}</p>
-<div><label>{{ inputstem or '' }} <span>
-<input type="text"
-    class="form-control"
-    placeholder="{{inputplaceholder or ''}}"
-    value="{{userword or ''}}"
-    size="{{cols}}"></span></label>
-</div>
+<div class="tableform">
 <button class="timButton">
-    {{ buttonText or button or "Save" }}
+    Avaa Taulukko/Raporttinäkymä
 </button>
-<a>{{ resetText }}</a>
-<p class="plgfooter">{{ footer }}</p>
 </div>
+<br>
         """,
         **attr.asdict(m.markup),
         userword=m.state.userword if m.state else '',
