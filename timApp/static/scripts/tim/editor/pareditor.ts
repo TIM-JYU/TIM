@@ -1049,6 +1049,8 @@ ${backTicks}
             upload.then((response) => {
                 $timeout(() => {
                     const editor = this.editor!;
+                    // This check is needed for uploads in other (non-attachment) plugins.
+                    // TODO: Could this be editor.contains(...)?
                     const isplugin = (editor.editorStartsWith("``` {"));
                     let start = "[File](";
                     let savedir = "/files/";
@@ -1073,9 +1075,9 @@ ${backTicks}
                     if (isplugin || macroRange || macroRange2) {
                         editor.insertTemplate(this.uploadedFile);
                     } else {
-                        editor.insertTemplate(start + this.uploadedFile + ")");
+                        editor.insertTemplate(`${start}${this.uploadedFile})`);
                     }
-                    // Separate from isPlugin so this is ran only when there are attachments.
+                    // Separate from isPlugin so this is ran only when there are attachments with stamps.
                     if (macroRange && kokousDate) {
                         stamped.uploadUrl = this.uploadedFile;
                         this.activeAttachments = this.updateAttachments(false, this.activeAttachments, stamped);
@@ -1391,7 +1393,8 @@ ${backTicks}
         const editorText = this.editor.getEditorText();
         const pluginSplit = editorText.split("```");
         for (const part of pluginSplit) {
-            // Do closer check only on paragraphs with showPdf-plugins.
+            // Do closer check only on paragraphs containing showPdf-plugins and stamped attachment macros
+            // (because same plugin type can also contain stampless macros).
             if (part.length > (this.liiteMacroStringBegin.length + this.liiteMacroStringEnd.length)
                 && part.includes('plugin="showPdf"') && part.includes(this.liiteMacroStringBegin)) {
                 const macroText = part.substring(
