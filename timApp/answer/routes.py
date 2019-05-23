@@ -608,7 +608,6 @@ def rename_answers(old_name: str, new_name: str, doc_path: str):
     return json_response({'modified': len(answers_to_rename), 'conflicts': conflicts})
 
 
-# TODO: Re-evaluate the function name, and implement
 def period_handling(task_ids, doc_ids, period):
     """
     Returns start and end of an period for answer results.

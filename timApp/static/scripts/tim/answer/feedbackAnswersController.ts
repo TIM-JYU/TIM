@@ -64,16 +64,18 @@ export class FeedbackAnswersCtrl extends DialogController<{params: IFeedbackAnsw
             feedbackAnswersOptions: this.options,
         });
 
+        const date_format = "D.M.YYYY HH:mm:ss";
+
         this.options = this.$storage.feedbackAnswersOptions;
         this.options.periodFrom = this.options.periodFrom || Date.now();
         this.options.periodTo = this.options.periodTo || Date.now();
         this.datePickerOptionsFrom = {
-            format: "D.M.YYYY HH:mm:ss",
+            format: date_format,
             defaultDate: moment(this.options.periodFrom),
             showTodayButton: true,
         };
         this.datePickerOptionsTo = {
-            format: "D.M.YYYY HH:mm:ss",
+            format: date_format,
             defaultDate: moment(this.options.periodTo),
             showTodayButton: true,
         };

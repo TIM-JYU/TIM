@@ -212,8 +212,7 @@ export class UserListController implements IController {
                     },
                     order: 40,
                 },
-                { // Feedback report output TODO: May only be visible if page is a feedback giving test
-
+                {
                     title: "Create Feedback Report",
                     action: async ($event: IAngularEvent) => {
                         let iusers: IUser[];

@@ -1,6 +1,5 @@
 import json
 from typing import List, Tuple, Iterable
-import dateutil.relativedelta
 
 from flask import Blueprint, request, abort
 
@@ -10,13 +9,12 @@ from timApp.plugin.plugin import Plugin
 from timApp.user.user import User
 from timApp.util.flask.responsehelper import csv_response
 from timApp.plugin.taskid import TaskId
-from datetime import datetime, timezone
+from datetime import datetime
 from timApp.answer.answer import Answer
 from timApp.plugin.pluginControl import task_ids_to_strlist
 
 from timApp.document.docentry import DocEntry, get_documents_in_folder
 from timApp.util.flask.requesthelper import get_option
-from timApp.util.utils import get_current_time
 from timApp.auth.accesshelper import verify_teacher_access
 from timApp.plugin.pluginControl import find_task_ids
 import csv
@@ -136,7 +134,7 @@ def compile_csv(qq: Iterable[Tuple[Answer, User]], printname: bool, hide_names: 
                 cnt += 1
             anonuser = anons[prev_user]
             json_content = json.loads(answer.content)
-            correct = json_content.get('correct')
+            correct = json_content.get('correct', "<JSON error: key 'correct' not found>")
 
             # If we need it in right/wrong format.
             if correct:
