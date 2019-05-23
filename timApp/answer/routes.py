@@ -107,7 +107,10 @@ def get_fields_and_users(u_fields: List[str], groups: List[UserGroup], d: DocInf
     for field in u_fields:
         field_content = field.split("|")
         field_alias = field_content[0].split("=")
-        task_id = TaskId.parse(field_alias[0].strip(), False, False)
+        try:
+            task_id = TaskId.parse(field_alias[0].strip(), False, False)
+        except PluginException:
+            continue
         task_ids.append(task_id)
         if not task_id.doc_id:
             task_id.doc_id = d.id
