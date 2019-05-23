@@ -20,9 +20,11 @@ const answerWordsPlaceHolderRegExp = /\|answer\[[0-9]+-[0-9]+\]\|/g;
 const matchPlaceHolderRegExp = /\|match\[[0-9]+\]\|/g;
 const matchWordPlaceHolderRegExp = /\|match\[[0-9]+:[0-9]+\]\|/g;
 const matchWordsPlaceHolderRegExp = /\|match\[[0-9]+:[0-9]+-[0-9]+\]\|/g;
+const partPlaceHolderRegExp = /\|part\[[0-9]+\]\|/g;
 const answerRegExpArray = [answerPlaceHolderRegExp, answerWordsPlaceHolderRegExp];
 const matchRegExpArray = [matchPlaceHolderRegExp, matchWordPlaceHolderRegExp, matchWordsPlaceHolderRegExp];
 const keywordPlaceHolder = /\|kw:.*\|/;
+
 // TODO: A placeholder for the level the learner currently is to be shown back to them.
 
 enum Mode {
@@ -54,6 +56,7 @@ const Choice = t.type({
 interface IQuestionItemT extends t.TypeOf<typeof QuestionItem> {
 
 }
+
 // TODO: Change words to optional so it works with plugins that set their own words. Check that getSentence() doesn't break at the same time.
 const QuestionItem = t.intersection([
     t.partial({
@@ -125,6 +128,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
     private saving = false;
     private showAnswers?: boolean;
     private forceSave = false;
+    private partArray: string[] = [];
 
     async $onInit() {
         super.$onInit();
@@ -814,16 +818,20 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
         this.feedback = feedback;
         this.feedback = this.feedback.replace(answerPlaceHolder, answer);
         this.feedback = this.feedback.replace(correctPlaceHolder, this.correctAnswerString);
+        const re = this.feedback.match(partPlaceHolderRegExp);
+        if (re) {
+            this.replacePlaceHolder(re, this.partArray);
+        }
 
         for (const placeholder of answerRegExpArray) {
-            const re = feedback.match(placeholder);
+            const re = this.feedback.match(placeholder);
             if (re) {
                 this.replacePlaceHolder(re, this.userAnswer);
             }
         }
 
         for (const placeholder of matchRegExpArray) {
-            const re = feedback.match(placeholder);
+            const re = this.feedback.match(placeholder);
             if (re) {
                 this.replacePlaceHolder(re, this.userSelections);
             }
@@ -841,7 +849,10 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
             const index = placeholder.match(/[0-9]+/);
             let replacement = "";
             if (index) {
-                replacement = wordarray[parseInt(index.toString())];
+                const indexText = wordarray[parseInt(index.toString())];
+                if (indexText) {
+                    replacement = indexText;
+                }
             }
             const replacementArray = replacement.split(" ");
             const word = placeholder.match(/:[0-9]+\]/);
@@ -851,24 +862,26 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
             if (word) {
                 const wordString = word.toString();
                 const wordIndex = parseInt(wordString.split(":")[1]);
-
-                this.feedback = this.feedback.replace(placeholder, replacementArray[wordIndex]);
-                return;
+                if(replacementArray[wordIndex]) {
+                    this.feedback = this.feedback.replace(placeholder, replacementArray[wordIndex]);
+                } else {
+                    this.feedback = this.feedback.replace(placeholder, "");
+                }
             }
 
             if (words) {
                 const result = this.replaceMultipleWords(replacementArray, words);
                 this.feedback = this.feedback.replace(placeholder, result);
-                return;
             }
 
             if (indices) {
                 const result = this.replaceMultipleWords(wordarray, indices);
                 this.feedback = this.feedback.replace(placeholder, result);
-                return;
+            }
+            if (!word && !words && !indices) {
+                this.feedback = this.feedback.replace(placeholder, replacement);
             }
 
-            this.feedback = this.feedback.replace(placeholder, replacement);
         }
     }
 
@@ -900,7 +913,6 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
      */
     getAnswerFromPlugins(): string[] {
         const plugins = this.attrs.questionItems[this.questionItemIndex].pluginNames;
-        this.userSelections = [];
         const timComponent = this.vctrl.getTimComponentByName(plugins[0]);
 
         if (timComponent) {
@@ -926,11 +938,18 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
                 });
 
             const answer: string[] = [];
+            const parts: string[] = [];
+            const selections: string[] = [];
             const values = new Map<string, string>();
+
             while (treeWalker.nextNode()) {
                 const node = treeWalker.currentNode;
                 if (node.nodeName === "#text" && node.textContent !== null) {
-                    const words = node.textContent.trim().split(" ");
+                    const content = node.textContent.trim();
+                    if (content !== "") {
+                        parts.push(content);
+                    }
+                    const words = content.split(" ");
                     for (const word of words) {
                         if (word !== "") {
                             answer.push(word);
@@ -955,15 +974,17 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
                                         }
                                         contentString = contentString.trim();
                                         values.set(name, contentString);
-                                        this.userSelections.push(contentString);
+                                        selections.push(contentString);
                                         answer.push(name);
+                                        parts.push(contentString);
                                     }
                                 } else {
                                     const content = plugin.getContent();
                                     if (content !== undefined) {
                                         values.set(name, content.trim());
-                                        this.userSelections.push(content);
+                                        selections.push(content);
                                         answer.push(name);
+                                        parts.push(content);
                                     }
 
                                 }
@@ -974,6 +995,8 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
             }
             this.selectionMap = values;
             this.answerArray = answer;
+            this.partArray = parts;
+            this.userSelections = selections;
             this.userAnswer = this.getSentence(answer, values);
         }
         return this.userSelections;
