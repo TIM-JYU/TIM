@@ -154,7 +154,10 @@ class TableFormHtmlModel(GenericHtmlModel[TableFormInputModel, TableFormMarkupMo
             #         r['fields'].append(list(userfields[1].keys())[list(userfields[1].values()).index(task_id.extended_or_doc_task)])
             #     else:
             #         r['fields'].append(task_id.extended_or_doc_task)
-            r['fields'] = list(userfields[0][0]['fields'].keys())
+            try:
+                r['fields'] = list(userfields[0][0]['fields'].keys())
+            except IndexError:
+                r['fields'] = []
             r['aliases'] = userfields[1]
             r['contentMap'] = userfields[2]
             #TODO else return "no groups/no fields"
