@@ -83,9 +83,7 @@ def post_process_pars(doc: Document, pars, user: User, sanitize=True, do_lazy=Fa
                 d = p.get_final_dict()
                 d['html'] = ' '
     else:
-        ids = doc.get_par_ids(no_preamble=True)
-        last_par = doc.get_paragraph(ids[-1]) if ids else None
-        show_settings_yaml = last_par.is_setting() if last_par else True
+        show_settings_yaml = all(p.is_setting() for p in final_pars)
         if not show_settings_yaml:
             for p in final_pars:
                 if p.is_setting():

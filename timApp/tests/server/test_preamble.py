@@ -217,10 +217,10 @@ class PreambleTest3(PreambleTestBase):
         p2c.document.add_text('p2c')
         p3c.document.add_text('p3c')
         e = self.get(d.url, as_tree=True)
-        self.assert_content(e, ['p1', 'p1c', 'p2', 'p2c', 'p3', 'p3c', '```\npreamble: preamble, chat\n\n```'])
+        self.assert_content(e, ['p1', 'p1c', 'p2', 'p2c', 'p3', 'p3c', ''])
         d.document.set_settings({'preamble': 'chat, preamble'})
         e = self.get(d.url, as_tree=True)
-        self.assert_content(e, ['p1c', 'p1', 'p2c', 'p2', 'p3c', 'p3', '```\npreamble: chat, preamble\n\n```'])
+        self.assert_content(e, ['p1c', 'p1', 'p2c', 'p2', 'p3c', 'p3', ''])
         dt = self.create_translation(d)
         p2ctr = self.create_translation(p2c)
         p = p2ctr.document.get_paragraphs()[0]
@@ -230,7 +230,7 @@ class PreambleTest3(PreambleTestBase):
         self.assert_content(e, ['p1c', 'p1', 'p2ctr', 'p2', 'p3c', 'p3', ''])
         d.document.set_settings({'preamble': 'chat, preamblez'})
         e = self.get(d.url, as_tree=True)
-        self.assert_content(e, ['p1c', 'p2c', 'p3c', '```\npreamble: chat, preamblez\n\n```'])
+        self.assert_content(e, ['p1c', 'p2c', 'p3c', ''])
 
     def test_preamble_ref(self):
         self.login_test3()

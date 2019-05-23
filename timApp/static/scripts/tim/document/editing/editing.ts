@@ -329,7 +329,7 @@ This will delete the whole ${options.area ? "area" : "paragraph"} from the docum
         let has = false;
         $(".par").each((index, elem) => {
             const p = $(elem);
-            if (isActionablePar(p) && !isSettingsPar(p) && !isHelpPar(p)) {
+            if (!isSettingsPar(p) && !isHelpPar(p)) {
                 has = true;
                 return false;
             }
