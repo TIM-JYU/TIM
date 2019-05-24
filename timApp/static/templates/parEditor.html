@@ -64,7 +64,7 @@
             <input type="checkbox" ng-model="$ctrl.getExtraData().tags[tag.name]"/> {{ tag.desc }}
         </label>
     </div>
-    <label class="pull-right font-weight-normal" ng-if="$ctrl.wrap.n!=-1" title="Put 0 to no wrap" ng-click="$ctrl.editor.forceWrap(true)">Wrap:
+    <label class="pull-right font-weight-normal" title="Put 0 to no wrap" ng-click="$ctrl.editor.forceWrap(true)">Wrap:
         <input type="text" ng-pattern="/[-0-9]*/" ng-model="$ctrl.wrap.n" size="2"/>
     </label>
     <div ng-if="$ctrl.trdiff"
