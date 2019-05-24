@@ -4,11 +4,11 @@
  */
 import angular from "angular";
 import * as t from "io-ts";
+import {EditMode} from "tim/document/popupMenu";
 import {ITimComponent, ViewCtrl} from "tim/document/viewctrl";
-import {GenericPluginMarkup, nullable, PluginBase, withDefault, Info, pluginBindings} from "tim/plugin/util";
+import {GenericPluginMarkup, Info, nullable, PluginBase,  pluginBindings, withDefault} from "tim/plugin/util";
 import {$http, $window} from "tim/util/ngimport";
 import {to} from "tim/util/utils";
-import {EditMode} from "tim/document/popupMenu";
 
 const feedbackApp = angular.module("feedbackApp", ["ngSanitize"]);
 export const moduleDefs = [feedbackApp];
@@ -45,8 +45,8 @@ interface IMatchElementT extends t.TypeOf<typeof MatchElement> {
 }
 
 const MatchElementArray = t.array(MatchElement);
+const StringArray = t.array(t.string);
 
-let StringArray = t.array(t.string);
 const Choice = t.type({
     correct: withDefault(t.boolean, false),
     levels: StringArray,
@@ -71,8 +71,8 @@ const QuestionItem = t.intersection([
 
 const FeedbackMarkup = t.intersection([
     t.partial({
-        practiceID: t.string,
         nextTask: t.string,
+        practiceID: t.string,
     }),
     GenericPluginMarkup,
     t.type({
@@ -274,7 +274,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
     checkCorrectAnswers() {
         const items = this.attrs.questionItems;
         for (const item of items) {
-            const missing = item.choices.every(x => x.correct === false);
+            const missing = item.choices.every((x) => x.correct === false);
             if (missing && !this.error) {
                 this.error = `A question item (${item.pluginNames}) is missing the correct answer.`;
             }
@@ -289,7 +289,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
     checkDefaultMatch() {
         const items = this.attrs.questionItems;
         for (const item of items) {
-            const defaultMatch = item.choices.filter(x => x.match.length === 0);
+            const defaultMatch = item.choices.filter((x) => x.match.length === 0);
             if (defaultMatch.length === 0 && !this.error) {
                 this.error = `A question item (${item.pluginNames}) is missing default feedback.`;
             }
@@ -658,7 +658,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
             }
 
             if (questionIndex === undefined || this.streak === this.attrs.correctsInRow ||
-                this.isAnsweredArray.every(x => x) || this.currentFeedbackLevel === this.feedbackMax
+                this.isAnsweredArray.every((x) => x) || this.currentFeedbackLevel === this.feedbackMax
                 || this.questionItemIndex >= this.attrs.questionItems.length) {
                 this.pluginMode = Mode.EndTask;
                 if (!this.vctrl.item.rights.editable || !this.vctrl.item.rights.teacher) {
@@ -817,22 +817,22 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
         this.feedback = feedback;
         this.feedback = this.feedback.replace(answerPlaceHolder, answer);
         this.feedback = this.feedback.replace(correctPlaceHolder, this.correctAnswerString);
-        const re = this.feedback.match(partPlaceHolderRegExp);
-        if (re) {
-            this.replacePlaceHolder(re, this.partArray);
+        const placere = this.feedback.match(partPlaceHolderRegExp);
+        if (placere) {
+            this.replacePlaceHolder(placere, this.partArray);
         }
 
         for (const placeholder of answerRegExpArray) {
-            const re = this.feedback.match(placeholder);
-            if (re) {
-                this.replacePlaceHolder(re, this.userAnswer);
+            const answerre = this.feedback.match(placeholder);
+            if (answerre) {
+                this.replacePlaceHolder(answerre, this.userAnswer);
             }
         }
 
         for (const placeholder of matchRegExpArray) {
-            const re = this.feedback.match(placeholder);
-            if (re) {
-                this.replacePlaceHolder(re, this.userSelections);
+            const matchre = this.feedback.match(placeholder);
+            if (matchre) {
+                this.replacePlaceHolder(matchre, this.userSelections);
             }
         }
     }
@@ -944,11 +944,11 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
             while (treeWalker.nextNode()) {
                 const node = treeWalker.currentNode;
                 if (node.nodeName === "#text" && node.textContent !== null) {
-                    const content = node.textContent.trim();
-                    if (content !== "") {
-                        parts.push(content);
+                    const textNodeContent = node.textContent.trim();
+                    if (textNodeContent !== "") {
+                        parts.push(textNodeContent);
                     }
-                    const words = content.split(" ");
+                    const words = textNodeContent.split(" ");
                     for (const word of words) {
                         if (word !== "") {
                             answer.push(word);
@@ -963,11 +963,11 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
                             let plugin = this.vctrl.getTimComponentByName(name);
                             if (plugin) {
                                 if (plugin.getContentArray) {
-                                    const content = plugin.getContentArray();
-                                    if (content !== undefined) {
+                                    const pluginNodeArrayContent = plugin.getContentArray();
+                                    if (pluginNodeArrayContent !== undefined) {
                                         let contentString = "";
-                                        if (content.length > 0) {
-                                            for (const c of content) {
+                                        if (pluginNodeArrayContent.length > 0) {
+                                            for (const c of pluginNodeArrayContent) {
                                                 contentString += ` ${c}`;
                                             }
                                         }
@@ -978,12 +978,12 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
                                         parts.push(contentString);
                                     }
                                 } else {
-                                    const content = plugin.getContent();
-                                    if (content !== undefined) {
-                                        values.set(name, content.trim());
-                                        selections.push(content);
+                                    const pluginNodeContent = plugin.getContent();
+                                    if (pluginNodeContent !== undefined) {
+                                        values.set(name, pluginNodeContent.trim());
                                         answer.push(name);
-                                        parts.push(content);
+                                        parts.push(pluginNodeContent);
+                                        selections.push(pluginNodeContent);
                                     }
 
                                 }
@@ -1017,7 +1017,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
             const re = new RegExp(v);
             let value = v;
             if (j < wordlists.length) {
-                const word = wordlists[j].filter(x => re.test((`\\b${x}\\b`)));
+                const word = wordlists[j].filter((x) => re.test((`\\b${x}\\b`)));
                 if (word.length > 0) {
                     value = word[0];
                 }
@@ -1027,7 +1027,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
             const kw = v.match(keywordPlaceHolder);
             if (kw && kw.length > 0 && j < wordlists.length) {
                 const keyword = kw[0].split(":")[1].replace("|", "");
-                const word = wordlists[j].filter(x => x.includes(keyword));
+                const word = wordlists[j].filter((x) => x.includes(keyword));
                 if (word.length > 0) {
                     value = word[0];
                 }
