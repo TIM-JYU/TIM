@@ -71,16 +71,15 @@ const QuestionItem = t.intersection([
 
 const FeedbackMarkup = t.intersection([
     t.partial({
-        instructionID: t.string,
+        practiceID: t.string,
         nextTask: t.string,
-        sampleItemID: t.string,
     }),
     GenericPluginMarkup,
     t.type({
         // All withDefaults should come here, NOT in t.partial.
         autoupdate: withDefault(t.number, 500),
         cols: withDefault(t.number, 20),
-        correctStreak: withDefault(t.number, 1),
+        correctsInRow: withDefault(t.number, 1),
         questionItems: t.array(QuestionItem),
         showAnswers: withDefault(t.boolean, false),
         shuffle: withDefault(t.boolean, false),
@@ -255,7 +254,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
      * Check that the task has a practice item or a TIM block with instructions.
      */
     checkInstructions() {
-        const id = this.attrs.instructionID;
+        const id = this.attrs.practiceID;
         const instruction = document.querySelectorAll(".par.instruction");
 
         if (id) {
@@ -538,8 +537,8 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
         }
 
         if (this.pluginMode === Mode.Instruction) {
-            const instructionQuestion = this.vctrl.getTimComponentByName(this.attrs.instructionID || "");
-            if (this.attrs.instructionID && instructionQuestion) {
+            const instructionQuestion = this.vctrl.getTimComponentByName(this.attrs.practiceID || "");
+            if (this.attrs.practiceID && instructionQuestion) {
                 if (instructionQuestion.getContent() === undefined) {
                     this.printFeedback("Please select a choice");
                     return;
@@ -658,7 +657,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
                 questionIndex = this.questionItemIndex;
             }
 
-            if (questionIndex === undefined || this.streak === this.attrs.correctStreak ||
+            if (questionIndex === undefined || this.streak === this.attrs.correctsInRow ||
                 this.isAnsweredArray.every(x => x) || this.currentFeedbackLevel === this.feedbackMax
                 || this.questionItemIndex >= this.attrs.questionItems.length) {
                 this.pluginMode = Mode.EndTask;

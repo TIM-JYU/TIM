@@ -43,8 +43,8 @@ class FeedbackMarkupModel(GenericMarkupModel):
     questionItems: Union[Any, Missing] = missing
     choice: Union[Any, Missing] = missing
     matchElement: Union[Any, Missing] = missing
-    instructionID: Union[Any, Missing] = missing
-    correctStreak: Union[int, Missing] = missing
+    practiceID: Union[Any, Missing] = missing
+    correctsInRow: Union[int, Missing] = missing
     nextTask: Union[Any, Missing] = missing
     dragSource: Union[str, Missing] = missing
     shuffle: Union[bool, Missing] = missing
@@ -57,8 +57,8 @@ class FeedbackMarkupSchema(GenericMarkupSchema):
     questionItems = fields.Raw()
     choice = fields.Raw()
     matchElement = fields.Raw()
-    instructionID = fields.Str()
-    correctStreak = fields.Int()
+    practiceID = fields.Str()
+    correctsInRow = fields.Int()
     nextTask = fields.Str()
     dragSource = fields.Str()
     shuffle = fields.Bool()
@@ -247,7 +247,7 @@ Who {#dropdown4 shuffle: true} the 3 mile swim in the race?
 
 ``` {#fb1 plugin="feedback"}
 # Quick reference for feedback options:
-#  correctStreak: number of correct answers in a row to advance to next task.
+#  correctsInRow: number of correct answers in a row to advance to next task.
 #  nextTask: the address of next task in the TIM file system.
 #  shuffle: (true or false) whether question items are given in random order.
 #  questionItems: contains the question items and the feedback for them.
@@ -261,7 +261,7 @@ Who {#dropdown4 shuffle: true} the 3 mile swim in the race?
 # Using & + word (example: &match1) after "levels:" you can create a reference. 
 # You can later refer to the defined reference levels with * + word (*match1).
 #
-correctStreak: 2  
+correctsInRow: 2  
 nextTask: "[Click here](next_task_document_name) to move to the next task."
 shuffle: true
 questionItems:
@@ -385,7 +385,7 @@ He wanted to know {#drop4}.
 
 ``` {#fb1 plugin="feedback"}
 # Quick reference for feedback options:
-#  correctStreak: number of correct answers in a row to advance to next task.
+#  correctsInRow: number of correct answers in a row to advance to next task.
 #  nextTask: the address of next task in the TIM file system.
 #  shuffle: (true or false) whether question items are given in random order.
 #  questionItems: contains the question items and the feedback for them.
@@ -400,7 +400,7 @@ He wanted to know {#drop4}.
 # Using & + word (example: &match1) after "levels:" you can create a reference. 
 # You can later refer to the defined reference levels with * + word (*match1).
 #
-correctStreak: 2
+correctsInRow: 2
 nextTask: "[Click here](next_task_document_name) to move to the next task."
 shuffle: true
 questionItems:
@@ -516,7 +516,7 @@ You know where I'll be found {#drop1}.
 
 """, """``` {#fb1 plugin="feedback"}
 # Quick reference for feedback options:
-#  correctStreak: number of correct answers in a row to advance to next task.
+#  correctsInRow: number of correct answers in a row to advance to next task.
 #  nextTask: the address of next task in the TIM file system.
 #  shuffle: (true or false) whether question items are given in random order.
 #  questionItems: contains the question items and the feedback for them.
@@ -530,7 +530,7 @@ You know where I'll be found {#drop1}.
 # Using & + word (example: &match1) after "levels:" you can create a reference. 
 # You can later refer to the defined reference levels with * + word (*match1).
 #
-correctStreak: 2  
+correctsInRow: 2  
 nextTask: "[Click here](next_task_document_name) to move to the next task."
 shuffle: true
 questionItems:
@@ -598,7 +598,7 @@ questionItems:
 
 ```""", """``` {#fb1 plugin="feedback"}
 # Quick reference for feedback options:
-#  correctStreak: number of correct answers in a row to advance to next task.
+#  correctsInRow: number of correct answers in a row to advance to next task.
 #  nextTask: the address of next task in the TIM file system.
 #  shuffle: (true or false) whether question items are given in random order.
 #  questionItems: contains the question items and the feedback for them.
@@ -613,7 +613,7 @@ questionItems:
 # Using & + word (example: &match1) after "levels:" you can create a reference. 
 # You can later refer to the defined reference levels with * + word (*match1).
 #
-correctStreak: 2
+correctsInRow: 2
 nextTask: "[Click here](next_task_document_name) to move to the next task."
 shuffle: true
 questionItems:
