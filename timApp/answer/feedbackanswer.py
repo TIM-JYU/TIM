@@ -216,7 +216,7 @@ def print_feedback_report(doc_path):
     name = get_option(request, 'name', 'both')
     hidename = False
     fullname = False
-    format = get_option(request, 'format', 'excel')
+    format = get_option(request, 'format', 'semicolon')
     validity = get_option(request, 'valid', 'all')
     exp_answers = get_option(request, 'answers', 'all')
     users = get_option(request, 'users', 'none')
