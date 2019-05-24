@@ -29,7 +29,7 @@ const TableFormMarkup = t.intersection([
         table: nullable(t.boolean),
         report: nullable(t.boolean),
         separator: nullable(t.string),
-        shownames: nullable(t.boolean),
+        anonNames: nullable(t.boolean),
         sortBy: nullable(t.string), /* TODO! Username and task, or task and username -- what about points? */
         buttonText: nullable(t.string),
         reportButton: nullable(t.string),
@@ -84,6 +84,7 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
     private modelOpts!: INgModelOptions;
     private oldCellValues!: string;
     private realnames = false;
+    private showTable = false;
 
     getDefaultMarkup() {
         return {};
@@ -216,9 +217,9 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
      * Boolean to determinate if usernames are viewed in report.
      * Choises are true for username and false for anonymous. Username/true as default.
      */
-    shownames() {
-        if (this.attrs.shownames) {
-            return this.attrs.shownames;
+    anonNames() {
+        if (this.attrs.anonNames) {
+            return this.attrs.anonNames;
         }
         else return false;
     }
@@ -258,14 +259,15 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
         }
         if (this.realnames) { colcount += 1; }
         for (let i = 0; i < rowcount; i++) {
+            if (this.data.hiderows.includes(i)) continue;
             const row: CellType[] = [];
             result.push(row);
             for(let j = 0; j < colcount; j++) {
-                if (!this.shownames() && j == 0 && i > 0) {
+                if (this.anonNames() && j == 0 && i > 0) {
                     row.push("Anonymous" + [i]);
                     continue;
                 }
-                if(!this.shownames() && this.realnames && j == 1 && i > 0) {
+                if(this.anonNames() && this.realnames && j == 1 && i > 0) {
                     row.push("Unknown" + [i]);
                     continue;
                 }
@@ -298,6 +300,14 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
     singleCellSave(rowi: number, coli: number, content: string){
         const cells = ["A" + (rowi+1),colnumToLetters(coli) + 1,colnumToLetters(coli)+(rowi+1)]
         this.doSaveText(cells)
+    }
+
+    openTable() {
+        this.showTable = true;
+    }
+
+    closeTable() {
+        this.showTable = false;
     }
 
     async doSaveText(cells: string[]) {
@@ -392,7 +402,7 @@ timApp.component("tableformRunner", {
         viewctrl: "?^timView",
     },
     template: `
-<div class="tableform">
+<div class="tableform" ng-if="$ctrl.showTable">
     <tim-markup-error ng-if="::$ctrl.markupError" data="::$ctrl.markupError"></tim-markup-error>
     <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
     <p ng-if="::$ctrl.stem" ng-bind-html="::$ctrl.stem"></p>
@@ -408,6 +418,7 @@ timApp.component("tableformRunner", {
         <tim-table disabled="!$ctrl.tableCheck()" data="::$ctrl.data" taskid="{{$ctrl.pluginMeta.getTaskId()}}" plugintype="{{$ctrl.pluginMeta.getPlugin()}}"></tim-table>
         <!-- TODO: taskid="{{ $ctrl.pluginm }}", vie pluginmeta & taskid-->
     </div>
+    
     <button class="timButton"
             ng-if="::$ctrl.tableCheck()"
             ng-click="$ctrl.saveText()">
@@ -418,9 +429,20 @@ timApp.component("tableformRunner", {
             ng-click="$ctrl.generateReport()">
             {{ ::$ctrl.reportButton() }}
     </button>
+    <button class="timButton"
+            ng-click="$ctrl.closeTable()">
+            Sulje Taulukko/Raporttinäkymä
+    </button>
     <pre ng-if="$ctrl.result">{{$ctrl.result}}</pre>
     <pre ng-if="$ctrl.error" ng-bind-html="$ctrl.error"></pre>
     <p ng-if="::$ctrl.footer" ng-bind="::$ctrl.footer" class="plgfooter"></p>
 </div>
+<div class="tableOpener" ng-if="!$ctrl.showTable">
+    <button class="timButton"
+            ng-click="$ctrl.openTable()">
+            Avaa Taulukko/Raporttinäkymä
+    </button>
+</div>
+<br> 
 `,
 });

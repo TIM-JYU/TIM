@@ -54,7 +54,7 @@ class TableFormMarkupModel(GenericMarkupModel):
     table: Union[bool, Missing] = missing
     report: Union[bool, Missing] = missing
     separator: Union[str, Missing] = missing
-    shownames: Union[bool, Missing] = missing
+    anonNames: Union[bool, Missing] = missing
     sortBy: Union[str, Missing] = missing
     dataCollection: Union[str, Missing] = missing
     autosave: Union[bool, Missing] = missing
@@ -74,7 +74,7 @@ class TableFormMarkupSchema(GenericMarkupSchema):
     table = fields.Boolean()
     report = fields.Boolean()
     separator = fields.Str(allow_none=True)
-    shownames = fields.Boolean()
+    anonNames = fields.Boolean()
     sortBy = fields.Str(allow_none=True)
     dataCollection = fields.Str(allow_none=True)
     autosave = fields.Boolean()
@@ -296,7 +296,7 @@ realnames: true #Show full name in 2nd column, true or false
 buttonText: #Name your save table button here
 autosave: true #autosave, true or false
 separator: ";" #Define your report value separator here, ";" by default
-shownames: true #To show or hide user (and full) names in report, true or false
+anonNames: true #To show or hide user (and full) names in report, true or false
 reportButton: "Name your generate report button here
 ```""", """
 ``` {#tableForm_report plugin="tableForm"}
@@ -307,7 +307,7 @@ fields:
 table: false
 report: true
 separator: ";" #Define your value separator here, ";" as default
-shownames: true #To show or hide user (and full) names in report, true or false
+anonNames: true #To show or hide user (and full) names in report, true or false
 reportButton: "Name your generate report button here
 ```"""]
     editor_tabs = [
