@@ -54,13 +54,16 @@ class TableFormMarkupModel(GenericMarkupModel):
     table: Union[bool, Missing] = missing
     report: Union[bool, Missing] = missing
     separator: Union[str, Missing] = missing
-    shownames: Union[bool, Missing] = missing
+    anonNames: Union[bool, Missing] = missing
     sortBy: Union[str, Missing] = missing
     dataCollection: Union[str, Missing] = missing
     autosave: Union[bool, Missing] = missing
     buttonText: Union[str, Missing] = missing
     reportButton: Union[str, Missing] = missing
     realnames: Union[bool, Missing] = missing
+    maxWidth: Union[str, Missing] = missing
+    minWidth: Union[str, Missing] = missing
+    singleLine: Union[bool, Missing] = missing
     fields: Union[List[str], Missing] = missing
 
 
@@ -71,13 +74,16 @@ class TableFormMarkupSchema(GenericMarkupSchema):
     table = fields.Boolean()
     report = fields.Boolean()
     separator = fields.Str(allow_none=True)
-    shownames = fields.Boolean()
+    anonNames = fields.Boolean()
     sortBy = fields.Str(allow_none=True)
     dataCollection = fields.Str(allow_none=True)
     autosave = fields.Boolean()
     buttonText = fields.Str(allow_none=True)
     reportButton = fields.Str(allow_none=True)
     realnames = fields.Boolean()
+    singleLine = fields.Boolean(allow_none=True)
+    maxWidth = fields.Str()
+    minWidth = fields.Str(allow_none=True)
     fields = fields.List(fields.Str())
 
     @post_load
@@ -154,7 +160,10 @@ class TableFormHtmlModel(GenericHtmlModel[TableFormInputModel, TableFormMarkupMo
             #         r['fields'].append(list(userfields[1].keys())[list(userfields[1].values()).index(task_id.extended_or_doc_task)])
             #     else:
             #         r['fields'].append(task_id.extended_or_doc_task)
-            r['fields'] = list(userfields[0][0]['fields'].keys())
+            try:
+                r['fields'] = list(userfields[0][0]['fields'].keys())
+            except IndexError:
+                r['fields'] = []
             r['aliases'] = userfields[1]
             r['contentMap'] = userfields[2]
             #TODO else return "no groups/no fields"
@@ -197,22 +206,12 @@ class TableFormAnswerSchema(TableFormAttrs, GenericAnswerSchema):
 def render_static_tableForm(m: TableFormHtmlModel):
     return render_template_string(
         """
-<div class="csRunDiv no-popup-menu">
-<h4>{{ header }}</h4>
-<p class="stem">{{ stem }}</p>
-<div><label>{{ inputstem or '' }} <span>
-<input type="text"
-    class="form-control"
-    placeholder="{{inputplaceholder or ''}}"
-    value="{{userword or ''}}"
-    size="{{cols}}"></span></label>
-</div>
+<div class="tableform">
 <button class="timButton">
-    {{ buttonText or button or "Save" }}
+    Avaa Taulukko/Raporttinäkymä
 </button>
-<a>{{ resetText }}</a>
-<p class="plgfooter">{{ footer }}</p>
 </div>
+<br>
         """,
         **attr.asdict(m.markup),
         userword=m.state.userword if m.state else '',
@@ -287,7 +286,7 @@ realnames: true #Show full name in 2nd column, true or false
 buttonText: #Name your save table button here
 autosave: true #autosave, true or false
 separator: ";" #Define your report value separator here, ";" by default
-shownames: true #To show or hide user (and full) names in report, true or false
+anonNames: true #To show or hide user (and full) names in report, true or false
 reportButton: "Name your generate report button here
 ```""", """
 ``` {#tableForm_report plugin="tableForm"}
@@ -298,7 +297,7 @@ fields:
 table: false
 report: true
 separator: ";" #Define your value separator here, ";" as default
-shownames: true #To show or hide user (and full) names in report, true or false
+anonNames: true #To show or hide user (and full) names in report, true or false
 reportButton: "Name your generate report button here
 ```"""]
     editor_tabs = [

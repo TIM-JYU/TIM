@@ -126,7 +126,7 @@ export class UserListController implements IController {
             };
             c.filter = f;
         }
-        this.instantUpdate = false;
+        this.instantUpdate = true;
 
         this.gridOptions = {
             exporterMenuPdf: false,

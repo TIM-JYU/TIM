@@ -268,7 +268,9 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
         this.isRunning = false;
         if (r.ok) {
             const data = r.result.data;
-            this.errormessage = data.web.error || "Input does not pass the RegEx: " + this.attrs.validinput;
+            //TODO: Make angular to show tooltip even without user having to move cursor out and back into the input
+            // (Use premade bootstrap method / add listener for enter?)
+            this.errormessage = data.web.error || "";
             this.result = data.web.result;
             this.initialValue = this.userword;
             this.hideSavedText = false;

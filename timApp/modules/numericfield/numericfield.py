@@ -33,10 +33,6 @@ def convert_to_float(value):
 class NumericfieldStateSchema(Schema):
     c = fields.Raw()
 
-    # @validates('numericvalue')
-    # def validate_numericvalue(self, value):
-    #     convert_to_float(value)
-
     @pre_load()
     def remove_null(self, data):
         try:
@@ -103,8 +99,6 @@ class NumericfieldInputSchema(Schema):
     @validates('numericvalue')
     def validate_numericvalue(self, number):
         pass
-        # if not number:
-        #     raise ValidationError('Syntax Error: Must be a number.')
 
     @post_load
     def make_obj(self, data):
@@ -134,8 +128,6 @@ class NumericfieldHtmlModel(GenericHtmlModel[NumericfieldInputModel, Numericfiel
         if self.state:
             if self.state.c is not None:
                 r['numericvalue'] = self.state.c
-            # if self.state.numericvalue is None:
-            #     r['numericvalue'] = ""
         return r
 
     class Meta:
@@ -221,25 +213,26 @@ def reqs():
     """Introducing templates for numericfield plugin"""
     templates = ["""
 ``` {#numericfield_normal plugin="numericfield"}
-cols: 5 #KENTÄN KOKO, NUMERAALINEN
+cols: 7 #KENTÄN KOKO, NUMERAALINEN
 autosave: true #AUTOSAVE, PÄÄLLÄ
 ```""", """
 ``` {#numericfield_extended plugin="numericfield"}
 header: #OTSIKKO, TYHJÄ = EI OTSIKKOA
 stem: #KYSYMYS, TYHJÄ = EI KYSYMYSTÄ
+step: #NUMERAALINEN ASKELLUS, TYHJÄ = OLETUS 1.0
 inputstem: #VASTAUS, TYHJÄ = EI VASTAUSTA
 followid: #SEURANTAID, TYHJÄ = EI SEURANTAID:tä
 initnumber: #ALKUARVO, TYHJÄ = EI ALKUARVOA
 buttonText: Save #PAINIKKEEN NIMI, TYHJÄ = EI PAINIKETTA
-cols: 5 #KENTÄN KOKO, NUMERAALINEN
+cols: 7 #KENTÄN KOKO, NUMERAALINEN
 autosave: false #AUTOSAVE, POIS PÄÄLTÄ
 validinput: ^\d{0,3}(\.\d{0,3})?$ #KÄYTTÄJÄSYÖTTEEN RAJOITIN, TYHJÄ = EI RAJOITUSTA
 errormessage: #INPUTCHECKERIN VIRHESELITE, TYHJÄ = SELITE ON INPUTCHECKER
 ```""", """
 ``` {#numericfield_label plugin="numericfield" readonly=view}
 followid: #SEURANTAID, TYHJÄ = EI SEURANTAID:tä
-initnumber: 0 #ALKUARVO, TYHJÄ = EI ALKUARVOA
-cols: 5 #KENTÄN KOKO, NUMERAALINEN
+initnumber: 10 #ALKUARVO, TYHJÄ = EI ALKUARVOA
+cols: 7 #KENTÄN KOKO, NUMERAALINEN
 autosave: false #AUTOSAVE, POIS PÄÄLTÄ
 labelStyle: plaintext #LABELSTYLE, TYHJÄ = KENTTÄMUOTO, PLAINTEXT = TEKSTIMUOTO
 ```"""
