@@ -54,6 +54,9 @@ export interface TimTable {
     hiderows: number[];
     lockedCells: string[];
     saveCallBack?: (rowi: number, coli: number, content: string) => void;
+    maxWidth?: string;
+    minWidth?: string;
+    singleLine?: boolean;
 }
 
 export interface ITable { // extends ITableStyles
@@ -1604,6 +1607,14 @@ export class TimTableController extends DestroyScope implements IController {
             this.applyStyle(styles, cell, cellStyles);
         }
 
+        if (this.data.maxWidth) {
+            styles['max-width'] = this.data.maxWidth;
+            styles['overflow'] = "hidden";
+        }
+        if (this.data.minWidth) styles['min-width'] = this.data.minWidth;
+        if (this.data.singleLine) {
+            styles["white-space"] = 'nowrap'
+        }
         return styles;
     }
 

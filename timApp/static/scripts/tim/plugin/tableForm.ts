@@ -11,20 +11,12 @@ import {
     pluginBindings,
     withDefault,
 } from "tim/plugin/util";
-import {$http, $httpParamSerializer, $timeout} from "tim/util/ngimport";
+import {$http, $httpParamSerializer} from "tim/util/ngimport";
 import {to} from "tim/util/utils";
 import {timApp} from "../app";
 import {getParId} from "../document/parhelpers";
 import {ViewCtrl} from "../document/viewctrl";
-import {
-    CellDataEntity,
-    CellType,
-    colnumToLetters,
-    DataEntity,
-    isPrimitiveCell,
-    TimTable,
-    TimTableController
-} from "./timTable";
+import {CellType, colnumToLetters, DataEntity, isPrimitiveCell, TimTable} from "./timTable";
 import "./tableForm.css";
 
 
@@ -43,6 +35,9 @@ const TableFormMarkup = t.intersection([
         reportButton: nullable(t.string),
         autosave: t.boolean,
         realnames: t.boolean,
+        minWidth: t.string,
+        maxWidth: t.string,
+        singleLine: t.boolean,
 
     }),
     GenericPluginMarkup,
@@ -76,7 +71,7 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
     private userfilter = "";
     private data: TimTable & {userdata: DataEntity} = {
         hiderows:[],
-        table:{countRow:0, countCol:0},
+        table:{countRow:0, countCol:0, columns:[]},
         hideSaveButton:true,
         lockedCells:[],
         hid:{edit:false},
@@ -120,6 +115,10 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
         this.setDataMatrix();
         this.oldCellValues = JSON.stringify(this.data.userdata.cells);
         if (this.attrs.autosave) this.data.saveCallBack = (rowi, coli, content) => this.singleCellSave(rowi, coli, content);
+        if(this.attrs.minWidth) this.data.minWidth = this.attrs.minWidth;
+        if(this.attrs.maxWidth !== undefined) this.data.maxWidth = this.attrs.maxWidth;
+        if(this.attrs.singleLine) this.data.singleLine = this.attrs.singleLine;
+
     }
 
     getTimTable() {
@@ -393,7 +392,7 @@ timApp.component("tableformRunner", {
         viewctrl: "?^timView",
     },
     template: `
-<div class="tableform" style="overflow-x: scroll">
+<div class="tableform">
     <tim-markup-error ng-if="::$ctrl.markupError" data="::$ctrl.markupError"></tim-markup-error>
     <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
     <p ng-if="::$ctrl.stem" ng-bind-html="::$ctrl.stem"></p>

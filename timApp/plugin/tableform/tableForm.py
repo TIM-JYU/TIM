@@ -61,6 +61,9 @@ class TableFormMarkupModel(GenericMarkupModel):
     buttonText: Union[str, Missing] = missing
     reportButton: Union[str, Missing] = missing
     realnames: Union[bool, Missing] = missing
+    maxWidth: Union[str, Missing] = missing
+    minWidth: Union[str, Missing] = missing
+    singleLine: Union[bool, Missing] = missing
     fields: Union[List[str], Missing] = missing
 
 
@@ -78,6 +81,9 @@ class TableFormMarkupSchema(GenericMarkupSchema):
     buttonText = fields.Str(allow_none=True)
     reportButton = fields.Str(allow_none=True)
     realnames = fields.Boolean()
+    singleLine = fields.Boolean(allow_none=True)
+    maxWidth = fields.Str()
+    minWidth = fields.Str(allow_none=True)
     fields = fields.List(fields.Str())
 
     @post_load
