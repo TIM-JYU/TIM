@@ -33,10 +33,6 @@ def convert_to_float(value):
 class NumericfieldStateSchema(Schema):
     c = fields.Raw()
 
-    # @validates('numericvalue')
-    # def validate_numericvalue(self, value):
-    #     convert_to_float(value)
-
     @pre_load()
     def remove_null(self, data):
         try:
@@ -103,8 +99,6 @@ class NumericfieldInputSchema(Schema):
     @validates('numericvalue')
     def validate_numericvalue(self, number):
         pass
-        # if not number:
-        #     raise ValidationError('Syntax Error: Must be a number.')
 
     @post_load
     def make_obj(self, data):
@@ -134,8 +128,6 @@ class NumericfieldHtmlModel(GenericHtmlModel[NumericfieldInputModel, Numericfiel
         if self.state:
             if self.state.c is not None:
                 r['numericvalue'] = self.state.c
-            # if self.state.numericvalue is None:
-            #     r['numericvalue'] = ""
         return r
 
     class Meta:
