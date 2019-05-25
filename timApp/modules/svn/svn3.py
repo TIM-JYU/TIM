@@ -198,7 +198,7 @@ def small__and_list_html(query, duration_template):
     if di:
         icon = replace_template_param(
             query, '<span><img src="{{docicon}}"  alt="Go to doc" /> </span>', "docicon", "/csstatic/book.png")
-        s += ' <a href="" target="timdoc">' + icon + di + '</a>'
+        s += ' <a href="" target="{{target}}">' + icon + di + '</a>'
     return s
 
 
@@ -251,7 +251,7 @@ def video_html(query):
     if di:
         icon = replace_template_param(
             query, '<span><img src="{{docicon}}"  alt="Go to doc" /> </span>', "docicon", "/csstatic/book.png")
-        s += ' <a href="" target="timdoc">' + icon + di + '</a>'
+        s += ' <a href="" target="{{target}}">' + icon + di + '</a>'
     s += replace_template_params(query, '<p class="plgfooter">{{footer}}</p>', "footer")
     s += '</div>'
     return s
@@ -341,7 +341,7 @@ def video_md(query):
     # if di:
     #    icon = replace_template_param(
     #        query, '<span><img src="{{docicon}}"  alt="Go to doc" /> </span>', "docicon", "/csstatic/book.png")
-    #    s += ' <a href="" target="timdoc">' + icon + di + '</a>'
+    #    s += ' <a href="" target="{{target}}">' + icon + di + '</a>'
     s += replace_template_params(query, '\\plgfooter{{{{footer}}}}\n', "footer")
     s += '}'
     return s
