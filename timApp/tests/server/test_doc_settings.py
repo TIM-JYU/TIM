@@ -33,3 +33,28 @@ The quick brown fox jumps over the lazy dog.
         d.document.set_settings({'input_format': 'rst'})
         r = self.get(d.url, as_tree=True).cssselect('.parContent img')
         self.assertTrue(r)
+
+    def test_no_visible_settings_on_save(self):
+        self.login_test1()
+        d = self.create_doc(initial_par="""
+#- {settings=""}
+
+#-
+test
+        """)
+        pars = d.document.get_paragraphs()
+        s_p = pars[0]
+        t_p = pars[1]
+        r = self.post_par(d.document, """
+#- {settings=""}
+a: b
+        """, s_p.get_id(), as_tree=True, json_key='texts')
+        self.assert_content(r, [''])
+
+        d.document.delete_paragraph(t_p.get_id())
+
+        r = self.post_par(d.document, """
+#- {settings=""}
+a: c
+        """, s_p.get_id(), as_tree=True, json_key='texts')
+        self.assert_content(r, ['a: c'])
