@@ -193,6 +193,10 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
         this.btnText = text;
     }
 
+    /**
+     * Makes the paragraph area visible. Used in conjuncture with CSS in the document settings that hides the paragraph
+     * area. Removes the flickering of elements in the page as they get initialized.
+     */
     showDocument() {
         const doc = document.querySelectorAll(".paragraphs");
         if (doc.length > 0) {
@@ -376,6 +380,8 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
 
     /**
      * Hide a TIM area from the page.
+     *
+     * TODO: Hide all areas with the same name instead of the first?
      */
     hideArea(area: string) {
         const areaElement = document.querySelectorAll(`.${area}`);
@@ -386,6 +392,8 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
 
     /**
      * Show a TIM area in the page.
+     *
+     * * TODO: Show all areas with the same name instead of the first?
      */
     showArea(area: string) {
         const areaElement = document.querySelectorAll(`.${area}`);
@@ -425,7 +433,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
 
     /**
      * Handles saving of the feedback plugin. To get the correct answer to the database, replaces user selections
-     * with the ones that are correct.
+     * with the selections that are correct.
      */
     async save() {
         const userAnswer = this.getSentence(this.answerArray, this.selectionMap).join(" ");
@@ -496,7 +504,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
     }
 
     /**
-     * Saves the selected plugin's content to the database.
+     * Saves the selected plugins content to the database.
      *
      * @param plugin The plugin to be saved.
      * @returns{boolean} Whether the save was succesful.
@@ -516,7 +524,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
     }
 
     /**
-     * Handles the checking of user's answer's correctness and cycles through the different modes in the plugin.
+     * Handles the checking of users answers correctness and cycles through the different modes in the plugin.
      *
      */
     async handleAnswer() {
