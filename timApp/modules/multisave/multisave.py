@@ -18,17 +18,6 @@ class MultisaveStateModel:
     #userword: str
 
 
-# class multisaveStateSchema(Schema):
-#     #userword = fields.Str(required=True)
-#
-#     @post_load
-#     def make_obj(self, data):
-#         return MultisaveStateModel(**data)
-#
-#     class Meta:
-#         strict = True
-
-
 @attr.s(auto_attribs=True)
 class MultisaveMarkupModel(GenericMarkupModel):
     areas: Union[List[str], Missing] = missing
@@ -50,21 +39,11 @@ class MultisaveMarkupSchema(GenericMarkupSchema):
 @attr.s(auto_attribs=True)
 class MultisaveInputModel:
     """Model for the information that is sent from browser (plugin AngularJS component)."""
-    ##userword: str
-    ##multisaveOK: bool = missing
-    ##nosave: bool = missing
-
-
-# class MultisaveInputSchema(Schema):
-#     @post_load
-#     def make_obj(self, data):
-#         return MultisaveInputModel(**data)
 
 
 class MultisaveAttrs(Schema):
     """Common fields for HTML and answer routes."""
     markup = fields.Nested(MultisaveMarkupSchema)
-    # state = fields.Nested(multisaveStateSchema, allow_none=True, required=True)
 
     class Meta:
         strict = True

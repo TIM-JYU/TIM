@@ -540,6 +540,9 @@ export class ViewCtrl implements IController {
                 await lo.abLoad.promise;
             }
         }
+        //TODO: do not call changeUser separately if updateAll enabled
+        // - handle /answers as single request for all related plugins instead of separate requests
+        // - do the same for /taskinfo and /getState requests
         for (const ab of this.abs.values()) {
             ab.changeUser(user, updateAll);
         }
