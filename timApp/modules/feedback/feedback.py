@@ -215,11 +215,12 @@ I {#practice words: ["will think", "won't think", "might think"]} before answeri
 
 ## Item header {defaultplugin="dropdown"}
 ::: {.info}
-Anything inside this `.info` section will not be a part of the actual question/answer.
-Here you can place extra instructions or you may delete the section.
+Anything inside this `.info` section starting with `::: {.info}` and ending with `:::` 
+will not be  a part of the actual question/answer. Here you can place extra instructions 
+or you may delete the section.
 
-The question ID `#dropdown1` should be unique. It refers to the feedback and should be
-edited in both. 
+The question ID `#dropdown1` should be unique to the task. It refers to the feedback and 
+should be edited in both the question item and feedback plugins. 
 :::
 
 What {#dropdown1 shuffle: true} on the stove?
@@ -271,7 +272,7 @@ questionItems:
     - match: ["is cooking"]
       correct: true
       levels: &rightmatch
-        - "**Correct!** You answered: *|answer|*"
+        - "**Correct!** You answered: *|correct|*."
     - match: ["do cooking"]
       levels: &match1
         - "You can write the level 1 feedback for the match choice here."
@@ -281,8 +282,8 @@ questionItems:
     - match: ["are cooking"]
       levels: &match2
         - "Level 1: |answer| is a placeholder for the given answer."
-        - "Level 2: |answer[0-1]| refers to the 1st and 2nd words of |answer|"
-        - "Level 3: |match| is a placeholder for the current match choice."
+        - "Level 2: |part[0]| refers to the 1st part of the answer."
+        - "Level 3: |match[0]| is a placeholder for the current match choice."
         - "Level 4: |correct| is a placeholder for the correct answer."
     - match: []  # Empty brackets for default feedback.
       levels: &defaultmatch
@@ -345,13 +346,14 @@ To here: {#practicedrop2}.
 
 ## Item header {defaultplugin="drag"}
 ::: {.info}
-Anything inside this `.info` section will not be a part of the actual question/answer.
-Here you can place extra instructions and the draggable words in "drag1".
+Anything inside this `.info` section starting with `::: {.info}` and ending with `:::` 
+will not be  a part of the actual question/answer. Here you can place extra instructions
+and the draggable words in "drag1".
 
 {#drag1 shuffle: true, words: ["I", "when", "around", "come"]}
 
-The question ID `#drop1` should be unique. It refers to the feedback and should be
-edited in both. 
+The question ID `#drop1` should be unique to the task. It refers to the feedback 
+and should be edited in both the question item and feedback plugins. 
 :::
 
 You know where I'll be found {#drop1}.
@@ -410,7 +412,7 @@ questionItems:
     - match: ["when I come around"]
       correct: true
       levels: &rightmatch
-        - "**Correct!** You answered: |answer|"
+        - "**Correct!** You answered: *|correct|*."
     - match: ["when around I come"]
       levels: &match1
         - "You can write the level 1 feedback for the match choice here."
@@ -420,8 +422,8 @@ questionItems:
     - match: ["when come I around"]
       levels: &match2
         - "Level 1: |answer| is a placeholder for the given answer."
-        - "Level 2: |answer[0-1]| refers to the 1st and 2nd words of |answer|"
-        - "Level 3: |match| is a placeholder for the current match choice."
+        - "Level 2: |part[0]| refers to the 1st part of the answer."
+        - "Level 3: |match[0]| is a placeholder for the current match choice."
         - "Level 4: |correct| is a placeholder for the correct answer."
     - match: [] # Empty brackets for default feedback.
       levels: &defaultmatch
@@ -492,24 +494,26 @@ To here: {#practicedrop2}.
 
 """, """## Item header {defaultplugin="dropdown"}
 ::: {.info}
-Anything inside this `.info` section will not be a part of the actual question/answer.
-Here you can place extra instructions or you may delete the section.
+Anything inside this `.info` section starting with `::: {.info}` and ending with `:::` 
+will not be  a part of the actual question/answer. Here you can place extra instructions 
+or you may delete the section.
 
-The question ID `#dropdown1` should be unique. It refers to the feedback and should be
-edited in both. 
+The question ID `#dropdown1` should be unique to the task. It refers to the feedback and 
+should be edited in both the question item and feedback plugins. 
 :::
 
 What {#dropdown1 shuffle: true} on the stove?
 
 """, """## Item header {defaultplugin="drag"}
 ::: {.info}
-Anything inside this `.info` section will not be a part of the actual question/answer.
-Here you can place extra instructions and the draggable words in "drag1".
+Anything inside this `.info` section starting with `::: {.info}` and ending with `:::` 
+will not be  a part of the actual question/answer. Here you can place extra instructions 
+and the draggable words in "drag1".
 
 {#drag1 shuffle: true , words: ["I", "when", "around", "come"]}
 
-The question ID `#drop1` should be unique. It refers to the feedback and should be
-edited in both. 
+The question ID `#drop1` should be unique to the task. It refers to the feedback and 
+should be edited in both the question item and feedback plugins. 
 :::
 
 You know where I'll be found {#drop1}.
@@ -540,7 +544,7 @@ questionItems:
     - match: ["is cooking"]
       correct: true
       levels: &rightmatch
-        - "**Correct!** You answered: *|answer|*"
+        - "**Correct!** You answered: *|correct|*."
     - match: ["do cooking"]
       levels: &match1
         - "You can write the level 1 feedback for the match choice here."
@@ -550,8 +554,8 @@ questionItems:
     - match: ["are cooking"]
       levels: &match2
         - "Level 1: |answer| is a placeholder for the given answer."
-        - "Level 2: |answer[0-1]| refers to the 1st and 2nd words of |answer|"
-        - "Level 3: |match| is a placeholder for the current match choice."
+        - "Level 2: |part[0]| refers to the 1st part of the answer."
+        - "Level 3: |match[0]| is a placeholder for the current match choice."
         - "Level 4: |correct| is a placeholder for the correct answer."
     - match: []  # Empty brackets for default feedback.
       levels: &defaultmatch
@@ -623,7 +627,7 @@ questionItems:
     - match: ["when I come around"]
       correct: true
       levels: &rightmatch
-        - "**Correct!** You answered: |answer|"
+        - "**Correct!** You answered: *|correct|*."
     - match: ["when around I come"]
       levels: &match1
         - "You can write the level 1 feedback for the match choice here."
@@ -633,8 +637,8 @@ questionItems:
     - match: ["when come I around"]
       levels: &match2
         - "Level 1: |answer| is a placeholder for the given answer."
-        - "Level 2: |answer[0-1]| refers to the 1st and 2nd words of |answer|"
-        - "Level 3: |match| is a placeholder for the current match choice."
+        - "Level 2: |part[0]| refers to the 1st part of the answer."
+        - "Level 3: |match[0]| is a placeholder for the current match choice."
         - "Level 4: |correct| is a placeholder for the correct answer."
     - match: [] # Empty brackets for default feedback.
       levels: &defaultmatch
