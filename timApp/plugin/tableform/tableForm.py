@@ -3,42 +3,34 @@ TIM example plugin: a tableFormndrome checker.
 """
 import json
 import os
-import re
-import string
 from typing import Union, List
 
 import attr
-from flask import jsonify, render_template_string, Blueprint, request
-from marshmallow import Schema, fields, post_load, validates, ValidationError
+from flask import jsonify, render_template_string, request
+from marshmallow import Schema, fields, post_load
 from marshmallow.utils import missing
 from webargs.flaskparser import use_args
 
 from pluginserver_flask import GenericMarkupModel, GenericMarkupSchema, GenericHtmlSchema, GenericHtmlModel, \
     GenericAnswerSchema, GenericAnswerModel, Missing, \
     InfoSchema, create_blueprint
-
+from timApp.answer.routes import get_fields_and_users
 from timApp.auth.accesshelper import get_doc_or_abort
-from timApp.auth.sessioninfo import get_current_user_object, get_current_user, get_current_user_id
 from timApp.plugin.pluginexception import PluginException
 from timApp.plugin.taskid import TaskId
-from timApp.plugin.timtable.timTable import colnum_to_letters
 from timApp.tim_app import csrf
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
-from timApp.answer.routes import get_fields_and_users
-from timApp.util.flask.responsehelper import ok_response, json_response, csv_response
+from timApp.util.flask.responsehelper import csv_response
 
 
 @attr.s(auto_attribs=True)
 class TableFormStateModel:
     """Model for the information that is stored in TIM database for each answer."""
-    #userword: str
-    #TODO: Tallenna taulukon data sellaisenaan / tallenna käyttäjän taulukkomäärityksiä?
+    #TODO: Save user given table layouts like in timTable
 
 
 class TableFormStateSchema(Schema):
-    #userword = fields.Str(required=True)
-
     @post_load
     def make_obj(self, data):
         return TableFormStateModel(**data)
@@ -49,7 +41,6 @@ class TableFormStateSchema(Schema):
 
 @attr.s(auto_attribs=True)
 class TableFormMarkupModel(GenericMarkupModel):
-    initword: Union[str, Missing] = missing
     groups: Union[List[str], Missing] = missing
     table: Union[bool, Missing] = missing
     report: Union[bool, Missing] = missing
@@ -69,7 +60,6 @@ class TableFormMarkupModel(GenericMarkupModel):
 
 
 class TableFormMarkupSchema(GenericMarkupSchema):
-    initword = fields.Str()
     groups = fields.List(fields.Str())
     table = fields.Boolean()
     report = fields.Boolean()
@@ -84,7 +74,7 @@ class TableFormMarkupSchema(GenericMarkupSchema):
     singleLine = fields.Boolean(allow_none=True)
     maxWidth = fields.Str()
     minWidth = fields.Str(allow_none=True)
-    fields = fields.List(fields.Str())
+    fields = fields.List(fields.Str()) #Keep this last - bad naming
 
     @post_load
     def make_obj(self, data):
@@ -97,19 +87,11 @@ class TableFormMarkupSchema(GenericMarkupSchema):
 @attr.s(auto_attribs=True)
 class TableFormInputModel:
     """Model for the information that is sent from browser (plugin AngularJS component)."""
-    #answers:
     replyRows: dict
-    nosave: bool = missing
 
 
 class TableFormInputSchema(Schema):
-    nosave = fields.Bool()
     replyRows = fields.Dict();
-
-    # @validates('userword')
-    # def validate_userword(self, word):
-    #     if not word:
-    #         raise ValidationError('Must not be empty.')
 
     @post_load
     def make_obj(self, data):
@@ -149,24 +131,13 @@ class TableFormHtmlModel(GenericHtmlModel[TableFormInputModel, TableFormMarkupMo
                 rows[f['user'].name] = dict(f['fields'])
                 rows[f['user'].name]['realname'] = f['user'].real_name
             r['rows'] = rows
-            #r['fields'] = []
-            # for field in self.markup.fields: #TODO: Read fieldnames from first row of userfields response
-            #     task = field.split('=', 1)[0]
-            #     task = task.split('>', 1)[0]
-            #     task_id = TaskId.parse(task, False, False)  # Todo check if simpler way to simply add missing docid prefix to field
-            #     if not task_id.doc_id:
-            #         task_id.doc_id = d.id
-            #     if task_id.extended_or_doc_task in userfields[1].values():
-            #         r['fields'].append(list(userfields[1].keys())[list(userfields[1].values()).index(task_id.extended_or_doc_task)])
-            #     else:
-            #         r['fields'].append(task_id.extended_or_doc_task)
             try:
                 r['fields'] = list(userfields[0][0]['fields'].keys())
             except IndexError:
                 r['fields'] = []
             r['aliases'] = userfields[1]
             r['contentMap'] = userfields[2]
-            #TODO else return "no groups/no fields"
+            #TODO else return "no groups/no fields"?
 
         return r
 
@@ -239,24 +210,10 @@ def answer(args: TableFormInputModel):
 
     web = {}
     result = {'web': web}
-    nosave = args.input.nosave
-    if not nosave:
-        save = saveRows
-        result["save"] = save
-        web['result'] = "saved"
+    save = saveRows
+    result["save"] = save
+    web['result'] = "saved"
     return jsonify(result)
-
-
-def check_letters(word: str, needed_len: int) -> bool:
-    """Checks if word has needed amount of chars.
-
-    :param word: word to check
-    :param needed_len: how many letters needed
-    :return: true if len match
-
-    """
-    s = word.upper()
-    return len(re.sub("[^[A-ZÅÄÖ]", "", s)) == needed_len
 
 
 @tableForm_plugin.route('/reqs/')

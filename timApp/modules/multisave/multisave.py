@@ -7,6 +7,7 @@ import attr
 from flask import jsonify, render_template_string
 from marshmallow import Schema, fields, post_load
 from marshmallow.utils import missing
+
 from pluginserver_flask import GenericMarkupModel, GenericMarkupSchema, GenericHtmlSchema, GenericHtmlModel, \
     Missing, \
     InfoSchema, create_app

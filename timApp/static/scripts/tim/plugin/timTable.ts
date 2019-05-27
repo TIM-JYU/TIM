@@ -55,7 +55,7 @@ export interface TimTable {
     hiddenRows?: number[];
     lockedCells?: string[];
     saveCallBack?: (rowi: number, coli: number, content: string) => void;
-    maxWidth?: string;
+    maxWidth?: string; //Possibly obsolete if cell/column layout can be given in data.table.colums
     minWidth?: string;
     singleLine?: boolean;
 }
@@ -2225,6 +2225,10 @@ export class TimTableController extends DestroyScope implements IController {
         return !cell.underSpanOf;
     }
 
+    /**
+     * Returns true if given cell should be visible
+     * @param index row number
+     */
     private showRow(index: number) {
         // TODO: Change to use proper type
         // return this.data.hiddenRows.includes(this.data.table.rows[index]);

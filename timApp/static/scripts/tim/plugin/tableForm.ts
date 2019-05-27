@@ -1,7 +1,7 @@
 /**
  * Defines the client-side implementation of a plugin for editing other plugins' answers in a formatted table
  */
-import angular, {INgModelOptions} from "angular";
+import angular from "angular";
 import * as t from "io-ts";
 import {
     GenericPluginMarkup,
@@ -27,7 +27,6 @@ const TableFormMarkup = t.intersection([
         anonNames: nullable(t.boolean),
         autosave: t.boolean,
         buttonText: nullable(t.string),
-        initword: t.string,
         maxWidth: t.string,
         minWidth: t.string,
         realnames: t.boolean,
@@ -132,6 +131,7 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
     /**
      * Transforms user/task combination defined in this.rows into cell format and sets up the table
      * TODO: Replace "A" with global variable userNameColumn, "B" with realNameColumn, 1 with headerRow etc
+     * TODO: generate rows/columns for this.data.table, possibly needed for more easily maintained layout handling
      */
     setDataMatrix() {
         this.data.userdata.cells.A1 = {cell: "Käyttäjänimi", backgroundColor: "#efecf1"};
