@@ -181,28 +181,6 @@ export class ViewCtrl implements IController {
         } else {
             initSlideView(this.item);
         }
-        initCssPrint();
-
-        // from https://stackoverflow.com/a/7317311
-        $(() => {
-            this.questionHandler.processQuestions();
-            this.setHeaderLinks();
-            this.noBeginPageBreak();
-            this.document.rebuildSections();
-            window.addEventListener("beforeunload", (e) => {
-                saveCurrentScreenPar();
-
-                if (!this.editing || $window.IS_TESTING) {
-                    return undefined;
-                }
-
-                const msg = "You are currently editing something. Are you sure you want to leave the page?";
-
-                (e || $window.event).returnValue = msg; // Gecko + IE
-                return msg; // Gecko + Webkit, Safari, Chrome etc.
-            });
-        });
-
         onClick("html", ($this, e) => {
             // Clicking anywhere
             const tagName = (e.target as Element).tagName.toLowerCase();
@@ -275,6 +253,28 @@ export class ViewCtrl implements IController {
         }
         this.reviewCtrl = new ReviewController(this);
         timLogTime("ViewCtrl end", "view");
+    }
+
+    $postLink() {
+        initCssPrint();
+
+        this.questionHandler.processQuestions();
+        this.setHeaderLinks();
+        this.noBeginPageBreak();
+        this.document.rebuildSections();
+        // from https://stackoverflow.com/a/7317311
+        window.addEventListener("beforeunload", (e) => {
+            saveCurrentScreenPar();
+
+            if (!this.editing || $window.IS_TESTING) {
+                return undefined;
+            }
+
+            const msg = "You are currently editing something. Are you sure you want to leave the page?";
+
+            (e || $window.event).returnValue = msg; // Gecko + IE
+            return msg; // Gecko + Webkit, Safari, Chrome etc.
+        });
     }
 
     public isTranslation() {
