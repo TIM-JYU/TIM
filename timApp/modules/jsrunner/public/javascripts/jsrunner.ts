@@ -1,5 +1,5 @@
 /**
- * Defines the client-side implementation of an example plugin (a palindrome checker).
+ * Defines the client-side implementation of JavaScript runner plugin.
  */
 import angular from "angular";
 import * as t from "io-ts";
@@ -7,6 +7,7 @@ import {GenericPluginMarkup, GenericPluginTopLevelFields, nullable, PluginBase, 
 import {$http} from "tim/util/ngimport";
 import {to} from "tim/util/utils";
 import "../../stylesheets/jsrunner.css";
+import {ViewCtrl} from "../../../../static/scripts/tim/document/viewctrl";
 
 const jsrunnerApp = angular.module("jsrunnerApp", ["ngSanitize"]);
 export const moduleDefs = [jsrunnerApp];
@@ -16,6 +17,7 @@ const JsrunnerMarkup = t.intersection([
         creditField: t.string,
         defaultPoints: t.number,
         failGrade: t.string,
+        fieldhelper: t.boolean,
         fields: t.array(t.string),
         gradeField: t.string,
         gradingScale: t.dictionary(t.string, t.number),
@@ -36,6 +38,8 @@ class JsrunnerController extends PluginBase<t.TypeOf<typeof JsrunnerMarkup>, t.T
     private error?: string;
     private isRunning = false;
     private print: string = "";
+    private fieldlist: string = "";
+    private vctrl!: ViewCtrl;
 
     getDefaultMarkup() {
         return {};
@@ -47,6 +51,17 @@ class JsrunnerController extends PluginBase<t.TypeOf<typeof JsrunnerMarkup>, t.T
 
     $onInit() {
         super.$onInit();
+        if(this.attrs.fieldhelper){
+            const pluginlist = this.vctrl.getTimComponentsByRegex(".*");
+            const tasks = "";
+            for (let plug of pluginlist) {
+                if(plug.getName() != undefined) {
+                    // @ts-ignore TODO
+                    tasks += " - " + plug.getName().toString() + "\n";
+                }
+            }
+            this.fieldlist = tasks;
+        }
     }
 
     checkFields() {
@@ -82,6 +97,10 @@ class JsrunnerController extends PluginBase<t.TypeOf<typeof JsrunnerMarkup>, t.T
     protected getAttributeType() {
         return JsrunnerAll;
     }
+
+    protected isFieldHelper(){
+        return this.attrs.fieldhelper;
+    }
 }
 
 jsrunnerApp.component("jsRunner", {
@@ -106,6 +125,7 @@ jsrunnerApp.component("jsRunner", {
     <pre ng-if="$ctrl.result">{{$ctrl.result}}</pre>
     <pre ng-if="$ctrl.print">{{$ctrl.print}}</pre>
     <p ng-if="::$ctrl.footer" ng-bind="::$ctrl.footer" class="plgfooter"></p>
+    <pre ng-if="::$ctrl.isFieldHelper()">{{$ctrl.fieldlist}}</pre>
 </div>
 `,
 });

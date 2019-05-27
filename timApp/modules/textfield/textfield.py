@@ -26,14 +26,6 @@ class TextfieldStateSchema(Schema):
     @pre_load()
     def numeric_to_text(self, data):
         data["c"] = str(data.get("c", ""))
-    #     # if not data.get("userword", False) and (data.get("numericvalue") is not None):
-    #     #     data["userword"] = str(data.get("numericvalue"))
-    #     #     pass
-    #     # pass
-    #     if 'userword' in data:
-    #         pass
-    #     else:
-    #         data["userword"] = data.get("numericvalue", "")
 
     @post_load
     def make_obj(self, data):

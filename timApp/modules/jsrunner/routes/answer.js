@@ -1,5 +1,6 @@
 var express = require('express');
 var router = express.Router();
+const Tools = require('./tools');
 
 router.put('/', function (req, res, next) {
 
@@ -16,16 +17,17 @@ router.put('/', function (req, res, next) {
 
     const {NodeVM} = require('vm2');
     const vm = new NodeVM({
-        console: 'inherit',
-        sandbox: {data: uAndF, currDoc, markup, aliases},
-        require: {
-            external: true, // TODO allow only tools.js
+        sandbox: {
+            data: uAndF,
+            currDoc,
+            markup,
+            aliases,
+            Tools,
         },
         timeout: 1000,
     });
     let result = vm.run(
         `
-        const Tools = require('./tools');
         let saveUsersFields = [];
         let output = "";
         let error = "";

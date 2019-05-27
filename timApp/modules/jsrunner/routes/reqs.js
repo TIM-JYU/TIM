@@ -4,7 +4,16 @@ var router = express.Router();
 const backTicks = "```";
 
 const templates = [`
-${backTicks} {#pistelasku plugin="jsrunner"}
+${backTicks} {#runner plugin="jsrunner"}
+groups:
+ -
+fields:
+ - 
+program: |!!
+
+!!
+${backTicks} `, `
+${backTicks}{#runner1 plugin="pali"}
 groups:
  -
 fields:
@@ -22,16 +31,6 @@ defaultPoints: 5
 program: |!!
 
 !!
-${backTicks} `, `
-${backTicks}{#pistelasku1 plugin="pali"}
-header: Kirjoita palindromi
-stem: Kirjoita palindromi, jossa on 7 kirjainta.
--points_array: [[0, 0.1], [0.6, 1]]
-inputstem: "Palindromisi:"
-needed_len: 7
-answerLimit: 4
-initword: muikku
-cols: 20
 ${backTicks}`]
 
 
@@ -51,8 +50,13 @@ router.get('/', function (req, res, next) {
                             {
                                 'data': templates[0].trim(),
                                 'text': 'JavaScript runner',
-                                'expl': 'Add JavaScript runner task',
-                            }
+                                'expl': 'Add basic JavaScript runner task',
+                            },
+                            {
+                                'data': templates[1].trim(),
+                                'text': 'Extended JavaScript runner',
+                                'expl': 'Add extended JavaScript runner task',
+                            },
                         ],
                     },
                 ],
