@@ -45,6 +45,7 @@ export interface ITimComponent {
     getContent: () => string | undefined;
     getContentArray?: () => string[] | undefined;
     getGroups: () => string[];
+    getTaskId: () => string | undefined;
     belongsToGroup(group: string): boolean;
     isUnSaved: () => boolean;
     save: () => Promise<{saved: boolean, message: (string | undefined)}>;

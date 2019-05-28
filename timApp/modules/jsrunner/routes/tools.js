@@ -93,7 +93,7 @@ class Tools {
     setInt(fieldName, content) {
         let fn = this.normalizeAndSet(fieldName);
         let r = parseInt(content);
-        if (isNaN(r)) throw new Error("Cant parse " + content + " to integer in " + fieldName);
+        if (isNaN(r)) throw new Error("Can't parse " + content + " to integer in " + fieldName);
         this.result[fn] = r;
     }
 
@@ -101,7 +101,7 @@ class Tools {
         let fn = this.normalizeAndSet(fieldName);
         let cont = content.toString().replace(",", ".");
         let r = parseFloat(cont);
-        if (isNaN(r)) throw new Error(" Can't parse " + content + " to number in " + fieldName);
+        if (isNaN(r)) throw new Error("Can't parse " + content + " to number in " + fieldName);
         this.result[fn] = r;
     }
 
