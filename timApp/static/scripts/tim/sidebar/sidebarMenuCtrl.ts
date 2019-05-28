@@ -5,6 +5,7 @@ import {ngStorage} from "ngstorage";
 import {timApp} from "tim/app";
 import {showCourseDialog} from "../document/course/courseDialogCtrl";
 import {getActiveDocument} from "../document/document";
+import {IDocSettings} from "../document/IDocSettings";
 import {showMergePdfDialog} from "../document/minutes/mergePdfCtrl";
 import {ViewCtrl} from "../document/viewctrl";
 import {DocumentOrFolder, IDocument, isRootFolder, redirectToItem} from "../item/IItem";
@@ -16,12 +17,12 @@ import {ILecture, ILectureListResponse2} from "../lecture/lecturetypes";
 import {ITemplate, showPrintDialog} from "../printing/printCtrl";
 import {showConsentDialog} from "../ui/consent";
 import {showMessageDialog} from "../ui/dialog";
+import {showInputDialog} from "../ui/inputDialog";
 import {ADMIN_GROUPNAME, TEACHERS_GROUPNAME} from "../user/IUser";
 import {setConsent} from "../user/settingsCtrl";
 import {Users, UserService} from "../user/userService";
 import {$http, $localStorage, $window} from "../util/ngimport";
 import {IOkResponse, Require, to} from "../util/utils";
-import {showInputDialog} from "../ui/inputDialog";
 
 export interface IHeader {
     id: string;
@@ -48,7 +49,7 @@ export class SidebarMenuCtrl implements IController {
     private vctrl?: Require<ViewCtrl>;
     private bookmarks: {};
     private documentMemoMinutes: string | undefined;
-    private docSettings?: {macros?: {knro?: string}};
+    private docSettings?: IDocSettings;
     private hideLinks: boolean = false;
     private displayIndex?: IHeaderDisplayIndexItem[];
     // Consent types:

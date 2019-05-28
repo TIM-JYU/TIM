@@ -5,6 +5,7 @@ import {setEditorScope} from "tim/editor/editorScope";
 import {fixDefExport, markAsUsed, to} from "tim/util/utils";
 import {timApp} from "../app";
 import {IExtraData, ITags} from "../document/editing/edittypes";
+import {IDocSettings} from "../document/IDocSettings";
 import {getElementByParId, getParAttributes} from "../document/parhelpers";
 import {ViewCtrl} from "../document/viewctrl";
 import {IDocument} from "../item/IItem";
@@ -12,10 +13,10 @@ import {DialogController, IModalInstance, registerDialogComponent, showDialog, s
 import {$http, $injector, $localStorage, $timeout, $upload, $window} from "../util/ngimport";
 import {IAceEditor} from "./ace-types";
 import {AceParEditor} from "./AceParEditor";
-import {IPluginInfoResponse, ParCompiler} from "./parCompiler";
-import {TextAreaParEditor} from "./TextAreaParEditor";
 import {SelectionRange} from "./BaseParEditor";
+import {IPluginInfoResponse, ParCompiler} from "./parCompiler";
 import {RestampDialogClose, showRestampDialog} from "./restampDialog";
+import {TextAreaParEditor} from "./TextAreaParEditor";
 
 markAsUsed(rangyinputs);
 
@@ -164,7 +165,7 @@ export class PareditorController extends DialogController<{params: IEditorParams
     private touchDevice: boolean;
     private autocomplete!: boolean; // $onInit
     private citeText!: string; // $onInit
-    private docSettings?: {macros?: {dates?: Array<[string, string, string]>, knro?: number, stampformat?: string}, custom_stamp_model?: string};
+    private docSettings?: IDocSettings;
     private uploadedFile?: string;
     private activeTab?: string;
     private lastTab?: string;
