@@ -3,10 +3,10 @@
  */
 import angular, {INgModelOptions} from "angular";
 import * as t from "io-ts";
+import {ITimComponent, ViewCtrl} from "tim/document/viewctrl";
 import {GenericPluginMarkup, Info, nullable, PluginBase, pluginBindings, withDefault} from "tim/plugin/util";
 import {$http} from "tim/util/ngimport";
 import {to} from "tim/util/utils";
-import {ITimComponent, ViewCtrl} from "tim/document/viewctrl";
 import {valueDefu} from "tim/util/utils"; // Authors note: needed for Reset-method, if ever wanted.
 
 const textfieldApp = angular.module("textfieldApp", ["ngSanitize"]);
@@ -51,7 +51,7 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
     private errormessage = "";
     private hideSavedText = true;
     private redAlert = false;
-    private saveResponse: {saved:boolean, message: (string | undefined)} = {saved:false, message:undefined}
+    private saveResponse: {saved: boolean, message: (string | undefined)} = {saved: false, message: undefined};
 
     getDefaultMarkup() {
         return {};
@@ -73,6 +73,15 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
         this.modelOpts = {debounce: this.autoupdate};
         this.vctrl.addTimComponent(this);
         this.initialValue = this.userword;
+    }
+
+    /**
+     * Returns the name given to the plugin.
+     */
+    getName(): string | undefined {
+        if (this.attrs.followid) return this.attrs.followid;
+        const taskId = this.pluginMeta.getTaskId();
+        if (taskId) return taskId.split(".")[1];
     }
 
     /**
@@ -152,8 +161,7 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
     async saveText() {
         if (this.isUnSaved()) {
             return this.doSaveText(false);
-        }
-        else {
+        } else {
             // return {saved: false, message:undefined};
             this.saveResponse.saved = false;
             this.saveResponse.message = undefined;
@@ -183,8 +191,8 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
         const inputfields = document.querySelectorAll("textfield-runner input, numericfield-runner input");
         for (let i = 0; i < inputfields.length; ++i) {
             const selectedfield = inputfields[i] as HTMLInputElement;
-            if (selectedfield === document.activeElement && inputfields[i+1]) {
-                let nextfield = inputfields[i+1] as HTMLInputElement;
+            if (selectedfield === document.activeElement && inputfields[i + 1]) {
+                const nextfield = inputfields[i + 1] as HTMLInputElement;
                 return nextfield.focus();
             }
         }
@@ -234,7 +242,7 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
      * Unused method warning is suppressed, as the method is only called in template.
      */
     autoSave() {
-        if (this.attrs.autosave) this.doSaveText(false);
+        if (this.attrs.autosave) { this.doSaveText(false); }
     }
 
     /**
@@ -244,7 +252,7 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
     async doSaveText(nosave: boolean) {
         this.errormessage = "";
         if (this.attrs.validinput) {
-            if(!this.validityCheck(this.attrs.validinput)) {
+            if (!this.validityCheck(this.attrs.validinput)) {
                 this.errormessage = this.attrs.errormessage || "Input does not pass the RegEx: " + this.attrs.validinput;
                 this.redAlert = true;
                 this.saveResponse.message = this.errormessage;
@@ -268,7 +276,7 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
         this.isRunning = false;
         if (r.ok) {
             const data = r.result.data;
-            //TODO: Make angular to show tooltip even without user having to move cursor out and back into the input
+            // TODO: Make angular to show tooltip even without user having to move cursor out and back into the input
             // (Use premade bootstrap method / add listener for enter?)
             this.errormessage = data.web.error || "";
             this.result = data.web.result;
@@ -303,7 +311,7 @@ textfieldApp.component("textfieldRunner", {
     <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
     <p class="stem" ng-if="::$ctrl.stem">{{::$ctrl.stem}}</p>
     <form name="$ctrl.f" class="form-inline">
-    <label>{{::$ctrl.inputstem}}<span>   
+    <label>{{::$ctrl.inputstem}}<span>
         <input type="string"
                ng-if="::!$ctrl.isPlainText()"
                class="form-control"
@@ -319,7 +327,7 @@ textfieldApp.component("textfieldRunner", {
                tooltip-is-open="$ctrl.f.$invalid && $ctrl.f.$dirty"
                tooltip-trigger="mouseenter"
                placeholder="{{::$ctrl.inputplaceholder}}"
-               size="{{::$ctrl.cols}}" 
+               size="{{::$ctrl.cols}}"
                ng-class="{warnFrame: ($ctrl.isUnSaved() && !$ctrl.redAlert), alertFrame: $ctrl.redAlert }">
                </span></label>
          <span ng-if="::$ctrl.isPlainText()" style="float:left;">{{$ctrl.userword}}</span>
@@ -329,8 +337,8 @@ textfieldApp.component("textfieldRunner", {
             ng-disabled="$ctrl.isRunning || $ctrl.readonly"
             ng-click="$ctrl.saveText()">
         {{::$ctrl.buttonText()}}
-    </button> 
-    <p class="savedtext" ng-if="!$ctrl.hideSavedText && $ctrl.buttonText()">Saved!</p> 
+    </button>
+    <p class="savedtext" ng-if="!$ctrl.hideSavedText && $ctrl.buttonText()">Saved!</p>
     <p ng-if="::$ctrl.footer" ng-bind="::$ctrl.footer" class="plgfooter"></p>
 </div>
 `,

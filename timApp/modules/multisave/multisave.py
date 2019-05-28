@@ -7,6 +7,7 @@ import attr
 from flask import jsonify, render_template_string
 from marshmallow import Schema, fields, post_load
 from marshmallow.utils import missing
+
 from pluginserver_flask import GenericMarkupModel, GenericMarkupSchema, GenericHtmlSchema, GenericHtmlModel, \
     Missing, \
     InfoSchema, create_app
@@ -16,17 +17,6 @@ from pluginserver_flask import GenericMarkupModel, GenericMarkupSchema, GenericH
 class MultisaveStateModel:
     """Model for the information that is stored in TIM database for each answer."""
     #userword: str
-
-
-# class multisaveStateSchema(Schema):
-#     #userword = fields.Str(required=True)
-#
-#     @post_load
-#     def make_obj(self, data):
-#         return MultisaveStateModel(**data)
-#
-#     class Meta:
-#         strict = True
 
 
 @attr.s(auto_attribs=True)
@@ -50,21 +40,11 @@ class MultisaveMarkupSchema(GenericMarkupSchema):
 @attr.s(auto_attribs=True)
 class MultisaveInputModel:
     """Model for the information that is sent from browser (plugin AngularJS component)."""
-    ##userword: str
-    ##multisaveOK: bool = missing
-    ##nosave: bool = missing
-
-
-# class MultisaveInputSchema(Schema):
-#     @post_load
-#     def make_obj(self, data):
-#         return MultisaveInputModel(**data)
 
 
 class MultisaveAttrs(Schema):
     """Common fields for HTML and answer routes."""
     markup = fields.Nested(MultisaveMarkupSchema)
-    # state = fields.Nested(multisaveStateSchema, allow_none=True, required=True)
 
     class Meta:
         strict = True

@@ -26,8 +26,8 @@ const styleToHtml: {[index: string]: string} = {
     fontWeight: "font-weight",
     height: "height",
     horizontalAlign: "horizontal-align",
-    minWidth: "min-width",
     maxWidth: "max-width",
+    minWidth: "min-width",
     rowspan: "rowspan",
     textAlign: "text-align",
     verticalAlign: "vertical-align",
@@ -49,12 +49,13 @@ export interface TimTable {
     editorButtonsBottom?: boolean;
     editorButtonsRight?: boolean;
     toolbarTemplates?: any;
-    hideSaveButton: boolean;
     hid: {edit?: boolean};
-    hiderows: number[];
-    lockedCells: string[];
+    hideSaveButton?: boolean;
+    // hiddenRows?: IRow[];
+    hiddenRows?: number[];
+    lockedCells?: string[];
     saveCallBack?: (rowi: number, coli: number, content: string) => void;
-    maxWidth?: string;
+    maxWidth?: string; //Possibly obsolete if cell/column layout can be given in data.table.colums
     minWidth?: string;
     singleLine?: boolean;
 }
@@ -237,9 +238,9 @@ export class TimTableController extends DestroyScope implements IController {
     private editing: boolean = false;
     private forcedEditMode: boolean = false;
     private task: boolean = false;
-    private hideSaveButton: boolean = false;
-    private hiderows: number[] = [];
-    //private saveCallBack: () => void;
+    private hideSaveButton?: boolean = false;
+    private hiddenRows?: number[] = [];
+    // private saveCallBack: () => void;
     private isRunning: boolean = false;
     public taskBorders: boolean = false;
     private editedCellContent: string | undefined;
@@ -367,6 +368,7 @@ export class TimTableController extends DestroyScope implements IController {
             }
             this.viewctrl.addTable(this, parId);
         }
+        if(this.disabled) return;
         document.addEventListener("keyup", this.keyUpTable);
         document.addEventListener("keydown", this.keyDownTable);
         document.addEventListener("keypress", this.keyPressTable);
@@ -547,7 +549,6 @@ export class TimTableController extends DestroyScope implements IController {
         */
     }
 
-
     /*
      * Set attribute to user object.  If key == CLEAR, remove attribute in value
      * IF key == CLEAR and value = ALL, clear all attributes
@@ -628,7 +629,7 @@ export class TimTableController extends DestroyScope implements IController {
     async saveCells(cellContent: string, docId: number, parId: string, row: number, col: number) {
         if (this.task) {
             this.setUserContent(row, col, cellContent);
-            if(this.data.saveCallBack) this.data.saveCallBack(row, col, cellContent);
+            if (this.data.saveCallBack) { this.data.saveCallBack(row, col, cellContent); }
             return;
         }
         const response = await $http.post<string[]>("/timTable/saveCell", {
@@ -765,7 +766,7 @@ export class TimTableController extends DestroyScope implements IController {
      */
     private initializeCellDataMatrix() {
         this.cellDataMatrix = [];
-        if(!this.data.table) this.data.table = {}
+        if (!this.data.table) { this.data.table = {}; }
         if (!this.data.table.rows) {
             this.data.table.rows = [];
         }
@@ -1060,7 +1061,9 @@ export class TimTableController extends DestroyScope implements IController {
     private keyDownTable(ev: KeyboardEvent) {
         this.shiftDown = ev.shiftKey;
 
-        // if (!this.mouseInTable) return;
+        //if (!this.mouseInTable) return;
+        //TODO: Check properly if table has focus when preventing default tab behavior
+        if (this.currentCell == undefined) return;
         if (ev.keyCode === KEY_TAB) {
             ev.preventDefault();
         }
@@ -1206,17 +1209,16 @@ export class TimTableController extends DestroyScope implements IController {
             Iterate towards direction until next non-locked cell in a non-hidden row is found
             or until iterator arrives at the same cell
              */
-            while(nextCellCoords){
-                if(nextCellCoords.row == y && nextCellCoords.col == x) break;
-                if(!(this.data.hiderows && this.data.hiderows.includes(nextCellCoords.row))
-                && !(this.data.lockedCells && this.data.lockedCells.includes(colnumToLetters(nextCellCoords.col) + (nextCellCoords.row + 1)))) break;
-                nextCellCoords = this.getNextCell(nextCellCoords.col, nextCellCoords.row, direction)
+            while (nextCellCoords) {
+                if (nextCellCoords.row == y && nextCellCoords.col == x) { break; }
+                if (!(this.data.hiddenRows && this.data.hiddenRows.includes(nextCellCoords.row))
+                && !(this.data.lockedCells && this.data.lockedCells.includes(colnumToLetters(nextCellCoords.col) + (nextCellCoords.row + 1)))) { break; }
+                nextCellCoords = this.getNextCell(nextCellCoords.col, nextCellCoords.row, direction);
             }
 
             if (!nextCellCoords) {
                 return true;
             }
-
 
             if (this.currentCell) {
                 this.openCell(nextCellCoords.row, nextCellCoords.col);
@@ -1366,7 +1368,7 @@ export class TimTableController extends DestroyScope implements IController {
         }
 
         const cellCoordinate = colnumToLetters(coli) + (rowi + 1);
-        if (this.data.lockedCells && this.data.lockedCells.includes(cellCoordinate)) return;
+        if (this.data.lockedCells && this.data.lockedCells.includes(cellCoordinate)) { return; }
 
         const activeCell = this.activeCell;
         this.setActiveCell(rowi, coli);
@@ -1608,12 +1610,12 @@ export class TimTableController extends DestroyScope implements IController {
         }
 
         if (this.data.maxWidth) {
-            styles['max-width'] = this.data.maxWidth;
-            styles['overflow'] = "hidden";
+            styles["max-width"] = this.data.maxWidth;
+            styles.overflow = "hidden";
         }
-        if (this.data.minWidth) styles['min-width'] = this.data.minWidth;
+        if (this.data.minWidth) { styles["min-width"] = this.data.minWidth; }
         if (this.data.singleLine) {
-            styles["white-space"] = 'nowrap'
+            styles["white-space"] = "nowrap";
         }
         return styles;
     }
@@ -2224,9 +2226,14 @@ export class TimTableController extends DestroyScope implements IController {
         return !cell.underSpanOf;
     }
 
-    private showRow(index: number){
-        if(!this.data.hiderows) return true;
-        return !this.data.hiderows.includes(index);
+    /**
+     * Returns true if given cell should be visible
+     * @param index row number
+     */
+    private showRow(index: number) {
+        // TODO: Change to use proper type
+        // return this.data.hiddenRows.includes(this.data.table.rows[index]);
+        return (!this.data.hiddenRows || !this.data.hiddenRows.includes(index));
     }
 }
 
