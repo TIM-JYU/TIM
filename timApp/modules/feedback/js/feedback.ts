@@ -6,7 +6,7 @@ import angular from "angular";
 import * as t from "io-ts";
 import {EditMode} from "tim/document/popupMenu";
 import {ITimComponent, ViewCtrl} from "tim/document/viewctrl";
-import {GenericPluginMarkup, Info, nullable, PluginBase,  pluginBindings, withDefault} from "tim/plugin/util";
+import {GenericPluginMarkup, Info, nullable, PluginBase, pluginBindings, withDefault} from "tim/plugin/util";
 import {$http, $window} from "tim/util/ngimport";
 import {to} from "tim/util/utils";
 
@@ -590,9 +590,10 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
         if (this.pluginMode === Mode.QuestionItem) {
             const plugins = this.attrs.questionItems[this.questionItemIndex];
             if (!this.hasContent(plugins)) {
-                this.printFeedback("You need to provide an answer");
+                this.error = "You need to provide an answer.";
                 return;
             }
+            this.error = undefined;
 
             // Gets all the plugins from the visible question item and compares to choices-array to check which matches.
             const selections = this.getAnswerFromPlugins();
@@ -869,7 +870,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
             if (word) {
                 const wordString = word.toString();
                 const wordIndex = parseInt(wordString.split(":")[1]);
-                if(replacementArray[wordIndex]) {
+                if (replacementArray[wordIndex]) {
                     this.feedback = this.feedback.replace(placeholder, replacementArray[wordIndex]);
                 } else {
                     this.feedback = this.feedback.replace(placeholder, "");
@@ -1154,6 +1155,13 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
                     this.showBlock(this.questionItemIndex);
                 }
                 this.edited = false;
+            }
+        }
+
+        if (this.questionItemIndex <= this.attrs.questionItems.length) {
+            const plugins = this.attrs.questionItems[this.questionItemIndex];
+            if (this.hasContent(plugins)) {
+                this.error = undefined;
             }
         }
     }
