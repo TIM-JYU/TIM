@@ -76,6 +76,15 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
     }
 
     /**
+     * Returns the name given to the plugin.
+     */
+    getName(): string | undefined {
+        if (this.attrs.followid) return this.attrs.followid;
+        const taskId = this.pluginMeta.getTaskId();
+        if (taskId) return taskId.split(".")[1];
+    }
+
+    /**
      *  Will run after $onInit - reserved for possible eventhandlers OR to be removed.
      */
     /*
