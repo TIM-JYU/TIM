@@ -50,7 +50,8 @@ CONTENT_FIELD_TYPE_MAP = {
 NEVERLAZY_PLUGINS = {
     'textfield',
     'multisave',
-    'numericfield'
+    'numericfield',
+    'jsrunner'
 }
 
 

@@ -16,6 +16,7 @@ const JsrunnerMarkup = t.intersection([
     t.partial({
         creditField: t.string,
         defaultPoints: t.number,
+        docid: t.boolean,
         failGrade: t.string,
         fieldhelper: t.boolean,
         fields: t.array(t.string),
@@ -53,12 +54,20 @@ class JsrunnerController extends PluginBase<t.TypeOf<typeof JsrunnerMarkup>, t.T
         super.$onInit();
         if (this.attrs.fieldhelper) {
             const pluginlist = this.vctrl.getTimComponentsByRegex(".*");
-            const tasks = "";
-            for (const plug of pluginlist) {
-                console.log(plug);
-                if (plug.getName() !== undefined) {
-                    // @ts-ignore TODO
-                    tasks += " - " + plug.getTaskId().toString() + "\n";
+            let tasks = "";
+            if (this.attrs.docid) {
+                for (const plug of pluginlist) {
+                    if (plug.getName()) {
+                        // @ts-ignore TODO
+                        tasks += " - " + plug.getTaskId().toString() + "\n";
+                    }
+                }
+            } else {
+                for (const plug of pluginlist) {
+                    if (plug.getName()) {
+                        // @ts-ignore TODO
+                        tasks += " - " + plug.getName().toString() + "\n";
+                    }
                 }
             }
             this.fieldlist = tasks;
@@ -70,7 +79,6 @@ class JsrunnerController extends PluginBase<t.TypeOf<typeof JsrunnerMarkup>, t.T
     }
 
     async doCheckFields(nosave: boolean) {
-        this.error =  "... undefined or no rights to fields ...";
         this.isRunning = true;
         const params = {
             input: {
@@ -82,7 +90,7 @@ class JsrunnerController extends PluginBase<t.TypeOf<typeof JsrunnerMarkup>, t.T
             params.input.nosave = true;
         }
         const url = this.pluginMeta.getAnswerUrl();
-        const r = await to($http.put<{web: {result: string, error?: string, print: string}}>(url, params));
+        const r = await to($http.put<{ web: { result: string, error?: string, print: string } }>(url, params));
         this.isRunning = false;
         if (r.ok) {
             const data = r.result.data;
