@@ -976,6 +976,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
                                         let contentString = "";
                                         if (pluginNodeArrayContent.length > 0) {
                                             for (const c of pluginNodeArrayContent) {
+                                                parts.push(c);
                                                 contentString += ` ${c}`;
                                             }
                                         }
@@ -983,7 +984,6 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
                                         values.set(name, contentString);
                                         selections.push(contentString);
                                         answer.push(name);
-                                        parts.push(contentString);
                                     }
                                 } else {
                                     const pluginNodeContent = plugin.getContent();
