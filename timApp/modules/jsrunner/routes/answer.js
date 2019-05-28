@@ -5,15 +5,12 @@ const Tools = require('./tools');
 router.put('/', function (req, res, next) {
 
     const uAndF = req.body.input.data;
-    console.log(uAndF);
     const aliases = req.body.input.aliases;
-    console.log(aliases);
     const doc = req.body.taskID;
     const regex = /[0-9]+\./;
     const currDoc = doc.match(regex);
     const program = req.body.markup.program;
     const markup = req.body.markup;
-    console.log(markup);
 
     const {NodeVM} = require('vm2');
     const vm = new NodeVM({
@@ -36,7 +33,6 @@ router.put('/', function (req, res, next) {
             function runProgram(saveUsersFields, output, error) {
                 ${program}
             }
-            // TODO: try for errors
             runProgram(); 
             saveUsersFields.push(tools.getResult());
             output += tools.getPrint();
@@ -46,7 +42,6 @@ router.put('/', function (req, res, next) {
         `,
         "/jsrunner/routes/vm.js",
         );
-    console.log(result);
     res.send({'save': result.res, 'web': {'result': 'points saved', 'print': result.pr, 'error': result.err}});
 
 });

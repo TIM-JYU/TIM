@@ -288,6 +288,14 @@ export abstract class PluginBase<MarkupType extends IGenericPluginMarkup, A exte
         if (taskId) return taskId.split(".")[1];
     }
 
+    getTaskId(): string | undefined {
+        const taskId = this.pluginMeta.getTaskId();
+        if (taskId) {
+            const docTask = taskId.split(".");
+            return docTask[0].toString() + "." + docTask[1].toString();
+        }
+    }
+
     /**
      * Returns the plugin's parent paragraph.
      */

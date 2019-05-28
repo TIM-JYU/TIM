@@ -51,13 +51,14 @@ class JsrunnerController extends PluginBase<t.TypeOf<typeof JsrunnerMarkup>, t.T
 
     $onInit() {
         super.$onInit();
-        if(this.attrs.fieldhelper){
+        if (this.attrs.fieldhelper) {
             const pluginlist = this.vctrl.getTimComponentsByRegex(".*");
             const tasks = "";
-            for (let plug of pluginlist) {
-                if(plug.getName() != undefined) {
+            for (const plug of pluginlist) {
+                console.log(plug);
+                if (plug.getName() !== undefined) {
                     // @ts-ignore TODO
-                    tasks += " - " + plug.getName().toString() + "\n";
+                    tasks += " - " + plug.getTaskId().toString() + "\n";
                 }
             }
             this.fieldlist = tasks;
@@ -69,7 +70,7 @@ class JsrunnerController extends PluginBase<t.TypeOf<typeof JsrunnerMarkup>, t.T
     }
 
     async doCheckFields(nosave: boolean) {
-        this.error =  "... undefined or no rights to fields ..."; // TODO: errorviesti tulee aina
+        this.error =  "... undefined or no rights to fields ...";
         this.isRunning = true;
         const params = {
             input: {
@@ -85,7 +86,6 @@ class JsrunnerController extends PluginBase<t.TypeOf<typeof JsrunnerMarkup>, t.T
         this.isRunning = false;
         if (r.ok) {
             const data = r.result.data;
-            // window.location.reload(); // TODO: ei tehdä jos print tai error
             this.error = data.web.error;
             this.print = data.web.print;
         } else {
@@ -98,7 +98,7 @@ class JsrunnerController extends PluginBase<t.TypeOf<typeof JsrunnerMarkup>, t.T
         return JsrunnerAll;
     }
 
-    protected isFieldHelper(){
+    protected isFieldHelper() {
         return this.attrs.fieldhelper;
     }
 }
