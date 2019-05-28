@@ -21,7 +21,7 @@ const JsrunnerMarkup = t.intersection([
         fields: t.array(t.string),
         gradeField: t.string,
         gradingScale: t.dictionary(t.string, t.number),
-        groups: t.array(t.string),
+        groups: (t.array(t.string)),
         program: nullable(t.string),
     }),
     GenericPluginMarkup,
@@ -101,6 +101,10 @@ class JsrunnerController extends PluginBase<t.TypeOf<typeof JsrunnerMarkup>, t.T
     protected isFieldHelper() {
         return this.attrs.fieldhelper;
     }
+
+    protected hasAllAttributes() {
+        return (this.attrs.fields || this.attrs.groups || this.attrs.program);
+    }
 }
 
 jsrunnerApp.component("jsRunner", {
@@ -114,7 +118,7 @@ jsrunnerApp.component("jsRunner", {
     <tim-markup-error ng-if="::$ctrl.markupError" data="::$ctrl.markupError"></tim-markup-error>
     <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
     <p ng-if="::$ctrl.stem" ng-bind-html="::$ctrl.stem"></p>
-    <button class="timButton"
+    <button ng-show="$ctrl.hasAllAttributes()" class="timButton"
             ng-if="::$ctrl.buttonText()"
             ng-disabled="$ctrl.isRunning || $ctrl.readonly"
             ng-click="$ctrl.checkFields()">
