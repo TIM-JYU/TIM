@@ -368,6 +368,7 @@ export class TimTableController extends DestroyScope implements IController {
             }
             this.viewctrl.addTable(this, parId);
         }
+        if(this.disabled) return;
         document.addEventListener("keyup", this.keyUpTable);
         document.addEventListener("keydown", this.keyDownTable);
         document.addEventListener("keypress", this.keyPressTable);
