@@ -27,8 +27,10 @@ const TableFormMarkup = t.intersection([
         anonNames: nullable(t.boolean),
         autosave: t.boolean,
         buttonText: nullable(t.string),
+        hideButtonText: nullable(t.string),
         maxWidth: t.string,
         minWidth: t.string,
+        open: t.boolean,
         realnames: t.boolean,
         report: nullable(t.boolean),
         reportButton: nullable(t.string),
@@ -82,7 +84,7 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
     private rows!: IRowsType;
     private oldCellValues!: string;
     private realnames = false;
-    private showTable = false;
+    private showTable = true;
 
     getDefaultMarkup() {
         return {};
@@ -95,6 +97,12 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
      buttonText() {
         return (this.attrs.buttonText || "Tallenna taulukko");
     }
+
+
+     hideButtonText() {
+        return (this.attrs.hideButtonText);
+    }
+
 
     // noinspection JSUnusedGlobalSymbols
     /**
@@ -116,6 +124,7 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
         if (this.attrs.minWidth) { this.data.minWidth = this.attrs.minWidth; }
         if (this.attrs.maxWidth !== undefined) { this.data.maxWidth = this.attrs.maxWidth; }
         if (this.attrs.singleLine) { this.data.singleLine = this.attrs.singleLine; }
+        if(this.attrs.open != undefined) this.showTable = this.attrs.open;
 
     }
 
@@ -440,8 +449,9 @@ timApp.component("tableformRunner", {
             {{ ::$ctrl.reportButton() }}
     </button>
     <button class="timButton"
-            ng-click="$ctrl.closeTable()">
-            Sulje Taulukko/Raporttinäkymä
+            ng-click="$ctrl.closeTable()"
+            ng-if="$ctrl.hideButtonText()">
+            {{::$ctrl.hideButtonText()}}
     </button>
     <pre ng-if="$ctrl.result">{{$ctrl.result}}</pre>
     <pre ng-if="$ctrl.error" ng-bind-html="$ctrl.error"></pre>
