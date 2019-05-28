@@ -272,7 +272,7 @@ questionItems:
     - match: ["is cooking"]
       correct: true
       levels: &rightmatch
-        - "**Correct!** You answered: *|correct|*."
+        - "**Correct!** You answered: *|correct|*"
     - match: ["do cooking"]
       levels: &match1
         - "You can write the level 1 feedback for the match choice here."
@@ -412,7 +412,7 @@ questionItems:
     - match: ["when I come around"]
       correct: true
       levels: &rightmatch
-        - "**Correct!** You answered: *|correct|*."
+        - "**Correct!** You answered: *|correct|*"
     - match: ["when around I come"]
       levels: &match1
         - "You can write the level 1 feedback for the match choice here."
@@ -544,7 +544,7 @@ questionItems:
     - match: ["is cooking"]
       correct: true
       levels: &rightmatch
-        - "**Correct!** You answered: *|correct|*."
+        - "**Correct!** You answered: *|correct|*"
     - match: ["do cooking"]
       levels: &match1
         - "You can write the level 1 feedback for the match choice here."
@@ -627,7 +627,7 @@ questionItems:
     - match: ["when I come around"]
       correct: true
       levels: &rightmatch
-        - "**Correct!** You answered: *|correct|*."
+        - "**Correct!** You answered: *|correct|*"
     - match: ["when around I come"]
       levels: &match1
         - "You can write the level 1 feedback for the match choice here."

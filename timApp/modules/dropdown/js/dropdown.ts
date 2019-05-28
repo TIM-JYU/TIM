@@ -5,8 +5,8 @@ import angular from "angular";
 import * as t from "io-ts";
 import {ITimComponent, ViewCtrl} from "tim/document/viewctrl";
 import {GenericPluginMarkup, Info, nullable, PluginBase, pluginBindings, withDefault} from "tim/plugin/util";
-import {to} from "tim/util/utils";
 import {$http} from "tim/util/ngimport";
+import {to} from "tim/util/utils";
 
 const dropdownApp = angular.module("dropdownApp", ["ngSanitize"]);
 export const moduleDefs = [dropdownApp];
@@ -64,7 +64,7 @@ class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.T
         }
         this.radio = this.attrs.radio;
         if (this.attrs.answers) {
-            // TODO: Show the answer browser if so desired.
+            // TODO: Implement showing and hiding the answer browser if it is deemed useful.
         }
     }
 
