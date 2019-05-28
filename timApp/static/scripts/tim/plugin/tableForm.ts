@@ -78,6 +78,7 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
         userdata: {type: "Relative", cells: {}},
         // saveCallBack: this.singleCellSave
     };
+    //TODO: Change row format to properly typed format (maybe userobject:IRowstype) format
     private rows!: IRowsType;
     private oldCellValues!: string;
     private realnames = false;
@@ -290,7 +291,8 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
             const reg = new RegExp(this.userfilter.toLowerCase());
             let rowi = 1;
             for (const [key, value] of Object.entries(this.rows)) {
-                if (!reg.test(key.toLowerCase())) {
+                // @ts-ignore TODO: change row format to properly typed format, see todo at this.rows
+                if (!reg.test(key.toLowerCase()) && !(this.attrs.realnames && (value["realname"] != null && reg.test(value["realname"].toString().toLowerCase())))) {
                     //this.data.hiddenRows.push(values);
                     this.data.hiddenRows.push(rowi);
                 }
