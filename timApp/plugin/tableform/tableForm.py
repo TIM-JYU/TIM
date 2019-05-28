@@ -50,11 +50,13 @@ class TableFormMarkupModel(GenericMarkupModel):
     dataCollection: Union[str, Missing] = missing
     autosave: Union[bool, Missing] = missing
     buttonText: Union[str, Missing] = missing
+    hideButtonText: Union[str, Missing] = missing
     reportButton: Union[str, Missing] = missing
     realnames: Union[bool, Missing] = missing
     maxWidth: Union[str, Missing] = missing
     minWidth: Union[str, Missing] = missing
     singleLine: Union[bool, Missing] = missing
+    open: Union[bool, Missing] = missing
     fields: Union[List[str], Missing] = missing
 
 
@@ -69,11 +71,13 @@ class TableFormMarkupSchema(GenericMarkupSchema):
     dataCollection = fields.Str(allow_none=True)
     autosave = fields.Boolean()
     buttonText = fields.Str(allow_none=True)
+    hideButtonText = fields.Str(allow_none=True)
     reportButton = fields.Str(allow_none=True)
     realnames = fields.Boolean()
     singleLine = fields.Boolean(allow_none=True)
     maxWidth = fields.Str()
     minWidth = fields.Str(allow_none=True)
+    open = fields.Boolean(allow_none=True)
     fields = fields.List(fields.Str()) #Keep this last - bad naming
 
     @post_load
