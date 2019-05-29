@@ -71,7 +71,8 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
         super.$onInit();
         this.numericvalue = valueOr(this.attrsall.numericvalue, this.attrs.initnumber || undefined);
         this.modelOpts = {debounce: this.autoupdate};
-        this.vctrl.addTimComponent(this);
+        if(!this.attrs.labelStyle)
+            this.vctrl.addTimComponent(this);
         this.initialValue = this.numericvalue;
     }
 
