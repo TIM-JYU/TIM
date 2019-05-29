@@ -28,10 +28,10 @@ def query_admin():
         isadmin = False
         if yesno == 'y':
             isadmin = True
-        User.create_with_group(email, realname, email, password, is_admin=isadmin)
+        User.create_with_group(username, realname, email, password, is_admin=isadmin)
 
-        print('UserAccount ', email, " created")
-        print('Use ', email, " and password you entered to login.")
+        print('UserAccount ', username, " created")
+        print('Use ', username, " and password you entered to login.")
     db.session.commit()
     timdb.close()
 
