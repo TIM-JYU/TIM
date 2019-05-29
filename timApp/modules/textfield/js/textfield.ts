@@ -71,7 +71,8 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
         super.$onInit();
         this.userword = this.attrsall.userword || this.attrs.initword || "";
         this.modelOpts = {debounce: this.autoupdate};
-        this.vctrl.addTimComponent(this);
+        if(!this.attrs.labelStyle)
+            this.vctrl.addTimComponent(this);
         this.initialValue = this.userword;
     }
 
