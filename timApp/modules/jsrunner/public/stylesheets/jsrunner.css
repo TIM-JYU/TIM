@@ -1,3 +1,11 @@
 .jsRunnerDiv {
     border: none;
 }
+
+.pluginjsrunner answerbrowser {
+    display: none;
+}
+
+[data-plugin="/jsrunner"] {
+    opacity: 1 !important;
+}
