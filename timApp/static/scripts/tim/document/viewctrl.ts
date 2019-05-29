@@ -676,7 +676,7 @@ export class ViewCtrl implements IController {
     registerAnswerBrowser(ab: AnswerBrowserController) {
         //TODO: Task can have two instances in same document (regular field and label version)
         // - for now just add extra answerbrowsers for them (causes unnecessary requests when changing user...)
-        // - maybe in future answerbrowser could find all its' plugins' instances and update them when ab.changeuser gets called?
+        // - maybe in future answerbrowser could find all related plugin instances and update them when ab.changeuser gets called?
         // - fix registerPluginLoader too
         if(this.abs.has((ab.taskId))){
             let index = 1;
