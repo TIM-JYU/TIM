@@ -674,7 +674,17 @@ export class ViewCtrl implements IController {
     private abs = new Map<string, AnswerBrowserController>();
 
     registerAnswerBrowser(ab: AnswerBrowserController) {
-        this.abs.set(ab.taskId, ab);
+        //TODO: Task can have two instances in same document (regular field and label version)
+        // - for now just add extra answerbrowsers for them (causes unnecessary requests when changing user...)
+        // - maybe in future answerbrowser could find all its' plugins' instances and update them when ab.changeuser gets called?
+        if(this.abs.has((ab.taskId))){
+            let index = 1;
+            while(this.abs.has(ab.taskId + index)){
+                index++
+            }
+            this.abs.set(ab.taskId + index, ab);
+        }
+        else this.abs.set(ab.taskId, ab);
     }
 
     getAnswerBrowser(taskId: string) {
