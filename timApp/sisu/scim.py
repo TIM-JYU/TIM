@@ -1,17 +1,17 @@
 import json
 import re
-from datetime import datetime
 from typing import List, Optional
 
 import attr
 from flask import Blueprint, request, current_app, abort, Response
-from marshmallow import Schema, fields, post_load, ValidationError
+from marshmallow import Schema, fields, post_load, ValidationError, missing
 from webargs.flaskparser import use_args
 
 from timApp.auth.login import create_or_update_user
 from timApp.timdb.sqa import db
+from timApp.user.scimentity import get_meta
 from timApp.user.user import User, UserOrigin
-from timApp.user.usergroup import UserGroup
+from timApp.user.usergroup import UserGroup, tim_group_to_scim, SISU_GROUP_PREFIX
 from timApp.util.flask.responsehelper import json_response
 from timApp.util.logger import log_warning
 
@@ -19,15 +19,8 @@ scim = Blueprint('scim',
                  __name__,
                  url_prefix='/scim')
 
-SISU_GROUP_PREFIX = 'sisu:'
 DELETED_GROUP_PREFIX = 'deleted:'
 CUMULATIVE_GROUP_PREFIX = 'cumulative:'
-
-DEFAULT_TIMESTAMP = datetime(
-    year=2015,
-    month=1,
-    day=1,
-)
 
 UNPROCESSABLE_ENTITY = 422
 
@@ -41,34 +34,67 @@ class SCIMMemberSchema(Schema):
     def make_obj(self, data):
         return SCIMMemberModel(**data)
 
-    class Meta:
-        strict = True
+
+@attr.s(auto_attribs=True)
+class SCIMMemberModel:
+    value: str
+    display: str
+    ref: Optional[str] = missing
 
 
-class SCIMGroupSchema(Schema):
+class SCIMCommonSchema(Schema):
     externalId = fields.Str(required=True)
     displayName = fields.Str(required=True)
+
+
+@attr.s(auto_attribs=True)
+class SCIMCommonModel:
+    externalId: str
+    displayName: str
+
+
+@attr.s(auto_attribs=True)
+class SCIMEmailModel:
+    value: str
+    type: str = missing
+    primary: bool = missing
+
+
+class SCIMEmailSchema(Schema):
+    value = fields.Str(required=True)
+    type = fields.Str()
+    primary = fields.Bool()
+
+    @post_load
+    def make_obj(self, data):
+        return SCIMEmailModel(**data)
+
+
+class SCIMUserSchema(SCIMCommonSchema):
+    userName = fields.Str(required=True)
+    emails = fields.List(fields.Nested(SCIMEmailSchema), required=True)
+
+    @post_load
+    def make_obj(self, data):
+        return SCIMUserModel(**data)
+
+
+@attr.s(auto_attribs=True)
+class SCIMUserModel(SCIMCommonModel):
+    userName: str
+    emails: List[SCIMEmailModel]
+
+
+class SCIMGroupSchema(SCIMCommonSchema):
     members = fields.List(fields.Nested(SCIMMemberSchema), required=True)
 
     @post_load
     def make_obj(self, data):
         return SCIMGroupModel(**data)
 
-    class Meta:
-        strict = True
-
 
 @attr.s(auto_attribs=True)
-class SCIMMemberModel:
-    value: str
-    display: str
-    ref: Optional[str] = None
-
-
-@attr.s(auto_attribs=True)
-class SCIMGroupModel:
-    externalId: str
-    displayName: str
+class SCIMGroupModel(SCIMCommonModel):
     members: List[SCIMMemberModel]
 
 
@@ -131,15 +157,8 @@ class GetGroupsModel:
     filter: str
 
 
-GROUP_ID_PREFIX = 'group-'
-
-
 def get_scim_id(ug: UserGroup):
     return tim_group_to_scim(ug.name)
-
-
-def get_tim_group_id(scim_id: str):
-    return int(scim_id.replace(GROUP_ID_PREFIX, ''))
 
 
 filter_re = re.compile('externalId sw (.+)')
@@ -149,14 +168,8 @@ def scim_group_to_tim(sisu_group: str):
     return f'{SISU_GROUP_PREFIX}{sisu_group}'
 
 
-def tim_group_to_scim(tim_group: str):
-    if not tim_group.startswith(SISU_GROUP_PREFIX):
-        raise Exception(f"Group {tim_group} is not a Sisu group")
-    return tim_group[len(SISU_GROUP_PREFIX):]
-
-
 @scim.route('/Groups')
-@use_args(GetGroupsSchema(strict=True))
+@use_args(GetGroupsSchema())
 def get_groups(args: GetGroupsModel):
     m = filter_re.fullmatch(args.filter)
     if not m:
@@ -168,7 +181,7 @@ def get_groups(args: GetGroupsModel):
             yield {
                 'id': get_scim_id(g),
                 # 'externalId': g.name,
-                'meta': get_group_meta(g),
+                'meta': get_meta(g),
             }
 
     return json_response({
@@ -179,7 +192,7 @@ def get_groups(args: GetGroupsModel):
 
 
 @scim.route('/Groups', methods=['post'])
-@use_args(SCIMGroupSchema(strict=True), locations=("json",))
+@use_args(SCIMGroupSchema(), locations=("json",))
 def post_group(args: SCIMGroupModel):
     gname = scim_group_to_tim(args.externalId)
     ug = UserGroup.get_by_name(gname)
@@ -209,26 +222,10 @@ def get_group(group_id):
 @scim.route('/Groups/<group_id>', methods=['put'])
 def put_group(group_id: str):
     ug = get_group_by_scim(group_id)
-    ps = SCIMGroupSchema()
-    try:
-        j = request.get_json()
-        if j is None:
-            return scim_error(422, 'JSON payload missing.')
-        p = ps.load(j)
-    except ValidationError as e:
-        return scim_error(422, json.dumps(e.messages, sort_keys=True))
-    d: SCIMGroupModel = p.data
+    d = load_data_from_req(SCIMGroupSchema)
     update_users(ug, d)
     db.session.commit()
     return json_response(group_scim(ug))
-
-
-def update_users(ug: UserGroup, d: SCIMGroupModel):
-    removed_user_names = set(u.name for u in ug.users) - set(u.value for u in d.members)
-    removed_users = User.query.filter(User.name.in_(removed_user_names)).all()
-    for u in removed_users:
-        ug.users.remove(u)
-    create_sisu_users(d, ug)
 
 
 @scim.route('/Groups/<group_id>', methods=['delete'])
@@ -239,6 +236,47 @@ def delete_group(group_id):
     return Response(status=204)
 
 
+@scim.route('/Users/<user_id>')
+def get_user(user_id):
+    u = User.get_by_name(user_id)
+    if not u:
+        return abort(404, 'User not found.')
+    return json_response(u.get_scim_data())
+
+
+@scim.route('/Users/<user_id>', methods=['put'])
+def put_user(user_id):
+    u = User.get_by_name(user_id)
+    if not u:
+        return abort(404, 'User not found.')
+    um: SCIMUserModel = load_data_from_req(SCIMUserSchema)
+    u.real_name = um.displayName
+    if um.emails:
+        u.email = um.emails[0].value
+    db.session.commit()
+    return json_response(u.get_scim_data())
+
+
+def load_data_from_req(schema):
+    ps = schema()
+    try:
+        j = request.get_json()
+        if j is None:
+            return scim_error(422, 'JSON payload missing.')
+        p = ps.load(j)
+    except ValidationError as e:
+        return scim_error(422, json.dumps(e.messages, sort_keys=True))
+    return p
+
+
+def update_users(ug: UserGroup, d: SCIMGroupModel):
+    removed_user_names = set(u.name for u in ug.users) - set(u.value for u in d.members)
+    removed_users = User.query.filter(User.name.in_(removed_user_names)).all()
+    for u in removed_users:
+        ug.users.remove(u)
+    create_sisu_users(d, ug)
+
+
 def create_sisu_users(args: SCIMGroupModel, ug: UserGroup):
     c_name = f'{CUMULATIVE_GROUP_PREFIX}{ug.name}'
     cumulative_group = UserGroup.get_by_name(c_name)
@@ -246,7 +284,7 @@ def create_sisu_users(args: SCIMGroupModel, ug: UserGroup):
         cumulative_group = UserGroup.create(c_name)
     for u in args.members:
         user = create_or_update_user(
-            f'{u.value}@jyu.fi',  # TODO will SCIM give email?
+            None,  # email will be given in /Users route
             u.display,
             u.value,
             origin=UserOrigin.Sisu,
@@ -256,34 +294,17 @@ def create_sisu_users(args: SCIMGroupModel, ug: UserGroup):
             cumulative_group.users.append(user)
 
 
-def get_group_meta(g: UserGroup):
-    host = current_app.config['TIM_HOST']
-    return {
-        'created': g.created or DEFAULT_TIMESTAMP,
-        'lastModified': g.modified or DEFAULT_TIMESTAMP,
-        'location': f'{host}/scim/Groups/{tim_group_to_scim(g.name)}',
-        'resourceType': 'Group',
-        # 'version': '',
-    }
-
-
 def group_scim(ug: UserGroup):
-    host = current_app.config['TIM_HOST']
-
     def members():
         for u in ug.users.all():  # type: User
             yield {
-                'value': u.name,
-                '$ref': f'{host}/scim/Users/{u.name}',
-                'display': u.real_name,
+                'value': u.scim_id,
+                '$ref': u.scim_location,
+                'display': u.scim_display_name,
             }
 
     return {
-        'schemas': ["urn:ietf:params:scim:schemas:core:2.0:Group"],
-        'id': get_scim_id(ug),
-        # 'externalId': ug.name,
-        'meta': get_group_meta(ug),
-        'displayName': ug.display_name,
+        **ug.get_scim_data(),
         'members': list(members()),
     }
 

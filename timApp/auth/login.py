@@ -3,6 +3,7 @@ import random
 import re
 import string
 import urllib.parse
+from typing import Optional
 
 from flask import Blueprint, render_template
 from flask import abort
@@ -89,7 +90,7 @@ def login_with_korppi():
 
 
 def create_or_update_user(
-        email: str,
+        email: Optional[str],
         real_name: str,
         user_name: str,
         group_to_add: UserGroup,
@@ -100,7 +101,7 @@ def create_or_update_user(
     if user is None:
         # Try email
         user: User = User.query.filter_by(email=email).first()
-        if user is not None:
+        if user is not None and email:
             # Two possibilities here:
             # 1) An email user signs in using Korppi for the first time. We update the user's username and personal
             # usergroup.
@@ -110,7 +111,7 @@ def create_or_update_user(
         else:
             user, _ = User.create_with_group(user_name, real_name, email, origin=origin)
     else:
-        if real_name:
+        if real_name and email:
             user.update_info(name=user_name, real_name=real_name, email=email)
     if group_to_add not in user.groups:
         user.groups.append(group_to_add)

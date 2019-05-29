@@ -1,13 +1,22 @@
 from typing import List
 
 from timApp.timdb.sqa import db, TimeStampMixin
+from timApp.user.scimentity import SCIMEntity
 from timApp.user.special_group_names import ANONYMOUS_GROUPNAME, LARGE_GROUPS, KORPPI_GROUPNAME, LOGGED_IN_GROUPNAME, \
     ADMIN_GROUPNAME, GROUPADMIN_GROUPNAME, TEACHERS_GROUPNAME
 from timApp.user.usergroupdoc import UserGroupDoc
 from timApp.user.usergroupmember import UserGroupMember
 
+SISU_GROUP_PREFIX = 'sisu:'
 
-class UserGroup(db.Model, TimeStampMixin):
+
+def tim_group_to_scim(tim_group: str):
+    if not tim_group.startswith(SISU_GROUP_PREFIX):
+        raise Exception(f"Group {tim_group} is not a Sisu group")
+    return tim_group[len(SISU_GROUP_PREFIX):]
+
+
+class UserGroup(db.Model, TimeStampMixin, SCIMEntity):
     """A usergroup. Each User should belong to a personal UserGroup that has the same name as the User name. No one
     else should belong to a personal UserGroup.
 
@@ -29,6 +38,10 @@ class UserGroup(db.Model, TimeStampMixin):
     display_name = db.Column(db.Text, nullable=True)
     """Usergroup display name."""
 
+    @property
+    def scim_display_name(self):
+        return self.display_name
+
     users = db.relationship('User', secondary=UserGroupMember.__table__,
                             back_populates='groups', lazy='dynamic')
     accesses = db.relationship('BlockAccess', back_populates='usergroup', lazy='dynamic')
@@ -44,6 +57,22 @@ class UserGroup(db.Model, TimeStampMixin):
         lazy='select',
         uselist=False,
     )
+
+    @property
+    def scim_created(self):
+        return self.created
+
+    @property
+    def scim_modified(self):
+        return self.modified
+
+    @property
+    def scim_id(self):
+        return tim_group_to_scim(self.name)
+
+    @property
+    def scim_resource_type(self):
+        return 'Group'
 
     def is_anonymous(self) -> bool:
         return self.name == ANONYMOUS_GROUPNAME

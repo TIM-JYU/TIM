@@ -18,8 +18,9 @@ from timApp.item.item import ItemBase
 from timApp.lecture.lectureusers import LectureUsers
 from timApp.notification.notification import Notification
 from timApp.timdb.exceptions import TimDbException
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import db, TimeStampMixin
 from timApp.user.preferences import Preferences
+from timApp.user.scimentity import SCIMEntity
 from timApp.user.settings.theme import Theme
 from timApp.user.special_group_names import ANONYMOUS_GROUPNAME, ANONYMOUS_USERNAME, LOGGED_IN_GROUPNAME, \
     SPECIAL_USERNAMES
@@ -91,7 +92,7 @@ class UserOrigin(Enum):
     Twitter = 9
 
 
-class User(db.Model):
+class User(db.Model, TimeStampMixin, SCIMEntity):
     """A user account.
 
     A special user 'Anonymous user' denotes a user that is not logged in. Its id is 0.
@@ -120,6 +121,30 @@ class User(db.Model):
 
     origin = db.Column(db.Enum(UserOrigin), nullable=True)
     """How the user registered to TIM."""
+
+    @property
+    def scim_display_name(self):
+        return self.real_name
+
+    @property
+    def scim_created(self):
+        return self.created
+
+    @property
+    def scim_modified(self):
+        return self.modified
+
+    @property
+    def scim_id(self):
+        return self.name
+
+    @property
+    def scim_resource_type(self):
+        return 'User'
+
+    @property
+    def scim_extra_data(self):
+        return {'emails': [{'value': self.email}] if self.email else []}
 
     consents = db.relationship('ConsentChange', back_populates='user', lazy='select')
     notifications = db.relationship('Notification', back_populates='user', lazy='dynamic')
@@ -211,7 +236,7 @@ class User(db.Model):
                           is_admin: bool = False,
                           origin: UserOrigin = None,
                           uid: Optional[int] = None):
-        user = User.create(name, real_name or name, email or name + '@example.com', password=password or '',
+        user = User.create(name, real_name or name, email, password=password or '',
                            uid=uid,
                            origin=origin)
         group = UserGroup.create(name)
