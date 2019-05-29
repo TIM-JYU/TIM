@@ -208,6 +208,8 @@ export class AnswerBrowserController extends DestroyScope implements IController
     private answerId?: Binding<number, "<?">;
     private loader!: PluginLoaderCtrl;
     private reviewHtml?: string;
+    private answerListener:any = null; // TODO: laita oikea tyyppi
+    private answerListenerController:any = null; // TODO: laita oikea tyyppi
 
     constructor(private scope: IScope, private element: IRootElementService) {
         super(scope, element);
@@ -352,6 +354,12 @@ export class AnswerBrowserController extends DestroyScope implements IController
         this.element.focus();
     }
 
+
+    registerAnswerListener(ac: any, al: any) { // TODO: korjaa tyyppi (funktio jolle menee yksi answer parametrina)
+        this.answerListener = al;
+        this.answerListenerController = ac;
+    }
+
     async changeAnswer() {
         if (this.selectedAnswer == null || !this.user) {
             return;
@@ -386,7 +394,13 @@ export class AnswerBrowserController extends DestroyScope implements IController
             }
             this.loadedAnswer.id = this.selectedAnswer.id;
             this.loadedAnswer.review = this.review;
-            void loadPlugin(r.result.data.html, this.loader.getPluginElement(), this.scope, this.viewctrl);
+            if ( this.answerListener ) {
+                let content = JSON.parse((this.selectedAnswer as any).content); // TODO: korjaa tyyppi
+                this.answerListener(this.answerListenerController, content);
+            }
+            else {
+                void loadPlugin(r.result.data.html, this.loader.getPluginElement(), this.scope, this.viewctrl);
+            }
             if (this.review) {
                 this.reviewHtml = r.result.data.reviewHtml;
                 await $timeout();

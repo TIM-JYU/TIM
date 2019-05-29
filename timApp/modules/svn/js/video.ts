@@ -371,7 +371,7 @@ videoApp.component("videoRunner", {
              ng-click="$ctrl.showVideo()"
              width="200"
              alt="Click here to show the video"/></div>
-    <a href="{{::$ctrl.doclink}}" ng-if="::$ctrl.doclink" target="{{::$ctrl.attrs.target}}">
+    <a href="{{::$ctrl.doclink}}" ng-if="::$ctrl.doclink" rel=”noopener” target="{{::$ctrl.attrs.target}}">
         <span ng-if="::$ctrl.docicon"><img ng-src="{{::$ctrl.docicon}}"
                                     alt="Go to doc"/> </span>{{::$ctrl.doctext}}</a>
     <video-zoom c="::$ctrl"></video-zoom>
@@ -391,7 +391,7 @@ videoApp.component("smallVideoRunner", {
            ng-click="$ctrl.showVideo()"><span ng-if="::$ctrl.videoicon">
             <img ng-src="{{::$ctrl.videoicon}}" alt="Click here to show"/> </span>
             {{::$ctrl.videoname}} {{::$ctrl.duration}} {{::$ctrl.span}}</a>
-        <a href="{{::$ctrl.doclink}}" ng-if="::$ctrl.doclink" target="{{::$ctrl.attrs.target}}">
+        <a href="{{::$ctrl.doclink}}" ng-if="::$ctrl.doclink" rel=”noopener” target="{{::$ctrl.attrs.target}}">
             <span ng-if="::$ctrl.docicon"><img ng-src="{{::$ctrl.docicon}}"
                                              alt="Go to doc"/> </span>{{::$ctrl.doctext}}</a>
     </p>
@@ -417,7 +417,7 @@ videoApp.component("listVideoRunner", {
                 </span>{{::$ctrl.videoname}}{{::$ctrl.startt}}
                 {{::$ctrl.duration}}
                 {{::$ctrl.span}}</a>
-            <a href="{{::$ctrl.doclink}}" ng-if="::$ctrl.doclink" target="{{::$ctrl.attrs.target}}"><span
+            <a href="{{::$ctrl.doclink}}" ng-if="::$ctrl.doclink" rel=”noopener” target="{{::$ctrl.attrs.target}}"><span
                     ng-if="::$ctrl.docicon"><img
                     ng-src="{{::$ctrl.docicon}}" alt="Go to doc"/> </span>{{::$ctrl.doctext}}</a></li>
     </ul>

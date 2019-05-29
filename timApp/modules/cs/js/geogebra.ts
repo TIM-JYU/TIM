@@ -15,17 +15,17 @@ const GeogebraMarkup = t.intersection([
     t.partial({
         beforeOpen: t.string,
         buttonBottom: t.boolean,
-        by: t.string,
         correctresponse: t.boolean,
         generalfeedback: t.boolean,
-        open: t.boolean,
-        timWay: t.boolean,
+        showButton: t.string,
         srchtml: t.string,
         width: t.number,
-        height: t.number
+        height: t.number,
+        noborders: t.boolean,
     }),
     GenericPluginMarkup,
     t.type({
+        open: withDefault(t.boolean, true),
         autopeek: withDefault(t.boolean, true),
         lang: withDefault(t.string, "fi"),
         // autoplay: withDefault(t.boolean, true),
@@ -35,10 +35,9 @@ const GeogebraMarkup = t.intersection([
 ]);
 const GeogebraAll = t.intersection([
     t.partial({
-        by: t.string,
-        timWay: t.boolean,
         usercode: t.string,
         srchtml: t.string,
+        norun: t.boolean,
     }),
     t.type({
         info: Info,
@@ -71,6 +70,7 @@ interface IGeogebraData {
 
 interface JSFrameWindow extends Window {
     getData(): string;
+    setData(state: any): void;
 }
 
 interface CustomFrame<T extends Window> extends HTMLIFrameElement {
@@ -90,7 +90,15 @@ class GeogebraController extends PluginBase<t.TypeOf<typeof GeogebraMarkup>,
         if (txt) {
             return txt;
         }
-        return this.english ? "Send" : "Lähetä";
+        return this.english ? "Save" : "Tallenna";
+    }
+
+    showButton() {
+        const txt = this.attrs.showButton;
+        if (txt) {
+            return txt;
+        }
+        return this.english ? "Show task" : "Näytä tehtävä";
     }
 
     public viewctrl!: ViewCtrl;
@@ -108,8 +116,7 @@ class GeogebraController extends PluginBase<t.TypeOf<typeof GeogebraMarkup>,
     private geogebratime: string = "";
     private isRunning: boolean = false;
     private inputrows: number = 1;
-    private timWay: boolean = false; // if answer is given to TIM TextArea-field
-    private isOpen: boolean = true;
+    private isOpen: boolean = false;
     private lastInputFieldId: string = "";
     private lastInputFieldValue: string = "";
     private lastInputFieldElement: HTMLInputElement | undefined;
@@ -124,38 +131,55 @@ class GeogebraController extends PluginBase<t.TypeOf<typeof GeogebraMarkup>,
         super.$onInit();
         this.button = this.buttonText();
         const aa = this.attrsall;
-        this.userCode = aa.usercode || this.attrs.by || "";
-        this.timWay = aa.timWay || this.attrs.timWay || false;
+        this.userCode = aa.usercode ||  "";
 
         if (this.attrs.open) {
+            this.isOpen = true;
         }
+    }
+
+    runShowTask() {
+        this.isOpen = true;
+    }
+
+
+
+    changeAnswer(cnrl: any, state:any) {
+        const frameElem = cnrl.element.find(".jsFrameContainer")[0] as HTMLElement;
+        const f = frameElem.firstChild as CustomFrame<JSFrameWindow>;
+        f.contentWindow.setData(state);
     }
 
 
     outputAsHtml() {
-        if ( !this.attrs.srchtml ) return "";
+        // if ( !this.attrs.srchtml ) return "";
+        if ( this.attrsall.preview ) return ""; // TODO: replace when preview delay and preview from markup ready
         $timeout(0);
         let t = this.pluginMeta.getTaskId()!.split(".") || ["",""];
         let taskId = t[0] + "." + t[1];
         let ab = this.viewctrl.getAnswerBrowser(taskId);
+        if ( ab ) ab.registerAnswerListener(this, this.changeAnswer);
         let anr = 0;
         if ( ab ) {
             anr = ab.findSelectedAnswerIndex();
+            if ( anr < 0 ) anr = 0;
         }
         const selectedUser = this.viewctrl.selectedUser;
         const user_id = selectedUser.id;
-        const html:string = this.attrs.srchtml;
-        const datasrc = btoa(html);
+        // const html:string = this.attrs.srchtml;
+        // const datasrc = btoa(html);
         const w = this.attrs.width || 800;
-        const h = this.attrs.height || 600;
+        const h = this.attrs.height || 450;
+        let url = this.getHtmlUrl() + '/' + user_id + '/' + anr;
+        url = url.replace("//", "/");
         this.geogebraoutput = "<iframe id=\"jsxFrame-stack-jsxgraph-1-div1\"\n" +
+            "        class=\"showGeoGebra geogebraFrame\" \n" +
             "        style=\"width:calc("+ w + "px + 2px);height:calc(" + h+ "px + 2px);border: none;\"\n" +
             "        sandbox=\"allow-scripts allow-same-origin\"\n" +
-            "        class=\"geogebraFrame\"\n" +
             // "        src=\"data:text/html;base64," + datasrc + "\">\n" +
             // "src=\"https://www.geogebra.org/material/iframe/id/23587/width/1600/height/715/border/888888/rc/false/ai/false/sdz/false/smb/false/stb/false/stbh/true/ld/false/sri/false\"" +
             // 'src="'+ '/cs/reqs' + '"' +
-            'src="'+ this.getHtmlUrl() + '/' + user_id + '/' + anr + '"' +
+            'src="'+ url + '"' +
             "</iframe>";
         const s = $sce.trustAsHtml(this.geogebraoutput);
         return s;
@@ -187,7 +211,7 @@ class GeogebraController extends PluginBase<t.TypeOf<typeof GeogebraMarkup>,
     }
 
 
-    async runSend(data: string) {
+    async runSend(data: any) {
         if (this.pluginMeta.isPreview()) {
             this.error = "Cannot run plugin while previewing.";
             return;
@@ -197,11 +221,9 @@ class GeogebraController extends PluginBase<t.TypeOf<typeof GeogebraMarkup>,
         this.isRunning = true;
         const url = this.getTaskUrl();
         const geogebraData = "";
+        data['type'] = "geogebra";
         const params = {
-            input: {
-                jsData: data,
-                type: "geogebra",
-            },
+            input: data
         };
 
         const r = await to($http<{
@@ -268,26 +290,18 @@ geogebraApp.component("geogebraRunner", {
         viewctrl: "^timView",
     },
     template: `
-<div ng-cloak class="csRunDiv math que geogebra no-popup-menu" >
+<div ng-cloak ng-class="{'csRunDiv': !$ctrl.attrs.noborders}"  class="math que geogebra no-popup-menu" >
     <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
     <p ng-if="::$ctrl.stem" class="stem" ng-bind-html="::$ctrl.stem"></p>
     <p ng-if="!$ctrl.isOpen" class="stem" ng-bind-html="::$ctrl.attrs.beforeOpen"></p>
 
-    <div class="no-popup-menu geogebraOutput" ng-if="::$ctrl.timWay" >
-        <div class="csRunCode"><textarea class="csRunArea csInputArea"
-                                 name="geogebraapi_ans1" id="geogebraapi_ans1"
-                                 rows={{$ctrl.inputrows}}
-                                 ng-model="$ctrl.userCode"
-                                 ng-trim="false"
-                                 ng-change="$ctrl.autoPeek()"
-                                 placeholder="{{$ctrl.inputplaceholder}}"></textarea></div>
-    </div>
-    <div ng-cloak id="output" class="jsFrameContainer geogebraOutput" ng-bind-html="::$ctrl.outputAsHtml()">
+    <div ng-cloak ng-if="$ctrl.isOpen" id="output" class="jsFrameContainer geogebraOutput" ng-bind-html="::$ctrl.outputAsHtml()">
     <!--<div ng-cloak id="output" ng-if="::!$ctrl.timWay" class="geogebraOutput" ng-bind-html="$ctrl.output">-->
     </div>
     <!-- <div class="peekdiv" id="peek" ng-bind-html="$ctrl.geogebrapeek"></div> -->
     <p class="csRunMenu">
-        <button ng-if="$ctrl.isOpen" ng-disabled="$ctrl.isRunning" title="(Ctrl-S)" ng-click="$ctrl.getData()"
+        <button ng-if="!$ctrl.isOpen"  ng-click="$ctrl.runShowTask()"  ng-bind-html="$ctrl.showButton()"></button>
+        <button ng-if="$ctrl.isOpen && !$ctrl.attrs.norun" ng-disabled="$ctrl.isRunning" title="(Ctrl-S)" ng-click="$ctrl.getData()"
                 ng-bind-html="::$ctrl.button"></button>
     </p>
     <span class="csRunError"
@@ -295,7 +309,6 @@ geogebraApp.component("geogebraRunner", {
           ng-style="$ctrl.tinyErrorStyle" ng-bind-html="$ctrl.error"></span>
 
     <p class="plgfooter" ng-if="::$ctrl.footer" ng-bind-html="::$ctrl.footer"></p>
-    <p>GeoGebra</p>
 </div>
 `,
 });

@@ -2175,7 +2175,8 @@ class CsController extends CsBase implements IController {
         this.showCodeNow();
     }
 
-    getClipboardHelper() {  // TODO: could be a TIM global function
+
+    getClipboardHelper() : HTMLTextAreaElement {  // TODO: could be a TIM global function
         let e1 = copyHelperElement;  // prevent extra creating and deleting
         if (e1) {
             return e1;
@@ -2195,7 +2196,20 @@ class CsController extends CsBase implements IController {
     copyToClipboard(s: string) {  // TODO: could be a TIM global function
         const e1 = this.getClipboardHelper();
         e1.value = s;
-        e1.select();
+        const isIOS = navigator.userAgent.match(/ipad|ipod|iphone/i);
+        if (isIOS) {
+            // e1.contentEditable = true;
+            e1.readOnly = true;
+            var range = document.createRange();
+            range.selectNodeContents(e1);
+            var sel = window.getSelection();
+            if (sel) {
+                sel.removeAllRanges();
+                sel.addRange(range);
+            }
+            e1.setSelectionRange(0, 999999);
+        } else
+            e1.select();
         document.execCommand("copy");
     }
 

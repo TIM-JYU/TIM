@@ -1,12 +1,14 @@
 from subprocess import check_output
-from typing import Optional, re
+from typing import Optional
 
 import requests
+from click import globals
 
 from points import *
 from run import *
 from os.path import splitext
 from cs_sanitizer import check_not_script
+from base64 import b64encode
 
 sys.path.insert(0, '/py')  # /py on mountattu docker kontissa /opt/tim/timApp/modules/py -hakemistoon
 
@@ -29,8 +31,8 @@ Adding new language to csPlugin:
        must be before "r" in the list (TODO: fix the list to be not dependent on the order)
 """
 
-cmdline_whitelist = "A-Za-z\-/\.åöäÅÖÄ 0-9_"
-filename_whitelist = "A-Za-z\-/\.åöäÅÖÄ 0-9_"
+cmdline_whitelist = "A-Za-z\\-/\\.åöäÅÖÄ 0-9_"
+filename_whitelist = "A-Za-z\\-/\\.åöäÅÖÄ 0-9_"
 
 
 def sanitize_filename(s):
@@ -43,7 +45,7 @@ def sanitize_cmdline(s):
     return re.sub("[^" + cmdline_whitelist + "]", "", s)
 
 
-def illegal_cmdline_chars(s):
+def illegal_cmdline_chars(_s):
     global cmdline_whitelist
     return ""
     # return re.sub("[" + cmdline_whitelist + "]", "", s)
@@ -139,7 +141,7 @@ class Language:
             # so need to ensure asciified is not empty. Can also happen if task id has only non-ascii chars.
             if asciified:
                 fname = asciified
-        except:
+        except AttributeError:
             pass
         self.filename = get_param(query, "filename", fname)
         self.ifilename = get_param(query, "inputfilename", "/input.txt")
@@ -165,7 +167,7 @@ class Language:
     def extension(self):
         return
 
-    def check_extension(self, extensions, ext, exe):
+    def check_extension(self, extensions, ext, _exe):
         self.fileext = ext
         self.filedext = ext
         for ex in extensions:
@@ -291,7 +293,7 @@ class CS(Language):
 
     def get_cmdline(self, sourcecode):
         cmdline = "%s /r:System.Numerics.dll /out:%s %s /cs/jypeli/TIMconsole.cs" % (
-        self.compiler, self.exename, self.sourcefilename)
+            self.compiler, self.exename, self.sourcefilename)
         return cmdline
 
     def run(self, result, sourcelines, points_rule):
@@ -336,7 +338,7 @@ class Jypeli(CS):
         if err.find("Compile") >= 0:
             return code, out, err, pwddir
         err = re.sub("^ALSA.*\n", "", err, flags=re.M)
-        err = re.sub("^W: \[pulse.*\n", "", err, flags=re.M)
+        err = re.sub("^W: \\[pulse.*\n", "", err, flags=re.M)
         err = re.sub("^AL lib:.*\n", "", err, flags=re.M)
         out = re.sub("^Could not open AL device - OpenAL Error: OutOfMemory.*\n", "", out, flags=re.M)
 
@@ -438,7 +440,7 @@ class Shell(Language):
     def run(self, result, sourcelines, points_rule):
         try:
             os.system('chmod +x ' + self.exename)
-        except:
+        except OSError:
             print("Ei oikeuksia: " + self.exename)
         extra = ""  # ""cd $PWD\nsource "
         try:
@@ -475,10 +477,13 @@ class Java(Language):
         self.sourcefilename = self.javaname
 
     def get_cmdline(self, sourcecode):
-        return "javac --module-path /javafx-sdk-11.0.1/lib --add-modules=ALL-MODULE-PATH -Xlint:all -cp %s %s" % (self.classpath, self.javaname)
+        return "javac --module-path /javafx-sdk-11.0.1/lib --add-modules=ALL-MODULE-PATH -Xlint:all -cp %s %s" % (
+            self.classpath, self.javaname)
 
     def run(self, result, sourcelines, points_rule):
-        code, out, err, pwddir = self.runself(["java", "--module-path", "/javafx-sdk-11.0.1/lib", "--add-modules=ALL-MODULE-PATH", "-cp", self.classpath, self.javaclassname],
+        code, out, err, pwddir = self.runself(["java", "--module-path", "/javafx-sdk-11.0.1/lib",
+                                               "--add-modules=ALL-MODULE-PATH", "-cp",
+                                               self.classpath, self.javaclassname],
                                               ulimit=df(self.ulimit, "ulimit -f 10000"))
         return code, out, err, pwddir
 
@@ -513,7 +518,7 @@ def check_comtest(self, ttype, code, out, err, result, points_rule):
     if ttype == "junit":
         out = re.sub("[\t ]*at " + self.javaclassname, "ERROR: " + self.javaclassname, out,
                      flags=re.M)  # prevent remove by next "at"-word
-    out = re.sub("\s+at .*\n", "\n", out, flags=re.M)
+    out = re.sub("\\s+at .*\n", "\n", out, flags=re.M)
     out = re.sub("\n+", "\n", out, flags=re.M)
     out = re.sub("Errors and Failures.*\n", "", out, flags=re.M)
     out = re.sub(self.prgpath + "/", "", out, flags=re.M)
@@ -527,7 +532,7 @@ def check_comtest(self, ttype, code, out, err, result, points_rule):
         eri = out.find("Test error")  # ccomtest
     if eri < 0:
         eri = out.find("ERROR:")  # ccomtest compile error
-    p = re.compile('Xlib: {2}extension "RANDR" missing on display ":1"\.\n')
+    p = re.compile('Xlib: {2}extension "RANDR" missing on display ":1"\\.\n')
     err = p.sub("", err)
     web = result["web"]
     web["testGreen"] = True
@@ -603,11 +608,13 @@ class Graphics(Java):
         if rect:
             a.extend(["--rect", rect])
         # print(a)
-        runcmd = ["java", "--module-path", "/javafx-sdk-11.0.1/lib", "--add-modules=ALL-MODULE-PATH", "sample.Runner", self.javaclassname, "--captureName", "run/capture.png"]
+        runcmd = ["java", "--module-path", "/javafx-sdk-11.0.1/lib",
+                  "--add-modules=ALL-MODULE-PATH", "sample.Runner",
+                  self.javaclassname, "--captureName", "run/capture.png"]
         runcmd.extend(a)
         code, out, err, pwddir = self.runself(runcmd, cwd=self.prgpath)
         out, err = self.copy_image(result, code, out, err, points_rule)
-        err = re.sub('Xlib: {2}extension "RANDR" missing on display ":1"\.\n', "", err)
+        err = re.sub('Xlib: {2}extension "RANDR" missing on display ":1"\\.\n', "", err)
         return code, out, err, pwddir
 
 
@@ -694,7 +701,7 @@ class PY3(Language):
     def run(self, result, sourcelines, points_rule):
         code, out, err, pwddir = self.runself(["python3", self.pure_exename])
         if err:
-            err = re.sub("/usr/lib/python3/dist-packages/matplotlib/font_manager(.*\n)*.*This may take a moment.'\)",
+            err = re.sub("/usr/lib/python3/dist-packages/matplotlib/font_manager(.*\n)*.*This may take a moment.'\\)",
                          "", err, flags=re.M)
             err = err.strip()
             if err:
@@ -934,7 +941,7 @@ class Stack(Language):
     def modify_usercode(self, s):
         if not s.startswith("{"):
             return s
-        s = s.replace("&quot;",'"')
+        s = s.replace("&quot;", '"')
         js = json.loads(s)
         res = ''
         for key in js:
@@ -942,7 +949,7 @@ class Stack(Language):
         return res
 
     def run(self, result, sourcelines, points_rule):
-        get_task = self.query.jso.get("input",{}).get("getTask",False)
+        get_task = self.query.jso.get("input", {}).get("getTask", False)
         url = "http://stack-api-server/api/endpoint.php"
         data = self.query.jso.get("input").get("stackData")
         stack_data = self.query.jso.get('markup').get('-stackData')
@@ -953,20 +960,20 @@ class Stack(Language):
             return 0, "", err, ""
         seed = stack_data.get("seed", 0)
         userseed = seed
-        state = self.query.jso.get("state",{})
+        state = self.query.jso.get("state", {})
         if isinstance(state, dict):
             userseed = state.get("seed", seed)
         nosave = self.query.jso.get('input', {}).get('nosave', False)
         stack_data["seed"] = userseed
-        q = stack_data.get("question","")
+        q = stack_data.get("question", "")
         if not isinstance(q, str):
             q = json.dumps(q)
             stack_data["question"] = q
 
         if not self.query.jso.get('markup').get('stackjsx') and q.find("[[jsxgraph") >= 0:  # make jsxgraph replace
-            q = q.replace('[[jsxgraph ','[[jsxgraphapi ')
-            q = q.replace('[[jsxgraph]]','[[jsxgraphapi]]')
-            q = q.replace('[[/jsxgraph]]','[[/jsxgraphapi]]')
+            q = q.replace('[[jsxgraph ', '[[jsxgraphapi ')
+            q = q.replace('[[jsxgraph]]', '[[jsxgraphapi]]')
+            q = q.replace('[[/jsxgraph]]', '[[/jsxgraphapi]]')
             stack_data["question"] = q
 
         if nosave or get_task:
@@ -991,14 +998,14 @@ class Stack(Language):
                     result['nosave'] = True
                     return 1, "", str(e) + " " + str(key) + ": " + html.escape(str(s)), ""
 
-        r = requests.post(url=url, data=json.dumps(stack_data))   #  json.dumps(data_to_send, cls=TimJsonEncoder))
+        r = requests.post(url=url, data=json.dumps(stack_data))  # json.dumps(data_to_send, cls=TimJsonEncoder))
         # r = requests.get(url="http://stack-test-container/api/endpoint.html")
 
         try:
             r = r.json()
-        except:
+        except json.JSONDecodeError:
             return 1, "", str(r.content.decode()), ""
-        out = "Score: %s" % r.get("score",0)
+        out = "Score: %s" % r.get("score", 0)
         # r['questiontext'] = tim_sanitize(r['questiontext'])
 
         if nosave:
@@ -1010,13 +1017,231 @@ class Stack(Language):
 
     def convert(self, sourcelines):
         url = "http://stack-api-server/api/xmltoyaml.php"
-        data = {'xml' : sourcelines}
+        data = {'xml': sourcelines}
         r = requests.post(url=url, data=json.dumps(data))
         r = r.json()
         return 0, r.get('yaml'), "", ""
 
 
+GEOGEBRA_DEFAULT_SRC_HTML = """
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Apps with Toolbar: Graphing Calculator</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+</head>
+<body>
+<div>
+<script type="text/javascript" src="https://cdn.geogebra.org/apps/deployggb.js"></script>
+<script type="text/javascript" src="/cs/geogebra/timgeo.js"></script>
+
+<script type="text/javascript">
+function perspective(p){
+    updateHelp(p);
+    ggbApplet.setPerspective(p);
+}
+
+var ggbApplet;
+
+var P = {
+//GEOWIDTH
+//GEOHEIGHT
+//GEOMATERIALID
+//GGBBASE64
+//GEOFILENAME
+};
+
+
+P.getData = function(){ 
+   return {"data": ggbApplet.getBase64()}; 
+}
+
+P.setDataInit = function (api, geostate) {
+    timgeo.setState(ggbApplet, geostate);
+}
+
+
+P.setData = function(geostate) {
+    P.setDataInit(ggbApplet, geostate);
+}
+
+//GEOJAVASCRIPT
+
+var geostate = GEOSTATE;
+
+P.appletOnLoad = function(api) {
+    if ( !P.setDataInit ) return;
+    ggbApplet = api;
+    var g = atob(geostate);
+    var state = JSON.parse(g);
+    // timgeo.setState(api, state);
+    P.setDataInit(api, state);
+}
+
+
+
+var applet = new GGBApplet(P, '5.0', 'geogebra_container');
+//  when used with Math Apps Bundle, uncomment this:
+//  applet.setHTML5Codebase('GeoGebra/HTML5/5.0/web3d/');
+
+  window.onload = function() { applet.inject('geogebra_container');
+}
+
+
+function getData(){ 
+    if ( P.getData )
+        return P.getData();
+}
+
+function setData(geostate) {
+    if ( P.setData )
+        P.setData(geostate);
+}
+
+</script>
+
+GEOPREHTML
+
+<div id="geogebra_container"></div>
+
+GEOPOSTHTML
+</div>
+</body>
+</html>
+"""
+
+GEOGEBRA_PARAMETERS_INIT = """
+P.appName = "graphing";
+P.height = 600;
+P.showMenuBar = true;
+P.showAlgebraInput = true;
+P.showToolBar = true;
+P.customToolBar = "0 77 73 62 | 1 501 67 , 5 19 , 72 75 76 | 2 15 45 , 18 65 , 7 37 | 4 3 8 9 , 13 44 , 58 , 47 | 16 51 64 , 70 | 10 34 53 11 , 24  20 22 , 21 23 | 55 56 57 , 12 | 36 46 , 38 49  50 , 71  14  68 | 30 29 54 32 31 33 | 25 17 26 60 52 61 | 40 41 42 , 27 28 35 , 6";
+P.showToolBarHelp = true;
+P.showResetIcon = true;
+P.enableLabelDrags = false;
+P.enableShiftDragZoom = true;
+P.enableRightClick = false;
+P.errorDialogsActive = false;
+P.useBrowserForJS = false;
+P.allowStyleBar = false;
+P.preventFocus = false;
+P.showZoomButtons = true;
+P.capturingThreshold = 3;
+{}
+"""
+
+GEOGEBRA_TOOL_HTML = """
+<script type="text/javascript">
+function objName() { return document.getElementById("objName").value; }
+function resultArea() { return document.getElementById("resultArea"); }
+function setArea(s) { resultArea().value = s; }
+function helpArea() { return document.getElementById("helpText"); }
+function setHelp(s) { helpArea().value = s; }
+function evalJS(s) {
+   try {
+       var res = eval(s);
+       if ( res ) return res;
+       return "";
+   } catch(err) {
+       return err.message;
+   }
+}
+function loadMaterial() {
+    let mat = document.getElementById("materialId").value;
+    if ( mat.indexOf("/") >= 0 ) {
+        P['filename'] = mat;
+        delete P['material_id'];
+        setHelp('"filename": "' + mat +'"')
+    } else {
+        P['material_id'] = mat;
+        delete P['filename'];
+        setHelp('"material_id": "' + mat +'"')
+    }
+    delete P['ggbBase64'];
+    applet = new GGBApplet(P, '5.0', 'geogebra_container');
+    applet.inject('geogebra_container');
+}
+</script>
+
+<p>Eval code:
+<textarea name="evalarea" id="evalarea" cols=40 rows=3></textarea>
+Eval:
+<a href="javascript:;" onclick="ggbApplet.evalCommand(document.getElementById('evalarea').value); setHelp('ggbApplet.evalCommand(cmds)')">commands</a>
+<a href="javascript:;" onclick="setArea(ggbApplet.evalCommandGetLabels(document.getElementById('evalarea').value)); setHelp('ggbApplet.evalCommandGetLabels(cmds)')">labels</a>
+<a href="javascript:;" onclick="setArea(ggbApplet.evalCommandCAS(document.getElementById('evalarea').value)); setHelp('ggbApplet.evalCommandCAS(cmds)')">CAS</a>
+<a href="javascript:;" onclick="setArea(evalJS(document.getElementById('evalarea').value)); setHelp('eval(cmds)')">JS</a>
+</p>
+
+<ul>
+  <li>Get constraction:
+    <a href="javascript:;" onclick="setArea(ggbApplet.getBase64()); setHelp('ggbApplet.getBase64()')">GGB</a>
+    <a href="javascript:;" onclick="setArea(ggbApplet.getXML()); setHelp('ggbApplet.getXML()')">XML</a>
+    <a href="javascript:;" onclick="setArea(ggbApplet.getAllObjectNames()); setHelp('ggbApplet.getAllObjectNames()')">Names</a>
+    <a href="javascript:;" onclick="setArea(timgeo.getConstructionState(ggbApplet)); setHelp('timgeo.getConstructionState(ggbApplet)')">State</a>
+    <a href="javascript:;" onclick="setArea(timgeo.getCommands(ggbApplet)); setHelp('timgeo.getCommands(ggbApplet)')">Commands</a>
+  </li>
+  <li>Obj name:
+    <input id="objName" size="6"/>
+    Get obj:
+    <a href="javascript:;" onclick="setArea(timgeo.getObjXML(ggbApplet,objName())); setHelp('timgeo.getObjXML(ggbApplet,\\''+objName()+'\\')')">XML</a>
+    <a href="javascript:;" onclick="setArea(timgeo.getObjCommand(ggbApplet,objName())); setHelp('timgeo.getObjCommand(ggbApplet,\\''+objName()+'\\')')">Command</a>
+    <a href="javascript:;" onclick="setArea(timgeo.getObjValue(ggbApplet,objName())); setHelp('timgeo.getObjValue(ggbApplet,\\''+objName()+'\\')')">Value</a>
+  </li>
+</ul>
+  JS: <input id="helpText" title="Javascript command" size="70"/>
+  <a href="javascript:timgeo.copyArea(helpArea())">Copy</a>
+<br>
+<textarea name="resultArea" id="resultArea" cols=90 rows=10></textarea>
+<ul>
+   <li><a href="javascript:timgeo.copyArea(resultArea())">Copy area</a></li>
+   <li>Set constraction:
+      <a href="javascript:;" onclick="ggbApplet.setBase64(resultArea().value); setHelp('ggbApplet.setBase64(ggb)')">GGB</a>
+      <a href="javascript:;" onclick="ggbApplet.setXML(resultArea().value); setHelp('ggbApplet.setXML(xml)')">XML</a>
+      <a href="javascript:;" onclick="ggbApplet.reset(); setHelp('ggbApplet.reset()')">Reset</a>
+      &nbsp;<input id="materialId" size="45" title="Write material ID or GGB-file URL"/>
+      <a href="javascript:;" onclick="loadMaterial()">Load</a>
+   </li>
+   <li><a href="javascript:;" onclick="ggbApplet.evalXML(resultArea().value); setHelp('ggbApplet.evalXML(xml)')">Set Obj XML</a></li>
+</ul>
+"""
+
+def get_by_id(jso, item_id, default):
+    val = jso.get(item_id, None)
+    if val is None:
+        val = jso.get("-" + item_id, default)
+    return val
+
+
+def html_change(s, old, jso, item_id, repfmt, default, valdef = None):
+    """
+    Korvataan s:ssä oleva sana old jsonin avaimesta item_id löytyvällä
+    tekstillä kun se muokataan repfmt formaatilla.  Mikäli avainta
+    ei löydy (edes - alkuisena), käytetään korvauksena default-jonoa.
+    Jos default == None ei tehdä mitään
+    :param s: jono josta korvataan
+    :param old: teksti jota etsitään
+    :param jso: dict josta etsitään avainta (kokeillaan myös - alkuun)
+    :param item_id: avain jonka kohdalta korvaava teksti otetaan
+    :param repfmt: muotoiluohje miten korvaava teksti muotoillaan
+    :param default: oletus jos avainta ei löydy, None => ei korvata mitään
+    :param valdel: mitä arvoa käytetään tekstille jos ei löydy
+    :return: korvattu jono
+    """
+    val = get_by_id(jso, item_id, valdef)
+    n = default
+    if val is not None:
+        n = repfmt.format(val)
+    if n is None:
+        return s
+    return s.replace(old, n)
+
+
 class Geogebra(Language):
+    global GEOGEBRA_DEFAULT_SRC_HTML
+    global GEOGEBRA_PARAMETERS_INIT
+    global GEOGEBRA_TOOL_HTML
+
     def can_give_task(self):
         return True
 
@@ -1030,7 +1255,7 @@ class Geogebra(Language):
     def modify_usercode(self, s):
         if not s.startswith("{"):
             return s
-        s = s.replace("&quot;",'"')
+        s = s.replace("&quot;", '"')
         js = json.loads(s)
         res = ''
         for key in js:
@@ -1038,24 +1263,54 @@ class Geogebra(Language):
         return res
 
     def run(self, result, sourcelines, points_rule):
-        data = self.query.jso["input"].get("jsData", None)
-        if data:
-            result["save"] = {'jsData': data}
+        data = dict(self.query.jso["input"])
+        if 'type' in data:
+            del data['type']
+        result["save"] = data
         return 0, "Geogebra run", "", ""
 
     def iframehtml(self, result, sourcelines, points_rule):
-        srchtml = self.query.jso['markup']['srchtml']
-        data = ""
-        state = self.query.jso.get("state",None)
-        if state:
-            data = state.get("jsData", "")
-        srchtml = srchtml.replace('JSDATA', '"'+ data + '"')
-        return srchtml
+        ma = self.query.jso['markup']
+        jsformat = "{}"
+        jsdef = None
+        postdef = None
+        if get_by_id(ma, 'tool', False):
+            jsformat = GEOGEBRA_PARAMETERS_INIT
+            jsdef = ""
+            postdef = GEOGEBRA_TOOL_HTML
 
+        srchtml = get_by_id(ma, 'srchtml', GEOGEBRA_DEFAULT_SRC_HTML)
+        srchtml = html_change(srchtml, "//GEOMATERIALID", ma, "material_id", 'material_id: "{}",', None)
+        srchtml = html_change(srchtml, "//GEOFILENAME", ma, "filename", 'filename: "{}",', None)
+        srchtml = html_change(srchtml, "//GEOWIDTH", ma, "width", 'width: {},', 800)
+        srchtml = html_change(srchtml, "//GEOHEIGHT", ma, "height", 'height: {},', 450)
+        srchtml = html_change(srchtml, "//GEOJAVASCRIPT", ma, "javascript", jsformat, None, jsdef)
+        srchtml = html_change(srchtml, "GEOPREHTML", ma, "prehtml", '{}', "")
+        srchtml = html_change(srchtml, "GEOPOSTHTML", ma, "posthtml", '{}', "", postdef)
+
+        data = get_by_id(ma, "data", "")
+        state = self.query.jso.get("state", {})
+        if state is None:
+            state = {}
+        udata = state.get("data", None)
+        if udata:
+            data = udata
+        if data:
+            if data[0] == '<': # is XML?
+                if not udata:  # send XML in data part
+                    state["data"] = data
+                data = ''
+            else:
+                state["data"] = ''
+        if data: # send ggb in parameters ggbBase64
+            srchtml = srchtml.replace('//GGBBASE64', f'ggbBase64: "{data.strip()}",')
+        geostate = b64encode(json.dumps(state).encode("UTF-8")).decode().strip()
+        srchtml = srchtml.replace('GEOSTATE', f"'{geostate}'")
+        return srchtml
 
     def convert(self, sourcelines):
         url = "http://stack-api-server/api/xmltoyaml.php"
-        data = {'xml' : sourcelines}
+        data = {'xml': sourcelines}
         r = requests.post(url=url, data=json.dumps(data))
         r = r.json()
         return 0, r.get('yaml'), "", ""
@@ -1139,14 +1394,15 @@ class Upload(Language):
         self.sourcefilename = "/tmp/%s/%s.txt" % (self.basename, self.filename)
         fn = self.query.jso["input"]["uploadedFile"]
         dn = os.path.dirname(fn)
-        ldn = "/tmp/"+self.basename+dn
-        lfn = "/tmp/"+self.basename+fn
+        ldn = "/tmp/" + self.basename + dn
+        lfn = "/tmp/" + self.basename + fn
         mkdirs(ldn)
         # os.symlink(fn,"/tmp/"+self.basename+"/"+fn)
         if not os.path.isfile(lfn):
             shutil.copyfile(fn, lfn)
         self.filename = "." + fn
         self.pure_exename = "/home/agent" + fn
+
     pass
 
     def run(self, result, sourcelines, points_rule):
@@ -1154,6 +1410,7 @@ class Upload(Language):
         if self.filename:
             out = "saved: " + self.filename
         return 0, out, "", ""
+
 
 class Octave(Language):
     def __init__(self, query, sourcecode):
@@ -1247,7 +1504,6 @@ class Pascal(Language):
 
     def run(self, result, sourcelines, points_rule):
         return self.runself([self.pure_exename])
-
 
 
 # Copy this for new language class

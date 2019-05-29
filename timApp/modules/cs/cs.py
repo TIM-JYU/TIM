@@ -453,19 +453,27 @@ def get_html(self: 'TIMServer', ttype, query: QueryClass):
             # ebycode = html.escape(code)
         # ebycode = code.replace("</pre>", "</pre>")  # prevent pre ending too early
         ebycode = code.replace("<", "&lt;").replace(">", "&gt;")
+        if before_open:
+            ebycode = before_open
         if tiny:
             lazy_visible = '<div class="lazyVisible csRunDiv csTinyDiv no-popup-menu" >' + get_tiny_surrounding_headers(
                 query,
                 '' + ebycode + '') + '</div>'
         else:
             # btn = '<p class="csRunMenu"><button class="tim-button"></button></p>'
+            prebeg = ''
+            preend = ''
+            lazyclasses = '';
+            if not before_open:
+                prebeg = '<pre>'
+                preend = '</pre>'
+                lazyclasses = 'csRunCode csEditorAreaDiv csrunEditorDiv csRunArea csInputArea csLazyPre'
             btn = '<p class="csRunMenu">&nbsp;</p>'
             lazy_visible = ('<div class="lazyVisible csRunDiv no-popup-menu" >' +
                             get_surrounding_headers(query,
-                                                    ('<div class="csRunCode csEditorAreaDiv '
-                                                     'csrunEditorDiv csRunArea csInputArea '
-                                                     'csLazyPre" ng-non-bindable><pre>') +
-                                                    ebycode + '</pre></div>') + btn + '</div>')
+                                                    ('<div class="' + lazyclasses + '"'
+                                                     ' " ng-non-bindable>'+prebeg) +
+                                                    ebycode + preend + '</div>') + btn + '</div>')
         # lazyClass = ' class="lazyHidden"'
         lazy_start = LAZYSTART
         lazy_end = LAZYEND
@@ -1222,7 +1230,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                             match = False
                             if is_plain:
                                 match = usercode == excode
-                            else:
+                            elif usercode is not None :
                                 excode = re.compile(excode, re.M)
                                 match = excode.match(usercode)
                             if match:
@@ -1230,6 +1238,12 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                     number_rule = get_points_rule(points_rule, is_test + "numberRule", None)
                     if number_rule:
                         give_points(points_rule, "code", check_number_rule(usercode, number_rule))
+                    points_key = get_points_rule(points_rule, "pointsKey", None)
+                    if points_key:
+                        p = query.jso.get("input",{}).get(points_key, None)
+                        if p is not None:
+                            give_points(points_rule, "code", p)
+
             # print(points_rule)
 
             # uid = pwd.getpwnam("agent").pw_uid
