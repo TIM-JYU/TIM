@@ -1,4 +1,4 @@
-from timApp.sisu.scim import DELETED_GROUP_PREFIX, CUMULATIVE_GROUP_PREFIX
+from timApp.sisu.scim import DELETED_GROUP_PREFIX, CUMULATIVE_GROUP_PREFIX, SISU_GROUP_PREFIX
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.user.usergroup import UserGroup
 
@@ -31,17 +31,18 @@ class ScimTest(TimRouteTest):
             expect_status=201,
             expect_contains={
                 'displayName': 'Sisu something',
-                'id': 'group-11',
-                'members': [{'$ref': 'http://localhost/scim/Users/5',
+                'id': 'sisu-something',
+                'members': [{'$ref': 'http://localhost/scim/Users/sisuuser',
                              'display': 'Sisu User',
                              'value': 'sisuuser'},
-                            {'$ref': 'http://localhost/scim/Users/6',
+                            {'$ref': 'http://localhost/scim/Users/sisuuser3',
                              'display': 'Sisu User 3',
                              'value': 'sisuuser3'}
                             ],
                 'schemas': ['urn:ietf:params:scim:schemas:core:2.0:Group'],
             }
         )
+        self.assertIsNone(UserGroup.get_by_name('sisu-something'))
         create_stamp = r['meta']['created']
         self.assertEqual(create_stamp, r['meta']['lastModified'])
         group_id = r['id']
@@ -90,10 +91,10 @@ class ScimTest(TimRouteTest):
             expect_content={
                 'displayName': 'Sisu something',
                 'id': group_id,
-                'members': [{'$ref': 'http://localhost/scim/Users/5',
+                'members': [{'$ref': 'http://localhost/scim/Users/sisuuser',
                              'display': 'Sisu User',
                              'value': 'sisuuser'},
-                            {'$ref': 'http://localhost/scim/Users/7',
+                            {'$ref': 'http://localhost/scim/Users/sisuuser2',
                              'display': 'Sisu User 2',
                              'value': 'sisuuser2'}],
                 'meta': {'created': create_stamp,
@@ -133,10 +134,10 @@ class ScimTest(TimRouteTest):
             expect_content={
                 'displayName': 'Sisu something',
                 'id': group_id,
-                'members': [{'$ref': 'http://localhost/scim/Users/5',
+                'members': [{'$ref': 'http://localhost/scim/Users/sisuuser',
                              'display': 'Sisu User',
                              'value': 'sisuuser'},
-                            {'$ref': 'http://localhost/scim/Users/7',
+                            {'$ref': 'http://localhost/scim/Users/sisuuser2',
                              'display': 'Sisu User 2',
                              'value': 'sisuuser2'}
                             ],
@@ -150,12 +151,10 @@ class ScimTest(TimRouteTest):
         )
         self.json_delete(f'/scim/Groups/{group_id}', auth=a, expect_status=204)
         self.json_delete(f'/scim/Groups/{group_id}', auth=a, expect_status=404)
-        g = UserGroup.get_by_name(f'{CUMULATIVE_GROUP_PREFIX}sisu-something')
+        g = UserGroup.get_by_name(f'{CUMULATIVE_GROUP_PREFIX}{SISU_GROUP_PREFIX}sisu-something')
         self.assertEqual(3, len(g.users.all()))
-        deleted_group = UserGroup.query.get(int(group_id.split('-')[1]))
+        deleted_group = UserGroup.get_by_name(f'{DELETED_GROUP_PREFIX}{SISU_GROUP_PREFIX}sisu-something')
         self.assertIsNotNone(deleted_group)
-        deleted_group2 = UserGroup.get_by_name(f'{DELETED_GROUP_PREFIX}sisu-something')
-        self.assertEqual(deleted_group, deleted_group2)
 
         r = self.json_post(
             '/scim/Groups',
@@ -171,10 +170,10 @@ class ScimTest(TimRouteTest):
             expect_contains={
                 'displayName': 'Sisu something',
                 'id': group_id,
-                'members': [{'$ref': 'http://localhost/scim/Users/5',
+                'members': [{'$ref': 'http://localhost/scim/Users/sisuuser',
                              'display': 'Sisu User',
                              'value': 'sisuuser'},
-                            {'$ref': 'http://localhost/scim/Users/6',
+                            {'$ref': 'http://localhost/scim/Users/sisuuser3',
                              'display': 'Sisu User 3',
                              'value': 'sisuuser3'}
                             ],

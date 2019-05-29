@@ -135,7 +135,7 @@ GROUP_ID_PREFIX = 'group-'
 
 
 def get_scim_id(ug: UserGroup):
-    return f'{GROUP_ID_PREFIX}{ug.id}'
+    return tim_group_to_scim(ug.name)
 
 
 def get_tim_group_id(scim_id: str):
@@ -145,13 +145,23 @@ def get_tim_group_id(scim_id: str):
 filter_re = re.compile('externalId sw (.+)')
 
 
+def scim_group_to_tim(sisu_group: str):
+    return f'{SISU_GROUP_PREFIX}{sisu_group}'
+
+
+def tim_group_to_scim(tim_group: str):
+    if not tim_group.startswith(SISU_GROUP_PREFIX):
+        raise Exception(f"Group {tim_group} is not a Sisu group")
+    return tim_group[len(SISU_GROUP_PREFIX):]
+
+
 @scim.route('/Groups')
 @use_args(GetGroupsSchema(strict=True))
 def get_groups(args: GetGroupsModel):
     m = filter_re.fullmatch(args.filter)
     if not m:
         return scim_error(422, 'Unsupported filter')
-    groups = UserGroup.query.filter(UserGroup.name.startswith(m.group(1))).all()
+    groups = UserGroup.query.filter(UserGroup.name.startswith(scim_group_to_tim(m.group(1)))).all()
 
     def gen_groups():
         for g in groups:  # type: UserGroup
@@ -171,7 +181,7 @@ def get_groups(args: GetGroupsModel):
 @scim.route('/Groups', methods=['post'])
 @use_args(SCIMGroupSchema(strict=True), locations=("json",))
 def post_group(args: SCIMGroupModel):
-    gname = args.externalId
+    gname = scim_group_to_tim(args.externalId)
     ug = UserGroup.get_by_name(gname)
     if ug:
         msg = f'Group already exists: {gname}'
@@ -251,7 +261,7 @@ def get_group_meta(g: UserGroup):
     return {
         'created': g.created or DEFAULT_TIMESTAMP,
         'lastModified': g.modified or DEFAULT_TIMESTAMP,
-        'location': f'{host}/scim/Groups/{g.name}',
+        'location': f'{host}/scim/Groups/{tim_group_to_scim(g.name)}',
         'resourceType': 'Group',
         # 'version': '',
     }
@@ -264,7 +274,7 @@ def group_scim(ug: UserGroup):
         for u in ug.users.all():  # type: User
             yield {
                 'value': u.name,
-                '$ref': f'{host}/scim/Users/{u.id}',  # This route does not exist, but Sisu won't use it.
+                '$ref': f'{host}/scim/Users/{u.name}',
                 'display': u.real_name,
             }
 
@@ -279,14 +289,10 @@ def group_scim(ug: UserGroup):
 
 
 def get_group_by_scim(group_id: str):
-    if not group_id.startswith(GROUP_ID_PREFIX):
-        scim_error(404, f'Group {group_id} not found')
     try:
-        ug = UserGroup.query.get(get_tim_group_id(group_id))
+        ug = UserGroup.get_by_name(scim_group_to_tim(group_id))
     except ValueError:
         return scim_error(404, f'Group {group_id} not found')
     if not ug:
-        scim_error(404, f'Group {group_id} not found')
-    if ug.name.startswith(DELETED_GROUP_PREFIX):
         scim_error(404, f'Group {group_id} not found')
     return ug
