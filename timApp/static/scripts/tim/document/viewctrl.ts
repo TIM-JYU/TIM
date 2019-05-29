@@ -677,6 +677,7 @@ export class ViewCtrl implements IController {
         //TODO: Task can have two instances in same document (regular field and label version)
         // - for now just add extra answerbrowsers for them (causes unnecessary requests when changing user...)
         // - maybe in future answerbrowser could find all its' plugins' instances and update them when ab.changeuser gets called?
+        // - fix registerPluginLoader too
         if(this.abs.has((ab.taskId))){
             let index = 1;
             while(this.abs.has(ab.taskId + index)){
@@ -694,7 +695,15 @@ export class ViewCtrl implements IController {
     private ldrs = new Map<string, PluginLoaderCtrl>();
 
     registerPluginLoader(loader: PluginLoaderCtrl) {
-        this.ldrs.set(loader.taskId, loader);
+        //TODO: see todos at registerAnswerBrowser
+        if (this.ldrs.has((loader.taskId))) {
+            let index = 1;
+            while (this.ldrs.has(loader.taskId + index)) {
+                index++
+            }
+            this.ldrs.set(loader.taskId + index, loader);
+        }
+        else this.ldrs.set(loader.taskId, loader);
     }
 
     getPluginLoader(taskId: string) {
