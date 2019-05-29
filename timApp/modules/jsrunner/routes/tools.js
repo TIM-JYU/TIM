@@ -68,6 +68,7 @@ class Tools {
     }
 
     getSum(fieldName, start, end, def = 0) {
+        if (isNaN(start) || isNaN(end)) throw new Error("from ... to parameters must be numbers in getSum method");
         let fn = this.normalizeField(fieldName);
         let sum = 0;
         let r = 0;
