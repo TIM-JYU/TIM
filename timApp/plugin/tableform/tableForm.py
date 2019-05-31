@@ -131,17 +131,19 @@ class TableFormHtmlModel(GenericHtmlModel[TableFormInputModel, TableFormMarkupMo
             user = User.get_by_name(self.user_id)
             userfields = get_fields_and_users(self.markup.fields, groups, d, user)
             rows = {}
+            realnames= {}
             for f in userfields[0]:
                 rows[f['user'].name] = dict(f['fields'])
-                rows[f['user'].name]['realname'] = f['user'].real_name
+                realnames[f['user'].name] = f['user'].real_name
             r['rows'] = rows
+            r['realnamemap'] = realnames
             try:
                 r['fields'] = list(userfields[0][0]['fields'].keys())
             except IndexError:
                 r['fields'] = []
             r['aliases'] = userfields[1]
             r['contentMap'] = userfields[2]
-            #TODO else return "no groups/no fields"?
+            #TODO else return "no groups/no fields"
 
         return r
 

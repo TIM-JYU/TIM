@@ -47,17 +47,19 @@ const TableFormMarkup = t.intersection([
         cols: withDefault(t.number, 20),
     }),
 ]);
-const Rows = t.dictionary(t.string, t.dictionary(t.string, t.union([t.string, t.null, t.number])));
 
+const Rows = t.dictionary(t.string,t.dictionary(t.string,t.union([t.string, t.null, t.number])))
 interface IRowsType extends t.TypeOf<typeof Rows> {
 }
 
+const realname = t.dictionary(t.string,t.string);
 const TableFormAll = t.intersection([
     t.partial({
         aliases: t.dictionary(t.string, t.string),
         contentMap: t.dictionary(t.string, t.string),
         fields: t.array(t.string),
-        rows: Rows,
+        realnamemap: t.dictionary(t.string, t.string),
+        rows: Rows
     }),
     GenericPluginTopLevelFields,
     t.type({markup: TableFormMarkup}),
@@ -85,6 +87,10 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
     private oldCellValues!: string;
     private realnames = false;
     private showTable = true;
+    private userNameColumn = "A";
+    private realNameColumn = "B"
+    private headerRow = 1;
+    private rowKeys!: string[];
 
     getDefaultMarkup() {
         return {};
@@ -116,16 +122,23 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
         super.$onInit();
         this.userfilter = "";
         // this.realnames = true;
-        if (this.attrs.realnames) { this.realnames = true; }
+        if (this.attrs.realnames) {
+            this.realnames = true;
+            const temp = this.realNameColumn;
+            this.realNameColumn = this.userNameColumn
+            this.userNameColumn = temp;
+        }
         this.rows = this.attrsall.rows || {};
+        this.rowKeys = Object.keys(this.rows)
         this.setDataMatrix();
         this.oldCellValues = JSON.stringify(this.data.userdata.cells);
         if (this.attrs.autosave) { this.data.saveCallBack = (rowi, coli, content) => this.singleCellSave(rowi, coli, content); }
         if (this.attrs.minWidth) { this.data.minWidth = this.attrs.minWidth; }
         if (this.attrs.maxWidth !== undefined) { this.data.maxWidth = this.attrs.maxWidth; }
-        if (this.attrs.singleLine) { this.data.singleLine = this.attrs.singleLine; }
-        if(this.attrs.open != undefined) this.showTable = this.attrs.open;
-
+        if (this.attrs.singleLine) {
+            this.data.singleLine = this.attrs.singleLine;
+        }
+        if (this.attrs.open != undefined) this.showTable = this.attrs.open;
     }
 
     /**
@@ -139,45 +152,83 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
     }
 
     /**
+     * Sorts row key values (usernames) by their real name attribute in this.realnamemap
+     * @param a username to conmpare with b
+     * @param b username to compare with a
+     */
+    sortByRealName(a: string, b: string) {
+        if (!this.attrsall.realnamemap) return 0;
+        try {
+            return this.attrsall.realnamemap[a].localeCompare(this.attrsall.realnamemap[b]);
+        } catch (e) {
+            return 0;
+        }
+    }
+
+    /**
      * Transforms user/task combination defined in this.rows into cell format and sets up the table
-     * TODO: Replace "A" with global variable userNameColumn, "B" with realNameColumn, 1 with headerRow etc
      * TODO: generate rows/columns for this.data.table, possibly needed for more easily maintained layout handling
      */
     setDataMatrix() {
-        this.data.userdata.cells.A1 = {cell: "Käyttäjänimi", backgroundColor: "#efecf1"};
-        if (this.realnames) { this.data.userdata.cells.B1 = {cell: "Henkilön Nimi", backgroundColor: "#efecf1"}; }
-        if (this.attrsall.fields && this.realnames) {
-            this.data.table.countCol = this.attrsall.fields.length + 2;
-        } else if (this.attrsall.fields) {
-            this.data.table.countCol = this.attrsall.fields.length + 1;
-        }
-        this.data.table.countRow = Object.keys(this.rows).length + 1;
-        let y = 2;
-        if(this.data.lockedCells) this.data.lockedCells = [];
-        for (const r of Object.keys(this.rows)) {
-            this.data.userdata.cells["A" + y] = {cell: r, backgroundColor: "#efecf1"};
-            this.data.lockedCells!.push("A" + y);
+        try {
+            this.data.userdata.cells[this.userNameColumn + this.headerRow] = {
+                cell: "Käyttäjänimi",
+                backgroundColor: "#efecf1"
+            };
             if (this.realnames) {
-                this.data.userdata.cells["B" + y] = {cell: this.rows[r].realname, backgroundColor: "#efecf1"};
-                this.data.lockedCells!.push("B" + y);
+                this.data.userdata.cells[this.realNameColumn + this.headerRow] = {
+                    cell: "Henkilön Nimi",
+                    backgroundColor: "#efecf1"
+                };
+                this.rowKeys.sort((a, b) => this.sortByRealName(a, b))
             }
-            y++;
-        }
-        // TODO: Load default cell colors from tableForm's private answer?
-        let xOffset = 1;
-        if (this.realnames) { xOffset = 2; }
-        if (this.attrsall.fields) {
-            for (let x = 0; x < this.attrsall.fields.length; x++) {
-                this.data.userdata.cells[colnumToLetters(x + xOffset) + 1] =  {cell: this.attrsall.fields[x], backgroundColor: "#efecf1"};
-                this.data.lockedCells!.push(colnumToLetters(x + xOffset) + 1);
-                y = 0;
-                for (const [u, r] of Object.entries(this.rows)) {
-                    if (r[this.attrsall.fields[x]]) {
-                        this.data.userdata.cells[colnumToLetters(x + xOffset) + (y + 2)] = r[this.attrsall.fields[x]];
+            if (this.attrsall.fields && this.realnames) {
+                this.data.table.countCol = this.attrsall.fields.length + 2;
+            } else if (this.attrsall.fields) {
+                this.data.table.countCol = this.attrsall.fields.length + 1;
+            }
+            this.data.table.countRow = Object.keys(this.rows).length + 1;
+            let y = 2;
+            if (!this.data.lockedCells) this.data.lockedCells = [];
+            for (const r of this.rowKeys) {
+                this.data.userdata.cells[this.userNameColumn + y] = {cell: r, backgroundColor: "#efecf1"};
+                this.data.lockedCells.push(this.userNameColumn + y);
+                if (this.realnames && this.attrsall.realnamemap) {
+                    this.data.userdata.cells[this.realNameColumn + y] = {
+                        cell: this.attrsall.realnamemap[r],
+                        backgroundColor: "#efecf1"
+                    };
+                    this.data.lockedCells.push(this.realNameColumn + y);
+                }
+                y++;
+            }
+            // TODO: Load default cell colors from tableForm's private answer?
+            let xOffset = 1;
+            if (this.realnames) {
+                xOffset = 2;
+            }
+            if (this.attrsall.fields) {
+                for (let x = 0; x < this.attrsall.fields.length; x++) {
+                    this.data.userdata.cells[colnumToLetters(x + xOffset) + 1] = {
+                        cell: this.attrsall.fields[x],
+                        backgroundColor: "#efecf1"
+                    };
+                    this.data.lockedCells!.push(colnumToLetters(x + xOffset) + 1);
+                    // y = 0;
+                    // for (const [u, r] of Object.entries(this.rows)) {
+                    //     if (r[this.attrsall.fields[x]]) {
+                    //         this.data.userdata.cells[colnumToLetters(x + xOffset) + (y + 2)] = r[this.attrsall.fields[x]];
+                    //     }
+                    //     y++;
+                    // }
+                    for (y = 0; y < this.rowKeys.length; y++) {
+                        this.data.userdata.cells[colnumToLetters(x + xOffset) + (y + 2)] = this.rows[this.rowKeys[y]][this.attrsall.fields[x]]
                     }
-                    y++;
                 }
             }
+        } catch (e) {
+            console.log(e)
+            this.error = "Error in setDataMatrix" + "\n" + e
         }
     }
 
@@ -191,7 +242,7 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
     }
 
     /**
-     * Saves closes timTable's editor and saves the cell that is being currently edited
+     * Closes timTable's editor and saves the cell that is being currently edited
      */
     saveText() {
         const timTable = this.getTimTable();
@@ -208,7 +259,9 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
      * Used to define table view & relative save button in angular, true or false.
      */
     tableCheck() {
-        return (this.attrs.table === true);
+        //return (this.attrs.table === true);
+        if(this.attrs.table != undefined) return this.attrs.table;
+        else return true;
     }
 
     // noinspection JSUnusedGlobalSymbols
@@ -286,7 +339,7 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
 
     /**
      * Adds rows to this.hiddenRows if their key (username) matches the given filter
-     * TODO: Add support for filtering with e.g realname
+     * TODO: Add support for filtering with user-chosen column
      */
     updateFilter() {
         const timTable = this.getTimTable();
@@ -299,19 +352,17 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
         if (this.userfilter != "" && this.userfilter != undefined) {
             const reg = new RegExp(this.userfilter.toLowerCase());
             let rowi = 1;
-            for (const [key, value] of Object.entries(this.rows)) {
-                // @ts-ignore TODO: change row format to properly typed format, see todo at this.rows
-                if (!reg.test(key.toLowerCase()) && !(this.attrs.realnames && (value["realname"] != null && reg.test(value["realname"].toString().toLowerCase())))) {
+            for(let i = 0; i < this.rowKeys.length; i++){
+                if (!reg.test(this.rowKeys[i].toLowerCase()) && !(this.attrs.realnames && (this.attrsall.realnamemap != null && reg.test(this.attrsall.realnamemap[this.rowKeys[i]].toLowerCase())))) {
                     //this.data.hiddenRows.push(values);
-                    this.data.hiddenRows.push(rowi);
+                    this.data.hiddenRows.push(i+1);
                 }
-                rowi++;
             }
         }
     }
     // singleCellSave(rowi: number, coli: number, content: string)
     singleCellSave(rowi: number, coli: number, content: string) {
-        const cells = ["A" + (rowi + 1), colnumToLetters(coli) + 1, colnumToLetters(coli) + (rowi + 1)];
+        const cells = [this.userNameColumn + (rowi + 1), colnumToLetters(coli) + this.headerRow, colnumToLetters(coli) + (rowi + 1)];
         this.doSaveText(cells);
     }
 
@@ -328,8 +379,6 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
      * @param cells
      */
     async doSaveText(cells: string[]) {
-        // TODO: Optimise save? (keep track of userLocations and taskLocations at SetDataMatrix)
-        // would need new location info if timtable implements sort
         this.error = "... saving ...";
         let keys;
         if (cells && cells.length > 0) {
@@ -340,8 +389,9 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
         // Sort because for now column containing usernames and row containing headers has to be checked first
         // in order to track which column has which task etc
         keys.sort();
-        // TODO: Keep track of these elsewhere
-        //  or first iterate through headerRow, userNameColumn etc given in global variables
+        // TODO: Optimise save? (keep track of userLocations and taskLocations at SetDataMatrix) - or iterate through
+        //  headerRow / userNameColum first
+        // if these are tracked would need to obtain updated location info from timtable if it implements sort
         const userLocations: {[index: string]: string} = {};
         const taskLocations: {[index: string]: string} = {};
         const replyRows: {[index: string]: {[index: string]: CellType}} = {};
@@ -371,14 +421,13 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
             // else if (typeof cellContent === "boolean") {
             //     throw new Error("cell was boolean?");
 
-            // TODO: Replace 'A' with userNameColumn etc. or keep track of taskLocations in global variable
-            if (columnPlace === "A") {
-                if (numberPlace === "1") { continue; }
+            if (columnPlace === this.userNameColumn) {
+                if (numberPlace === this.headerRow.toString()) { continue; }
                 userLocations[numberPlace] = cellContent;
                 replyRows[cellContent] = {};
-            } else if (this.realnames && columnPlace === "B") {
+            } else if (this.realnames && columnPlace === this.realNameColumn) {
                 continue;
-            } else if (numberPlace === "1") {
+            } else if (numberPlace === this.headerRow.toString()) {
                 let contentalias;
                 if (this.attrsall.aliases && cellContent in this.attrsall.aliases) {
                     contentalias = this.attrsall.aliases[cellContent];
