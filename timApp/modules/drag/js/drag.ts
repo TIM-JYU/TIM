@@ -1,24 +1,15 @@
 /**
  * Defines the client-side implementation of a drag plugin.
  */
-import angular, {INgModelOptions} from "angular";
+import angular from "angular";
 import {IRootElementService, IScope} from "angular";
+import drag from "angular-drag-and-drop-lists";
 import * as t from "io-ts";
+import {polyfill} from "mobile-drag-drop";
 import {ITimComponent, ViewCtrl} from "tim/document/viewctrl";
-import {
-    GenericPluginMarkup,
-    getDefaults,
-    Info,
-    nullable,
-    PluginBase,
-    pluginBindings,
-    PluginMeta,
-    withDefault
-} from "tim/plugin/util";
+import {GenericPluginMarkup, Info, PluginBase, pluginBindings, withDefault} from "tim/plugin/util";
 import {$http} from "tim/util/ngimport";
 import {markAsUsed, to} from "tim/util/utils";
-import {polyfill} from "mobile-drag-drop";
-import drag from "angular-drag-and-drop-lists";
 
 markAsUsed(drag);
 

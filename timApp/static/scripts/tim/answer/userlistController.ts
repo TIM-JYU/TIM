@@ -5,11 +5,10 @@ import uiGrid, {IFilterOptions, IGridColumnOf, IGridRowOf} from "ui-grid";
 import {ViewCtrl} from "../document/viewctrl";
 import {DialogController, registerDialogComponent, showDialog, showMessageDialog} from "../ui/dialog";
 import {IUser} from "../user/IUser";
-import {$http, $timeout} from "../util/ngimport";
-import {Binding, getURLParameter, markAsUsed, Require, to} from "../util/utils";
+import {$timeout} from "../util/ngimport";
+import {Binding, getURLParameter, markAsUsed, Require} from "../util/utils";
 import {showAllAnswers} from "./allAnswersController";
 import {showFeedbackAnswers} from "./feedbackAnswersController";
-import {IRelevanceResponse} from "../item/relevanceEdit";
 
 markAsUsed(allanswersctrl);
 
@@ -124,7 +123,7 @@ export class UserListController implements IController {
         for (const c of this.columns) {
             const f: IFixedFilterOptions = {
                 condition: filterFn,
-                rawTerm: true, // required for RegExp to work
+                rawTerm: true, // Required for RegExp to work.
             };
             c.filter = f;
         }
@@ -223,7 +222,7 @@ export class UserListController implements IController {
 
                             const visibleRows = this.gridApi.core.getVisibleRows(this.gridApi.grid);
 
-                            for (const row of visibleRows) { // create string array of visible item
+                            for (const row of visibleRows) { // Create string array of visible item.
                                 if (row.entity !== selectedUser) {
                                     iusers.push(row.entity);
                                 }
