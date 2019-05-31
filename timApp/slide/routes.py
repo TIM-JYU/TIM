@@ -36,9 +36,6 @@ class SetSlideStatusSchema(Schema):
     def make_obj(self, data):
         return SetSlideStatusModel(**data)
 
-    class Meta:
-        strict = True
-
 
 @attr.s(auto_attribs=True)
 class SetSlideStatusModel:

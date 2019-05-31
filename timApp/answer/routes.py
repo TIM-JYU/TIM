@@ -541,9 +541,6 @@ class GetStateSchema(Schema):
     def make_obj(self, data):
         return GetStateModel(**data)
 
-    class Meta:
-        strict = True
-
 
 @attr.s(auto_attribs=True)
 class GetStateModel:

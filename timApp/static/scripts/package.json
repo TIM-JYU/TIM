@@ -49,7 +49,7 @@
     "replace-in-file": "^2.5.0",
     "systemjs-builder": "^0.16.13",
     "tslint": "^5.15.0",
-    "typescript": "^3.4.3"
+    "typescript": "^3.5.1"
   },
   "jspm": {
     "dependencies": {
@@ -110,7 +110,7 @@
       "stream": "npm:jspm-nodelibs-stream@^0.2.0",
       "string_decoder": "npm:jspm-nodelibs-string_decoder@^0.2.0",
       "tslib": "npm:tslib@^1.9.3",
-      "typescript": "npm:typescript@next",
+      "typescript": "npm:typescript@^3.5.1",
       "url": "npm:jspm-nodelibs-url@^0.2.0",
       "util": "npm:jspm-nodelibs-util@^0.2.0",
       "vm": "npm:jspm-nodelibs-vm@^0.2.0"
@@ -221,21 +221,7 @@
             "esModule": true
           }
         }
-      },
-      "npm:typescript@next": {
-        "browser": {},
-        "map": {
-          "buffer": "@empty",
-          "child_process": "@empty",
-          "fs": "@empty",
-          "path": "@empty",
-          "process": "@empty",
-          "readline": "@empty"
-        },
-        "dependencies": {
-          "source-map-support": "*"
-        }
       }
     }
   }
-}
+}

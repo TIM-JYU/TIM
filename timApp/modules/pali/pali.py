@@ -29,9 +29,6 @@ class PaliStateSchema(Schema):
     def make_obj(self, data):
         return PaliStateModel(**data)
 
-    class Meta:
-        strict = True
-
 
 @attr.s(auto_attribs=True)
 class PaliMarkupModel(GenericMarkupModel):
@@ -59,9 +56,6 @@ class PaliMarkupSchema(GenericMarkupSchema):
     @post_load
     def make_obj(self, data):
         return PaliMarkupModel(**data)
-
-    class Meta:
-        strict = True
 
 
 @attr.s(auto_attribs=True)
@@ -92,9 +86,6 @@ class PaliAttrs(Schema):
     markup = fields.Nested(PaliMarkupSchema)
     state = fields.Nested(PaliStateSchema, allow_none=True, required=True)
 
-    class Meta:
-        strict = True
-
 
 @attr.s(auto_attribs=True)
 class PaliHtmlModel(GenericHtmlModel[PaliInputModel, PaliMarkupModel, PaliStateModel]):
@@ -110,9 +101,6 @@ class PaliHtmlModel(GenericHtmlModel[PaliInputModel, PaliMarkupModel, PaliStateM
             r['userword'] = self.state.userword
         return r
 
-    class Meta:
-        strict = True
-
 
 class PaliHtmlSchema(PaliAttrs, GenericHtmlSchema):
     info = fields.Nested(InfoSchema, allow_none=True, required=True)
@@ -121,9 +109,6 @@ class PaliHtmlSchema(PaliAttrs, GenericHtmlSchema):
     def make_obj(self, data):
         # noinspection PyArgumentList
         return PaliHtmlModel(**data)
-
-    class Meta:
-        strict = True
 
 
 @attr.s(auto_attribs=True)
@@ -138,9 +123,6 @@ class PaliAnswerSchema(PaliAttrs, GenericAnswerSchema):
     def make_obj(self, data):
         # noinspection PyArgumentList
         return PaliAnswerModel(**data)
-
-    class Meta:
-        strict = True
 
 
 def render_static_pali(m: PaliHtmlModel):
@@ -167,7 +149,7 @@ app = create_app(__name__, PaliHtmlSchema())
 
 
 @app.route('/answer/', methods=['put'])
-@use_args(PaliAnswerSchema(strict=True), locations=("json",))
+@use_args(PaliAnswerSchema(), locations=("json",))
 def answer(args: PaliAnswerModel):
     web = {}
     result = {'web': web}

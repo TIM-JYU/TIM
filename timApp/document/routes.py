@@ -90,7 +90,7 @@ def get_block(doc_id, par_id):
 
 
 @doc_bp.route("/getBlock")
-@use_args(GetBlockSchema(strict=True))
+@use_args(GetBlockSchema())
 def get_block_schema(args: GetBlockModel):
     return get_block_2(args)
 

@@ -273,9 +273,6 @@ class RestampSchema(Schema):
     def make_obj(self, data):
         return RestampModel(**data)
 
-    class Meta:
-        strict = True
-
 
 @upload.route('/upload/restamp', methods=['POST'])
 @use_args(RestampSchema())

@@ -184,6 +184,8 @@ export interface IAnswerSaveEvent {
     error?: string;
 }
 
+type AnswerCallback = (a: IAnswer) => void;
+
 export class AnswerBrowserController extends DestroyScope implements IController {
     static $inject = ["$scope", "$element"];
     public taskId!: Binding<string, "<">;
@@ -208,8 +210,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
     private answerId?: Binding<number, "<?">;
     private loader!: PluginLoaderCtrl;
     private reviewHtml?: string;
-    private answerListener:any = null; // TODO: laita oikea tyyppi
-    private answerListenerController:any = null; // TODO: laita oikea tyyppi
+    private answerListener?: AnswerCallback;
 
     constructor(private scope: IScope, private element: IRootElementService) {
         super(scope, element);
@@ -355,9 +356,8 @@ export class AnswerBrowserController extends DestroyScope implements IController
     }
 
 
-    registerAnswerListener(ac: any, al: any) { // TODO: korjaa tyyppi (funktio jolle menee yksi answer parametrina)
-        this.answerListener = al;
-        this.answerListenerController = ac;
+    registerAnswerListener(ac: AnswerCallback) {
+        this.answerListener = ac;
     }
 
     async changeAnswer() {
@@ -394,11 +394,9 @@ export class AnswerBrowserController extends DestroyScope implements IController
             }
             this.loadedAnswer.id = this.selectedAnswer.id;
             this.loadedAnswer.review = this.review;
-            if ( this.answerListener ) {
-                let content = JSON.parse((this.selectedAnswer as any).content); // TODO: korjaa tyyppi
-                this.answerListener(this.answerListenerController, content);
-            }
-            else {
+            if (this.answerListener) {
+                this.answerListener(this.selectedAnswer);
+            } else {
                 void loadPlugin(r.result.data.html, this.loader.getPluginElement(), this.scope, this.viewctrl);
             }
             if (this.review) {

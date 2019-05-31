@@ -28,6 +28,12 @@ SystemJS.config({
       },
       "npm:core-js@1.2.7": {
         "map": {}
+      },
+      "npm:source-map-support@0.5.12": {
+        "map": {
+          "buffer-from": "npm:buffer-from@1.1.1",
+          "source-map": "npm:source-map@0.6.1"
+        }
       }
     }
   },
@@ -73,7 +79,9 @@ SystemJS.config({
     }
   },
   meta: {
-    "*.css": { loader: "css" },
+    "*.css": {
+      "loader": "css"
+    },
     "npm:angular-eonasdan-datetimepicker@0.3.9/dist/angular-eonasdan-datetimepicker.js": {
       "deps": [
         "angular",
@@ -212,7 +220,7 @@ SystemJS.config({
     "text": "github:systemjs/plugin-text@0.0.9",
     "ts": "github:frankwallis/plugin-typescript@9.0.0",
     "tslib": "npm:tslib@1.9.3",
-    "typescript": "npm:typescript@next",
+    "typescript": "npm:typescript@3.5.1",
     "url": "npm:jspm-nodelibs-url@0.2.1",
     "util": "npm:jspm-nodelibs-util@0.2.2",
     "vm": "npm:jspm-nodelibs-vm@0.2.1"
@@ -576,17 +584,6 @@ SystemJS.config({
       "map": {
         "inherits": "npm:inherits@2.0.3",
         "readable-stream": "npm:readable-stream@2.3.6"
-      }
-    },
-    "npm:typescript@next": {
-      "map": {
-        "source-map-support": "npm:source-map-support@0.5.12"
-      }
-    },
-    "npm:source-map-support@0.5.12": {
-      "map": {
-        "buffer-from": "npm:buffer-from@1.1.1",
-        "source-map": "npm:source-map@0.6.1"
       }
     },
     "npm:stream-http@2.8.3": {

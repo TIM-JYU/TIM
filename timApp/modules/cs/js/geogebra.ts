@@ -1,11 +1,10 @@
 ﻿import angular from "angular";
 import * as t from "io-ts";
-import {ParCompiler} from "tim/editor/parCompiler";
+import {IAnswer} from "tim/answer/IAnswer";
+import {ViewCtrl} from "tim/document/viewctrl";
 import {GenericPluginMarkup, Info, PluginBase, pluginBindings, withDefault} from "tim/plugin/util";
 import {$http, $sce, $timeout} from "tim/util/ngimport";
 import {to} from "tim/util/utils";
-import {ViewCtrl} from "tim/document/viewctrl";
-
 
 const geogebraApp = angular.module("geogebraApp", ["ngSanitize"]);
 export const moduleDefs = [geogebraApp];
@@ -142,14 +141,11 @@ class GeogebraController extends PluginBase<t.TypeOf<typeof GeogebraMarkup>,
         this.isOpen = true;
     }
 
-
-
-    changeAnswer(cnrl: any, state:any) {
-        const frameElem = cnrl.element.find(".jsFrameContainer")[0] as HTMLElement;
+    changeAnswer(a: IAnswer) {
+        const frameElem = this.element.find(".jsFrameContainer")[0] as HTMLElement;
         const f = frameElem.firstChild as CustomFrame<JSFrameWindow>;
-        f.contentWindow.setData(state);
+        f.contentWindow.setData(JSON.parse(a.content));
     }
-
 
     outputAsHtml() {
         // if ( !this.attrs.srchtml ) return "";
@@ -158,7 +154,7 @@ class GeogebraController extends PluginBase<t.TypeOf<typeof GeogebraMarkup>,
         let t = this.pluginMeta.getTaskId()!.split(".") || ["",""];
         let taskId = t[0] + "." + t[1];
         let ab = this.viewctrl.getAnswerBrowser(taskId);
-        if ( ab ) ab.registerAnswerListener(this, this.changeAnswer);
+        if (ab) ab.registerAnswerListener((a) => this.changeAnswer(a));
         let anr = 0;
         if ( ab ) {
             anr = ab.findSelectedAnswerIndex();

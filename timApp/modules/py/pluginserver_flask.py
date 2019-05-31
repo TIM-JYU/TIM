@@ -17,7 +17,6 @@ If validation fails, the plugin returns an error with status code 422.
 """
 import base64
 import json
-from pprint import pprint
 from typing import Optional, Set, Union, TypeVar, Generic, Dict, List
 
 import attr
@@ -51,9 +50,6 @@ class InfoSchema(Schema):
     @post_load
     def make_obj(self, data):
         return InfoModel(**data)
-
-    class Meta:
-        strict = True
 
 
 def list_not_missing_fields(inst):
@@ -96,9 +92,6 @@ class GenericMarkupSchema(Schema):
             data['hidden_keys'] = hidden_keys
         return data
 
-    class Meta:
-        strict = True
-
 
 class GenericHtmlSchema(Schema):
     access = fields.Str()
@@ -120,9 +113,6 @@ class GenericHtmlSchema(Schema):
         if value != 'NEVERLAZY' and not isinstance(value, bool):
             raise ValidationError('do_lazy must be bool or "NEVERLAZY"')
 
-    class Meta:
-        strict = True
-
 
 class GenericAnswerSchema(Schema):
     info = fields.Nested(InfoSchema, required=True)
@@ -130,9 +120,6 @@ class GenericAnswerSchema(Schema):
     markup = fields.Dict(required=True)
     state = fields.Field(allow_none=True, required=True)
     taskID = fields.Str(required=True)
-
-    class Meta:
-        strict = True
 
 
 PluginMarkup = TypeVar('PluginMarkup', bound=GenericMarkupModel)
@@ -170,7 +157,6 @@ class GenericHtmlModel(GenericRouteModel[PluginInput, PluginMarkup, PluginState]
 
     def get_browser_json(self) -> Dict:
         r = dict(list_not_missing_fields(self))
-        pprint(r)
         r['markup'] = self.markup.get_visible_data()
         return r
 
@@ -193,9 +179,6 @@ class GenericHtmlModel(GenericRouteModel[PluginInput, PluginMarkup, PluginState]
     def get_component_html_name(self) -> str:
         """Gets the name of the Angular component as it should be in HTML."""
         raise NotImplementedError('Must be implemented by a derived class.')
-
-    class Meta:
-        strict = True
 
 
 def render_validationerror(e: ValidationError):
@@ -310,7 +293,7 @@ def create_app(name: str, html_schema: GenericHtmlSchema):
         return jsonify({'web': {'error': render_validationerror(ValidationError(message=error.data['messages']))}})
 
     @app.route('/multihtml/', methods=['post'])
-    @use_args(GenericHtmlSchema(many=True, strict=True), locations=("json",))
+    @use_args(GenericHtmlSchema(many=True), locations=("json",))
     def multihtml(args: List[GenericHtmlSchema]):
         return render_multihtml(html_schema, args)
 
