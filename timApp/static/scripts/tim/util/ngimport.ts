@@ -46,8 +46,6 @@ export function injectProviders($a: angular.auto.IProvideService,
     $logProvider = $c;
 }
 
-injectProviders.$inject = ["$provide", "$httpProvider", "$logProvider"];
-
 export function injectServices($i: angular.auto.IInjectorService) {
     $anchorScroll = $i.get("$anchorScroll") as angular.IAnchorScrollService;
     $cacheFactory = $i.get("$cacheFactory") as angular.ICacheFactoryService;
@@ -85,4 +83,9 @@ export function injectServices($i: angular.auto.IInjectorService) {
     $upload = $i.get("Upload") as angular.angularFileUpload.IUploadService;
 }
 
-injectServices.$inject = ["$injector"];
+function doInject() {
+    injectProviders.$inject = ["$provide", "$httpProvider", "$logProvider"];
+    injectServices.$inject = ["$injector"];
+}
+
+doInject();
