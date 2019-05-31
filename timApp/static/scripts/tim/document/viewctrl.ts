@@ -275,6 +275,10 @@ export class ViewCtrl implements IController {
             (e || $window.event).returnValue = msg; // Gecko + IE
             return msg; // Gecko + Webkit, Safari, Chrome etc.
         });
+        // Change hash whenever user scrolls the document.
+        window.addEventListener("scroll", (e) => {
+            saveCurrentScreenPar();
+        });
     }
 
     public isTranslation() {

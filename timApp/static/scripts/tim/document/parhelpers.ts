@@ -242,11 +242,14 @@ export const EDITOR_CLASS_DOT = "." + EDITOR_CLASS;
 
 export function saveCurrentScreenPar() {
     // Save currently viewed paragraph hash to browser history to make the browser
-    // come back there when returning to the document. (Firefox & IE tested; Chrome doesn't show
-    // hash in address, but returns to the right place regardless.)
+    // come back there when returning to the document.
     // noinspection CssInvalidPseudoSelector
     const parId = getParId($(".par:not('.preamble'):onScreen").first());
     if (parId) {
-        window.history.replaceState(undefined, document.title, `${location.protocol}//${location.host}${location.pathname}${location.search}#${parId}`);
+        // Don't replace if the hash is going to stay the same.
+        if (location.hash !== `#${parId}`) {
+            const url = `${location.protocol}//${location.host}${location.pathname}${location.search}#${parId}`;
+            window.history.replaceState(undefined, document.title, url);
+        }
     }
 }
