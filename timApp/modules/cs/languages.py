@@ -1045,6 +1045,7 @@ var ggbApplet;
 
 var P = {
 borderColor: "#FFFFFF",
+preventFocus: true,
 //GEOWIDTH
 //GEOHEIGHT
 //GEOMATERIALID
