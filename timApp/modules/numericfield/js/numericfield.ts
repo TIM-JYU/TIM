@@ -149,7 +149,7 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
      * Initialize content.
      */
     initCode() {
-        this.numericvalue = this.attrs.initnumber || undefined;
+        this.numericvalue = this.attrs.initnumber || undefined || (this.attrs.initnumber == 0 && 0)
         this.initialValue = this.numericvalue;
         this.result = undefined;
     }
