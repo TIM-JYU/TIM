@@ -57,6 +57,8 @@ class TableFormMarkupModel(GenericMarkupModel):
     minWidth: Union[str, Missing] = missing
     singleLine: Union[bool, Missing] = missing
     open: Union[bool, Missing] = missing
+    hiddenColumns: Union[List[int], Missing] = missing
+    hiddenRows: Union[List[int], Missing] = missing
     fields: Union[List[str], Missing] = missing
 
 
@@ -78,6 +80,8 @@ class TableFormMarkupSchema(GenericMarkupSchema):
     maxWidth = fields.Str()
     minWidth = fields.Str(allow_none=True)
     open = fields.Boolean(allow_none=True)
+    hiddenColumns = fields.List(fields.Number(allow_none=True))
+    hiddenRows = fields.List(fields.Number(allow_none=True))
     fields = fields.List(fields.Str()) #Keep this last - bad naming
 
     @post_load

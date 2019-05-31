@@ -28,6 +28,8 @@ const TableFormMarkup = t.intersection([
         autosave: t.boolean,
         buttonText: nullable(t.string),
         hideButtonText: nullable(t.string),
+        hiddenColumns: t.array(t.number),
+        hiddenRows: t.array(t.number),
         maxWidth: t.string,
         minWidth: t.string,
         open: t.boolean,
@@ -74,6 +76,7 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
     private data: TimTable & {userdata: DataEntity} = {
         hid: {edit: false},
         hiddenRows: [],
+        hiddenColumns: [],
         hideSaveButton: true,
         lockedCells: [],
         table: {countRow: 0, countCol: 0, columns: []},
@@ -139,6 +142,8 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
             this.data.singleLine = this.attrs.singleLine;
         }
         if (this.attrs.open != undefined) this.showTable = this.attrs.open;
+        this.data.hiddenColumns = this.attrs.hiddenColumns;
+        this.data.hiddenRows = this.attrs.hiddenRows;
     }
 
     /**
@@ -348,7 +353,8 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
         }
         // TODO check if better way to save than just making saveAndCloseSmallEditor public and calling it
         timTable.saveAndCloseSmallEditor();
-        this.data.hiddenRows = [];
+        if(this.attrs.hiddenRows) this.data.hiddenRows = this.attrs.hiddenRows.slice()
+        else this.data.hiddenRows = [];
         if (this.userfilter != "" && this.userfilter != undefined) {
             const reg = new RegExp(this.userfilter.toLowerCase());
             let rowi = 1;
