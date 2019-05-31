@@ -355,6 +355,7 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
         timTable.saveAndCloseSmallEditor();
         if(this.attrs.hiddenRows) this.data.hiddenRows = this.attrs.hiddenRows.slice()
         else this.data.hiddenRows = [];
+         //TODO: if usernamecolumn in hiddencolums then skip reg.test for this.rowkeys
         if (this.userfilter != "" && this.userfilter != undefined) {
             const reg = new RegExp(this.userfilter.toLowerCase());
             let rowi = 1;
