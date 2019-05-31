@@ -20,7 +20,7 @@ class VelpTest(BrowserTest):
         self.goto_document(d, view='velp')
 
         velp_selection_element = self.drv.find_element_by_css_selector('#velpSelection')
-        self.assert_same_screenshot(velp_selection_element, ['velps/velp_selection_empty', 'velps/velp_selection_empty_alt'])
+        self.assert_same_screenshot(velp_selection_element, ['velps/velp_selection_empty'])
         create_velp_btn = find_button_by_text(velp_selection_element, 'Create new velp')
         create_velp_btn.click()
         new_velp_selector = '.velp-data.new.edit'

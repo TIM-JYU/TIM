@@ -24,11 +24,6 @@ def find_preview_element(pareditor: WebElement) -> WebElement:
 
 
 class ParEditorTest(BrowserTest):
-    def get_screenshot_tolerance(self) -> float:
-        # Using a recent Boot2Docker, sometimes a small vertical yellow line appears next to a button.
-        # In that case, the diff value is about 0.002.
-        return 0.003
-
     def wait_for_preview_to_finish(self):
         self.wait.until_not(ec.text_to_be_present_in_element((By.CSS_SELECTOR, '.previewDiv'), '...'))
 
