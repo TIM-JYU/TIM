@@ -496,7 +496,7 @@ export class PermCtrl implements IController {
     }
 
     async getNotifySettings() {
-        const r = await to($http.get("/notify/" + this.item.id));
+        const r = await to($http.get<{}>("/notify/" + this.item.id));
         if (r.ok) {
             this.notifySettings = r.result.data;
         } else {
