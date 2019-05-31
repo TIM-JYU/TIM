@@ -849,6 +849,7 @@ def search():
         cmd.append("-F")
     if search_whole_words:
         cmd.append("-sw")
+    cmd.append("--")
     cmd.append(query)
 
     if search_content:
