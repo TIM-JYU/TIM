@@ -275,7 +275,7 @@ def render_multihtml(schema: GenericHtmlSchema, args: List[GenericHtmlSchema]):
         except ValidationError as e:
             results.append(render_validationerror(e))
         else:
-            results.append(render_plugin_html(p.data))
+            results.append(render_plugin_html(p))
     return jsonify(results)
 
 
