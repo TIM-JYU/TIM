@@ -453,10 +453,15 @@ def get_html(self: 'TIMServer', ttype, query: QueryClass):
             # ebycode = html.escape(code)
         # ebycode = code.replace("</pre>", "</pre>")  # prevent pre ending too early
         ebycode = code.replace("<", "&lt;").replace(">", "&gt;")
+        cs_class = 'csRunDiv '
+        if get_param(query, 'noborders', False):
+            cs_class = ''
+
         if before_open:
             ebycode = before_open
         if tiny:
-            lazy_visible = '<div class="lazyVisible csRunDiv csTinyDiv no-popup-menu" >' + get_tiny_surrounding_headers(
+            lazy_visible = '<div class="lazyVisible ' + cs_class\
+                           + 'csTinyDiv no-popup-menu" >' + get_tiny_surrounding_headers(
                 query,
                 '' + ebycode + '') + '</div>'
         else:
@@ -469,7 +474,7 @@ def get_html(self: 'TIMServer', ttype, query: QueryClass):
                 preend = '</pre>'
                 lazyclasses = 'csRunCode csEditorAreaDiv csrunEditorDiv csRunArea csInputArea csLazyPre'
             btn = '<p class="csRunMenu">&nbsp;</p>'
-            lazy_visible = ('<div class="lazyVisible csRunDiv no-popup-menu" >' +
+            lazy_visible = ('<div class="lazyVisible ' + cs_class +  'no-popup-menu" >' +
                             get_surrounding_headers(query,
                                                     ('<div class="' + lazyclasses + '"'
                                                      ' " ng-non-bindable>'+prebeg) +

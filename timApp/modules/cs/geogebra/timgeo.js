@@ -94,11 +94,17 @@ getCommands: function(api) {
 setState: function(api, geostate) {
     if ( !geostate ) return;
     let data = geostate['data'];
-    if ( !data ) return;
-    if ( data.startsWith("<") ) {
-        api.setXML(data);
-    } else {
-        api.setBase64(data);
+    if ( data ) {
+        if (data.startsWith("<")) {
+            api.setXML(data);
+        } else {
+            api.setBase64(data);
+        }
+    }
+    let commands = geostate['commands'];
+    if (commands ) {
+        labels = api.evalCommandGetLabels(commands);
+        console.log(labels);
     }
 },
 

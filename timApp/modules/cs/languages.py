@@ -1044,6 +1044,7 @@ function perspective(p){
 var ggbApplet;
 
 var P = {
+borderColor: "#FFFFFF",
 //GEOWIDTH
 //GEOHEIGHT
 //GEOMATERIALID
@@ -1304,6 +1305,10 @@ class Geogebra(Language):
                 state["data"] = ''
         if data: # send ggb in parameters ggbBase64
             srchtml = srchtml.replace('//GGBBASE64', f'ggbBase64: "{data.strip()}",')
+
+        commands = get_by_id(ma, "commands", None)
+        if commands:
+            state["commands"] = commands
         geostate = b64encode(json.dumps(state).encode("UTF-8")).decode().strip()
         srchtml = srchtml.replace('GEOSTATE', f"'{geostate}'")
         return srchtml
@@ -1381,6 +1386,9 @@ class Mathcheck(Language):
         # cmdline = sanitize_cmdline(cmdline)
         out = check_output(["cd " + self.prgpath + " && " + cmdline], stderr=subprocess.STDOUT,
                            shell=True).decode("utf-8")
+        correct_text = get_param(self.query, 'correctText', None)
+        if correct_text:
+            out = out.replace("No errors found. MathCheck is convinced that there are no errors.", correct_text)
         return 0, out, "", ""
 
 
