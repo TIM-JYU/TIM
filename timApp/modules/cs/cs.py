@@ -404,9 +404,13 @@ def get_html(self: 'TIMServer', ttype, query: QueryClass):
     language = None
     is_rv = is_review(query)
 
+    language_class = languages.get(ttype.lower(), Language)
+    language = language_class(query, bycode)
+
+    if do_lazy and not before_open:
+        before_open = language.get_default_before_open()
+
     if before_open or is_rv:
-        language_class = languages.get(ttype.lower(), Language)
-        language = language_class(query, bycode)
         usercode = language.modify_usercode(usercode)
         before_open = before_open.replace('{USERCODE}', usercode)
         js['markup']['beforeOpen'] = before_open
@@ -454,7 +458,7 @@ def get_html(self: 'TIMServer', ttype, query: QueryClass):
         # ebycode = code.replace("</pre>", "</pre>")  # prevent pre ending too early
         ebycode = code.replace("<", "&lt;").replace(">", "&gt;")
         cs_class = 'csRunDiv '
-        if get_param(query, 'noborders', False):
+        if not get_param(query, 'borders', True):
             cs_class = ''
 
         if before_open:

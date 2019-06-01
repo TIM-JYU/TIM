@@ -1,4 +1,4 @@
-copyright number_file( "number.cc", "Antti Valmari", 20170723 );
+copyright number_file( "number.cc", "Antti Valmari", 20190121 );
 /*
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -665,7 +665,7 @@ number exp( number xx ){
   return xx;
 }
 
-number log( number xx ){
+number ln( number xx ){
   if(
     xx.type == number::und || xx.type == number::zer ||
     xx.type == number::neg || xx.type == number::trv
@@ -693,23 +693,27 @@ number log10( number xx ){
   return xx;
 }
 
-number log_general( number aa, number xx ){
+number log2( number xx ){
+  const double
+    ln2lo = nextafter( log(2), 0. ), ln2hi = nextafter( log(2), 1/0. );
   if(
     xx.type == number::und || xx.type == number::zer ||
-    xx.type == number::neg || xx.type == number::trv ||
-    aa.type == number::und || aa.type == number::zer ||
-    aa.type == number::neg || aa.type == number::trv
+    xx.type == number::neg || xx.type == number::trv
   ){ return numu; }
-  aa.to_dblu();
-  if( aa.d_hi <= 1. ){ return numu; }
-  if( xx.isc_1() ){ return num0; }
+  unsigned pow2 = 0;
+  if( xx.type == number::pos && xx.r_de == 1 ){
+    while( !( xx.r_nu & 1 ) ){ xx.r_nu >>= 1; ++pow2; }
+    if( xx.r_nu == 1 ){ return number( pow2 ); }
+  }
+  if( xx.type == number::dbl && xx.d_lo == 1. && xx.d_hi == 1. ){
+    return num0;
+  }
   xx.to_dblu();
   if( xx.d_hi <= 0. ){ return numu; }
   if( xx.d_lo <= 0. ){ xx.type = number::dbu; xx.d_lo = -1/0.; }
-  else{ xx.d_lo = nextafter( log( xx.d_lo ) / log( aa.d_hi ), -1/0. ); }
-  if( aa.d_lo <= 1. ){ xx.type = number::dbu; xx.d_hi = 1/0.; }
-  else{ xx.d_hi = nextafter( log( xx.d_hi ) / log( xx.d_hi ), 1/0. ); }
-  return xx;
+  else{ xx.d_lo = nextafter( log( xx.d_lo ) / ln2hi, -1/0. ); }
+  xx.d_hi = nextafter( log( xx.d_hi ) / ln2lo, 1/0. );
+  return xx + pow2;
 }
 
 

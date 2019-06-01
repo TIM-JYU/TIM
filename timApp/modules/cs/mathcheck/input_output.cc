@@ -1,5 +1,5 @@
 /* MathCheck input/output and some other utilities
-  Copyright Antti Valmari. */ const unsigned date = 20180921;
+  Copyright Antti Valmari. */ const unsigned date = 20190124;
 /*
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -640,6 +640,16 @@ void out_esc( char ch ){
 }
 
 void out_esc( const char *s1 ){ for( ; *s1; ++s1 ){ out_esc( *s1 ); } }
+
+
+/* These are the same as out_esc, except that spaces are printed as hard. */
+
+void out_hard( char ch ){
+  if( ch == ' ' ){ out_print( "\xC2\xA0" ); }
+  else{ out_esc( ch ); }
+}
+
+void out_hard( const char *s1 ){ for( ; *s1; ++s1 ){ out_hard( *s1 ); } }
 
 
 /* These features facilitate printing in HTML mode and AsciiMath mode. */

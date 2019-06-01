@@ -274,6 +274,8 @@ class Language:
                 self.run_points_given = True
         return out, err
 
+    def get_default_before_open(self):
+        return ''
 
 class CS(Language):
     def __init__(self, query, sourcecode):
@@ -1059,9 +1061,8 @@ P.getData = function(){
 }
 
 P.setDataInit = function (api, geostate) {
-    timgeo.setState(ggbApplet, geostate);
+    timgeo.setState(api, geostate);
 }
-
 
 P.setData = function(geostate) {
     P.setDataInit(ggbApplet, geostate);
@@ -1114,6 +1115,7 @@ GEOPOSTHTML
 
 GEOGEBRA_PARAMETERS_INIT = """
 P.appName = "graphing";
+P.width = 1200;
 P.height = 600;
 P.showMenuBar = true;
 P.showAlgebraInput = true;
@@ -1127,7 +1129,7 @@ P.enableRightClick = false;
 P.errorDialogsActive = false;
 P.useBrowserForJS = false;
 P.allowStyleBar = false;
-P.preventFocus = false;
+P.preventFocus = true;
 P.showZoomButtons = true;
 P.capturingThreshold = 3;
 {}
@@ -1140,7 +1142,9 @@ function resultArea() { return document.getElementById("resultArea"); }
 function setArea(s) { resultArea().value = s; }
 function helpArea() { return document.getElementById("helpText"); }
 function setHelp(s) { helpArea().value = s; }
+var api;
 function evalJS(s) {
+   api = ggbApplet;
    try {
        var res = eval(s);
        if ( res ) return res;
@@ -1215,7 +1219,7 @@ def get_by_id(jso, item_id, default):
     return val
 
 
-def html_change(s, old, jso, item_id, repfmt, default, valdef = None):
+def html_change(s, old, jso, item_id, repfmt, default, valdef = None, delta = 0):
     """
     Korvataan s:ssä oleva sana old jsonin avaimesta item_id löytyvällä
     tekstillä kun se muokataan repfmt formaatilla.  Mikäli avainta
@@ -1227,22 +1231,31 @@ def html_change(s, old, jso, item_id, repfmt, default, valdef = None):
     :param item_id: avain jonka kohdalta korvaava teksti otetaan
     :param repfmt: muotoiluohje miten korvaava teksti muotoillaan
     :param default: oletus jos avainta ei löydy, None => ei korvata mitään
-    :param valdel: mitä arvoa käytetään tekstille jos ei löydy
+    :param valdef: mitä arvoa käytetään tekstille jos ei löydy
+    :param delta: minkä verran arvoa muutetaan kun se laitetaan
     :return: korvattu jono
     """
-    val = get_by_id(jso, item_id, valdef)
-    n = default
-    if val is not None:
-        n = repfmt.format(val)
-    if n is None:
+    try:
+        val = get_by_id(jso, item_id, valdef)
+        n = default
+        if val is not None:
+            if delta:
+                val = int(val) + delta
+            n = repfmt.format(val)
+        if n is None:
+            return s
+        return s.replace(old, n)
+    except ValueError:
         return s
-    return s.replace(old, n)
 
 
 class Geogebra(Language):
     global GEOGEBRA_DEFAULT_SRC_HTML
     global GEOGEBRA_PARAMETERS_INIT
     global GEOGEBRA_TOOL_HTML
+
+    def get_default_before_open(self):
+        return '<div class="defBeforeOpen"><p>Open GeoGebra</p></div>'
 
     def can_give_task(self):
         return True
@@ -1284,8 +1297,8 @@ class Geogebra(Language):
         srchtml = get_by_id(ma, 'srchtml', GEOGEBRA_DEFAULT_SRC_HTML)
         srchtml = html_change(srchtml, "//GEOMATERIALID", ma, "material_id", 'material_id: "{}",', None)
         srchtml = html_change(srchtml, "//GEOFILENAME", ma, "filename", 'filename: "{}",', None)
-        srchtml = html_change(srchtml, "//GEOWIDTH", ma, "width", 'width: {},', "", "800")
-        srchtml = html_change(srchtml, "//GEOHEIGHT", ma, "height", 'height: {},', "", "450")
+        srchtml = html_change(srchtml, "//GEOWIDTH", ma, "width", 'width: {},', "", "800", -10)
+        srchtml = html_change(srchtml, "//GEOHEIGHT", ma, "height", 'height: {},', "", "450", -20)  # prevent scrollbar
         srchtml = html_change(srchtml, "//GEOJAVASCRIPT", ma, "javascript", jsformat, None, jsdef)
         srchtml = html_change(srchtml, "GEOPREHTML", ma, "prehtml", '{}', "")
         srchtml = html_change(srchtml, "GEOPOSTHTML", ma, "posthtml", '{}', "", postdef)

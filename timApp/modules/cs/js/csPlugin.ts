@@ -436,7 +436,7 @@ function commentTrim(s: string) {
 }
 
 function makeTemplate() {
-    return `<div class="csRunDiv type-{{::$ctrl.rtype}}">
+    return `<div ng-class="::{'csRunDiv': $ctrl.attrs.borders}" class="type-{{::$ctrl.rtype}}">
     <tim-markup-error ng-if="::$ctrl.markupError" data="::$ctrl.markupError"></tim-markup-error>
     <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
     <p ng-if="::$ctrl.stem" class="stem" ng-bind-html="::$ctrl.stem"></p>
@@ -706,6 +706,7 @@ const CsMarkupOptional = t.partial({
     variables: t.string,
     width: t.union([t.number, t.string]),
     wrap: t.Integer,
+    borders: withDefault(t.boolean, true),
 });
 
 const CsMarkupDefaults = t.type({
@@ -1252,6 +1253,7 @@ class CsController extends CsBase implements IController {
 
     $onInit() {
         super.$onInit();
+       //  if ( typeof this.attrs.borders !== 'undefined' ) this.attrs.borders = true;
         this.buttons = this.getTemplateButtons();
         const rt = this.rtype;
         const isText = this.isText;
@@ -3046,7 +3048,7 @@ csApp.component("csSimcirRunner", {
 csApp.component("csTextRunner", {
     ...commonComponentOptions,
     template: `
-<div class="csRunDiv csTinyDiv" style="text-align: left;">
+<div ng-class="::{'csRunDiv': $ctrl.attrs.borders}" class="csTinyDiv" style="text-align: left;">
     <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
     <span ng-if="::$ctrl.stem"
           class="stem"

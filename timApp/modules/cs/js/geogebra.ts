@@ -20,11 +20,12 @@ const GeogebraMarkup = t.intersection([
         srchtml: t.string,
         width: t.number,
         height: t.number,
-        noborders: t.boolean,
+        tool: t.boolean,
     }),
     GenericPluginMarkup,
     t.type({
         open: withDefault(t.boolean, true),
+        borders: withDefault(t.boolean, true),
         autopeek: withDefault(t.boolean, true),
         lang: withDefault(t.string, "fi"),
         // autoplay: withDefault(t.boolean, true),
@@ -164,8 +165,14 @@ class GeogebraController extends PluginBase<t.TypeOf<typeof GeogebraMarkup>,
         const user_id = selectedUser.id;
         // const html:string = this.attrs.srchtml;
         // const datasrc = btoa(html);
-        const w = this.attrs.width || 800;
-        const h = this.attrs.height || 450;
+        let w = this.attrs.width || 800;
+        let h = this.attrs.height || 450;
+
+        if ( this.attrs.tool ) {
+           w = Math.max(w, 1200);
+           h = Math.max(w, 1100);
+        }
+
         let url = this.getHtmlUrl() + '/' + user_id + '/' + anr;
         url = url.replace("//", "/");
         this.geogebraoutput = "<iframe id=\"jsxFrame-stack-jsxgraph-1-div1\"\n" +
@@ -286,7 +293,7 @@ geogebraApp.component("geogebraRunner", {
         viewctrl: "^timView",
     },
     template: `
-<div ng-cloak ng-class="{'csRunDiv': !$ctrl.attrs.noborders}"  class="math que geogebra no-popup-menu" >
+<div ng-cloak ng-class="::{'csRunDiv': $ctrl.attrs.borders}"  class="math que geogebra no-popup-menu" >
     <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
     <p ng-if="::$ctrl.stem" class="stem" ng-bind-html="::$ctrl.stem"></p>
     <p ng-if="!$ctrl.isOpen" class="stem" ng-bind-html="::$ctrl.attrs.beforeOpen"></p>

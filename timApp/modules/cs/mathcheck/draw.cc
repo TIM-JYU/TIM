@@ -1,4 +1,6 @@
-copyright draw_cc( "draw.cc", "Antti Valmari", 20181004 );
+#ifdef mathcheck
+copyright draw_cc( "draw.cc", "Antti Valmari", 20190120 );
+#endif
 /*
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -591,7 +593,9 @@ inline double rough_up( double xx ){ return rough_down( xx, true ); }
 
 
 /*** Higher-level drawing facilities ***/
+#ifdef mathcheck
 copyright draw_font_def_cc( "draw_font_def.cc" );
+#endif
 #include "draw_font_def.cc"
 namespace draw{
 

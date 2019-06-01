@@ -32,8 +32,15 @@ getConstructionState: function(api) {
     return state;
 },
 
-getObjXML: function(api, name) {
-    let names = name.split(",");
+
+makeArray: function(objnames) {
+    if ( Array.isArray(objnames) ) return objnames;
+    if ( !objnames ) return [];
+    return objnames.split(",");
+},
+
+getObjXML: function(api, objnames) {
+    let names = timgeo.makeArray(objnames);
     let vals = "";
     for (let i=0; i < names.length; i++) {
        let n = names[i].trim();
@@ -43,8 +50,8 @@ getObjXML: function(api, name) {
     return vals.trim();
 },
 
-getObjValue: function(api, name) {
-    let names = name.split(",");
+getObjValue: function(api, objnames) {
+    let names = timgeo.makeArray(objnames);
     let vals = "";
     for (let i=0; i < names.length; i++) {
        let n = names[i].trim();
@@ -54,8 +61,8 @@ getObjValue: function(api, name) {
     return vals.trim();
 },
 
-getObjsCommands: function(api, name) {
-    let names = name.split(",");
+getObjsCommands: function(api, objnames) {
+    let names = timgeo.makeArray(objnames);
     let cmds = "";
     for (let i=0; i < names.length; i++) {
        let n = names[i].trim();
@@ -104,8 +111,47 @@ setState: function(api, geostate) {
     let commands = geostate['commands'];
     if (commands ) {
         labels = api.evalCommandGetLabels(commands);
-        console.log(labels);
     }
 },
+
+setLabelsVisible: function (api, objnames, visible)  {
+    let names = timgeo.makeArray(objnames);
+    for (let i=0; i < names.length; i++) {
+        let n = names[i].trim();
+        if ( !n ) continue;
+        api.setLabelVisible(n, visible);
+    }
+},
+
+setLabelStyle: function (api, objnames, style)  {
+    let names = timgeo.makeArray(objnames);
+    for (let i=0; i < names.length; i++) {
+        let n = names[i].trim();
+        if ( !n ) continue;
+        api.setLabelVisible(n, true);
+        api.setLabelStyle(n, style);
+    }
+},
+
+setAllLabelsVisible: function (api, visible)  {
+    let objnames = api.getAllObjectNames();
+    timgeo.setLabelsVisible(api, objnames, visible);
+},
+
+
+setPointsCoords(api, lines) {
+    // B = (-0.88, -0.47)
+    if ( !lines ) return;
+    cmds = lines.split('\n');
+    let re = / *([^ =]*) *= *[\(\[]([^,]*), *([^\)\]]*)/;
+    for (let i=0; i < cmds.length; i++) {
+        let cmd = cmds[i].trim();
+        if ( !cmd ) continue;
+        let m = re.exec(cmd);
+        if ( !m ) continue;
+        api.setCoords(m[1], m[2], m[3]);
+    }
+},
+
 
 };

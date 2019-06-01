@@ -1,4 +1,4 @@
-copyright CFG_file( "CFG.cc", "Antti Valmari", 20181022 );
+copyright CFG_file( "CFG.cc", "Antti Valmari", 20190207 );
 /*
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -69,6 +69,7 @@ class CFG{
 public:
 
   static char start0, start1;         // start symbols of both grammars
+  static const char *duplicate;       // a word with two derivations in start1
 
 
 /*** Some small functions ***/
@@ -98,13 +99,13 @@ public:
   }
 
   /* A buffer for various purposes */
-  static bool incomplete;
+  static unsigned incomplete;   // 1 = buffer overflow, 2 = heap overflow
   static const unsigned buff_max = 50;
   static unsigned buff_sz;
   static char buff[ buff_max + 1 ];
   inline static bool buff_add( char ch ){
     if( buff_sz < buff_max ){ buff[ buff_sz ] = ch; ++buff_sz; return true; }
-    else{ incomplete = true; return false; }
+    else{ incomplete = 1; return false; }
   }
 
   /* Addition of a rule for the nonterminal */
@@ -314,7 +315,7 @@ private:
     CFG *ntp;         // wd belongs to the language of *nt
   };
   static unsigned heap_cnt;                   // total number of pushed items
-  static unsigned const heap_limit = 5000;    // when met, terminate wg
+  static unsigned const heap_limit = 50000;   // when met, terminate wg
   static std::vector< heap_elem > word_heap;
 
   /* Push a copy of the buffer to the heap as a word of this nt. */
@@ -322,7 +323,7 @@ private:
 
     /* Give up after too much work. */
     if( heap_cnt < heap_limit ){ ++heap_cnt; }
-    else{ incomplete = true; return; }
+    else{ incomplete = 2; return; }
 
     /* Copy buff to fresh memory. */
     char *new_wd = new char[ buff_sz + 1 ];
@@ -363,6 +364,7 @@ private:
     instances of nonterminal invocations, and proceed recursively to all other
     relevant nonterminals. */
   void gw_bottom(){
+    if( incomplete > 1 ){ return; }
 
     /* Avoid infinite recursion. */
     if( gw_started ){ return; }
@@ -390,6 +392,7 @@ private:
 
   /* Generate the words that do need nonterminal invocations. */
   void gw_sub( unsigned jj ){
+    if( incomplete > 1 ){ return; }
 
     while( gw_rp[ jj ] && is_terminal( gw_rp[ jj ] ) ){
       if( buff_add( gw_rp[ jj ] ) ){ ++jj; }else{ break; }
@@ -397,7 +400,7 @@ private:
 
     if( !gw_rp[ jj ] ){ heap_push(); return; }
 
-    if( is_terminal( gw_rp[ jj ] ) ){ incomplete = true; return; }
+    if( is_terminal( gw_rp[ jj ] ) ){ return; }
 
     unsigned buff_old = buff_sz;
     if( jj != gw_ll ){
@@ -424,7 +427,7 @@ private:
 
   /* Free the dynamically allocated words. */
   static void words_clear(){
-    buff_sz = 0; incomplete = false; heap_cnt = 0;
+    buff_sz = 0; incomplete = 0; heap_cnt = 0;
     for( unsigned ii = 0; ii < word_heap.size(); ++ii ){
       delete word_heap[ ii ].wd;
     }
@@ -435,6 +438,7 @@ private:
         delete nt.words[ jj ];
       }
       nt.words.clear(); nt.gw_started = false;
+      delete duplicate; duplicate = 0;
     }
   }
 
@@ -486,7 +490,8 @@ public:
     /* Generate all words up to maximum length. */
     while( !word_heap.empty() ){
 
-      /* Pop a word from the heap. If it is a duplicate, release its memory.
+      /* Pop a word from the heap. If it is a duplicate, release its memory
+        except that record it, if it is the first found duplicate of start1.
         Otherwise, add it to the word list after using it in all possible ways
         as a reply to nonterminal invocations, to generate new words. */
       CFG *ntp = word_heap[0].ntp;
@@ -512,13 +517,16 @@ public:
 
         ntp->words.push_back( word_heap[0].wd );
 
+      }else if( !duplicate && ntp->offset == 'A'-26 ){
+        duplicate = word_heap[0].wd;
+
       }else{ delete word_heap[0].wd; }
 
       heap_pop();
     }
 
-    if( incomplete ){
-      err_set_warning( check_level );
+    if( incomplete ){ err_set_warning( check_level ); }
+    if( incomplete > 1 ){
     }else if( start_0->words.size() > start_1->words.size() ){
       err_msg = start_0->words.back(); err_mode = err_CFG_1;
     }else if( start_1->words.size() > start_0->words.size() ){
@@ -543,7 +551,8 @@ public:
 };
 CFG CFG::nonterminals[ 52 ];
 char CFG::start0 = 'A', CFG::start1 = 'A';
-bool CFG::incomplete = false;
+const char *CFG::duplicate = 0;
+unsigned CFG::incomplete = 0;
 unsigned CFG::buff_sz = 0;
 char CFG::buff[] = {};
 const char *CFG::tested_word;
@@ -556,17 +565,38 @@ std::vector< CFG::heap_elem > CFG::word_heap;
 
 
 /* Read a string. */
+bool CFG_ignore_CR = false;
 void CFG_string( char banned = '\0' ){
   inp_skip_white_space(); err_pos = inp_byte_now; CFG::buff_sz = 0;
   if( !inp_chr || inp_chr == banned ){
     err_set_inp( "A string is needed here" );
     CFG::buff[ CFG::buff_sz ] = '\0'; return;
   }
-  while( inp_chr && inp_chr != ' ' && inp_chr != '\n' ){
-    if( inp_chr != '$' && !CFG::buff_add( inp_chr ) ){
-      err_set_inp( "The string is too long" ); break;
+  char stopper = ' ';
+  while( stopper && inp_chr && lc() ){
+    if( inp_chr == '"' || inp_chr == '\'' ){
+      stopper = inp_chr; inp_get_chr();
     }
-    inp_get_chr();
+    while( inp_chr && inp_chr != stopper ){
+      if( inp_chr == '\n' ){
+        if( !CFG_ignore_CR ){
+          if( stopper != ' ' ){ stopper = '\0'; }
+          break;
+        }
+      }else if( !CFG::buff_add( inp_chr ) ){
+        stopper = '\0'; err_set_inp( "The string is too long" ); break;
+      }
+      inp_get_chr();
+    }
+    if( stopper == ' ' ){ stopper = '\0'; }
+    else{
+      if( inp_chr != stopper ){
+        err_set_inp( "The string was not terminated properly" ); break;
+      }else{
+        inp_get_chr(); inp_skip_white_space(); err_pos = inp_byte_now;
+        if( inp_chr != '"' && inp_chr != '\'' ){ stopper = '\0'; }
+      }
+    }
   }
   CFG::buff[ CFG::buff_sz ] = '\0';
 }
