@@ -109,8 +109,12 @@ setState: function(api, geostate) {
         }
     }
     let commands = geostate['commands'];
-    if (commands ) {
+    if ( commands ) {
         labels = api.evalCommandGetLabels(commands);
+    }
+    let objxml = geostate['objxml'];
+    if ( objxml ) {
+        api.evalXML(objxml);
     }
 },
 
@@ -139,7 +143,7 @@ setAllLabelsVisible: function (api, visible)  {
 },
 
 
-setPointsCoords(api, lines) {
+setPointsCoords: function (api, lines) {
     // B = (-0.88, -0.47)
     if ( !lines ) return;
     cmds = lines.split('\n');

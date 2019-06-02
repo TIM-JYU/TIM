@@ -1212,7 +1212,7 @@ Eval:
 </ul>
 """
 
-def get_by_id(jso, item_id, default):
+def get_by_id(jso, item_id, default=None):
     val = jso.get(item_id, None)
     if val is None:
         val = jso.get("-" + item_id, default)
@@ -1323,6 +1323,9 @@ class Geogebra(Language):
         commands = get_by_id(ma, "commands", None)
         if commands:
             state["commands"] = commands
+        objxml = get_by_id(ma, "objxml", None)
+        if objxml:
+            state["objxml"] = objxml
         geostate = b64encode(json.dumps(state).encode("UTF-8")).decode().strip()
         srchtml = srchtml.replace('GEOSTATE', f"'{geostate}'")
         return srchtml
