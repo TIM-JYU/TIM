@@ -158,4 +158,34 @@ setPointsCoords: function (api, lines) {
 },
 
 
+setXmlPropertyLines: function (lines, obj, prop) {
+    let name = '<' + prop.substr(1, prop.indexOf(' ') - 1);
+    let found = false;
+    let endi = 0;
+    for (let i = 0; i < lines.length; i++) {
+        let line = lines[i];
+        if (line.indexOf(name) >= 0) {
+            lines[i] += prop;
+            found = true;
+            continue;
+        }
+        if (line.indexOf("</element>") >= 0) endi = i;
+    }
+    if (!found)
+        lines.splice(endi, 0, prop);
+},
+
+setXmlProperty: function (api, obj, prop) {
+//  https://help.geogebra.org/topic/dynamically-changing-size-of-an-input-box-based-on-input-
+    let xml = api.getXML(obj);
+    let lines = xml.split("\n");
+    let props = prop.split("\n");
+    for (let i = 0; i < props.length; i++) {
+        let pr = props[i].trim();
+        if ( pr ) timgeo.setXmlPropertyLines(lines, obj, pr);
+    }
+    xml = lines.join("\n");
+    api.evalXML(xml);
+},
+
 };
