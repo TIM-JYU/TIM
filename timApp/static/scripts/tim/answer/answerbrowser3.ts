@@ -40,7 +40,7 @@ async function loadPlugin(html: string, plugin: JQuery, scope: IScope, viewctrl:
 export class PluginLoaderCtrl extends DestroyScope implements IController {
     static $inject = ["$element", "$scope", "$transclude"];
     private compiled = false;
-    private viewctrl!: Require<ViewCtrl>;
+    private viewctrl?: Require<ViewCtrl>;
     public taskId!: Binding<string, "@">;
     private type!: Binding<string, "@">;
     private showBrowser: boolean = false;
@@ -60,7 +60,9 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
     }
 
     $onInit() {
-        this.viewctrl.registerPluginLoader(this);
+        if (this.viewctrl) {
+            this.viewctrl.registerPluginLoader(this);
+        }
         if (this.isValidTaskId(this.taskId)) {
             const [id, name] = this.taskId.split(".");
             if (getURLParameter("task") === name) {
@@ -98,13 +100,13 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
         this.scope.$evalAsync(async () => {
             const plugin = this.getPluginElement();
             this.compiled = true;
-            if (!this.viewctrl.noBrowser && this.isValidTaskId(this.taskId) && this.type !== "lazyonly" && Users.isLoggedIn()) {
+            if (this.viewctrl && !this.viewctrl.noBrowser && this.isValidTaskId(this.taskId) && this.type !== "lazyonly" && Users.isLoggedIn()) {
                 this.showBrowser = true;
             } else {
                 this.abLoad.resolve(null); // this plugin instance doesn't have answer browser
             }
             const h = this.getNonLazyHtml();
-            if (h) {
+            if (h && this.viewctrl) {
                 await loadPlugin(h, plugin, this.viewctrl.scope, this.viewctrl);
             }
             this.removeActivationHandler();
@@ -160,7 +162,7 @@ timApp.component("timPluginLoader", {
     },
     controller: PluginLoaderCtrl,
     require: {
-        viewctrl: "^timView",
+        viewctrl: "?^timView",
     },
     template: `
 <div ng-if="$ctrl.answerId && $ctrl.showPlaceholder && !$ctrl.isPreview()" style="width: 1px; height: 23px;"></div>
