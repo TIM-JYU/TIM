@@ -29,7 +29,7 @@ export class TimTableEditorToolbarController extends DialogController<{params: I
         round: false,
     };
 
-    readonly DEFAULT_CELL_BGCOLOR = "yellow"; // "#EEEEEE";
+    readonly DEFAULT_CELL_BGCOLOR = "FFFF00"; // "yellow"; // "#EEEEEE";
 
     constructor(protected element: IRootElementService, protected scope: IScope) {
         super(element, scope);
@@ -267,7 +267,6 @@ registerDialogComponent(TimTableEditorToolbarController,
                 </color-picker>
                 <button class="timButton btn-xs"
                         ng-hide="$ctrl.hid.colorPicker"
-                        ng-style="$ctrl.getStyle()"
                         ng-click="$ctrl.applyBackgroundColor()">Apply color
                 </button>
                 <button class="timButton btn-xs"
