@@ -74,10 +74,11 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
     private isRunning = false;
     private userfilter = "";
     private data: TimTable & {userdata: DataEntity} = {
-        hid: {edit: false},
+        hid: {edit: false, insertMenu: true, editMenu: true},
         hiddenRows: [],
         hiddenColumns: [],
         hideSaveButton: true,
+        //lockCellCount: true,
         lockedCells: [],
         table: {countRow: 0, countCol: 0, columns: []},
         //TODO: give rows (and maybe colums) in data.table

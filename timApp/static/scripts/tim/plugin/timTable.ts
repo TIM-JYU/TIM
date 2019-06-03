@@ -49,16 +49,17 @@ export interface TimTable {
     editorButtonsBottom?: boolean;
     editorButtonsRight?: boolean;
     toolbarTemplates?: any;
-    hid: {edit?: boolean};
+    hid: {edit?: boolean, insertMenu?: boolean, editMenu?: boolean};
     hideSaveButton?: boolean;
     // hiddenRows?: IRow[];
     hiddenRows?: number[];
-    hiddenColumns?: number[]
+    hiddenColumns?: number[];
     lockedCells?: string[];
     saveCallBack?: (rowi: number, coli: number, content: string) => void;
     maxWidth?: string; //Possibly obsolete if cell/column layout can be given in data.table.colums
     minWidth?: string;
     singleLine?: boolean;
+    //lockCellCount?: boolean;
 }
 
 export interface ITable { // extends ITableStyles
@@ -241,6 +242,7 @@ export class TimTableController extends DestroyScope implements IController {
     private task: boolean = false;
     private hideSaveButton?: boolean = false;
     private hiddenRows?: number[] = [];
+    //private lockCellCount: boolean = false;
     // private saveCallBack: () => void;
     private isRunning: boolean = false;
     public taskBorders: boolean = false;
@@ -344,6 +346,10 @@ export class TimTableController extends DestroyScope implements IController {
             if (this.data.task) {
                 this.task = true;
             }
+
+            // if(this.data.lockCellCount){
+            //     this.lockCellCount = this.data.lockCellCount;
+            // }
             if (this.data.addRowButtonText) {
                 this.addRowButtonText = " " + this.data.addRowButtonText;
             }
@@ -464,6 +470,7 @@ export class TimTableController extends DestroyScope implements IController {
     }
 
     public addRowEnabled() {
+        //return !this.task && this.editRight && this.isInEditMode() && !this.lockCellCount
         return !this.task && this.editRight && this.isInEditMode();
     }
 
