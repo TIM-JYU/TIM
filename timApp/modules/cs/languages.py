@@ -301,6 +301,8 @@ class CS(Language):
     def run(self, result, sourcelines, points_rule):
         return self.runself(["mono", "-O=all", self.pure_exename])
 
+    def save(self, result):
+        return
 
 class Jypeli(CS):
     def __init__(self, query, sourcecode):
@@ -1278,6 +1280,10 @@ class Geogebra(Language):
         return res
 
     def run(self, result, sourcelines, points_rule):
+        self.save(result)
+        return 0, "Geogebra run", "", ""
+
+    def save(self, result):
         data = dict(self.query.jso["input"])
         if 'type' in data:
             del data['type']

@@ -1417,6 +1417,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                         code, out, err = (-1, "", str(e))
                     # print("Run2: ", language.imgsource, language.pngname)
                     out, err = language.copy_image(result, code, out, err, points_rule)
+                    language.save(result)
                 else:  # Most languages are run from here
                     # print(query.jso.get("markup").get("byCode"))
                     code, out, err, pwddir = language.run(result, slines, points_rule)
