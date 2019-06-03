@@ -9,12 +9,24 @@ error_422 = {'detail': 'The request was well-formed but was unable to be followe
 
 class ScimTest(TimRouteTest):
     def test_scim(self):
-        self.json_post('/scim/Groups', expect_status=401, expect_content='This action requires authentication.')
+        self.json_post(
+            '/scim/Groups',
+            expect_status=401,
+            expect_content={
+                'detail': 'This action requires authentication.',
+                'schemas': ['urn:ietf:params:scim:api:messages:2.0:Error'],
+                'status': '401',
+            },
+        )
         self.json_post(
             '/scim/Groups',
             auth=('cat', 'dog'),
             expect_status=401,
-            expect_content='Incorrect username or password.',
+            expect_content={
+                'detail': 'Incorrect username or password.',
+                'schemas': ['urn:ietf:params:scim:api:messages:2.0:Error'],
+                'status': '401',
+            },
         )
         a = ('t', 'pass')
         self.json_post('/scim/Groups', auth=a, expect_status=422, expect_content=error_422)

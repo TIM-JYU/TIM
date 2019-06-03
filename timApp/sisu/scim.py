@@ -126,19 +126,20 @@ def check_auth():
     expected_username = current_app.config.get('SCIM_USERNAME')
     expected_password = current_app.config.get('SCIM_PASSWORD')
     if not expected_username or not expected_password:
-        abort(403, 'SCIM username or password not configured.')
-    auth_required = Response(
-        'This action requires authentication.',
+        return json_response(scim_error_json(403, 'SCIM username or password not configured.'))
+    auth_required = json_response(
+        scim_error_json(401, 'This action requires authentication.'),
         401,
-        {'WWW-Authenticate': 'Basic realm="Authentication required"'})
+        headers={'WWW-Authenticate': 'Basic realm="Authentication required"'},
+    )
     auth = request.authorization
     if not auth:
         return auth_required
     if auth.username == expected_username and auth.password == expected_password:
         pass
     else:
-        return Response(
-            'Incorrect username or password.',
+        return json_response(
+            scim_error_json(401, 'Incorrect username or password.'),
             401,
             {'WWW-Authenticate': 'Basic realm="Authentication required"'},
         )

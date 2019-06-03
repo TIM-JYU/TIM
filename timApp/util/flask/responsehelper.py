@@ -23,8 +23,8 @@ def safe_redirect(url, **values):
     return redirect(url_for('indexPage'))
 
 
-def json_response(jsondata, status_code=200):
-    response = Response(to_json_str(jsondata), mimetype='application/json')
+def json_response(jsondata, status_code=200, headers=None):
+    response = Response(to_json_str(jsondata), mimetype='application/json', headers=headers)
     response.status_code = status_code
     return response
 
