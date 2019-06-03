@@ -3,7 +3,7 @@ import * as t from "io-ts";
 import $ from "jquery";
 import {CellInfo} from "sagecell";
 import {IAce, IAceEditor} from "tim/editor/ace-types";
-import {ParCompiler} from "tim/editor/parCompiler";
+import {IPluginInfoResponse, ParCompiler} from "tim/editor/parCompiler";
 import {GenericPluginMarkup, Info, nullable, PluginBase, pluginBindings, withDefault} from "tim/plugin/util";
 import {$compile, $http, $sce, $timeout, $upload, $window} from "tim/util/ngimport";
 import {fixDefExport, to, valueDefu, valueOr} from "tim/util/utils";
@@ -2466,34 +2466,13 @@ class CsController extends CsBase implements IController {
             return;
         }
         this.lastMD = text;
-        const r = await to($http.post<{texts: string | Array<{html: string}>}>(
+        const r = await to($http.post<IPluginInfoResponse>(
             `/preview/${taskId.split(".")[0]}`, {
                 text: text,
             }));
         if (r.ok) {
-            const data = r.result.data;
-            let s = "";
-            const previewDiv = this.preview;
-
-            if (typeof data.texts === "string") {
-                s = data.texts;
-            } else {
-                const len = data.texts.length;
-                for (let i = 0; i < len; i++) {
-                    s += data.texts[i].html;
-                }
-            }
-            // s = '<div class="par"  id="f2AP4FHbBIkB"  t="MHgzMGJlMDIxNw=="  attrs="{}" ng-non-bindable>  <div class=""> <p>Vesa MD 2</p>  </div>    <div class="editline" title="Click to edit this paragraph"></div>    <div class="readline"          title="Click to mark this paragraph as read"></div>     </div>    ';
-            s = s.replace(/parContent/, ""); // Tämä piti ottaa pois ettei scope pilaannu seuraavaa kertaa varten???
-            s = s.replace(/<div class="editline".*<.div>/, "");
-            s = s.replace(/<div class="readline"[\s\S]*?<.div>/, "");
-            const html = $compile(s)(this.scope);
-            previewDiv.empty().append(html);
-
-            ParCompiler.processAllMath(previewDiv);
-            // $scope.outofdate = false;
-            // $scope.parCount = len;
-
+            const html = await ParCompiler.compile(r.result.data, this.scope);
+            this.preview.empty().append(html);
         } else {
             const data = r.result.data;
             $window.alert("Failed to show preview: " + data.error);

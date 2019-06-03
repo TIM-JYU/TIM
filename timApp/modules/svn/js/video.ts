@@ -165,7 +165,7 @@ class ShowFileController extends PluginBase<t.TypeOf<typeof ShowFileMarkup>,
     private startt!: string | null;
     private width?: number;
     private height?: number;
-    private vctrl!: ViewCtrl;
+    private vctrl?: ViewCtrl;
 
     $onInit() {
         super.$onInit();
@@ -321,7 +321,7 @@ class ShowFileController extends PluginBase<t.TypeOf<typeof ShowFileMarkup>,
         if (!this.video) {
             return;
         }
-        if (this.attrs.followid) {
+        if (this.attrs.followid && this.vctrl) {
             this.vctrl.registerVideo(this.attrs.followid, this.video);
         }
         this.video.addEventListener("loadedmetadata", () => {
@@ -353,7 +353,7 @@ const common = {
     bindings: pluginBindings,
     controller: ShowFileController,
     require: {
-        vctrl: "^timView",
+        vctrl: "?^timView",
     },
 };
 
