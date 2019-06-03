@@ -1,0 +1,49 @@
+Geogebra
+Laaja GeoGebra pohja
+``` {plugin="csPlugin" #PLUGINNAMEHERE}
+type: geogebra
+#tool: true
+#header: Tähän otsikko, poista risuaita alusta
+#stem: Tähän selite, , poista risuaita alusta
+-pointsRule:
+   {}
+width: 600
+height: 320
+material_id:
+commands: |!!
+!!
+javascript: |!!
+P.setDataInit = function (api, geostate) {
+    timgeo.setState(api, geostate);
+    timgeo.setAllLabelsVisible(api, false);  // kaikki labelit piiloon
+    api.setVisible("kulmannimi", false);
+    timgeo.setLabelsVisible(api, "D,E,F,β,textkulma", true);  //muutamat takaisin
+    timgeo.setXmlProperty(api, 'textkulma', '<length val="5" />');
+    timgeo.setPointsCoords(api, geostate.userpts); // tilan palautus
+    api.evalCommand(geostate.usercmds);
+}
+
+P.getData = function(){
+    return {
+       "usercode": ggbApplet.getValueString('kulmannimi'),
+       "userpts":  timgeo.getObjValue(ggbApplet,"D,E,F"),
+       "usercmds": timgeo.getObjCommand(ggbApplet, 'kulmannimi'),
+   };
+}
+!!
+-objxml: |!!
+!!
+-data: |!!
+<geogebra format="5.0">
+<euclidianView>
+    <coordSystem xZero="350" yZero="130" scale="25" yscale="25"/>
+	<axis id="0" show="false" />
+	<axis id="1" show="false" />
+</euclidianView>
+<kernel>
+	<decimals val="0"/>
+	<angleUnit val="degree"/>
+</kernel>
+</geogebra>
+!!
+```

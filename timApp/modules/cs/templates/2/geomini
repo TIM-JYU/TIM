@@ -1,0 +1,10 @@
+Geogebra mini
+Minimaalinen GeoGebra pohja
+``` {plugin="csPlugin" #geo2}
+type: geogebra
+borders: false
+norun: true
+width: 650
+height: 500
+material_id: "X8EFduVc"
+```

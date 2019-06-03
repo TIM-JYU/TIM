@@ -188,4 +188,8 @@ setXmlProperty: function (api, obj, prop) {
     api.evalXML(xml);
 },
 
+setTextValue: function (api, name, value) {
+    api.setTextValue(name, value || '');
+},
+
 };

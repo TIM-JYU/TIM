@@ -5,6 +5,7 @@ import io
 import logging
 import signal
 import socketserver
+
 from languages import *
 import os
 import glob
@@ -1156,6 +1157,14 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             usercode = get_json_param(query.jso, "input", "usercode", None)
             if isinstance(usercode, str):
                 save["usercode"] = usercode
+
+            filesaveattribute = get_param(query, "filesaveattribute", None)
+            if filesaveattribute:
+                attrnames = filesaveattribute.split(',')
+                usercode = ""
+                for aname in attrnames:
+                    usercode += get_json_param(query.jso, "input", aname.strip(), "") + "\n"
+                s = usercode
 
             nosave = get_param(query, "nosave", None)
             nosave = get_json_param(query.jso, "input", "nosave", nosave)

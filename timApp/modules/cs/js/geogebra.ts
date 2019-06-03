@@ -2,7 +2,7 @@
 import * as t from "io-ts";
 import {IAnswer} from "tim/answer/IAnswer";
 import {ViewCtrl} from "tim/document/viewctrl";
-import {GenericPluginMarkup, Info, PluginBase, pluginBindings, withDefault} from "tim/plugin/util";
+import {GenericPluginMarkup, Info, nullable, PluginBase, pluginBindings, withDefault} from "tim/plugin/util";
 import {$http, $sce, $timeout} from "tim/util/ngimport";
 import {to} from "tim/util/utils";
 
@@ -101,9 +101,10 @@ class GeogebraController extends PluginBase<t.TypeOf<typeof GeogebraMarkup>,
         return this.english ? "Show task" : "Näytä tehtävä";
     }
 
-    public viewctrl!: ViewCtrl;
+    public viewctrl?: ViewCtrl;
     private span: string = "";
     private error: string = "";
+    private console: string = "";
     private userCode: string = "";
     private geogebraoutput: string = "";
     private geogebrainputfeedback: string = "";
@@ -154,15 +155,20 @@ class GeogebraController extends PluginBase<t.TypeOf<typeof GeogebraMarkup>,
         $timeout(0);
         let t = this.pluginMeta.getTaskId()!.split(".") || ["",""];
         let taskId = t[0] + "." + t[1];
-        let ab = this.viewctrl.getAnswerBrowser(taskId);
+        let ab = null;
+
+        let user_id = 1;
+        if ( this.viewctrl ) {
+            ab = this.viewctrl.getAnswerBrowser(taskId);
+            const selectedUser = this.viewctrl.selectedUser;
+            user_id = selectedUser.id;
+        }
         if (ab) ab.registerAnswerListener((a) => this.changeAnswer(a));
         let anr = 0;
         if ( ab ) {
             anr = ab.findSelectedAnswerIndex();
             if ( anr < 0 ) anr = 0;
         }
-        const selectedUser = this.viewctrl.selectedUser;
-        const user_id = selectedUser.id;
         // const html:string = this.attrs.srchtml;
         // const datasrc = btoa(html);
         let w = this.attrs.width || 800;
@@ -229,8 +235,10 @@ class GeogebraController extends PluginBase<t.TypeOf<typeof GeogebraMarkup>,
             input: data
         };
 
+        this.console = "";
+
         const r = await to($http<{
-            web: {geogebraResult: GeogebraResult, error?: string},
+            web: {geogebraResult: GeogebraResult, error?: string, console?: string},
         }>({method: "PUT", url: url, data: params, timeout: 20000},
         ));
         this.isRunning = false;
@@ -245,6 +253,10 @@ class GeogebraController extends PluginBase<t.TypeOf<typeof GeogebraMarkup>,
         }
         if (r.result.data.web.error) {
             this.error = r.result.data.web.error;
+            return;
+        }
+        if (r.result.data.web.console) {
+            this.console = r.result.data.web.console;
             return;
         }
         const geogebraResult = r.result.data.web.geogebraResult;
@@ -280,6 +292,9 @@ class GeogebraController extends PluginBase<t.TypeOf<typeof GeogebraMarkup>,
 const common = {
     bindings: pluginBindings,
     controller: GeogebraController,
+    require: {
+        viewctrl: "?^timView",
+    },
 };
 
 /*
@@ -289,9 +304,6 @@ const common = {
 
 geogebraApp.component("geogebraRunner", {
     ...common,
-    require: {
-        viewctrl: "^timView",
-    },
     template: `
 <div ng-cloak ng-class="::{'csRunDiv': $ctrl.attrs.borders}"  class="math que geogebra no-popup-menu" >
     <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
@@ -306,6 +318,9 @@ geogebraApp.component("geogebraRunner", {
         <button ng-if="!$ctrl.isOpen"  ng-click="$ctrl.runShowTask()"  ng-bind-html="$ctrl.showButton()"></button>
         <button ng-if="$ctrl.isOpen && !$ctrl.attrs.norun" ng-disabled="$ctrl.isRunning" title="(Ctrl-S)" ng-click="$ctrl.getData()"
                 ng-bind-html="::$ctrl.button"></button>
+        <span class="geogebra message"
+              ng-if="$ctrl.console"
+              ng-bind-html="$ctrl.console"></span>
     </p>
     <span class="csRunError"
           ng-if="$ctrl.error"
