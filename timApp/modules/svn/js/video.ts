@@ -166,9 +166,11 @@ class ShowFileController extends PluginBase<t.TypeOf<typeof ShowFileMarkup>,
     private width?: number;
     private height?: number;
     private vctrl?: ViewCtrl;
+    private iframeopts?: string;
 
     $onInit() {
         super.$onInit();
+        this.iframeopts = 'sandbox="allow-scripts allow-same-origin"';
         this.start = muunna(this.attrs.start);
         this.end = muunna(this.attrs.end);
         this.width = this.attrs.width;
@@ -295,7 +297,7 @@ class ShowFileController extends PluginBase<t.TypeOf<typeof ShowFileMarkup>,
         ${w}${h}
         frameborder="0"
         allowfullscreen
-        ${this.attrs.iframeopts || ""}>
+        ${this.iframeopts || ""}>
 </iframe>`;
         } else {
             params = "";
