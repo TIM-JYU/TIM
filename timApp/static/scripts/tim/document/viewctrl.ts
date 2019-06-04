@@ -520,6 +520,27 @@ export class ViewCtrl implements IController {
         return returnList;
     }
 
+    /**
+     * @returns {ITimComponent[]} List of all registered ITimComponents
+     */
+    public getAllTimComponents(): ITimComponent[] {
+        return Array.from(this.timComponents.values());
+    }
+
+    /**
+     * @returns {boolean} True if at least one registered ITimComponent was in unsaved state
+     */
+    public checkUnSavedTimComponents(): boolean {
+        let unsavedTimComponents = false;
+        for (const t of this.timComponents.values()) {
+            if (t.isUnSaved()) {
+                unsavedTimComponents = true;
+                break;
+            }
+        }
+        return unsavedTimComponents;
+    }
+
     isEmptyDocument() {
         return this.docVersion[0] === 0 && this.docVersion[1] === 0; // TODO can be empty otherwise too
     }
