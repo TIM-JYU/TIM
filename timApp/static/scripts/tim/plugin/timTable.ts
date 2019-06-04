@@ -49,15 +49,17 @@ export interface TimTable {
     editorButtonsBottom?: boolean;
     editorButtonsRight?: boolean;
     toolbarTemplates?: any;
-    hid: {edit?: boolean};
+    hid: {edit?: boolean, insertMenu?: boolean, editMenu?: boolean};
     hideSaveButton?: boolean;
     // hiddenRows?: IRow[];
     hiddenRows?: number[];
+    hiddenColumns?: number[];
     lockedCells?: string[];
     saveCallBack?: (rowi: number, coli: number, content: string) => void;
     maxWidth?: string; //Possibly obsolete if cell/column layout can be given in data.table.colums
     minWidth?: string;
     singleLine?: boolean;
+    //lockCellCount?: boolean;
 }
 
 export interface ITable { // extends ITableStyles
@@ -240,6 +242,7 @@ export class TimTableController extends DestroyScope implements IController {
     private task: boolean = false;
     private hideSaveButton?: boolean = false;
     private hiddenRows?: number[] = [];
+    //private lockCellCount: boolean = false;
     // private saveCallBack: () => void;
     private isRunning: boolean = false;
     public taskBorders: boolean = false;
@@ -343,6 +346,10 @@ export class TimTableController extends DestroyScope implements IController {
             if (this.data.task) {
                 this.task = true;
             }
+
+            // if(this.data.lockCellCount){
+            //     this.lockCellCount = this.data.lockCellCount;
+            // }
             if (this.data.addRowButtonText) {
                 this.addRowButtonText = " " + this.data.addRowButtonText;
             }
@@ -463,6 +470,7 @@ export class TimTableController extends DestroyScope implements IController {
     }
 
     public addRowEnabled() {
+        //return !this.task && this.editRight && this.isInEditMode() && !this.lockCellCount
         return !this.task && this.editRight && this.isInEditMode();
     }
 
@@ -1206,12 +1214,13 @@ export class TimTableController extends DestroyScope implements IController {
 
             let nextCellCoords = this.getNextCell(x, y, direction);
             /*
-            Iterate towards direction until next non-locked cell in a non-hidden row is found
+            Iterate towards direction until next non-locked cell in a non-hidden row or column is found
             or until iterator arrives at the same cell
              */
             while (nextCellCoords) {
                 if (nextCellCoords.row == y && nextCellCoords.col == x) { break; }
                 if (!(this.data.hiddenRows && this.data.hiddenRows.includes(nextCellCoords.row))
+                    && !(this.data.hiddenColumns && this.data.hiddenColumns.includes(nextCellCoords.col))
                 && !(this.data.lockedCells && this.data.lockedCells.includes(colnumToLetters(nextCellCoords.col) + (nextCellCoords.row + 1)))) { break; }
                 nextCellCoords = this.getNextCell(nextCellCoords.col, nextCellCoords.row, direction);
             }
@@ -2227,13 +2236,22 @@ export class TimTableController extends DestroyScope implements IController {
     }
 
     /**
-     * Returns true if given cell should be visible
+     * Returns true if given row should be visible
      * @param index row number
      */
     private showRow(index: number) {
         // TODO: Change to use proper type
         // return this.data.hiddenRows.includes(this.data.table.rows[index]);
         return (!this.data.hiddenRows || !this.data.hiddenRows.includes(index));
+    }
+
+    /**
+     * Returns true if given column should be visible
+     * @param index row number
+     */
+    private showColumn(index: number) {
+        // TODO: Change to use proper type
+        return (!this.data.hiddenColumns || !this.data.hiddenColumns.includes(index));
     }
 }
 
@@ -2266,6 +2284,7 @@ timApp.component("timTable", {
         <tr ng-repeat="r in $ctrl.cellDataMatrix" ng-init="rowi = $index"
             ng-style="$ctrl.stylingForRow(rowi)" ng-show="$ctrl.showRow(rowi)">
                 <td ng-class="{'activeCell': $ctrl.isActiveCell(rowi, coli)}"
+                 ng-show="$ctrl.showColumn(coli)"
                  ng-repeat="td in r" ng-init="coli = $index" ng-if="$ctrl.showCell(td)"
                  colspan="{{td.colspan}}" rowspan="{{td.rowspan}}"
                     ng-style="$ctrl.stylingForCell(rowi, coli)" ng-click="$ctrl.cellClicked(td, rowi, coli, $event)">

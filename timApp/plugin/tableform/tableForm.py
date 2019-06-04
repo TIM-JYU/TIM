@@ -57,6 +57,8 @@ class TableFormMarkupModel(GenericMarkupModel):
     minWidth: Union[str, Missing] = missing
     singleLine: Union[bool, Missing] = missing
     open: Union[bool, Missing] = missing
+    hiddenColumns: Union[List[int], Missing] = missing
+    hiddenRows: Union[List[int], Missing] = missing
     fields: Union[List[str], Missing] = missing
 
 
@@ -78,6 +80,8 @@ class TableFormMarkupSchema(GenericMarkupSchema):
     maxWidth = fields.Str()
     minWidth = fields.Str(allow_none=True)
     open = fields.Boolean(allow_none=True)
+    hiddenColumns = fields.List(fields.Number(allow_none=True))
+    hiddenRows = fields.List(fields.Number(allow_none=True))
     fields = fields.List(fields.Str()) #Keep this last - bad naming
 
     @post_load
@@ -131,17 +135,19 @@ class TableFormHtmlModel(GenericHtmlModel[TableFormInputModel, TableFormMarkupMo
             user = User.get_by_name(self.user_id)
             userfields = get_fields_and_users(self.markup.fields, groups, d, user)
             rows = {}
+            realnames= {}
             for f in userfields[0]:
                 rows[f['user'].name] = dict(f['fields'])
-                rows[f['user'].name]['realname'] = f['user'].real_name
+                realnames[f['user'].name] = f['user'].real_name
             r['rows'] = rows
+            r['realnamemap'] = realnames
             try:
                 r['fields'] = list(userfields[0][0]['fields'].keys())
             except IndexError:
                 r['fields'] = []
             r['aliases'] = userfields[1]
             r['contentMap'] = userfields[2]
-            #TODO else return "no groups/no fields"?
+            #TODO else return "no groups/no fields"
 
         return r
 

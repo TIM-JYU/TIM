@@ -29,7 +29,7 @@ export class TimTableEditorToolbarController extends DialogController<{params: I
         round: false,
     };
 
-    readonly DEFAULT_CELL_BGCOLOR = "yellow"; // "#EEEEEE";
+    readonly DEFAULT_CELL_BGCOLOR = "FFFF00"; // "yellow"; // "#EEEEEE";
 
     constructor(protected element: IRootElementService, protected scope: IScope) {
         super(element, scope);
@@ -42,6 +42,9 @@ export class TimTableEditorToolbarController extends DialogController<{params: I
         this.activeTable = this.resolve.params.activeTable;
         this.hid = this.activeTable.data.hid;
         this.draggable.setCloseFn(undefined); // Hides the close button
+        // if (this.activeTable.data.lockCellCount) {
+        //     this.lockCellCount = this.activeTable.data.lockCellCount;
+        // }
     }
 
     /**
@@ -55,6 +58,7 @@ export class TimTableEditorToolbarController extends DialogController<{params: I
     public activeTable?: TimTableController;
     private visible: boolean = true;
     private hid?: any;
+    //private lockCellCount: boolean = false;
 
     private previousBackgroundColor: string = this.DEFAULT_CELL_BGCOLOR;
     private cellBackgroundColor: string = this.DEFAULT_CELL_BGCOLOR;
@@ -263,7 +267,6 @@ registerDialogComponent(TimTableEditorToolbarController,
                 </color-picker>
                 <button class="timButton btn-xs"
                         ng-hide="$ctrl.hid.colorPicker"
-                        ng-style="$ctrl.getStyle()"
                         ng-click="$ctrl.applyBackgroundColor()">Apply color
                 </button>
                 <button class="timButton btn-xs"

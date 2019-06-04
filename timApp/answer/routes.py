@@ -155,7 +155,7 @@ def get_fields_and_users(u_fields: List[str], groups: List[UserGroup], d: DocInf
                     if len(p) > 1:
                         plug = find_plugin_from_document(doc_map[task.doc_id], task, get_current_user_object())
                         content_field = plug.get_content_field_name()
-                        value = p[content_field]
+                        value = p.get(content_field)
                     else:
                         values_p = list(p.values())
                         value = values_p[0]
