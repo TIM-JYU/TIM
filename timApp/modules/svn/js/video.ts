@@ -170,7 +170,10 @@ class ShowFileController extends PluginBase<t.TypeOf<typeof ShowFileMarkup>,
 
     $onInit() {
         super.$onInit();
-        this.iframeopts = 'sandbox="allow-scripts allow-same-origin"';
+        let n = this.attrs.file || "";
+        this.iframeopts =  'sandbox="allow-scripts allow-same-origin"';
+        if ( n.indexOf('.pdf') == n.length-4 ) this.iframeopts = "";  // for chrome :-( Sanddboxed viewer does not work!
+
         this.start = muunna(this.attrs.start);
         this.end = muunna(this.attrs.end);
         this.width = this.attrs.width;
