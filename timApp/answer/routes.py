@@ -148,8 +148,8 @@ def get_fields_and_users(u_fields: List[str], groups: List[UserGroup], d: DocInf
             else:
                 json_str = a.content
                 p = json.loads(json_str)
-                if(task.extended_or_doc_task in content_map):
-                    #value = p[content_map[task.extended_or_doc_task]]
+                if task.extended_or_doc_task in content_map:
+                    # value = p[content_map[task.extended_or_doc_task]]
                     value = p.get(content_map[task.extended_or_doc_task])
                 else:
                     if len(p) > 1:

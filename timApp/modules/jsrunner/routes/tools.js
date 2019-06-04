@@ -112,6 +112,7 @@ class Tools {
     }
 
     getGrade(points) {
+        if (isNaN(points)) throw new Error("Points must be number in getGrade method");
         if (!this.markup.gradingScale) this.error = "Grading scale has not been set";
         const scale = this.markup.gradingScale;
         const values = Object.entries(scale);
@@ -126,16 +127,15 @@ class Tools {
         return grade;
     }
 
-    saveGrade(gradeVal, points) {
+    saveGrade(gradeVal, points=0) {
         let d = this.markup.gradeField || "grade";
         let fn = this.normalizeAndSet(d);
         this.result[fn] = gradeVal;
-        if (arguments.length === 2) {
-            let c = this.markup.creditField || "credit";
-            let fnc = this.normalizeAndSet(c);
-            this.result[fnc] = points;
-        }
-
+        let c = this.markup.creditField || "credit";
+        let fnc = this.normalizeAndSet(c);
+        if (this.markup.defaultPoints) points = this.markup.defaultPoints;
+        if (arguments.length === 2) points = arguments[1];
+        this.result[fnc] = points;
     }
 
     defineTime(s) {
