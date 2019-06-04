@@ -91,7 +91,6 @@ def points_to_float(points: Union[str, float]):
 
 
 def get_fields_and_users(u_fields: List[str], groups: List[UserGroup], d: DocInfo, current_user: User):
-    print(u_fields)
     users = set()
     for group in groups:
         g = group.users.all()
@@ -99,10 +98,9 @@ def get_fields_and_users(u_fields: List[str], groups: List[UserGroup], d: DocInf
             users.add(u)
 
     task_ids = []
-    alias_map = {}  # {'13.oikeanimi': 'alias'}
+    alias_map = {}
     content_map = {}
-    print(alias_map)
-    jsrunner_alias_map = {}  # jsrunnerissa tarvitsee {'alias': '13.oikeanimi'}
+    jsrunner_alias_map = {}
     doc_map = {}
     for field in u_fields:
         field_content = field.split("|")
@@ -117,6 +115,8 @@ def get_fields_and_users(u_fields: List[str], groups: List[UserGroup], d: DocInf
         if len(field_content) == 2:
             content_map[task_id.extended_or_doc_task] = field_content[1].strip()
         if len(field_alias) == 2:
+            if field_alias[1].strip() in jsrunner_alias_map:
+                abort(403, f'Duplicate alias {field_alias[1].strip()} in fields attribute')
             alias_map[task_id.extended_or_doc_task] = field_alias[1].strip()
             jsrunner_alias_map[field_alias[1].strip()] = task_id.extended_or_doc_task
         dib = get_doc_or_abort(task_id.doc_id)
@@ -164,7 +164,6 @@ def get_fields_and_users(u_fields: List[str], groups: List[UserGroup], d: DocInf
             else:
                 user_tasks[task.extended_or_doc_task] = value
         res.append({'user': user, 'fields': user_tasks})
-    print(res)
     return res, jsrunner_alias_map, content_map
 
 
@@ -297,7 +296,7 @@ def post_answer(plugintype: str, task_id_ext: str):
             abort(403, f'Missing group in jsrunner')
 
         answerdata['data'], answerdata['aliases'], trash = get_fields_and_users(plugin.values['fields'], g, d,
-                                                                         get_current_user_object())
+                                                                                get_current_user_object())
 
     answer_call_data = {'markup': plugin.values,
                         'state': state,
@@ -318,91 +317,8 @@ def post_answer(plugintype: str, task_id_ext: str):
         return json_response({'error': 'The key "web" is missing in plugin response.'}, 400)
     result = {'web': jsonresp['web']}
 
-    def handle_jsrunner_response():
-        save_obj = jsonresp['save']
-        print(save_obj)
-        tasks = set()
-        # content_map = {}
-        doc_map: Dict[int, DocInfo] = {}
-        for item in save_obj:
-            task_u = item['fields']
-            for key in task_u.keys():
-                key_content = key.split("|")
-                # #TODO: Parse content tässä
-                # if len(key_content) == 2:
-                #     content_map[key_content[0]] = key_content[1].strip()
-                tasks.add(key_content[0])
-                id_num = TaskId.parse(key_content[0], False, False)
-                if id_num.doc_id not in doc_map:
-                    doc_map[id_num.doc_id] = get_doc_or_abort(id_num.doc_id)
-        task_content = {}
-        for task in tasks:
-            t_id = TaskId.parse(task, False, False)
-            dib = doc_map[t_id.doc_id]
-            verify_teacher_access(dib)
-            if t_id.task_name == "grade" or t_id.task_name == "credit":
-                task_content[task] = 'c'
-                continue
-            try:
-                plug = find_plugin_from_document(dib.document, t_id, get_current_user_object())
-                content_field = plug.get_content_field_name()
-                # key_content = key.split("|")
-                # #TODO: Parse content tässä
-                # if len(key_content) == 2:
-                #     content_map[key_content[0]] = key_content[1].strip()
-                # TODO: check plug content type ^
-                task_content[task] = content_field
-            except PluginException as e:
-                errormsg = str(t_id.doc_id) + ": " + str(e) + " \n"
-                try:
-                    result['web']['error'] = result['web']['error'] + errormsg
-                except KeyError:
-                    result['web'] = {"error": errormsg}
-        print(task_content)
-        for user in save_obj:
-            u_id = user['user']
-            u = User.get_by_id(u_id)
-            user_fields = user['fields']
-            for key, value in user_fields.items():
-                try:
-                    content_list = key.split("|")
-                    if len(content_list) == 2:
-                        content_type = content_list[1].strip()
-                    else:
-                        content_type = task_content[content_list[0]]
-                    c = {content_type: value}
-                    task_id = TaskId.parse(content_list[0], False, False)
-                    an: Answer = get_latest_answers_query(task_id, [u]).first()
-                    content = json.dumps(c)
-                    if an and an.content == content: #TODO check if redundant
-                        pass
-                    elif an:
-                        an_content = json.loads(an.content)
-                        if an_content.get(content_type) != value:
-                            an_content[content_type] = value
-                            an_content = json.dumps(an_content)
-                            a_result = Answer(
-                                content=an_content,
-                                task_id=task_id.doc_task,
-                                users=[u],
-                                valid=True,
-                                last_points_modifier=get_current_user_group()
-                            )
-                            db.session.add(a_result)
-                    else:
-                        a_result = Answer(
-                            content=content,
-                            task_id=task_id.doc_task,
-                            users=[u],
-                            valid=True,
-                            last_points_modifier=get_current_user_group()
-                        )
-                        db.session.add(a_result)
-                except KeyError:
-                    pass
-
     if plugin.type == 'jsrunner' or plugin.type == 'tableForm':
-        handle_jsrunner_response()
+        handle_jsrunner_response(jsonresp, result)
         db.session.commit()
         return json_response(result)
 
@@ -490,6 +406,90 @@ def post_answer(plugintype: str, task_id_ext: str):
 
     db.session.commit()
     return json_response(result)
+
+
+def handle_jsrunner_response(jsonresp, result):
+    save_obj = jsonresp['save']
+    print(save_obj)
+    tasks = set()
+    # content_map = {}
+    doc_map: Dict[int, DocInfo] = {}
+    for item in save_obj:
+        task_u = item['fields']
+        for key in task_u.keys():
+            key_content = key.split("|")
+            # #TODO: Parse content tässä
+            # if len(key_content) == 2:
+            #     content_map[key_content[0]] = key_content[1].strip()
+            tasks.add(key_content[0])
+            id_num = TaskId.parse(key_content[0], False, False)
+            if id_num.doc_id not in doc_map:
+                doc_map[id_num.doc_id] = get_doc_or_abort(id_num.doc_id)
+    task_content = {}
+    for task in tasks:
+        t_id = TaskId.parse(task, False, False)
+        dib = doc_map[t_id.doc_id]
+        verify_teacher_access(dib)
+        if t_id.task_name == "grade" or t_id.task_name == "credit":
+            task_content[task] = 'c'
+            continue
+        try:
+            plug = find_plugin_from_document(dib.document, t_id, get_current_user_object())
+            content_field = plug.get_content_field_name()
+            # key_content = key.split("|")
+            # #TODO: Parse content tässä
+            # if len(key_content) == 2:
+            #     content_map[key_content[0]] = key_content[1].strip()
+            # TODO: check plug content type ^
+            task_content[task] = content_field
+        except PluginException as e:
+            errormsg = str(t_id.doc_id) + ": " + str(e) + " \n"
+            try:
+                result['web']['error'] = result['web']['error'] + errormsg
+            except KeyError:
+                result['web'] = {"error": errormsg}
+    print(task_content)
+    for user in save_obj:
+        u_id = user['user']
+        u = User.get_by_id(u_id)
+        user_fields = user['fields']
+        for key, value in user_fields.items():
+            try:
+                content_list = key.split("|")
+                if len(content_list) == 2:
+                    content_type = content_list[1].strip()
+                else:
+                    content_type = task_content[content_list[0]]
+                c = {content_type: value}
+                task_id = TaskId.parse(content_list[0], False, False)
+                an: Answer = get_latest_answers_query(task_id, [u]).first()
+                content = json.dumps(c)
+                if an and an.content == content:  # TODO check if redundant
+                    pass
+                elif an:
+                    an_content = json.loads(an.content)
+                    if an_content.get(content_type) != value:
+                        an_content[content_type] = value
+                        an_content = json.dumps(an_content)
+                        a_result = Answer(
+                            content=an_content,
+                            task_id=task_id.doc_task,
+                            users=[u],
+                            valid=True,
+                            last_points_modifier=get_current_user_group()
+                        )
+                        db.session.add(a_result)
+                else:
+                    a_result = Answer(
+                        content=content,
+                        task_id=task_id.doc_task,
+                        users=[u],
+                        valid=True,
+                        last_points_modifier=get_current_user_group()
+                    )
+                    db.session.add(a_result)
+            except KeyError:
+                pass
 
 
 def get_hidden_name(user_id):
