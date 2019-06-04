@@ -200,6 +200,9 @@ class Language:
     def run(self, result, sourcelines, points_rule):
         return 0, "", "", ""
 
+    def save(self, result): # when used without run, this can change result if needed
+        return
+
     def convert(self, sourcelines):
         return 0, sourcelines, "", ""
 
@@ -300,9 +303,6 @@ class CS(Language):
 
     def run(self, result, sourcelines, points_rule):
         return self.runself(["mono", "-O=all", self.pure_exename])
-
-    def save(self, result):
-        return
 
 class Jypeli(CS):
     def __init__(self, query, sourcecode):
