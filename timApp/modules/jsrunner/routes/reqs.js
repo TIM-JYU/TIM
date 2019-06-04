@@ -13,7 +13,7 @@ program: |!!
 
 !!
 ${backTicks} `, `
-${backTicks}{#runner1 plugin="pali"}
+${backTicks}{#runner1 plugin="jsrunner"}
 groups:
  -
 fields:
