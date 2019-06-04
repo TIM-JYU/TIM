@@ -55,6 +55,8 @@ export class StartCtrl implements IController {
                     this.language = this.storage.language;
                 } else {
                     this.language = FRONT_PAGE_DEFAULT_LANGUAGE;
+                    // Save to storage here so top bar login is the same language.
+                    this.storage.language = this.language;
                 }
                 break;
         }
