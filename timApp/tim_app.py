@@ -146,6 +146,12 @@ setup_logging(app)
 default_secret = app.config['SECRET_KEY']
 
 # Compress(app)
+
+# Disabling object expiration on commit makes testing easier
+# because sometimes objects would expire after calling a route.
+if app.config['TESTING']:
+    db.session = db.create_scoped_session({'expire_on_commit': False})
+
 db.init_app(app)
 db.app = app
 migrate = Migrate(app, db)

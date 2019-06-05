@@ -25,7 +25,7 @@ from timApp.auth.login import login_page, logout
 from timApp.auth.sessioninfo import get_current_user_object, get_other_users_as_list, get_current_user_id, \
     logged_in, current_user_in_lecture
 from timApp.bookmark.bookmarks import Bookmarks
-from timApp.bookmark.routes import bookmarks
+from timApp.bookmark.routes import bookmarks, add_to_course_bookmark
 from timApp.document.course.routes import course_blueprint
 from timApp.document.create_item import get_templates_for_folder
 from timApp.document.docentry import DocEntry
@@ -37,9 +37,11 @@ from timApp.document.routes import doc_bp
 from timApp.document.translation.routes import tr_bp
 from timApp.folder.folder import Folder
 from timApp.gamification.generateMap import generateMap
+from timApp.item.block import Block
 from timApp.item.manage import manage_page
 from timApp.item.routes import view_page
 from timApp.item.routes_tags import tags_blueprint
+from timApp.item.tag import Tag
 from timApp.lecture.routes import lecture_routes
 from timApp.markdown.dumboclient import DumboHTMLException
 from timApp.note.routes import notes
@@ -55,9 +57,10 @@ from timApp.tim_app import app, default_secret
 from timApp.timdb.exceptions import ItemAlreadyExistsException
 from timApp.timdb.sqa import db
 from timApp.upload.upload import upload
-from timApp.user.groups import groups
+from timApp.user.groups import groups, is_course
 from timApp.user.settings.settings import settings_page
 from timApp.user.user import User
+from timApp.user.usergroup import UserGroup
 from timApp.user.userutils import NoSuchUserException
 from timApp.util.flask.ReverseProxied import ReverseProxied
 from timApp.util.flask.cache import cache
@@ -266,11 +269,31 @@ def get_server_time():
     return json_response({'t1': t1, 't2': t2, 't3': int(time.time() * 1000)})
 
 
+def update_user_course_bookmarks():
+    u = get_current_user_object()
+    for gr in u.groups:  # type: UserGroup
+        if gr.is_sisu and gr.name.endswith('-students'):
+            sisuid = gr.name.replace('-students', '')
+            docs = DocEntry.query.join(Block).join(Tag).filter(Tag.name == sisuid).with_entities(DocEntry).all()
+            if not docs:
+                continue
+            if len(docs) > 1:
+                continue
+            d: DocEntry = docs[0]
+            if not is_course(d):
+                continue
+            if d.document.get_settings().sisu_require_manual_enroll():
+                continue
+            b = Bookmarks(u)
+            add_to_course_bookmark(b, d)
+
+
 @app.route("/en")
 @app.route("/fi")
 @app.route("/")
 def start_page():
     in_lecture = current_user_in_lecture()
+    update_user_course_bookmarks()
     return render_template('start.html',
                            in_lecture=in_lecture)
 

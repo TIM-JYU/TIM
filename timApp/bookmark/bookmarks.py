@@ -38,7 +38,7 @@ class Bookmarks:
         try:
             group = filter(lambda x: x.get(groupname) is not None, bookmark_data).__next__()
         except StopIteration:
-            return
+            return self
         self._delete_item_from_group(group.get(groupname), name)
         return self
 
@@ -66,12 +66,10 @@ class Bookmarks:
             if bookmark is not None:
                 i[name] = link
                 item_found = True
-        if not item_found and not move_to_top:
-            groupitems.append({name: link})
+        if not item_found:
+            groupitems.insert(0, {name: link})
         elif move_to_top:
             self._delete_item_from_group(groupitems, name)
-            groupitems.insert(0, {name: link})
-        else:
             groupitems.insert(0, {name: link})
         if limit is not None:
             groupitems[:] = groupitems[:limit]
@@ -81,7 +79,7 @@ class Bookmarks:
         for g in bookmark_data:
             items = g.get(groupname)
             if items is not None:
-                return
+                return self
         bookmark_data.append({groupname: []})
         return self
 

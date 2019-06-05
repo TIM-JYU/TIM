@@ -2,6 +2,7 @@ import {IController} from "angular";
 import moment from "moment";
 import {timApp} from "../app";
 import {IBookmarkGroup} from "../bookmark/bookmarks";
+import {IDocSettings} from "../document/IDocSettings";
 import {ViewCtrl} from "../document/viewctrl";
 import {DocumentOrFolder, isRootFolder, ITag, ITranslation, TagType} from "../item/IItem";
 import {showMessageDialog} from "../ui/dialog";
@@ -45,6 +46,7 @@ class HeaderController implements IController {
     private itemLinks!: IItemLink[];
     private translations: ITranslation[] = $window.translations;
     private crumbs = $window.breadcrumbs;
+    private docSettings?: IDocSettings = $window.docSettings;
 
     $onInit() {
         this.route = document.location.pathname.split("/")[1];
@@ -70,12 +72,19 @@ class HeaderController implements IController {
         return this.route === i.route;
     }
 
+    getMainCourseDocPath() {
+        if (this.docSettings && this.docSettings.course_main) {
+            return this.docSettings.course_main;
+        }
+        return this.item.path;
+    }
+
     /**
      * Checks if the document has been tagged as a course and the tag hasn't expired.
      */
     private async checkIfTaggedAsCourse() {
         this.taggedAsCourse = false;
-        const r = await to($http.get<ITag[]>(`/tags/getTags/${this.item.path}`));
+        const r = await to($http.get<ITag[]>(`/tags/getTags/${this.getMainCourseDocPath()}`));
         if (r.ok) {
             for (const tag of r.result.data) {
                 if (isCourse(tag)) {
@@ -102,8 +111,8 @@ class HeaderController implements IController {
         if (!this.viewctrl.bookmarksCtrl) {
             throw new Error("Bookmarkscontroller not registered");
         }
-        const bookmark = {group: courseFolder, name: this.item.title, link: "/view/" + this.item.path};
-        await $http.post<IBookmarkGroup[]>("/bookmarks/add", bookmark);
+        const bookmark = {path: `/view/${this.getMainCourseDocPath()}`};
+        await $http.post<IBookmarkGroup[]>("/bookmarks/addCourse", bookmark);
         await this.viewctrl.bookmarksCtrl.refresh();
         this.checkIfBookmarked(); // Instead of directly changing boolean this checks if it really was added.
     }
@@ -121,13 +130,17 @@ class HeaderController implements IController {
         for (const folder of this.bookmarks) {
             if (folder.name === courseFolder) {
                 for (const bookmark of folder.items) {
-                    if (bookmark.link === "/view/" + this.item.path) {
+                    if (bookmark.link === `/view/${this.getMainCourseDocPath()}`) {
                         this.bookmarked = true;
                         return;
                     }
                 }
             }
         }
+    }
+
+    showAddToMyCourses() {
+        return this.taggedAsCourse && !this.bookmarked;
     }
 }
 
@@ -140,7 +153,7 @@ timApp.component("timHeader", {
 <div ng-if="::!$ctrl.hideLinks && $ctrl.item">
     <div class="pull-right">
         <button ng-cloak
-                ng-if="$ctrl.taggedAsCourse && !$ctrl.bookmarked"
+                ng-if="::$ctrl.showAddToMyCourses()"
                 ng-click="$ctrl.addToBookmarkFolder()"
                 title="Add this page to 'My courses' bookmark folder"
                 class="timButton label">

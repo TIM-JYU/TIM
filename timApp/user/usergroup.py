@@ -87,6 +87,10 @@ class UserGroup(db.Model, TimeStampMixin, SCIMEntity):
     def pretty_full_name(self):
         return self.name
 
+    @property
+    def is_sisu(self):
+        return self.name.startswith('sisu:')
+
     @staticmethod
     def create(name: str) -> 'UserGroup':
         """Creates a new user group.

@@ -87,14 +87,12 @@ class CommentTest(NotifyTestBase):
         par = d.document.get_paragraphs()[0]
         self.post_comment(par, True, 'hi')
         self.login_test2()
-        db.session.add(d)
         self.update_notify_settings(
             d,
             {'email_comment_add': True,
              'email_comment_modify': True,
              'email_doc_modify': True}
         )
-        db.session.add(d)
         process_pending_notifications()
         self.login_test1()
         self.post_comment(par, True, 'hello')
@@ -103,8 +101,6 @@ class CommentTest(NotifyTestBase):
         self.login_test3()
         self.post_comment(par, True, 'good morning')
         self.post_par(d.document, 'edited', par.get_id())  # test also mixing comments and doc modifications
-        db.session.expunge_all()
-        db.session.add(d)
         self.assertEqual(1, len(sent_mails_in_testing))
         self.assertEqual(
             {'mail_from': 'tim@jyu.fi',

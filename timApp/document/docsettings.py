@@ -47,6 +47,7 @@ class DocSettings:
     memo_minutes_key = 'memo_minutes'
     comments_key = 'comments'
     course_group_key = 'course_group'
+    sisu_require_manual_enroll_key = 'sisu_require_manual_enroll'
 
     @classmethod
     def from_paragraph(cls, par: DocParagraph):
@@ -263,6 +264,9 @@ class DocSettings:
 
     def comments(self):
         return self.__dict.get(self.comments_key)
+
+    def sisu_require_manual_enroll(self):
+        return self.__dict.get(self.sisu_require_manual_enroll_key, False)
 
 
 def resolve_settings_for_pars(pars: Iterable[DocParagraph]) -> YamlBlock:

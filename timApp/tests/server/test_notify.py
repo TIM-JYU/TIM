@@ -4,7 +4,6 @@ from timApp.document.docinfo import DocInfo
 from timApp.document.randutils import random_id
 from timApp.notification.notify import sent_mails_in_testing, process_pending_notifications
 from timApp.tests.server.timroutetest import TimRouteTest
-from timApp.document.docentry import DocEntry
 from timApp.timdb.sqa import db
 
 
@@ -19,14 +18,12 @@ class NotifyTestBase(TimRouteTest):
     def prepare_doc(self, add_new_par=True) -> Tuple[DocInfo, str, str]:
         self.login_test1()
         d = self.create_doc()
-        doc_id = d.id
         title = d.title
         url = d.url
         self.test_user_2.grant_access(d.id, 'view')
         self.new_par(d.document, 'test')
         self.assertEqual([], sent_mails_in_testing)
         self.login_test2()
-        d = DocEntry.find_by_id(doc_id)  # Avoids DetachedInstanceError
 
         # testuser 2 will get notification from both additions
         # because pending notifications have not yet been processed
@@ -180,7 +177,6 @@ class NotifyFolderTest(NotifyTestBase):
         t1_f = self.current_user.get_personal_folder()
         self.test_user_2.grant_access(t1_f.id, 'view')
         self.login_test2()
-        db.session.add(t1_f)
         self.update_notify_settings(t1_f, {'email_comment_add': True, 'email_comment_modify': False,
                                            'email_doc_modify': True})
         r = self.get('/notify/all')
@@ -196,7 +192,6 @@ class NotifyFolderTest(NotifyTestBase):
         self.assertEqual(1, len(sent_mails_in_testing))
 
         self.login_test2()
-        db.session.add(d)
         self.update_notify_settings(d, {'email_comment_add': True, 'email_comment_modify': False,
                                         'email_doc_modify': True})
 

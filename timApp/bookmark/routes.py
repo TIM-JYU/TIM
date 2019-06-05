@@ -1,8 +1,11 @@
-from flask import Blueprint
+from flask import Blueprint, abort
 from flask import current_app
 from flask import g
 
 from timApp.auth.accesshelper import verify_logged_in, get_doc_or_abort
+from timApp.document.docentry import DocEntry
+from timApp.document.docinfo import DocInfo
+from timApp.user.groups import is_course
 from timApp.util.flask.requesthelper import verify_json_params
 from timApp.util.flask.responsehelper import json_response
 from timApp.auth.sessioninfo import get_current_user_object
@@ -25,6 +28,22 @@ def add_bookmark():
     groupname, item_name, item_path = verify_json_params('group', 'name', 'link')
     g.bookmarks.add_bookmark(groupname, item_name, item_path).save_bookmarks()
     return get_bookmarks()
+
+
+@bookmarks.route('/addCourse', methods=['POST'])
+def add_course_bookmark():
+    path, = verify_json_params('path')
+    d = DocEntry.find_by_path(path)
+    if not d:
+        abort(404, 'Course not found')
+    if not is_course(d):
+        abort(400, 'Document is not a course')
+    add_to_course_bookmark(g.bookmarks, d)
+    return get_bookmarks()
+
+
+def add_to_course_bookmark(b: Bookmarks, d: DocInfo):
+    b.add_bookmark('My courses', d.title, d.path, move_to_top=False).save_bookmarks()
 
 
 @bookmarks.route('/edit', methods=['POST'])
