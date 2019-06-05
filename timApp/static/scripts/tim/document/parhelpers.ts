@@ -240,16 +240,35 @@ export function canSeeSource(item: IItem, par: Paragraph) {
 export const EDITOR_CLASS = "editorArea";
 export const EDITOR_CLASS_DOT = "." + EDITOR_CLASS;
 
+/**
+ * Save currently viewed paragraph hash to browser history to make the browser
+ * come back there when returning to the document.
+ */
 export function saveCurrentScreenPar() {
-    // Save currently viewed paragraph hash to browser history to make the browser
-    // come back there when returning to the document.
     // noinspection CssInvalidPseudoSelector
     const parId = getParId($(".par:not('.preamble'):onScreen").first());
     if (parId) {
         // Don't replace if the hash is going to stay the same.
-        if (location.hash !== `#${parId}`) {
-            const url = `${location.protocol}//${location.host}${location.pathname}${location.search}#${parId}`;
+        const hash = getParHash(parId);
+        if (location.hash !== hash) {
+            const url = `${location.protocol}//${location.host}${location.pathname}${location.search}${hash}`;
             window.history.replaceState(undefined, document.title, url);
         }
     }
+}
+
+/**
+ * Get paragraph header hash if available, otherwise use the id as hash.
+ *
+ * @param parId Paragraph's id.
+ */
+export function getParHash(parId: string) {
+    const d = document.getElementById(parId);
+    if (d) {
+        const headerlink = d.getElementsByClassName("headerlink")[0];
+        if (headerlink) {
+            return headerlink.getAttribute("href");
+        }
+    }
+    return `#${parId}`;
 }
