@@ -110,7 +110,7 @@ setState: function(api, geostate) {
     }
     let commands = geostate['commands'];
     if ( commands ) {
-        labels = api.evalCommandGetLabels(commands);
+        let labels = api.evalCommandGetLabels(commands);
     }
     let objxml = geostate['objxml'];
     if ( objxml ) {
@@ -191,5 +191,49 @@ setXmlProperty: function (api, obj, prop) {
 setTextValue: function (api, name, value) {
     api.setTextValue(name, value || '');
 },
+
+getPureValue: function(api, objnames) {
+    let names = timgeo.makeArray(objnames);
+    let vals = "";
+    for (let i=0; i < names.length; i++) {
+       let n = names[i].trim();
+       if ( !n ) continue;
+       let s = ggbApplet.getValueString(n);
+       vals += "\n" + s.replace(/[^.,\-0-9]/g, '');
+    }
+    return vals.trim();
+},
+
+getNumberValue: function(api, objnames) {
+    let names = timgeo.makeArray(objnames);
+    let vals = "";
+    for (let i=0; i < names.length; i++) {
+       let n = names[i].trim();
+       if ( !n ) continue;
+       let s = ggbApplet.getValue(n);
+       vals += "\n" + s;
+    }
+    return vals.trim();
+},
+
+deleteObject: function(api, objnames) {
+    let names = timgeo.makeArray(objnames);
+    let vals = "";
+    for (let i=0; i < names.length; i++) {
+       let n = names[i].trim();
+       if ( !n ) continue;
+       let s = ggbApplet.deleteObject(n);
+    }
+},
+
+deleteAllObjects: function(api) {
+    timgeo.deleteObject(api, ggbApplet.getAllObjectNames());
+},
+
+removeLines: function(s, remove) {
+    let re = new RegExp("^.*" + remove + '.*\n?', "gm");
+    return s.replace(re, '');
+},
+
 
 };

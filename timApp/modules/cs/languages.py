@@ -1194,7 +1194,10 @@ Eval:
     Get obj:
     <a href="javascript:;" onclick="setArea(timgeo.getObjXML(ggbApplet,objName())); setHelp('timgeo.getObjXML(ggbApplet,\\''+objName()+'\\')')">XML</a>
     <a href="javascript:;" onclick="setArea(timgeo.getObjCommand(ggbApplet,objName())); setHelp('timgeo.getObjCommand(ggbApplet,\\''+objName()+'\\')')">Command</a>
-    <a href="javascript:;" onclick="setArea(timgeo.getObjValue(ggbApplet,objName())); setHelp('timgeo.getObjValue(ggbApplet,\\''+objName()+'\\')')">Value</a>
+    Value:
+    <a href="javascript:;" onclick="setArea(timgeo.getNumberValue(ggbApplet,objName())); setHelp('timgeo.getNumberValue(ggbApplet,\\''+objName()+'\\')')">Number</a>
+    <a href="javascript:;" onclick="setArea(timgeo.getObjValue(ggbApplet,objName())); setHelp('timgeo.getObjValue(ggbApplet,\\''+objName()+'\\')')">String</a>
+    <a href="javascript:;" onclick="setArea(timgeo.getPureValue(ggbApplet,objName())); setHelp('timgeo.getPureValue(ggbApplet,\\''+objName()+'\\')')">Pure</a>
   </li>
 </ul>
   JS: <input id="helpText" title="Javascript command" size="70"/>
@@ -1281,14 +1284,14 @@ class Geogebra(Language):
 
     def run(self, result, sourcelines, points_rule):
         self.save(result)
-        return 0, "Geogebra run", "", ""
+        return 0, "Geogebra saved", "", ""
 
     def save(self, result):
         data = dict(self.query.jso["input"])
         if 'type' in data:
             del data['type']
         result["save"] = data
-        return 0, "Geogebra run", "", ""
+        return 0, "Geogebra saved", "", ""
 
     def iframehtml(self, result, sourcelines, points_rule):
         ma = self.query.jso['markup']
