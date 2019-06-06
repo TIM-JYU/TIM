@@ -1,7 +1,7 @@
 from typing import List
 
 from timApp.user.special_group_names import ANONYMOUS_GROUPNAME, LARGE_GROUPS, KORPPI_GROUPNAME, LOGGED_IN_GROUPNAME, \
-    ADMIN_GROUPNAME, GROUPADMIN_GROUPNAME
+    ADMIN_GROUPNAME, GROUPADMIN_GROUPNAME, TEACHERS_GROUPNAME
 from timApp.timdb.sqa import db
 from timApp.user.usergroupdoc import UserGroupDoc
 from timApp.user.usergroupmember import UserGroupMember
@@ -92,6 +92,10 @@ class UserGroup(db.Model):
     @staticmethod
     def get_korppi_group() -> 'UserGroup':
         return UserGroup.query.filter_by(name=KORPPI_GROUPNAME).one()
+
+    @staticmethod
+    def get_teachers_group() -> 'UserGroup':
+        return UserGroup.query.filter_by(name=TEACHERS_GROUPNAME).one()
 
     @staticmethod
     def get_logged_in_group() -> 'UserGroup':

@@ -3,8 +3,9 @@ import re
 from copy import deepcopy
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Tuple, Optional, Union, Iterable, Dict, NamedTuple, Generator, List, Match
+from typing import Tuple, Optional, Union, Iterable, Dict, NamedTuple, Generator, Match
 
+import attr
 import yaml
 from flask import render_template_string
 
@@ -98,6 +99,18 @@ def get_num_value(values, key, default=None):
     return value
 
 
+@attr.s(auto_attribs=True)
+class PluginType:
+    type: str
+
+    def get_content_field_name(self):
+        return CONTENT_FIELD_NAME_MAP.get(self.type, 'content')
+
+    def can_give_task(self):
+        plugin_class = timApp.plugin.containerLink.get_plugin(self.type)
+        return plugin_class.get('canGiveTask', False)
+
+
 class Plugin:
     deadline_key = 'deadline'
     starttime_key = 'starttime'
@@ -111,7 +124,7 @@ class Plugin:
                  par: Optional[DocParagraph] = None):
         self.answer: Optional[Answer] = None
         self.answer_count = None
-        self.options: PluginRenderOptions = None
+        self.options: Optional[PluginRenderOptions] = None
         self.task_id = task_id
         if task_id and (task_id.doc_id == par.doc.doc_id or not task_id.doc_id):
             # self.task_id = TaskId.parse(task_id, require_doc_id=False)
@@ -123,6 +136,7 @@ class Plugin:
         assert isinstance(values, dict)
         self.values = values
         self.type = plugin_type
+        self.ptype = PluginType(plugin_type)
         self.par = par
         self.points_rule_cache = None  # cache for points rule
         self.output = None
@@ -260,7 +274,7 @@ class Plugin:
         if self.answer is not None:
             if self.task_id.is_points_ref:
                 p = f'{self.answer.points:g}' if self.answer.points is not None else ''
-                state = {self.get_content_field_name(): p}
+                state = {self.ptype.get_content_field_name(): p}
             else:
                 state = try_load_json(self.answer.content)
             # if isinstance(state, dict) and options.user is not None:
@@ -292,9 +306,6 @@ class Plugin:
                 "review": options.review,
                 }
 
-    def get_content_field_name(self):
-        return CONTENT_FIELD_NAME_MAP.get(self.type, 'content')
-
     def is_answer_valid(self, old_answers, tim_info):
         """Determines whether the currently posted answer should be considered valid.
 
@@ -313,10 +324,6 @@ class Plugin:
         if tim_info.get('notValid', None):
             return False, 'Answer is not valid'
         return True, 'ok'
-
-    def can_give_task(self):
-        plugin_class = timApp.plugin.containerLink.get_plugin(self.type)
-        return plugin_class.get('canGiveTask', False)
 
     def is_cached(self):
         cached = self.values.get('cache', None)
@@ -481,7 +488,7 @@ def find_inline_plugins(block: DocParagraph, macroinfo: MacroInfo) -> Generator[
 
     # "}" not allowed in inlineplugins for now
     # TODO make task id optional
-    matches: List[Match] = re.finditer(r'{#([^ }\n]+)([ \n][^}]+)?}', md)
+    matches: Iterable[Match] = re.finditer(r'{#([^ }\n]+)([ \n][^}]+)?}', md)
     for m in matches:
         task_str = m.group(1)
         task_id = UnvalidatedTaskId(task_str)

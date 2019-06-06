@@ -279,10 +279,11 @@ def verify_task_access(
         task_id: TaskId,
         access_type: AccessType,
         required_task_access_level: TaskIdAccess,
+        context_user: User = None,
 ) -> Plugin:
     assert d.id == task_id.doc_id
     u = get_current_user_object()
-    doc, found_plugin = get_plugin_from_request(d.document, task_id, u)
+    doc, found_plugin = get_plugin_from_request(d.document, task_id, context_user or u)
     verify_access(doc.get_docinfo(), access_type)
     if found_plugin.task_id.access_specifier == TaskIdAccess.ReadOnly and \
             required_task_access_level == TaskIdAccess.ReadWrite and \

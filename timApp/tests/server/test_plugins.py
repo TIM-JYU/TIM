@@ -1,11 +1,9 @@
-import base64
 import io
 import json
 import re
 from collections import OrderedDict
 from datetime import timedelta
 from itertools import product
-from typing import Dict, Any
 
 import dateutil.parser
 from lxml import html
@@ -14,8 +12,6 @@ from lxml.html import HtmlElement
 from timApp.answer.answer import Answer
 from timApp.answer.pointsumrule import PointSumRule, PointType
 from timApp.auth.sessioninfo import get_current_user_object
-from timApp.document.docinfo import DocInfo
-from timApp.document.docparagraph import DocParagraph
 from timApp.document.randutils import random_id
 from timApp.plugin.plugin import Plugin, find_plugin_from_document
 from timApp.plugin.taskid import TaskId
@@ -218,15 +214,6 @@ class PluginTest(TimRouteTest):
 
     def exclude_answered_on_id(self, answer_list):
         return [{k: v for k, v in ans.items() if k not in ('answered_on', 'id')} for ans in answer_list]
-
-    def get_state(self, aid: int, **kwargs):
-        self.get('/getState',
-                 query_string={
-                     'user_id': self.current_user_id(),
-                     'answer_id': aid,
-                 },
-                 **kwargs,
-                 )
 
     def test_idless_plugin(self):
         self.login_test1()
@@ -806,153 +793,6 @@ choices:
             'Plugin error: Task name cannot be only a number.'
         ])
 
-    def test_plugin_in_preamble(self):
-        self.run_plugin_in_preamble('a/a', create_preamble_translation=True)
-        self.run_plugin_in_preamble('b/b', create_preamble_translation=False)
-
-    def run_plugin_in_preamble(self, doc_path: str, create_preamble_translation=True):
-        self.login_test1()
-        d = self.create_doc(path=self.get_personal_item_path(doc_path))
-        p = self.create_preamble_for(d)
-        p.document.add_text("""
-``` {#t plugin="mmcq"}
-stem: ""
-choices:
-  -
-    correct: true
-    reason: ""
-    text: ""
-```
-        """)
-        d.document.insert_preamble_pars()
-        par = d.document.get_paragraphs()[0]
-        plug = Plugin.from_paragraph(par)
-        self.assertEqual(f'{d.id}.t', plug.task_id.doc_task)
-        resp = self.post_answer(plug.type, plug.task_id.extended, [True])
-        a: Answer = Answer.query.get(resp['savedNew'])
-        self.assertEqual(1, a.points)
-        self.assertEqual(f'{d.id}.t', a.task_id)
-        self.get_state(a.id)
-
-        if create_preamble_translation:
-            tr_p = self.create_translation(p)
-            tr_par = tr_p.document.get_paragraphs()[0]
-            tr_par.set_markdown(par.get_markdown().replace('true', 'false'))
-            tr_par.save()
-        else:
-            tr_p = p
-
-        tr = self.create_translation(d)
-        tr.document.insert_preamble_pars()
-
-        resp = self.post_answer(
-            plug.type,
-            plug.task_id.extended,
-            [False],
-            ref_from=(tr.id, tr.document.get_paragraphs()[0].get_id()))
-        a: Answer = Answer.query.get(resp['savedNew'])
-        self.assertEqual(1 if create_preamble_translation else 0, a.points)
-        self.assertEqual(f'{d.id}.t', a.task_id)
-        self.check_plugin_ref_correct(tr, d, p.document.get_paragraphs()[0], preamble_doc=tr_p)
-
-    def test_referenced_plugin_in_preamble(self):
-        self.run_referenced_plugin_in_preamble('c/c', create_preamble_translation=True)
-        self.run_referenced_plugin_in_preamble('d/d', create_preamble_translation=False)
-
-    def run_referenced_plugin_in_preamble(self, doc_path: str, create_preamble_translation=True):
-        self.login_test1()
-        d = self.create_doc(path=self.get_personal_item_path(doc_path))
-        plugin_doc = self.create_doc(initial_par="""
-``` {#t plugin="mmcq"}
-stem: ""
-choices:
-  -
-    correct: true
-    reason: ""
-    text: ""
-        """)
-        p = self.create_preamble_for(d)
-        p.document.add_paragraph_obj(plugin_doc.document.get_paragraphs()[0].create_reference(p.document))
-        plugin_par = plugin_doc.document.get_paragraphs()[0]
-        plug = Plugin.from_paragraph(plugin_par)
-        d.document.insert_preamble_pars()
-        # The plugin is a reference, so it exists only in the original document.
-        self.post_answer(plug.type, f'{d.id}.t', [True],
-                         expect_status=400,
-                         json_key='error',
-                         expect_content='Plugin not found',
-                         )
-
-        resp = self.post_answer(plug.type, plug.task_id.extended, [True],
-                                ref_from=(d.id, d.document.get_paragraphs()[0].get_id()))
-        a: Answer = Answer.query.get(resp['savedNew'])
-        self.assertEqual(1, a.points)
-        self.assertEqual(plug.task_id.doc_task, a.task_id)
-
-        if create_preamble_translation:
-            tr_p = self.create_translation(p)
-        else:
-            tr_p = p
-
-        tr = self.create_translation(d)
-        tr.document.insert_preamble_pars()
-
-        resp = self.post_answer(
-            plug.type,
-            plug.task_id.extended,
-            [False],
-            ref_from=(tr.id, tr.document.get_paragraphs()[0].get_id()))
-        a: Answer = Answer.query.get(resp['savedNew'])
-        self.assertEqual(0, a.points)
-        self.assertEqual(plug.task_id.doc_task, a.task_id)
-        self.check_plugin_ref_correct(tr, plugin_doc, plugin_par, preamble_doc=tr_p)
-
-    def test_reference_to_preamble(self):
-        self.login_test1()
-        d = self.create_doc(path=self.get_personal_item_path('e/e'))
-        p = self.create_preamble_for(d)
-        p.document.add_text("""
-``` {#t plugin="mmcq"}
-stem: ""
-choices:
-  -
-    correct: true
-    reason: ""
-    text: ""
-```
-                """)
-        tr_p = self.create_translation(p)
-        tr_p.document.set_settings({'global_plugin_attrs': {'all': {'buttonText': 'This is in English'}}})
-
-        self.check_plugin_ref_correct(tr_p, p, p.document.get_paragraphs()[0])
-        n = self.create_doc()
-        n.document.add_paragraph_obj(tr_p.document.get_paragraphs()[1].create_reference(n.document))
-        # print(f'd={d.id} p={p.id} tr_p={tr_p.id} n={n.id}')
-
-        tr_d = self.create_translation(d)
-        self.check_plugin_ref_correct(n, p, p.document.get_paragraphs()[0])
-
-        n = self.create_doc()
-        tr_d.document.insert_preamble_pars()
-        n.document.add_paragraph_obj(tr_d.document.get_paragraphs()[0].create_reference(n.document))
-        self.check_plugin_ref_correct(n, d, p.document.get_paragraphs()[0], text_to_check='This is in English')
-
-    def check_plugin_ref_correct(self, doc_to_check: DocInfo, expected_doc: DocInfo, expected_par: DocParagraph,
-                                 text_to_check='',
-                                 preamble_doc: DocInfo = None):
-        par = self.get(doc_to_check.url, as_tree=True).cssselect('mmcq')[0].getparent().getparent().getparent().getparent()
-        # print(html.tostring(par, pretty_print=True).decode())
-        if preamble_doc:
-            self.assertEqual(preamble_doc.path, par.attrib['data-from-preamble'])
-        else:
-            self.assertIsNone(par.attrib.get('data-from-preamble'))
-        if text_to_check:
-            self.assertIn(text_to_check, html.tostring(par).decode())
-        # print(f'{expected_doc.id}.t.{expected_par.get_id()}')
-        self.assertEqual(expected_par.get_id(), par.attrib['ref-id'])
-        self.assertEqual(str(expected_doc.id), par.attrib['ref-doc-id'])
-        self.assertTrue(par.cssselect(fr'#{expected_doc.id}\.t\.{expected_par.get_id()}'))
-
     def test_answer_rename(self):
         self.login_test1()
         d = self.create_doc(initial_par="""
@@ -1102,201 +942,6 @@ needed_len: 6
         r = self.get(d.get_url_for_view('teacher'))
         self.assertIn('users = [{"email": "test1@example.com"', r)
 
-    def make_base64(self, d: dict):
-        """Converts the given dict to a base64-encoded JSON string."""
-        return base64.b64encode(json.dumps(d, sort_keys=True).encode()).decode()
-
-    def test_inline_plugins(self):
-        self.login_test1()
-        d = self.create_doc(initial_par="""
-#- {defaultplugin=pali id=Lm7y6R7n5XIb}
-*Hello* {#t1}, {#tx:nonexistent} and {#t2} $x$
-
-#- {defaultplugin=pali math_type=svg id=spOMcE20X2aX}
-Hi {#t3} $x$
-
-#- {defaultplugin=pali id=Se0s8FDLbhOp}
-{#t4 header: hi, footer: ho}
-        """)
-        r = self.get(d.url, as_tree=True)
-        e = r.cssselect('.par')[0]
-        expected_json = self.create_plugin_json(
-            d,
-            't1',
-            'Lm7y6R7n5XIb',
-        )
-        expected_json2 = self.create_plugin_json(
-            d,
-            't2',
-            'Lm7y6R7n5XIb',
-        )
-        self.assert_same_html(e, f"""
-<div class="par" id="Lm7y6R7n5XIb" t="LTB4NDMxYzFjN2M=" attrs='{{"defaultplugin": "pali"}}'>
-<div class="parContent">
-                <em>Hello</em> <tim-plugin-loader type="full" answer-id="" class="pluginpali inlineplugin" task-id="{d.id}.t1"><span id="{d.id}.t1.Lm7y6R7n5XIb" data-plugin="/pali">
-                <pali-runner json="{self.make_base64(expected_json)}"></pali-runner></span></tim-plugin-loader>, <span class="error">Plugin nonexistent error: Plugin does not exist.</span> and <tim-plugin-loader type="full" answer-id="" class="pluginpali inlineplugin" task-id="{d.id}.t2"><span id="{d.id}.t2.Lm7y6R7n5XIb" data-plugin="/pali"><pali-runner json="{self.make_base64(expected_json2)}"></pali-runner></span></tim-plugin-loader>
-            <span class="math inline">\(x\)</span>
-            </div>
-<div class="editline" title="Click to edit this paragraph"></div>
-<div class="readline" title="Click to mark this paragraph as read"></div>
-</div>
-""")
-        a = self.post_answer_no_abdata(
-            plugin_type='pali', task_id=f'{d.id}.t2',
-            user_input={'userword': 'aaaaaa'},
-        )
-        aid = a['savedNew']
-        self.assertEqual({'savedNew': aid, 'web': {'result': 'saved'}}, a)
-        self.assertIsInstance(aid, int)
-
-        r = self.get(d.url, as_tree=True)
-        e = r.cssselect('.par')[0]
-        s = {'userword': 'aaaaaa'}
-        expected_json2 = self.create_plugin_json(
-            d,
-            't2',
-            'Lm7y6R7n5XIb',
-            info={
-                "current_user_id": "testuser1",
-                "earlier_answers": 1,
-                "look_answer": False,
-                "max_answers": None,
-                "user_id": "testuser1",
-                "valid": True,
-            },
-            state=s,
-            toplevel=s,
-        )
-        self.assert_same_html(e, f"""
-<div class="par" id="Lm7y6R7n5XIb" t="LTB4NDMxYzFjN2M=" attrs='{{"defaultplugin": "pali"}}'>
-<div class="parContent">
-<em>Hello</em>
-<tim-plugin-loader type="full" answer-id="" class="pluginpali inlineplugin" task-id="{d.id}.t1">
-<span id="{d.id}.t1.Lm7y6R7n5XIb" data-plugin="/pali">
-<pali-runner json="{self.make_base64(expected_json)}"></pali-runner></span></tim-plugin-loader>,
-<span class="error">Plugin nonexistent error: Plugin does not exist.</span> and 
-<tim-plugin-loader type="full" answer-id="{aid}" class="pluginpali inlineplugin" task-id="{d.id}.t2">
-<span id="{d.id}.t2.Lm7y6R7n5XIb" data-plugin="/pali"><pali-runner json="{self.make_base64(
-    expected_json2)}"></pali-runner></span></tim-plugin-loader>
-<span class="math inline">\(x\)</span>
-            </div>
-<div class="editline" title="Click to edit this paragraph"></div>
-<div class="readline" title="Click to mark this paragraph as read"></div>
-</div>
-        """)
-        expected_json = self.create_plugin_json(
-            d,
-            't3',
-            'spOMcE20X2aX',
-        )
-        self.assert_same_html(r.cssselect('.par')[1], f"""
-<div class="par" id="spOMcE20X2aX" t="LTB4NTRjM2E3ZmE=" attrs='{{"defaultplugin": "pali", "math_type": "svg"}}'>
-<div class="parContent">
-                Hi
-<tim-plugin-loader type="full" answer-id="" class="pluginpali inlineplugin" task-id="{d.id}.t3">
-<span id="{d.id}.t3.spOMcE20X2aX" data-plugin="/pali">
-<pali-runner json="{self.make_base64(expected_json)}"></pali-runner>
-</span>
-</tim-plugin-loader>
-<span class="mathp inline"><img style="width:0.80327em; vertical-align:-0.06000em" src="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0nMS4wJyBlbmNvZGluZz0nVVRGLTgnPz4KPCEtLSBUaGlzIGZpbGUgd2FzIGdlbmVyYXRlZCBieSBkdmlzdmdtIDIuNCAtLT4KPHN2ZyBoZWlnaHQ9JzUuMjg5NDZwdCcgdmVyc2lvbj0nMS4xJyB2aWV3Qm94PSctMC41MDAwMDIgLTQuNzg5NDU4IDYuNjkzOTIyIDUuMjg5NDYnIHdpZHRoPSc2LjY5MzkyMnB0JyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHhtbG5zOnhsaW5rPSdodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rJz4KPGRlZnM+PHN0eWxlIHR5cGU9InRleHQvY3NzIj48IVtDREFUQVtwYXRoIHtzdHJva2U6IGN1cnJlbnRDb2xvcjtzdHJva2Utd2lkdGg6IDAuMDVwdDt9XV0+PC9zdHlsZT48cGF0aCBkPSdNMy4zMjc1MjIgLTMuMDA4NzE3QzMuMzg3Mjk4IC0zLjI2Nzc0NiAzLjYxNjQzOCAtNC4xODQzMDkgNC4zMTM4MjMgLTQuMTg0MzA5QzQuMzYzNjM2IC00LjE4NDMwOSA0LjYwMjc0IC00LjE4NDMwOSA0LjgxMTk1NSAtNC4wNTQ3OTVDNC41MzMwMDEgLTQuMDA0OTgxIDQuMzMzNzQ4IC0zLjc1NTkxNSA0LjMzMzc0OCAtMy41MTY4MTJDNC4zMzM3NDggLTMuMzU3NDEgNC40NDMzMzcgLTMuMTY4MTIgNC43MTIzMjkgLTMuMTY4MTJDNC45MzE1MDcgLTMuMTY4MTIgNS4yNTAzMTEgLTMuMzQ3NDQ3IDUuMjUwMzExIC0zLjc0NTk1M0M1LjI1MDMxMSAtNC4yNjQwMSA0LjY2MjUxNiAtNC40MDM0ODcgNC4zMjM3ODYgLTQuNDAzNDg3QzMuNzQ1OTUzIC00LjQwMzQ4NyAzLjM5NzI2IC0zLjg3NTQ2NyAzLjI3NzcwOSAtMy42NDYzMjZDMy4wMjg2NDMgLTQuMzAzODYxIDIuNDkwNjYgLTQuNDAzNDg3IDIuMjAxNzQzIC00LjQwMzQ4N0MxLjE2NTYyOSAtNC40MDM0ODcgMC41OTc3NTggLTMuMTE4MzA2IDAuNTk3NzU4IC0yLjg2OTI0QzAuNTk3NzU4IC0yLjc2OTYxNCAwLjY5NzM4NSAtMi43Njk2MTQgMC43MTczMSAtMi43Njk2MTRDMC43OTcwMTEgLTIuNzY5NjE0IDAuODI2ODk5IC0yLjc4OTUzOSAwLjg0NjgyNCAtMi44NzkyMDNDMS4xODU1NTQgLTMuOTM1MjQzIDEuODQzMDg4IC00LjE4NDMwOSAyLjE4MTgxOCAtNC4xODQzMDlDMi4zNzExMDggLTQuMTg0MzA5IDIuNzE5ODAxIC00LjA5NDY0NSAyLjcxOTgwMSAtMy41MTY4MTJDMi43MTk4MDEgLTMuMjA3OTcgMi41NTA0MzYgLTIuNTQwNDczIDIuMTgxODE4IC0xLjE0NTcwNEMyLjAyMjQxNiAtMC41MjgwMiAxLjY3MzcyNCAtMC4xMDk1ODkgMS4yMzUzNjcgLTAuMTA5NTg5QzEuMTc1NTkyIC0wLjEwOTU4OSAwLjk0NjQ1MSAtMC4xMDk1ODkgMC43MzcyMzUgLTAuMjM5MTAzQzAuOTg2MzAxIC0wLjI4ODkxNyAxLjIwNTQ3OSAtMC40OTgxMzIgMS4yMDU0NzkgLTAuNzc3MDg2QzEuMjA1NDc5IC0xLjA0NjA3NyAwLjk4NjMwMSAtMS4xMjU3NzggMC44MzY4NjIgLTEuMTI1Nzc4QzAuNTM3OTgzIC0xLjEyNTc3OCAwLjI4ODkxNyAtMC44NjY3NSAwLjI4ODkxNyAtMC41NDc5NDVDMC4yODg5MTcgLTAuMDg5NjY0IDAuNzg3MDQ5IDAuMTA5NTg5IDEuMjI1NDA1IDAuMTA5NTg5QzEuODgyOTM5IDAuMTA5NTg5IDIuMjQxNTk0IC0wLjU4Nzc5NiAyLjI3MTQ4MiAtMC42NDc1NzJDMi4zOTEwMzQgLTAuMjc4OTU0IDIuNzQ5Njg5IDAuMTA5NTg5IDMuMzQ3NDQ3IDAuMTA5NTg5QzQuMzczNTk5IDAuMTA5NTg5IDQuOTQxNDY5IC0xLjE3NTU5MiA0Ljk0MTQ2OSAtMS40MjQ2NThDNC45NDE0NjkgLTEuNTI0Mjg0IDQuODUxODA2IC0xLjUyNDI4NCA0LjgyMTkxOCAtMS41MjQyODRDNC43MzIyNTQgLTEuNTI0Mjg0IDQuNzEyMzI5IC0xLjQ4NDQzMyA0LjY5MjQwMyAtMS40MTQ2OTVDNC4zNjM2MzYgLTAuMzQ4NjkyIDMuNjg2MTc3IC0wLjEwOTU4OSAzLjM2NzM3MiAtMC4xMDk1ODlDMi45Nzg4MjkgLTAuMTA5NTg5IDIuODE5NDI3IC0wLjQyODM5NCAyLjgxOTQyNyAtMC43NjcxMjNDMi44MTk0MjcgLTAuOTg2MzAxIDIuODc5MjAzIC0xLjIwNTQ3OSAyLjk4ODc5MiAtMS42NDM4MzZMMy4zMjc1MjIgLTMuMDA4NzE3WicgaWQ9J2cwLTEyMCcvPgo8L2RlZnM+CjxnIGlkPSdwYWdlMSc+Cjx1c2UgeD0nMCcgeGxpbms6aHJlZj0nI2cwLTEyMCcgeT0nMCcvPgo8L2c+Cjwvc3ZnPg==" title="x"></span></div>
-            
-<div class="editline" title="Click to edit this paragraph"></div>
-<div class="readline" title="Click to mark this paragraph as read"></div>
-</div>
-        """)
-
-        expected_json = self.create_plugin_json(
-            d,
-            't4',
-            'Se0s8FDLbhOp',
-            markup={"header": "hi",
-                    "footer": "ho", }
-        )
-        self.assert_same_html(r.cssselect('.par')[2], f"""
-<div class="par" id="Se0s8FDLbhOp" t="LTB4MzJmOWU4MGI=" attrs='{{"defaultplugin": "pali"}}'>
-<div class="parContent">
-<tim-plugin-loader type="full" answer-id="" class="pluginpali inlineplugin" task-id="{d.id}.t4">
-<span id="{d.id}.t4.Se0s8FDLbhOp" data-plugin="/pali">
-<pali-runner json="{self.make_base64(expected_json)}"></pali-runner>
-</span>
-</tim-plugin-loader>
-</div>
-<div class="editline" title="Click to edit this paragraph"></div>
-<div class="readline" title="Click to mark this paragraph as read"></div>
-</div>
-                """)
-
-        a = self.post_answer_no_abdata(
-            plugin_type='pali',
-            task_id=f'{d.id}.t5',
-            user_input={'userword': 'aaaaaa'},
-            expect_status=400,
-            json_key='error',
-            expect_content='Task not found in the document: t5',
-        )
-
-    def create_plugin_json(self, d: DocInfo,
-                           task_name: str,
-                           par_id: str = None,
-                           markup=None,
-                           state=None,
-                           toplevel=None,
-                           info=None):
-        if not toplevel:
-            toplevel = {}
-        if not markup:
-            markup = {}
-        basic_task_id = f"{d.id}.{task_name}"
-        expected_json = {
-            **toplevel,
-            "info": info,
-            "markup": {
-                "hidden_keys": [],
-                **markup,
-            },
-            "state": state,
-            "taskID": basic_task_id,
-            "anonymous": True,
-            "doLazy": False,
-            "preview": False,
-            "review": False,
-            "targetFormat": "latex",
-            "taskIDExt": f"{d.id}.{task_name}.{par_id}" if par_id else basic_task_id,
-            "user_id": self.current_user.name,
-            "userPrint": False,
-        }
-        return expected_json
-
-    def test_inline_plugin_no_html_escape(self):
-        self.login_test1()
-        d = self.create_doc(initial_par="""
-#- {defaultplugin=pali id=a3Xuyg1PF1l1}
-{#t5 initword: }
-        """)
-        r = self.get(d.url, as_tree=True)
-        # Make sure Dumbo won't escape plugin's error HTML.
-        self.assert_same_html(r.cssselect('.parContent')[0], f"""
-<div class="parContent">
-    <tim-plugin-loader type="full" answer-id="" class="pluginpali inlineplugin" task-id="{d.id}.t5">
-    <span id="{d.id}.t5.a3Xuyg1PF1l1" data-plugin="/pali">
-        <div class="pluginError">
-            The following fields have invalid values:
-            <ul>
-                <li>
-                    initword: Field may not be null.
-                </li>
-            </ul>
-        </div>
-    </span>
-    </tim-plugin-loader>
-</div>
-        """)
-
-    def assert_plugin_json(self, e: HtmlElement, content: Dict[str, Any]):
-        b64str = e.attrib['json']
-        json_str = base64.b64decode(b64str)
-        self.assertEqual(content, json.loads(json_str))
-
     def test_taskid_reference(self):
         self.login_test1()
         d = self.create_doc(initial_par="""
@@ -1370,40 +1015,6 @@ Hi {#t3} $x$
         r = self.get(d2.get_url_for_view('teacher'), as_tree=True)
         alert: HtmlElement = r.cssselect('.alert-info')[0]
         self.assertEqual(f'You do not have full access to the following tasks: {d_id}.t', alert.text_content().strip())
-
-    def test_inline_plugin_error_html_no_p(self):
-        self.login_test1()
-        d = self.create_doc(initial_par="""
-#- {defaultplugin="pali" id=a3Xuyg1PF1l1}
-a {#x initword: } b
-        """)
-        r = self.get(d.url, as_tree=True)
-        self.assert_same_html(r.cssselect('.parContent')[0], f"""
-<div class="parContent">
-    a
-    <tim-plugin-loader type="full" answer-id="" class="pluginpali inlineplugin" task-id="{d.id}.x">
-    <span id="{d.id}.x.a3Xuyg1PF1l1" data-plugin="/pali">
-        <div class="pluginError">
-            The following fields have invalid values:
-            <ul>
-                <li>
-                    initword: Field may not be null.
-                </li>
-            </ul>
-        </div>
-    </span>
-    </tim-plugin-loader>
-    b
-</div>""")
-
-    def test_inline_plugin_sanitize(self):
-        self.login_test1()
-        d = self.create_doc(initial_par="""
-#- {defaultplugin=pali}
-<script>alert('hello')</script>
-        """)
-        r = self.get(d.url, as_tree=True)
-        self.assertFalse(r.cssselect('.parContent script'))
 
     def test_taskid_field(self):
         self.login_test1()
@@ -1514,28 +1125,6 @@ a {#x initword: } b
             db.session.commit()
             self.get_state(r['savedNew'])
 
-    def test_multiline_inlineplugin(self):
-        """Multiline markup in inlineplugins works."""
-        self.login_test1()
-        d = self.create_doc(initial_par="""
-#- {defaultplugin=pali id=SSYigUyqdb7p}
-{#t
-initword: hi
-}
-        """)
-        r = self.get(d.url, as_tree=True)
-        e = r.cssselect(f'.parContent > tim-plugin-loader[task-id="{d.id}.t"] > span > pali-runner')
-        self.assertTrue(e)
-        self.assert_plugin_json(
-            e[0],
-            self.create_plugin_json(
-                d,
-                't',
-                par_id='SSYigUyqdb7p',
-                markup={'initword': 'hi'},
-            ),
-        )
-
     def test_invalid_getstate(self):
         self.login_test1()
         d = self.create_doc(initial_par="""
@@ -1587,24 +1176,66 @@ initword: a""")
 ```""")
         self.assert_content(self.get(d.url, as_tree=True), [''])
 
-    def test_inline_plugin_login(self):
+    def test_plugin_run_user_macro(self):
         self.login_test1()
+        uinput = {
+            "usercode": f"x = 'testuser1'",
+            "userinput": "",
+            "isInput": False,
+            "userargs": "",
+            "nosave": False,
+            "type": "py",
+        }
         d = self.create_doc(initial_par="""
-#- {defaultplugin=pali}
-{#t}
-""")
-        u = d.url
-        grant_view_access(UserGroup.get_anonymous_group().id, d.id)
-        self.logout()
-        r = self.get(u, as_tree=True).cssselect('.parContent login-menu')
-        self.assertTrue(r)
+``` {#py plugin="csPlugin"}
+type: python
+fullprogram: |!!
+// BYCODEBEGIN
 
-    def test_inline_plugin_ref(self):
-        self.login_test1()
-        d = self.create_doc(initial_par="""
-#-  {defaultplugin=pali id=SSYigUyqdb7p}
-{#t}
+// BYCODEEND
+print(x == '%%username%%')
+!!
+```
+
         """)
-        d2 = self.create_doc()
-        d2.document.add_paragraph_obj(d.document.get_paragraphs()[0].create_reference(d2.document))
-        self.get(d2.url)
+        a = self.post_answer('csPlugin', f'{d.id}.py', user_input=uinput)
+        self.assertEqual('True\n', a['web']['console'])
+        self.test_user_2.grant_access(d.id, 'view')
+        self.login_test2()
+        uinput2 = {**uinput, "usercode": f"x = 'testuser2'"}
+        a = self.post_answer('csPlugin', f'{d.id}.py', user_input=uinput2)
+        a_id = a['savedNew']
+        self.assertEqual('True\n', a['web']['console'])
+        self.login_test1()
+        a = self.post_answer(
+            'csPlugin',
+            f'{d.id}.py',
+            user_input=uinput2,
+            teacher=True,
+            answer_id=a_id,
+            user_id=self.test_user_2.id,
+        )
+        self.assertEqual('True\n', a['web']['console'])
+
+        self.test_user_2.grant_access(d.id, 'teacher')
+        self.login_test2()
+        self.post_answer(
+            'csPlugin',
+            f'{d.id}.py',
+            user_input=uinput2,
+            teacher=True,
+            user_id=self.test_user_1.id,
+            expect_status=403,
+            json_key='error',
+            expect_content='Permission denied: you are not in teachers group.'
+        )
+
+        self.test_user_2.groups.append(UserGroup.get_teachers_group())
+        db.session.commit()
+        self.post_answer(
+            'csPlugin',
+            f'{d.id}.py',
+            user_input=uinput2,
+            teacher=True,
+            user_id=self.test_user_1.id,
+        )

@@ -1,4 +1,5 @@
 """Defines the TimRouteTest class."""
+import base64
 import io
 import json
 import re
@@ -6,7 +7,7 @@ import socket
 import unittest
 import warnings
 from functools import lru_cache
-from typing import Union, Optional, List, Dict, Tuple
+from typing import Union, Optional, List, Dict, Tuple, Any
 
 from flask import Response
 from flask import session
@@ -740,6 +741,56 @@ class TimRouteTest(TimDbTest):
 
     def print_html(self, e: HtmlElement):
         print(html.tostring(e, pretty_print=True).decode())
+
+    def create_plugin_json(self, d: DocInfo,
+                           task_name: str,
+                           par_id: str = None,
+                           markup=None,
+                           state=None,
+                           toplevel=None,
+                           info=None):
+        if not toplevel:
+            toplevel = {}
+        if not markup:
+            markup = {}
+        basic_task_id = f"{d.id}.{task_name}"
+        expected_json = {
+            **toplevel,
+            "info": info,
+            "markup": {
+                "hidden_keys": [],
+                **markup,
+            },
+            "state": state,
+            "taskID": basic_task_id,
+            "anonymous": True,
+            "doLazy": False,
+            "preview": False,
+            "review": False,
+            "targetFormat": "latex",
+            "taskIDExt": f"{d.id}.{task_name}.{par_id}" if par_id else basic_task_id,
+            "user_id": self.current_user.name,
+            "userPrint": False,
+        }
+        return expected_json
+
+    def make_base64(self, d: dict):
+        """Converts the given dict to a base64-encoded JSON string."""
+        return base64.b64encode(json.dumps(d, sort_keys=True).encode()).decode()
+
+    def assert_plugin_json(self, e: HtmlElement, content: Dict[str, Any]):
+        b64str = e.attrib['json']
+        json_str = base64.b64decode(b64str)
+        self.assertEqual(content, json.loads(json_str))
+
+    def get_state(self, aid: int, **kwargs):
+        self.get('/getState',
+                 query_string={
+                     'user_id': self.current_user_id(),
+                     'answer_id': aid,
+                 },
+                 **kwargs,
+                 )
 
 
 if __name__ == '__main__':

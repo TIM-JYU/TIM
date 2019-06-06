@@ -31,13 +31,14 @@ from timApp.document.post_process import hide_names_in_teacher
 from timApp.item.block import Block, BlockType
 from timApp.markdown.dumboclient import call_dumbo
 from timApp.plugin.containerLink import call_plugin_answer
-from timApp.plugin.plugin import Plugin, PluginWrap, NEVERLAZY
+from timApp.plugin.plugin import Plugin, PluginWrap, NEVERLAZY, PluginType
 from timApp.plugin.pluginControl import find_task_ids, pluginify
 from timApp.plugin.pluginexception import PluginException
 from timApp.plugin.taskid import TaskId, TaskIdAccess
 from timApp.timdb.dbaccess import get_timdb
 from timApp.timdb.exceptions import TimDbException
 from timApp.timdb.sqa import db
+from timApp.user.special_group_names import TEACHERS_GROUPNAME
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
 from timApp.util.flask.requesthelper import verify_json_params, get_option, get_consent_opt
@@ -164,22 +165,16 @@ def post_answer(plugintype: str, task_id_ext: str):
     d.document.insert_preamble_pars()
 
     curr_user = get_current_user_object()
-    try:
-        plugin = verify_task_access(d, tid, AccessType.view, TaskIdAccess.ReadWrite)
-    except (PluginException, TimDbException) as e:
-        return abort(400, str(e))
-    if 'input' not in request.get_json():
-        return json_response({'error': 'The key "input" was not found from the request.'}, 400)
-    answerdata = request.get_json()['input']
-
-    answer_browser_data = request.get_json().get('abData', {})
+    ptype = PluginType(plugintype)
+    answerdata, = verify_json_params('input')
+    answer_browser_data, = verify_json_params('abData', require=False, default={})
     is_teacher = answer_browser_data.get('teacher', False)
     save_teacher = answer_browser_data.get('saveTeacher', False)
     save_answer = answer_browser_data.get('saveAnswer', True) and tid.task_name
 
     if tid.is_points_ref:
         verify_teacher_access(d)
-        given_points = answerdata.get(plugin.get_content_field_name())
+        given_points = answerdata.get(ptype.get_content_field_name())
         if given_points is not None:
             try:
                 given_points = float(given_points)
@@ -191,7 +186,7 @@ def post_answer(plugintype: str, task_id_ext: str):
             s = None
         else:
             a = Answer(
-                content=json.dumps({plugin.get_content_field_name(): ''}),
+                content=json.dumps({ptype.get_content_field_name(): ''}),
                 points=given_points,
                 task_id=tid.doc_task,
                 users_all=[curr_user],
@@ -208,14 +203,16 @@ def post_answer(plugintype: str, task_id_ext: str):
     users = None
 
     try:
-        get_task = answerdata and answerdata.get("getTask", None) and plugin.can_give_task()
+        get_task = answerdata and answerdata.get("getTask", None) and ptype.can_give_task()
     except:
         get_task = False
 
     if not (save_answer or get_task) or is_teacher:
         verify_seeanswers_access(d)
+    ctx_user = None
     if is_teacher:
         answer_id = answer_browser_data.get('answer_id', None)
+        user_id = answer_browser_data.get('userId', None)
         if answer_id is not None:
             answer = Answer.query.get(answer_id)
             if not answer:
@@ -230,9 +227,19 @@ def post_answer(plugintype: str, task_id_ext: str):
             users = list(answer.users_all)
             if not users:
                 return abort(400, 'No users found for the specified answer')
-            user_id = answer_browser_data.get('userId', None)
             if user_id not in (u.id for u in users):
                 return abort(400, 'userId is not associated with answer_id')
+        elif user_id and user_id != curr_user.id:
+            teacher_group = UserGroup.get_teachers_group()
+            if curr_user not in teacher_group.users:
+                abort(403, 'Permission denied: you are not in teachers group.')
+        ctx_user = User.query.get(user_id)
+        if user_id and not ctx_user:
+            abort(404, f'User {user_id} not found')
+    try:
+        plugin = verify_task_access(d, tid, AccessType.view, TaskIdAccess.ReadWrite, context_user=ctx_user)
+    except (PluginException, TimDbException) as e:
+        return abort(400, str(e))
 
     if plugin.type != plugintype:
         abort(400, f'Plugin type mismatch: {plugin.type} != {plugintype}')
