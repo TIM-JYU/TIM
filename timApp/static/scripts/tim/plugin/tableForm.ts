@@ -325,6 +325,7 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
         if (this.realnames) { colcount += 1; }
         for (let i = 0; i < rowcount; i++) {
             //TODO: In future: change hiddenRows check if hiddenRows is changed from number[] to IRows
+            //TODO: Check for hiddenColumns
             if (this.data.hiddenRows && this.data.hiddenRows.includes(i)) { continue; }
             const row: CellType[] = [];
             result.push(row);
@@ -368,7 +369,7 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
             }
         }
     }
-    // singleCellSave(rowi: number, coli: number, content: string)
+
     singleCellSave(rowi: number, coli: number, content: string) {
         const cells = [this.userNameColumn + (rowi + 1), colnumToLetters(coli) + this.headerRow, colnumToLetters(coli) + (rowi + 1)];
         this.doSaveText(cells);

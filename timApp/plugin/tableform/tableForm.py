@@ -205,6 +205,8 @@ tableForm_plugin = create_blueprint(__name__, 'tableForm', TableFormHtmlSchema()
 @tableForm_plugin.route('/generateCSV')
 def gen_csv():
     temp = json.loads(request.args.get('data'))
+    if len(request.args.get('separator')) > 1:
+        return "Only 1-character string separators supported for now"
     return csv_response(temp, 'excel', request.args.get('separator'))
 
 
