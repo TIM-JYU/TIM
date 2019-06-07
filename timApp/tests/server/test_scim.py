@@ -54,6 +54,9 @@ class ScimTest(TimRouteTest):
                 'schemas': ['urn:ietf:params:scim:schemas:core:2.0:Group'],
             }
         )
+        create_stamp = r['meta']['created']
+        self.assertEqual(create_stamp, r['meta']['lastModified'])
+        group_id = r['id']
         ru = self.get(
             f'/scim/Users/sisuuser',
             auth=a,
@@ -71,30 +74,37 @@ class ScimTest(TimRouteTest):
             },
             'schemas': ['urn:ietf:params:scim:schemas:core:2.0:User'],
         }, ru)
-        self.json_put(
-            f'/scim/Users/sisuuser',
-            auth=a,
-            json_data={
-                'displayName': 'Sisu User',
-                'emails': [{'value': 'sisuuser@example.com'}],
-                'externalId': 'sisuuser',
-                'userName': 'sisuuser',
-            },
-        )
-        self.get(
-            f'/scim/Users/sisuuser',
-            auth=a,
-            expect_contains={
-                'displayName': 'Sisu User',
-                'id': 'sisuuser',
-                'emails': [{'value': 'sisuuser@example.com'}],
-                'schemas': ['urn:ietf:params:scim:schemas:core:2.0:User'],
-            },
-        )
+
+        def update_and_get():
+            self.json_put(
+                f'/scim/Users/sisuuser',
+                auth=a,
+                json_data={
+                    'displayName': 'Sisu User',
+                    'emails': [{'value': 'sisuuser@example.com'}],
+                    'externalId': 'sisuuser',
+                    'userName': 'sisuuser',
+                },
+            )
+            return self.get(
+                f'/scim/Users/sisuuser',
+                auth=a,
+                expect_contains={
+                    'displayName': 'Sisu User',
+                    'id': 'sisuuser',
+                    'emails': [{'value': 'sisuuser@example.com'}],
+                    'schemas': ['urn:ietf:params:scim:schemas:core:2.0:User'],
+                },
+            )
+
+        ru2 = update_and_get()
+        self.assertEqual(create_stamp_user, ru2['meta']['created'])
+        new_modified = ru2['meta']['lastModified']
+        self.assertNotEqual(create_stamp_user, new_modified)
+        ru3 = update_and_get()
+        self.assertEqual(ru3['meta']['lastModified'], new_modified)
+
         self.assertIsNone(UserGroup.get_by_name('sisu-something'))
-        create_stamp = r['meta']['created']
-        self.assertEqual(create_stamp, r['meta']['lastModified'])
-        group_id = r['id']
         self.json_post(
             '/scim/Groups',
             json_data={
