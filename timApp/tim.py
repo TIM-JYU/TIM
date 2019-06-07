@@ -272,8 +272,10 @@ def get_server_time():
 def update_user_course_bookmarks():
     u = get_current_user_object()
     for gr in u.groups:  # type: UserGroup
-        if gr.is_sisu and gr.name.endswith('-students'):
-            sisuid = gr.name.replace('-students', '')
+        if gr.is_sisu_student_group:
+            sisuid = gr.get_sisu_id()
+            if not sisuid:
+                continue  # Should not happen if is_sisu_student_group is true.
             docs = DocEntry.query.join(Block).join(Tag).filter(Tag.name == sisuid).with_entities(DocEntry).all()
             if not docs:
                 continue

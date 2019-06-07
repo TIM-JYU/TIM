@@ -1,3 +1,4 @@
+import re
 from typing import List
 
 from timApp.timdb.sqa import db, TimeStampMixin
@@ -90,6 +91,16 @@ class UserGroup(db.Model, TimeStampMixin, SCIMEntity):
     @property
     def is_sisu(self):
         return self.name.startswith('sisu:')
+
+    @property
+    def is_sisu_student_group(self):
+        return self.is_sisu and self.name.endswith('-students')
+
+    def get_sisu_id(self):
+        m = re.fullmatch(r'(sisu:[a-zA-Z0-9_-]+)-(student|teacher)s', self.name)
+        if not m:
+            return None
+        return m.group(1)
 
     @staticmethod
     def create(name: str) -> 'UserGroup':
