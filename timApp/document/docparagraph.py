@@ -724,7 +724,7 @@ class DocParagraph:
         title_ids = []
         for e in blocks:
             level = count_chars_from_beginning(e['md'], '#')
-            if level > 0:
+            if 0 < level < 7:
                 title = e['md'][level:].strip()
                 title_ids.append(title_to_id(title))
                 deltas[level] += 1

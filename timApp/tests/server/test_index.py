@@ -252,3 +252,11 @@ Lorem ipsum.
         self.assertNotIn(tr_pars[3].get_id(), changed)
         e = self.get(t.url, as_tree=True)
         self.assert_content(e, ['', '1. a', 'tr', '2. c'])
+
+    def test_too_deep_heading(self):
+        self.login_test1()
+        d = self.create_doc(initial_par="""
+####### a
+
+#-""")
+        self.get(d.url)
