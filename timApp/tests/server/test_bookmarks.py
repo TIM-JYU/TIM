@@ -121,13 +121,13 @@ class BookmarkTest2(BookmarkTestBase):
         b = Bookmarks(self.test_user_1)
         self.assertEqual(
             {'editable': True,
-             'items': [{'link': d2.path, 'name': d2.title},
-                       {'link': d.path, 'name': d.title}],
+             'items': [{'link': d2.url_relative, 'name': d2.title},
+                       {'link': d.url_relative, 'name': d.title}],
              'name': 'My courses'}, b.as_dict()[1])
         self.get('/')
         b = Bookmarks(self.test_user_1)
         self.assertEqual(
             {'editable': True,
-             'items': [{'link': d2.path, 'name': d2.title},
-                       {'link': d.path, 'name': d.title}],
+             'items': [{'link': d2.url_relative, 'name': d2.title},
+                       {'link': d.url_relative, 'name': d.title}],
              'name': 'My courses'}, b.as_dict()[1])
