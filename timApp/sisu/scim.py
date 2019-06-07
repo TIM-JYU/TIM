@@ -1,9 +1,9 @@
 import json
 import re
-from typing import List, Optional
+from typing import List, Optional, Dict
 
 import attr
-from flask import Blueprint, request, current_app, abort, Response
+from flask import Blueprint, request, current_app, Response
 from marshmallow import Schema, fields, post_load, ValidationError, missing
 from webargs.flaskparser import use_args
 
@@ -98,19 +98,31 @@ class SCIMGroupModel(SCIMCommonModel):
     members: List[SCIMMemberModel]
 
 
+@attr.s(auto_attribs=True)
+class SCIMException(Exception):
+    code: int
+    msg: str
+    headers: Optional[Dict[str, str]] = None
+
+
+@scim.errorhandler(SCIMException)
+def item_locked(error: SCIMException):
+    return handle_error_msg_code(error.code, error.msg, error.headers)
+
+
 def handle_error(error):
+    return handle_error_msg_code(error.code, error.description)
+
+
+def handle_error_msg_code(code: int, msg: str, headers=None):
     return json_response(
-        scim_error_json(error.code, error.description),
-        status_code=error.code,
+        scim_error_json(code, msg),
+        status_code=code,
+        headers=headers,
     )
 
 
 scim.errorhandler(UNPROCESSABLE_ENTITY)(handle_error)
-scim.errorhandler(409)(handle_error)
-
-
-def scim_error(code: int, msg: str):
-    return abort(code, msg)
 
 
 def scim_error_json(code, msg):
@@ -126,23 +138,15 @@ def check_auth():
     expected_username = current_app.config.get('SCIM_USERNAME')
     expected_password = current_app.config.get('SCIM_PASSWORD')
     if not expected_username or not expected_password:
-        return json_response(scim_error_json(403, 'SCIM username or password not configured.'))
-    auth_required = json_response(
-        scim_error_json(401, 'This action requires authentication.'),
-        401,
-        headers={'WWW-Authenticate': 'Basic realm="Authentication required"'},
-    )
+        raise SCIMException(403, 'SCIM username or password not configured.')
+    headers = {'WWW-Authenticate': 'Basic realm="Authentication required"'}
     auth = request.authorization
     if not auth:
-        return auth_required
+        raise SCIMException(401, 'This action requires authentication.', headers=headers)
     if auth.username == expected_username and auth.password == expected_password:
         pass
     else:
-        return json_response(
-            scim_error_json(401, 'Incorrect username or password.'),
-            401,
-            {'WWW-Authenticate': 'Basic realm="Authentication required"'},
-        )
+        raise SCIMException(401, 'Incorrect username or password.', headers=headers)
 
 
 class GetGroupsSchema(Schema):
@@ -174,7 +178,7 @@ def scim_group_to_tim(sisu_group: str):
 def get_groups(args: GetGroupsModel):
     m = filter_re.fullmatch(args.filter)
     if not m:
-        return scim_error(422, 'Unsupported filter')
+        raise SCIMException(422, 'Unsupported filter')
     groups = UserGroup.query.filter(UserGroup.name.startswith(scim_group_to_tim(m.group(1)))).all()
 
     def gen_groups():
@@ -201,7 +205,7 @@ def post_group(args: SCIMGroupModel):
         msg = f'Group already exists: {gname}'
         log_warning(msg)
         log_warning(str(args))
-        return scim_error(409, msg)
+        raise SCIMException(409, msg)
     deleted_group = UserGroup.get_by_name(f'{DELETED_GROUP_PREFIX}{gname}')
     if deleted_group:
         ug = deleted_group
@@ -241,7 +245,7 @@ def delete_group(group_id):
 def get_user(user_id):
     u = User.get_by_name(user_id)
     if not u:
-        return abort(404, 'User not found.')
+        raise SCIMException(404, 'User not found.')
     return json_response(u.get_scim_data())
 
 
@@ -249,7 +253,7 @@ def get_user(user_id):
 def put_user(user_id):
     u = User.get_by_name(user_id)
     if not u:
-        return abort(404, 'User not found.')
+        raise SCIMException(404, 'User not found.')
     um: SCIMUserModel = load_data_from_req(SCIMUserSchema)
     u.real_name = um.displayName
     if um.emails:
@@ -263,10 +267,10 @@ def load_data_from_req(schema):
     try:
         j = request.get_json()
         if j is None:
-            return scim_error(422, 'JSON payload missing.')
+            raise SCIMException(422, 'JSON payload missing.')
         p = ps.load(j)
     except ValidationError as e:
-        return scim_error(422, json.dumps(e.messages, sort_keys=True))
+        raise SCIMException(422, json.dumps(e.messages, sort_keys=True))
     return p
 
 
@@ -314,7 +318,7 @@ def get_group_by_scim(group_id: str):
     try:
         ug = UserGroup.get_by_name(scim_group_to_tim(group_id))
     except ValueError:
-        return scim_error(404, f'Group {group_id} not found')
+        raise SCIMException(404, f'Group {group_id} not found')
     if not ug:
-        scim_error(404, f'Group {group_id} not found')
+        raise SCIMException(404, f'Group {group_id} not found')
     return ug

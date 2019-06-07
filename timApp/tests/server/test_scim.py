@@ -75,6 +75,30 @@ class ScimTest(TimRouteTest):
             'schemas': ['urn:ietf:params:scim:schemas:core:2.0:User'],
         }, ru)
 
+        user_not_found = {
+            'detail': 'User not found.',
+            'schemas': ['urn:ietf:params:scim:api:messages:2.0:Error'],
+            'status': '404',
+        }
+        self.get(
+            f'/scim/Users/xxx',
+            auth=a,
+            expect_status=404,
+            expect_content=user_not_found,
+        )
+        self.json_put(
+            f'/scim/Users/xxx',
+            auth=a,
+            json_data={
+                'displayName': 'Sisu User',
+                'emails': [{'value': 'sisuuser@example.com'}],
+                'externalId': 'sisuuser',
+                'userName': 'sisuuser',
+            },
+            expect_status=404,
+            expect_content=user_not_found,
+        )
+
         def update_and_get():
             self.json_put(
                 f'/scim/Users/sisuuser',
