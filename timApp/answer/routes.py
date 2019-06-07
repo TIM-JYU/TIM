@@ -410,7 +410,6 @@ def post_answer(plugintype: str, task_id_ext: str):
 
 def handle_jsrunner_response(jsonresp, result):
     save_obj = jsonresp['save']
-    print(save_obj)
     tasks = set()
     # content_map = {}
     doc_map: Dict[int, DocInfo] = {}
@@ -448,7 +447,6 @@ def handle_jsrunner_response(jsonresp, result):
                 result['web']['error'] = result['web']['error'] + errormsg
             except KeyError:
                 result['web'] = {"error": errormsg}
-    print(task_content)
     for user in save_obj:
         u_id = user['user']
         u = User.get_by_id(u_id)
