@@ -116,7 +116,6 @@ export class TagController extends DialogController<{ params: IItem }, {}> {
 
     /**
      * Replaces old tag with new tag of the same tag type.
-     * @returns {Promise<void>}
      */
     private async editSelectedTag() {
         if (this.selected) {
@@ -161,7 +160,6 @@ export class TagController extends DialogController<{ params: IItem }, {}> {
      * Removes the selected tag from the database. Checks admin/teachers rights if
      * tag to remove is not of regular type.
      * @param {ITag} t Tag to delete.
-     * @returns {Promise<void>}
      */
     private async removeTag(t: ITag) {
         if (t.type !== TagType.Regular) {

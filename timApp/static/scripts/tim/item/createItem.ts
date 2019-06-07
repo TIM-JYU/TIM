@@ -49,7 +49,6 @@ class CreateItemController implements IController {
 
     /**
      * Checks whether the document to copy has regular tags (special tags aren't copied) with expiration dates.
-     * @returns {Promise<void>}
      */
     private async checkExpiredTags() {
         if (this.params && this.params.copy) {

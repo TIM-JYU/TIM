@@ -166,7 +166,6 @@ export class SearchBoxCtrl implements IController {
 
     /**
      * Word search on target folder.
-     * @returns {Promise<void>}
      */
     async search() {
         if (this.loading) {
@@ -344,7 +343,6 @@ export class SearchBoxCtrl implements IController {
 
     /**
      * Document path search.
-     * @returns {Promise<void>}
      */
     private async pathSearch() {
         const r = await to($http<ISearchResultsInfo>({
@@ -367,7 +365,6 @@ export class SearchBoxCtrl implements IController {
 
     /**
      * Document title search (unused).
-     * @returns {Promise<void>}
      */
     private async titleSearch() {
         const r = await to($http<ISearchResultsInfo>({
@@ -389,7 +386,6 @@ export class SearchBoxCtrl implements IController {
 
     /**
      * Document paragraph word and title search.
-     * @returns {Promise<void>}
      */
     private async wordSearch() {
         const r = await to($http<ISearchResultsInfo>({
@@ -421,7 +417,6 @@ export class SearchBoxCtrl implements IController {
 
     /**
      * Search document tags.
-     * @returns {Promise<void>}
      */
     private async tagSearch() {
         const r = await to($http<ITagSearchResultsInfo>({
@@ -470,7 +465,6 @@ export class SearchBoxCtrl implements IController {
 
     /**
      * Makes a list of folder paths starting from the current default search folder.
-     * @returns {Promise<void>}
      */
     private async loadFolderSuggestions() {
         const response = await $http<string[]>({

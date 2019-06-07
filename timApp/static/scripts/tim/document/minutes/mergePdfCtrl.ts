@@ -50,7 +50,6 @@ export class MergePdfController extends DialogController<{ params: IMergeParams 
 
     /**
      * Gets a list of attachments in the documents and notes whether invalid files were found.
-     * @returns {Promise<void>}
      */
     async listAttachments() {
         const url = `/minutes/listAttachments/${this.resolve.params.document.path}`;

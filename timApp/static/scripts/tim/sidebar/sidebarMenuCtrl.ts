@@ -306,7 +306,6 @@ export class SidebarMenuCtrl implements IController {
 
     /**
      * Marks all paragraphs of the document as read.
-     * @returns {Promise<void>}
      */
     private async markAllAsRead() {
         if (this.vctrl) {

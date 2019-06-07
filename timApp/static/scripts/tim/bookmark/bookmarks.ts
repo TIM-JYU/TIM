@@ -157,7 +157,6 @@ export class BookmarksController implements IController {
 
     /**
      * Updates bookmarks.
-     * @returns {Promise<void>}
      */
     async refresh() {
         const response = await $http.get<IBookmarkGroup[]>("/bookmarks/get");

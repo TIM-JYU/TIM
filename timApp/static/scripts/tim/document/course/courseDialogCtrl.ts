@@ -9,7 +9,7 @@ import {DialogController, registerDialogComponent, showDialog} from "../../ui/di
 import {$http} from "../../util/ngimport";
 import {to} from "../../util/utils";
 
-export class CourseDialogController extends DialogController<{ params: IItem }, {}> {
+export class CourseDialogController extends DialogController<{params: IItem}, {}> {
     static component = "timCourseDialog";
     static $inject = ["$element", "$scope"] as const;
     private f!: IFormController; // initialized in the template
@@ -73,7 +73,6 @@ export class CourseDialogController extends DialogController<{ params: IItem }, 
 
     /**
      * Removes current code and subject tags so they can be replaced.
-     * @returns {Promise<void>}
      */
     private async removeCurrentSpecialTags() {
         const docPath = this.resolve.params.path;
@@ -112,7 +111,6 @@ export class CourseDialogController extends DialogController<{ params: IItem }, 
 
     /**
      * Removes course code and subject from teh database.
-     * @returns {Promise<void>}
      */
     private async unregisterCourse() {
         await this.removeCurrentSpecialTags();
@@ -123,7 +121,6 @@ export class CourseDialogController extends DialogController<{ params: IItem }, 
 
     /**
      * Creates course special tags and adds them to database.
-     * @returns {Promise<void>}
      */
     private async registerCourse() {
         if (this.f.$invalid) {
@@ -151,7 +148,7 @@ export class CourseDialogController extends DialogController<{ params: IItem }, 
             expires: this.expires, name: codeName, type: TagType.CourseCode,
         };
         const subjectTag = {
-            expires: this.expires,  name: this.courseSubject.trim(), type: TagType.Subject,
+            expires: this.expires, name: this.courseSubject.trim(), type: TagType.Subject,
         };
         const data = {tags: [codeTag, subjectTag]};
         const r = await to($http.post(`/tags/add/${docPath}`, data));

@@ -656,7 +656,6 @@ export class TimTableController extends DestroyScope implements IController {
      * @param {string} parId Paragraph id
      * @param {number} row Row index
      * @param {number} col Column index
-     * @returns {Promise<void>}
      */
     async openEditor(cell: CellEntity, docId: number, value: string, parId: string, row: number, col: number) {
         if (this.currentCell) {
@@ -1406,7 +1405,6 @@ export class TimTableController extends DestroyScope implements IController {
      * @param {number} rowi Row Index
      * @param {number} coli Column index
      * @param {MouseEvent} event MouseEvent
-     * @returns {Promise<void>}
      */
     private async calculateElementPlaces(rowi: number, coli: number, event?: MouseEvent) {
         await $timeout();

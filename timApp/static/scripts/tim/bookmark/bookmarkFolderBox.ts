@@ -46,7 +46,6 @@ class BookmarkFolderBoxCtrl implements IController {
 
     /**
      * Gets entries of documents corresponding bookmark items and rejoins them with the bookmarks.
-     * @returns {Promise<void>}
      */
     private async getDocumentData() {
         // Returns a list of ITaggedItems because bookmarks aren't directly linked to
@@ -92,7 +91,6 @@ class BookmarkFolderBoxCtrl implements IController {
     /**
      * Deletes the bookmark and updates document list.
      * @param {IBookmark} d Bookmark to delete.
-     * @returns {Promise<void>}
      */
     private async removeFromList(d: IBookmark) {
         const response = await $http.post<IBookmarkGroup[]>("/bookmarks/delete", {
@@ -109,7 +107,6 @@ class BookmarkFolderBoxCtrl implements IController {
     /**
      * Opens editing dialog for the bookmark and updates list if changes were made.
      * @param {IBookmark} b Bookmark to edit.
-     * @returns {Promise<void>}
      */
     private async editFromList(b: IBookmark) {
         const r = await to(showBookmarkDialog({
