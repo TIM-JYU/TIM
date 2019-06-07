@@ -1,6 +1,5 @@
-from timApp.item.tag import TagType
+from timApp.item.tag import TagType, Tag
 from timApp.tests.server.timroutetest import TimRouteTest
-from timApp.user.usergroup import UserGroup
 from timApp.timdb.sqa import db
 
 
@@ -60,3 +59,30 @@ class CoursesTest(TimRouteTest):
                                                                                   'type': TagType.Subject.value}],
                                                                         'title': d.title,
                                                                         'unpublished': True}])
+
+    def test_add_course_route(self):
+        self.login_test1()
+        d = self.create_doc()
+        self.json_post(
+            f'/bookmarks/addCourse', {'path': d.path},
+            expect_status=400,
+            expect_content='Document is not a course',
+            json_key='error',
+        )
+
+        db.session.add(d.block)
+        d.block.tags.append(Tag(name='test', type=TagType.CourseCode))
+        db.session.commit()
+        self.json_post(
+            f'/bookmarks/addCourse', {'path': d.path},
+            expect_content=[{'editable': False,
+                             'items': [{
+                                 'link': d.url_relative,
+                                 'name': d.title}],
+                             'name': 'Last edited'},
+                            {'editable': True,
+                             'items': [{
+                                 'link': d.url_relative,
+                                 'name': d.title}],
+                             'name': 'My courses'}]
+        )

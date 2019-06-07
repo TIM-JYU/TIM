@@ -111,7 +111,7 @@ class HeaderController implements IController {
         if (!this.viewctrl.bookmarksCtrl) {
             throw new Error("Bookmarkscontroller not registered");
         }
-        const bookmark = {path: `/view/${this.getMainCourseDocPath()}`};
+        const bookmark = {path: `${this.getMainCourseDocPath()}`};
         await $http.post<IBookmarkGroup[]>("/bookmarks/addCourse", bookmark);
         await this.viewctrl.bookmarksCtrl.refresh();
         this.checkIfBookmarked(); // Instead of directly changing boolean this checks if it really was added.
@@ -153,7 +153,7 @@ timApp.component("timHeader", {
 <div ng-if="::!$ctrl.hideLinks && $ctrl.item">
     <div class="pull-right">
         <button ng-cloak
-                ng-if="::$ctrl.showAddToMyCourses()"
+                ng-if="$ctrl.showAddToMyCourses()"
                 ng-click="$ctrl.addToBookmarkFolder()"
                 title="Add this page to 'My courses' bookmark folder"
                 class="timButton label">

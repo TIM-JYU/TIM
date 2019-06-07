@@ -43,7 +43,7 @@ def add_course_bookmark():
 
 
 def add_to_course_bookmark(b: Bookmarks, d: DocInfo):
-    b.add_bookmark('My courses', d.title, d.path, move_to_top=False).save_bookmarks()
+    b.add_bookmark('My courses', d.title, d.url_relative, move_to_top=False).save_bookmarks()
 
 
 @bookmarks.route('/edit', methods=['POST'])
