@@ -233,9 +233,10 @@ def post_answer(plugintype: str, task_id_ext: str):
             teacher_group = UserGroup.get_teachers_group()
             if curr_user not in teacher_group.users:
                 abort(403, 'Permission denied: you are not in teachers group.')
-        ctx_user = User.query.get(user_id)
-        if user_id and not ctx_user:
-            abort(404, f'User {user_id} not found')
+        if user_id:
+            ctx_user = User.query.get(user_id)
+            if not ctx_user:
+                abort(404, f'User {user_id} not found')
     try:
         plugin = verify_task_access(d, tid, AccessType.view, TaskIdAccess.ReadWrite, context_user=ctx_user)
     except (PluginException, TimDbException) as e:

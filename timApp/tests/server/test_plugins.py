@@ -1239,3 +1239,19 @@ print(x == '%%username%%')
             teacher=True,
             user_id=self.test_user_1.id,
         )
+        self.post_answer(
+            'csPlugin',
+            f'{d.id}.py',
+            user_input=uinput2,
+            teacher=True,
+        )
+        self.post_answer(
+            'csPlugin',
+            f'{d.id}.py',
+            user_input=uinput2,
+            teacher=True,
+            user_id=999,
+            expect_status=404,
+            expect_content='User 999 not found',
+            json_key='error',
+        )
