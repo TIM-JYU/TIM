@@ -176,7 +176,7 @@ def delete_extra_files(extra_files, prgpath):
 def get_md(ttype, query):
     tiny = False
 
-    bycode, is_input, js, runner, tiny = handle_common_params(query, tiny, ttype)
+    bycode, is_input, js, runner, tiny = handle_common_params(query, tiny, ttype, None)
 
     usercode = None
     user_print = get_json_param(query.jso, "userPrint", None, False)
@@ -397,16 +397,22 @@ def get_html(self: 'TIMServer', ttype, query: QueryClass):
     # do_lazy = False
     # print("do_lazy",do_lazy,type(do_lazy))
 
+
     bycode, is_input, js, runner, tiny = handle_common_params(query, tiny, ttype)
+    language_class = languages.get(ttype.lower(), Language)
+    language = language_class(query, bycode)
 
     usercode = get_json_eparam(query.jso, "state", "usercode", "")
 
+    state_copy = language.state_copy()
+    for key in state_copy:
+        value = get_json_eparam(query.jso, "state", key, "")
+        if value:
+            js['markup'][key] = value
+
     before_open = query.jso.get("markup", {}).get('beforeOpen','')
-    language = None
     is_rv = is_review(query)
 
-    language_class = languages.get(ttype.lower(), Language)
-    language = language_class(query, bycode)
 
     if do_lazy and not before_open:
         before_open = language.get_default_before_open()
@@ -494,9 +500,11 @@ def get_html(self: 'TIMServer', ttype, query: QueryClass):
 
 
 def handle_common_params(query: QueryClass, tiny, ttype):
+    language_class = languages.get(ttype.lower(), Language)
+    language = language_class(query, "")
     if query.hide_program:
         get_param_del(query, 'program', '')
-    js = query_params_to_map_check_parts(query)
+    js = query_params_to_map_check_parts(query, language.deny_attributes())
     # print(js)
 
     q_bycode = get_param(query, "byCode", None)

@@ -17,7 +17,8 @@ const GeogebraMarkup = t.intersection([
         correctresponse: t.boolean,
         generalfeedback: t.boolean,
         showButton: t.string,
-        srchtml: t.string,
+        // srchtml: t.string,
+        message: t.string,
         width: t.number,
         height: t.number,
         tool: t.boolean,
@@ -26,7 +27,6 @@ const GeogebraMarkup = t.intersection([
     t.type({
         open: withDefault(t.boolean, true),
         borders: withDefault(t.boolean, true),
-        autopeek: withDefault(t.boolean, true),
         lang: withDefault(t.string, "fi"),
         // autoplay: withDefault(t.boolean, true),
         // file: t.string,
@@ -36,7 +36,7 @@ const GeogebraMarkup = t.intersection([
 const GeogebraAll = t.intersection([
     t.partial({
         usercode: t.string,
-        srchtml: t.string,
+        // srchtml: t.string,
         norun: t.boolean,
     }),
     t.type({
@@ -105,6 +105,7 @@ class GeogebraController extends PluginBase<t.TypeOf<typeof GeogebraMarkup>,
     private span: string = "";
     private error: string = "";
     private console: string = "";
+    private message: string = "";
     private userCode: string = "";
     private geogebraoutput: string = "";
     private geogebrainputfeedback: string = "";
@@ -134,6 +135,8 @@ class GeogebraController extends PluginBase<t.TypeOf<typeof GeogebraMarkup>,
         const aa = this.attrsall;
         this.userCode = aa.usercode ||  "";
 
+        this.message = this.attrs.message || "";
+
         if (this.attrs.open) {
             this.isOpen = true;
         }
@@ -146,6 +149,7 @@ class GeogebraController extends PluginBase<t.TypeOf<typeof GeogebraMarkup>,
     changeAnswer(a: IAnswer) {
         const frameElem = this.element.find(".jsFrameContainer")[0] as HTMLElement;
         const f = frameElem.firstChild as CustomFrame<JSFrameWindow>;
+        if ( !f.contentWindow.setData ) return;
         f.contentWindow.setData(JSON.parse(a.content));
     }
 
@@ -267,7 +271,11 @@ class GeogebraController extends PluginBase<t.TypeOf<typeof GeogebraMarkup>,
     getData() {
         const frameElem = this.element.find(".jsFrameContainer")[0] as HTMLElement;
         const f = frameElem.firstChild as CustomFrame<JSFrameWindow>;
-        let s = f.contentWindow.getData();
+        if ( !f.contentWindow.getData) return;
+        let s:any = f.contentWindow.getData();
+        if ( s.message ) {
+            this.message = s.message;
+        }
         this.runSend(s);
     }
 
@@ -318,6 +326,9 @@ geogebraApp.component("geogebraRunner", {
         <button ng-if="!$ctrl.isOpen"  ng-click="$ctrl.runShowTask()"  ng-bind-html="$ctrl.showButton()"></button>
         <button ng-if="$ctrl.isOpen && !$ctrl.attrs.norun" ng-disabled="$ctrl.isRunning" title="(Ctrl-S)" ng-click="$ctrl.getData()"
                 ng-bind-html="::$ctrl.button"></button>
+        <span class="geogebra message"
+              ng-if="$ctrl.message"
+              ng-bind-html="$ctrl.message"></span>
         <span class="geogebra message"
               ng-if="$ctrl.console"
               ng-bind-html="$ctrl.console"></span>

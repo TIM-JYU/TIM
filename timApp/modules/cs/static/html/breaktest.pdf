@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Variable Swap</title>
+    </head>
+    <body>
+    <div id="jsavcontainer">
+    <p>Kukkuu! Ei päässyt ulos!</p>
+    </div>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+    <script>
+        this.top.location !== this.location && (this.top.location = this.location);
+        $('#jsavcontainer', parent.document).html('<h1>clicked</h1>');
+    </script>
+    </body>
+</html>

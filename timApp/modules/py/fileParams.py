@@ -616,22 +616,25 @@ def query_params_to_attribute(query, leave_away):
     return result + ""
 
 
-def query_params_to_map(query: Dict[str, Any], transform=None):
+def query_params_to_map(query: Dict[str, Any], transform=None, deny: Dict[str, Any] = None):
     if transform is None:
         def transform(x):
             return x[0]
     result = {}
     for field in query.keys():
-        if not field.startswith("-"):
-            result[field] = transform(query[field])
+        if field.startswith("-"):
+            continue
+        if deny and field in deny:
+            continue
+        result[field] = transform(query[field])
     m = result.get("markup")
     if m:
-        result["markup"] = query_params_to_map(m, transform=lambda x: x)
+        result["markup"] = query_params_to_map(m, transform=lambda x: x, deny=deny)
     return result
 
 
-def query_params_to_map_check_parts(query: QueryClass):
-    result = query_params_to_map(query.query)
+def query_params_to_map_check_parts(query: QueryClass, deny: Dict[str, Any] = None):
+    result = query_params_to_map(query.query, deny=deny)
     return result
 
 

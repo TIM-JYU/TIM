@@ -203,6 +203,13 @@ class Language:
     def save(self, result): # when used without run, this can change result if needed
         return
 
+
+    def deny_attributes(self):
+        return None
+
+    def state_copy(self):
+        return []
+
     def convert(self, sourcelines):
         return 0, sourcelines, "", ""
 
@@ -1284,14 +1291,28 @@ class Geogebra(Language):
 
     def run(self, result, sourcelines, points_rule):
         self.save(result)
-        return 0, "Geogebra saved", "", ""
+        return 0, "GeoGebra saved", "", ""
 
     def save(self, result):
         data = dict(self.query.jso["input"])
         if 'type' in data:
             del data['type']
         result["save"] = data
-        return 0, "Geogebra saved", "", ""
+        return 0, "GeoGebra saved", "", ""
+
+    def deny_attributes(self):
+        return {"srchml":"",
+                "filename": "",
+                "prehtml": "",
+                "posthtml": "",
+                "data":"",
+                "javascript": "",
+                "commands": "",
+                "objxml": ""
+        }
+
+    def state_copy(self):
+        return ["message"]
 
     def iframehtml(self, result, sourcelines, points_rule):
         ma = self.query.jso['markup']
