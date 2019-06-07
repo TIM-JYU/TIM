@@ -173,11 +173,12 @@ export class CourseDialogController extends DialogController<{ params: IItem }, 
     private async getSubjects() {
         const r = await to($http.get<ICourseSettings>(`/courses/settings`));
         if (r.ok) {
-            this.subjects = r.result.data.course_subjects;
-            return;
+            // Add a placeholder subject for quicker testing in case course settings does not exist.
+            this.subjects = r.result.data.course_subjects || ["test"];
+        } else {
+            this.errorMessage = r.result.data.error;
+            this.successMessage = undefined;
         }
-        this.errorMessage = r.result.data.error;
-        this.successMessage = undefined;
     }
 }
 
