@@ -93,7 +93,7 @@ class TableFormInputModel:
 
 
 class TableFormInputSchema(Schema):
-    replyRows = fields.Dict();
+    replyRows = fields.Dict()
 
     @post_load
     def make_obj(self, data):
