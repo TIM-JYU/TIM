@@ -31,13 +31,12 @@ const NumericfieldMarkup = t.intersection([
     }),
 ]);
 const NumericfieldAll = t.intersection([
-    t.partial({
-        numericvalue: (t.number),
-    }),
+    t.partial({}),
     t.type({
         info: Info,
         markup: NumericfieldMarkup,
         preview: t.boolean,
+        state: nullable(t.type({c: t.union([t.string, t.number, t.null])})),
     }),
 ]);
 
@@ -51,10 +50,10 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
     private errormessage = "";
     private hideSavedText = true;
     private redAlert = false;
-    private saveResponse: {saved:boolean, message: (string | undefined)} = {saved:false, message:undefined}
+    private saveResponse: {saved: boolean, message: (string | undefined)} = {saved: false, message: undefined};
 
     getDefaultMarkup() {
-        return { };
+        return {};
     }
 
     /**
@@ -64,20 +63,31 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
         return super.buttonText() || null;
     }
 
-    /**
-     * Settings on every new page load.
-     */
+    get valueOrEmpty(): string {
+        return valueOr<string | number, string>(this.numericvalue, "").toString();
+    }
+
     $onInit() {
         super.$onInit();
-        this.numericvalue = valueOr(this.attrsall.numericvalue, this.attrs.initnumber || undefined );
-        if(this.numericvalue == undefined)
-        {
-            if(this.attrs.initnumber === 0)
-                this.numericvalue = 0;
+        const state = this.attrsall.state && this.attrsall.state.c;
+        if (state !== undefined) {
+            if (typeof state === "number") {
+                this.numericvalue = state;
+            } else if (state !== null) {
+                // TODO: parseFloat accepts too much like "6hello", should have a more accurate float check.
+                this.numericvalue = parseFloat(state.replace(",", "."));
+                if (isNaN(this.numericvalue)) {
+                    this.numericvalue = undefined;
+                    if (state !== "") {
+                        this.errormessage = `State is NaN (${state}); showing empty value.`;
+                    }
+                }
+            }
         }
         this.modelOpts = {debounce: this.autoupdate};
-        if(!this.attrs.labelStyle)
+        if (!this.attrs.labelStyle) {
             this.vctrl.addTimComponent(this);
+        }
         this.initialValue = this.numericvalue;
     }
 
@@ -85,14 +95,19 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
      * Returns the name given to the plugin.
      */
     getName(): string | undefined {
-        if (this.attrs.followid) return this.attrs.followid;
+        if (this.attrs.followid) {
+            return this.attrs.followid;
+        }
         const taskId = this.pluginMeta.getTaskId();
-        if (taskId) return taskId.split(".")[1];
+        if (taskId) {
+            return taskId.split(".")[1];
+        }
     }
 
     /**
      * Will run after $onInit - reserved for possible eventhandlers OR to be removed.
      */
+
     /*
     $postLink() {
         if (this.userword == "") {
@@ -106,15 +121,7 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
      * Not used in numericfield plugin, but promised to be implemented in ITimComponent.
      */
     getContent(): string {
-        return this.numericvalue.toString();
-    }
-
-    // noinspection JSUnusedGlobalSymbols
-    /**
-     * Returns (user) content in numeric form.
-     */
-    getNumericContent(): number {
-        return this.numericvalue;
+        return this.valueOrEmpty;
     }
 
     /**
@@ -154,10 +161,11 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
      * Initialize content.
      */
     initCode() {
-        this.numericvalue = this.attrs.initnumber || undefined
+        this.numericvalue = this.attrs.initnumber || undefined;
         if (this.numericvalue == undefined) {
-            if (this.attrs.initnumber === 0)
+            if (this.attrs.initnumber === 0) {
                 this.numericvalue = 0;
+            }
         }
         this.initialValue = this.numericvalue;
         this.result = undefined;
@@ -170,8 +178,7 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
     saveText() {
         if (this.isUnSaved()) {
             return this.doSaveText(false);
-        }
-        else {
+        } else {
             this.saveResponse.saved = false;
             this.saveResponse.message = undefined;
             return this.saveResponse;
@@ -185,7 +192,9 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
      * Unused method warning is suppressed, as the method is only called in template.
      */
     autoSave() {
-        if (this.attrs.autosave) this.doSaveText(false);
+        if (this.attrs.autosave) {
+            this.doSaveText(false);
+        }
     }
 
     // noinspection JSUnusedGlobalSymbols
@@ -218,7 +227,7 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
             return true;
         }
         const regExpChecker = new RegExp(re);
-        return regExpChecker.test(this.numericvalue.toString());
+        return regExpChecker.test(this.valueOrEmpty);
     }
 
     // noinspection JSUnusedGlobalSymbols
@@ -231,8 +240,8 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
         const inputfields = document.querySelectorAll("numericfield-runner input, textfield-runner input");
         for (let i = 0; i < inputfields.length; ++i) {
             const selectedfield = inputfields[i] as HTMLInputElement;
-            if (selectedfield === document.activeElement && inputfields[i+1]) {
-                let nextfield = inputfields[i+1] as HTMLInputElement;
+            if (selectedfield === document.activeElement && inputfields[i + 1]) {
+                const nextfield = inputfields[i + 1] as HTMLInputElement;
                 return nextfield.focus();
             }
         }
@@ -252,7 +261,6 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
         return (this.initialValue != this.numericvalue);
     }
 
-
     /**
      * Actual saver, called by different save alternatives implemented above.
      * @param true/false parameter boolean checker for the need to save
@@ -260,7 +268,7 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
     async doSaveText(nosave: boolean) {
         this.errormessage = "";
         if (this.attrs.validinput) {
-            if(!this.validityCheck(this.attrs.validinput)) {
+            if (!this.validityCheck(this.attrs.validinput)) {
                 this.errormessage = this.attrs.errormessage || "Input does not pass the RegEx: " + this.attrs.validinput;
                 this.redAlert = true;
                 this.saveResponse.message = this.errormessage;
@@ -274,7 +282,7 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
         const params = {
             input: {
                 nosave: false,
-                numericvalue: this.numericvalue,
+                c: this.numericvalue,
             },
         };
 
@@ -286,9 +294,11 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
         this.isRunning = false;
         if (r.ok) {
             const data = r.result.data;
-            this.errormessage = data.web.error;
+            if (data.web.error) {
+                this.errormessage = data.web.error;
+            }
             this.result = data.web.result;
-            if (this.result == "saved") {
+            if (this.result === "saved") {
                 this.initialValue = this.numericvalue;
                 this.hideSavedText = false;
                 this.redAlert = false;
@@ -352,7 +362,7 @@ numericfieldApp.component("numericfieldRunner", {
             ng-click="$ctrl.saveText()">
         {{::$ctrl.buttonText()}}
     </button>
-    <p class="savedtext" ng-if="!$ctrl.hideSavedText && $ctrl.buttonText()">Saved!</p> 
+    <p class="savedtext" ng-if="!$ctrl.hideSavedText && $ctrl.buttonText()">Saved!</p>
     <p ng-if="::$ctrl.footer" ng-bind="::$ctrl.footer" class="plgfooter"></p>
 </div> `,
 });

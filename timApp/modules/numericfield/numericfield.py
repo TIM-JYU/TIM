@@ -6,43 +6,17 @@ from typing import Union
 
 import attr
 from flask import jsonify, render_template_string
-from marshmallow import Schema, fields, post_load, validates, ValidationError, pre_load
+from marshmallow import Schema, fields, post_load
 from marshmallow.utils import missing
 from webargs.flaskparser import use_args
 
 from pluginserver_flask import GenericMarkupModel, GenericMarkupSchema, GenericHtmlSchema, GenericHtmlModel, \
     GenericAnswerSchema, GenericAnswerModel, Missing, \
     InfoSchema, create_app
+from common_schemas import TextfieldStateModel, TextfieldStateSchema
 
-
-@attr.s(auto_attribs=True)
-class NumericfieldStateModel:
-    """Model for the information that is stored in TIM database for each answer."""
-    c: float = missing
-
-
-def convert_to_float(value):
-    if value is None or value == "":
-        return None
-    try:
-        return float(value)
-    except ValueError:
-        raise ValidationError('Must be float.')
-
-
-class NumericfieldStateSchema(Schema):
-    c = fields.Raw()
-
-    @pre_load()
-    def remove_null(self, data):
-        try:
-            data["c"] = float(str(data.get("c", "")).replace(',', '.'))
-        except (ValueError, TypeError):
-            data["c"] = ""
-
-    @post_load()
-    def make_obj(self, data,):
-        return NumericfieldStateModel(c=convert_to_float(data['c']))
+NumericfieldStateModel = TextfieldStateModel
+NumericfieldStateSchema = TextfieldStateSchema
 
 
 @attr.s(auto_attribs=True)
@@ -59,6 +33,7 @@ class NumericfieldMarkupModel(GenericMarkupModel):
     labelStyle: Union[str, Missing] = missing
     step: Union[float, Missing] = missing
 
+
 class NumericfieldMarkupSchema(GenericMarkupSchema):
     points_array = fields.List(fields.List(fields.Number()))
     header = fields.String(allow_none=True)
@@ -66,7 +41,7 @@ class NumericfieldMarkupSchema(GenericMarkupSchema):
     stem = fields.String(allow_none=True)
     initnumber = fields.Number(allow_none=True)
     cols = fields.Int()
-    inputplaceholder: fields.Number(allow_none=True)
+    inputplaceholder = fields.Number(allow_none=True)
     followid = fields.String(allow_none=True)
     autosave = fields.Boolean()
     validinput = fields.String(allow_none=True)
@@ -82,17 +57,13 @@ class NumericfieldMarkupSchema(GenericMarkupSchema):
 @attr.s(auto_attribs=True)
 class NumericfieldInputModel:
     """Model for the information that is sent from browser (plugin AngularJS component)."""
-    numericvalue: float = missing
+    c: float = missing
     nosave: bool = missing
 
 
 class NumericfieldInputSchema(Schema):
-    numericvalue = fields.Number(allow_none=True)
+    c = fields.Number(allow_none=True)
     nosave = fields.Bool()
-
-    @validates('numericvalue')
-    def validate_numericvalue(self, number):
-        pass
 
     @post_load
     def make_obj(self, data):
@@ -112,14 +83,6 @@ class NumericfieldHtmlModel(GenericHtmlModel[NumericfieldInputModel, Numericfiel
 
     def get_static_html(self) -> str:
         return render_static_numericfield(self)
-
-    def get_browser_json(self):
-        """Allowing null values to dataBase"""
-        r = super().get_browser_json()
-        if self.state:
-            if self.state.c is not None:
-                r['numericvalue'] = self.state.c
-        return r
 
 
 class NumericfieldHtmlSchema(NumericfieldAttrs, GenericHtmlSchema):
@@ -165,6 +128,7 @@ size="{{cols}}"></span></label>
         **attr.asdict(m.markup),
     )
 
+
 app = create_app(__name__, NumericfieldHtmlSchema())
 
 
@@ -173,16 +137,16 @@ app = create_app(__name__, NumericfieldHtmlSchema())
 def answer(args: NumericfieldAnswerModel):
     web = {}
     result = {'web': web}
-    numericvalue = args.input.numericvalue
+    c = args.input.c
     nosave = args.input.nosave
 
-    if isinstance(numericvalue, Missing):
+    if isinstance(c, Missing):
         web['result'] = "unsaved"
         web['error'] = "Please enter a number"
         nosave = True
 
     if not nosave:
-        save = {"c": numericvalue}
+        save = {"c": c}
         result["save"] = save
         web['result'] = "saved"
 

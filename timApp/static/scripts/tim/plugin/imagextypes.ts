@@ -6,14 +6,14 @@ export interface IPoint {
     y: number;
 }
 
-const TuplePointR = t.clean(t.union([t.tuple([t.number, t.number]), t.tuple([t.number, t.number, t.number, t.number])]));
-const LineSegment = t.clean(t.intersection([
+const TuplePointR = t.union([t.tuple([t.number, t.number]), t.tuple([t.number, t.number, t.number, t.number])]);
+const LineSegment = t.intersection([
     t.type({lines: t.array(TuplePointR)}),
     t.partial({
         color: t.string,
         w: t.union([t.number, t.string]), // TODO should convert w to number only in database
     }),
-]));
+]);
 export type TuplePoint = t.TypeOf<typeof TuplePointR>;
 
 export interface ILineSegment extends t.TypeOf<typeof LineSegment> {
@@ -56,15 +56,15 @@ export type RequiredNonNull<T> = {
 };
 export type RequireNonNullExcept<T, U extends keyof T> = MakeOptional<RequiredNonNull<T>, U>;
 
-const ObjectType = t.clean(t.keyof({
+const ObjectType = t.keyof({
     ellipse: null,
     img: null,
     rectangle: null,
     textbox: null,
     vector: null,
-}));
+});
 
-const PinAlignment = t.clean(t.keyof({
+const PinAlignment = t.keyof({
     center: null,
     east: null,
     north: null,
@@ -74,31 +74,31 @@ const PinAlignment = t.clean(t.keyof({
     southeast: null,
     southwest: null,
     west: null,
-}));
+});
 
 export type PinAlign = t.TypeOf<typeof PinAlignment>;
 
-const ImgProps = t.clean(
-    t.intersection([
-        t.partial({
-            textbox: t.boolean,
-        }),
-        t.type({
-            src: t.string,
-        }),
-    ]));
+const ImgProps = t.intersection([
+    t.partial({
+        textbox: t.boolean,
+    }),
+    t.type({
+        src: t.string,
+    }),
+]);
 
-export const ValidCoord = t.clean(t.tuple([t.number, t.number]));
+export const ValidCoord = t.tuple([t.number, t.number]);
 
-export const SingleSize = t.clean(t.tuple([t.number]));
+export const SingleSize = t.tuple([t.number]);
 
-const Size = t.clean(t.union([t.null, ValidCoord, SingleSize]));
+const Size = t.union([t.null, ValidCoord, SingleSize]);
 
 export type SizeT = t.TypeOf<typeof Size>;
 
-const Angle = t.clean(nullable(t.number));
+const Angle = nullable(t.number);
 
-const TextboxProps = t.clean(t.intersection([
+const TextboxProps = t.intersection([
+    t.partial({}),
     t.partial({
         a: Angle,
         position: ValidCoord,
@@ -110,15 +110,15 @@ const TextboxProps = t.clean(t.intersection([
         font: nullable(t.string),
         text: nullable(t.string),
         textColor: nullable(t.string),
-    })]));
+    })]);
 
-const VectorProps = t.clean(t.partial({
+const VectorProps = t.partial({
     arrowheadlength: t.number,
     arrowheadwidth: t.number,
     color: nullable(t.string),
-}));
+});
 
-const CommonProps = t.clean(t.partial({
+const CommonProps = t.partial({
     a: Angle,
     borderWidth: nullable(t.number),
     color: nullable(t.string),
@@ -130,9 +130,9 @@ const CommonProps = t.clean(t.partial({
     imgproperties: nullable(ImgProps),
     textboxproperties: nullable(TextboxProps),
     vectorproperties: nullable(VectorProps),
-}));
+});
 
-const PinProps = t.clean(t.partial({
+const PinProps = t.partial({
     color: nullable(t.string),
     dotRadius: nullable(t.number),
     length: nullable(t.number),
@@ -143,14 +143,14 @@ const PinProps = t.clean(t.partial({
         start: ValidCoord,
     }),
     visible: t.boolean,
-}));
+});
 
 export interface PinPropsT extends t.TypeOf<typeof PinProps> {
 }
 
 const FixedObjectProps = CommonProps;
 
-const TargetProps = t.clean(t.intersection([
+const TargetProps = t.intersection([
     CommonProps,
     t.partial({
         dropColor: t.string,
@@ -158,14 +158,14 @@ const TargetProps = t.clean(t.intersection([
         snap: t.boolean,
         snapColor: t.string,
         snapOffset: ValidCoord,
-    })]));
+    })]);
 
-const Lock = t.clean(t.keyof({
+const Lock = t.keyof({
     x: null,
     y: null,
-}));
+});
 
-const DragObjectProps = t.clean(t.intersection([
+const DragObjectProps = t.intersection([
     t.partial({
         lock: Lock,
         pin: PinProps,
@@ -173,7 +173,7 @@ const DragObjectProps = t.clean(t.intersection([
         ylimits: ValidCoord,
     }),
     FixedObjectProps,
-]));
+]);
 
 export interface CommonPropsT extends t.TypeOf<typeof CommonProps> {
 }
@@ -198,7 +198,7 @@ export interface VectorPropsT extends t.TypeOf<typeof VectorProps> {
 
 export type ObjectTypeT = t.TypeOf<typeof ObjectType>;
 
-const BackgroundProps = t.clean(t.intersection([
+const BackgroundProps = t.intersection([
     t.partial({
         a: Angle,
         size: Size,
@@ -206,14 +206,14 @@ const BackgroundProps = t.clean(t.intersection([
     t.type({
         src: t.string,
     }),
-]));
+]);
 
-const DefaultProps = t.clean(t.intersection([DragObjectProps, TargetProps]));
+const DefaultProps = t.intersection([DragObjectProps, TargetProps]);
 
 export interface DefaultPropsT extends t.TypeOf<typeof DefaultProps> {
 }
 
-export const ImageXMarkup = t.clean(t.intersection([
+export const ImageXMarkup = t.intersection([
     t.partial({
         background: BackgroundProps,
         buttonPlay: t.string,
@@ -251,17 +251,17 @@ export const ImageXMarkup = t.clean(t.intersection([
         showTimes: withDefault(t.boolean, false),
         showVideoTime: withDefault(t.boolean, true),
     }),
-]));
+]);
 
-export const RightAnswer = t.clean(t.type({
+export const RightAnswer = t.type({
     id: t.string,
     position: ValidCoord,
-}));
+});
 
 export interface RightAnswerT extends t.TypeOf<typeof RightAnswer> {
 }
 
-export const ImageXAll = t.clean(t.intersection([
+export const ImageXAll = t.intersection([
     t.partial({
         state: nullable(t.partial({
             freeHandData: t.array(LineSegment),
@@ -279,7 +279,7 @@ export const ImageXAll = t.clean(t.intersection([
         markup: ImageXMarkup,
         preview: t.boolean,
     }),
-]));
+]);
 
 // By default, all properties are required when passing data to ObjBase constructors.
 // Here we make some properties optional.

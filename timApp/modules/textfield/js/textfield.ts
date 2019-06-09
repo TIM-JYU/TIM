@@ -6,8 +6,7 @@ import * as t from "io-ts";
 import {ITimComponent, ViewCtrl} from "tim/document/viewctrl";
 import {GenericPluginMarkup, Info, nullable, PluginBase, pluginBindings, withDefault} from "tim/plugin/util";
 import {$http} from "tim/util/ngimport";
-import {to} from "tim/util/utils";
-import {valueDefu} from "tim/util/utils"; // Authors note: needed for Reset-method, if ever wanted.
+import {to, valueOr} from "tim/util/utils";
 
 const textfieldApp = angular.module("textfieldApp", ["ngSanitize"]);
 export const moduleDefs = [textfieldApp];
@@ -32,12 +31,12 @@ const TextfieldMarkup = t.intersection([
 ]);
 const TextfieldAll = t.intersection([
     t.partial({
-        userword: t.string,
     }),
     t.type({
         info: Info,
         markup: TextfieldMarkup,
         preview: t.boolean,
+        state: nullable(t.type({c: t.union([t.string, t.number, t.null])})),
     }),
 ]);
 
@@ -61,18 +60,16 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
      * Returns (user) defined text for the button.
      */
     buttonText() {
-       return super.buttonText() || null;
+        return super.buttonText() || null;
     }
 
-    /**
-     * Settings on every new page load.
-     */
     $onInit() {
         super.$onInit();
-        this.userword = this.attrsall.userword || this.attrs.initword || "";
+        this.userword = (valueOr(this.attrsall.state && this.attrsall.state.c, this.attrs.initword || "")).toString();
         this.modelOpts = {debounce: this.autoupdate};
-        if(!this.attrs.labelStyle)
+        if (!this.attrs.labelStyle) {
             this.vctrl.addTimComponent(this);
+        }
         this.initialValue = this.userword;
     }
 
@@ -80,37 +77,20 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
      * Returns the name given to the plugin.
      */
     getName(): string | undefined {
-        if (this.attrs.followid) return this.attrs.followid;
+        if (this.attrs.followid) {
+            return this.attrs.followid;
+        }
         const taskId = this.pluginMeta.getTaskId();
-        if (taskId) return taskId.split(".")[1];
-    }
-
-    /**
-     *  Will run after $onInit - reserved for possible eventhandlers OR to be removed.
-     */
-    /*
-    $postLink() {
-        if (this.userword == "") {
-            this.userword = this.attrs.initword || "";
+        if (taskId) {
+            return taskId.split(".")[1];
         }
     }
-    */
 
     /**
      * Returns (user) content in string form.
      */
     getContent(): string {
         return this.userword;
-    }
-
-    // noinspection JSUnusedGlobalSymbols
-    /**
-     * Returns (user) content in numeric form.
-     * Not used in textfield plugin, but promised to be implemented in ITimComponent.
-     * Unused method warning is suppressed.
-     */
-    getNumericContent(): number {
-        return -1;
     }
 
     /**
@@ -243,7 +223,9 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
      * Unused method warning is suppressed, as the method is only called in template.
      */
     autoSave() {
-        if (this.attrs.autosave) { this.doSaveText(false); }
+        if (this.attrs.autosave) {
+            this.doSaveText(false);
+        }
     }
 
     /**
@@ -265,7 +247,7 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
         const params = {
             input: {
                 nosave: false,
-                userword: this.userword.trim(),
+                c: this.userword.trim(),
             },
         };
 

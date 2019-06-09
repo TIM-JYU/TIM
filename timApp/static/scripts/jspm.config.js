@@ -173,7 +173,7 @@ SystemJS.config({
   map: {
     "css": "github:systemjs/plugin-css@0.1.37",
     "deepmerge": "npm:deepmerge@3.0.0",
-    "io-ts": "npm:io-ts@1.4.1",
+    "io-ts": "npm:io-ts@1.8.6",
     "angular-diff-match-patch": "npm:angular-diff-match-patch@0.7.4",
     "ifvisible.js": "npm:ifvisible.js@1.0.6",
     "angularjs-color-picker": "npm:angularjs-color-picker@3.4.8",
@@ -522,11 +522,6 @@ SystemJS.config({
         "angular": "npm:angular@1.7.5"
       }
     },
-    "npm:io-ts@1.4.1": {
-      "map": {
-        "fp-ts": "npm:fp-ts@1.11.1"
-      }
-    },
     "npm:buffer@5.2.1": {
       "map": {
         "base64-js": "npm:base64-js@1.3.0",
@@ -593,6 +588,11 @@ SystemJS.config({
         "builtin-status-codes": "npm:builtin-status-codes@3.0.0",
         "xtend": "npm:xtend@4.0.1",
         "readable-stream": "npm:readable-stream@2.3.6"
+      }
+    },
+    "npm:io-ts@1.8.6": {
+      "map": {
+        "fp-ts": "npm:fp-ts@1.18.2"
       }
     }
   }

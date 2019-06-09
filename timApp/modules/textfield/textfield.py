@@ -5,31 +5,14 @@ from typing import Union
 
 import attr
 from flask import jsonify, render_template_string
-from marshmallow import Schema, fields, post_load, validates, ValidationError, pre_load
+from marshmallow import Schema, fields, post_load, validates
 from marshmallow.utils import missing
 from webargs.flaskparser import use_args
 
+from common_schemas import TextfieldStateModel, TextfieldStateSchema
 from pluginserver_flask import GenericMarkupModel, GenericMarkupSchema, GenericHtmlSchema, GenericHtmlModel, \
     GenericAnswerSchema, GenericAnswerModel, Missing, \
     InfoSchema, create_app
-
-
-@attr.s(auto_attribs=True)
-class TextfieldStateModel:
-    """Model for the information that is stored in TIM database for each answer."""
-    c: str
-
-
-class TextfieldStateSchema(Schema):
-    c = fields.Str(required=True)
-
-    @pre_load()
-    def numeric_to_text(self, data):
-        data["c"] = str(data.get("c", ""))
-
-    @post_load
-    def make_obj(self, data):
-        return TextfieldStateModel(**data)
 
 
 @attr.s(auto_attribs=True)
@@ -45,6 +28,7 @@ class TextfieldMarkupModel(GenericMarkupModel):
     errormessage: Union[str, Missing] = missing
     labelStyle: Union[str, Missing] = missing
 
+
 class TextfieldMarkupSchema(GenericMarkupSchema):
     points_array = fields.List(fields.List(fields.Number()))
     header = fields.String(allow_none=True)
@@ -52,7 +36,7 @@ class TextfieldMarkupSchema(GenericMarkupSchema):
     stem = fields.String(allow_none=True)
     initword = fields.String(allow_none=True)
     cols = fields.Int()
-    inputplaceholder: fields.Str(allow_none=True)
+    inputplaceholder = fields.Str(allow_none=True)
     followid = fields.String(allow_none=True)
     autosave = fields.Boolean()
     validinput = fields.String(allow_none=True)
@@ -67,15 +51,15 @@ class TextfieldMarkupSchema(GenericMarkupSchema):
 @attr.s(auto_attribs=True)
 class TextfieldInputModel:
     """Model for the information that is sent from browser (plugin AngularJS component)."""
-    userword: str
+    c: str
     nosave: bool = missing
 
 
 class TextfieldInputSchema(Schema):
-    userword = fields.Str(required=True)
+    c = fields.Str(required=True)
     nosave = fields.Bool()
 
-    @validates('userword')
+    @validates('c')
     def validate_userword(self, word):
         pass
 
@@ -97,12 +81,6 @@ class TextfieldHtmlModel(GenericHtmlModel[TextfieldInputModel, TextfieldMarkupMo
 
     def get_static_html(self) -> str:
         return render_static_textfield(self)
-
-    def get_browser_json(self):
-        r = super().get_browser_json()
-        if self.state:
-            r['userword'] = self.state.c
-        return r
 
 
 class TextfieldHtmlSchema(TextfieldAttrs, GenericHtmlSchema):
@@ -157,12 +135,12 @@ app = create_app(__name__, TextfieldHtmlSchema())
 def answer(args: TextfieldAnswerModel):
     web = {}
     result = {'web': web}
-    userword = args.input.userword
+    c = args.input.c
 
     nosave = args.input.nosave
 
     if not nosave:
-        save = {"c": userword}
+        save = {"c": c}
         result["save"] = save
         web['result'] = "saved"
 

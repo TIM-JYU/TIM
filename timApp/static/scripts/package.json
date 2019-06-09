@@ -39,7 +39,7 @@
     "@types/ui-grid": "^0.0.35",
     "deepmerge": "^3.0.0",
     "ifvisible.js": "^1.0.6",
-    "io-ts": "^1.4.1",
+    "io-ts": "^1.8.6",
     "moment": "^2.22.2",
     "tslib": "^1.9.3",
     "type-zoo": "^3.0.0"
@@ -71,7 +71,7 @@
       "deepmerge": "npm:deepmerge@^3.0.0",
       "humanize-duration": "github:EvanHahn/HumanizeDuration.js@^3.15.1",
       "ifvisible.js": "npm:ifvisible.js@^1.0.6",
-      "io-ts": "npm:io-ts@^1.4.1",
+      "io-ts": "npm:io-ts@^1.8.6",
       "katex": "npm:katex@0.7.1",
       "ng-file-upload": "npm:ng-file-upload@^12.2.13",
       "ngstorage": "npm:ngstorage@^0.3.11",
@@ -224,4 +224,4 @@
       }
     }
   }
-}
+}

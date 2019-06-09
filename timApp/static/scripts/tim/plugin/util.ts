@@ -41,6 +41,7 @@ export const GenericPluginTopLevelFields = t.intersection([
             readonly: null,
             readwrite: null,
         }),
+        state: t.unknown,
     }),
     t.type({
         info: Info,
@@ -63,6 +64,7 @@ export function getDefaults<MarkupType extends IGenericPluginMarkup,
         info: null,
         markup: defaultMarkup,
         preview: true,
+        state: null,
     };
     const d = runtimeType.decode(defaults);
     if (d.isLeft()) {
