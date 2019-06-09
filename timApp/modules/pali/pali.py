@@ -16,6 +16,7 @@ from pluginserver_flask import GenericMarkupModel, GenericMarkupSchema, GenericH
     InfoSchema, create_app
 
 
+
 @attr.s(auto_attribs=True)
 class PaliStateModel:
     """Model for the information that is stored in TIM database for each answer."""
@@ -198,7 +199,7 @@ def reqs():
 header: Kirjoita palindromi
 stem: Kirjoita palindromi, jossa on 5 kirjainta.
 -points_array: [[0, 0.1], [0.6, 1]]
-inputstem: "Palindromisi:"
+inputstem: "Palindromisi 5 kirjainta inputstem:"
 needed_len: 5
 answerLimit: 3
 initword: muikku

@@ -22,7 +22,7 @@ export interface IPluginAttributes<Markup extends IGenericPluginMarkup, State> {
 export const GenericPluginMarkup = t.partial({
     answerLimit: t.Integer,
     button: nullable(t.string),
-    buttonText: t.string,
+    buttonText: nullable(t.string),
     footer: t.string,
     header: nullable(t.string),
     lazy: t.boolean,
@@ -229,6 +229,7 @@ export abstract class PluginBase<MarkupType extends IGenericPluginMarkup, A exte
     abstract getDefaultMarkup(): Partial<MarkupType>;
 
     $postLink() {
+
     }
 
     $onInit() {
@@ -255,6 +256,56 @@ export abstract class PluginBase<MarkupType extends IGenericPluginMarkup, A exte
 
     protected getRootElement() {
         return this.element[0];
+    }
+
+    getGroups(): string[] {
+        const returnList: string[] = [];
+        const parents = this.element.parents(".area");
+        if (parents[0]) {
+            const areaList = parents[0].classList;
+            areaList.forEach(
+                (value) => {
+                    const m = value.match(/^area_(\S+)$/);
+                    if (m) {
+                        returnList.push(m[1]);
+                        console.log(m[1]);
+                    }
+                }
+            );
+        }
+        return returnList;
+    }
+
+    belongsToGroup(group: string): boolean {
+        return this.getGroups().includes(group);
+    }
+
+    /**
+     * Returns the name given to the plugin.
+     */
+    getName(): string | undefined {
+        const taskId = this.pluginMeta.getTaskId();
+        if (taskId) return taskId.split(".")[1];
+    }
+
+    getTaskId(): string | undefined {
+        const taskId = this.pluginMeta.getTaskId();
+        if (taskId) {
+            const docTask = taskId.split(".");
+            return docTask[0].toString() + "." + docTask[1].toString();
+        }
+    }
+
+    /**
+     * Returns the plugin's parent paragraph.
+     */
+    public getPar() {
+        return this.element.parents(".par");
+    }
+
+    resetField(): undefined {
+        // this.$onInit()
+        return undefined;
     }
 }
 

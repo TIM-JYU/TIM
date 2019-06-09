@@ -20,6 +20,7 @@ import json
 from typing import Optional, Set, Union, TypeVar, Generic, Dict, List
 
 import attr
+from flask import Blueprint
 from flask import render_template_string, jsonify, Flask
 from marshmallow import Schema, fields, post_load, missing, pre_load, ValidationError, validates
 # noinspection PyProtectedMember
@@ -71,6 +72,7 @@ class GenericMarkupModel:
     footer: Union[str, Missing] = missing
     stem: Union[str, Missing] = missing
     lazy: Union[bool, Missing] = missing
+    buttonText: Union[str, None, Missing] = missing
 
     def get_visible_data(self):
         return {k: v for k, v in list_not_missing_fields(self) if k not in self.hidden_keys}
@@ -82,6 +84,7 @@ class GenericMarkupSchema(Schema):
     footer = fields.Str()
     hidden_keys = fields.List(fields.Str(), required=True)
     stem = fields.Str()
+    buttonText = fields.Str(allow_none=True)
 
     @pre_load
     def process_minus(self, data):
@@ -287,7 +290,11 @@ def create_app(name: str, html_schema: GenericHtmlSchema):
     :return: The app.
     """
     app = Flask(name, static_folder=".", static_url_path="")
+    register_routes(app, html_schema)
+    return app
 
+
+def register_routes(app, html_schema: GenericHtmlSchema, csrf=None):
     @app.errorhandler(422)
     def handle_invalid_request(error: UnprocessableEntity):
         return jsonify({'web': {'error': render_validationerror(ValidationError(message=error.data['messages']))}})
@@ -297,9 +304,20 @@ def create_app(name: str, html_schema: GenericHtmlSchema):
     def multihtml(args: List[GenericHtmlSchema]):
         return render_multihtml(html_schema, args)
 
+    if csrf:
+        csrf.exempt(multihtml)
+
     @app.before_request
     def print_rq():
         pass
         # pprint(request.get_json(silent=True))
 
     return app
+
+
+def create_blueprint(name: str, plugin_name: str, html_schema: GenericHtmlSchema, csrf=None):
+    bp = Blueprint(f'{plugin_name}_plugin',
+                   name,
+                   url_prefix=f'/{plugin_name}')
+    register_routes(bp, html_schema, csrf)
+    return bp

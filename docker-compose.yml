@@ -4,10 +4,13 @@ services:
   image: timimages/tim:${TIM_IMAGE_TAG}
   build: ./timApp
   depends_on:
-   - stack-api-server
+   # - stack-api-server
    - postgresql
    - csplugin
    - pali
+   - textfield
+   - numericfield
+   - multisave
    - showfile
    - haskellplugins
    - imagex
@@ -22,7 +25,7 @@ services:
   command: python3 launch.py --with-gunicorn
   environment:
    FLASK_APP: tim.py
-   PYTHONPATH: /service:/usr/local/lib/python3.6/dist-packages
+   PYTHONPATH: /service:/service/timApp/modules/py:/usr/local/lib/python3.6/dist-packages
    COMPOSE_PROJECT_NAME: ${COMPOSE_PROJECT_NAME}
    TIM_SETTINGS: ${CONFIG_FILE}
    TIM_HOST: ${TIM_HOST}
@@ -89,13 +92,54 @@ services:
   restart: unless-stopped
  pali:
   image: timimages/tim:${TIM_IMAGE_TAG}
-  # build: ./timApp/modules/pali
+  build: ./timApp/modules/pali
   volumes:
    - ./timApp/modules/pali:/pali:ro
    - ./timApp/modules/py:/py:ro
   working_dir: /pali
   environment:
     PYTHONPATH: /pali:/py:/usr/local/lib/python3.6/dist-packages
+  command: ./startAll.sh
+  restart: unless-stopped
+ textfield:
+  image: timimages/tim:${TIM_IMAGE_TAG}
+  #build: ./timApp/modules/textfield
+  volumes:
+   - ./timApp/modules/textfield:/textfield:ro
+   - ./timApp/modules/py:/py:ro
+  working_dir: /textfield
+  environment:
+   PYTHONPATH: /textfield:/py:/usr/local/lib/python3.6/dist-packages
+  command: ./startAll.sh
+  restart: unless-stopped
+ numericfield:
+  image: timimages/tim:${TIM_IMAGE_TAG}
+  #build: ./timApp/modules/numericfield
+  volumes:
+   - ./timApp/modules/numericfield:/numericfield:ro
+   - ./timApp/modules/py:/py:ro
+  working_dir: /numericfield
+  environment:
+   PYTHONPATH: /numericfield:/py:/usr/local/lib/python3.6/dist-packages
+  command: ./startAll.sh
+  restart: unless-stopped
+ multisave:
+  image: timimages/tim:${TIM_IMAGE_TAG}
+  #build: ./timApp/modules/multisave
+  volumes:
+   - ./timApp/modules/multisave:/multisave:ro
+   - ./timApp/modules/py:/py:ro
+  working_dir: /multisave
+  environment:
+   PYTHONPATH: /multisave:/py:/usr/local/lib/python3.6/dist-packages
+  command: ./startAll.sh
+  restart: unless-stopped
+ jsrunner:
+  image: timimages/tim:${TIM_IMAGE_TAG}
+  #build: ./timApp/modules/multisave
+  volumes:
+   - ./timApp/modules/jsrunner:/jsrunner:ro
+  working_dir: /jsrunner
   command: ./startAll.sh
   restart: unless-stopped
  uploader:
@@ -144,7 +188,7 @@ services:
    - redis
   environment:
    FLASK_APP: tim.py
-   PYTHONPATH: /service:/usr/local/lib/python3.6/dist-packages
+   PYTHONPATH: /service:/service/timApp/modules/py:/usr/local/lib/python3.6/dist-packages
    COMPOSE_PROJECT_NAME: ${COMPOSE_PROJECT_NAME}
    TIM_SETTINGS: ${CONFIG_FILE}
    TIM_HOST: ${TIM_HOST}

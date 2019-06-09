@@ -40,6 +40,20 @@ NEVERLAZY = "NEVERLAZY"
 CONTENT_FIELD_NAME_MAP = {
     'csPlugin': 'usercode',
     'pali': 'userword',
+    'numericfield': 'c',
+    'textfield': 'c',
+}
+
+CONTENT_FIELD_TYPE_MAP = {
+    'numericfield': float,
+}
+
+NEVERLAZY_PLUGINS = {
+    'textfield',
+    'multisave',
+    'numericfield',
+    'jsrunner',
+    'tableForm'
 }
 
 
@@ -294,7 +308,7 @@ class Plugin:
                 "state": state,
                 "taskID": self.task_id.doc_task if self.task_id else self.fake_task_id,
                 "taskIDExt": self.task_id.extended_or_doc_task if self.task_id else self.fake_task_id,
-                "doLazy": options.do_lazy,
+                "doLazy": (options.do_lazy and self.type not in NEVERLAZY_PLUGINS) if isinstance(options.do_lazy, bool) else options.do_lazy,
                 "userPrint": options.user_print,
                 # added preview here so that whether or not the window is in preview can be
                 # checked in python so that decisions on what data is sent can be made.
@@ -305,6 +319,9 @@ class Plugin:
                 "targetFormat": options.target_format.value,
                 "review": options.review,
                 }
+
+    def get_content_field_name(self):
+        return CONTENT_FIELD_NAME_MAP.get(self.type, 'c')
 
     def is_answer_valid(self, old_answers, tim_info):
         """Determines whether the currently posted answer should be considered valid.
@@ -334,6 +351,8 @@ class Plugin:
         return self.values.get('gvData', False)  # Graphviz is cached if not cacahe: false attribute
 
     def is_lazy(self) -> bool:
+        if self.type in NEVERLAZY_PLUGINS:
+            return False
         do_lazy = self.options.do_lazy
         plugin_lazy = self.plugin_lazy
         html = self.output

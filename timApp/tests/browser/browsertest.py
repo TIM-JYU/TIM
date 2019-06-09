@@ -133,6 +133,10 @@ class BrowserTest(TimLiveServer, TimRouteTest):
         logs = self.drv.get_log("browser")
         pprint(logs)
 
+    def refresh(self):
+        """Refreshes the current browser page"""
+        self.drv.refresh()
+
     def save_screenshot(self, filename: str='screenshot'):
         """Saves the current browser screen to a PNG file in screenshots directory.
 

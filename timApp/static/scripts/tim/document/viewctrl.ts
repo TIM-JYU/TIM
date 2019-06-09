@@ -38,6 +38,21 @@ import {MenuFunctionEntry} from "./viewutils";
 
 markAsUsed(ngs, popupMenu, interceptor, helpPar);
 
+export interface ITimComponent {
+    getName: () => string | undefined;
+    getContent: () => string | undefined;
+    getContentArray?: () => string[] | undefined;
+    getGroups: () => string[];
+    getTaskId: () => string | undefined;
+    belongsToGroup(group: string): boolean;
+    isUnSaved: () => boolean;
+    save: () => Promise<{saved: boolean, message: (string | undefined)}>;
+    getPar: () => Paragraph;
+    setPluginWords?: (words: string[]) => void;
+    setForceAnswerSave?: (force: boolean) => void;
+    resetField: () => string | undefined;
+}
+
 export interface IInsertDiffResult {
     type: "insert";
     after_id: string | null;
@@ -94,6 +109,7 @@ export class ViewCtrl implements IController {
     private velpMode: boolean;
 
     private timTables = new Map<string, TimTableController>();
+    private timComponents: Map<string, ITimComponent> = new Map();
 
     private pendingUpdates: PendingCollection = new Map<string, string>();
     private document: Document;
@@ -257,6 +273,16 @@ export class ViewCtrl implements IController {
         // from https://stackoverflow.com/a/7317311
         window.addEventListener("beforeunload", (e) => {
             saveCurrentScreenPar();
+            let unsavedTimComponents = false;
+            for (const t of this.timComponents.values()) {
+                if (t.isUnSaved()) {
+                    unsavedTimComponents = true;
+                    break;
+                }
+            }
+            if ((!this.editing && !unsavedTimComponents) || $window.IS_TESTING) {
+                return undefined;
+            }
 
             if (!this.editing || $window.IS_TESTING) {
                 return undefined;
@@ -389,6 +415,7 @@ export class ViewCtrl implements IController {
      * @param {string} parId The ID of the table paragraph.
      */
     public addTable(controller: TimTableController, parId: string) {
+        console.log("table added!");
         this.timTables.set(parId, controller);
     }
 
@@ -399,6 +426,74 @@ export class ViewCtrl implements IController {
      */
     public getTableControllerFromParId(parId: string) {
         return this.timTables.get(parId);
+    }
+
+    /**
+     * Registers an ITimComponent to the view controller by its name attribute if it has one.
+     * @param {ITimComponent} component The component to be registered.
+     */
+    public addTimComponent(component: ITimComponent) {
+        let name = component.getName();
+        if (name) this.timComponents.set(name, component);
+    }
+
+    /**
+     * Returns an ITimComponent where register ID matches the given string.
+     * @param {string} name The register ID of the ITimComponent.
+     * @returns {ITimComponent | undefined} Matching component if there was one.
+     */
+    public getTimComponentByName(name: string): ITimComponent | undefined {
+        return this.timComponents.get(name);
+    }
+
+    /**
+     * Gets ITimComponents nested within specified area component.
+     * @param{string} group name of the area object.
+     * @returns {ITimComponent[]} List of ITimComponents nested within the area.
+     */
+    public getTimComponentsByGroup(group: string): ITimComponent[] {
+        let returnList: ITimComponent[] = [];
+        for(const [k, v] of this.timComponents)
+        {
+            if (v.belongsToGroup(group)) returnList.push(v);
+        }
+        return returnList;
+    }
+
+    /**
+     * Searches for registered ITimComponent whose ID matches the given regexp.
+     * @param {string} re The RegExp to be used in search.
+     * @returns {ITimComponent[]} List of ITimComponents where the ID matches the regexp.
+     */
+    public getTimComponentsByRegex(re: string): ITimComponent[]{
+        let returnList: ITimComponent[] = [];
+        let reg = new RegExp(re)
+        for(const [k, v] of this.timComponents)
+        {
+            if (reg.test(k)) returnList.push(v);
+        }
+        return returnList;
+    }
+
+    /**
+     * @returns {ITimComponent[]} List of all registered ITimComponents
+     */
+    public getAllTimComponents(): ITimComponent[] {
+        return Array.from(this.timComponents.values());
+    }
+
+    /**
+     * @returns {boolean} True if at least one registered ITimComponent was in unsaved state
+     */
+    public checkUnSavedTimComponents(): boolean {
+        let unsavedTimComponents = false;
+        for (const t of this.timComponents.values()) {
+            if (t.isUnSaved()) {
+                unsavedTimComponents = true;
+                break;
+            }
+        }
+        return unsavedTimComponents;
     }
 
     isEmptyDocument() {
@@ -422,6 +517,9 @@ export class ViewCtrl implements IController {
                 await lo.abLoad.promise;
             }
         }
+        //TODO: do not call changeUser separately if updateAll enabled
+        // - handle /answers as single request for all related plugins instead of separate requests
+        // - do the same for /taskinfo and /getState requests
         for (const ab of this.abs.values()) {
             ab.changeUser(user, updateAll);
         }
@@ -534,7 +632,18 @@ export class ViewCtrl implements IController {
     private abs = new Map<string, AnswerBrowserController>();
 
     registerAnswerBrowser(ab: AnswerBrowserController) {
-        this.abs.set(ab.taskId, ab);
+        //TODO: Task can have two instances in same document (regular field and label version)
+        // - for now just add extra answerbrowsers for them (causes unnecessary requests when changing user...)
+        // - maybe in future answerbrowser could find all related plugin instances and update them when ab.changeuser gets called?
+        // - fix registerPluginLoader too
+        if(this.abs.has((ab.taskId))){
+            let index = 1;
+            while(this.abs.has(ab.taskId + index)){
+                index++
+            }
+            this.abs.set(ab.taskId + index, ab);
+        }
+        else this.abs.set(ab.taskId, ab);
     }
 
     getAnswerBrowser(taskId: string) {
@@ -544,7 +653,15 @@ export class ViewCtrl implements IController {
     private ldrs = new Map<string, PluginLoaderCtrl>();
 
     registerPluginLoader(loader: PluginLoaderCtrl) {
-        this.ldrs.set(loader.taskId, loader);
+        //TODO: see todos at registerAnswerBrowser
+        if (this.ldrs.has((loader.taskId))) {
+            let index = 1;
+            while (this.ldrs.has(loader.taskId + index)) {
+                index++
+            }
+            this.ldrs.set(loader.taskId + index, loader);
+        }
+        else this.ldrs.set(loader.taskId, loader);
     }
 
     getPluginLoader(taskId: string) {

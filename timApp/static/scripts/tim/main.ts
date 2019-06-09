@@ -28,6 +28,7 @@ import * as imagex from "tim/plugin/imagex";
 import * as qstController from "tim/plugin/qstController";
 import * as tape from "tim/plugin/tape";
 import * as timTable from "tim/plugin/timTable";
+import * as tableForm from "tim/plugin/tableForm";
 import * as pluginUtil from "tim/plugin/util";
 import * as searchBox from "tim/search/searchBox";
 import * as sidebarMenuCtrl from "tim/sidebar/sidebarMenuCtrl";
@@ -81,6 +82,7 @@ markAsUsed(
     tape,
     templateList,
     timTable,
+    tableForm,
     userlistController,
     userMenu,
     velpSelection,

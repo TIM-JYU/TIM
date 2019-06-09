@@ -1,8 +1,9 @@
 """Answer-related routes."""
 import json
 import re
+import time
 from datetime import timezone, timedelta, datetime
-from typing import Union, List, Tuple, Optional
+from typing import Union, List, Tuple, Dict
 
 import attr
 import dateutil.parser
@@ -13,10 +14,12 @@ from flask import abort
 from flask import request
 from marshmallow import Schema, fields, post_load
 from marshmallow.utils import _Missing, missing
+from sqlalchemy import func
 from webargs.flaskparser import use_args
 
 from timApp.answer.answer import Answer
 from timApp.answer.answer_models import AnswerUpload
+from timApp.answer.answers import get_latest_answers_query
 from timApp.auth.accesshelper import verify_logged_in, get_doc_or_abort, verify_manage_access
 from timApp.auth.accesshelper import verify_task_access, verify_teacher_access, verify_seeanswers_access, \
     has_teacher_access, \
@@ -31,14 +34,16 @@ from timApp.document.post_process import hide_names_in_teacher
 from timApp.item.block import Block, BlockType
 from timApp.markdown.dumboclient import call_dumbo
 from timApp.plugin.containerLink import call_plugin_answer
-from timApp.plugin.plugin import Plugin, PluginWrap, NEVERLAZY, PluginType
+from timApp.plugin.plugin import Plugin, PluginWrap, NEVERLAZY
+from timApp.plugin.plugin import PluginType
+from timApp.plugin.plugin import find_plugin_from_document
 from timApp.plugin.pluginControl import find_task_ids, pluginify
+from timApp.plugin.pluginControl import task_ids_to_strlist
 from timApp.plugin.pluginexception import PluginException
 from timApp.plugin.taskid import TaskId, TaskIdAccess
 from timApp.timdb.dbaccess import get_timdb
 from timApp.timdb.exceptions import TimDbException
 from timApp.timdb.sqa import db
-from timApp.user.special_group_names import TEACHERS_GROUPNAME
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
 from timApp.util.flask.requesthelper import verify_json_params, get_option, get_consent_opt
@@ -147,6 +152,83 @@ def get_iframehtml(plugintype: str, task_id_ext: str, user_id: int, anr: int):
     return result
 
 
+def get_fields_and_users(u_fields: List[str], groups: List[UserGroup], d: DocInfo, current_user: User):
+    users = set()
+    for group in groups:
+        g = group.users.all()
+        for u in g:
+            users.add(u)
+
+    task_ids = []
+    alias_map = {}
+    content_map = {}
+    jsrunner_alias_map = {}
+    doc_map = {}
+    for field in u_fields:
+        field_content = field.split("|")
+        field_alias = field_content[0].split("=")
+        try:
+            task_id = TaskId.parse(field_alias[0].strip(), False, False)
+        except PluginException:
+            continue
+        task_ids.append(task_id)
+        if not task_id.doc_id:
+            task_id.doc_id = d.id
+        if len(field_content) == 2:
+            content_map[task_id.extended_or_doc_task] = field_content[1].strip()
+        if len(field_alias) == 2:
+            if field_alias[1].strip() in jsrunner_alias_map:
+                abort(403, f'Duplicate alias {field_alias[1].strip()} in fields attribute')
+            alias_map[task_id.extended_or_doc_task] = field_alias[1].strip()
+            jsrunner_alias_map[field_alias[1].strip()] = task_id.extended_or_doc_task
+        dib = get_doc_or_abort(task_id.doc_id)
+        if not current_user.has_teacher_access(dib):
+            abort(403, f'Missing teacher access for document {dib.id}')
+        doc_map[task_id.doc_id] = dib.document
+
+    res = []
+    for user in users:
+        answer_ids = (
+            user.answers
+                .filter(Answer.task_id.in_(task_ids_to_strlist(task_ids)))
+                .group_by(Answer.task_id)
+                .with_entities(func.max(Answer.id)).all()
+        )
+        answer_list = Answer.query.filter(Answer.id.in_(answer_ids)).all()
+        answer_dict: Dict[str, Answer] = {}
+        for answer in answer_list:
+            answer_dict[answer.task_id] = answer
+        user_tasks = {}
+        for task in task_ids:
+            a = answer_dict.get(task.doc_task)
+            if not a:
+                value = None
+            elif task.field == "points":
+                value = a.points
+            elif task.field == "datetime":
+                value = time.mktime(a.answered_on.timetuple())
+            else:
+                json_str = a.content
+                p = json.loads(json_str)
+                if task.extended_or_doc_task in content_map:
+                    # value = p[content_map[task.extended_or_doc_task]]
+                    value = p.get(content_map[task.extended_or_doc_task])
+                else:
+                    if len(p) > 1:
+                        plug = find_plugin_from_document(doc_map[task.doc_id], task, get_current_user_object())
+                        content_field = plug.get_content_field_name()
+                        value = p.get(content_field)
+                    else:
+                        values_p = list(p.values())
+                        value = values_p[0]
+            if task.extended_or_doc_task in alias_map:
+                user_tasks[alias_map.get(task.extended_or_doc_task)] = value
+            else:
+                user_tasks[task.extended_or_doc_task] = value
+        res.append({'user': user, 'fields': user_tasks})
+    return res, jsrunner_alias_map, content_map
+
+
 @answers.route("/<plugintype>/<task_id_ext>/answer/", methods=['PUT'])
 def post_answer(plugintype: str, task_id_ext: str):
     """Saves the answer submitted by user for a plugin in the database.
@@ -156,6 +238,7 @@ def post_answer(plugintype: str, task_id_ext: str):
     :return: JSON
 
     """
+
     timdb = get_timdb()
     try:
         tid = TaskId.parse(task_id_ext)
@@ -170,6 +253,7 @@ def post_answer(plugintype: str, task_id_ext: str):
     answer_browser_data, = verify_json_params('abData', require=False, default={})
     is_teacher = answer_browser_data.get('teacher', False)
     save_teacher = answer_browser_data.get('saveTeacher', False)
+    save_teacher_without_collaboration = answer_browser_data.get('saveTeacherWithoutCollaboration', False)
     save_answer = answer_browser_data.get('saveAnswer', True) and tid.task_name
 
     if tid.is_points_ref:
@@ -278,6 +362,15 @@ def post_answer(plugintype: str, task_id_ext: str):
     # Get the newest answer (state). Only for logged in users.
     state = try_load_json(old_answers[0].content) if logged_in() and len(old_answers) > 0 else None
 
+    if plugin.type == 'jsrunner':
+        groupnames = plugin.values.get('groups', [plugin.values.get('group')])
+        g = UserGroup.query.filter(UserGroup.name.in_(groupnames))
+        if len(g.all()) < 1:  # TODO: miten pitäisi tarkistaa?
+            abort(403, f'Missing group in jsrunner')
+
+        answerdata['data'], answerdata['aliases'], trash = get_fields_and_users(plugin.values['fields'], g, d,
+                                                                                get_current_user_object())
+
     answer_call_data = {'markup': plugin.values,
                         'state': state,
                         'input': answerdata,
@@ -297,7 +390,12 @@ def post_answer(plugintype: str, task_id_ext: str):
         return json_response({'error': 'The key "web" is missing in plugin response.'}, 400)
     result = {'web': jsonresp['web']}
 
-    def add_reply(obj, key, runMarkDown = False):
+    if plugin.type == 'jsrunner' or plugin.type == 'tableForm':
+        handle_jsrunner_response(jsonresp, result)
+        db.session.commit()
+        return json_response(result)
+
+    def add_reply(obj, key, runMarkDown=False):
         if key not in plugin.values:
             return
         text_to_add = plugin.values[key]
@@ -360,6 +458,19 @@ def post_answer(plugintype: str, task_id_ext: str):
                                                            tags,
                                                            valid=True,
                                                            points_given_by=get_current_user_group())
+        elif is_teacher and save_teacher_without_collaboration:
+            user_id = answer_browser_data.get('userId')
+            if user_id:
+                users = [User.query.get(user_id)]
+                points = answer_browser_data.get('points', points)
+                points = points_to_float(points)
+                result['savedNew'] = timdb.answers.save_answer(users,
+                                                               tid,
+                                                               json.dumps(save_object),
+                                                               points,
+                                                               tags,
+                                                               valid=True,
+                                                               points_given_by=get_current_user_group())
         else:
             result['savedNew'] = None
         if result['savedNew'] is not None and upload is not None:
@@ -368,6 +479,88 @@ def post_answer(plugintype: str, task_id_ext: str):
 
     db.session.commit()
     return json_response(result)
+
+
+def handle_jsrunner_response(jsonresp, result):
+    save_obj = jsonresp['save']
+    tasks = set()
+    # content_map = {}
+    doc_map: Dict[int, DocInfo] = {}
+    for item in save_obj:
+        task_u = item['fields']
+        for key in task_u.keys():
+            key_content = key.split("|")
+            # #TODO: Parse content tässä
+            # if len(key_content) == 2:
+            #     content_map[key_content[0]] = key_content[1].strip()
+            tasks.add(key_content[0])
+            id_num = TaskId.parse(key_content[0], False, False)
+            if id_num.doc_id not in doc_map:
+                doc_map[id_num.doc_id] = get_doc_or_abort(id_num.doc_id)
+    task_content = {}
+    for task in tasks:
+        t_id = TaskId.parse(task, False, False)
+        dib = doc_map[t_id.doc_id]
+        verify_teacher_access(dib)
+        if t_id.task_name == "grade" or t_id.task_name == "credit":
+            task_content[task] = 'c'
+            continue
+        try:
+            plug = find_plugin_from_document(dib.document, t_id, get_current_user_object())
+            content_field = plug.get_content_field_name()
+            # key_content = key.split("|")
+            # #TODO: Parse content tässä
+            # if len(key_content) == 2:
+            #     content_map[key_content[0]] = key_content[1].strip()
+            # TODO: check plug content type ^
+            task_content[task] = content_field
+        except PluginException as e:
+            errormsg = str(t_id.doc_id) + ": " + str(e) + " \n"
+            try:
+                result['web']['error'] = result['web']['error'] + errormsg
+            except KeyError:
+                result['web'] = {"error": errormsg}
+    for user in save_obj:
+        u_id = user['user']
+        u = User.get_by_id(u_id)
+        user_fields = user['fields']
+        for key, value in user_fields.items():
+            try:
+                content_list = key.split("|")
+                if len(content_list) == 2:
+                    content_type = content_list[1].strip()
+                else:
+                    content_type = task_content[content_list[0]]
+                c = {content_type: value}
+                task_id = TaskId.parse(content_list[0], False, False)
+                an: Answer = get_latest_answers_query(task_id, [u]).first()
+                content = json.dumps(c)
+                if an and an.content == content:  # TODO check if redundant
+                    pass
+                elif an:
+                    an_content = json.loads(an.content)
+                    if an_content.get(content_type) != value:
+                        an_content[content_type] = value
+                        an_content = json.dumps(an_content)
+                        a_result = Answer(
+                            content=an_content,
+                            task_id=task_id.doc_task,
+                            users=[u],
+                            valid=True,
+                            last_points_modifier=get_current_user_group()
+                        )
+                        db.session.add(a_result)
+                else:
+                    a_result = Answer(
+                        content=content,
+                        task_id=task_id.doc_task,
+                        users=[u],
+                        valid=True,
+                        last_points_modifier=get_current_user_group()
+                    )
+                    db.session.add(a_result)
+            except KeyError:
+                pass
 
 
 def get_hidden_name(user_id):
@@ -639,7 +832,8 @@ def get_task_users(task_id):
     d = get_doc_or_abort(tid.doc_id)
     verify_seeanswers_access(d)
     usergroup = request.args.get('group')
-    q = User.query.join(Answer, User.answers).filter_by(task_id=task_id).join(UserGroup, User.groups).order_by(User.real_name.asc())
+    q = User.query.join(Answer, User.answers).filter_by(task_id=task_id).join(UserGroup, User.groups).order_by(
+        User.real_name.asc())
     if usergroup is not None:
         q = q.filter(UserGroup.name.in_([usergroup]))
     users = q.all()

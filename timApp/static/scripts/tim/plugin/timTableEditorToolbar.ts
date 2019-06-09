@@ -42,6 +42,9 @@ export class TimTableEditorToolbarController extends DialogController<{params: I
         this.activeTable = this.resolve.params.activeTable;
         this.hid = this.activeTable.data.hid;
         this.draggable.setCloseFn(undefined); // Hides the close button
+        // if (this.activeTable.data.lockCellCount) {
+        //     this.lockCellCount = this.activeTable.data.lockCellCount;
+        // }
     }
 
     /**
@@ -55,6 +58,7 @@ export class TimTableEditorToolbarController extends DialogController<{params: I
     public activeTable?: TimTableController;
     private visible: boolean = true;
     private hid?: any;
+    //private lockCellCount: boolean = false;
 
     private previousBackgroundColor: string = this.DEFAULT_CELL_BGCOLOR;
     private cellBackgroundColor: string = this.DEFAULT_CELL_BGCOLOR;

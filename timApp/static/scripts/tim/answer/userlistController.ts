@@ -39,6 +39,7 @@ export class UserListController implements IController {
     private onUserChange!: Binding<(params: {$USER: IUser, $UPDATEALL: boolean}) => void, "&">;
     private viewctrl!: Require<ViewCtrl>;
     private element: IRootElementService;
+    private preventedChange = false;
 
     constructor(scope: IScope, element: IRootElementService) {
         this.scope = scope;
@@ -126,7 +127,7 @@ export class UserListController implements IController {
             };
             c.filter = f;
         }
-        this.instantUpdate = false;
+        this.instantUpdate = true;
 
         this.gridOptions = {
             exporterMenuPdf: false,
@@ -163,6 +164,26 @@ export class UserListController implements IController {
                     }
                 }
                 gridApi.cellNav.on.navigate(this.scope, (newRowCol, oldRowCol) => {
+                    // TODO: check if simple way to cancel this event here
+                    //  or make unsavitimcomponents checks at keyboardpress/click events before on.navigate gets called
+                    if (this.preventedChange) {
+                        this.preventedChange = false;
+                        return;
+                    }
+
+                    if(oldRowCol && oldRowCol.row === newRowCol.row) return;
+                    let unsavedTimComponents = this.viewctrl.checkUnSavedTimComponents();
+                    if (unsavedTimComponents && !window.confirm("You have unsaved changes. Change user anyway?")) {
+                        this.preventedChange = true;
+                        if (oldRowCol) {
+                            gridApi.cellNav.scrollToFocus(oldRowCol.row.entity, oldRowCol.col.colDef);
+                        } else {
+                            if (this.gridOptions && this.gridOptions.data && this.gridOptions.columnDefs) {
+                                gridApi.cellNav.scrollToFocus(this.gridOptions.data[0], this.gridOptions.columnDefs[0]);
+                            }
+                        }
+                        return;
+                    }
                     gridApi.selection.selectRow(newRowCol.row.entity);
                 });
             },

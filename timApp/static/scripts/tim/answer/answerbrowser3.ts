@@ -165,7 +165,7 @@ timApp.component("timPluginLoader", {
         viewctrl: "?^timView",
     },
     template: `
-<div ng-if="$ctrl.answerId && $ctrl.showPlaceholder && !$ctrl.isPreview()" style="width: 1px; height: 23px;"></div>
+<div class="answerBrowserPlaceholder" ng-if="$ctrl.answerId && $ctrl.showPlaceholder && !$ctrl.isPreview()" style="width: 1px; height: 23px;"></div>
 <answerbrowser ng-class="{'has-answers': $ctrl.answerId}"
                ng-if="$ctrl.showBrowser && !$ctrl.isPreview()"
                task-id="$ctrl.taskId"
@@ -196,6 +196,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
     private user: IUser | undefined;
     private fetchedUser: IUser | undefined;
     private saveTeacher: boolean = false;
+    private saveTeacherWithoutCollaboration: boolean = true;
     private users: IUser[] | undefined;
     private answers: IAnswer[] = [];
     private filteredAnswers: IAnswer[] = [];
@@ -208,7 +209,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
     private alerts: Array<{}> = [];
     private taskInfo: ITaskInfo | undefined;
     private points: number | undefined;
-    private loadedAnswer: {id: number | undefined, review: boolean} = {review: false, id: undefined};
+    private loadedAnswer: { id: number | undefined, review: boolean } = {review: false, id: undefined};
     private answerId?: Binding<number, "<?">;
     private loader!: PluginLoaderCtrl;
     private reviewHtml?: string;
@@ -281,13 +282,17 @@ export class AnswerBrowserController extends DestroyScope implements IController
         ], (newValues, oldValues, scope) => this.updateFilteredAndSetNewest());
 
         const answs = await this.getAnswers();
-        if (answs) {
+        if (answs && (answs.length > 0)) {
             this.answers = answs;
             const updated = this.updateAnswerFromURL();
             if (!updated) {
                 this.handleAnswerFetch(this.answers);
             }
+
+        } else {
+            this.resetITimComponent();
         }
+
         await this.loadInfo();
         await this.checkUsers(); // load users, answers have already been loaded for the currently selected user
 
@@ -381,7 +386,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
         };
         if (this.selectedAnswer.id !== this.loadedAnswer.id || this.loadedAnswer.review !== this.review) {
             this.loading++;
-            const r = await to($http.get<{html: string, reviewHtml: string}>("/getState", {
+            const r = await to($http.get<{ html: string, reviewHtml: string }>("/getState", {
                 params: {
                     ...parParams,
                     answer_id: this.selectedAnswer.id,
@@ -529,6 +534,18 @@ export class AnswerBrowserController extends DestroyScope implements IController
             return {
                 answer_id: this.selectedAnswer.id,
                 saveTeacher: this.saveTeacher,
+                saveTeacherWithoutCollaboration: this.saveTeacherWithoutCollaboration,
+                teacher: this.viewctrl.teacherMode,
+                points: this.points,
+                giveCustomPoints: this.giveCustomPoints,
+                userId: this.user.id,
+                saveAnswer: !this.viewctrl.noBrowser,
+            };
+        } else if (this.user && this.saveTeacherWithoutCollaboration) {
+            return {
+                // answer_id: this.selectedAnswer.id,
+                saveTeacherWithoutCollaboration: this.saveTeacherWithoutCollaboration,
+                saveTeacher: this.saveTeacher,
                 teacher: this.viewctrl.teacherMode,
                 points: this.points,
                 giveCustomPoints: this.giveCustomPoints,
@@ -555,7 +572,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
         this.users = r.result.data;
     }
 
-    showError(response: {data: {error: string}}) {
+    showError(response: { data: { error: string } }) {
         this.alerts.push({msg: "Error: " + response.data.error, type: "danger"});
     }
 
@@ -596,6 +613,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
             return;
         }
         this.handleAnswerFetch(data);
+        return data;
     }
 
     private handleAnswerFetch(data: IAnswer[]) {
@@ -655,9 +673,22 @@ export class AnswerBrowserController extends DestroyScope implements IController
         return this.taskInfo.userMin != null && this.taskInfo.userMax != null;
     }
 
+    resetITimComponent() {
+        const c = this.viewctrl.getTimComponentByName(this.taskId.split(".")[1]);
+        if (c) {
+            c.resetField();
+        }
+    }
+
     async loadUserAnswersIfChanged() {
         if (this.hasUserChanged()) {
-            await this.getAnswersAndUpdate();
+            const answers = await this.getAnswersAndUpdate();
+            if (!answers || answers.length === 0) {
+                this.resetITimComponent();
+            } else {
+                this.loadedAnswer = {review: false, id: undefined};
+                this.changeAnswer();
+            }
             await this.loadInfo();
         }
     }

@@ -74,6 +74,7 @@ TIM_SAFE_TAGS = [
     'dropdown-runner',
     'feedback-runner',
     'imagex-runner',
+    'js-runner',
     'list-video-runner',
     'mcq',
     'mmcq',
@@ -81,6 +82,7 @@ TIM_SAFE_TAGS = [
     'savearea-runner',
     'small-video-runner',
     'textfield-runner',
+    'numericfield-runner',
     'video-runner',
 ]
 

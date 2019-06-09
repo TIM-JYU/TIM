@@ -18,13 +18,16 @@ from timApp.timtypes import DocumentType as Document
 
 from timApp.plugin.timtable import timTable
 
-
 TIM_URL = ""
 
 CSPLUGIN_NAME = 'csplugin'
 SVNPLUGIN_NAME = 'showfile'
 HASKELLPLUGIN_NAME = 'haskellplugins'
 PALIPLUGIN_NAME = 'pali'
+TEXTFIELDPLUGIN_NAME = 'textfield'
+NUMERICFIELDPLUGIN_NAME = 'numericfield'
+MULTISAVEPLUGIN_NAME = 'multisave'
+JSRUNNERPLUGIN_NAME = 'jsrunner'
 IMAGEXPLUGIN_NAME = 'imagex'
 MARKUP = 'markup'
 REGEXATTRS = 'regexattrs'
@@ -64,9 +67,14 @@ def get_plugins():
             # "graphviz": {"host": "http://" + HASKELLPLUGIN_NAME + ":5004/"},
             "graphviz": {"host": "http://" + CSPLUGIN_NAME + ":5000/cs/graphviz/"},
             "pali": {"host": "http://" + PALIPLUGIN_NAME + ":5000/"},
+            "textfield": {"host": "http://" + TEXTFIELDPLUGIN_NAME + ":5000/"},
+            "numericfield": {"host": "http://" + NUMERICFIELDPLUGIN_NAME + ":5000/"},
+            "multisave": {"host": "http://" + MULTISAVEPLUGIN_NAME + ":5000/"},
+            "jsrunner": {"host": "http://" + JSRUNNERPLUGIN_NAME + ":5000/"},
             "imagex": {"host": "http://" + IMAGEXPLUGIN_NAME + ":5000/"},
             "qst": {"host": "http://" + "localhost" + f":{current_app.config['QST_PLUGIN_PORT']}/qst/", REGEXATTRS: QSTMDATTRS, AUTOMDATTRS: True},
             "timTable": {"host": "http://" + "localhost" + f":{current_app.config['QST_PLUGIN_PORT']}/timTable/", "instance": timTable.TimTable(), 'lazy': False},
+            "tableForm": {"host": "http://" + "localhost" + f":{current_app.config['QST_PLUGIN_PORT']}/tableForm/", 'lazy': False},
             "tape": {"host": "http://" + "localhost" + f":{current_app.config['QST_PLUGIN_PORT']}/tape/"},
             "echo": {"host": "http://" + "tim" + ":5000/echoRequest/", "skip_reqs": True}
         }

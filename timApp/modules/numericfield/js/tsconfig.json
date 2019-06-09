@@ -1,0 +1,15 @@
+{
+  "extends": "../../../static/scripts/tsconfig_plugin",
+  "compilerOptions": {
+    "outDir": "build",
+    "strictNullChecks": false
+  },
+  "include": [
+    "./**/*.ts"
+  ],
+  "references": [
+    {
+      "path": "../../../static/scripts"
+    }
+  ]
+}
