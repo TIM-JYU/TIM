@@ -44,9 +44,6 @@ class NumericfieldStateSchema(Schema):
     def make_obj(self, data,):
         return NumericfieldStateModel(c=convert_to_float(data['c']))
 
-    class Meta:
-        strict = True
-
 
 @attr.s(auto_attribs=True)
 class NumericfieldMarkupModel(GenericMarkupModel):
@@ -81,9 +78,6 @@ class NumericfieldMarkupSchema(GenericMarkupSchema):
     def make_obj(self, data):
         return NumericfieldMarkupModel(**data)
 
-    class Meta:
-        strict = True
-
 
 @attr.s(auto_attribs=True)
 class NumericfieldInputModel:
@@ -110,9 +104,6 @@ class NumericfieldAttrs(Schema):
     markup = fields.Nested(NumericfieldMarkupSchema)
     state = fields.Nested(NumericfieldStateSchema, allow_none=True, required=True)
 
-    class Meta:
-        strict = True
-
 
 @attr.s(auto_attribs=True)
 class NumericfieldHtmlModel(GenericHtmlModel[NumericfieldInputModel, NumericfieldMarkupModel, NumericfieldStateModel]):
@@ -130,9 +121,6 @@ class NumericfieldHtmlModel(GenericHtmlModel[NumericfieldInputModel, Numericfiel
                 r['numericvalue'] = self.state.c
         return r
 
-    class Meta:
-        strict = True
-
 
 class NumericfieldHtmlSchema(NumericfieldAttrs, GenericHtmlSchema):
     info = fields.Nested(InfoSchema, allow_none=True, required=True)
@@ -141,9 +129,6 @@ class NumericfieldHtmlSchema(NumericfieldAttrs, GenericHtmlSchema):
     def make_obj(self, data):
         # noinspection PyArgumentList
         return NumericfieldHtmlModel(**data)
-
-    class Meta:
-        strict = True
 
 
 @attr.s(auto_attribs=True)
@@ -158,9 +143,6 @@ class NumericfieldAnswerSchema(NumericfieldAttrs, GenericAnswerSchema):
     def make_obj(self, data):
         # noinspection PyArgumentList
         return NumericfieldAnswerModel(**data)
-
-    class Meta:
-        strict = True
 
 
 def render_static_numericfield(m: NumericfieldHtmlModel):
@@ -187,7 +169,7 @@ app = create_app(__name__, NumericfieldHtmlSchema())
 
 
 @app.route('/answer/', methods=['put'])
-@use_args(NumericfieldAnswerSchema(strict=True), locations=("json",))
+@use_args(NumericfieldAnswerSchema(), locations=("json",))
 def answer(args: NumericfieldAnswerModel):
     web = {}
     result = {'web': web}

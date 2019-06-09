@@ -33,9 +33,6 @@ class MultisaveMarkupSchema(GenericMarkupSchema):
     def make_obj(self, data):
         return MultisaveMarkupModel(**data)
 
-    class Meta:
-        strict = True
-
 
 @attr.s(auto_attribs=True)
 class MultisaveInputModel:
@@ -45,9 +42,6 @@ class MultisaveInputModel:
 class MultisaveAttrs(Schema):
     """Common fields for HTML and answer routes."""
     markup = fields.Nested(MultisaveMarkupSchema)
-
-    class Meta:
-        strict = True
 
 
 @attr.s(auto_attribs=True)
@@ -63,9 +57,6 @@ class MultisaveHtmlModel(GenericHtmlModel[MultisaveInputModel, MultisaveMarkupMo
         r = super().get_browser_json()
         return r
 
-    class Meta:
-        strict = True
-
 
 class MultisaveHtmlSchema(MultisaveAttrs, GenericHtmlSchema):
     info = fields.Nested(InfoSchema, allow_none=True, required=True)
@@ -74,9 +65,6 @@ class MultisaveHtmlSchema(MultisaveAttrs, GenericHtmlSchema):
     def make_obj(self, data):
         # noinspection PyArgumentList
         return MultisaveHtmlModel(**data)
-
-    class Meta:
-        strict = True
 
 
 def render_static_multisave(m: MultisaveHtmlModel):

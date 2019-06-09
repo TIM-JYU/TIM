@@ -35,9 +35,6 @@ class TableFormStateSchema(Schema):
     def make_obj(self, data):
         return TableFormStateModel(**data)
 
-    class Meta:
-        strict = True
-
 
 @attr.s(auto_attribs=True)
 class TableFormMarkupModel(GenericMarkupModel):
@@ -88,9 +85,6 @@ class TableFormMarkupSchema(GenericMarkupSchema):
     def make_obj(self, data):
         return TableFormMarkupModel(**data)
 
-    class Meta:
-        strict = True
-
 
 @attr.s(auto_attribs=True)
 class TableFormInputModel:
@@ -110,9 +104,6 @@ class TableFormAttrs(Schema):
     """Common fields for HTML and answer routes."""
     markup = fields.Nested(TableFormMarkupSchema)
     state = fields.Nested(TableFormStateSchema, allow_none=True, required=True)
-
-    class Meta:
-        strict = True
 
 
 @attr.s(auto_attribs=True)
@@ -151,9 +142,6 @@ class TableFormHtmlModel(GenericHtmlModel[TableFormInputModel, TableFormMarkupMo
 
         return r
 
-    class Meta:
-        strict = True
-
 
 class TableFormHtmlSchema(TableFormAttrs, GenericHtmlSchema):
     info = fields.Nested(InfoSchema, allow_none=True, required=True)
@@ -162,9 +150,6 @@ class TableFormHtmlSchema(TableFormAttrs, GenericHtmlSchema):
     def make_obj(self, data):
         # noinspection PyArgumentList
         return TableFormHtmlModel(**data)
-
-    class Meta:
-        strict = True
 
 
 @attr.s(auto_attribs=True)
@@ -179,9 +164,6 @@ class TableFormAnswerSchema(TableFormAttrs, GenericAnswerSchema):
     def make_obj(self, data):
         # noinspection PyArgumentList
         return TableFormAnswerModel(**data)
-
-    class Meta:
-        strict = True
 
 
 def render_static_tableForm(m: TableFormHtmlModel):
@@ -213,7 +195,7 @@ def gen_csv():
 
 @tableForm_plugin.route('/answer/', methods=['put'])
 @csrf.exempt
-@use_args(TableFormAnswerSchema(strict=True), locations=("json",))
+@use_args(TableFormAnswerSchema(), locations=("json",))
 def answer(args: TableFormInputModel):
     rows = args.input.replyRows
     saveRows = []

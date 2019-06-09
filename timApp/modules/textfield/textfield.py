@@ -31,9 +31,6 @@ class TextfieldStateSchema(Schema):
     def make_obj(self, data):
         return TextfieldStateModel(**data)
 
-    class Meta:
-        strict = True
-
 
 @attr.s(auto_attribs=True)
 class TextfieldMarkupModel(GenericMarkupModel):
@@ -66,9 +63,6 @@ class TextfieldMarkupSchema(GenericMarkupSchema):
     def make_obj(self, data):
         return TextfieldMarkupModel(**data)
 
-    class Meta:
-        strict = True
-
 
 @attr.s(auto_attribs=True)
 class TextfieldInputModel:
@@ -95,9 +89,6 @@ class TextfieldAttrs(Schema):
     markup = fields.Nested(TextfieldMarkupSchema)
     state = fields.Nested(TextfieldStateSchema, allow_none=True, required=True)
 
-    class Meta:
-        strict = True
-
 
 @attr.s(auto_attribs=True)
 class TextfieldHtmlModel(GenericHtmlModel[TextfieldInputModel, TextfieldMarkupModel, TextfieldStateModel]):
@@ -113,9 +104,6 @@ class TextfieldHtmlModel(GenericHtmlModel[TextfieldInputModel, TextfieldMarkupMo
             r['userword'] = self.state.c
         return r
 
-    class Meta:
-        strict = True
-
 
 class TextfieldHtmlSchema(TextfieldAttrs, GenericHtmlSchema):
     info = fields.Nested(InfoSchema, allow_none=True, required=True)
@@ -124,9 +112,6 @@ class TextfieldHtmlSchema(TextfieldAttrs, GenericHtmlSchema):
     def make_obj(self, data):
         # noinspection PyArgumentList
         return TextfieldHtmlModel(**data)
-
-    class Meta:
-        strict = True
 
 
 @attr.s(auto_attribs=True)
@@ -141,9 +126,6 @@ class TextfieldAnswerSchema(TextfieldAttrs, GenericAnswerSchema):
     def make_obj(self, data):
         # noinspection PyArgumentList
         return TextfieldAnswerModel(**data)
-
-    class Meta:
-        strict = True
 
 
 def render_static_textfield(m: TextfieldHtmlModel):
@@ -171,7 +153,7 @@ app = create_app(__name__, TextfieldHtmlSchema())
 
 
 @app.route('/answer/', methods=['put'])
-@use_args(TextfieldAnswerSchema(strict=True), locations=("json",))
+@use_args(TextfieldAnswerSchema(), locations=("json",))
 def answer(args: TextfieldAnswerModel):
     web = {}
     result = {'web': web}
