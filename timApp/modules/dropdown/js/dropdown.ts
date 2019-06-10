@@ -87,8 +87,7 @@ class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.T
      * Saves the selection that in the plugin.
      */
     async save() {
-        const failure = await this.doSave(this.attrs.instruction);
-        return failure;
+        return await this.doSave(this.attrs.instruction);
     }
 
     async doSave(nosave: boolean) {
@@ -112,12 +111,10 @@ class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.T
         if (r.ok) {
             const data = r.result.data;
             this.error = data.web.error;
-            if (data.web.error) {
-                return data.web.error;
-            }
         } else {
-            this.error = "Error connecting to the backend";
+            this.error = r.result.data.error;
         }
+        return {saved: r.ok, message: this.error};
     }
 
     selfSave() {
@@ -152,6 +149,10 @@ class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.T
 
     protected getAttributeType() {
         return DropdownAll;
+    }
+
+    isUnSaved() {
+        return false; // TODO
     }
 }
 

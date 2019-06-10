@@ -437,8 +437,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
      */
     async save() {
         const userAnswer = this.getSentence(this.answerArray, this.selectionMap).join(" ");
-        const failure = await this.doSave(false, this.correctAnswer, this.correctAnswerString, userAnswer);
-        return failure;
+        return await this.doSave(false, this.correctAnswer, this.correctAnswerString, userAnswer);
     }
 
     async doSave(nosave: boolean, correct: boolean, correctAnswer: string, userAnswer: string) {
@@ -461,17 +460,14 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
         }
         const url = this.pluginMeta.getAnswerUrl();
         const r = await to($http.put<{ web: { result: string, error?: string } }>(url, params));
+        this.saving = false;
         if (r.ok) {
             const data = r.result.data;
             this.error = data.web.error;
-            if (data.web.error) {
-                this.saving = false;
-                return data.web.error;
-            }
         } else {
-            this.error = "Error connecting to the backend";
+            this.error = r.result.data.error;
         }
-        this.saving = false;
+        return {saved: r.ok, message: this.error};
     }
 
     /**
@@ -515,12 +511,8 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
             plugin.setForceAnswerSave(true);
         }
         const failure = await plugin.save();
-        if (failure) {
-            this.saving = false;
-            return false;
-        }
         this.saving = false;
-        return true;
+        return failure.message == null;
     }
 
     /**
@@ -1178,6 +1170,10 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
 
     protected getAttributeType() {
         return FeedbackAll;
+    }
+
+    isUnSaved() {
+        return false; // TODO
     }
 }
 

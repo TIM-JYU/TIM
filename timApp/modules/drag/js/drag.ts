@@ -1,8 +1,7 @@
 /**
  * Defines the client-side implementation of a drag plugin.
  */
-import angular from "angular";
-import {IRootElementService, IScope} from "angular";
+import angular, {IRootElementService, IScope} from "angular";
 import drag from "angular-drag-and-drop-lists";
 import * as t from "io-ts";
 import {polyfill} from "mobile-drag-drop";
@@ -10,11 +9,10 @@ import {ITimComponent, ViewCtrl} from "tim/document/viewctrl";
 import {GenericPluginMarkup, Info, PluginBase, pluginBindings, withDefault} from "tim/plugin/util";
 import {$http} from "tim/util/ngimport";
 import {markAsUsed, to} from "tim/util/utils";
-
-markAsUsed(drag);
-
 // Optional import of scroll behaviour.
 import {scrollBehaviourDragImageTranslateOverride} from "mobile-drag-drop/scroll-behaviour";
+
+markAsUsed(drag);
 
 const dragApp = angular.module("dragApp", ["ngSanitize", "dndLists"]);
 export const moduleDefs = [dragApp];
@@ -215,8 +213,7 @@ class DragController extends PluginBase<t.TypeOf<typeof DragMarkup>, t.TypeOf<ty
     }
 
     async save() {
-        const failure = await this.doSave(false);
-        return failure;
+        return await this.doSave(false);
     }
 
     async doSave(nosave: false) {
@@ -240,19 +237,19 @@ class DragController extends PluginBase<t.TypeOf<typeof DragMarkup>, t.TypeOf<ty
         if (r.ok) {
             const data = r.result.data;
             this.error = data.web.error;
-            if (data.web.error) {
-                return data.web.error;
-            }
         } else {
-            this.error = "Saving error.";
+            this.error = r.result.data.error;
         }
+        return {saved: r.ok, message: this.error};
     }
 
     protected getAttributeType() {
         return DragAll;
     }
 
-
+    isUnSaved() {
+        return false; // TODO
+    }
 }
 
 dragApp.component("dragRunner", {
