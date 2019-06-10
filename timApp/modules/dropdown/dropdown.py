@@ -26,9 +26,6 @@ class DropdownStateSchema(Schema):
     def make_obj(self, data):
         return DropdownStateModel(**data)
 
-    class Meta:
-        strict = True
-
 
 @attr.s(auto_attribs=True)
 class DropdownMarkupModel(GenericMarkupModel):
@@ -51,9 +48,6 @@ class DropdownMarkupSchema(GenericMarkupSchema):
     @post_load
     def make_obj(self, data):
         return DropdownMarkupModel(**data)
-
-    class Meta:
-        strict = True
 
 
 @attr.s(auto_attribs=True)
@@ -100,9 +94,6 @@ class DropdownHtmlModel(GenericHtmlModel[DropdownInputModel, DropdownMarkupModel
             data=make_base64(self.get_browser_json()),
         )
 
-    class Meta:
-        strict = True
-
 
 class DropdownHtmlSchema(DropdownAttrs, GenericHtmlSchema):
     info = fields.Nested(InfoSchema, allow_none=True, required=True)
@@ -111,9 +102,6 @@ class DropdownHtmlSchema(DropdownAttrs, GenericHtmlSchema):
     def make_obj(self, data):
         # noinspection PyArgumentList
         return DropdownHtmlModel(**data)
-
-    class Meta:
-        strict = True
 
 
 @attr.s(auto_attribs=True)
@@ -128,9 +116,6 @@ class DropdownAnswerSchema(DropdownAttrs, GenericAnswerSchema):
     def make_obj(self, data):
         # noinspection PyArgumentList
         return DropdownAnswerModel(**data)
-
-    class Meta:
-        strict = True
 
 
 def render_static_dropdown(m: DropdownHtmlModel):
@@ -160,7 +145,7 @@ app = create_app(__name__, DropdownHtmlSchema())
 
 
 @app.route('/answer/', methods=['put'])
-@use_args(DropdownAnswerSchema(strict=True), locations=("json",))
+@use_args(DropdownAnswerSchema(), locations=("json",))
 def answer(args: DropdownAnswerModel):
     web = {}
     result = {'web': web}

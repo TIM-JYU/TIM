@@ -33,9 +33,6 @@ class FeedbackStateSchema(Schema):
     def make_obj(self, data):
         return FeedbackStateModel(**data)
 
-    class Meta:
-        strict = True
-
 
 @attr.s(auto_attribs=True)
 class FeedbackMarkupModel(GenericMarkupModel):
@@ -74,9 +71,6 @@ class FeedbackMarkupSchema(GenericMarkupSchema):
     def make_obj(self, data):
         return FeedbackMarkupModel(**data)
 
-    class Meta:
-        strict = True
-
 
 @attr.s(auto_attribs=True)
 class FeedbackInputModel:
@@ -104,9 +98,6 @@ class FeedbackAttrs(Schema):
     markup = fields.Nested(FeedbackMarkupSchema)
     state = fields.Nested(FeedbackStateSchema, allow_none=True, required=True)
 
-    class Meta:
-        strict = True
-
 
 @attr.s(auto_attribs=True)
 class FeedbackHtmlModel(GenericHtmlModel[FeedbackInputModel, FeedbackMarkupModel, FeedbackStateModel]):
@@ -120,9 +111,6 @@ class FeedbackHtmlModel(GenericHtmlModel[FeedbackInputModel, FeedbackMarkupModel
         r = super().get_browser_json()
         return r
 
-    class Meta:
-        strict = True
-
 
 class FeedbackHtmlSchema(FeedbackAttrs, GenericHtmlSchema):
     info = fields.Nested(InfoSchema, allow_none=True, required=True)
@@ -131,9 +119,6 @@ class FeedbackHtmlSchema(FeedbackAttrs, GenericHtmlSchema):
     def make_obj(self, data):
         # noinspection PyArgumentList
         return FeedbackHtmlModel(**data)
-
-    class Meta:
-        strict = True
 
 
 @attr.s(auto_attribs=True)
@@ -148,9 +133,6 @@ class FeedbackAnswerSchema(FeedbackAttrs, GenericAnswerSchema):
     def make_obj(self, data):
         # noinspection PyArgumentList
         return FeedbackAnswerModel(**data)
-
-    class Meta:
-        strict = True
 
 
 def render_static_feedback(m: FeedbackHtmlModel):
@@ -175,7 +157,7 @@ def render_static_feedback(m: FeedbackHtmlModel):
 app = create_app(__name__, FeedbackHtmlSchema())
 
 @app.route('/answer/', methods=['put'])
-@use_args(FeedbackAnswerSchema(strict=True), locations=("json",))
+@use_args(FeedbackAnswerSchema(), locations=("json",))
 def answer(args: FeedbackAnswerModel):
     web = {}
     result = {'web': web}

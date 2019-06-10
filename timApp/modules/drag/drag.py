@@ -27,9 +27,6 @@ class DragStateSchema(Schema):
     def make_obj(self, data):
         return DragStateModel(**data)
 
-    class Meta:
-        strict = True
-
 
 @attr.s(auto_attribs=True)
 class DragMarkupModel(GenericMarkupModel):
@@ -68,9 +65,6 @@ class DragMarkupSchema(GenericMarkupSchema):
     @post_load
     def make_obj(self, data):
         return DragMarkupModel(**data)
-
-    class Meta:
-        strict = True
 
 
 @attr.s(auto_attribs=True)
@@ -122,9 +116,6 @@ class DragHtmlModel(GenericHtmlModel[DragInputModel, DragMarkupModel, DragStateM
             data=make_base64(self.get_browser_json()),
         )
 
-    class Meta:
-        strict = True
-
 
 class DragHtmlSchema(DragAttrs, GenericHtmlSchema):
     info = fields.Nested(InfoSchema, allow_none=True, required=True)
@@ -133,9 +124,6 @@ class DragHtmlSchema(DragAttrs, GenericHtmlSchema):
     def make_obj(self, data):
         # noinspection PyArgumentList
         return DragHtmlModel(**data)
-
-    class Meta:
-        strict = True
 
 
 @attr.s(auto_attribs=True)
@@ -150,9 +138,6 @@ class DragAnswerSchema(DragAttrs, GenericAnswerSchema):
     def make_obj(self, data):
         # noinspection PyArgumentList
         return DragAnswerModel(**data)
-
-    class Meta:
-        strict = True
 
 
 def render_static_drag(m: DragHtmlModel):
@@ -182,7 +167,7 @@ app = create_app(__name__, DragHtmlSchema())
 
 
 @app.route('/answer/', methods=['put'])
-@use_args(DragAnswerSchema(strict=True), locations=("json",))
+@use_args(DragAnswerSchema(), locations=("json",))
 def answer(args: DragAnswerModel):
     web = {}
     result = {'web': web}
