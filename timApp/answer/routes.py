@@ -12,7 +12,7 @@ from flask import Blueprint
 from flask import Response
 from flask import abort
 from flask import request
-from marshmallow import Schema, fields, post_load
+from marshmallow import Schema, fields, post_load, validates_schema, ValidationError
 from marshmallow.utils import _Missing, missing
 from sqlalchemy import func
 from webargs.flaskparser import use_args
@@ -229,6 +229,17 @@ def get_fields_and_users(u_fields: List[str], groups: List[UserGroup], d: DocInf
     return res, jsrunner_alias_map, content_map
 
 
+class JsRunnerSchema(Schema):
+    group = fields.Str()
+    groups = fields.List(fields.Str())
+    fields = fields.List(fields.Str(), required=True)
+
+    @validates_schema(skip_on_field_errors=True)
+    def validate_schema(self, data):
+        if data.get('group') is None and data.get('groups') is None:
+            raise ValidationError("Either group or groups must be given.")
+
+
 @answers.route("/<plugintype>/<task_id_ext>/answer/", methods=['PUT'])
 def post_answer(plugintype: str, task_id_ext: str):
     """Saves the answer submitted by user for a plugin in the database.
@@ -364,13 +375,22 @@ def post_answer(plugintype: str, task_id_ext: str):
     state = try_load_json(old_answers[0].content) if logged_in() and len(old_answers) > 0 else None
 
     if plugin.type == 'jsrunner':
+        s = JsRunnerSchema()
+        try:
+            s.load(plugin.values)
+        except ValidationError as e:
+            return abort(400, str(e))
         groupnames = plugin.values.get('groups', [plugin.values.get('group')])
         g = UserGroup.query.filter(UserGroup.name.in_(groupnames))
-        if len(g.all()) < 1:  # TODO: miten pitäisi tarkistaa?
-            abort(403, f'Missing group in jsrunner')
+        found_groups = g.all()
+        not_found_groups = sorted(list(set(groupnames) - set(g.name for g in found_groups)))
+        if not_found_groups:
+            abort(404, f'The following groups were not found: {", ".join(not_found_groups)}')
 
-        answerdata['data'], answerdata['aliases'], trash = get_fields_and_users(plugin.values['fields'], g, d,
-                                                                                get_current_user_object())
+        answerdata['data'], answerdata['aliases'], _ = get_fields_and_users(plugin.values['fields'],
+                                                                            found_groups,
+                                                                            d,
+                                                                            get_current_user_object())
 
     answer_call_data = {'markup': plugin.values,
                         'state': state,

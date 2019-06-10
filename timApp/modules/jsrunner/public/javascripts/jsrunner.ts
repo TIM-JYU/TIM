@@ -3,11 +3,11 @@
  */
 import angular from "angular";
 import * as t from "io-ts";
+import {ViewCtrl} from "tim/document/viewctrl";
 import {GenericPluginMarkup, GenericPluginTopLevelFields, nullable, PluginBase, pluginBindings} from "tim/plugin/util";
 import {$http} from "tim/util/ngimport";
 import {to} from "tim/util/utils";
 import "../../stylesheets/jsrunner.css";
-import {ViewCtrl} from "../../../../static/scripts/tim/document/viewctrl";
 
 const jsrunnerApp = angular.module("jsrunnerApp", ["ngSanitize"]);
 export const moduleDefs = [jsrunnerApp];
@@ -21,8 +21,8 @@ const JsrunnerMarkup = t.intersection([
         fieldhelper: t.boolean,
         fields: t.array(t.string),
         gradeField: t.string,
-        gradingScale: t.dictionary(t.string, t.number),
-        groups: (t.array(t.string)),
+        gradingScale: t.record(t.string, t.number),
+        groups: t.array(t.string),
         program: nullable(t.string),
     }),
     GenericPluginMarkup,
