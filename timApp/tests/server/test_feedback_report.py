@@ -7,13 +7,13 @@ class FeedbackReportTest(TimRouteTest):
     def test_empty_report(self):
         self.login_test1()
         d = self.create_doc()
-        self.get(f'/feedback/report/{d.path}', expect_content="Full Name;"
-                                                              "Username;"
-                                                              "Result;"
-                                                              "Item;"
-                                                              "Selected option;"
-                                                              "Feedback;"
-                                                              "Time spent on item(sec);"
+        self.get(f'/feedback/report/{d.path}', expect_content="Full Name,"
+                                                              "Username,"
+                                                              "Result,"
+                                                              "Item,"
+                                                              "Selected option,"
+                                                              "Feedback,"
+                                                              "Time spent on item(sec),"
                                                               "Time spent on feedback(sec)\r\n")
 
     def test_data_report(self):
@@ -48,9 +48,9 @@ questionItems:
                                               'correct_answer': 'aaaaaa',
                                               'feedback': 'correct!'})
         self.assertEqual({'result': 'saved'}, answer['web'])
-        exp_result = """Full Name;Username;Result;Item;Selected option;Feedback;Time spent on item(sec);Time spent on feedback(sec)
+        exp_result = """Full Name,Username,Result,Item,Selected option,Feedback,Time spent on item(sec),Time spent on feedback(sec)
 
-Test user 1;testuser1;right;aaaaaa;aaaaaa;correct!;0.0;0.0
+Test user 1,testuser1,right,aaaaaa,aaaaaa,correct!,0.0,0.0
 """.replace('\n', '\r\n')
 
         self.get(f'/feedback/report/{d.path}', expect_content=exp_result)
