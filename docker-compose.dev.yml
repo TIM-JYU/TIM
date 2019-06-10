@@ -55,6 +55,18 @@ services:
   command: ${JSRUNNER_DEV_COMMAND:-/usr/sbin/sshd -D}
   ports:
    - "49951:22"
+ dropdown:
+  command: ${DROPDOWN_DEV_COMMAND:-/usr/sbin/sshd -D}
+  ports:
+   - "49979:22"
+ drag:
+  command: ${DRAG_DEV_COMMAND:-/usr/sbin/sshd -D}
+  ports:
+   - "49980:22"
+ feedback:
+  command: ${FEEDBACK_DEV_COMMAND:-/usr/sbin/sshd -D}
+  ports:
+   - "49978:22"
  csplugin:
   image: timimages/cs3sudo:rust
   build:

@@ -73,6 +73,7 @@ TIM_SAFE_TAGS = [
     'cs-text-runner',
     'dropdown-runner',
     'feedback-runner',
+    'drag-runner',
     'imagex-runner',
     'js-runner',
     'list-video-runner',

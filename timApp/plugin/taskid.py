@@ -28,8 +28,8 @@ class TaskIdAccess(Enum):
 class TaskId:
     doc_id: Optional[int]
     task_name: str = attr.ib()
-    block_id_hint: Optional[str]
-    field: Optional[str]
+    block_id_hint: Optional[str] = None
+    field: Optional[str] = None
     plugin_type: Optional[str] = None
     access_specifier: Optional[TaskIdAccess] = None
 

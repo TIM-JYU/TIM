@@ -87,7 +87,7 @@ export class ViewCtrl implements IController {
     private notification: string = "";
     private videoElements = new Map<string, HTMLVideoElement>();
     clipMeta: IClipboardMeta = {allowPasteContent: false, allowPasteRef: false, empty: true};
-    selection: {pars?: JQuery; start?: Paragraph; end?: Paragraph} = {};
+    selection: { pars?: JQuery; start?: Paragraph; end?: Paragraph } = {};
     public par: JQuery | undefined;
 
     static $inject = ["$scope"];
@@ -116,7 +116,7 @@ export class ViewCtrl implements IController {
     private showRefresh: boolean;
     public selectedUser: IUser;
     public editing: boolean = false;
-    public $storage: ngStorage.StorageService & {defaultAction: string | null; noteAccess: string};
+    public $storage: ngStorage.StorageService & { defaultAction: string | null; noteAccess: string };
     private liveUpdates: number;
     private oldWidth: number;
     public defaultAction: MenuFunctionEntry | undefined;
@@ -136,6 +136,12 @@ export class ViewCtrl implements IController {
     // For search box.
     private displaySearch = false;
     diffDialog?: DiffController;
+
+    // To hide actions on both sides of the page.
+    public actionsDisabled = false;
+
+    // To give an alert if trying to go to another page when doing an adaptive feedback task.
+    public doingTask = false;
 
     constructor(sc: IScope) {
         timLogTime("ViewCtrl start", "view");
@@ -280,7 +286,7 @@ export class ViewCtrl implements IController {
                     break;
                 }
             }
-            if ((!this.editing && !unsavedTimComponents) || $window.IS_TESTING) {
+            if ((!this.editing && !unsavedTimComponents && !this.doingTask) || $window.IS_TESTING) {
                 return undefined;
             }
 
@@ -324,7 +330,7 @@ export class ViewCtrl implements IController {
         }
         let stop: IPromise<any> | undefined;
         stop = $interval(async () => {
-            const response = await $http.get<{version: [number, number], diff: DiffResult[], live: number}>("/getParDiff/" + this.docId + "/" + this.docVersion[0] + "/" + this.docVersion[1]);
+            const response = await $http.get<{ version: [number, number], diff: DiffResult[], live: number }>("/getParDiff/" + this.docId + "/" + this.docVersion[0] + "/" + this.docVersion[1]);
             this.docVersion = response.data.version;
             this.liveUpdates = response.data.live; // TODO: start new loop by this or stop if None
             const replaceFn = async (d: DiffResult, parId: string) => {
@@ -453,8 +459,7 @@ export class ViewCtrl implements IController {
      */
     public getTimComponentsByGroup(group: string): ITimComponent[] {
         let returnList: ITimComponent[] = [];
-        for(const [k, v] of this.timComponents)
-        {
+        for (const [k, v] of this.timComponents) {
             if (v.belongsToGroup(group)) returnList.push(v);
         }
         return returnList;
@@ -465,11 +470,10 @@ export class ViewCtrl implements IController {
      * @param {string} re The RegExp to be used in search.
      * @returns {ITimComponent[]} List of ITimComponents where the ID matches the regexp.
      */
-    public getTimComponentsByRegex(re: string): ITimComponent[]{
+    public getTimComponentsByRegex(re: string): ITimComponent[] {
         let returnList: ITimComponent[] = [];
         let reg = new RegExp(re)
-        for(const [k, v] of this.timComponents)
-        {
+        for (const [k, v] of this.timComponents) {
             if (reg.test(k)) returnList.push(v);
         }
         return returnList;
@@ -526,7 +530,7 @@ export class ViewCtrl implements IController {
     }
 
     async beginUpdate() {
-        const response = await $http.get<{changed_pars: {[id: string]: string}}>("/getUpdatedPars/" + this.docId);
+        const response = await $http.get<{ changed_pars: { [id: string]: string } }>("/getUpdatedPars/" + this.docId);
         this.updatePendingPars(new Map<string, string>(Object.entries(response.data.changed_pars)));
     }
 

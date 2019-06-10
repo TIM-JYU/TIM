@@ -35,7 +35,8 @@ class Answers(TimDbBase):
                     points: Optional[float],
                     tags: Optional[List[str]] = None,
                     valid: bool = True,
-                    points_given_by=None):
+                    points_given_by=None,
+                    force_save=False):
         """Saves an answer to the database.
 
         :param points_given_by: The usergroup id who gave the points, or None if they were given by a plugin.
@@ -45,12 +46,13 @@ class Answers(TimDbBase):
         :param task_id: The id of the task.
         :param content: The content of the answer.
         :param points: Points for the task.
+        :param force_save: Force the system to save an answer
 
         """
         if tags is None:
             tags = []
         existing_answers = self.get_common_answers(users, task_id)
-        if len(existing_answers) > 0 and existing_answers[0].content == content:
+        if existing_answers and existing_answers[0].content == content and not force_save:
             a = existing_answers[0]
             a.points = points
             a.last_points_modifier = points_given_by

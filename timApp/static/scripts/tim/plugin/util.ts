@@ -82,7 +82,7 @@ function getEssentialContext(c: t.Context) {
     return c;
 }
 
-type MarkupError = Array<{name: string, type: string}>;
+type MarkupError = Array<{ name: string, type: string }>;
 
 function isPrefixOfSome(s: string, others: string[]) {
     for (const o of others) {
@@ -218,7 +218,7 @@ export abstract class PluginBase<MarkupType extends IGenericPluginMarkup, A exte
     protected plugintype?: Binding<string, "@?">;
     protected taskid?: Binding<string, "@?">;
 
-    protected markupError?: Array<{name: string, type: string}>;
+    protected markupError?: Array<{ name: string, type: string }>;
     protected pluginMeta: PluginMeta;
 
     constructor(
@@ -270,7 +270,6 @@ export abstract class PluginBase<MarkupType extends IGenericPluginMarkup, A exte
                     const m = value.match(/^area_(\S+)$/);
                     if (m) {
                         returnList.push(m[1]);
-                        console.log(m[1]);
                     }
                 }
             );
@@ -308,6 +307,23 @@ export abstract class PluginBase<MarkupType extends IGenericPluginMarkup, A exte
     resetField(): undefined {
         // this.$onInit()
         return undefined;
+    }
+
+    /**
+     * Shuffles a string array.
+     * @param words Array of strings to be shuffled.
+     */
+    shuffleWords(words: string []): string [] {
+        // Shuffle algorithm from csparsons.ts
+        const result = words.slice();
+        const n = words.length;
+        for (let i = n - 1; i >= 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            const tmp = result[i];
+            result[i] = result[j];
+            result[j] = tmp;
+        }
+        return result;
     }
 }
 

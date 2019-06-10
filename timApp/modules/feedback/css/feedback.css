@@ -1,0 +1,27 @@
+feedback-runner {
+    margin-bottom: 15px;
+    display: block;
+}
+
+.pluginfeedback .answerBrowserPlaceholder {
+    display: none;
+}
+
+.feedbackContent {
+    min-height: 10vh;
+}
+.task {
+    border-color: #33CCCC;
+    border-style: solid;
+    border-radius: 10px;
+    padding: 50px;
+    min-height: 50vh;
+    margin-top: 1em;
+    margin-bottom: 1em;
+}
+
+.pluginfeedback .feedbackButton {
+    display: block;
+    min-width: 8em;
+    margin-left: auto;
+}

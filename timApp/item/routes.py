@@ -378,6 +378,7 @@ def view(item_path, template_name, usergroup=None, route="view"):
     return render_template(template_name,
                            access=access,
                            hide_links=should_hide_links(doc_settings, rights),
+                           hide_top_buttons=should_hide_top_buttons(doc_settings, rights),
                            show_unpublished_bg=show_unpublished_bg,
                            route=route,
                            edit_mode=edit_mode,
@@ -434,12 +435,26 @@ def get_items(folder: str):
 
 
 def should_hide_links(settings: DocSettings, rights: dict):
-    hide_type = settings.hide_links()
+    return check_rights(settings.hide_links(), rights)
+
+
+def should_hide_top_buttons(settings: DocSettings, rights: dict):
+    return check_rights(settings.hide_top_buttons(), rights)
+
+
+def check_rights(hide_type: str, rights: dict):
+    """
+    Checks whether the user has the correct rights rights not to hide links or the buttons in the top of the
+    page from them.
+
+    :param hide_type What elements to hide in the document.
+    :param rights Which user roles the elements should be hidden from.
+    :return Should the elements be hidden from the user.
+    """
     return {'view': not rights['editable'] and not rights['see_answers'],
             'edit': not rights['see_answers'],
             'see_answers': not rights['teacher'],
             'teacher': not rights['manage']}.get(hide_type, False)
-
 
 @view_page.route('/getParDiff/<int:doc_id>/<int:major>/<int:minor>')
 def check_updated_pars(doc_id, major, minor):

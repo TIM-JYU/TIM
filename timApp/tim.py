@@ -18,6 +18,7 @@ from werkzeug.contrib.profiler import ProfilerMiddleware
 
 from timApp.admin.global_notification import global_notification
 from timApp.admin.routes import admin_bp
+from timApp.answer.feedbackanswer import feedback
 from timApp.answer.routes import answers
 from timApp.auth.accesshelper import verify_edit_access, verify_view_access, \
     ItemLockedException, get_doc_or_abort
@@ -108,6 +109,7 @@ app.register_blueprint(plugin_bp)
 app.register_blueprint(tags_blueprint)
 app.register_blueprint(course_blueprint)
 app.register_blueprint(scim)
+app.register_blueprint(feedback)
 
 app.wsgi_app = ReverseProxied(app.wsgi_app)
 

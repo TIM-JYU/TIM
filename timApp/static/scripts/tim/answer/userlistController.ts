@@ -8,6 +8,7 @@ import {IUser} from "../user/IUser";
 import {$timeout} from "../util/ngimport";
 import {Binding, getURLParameter, markAsUsed, Require} from "../util/utils";
 import {showAllAnswers} from "./allAnswersController";
+import {showFeedbackAnswers} from "./feedbackAnswersController";
 
 markAsUsed(allanswersctrl);
 
@@ -123,7 +124,7 @@ export class UserListController implements IController {
         for (const c of this.columns) {
             const f: IFixedFilterOptions = {
                 condition: filterFn,
-                rawTerm: true, // required for RegExp to work
+                rawTerm: true, // Required for RegExp to work.
             };
             c.filter = f;
         }
@@ -230,6 +231,35 @@ export class UserListController implements IController {
                         });
                     },
                     order: 40,
+                },
+                {
+                    title: "Create Feedback Report",
+                    action: async ($event: IAngularEvent) => {
+                        let iusers: IUser[];
+                        iusers = [];
+                        if (this.gridApi) {
+                            const selectedUser = this.gridApi.selection.getSelectedRows()[0];
+                            iusers.push(selectedUser);
+
+                            const visibleRows = this.gridApi.core.getVisibleRows(this.gridApi.grid);
+
+                            for (const row of visibleRows) { // Create string array of visible item.
+                                if (row.entity !== selectedUser) {
+                                    iusers.push(row.entity);
+                                }
+                            }
+                            if (visibleRows.length <= 0) {
+                                iusers = [];
+                            }
+                        }
+                        await showFeedbackAnswers({
+                            url: "/feedback/report/" + this.viewctrl.item.id,
+                            users: iusers,
+                            identifier: this.viewctrl.item.id.toString(),
+                            allTasks: true,
+                        });
+                    },
+                    order: 50,
                 },
             ],
             rowTemplate: "<div ng-dblclick=\"grid.appScope.fireUserChange(row, true)\" ng-repeat=\"(colRenderIndex, col) in colContainer.renderedColumns track by col.colDef.name\" class=\"ui-grid-cell\" ng-class=\"{ 'ui-grid-row-header-cell': col.isRowHeader }\" ui-grid-cell></div>",

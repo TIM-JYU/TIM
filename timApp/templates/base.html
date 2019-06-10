@@ -42,6 +42,9 @@ depends=(
         <link rel="stylesheet" href="{{ url_for('3rdparty.static', filename='npm/katex@0.7.1/dist/katex.min.css') }}">
         <link rel="stylesheet" href="{{ url_for('3rdparty.static', filename='npm/angularjs-color-picker@3.4.8/dist/angularjs-color-picker.min.css') }}">
         <link rel="stylesheet" href="{{ url_for('3rdparty.static', filename='npm/angularjs-color-picker@3.4.8/dist/themes/angularjs-color-picker-bootstrap.min.css') }}">
+        <link rel="stylesheet" href="{{ url_for('3rdparty.static', filename='npm/angularjs-dragula@2.0.0/dist/dragula.min.css') }}">
+        <link rel="stylesheet" href="{{ url_for('3rdparty.static', filename='npm/mobile-drag-drop@2.3.0-rc.1/default.css') }}">
+
         {% block customcss %}
             <style type="text/css">
                 {{ prefs.custom_css }}
@@ -112,6 +115,7 @@ depends=(
                         {% if not hide_links %}
                             </a>
                         {% endif %}
+                        {% if not hide_top_buttons %}
                         {% if session.user_id %}
                         <div style="padding-top:4px;" class="pull-right">
                             <span class="timButton" ng-click="$ctrl.displaySearch = !$ctrl.displaySearch"
@@ -127,6 +131,7 @@ depends=(
                             </span>
                         </div>
                         {% endif %}
+                        {% endif %}
                         <img alt="Jyväskylän yliopisto" class="pull-right" height="42"
                              src="{{ url_for('static', filename='images/jyulogo.png') }}"/>
                         <div>
@@ -136,10 +141,11 @@ depends=(
                                     <search-box></search-box>
                             </bootstrap-panel>
                         </div>
+                        {% if not hide_top_buttons %}
                         <div class="text-center text-nowrap">
                             <login-menu></login-menu>
                         </div>
-
+                        {% endif %}
                     </div>
                 </div>
                 <div class="col-lg-{{ col_3_lg }}

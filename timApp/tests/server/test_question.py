@@ -22,8 +22,7 @@ class QuestionTest(TimLiveServer, TimRouteTest):
         <div class="parContent" id="test1">
             <tim-plugin-loader type="full" task-id="{d.id}.test1" class="pluginqst" answer-id="">
             <div id="{d.id}.test1.{first_id}" data-plugin="/qst">
-                <qst-runner
-                        json="{{&quot;markup&quot;: {{&quot;timeLimit&quot;: 90, &quot;questionText&quot;: &quot;What day is it today?&quot;, &quot;questionType&quot;: &quot;radio-vertical&quot;, &quot;questionTitle&quot;: &quot;Today&quot;, &quot;rows&quot;: [&quot;Monday&quot;, &quot;Wednesday&quot;, &quot;Friday&quot;], &quot;headers&quot;: [], &quot;answerFieldType&quot;: &quot;radio&quot;, &quot;isTask&quot;: false}}, &quot;state&quot;: null, &quot;taskID&quot;: &quot;3.test1&quot;, &quot;taskIDExt&quot;: &quot;{d.id}.test1.{first_id}&quot;, &quot;doLazy&quot;: false, &quot;userPrint&quot;: false, &quot;preview&quot;: false, &quot;anonymous&quot;: true, &quot;info&quot;: null, &quot;user_id&quot;: &quot;testuser1&quot;, &quot;targetFormat&quot;: &quot;latex&quot;, &quot;review&quot;: false, &quot;show_result&quot;: false}}"/>
+                <qst-runner json='{{"anonymous": true, "doLazy": false, "info": null, "markup": {{"answerFieldType": "radio", "headers": [], "isTask": false, "questionText": "What day is it today?", "questionTitle": "Today", "questionType": "radio-vertical", "rows": ["Monday", "Wednesday", "Friday"], "timeLimit": 90}}, "preview": false, "review": false, "show_result": false, "state": null, "targetFormat": "latex", "taskID": "{d.id}.test1", "taskIDExt": "{d.id}.test1.{first_id}", "userPrint": false, "user_id": "testuser1"}}'></qst-runner>
             </div>
             </tim-plugin-loader>
         </div>
@@ -32,7 +31,8 @@ class QuestionTest(TimLiveServer, TimRouteTest):
              title="Click to mark this paragraph as read"></div>
     </div>
             """)
-        self.assert_elements_equal(expected_element, data.cssselect('#' + first_id)[0])
+        par = data.cssselect('#' + first_id)[0]
+        self.assert_elements_equal(expected_element, par)
 
         second_id = pars[1].get_id()
         result = data.cssselect(f'#{second_id} .parContent qst-runner')

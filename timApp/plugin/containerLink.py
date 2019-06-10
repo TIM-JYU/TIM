@@ -32,10 +32,15 @@ IMAGEXPLUGIN_NAME = 'imagex'
 MARKUP = 'markup'
 REGEXATTRS = 'regexattrs'
 AUTOMDATTRS = 'automdattrs'
+DROPDOWNPLUGIN_NAME = 'dropdown'
+FEEDBACKPLUGIN_NAME = 'feedback'
+DRAGPLUGIN_NAME = 'drag'
 
 PLUGINS = None
 PLUGIN_REGEX_OBJS = {}
 QSTMDATTRS = ["rows", "choices", "[0-9]", ".*[Tt]ext"]
+FBMDATTRS = ["nextTask","questionItems","choices","levels"]
+DRAGATTRS = ["words"]
 
 """
 plugin class attributes
@@ -76,7 +81,10 @@ def get_plugins():
             "timTable": {"host": "http://" + "localhost" + f":{current_app.config['QST_PLUGIN_PORT']}/timTable/", "instance": timTable.TimTable(), 'lazy': False},
             "tableForm": {"host": "http://" + "localhost" + f":{current_app.config['QST_PLUGIN_PORT']}/tableForm/", 'lazy': False},
             "tape": {"host": "http://" + "localhost" + f":{current_app.config['QST_PLUGIN_PORT']}/tape/"},
-            "echo": {"host": "http://" + "tim" + ":5000/echoRequest/", "skip_reqs": True}
+            "echo": {"host": "http://" + "tim" + ":5000/echoRequest/", "skip_reqs": True},
+            "dropdown": {"host": "http://" + DROPDOWNPLUGIN_NAME + ":5000/"},
+            "feedback": {"host": "http://" + FEEDBACKPLUGIN_NAME + ":5000/", REGEXATTRS: FBMDATTRS, AUTOMDATTRS: True},
+            "drag": {"host": "http://" + DRAGPLUGIN_NAME + ":5000/", REGEXATTRS: DRAGATTRS, AUTOMDATTRS: True},
         }
     return PLUGINS
 
@@ -176,10 +184,11 @@ def dict_to_dumbo(pm):
 
 
 def convert_md(plugin_data: List[dict], options: DumboOptions, outtype='md', plugin_opts: List[DumboOptions]=None):
-    markups = [p['markup'] for p in plugin_data]
+    markups = [p for p in plugin_data]
     html_markups = call_dumbo(markups, f'/{outtype}keys', options=options, data_opts=plugin_opts)
     for p, h in zip(plugin_data, html_markups):
-        p['markup'] = h
+        p.clear()
+        p.update(h)
 
 
 def prepare_for_dumbo_attr_list_recursive(regex_obj, plugin_data: dict):

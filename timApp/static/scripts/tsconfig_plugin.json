@@ -7,6 +7,7 @@
     "preserveConstEnums": true,
     "sourceMap": true,
     "moduleResolution": "node",
+    "downlevelIteration": true,
     "baseUrl": ".",
     "target": "es5",
     "lib": [
@@ -27,6 +28,18 @@
       ],
       "io-ts/*": [
         "./node_modules/io-ts/*"
+      ],
+      "mobile-drag-drop": [
+        "./node_modules/mobile-drag-drop"
+      ],
+      "mobile-drag-drop/*": [
+        "./node_modules/mobile-drag-drop/*"
+      ],
+      "angular-drag-and-drop-lists": [
+        "./node_modules/angular-drag-and-drop-lists"
+      ],
+      "angular-drag-and-drop-lists/*": [
+        "./node_modules/angular-drag-and-drop-lists/*"
       ]
     },
     "typeRoots": [

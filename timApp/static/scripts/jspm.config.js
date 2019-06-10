@@ -171,6 +171,8 @@ SystemJS.config({
     "github:*/*.json"
   ],
   map: {
+    "angular-drag-and-drop-lists": "npm:angular-drag-and-drop-lists@2.1.0",
+    "mobile-drag-drop": "npm:mobile-drag-drop@2.3.0-rc.1",
     "css": "github:systemjs/plugin-css@0.1.37",
     "deepmerge": "npm:deepmerge@3.0.0",
     "io-ts": "npm:io-ts@1.8.6",

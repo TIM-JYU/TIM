@@ -16,6 +16,8 @@ services:
    - imagex
    - uploader
    - dumbo
+   - dropdown
+   - feedback
   volumes:
    - .:/service
    - ${LOG_DIR}:/service/tim_logs
@@ -140,6 +142,34 @@ services:
   volumes:
    - ./timApp/modules/jsrunner:/jsrunner:ro
   working_dir: /jsrunner
+ dropdown:
+  image: timimages/tim:${TIM_IMAGE_TAG}
+  volumes:
+   - ./timApp/modules/dropdown:/dropdown:ro
+   - ./timApp/modules/py:/py:ro
+  working_dir: /dropdown
+  environment:
+   PYTHONPATH: /dropdown:/py:/usr/local/lib/python3.6/dist-packages
+  command: ./startAll.sh
+  restart: unless-stopped
+ drag:
+  image: timimages/tim:${TIM_IMAGE_TAG}
+  volumes:
+   - ./timApp/modules/drag:/drag:ro
+   - ./timApp/modules/py:/py:ro
+  working_dir: /drag
+  environment:
+   PYTHONPATH: /drag:/py:/usr/local/lib/python3.6/dist-packages
+  command: ./startAll.sh
+  restart: unless-stopped
+ feedback:
+  image: timimages/tim:${TIM_IMAGE_TAG}
+  volumes:
+   - ./timApp/modules/feedback:/feedback:ro
+   - ./timApp/modules/py:/py:ro
+  working_dir: /feedback
+  environment:
+   PYTHONPATH: /feedback:/py:/usr/local/lib/python3.6/dist-packages
   command: ./startAll.sh
   restart: unless-stopped
  uploader:

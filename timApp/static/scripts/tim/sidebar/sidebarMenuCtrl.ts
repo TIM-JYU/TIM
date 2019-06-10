@@ -51,6 +51,7 @@ export class SidebarMenuCtrl implements IController {
     private documentMemoMinutes: string | undefined;
     private docSettings?: IDocSettings;
     private hideLinks: boolean = false;
+    private hideTopButtons: boolean = false;
     private displayIndex?: IHeaderDisplayIndexItem[];
     // Consent types:
     // number corresponds to values of ConsentType
@@ -70,6 +71,7 @@ export class SidebarMenuCtrl implements IController {
         this.bookmarks = $window.bookmarks; // from base.html
         this.leftSide = $(".left-fixed-side");
         this.hideLinks = $window.hideLinks;
+        this.hideTopButtons = $window.hideTopButtons;
         this.displayIndex = this.formDisplayIndex($window.index);
         this.active = -1;
         if ($window.showIndex) {
@@ -436,7 +438,7 @@ timApp.component("timSidebarMenu", {
         lctrl: "?^timLecture",
         vctrl: "?^timView",
     },
-    template: `<div class="btn btn-default btn-sm pull-left" ng-click="$ctrl.showSidebar()" title="Show menu">
+    template: `<div class="btn btn-default btn-sm pull-left" ng-click="$ctrl.showSidebar()" title="Show menu" ng-if="!$ctrl.hideTopButtons">
     <i class="glyphicon glyphicon-menu-hamburger" title="Click to open sidebar-menu"></i>
 </div>
 <uib-tabset id="menuTabs" active="$ctrl.active" class="hidden-sm hidden-xs">

@@ -1,0 +1,7 @@
+.plugindropdown .answerBrowserPlaceholder {
+    display: none;
+}
+
+.plugindropdown li {
+    list-style-type: none;
+}
