@@ -48,12 +48,15 @@ questionItems:
                                               'correct_answer': 'aaaaaa',
                                               'feedback': 'correct!'})
         self.assertEqual({'result': 'saved'}, answer['web'])
-        exp_result = """Full Name,Username,Result,Item,Selected option,Feedback,Time spent on item(sec),Time spent on feedback(sec)
 
-Test user 1,testuser1,right,aaaaaa,aaaaaa,correct!,0.0,0.0
-""".replace('\n', '\r\n')
+        exp_results = [
+            f"""Full Name,Username,Result,Item,Selected option,Feedback,Time spent on item(sec),Time spent on feedback(sec)
 
-        self.get(f'/feedback/report/{d.path}', expect_content=exp_result)
+Test user 1,testuser1,right,aaaaaa,aaaaaa,correct!,0.0,0.{d}
+""".replace('\n', '\r\n') for d in (0, 1, 2)]
+
+        r = self.get(f'/feedback/report/{d.path}')
+        self.assertIn(r, exp_results)
 
     def test_no_permissions(self):
         self.login_test3()
