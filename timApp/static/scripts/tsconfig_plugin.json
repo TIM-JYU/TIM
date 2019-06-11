@@ -13,7 +13,8 @@
     "lib": [
       "dom",
       "es7",
-      "scripthost"
+      "scripthost",
+      "dom.iterable"
     ],
     "noEmit": false,
     "paths": {
@@ -46,6 +47,12 @@
       "./node_modules/@types",
       "./tim/util/types",
       "./tim/util"
+    ],
+    "plugins": [
+      {
+        "name": "typescript-tslint-plugin",
+        "alwaysShowRuleFailuresAsWarnings": false
+      }
     ]
   },
   "exclude": [

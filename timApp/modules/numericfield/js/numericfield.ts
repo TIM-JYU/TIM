@@ -105,18 +105,6 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
     }
 
     /**
-     * Will run after $onInit - reserved for possible eventhandlers OR to be removed.
-     */
-
-    /*
-    $postLink() {
-        if (this.userword == "") {
-            this.userword = this.attrs.initword || "";
-        }
-    }
-    */
-
-    /**
      * Returns (user) content in string form.
      * Not used in numericfield plugin, but promised to be implemented in ITimComponent.
      */

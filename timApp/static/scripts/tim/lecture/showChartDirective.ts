@@ -104,14 +104,14 @@ function qstShortText(s: string): string | string[] {
     }
     let max = 25;
     if (parts.length >= 3) {
-        max = parseInt(parts[2]);
+        max = parseInt(parts[2], 10);
         if (isNaN(max)) {
             max = 25;
         }
     }
     let maxrows = 3;
     if (parts.length >= 4) {
-        maxrows = parseInt(parts[3]);
+        maxrows = parseInt(parts[3], 10);
         if (isNaN(maxrows)) {
             maxrows = 3;
         }
@@ -129,7 +129,7 @@ function timGetLSIntValue(key: string, def: number): number {
     if (val == null) {
         val = def;
     }
-    val = parseInt(val);
+    val = parseInt(val, 10);
     if (isNaN(val)) {
         val = def;
     }
@@ -508,12 +508,12 @@ class ChartController implements IController {
         this.div.empty();
         if (!this.isText) {
             const newType = this.charts[qstChartIndex];
-            const ctx: JQuery<HTMLCanvasElement> = $(`<canvas width="${this.canvasw}" height="${this.canvash}"><canvas>`) as JQuery<HTMLCanvasElement>;
+            const ctx: JQuery<HTMLCanvasElement> = $(`<canvas width="${this.canvasw}" height="${this.canvash}"><canvas>`);
             this.div.append(ctx);
             const config = clone(this.chartConfig);
             config.type = newType;
-            const Chart = (await import("chart.js")).Chart;
-            this.answerChart = new Chart(ctx, config) as TimChart;
+            const chart = (await import("chart.js")).Chart;
+            this.answerChart = new chart(ctx, config) as TimChart;
         }
         this.update();
     }

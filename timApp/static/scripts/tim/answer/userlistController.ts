@@ -60,8 +60,8 @@ export class UserListController implements IController {
         let anyAnnotations = false;
         let smallFieldWidth = 59;
 
-        for (let i = 0; i < this.viewctrl.users.length; ++i) {
-            if (this.viewctrl.users[i].velped_task_count > 0) {
+        for (const u of this.viewctrl.users) {
+            if (u.velped_task_count > 0) {
                 anyAnnotations = true;
                 smallFieldWidth = 40;
                 break;
@@ -172,8 +172,8 @@ export class UserListController implements IController {
                         return;
                     }
 
-                    if(oldRowCol && oldRowCol.row === newRowCol.row) return;
-                    let unsavedTimComponents = this.viewctrl.checkUnSavedTimComponents();
+                    if (oldRowCol && oldRowCol.row === newRowCol.row) { return; }
+                    const unsavedTimComponents = this.viewctrl.checkUnSavedTimComponents();
                     if (unsavedTimComponents && !window.confirm("You have unsaved changes. Change user anyway?")) {
                         this.preventedChange = true;
                         if (oldRowCol) {
@@ -286,17 +286,17 @@ export class UserListController implements IController {
         fieldNames.set(fields[1], options.taskPointField);
         fieldNames.set(fields[2], options.velpPointField);
         let filename;
-        for (let i = 0; i < fields.length; ++i) {
-            const fieldName = fieldNames.get(fields[i]);
+        for (const f of fields) {
+            const fieldName = fieldNames.get(f);
             if (fieldName) {
                 filename = (filename || fieldName + ".txt");
                 if (dataKorppi !== "") {
                     dataKorppi += "\n";
                 }
-                for (let j = 0; j < data.length; j++) {
-                    const entity = data[j].entity as any;
-                    if (entity[fields[i]] != null) {
-                        dataKorppi += entity.name + ";" + fieldName + ";" + entity[fields[i]] + "\n";
+                for (const d of data) {
+                    const entity = d.entity as any;
+                    if (entity[f] != null) {
+                        dataKorppi += entity.name + ";" + fieldName + ";" + entity[f] + "\n";
                     }
                 }
             }

@@ -81,7 +81,7 @@ export class QuestionHandler {
                 if (questionTitle.length > 10) {
                     questionTitle = questionTitle.substr(0, 10) + "\r\n...";
                 }
-                const nt = parseInt(questionTitle);
+                const nt = parseInt(questionTitle, 10);
                 let nr = "";
                 if (isNaN(nt)) {
                     nr = (n) + "" + separator + "\r\n";

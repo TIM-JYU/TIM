@@ -77,12 +77,12 @@ export function getPointsTable(markupPoints?: string): Array<{[points: string]: 
     const pointsTable: Array<{[points: string]: string}> = [];
     if (markupPoints && markupPoints !== "") {
         const points = markupPoints.split("|");
-        for (let i = 0; i < points.length; i++) {
-            const rowPoints = points[i].split(";");
+        for (const p of points) {
+            const rowPoints = p.split(";");
             const rowPointsDict: {[points: string]: string} = {};
-            for (let k = 0; k < rowPoints.length; k++) {
-                if (rowPoints[k] !== "") {
-                    const colPoints = rowPoints[k].split(":", 2);
+            for (const rp of rowPoints) {
+                if (rp !== "") {
+                    const colPoints = rp.split(":", 2);
                     rowPointsDict[colPoints[0]] = colPoints[1];
                 }
             }
@@ -102,7 +102,7 @@ export function minimizeJson(json: IProcessedHeaders): IUnprocessedHeaders {
         result.headers = [];
         for (let i = 0; i < json.headers.length; i++) {
             let header: string | IHeader = json.headers[i];
-            if (header.id == i && header.type === "header") {
+            if (header.id === i && header.type === "header") {
                 header = header.text;
             }
             result.headers.push(header);
@@ -114,7 +114,7 @@ export function minimizeJson(json: IProcessedHeaders): IUnprocessedHeaders {
 
     for (let i = 0; i < rows.length; i++) {
         let row: string | IRow = rows[i];
-        if (row.id == i + 1 && (!row.type || row.type === "question")) {
+        if (row.id === i + 1 && (!row.type || row.type === "question")) {
             row = row.text; // { text: row.text};
         } else {
             allText = false;
@@ -411,8 +411,7 @@ class AnswerSheetController implements IController {
                 return arr;
             } else {
                 for (let i = 0; i < table.length; i++) {
-                    for (let j = 0; j < table[i].length; j++) {
-                        const val = table[i][j];
+                    for (const val of table[i]) {
                         if (!val) {
                             continue;
                         }
@@ -433,8 +432,7 @@ class AnswerSheetController implements IController {
                 throw new Error(`Expected answertable of length 1, got ${table.length}`);
             }
             const row = table[0];
-            for (let i = 0; i < row.length; i++) {
-                const val = row[i];
+            for (const val of row) {
                 if (!val) {
                     continue;
                 }

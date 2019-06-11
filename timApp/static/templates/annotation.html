@@ -54,8 +54,8 @@
                     <div>
                     <span ng-hide="actrl.checkRights()">
                         <label ng-class="{disabled: actrl.checkRights()}"><div title="Visible to" ng-class="['annqmark', 'glyphicon', 'glyphicon-eye-open', ]"></div></label>
-                        <select ng-model="actrl.visible_options.value" ng-disabled="actrl.checkRights()"
-                            ng-options="v as actrl.visible_options.names[v-1] for v in actrl.visible_options.values">
+                        <select ng-model="actrl.visibleOptions.value" ng-disabled="actrl.checkRights()"
+                            ng-options="v as actrl.visibleOptions.names[v-1] for v in actrl.visibleOptions.values">
                         </select>
                         <div ng-class="['annqmark', 'glyphicon', 'glyphicon-question-sign', 'clickable-icon']"
                          uib-popover="'Just me' means that the annotation is visible only to yourself. 'Document owner' refers to the person or group who has been named as the document owner. 'Teachers' refers to the users that have teacher access to this document. 'Everyone' means that the annotation is visible to everyone who can view the assessed content."
@@ -66,7 +66,7 @@
                     <span ng-show="actrl.checkRights()" class="annotationVisibleText">
 
                         <span title="Visible to" ng-class="['annqmark', 'glyphicon', 'glyphicon-eye-open', ]"></span>
-                        {{ actrl.visible_options.names[visible_options.value - 1] }}
+                        {{ actrl.visibleOptions.names[visibleOptions.value - 1] }}
 
                         <span ng-class="['annqmark', 'glyphicon', 'glyphicon-question-sign', 'clickable-icon']"
                          uib-popover="'Just me' means that the annotation is visible only to yourself. 'Document owner' refers to the person or group who has been named as the document owner. 'Teachers' refers to the users that have teacher access to this document. 'Everyone' means that the annotation is visible to everyone who can view the assessed content."
@@ -95,7 +95,7 @@
                      ng-click="actrl.deleteAnnotation()"></span>
         </div>
          <div class="annotationVisibleText" ng-hide="actrl.showFull">
-            {{ actrl.visible_options.names[actrl.visible_options.value - 1] }}
+            {{ actrl.visibleOptions.names[actrl.visibleOptions.value - 1] }}
         </div>
     </div>
 

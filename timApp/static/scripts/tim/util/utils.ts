@@ -55,7 +55,7 @@ export function stringOrNull(x: {toString: () => string}): string {
     return "null";
 }
 
-export function checkIfElement(x: any): x is Element {
+export function checkIfElement(x: Node): x is Element {
     return typeof ((x as any).hasAttribute) === "function";
 }
 
@@ -66,7 +66,7 @@ export function checkIfElement(x: any): x is Element {
  */
 export function isInViewport(el: Element) {
     const rect = el.getBoundingClientRect();
-    if (!document.documentElement) return true;
+    if (!document.documentElement) { return true; }
     return (
         rect.top >= 0 &&
         rect.left >= 0 &&
@@ -165,8 +165,8 @@ export function clone<T>(obj: T): T {
     return JSON.parse(JSON.stringify(obj));
 }
 
-type Success<T> = {ok: true, result: T};
-type Failure<T> = {ok: false, result: T};
+interface Success<T> {ok: true; result: T; }
+interface Failure<T> {ok: false; result: T; }
 export type Result<T, U> = Success<T> | Failure<U>;
 
 /**
@@ -298,14 +298,16 @@ export function getViewPortSize() {
     if (vw) {
         return {width: vw.width, height: vw.height};
     }
-    const w = window,
-        d = document,
-        e = d.documentElement,
-        g = d.getElementsByTagName('body')[0];
+    const w = window;
+    const d = document;
+    const e = d.documentElement;
+    const g = d.getElementsByTagName("body")[0];
     // documentElement.client{Width,Height} excludes scrollbars, so it works best.
-    if (!e) return {width: 1024, height: 768};
-    const width = e.clientWidth,
-        height = e.clientHeight;
+    if (!e) {
+        return {width: 1024, height: 768};
+    }
+    const width = e.clientWidth;
+    const height = e.clientHeight;
     return {width, height};
 }
 
@@ -323,12 +325,13 @@ export function escapeRegExp(str: string) {
 }
 
 export function debugTextToHeader(s: string) {
-  var para = document.createElement("p");
-  var node = document.createTextNode(s);
+  const para = document.createElement("p");
+  const node = document.createTextNode(s);
   para.appendChild(node);
-  var element = document.getElementById("header");
-  if ( element )
+  const element = document.getElementById("header");
+  if ( element ) {
     element.appendChild(para);
+  }
 }
 
 export function getPageXY(e: JQuery.Event) {
@@ -380,8 +383,8 @@ export const ToReturn = Promise;
 
 export function injectStyle(url: string) {
     const links = document.getElementsByTagName("link");
-    for (let i = 0; i < links.length; i++) {
-        if (links[i].getAttribute("href") === url) {
+    for (const l of links) {
+        if (l.getAttribute("href") === url) {
             return;
         }
     }
@@ -412,8 +415,8 @@ export function valueOr<T extends {}, K extends T>(v: T | undefined | null, def:
 }
 
 export function valueDefu(s: string | undefined | null, def: string): string {
-    if (s === undefined) return def;
-    if (s === null) return "";
+    if (s === undefined) { return def; }
+    if (s === null) { return ""; }
     return s;
 }
 

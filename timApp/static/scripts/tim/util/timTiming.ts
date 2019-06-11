@@ -46,8 +46,8 @@ export function timLogInit(params: string) {
     p = p.replace("b'", "");
     p = p.replace("'", "");
     const ps = p.split("&");
-    for (let i = 0; i < ps.length; i++) {
-        const k = (ps[i] + "=").split("=");
+    for (const param of ps) {
+        const k = (param + "=").split("=");
         const key = k[0];
         const val = k[1];
         if (key === "timing") {

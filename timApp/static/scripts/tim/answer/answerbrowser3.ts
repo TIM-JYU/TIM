@@ -50,7 +50,6 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
 
     constructor(private element: IRootElementService, private scope: IScope, private transclude: ITranscludeFunction) {
         super(scope, element);
-        this.loadPlugin = this.loadPlugin.bind(this);
         transclude((clone, s) => {
             const c = clone!.filter("[data-plugin]");
             this.pluginElement = c;
@@ -93,7 +92,7 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
         return taskId && taskId.slice(-1) !== "."; // TODO should check more accurately
     }
 
-    loadPlugin() {
+    loadPlugin = () => {
         if (this.compiled) {
             return;
         }
@@ -121,8 +120,7 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
         const pe = this.getPluginElement();
         const cns = pe[0].childNodes;
         let nonLazyHtml;
-        for (let i = 0; i < cns.length; ++i) {
-            const n = cns[i];
+        for (const n of cns) {
             if (n.nodeType === Node.COMMENT_NODE &&
                 n.nodeValue &&
                 n.nodeValue.startsWith(LAZY_MARKER) &&
@@ -218,7 +216,6 @@ export class AnswerBrowserController extends DestroyScope implements IController
     constructor(private scope: IScope, private element: IRootElementService) {
         super(scope, element);
         this.loading = 0;
-        this.checkKeyPress = this.checkKeyPress.bind(this);
     }
 
     registerNewAnswer(args: IAnswerSaveEvent) {
@@ -362,7 +359,6 @@ export class AnswerBrowserController extends DestroyScope implements IController
         this.element.focus();
     }
 
-
     registerAnswerListener(ac: AnswerCallback) {
         this.answerListener = ac;
     }
@@ -444,7 +440,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
         return -1;
     }
 
-    checkKeyPress(e: KeyboardEvent) {
+    checkKeyPress = (e: KeyboardEvent) => {
         if (this.loading > 0) {
             return;
         }
@@ -518,9 +514,9 @@ export class AnswerBrowserController extends DestroyScope implements IController
     }
 
     setAnswerById(id: number, updateImmediately: boolean) {
-        for (let i = 0; i < this.filteredAnswers.length; i++) {
-            if (this.filteredAnswers[i].id === id) {
-                this.selectedAnswer = this.filteredAnswers[i];
+        for (const f of this.filteredAnswers) {
+            if (f.id === id) {
+                this.selectedAnswer = f;
                 if (updateImmediately) {
                     this.changeAnswer();
                 }

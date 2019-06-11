@@ -26,11 +26,11 @@ import {
     isSettingsPar,
     Paragraph,
 } from "../parhelpers";
+import {handleUnread} from "../readings";
 import {ViewCtrl} from "../viewctrl";
+import {MenuFunctionList} from "../viewutils";
 import {IExtraData, IParResponse, ITags} from "./edittypes";
 import {isManageResponse, showRenameDialog} from "./pluginRenameForm";
-import {handleUnread} from "../readings";
-import {MenuFunctionList} from "../viewutils";
 
 export enum EditType {
     Edit,
@@ -291,14 +291,14 @@ This will delete the whole ${options.area ? "area" : "paragraph"} from the docum
                 } else {
                     const saveData = r.result.data;
                     if (saveData.duplicates && saveData.duplicates.length > 0 && saveData.new_par_ids != null) {
-                        const r = await to(showRenameDialog({
+                        const res = await to(showRenameDialog({
                             duplicates: saveData.duplicates,
                             extraData,
                             new_par_ids: saveData.new_par_ids,
                             original_par: saveData.original_par,
                         }));
-                        if (r.ok && !isManageResponse(r.result)) {
-                            this.addSavedParToDom(r.result, params);
+                        if (res.ok && !isManageResponse(res.result)) {
+                            this.addSavedParToDom(res.result, params);
                         } else {
                             this.addSavedParToDom(saveData, params);
                         }

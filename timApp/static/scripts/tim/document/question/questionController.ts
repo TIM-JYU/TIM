@@ -22,11 +22,11 @@ import {
     MatrixType,
     QuestionType,
 } from "../../lecture/lecturetypes";
+import {IGenericPluginMarkup} from "../../plugin/util";
 import {DialogController, registerDialogComponent, showDialog, showMessageDialog} from "../../ui/dialog";
 import {$http, $timeout} from "../../util/ngimport";
 import {IParResponse} from "../editing/edittypes";
 import {QuestionMatrixController} from "./questionMatrix";
-import {IGenericPluginMarkup} from "../../plugin/util";
 
 markAsUsed(QuestionMatrixController);
 
@@ -378,7 +378,7 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
             return 0;
         }
         const edits = this.element.find(".questiontext");
-        const ind = parseInt(id.substr(1)) + dir - 1;
+        const ind = parseInt(id.substr(1), 10) + dir - 1;
         if (ind < 0) {
             return 0;
         }
@@ -480,11 +480,11 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
             this.question.answerFieldType = "text";
         }
 
-        for (let i = 0; i < this.rows.length; i++) {
-            if (this.rows[i].columns.length > columnsCount) {
-                this.rows[i].columns.splice(columnsCount, this.rows[i].columns.length);
+        for (const r of this.rows) {
+            if (r.columns.length > columnsCount) {
+                r.columns.splice(columnsCount, r.columns.length);
             }
-            while (this.rows[i].columns.length < columnsCount) {
+            while (r.columns.length < columnsCount) {
                 this.addCol(this.rows[0].columns.length);
             }
         }
@@ -615,11 +615,11 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
      * @param indexToBeDeleted Index of the column to be deleted.
      */
     private delCol(indexToBeDeleted: number) {
-        for (let i = 0; i < this.rows.length; i++) {
+        for (const r of this.rows) {
             if (indexToBeDeleted === -1) {
-                this.rows[i].columns.splice(-1, 1);
+                r.columns.splice(-1, 1);
             } else {
-                this.rows[i].columns.splice(indexToBeDeleted, 1);
+                r.columns.splice(indexToBeDeleted, 1);
             }
         }
         if (indexToBeDeleted === -1) {
@@ -670,8 +670,8 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
         if (rows.length < 2) {
             return false;
         }
-        for (let i = 0; i < rows.length; i++) {
-            if (rows[i].text === "" || rows[i].text == null) {
+        for (const r of rows) {
+            if (r.text === "" || r.text == null) {
                 return true;
             }
         }
@@ -689,11 +689,10 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
         let n = 0;
         if (this.question.questionType === "matrix" || this.question.questionType === "true-false") {
             if (this.question.matrixType !== "textArea") {
-                for (let i = 0; i < this.rows.length; i++) {
+                for (const r of this.rows) {
                     points += separator;
                     separator2 = "";
-                    for (let j = 0; j < this.rows[i].columns.length; j++) {
-                        const currentColumn = this.rows[i].columns[j];
+                    for (const currentColumn of r.columns) {
                         if (currentColumn.points !== "" && currentColumn.points != "0") {
                             points += separator2;
                             const id = currentColumn.id + 1;
@@ -706,12 +705,12 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
                 }
             }
         } else {
-            for (let i = 0; i < this.rows.length; i++) {
+            for (const r of this.rows) {
                 points += separator;
-                const currentColumn = this.rows[i].columns[0];
+                const currentColumn = r.columns[0];
                 if (currentColumn.points !== "" && currentColumn.points != "0") {
                     points += separator2;
-                    const id = this.rows[i].id;
+                    const id = r.id;
                     points += id.toString() + ":" + parseFloat(currentColumn.points) || 0;
                     separator2 = ";";
                     n++;
@@ -731,8 +730,7 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
     private createExplanation(): IExplCollection {
         const expl: IExplCollection = {};
         let n = 0;
-        for (let i = 0; i < this.rows.length; i++) {
-            const row = this.rows[i];
+        for (const row of this.rows) {
             if (row.expl && row.expl.trim()) {
                 expl[row.id] = row.expl.trim();
                 n++;
@@ -797,29 +795,29 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
 
         const headersJson: IHeader[] = [];
         if (this.question.questionType === "matrix" || this.question.questionType === "true-false" || this.question.questionType === "") {
-            for (let i = 0; i < this.columnHeaders.length; i++) {
+            for (const h of this.columnHeaders) {
                 const header = {
-                    type: this.columnHeaders[i].type,
-                    id: this.columnHeaders[i].id,
-                    text: this.replaceLinebreaksWithHTML(this.columnHeaders[i].text) || "",
+                    type: h.type,
+                    id: h.id,
+                    text: this.replaceLinebreaksWithHTML(h.text) || "",
                 };
                 headersJson.push(header);
             }
         }
 
         const rowsJson: IRow[] = [];
-        for (let i = 0; i < this.rows.length; i++) {
+        for (const r of this.rows) {
             const row: IRow = {
-                id: this.rows[i].id,
-                type: this.rows[i].type,
-                text: this.replaceLinebreaksWithHTML(this.rows[i].text),
+                id: r.id,
+                type: r.type,
+                text: this.replaceLinebreaksWithHTML(r.text),
                 columns: [],
             };
             const columnsJson: IColumn[] = [];
-            for (let j = 0; j < this.rows[i].columns.length; j++) {
+            for (const c of r.columns) {
                 const column: IColumn = {
-                    id: this.rows[i].columns[j].id,
-                    type: this.rows[i].columns[j].type,
+                    id: c.id,
+                    type: c.type,
                     rowId: row.id,
                     text: "",
                     answerFieldType: "text",

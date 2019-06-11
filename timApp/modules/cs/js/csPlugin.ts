@@ -28,6 +28,7 @@ interface CustomFrame<T extends Window> extends HTMLIFrameElement {
 
 // js-parsons is unused; just declare a stub to make TS happy
 declare class ParsonsWidget {
+    // tslint:disable-next-line:variable-name
     static _graders: any;
 
     constructor(data: {});
@@ -189,10 +190,9 @@ function is(types: string[], file: string) {
         return false;
     }
     file = file.toLowerCase();
-    for (let i = 0; i < types.length; i++) {
-        const t = types[i];
-        if (file.endsWith(t)) {
-            if (t !== "pdf") {
+    for (const ty of types) {
+        if (file.endsWith(ty)) {
+            if (ty !== "pdf") {
                 return true;
             }
             if (navigator.mimeTypes.namedItem("application/pdf") || hasAcrobatInstalled() || getBrowserName() === "ie") {
@@ -277,9 +277,9 @@ class LanguageTypes {
             return def;
         }
         type = type.toLowerCase();
-        for (let i = 0; i < types.length; i++) {
-            if (type.indexOf(types[i]) >= 0) {
-                return types[i];
+        for (const ty of types) {
+            if (type.indexOf(ty) >= 0) {
+                return ty;
             }
         }
         return def;
@@ -329,39 +329,34 @@ class LanguageTypes {
 
     getTestType(type: string, language: string, def: string) {
 
-        const t = this.whatIsIn(this.testTypes, type, def);
-        if (t !== "comtest") {
-            return t;
+        const ty = this.whatIsIn(this.testTypes, type, def);
+        if (ty !== "comtest") {
+            return ty;
         }
         const lt = this.whatIsIn(this.runTypes, language, "console");
         const impt = this.impTestTypes[lt];
         if (impt) {
             return impt;
         }
-        return t;
+        return ty;
     }
 
     getUnitTestType(type: string, language: string, def: string) {
 
-        const t = this.whatIsIn(this.unitTestTypes, type, def);
-        if (t !== "unit") {
-            return t;
+        const ty = this.whatIsIn(this.unitTestTypes, type, def);
+        if (ty !== "unit") {
+            return ty;
         }
         const lt = this.whatIsIn(this.runTypes, language, "console");
         const impt = this.impUnitTestTypes[lt];
         if (impt) {
             return impt;
         }
-        return t;
+        return ty;
     }
 
     isInArray(word: string, array: string[]) {
-        for (let i = 0; i < array.length; i++) {
-            if (word === array[i]) {
-                return true;
-            }
-        }
-        return false;
+        return array.includes(word);
     }
 }
 
@@ -518,7 +513,7 @@ function makeTemplate() {
                     ng-click="$ctrl.runUnitTest()">UTest
             </button>
             &nbsp&nbsp<span ng-if="::$ctrl.isDocument">
-          
+
             <a href="" ng-disabled="$ctrl.isRunning"
                ng-click="$ctrl.runDocument()">{{$ctrl.docLink}}</a>&nbsp&nbsp</span>
             <a href=""
@@ -546,7 +541,7 @@ function makeTemplate() {
                                                           ng-pattern="/[-0-9]*/"
                                                           ng-model="$ctrl.wrap"
                                                           size="2"/></label></span></p>
-          
+
     </div>
     <div ng-if="::$ctrl.isSage" class="outputSage no-popup-menu"></div>
     <pre ng-if="$ctrl.viewCode && $ctrl.codeunder">{{$ctrl.code}}</pre>
@@ -605,7 +600,7 @@ function getInt(s: string | number) {
     if (typeof s === "number") {
         return s;
     }
-    const n = parseInt(s);
+    const n = parseInt(s, 10);
     if (isNaN(n)) {
         return 0;
     }
@@ -710,6 +705,7 @@ const CsMarkupOptional = t.partial({
 });
 
 const CsMarkupDefaults = t.type({
+    // tslint:disable
     autorun: withDefault(t.boolean, false),
     parsonsnotordermatters: withDefault(t.boolean, false),
     blind: withDefault(t.boolean, false),
@@ -750,6 +746,7 @@ const CsMarkupDefaults = t.type({
     validityCheckMessage: withDefault(t.string, ""),
     viewCode: withDefault(t.boolean, false),
     words: withDefault(t.boolean, false),
+    // tslint:enable
 });
 
 const CsMarkup = t.intersection([CsMarkupOptional, CsMarkupDefaults, GenericPluginMarkup]);
@@ -853,7 +850,7 @@ class CsController extends CsBase implements IController {
     private muokattu: boolean;
     private noeditor!: boolean;
     private oneruntime?: string;
-    private out?: {write: Function, writeln: Function, canvas: Element};
+    private out?: {write: () => void, writeln: () => void, canvas: Element};
     private parson?: ParsonsWidget;
     private parsonsId?: Vid;
     private postcode?: string;
@@ -1139,7 +1136,7 @@ class CsController extends CsBase implements IController {
     }
 
     get isRun() {
-        return ((languageTypes.getRunType(this.type, "") !== "" || this.isAll) && this.attrs.norun === false)
+        return ((languageTypes.getRunType(this.type, "") !== "" || this.isAll) && !this.attrs.norun)
             || (this.type.indexOf("text") >= 0 || this.isSimcir || this.attrs.justSave)
             || this.attrs.button; // or this.buttonText()?
     }
@@ -1273,9 +1270,9 @@ class CsController extends CsBase implements IController {
             this.attrs.jsparsons,
         ];
         for (const c of this.editorModes) {
-            this.editorModeIndecies.push(parseInt(c));
+            this.editorModeIndecies.push(parseInt(c, 10));
         }
-        this.editorModeIndecies.push(parseInt(this.editorModes[0]));
+        this.editorModeIndecies.push(parseInt(this.editorModes[0], 10));
         if (this.editorModes.length <= 1) {
             this.editorText = ["", "", "", "", "", "", ""];
         }
@@ -1328,7 +1325,7 @@ class CsController extends CsBase implements IController {
 
     async $postLink() {
         await $timeout(); // because of ng-if, tauno would not be found until Angular has processed everything
-        this.taunoElem = this.element.find(".taunoContainer")[0] as HTMLElement;
+        this.taunoElem = this.element.find(".taunoContainer")[0];
         this.edit = this.element.find("textarea")[0] as HTMLTextAreaElement;
         this.preview = this.element.find(".csrunPreview");
         const styleArgs = this.attrs["style-args"];
@@ -1451,7 +1448,7 @@ class CsController extends CsBase implements IController {
                 reader.onload = ((e) => {
                     this.scope.$evalAsync(() => {
                         this.usercode = reader.result as string;
-                        if ( this.attrs.uploadautosave ) this.runCode();
+                        if ( this.attrs.uploadautosave ) { this.runCode(); }
                     });
                 });
                 reader.readAsText(file);
@@ -1478,8 +1475,9 @@ class CsController extends CsBase implements IController {
             upload.then((response) => {
                 $timeout(() => {
                     this.showUploaded(response.data.file, response.data.type);
-                    if ( this.attrs.uploadautosave || !this.attrs.button )
+                    if ( this.attrs.uploadautosave || !this.attrs.button ) {
                         this.doRunCode("upload", false);
+                    }
                 });
             }, (response) => {
                 if (response.status > 0) {
@@ -1591,21 +1589,21 @@ class CsController extends CsBase implements IController {
 
     runCodeCommon(nosave: boolean, extraMarkUp?: IExtraMarkup) {
         this.runned = true;
-        const t = languageTypes.getRunType(this.selectedLanguage, "cs");
-        if (t === "md") {
+        const ty = languageTypes.getRunType(this.selectedLanguage, "cs");
+        if (ty === "md") {
             this.showMD();
             if (nosave || this.nosave) {
                 return;
             }
         }
-        if (languageTypes.isInArray(t, csJSTypes)) {
-            // this.jstype = t;
+        if (languageTypes.isInArray(ty, csJSTypes)) {
+            // this.jstype = ty;
             this.showJS();
             if (nosave || this.nosave) {
                 return;
             }
         }
-        this.doRunCode(t, nosave || this.nosave);
+        this.doRunCode(ty, nosave || this.nosave);
     }
 
     runCodeAuto() {
@@ -1621,13 +1619,13 @@ class CsController extends CsBase implements IController {
     }
 
     runTest() {
-        const t = languageTypes.getTestType(this.type, this.selectedLanguage, "comtest");
-        this.doRunCode(t, false);
+        const ty = languageTypes.getTestType(this.type, this.selectedLanguage, "comtest");
+        this.doRunCode(ty, false);
     }
 
     runUnitTest() {
-        const t = languageTypes.getUnitTestType(this.type, this.selectedLanguage, "junit");
-        this.doRunCode(t, false);
+        const ty = languageTypes.getUnitTestType(this.type, this.selectedLanguage, "junit");
+        this.doRunCode(ty, false);
     }
 
     runDocument() {
@@ -1637,8 +1635,8 @@ class CsController extends CsBase implements IController {
             return;
         }
         this.docLink = "Hide document";
-        const t = languageTypes.getRunType(this.selectedLanguage, "cs");
-        this.doRunCode(t, false, {document: true});
+        const ty = languageTypes.getRunType(this.selectedLanguage, "cs");
+        this.doRunCode(ty, false, {document: true});
     }
 
     closeDocument() {
@@ -2177,8 +2175,7 @@ class CsController extends CsBase implements IController {
         this.showCodeNow();
     }
 
-
-    getClipboardHelper() : HTMLTextAreaElement {  // TODO: could be a TIM global function
+    getClipboardHelper(): HTMLTextAreaElement {  // TODO: could be a TIM global function
         let e1 = copyHelperElement;  // prevent extra creating and deleting
         if (e1) {
             return e1;
@@ -2202,16 +2199,17 @@ class CsController extends CsBase implements IController {
         if (isIOS) {
             // e1.contentEditable = true;
             e1.readOnly = true;
-            var range = document.createRange();
+            const range = document.createRange();
             range.selectNodeContents(e1);
-            var sel = window.getSelection();
+            const sel = window.getSelection();
             if (sel) {
                 sel.removeAllRanges();
                 sel.addRange(range);
             }
             e1.setSelectionRange(0, 999999);
-        } else
+        } else {
             e1.select();
+        }
         document.execCommand("copy");
     }
 
@@ -2226,24 +2224,22 @@ class CsController extends CsBase implements IController {
     getSameIndent(s: string, beg: number): string {
         let n = 0;
         let b = beg;
-        for (let i=b; i<s.length; i++) {
+        for (let i = b; i < s.length; i++) {
             const c = s[i];
-            if (c == ' ') n++;
-            else if (c == '\n') { b = i+1; n = 0; }
-            else break;
+            if (c == " ") { n++; } else if (c == "\n") { b = i + 1; n = 0; } else { break; }
         }
         return s.substr(b, n);
     }
 
     findLastNonEmpty(s: string): number {
-        let i = s.length-1;
+        let i = s.length - 1;
         let foundChars = false;
 
         for ( ; i >= 0; i--) {
-            let c = s[i];
-            if ( c == '\n') {
+            const c = s[i];
+            if ( c == "\n") {
                 if ( foundChars ) { i++; break; }
-            } else if ( c != ' ') foundChars = true;
+            } else if ( c != " ") { foundChars = true; }
         }
         return i;
     }
@@ -2253,49 +2249,49 @@ class CsController extends CsBase implements IController {
         let post = "";
         let extra = false;
         if ( this.viewCode && this.precode ) { // TODO: get if not present?
-            pre = this.precode +"\n";
+            pre = this.precode + "\n";
             extra = true;
         }
 
         if ( this.viewCode && this.postcode ) { // TODO: get if not present?
-            post = this.postcode +"\n";
+            post = this.postcode + "\n";
             extra = true;
         }
 
-        let usercode = this.usercode;
+        const usercode = this.usercode;
 
         // TODO: begin and end texts as a parameter and then indext picked there
-        let ind = ""
+        let ind = "";
         if ( extra ) {
-            ind = this.getSameIndent(this.usercode,0);
-            pre += ind+ "// BYCODEBEGIN\n";  // TODO: ask comment string from language
-            let i = this.findLastNonEmpty(usercode);
+            ind = this.getSameIndent(this.usercode, 0);
+            pre += ind + "// BYCODEBEGIN\n";  // TODO: ask comment string from language
+            const i = this.findLastNonEmpty(usercode);
             ind = this.getSameIndent(this.usercode, i);
             post = "\n" + ind + "// BYCODEEND\n" + post;  // TODO: ask comment string from language
         }
-        let s = pre + this.usercode + post;
+        const s = pre + this.usercode + post;
         this.copyToClipboard(s);
     }
 
     checkByCodeRemove() {
         // TODO: begin and end texts as a parameter and then indext picked there
-        if ( this.nocode || !(this.file || this.program) ) return;
+        if ( this.nocode || !(this.file || this.program) ) { return; }
         const BEGINCODE = "BYCODEBEGIN";
         const ENDCODE = "BYCODEEND";
         let code = this.usercode;
         let i = code.indexOf(BEGINCODE);
         if ( i >= 0) {
-            let endl = code.indexOf("\n", i);
-            if (endl<0) return; // NO user code
-            code = code.substr(endl+1);
+            const endl = code.indexOf("\n", i);
+            if (endl < 0) { return; } // NO user code
+            code = code.substr(endl + 1);
         }
         i = code.indexOf(ENDCODE);
         if ( i >= 0 ) {
             let endl = code.lastIndexOf("\n", i);
-            if ( endl > 0 && code[endl-1] == '\r') endl--; // if there are linefeeds like cr lf
-            if ( endl >= 0 ) code = code.substr(0, endl);
+            if ( endl > 0 && code[endl - 1] == "\r") { endl--; } // if there are linefeeds like cr lf
+            if ( endl >= 0 ) { code = code.substr(0, endl); }
         }
-        if ( code.length == this.usercode.length ) return;
+        if ( code.length == this.usercode.length ) { return; }
         this.usercode = code;
 
     }
@@ -2312,33 +2308,31 @@ class CsController extends CsBase implements IController {
         let n = 0;
         let len = 0;
         const st = this.usercode.split("\n");
-        for (const i in st) {
-            if (st.hasOwnProperty(i)) {
-                let s = st[i];
-                const l = s.length;
-                len += l;
-                let j = 0;
-                for (; j < s.length; j++) {
-                    if (s[j] !== " ") {
-                        break;
-                    }
+        for (let i = 0; i < st.length; ++i) {
+            let s = st[i];
+            const l = s.length;
+            len += l;
+            let j = 0;
+            for (; j < s.length; j++) {
+                if (s[j] !== " ") {
+                    break;
                 }
-                // if ( s.lastIndexOf(spaces,0) === 0 ) continue;
-                if (j >= spaces.length) {
-                    continue;
-                }
-                if (s.trim() === "") {
-                    continue;
-                } // do not indent empty lines
-                s = spaces + s.substring(j);
-                const dl = s.length - l;
-                if (len - l < start) {
-                    start += dl;
-                }
-                len += dl;
-                st[i] = s;
-                n++;
             }
+            // if ( s.lastIndexOf(spaces,0) === 0 ) continue;
+            if (j >= spaces.length) {
+                continue;
+            }
+            if (s.trim() === "") {
+                continue;
+            } // do not indent empty lines
+            s = spaces + s.substring(j);
+            const dl = s.length - l;
+            if (len - l < start) {
+                start += dl;
+            }
+            len += dl;
+            st[i] = s;
+            n++;
         }
         if (!n) {
             return;
@@ -3134,7 +3128,7 @@ class CsConsoleController extends CsBase implements IController {
     }
 
     focusOnInput() {
-        const el = this.getRootElement().querySelector(".console-input") as HTMLInputElement | null;
+        const el: HTMLInputElement | null = this.getRootElement().querySelector(".console-input");
         if (el) {
             el.focus();
         }
@@ -3142,7 +3136,7 @@ class CsConsoleController extends CsBase implements IController {
 
     async handler() {
         const url = this.pluginMeta.getAnswerUrl();
-        const t = languageTypes.getRunType(this.type, "shell");
+        const ty = languageTypes.getRunType(this.type, "shell");
         const ucode = this.currentInput;
         const isInput = false;
         const uargs = "";
@@ -3157,7 +3151,7 @@ class CsConsoleController extends CsBase implements IController {
                     userinput: uinput,
                     isInput: isInput,
                     userargs: uargs,
-                    type: t,
+                    type: ty,
                 },
             },
         }));
@@ -3311,11 +3305,11 @@ export function truthTable(sentence: string, topbottomLines: boolean) {
             input = input.split(r[0]).join(r[1]);
         }
 
-        for (let i = 0; i < abcde.length; i++) {
-            if (input.indexOf(abcde[i]) >= 0) {
-                header += abcde[i] + " ";
+        for (const c of abcde) {
+            if (input.indexOf(c) >= 0) {
+                header += c + " ";
                 const zv = "z[" + count + "]";
-                input = input.split(abcde[i]).join(zv);
+                input = input.split(c).join(zv);
                 vals += "+" + zv + '+" "';
                 count++;
                 cnt2 *= 2;
@@ -3341,11 +3335,14 @@ export function truthTable(sentence: string, topbottomLines: boolean) {
         for (let n = 0; n < cnt2; n++) {
             const z = [];
             for (let i = 0; i < count; i++) {
+                // tslint:disable-next-line:no-bitwise
                 z[i] = (n >> (count - 1 - i)) & 1;
             }
+            // tslint:disable-next-line:no-eval
             result += eval(vals) + "= ";
             const inp = input.split(";");
             for (let i = 0; i < inp.length; i++) {
+                // tslint:disable-next-line:no-eval
                 const tulos = " " + (eval(inp[i]) ? 1 : 0) + fills[i];
                 result += tulos;
             }

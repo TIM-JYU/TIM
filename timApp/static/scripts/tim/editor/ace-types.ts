@@ -16,5 +16,5 @@ export interface IAceEditor extends Editor {
 // suppress incorrect PyCharm warning:
 //noinspection JSUnusedGlobalSymbols
 export interface IAce extends AceAjax.Ace {
-    UndoManager: {new (): AceAjax.UndoManager};
+    UndoManager: new () => AceAjax.UndoManager;
 }

@@ -34,7 +34,7 @@ import {onClick} from "./eventhandlers";
 import {PopupMenuController} from "./popupMenu";
 import {RefPopupHandler} from "./refpopup";
 import {initSlideView} from "./slide";
-import {MenuFunctionEntry} from "./viewutils";
+import {IMenuFunctionEntry} from "./viewutils";
 
 markAsUsed(ngs, popupMenu, interceptor, helpPar);
 
@@ -119,7 +119,7 @@ export class ViewCtrl implements IController {
     public $storage: ngStorage.StorageService & { defaultAction: string | null; noteAccess: string };
     private liveUpdates: number;
     private oldWidth: number;
-    public defaultAction: MenuFunctionEntry | undefined;
+    public defaultAction: IMenuFunctionEntry | undefined;
     public reviewCtrl: ReviewController;
     public lectureCtrl?: LectureController;
     public questionHandler: QuestionHandler;
@@ -347,8 +347,7 @@ export class ViewCtrl implements IController {
                 const compiled = await ParCompiler.compile(d.content, sc);
                 e.before(compiled);
             };
-            for (let i = 0; i < response.data.diff.length; ++i) {
-                const d = response.data.diff[i];
+            for (const d of response.data.diff) {
                 if (d.type === "delete") {
                     if (d.end_id != null) {
                         getElementByParId(d.start_id).nextUntil(getElementByParId(d.end_id)).addBack().remove();
@@ -439,8 +438,8 @@ export class ViewCtrl implements IController {
      * @param {ITimComponent} component The component to be registered.
      */
     public addTimComponent(component: ITimComponent) {
-        let name = component.getName();
-        if (name) this.timComponents.set(name, component);
+        const name = component.getName();
+        if (name) { this.timComponents.set(name, component); }
     }
 
     /**
@@ -458,9 +457,9 @@ export class ViewCtrl implements IController {
      * @returns {ITimComponent[]} List of ITimComponents nested within the area.
      */
     public getTimComponentsByGroup(group: string): ITimComponent[] {
-        let returnList: ITimComponent[] = [];
+        const returnList: ITimComponent[] = [];
         for (const [k, v] of this.timComponents) {
-            if (v.belongsToGroup(group)) returnList.push(v);
+            if (v.belongsToGroup(group)) { returnList.push(v); }
         }
         return returnList;
     }
@@ -471,10 +470,10 @@ export class ViewCtrl implements IController {
      * @returns {ITimComponent[]} List of ITimComponents where the ID matches the regexp.
      */
     public getTimComponentsByRegex(re: string): ITimComponent[] {
-        let returnList: ITimComponent[] = [];
-        let reg = new RegExp(re)
+        const returnList: ITimComponent[] = [];
+        const reg = new RegExp(re);
         for (const [k, v] of this.timComponents) {
-            if (reg.test(k)) returnList.push(v);
+            if (reg.test(k)) { returnList.push(v); }
         }
         return returnList;
     }
@@ -521,7 +520,7 @@ export class ViewCtrl implements IController {
                 await lo.abLoad.promise;
             }
         }
-        //TODO: do not call changeUser separately if updateAll enabled
+        // TODO: do not call changeUser separately if updateAll enabled
         // - handle /answers as single request for all related plugins instead of separate requests
         // - do the same for /taskinfo and /getState requests
         for (const ab of this.abs.values()) {
@@ -636,18 +635,17 @@ export class ViewCtrl implements IController {
     private abs = new Map<string, AnswerBrowserController>();
 
     registerAnswerBrowser(ab: AnswerBrowserController) {
-        //TODO: Task can have two instances in same document (regular field and label version)
+        // TODO: Task can have two instances in same document (regular field and label version)
         // - for now just add extra answerbrowsers for them (causes unnecessary requests when changing user...)
         // - maybe in future answerbrowser could find all related plugin instances and update them when ab.changeuser gets called?
         // - fix registerPluginLoader too
-        if(this.abs.has((ab.taskId))){
+        if (this.abs.has((ab.taskId))) {
             let index = 1;
-            while(this.abs.has(ab.taskId + index)){
-                index++
+            while (this.abs.has(ab.taskId + index)) {
+                index++;
             }
             this.abs.set(ab.taskId + index, ab);
-        }
-        else this.abs.set(ab.taskId, ab);
+        } else { this.abs.set(ab.taskId, ab); }
     }
 
     getAnswerBrowser(taskId: string) {
@@ -657,15 +655,14 @@ export class ViewCtrl implements IController {
     private ldrs = new Map<string, PluginLoaderCtrl>();
 
     registerPluginLoader(loader: PluginLoaderCtrl) {
-        //TODO: see todos at registerAnswerBrowser
+        // TODO: see todos at registerAnswerBrowser
         if (this.ldrs.has((loader.taskId))) {
             let index = 1;
             while (this.ldrs.has(loader.taskId + index)) {
-                index++
+                index++;
             }
             this.ldrs.set(loader.taskId + index, loader);
-        }
-        else this.ldrs.set(loader.taskId, loader);
+        } else { this.ldrs.set(loader.taskId, loader); }
     }
 
     getPluginLoader(taskId: string) {
@@ -721,8 +718,6 @@ class EntityRegistry<K, V> {
         return this.entities.get(k);
     }
 }
-
-
 
 timApp.component("timView", {
     controller: ViewCtrl,

@@ -1,5 +1,5 @@
-import {ConsentType} from "../ui/consent";
 import {IFolder} from "../item/IItem";
+import {ConsentType} from "../ui/consent";
 
 export const TEACHERS_GROUPNAME = "teachers";
 export const ADMIN_GROUPNAME = "Administrators";

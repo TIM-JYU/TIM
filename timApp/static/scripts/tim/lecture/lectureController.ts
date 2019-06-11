@@ -12,6 +12,7 @@
  */
 
 import {IController, IScope} from "angular";
+import ifvisible from "ifvisible.js";
 import moment from "moment";
 import {timApp} from "tim/app";
 import {clone, getURLParameter, markAsUsed, Require, setStorage, to} from "tim/util/utils";
@@ -59,7 +60,6 @@ import {
 import * as wall from "./lectureWall";
 import {LectureWallController, showLectureWall} from "./lectureWall";
 import {askQuestion} from "./questionAskController";
-import ifvisible from "ifvisible.js";
 
 markAsUsed(wall);
 
@@ -358,18 +358,18 @@ export class LectureController implements IController {
      * @param peopleList List of people in the lecture.
      */
     addPeopleToList(people: ILecturePerson[], peopleList: ILecturePerson[]) {
-        for (let i = 0; i < people.length; i++) {
+        for (const p of people) {
             let oldUser = false;
-            for (let index = 0; index < peopleList.length; index++) {
-                if (peopleList[index].user.id === people[i].user.id) {
+            for (const pl of peopleList) {
+                if (pl.user.id === p.user.id) {
                     oldUser = true;
-                    peopleList[index].active = people[i].active;
+                    pl.active = p.active;
                     break;
                 }
             }
 
             if (!oldUser) {
-                const student = clone(people[i]);
+                const student = clone(p);
                 peopleList.push(student);
             }
         }
@@ -389,12 +389,12 @@ export class LectureController implements IController {
         this.lectures = [];
         this.futureLectures = [];
 
-        for (let i = 0; i < answer.lectures.length; i++) {
-            this.lectures.push(answer.lectures[i]);
+        for (const l of answer.lectures) {
+            this.lectures.push(l);
         }
 
-        for (let i = 0; i < answer.futureLectures.length; i++) {
-            this.futureLectures.push(answer.futureLectures[i]);
+        for (const l of answer.futureLectures) {
+            this.futureLectures.push(l);
         }
     }
 

@@ -64,7 +64,7 @@ export class UserService {
         const separator = targetUrl.indexOf("?") >= 0 ? "&" : "?";
         const cameFromRaw = $window.came_from || "";
         const anchorRaw = window.location.hash.replace("#", "");
-        const redirectFn = function() {
+        const redirectFn = () => {
             window.location.replace(targetUrl + separator + $httpParamSerializer({
                 came_from: cameFromRaw,
                 anchor: anchorRaw,

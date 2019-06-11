@@ -6,12 +6,12 @@ import {IFormController, IRootElementService, IScope} from "angular";
 import {Moment} from "moment";
 import * as focusMe from "tim/ui/focusMe";
 import {DialogController, registerDialogComponent, showDialog} from "../ui/dialog";
-import {IItem, ITag, tagStyleClass, TagType} from "./IItem";
 import {TEACHERS_GROUPNAME} from "../user/IUser";
 import {userBelongsToGroupOrIsAdmin} from "../user/userService";
+import {KEY_ENTER} from "../util/keycodes";
 import {$http} from "../util/ngimport";
 import {markAsUsed, to} from "../util/utils";
-import {KEY_ENTER} from "../util/keycodes";
+import {IItem, ITag, tagStyleClass, TagType} from "./IItem";
 
 markAsUsed(focusMe);
 

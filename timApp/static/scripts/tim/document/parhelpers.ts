@@ -175,7 +175,7 @@ export function dereferencePar(par: Paragraph) {
         return [par.attr("ref-doc-id"), par.attr("ref-id"), par.attr("ref-t")] as const;
     }
     const doc = getActiveDocument();
-    return [doc.id, par.attr("id"), par.attr("t")] as const;
+    return [doc.getId(), par.attr("id"), par.attr("t")] as const;
 }
 
 /**

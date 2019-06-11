@@ -25,8 +25,8 @@ export class SettingsCtrl implements IController {
     private saving = false;
     private style: HTMLElementTagNameMap["style"];
     private settings: ISettings;
-    private cssFiles: {}[];
-    private notifications: {}[];
+    private cssFiles: Array<{}>;
+    private notifications: Array<{}>;
     private consent: ConsentType | undefined;
     private storageClear = false;
 

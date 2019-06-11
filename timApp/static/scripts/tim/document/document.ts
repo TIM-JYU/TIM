@@ -5,19 +5,19 @@ import {getParAttributes, getParId, getRefAttrs, Paragraph} from "./parhelpers";
 type SectionMap = Map<string, JQuery[]>;
 
 export class Document {
-    get sections(): SectionMap {
-        return this._sections;
+    getSections(): SectionMap {
+        return this.sections;
     }
 
-    get id(): number {
-        return this._id;
+    getId(): number {
+        return this.id;
     }
 
-    private _sections = new Map<string, JQuery[]>();
-    private _id: number;
+    private sections = new Map<string, JQuery[]>();
+    private id: number;
 
     constructor(id: number) {
-        this._id = id;
+        this.id = id;
     }
 
     /**
@@ -25,7 +25,7 @@ export class Document {
      */
     public rebuildSections() {
         $(".readsection").remove();
-        this._sections = new Map();
+        this.sections = new Map();
         this.buildSections([], $("#pars"));
         this.refreshSectionReadMarks();
     }
@@ -35,7 +35,7 @@ export class Document {
      */
     public refreshSectionReadMarks() {
         $(".readsection").remove();
-        for (const sectionPars of this._sections.values()) {
+        for (const sectionPars of this.sections.values()) {
             const readlines = $(sectionPars.map((p) => p[0])).children(".readline");
             const modifiedCount = readlines.filter(".read-modified").not(".read").length;
             const unreadCount = readlines.not(".read-modified").not(".read").length;
@@ -70,7 +70,7 @@ export class Document {
                     if (content.children("h1, h2, h3").length > 0) {
                         if (currentSectionPars.length > 0) {
                             const parId = getParId(currentSectionPars[currentSectionPars.length - 1])!;
-                            this._sections.set(parId, currentSectionPars);
+                            this.sections.set(parId, currentSectionPars);
                         }
                         currentSectionPars = [child];
                     } else if (!attrs.hasOwnProperty("settings") && !attrs.hasOwnProperty("area") && !attrs.hasOwnProperty("area_end") && !refAttrs.hasOwnProperty("area") && !refAttrs.hasOwnProperty("area_end")) {
@@ -79,7 +79,7 @@ export class Document {
                 }
             } else if (child.hasClass("addBottomContainer")) {
                 if (currentSectionPars.length > 0) {
-                    this._sections.set(getParId(currentSectionPars[currentSectionPars.length - 1])!, currentSectionPars);
+                    this.sections.set(getParId(currentSectionPars[currentSectionPars.length - 1])!, currentSectionPars);
                 }
             }
             child = child.next();

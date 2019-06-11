@@ -3,11 +3,11 @@
  */
 
 import {IRootElementService, IScope} from "angular";
+import {ngStorage} from "ngstorage";
 import * as focusMe from "tim/ui/focusMe";
 import {DialogController, registerDialogComponent, showDialog} from "../ui/dialog";
-import {markAsUsed} from "../util/utils";
-import {ngStorage} from "ngstorage";
 import {$localStorage} from "../util/ngimport";
+import {markAsUsed} from "../util/utils";
 
 markAsUsed(focusMe);
 

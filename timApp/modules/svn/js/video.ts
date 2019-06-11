@@ -11,7 +11,7 @@ function muunna(value: string | number | undefined): number | undefined {
     if (!value) {
         return undefined;
     }
-    if (typeof value == 'number') {
+    if (typeof value == "number") {
         return value;
     }
 
@@ -107,8 +107,8 @@ const ShowFileMarkup = t.intersection([
     GenericPluginMarkup,
     t.type({
         autoplay: withDefault(t.boolean, true),
-        file: withDefault(t.string, ''),
-        target: withDefault(t.string, 'timdoc'),
+        file: withDefault(t.string, ""),
+        target: withDefault(t.string, "timdoc"),
         open: withDefault(t.boolean, false),
     }),
 ]);
@@ -170,9 +170,11 @@ class ShowFileController extends PluginBase<t.TypeOf<typeof ShowFileMarkup>,
 
     $onInit() {
         super.$onInit();
-        let n = this.attrs.file || "";
-        this.iframeopts =  'sandbox="allow-scripts allow-same-origin"';
-        if ( n.indexOf('.pdf') == n.length-4 ) this.iframeopts = "";  // for chrome :-( Sanddboxed viewer does not work!
+        const n = this.attrs.file || "";
+        this.iframeopts = 'sandbox="allow-scripts allow-same-origin"';
+        if (n.endsWith(".pdf")) {
+            this.iframeopts = ""; // for Chrome :-( Sandboxed viewer does not work!
+        }
 
         this.start = muunna(this.attrs.start);
         this.end = muunna(this.attrs.end);

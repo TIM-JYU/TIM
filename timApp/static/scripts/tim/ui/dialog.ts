@@ -20,7 +20,6 @@ export abstract class DialogController<T, Ret> implements IController {
     protected abstract getTitle(): string;
 
     constructor(protected element: IRootElementService, protected scope: IScope) {
-        this.handleEscPress = this.handleEscPress.bind(this);
     }
 
     $onInit() {
@@ -34,7 +33,7 @@ export abstract class DialogController<T, Ret> implements IController {
         document.addEventListener("keydown", this.handleEscPress);
     }
 
-    handleEscPress(e: KeyboardEvent) {
+    handleEscPress = (e: KeyboardEvent) => {
         if (e.keyCode === KEY_ESC && this.isTopMostDialog()) {
             this.dismiss();
         }

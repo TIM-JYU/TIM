@@ -47,40 +47,40 @@ export function injectProviders($a: angular.auto.IProvideService,
 }
 
 export function injectServices($i: angular.auto.IInjectorService) {
-    $anchorScroll = $i.get("$anchorScroll") as angular.IAnchorScrollService;
-    $cacheFactory = $i.get("$cacheFactory") as angular.ICacheFactoryService;
-    $compile = $i.get("$compile") as angular.ICompileService;
-    $controller = $i.get("$controller") as angular.IControllerService;
-    $document = $i.get("$document") as angular.IDocumentService;
-    $exceptionHandler = $i.get("$exceptionHandler") as angular.IExceptionHandlerService;
-    $filter = $i.get("$filter") as angular.IFilterService;
-    $http = $i.get("$http") as angular.IHttpService;
-    $httpBackend = $i.get("$httpBackend") as angular.IHttpBackendService;
-    $httpParamSerializer = $i.get("$httpParamSerializer") as angular.IHttpParamSerializer;
-    $httpParamSerializerJQLike = $i.get("$httpParamSerializerJQLike") as angular.IHttpParamSerializer;
+    $anchorScroll = $i.get("$anchorScroll");
+    $cacheFactory = $i.get("$cacheFactory");
+    $compile = $i.get("$compile");
+    $controller = $i.get("$controller");
+    $document = $i.get("$document");
+    $exceptionHandler = $i.get("$exceptionHandler");
+    $filter = $i.get("$filter");
+    $http = $i.get("$http");
+    $httpBackend = $i.get("$httpBackend");
+    $httpParamSerializer = $i.get("$httpParamSerializer");
+    $httpParamSerializerJQLike = $i.get("$httpParamSerializerJQLike");
     $injector = $i;
-    $interpolate = $i.get("$interpolate") as angular.IInterpolateService;
-    $interval = $i.get("$interval") as angular.IIntervalService;
-    $locale = $i.get("$locale") as angular.ILocaleService;
-    $localStorage = $i.get("$localStorage") as ngStorage.StorageService;
-    $location = $i.get("$location") as angular.ILocationService;
-    $log = $i.get("$log") as angular.ILogService;
-    $parse = $i.get("$parse") as angular.IParseService;
-    $q = $i.get("$q") as angular.IQService;
-    $rootElement = $i.get("$rootElement") as angular.IRootElementService;
-    $rootScope = $i.get("$rootScope") as angular.IRootScopeService;
-    $sanitize = $i.get("$sanitize") as angular.sanitize.ISanitizeService;
-    $sce = $i.get("$sce") as angular.ISCEService;
-    $sceDelegate = $i.get("$sceDelegate") as angular.ISCEDelegateService;
-    $templateCache = $i.get("$templateCache") as angular.ITemplateCacheService;
-    $templateRequest = $i.get("$templateRequest") as angular.ITemplateRequestService;
-    $timeout = $i.get("$timeout") as angular.ITimeoutService;
-    $window = $i.get("$window") as angular.IWindowService;
-    $xhrFactory = $i.get("$xhrFactory") as angular.IXhrFactory<any>;
+    $interpolate = $i.get("$interpolate");
+    $interval = $i.get("$interval");
+    $locale = $i.get("$locale");
+    $localStorage = $i.get("$localStorage");
+    $location = $i.get("$location");
+    $log = $i.get("$log");
+    $parse = $i.get("$parse");
+    $q = $i.get("$q");
+    $rootElement = $i.get("$rootElement");
+    $rootScope = $i.get("$rootScope");
+    $sanitize = $i.get("$sanitize");
+    $sce = $i.get("$sce");
+    $sceDelegate = $i.get("$sceDelegate");
+    $templateCache = $i.get("$templateCache");
+    $templateRequest = $i.get("$templateRequest");
+    $timeout = $i.get("$timeout");
+    $window = $i.get("$window");
+    $xhrFactory = $i.get("$xhrFactory");
 
     // 3rd party services
-    $uibModal = $i.get("$uibModal") as angular.ui.bootstrap.IModalService;
-    $upload = $i.get("Upload") as angular.angularFileUpload.IUploadService;
+    $uibModal = $i.get("$uibModal");
+    $upload = $i.get("Upload");
 }
 
 function doInject() {

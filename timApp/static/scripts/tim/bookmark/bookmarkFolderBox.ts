@@ -161,7 +161,7 @@ class BookmarkFolderBoxCtrl implements IController {
      */
     private bookmarkIndexOf(bookmark: IBookmark) {
         if (this.documents) {
-            for (const {item, index} of this.documents.map((item, index) => ({ item, index }))) {
+            for (const {item, index} of this.documents.map((it, ind) => ({ item: it, index: ind }))) {
                 if (bookmark.link === item.bookmark.link) {
                     return index;
                 }

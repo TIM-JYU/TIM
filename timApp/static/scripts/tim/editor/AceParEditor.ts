@@ -232,7 +232,7 @@ export class AceParEditor extends BaseParEditor {
         }
         toNextLine = toNextLine.trim();
 
-        const breakline = '\n#- {.printpagebreak}\n#-\n';
+        const breakline = "\n#- {.printpagebreak}\n#-\n";
 
         this.editor.selection.setRange(range, false);
         this.editor.insert(toKeepInLine + breakline + "\n" + toNextLine);
@@ -483,8 +483,8 @@ export class AceParEditor extends BaseParEditor {
     changeValue(attributes: string[], text: string) {
         const pos = this.editor.getCursorPosition();
         let line = this.editor.session.getLine(pos.row);
-        for (let i = 0; i < attributes.length; i++) {
-            const ma = line.match(" *" + attributes[i]);
+        for (const a of attributes) {
+            const ma = line.match(" *" + a);
             if (ma) {
                 const len = line.length;
                 line = ma[0] + " " + text;

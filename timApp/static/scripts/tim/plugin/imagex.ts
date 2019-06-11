@@ -1,4 +1,5 @@
 import angular, {IPromise, IRootElementService, IScope} from "angular";
+import * as colorpicker from "angular-bootstrap-colorpicker";
 import ngSanitize from "angular-sanitize";
 import deepmerge from "deepmerge";
 import * as t from "io-ts";
@@ -6,7 +7,6 @@ import {ViewCtrl} from "../document/viewctrl";
 import {editorChangeValue} from "../editor/editorScope";
 import {$http, $q, $sce, $timeout} from "../util/ngimport";
 import {markAsUsed, MouseOrTouch, numOrStringToNumber, posToRelative, Require, to, valueOr} from "../util/utils";
-import * as colorpicker from "angular-bootstrap-colorpicker";
 import {
     CommonPropsT,
     DefaultPropsT,
@@ -42,7 +42,6 @@ import {
 import {PluginBase, pluginBindings} from "./util";
 
 markAsUsed(ngSanitize, colorpicker);
-
 
 const imagexApp = angular.module("imagexApp", ["ngSanitize", "colorpicker.module"]);
 export const moduleDefs = [imagexApp];
@@ -207,8 +206,9 @@ class FreeHand {
 
     setColor(newColor: string) {
         this.imgx.color = newColor;
-        if (this.prevPos)
+        if (this.prevPos) {
             this.startSegment(tupleToCoords(this.prevPos));
+        }
     }
 
     setWidth(newWidth: number) {
@@ -216,8 +216,9 @@ class FreeHand {
         if (this.imgx.w < 1) {
             this.imgx.w = 1;
         }
-        if (this.prevPos)
+        if (this.prevPos) {
             this.startSegment(tupleToCoords(this.prevPos));
+        }
     }
 
     incWidth(dw: number) {
@@ -246,8 +247,7 @@ class FreeHand {
 
     // TODO get rid of type assertions ("as number")
     drawCirclesVideoDot(ctx: CanvasRenderingContext2D, dr: ILineSegment[], videoPlayer: VideoPlayer) {
-        for (let dri = 0; dri < dr.length; dri++) {
-            const seg = dr[dri];
+        for (const seg of dr) {
             const vt = videoPlayer.currentTime;
             // console.log("vt: " + vt + " " + this.lastDrawnSeg );
             let seg1 = -1;
@@ -310,8 +310,7 @@ class FreeHand {
             this.imgx.draw();
         }
         const vt = videoPlayer.currentTime;
-        for (let dri = 0; dri < dr.length; dri++) {
-            const seg = dr[dri];
+        for (const seg of dr) {
             if (seg.lines.length < 1) {
                 continue;
             }
@@ -816,11 +815,10 @@ class DragTask {
     addRightAnswers(answers: RightAnswerT[]) {
         this.lines = [];
         const objects = this.drawObjects;
-        const rightdrags = answers;
-        for (let j = 0; j < rightdrags.length; j++) {
-            for (let p = 0; p < objects.length; p++) {
-                if (objects[p].id === rightdrags[j].id) {
-                    const line = new Line("green", 2, objects[p], tupleToCoords(rightdrags[j].position));
+        for (const d of answers) {
+            for (const o of objects) {
+                if (o.id === d.id) {
+                    const line = new Line("green", 2, o, tupleToCoords(d.position));
                     this.lines.push(line);
                 }
             }
@@ -1460,7 +1458,7 @@ function loadImage(src: string): [IPromise<ImageLoadResult>, HTMLImageElement] {
     return [deferred.promise, sprite];
 }
 
-function baseDefs(t: ObjectTypeT, color: string): RequireExcept<DefaultPropsT, OptionalPropNames> {
+function baseDefs(objType: ObjectTypeT, color: string): RequireExcept<DefaultPropsT, OptionalPropNames> {
     return {
         a: 0,
         color,
@@ -1470,7 +1468,7 @@ function baseDefs(t: ObjectTypeT, color: string): RequireExcept<DefaultPropsT, O
         snap: true,
         snapColor: "cyan",
         snapOffset: [0, 0],
-        type: t,
+        type: objType,
     };
 }
 
@@ -1589,7 +1587,6 @@ class ImageXController extends PluginBase<t.TypeOf<typeof ImageXMarkup>,
            // event.preventDefault();
         });
 
-
         this.tries = this.attrsall.info && this.attrsall.info.earlier_answers || 0;
         this.freeHandDrawing = new FreeHand(this,
             this.attrsall.state && this.attrsall.state.freeHandData || [],
@@ -1699,7 +1696,7 @@ class ImageXController extends PluginBase<t.TypeOf<typeof ImageXMarkup>,
             if (d.pendingImage) {
                 const r = await d.pendingImage;
                 if (r instanceof Event) {
-                    this.imageLoadError = `Failed to load image ${(r.target as Element)!.getAttribute("src")}`;
+                    this.imageLoadError = `Failed to load image ${(r.target as Element).getAttribute("src")}`;
                     break;
                 }
             }

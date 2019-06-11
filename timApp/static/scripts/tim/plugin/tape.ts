@@ -1,10 +1,10 @@
-import {timApp} from "../app";
 import {IController, IRootElementService, IScope} from "angular";
+import {timApp} from "../app";
 import {Binding} from "../util/utils";
 
 export enum ParameterType {
     NUMBER,
-    STRING
+    STRING,
 }
 
 /**
@@ -27,14 +27,15 @@ export abstract class Command {
     }
 
     public toString(param: string): string {
-        if ( this.usesParameter )
+        if ( this.usesParameter ) {
             return this.name + "(" + param + ")";
+        }
         return this.name;
     }
 
     public isLabel(): boolean { return false; }
 
-    public getParameterType() : ParameterType { return ParameterType.STRING; }
+    public getParameterType(): ParameterType { return ParameterType.STRING; }
 }
 
 /**
@@ -52,7 +53,7 @@ export class CommandParameters {
     public commandList: CommandInstance[] = [];
 }
 
-//<editor-fold desc="Commands">
+// <editor-fold desc="Commands">
 
 class Input extends Command {
     constructor() {
@@ -81,7 +82,7 @@ class Output extends Command {
         if (params.state.hand != null) {
             params.state.output.push(params.state.hand);
             while (params.state.output.length > 6 ) {
-                params.state.output.splice(0,1);
+                params.state.output.splice(0, 1);
             }
             params.state.hand = undefined;
         }
@@ -99,7 +100,7 @@ class MemoryCommand extends Command {
         return "Memory index";
     }
 
-    public getParameterType() : ParameterType { return ParameterType.NUMBER; }
+    public getParameterType(): ParameterType { return ParameterType.NUMBER; }
 }
 
 class Add extends MemoryCommand {
@@ -169,7 +170,7 @@ class DefineLabel extends Command {
     public isLabel() { return true; }
 
     public toString(param: string): string {
-        return param + ":"
+        return param + ":";
     }
 }
 
@@ -183,7 +184,7 @@ class Jump extends Command {
     }
 
     protected jumpToLabel(params: CommandParameters) {
-        const index = params.commandList.findIndex(c => c.command.isLabel() && c.parameter === params.mainParam);
+        const index = params.commandList.findIndex((c) => c.command.isLabel() && c.parameter === params.mainParam);
         if (index > -1) {
             params.state.instructionPointer = index + 1;
         }
@@ -218,7 +219,7 @@ class JumpIfNeg extends Jump {
     public getParameterName() { return "Label"; }
 }
 
-//</editor-fold>
+// </editor-fold>
 
 /**
  * An instance of a command to be executed. Includes the command and its parameters.
@@ -274,46 +275,42 @@ export interface TapeAttrs {
 }
 
 function isiOS(): boolean {
-      let iDevices = [
-        'iPad Simulator',
-        'iPhone Simulator',
-        'iPod Simulator',
-        'iPad',
-        'iPhone',
-        'iPod'
+      const iDevices = [
+        "iPad Simulator",
+        "iPhone Simulator",
+        "iPod Simulator",
+        "iPad",
+        "iPhone",
+        "iPod",
       ];
 
       if (!!navigator.platform) {
         while (iDevices.length) {
-          if (navigator.platform === iDevices.pop()){ return true; }
+          if (navigator.platform === iDevices.pop()) { return true; }
         }
       }
       return false;
 }
 
-
-function scrollElementVisibleInParent(el:Element, par:Element, extraY: number) {
+function scrollElementVisibleInParent(el: Element, par: Element, extraY: number) {
     // Scroll par window so that el comes visible if it is not visible
     // it is ensured that at least extraY times el hight is over or under el
-    let rect     = el.getBoundingClientRect(),
-        prect     = par.getBoundingClientRect();
+    const rect = el.getBoundingClientRect();
+    const prect = par.getBoundingClientRect();
 
-    let dy = prect.top-rect.top;
+    let dy = prect.top - rect.top;
     if ( dy > 0 ) { // el too high
-        par.scrollTop -= dy + extraY*rect.height;
+        par.scrollTop -= dy + extraY * rect.height;
         return false;
     }
 
     dy = (prect.top + prect.height) - (rect.top + rect.height);
     if ( dy < 0 ) { // el too low
-        par.scrollTop -= dy - extraY*rect.height;
+        par.scrollTop -= dy - extraY * rect.height;
         return false;
     }
     return true;
 }
-
-
-
 
 /**
  * The tape machine controller.
@@ -329,7 +326,6 @@ export class TapeController implements IController {
 
     $onInit() {
         this.iOS = isiOS();
-        this.step = this.step.bind(this);
         this.inputString = "";
         if ( this.data.presetInput ) {
             this.inputString = String(this.data.presetInput);
@@ -363,13 +359,12 @@ export class TapeController implements IController {
 
     private timer: any;
 
-    private inputString : string = '';
-    private memString : string = '';
-    private programAsText: string = '';
+    private inputString: string = "";
+    private memString: string = "";
+    private programAsText: string = "";
     private textmode: boolean = false; // do not use as ng-model, because ipad changes it different time than PC
     private textmodeCB: boolean = false;
     private iOS: boolean = false;
-
 
     /**
      * Handles clicks on the "Insert command" button.
@@ -379,20 +374,21 @@ export class TapeController implements IController {
             return;
         }
         if (this.textmode) {
-            let n = this.element.find(".textAreaRobotProgram").getSelection().start;
+            const n = this.element.find(".textAreaRobotProgram").getSelection().start;
             let r = 0;
-            let text = this.programAsText;
-            for (let i=0; i<n; i++) {
-                if (text[i] === "\n") r++;
+            const text = this.programAsText;
+            for (let i = 0; i < n; i++) {
+                if (text[i] === "\n") { r++; }
             }
             this.selectedCommandIndex = r;
         }
 
         const commandToAdd = this.possibleCommandList[this.newCommandIndex];
         this.addCommand(commandToAdd, this.newCommandParameter, this.selectedCommandIndex);
-        if (this.selectedCommandIndex !== -1)
+        if (this.selectedCommandIndex !== -1) {
             this.selectedCommandIndex++;
-        if (this.textmode) this.textAll();
+        }
+        if (this.textmode) { this.textAll(); }
 
         this.checkCommandInView(this.selectedCommandIndex);
 
@@ -411,14 +407,14 @@ export class TapeController implements IController {
         // TODO maybe move parameter validation to the commands themselves?
         if (commandToAdd.usesParameter) {
             if (commandToAdd.getParameterType() === ParameterType.NUMBER) {
-                parameter = parseInt(parameterString);
+                parameter = parseInt(parameterString, 10);
                 // for now we assume all numbers are memory indexes
                 if (isNaN(parameter) || parameter < 0 || parameter >= this.state.memory.length) {
                     return false;
                 }
             } else {
                 if (parameterString === "" ||
-                    parameterString.includes(' ')) { // don't allow spaces to make parsing easier
+                    parameterString.includes(" ")) { // don't allow spaces to make parsing easier
                     // TODO show error?
                     return false;
                 }
@@ -435,22 +431,19 @@ export class TapeController implements IController {
         return true;
     }
 
-
-    private checkCommandInView(n : number) {
+    private checkCommandInView(n: number) {
         if (this.commandList.length > 10) { // long program, ensure command is visible
-            if ( n >= this.commandList.length ) n = this.commandList.length-1;
-            if ( n < 0 ) return;
-            let cmdul = this.element.find(".cmditems");
-            let cmdli = cmdul.children()[n];
+            if ( n >= this.commandList.length ) { n = this.commandList.length - 1; }
+            if ( n < 0 ) { return; }
+            const cmdul = this.element.find(".cmditems");
+            const cmdli = cmdul.children()[n];
             scrollElementVisibleInParent(cmdli, cmdul[0], 1);
         }
     }
 
-
     private checkCurrentCommandInView() {
         this.checkCommandInView(this.state.instructionPointer);
     }
-
 
     /**
      * Steps the program.
@@ -492,19 +485,17 @@ export class TapeController implements IController {
         }
     }
 
-
-    private static arrayFromString(s? : string): number[]
-    {
-        if ( !s ) return [];
+    private static arrayFromString(s?: string): number[] {
+        if ( !s ) { return []; }
         s = s.trim();
-        if ( s === "" ) return [];
+        if ( s === "" ) { return []; }
 
-        let result = [];
-        let pieces = s.split(',');
-        for (let n of pieces) {
+        const result = [];
+        const pieces = s.split(",");
+        for (const n of pieces) {
             let val = Number(n.trim());
-            if ( !val ) val = 0;
-            result.push(val)
+            if ( !val ) { val = 0; }
+            result.push(val);
         }
         return result;
     }
@@ -537,7 +528,7 @@ export class TapeController implements IController {
 
         this.state.memory = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 
-        let memState = TapeController.arrayFromString(this.memString);  // Array.from(this.data.presetInput);
+        const memState = TapeController.arrayFromString(this.memString);  // Array.from(this.data.presetInput);
 
         for (let i = 0; i < memState.length && i < this.state.memory.length; i++) {
             this.state.memory[i] = memState[i];
@@ -578,58 +569,52 @@ export class TapeController implements IController {
         this.programAsText = this.toText();
     }
 
-
-    private selectAllText(name: string, newtext:string) {
-        let jh = this.element.find(name);
-        if ( newtext ) jh.val(newtext);
-        let h = jh[0] as HTMLTextAreaElement;
-        if ( !h ) return;
+    private selectAllText(name: string, newtext: string) {
+        const jh = this.element.find(name);
+        if ( newtext ) { jh.val(newtext); }
+        const h = jh[0] as HTMLTextAreaElement;
+        if ( !h ) { return; }
         if ( this.iOS ) {
             h.focus();
-            h.setSelectionRange(0,99999);  // select is not working in iOS
+            h.setSelectionRange(0, 99999);  // select is not working in iOS
         } else {
             jh.select();
         }
 
     }
 
-
     private copyAll() {
         // this.changeText();
         if ( this.textmode ) {
-            this.selectAllText(".textAreaRobotProgram","");
+            this.selectAllText(".textAreaRobotProgram", "");
         } else {
             this.selectAllText(".hiddenRobotProgram", this.toText());
         }
         document.execCommand("copy");
     }
 
-
     private paste() {
-        if ( this.programAsText === "" ) return;
+        if ( this.programAsText === "" ) { return; }
         this.commandList = [];
         this.fromText(this.programAsText);
     }
 
-
     private changeList() {
-        if ( !this.textmode ) return;
+        if ( !this.textmode ) { return; }
         this.textmode = false;
         this.textmodeCB = false;
         this.paste();
     }
 
-
     private changeText() {
-        if ( this.textmode ) return;
+        if ( this.textmode ) { return; }
         this.textmode = true;
         this.textmodeCB = true;
         this.textAll();
     }
 
     private changeMode() {
-        if ( this.textmode ) this.changeList(); // oldtextmode to know the old value istead of the automatic
-        else this.changeText();
+        if ( this.textmode ) { this.changeList(); } else { this.changeText(); }
     }
 
     /**
@@ -638,8 +623,8 @@ export class TapeController implements IController {
     private toText(): string {
         let result: string = "";
         // this.commandList.forEach(c => result += `${c.command.name} ${c.parameter}\n`);
-        for (let c of this.commandList) {
-             result += c.command.toString(c.parameter) + "\n"
+        for (const c of this.commandList) {
+             result += c.command.toString(c.parameter) + "\n";
         }
         return result;
     }
@@ -650,17 +635,17 @@ export class TapeController implements IController {
      */
     private fromText(text: string) {
         text = text.replace("\r\n", "\n").replace("\r", "\n");
-        const lines = text.split('\n');
+        const lines = text.split("\n");
         for (let line of lines) {
-            line = line.replace(';', '').trim();
+            line = line.replace(";", "").trim();
             if (line.length == 0) {
                 continue;
             }
 
-            const colonIndex = line.indexOf(':');
+            const colonIndex = line.indexOf(":");
             if (colonIndex == line.length - 1 && line.length > 1) {
                 // label found
-                const defineLabelCommand = this.possibleCommandList.find(c => c.name === "Define Label");
+                const defineLabelCommand = this.possibleCommandList.find((c) => c.name === "Define Label");
                 if (defineLabelCommand) {
                     this.addCommand(defineLabelCommand, line.slice(0, line.length - 1));
                 }
@@ -669,19 +654,19 @@ export class TapeController implements IController {
             }
 
             let components: string[] = [];
-            const pIndex = line.indexOf('(');
-            let separator = '(';
+            const pIndex = line.indexOf("(");
+            let separator = "(";
 
             if (pIndex === -1) {
                 // Check for "Python syntax"
-                const spaceIndex = line.indexOf(' ');
+                const spaceIndex = line.indexOf(" ");
                 if (spaceIndex > -1) {
-                    separator = ' ';
+                    separator = " ";
                 }
             } else {
                 // C syntax
 
-                const closingIndex = line.indexOf(')');
+                const closingIndex = line.indexOf(")");
                 // We wouldn't need to check the following for parsing,
                 // but check it anyway to force correct syntax
                 if (closingIndex < pIndex) {
@@ -689,8 +674,8 @@ export class TapeController implements IController {
                     continue;
                 }
 
-                line = line.replace(')', '');
-                separator = '(';
+                line = line.replace(")", "");
+                separator = "(";
             }
 
             components = line.split(separator);
@@ -698,8 +683,8 @@ export class TapeController implements IController {
                 continue;
             }
 
-            let name = components[0].trim().toUpperCase();
-            const command = this.possibleCommandList.find(c => c.name === name);
+            const name = components[0].trim().toUpperCase();
+            const command = this.possibleCommandList.find((c) => c.name === name);
             if (!command) {
                 continue;
             }
@@ -752,8 +737,9 @@ export class TapeController implements IController {
         }
 
         if (index > -1 && index < this.commandList.length) {
-            if (this.commandList[index].command.isLabel())
+            if (this.commandList[index].command.isLabel()) {
                 return "blue";
+            }
         }
 
         return "black";
@@ -869,7 +855,7 @@ tim-tape .presetInput {
     width: 200px;
 }
 tim-tape .robotEditDiv {
-    
+
 }
 tim-tape .robotEditArea {
    height: calc(100% - 40px);
@@ -898,7 +884,7 @@ tim-tape .commandListContainer {
                     <span class="output">
                     <div ng-repeat="n in $ctrl.state.output track by $index" class="tapeItem">{{n}}</div>
                     </span>
-               </div> 
+               </div>
                 <img src="/static/images/tape/output.png" />
                 <span>Output</span>
             </div>
@@ -936,7 +922,7 @@ tim-tape .commandListContainer {
             <span class="commandListContainer newCommandList" ng-hide="$ctrl.data.hideCommands">
                 Commands:
                 <ul class="list-unstyled listBox">
-                <li ng-repeat="c in $ctrl.possibleCommandList" class="command" ng-style="{'color': $ctrl.getNewCommandColor($index)}" 
+                <li ng-repeat="c in $ctrl.possibleCommandList" class="command" ng-style="{'color': $ctrl.getNewCommandColor($index)}"
                     ng-click="$ctrl.onCommandClick($index)">{{c.name}}</li>
                 </ul>
             </span>
@@ -958,9 +944,9 @@ tim-tape .commandListContainer {
                 Program:
                 <textarea class= "robotEditArea textAreaRobotProgram" ng-model="$ctrl.programAsText" ng-hide="!$ctrl.textmode"></textarea>
                 <ul class="cmditems list-unstyled listBox programCommandList" ng-hide="$ctrl.textmode">
-                <li  ng-repeat="c in $ctrl.commandList" class="command" ng-click="$ctrl.selectedCommandIndex = $index" 
+                <li  ng-repeat="c in $ctrl.commandList" class="command" ng-click="$ctrl.selectedCommandIndex = $index"
                 ng-style="{'color': $ctrl.getCommandColor($index), 'background-color': $ctrl.getCommandBackgroundColor($index)}">{{c.getName()}}</li>
-                <li class="command" ng-style="{'color': $ctrl.getCommandColor($ctrl.commandList.length + 1)}" 
+                <li class="command" ng-style="{'color': $ctrl.getCommandColor($ctrl.commandList.length + 1)}"
                     ng-click="$ctrl.selectedCommandIndex = ($ctrl.commandList.length + 1)">-</li>
                 </ul>
                 <!--- <select ng-model="$ctrl.selected" size="10">
@@ -989,5 +975,5 @@ tim-tape .commandListContainer {
         </div>
         <textarea style= "height: 1px; width: 1px; position: unset;" class="hiddenRobotProgram"></textarea>
     </div>
-    `
+    `,
 });

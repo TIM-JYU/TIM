@@ -25,7 +25,7 @@ export type ClipboardMetaResponse = {
     disable_content: boolean;
     last_action?: "copy" | "cut" | "paste";
     empty: false;
-} | {empty: true}
+} | {empty: true};
 
 export interface IClipboardMeta {
     area_name?: string;

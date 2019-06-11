@@ -29,7 +29,7 @@ export interface IParInfo {
     area_end?: string;
 }
 
-export type ITags = {markread: boolean, marktranslated?: boolean};
+export interface ITags {markread: boolean; marktranslated?: boolean; }
 
 export interface IExtraData extends IParInfo {
     // attrs: {classes: string[], [i: string]: any};

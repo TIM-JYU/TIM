@@ -16,7 +16,8 @@
     "lib": [
       "dom",
       "es2017",
-      "scripthost"
+      "scripthost",
+      "dom.iterable"
     ],
     "experimentalDecorators": true,
     "downlevelIteration": true,
@@ -24,7 +25,13 @@
     "declarationDir": "decls",
     "declaration": true,
     "emitDeclarationOnly": true,
-    "importHelpers": true
+    "importHelpers": true,
+    "plugins": [
+      {
+        "name": "typescript-tslint-plugin",
+        "alwaysShowRuleFailuresAsWarnings": false
+      }
+    ]
   },
   "exclude": [
     "node_modules",

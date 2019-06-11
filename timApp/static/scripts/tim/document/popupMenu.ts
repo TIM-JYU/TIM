@@ -6,7 +6,7 @@ import {Pos} from "../ui/draggable";
 import {$http, $timeout, $window} from "../util/ngimport";
 import {to} from "../util/utils";
 import {ViewCtrl} from "./viewctrl";
-import {MenuFunctionEntry, MenuFunctionList} from "./viewutils";
+import {IMenuFunctionEntry, MenuFunctionList} from "./viewutils";
 
 export type EditMode = "par" | "area";
 
@@ -103,7 +103,7 @@ export class PopupMenuController extends DialogController<{params: IPopupParams}
      * @param e Event object
      * @param f The function to call
      */
-    callFunc(e: JQuery.Event, f: MenuFunctionEntry) {
+    callFunc(e: JQuery.Event, f: IMenuFunctionEntry) {
         f.func(e, $(this.p.srcid));
         if (f.closeAfter || f.closeAfter == null) {
             this.close();
@@ -118,7 +118,7 @@ export class PopupMenuController extends DialogController<{params: IPopupParams}
         return fDesc === this.vctrl.$storage.defaultAction ? "checked" : "";
     }
 
-    clicked(f: MenuFunctionEntry) {
+    clicked(f: IMenuFunctionEntry) {
         if (!this.p.save) {
             return;
         }

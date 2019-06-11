@@ -2,10 +2,10 @@ import {IPromise} from "angular";
 import moment from "moment";
 import {ngStorage} from "ngstorage";
 import {DialogController, registerDialogComponent, showDialog} from "../ui/dialog";
+import {IUser} from "../user/IUser";
 import {$http, $httpParamSerializer, $localStorage} from "../util/ngimport";
 import {to} from "../util/utils";
 import {IExportOptions} from "./userlistController";
-import {IUser} from "../user/IUser";
 
 interface IFBOptions {
     period: any;
@@ -64,18 +64,18 @@ export class FeedbackAnswersCtrl extends DialogController<{params: IFeedbackAnsw
             feedbackAnswersOptions: this.options,
         });
 
-        const date_format = "D.M.YYYY HH:mm:ss";
+        const dateFormat = "D.M.YYYY HH:mm:ss";
 
         this.options = this.$storage.feedbackAnswersOptions;
         this.options.periodFrom = this.options.periodFrom || Date.now();
         this.options.periodTo = this.options.periodTo || Date.now();
         this.datePickerOptionsFrom = {
-            format: date_format,
+            format: dateFormat,
             defaultDate: moment(this.options.periodFrom),
             showTodayButton: true,
         };
         this.datePickerOptionsTo = {
-            format: date_format,
+            format: dateFormat,
             defaultDate: moment(this.options.periodTo),
             showTodayButton: true,
         };
@@ -90,8 +90,7 @@ export class FeedbackAnswersCtrl extends DialogController<{params: IFeedbackAnsw
             }
         }
         this.options.users = "";
-        for (const user of options.users)
-        {
+        for (const user of options.users) {
             this.options.users += user.name + ",";
         }
     }

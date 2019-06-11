@@ -1,6 +1,4 @@
 import {wrapText} from "../document/editing/editing";
-import {$log, $timeout} from "../util/ngimport";
-import {BaseParEditor, CURSOR, focusAfter, IEditorCallbacks, SelectionRange} from "./BaseParEditor";
 import {
     KEY_1,
     KEY_2,
@@ -13,8 +11,10 @@ import {
     KEY_O,
     KEY_S,
     KEY_TAB,
-    KEY_Y
+    KEY_Y,
 } from "../util/keycodes";
+import {$log, $timeout} from "../util/ngimport";
+import {BaseParEditor, CURSOR, focusAfter, IEditorCallbacks, SelectionRange} from "./BaseParEditor";
 
 export class TextAreaParEditor extends BaseParEditor {
     public editor: JQuery;
@@ -93,7 +93,7 @@ export class TextAreaParEditor extends BaseParEditor {
     scrollToCaret() {
         const editor = this.editorElement;
         const text = this.getEditorText();
-        const lineHeight = parseInt(this.editor.css("line-height"));
+        const lineHeight = parseInt(this.editor.css("line-height"), 10);
         const height = this.editor.height();
         const currentLine = text.substr(0, editor.selectionStart).split("\n").length;
         const currentScroll = this.editor.scrollTop();
@@ -432,8 +432,8 @@ export class TextAreaParEditor extends BaseParEditor {
         }
 
         let line = t.substring(b, e);
-        for (let i = 0; i < attributes.length; i++) {
-            const ma = line.match(" *" + attributes[i]);
+        for (const a of attributes) {
+            const ma = line.match(" *" + a);
             if (ma) {
                 line = ma[0] + " " + text;
                 this.editor.setSelection(b, e);
@@ -522,7 +522,7 @@ export class TextAreaParEditor extends BaseParEditor {
         }
         toNextLine = toNextLine.trim();
 
-        const breakline = '\n#- {.printpagebreak}\n#-\n';
+        const breakline = "\n#- {.printpagebreak}\n#-\n";
 
         this.editor.replaceSelectedText(toKeepInLine + breakline + "\n" + toNextLine);
     }

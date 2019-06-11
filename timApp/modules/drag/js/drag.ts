@@ -5,12 +5,11 @@ import angular, {IRootElementService, IScope} from "angular";
 import drag from "angular-drag-and-drop-lists";
 import * as t from "io-ts";
 import {polyfill} from "mobile-drag-drop";
+import {scrollBehaviourDragImageTranslateOverride} from "mobile-drag-drop/scroll-behaviour";
 import {ITimComponent, ViewCtrl} from "tim/document/viewctrl";
 import {GenericPluginMarkup, Info, PluginBase, pluginBindings, withDefault} from "tim/plugin/util";
 import {$http} from "tim/util/ngimport";
 import {markAsUsed, to} from "tim/util/utils";
-// Optional import of scroll behaviour.
-import {scrollBehaviourDragImageTranslateOverride} from "mobile-drag-drop/scroll-behaviour";
 
 markAsUsed(drag);
 
@@ -46,7 +45,6 @@ const DragAll = t.intersection([
         preview: t.boolean,
     }),
 ]);
-
 
 class DragController extends PluginBase<t.TypeOf<typeof DragMarkup>, t.TypeOf<typeof DragAll>, typeof DragAll> implements ITimComponent {
     static $inject = ["$scope", "$element"];
@@ -158,13 +156,12 @@ class DragController extends PluginBase<t.TypeOf<typeof DragMarkup>, t.TypeOf<ty
         this.vctrl.addTimComponent(this);
     }
 
-
     /**
      * Returns content separated by a comma or undefined if no content is contained.
      * @returns {string} Returns content as a string separated by comma.
      */
     getContent() {
-        let cont = this.getContentArray().join(",");
+        const cont = this.getContentArray().join(",");
         if (cont.length < 1) {
             return undefined;
         }

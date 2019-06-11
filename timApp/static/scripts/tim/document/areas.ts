@@ -2,13 +2,13 @@ import {IScope} from "angular";
 import $ from "jquery";
 import * as nameArea from "tim/document/editing/nameArea";
 import {markAsUsed, to} from "tim/util/utils";
+import {showMessageDialog} from "../ui/dialog";
 import {$http, $timeout} from "../util/ngimport";
 import {INameAreaOptions, showNameAreaDialog} from "./editing/nameArea";
 import {onClick, onMouseOverOut} from "./eventhandlers";
 import {Area, getArea, getFirstParId, getLastParId, Paragraph, Paragraphs} from "./parhelpers";
 import {ViewCtrl} from "./viewctrl";
 import {getEmptyCoords} from "./viewutils";
-import {showMessageDialog} from "../ui/dialog";
 
 markAsUsed(nameArea);
 

@@ -232,7 +232,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
             }
         }
 
-        if (!levels.every(x => x === levels[0]) && !this.error) {
+        if (!levels.every((x) => x === levels[0]) && !this.error) {
             this.error = "Different number of feedback levels";
         }
         return levels[0];
@@ -262,8 +262,8 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
         const instruction = document.querySelectorAll(".par.instruction");
 
         if (id) {
-            const instruction = this.vctrl.getTimComponentByName(id);
-            if (!instruction && !this.error) {
+            const inst = this.vctrl.getTimComponentByName(id);
+            if (!inst && !this.error) {
                 this.error = "Feedback plugin has instruction plugin defined but it cannot be found from the document.";
             }
         }
@@ -278,7 +278,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
     checkCorrectAnswers() {
         const items = this.attrs.questionItems;
         for (const item of items) {
-            const missing = item.choices.every((x) => x.correct === false);
+            const missing = item.choices.every((x) => !x.correct);
             if (missing && !this.error) {
                 this.error = `A question item (${item.pluginNames}) is missing the correct answer.`;
             }
@@ -647,7 +647,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
             this.printFeedback("");
 
             // Whether to give a question item in a random index or give consecutive ones.
-            let questionIndex = undefined;
+            let questionIndex;
             if (this.attrs.shuffle) {
                 questionIndex = this.getRandomQuestion(this.isAnsweredArray);
                 if (questionIndex !== undefined) {
@@ -849,7 +849,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
             const index = placeholder.match(/[0-9]+/);
             let replacement = "";
             if (index) {
-                const indexText = wordarray[parseInt(index.toString())];
+                const indexText = wordarray[parseInt(index.toString(), 10)];
                 if (indexText) {
                     replacement = indexText;
                 }
@@ -861,7 +861,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
 
             if (word) {
                 const wordString = word.toString();
-                const wordIndex = parseInt(wordString.split(":")[1]);
+                const wordIndex = parseInt(wordString.split(":")[1], 10);
                 if (replacementArray[wordIndex]) {
                     this.feedback = this.feedback.replace(placeholder, replacementArray[wordIndex]);
                 } else {
@@ -894,8 +894,8 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
      */
     replaceMultipleWords(array: string[], indices: string[]): string {
         const wordString = indices.toString().split("-");
-        const start = parseInt(wordString[0].replace(":", ""));
-        const end = parseInt(wordString[1]);
+        const start = parseInt(wordString[0].replace(":", ""), 10);
+        const end = parseInt(wordString[1], 10);
         let result = "";
         for (let i = start; i <= end; i++) {
             if (array[i]) {
@@ -959,9 +959,9 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
 
                 if (node.nodeName === "TIM-PLUGIN-LOADER") {
                     if (node instanceof Element) {
-                        let name = node.getAttribute("task-id")!.split(".")[1];
+                        const name = node.getAttribute("task-id")!.split(".")[1];
                         if (name && plugins.includes(name)) {
-                            let plugin = this.vctrl.getTimComponentByName(name);
+                            const plugin = this.vctrl.getTimComponentByName(name);
                             if (plugin) {
                                 if (plugin.getContentArray) {
                                     const pluginNodeArrayContent = plugin.getContentArray();

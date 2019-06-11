@@ -130,8 +130,7 @@ class StackController extends PluginBase<t.TypeOf<typeof StackMarkup>,
 
     processNodes(res: {[name: string]: string}, nodes: HTMLCollectionOf<HTMLInputElement> |
         HTMLCollectionOf<HTMLTextAreaElement> | HTMLCollectionOf<HTMLSelectElement>, id: string): {[name: string]: string} {
-        for (let i = 0; i < nodes.length; i++) {
-            const element = nodes[i];
+        for (const element of nodes) {
             if (element.name.indexOf(STACK_VARIABLE_PREFIX) === 0 &&
                 element.name.indexOf("_val") === -1 &&
                 element.name.indexOf(id) >= 0

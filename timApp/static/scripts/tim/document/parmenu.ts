@@ -91,7 +91,7 @@ To comment or edit this, go to the corresponding <a href="/view/${getPreambleDoc
                 this.viewctrl.editingHandler.extendSelection(par);
             }
 
-            if(!this.viewctrl.actionsDisabled) {
+            if (!this.viewctrl.actionsDisabled) {
                 this.showOptionsWindow(e, par);
             }
             return false;

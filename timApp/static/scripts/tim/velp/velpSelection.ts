@@ -4,6 +4,7 @@ import {Binding, clone, markAsUsed, Require} from "tim/util/utils";
 import * as velpSummary from "tim/velp/velpSummary";
 import {colorPalette, VelpWindowController} from "tim/velp/velpWindow";
 import {ViewCtrl} from "../document/viewctrl";
+import {showMessageDialog} from "../ui/dialog";
 import {$http} from "../util/ngimport";
 import {
     ILabel,
@@ -17,7 +18,6 @@ import {
     IVelpGroupUI,
     VelpGroupSelectionType,
 } from "./velptypes";
-import {showMessageDialog} from "../ui/dialog";
 
 markAsUsed(velpSummary);
 
@@ -57,10 +57,10 @@ export class VelpSelectionController implements IController {
     private velpOrderingKey!: string; // $onInit
     private velpLabelsKey!: string; // $onInit
     private advancedOnKey!: string; // $onInit
-    private default_velp_group: IVelpGroupUI;
+    private defaultVelpGroup: IVelpGroupUI;
     private labelAdded: boolean = false;
     public vctrl!: Require<ViewCtrl>;
-    private default_personal_velp_group: IVelpGroup;
+    private defaultPersonalVelpGroup: IVelpGroup;
     private onInit!: Binding<(params: {$API: VelpSelectionController}) => void, "&">;
     private newVelpCtrl?: VelpWindowController;
 
@@ -108,7 +108,7 @@ export class VelpSelectionController implements IController {
 
         this.groupSelections = {};
         this.groupDefaults = {};
-        this.default_velp_group = {
+        this.defaultVelpGroup = {
             id: -1,
             name: "No access to default group",
             edit_access: false,
@@ -117,7 +117,7 @@ export class VelpSelectionController implements IController {
             selected: false,
             target_type: null,
         }; // TODO Use route to add this information
-        this.default_personal_velp_group = {id: -2, name: "Personal-default", target_type: null, default: true};
+        this.defaultPersonalVelpGroup = {id: -2, name: "Personal-default", target_type: null, default: true};
     }
 
     get rctrl() {
@@ -156,47 +156,47 @@ export class VelpSelectionController implements IController {
 
         this.velpGroups = response.data;
 
-        this.default_velp_group = response2.data;
+        this.defaultVelpGroup = response2.data;
 
         // If doc_default exists already for some reason but isn't a velp group yet, remove it from fetched velp groups
         for (const g of this.velpGroups) {
-            if (g.name === this.default_velp_group.name && this.default_velp_group.id < 0) {
+            if (g.name === this.defaultVelpGroup.name && this.defaultVelpGroup.id < 0) {
                 const extraDefaultIndex = this.velpGroups.indexOf(g);
-                this.velpGroups.push(this.default_velp_group);
+                this.velpGroups.push(this.defaultVelpGroup);
                 this.velpGroups.splice(extraDefaultIndex, 1);
                 break;
             }
         }
 
-        if (this.default_velp_group.edit_access) {
+        if (this.defaultVelpGroup.edit_access) {
             this.velpGroups.forEach((g) => {
-                if (g.id === this.default_velp_group.id) {
+                if (g.id === this.defaultVelpGroup.id) {
                     g.selected = true;
                 }
             });
-            this.default_velp_group.selected = true;
-            this.newVelp.velp_groups.push(this.default_velp_group.id);
+            this.defaultVelpGroup.selected = true;
+            this.newVelp.velp_groups.push(this.defaultVelpGroup.id);
         }
 
         // Get personal velp group data
         const response3 = await p3;
         const data = response3.data;
-        this.default_personal_velp_group = {id: data.id, name: data.name, target_type: null, default: true};
+        this.defaultPersonalVelpGroup = {id: data.id, name: data.name, target_type: null, default: true};
 
         if (data.created_new_group) {
             this.velpGroups.push(data);
         }
 
-        if (!this.default_velp_group.edit_access) {
-            this.newVelp.velp_groups.push(this.default_personal_velp_group.id);
+        if (!this.defaultVelpGroup.edit_access) {
+            this.newVelp.velp_groups.push(this.defaultPersonalVelpGroup.id);
         }
 
-        if (this.default_personal_velp_group.id < 0 && !this.velpGroupsContain(this.default_velp_group)) {
-            this.velpGroups.push(this.default_velp_group);
+        if (this.defaultPersonalVelpGroup.id < 0 && !this.velpGroupsContain(this.defaultVelpGroup)) {
+            this.velpGroups.push(this.defaultVelpGroup);
         }
 
-        if (this.default_velp_group.id < 0 && !this.velpGroupsContain(this.default_velp_group)) {
-            this.velpGroups.push(this.default_velp_group);
+        if (this.defaultVelpGroup.id < 0 && !this.velpGroupsContain(this.defaultVelpGroup)) {
+            this.velpGroups.push(this.defaultVelpGroup);
         }
 
         // Get velp and annotation data
@@ -216,8 +216,8 @@ export class VelpSelectionController implements IController {
         this.labels.forEach((l) => {
             l.edit = false;
             l.selected = false;
-            for (let i = 0; i < this.selectedLabels.length; i++) {
-                if (l.id === this.selectedLabels[i]) {
+            for (const s of this.selectedLabels) {
+                if (l.id === s) {
                     l.selected = true;
                 }
             }
@@ -233,8 +233,8 @@ export class VelpSelectionController implements IController {
 
         this.velpGroups.forEach((g) => {
             g.show = false;
-            for (let i = 0; i < docSelections.length; i++) {
-                if (docSelections[i].id === g.id && docSelections[i].selected) {
+            for (const s of docSelections) {
+                if (s.id === g.id && s.selected) {
                     g.show = true;
                     break;
                 }
@@ -247,8 +247,8 @@ export class VelpSelectionController implements IController {
         const docDefaults = this.groupDefaults["0"];
 
         this.velpGroups.forEach((g) => {
-            for (let i = 0; i < docDefaults.length; i++) {
-                if (docDefaults[i].id === g.id && docDefaults[i].selected) {
+            for (const d of docDefaults) {
+                if (d.id === g.id && d.selected) {
                     g.default = true;
                     break;
                 }
@@ -317,15 +317,6 @@ export class VelpSelectionController implements IController {
 
     }
 
-    /**
-     * Toggles the label's edit attribute.
-     * @param label - Label to edit
-
-     this.toggleLabelToEdit = function (label) {
-        label.edit = !label.edit;
-    };
-     */
-
     setAdvancedOnlocalStorage(value: boolean) {
         window.localStorage.setItem(this.advancedOnKey, value.toString());
     }
@@ -361,9 +352,9 @@ export class VelpSelectionController implements IController {
      * Deselects all the labels.
      */
     deselectLabels() {
-        for (let i = 0; i < this.labels.length; i++) {
-            if (this.labels[i].selected) {
-                this.toggleLabel(this.labels[i]);
+        for (const l of this.labels) {
+            if (l.selected) {
+                this.toggleLabel(l);
             }
         }
     }
@@ -391,20 +382,20 @@ export class VelpSelectionController implements IController {
      * Generates the default velp group.
      */
     async generateDefaultVelpGroup(): Promise<IVelpGroup | null> {
-        if (this.default_velp_group.edit_access) {
+        if (this.defaultVelpGroup.edit_access) {
             const json = await $http.post<IVelpGroup>("/{0}/create_default_velp_group".replace("{0}", this.docId.toString()), "{}");
-            const new_default_velp_group = json.data;
-            new_default_velp_group.default = true;
+            const newDefaultVelpGroup = json.data;
+            newDefaultVelpGroup.default = true;
 
-            const index = this.velpGroups.indexOf(this.default_velp_group);
+            const index = this.velpGroups.indexOf(this.defaultVelpGroup);
             this.velpGroups.splice(index, 1);
 
-            if (this.velpGroups.indexOf(new_default_velp_group) < 0) {
-                this.velpGroups.push(new_default_velp_group);
+            if (this.velpGroups.indexOf(newDefaultVelpGroup) < 0) {
+                this.velpGroups.push(newDefaultVelpGroup);
             }
 
-            this.default_velp_group = new_default_velp_group;
-            return new_default_velp_group;
+            this.defaultVelpGroup = newDefaultVelpGroup;
+            return newDefaultVelpGroup;
         } else {
             // No edit access to default velp group
             return null;
@@ -463,12 +454,12 @@ export class VelpSelectionController implements IController {
         }
 
         let updatedLabel = null;
-        for (let i = 0; i < this.labels.length; i++) {
-            if (this.labels[i].id === this.labelToEdit.id) {
+        for (const l of this.labels) {
+            if (l.id === this.labelToEdit.id) {
                 this.labelToEdit.edit = false;
-                this.labels[i].content = this.labelToEdit.content;
-                this.labels[i].edit = false;
-                updatedLabel = this.labels[i];
+                l.content = this.labelToEdit.content;
+                l.edit = false;
+                updatedLabel = l;
                 break;
             }
         }
@@ -503,14 +494,14 @@ export class VelpSelectionController implements IController {
         this.newLabel = {content: "", selected: true, valid: true, id: null};
     }
 
-    /** Velpgroup methods **/
+    /* Velpgroup methods */
 
     getDefaultVelpGroup() {
-        return this.default_velp_group;
+        return this.defaultVelpGroup;
     }
 
     setDefaultVelpGroup(group: IVelpGroup) {
-        this.default_velp_group = group;
+        this.defaultVelpGroup = group;
     }
 
     /**
@@ -592,7 +583,7 @@ export class VelpSelectionController implements IController {
      * @returns {boolean} Whether the group is personal default or document default group or not.
      */
     isVelpGroupDefaultFallBack(groupId: number) {
-        return (groupId === this.default_personal_velp_group.id || groupId === this.default_velp_group.id);
+        return (groupId === this.defaultPersonalVelpGroup.id || groupId === this.defaultVelpGroup.id);
     }
 
     /**
@@ -627,9 +618,9 @@ export class VelpSelectionController implements IController {
     checkCollectionForSelected(groupId: number, paragraphId: string, collection: IVelpGroupCollection) {
         if (collection.hasOwnProperty(paragraphId)) {
             const selectionsHere = collection[paragraphId];
-            for (let i = 0; i < selectionsHere.length; ++i) {
-                if (selectionsHere[i].id === groupId) {
-                    return selectionsHere[i].selected;
+            for (const s of selectionsHere) {
+                if (s.id === groupId) {
+                    return s.selected;
                 }
             }
         }
@@ -666,25 +657,25 @@ export class VelpSelectionController implements IController {
      */
     changeVelpGroupSelection(group: IVelpGroup, type: VelpGroupSelectionType) {
 
-        let target_id: string;
-        let target_type: number;
+        let targetId: string;
+        let targetType: number;
         if (this.isAttachedToParagraph() && this.rctrl.selectedElement != null) {
-            target_id = this.rctrl.selectedElement.id;
-            target_type = 1;
+            targetId = this.rctrl.selectedElement.id;
+            targetType = 1;
         } else {
-            target_id = "0";
-            target_type = 0;
+            targetId = "0";
+            targetType = 0;
         }
 
-        const data = Object.assign({target_id, target_type, selection_type: type}, group);
+        const data = Object.assign({target_id: targetId, target_type: targetType, selection_type: type}, group);
 
         if (type === "show") {
             $http.post("/{0}/change_selection".replace("{0}", this.docId.toString()), data);
 
-            this.groupSelections[target_id] = [];
+            this.groupSelections[targetId] = [];
 
             this.velpGroups.forEach((g) => {
-                this.groupSelections[target_id].push({id: g.id, selected: g.show});
+                this.groupSelections[targetId].push({id: g.id, selected: g.show});
             });
 
             /*
@@ -706,10 +697,10 @@ export class VelpSelectionController implements IController {
         } else if (type === "default") {
             $http.post("/{0}/change_selection".replace("{0}", this.docId.toString()), data);
 
-            this.groupDefaults[target_id] = [];
+            this.groupDefaults[targetId] = [];
 
             this.velpGroups.forEach((g) => {
-                this.groupDefaults[target_id].push({id: g.id, selected: g.default});
+                this.groupDefaults[targetId].push({id: g.id, selected: g.default});
             });
 
             /*if (!this.groupDefaults.hasOwnProperty(group.target_id))
@@ -858,9 +849,9 @@ export class VelpSelectionController implements IController {
         const groups = [];
 
         for (let i = 0; i < velp.velp_groups.length; i++) {
-            for (let j = 0; j < this.velpGroups.length; j++) {
-                groups.push(this.velpGroups[j]);
-                groups[i].selected = velp.velp_groups.indexOf(this.velpGroups[j].id) >= 0;
+            for (const v of this.velpGroups) {
+                groups.push(v);
+                groups[i].selected = velp.velp_groups.indexOf(v.id) >= 0;
             }
         }
         return groups;
@@ -942,9 +933,9 @@ timApp.filter("filterByLabels", () => {
         }
 
         if (labels != null) {
-            for (let i = 0; i < labels.length; i++) {
-                if (labels[i].selected) {
-                    selectedLabels.push(labels[i].id);
+            for (const l of labels) {
+                if (l.selected) {
+                    selectedLabels.push(l.id);
                 }
             }
         }
@@ -952,8 +943,8 @@ timApp.filter("filterByLabels", () => {
         if (velps != null) {
             for (let j = 0; j < velps.length; j++) {
 
-                for (let k = 0; k < selectedLabels.length; k++) {
-                    if (velps[j].labels != null && velps[j].labels.indexOf(selectedLabels[k]) !== -1) {
+                for (const s of selectedLabels) {
+                    if (velps[j].labels != null && velps[j].labels.indexOf(s) !== -1) {
                         if (!(j in selectedVelps)) {
                             selectedVelps[j] = [velps[j], 1];
                         } else {
@@ -980,8 +971,8 @@ timApp.filter("filterByLabels", () => {
 
         selectedArray.sort((a, b) => b[1] - a[1]);
 
-        for (let l = 0; l < selectedArray.length; l++) {
-            returnVelps.push(selectedArray[l][0]);
+        for (const s of selectedArray) {
+            returnVelps.push(s[0]);
         }
 
         return returnVelps;
@@ -999,22 +990,22 @@ timApp.filter("filterByVelpGroups", () => {
             return velps;
         }
 
-        for (let j = 0; j < groups.length; j++) {
-            if (groups[j].show) {
-                checkedGroups.push(groups[j].id);
+        for (const g of groups) {
+            if (g.show) {
+                checkedGroups.push(g.id);
             }
         }
 
-        for (let i = 0; i < velps.length; i++) {
+        for (const v of velps) {
             // always include velp that is being edited
-            if (velps[i].edit) {
-                selected.push(velps[i]);
+            if (v.edit) {
+                selected.push(v);
                 continue;
             }
 
-            for (let k = 0; k < checkedGroups.length; k++) {
-                if (velps[i].velp_groups.indexOf(checkedGroups[k]) >= 0 && selected.indexOf(velps[i]) < 0) {
-                    selected.push(velps[i]);
+            for (const c of checkedGroups) {
+                if (v.velp_groups.indexOf(c) >= 0 && selected.indexOf(v) < 0) {
+                    selected.push(v);
                 }
             }
         }
@@ -1025,8 +1016,8 @@ timApp.filter("filterByVelpGroups", () => {
 
 timApp.filter("orderByWhenNotEditing", () => {
     return (velps: INewVelp[], orderStr: string, filteredVelps: IVelp[]) => {
-        for (let i = 0; i < velps.length; i++) {
-            if (velps[i].edit) {
+        for (const v of velps) {
+            if (v.edit) {
                 return filteredVelps;
             }
         }

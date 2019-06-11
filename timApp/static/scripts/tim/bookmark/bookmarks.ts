@@ -51,9 +51,9 @@ export class BookmarksController implements IController {
         if (!groupToKeepOpen || !this.data) {
             return;
         }
-        for (let i = 0; i < this.data.length; ++i) {
-            if (this.data[i].name === groupToKeepOpen.name) {
-                this.data[i].isOpen = true;
+        for (const d of this.data) {
+            if (d.name === groupToKeepOpen.name) {
+                d.isOpen = true;
                 return;
             }
         }
@@ -63,9 +63,9 @@ export class BookmarksController implements IController {
         if (!this.data) {
             return [];
         }
-        for (let i = 0; i < this.data.length; ++i) {
-            if (this.data[i].name === "") {
-                return this.data[i].items;
+        for (const d of this.data) {
+            if (d.name === "") {
+                return d.items;
             }
         }
         return [];

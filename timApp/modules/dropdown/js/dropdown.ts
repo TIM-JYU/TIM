@@ -45,7 +45,6 @@ class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.T
     private radio?: boolean;
     private shuffle?: boolean;
 
-
     getDefaultMarkup() {
         return {};
     }

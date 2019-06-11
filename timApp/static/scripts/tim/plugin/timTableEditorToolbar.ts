@@ -58,7 +58,7 @@ export class TimTableEditorToolbarController extends DialogController<{params: I
     public activeTable?: TimTableController;
     private visible: boolean = true;
     private hid?: any;
-    //private lockCellCount: boolean = false;
+    // private lockCellCount: boolean = false;
 
     private previousBackgroundColor: string = this.DEFAULT_CELL_BGCOLOR;
     private cellBackgroundColor: string = this.DEFAULT_CELL_BGCOLOR;
@@ -122,7 +122,6 @@ export class TimTableEditorToolbarController extends DialogController<{params: I
         this.callbacks.setCell(value);
     }
 
-
     /**
      * Clears cell format
      */
@@ -130,24 +129,21 @@ export class TimTableEditorToolbarController extends DialogController<{params: I
         this.callbacks.setCell({CLEAR: "ALL"});
     }
 
-
     private pinSelected() {
-        const style : any = {};
-        if ( !this.activeTable ) return style;
+        const style: any = {};
+        if ( !this.activeTable ) { return style; }
         if ( this.activeTable.shiftDown ) {
-            style["background"] = 'black';
+            style.background = "black";
         }
         return style;
     }
 
-
     private changePin() {
         const t: any = this.activeTable;
-        if ( !t ) return;
+        if ( !t ) { return; }
         t.shiftDown = !t.shiftDown;
         t.startCell = t.activeCell;
     }
-
 
     /**
      * Add current cell to templates
@@ -156,13 +152,12 @@ export class TimTableEditorToolbarController extends DialogController<{params: I
         this.callbacks.addToTemplates();
     }
 
-
     /**
      * Gets the cell text for toolbar
      */
     private getCellForToolbar(value: any) {
-        if ( !value.cell ) return "\u2003"; // &#8195  em space &emsp;
-        return value.cell.substr(0,5);
+        if ( !value.cell ) { return "\u2003"; } // &#8195  em space &emsp;
+        return value.cell.substr(0, 5);
     }
 
     private eventApi = {

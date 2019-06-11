@@ -4,10 +4,10 @@
 
 import {IRootElementService, IScope} from "angular";
 import {ngStorage} from "ngstorage";
-import {getCourseCode, ICourseSettings, ISubjectList, ITaggedItem, tagIsExpired, TagType,} from "../../item/IItem";
+import {getCourseCode, ICourseSettings, ISubjectList, ITaggedItem, tagIsExpired, TagType} from "../../item/IItem";
 import {DialogController, registerDialogComponent, showDialog} from "../../ui/dialog";
-import {$http, $localStorage} from "../../util/ngimport";
 import {KEY_ENTER} from "../../util/keycodes";
+import {$http, $localStorage} from "../../util/ngimport";
 
 export interface ICourseListParams {
     settings: ICourseSettings;
@@ -67,7 +67,7 @@ export class CourseListDialogController extends DialogController<{ params: ICour
      */
     private loadCollapseStates() {
         if (this.grouped && this.closedSubjects && this.closedSubjects.length === this.grouped.length) {
-            for (const {subject, i} of this.grouped.map((subject, i) => ({ subject, i }))) {
+            for (const {subject, i} of this.grouped.map((s, ind) => ({ subject: s, i: ind }))) {
                 subject.closed = this.closedSubjects[i];
             }
         }
@@ -79,7 +79,7 @@ export class CourseListDialogController extends DialogController<{ params: ICour
     private saveCollapseStates() {
         this.closedSubjects = [];
         if (this.grouped) {
-            for (const {subject, i} of this.grouped.map((subject, i) => ({ subject, i }))) {
+            for (const {subject, i} of this.grouped.map((s, ind) => ({ subject: s, i: ind }))) {
                 this.closedSubjects.push(subject.closed);
             }
         }

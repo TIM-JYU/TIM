@@ -1,9 +1,9 @@
 import {IRootElementService, IScope} from "angular";
 import {timApp} from "../app";
 import {DialogController, registerDialogComponent, showDialog} from "../ui/dialog";
+import {KEY_ENTER} from "../util/keycodes";
 import {$http, $timeout} from "../util/ngimport";
 import {ILectureMessage} from "./lecturetypes";
-import {KEY_ENTER} from "../util/keycodes";
 
 export class LectureWallController extends DialogController<{params: {messages: ILectureMessage[]}}, {}> {
     static component = "timLectureWall";

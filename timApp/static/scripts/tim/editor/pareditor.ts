@@ -114,14 +114,14 @@ interface IEditorTemplateFormatV2 {
     templates: IEditorTabContent;
 }
 
-interface EditorItem<T> {
+interface IEditorItem<T> {
     text: string;
     shortcut: string;
     items: T;
 }
 
 interface IEditorTemplateFormatV3 {
-    editor_tabs: Array<EditorItem<Array<EditorItem<MenuItemEntries>>>>;
+    editor_tabs: Array<IEditorItem<Array<IEditorItem<MenuItemEntries>>>>;
 }
 
 interface IEditorTab {
@@ -144,7 +144,7 @@ function isV3Format(d: any): d is IEditorTemplateFormatV3 {
     return d.editor_tabs != null;
 }
 
-type MenuNameAndItems = [string, MenuItemEntries][];
+type MenuNameAndItems = Array<[string, MenuItemEntries]>;
 
 export class PareditorController extends DialogController<{params: IEditorParams}, IEditorResult> {
     static component = "pareditor";
@@ -540,7 +540,7 @@ ${backTicks}
         this.lastTab = this.activeTab;
         this.citeText = this.getCiteText();
         const sn = this.getLocalValue("wrap");
-        let n = parseInt(sn || "-90");
+        let n = parseInt(sn || "-90", 10);
         if (isNaN(n)) {
             n = -90;
         }
@@ -598,7 +598,7 @@ ${backTicks}
     initCustomTabs() {
         const tabs: {[tab: string]: {[menuName: string]: IEditorMenuItem[] | undefined} | undefined} = {};
         for (const [plugin, d] of Object.entries($window.reqs)) {
-            const data = d as unknown;
+            const data = d;
             let currTabs: Array<[string, MenuNameAndItems]>;
             if (isV3Format(data)) {
                 // this needs type casts inside maps because otherwise the types are inferred as plain arrays and not tuples
@@ -923,10 +923,10 @@ ${backTicks}
         const items = clipboardData.items;
         // find pasted image among pasted items
         let blobs = 0;
-        for (let i = 0; i < items.length; i++) {
+        for (const i of items) {
             // TODO: one could inspect if some item contains image name and then use that to name the image
-            if (items[i].type.indexOf("image") === 0) {
-                const blob = items[i].getAsFile();
+            if (i.type.indexOf("image") === 0) {
+                const blob = i.getAsFile();
                 if (blob !== null) {
                     this.onFileSelect(blob);
                     blobs++;
@@ -945,8 +945,8 @@ ${backTicks}
             return;
         }
         const files = de.dataTransfer.files;
-        for (let i = 0; i < files.length; i++) {
-            this.onFileSelect(files[i]);
+        for (const f of files) {
+            this.onFileSelect(f);
         }
     }
 
@@ -1049,10 +1049,10 @@ ${backTicks}
 
             upload.then((response) => {
                 $timeout(() => {
-                    const editor = this.editor!;
+                    const ed = this.editor!;
                     // This check is needed for uploads in other (non-attachment) plugins.
                     // TODO: Could this be editor.contains(...)?
-                    const isplugin = (editor.editorStartsWith("``` {"));
+                    const isplugin = (ed.editorStartsWith("``` {"));
                     let start = "[File](";
                     let savedir = "/files/";
                     if (response.data.image  || response.data.file.toString().indexOf(".svg") >= 0 ) {
@@ -1074,9 +1074,9 @@ ${backTicks}
                             selectionRange);
                     }
                     if (isplugin || macroRange || macroRange2) {
-                        editor.insertTemplate(this.uploadedFile);
+                        ed.insertTemplate(this.uploadedFile);
                     } else {
-                        editor.insertTemplate(`${start}${this.uploadedFile})`);
+                        ed.insertTemplate(`${start}${this.uploadedFile})`);
                     }
                     // Separate from isPlugin so this is ran only when there are attachments with stamps.
                     if (macroRange && kokousDate) {

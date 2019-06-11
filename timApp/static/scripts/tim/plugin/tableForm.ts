@@ -50,18 +50,18 @@ const TableFormMarkup = t.intersection([
     }),
 ]);
 
-const Rows = t.dictionary(t.string,t.dictionary(t.string,t.union([t.string, t.null, t.number])))
+const Rows = t.dictionary(t.string, t.dictionary(t.string, t.union([t.string, t.null, t.number])));
 interface IRowsType extends t.TypeOf<typeof Rows> {
 }
 
-const realname = t.dictionary(t.string,t.string);
+const realname = t.dictionary(t.string, t.string);
 const TableFormAll = t.intersection([
     t.partial({
         aliases: t.dictionary(t.string, t.string),
         contentMap: t.dictionary(t.string, t.string),
         fields: t.array(t.string),
         realnamemap: t.dictionary(t.string, t.string),
-        rows: Rows
+        rows: Rows,
     }),
     GenericPluginTopLevelFields,
     t.type({markup: TableFormMarkup}),
@@ -78,21 +78,21 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
         hiddenRows: [],
         hiddenColumns: [],
         hideSaveButton: true,
-        //lockCellCount: true,
+        // lockCellCount: true,
         lockedCells: [],
         table: {countRow: 0, countCol: 0, columns: []},
-        //TODO: give rows (and maybe colums) in data.table
+        // TODO: give rows (and maybe colums) in data.table
         task: true,
         userdata: {type: "Relative", cells: {}},
         // saveCallBack: this.singleCellSave
     };
-    //TODO: Change row format to properly typed format (maybe userobject:IRowstype) format
+    // TODO: Change row format to properly typed format (maybe userobject:IRowstype) format
     private rows!: IRowsType;
     private oldCellValues!: string;
     private realnames = false;
     private showTable = true;
     private userNameColumn = "A";
-    private realNameColumn = "B"
+    private realNameColumn = "B";
     private headerRow = 1;
     private rowKeys!: string[];
 
@@ -108,11 +108,9 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
         return (this.attrs.buttonText || "Tallenna taulukko");
     }
 
-
      hideButtonText() {
         return (this.attrs.hideButtonText);
     }
-
 
     // noinspection JSUnusedGlobalSymbols
     /**
@@ -129,11 +127,11 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
         if (this.attrs.realnames) {
             this.realnames = true;
             const temp = this.realNameColumn;
-            this.realNameColumn = this.userNameColumn
+            this.realNameColumn = this.userNameColumn;
             this.userNameColumn = temp;
         }
         this.rows = this.attrsall.rows || {};
-        this.rowKeys = Object.keys(this.rows)
+        this.rowKeys = Object.keys(this.rows);
         this.setDataMatrix();
         this.oldCellValues = JSON.stringify(this.data.userdata.cells);
         if (this.attrs.autosave) { this.data.saveCallBack = (rowi, coli, content) => this.singleCellSave(rowi, coli, content); }
@@ -142,7 +140,7 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
         if (this.attrs.singleLine) {
             this.data.singleLine = this.attrs.singleLine;
         }
-        if (this.attrs.open != undefined) this.showTable = this.attrs.open;
+        if (this.attrs.open != undefined) { this.showTable = this.attrs.open; }
         this.data.hiddenColumns = this.attrs.hiddenColumns;
         this.data.hiddenRows = this.attrs.hiddenRows;
     }
@@ -163,7 +161,7 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
      * @param b username to compare with a
      */
     sortByRealName(a: string, b: string) {
-        if (!this.attrsall.realnamemap) return 0;
+        if (!this.attrsall.realnamemap) { return 0; }
         try {
             return this.attrsall.realnamemap[a].localeCompare(this.attrsall.realnamemap[b]);
         } catch (e) {
@@ -179,14 +177,14 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
         try {
             this.data.userdata.cells[this.userNameColumn + this.headerRow] = {
                 cell: "Käyttäjänimi",
-                backgroundColor: "#efecf1"
+                backgroundColor: "#efecf1",
             };
             if (this.realnames) {
                 this.data.userdata.cells[this.realNameColumn + this.headerRow] = {
                     cell: "Henkilön Nimi",
-                    backgroundColor: "#efecf1"
+                    backgroundColor: "#efecf1",
                 };
-                this.rowKeys.sort((a, b) => this.sortByRealName(a, b))
+                this.rowKeys.sort((a, b) => this.sortByRealName(a, b));
             }
             if (this.attrsall.fields && this.realnames) {
                 this.data.table.countCol = this.attrsall.fields.length + 2;
@@ -195,14 +193,14 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
             }
             this.data.table.countRow = Object.keys(this.rows).length + 1;
             let y = 2;
-            if (!this.data.lockedCells) this.data.lockedCells = [];
+            if (!this.data.lockedCells) { this.data.lockedCells = []; }
             for (const r of this.rowKeys) {
                 this.data.userdata.cells[this.userNameColumn + y] = {cell: r, backgroundColor: "#efecf1"};
                 this.data.lockedCells.push(this.userNameColumn + y);
                 if (this.realnames && this.attrsall.realnamemap) {
                     this.data.userdata.cells[this.realNameColumn + y] = {
                         cell: this.attrsall.realnamemap[r],
-                        backgroundColor: "#efecf1"
+                        backgroundColor: "#efecf1",
                     };
                     this.data.lockedCells.push(this.realNameColumn + y);
                 }
@@ -217,9 +215,9 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
                 for (let x = 0; x < this.attrsall.fields.length; x++) {
                     this.data.userdata.cells[colnumToLetters(x + xOffset) + 1] = {
                         cell: this.attrsall.fields[x],
-                        backgroundColor: "#efecf1"
+                        backgroundColor: "#efecf1",
                     };
-                    this.data.lockedCells!.push(colnumToLetters(x + xOffset) + 1);
+                    this.data.lockedCells.push(colnumToLetters(x + xOffset) + 1);
                     // y = 0;
                     // for (const [u, r] of Object.entries(this.rows)) {
                     //     if (r[this.attrsall.fields[x]]) {
@@ -228,13 +226,13 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
                     //     y++;
                     // }
                     for (y = 0; y < this.rowKeys.length; y++) {
-                        this.data.userdata.cells[colnumToLetters(x + xOffset) + (y + 2)] = this.rows[this.rowKeys[y]][this.attrsall.fields[x]]
+                        this.data.userdata.cells[colnumToLetters(x + xOffset) + (y + 2)] = this.rows[this.rowKeys[y]][this.attrsall.fields[x]];
                     }
                 }
             }
         } catch (e) {
-            console.log(e)
-            this.error = "Error in setDataMatrix" + "\n" + e
+            console.log(e);
+            this.error = "Error in setDataMatrix" + "\n" + e;
         }
     }
 
@@ -265,9 +263,8 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
      * Used to define table view & relative save button in angular, true or false.
      */
     tableCheck() {
-        //return (this.attrs.table === true);
-        if(this.attrs.table != undefined) return this.attrs.table;
-        else return true;
+        // return (this.attrs.table === true);
+        if (this.attrs.table != undefined) { return this.attrs.table; } else { return true; }
     }
 
     // noinspection JSUnusedGlobalSymbols
@@ -307,7 +304,7 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
         const dataTable = this.generateCSVTable();
         const win = window.open("/tableForm/generateCSV?" + $httpParamSerializer({data: JSON.stringify(dataTable), separator: (this.attrs.separator || ",")}), "WINDOWID");
         if (win == null) {
-            this.error;
+            this.error = "Failed to open report window.";
         }
     }
 
@@ -324,8 +321,8 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
         }
         if (this.realnames) { colcount += 1; }
         for (let i = 0; i < rowcount; i++) {
-            //TODO: In future: change hiddenRows check if hiddenRows is changed from number[] to IRows
-            //TODO: Check for hiddenColumns
+            // TODO: In future: change hiddenRows check if hiddenRows is changed from number[] to IRows
+            // TODO: Check for hiddenColumns
             if (this.data.hiddenRows && this.data.hiddenRows.includes(i)) { continue; }
             const row: CellType[] = [];
             result.push(row);
@@ -355,16 +352,15 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
         }
         // TODO check if better way to save than just making saveAndCloseSmallEditor public and calling it
         timTable.saveAndCloseSmallEditor();
-        if(this.attrs.hiddenRows) this.data.hiddenRows = this.attrs.hiddenRows.slice()
-        else this.data.hiddenRows = [];
-         //TODO: if usernamecolumn in hiddencolums then skip reg.test for this.rowkeys
+        if (this.attrs.hiddenRows) { this.data.hiddenRows = this.attrs.hiddenRows.slice(); } else { this.data.hiddenRows = []; }
+         // TODO: if usernamecolumn in hiddencolums then skip reg.test for this.rowkeys
         if (this.userfilter != "" && this.userfilter != undefined) {
             const reg = new RegExp(this.userfilter.toLowerCase());
-            let rowi = 1;
-            for(let i = 0; i < this.rowKeys.length; i++){
+            const rowi = 1;
+            for (let i = 0; i < this.rowKeys.length; i++) {
                 if (!reg.test(this.rowKeys[i].toLowerCase()) && !(this.attrs.realnames && (this.attrsall.realnamemap != null && reg.test(this.attrsall.realnamemap[this.rowKeys[i]].toLowerCase())))) {
-                    //this.data.hiddenRows.push(values);
-                    this.data.hiddenRows.push(i+1);
+                    // this.data.hiddenRows.push(values);
+                    this.data.hiddenRows.push(i + 1);
                 }
             }
         }
@@ -423,8 +419,7 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
             }
             if (cellContent === null) {
                 cellContent = "";
-            }
-            else if (typeof cellContent === "boolean" || typeof cellContent === "number") {
+            } else if (typeof cellContent === "boolean" || typeof cellContent === "number") {
                 cellContent = cellContent.toString();
             }
             // else if (typeof cellContent === "boolean") {

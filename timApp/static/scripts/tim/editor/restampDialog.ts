@@ -5,9 +5,9 @@
 import {IPromise, IRootElementService, IScope} from "angular";
 import * as focusMe from "tim/ui/focusMe";
 import {DialogController, registerDialogComponent, showDialog} from "../ui/dialog";
+import {$http} from "../util/ngimport";
 import {markAsUsed, to} from "../util/utils";
 import {IStampingData} from "./pareditor";
-import {$http} from "../util/ngimport";
 
 // The close states dialog can return.
 export enum RestampDialogClose {

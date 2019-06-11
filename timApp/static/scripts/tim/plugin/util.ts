@@ -271,7 +271,7 @@ export abstract class PluginBase<MarkupType extends IGenericPluginMarkup, A exte
                     if (m) {
                         returnList.push(m[1]);
                     }
-                }
+                },
             );
         }
         return returnList;
@@ -286,7 +286,7 @@ export abstract class PluginBase<MarkupType extends IGenericPluginMarkup, A exte
      */
     getName(): string | undefined {
         const taskId = this.pluginMeta.getTaskId();
-        if (taskId) return taskId.split(".")[1];
+        if (taskId) { return taskId.split(".")[1]; }
     }
 
     getTaskId(): string | undefined {

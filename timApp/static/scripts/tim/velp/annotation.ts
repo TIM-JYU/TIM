@@ -26,7 +26,7 @@ markAsUsed(focusme);
 export class AnnotationController extends DestroyScope implements IController {
     static $inject = ["$scope", "$element"];
     private ctrlDown: boolean;
-    private visible_options!: {
+    private visibleOptions!: {
         type: string; value: number; title: string;
         values: [number, number, number, number];
         names: [string, string, string, string]
@@ -79,7 +79,7 @@ export class AnnotationController extends DestroyScope implements IController {
     $onInit() {
         this.show = this.showStr === "true";
         this.annotation = JSON.parse(this.annotationdata);
-        this.visible_options = {
+        this.visibleOptions = {
             type: "select",
             value: this.annotation.visible_to,
             title: "Visible to",
@@ -124,7 +124,8 @@ export class AnnotationController extends DestroyScope implements IController {
         this.scope.$watch(() => this.annotation.newannotation, (newValue) => {
             if (newValue && this.show) { // this check is necessary
 
-                const x = window.scrollX, y = window.scrollY;
+                const x = window.scrollX;
+                const y = window.scrollY;
 
                 const pos = this.element[0].getBoundingClientRect().top;
                 this.element.find("textarea").focus();
@@ -278,14 +279,14 @@ export class AnnotationController extends DestroyScope implements IController {
             this.updateAnnotation();
         }
         this.newcomment = "";
-        if (this.visible_options.value !== this.original.visible_to) {
-            this.rctrl.changeVisibility(this.annotation.id, this.visible_options.value);
+        if (this.visibleOptions.value !== this.original.visible_to) {
+            this.rctrl.changeVisibility(this.annotation.id, this.visibleOptions.value);
         }
         this.original = {
             aid: this.annotation.id,
             points: this.annotation.points,
             annotation_id: id,
-            visible_to: this.visible_options.value,
+            visible_to: this.visibleOptions.value,
             velp: this.velp,
             color: this.annotation.color,
             comment: this.newcomment,
@@ -304,7 +305,7 @@ export class AnnotationController extends DestroyScope implements IController {
      * @returns {boolean} Whether the user has rights or not
      */
     checkRights() {
-        return this.annotation.edit_access !== true;
+        return !this.annotation.edit_access;
     }
 
     /**
@@ -324,7 +325,7 @@ export class AnnotationController extends DestroyScope implements IController {
             return false;
         }
         if (this.original.points !== this.annotation.points || this.original.comment !== this.newcomment ||
-            this.original.visible_to !== this.visible_options.value || this.original.velp !== this.velp ||
+            this.original.visible_to !== this.visibleOptions.value || this.original.velp !== this.velp ||
             this.original.color !== this.annotation.color) {
             return true;
         }

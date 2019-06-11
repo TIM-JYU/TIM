@@ -4,6 +4,7 @@ import {IPreviewParams, makePreview} from "../document/question/dynamicAnswerShe
 import {fetchAskedQuestion, showQuestionEditDialog} from "../document/question/questionController";
 import {DialogController, registerDialogComponent, showDialog, showMessageDialog} from "../ui/dialog";
 import {$http, $timeout} from "../util/ngimport";
+import {getStorage, setStorage} from "../util/utils";
 import {
     AnswerTable,
     IAskedQuestion,
@@ -15,7 +16,6 @@ import {
     QuestionOrAnswer,
 } from "./lecturetypes";
 import {showStatisticsDialog} from "./statisticsToQuestionController";
-import {getStorage, setStorage} from "../util/utils";
 
 /**
  * Created by hajoviin on 22.4.2015

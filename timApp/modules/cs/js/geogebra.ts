@@ -2,7 +2,7 @@
 import * as t from "io-ts";
 import {IAnswer} from "tim/answer/IAnswer";
 import {ViewCtrl} from "tim/document/viewctrl";
-import {GenericPluginMarkup, Info, nullable, PluginBase, pluginBindings, withDefault} from "tim/plugin/util";
+import {GenericPluginMarkup, Info, PluginBase, pluginBindings, withDefault} from "tim/plugin/util";
 import {$http, $sce, $timeout} from "tim/util/ngimport";
 import {to} from "tim/util/utils";
 
@@ -147,52 +147,60 @@ class GeogebraController extends PluginBase<t.TypeOf<typeof GeogebraMarkup>,
     }
 
     changeAnswer(a: IAnswer) {
-        const frameElem = this.element.find(".jsFrameContainer")[0] as HTMLElement;
+        const frameElem = this.element.find(".jsFrameContainer")[0];
         const f = frameElem.firstChild as CustomFrame<JSFrameWindow>;
-        if ( !f.contentWindow.setData ) return;
+        if ( !f.contentWindow.setData ) {
+            return;
+        }
         f.contentWindow.setData(JSON.parse(a.content));
     }
 
     outputAsHtml() {
         // if ( !this.attrs.srchtml ) return "";
-        if ( this.attrsall.preview ) return ""; // TODO: replace when preview delay and preview from markup ready
+        if (this.attrsall.preview) {
+            return "";
+        } // TODO: replace when preview delay and preview from markup ready
         $timeout(0);
-        let t = this.pluginMeta.getTaskId()!.split(".") || ["",""];
-        let taskId = t[0] + "." + t[1];
+        const tid = this.pluginMeta.getTaskId()!.split(".") || ["", ""];
+        const taskId = tid[0] + "." + tid[1];
         let ab = null;
 
-        let user_id = 1;
-        if ( this.viewctrl ) {
+        let userId = 1;
+        if (this.viewctrl) {
             ab = this.viewctrl.getAnswerBrowser(taskId);
             const selectedUser = this.viewctrl.selectedUser;
-            user_id = selectedUser.id;
+            userId = selectedUser.id;
         }
-        if (ab) ab.registerAnswerListener((a) => this.changeAnswer(a));
+        if (ab) {
+            ab.registerAnswerListener((a) => this.changeAnswer(a));
+        }
         let anr = 0;
-        if ( ab ) {
+        if (ab) {
             anr = ab.findSelectedAnswerIndex();
-            if ( anr < 0 ) anr = 0;
+            if (anr < 0) {
+                anr = 0;
+            }
         }
         // const html:string = this.attrs.srchtml;
         // const datasrc = btoa(html);
         let w = this.attrs.width || 800;
         let h = this.attrs.height || 450;
 
-        if ( this.attrs.tool ) {
-           w = Math.max(w, 1200);
-           h = Math.max(w, 1100);
+        if (this.attrs.tool) {
+            w = Math.max(w, 1200);
+            h = Math.max(w, 1100);
         }
 
-        let url = this.getHtmlUrl() + '/' + user_id + '/' + anr;
+        let url = this.getHtmlUrl() + "/" + userId + "/" + anr;
         url = url.replace("//", "/");
         this.geogebraoutput = "<iframe id=\"jsxFrame-stack-jsxgraph-1-div1\"\n" +
             "        class=\"showGeoGebra geogebraFrame\" \n" +
-            "        style=\"width:calc("+ w + "px + 2px);height:calc(" + h+ "px + 2px);border: none;\"\n" +
+            "        style=\"width:calc(" + w + "px + 2px);height:calc(" + h + "px + 2px);border: none;\"\n" +
             "        sandbox=\"allow-scripts allow-same-origin\"\n" +
             // "        src=\"data:text/html;base64," + datasrc + "\">\n" +
             // "src=\"https://www.geogebra.org/material/iframe/id/23587/width/1600/height/715/border/888888/rc/false/ai/false/sdz/false/smb/false/stb/false/stbh/true/ld/false/sri/false\"" +
             // 'src="'+ '/cs/reqs' + '"' +
-            'src="'+ url + '"' +
+            'src="' + url + '"' +
             "</iframe>";
         const s = $sce.trustAsHtml(this.geogebraoutput);
         return s;
@@ -203,12 +211,11 @@ class GeogebraController extends PluginBase<t.TypeOf<typeof GeogebraMarkup>,
         return s;
     }
 
-
     getHtmlUrl(): string {
         if (this.htmlUrl) {
             return this.htmlUrl;
         }
-        const url = '/iframehtml'+this.pluginMeta.getAnswerUrl().replace('/answer','');
+        const url = "/iframehtml" + this.pluginMeta.getAnswerUrl().replace("/answer", "");
 
         this.htmlUrl = url;
         return url;
@@ -223,7 +230,6 @@ class GeogebraController extends PluginBase<t.TypeOf<typeof GeogebraMarkup>,
         return url;
     }
 
-
     async runSend(data: any) {
         if (this.pluginMeta.isPreview()) {
             this.error = "Cannot run plugin while previewing.";
@@ -234,9 +240,9 @@ class GeogebraController extends PluginBase<t.TypeOf<typeof GeogebraMarkup>,
         this.isRunning = true;
         const url = this.getTaskUrl();
         const geogebraData = "";
-        data['type'] = "geogebra";
+        data.type = "geogebra";
         const params = {
-            input: data
+            input: data,
         };
 
         this.console = "";
@@ -266,14 +272,14 @@ class GeogebraController extends PluginBase<t.TypeOf<typeof GeogebraMarkup>,
         const geogebraResult = r.result.data.web.geogebraResult;
     }
 
-
-
     getData() {
-        const frameElem = this.element.find(".jsFrameContainer")[0] as HTMLElement;
+        const frameElem = this.element.find(".jsFrameContainer")[0];
         const f = frameElem.firstChild as CustomFrame<JSFrameWindow>;
-        if ( !f.contentWindow.getData) return;
-        let s:any = f.contentWindow.getData();
-        if ( s.message ) {
+        if (!f.contentWindow.getData) {
+            return;
+        }
+        const s: any = f.contentWindow.getData();
+        if (s.message) {
             this.message = s.message;
         }
         this.runSend(s);
@@ -306,7 +312,6 @@ const common = {
 };
 
 /*
-
 
 */
 

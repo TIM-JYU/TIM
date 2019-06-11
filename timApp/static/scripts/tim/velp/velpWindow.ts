@@ -37,7 +37,7 @@ export class VelpWindowController implements IController {
     private velp!: Binding<IVelpUI, "<">;
     private newLabel: INewLabel;
     private labelToEdit: INewLabel;
-    private visible_options: {type: string; title: string; values: [number, number, number, number]; names: [string, string, string, string]};
+    private visibleOptions: {type: string; title: string; values: [number, number, number, number]; names: [string, string, string, string]};
     private settings: {teacherRightsError: string; labelContentError: string; velpGroupError: string; velpGroupWarning: string; velpContentError: string};
     private submitted: boolean;
     private hasEditAccess: boolean;
@@ -67,7 +67,7 @@ export class VelpWindowController implements IController {
     constructor() {
         this.newLabel = {content: "", selected: true, valid: true, id: null};
         this.labelToEdit = {content: "", selected: false, edit: false, valid: true, id: null};
-        this.visible_options = {
+        this.visibleOptions = {
             type: "select",
             title: "Visible to",
             values: [1, 2, 3, 4],
@@ -111,7 +111,7 @@ export class VelpWindowController implements IController {
                 this.velpLocal = clone(this.velp);
                 // TODO: focus velp content textarea
             }
-            this.velpSelection.setVelpToEdit(this.velp, this.cancelEdit);
+            this.velpSelection.setVelpToEdit(this.velp, () => this.cancelEdit());
         }
     }
 
@@ -254,9 +254,9 @@ export class VelpWindowController implements IController {
             return true;
         }
 
-        for (let i = 0; i < this.velp.velp_groups.length; i++) {
-            for (let j = 0; j < this.velpGroups.length; j++) {
-                if (this.velpGroups[j].id === this.velp.velp_groups[i] && this.velpGroups[j].show) {
+        for (const vg of this.velp.velp_groups) {
+            for (const g of this.velpGroups) {
+                if (g.id === vg && g.show) {
                     return true;
                 }
             }
@@ -304,8 +304,8 @@ export class VelpWindowController implements IController {
 
         if (this.labelToEdit.edit) {
             this.labelToEdit.edit = false;
-            for (let i = 0; i < this.labels.length; i++) {
-                this.labels[i].edit = false;
+            for (const l of this.labels) {
+                l.edit = false;
             }
         }
 
@@ -346,12 +346,12 @@ export class VelpWindowController implements IController {
         }
 
         let updatedLabel = null;
-        for (let i = 0; i < this.labels.length; i++) {
-            if (this.labels[i].id === this.labelToEdit.id) {
+        for (const l of this.labels) {
+            if (l.id === this.labelToEdit.id) {
                 this.labelToEdit.edit = false;
-                this.labels[i].content = this.labelToEdit.content;
-                this.labels[i].edit = false;
-                updatedLabel = this.labels[i];
+                l.content = this.labelToEdit.content;
+                l.edit = false;
+                updatedLabel = l;
                 break;
             }
         }
@@ -375,9 +375,9 @@ export class VelpWindowController implements IController {
     }
 
     async editVelp() {
-        const default_velp_group = this.velpSelection.getDefaultVelpGroup();
+        const defaultVelpGroup = this.velpSelection.getDefaultVelpGroup();
 
-        if (this.isGroupInVelp(default_velp_group) && default_velp_group.id === -1) {
+        if (this.isGroupInVelp(defaultVelpGroup) && defaultVelpGroup.id === -1) {
             await this.handleDefaultVelpGroupIssue();
             await this.updateVelpInDatabase();
         } else if (this.velp.velp_groups.length > 0) {

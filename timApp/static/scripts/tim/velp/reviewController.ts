@@ -6,7 +6,7 @@ import {ViewCtrl} from "../document/viewctrl";
 import {IItem} from "../item/IItem";
 import {showMessageDialog} from "../ui/dialog";
 import {$compile, $http, $window} from "../util/ngimport";
-import {angularWait, assertIsText, checkIfElement, getElementParent, stringOrNull,} from "../util/utils";
+import {angularWait, assertIsText, checkIfElement, getElementParent, stringOrNull} from "../util/utils";
 import {VelpSelectionController} from "./velpSelection";
 import {IAnnotation, IAnnotationCoordless, IAnnotationInterval, isFullCoord, IVelp, IVelpUI} from "./velptypes";
 
@@ -64,18 +64,18 @@ export class ReviewController {
         this.annotations = response.data;
         const annotationsToRemove = [];
 
-        for (let i = 0; i < this.annotations.length; i++) {
+        for (const a of this.annotations) {
 
-            const placeInfo = this.annotations[i].coord;
+            const placeInfo = a.coord;
             const parent = document.getElementById(placeInfo.start.par_id);
 
             if (parent == null) {
                 // TODO: Decide what to do, when parent element has been deleted, for now remove annotation from list
-                annotationsToRemove.push(this.annotations[i]);
+                annotationsToRemove.push(a);
                 continue;
             }
 
-            if (this.annotations[i].answer_id != null) {
+            if (a.answer_id != null) {
                 if (!parent.classList.contains("has-annotation")) {
                     parent.classList.add("has-annotation");
                 }
@@ -89,7 +89,7 @@ export class ReviewController {
                     if (elements == null) {
                         this.addAnnotationToElement(
                             parent,
-                            this.annotations[i],
+                            a,
                             false,
                             "Could not show annotation in correct place");
                         return;
@@ -97,10 +97,10 @@ export class ReviewController {
 
                     const startElpath = placeInfo.start.el_path;
 
-                    for (let j = 0; j < startElpath.length; j++) {
+                    for (const p of startElpath) {
                         const elementChildren = this.getElementChildren(elements);
-                        if (elementChildren[startElpath[j]] != null) {
-                            elements = elementChildren[startElpath[j]];
+                        if (elementChildren[p] != null) {
+                            elements = elementChildren[p];
                         }
                     }
 
@@ -110,18 +110,18 @@ export class ReviewController {
                     const range = document.createRange();
                     range.setStart(startel, placeInfo.start.offset);
                     range.setEnd(endel, placeInfo.end.offset);
-                    this.addAnnotationToCoord(range, this.annotations[i], false);
-                    this.addAnnotationToElement(parent, this.annotations[i], false, "Added also margin annotation");
+                    this.addAnnotationToCoord(range, a, false);
+                    this.addAnnotationToElement(parent, a, false, "Added also margin annotation");
                 } catch (err) {
-                    this.addAnnotationToElement(parent, this.annotations[i], false, "Could not show annotation in correct place");
+                    this.addAnnotationToElement(parent, a, false, "Could not show annotation in correct place");
                 }
             } else {
-                this.addAnnotationToElement(parent, this.annotations[i], false, "Paragraph has been modified");
+                this.addAnnotationToElement(parent, a, false, "Paragraph has been modified");
             }
         }
 
-        for (let k = 0; k < annotationsToRemove.length; k++) {
-            const index = this.annotations.indexOf(annotationsToRemove[k]);
+        for (const r of annotationsToRemove) {
+            const index = this.annotations.indexOf(r);
             this.annotations.splice(index, 1);
         }
 
@@ -138,8 +138,7 @@ export class ReviewController {
          return element.children;
          */
         const children = [];
-        for (let i = 0; i < element.childNodes.length; i++) {
-            const childNode = element.childNodes[i];
+        for (const childNode of element.childNodes) {
             if (checkIfElement(childNode)) {
                 children.push(childNode);
             }
@@ -204,8 +203,8 @@ export class ReviewController {
         const oldAnnotations = par.querySelectorAll(".notes [aid]");
         angular.element(oldAnnotations).remove();
 
-        for (let i = 0; i < annotations.length; i++) {
-            const placeInfo = annotations[i].coord;
+        for (const a of annotations) {
+            const placeInfo = a.coord;
 
             const preElem = par.getElementsByTagName("PRE")[0];
             if (!preElem) {
@@ -214,7 +213,7 @@ export class ReviewController {
             const element = preElem.firstChild;
 
             if (!showInPlace || !isFullCoord(placeInfo.start) || !isFullCoord(placeInfo.end)) {
-                this.addAnnotationToElement(par, annotations[i], false, "Added as margin annotation");
+                this.addAnnotationToElement(par, a, false, "Added as margin annotation");
             } else if (element) {
                 const range = document.createRange();
                 try {
@@ -223,8 +222,8 @@ export class ReviewController {
                 } catch (e) {
                     // catch: Failed to execute 'setStart' on 'Range': The offset XX is larger than the node's length (YY).
                 }
-                this.addAnnotationToCoord(range, annotations[i], false);
-                this.addAnnotationToElement(par, annotations[i], false, "Added also margin annotation");
+                this.addAnnotationToCoord(range, a, false);
+                this.addAnnotationToElement(par, a, false, "Added also margin annotation");
             } else {
                 showMessageDialog("Couldn't add annotations");
             }
@@ -389,8 +388,8 @@ export class ReviewController {
 
         if (annotationParents.length > 1) {
             let savedHTML = "";
-            for (let i = 0; i < annotationHighlights.length; i++) {
-                let addHTML = annotationHighlights[i].innerHTML.replace('<span class="ng-scope">', "");
+            for (const a of annotationHighlights) {
+                let addHTML = a.innerHTML.replace('<span class="ng-scope">', "");
                 addHTML = addHTML.replace("</span>", "");
                 savedHTML += addHTML;
             }
@@ -422,10 +421,10 @@ export class ReviewController {
         const par = annotationElement.parents(".par");
         const annotationHighlights = annotationElement[0].getElementsByClassName("highlighted");
         if (!inmargin) {
-            for (let a = 0; a < this.annotations.length; a++) {
-                if (id === this.annotations[a].id) {
+            for (const a of this.annotations) {
+                if (id === a.id) {
                     $(annotationElement[1]).remove();
-                    this.addAnnotationToElement(par[0], this.annotations[a], false, "Added also margin annotation");
+                    this.addAnnotationToElement(par[0], a, false, "Added also margin annotation");
                     // addAnnotationToElement(this.annotations[a], false, "Added also margin annotation");
                 }
             }
@@ -433,8 +432,8 @@ export class ReviewController {
         } else {
             if (annotationParents.length > 1) {
                 let savedHTML = "";
-                for (let i = 0; i < annotationHighlights.length; i++) {
-                    let addHTML = annotationHighlights[i].innerHTML.replace('<span class="ng-scope">', "");
+                for (const a of annotationHighlights) {
+                    let addHTML = a.innerHTML.replace('<span class="ng-scope">', "");
                     addHTML = addHTML.replace("</span>", "");
                     savedHTML += addHTML;
                 }
@@ -452,18 +451,18 @@ export class ReviewController {
      * @param points - Annotation points
      */
     changeAnnotationPoints(id: number, points: number): void {
-        for (let i = 0; i < this.annotations.length; i++) {
-            if (this.annotations[i].id === id) {
-                this.annotations[i].points = points;
+        for (const a of this.annotations) {
+            if (a.id === id) {
+                a.points = points;
                 break;
             }
         }
     }
 
     changeAnnotationColor(id: number, color: string | null): void {
-        for (let i = 0; i < this.annotations.length; i++) {
-            if (this.annotations[i].id === id) {
-                this.annotations[i].color = color;
+        for (const a of this.annotations) {
+            if (a.id === id) {
+                a.color = color;
                 break;
             }
         }
@@ -476,9 +475,9 @@ export class ReviewController {
      * @param comment - Content of the given comment
      */
     addComment(id: number, name: string, comment: string): void {
-        for (let i = 0; i < this.annotations.length; i++) {
-            if (this.annotations[i].id === id) {
-                this.annotations[i].comments.push({
+        for (const a of this.annotations) {
+            if (a.id === id) {
+                a.comments.push({
                     commenter_username: name,
                     content: comment,
                     comment_time: "now",
@@ -501,9 +500,9 @@ export class ReviewController {
      * @param visibility - Annotation visibility (1, 2, 3 or 4)
      */
     changeVisibility(id: number, visiblity: number): void {
-        for (let i = 0; i < this.annotations.length; i++) {
-            if (this.annotations[i].id === id) {
-                this.annotations[i].visible_to = visiblity;
+        for (const a of this.annotations) {
+            if (a.id === id) {
+                a.visible_to = visiblity;
                 break;
             }
         }
@@ -607,8 +606,8 @@ export class ReviewController {
      * @returns {boolean} Whether illegal classes were found or not.
      */
     hasAnyIllegalClass(element: Element): boolean {
-        for (let i = 0; i < illegalClasses.length; i++) {
-            if (element.classList.contains(illegalClasses[i])) {
+        for (const c of illegalClasses) {
+            if (element.classList.contains(c)) {
                 return true;
             }
         }
@@ -625,8 +624,8 @@ export class ReviewController {
         const clone = range.cloneContents();
         div.appendChild(clone);
         const children = div.childNodes;
-        for (let i = 0; i < children.length; i++) {
-            if (this.hasElementChildrenAnnotation(children[i])) {
+        for (const c of children) {
+            if (this.hasElementChildrenAnnotation(c)) {
                 return true;
             }
         }
@@ -646,8 +645,8 @@ export class ReviewController {
 
         const children = element.childNodes;
 
-        for (let i = 0; i < children.length; i++) {
-            if (this.hasElementChildrenAnnotation(children[i])) {
+        for (const c of children) {
+            if (this.hasElementChildrenAnnotation(c)) {
                 return true;
             }
         }
@@ -873,8 +872,8 @@ export class ReviewController {
                 if (isInline) {
                     return;
                 }
-                const ctrl = this.getAnswerBrowserFromPluginLoader(first);
-                return ctrl && ctrl.selectedAnswer;
+                const ab = this.getAnswerBrowserFromPluginLoader(first);
+                return ab && ab.selectedAnswer;
             }
             return;
         }
@@ -911,15 +910,15 @@ export class ReviewController {
         let count = 0;
 
         const children = this.getElementChildren(myparent);
-        for (let i = 0; i < children.length; i++) {
+        for (const c of children) {
 
-            if (children[i] === start) {
+            if (c === start) {
                 array.push(count);
                 return this.getElementPositionInTree(myparent, array);
             }
 
-            if (this.checkIfAnnotation(children[i])) {
-                const innerElements = children[i].getElementsByClassName("highlighted")[0];
+            if (this.checkIfAnnotation(c)) {
+                const innerElements = c.getElementsByClassName("highlighted")[0];
                 const innerChildren = this.getElementChildren(innerElements);
                 if (innerChildren.length > 2) {
                     count += innerChildren.length - 2;
@@ -1008,7 +1007,7 @@ export class ReviewController {
             if (this.checkIfAnnotation(child)) {
 
                 const aidAttr = child.getAttribute("aid");
-                if (aidAttr && parseInt(aidAttr) === aid) {
+                if (aidAttr && parseInt(aidAttr, 10) === aid) {
 
                     let startnum = num - 1;
                     num += innerElement.childNodes.length;
@@ -1056,9 +1055,9 @@ export class ReviewController {
      * @returns Object - Annotation
      */
     getAnnotation(id: number): IAnnotation | undefined {
-        for (let i = 0; i < this.annotations.length; i++) {
-            if (id === this.annotations[i].id) {
-                return this.annotations[i];
+        for (const a of this.annotations) {
+            if (id === a.id) {
+                return a;
             }
         }
     }

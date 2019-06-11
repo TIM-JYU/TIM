@@ -688,10 +688,10 @@ export class GamificationMapCtrl implements IController {
             }
         }
         // Tile images used to draw the building frames
-        this.frameTile = findTileImagePos(this.tileFrameSet!, 0);
-        this.grayTile = findTileImagePos(this.tileFrameSet!, 1);
-        this.roofTile = findTileImagePos(this.roofFrameSet!, 1);
-        this.roofFrameTile = findTileImagePos(this.roofFrameSet!, 0);
+        this.frameTile = findTileImagePos(this.tileFrameSet, 0);
+        this.grayTile = findTileImagePos(this.tileFrameSet, 1);
+        this.roofTile = findTileImagePos(this.roofFrameSet, 1);
+        this.roofFrameTile = findTileImagePos(this.roofFrameSet, 0);
         // Draw the map
         this.drawMap();
     }

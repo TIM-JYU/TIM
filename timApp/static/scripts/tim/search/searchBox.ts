@@ -6,11 +6,11 @@ import {IController} from "angular";
 import {ngStorage} from "ngstorage";
 import {timApp} from "../app";
 import {DocumentOrFolder, IItem, ITag, ITaggedItem} from "../item/IItem";
+import {relevanceSuggestions} from "../item/relevanceEdit";
+import {KEY_ENTER} from "../util/keycodes";
 import {$http, $localStorage, $window} from "../util/ngimport";
 import {Binding, to} from "../util/utils";
 import {SearchResultController, showSearchResultDialog} from "./searchResultsCtrl";
-import {KEY_ENTER} from "../util/keycodes";
-import {relevanceSuggestions} from "../item/relevanceEdit";
 
 /**
  * All data title/word search route returns.

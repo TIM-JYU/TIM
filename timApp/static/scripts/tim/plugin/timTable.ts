@@ -48,7 +48,7 @@ export interface TimTable {
     editorBottom?: boolean;
     editorButtonsBottom?: boolean;
     editorButtonsRight?: boolean;
-    toolbarTemplates?: any;
+    toolbarTemplates?: any[];
     hid: {edit?: boolean, insertMenu?: boolean, editMenu?: boolean};
     hideSaveButton?: boolean;
     // hiddenRows?: IRow[];
@@ -56,10 +56,10 @@ export interface TimTable {
     hiddenColumns?: number[];
     lockedCells?: string[];
     saveCallBack?: (rowi: number, coli: number, content: string) => void;
-    maxWidth?: string; //Possibly obsolete if cell/column layout can be given in data.table.colums
+    maxWidth?: string; // Possibly obsolete if cell/column layout can be given in data.table.colums
     minWidth?: string;
     singleLine?: boolean;
-    //lockCellCount?: boolean;
+    // lockCellCount?: boolean;
 }
 
 export interface ITable { // extends ITableStyles
@@ -195,11 +195,12 @@ const columnCellStyles: Set<string> = new Set<string>([
 enum Direction {
     Up = 1,
     Down = 2,
-    UpAndDown = 3,
     Left = 4,
     Right = 8,
-    LeftAndRight = 12,
 }
+
+const UP_OR_DOWN = [Direction.Up, Direction.Down];
+const LEFT_OR_RIGHT = [Direction.Left, Direction.Right];
 
 export function isPrimitiveCell(cell: CellEntity): cell is CellType {
     return cell == null || (cell as ICell).cell === undefined;
@@ -242,7 +243,7 @@ export class TimTableController extends DestroyScope implements IController {
     private task: boolean = false;
     private hideSaveButton?: boolean = false;
     private hiddenRows?: number[] = [];
-    //private lockCellCount: boolean = false;
+    // private lockCellCount: boolean = false;
     // private saveCallBack: () => void;
     private isRunning: boolean = false;
     public taskBorders: boolean = false;
@@ -267,17 +268,7 @@ export class TimTableController extends DestroyScope implements IController {
 
     constructor(private scope: IScope, private element: IRootElementService) {
         super(scope, element);
-        this.keyUpTable = this.keyUpTable.bind(this);
-        this.keyDownTable = this.keyDownTable.bind(this);
-        this.keyPressTable = this.keyPressTable.bind(this);
         this.pluginMeta = new PluginMeta(element);
-        this.onClick = this.onClick.bind(this);
-        this.setCell = this.setCell.bind(this);
-        this.addToTemplates = this.addToTemplates.bind(this);
-        this.addColumnFromToolbar = this.addColumnFromToolbar.bind(this);
-        this.addRowFromToolbar = this.addRowFromToolbar.bind(this);
-        this.removeColumnFromToolbar = this.removeColumnFromToolbar.bind(this);
-        this.removeRowFromToolbar = this.removeRowFromToolbar.bind(this);
         // if ( !this.data.hid ) this.data.hid = {};
     }
 
@@ -375,7 +366,7 @@ export class TimTableController extends DestroyScope implements IController {
             }
             this.viewctrl.addTable(this, parId);
         }
-        if(this.disabled) return;
+        if (this.disabled) { return; }
         document.addEventListener("keyup", this.keyUpTable);
         document.addEventListener("keydown", this.keyDownTable);
         document.addEventListener("keypress", this.keyPressTable);
@@ -405,12 +396,12 @@ export class TimTableController extends DestroyScope implements IController {
             if (this.isInEditMode() && isToolbarEnabled()) {
                 openTableEditorToolbar({
                     callbacks: {
-                        setCell: this.setCell,
-                        addToTemplates: this.addToTemplates,
-                        addColumn: this.addColumnFromToolbar,
-                        addRow: this.addRowFromToolbar,
-                        removeColumn: this.removeColumnFromToolbar,
-                        removeRow: this.removeRowFromToolbar,
+                        setCell: (val) => this.setCell(val),
+                        addToTemplates: () => this.addToTemplates(),
+                        addColumn: (offset) => this.addColumnFromToolbar(offset),
+                        addRow: (offset) => this.addRowFromToolbar(offset),
+                        removeColumn: () => this.removeColumnFromToolbar(),
+                        removeRow: () => this.removeRowFromToolbar(),
                     }, activeTable: this,
                 });
             } else {
@@ -470,7 +461,7 @@ export class TimTableController extends DestroyScope implements IController {
     }
 
     public addRowEnabled() {
-        //return !this.task && this.editRight && this.isInEditMode() && !this.lockCellCount
+        // return !this.task && this.editRight && this.isInEditMode() && !this.lockCellCount
         return !this.task && this.editRight && this.isInEditMode();
     }
 
@@ -782,8 +773,7 @@ export class TimTableController extends DestroyScope implements IController {
         let ncols = this.data.table.countCol || 0;
         nrows = Math.max(this.data.table.rows.length, nrows);
 
-        for (let iy = 0; iy < this.data.table.rows.length; iy++) {
-            const row = this.data.table.rows[iy];
+        for (const row of this.data.table.rows) {
             if (row.row) {
                 ncols = Math.max(row.row.length, ncols);
             }
@@ -867,11 +857,10 @@ export class TimTableController extends DestroyScope implements IController {
      * @param {CellDataEntity} cells: cells part of tabledatablock
      */
     public processDataBlock(cells: CellDataEntity) {
-        for (const item in cells) {
+        for (const [item, value] of Object.entries(cells)) {
 
             const alphaRegExp = new RegExp("([A-Z]*)");
             const alpha = alphaRegExp.exec(item);
-            const value = cells[item];
 
             if (alpha == null) {
                 continue;
@@ -994,7 +983,7 @@ export class TimTableController extends DestroyScope implements IController {
             reversedCharacterPlaceInString++;
         }
         columnIndex = columnIndex - 1;
-        const rowIndex = parseInt(rowValue) - 1;
+        const rowIndex = parseInt(rowValue, 10) - 1;
         return {col: columnIndex, row: rowIndex};
     }
 
@@ -1037,8 +1026,7 @@ export class TimTableController extends DestroyScope implements IController {
      * @param {number} width The new width of the row.
      */
     private resizeRowWidth(rowIndex: number, width: number) {
-        for (let ri = 0; ri < this.cellDataMatrix.length; ri++) {
-            const row = this.cellDataMatrix[ri];
+        for (const row of this.cellDataMatrix) {
             for (let i = row.length; i < width; i++) {
                 row[i] = this.createDummyCell();
             }
@@ -1065,19 +1053,19 @@ export class TimTableController extends DestroyScope implements IController {
         }
     }
 
-    private keyDownTable(ev: KeyboardEvent) {
+    private keyDownTable = (ev: KeyboardEvent) => {
         this.shiftDown = ev.shiftKey;
 
-        //if (!this.mouseInTable) return;
-        //TODO: Check properly if table has focus when preventing default tab behavior
-        if (this.currentCell == undefined) return;
+        // if (!this.mouseInTable) return;
+        // TODO: Check properly if table has focus when preventing default tab behavior
+        if (this.currentCell == undefined) { return; }
         if (ev.keyCode === KEY_TAB) {
             ev.preventDefault();
         }
 
     }
 
-    private keyPressTable(ev: KeyboardEvent) {
+    private keyPressTable = (ev: KeyboardEvent) => {
         // if (!this.mouseInTable) return;
         if (ev.keyCode === KEY_TAB) {
             ev.preventDefault();
@@ -1089,7 +1077,7 @@ export class TimTableController extends DestroyScope implements IController {
      * Deals with key events inside the table.
      * @param {KeyboardEvent} ev KeyboardEvent
      */
-    private keyUpTable(ev: KeyboardEvent) {
+    private keyUpTable = (ev: KeyboardEvent) => {
         // this.shiftDown = ev.shiftKey;
         this.shiftDown = ev.shiftKey;
 
@@ -1200,12 +1188,12 @@ export class TimTableController extends DestroyScope implements IController {
             let x = this.activeCell.col;
             let y = this.activeCell.row;
             if (this.lastDirection) {
-                if ((this.lastDirection.direction & Direction.UpAndDown) > 0) {
-                    if ((direction & Direction.UpAndDown) > 0) {
+                if (UP_OR_DOWN.includes(this.lastDirection.direction)) {
+                    if (UP_OR_DOWN.includes(direction)) {
                         x = this.lastDirection.coord;
                     }
                 } else {
-                    if ((direction & Direction.LeftAndRight) > 0) {
+                    if (LEFT_OR_RIGHT.includes(direction)) {
                         y = this.lastDirection.coord;
                     }
                 }
@@ -2123,12 +2111,11 @@ export class TimTableController extends DestroyScope implements IController {
             }
             templ[key] = obj[key];
         }
-        if (typeof this.data.toolbarTemplates === "undefined") {
+        if (this.data.toolbarTemplates === undefined) {
             this.data.toolbarTemplates = [];
         }
-        for (const i in this.data.toolbarTemplates) {
-            const ob = this.data.toolbarTemplates[i];
-            delete ob.$$hashKey;
+        for (const ob of this.data.toolbarTemplates) {
+            delete ob.$$hashKey; // TODO: is this needed? AngularJS internal attributes should never be touched.
             if (JSON.stringify(ob) == JSON.stringify(templ)) {
                 return;
             }

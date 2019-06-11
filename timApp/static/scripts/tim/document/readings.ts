@@ -62,7 +62,7 @@ export async function markParRead(par: JQuery, readingType: ReadingType) {
     if (!Users.isLoggedIn()) {
         return;
     }
-    const r = await to($http.put(`/read/${getActiveDocument().id}/${parId}/${readingType}`, data));
+    const r = await to($http.put(`/read/${getActiveDocument().getId()}/${parId}/${readingType}`, data));
     if (!r.ok) {
         $log.error("Could not save the read marking for paragraph " + parId);
         readline.removeClass(readClassName);
@@ -81,7 +81,7 @@ async function markParsRead($pars: JQuery) {
     }).get();
     $pars.find(".readline").addClass(readClasses[ReadingType.ClickRed]);
     const doc = getActiveDocument();
-    const r = await to($http.put("/read/" + doc.id + "/" + "null" + "/" + ReadingType.ClickRed, {pars: parIds}));
+    const r = await to($http.put("/read/" + doc.getId() + "/" + "null" + "/" + ReadingType.ClickRed, {pars: parIds}));
     if (!r.ok) {
         $log.error("Could not save the read markings");
         return;
@@ -91,7 +91,7 @@ async function markParsRead($pars: JQuery) {
 
 async function markAllAsRead() {
     const doc = getActiveDocument();
-    const r = await to($http.put("/read/" + doc.id, {}));
+    const r = await to($http.put("/read/" + doc.getId(), {}));
     if (!r.ok) {
         await showMessageDialog("Could not mark the document as read.");
         return;
@@ -234,7 +234,7 @@ export async function initReadings(sc: ViewCtrl) {
             void showMessageDialog("Unable to mark this section as read");
             return;
         }
-        const pars = doc.sections.get(parId);
+        const pars = doc.getSections().get(parId);
         if (!pars) {
             return;
         }
