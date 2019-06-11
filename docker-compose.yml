@@ -143,6 +143,8 @@ services:
   volumes:
    - ./timApp/modules/jsrunner:/jsrunner:ro
   working_dir: /jsrunner
+  command: ./startAll.sh
+  restart: unless-stopped
  dropdown:
   image: timimages/tim:${TIM_IMAGE_TAG}
   volumes:
