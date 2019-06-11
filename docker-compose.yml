@@ -18,6 +18,7 @@ services:
    - dumbo
    - dropdown
    - feedback
+   - jsrunner
   volumes:
    - .:/service
    - ${LOG_DIR}:/service/tim_logs
