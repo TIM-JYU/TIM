@@ -34,7 +34,7 @@ from timApp.document.post_process import hide_names_in_teacher
 from timApp.item.block import Block, BlockType
 from timApp.markdown.dumboclient import call_dumbo
 from timApp.plugin.containerLink import call_plugin_answer
-from timApp.plugin.plugin import Plugin, PluginWrap, NEVERLAZY
+from timApp.plugin.plugin import Plugin, PluginWrap, NEVERLAZY, TaskNotFoundException
 from timApp.plugin.plugin import PluginType
 from timApp.plugin.plugin import find_plugin_from_document
 from timApp.plugin.pluginControl import find_task_ids, pluginify
@@ -181,7 +181,7 @@ def get_fields_and_users(u_fields: List[str], groups: List[UserGroup], d: DocInf
                 abort(403, f'Duplicate alias {field_alias[1].strip()} in fields attribute')
             alias_map[task_id.extended_or_doc_task] = field_alias[1].strip()
             jsrunner_alias_map[field_alias[1].strip()] = task_id.extended_or_doc_task
-        dib = get_doc_or_abort(task_id.doc_id)
+        dib = get_doc_or_abort(task_id.doc_id, f'Document {task_id.doc_id} not found')
         if not current_user.has_teacher_access(dib):
             abort(403, f'Missing teacher access for document {dib.id}')
         doc_map[task_id.doc_id] = dib.document
@@ -232,6 +232,7 @@ def get_fields_and_users(u_fields: List[str], groups: List[UserGroup], d: DocInf
 class JsRunnerSchema(Schema):
     group = fields.Str()
     groups = fields.List(fields.Str())
+    program = fields.Str()
     fields = fields.List(fields.Str(), required=True)
 
     @validates_schema(skip_on_field_errors=True)
@@ -391,6 +392,8 @@ def post_answer(plugintype: str, task_id_ext: str):
                                                                             found_groups,
                                                                             d,
                                                                             get_current_user_object())
+        if plugin.values.get('program') is None:
+            abort(400, "Attribute 'program' is required.")
 
     answer_call_data = {'markup': plugin.values,
                         'state': state,
@@ -412,7 +415,7 @@ def post_answer(plugintype: str, task_id_ext: str):
     result = {'web': jsonresp['web']}
 
     if plugin.type == 'jsrunner' or plugin.type == 'tableForm':
-        handle_jsrunner_response(jsonresp, result)
+        handle_jsrunner_response(jsonresp, result, d)
         db.session.commit()
         return json_response(result)
 
@@ -503,7 +506,7 @@ def post_answer(plugintype: str, task_id_ext: str):
     return json_response(result)
 
 
-def handle_jsrunner_response(jsonresp, result):
+def handle_jsrunner_response(jsonresp, result, current_doc: DocInfo):
     save_obj = jsonresp['save']
     tasks = set()
     # content_map = {}
@@ -519,13 +522,13 @@ def handle_jsrunner_response(jsonresp, result):
             id_num = TaskId.parse(key_content[0], False, False)
             if id_num.doc_id not in doc_map:
                 doc_map[id_num.doc_id] = get_doc_or_abort(id_num.doc_id)
-    task_content = {}
+    task_content_name_map = {}
     for task in tasks:
         t_id = TaskId.parse(task, False, False)
         dib = doc_map[t_id.doc_id]
         verify_teacher_access(dib)
         if t_id.task_name == "grade" or t_id.task_name == "credit":
-            task_content[task] = 'c'
+            task_content_name_map[task] = 'c'
             continue
         try:
             plug = find_plugin_from_document(dib.document, t_id, get_current_user_object())
@@ -535,9 +538,10 @@ def handle_jsrunner_response(jsonresp, result):
             # if len(key_content) == 2:
             #     content_map[key_content[0]] = key_content[1].strip()
             # TODO: check plug content type ^
-            task_content[task] = content_field
-        except PluginException as e:
-            errormsg = str(t_id.doc_id) + ": " + str(e) + " \n"
+            task_content_name_map[task] = content_field
+        except TaskNotFoundException as e:
+            task_display = t_id.doc_task if t_id.doc_id != current_doc.id else t_id.task_name
+            errormsg = f"Task not found: {task_display}"
             try:
                 result['web']['error'] = result['web']['error'] + errormsg
             except KeyError:
@@ -550,10 +554,10 @@ def handle_jsrunner_response(jsonresp, result):
             try:
                 content_list = key.split("|")
                 if len(content_list) == 2:
-                    content_type = content_list[1].strip()
+                    content_field = content_list[1].strip()
                 else:
-                    content_type = task_content[content_list[0]]
-                c = {content_type: value}
+                    content_field = task_content_name_map[content_list[0]]
+                c = {content_field: value}
                 task_id = TaskId.parse(content_list[0], False, False)
                 an: Answer = get_latest_answers_query(task_id, [u]).first()
                 content = json.dumps(c)
@@ -561,8 +565,8 @@ def handle_jsrunner_response(jsonresp, result):
                     pass
                 elif an:
                     an_content = json.loads(an.content)
-                    if an_content.get(content_type) != value:
-                        an_content[content_type] = value
+                    if an_content.get(content_field) != value:
+                        an_content[content_field] = value
                         an_content = json.dumps(an_content)
                         a_result = Answer(
                             content=an_content,

@@ -28,10 +28,10 @@ from timApp.util.flask.requesthelper import get_option
 from timApp.util.utils import get_current_time
 
 
-def get_doc_or_abort(doc_id: int):
+def get_doc_or_abort(doc_id: int, msg: str = None):
     d = DocEntry.find_by_id(doc_id)
     if not d:
-        abort(404, 'Document not found')
+        abort(404, msg or 'Document not found')
     return d
 
 

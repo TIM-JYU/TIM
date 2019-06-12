@@ -1,5 +1,5 @@
 import * as t from "io-ts";
-import {GenericPluginMarkup, Info, nullable, withDefault} from "./util";
+import {GenericPluginMarkup, Info, nullable, withDefault} from "./attributes";
 
 export interface IPoint {
     x: number;

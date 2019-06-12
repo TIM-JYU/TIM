@@ -546,6 +546,11 @@ def maybe_get_plugin_from_par(p: DocParagraph, task_id: TaskId, u: User) -> Opti
     return None
 
 
+class TaskNotFoundException(PluginException):
+    """The exception that is thrown when a task cannot be found."""
+    pass
+
+
 def find_plugin_from_document(d: Document, task_id: TaskId, u: User):
     used_hint = False
     with d.__iter__() as it:
@@ -570,7 +575,7 @@ def find_plugin_from_document(d: Document, task_id: TaskId, u: User):
     err_msg = f'Task not found in the document: {task_id.task_name}'
     if used_hint:
         err_msg += ' (potentially because of wrong block id hint)'
-    raise PluginException(err_msg)
+    raise TaskNotFoundException(err_msg)
 
 
 class InlinePlugin(Plugin):

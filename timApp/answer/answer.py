@@ -1,3 +1,4 @@
+import json
 from sqlalchemy import func
 
 from timApp.answer.answer_models import UserAnswer
@@ -34,6 +35,10 @@ class Answer(db.Model):
     users_all = db.relationship('User', secondary=UserAnswer.__table__,
                                 back_populates='answers_alt', lazy='select')
     annotations = db.relationship('Annotation', back_populates='answer')
+
+    @property
+    def content_as_json(self):
+        return json.loads(self.content)
 
     def get_answer_number(self):
         u = self.users.first()

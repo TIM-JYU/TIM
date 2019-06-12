@@ -1,6 +1,6 @@
 import moment, {Moment} from "moment";
 import {IItem} from "../item/IItem";
-import {IGenericPluginMarkup} from "../plugin/util";
+import {IGenericPluginMarkup} from "../plugin/attributes";
 import {DurationChoice} from "../ui/durationPicker";
 import {IUser} from "../user/IUser";
 

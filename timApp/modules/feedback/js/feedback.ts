@@ -6,7 +6,8 @@ import angular from "angular";
 import * as t from "io-ts";
 import {EditMode} from "tim/document/popupMenu";
 import {ITimComponent, ViewCtrl} from "tim/document/viewctrl";
-import {GenericPluginMarkup, Info, nullable, PluginBase, pluginBindings, withDefault} from "tim/plugin/util";
+import {GenericPluginMarkup, Info, nullable, withDefault} from "tim/plugin/attributes";
+import {PluginBase, pluginBindings} from "tim/plugin/util";
 import {$http, $window} from "tim/util/ngimport";
 import {to} from "tim/util/utils";
 

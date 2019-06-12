@@ -4,36 +4,14 @@
 import angular from "angular";
 import * as t from "io-ts";
 import {ViewCtrl} from "tim/document/viewctrl";
-import {GenericPluginMarkup, GenericPluginTopLevelFields, nullable, PluginBase, pluginBindings} from "tim/plugin/util";
+import {PluginBase, pluginBindings} from "tim/plugin/util";
 import {$http} from "tim/util/ngimport";
 import {to} from "tim/util/utils";
 import "../../stylesheets/jsrunner.css";
+import {JsrunnerAll, JsrunnerMarkup} from "./jsrunnertypes";
 
 const jsrunnerApp = angular.module("jsrunnerApp", ["ngSanitize"]);
 export const moduleDefs = [jsrunnerApp];
-
-const JsrunnerMarkup = t.intersection([
-    t.partial({
-        creditField: t.string,
-        defaultPoints: t.number,
-        docid: t.boolean,
-        failGrade: t.string,
-        fieldhelper: t.boolean,
-        fields: t.array(t.string),
-        gradeField: t.string,
-        gradingScale: t.record(t.string, t.number),
-        groups: t.array(t.string),
-        program: nullable(t.string),
-    }),
-    GenericPluginMarkup,
-    t.type({
-        // all withDefaults should come here; NOT in t.partial
-    }),
-]);
-const JsrunnerAll = t.intersection([
-    GenericPluginTopLevelFields,
-    t.type({markup: JsrunnerMarkup}),
-]);
 
 class JsrunnerController extends PluginBase<t.TypeOf<typeof JsrunnerMarkup>, t.TypeOf<typeof JsrunnerAll>, typeof JsrunnerAll> {
     private error?: string;

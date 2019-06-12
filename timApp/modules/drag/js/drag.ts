@@ -7,7 +7,8 @@ import * as t from "io-ts";
 import {polyfill} from "mobile-drag-drop";
 import {scrollBehaviourDragImageTranslateOverride} from "mobile-drag-drop/scroll-behaviour";
 import {ITimComponent, ViewCtrl} from "tim/document/viewctrl";
-import {GenericPluginMarkup, Info, PluginBase, pluginBindings, withDefault} from "tim/plugin/util";
+import {GenericPluginMarkup, Info, withDefault} from "tim/plugin/attributes";
+import {PluginBase, pluginBindings} from "tim/plugin/util";
 import {$http} from "tim/util/ngimport";
 import {markAsUsed, to} from "tim/util/utils";
 

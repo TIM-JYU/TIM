@@ -5,6 +5,7 @@
 *.pyc
 *~
 .cabal-sandbox/
+.cache/
 .idea
 .mypy_cache/
 .settings

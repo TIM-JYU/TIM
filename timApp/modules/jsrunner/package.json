@@ -3,15 +3,27 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "start": "node ./bin/www"
+    "start": "ts-node -r tsconfig-paths/register ./bin/www.ts",
+    "postinstall": "parcel build --global toolsjs ./routes/tools.ts"
   },
   "dependencies": {
     "cookie-parser": "~1.4.3",
     "debug": "~2.6.9",
     "express": "~4.16.0",
     "http-errors": "~1.6.2",
+    "io-ts": "latest",
+    "isolated-vm": "^1.7.10",
     "jade": "~1.11.0",
-    "morgan": "~1.9.0",
-    "vm2": "^3.6.10"
+    "morgan": "~1.9.0"
+  },
+  "devDependencies": {
+    "@types/cookie-parser": "^1.4.1",
+    "@types/debug": "^4.1.4",
+    "@types/http-errors": "^1.6.1",
+    "@types/morgan": "^1.7.35",
+    "parcel-bundler": "^1.12.3",
+    "ts-node": "^8.2.0",
+    "tsconfig-paths": "^3.8.0",
+    "typescript": "^3.5.1"
   }
 }

@@ -1,7 +1,8 @@
 ﻿import angular from "angular";
 import * as t from "io-ts";
 import {ViewCtrl} from "tim/document/viewctrl";
-import {GenericPluginMarkup, Info, nullable, PluginBase, pluginBindings, withDefault} from "tim/plugin/util";
+import {GenericPluginMarkup, Info, nullable, withDefault} from "tim/plugin/attributes";
+import {PluginBase, pluginBindings} from "tim/plugin/util";
 import {valueDefu, valueOr} from "tim/util/utils";
 
 const videoApp = angular.module("videoApp", ["ngSanitize"]);

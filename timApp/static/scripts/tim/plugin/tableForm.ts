@@ -4,18 +4,15 @@
 import angular from "angular";
 import * as t from "io-ts";
 import {
-    GenericPluginMarkup,
-    GenericPluginTopLevelFields,
-    nullable,
     PluginBase,
     pluginBindings,
-    withDefault,
-} from "tim/plugin/util";
+    } from "tim/plugin/util";
 import {$http, $httpParamSerializer} from "tim/util/ngimport";
 import {to} from "tim/util/utils";
 import {timApp} from "../app";
 import {getParId} from "../document/parhelpers";
 import {ViewCtrl} from "../document/viewctrl";
+import {GenericPluginMarkup, GenericPluginTopLevelFields, nullable, withDefault} from "./attributes";
 import "./tableForm.css";
 import {CellType, colnumToLetters, DataEntity, isPrimitiveCell, TimTable} from "./timTable";
 

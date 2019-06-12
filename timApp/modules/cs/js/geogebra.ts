@@ -2,7 +2,8 @@
 import * as t from "io-ts";
 import {IAnswer} from "tim/answer/IAnswer";
 import {ViewCtrl} from "tim/document/viewctrl";
-import {GenericPluginMarkup, Info, PluginBase, pluginBindings, withDefault} from "tim/plugin/util";
+import {GenericPluginMarkup, Info, withDefault} from "tim/plugin/attributes";
+import {PluginBase, pluginBindings} from "tim/plugin/util";
 import {$http, $sce, $timeout} from "tim/util/ngimport";
 import {to} from "tim/util/utils";
 

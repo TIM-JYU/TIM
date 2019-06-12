@@ -22,7 +22,7 @@ import {
     MatrixType,
     QuestionType,
 } from "../../lecture/lecturetypes";
-import {IGenericPluginMarkup} from "../../plugin/util";
+import {IGenericPluginMarkup} from "../../plugin/attributes";
 import {DialogController, registerDialogComponent, showDialog, showMessageDialog} from "../../ui/dialog";
 import {$http, $timeout} from "../../util/ngimport";
 import {IParResponse} from "../editing/edittypes";

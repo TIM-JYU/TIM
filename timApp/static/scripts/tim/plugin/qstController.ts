@@ -11,7 +11,8 @@ import {showQuestionAskDialog} from "../lecture/questionAskController";
 import {showMessageDialog} from "../ui/dialog";
 import {$http} from "../util/ngimport";
 import {Binding, to} from "../util/utils";
-import {IPluginAttributes, pluginBindings, PluginMeta} from "./util";
+import {IPluginAttributes} from "./attributes";
+import {pluginBindings, PluginMeta} from "./util";
 
 // Represents fields that are not actually stored in plugin markup but that are added by TIM alongside markup
 // in view route so that extra information can be passed to qst component. TODO: they should not be inside markup.

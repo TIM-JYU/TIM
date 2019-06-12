@@ -7,9 +7,11 @@ import {
     GenericPluginMarkup,
     GenericPluginTopLevelFields,
     nullable,
+    withDefault,
+} from "tim/plugin/attributes";
+import {
     PluginBase,
     pluginBindings,
-    withDefault,
 } from "tim/plugin/util";
 import {$http} from "tim/util/ngimport";
 import {to} from "tim/util/utils";

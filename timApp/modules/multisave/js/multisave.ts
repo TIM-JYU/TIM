@@ -4,7 +4,8 @@
 import angular, {INgModelOptions} from "angular";
 import * as t from "io-ts";
 import {ITimComponent, ViewCtrl} from "tim/document/viewctrl";
-import {GenericPluginMarkup, Info, PluginBase, pluginBindings} from "tim/plugin/util";
+import {GenericPluginMarkup, Info} from "tim/plugin/attributes";
+import {PluginBase, pluginBindings} from "tim/plugin/util";
 
 const multisaveApp = angular.module("multisaveApp", ["ngSanitize"]);
 export const moduleDefs = [multisaveApp];
