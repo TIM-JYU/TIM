@@ -175,7 +175,7 @@ SystemJS.config({
     "mobile-drag-drop": "npm:mobile-drag-drop@2.3.0-rc.1",
     "css": "github:systemjs/plugin-css@0.1.37",
     "deepmerge": "npm:deepmerge@3.0.0",
-    "io-ts": "npm:io-ts@1.8.6",
+    "io-ts": "npm:io-ts@1.9.0",
     "angular-diff-match-patch": "npm:angular-diff-match-patch@0.7.4",
     "ifvisible.js": "npm:ifvisible.js@1.0.6",
     "angularjs-color-picker": "npm:angularjs-color-picker@3.4.8",
@@ -592,7 +592,7 @@ SystemJS.config({
         "readable-stream": "npm:readable-stream@2.3.6"
       }
     },
-    "npm:io-ts@1.8.6": {
+    "npm:io-ts@1.9.0": {
       "map": {
         "fp-ts": "npm:fp-ts@1.18.2"
       }
