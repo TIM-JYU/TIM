@@ -140,7 +140,7 @@ services:
   image: timimages/tim:${TIM_IMAGE_TAG}
   #build: ./timApp/modules/multisave
   volumes:
-   - ./timApp/modules/jsrunner:/timApp/modules/jsrunner:ro
+   - ./timApp/modules/jsrunner:/timApp/modules/jsrunner:rw
    - ./timApp/static/scripts:/timApp/static/scripts:ro
   working_dir: /timApp/modules/jsrunner
   command: ./startAll.sh
