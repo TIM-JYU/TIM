@@ -18,7 +18,6 @@ services:
    - dumbo
    - dropdown
    - feedback
-   - jsrunner
   volumes:
    - .:/service
    - ${LOG_DIR}:/service/tim_logs
@@ -186,6 +185,7 @@ services:
    context: ./local_nginx
   depends_on:
    - tim
+   - jsrunner
   volumes:
    - ./timApp/modules/cs/static:/csstatic:ro
    - ./timApp/modules/cs/generated:/csgenerated:ro
