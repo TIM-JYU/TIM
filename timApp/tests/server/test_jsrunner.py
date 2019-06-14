@@ -6,7 +6,6 @@ from timApp.document.docinfo import DocInfo
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.user.user import User
 
-
 DEFAULT_RESULT_TEXT = 'Script was executed.'
 
 
@@ -21,7 +20,7 @@ class JsRunnerTest(TimRouteTest):
         first = anss[0]
         self.assertEqual(content, first.content_as_json[content_field])
 
-    def test_jsrunner_invalid(self):
+    def test_invalid_markup(self):
         invalid_yamls = [
             ('', "{'fields': ['Missing data for required field.']}", 400),
             ('fields: []', "{'_schema': ['Either group or groups must be given.']}", 400),
@@ -31,7 +30,10 @@ class JsRunnerTest(TimRouteTest):
             ('fields: []\ngroup: xxx', "The following groups were not found: xxx", 404),
             ('fields: []\ngroups: [xxx, yyy]', "The following groups were not found: xxx, yyy", 404),
             ('fields: []\ngroup: testuser1', "Attribute 'program' is required.", 400),
-            ('fields: []\ngroup: testuser1\nprogram: ""', {"web": {"result": DEFAULT_RESULT_TEXT, "print": "", "errors": []}},
+            ('fields: []\ngroup: testuser1\nprogram: ""\ntimeout: 2000',
+             {'web': {'error': 'Invalid input to jsrunner answer route.'}}, 200),
+            ('fields: []\ngroup: testuser1\nprogram: ""',
+             {"web": {"output": "", "errors": []}},
              200),
         ]
         for y, e, s in invalid_yamls:
@@ -48,8 +50,8 @@ class JsRunnerTest(TimRouteTest):
 #- {{#r plugin=jsrunner}}
 {md}""")
 
-    def do_jsrun(self, d: DocInfo, expect_content, expect_status=200, **kwargs):
-        self.post_answer(
+    def do_jsrun(self, d: DocInfo, expect_content=None, expect_status=200, **kwargs):
+        return self.post_answer(
             'jsrunner',
             f'{d.id}.r',
             user_input={},
@@ -58,7 +60,7 @@ class JsRunnerTest(TimRouteTest):
             **kwargs,
         )
 
-    def test_jsrunner_nonexistent_field(self):
+    def test_nonexistent_field(self):
         d = self.create_jsrun("""
 fields:
  - y
@@ -69,13 +71,14 @@ group: testuser1
         """)
         self.do_jsrun(
             d,
-            expect_content={'web': {'error': 'Task not found: x',
-                                    'print': '',
-                                    'errors': [],
-                                    'result': DEFAULT_RESULT_TEXT}},
+            expect_content={'web': {
+                'error': 'Task not found: x',
+                'output': '',
+                'errors': [],
+            }},
         )
 
-    def test_jsrunner_nonexistent_doc(self):
+    def test_nonexistent_doc(self):
         d = self.create_jsrun("""
 fields:
  - 999.x
@@ -90,7 +93,35 @@ group: testuser1
             expect_status=404,
         )
 
-    def test_jsrunner_setters_and_getters(self):
+    def test_infinite_loop(self):
+        d = self.create_jsrun("""
+fields: []
+group: testuser1
+timeout: 100
+program: |!!
+while (true) {}
+!!
+        """)
+        self.do_jsrun(
+            d,
+            expect_content={'web': {'fatalError': {'msg': 'Script execution timed out.'}, 'output': ''}},
+        )
+
+    def test_syntax_error(self):
+        d = self.create_jsrun("""
+    fields: []
+    group: testuser1
+    program: |!!
+    {
+    !!
+            """)
+        r = self.do_jsrun(
+            d,
+        )
+        self.assertEqual('Unexpected end of input', r['web']['fatalError']['msg'])
+        self.assertTrue(r['web']['fatalError']['stackTrace'].startswith('SyntaxError: Unexpected end of input\n'))
+
+    def test_setters_and_getters(self):
         d = self.create_jsrun("""
 fields: []
 program: |!!
@@ -131,7 +162,7 @@ group: testuser1
 """)
         self.do_jsrun(
             d,
-            expect_content={"web": {"result": DEFAULT_RESULT_TEXT, "print": "", "errors": []}},
+            expect_content={"web": {"output": "", "errors": []}},
         )
         self.verify_content(f'{d.id}.t01', 'c', 2, self.test_user_1)
         self.verify_content(f'{d.id}.t02', 'c', 2.1, self.test_user_1)

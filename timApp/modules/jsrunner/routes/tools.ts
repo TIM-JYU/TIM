@@ -1,5 +1,5 @@
 import * as t from "io-ts";
-import {IJsRunnerMarkup} from "../public/javascripts/jsrunnertypes";
+import {IError, IJsRunnerMarkup} from "../public/javascripts/jsrunnertypes";
 import {AliasDataT, UserFieldDataT} from "../servertypes";
 
 function genericTypeError(parameterDescription: string, v: unknown) {
@@ -77,11 +77,6 @@ function ensureStringLikeValue(s: unknown): string {
 }
 
 const ABSOLUTE_FIELD_REGEX = /^[0-9]+\./;
-
-interface IError {
-    msg: string;
-    stackTrace?: string;
-}
 
 class Tools {
     private output = "";

@@ -1,9 +1,9 @@
 import express from "express";
-import {AliasDataT, JsrunnerAnswer, UserFieldDataT} from "../servertypes";
-import ivm from "isolated-vm";
 import {readFileSync} from "fs";
+import ivm from "isolated-vm";
+import {AnswerReturn, ErrorList, IError, IJsRunnerMarkup} from "../public/javascripts/jsrunnertypes";
+import {AliasDataT, JsrunnerAnswer, UserFieldDataT} from "../servertypes";
 import Tools from "./tools";
-import {IJsRunnerMarkup} from "../public/javascripts/jsrunnertypes";
 
 const router = express.Router();
 
@@ -19,6 +19,10 @@ interface IRunnerData {
     program: string;
 }
 
+type RunnerResult =
+    | {output: string, res: {}, errors: ErrorList, fatalError?: never}
+    | {output: string, fatalError: IError};
+
 /**
  * Runs jsrunner script with the provided data and returns the result.
  *
@@ -26,7 +30,7 @@ interface IRunnerData {
  *
  * @param d The data to use.
  */
-function runner(d: IRunnerData) {
+function runner(d: IRunnerData): RunnerResult {
     const data = d.data;
     const currDoc = d.currDoc;
     const markup = d.markup;
@@ -38,13 +42,14 @@ function runner(d: IRunnerData) {
         for (const user of data) {
             const tools = new Tools(user, currDoc, markup, aliases); // in compiled JS, this is tools_1.default(...)
 
+            // tslint:disable
             // Fake parameters hide the outer local variables so user script won't accidentally touch them.
-            function runProgram(program: string, saveUsersFields?: never, output?: never, error?: never,
-                                data?: never, d?: never, currDoc?: never, markup?: never, aliases?: never,
-                                Tools?: never) {
+            function runProgram(program: string, saveUsersFields?: never, output?: never, errors?: never,
+                                data?: never, d?: never, currDoc?: never, markup?: never, aliases?: never) {
                 eval(program);
             }
 
+            // tslint:enable
             runProgram(d.program);
             saveUsersFields.push(tools.getResult());
             output += tools.getOutput();
@@ -55,14 +60,15 @@ function runner(d: IRunnerData) {
         }
         return {res: saveUsersFields, output, errors};
     } catch (e) {
-        return {output, fatalError: e.message};
+        const err = e as Error;
+        return {output, fatalError: {msg: err.message, stackTrace: e.stack}};
     }
 }
 
 router.put("/", (req, res, next) => {
     const decoded = JsrunnerAnswer.decode(req.body);
     if (decoded.isLeft()) {
-        res.send({web: {error: "Incorrect input format."}});
+        res.send({web: {error: "Invalid input to jsrunner answer route."}});
         return;
     }
     const value = decoded.value;
@@ -87,7 +93,7 @@ router.put("/", (req, res, next) => {
         JSON.stringify(runner(JSON.parse(g)))`,
         {
             filename: "script.js",
-        }
+        },
     );
     const ctx = isolate.createContextSync({inspector: false});
     toolsScript.runSync(ctx);
@@ -99,23 +105,38 @@ router.put("/", (req, res, next) => {
         program: value.markup.program || "",
     };
     ctx.global.setSync("g", JSON.stringify(runnerData));
-    const result: ReturnType<typeof runner> = JSON.parse(script.runSync(ctx, {timeout: 1000}));
-    if (result.fatalError) {
-        res.send({
+    let r: AnswerReturn;
+    try {
+        const result: ReturnType<typeof runner> = JSON.parse(
+            script.runSync(ctx, {timeout: value.markup.timeout || 1000}),
+        );
+        if (result.fatalError) {
+            r = {
+                web: {
+                    fatalError: result.fatalError,
+                    output: result.output,
+                },
+            };
+        } else {
+            r = {
+                save: result.res,
+                web: {
+                    output: result.output,
+                    errors: result.errors,
+                },
+            };
+        }
+    } catch (e) {
+        const err: Error = e;
+        // This happens at least if the script execution times out.
+        r = {
             web: {
-                fatalError: result.fatalError,
+                fatalError: {msg: err.message || "Unknown error occurred."},
+                output: "",
             },
-        });
-        return;
+        };
     }
-    res.send({
-        save: result.res,
-        web: {
-            result: "Script was executed.",
-            print: result.output,
-            errors: result.errors,
-        },
-    });
+    res.send(r);
 });
 
 export default router;

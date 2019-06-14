@@ -230,9 +230,16 @@ def get_fields_and_users(u_fields: List[str], groups: List[UserGroup], d: DocInf
 
 
 class JsRunnerSchema(Schema):
+    creditField = fields.Str()
+    gradeField = fields.Str()
+    gradingScale = fields.Dict()
+    defaultPoints = fields.Float()
+    failGrade = fields.Str()
+    fieldhelper = fields.Bool()
     group = fields.Str()
     groups = fields.List(fields.Str())
     program = fields.Str()
+    timeout = fields.Int()
     fields = fields.List(fields.Str(), required=True)
 
     @validates_schema(skip_on_field_errors=True)
@@ -507,7 +514,9 @@ def post_answer(plugintype: str, task_id_ext: str):
 
 
 def handle_jsrunner_response(jsonresp, result, current_doc: DocInfo):
-    save_obj = jsonresp['save']
+    save_obj = jsonresp.get('save')
+    if not save_obj:
+        return
     tasks = set()
     # content_map = {}
     doc_map: Dict[int, DocInfo] = {}

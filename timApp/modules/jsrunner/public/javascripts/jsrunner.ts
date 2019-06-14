@@ -8,17 +8,18 @@ import {PluginBase, pluginBindings} from "tim/plugin/util";
 import {$http} from "tim/util/ngimport";
 import {to} from "tim/util/utils";
 import "../../stylesheets/jsrunner.css";
-import {JsrunnerAll, JsrunnerMarkup} from "./jsrunnertypes";
+import {AnswerReturnBrowser, ErrorList, IError, JsrunnerAll, JsrunnerMarkup} from "./jsrunnertypes";
 
 const jsrunnerApp = angular.module("jsrunnerApp", ["ngSanitize"]);
 export const moduleDefs = [jsrunnerApp];
 
 class JsrunnerController extends PluginBase<t.TypeOf<typeof JsrunnerMarkup>, t.TypeOf<typeof JsrunnerAll>, typeof JsrunnerAll> {
-    private error?: string;
+    private error?: IError;
     private isRunning = false;
-    private print: string = "";
+    private output: string = "";
     private fieldlist: string = "";
     private vctrl!: ViewCtrl;
+    private scriptErrors?: ErrorList;
 
     getDefaultMarkup() {
         return {};
@@ -35,16 +36,16 @@ class JsrunnerController extends PluginBase<t.TypeOf<typeof JsrunnerMarkup>, t.T
             let tasks = "";
             if (this.attrs.docid) {
                 for (const plug of pluginlist) {
-                    if (plug.getName()) {
-                        // @ts-ignore TODO
-                        tasks += " - " + plug.getTaskId().toString() + "\n";
+                    const taskId = plug.getTaskId();
+                    if (taskId) {
+                        tasks += " - " + taskId.toString() + "\n";
                     }
                 }
             } else {
                 for (const plug of pluginlist) {
-                    if (plug.getName()) {
-                        // @ts-ignore TODO
-                        tasks += " - " + plug.getName().toString() + "\n";
+                    const name = plug.getName();
+                    if (name) {
+                        tasks += " - " + name.toString() + "\n";
                     }
                 }
             }
@@ -68,16 +69,20 @@ class JsrunnerController extends PluginBase<t.TypeOf<typeof JsrunnerMarkup>, t.T
             params.input.nosave = true;
         }
         const url = this.pluginMeta.getAnswerUrl();
-        const r = await to($http.put<{ web: { result: string, error?: string, print: string } }>(url, params));
+        const r = await to($http.put<AnswerReturnBrowser>(url, params));
         this.isRunning = false;
         if (r.ok) {
             const data = r.result.data;
-            this.error = data.web.error;
-            this.print = data.web.print;
+            if (data.web.fatalError) {
+                this.error = data.web.fatalError;
+            } else {
+                this.error = undefined;
+                this.scriptErrors = data.web.errors;
+                this.output = data.web.output;
+            }
         } else {
-            this.error = r.result.data.error || "Unknown error occurred";
+            this.error = {msg: r.result.data.error || "Unknown error occurred"};
         }
-
     }
 
     protected getAttributeType() {
@@ -93,6 +98,26 @@ class JsrunnerController extends PluginBase<t.TypeOf<typeof JsrunnerMarkup>, t.T
     }
 }
 
+jsrunnerApp.component("jsrunnerError", {
+    bindings: {
+        e: "<",
+    },
+    controller: class {
+        showTrace = false;
+
+        toggleStackTrace() {
+            this.showTrace = !this.showTrace;
+        }
+    },
+    template: `
+<tim-alert severity="danger">
+    <span>{{ ::$ctrl.e.msg }}</span>
+    <button ng-if="$ctrl.e.stackTrace" class="timButton btn-sm" ng-click="$ctrl.toggleStackTrace()">Stack trace</button>
+    <pre ng-if="$ctrl.e.stackTrace && $ctrl.showTrace">{{ $ctrl.e.stackTrace }}</pre>
+</tim-alert>
+    `,
+});
+
 jsrunnerApp.component("jsRunner", {
     bindings: pluginBindings,
     controller: JsrunnerController,
@@ -104,16 +129,16 @@ jsrunnerApp.component("jsRunner", {
     <tim-markup-error ng-if="::$ctrl.markupError" data="::$ctrl.markupError"></tim-markup-error>
     <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
     <p ng-if="::$ctrl.stem" ng-bind-html="::$ctrl.stem"></p>
-    <button ng-show="$ctrl.hasAllAttributes()" class="timButton"
-            ng-if="::$ctrl.buttonText()"
+    <button ng-if="::$ctrl.hasAllAttributes()" class="timButton"
             ng-disabled="$ctrl.isRunning || $ctrl.readonly"
             ng-click="$ctrl.checkFields()">
         {{::$ctrl.buttonText()}}
     </button>
-    <a href="" ng-if="$ctrl.edited" ng-click="$ctrl.initCode()">{{::$ctrl.resetText}}</a>
-    <div ng-if="$ctrl.error" ng-bind-html="$ctrl.error"></div>
+    <p ng-if="$ctrl.error">Fatal error occurred, script results not saved.</p>
+    <jsrunner-error ng-if="$ctrl.error" e="$ctrl.error"></jsrunner-error>
+    <jsrunner-error ng-repeat="err in $ctrl.scriptErrors" e="err"></jsrunner-error>
     <pre ng-if="$ctrl.result">{{$ctrl.result}}</pre>
-    <pre ng-if="$ctrl.print">{{$ctrl.print}}</pre>
+    <pre ng-if="$ctrl.output">{{$ctrl.output}}</pre>
     <p ng-if="::$ctrl.footer" ng-bind="::$ctrl.footer" class="plgfooter"></p>
     <pre ng-if="::$ctrl.isFieldHelper()">{{$ctrl.fieldlist}}</pre>
 </div>

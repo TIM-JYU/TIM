@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "start": "ts-node -r tsconfig-paths/register ./bin/www.ts",
-    "buildtools": "npx parcel build --global toolsjs ./routes/tools.ts",
+    "buildtools": "npx parcel build --no-minify --global toolsjs ./routes/tools.ts",
     "postinstall": "npm run buildtools"
   },
   "dependencies": {
@@ -25,6 +25,7 @@
     "parcel-bundler": "^1.12.3",
     "ts-node": "^8.2.0",
     "tsconfig-paths": "^3.8.0",
-    "typescript": "^3.5.1"
+    "typescript": "^3.5.1",
+    "typescript-tslint-plugin": "^0.5.0"
   }
 }
