@@ -541,11 +541,9 @@ def handle_jsrunner_response(jsonresp, result, current_doc: DocInfo):
             task_content_name_map[task] = content_field
         except TaskNotFoundException as e:
             task_display = t_id.doc_task if t_id.doc_id != current_doc.id else t_id.task_name
-            errormsg = f"Task not found: {task_display}"
-            try:
-                result['web']['error'] = result['web']['error'] + errormsg
-            except KeyError:
-                result['web'] = {"error": errormsg}
+            result['web']['error'] = f"Task not found: {task_display}"
+            return
+
     for user in save_obj:
         u_id = user['user']
         u = User.get_by_id(u_id)

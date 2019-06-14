@@ -7,6 +7,9 @@ from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.user.user import User
 
 
+DEFAULT_RESULT_TEXT = 'Script was executed.'
+
+
 class JsRunnerTest(TimRouteTest):
     def setUp(self):
         super().setUp()
@@ -28,7 +31,7 @@ class JsRunnerTest(TimRouteTest):
             ('fields: []\ngroup: xxx', "The following groups were not found: xxx", 404),
             ('fields: []\ngroups: [xxx, yyy]', "The following groups were not found: xxx, yyy", 404),
             ('fields: []\ngroup: testuser1', "Attribute 'program' is required.", 400),
-            ('fields: []\ngroup: testuser1\nprogram: ""', {"web": {"result": "points saved", "print": "", "error": ""}},
+            ('fields: []\ngroup: testuser1\nprogram: ""', {"web": {"result": DEFAULT_RESULT_TEXT, "print": "", "errors": []}},
              200),
         ]
         for y, e, s in invalid_yamls:
@@ -68,7 +71,8 @@ group: testuser1
             d,
             expect_content={'web': {'error': 'Task not found: x',
                                     'print': '',
-                                    'result': 'points saved'}},
+                                    'errors': [],
+                                    'result': DEFAULT_RESULT_TEXT}},
         )
 
     def test_jsrunner_nonexistent_doc(self):
@@ -127,7 +131,7 @@ group: testuser1
 """)
         self.do_jsrun(
             d,
-            expect_content={"web": {"result": "points saved", "print": "", "error": ""}},
+            expect_content={"web": {"result": DEFAULT_RESULT_TEXT, "print": "", "errors": []}},
         )
         self.verify_content(f'{d.id}.t01', 'c', 2, self.test_user_1)
         self.verify_content(f'{d.id}.t02', 'c', 2.1, self.test_user_1)

@@ -2,20 +2,20 @@ import * as t from "io-ts";
 import {IJsRunnerMarkup} from "../public/javascripts/jsrunnertypes";
 import {AliasDataT, UserFieldDataT} from "../servertypes";
 
-function genericTypeError(method: string, parameterDescription: string, v: unknown) {
-    return new Error(`${method} called with ${parameterDescription} of type ${typeof v}`);
+function genericTypeError(parameterDescription: string, v: unknown) {
+    return new Error(`${parameterDescription} has unexpected type: ${typeof v}`);
 }
 
-function fieldNameTypeError(method: string, v: unknown) {
-    return genericTypeError(method, "fieldName", v);
+function fieldNameTypeError(v: unknown) {
+    return genericTypeError("fieldName", v);
 }
 
-function defaultValueTypeError(method: string, v: unknown) {
-    return genericTypeError(method, "default value", v);
+function defaultValueTypeError(v: unknown) {
+    return genericTypeError("default value", v);
 }
 
-function valueTypeError(method: string, v: unknown) {
-    return genericTypeError(method, "value", v);
+function valueTypeError(v: unknown) {
+    return genericTypeError("value", v);
 }
 
 const checkString = t.string.is;
@@ -24,51 +24,51 @@ const checkInt = t.Int.is;
 
 const StringOrNumber = t.union([t.string, t.number]);
 
-function ensureStringFieldName(method: string, s: unknown): string {
+function ensureStringFieldName(s: unknown): string {
     if (!checkString(s)) {
-        throw fieldNameTypeError(method, s);
+        throw fieldNameTypeError(s);
     }
     return s;
 }
 
-function ensureNumberDefault(method: string, s: unknown): number {
+function ensureNumberDefault(s: unknown): number {
     if (!checkNumber(s)) {
-        throw defaultValueTypeError(method, s);
+        throw defaultValueTypeError(s);
     }
     return s;
 }
 
-function ensureIntDefault(method: string, s: unknown): number {
+function ensureIntDefault(s: unknown): number {
     if (!checkInt(s)) {
-        throw defaultValueTypeError(method, s);
+        throw defaultValueTypeError(s);
     }
     return s;
 }
 
-function ensureStringDefault(method: string, s: unknown): string {
+function ensureStringDefault(s: unknown): string {
     if (!checkString(s)) {
-        throw defaultValueTypeError(method, s);
+        throw defaultValueTypeError(s);
     }
     return s;
 }
 
-function ensureNumberLikeValue(method: string, s: unknown): number {
+function ensureNumberLikeValue(s: unknown): number {
     if (!StringOrNumber.is(s)) {
-        throw valueTypeError(method, s);
+        throw valueTypeError(s);
     }
     if (typeof s === "string") {
         const v = parseFloat(s.replace(",", "."));
         if (isNaN(v)) {
-            throw valueTypeError(method, s);
+            throw valueTypeError(s);
         }
         return v;
     }
     return s;
 }
 
-function ensureStringLikeValue(method: string, s: unknown): string {
+function ensureStringLikeValue(s: unknown): string {
     if (!StringOrNumber.is(s)) {
-        throw valueTypeError(method, s);
+        throw valueTypeError(s);
     }
     if (typeof s === "number") {
         return s.toString();
@@ -78,9 +78,14 @@ function ensureStringLikeValue(method: string, s: unknown): string {
 
 const ABSOLUTE_FIELD_REGEX = /^[0-9]+\./;
 
+interface IError {
+    msg: string;
+    stackTrace?: string;
+}
+
 class Tools {
-    private printP = "";
-    private error = "";
+    private output = "";
+    private errors: IError[] = [];
     private result: {[index: string]: unknown} = {};
 
     constructor(
@@ -107,7 +112,7 @@ class Tools {
         return this.data.fields[fn];
     }
 
-    private normalizeAndSet(fieldName: string) {
+    private checkAliasAndNormalize(fieldName: string) {
         if (fieldName in this.aliases) {
             return this.normalizeField(this.aliases[fieldName]);
         }
@@ -119,8 +124,8 @@ class Tools {
     }
 
     getDouble(fieldName: unknown, defa: unknown = 0): number {
-        const f = ensureStringFieldName("getDouble", fieldName);
-        const def = ensureNumberDefault("getDouble", defa);
+        const f = ensureStringFieldName(fieldName);
+        const def = ensureNumberDefault(defa);
         const s = this.normalizeAndGet(f);
         if (checkNumber(s)) {
             return this.handlePossibleNaN(s, s, def);
@@ -144,13 +149,13 @@ class Tools {
     }
 
     private reportInputTypeErrorAndReturnDef<T>(s: unknown, def: T) {
-        this.reportError(`getDouble found user '${this.data.user.name}' value '${s}' of type ${typeof s}, using default value ${def}`);
+        this.reportError(`Found value '${s}' of type ${typeof s}, using default value ${def}`);
         return def;
     }
 
     getInt(fieldName: unknown, defa: unknown = 0): number {
-        const f = ensureStringFieldName("getInt", fieldName);
-        const def = ensureIntDefault("getInt", defa);
+        const f = ensureStringFieldName(fieldName);
+        const def = ensureIntDefault(defa);
         const s = this.normalizeAndGet(f);
         if (checkInt(s)) {
             return this.handlePossibleNaN(s, s, def);
@@ -166,8 +171,8 @@ class Tools {
     }
 
     getString(fieldName: unknown, defa: unknown = ""): string {
-        const f = ensureStringFieldName("getString", fieldName);
-        const def = ensureStringDefault("getString", defa);
+        const f = ensureStringFieldName(fieldName);
+        const def = ensureStringDefault(defa);
         let s = this.normalizeAndGet(f);
         if (s === null || s === undefined) {
             s = def;
@@ -179,7 +184,7 @@ class Tools {
     }
 
     getValue(fieldName: unknown, def: unknown = "") {
-        const f = ensureStringFieldName("getValue", fieldName);
+        const f = ensureStringFieldName(fieldName);
         let s = this.normalizeAndGet(f);
         if (s === null || s === undefined) {
             s = def;
@@ -188,10 +193,10 @@ class Tools {
     }
 
     getSum(fieldName: unknown, start: unknown, end: unknown, defa: unknown = 0): number {
-        const f = ensureStringFieldName("getSum", fieldName);
-        const def = ensureNumberDefault("getSum", defa);
+        const f = ensureStringFieldName(fieldName);
+        const def = ensureNumberDefault(defa);
         if (!(checkInt(start) && checkInt(end))) {
-            throw new Error("Parameters 'start' and 'end' must be integers in getSum method.");
+            throw new Error("Parameters 'start' and 'end' must be integers.");
         }
         let sum = 0;
         for (let i = start; i <= end; i++) {
@@ -201,42 +206,42 @@ class Tools {
     }
 
     setString(fieldName: unknown, content: unknown): void {
-        const f = ensureStringFieldName("setString", fieldName);
-        const c = ensureStringLikeValue("setString", content);
-        const fn = this.normalizeAndSet(f);
+        const f = ensureStringFieldName(fieldName);
+        const c = ensureStringLikeValue(content);
+        const fn = this.checkAliasAndNormalize(f);
         this.result[fn] = c;
     }
 
     setInt(fieldName: unknown, content: unknown): void {
-        const f = ensureStringFieldName("setInt", fieldName);
-        const c = ensureNumberLikeValue("setInt", content);
-        const fn = this.normalizeAndSet(f);
+        const f = ensureStringFieldName(fieldName);
+        const c = ensureNumberLikeValue(content);
+        const fn = this.checkAliasAndNormalize(f);
         if (!checkInt(c)) {
-            throw valueTypeError("setInt", content);
+            throw valueTypeError(content);
         }
         this.result[fn] = c;
     }
 
     setDouble(fieldName: unknown, content: unknown): void {
-        const f = ensureStringFieldName("setDouble", fieldName);
-        const c = ensureNumberLikeValue("setDouble", content);
-        const fn = this.normalizeAndSet(f);
+        const f = ensureStringFieldName(fieldName);
+        const c = ensureNumberLikeValue(content);
+        const fn = this.checkAliasAndNormalize(f);
         this.result[fn] = c;
     }
 
     getDefaultPoints(): number {
         if (!this.markup.defaultPoints) {
-            throw new Error("Default points have not been set");
+            throw new Error("defaultPoints have not been set.");
         }
         return this.markup.defaultPoints;
     }
 
     getGrade(points: unknown): string | number {
         if (!checkNumber(points)) {
-            throw new Error("Points must be number in getGrade method");
+            throw new Error("points must be number.");
         }
         if (!this.markup.gradingScale) {
-            throw new Error("gradingScale has not been set");
+            throw new Error("gradingScale has not been set.");
         }
         const scale = this.markup.gradingScale;
         const values = Object.entries(scale);
@@ -253,15 +258,15 @@ class Tools {
 
     saveGrade(gradeVal: unknown, points: unknown = this.markup.defaultPoints) {
         const d = this.markup.gradeField || "grade";
-        const fn = this.normalizeAndSet(d);
+        const fn = this.checkAliasAndNormalize(d);
         this.result[fn] = gradeVal;
         const c = this.markup.creditField || "credit";
-        const fnc = this.normalizeAndSet(c);
+        const fnc = this.checkAliasAndNormalize(c);
         let p;
         if (points !== undefined) {
-            p = ensureNumberLikeValue("saveGrade", points);
+            p = ensureNumberLikeValue(points);
             if (!checkInt(p)) {
-                throw new Error("saveGrade: points is not int");
+                throw new Error("points is not integer.");
             }
         } else {
             p = 0;
@@ -271,7 +276,7 @@ class Tools {
 
     defineTime(s: unknown): number {
         if (!checkString(s)) {
-            throw valueTypeError("defineTime", s);
+            throw valueTypeError(s);
         }
         // TODO: fix timezone to work locally
         const localDateTime = new Date(s);
@@ -280,36 +285,34 @@ class Tools {
     }
 
     getDateTime(fieldName: unknown, defa: unknown = NaN): number {
-        const f = ensureStringFieldName("getDateTime", fieldName);
-        const def = ensureNumberDefault("getDateTime", defa);
+        const f = ensureStringFieldName(fieldName);
+        const def = ensureNumberDefault(defa);
         return this.getDouble(fieldName, defa);
     }
 
-    print(...args: any[]) {
+    print(...args: unknown[]) {
+        let sep = "";
         for (const a of args) {
-            this.printP += a + " ";
+            this.output += sep + a;
+            sep = " ";
         }
-        this.printP += "\n";
+        this.output += "\n";
     }
 
     getResult() {
         return {user: this.data.user.id, fields: this.result};
     }
 
-    getPrint() {
-        return this.printP;
+    getOutput() {
+        return this.output;
     }
 
-    getError() {
-        return this.error;
-    }
-
-    private fatalError(msg: string) {
-        // TODO
+    getErrors() {
+        return this.errors;
     }
 
     private reportError(msg: string) {
-        // TODO
+        this.errors.push({msg, stackTrace: new Error().stack});
     }
 }
 
