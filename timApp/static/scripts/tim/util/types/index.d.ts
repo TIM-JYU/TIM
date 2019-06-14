@@ -6,7 +6,6 @@ declare module "angular-eonasdan-datetimepicker";
 declare module "angularjs-color-picker";
 declare module "bootstrap-sass";
 declare module "angular-touch";
-declare module "angularjs-dragula";
 declare module "angular-drag-and-drop-lists";
 declare module "angular-bootstrap-colorpicker";
 declare module "angular-diff-match-patch" {
