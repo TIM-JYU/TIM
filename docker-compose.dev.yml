@@ -18,6 +18,7 @@ services:
    - "5433:5432"
   tmpfs:
    - /var/lib/postgresql/data
+  restart: unless-stopped
  imagex:
   image: timimages/cs3sudo:rust
   volumes:
@@ -113,6 +114,7 @@ services:
    - /home/seluser
   volumes:
    - /dev/shm:/dev/shm
+  restart: unless-stopped
  nginx:
   image: timimages/local_nginx_dev:compose
   build:

@@ -40,6 +40,7 @@ services:
    args:
     TIM_IMAGE_TAG: ${TIM_IMAGE_TAG}
   command: sleep infinity
+  restart: unless-stopped
  postgresql:
   image: postgres:9.5
   volumes:
