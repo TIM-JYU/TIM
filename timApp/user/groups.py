@@ -27,10 +27,14 @@ USERGROUP_NOT_FOUND = 'User group not found'
 SISU_PREFIX = 'sisu-'
 
 
-def verify_groupadmin():
+def verify_groupadmin(require=True):
     if not check_admin_access():
         if not UserGroup.get_groupadmin_group() in get_current_user_object().groups:
-            abort(403, 'This action requires group administrator rights.')
+            if require:
+                abort(403, 'This action requires group administrator rights.')
+            else:
+                return False
+    return True
 
 
 def get_uid_gid(groupname, usernames) -> Tuple[UserGroup, List[User]]:
@@ -122,29 +126,30 @@ def create_group(groupname):
     return json_response(doc)
 
 
-def verify_group_access(ug: UserGroup, access_set, u=None):
+def verify_group_access(ug: UserGroup, access_set, u=None, require=True):
     if ug.name in PRIVILEGED_GROUPS:
-        verify_admin()
+        return verify_admin(require=require)
     b = ug.admin_doc
     if not b:
-        verify_groupadmin()
+        return verify_groupadmin(require=require)
     else:
         if not u:
             u = get_current_user_object()
         if not u.has_some_access(b, access_set):
-            verify_groupadmin()
+            return verify_groupadmin(require=require)
+        return False
 
 
-def verify_group_edit_access(ug: UserGroup, user=None):
+def verify_group_edit_access(ug: UserGroup, user=None, require=True):
     if ug.name in SPECIAL_GROUPS:
         abort(400, 'Cannot edit special groups.')
     if User.get_by_name(ug.name):
         abort(400, 'Cannot edit personal groups.')
-    verify_group_access(ug, edit_access_set, user)
+    verify_group_access(ug, edit_access_set, user, require=require)
 
 
-def verify_group_view_access(ug: UserGroup, user=None):
-    verify_group_access(ug, view_access_set, user)
+def verify_group_view_access(ug: UserGroup, user=None, require=True):
+    verify_group_access(ug, view_access_set, user, require=require)
 
 
 @groups.route('/addmember/<groupname>/<usernames>')

@@ -44,6 +44,7 @@ from timApp.plugin.taskid import TaskId, TaskIdAccess
 from timApp.timdb.dbaccess import get_timdb
 from timApp.timdb.exceptions import TimDbException
 from timApp.timdb.sqa import db
+from timApp.user.groups import verify_group_view_access
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
 from timApp.util.flask.requesthelper import verify_json_params, get_option, get_consent_opt
@@ -154,7 +155,11 @@ def get_iframehtml(plugintype: str, task_id_ext: str, user_id: int, anr: int):
 
 def get_fields_and_users(u_fields: List[str], groups: List[UserGroup], d: DocInfo, current_user: User):
     users = set()
+    needs_group_access_check = UserGroup.get_teachers_group() not in current_user.groups
     for group in groups:
+        if needs_group_access_check and group.name != current_user.name:
+            if not verify_group_view_access(group, current_user, require=False):
+                return abort(403, f'Missing view access for group {group.name}')
         g = group.users.all()
         for u in g:
             users.add(u)
@@ -166,21 +171,29 @@ def get_fields_and_users(u_fields: List[str], groups: List[UserGroup], d: DocInf
     doc_map = {}
     for field in u_fields:
         field_content = field.split("|")
-        field_alias = field_content[0].split("=")
         try:
-            task_id = TaskId.parse(field_alias[0].strip(), False, False)
-        except PluginException:
-            continue
+            t, a, *rest = field_content[0].split("=")
+        except ValueError:
+            t, a, rest = field_content[0], None, None
+        if rest:
+            return abort(400, f'Invalid alias: {field}')
+        if a == '':
+            return abort(400, f'Alias cannot be empty: {field}')
+        try:
+            task_id = TaskId.parse(t, False, False)
+        except PluginException as e:
+            return abort(400, str(e))
         task_ids.append(task_id)
         if not task_id.doc_id:
             task_id.doc_id = d.id
         if len(field_content) == 2:
             content_map[task_id.extended_or_doc_task] = field_content[1].strip()
-        if len(field_alias) == 2:
-            if field_alias[1].strip() in jsrunner_alias_map:
-                abort(403, f'Duplicate alias {field_alias[1].strip()} in fields attribute')
-            alias_map[task_id.extended_or_doc_task] = field_alias[1].strip()
-            jsrunner_alias_map[field_alias[1].strip()] = task_id.extended_or_doc_task
+        if a:
+            alias = a
+            if alias in jsrunner_alias_map:
+                abort(400, f'Duplicate alias {alias} in fields attribute')
+            alias_map[task_id.extended_or_doc_task] = alias
+            jsrunner_alias_map[alias] = task_id.extended_or_doc_task
         dib = get_doc_or_abort(task_id.doc_id, f'Document {task_id.doc_id} not found')
         if not current_user.has_teacher_access(dib):
             abort(403, f'Missing teacher access for document {dib.id}')
@@ -524,23 +537,29 @@ def handle_jsrunner_response(jsonresp, result, current_doc: DocInfo):
         task_u = item['fields']
         for key in task_u.keys():
             key_content = key.split("|")
+            tid = key_content[0]
             # #TODO: Parse content tässä
             # if len(key_content) == 2:
             #     content_map[key_content[0]] = key_content[1].strip()
-            tasks.add(key_content[0])
-            id_num = TaskId.parse(key_content[0], False, False)
+            tasks.add(tid)
+            try:
+                id_num = TaskId.parse(tid, False, False)
+            except PluginException:
+                return abort(400, f'Invalid task name: {tid.split(".")[1]}')
             if id_num.doc_id not in doc_map:
                 doc_map[id_num.doc_id] = get_doc_or_abort(id_num.doc_id)
     task_content_name_map = {}
+    u = get_current_user_object()
     for task in tasks:
         t_id = TaskId.parse(task, False, False)
         dib = doc_map[t_id.doc_id]
-        verify_teacher_access(dib)
+        if not u.has_teacher_access(dib):
+            return abort(403, f'Missing teacher access for document {dib.id}')
         if t_id.task_name == "grade" or t_id.task_name == "credit":
             task_content_name_map[task] = 'c'
             continue
         try:
-            plug = find_plugin_from_document(dib.document, t_id, get_current_user_object())
+            plug = find_plugin_from_document(dib.document, t_id, u)
             content_field = plug.get_content_field_name()
             # key_content = key.split("|")
             # #TODO: Parse content tässä

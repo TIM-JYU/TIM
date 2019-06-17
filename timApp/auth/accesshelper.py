@@ -49,9 +49,12 @@ def get_folder_or_abort(folder_id: int):
     return f
 
 
-def verify_admin():
+def verify_admin(require=True):
     if not check_admin_access():
-        abort(403, 'This action requires administrative rights.')
+        if require:
+            abort(403, 'This action requires administrative rights.')
+        return False
+    return True
 
 
 def verify_edit_access(b: ItemOrBlock, require=True, message=None, check_duration=False, check_parents=False):
