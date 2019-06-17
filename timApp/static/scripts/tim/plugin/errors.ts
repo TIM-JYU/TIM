@@ -23,9 +23,9 @@ function isPrefixOfSome(s: string, others: string[]) {
 
 export function getErrors<A>(v: Left<t.Errors, A>): MarkupError {
     const ps: Array<[string[], string]> = v.value
-        .filter((e) => e.context.length >= 3 && e.context[0].key === "" && e.context[1].key === "markup")
+        .filter((e) => e.context.length >= 3 && e.context[0].key === "" && e.context[2].key === "markup")
         .map((error) => getEssentialContext(error.context))
-        .map((error) => [error.slice(2).map((x) => x.key), error[error.length - 1].type.name]);
+        .map((error) => [error.slice(4).map((x) => x.key), error[error.length - 1].type.name]);
     const errs = new Map<string, Set<string>>();
     const knownKeys = ps.map(([keys, _]) => keys.join("."));
     for (let [keys, type] of ps) {
