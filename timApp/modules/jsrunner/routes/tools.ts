@@ -282,7 +282,7 @@ class Tools {
     getDateTime(fieldName: unknown, defa: unknown = NaN): number {
         const f = ensureStringFieldName(fieldName);
         const def = ensureNumberDefault(defa);
-        return this.getDouble(fieldName, defa);
+        return this.getDouble(f, def);
     }
 
     print(...args: unknown[]) {
