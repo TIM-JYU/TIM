@@ -439,13 +439,13 @@ def post_answer(plugintype: str, task_id_ext: str):
         db.session.commit()
         return json_response(result)
 
-    def add_reply(obj, key, runMarkDown=False):
+    def add_reply(obj, key, run_markdown=False):
         if key not in plugin.values:
             return
         text_to_add = plugin.values[key]
-        if runMarkDown:
-            result = call_dumbo([text_to_add])
-            text_to_add = result[0]
+        if run_markdown:
+            dumbo_result = call_dumbo([text_to_add])
+            text_to_add = dumbo_result[0]
         obj[key] = text_to_add
 
     if not get_task:
