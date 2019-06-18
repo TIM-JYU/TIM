@@ -19,7 +19,7 @@ from webargs.flaskparser import use_args
 
 from timApp.answer.answer import Answer
 from timApp.answer.answer_models import AnswerUpload
-from timApp.answer.answers import get_latest_answers_query
+from timApp.answer.answers import get_latest_answers_query, get_common_answers, save_answer, get_all_answers
 from timApp.auth.accesshelper import verify_logged_in, get_doc_or_abort, verify_manage_access
 from timApp.auth.accesshelper import verify_task_access, verify_teacher_access, verify_seeanswers_access, \
     has_teacher_access, \
@@ -122,7 +122,7 @@ def get_iframehtml(plugintype: str, task_id_ext: str, user_id: int, anr: int):
 
     users = [User.query.get(user_id)]
 
-    old_answers = timdb.answers.get_common_answers(users, tid)
+    old_answers = get_common_answers(users, tid)
 
     info = plugin.get_info(users, len(old_answers), look_answer=False and not False, valid=True)
 
@@ -271,7 +271,6 @@ def post_answer(plugintype: str, task_id_ext: str):
 
     """
 
-    timdb = get_timdb()
     try:
         tid = TaskId.parse(task_id_ext)
     except PluginException as e:
@@ -286,8 +285,7 @@ def post_answer(plugintype: str, task_id_ext: str):
     force_answer = answer_options.get('forceSave', False)
     is_teacher = answer_browser_data.get('teacher', False)
     save_teacher = answer_browser_data.get('saveTeacher', False)
-    save_teacher_without_collaboration = answer_browser_data.get('saveTeacherWithoutCollaboration', False)
-    save_answer = answer_browser_data.get('saveAnswer', True) and tid.task_name
+    should_save_answer = answer_browser_data.get('saveAnswer', True) and tid.task_name
 
     if tid.is_points_ref:
         verify_teacher_access(d)
@@ -324,7 +322,7 @@ def post_answer(plugintype: str, task_id_ext: str):
     except:
         get_task = False
 
-    if not (save_answer or get_task) or is_teacher:
+    if not (should_save_answer or get_task) or is_teacher:
         verify_seeanswers_access(d)
     ctx_user = None
     if is_teacher:
@@ -385,7 +383,7 @@ def post_answer(plugintype: str, task_id_ext: str):
     if users is None:
         users = [User.query.get(u['id']) for u in get_session_users()]
 
-    old_answers = timdb.answers.get_common_answers(users, tid)
+    old_answers = get_common_answers(users, tid)
     try:
         valid, _ = plugin.is_answer_valid(len(old_answers), {})
     except PluginException as e:
@@ -468,7 +466,7 @@ def post_answer(plugintype: str, task_id_ext: str):
             tags = save_object['tags']
         except (TypeError, KeyError):
             pass
-        if not is_teacher and save_answer:
+        if not is_teacher and should_save_answer:
             is_valid, explanation = plugin.is_answer_valid(len(old_answers), tim_info)
             points_given_by = None
             if answer_browser_data.get('giveCustomPoints'):
@@ -479,43 +477,29 @@ def post_answer(plugintype: str, task_id_ext: str):
                 else:
                     points_given_by = get_current_user_group()
             if points or save_object is not None or tags:
-                result['savedNew'] = timdb.answers.save_answer(users,
-                                                               tid,
-                                                               json.dumps(save_object),
-                                                               points,
-                                                               tags,
-                                                               is_valid,
-                                                               points_given_by,
-                                                               force_answer)
+                result['savedNew'] = save_answer(users,
+                                                 tid,
+                                                 json.dumps(save_object),
+                                                 points,
+                                                 tags,
+                                                 is_valid,
+                                                 points_given_by,
+                                                 force_answer)
             else:
                 result['savedNew'] = None
             if not is_valid:
                 result['error'] = explanation
         elif save_teacher:
-            if curr_user not in users:
-                users.append(curr_user)
             points = answer_browser_data.get('points', points)
             points = points_to_float(points)
-            result['savedNew'] = timdb.answers.save_answer(users,
-                                                           tid,
-                                                           json.dumps(save_object),
-                                                           points,
-                                                           tags,
-                                                           valid=True,
-                                                           points_given_by=get_current_user_group())
-        elif is_teacher and save_teacher_without_collaboration:
-            user_id = answer_browser_data.get('userId')
-            if user_id:
-                users = [User.query.get(user_id)]
-                points = answer_browser_data.get('points', points)
-                points = points_to_float(points)
-                result['savedNew'] = timdb.answers.save_answer(users,
-                                                               tid,
-                                                               json.dumps(save_object),
-                                                               points,
-                                                               tags,
-                                                               valid=True,
-                                                               points_given_by=get_current_user_group())
+            result['savedNew'] = save_answer(users,
+                                             tid,
+                                             json.dumps(save_object),
+                                             points,
+                                             tags,
+                                             valid=True,
+                                             points_given_by=get_current_user_group(),
+                                             saver=curr_user)
         else:
             result['savedNew'] = None
         if result['savedNew'] is not None and upload is not None:
@@ -549,17 +533,17 @@ def handle_jsrunner_response(jsonresp, result, current_doc: DocInfo):
             if id_num.doc_id not in doc_map:
                 doc_map[id_num.doc_id] = get_doc_or_abort(id_num.doc_id)
     task_content_name_map = {}
-    u = get_current_user_object()
+    curr_user = get_current_user_object()
     for task in tasks:
         t_id = TaskId.parse(task, False, False)
         dib = doc_map[t_id.doc_id]
-        if not u.has_teacher_access(dib):
+        if not curr_user.has_teacher_access(dib):
             return abort(403, f'Missing teacher access for document {dib.id}')
         if t_id.task_name == "grade" or t_id.task_name == "credit":
             task_content_name_map[task] = 'c'
             continue
         try:
-            plug = find_plugin_from_document(dib.document, t_id, u)
+            plug = find_plugin_from_document(dib.document, t_id, curr_user)
             content_field = plug.get_content_field_name()
             # key_content = key.split("|")
             # #TODO: Parse content tässä
@@ -577,42 +561,30 @@ def handle_jsrunner_response(jsonresp, result, current_doc: DocInfo):
         u = User.get_by_id(u_id)
         user_fields = user['fields']
         for key, value in user_fields.items():
-            try:
-                content_list = key.split("|")
-                if len(content_list) == 2:
-                    content_field = content_list[1].strip()
-                else:
-                    content_field = task_content_name_map[content_list[0]]
-                c = {content_field: value}
-                task_id = TaskId.parse(content_list[0], False, False)
-                an: Answer = get_latest_answers_query(task_id, [u]).first()
-                content = json.dumps(c)
-                if an and an.content == content:  # TODO check if redundant
-                    pass
-                elif an:
-                    an_content = json.loads(an.content)
-                    if an_content.get(content_field) != value:
-                        an_content[content_field] = value
-                        an_content = json.dumps(an_content)
-                        a_result = Answer(
-                            content=an_content,
-                            task_id=task_id.doc_task,
-                            users=[u],
-                            valid=True,
-                            last_points_modifier=get_current_user_group()
-                        )
-                        db.session.add(a_result)
-                else:
-                    a_result = Answer(
-                        content=content,
-                        task_id=task_id.doc_task,
-                        users=[u],
-                        valid=True,
-                        last_points_modifier=get_current_user_group()
-                    )
-                    db.session.add(a_result)
-            except KeyError:
-                pass
+            content_list = key.split("|")
+            if len(content_list) == 2:
+                content_field = content_list[1].strip()
+            else:
+                content_field = task_content_name_map[content_list[0]]
+            task_id = TaskId.parse(content_list[0], False, False)
+            an: Answer = get_latest_answers_query(task_id, [u]).first()
+            content = json.dumps({content_field: value})
+            if an and an.content == content:
+                continue
+            elif an:
+                an_content = json.loads(an.content)
+                if an_content.get(content_field) == value:
+                    continue
+                an_content[content_field] = value
+                content = json.dumps(an_content)
+            ans = Answer(
+                content=content,
+                task_id=task_id.doc_task,
+                users=[u],
+                valid=True,
+                saver=curr_user,
+            )
+            db.session.add(ans)
 
 
 def get_hidden_name(user_id):
@@ -769,22 +741,22 @@ def get_all_answers_as_list(task_ids: List[TaskId]):
 
     hide_names = name_opt == 'anonymous'
     hide_names = hide_names or hide_names_in_teacher()
-    all_answers = timdb.answers.get_all_answers(task_ids,
-                                                usergroup,
-                                                hide_names,
-                                                age,
-                                                valid,
-                                                printname,
-                                                sort_opt,
-                                                print_opt,
-                                                period_from,
-                                                period_to,
-                                                consent=consent)
+    all_answers = get_all_answers(task_ids,
+                                  usergroup,
+                                  hide_names,
+                                  age,
+                                  valid,
+                                  printname,
+                                  sort_opt,
+                                  print_opt,
+                                  period_from,
+                                  period_to,
+                                  consent=consent)
     return all_answers
 
 
 @answers.route("/allAnswers/<task_id>")
-def get_all_answers(task_id):
+def get_all_answers_route(task_id):
     all_answers = get_all_answers_as_list(task_id)
     return json_response(all_answers)
 

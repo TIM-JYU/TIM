@@ -4,7 +4,9 @@ from typing import List
 from timApp.answer.answer import Answer
 from timApp.document.docinfo import DocInfo
 from timApp.tests.server.timroutetest import TimRouteTest
+from timApp.timdb.sqa import db
 from timApp.user.user import User
+from timApp.user.usergroup import UserGroup
 
 
 class JsRunnerTest(TimRouteTest):
@@ -17,6 +19,7 @@ class JsRunnerTest(TimRouteTest):
         self.assertEqual(expected_count, len(anss))
         first = anss[0]
         self.assertEqual(content, first.content_as_json[content_field])
+        return first
 
     def test_invalid_markup(self):
         invalid_yamls = [
@@ -359,3 +362,10 @@ tools.setString("t", "hi");
             expect_status=403,
             json_key='error',
         )
+        self.test_user_2.groups.append(UserGroup.get_teachers_group())
+        db.session.commit()
+        self.do_jsrun(
+            d2,
+        )
+        a = self.verify_content(f'{d2.id}.t', 'c', 'hi', self.test_user_1)
+        self.assertEqual(self.test_user_2, a.saver)

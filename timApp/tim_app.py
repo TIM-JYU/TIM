@@ -12,7 +12,7 @@ from flask_migrate import Migrate
 from flask_wtf import CSRFProtect
 from sqlalchemy.sql.ddl import CreateTable
 
-from timApp.answer.answer import Answer
+from timApp.answer.answer import Answer, AnswerSaver
 from timApp.answer.answer_models import AnswerTag, AnswerUpload, UserAnswer
 from timApp.auth.auth_models import AccessType, BlockAccess
 from timApp.item.blockrelevance import BlockRelevance
@@ -73,6 +73,7 @@ reg_models(
     Annotation,
     AnnotationComment,
     Answer,
+    AnswerSaver,
     AnswerTag,
     AnswerUpload,
     AskedJson,

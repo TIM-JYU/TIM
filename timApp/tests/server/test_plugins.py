@@ -10,6 +10,7 @@ from lxml import html
 from lxml.html import HtmlElement
 
 from timApp.answer.answer import Answer
+from timApp.answer.answers import get_points_by_rule
 from timApp.answer.pointsumrule import PointSumRule, PointType
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.randutils import random_id
@@ -552,7 +553,7 @@ class PluginTest(TimRouteTest):
             rule_dict = {'groups': {'1st': g1, '2nd': g2, '3rd': g3},
                          'count': {count_type: count}}
             rule = PointSumRule(rule_dict)
-            points = timdb.answers.get_points_by_rule(
+            points = get_points_by_rule(
                 rule_dict,
                 task_ids, [TEST_USER_1_ID, TEST_USER_2_ID])
             self.assertEqual(tasksum1, points[TEST_USER_1_ID]['task_sum'])
@@ -570,7 +571,7 @@ class PluginTest(TimRouteTest):
                         self.assertEqual(0, points[TEST_USER_2_ID]['groups'][k][n])
                 self.assertEqual(pts[k]['total_sum'], points[TEST_USER_1_ID]['groups'][k]['total_sum'])
                 self.assertEqual(pts2[k]['total_sum'], points[TEST_USER_2_ID]['groups'][k]['total_sum'])
-            points = timdb.answers.get_points_by_rule(
+            points = get_points_by_rule(
                 {'groups': {'1st': g1, '2nd': g2, '3rd': g3},
                  'count': {count_type: count}},
                 task_ids, [TEST_USER_1_ID, TEST_USER_2_ID], flatten=True)
@@ -861,8 +862,11 @@ choices:
         did = d.id
         self.login_test2()
         a = self.post_answer('mmcq', f'{did}.t', [False, False, False])
-        self.login_test1()
         aid = a['savedNew']
+        a: Answer = Answer.query.get(aid)
+        self.assertIsNone(a.saver)
+        self.login_test1()
+
         fix_id = self.post_answer(
             'mmcq', f'{did}.t', [False, False, True],
             save_teacher=True,
@@ -871,7 +875,8 @@ choices:
             answer_id=aid,
         )['savedNew']
         a: Answer = Answer.query.get(fix_id)
-        self.assertEqual(2, len(a.users_all))
+        self.assertEqual(1, len(a.users_all))
+        self.assertEqual(a.saver, self.current_user)
         a: Answer = Answer.query.get(aid)
         self.assertEqual(1, len(a.users_all))
 

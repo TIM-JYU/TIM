@@ -194,7 +194,6 @@ export class AnswerBrowserController extends DestroyScope implements IController
     private user: IUser | undefined;
     private fetchedUser: IUser | undefined;
     private saveTeacher: boolean = false;
-    private saveTeacherWithoutCollaboration: boolean = true;
     private users: IUser[] | undefined;
     private answers: IAnswer[] = [];
     private filteredAnswers: IAnswer[] = [];
@@ -526,33 +525,23 @@ export class AnswerBrowserController extends DestroyScope implements IController
     }
 
     getBrowserData() {
-        if (this.answers.length > 0 && this.selectedAnswer && this.user) {
+        const common = {
+            teacher: this.viewctrl.teacherMode,
+            saveAnswer: !this.viewctrl.noBrowser,
+        };
+        if (this.selectedAnswer && this.user) {
             return {
                 answer_id: this.selectedAnswer.id,
                 saveTeacher: this.saveTeacher,
-                saveTeacherWithoutCollaboration: this.saveTeacherWithoutCollaboration,
-                teacher: this.viewctrl.teacherMode,
                 points: this.points,
                 giveCustomPoints: this.giveCustomPoints,
                 userId: this.user.id,
-                saveAnswer: !this.viewctrl.noBrowser,
-            };
-        } else if (this.user && this.saveTeacherWithoutCollaboration) {
-            return {
-                // answer_id: this.selectedAnswer.id,
-                saveTeacherWithoutCollaboration: this.saveTeacherWithoutCollaboration,
-                saveTeacher: this.saveTeacher,
-                teacher: this.viewctrl.teacherMode,
-                points: this.points,
-                giveCustomPoints: this.giveCustomPoints,
-                userId: this.user.id,
-                saveAnswer: !this.viewctrl.noBrowser,
+                ...common,
             };
         } else {
             return {
                 saveTeacher: false,
-                teacher: this.viewctrl.teacherMode,
-                saveAnswer: !this.viewctrl.noBrowser,
+                ...common,
             };
         }
     }

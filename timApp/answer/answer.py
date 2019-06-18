@@ -5,6 +5,15 @@ from timApp.answer.answer_models import UserAnswer
 from timApp.timdb.sqa import db, include_if_loaded
 
 
+class AnswerSaver(db.Model):
+    """Holds information about who has saved an answer. For example, in teacher view, "Save teacher's fix"
+    would store the teacher in this table.
+    """
+    __tablename__ = 'answersaver'
+    answer_id = db.Column(db.Integer, db.ForeignKey('answer.id'), primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('useraccount.id'), primary_key=True)
+
+
 class Answer(db.Model):
     """An answer to a task."""
     __tablename__ = 'answer'
@@ -35,6 +44,7 @@ class Answer(db.Model):
     users_all = db.relationship('User', secondary=UserAnswer.__table__,
                                 back_populates='answers_alt', lazy='select')
     annotations = db.relationship('Annotation', back_populates='answer')
+    saver = db.relationship('User', lazy='select', secondary=AnswerSaver.__table__, uselist=False)
 
     @property
     def content_as_json(self):
