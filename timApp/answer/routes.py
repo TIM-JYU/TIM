@@ -676,7 +676,6 @@ def get_all_answers_as_list(task_ids: List[TaskId]):
     verify_logged_in()
     if not task_ids:
         return []
-    timdb = get_timdb()
     doc_ids = set()
     for tid in task_ids:
         doc_ids.add(tid.doc_id)
@@ -696,47 +695,6 @@ def get_all_answers_as_list(task_ids: List[TaskId]):
 
     period_from, period_to = period_handling(task_ids, doc_ids, period_opt)
 
-    """
-    period_from = datetime.min.replace(tzinfo=timezone.utc)
-
-    # TODO: The key will be wrong when getting answers to a document that has only one task
-    since_last_key = task_ids[0].doc_task
-    if len(task_ids) > 1:
-        since_last_key = str(next(d for d in doc_ids))
-        if len(doc_ids) > 1:
-            since_last_key = None
-
-    period_opt = get_option(request, 'period', 'whenever')
-    period_to = get_current_time()
-    if period_opt == 'whenever':
-        pass
-    elif period_opt == 'sincelast' and since_last_key is not None:
-        u = get_current_user_object()
-        prefs = u.get_prefs()
-        last_answer_fetch = prefs.last_answer_fetch
-        period_from = last_answer_fetch.get(since_last_key, datetime.min.replace(tzinfo=timezone.utc))
-        last_answer_fetch[since_last_key] = get_current_time()
-        prefs.last_answer_fetch = last_answer_fetch
-        u.set_prefs(prefs)
-        db.session.commit()
-    elif period_opt == 'day':
-        period_from = period_to - timedelta(days=1)
-    elif period_opt == 'week':
-        period_from = period_to - timedelta(weeks=1)
-    elif period_opt == 'month':
-        period_from = period_to - dateutil.relativedelta.relativedelta(months=1)
-    elif period_opt == 'other':
-        period_from_str = get_option(request, 'periodFrom', period_from.isoformat())
-        period_to_str = get_option(request, 'periodTo', period_to.isoformat())
-        try:
-            period_from = dateutil.parser.parse(period_from_str)
-        except (ValueError, OverflowError):
-            pass
-        try:
-            period_to = dateutil.parser.parse(period_to_str)
-        except (ValueError, OverflowError):
-            pass
-    """
     if not usergroup:
         usergroup = None
 
