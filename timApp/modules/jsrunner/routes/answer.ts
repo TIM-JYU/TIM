@@ -68,14 +68,14 @@ function runner(d: IRunnerData): RunnerResult {
 router.put("/", (req, res, next) => {
     const decoded = JsrunnerAnswer.decode(req.body);
     if (decoded.isLeft()) {
-        res.send({web: {error: "Invalid input to jsrunner answer route."}});
+        res.json({web: {error: "Invalid input to jsrunner answer route."}});
         return;
     }
     const value = decoded.value;
     const regex = /[0-9]+\./;
     const currDoc = value.taskID.match(regex);
     if (!currDoc) {
-        res.send({web: {error: "Taskid missing or incorrect format."}});
+        res.json({web: {error: "Taskid missing or incorrect format."}});
         return;
     }
     const isolate = new ivm.Isolate({
@@ -136,7 +136,7 @@ router.put("/", (req, res, next) => {
             },
         };
     }
-    res.send(r);
+    res.json(r);
 });
 
 export default router;

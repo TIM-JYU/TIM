@@ -36,7 +36,7 @@ ${backTicks}`];
 
 /* GET users listing. */
 router.get("/", (req, res, next) => {
-    res.send({
+    res.json({
         js: ["javascripts/build/jsrunner.js"],
         multihtml: true,
         css: ["stylesheets/jsrunner.css"],

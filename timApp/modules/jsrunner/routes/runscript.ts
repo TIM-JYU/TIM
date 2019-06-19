@@ -16,7 +16,7 @@ router.post("/", (req, res, next) => {
     const decoded = RunScriptInput.decode(req.body);
     if (decoded.isLeft()) {
         res.status(400);
-        res.send({error: "Invalid input to jsrunner runScript route."});
+        res.json({error: "Invalid input to jsrunner runScript route."});
         return;
     }
     const inputs = decoded.value;
@@ -38,7 +38,7 @@ router.post("/", (req, res, next) => {
             },
         );
     } catch (e) {
-        res.send({error: e.message});
+        res.json({error: e.message});
         return;
     }
     const ctx = isolate.createContextSync({inspector: false});
@@ -46,12 +46,12 @@ router.post("/", (req, res, next) => {
     try {
         const result = script.runSync(ctx, {timeout: inputs.timeout || 500});
         if (result === undefined) {
-            res.send({error: "Script failed to return anything (the return value must be JSON serializable)."});
+            res.json({error: "Script failed to return anything (the return value must be JSON serializable)."});
         } else {
-            res.send({result: JSON.parse(result)});
+            res.json({result: JSON.parse(result)});
         }
     } catch (e) {
-        res.send({error: e.message});
+        res.json({error: e.message});
     }
 });
 
