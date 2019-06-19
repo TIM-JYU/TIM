@@ -27,7 +27,10 @@ export class CsParsonsWidget {
             styleWords: "",
         };
 
-        this.options = $.extend({}, defaults, options);
+        this.options = {
+            ...defaults,
+            ...options,
+        };
     }
 
     init(text: string, userText: string) {
