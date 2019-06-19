@@ -123,7 +123,7 @@ class TableFormHtmlModel(GenericHtmlModel[TableFormInputModel, TableFormMarkupMo
             except PluginException as e:
                 return
             d = get_doc_or_abort(tid.doc_id)
-            user = User.get_by_name(self.user_id)
+            user = User.get_by_name(self.info.current_user_id)
             userfields = get_fields_and_users(self.markup.fields, groups, d, user)
             rows = {}
             realnames= {}
