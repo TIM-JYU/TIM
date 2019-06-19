@@ -8,7 +8,7 @@ import {polyfill} from "mobile-drag-drop";
 import {scrollBehaviourDragImageTranslateOverride} from "mobile-drag-drop/scroll-behaviour";
 import {ITimComponent, ViewCtrl} from "tim/document/viewctrl";
 import {GenericPluginMarkup, Info, withDefault} from "tim/plugin/attributes";
-import {PluginBase, pluginBindings} from "tim/plugin/util";
+import {PluginBase, pluginBindings, shuffleStrings} from "tim/plugin/util";
 import {$http} from "tim/util/ngimport";
 import {markAsUsed, to} from "tim/util/utils";
 
@@ -102,7 +102,7 @@ class DragController extends PluginBase<t.TypeOf<typeof DragMarkup>, t.TypeOf<ty
             this.createWordobjs(this.attrsall.c);
         } else {
             if (this.shuffle && this.attrs.words) {
-                const words = this.shuffleWords(this.attrs.words);
+                const words = shuffleStrings(this.attrs.words);
                 this.createWordobjs(words);
             } else {
                 this.createWordobjs(this.attrs.words || []);
@@ -199,7 +199,7 @@ class DragController extends PluginBase<t.TypeOf<typeof DragMarkup>, t.TypeOf<ty
      */
     setPluginWords(words: string []) {
         if (this.shuffle) {
-            this.createWordobjs(this.shuffleWords(words));
+            this.createWordobjs(shuffleStrings(words));
         } else {
             this.createWordobjs(words);
         }

@@ -200,23 +200,22 @@ export abstract class PluginBase<MarkupType extends IGenericPluginMarkup, A exte
         // this.$onInit()
         return undefined;
     }
+}
 
-    /**
-     * Shuffles a string array.
-     * @param words Array of strings to be shuffled.
-     */
-    shuffleWords(words: string []): string [] {
-        // Shuffle algorithm from csparsons.ts
-        const result = words.slice();
-        const n = words.length;
-        for (let i = n - 1; i >= 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            const tmp = result[i];
-            result[i] = result[j];
-            result[j] = tmp;
-        }
-        return result;
+/**
+ * Shuffles a string array.
+ * @param strings Array of strings to be shuffled.
+ */
+export function shuffleStrings(strings: string []): string [] {
+    const result = strings.slice();
+    const n = strings.length;
+    for (let i = n - 1; i >= 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        const tmp = result[i];
+        result[i] = result[j];
+        result[j] = tmp;
     }
+    return result;
 }
 
 export const pluginBindings = {

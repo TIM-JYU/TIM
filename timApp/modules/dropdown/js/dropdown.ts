@@ -5,7 +5,7 @@ import angular from "angular";
 import * as t from "io-ts";
 import {ITimComponent, ViewCtrl} from "tim/document/viewctrl";
 import {GenericPluginMarkup, Info, withDefault} from "tim/plugin/attributes";
-import {PluginBase, pluginBindings} from "tim/plugin/util";
+import {PluginBase, pluginBindings, shuffleStrings} from "tim/plugin/util";
 import {$http} from "tim/util/ngimport";
 import {to} from "tim/util/utils";
 
@@ -55,7 +55,7 @@ class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.T
         this.selectedWord = this.attrsall.c;
         this.shuffle = this.attrs.shuffle;
         if (this.shuffle && this.attrs.words) {
-            this.wordList = this.shuffleWords(this.attrs.words);
+            this.wordList = shuffleStrings(this.attrs.words);
         } else {
             this.wordList = this.attrs.words || [];
         }
@@ -139,7 +139,7 @@ class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.T
      */
     setPluginWords(words: string[]) {
         if (this.shuffle) {
-            this.wordList = this.shuffleWords(words);
+            this.wordList = shuffleStrings(words);
         } else {
             this.wordList = words;
         }

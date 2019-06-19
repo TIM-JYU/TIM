@@ -1,4 +1,5 @@
 import $ from "jquery";
+import {shuffleStrings} from "tim/plugin/util";
 import "./jquery-ui-sortable.min.js";
 import "./jquery.ui.touch-punch.min.js";
 
@@ -29,23 +30,11 @@ export class CsParsonsWidget {
         this.options = $.extend({}, defaults, options);
     }
 
-    shuffle(lines: string[]) {
-        const result = lines.slice();
-        const n = lines.length;
-        for (let i = n - 1; i >= 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            const tmp = result[i];
-            result[i] = result[j];
-            result[j] = tmp;
-        }
-        return result;
-    }
-
     init(text: string, userText: string) {
         this.text = text;
         if (this.options.shuffle) {
             this.lines = text.split("\n");
-            this.lines = this.shuffle(this.lines);
+            this.lines = shuffleStrings(this.lines);
         } else {
             this.lines = userText.split("\n");
         }
