@@ -785,6 +785,7 @@ class TimRouteTest(TimDbTest):
             "targetFormat": "latex",
             "taskIDExt": f"{d.id}.{task_name}.{par_id}" if par_id else basic_task_id,
             "user_id": self.current_user.name,
+            'current_user_id': self.current_user.name,
             "userPrint": False,
         }
         return expected_json

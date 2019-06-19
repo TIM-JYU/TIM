@@ -32,7 +32,6 @@ from werkzeug.exceptions import UnprocessableEntity
 @attr.s(auto_attribs=True)
 class InfoModel:
     """Model for the information that is given by TIM in an answer request."""
-    current_user_id: str
     earlier_answers: int
     look_answer: bool
     max_answers: Optional[int]
@@ -41,7 +40,6 @@ class InfoModel:
 
 
 class InfoSchema(Schema):
-    current_user_id = fields.Str(required=True)
     earlier_answers = fields.Int(required=True)
     look_answer = fields.Bool(required=True)
     max_answers = fields.Int(required=True, allow_none=True)
@@ -113,6 +111,7 @@ class GenericHtmlSchema(Schema):
     taskIDExt = fields.Str(required=True)
     user_id = fields.Str(required=True)
     userPrint = fields.Bool(required=True)
+    current_user_id = fields.Str(required=True)
 
     @validates('doLazy')
     def validate_do_lazy(self, value):
@@ -159,6 +158,7 @@ class GenericHtmlModel(GenericRouteModel[PluginInput, PluginMarkup, PluginState]
     taskIDExt: str
     user_id: str
     userPrint: bool
+    current_user_id: str
     access: Union[str, Missing] = missing
 
     def get_browser_json(self) -> Dict:

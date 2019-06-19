@@ -58,7 +58,6 @@ Hi {#t3} $x$
             't2',
             'Lm7y6R7n5XIb',
             info={
-                "current_user_id": "testuser1",
                 "earlier_answers": 1,
                 "look_answer": False,
                 "max_answers": None,

@@ -972,12 +972,13 @@ needed_len: 6
         self.assert_plugin_json(r.cssselect('.parContent pali-runner')[0],
                                 self.create_plugin_json(
                                     d, 't5', state=s, toplevel=s,
-                                    info={'current_user_id': 'testuser1',
-                                          'earlier_answers': 1,
-                                          'look_answer': False,
-                                          'max_answers': None,
-                                          'user_id': 'testuser1',
-                                          'valid': True},
+                                    info={
+                                        'earlier_answers': 1,
+                                        'look_answer': False,
+                                        'max_answers': None,
+                                        'user_id': 'testuser1',
+                                        'valid': True,
+                                    },
                                 ))
         r = self.post_answer('pali', f'{d.id}.t5', {'userword': 'xxx'},
                              ref_from=[d2.id, d2.document.get_paragraphs()[0].get_id()])
@@ -1057,7 +1058,7 @@ needed_len: 6
         r = self.get(d.url, as_tree=True)
         s = {'userword': '6'}
         expected_json = self.create_plugin_json(d, 't', state=s, toplevel=s, par_id='points',
-                                                info={'current_user_id': 'testuser1', 'earlier_answers': 1,
+                                                info={'earlier_answers': 1,
                                                       'look_answer': False,
                                                       'max_answers': None, 'user_id': 'testuser1', 'valid': True}, )
         self.assert_same_html(r.cssselect('.parContent')[1], f"""
@@ -1095,7 +1096,7 @@ needed_len: 6
         self.assert_plugin_json(
             r.cssselect('.parContent pali-runner')[0],
             self.create_plugin_json(d, 't', state=s, toplevel=s, par_id='SSYigUyqdb7p',
-                                    info={'current_user_id': 'testuser1', 'earlier_answers': 1,
+                                    info={'earlier_answers': 1,
                                           'look_answer': False,
                                           'max_answers': None, 'user_id': 'testuser1', 'valid': True}, ))
 

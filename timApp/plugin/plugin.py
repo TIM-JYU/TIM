@@ -11,6 +11,7 @@ from flask import render_template_string
 
 import timApp
 from timApp.answer.answer import Answer
+from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.document import Document
 from timApp.document.macroinfo import MacroInfo
@@ -278,7 +279,6 @@ class Plugin:
             # posted before the current one
             'earlier_answers': old_answers,
             'max_answers': self.answer_limit(),
-            'current_user_id': get_current_user_object().name,
             'user_id': user_ids,
             # indicates whether we are just looking at an answer, not actually posting a new one
             'look_answer': look_answer,
@@ -325,6 +325,7 @@ class Plugin:
                 "user_id": options.user.name if options.user is not None else 'Anonymous',
                 "targetFormat": options.target_format.value,
                 "review": options.review,
+                'current_user_id': get_current_user_object().name,
                 }
 
     def get_content_field_name(self):

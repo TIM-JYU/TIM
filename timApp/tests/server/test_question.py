@@ -22,7 +22,7 @@ class QuestionTest(TimLiveServer, TimRouteTest):
         <div class="parContent" id="test1">
             <tim-plugin-loader type="full" task-id="{d.id}.test1" class="pluginqst" answer-id="">
             <div id="{d.id}.test1.{first_id}" data-plugin="/qst">
-                <qst-runner json='{{"anonymous": true, "doLazy": false, "info": null, "markup": {{"answerFieldType": "radio", "headers": [], "isTask": false, "questionText": "What day is it today?", "questionTitle": "Today", "questionType": "radio-vertical", "rows": ["Monday", "Wednesday", "Friday"], "timeLimit": 90}}, "preview": false, "review": false, "show_result": false, "state": null, "targetFormat": "latex", "taskID": "{d.id}.test1", "taskIDExt": "{d.id}.test1.{first_id}", "userPrint": false, "user_id": "testuser1"}}'></qst-runner>
+                <qst-runner json='{{"anonymous": true, "current_user_id": "testuser1", "doLazy": false, "info": null, "markup": {{"answerFieldType": "radio", "headers": [], "isTask": false, "questionText": "What day is it today?", "questionTitle": "Today", "questionType": "radio-vertical", "rows": ["Monday", "Wednesday", "Friday"], "timeLimit": 90}}, "preview": false, "review": false, "show_result": false, "state": null, "targetFormat": "latex", "taskID": "{d.id}.test1", "taskIDExt": "{d.id}.test1.{first_id}", "userPrint": false, "user_id": "testuser1"}}'></qst-runner>
             </div>
             </tim-plugin-loader>
         </div>
