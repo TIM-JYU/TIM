@@ -17,6 +17,7 @@ from marshmallow.utils import _Missing, missing
 from sqlalchemy import func
 from webargs.flaskparser import use_args
 
+from pluginserver_flask import GenericMarkupSchema
 from timApp.answer.answer import Answer
 from timApp.answer.answer_models import AnswerUpload
 from timApp.answer.answers import get_latest_answers_query, get_common_answers, save_answer, get_all_answers
@@ -242,7 +243,7 @@ def get_fields_and_users(u_fields: List[str], groups: List[UserGroup], d: DocInf
     return res, jsrunner_alias_map, content_map
 
 
-class JsRunnerSchema(Schema):
+class JsRunnerSchema(GenericMarkupSchema):
     creditField = fields.Str()
     gradeField = fields.Str()
     gradingScale = fields.Dict()

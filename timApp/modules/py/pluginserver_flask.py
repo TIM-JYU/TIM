@@ -80,11 +80,14 @@ class GenericMarkupModel:
 
 class GenericMarkupSchema(Schema):
     lazy = fields.Bool()
-    header = fields.Str()
+    header = fields.Str(allow_none=True)
     footer = fields.Str()
     hidden_keys = fields.List(fields.Str(), required=True)
-    stem = fields.Str()
+    stem = fields.Str(allow_none=True)
     buttonText = fields.Str(allow_none=True)
+    button = fields.Str(allow_none=True)
+    answerLimit = fields.Int()
+    resetText = fields.Str(allow_none=True)
 
     @pre_load
     def process_minus(self, data):
