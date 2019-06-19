@@ -18,7 +18,6 @@ const NumericfieldMarkup = t.intersection([
         inputplaceholder: nullable(t.number),
         inputstem: nullable(t.string),
         initnumber: nullable(t.number),
-        buttonText: nullable(t.string),
         validinput: nullable(t.string),
         errormessage: nullable(t.string),
         labelStyle: nullable(t.string),

@@ -23,7 +23,6 @@ const TableFormMarkup = t.intersection([
     t.partial({
         anonNames: nullable(t.boolean),
         autosave: t.boolean,
-        buttonText: nullable(t.string),
         hideButtonText: nullable(t.string),
         hiddenColumns: t.array(t.number),
         hiddenRows: t.array(t.number),

@@ -18,7 +18,6 @@ const TextfieldMarkup = t.intersection([
         inputplaceholder: nullable(t.string),
         inputstem: nullable(t.string),
         initword: nullable(t.string),
-        buttonText: nullable(t.string),
         validinput: nullable(t.string),
         errormessage: nullable(t.string),
         labelStyle: nullable(t.string),
