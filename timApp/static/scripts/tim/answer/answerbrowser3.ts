@@ -21,6 +21,7 @@ timLogTime("answerbrowser3 load", "answ");
 
 const LAZY_MARKER = "lazy";
 const LAZY_MARKER_LENGTH = LAZY_MARKER.length;
+const FIELD_PLUGINS = new Set(["textfield", "numericfield"]);
 
 function isElement(n: Node): n is Element {
     return n.nodeType === Node.ELEMENT_NODE;
@@ -68,6 +69,7 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
                 this.loadPlugin();
             }
         }
+        this.showPlaceholder = !this.isInFormMode();
     }
 
     $postLink() {
@@ -144,11 +146,28 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
     }
 
     dimPlugin() {
-        this.getPluginElement().css("opacity", "0.3");
+        if (!this.isInFormMode()) {
+            this.getPluginElement().css("opacity", "0.3");
+        }
     }
 
     isPreview() {
         return this.element.parents(".previewcontent").length > 0;
+    }
+
+    isInFormMode() {
+        if (!this.viewctrl) {
+            return false;
+        }
+        return this.viewctrl.docSettings.form_mode && this.isFieldPlugin();
+    }
+
+    isFieldPlugin() {
+        const plugin = this.getPluginElement().attr("data-plugin");
+        if (!plugin) {
+            return false;
+        }
+        return FIELD_PLUGINS.has(plugin.slice(1)); // remove leading '/' so we get only the plugin type name
     }
 }
 
@@ -232,6 +251,9 @@ export class AnswerBrowserController extends DestroyScope implements IController
     }
 
     async $onInit() {
+        if (this.loader.isInFormMode()) {
+            this.element.hide();
+        }
         this.viewctrl.registerAnswerBrowser(this);
         this.scope.$watch(() => this.taskId, (newValue, oldValue) => {
             if (newValue === oldValue) {
@@ -529,10 +551,10 @@ export class AnswerBrowserController extends DestroyScope implements IController
             teacher: this.viewctrl.teacherMode,
             saveAnswer: !this.viewctrl.noBrowser,
         };
-        if (this.selectedAnswer && this.user) {
+        if (this.user) {
             return {
-                answer_id: this.selectedAnswer.id,
-                saveTeacher: this.saveTeacher,
+                answer_id: this.selectedAnswer ? this.selectedAnswer.id : undefined,
+                saveTeacher: this.saveTeacher || this.loader.isInFormMode(),
                 points: this.points,
                 giveCustomPoints: this.giveCustomPoints,
                 userId: this.user.id,

@@ -5,3 +5,15 @@
 .plugindropdown answerbrowser {
     display: none;
 }
+
+.plugindrag answerbrowser {
+    display: none;
+}
+
+.plugindrag .answerBrowserPlaceholder {
+    display: none;
+}
+
+.plugindropdown .answerBrowserPlaceholder {
+    display: none;
+}

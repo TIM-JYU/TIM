@@ -128,7 +128,7 @@ export class UserListController implements IController {
             };
             c.filter = f;
         }
-        this.instantUpdate = true;
+        this.instantUpdate = this.viewctrl.docSettings.form_mode || false;
 
         this.gridOptions = {
             exporterMenuPdf: false,

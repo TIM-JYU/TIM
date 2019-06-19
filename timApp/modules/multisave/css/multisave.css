@@ -3,14 +3,6 @@
     margin-top: 5px;
 }
 
-.pluginmultisave answerbrowser {
-    display: none;
-}
-
-[data-plugin="/multisave"] {
-    opacity: 1 !important;
-}
-
 /*
 / Most likely will not be implemented - showing Saved! text until fadeOut.
 / Existing issue: can't redo Saved! text without page refresh.

@@ -40,14 +40,6 @@
 
 }
 
-.plugindrag answerbrowser {
-    display: none;
-}
-
-.plugindrag .answerBrowserPlaceholder {
-    display: none;
-}
-
 .dndDraggingSource {
   opacity: 0.6; 
 }

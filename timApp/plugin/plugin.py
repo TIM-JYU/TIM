@@ -57,6 +57,13 @@ NEVERLAZY_PLUGINS = {
 }
 
 
+NO_ANSWERBROWSER_PLUGINS = {
+    'multisave',
+    'jsrunner',
+    'tableForm',
+}
+
+
 class PluginWrap(Enum):
     Nothing = 1
     NoLoader = 2
@@ -385,7 +392,7 @@ class Plugin:
             return None
         # Some plugins don't have answers but they may still need to be loaded lazily.
         # We sometimes want answerbrowser for graphviz too, so we don't exclude it here.
-        if self.type.startswith('show'):
+        if self.type.startswith('show') or self.type in NO_ANSWERBROWSER_PLUGINS:
             return 'lazyonly' if self.is_lazy() else None
         return 'full'
 

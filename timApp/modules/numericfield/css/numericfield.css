@@ -1,7 +1,3 @@
-.pluginnumericfield answerbrowser {
-    display: none;
-}
-
 .pluginnumericfield .timButton {
     margin-bottom: 5px;
 }
@@ -11,10 +7,6 @@ numericfield-runner .stem {
     height: 6px;
 }
 
-.pluginnumericfield .answerBrowserPlaceholder {
-    display: none;
-}
-
 .warnFrame {
     border-right-color: gold;
     border-right-width: thick;
@@ -22,10 +14,6 @@ numericfield-runner .stem {
 
 input:focus.warnFrame {
     border-right-color: gold !important;
-}
-
-[data-plugin="/numericfield"] {
-    opacity: 1 !important;
 }
 
 .alertFrame {

@@ -1,14 +1,3 @@
 .plugintableForm {
     border: none;
 }
-.plugintableForm answerbrowser {
-    display: none;
-}
-
-.plugintableForm answerBrowserPlaceholder {
-    display: none;
-}
-
-[data-plugin="/tableForm"] {
-    opacity: 1 !important;
-}

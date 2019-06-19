@@ -31,6 +31,7 @@ import {EditingHandler} from "./editing/editing";
 import {PendingCollection} from "./editing/edittypes";
 import * as helpPar from "./editing/helpPar";
 import {onClick} from "./eventhandlers";
+import {IDocSettings} from "./IDocSettings";
 import {PopupMenuController} from "./popupMenu";
 import {RefPopupHandler} from "./refpopup";
 import {initSlideView} from "./slide";
@@ -142,6 +143,7 @@ export class ViewCtrl implements IController {
 
     // To give an alert if trying to go to another page when doing an adaptive feedback task.
     public doingTask = false;
+    public docSettings: IDocSettings = $window.docSettings;
 
     constructor(sc: IScope) {
         timLogTime("ViewCtrl start", "view");

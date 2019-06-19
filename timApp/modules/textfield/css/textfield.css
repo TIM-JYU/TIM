@@ -1,7 +1,3 @@
-.plugintextfield answerbrowser {
-    display: none;
-}
-
 .plugintextfield .timButton {
     margin-bottom: 5px;
 }
@@ -11,10 +7,6 @@ textfield-runner .stem {
     height: 6px;
 }
 
-.plugintextfield .answerBrowserPlaceholder {
-    display: none;
-}
-
 .warnFrame {
     border-right-color: gold;
     border-right-width: thick;
@@ -22,10 +14,6 @@ textfield-runner .stem {
 
 input:focus.warnFrame {
     border-right-color: gold !important;
-}
-
-[data-plugin="/textfield"] {
-    opacity: 1 !important;
 }
 
 .alertFrame {
