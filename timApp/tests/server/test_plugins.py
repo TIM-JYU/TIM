@@ -314,16 +314,20 @@ class PluginTest(TimRouteTest):
         mimetype, ur, user_input = self.do_plugin_upload(doc, file_content, filename, task_id, task_name)
         answer_list = self.get_task_answers(task_id)
         self.assertEqual(1, len(answer_list))
-        self.assertListEqual([{'real_name': TEST_USER_1_NAME, 'email': 'test1@example.com', 'id': TEST_USER_1_ID, 'name': TEST_USER_1_USERNAME},
-                              {'real_name': 'Test user 2', 'email': 'test2@example.com', 'id': TEST_USER_2_ID, 'name': TEST_USER_2_USERNAME}],
-                             answer_list[0]['users'])
+        self.assertEqual([{'real_name': TEST_USER_1_NAME, 'email': 'test1@example.com', 'id': TEST_USER_1_ID,
+                           'name': TEST_USER_1_USERNAME},
+                          {'real_name': 'Test user 2', 'email': 'test2@example.com', 'id': TEST_USER_2_ID,
+                           'name': TEST_USER_2_USERNAME}],
+                         answer_list[0]['users'])
         self.assertEqual(file_content, self.get_no_warn(ur['file']))
         self.login_test2()
         answer_list = self.get_task_answers(task_id)
         self.assertEqual(1, len(answer_list))
-        self.assertListEqual([{'real_name': TEST_USER_1_NAME, 'email': 'test1@example.com', 'id': TEST_USER_1_ID, 'name': TEST_USER_1_USERNAME},
-                              {'real_name': 'Test user 2', 'email': 'test2@example.com', 'id': TEST_USER_2_ID, 'name': TEST_USER_2_USERNAME}],
-                             answer_list[0]['users'])
+        self.assertEqual([{'real_name': TEST_USER_1_NAME, 'email': 'test1@example.com', 'id': TEST_USER_1_ID,
+                           'name': TEST_USER_1_USERNAME},
+                          {'real_name': 'Test user 2', 'email': 'test2@example.com', 'id': TEST_USER_2_ID,
+                           'name': TEST_USER_2_USERNAME}],
+                         answer_list[0]['users'])
         self.assertEqual(file_content, self.get_no_warn(ur['file']))
 
     def test_all_answers(self):
