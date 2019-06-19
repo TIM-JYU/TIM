@@ -1,7 +1,7 @@
 import * as t from "io-ts";
 import {GenericPluginMarkup, GenericPluginTopLevelFields} from "tim/plugin/attributes";
 
-const Max1000 = t.brand(
+export const Max1000 = t.brand(
   t.number,
   (n): n is t.Branded<number, {readonly Max1000: unique symbol}> => n >= 0 && n <= 1000,
   "Max1000",

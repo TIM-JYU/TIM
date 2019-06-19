@@ -1,6 +1,8 @@
 """Server tests for jsrunner plugin."""
 from typing import List
 
+import requests
+
 from timApp.answer.answer import Answer
 from timApp.document.docinfo import DocInfo
 from timApp.tests.server.timroutetest import TimRouteTest
@@ -369,3 +371,58 @@ tools.setString("t", "hi");
         )
         a = self.verify_content(f'{d2.id}.t', 'c', 'hi', self.test_user_1)
         self.assertEqual(self.test_user_2, a.saver)
+
+    def test_runscript(self):
+        runscript_url = 'http://jsrunner:5000/runScript'
+        r = requests.post(runscript_url)
+        self.assertEqual(400, r.status_code)
+        self.assertEqual({'error': 'Invalid input to jsrunner runScript route.'}, r.json())
+
+        r = requests.post(
+            runscript_url,
+            json={
+                'code': """
+            const result = {x: data.a + data.b, y: data.a - data.b};
+            return result;
+            """,
+                'data': {'a': 7, 'b': 11}})
+        self.assertEqual(200, r.status_code)
+        self.assertEqual({'result': {'x': 18, 'y': -4}}, r.json())
+
+        r = requests.post(
+            runscript_url,
+            json={
+                'timeout': 10,
+                'code': """while(true){}""",
+                'data': {}})
+        self.assertEqual(200, r.status_code)
+        self.assertEqual({'error': 'Script execution timed out.'}, r.json())
+
+        r = requests.post(
+            runscript_url,
+            json={
+                'timeout': 10000,
+                'code': """while(true){}""",
+                'data': {}})
+        self.assertEqual(400, r.status_code)
+        self.assertEqual({'error': 'Invalid input to jsrunner runScript route.'}, r.json())
+
+        r = requests.post(
+            runscript_url,
+            json={
+                'code': """{""",
+                'data': {}})
+        self.assertEqual(200, r.status_code)
+        self.assertEqual({'error': 'Unexpected end of input [script.js:6:39]'}, r.json())
+
+        r = requests.post(
+            runscript_url,
+            json={
+                'code': """
+                class X {}
+                return X;
+                """,
+                'data': {}})
+        self.assertEqual(200, r.status_code)
+        self.assertEqual({'error': 'Script failed to return anything (the return value must be JSON serializable).'},
+                         r.json())
