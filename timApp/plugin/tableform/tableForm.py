@@ -126,7 +126,7 @@ class TableFormHtmlModel(GenericHtmlModel[TableFormInputModel, TableFormMarkupMo
             user = User.get_by_name(self.info.current_user_id)
             userfields = get_fields_and_users(self.markup.fields, groups, d, user)
             rows = {}
-            realnames= {}
+            realnames = {}
             for f in userfields[0]:
                 rows[f['user'].name] = dict(f['fields'])
                 realnames[f['user'].name] = f['user'].real_name
@@ -138,7 +138,7 @@ class TableFormHtmlModel(GenericHtmlModel[TableFormInputModel, TableFormMarkupMo
                 r['fields'] = []
             r['aliases'] = userfields[1]
             r['contentMap'] = userfields[2]
-            #TODO else return "no groups/no fields"
+            # TODO else return "no groups/no fields"
 
         return r
 
