@@ -42,7 +42,7 @@ class Answer(db.Model):
     users = db.relationship('User', secondary=UserAnswer.__table__,
                             back_populates='answers', lazy='dynamic')
     users_all = db.relationship('User', secondary=UserAnswer.__table__,
-                                back_populates='answers_alt', lazy='select')
+                                back_populates='answers_alt', order_by='User.real_name', lazy='select')
     annotations = db.relationship('Annotation', back_populates='answer')
     saver = db.relationship('User', lazy='select', secondary=AnswerSaver.__table__, uselist=False)
 
