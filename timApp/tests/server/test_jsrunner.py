@@ -158,6 +158,19 @@ tools.setString("t1", "a");
         )
         self.verify_content(f'{d.id}.t1', 'c', 'a', self.test_user_1, expected_count=1)
 
+    def test_print_nonascii(self):
+        d = self.create_jsrun("""
+fields: []
+group: testuser1
+program: |!!
+tools.print("häh höh håh");
+!!
+        """)
+        self.do_jsrun(
+            d,
+            expect_content={'web': {'errors': [], 'output': 'häh höh håh\n'}},
+        )
+
     def test_aliases_and_getters(self):
         d1 = self.create_doc(initial_par="""
 #- {plugin=textfield #t1}
