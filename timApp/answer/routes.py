@@ -204,15 +204,14 @@ def get_fields_and_users(u_fields: List[str], groups: List[UserGroup], d: DocInf
     res = []
     group_filter = UserGroup.id.in_([ug.id for ug in groups])
     sub = (Answer.query
+           .filter(Answer.task_id.in_(task_ids_to_strlist(task_ids)))
            .join(User, Answer.users)
            .join(UserGroup, User.groups)
-           .filter(Answer.task_id.in_(task_ids_to_strlist(task_ids)))
            .filter(group_filter)
            .group_by(Answer.task_id, User.id)
            .with_entities(func.max(Answer.id), User.id)).subquery()
     answers_with_users: List[Tuple[User, Answer]] = (
-        UserGroup.query.join(User, UserGroup.users)
-            .filter(group_filter)
+        UserGroup.query.filter(group_filter).join(User, UserGroup.users)
             .outerjoin(Answer, tuple_(Answer.id, User.id).in_(sub))
             .order_by(User.id)
             .with_entities(User.id, Answer).all()
