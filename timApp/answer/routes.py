@@ -203,20 +203,32 @@ def get_fields_and_users(u_fields: List[str], groups: List[UserGroup], d: DocInf
 
     res = []
     group_filter = UserGroup.id.in_([ug.id for ug in groups])
-    sub = (Answer.query
-           .filter(Answer.task_id.in_(task_ids_to_strlist(task_ids)))
-           .join(User, Answer.users)
-           .join(UserGroup, User.groups)
-           .filter(group_filter)
-           .group_by(Answer.task_id, User.id)
-           .with_entities(func.max(Answer.id), User.id)).subquery()
-    answers_with_users: List[Tuple[User, Answer]] = (
-        UserGroup.query.filter(group_filter).join(User, UserGroup.users)
-            .outerjoin(Answer, tuple_(Answer.id, User.id).in_(sub))
-            .order_by(User.id)
-            .with_entities(User.id, Answer).all()
+    answer_sub = Answer.query.filter(Answer.task_id.in_(task_ids_to_strlist(task_ids)))
+    aid_max = func.max(Answer.id)
+    sub = (
+        answer_sub
+            .join(User, Answer.users)
+            .join(UserGroup, User.groups)
+            .filter(group_filter)
+            .group_by(Answer.task_id, User.id)
+            .with_entities(aid_max.label('aid'), User.id.label('uid'))
+            .all()
     )
-    users = User.query.filter(User.id.in_([uid for uid, _ in answers_with_users])).order_by(User.id).all()
+    aid_uid_map = {}
+    for aid, uid in sub:
+        aid_uid_map[aid] = uid
+    users = UserGroup.query.filter(group_filter).join(User, UserGroup.users).with_entities(User).order_by(User.id).all()
+    user_map = {}
+    for u in users:
+        user_map[u.id] = u
+    answs = Answer.query.filter(Answer.id.in_(aid for aid, _ in sub)).all()
+    answers_with_users = []
+    for a in answs:
+        answers_with_users.append((aid_uid_map[a.id], a))
+    missing_users = set(u.id for u in users) - set(uid for uid, _ in answers_with_users)
+    for mu in missing_users:
+        answers_with_users.append((mu, None))
+    answers_with_users.sort(key=lambda x: x[0])
     last_user = None
     user_tasks = None
     user_index = -1
