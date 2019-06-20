@@ -29,6 +29,22 @@ def expand_macros_regex(text: str, macros, macro_delimiter=None):
 # Ks. https://tim.jyu.fi/view/tim/ohjeita/satunnaistus#timfiltterit
 
 
+def srange(s, i1, i2, step=1):
+    """
+    Jinja2 filter for generating indexed names
+    :param s: format string for item
+    :param i1: start index
+    :param i2: exclusive end index
+    :param after: string after every item
+    :param step: how much increment
+    :return: like "d1 d2 d3 "  by call sfrom('d{0} ', 1, 4)
+    """
+    result = ''
+    for i in range(i1, i2, step):
+        result += s.format(i)
+    return result
+
+
 def Pz(i):
     """
     Returns number as a string so that from 0 comes "", postive number comes like " + 1"
@@ -115,6 +131,7 @@ def create_environment(macro_delimiter: str):
         trim_blocks=True,
     )
     env.filters['Pz'] = Pz
+    env.filters['srange'] = srange
 
     # During some markdown tests, there is no request context and therefore no g object.
     try:
