@@ -172,7 +172,7 @@ class Tools {
         if (s === null || s === undefined) {
             s = def;
         }
-        if (!checkNumber(s)) {
+        if (!checkString(s)) {
             return this.reportInputTypeErrorAndReturnDef(s, def);
         }
         return s.toString();
