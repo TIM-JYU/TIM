@@ -215,15 +215,20 @@ def get_fields_and_users(u_fields: List[str], groups: List[UserGroup], d: DocInf
             .filter(group_filter)
             .outerjoin(Answer, tuple_(Answer.id, User.id).in_(sub))
             .order_by(User.id)
-            .with_entities(User, Answer).all()
+            .with_entities(User.id, Answer).all()
     )
+    users = User.query.filter(User.id.in_([uid for uid, _ in answers_with_users])).order_by(User.id).all()
     last_user = None
     user_tasks = None
-    for user, a in answers_with_users:
-        if last_user != user:
+    user_index = -1
+    user = None
+    for uid, a in answers_with_users:
+        if last_user != uid:
+            user_index += 1
             user_tasks = {}
+            user = users[user_index]
             res.append({'user': user, 'fields': user_tasks})
-            last_user = user
+            last_user = uid
             if not a:
                 continue
         for task in task_id_map[a.task_id]:
