@@ -16,6 +16,7 @@ from flask import request
 from marshmallow import Schema, fields, post_load, validates_schema, ValidationError
 from marshmallow.utils import _Missing, missing
 from sqlalchemy import func, tuple_
+from sqlalchemy.orm import defaultload
 from webargs.flaskparser import use_args
 
 from pluginserver_flask import GenericMarkupSchema
@@ -217,7 +218,14 @@ def get_fields_and_users(u_fields: List[str], groups: List[UserGroup], d: DocInf
     aid_uid_map = {}
     for aid, uid in sub:
         aid_uid_map[aid] = uid
-    users = UserGroup.query.filter(group_filter).join(User, UserGroup.users).with_entities(User).order_by(User.id).all()
+    users = (
+        UserGroup.query.filter(group_filter)
+            .join(User, UserGroup.users)
+            .options(defaultload(UserGroup.users).lazyload(User.groups))
+            .with_entities(User)
+            .order_by(User.id)
+            .all()
+    )
     user_map = {}
     for u in users:
         user_map[u.id] = u
