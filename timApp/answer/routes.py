@@ -156,6 +156,11 @@ def get_iframehtml(plugintype: str, task_id_ext: str, user_id: int, anr: int):
     return result
 
 
+def chunks(l: List, n: int):
+    for i in range(0, len(l), n):
+        yield l[i:i + n]
+
+
 def get_fields_and_users(u_fields: List[str], groups: List[UserGroup], d: DocInfo, current_user: User):
     needs_group_access_check = UserGroup.get_teachers_group() not in current_user.groups
     for group in groups:
@@ -204,17 +209,20 @@ def get_fields_and_users(u_fields: List[str], groups: List[UserGroup], d: DocInf
 
     res = []
     group_filter = UserGroup.id.in_([ug.id for ug in groups])
-    answer_sub = Answer.query.filter(Answer.task_id.in_(task_ids_to_strlist(task_ids)))
-    aid_max = func.max(Answer.id)
-    sub = (
-        answer_sub
-            .join(User, Answer.users)
-            .join(UserGroup, User.groups)
-            .filter(group_filter)
-            .group_by(Answer.task_id, User.id)
-            .with_entities(aid_max.label('aid'), User.id.label('uid'))
-            .all()
-    )
+    sub = []
+
+    # For some reason, with 7 or more fields, executing the following query is very slow.
+    # That's why we split the list of task ids in chunks of size 6 and merge the results.
+    for task_chunk in chunks(task_ids, 6):
+        sub += (
+            Answer.query.filter(Answer.task_id.in_(task_ids_to_strlist(task_chunk)))
+                .join(User, Answer.users)
+                .join(UserGroup, User.groups)
+                .filter(group_filter)
+                .group_by(Answer.task_id, User.id)
+                .with_entities(func.max(Answer.id), User.id)
+                .all()
+        )
     aid_uid_map = {}
     for aid, uid in sub:
         aid_uid_map[aid] = uid
