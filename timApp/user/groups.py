@@ -149,7 +149,7 @@ def verify_group_edit_access(ug: UserGroup, user=None, require=True):
 
 
 def verify_group_view_access(ug: UserGroup, user=None, require=True):
-    verify_group_access(ug, view_access_set, user, require=require)
+    return verify_group_access(ug, view_access_set, user, require=require)
 
 
 @groups.route('/addmember/<groupname>/<usernames>')
