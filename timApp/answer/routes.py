@@ -2,6 +2,7 @@
 import json
 import re
 import time
+from collections import defaultdict
 from datetime import timezone, timedelta, datetime
 from typing import Union, List, Tuple, Dict
 
@@ -14,7 +15,7 @@ from flask import abort
 from flask import request
 from marshmallow import Schema, fields, post_load, validates_schema, ValidationError
 from marshmallow.utils import _Missing, missing
-from sqlalchemy import func
+from sqlalchemy import func, tuple_
 from webargs.flaskparser import use_args
 
 from pluginserver_flask import GenericMarkupSchema
@@ -155,17 +156,14 @@ def get_iframehtml(plugintype: str, task_id_ext: str, user_id: int, anr: int):
 
 
 def get_fields_and_users(u_fields: List[str], groups: List[UserGroup], d: DocInfo, current_user: User):
-    users = set()
     needs_group_access_check = UserGroup.get_teachers_group() not in current_user.groups
     for group in groups:
         if needs_group_access_check and group.name != current_user.name:
             if not verify_group_view_access(group, current_user, require=False):
                 return abort(403, f'Missing view access for group {group.name}')
-        g = group.users.all()
-        for u in g:
-            users.add(u)
 
     task_ids = []
+    task_id_map = defaultdict(list)
     alias_map = {}
     content_map = {}
     jsrunner_alias_map = {}
@@ -187,6 +185,7 @@ def get_fields_and_users(u_fields: List[str], groups: List[UserGroup], d: DocInf
         task_ids.append(task_id)
         if not task_id.doc_id:
             task_id.doc_id = d.id
+        task_id_map[task_id.doc_task].append(task_id)
         if len(field_content) == 2:
             content_map[task_id.extended_or_doc_task] = field_content[1].strip()
         if a:
@@ -195,26 +194,39 @@ def get_fields_and_users(u_fields: List[str], groups: List[UserGroup], d: DocInf
                 abort(400, f'Duplicate alias {alias} in fields attribute')
             alias_map[task_id.extended_or_doc_task] = alias
             jsrunner_alias_map[alias] = task_id.extended_or_doc_task
+        if task_id.doc_id in doc_map:
+            continue
         dib = get_doc_or_abort(task_id.doc_id, f'Document {task_id.doc_id} not found')
         if not current_user.has_teacher_access(dib):
             abort(403, f'Missing teacher access for document {dib.id}')
         doc_map[task_id.doc_id] = dib.document
 
     res = []
-    for user in users:
-        answer_ids = (
-            user.answers
-                .filter(Answer.task_id.in_(task_ids_to_strlist(task_ids)))
-                .group_by(Answer.task_id)
-                .with_entities(func.max(Answer.id)).all()
-        )
-        answer_list = Answer.query.filter(Answer.id.in_(answer_ids)).all()
-        answer_dict: Dict[str, Answer] = {}
-        for answer in answer_list:
-            answer_dict[answer.task_id] = answer
-        user_tasks = {}
-        for task in task_ids:
-            a = answer_dict.get(task.doc_task)
+    group_filter = UserGroup.id.in_([ug.id for ug in groups])
+    sub = (Answer.query
+           .join(User, Answer.users)
+           .join(UserGroup, User.groups)
+           .filter(Answer.task_id.in_(task_ids_to_strlist(task_ids)))
+           .filter(group_filter)
+           .group_by(Answer.task_id, User.id)
+           .with_entities(func.max(Answer.id), User.id)).subquery()
+    answers_with_users: List[Tuple[User, Answer]] = (
+        UserGroup.query.join(User, UserGroup.users)
+            .filter(group_filter)
+            .outerjoin(Answer, tuple_(Answer.id, User.id).in_(sub))
+            .order_by(User.id)
+            .with_entities(User, Answer).all()
+    )
+    last_user = None
+    user_tasks = None
+    for user, a in answers_with_users:
+        if last_user != user:
+            user_tasks = {}
+            res.append({'user': user, 'fields': user_tasks})
+            last_user = user
+            if not a:
+                continue
+        for task in task_id_map[a.task_id]:
             if not a:
                 value = None
             elif task.field == "points":
@@ -229,7 +241,7 @@ def get_fields_and_users(u_fields: List[str], groups: List[UserGroup], d: DocInf
                     value = p.get(content_map[task.extended_or_doc_task])
                 else:
                     if len(p) > 1:
-                        plug = find_plugin_from_document(doc_map[task.doc_id], task, get_current_user_object())
+                        plug = find_plugin_from_document(doc_map[task.doc_id], task, user)
                         content_field = plug.get_content_field_name()
                         value = p.get(content_field)
                     else:
@@ -239,7 +251,6 @@ def get_fields_and_users(u_fields: List[str], groups: List[UserGroup], d: DocInf
                 user_tasks[alias_map.get(task.extended_or_doc_task)] = value
             else:
                 user_tasks[task.extended_or_doc_task] = value
-        res.append({'user': user, 'fields': user_tasks})
     return res, jsrunner_alias_map, content_map
 
 

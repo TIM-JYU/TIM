@@ -11,17 +11,34 @@ from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
 
 
-class JsRunnerTest(TimRouteTest):
-    def setUp(self):
-        super().setUp()
-        self.login_test1()
-
+class JsRunnerTestBase(TimRouteTest):
     def verify_content(self, task: str, content_field: str, content, u: User, expected_count=1):
         anss: List[Answer] = u.answers.filter_by(task_id=task).order_by(Answer.answered_on.desc()).all()
         self.assertEqual(expected_count, len(anss))
         first = anss[0]
         self.assertEqual(content, first.content_as_json[content_field])
         return first
+
+    def create_jsrun(self, md):
+        return self.create_doc(initial_par=rf"""
+#- {{#r plugin=jsrunner}}
+{md}""")
+
+    def do_jsrun(self, d: DocInfo, expect_content=None, expect_status=200, **kwargs):
+        return self.post_answer(
+            'jsrunner',
+            f'{d.id}.r',
+            user_input={},
+            expect_content=expect_content,
+            expect_status=expect_status,
+            **kwargs,
+        )
+
+
+class JsRunnerTest(JsRunnerTestBase):
+    def setUp(self):
+        super().setUp()
+        self.login_test1()
 
     def test_invalid_markup(self):
         invalid_yamls = [
@@ -49,21 +66,6 @@ class JsRunnerTest(TimRouteTest):
                 expect_status=s,
                 json_key='error' if s >= 400 else None,
             )
-
-    def create_jsrun(self, md):
-        return self.create_doc(initial_par=rf"""
-#- {{#r plugin=jsrunner}}
-{md}""")
-
-    def do_jsrun(self, d: DocInfo, expect_content=None, expect_status=200, **kwargs):
-        return self.post_answer(
-            'jsrunner',
-            f'{d.id}.r',
-            user_input={},
-            expect_content=expect_content,
-            expect_status=expect_status,
-            **kwargs,
-        )
 
     def test_nonexistent_field(self):
         d = self.create_jsrun("""
@@ -439,3 +441,54 @@ tools.setString("t", "hi");
         self.assertEqual(200, r.status_code)
         self.assertEqual({'error': 'Script failed to return anything (the return value must be JSON serializable).'},
                          r.json())
+
+
+class JsRunnerGroupTest(JsRunnerTestBase):
+    def test_jsrunner_group(self):
+        self.login_test1()
+        d = self.create_jsrun("""
+fields: [t1, t2]
+group: testusers
+program: |!!
+tools.setString("t1", tools.getString("t1", "") + "-" + tools.getStudentName());
+tools.setString("t2", tools.getString("t2", "") + "=" + tools.getStudentName());
+!!
+        """)
+        d.document.add_text("""
+#- {#t1 plugin=textfield}
+#- {#t2 plugin=textfield}
+        """)
+        ug = UserGroup.create('testusers')
+        ug.users.append(self.test_user_1)
+        ug.users.append(self.test_user_2)
+        ug.users.append(self.test_user_3)
+        self.test_user_1.groups.append(UserGroup.get_teachers_group())
+        db.session.commit()
+        self.do_jsrun(
+            d,
+            expect_content={'web': {'errors': [], 'output': ''}},
+        )
+        self.verify_content(f'{d.id}.t1', 'c', '-Test user 1', self.test_user_1)
+        self.verify_content(f'{d.id}.t2', 'c', '=Test user 1', self.test_user_1)
+        self.verify_content(f'{d.id}.t1', 'c', '-Test user 2', self.test_user_2)
+        self.verify_content(f'{d.id}.t2', 'c', '=Test user 2', self.test_user_2)
+        self.do_jsrun(
+            d,
+            expect_content={'web': {'errors': [], 'output': ''}},
+        )
+        self.verify_content(f'{d.id}.t1', 'c', '-Test user 1-Test user 1', self.test_user_1, expected_count=2)
+        self.verify_content(f'{d.id}.t2', 'c', '=Test user 1=Test user 1', self.test_user_1, expected_count=2)
+        self.verify_content(f'{d.id}.t1', 'c', '-Test user 2-Test user 2', self.test_user_2, expected_count=2)
+        self.verify_content(f'{d.id}.t2', 'c', '=Test user 2=Test user 2', self.test_user_2, expected_count=2)
+        self.do_jsrun(
+            d,
+            expect_content={'web': {'errors': [], 'output': ''}},
+        )
+        self.verify_content(f'{d.id}.t1', 'c', '-Test user 1-Test user 1-Test user 1', self.test_user_1,
+                            expected_count=3)
+        self.verify_content(f'{d.id}.t2', 'c', '=Test user 1=Test user 1=Test user 1', self.test_user_1,
+                            expected_count=3)
+        self.verify_content(f'{d.id}.t1', 'c', '-Test user 2-Test user 2-Test user 2', self.test_user_2,
+                            expected_count=3)
+        self.verify_content(f'{d.id}.t2', 'c', '=Test user 2=Test user 2=Test user 2', self.test_user_2,
+                            expected_count=3)
