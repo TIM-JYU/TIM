@@ -187,15 +187,16 @@ class Tools {
         return s;
     }
 
-    getSum(fieldName: unknown, start: unknown, end: unknown, defa: unknown = 0): number {
+    getSum(fieldName: unknown, start: number, end: number, defa: unknown = 0, max: unknown = 1e100): number {
         const f = ensureStringFieldName(fieldName);
         const def = ensureNumberDefault(defa);
+        const maxv = ensureNumberDefault(max);
         if (!(checkInt(start) && checkInt(end))) {
             throw new Error("Parameters 'start' and 'end' must be integers.");
         }
         let sum = 0;
         for (let i = start; i <= end; i++) {
-            sum += this.getDouble(f + i.toString(), def);
+            sum += Math.min(this.getDouble(f + i.toString(), def), maxv);
         }
         return sum;
     }
@@ -269,7 +270,7 @@ class Tools {
         this.result[fnc] = p;
     }
 
-    defineTime(s: unknown): number {
+    static defineTime(s: unknown): number {
         if (!checkString(s)) {
             throw valueTypeError(s);
         }
@@ -285,7 +286,7 @@ class Tools {
         return this.getDouble(f, def);
     }
 
-    print(...args: unknown[]) {
+     print(...args: unknown[]) {
         let sep = "";
         for (const a of args) {
             this.output += sep + a;
@@ -300,6 +301,10 @@ class Tools {
 
     getOutput() {
         return this.output;
+    }
+
+    clearOutput() {
+        this.output = "";
     }
 
     getErrors() {

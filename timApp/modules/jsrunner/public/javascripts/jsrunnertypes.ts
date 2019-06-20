@@ -19,6 +19,8 @@ export const JsrunnerMarkup = t.intersection([
         gradingScale: t.record(t.string, t.number),
         groups: t.array(t.string),
         program: t.string,
+        preprogram: t.string,
+        postprogram: t.string,
         timeout: Max1000,
     }),
     GenericPluginMarkup,

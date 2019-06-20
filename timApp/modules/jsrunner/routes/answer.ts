@@ -39,6 +39,17 @@ function runner(d: IRunnerData): RunnerResult {
     let output = "";
     const errors = [];
     try {
+        const guser = data[0];
+        const gtools = new Tools(guser, currDoc, markup, aliases); // create global tools
+        // tslint:disable
+        function runPreProgram(program: string | undefined, saveUsersFields?: never, output?: never, errors?: never,
+                            data?: never, d?: never, currDoc?: never, markup?: never, aliases?: never) {
+            if ( program ) eval(program);
+        }
+        runPreProgram(d.markup.preprogram);
+        output += gtools.getOutput();
+        gtools.clearOutput();
+
         for (const user of data) {
             const tools = new Tools(user, currDoc, markup, aliases); // in compiled JS, this is tools_1.default(...)
 
@@ -51,12 +62,26 @@ function runner(d: IRunnerData): RunnerResult {
 
             // tslint:enable
             runProgram(d.program);
+            // tools.print("d", JSON.stringify(d));
+            // tools.print("User", JSON.stringify(tools));
             saveUsersFields.push(tools.getResult());
             output += tools.getOutput();
             const userErrs = tools.getErrors();
             if (userErrs.length > 0) {
                 errors.push({user: user.user.name, errors: userErrs});
             }
+        }
+            // tslint:disable
+        function runPostProgram(program: string | undefined, saveUsersFields?: never, output?: never, errors?: never,
+                            data?: never, d?: never, currDoc?: never, markup?: never, aliases?: never) {
+            if ( program ) eval(program);
+        }
+        runPostProgram(d.markup.postprogram);
+        saveUsersFields.push(gtools.getResult());
+        output += gtools.getOutput();
+        const guserErrs = gtools.getErrors();
+        if (guserErrs.length > 0) {
+            errors.push({user: guser.user.name, errors: guserErrs});
         }
         return {res: saveUsersFields, output, errors};
     } catch (e) {

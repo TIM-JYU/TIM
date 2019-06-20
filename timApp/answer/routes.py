@@ -293,6 +293,8 @@ class JsRunnerSchema(GenericMarkupSchema):
     group = fields.Str()
     groups = fields.List(fields.Str())
     program = fields.Str()
+    preprogram = fields.Str()
+    postprogram = fields.Str()
     timeout = fields.Int()
     fields = fields.List(fields.Str(), required=True)
 
