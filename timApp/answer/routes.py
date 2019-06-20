@@ -279,11 +279,8 @@ def get_fields_and_users(u_fields: List[str], groups: List[UserGroup], d: DocInf
                     else:
                         values_p = list(p.values())
                         value = values_p[0]
-            if task.extended_or_doc_task in alias_map:
-                user_tasks[alias_map.get(task.extended_or_doc_task)] = value
-            else:
-                user_tasks[task.extended_or_doc_task] = value
-    return res, jsrunner_alias_map, content_map
+            user_tasks[alias_map.get(task.extended_or_doc_task, task.extended_or_doc_task)] = value
+    return res, jsrunner_alias_map, content_map, sorted([alias_map.get(ts.extended_or_doc_task, ts.extended_or_doc_task) for ts in task_ids])
 
 
 class JsRunnerSchema(GenericMarkupSchema):
@@ -450,10 +447,12 @@ def post_answer(plugintype: str, task_id_ext: str):
         if not_found_groups:
             abort(404, f'The following groups were not found: {", ".join(not_found_groups)}')
 
-        answerdata['data'], answerdata['aliases'], _ = get_fields_and_users(plugin.values['fields'],
-                                                                            found_groups,
-                                                                            d,
-                                                                            get_current_user_object())
+        answerdata['data'], answerdata['aliases'], _, _ = get_fields_and_users(
+            plugin.values['fields'],
+            found_groups,
+            d,
+            get_current_user_object(),
+        )
         if plugin.values.get('program') is None:
             abort(400, "Attribute 'program' is required.")
 

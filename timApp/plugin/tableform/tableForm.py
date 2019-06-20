@@ -90,10 +90,12 @@ class TableFormMarkupSchema(GenericMarkupSchema):
 class TableFormInputModel:
     """Model for the information that is sent from browser (plugin AngularJS component)."""
     replyRows: dict
+    nosave: bool
 
 
 class TableFormInputSchema(Schema):
     replyRows = fields.Dict()
+    nosave = fields.Bool()
 
     @post_load
     def make_obj(self, data):
@@ -124,20 +126,17 @@ class TableFormHtmlModel(GenericHtmlModel[TableFormInputModel, TableFormMarkupMo
                 return
             d = get_doc_or_abort(tid.doc_id)
             user = User.get_by_name(self.current_user_id)
-            userfields = get_fields_and_users(self.markup.fields, groups, d, user)
+            fielddata, aliases, content_map, field_names = get_fields_and_users(self.markup.fields, groups, d, user)
             rows = {}
             realnames = {}
-            for f in userfields[0]:
+            for f in fielddata:
                 rows[f['user'].name] = dict(f['fields'])
                 realnames[f['user'].name] = f['user'].real_name
             r['rows'] = rows
             r['realnamemap'] = realnames
-            try:
-                r['fields'] = list(userfields[0][0]['fields'].keys())
-            except IndexError:
-                r['fields'] = []
-            r['aliases'] = userfields[1]
-            r['contentMap'] = userfields[2]
+            r['fields'] = field_names
+            r['aliases'] = aliases
+            r['contentMap'] = content_map
             # TODO else return "no groups/no fields"
 
         return r
