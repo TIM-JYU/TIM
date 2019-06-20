@@ -12,7 +12,7 @@ const RunScriptInput = t.intersection([t.type({
     timeout: Max1000,
 })]);
 
-router.post("/", (req, res, next) => {
+router.post("/", async (req, res, next) => {
     const decoded = RunScriptInput.decode(req.body);
     if (decoded.isLeft()) {
         res.status(400);
@@ -26,7 +26,7 @@ router.post("/", (req, res, next) => {
     });
     let script;
     try {
-        script = isolate.compileScriptSync(
+        script = await isolate.compileScript(
             `
             const data = JSON.parse(g);
             function runScript() {
@@ -41,10 +41,10 @@ router.post("/", (req, res, next) => {
         res.json({error: e.message});
         return;
     }
-    const ctx = isolate.createContextSync({inspector: false});
-    ctx.global.setSync("g", JSON.stringify(inputs.data));
+    const ctx = await isolate.createContext({inspector: false});
+    await ctx.global.set("g", JSON.stringify(inputs.data));
     try {
-        const result = script.runSync(ctx, {timeout: inputs.timeout || 500});
+        const result = await script.run(ctx, {timeout: inputs.timeout || 500});
         if (result === undefined) {
             res.json({error: "Script failed to return anything (the return value must be JSON serializable)."});
         } else {

@@ -65,7 +65,7 @@ function runner(d: IRunnerData): RunnerResult {
     }
 }
 
-router.put("/", (req, res, next) => {
+router.put("/", async (req, res, next) => {
     const decoded = JsrunnerAnswer.decode(req.body);
     if (decoded.isLeft()) {
         res.json({web: {error: "Invalid input to jsrunner answer route."}});
@@ -83,10 +83,10 @@ router.put("/", (req, res, next) => {
         inspector: false,
     });
 
-    const toolsScript = isolate.compileScriptSync(toolsSource, {filename: "tools.js"});
+    const toolsScript = await isolate.compileScript(toolsSource, {filename: "tools.js"});
 
     // Do not add more code inside the string. Edit the 'runner' function instead.
-    const script = isolate.compileScriptSync(
+    const script = await isolate.compileScript(
         `
         const tools_1 = toolsjs;
         ${runner}
@@ -95,8 +95,8 @@ router.put("/", (req, res, next) => {
             filename: "script.js",
         },
     );
-    const ctx = isolate.createContextSync({inspector: false});
-    toolsScript.runSync(ctx);
+    const ctx = await isolate.createContext({inspector: false});
+    await toolsScript.run(ctx);
     const runnerData: IRunnerData = {
         data: value.input.data,
         currDoc: currDoc[0],
@@ -104,11 +104,11 @@ router.put("/", (req, res, next) => {
         aliases: value.input.aliases,
         program: value.markup.program || "",
     };
-    ctx.global.setSync("g", JSON.stringify(runnerData));
+    await ctx.global.set("g", JSON.stringify(runnerData));
     let r: AnswerReturn;
     try {
         const result: ReturnType<typeof runner> = JSON.parse(
-            script.runSync(ctx, {timeout: value.markup.timeout || 1000}),
+            await script.run(ctx, {timeout: value.markup.timeout || 1000}),
         );
         if (result.fatalError) {
             r = {
