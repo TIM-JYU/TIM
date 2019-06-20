@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "start": "ts-node -r tsconfig-paths/register ./bin/www.ts",
+    "start": "npx ts-node -r tsconfig-paths/register ./bin/www.ts",
     "buildtools": "npx parcel build --no-minify --global toolsjs ./routes/tools.ts",
     "postinstall": "npm run buildtools"
   },

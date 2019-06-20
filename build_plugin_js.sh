@@ -6,4 +6,4 @@
 timApp/modules/textfield/js timApp/modules/numericfield/js timApp/modules/multisave/js \
 timApp/modules/jsrunner/public/javascripts timApp/modules/dropdown/js timApp/modules/feedback/js timApp/modules/drag/js
 
-./run_command_workdir.sh timApp/modules/jsrunner npm install --unsafe-perm
+./run_command_workdir.sh timApp/modules/jsrunner npm install --no-bin-links --unsafe-perm
