@@ -137,7 +137,7 @@ def verify_group_access(ug: UserGroup, access_set, u=None, require=True):
             u = get_current_user_object()
         if not u.has_some_access(b, access_set):
             return verify_groupadmin(require=require)
-        return False
+        return True
 
 
 def verify_group_edit_access(ug: UserGroup, user=None, require=True):
