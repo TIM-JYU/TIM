@@ -1,5 +1,5 @@
 #![feature(box_patterns)]
-#![feature(async_await, await_macro)]
+#![feature(async_await)]
 #![recursion_limit = "128"]
 
 #[macro_use]
@@ -36,9 +36,9 @@ use diesel::pg::PgConnection;
 use diesel::r2d2::{ConnectionManager, Pool};
 use failure::Fail;
 use failure::ResultExt;
-use actix_web_async_await::{await};
 use futures::executor::block_on;
 use rayon;
+use futures::compat::Future01CompatExt;
 
 fn view_document(info: Path<(u32,)>) -> String {
     format!("Hello {}!", &info.0)
@@ -87,15 +87,15 @@ async fn view_item_impl(req: &HttpRequest<AppState>) -> Result<HttpResponse, Tim
         PathSpec::Id(_) => return Ok(HttpResponse::Ok().body("not supported by id yet")),
         PathSpec::Path(p) => path = p.to_string(),
     }
-    let res = await!(state
+    let res = (state
         .db
         .send(GetItem {
             path: path.to_string()
-        }))
+        })).compat().await
     .context(TimErrorKind::Db)??;
     match res {
         ItemKind::Folder(f) => {
-            let items = await!(state.db.send(GetItems { path: f.get_path() }))
+            let items = (state.db.send(GetItems { path: f.get_path() })).compat().await
                 .context(TimErrorKind::Db)??;
             Ok(HttpResponse::Ok()
                 .content_type("text/html; charset=utf-8")
