@@ -12,12 +12,6 @@ mod schema;
 mod settings;
 mod timerror;
 
-use actix::Addr;
-use actix::SyncArbiter;
-use actix_web::pred;
-use actix_web::ResponseError;
-use actix_web::{http, server, App, HttpRequest, HttpResponse, Path};
-use askama::Template;
 use crate::db::DbExecutor;
 use crate::db::GetItem;
 use crate::db::GetItems;
@@ -32,13 +26,19 @@ use crate::models::ItemList;
 use crate::settings::Settings;
 use crate::timerror::TimError;
 use crate::timerror::TimErrorKind;
+use actix::Addr;
+use actix::SyncArbiter;
+use actix_web::pred;
+use actix_web::ResponseError;
+use actix_web::{http, server, App, HttpRequest, HttpResponse, Path};
+use askama::Template;
 use diesel::pg::PgConnection;
 use diesel::r2d2::{ConnectionManager, Pool};
 use failure::Fail;
 use failure::ResultExt;
+use futures::compat::Future01CompatExt;
 use futures::executor::block_on;
 use rayon;
-use futures::compat::Future01CompatExt;
 
 fn view_document(info: Path<(u32,)>) -> String {
     format!("Hello {}!", &info.0)
@@ -87,15 +87,17 @@ async fn view_item_impl(req: &HttpRequest<AppState>) -> Result<HttpResponse, Tim
         PathSpec::Id(_) => return Ok(HttpResponse::Ok().body("not supported by id yet")),
         PathSpec::Path(p) => path = p.to_string(),
     }
-    let res = (state
-        .db
-        .send(GetItem {
-            path: path.to_string()
-        })).compat().await
+    let res = (state.db.send(GetItem {
+        path: path.to_string(),
+    }))
+    .compat()
+    .await
     .context(TimErrorKind::Db)??;
     match res {
         ItemKind::Folder(f) => {
-            let items = (state.db.send(GetItems { path: f.get_path() })).compat().await
+            let items = (state.db.send(GetItems { path: f.get_path() }))
+                .compat()
+                .await
                 .context(TimErrorKind::Db)??;
             Ok(HttpResponse::Ok()
                 .content_type("text/html; charset=utf-8")

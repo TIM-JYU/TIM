@@ -1,13 +1,13 @@
-use actix::Actor;
-use actix::Handler;
-use actix::Message;
-use actix::SyncContext;
 use crate::document::DocInfo;
 use crate::models::Folder;
 use crate::models::ItemKind;
 use crate::schema;
 use crate::timerror::TimError;
 use crate::timerror::TimErrorKind;
+use actix::Actor;
+use actix::Handler;
+use actix::Message;
+use actix::SyncContext;
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
 use diesel::r2d2::{ConnectionManager, Pool};

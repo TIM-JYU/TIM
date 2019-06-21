@@ -1,7 +1,7 @@
-use std::convert::TryFrom;
 use crate::timerror::{TimError, TimErrorKind};
-use yaml_rust::{YamlLoader, Yaml};
 use failure::ResultExt;
+use std::convert::TryFrom;
+use yaml_rust::{Yaml, YamlLoader};
 
 #[derive(Debug)]
 struct YamlBlock {
@@ -20,18 +20,23 @@ impl TryFrom<&str> for YamlBlock {
         let mut r =
             YamlLoader::load_from_str(&correct_yaml(value)).context(TimErrorKind::InvalidYaml)?;
         let mut drain = r.drain(..);
-        Ok(YamlBlock {yaml: drain.next().ok_or(TimErrorKind::InvalidYaml)?})
+        Ok(YamlBlock {
+            yaml: drain.next().ok_or(TimErrorKind::InvalidYaml)?,
+        })
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use yaml_rust::YamlLoader;
     use crate::document::yamlblock::YamlBlock;
     use std::convert::TryFrom;
+    use yaml_rust::YamlLoader;
 
     fn check_same_yaml(std_yaml: &str, tim_yaml: &str) {
-        assert_eq!(YamlLoader::load_from_str(std_yaml).unwrap()[0], YamlBlock::try_from(tim_yaml).unwrap().yaml);
+        assert_eq!(
+            YamlLoader::load_from_str(std_yaml).unwrap()[0],
+            YamlBlock::try_from(tim_yaml).unwrap().yaml
+        );
     }
 
     #[test]

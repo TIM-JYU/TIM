@@ -115,7 +115,9 @@ fn dereference_blocks(
                 PP::DerefBlock(box PP::Setting(_), _) => return pp,
                 PP::DerefBlock(box PP::Plugin(_), _) => return pp,
                 PP::Error(_) => return pp,
-                PP::Area(blocks) => return PP::Area(dereference_blocks(blocks, docs, visited_blocks)),
+                PP::Area(blocks) => {
+                    return PP::Area(dereference_blocks(blocks, docs, visited_blocks))
+                }
                 PP::Ref(ref _ctxblock, ref docref) => PP::DerefBlock(
                     Box::from(deref_single(docref.clone(), docs, visited_blocks)),
                     Box::from(pp),

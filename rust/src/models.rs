@@ -1,5 +1,5 @@
-use askama::Template;
 use crate::document::DocInfo;
+use askama::Template;
 use diesel_derive_enum::DbEnum;
 use serde_derive::Serialize;
 

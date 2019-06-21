@@ -1,9 +1,9 @@
-use chrono::prelude::*;
 use crate::document::docblock::AttributeContainer;
 use crate::document::docblock::BlockIdLike;
 use crate::document::BlockId;
 use crate::document::DocBlock;
 use crate::timerror::TimErrorKind;
+use chrono::prelude::*;
 use failure::Error;
 use failure::ResultExt;
 use indexmap::IndexMap;

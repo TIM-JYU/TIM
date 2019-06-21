@@ -1,5 +1,5 @@
-use askama::Template;
 use crate::models::Item;
+use askama::Template;
 use serde_derive::Serialize;
 
 #[derive(Template, Queryable, Serialize)]
