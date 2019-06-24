@@ -7,6 +7,7 @@ from typing import Tuple, Optional, Union, Iterable, Dict, NamedTuple, Generator
 
 import attr
 import yaml
+from docutils.nodes import header
 from flask import render_template_string
 
 import timApp
@@ -412,6 +413,8 @@ class Plugin:
             markup = self.values
             header = str(markup.get("header", markup.get("headerText", "")))
             stem = str(markup.get("stem", "Open plugin"))
+            if not header and not stem:
+                stem = "+ question"
             out = f'{LAZYSTART}{out}{LAZYEND}<span style="font-weight:bold">{header}</span><div><p>{stem}</p></div>'
 
         # Create min and max height for div
@@ -518,8 +521,9 @@ def find_inline_plugins(block: DocParagraph, macroinfo: MacroInfo) -> Generator[
 
     # "}" not allowed in inlineplugins for now
     # TODO make task id optional
-    matches: Iterable[Match] = re.finditer(r'{#([^ }\n]+)(([ \n]*[^{}]*)|([ \n]*[^{}]*{[^{}]*}[^{}]*)*)?}', md)
+    # matches: Iterable[Match] = re.finditer(r'{#([^ }\n]+)(([ \n]*[^{}]*)|([ \n]*[^{}]*{[^{}]*}[^{}]*)*)?}', md)
     # matches: Iterable[Match] = re.finditer(r'{#([^ }\n]+)([ \n][^}]+)?}', md)
+    matches: Iterable[Match] = re.finditer(r'{#([\w]*)([\s\S]*?)?#}', md)
     for m in matches:
         task_str = m.group(1)
         task_id = UnvalidatedTaskId(task_str)

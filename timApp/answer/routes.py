@@ -169,10 +169,9 @@ def get_fields_and_users(u_fields: List[str], groups: List[UserGroup], d: DocInf
             if not verify_group_view_access(group, current_user, require=False):
                 # return abort(403, f'Missing view access for group {group.name}')
                 continue
-        else:
-            ugroups.append(group)
+        ugroups.append(group)
 
-    if not ugroups:
+    if not ugroups:  # if no access, give at least own group
         for group in current_user.groups:
             if group.name == current_user.name:
                 print(group.name + " added just user group")
@@ -292,7 +291,7 @@ def get_fields_and_users(u_fields: List[str], groups: List[UserGroup], d: DocInf
                         values_p = list(p.values())
                         value = values_p[0]
             user_tasks[alias_map.get(task.extended_or_doc_task, task.extended_or_doc_task)] = value
-    return res, jsrunner_alias_map, content_map, sorted([alias_map.get(ts.extended_or_doc_task, ts.extended_or_doc_task) for ts in task_ids])
+    return res, jsrunner_alias_map, content_map, [alias_map.get(ts.extended_or_doc_task, ts.extended_or_doc_task) for ts in task_ids]
 
 
 class JsRunnerSchema(GenericMarkupSchema):

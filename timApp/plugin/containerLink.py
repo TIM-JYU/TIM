@@ -38,7 +38,7 @@ DRAGPLUGIN_NAME = 'drag'
 
 PLUGINS = None
 PLUGIN_REGEX_OBJS = {}
-QSTMDATTRS = ["rows", "choices", "[0-9]", ".*[Tt]ext"]
+QSTMDATTRS = ["header", "expl", "stem", "rows", "reason", "choices", "[0-9]", ".*[Tt]ext"]
 FBMDATTRS = ["nextTask","questionItems","choices","levels"]
 DRAGATTRS = ["words"]
 TEXTFIELDATTRS = ["header", "stem", "inputstem"]

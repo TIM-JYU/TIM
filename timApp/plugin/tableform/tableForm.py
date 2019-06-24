@@ -53,6 +53,7 @@ class TableFormMarkupModel(GenericMarkupModel):
     maxWidth: Union[str, Missing] = missing
     minWidth: Union[str, Missing] = missing
     singleLine: Union[bool, Missing] = missing
+    removeDocIds: Union[bool, Missing] = missing
     open: Union[bool, Missing] = missing
     hiddenColumns: Union[List[int], Missing] = missing
     hiddenRows: Union[List[int], Missing] = missing
@@ -74,6 +75,7 @@ class TableFormMarkupSchema(GenericMarkupSchema):
     reportButton = fields.Str(allow_none=True)
     realnames = fields.Boolean()
     singleLine = fields.Boolean(allow_none=True)
+    removeDocIds = fields.Boolean(allow_none=True)
     maxWidth = fields.Str()
     minWidth = fields.Str(allow_none=True)
     open = fields.Boolean(allow_none=True)

@@ -36,6 +36,7 @@ const TableFormMarkup = t.intersection([
         singleLine: t.boolean,
         sortBy: nullable(t.string), /* TODO! Username and task, or task and username -- what about points? */
         table: nullable(t.boolean),
+        removeDocIds: withDefault(t.boolean, true),
 
     }),
     GenericPluginMarkup,
@@ -209,8 +210,12 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
             }
             if (this.attrsall.fields) {
                 for (let x = 0; x < this.attrsall.fields.length; x++) {
+                    let colheader = this.attrsall.fields[x];
+                    if ( this.attrs.removeDocIds && colheader.match(/^\d+\..+/)) {
+                        colheader = colheader.substring(colheader.indexOf(".") + 1);
+                    }
                     this.data.userdata.cells[colnumToLetters(x + xOffset) + 1] = {
-                        cell: this.attrsall.fields[x],
+                        cell: colheader,
                         backgroundColor: "#efecf1",
                     };
                     this.data.lockedCells.push(colnumToLetters(x + xOffset) + 1);
