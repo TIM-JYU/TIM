@@ -133,6 +133,7 @@ class ImportDataController extends PluginBase<t.TypeOf<typeof ImportDataMarkup>,
     }
 
     async doImport() {
+        this.isRunning = true;
         const text = this.importText;
         const url = this.pluginMeta.getAnswerUrl();
         // url.replace("answer", "importData");
@@ -153,6 +154,7 @@ class ImportDataController extends PluginBase<t.TypeOf<typeof ImportDataMarkup>,
         }>({method: "PUT", url: url, data: params, timeout: 20000},
         ));
 
+        this.isRunning = false;
         if (!r.ok) {
             const e = r.result.data.error;
             if ( e ) {
