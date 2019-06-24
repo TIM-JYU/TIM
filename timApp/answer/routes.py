@@ -164,16 +164,12 @@ def chunks(l: List, n: int):
 def get_fields_and_users(u_fields: List[str], groups: List[UserGroup], d: DocInfo, current_user: User):
     needs_group_access_check = UserGroup.get_teachers_group() not in current_user.groups
     ugroups = []
-    print(f"Needs needs_group_access_check: {needs_group_access_check} for {current_user.name}")
     for group in groups:
-        print(group.name)
         if needs_group_access_check and group.name != current_user.name:
             if not verify_group_view_access(group, current_user, require=False):
                 # return abort(403, f'Missing view access for group {group.name}')
-                print(f'Missing view access for group {group.name}')
                 continue
         else:
-            print(group.name + " added")
             ugroups.append(group)
 
     if not ugroups:
