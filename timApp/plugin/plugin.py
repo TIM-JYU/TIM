@@ -62,6 +62,7 @@ NO_ANSWERBROWSER_PLUGINS = {
     'multisave',
     'jsrunner',
     'tableForm',
+    'importData',
 }
 
 
@@ -81,6 +82,7 @@ class PluginRenderOptions(NamedTuple):
     review: bool
     wraptype: PluginWrap
     current_user: User
+    viewmode: bool
 
     @property
     def is_html(self):
@@ -320,6 +322,7 @@ class Plugin:
                 # added preview here so that whether or not the window is in preview can be
                 # checked in python so that decisions on what data is sent can be made.
                 "preview": options.preview,
+                "viewmode": options.viewmode,
                 "anonymous": options.user is not None,
                 "info": info,
                 "user_id": options.user.name if options.user is not None else 'Anonymous',
@@ -431,7 +434,7 @@ class Plugin:
 <{tag} id='{html_task_id}' data-plugin='/{self.type}' {style}>
 {out}
 </{tag}>
-            """
+            """.strip()
             if abtype and self.options.wraptype == PluginWrap.Full:
                 return render_template_string(
                     """
@@ -450,7 +453,7 @@ class Plugin:
                     doc_task_id=doc_task_id,
                     cont=cont,
                     aid=self.answer.id if self.answer else None,
-                )
+                ).replace("\n", "")
             else:
                 return cont
         return out
@@ -515,11 +518,12 @@ def find_inline_plugins(block: DocParagraph, macroinfo: MacroInfo) -> Generator[
 
     # "}" not allowed in inlineplugins for now
     # TODO make task id optional
-    matches: Iterable[Match] = re.finditer(r'{#([^ }\n]+)([ \n][^}]+)?}', md)
+    matches: Iterable[Match] = re.finditer(r'{#([^ }\n]+)(([ \n]*[^{}]*)|([ \n]*[^{}]*{[^{}]*}[^{}]*)*)?}', md)
+    # matches: Iterable[Match] = re.finditer(r'{#([^ }\n]+)([ \n][^}]+)?}', md)
     for m in matches:
         task_str = m.group(1)
         task_id = UnvalidatedTaskId(task_str)
-        p_yaml = m.group(2)
+        p_yaml = m.group(2).replace("\n", " ")
         p_range = (m.start(), m.end())
         yield task_id, p_yaml, p_range, md
 

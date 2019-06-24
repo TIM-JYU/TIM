@@ -51,6 +51,7 @@ from timApp.plugin.qst.qst import qst_plugin
 from timApp.plugin.routes import plugin_bp
 from timApp.plugin.timtable.timTable import timTable_plugin
 from timApp.plugin.tableform.tableForm import tableForm_plugin
+from timApp.plugin.importdata.importData import importData_plugin
 from timApp.printing.print import print_blueprint
 from timApp.plugin.tape.tape import tape_plugin
 from timApp.readmark.routes import readings
@@ -66,13 +67,15 @@ from timApp.user.usergroup import UserGroup
 from timApp.user.userutils import NoSuchUserException
 from timApp.util.flask.ReverseProxied import ReverseProxied
 from timApp.util.flask.cache import cache
-from timApp.util.flask.responsehelper import json_response, ok_response, error_generic
+from timApp.util.flask.responsehelper import json_response, ok_response, error_generic, text_response
 from timApp.util.flask.routes_static import static_bp
 from timApp.util.flask.search import search_routes
 from timApp.util.logger import log_info, log_error, log_debug, log_warning
 from timApp.util.utils import get_current_time
 from timApp.velp.annotation import annotations
 from timApp.velp.velp import velps
+
+import requests
 
 cache.init_app(app)
 
@@ -82,6 +85,7 @@ app.register_blueprint(manage_page)
 app.register_blueprint(qst_plugin)
 app.register_blueprint(timTable_plugin)
 app.register_blueprint(tableForm_plugin)
+app.register_blueprint(importData_plugin)
 app.register_blueprint(tape_plugin)
 app.register_blueprint(edit_page)
 app.register_blueprint(view_page)
@@ -241,6 +245,15 @@ def not_found(error):
 @app.route("/ping")
 def ping():
     return ok_response()
+
+
+@app.route("/getproxy")
+def getproxy():
+    url = request.args.get('url')
+    r = requests.request('get', url)
+
+    text = r.content
+    return text_response(text, r.status_code)
 
 
 @app.route("/getTemplates")

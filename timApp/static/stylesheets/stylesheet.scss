@@ -1264,3 +1264,20 @@ tim-user-list {
     display: block;
     height: calc(100% - #{13px * $line-height-base});
 }
+
+p.closeButton {
+    margin-left: auto;
+    margin-right: 0;
+    position: absolute;
+    right: 10px;
+    cursor: pointer;
+}
+
+p.closeButton::before {
+  content: "X";
+  font-weight: bold;
+}
+
+.importDataInner {
+    padding-left: 1em;
+}

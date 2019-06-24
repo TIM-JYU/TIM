@@ -161,7 +161,7 @@ def abort_if_not_access_and_required(access_obj: BlockAccess,
             else:
                 raise ItemLockedException(ba)
     if require:
-        abort(403, message or "Sorry, you don't have permission to view this resource.")
+        abort(403, message or "Sorry, you don't have permission to use this resource.")
     return None
 
 
@@ -243,7 +243,7 @@ def verify_comment_right(b: ItemOrBlock):
 
 
 def get_plugin_from_request(doc: Document, task_id: TaskId, u: User) -> Tuple[Document, Plugin]:
-    assert doc.doc_id == task_id.doc_id
+    # assert doc.doc_id == task_id.doc_id
     orig_doc_id, orig_par_id = get_orig_doc_and_par_id_from_request()
     plug = find_plugin_from_document(doc, task_id, u)
     par_id = plug.par.get_id()

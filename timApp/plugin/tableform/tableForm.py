@@ -113,6 +113,9 @@ class TableFormHtmlModel(GenericHtmlModel[TableFormInputModel, TableFormMarkupMo
     def get_component_html_name(self) -> str:
         return 'tableform-runner'
 
+    def show_in_view(self) -> bool:
+        return False
+
     def get_static_html(self) -> str:
         return render_static_tableForm(self)
 
@@ -204,8 +207,8 @@ def answer(args: TableFormInputModel):
 
     web = {}
     result = {'web': web}
-    save = saveRows
-    result["save"] = save
+    savedata = saveRows
+    result["savedata"] = savedata
     web['result'] = "saved"
     return jsonify(result)
 

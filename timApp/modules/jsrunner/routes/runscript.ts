@@ -12,6 +12,17 @@ const RunScriptInput = t.intersection([t.type({
     timeout: Max1000,
 })]);
 
+function numberLines(s: string, delta: number): string {
+    const lines = s.split("\n");
+    let result = "";
+// tslint:disable-next-line: prefer-for-of
+    for (let i = 0; i < lines.length; i++) {
+        const space = (i + delta < 10) ? "0" : "";
+        result += space + (i + delta) + ": " + lines[i] + "\n";
+    }
+    return result;
+}
+
 router.post("/", async (req, res, next) => {
     const decoded = RunScriptInput.decode(req.body);
     if (decoded.isLeft()) {
@@ -28,17 +39,30 @@ router.post("/", async (req, res, next) => {
     try {
         script = await isolate.compileScript(
             `
-            const data = JSON.parse(g);
-            function runScript() {
-                ${inputs.code}
-            }
-            JSON.stringify(runScript())`,
+const data = JSON.parse(g);
+let output = "";
+
+
+function print(s) { output += s; }
+
+function println(s) { print(s + "\\n"); }
+// Empty lines so we get user code to row 11
+function runMyScript() {
+${inputs.code}
+}
+
+function runScript() {
+    let result = runMyScript();
+    return { output: output, result: result };
+}
+JSON.stringify(runScript())`,
             {
                 filename: "script.js",
             },
         );
     } catch (e) {
-        res.json({error: e.message});
+        const lines = "\n<pre>\n" + numberLines(inputs.code, 11) + "</pre>\n";
+        res.json({error: e.message + lines});
         return;
     }
     const ctx = await isolate.createContext({inspector: false});
@@ -48,7 +72,8 @@ router.post("/", async (req, res, next) => {
         if (result === undefined) {
             res.json({error: "Script failed to return anything (the return value must be JSON serializable)."});
         } else {
-            res.json({result: JSON.parse(result)});
+            const jresult = JSON.parse(result);
+            res.json({result: jresult.result, output: jresult.output});
         }
     } catch (e) {
         res.json({error: e.message});

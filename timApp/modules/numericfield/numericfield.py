@@ -27,10 +27,13 @@ class NumericfieldMarkupModel(GenericMarkupModel):
     cols: Union[int, Missing] = missing
     inputplaceholder: Union[int, Missing] = missing
     followid: Union[str, Missing] = missing
+    arrows: Union[bool, Missing] = missing
+    wheel: Union[bool, Missing] = missing
+    verticalkeys: Union[bool, Missing] = missing
     autosave: Union[bool, Missing] = missing
     validinput: Union[str, Missing] = missing
     errormessage: Union[str, Missing] = missing
-    labelStyle: Union[str, Missing] = missing
+    readOnlyStyle: Union[str, Missing] = missing
     step: Union[float, Missing] = missing
 
 
@@ -44,9 +47,12 @@ class NumericfieldMarkupSchema(GenericMarkupSchema):
     inputplaceholder = fields.Number(allow_none=True)
     followid = fields.String(allow_none=True)
     autosave = fields.Boolean()
+    arrows = fields.Boolean()
+    wheel = fields.Boolean()
+    verticalkeys = fields.Boolean()
     validinput = fields.String(allow_none=True)
     errormessage = fields.String(allow_none=True)
-    labelStyle = fields.String(allow_none=True)
+    readOnlyStyle = fields.String(allow_none=True)
     step = fields.Number(allow_none=True)
 
     @post_load
@@ -180,7 +186,7 @@ followid: #SEURANTAID, TYHJÄ = EI SEURANTAID:tä
 initnumber: 10 #ALKUARVO, TYHJÄ = EI ALKUARVOA
 cols: 7 #KENTÄN KOKO, NUMERAALINEN
 autosave: false #AUTOSAVE, POIS PÄÄLTÄ
-labelStyle: plaintext #LABELSTYLE, TYHJÄ = KENTTÄMUOTO, PLAINTEXT = TEKSTIMUOTO
+readOnlyStyle: plaintext # TYHJÄ = KENTTÄMUOTO, plaintext = TEKSTIMUOTO
 ```"""
 ]
     return jsonify({

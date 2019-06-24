@@ -82,9 +82,20 @@ class Document:
         # List of preamble pars if they have been inserted
         self.preamble_pars = None
 
+        self.route = '';
+
     @classmethod
     def get_default_files_root(cls):
         return cls.default_files_root
+
+    def is_viewmode(self):
+        if self.route == "view":
+            return True
+        if self.route == "lecture":
+            return True
+        if self.route == "slide":
+            return True
+        return False
 
     @classmethod
     def get_documents_dir(cls, files_root: str = default_files_root) -> str:

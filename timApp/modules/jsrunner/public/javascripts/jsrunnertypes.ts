@@ -47,7 +47,7 @@ export type ErrorList = Array<{errors: IError[], user: string}>;
 interface AnswerReturnSuccess {
     web:
         {output: string, errors: ErrorList, fatalError?: undefined};
-    save: {};
+    savedata: {};
 }
 
 interface AnswerReturnError {
@@ -55,4 +55,4 @@ interface AnswerReturnError {
 }
 
 export type AnswerReturn = AnswerReturnSuccess | AnswerReturnError;
-export type AnswerReturnBrowser = Omit<AnswerReturnSuccess & {web: {error?: string}}, "save"> | AnswerReturnError;
+export type AnswerReturnBrowser = Omit<AnswerReturnSuccess & {web: {error?: string}}, "savedata"> | AnswerReturnError;

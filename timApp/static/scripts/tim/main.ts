@@ -26,6 +26,7 @@ import * as lectureMenu from "tim/lecture/lectureMenu";
 import * as questionAskController from "tim/lecture/questionAskController";
 import * as showStatisticsToQuestionController from "tim/lecture/statisticsToQuestionController";
 import * as imagex from "tim/plugin/imagex";
+import * as importData from "tim/plugin/importData";
 import * as qstController from "tim/plugin/qstController";
 import * as tableForm from "tim/plugin/tableForm";
 import * as tape from "tim/plugin/tape";
@@ -57,6 +58,7 @@ markAsUsed(
     createLectureCtrl,
     header,
     imagex,
+    importData,
     indexCtrl,
     lectureController,
     lectureInfoController,

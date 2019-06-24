@@ -20,14 +20,17 @@ const NumericfieldMarkup = t.intersection([
         initnumber: nullable(t.number),
         validinput: nullable(t.string),
         errormessage: nullable(t.string),
-        labelStyle: nullable(t.string),
+        readOnlyStyle: nullable(t.string),
         step: nullable(t.number),
+        arrows: t.boolean,
+        wheel: t.boolean,
+        verticalkeys: t.boolean,
         autosave: t.boolean,
     }),
     GenericPluginMarkup,
     t.type({
         autoupdate: withDefault(t.number, 500),
-        cols: withDefault(t.number, 1),
+        cols: withDefault(t.number, 5),
     }),
 ]);
 const NumericfieldAll = t.intersection([
@@ -84,10 +87,13 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
                 }
             }
         }
+        if ( !this.attrs.wheel ) { this.element.bind("mousewheel DOMMouseScroll", (e) => false); }
+        if ( !this.attrs.verticalkeys ) { this.element.bind("keydown",
+            (e) => { if ( e.which == 38 || e.which == 40 ) { e.preventDefault(); } }); }
         this.modelOpts = {debounce: this.autoupdate};
-        if (!this.attrs.labelStyle) {
+        // if (!this.attrs.readOnlyStyle) {
             this.vctrl.addTimComponent(this);
-        }
+        // }
         this.initialValue = this.numericvalue;
     }
 
@@ -198,11 +204,11 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
     // noinspection JSUnusedGlobalSymbols
     /**
      * Returns true value, if label is set to plaintext.
-     * Used to define labelstyle in angular, either input or span.
+     * Used to define readOnlyStyle in angular, either input or span.
      * Unused method warning is suppressed, as the method is only called in template.
      */
     isPlainText() {
-        return (this.attrs.labelStyle == "plaintext");
+        return (this.attrs.readOnlyStyle == "plaintext" && window.location.pathname.startsWith("/view/"));
     }
 
     /**
@@ -319,11 +325,12 @@ numericfieldApp.component("numericfieldRunner", {
 <div class="numericfieldNoSaveDiv">
     <tim-markup-error ng-if="::$ctrl.markupError" data="::$ctrl.markupError"></tim-markup-error>
     <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
-    <p class="stem" ng-if="::$ctrl.stem">{{::$ctrl.stem}}</p>
+    <p class="stem" ng-if="::$ctrl.stem" ng-bind-html="::$ctrl.stem"></p>
     <div class="form-inline">
-    <label>{{::$ctrl.inputstem}} <span>
+     <label><span>
+      <span ng-bind-html="::$ctrl.inputstem"></span>
+      <span ng-if="::!$ctrl.isPlainText()" ng-class="::{noarrows: (!$ctrl.attrs.arrows)}">
         <input type="number"
-               ng-if="::!$ctrl.isPlainText()"
                style="width: {{::$ctrl.cols}}em"
                step="{{ $ctrl.stepCheck() }}"
                class="form-control"
@@ -340,8 +347,10 @@ numericfieldApp.component("numericfieldRunner", {
                tooltip-trigger="mouseenter"
                placeholder="{{::$ctrl.inputplaceholder}}"
                ng-class="{warnFrame: ($ctrl.isUnSaved() && !$ctrl.redAlert), alertFrame: $ctrl.redAlert}">
-               </span></label>
-        <span ng-if="::$ctrl.isPlainText()" style="float:left;">{{$ctrl.numericvalue}}</span>
+      </span>
+      <!--<span ng-if="::$ctrl.isPlainText()" style="float:left;" ng-bind-html="$ctrl.inputstem + " " + $ctrl.numericvalue">{{$ctrl.numericvalue}}</span> -->
+      <span ng-if="::$ctrl.isPlainText()" style="" >&nbsp;{{$ctrl.numericvalue}}</span>
+     </span></label>
     </div>
     <div ng-if="$ctrl.error" style="font-size: 12px" ng-bind-html="$ctrl.error"></div>
     <button class="timButton"

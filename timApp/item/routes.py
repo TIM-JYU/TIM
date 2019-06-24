@@ -231,6 +231,8 @@ def view(item_path, template_name, usergroup=None, route="view"):
 
     doc, xs = get_document(doc_info, view_range)
 
+    doc.route = route
+
     clear_cache = get_option(request, "nocache", False)
     hide_answers = get_option(request, 'noanswers', False)
 

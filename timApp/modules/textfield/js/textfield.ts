@@ -20,7 +20,7 @@ const TextfieldMarkup = t.intersection([
         initword: nullable(t.string),
         validinput: nullable(t.string),
         errormessage: nullable(t.string),
-        labelStyle: nullable(t.string),
+        readOnlyStyle: nullable(t.string),
         autosave: t.boolean,
     }),
     GenericPluginMarkup,
@@ -67,9 +67,9 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
         super.$onInit();
         this.userword = (valueOr(this.attrsall.state && this.attrsall.state.c, this.attrs.initword || "")).toString();
         this.modelOpts = {debounce: this.autoupdate};
-        if (!this.attrs.labelStyle) {
+        // if (!this.attrs.readOnlyStyle) {
             this.vctrl.addTimComponent(this);
-        }
+        // }
         this.initialValue = this.userword;
     }
 
@@ -182,11 +182,11 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
     // noinspection JSUnusedGlobalSymbols
     /**
      * Returns true value, if label is set to plaintext.
-     * Used to define labelstyle in angular, either input or span.
+     * Used to define readOnlyStyle in angular, either input or span.
      * Unused method warning is suppressed, as the method is only called in template.
      */
     isPlainText() {
-        return (this.attrs.labelStyle == "plaintext");
+        return (this.attrs.readOnlyStyle == "plaintext" && window.location.pathname.startsWith("/view/"));
     }
 
     /**

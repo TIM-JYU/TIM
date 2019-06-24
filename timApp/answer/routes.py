@@ -163,10 +163,21 @@ def chunks(l: List, n: int):
 
 def get_fields_and_users(u_fields: List[str], groups: List[UserGroup], d: DocInfo, current_user: User):
     needs_group_access_check = UserGroup.get_teachers_group() not in current_user.groups
+    ugroups = []
     for group in groups:
         if needs_group_access_check and group.name != current_user.name:
             if not verify_group_view_access(group, current_user, require=False):
-                return abort(403, f'Missing view access for group {group.name}')
+                # return abort(403, f'Missing view access for group {group.name}')
+                pass
+            else:
+                ugroups.append(group)
+
+    if not ugroups:
+        for group in current_user.groups:
+            if group.name == current_user.name:
+                ugroups.append(group)
+
+    groups = ugroups
 
     task_ids = []
     task_id_map = defaultdict(list)
@@ -371,6 +382,7 @@ def post_answer(plugintype: str, task_id_ext: str):
     if is_teacher:
         answer_id = answer_browser_data.get('answer_id', None)
         user_id = answer_browser_data.get('userId', None)
+
         if answer_id is not None:
             answer = Answer.query.get(answer_id)
             if not answer:
@@ -387,7 +399,7 @@ def post_answer(plugintype: str, task_id_ext: str):
                 return abort(400, 'No users found for the specified answer')
             if user_id not in (u.id for u in users):
                 return abort(400, 'userId is not associated with answer_id')
-        elif user_id and user_id != curr_user.id:
+        elif user_id and user_id != curr_user.id and False: # TODO: Vesa's hack to no need for belong teachers group
             teacher_group = UserGroup.get_teachers_group()
             if curr_user not in teacher_group.users:
                 abort(403, 'Permission denied: you are not in teachers group.')
@@ -395,6 +407,7 @@ def post_answer(plugintype: str, task_id_ext: str):
             ctx_user = User.query.get(user_id)
             if not ctx_user:
                 abort(404, f'User {user_id} not found')
+            users = [ctx_user]  # TODO: Vesa's hack to save answer to student
     try:
         plugin = verify_task_access(d, tid, AccessType.view, TaskIdAccess.ReadWrite, context_user=ctx_user)
     except (PluginException, TimDbException) as e:
@@ -474,13 +487,17 @@ def post_answer(plugintype: str, task_id_ext: str):
         return json_response({'error': 'The plugin response took too long'}, 400)
 
     if 'web' not in jsonresp:
-        return json_response({'error': 'The key "web" is missing in plugin response.'}, 400)
+        # jsonresp["web"] = { 'error': plugin_response }
+        # return json_response({'error': 'The key "web" is missing in plugin response.'}, 400)
+        return json_response({'error': plugin_response, 'web': ''}, 400)
     result = {'web': jsonresp['web']}
 
-    if plugin.type == 'jsrunner' or plugin.type == 'tableForm':
+    # if plugin.type == 'jsrunner' or plugin.type == 'tableForm' or plugin.type == 'importData':
+    if 'savedata' in jsonresp:
         handle_jsrunner_response(jsonresp, result, d)
         db.session.commit()
-        return json_response(result)
+        if 'save' not in jsonresp: # plugin may also hope some things to be saved
+            return json_response(result)
 
     def add_reply(obj, key, run_markdown=False):
         if key not in plugin.values:
@@ -511,7 +528,7 @@ def post_answer(plugintype: str, task_id_ext: str):
             tags = save_object['tags']
         except (TypeError, KeyError):
             pass
-        if not is_teacher and should_save_answer:
+        if (not is_teacher and should_save_answer) or ( 'savedata' in jsonresp):
             is_valid, explanation = plugin.is_answer_valid(len(old_answers), tim_info)
             points_given_by = None
             if answer_browser_data.get('giveCustomPoints'):
@@ -556,7 +573,7 @@ def post_answer(plugintype: str, task_id_ext: str):
 
 
 def handle_jsrunner_response(jsonresp, result, current_doc: DocInfo):
-    save_obj = jsonresp.get('save')
+    save_obj = jsonresp.get('savedata')
     if not save_obj:
         return
     tasks = set()
@@ -575,6 +592,8 @@ def handle_jsrunner_response(jsonresp, result, current_doc: DocInfo):
                 id_num = TaskId.parse(tid, False, False)
             except PluginException:
                 return abort(400, f'Invalid task name: {tid.split(".")[1]}')
+            if not id_num.doc_id:
+                return abort(400, f'Doc id missing: {tid}')
             if id_num.doc_id not in doc_map:
                 doc_map[id_num.doc_id] = get_doc_or_abort(id_num.doc_id)
     task_content_name_map = {}
@@ -767,6 +786,7 @@ def get_all_answers_route(task_id):
 class GetStateSchema(Schema):
     answer_id = fields.Int(required=True)
     par_id = fields.Str()
+    doc_id = fields.Str()
     user_id = fields.Int(required=True)
     review = fields.Bool(missing=False)
 
@@ -781,6 +801,7 @@ class GetStateModel:
     user_id: int
     review: bool
     par_id: Union[str, _Missing] = missing
+    doc_id: Union[str, _Missing] = missing
 
 
 @answers.route("/getState")
@@ -790,6 +811,8 @@ def get_state(args: GetStateModel):
 
     try:
         answer, doc_id = verify_answer_access(answer_id, user_id)
+        if args.doc_id:
+            doc_id = args.doc_id
     except PluginException as e:
         return abort(400, str(e))
     doc = Document(doc_id)
@@ -846,6 +869,10 @@ def verify_answer_access(
     tid = TaskId.parse(answer.task_id)
     d = get_doc_or_abort(tid.doc_id)
     d.document.insert_preamble_pars()
+
+    if verify_teacher_access(d, require=False):  # TODO: tarkista onko oikein tämä!!! Muuten tuli virhe toisten vastauksia hakiessa.
+        return answer, tid.doc_id
+
     if user_id != get_current_user_id() or not logged_in():
         if require_teacher_if_not_own:
             verify_task_access(d, tid, AccessType.teacher, required_task_access_level)

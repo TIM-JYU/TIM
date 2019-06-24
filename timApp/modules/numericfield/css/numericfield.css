@@ -59,3 +59,21 @@ input:focus.alertframe {
     margin-bottom: 0px;
     margin-top: 0px;
 }
+
+/* Hide HTML5 Up and Down arrows. */
+.noarrows input[type="number"]::-webkit-outer-spin-button,.noarrows  input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.noarrows input[type="number"] {
+    -moz-appearance: textfield;
+}
+
+.inlineplugin label, .numericfield label, .textfield label{
+    font-weight: unset;
+}
+
+.inlineplugin input, .numericfield input, .textfield input{
+    padding: 3px;
+}

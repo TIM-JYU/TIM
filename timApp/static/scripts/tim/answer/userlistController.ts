@@ -20,6 +20,7 @@ export interface IExportOptions {
     totalPointField: string;
     velpPointField: string;
     taskPointField: string;
+    copy: boolean;
 }
 
 function filterFn(term: string, cellValue: any, row: IGridRowOf<any>, column: IGridColumnOf<any>) {
@@ -270,6 +271,46 @@ export class UserListController implements IController {
         this.onUserChange({$USER: row.entity, $UPDATEALL: updateAll});
     }
 
+    copyHelperElement: HTMLTextAreaElement | undefined;
+
+    getClipboardHelper(): HTMLTextAreaElement {  // TODO: could be a TIM global function
+        let e1 = this.copyHelperElement;  // prevent extra creating and deleting
+        if (e1) {
+            return e1;
+        }
+        e1 = document.createElement("textarea");
+        e1.setAttribute("readonly", "");
+        // e1.style.position = 'absolute';
+        e1.style.position = "fixed"; // fixed seems better for FF and Edge so not to jump to end
+        // e1.style.left = '-9999px';
+        e1.style.top = "-9999px";
+        document.body.appendChild(e1);
+        // document.body.removeChild(el);
+        this.copyHelperElement = e1;
+        return e1;
+    }
+
+    copyToClipboard(s: string) {  // TODO: could be a TIM global function
+        const e1 = this.getClipboardHelper();
+        e1.value = s;
+        const isIOS = navigator.userAgent.match(/ipad|ipod|iphone/i);
+        if (isIOS) {
+            // e1.contentEditable = true;
+            e1.readOnly = true;
+            const range = document.createRange();
+            range.selectNodeContents(e1);
+            const sel = window.getSelection();
+            if (sel) {
+                sel.removeAllRanges();
+                sel.addRange(range);
+            }
+            e1.setSelectionRange(0, 999999);
+        } else {
+            e1.select();
+        }
+        document.execCommand("copy");
+    }
+
     exportKorppi(options: IExportOptions) {
         if (!options.taskPointField && !options.velpPointField && !options.totalPointField) {
             return;
@@ -280,7 +321,7 @@ export class UserListController implements IController {
         const data = this.gridApi.core.getVisibleRows(this.gridApi.grid);
         let dataKorppi = "";
 
-        const fields = ["total_points", "task_points", "velp_points"];
+        const fields = ["total_points", "task_points", "velp_points", ""];
         const fieldNames = new Map<string, string>();
         fieldNames.set(fields[0], options.totalPointField);
         fieldNames.set(fields[1], options.taskPointField);
@@ -305,7 +346,13 @@ export class UserListController implements IController {
         if (!filename) {
             filename = "korppi_" + this.viewctrl.docId + ".txt";
         }
+
+        if ( options.copy ) {
+            this.copyToClipboard(dataKorppi);
+            return;
+        }
         // from https://stackoverflow.com/a/33542499
+
         const blob = new Blob([dataKorppi], {type: "text/plain"});
         if (window.navigator.msSaveOrOpenBlob) {
             window.navigator.msSaveBlob(blob, filename);
@@ -317,6 +364,13 @@ export class UserListController implements IController {
             elem.click();
             document.body.removeChild(elem);
         }
+        /*
+        const opened = window.open("text/plain", "replace");
+        if ( !opened ) { return; }
+        opened.document.write(dataKorppi);
+        opened.close();
+        */
+
     }
 
     private findUserByName(userName: string) {
@@ -350,13 +404,18 @@ timApp.component("timUserList", {
 export class KorppiExportCtrl extends DialogController<{}, IExportOptions> {
     static component = "timKorppiExport";
     static $inject = ["$element", "$scope"] as const;
-    private options: IExportOptions = {totalPointField: "", velpPointField: "", taskPointField: ""};
+    private options: IExportOptions = {totalPointField: "", velpPointField: "", taskPointField: "", copy: false};
 
     protected getTitle() {
         return "Export to Korppi";
     }
 
     ok() {
+        this.close(this.options);
+    }
+
+    copy() {
+        this.options.copy = true;
         this.close(this.options);
     }
 }

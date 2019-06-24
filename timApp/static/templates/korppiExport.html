@@ -42,6 +42,9 @@
     </dialog-body>
     <dialog-footer>
         <button ng-disabled="!$ctrl.options.velpPointField && !$ctrl.options.taskPointField && !$ctrl.options.totalPointField"
+                class="timButton" type="button" ng-click="$ctrl.copy()">Copy
+        </button>
+        <button ng-disabled="!$ctrl.options.velpPointField && !$ctrl.options.taskPointField && !$ctrl.options.totalPointField"
                 class="timButton" type="button" ng-click="$ctrl.ok()">Export
         </button>
         <button class="btn btn-default" type="button" ng-click="$ctrl.dismiss()">Cancel</button>

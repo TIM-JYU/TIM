@@ -41,6 +41,7 @@ PLUGIN_REGEX_OBJS = {}
 QSTMDATTRS = ["rows", "choices", "[0-9]", ".*[Tt]ext"]
 FBMDATTRS = ["nextTask","questionItems","choices","levels"]
 DRAGATTRS = ["words"]
+TEXTFIELDATTRS = ["header", "stem", "inputstem"]
 
 """
 plugin class attributes
@@ -72,14 +73,15 @@ def get_plugins():
             # "graphviz": {"host": "http://" + HASKELLPLUGIN_NAME + ":5004/"},
             "graphviz": {"host": "http://" + CSPLUGIN_NAME + ":5000/cs/graphviz/"},
             "pali": {"host": "http://" + PALIPLUGIN_NAME + ":5000/"},
-            "textfield": {"host": "http://" + TEXTFIELDPLUGIN_NAME + ":5000/"},
-            "numericfield": {"host": "http://" + NUMERICFIELDPLUGIN_NAME + ":5000/"},
+            "textfield": {"host": "http://" + TEXTFIELDPLUGIN_NAME + ":5000/", REGEXATTRS: TEXTFIELDATTRS, AUTOMDATTRS: True},
+            "numericfield": {"host": "http://" + NUMERICFIELDPLUGIN_NAME + ":5000/", REGEXATTRS: TEXTFIELDATTRS, AUTOMDATTRS: True},
             "multisave": {"host": "http://" + MULTISAVEPLUGIN_NAME + ":5000/"},
             "jsrunner": {"host": "http://" + JSRUNNERPLUGIN_NAME + ":5000/"},
             "imagex": {"host": "http://" + IMAGEXPLUGIN_NAME + ":5000/"},
             "qst": {"host": "http://" + "localhost" + f":{current_app.config['QST_PLUGIN_PORT']}/qst/", REGEXATTRS: QSTMDATTRS, AUTOMDATTRS: True},
             "timTable": {"host": "http://" + "localhost" + f":{current_app.config['QST_PLUGIN_PORT']}/timTable/", "instance": timTable.TimTable(), 'lazy': False},
             "tableForm": {"host": "http://" + "localhost" + f":{current_app.config['QST_PLUGIN_PORT']}/tableForm/", 'lazy': False},
+            "importData": {"host": "http://" + "localhost" + f":{current_app.config['QST_PLUGIN_PORT']}/importData/"},
             "tape": {"host": "http://" + "localhost" + f":{current_app.config['QST_PLUGIN_PORT']}/tape/"},
             "echo": {"host": "http://" + "tim" + ":5000/echoRequest/", "skip_reqs": True},
             "dropdown": {"host": "http://" + DROPDOWNPLUGIN_NAME + ":5000/"},

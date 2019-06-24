@@ -152,7 +152,7 @@ class PluginPlacement:
                 err, name = self.errors[sr]
                 h = get_error_plugin(name, err, plugin_output_format=self.output_format)
             else:
-                h = p.get_final_output()
+                h = p.get_final_output().strip()
             start, end = sr
             out_md = out_md[:start] + h + out_md[end:]
         return out_md
@@ -351,6 +351,7 @@ def pluginify(doc: Document,
         user=user,
         review=review,
         wraptype=pluginwrap,
+        viewmode=doc.is_viewmode(),
         current_user=get_current_user_object(),
     )
 

@@ -96,6 +96,11 @@ class JsrunnerController extends PluginBase<t.TypeOf<typeof JsrunnerMarkup>, t.T
     protected hasAllAttributes() {
         return (this.attrs.fields || this.attrs.groups || this.attrs.program);
     }
+
+    isPlainText() {
+        return (window.location.pathname.startsWith("/view/"));
+    }
+
 }
 
 jsrunnerApp.component("jsrunnerError", {
@@ -125,7 +130,7 @@ jsrunnerApp.component("jsRunner", {
         vctrl: "^timView",
     },
     template: `
-<div class="jsRunnerDiv">
+<div class="jsRunnerDiv" ng-if="::!$ctrl.isPlainText()">
     <tim-markup-error ng-if="::$ctrl.markupError" data="::$ctrl.markupError"></tim-markup-error>
     <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
     <p ng-if="::$ctrl.stem" ng-bind-html="::$ctrl.stem"></p>

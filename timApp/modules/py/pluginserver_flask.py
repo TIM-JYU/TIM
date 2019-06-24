@@ -105,6 +105,7 @@ class GenericHtmlSchema(Schema):
     markup = fields.Dict(required=True)
     preview = fields.Bool(required=True)
     review = fields.Bool(required=True)
+    viewmode = fields.Bool(required=True)
     state = fields.Field(allow_none=True, required=True)
     targetFormat = fields.Str(required=True)
     taskID = fields.Str(required=True)
@@ -154,6 +155,7 @@ class GenericHtmlModel(GenericRouteModel[PluginInput, PluginMarkup, PluginState]
     doLazy: bool
     preview: bool
     review: bool
+    viewmode: bool
     targetFormat: str
     taskIDExt: str
     user_id: str
@@ -166,6 +168,14 @@ class GenericHtmlModel(GenericRouteModel[PluginInput, PluginMarkup, PluginState]
         r['markup'] = self.markup.get_visible_data()
         return r
 
+    def get_maybe_empty_static_html(self) -> str:
+        """Renders a static version of the plugin.
+           When plugin is not shown in view mode, return empty string
+        """
+        if self.viewmode and not self.show_in_view():
+            return render_template_string("")
+        return self.get_static_html()
+
     def get_static_html(self) -> str:
         """Renders a static version of the plugin.
 
@@ -176,6 +186,9 @@ class GenericHtmlModel(GenericRouteModel[PluginInput, PluginMarkup, PluginState]
     def get_real_html(self) -> str:
         """Renders the plugin as HTML."""
         component = self.get_component_html_name()
+        if self.viewmode and not self.show_in_view():
+            return render_template_string("")
+
         return render_template_string(
             """<{{component}} json="{{data}}"></{{component}}>""",
             data=make_base64(self.get_browser_json()),
@@ -185,6 +198,13 @@ class GenericHtmlModel(GenericRouteModel[PluginInput, PluginMarkup, PluginState]
     def get_component_html_name(self) -> str:
         """Gets the name of the Angular component as it should be in HTML."""
         raise NotImplementedError('Must be implemented by a derived class.')
+
+    def show_in_view(self) -> bool:
+        """
+        If component is not show in view mode return False
+        :return: is component shown in view mode
+        """
+        return True
 
 
 def render_validationerror(e: ValidationError):
@@ -211,7 +231,7 @@ def render_plugin_with_login_request(m: GenericHtmlModel[PluginInput, PluginMark
 <p class="pluginError">
     Please <login-menu></login-menu> to interact with this component.
 </p>
-{{ static_html|safe }}""", static_html=m.get_static_html(),
+{{ static_html|safe }}""", static_html=m.get_maybe_empty_static_html(),
     )
 
 
@@ -249,7 +269,7 @@ def render_plugin_lazy(m: GenericHtmlModel[PluginInput, PluginMarkup, PluginStat
         """
 <div class="lazy" data-html="{{ real_html }}"></div>
 {{ static_html|safe }} <!--lazy -->""".strip(),
-        static_html=m.get_static_html(),
+        static_html=m.get_maybe_empty_static_html(),
         real_html=m.get_real_html(),
     )
 
