@@ -171,10 +171,10 @@ def get_fields_and_users(u_fields: List[str], groups: List[UserGroup], d: DocInf
             if not verify_group_view_access(group, current_user, require=False):
                 # return abort(403, f'Missing view access for group {group.name}')
                 print(f'Missing view access for group {group.name}')
-                pass
-            else:
-                print(group.name + " added")
-                ugroups.append(group)
+                continue
+        else:
+            print(group.name + " added")
+            ugroups.append(group)
 
     if not ugroups:
         for group in current_user.groups:
