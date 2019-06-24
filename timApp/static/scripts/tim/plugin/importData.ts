@@ -90,8 +90,9 @@ class ImportDataController extends PluginBase<t.TypeOf<typeof ImportDataMarkup>,
         super.$onInit();
         this.isOpen = this.attrs.open;
         const aa: any = this.attrsall; // TODO: miten staten saa?
-        this.separator = aa.state.separator || this.attrs.separator;
-        this.url = aa.state.url || this.attrs.url;
+        const state: any = aa.state || {};
+        this.separator = state.separator || this.attrs.separator;
+        this.url = state.url || this.attrs.url;
     }
 
     protected getAttributeType() {

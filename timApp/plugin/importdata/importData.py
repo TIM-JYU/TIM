@@ -217,14 +217,17 @@ def answer(args: ImportDataAnswerModel):
 
     if wrong:
         wrongs = "\nWrong lines: " + str(wrong) + "\n" + wrongs
-    jsonresp = { 'savedata': rows, 'web' : { 'result': output + "Imported " + str(len(rows)) + wrongs} }
+    jsonresp = { 'savedata': rows,
+                 'web' : { 'result': output + "Imported " + str(len(rows)) + wrongs} }
 
     save = {}
 
-    if args.input.url != args.markup.url or (args.state.url and args.state.url != args.input.url):
+    if args.input.url != args.markup.url or \
+            (args.state and args.state.url and args.state.url != args.input.url):
         save['url'] = args.input.url
 
-    if separator != defaultseparator or (args.state.separator and args.state.separator != separator):
+    if separator != defaultseparator or \
+            (args.state and args.state.separator and args.state.separator != separator):
         save['separator'] = separator
     if save:
         jsonresp["save"] = save
