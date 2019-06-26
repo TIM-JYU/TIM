@@ -186,14 +186,14 @@ def answer(args: DragAnswerModel):
 def reqs():
     templates = ["""
 #- {defaultplugin="drag"}
-{#drag1}
+{#drag1 #}
 """,
 """
 #- {defaultplugin="drag"}
-{#drag2 words: [weather, is, lovely, almost, always]}
+{#drag2 words: [weather, is, lovely, almost, always] #}
 ""","""
 #- {defaultplugin="drag"}
-{#dragtrash trash: true}
+{#dragtrash trash: true #}
 """]
     return jsonify({
         "js": ["js/build/drag.js"],

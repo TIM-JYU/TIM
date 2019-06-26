@@ -428,6 +428,11 @@ ${backTicks}
                         name: "Heading numbering",
                     },
                     {
+                        title: "Use document like a form",
+                        func: () => this.editor!.insertTemplate("form_mode: true\n"),
+                        name: "Form mode",
+                    },
+                    {
                         title: "Styles for this document",
                         func: () => this.editor!.insertTemplate("css: |!!\n.style {\n\n}\n!!\n"),
                         name: "CSS",

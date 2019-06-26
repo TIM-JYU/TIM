@@ -21,12 +21,13 @@ const TextfieldMarkup = t.intersection([
         validinput: nullable(t.string),
         errormessage: nullable(t.string),
         readOnlyStyle: nullable(t.string),
+        showname: nullable(t.number),
         autosave: t.boolean,
     }),
     GenericPluginMarkup,
     t.type({
         autoupdate: withDefault(t.number, 500),
-        cols: withDefault(t.number, 1),
+        cols: withDefault(t.number, 7),
     }),
 ]);
 const TextfieldAll = t.intersection([
@@ -66,11 +67,13 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
     $onInit() {
         super.$onInit();
         this.userword = (valueOr(this.attrsall.state && this.attrsall.state.c, this.attrs.initword || "")).toString();
+
         this.modelOpts = {debounce: this.autoupdate};
         // if (!this.attrs.readOnlyStyle) {
             this.vctrl.addTimComponent(this);
         // }
         this.initialValue = this.userword;
+        if (  this.attrs.showname ) { this.initCode(); }
     }
 
     /**
@@ -130,7 +133,15 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
      * Initialize content.
      */
     initCode() {
-        this.userword = this.attrs.initword || "";
+        if ( this.attrs.showname ) {
+            const u = this.vctrl.selectedUser;
+            if ( this.attrs.showname == 1 ) {
+                this.userword = u.real_name;
+            }
+            if ( this.attrs.showname == 2 ) {
+                this.userword = u.name;
+            }
+        } else { this.userword = this.attrs.initword || ""; }
         this.initialValue = this.userword;
         this.result = undefined;
     }
@@ -186,6 +197,7 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
      * Unused method warning is suppressed, as the method is only called in template.
      */
     isPlainText() {
+        if ( this.attrs.showname ) { return true; }
         return (this.attrs.readOnlyStyle == "plaintext" && window.location.pathname.startsWith("/view/"));
     }
 

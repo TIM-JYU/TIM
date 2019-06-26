@@ -4,7 +4,7 @@ import re
 import time
 from collections import defaultdict
 from datetime import timezone, timedelta, datetime
-from typing import Union, List, Tuple, Dict
+from typing import Union, List, Tuple, Dict, Match, Iterable
 
 import attr
 import dateutil.parser
@@ -161,14 +161,67 @@ def chunks(l: List, n: int):
         yield l[i:i + n]
 
 
-def get_fields_and_users(u_fields: List[str], groups: List[UserGroup], d: DocInfo, current_user: User):
+def widen_fields(fields: List[str]):
+    """
+    if there is syntax d(1,3) in fileds, it is made d1,d2
+    from d(1,3)=t  would come d1=t1, d2=t2
+    :param fields: list of fields
+    :return: array fields widened
+    """
+    fields1 = []
+    prog = re.compile('([\w\.]*)\((\d*),(\d*)\)')
+    for field in fields:
+        parts = field.split(";")
+        fields1.extend(parts)
+
+    rfields = []
+    for field in fields1:
+        field_content = field.split("|")
+        try:
+            t, a, *rest = field_content[0].split("=")
+        except ValueError:
+            t, a, rest = field_content[0], "", None
+        t = t.strip()
+        a = a.strip()
+        match = re.search(prog, t)
+        if not match:
+            rfields.append(field)
+            continue
+
+        tb = match.group(1)
+        n1 = int(match.group(2))
+        n2 = int(match.group(3))
+
+        for i in range(n1, n2):
+            tn = tb + str(i)
+            if not tb:
+                tn = ""
+            if a:
+                tn += "=" + a + str(i)
+            field_content[0] = tn
+            rfields.append("|".join(field_content))
+
+    return rfields
+
+
+def get_fields_and_users(u_fields: List[str], groups: List[UserGroup],
+                         d: DocInfo, current_user: User, autoalias: bool = False):
+    """
+    Return fielddata, aliases, content_map, field_names
+    :param u_fields: list of fields to be used
+    :param groups: user groups to be used
+    :param d: default document
+    :param current_user: current users, check his rights to fields
+    :param autoalias: if true, give automatically from d1 same as would be from d1 = d1
+    :return: fielddata, aliases, content_map, field_names
+    """
     needs_group_access_check = UserGroup.get_teachers_group() not in current_user.groups
     ugroups = []
     for group in groups:
         if needs_group_access_check and group.name != current_user.name:
             if not verify_group_view_access(group, current_user, require=False):
                 # return abort(403, f'Missing view access for group {group.name}')
-                continue
+                continue # TODO: study how to give just warning from missing access, extra return string?
         ugroups.append(group)
 
     if not ugroups:  # if no access, give at least own group
@@ -185,12 +238,24 @@ def get_fields_and_users(u_fields: List[str], groups: List[UserGroup], d: DocInf
     content_map = {}
     jsrunner_alias_map = {}
     doc_map = {}
+    num_prog = re.compile('^\d+\..+/')
+
+    u_fields = widen_fields(u_fields)
+
     for field in u_fields:
         field_content = field.split("|")
         try:
             t, a, *rest = field_content[0].split("=")
         except ValueError:
-            t, a, rest = field_content[0], None, None
+            a = None
+            t, rest = field_content[0], None
+            if autoalias:
+                a = t.strip()
+                if num_prog.match(a):  # remove leading doc id
+                    a = a[a.find('.')+1:]
+        t = t.strip()
+        if a:
+            a = a.strip()
         if rest:
             return abort(400, f'Invalid alias: {field}')
         if a == '':
@@ -617,8 +682,11 @@ def handle_jsrunner_response(jsonresp, result, current_doc: DocInfo):
             task_content_name_map[task] = content_field
         except TaskNotFoundException as e:
             task_display = t_id.doc_task if t_id.doc_id != current_doc.id else t_id.task_name
-            result['web']['error'] = f"Task not found: {task_display}"
-            return
+            if not result['web'].get('error', None):
+                result['web']['error'] = 'Errors:\n'
+            result['web']['error'] += f"Task not found: {task_display}\n"
+            task_content_name_map[task] = 'ignore'
+            continue
 
     for user in save_obj:
         u_id = user['user']
@@ -630,6 +698,8 @@ def handle_jsrunner_response(jsonresp, result, current_doc: DocInfo):
                 content_field = content_list[1].strip()
             else:
                 content_field = task_content_name_map[content_list[0]]
+            if content_field == 'ignore':
+                continue
             task_id = TaskId.parse(content_list[0], False, False)
             an: Answer = get_latest_answers_query(task_id, [u]).first()
             content = json.dumps({content_field: value})

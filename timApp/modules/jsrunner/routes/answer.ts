@@ -3,6 +3,7 @@ import {readFileSync} from "fs";
 import ivm from "isolated-vm";
 import {AnswerReturn, ErrorList, IError, IJsRunnerMarkup} from "../public/javascripts/jsrunnertypes";
 import {AliasDataT, JsrunnerAnswer, UserFieldDataT} from "../servertypes";
+// import numberLines from "./runscript";
 import Tools from "./tools";
 
 const router = express.Router();
@@ -31,6 +32,20 @@ type RunnerResult =
  * @param d The data to use.
  */
 function runner(d: IRunnerData): RunnerResult {
+
+    // TODO: This is allready in runscipt, but does not allow with 2 params???
+    // And for some reason it is not found if it is outside this function???
+    function numberLines2(s: string, delta: number): string {
+        const lines = s.split("\n");
+        let result = "";
+        // tslint:disable-next-line: prefer-for-of
+        for (let i = 0; i < lines.length; i++) {
+            const space = (i + delta < 10) ? "0" : "";
+            result += space + (i + delta) + ": " + lines[i] + "\n";
+        }
+        return result;
+    }
+
     const data = d.data;
     const currDoc = d.currDoc;
     const markup = d.markup;
@@ -53,8 +68,8 @@ function runner(d: IRunnerData): RunnerResult {
         for (const user of data) {
             const tools = new Tools(user, currDoc, markup, aliases); // in compiled JS, this is tools_1.default(...)
 
-            // tslint:disable
             // Fake parameters hide the outer local variables so user script won't accidentally touch them.
+            // tslint:disable
             function runProgram(program: string, saveUsersFields?: never, output?: never, errors?: never,
                                 data?: never, d?: never, currDoc?: never, markup?: never, aliases?: never) {
                 eval(program);
@@ -71,7 +86,7 @@ function runner(d: IRunnerData): RunnerResult {
                 errors.push({user: user.user.name, errors: userErrs});
             }
         }
-            // tslint:disable
+        // tslint:disable
         function runPostProgram(program: string | undefined, saveUsersFields?: never, output?: never, errors?: never,
                             data?: never, d?: never, currDoc?: never, markup?: never, aliases?: never) {
             if ( program ) eval(program);
@@ -83,10 +98,21 @@ function runner(d: IRunnerData): RunnerResult {
         if (guserErrs.length > 0) {
             errors.push({user: guser.user.name, errors: guserErrs});
         }
+        if ( errors.length > 0 ) {
+            const prg = numberLines2(d.program, 1);
+            errors.push( {
+                user: "program",
+                errors: [{
+                    msg: "See program",
+                    stackTrace: prg
+                }]
+            });
+        }
         return {res: saveUsersFields, output, errors};
     } catch (e) {
         const err = e as Error;
-        return {output, fatalError: {msg: err.message, stackTrace: e.stack}};
+        const prg = "\n" + numberLines2(d.program, 1);
+        return {output, fatalError: {msg: err.message, stackTrace: e.stack + prg}};
     }
 }
 

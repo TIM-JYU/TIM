@@ -116,9 +116,12 @@ jsrunnerApp.component("jsrunnerError", {
     },
     template: `
 <tim-alert severity="danger">
-    <span>{{ ::$ctrl.e.msg }}</span>
-    <button ng-if="$ctrl.e.stackTrace" class="timButton btn-sm" ng-click="$ctrl.toggleStackTrace()">Stack trace</button>
-    <pre ng-if="$ctrl.e.stackTrace && $ctrl.showTrace">{{ $ctrl.e.stackTrace }}</pre>
+  <span>{{ $ctrl.e.user }}:</span>
+  <div ng-repeat="err in $ctrl.e.errors">
+    <span>{{ err.msg }}</span>
+    <button ng-if="err.stackTrace" class="timButton btn-sm" ng-click="$ctrl.toggleStackTrace()">Stack trace</button>
+    <pre ng-if="err.stackTrace && $ctrl.showTrace">{{ err.stackTrace }}</pre>
+  </div>
 </tim-alert>
     `,
 });
@@ -140,7 +143,8 @@ jsrunnerApp.component("jsRunner", {
         {{::$ctrl.buttonText()}}
     </button>
     <p ng-if="$ctrl.error">Fatal error occurred, script results not saved.</p>
-    <jsrunner-error ng-if="$ctrl.error" e="$ctrl.error"></jsrunner-error>
+    <pre ng-if="$ctrl.error">{{$ctrl.error.msg}}</pre>
+    <pre ng-if="$ctrl.error">{{$ctrl.error.stackTrace}}</pre>
     <jsrunner-error ng-repeat="err in $ctrl.scriptErrors" e="err"></jsrunner-error>
     <pre ng-if="$ctrl.result">{{$ctrl.result}}</pre>
     <pre ng-if="$ctrl.output">{{$ctrl.output}}</pre>

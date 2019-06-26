@@ -48,8 +48,10 @@ class TableFormMarkupModel(GenericMarkupModel):
     autosave: Union[bool, Missing] = missing
     buttonText: Union[str, Missing] = missing
     hideButtonText: Union[str, Missing] = missing
+    openButtonText: Union[str, Missing] = missing
     reportButton: Union[str, Missing] = missing
     realnames: Union[bool, Missing] = missing
+    usernames: Union[bool, Missing] = missing
     maxWidth: Union[str, Missing] = missing
     minWidth: Union[str, Missing] = missing
     singleLine: Union[bool, Missing] = missing
@@ -72,8 +74,10 @@ class TableFormMarkupSchema(GenericMarkupSchema):
     autosave = fields.Boolean()
     buttonText = fields.Str(allow_none=True)
     hideButtonText = fields.Str(allow_none=True)
+    openButtonText = fields.Str(allow_none=True)
     reportButton = fields.Str(allow_none=True)
     realnames = fields.Boolean()
+    usernames = fields.Boolean()
     singleLine = fields.Boolean(allow_none=True)
     removeDocIds = fields.Boolean(allow_none=True)
     maxWidth = fields.Str()
@@ -131,7 +135,8 @@ class TableFormHtmlModel(GenericHtmlModel[TableFormInputModel, TableFormMarkupMo
                 return
             d = get_doc_or_abort(tid.doc_id)
             user = User.get_by_name(self.current_user_id)
-            fielddata, aliases, content_map, field_names = get_fields_and_users(self.markup.fields, groups, d, user)
+            fielddata, aliases, content_map, field_names = \
+                get_fields_and_users(self.markup.fields, groups, d, user, self.markup.removeDocIds)
             rows = {}
             realnames = {}
             for f in fielddata:
