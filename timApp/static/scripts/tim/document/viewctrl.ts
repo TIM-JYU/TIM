@@ -13,7 +13,7 @@ import * as popupMenu from "tim/document/popupMenu";
 import {QuestionHandler} from "tim/document/question/questions";
 import {initReadings} from "tim/document/readings";
 import {timLogTime} from "tim/util/timTiming";
-import {isPageDirty, markAsUsed, markPageNotDirty} from "tim/util/utils";
+import {isPageDirty, markAsUsed, markPageNotDirty, to} from "tim/util/utils";
 import {AnswerBrowserController, PluginLoaderCtrl} from "../answer/answerbrowser3";
 import {BookmarksController, IBookmarkGroup} from "../bookmark/bookmarks";
 import {IPluginInfoResponse, ParCompiler} from "../editor/parCompiler";
@@ -23,7 +23,17 @@ import {TimTableController} from "../plugin/timTable";
 import {initCssPrint} from "../printing/cssPrint";
 import {IUser} from "../user/IUser";
 import {Users} from "../user/userService";
-import {$compile, $filter, $http, $interval, $localStorage, $q, $timeout, $window} from "../util/ngimport";
+import {
+    $compile,
+    $filter,
+    $http,
+    $httpParamSerializer,
+    $interval,
+    $localStorage,
+    $q,
+    $timeout,
+    $window
+} from "../util/ngimport";
 import {AnnotationController} from "../velp/annotation";
 import {ReviewController} from "../velp/reviewController";
 import {DiffController} from "./diffDialog";
@@ -36,6 +46,7 @@ import {PopupMenuController} from "./popupMenu";
 import {RefPopupHandler} from "./refpopup";
 import {initSlideView} from "./slide";
 import {IMenuFunctionEntry} from "./viewutils";
+import {IAnswer} from "../answer/IAnswer";
 
 markAsUsed(ngs, popupMenu, interceptor, helpPar);
 
@@ -525,8 +536,35 @@ export class ViewCtrl implements IController {
         // TODO: do not call changeUser separately if updateAll enabled
         // - handle /answers as single request for all related plugins instead of separate requests
         // - do the same for /taskinfo and /getState requests
+        // for (const ab of this.abs.values()) {
+        //     ab.changeUser(user, updateAll);
+        // }
+
+        // // Make a single request for all answerbrowsers in this.abs.values
+        const taskList = [];
         for (const ab of this.abs.values()) {
-            ab.changeUser(user, updateAll);
+            taskList.push(ab.taskId);
+        }
+        // const response = await $http.get<{ }>("/multipluginanswer?" + $httpParamSerializer({fields: taskList, user: user.id, doc: this.docId}));
+        // console.log(response);
+        // TODO: if answerbrowser had same user as before then it can be removed from the query
+        //  Would it even happen if updateAll is enabled all the time when changing users
+        if (updateAll) {
+            const answerResponse = await $http.get<{ [index: string]: [IAnswer] }>("/multipluginanswer2?" + $httpParamSerializer({
+                fields: taskList,
+                user: user.id,
+            }));
+            console.log(answerResponse);
+            const selectedAnswers: {[index: string]: IAnswer | undefined} = {}
+            for (const [k, ab] of this.abs) {
+                ab.changeUserAndAnswers(user, updateAll, answerResponse.data[ab.taskId]);
+                selectedAnswers[k] = ab.selectedAnswer;
+            }
+            // TODO
+            // const stateResponse = await $http.get<{ [index: string]: { html: string, reviewHtml: string } }>("/getStates?" + $httpParamSerializer({
+            //     fields: taskList,
+            //     user: user.id,
+            // }));
         }
     }
 

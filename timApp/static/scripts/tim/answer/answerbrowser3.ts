@@ -331,6 +331,21 @@ export class AnswerBrowserController extends DestroyScope implements IController
         }
     }
 
+    async changeUserAndAnswers(user: IUser, updateAll: boolean, answers: IAnswer[]) {
+        this.user = user;
+        this.fetchedUser = this.user;
+            // const answers = await this.getAnswersAndUpdate();
+            this.handleAnswerFetch(answers);
+            if (!answers || answers.length === 0) {
+                this.resetITimComponent();
+            } else {
+                this.loadedAnswer = {review: false, id: undefined};
+                this.changeAnswer();
+            }
+            await this.loadInfo();
+
+    }
+
     private unDimPlugin() {
         this.loader.unDimPlugin();
     }
