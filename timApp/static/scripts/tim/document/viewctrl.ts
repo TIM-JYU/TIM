@@ -33,7 +33,7 @@ import {
     $localStorage,
     $q,
     $timeout,
-    $window,
+    $window
 } from "../util/ngimport";
 import {AnnotationController} from "../velp/annotation";
 import {ReviewController} from "../velp/reviewController";

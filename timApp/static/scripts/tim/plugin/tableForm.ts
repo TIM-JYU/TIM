@@ -58,7 +58,6 @@ const realname = t.dictionary(t.string, t.string);
 const TableFormAll = t.intersection([
     t.partial({
         aliases: t.dictionary(t.string, t.string),
-        contentMap: t.dictionary(t.string, t.string),
         fields: t.array(t.string),
         realnamemap: t.dictionary(t.string, t.string),
         rows: Rows,
@@ -445,11 +444,7 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
                 if (this.attrsall.aliases && cellContent in this.attrsall.aliases) {
                     contentalias = this.attrsall.aliases[cellContent];
                 } else { contentalias = cellContent; }
-                let contentfield = "";
-                if (this.attrsall.contentMap && contentalias in this.attrsall.contentMap) {
-                    contentfield = "|" + this.attrsall.contentMap[contentalias];
-                }
-                taskLocations[columnPlace] = contentalias + contentfield;
+                taskLocations[columnPlace] = contentalias;
             } else {
                 replyRows[userLocations[numberPlace]][taskLocations[columnPlace]] = cellContent;
             }

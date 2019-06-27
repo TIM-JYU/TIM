@@ -251,13 +251,13 @@ def widen_fields(fields: List[str]):
 def get_fields_and_users(u_fields: List[str], groups: List[UserGroup],
                          d: DocInfo, current_user: User, autoalias: bool = False):
     """
-    Return fielddata, aliases, content_map, field_names
+    Return fielddata, aliases, field_names
     :param u_fields: list of fields to be used
     :param groups: user groups to be used
     :param d: default document
     :param current_user: current users, check his rights to fields
     :param autoalias: if true, give automatically from d1 same as would be from d1 = d1
-    :return: fielddata, aliases, content_map, field_names
+    :return: fielddata, aliases, field_names
     """
     needs_group_access_check = UserGroup.get_teachers_group() not in current_user.groups
     ugroups = []
@@ -279,7 +279,6 @@ def get_fields_and_users(u_fields: List[str], groups: List[UserGroup],
     task_ids = []
     task_id_map = defaultdict(list)
     alias_map = {}
-    content_map = {}
     jsrunner_alias_map = {}
     doc_map = {}
     num_prog = re.compile('^\d+\..+/')
@@ -287,12 +286,11 @@ def get_fields_and_users(u_fields: List[str], groups: List[UserGroup],
     u_fields = widen_fields(u_fields)
 
     for field in u_fields:
-        field_content = field.split("|")
         try:
-            t, a, *rest = field_content[0].split("=")
+            t, a, *rest = field.split("=")
         except ValueError:
             a = None
-            t, rest = field_content[0], None
+            t, rest = field, None
             if autoalias:
                 a = t.strip()
                 if num_prog.match(a):  # remove leading doc id
@@ -312,8 +310,6 @@ def get_fields_and_users(u_fields: List[str], groups: List[UserGroup],
         if not task_id.doc_id:
             task_id.doc_id = d.id
         task_id_map[task_id.doc_task].append(task_id)
-        if len(field_content) == 2:
-            content_map[task_id.extended_or_doc_task] = field_content[1].strip()
         if a:
             alias = a
             if alias in jsrunner_alias_map:
@@ -388,11 +384,6 @@ def get_fields_and_users(u_fields: List[str], groups: List[UserGroup],
             else:
                 json_str = a.content
                 p = json.loads(json_str)
-                # TODO: content_map is not filled when giving contentfield in with . symbol
-                #  maybe obsolete if save can accept contentfields after . symbol too
-                # if task.extended_or_doc_task in content_map:
-                #     # value = p[content_map[task.extended_or_doc_task]]
-                #     value = p.get(content_map[task.extended_or_doc_task])
                 if task.field:
                     value = p.get(task.field)
                 else:
@@ -404,7 +395,7 @@ def get_fields_and_users(u_fields: List[str], groups: List[UserGroup],
                         values_p = list(p.values())
                         value = values_p[0]
             user_tasks[alias_map.get(task.extended_or_doc_task, task.extended_or_doc_task)] = value
-    return res, jsrunner_alias_map, content_map, [alias_map.get(ts.extended_or_doc_task, ts.extended_or_doc_task) for ts in task_ids]
+    return res, jsrunner_alias_map, [alias_map.get(ts.extended_or_doc_task, ts.extended_or_doc_task) for ts in task_ids]
 
 
 class JsRunnerSchema(GenericMarkupSchema):
@@ -575,7 +566,7 @@ def post_answer(plugintype: str, task_id_ext: str):
         if not_found_groups:
             abort(404, f'The following groups were not found: {", ".join(not_found_groups)}')
 
-        answerdata['data'], answerdata['aliases'], _, _ = get_fields_and_users(
+        answerdata['data'], answerdata['aliases'], _ = get_fields_and_users(
             plugin.values['fields'],
             found_groups,
             d,
@@ -690,14 +681,10 @@ def handle_jsrunner_response(jsonresp, result, current_doc: DocInfo):
     if not save_obj:
         return
     tasks = set()
-    # content_map = {}
     doc_map: Dict[int, DocInfo] = {}
     for item in save_obj:
         task_u = item['fields']
-        for key in task_u.keys():
-            key_content = key.split("|")
-            tid = key_content[0]
-            # #TODO: clean up |-based contentfield checking
+        for tid in task_u.keys():
             tasks.add(tid)
             try:
                 id_num = TaskId.parse(tid, False, False, True)
@@ -737,14 +724,10 @@ def handle_jsrunner_response(jsonresp, result, current_doc: DocInfo):
         u = User.get_by_id(u_id)
         user_fields = user['fields']
         for key, value in user_fields.items():
-            content_list = key.split("|")
-            if len(content_list) == 2:
-                content_field = content_list[1].strip()
-            else:
-                content_field = task_content_name_map[content_list[0]]
+            content_field = task_content_name_map[key]
             if content_field == 'ignore':
                 continue
-            task_id = TaskId.parse(content_list[0], False, False, True)
+            task_id = TaskId.parse(key, False, False, True)
             # TODO: Check if t_id.field = "points"/time etc
             #  If not then we want to save to answer's content at [t_id.field]
             #  else we just copy previous answer and edit it's points/time

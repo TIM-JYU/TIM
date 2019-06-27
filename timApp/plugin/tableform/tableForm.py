@@ -135,7 +135,7 @@ class TableFormHtmlModel(GenericHtmlModel[TableFormInputModel, TableFormMarkupMo
                 return
             d = get_doc_or_abort(tid.doc_id)
             user = User.get_by_name(self.current_user_id)
-            fielddata, aliases, content_map, field_names = \
+            fielddata, aliases, field_names = \
                 get_fields_and_users(self.markup.fields, groups, d, user, self.markup.removeDocIds)
             rows = {}
             realnames = {}
@@ -146,7 +146,6 @@ class TableFormHtmlModel(GenericHtmlModel[TableFormInputModel, TableFormMarkupMo
             r['realnamemap'] = realnames
             r['fields'] = field_names
             r['aliases'] = aliases
-            r['contentMap'] = content_map
             # TODO else return "no groups/no fields"
 
         return r
