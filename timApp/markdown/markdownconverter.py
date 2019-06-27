@@ -29,6 +29,10 @@ def expand_macros_regex(text: str, macros, macro_delimiter=None):
 # Ks. https://tim.jyu.fi/view/tim/ohjeita/satunnaistus#timfiltterit
 
 
+# To create a new filter,
+#  1. make a class or function
+#  2. and map it in create_environment
+
 def srange(s, i1, i2, step=1):
     """
     Jinja2 filter for generating indexed names
