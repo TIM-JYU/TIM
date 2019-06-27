@@ -15,6 +15,7 @@ import {initReadings} from "tim/document/readings";
 import {timLogTime} from "tim/util/timTiming";
 import {isPageDirty, markAsUsed, markPageNotDirty, to} from "tim/util/utils";
 import {AnswerBrowserController, PluginLoaderCtrl} from "../answer/answerbrowser3";
+import {IAnswer} from "../answer/IAnswer";
 import {BookmarksController, IBookmarkGroup} from "../bookmark/bookmarks";
 import {IPluginInfoResponse, ParCompiler} from "../editor/parCompiler";
 import {IDocument} from "../item/IItem";
@@ -32,7 +33,7 @@ import {
     $localStorage,
     $q,
     $timeout,
-    $window
+    $window,
 } from "../util/ngimport";
 import {AnnotationController} from "../velp/annotation";
 import {ReviewController} from "../velp/reviewController";
@@ -46,7 +47,6 @@ import {PopupMenuController} from "./popupMenu";
 import {RefPopupHandler} from "./refpopup";
 import {initSlideView} from "./slide";
 import {IMenuFunctionEntry} from "./viewutils";
-import {IAnswer} from "../answer/IAnswer";
 
 markAsUsed(ngs, popupMenu, interceptor, helpPar);
 
