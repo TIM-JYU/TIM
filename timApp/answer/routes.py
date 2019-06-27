@@ -697,12 +697,10 @@ def handle_jsrunner_response(jsonresp, result, current_doc: DocInfo):
         for key in task_u.keys():
             key_content = key.split("|")
             tid = key_content[0]
-            # #TODO: Parse content tässä
-            # if len(key_content) == 2:
-            #     content_map[key_content[0]] = key_content[1].strip()
+            # #TODO: clean up |-based contentfield checking
             tasks.add(tid)
             try:
-                id_num = TaskId.parse(tid, False, False)
+                id_num = TaskId.parse(tid, False, False, True)
             except PluginException:
                 return abort(400, f'Invalid task name: {tid.split(".")[1]}')
             if not id_num.doc_id:
@@ -712,7 +710,7 @@ def handle_jsrunner_response(jsonresp, result, current_doc: DocInfo):
     task_content_name_map = {}
     curr_user = get_current_user_object()
     for task in tasks:
-        t_id = TaskId.parse(task, False, False)
+        t_id = TaskId.parse(task, False, False, True)
         dib = doc_map[t_id.doc_id]
         if not curr_user.has_teacher_access(dib):
             return abort(403, f'Missing teacher access for document {dib.id}')
@@ -720,14 +718,12 @@ def handle_jsrunner_response(jsonresp, result, current_doc: DocInfo):
             task_content_name_map[task] = 'c'
             continue
         try:
-            plug = find_plugin_from_document(dib.document, t_id, curr_user)
-            content_field = plug.get_content_field_name()
-            # key_content = key.split("|")
-            # #TODO: Parse content tässä
-            # if len(key_content) == 2:
-            #     content_map[key_content[0]] = key_content[1].strip()
-            # TODO: check plug content type ^
-            task_content_name_map[task] = content_field
+            if(t_id.field):
+                task_content_name_map[task] = t_id.field
+            else:
+                plug = find_plugin_from_document(dib.document, t_id, curr_user)
+                content_field = plug.get_content_field_name()
+                task_content_name_map[task] = content_field
         except TaskNotFoundException as e:
             task_display = t_id.doc_task if t_id.doc_id != current_doc.id else t_id.task_name
             if not result['web'].get('error', None):
@@ -748,7 +744,10 @@ def handle_jsrunner_response(jsonresp, result, current_doc: DocInfo):
                 content_field = task_content_name_map[content_list[0]]
             if content_field == 'ignore':
                 continue
-            task_id = TaskId.parse(content_list[0], False, False)
+            task_id = TaskId.parse(content_list[0], False, False, True)
+            # TODO: Check if t_id.field = "points"/time etc
+            #  If not then we want to save to answer's content at [t_id.field]
+            #  else we just copy previous answer and edit it's points/time
             an: Answer = get_latest_answers_query(task_id, [u]).first()
             content = json.dumps({content_field: value})
             if an and an.content == content:
