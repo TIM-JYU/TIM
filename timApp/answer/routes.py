@@ -305,7 +305,7 @@ def get_fields_and_users(u_fields: List[str], groups: List[UserGroup],
         if a == '':
             return abort(400, f'Alias cannot be empty: {field}')
         try:
-            task_id = TaskId.parse(t, False, False)
+            task_id = TaskId.parse(t, False, False, True)
         except PluginException as e:
             return abort(400, str(e))
         task_ids.append(task_id)
@@ -388,9 +388,13 @@ def get_fields_and_users(u_fields: List[str], groups: List[UserGroup],
             else:
                 json_str = a.content
                 p = json.loads(json_str)
-                if task.extended_or_doc_task in content_map:
-                    # value = p[content_map[task.extended_or_doc_task]]
-                    value = p.get(content_map[task.extended_or_doc_task])
+                # TODO: content_map is not filled when giving contentfield in with . symbol
+                #  maybe obsolete if save can accept contentfields after . symbol too
+                # if task.extended_or_doc_task in content_map:
+                #     # value = p[content_map[task.extended_or_doc_task]]
+                #     value = p.get(content_map[task.extended_or_doc_task])
+                if task.field:
+                    value = p.get(task.field)
                 else:
                     if len(p) > 1:
                         plug = find_plugin_from_document(doc_map[task.doc_id], task, user)
