@@ -192,6 +192,8 @@ def view(item_path, template_name, usergroup=None, route="view"):
     if doc_info is None:
         return try_return_folder(item_path)
 
+    doc_info.request = request
+
     doc_id = doc_info.id
     edit_mode = request.args.get('edit', None) if has_edit_access(doc_info) else None
     create_environment("%%")  # TODO get macroinf

@@ -10,7 +10,7 @@ from timApp.document.specialnames import DEFAULT_PREAMBLE_DOC
 from timApp.document.yamlblock import YamlBlock
 from timApp.markdown.dumboclient import MathType, DumboOptions, InputFormat
 from timApp.timdb.exceptions import TimDbException, InvalidReferenceException
-
+from flask.globals import request
 
 class DocSettings:
     global_plugin_attrs_key = 'global_plugin_attrs'
@@ -48,6 +48,7 @@ class DocSettings:
     memo_minutes_key = 'memo_minutes'
     comments_key = 'comments'
     course_group_key = 'course_group'
+    fromurl_key = 'fromurl'
     sisu_require_manual_enroll_key = 'sisu_require_manual_enroll'
 
     @classmethod
@@ -62,6 +63,23 @@ class DocSettings:
             raise TimDbException(f'Not a settings paragraph: {par.get_id()}')
         try:
             yaml_vals = DocSettings.parse_values(par)
+            # TODO: comes her at least 6 times with same par?  Could this be cached?
+
+            # Replace some macros be values comoing from URL
+            if DocSettings.fromurl_key in yaml_vals.values:
+                fromurl = yaml_vals.values.get(DocSettings.fromurl_key)
+                for fu in fromurl:
+                    if fu:
+                        # request = par.doc.docinfo.request
+
+                        # TODO: if allready value and fromurl.get(fu) then ole value wins
+                        urlvalue = request.args.get(fu, fromurl.get(fu))
+                        if urlvalue:
+                            if not yaml_vals.values.get('macros', None):
+                                yaml_vals.values["macros"] = {}
+                            yaml_vals.values["macros"][fu] = urlvalue
+                del yaml_vals.values[DocSettings.fromurl_key]
+
         except yaml.YAMLError as e:
             raise TimDbException(f'Invalid YAML: {e}')
         else:
@@ -75,6 +93,7 @@ class DocSettings:
         self.doc = doc
         self.__dict = settings_dict if settings_dict else YamlBlock()
         self.user = None
+        self.request = None
 
     def to_paragraph(self) -> DocParagraph:
         text = '```\n' + self.__dict.to_markdown() + '\n```'

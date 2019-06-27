@@ -160,6 +160,50 @@ def chunks(l: List, n: int):
     for i in range(0, len(l), n):
         yield l[i:i + n]
 
+@answers.route("/multipluginanswer")
+def get_multiple_plugin_answers():
+    # Experiment on changing field values in teacher view using get_fields_and_users returns
+    # would only return latest answer
+    fields = request.args.getlist('fields')
+    user = request.args.get('user')
+    user = User.get_by_id(user)
+    userGroup = UserGroup.get_by_name(user.name)
+    doc = request.args.get('doc')
+    fieldlist = get_fields_and_users(fields, [userGroup], doc, user)
+    return json_response(fieldlist)
+
+@answers.route("/multipluginanswer2")
+def get_multiple_plugin_answers2():
+    # Another experiment on changing field values in teacher view
+    # Single request for all plugin answers when updateAll enabled
+    #TODO: Optimize - for now it's just get_answers repeated
+    fields = request.args.getlist('fields')
+    user_id = request.args.get('user')
+    try:
+        user_id = int(user_id)
+    except ValueError:
+        abort(404, 'Not a valid user id')
+    verify_logged_in()
+    try:
+        fieldlist = {}
+        for task_id in fields:
+          tid = TaskId.parse(task_id)
+          d = get_doc_or_abort(tid.doc_id)
+          user = User.get_by_id(user_id)
+          if user_id != get_current_user_id():
+              verify_seeanswers_access(d)
+          if user is None:
+              abort(400, 'Non-existent user')
+          user_answers: List[Answer] = user.get_answers_for_task(tid.doc_task).all()
+          if hide_names_in_teacher():
+              for answer in user_answers:
+                  for u in answer.users_all:
+                      maybe_hide_name(d, u)
+          fieldlist[task_id] = user_answers
+        return json_response(fieldlist)
+    except Exception as e:
+        return abort(400, str(e))
+    pass
 
 def widen_fields(fields: List[str]):
     """
@@ -261,7 +305,7 @@ def get_fields_and_users(u_fields: List[str], groups: List[UserGroup],
         if a == '':
             return abort(400, f'Alias cannot be empty: {field}')
         try:
-            task_id = TaskId.parse(t, False, False)
+            task_id = TaskId.parse(t, False, False, True)
         except PluginException as e:
             return abort(400, str(e))
         task_ids.append(task_id)
@@ -344,9 +388,13 @@ def get_fields_and_users(u_fields: List[str], groups: List[UserGroup],
             else:
                 json_str = a.content
                 p = json.loads(json_str)
-                if task.extended_or_doc_task in content_map:
-                    # value = p[content_map[task.extended_or_doc_task]]
-                    value = p.get(content_map[task.extended_or_doc_task])
+                # TODO: content_map is not filled when giving contentfield in with . symbol
+                #  maybe obsolete if save can accept contentfields after . symbol too
+                # if task.extended_or_doc_task in content_map:
+                #     # value = p[content_map[task.extended_or_doc_task]]
+                #     value = p.get(content_map[task.extended_or_doc_task])
+                if task.field:
+                    value = p.get(task.field)
                 else:
                     if len(p) > 1:
                         plug = find_plugin_from_document(doc_map[task.doc_id], task, user)
