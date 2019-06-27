@@ -205,6 +205,9 @@ def get_multiple_plugin_answers2():
         return abort(400, str(e))
     pass
 
+TASK_PROG = re.compile('([\w\.]*)\((\d*),(\d*)\)(.*)') # see https://regex101.com/r/ZZuizF/2
+TASK_NAME_PROG = re.compile("(\d+.)?([\w\d]+)[.\[]?.*")  # see https://regex101.com/r/OjnTAn/4
+
 def widen_fields(fields: List[str]):
     """
     if there is syntax d(1,3) in fileds, it is made d1,d2
@@ -213,21 +216,19 @@ def widen_fields(fields: List[str]):
     :return: array fields widened
     """
     fields1 = []
-    prog = re.compile('([\w\.]*)\((\d*),(\d*)\)')
     for field in fields:
         parts = field.split(";")
         fields1.extend(parts)
 
     rfields = []
     for field in fields1:
-        field_content = field.split("|")
         try:
-            t, a, *rest = field_content[0].split("=")
+            t, a, *rest = field.split("=")
         except ValueError:
-            t, a, rest = field_content[0], "", None
+            t, a, rest = field, "", None
         t = t.strip()
         a = a.strip()
-        match = re.search(prog, t)
+        match = re.search(TASK_PROG, t)
         if not match:
             rfields.append(field)
             continue
@@ -235,17 +236,30 @@ def widen_fields(fields: List[str]):
         tb = match.group(1)
         n1 = int(match.group(2))
         n2 = int(match.group(3))
+        te = match.group(4)
 
         for i in range(n1, n2):
-            tn = tb + str(i)
+            tn = tb + str(i) + te
             if not tb:
                 tn = ""
             if a:
                 tn += "=" + a + str(i)
-            field_content[0] = tn
-            rfields.append("|".join(field_content))
+            rfields.append(tn)
 
     return rfields
+
+
+def get_alias(name):
+    """
+    Get name part form string like 534.d1.points
+    :param name: full name of field
+    :return: just name part of field, like d1
+    """
+    t = name.strip()
+    match = re.search(TASK_NAME_PROG, t)
+    if not match:
+        return name
+    return match.group(2)
 
 
 def get_fields_and_users(u_fields: List[str], groups: List[UserGroup],
@@ -294,9 +308,7 @@ def get_fields_and_users(u_fields: List[str], groups: List[UserGroup],
             a = None
             t, rest = field_content[0], None
             if autoalias:
-                a = t.strip()
-                if num_prog.match(a):  # remove leading doc id
-                    a = a[a.find('.')+1:]
+                a = get_alias(t)
         t = t.strip()
         if a:
             a = a.strip()

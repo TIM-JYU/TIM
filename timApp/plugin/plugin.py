@@ -515,21 +515,26 @@ def parse_plugin_values(par: DocParagraph,
     return parse_plugin_values_macros(par, global_attrs, macroinfo.get_macros(), macroinfo.get_macro_delimiter())
 
 
-def find_inline_plugins(block: DocParagraph, macroinfo: MacroInfo) -> Generator[
-    Tuple[UnvalidatedTaskId, Optional[str], Range, str], None, None]:
-    md = block.get_expanded_markdown(macroinfo=macroinfo)
+TASK_NAME_PROG = re.compile(r'{#([\w:]*)([\s\S]*?)?#}')  # see https://regex101.com/r/XmnIZv/32
 
+def find_inline_plugins_from_str(md) -> Generator[
+    Tuple[UnvalidatedTaskId, Optional[str], Range, str], None, None]:
     # "}" not allowed in inlineplugins for now
     # TODO make task id optional
     # matches: Iterable[Match] = re.finditer(r'{#([^ }\n]+)(([ \n]*[^{}]*)|([ \n]*[^{}]*{[^{}]*}[^{}]*)*)?}', md)
     # matches: Iterable[Match] = re.finditer(r'{#([^ }\n]+)([ \n][^}]+)?}', md)
-    matches: Iterable[Match] = re.finditer(r'{#([\w]*)([\s\S]*?)?#}', md)
+    matches: Iterable[Match] = TASK_NAME_PROG.finditer(md)
     for m in matches:
         task_str = m.group(1)
         task_id = UnvalidatedTaskId(task_str)
         p_yaml = m.group(2).replace("\n", " ")
         p_range = (m.start(), m.end())
         yield task_id, p_yaml, p_range, md
+
+def find_inline_plugins(block: DocParagraph, macroinfo: MacroInfo) -> Generator[
+    Tuple[UnvalidatedTaskId, Optional[str], Range, str], None, None]:
+    md = block.get_expanded_markdown(macroinfo=macroinfo)
+    return find_inline_plugins_from_str(md)
 
 
 def maybe_get_plugin_from_par(p: DocParagraph, task_id: TaskId, u: User) -> Optional[Plugin]:
