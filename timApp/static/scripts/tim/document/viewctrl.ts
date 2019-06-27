@@ -536,36 +536,36 @@ export class ViewCtrl implements IController {
         // TODO: do not call changeUser separately if updateAll enabled
         // - handle /answers as single request for all related plugins instead of separate requests
         // - do the same for /taskinfo and /getState requests
-        // for (const ab of this.abs.values()) {
-        //     ab.changeUser(user, updateAll);
-        // }
-
-        // // Make a single request for all answerbrowsers in this.abs.values
-        const taskList = [];
         for (const ab of this.abs.values()) {
-            taskList.push(ab.taskId);
+            ab.changeUser(user, updateAll);
         }
-        // const response = await $http.get<{ }>("/multipluginanswer?" + $httpParamSerializer({fields: taskList, user: user.id, doc: this.docId}));
-        // console.log(response);
-        // TODO: if answerbrowser had same user as before then it can be removed from the query
-        //  Would it even happen if updateAll is enabled all the time when changing users
-        if (updateAll) {
-            const answerResponse = await $http.get<{ [index: string]: [IAnswer] }>("/multipluginanswer2?" + $httpParamSerializer({
-                fields: taskList,
-                user: user.id,
-            }));
-            console.log(answerResponse);
-            const selectedAnswers: {[index: string]: IAnswer | undefined} = {}
-            for (const [k, ab] of this.abs) {
-                ab.changeUserAndAnswers(user, updateAll, answerResponse.data[ab.taskId]);
-                selectedAnswers[k] = ab.selectedAnswer;
-            }
-            // TODO
-            // const stateResponse = await $http.get<{ [index: string]: { html: string, reviewHtml: string } }>("/getStates?" + $httpParamSerializer({
-            //     fields: taskList,
-            //     user: user.id,
-            // }));
-        }
+
+        // // // Make a single request for all answerbrowsers in this.abs.values
+        // const taskList = [];
+        // for (const ab of this.abs.values()) {
+        //     taskList.push(ab.taskId);
+        // }
+        // // const response = await $http.get<{ }>("/multipluginanswer?" + $httpParamSerializer({fields: taskList, user: user.id, doc: this.docId}));
+        // // console.log(response);
+        // // TODO: if answerbrowser had same user as before then it can be removed from the query
+        // //  Would it even happen if updateAll is enabled all the time when changing users
+        // if (updateAll) {
+        //     const answerResponse = await $http.get<{ [index: string]: [IAnswer] }>("/multipluginanswer2?" + $httpParamSerializer({
+        //         fields: taskList,
+        //         user: user.id,
+        //     }));
+        //     console.log(answerResponse);
+        //     const selectedAnswers: {[index: string]: IAnswer | undefined} = {}
+        //     for (const [k, ab] of this.abs) {
+        //         ab.changeUserAndAnswers(user, updateAll, answerResponse.data[ab.taskId]);
+        //         selectedAnswers[k] = ab.selectedAnswer;
+        //     }
+        //     // TODO
+        //     // const stateResponse = await $http.get<{ [index: string]: { html: string, reviewHtml: string } }>("/getStates?" + $httpParamSerializer({
+        //     //     fields: taskList,
+        //     //     user: user.id,
+        //     // }));
+        // }
     }
 
     async beginUpdate() {
