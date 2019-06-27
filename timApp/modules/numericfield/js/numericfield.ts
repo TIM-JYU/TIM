@@ -300,7 +300,7 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
             }
             this.saveResponse.message = this.errormessage;
         } else {
-            this.errormessage = "Infinite loop or some other error?";
+            this.errormessage = r.result.data.error;
         }
         return this.saveResponse;
     }

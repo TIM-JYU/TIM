@@ -24,12 +24,15 @@ const TableFormMarkup = t.intersection([
         anonNames: nullable(t.boolean),
         autosave: t.boolean,
         hideButtonText: nullable(t.string),
+        openButtonText: withDefault(t.string, "Avaa Taulukko/Raporttinäkymä"),
+
         hiddenColumns: t.array(t.number),
         hiddenRows: t.array(t.number),
         maxWidth: t.string,
         minWidth: t.string,
         open: t.boolean,
-        realnames: t.boolean,
+        usernames: withDefault(t.boolean, true),
+        realnames: withDefault(t.boolean, true),
         report: nullable(t.boolean),
         reportButton: nullable(t.string),
         separator: nullable(t.string),
@@ -87,6 +90,7 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
     private rows!: IRowsType;
     private oldCellValues!: string;
     private realnames = false;
+    private usernames = false;
     private showTable = true;
     private userNameColumn = "A";
     private realNameColumn = "B";
@@ -210,10 +214,14 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
             }
             if (this.attrsall.fields) {
                 for (let x = 0; x < this.attrsall.fields.length; x++) {
-                    let colheader = this.attrsall.fields[x];
+
+                    const colheader = this.attrsall.fields[x];
+                    /*  // Done in server side
                     if ( this.attrs.removeDocIds && colheader.match(/^\d+\..+/)) {
                         colheader = colheader.substring(colheader.indexOf(".") + 1);
                     }
+                    */
+
                     this.data.userdata.cells[colnumToLetters(x + xOffset) + 1] = {
                         cell: colheader,
                         backgroundColor: "#efecf1",
@@ -460,7 +468,7 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
             this.error = data.web.error;
             // this.result = "Saved";
         } else {
-            this.error = "Infinite loop or some other error?";
+            this.error = r.result.data.error; // "Infinite loop or some other error?";
         }
     }
 
@@ -481,7 +489,7 @@ timApp.component("tableformRunner", {
     <tim-markup-error ng-if="::$ctrl.markupError" data="::$ctrl.markupError"></tim-markup-error>
     <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
     <p ng-if="::$ctrl.stem" ng-bind-html="::$ctrl.stem"></p>
-    <div class="form-inline" ng-show="::$ctrl.tableCheck()"><label>Suodata {{::$ctrl.inputstem}} <span>
+    <div class="form-inline" ng-show="::$ctrl.tableCheck()"><label class="hidden-print">Suodata {{::$ctrl.inputstem}} <span>
         <input type="text"
                class="form-control"
                ng-model="$ctrl.userfilter"
@@ -492,6 +500,7 @@ timApp.component("tableformRunner", {
                size="{{::$ctrl.cols}}"></span></label>
         <tim-table disabled="!$ctrl.tableCheck()" data="::$ctrl.data" taskid="{{$ctrl.pluginMeta.getTaskId()}}" plugintype="{{$ctrl.pluginMeta.getPlugin()}}"></tim-table>
     </div>
+    <div class="hidden-print">
     <button class="timButton"
             ng-if="::$ctrl.tableCheck()"
             ng-click="$ctrl.saveText()">
@@ -507,6 +516,7 @@ timApp.component("tableformRunner", {
             ng-if="$ctrl.hideButtonText()">
             {{::$ctrl.hideButtonText()}}
     </button>
+    </div>
     <pre ng-if="$ctrl.result">{{$ctrl.result}}</pre>
     <pre ng-if="$ctrl.error" ng-bind-html="$ctrl.error"></pre>
     <p ng-if="::$ctrl.footer" ng-bind="::$ctrl.footer" class="plgfooter"></p>
@@ -514,7 +524,7 @@ timApp.component("tableformRunner", {
 <div class="tableOpener" ng-if="!$ctrl.showTable">
     <button class="timButton"
             ng-click="$ctrl.openTable()">
-            Avaa Taulukko/Raporttinäkymä
+            {{::$ctrl.attrs.openButtonText}}
     </button>
 </div>
 <br>

@@ -125,13 +125,15 @@ class Tools {
         if (checkNumber(s)) {
             return this.handlePossibleNaN(s, s, def);
         }
-        if (s === null || s === undefined) {
+        if (s === null || s === undefined  ) {
             return def;
         }
         if (typeof s !== "string") {
             return this.reportInputTypeErrorAndReturnDef(s, def);
         }
-        const sp = s.replace(",", ".");
+        const st = s.trim();
+        if ( st == "" ) { return def;  }
+        const sp = st.replace(",", ".");
         const r = parseFloat(sp);
         return this.handlePossibleNaN(r, s, def);
     }
@@ -172,10 +174,12 @@ class Tools {
         if (s === null || s === undefined) {
             s = def;
         }
-        if (!checkString(s)) {
-            return this.reportInputTypeErrorAndReturnDef(s, def);
-        }
-        return s.toString();
+        // if (!checkString(s)) {  // if number this returns error :-(
+        //     return this.reportInputTypeErrorAndReturnDef(s, def);
+        // }
+        // @ts-ignore
+        const st: string = s;
+        return st.toString();
     }
 
     getValue(fieldName: unknown, def: unknown = "") {

@@ -169,11 +169,11 @@ def reqs():
     templates = ["""{#test:dropdown words: [option 1, option 2, option 3]}""", """
 #- {defaultplugin="dropdown"}
 
-The weather {#drop1 words: [is,do,are⁞]} nice today.
+The weather {#drop1 words: [is,do,are⁞]#} nice today.
 """, """
 #- {defaultplugin="dropdown"}
 
-The weather {#drop2 words: [is,do,are⁞]} terrible {#drop3 words: [yesterday, today, tomorrow]}, don't you think?
+The weather {#drop2 words: [is,do,are⁞]#} terrible {#drop3 words: [yesterday, today, tomorrow]#}, don't you think?
 """]
     return jsonify({
         "js": ["js/build/dropdown.js"],

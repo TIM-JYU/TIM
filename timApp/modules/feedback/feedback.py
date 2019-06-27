@@ -193,7 +193,7 @@ brackets.
 
 The next is a practice question. It can be edited or deleted.
 
-I {#practice words: ["will think", "won't think", "might think"]} before answering.
+I {#practice words: ["will think", "won't think", "might think"]#} before answering.
 
 ## Item header {defaultplugin="dropdown"}
 ::: {.info}
@@ -205,28 +205,28 @@ The question ID `#dropdown1` should be unique to the task. It refers to the feed
 should be edited in both the question item and feedback plugins. 
 :::
 
-What {#dropdown1 shuffle: true} on the stove?
+What {#dropdown1 shuffle: true#} on the stove?
 
 ## Item header {defaultplugin="dropdown"}
 ::: {.info}
 This is the `.info` section.
 :::
 
-Who {#dropdown2 shuffle: true} the cake?
+Who {#dropdown2 shuffle: true#} the cake?
 
 ## Item header {defaultplugin="dropdown"}
 ::: {.info}
 This is the `.info` section.
 :::
 
-What {#dropdown3 shuffle: true} on the roof?
+What {#dropdown3 shuffle: true#} on the roof?
 
 ## Item header {defaultplugin="dropdown"}
 ::: {.info}
 This is the `.info` section.
 :::
 
-Who {#dropdown4 shuffle: true} the 3 mile swim in the race?
+Who {#dropdown4 shuffle: true#} the 3 mile swim in the race?
 
 ``` {#fb1 plugin="feedback"}
 # Quick reference for feedback options:
@@ -322,9 +322,9 @@ brackets.
 
 The next is a practice question. It can be edited or deleted.
 
-Drag from here: {#practicedrag1 words: ["I", "before", "will think", "answering"]}
+Drag from here: {#practicedrag1 words: ["I", "before", "will think", "answering"]#}
 
-To here: {#practicedrop2}.
+To here: {#practicedrop2#}.
 
 ## Item header {defaultplugin="drag"}
 ::: {.info}
@@ -332,40 +332,40 @@ Anything inside this `.info` section starting with `::: {.info}` and ending with
 will not be  a part of the actual question/answer. Here you can place extra instructions
 and the draggable words in "drag1".
 
-{#drag1 shuffle: true, words: ["I", "when", "around", "come"]}
+{#drag1 shuffle: true, words: ["I", "when", "around", "come"]#}
 
 The question ID `#drop1` should be unique to the task. It refers to the feedback 
 and should be edited in both the question item and feedback plugins. 
 :::
 
-You know where I'll be found {#drop1}.
+You know where I'll be found {#drop1#}.
 
 ## Item header {defaultplugin="drag"}
 ::: {.info}
 This is the `.info` section with draggable words.
 
-{#drag2 shuffle: true, words: ["I", "if", "a mile", "run"]}
+{#drag2 shuffle: true, words: ["I", "if", "a mile", "run"]#}
 :::
 
-I will be quite tired {#drop2}.
+I will be quite tired {#drop2#}.
 
 ## Item header {defaultplugin="drag"}
 ::: {.info}
 This is the `.info` section with draggable words.
 
-{#drag3 shuffle: true, words: ["I", "who", "at work", "see"]}
+{#drag3 shuffle: true, words: ["I", "who", "at work", "see"]#}
 :::
 
-I will tell you {#drop3}.
+I will tell you {#drop3#}.
 
 ## Item header {defaultplugin="drag"}
 ::: {.info}
 This is the `.info` section with draggable words.
 
-{#drag4 shuffle: true, words: ["I", "whether", "a computer", "had"]}
+{#drag4 shuffle: true, words: ["I", "whether", "a computer", "had"]#}
 :::
 
-He wanted to know {#drop4}.
+He wanted to know {#drop4#}.
 
 ``` {#fb1 plugin="feedback"}
 # Quick reference for feedback options:
@@ -460,7 +460,7 @@ brackets.
 
 The next is a practice question. It can be edited or deleted.
 
-I {#practice words: ["will think", "won't think", "might think"]} before answering.
+I {#practice words: ["will think", "won't think", "might think"]#} before answering.
 
 """, """## Instruction header {.instruction defaultplugin="drag"}
 
@@ -470,9 +470,9 @@ brackets.
 
 The next is a practice question. It can be edited or deleted.
 
-Drag from here: {#practicedrag1 words: ["I", "before", "will think", "answering"]}
+Drag from here: {#practicedrag1 words: ["I", "before", "will think", "answering"]#}
 
-To here: {#practicedrop2}.
+To here: {#practicedrop2#}.
 
 """, """## Item header {defaultplugin="dropdown"}
 ::: {.info}
@@ -484,7 +484,7 @@ The question ID `#dropdown1` should be unique to the task. It refers to the feed
 should be edited in both the question item and feedback plugins. 
 :::
 
-What {#dropdown1 shuffle: true} on the stove?
+What {#dropdown1 shuffle: true#} on the stove?
 
 """, """## Item header {defaultplugin="drag"}
 ::: {.info}
@@ -492,13 +492,13 @@ Anything inside this `.info` section starting with `::: {.info}` and ending with
 will not be  a part of the actual question/answer. Here you can place extra instructions 
 and the draggable words in "drag1".
 
-{#drag1 shuffle: true , words: ["I", "when", "around", "come"]}
+{#drag1 shuffle: true , words: ["I", "when", "around", "come"]#}
 
 The question ID `#drop1` should be unique to the task. It refers to the feedback and 
 should be edited in both the question item and feedback plugins. 
 :::
 
-You know where I'll be found {#drop1}.
+You know where I'll be found {#drop1#}.
 
 """, """``` {#fb1 plugin="feedback"}
 # Quick reference for feedback options:
