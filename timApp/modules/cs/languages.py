@@ -208,6 +208,9 @@ class Language:
         return None
 
     def state_copy(self):
+        """
+        :return: list of state attribute names to be copied to .ts client code
+        """
         return []
 
     def convert(self, sourcelines):

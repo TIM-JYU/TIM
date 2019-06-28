@@ -48,7 +48,7 @@ class DocSettings:
     memo_minutes_key = 'memo_minutes'
     comments_key = 'comments'
     course_group_key = 'course_group'
-    fromurl_key = 'fromurl'
+    urlmacros_key = 'urlmacros'
     sisu_require_manual_enroll_key = 'sisu_require_manual_enroll'
 
     @classmethod
@@ -66,19 +66,19 @@ class DocSettings:
             # TODO: comes her at least 6 times with same par?  Could this be cached?
 
             # Replace some macros be values comoing from URL
-            if DocSettings.fromurl_key in yaml_vals.values:
-                fromurl = yaml_vals.values.get(DocSettings.fromurl_key)
-                for fu in fromurl:
+            if DocSettings.urlmacros_key in yaml_vals.values:
+                urlmacros = yaml_vals.values.get(DocSettings.urlmacros_key)
+                for fu in urlmacros:
                     if fu:
                         # request = par.doc.docinfo.request
 
-                        # TODO: if allready value and fromurl.get(fu) then ole value wins
-                        urlvalue = request.args.get(fu, fromurl.get(fu))
+                        # TODO: if allready value and urlmacros.get(fu) then ole value wins
+                        urlvalue = request.args.get(fu, urlmacros.get(fu))
                         if urlvalue:
                             if not yaml_vals.values.get('macros', None):
                                 yaml_vals.values["macros"] = {}
                             yaml_vals.values["macros"][fu] = urlvalue
-                del yaml_vals.values[DocSettings.fromurl_key]
+                del yaml_vals.values[DocSettings.urlmacros_key]
 
         except yaml.YAMLError as e:
             raise TimDbException(f'Invalid YAML: {e}')
