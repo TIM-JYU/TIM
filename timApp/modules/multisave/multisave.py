@@ -16,16 +16,18 @@ from pluginserver_flask import GenericMarkupModel, GenericMarkupSchema, GenericH
 # @attr.s(auto_attribs=True)
 class MultisaveStateModel:
     """Model for the information that is stored in TIM database for each answer."""
-    #userword: str
+    # userword: str
 
 
 @attr.s(auto_attribs=True)
 class MultisaveMarkupModel(GenericMarkupModel):
+    jumplink: Union[str, Missing] = missing
     areas: Union[List[str], Missing] = missing
     fields: Union[List[str], Missing] = missing
 
 
 class MultisaveMarkupSchema(GenericMarkupSchema):
+    jumplink = fields.String(allow_none=True)  # if after fields, problems
     areas = fields.List(fields.Str())
     fields = fields.List(fields.Str())
 
@@ -79,6 +81,7 @@ def render_static_multisave(m: MultisaveHtmlModel):
 
 
 app = create_app(__name__, MultisaveHtmlSchema())
+
 
 @app.route('/reqs/')
 @app.route('/reqs')
