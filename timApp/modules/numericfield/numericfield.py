@@ -165,28 +165,28 @@ def reqs():
     """Introducing templates for numericfield plugin"""
     templates = ["""
 ``` {#numericfield_normal plugin="numericfield"}
-cols: 7 #KENTÄN KOKO, NUMERAALINEN
-autosave: true #AUTOSAVE, PÄÄLLÄ
+cols: 7        # kentän koko, numeraalinen
+autosave: true # autosave, päällä
 ```""", """
 ``` {#numericfield_extended plugin="numericfield"}
-header: #OTSIKKO, TYHJÄ = EI OTSIKKOA
-stem: #KYSYMYS, TYHJÄ = EI KYSYMYSTÄ
-step: #NUMERAALINEN ASKELLUS, TYHJÄ = OLETUS 1.0
-inputstem: #VASTAUS, TYHJÄ = EI VASTAUSTA
-followid: #SEURANTAID, TYHJÄ = EI SEURANTAID:tä
-initnumber: #ALKUARVO, TYHJÄ = EI ALKUARVOA
-buttonText: Save #PAINIKKEEN NIMI, TYHJÄ = EI PAINIKETTA
-cols: 7 #KENTÄN KOKO, NUMERAALINEN
-autosave: false #AUTOSAVE, POIS PÄÄLTÄ
-validinput: ^\d{0,3}(\.\d{0,3})?$ #KÄYTTÄJÄSYÖTTEEN RAJOITIN, TYHJÄ = EI RAJOITUSTA
-errormessage: #INPUTCHECKERIN VIRHESELITE, TYHJÄ = SELITE ON INPUTCHECKER
+header:          # otsikko, tyhjä = ei otsikkoa
+stem:            # kysymys, tyhjä = ei kysymystä
+step:            # numeraalinen askellus, tyhjä = oletus 1.0
+inputstem:       # vastaus, tyhjä = ei vastausta
+followid:        # seurantaid, tyhjä = ei seurantaid:tä
+initnumber:      # alkuarvo, tyhjä = ei alkuarvoa
+buttonText: Save # painikkeen nimi, tyhjä = ei painiketta
+cols: 7          # kentän koko, numeraalinen
+autosave: false  # autosave, pois päältä
+validinput: "^\d{0,3}(\.\d{0,3})?$" # käyttäjäsyötteen rajoitin, tyhjä = ei rajoitusta
+errormessage:    # inputcheckerin virheselite, tyhjä = selite on inputchecker
 ```""", """
 ``` {#numericfield_label plugin="numericfield" readonly=view}
-followid: #SEURANTAID, TYHJÄ = EI SEURANTAID:tä
-initnumber: 10 #ALKUARVO, TYHJÄ = EI ALKUARVOA
-cols: 7 #KENTÄN KOKO, NUMERAALINEN
-autosave: false #AUTOSAVE, POIS PÄÄLTÄ
-readOnlyStyle: plaintext # TYHJÄ = KENTTÄMUOTO, plaintext = TEKSTIMUOTO
+followid:        # seurantaid, tyhjä = ei seurantaid:tä
+initnumber: 10   # alkuarvo, tyhjä = ei alkuarvoa
+cols: 7          # kentän koko, numeraalinen
+autosave: false  # autosave, pois päältä
+readOnlyStyle: plaintext # tyhjä = kenttämuoto, plaintext = tekstimuoto
 ```"""
 ]
     return jsonify({
