@@ -717,13 +717,15 @@ def handle_jsrunner_response(jsonresp, result, current_doc: DocInfo):
             task_content_name_map[task] = 'c'
             continue
         try:
-            if(t_id.field):
+            if t_id.field and t_id.field != "points":
                 task_content_name_map[task] = t_id.field
             else:
                 plug = find_plugin_from_document(dib.document, t_id, curr_user)
                 content_field = plug.get_content_field_name()
                 task_content_name_map[task] = content_field
         except TaskNotFoundException as e:
+            #TODO: Always check if task exists? Now it's possible to add answers to
+            # nonexistant tasks when using d1.contentfield notation
             task_display = t_id.doc_task if t_id.doc_id != current_doc.id else t_id.task_name
             if not result['web'].get('error', None):
                 result['web']['error'] = 'Errors:\n'
@@ -740,21 +742,37 @@ def handle_jsrunner_response(jsonresp, result, current_doc: DocInfo):
             if content_field == 'ignore':
                 continue
             task_id = TaskId.parse(key, False, False, True)
-            # TODO: Check if t_id.field = "points"/time etc
-            #  If not then we want to save to answer's content at [t_id.field]
-            #  else we just copy previous answer and edit it's points/time
             an: Answer = get_latest_answers_query(task_id, [u]).first()
-            content = json.dumps({content_field: value})
-            if an and an.content == content:
-                continue
-            elif an:
+            points = None
+            content = json.dumps({content_field: None})
+            if task_id.field == 'points':
+                if value == "":
+                    value = None
+                else:
+                    try:
+                        value = float(value)
+                    except ValueError:
+                        if not result['web'].get('error', None):
+                            result['web']['error'] = 'Errors:\n'
+                        result['web']['error'] += f"Value {value} is not valid point value for task {task_id.task_name}\n"
+                        continue
+                points = value
+            else:
+                content = json.dumps({content_field: value})
+            if an:
                 an_content = json.loads(an.content)
-                if an_content.get(content_field) == value:
-                    continue
-                an_content[content_field] = value
+                if task_id.field  == 'points':
+                    if an.points == points:
+                        continue
+                else:
+                    if an_content.get(content_field) == value:
+                        continue
+                    an_content[content_field] = value
+                    points = an.points
                 content = json.dumps(an_content)
             ans = Answer(
                 content=content,
+                points=points,
                 task_id=task_id.doc_task,
                 users=[u],
                 valid=True,
