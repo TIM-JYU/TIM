@@ -119,7 +119,7 @@ class TableFormHtmlModel(GenericHtmlModel[TableFormInputModel, TableFormMarkupMo
     def get_component_html_name(self) -> str:
         return 'tableform-runner'
 
-    def show_in_view(self) -> bool:
+    def show_in_view_default(self) -> bool:
         return False
 
     def get_static_html(self) -> str:

@@ -8,6 +8,7 @@ import {GenericPluginMarkup, Info, nullable, withDefault} from "tim/plugin/attri
 import {PluginBase, pluginBindings} from "tim/plugin/util";
 import {$compile, $http, $sce, $timeout, $upload, $window} from "tim/util/ngimport";
 import {fixDefExport, to, valueDefu, valueOr} from "tim/util/utils";
+import {ITimComponent, ViewCtrl} from "../../../static/scripts/tim/document/viewctrl";
 
 interface GlowScriptWindow extends Window {
     runJavaScript(text: string, args: string, input: string, wantsConsole: boolean): string;
@@ -810,8 +811,10 @@ function numOrDef(val: string | number | undefined, def: number) {
     return def;
 }
 
-class CsController extends CsBase implements IController {
-    private notSaved: boolean = true;
+class CsController extends CsBase implements ITimComponent {
+    private vctrl!: ViewCtrl;
+
+    private notSaved: boolean = false;
     private aceEditor?: IAceEditor;
     private canvas?: HTMLCanvasElement;
     private canvasConsole: {log: (...args: string[]) => void};
@@ -926,6 +929,37 @@ class CsController extends CsBase implements IController {
         this.muokattu = false;
         this.editorIndex = 0;
         this.editorModeIndecies = [];
+    }
+
+    /**
+     * Returns the name given to the plugin.
+     */
+    getName(): string | undefined {
+        // if (this.attrs.followid) {
+        //    return this.attrs.followid;
+        // }
+        const taskId = this.pluginMeta.getTaskId();
+        if (taskId) {
+            return taskId.split(".")[1];
+        }
+    }
+
+    getContent(): string {
+        return this.usercode;
+    }
+
+    async save() {
+        this.runCode();
+        return {saved: true, message: undefined};
+    }
+
+    isUnSaved() {
+        return this.notSaved;
+    }
+
+    resetField(): undefined {
+        this.initCode();
+        return undefined;
     }
 
     svgImageSnippet() {
@@ -1322,6 +1356,7 @@ class CsController extends CsBase implements IController {
 
         this.showUploaded(this.attrsall.uploadedFile, this.attrsall.uploadedType);
         this.initSaved();
+        this.vctrl.addTimComponent(this);
     }
 
     async $postLink() {
@@ -1382,6 +1417,7 @@ class CsController extends CsBase implements IController {
         this.dochecks.savedcode = this.usercode;
         this.dochecks.savedargs = this.userargs;
         this.dochecks.savedinput = this.userinput;
+        this.notSaved = false;
     }
 
     async $doCheck() {
@@ -1389,6 +1425,9 @@ class CsController extends CsBase implements IController {
         this.notSaved = this.usercode !== this.dochecks.savedcode ||
                         this.userinput != this.dochecks.savedinput ||
                         this.userargs != this.dochecks.savedargs;
+        if ( this.notSaved )  {
+            anyChanged = true;
+        }
         if (this.usercode !== this.dochecks.usercode) {
 
             this.checkByCodeRemove();
@@ -2086,6 +2125,7 @@ class CsController extends CsBase implements IController {
         if (this.simcir) {
             this.setCircuitData();
         }
+        this.initSaved();
     }
 
     async initSage(firstTime: boolean) {
@@ -2973,6 +3013,9 @@ Object.getPrototypeOf(document.createElement("canvas").getContext("2d")).fillCir
 const commonComponentOptions = {
     bindings: pluginBindings,
     controller: CsController,
+        require: {
+        vctrl: "^timView",
+    },
 };
 
 csApp.component("csRunner", {

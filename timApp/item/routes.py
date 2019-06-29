@@ -2,6 +2,7 @@
 import time
 import traceback
 from typing import Tuple, Union, Optional, List
+from flask import g
 
 from flask import Blueprint, render_template
 from flask import abort
@@ -182,6 +183,9 @@ def get_module_ids(js_paths: List[str]):
 
 def view(item_path, template_name, usergroup=None, route="view"):
     taketime("view begin", zero=True)
+
+    g.viewmode =  route in ["view", "velp", "lecture", "slide"]
+
     if has_special_chars(item_path):
         return redirect(remove_path_special_chars(request.path) + '?' + request.query_string.decode('utf8'))
 
@@ -232,6 +236,7 @@ def view(item_path, template_name, usergroup=None, route="view"):
     start_index = max(view_range[0], 0) if view_range else 0
 
     doc, xs = get_document(doc_info, view_range)
+    g.doc = doc
 
     doc.route = route
 
