@@ -59,6 +59,8 @@ export interface TimTable {
     maxWidth?: string; // Possibly obsolete if cell/column layout can be given in data.table.colums
     minWidth?: string;
     singleLine?: boolean;
+    filterRow?: boolean;
+    cbColumn?: boolean;
     // lockCellCount?: boolean;
 }
 
@@ -253,6 +255,9 @@ export class TimTableController extends DestroyScope implements IController {
     private activeCell?: {row: number, col: number};
     private startCell?: {row: number, col: number};
     public shiftDown: boolean = false;
+    public cbs: boolean[] = [];
+    public filters: string[] = [];
+    public originalHiddenRows: number[] = [];
 
     /**
      * Stores the last direction that the user moved towards with arrow keys
@@ -374,6 +379,9 @@ export class TimTableController extends DestroyScope implements IController {
         onClick("body", ($this, e) => {
             this.onClick(e);
         });
+        if ( this.data.hiddenRows ) {
+            this.originalHiddenRows = this.data.hiddenRows.slice();
+        }
     }
 
     $doCheck() {
@@ -440,6 +448,45 @@ export class TimTableController extends DestroyScope implements IController {
      */
     public isInForcedEditMode() {
         return this.forcedEditMode;
+    }
+
+    public static isMatch(regs: RegExp[], row: any[]) {
+        for (let c = 0; c < regs.length; c++) {
+            if ( regs[c] && !regs[c].test(row[c].cell.toLowerCase())) { return false; }
+        }
+        return true;
+    }
+
+    /**
+     * Adds rows to this.hiddenRows if their key (username) matches the given filter
+     * TODO: Add support for filtering with user-chosen column
+     */
+    updateFilter() {
+        const timTable = this;
+        if (timTable == null) {
+            return;
+        }
+        // TODO check if better way to save than just making saveAndCloseSmallEditor public and calling it
+        timTable.saveAndCloseSmallEditor();
+        if (this.originalHiddenRows) { this.data.hiddenRows = this.originalHiddenRows.slice(); } else { this.data.hiddenRows = []; }
+         // TODO: if usernamecolumn in hiddencolums then skip reg.test for this.rowkeys
+        let isFilter = false;
+        const regs = [];
+        for (let c = 0; c < this.filters.length; c++) {
+            if ( this.filters[c] ) {
+                isFilter = true;
+                if ( this.filters[c] ) {
+                    regs[c] = new RegExp(this.filters[c].toLowerCase());
+                }
+            }
+        }
+        if ( !isFilter ) { return; }
+
+        for (let i = 1; i < this.cellDataMatrix.length; i++) {
+            if ( !TimTableController.isMatch(regs, this.cellDataMatrix[i])) {
+                this.data.hiddenRows.push(i);
+            }
+        }
     }
 
     public taskBordersf() {
@@ -2266,8 +2313,23 @@ timApp.component("timTable", {
      ng-style="$ctrl.stylingForTable($ctrl.data.table)" id={{$ctrl.data.table.id}}>
         <col ng-repeat="c in $ctrl.columns" ng-attr-span="{{c.span}}}" id={{c.id}}
              ng-style="$ctrl.stylingForColumn(c, $index)"/>
+        <tr ng-if="::$ctrl.data.filterRow">
+            <td><input type="checkbox" name="cbFltr" value="cbFltr"> </td>
+
+            <td ng-class=""
+             ng-show="$ctrl.showColumn(coli)"
+             ng-repeat="c in $ctrl.cellDataMatrix[0]" ng-attr-span="{{c.span}}}" ng-init="coli = $index"
+             ng-style="" ng-click="">
+               <div class="filterdiv">
+                 <input type="text" ng-change="$ctrl.updateFilter()" ng-model="$ctrl.filters[coli]" >
+               </div>
+            </td>
+
+        </tr>
         <tr ng-repeat="r in $ctrl.cellDataMatrix" ng-init="rowi = $index"
             ng-style="$ctrl.stylingForRow(rowi)" ng-show="$ctrl.showRow(rowi)">
+                <td ng-if="::$ctrl.data.cbColumn">
+                   <input type="checkbox" ng-model="$ctrl.cbs[rowi]"> </td>
                 <td ng-class="{'activeCell': $ctrl.isActiveCell(rowi, coli)}"
                  ng-show="$ctrl.showColumn(coli)"
                  ng-repeat="td in r" ng-init="coli = $index" ng-if="$ctrl.showCell(td)"

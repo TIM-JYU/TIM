@@ -60,6 +60,8 @@ class TableFormMarkupModel(GenericMarkupModel):
     hiddenColumns: Union[List[int], Missing] = missing
     hiddenRows: Union[List[int], Missing] = missing
     fields: Union[List[str], Missing] = missing
+    filterRow: Union[bool, Missing] = missing
+    cbColumn: Union[bool, Missing] = missing
 
 
 
@@ -83,9 +85,12 @@ class TableFormMarkupSchema(GenericMarkupSchema):
     maxWidth = fields.Str()
     minWidth = fields.Str(allow_none=True)
     open = fields.Boolean(allow_none=True)
+    filterRow = fields.Boolean(allow_none=True)
+    cbColumn = fields.Boolean(allow_none=True)
     hiddenColumns = fields.List(fields.Number(allow_none=True))
     hiddenRows = fields.List(fields.Number(allow_none=True))
     fields = fields.List(fields.Str()) #Keep this last - bad naming
+
 
     @post_load
     def make_obj(self, data):
@@ -226,39 +231,39 @@ def reqs():
     templates = ["""
 ``` {#tableForm_table plugin="tableForm"}
 groups: 
- - Group Name #Use Group Name here
+ - Group Name   # Use Group Name here
 fields:
- - d1=demo1 #List your fields here, = for alias
+ - d1=demo1     # List your fields here, = for alias
 table: true
 report: false
-realnames: true #Show full name in 2nd column, true or false
-buttonText: #Name your save button here
-autosave: true #autosave, true or false
+realnames: true # Show full name in 2nd column, true or false
+buttonText:     # Name your save button here
+autosave: true  # autosave, true or false
 ```""", """
 ``` {#tableForm_table_report plugin="tableForm"}
 groups: 
- - Group Name #Use Group Name here
+ - Group Name   # Use Group Name here
 fields:
- - d1=demo1 #List your fields here, = for alias
+ - d1=demo1     # List your fields here, = for alias
 table: true
 report: true
-realnames: true #Show full name in 2nd column, true or false
-buttonText: #Name your save table button here
-autosave: true #autosave, true or false
-separator: ";" #Define your report value separator here, ";" by default
-anonNames: true #To show or hide user (and full) names in report, true or false
-reportButton: "Name your generate report button here
+realnames: true # Show full name in 2nd column, true or false
+buttonText:     # Name your save table button here
+autosave: true  # autosave, true or false
+separator: ";"  # Define your report value separator here, ";" by default
+anonNames: true # To show or hide user (and full) names in report, true or false
+reportButton: "Name your generate report button here"
 ```""", """
 ``` {#tableForm_report plugin="tableForm"}
 groups: 
  - Group Name #Use Group Name here
 fields:
- - d1=demo1 #List your fields here, = for alias
+ - d1=demo1     # List your fields here, = for alias
 table: false
 report: true
-separator: ";" #Define your value separator here, ";" as default
-anonNames: true #To show or hide user (and full) names in report, true or false
-reportButton: "Name your generate report button here
+separator: ";"  # Define your value separator here, ";" as default
+anonNames: true # To show or hide user (and full) names in report, true or false
+reportButton: "Name your generate report button here"
 ```"""]
     editor_tabs = [
             {
