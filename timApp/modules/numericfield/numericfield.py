@@ -163,12 +163,8 @@ def answer(args: NumericfieldAnswerModel):
 @app.route('/reqs')
 def reqs():
     """Introducing templates for numericfield plugin"""
-    templates = ["""
-``` {#numericfield_normal plugin="numericfield"}
-cols: 7        # kentän koko, numeraalinen
-autosave: true # autosave, päällä
-```""", """
-``` {#numericfield_extended plugin="numericfield"}
+    templates = [
+"""``` {#PLUGINNAMEHERE plugin="numericfield"}
 header:          # otsikko, tyhjä = ei otsikkoa
 stem:            # kysymys, tyhjä = ei kysymystä
 step:            # numeraalinen askellus, tyhjä = oletus 1.0
@@ -180,14 +176,12 @@ cols: 7          # kentän koko, numeraalinen
 autosave: false  # autosave, pois päältä
 validinput: "^\d{0,3}(\.\d{0,3})?$" # käyttäjäsyötteen rajoitin, tyhjä = ei rajoitusta
 errormessage:    # inputcheckerin virheselite, tyhjä = selite on inputchecker
-```""", """
-``` {#numericfield_label plugin="numericfield" readonly=view}
-followid:        # seurantaid, tyhjä = ei seurantaid:tä
-initnumber: 10   # alkuarvo, tyhjä = ei alkuarvoa
-cols: 7          # kentän koko, numeraalinen
-autosave: false  # autosave, pois päältä
-readOnlyStyle: plaintext # tyhjä = kenttämuoto, plaintext = tekstimuoto
-```"""
+```""",
+"""#- {defaultplugin=\"numericfield\" readonly=\"view\"}
+{% set name,n = 'd', 5 %}
+%% ('{{#'+name+'{0} stem: \"{0}\", autosave: true, readOnlyStyle: plaintext#}}') | srange(1,n+1) -%%
+{#%%name%%sum stem: summa, autosave: true, readOnlyStyle: plaintext#} 
+""",
 ]
     return jsonify({
         "js": ["js/build/numericfield.js"],
@@ -198,22 +192,27 @@ readOnlyStyle: plaintext # tyhjä = kenttämuoto, plaintext = tekstimuoto
                 'text': 'Plugins',
                 'items': [
                     {
-                        'text': 'Numericfield',
+                        'text': 'Fields',
                         'items': [
                             {
-                                'data': templates[0].strip(),
-                                'text': 'Numeerinen kenttä (autosave)',
+                                'data': '{#nf1 autosave: true #}',
+                                'text': 'Numeerinen kenttä (inline, autosave)',
                                 'expl': 'Luo kenttä jonka syötteet ovat vain numeroita',
                             },
                             {
-                                'data': templates[1].strip(),
+                                'data': templates[0].strip(),
                                 'text': 'Numeerinen kenttä (laajennettu)',
                                 'expl': 'Luo kenttä jonka syötteet ovat vain numeroita',
                             },
                             {
-                                'data': templates[2].strip(),
+                                'data': "{#nf3 readOnlyStyle: plaintext #}",
                                 'text': 'Label kenttä (read only)',
                                 'expl': 'Luo kenttä jonka syötteitä käyttäjä ei voi muokata',
+                            },
+                            {
+                                'data': templates[1].strip(),
+                                'text': 'Joukko numeerisia kenttiä ja summa',
+                                'expl': 'Lohko jossa joukko numeerisia kenttiä ja niiden summa',
                             },
                         ],
                     },

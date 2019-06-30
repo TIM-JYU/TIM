@@ -265,7 +265,7 @@ reportButton: "Name your generate report button here
                 'text': 'Plugins',
                 'items': [
                     {
-                        'text': 'TableForm',
+                        'text': 'Fields',
                         'items': [
                             {
                                 'data': templates[0].strip(),

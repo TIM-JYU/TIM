@@ -76,15 +76,23 @@ class Belongs:
         self.cache[groupname] = b
         return b
 
-def isview(retVal):
-    v = False
+def isview(retVal, mode=None):
+    if not mode:
+        v = False
+        try:
+            v = g.viewmode
+        except:
+            return False
+        if v:
+            return retVal
+        return not retVal
     try:
-        v = g.viewmode
+        r = g.route
+        if re.match(mode, r):
+            return retVal
+        return not retVal
     except:
         return False
-    if v:
-        return retVal
-    return not retVal
 
 
 # ------------------------ Jinja filters end ---------------------------------------------------------------

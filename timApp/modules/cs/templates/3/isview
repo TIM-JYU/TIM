@@ -1,0 +1,3 @@
+False isview
+Attributes for paragraphs not visible in view-mode
+#- {visible="%% False | isview%%" nocache="true"}

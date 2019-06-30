@@ -106,7 +106,7 @@ fields:
                 'text': 'Plugins',
                 'items': [
                     {
-                        'text': 'Multisave',
+                        'text': 'Fields',
                         'items': [
                             {
                                 'data': templates[0].strip(),

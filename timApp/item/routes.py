@@ -185,6 +185,7 @@ def view(item_path, template_name, usergroup=None, route="view"):
     taketime("view begin", zero=True)
 
     g.viewmode =  route in ["view", "velp", "lecture", "slide"]
+    g.route = route
 
     if has_special_chars(item_path):
         return redirect(remove_path_special_chars(request.path) + '?' + request.query_string.decode('utf8'))

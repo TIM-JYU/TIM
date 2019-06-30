@@ -204,7 +204,7 @@ def reqs():
                 'text': 'Plugins',
                 'items': [
                     {
-                        'text': 'Drag',
+                        'text': 'Fields',
                         'items': [
                             {
                                 'data': templates[0].strip(),
@@ -218,7 +218,7 @@ def reqs():
                             },
                             {
                                 'data': templates[2].strip(),
-                                'text': 'Trashcontainer',
+                                'text': 'Drag Trashcontainer',
                                 'expl': 'Add drag trashcontainer for deleting non-copyable words'
                             },
                         ],

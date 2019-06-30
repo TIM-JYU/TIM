@@ -250,7 +250,7 @@ buttonText: Import
                 'text': 'Plugins',
                 'items': [
                     {
-                        'text': 'ImportData',
+                        'text': 'Fields',
                         'items': [
                             {
                                 'data': templates[0].strip(),
