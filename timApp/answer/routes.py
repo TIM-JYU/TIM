@@ -263,7 +263,8 @@ def get_alias(name):
 
 
 def get_fields_and_users(u_fields: List[str], groups: List[UserGroup],
-                         d: DocInfo, current_user: User, autoalias: bool = False):
+                         d: DocInfo, current_user: User, autoalias: bool = False,
+                         add_missing_fields: bool = False):
     """
     Return fielddata, aliases, field_names
     :param u_fields: list of fields to be used
@@ -271,6 +272,7 @@ def get_fields_and_users(u_fields: List[str], groups: List[UserGroup],
     :param d: default document
     :param current_user: current users, check his rights to fields
     :param autoalias: if true, give automatically from d1 same as would be from d1 = d1
+    :param add_missing_fields: return estimated field even if it wasn't given previously
     :return: fielddata, aliases, field_names
     """
     needs_group_access_check = UserGroup.get_teachers_group() not in current_user.groups
@@ -282,13 +284,13 @@ def get_fields_and_users(u_fields: List[str], groups: List[UserGroup],
                 continue # TODO: study how to give just warning from missing access, extra return string?
         ugroups.append(group)
 
-    if not ugroups:  # if no access, give at least own group
-        for group in current_user.groups:
-            if group.name == current_user.name:
-                print(group.name + " added just user group")
-                ugroups.append(group)
+    #if not ugroups:  # if no access, give at least own group
+    #    for group in current_user.groups:
+    #        if group.name == current_user.name:
+    #            print(group.name + " added just user group")
+    #            ugroups.append(group)
 
-    groups = ugroups
+    #groups = ugroups
 
     task_ids = []
     task_id_map = defaultdict(list)
@@ -315,7 +317,7 @@ def get_fields_and_users(u_fields: List[str], groups: List[UserGroup],
         if a == '':
             return abort(400, f'Alias cannot be empty: {field}')
         try:
-            task_id = TaskId.parse(t, False, False, True)
+            task_id = TaskId.parse(t, False, False, add_missing_fields)
         except PluginException as e:
             return abort(400, str(e))
         if task_id.field is None:
@@ -337,18 +339,19 @@ def get_fields_and_users(u_fields: List[str], groups: List[UserGroup],
             abort(403, f'Missing teacher access for document {dib.id}')
         doc_map[task_id.doc_id] = dib.document
 
-    for task in tasks_without_fields:
-        try:
-            plug = find_plugin_from_document(doc_map[task.doc_id], task, current_user)
-            task.field = plug.get_content_field_name()
-        except TaskNotFoundException:
-            task.field = "c"
-        try:
-            alias_map[task.doc_task_with_field] = alias_map[task.doc_task]
-            jsrunner_alias_map[alias_map[task.doc_task]] = task.doc_task_with_field
-            del alias_map[task.doc_task]
-        except KeyError:
-            pass
+    if add_missing_fields:
+        for task in tasks_without_fields:
+            try:
+                plug = find_plugin_from_document(doc_map[task.doc_id], task, current_user)
+                task.field = plug.get_content_field_name()
+            except TaskNotFoundException:
+                task.field = "c"
+            try:
+                alias_map[task.doc_task_with_field] = alias_map[task.doc_task]
+                jsrunner_alias_map[alias_map[task.doc_task]] = task.doc_task_with_field
+                del alias_map[task.doc_task]
+            except KeyError:
+                pass
 
     res = []
     group_filter = UserGroup.id.in_([ug.id for ug in groups])
