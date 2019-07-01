@@ -284,13 +284,13 @@ def get_fields_and_users(u_fields: List[str], groups: List[UserGroup],
                 continue # TODO: study how to give just warning from missing access, extra return string?
         ugroups.append(group)
 
-    #if not ugroups:  # if no access, give at least own group
-    #    for group in current_user.groups:
-    #        if group.name == current_user.name:
-    #            print(group.name + " added just user group")
-    #            ugroups.append(group)
+    if not ugroups:  # if no access, give at least own group
+       for group in current_user.groups:
+           if group.name == current_user.name:
+               print(group.name + " added just user group")
+               ugroups.append(group)
 
-    #groups = ugroups
+    groups = ugroups
 
     task_ids = []
     task_id_map = defaultdict(list)
