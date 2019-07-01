@@ -258,6 +258,8 @@ export class TimTableController extends DestroyScope implements IController {
     public cbs: boolean[] = [];
     public filters: string[] = [];
     public originalHiddenRows: number[] = [];
+    private rowDelta = 0;
+    private colDelta = 0;
 
     /**
      * Stores the last direction that the user moved towards with arrow keys
@@ -382,6 +384,9 @@ export class TimTableController extends DestroyScope implements IController {
         if ( this.data.hiddenRows ) {
             this.originalHiddenRows = this.data.hiddenRows.slice();
         }
+
+        if ( this.data.cbColumn ) { this.colDelta = 1; }
+        if ( this.data.filterRow ) { this.rowDelta = 1; }
     }
 
     $doCheck() {
@@ -1490,14 +1495,14 @@ export class TimTableController extends DestroyScope implements IController {
         if (cell.renderIndexX === undefined || cell.renderIndexY === undefined) {
             return; // we should never be able to get here
         }
-        const tablecell = table.children("tbody").last().children("tr").eq(cell.renderIndexY).children("td").eq(cell.renderIndexX);
+        const tablecell = table.children("tbody").last().children("tr").eq(cell.renderIndexY + this.rowDelta).children("td").eq(cell.renderIndexX + this.colDelta);
         const tableCellOffset = tablecell.offset();
 
         let cell2y = 0;
         if (rowi > 0) {
             const cell2 = this.cellDataMatrix[rowi - 1][coli];
             if (cell2.renderIndexX !== undefined && cell2.renderIndexY !== undefined) {
-                const tablecell2 = table.children("tbody").last().children("tr").eq(cell2.renderIndexY).children("td");
+                const tablecell2 = table.children("tbody").last().children("tr").eq(cell2.renderIndexY + this.colDelta).children("td");
                 const off2 = tablecell2.offset();
                 if (off2) {
                     cell2y = off2.top;
