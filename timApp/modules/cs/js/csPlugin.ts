@@ -954,7 +954,7 @@ class CsController extends CsBase implements ITimComponent {
     }
 
     isUnSaved() {
-        return this.notSaved;
+        return this.notSaved && this.pluginMeta.getTaskId() != "";
     }
 
     resetField(): undefined {

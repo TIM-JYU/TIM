@@ -52,6 +52,7 @@ class TableFormMarkupModel(GenericMarkupModel):
     reportButton: Union[str, Missing] = missing
     realnames: Union[bool, Missing] = missing
     usernames: Union[bool, Missing] = missing
+    emails: Union[bool, Missing] = missing
     maxWidth: Union[str, Missing] = missing
     minWidth: Union[str, Missing] = missing
     singleLine: Union[bool, Missing] = missing
@@ -59,11 +60,12 @@ class TableFormMarkupModel(GenericMarkupModel):
     open: Union[bool, Missing] = missing
     hiddenColumns: Union[List[int], Missing] = missing
     hiddenRows: Union[List[int], Missing] = missing
-    fields: Union[List[str], Missing] = missing
     filterRow: Union[bool, Missing] = missing
     cbColumn: Union[bool, Missing] = missing
-
-
+    removeUsersButtonText: Union[str, Missing] = missing
+    userListButtonText: Union[str, Missing] = missing
+    emailUsersButtonText: Union[str, Missing] = missing
+    fields: Union[List[str], Missing] = missing
 
 class TableFormMarkupSchema(GenericMarkupSchema):
     groups = fields.List(fields.Str())
@@ -80,6 +82,7 @@ class TableFormMarkupSchema(GenericMarkupSchema):
     reportButton = fields.Str(allow_none=True)
     realnames = fields.Boolean()
     usernames = fields.Boolean()
+    emails = fields.Boolean()
     singleLine = fields.Boolean(allow_none=True)
     removeDocIds = fields.Boolean(default=True)
     maxWidth = fields.Str()
@@ -89,6 +92,9 @@ class TableFormMarkupSchema(GenericMarkupSchema):
     cbColumn = fields.Boolean(allow_none=True)
     hiddenColumns = fields.List(fields.Number(allow_none=True))
     hiddenRows = fields.List(fields.Number(allow_none=True))
+    removeUsersButtonText = fields.Str(allow_none=True)
+    userListButtonText = fields.Str(allow_none=True)
+    emailUsersButtonText = fields.Str(allow_none=True)
     fields = fields.List(fields.Str()) #Keep this last - bad naming
 
 
@@ -256,7 +262,7 @@ reportButton: "Name your generate report button here"
 ```""", """
 ``` {#tableForm_report plugin="tableForm"}
 groups: 
- - Group Name #Use Group Name here
+ - Group Name   # Use Group Name here
 fields:
  - d1=demo1     # List your fields here, = for alias
 table: false

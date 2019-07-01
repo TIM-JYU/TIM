@@ -114,7 +114,13 @@ def create_group(groupname):
     apply_template(doc)
     s = doc.document.get_settings().get_dict().get('macros', {})
     s['group'] = groupname
+    s['fields'] = ['info']
     doc.document.add_setting('macros', s)
+    text = '''
+## Omia kenttiä {defaultplugin="textfield" readonly="view"}
+{#info autosave: true #}    
+    '''
+    doc.document.add_text(text)
     u.admin_doc = doc.block
     f = doc.parent
     if len(f.block.accesses) == 1:

@@ -8,6 +8,7 @@ interface InputDialogParams<T> {
     text: string;
     okText?: string;
     cancelText?: string;
+    isInput?: boolean;       // If one wants to use it just as confirm dialog with error messages
 }
 
 class InputDialogCtrl<T> extends DialogController<{params: InputDialogParams<T>}, T> {
@@ -16,6 +17,7 @@ class InputDialogCtrl<T> extends DialogController<{params: InputDialogParams<T>}
     private value = "";
     private error?: string;
     private focus = false;
+    private isInput = true;
 
     protected getTitle() {
         return this.resolve.params.title;
@@ -24,6 +26,10 @@ class InputDialogCtrl<T> extends DialogController<{params: InputDialogParams<T>}
     async $onInit() {
         super.$onInit();
         this.value = this.resolve.params.defaultValue;
+        if ( this.resolve.params.isInput === false) {
+            this.value = "-";
+            this.isInput = false;
+        }
         await this.draggable.getLayoutPromise();
         this.focus = true;
     }
@@ -62,11 +68,12 @@ registerDialogComponent(InputDialogCtrl,
         template: `
 <tim-dialog>
     <dialog-body>
-        <p ng-bind="::$ctrl.text()"></p>
+        <p ng-bind-html="::$ctrl.text()"></p>
         <input on-save="$ctrl.ok()"
                class="form-control"
                focus-me="$ctrl.focus"
                type="text"
+               ng-if="$ctrl.isInput"
                ng-model="$ctrl.value"
                ng-change="$ctrl.clearError()">
         <tim-alert ng-if="$ctrl.error" severity="danger">
