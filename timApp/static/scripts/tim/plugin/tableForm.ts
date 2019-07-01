@@ -31,6 +31,8 @@ const TableFormMarkup = t.intersection([
         maxWidth: t.string,
         minWidth: t.string,
         open: t.boolean,
+        filterRow: t.boolean,
+        cbColumn: t.boolean,
         usernames: withDefault(t.boolean, true),
         realnames: withDefault(t.boolean, true),
         report: nullable(t.boolean),
@@ -143,6 +145,8 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
         if (this.attrs.open != undefined) { this.showTable = this.attrs.open; }
         this.data.hiddenColumns = this.attrs.hiddenColumns;
         this.data.hiddenRows = this.attrs.hiddenRows;
+        this.data.cbColumn = this.attrs.cbColumn;
+        this.data.filterRow = this.attrs.filterRow;
     }
 
     /**
@@ -484,6 +488,7 @@ timApp.component("tableformRunner", {
     <tim-markup-error ng-if="::$ctrl.markupError" data="::$ctrl.markupError"></tim-markup-error>
     <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
     <p ng-if="::$ctrl.stem" ng-bind-html="::$ctrl.stem"></p>
+    <!--
     <div class="form-inline" ng-show="::$ctrl.tableCheck()"><label class="hidden-print">Suodata {{::$ctrl.inputstem}} <span>
         <input type="text"
                class="form-control"
@@ -493,6 +498,7 @@ timApp.component("tableformRunner", {
                ng-change="$ctrl.updateFilter()"
                ng-readonly="::$ctrl.readonly"
                size="{{::$ctrl.cols}}"></span></label>
+    -->
         <tim-table disabled="!$ctrl.tableCheck()" data="::$ctrl.data" taskid="{{$ctrl.pluginMeta.getTaskId()}}" plugintype="{{$ctrl.pluginMeta.getPlugin()}}"></tim-table>
     </div>
     <div class="hidden-print">

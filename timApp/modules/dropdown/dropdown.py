@@ -184,7 +184,7 @@ The weather {#drop2 words: [is,do,are⁞]#} terrible {#drop3 words: [yesterday, 
                 'text': 'Plugins',
                 'items': [
                     {
-                        'text': 'Dropdown',
+                        'text': 'Fields',
                         'items': [
                             {
                                 'data': templates[0].strip(),

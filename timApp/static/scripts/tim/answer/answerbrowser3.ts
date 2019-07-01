@@ -211,7 +211,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
     private loading: number;
     private viewctrl!: Require<ViewCtrl>;
     private user: IUser | undefined;
-    private fetchedUser: IUser | undefined;
+    private fetchedUser: number = 0; // IUser | undefined;
     private saveTeacher: boolean = false;
     private users: IUser[] | undefined;
     private answers: IAnswer[] = [];
@@ -308,7 +308,9 @@ export class AnswerBrowserController extends DestroyScope implements IController
             }
 
         } else {
-            this.resetITimComponent();
+            if ( answs != null ) {
+                this.resetITimComponent();
+            }
         }
 
         await this.loadInfo();
@@ -333,16 +335,16 @@ export class AnswerBrowserController extends DestroyScope implements IController
 
     async changeUserAndAnswers(user: IUser, updateAll: boolean, answers: IAnswer[]) {
         this.user = user;
-        this.fetchedUser = this.user;
-            // const answers = await this.getAnswersAndUpdate();
-            this.handleAnswerFetch(answers);
-            if (!answers || answers.length === 0) {
-                this.resetITimComponent();
-            } else {
-                this.loadedAnswer = {review: false, id: undefined};
-                this.changeAnswer();
-            }
-            await this.loadInfo();
+        this.fetchedUser = this.user ? this.user.id : 0;
+        // const answers = await this.getAnswersAndUpdate();
+        this.handleAnswerFetch(answers);
+        if (!answers || answers.length === 0) {
+            this.resetITimComponent();
+        } else {
+            this.loadedAnswer = {review: false, id: undefined};
+            this.changeAnswer();
+        }
+        await this.loadInfo();
 
     }
 
@@ -627,6 +629,8 @@ export class AnswerBrowserController extends DestroyScope implements IController
     }
 
     async getAnswersAndUpdate() {
+        // if ( this.isUseCurrentUser(this.taskId) ) { return null; }
+
         if (!this.viewctrl.item.rights || !this.viewctrl.item.rights.browse_own_answers) {
             return;
         }
@@ -657,12 +661,28 @@ export class AnswerBrowserController extends DestroyScope implements IController
         }
     }
 
+    private isUseCurrentUser(taskId: string) {
+        let uid = 0;
+        if ( this.user ) { uid = this.user.id; }
+        const c: any = this.viewctrl.getTimComponentByName(this.taskId.split(".")[1]);
+        if ( !c ) { return uid; }
+        const a: any = c.attrsall;
+        if ( a && a.markup && a.markup.useCurrentUser ) {
+            const w: any = window;
+            this.user = w.current_user;
+            return w.current_user.id;
+        }
+        return uid;
+    }
+
+    /* Return user answers, null = do not care */
     private async getAnswers() {
-        if (!this.user) {
+        const uid = this.isUseCurrentUser(this.taskId);
+        if (!uid) {
             return undefined;
         }
         this.loading++;
-        const r = await to($http.get<IAnswer[]>(`/answers/${this.taskId}/${this.user.id}`, {
+        const r = await to($http.get<IAnswer[]>(`/answers/${this.taskId}/${uid}`, {
             params: {
                 _: Date.now(),
             },
@@ -672,7 +692,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
             this.showError(r.result);
             return undefined;
         }
-        this.fetchedUser = this.user;
+        this.fetchedUser = uid;
         return r.result.data;
     }
 
@@ -681,7 +701,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
     }
 
     hasUserChanged() {
-        return (this.user || {id: null}).id !== (this.fetchedUser || {id: null}).id;
+        return (this.user || {id: null}).id !== this.fetchedUser;
     }
 
     dimPlugin() {
@@ -706,7 +726,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
         if (this.hasUserChanged()) {
             const answers = await this.getAnswersAndUpdate();
             if (!answers || answers.length === 0) {
-                this.resetITimComponent();
+                if ( answers != null ) { this.resetITimComponent(); }
             } else {
                 this.loadedAnswer = {review: false, id: undefined};
                 this.changeAnswer();

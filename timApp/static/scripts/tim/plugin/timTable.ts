@@ -59,6 +59,8 @@ export interface TimTable {
     maxWidth?: string; // Possibly obsolete if cell/column layout can be given in data.table.colums
     minWidth?: string;
     singleLine?: boolean;
+    filterRow?: boolean;
+    cbColumn?: boolean;
     // lockCellCount?: boolean;
 }
 
@@ -253,6 +255,12 @@ export class TimTableController extends DestroyScope implements IController {
     private activeCell?: {row: number, col: number};
     private startCell?: {row: number, col: number};
     public shiftDown: boolean = false;
+    public cbs: boolean[] = [];
+    public filters: string[] = [];
+    public originalHiddenRows: number[] = [];
+    private rowDelta = 0;
+    private colDelta = 0;
+    private cbFilter: boolean = false;
 
     /**
      * Stores the last direction that the user moved towards with arrow keys
@@ -374,6 +382,12 @@ export class TimTableController extends DestroyScope implements IController {
         onClick("body", ($this, e) => {
             this.onClick(e);
         });
+        if ( this.data.hiddenRows ) {
+            this.originalHiddenRows = this.data.hiddenRows.slice();
+        }
+
+        if ( this.data.cbColumn ) { this.colDelta = 1; }
+        if ( this.data.filterRow ) { this.rowDelta = 1; }
     }
 
     $doCheck() {
@@ -440,6 +454,71 @@ export class TimTableController extends DestroyScope implements IController {
      */
     public isInForcedEditMode() {
         return this.forcedEditMode;
+    }
+
+    /**
+     * Changes all visible check boxes on this column to same value than header row cb
+     * if header row cb clicked. Otherwise just update hidden rows if cbFilter is on.
+     * @param rowi index of chacbox changed
+     */
+    updateCBs(rowi: number) {
+        if ( rowi == 0 ) {
+            const b = this.cbs[0];
+            for (let i = 1; i < this.cellDataMatrix.length; i++) {
+                if ( this.data.hiddenRows && this.data.hiddenRows.includes(i) ) { continue; }
+                this.cbs[i] = b;
+            }
+        }
+        if ( this.cbFilter ) {
+            this.updateFilter();
+        }
+    }
+
+    /**
+     * Check if all regexp's in regs maches to row values. It's kind of and
+     * over all regs if tehere is some condition
+     * TODO: add value compare by < and > operators
+     * @param regs list of regexp to check
+     * @param row where to check values
+     */
+    public static isMatch(regs: RegExp[], row: any[]) {
+        for (let c = 0; c < regs.length; c++) {
+            if ( regs[c] && !regs[c].test(row[c].cell.toLowerCase())) { return false; }
+        }
+        return true;
+    }
+
+    /**
+     * Adds rows to this.hiddenRows if their row values matches the given filters
+     * TODO: add also < and > compare
+     */
+    updateFilter() {
+        const timTable = this;
+        if (timTable == null) {
+            return;
+        }
+        // TODO check if better way to save than just making saveAndCloseSmallEditor public and calling it
+        timTable.saveAndCloseSmallEditor();
+        if (this.originalHiddenRows) { this.data.hiddenRows = this.originalHiddenRows.slice(); } else { this.data.hiddenRows = []; }
+         // TODO: if usernamecolumn in hiddencolums then skip reg.test for this.rowkeys
+        let isFilter = false;
+        const regs = [];
+        for (let c = 0; c < this.filters.length; c++) {
+            if ( this.filters[c] ) {
+                isFilter = true;
+                if ( this.filters[c] ) {
+                    regs[c] = new RegExp(this.filters[c].toLowerCase());
+                }
+            }
+        }
+        if ( !this.cbFilter && !isFilter ) { return; }
+
+        for (let i = 1; i < this.cellDataMatrix.length; i++) {
+            if ( this.cbFilter && !this.cbs[i] ||
+                !TimTableController.isMatch(regs, this.cellDataMatrix[i])) {
+                this.data.hiddenRows.push(i);
+            }
+        }
     }
 
     public taskBordersf() {
@@ -1443,14 +1522,14 @@ export class TimTableController extends DestroyScope implements IController {
         if (cell.renderIndexX === undefined || cell.renderIndexY === undefined) {
             return; // we should never be able to get here
         }
-        const tablecell = table.children("tbody").last().children("tr").eq(cell.renderIndexY).children("td").eq(cell.renderIndexX);
+        const tablecell = table.children("tbody").last().children("tr").eq(cell.renderIndexY + this.rowDelta).children("td").eq(cell.renderIndexX + this.colDelta);
         const tableCellOffset = tablecell.offset();
 
         let cell2y = 0;
         if (rowi > 0) {
             const cell2 = this.cellDataMatrix[rowi - 1][coli];
             if (cell2.renderIndexX !== undefined && cell2.renderIndexY !== undefined) {
-                const tablecell2 = table.children("tbody").last().children("tr").eq(cell2.renderIndexY).children("td");
+                const tablecell2 = table.children("tbody").last().children("tr").eq(cell2.renderIndexY + this.colDelta).children("td");
                 const off2 = tablecell2.offset();
                 if (off2) {
                     cell2y = off2.top;
@@ -2266,8 +2345,23 @@ timApp.component("timTable", {
      ng-style="$ctrl.stylingForTable($ctrl.data.table)" id={{$ctrl.data.table.id}}>
         <col ng-repeat="c in $ctrl.columns" ng-attr-span="{{c.span}}}" id={{c.id}}
              ng-style="$ctrl.stylingForColumn(c, $index)"/>
+        <tr ng-if="::$ctrl.data.filterRow"> <!-- Filter row -->
+            <td><input type="checkbox" ng-model="$ctrl.cbFilter" ng-change="$ctrl.updateFilter()"> </td>
+
+            <td ng-class=""
+             ng-show="$ctrl.showColumn(coli)"
+             ng-repeat="c in $ctrl.cellDataMatrix[0]" ng-attr-span="{{c.span}}}" ng-init="coli = $index"
+             ng-style="" ng-click="">
+               <div class="filterdiv">
+                 <input type="text" ng-change="$ctrl.updateFilter()" ng-model="$ctrl.filters[coli]" >
+               </div>
+            </td>
+
+        </tr>
         <tr ng-repeat="r in $ctrl.cellDataMatrix" ng-init="rowi = $index"
             ng-style="$ctrl.stylingForRow(rowi)" ng-show="$ctrl.showRow(rowi)">
+                <td ng-if="::$ctrl.data.cbColumn">
+                   <input type="checkbox" ng-model="$ctrl.cbs[rowi]" ng-change="$ctrl.updateCBs(rowi)"> </td>
                 <td ng-class="{'activeCell': $ctrl.isActiveCell(rowi, coli)}"
                  ng-show="$ctrl.showColumn(coli)"
                  ng-repeat="td in r" ng-init="coli = $index" ng-if="$ctrl.showCell(td)"

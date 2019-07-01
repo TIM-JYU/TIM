@@ -551,6 +551,10 @@ def post_answer(plugintype: str, task_id_ext: str):
         abort(400, f'Plugin type mismatch: {plugin.type} != {plugintype}')
 
     upload = None
+
+    if ( plugin.values.get("useCurrentUser", False) ):  # For plugins that is saved only for current user
+        users = [curr_user];
+
     if isinstance(answerdata, dict):
         file = answerdata.get('uploadedFile', '')
         trimmed_file = file.replace('/uploads/', '')

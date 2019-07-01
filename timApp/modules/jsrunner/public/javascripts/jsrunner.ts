@@ -20,6 +20,8 @@ class JsrunnerController extends PluginBase<t.TypeOf<typeof JsrunnerMarkup>, t.T
     private fieldlist: string = "";
     private vctrl!: ViewCtrl;
     private scriptErrors?: ErrorList;
+    private isopen: boolean = true;
+    private visible: number = -1;
 
     getDefaultMarkup() {
         return {};
@@ -31,7 +33,8 @@ class JsrunnerController extends PluginBase<t.TypeOf<typeof JsrunnerMarkup>, t.T
 
     $onInit() {
         super.$onInit();
-        if (this.attrs.fieldhelper) {
+        if (this.attrs.fieldhelper && this.isVisible()) {
+            this.isopen = this.attrs.open || false;
             const pluginlist = this.vctrl.getTimComponentsByRegex(".*");
             let tasks = "";
             if (this.attrs.docid) {
@@ -97,8 +100,13 @@ class JsrunnerController extends PluginBase<t.TypeOf<typeof JsrunnerMarkup>, t.T
         return (this.attrs.fields || this.attrs.groups || this.attrs.program);
     }
 
-    isPlainText() {
-        return (window.location.pathname.startsWith("/view/"));
+    isVisible() {
+        if ( this.visible >= 0 ) { return this.visible == 1; }
+        this.visible = 0;
+        if ( this.attrs.showInView ) { this.visible = 1; return true; }
+        const pn = window.location.pathname;
+        if ( pn.match("teacher|answers") ) { this.visible = 1; }
+        return this.visible == 1;
     }
 
 }
@@ -133,7 +141,7 @@ jsrunnerApp.component("jsRunner", {
         vctrl: "^timView",
     },
     template: `
-<div class="jsRunnerDiv" ng-if="::!$ctrl.isPlainText()">
+<div class="jsRunnerDiv" ng-if="::$ctrl.isVisible()">
     <tim-markup-error ng-if="::$ctrl.markupError" data="::$ctrl.markupError"></tim-markup-error>
     <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
     <p ng-if="::$ctrl.stem" ng-bind-html="::$ctrl.stem"></p>
@@ -149,7 +157,11 @@ jsrunnerApp.component("jsRunner", {
     <pre ng-if="$ctrl.result">{{$ctrl.result}}</pre>
     <pre ng-if="$ctrl.output">{{$ctrl.output}}</pre>
     <p ng-if="::$ctrl.footer" ng-bind="::$ctrl.footer" class="plgfooter"></p>
-    <pre ng-if="::$ctrl.isFieldHelper()">{{$ctrl.fieldlist}}</pre>
+    <div ng-if="::$ctrl.isFieldHelper()">
+    <p ng-show="!$ctrl.isopen" ng-click="$ctrl.isopen=true" >+ Show field list</p>
+    <p ng-show="$ctrl.isopen" ng-click="$ctrl.isopen=false">- Hide field list</p>
+    <pre ng-show="$ctrl.isopen">{{$ctrl.fieldlist}}</pre>
+    </div>
 </div>
 `,
 });

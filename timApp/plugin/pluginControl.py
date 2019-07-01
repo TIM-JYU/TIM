@@ -286,6 +286,25 @@ def check_task_access(errs: ErrorMap, p_range: Range, plugin_name: str, tid: Tas
 KeyType = Tuple[int, Range]
 
 
+def get_answers(user, task_ids, answer_map):
+    col = func.max(Answer.id).label('col')
+    cnt = func.count(Answer.id).label('cnt')
+    sub = (user
+           .answers
+           .filter(Answer.task_id.in_(task_ids_to_strlist(task_ids)) & Answer.valid == True)
+           .add_columns(col, cnt)
+           .with_entities(col, cnt)
+           .group_by(Answer.task_id).subquery())
+    answers: List[Tuple[Answer, int]] = (
+        Answer.query.join(sub, Answer.id == sub.c.col)
+            .with_entities(Answer, sub.c.cnt)
+            .all()
+    )
+    for answer, cnt in answers:
+        answer_map[answer.task_id] = answer, cnt
+    return cnt, answers
+
+
 def pluginify(doc: Document,
               pars: List[DocParagraph],
               user: Optional[User],
@@ -320,6 +339,7 @@ def pluginify(doc: Document,
     """
 
     taketime("answ", "start")
+    current_user = get_current_user_object()
     if dereference:
         pars = dereference_pars(pars, context_doc=doc)
     if not edit_window and has_edit_access(doc.get_docinfo()):
@@ -352,27 +372,14 @@ def pluginify(doc: Document,
         review=review,
         wraptype=pluginwrap,
         viewmode=doc.is_viewmode(),
-        current_user=get_current_user_object(),
+        current_user=current_user,
     )
 
     if load_states and custom_answer is None and user is not None:
-        task_ids, _, _ = find_task_ids(pars, check_access=user != get_current_user_object())
-        col = func.max(Answer.id).label('col')
-        cnt = func.count(Answer.id).label('cnt')
-        sub = (user
-               .answers
-               .filter(Answer.task_id.in_(task_ids_to_strlist(task_ids)) & Answer.valid == True)
-               .add_columns(col, cnt)
-               .with_entities(col, cnt)
-               .group_by(Answer.task_id).subquery())
-        answers: List[Tuple[Answer, int]] = (
-            Answer.query.join(sub, Answer.id == sub.c.col)
-                .with_entities(Answer, sub.c.cnt)
-                .all()
-        )
+        # TODO: could this return also the plugins, then there is no need for other iteration
+        task_ids, _, _ = find_task_ids(pars, check_access=user != current_user)
+        get_answers(user, task_ids, answer_map)
         # TODO: RND_SEED get all users rand_seeds for this doc's tasks. New table?
-        for answer, cnt in answers:
-            answer_map[answer.task_id] = answer, cnt
 
     placements = {}
     dumbo_opts = OrderedDict()
@@ -426,6 +433,27 @@ def pluginify(doc: Document,
 
     js_paths = []
     css_paths = []
+
+    if (user.id != current_user.id):  # Check if there are plugins that needs current user data
+        taketime("uplg", "useCurentUser")
+        task_ids = []
+        plugins_to_change = []
+        for plugin_name, plugin_block_map in plugins.items():
+            taketime("plg ", plugin_name)
+            for _, plugin in plugin_block_map.items():
+                if plugin.values.get("useCurrentUser", False):
+                    task_ids.append(plugin.task_id)
+                    plugins_to_change.append(plugin)
+        if task_ids:
+            get_answers(current_user, task_ids, answer_map)
+            for p in plugins_to_change:
+                a = answer_map.get(p.task_id.doc_task,None)
+                if not a:
+                    continue
+                p.answer = a[0]
+                p.answer_count = a[1]
+                # p.options.__setattr__("user", current_user)
+                p.options = p.options._replace(user = current_user)
 
     # taketime("answ", "done", len(answers))
 

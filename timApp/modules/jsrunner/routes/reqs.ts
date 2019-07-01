@@ -32,7 +32,14 @@ defaultPoints: 5
 program: |!!
 
 !!
-${backTicks}`];
+${backTicks} `, `
+${backTicks} {#fields plugin="jsrunner"}
+fieldhelper: true
+docid: true
+open: true
+${backTicks}`]
+
+;
 
 /* GET users listing. */
 router.get("/", (req, res, next) => {
@@ -45,7 +52,7 @@ router.get("/", (req, res, next) => {
                 text: "Plugins",
                 items: [
                     {
-                        text: "Jsrunner",
+                        text: "Fields",
                         items: [
                             {
                                 data: templates[0].trim(),
@@ -56,6 +63,11 @@ router.get("/", (req, res, next) => {
                                 data: templates[1].trim(),
                                 text: "Extended JavaScript runner",
                                 expl: "Add extended JavaScript runner task",
+                            },
+                            {
+                                data: templates[2].trim(),
+                                text: "Show fields",
+                                expl: "Show fields in this document",
                             },
                         ],
                     },

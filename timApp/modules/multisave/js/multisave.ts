@@ -114,7 +114,7 @@ export class MultisaveController extends PluginBase<t.TypeOf<typeof multisaveMar
             this.isSaved = true;
         }
 
-        if ( this.attrs.jumplink ) {
+        if ( this.attrs.jumplink ) { // If tehre is need for jumplink
             const values = [];
             for (const v of componentsToSave) {
                 const value = v.getContent();
@@ -143,7 +143,7 @@ multisaveApp.component("multisaveRunner", {
         vctrl: "^timView",
     },
     template: `
-<div class="no-popup-menu">
+<span class="no-popup-menu">
     <tim-markup-error ng-if="::$ctrl.markupError" data="::$ctrl.markupError"></tim-markup-error>
     <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
     <button class="timButton"
@@ -153,6 +153,6 @@ multisaveApp.component("multisaveRunner", {
     </button>
     <p class="savedtext" ng-if="$ctrl.isSaved">Saved {{$ctrl.savedFields}} fields!</p>
     <p ng-if="::$ctrl.footer" ng-bind="::$ctrl.footer" class="plgfooter"></p>
-</div>
+</span>
 `,
 });

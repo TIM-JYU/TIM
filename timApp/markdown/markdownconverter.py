@@ -76,6 +76,25 @@ class Belongs:
         self.cache[groupname] = b
         return b
 
+def isview(retVal, mode=None):
+    if not mode:
+        v = False
+        try:
+            v = g.viewmode
+        except:
+            return False
+        if v:
+            return retVal
+        return not retVal
+    try:
+        r = g.route
+        if re.match(mode, r):
+            return retVal
+        return not retVal
+    except:
+        return False
+
+
 # ------------------------ Jinja filters end ---------------------------------------------------------------
 
 
@@ -136,6 +155,7 @@ def create_environment(macro_delimiter: str):
     )
     env.filters['Pz'] = Pz
     env.filters['srange'] = srange
+    env.filters['isview'] = isview
 
     # During some markdown tests, there is no request context and therefore no g object.
     try:

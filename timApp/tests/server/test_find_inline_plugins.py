@@ -66,3 +66,25 @@ class TestFind_inline_plugins(TestCase):
             self.assertEqual(y[i], p_yaml, "Not same yaml")
             self.assertEqual(r[i], str(p_range), "Not same range")
             i += 1
+
+    def test_find_inline_plugins6(self):
+        #               1         2
+        #     012345678901234567890
+        s1 = "{#234.jono#}"
+
+        r1 = find_inline_plugins_from_str(s1)
+        for p_task_id, p_yaml, p_range, md in r1:
+            self.assertEqual("234.jono", p_task_id.s, "Not same task_id")
+            self.assertEqual("", p_yaml, "Not same yaml")
+            self.assertEqual("(0, 12)", str(p_range), "Not same range")
+
+    def test_find_inline_plugins7(self):
+        #               1         2
+        #     012345678901234567890
+        s1 = "{##}"
+
+        r1 = find_inline_plugins_from_str(s1)
+        for p_task_id, p_yaml, p_range, md in r1:
+            self.assertEqual("", p_task_id.s, "Not same task_id")
+            self.assertEqual("", p_yaml, "Not same yaml")
+            self.assertEqual("(0, 4)", str(p_range), "Not same range")

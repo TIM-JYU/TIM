@@ -153,30 +153,19 @@ def answer(args: TextfieldAnswerModel):
 @app.route('/reqs')
 def reqs():
     """Introducing templates for textfield plugin"""
-    templates = ["""
-``` {#textfield_normal plugin="textfield"}
-cols: 1 #KENTÄN KOKO, NUMERAALINEN
-autosave: true #AUTOSAVE, PÄÄLLÄ
-```""", """
-``` {#textfield_extended plugin="textfield"}
-header: #OTSIKKO, TYHJÄ = EI OTSIKKOA
-stem: #KYSYMYS, TYHJÄ = EI KYSYMYSTÄ
-inputstem: #VASTAUS, TYHJÄ = EI VASTAUSTA
-followid: #SEURANTAID, TYHJÄ = EI SEURANTAID:tä
-initword: #ALKUARVO, TYHJÄ = EI ALKUARVOA
-buttonText: Save #PAINIKKEEN NIMI, TYHJÄ = EI PAINIKETTA
-cols: 1 #KENTÄN KOKO, NUMERAALINEN
-autosave: false #AUTOSAVE, POIS PÄÄLTÄ
-validinput: ^(hyv|hyl|[12345])$ #KÄYTTÄJÄSYÖTTEEN RAJOITIN, TYHJÄ = EI RAJOITUSTA
-errormessage: #INPUTCHECKERIN VIRHESELITE, TYHJÄ = SELITE ON INPUTCHECKER
-```""", """
-``` {#textfield_label plugin="textfield" readonly=view}
-followid: #SEURANTAID, TYHJÄ = EI SEURANTAID:tä
-initword: label #ALKUARVO, TYHJÄ = EI ALKUARVOA
-cols: 1 #KENTÄN KOKO, NUMERAALINEN
-autosave: false #AUTOSAVE, POIS PÄÄLTÄ
-readOnlyStyle: plaintext #, TYHJÄ = KENTTÄMUOTO, plaintext = TEKSTIMUOTO
-```"""
+    templates = [
+"""``` {#PLUGINNAMEHERE="textfield"}
+header:          # otsikko, tyhjä = ei otsikkoa
+stem:            # kysymys, tyhjä = ei kysymystä
+inputstem:       # vastaus, tyhjä = ei vastausta
+followid:        # seurantaid, tyhjä = ei seurantaid:tä
+initword:        # alkuarvo, tyhjä = ei alkuarvoa
+buttonText: Save # PAINIKKEEN NIMI, TYHJÄ = EI PAINIKETTA
+cols: 1          # kentän koko, numeraalinen
+autosave: false  # autosave, pois päältä
+validinput: '^(hyv|hyl|[12345])$' #käyttäjäsyötteen rajoitin, tyhjä = ei rajoitusta
+errormessage:    #inputcheckerin virheselite, tyhjä = selite on inputchecker
+```""",
 ]
     return jsonify({
         "js": ["js/build/textfield.js"],
@@ -187,22 +176,32 @@ readOnlyStyle: plaintext #, TYHJÄ = KENTTÄMUOTO, plaintext = TEKSTIMUOTO
                 'text': 'Plugins',
                 'items': [
                     {
-                        'text': 'Textfield',
+                        'text': 'Fields',
                         'items': [
                             {
-                                'data': templates[0].strip(),
-                                'text': 'Tekstikenttä (autosave)',
+                                'data': '#- {defaultplugin="textfield" readonly="view"}',
+                                'text': 'defaultplugin/textfield',
+                                'expl': 'Attribuutit kappaleelle jossa inline textfield',
+                            },
+                            {
+                                'data': "{#tf1 autosave: true #}",
+                                'text': 'Tekstikenttä (inline, autosave)',
                                 'expl': 'Luo kenttä jonka syötteet ovat tekstiä',
                             },
                             {
-                                'data': templates[1].strip(),
+                                'data': templates[0].strip(),
                                 'text': 'Tekstikenttä (laajennettu)',
                                 'expl': 'Luo kenttä jonka syötteet ovat tekstiä',
                             },
                             {
-                                'data': templates[2].strip(),
-                                'text': 'Label kenttä (read only)',
+                                'data': "{#tf2 readOnlyStyle: plaintext #}",
+                                'text': 'Label kenttä (inline, read only)',
                                 'expl': 'Luo kenttä jonka syötteitä käyttäjä ei voi muokata',
+                            },
+                            {
+                                'data': "{#username showname: 1, inputstem: 'Nimi: '#}",
+                                'text': 'Käyttäjän nimi (inline)',
+                                'expl': 'Kenttä joka näyttää käyttäjän nimen, tarvitsee lohkon alkuun defaultplugin',
                             },
                         ],
                     },

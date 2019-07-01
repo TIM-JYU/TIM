@@ -71,6 +71,9 @@ class GenericMarkupModel:
     stem: Union[str, Missing] = missing
     lazy: Union[bool, Missing] = missing
     buttonText: Union[str, None, Missing] = missing
+    button: Union[str, None, Missing] = missing
+    useCurrentUser: Union[bool, Missing] = missing
+    showInView: Union[bool, Missing] = missing
 
     def get_visible_data(self):
         return {k: v for k, v in list_not_missing_fields(self) if k not in self.hidden_keys}
@@ -86,6 +89,8 @@ class GenericMarkupSchema(Schema):
     button = fields.Str(allow_none=True)
     answerLimit = fields.Int()
     resetText = fields.Str(allow_none=True)
+    useCurrentUser = fields.Bool(allow_none=True)
+    showInView = fields.Bool()
 
     @pre_load
     def process_minus(self, data):
@@ -199,12 +204,22 @@ class GenericHtmlModel(GenericRouteModel[PluginInput, PluginMarkup, PluginState]
         """Gets the name of the Angular component as it should be in HTML."""
         raise NotImplementedError('Must be implemented by a derived class.')
 
+    def show_in_view_default(self) -> bool:
+        """
+        If component is not show in view mode return False.
+        This method is for to be overridden in child classes if they should not be shown on View-mode
+        :return: is component shown in view as deafault
+        """
+        return True
+
     def show_in_view(self) -> bool:
         """
         If component is not show in view mode return False
         :return: is component shown in view mode
         """
-        return True
+        if self.markup.showInView != missing:
+            return self.markup.showInView
+        return self.show_in_view_default()
 
 
 def render_validationerror(e: ValidationError):

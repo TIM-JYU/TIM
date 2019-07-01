@@ -295,6 +295,11 @@ class Plugin:
 
     def render_json(self):
         options = self.options
+        """
+        if options.current_user != options.user:
+            if self.values.get("userCurrentUser"):
+                options.user = options.current_user
+        """
         if self.answer is not None:
             if self.task_id.is_points_ref:
                 p = f'{self.answer.points:g}' if self.answer.points is not None else ''
@@ -515,7 +520,7 @@ def parse_plugin_values(par: DocParagraph,
     return parse_plugin_values_macros(par, global_attrs, macroinfo.get_macros(), macroinfo.get_macro_delimiter())
 
 
-TASK_NAME_PROG = re.compile(r'{#([\w:]*)([\s\S]*?)?#}')  # see https://regex101.com/r/XmnIZv/32
+TASK_NAME_PROG = re.compile(r'{#([\.\w:]*)([\s\S]*?)?#}')  # see https://regex101.com/r/XmnIZv/33
 
 def find_inline_plugins_from_str(md) -> Generator[
     Tuple[UnvalidatedTaskId, Optional[str], Range, str], None, None]:

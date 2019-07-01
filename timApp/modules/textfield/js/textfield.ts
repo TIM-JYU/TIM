@@ -306,7 +306,9 @@ textfieldApp.component("textfieldRunner", {
     <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
     <p class="stem" ng-if="::$ctrl.stem">{{::$ctrl.stem}}</p>
     <form name="$ctrl.f" class="form-inline">
-    <label>{{::$ctrl.inputstem}}<span>
+     <label><span>
+      <span ng-bind-html="::$ctrl.inputstem"></span>
+      <span ng-if="::!$ctrl.isPlainText()" >
         <input type="string"
                ng-if="::!$ctrl.isPlainText()"
                class="form-control"
@@ -324,9 +326,11 @@ textfieldApp.component("textfieldRunner", {
                placeholder="{{::$ctrl.inputplaceholder}}"
                size="{{::$ctrl.cols}}"
                ng-class="{warnFrame: ($ctrl.isUnSaved() && !$ctrl.redAlert), alertFrame: $ctrl.redAlert }">
-               </span></label>
-         <span ng-if="::$ctrl.isPlainText()" style="float:left;">{{$ctrl.userword}}</span>
+         </span>
+         <span ng-if="::$ctrl.isPlainText()" style="">{{$ctrl.userword}}</span>
+         </span></label>
     </form>
+    <div ng-if="$ctrl.error" style="font-size: 12px" ng-bind-html="$ctrl.error"></div>
     <button class="timButton"
             ng-if="$ctrl.buttonText()"
             ng-disabled="$ctrl.isRunning || $ctrl.readonly"
