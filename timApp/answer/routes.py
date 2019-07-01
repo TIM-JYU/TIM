@@ -298,7 +298,7 @@ def get_fields_and_users(u_fields: List[str], groups: List[UserGroup],
     num_prog = re.compile('^\d+\..+/')
 
     u_fields = widen_fields(u_fields)
-
+    tasks_without_fields = []
     for field in u_fields:
         try:
             t, a, *rest = field.split("=")
@@ -318,6 +318,8 @@ def get_fields_and_users(u_fields: List[str], groups: List[UserGroup],
             task_id = TaskId.parse(t, False, False, True)
         except PluginException as e:
             return abort(400, str(e))
+        if task_id.field is None:
+            tasks_without_fields.append(task_id)
         task_ids.append(task_id)
         if not task_id.doc_id:
             task_id.doc_id = d.id
@@ -334,6 +336,19 @@ def get_fields_and_users(u_fields: List[str], groups: List[UserGroup],
         if not current_user.has_teacher_access(dib):
             abort(403, f'Missing teacher access for document {dib.id}')
         doc_map[task_id.doc_id] = dib.document
+
+    for task in tasks_without_fields:
+        try:
+            plug = find_plugin_from_document(doc_map[task.doc_id], task, current_user)
+            task.field = plug.get_content_field_name()
+        except TaskNotFoundException:
+            task.field = "c"
+        try:
+            alias_map[task.doc_task_with_field] = alias_map[task.doc_task]
+            jsrunner_alias_map[alias_map[task.doc_task]] = task.doc_task_with_field
+            del alias_map[task.doc_task]
+        except KeyError:
+            pass
 
     res = []
     group_filter = UserGroup.id.in_([ug.id for ug in groups])
@@ -717,21 +732,20 @@ def handle_jsrunner_response(jsonresp, result, current_doc: DocInfo):
             task_content_name_map[task] = 'c'
             continue
         try:
-            if t_id.field and t_id.field != "points":
+            if t_id.field  and t_id.field != "points":
                 task_content_name_map[task] = t_id.field
             else:
                 plug = find_plugin_from_document(dib.document, t_id, curr_user)
                 content_field = plug.get_content_field_name()
                 task_content_name_map[task] = content_field
         except TaskNotFoundException as e:
-            #TODO: Always check if task exists? Now it's possible to add answers to
-            # nonexistant tasks when using d1.contentfield notation
-            task_display = t_id.doc_task if t_id.doc_id != current_doc.id else t_id.task_name
-            if not result['web'].get('error', None):
-                result['web']['error'] = 'Errors:\n'
-            result['web']['error'] += f"Task not found: {task_display}\n"
-            task_content_name_map[task] = 'ignore'
-            continue
+            #task_display = t_id.doc_task if t_id.doc_id != current_doc.id else t_id.task_name
+            #if not result['web'].get('error', None):
+            #    result['web']['error'] = 'Errors:\n'
+            #result['web']['error'] += f"Task not found: {task_display}\n"
+            #task_content_name_map[task] = 'ignore'
+            #continue
+            task_content_name_map[task] = "c"
 
     for user in save_obj:
         u_id = user['user']
@@ -761,7 +775,7 @@ def handle_jsrunner_response(jsonresp, result, current_doc: DocInfo):
                 content = json.dumps({content_field: value})
             if an:
                 an_content = json.loads(an.content)
-                if task_id.field  == 'points':
+                if task_id.field == 'points':
                     if an.points == points:
                         continue
                 else:
