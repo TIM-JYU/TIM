@@ -6,7 +6,7 @@ import * as t from "io-ts";
 import {
     PluginBase,
     pluginBindings,
-    } from "tim/plugin/util";
+} from "tim/plugin/util";
 import {$http, $httpParamSerializer} from "tim/util/ngimport";
 import {to} from "tim/util/utils";
 import {timApp} from "../app";
@@ -53,6 +53,7 @@ const TableFormMarkup = t.intersection([
 ]);
 
 const Rows = t.dictionary(t.string, t.dictionary(t.string, t.union([t.string, t.null, t.number])));
+
 interface IRowsType extends t.TypeOf<typeof Rows> {
 }
 
@@ -74,7 +75,7 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
     private error?: string;
     private isRunning = false;
     private userfilter = "";
-    private data: TimTable & {userdata: DataEntity} = {
+    private data: TimTable & { userdata: DataEntity } = {
         hid: {edit: false, insertMenu: true, editMenu: true},
         hiddenRows: [],
         hiddenColumns: [],
@@ -97,6 +98,9 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
     private realNameColumn = "B";
     private headerRow = 1;
     private rowKeys!: string[];
+    private userLocations: { [index: string]: string } = {};
+    private taskLocations: { [index: string]: string } = {};
+    private changedCells: string[] = []; // Use same type as data.userdata?
 
     getDefaultMarkup() {
         return {};
@@ -106,11 +110,11 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
     /**
      * Used to define table view & relative save button in angular, true or false.
      */
-     buttonText() {
+    buttonText() {
         return (this.attrs.buttonText || "Tallenna taulukko");
     }
 
-     hideButtonText() {
+    hideButtonText() {
         return (this.attrs.hideButtonText);
     }
 
@@ -118,7 +122,7 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
     /**
      * Used to define table view & relative save button in angular, true or false.
      */
-     reportButton() {
+    reportButton() {
         return (this.attrs.reportButton || "Luo Raportti");
     }
 
@@ -136,13 +140,21 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
         this.rowKeys = Object.keys(this.rows);
         this.setDataMatrix();
         this.oldCellValues = JSON.stringify(this.data.userdata.cells);
-        if (this.attrs.autosave) { this.data.saveCallBack = (rowi, coli, content) => this.singleCellSave(rowi, coli, content); }
-        if (this.attrs.minWidth) { this.data.minWidth = this.attrs.minWidth; }
-        if (this.attrs.maxWidth !== undefined) { this.data.maxWidth = this.attrs.maxWidth; }
+
+        this.data.saveCallBack = (rowi, coli, content) => this.cellChanged(rowi, coli, content);
+
+        if (this.attrs.minWidth) {
+            this.data.minWidth = this.attrs.minWidth;
+        }
+        if (this.attrs.maxWidth !== undefined) {
+            this.data.maxWidth = this.attrs.maxWidth;
+        }
         if (this.attrs.singleLine) {
             this.data.singleLine = this.attrs.singleLine;
         }
-        if (this.attrs.open != undefined) { this.showTable = this.attrs.open; }
+        if (this.attrs.open != undefined) {
+            this.showTable = this.attrs.open;
+        }
         this.data.hiddenColumns = this.attrs.hiddenColumns;
         this.data.hiddenRows = this.attrs.hiddenRows;
         this.data.cbColumn = this.attrs.cbColumn;
@@ -165,7 +177,9 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
      * @param b username to compare with a
      */
     sortByRealName(a: string, b: string) {
-        if (!this.attrsall.realnamemap) { return 0; }
+        if (!this.attrsall.realnamemap) {
+            return 0;
+        }
         try {
             return this.attrsall.realnamemap[a].localeCompare(this.attrsall.realnamemap[b]);
         } catch (e) {
@@ -197,10 +211,13 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
             }
             this.data.table.countRow = Object.keys(this.rows).length + 1;
             let y = 2;
-            if (!this.data.lockedCells) { this.data.lockedCells = []; }
+            if (!this.data.lockedCells) {
+                this.data.lockedCells = [];
+            }
             for (const r of this.rowKeys) {
                 this.data.userdata.cells[this.userNameColumn + y] = {cell: r, backgroundColor: "#efecf1"};
                 this.data.lockedCells.push(this.userNameColumn + y);
+                this.userLocations[y] = r;
                 if (this.realnames && this.attrsall.realnamemap) {
                     this.data.userdata.cells[this.realNameColumn + y] = {
                         cell: this.attrsall.realnamemap[r],
@@ -229,6 +246,13 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
                         cell: colheader,
                         backgroundColor: "#efecf1",
                     };
+                    let contentalias;
+                    if (this.attrsall.aliases && colheader in this.attrsall.aliases) {
+                        contentalias = this.attrsall.aliases[colheader];
+                    } else {
+                        contentalias = colheader;
+                    }
+                    this.taskLocations[colnumToLetters(x + xOffset)] = contentalias;
                     this.data.lockedCells.push(colnumToLetters(x + xOffset) + 1);
                     // y = 0;
                     // for (const [u, r] of Object.entries(this.rows)) {
@@ -276,7 +300,11 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
      */
     tableCheck() {
         // return (this.attrs.table === true);
-        if (this.attrs.table != undefined) { return this.attrs.table; } else { return true; }
+        if (this.attrs.table != undefined) {
+            return this.attrs.table;
+        } else {
+            return true;
+        }
     }
 
     // noinspection JSUnusedGlobalSymbols
@@ -295,7 +323,9 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
     anonNames() {
         if (this.attrs.anonNames) {
             return this.attrs.anonNames;
-        } else { return false; }
+        } else {
+            return false;
+        }
     }
 
     /**
@@ -314,7 +344,10 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
      */
     generateReport() {
         const dataTable = this.generateCSVTable();
-        const win = window.open("/tableForm/generateCSV?" + $httpParamSerializer({data: JSON.stringify(dataTable), separator: (this.attrs.separator || ",")}), "WINDOWID");
+        const win = window.open("/tableForm/generateCSV?" + $httpParamSerializer({
+            data: JSON.stringify(dataTable),
+            separator: (this.attrs.separator || ","),
+        }), "WINDOWID");
         if (win == null) {
             this.error = "Failed to open report window.";
         }
@@ -331,11 +364,15 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
         if (this.attrsall.fields && this.attrsall.fields.length) {
             colcount = this.attrsall.fields.length + 1;
         }
-        if (this.realnames) { colcount += 1; }
+        if (this.realnames) {
+            colcount += 1;
+        }
         for (let i = 0; i < rowcount; i++) {
             // TODO: In future: change hiddenRows check if hiddenRows is changed from number[] to IRows
             // TODO: Check for hiddenColumns
-            if (this.data.hiddenRows && this.data.hiddenRows.includes(i)) { continue; }
+            if (this.data.hiddenRows && this.data.hiddenRows.includes(i)) {
+                continue;
+            }
             const row: CellType[] = [];
             result.push(row);
             for (let j = 0; j < colcount; j++) {
@@ -364,8 +401,12 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
         }
         // TODO check if better way to save than just making saveAndCloseSmallEditor public and calling it
         timTable.saveAndCloseSmallEditor();
-        if (this.attrs.hiddenRows) { this.data.hiddenRows = this.attrs.hiddenRows.slice(); } else { this.data.hiddenRows = []; }
-         // TODO: if usernamecolumn in hiddencolums then skip reg.test for this.rowkeys
+        if (this.attrs.hiddenRows) {
+            this.data.hiddenRows = this.attrs.hiddenRows.slice();
+        } else {
+            this.data.hiddenRows = [];
+        }
+        // TODO: if usernamecolumn in hiddencolums then skip reg.test for this.rowkeys
         if (this.userfilter != "" && this.userfilter != undefined) {
             const reg = new RegExp(this.userfilter.toLowerCase());
             const rowi = 1;
@@ -378,8 +419,29 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
         }
     }
 
+    /**
+     * Callback function that gets called when timTable saves a cell
+     * @param rowi row number
+     * @param coli col number
+     * @param content unused
+     */
+    cellChanged(rowi: number, coli: number, content: string) {
+        if (this.attrs.autosave) {
+            this.singleCellSave(rowi, coli, content);
+        } else {
+            this.changedCells.push(colnumToLetters(coli) + (rowi + 1));
+        }
+    }
+
+    /**
+     * Calls the actual save function with given cell
+     * @param rowi row number
+     * @param coli col number
+     * @param content unused
+     */
     singleCellSave(rowi: number, coli: number, content: string) {
-        const cells = [this.userNameColumn + (rowi + 1), colnumToLetters(coli) + this.headerRow, colnumToLetters(coli) + (rowi + 1)];
+        // const cells = [this.userNameColumn + (rowi + 1), colnumToLetters(coli) + this.headerRow, colnumToLetters(coli) + (rowi + 1)];
+        const cells = [colnumToLetters(coli) + (rowi + 1)];
         this.doSaveText(cells);
     }
 
@@ -401,57 +463,53 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
         if (cells && cells.length > 0) {
             keys = cells;
         } else {
-            keys = Object.keys(this.data.userdata.cells);
+            // TODO: Force save all?
+            // keys = Object.keys(this.data.userdata.cells);
+            keys = this.changedCells;
         }
-        // Sort because for now column containing usernames and row containing headers has to be checked first
-        // in order to track which column has which task etc
-        keys.sort();
-        // TODO: Optimise save? (keep track of userLocations and taskLocations at SetDataMatrix) - or iterate through
-        //  headerRow / userNameColum first
-        // if these are tracked would need to obtain updated location info from timtable if it implements sort
-        const userLocations: {[index: string]: string} = {};
-        const taskLocations: {[index: string]: string} = {};
-        const replyRows: {[index: string]: {[index: string]: CellType}} = {};
-        for (const coord of keys) {
-            const alphaRegExp = new RegExp("([A-Z]*)");
-            const alpha = alphaRegExp.exec(coord);
-            if (alpha == null) {
-                continue;
-            }
-            const columnPlace = alpha[0];
-            const numberPlace = coord.substring(columnPlace.length);
-            const cell = this.data.userdata.cells[coord];
-            let cellContent;
-            // TODO: Save cell attributes (e.g backgroundColor) as plugin's own answer to let users take advantage
-            //  of timTable's cell layout editing
-            if (!isPrimitiveCell(cell)) {
-                cellContent = cell.cell;
-            } else {
-                cellContent = cell;
-            }
-            if (cellContent === null) {
-                cellContent = "";
-            } else if (typeof cellContent === "boolean" || typeof cellContent === "number") {
-                cellContent = cellContent.toString();
-            }
-            // else if (typeof cellContent === "boolean") {
-            //     throw new Error("cell was boolean?");
+        const replyRows: { [index: string]: { [index: string]: CellType } } = {};
+        try {
+            for (const coord of keys) {
+                const alphaRegExp = new RegExp("([A-Z]*)");
+                const alpha = alphaRegExp.exec(coord);
+                if (alpha == null) {
+                    continue;
+                }
+                const columnPlace = alpha[0];
+                const numberPlace = coord.substring(columnPlace.length);
+                const cell = this.data.userdata.cells[coord];
+                let cellContent;
+                // TODO: Save cell attributes (e.g backgroundColor) as plugin's own answer to let users take advantage
+                //  of timTable's cell layout editing
+                if (!isPrimitiveCell(cell)) {
+                    cellContent = cell.cell;
+                } else {
+                    cellContent = cell;
+                }
+                if (cellContent === null) {
+                    cellContent = "";
+                } else if (typeof cellContent === "boolean" || typeof cellContent === "number") {
+                    cellContent = cellContent.toString();
+                }
+                // else if (typeof cellContent === "boolean") {
+                //     throw new Error("cell was boolean?");
 
-            if (columnPlace === this.userNameColumn) {
-                if (numberPlace === this.headerRow.toString()) { continue; }
-                userLocations[numberPlace] = cellContent;
-                replyRows[cellContent] = {};
-            } else if (this.realnames && columnPlace === this.realNameColumn) {
-                continue;
-            } else if (numberPlace === this.headerRow.toString()) {
-                let contentalias;
-                if (this.attrsall.aliases && cellContent in this.attrsall.aliases) {
-                    contentalias = this.attrsall.aliases[cellContent];
-                } else { contentalias = cellContent; }
-                taskLocations[columnPlace] = contentalias;
-            } else {
-                replyRows[userLocations[numberPlace]][taskLocations[columnPlace]] = cellContent;
+                if (columnPlace === this.userNameColumn
+                    || (this.realnames && columnPlace === this.realNameColumn)
+                    || numberPlace === this.headerRow.toString()) {
+                    continue;
+                } else {
+                    try {
+                        replyRows[this.userLocations[numberPlace]][this.taskLocations[columnPlace]] = cellContent;
+                    } catch (TypeError) {
+                        replyRows[this.userLocations[numberPlace]] = {};
+                        replyRows[this.userLocations[numberPlace]][this.taskLocations[columnPlace]] = cellContent;
+                    }
+                }
             }
+        } catch (e) {
+            console.log(e);
+            this.error = "Error in doSaveText" + "\n" + e;
         }
         const params = {
             input: {
@@ -469,6 +527,7 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
         } else {
             this.error = r.result.data.error; // "Infinite loop or some other error?";
         }
+        // TODO: Clear changedCells?
     }
 
     protected getAttributeType() {
