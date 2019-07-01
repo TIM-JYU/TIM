@@ -243,7 +243,7 @@ export class TimTableController extends DestroyScope implements IController {
     private editing: boolean = false;
     private forcedEditMode: boolean = false;
     private task: boolean = false;
-    private hideSaveButton?: boolean = false;
+    // private hideSaveButton?: boolean = false;
     private hiddenRows?: number[] = [];
     // private lockCellCount: boolean = false;
     // private saveCallBack: () => void;
@@ -261,6 +261,7 @@ export class TimTableController extends DestroyScope implements IController {
     private rowDelta = 0;
     private colDelta = 0;
     private cbFilter: boolean = false;
+    private filterRow: boolean = false;
 
     /**
      * Stores the last direction that the user moved towards with arrow keys
@@ -327,6 +328,13 @@ export class TimTableController extends DestroyScope implements IController {
                 cells: {},
             };
         }
+
+        this.filterRow = this.data.filterRow || false;
+        if ( this.cellDataMatrix.length <= 2) { this.filterRow = false; }
+
+        if ( this.data.cbColumn ) { this.colDelta = 1; }
+        if ( this.filterRow ) { this.rowDelta = 1; }
+
         let tb = false;
         if (this.data.taskBorders) {
             tb = true;
@@ -386,8 +394,6 @@ export class TimTableController extends DestroyScope implements IController {
             this.originalHiddenRows = this.data.hiddenRows.slice();
         }
 
-        if ( this.data.cbColumn ) { this.colDelta = 1; }
-        if ( this.data.filterRow ) { this.rowDelta = 1; }
     }
 
     $doCheck() {
@@ -472,6 +478,25 @@ export class TimTableController extends DestroyScope implements IController {
         if ( this.cbFilter ) {
             this.updateFilter();
         }
+    }
+
+    public static rowToList(row: ICell[]) {
+        const rlist: string[] = [];
+        for (const c of row) {
+            rlist.push(c ? c.cell ? c.cell.toString() : "" : "");
+        }
+        return rlist;
+    }
+
+    public getCheckedRows(startFrom: number, visible: boolean) {
+        const crows = [];
+        for (let i = startFrom; i < this.cellDataMatrix.length; i++) {
+            if ( this.data.hiddenRows && this.data.hiddenRows.includes(i) && visible ) { continue; }
+            if ( this.cbs[i] ) {
+                crows.push(TimTableController.rowToList(this.cellDataMatrix[i]));
+            }
+        }
+        return crows;
     }
 
     /**
@@ -738,8 +763,7 @@ export class TimTableController extends DestroyScope implements IController {
         });
 
         const data = response.data;
-        const value = this.cellToString(data[0]);
-        return value;
+        return this.cellToString(data[0]);
     }
 
     /**
@@ -946,7 +970,7 @@ export class TimTableController extends DestroyScope implements IController {
             }
             const numberPlace = item.substring(alpha[0].length);
 
-            const address = this.getAddress(alpha[0], numberPlace);
+            const address = TimTableController.getAddress(alpha[0], numberPlace);
             if (this.checkThatAddIsValid(address)) {
                 this.setValueToMatrix(address.row, address.col, value);
             }
@@ -1039,10 +1063,11 @@ export class TimTableController extends DestroyScope implements IController {
      * @param {{col: number, row: number}} address row and column index
      * @returns {boolean} true if valid
      */
-    private checkThatAddIsValid(address: {col: number, row: number}) {
+    checkThatAddIsValid(address: { col: number; row: number }): boolean {
         if (address.col >= 0 && address.row >= 0) {
             return true;
         }
+        return false;
     }
 
     /**
@@ -1052,7 +1077,7 @@ export class TimTableController extends DestroyScope implements IController {
      * @param {string} rowValue  Row value, ex. '1'
      * @returns {{col: number, row: number}} Coordinates as index numbers
      */
-    private getAddress(colValue: string, rowValue: string) {
+    static getAddress(colValue: string, rowValue: string) {
         const charCodeOfA = "A".charCodeAt(0);
         const asciiCharCount = 26;
         let reversedCharacterPlaceInString = 0;
@@ -1149,7 +1174,6 @@ export class TimTableController extends DestroyScope implements IController {
         if (ev.keyCode === KEY_TAB) {
             ev.preventDefault();
         }
-
     }
 
     /**
@@ -1809,10 +1833,7 @@ export class TimTableController extends DestroyScope implements IController {
             return false;
         }
         const ic2 = TimTableController.toIndex(r, 3, coln, ic1);
-        if (ic2 < coli) {
-            return false;
-        }
-        return true;
+        return ic2 >= coli;
     }
 
     /**
@@ -1833,15 +1854,13 @@ export class TimTableController extends DestroyScope implements IController {
             return false;
         }
         const i2 = TimTableController.toIndex(r, 1, n, i1);
-        if (i2 < index) {
-            return false;
-        }
-        return true;
+        return i2 >= index;
     }
 
     /**
      * Sets style attributes for columns
      * @param {IColumn} col The column to be styled
+     * @param index col index
      */
     private stylingForColumn(col: IColumn, index: number) {
         const styles: {[index: string]: string} = {};
@@ -2345,15 +2364,15 @@ timApp.component("timTable", {
      ng-style="$ctrl.stylingForTable($ctrl.data.table)" id={{$ctrl.data.table.id}}>
         <col ng-repeat="c in $ctrl.columns" ng-attr-span="{{c.span}}}" id={{c.id}}
              ng-style="$ctrl.stylingForColumn(c, $index)"/>
-        <tr ng-if="::$ctrl.data.filterRow"> <!-- Filter row -->
-            <td><input type="checkbox" ng-model="$ctrl.cbFilter" ng-change="$ctrl.updateFilter()"> </td>
+        <tr ng-if="$ctrl.filterRow"> <!-- Filter row -->
+            <td><input type="checkbox" ng-model="$ctrl.cbFilter" ng-change="$ctrl.updateFilter()" title="Check to show only checked rows"> </td>
 
             <td ng-class=""
              ng-show="$ctrl.showColumn(coli)"
              ng-repeat="c in $ctrl.cellDataMatrix[0]" ng-attr-span="{{c.span}}}" ng-init="coli = $index"
              ng-style="" ng-click="">
                <div class="filterdiv">
-                 <input type="text" ng-change="$ctrl.updateFilter()" ng-model="$ctrl.filters[coli]" >
+                 <input type="text" ng-change="$ctrl.updateFilter()" ng-model="$ctrl.filters[coli]" title="Write filter condition">
                </div>
             </td>
 

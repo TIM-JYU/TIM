@@ -12,6 +12,8 @@ import {to} from "tim/util/utils";
 import {timApp} from "../app";
 import {getParId} from "../document/parhelpers";
 import {ViewCtrl} from "../document/viewctrl";
+import {IDocument} from "../item/IItem";
+import {showInputDialog} from "../ui/inputDialog";
 import {GenericPluginMarkup, GenericPluginTopLevelFields, nullable, withDefault} from "./attributes";
 import "./tableForm.css";
 import {CellType, colnumToLetters, DataEntity, isPrimitiveCell, TimTable} from "./timTable";
@@ -33,8 +35,10 @@ const TableFormMarkup = t.intersection([
         open: t.boolean,
         filterRow: t.boolean,
         cbColumn: t.boolean,
+        groups: t.array(t.string),
         usernames: withDefault(t.boolean, true),
         realnames: withDefault(t.boolean, true),
+        emails: withDefault(t.boolean, false),
         report: nullable(t.boolean),
         reportButton: nullable(t.string),
         separator: nullable(t.string),
@@ -42,7 +46,9 @@ const TableFormMarkup = t.intersection([
         sortBy: nullable(t.string), /* TODO! Username and task, or task and username -- what about points? */
         table: nullable(t.boolean),
         removeDocIds: withDefault(t.boolean, true),
-
+        removeUsersButtonText: nullable(t.string),
+        userListButtonText: nullable(t.string),
+        emailUsersButtonText: nullable(t.string),
     }),
     GenericPluginMarkup,
     t.type({
@@ -93,6 +99,7 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
     private oldCellValues!: string;
     private realnames = false;
     private usernames = false;
+    private emails = false;
     private showTable = true;
     private userNameColumn = "A";
     private realNameColumn = "B";
@@ -101,6 +108,9 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
     private userLocations: { [index: string]: string } = {};
     private taskLocations: { [index: string]: string } = {};
     private changedCells: string[] = []; // Use same type as data.userdata?
+    private userlist: string = "";
+    private listSep: string = "-";
+    private listEmail: boolean = false;
 
     getDefaultMarkup() {
         return {};
@@ -391,32 +401,78 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
     }
 
     /**
-     * Adds rows to this.hiddenRows if their key (username) matches the given filter
-     * TODO: Add support for filtering with user-chosen column
+     * Make list of users colIndex.  Separate items by separators
+     * @param users array of users
+     * @param colIndex what index to use for list
+     * @param perseparator what comes before evyry item
+     * @param midseparator what comes between items
      */
-    updateFilter() {
+    makeUserList(users: string[][], colIndex: number, preseparator: string, midseparator: string): string {
+        let result = "";
+        let sep = "";
+        for (const r of users) {
+            result += sep + preseparator + r[colIndex];
+            sep = midseparator;
+        }
+        return result;
+    }
+
+    /**
+     * Removes selected users from the group
+     */
+    async removeUsers() {
         const timTable = this.getTimTable();
         if (timTable == null) {
             return;
         }
-        // TODO check if better way to save than just making saveAndCloseSmallEditor public and calling it
-        timTable.saveAndCloseSmallEditor();
-        if (this.attrs.hiddenRows) {
-            this.data.hiddenRows = this.attrs.hiddenRows.slice();
-        } else {
-            this.data.hiddenRows = [];
+        const selUsers = timTable.getCheckedRows(1, true);
+        let msg = "";
+        for (const r of selUsers) {
+            msg += r.join(", ") + "<br>";
         }
-        // TODO: if usernamecolumn in hiddencolums then skip reg.test for this.rowkeys
-        if (this.userfilter != "" && this.userfilter != undefined) {
-            const reg = new RegExp(this.userfilter.toLowerCase());
-            const rowi = 1;
-            for (let i = 0; i < this.rowKeys.length; i++) {
-                if (!reg.test(this.rowKeys[i].toLowerCase()) && !(this.attrs.realnames && (this.attrsall.realnamemap != null && reg.test(this.attrsall.realnamemap[this.rowKeys[i]].toLowerCase())))) {
-                    // this.data.hiddenRows.push(values);
-                    this.data.hiddenRows.push(i + 1);
+        if ( msg == "" ) { return; }
+
+        if ( !this.attrs.groups ) { return; }
+        const group = this.attrs.groups[0];
+
+        const doc = await showInputDialog({
+            defaultValue: "",
+            text: "<b>Really remove following users from group:</b> " + group + "<br>\n<pre>\n" + msg + "\n</pre>",
+            title: "Remove user from group " + group,
+            isInput: false,
+            validator: async (s) => {
+                const ulist = this.makeUserList(selUsers, 1, "", ",");
+                // /groups/removemember/group/ ulist
+                const r = await to($http.get<IDocument>(`/groups/removemember/${group}/${ulist}`));
+                if (r.ok) {
+                    return {ok: true, result: r.result.data};
+                } else {
+                    return {ok: false, result: r.result.data.error};
                 }
-            }
+            },
+        });
+        location.reload();
+    }
+
+    listUsernames() {
+        const timTable = this.getTimTable();
+        if (timTable == null) {
+            return;
         }
+        let preseparator = " - ";
+        let midseparator = "\n";
+        let sep = this.listSep;
+        let colindex = 1;
+        const selUsers = timTable.getCheckedRows(1, true);
+        if ( this.listEmail ) { midseparator = "\n"; preseparator = ""; colindex = 2; }
+        if ( sep == "" ) { sep = "\n"; }
+        if ( sep != "-") { midseparator = sep; preseparator = ""; }
+        this.userlist = this.makeUserList(selUsers, colindex, preseparator, midseparator);
+    }
+
+    copyList() {
+        const ta = this.element.find("#userlist");
+        ta.focus(); ta.select(); document.execCommand("copy");
     }
 
     /**
@@ -547,22 +603,11 @@ timApp.component("tableformRunner", {
     <tim-markup-error ng-if="::$ctrl.markupError" data="::$ctrl.markupError"></tim-markup-error>
     <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
     <p ng-if="::$ctrl.stem" ng-bind-html="::$ctrl.stem"></p>
-    <!--
-    <div class="form-inline" ng-show="::$ctrl.tableCheck()"><label class="hidden-print">Suodata {{::$ctrl.inputstem}} <span>
-        <input type="text"
-               class="form-control"
-               ng-model="$ctrl.userfilter"
-               ng-model-options="::$ctrl.modelOpts"
-               ng-trim="false"
-               ng-change="$ctrl.updateFilter()"
-               ng-readonly="::$ctrl.readonly"
-               size="{{::$ctrl.cols}}"></span></label>
-    -->
-        <tim-table disabled="!$ctrl.tableCheck()" data="::$ctrl.data" taskid="{{$ctrl.pluginMeta.getTaskId()}}" plugintype="{{$ctrl.pluginMeta.getPlugin()}}"></tim-table>
-    </div>
+    <tim-table disabled="!$ctrl.tableCheck()" data="::$ctrl.data" taskid="{{$ctrl.pluginMeta.getTaskId()}}" plugintype="{{$ctrl.pluginMeta.getPlugin()}}"></tim-table>
+</div>
     <div class="hidden-print">
     <button class="timButton"
-            ng-if="::$ctrl.tableCheck()"
+            ng-if="::$ctrl.tableCheck() && !$ctrl.attrs.autosave"
             ng-click="$ctrl.saveText()">
             {{ ::$ctrl.buttonText() }}
     </button>
@@ -573,9 +618,40 @@ timApp.component("tableformRunner", {
     </button>
     <button class="timButton"
             ng-click="$ctrl.closeTable()"
-            ng-if="$ctrl.hideButtonText()">
+            ng-if="::$ctrl.hideButtonText()">
             {{::$ctrl.hideButtonText()}}
     </button>
+    <button class="timButton"
+            ng-click="$ctrl.removeUsers()"
+            ng-if="::$ctrl.attrs.removeUsersButtonText">
+            {{::$ctrl.attrs.removeUsersButtonText}}
+    </button>
+    <button class="timButton"
+            ng-click="$ctrl.listUsernames()"
+            ng-if="::$ctrl.attrs.userListButtonText">
+            {{::$ctrl.attrs.userListButtonText}}
+    </button>
+    <button class="timButton"
+            ng-click="$ctrl.emailUsern()"
+            ng-if="::$ctrl.attrs.emailUsersButtonText">
+            {{::$ctrl.attrs.emailUsersButtonText}}
+    </button>
+    </div>
+    <div class="csRunDiv " style="padding: 1em;" ng-if="$ctrl.userlist"> <!-- userlist -->
+        <p class="closeButton" ng-click="$ctrl.userlist=''"></p>
+        <p>Separator:
+        <input type="radio" name="listsep" ng-model="$ctrl.listSep" value = "-" ng-change="$ctrl.listUsernames()">-
+        <input type="radio" name="listsep" ng-model="$ctrl.listSep" value = "," ng-change="$ctrl.listUsernames()">,
+        <input type="radio" name="listsep" ng-model="$ctrl.listSep" value = "|" ng-change="$ctrl.listUsernames()">|
+        <input type="radio" name="listsep" ng-model="$ctrl.listSep" value = ";" ng-change="$ctrl.listUsernames()">;
+        <input type="radio" name="listsep" ng-model="$ctrl.listSep" value = "\n" ng-change="$ctrl.listUsernames()">\\n
+        </p>
+        <input type="checkbox" ng-model="$ctrl.listEmail" ng-change="$ctrl.listUsernames()">Email<br>
+        <textarea id="userlist" ng-model="$ctrl.userlist" rows="10" cols="40"></textarea>
+        <button class="timButton"
+                ng-click="$ctrl.copyList()">
+                Copy
+        </button>
     </div>
     <pre ng-if="$ctrl.result">{{$ctrl.result}}</pre>
     <pre ng-if="$ctrl.error" ng-bind-html="$ctrl.error"></pre>
