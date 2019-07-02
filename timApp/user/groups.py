@@ -115,6 +115,7 @@ def create_group(groupname):
     s = doc.document.get_settings().get_dict().get('macros', {})
     s['group'] = groupname
     s['fields'] = ['info']
+    s['maxRows'] = "60em"
     doc.document.add_setting('macros', s)
     text = '''
 ## Omia kenttiä {defaultplugin="textfield" readonly="view"}

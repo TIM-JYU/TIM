@@ -65,6 +65,7 @@ class TableFormMarkupModel(GenericMarkupModel):
     removeUsersButtonText: Union[str, Missing] = missing
     userListButtonText: Union[str, Missing] = missing
     emailUsersButtonText: Union[str, Missing] = missing
+    maxRows: Union[str, Missing] = missing
     fields: Union[List[str], Missing] = missing
 
 class TableFormMarkupSchema(GenericMarkupSchema):
@@ -95,6 +96,7 @@ class TableFormMarkupSchema(GenericMarkupSchema):
     removeUsersButtonText = fields.Str(allow_none=True)
     userListButtonText = fields.Str(allow_none=True)
     emailUsersButtonText = fields.Str(allow_none=True)
+    maxRows = fields.Str(allow_none=True)
     fields = fields.List(fields.Str()) #Keep this last - bad naming
 
 

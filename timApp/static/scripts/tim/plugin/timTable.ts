@@ -61,6 +61,7 @@ export interface TimTable {
     singleLine?: boolean;
     filterRow?: boolean;
     cbColumn?: boolean;
+    maxRows?: string;
     // lockCellCount?: boolean;
 }
 
@@ -262,6 +263,7 @@ export class TimTableController extends DestroyScope implements IController {
     private colDelta = 0;
     private cbFilter: boolean = false;
     private filterRow: boolean = false;
+    private maxRows: string = "2000em";
 
     /**
      * Stores the last direction that the user moved towards with arrow keys
@@ -317,6 +319,8 @@ export class TimTableController extends DestroyScope implements IController {
      * Set listener and initializes tabledatablock
      */
     async $onInit() {
+        if ( this.data.maxRows ) { this.maxRows = this.data.maxRows; }
+
         this.initializeCellDataMatrix();
         this.processDataBlockAndCellDataMatrix();
         this.userdata = this.data.userdata;
@@ -2336,6 +2340,10 @@ export class TimTableController extends DestroyScope implements IController {
         // TODO: Change to use proper type
         return (!this.data.hiddenColumns || !this.data.hiddenColumns.includes(index));
     }
+
+    private tableStyle() {
+        return {"border": "none", "overflow": "auto", "max-height": this.maxRows};
+    }
 }
 
 timApp.component("timTable", {
@@ -2352,7 +2360,7 @@ timApp.component("timTable", {
     template: `<div ng-if="!$ctrl.disabled" ng-mouseenter="$ctrl.mouseInsideTable()"
      ng-mouseleave="$ctrl.mouseOutTable()">
 <div ng-cloak ng-class="{
-          'csRunDiv': $ctrl.taskBorders}" class=" no-popup-menu" style="border: none" >
+          'csRunDiv': $ctrl.taskBorders}" class=" no-popup-menu" ng-style="::$ctrl.tableStyle()" >
     <h4 ng-if="::$ctrl.data.header" ng-bind-html="::$ctrl.data.header"></h4>
     <p ng-if="::$ctrl.data.stem" class="stem" ng-bind-html="::$ctrl.data.stem"></p>
     <div class="timTableContentDiv no-highlight">

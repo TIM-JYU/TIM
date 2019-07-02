@@ -32,6 +32,7 @@ const TableFormMarkup = t.intersection([
         hiddenRows: t.array(t.number),
         maxWidth: t.string,
         minWidth: t.string,
+        maxRows: t.string,
         open: t.boolean,
         filterRow: t.boolean,
         cbColumn: t.boolean,
@@ -157,6 +158,7 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
         this.data.hiddenRows = this.attrs.hiddenRows;
         this.data.cbColumn = this.attrs.cbColumn;
         this.data.filterRow = this.attrs.filterRow;
+        this.data.maxRows = this.attrs.maxRows;
     }
 
     /**
