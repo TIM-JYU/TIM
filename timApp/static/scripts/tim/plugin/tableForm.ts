@@ -35,6 +35,8 @@ const TableFormMarkup = t.intersection([
         maxRows: t.string,
         open: t.boolean,
         filterRow: t.boolean,
+        toolbarTemplates: t.array(t.object),
+
         cbColumn: t.boolean,
         groups: t.array(t.string),
         usernames: withDefault(t.boolean, true),
@@ -69,6 +71,7 @@ const TableFormAll = t.intersection([
         aliases: t.dictionary(t.string, t.string),
         fields: t.array(t.string),
         realnamemap: t.dictionary(t.string, t.string),
+        emailmap: t.dictionary(t.string, t.string),
         rows: Rows,
     }),
     GenericPluginTopLevelFields,
@@ -102,7 +105,8 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
     private emails = false;
     private showTable = true;
     private userNameColumn = "A";
-    private realNameColumn = "B";
+    private realNameColumn = "A";
+    private emailColumn = "B";
     private headerRow = 1;
     private rowKeys!: string[];
     private userlist: string = "";
@@ -139,9 +143,11 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
         // this.realnames = true;
         if (this.attrs.realnames) {
             this.realnames = true;
-            const temp = this.realNameColumn;
-            this.realNameColumn = this.userNameColumn;
-            this.userNameColumn = temp;
+            this.userNameColumn = "B";
+            this.emailColumn = "C";
+        }
+        if (this.attrs.emails) {
+            this.emails = true;
         }
         this.rows = this.attrsall.rows || {};
         this.rowKeys = Object.keys(this.rows);
@@ -159,6 +165,7 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
         this.data.cbColumn = this.attrs.cbColumn;
         this.data.filterRow = this.attrs.filterRow;
         this.data.maxRows = this.attrs.maxRows;
+        this.data.toolbarTemplates = this.attrs.toolbarTemplates;
     }
 
     /**
@@ -173,7 +180,7 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
 
     /**
      * Sorts row key values (usernames) by their real name attribute in this.realnamemap
-     * @param a username to conmpare with b
+     * @param a username to compare with b
      * @param b username to compare with a
      */
     sortByRealName(a: string, b: string) {
@@ -202,6 +209,12 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
                 };
                 this.rowKeys.sort((a, b) => this.sortByRealName(a, b));
             }
+            if (this.emails) {
+                this.data.userdata.cells[this.emailColumn + this.headerRow] = {
+                    cell: "Email",
+                    backgroundColor: "#efecf1",
+                };
+            }
             if (this.attrsall.fields && this.realnames) {
                 this.data.table.countCol = this.attrsall.fields.length + 2;
             } else if (this.attrsall.fields) {
@@ -220,13 +233,19 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
                     };
                     this.data.lockedCells.push(this.realNameColumn + y);
                 }
+                if (this.emails && this.attrsall.emailmap) {
+                    this.data.userdata.cells[this.emailColumn + y] = {
+                        cell: this.attrsall.emailmap[r],
+                        backgroundColor: "#efecf1",
+                    };
+                    this.data.lockedCells.push(this.emailColumn + y);
+                }
                 y++;
             }
             // TODO: Load default cell colors from tableForm's private answer?
             let xOffset = 1;
-            if (this.realnames) {
-                xOffset = 2;
-            }
+            if (this.realnames) { xOffset++; }
+            if (this.emails)    { xOffset++; }
             if (this.attrsall.fields) {
                 for (let x = 0; x < this.attrsall.fields.length; x++) {
 

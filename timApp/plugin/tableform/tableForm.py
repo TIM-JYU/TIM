@@ -27,7 +27,7 @@ from timApp.util.flask.responsehelper import csv_response
 @attr.s(auto_attribs=True)
 class TableFormStateModel:
     """Model for the information that is stored in TIM database for each answer."""
-    #TODO: Save user given table layouts like in timTable
+    # TODO: Save user given table layouts like in timTable
 
 
 class TableFormStateSchema(Schema):
@@ -66,7 +66,9 @@ class TableFormMarkupModel(GenericMarkupModel):
     userListButtonText: Union[str, Missing] = missing
     emailUsersButtonText: Union[str, Missing] = missing
     maxRows: Union[str, Missing] = missing
+    toolbarTemplates: Union[List[dict], Missing] = missing
     fields: Union[List[str], Missing] = missing
+
 
 class TableFormMarkupSchema(GenericMarkupSchema):
     groups = fields.List(fields.Str())
@@ -97,8 +99,8 @@ class TableFormMarkupSchema(GenericMarkupSchema):
     userListButtonText = fields.Str(allow_none=True)
     emailUsersButtonText = fields.Str(allow_none=True)
     maxRows = fields.Str(allow_none=True)
-    fields = fields.List(fields.Str()) #Keep this last - bad naming
-
+    toolbarTemplates = fields.List(fields.Dict())
+    fields = fields.List(fields.Str())  # Keep this last - bad naming
 
     @post_load
     def make_obj(self, data):
@@ -144,7 +146,7 @@ class TableFormHtmlModel(GenericHtmlModel[TableFormInputModel, TableFormMarkupMo
             groups = UserGroup.query.filter(UserGroup.name.in_(self.markup.groups))
             try:
                 tid = TaskId.parse(self.taskID)
-            except PluginException as e:
+            except PluginException:
                 return
             d = get_doc_or_abort(tid.doc_id)
             user = User.get_by_name(self.current_user_id)
@@ -152,11 +154,15 @@ class TableFormHtmlModel(GenericHtmlModel[TableFormInputModel, TableFormMarkupMo
                 get_fields_and_users(self.markup.fields, groups, d, user, self.markup.removeDocIds)
             rows = {}
             realnames = {}
+            emails = {}
             for f in fielddata:
-                rows[f['user'].name] = dict(f['fields'])
-                realnames[f['user'].name] = f['user'].real_name
+                username = f['user'].name
+                rows[username] = dict(f['fields'])
+                realnames[username] = f['user'].real_name
+                emails[username] = f['user'].email
             r['rows'] = rows
             r['realnamemap'] = realnames
+            r['emailmap'] = emails
             r['fields'] = field_names
             r['aliases'] = aliases
             # TODO else return "no groups/no fields"
@@ -198,7 +204,7 @@ def render_static_tableForm(m: TableFormHtmlModel):
 <br>
         """,
         **attr.asdict(m.markup),
-        userword=m.state.userword if m.state else '',
+        # userword=m.state.userword if m.state else '',
     )
 
 
@@ -209,7 +215,7 @@ tableForm_plugin = create_blueprint(__name__, 'tableForm', TableFormHtmlSchema()
 def gen_csv():
     temp = json.loads(request.args.get('data'))
     if len(request.args.get('separator')) > 1:
-        #TODO: Add support >1 char strings like in Korppi
+        # TODO: Add support >1 char strings like in Korppi
         return "Only 1-character string separators supported for now" 
     return csv_response(temp, 'excel', request.args.get('separator'))
 
@@ -222,7 +228,7 @@ def answer(args: TableFormInputModel):
     saveRows = []
     for u, r in rows.items():
         user = User.get_by_name(u)
-        saveRows.append({'user':user.id, 'fields':r})
+        saveRows.append({'user': user.id, 'fields': r})
 
     web = {}
     result = {'web': web}
@@ -244,6 +250,7 @@ fields:
  - d1=demo1     # List your fields here, = for alias
 table: true
 report: false
+maxRows: 40em   # max height for the table before scrollbar 
 realnames: true # Show full name in 2nd column, true or false
 buttonText:     # Name your save button here
 autosave: true  # autosave, true or false
@@ -255,6 +262,7 @@ fields:
  - d1=demo1     # List your fields here, = for alias
 table: true
 report: true
+maxRows: 40em   # max height for the table before scrollbar 
 realnames: true # Show full name in 2nd column, true or false
 buttonText:     # Name your save table button here
 autosave: true  # autosave, true or false

@@ -245,7 +245,7 @@ export class TimTableController extends DestroyScope implements IController {
     private forcedEditMode: boolean = false;
     private task: boolean = false;
     // private hideSaveButton?: boolean = false;
-    private hiddenRows?: number[] = [];
+    private hiddenRows: number[] = [];
     // private lockCellCount: boolean = false;
     // private saveCallBack: () => void;
     private isRunning: boolean = false;
@@ -735,8 +735,26 @@ export class TimTableController extends DestroyScope implements IController {
      */
     async saveCells(cellContent: string, docId: number, parId: string, row: number, col: number) {
         if (this.task) {
-            this.setUserContent(row, col, cellContent);
-            if (this.data.saveCallBack) { this.data.saveCallBack(row, col, cellContent); }
+            let x1 = col;
+            let x2 = col;
+            let y1 = row;
+            let y2 = row;
+            if (this.startCell) {
+                x1 = Math.min(col, this.startCell.col);
+                x2 = Math.max(col, this.startCell.col);
+                y1 = Math.min(row, this.startCell.row);
+                y2 = Math.max(row, this.startCell.row);
+            }
+
+            for (let y = y1; y <= y2; y++) {
+                for (let x = x1; x <= x2; x++) {
+                    if ( !(this.data.hiddenRows && this.data.hiddenRows.includes(y)) ) {
+                        this.setUserContent(y, x, cellContent);
+                        if (this.data.saveCallBack) { this.data.saveCallBack(y, x, cellContent); }
+                    }
+                }
+            }
+
             return;
         }
         const response = await $http.post<string[]>("/timTable/saveCell", {
@@ -1474,8 +1492,8 @@ export class TimTableController extends DestroyScope implements IController {
         if (this.data.lockedCells && this.data.lockedCells.includes(cellCoordinate)) { return; }
 
         const activeCell = this.activeCell;
-        this.setActiveCell(rowi, coli);
         if (this.getHid().edit) {
+            this.setActiveCell(rowi, coli);
             return;
         }
         if (this.currentCell ||
@@ -1493,7 +1511,8 @@ export class TimTableController extends DestroyScope implements IController {
             this.currentCell = {row: rowi, col: coli, editorOpen: false};
             this.calculateElementPlaces(rowi, coli, event);
         }
-    }
+        this.setActiveCell(rowi, coli);
+}
 
     /**
      * Saves the possible currently edited cell.
@@ -2258,12 +2277,15 @@ export class TimTableController extends DestroyScope implements IController {
         if (this.task) {
             for (let y = y1; y <= y2; y++) {
                 for (let x = x1; x <= x2; x++) {
-                    this.setUserAttribute(y, x, key, value);
+                    if ( !(this.data.hiddenRows && this.data.hiddenRows.includes(y)) ) {
+                        this.setUserAttribute(y, x, key, value);
+                    }
                 }
             }
             return;
         }
 
+        // TODO: Does not take account hidden rows!
         let data = {docId, parId, y1, y2, x1, x2, [key]: value};
         if (route === "setCell") {
             data = {docId, parId, y1, y2, x1, x2, key: key, value: value};
