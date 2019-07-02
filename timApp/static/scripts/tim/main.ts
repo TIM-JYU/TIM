@@ -30,6 +30,7 @@ import * as importData from "tim/plugin/importData";
 import * as qstController from "tim/plugin/qstController";
 import * as tableForm from "tim/plugin/tableForm";
 import * as tape from "tim/plugin/tape";
+import * as timMenuController from "tim/plugin/timMenuController";
 import * as timTable from "tim/plugin/timTable";
 import * as pluginUtil from "tim/plugin/util";
 import * as searchBox from "tim/search/searchBox";
@@ -83,6 +84,7 @@ markAsUsed(
     taggedDocumentList,
     tape,
     templateList,
+    timMenuController,
     timTable,
     tableForm,
     userlistController,
