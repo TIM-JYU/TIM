@@ -570,7 +570,7 @@ timApp.component("tableformRunner", {
     <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
     <p ng-if="::$ctrl.stem" ng-bind-html="::$ctrl.stem"></p>
     <tim-table disabled="!$ctrl.tableCheck()" data="::$ctrl.data" taskid="{{$ctrl.pluginMeta.getTaskId()}}" plugintype="{{$ctrl.pluginMeta.getPlugin()}}"></tim-table>
-</div>
+
     <div class="hidden-print">
     <button class="timButton"
             ng-if="::$ctrl.tableCheck() && !$ctrl.attrs.autosave"
