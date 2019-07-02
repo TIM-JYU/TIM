@@ -13,7 +13,7 @@ from flask import Blueprint
 from flask import Response
 from flask import abort
 from flask import request
-from marshmallow import Schema, fields, post_load, validates_schema, ValidationError
+from marshmallow import Schema, fields, post_load, validates_schema, ValidationError, pre_load
 from marshmallow.utils import _Missing, missing
 from sqlalchemy import func, tuple_
 from sqlalchemy.orm import defaultload
@@ -941,9 +941,36 @@ class GetStateSchema(Schema):
     user_id = fields.Int(required=True)
     review = fields.Bool(missing=False)
 
+
     @post_load
     def make_obj(self, data):
         return GetStateModel(**data)
+
+
+class GetMultiStatesSchema(Schema):
+    # answer_id = fields.Int(required=True)
+    # par_id = fields.Str()
+    # doc_id = fields.Str()
+    # user_id = fields.Int(required=True)
+    # review = fields.Bool(missing=False)
+    answer_ids = fields.List(fields.Int())
+    user_id = fields.Int()
+    doc_id = fields.Int()
+
+    # @pre_load()
+    # def debug(self, data):
+    #     print("debug me")
+
+    @post_load
+    def make_obj(self, data):
+        return GetMultiStatesModel(**data)
+
+
+@attr.s(auto_attribs=True)
+class GetMultiStatesModel:
+    answer_ids: List[int]
+    user_id: int
+    doc_id: int
 
 
 @attr.s(auto_attribs=True)
@@ -954,6 +981,40 @@ class GetStateModel:
     par_id: Union[str, _Missing] = missing
     doc_id: Union[str, _Missing] = missing
 
+
+@answers.route("/getMultiStates")
+@use_args(GetMultiStatesSchema())
+def get_multi_states(args: GetMultiStatesModel):
+    answer_ids, user_id, doc_id = args.answer_ids, args.user_id, args.doc_id
+    print(args)
+    docentry = get_doc_or_abort(doc_id)
+    verify_seeanswers_access(docentry)
+    doc = Document(doc_id)
+    user = User.query.get(user_id)
+    if user is None:
+        abort(400, 'Non-existent user')
+    doc.insert_preamble_pars()
+    answs = Answer.query.filter(Answer.id.in_(answer_ids)).all()
+    response = {}
+    for ans in answs:
+        tid = TaskId.parse(ans.task_id)
+        # if parid, maybe_set_hint?
+        try:
+            doc, plug = get_plugin_from_request(doc, task_id=tid, u=user)
+        except PluginException as e:
+            return abort(400, str(e))
+        block = plug.par
+        _, _, _, plug = pluginify(
+            doc,
+            [block],
+            user,
+            custom_answer=ans,
+            pluginwrap=PluginWrap.Nothing,
+            do_lazy=NEVERLAZY,
+        )
+        html = plug.get_final_output()
+        response[ans.id] = {'html': html, 'reviewHtml': None}
+    return json_response(response)
 
 @answers.route("/getState")
 @use_args(GetStateSchema())
