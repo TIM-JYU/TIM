@@ -33,6 +33,7 @@ const TableFormMarkup = t.intersection([
         maxWidth: t.string,
         minWidth: t.string,
         maxRows: t.string,
+        maxCols: t.string,
         open: t.boolean,
         filterRow: t.boolean,
         toolbarTemplates: t.array(t.object),
@@ -106,11 +107,14 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
     private showTable = true;
     private userNameColumn = "A";
     private realNameColumn = "A";
+    private userNameColIndex = 0;
     private emailColumn = "B";
     private headerRow = 1;
     private rowKeys!: string[];
     private userlist: string = "";
     private listSep: string = "-";
+    private listName: boolean = false;
+    private listUsername: boolean = true;
     private listEmail: boolean = false;
 
     getDefaultMarkup() {
@@ -144,6 +148,7 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
         if (this.attrs.realnames) {
             this.realnames = true;
             this.userNameColumn = "B";
+            this.userNameColIndex = 1;
             this.emailColumn = "C";
         }
         if (this.attrs.emails) {
@@ -161,10 +166,19 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
         }
         if (this.attrs.open != undefined) { this.showTable = this.attrs.open; }
         this.data.hiddenColumns = this.attrs.hiddenColumns;
+        if ( !this.attrs.usernames ) {
+            if (!this.data.hiddenColumns) {
+                this.data.hiddenColumns = [this.userNameColIndex];
+            } else {
+                this.data.hiddenColumns.push(this.userNameColIndex);
+            }
+        }
+
         this.data.hiddenRows = this.attrs.hiddenRows;
         this.data.cbColumn = this.attrs.cbColumn;
         this.data.filterRow = this.attrs.filterRow;
         this.data.maxRows = this.attrs.maxRows;
+        this.data.maxCols = this.attrs.maxCols;
         this.data.toolbarTemplates = this.attrs.toolbarTemplates;
     }
 
@@ -440,18 +454,30 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
 
     listUsernames() {
         const timTable = this.getTimTable();
-        if (timTable == null) {
-            return;
-        }
+        if (timTable == null) { return; }
         let preseparator = " - ";
         let midseparator = "\n";
         let sep = this.listSep;
-        let colindex = 1;
+        const colindex = 0;
+        const unindex = this.userNameColumn.charCodeAt(0) - "A"[0].charCodeAt(0);
         const selUsers = timTable.getCheckedRows(1, true);
-        if ( this.listEmail ) { midseparator = "\n"; preseparator = ""; colindex = 2; }
-        if ( sep == "" ) { sep = "\n"; }
+        const ulist = [];
+        let usep = "";
+        if ( !this.attrsall.realnamemap ) { return; }
+        if ( !this.attrsall.emailmap ) { return; }
+        for (const u of selUsers) {
+            const un = u[unindex];
+            let s = "";
+            if ( this.listName ) { s = this.attrsall.realnamemap[un]; usep = ", "; }
+            if ( this.listUsername ) { s += usep + un; usep = ", "; }
+            if ( this.listEmail ) { s += usep + this.attrsall.emailmap[un]; usep = ", "; }
+            usep = "";
+            ulist.push([s]);
+        }
+        // if ( this.listEmail ) { midseparator = "\n"; preseparator = "";  }
+        if ( sep == "" ) { sep = "\n"; }  // radio could not give \n?
         if ( sep != "-") { midseparator = sep; preseparator = ""; }
-        this.userlist = this.makeUserList(selUsers, colindex, preseparator, midseparator);
+        this.userlist = this.makeUserList(ulist, colindex, preseparator, midseparator);
     }
 
     copyList() {
@@ -569,7 +595,8 @@ timApp.component("tableformRunner", {
     <tim-markup-error ng-if="::$ctrl.markupError" data="::$ctrl.markupError"></tim-markup-error>
     <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
     <p ng-if="::$ctrl.stem" ng-bind-html="::$ctrl.stem"></p>
-    <tim-table disabled="!$ctrl.tableCheck()" data="::$ctrl.data" taskid="{{$ctrl.pluginMeta.getTaskId()}}" plugintype="{{$ctrl.pluginMeta.getPlugin()}}"></tim-table>
+    <tim-table disabled="!$ctrl.tableCheck()" data="::$ctrl.data"
+               taskid="{{$ctrl.pluginMeta.getTaskId()}}" plugintype="{{$ctrl.pluginMeta.getPlugin()}}"></tim-table>
 
     <div class="hidden-print">
     <button class="timButton"
@@ -612,6 +639,8 @@ timApp.component("tableformRunner", {
         <input type="radio" name="listsep" ng-model="$ctrl.listSep" value = ";" ng-change="$ctrl.listUsernames()">;
         <input type="radio" name="listsep" ng-model="$ctrl.listSep" value = "\n" ng-change="$ctrl.listUsernames()">\\n
         </p>
+        <input type="checkbox" ng-model="$ctrl.listName" ng-change="$ctrl.listUsernames()">Name
+        <input type="checkbox" ng-model="$ctrl.listUsername" ng-change="$ctrl.listUsernames()">Username
         <input type="checkbox" ng-model="$ctrl.listEmail" ng-change="$ctrl.listUsernames()">Email<br>
         <textarea id="userlist" ng-model="$ctrl.userlist" rows="10" cols="40"></textarea>
         <button class="timButton"

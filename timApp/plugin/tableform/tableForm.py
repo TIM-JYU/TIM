@@ -66,6 +66,7 @@ class TableFormMarkupModel(GenericMarkupModel):
     userListButtonText: Union[str, Missing] = missing
     emailUsersButtonText: Union[str, Missing] = missing
     maxRows: Union[str, Missing] = missing
+    maxCols: Union[str, Missing] = missing
     toolbarTemplates: Union[List[dict], Missing] = missing
     fields: Union[List[str], Missing] = missing
 
@@ -99,6 +100,7 @@ class TableFormMarkupSchema(GenericMarkupSchema):
     userListButtonText = fields.Str(allow_none=True)
     emailUsersButtonText = fields.Str(allow_none=True)
     maxRows = fields.Str(allow_none=True)
+    maxCols = fields.Str(allow_none=True)
     toolbarTemplates = fields.List(fields.Dict())
     fields = fields.List(fields.Str())  # Keep this last - bad naming
 

@@ -62,6 +62,7 @@ export interface TimTable {
     filterRow?: boolean;
     cbColumn?: boolean;
     maxRows?: string;
+    maxCols?: string;
     // lockCellCount?: boolean;
 }
 
@@ -264,6 +265,7 @@ export class TimTableController extends DestroyScope implements IController {
     private cbFilter: boolean = false;
     private filterRow: boolean = false;
     private maxRows: string = "2000em";
+    private maxCols: string = "fit-content";
 
     /**
      * Stores the last direction that the user moved towards with arrow keys
@@ -320,6 +322,7 @@ export class TimTableController extends DestroyScope implements IController {
      */
     async $onInit() {
         if ( this.data.maxRows ) { this.maxRows = this.data.maxRows; }
+        if ( this.data.maxCols ) { this.maxCols = this.data.maxCols; }
 
         this.initializeCellDataMatrix();
         this.processDataBlockAndCellDataMatrix();
@@ -2364,7 +2367,7 @@ export class TimTableController extends DestroyScope implements IController {
     }
 
     private tableStyle() {
-        return {"border": "none", "overflow": "auto", "max-height": this.maxRows};
+        return {"border": "none", "overflow": "auto", "max-height": this.maxRows, "width": this.maxCols};
     }
 }
 
