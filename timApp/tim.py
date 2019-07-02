@@ -152,7 +152,7 @@ def bad_request(error):
 # noinspection PyClassHasNoInit
 class Forbidden(ex.HTTPException):
     code = 403
-    description = "Sorry, you don't have permission to view this resource."
+    description = "Sorry, you don't have permission to use this resource."
 
 
 ex._aborter.mapping[403] = Forbidden

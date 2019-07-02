@@ -73,7 +73,7 @@ class TimRouteTest(TimDbTest):
     ok_resp = {'status': 'ok'}
 
     # The expected content of an AJAX response that returns a generic permission error.
-    permission_error = {'error': "Sorry, you don't have permission to view this resource."}
+    permission_error = {'error': "Sorry, you don't have permission to use this resource."}
 
     @classmethod
     def setUpClass(cls):
