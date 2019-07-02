@@ -307,7 +307,7 @@ textfieldApp.component("textfieldRunner", {
     <p class="stem" ng-if="::$ctrl.stem">{{::$ctrl.stem}}</p>
     <form name="$ctrl.f" class="form-inline">
      <label><span>
-      <span ng-bind-html="::$ctrl.inputstem"></span>
+      <span class="inputstem" ng-bind-html="::$ctrl.inputstem"></span>
       <span ng-if="::!$ctrl.isPlainText()" >
         <input type="string"
                ng-if="::!$ctrl.isPlainText()"

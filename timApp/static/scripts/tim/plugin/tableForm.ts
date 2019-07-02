@@ -32,8 +32,12 @@ const TableFormMarkup = t.intersection([
         hiddenRows: t.array(t.number),
         maxWidth: t.string,
         minWidth: t.string,
+        maxRows: t.string,
+        maxCols: t.string,
         open: t.boolean,
         filterRow: t.boolean,
+        toolbarTemplates: t.array(t.object),
+
         cbColumn: t.boolean,
         groups: t.array(t.string),
         usernames: withDefault(t.boolean, true),
@@ -69,6 +73,7 @@ const TableFormAll = t.intersection([
         aliases: t.dictionary(t.string, t.string),
         fields: t.array(t.string),
         realnamemap: t.dictionary(t.string, t.string),
+        emailmap: t.dictionary(t.string, t.string),
         rows: Rows,
     }),
     GenericPluginTopLevelFields,
@@ -102,7 +107,9 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
     private emails = false;
     private showTable = true;
     private userNameColumn = "A";
-    private realNameColumn = "B";
+    private realNameColumn = "A";
+    private userNameColIndex = 0;
+    private emailColumn = "B";
     private headerRow = 1;
     private rowKeys!: string[];
     private userLocations: { [index: string]: string } = {};
@@ -110,6 +117,8 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
     private changedCells: string[] = []; // Use same type as data.userdata?
     private userlist: string = "";
     private listSep: string = "-";
+    private listName: boolean = false;
+    private listUsername: boolean = true;
     private listEmail: boolean = false;
 
     getDefaultMarkup() {
@@ -142,9 +151,12 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
         // this.realnames = true;
         if (this.attrs.realnames) {
             this.realnames = true;
-            const temp = this.realNameColumn;
-            this.realNameColumn = this.userNameColumn;
-            this.userNameColumn = temp;
+            this.userNameColumn = "B";
+            this.userNameColIndex = 1;
+            this.emailColumn = "C";
+        }
+        if (this.attrs.emails) {
+            this.emails = true;
         }
         this.rows = this.attrsall.rows || {};
         this.rowKeys = Object.keys(this.rows);
@@ -166,9 +178,20 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
             this.showTable = this.attrs.open;
         }
         this.data.hiddenColumns = this.attrs.hiddenColumns;
+        if ( !this.attrs.usernames ) {
+            if (!this.data.hiddenColumns) {
+                this.data.hiddenColumns = [this.userNameColIndex];
+            } else {
+                this.data.hiddenColumns.push(this.userNameColIndex);
+            }
+        }
+
         this.data.hiddenRows = this.attrs.hiddenRows;
         this.data.cbColumn = this.attrs.cbColumn;
         this.data.filterRow = this.attrs.filterRow;
+        this.data.maxRows = this.attrs.maxRows;
+        this.data.maxCols = this.attrs.maxCols;
+        this.data.toolbarTemplates = this.attrs.toolbarTemplates;
     }
 
     /**
@@ -183,7 +206,7 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
 
     /**
      * Sorts row key values (usernames) by their real name attribute in this.realnamemap
-     * @param a username to conmpare with b
+     * @param a username to compare with b
      * @param b username to compare with a
      */
     sortByRealName(a: string, b: string) {
@@ -214,6 +237,12 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
                 };
                 this.rowKeys.sort((a, b) => this.sortByRealName(a, b));
             }
+            if (this.emails) {
+                this.data.userdata.cells[this.emailColumn + this.headerRow] = {
+                    cell: "Email",
+                    backgroundColor: "#efecf1",
+                };
+            }
             if (this.attrsall.fields && this.realnames) {
                 this.data.table.countCol = this.attrsall.fields.length + 2;
             } else if (this.attrsall.fields) {
@@ -235,13 +264,19 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
                     };
                     this.data.lockedCells.push(this.realNameColumn + y);
                 }
+                if (this.emails && this.attrsall.emailmap) {
+                    this.data.userdata.cells[this.emailColumn + y] = {
+                        cell: this.attrsall.emailmap[r],
+                        backgroundColor: "#efecf1",
+                    };
+                    this.data.lockedCells.push(this.emailColumn + y);
+                }
                 y++;
             }
             // TODO: Load default cell colors from tableForm's private answer?
             let xOffset = 1;
-            if (this.realnames) {
-                xOffset = 2;
-            }
+            if (this.realnames) { xOffset++; }
+            if (this.emails)    { xOffset++; }
             if (this.attrsall.fields) {
                 for (let x = 0; x < this.attrsall.fields.length; x++) {
 
@@ -456,18 +491,30 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
 
     listUsernames() {
         const timTable = this.getTimTable();
-        if (timTable == null) {
-            return;
-        }
+        if (timTable == null) { return; }
         let preseparator = " - ";
         let midseparator = "\n";
         let sep = this.listSep;
-        let colindex = 1;
+        const colindex = 0;
+        const unindex = this.userNameColumn.charCodeAt(0) - "A"[0].charCodeAt(0);
         const selUsers = timTable.getCheckedRows(1, true);
-        if ( this.listEmail ) { midseparator = "\n"; preseparator = ""; colindex = 2; }
-        if ( sep == "" ) { sep = "\n"; }
+        const ulist = [];
+        let usep = "";
+        if ( !this.attrsall.realnamemap ) { return; }
+        if ( !this.attrsall.emailmap ) { return; }
+        for (const u of selUsers) {
+            const un = u[unindex];
+            let s = "";
+            if ( this.listName ) { s = this.attrsall.realnamemap[un]; usep = ", "; }
+            if ( this.listUsername ) { s += usep + un; usep = ", "; }
+            if ( this.listEmail ) { s += usep + this.attrsall.emailmap[un]; usep = ", "; }
+            usep = "";
+            ulist.push([s]);
+        }
+        // if ( this.listEmail ) { midseparator = "\n"; preseparator = "";  }
+        if ( sep == "" ) { sep = "\n"; }  // radio could not give \n?
         if ( sep != "-") { midseparator = sep; preseparator = ""; }
-        this.userlist = this.makeUserList(selUsers, colindex, preseparator, midseparator);
+        this.userlist = this.makeUserList(ulist, colindex, preseparator, midseparator);
     }
 
     copyList() {
@@ -603,8 +650,9 @@ timApp.component("tableformRunner", {
     <tim-markup-error ng-if="::$ctrl.markupError" data="::$ctrl.markupError"></tim-markup-error>
     <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
     <p ng-if="::$ctrl.stem" ng-bind-html="::$ctrl.stem"></p>
-    <tim-table disabled="!$ctrl.tableCheck()" data="::$ctrl.data" taskid="{{$ctrl.pluginMeta.getTaskId()}}" plugintype="{{$ctrl.pluginMeta.getPlugin()}}"></tim-table>
-</div>
+    <tim-table disabled="!$ctrl.tableCheck()" data="::$ctrl.data"
+               taskid="{{$ctrl.pluginMeta.getTaskId()}}" plugintype="{{$ctrl.pluginMeta.getPlugin()}}"></tim-table>
+
     <div class="hidden-print">
     <button class="timButton"
             ng-if="::$ctrl.tableCheck() && !$ctrl.attrs.autosave"
@@ -646,6 +694,8 @@ timApp.component("tableformRunner", {
         <input type="radio" name="listsep" ng-model="$ctrl.listSep" value = ";" ng-change="$ctrl.listUsernames()">;
         <input type="radio" name="listsep" ng-model="$ctrl.listSep" value = "\n" ng-change="$ctrl.listUsernames()">\\n
         </p>
+        <input type="checkbox" ng-model="$ctrl.listName" ng-change="$ctrl.listUsernames()">Name
+        <input type="checkbox" ng-model="$ctrl.listUsername" ng-change="$ctrl.listUsernames()">Username
         <input type="checkbox" ng-model="$ctrl.listEmail" ng-change="$ctrl.listUsernames()">Email<br>
         <textarea id="userlist" ng-model="$ctrl.userlist" rows="10" cols="40"></textarea>
         <button class="timButton"

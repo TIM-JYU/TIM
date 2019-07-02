@@ -434,6 +434,8 @@ def pluginify(doc: Document,
     js_paths = []
     css_paths = []
 
+    if not user:
+        user = current_user
     if (user.id != current_user.id):  # Check if there are plugins that needs current user data
         taketime("uplg", "useCurentUser")
         task_ids = []
