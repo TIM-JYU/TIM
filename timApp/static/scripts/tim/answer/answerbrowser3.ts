@@ -686,6 +686,12 @@ export class AnswerBrowserController extends DestroyScope implements IController
             return;
         }
         const data = await this.getAnswers();
+        if (!data || data.length === 0) {
+            if ( data != null ) {
+                this.loadedAnswer = {review: false, id: undefined};
+                this.resetITimComponent();
+            }
+        }
         if (!data) {
             return;
         }
@@ -777,10 +783,10 @@ export class AnswerBrowserController extends DestroyScope implements IController
         if (this.hasUserChanged()) {
             const answers = await this.getAnswersAndUpdate();
             if (!answers || answers.length === 0) {
-                if ( answers != null ) { this.resetITimComponent(); }
+                // if ( answers != null ) { this.resetITimComponent(); }
             } else {
-                this.loadedAnswer = {review: false, id: undefined};
-                this.changeAnswer();
+                // this.loadedAnswer = {review: false, id: undefined};
+                // this.changeAnswer();
             }
             await this.loadInfo();
         }
