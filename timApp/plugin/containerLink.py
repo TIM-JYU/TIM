@@ -81,7 +81,7 @@ def get_plugins():
             "jsrunner": {"host": "http://" + JSRUNNERPLUGIN_NAME + ":5000/"},
             "imagex": {"host": "http://" + IMAGEXPLUGIN_NAME + ":5000/"},
             "qst": {"host": "http://" + "localhost" + f":{current_app.config['QST_PLUGIN_PORT']}/qst/", REGEXATTRS: QSTMDATTRS, AUTOMDATTRS: True},
-            "timMenu": {"host": "http://" + "localhost" + f":{current_app.config['QST_PLUGIN_PORT']}/timMenu/", "instance": timMenu.TimMenu(), 'lazy': False},
+            "timMenu": {"host": "http://" + "localhost" + f":{current_app.config['QST_PLUGIN_PORT']}/timMenu/"},
             "timTable": {"host": "http://" + "localhost" + f":{current_app.config['QST_PLUGIN_PORT']}/timTable/", "instance": timTable.TimTable(), 'lazy': False},
             "tableForm": {"host": "http://" + "localhost" + f":{current_app.config['QST_PLUGIN_PORT']}/tableForm/", 'lazy': False},
             "importData": {"host": "http://" + "localhost" + f":{current_app.config['QST_PLUGIN_PORT']}/importData/"},

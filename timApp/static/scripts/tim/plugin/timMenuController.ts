@@ -17,7 +17,7 @@ class TimMenuController implements IController {
     }
 }
 
-timMenuApp.component("timMenuRunner", {
+timMenuApp.component("timmenuRunner", {
     bindings: pluginBindings,
     controller: TimMenuController,
     template: `
