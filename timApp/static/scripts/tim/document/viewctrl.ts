@@ -561,36 +561,16 @@ export class ViewCtrl implements IController {
                 user: user.id,
             }));
             console.log(answerResponse);
-            const selectedAnswers: {[index: string]: IAnswer | undefined} = {};
-            const absNeedAnswerchange = [];
-            for (const [k, ab] of this.abs) {
-                const needsAnswerChange = ab.changeUserAndAnswers(user, updateAll, answerResponse.data[ab.taskId]);
-                selectedAnswers[k] = ab.selectedAnswer;
-                if (needsAnswerChange) { absNeedAnswerchange.push(ab); }
-            }
-            // const abParParams: Array<{
-            //     answer_id: number; // IE shows this message
-            //     review: boolean; // And for IE you can not return anything, otherwise it will show even null
-            //     // And for IE you can not return anything, otherwise it will show even null
-            //     user_id: number; doc_id: string | number | undefined; par_id: string | undefined; ref_from_doc_id: number; ref_from_par_id: string | undefined;
-            // }>  = [];
-            // const answerIds: number[] = [];
+            // const selectedAnswers: {[index: string]: IAnswer} = {};
+            // const absNeedAnswerchange = [];
             const answerIds: {[index: string]: AnswerBrowserController} = {};
-            absNeedAnswerchange.forEach((a) => {
-                // const params = a.stateRequestPrep();
-                // if (params != undefined) {
-                //     abParParams.push(params);
-                // }
-                a.stateRequestPrep();
-                if (a.selectedAnswer) {
-                    answerIds[a.selectedAnswer.id] = a;
-                }
+            for (const [k, ab] of this.abs) {
+                ab.changeUserAndAnswers(user, updateAll, answerResponse.data[ab.taskId]);
+                if (ab.selectedAnswer !== undefined) { answerIds[ab.selectedAnswer.id] = ab; }
+                // if (needsAnswerChange) { absNeedAnswerchange.push(ab); }
+            }
+            console.log(answerIds);
 
-            });
-
-            // make request for multiple states
-            // need: userid, list of answerids, docid
-            // maybe need: review (per task), par_id (per task)
             const r = await to($http.get<{ [index: number]: { html: string, reviewHtml: string } }>("/getMultiStates", {
                 params: {
                     answer_ids: Object.keys(answerIds),
@@ -601,8 +581,44 @@ export class ViewCtrl implements IController {
             // console.log(stateResponse);
             if (!r.ok) { return; } // TODO: Notify user
             for (const [ansId, json] of Object.entries(r.result.data)) {
-                answerIds[ansId].continueFromStateReq(json.html, json.reviewHtml);
+                answerIds[ansId].changeAnswerFromState(json.html, json.reviewHtml);
             }
+
+            // const abParParams: Array<{
+            //     answer_id: number; // IE shows this message
+            //     review: boolean; // And for IE you can not return anything, otherwise it will show even null
+            //     // And for IE you can not return anything, otherwise it will show even null
+            //     user_id: number; doc_id: string | number | undefined; par_id: string | undefined; ref_from_doc_id: number; ref_from_par_id: string | undefined;
+            // }>  = [];
+            // const answerIds: number[] = [];
+            // const answerIds: {[index: string]: AnswerBrowserController} = {};
+            // absNeedAnswerchange.forEach((a) => {
+            //     // const params = a.stateRequestPrep();
+            //     // if (params != undefined) {
+            //     //     abParParams.push(params);
+            //     // }
+            //     a.stateRequestPrep();
+            //     if (a.selectedAnswer) {
+            //         answerIds[a.selectedAnswer.id] = a;
+            //     }
+            //
+            // });
+
+            // make request for multiple states
+            // need: userid, list of answerids, docid
+            // maybe need: review (per task), par_id (per task)
+            // const r = await to($http.get<{ [index: number]: { html: string, reviewHtml: string } }>("/getMultiStates", {
+            //     params: {
+            //         answer_ids: Object.keys(answerIds),
+            //         user_id: this.selectedUser.id,
+            //         doc_id: this.docId,
+            //     },
+            // }));
+            // // console.log(stateResponse);
+            // if (!r.ok) { return; } // TODO: Notify user
+            // for (const [ansId, json] of Object.entries(r.result.data)) {
+            //     answerIds[ansId].continueFromStateReq(json.html, json.reviewHtml);
+            // }
         }
     }
 

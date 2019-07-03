@@ -996,11 +996,14 @@ def get_multi_states(args: GetMultiStatesModel):
     doc.insert_preamble_pars()
     answs = Answer.query.filter(Answer.id.in_(answer_ids)).all()
     response = {}
+    # blocks = []
     for ans in answs:
+        ###
         tid = TaskId.parse(ans.task_id)
-        # if parid, maybe_set_hint?
+        #if parid, maybe_set_hint?
         try:
             doc, plug = get_plugin_from_request(doc, task_id=tid, u=user)
+            #plug = find_plugin_from_document(doc, tid, user)
         except PluginException as e:
             return abort(400, str(e))
         block = plug.par
@@ -1014,6 +1017,24 @@ def get_multi_states(args: GetMultiStatesModel):
         )
         html = plug.get_final_output()
         response[ans.id] = {'html': html, 'reviewHtml': None}
+    #     ###tid = TaskId.parse(ans.task_id)
+    #     # if parid, maybe_set_hint?
+    #     try:
+    #         doc, plug = get_plugin_from_request(doc, task_id=tid, u=user)
+    #         #plug = find_plugin_from_document(doc, tid, user)
+    #     except PluginException as e:
+    #         return abort(400, str(e))
+    #     block = plug.par
+    #     blocks.append(block)
+    # a, b, c, plug = pluginify(
+    #     doc,
+    #     blocks,
+    #     user,
+    #     # custom_answer=ans,
+    #     pluginwrap=PluginWrap.Nothing,
+    #     do_lazy=NEVERLAZY,
+    # )
+    # print("hmm")
     return json_response(response)
 
 @answers.route("/getState")

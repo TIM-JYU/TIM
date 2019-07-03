@@ -334,20 +334,53 @@ export class AnswerBrowserController extends DestroyScope implements IController
     }
 
     async changeUserAndAnswers(user: IUser, updateAll: boolean, answers: IAnswer[]) {
-        let needsAnswerChange = false;
+        // let needsAnswerChange = false;
         this.user = user;
         this.fetchedUser = this.user ? this.user.id : 0;
         // const answers = await this.getAnswersAndUpdate();
-        this.handleAnswerFetch(answers);
-        if (!answers || answers.length === 0) {
-            this.resetITimComponent();
-        } else {
-            this.loadedAnswer = {review: false, id: undefined};
-            // this.changeAnswer();
-            needsAnswerChange = true;
-        }
+        // this.handleAnswerFetch(answers);
+        this.answers = answers;
+        this.updateFiltered();
+        this.selectedAnswer = this.filteredAnswers.length > 0 ? this.filteredAnswers[0] : undefined;
+        console.log("debug line");
+        // if (!answers || answers.length === 0) {
+        //     // TODO
+        //     // this.resetITimComponent();
+        // } else {
+        //     this.loadedAnswer = {review: false, id: undefined};
+        //     // this.changeAnswer();
+        //     // needsAnswerChange = true;
+        // }
         await this.loadInfo();
-        return needsAnswerChange;
+    }
+
+    changeAnswerFromState(html: string, reviewHtml: string) {
+        if (this.selectedAnswer == null || !this.user) {
+            return;
+        }
+        this.unDimPlugin();
+        this.updatePoints();
+        const par = this.element.parents(".par");
+        const ids = dereferencePar(par);
+        if (!ids) {
+            return;
+        }
+        if (this.selectedAnswer.id !== this.loadedAnswer.id || this.loadedAnswer.review !== this.review) {
+
+            this.loadedAnswer.id = this.selectedAnswer.id;
+            this.loadedAnswer.review = this.review;
+            if (this.answerListener) {
+                this.answerListener(this.selectedAnswer);
+            } else {
+                void loadPlugin(html, this.loader.getPluginElement(), this.scope, this.viewctrl);
+            }
+            // if (this.review) { //No review implemented for this version yet
+            //     this.reviewHtml = r.result.data.reviewHtml;
+            //     await $timeout();
+            // }
+        }
+        this.viewctrl.reviewCtrl.loadAnnotationsToAnswer(this.selectedAnswer.id, par[0], this.review);
+
     }
 
     private unDimPlugin() {
@@ -782,12 +815,12 @@ export class AnswerBrowserController extends DestroyScope implements IController
     async loadUserAnswersIfChanged() {
         if (this.hasUserChanged()) {
             const answers = await this.getAnswersAndUpdate();
-            if (!answers || answers.length === 0) {
-                // if ( answers != null ) { this.resetITimComponent(); }
-            } else {
-                // this.loadedAnswer = {review: false, id: undefined};
-                // this.changeAnswer();
-            }
+            // if (!answers || answers.length === 0) {
+            //     // if ( answers != null ) { this.resetITimComponent(); }
+            // } else {
+            //     // this.loadedAnswer = {review: false, id: undefined};
+            //     // this.changeAnswer();
+            // }
             await this.loadInfo();
         }
     }
