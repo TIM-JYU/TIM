@@ -39,6 +39,7 @@ const TableFormMarkup = t.intersection([
         toolbarTemplates: t.array(t.object),
 
         cbColumn: t.boolean,
+        nrColumn: t.boolean,
         groups: t.array(t.string),
         usernames: withDefault(t.boolean, true),
         realnames: withDefault(t.boolean, true),
@@ -111,7 +112,7 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
     private realNameColIndex = 0;
     private userNameColIndex = 1;
     private emailColIndex = 2;
-    private headerRow = 1;
+    private headerRow = -1;  // headers is the topmost row and not indexable
     private rowKeys!: string[];
     private userLocations: { [index: string]: string } = {};
     private taskLocations: { [index: string]: string } = {};
@@ -137,11 +138,6 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
      */
     buttonText() {
         return (this.attrs.buttonText || "Tallenna taulukko");
-    }
-
-    // tslint:disable-next-line
-    hideButtonText() {
-        return (this.attrs.hideButtonText);
     }
 
     // noinspection JSUnusedGlobalSymbols
@@ -198,6 +194,7 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
         }
 
         this.data.cbColumn = this.attrs.cbColumn;
+        this.data.nrColumn = this.attrs.nrColumn;
         this.data.filterRow = this.attrs.filterRow;
         this.data.maxRows = this.attrs.maxRows;
         this.data.maxCols = this.attrs.maxCols;
@@ -230,12 +227,24 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
         }
     }
 
+    sortByEmail(a: string, b: string) {
+        if (!this.attrsall.emailmap) {
+            return 0;
+        }
+        try {
+            return this.attrsall.emailmap[a].localeCompare(this.attrsall.emailmap[b]);
+        } catch (e) {
+            return 0;
+        }
+    }
+
     /**
      * Transforms user/task combination defined in this.rows into cell format and sets up the table
      * TODO: generate rows/columns for this.data.table, possibly needed for more easily maintained layout handling
      */
     setDataMatrix() {
         try {
+            /*
             this.data.userdata.cells[this.userNameColumn + this.headerRow] = {
                 cell: "Käyttäjänimi",
                 backgroundColor: "#efecf1",
@@ -244,14 +253,26 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
                 cell: "Henkilön Nimi",
                 backgroundColor: "#efecf1",
             };
-            this.rowKeys.sort((a, b) => this.sortByRealName(a, b));
             this.data.userdata.cells[this.emailColumn + this.headerRow] = {
                 cell: "Email",
                 backgroundColor: "#efecf1",
             };
+            */
+
+            if ( this.realnames ) {
+                this.rowKeys.sort((a, b) => this.sortByRealName(a, b));
+            } else if ( this.usernames ) {
+
+            } else {
+                this.rowKeys.sort((a, b) => this.sortByEmail(a, b));
+            }
+
+            this.data.headers = ["Henkilön nimi", "Käyttäjänimi", "eMail"];
+            this.data.headersStyle = {backgroundColor: "#efecf1"};
+
             if (this.attrsall.fields ) { this.data.table.countCol = this.attrsall.fields.length + 3; }
-            this.data.table.countRow = Object.keys(this.rows).length + 1;
-            let y = 2;
+            this.data.table.countRow = Object.keys(this.rows).length;
+            let y = 1;
             if (!this.data.lockedCells) {
                 this.data.lockedCells = [];
             }
@@ -281,11 +302,14 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
                 for (let x = 0; x < this.attrsall.fields.length; x++) {
 
                     const colheader = this.attrsall.fields[x];
-
+                    this.data.headers.push(colheader);
+                    /*
                     this.data.userdata.cells[colnumToLetters(x + xOffset) + 1] = {
                         cell: colheader,
                         backgroundColor: "#efecf1",
                     };
+                    */
+
                     let contentalias;
                     if (this.attrsall.aliases && colheader in this.attrsall.aliases) {
                         contentalias = this.attrsall.aliases[colheader];
@@ -293,7 +317,7 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
                         contentalias = colheader;
                     }
                     this.taskLocations[colnumToLetters(x + xOffset)] = contentalias;
-                    this.data.lockedCells.push(colnumToLetters(x + xOffset) + 1);
+                    // this.data.lockedCells.push(colnumToLetters(x + xOffset) + 1);
                     // y = 0;
                     // for (const [u, r] of Object.entries(this.rows)) {
                     //     if (r[this.attrsall.fields[x]]) {
@@ -302,7 +326,7 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
                     //     y++;
                     // }
                     for (y = 0; y < this.rowKeys.length; y++) {
-                        this.data.userdata.cells[colnumToLetters(x + xOffset) + (y + 2)] = this.rows[this.rowKeys[y]][this.attrsall.fields[x]];
+                        this.data.userdata.cells[colnumToLetters(x + xOffset) + (y + 1)] = this.rows[this.rowKeys[y]][this.attrsall.fields[x]];
                     }
                 }
             }
@@ -430,10 +454,10 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
      * Make list of users colIndex.  Separate items by separators
      * @param users array of users
      * @param colIndex what index to use for list
-     * @param perseparator what comes before evyry item
+     * @param preseparator what comes before evyry item
      * @param midseparator what comes between items
      */
-    makeUserList(users: string[][], colIndex: number, preseparator: string, midseparator: string): string {
+    static makeUserList(users: string[][], colIndex: number, preseparator: string, midseparator: string): string {
         let result = "";
         let sep = "";
         for (const r of users) {
@@ -446,6 +470,7 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
     /**
      * Removes selected users from the group
      */
+    /* eslint-disable-next-line no-unused-method */
     async removeUsers() {
         const timTable = this.getTimTable();
         if (timTable == null) {
@@ -461,13 +486,13 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
         if ( !this.attrs.groups ) { return; }
         const group = this.attrs.groups[0];
 
-        const doc = await showInputDialog({
+        await showInputDialog({
             defaultValue: "",
             text: "<b>Really remove following users from group:</b> " + group + "<br>\n<pre>\n" + msg + "\n</pre>",
             title: "Remove user from group " + group,
             isInput: false,
-            validator: async (s) => {
-                const ulist = this.makeUserList(selUsers, 1, "", ",");
+            validator: async () => {
+                const ulist = TableFormController.makeUserList(selUsers, 1, "", ",");
                 // /groups/removemember/group/ ulist
                 const r = await to($http.get<IDocument>(`/groups/removemember/${group}/${ulist}`));
                 if (r.ok) {
@@ -504,7 +529,7 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
         // if ( this.listEmail ) { midseparator = "\n"; preseparator = "";  }
         if ( sep == "" ) { sep = "\n"; }  // radio could not give \n?
         if ( sep != "-") { midseparator = sep; preseparator = ""; }
-        this.userlist = this.makeUserList(ulist, colindex, preseparator, midseparator);
+        this.userlist = TableFormController.makeUserList(ulist, colindex, preseparator, midseparator);
     }
 
     copyList() {
@@ -518,13 +543,13 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
         const timTable = this.getTimTable();
         if (timTable == null) { return; }
         const selUsers = timTable.getCheckedRows(1, true);
-        this.emaillist = this.makeUserList(selUsers, this.emailColIndex, "", "\n");
+        this.emaillist = TableFormController.makeUserList(selUsers, this.emailColIndex, "", "\n");
     }
 
     // tslint:disable-next-line
     sendEmail() {
         const w: any = window;
-        let  addrs = this.emaillist.replace("\n", ";")
+        let  addrs = this.emaillist.replace("\n", ";");
         let bcc = "";
         if ( this.emailbcc ) {
             bcc = addrs;
@@ -533,11 +558,10 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
         if ( this.emailbccme ) {
             bcc += ";" + w.current_user.email;
         }
-        const mailto = "mailto:" + addrs
+        window.location.href = "mailto:" + addrs
               + "?" + "subject=" + this.emailsubject
               + "&" + "body=" + this.emailbody
               + "&" + "bcc=" + bcc;
-        window.location.href = mailto;
     }
 
     /**
@@ -616,8 +640,9 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
                 //     throw new Error("cell was boolean?");
 
                 if (columnPlace === this.userNameColumn
-                    || (this.realnames && columnPlace === this.realNameColumn)  // TODO: Do we need this anymore?
-                    || numberPlace === this.headerRow.toString()) {
+                    || columnPlace === this.realNameColumn  // TODO: Do we need this anymore?
+                    || columnPlace === this.emailColumn) {  // TODO: Do we need this anymore?
+                    // || numberPlace === this.headerRow.toString()) {
                     continue;
                 } else {
                     try {
@@ -684,8 +709,8 @@ timApp.component("tableformRunner", {
     </button>
     <button class="timButton"
             ng-click="$ctrl.closeTable()"
-            ng-if="::$ctrl.hideButtonText()">
-            {{::$ctrl.hideButtonText()}}
+            ng-if="::$ctrl.attrs.hideButtonText">
+            {{::$ctrl.attrs.hideButtonText}}
     </button>
     <button class="timButton"
             ng-click="$ctrl.removeUsers()"
