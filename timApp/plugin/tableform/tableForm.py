@@ -153,7 +153,8 @@ class TableFormHtmlModel(GenericHtmlModel[TableFormInputModel, TableFormMarkupMo
             d = get_doc_or_abort(tid.doc_id)
             user = User.get_by_name(self.current_user_id)
             fielddata, aliases, field_names = \
-                get_fields_and_users(self.markup.fields, groups, d, user, self.markup.removeDocIds)
+                get_fields_and_users(self.markup.fields, groups, d,
+                                     user, self.markup.removeDocIds, add_missing_fields=True)
             rows = {}
             realnames = {}
             emails = {}

@@ -544,33 +544,66 @@ export class ViewCtrl implements IController {
         for (const ab of this.abs.values()) {
             ab.changeUser(user, updateAll);
         }
+        return;
+        // TODO below
+        // // Make a single request for all answerbrowsers in this.abs.values
+        const taskList = [];
+        for (const ab of this.abs.values()) {
+            taskList.push(ab.taskId);
+        }
+        // const response = await $http.get<{ }>("/multipluginanswer?" + $httpParamSerializer({fields: taskList, user: user.id, doc: this.docId}));
+        // console.log(response);
+        // TODO: if answerbrowser had same user as before then it can be removed from the query
+        //  Would it even happen if updateAll is enabled all the time when changing users
+        if (updateAll) {
+            const answerResponse = await $http.get<{ [index: string]: [IAnswer] }>("/multipluginanswer2?" + $httpParamSerializer({
+                fields: taskList,
+                user: user.id,
+            }));
+            console.log(answerResponse);
+            const selectedAnswers: {[index: string]: IAnswer | undefined} = {};
+            const absNeedAnswerchange = [];
+            for (const [k, ab] of this.abs) {
+                const needsAnswerChange = ab.changeUserAndAnswers(user, updateAll, answerResponse.data[ab.taskId]);
+                selectedAnswers[k] = ab.selectedAnswer;
+                if (needsAnswerChange) { absNeedAnswerchange.push(ab); }
+            }
+            // const abParParams: Array<{
+            //     answer_id: number; // IE shows this message
+            //     review: boolean; // And for IE you can not return anything, otherwise it will show even null
+            //     // And for IE you can not return anything, otherwise it will show even null
+            //     user_id: number; doc_id: string | number | undefined; par_id: string | undefined; ref_from_doc_id: number; ref_from_par_id: string | undefined;
+            // }>  = [];
+            // const answerIds: number[] = [];
+            const answerIds: {[index: string]: AnswerBrowserController} = {};
+            absNeedAnswerchange.forEach((a) => {
+                // const params = a.stateRequestPrep();
+                // if (params != undefined) {
+                //     abParParams.push(params);
+                // }
+                a.stateRequestPrep();
+                if (a.selectedAnswer) {
+                    answerIds[a.selectedAnswer.id] = a;
+                }
 
-        // // // Make a single request for all answerbrowsers in this.abs.values
-        // const taskList = [];
-        // for (const ab of this.abs.values()) {
-        //     taskList.push(ab.taskId);
-        // }
-        // // const response = await $http.get<{ }>("/multipluginanswer?" + $httpParamSerializer({fields: taskList, user: user.id, doc: this.docId}));
-        // // console.log(response);
-        // // TODO: if answerbrowser had same user as before then it can be removed from the query
-        // //  Would it even happen if updateAll is enabled all the time when changing users
-        // if (updateAll) {
-        //     const answerResponse = await $http.get<{ [index: string]: [IAnswer] }>("/multipluginanswer2?" + $httpParamSerializer({
-        //         fields: taskList,
-        //         user: user.id,
-        //     }));
-        //     console.log(answerResponse);
-        //     const selectedAnswers: {[index: string]: IAnswer | undefined} = {}
-        //     for (const [k, ab] of this.abs) {
-        //         ab.changeUserAndAnswers(user, updateAll, answerResponse.data[ab.taskId]);
-        //         selectedAnswers[k] = ab.selectedAnswer;
-        //     }
-        //     // TODO
-        //     // const stateResponse = await $http.get<{ [index: string]: { html: string, reviewHtml: string } }>("/getStates?" + $httpParamSerializer({
-        //     //     fields: taskList,
-        //     //     user: user.id,
-        //     // }));
-        // }
+            });
+
+            // make request for multiple states
+            // need: userid, list of answerids, docid
+            // maybe need: review (per task), par_id (per task)
+            const r = await to($http.get<{ [index: number]: { html: string, reviewHtml: string } }>("/getMultiStates", {
+                params: {
+                    answer_ids: Object.keys(answerIds),
+                    user_id: this.selectedUser.id,
+                    doc_id: this.docId,
+                },
+            }));
+            // console.log(stateResponse);
+            if (!r.ok) { return; } // TODO: Notify user
+            for (const [ansId, json] of Object.entries(r.result.data)) {
+                answerIds[ansId].continueFromStateReq(json.html, json.reviewHtml);
+            }
+        }
     }
 
     async beginUpdate() {
