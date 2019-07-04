@@ -1,3 +1,27 @@
+/**
+ * Implementation for TimTable
+ *
+ * The table can be sorted by clicking the header row.
+ * The sort order is kept in permutation table permTable and the real data is
+ * not sorted, only showed using the perumtation table.
+ *
+ * That means that there is 3 types on coordinates:
+ * - spredsheet-like coodinates, example D7
+ * - cell indecies by orgininal indecies of cells
+ * - screen indecies for the shell
+ *
+ * So one must be carafull what coordinates to use and when.
+ * Especially for areas there is type SelectedCells that keeps track from both.
+ * At the moment it is supposed that selection must allways be rectangular area and
+ * columns are not sorted. If one adds posibility to change order of columns,
+ * then the behaviour of SelelctedCell-interface must be changed.
+ *
+ * To change from original coord to sceencoord there is permTableToScreen
+ * Mostly the screencoordinates starts in code by s like sy, srow and so on.
+ */
+// TODO: Static headers and filter rows so they do not scroll
+// TODO: Numeric sort
+// TODO: less and greater filter
 import {IController, IRootElementService, IScope} from "angular";
 import {getParId} from "tim/document/parhelpers";
 import {timApp} from "../app";
@@ -11,11 +35,6 @@ import {$http, $timeout} from "../util/ngimport";
 import {Binding} from "../util/utils";
 import {hideToolbar, isToolbarEnabled, openTableEditorToolbar} from "./timTableEditorToolbar";
 import {PluginMeta} from "./util";
-
-// TODO:  Numeric sort
-// TODO: Descending sort
-// TODO: fill area when sorted
-// TODO: less and greater filter
 
 const styleToHtml: {[index: string]: string} = {
     backgroundColor: "background-color",
@@ -91,6 +110,18 @@ export interface ITable { // extends ITableStyles
 export interface DataEntity {
     type: "Relative" | "Abstract";
     cells: CellDataEntity;
+}
+
+export interface CellIndex {
+    x: number;
+    y: number;
+}
+
+export interface SelectedCells {
+    cells: CellIndex[];   // List of original cell indecies inside selected area
+    srows: boolean[];     // table for screen indecies selected
+    scol1: number;        // screen index for first selected column
+    scol2: number;        // screen index for last selected column
 }
 
 export interface CellDataEntity {
@@ -264,20 +295,25 @@ export class TimTableController extends DestroyScope implements IController {
     private currentCell?: {row: number, col: number, editorOpen: boolean};
     private activeCell?: {row: number, col: number};
     private startCell?: {row: number, col: number};
+    private selectedCells: SelectedCells = {cells: [], srows: [], scol1: 0, scol2: 0};
     public shiftDown: boolean = false;
     public cbAllFilter: boolean = false;
     public cbs: boolean[] = [];
     public filters: string[] = [];
+    public sortDir: number[] = [];
+    public sortSymbol: string[] = [];
+    public sortSymbols: string[] = ["🢓", "", "🢑"];  // [" ▼", "", " ▲" ];
     public originalHiddenRows: number[] = [];
     private rowDelta = 0;
     private colDelta = 0;
     private cbFilter: boolean = false;
     private filterRow: boolean = false;
     private maxRows: string = "2000em";
-    private maxCols: string = "fit-content";
+    private maxCols: string = "auto";
     private totalrows: number = 0;
     private visiblerows: string = "";
     private permTable: number[] = [];
+    private permTableToScreen: number[] = []; // inverse perm table to get screencoordinate for row
 
     /**
      * Stores the last direction that the user moved towards with arrow keys
@@ -552,6 +588,7 @@ export class TimTableController extends DestroyScope implements IController {
      */
     updateFilter() {
         this.saveAndCloseSmallEditor();
+        this.disableStartCell();
         // TODO check if better way to save than just making saveAndCloseSmallEditor public and calling it
         // this.saveAndCloseSmallEditor();
         if (this.originalHiddenRows) { this.data.hiddenRows = this.originalHiddenRows.slice(); } else { this.data.hiddenRows = []; }
@@ -561,7 +598,6 @@ export class TimTableController extends DestroyScope implements IController {
         let hl = this.data.hiddenRows.length;
         if ( hl > 0 ) { this.visiblerows += (this.totalrows - hl); }
 
-         // TODO: if usernamecolumn in hiddencolums then skip reg.test for this.rowkeys
         let isFilter = false;
         const regs = [];
         for (let c = 0; c < this.filters.length; c++) {
@@ -584,7 +620,7 @@ export class TimTableController extends DestroyScope implements IController {
         if ( hl > 0 ) { this.visiblerows += (this.totalrows - hl); }
     }
 
-    sortByColumn(ai: number, bi: number, col: number): number {
+    sortByColumn(ai: number, bi: number, col: number, dir: number): number {
         // TODO: numeric sort also
         const a = this.cellDataMatrix[ai];
         const b = this.cellDataMatrix[bi];
@@ -594,14 +630,33 @@ export class TimTableController extends DestroyScope implements IController {
         const ccb = cb.cell;
         const va = "" + cca;
         const vb = "" + ccb;
-        const ret = va.localeCompare(vb);
+        const ret = va.localeCompare(vb) * dir;
         return ret;
+    }
+
+    clearSortOrder() {
+        this.permTable = [];
+        for (let i = 0; i < this.cellDataMatrix.length; i++) {
+            this.permTable[i] = i;
+            this.permTableToScreen[i] = i;
+        }
+        this.sortDir = [];
+        this.sortSymbol = [];
     }
 
     sortData(col: number) {
         this.saveAndCloseSmallEditor();
+        let dir = this.sortDir[col];
+        if ( !dir ) { dir = -1; }
+        dir = -dir;
+        this.sortDir[col] = dir;
+        this.sortSymbol[col] = this.sortSymbols[dir + 1];
         // this.rowKeys.sort((a, b) => this.sortByRealName(a, b));
-        this.permTable.sort((a, b) => this.sortByColumn(a, b, col) );
+        this.permTable.sort((a, b) => this.sortByColumn(a, b, col, dir) );
+        for (let i = 0; i < this.permTable.length; i++) {
+            this.permTableToScreen[this.permTable[i]] = i;
+        }
+        this.disableStartCell();
     }
 
     public taskBordersf() {
@@ -782,6 +837,40 @@ export class TimTableController extends DestroyScope implements IController {
     disableStartCell() {
         this.startCell = undefined;
         this.shiftDown = false;
+        this.selectedCells.srows = [];
+    }
+
+    getSelectedCells(row: number, col: number): SelectedCells {
+        const ret: CellIndex[] = [];
+        const srows: boolean[] = [];
+
+        const scol = col;
+        const srow = this.permTableToScreen[row];
+        if ( scol == undefined || srow < 0 ) { return { cells: ret, srows: [], scol1: 0, scol2: 0 }; }
+
+        let sx1 = scol;
+        let sx2 = scol;
+        let sy1 = srow;
+        let sy2 = srow;
+        if (this.startCell) {
+            const sscol = this.startCell.col; // start screen...
+            const ssrow = this.permTableToScreen[this.startCell.row];
+            sx1 = Math.min(scol, sscol);
+            sx2 = Math.max(scol, sscol);
+            sy1 = Math.min(srow, ssrow);
+            sy2 = Math.max(srow, ssrow);
+        }
+
+        for (let sy = sy1; sy <= sy2; sy++) {
+            const y = this.permTable[sy];
+            if ( (this.data.hiddenRows && this.data.hiddenRows.includes(y)) ) { continue; }
+            for (let sx = sx1; sx <= sx2; sx++) {
+                if ( (this.data.hiddenColumns && this.data.hiddenColumns.includes(sx)) ) { continue; }
+                srows[sy] = true;
+                ret.push({x: sx, y: y});
+            }
+        }
+        return { cells: ret, srows: srows, scol1: sx1, scol2: sx2 };
     }
 
     /**
@@ -794,26 +883,11 @@ export class TimTableController extends DestroyScope implements IController {
      */
     async saveCells(cellContent: string, docId: number, parId: string, row: number, col: number) {
         if (this.task) {
-            let x1 = col;
-            let x2 = col;
-            let y1 = row;
-            let y2 = row;
-            if (this.startCell) {
-                x1 = Math.min(col, this.startCell.col);
-                x2 = Math.max(col, this.startCell.col);
-                y1 = Math.min(row, this.startCell.row);
-                y2 = Math.max(row, this.startCell.row);
+            // const cells = this.getSelectedCells(row, col);
+            for (const c of this.selectedCells.cells) {
+                this.setUserContent(c.y, c.x, cellContent);
+                if (this.data.saveCallBack) { this.data.saveCallBack(c.y, c.x, cellContent); }
             }
-
-            for (let y = y1; y <= y2; y++) {
-                for (let x = x1; x <= x2; x++) {
-                    if ( !(this.data.hiddenRows && this.data.hiddenRows.includes(y)) ) {
-                        this.setUserContent(y, x, cellContent);
-                        if (this.data.saveCallBack) { this.data.saveCallBack(y, x, cellContent); }
-                    }
-                }
-            }
-
             return;
         }
         const response = await $http.post<string[]>("/timTable/saveCell", {
@@ -979,10 +1053,7 @@ export class TimTableController extends DestroyScope implements IController {
 
         }
         this.ensureColums();
-        this.permTable = [];
-        for (let i = 0; i < this.cellDataMatrix.length; i++) {
-            this.permTable[i] = i;
-        }
+        this.clearSortOrder();
     }
 
     /**
@@ -1307,7 +1378,7 @@ export class TimTableController extends DestroyScope implements IController {
             const parId = getParId(this.element.parents(".par"));
 
             if (parId && this.currentCell !== undefined && this.currentCell.row !== undefined && this.currentCell.col !== undefined) { // if != undefined is missing, then returns some number if true, if the number is 0 then statement is false
-                const sy = this.permTable.indexOf(this.currentCell.row);
+                const sy = this.permTableToScreen[this.currentCell.row];
                 if (sy === this.cellDataMatrix.length - 1) {
                     this.doCellMovement(Direction.Right);
                 } else {
@@ -1433,7 +1504,7 @@ export class TimTableController extends DestroyScope implements IController {
         let nextRow;
         let nextColumn;
         let cell;
-        const sy = this.permTable.indexOf(y);  // index in screen
+        const sy = this.permTableToScreen[y];  // index in screen
         switch (direction) {
             case Direction.Up:
                 nextRow = this.constrainRowIndex(sy - 1);
@@ -1508,6 +1579,7 @@ export class TimTableController extends DestroyScope implements IController {
         if (!this.shiftDown) {
             this.startCell = {row: rowi, col: coli};
         }
+        this.selectedCells = this.getSelectedCells(rowi, coli);
         this.scope.$applyAsync();
     }
 
@@ -1535,7 +1607,6 @@ export class TimTableController extends DestroyScope implements IController {
      * @param {MouseEvent} event If mouse was clikced
      */
     private async cellClicked(cell: CellEntity, rowi: number, coli: number, event?: MouseEvent) {
-        // const ir = this.permTable.indexOf(rowi);
         this.openCellForEditing(cell, rowi, coli, event);
         this.lastDirection = undefined;
     }
@@ -1636,27 +1707,23 @@ export class TimTableController extends DestroyScope implements IController {
      */
     private async calculateElementPlaces(rowi: number, coli: number, event?: MouseEvent) {
         await $timeout();
-        const ir = this.permTable.indexOf(rowi);
+        const sr = this.permTableToScreen[rowi];
         const table = this.element.find(".timTableTable").first();
         const cell = this.cellDataMatrix[rowi][coli];
         if (cell.renderIndexX === undefined || cell.renderIndexY === undefined) {
             return; // we should never be able to get here
         }
         const ry = this.permTable[cell.renderIndexY];
-        const tablecell = table.children("tbody").last().children("tr").eq(ir + this.rowDelta).children("td").eq(cell.renderIndexX + this.colDelta);
+        const tablecell = table.children("tbody").last().children("tr").eq(sr + this.rowDelta).children("td").eq(cell.renderIndexX + this.colDelta);
         // const tableCellOffset = tablecell.offset(); // Ihmeellisesti tämä antoi väärän tuloksen???
-        const tableCellOffset = table.children("tbody").last().children("tr").eq(ir + this.rowDelta).children("td").eq(cell.renderIndexX + this.colDelta).offset();
+        const tableCellOffset = table.children("tbody").last().children("tr").eq(sr + this.rowDelta).children("td").eq(cell.renderIndexX + this.colDelta).offset();
 
         let cell2y = 0;
-        if (ir > 0) {
-            const ry2 = this.permTable.indexOf(ir - 1);  // who is the previous cell upwards
-            const cell2 = this.cellDataMatrix[ry2][coli];
-            if (cell2.renderIndexX !== undefined && cell2.renderIndexY !== undefined) {
-                const tablecell2 = table.children("tbody").last().children("tr").eq(ir - 1 + this.rowDelta).children("td");
-                const off2 = tablecell2.offset();
-                if (off2) {
-                    cell2y = off2.top;
-                }
+        if (sr > 0) {
+            const tablecell2 = table.children("tbody").last().children("tr").eq(sr - 1 + this.rowDelta).children("td");
+            const off2 = tablecell2.offset();
+            if (off2) {
+                cell2y = off2.top;
             }
         }
 
@@ -1728,7 +1795,7 @@ export class TimTableController extends DestroyScope implements IController {
             const buttonOpenBigEditor = this.element.find(".buttonOpenBigEditor");
             const h = buttonOpenBigEditor.height() || 20;
             if (editOffset && editOuterHeight && tableCellOffset && editOuterWidth) {
-                const mul = ir == 0 ? 1 : 2;
+                const mul = sr == 0 ? 1 : 2;
                 inlineEditorButtons.offset({
                     left: tableCellOffset.left,
                     top: (cell2y ? cell2y : editOffset.top) - h - 5,
@@ -2335,6 +2402,16 @@ export class TimTableController extends DestroyScope implements IController {
         if (value.indexOf("##") == 0) {
             value = value.substr(1);
         }
+        // const cells = this.getSelectedCells(this.activeCell.row, this.activeCell.col);
+
+        if (this.task) {
+            for (const c of this.selectedCells.cells) {
+                this.setUserAttribute(c.y, c.x, key, value);
+            }
+            return;
+        }
+
+        // TODO; Old code, change protocol to use cells
         const parId = this.getOwnParId();
         const docId = this.viewctrl.item.id;
         const rowId = this.activeCell.row;
@@ -2350,18 +2427,7 @@ export class TimTableController extends DestroyScope implements IController {
             y2 = Math.max(this.activeCell.row, this.startCell.row);
         }
 
-        if (this.task) {
-            for (let y = y1; y <= y2; y++) {
-                for (let x = x1; x <= x2; x++) {
-                    if ( !(this.data.hiddenRows && this.data.hiddenRows.includes(y)) ) {
-                        this.setUserAttribute(y, x, key, value);
-                    }
-                }
-            }
-            return;
-        }
-
-        // TODO: Does not take account hidden rows!
+        // TODO: Does not take account hidden rows! Change protocol to use cells
         let data = {docId, parId, y1, y2, x1, x2, [key]: value};
         if (route === "setCell") {
             data = {docId, parId, y1, y2, x1, x2, key: key, value: value};
@@ -2377,6 +2443,7 @@ export class TimTableController extends DestroyScope implements IController {
      * Checks whether a cell is the currently active cell of the table.
      * The active cell is the cell that is being edited, or if no cell is being edited,
      * the cell that was edited last.
+     * Suppose only rectangle areas
      * @param {number} rowi Table row index.
      * @param {number} coli Table column index.
      * @returns {boolean} True if the cell is active, otherwise false.
@@ -2389,18 +2456,19 @@ export class TimTableController extends DestroyScope implements IController {
         /*if (this.currentCell && this.currentCell.editorOpen) {
             return this.currentCell.row === rowi && this.currentCell.col === coli;
         }*/
+        if (!this.activeCell) { return false; }
 
-        if (this.activeCell && this.startCell) {
-            const x1 = Math.min(this.activeCell.col, this.startCell.col);
-            const x2 = Math.max(this.activeCell.col, this.startCell.col);
-            const y1 = Math.min(this.activeCell.row, this.startCell.row);
-            const y2 = Math.max(this.activeCell.row, this.startCell.row);
-            return x1 <= coli && coli <= x2 && y1 <= rowi && rowi <= y2;
-        }
+        const srow = this.permTableToScreen[rowi];
+        const scol = coli;
 
-        if (this.activeCell) {
-            return this.activeCell.row === rowi && this.activeCell.col === coli;
+        if ( scol < this.selectedCells.scol1 || this.selectedCells.scol2 < scol ) { return false; }
+        if ( this.selectedCells.srows[srow] ) { return true; }
+
+        /*  too slow:
+        for (const c of this.selectedCells.cells ) {
+            if ( c.x == coli && c.y == rowi ) { return true; }
         }
+        */
 
         return false;
     }
@@ -2447,6 +2515,15 @@ export class TimTableController extends DestroyScope implements IController {
         if ( !this.data.hiddenColumns ) { return false; }
         return this.data.hiddenColumns.includes(coli);
     }
+
+    private clearFilters() {
+        for (let i = 0; i < this.filters.length; i++) {
+            this.filters[i] = "";
+        }
+        this.updateFilter();
+        this.clearSortOrder();
+    }
+
 }
 
 timApp.component("timTable", {
@@ -2477,14 +2554,18 @@ timApp.component("timTable", {
              ng-style="$ctrl.stylingForColumn(c, $index)"/>
 
         <tr ng-if="$ctrl.data.headers"> <!-- Header row -->
-            <td class="nrcolumn totalnr" ng-if="::$ctrl.data.nrColumn" >{{$ctrl.totalrows}}</td>
+            <td class="nrcolumn totalnr" ng-if="::$ctrl.data.nrColumn"
+                ng-click="$ctrl.clearFilters()"
+                title="Click to show all"
+                ">{{$ctrl.totalrows}}</td>
             <td ng-if="::$ctrl.data.cbColumn"><input type="checkbox" ng-model="$ctrl.cbAllFilter"
              ng-change="$ctrl.updateCBs(-1)" title="Check for all visible rows"> </td>
             <td class="headers"
              ng-repeat="c in $ctrl.data.headers"  ng-init="coli = $index"
              ng-show="::$ctrl.showColumn(coli)"
              ng-click="$ctrl.sortData(coli)"
-             ng-style="$ctrl.data.headersStyle" ng-click="" >{{c}}
+             title="Click to sort"
+             ng-style="$ctrl.data.headersStyle" ng-click="" >{{c}}{{$ctrl.sortSymbol[coli]}}
             </td>
         </tr>
 
