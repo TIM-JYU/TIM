@@ -566,7 +566,9 @@ export class ViewCtrl implements IController {
             const answerIds: {[index: string]: AnswerBrowserController} = {};
             for (const [k, ab] of this.abs) {
                 ab.changeUserAndAnswers(user, updateAll, answerResponse.data[ab.taskId]);
-                if (ab.selectedAnswer !== undefined) { answerIds[ab.selectedAnswer.id] = ab; }
+                if (ab.selectedAnswer !== undefined) {
+                    answerIds[ab.selectedAnswer!.id] = ab;
+                }
                 // if (needsAnswerChange) { absNeedAnswerchange.push(ab); }
             }
             console.log(answerIds);
