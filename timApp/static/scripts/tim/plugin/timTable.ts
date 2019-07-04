@@ -20,8 +20,7 @@
  * Mostly the screencoordinates starts in code by s like sy, srow and so on.
  */
 // TODO: Static headers and filter rows so they do not scroll
-// TODO: Numeric sort
-// TODO: less and greater filter
+
 import {IController, IRootElementService, IScope} from "angular";
 import {getParId} from "tim/document/parhelpers";
 import {timApp} from "../app";
@@ -35,6 +34,89 @@ import {$http, $timeout} from "../util/ngimport";
 import {Binding} from "../util/utils";
 import {hideToolbar, isToolbarEnabled, openTableEditorToolbar} from "./timTableEditorToolbar";
 import {PluginMeta} from "./util";
+
+/**
+ * NumFilter class for filtering numbers.
+ *
+ * <2     => find all numbers less than 2
+ * <=2    => find all numbers less or equal than 2
+ * >2     => find all numbers greter than 2
+ * >=2    => find all numbers greter or equal than 2
+ * =2     => find all numbers equal to 2
+ * >2<4   => find all numbers in range ]2,4[
+ * >=2<=4 => find all numbers in range [2,4]
+ * >2<4!  => find all numbers not in range ]2,4[
+ * See: https://regex101.com/r/yfHbaH/3
+ */
+const numFilterEx: RegExp = /([<=>!]=?) *(-?[\w\.,]+) *(!?) */g;
+
+type NumStr = number | string;
+type FilterComparator = (a: NumStr, b: NumStr) => boolean;
+
+const filterComparatorOperators = {
+    "<" : ((a: NumStr, b: NumStr): boolean => a < b),
+    "<=": ((a: NumStr, b: NumStr): boolean => a <= b),
+    "=" : ((a: NumStr, b: NumStr): boolean => a == b),
+    "!=": ((a: NumStr, b: NumStr): boolean => a != b),
+    "!" : ((a: NumStr, b: NumStr): boolean => a != b),
+    "==": ((a: NumStr, b: NumStr): boolean => a == b),
+    ">" : ((a: NumStr, b: NumStr): boolean => a > b),
+    ">=": ((a: NumStr, b: NumStr): boolean => a >= b),
+};
+
+class ComparatorFilter {
+    values: NumStr[] = [];
+    funcs: FilterComparator[] = [];
+    negate: boolean = false;
+    // m: RegExpExecArray |
+    // null = [];
+    constructor(fltr: string) {
+        // this.m = numFilterEx.exec(fltr);
+        // if ( !this.m ) { return; }
+        // if ( fltr.indexOf("!") >= 0 ) { fltr = fltr.replace("!", ""); this.negate = true; }
+        for (let result = numFilterEx.exec(fltr); result !== null; result = numFilterEx.exec(fltr)) {
+            const op = result[1];
+            // @ts-ignore
+            this.funcs.push(filterComparatorOperators[op]);
+            const vs = result[2];
+            if ( result[3] ) { this.negate = true; }
+            let v: NumStr;
+            try {
+                v = Number.parseFloat(vs);
+                if ( isNaN(v) ) { v = vs.toLowerCase(); }
+            } catch (e) {
+                v = vs.toLowerCase();
+            }
+            this.values.push(v);
+        }
+    }
+
+    public static isNumFilter(s: string): boolean {
+        if ( !s ) { return false; }
+        // return ( !!numFilterEx.exec(s) ); // eats first match?
+        return "!<=>".indexOf(s[0]) >= 0;
+    }
+
+    public static makeNumFilter(s: string): ComparatorFilter | null {
+        if ( !this.isNumFilter(s) ) { return null; }
+        return new ComparatorFilter(s);
+    }
+
+    public isMatch(s: string): boolean {
+        let n: NumStr = "";
+        try {
+            n = Number.parseFloat(s);
+            if ( isNaN(n) ) { n = s.toLowerCase(); }
+        } catch {
+            n = s.toLowerCase();
+        }
+        let res = true;
+        for (let i = 0; i < this.values.length; i++) {
+            if ( !this.funcs[i](n, this.values[i]) ) { res = false; break; }
+        }
+        return this.negate ? !res : res;
+    }
+}
 
 const styleToHtml: {[index: string]: string} = {
     backgroundColor: "background-color",
@@ -568,6 +650,10 @@ export class TimTableController extends DestroyScope implements IController {
         return crows;
     }
 
+    public static makeNumFilter(fltr: string) {
+
+    }
+
     /**
      * Check if all regexp's in regs maches to row values. It's kind of and
      * over all regs if tehere is some condition
@@ -575,9 +661,16 @@ export class TimTableController extends DestroyScope implements IController {
      * @param regs list of regexp to check
      * @param row where to check values
      */
-    public static isMatch(regs: RegExp[], row: any[]) {
-        for (let c = 0; c < regs.length; c++) {
-            if ( regs[c] && !regs[c].test(row[c].cell.toLowerCase())) { return false; }
+    public static isMatch(regs: RegExp[], cmpfltrs: ComparatorFilter[], row: any[]) {
+        for (let c = 0; c < row.length; c++) {
+            if ( !regs[c] ) { continue; }
+            const s: string = row[c].cell.toLowerCase();
+            if ( !regs[c].test(s) ) { return false; }
+        }
+        for (let c = 0; c < row.length; c++) {
+            if ( !cmpfltrs[c] ) { continue; }
+            const s: string = row[c].cell;
+            if ( cmpfltrs[c] && !cmpfltrs[c].isMatch(s) ) { return false; }
         }
         return true;
     }
@@ -600,21 +693,24 @@ export class TimTableController extends DestroyScope implements IController {
 
         let isFilter = false;
         const regs = [];
+        const cmpfltrs = [];
         for (let c = 0; c < this.filters.length; c++) {
-            if ( this.filters[c] ) {
-                isFilter = true;
-                if ( this.filters[c] ) {
-                    regs[c] = new RegExp(this.filters[c].toLowerCase());
-                }
+            if ( !this.filters[c] ) { continue; }
+            isFilter = true;
+            const fltr = this.filters[c];
+            const cmpfltr = ComparatorFilter.makeNumFilter(fltr);
+            if ( cmpfltr ) {
+                cmpfltrs[c] = cmpfltr;
+            } else {
+                regs[c] = new RegExp(fltr.toLowerCase());
             }
         }
         if ( !this.cbFilter && !isFilter ) { return; }
 
         for (let i = 0; i < this.cellDataMatrix.length; i++) {
-            if ( this.cbFilter && !this.cbs[i] ||
-                !TimTableController.isMatch(regs, this.cellDataMatrix[i])) {
-                this.data.hiddenRows.push(i);
-            }
+            if ( this.cbFilter && !this.cbs[i] ) { this.data.hiddenRows.push(i); continue; }
+            if ( TimTableController.isMatch(regs, cmpfltrs, this.cellDataMatrix[i])) { continue; }
+            this.data.hiddenRows.push(i);
         }
         hl = this.data.hiddenRows.length;
         if ( hl > 0 ) { this.visiblerows += (this.totalrows - hl); }
@@ -630,8 +726,18 @@ export class TimTableController extends DestroyScope implements IController {
         const ccb = cb.cell;
         const va = "" + cca;
         const vb = "" + ccb;
-        const ret = va.localeCompare(vb) * dir;
-        return ret;
+        const na = Number.parseFloat(va);
+        const nb = Number.parseFloat(vb);
+        if ( isNaN(na) || isNaN(nb)) {
+            return va.localeCompare(vb) * dir;
+        }
+        let ret = 0;
+        if ( na > nb ) {
+            ret = 1;
+        } else if ( na < nb ) {
+            ret = -1;
+        }
+        return ret * dir;
     }
 
     clearSortOrder() {

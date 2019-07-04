@@ -116,7 +116,6 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
     private realNameColIndex = 0;
     private userNameColIndex = 1;
     private emailColIndex = 2;
-    private headerRow = -1;  // headers is the topmost row and not indexable
     private rowKeys!: string[];
     private userLocations: { [index: string]: string } = {};
     private taskLocations: { [index: string]: string } = {};
@@ -255,21 +254,6 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
      */
     setDataMatrix() {
         try {
-            /*
-            this.data.userdata.cells[this.userNameColumn + this.headerRow] = {
-                cell: "Käyttäjänimi",
-                backgroundColor: this.fixedColor,
-            };
-            this.data.userdata.cells[this.realNameColumn + this.headerRow] = {
-                cell: "Henkilön Nimi",
-                backgroundColor: this.fixedColor,
-            };
-            this.data.userdata.cells[this.emailColumn + this.headerRow] = {
-                cell: "Email",
-                backgroundColor: this.fixedColor,
-            };
-            */
-
             if ( this.realnames ) {
                 this.rowKeys.sort((a, b) => this.sortByRealName(a, b));
             } else if ( this.usernames ) {
@@ -482,7 +466,7 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
     /**
      * Removes selected users from the group
      */
-    /* eslint-disable-next-line no-unused-method */
+    // @ts-ignore
     async removeUsers() {
         const timTable = this.getTimTable();
         if (timTable == null) {
@@ -544,13 +528,14 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
         this.userlist = TableFormController.makeUserList(ulist, colindex, preseparator, midseparator);
     }
 
+    // @ts-ignore
     copyList() {
         const ta = this.element.find("#userlist");
         ta.focus(); ta.select(); document.execCommand("copy");
         // TODO: myös iPad toimimaan, ks GeoGebra tai csPlugin jaa tee yleinen copy
     }
 
-    // tslint:disable-next-line
+    // @ts-ignore
     emailUsers() {
         const timTable = this.getTimTable();
         if (timTable == null) { return; }
@@ -558,7 +543,7 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
         this.emaillist = TableFormController.makeUserList(selUsers, this.emailColIndex, "", "\n");
     }
 
-    // tslint:disable-next-line
+    // @ts-ignore
     sendEmail() {
         const w: any = window;
         let  addrs = this.emaillist.replace("\n", ";");
@@ -597,7 +582,6 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
      * @param content unused
      */
     singleCellSave(rowi: number, coli: number, content: string) {
-        // const cells = [this.userNameColumn + (rowi + 1), colnumToLetters(coli) + this.headerRow, colnumToLetters(coli) + (rowi + 1)];
         const cells = [colnumToLetters(coli) + (rowi + 1)];
         this.doSaveText(cells);
     }
@@ -654,7 +638,6 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
                 if (columnPlace === this.userNameColumn
                     || columnPlace === this.realNameColumn  // TODO: Do we need this anymore?
                     || columnPlace === this.emailColumn) {  // TODO: Do we need this anymore?
-                    // || numberPlace === this.headerRow.toString()) {
                     continue;
                 } else {
                     try {
