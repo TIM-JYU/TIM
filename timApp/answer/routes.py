@@ -1007,17 +1007,19 @@ def get_multi_states(args: GetMultiStatesModel):
         except PluginException as e:
             return abort(400, str(e))
         block = plug.par
-        _, _, _, plug = pluginify(
+        a, b, c, plug = pluginify(
             doc,
             [block],
             user,
             custom_answer=ans,
             pluginwrap=PluginWrap.Nothing,
             do_lazy=NEVERLAZY,
+            debugging_multistate=True,
         )
         html = plug.get_final_output()
         response[ans.id] = {'html': html, 'reviewHtml': None}
-    #     ###tid = TaskId.parse(ans.task_id)
+        ####
+    #     tid = TaskId.parse(ans.task_id)
     #     # if parid, maybe_set_hint?
     #     try:
     #         doc, plug = get_plugin_from_request(doc, task_id=tid, u=user)
