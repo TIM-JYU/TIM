@@ -33,7 +33,7 @@ const TableFormMarkup = t.intersection([
         maxWidth: t.string,
         minWidth: t.string,
         maxRows: t.string,
-        maxCols: t.string,
+        maxCols: withDefault(t.string, "fit-content"),
         open: t.boolean,
         filterRow: t.boolean,
         toolbarTemplates: t.array(t.object),
@@ -51,9 +51,12 @@ const TableFormMarkup = t.intersection([
         sortBy: nullable(t.string), /* TODO! Username and task, or task and username -- what about points? */
         table: nullable(t.boolean),
         removeDocIds: withDefault(t.boolean, true),
+        taskBorders: withDefault(t.boolean, false),
         removeUsersButtonText: nullable(t.string),
         userListButtonText: nullable(t.string),
         emailUsersButtonText: nullable(t.string),
+        fontSize: withDefault(t.string, "smaller"),
+        fixedColor: withDefault(t.string, "#f0f0f0"),
     }),
     GenericPluginMarkup,
     t.type({
@@ -97,6 +100,7 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
         // TODO: give rows (and maybe colums) in data.table
         task: true,
         userdata: {type: "Relative", cells: {}},
+
         // saveCallBack: this.singleCellSave
     };
     // TODO: Change row format to properly typed format (maybe userobject:IRowstype) format
@@ -127,6 +131,7 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
     private listName: boolean = false;
     private listUsername: boolean = true;
     private listEmail: boolean = false;
+    private fixedColor: string = "#f0f0f0";
 
     getDefaultMarkup() {
         return {};
@@ -166,6 +171,12 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
 
     async $onInit() {
         super.$onInit();
+        const d: any =  this.data;
+        const table: any =  this.data.table;
+        if ( this.attrs.fontSize ) { table.fontSize = this.attrs.fontSize; }
+        d.taskBorders = this.attrs.taskBorders;
+        this.fixedColor = this.attrs.fixedColor || this.fixedColor;
+
         this.data.hiddenRows = this.attrs.hiddenRows;
         this.data.hiddenColumns = this.attrs.hiddenColumns;
         this.userfilter = "";
@@ -247,15 +258,15 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
             /*
             this.data.userdata.cells[this.userNameColumn + this.headerRow] = {
                 cell: "Käyttäjänimi",
-                backgroundColor: "#efecf1",
+                backgroundColor: this.fixedColor,
             };
             this.data.userdata.cells[this.realNameColumn + this.headerRow] = {
                 cell: "Henkilön Nimi",
-                backgroundColor: "#efecf1",
+                backgroundColor: this.fixedColor,
             };
             this.data.userdata.cells[this.emailColumn + this.headerRow] = {
                 cell: "Email",
-                backgroundColor: "#efecf1",
+                backgroundColor: this.fixedColor,
             };
             */
 
@@ -268,7 +279,8 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
             }
 
             this.data.headers = ["Henkilön nimi", "Käyttäjänimi", "eMail"];
-            this.data.headersStyle = {backgroundColor: "#efecf1"};
+            this.data.headersStyle = {"backgroundColor": this.fixedColor,
+                                      "font-weight": "bold"};
 
             if (this.attrsall.fields ) { this.data.table.countCol = this.attrsall.fields.length + 3; }
             this.data.table.countRow = Object.keys(this.rows).length;
@@ -277,20 +289,20 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
                 this.data.lockedCells = [];
             }
             for (const r of this.rowKeys) {
-                this.data.userdata.cells[this.userNameColumn + y] = {cell: r, backgroundColor: "#efecf1"};
+                this.data.userdata.cells[this.userNameColumn + y] = {cell: r, backgroundColor: this.fixedColor};
                 this.data.lockedCells.push(this.userNameColumn + y);
                 this.userLocations[y] = r;
                 if ( this.attrsall.realnamemap ) {
                     this.data.userdata.cells[this.realNameColumn + y] = {
                         cell: this.attrsall.realnamemap[r],
-                        backgroundColor: "#efecf1",
+                        backgroundColor: this.fixedColor,
                     };
                     this.data.lockedCells.push(this.realNameColumn + y);
                 }
                 if ( this.attrsall.emailmap ) {
                     this.data.userdata.cells[this.emailColumn + y] = {
                         cell: this.attrsall.emailmap[r],
-                        backgroundColor: "#efecf1",
+                        backgroundColor: this.fixedColor,
                     };
                     this.data.lockedCells.push(this.emailColumn + y);
                 }
@@ -306,7 +318,7 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
                     /*
                     this.data.userdata.cells[colnumToLetters(x + xOffset) + 1] = {
                         cell: colheader,
-                        backgroundColor: "#efecf1",
+                        backgroundColor: this.fixedColor,
                     };
                     */
 
