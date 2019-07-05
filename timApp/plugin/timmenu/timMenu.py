@@ -2,7 +2,7 @@
 
 """
 import os
-from typing import Union
+from typing import Union, List
 
 import attr
 
@@ -30,44 +30,16 @@ class TimMenuStateSchema(Schema):
         res = TimMenuStateModel(**data)
         return res
 
-
 @attr.s(auto_attribs=True)
 class TimMenuMarkupModel(GenericMarkupModel):
-    buttonText: Union[str, Missing] = missing
-    docid: Union[int, Missing] = missing
-    open: Union[bool, Missing] = missing
-    borders: Union[bool, Missing] = missing
-    upload: Union[bool, Missing] = missing
-    useurl: Union[bool, Missing] = missing
-    useseparator: Union[bool, Missing] = missing
-    uploadstem: Union[str, Missing] = missing
-    urlstem: Union[str, Missing] = missing
-    loadButtonText: Union[str, Missing] = missing
-    url: Union[str, Missing] = missing
-    beforeOpen: Union[str, Missing] = missing
+    hoverOpen: Union[bool, Missing] = missing
     separator: Union[str, Missing] = missing
-    prefilter: Union[str, Missing] = missing
-    placeholder: Union[str, Missing] = missing
-
-
+    menu: Union[List[Union[List[str], Missing]], Missing] = missing
 
 class TimMenuMarkupSchema(GenericMarkupSchema):
-    buttonText = fields.Str(allow_none=True)
-    docid = fields.Int(allow_none=True)
-    open = fields.Bool(allow_none=True)
-    borders = fields.Bool(allow_none=True)
-    upload = fields.Bool(allow_none=True)
-    useurl = fields.Bool(allow_none=True)
-    useseparator = fields.Bool(allow_none=True)
-    uploadstem = fields.Str(allow_none=True)
-    urlstem = fields.Str(allow_none=True)
-    loadButtonText = fields.Str(allow_none=True)
-    url = fields.Str(allow_none=True)
-    beforeOpen = fields.Str(allow_none=True)
+    hoverOpen = fields.Bool(allow_none=True, default=True)
     separator = fields.Str(allow_none=True)
-    prefilter = fields.Str(allow_none=True)
-    placeholder = fields.Str(allow_none=True)
-
+    menu = fields.List(fields.Str())
 
     @post_load
     def make_obj(self, data):
@@ -101,7 +73,7 @@ class TimMenuHtmlModel(GenericHtmlModel[TimMenuInputModel, TimMenuMarkupModel, T
         return 'timmenu-runner'
 
     def show_in_view_default(self) -> bool:
-        return False
+        return True
 
     def get_static_html(self) -> str:
         s = self.markup.beforeOpen or "+ Open Import"
