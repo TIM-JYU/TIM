@@ -575,7 +575,7 @@ export class ViewCtrl implements IController {
         // TODO: if answerbrowser had same user as before then it can be removed from the query
         //  Would it even happen if updateAll is enabled all the time when changing users
         if (updateAll) {
-            if (Object.keys(this.abs).length == 0) {
+            if (this.abs.size == 0) {
                 return;
             }
             const taskList2 = [];
