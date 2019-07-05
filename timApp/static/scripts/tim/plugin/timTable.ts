@@ -20,6 +20,8 @@
  * Mostly the screencoordinates starts in code by s like sy, srow and so on.
  */
 // TODO: Static headers and filter rows so they do not scroll
+// TODO: Toolbar visible only when hit an editable field (not locked)
+// TODO: Toolbar shall not steal focus when created first time
 
 import {IController, IRootElementService, IScope} from "angular";
 import {getParId} from "tim/document/parhelpers";
@@ -384,7 +386,7 @@ export class TimTableController extends DestroyScope implements IController {
     public filters: string[] = [];
     public sortDir: number[] = [];
     public sortSymbol: string[] = [];
-    public sortSymbols: string[] = ["🢓", "", "🢑"];  // [" ▼", "", " ▲" ];
+    public sortSymbols: string[] = [" ▼", "", " ▲" ];  // ["🢓", "", "🢑"];  // this small does not work in iPad/Android
     public originalHiddenRows: number[] = [];
     private rowDelta = 0;
     private colDelta = 0;
