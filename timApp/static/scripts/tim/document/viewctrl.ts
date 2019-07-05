@@ -570,15 +570,18 @@ export class ViewCtrl implements IController {
         return;
         // TODO experiments below
         // // Make a single request for all answerbrowsers in this.abs.values
-        const taskList2 = [];
-        for (const ab of this.abs.values()) {
-            taskList2.push(ab.taskId);
-        }
         // const response = await $http.get<{ }>("/multipluginanswer?" + $httpParamSerializer({fields: taskList, user: user.id, doc: this.docId}));
         // console.log(response);
         // TODO: if answerbrowser had same user as before then it can be removed from the query
         //  Would it even happen if updateAll is enabled all the time when changing users
         if (updateAll) {
+            if (Object.keys(this.abs).length == 0) {
+                return;
+            }
+            const taskList2 = [];
+            for (const ab of this.abs.values()) {
+                taskList2.push(ab.taskId);
+            }
             const answerResponse = await $http.get<{ [index: string]: [IAnswer] }>("/multipluginanswer2?" + $httpParamSerializer({
                 fields: taskList2,
                 user: user.id,
