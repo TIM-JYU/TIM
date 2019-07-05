@@ -197,7 +197,7 @@ def get_multiple_plugin_answers2():
         answs = user.answers.options(joinedload(Answer.users_all)).order_by(Answer.id.desc()).filter(Answer.task_id.in_(fields)).all()
         for a in answs:
             fieldlist[a.task_id].append(a)
-        return json_response(fieldlist)
+        return json_response({"answers": fieldlist, "userId": user_id})
     except Exception as e:
         return abort(400, str(e))
 

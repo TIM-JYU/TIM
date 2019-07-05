@@ -547,15 +547,19 @@ export class ViewCtrl implements IController {
                 taskList.push(fab.taskId);
             }
             // TODO: Query only one (first valid) answer
-            const answerResponse = await $http.get<{ [index: string]: [IAnswer] }>("/multipluginanswer2?" + $httpParamSerializer({
+            const answerResponse = await $http.get<{ answers: {[index: string]: [IAnswer]}, userId: number}>("/multipluginanswer2?" + $httpParamSerializer({
                 fields: taskList,
                 user: user.id,
             }));
-            for (const fab of this.formAbs.values()) {
-                fab.changeUserAndAnswers(user, updateAll, answerResponse.data[fab.taskId]);
-                const timComp = this.getTimComponentByName(fab.taskId.split(".")[1]);
-                if (timComp && fab.selectedAnswer) {
-                    timComp.setAnswer(JSON.parse(fab.selectedAnswer.content));
+            // UserId check might ensure the loaded response is from correct user
+            // when using slow connections (or maybe not)
+            if (answerResponse.data.userId == this.selectedUser.id) {
+                for (const fab of this.formAbs.values()) {
+                    fab.changeUserAndAnswers(user, updateAll, answerResponse.data.answers[fab.taskId]);
+                    const timComp = this.getTimComponentByName(fab.taskId.split(".")[1]);
+                    if (timComp && fab.selectedAnswer) {
+                        timComp.setAnswer(JSON.parse(fab.selectedAnswer.content));
+                    }
                 }
             }
         }
