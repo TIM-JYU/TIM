@@ -63,6 +63,8 @@ export interface ITimComponent {
     setPluginWords?: (words: string[]) => void;
     setForceAnswerSave?: (force: boolean) => void;
     resetField: () => string | undefined;
+    supportsSetAnswer: () => boolean;
+    setAnswer: (content: {[index: string]: string}) => {ok: boolean, message: (string | undefined)};
 }
 
 export interface IInsertDiffResult {
@@ -538,18 +540,39 @@ export class ViewCtrl implements IController {
                 await lo.abLoad.promise;
             }
         }
+
+        if (this.docSettings.form_mode) {
+            const taskList = [];
+            for (const fab of this.formAbs.values()) {
+                taskList.push(fab.taskId);
+            }
+            // TODO: Query only one (first valid) answer
+            const answerResponse = await $http.get<{ [index: string]: [IAnswer] }>("/multipluginanswer2?" + $httpParamSerializer({
+                fields: taskList,
+                user: user.id,
+            }));
+            for (const fab of this.formAbs.values()) {
+                fab.changeUserAndAnswers(user, updateAll, answerResponse.data[fab.taskId]);
+                const timComp = this.getTimComponentByName(fab.taskId.split(".")[1]);
+                if (timComp && fab.selectedAnswer) {
+                    timComp.setAnswer(JSON.parse(fab.selectedAnswer.content));
+                }
+            }
+        }
+
         // TODO: do not call changeUser separately if updateAll enabled
         // - handle /answers as single request for all related plugins instead of separate requests
         // - do the same for /taskinfo and /getState requests
         for (const ab of this.abs.values()) {
             ab.changeUser(user, updateAll);
         }
+
         return;
-        // TODO below
+        // TODO experiments below
         // // Make a single request for all answerbrowsers in this.abs.values
-        const taskList = [];
+        const taskList2 = [];
         for (const ab of this.abs.values()) {
-            taskList.push(ab.taskId);
+            taskList2.push(ab.taskId);
         }
         // const response = await $http.get<{ }>("/multipluginanswer?" + $httpParamSerializer({fields: taskList, user: user.id, doc: this.docId}));
         // console.log(response);
@@ -557,7 +580,7 @@ export class ViewCtrl implements IController {
         //  Would it even happen if updateAll is enabled all the time when changing users
         if (updateAll) {
             const answerResponse = await $http.get<{ [index: string]: [IAnswer] }>("/multipluginanswer2?" + $httpParamSerializer({
-                fields: taskList,
+                fields: taskList2,
                 user: user.id,
             }));
             console.log(answerResponse);
@@ -729,8 +752,24 @@ export class ViewCtrl implements IController {
     }
 
     private abs = new Map<string, AnswerBrowserController>();
+    private formAbs = new Map<string, AnswerBrowserController>();
 
+    /**
+     * Registers answerbrowser to related map
+     * If form_mode is enabled and answerBrowser is from timComponent
+     * that supports setting answer then add it to formAbs
+     * else add it to regular ab map
+     * @param ab AnswerBrowserController to be registered
+     */
     registerAnswerBrowser(ab: AnswerBrowserController) {
+        if (this.docSettings.form_mode) {
+            const timComp = this.getTimComponentByName(ab.taskId.split(".")[1]);
+            if (timComp && timComp.supportsSetAnswer()) {
+                // TODO: Should propably iterate like below in case of duplicates
+                this.formAbs.set(ab.taskId, ab);
+                return;
+            }
+        }
         // TODO: Task can have two instances in same document (regular field and label version)
         // - for now just add extra answerbrowsers for them (causes unnecessary requests when changing user...)
         // - maybe in future answerbrowser could find all related plugin instances and update them when ab.changeuser gets called?
