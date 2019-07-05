@@ -563,12 +563,12 @@ export class ViewCtrl implements IController {
         // TODO: do not call changeUser separately if updateAll enabled
         // - handle /answers as single request for all related plugins instead of separate requests
         // - do the same for /taskinfo and /getState requests
-        for (const ab of this.abs.values()) {
-            ab.changeUser(user, updateAll);
-        }
-
-        return;
-        // TODO experiments below
+        // for (const ab of this.abs.values()) {
+        //     ab.changeUser(user, updateAll);
+        // }
+        //
+        // return;
+        // TODO experiments below, uncomment 4 lines above
         // // Make a single request for all answerbrowsers in this.abs.values
         // const response = await $http.get<{ }>("/multipluginanswer?" + $httpParamSerializer({fields: taskList, user: user.id, doc: this.docId}));
         // console.log(response);
@@ -593,7 +593,7 @@ export class ViewCtrl implements IController {
             for (const [k, ab] of this.abs) {
                 ab.changeUserAndAnswers(user, updateAll, answerResponse.data[ab.taskId]);
                 if (ab.selectedAnswer !== undefined) {
-                    answerIds[ab.selectedAnswer!.id] = ab;
+                    answerIds[ab.selectedAnswer.id] = ab;
                 }
                 // if (needsAnswerChange) { absNeedAnswerchange.push(ab); }
             }
