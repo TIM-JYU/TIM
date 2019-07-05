@@ -16,7 +16,7 @@ from flask import request
 from marshmallow import Schema, fields, post_load, validates_schema, ValidationError, pre_load
 from marshmallow.utils import _Missing, missing
 from sqlalchemy import func, tuple_
-from sqlalchemy.orm import defaultload
+from sqlalchemy.orm import defaultload, joinedload
 from webargs.flaskparser import use_args
 
 from pluginserver_flask import GenericMarkupSchema
@@ -183,30 +183,28 @@ def get_multiple_plugin_answers2():
         user_id = int(user_id)
     except ValueError:
         abort(404, 'Not a valid user id')
+    user = User.get_by_id(user_id)
     verify_logged_in()
     try:
-        fieldlist = {}
+        doc_map = {}
+        fieldlist = {k: [] for k in fields}
         for task_id in fields:
-          tid = TaskId.parse(task_id)
-          d = get_doc_or_abort(tid.doc_id)
-          user = User.get_by_id(user_id)
-          if user_id != get_current_user_id():
-              verify_seeanswers_access(d)
-          if user is None:
-              abort(400, 'Non-existent user')
-          user_answers: List[Answer] = user.get_answers_for_task(tid.doc_task).all()
-          if hide_names_in_teacher():
-              for answer in user_answers:
-                  for u in answer.users_all:
-                      maybe_hide_name(d, u)
-          fieldlist[task_id] = user_answers
+            tid = TaskId.parse(task_id)
+            if tid.doc_id not in doc_map:
+                dib = get_doc_or_abort(tid.doc_id, f'Document {tid.doc_id} not found')
+                verify_seeanswers_access(dib)
+                doc_map[tid.doc_id] = dib.document
+        answs = user.answers.options(joinedload(Answer.users_all)).order_by(Answer.id.desc()).filter(Answer.task_id.in_(fields)).all()
+        for a in answs:
+            fieldlist[a.task_id].append(a)
         return json_response(fieldlist)
     except Exception as e:
         return abort(400, str(e))
-    pass
+
 
 TASK_PROG = re.compile('([\w\.]*)\((\d*),(\d*)\)(.*)') # see https://regex101.com/r/ZZuizF/2
 TASK_NAME_PROG = re.compile("(\d+.)?([\w\d]+)[.\[]?.*")  # see https://regex101.com/r/OjnTAn/4
+
 
 def widen_fields(fields: List[str]):
     """
