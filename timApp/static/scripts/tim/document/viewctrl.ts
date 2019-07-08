@@ -297,18 +297,8 @@ export class ViewCtrl implements IController {
         // from https://stackoverflow.com/a/7317311
         window.addEventListener("beforeunload", (e) => {
             saveCurrentScreenPar();
-            let unsavedTimComponents = false;
-            for (const t of this.timComponents.values()) {
-                if (t.isUnSaved()) {
-                    unsavedTimComponents = true;
-                    break;
-                }
-            }
-            if ((!this.editing && !unsavedTimComponents && !this.doingTask) || $window.IS_TESTING) {
-                return undefined;
-            }
 
-            if (!this.editing || $window.IS_TESTING) {
+            if ((!this.editing && !this.checkUnSavedTimComponents() && !this.doingTask) || $window.IS_TESTING) {
                 return undefined;
             }
 
@@ -428,11 +418,11 @@ export class ViewCtrl implements IController {
         });
         this.reviewCtrl.loadDocumentAnnotations();
         this.editingHandler.insertHelpPar();
-        window.onbeforeunload = () => {
-            const dirty = this.checkUnSavedTimComponents();
-            if ( dirty ) { return "You have unsaved tasks!"; }  // IE shows this message
-            // And for IE you can not return anything, otherwise it will show even null
-        };
+        // window.onbeforeunload = () => {
+        //     const dirty = this.checkUnSavedTimComponents();
+        //     if ( dirty ) { return "You have unsaved tasks!"; }  // IE shows this message
+        //     // And for IE you can not return anything, otherwise it will show even null
+        // };
     }
 
     /**
