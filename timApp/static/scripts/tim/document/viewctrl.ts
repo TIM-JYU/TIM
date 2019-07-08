@@ -14,7 +14,7 @@ import {QuestionHandler} from "tim/document/question/questions";
 import {initReadings} from "tim/document/readings";
 import {timLogTime} from "tim/util/timTiming";
 import {isPageDirty, markAsUsed, markPageNotDirty, to} from "tim/util/utils";
-import {AnswerBrowserController, PluginLoaderCtrl} from "../answer/answerbrowser3";
+import {AnswerBrowserController, ITaskInfo, PluginLoaderCtrl} from "../answer/answerbrowser3";
 import {IAnswer} from "../answer/IAnswer";
 import {BookmarksController, IBookmarkGroup} from "../bookmark/bookmarks";
 import {IPluginInfoResponse, ParCompiler} from "../editor/parCompiler";
@@ -157,6 +157,9 @@ export class ViewCtrl implements IController {
     // To give an alert if trying to go to another page when doing an adaptive feedback task.
     public doingTask = false;
     public docSettings: IDocSettings = $window.docSettings;
+
+    // Form-mode related attributes.
+    private formTaskInfosLoaded = false;
 
     constructor(sc: IScope) {
         timLogTime("ViewCtrl start", "view");
@@ -551,11 +554,23 @@ export class ViewCtrl implements IController {
                 fields: taskList,
                 user: user.id,
             }));
+            if (!this.formTaskInfosLoaded) {
+                const taskInfoResponse = await $http.get<{ [index: string]: ITaskInfo }>("/taskinfos?" + $httpParamSerializer({
+                    tasks: taskList,
+                }));
+                this.formTaskInfosLoaded = true;
+                for (const fab of this.formAbs.values()) {
+                    fab.setInfo(taskInfoResponse.data[fab.taskId]);
+                }
+            }
             // UserId check might ensure the loaded response is from correct user
             // when using slow connections (or maybe not)
             if (answerResponse.data.userId == this.selectedUser.id) {
                 for (const fab of this.formAbs.values()) {
-                    fab.changeUserAndAnswers(user, updateAll, answerResponse.data.answers[fab.taskId]);
+                    fab.changeUserAndAnswers(user,
+                        updateAll,
+                        answerResponse.data.answers[fab.taskId],
+                    );
                     const timComp = this.getTimComponentByName(fab.taskId.split(".")[1]);
                     if (timComp && fab.selectedAnswer) {
                         timComp.setAnswer(JSON.parse(fab.selectedAnswer.content));
@@ -792,6 +807,10 @@ export class ViewCtrl implements IController {
 
     getAnswerBrowser(taskId: string) {
         return this.abs.get(taskId);
+    }
+
+    getFormAnswerBrowser(taskId: string) {
+        return this.formAbs.get(taskId);
     }
 
     private ldrs = new Map<string, PluginLoaderCtrl>();

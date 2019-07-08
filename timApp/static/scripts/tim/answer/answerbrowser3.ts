@@ -192,7 +192,7 @@ timApp.component("timPluginLoader", {
     transclude: true,
 });
 
-interface ITaskInfo {
+export interface ITaskInfo {
     userMin: number;
     userMax: number;
     answerLimit: number;
@@ -299,26 +299,33 @@ export class AnswerBrowserController extends DestroyScope implements IController
             () => this.onlyValid,
         ], (newValues, oldValues, scope) => this.updateFilteredAndSetNewest());
 
-        const answs = await this.getAnswers();
-        if (answs && (answs.length > 0)) {
-            this.answers = answs;
-            const updated = this.updateAnswerFromURL();
-            if (!updated) {
-                this.handleAnswerFetch(this.answers);
-            }
+        // form_mode off or plugin ab didn't register as form (doesn't support setAnswer?)
+        // else answers, taskinfo (and maybe users) are given by viewctrl
+        if (!this.viewctrl.docSettings.form_mode || !this.viewctrl.getFormAnswerBrowser(this.taskId)) {
+            const answs = await this.getAnswers();
+            if (answs && (answs.length > 0)) {
+                this.answers = answs;
+                const updated = this.updateAnswerFromURL();
+                if (!updated) {
+                    this.handleAnswerFetch(this.answers);
+                }
 
-        } else {
-            if ( answs != null ) {
-                this.resetITimComponent();
+            } else {
+                if (answs != null) {
+                    this.resetITimComponent();
+                }
             }
+            await this.loadInfo();
+            await this.checkUsers(); // load users, answers have already been loaded for the currently selected user
         }
-
-        await this.loadInfo();
-        await this.checkUsers(); // load users, answers have already been loaded for the currently selected user
 
         this.loader.getPluginElement().on("mouseenter touchstart", () => {
             void this.checkUsers();
         });
+
+        // TODO: Angular throws error if many answerbrowsers resolve around the same time
+        //  (e.g awaits above don't happen if were in form mode and don't want separate info reqs)
+        await $timeout(0);
         this.loader.abLoad.resolve(this);
     }
 
@@ -839,6 +846,10 @@ export class AnswerBrowserController extends DestroyScope implements IController
             return null;
         }
         return Math.max(this.taskInfo.answerLimit - this.answers.length, 0);
+    }
+
+    public setInfo(info: ITaskInfo) {
+        this.taskInfo = info;
     }
 
     async loadInfo() {

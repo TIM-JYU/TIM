@@ -813,6 +813,32 @@ def maybe_hide_name(d: DocInfo, u: User):
     if should_hide_name(d, u):
         u.hide_name = True
 
+@answers.route("/taskinfos")
+def get_task_infos():
+    tasks = request.args.getlist('tasks')
+    doc_map = {}
+    user = get_current_user_object()
+    infolist = {}
+    for task_id in tasks:
+        try:
+            tid = TaskId.parse(task_id)
+            if tid.doc_id not in doc_map:
+                dib = get_doc_or_abort(tid.doc_id, f'Document {tid.doc_id} not found')
+                doc_map[tid.doc_id] = dib.document
+            plugin = find_plugin_from_document(doc_map[tid.doc_id], tid, user)
+            tim_vars = {'maxPoints': plugin.max_points(),
+                        'userMin': plugin.user_min_points(),
+                        'userMax': plugin.user_max_points(),
+                        'deadline': plugin.deadline(),
+                        'starttime': plugin.starttime(),
+                        'answerLimit': plugin.answer_limit(),
+                        'triesText': plugin.values.get('triesText', 'Tries left:'),
+                        'pointsText': plugin.values.get('pointsText', 'Points:')
+                        }
+            infolist[task_id] = tim_vars
+        except (TaskNotFoundException, PluginException) as e:
+            return abort(400, str(e))
+    return json_response(infolist)
 
 @answers.route("/taskinfo/<task_id>")
 def get_task_info(task_id):
