@@ -344,20 +344,10 @@ export class AnswerBrowserController extends DestroyScope implements IController
         // let needsAnswerChange = false;
         this.user = user;
         this.fetchedUser = this.user ? this.user.id : 0;
-        // const answers = await this.getAnswersAndUpdate();
-        // this.handleAnswerFetch(answers);
         this.answers = answers;
         this.updateFiltered();
         this.selectedAnswer = this.filteredAnswers.length > 0 ? this.filteredAnswers[0] : undefined;
         console.log("debug line");
-        // if (!answers || answers.length === 0) {
-        //     // TODO
-        //     // this.resetITimComponent();
-        // } else {
-        //     this.loadedAnswer = {review: false, id: undefined};
-        //     // this.changeAnswer();
-        //     // needsAnswerChange = true;
-        // }
         await this.loadInfo();
     }
 

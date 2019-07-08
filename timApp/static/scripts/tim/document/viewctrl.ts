@@ -572,8 +572,12 @@ export class ViewCtrl implements IController {
                         answerResponse.data.answers[fab.taskId],
                     );
                     const timComp = this.getTimComponentByName(fab.taskId.split(".")[1]);
-                    if (timComp && fab.selectedAnswer) {
-                        timComp.setAnswer(JSON.parse(fab.selectedAnswer.content));
+                    if (timComp) {
+                        if (fab.selectedAnswer) {
+                            timComp.setAnswer(JSON.parse(fab.selectedAnswer.content));
+                        } else {
+                            timComp.resetField();
+                        }
                     }
                 }
             }
