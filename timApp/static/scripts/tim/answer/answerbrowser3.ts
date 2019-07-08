@@ -317,11 +317,11 @@ export class AnswerBrowserController extends DestroyScope implements IController
             }
             await this.loadInfo();
             await this.checkUsers(); // load users, answers have already been loaded for the currently selected user
-        }
 
-        this.loader.getPluginElement().on("mouseenter touchstart", () => {
-            void this.checkUsers();
-        });
+            this.loader.getPluginElement().on("mouseenter touchstart", () => {
+                void this.checkUsers();
+            });
+        }
 
         // TODO: Angular throws error if many answerbrowsers resolve around the same time
         //  (e.g awaits above don't happen if were in form mode and don't want separate info reqs)
