@@ -30,17 +30,33 @@ class TimMenuStateSchema(Schema):
         res = TimMenuStateModel(**data)
         return res
 
+class TimMenuItem():
+    def __init__(self, text: str):
+        self.text = text
+
 @attr.s(auto_attribs=True)
 class TimMenuMarkupModel(GenericMarkupModel):
     hoverOpen: Union[bool, Missing] = missing
     separator: Union[str, Missing] = missing
-    menu: Union[List[Union[List[str], Missing]], Missing] = missing
+    menu: Union[List[str], Missing] = missing
+
+@attr.s(auto_attribs=True)
+class TimMenuItemModel:
+    text: str
+
+class TimMenuItemSchema(Schema):
+    text = fields.Str(required=False)
+
+    @post_load
+    def make_obj(self, data):
+        return TimMenuItemModel(**data)
+
 
 class TimMenuMarkupSchema(GenericMarkupSchema):
     hoverOpen = fields.Bool(allow_none=True, default=True)
     separator = fields.Str(allow_none=True)
     menu = fields.List(fields.Str())
-
+    # menu = fields.List(fields.Nested(TimMenuItemSchema))
     @post_load
     def make_obj(self, data):
         return TimMenuMarkupModel(**data)
@@ -76,7 +92,7 @@ class TimMenuHtmlModel(GenericHtmlModel[TimMenuInputModel, TimMenuMarkupModel, T
         return True
 
     def get_static_html(self) -> str:
-        s = self.markup.beforeOpen or "+ Open Import"
+        s = "TimMenu"
         return render_static_TimMenu(self, s)
 
     def get_browser_json(self):
@@ -94,11 +110,10 @@ class TimMenuHtmlSchema(TimMenuAttrs, GenericHtmlSchema):
         return TimMenuHtmlModel(**data)
 
 
-
 def render_static_TimMenu(m: TimMenuHtmlModel, s: str):
     return render_template_string(
         f"""
-<div class="ImportData">
+<div class="TimMenu">
  {s}
 </div>
 <br>

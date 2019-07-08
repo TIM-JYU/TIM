@@ -34,7 +34,7 @@ const TimMenuAll = t.intersection([
 ]);
 
 interface IMenuItem {
-    items: IMenuItem[];
+    items: IMenuItem[] | undefined;
     open: false; // Whether the list of items is shown.
     text: string;
 }
@@ -64,11 +64,40 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
         super.$onInit();
         this.hoverOpen = this.attrs.hoverOpen;
         this.separator = this.attrs.separator;
-        console.log(this.attrs);
         // const a: IMenuItem = {text: "[Linkki 1](linkki1)", items: [], open: false};
         // const b: IMenuItem = {text: "[Linkki 2](linkki2)", items: [], open: false};
-        this.menu = this.attrs.menu; // [a, b];
-        console.log(this.menu);
+        this.formMenu();
+    }
+
+    /**
+     * Turn string-list into two-leveled menuitem-list.
+     * TODO: Support arbitrary number of levels.
+     * TODO: Get this.attrs.menu in better format.
+     */
+    formMenu() {
+        if (!this.attrs.menu) {
+            return;
+        }
+        const menu = [];
+        for (const m of this.attrs.menu) {
+            const parts = m.split(" - ");
+            if (parts.length > 0) {
+                if (parts.length > 1) {
+                    const tempItems = [];
+                    for (const {item, index} of parts.map((it, ind) => ({ item: it, index: ind }))) {
+                        if (index !== 0) {
+                            tempItems.push({open: false, text: item.trim()});
+                        }
+                    }
+                    const menuitem = {items: tempItems, open: false, text: parts[0].trim()};
+                    menu.push(menuitem);
+                } else {
+                    const menuitem = {items: undefined, open: false, text: parts[0].trim()};
+                    menu.push(menuitem);
+                }
+            }
+        }
+        this.menu = menu;
     }
 
     protected getAttributeType() {
@@ -77,10 +106,6 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
 
     isPlainText() {
         return (window.location.pathname.startsWith("/view/"));
-    }
-
-    menuClick(m: any) {
-        console.log(m);
     }
 }
 
@@ -92,9 +117,21 @@ timApp.component("timmenuRunner", {
     },
     template: `
 <tim-markup-error ng-if="::$ctrl.markupError" data="::$ctrl.markupError"></tim-markup-error>
-<div>
-{{$ctrl.separator}}&nbsp;<span ng-repeat="m in $ctrl.menu | orderBy:'title'">
-<span ng-click="$ctrl.menuClick(m)">{{m}}</span>&nbsp;{{$ctrl.separator}}&nbsp;</span>
+<div style="margin-top: 5px; margin-bottom: 10px;">
+    <span ng-repeat="m in $ctrl.menu">
+        <div ng-if="m.items" class="btn-group" uib-dropdown is-open="status.isopen" id="simple-dropdown" style="cursor: pointer;">
+          <span uib-dropdown-toggle ng-disabled="disabled">
+           {{m.text}}<span class="caret"></span>
+          </span>
+          <ul class="dropdown-menu" uib-dropdown-menu aria-labelledby="simple-dropdown">
+            <li ng-repeat="i in m.items" role="menuitem"><a>{{i.text}}</a></li>
+          </ul>
+        </div>
+        <div ng-if="!m.items" class="btn-group" style="cursor: pointer;">
+        {{m.text}}
+        </div>
+        &nbsp;
+    </span>
 </div>
 `,
 });
