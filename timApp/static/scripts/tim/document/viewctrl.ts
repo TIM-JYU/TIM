@@ -810,7 +810,7 @@ export class ViewCtrl implements IController {
     }
 
     getAnswerBrowser(taskId: string) {
-        return this.abs.get(taskId);
+        return (this.abs.get(taskId) || this.formAbs.get(taskId));
     }
 
     getFormAnswerBrowser(taskId: string) {
