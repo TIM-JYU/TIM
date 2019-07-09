@@ -126,6 +126,7 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
     private emailbody: string = "";
     private emailbcc: boolean = false;
     private emailbccme: boolean = false;
+    private emailtim: boolean = false;
     private listSep: string = "-";
     private listName: boolean = false;
     private listUsername: boolean = true;
@@ -472,7 +473,7 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
         if (timTable == null) {
             return;
         }
-        const selUsers = timTable.getCheckedRows(1, true);
+        const selUsers = timTable.getCheckedRows(0, true);
         let msg = "";
         for (const r of selUsers) {
             msg += r.join(", ") + "<br>";
@@ -508,7 +509,7 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
         let midseparator = "\n";
         let sep = this.listSep;
         const colindex = 0;
-        const selUsers = timTable.getCheckedRows(1, true);
+        const selUsers = timTable.getCheckedRows(0, true);
         const ulist = [];
         let usep = "";
         if ( !this.attrsall.realnamemap ) { return; }
@@ -543,9 +544,25 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
         this.emaillist = TableFormController.makeUserList(selUsers, this.emailColIndex, "", "\n");
     }
 
+    async sendEmailTim() {
+        const url = this.pluginMeta.getAnswerUrl().replace("answer", "multiSendEmail")
+        const response = await $http.post<string[]>(url, {
+            rcpt: this.emaillist.replace("\n", ";"),
+            subject: this.emailsubject,
+            msg: this.emailbody,
+        });
+        this.error = JSON.stringify(response);
+        return;
+    }
+
     // @ts-ignore
-    sendEmail() {
+    public async sendEmail() {
+        if ( this.emailtim ) {
+            this.sendEmailTim();
+            return;
+        }
         const w: any = window;
+        // TODO: iPad do not like ;
         let  addrs = this.emaillist.replace("\n", ";");
         let bcc = "";
         if ( this.emailbcc ) {
@@ -553,7 +570,8 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
             addrs = "";
         }
         if ( this.emailbccme ) {
-            bcc += ";" + w.current_user.email;
+            if ( bcc ) { bcc += ";"; }
+            bcc += w.current_user.email;
         }
         window.location.href = "mailto:" + addrs
               + "?" + "subject=" + this.emailsubject
@@ -747,6 +765,7 @@ timApp.component("tableformRunner", {
         <p>
         <input type="checkbox" ng-model="$ctrl.emailbcc" >BCC
         <input type="checkbox" ng-model="$ctrl.emailbccme" >BCC also for me
+        <input type="checkbox" ng-model="$ctrl.emailtim" >use TIM to send
         </p>
         <p>Subject: <input ng-model="$ctrl.emailsubject" size="60"></p>
         <p>eMail content:</p>
