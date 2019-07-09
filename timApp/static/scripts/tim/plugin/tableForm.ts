@@ -125,8 +125,8 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
     private emailsubject: string = "";
     private emailbody: string = "";
     private emailbcc: boolean = false;
-    private emailbccme: boolean = false;
-    private emailtim: boolean = false;
+    private emailbccme: boolean = true;
+    private emailtim: boolean = true;
     private listSep: string = "-";
     private listName: boolean = false;
     private listUsername: boolean = true;
@@ -550,7 +550,7 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
             rcpt: this.emaillist.replace("\n", ";"),
             subject: this.emailsubject,
             msg: this.emailbody,
-            bcc: this.emailbcc,
+            bccme: this.emailbccme,
         });
         this.error = JSON.stringify(response);
         return;
@@ -742,31 +742,32 @@ timApp.component("tableformRunner", {
             {{::$ctrl.attrs.emailUsersButtonText}}
     </button>
     </div>
-    <div class="csRunDiv " style="padding: 1em;" ng-if="$ctrl.userlist"> <!-- userlist -->
+    <div class="csRunDiv tableUsers" style="padding: 1em;" ng-if="$ctrl.userlist"> <!-- userlist -->
         <p class="closeButton" ng-click="$ctrl.userlist=''"></p>
         <p>Separator:
-        <input type="radio" name="listsep" ng-model="$ctrl.listSep" value = "-" ng-change="$ctrl.listUsernames()">-
-        <input type="radio" name="listsep" ng-model="$ctrl.listSep" value = "," ng-change="$ctrl.listUsernames()">,
-        <input type="radio" name="listsep" ng-model="$ctrl.listSep" value = "|" ng-change="$ctrl.listUsernames()">|
-        <input type="radio" name="listsep" ng-model="$ctrl.listSep" value = ";" ng-change="$ctrl.listUsernames()">;
-        <input type="radio" name="listsep" ng-model="$ctrl.listSep" value = "\n" ng-change="$ctrl.listUsernames()">\\n
+        <label><input type="radio" name="listsep" ng-model="$ctrl.listSep" value = "-" ng-change="$ctrl.listUsernames()">-</label>&nbsp;
+        <label><input type="radio" name="listsep" ng-model="$ctrl.listSep" value = "," ng-change="$ctrl.listUsernames()">,</label>&nbsp;
+        <label><input type="radio" name="listsep" ng-model="$ctrl.listSep" value = "|" ng-change="$ctrl.listUsernames()">|</label>&nbsp;
+        <label><input type="radio" name="listsep" ng-model="$ctrl.listSep" value = ";" ng-change="$ctrl.listUsernames()">;</label>&nbsp;
+        <label><input type="radio" name="listsep" ng-model="$ctrl.listSep" value = "\n" ng-change="$ctrl.listUsernames()">\\n</label>&nbsp;
         </p>
-        <input type="checkbox" ng-model="$ctrl.listName" ng-change="$ctrl.listUsernames()">Name
-        <input type="checkbox" ng-model="$ctrl.listUsername" ng-change="$ctrl.listUsernames()">Username
-        <input type="checkbox" ng-model="$ctrl.listEmail" ng-change="$ctrl.listUsernames()">Email<br>
-        <textarea id="userlist" ng-model="$ctrl.userlist" rows="10" cols="40"></textarea>
+        <label><input type="checkbox" ng-model="$ctrl.listName" ng-change="$ctrl.listUsernames()">Name</label>&nbsp;
+        <label><input type="checkbox" ng-model="$ctrl.listUsername" ng-change="$ctrl.listUsernames()">Username</label>&nbsp;
+        <label><input type="checkbox" ng-model="$ctrl.listEmail" ng-change="$ctrl.listUsernames()">Email</label>&nbsp;
+        <br>
+        <textarea id="userlist" ng-model="$ctrl.userlist" rows="10" cols="60"></textarea>
         <button class="timButton"
                 ng-click="$ctrl.copyList()">
                 Copy
         </button>
     </div>
-    <div class="csRunDiv " style="padding: 1em;" ng-if="$ctrl.emaillist"> <!-- email -->
+    <div class="csRunDiv tableEmail" style="padding: 1em;" ng-if="$ctrl.emaillist"> <!-- email -->
         <p class="closeButton" ng-click="$ctrl.emaillist=''"></p>
         <p><textarea id="emaillist" ng-model="$ctrl.emaillist" rows="4" cols="40"></textarea><p>
         <p>
-        <input type="checkbox" ng-model="$ctrl.emailbcc" >BCC
-        <input type="checkbox" ng-model="$ctrl.emailbccme" >BCC also for me
-        <input type="checkbox" ng-model="$ctrl.emailtim" >use TIM to send
+        <label title="Send so that names are not visible (works only non-TIM send)"><input type="checkbox" ng-model="$ctrl.emailbcc">BCC</label>&nbsp;
+        <label title="Send also a copy for me"><input type="checkbox" ng-model="$ctrl.emailbccme" >BCC also for me</label>&nbsp;
+        <label title="Send using TIM.  Every mail is send as a personal mail."><input type="checkbox" ng-model="$ctrl.emailtim" >use TIM to send</label>&nbsp;
         </p>
         <p>Subject: <input ng-model="$ctrl.emailsubject" size="60"></p>
         <p>eMail content:</p>
