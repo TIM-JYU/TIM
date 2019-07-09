@@ -22,6 +22,8 @@
 // TODO: Static headers and filter rows so they do not scroll
 // TODO: Toolbar visible only when hit an editable field (not locked)
 // TODO: Toolbar shall not steal focus when created first time
+// TODO: save filter and sort conditions
+// TODO: Show sort icons weakly, so old icons with gray
 
 import {IController, IRootElementService, IScope} from "angular";
 import {getParId} from "tim/document/parhelpers";
