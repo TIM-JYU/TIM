@@ -12,6 +12,7 @@ from marshmallow.utils import missing
 
 from pluginserver_flask import GenericMarkupModel, GenericMarkupSchema, GenericHtmlSchema, GenericHtmlModel, \
      Missing, InfoSchema, create_blueprint
+from timApp.markdown.dumboclient import call_dumbo
 from timApp.tim_app import csrf
 
 
@@ -103,7 +104,10 @@ class TimMenuHtmlModel(GenericHtmlModel[TimMenuInputModel, TimMenuMarkupModel, T
 
     def get_browser_json(self):
         r = super().get_browser_json()
-        # r['state']['separator'] = ";"
+        # TODO: Error handling etc.
+        # print(r['markup']['menu'])
+        r['markup']['menu'] = call_dumbo(r['markup']['menu'])
+        # print(r['markup']['menu'])
         return r
 
 
@@ -136,17 +140,18 @@ def reqs():
     """Introducing templates for TimMenu plugin"""
     templates = ["""
 ``` {plugin="timMenu"}
-width: 10em;
 separator: "|"
-openingSymbol: "|"
-openDirection: top
-- text: [link1_text](link1)
-- text: Title 1
-    - text: [link2_text](link2)
-    - text: [link3_text](link3)
--  text: Title 2
-    - text: [link4_text](link4)
-    - text: [link5_text](link5)
+openingSymbol: " &#9661;"
+menu:
+ - Title 1
+    - [Link1_text](link1_address)
+    - [Link2_text](link2_address)
+    - *linkless_item*
+ - Title 2
+    - [Link3_text](link3_address)
+    - [Link4_text](link4_address)
+ - '[Title 3](title3_link_address)'
+ - '[Title 4](title4_link_address)'
 ```
 ""","""
 ``` {plugin="timMenu"}
@@ -187,5 +192,6 @@ openDirection: top
         "js": [],
         "multihtml": True,
         'editor_tabs': editor_tabs,
+        #"default_automd": True,
     },
     )

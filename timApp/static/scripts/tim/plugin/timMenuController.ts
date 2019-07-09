@@ -58,10 +58,7 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
         this.hoverOpen = this.attrs.hoverOpen;
         this.separator = this.attrs.separator;
         this.openingSymbol = this.attrs.openingSymbol;
-        // const a: IMenuItem = {text: "[Linkki 1](linkki1)", items: [], open: false};
-        // const b: IMenuItem = {text: "[Linkki 2](linkki2)", items: [], open: false};
         this.formMenu();
-        console.log(this.openingSymbol);
     }
 
     /**
@@ -121,7 +118,7 @@ timApp.component("timmenuRunner", {
           </ul>
         </div>
         <div ng-if="!m.items" class="btn-group" style="cursor: pointer;" ng-bind-html="m.text"></div>
-        <span ng-bind-html="$ctrl.separator"></span>
+        <span ng-if="!$last" ng-bind-html="$ctrl.separator"></span>
     </span>
 </div>
 `,
