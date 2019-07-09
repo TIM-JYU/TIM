@@ -158,7 +158,7 @@ def get_all_answers(task_ids: List[TaskId],
         answ = str(line)
         if isinstance(line, dict):  # maybe csPlugin?
             if "usercode" in line:  # is csPlugin
-                answ = line.get("usercode", "-")
+                answ = str(line.get("usercode", "-"))
             else:
                 if "points" in line:  # empty csPlugin answer
                     answ = ""

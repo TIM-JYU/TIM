@@ -539,7 +539,7 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
     emailUsers() {
         const timTable = this.getTimTable();
         if (timTable == null) { return; }
-        const selUsers = timTable.getCheckedRows(1, true);
+        const selUsers = timTable.getCheckedRows(0, true);
         this.emaillist = TableFormController.makeUserList(selUsers, this.emailColIndex, "", "\n");
     }
 
