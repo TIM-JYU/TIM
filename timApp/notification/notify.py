@@ -96,7 +96,7 @@ def send_email(
 
     if is_localhost():
         # don't use log_* function because this is typically run in Celery
-        print(f'Skipping mail send on localhost, message: {msg}')
+        print(f'Skipping mail send on localhost, rcpt: {rcpt}, message: {msg}')
         return None
 
     return Thread(target=send_email_impl, args=(app, rcpt, subject, msg, mail_from, reply_to)).start()
@@ -163,7 +163,7 @@ def multi_send_email_impl(
         bcc: str = ''
 ):
     with flask_app.app_context():
-        mime_msg = MIMEText(msg + flask_app.config['MAIL_SIGNATURE'])
+        mime_msg = MIMEText(msg)  # + flask_app.config['MAIL_SIGNATURE'])
         mime_msg['Subject'] = subject
         mime_msg['From'] = mail_from
         mime_msg['To'] = rcpt

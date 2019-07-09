@@ -127,6 +127,7 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
     private emailbcc: boolean = false;
     private emailbccme: boolean = true;
     private emailtim: boolean = true;
+    private emailMsg: string = "";
     private listSep: string = "-";
     private listName: boolean = false;
     private listUsername: boolean = true;
@@ -545,6 +546,7 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
     }
 
     async sendEmailTim() {
+        this.emailMsg = ""; // JSON.stringify(response);
         const url = this.pluginMeta.getAnswerUrl().replace("answer", "multiSendEmail");
         const response = await $http.post<string[]>(url, {
             rcpt: this.emaillist.replace(/\n/g, ";"),
@@ -552,7 +554,7 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
             msg: this.emailbody,
             bccme: this.emailbccme,
         });
-        this.error = JSON.stringify(response);
+        this.emailMsg = "Sent"; // JSON.stringify(response);
         return;
     }
 
@@ -772,10 +774,14 @@ timApp.component("tableformRunner", {
         <p>Subject: <input ng-model="$ctrl.emailsubject" size="60"></p>
         <p>eMail content:</p>
         <p><textarea id="emaillist" ng-model="$ctrl.emailbody" rows="10" cols="70"></textarea></p>
+        <p>
         <button class="timButton"
                 ng-click="$ctrl.sendEmail()">
                 Lähetä
         </button>
+        <!-- <span class="emailMsg" ng-model="$ctrl.emailMsg"></span> -->
+        <span class="savedtext" ng-if="$ctrl.emailMsg">Sent!</span>
+        </p>
     </div>
     <pre ng-if="$ctrl.result">{{$ctrl.result}}</pre>
     <pre ng-if="$ctrl.error" ng-bind-html="$ctrl.error"></pre>
