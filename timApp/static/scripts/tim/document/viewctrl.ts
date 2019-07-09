@@ -539,15 +539,16 @@ export class ViewCtrl implements IController {
             for (const fab of this.formAbs.values()) {
                 taskList.push(fab.taskId);
             }
-            // TODO: Query only one (first valid) answer
-            const answerResponse = await $http.get<{ answers: {[index: string]: [IAnswer]}, userId: number}>("/multipluginanswer2?" + $httpParamSerializer({
-                fields: taskList,
+            // TODO: Query only one (first valid) answer?
+            const answerResponse = await $http.post<{ answers: { [index: string]: [IAnswer] }, userId: number }>("/answersForTasks", {
+                tasks: taskList,
                 user: user.id,
-            }));
+            });
+            // const json = await $http.post<IAnnotation>("/add_annotation", {...newAnnotation, coord});
             if (!this.formTaskInfosLoaded) {
-                const taskInfoResponse = await $http.get<{ [index: string]: ITaskInfo }>("/taskinfos?" + $httpParamSerializer({
+                const taskInfoResponse = await $http.post<{ [index: string]: ITaskInfo }>("/infosForTasks", {
                     tasks: taskList,
-                }));
+                });
                 this.formTaskInfosLoaded = true;
                 for (const fab of this.formAbs.values()) {
                     fab.setInfo(taskInfoResponse.data[fab.taskId]);

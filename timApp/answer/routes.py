@@ -160,25 +160,10 @@ def chunks(l: List, n: int):
     for i in range(0, len(l), n):
         yield l[i:i + n]
 
-@answers.route("/multipluginanswer")
-def get_multiple_plugin_answers():
-    # Experiment on changing field values in teacher view using get_fields_and_users returns
-    # would only return latest answer
-    fields = request.args.getlist('fields')
-    user = request.args.get('user')
-    user = User.get_by_id(user)
-    userGroup = UserGroup.get_by_name(user.name)
-    doc = request.args.get('doc')
-    fieldlist = get_fields_and_users(fields, [userGroup], doc, user)
-    return json_response(fieldlist)
 
-@answers.route("/multipluginanswer2")
-def get_multiple_plugin_answers2():
-    # Another experiment on changing field values in teacher view
-    # Single request for all plugin answers when updateAll enabled
-    #TODO: Optimize - for now it's just get_answers repeated
-    fields = request.args.getlist('fields')
-    user_id = request.args.get('user')
+@answers.route("/answersForTasks", methods=['POST'])
+def get_answers_for_tasks():
+    tasks, user_id = verify_json_params('tasks', 'user')
     try:
         user_id = int(user_id)
     except ValueError:
@@ -187,14 +172,14 @@ def get_multiple_plugin_answers2():
     verify_logged_in()
     try:
         doc_map = {}
-        fieldlist = {k: [] for k in fields}
-        for task_id in fields:
+        fieldlist = {k: [] for k in tasks}
+        for task_id in tasks:
             tid = TaskId.parse(task_id)
             if tid.doc_id not in doc_map:
                 dib = get_doc_or_abort(tid.doc_id, f'Document {tid.doc_id} not found')
                 verify_seeanswers_access(dib)
                 doc_map[tid.doc_id] = dib.document
-        answs = user.answers.options(joinedload(Answer.users_all)).order_by(Answer.id.desc()).filter(Answer.task_id.in_(fields)).all()
+        answs = user.answers.options(joinedload(Answer.users_all)).order_by(Answer.id.desc()).filter(Answer.task_id.in_(tasks)).all()
         for a in answs:
             fieldlist[a.task_id].append(a)
         return json_response({"answers": fieldlist, "userId": user_id})
@@ -813,9 +798,9 @@ def maybe_hide_name(d: DocInfo, u: User):
     if should_hide_name(d, u):
         u.hide_name = True
 
-@answers.route("/taskinfos")
+@answers.route("/infosForTasks", methods=['POST'])
 def get_task_infos():
-    tasks = request.args.getlist('tasks')
+    tasks, = verify_json_params('tasks')
     doc_map = {}
     user = get_current_user_object()
     infolist = {}
