@@ -166,7 +166,7 @@ def multi_send_email_impl(
         mime_msg = MIMEText(msg)  # + flask_app.config['MAIL_SIGNATURE'])
         mime_msg['Subject'] = subject
         mime_msg['From'] = mail_from
-        mime_msg['To'] = rcpt
+        # mime_msg['To'] = rcpt  # some servers do not like 2 to: fields
         mime_msg['Bcc'] = bcc
 
         if reply_to:
