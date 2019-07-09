@@ -561,9 +561,12 @@ export class ViewCtrl implements IController {
             // when using slow connections (or maybe not)
             if (answerResponse.data.userId == this.selectedUser.id) {
                 for (const fab of this.formAbs.values()) {
-                    fab.changeUserAndAnswers(user,
-                        [answerResponse.data.answers[fab.taskId]],
-                    );
+                    const ans = answerResponse.data.answers[fab.taskId];
+                    if (ans === undefined) {
+                        fab.changeUserAndAnswers(user, []);
+                    } else {
+                        fab.changeUserAndAnswers(user, [ans]);
+                    }
                     const timComp = this.getTimComponentByName(fab.taskId.split(".")[1]);
                     if (timComp) {
                         if (fab.selectedAnswer) {

@@ -36,6 +36,7 @@ from timApp.document.document import Document
 from timApp.document.post_process import hide_names_in_teacher
 from timApp.item.block import Block, BlockType
 from timApp.markdown.dumboclient import call_dumbo
+from timApp.plugin import pluginControl
 from timApp.plugin.containerLink import call_plugin_answer
 from timApp.plugin.plugin import Plugin, PluginWrap, NEVERLAZY, TaskNotFoundException
 from timApp.plugin.plugin import PluginType
@@ -216,7 +217,7 @@ def get_answers_for_tasks3():
                 doc_map[tid.doc_id] = dib.document
             tids.append(tid)
         answer_map = {}
-        get_answers2(user, tids, answer_map)
+        pluginControl.get_answers(user, tids, answer_map)
         for ans in answer_map:
             fieldlist[ans] = answer_map[ans][0]
         return json_response({"answers": fieldlist, "userId": user_id})
