@@ -545,11 +545,12 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
     }
 
     async sendEmailTim() {
-        const url = this.pluginMeta.getAnswerUrl().replace("answer", "multiSendEmail")
+        const url = this.pluginMeta.getAnswerUrl().replace("answer", "multiSendEmail");
         const response = await $http.post<string[]>(url, {
             rcpt: this.emaillist.replace("\n", ";"),
             subject: this.emailsubject,
             msg: this.emailbody,
+            bcc: this.emailbcc,
         });
         this.error = JSON.stringify(response);
         return;

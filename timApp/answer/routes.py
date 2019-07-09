@@ -460,12 +460,12 @@ def multisendemail(plugintype: str, task_id_ext: str):
     verify_teacher_access(d)
     mail_from = get_current_user_object().email
     bcc = ""
-    if request.args.get('bcc'):
+    if request.json.get('bcc'):
         bcc = mail_from
     multi_send_email(
-        rcpt=request.args.get('rcpt'),
-        subject=request.args.get('subject'),
-        msg=request.args.get('msg'),
+        rcpt=request.json.get('rcpt'),
+        subject=request.json.get('subject'),
+        msg=request.json.get('msg'),
         mail_from=mail_from,
         reply_to=mail_from,
         bcc=bcc
