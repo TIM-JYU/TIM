@@ -340,7 +340,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
         }
     }
 
-    async changeUserAndAnswers(user: IUser, updateAll: boolean, answers: IAnswer[]) {
+    async changeUserAndAnswers(user: IUser, answers: IAnswer[]) {
         // let needsAnswerChange = false;
         this.user = user;
         this.fetchedUser = this.user ? this.user.id : 0;

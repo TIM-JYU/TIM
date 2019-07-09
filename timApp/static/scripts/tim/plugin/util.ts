@@ -199,8 +199,6 @@ export abstract class PluginBase<MarkupType extends IGenericPluginMarkup, A exte
     /**
      * @returns {Boolean} true if plugin supports setAnswer
      * False by default
-     * TODO: Check if needed (calling setAnswer with empty could do the same
-     *  or be used for resetting content
      */
     public supportsSetAnswer(): boolean {
         return false;

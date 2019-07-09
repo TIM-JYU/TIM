@@ -540,7 +540,7 @@ export class ViewCtrl implements IController {
                 taskList.push(fab.taskId);
             }
             // TODO: Query only one (first valid) answer?
-            const answerResponse = await $http.post<{ answers: { [index: string]: [IAnswer] }, userId: number }>("/answersForTasks", {
+            const answerResponse = await $http.post<{ answers: { [index: string]: [IAnswer] }, userId: number }>("/userAnswersForTasks", {
                 tasks: taskList,
                 user: user.id,
             });
@@ -559,7 +559,6 @@ export class ViewCtrl implements IController {
             if (answerResponse.data.userId == this.selectedUser.id) {
                 for (const fab of this.formAbs.values()) {
                     fab.changeUserAndAnswers(user,
-                        updateAll,
                         answerResponse.data.answers[fab.taskId],
                     );
                     const timComp = this.getTimComponentByName(fab.taskId.split(".")[1]);
@@ -577,90 +576,8 @@ export class ViewCtrl implements IController {
         // TODO: do not call changeUser separately if updateAll enabled
         // - handle /answers as single request for all related plugins instead of separate requests
         // - do the same for /taskinfo and /getState requests
-        // for (const ab of this.abs.values()) {
-        //     ab.changeUser(user, updateAll);
-        // }
-        //
-        // return;
-        // TODO experiments below, uncomment 4 lines above
-        // // Make a single request for all answerbrowsers in this.abs.values
-        // const response = await $http.get<{ }>("/multipluginanswer?" + $httpParamSerializer({fields: taskList, user: user.id, doc: this.docId}));
-        // console.log(response);
-        // TODO: if answerbrowser had same user as before then it can be removed from the query
-        //  Would it even happen if updateAll is enabled all the time when changing users
-        if (updateAll) {
-            if (this.abs.size == 0) {
-                return;
-            }
-            const taskList2 = [];
-            for (const ab of this.abs.values()) {
-                taskList2.push(ab.taskId);
-            }
-            const answerResponse = await $http.get<{ [index: string]: [IAnswer] }>("/multipluginanswer2?" + $httpParamSerializer({
-                fields: taskList2,
-                user: user.id,
-            }));
-            console.log(answerResponse);
-            // const selectedAnswers: {[index: string]: IAnswer} = {};
-            // const absNeedAnswerchange = [];
-            const answerIds: {[index: string]: AnswerBrowserController} = {};
-            for (const [k, ab] of this.abs) {
-                ab.changeUserAndAnswers(user, updateAll, answerResponse.data[ab.taskId]);
-                if (ab.selectedAnswer !== undefined) {
-                    answerIds[ab.selectedAnswer.id] = ab;
-                }
-                // if (needsAnswerChange) { absNeedAnswerchange.push(ab); }
-            }
-            console.log(answerIds);
-
-            const r = await to($http.get<{ [index: number]: { html: string, reviewHtml: string } }>("/getMultiStates", {
-                params: {
-                    answer_ids: Object.keys(answerIds),
-                    user_id: this.selectedUser.id,
-                    doc_id: this.docId,
-                },
-            }));
-            // console.log(stateResponse);
-            if (!r.ok) { return; } // TODO: Notify user
-            for (const [ansId, json] of Object.entries(r.result.data)) {
-                answerIds[ansId].changeAnswerFromState(json.html, json.reviewHtml);
-            }
-
-            // const abParParams: Array<{
-            //     answer_id: number; // IE shows this message
-            //     review: boolean; // And for IE you can not return anything, otherwise it will show even null
-            //     // And for IE you can not return anything, otherwise it will show even null
-            //     user_id: number; doc_id: string | number | undefined; par_id: string | undefined; ref_from_doc_id: number; ref_from_par_id: string | undefined;
-            // }>  = [];
-            // const answerIds: number[] = [];
-            // const answerIds: {[index: string]: AnswerBrowserController} = {};
-            // absNeedAnswerchange.forEach((a) => {
-            //     // const params = a.stateRequestPrep();
-            //     // if (params != undefined) {
-            //     //     abParParams.push(params);
-            //     // }
-            //     a.stateRequestPrep();
-            //     if (a.selectedAnswer) {
-            //         answerIds[a.selectedAnswer.id] = a;
-            //     }
-            //
-            // });
-
-            // make request for multiple states
-            // need: userid, list of answerids, docid
-            // maybe need: review (per task), par_id (per task)
-            // const r = await to($http.get<{ [index: number]: { html: string, reviewHtml: string } }>("/getMultiStates", {
-            //     params: {
-            //         answer_ids: Object.keys(answerIds),
-            //         user_id: this.selectedUser.id,
-            //         doc_id: this.docId,
-            //     },
-            // }));
-            // // console.log(stateResponse);
-            // if (!r.ok) { return; } // TODO: Notify user
-            // for (const [ansId, json] of Object.entries(r.result.data)) {
-            //     answerIds[ansId].continueFromStateReq(json.html, json.reviewHtml);
-            // }
+        for (const ab of this.abs.values()) {
+            ab.changeUser(user, updateAll);
         }
     }
 

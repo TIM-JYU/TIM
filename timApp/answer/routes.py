@@ -161,8 +161,12 @@ def chunks(l: List, n: int):
         yield l[i:i + n]
 
 
-@answers.route("/answersForTasks", methods=['POST'])
+@answers.route("/userAnswersForTasks", methods=['POST'])
 def get_answers_for_tasks():
+    """
+    Queries all answers for given list of tasks by the given user
+    :return: {answers:[Answer], user: user_id}
+    """
     tasks, user_id = verify_json_params('tasks', 'user')
     try:
         user_id = int(user_id)
@@ -800,6 +804,10 @@ def maybe_hide_name(d: DocInfo, u: User):
 
 @answers.route("/infosForTasks", methods=['POST'])
 def get_task_infos():
+    """
+    Returns task infos for given list of tasks
+    :return: {[task_id]: taskInfo}
+    """
     tasks, = verify_json_params('tasks')
     doc_map = {}
     user = get_current_user_object()
@@ -957,11 +965,6 @@ class GetStateSchema(Schema):
 
 
 class GetMultiStatesSchema(Schema):
-    # answer_id = fields.Int(required=True)
-    # par_id = fields.Str()
-    # doc_id = fields.Str()
-    # user_id = fields.Int(required=True)
-    # review = fields.Bool(missing=False)
     answer_ids = fields.List(fields.Int())
     user_id = fields.Int()
     doc_id = fields.Int()
@@ -994,6 +997,12 @@ class GetStateModel:
 @answers.route("/getMultiStates")
 @use_args(GetMultiStatesSchema())
 def get_multi_states(args: GetMultiStatesModel):
+    """
+    WIP
+    Queries plugin states for multiple answers
+    :param args: {answer_ids: list of answers, user_id, doc_id}
+    :return: {answerID: {'html': html, 'reviewHtml': None}}
+    """
     answer_ids, user_id, doc_id = args.answer_ids, args.user_id, args.doc_id
     print(args)
     docentry = get_doc_or_abort(doc_id)
