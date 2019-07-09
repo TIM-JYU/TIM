@@ -183,9 +183,42 @@ def get_answers_for_tasks():
                 dib = get_doc_or_abort(tid.doc_id, f'Document {tid.doc_id} not found')
                 verify_seeanswers_access(dib)
                 doc_map[tid.doc_id] = dib.document
-        answs = user.answers.options(joinedload(Answer.users_all)).order_by(Answer.id.desc()).filter(Answer.task_id.in_(tasks)).all()
+        answs = user.answers.options(joinedload(Answer.users_all))\
+            .order_by(Answer.id.desc()).filter(Answer.valid.is_(True))\
+            .filter(Answer.task_id.in_(tasks)).all()
         for a in answs:
             fieldlist[a.task_id].append(a)
+        return json_response({"answers": fieldlist, "userId": user_id})
+    except Exception as e:
+        return abort(400, str(e))
+
+@answers.route("/multiplugin3", methods=['POST'])
+def get_answers_for_tasks3():
+    """
+    WIP
+    """
+    tasks, user_id = verify_json_params('tasks', 'user')
+    try:
+        user_id = int(user_id)
+    except ValueError:
+        abort(404, 'Not a valid user id')
+    user = User.get_by_id(user_id)
+    verify_logged_in()
+    try:
+        doc_map = {}
+        fieldlist = {}
+        tids = []
+        for task_id in tasks:
+            tid = TaskId.parse(task_id)
+            if tid.doc_id not in doc_map:
+                dib = get_doc_or_abort(tid.doc_id, f'Document {tid.doc_id} not found')
+                verify_seeanswers_access(dib)
+                doc_map[tid.doc_id] = dib.document
+            tids.append(tid)
+        answer_map = {}
+        get_answers2(user, tids, answer_map)
+        for ans in answer_map:
+            fieldlist[ans] = answer_map[ans][0]
         return json_response({"answers": fieldlist, "userId": user_id})
     except Exception as e:
         return abort(400, str(e))
@@ -850,6 +883,23 @@ def get_task_info(task_id):
         return abort(400, str(e))
     return json_response(tim_vars)
 
+def get_answers2(user, task_ids, answer_map):
+    col = func.max(Answer.id).label('col')
+    cnt = func.count(Answer.id).label('cnt')
+    sub = (user
+           .answers
+           .filter(Answer.task_id.in_(task_ids_to_strlist(task_ids)) & Answer.valid == True)
+           .add_columns(col, cnt)
+           .with_entities(col, cnt)
+           .group_by(Answer.task_id).subquery())
+    answers: List[Tuple[Answer, int]] = (
+        Answer.query.join(sub, Answer.id == sub.c.col)
+            .with_entities(Answer, sub.c.cnt)
+            .all()
+    )
+    for answer, cnt in answers:
+        answer_map[answer.task_id] = answer, cnt
+    return cnt, answers
 
 @answers.route("/answers/<task_id>/<user_id>")
 def get_answers(task_id, user_id):

@@ -540,11 +540,14 @@ export class ViewCtrl implements IController {
                 taskList.push(fab.taskId);
             }
             // TODO: Query only one (first valid) answer?
-            const answerResponse = await $http.post<{ answers: { [index: string]: [IAnswer] }, userId: number }>("/userAnswersForTasks", {
+            // const answerResponse = await $http.post<{ answers: { [index: string]: [IAnswer] }, userId: number }>("/userAnswersForTasks", {
+            //     tasks: taskList,
+            //     user: user.id,
+            // });
+            const answerResponse = await $http.post<{ answers: { [index: string]: IAnswer }, userId: number }>("/multiplugin3", {
                 tasks: taskList,
                 user: user.id,
             });
-            // const json = await $http.post<IAnnotation>("/add_annotation", {...newAnnotation, coord});
             if (!this.formTaskInfosLoaded) {
                 const taskInfoResponse = await $http.post<{ [index: string]: ITaskInfo }>("/infosForTasks", {
                     tasks: taskList,
@@ -559,7 +562,7 @@ export class ViewCtrl implements IController {
             if (answerResponse.data.userId == this.selectedUser.id) {
                 for (const fab of this.formAbs.values()) {
                     fab.changeUserAndAnswers(user,
-                        answerResponse.data.answers[fab.taskId],
+                        [answerResponse.data.answers[fab.taskId]],
                     );
                     const timComp = this.getTimComponentByName(fab.taskId.split(".")[1]);
                     if (timComp) {
