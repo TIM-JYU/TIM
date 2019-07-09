@@ -168,6 +168,7 @@ export interface TimTable {
     hiddenColumns?: number[];
     lockedCells?: string[];
     saveCallBack?: (rowi: number, coli: number, content: string) => void;
+    cbCallBack?: (cbs: boolean[], n: number, index: number) => void;
     maxWidth?: string; // Possibly obsolete if cell/column layout can be given in data.table.colums
     minWidth?: string;
     singleLine?: boolean;
@@ -632,7 +633,18 @@ export class TimTableController extends DestroyScope implements IController {
         }
         if ( this.cbFilter ) {
             this.updateFilter();
+        } else {
+            this.countCBs(rowi);
         }
+    }
+
+    private countCBs(rowi: number) {
+        let n = 0;
+        for (let i = 0; i < this.cellDataMatrix.length; i++) {
+            if ( this.data.hiddenRows && this.data.hiddenRows.includes(i) ) { continue; }
+            if ( this.cbs[i] ) { n++; }
+        }
+        if ( this.data.cbCallBack ) { this.data.cbCallBack(this.cbs, n, rowi); }
     }
 
     public static rowToList(row: ICell[]) {
@@ -718,6 +730,7 @@ export class TimTableController extends DestroyScope implements IController {
         }
         hl = this.data.hiddenRows.length;
         if ( hl > 0 ) { this.visiblerows += (this.totalrows - hl); }
+        this.countCBs(-1);
     }
 
     sortByColumn(ai: number, bi: number, col: number, dir: number): number {
@@ -2630,6 +2643,7 @@ export class TimTableController extends DestroyScope implements IController {
         for (let i = 0; i < this.filters.length; i++) {
             this.filters[i] = "";
         }
+        this.cbFilter = false;
         this.updateFilter();
         this.clearSortOrder();
     }

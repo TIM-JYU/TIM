@@ -133,6 +133,7 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
     private listUsername: boolean = true;
     private listEmail: boolean = false;
     private fixedColor: string = "#f0f0f0";
+    private cbCount: number = 0;
 
     getDefaultMarkup() {
         return {};
@@ -191,6 +192,7 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
         this.oldCellValues = JSON.stringify(this.data.userdata.cells);
 
         this.data.saveCallBack = (rowi, coli, content) => this.cellChanged(rowi, coli, content);
+        this.data.cbCallBack = (cbs, n, index) => this.cbChanged(cbs, n, index);
 
         if (this.attrs.minWidth) {
             this.data.minWidth = this.attrs.minWidth;
@@ -566,20 +568,30 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
         }
         const w: any = window;
         // TODO: iPad do not like ;
-        let  addrs = this.emaillist.replace(/\n/g, ";");
+        let  addrs = this.emaillist.replace(/\n/g, ",");
         let bcc = "";
         if ( this.emailbcc ) {
             bcc = addrs;
             addrs = "";
         }
         if ( this.emailbccme ) {
-            if ( bcc ) { bcc += ";"; }
+            if ( bcc ) { bcc += ","; }
             bcc += w.current_user.email;
         }
         window.location.href = "mailto:" + addrs
               + "?" + "subject=" + this.emailsubject
               + "&" + "body=" + this.emailbody
               + "&" + "bcc=" + bcc;
+    }
+
+    /**
+     * Callback function to be noticed when check boxes are changed in table
+     * @param cbs boolean list of cb-values
+     * @param n number of visible checked cbs
+     * @param index index of clicked cb, may be -1 if header row cb clicked
+     */
+    cbChanged(cbs: boolean[], n: number, index: number) {
+        this.cbCount = n;
     }
 
     /**
@@ -730,17 +742,17 @@ timApp.component("tableformRunner", {
     </button>
     <button class="timButton"
             ng-click="$ctrl.removeUsers()"
-            ng-if="::$ctrl.attrs.removeUsersButtonText">
+            ng-if="$ctrl.attrs.removeUsersButtonText && $ctrl.cbCount">
             {{::$ctrl.attrs.removeUsersButtonText}}
     </button>
     <button class="timButton"
             ng-click="$ctrl.listUsernames()"
-            ng-if="::$ctrl.attrs.userListButtonText">
+            ng-if="$ctrl.attrs.userListButtonText && $ctrl.cbCount">
             {{::$ctrl.attrs.userListButtonText}}
     </button>
     <button class="timButton"
             ng-click="$ctrl.emailUsers()"
-            ng-if="::$ctrl.attrs.emailUsersButtonText">
+            ng-if="$ctrl.attrs.emailUsersButtonText && $ctrl.cbCount">
             {{::$ctrl.attrs.emailUsersButtonText}}
     </button>
     </div>
