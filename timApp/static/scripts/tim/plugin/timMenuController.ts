@@ -3,7 +3,6 @@
  */
 import angular from "angular";
 import * as t from "io-ts";
-import {ViewCtrl} from "tim/document/viewctrl";
 import {PluginBase, pluginBindings} from "tim/plugin/util";
 import {timApp} from "../app";
 import {GenericPluginMarkup, Info, nullable, withDefault} from "./attributes";
@@ -19,7 +18,8 @@ const TimMenuMarkup = t.intersection([
     GenericPluginMarkup,
     t.type({
         hoverOpen: withDefault(t.boolean, true),
-        separator: withDefault(t.string, "|"),
+        separator: withDefault(t.string, "&nbsp;"), // Non-breaking space
+        openingSymbol: withDefault(t.string, "&#9662;"), // Caret
     }),
 ]);
 const TimMenuAll = t.intersection([
@@ -40,17 +40,10 @@ interface IMenuItem {
 }
 
 class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.TypeOf<typeof TimMenuAll>, typeof TimMenuAll> {
-    private isRunning = false;
-    private output: string = "";
-    private fieldlist: string = "";
-    private vctrl!: ViewCtrl;
-    private importText: string = "";
-    private error: {message?: string, stacktrace?: string} = {};
-    private result: string = "";
     private menu: any; // IMenuItem[] = [];
-
+    private openingSymbol: string = "";
     private hoverOpen: boolean = true;
-    private separator: string = "|";
+    private separator: string = "";
 
     getDefaultMarkup() {
         return {};
@@ -64,9 +57,11 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
         super.$onInit();
         this.hoverOpen = this.attrs.hoverOpen;
         this.separator = this.attrs.separator;
+        this.openingSymbol = this.attrs.openingSymbol;
         // const a: IMenuItem = {text: "[Linkki 1](linkki1)", items: [], open: false};
         // const b: IMenuItem = {text: "[Linkki 2](linkki2)", items: [], open: false};
         this.formMenu();
+        console.log(this.openingSymbol);
     }
 
     /**
@@ -120,17 +115,13 @@ timApp.component("timmenuRunner", {
 <div style="margin-top: 5px; margin-bottom: 10px;">
     <span ng-repeat="m in $ctrl.menu">
         <div ng-if="m.items" class="btn-group" uib-dropdown is-open="status.isopen" id="simple-dropdown" style="cursor: pointer;">
-          <span uib-dropdown-toggle ng-disabled="disabled">
-           {{m.text}}<span class="caret"></span>
-          </span>
+          <span uib-dropdown-toggle ng-disabled="disabled" ng-bind-html="m.text + $ctrl.openingSymbol"></span>
           <ul class="dropdown-menu" uib-dropdown-menu aria-labelledby="simple-dropdown">
-            <li ng-repeat="i in m.items" role="menuitem"><a>{{i.text}}</a></li>
+            <li ng-repeat="i in m.items" role="menuitem" ng-bind-html="i.text"></li>
           </ul>
         </div>
-        <div ng-if="!m.items" class="btn-group" style="cursor: pointer;">
-        {{m.text}}
-        </div>
-        &nbsp;
+        <div ng-if="!m.items" class="btn-group" style="cursor: pointer;" ng-bind-html="m.text"></div>
+        <span ng-bind-html="$ctrl.separator"></span>
     </span>
 </div>
 `,

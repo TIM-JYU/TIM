@@ -20,10 +20,12 @@ class TimMenuStateModel:
     """Model for the information that is stored in TIM database for each answer."""
     url: Union[str, Missing] = None
     separator: Union[str, Missing] = None
+    openingSymbol: Union[str, Missing] = None
 
 class TimMenuStateSchema(Schema):
     url = fields.Str(allow_none=True)
     separator = fields.Str(allow_none=True)
+    openingSymbol = fields.Str(allow_none=True)
 
     @post_load
     def make_obj(self, data):
@@ -38,6 +40,7 @@ class TimMenuItem():
 class TimMenuMarkupModel(GenericMarkupModel):
     hoverOpen: Union[bool, Missing] = missing
     separator: Union[str, Missing] = missing
+    openingSymbol: Union[str, Missing] = missing
     menu: Union[List[str], Missing] = missing
 
 @attr.s(auto_attribs=True)
@@ -54,7 +57,8 @@ class TimMenuItemSchema(Schema):
 
 class TimMenuMarkupSchema(GenericMarkupSchema):
     hoverOpen = fields.Bool(allow_none=True, default=True)
-    separator = fields.Str(allow_none=True)
+    separator = fields.Str(allow_none=True, default="&nbsp;")
+    openingSymbol = fields.Str(allow_none=True, default="&#9662;")
     menu = fields.List(fields.Str())
     # menu = fields.List(fields.Nested(TimMenuItemSchema))
     @post_load
@@ -72,11 +76,13 @@ class TimMenuInputModel:
     """Model for the information that is sent from browser (plugin AngularJS component)."""
     data: str
     separator: str
+    openingSymbol: str
     url: str
 
 class TimMenuInputSchema(Schema):
     data = fields.Str(required=True)
     separator = fields.Str(required=False)
+    openingSymbol = fields.Str(required=False)
     url = fields.Str(required=False)
 
     @post_load
@@ -132,6 +138,7 @@ def reqs():
 ``` {plugin="timMenu"}
 width: 10em;
 separator: "|"
+openingSymbol: "|"
 openDirection: top
 - text: [link1_text](link1)
 - text: Title 1
