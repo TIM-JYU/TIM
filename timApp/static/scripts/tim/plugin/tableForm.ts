@@ -547,7 +547,7 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
     async sendEmailTim() {
         const url = this.pluginMeta.getAnswerUrl().replace("answer", "multiSendEmail");
         const response = await $http.post<string[]>(url, {
-            rcpt: this.emaillist.replace("\n", ";"),
+            rcpt: this.emaillist.replace(/\n/g, ";"),
             subject: this.emailsubject,
             msg: this.emailbody,
             bccme: this.emailbccme,
@@ -564,7 +564,7 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
         }
         const w: any = window;
         // TODO: iPad do not like ;
-        let  addrs = this.emaillist.replace("\n", ";");
+        let  addrs = this.emaillist.replace(/\n/g, ";");
         let bcc = "";
         if ( this.emailbcc ) {
             bcc = addrs;
