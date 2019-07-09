@@ -150,7 +150,7 @@ def multi_send_email(
         print(f'Skipping mail send on localhost, rcpt: {rcpt}, message: {msg}')
         return None
 
-    return Thread(target=multi_send_email_impl, args=(app, rcpt, subject, msg, mail_from, reply_to)).start()
+    return Thread(target=multi_send_email_impl, args=(app, rcpt, subject, msg, mail_from, reply_to, bcc)).start()
 
 
 def multi_send_email_impl(
@@ -166,7 +166,6 @@ def multi_send_email_impl(
         mime_msg = MIMEText(msg)  # + flask_app.config['MAIL_SIGNATURE'])
         mime_msg['Subject'] = subject
         mime_msg['From'] = mail_from
-        # mime_msg['To'] = rcpt  # some servers do not like 2 to: fields
         mime_msg['Bcc'] = bcc
 
         if reply_to:
@@ -177,8 +176,9 @@ def multi_send_email_impl(
         try:
             for rcp in rcpts:
                 try:
+                    # TODO: Mailmerge here possible templates.
                     mime_msg['To'] = rcp
-                    s.sendmail(mail_from, [rcp], mime_msg.as_string())
+                    s.sendmail(mail_from, [rcp, bcc], mime_msg.as_string())
                 except (smtplib.SMTPSenderRefused,
                         smtplib.SMTPRecipientsRefused,
                         smtplib.SMTPHeloError,
