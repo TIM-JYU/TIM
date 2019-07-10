@@ -621,7 +621,10 @@ def tim_convert_input(source, from_format, input_type, to, extra_args=(), output
                 filters = filters.split()
             f = ['--filter=' + x for x in filters]
             args.extend(f)
-
+        try:  # Hack because images in mmcqs is not found
+            os.symlink("/tim_files/blocks/images", "/images")
+        except:
+            pass
         p = subprocess.Popen(
             args,
             stdin=subprocess.PIPE if string_input else None,
