@@ -176,7 +176,7 @@ def delete_extra_files(extra_files, prgpath):
 def get_md(ttype, query):
     tiny = False
 
-    bycode, is_input, js, runner, tiny = handle_common_params(query, tiny, ttype, None)
+    bycode, is_input, js, runner, tiny = handle_common_params(query, tiny, ttype)
 
     usercode = None
     user_print = get_json_param(query.jso, "userPrint", None, False)
@@ -225,6 +225,9 @@ def get_md(ttype, query):
         code = '\\begin{lstlisting}\n' + \
                str(usercode) + '\n' + \
                '\\end{lstlisting}\n'
+
+        if 'mathcheck' in ttype and str(usercode) == '=':
+            code = ''
 
         if 'text' in ttype and rows is not None and str(usercode) == '':
             r = ''  # for text make a verbatim with number of rows empty lines

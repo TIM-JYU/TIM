@@ -36,7 +36,7 @@ from timApp.document.document import Document
 from timApp.document.post_process import hide_names_in_teacher
 from timApp.item.block import Block, BlockType
 from timApp.markdown.dumboclient import call_dumbo
-from timApp.plugin import pluginControl
+from timApp.notification.notify import multi_send_email
 from timApp.plugin.containerLink import call_plugin_answer
 from timApp.plugin.plugin import Plugin, PluginWrap, NEVERLAZY, TaskNotFoundException
 from timApp.plugin.plugin import PluginType
@@ -493,6 +493,30 @@ class JsRunnerSchema(GenericMarkupSchema):
     def validate_schema(self, data):
         if data.get('group') is None and data.get('groups') is None:
             raise ValidationError("Either group or groups must be given.")
+
+
+@answers.route("/<plugintype>/<task_id_ext>/multiSendEmail/", methods=['POST'])
+def multisendemail(plugintype: str, task_id_ext: str):
+    try:
+        tid = TaskId.parse(task_id_ext)
+    except PluginException as e:
+        return abort(400, f'Task id error: {e}')
+    d = get_doc_or_abort(tid.doc_id)
+    verify_teacher_access(d)
+    mail_from = get_current_user_object().email
+    bcc = ""
+    bccme = request.json.get('bccme', False)
+    if bccme:
+        bcc = mail_from
+    multi_send_email(
+        rcpt=request.json.get('rcpt'),
+        subject=request.json.get('subject'),
+        msg=request.json.get('msg'),
+        mail_from=mail_from,
+        reply_to=mail_from,
+        bcc=bcc
+    )
+    return ok_response()
 
 
 @answers.route("/<plugintype>/<task_id_ext>/answer/", methods=['PUT'])

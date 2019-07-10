@@ -179,7 +179,8 @@ def internal_error(error):
     help_email = app.config['HELP_EMAIL']
     error.description = Markup('Something went wrong with the server, sorry. '
                                'TIM developers have been notified about this. '
-                               f'If the problem persists, please send email to <a href="mailto:{help_email}">{help_email}</a>.')
+                               'If the problem persists, please send email to '
+                               f'<a href="mailto:{help_email}">{help_email}</a>.')
     tb = traceback.format_exc()
     message = f"""
 Exception happened on {get_current_time()} at {request.url}
@@ -233,7 +234,8 @@ def service_unavailable(error):
 
 @app.errorhandler(413)
 def entity_too_large(error):
-    error.description = f'Your file is too large to be uploaded. Maximum size is {app.config["MAX_CONTENT_LENGTH"] / 1024 / 1024} MB.'
+    error.description = 'Your file is too large to be uploaded. ' +\
+        f'Maximum size is {app.config["MAX_CONTENT_LENGTH"] / 1024 / 1024} MB.'
     return error_generic(error, 413)
 
 
