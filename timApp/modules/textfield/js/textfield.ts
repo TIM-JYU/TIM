@@ -52,6 +52,7 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
     private hideSavedText = true;
     private redAlert = false;
     private saveResponse: {saved: boolean, message: (string | undefined)} = {saved: false, message: undefined};
+    private preventedAutosave = false;
 
     getDefaultMarkup() {
         return {};
@@ -205,6 +206,7 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
             const selectedfield = inputfields[i] as HTMLInputElement;
             if (selectedfield === document.activeElement && inputfields[i + 1]) {
                 const nextfield = inputfields[i + 1] as HTMLInputElement;
+                this.preventedAutosave = true;
                 return nextfield.focus();
             }
         }
@@ -255,6 +257,10 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
      * Unused method warning is suppressed, as the method is only called in template.
      */
     autoSave() {
+        if(this.preventedAutosave){
+            this.preventedAutosave = false;
+            return;
+        }
         if (this.attrs.autosave) {
             this.doSaveText(false);
         }
@@ -265,6 +271,11 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
      * @param true/false parameter boolean checker for the need to save
      */
     async doSaveText(nosave: boolean) {
+        if (!this.isUnSaved()) {
+            this.saveResponse.saved = false;
+            this.saveResponse.message = "No changes"
+            return this.saveResponse;
+        }
         this.errormessage = "";
         if (this.attrs.validinput) {
             if (!this.validityCheck(this.attrs.validinput)) {
