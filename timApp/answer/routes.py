@@ -209,27 +209,12 @@ def get_answers2(user, task_ids, answer_map):
     )
     for answer in answers:
         if len(answer.users_all) > 1:
-            answer_map[answer.task_id] = {
-            'id': answer.id,
-            'task_id': answer.task_id,
-            'content': answer.content,
-            'points': answer.points,
-            'answered_on': answer.answered_on,
-            'valid': answer.valid,
-            'last_points_modifier': answer.last_points_modifier,
-            'users': answer.users_all
-        }
+            answer_map[answer.task_id] = answer
         else:
             # answer_map[answer.task_id] = answer
-            answer_map[answer.task_id] = {
-                'id': answer.id,
-                'task_id': answer.task_id,
-                'content': answer.content,
-                'points': answer.points,
-                'answered_on': answer.answered_on,
-                'valid': answer.valid,
-                'last_points_modifier': answer.last_points_modifier,
-            }
+            asd = answer.to_json()
+            asd.pop('users')
+            answer_map[answer.task_id] = asd
     return answers
 
 @answers.route("/multiplugin3", methods=['POST'])
