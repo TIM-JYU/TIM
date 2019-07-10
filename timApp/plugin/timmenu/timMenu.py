@@ -23,6 +23,7 @@ class TimMenuStateModel:
     separator: Union[str, Missing] = None
     openingSymbol: Union[str, Missing] = None
 
+
 class TimMenuStateSchema(Schema):
     url = fields.Str(allow_none=True)
     separator = fields.Str(allow_none=True)
@@ -33,38 +34,52 @@ class TimMenuStateSchema(Schema):
         res = TimMenuStateModel(**data)
         return res
 
-class TimMenuItem():
-    def __init__(self, text: str):
+
+class TimMenuItem:
+    def __init__(self, text: str, level: int):
         self.text = text
+        self.level = level
+
+    def __str__(self):
+        return f"{{level: {self.level}, text: '{self.text}'}}"
+
+    def __repr__(self):
+        return str(self)
+
+@attr.s(auto_attribs=True)
+class TimMenuItemModel:
+    text: str
+    level: int
+
 
 @attr.s(auto_attribs=True)
 class TimMenuMarkupModel(GenericMarkupModel):
     hoverOpen: Union[bool, Missing] = missing
     separator: Union[str, Missing] = missing
     openingSymbol: Union[str, Missing] = missing
-    menu: Union[List[str], Missing] = missing
+    #menu: Union[List[str], Missing] = missing
+    menu: Union[str, Missing] = missing
 
-@attr.s(auto_attribs=True)
-class TimMenuItemModel:
-    text: str
 
 class TimMenuItemSchema(Schema):
-    text = fields.Str(required=False)
+    text = fields.Str(required=True)
+    level = fields.Int(required=True)
 
     @post_load
     def make_obj(self, data):
         return TimMenuItemModel(**data)
 
-
 class TimMenuMarkupSchema(GenericMarkupSchema):
     hoverOpen = fields.Bool(allow_none=True, default=True)
     separator = fields.Str(allow_none=True, default="&nbsp;")
     openingSymbol = fields.Str(allow_none=True, default="&#9662;")
-    menu = fields.List(fields.Str())
+    #menu = fields.List(fields.Str())
+    menu = fields.Str()
     # menu = fields.List(fields.Nested(TimMenuItemSchema))
     @post_load
     def make_obj(self, data):
         return TimMenuMarkupModel(**data)
+
 
 class TimMenuAttrs(Schema):
     """Common fields for HTML and answer routes."""
@@ -90,6 +105,19 @@ class TimMenuInputSchema(Schema):
     def make_obj(self, data):
         return TimMenuInputModel(**data)
 
+
+def parse_menu_string(menu_str):
+    menu_split = menu_str.split("\n")
+    menuitem_list = []
+    for item in menu_split:
+        list_symbol_index = item.index("-")
+        level = list_symbol_index//2
+        text_markdown = item[list_symbol_index+1:]
+        text_html = call_dumbo([text_markdown])[0]
+        menuitem_list.append(TimMenuItem(text_html, level))
+    return menuitem_list
+
+
 @attr.s(auto_attribs=True)
 class TimMenuHtmlModel(GenericHtmlModel[TimMenuInputModel, TimMenuMarkupModel, TimMenuStateModel]):
     def get_component_html_name(self) -> str:
@@ -105,9 +133,8 @@ class TimMenuHtmlModel(GenericHtmlModel[TimMenuInputModel, TimMenuMarkupModel, T
     def get_browser_json(self):
         r = super().get_browser_json()
         # TODO: Error handling etc.
-        # print(r['markup']['menu'])
-        r['markup']['menu'] = call_dumbo(r['markup']['menu'])
-        # print(r['markup']['menu'])
+        print(parse_menu_string(r['markup']['menu']))
+        r['markup']['menu'] = str(parse_menu_string(r['markup']['menu']))
         return r
 
 
