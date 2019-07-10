@@ -193,6 +193,45 @@ def get_answers_for_tasks():
     except Exception as e:
         return abort(400, str(e))
 
+def get_answers2(user, task_ids, answer_map):
+    col = func.max(Answer.id).label('col')
+    sub = (user
+           .answers
+           .filter(Answer.task_id.in_(task_ids_to_strlist(task_ids)) & Answer.valid == True)
+           .add_columns(col)
+           .with_entities(col)
+           .group_by(Answer.task_id).subquery())
+    answers: List[Answer] = (
+        Answer.query.join(sub, Answer.id == sub.c.col)
+        #Answer.query.join(sub, Answer.id == sub.c.col).join(Answer.users_all)
+        # .with_entities(Answer, sub.c.cnt)
+            .all()
+    )
+    for answer in answers:
+        if len(answer.users_all) > 1:
+            answer_map[answer.task_id] = {
+            'id': answer.id,
+            'task_id': answer.task_id,
+            'content': answer.content,
+            'points': answer.points,
+            'answered_on': answer.answered_on,
+            'valid': answer.valid,
+            'last_points_modifier': answer.last_points_modifier,
+            'users': answer.users_all
+        }
+        else:
+            # answer_map[answer.task_id] = answer
+            answer_map[answer.task_id] = {
+                'id': answer.id,
+                'task_id': answer.task_id,
+                'content': answer.content,
+                'points': answer.points,
+                'answered_on': answer.answered_on,
+                'valid': answer.valid,
+                'last_points_modifier': answer.last_points_modifier,
+            }
+    return answers
+
 @answers.route("/multiplugin3", methods=['POST'])
 def get_answers_for_tasks3():
     """
@@ -217,10 +256,11 @@ def get_answers_for_tasks3():
                 doc_map[tid.doc_id] = dib.document
             tids.append(tid)
         answer_map = {}
-        pluginControl.get_answers(user, tids, answer_map)
-        for ans in answer_map:
-            fieldlist[ans] = answer_map[ans][0]
-        return json_response({"answers": fieldlist, "userId": user_id})
+        # pluginControl.get_answers(user, tids, answer_map)
+        get_answers2(user, tids, answer_map)
+        # for ans in answs:
+        #      fieldlist[ans.task_id] = [ans]
+        return json_response({"answers": answer_map, "userId": user_id})
     except Exception as e:
         return abort(400, str(e))
 
@@ -884,23 +924,6 @@ def get_task_info(task_id):
         return abort(400, str(e))
     return json_response(tim_vars)
 
-def get_answers2(user, task_ids, answer_map):
-    col = func.max(Answer.id).label('col')
-    cnt = func.count(Answer.id).label('cnt')
-    sub = (user
-           .answers
-           .filter(Answer.task_id.in_(task_ids_to_strlist(task_ids)) & Answer.valid == True)
-           .add_columns(col, cnt)
-           .with_entities(col, cnt)
-           .group_by(Answer.task_id).subquery())
-    answers: List[Tuple[Answer, int]] = (
-        Answer.query.join(sub, Answer.id == sub.c.col)
-            .with_entities(Answer, sub.c.cnt)
-            .all()
-    )
-    for answer, cnt in answers:
-        answer_map[answer.task_id] = answer, cnt
-    return cnt, answers
 
 @answers.route("/answers/<task_id>/<user_id>")
 def get_answers(task_id, user_id):
