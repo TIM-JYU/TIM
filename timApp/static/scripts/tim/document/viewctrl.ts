@@ -530,6 +530,9 @@ export class ViewCtrl implements IController {
         if (updateAll) {
             for (const lo of this.ldrs.values()) {
                 lo.loadPlugin();
+                // await lo.abLoad.promise;
+            }
+            for (const lo of this.ldrs.values()) {
                 await lo.abLoad.promise;
             }
         }
