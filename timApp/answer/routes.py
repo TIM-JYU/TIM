@@ -781,6 +781,7 @@ def post_answer(plugintype: str, task_id_ext: str):
 
 
 def handle_jsrunner_response(jsonresp, result, current_doc: DocInfo):
+    # TODO: Might need to rewrite this function for optimization
     save_obj = jsonresp.get('savedata')
     if not save_obj:
         return
@@ -828,39 +829,53 @@ def handle_jsrunner_response(jsonresp, result, current_doc: DocInfo):
         u_id = user['user']
         u = User.get_by_id(u_id)
         user_fields = user['fields']
+        task_map = {}
         for key, value in user_fields.items():
-            content_field = task_content_name_map[key]
-            if content_field == 'ignore':
-                continue
             task_id = TaskId.parse(key, False, False, True)
+            field = task_id.field
+            if field is None:
+                field = task_content_name_map[task_id.doc_task]
+            try:
+                task_map[task_id.doc_task][field] = value
+            except KeyError:
+                task_map[task_id.doc_task] = {}
+                task_map[task_id.doc_task][field] = value
+        for taskid, contents in task_map.items():
+            task_id = TaskId.parse(taskid, False, False)
             an: Answer = get_latest_answers_query(task_id, [u]).first()
             points = None
-            content = json.dumps({content_field: None})
-            if task_id.field == 'points':
-                if value == "":
-                    value = None
-                else:
-                    try:
-                        value = float(value)
-                    except ValueError:
-                        if not result['web'].get('error', None):
-                            result['web']['error'] = 'Errors:\n'
-                        result['web']['error'] += f"Value {value} is not valid point value for task {task_id.task_name}\n"
-                        continue
-                points = value
-            else:
-                content = json.dumps({content_field: value})
+            content = {}
+            new_answer = True
             if an:
-                an_content = json.loads(an.content)
-                if task_id.field == 'points':
-                    if an.points == points:
-                        continue
+                points = an.points
+                content = json.loads(an.content)
+                new_answer = False
+            for field, value in contents.items():
+                if field == 'points':
+                    if value == "":
+                        value = None
+                    else:
+                        try:
+                            value = float(value)
+                        except ValueError:
+                            if not result['web'].get('error', None):
+                                result['web']['error'] = 'Errors:\n'
+                            result['web'][
+                                'error'] += f"Value {value} is not valid point value for task {task_id.task_name}\n"
+                            continue
+                    if points != value:
+                        new_answer = True
+                    points = value
                 else:
-                    if an_content.get(content_field) == value:
-                        continue
-                    an_content[content_field] = value
-                    points = an.points
-                content = json.dumps(an_content)
+                    if an and content.get(field, "") != value:
+                        new_answer = True
+                    content[field] = value
+            if not new_answer:
+                continue
+            if content == {}:
+                # TODO: can this be reached without points field?
+                content[task_content_name_map[task_id.doc_task + ".points"]] = None
+            content = json.dumps(content)
             ans = Answer(
                 content=content,
                 points=points,
@@ -870,6 +885,48 @@ def handle_jsrunner_response(jsonresp, result, current_doc: DocInfo):
                 saver=curr_user,
             )
             db.session.add(ans)
+        # for key, value in user_fields.items():
+        #     content_field = task_content_name_map[key]
+        #     if content_field == 'ignore':
+        #         continue
+        #     task_id = TaskId.parse(key, False, False, True)
+        #     an: Answer = get_latest_answers_query(task_id, [u]).first()
+        #     points = None
+        #     content = json.dumps({content_field: None})
+        #     if task_id.field == 'points':
+        #         if value == "":
+        #             value = None
+        #         else:
+        #             try:
+        #                 value = float(value)
+        #             except ValueError:
+        #                 if not result['web'].get('error', None):
+        #                     result['web']['error'] = 'Errors:\n'
+        #                 result['web']['error'] += f"Value {value} is not valid point value for task {task_id.task_name}\n"
+        #                 continue
+        #         points = value
+        #     else:
+        #         content = json.dumps({content_field: value})
+        #     if an:
+        #         an_content = json.loads(an.content)
+        #         if task_id.field == 'points':
+        #             if an.points == points:
+        #                 continue
+        #         else:
+        #             if an_content.get(content_field) == value:
+        #                 continue
+        #             an_content[content_field] = value
+        #             points = an.points
+        #         content = json.dumps(an_content)
+        #     ans = Answer(
+        #         content=content,
+        #         points=points,
+        #         task_id=task_id.doc_task,
+        #         users=[u],
+        #         valid=True,
+        #         saver=curr_user,
+        #     )
+        #     db.session.add(ans)
 
 
 def get_hidden_name(user_id):
