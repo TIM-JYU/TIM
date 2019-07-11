@@ -36,12 +36,13 @@ class TimMenuStateSchema(Schema):
 
 
 class TimMenuItem:
-    def __init__(self, text: str, level: int):
+    def __init__(self, text: str, level: int, items = None):
         self.text = text
         self.level = level
+        self.items = items
 
     def __str__(self):
-        return f"{{level: {self.level}, text: '{self.text}'}}"
+        return f"{{level: {self.level}, text: '{self.text}', items: {self.items}}}"
 
     def __repr__(self):
         return str(self)
@@ -95,6 +96,7 @@ class TimMenuInputModel:
     openingSymbol: str
     url: str
 
+
 class TimMenuInputSchema(Schema):
     data = fields.Str(required=True)
     separator = fields.Str(required=False)
@@ -107,14 +109,28 @@ class TimMenuInputSchema(Schema):
 
 
 def parse_menu_string(menu_str):
+    """
+    Parses a markdown list formatted string into menu structure.
+    :param menu_str: Menu in a single string.
+    :return:
+    """
     menu_split = menu_str.split("\n")
     menuitem_list = []
+    parents = [TimMenuItem("", -1, [])]
     for item in menu_split:
         list_symbol_index = item.index("-")
         level = list_symbol_index//2
         text_markdown = item[list_symbol_index+1:]
-        text_html = call_dumbo([text_markdown])[0]
-        menuitem_list.append(TimMenuItem(text_html, level))
+        text_html = call_dumbo([text_markdown])[0].replace("<p>","").replace("</p>","")
+        current = TimMenuItem(text_html, level, [])
+        for parent in parents:
+            if parent.level < level:
+                # print("appending " + str(current) + " to " + str(parent))
+                parent.items.append(current)
+                parents.insert(0, current)
+                break
+        menuitem_list = parents[-1].items
+    # print(menuitem_list)
     return menuitem_list
 
 
@@ -133,7 +149,6 @@ class TimMenuHtmlModel(GenericHtmlModel[TimMenuInputModel, TimMenuMarkupModel, T
     def get_browser_json(self):
         r = super().get_browser_json()
         # TODO: Error handling etc.
-        print(parse_menu_string(r['markup']['menu']))
         r['markup']['menu'] = str(parse_menu_string(r['markup']['menu']))
         return r
 
@@ -169,28 +184,20 @@ def reqs():
 ``` {plugin="timMenu"}
 separator: "|"
 openingSymbol: " &#9661;"
-menu:
+menu: |!!
  - Title 1
-    - [Link1_text](link1_address)
-    - [Link2_text](link2_address)
-    - *linkless_item*
+    - [Item 1](item_1_address)
+    - [Item 2](item_2_address)
+    - [Item 3](item_3_address)
+    - *Non-link item*
  - Title 2
-    - [Link3_text](link3_address)
-    - [Link4_text](link4_address)
- - '[Title 3](title3_link_address)'
- - '[Title 4](title4_link_address)'
+    - [Item 4](item_4_address)
+    - [Item 5](item_5_address)
+ - [Title 3](title_3_address)
+ - *Non-link title*
+!!
 ```
-""","""
-``` {plugin="timMenu"}
-- [link1_text](link1)
-- Title 1
-    - [link2_text](link2)
-    - [link3_text](link3)
--  Title 2
-    - [link4_text](link4)
-    - [link5_text](link5)
-```
-    """]
+"""]
     editor_tabs = [
             {
                 'text': 'Insert',
@@ -202,11 +209,6 @@ menu:
                                 'data': templates[0].strip(),
                                 'text': 'TimMenu',
                                 'expl': 'Add a dropdown menu bar',
-                            },
-                            {
-                                'data': templates[1].strip(),
-                                'text': 'TimMenu (simple)',
-                                'expl': 'Add a minimal dropdown menu bar',
                             },
                         ],
                     },

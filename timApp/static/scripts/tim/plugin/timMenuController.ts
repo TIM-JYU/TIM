@@ -6,7 +6,6 @@ import * as t from "io-ts";
 import {PluginBase, pluginBindings} from "tim/plugin/util";
 import {timApp} from "../app";
 import {GenericPluginMarkup, Info, nullable, withDefault} from "./attributes";
-import {IMenuItem} from "ui-grid";
 
 const importDataApp = angular.module("importDataApp", ["ngSanitize"]);
 export const moduleDefs = [importDataApp];
@@ -69,7 +68,6 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
         this.separator = this.attrs.separator;
         this.openingSymbol = this.attrs.openingSymbol;
         this.formMenu();
-        console.log(this.menu);
     }
 
     /**
@@ -79,29 +77,10 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
         if (!this.attrs.menu) {
             return;
         }
-        const temp: IMenuItem[] = [];
+        // const temp: IMenuItem[] = [];
         const evaluedMenu = eval(this.attrs.menu);
-
-        // TODO: Support arbitrary number of levels.
-        let upper: IMenuItem = {level: 0, text: "", items: undefined};
-        for (const item of evaluedMenu) {
-            if (item) {
-                const current: IMenuItem = {level: item.level, text: item.text, items: undefined};
-                if (item.level > upper.level) {
-                    if (!upper.items) {
-                        upper.text += this.openingSymbol;
-                        upper.items = [current];
-                    } else {
-                        upper.items.push(current);
-                    }
-                } else {
-                    item.text = item.text.replace("<p>", "").replace("</p>", "");
-                    upper = item;
-                    temp.push(item);
-                }
-            }
-        }
-        this.menu = temp;
+        this.menu = evaluedMenu;
+        // console.log(this.menu);
     }
 
     protected getAttributeType() {
@@ -123,13 +102,13 @@ timApp.component("timmenuRunner", {
 <tim-markup-error ng-if="::$ctrl.markupError" data="::$ctrl.markupError"></tim-markup-error>
 <div style="margin-top: 5px; margin-bottom: 10px;">
     <span ng-repeat="m in $ctrl.menu">
-        <div ng-if="m.items" class="btn-group" uib-dropdown is-open="status.isopen" id="simple-dropdown" style="cursor: pointer;">
-          <span uib-dropdown-toggle ng-disabled="disabled" ng-bind-html="m.text"></span>
+        <div ng-if="m.items.length > 0" class="btn-group" uib-dropdown is-open="status.isopen" id="simple-dropdown" style="cursor: pointer;">
+          <span uib-dropdown-toggle ng-disabled="disabled" ng-bind-html="m.text+$ctrl.openingSymbol"></span>
           <ul class="dropdown-menu" uib-dropdown-menu aria-labelledby="simple-dropdown">
             <li ng-repeat="i in m.items" role="menuitem" ng-bind-html="i.text"></li>
           </ul>
         </div>
-        <div ng-if="!m.items" class="btn-group" style="cursor: pointer;" ng-bind-html="m.text"></div>
+        <div ng-if="m.items.length < 1" class="btn-group" style="cursor: pointer;" ng-bind-html="m.text"></div>
         <span ng-if="!$last" ng-bind-html="$ctrl.separator"></span>
     </span>
 </div>
