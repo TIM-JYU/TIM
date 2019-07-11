@@ -130,6 +130,38 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
         return undefined;
     }
 
+    // TODO: Do not support setAnswer if an attribute says not to
+    supportsSetAnswer(): boolean {
+        return true;
+    }
+
+    // TODO: Use answer content as arg or entire IAnswer?
+    setAnswer(content: { [index: string]: string }): { ok: boolean, message: (string | undefined) } {
+        let message = undefined;
+        let ok = true;
+        // TODO: should receiving empty answer reset to defaultnumber or clear field?
+        if (Object.keys(content).length == 0) {
+            this.resetField();
+        } else {
+            try {
+                const parsed = parseFloat(content["c"]);
+                if (isNaN(parsed)) {
+                    this.numericvalue = undefined;
+                    ok = false;
+                    message = "Value at \"c\" was not a valid number"
+                }
+                this.numericvalue = parsed;
+            } catch (TypeError) {
+                this.numericvalue = undefined;
+                ok = false;
+                message = "Couldn't find related content (\"c\")"
+            }
+        }
+        this.initialValue = this.numericvalue
+        return {ok: ok, message: message};
+
+    }
+
     /**
      * Method for autoupdating.
      */

@@ -114,18 +114,23 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
     }
 
     // TODO: Use answer content as arg or entire IAnswer?
-    setAnswer( content: {[index: string]: string} ): {ok: boolean, message: (string | undefined)} {
-        if(Object.keys(content).length == 0) {
+    setAnswer(content: { [index: string]: string }): { ok: boolean, message: (string | undefined) } {
+        let message = undefined;
+        let ok = true;
+        // TODO: should receiving empty answer reset to defaultnumber or clear field?
+        if (Object.keys(content).length == 0) {
             this.resetField();
+        } else {
+            try {
+                this.userword = content["c"];
+            } catch (TypeError) {
+                this.userword = "";
+                ok = false;
+                message = "Couldn't find related content (\"c\")";
+            }
         }
-        try {
-            this.userword = content["c"];
-        }
-        catch (TypeError) {
-            return {ok: false, message: "Couldn't find related content (\"c\")"};
-        }
-        this.initialValue = this.userword
-        return {ok: true, message: undefined};
+        this.initialValue = this.userword;
+        return {ok: ok, message: message};
 
     }
 
