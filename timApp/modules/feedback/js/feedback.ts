@@ -558,7 +558,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
                     this.hideParagraph(instruction[0]);
                 }
                 const failure = await this.doSave(false, false, "", "");
-                if (failure) {
+                if ( !failure.saved ) {
                     this.error = "Error saving a plugin";
                     return;
                 }
