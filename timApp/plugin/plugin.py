@@ -256,6 +256,7 @@ class Plugin:
         return points
 
     def to_paragraph(self) -> DocParagraph:
+        yaml.Dumper.ignore_aliases = lambda *args: True
         text = '```\n' + yaml.dump(self.values, allow_unicode=True, default_flow_style=False) + '\n```'
         attrs = {}
         if self.par:

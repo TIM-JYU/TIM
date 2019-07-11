@@ -24,6 +24,7 @@
 // TODO: Toolbar shall not steal focus when created first time
 // TODO: save filter and sort conditions
 // TODO: Show sort icons weakly, so old icons with gray
+// TODO: set styles also by list of cells like value
 
 import {IController, IRootElementService, IScope} from "angular";
 import {getParId} from "tim/document/parhelpers";
@@ -144,6 +145,12 @@ const styleToHtml: {[index: string]: string} = {
     visibility: "visibility",
     width: "width",
 };
+
+export interface CellResponse {
+    row: number;
+    col: number;
+    cellHtml: string;
+}
 
 export interface TimTable {
     table: ITable;
@@ -468,6 +475,7 @@ export class TimTableController extends DestroyScope implements IController {
 
         this.initializeCellDataMatrix();
         this.processDataBlockAndCellDataMatrix();
+        this.clearSortOrder();
         this.userdata = this.data.userdata;
         if (this.userdata) {
             this.processDataBlock(this.userdata.cells);
@@ -1009,19 +1017,41 @@ export class TimTableController extends DestroyScope implements IController {
             // const cells = this.getSelectedCells(row, col);
             for (const c of this.selectedCells.cells) {
                 this.setUserContent(c.y, c.x, cellContent);
-                if (this.data.saveCallBack) { this.data.saveCallBack(c.y, c.x, cellContent); }
+                if (this.data.saveCallBack) {
+                    this.data.saveCallBack(c.y, c.x, cellContent);
+                }
             }
             return;
         }
-        const response = await $http.post<string[]>("/timTable/saveCell", {
-            cellContent,
+        // TODO: tee iso tietue ja sille oma reitti ja paluussa kaikki uudet paikat
+        const cellsToSave = [];
+        for (const c of this.selectedCells.cells) {
+            cellsToSave.push({c: cellContent, row: c.y, col: c.x});
+        }
+        const response = await $http.post<CellResponse[]>("/timTable/saveMultiCell", {
             docId,
             parId,
-            row,
-            col,
+            cellsToSave: cellsToSave,
         });
-        const cellHtml = response.data[0];
-        this.cellDataMatrix[row][col].cell = cellHtml;
+        const cellHtmls = response.data;
+        for (const c of cellHtmls) {
+            this.cellDataMatrix[c.row][c.col].cell = c.cellHtml;
+        }
+
+        /*
+        for (const c of this.selectedCells.cells) {
+            const response = await $http.post<string[]>("/timTable/saveCell", {
+                cellContent,
+                docId,
+                parId,
+                row: c.y,
+                col: c.x,
+            });
+            const cellHtml = response.data[0];
+            this.cellDataMatrix[c.y][c.x].cell = cellHtml;
+        }
+        */
+
     }
 
     /**
@@ -2269,15 +2299,7 @@ export class TimTableController extends DestroyScope implements IController {
         const parId = this.getOwnParId();
         const docId = this.viewctrl.item.id;
         if (rowId == -1) {
-            if (this.isInDataInputMode()) {
-                rowId = this.cellDataMatrix.length;
-            } else {
-                if (this.data.table.rows) {
-                    rowId = this.data.table.rows.length;
-                } else {
-                    return;
-                }
-            }
+            rowId = this.cellDataMatrix.length;
         }
 
         let response;
@@ -2337,8 +2359,10 @@ export class TimTableController extends DestroyScope implements IController {
         const route = this.isInDataInputMode() ? "/timTable/addDatablockColumn" : "/timTable/addColumn";
         const parId = this.getOwnParId();
         const docId = this.viewctrl.item.id;
+        const rowLen = this.cellDataMatrix[0].length;
+        if ( colId < 0 ) { colId = rowLen; }
         const response = await $http.post<TimTable>(route,
-            {docId, parId, colId});
+            {docId, parId, colId, rowLen});
         this.data = response.data;
         this.reInitialize();
     }
@@ -2376,6 +2400,8 @@ export class TimTableController extends DestroyScope implements IController {
     public reInitialize() {
         this.initializeCellDataMatrix();
         this.processDataBlockAndCellDataMatrix();
+        this.clearSortOrder();
+
         ParCompiler.processAllMathDelayed(this.element);
 
         if (this.currentCell) {
@@ -2479,13 +2505,24 @@ export class TimTableController extends DestroyScope implements IController {
     }
 
     async addToTemplates() {
-        if (!this.viewctrl || !this.activeCell) {
-            return;
-        }
+        const parId = getParId(this.element.parents(".par"));
+        if ( !this.activeCell || !this.viewctrl || !parId || (this.currentCell && this.currentCell.editorOpen)) { return; }
+        const cell: CellEntity = {
+            cell: "",
+        };
+
         const rowId = this.activeCell.row;
         const colId = this.activeCell.col;
         const obj = this.cellDataMatrix[rowId][colId];
         const templ: any = {};
+        let value = "";
+
+        if (!this.task) {
+            value = await this.getCellData(cell, this.viewctrl.item.id, parId, rowId, colId);
+        } else {
+            value = this.getCellContentString(rowId, colId);
+        }
+
         for (const key in obj) {
             if (key.indexOf("render") == 0 || key.indexOf("border") == 0) {
                 continue;
@@ -2498,6 +2535,7 @@ export class TimTableController extends DestroyScope implements IController {
             }
             templ[key] = obj[key];
         }
+        templ.cell = value;
         if (this.data.toolbarTemplates === undefined) {
             this.data.toolbarTemplates = [];
         }
@@ -2731,7 +2769,7 @@ timApp.component("timTable", {
         <input class="editInput"  ng-show="$ctrl.isSomeCellBeingEdited()"
                    ng-keydown="$ctrl.keyDownPressedInSmallEditor($event)"
                    ng-keyup="$ctrl.keyUpPressedInSmallEditor($event)" ng-model="$ctrl.editedCellContent"><!--
-             --><span class="inlineEditorButtons" ng-show="$ctrl.isSomeCellBeingEdited()" ><!--
+             --><span class="inlineEditorButtons" style="position: fixed;" ng-show="$ctrl.isSomeCellBeingEdited()" ><!--
                  --><button class="timButton buttonOpenBigEditor"
                         ng-click="$ctrl.openBigEditor()" class="timButton"><span class="glyphicon glyphicon-pencil"></span>
                  </button><!--

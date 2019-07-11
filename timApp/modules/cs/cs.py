@@ -1393,7 +1393,8 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 showname = language.sourcefilename.replace(language.basename, "").replace("/tmp//", "")
                 if showname == "prg":
                     showname = ""
-                code, out, err, pwddir = (0, "", ("Saved " + showname), "")
+                saved_text = get_param(query, "savedText", "Saved {0}")
+                code, out, err, pwddir = (0, "", saved_text.format(showname), "")
             #elif get_param(query, "justCompile", False) and ttype.find("comtest") < 0:
             #    language.just_compile = True
                 # code, out, err, pwddir = (0, "".encode("utf-8"), ("Compiled " + filename).encode("utf-8"), "")

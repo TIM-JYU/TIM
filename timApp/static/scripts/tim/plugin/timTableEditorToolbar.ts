@@ -156,8 +156,11 @@ export class TimTableEditorToolbarController extends DialogController<{params: I
      * Gets the cell text for toolbar
      */
     private getCellForToolbar(value: any) {
-        if ( !value.cell ) { return "\u2003"; } // &#8195  em space &emsp;
-        return value.cell.substr(0, 5);
+        let v = value.text;
+        if ( !v ) { v = value.cell; }
+        if ( !v ) { return "\u2003"; } // &#8195  em space &emsp;
+        // v = v.replace('$', '');
+        return v.substr(0, 5);
     }
 
     private eventApi = {
