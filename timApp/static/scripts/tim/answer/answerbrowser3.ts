@@ -192,7 +192,7 @@ timApp.component("timPluginLoader", {
     transclude: true,
 });
 
-interface ITaskInfo {
+export interface ITaskInfo {
     userMin: number;
     userMax: number;
     answerLimit: number;
@@ -299,26 +299,33 @@ export class AnswerBrowserController extends DestroyScope implements IController
             () => this.onlyValid,
         ], (newValues, oldValues, scope) => this.updateFilteredAndSetNewest());
 
-        const answs = await this.getAnswers();
-        if (answs && (answs.length > 0)) {
-            this.answers = answs;
-            const updated = this.updateAnswerFromURL();
-            if (!updated) {
-                this.handleAnswerFetch(this.answers);
-            }
+        // form_mode off or plugin ab didn't register as form (doesn't support setAnswer?)
+        // else answers, taskinfo (and maybe users) are given by viewctrl
+        if (!this.viewctrl.docSettings.form_mode || !this.viewctrl.getFormAnswerBrowser(this.taskId)) {
+            const answs = await this.getAnswers();
+            if (answs && (answs.length > 0)) {
+                this.answers = answs;
+                const updated = this.updateAnswerFromURL();
+                if (!updated) {
+                    this.handleAnswerFetch(this.answers);
+                }
 
-        } else {
-            if ( answs != null ) {
-                this.resetITimComponent();
+            } else {
+                if (answs != null) {
+                    this.resetITimComponent();
+                }
             }
+            await this.loadInfo();
+            await this.checkUsers(); // load users, answers have already been loaded for the currently selected user
+
+            this.loader.getPluginElement().on("mouseenter touchstart", () => {
+                void this.checkUsers();
+            });
         }
 
-        await this.loadInfo();
-        await this.checkUsers(); // load users, answers have already been loaded for the currently selected user
-
-        this.loader.getPluginElement().on("mouseenter touchstart", () => {
-            void this.checkUsers();
-        });
+        // TODO: Angular throws error if many answerbrowsers resolve around the same time
+        //  (e.g awaits above don't happen if were in form mode and don't want separate info reqs)
+        await $timeout(0);
         this.loader.abLoad.resolve(this);
     }
 
@@ -333,21 +340,44 @@ export class AnswerBrowserController extends DestroyScope implements IController
         }
     }
 
-    async changeUserAndAnswers(user: IUser, updateAll: boolean, answers: IAnswer[]) {
-        let needsAnswerChange = false;
+    async changeUserAndAnswers(user: IUser, answers: IAnswer[]) {
+        // let needsAnswerChange = false;
         this.user = user;
         this.fetchedUser = this.user ? this.user.id : 0;
-        // const answers = await this.getAnswersAndUpdate();
-        this.handleAnswerFetch(answers);
-        if (!answers || answers.length === 0) {
-            this.resetITimComponent();
-        } else {
-            this.loadedAnswer = {review: false, id: undefined};
-            // this.changeAnswer();
-            needsAnswerChange = true;
-        }
+        this.answers = answers;
+        this.updateFiltered();
+        this.selectedAnswer = this.filteredAnswers.length > 0 ? this.filteredAnswers[0] : undefined;
+        console.log("debug line");
         await this.loadInfo();
-        return needsAnswerChange;
+    }
+
+    changeAnswerFromState(html: string, reviewHtml: string) {
+        if (this.selectedAnswer == null || !this.user) {
+            return;
+        }
+        this.unDimPlugin();
+        this.updatePoints();
+        const par = this.element.parents(".par");
+        const ids = dereferencePar(par);
+        if (!ids) {
+            return;
+        }
+        if (this.selectedAnswer.id !== this.loadedAnswer.id || this.loadedAnswer.review !== this.review) {
+
+            this.loadedAnswer.id = this.selectedAnswer.id;
+            this.loadedAnswer.review = this.review;
+            if (this.answerListener) {
+                this.answerListener(this.selectedAnswer);
+            } else {
+                void loadPlugin(html, this.loader.getPluginElement(), this.scope, this.viewctrl);
+            }
+            // if (this.review) { //No review implemented for this version yet
+            //     this.reviewHtml = r.result.data.reviewHtml;
+            //     await $timeout();
+            // }
+        }
+        this.viewctrl.reviewCtrl.loadAnnotationsToAnswer(this.selectedAnswer.id, par[0], this.review);
+
     }
 
     private unDimPlugin() {
@@ -622,7 +652,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
         if (this.user) {
             return {
                 answer_id: this.selectedAnswer ? this.selectedAnswer.id : undefined,
-                saveTeacher: this.saveTeacher || this.loader.isInFormMode(),
+                saveTeacher: this.saveTeacher || (this.loader.isInFormMode() && this.viewctrl.teacherMode), // TODO: Check if correct
                 points: this.points,
                 giveCustomPoints: this.giveCustomPoints,
                 userId: this.user.id,
@@ -686,6 +716,12 @@ export class AnswerBrowserController extends DestroyScope implements IController
             return;
         }
         const data = await this.getAnswers();
+        if (!data || data.length === 0) {
+            if ( data != null ) {
+                this.loadedAnswer = {review: false, id: undefined};
+                this.resetITimComponent();
+            }
+        }
         if (!data) {
             return;
         }
@@ -776,12 +812,12 @@ export class AnswerBrowserController extends DestroyScope implements IController
     async loadUserAnswersIfChanged() {
         if (this.hasUserChanged()) {
             const answers = await this.getAnswersAndUpdate();
-            if (!answers || answers.length === 0) {
-                if ( answers != null ) { this.resetITimComponent(); }
-            } else {
-                this.loadedAnswer = {review: false, id: undefined};
-                this.changeAnswer();
-            }
+            // if (!answers || answers.length === 0) {
+            //     // if ( answers != null ) { this.resetITimComponent(); }
+            // } else {
+            //     // this.loadedAnswer = {review: false, id: undefined};
+            //     // this.changeAnswer();
+            // }
             await this.loadInfo();
         }
     }
@@ -800,6 +836,10 @@ export class AnswerBrowserController extends DestroyScope implements IController
             return null;
         }
         return Math.max(this.taskInfo.answerLimit - this.answers.length, 0);
+    }
+
+    public setInfo(info: ITaskInfo) {
+        this.taskInfo = info;
     }
 
     async loadInfo() {

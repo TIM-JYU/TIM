@@ -14,7 +14,7 @@ import {QuestionHandler} from "tim/document/question/questions";
 import {initReadings} from "tim/document/readings";
 import {timLogTime} from "tim/util/timTiming";
 import {isPageDirty, markAsUsed, markPageNotDirty, to} from "tim/util/utils";
-import {AnswerBrowserController, PluginLoaderCtrl} from "../answer/answerbrowser3";
+import {AnswerBrowserController, ITaskInfo, PluginLoaderCtrl} from "../answer/answerbrowser3";
 import {IAnswer} from "../answer/IAnswer";
 import {BookmarksController, IBookmarkGroup} from "../bookmark/bookmarks";
 import {IPluginInfoResponse, ParCompiler} from "../editor/parCompiler";
@@ -63,6 +63,8 @@ export interface ITimComponent {
     setPluginWords?: (words: string[]) => void;
     setForceAnswerSave?: (force: boolean) => void;
     resetField: () => string | undefined;
+    supportsSetAnswer: () => boolean;
+    setAnswer: (content: {[index: string]: string}) => {ok: boolean, message: (string | undefined)};
 }
 
 export interface IInsertDiffResult {
@@ -155,6 +157,9 @@ export class ViewCtrl implements IController {
     // To give an alert if trying to go to another page when doing an adaptive feedback task.
     public doingTask = false;
     public docSettings: IDocSettings = $window.docSettings;
+
+    // Form-mode related attributes.
+    private formTaskInfosLoaded = false;
 
     constructor(sc: IScope) {
         timLogTime("ViewCtrl start", "view");
@@ -292,18 +297,8 @@ export class ViewCtrl implements IController {
         // from https://stackoverflow.com/a/7317311
         window.addEventListener("beforeunload", (e) => {
             saveCurrentScreenPar();
-            let unsavedTimComponents = false;
-            for (const t of this.timComponents.values()) {
-                if (t.isUnSaved()) {
-                    unsavedTimComponents = true;
-                    break;
-                }
-            }
-            if ((!this.editing && !unsavedTimComponents && !this.doingTask) || $window.IS_TESTING) {
-                return undefined;
-            }
 
-            if (!this.editing || $window.IS_TESTING) {
+            if ((!this.editing && !this.checkUnSavedTimComponents() && !this.doingTask) || $window.IS_TESTING) {
                 return undefined;
             }
 
@@ -423,11 +418,11 @@ export class ViewCtrl implements IController {
         });
         this.reviewCtrl.loadDocumentAnnotations();
         this.editingHandler.insertHelpPar();
-        window.onbeforeunload = () => {
-            const dirty = this.checkUnSavedTimComponents();
-            if ( dirty ) { return "You have unsaved tasks!"; }  // IE shows this message
-            // And for IE you can not return anything, otherwise it will show even null
-        };
+        // window.onbeforeunload = () => {
+        //     const dirty = this.checkUnSavedTimComponents();
+        //     if ( dirty ) { return "You have unsaved tasks!"; }  // IE shows this message
+        //     // And for IE you can not return anything, otherwise it will show even null
+        // };
     }
 
     /**
@@ -535,74 +530,63 @@ export class ViewCtrl implements IController {
         if (updateAll) {
             for (const lo of this.ldrs.values()) {
                 lo.loadPlugin();
+                // await lo.abLoad.promise;
+            }
+            for (const lo of this.ldrs.values()) {
                 await lo.abLoad.promise;
             }
         }
+
+        if (this.docSettings.form_mode) {
+            const taskList = [];
+            for (const fab of this.formAbs.values()) {
+                taskList.push(fab.taskId);
+            }
+            // TODO: Query only one (first valid) answer?
+            // const answerResponse = await $http.post<{ answers: { [index: string]: [IAnswer] }, userId: number }>("/userAnswersForTasks", {
+            //     tasks: taskList,
+            //     user: user.id,
+            // });
+            const answerResponse = await $http.post<{ answers: { [index: string]: IAnswer }, userId: number }>("/multiplugin3", {
+                tasks: taskList,
+                user: user.id,
+            });
+            if (!this.formTaskInfosLoaded) {
+                const taskInfoResponse = await $http.post<{ [index: string]: ITaskInfo }>("/infosForTasks", {
+                    tasks: taskList,
+                });
+                this.formTaskInfosLoaded = true;
+                for (const fab of this.formAbs.values()) {
+                    fab.setInfo(taskInfoResponse.data[fab.taskId]);
+                }
+            }
+            // UserId check might ensure the loaded response is from correct user
+            // when using slow connections (or maybe not)
+            if (answerResponse.data.userId == this.selectedUser.id) {
+                for (const fab of this.formAbs.values()) {
+                    const ans = answerResponse.data.answers[fab.taskId];
+                    if (ans === undefined) {
+                        fab.changeUserAndAnswers(user, []);
+                    } else {
+                        fab.changeUserAndAnswers(user, [ans]);
+                    }
+                    const timComp = this.getTimComponentByName(fab.taskId.split(".")[1]);
+                    if (timComp) {
+                        if (fab.selectedAnswer) {
+                            timComp.setAnswer(JSON.parse(fab.selectedAnswer.content));
+                        } else {
+                            timComp.resetField();
+                        }
+                    }
+                }
+            }
+        }
+
         // TODO: do not call changeUser separately if updateAll enabled
         // - handle /answers as single request for all related plugins instead of separate requests
         // - do the same for /taskinfo and /getState requests
         for (const ab of this.abs.values()) {
             ab.changeUser(user, updateAll);
-        }
-        return;
-        // TODO below
-        // // Make a single request for all answerbrowsers in this.abs.values
-        const taskList = [];
-        for (const ab of this.abs.values()) {
-            taskList.push(ab.taskId);
-        }
-        // const response = await $http.get<{ }>("/multipluginanswer?" + $httpParamSerializer({fields: taskList, user: user.id, doc: this.docId}));
-        // console.log(response);
-        // TODO: if answerbrowser had same user as before then it can be removed from the query
-        //  Would it even happen if updateAll is enabled all the time when changing users
-        if (updateAll) {
-            const answerResponse = await $http.get<{ [index: string]: [IAnswer] }>("/multipluginanswer2?" + $httpParamSerializer({
-                fields: taskList,
-                user: user.id,
-            }));
-            console.log(answerResponse);
-            const selectedAnswers: {[index: string]: IAnswer | undefined} = {};
-            const absNeedAnswerchange = [];
-            for (const [k, ab] of this.abs) {
-                const needsAnswerChange = ab.changeUserAndAnswers(user, updateAll, answerResponse.data[ab.taskId]);
-                selectedAnswers[k] = ab.selectedAnswer;
-                if (needsAnswerChange) { absNeedAnswerchange.push(ab); }
-            }
-            // const abParParams: Array<{
-            //     answer_id: number; // IE shows this message
-            //     review: boolean; // And for IE you can not return anything, otherwise it will show even null
-            //     // And for IE you can not return anything, otherwise it will show even null
-            //     user_id: number; doc_id: string | number | undefined; par_id: string | undefined; ref_from_doc_id: number; ref_from_par_id: string | undefined;
-            // }>  = [];
-            // const answerIds: number[] = [];
-            const answerIds: {[index: string]: AnswerBrowserController} = {};
-            absNeedAnswerchange.forEach((a) => {
-                // const params = a.stateRequestPrep();
-                // if (params != undefined) {
-                //     abParParams.push(params);
-                // }
-                a.stateRequestPrep();
-                if (a.selectedAnswer) {
-                    answerIds[a.selectedAnswer.id] = a;
-                }
-
-            });
-
-            // make request for multiple states
-            // need: userid, list of answerids, docid
-            // maybe need: review (per task), par_id (per task)
-            const r = await to($http.get<{ [index: number]: { html: string, reviewHtml: string } }>("/getMultiStates", {
-                params: {
-                    answer_ids: Object.keys(answerIds),
-                    user_id: this.selectedUser.id,
-                    doc_id: this.docId,
-                },
-            }));
-            // console.log(stateResponse);
-            if (!r.ok) { return; } // TODO: Notify user
-            for (const [ansId, json] of Object.entries(r.result.data)) {
-                answerIds[ansId].continueFromStateReq(json.html, json.reviewHtml);
-            }
         }
     }
 
@@ -711,8 +695,24 @@ export class ViewCtrl implements IController {
     }
 
     private abs = new Map<string, AnswerBrowserController>();
+    private formAbs = new Map<string, AnswerBrowserController>();
 
+    /**
+     * Registers answerbrowser to related map
+     * If form_mode is enabled and answerBrowser is from timComponent
+     * that supports setting answer then add it to formAbs
+     * else add it to regular ab map
+     * @param ab AnswerBrowserController to be registered
+     */
     registerAnswerBrowser(ab: AnswerBrowserController) {
+        if (this.docSettings.form_mode) {
+            const timComp = this.getTimComponentByName(ab.taskId.split(".")[1]);
+            if (timComp && timComp.supportsSetAnswer()) {
+                // TODO: Should propably iterate like below in case of duplicates
+                this.formAbs.set(ab.taskId, ab);
+                return;
+            }
+        }
         // TODO: Task can have two instances in same document (regular field and label version)
         // - for now just add extra answerbrowsers for them (causes unnecessary requests when changing user...)
         // - maybe in future answerbrowser could find all related plugin instances and update them when ab.changeuser gets called?
@@ -727,7 +727,11 @@ export class ViewCtrl implements IController {
     }
 
     getAnswerBrowser(taskId: string) {
-        return this.abs.get(taskId);
+        return (this.abs.get(taskId) || this.formAbs.get(taskId));
+    }
+
+    getFormAnswerBrowser(taskId: string) {
+        return this.formAbs.get(taskId);
     }
 
     private ldrs = new Map<string, PluginLoaderCtrl>();

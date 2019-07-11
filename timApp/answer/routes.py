@@ -16,7 +16,7 @@ from flask import request
 from marshmallow import Schema, fields, post_load, validates_schema, ValidationError, pre_load
 from marshmallow.utils import _Missing, missing
 from sqlalchemy import func, tuple_
-from sqlalchemy.orm import defaultload
+from sqlalchemy.orm import defaultload, joinedload
 from webargs.flaskparser import use_args
 
 from pluginserver_flask import GenericMarkupSchema
@@ -36,6 +36,7 @@ from timApp.document.document import Document
 from timApp.document.post_process import hide_names_in_teacher
 from timApp.item.block import Block, BlockType
 from timApp.markdown.dumboclient import call_dumbo
+from timApp.notification.notify import multi_send_email
 from timApp.plugin.containerLink import call_plugin_answer
 from timApp.plugin.plugin import Plugin, PluginWrap, NEVERLAZY, TaskNotFoundException
 from timApp.plugin.plugin import PluginType
@@ -160,53 +161,98 @@ def chunks(l: List, n: int):
     for i in range(0, len(l), n):
         yield l[i:i + n]
 
-@answers.route("/multipluginanswer")
-def get_multiple_plugin_answers():
-    # Experiment on changing field values in teacher view using get_fields_and_users returns
-    # would only return latest answer
-    fields = request.args.getlist('fields')
-    user = request.args.get('user')
-    user = User.get_by_id(user)
-    userGroup = UserGroup.get_by_name(user.name)
-    doc = request.args.get('doc')
-    fieldlist = get_fields_and_users(fields, [userGroup], doc, user)
-    return json_response(fieldlist)
 
-@answers.route("/multipluginanswer2")
-def get_multiple_plugin_answers2():
-    # Another experiment on changing field values in teacher view
-    # Single request for all plugin answers when updateAll enabled
-    #TODO: Optimize - for now it's just get_answers repeated
-    fields = request.args.getlist('fields')
-    user_id = request.args.get('user')
+@answers.route("/userAnswersForTasks", methods=['POST'])
+def get_answers_for_tasks():
+    """
+    Queries all answers for given list of tasks by the given user
+    :return: {answers:[Answer], user: user_id}
+    """
+    tasks, user_id = verify_json_params('tasks', 'user')
     try:
         user_id = int(user_id)
     except ValueError:
         abort(404, 'Not a valid user id')
+    user = User.get_by_id(user_id)
     verify_logged_in()
     try:
-        fieldlist = {}
-        for task_id in fields:
-          tid = TaskId.parse(task_id)
-          d = get_doc_or_abort(tid.doc_id)
-          user = User.get_by_id(user_id)
-          if user_id != get_current_user_id():
-              verify_seeanswers_access(d)
-          if user is None:
-              abort(400, 'Non-existent user')
-          user_answers: List[Answer] = user.get_answers_for_task(tid.doc_task).all()
-          if hide_names_in_teacher():
-              for answer in user_answers:
-                  for u in answer.users_all:
-                      maybe_hide_name(d, u)
-          fieldlist[task_id] = user_answers
-        return json_response(fieldlist)
+        doc_map = {}
+        fieldlist = {k: [] for k in tasks}
+        for task_id in tasks:
+            tid = TaskId.parse(task_id)
+            if tid.doc_id not in doc_map:
+                dib = get_doc_or_abort(tid.doc_id, f'Document {tid.doc_id} not found')
+                verify_seeanswers_access(dib)
+                doc_map[tid.doc_id] = dib.document
+        answs = user.answers.options(joinedload(Answer.users_all))\
+            .order_by(Answer.id.desc()).filter(Answer.valid.is_(True))\
+            .filter(Answer.task_id.in_(tasks)).all()
+        for a in answs:
+            fieldlist[a.task_id].append(a)
+        return json_response({"answers": fieldlist, "userId": user_id})
     except Exception as e:
         return abort(400, str(e))
-    pass
+
+def get_answers2(user, task_ids, answer_map):
+    col = func.max(Answer.id).label('col')
+    sub = (user
+           .answers
+           .filter(Answer.task_id.in_(task_ids_to_strlist(task_ids)) & Answer.valid == True)
+           .add_columns(col)
+           .with_entities(col)
+           .group_by(Answer.task_id).subquery())
+    answers: List[Answer] = (
+        Answer.query.join(sub, Answer.id == sub.c.col)
+        #Answer.query.join(sub, Answer.id == sub.c.col).join(Answer.users_all)
+        # .with_entities(Answer, sub.c.cnt)
+            .all()
+    )
+    for answer in answers:
+        if len(answer.users_all) > 1:
+            answer_map[answer.task_id] = answer
+        else:
+            # answer_map[answer.task_id] = answer
+            asd = answer.to_json()
+            asd.pop('users')
+            answer_map[answer.task_id] = asd
+    return answers
+
+@answers.route("/multiplugin3", methods=['POST'])
+def get_answers_for_tasks3():
+    """
+    WIP
+    """
+    tasks, user_id = verify_json_params('tasks', 'user')
+    try:
+        user_id = int(user_id)
+    except ValueError:
+        abort(404, 'Not a valid user id')
+    user = User.get_by_id(user_id)
+    verify_logged_in()
+    try:
+        doc_map = {}
+        fieldlist = {}
+        tids = []
+        for task_id in tasks:
+            tid = TaskId.parse(task_id)
+            if tid.doc_id not in doc_map:
+                dib = get_doc_or_abort(tid.doc_id, f'Document {tid.doc_id} not found')
+                verify_seeanswers_access(dib)
+                doc_map[tid.doc_id] = dib.document
+            tids.append(tid)
+        answer_map = {}
+        # pluginControl.get_answers(user, tids, answer_map)
+        get_answers2(user, tids, answer_map)
+        # for ans in answs:
+        #      fieldlist[ans.task_id] = [ans]
+        return json_response({"answers": answer_map, "userId": user_id})
+    except Exception as e:
+        return abort(400, str(e))
+
 
 TASK_PROG = re.compile('([\w\.]*)\((\d*),(\d*)\)(.*)') # see https://regex101.com/r/ZZuizF/2
 TASK_NAME_PROG = re.compile("(\d+.)?([\w\d]+)[.\[]?.*")  # see https://regex101.com/r/OjnTAn/4
+
 
 def widen_fields(fields: List[str]):
     """
@@ -447,6 +493,30 @@ class JsRunnerSchema(GenericMarkupSchema):
     def validate_schema(self, data):
         if data.get('group') is None and data.get('groups') is None:
             raise ValidationError("Either group or groups must be given.")
+
+
+@answers.route("/<plugintype>/<task_id_ext>/multiSendEmail/", methods=['POST'])
+def multisendemail(plugintype: str, task_id_ext: str):
+    try:
+        tid = TaskId.parse(task_id_ext)
+    except PluginException as e:
+        return abort(400, f'Task id error: {e}')
+    d = get_doc_or_abort(tid.doc_id)
+    verify_teacher_access(d)
+    mail_from = get_current_user_object().email
+    bcc = ""
+    bccme = request.json.get('bccme', False)
+    if bccme:
+        bcc = mail_from
+    multi_send_email(
+        rcpt=request.json.get('rcpt'),
+        subject=request.json.get('subject'),
+        msg=request.json.get('msg'),
+        mail_from=mail_from,
+        reply_to=mail_from,
+        bcc=bcc
+    )
+    return ok_response()
 
 
 @answers.route("/<plugintype>/<task_id_ext>/answer/", methods=['PUT'])
@@ -711,6 +781,7 @@ def post_answer(plugintype: str, task_id_ext: str):
 
 
 def handle_jsrunner_response(jsonresp, result, current_doc: DocInfo):
+    # TODO: Might need to rewrite this function for optimization
     save_obj = jsonresp.get('savedata')
     if not save_obj:
         return
@@ -758,39 +829,53 @@ def handle_jsrunner_response(jsonresp, result, current_doc: DocInfo):
         u_id = user['user']
         u = User.get_by_id(u_id)
         user_fields = user['fields']
+        task_map = {}
         for key, value in user_fields.items():
-            content_field = task_content_name_map[key]
-            if content_field == 'ignore':
-                continue
             task_id = TaskId.parse(key, False, False, True)
+            field = task_id.field
+            if field is None:
+                field = task_content_name_map[task_id.doc_task]
+            try:
+                task_map[task_id.doc_task][field] = value
+            except KeyError:
+                task_map[task_id.doc_task] = {}
+                task_map[task_id.doc_task][field] = value
+        for taskid, contents in task_map.items():
+            task_id = TaskId.parse(taskid, False, False)
             an: Answer = get_latest_answers_query(task_id, [u]).first()
             points = None
-            content = json.dumps({content_field: None})
-            if task_id.field == 'points':
-                if value == "":
-                    value = None
-                else:
-                    try:
-                        value = float(value)
-                    except ValueError:
-                        if not result['web'].get('error', None):
-                            result['web']['error'] = 'Errors:\n'
-                        result['web']['error'] += f"Value {value} is not valid point value for task {task_id.task_name}\n"
-                        continue
-                points = value
-            else:
-                content = json.dumps({content_field: value})
+            content = {}
+            new_answer = True
             if an:
-                an_content = json.loads(an.content)
-                if task_id.field == 'points':
-                    if an.points == points:
-                        continue
+                points = an.points
+                content = json.loads(an.content)
+                new_answer = False
+            for field, value in contents.items():
+                if field == 'points':
+                    if value == "":
+                        value = None
+                    else:
+                        try:
+                            value = float(value)
+                        except ValueError:
+                            if not result['web'].get('error', None):
+                                result['web']['error'] = 'Errors:\n'
+                            result['web'][
+                                'error'] += f"Value {value} is not valid point value for task {task_id.task_name}\n"
+                            continue
+                    if points != value:
+                        new_answer = True
+                    points = value
                 else:
-                    if an_content.get(content_field) == value:
-                        continue
-                    an_content[content_field] = value
-                    points = an.points
-                content = json.dumps(an_content)
+                    if an and content.get(field, "") != value:
+                        new_answer = True
+                    content[field] = value
+            if not new_answer:
+                continue
+            if content == {}:
+                # TODO: can this be reached without points field?
+                content[task_content_name_map[task_id.doc_task + ".points"]] = None
+            content = json.dumps(content)
             ans = Answer(
                 content=content,
                 points=points,
@@ -800,6 +885,48 @@ def handle_jsrunner_response(jsonresp, result, current_doc: DocInfo):
                 saver=curr_user,
             )
             db.session.add(ans)
+        # for key, value in user_fields.items():
+        #     content_field = task_content_name_map[key]
+        #     if content_field == 'ignore':
+        #         continue
+        #     task_id = TaskId.parse(key, False, False, True)
+        #     an: Answer = get_latest_answers_query(task_id, [u]).first()
+        #     points = None
+        #     content = json.dumps({content_field: None})
+        #     if task_id.field == 'points':
+        #         if value == "":
+        #             value = None
+        #         else:
+        #             try:
+        #                 value = float(value)
+        #             except ValueError:
+        #                 if not result['web'].get('error', None):
+        #                     result['web']['error'] = 'Errors:\n'
+        #                 result['web']['error'] += f"Value {value} is not valid point value for task {task_id.task_name}\n"
+        #                 continue
+        #         points = value
+        #     else:
+        #         content = json.dumps({content_field: value})
+        #     if an:
+        #         an_content = json.loads(an.content)
+        #         if task_id.field == 'points':
+        #             if an.points == points:
+        #                 continue
+        #         else:
+        #             if an_content.get(content_field) == value:
+        #                 continue
+        #             an_content[content_field] = value
+        #             points = an.points
+        #         content = json.dumps(an_content)
+        #     ans = Answer(
+        #         content=content,
+        #         points=points,
+        #         task_id=task_id.doc_task,
+        #         users=[u],
+        #         valid=True,
+        #         saver=curr_user,
+        #     )
+        #     db.session.add(ans)
 
 
 def get_hidden_name(user_id):
@@ -815,6 +942,36 @@ def maybe_hide_name(d: DocInfo, u: User):
     if should_hide_name(d, u):
         u.hide_name = True
 
+@answers.route("/infosForTasks", methods=['POST'])
+def get_task_infos():
+    """
+    Returns task infos for given list of tasks
+    :return: {[task_id]: taskInfo}
+    """
+    tasks, = verify_json_params('tasks')
+    doc_map = {}
+    user = get_current_user_object()
+    infolist = {}
+    for task_id in tasks:
+        try:
+            tid = TaskId.parse(task_id)
+            if tid.doc_id not in doc_map:
+                dib = get_doc_or_abort(tid.doc_id, f'Document {tid.doc_id} not found')
+                doc_map[tid.doc_id] = dib.document
+            plugin = find_plugin_from_document(doc_map[tid.doc_id], tid, user)
+            tim_vars = {'maxPoints': plugin.max_points(),
+                        'userMin': plugin.user_min_points(),
+                        'userMax': plugin.user_max_points(),
+                        'deadline': plugin.deadline(),
+                        'starttime': plugin.starttime(),
+                        'answerLimit': plugin.answer_limit(),
+                        'triesText': plugin.values.get('triesText', 'Tries left:'),
+                        'pointsText': plugin.values.get('pointsText', 'Points:')
+                        }
+            infolist[task_id] = tim_vars
+        except (TaskNotFoundException, PluginException) as e:
+            return abort(400, str(e))
+    return json_response(infolist)
 
 @answers.route("/taskinfo/<task_id>")
 def get_task_info(task_id):
@@ -948,11 +1105,6 @@ class GetStateSchema(Schema):
 
 
 class GetMultiStatesSchema(Schema):
-    # answer_id = fields.Int(required=True)
-    # par_id = fields.Str()
-    # doc_id = fields.Str()
-    # user_id = fields.Int(required=True)
-    # review = fields.Bool(missing=False)
     answer_ids = fields.List(fields.Int())
     user_id = fields.Int()
     doc_id = fields.Int()
@@ -985,6 +1137,12 @@ class GetStateModel:
 @answers.route("/getMultiStates")
 @use_args(GetMultiStatesSchema())
 def get_multi_states(args: GetMultiStatesModel):
+    """
+    WIP
+    Queries plugin states for multiple answers
+    :param args: {answer_ids: list of answers, user_id, doc_id}
+    :return: {answerID: {'html': html, 'reviewHtml': None}}
+    """
     answer_ids, user_id, doc_id = args.answer_ids, args.user_id, args.doc_id
     print(args)
     docentry = get_doc_or_abort(doc_id)
@@ -996,24 +1154,47 @@ def get_multi_states(args: GetMultiStatesModel):
     doc.insert_preamble_pars()
     answs = Answer.query.filter(Answer.id.in_(answer_ids)).all()
     response = {}
+    # blocks = []
     for ans in answs:
+        ###
         tid = TaskId.parse(ans.task_id)
-        # if parid, maybe_set_hint?
+        #if parid, maybe_set_hint?
         try:
             doc, plug = get_plugin_from_request(doc, task_id=tid, u=user)
+            #plug = find_plugin_from_document(doc, tid, user)
         except PluginException as e:
             return abort(400, str(e))
         block = plug.par
-        _, _, _, plug = pluginify(
+        a, b, c, plug = pluginify(
             doc,
             [block],
             user,
             custom_answer=ans,
             pluginwrap=PluginWrap.Nothing,
             do_lazy=NEVERLAZY,
+            debugging_multistate=True,
         )
         html = plug.get_final_output()
         response[ans.id] = {'html': html, 'reviewHtml': None}
+        ####
+    #     tid = TaskId.parse(ans.task_id)
+    #     # if parid, maybe_set_hint?
+    #     try:
+    #         doc, plug = get_plugin_from_request(doc, task_id=tid, u=user)
+    #         #plug = find_plugin_from_document(doc, tid, user)
+    #     except PluginException as e:
+    #         return abort(400, str(e))
+    #     block = plug.par
+    #     blocks.append(block)
+    # a, b, c, plug = pluginify(
+    #     doc,
+    #     blocks,
+    #     user,
+    #     # custom_answer=ans,
+    #     pluginwrap=PluginWrap.Nothing,
+    #     do_lazy=NEVERLAZY,
+    # )
+    # print("hmm")
     return json_response(response)
 
 @answers.route("/getState")

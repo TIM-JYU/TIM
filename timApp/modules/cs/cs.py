@@ -176,7 +176,7 @@ def delete_extra_files(extra_files, prgpath):
 def get_md(ttype, query):
     tiny = False
 
-    bycode, is_input, js, runner, tiny = handle_common_params(query, tiny, ttype, None)
+    bycode, is_input, js, runner, tiny = handle_common_params(query, tiny, ttype)
 
     usercode = None
     user_print = get_json_param(query.jso, "userPrint", None, False)
@@ -225,6 +225,9 @@ def get_md(ttype, query):
         code = '\\begin{lstlisting}\n' + \
                str(usercode) + '\n' + \
                '\\end{lstlisting}\n'
+
+        if 'mathcheck' in ttype and str(usercode) == '=':
+            code = ''
 
         if 'text' in ttype and rows is not None and str(usercode) == '':
             r = ''  # for text make a verbatim with number of rows empty lines
@@ -1390,7 +1393,8 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 showname = language.sourcefilename.replace(language.basename, "").replace("/tmp//", "")
                 if showname == "prg":
                     showname = ""
-                code, out, err, pwddir = (0, "", ("Saved " + showname), "")
+                saved_text = get_param(query, "savedText", "Saved {0}")
+                code, out, err, pwddir = (0, "", saved_text.format(showname), "")
             #elif get_param(query, "justCompile", False) and ttype.find("comtest") < 0:
             #    language.just_compile = True
                 # code, out, err, pwddir = (0, "".encode("utf-8"), ("Compiled " + filename).encode("utf-8"), "")

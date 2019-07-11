@@ -62,11 +62,14 @@ class TableFormMarkupModel(GenericMarkupModel):
     hiddenRows: Union[List[int], Missing] = missing
     filterRow: Union[bool, Missing] = missing
     cbColumn: Union[bool, Missing] = missing
+    nrColumn: Union[bool, Missing] = missing
     removeUsersButtonText: Union[str, Missing] = missing
     userListButtonText: Union[str, Missing] = missing
     emailUsersButtonText: Union[str, Missing] = missing
     maxRows: Union[str, Missing] = missing
     maxCols: Union[str, Missing] = missing
+    fontSize: Union[str, Missing] = missing
+    fixedColor: Union[str, Missing] = missing
     toolbarTemplates: Union[List[dict], Missing] = missing
     fields: Union[List[str], Missing] = missing
 
@@ -94,6 +97,7 @@ class TableFormMarkupSchema(GenericMarkupSchema):
     open = fields.Boolean(allow_none=True)
     filterRow = fields.Boolean(allow_none=True)
     cbColumn = fields.Boolean(allow_none=True)
+    nrColumn = fields.Boolean(allow_none=True)
     hiddenColumns = fields.List(fields.Number(allow_none=True))
     hiddenRows = fields.List(fields.Number(allow_none=True))
     removeUsersButtonText = fields.Str(allow_none=True)
@@ -102,6 +106,8 @@ class TableFormMarkupSchema(GenericMarkupSchema):
     maxRows = fields.Str(allow_none=True)
     maxCols = fields.Str(allow_none=True)
     toolbarTemplates = fields.List(fields.Dict())
+    fontSize = fields.Str(allow_none=True)
+    fixedColor = fields.Str(allow_none=True)
     fields = fields.List(fields.Str())  # Keep this last - bad naming
 
     @post_load
