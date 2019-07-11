@@ -308,6 +308,7 @@ def get_answers(user, task_ids, answer_map):
 def pluginify(doc: Document,
               pars: List[DocParagraph],
               user: Optional[User],
+              debugging_multistate: bool = False, #TODO delete this
               custom_answer: Optional[Answer] = None,
               sanitize=True,
               do_lazy=False,
@@ -545,6 +546,8 @@ def pluginify(doc: Document,
                         placements[idx].set_error(r, str(e))
                         continue
                     placements[idx].set_output(r, html)
+    if debugging_multistate:  # TODO delete this
+        return None, None, None, custom_answer_plugin
     for idx, place in placements.items():
         par = html_pars[idx]
         par[output_format.value] = place.get_block_output()

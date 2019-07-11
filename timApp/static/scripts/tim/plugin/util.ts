@@ -196,6 +196,25 @@ export abstract class PluginBase<MarkupType extends IGenericPluginMarkup, A exte
         return this.element.parents(".par");
     }
 
+    /**
+     * @returns {Boolean} true if plugin supports setAnswer
+     * False by default
+     */
+    public supportsSetAnswer(): boolean {
+        return false;
+    }
+
+    /**
+     * Sets plugin's answer content via external call
+     * @param content answer to be parsed
+     * @returns {ok: boolean, message: (string | undefined)}
+     * ok: true if content was succesfully parsed
+     * message: for replying with possible errors
+     */
+    setAnswer(content: { [index: string]: string }): { ok: boolean, message: (string | undefined) } {
+        return {ok: false, message: "Plugin doesn't support setAnswer"};
+    }
+
     resetField(): undefined {
         // this.$onInit()
         return undefined;
