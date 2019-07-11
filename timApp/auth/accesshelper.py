@@ -57,6 +57,10 @@ def verify_admin(require=True):
     return True
 
 
+def verify_admin_no_ret(require=True):
+    verify_admin(require)
+
+
 def verify_edit_access(b: ItemOrBlock, require=True, message=None, check_duration=False, check_parents=False):
     u = get_current_user_object()
     has_access = u.has_edit_access(b)
