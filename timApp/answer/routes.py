@@ -162,10 +162,11 @@ def chunks(l: List, n: int):
         yield l[i:i + n]
 
 
-@answers.route("/userAnswersForTasks", methods=['POST'])
-def get_answers_for_tasks():
+@answers.route("/multiplugin2", methods=['POST'])
+def get_answers_for_tasks2():
     """
     Queries all answers for given list of tasks by the given user
+    TODO: experimental, delete?
     :return: {answers:[Answer], user: user_id}
     """
     tasks, user_id = verify_json_params('tasks', 'user')
@@ -193,7 +194,16 @@ def get_answers_for_tasks():
     except Exception as e:
         return abort(400, str(e))
 
-def get_answers2(user, task_ids, answer_map):
+
+def get_useranswers_for_task(user, task_ids, answer_map):
+    """
+    Performs a query for latest valid answers by given user for given task
+    Similar to pluginControl.get_answers but without counting
+    :param user: user
+    :param task_ids: tasks to be queried
+    :param answer_map: a dict where to add each taskID: Answer
+    :return: {taskID: Answer}
+    """
     col = func.max(Answer.id).label('col')
     sub = (user
            .answers
@@ -201,13 +211,8 @@ def get_answers2(user, task_ids, answer_map):
            .add_columns(col)
            .with_entities(col)
            .group_by(Answer.task_id).subquery())
-    answers: List[Answer] = (
-        Answer.query.join(sub, Answer.id == sub.c.col)
-        #Answer.query.join(sub, Answer.id == sub.c.col).join(Answer.users_all)
-        # .with_entities(Answer, sub.c.cnt)
-            .all()
-    )
-    for answer in answers:
+    answs: List[Answer] = Answer.query.join(sub, Answer.id == sub.c.col) .all()
+    for answer in answs:
         if len(answer.users_all) > 1:
             answer_map[answer.task_id] = answer
         else:
@@ -215,12 +220,14 @@ def get_answers2(user, task_ids, answer_map):
             asd = answer.to_json()
             asd.pop('users')
             answer_map[answer.task_id] = asd
-    return answers
+    return answs
 
-@answers.route("/multiplugin3", methods=['POST'])
-def get_answers_for_tasks3():
+
+@answers.route("/userAnswersForTasks", methods=['POST'])
+def get_answers_for_tasks():
     """
-    WIP
+    Route for getting latest valid answers for given user and list of tasks
+    :return: {"answers": {taskID: Answer}, "userId": user_id}
     """
     tasks, user_id = verify_json_params('tasks', 'user')
     try:
@@ -242,9 +249,7 @@ def get_answers_for_tasks3():
             tids.append(tid)
         answer_map = {}
         # pluginControl.get_answers(user, tids, answer_map)
-        get_answers2(user, tids, answer_map)
-        # for ans in answs:
-        #      fieldlist[ans.task_id] = [ans]
+        get_useranswers_for_task(user, tids, answer_map)
         return json_response({"answers": answer_map, "userId": user_id})
     except Exception as e:
         return abort(400, str(e))

@@ -542,12 +542,7 @@ export class ViewCtrl implements IController {
             for (const fab of this.formAbs.values()) {
                 taskList.push(fab.taskId);
             }
-            // TODO: Query only one (first valid) answer?
-            // const answerResponse = await $http.post<{ answers: { [index: string]: [IAnswer] }, userId: number }>("/userAnswersForTasks", {
-            //     tasks: taskList,
-            //     user: user.id,
-            // });
-            const answerResponse = await $http.post<{ answers: { [index: string]: IAnswer }, userId: number }>("/multiplugin3", {
+            const answerResponse = await $http.post<{ answers: { [index: string]: IAnswer }, userId: number }>("/userAnswersForTasks", {
                 tasks: taskList,
                 user: user.id,
             });
@@ -560,8 +555,6 @@ export class ViewCtrl implements IController {
                     fab.setInfo(taskInfoResponse.data[fab.taskId]);
                 }
             }
-            // UserId check might ensure the loaded response is from correct user
-            // when using slow connections (or maybe not)
             if (answerResponse.data.userId == this.selectedUser.id) {
                 for (const fab of this.formAbs.values()) {
                     const ans = answerResponse.data.answers[fab.taskId];

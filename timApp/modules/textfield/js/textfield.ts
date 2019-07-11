@@ -267,7 +267,7 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
             return;
         }
         if (this.attrs.autosave) {
-            this.doSaveText(false);
+            this.saveText();
         }
     }
 

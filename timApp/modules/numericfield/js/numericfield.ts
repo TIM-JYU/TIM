@@ -219,7 +219,7 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
      */
     autoSave() {
         if (this.attrs.autosave) {
-            this.doSaveText(false);
+            this.saveText();
         }
     }
 
