@@ -940,7 +940,11 @@ def add_missing_elements(table_json, datablock):
     empty_cell = {'cell': ''}
 
     # TODO: If table has only datablocks, crashes here.
-    table_row_count = len(table_json['rows'])
+    try:
+        table_row_count = len(table_json['rows'])
+    except:
+        table_row_count = 0
+        table_json['rows'] = []
     # Add missing rows.
     for i in range(0, max_row_count - table_row_count):
         table_json['rows'].append({'row': [empty_cell]})
