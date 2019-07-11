@@ -557,8 +557,8 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
                 if (instruction && (!this.teacherRight || this.editMode == null)) {
                     this.hideParagraph(instruction[0]);
                 }
-                const failure = await this.doSave(false, false, "", "");
-                if ( !failure.saved ) {
+                const result = await this.doSave(false, false, "", "");
+                if ( !result.saved ) {
                     this.error = "Error saving a plugin";
                     return;
                 }
@@ -639,8 +639,8 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
         }
 
         if (this.pluginMode === Mode.Feedback) {
-            const failure = await this.save();
-            if (failure) {
+            const result = await this.save();
+            if ( !result.saved ) {
                 this.error = "Error saving feedback";
                 return;
             }
