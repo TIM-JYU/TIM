@@ -453,7 +453,7 @@ export class ViewCtrl implements IController {
      * @param {ITimComponent} component The component to be registered.
      */
     public addTimComponent(component: ITimComponent, tag?: (string | undefined)) {
-        if (this.editing) {
+        if (this.docSettings.form_mode) {
             const id = component.getTaskId();
             if (id && this.getFormAnswerBrowser(id)) {
                 return;
@@ -772,7 +772,7 @@ export class ViewCtrl implements IController {
         //     }
         //     this.ldrs.set(loader.taskId + index, loader);
         // } else { this.ldrs.set(loader.taskId, loader); }
-        if (this.editing && this.getFormAnswerBrowser(loader.taskId)) {
+        if (this.docSettings.form_mode && this.getFormAnswerBrowser(loader.taskId)) {
             return;
         }
         this.ldrs.set(loader.taskId, loader);
