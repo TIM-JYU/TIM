@@ -24,11 +24,13 @@ class MultisaveMarkupModel(GenericMarkupModel):
     jumplink: Union[str, Missing] = missing
     areas: Union[List[str], Missing] = missing
     fields: Union[List[str], Missing] = missing
+    groups: Union[List[str], Missing] = missing
 
 
 class MultisaveMarkupSchema(GenericMarkupSchema):
     jumplink = fields.String(allow_none=True)  # if after fields, problems
     areas = fields.List(fields.Str())
+    groups = fields.List(fields.Str())
     fields = fields.List(fields.Str())
 
     @post_load

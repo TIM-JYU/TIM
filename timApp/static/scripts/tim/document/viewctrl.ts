@@ -124,6 +124,7 @@ export class ViewCtrl implements IController {
 
     private timTables = new Map<string, TimTableController>();
     private timComponents: Map<string, ITimComponent> = new Map();
+    private timComponentTags: Map<string, [string]> = new Map();
 
     private pendingUpdates: PendingCollection = new Map<string, string>();
     private document: Document;
@@ -448,11 +449,23 @@ export class ViewCtrl implements IController {
 
     /**
      * Registers an ITimComponent to the view controller by its name attribute if it has one.
+     * @param {tag} custom tag for accessing  group of ITimComponents
      * @param {ITimComponent} component The component to be registered.
      */
-    public addTimComponent(component: ITimComponent) {
+    public addTimComponent(component: ITimComponent, tag?: (string | undefined)) {
         const name = component.getName();
-        if (name) { this.timComponents.set(name, component); }
+        if (name) {
+            this.timComponents.set(name, component);
+            if (tag) {
+                const prev = this.timComponentTags.get(tag);
+                if (prev != undefined) {
+                    prev.push(name);
+                    this.timComponentTags.set(tag, prev);
+                } else {
+                    this.timComponentTags.set(tag, [name]);
+                }
+            }
+        }
     }
 
     /**
@@ -462,6 +475,20 @@ export class ViewCtrl implements IController {
      */
     public getTimComponentByName(name: string): ITimComponent | undefined {
         return this.timComponents.get(name);
+    }
+
+    public getTimComponentsByTag(tag: string): ITimComponent[] {
+        const returnList: ITimComponent[] = [];
+        const arr = this.timComponentTags.get(tag);
+        if (arr) {
+            for (const name of arr) {
+                const t = this.getTimComponentByName(name);
+                if (t) {
+                    returnList.push(t);
+                }
+            }
+        }
+        return returnList;
     }
 
     /**

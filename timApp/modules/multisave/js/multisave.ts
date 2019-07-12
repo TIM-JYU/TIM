@@ -13,6 +13,7 @@ export const moduleDefs = [multisaveApp];
 const multisaveMarkup = t.intersection([
     t.partial({
         areas: t.array(t.string),
+        groups: t.array(t.string),
         fields: t.array(t.string),
         followid: t.string,
         jumplink: t.string,
@@ -78,6 +79,14 @@ export class MultisaveController extends PluginBase<t.TypeOf<typeof multisaveMar
                 }
             }
         }
+                if (this.attrs.groups) {
+            for (const i of this.attrs.groups) {
+                const timComponents = this.vctrl.getTimComponentsByTag(i);
+                for (const v of timComponents) {
+                    if (!componentsToSave.includes(v)) { componentsToSave.push(v); }
+                }
+            }
+        }
 
         let ownArea: string | undefined;
         const parents = this.element.parents(".area");
@@ -87,12 +96,12 @@ export class MultisaveController extends PluginBase<t.TypeOf<typeof multisaveMar
         }
 
         // no given followids or areas but the plugin is inside an area
-        if (!this.attrs.fields && !this.attrs.areas && ownArea) {
+        if (!this.attrs.fields && !this.attrs.areas && !this.attrs.groups && ownArea) {
             componentsToSave = this.vctrl.getTimComponentsByGroup(ownArea);
         }
 
         // no given followids / areas and no own area found
-        if (!this.attrs.fields && !this.attrs.areas && !ownArea) {
+        if (!this.attrs.fields && !this.attrs.areas && !this.attrs.groups && !ownArea) {
             componentsToSave = this.vctrl.getTimComponentsByRegex(".*");
         }
 

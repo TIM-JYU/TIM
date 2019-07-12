@@ -70,20 +70,22 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
         this.userword = (valueOr(this.attrsall.state && this.attrsall.state.c, this.attrs.initword || "")).toString();
 
         this.modelOpts = {debounce: this.autoupdate};
-        // if (!this.attrs.readOnlyStyle) {
+        if (this.attrs.followid) {
+            this.vctrl.addTimComponent(this, this.attrs.followid);
+        } else {
             this.vctrl.addTimComponent(this);
-        // }
+        }
         this.initialValue = this.userword;
-        if (  this.attrs.showname ) { this.initCode(); }
+        if (this.attrs.showname ) { this.initCode(); }
     }
 
     /**
      * Returns the name given to the plugin.
      */
     getName(): string | undefined {
-        if (this.attrs.followid) {
-            return this.attrs.followid;
-        }
+        // if (this.attrs.followid) {
+        //     return this.attrs.followid;
+        // }
         const taskId = this.pluginMeta.getTaskId();
         if (taskId) {
             return taskId.split(".")[1];
