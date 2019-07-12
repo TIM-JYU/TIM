@@ -692,6 +692,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
      * @param plugins Plugins to check.
      */
     hasContent(plugins: IQuestionItemT): boolean {
+        if ( !plugins ) { return false; }
         for (const p of plugins.pluginNames) {
             const plugin = this.vctrl.getTimComponentByName(p);
             if (plugin && plugin.getContent() === undefined) {
