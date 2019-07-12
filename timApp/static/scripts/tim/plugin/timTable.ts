@@ -152,6 +152,19 @@ export interface CellResponse {
     cellHtml: string;
 }
 
+export interface CellToSave {
+    row: number;
+    col: number;
+    c: string;
+}
+
+export interface CellAttrToSave {
+    row: number;
+    col: number;
+    c: string;
+    key: string;
+}
+
 export interface TimTable {
     table: ITable;
     id?: string;
@@ -174,7 +187,11 @@ export interface TimTable {
     hiddenRows?: number[];
     hiddenColumns?: number[];
     lockedCells?: string[];
-    saveCallBack?: (rowi: number, coli: number, content: string) => void;
+    // cellsTosave may include un-rect area (not at the moment but maybe in future
+    // colValuesAreSame means in one column all values are same,
+    // so that it is possible to save them to one group
+    saveCallBack?: (cellsTosave: CellToSave[], colValuesAreSame: boolean ) => void;
+    saveStyleCallBack?: (cellsTosave: CellAttrToSave[], colValuesAreSame: boolean ) => void;
     cbCallBack?: (cbs: boolean[], n: number, index: number) => void;
     maxWidth?: string; // Possibly obsolete if cell/column layout can be given in data.table.colums
     minWidth?: string;
@@ -340,7 +357,8 @@ const UP_OR_DOWN = [Direction.Up, Direction.Down];
 const LEFT_OR_RIGHT = [Direction.Left, Direction.Right];
 
 export function isPrimitiveCell(cell: CellEntity): cell is CellType {
-    return cell == null || (cell as ICell).cell === undefined;
+    // return cell == null || (cell as ICell).cell === undefined;
+    return cell == null || typeof cell !== "object";
 }
 
 /**
@@ -1013,19 +1031,17 @@ export class TimTableController extends DestroyScope implements IController {
      * @param {number} col Column index
      */
     async saveCells(cellContent: string, docId: number, parId: string, row: number, col: number) {
+        const cellsToSave: CellToSave[] = [];
         if (this.task) {
             // const cells = this.getSelectedCells(row, col);
             for (const c of this.selectedCells.cells) {
+                cellsToSave.push({c: cellContent, row: c.y, col: c.x});
                 this.setUserContent(c.y, c.x, cellContent);
-                // TODO: tee tästä kuten alla saveMultiCell eli kasaa yhteen kaikki tellennettavat ja vasta sitten kutsu callbackiä
-                if (this.data.saveCallBack) {
-                    this.data.saveCallBack(c.y, c.x, cellContent);
-                }
             }
+            if (this.data.saveCallBack) { this.data.saveCallBack(cellsToSave, true); }
             return;
         }
 
-        const cellsToSave = [];
         for (const c of this.selectedCells.cells) {
             cellsToSave.push({c: cellContent, row: c.y, col: c.x});
         }
@@ -1212,6 +1228,7 @@ export class TimTableController extends DestroyScope implements IController {
                 targetCell[key] = value;
             }
         }
+        if ( !targetCell.cell ) { targetCell.cell = ""; }
 
     }
 
@@ -1819,23 +1836,17 @@ export class TimTableController extends DestroyScope implements IController {
     }
 
     private async saveToCurrentCell(value: string) {
-        if (!this.viewctrl || !this.activeCell) {
-            return;
-        }
+        if (!this.viewctrl || !this.activeCell) { return; }
         const parId = this.getOwnParId();
-        if (!parId) {
-            return;
-        }
+        if (!parId) { return; }
+
         const docId = this.viewctrl.item.id;
         const rowId = this.activeCell.row;
         const colId = this.activeCell.col;
 
-        if (typeof value === "string") {
-            await this.saveCells(value, docId, parId, rowId, colId);
-            await ParCompiler.processAllMath(this.element);
-            return true;
-        }
-        return false;
+        await this.saveCells(value, docId, parId, rowId, colId);
+        await ParCompiler.processAllMath(this.element);
+        return true;
     }
 
     /**
@@ -1975,9 +1986,8 @@ export class TimTableController extends DestroyScope implements IController {
 
     /**
      * Sets style attributes for cells
-     * @param {CellEntity} cell Styled cell
      * @param {number} rowi Table row index
-     * @param {number] coli Table column index
+     * @param {number} coli Table column index
      */
     private stylingForCell(rowi: number, coli: number) {
         const styles = this.stylingForCellOfColumn(coli);
@@ -2477,16 +2487,27 @@ export class TimTableController extends DestroyScope implements IController {
     }
 
     async setCell(value: object) {
-        for (const [key, s] of Object.entries(value)) {
+        const cellsToSave: CellAttrToSave[] = [];
+        for (let [key, s] of Object.entries(value)) {
             if (key.indexOf("$$") == 0) {
                 continue;
             }
             if (key === "cell") {
                 this.editedCellContent = s;
-                await this.saveToCurrentCell(s);
+                await this.saveToCurrentCell(s);  // TODO: think if this can be done with same query
             } else {
-                await this.setCellStyleAttribute("setCell", key, s);
+                // sometimes there is extra # in colors?
+                if (s.indexOf("##") == 0) {
+                    s = s.substr(1);
+                }
+                for (const c of this.selectedCells.cells) {
+                   cellsToSave.push({col: c.x, row: c.y, key: key, c: s });
+                }
+
             }
+        }
+        if ( cellsToSave ) {
+            await this.setCellStyleAttribute("setCell", cellsToSave, true);
         }
     }
 
@@ -2537,49 +2558,26 @@ export class TimTableController extends DestroyScope implements IController {
     /**
      * Tells the server to set a cell style attribute.
      * @param route The route to call.
-     * @param key The name of the attribute to set.
-     * @param value The value of the attribute.
+     * @param cellsToSave list of cells to save
+     * @param colValuesAreSame if all values in same col are same
      */
-    async setCellStyleAttribute(route: string, key: string, value: string) {
+    async setCellStyleAttribute(route: string, cellsToSave: CellAttrToSave[], colValuesAreSame: boolean) {
         if (!this.viewctrl || !this.activeCell) {
             return;
         }
 
-        // sometimes there is extra # in colors?
-        if (value.indexOf("##") == 0) {
-            value = value.substr(1);
-        }
-        // const cells = this.getSelectedCells(this.activeCell.row, this.activeCell.col);
-
         if (this.task) {
-            for (const c of this.selectedCells.cells) {
-                this.setUserAttribute(c.y, c.x, key, value);
+            for (const c of cellsToSave) {
+                this.setUserAttribute(c.row, c.col, c.key, c.c);
             }
+            if (this.data.saveStyleCallBack) { this.data.saveStyleCallBack(cellsToSave, colValuesAreSame); }
             return;
         }
 
-        // TODO; Old code, change protocol to use cells
         const parId = this.getOwnParId();
         const docId = this.viewctrl.item.id;
-        const rowId = this.activeCell.row;
-        const colId = this.activeCell.col;
-        let x1 = colId;
-        let x2 = colId;
-        let y1 = rowId;
-        let y2 = rowId;
-        if (this.startCell) {
-            x1 = Math.min(this.activeCell.col, this.startCell.col);
-            x2 = Math.max(this.activeCell.col, this.startCell.col);
-            y1 = Math.min(this.activeCell.row, this.startCell.row);
-            y2 = Math.max(this.activeCell.row, this.startCell.row);
-        }
 
-        // TODO: Does not take account hidden rows! Change protocol to use cells
-        let data = {docId, parId, y1, y2, x1, x2, [key]: value};
-        if (route === "setCell") {
-            data = {docId, parId, y1, y2, x1, x2, key: key, value: value};
-        }
-        const response = await $http.post<TimTable>("/timTable/" + route, data);
+        const response = await $http.post<TimTable>("/timTable/" + route, {docId, parId, cellsToSave});
         const toolbarTemplates = this.data.toolbarTemplates;
         this.data = response.data;
         this.data.toolbarTemplates = toolbarTemplates;

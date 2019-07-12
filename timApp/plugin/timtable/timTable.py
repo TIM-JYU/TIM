@@ -197,10 +197,7 @@ def tim_table_get_cell_data():
         cell_cnt = find_cell_from_datablock(yaml[TABLE][DATABLOCK][CELLS], int(args[ROW]), int(args[COL]))
     if cell_cnt is not None:
         if isinstance(cell_cnt, dict):
-            if CELL in cell_cnt:
-                multi.append(cell_cnt[CELL])
-            else:
-                return abort(400)
+            multi.append(cell_cnt.get(CELL,''))
         else:
             multi.append(cell_cnt)
     else:
@@ -336,7 +333,7 @@ def save_plugin(p: Plugin):
     docinfo.update_last_modified()
     notify_doc_watchers(
         docinfo,
-        p.to_paragraph().get_markdown(),
+        p.to_paragraph().get_markdown(), # TODO: for big tables this takes long time. So do it nside function if there is somebody to notify
         NotificationType.ParModified, par=p.par,
         old_version=old_ver,
     )
@@ -639,30 +636,14 @@ def tim_table_remove_column():
 #############################
 # Table editor toolbar routes
 #############################
-@timTable_plugin.route("setCell_all", methods=["POST"])
-def tim_table_set_cell_all():
-    """
-    Sets a cell's background color.
-    :return: The entire table's data after the cell's background color has been set.
-    """
-    #  TODO: this is not ready.  Save all data celldata at once
-    # doc_id, par_id, row_id, col_id, value = verify_json_params('docId', 'parId', 'rowId', 'colId', 'value')
-    doc_id, par_id, y1, y2, x1, x2, value = verify_json_params('docId', 'parId', 'y1', 'y2', 'x1', 'x2', 'value')
-    return set_cell_style_attribute(doc_id, par_id, y1, y2, x1, x2, BACKGROUND_COLOR, value)
-
-
 @timTable_plugin.route("setCell", methods=["POST"])
 def tim_table_set_cell():
     """
     Sets a cell's attributes or content.
     :return: The entire table's data after the cell's things has been set.
     """
-    json_params = request.get_json() or {}
-    doc_id, par_id, y1, y2, x1, x2, key, value = verify_json_params('docId', 'parId', 'y1', 'y2', 'x1', 'x2', 'key', 'value')
-
-    if key == 'cell':
-        return tim_table_save_cell_value(value, doc_id, par_id, y2, x2)
-    return set_cell_style_attribute(doc_id, par_id, y1, y2, x1, x2, key, value)
+    doc_id, par_id, cells_to_save = verify_json_params('docId', 'parId', 'cellsToSave')
+    return json_response(set_cell_style_attribute(doc_id, par_id, cells_to_save))
 
 
 def clear_attributes(cell):
@@ -674,99 +655,136 @@ def clear_attributes(cell):
             del cell[key]
 
 
-def set_cell_style_attribute(doc_id, par_id, y1, y2, x1, x2, attribute, value):
+def set_cell_style_attribute(doc_id, par_id, cells_to_save):
     """
     Sets a style attribute for a cell.
     :param doc_id: Document ID
     :param par_id: Paragraph ID
-    :param y1: Row index
-    :param y2: Row index
-    :param x1: Column index
-    :param x2: Column index
-    :param attribute: The attribute to set.
-    :param value: The value of the attribute.
+    :param cells_to_save: list of cells to save
     :return: The entire table's data after the style attribute has been set.
     """
     d, plug = get_plugin_from_paragraph(doc_id, par_id)
     data_input_mode = is_in_datainput_mode(plug)
+    cell_data_to_save = []
+    for c in cells_to_save:
+        row_id = c["row"]
+        col_id = c["col"]
+        attribute = c["key"]
+        value = c["c"]
+        if attribute == "cell":
+            cell_data_to_save.append(c)
+            continue
+        if data_input_mode:
+            datablock_entries = construct_datablock_entry_list_from_yaml(plug)
+            existing_datablock_entry = None
+            for entry in datablock_entries:
+                if entry.row == row_id and entry.column == col_id:
+                    existing_datablock_entry = entry
+                    break
 
-    for row_id in range(y1,y2+1):
-        for col_id in range(x1,x2+1):
-            if data_input_mode:
-                datablock_entries = construct_datablock_entry_list_from_yaml(plug)
-                existing_datablock_entry = None
-                for entry in datablock_entries:
-                    if entry.row == row_id and entry.column == col_id:
-                        existing_datablock_entry = entry
-                        break
-
-                if not existing_datablock_entry:
-                    if attribute != "CLEAR":
-                        try:
-                            cell_content = find_cell(plug.values[TABLE][ROWS], row_id, col_id)
-                        except KeyError:
-                            cell_content = ''
-                        new_entry = RelativeDataBlockValue(row_id, col_id, {attribute: value, CELL: cell_content} )
-                        datablock_entries.append(new_entry)
-                    else:
-                        pass
+            if not existing_datablock_entry:
+                if attribute != "CLEAR":
+                    try:
+                        cell_content = find_cell(plug.values[TABLE][ROWS], row_id, col_id)
+                    except KeyError:
+                        cell_content = ''
+                    new_entry = RelativeDataBlockValue(row_id, col_id, {attribute: value, CELL: cell_content} )
+                    datablock_entries.append(new_entry)
                 else:
-                    if isinstance(existing_datablock_entry.data, str):
-                        if attribute != "CLEAR":
-                            existing_datablock_entry.data = {CELL: existing_datablock_entry.data, attribute: value}
-                        else:
-                            pass
-                    else:
-                        if attribute != "CLEAR":
-                            existing_datablock_entry.data[attribute] = value
-                        else:
-                            clear_attributes(existing_datablock_entry.data)
-                apply_datablock_from_entry_list(plug, datablock_entries)
+                    pass
             else:
-                try:
-                    rows = plug.values[TABLE][ROWS]
-                except KeyError:
-                    # return abort(400)
-                    rows = []
-                    plug.values[TABLE][ROWS] = rows
-
-                if len(rows) <= row_id:
-                    if attribute == "CLEAR":
-                        continue
-                    # return abort(400)
-                    for ir in range(len(rows), row_id+1):
-                        rows.append({ ROW: []})
-                row = rows[row_id]
-                try:
-                    row_data = row[ROW]
-                except KeyError:
-                    return abort(400)
-                if len(row_data) <= col_id:
-                    if attribute == "CLEAR":
-                        continue
-                    # return abort(400)
-                    for ic in range(len(row_data), col_id+1):
-                        row_data.append('')
-                cell = row_data[col_id]
-                if is_primitive(cell):
+                if isinstance(existing_datablock_entry.data, str):
                     if attribute != "CLEAR":
-                        row_data[col_id] = {CELL: cell, attribute: value}
+                        existing_datablock_entry.data = {CELL: existing_datablock_entry.data, attribute: value}
                     else:
                         pass
                 else:
                     if attribute != "CLEAR":
-                        cell[attribute] = value
+                        existing_datablock_entry.data[attribute] = value
                     else:
-                        try:
-                            if value != "ALL":
-                                del cell[value]
-                            else:
-                                clear_attributes(cell)
-                        except:
-                            pass
+                        clear_attributes(existing_datablock_entry.data)
+            apply_datablock_from_entry_list(plug, datablock_entries)
+        else:
+            try:
+                rows = plug.values[TABLE][ROWS]
+            except KeyError:
+                # return abort(400)
+                rows = []
+                plug.values[TABLE][ROWS] = rows
 
+            if len(rows) <= row_id:
+                if attribute == "CLEAR":
+                    continue
+                # return abort(400)
+                for ir in range(len(rows), row_id+1):
+                    rows.append({ ROW: []})
+            row = rows[row_id]
+            try:
+                row_data = row[ROW]
+            except KeyError:
+                return abort(400)
+            if len(row_data) <= col_id:
+                if attribute == "CLEAR":
+                    continue
+                # return abort(400)
+                for ic in range(len(row_data), col_id+1):
+                    row_data.append('')
+            cell = row_data[col_id]
+            if is_primitive(cell):
+                if attribute != "CLEAR":
+                    row_data[col_id] = {CELL: cell, attribute: value}
+                else:
+                    pass
+            else:
+                if attribute != "CLEAR":
+                    cell[attribute] = value
+                else:
+                    try:
+                        if value != "ALL":
+                            del cell[value]
+                        else:
+                            clear_attributes(cell)
+                    except:
+                        pass
+
+    if cell_data_to_save:
+        tim_table_save_multi_cell_value(cell_data_to_save, doc_id, par_id, False)
     save_plugin(plug)
-    return json_response(prepare_for_and_call_dumbo(plug))
+    return prepare_for_and_call_dumbo(plug)  # Do we need this because the table is allready ok???
+
+
+def set_value_to_table(plug, row_id, col_id, value):
+    """
+    Set value in the description part of table
+    :param plug: plugin to use
+    :param row_id: row where to set
+    :param col_id: col where to set
+    :param value: value to be set
+    :return: nothing
+    """
+    try:
+        rows = plug.values[TABLE][ROWS]
+    except KeyError:
+        # return abort(400)
+        rows = []
+        plug.values[TABLE][ROWS] = rows
+
+    if len(rows) <= row_id:
+        for ir in range(len(rows), row_id + 1):
+            rows.append({ROW: []})
+    row = rows[row_id]
+    try:
+        row_data = row[ROW]
+    except KeyError:
+        return abort(400)
+    if len(row_data) <= col_id:
+        for ic in range(len(row_data), col_id + 1):
+            row_data.append('')
+    cell = row_data[col_id]
+    if is_primitive(cell):
+        row_data[col_id] = value
+    else:
+        cell[CELL] = value
 
 
 def get_plugin_from_paragraph(doc_id, par_id) -> (DocEntry, Plugin):
@@ -830,9 +848,11 @@ def tim_table_save_cell_list():
     return tim_table_save_cell_value(cell_content, docid, parid, row, col)
 
 
-def tim_table_save_multi_cell_value(cells_to_save, docid, parid):
+def tim_table_save_multi_cell_value(cells_to_save, docid, parid, must_call_dumbo=True):
     multi = []
     d, plug = get_plugin_from_paragraph(docid, parid)
+    data_input_mode = is_in_datainput_mode(plug)
+
     yaml = plug.values
     # verify_edit_access(d)
     if is_in_global_append_mode(plug):
@@ -851,13 +871,17 @@ def tim_table_save_multi_cell_value(cells_to_save, docid, parid):
         cell_content = c["c"]
         row = c["row"]
         col = c["col"]
-        save_cell(yaml[TABLE][DATABLOCK], row, col, cell_content)
+        if data_input_mode:
+            save_cell(yaml[TABLE][DATABLOCK], row, col, cell_content)
+        else:
+            set_value_to_table(plug, row, col, cell_content)
         cc = str(cell_content)
         if plug.is_automd_enabled(True) and not cc.startswith(MD):
             cc = MD + cc
         settings = d.document.get_settings()
-        html = call_dumbo([cc], DUMBO_PARAMS, options=plug.par.get_dumbo_options(base_opts=settings.get_dumbo_options()))
-        multi.append({'cellHtml': html[0], 'row': row, 'col': col})
+        if must_call_dumbo:
+            html = call_dumbo([cc], DUMBO_PARAMS, options=plug.par.get_dumbo_options(base_opts=settings.get_dumbo_options()))
+            multi.append({'cellHtml': html[0], 'row': row, 'col': col})
     save_plugin(plug)
     return json_response(multi)
 
@@ -931,7 +955,7 @@ def find_cell(rows: list, row: int, col: int) -> str:
     right_cell = right_row[col]
     if isinstance(right_cell, str) or isinstance(right_cell, int) or isinstance(right_cell, float):
        return right_cell
-    return right_cell[CELL]
+    return right_cell.get(CELL,'')
 
 
 def find_cell_from_datablock(cells: dict, row: int, col: int) -> Optional[str]:
@@ -1077,7 +1101,7 @@ def prepare_for_dumbo(values):
                     continue
                 rowdata[i] = MD + cell
             else:
-                s = cell[CELL]
+                s = cell.get(CELL,'')
                 if s == '':
                     continue
                 cell[CELL] = MD + s
