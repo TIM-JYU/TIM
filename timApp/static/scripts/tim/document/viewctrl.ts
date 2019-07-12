@@ -453,6 +453,12 @@ export class ViewCtrl implements IController {
      * @param {ITimComponent} component The component to be registered.
      */
     public addTimComponent(component: ITimComponent, tag?: (string | undefined)) {
+        if (this.editing) {
+            const id = component.getTaskId();
+            if (id && this.getFormAnswerBrowser(id)) {
+                return;
+            }
+        }
         const name = component.getName();
         if (name) {
             this.timComponents.set(name, component);
@@ -737,13 +743,14 @@ export class ViewCtrl implements IController {
         // - for now just add extra answerbrowsers for them (causes unnecessary requests when changing user...)
         // - maybe in future answerbrowser could find all related plugin instances and update them when ab.changeuser gets called?
         // - fix registerPluginLoader too
-        if (this.abs.has((ab.taskId))) {
-            let index = 1;
-            while (this.abs.has(ab.taskId + index)) {
-                index++;
-            }
-            this.abs.set(ab.taskId + index, ab);
-        } else { this.abs.set(ab.taskId, ab); }
+        // if (this.abs.has((ab.taskId))) {
+        //     let index = 1;
+        //     while (this.abs.has(ab.taskId + index)) {
+        //         index++;
+        //     }
+        //     this.abs.set(ab.taskId + index, ab);
+        // } else { this.abs.set(ab.taskId, ab); }
+        this.abs.set(ab.taskId, ab);
     }
 
     getAnswerBrowser(taskId: string) {
@@ -757,14 +764,18 @@ export class ViewCtrl implements IController {
     private ldrs = new Map<string, PluginLoaderCtrl>();
 
     registerPluginLoader(loader: PluginLoaderCtrl) {
-        // TODO: see todos at registerAnswerBrowser
-        if (this.ldrs.has((loader.taskId))) {
-            let index = 1;
-            while (this.ldrs.has(loader.taskId + index)) {
-                index++;
-            }
-            this.ldrs.set(loader.taskId + index, loader);
-        } else { this.ldrs.set(loader.taskId, loader); }
+        // // TODO: see todos at registerAnswerBrowser
+        // if (this.ldrs.has((loader.taskId))) {
+        //     let index = 1;
+        //     while (this.ldrs.has(loader.taskId + index)) {
+        //         index++;
+        //     }
+        //     this.ldrs.set(loader.taskId + index, loader);
+        // } else { this.ldrs.set(loader.taskId, loader); }
+        if (this.editing && this.getFormAnswerBrowser(loader.taskId)) {
+            return;
+        }
+        this.ldrs.set(loader.taskId, loader);
     }
 
     getPluginLoader(taskId: string) {
