@@ -309,11 +309,6 @@ export class AnswerBrowserController extends DestroyScope implements IController
                 if (!updated) {
                     this.handleAnswerFetch(this.answers);
                 }
-
-            } else {
-                if (answs != null) {
-                    this.resetITimComponent();
-                }
             }
             await this.loadInfo();
             await this.checkUsers(); // load users, answers have already been loaded for the currently selected user
