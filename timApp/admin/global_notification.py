@@ -7,7 +7,7 @@ from flask import Blueprint
 from flask import current_app
 from flask import url_for
 
-from timApp.auth.accesshelper import verify_admin
+from timApp.auth.accesshelper import verify_admin_no_ret
 from timApp.markdown.markdownconverter import md_to_html
 from timApp.util.flask.responsehelper import safe_redirect
 
@@ -15,7 +15,7 @@ global_notification = Blueprint('global_notification',
                                 __name__,
                                 url_prefix='/globalNotification')
 
-global_notification.before_request(verify_admin)
+global_notification.before_request(verify_admin_no_ret)
 
 
 @global_notification.app_context_processor

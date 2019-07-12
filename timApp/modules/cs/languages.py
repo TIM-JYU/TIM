@@ -1305,7 +1305,7 @@ class Geogebra(Language):
         return 0, "GeoGebra saved", "", ""
 
     def deny_attributes(self):
-        return {"srchml":"",
+        return {"srchtml":"",
                 "filename": "",
                 "prehtml": "",
                 "posthtml": "",

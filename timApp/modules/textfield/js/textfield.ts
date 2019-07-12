@@ -276,6 +276,11 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
      * @param true/false parameter boolean checker for the need to save
      */
     async doSaveText(nosave: boolean) {
+        if (!this.isUnSaved()) {
+            this.saveResponse.saved = false;
+            this.saveResponse.message = "No changes"
+            return this.saveResponse;
+        }
         this.errormessage = "";
         if (this.attrs.validinput) {
             if (!this.validityCheck(this.attrs.validinput)) {

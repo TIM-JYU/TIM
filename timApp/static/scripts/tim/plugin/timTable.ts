@@ -1017,13 +1017,14 @@ export class TimTableController extends DestroyScope implements IController {
             // const cells = this.getSelectedCells(row, col);
             for (const c of this.selectedCells.cells) {
                 this.setUserContent(c.y, c.x, cellContent);
+                // TODO: tee tästä kuten alla saveMultiCell eli kasaa yhteen kaikki tellennettavat ja vasta sitten kutsu callbackiä
                 if (this.data.saveCallBack) {
                     this.data.saveCallBack(c.y, c.x, cellContent);
                 }
             }
             return;
         }
-        // TODO: tee iso tietue ja sille oma reitti ja paluussa kaikki uudet paikat
+
         const cellsToSave = [];
         for (const c of this.selectedCells.cells) {
             cellsToSave.push({c: cellContent, row: c.y, col: c.x});
@@ -1037,21 +1038,6 @@ export class TimTableController extends DestroyScope implements IController {
         for (const c of cellHtmls) {
             this.cellDataMatrix[c.row][c.col].cell = c.cellHtml;
         }
-
-        /*
-        for (const c of this.selectedCells.cells) {
-            const response = await $http.post<string[]>("/timTable/saveCell", {
-                cellContent,
-                docId,
-                parId,
-                row: c.y,
-                col: c.x,
-            });
-            const cellHtml = response.data[0];
-            this.cellDataMatrix[c.y][c.x].cell = cellHtml;
-        }
-        */
-
     }
 
     /**

@@ -60,6 +60,7 @@ class DragController extends PluginBase<t.TypeOf<typeof DragMarkup>, t.TypeOf<ty
     private effectAllowed?: string;
     private vctrl!: ViewCtrl;
     private wordObjs?: Array<{ id: number, word: string }>;
+    private shuffleDone: boolean = false;
 
     constructor(
         protected scope: IScope,
@@ -103,6 +104,7 @@ class DragController extends PluginBase<t.TypeOf<typeof DragMarkup>, t.TypeOf<ty
         } else {
             if (this.shuffle && this.attrs.words) {
                 const words = shuffleStrings(this.attrs.words);
+                this.shuffleDone = true;
                 this.createWordobjs(words);
             } else {
                 this.createWordobjs(this.attrs.words || []);
@@ -206,7 +208,8 @@ class DragController extends PluginBase<t.TypeOf<typeof DragMarkup>, t.TypeOf<ty
     }
 
     resetField(): undefined {
-        this.setPluginWords(this.attrs.words || []);
+        // this.setPluginWords(this.attrs.words || []);
+        // this.createWordobjs(this.attrs.words || []);
         return undefined;
     }
 
