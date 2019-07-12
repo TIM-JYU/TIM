@@ -791,7 +791,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
         return this.taskInfo.userMin != null && this.taskInfo.userMax != null;
     }
 
-    // TODO: Delete? Possible nly plugins registered as form plugin should reset,
+    // TODO: Delete? Possibly only plugins registered as form plugins should reset,
     //  and that is handled by viewctrl
     resetITimComponent() {
         const c = this.viewctrl.getTimComponentByName(this.taskId.split(".")[1]);
