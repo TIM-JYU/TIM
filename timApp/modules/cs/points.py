@@ -81,8 +81,11 @@ def return_points(points_rule, result):
     max_points = points_rule.get("max_points", 1e100)
     if "result" in points_rule:
         points = points_rule["result"]
-        tim_info = {"points": max(min(points,max_points), min_points)}
-        result["tim_info"] = tim_info
+        tim_info = result.get("tim_info", None)
+        if tim_info == None:
+            result["tim_info"] = {}
+            tim_info = result.get("tim_info", None)
+        tim_info["points"] = max(min(points,max_points), min_points)
     if "points" in points_rule:
         points = points_rule["points"]
         result["save"]["points"] = points
