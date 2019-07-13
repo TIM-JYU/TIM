@@ -72,12 +72,28 @@ class DocSettings:
                     if fu:
                         # request = par.doc.docinfo.request
 
-                        # TODO: if allready value and urlmacros.get(fu) then ole value wins
+                        # TODO: if allready value and urlmacros.get(fu) then old value wins
                         urlvalue = request.args.get(fu, urlmacros.get(fu))
                         if urlvalue:
-                            if not yaml_vals.values.get('macros', None):
-                                yaml_vals.values["macros"] = {}
-                            yaml_vals.values["macros"][fu] = urlvalue
+                            try:
+                                if not yaml_vals.values.get('macros', None):
+                                    yaml_vals.values["macros"] = {}
+                                try:
+                                    uvalue = float(urlvalue)
+                                except:
+                                    uvalue = None
+                                if uvalue is not None:
+                                    maxvalue = yaml_vals.values["macros"].get("MAX"+fu, None)
+                                    if maxvalue is not None:
+                                        if uvalue > maxvalue:
+                                            urlvalue = maxvalue
+                                    minvalue = yaml_vals.values["macros"].get("MIN"+fu, None)
+                                    if minvalue is not None:
+                                        if uvalue < minvalue:
+                                            urlvalue = minvalue
+                                yaml_vals.values["macros"][fu] = urlvalue
+                            except:
+                                pass
                 del yaml_vals.values[DocSettings.urlmacros_key]
 
         except yaml.YAMLError as e:

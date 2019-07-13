@@ -14,7 +14,7 @@ from timApp.util.utils import get_error_html, title_to_id
 
 
 # noinspection PyUnusedLocal
-def has_macros(text: str, macros, macro_delimiter: Optional[str]=None):
+def has_macros(text: str, macros, macro_delimiter: Optional[str] = None):
     return macro_delimiter and (macro_delimiter in text or '{!!!' in text or '{%' in text)
 
 
@@ -33,22 +33,30 @@ def expand_macros_regex(text: str, macros, macro_delimiter=None):
 #  1. make a class or function
 #  2. and map it in create_environment
 
-def srange(s, i1, i2, step=1):
+def srange(s, i1, i2, step=1, *argv):
     """
     Jinja2 filter for generating indexed names
     :param s: format string for item
     :param i1: start index
     :param i2: exclusive end index
-    :param after: string after every item
     :param step: how much increment
+    :param argv pair of value to add and mul index
     :return: like "d1 d2 d3 "  by call sfrom('d{0} ', 1, 4)
     """
     result = ''
     for i in range(i1, i2, step):
-        result += s.format(i)
+        ext = []
+        for j in range(0, len(argv), 2):
+            add = argv[j]
+            mul = 1
+            if j + 1 < len(argv):
+                mul = argv[j+1]
+            ext.append(mul * i + add)
+        result += s.format(i, *ext)
     return result
 
 
+# noinspection PyPep8Naming
 def Pz(i):
     """
     Returns number as a string so that from 0 comes "", postive number comes like " + 1"
@@ -76,21 +84,21 @@ class Belongs:
         self.cache[groupname] = b
         return b
 
-def isview(retVal, mode=None):
+
+def isview(ret_val, mode=None):
     if not mode:
-        v = False
         try:
             v = g.viewmode
         except:
             return False
         if v:
-            return retVal
-        return not retVal
+            return ret_val
+        return not ret_val
     try:
         r = g.route
         if re.match(mode, r):
-            return retVal
-        return not retVal
+            return ret_val
+        return not ret_val
     except:
         return False
 
@@ -98,11 +106,13 @@ def isview(retVal, mode=None):
 # ------------------------ Jinja filters end ---------------------------------------------------------------
 
 
-def expand_macros(text: str, macros, settings, macro_delimiter: Optional[str]=None, env=None, ignore_errors: bool=False):
+def expand_macros(text: str, macros, settings, macro_delimiter: Optional[str] = None,
+                  env=None, ignore_errors: bool = False):
     # return text  # comment out when want to take time if this slows things
     if not has_macros(text, macros, macro_delimiter):
         return text
     if env is None:
+        # noinspection PyBroadException
         try:
             env = g.env
         except:
@@ -169,7 +179,7 @@ def create_environment(macro_delimiter: str):
 def md_to_html(text: str,
                sanitize: bool = True,
                macros: Optional[Dict[str, object]] = None,
-               macro_delimiter: Optional[str]=None) -> str:
+               macro_delimiter: Optional[str] = None) -> str:
     """Converts the specified markdown text to HTML.
 
     :param macros: The macros to use.
@@ -213,7 +223,7 @@ def par_list_to_html_list(pars,
     macroinfo.preserve_user_macros = True
     # if settings.nomacros():
     #    texts = [p.get_markdown() for p in pars]
-    #else:
+    # else:
     dumbo_opts = settings.get_dumbo_options()
     texts = [p.get_expanded_markdown(macroinfo) if not p.has_dumbo_options() else {
         'content': p.get_expanded_markdown(macroinfo),
@@ -222,7 +232,7 @@ def par_list_to_html_list(pars,
 
     texplain = settings.is_texplain()
     if texplain:  # add pre-markers to tex paragrpahs
-        for i in range(0,len(texts)):
+        for i in range(0, len(texts)):
             text = texts[i]
             if text.find('```') != 0 and text.find('#') != 0:
                 texts[i] = '```\n' + text + "\n```"
@@ -358,7 +368,7 @@ def change_class(text_containing_html_tag: str, text_content: str, new_class: st
     return [text_containing_html_tag, text_content]
 
 
-def insert_heading_numbers(html_str: str, heading_info, auto_number_headings: bool=True, heading_format: str=''):
+def insert_heading_numbers(html_str: str, heading_info, auto_number_headings: bool = True, heading_format: str = ''):
     """Applies the given heading_format to the HTML if it is a heading, based on the given heading_info. Additionally
     corrects the id attribute of the heading in case it has been used earlier.
 
