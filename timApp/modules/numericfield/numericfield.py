@@ -26,7 +26,7 @@ class NumericfieldMarkupModel(GenericMarkupModel):
     initnumber: Union[float, Missing] = missing
     cols: Union[int, Missing] = missing
     inputplaceholder: Union[int, Missing] = missing
-    followid: Union[str, Missing] = missing
+    tag: Union[str, Missing] = missing
     arrows: Union[bool, Missing] = missing
     wheel: Union[bool, Missing] = missing
     verticalkeys: Union[bool, Missing] = missing
@@ -45,7 +45,7 @@ class NumericfieldMarkupSchema(GenericMarkupSchema):
     initnumber = fields.Number(allow_none=True)
     cols = fields.Int()
     inputplaceholder = fields.Number(allow_none=True)
-    followid = fields.String(allow_none=True)
+    tag = fields.String(allow_none=True)
     autosave = fields.Boolean()
     arrows = fields.Boolean()
     wheel = fields.Boolean()
@@ -169,7 +169,7 @@ header:          # otsikko, tyhjä = ei otsikkoa
 stem:            # kysymys, tyhjä = ei kysymystä
 step:            # numeraalinen askellus, tyhjä = oletus 1.0
 inputstem:       # vastaus, tyhjä = ei vastausta
-followid:        # seurantaid, tyhjä = ei seurantaid:tä
+tag:        # seurantaid, tyhjä = ei seurantaid:tä
 initnumber:      # alkuarvo, tyhjä = ei alkuarvoa
 buttonText: Save # painikkeen nimi, tyhjä = ei painiketta
 cols: 7          # kentän koko, numeraalinen

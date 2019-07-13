@@ -14,7 +14,7 @@ export const moduleDefs = [textfieldApp];
 
 const TextfieldMarkup = t.intersection([
     t.partial({
-        followid: nullable(t.string),
+        tag: nullable(t.string),
         inputplaceholder: nullable(t.string),
         inputstem: nullable(t.string),
         initword: nullable(t.string),
@@ -70,8 +70,8 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
         this.userword = (valueOr(this.attrsall.state && this.attrsall.state.c, this.attrs.initword || "")).toString();
 
         this.modelOpts = {debounce: this.autoupdate};
-        if (this.attrs.followid) {
-            this.vctrl.addTimComponent(this, this.attrs.followid);
+        if (this.attrs.tag) {
+            this.vctrl.addTimComponent(this, this.attrs.tag);
         } else {
             this.vctrl.addTimComponent(this);
         }
@@ -83,8 +83,8 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
      * Returns the name given to the plugin.
      */
     getName(): string | undefined {
-        // if (this.attrs.followid) {
-        //     return this.attrs.followid;
+        // if (this.attrs.tag) {
+        //     return this.attrs.tag;
         // }
         const taskId = this.pluginMeta.getTaskId();
         if (taskId) {

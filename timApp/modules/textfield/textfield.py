@@ -22,7 +22,7 @@ class TextfieldMarkupModel(GenericMarkupModel):
     initword: Union[str, Missing] = missing
     cols: Union[int, Missing] = missing
     inputplaceholder: Union[str, Missing] = missing
-    followid: Union[str, Missing] = missing
+    tag: Union[str, Missing] = missing
     autosave: Union[bool, Missing] = missing
     validinput: Union[str, Missing] = missing
     errormessage: Union[str, Missing] = missing
@@ -38,7 +38,7 @@ class TextfieldMarkupSchema(GenericMarkupSchema):
     initword = fields.String(allow_none=True)
     cols = fields.Int()
     inputplaceholder = fields.Str(allow_none=True)
-    followid = fields.String(allow_none=True)
+    tag = fields.String(allow_none=True)
     autosave = fields.Boolean()
     validinput = fields.String(allow_none=True)
     errormessage = fields.String(allow_none=True)
@@ -158,7 +158,7 @@ def reqs():
 header:          # otsikko, tyhjä = ei otsikkoa
 stem:            # kysymys, tyhjä = ei kysymystä
 inputstem:       # vastaus, tyhjä = ei vastausta
-followid:        # seurantaid, tyhjä = ei seurantaid:tä
+tag:        # seurantaid, tyhjä = ei seurantaid:tä
 initword:        # alkuarvo, tyhjä = ei alkuarvoa
 buttonText: Save # PAINIKKEEN NIMI, TYHJÄ = EI PAINIKETTA
 cols: 1          # kentän koko, numeraalinen
