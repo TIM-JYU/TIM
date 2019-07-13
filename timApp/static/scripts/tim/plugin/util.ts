@@ -55,7 +55,7 @@ export class PluginMeta {
             url = url.substring(i);
         }
         url += `/${this.getTaskId()}/answer/`;
-        return url + location.search;
+        return url; // + window.location.search;
     }
 
     public isPreview() {

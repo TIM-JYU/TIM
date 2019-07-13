@@ -25,6 +25,7 @@ timApp.config([() => {
     const interceptor = [
         () => {
             const re = /\/[^/]+\/([^/]+)\/answer\/$/;
+            const re2 = /\/infosForTasks/;  // add here all routes that needs doc
             return {
                 request(config: IRequestConfig) {
                     if (re.test(config.url)) {
@@ -52,6 +53,9 @@ timApp.config([() => {
                             const par = angular.element(e).parents(".par");
                             config.data.ref_from = {docId: $window.item.id, par: par.attr("id")};
                         }
+                        config.url += window.location.search;  // make urlmacros possible
+                    } else if ( re2.test(config.url)) {
+                        config.url += window.location.search;  // make urlmacros possible
                     }
                     return config;
                 },

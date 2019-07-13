@@ -1250,7 +1250,8 @@ def get_state(args: GetStateModel):
             pluginwrap=PluginWrap.Nothing,
             do_lazy=NEVERLAZY,
         )
-        return json_response({'html': html, 'reviewHtml': rplug.get_final_output()})
+        rhtml = rplug.get_final_output()
+        return json_response({'html': html, 'reviewHtml': rhtml})
     else:
         return json_response({'html': html, 'reviewHtml': None})
 
