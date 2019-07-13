@@ -151,8 +151,9 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
                     this.numericvalue = undefined;
                     ok = false;
                     message = "Value at \"c\" was not a valid number"
+                } else {
+                    this.numericvalue = parsed;
                 }
-                this.numericvalue = parsed;
             } catch (TypeError) {
                 this.numericvalue = undefined;
                 ok = false;
