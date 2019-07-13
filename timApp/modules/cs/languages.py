@@ -312,6 +312,8 @@ class CS(Language):
         return cmdline
 
     def run(self, result, sourcelines, points_rule):
+        # result["tim_info"]["valid"] = False  # kokeilu että valit toimii
+        # result["tim_info"]["validMsg"] = "Et voi enää saada pisteitä kun katsoit vastauksen"
         return self.runself(["mono", "-O=all", self.pure_exename])
 
 class Jypeli(CS):

@@ -582,7 +582,9 @@ export class ViewCtrl implements IController {
                 user: user.id,
             });
             if (!this.formTaskInfosLoaded) {
-                const taskInfoResponse = await $http.post<{ [index: string]: ITaskInfo }>("/infosForTasks", {
+                const taskInfoResponse = await $http.post<{ [index: string]: ITaskInfo }>(
+                    "/infosForTasks",  // + window.location.search,  // done in interceptor
+                    {
                     tasks: taskList,
                 });
                 this.formTaskInfosLoaded = true;

@@ -60,7 +60,6 @@ class DragController extends PluginBase<t.TypeOf<typeof DragMarkup>, t.TypeOf<ty
     private effectAllowed?: string;
     private vctrl!: ViewCtrl;
     private wordObjs?: Array<{ id: number, word: string }>;
-    private shuffleDone: boolean = false;
 
     constructor(
         protected scope: IScope,
@@ -103,8 +102,7 @@ class DragController extends PluginBase<t.TypeOf<typeof DragMarkup>, t.TypeOf<ty
             this.createWordobjs(this.attrsall.c);
         } else {
             if (this.shuffle && this.attrs.words) {
-                const words = shuffleStrings(this.attrs.words);
-                this.shuffleDone = true;
+                const words = shuffleStrings(this.attrs.words || []);
                 this.createWordobjs(words);
             } else {
                 this.createWordobjs(this.attrs.words || []);
@@ -133,6 +131,7 @@ class DragController extends PluginBase<t.TypeOf<typeof DragMarkup>, t.TypeOf<ty
      * @param words Array of strings to be transformed into draggable models.
      */
     createWordobjs(words: string[]) {
+        console.log("Luodaan: " + words.join(","));
         if (!words) {
             return;
         }
@@ -208,8 +207,7 @@ class DragController extends PluginBase<t.TypeOf<typeof DragMarkup>, t.TypeOf<ty
     }
 
     resetField(): undefined {
-        // this.setPluginWords(this.attrs.words || []);
-        // this.createWordobjs(this.attrs.words || []);
+        this.setPluginWords(this.attrs.words || []);
         return undefined;
     }
 

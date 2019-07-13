@@ -894,8 +894,10 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             result = {}
         save = {}
         web = {}
+        tim_info = {}
         result["web"] = web
         result["save"] = save
+        result["tim_info"] = tim_info
 
         # print("doAll ===================================================")
         # print(self.path)

@@ -692,6 +692,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
      * @param plugins Plugins to check.
      */
     hasContent(plugins: IQuestionItemT): boolean {
+        if ( !plugins ) { return false; }
         for (const p of plugins.pluginNames) {
             const plugin = this.vctrl.getTimComponentByName(p);
             if (plugin && plugin.getContent() === undefined) {
@@ -778,26 +779,24 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
             return true;
         }
 
-        if (match.length === answer.length) {
-            for (let i = 0; i < answer.length; i++) {
-                // TODO: Keyword not really needed with RegExp, but leave it in anyway for now if users happen to use it.
-                const kw = match[i].match(keywordPlaceHolder);
-                if (kw && kw.length > 0) {
-                    const word = kw[0].split(":")[1].replace("|", "");
-                    if (!answer[i].toLowerCase().includes(word.toLowerCase())) {
-                        return false;
-                    }
-                    continue;
-                }
-
-                const re = new RegExp(`\\b${match[i]}\\b`);
-                if (!re.test(answer[i])) {
+        if (match.length !== answer.length) { return false; }
+        for (let i = 0; i < answer.length; i++) {
+            // TODO: Keyword not really needed with RegExp, but leave it in anyway for now if users happen to use it.
+            const kw = match[i].match(keywordPlaceHolder);
+            if (kw && kw.length > 0) {
+                const word = kw[0].split(":")[1].replace("|", "");
+                if (!answer[i].toLowerCase().includes(word.toLowerCase())) {
                     return false;
                 }
+                continue;
             }
-            return true;
+            if ( match[i] === answer[i] ) { continue; }
+            const re = new RegExp(`\\b${match[i]}\\b`);
+            if (!re.test(answer[i])) {
+                return false;
+            }
         }
-        return false;
+        return true;
     }
 
     /**

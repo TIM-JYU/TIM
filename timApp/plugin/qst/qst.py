@@ -132,9 +132,9 @@ def qst_answer_jso(jsondata):
     return json_response({'save': save, 'web': web, "tim_info": tim_info})
 
 
-def is_review(request):
+def is_review(jso):
     # print(query)
-    result = request.full_path.find("review=") >= 0
+    result = jso.get("review", False)
     return result
 
 
@@ -144,7 +144,7 @@ def qst_multihtml():
     jsondata = request.get_json()
     multi = []
     for jso in jsondata:
-        multi.append(qst_get_html(jso, is_review(request)))
+        multi.append(qst_get_html(jso, is_review(jso)))
     return json_response(multi)
 
 
@@ -232,7 +232,7 @@ def qst__mcq_multihtml():
     multi = []
     for jso in jsondata:
         convert_mcq_to_qst(jso)
-        multi.append(qst_get_html(jso, is_review(request)))
+        multi.append(qst_get_html(jso, is_review(jso)))
     return json_response(multi)
 
 
@@ -243,7 +243,7 @@ def qst__mmcq_multihtml():
     multi = []
     for jso in jsondata:
         convert_mcq_to_qst(jso, True)
-        multi.append(qst_get_html(jso, is_review(request)))
+        multi.append(qst_get_html(jso, is_review(jso)))
     return json_response(multi)
 
 
@@ -295,7 +295,7 @@ def get_question_md():
 def qst_html():
     jsondata = request.get_json()
 
-    html = qst_get_html(jsondata, is_review(request))
+    html = qst_get_html(jsondata, is_review(jsondata))
     return Response(html, mimetype="text/html")
 
 

@@ -357,8 +357,10 @@ class Plugin:
         if self.deadline(default=datetime.max.replace(tzinfo=timezone.utc)) < get_current_time():
             return False, 'The deadline for submitting answers has passed.'
         if tim_info.get('notValid', None):
-            return False, 'Answer is not valid'
-        return True, 'ok'
+            return False, tim_info.get('validMsg', 'Answer is not valid')
+        valid = tim_info.get('valid', True)
+        valid_msg = tim_info.get('validMsg', "ok")
+        return valid, valid_msg
 
     def is_cached(self):
         cached = self.values.get('cache', None)

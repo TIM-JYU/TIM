@@ -16,7 +16,7 @@ import {IDocument} from "../item/IItem";
 import {showInputDialog} from "../ui/inputDialog";
 import {GenericPluginMarkup, GenericPluginTopLevelFields, nullable, withDefault} from "./attributes";
 import "./tableForm.css";
-import {CellType, colnumToLetters, DataEntity, isPrimitiveCell, TimTable} from "./timTable";
+import {CellToSave, CellType, colnumToLetters, DataEntity, isPrimitiveCell, TimTable} from "./timTable";
 
 const tableFormApp = angular.module("tableFormApp", ["ngSanitize"]);
 export const moduleDefs = [tableFormApp];
@@ -191,7 +191,7 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
         this.setDataMatrix();
         this.oldCellValues = JSON.stringify(this.data.userdata.cells);
 
-        this.data.saveCallBack = (rowi, coli, content) => this.cellChanged(rowi, coli, content);
+        this.data.saveCallBack = (cellsTosave, colValuesAreSame) => this.cellChanged(cellsTosave, colValuesAreSame);
         this.data.cbCallBack = (cbs, n, index) => this.cbChanged(cbs, n, index);
 
         if (this.attrs.minWidth) {
@@ -596,15 +596,22 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
 
     /**
      * Callback function that gets called when timTable saves a cell
-     * @param rowi row number
-     * @param coli col number
-     * @param content unused
+     * @param cellsToSave list of cells that needs to be saved
+     * @param colValuesAreSame if all values in on column has same value
      */
-    cellChanged(rowi: number, coli: number, content: string) {
-        if (this.attrs.autosave) {
-            this.singleCellSave(rowi, coli, content);
-        } else {
-            this.changedCells.push(colnumToLetters(coli) + (rowi + 1));
+    cellChanged(cellsToSave: CellToSave[], colValuesAreSame: boolean) {
+        // TODO make better implementation so singleCellSave is not called one by one
+        // TODO: maybe done so that push cells to chengedCells and call save
+        // TODO: but first check if saved to person or group and to that column by column
+        for (const c of cellsToSave) {
+            const coli = c.col;
+            const rowi = c.row;
+            const content = c.c;
+            if (this.attrs.autosave) {
+                this.singleCellSave(rowi, coli, content);
+            } else {
+                this.changedCells.push(colnumToLetters(coli) + (rowi + 1));
+            }
         }
     }
 
