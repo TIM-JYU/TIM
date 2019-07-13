@@ -54,9 +54,9 @@ export interface ITimComponent {
     getName: () => string | undefined;
     getContent: () => string | undefined;
     getContentArray?: () => string[] | undefined;
-    getGroups: () => string[];
+    getAreas: () => string[];
     getTaskId: () => string | undefined;
-    belongsToGroup(group: string): boolean;
+    belongsToArea(area: string): boolean;
     isUnSaved: () => boolean;
     save: () => Promise<{saved: boolean, message: (string | undefined)}>;
     getPar: () => Paragraph;
@@ -459,6 +459,8 @@ export class ViewCtrl implements IController {
                 return;
             }
         }
+        // Registering with any other name than taskId breaks
+        // form functionality
         const name = component.getName();
         if (name) {
             this.timComponents.set(name, component);
@@ -499,13 +501,13 @@ export class ViewCtrl implements IController {
 
     /**
      * Gets ITimComponents nested within specified area component.
-     * @param{string} group name of the area object.
+     * @param{string} area name of the area object.
      * @returns {ITimComponent[]} List of ITimComponents nested within the area.
      */
-    public getTimComponentsByGroup(group: string): ITimComponent[] {
+    public getTimComponentsByArea(area: string): ITimComponent[] {
         const returnList: ITimComponent[] = [];
         for (const [k, v] of this.timComponents) {
-            if (v.belongsToGroup(group)) { returnList.push(v); }
+            if (v.belongsToArea(area)) { returnList.push(v); }
         }
         return returnList;
     }

@@ -73,7 +73,7 @@ class DragController extends PluginBase<t.TypeOf<typeof DragMarkup>, t.TypeOf<ty
         return {};
     }
 
-    getGroups(): string[] {
+    getAreas(): string[] {
         return [""];
     }
 
