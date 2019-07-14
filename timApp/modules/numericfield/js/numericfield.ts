@@ -90,12 +90,8 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
         if ( !this.attrs.wheel ) { this.element.bind("mousewheel DOMMouseScroll", (e) => false); }
         if ( !this.attrs.verticalkeys ) { this.element.bind("keydown",
             (e) => { if ( e.which == 38 || e.which == 40 ) { e.preventDefault(); } }); }
-        this.modelOpts = {debounce: this.autoupdate};
-        if (this.attrs.tag) {
-            this.vctrl.addTimComponent(this, this.attrs.tag);
-        } else {
-            this.vctrl.addTimComponent(this);
-        }
+        this.modelOpts = {debounce:{blur: 0}};
+        this.vctrl.addTimComponent(this, this.attrs.tag );
         this.initialValue = this.numericvalue;
     }
 

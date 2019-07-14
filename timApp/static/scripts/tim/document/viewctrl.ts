@@ -449,10 +449,10 @@ export class ViewCtrl implements IController {
 
     /**
      * Registers an ITimComponent to the view controller by its name attribute if it has one.
-     * @param {tag} custom tag for accessing  group of ITimComponents
+     * @param {string | null | undefined} tag optional tag for accessing  group of ITimComponents
      * @param {ITimComponent} component The component to be registered.
      */
-    public addTimComponent(component: ITimComponent, tag?: (string | undefined)) {
+    public addTimComponent(component: ITimComponent, tag?: (string | null)) {
         if (this.docSettings.form_mode) {
             const id = component.getTaskId();
             if (id && this.getFormAnswerBrowser(id)) {
