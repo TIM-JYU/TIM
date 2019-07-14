@@ -74,6 +74,7 @@ def get_plugins():
             "graphviz": {"host": "http://" + CSPLUGIN_NAME + ":5000/cs/graphviz/"},
             "pali": {"host": "http://" + PALIPLUGIN_NAME + ":5000/"},
             "textfield": {"host": "http://" + TEXTFIELDPLUGIN_NAME + ":5000/", REGEXATTRS: TEXTFIELDATTRS, AUTOMDATTRS: True},
+            "cbfield": {"host": "http://" + TEXTFIELDPLUGIN_NAME + ":5000/cb/", REGEXATTRS: TEXTFIELDATTRS, AUTOMDATTRS: True},
             "numericfield": {"host": "http://" + NUMERICFIELDPLUGIN_NAME + ":5000/", REGEXATTRS: TEXTFIELDATTRS, AUTOMDATTRS: True},
             "multisave": {"host": "http://" + MULTISAVEPLUGIN_NAME + ":5000/"},
             "jsrunner": {"host": "http://" + JSRUNNERPLUGIN_NAME + ":5000/"},

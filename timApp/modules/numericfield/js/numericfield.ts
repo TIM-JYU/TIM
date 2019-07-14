@@ -139,28 +139,28 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
 
     // TODO: Use answer content as arg or entire IAnswer?
     setAnswer(content: { [index: string]: string }): { ok: boolean, message: (string | undefined) } {
-        let message = undefined;
+        let message;
         let ok = true;
         // TODO: should receiving empty answer reset to defaultnumber or clear field?
         if (Object.keys(content).length == 0) {
             this.resetField();
         } else {
             try {
-                const parsed = parseFloat(content["c"]);
+                const parsed = parseFloat(content.c);
                 if (isNaN(parsed)) {
                     this.numericvalue = undefined;
                     ok = false;
-                    message = "Value at \"c\" was not a valid number"
+                    message = "Value at \"c\" was not a valid number";
                 } else {
                     this.numericvalue = parsed;
                 }
             } catch (TypeError) {
                 this.numericvalue = undefined;
                 ok = false;
-                message = "Couldn't find related content (\"c\")"
+                message = "Couldn't find related content (\"c\")";
             }
         }
-        this.initialValue = this.numericvalue
+        this.initialValue = this.numericvalue;
         return {ok: ok, message: message};
 
     }
@@ -292,7 +292,7 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
 
     /**
      * Actual saver, called by different save alternatives implemented above.
-     * @param true/false parameter boolean checker for the need to save
+     * @param nosave true/false parameter boolean checker for the need to save
      */
     async doSaveText(nosave: boolean) {
         this.errormessage = "";

@@ -21,7 +21,7 @@ timLogTime("answerbrowser3 load", "answ");
 
 const LAZY_MARKER = "lazy";
 const LAZY_MARKER_LENGTH = LAZY_MARKER.length;
-const FIELD_PLUGINS = new Set(["textfield", "numericfield"]);
+const FIELD_PLUGINS = new Set(["textfield", "numericfield", "cbfield", "rbfield"]);
 
 function isElement(n: Node): n is Element {
     return n.nodeType === Node.ELEMENT_NODE;

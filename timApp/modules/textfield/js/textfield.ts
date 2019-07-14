@@ -117,14 +117,14 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
 
     // TODO: Use answer content as arg or entire IAnswer?
     setAnswer(content: { [index: string]: string }): { ok: boolean, message: (string | undefined) } {
-        let message = undefined;
+        let message;
         let ok = true;
         // TODO: should receiving empty answer reset to defaultnumber or clear field?
         if (Object.keys(content).length == 0) {
             this.resetField();
         } else {
             try {
-                this.userword = content["c"];
+                this.userword = content.c;
             } catch (TypeError) {
                 this.userword = "";
                 ok = false;
@@ -264,7 +264,7 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
      * Unused method warning is suppressed, as the method is only called in template.
      */
     autoSave() {
-        if(this.preventedAutosave){
+        if (this.preventedAutosave) {
             this.preventedAutosave = false;
             return;
         }
@@ -280,7 +280,7 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
     async doSaveText(nosave: boolean) {
         if (!this.isUnSaved()) {
             this.saveResponse.saved = false;
-            this.saveResponse.message = "No changes"
+            this.saveResponse.message = "No changes";
             return this.saveResponse;
         }
         this.errormessage = "";
@@ -347,7 +347,7 @@ textfieldApp.component("textfieldRunner", {
      <label><span>
       <span class="inputstem" ng-bind-html="::$ctrl.inputstem"></span>
       <span ng-if="::!$ctrl.isPlainText()" >
-        <input type="string"
+        <input type="text"
                ng-if="::!$ctrl.isPlainText()"
                class="form-control"
                ng-model="$ctrl.userword"

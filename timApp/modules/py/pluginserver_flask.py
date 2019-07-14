@@ -315,6 +315,8 @@ def render_multihtml(schema: GenericHtmlSchema, args: List[GenericHtmlSchema]):
             p = schema.load(a)
         except ValidationError as e:
             results.append(render_validationerror(e))
+        except Exception as e:
+            results.append(render_validationerror(e))
         else:
             results.append(render_plugin_html(p))
     return jsonify(results)
@@ -332,15 +334,23 @@ def create_app(name: str, html_schema: GenericHtmlSchema):
     return app
 
 
-def register_routes(app, html_schema: GenericHtmlSchema, csrf=None):
+def register_routes(app, html_schema: GenericHtmlSchema, csrf=None, pre=""):
     @app.errorhandler(422)
     def handle_invalid_request(error: UnprocessableEntity):
         return jsonify({'web': {'error': render_validationerror(ValidationError(message=error.data['messages']))}})
 
-    @app.route('/multihtml/', methods=['post'])
+    @app.route(pre+'/multihtml/', methods=['post'])
     @use_args(GenericHtmlSchema(many=True), locations=("json",))
     def multihtml(args: List[GenericHtmlSchema]):
+        ret = render_multihtml(html_schema, args)
+        return ret
+
+    """
+    @app.route('/cb/multihtml/', methods=['post'])
+    @use_args(GenericHtmlSchema(many=True), locations=("json",))
+    def cb2_multihtml(args: List[GenericHtmlSchema]):
         return render_multihtml(html_schema, args)
+    """
 
     if csrf:
         csrf.exempt(multihtml)
@@ -349,6 +359,7 @@ def register_routes(app, html_schema: GenericHtmlSchema, csrf=None):
     def print_rq():
         pass
         # pprint(request.get_json(silent=True))
+        # print(request.get_json(silent=True))
 
     return app
 

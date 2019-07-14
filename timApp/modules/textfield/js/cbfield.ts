@@ -1,5 +1,5 @@
 /**
- * Defines the client-side implementation of textfield/label plugin.
+ * Defines the client-side implementation of cbfield/label plugin.
  */
 import angular, {INgModelOptions} from "angular";
 import * as t from "io-ts";
@@ -9,10 +9,10 @@ import {PluginBase, pluginBindings} from "tim/plugin/util";
 import {$http} from "tim/util/ngimport";
 import {to, valueOr} from "tim/util/utils";
 
-const textfieldApp = angular.module("textfieldApp", ["ngSanitize"]);
-export const moduleDefs = [textfieldApp];
+const cbfieldApp = angular.module("cbfieldApp", ["ngSanitize"]);
+export const moduleDefs = [cbfieldApp];
 
-const TextfieldMarkup = t.intersection([
+const CbfieldMarkup = t.intersection([
     t.partial({
         tag: nullable(t.string),
         inputplaceholder: nullable(t.string),
@@ -30,24 +30,24 @@ const TextfieldMarkup = t.intersection([
         cols: withDefault(t.number, 7),
     }),
 ]);
-const TextfieldAll = t.intersection([
+const CbfieldAll = t.intersection([
     t.partial({
     }),
     t.type({
         info: Info,
-        markup: TextfieldMarkup,
+        markup: CbfieldMarkup,
         preview: t.boolean,
         state: nullable(t.type({c: t.union([t.string, t.number, t.null])})),
     }),
 ]);
 
-class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t.TypeOf<typeof TextfieldAll>, typeof TextfieldAll> implements ITimComponent {
+class CbfieldController extends PluginBase<t.TypeOf<typeof CbfieldMarkup>, t.TypeOf<typeof CbfieldAll>, typeof CbfieldAll> implements ITimComponent {
     private result?: string;
     private isRunning = false;
-    private userword = "";
+    private userword: boolean = false;
     private modelOpts!: INgModelOptions; // initialized in $onInit, so need to assure TypeScript with "!"
     private vctrl!: ViewCtrl;
-    private initialValue = "";
+    private initialValue: boolean = false;
     private errormessage = "";
     private hideSavedText = true;
     private redAlert = false;
@@ -65,9 +65,18 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
         return super.buttonText() || null;
     }
 
+    makeBoolean(s: string): boolean {
+        if ( s == "" ) { return false; }
+        if ( s == "0" ) { return false; }
+        if ( s == "false" ) { return false; }
+        if ( s == "1" ) { return true; }
+        return true;
+    }
+
     $onInit() {
         super.$onInit();
-        this.userword = (valueOr(this.attrsall.state && this.attrsall.state.c, this.attrs.initword || "")).toString();
+        const uw = (valueOr(this.attrsall.state && this.attrsall.state.c, this.attrs.initword || "")).toString();
+        this.userword = this.makeBoolean(uw);
 
         this.modelOpts = {debounce: this.autoupdate};
         if (this.attrs.tag) {
@@ -96,7 +105,7 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
      * Returns (user) content in string form.
      */
     getContent(): string {
-        return this.userword;
+        return this.userword ? "1" : "0";
     }
 
     /**
@@ -117,16 +126,16 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
 
     // TODO: Use answer content as arg or entire IAnswer?
     setAnswer(content: { [index: string]: string }): { ok: boolean, message: (string | undefined) } {
-        let message = undefined;
+        let message;
         let ok = true;
         // TODO: should receiving empty answer reset to defaultnumber or clear field?
         if (Object.keys(content).length == 0) {
             this.resetField();
         } else {
             try {
-                this.userword = content["c"];
+                this.userword = this.makeBoolean(content.c);
             } catch (TypeError) {
-                this.userword = "";
+                this.userword = false;
                 ok = false;
                 message = "Couldn't find related content (\"c\")";
             }
@@ -161,15 +170,7 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
      * Initialize content.
      */
     initCode() {
-        if ( this.attrs.showname ) {
-            const u = this.vctrl.selectedUser;
-            if ( this.attrs.showname == 1 ) {
-                this.userword = u.real_name;
-            }
-            if ( this.attrs.showname == 2 ) {
-                this.userword = u.name;
-            }
-        } else { this.userword = this.attrs.initword || ""; }
+        this.userword = this.makeBoolean(this.attrs.initword || "");
         this.initialValue = this.userword;
         this.result = undefined;
     }
@@ -208,7 +209,7 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
      * Unused method warning is suppressed, as the method is only called in template.
      */
     changeFocus() {
-        const inputfields = document.querySelectorAll("textfield-runner input, numericfield-runner input");
+        const inputfields = document.querySelectorAll("cbfield-runner input, numericfield-runner input");
         for (let i = 0; i < inputfields.length; ++i) {
             const selectedfield = inputfields[i] as HTMLInputElement;
             if (selectedfield === document.activeElement && inputfields[i + 1]) {
@@ -231,16 +232,12 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
     }
 
     /**
-     * Method to check grading input type for textfield.
+     * Method to check grading input type for cbfield.
      * Used as e.g. grading checker for hyv | hyl | 1 | 2 | 3 | 4 | 5.
      * @param re validinput defined by given attribute.
      */
     validityCheck(re: string) {
-        if (this.userword === "") {
-            return new RegExp("").test(this.userword);
-        }
-        const regExpChecker = new RegExp(re);
-        return regExpChecker.test(this.userword);
+        return true;
     }
 
     // noinspection JSUnusedGlobalSymbols
@@ -259,12 +256,12 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
 
     // noinspection JSUnusedGlobalSymbols
     /**
-     * Autosaver used by ng-blur in textfieldApp component.
+     * Autosaver used by ng-blur in cbfieldApp component.
      * Needed to seperate from other save methods because of the if-structure.
      * Unused method warning is suppressed, as the method is only called in template.
      */
     autoSave() {
-        if(this.preventedAutosave){
+        if (this.preventedAutosave) {
             this.preventedAutosave = false;
             return;
         }
@@ -275,12 +272,12 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
 
     /**
      * Actual save method, called by different save alternatives implemented above.
-     * @param true/false parameter boolean checker for the need to save
+     * @param nosave true/false parameter boolean checker for the need to save
      */
     async doSaveText(nosave: boolean) {
         if (!this.isUnSaved()) {
             this.saveResponse.saved = false;
-            this.saveResponse.message = "No changes"
+            this.saveResponse.message = "No changes";
             return this.saveResponse;
         }
         this.errormessage = "";
@@ -293,11 +290,13 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
             }
         }
         this.isRunning = true;
+        let c = "0";
+        if ( this.userword ) { c = "1"; }
         this.result = undefined;
         const params = {
             input: {
                 nosave: false,
-                c: this.userword.trim(),
+                c: c,
             },
         };
 
@@ -325,16 +324,16 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
     }
 
     protected getAttributeType() {
-        return TextfieldAll;
+        return CbfieldAll;
     }
 }
 
 /**
- * Introducing textfieldRunner as HTML component.
+ * Introducing cbfieldRunner as HTML component.
  */
-textfieldApp.component("textfieldRunner", {
+cbfieldApp.component("cbfieldRunner", {
     bindings: pluginBindings,
-    controller: TextfieldController,
+    controller: CbfieldController,
     require: {
         vctrl: "^timView",
     },
@@ -347,7 +346,7 @@ textfieldApp.component("textfieldRunner", {
      <label><span>
       <span class="inputstem" ng-bind-html="::$ctrl.inputstem"></span>
       <span ng-if="::!$ctrl.isPlainText()" >
-        <input type="string"
+        <input type="checkbox"
                ng-if="::!$ctrl.isPlainText()"
                class="form-control"
                ng-model="$ctrl.userword"
