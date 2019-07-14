@@ -13,6 +13,7 @@ export const moduleDefs = [multisaveApp];
 const multisaveMarkup = t.intersection([
     t.partial({
         areas: t.array(t.string),
+        tags: t.array(t.string),
         fields: t.array(t.string),
         followid: t.string,
         jumplink: t.string,
@@ -72,9 +73,19 @@ export class MultisaveController extends PluginBase<t.TypeOf<typeof multisaveMar
 
         if (this.attrs.areas) {
             for (const i of this.attrs.areas) {
-                const timComponents = this.vctrl.getTimComponentsByGroup(i);
+                const timComponents = this.vctrl.getTimComponentsByArea(i);
                 for (const v of timComponents) {
                     if (!componentsToSave.includes(v)) { componentsToSave.push(v); }
+                }
+            }
+        }
+        if (this.attrs.tags) {
+            for (const i of this.attrs.tags) {
+                const timComponents = this.vctrl.getTimComponentsByTag(i);
+                for (const v of timComponents) {
+                    if (!componentsToSave.includes(v)) {
+                        componentsToSave.push(v);
+                    }
                 }
             }
         }
@@ -87,12 +98,12 @@ export class MultisaveController extends PluginBase<t.TypeOf<typeof multisaveMar
         }
 
         // no given followids or areas but the plugin is inside an area
-        if (!this.attrs.fields && !this.attrs.areas && ownArea) {
-            componentsToSave = this.vctrl.getTimComponentsByGroup(ownArea);
+        if (!this.attrs.fields && !this.attrs.areas && !this.attrs.tags && ownArea) {
+            componentsToSave = this.vctrl.getTimComponentsByArea(ownArea);
         }
 
         // no given followids / areas and no own area found
-        if (!this.attrs.fields && !this.attrs.areas && !ownArea) {
+        if (!this.attrs.fields && !this.attrs.areas && !this.attrs.tags && !ownArea) {
             componentsToSave = this.vctrl.getTimComponentsByRegex(".*");
         }
 

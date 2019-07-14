@@ -711,12 +711,6 @@ export class AnswerBrowserController extends DestroyScope implements IController
             return;
         }
         const data = await this.getAnswers();
-        if (!data || data.length === 0) {
-            if ( data != null ) {
-                this.loadedAnswer = {review: false, id: undefined};
-                this.resetITimComponent();
-            }
-        }
         if (!data) {
             return;
         }
@@ -797,6 +791,8 @@ export class AnswerBrowserController extends DestroyScope implements IController
         return this.taskInfo.userMin != null && this.taskInfo.userMax != null;
     }
 
+    // TODO: Delete? Possibly only plugins registered as form plugins should reset,
+    //  and that is handled by viewctrl
     resetITimComponent() {
         const c = this.viewctrl.getTimComponentByName(this.taskId.split(".")[1]);
         if (c) {

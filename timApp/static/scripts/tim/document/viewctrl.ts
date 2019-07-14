@@ -54,9 +54,9 @@ export interface ITimComponent {
     getName: () => string | undefined;
     getContent: () => string | undefined;
     getContentArray?: () => string[] | undefined;
-    getGroups: () => string[];
+    getAreas: () => string[];
     getTaskId: () => string | undefined;
-    belongsToGroup(group: string): boolean;
+    belongsToArea(area: string): boolean;
     isUnSaved: () => boolean;
     save: () => Promise<{saved: boolean, message: (string | undefined)}>;
     getPar: () => Paragraph;
@@ -124,6 +124,7 @@ export class ViewCtrl implements IController {
 
     private timTables = new Map<string, TimTableController>();
     private timComponents: Map<string, ITimComponent> = new Map();
+    private timComponentTags: Map<string, [string]> = new Map();
 
     private pendingUpdates: PendingCollection = new Map<string, string>();
     private document: Document;
@@ -448,11 +449,31 @@ export class ViewCtrl implements IController {
 
     /**
      * Registers an ITimComponent to the view controller by its name attribute if it has one.
+     * @param {tag} custom tag for accessing  group of ITimComponents
      * @param {ITimComponent} component The component to be registered.
      */
-    public addTimComponent(component: ITimComponent) {
+    public addTimComponent(component: ITimComponent, tag?: (string | undefined)) {
+        if (this.docSettings.form_mode) {
+            const id = component.getTaskId();
+            if (id && this.getFormAnswerBrowser(id)) {
+                return;
+            }
+        }
+        // Registering with any other name than taskId breaks
+        // form functionality
         const name = component.getName();
-        if (name) { this.timComponents.set(name, component); }
+        if (name) {
+            this.timComponents.set(name, component);
+            if (tag) {
+                const prev = this.timComponentTags.get(tag);
+                if (prev != undefined) {
+                    prev.push(name);
+                    this.timComponentTags.set(tag, prev);
+                } else {
+                    this.timComponentTags.set(tag, [name]);
+                }
+            }
+        }
     }
 
     /**
@@ -464,15 +485,29 @@ export class ViewCtrl implements IController {
         return this.timComponents.get(name);
     }
 
+    public getTimComponentsByTag(tag: string): ITimComponent[] {
+        const returnList: ITimComponent[] = [];
+        const arr = this.timComponentTags.get(tag);
+        if (arr) {
+            for (const name of arr) {
+                const t = this.getTimComponentByName(name);
+                if (t) {
+                    returnList.push(t);
+                }
+            }
+        }
+        return returnList;
+    }
+
     /**
      * Gets ITimComponents nested within specified area component.
-     * @param{string} group name of the area object.
+     * @param{string} area name of the area object.
      * @returns {ITimComponent[]} List of ITimComponents nested within the area.
      */
-    public getTimComponentsByGroup(group: string): ITimComponent[] {
+    public getTimComponentsByArea(area: string): ITimComponent[] {
         const returnList: ITimComponent[] = [];
         for (const [k, v] of this.timComponents) {
-            if (v.belongsToGroup(group)) { returnList.push(v); }
+            if (v.belongsToArea(area)) { returnList.push(v); }
         }
         return returnList;
     }
@@ -712,13 +747,14 @@ export class ViewCtrl implements IController {
         // - for now just add extra answerbrowsers for them (causes unnecessary requests when changing user...)
         // - maybe in future answerbrowser could find all related plugin instances and update them when ab.changeuser gets called?
         // - fix registerPluginLoader too
-        if (this.abs.has((ab.taskId))) {
-            let index = 1;
-            while (this.abs.has(ab.taskId + index)) {
-                index++;
-            }
-            this.abs.set(ab.taskId + index, ab);
-        } else { this.abs.set(ab.taskId, ab); }
+        // if (this.abs.has((ab.taskId))) {
+        //     let index = 1;
+        //     while (this.abs.has(ab.taskId + index)) {
+        //         index++;
+        //     }
+        //     this.abs.set(ab.taskId + index, ab);
+        // } else { this.abs.set(ab.taskId, ab); }
+        this.abs.set(ab.taskId, ab);
     }
 
     getAnswerBrowser(taskId: string) {
@@ -732,14 +768,18 @@ export class ViewCtrl implements IController {
     private ldrs = new Map<string, PluginLoaderCtrl>();
 
     registerPluginLoader(loader: PluginLoaderCtrl) {
-        // TODO: see todos at registerAnswerBrowser
-        if (this.ldrs.has((loader.taskId))) {
-            let index = 1;
-            while (this.ldrs.has(loader.taskId + index)) {
-                index++;
-            }
-            this.ldrs.set(loader.taskId + index, loader);
-        } else { this.ldrs.set(loader.taskId, loader); }
+        // // TODO: see todos at registerAnswerBrowser
+        // if (this.ldrs.has((loader.taskId))) {
+        //     let index = 1;
+        //     while (this.ldrs.has(loader.taskId + index)) {
+        //         index++;
+        //     }
+        //     this.ldrs.set(loader.taskId + index, loader);
+        // } else { this.ldrs.set(loader.taskId, loader); }
+        if (this.docSettings.form_mode && this.getFormAnswerBrowser(loader.taskId)) {
+            return;
+        }
+        this.ldrs.set(loader.taskId, loader);
     }
 
     getPluginLoader(taskId: string) {

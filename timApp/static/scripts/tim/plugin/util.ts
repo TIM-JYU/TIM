@@ -152,7 +152,7 @@ export abstract class PluginBase<MarkupType extends IGenericPluginMarkup, A exte
         return this.element[0];
     }
 
-    getGroups(): string[] {
+    getAreas(): string[] {
         const returnList: string[] = [];
         const parents = this.element.parents(".area");
         if (parents[0]) {
@@ -169,8 +169,8 @@ export abstract class PluginBase<MarkupType extends IGenericPluginMarkup, A exte
         return returnList;
     }
 
-    belongsToGroup(group: string): boolean {
-        return this.getGroups().includes(group);
+    belongsToArea(area: string): boolean {
+        return this.getAreas().includes(area);
     }
 
     /**

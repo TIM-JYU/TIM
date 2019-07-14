@@ -14,7 +14,7 @@ export const moduleDefs = [numericfieldApp];
 
 const NumericfieldMarkup = t.intersection([
     t.partial({
-        followid: nullable(t.string),
+        tag: nullable(t.string),
         inputplaceholder: nullable(t.number),
         inputstem: nullable(t.string),
         initnumber: nullable(t.number),
@@ -91,9 +91,11 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
         if ( !this.attrs.verticalkeys ) { this.element.bind("keydown",
             (e) => { if ( e.which == 38 || e.which == 40 ) { e.preventDefault(); } }); }
         this.modelOpts = {debounce: this.autoupdate};
-        // if (!this.attrs.readOnlyStyle) {
+        if (this.attrs.tag) {
+            this.vctrl.addTimComponent(this, this.attrs.tag);
+        } else {
             this.vctrl.addTimComponent(this);
-        // }
+        }
         this.initialValue = this.numericvalue;
     }
 
@@ -101,9 +103,9 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
      * Returns the name given to the plugin.
      */
     getName(): string | undefined {
-        if (this.attrs.followid) {
-            return this.attrs.followid;
-        }
+        // if (this.attrs.tag) {
+        //     return this.attrs.tag;
+        // }
         const taskId = this.pluginMeta.getTaskId();
         if (taskId) {
             return taskId.split(".")[1];
@@ -149,8 +151,9 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
                     this.numericvalue = undefined;
                     ok = false;
                     message = "Value at \"c\" was not a valid number"
+                } else {
+                    this.numericvalue = parsed;
                 }
-                this.numericvalue = parsed;
             } catch (TypeError) {
                 this.numericvalue = undefined;
                 ok = false;
