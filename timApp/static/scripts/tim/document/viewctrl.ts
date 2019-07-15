@@ -459,9 +459,9 @@ export class ViewCtrl implements IController {
                 return;
             }
         }
-        // Registering with any other name than taskId breaks
+        // Registering with any other name than docId.taskId breaks
         // form functionality
-        const name = component.getName();
+        const name = component.getTaskId();
         if (name) {
             this.timComponents.set(name, component);
             if (tag) {
@@ -478,10 +478,14 @@ export class ViewCtrl implements IController {
 
     /**
      * Returns an ITimComponent where register ID matches the given string.
+     * If docID is not present then automatically append with current docID
      * @param {string} name The register ID of the ITimComponent.
      * @returns {ITimComponent | undefined} Matching component if there was one.
      */
     public getTimComponentByName(name: string): ITimComponent | undefined {
+        if (name.split(".").length < 2) {
+            name = this.docId + "." + name;
+        }
         return this.timComponents.get(name);
     }
 
@@ -519,9 +523,14 @@ export class ViewCtrl implements IController {
      */
     public getTimComponentsByRegex(re: string): ITimComponent[] {
         const returnList: ITimComponent[] = [];
-        const reg = new RegExp(re);
+        const reg = new RegExp("^" + re + "$");
+        const regWithDoc = new RegExp("^" + this.docId + "." + re + "$");
         for (const [k, v] of this.timComponents) {
-            if (reg.test(k)) { returnList.push(v); }
+            if (reg.test(k)) {
+                returnList.push(v);
+            } else if (regWithDoc.test(k)) {
+                returnList.push(v);
+            }
         }
         return returnList;
     }
