@@ -83,6 +83,7 @@ TIM_SAFE_TAGS = [
     'multisave-runner',
     'small-video-runner',
     'textfield-runner',
+    'cbfield-runner',
     'numericfield-runner',
     'video-runner',
 ]

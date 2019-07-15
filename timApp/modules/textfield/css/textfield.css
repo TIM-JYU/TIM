@@ -48,10 +48,20 @@ input:focus.alertframe {
     100% { opacity: 0; height: 0; }
 }
 
-.plugintextfield p {
+.plugintextfield p, .plugincbfield p {
     padding-top: 0px;
     padding-left: 0px;
     padding-bottom: 0px;
     margin-bottom: 0px;
     margin-top: 0px;
+}
+
+textfield-runner .stem, cbfield-runner .stem {
+    text-align: left;
+    height: 6px;
+}
+
+.pluginrbfield input[type="radio"],.plugincbfield input[type="checkbox"] {
+    margin: 0;
+    line-height: normal;
 }

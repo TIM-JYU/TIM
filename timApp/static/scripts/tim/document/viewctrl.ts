@@ -447,10 +447,14 @@ export class ViewCtrl implements IController {
         return this.timTables.get(parId);
     }
 
+    public addTimComponent2(component: ITimComponent, tag?: (string | undefined)) {
+        this.addTimComponent(component, tag);
+    }
+
     /**
      * Registers an ITimComponent to the view controller by its name attribute if it has one.
-     * @param {string | null | undefined} tag optional tag for accessing  group of ITimComponents
      * @param {ITimComponent} component The component to be registered.
+     * @param {string | undefined} tag for accessing  group of ITimComponents
      */
     public addTimComponent(component: ITimComponent, tag?: (string | null)) {
         if (this.docSettings.form_mode) {
