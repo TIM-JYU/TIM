@@ -620,6 +620,42 @@ export class ViewCtrl implements IController {
         }
     }
 
+    public async updateFields(taskids: string[]) {
+        // TODO: if(!taskids) use all formAbs / regular abs
+        // TODO: Parse regular abs to another array
+        // TODO: Refactor (repeated lines from changeUser)
+        const formAbMap = new Map<string, AnswerBrowserController>();
+        const fabIds: string[] = [];
+        for (const t of taskids) {
+            const fab = this.getFormAnswerBrowser(t);
+            if (fab) {
+                formAbMap.set(t, fab);
+                fabIds.push(t);
+            }
+        }
+        const answerResponse = await $http.post<{ answers: { [index: string]: IAnswer }, userId: number }>("/userAnswersForTasks", {
+            tasks: fabIds,
+            user: this.selectedUser.id,
+        });
+        for (const fab of formAbMap.values()) {
+            const ans = answerResponse.data.answers[fab.taskId];
+            if (ans === undefined) {
+                fab.changeUserAndAnswers(this.selectedUser, []);
+            } else {
+                fab.changeUserAndAnswers(this.selectedUser, [ans]);
+            }
+            const timComp = this.getTimComponentByName(fab.taskId.split(".")[1]);
+            if (timComp) {
+                if (fab.selectedAnswer) {
+                    timComp.setAnswer(JSON.parse(fab.selectedAnswer.content));
+                } else {
+                    timComp.resetField();
+                }
+            }
+        }
+        // console.log("debug line");
+    }
+
     async beginUpdate() {
         const response = await $http.get<{ changed_pars: { [id: string]: string } }>("/getUpdatedPars/" + this.docId);
         this.updatePendingPars(new Map<string, string>(Object.entries(response.data.changed_pars)));
