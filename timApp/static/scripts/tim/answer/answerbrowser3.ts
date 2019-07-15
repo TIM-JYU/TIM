@@ -94,14 +94,37 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
         return taskId && taskId.slice(-1) !== "."; // TODO should check more accurately
     }
 
+    public isUseCurrentUser() {
+        // TODO: Refactor
+        if (!this.viewctrl) {
+            return false;
+        }
+        const c: any = this.viewctrl.getTimComponentByName(this.taskId.split(".")[1]);
+        if (!c) {
+            return false;
+        }
+        const a: any = c.attrsall;
+        if (a && a.markup && a.markup.useCurrentUser) {
+            return true;
+        }
+        return false;
+    }
+
     loadPlugin = () => {
         if (this.compiled) {
             return;
         }
+        if (this.viewctrl) {
+            const ab = this.viewctrl.getAnswerBrowser(this.taskId);
+            if (ab) {
+                this.compiled = true;
+                this.abLoad.resolve(ab);
+            }
+        }
         this.scope.$evalAsync(async () => {
             const plugin = this.getPluginElement();
             this.compiled = true;
-            if (this.viewctrl && !this.viewctrl.noBrowser && this.isValidTaskId(this.taskId) && this.type !== "lazyonly" && Users.isLoggedIn()) {
+            if (!this.isUseCurrentUser() && this.viewctrl && !this.viewctrl.noBrowser && this.isValidTaskId(this.taskId) && this.type !== "lazyonly" && Users.isLoggedIn()) {
                 this.showBrowser = true;
             } else {
                 this.abLoad.resolve(null); // this plugin instance doesn't have answer browser

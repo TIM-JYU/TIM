@@ -776,9 +776,6 @@ export class ViewCtrl implements IController {
         //     }
         //     this.ldrs.set(loader.taskId + index, loader);
         // } else { this.ldrs.set(loader.taskId, loader); }
-        if (this.docSettings.form_mode && this.getFormAnswerBrowser(loader.taskId)) {
-            return;
-        }
         this.ldrs.set(loader.taskId, loader);
     }
 
