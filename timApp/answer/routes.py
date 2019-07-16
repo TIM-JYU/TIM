@@ -492,6 +492,8 @@ class JsRunnerSchema(GenericMarkupSchema):
     preprogram = fields.Str()
     postprogram = fields.Str()
     timeout = fields.Int()
+    updateFields = fields.List(fields.Str())
+    paramFields = fields.List(fields.Str())
     fields = fields.List(fields.Str(), required=True)
 
     @validates_schema(skip_on_field_errors=True)

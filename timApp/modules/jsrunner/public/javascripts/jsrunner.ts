@@ -31,29 +31,31 @@ class JsrunnerController extends PluginBase<t.TypeOf<typeof JsrunnerMarkup>, t.T
         return super.buttonText() || "Run script";
     }
 
-    $onInit() {
-        super.$onInit();
-        if (this.attrs.fieldhelper && this.isVisible()) {
-            this.isopen = this.attrs.open || false;
-            const pluginlist = this.vctrl.getTimComponentsByRegex(".*");
-            let tasks = "";
-            if (this.attrs.docid) {
-                for (const plug of pluginlist) {
-                    const taskId = plug.getTaskId();
-                    if (taskId) {
-                        tasks += " - " + taskId.toString() + "\n";
-                    }
-                }
-            } else {
-                for (const plug of pluginlist) {
-                    const name = plug.getName();
-                    if (name) {
-                        tasks += " - " + name.toString() + "\n";
-                    }
+    showFieldHelper() {
+        this.isopen = this.attrs.open || false;
+        const pluginlist = this.vctrl.getTimComponentsByRegex(".*");
+        let tasks = "";
+        if (this.attrs.docid) {
+            for (const plug of pluginlist) {
+                const taskId = plug.getTaskId();
+                if (taskId) {
+                    tasks += " - " + taskId.toString() + "\n";
                 }
             }
-            this.fieldlist = tasks;
+        } else {
+            for (const plug of pluginlist) {
+                const name = plug.getName();
+                if (name) {
+                    tasks += " - " + name.toString() + "\n";
+                }
+            }
         }
+        this.fieldlist = tasks;
+    }
+
+    $onInit() {
+        super.$onInit();
+        if (this.attrs.fieldhelper && this.isVisible()) { this.showFieldHelper(); }
     }
 
     checkFields() {
@@ -82,6 +84,9 @@ class JsrunnerController extends PluginBase<t.TypeOf<typeof JsrunnerMarkup>, t.T
                 this.error = undefined;
                 this.scriptErrors = data.web.errors;
                 this.output = data.web.output;
+                if ( this.attrsall.markup.updateFields ) {
+                    this.vctrl.updateFields(this.attrsall.markup.updateFields);
+                }
             }
         } else {
             this.error = {msg: r.result.data.error || "Unknown error occurred"};

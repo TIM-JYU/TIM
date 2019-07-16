@@ -14,7 +14,9 @@ export const JsrunnerMarkup = t.intersection([
         docid: t.boolean,
         failGrade: t.string,
         fieldhelper: t.boolean,
-        fields: t.array(t.string),
+        fields: t.array(t.string),       // fields to use in calculations
+        updateFields: t.array(t.string), // Fields to update after run
+        paramFields: t.array(t.string),  // fields to bring to calculation as parameter
         gradeField: t.string,
         gradingScale: t.record(t.string, t.number),
         groups: t.array(t.string),
