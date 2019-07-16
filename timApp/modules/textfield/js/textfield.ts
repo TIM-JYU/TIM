@@ -68,13 +68,9 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
     $onInit() {
         super.$onInit();
         this.userword = (valueOr(this.attrsall.state && this.attrsall.state.c, this.attrs.initword || "")).toString();
-
-        this.modelOpts = {debounce: this.autoupdate};
-        if (this.attrs.tag) {
-            this.vctrl.addTimComponent(this, this.attrs.tag);
-        } else {
-            this.vctrl.addTimComponent(this);
-        }
+        //this.modelOpts = {debounce: this.autoupdate};
+        this.modelOpts = {debounce:{blur: 0}};
+        this.vctrl.addTimComponent(this, this.attrs.tag );
         this.initialValue = this.userword;
         if (this.attrs.showname ) { this.initCode(); }
     }
@@ -351,7 +347,6 @@ textfieldApp.component("textfieldRunner", {
                ng-if="::!$ctrl.isPlainText()"
                class="form-control"
                ng-model="$ctrl.userword"
-               ng-model-options="{ debounce: {'blur': 0} } "
                ng-blur="::$ctrl.autoSave()"
                ng-keydown="$event.keyCode === 13 && $ctrl.saveText() && $ctrl.changeFocus()"
                ng-model-options="::$ctrl.modelOpts"
