@@ -36,10 +36,11 @@ class TimMenuStateSchema(Schema):
 
 
 class TimMenuItem:
-    def __init__(self, text: str, level: int, items = None):
+    def __init__(self, text: str, level: int, items = None, open = False):
         self.text = text
         self.level = level
         self.items = items
+        self.open = open
 
     def __str__(self):
         return f"{{level: {self.level}, text: '{self.text}', items: {self.items}}}"
@@ -87,6 +88,10 @@ class TimMenuAttrs(Schema):
     markup = fields.Nested(TimMenuMarkupSchema)
     state = fields.Nested(TimMenuStateSchema, allow_none=True, required=True)
 
+class TimMenuError(Exception):
+    """
+    Generic timmenu-plugin error.
+    """
 
 @attr.s(auto_attribs=True)
 class TimMenuInputModel:
@@ -117,11 +122,16 @@ def parse_menu_string(menu_str):
     menu_split = menu_str.split("\n")
     menuitem_list = []
     parents = [TimMenuItem("", -1, [])]
+    if not menu_split:
+        # TODO: Reporting errors to user.
+        raise TimMenuError("'menu' is empty or invalid!")
     for item in menu_split:
+        if not item:
+            continue
         list_symbol_index = item.index("-")
         level = list_symbol_index//2
         text_markdown = item[list_symbol_index+1:]
-        text_html = call_dumbo([text_markdown])[0].replace("<p>","").replace("</p>","")
+        text_html = call_dumbo([text_markdown])[0].replace("<p>","<span>").replace("</p>","</span>")
         current = TimMenuItem(text_html, level, [])
         for parent in parents:
             if parent.level < level:

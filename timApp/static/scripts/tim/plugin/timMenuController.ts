@@ -46,6 +46,7 @@ interface IMenuItem {
     items: IMenuItem[] | undefined;
     text: string;
     level: number;
+    open: boolean;
 }
 
 class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.TypeOf<typeof TimMenuAll>, typeof TimMenuAll> {
@@ -90,6 +91,23 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
     isPlainText() {
         return (window.location.pathname.startsWith("/view/"));
     }
+
+    /**
+     * Close other menus and toggle clicked menu open or closed.
+     * @param item
+     * @param parent
+     */
+    toggleSubmenu(item: any, parent: IMenuItem) {
+        const wasOpen = item.open;
+        if (parent.items) {
+            for (const i of parent.items) {
+                i.open = false;
+            }
+        }
+        if (!wasOpen) {
+            item.open = !item.open;
+        }
+    }
 }
 
 timApp.component("timmenuRunner", {
@@ -100,12 +118,20 @@ timApp.component("timmenuRunner", {
     },
     template: `
 <tim-markup-error ng-if="::$ctrl.markupError" data="::$ctrl.markupError"></tim-markup-error>
-<div style="margin-top: 5px; margin-bottom: 10px;">
+<div class="tim-menu">
     <span ng-repeat="m in $ctrl.menu">
         <div ng-if="m.items.length > 0" class="btn-group" uib-dropdown is-open="status.isopen" id="simple-dropdown" style="cursor: pointer;">
           <span uib-dropdown-toggle ng-disabled="disabled" ng-bind-html="m.text+$ctrl.openingSymbol"></span>
           <ul class="dropdown-menu" uib-dropdown-menu aria-labelledby="simple-dropdown">
-            <li ng-repeat="i in m.items" role="menuitem" ng-bind-html="i.text"></li>
+            <li class="tim-menu-item" ng-repeat="item in m.items" role="menuitem">
+                <span class="tim-menu-item" ng-if="item.items.length > 0">
+                    <span ng-bind-html="item.text+$ctrl.openingSymbol" ng-click="$ctrl.toggleSubmenu(item, m)"></span>
+                    <ul class="tim-menu-submenu" ng-if="item.open">
+                        <li class="tim-menu-item" ng-repeat="submenuitem in item.items" ng-bind-html="submenuitem.text"></li>
+                    </ul>
+                </span ng-if="item.items.length > 0">
+                <span class="tim-menu-item" ng-if="item.items.length < 1" ng-bind-html="item.text"></span>
+            </li>
           </ul>
         </div>
         <div ng-if="m.items.length < 1" class="btn-group" style="cursor: pointer;" ng-bind-html="m.text"></div>
