@@ -807,10 +807,17 @@ export class ViewCtrl implements IController {
     }
 
     getAnswerBrowser(taskId: string) {
+        // TODO: Probably need a generic function for checking missing docId
+        if (taskId.split(".").length < 2) {
+            taskId = this.docId + "." + name;
+        }
         return (this.abs.get(taskId) || this.formAbs.get(taskId));
     }
 
     getFormAnswerBrowser(taskId: string) {
+        if (taskId.split(".").length < 2) {
+            taskId = this.docId + "." + name;
+        }
         return this.formAbs.get(taskId);
     }
 
@@ -829,6 +836,9 @@ export class ViewCtrl implements IController {
     }
 
     getPluginLoader(taskId: string) {
+        if (taskId.split(".").length < 2) {
+            taskId = this.docId + "." + name;
+        }
         return this.ldrs.get(taskId);
     }
 
