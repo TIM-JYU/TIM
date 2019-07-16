@@ -3,7 +3,7 @@
  */
 import angular from "angular";
 import * as t from "io-ts";
-import {ViewCtrl} from "tim/document/viewctrl";
+import {ITimComponent, ViewCtrl} from "tim/document/viewctrl";
 import {PluginBase, pluginBindings} from "tim/plugin/util";
 import {$http} from "tim/util/ngimport";
 import {to} from "tim/util/utils";
@@ -64,7 +64,21 @@ class JsrunnerController extends PluginBase<t.TypeOf<typeof JsrunnerMarkup>, t.T
 
     async doCheckFields(nosave: boolean) {
         this.isRunning = true;
+
+        const paramComps = [];
+        if (this.attrsall.markup.paramFields) {
+            for (const i of this.attrsall.markup.paramFields) {
+                const timComponents = this.vctrl.getTimComponentsByRegex(i);
+                for (const v of timComponents) {
+                    const cname = v.getName();
+                    const value = v.getContent();
+                    paramComps.push({name: cname, c: value});
+                }
+            }
+        }
+
         const params = {
+            paramComps: paramComps,
             input: {
                 nosave: false,
             },

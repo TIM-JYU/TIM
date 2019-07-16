@@ -677,6 +677,17 @@ def post_answer(plugintype: str, task_id_ext: str):
         if not_found_groups:
             abort(404, f'The following groups were not found: {", ".join(not_found_groups)}')
 
+        try:
+            pcomps = verify_json_params('paramComps')
+            preprg = plugin.values["preprogram"]
+            if pcomps and preprg:
+                for cv in pcomps[0]:  #  TODO:  miksi taulukko taulukoista???
+                    rn = '{' + cv['name'] + '}'
+                    preprg = preprg.replace(rn, '"' + cv['c'] + '"')
+                plugin.values["preprogram"] = preprg
+        except:
+            pass
+
         answerdata['data'], answerdata['aliases'], _ = get_fields_and_users(
             plugin.values['fields'],
             found_groups,
