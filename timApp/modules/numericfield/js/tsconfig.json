@@ -1,7 +1,7 @@
 {
   "extends": "../../../static/scripts/tsconfig_plugin",
   "compilerOptions": {
-    "outDir": "build",
+    "outDir": "build"
   },
   "include": [
     "./**/*.ts"

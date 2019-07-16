@@ -84,6 +84,7 @@ TIM_SAFE_TAGS = [
     'small-video-runner',
     'textfield-runner',
     'cbfield-runner',
+    'rbfield-runner',
     'numericfield-runner',
     'video-runner',
 ]

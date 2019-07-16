@@ -1,2 +1,2 @@
 #!/usr/bin/env bash
-python3 textfield.py
+python3 field.py

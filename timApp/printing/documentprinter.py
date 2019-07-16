@@ -547,6 +547,16 @@ class DocumentPrinter:
         return existing_print.path_to_file
 
 
+def number_lines(s: str, start: int = 1):
+    lines = s.split("\n")
+    i = start
+    result = ""
+    for line in lines:
+        result += "{0:3}: {1}\n".format(i, line)
+        i += 1
+    return result
+
+
 # ------------------------ copied from pypandoc / Juho Vepsäläinen ---------------------------------
 # use own version, because the original fall down if scandinavian chars in erros messages
 
@@ -640,12 +650,12 @@ def tim_convert_input(source, from_format, input_type, to, extra_args=(), output
             )
 
         try:
-            source = cast_bytes(source, encoding='utf-8')
+            bsource = cast_bytes(source, encoding='utf-8')
         except (UnicodeDecodeError, UnicodeEncodeError):
             # assume that it is already a utf-8 encoded string
             pass
         try:
-            stdout, stderr = p.communicate(source if string_input else None)
+            stdout, stderr = p.communicate(bsource if string_input else None)
         except OSError:
             # this is happening only on Py2.6 when pandoc dies before reading all
             # the input. We treat that the same as when we exit with an error...
@@ -654,7 +664,8 @@ def tim_convert_input(source, from_format, input_type, to, extra_args=(), output
         stdout = _decode_result(stdout)
         stderr = _decode_result(stderr)
         if stdout or stderr:
-            raise RuntimeError('Pandoc died with exitcode "%s" during conversion.' % stdout + stderr)
+            raise RuntimeError('Pandoc died with exitcode "%s" during conversion. \nSource=\n%s' %
+                               (stdout + stderr, number_lines(source)))
 
         with open(latex_file, "r", encoding='utf-8') as r:
             lines = r.readlines()

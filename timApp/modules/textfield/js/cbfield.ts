@@ -26,8 +26,7 @@ const CbfieldMarkup = t.intersection([
     }),
     GenericPluginMarkup,
     t.type({
-        autoupdate: withDefault(t.number, 500),
-        cols: withDefault(t.number, 7),
+        cols: withDefault(t.number, 0),
     }),
 ]);
 const CbfieldAll = t.intersection([
@@ -78,7 +77,6 @@ class CbfieldController extends PluginBase<t.TypeOf<typeof CbfieldMarkup>, t.Typ
         const uw = (valueOr(this.attrsall.state && this.attrsall.state.c, this.attrs.initword || "")).toString();
         this.userword = this.makeBoolean(uw);
 
-        this.modelOpts = {debounce: this.autoupdate};
         if (this.attrs.tag) {
             this.vctrl.addTimComponent(this, this.attrs.tag);
         } else {
@@ -146,13 +144,6 @@ class CbfieldController extends PluginBase<t.TypeOf<typeof CbfieldMarkup>, t.Typ
     }
 
     /**
-     * Method for autoupdating.
-     */
-    get autoupdate(): number {
-        return this.attrs.autoupdate;
-    }
-
-    /**
      * Returns (user) set inputstem (textfeed before userinput box).
      */
     get inputstem() {
@@ -163,7 +154,15 @@ class CbfieldController extends PluginBase<t.TypeOf<typeof CbfieldMarkup>, t.Typ
      * Returns (user) set col size (size of the field).
      */
     get cols() {
-        return this.attrs.cols;
+        if ( !this.attrs.cols ) { return {}; }
+        return {width: this.attrs.cols + "em", display: "inline-block"};
+    }
+
+    get cbStyle() {
+        if ( !this.inputstem ) { return {}; }
+        return { // otherwise input stem and cb are vertical
+            width: "auto",
+        };
     }
 
     /**
@@ -192,52 +191,12 @@ class CbfieldController extends PluginBase<t.TypeOf<typeof CbfieldMarkup>, t.Typ
 
     // noinspection JSUnusedGlobalSymbols
     /**
-     * Returns validinput attribute, if one is defined.
-     * Used by pattern checker in angular.
-     * Unused method warning is suppressed, as the method is only called in template.
-     */
-    getPattern() {
-        if (this.attrs.validinput) {
-            return this.attrs.validinput;
-        }
-    }
-
-    // noinspection JSUnusedGlobalSymbols
-    /**
-     * Returns focus on next HTML field.
-     * Used by keydown (Enter) in angular.
-     * Unused method warning is suppressed, as the method is only called in template.
-     */
-    changeFocus() {
-        const inputfields = document.querySelectorAll("cbfield-runner input, numericfield-runner input");
-        for (let i = 0; i < inputfields.length; ++i) {
-            const selectedfield = inputfields[i] as HTMLInputElement;
-            if (selectedfield === document.activeElement && inputfields[i + 1]) {
-                const nextfield = inputfields[i + 1] as HTMLInputElement;
-                this.preventedAutosave = true;
-                return nextfield.focus();
-            }
-        }
-    }
-
-    // noinspection JSUnusedGlobalSymbols
-    /**
      * Returns true value, if label is set to plaintext.
      * Used to define readOnlyStyle in angular, either input or span.
      * Unused method warning is suppressed, as the method is only called in template.
      */
     isPlainText() {
-        if ( this.attrs.showname ) { return true; }
         return (this.attrs.readOnlyStyle == "plaintext" && window.location.pathname.startsWith("/view/"));
-    }
-
-    /**
-     * Method to check grading input type for cbfield.
-     * Used as e.g. grading checker for hyv | hyl | 1 | 2 | 3 | 4 | 5.
-     * @param re validinput defined by given attribute.
-     */
-    validityCheck(re: string) {
-        return true;
     }
 
     // noinspection JSUnusedGlobalSymbols
@@ -281,14 +240,6 @@ class CbfieldController extends PluginBase<t.TypeOf<typeof CbfieldMarkup>, t.Typ
             return this.saveResponse;
         }
         this.errormessage = "";
-        if (this.attrs.validinput) {
-            if (!this.validityCheck(this.attrs.validinput)) {
-                this.errormessage = this.attrs.errormessage || "Input does not pass the RegEx: " + this.attrs.validinput;
-                this.redAlert = true;
-                this.saveResponse.message = this.errormessage;
-                return this.saveResponse;
-            }
-        }
         this.isRunning = true;
         let c = "0";
         if ( this.userword ) { c = "1"; }
@@ -314,7 +265,6 @@ class CbfieldController extends PluginBase<t.TypeOf<typeof CbfieldMarkup>, t.Typ
             this.result = data.web.result;
             this.initialValue = this.userword;
             this.hideSavedText = false;
-            this.redAlert = false;
             this.saveResponse.saved = true;
             this.saveResponse.message = this.errormessage;
         } else {
@@ -338,35 +288,34 @@ cbfieldApp.component("cbfieldRunner", {
         vctrl: "^timView",
     },
     template: `
-<div class="textfieldNoSaveDiv">
+<div class="textfieldNoSaveDiv" ng-style="::$ctrl.cols">
     <tim-markup-error ng-if="::$ctrl.markupError" data="::$ctrl.markupError"></tim-markup-error>
     <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
     <p class="stem" ng-if="::$ctrl.stem">{{::$ctrl.stem}}</p>
-    <form name="$ctrl.f" class="form-inline">
-     <label><span>
+    <!--<form name="$ctrl.f" class="form-inline"> -->
+     <!--<label>-->
+     <span style="width: 100%">
       <span class="inputstem" ng-bind-html="::$ctrl.inputstem"></span>
-      <span ng-if="::!$ctrl.isPlainText()" >
+      <span  ng-if="::!$ctrl.isPlainText()" ng-class="{warnFrame: ($ctrl.isUnSaved() )  }">
+        <!-- <span ng-if="$ctrl.isUnSaved()"  ng-class="{warnFrame: ($ctrl.isUnSaved() )  }">&nbsp;</span> -->
         <input type="checkbox"
                ng-if="::!$ctrl.isPlainText()"
+               name="{{::$ctrl.rbname}}"
+               ng-style="::$ctrl.cbStyle"
                class="form-control"
                ng-model="$ctrl.userword"
-               ng-model-options="{ debounce: {'blur': 0} } "
-               ng-blur="::$ctrl.autoSave()"
-               ng-keydown="$event.keyCode === 13 && $ctrl.saveText() && $ctrl.changeFocus()"
+               ng-change="$ctrl.autoSave()"
                ng-model-options="::$ctrl.modelOpts"
-               ng-trim="false"
-               ng-pattern="$ctrl.getPattern()"
                ng-readonly="::$ctrl.readonly"
                uib-tooltip="{{ $ctrl.errormessage }}"
                tooltip-is-open="$ctrl.f.$invalid && $ctrl.f.$dirty"
                tooltip-trigger="mouseenter"
-               placeholder="{{::$ctrl.inputplaceholder}}"
-               size="{{::$ctrl.cols}}"
-               ng-class="{warnFrame: ($ctrl.isUnSaved() && !$ctrl.redAlert), alertFrame: $ctrl.redAlert }">
+               >
          </span>
          <span ng-if="::$ctrl.isPlainText()" style="">{{$ctrl.userword}}</span>
-         </span></label>
-    </form>
+         </span>
+         <!--</label>-->
+    <!--</form> -->
     <div ng-if="$ctrl.error" style="font-size: 12px" ng-bind-html="$ctrl.error"></div>
     <button class="timButton"
             ng-if="$ctrl.buttonText()"

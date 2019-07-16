@@ -1,10 +1,10 @@
 """
 TIM plugin: a textfield
 """
-from typing import Union, List
+from typing import Union
 
 import attr
-from flask import jsonify, render_template_string
+from flask import jsonify, render_template_string, Blueprint
 from marshmallow import Schema, fields, post_load, validates
 from marshmallow.utils import missing
 from webargs.flaskparser import use_args
@@ -12,7 +12,9 @@ from webargs.flaskparser import use_args
 from common_schemas import TextfieldStateModel, TextfieldStateSchema
 from pluginserver_flask import GenericMarkupModel, GenericMarkupSchema, GenericHtmlSchema, GenericHtmlModel, \
     GenericAnswerSchema, GenericAnswerModel, Missing, \
-    InfoSchema, create_app, register_routes, render_multihtml
+    InfoSchema, render_multihtml
+
+textfield_route = Blueprint('tf', __name__, url_prefix="/tf")
 
 
 @attr.s(auto_attribs=True)
@@ -85,15 +87,6 @@ class TextfieldHtmlModel(GenericHtmlModel[TextfieldInputModel, TextfieldMarkupMo
         return render_static_textfield(self)
 
 
-@attr.s(auto_attribs=True)
-class CbfieldHtmlModel(GenericHtmlModel[TextfieldInputModel, TextfieldMarkupModel, TextfieldStateModel]):
-    def get_component_html_name(self) -> str:
-        return 'cbfield-runner'
-
-    def get_static_html(self) -> str:
-        return render_static_cdfield(self)
-
-
 class TextfieldHtmlSchema(TextfieldAttrs, GenericHtmlSchema):
     info = fields.Nested(InfoSchema, allow_none=True, required=True)
 
@@ -101,15 +94,6 @@ class TextfieldHtmlSchema(TextfieldAttrs, GenericHtmlSchema):
     def make_obj(self, data):
         # noinspection PyArgumentList
         return TextfieldHtmlModel(**data)
-
-
-class CbfieldHtmlSchema(TextfieldAttrs, GenericHtmlSchema):
-    info = fields.Nested(InfoSchema, allow_none=True, required=True)
-
-    @post_load
-    def make_obj(self, data):
-        # noinspection PyArgumentList
-        return CbfieldHtmlModel(**data)
 
 
 @attr.s(auto_attribs=True)
@@ -125,23 +109,6 @@ class TextfieldAnswerSchema(TextfieldAttrs, GenericAnswerSchema):
         # noinspection PyArgumentList
         return TextfieldAnswerModel(**data)
 
-
-def render_static_cdfield(m: TextfieldHtmlModel):
-    return render_template_string("""
-<div>
-<h4>{{ header or '' }}</h4>
-<p class="stem">{{ stem or '' }}</p>
-<div><label>{{ inputstem or '' }} <span>
-<input type="checkbox"
-class="form-control"
-placeholder="{{ inputplaceholder or '' }}"
-size="{{cols}}"></span></label>
-</div>
-<a>{{ resetText }}</a>
-<p class="plgfooter">{{ '' }}</p>
-</div>""".strip(),
-        **attr.asdict(m.markup),
-    )
 
 def render_static_textfield(m: TextfieldHtmlModel):
     return render_template_string("""
@@ -164,39 +131,18 @@ size="{{cols}}"></span></label>
     )
 
 
-app = create_app(__name__, TextfieldHtmlSchema())
-# register_routes(app, CbfieldHtmlSchema(), '/cb')
-
-
-CB_FIELD_HTML_SCHEMA = CbfieldHtmlSchema()
+TEXT_FIELD_HTML_SCHEMA = TextfieldHtmlSchema()
 
 # @app.route('/cb/multihtml/', methods=['post'])
 # @use_args(CbfieldHtmlSchema(many=True), locations=("json",))
-@app.route('/cb/multihtml/', methods=['post'])
+@textfield_route.route('/multihtml/', methods=['post'])
 @use_args(GenericHtmlSchema(many=True), locations=("json",))
-def cb_multihtml(args):  # args: List[GenericHtmlSchema]):
-    ret = render_multihtml(CB_FIELD_HTML_SCHEMA, args)
+def tf_multihtml(args):  # args: List[GenericHtmlSchema]):
+    ret = render_multihtml(TEXT_FIELD_HTML_SCHEMA, args)
     return ret
 
 
-@app.route('/cb/answer/', methods=['put'])
-@use_args(TextfieldAnswerSchema(), locations=("json",))
-def cb_answer(args: TextfieldAnswerModel):
-    web = {}
-    result = {'web': web}
-    c = args.input.c
-
-    nosave = args.input.nosave
-
-    if not nosave:
-        save = {"c": c}
-        result["save"] = save
-        web['result'] = "saved"
-
-    return jsonify(result)
-
-
-@app.route('/answer/', methods=['put'])
+@textfield_route.route('/answer/', methods=['put'])
 @use_args(TextfieldAnswerSchema(), locations=("json",))
 def answer(args: TextfieldAnswerModel):
     web = {}
@@ -213,37 +159,8 @@ def answer(args: TextfieldAnswerModel):
     return jsonify(result)
 
 
-@app.route('/cb/reqs/')
-@app.route('/cb/reqs')
-def cb_reqs():
-    """Introducing templates for cbfield plugin"""
-    return jsonify({
-        "js": ["/textfield/js/build/cbfield.js"],
-        "css": ["/textfield/css/textfield.css", "/numericfield/css/numericfield.css"],
-        "multihtml": True,
-        # "css": ["css/textfield.css"],
-        'editor_tabs': [
-            {
-                'text': 'Plugins',
-                'items': [
-                    {
-                        'text': 'Fields',
-                        'items': [
-                            {
-                                'data': "{#cb1 autosave: true #}",
-                                'text': 'Checkbox (inline, autosave)',
-                                'expl': 'Luo yhden ruksinkenttä',
-                            }]
-                    },
-                ],
-            },
-        ],
-    },
-    )
-
-
-@app.route('/reqs/')
-@app.route('/reqs')
+@textfield_route.route('/reqs/')
+@textfield_route.route('/reqs')
 def reqs():
     """Introducing templates for textfield plugin"""
     templates = [
@@ -256,14 +173,14 @@ initword:        # alkuarvo, tyhjä = ei alkuarvoa
 buttonText: Save # PAINIKKEEN NIMI, TYHJÄ = EI PAINIKETTA
 cols: 1          # kentän koko, numeraalinen
 autosave: false  # autosave, pois päältä
-validinput: '^(hyv|hyl|[12345])$' #käyttäjäsyötteen rajoitin, tyhjä = ei rajoitusta
+validinput: '^(hyv|hyl|[12345])$' # käyttäjäsyötteen rajoitin, tyhjä = ei rajoitusta
 errormessage:    #inputcheckerin virheselite, tyhjä = selite on inputchecker
 ```""",
 ]
     return jsonify({
-        "js": ["js/build/textfield.js"],
+        "js": ["/field/js/build/textfield.js"],
         "multihtml": True,
-        "css": ["css/textfield.css", "/numericfield/css/numericfield.css"],
+        "css": ["/field/css/textfield.css", "/numericfield/css/numericfield.css"],
         'editor_tabs': [
             {
                 'text': 'Plugins',
@@ -302,12 +219,4 @@ errormessage:    #inputcheckerin virheselite, tyhjä = selite on inputchecker
             },
         ],
     },
-    )
-
-
-if __name__ == '__main__':
-    app.run(
-        host='0.0.0.0',
-        port=5000,
-        debug=False,  # for live reloading, this can be turned on
     )
