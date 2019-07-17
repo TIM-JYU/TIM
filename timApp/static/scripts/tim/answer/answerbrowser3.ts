@@ -96,10 +96,10 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
 
     public isUseCurrentUser() {
         // TODO: Refactor
-        if (!this.viewctrl) {
+        if (!this.viewctrl || !this.taskId) {
             return false;
         }
-        const c: any = this.viewctrl.getTimComponentByName(this.taskId.split(".")[1]);
+        const c: any = this.viewctrl.getTimComponentByName(this.taskId);
         if (!c) {
             return false;
         }
@@ -124,7 +124,7 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
         this.scope.$evalAsync(async () => {
             const plugin = this.getPluginElement();
             this.compiled = true;
-            if (!this.isUseCurrentUser() && this.viewctrl && !this.viewctrl.noBrowser && this.isValidTaskId(this.taskId) && this.type !== "lazyonly" && Users.isLoggedIn()) {
+            if (this.viewctrl && !this.viewctrl.noBrowser && this.isValidTaskId(this.taskId) && this.type !== "lazyonly" && Users.isLoggedIn() && !this.isUseCurrentUser()) {
                 this.showBrowser = true;
             } else {
                 this.abLoad.resolve(null); // this plugin instance doesn't have answer browser
