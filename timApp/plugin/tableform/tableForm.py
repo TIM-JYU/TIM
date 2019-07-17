@@ -259,10 +259,15 @@ fields:
  - d1=demo1     # List your fields here, = for alias
 table: true
 report: false
-maxRows: 40em   # max height for the table before scrollbar 
-realnames: true # Show full name in 2nd column, true or false
-buttonText:     # Name your save button here
-autosave: true  # autosave, true or false
+maxRows: 40em     # max height for the table before scrollbar 
+realnames: true   # Show full name in 2nd column, true or false
+buttonText:       # Name your save button here
+autosave: true    # autosave, true or false
+cbColumn: true    # show checkboxes
+nrColumn: true    # show numbers
+filterRow: true   # show filters 
+singleLine: true  #
+emailUsersButtonText: "Lähetä sähköpostia valituille" # jos halutaan lähettää sähköpostia 
 ```""", """
 ``` {#tableForm_table_report plugin="tableForm"}
 groups: 

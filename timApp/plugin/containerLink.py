@@ -24,7 +24,7 @@ CSPLUGIN_NAME = 'csplugin'
 SVNPLUGIN_NAME = 'showfile'
 HASKELLPLUGIN_NAME = 'haskellplugins'
 PALIPLUGIN_NAME = 'pali'
-TEXTFIELDPLUGIN_NAME = 'textfield'
+FIELDPLUGIN_BASE_NAME = 'textfield'  # TODO: chage to field
 NUMERICFIELDPLUGIN_NAME = 'numericfield'
 MULTISAVEPLUGIN_NAME = 'multisave'
 JSRUNNERPLUGIN_NAME = 'jsrunner'
@@ -73,8 +73,11 @@ def get_plugins():
             # "graphviz": {"host": "http://" + HASKELLPLUGIN_NAME + ":5004/"},
             "graphviz": {"host": "http://" + CSPLUGIN_NAME + ":5000/cs/graphviz/"},
             "pali": {"host": "http://" + PALIPLUGIN_NAME + ":5000/"},
-            "textfield": {"host": "http://" + TEXTFIELDPLUGIN_NAME + ":5000/", REGEXATTRS: TEXTFIELDATTRS, AUTOMDATTRS: True},
-            "cbfield": {"host": "http://" + TEXTFIELDPLUGIN_NAME + ":5000/cb/", REGEXATTRS: TEXTFIELDATTRS, AUTOMDATTRS: True},
+            # TODO: field is just a dummy class to get toute for /field  better solution is needed
+            "field": {"host": "http://" + FIELDPLUGIN_BASE_NAME + ":5000/", REGEXATTRS: TEXTFIELDATTRS, AUTOMDATTRS: True},
+            "textfield": {"host": "http://" + FIELDPLUGIN_BASE_NAME + ":5000/tf/", REGEXATTRS: TEXTFIELDATTRS, AUTOMDATTRS: True},
+            "cbfield": {"host": "http://" + FIELDPLUGIN_BASE_NAME + ":5000/cb/", REGEXATTRS: TEXTFIELDATTRS, AUTOMDATTRS: True},
+            "rbfield": {"host": "http://" + FIELDPLUGIN_BASE_NAME + ":5000/rb/", REGEXATTRS: TEXTFIELDATTRS, AUTOMDATTRS: True},
             "numericfield": {"host": "http://" + NUMERICFIELDPLUGIN_NAME + ":5000/", REGEXATTRS: TEXTFIELDATTRS, AUTOMDATTRS: True},
             "multisave": {"host": "http://" + MULTISAVEPLUGIN_NAME + ":5000/"},
             "jsrunner": {"host": "http://" + JSRUNNERPLUGIN_NAME + ":5000/"},

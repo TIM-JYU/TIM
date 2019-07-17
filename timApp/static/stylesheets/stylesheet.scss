@@ -263,6 +263,19 @@ a .glyphicon {
         padding-right: 3pt;
     }
 
+    span.plus::before {
+        position: relative;
+        top: 1px;
+        display: inline-block;
+        font-family: 'Glyphicons Halflings';
+        font-style: normal;
+        font-weight: normal;
+        line-height: 1;
+        -webkit-font-smoothing: antialiased;
+        content: "\002b";
+        color: $basic-color
+    }
+
 
      /* ready styles end */
 

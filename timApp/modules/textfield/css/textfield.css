@@ -48,7 +48,7 @@ input:focus.alertframe {
     100% { opacity: 0; height: 0; }
 }
 
-.plugintextfield p, .plugincbfield p {
+.plugintextfield p, .plugincbfield p, .pluginrbfield p {
     padding-top: 0px;
     padding-left: 0px;
     padding-bottom: 0px;
@@ -56,12 +56,35 @@ input:focus.alertframe {
     margin-top: 0px;
 }
 
-textfield-runner .stem, cbfield-runner .stem {
+textfield-runner .stem, cbfield-runner .stem, rbfield-runner .stem  {
     text-align: left;
     height: 6px;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 .pluginrbfield input[type="radio"],.plugincbfield input[type="checkbox"] {
     margin: 0;
     line-height: normal;
+    -webkit-box-shadow: none;
+    display: unset;
+    /* width: auto; */
+}
+
+.plugincbfield .warnFrame, .pluginrbfield .warnFrame {
+    border-bottom-style: solid;
+    border-bottom-color: gold;
+    border-bottom-width: thick;
+}
+
+.plugincbfield .stem, .pluginrbfield .stem {
+    text-align: center;
+}
+
+.plugincbfield .form-control, .pluginrbfield .form-control {
+    width: 100%;
+    height: auto;
+    -webkit-box-shadow: none;
+    top: 2px;
+    position: relative;
 }

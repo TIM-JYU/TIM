@@ -3,7 +3,7 @@
  */
 import angular from "angular";
 import * as t from "io-ts";
-import {ViewCtrl} from "tim/document/viewctrl";
+import {ITimComponent, ViewCtrl} from "tim/document/viewctrl";
 import {PluginBase, pluginBindings} from "tim/plugin/util";
 import {$http} from "tim/util/ngimport";
 import {to} from "tim/util/utils";
@@ -31,29 +31,31 @@ class JsrunnerController extends PluginBase<t.TypeOf<typeof JsrunnerMarkup>, t.T
         return super.buttonText() || "Run script";
     }
 
-    $onInit() {
-        super.$onInit();
-        if (this.attrs.fieldhelper && this.isVisible()) {
-            this.isopen = this.attrs.open || false;
-            const pluginlist = this.vctrl.getTimComponentsByRegex(".*");
-            let tasks = "";
-            if (this.attrs.docid) {
-                for (const plug of pluginlist) {
-                    const taskId = plug.getTaskId();
-                    if (taskId) {
-                        tasks += " - " + taskId.toString() + "\n";
-                    }
-                }
-            } else {
-                for (const plug of pluginlist) {
-                    const name = plug.getName();
-                    if (name) {
-                        tasks += " - " + name.toString() + "\n";
-                    }
+    showFieldHelper() {
+        this.isopen = this.attrs.open || false;
+        const pluginlist = this.vctrl.getTimComponentsByRegex(".*");
+        let tasks = "";
+        if (this.attrs.docid) {
+            for (const plug of pluginlist) {
+                const taskId = plug.getTaskId();
+                if (taskId) {
+                    tasks += " - " + taskId.toString() + "\n";
                 }
             }
-            this.fieldlist = tasks;
+        } else {
+            for (const plug of pluginlist) {
+                const name = plug.getName();
+                if (name) {
+                    tasks += " - " + name.toString() + "\n";
+                }
+            }
         }
+        this.fieldlist = tasks;
+    }
+
+    $onInit() {
+        super.$onInit();
+        if (this.attrs.fieldhelper && this.isVisible()) { this.showFieldHelper(); }
     }
 
     checkFields() {
@@ -62,7 +64,21 @@ class JsrunnerController extends PluginBase<t.TypeOf<typeof JsrunnerMarkup>, t.T
 
     async doCheckFields(nosave: boolean) {
         this.isRunning = true;
+
+        const paramComps = [];
+        if (this.attrsall.markup.paramFields) {
+            for (const i of this.attrsall.markup.paramFields) {
+                const timComponents = this.vctrl.getTimComponentsByRegex(i);
+                for (const v of timComponents) {
+                    const cname = v.getName();
+                    const value = v.getContent();
+                    paramComps.push({name: cname, c: value});
+                }
+            }
+        }
+
         const params = {
+            paramComps: paramComps,
             input: {
                 nosave: false,
             },
@@ -82,6 +98,9 @@ class JsrunnerController extends PluginBase<t.TypeOf<typeof JsrunnerMarkup>, t.T
                 this.error = undefined;
                 this.scriptErrors = data.web.errors;
                 this.output = data.web.output;
+                if ( this.attrsall.markup.updateFields ) {
+                    this.vctrl.updateFields(this.attrsall.markup.updateFields);
+                }
             }
         } else {
             this.error = {msg: r.result.data.error || "Unknown error occurred"};

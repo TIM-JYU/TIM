@@ -68,8 +68,8 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
     $onInit() {
         super.$onInit();
         this.userword = (valueOr(this.attrsall.state && this.attrsall.state.c, this.attrs.initword || "")).toString();
-        //this.modelOpts = {debounce: this.autoupdate};
-        this.modelOpts = {debounce:{blur: 0}};
+        // this.modelOpts = {debounce: this.autoupdate};
+        this.modelOpts = {debounce: { blur: 0}};
         this.vctrl.addTimComponent(this, this.attrs.tag );
         this.initialValue = this.userword;
         if (this.attrs.showname ) { this.initCode(); }
@@ -271,7 +271,7 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
 
     /**
      * Actual save method, called by different save alternatives implemented above.
-     * @param true/false parameter boolean checker for the need to save
+     * @param nosave: true/false parameter boolean checker for the need to save
      */
     async doSaveText(nosave: boolean) {
         if (!this.isUnSaved()) {

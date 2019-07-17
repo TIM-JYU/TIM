@@ -87,10 +87,10 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
                 }
             }
         }
-        if ( !this.attrs.wheel ) { this.element.bind("mousewheel DOMMouseScroll", (e) => false); }
+        if ( !this.attrs.wheel ) { this.element.bind("mousewheel DOMMouseScroll", () => false); }
         if ( !this.attrs.verticalkeys ) { this.element.bind("keydown",
             (e) => { if ( e.which == 38 || e.which == 40 ) { e.preventDefault(); } }); }
-        this.modelOpts = {debounce:{blur: 0}};
+        this.modelOpts = {debounce: {blur: 0}};
         this.vctrl.addTimComponent(this, this.attrs.tag );
         this.initialValue = this.numericvalue;
     }
@@ -366,7 +366,6 @@ numericfieldApp.component("numericfieldRunner", {
                step="{{ $ctrl.stepCheck() }}"
                class="form-control"
                ng-model="$ctrl.numericvalue"
-               ng-model-options="{ debounce: {'blur': 0} } "
                ng-blur="$ctrl.autoSave()"
                ng-keydown="$event.keyCode === 13 && $ctrl.saveText() && $ctrl.changeFocus()"
                ng-model-options="::$ctrl.modelOpts"

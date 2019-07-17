@@ -177,6 +177,15 @@ tim-table {
         margin-right: auto;
         margin-bottom: 20px;
     }
+
+     td input[type="text"] {
+        width: 100%;
+     }
+
+     .timTableTable {
+        width: min-content;
+     }
+
 }
 
 tim-tape {

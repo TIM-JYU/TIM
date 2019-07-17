@@ -1,5 +1,5 @@
 /**
- * Defines the client-side implementation of cbfield/label plugin.
+ * Defines the client-side implementation of rbfield/label plugin.
  */
 import angular, {INgModelOptions} from "angular";
 import * as t from "io-ts";
@@ -9,10 +9,10 @@ import {PluginBase, pluginBindings} from "tim/plugin/util";
 import {$http} from "tim/util/ngimport";
 import {to, valueOr} from "tim/util/utils";
 
-const cbfieldApp = angular.module("cbfieldApp", ["ngSanitize"]);
-export const moduleDefs = [cbfieldApp];
+const rbfieldApp = angular.module("rbfieldApp", ["ngSanitize"]);
+export const moduleDefs = [rbfieldApp];
 
-const CbfieldMarkup = t.intersection([
+const RbfieldMarkup = t.intersection([
     t.partial({
         tag: nullable(t.string),
         inputplaceholder: nullable(t.string),
@@ -23,35 +23,38 @@ const CbfieldMarkup = t.intersection([
         readOnlyStyle: nullable(t.string),
         showname: nullable(t.number),
         autosave: t.boolean,
+        isRb: t.boolean,
     }),
     GenericPluginMarkup,
     t.type({
         cols: withDefault(t.number, 0),
     }),
 ]);
-const CbfieldAll = t.intersection([
+const RbfieldAll = t.intersection([
     t.partial({
     }),
     t.type({
         info: Info,
-        markup: CbfieldMarkup,
+        markup: RbfieldMarkup,
         preview: t.boolean,
         state: nullable(t.type({c: t.union([t.string, t.number, t.null])})),
     }),
 ]);
 
-class CbfieldController extends PluginBase<t.TypeOf<typeof CbfieldMarkup>, t.TypeOf<typeof CbfieldAll>, typeof CbfieldAll> implements ITimComponent {
+class RbfieldController extends PluginBase<t.TypeOf<typeof RbfieldMarkup>, t.TypeOf<typeof RbfieldAll>, typeof RbfieldAll> implements ITimComponent {
     private result?: string;
     private isRunning = false;
-    private userword: boolean = false;
+    private userword: string = "0";
     private modelOpts!: INgModelOptions; // initialized in $onInit, so need to assure TypeScript with "!"
     private vctrl!: ViewCtrl;
-    private initialValue: boolean = false;
+    private initialValue: string = "0";
     private errormessage = "";
     private hideSavedText = true;
     private redAlert = false;
     private saveResponse: {saved: boolean, message: (string | undefined)} = {saved: false, message: undefined};
     private preventedAutosave = false;
+    private rbName: string = "";
+    private name: string = "";
 
     getDefaultMarkup() {
         return {};
@@ -63,7 +66,7 @@ class CbfieldController extends PluginBase<t.TypeOf<typeof CbfieldMarkup>, t.Typ
     buttonText() {
         return super.buttonText() || null;
     }
-
+/*
     makeBoolean(s: string): boolean {
         if ( s == "" ) { return false; }
         if ( s == "0" ) { return false; }
@@ -71,11 +74,12 @@ class CbfieldController extends PluginBase<t.TypeOf<typeof CbfieldMarkup>, t.Typ
         if ( s == "1" ) { return true; }
         return true;
     }
-
+*/
     $onInit() {
         super.$onInit();
-        const uw = (valueOr(this.attrsall.state && this.attrsall.state.c, this.attrs.initword || "")).toString();
-        this.userword = this.makeBoolean(uw);
+        this.rbName = this.rbname;
+        const uw = (valueOr(this.attrsall.state && this.attrsall.state.c, this.attrs.initword || "0")).toString();
+        this.userword = uw; // this.makeBoolean(uw);
 
         if (this.attrs.tag) {
             this.vctrl.addTimComponent(this, this.attrs.tag);
@@ -86,16 +90,30 @@ class CbfieldController extends PluginBase<t.TypeOf<typeof CbfieldMarkup>, t.Typ
         if (this.attrs.showname ) { this.initCode(); }
     }
 
+    get inputtype(): string {
+        return "radio";
+    }
+
+    get rbname(): string {
+        if ( this.rbName ) { return this.rbName; }
+        let n: string = this.getName() || "rb";
+        n = n.replace(/[0-9]+/, "");
+        this.rbName = n;
+        return n;
+    }
+
     /**
      * Returns the name given to the plugin.
      */
-    getName(): string | undefined {
+    getName(): string | undefined { // TODO: tämä kantaluokkaan
         // if (this.attrs.tag) {
         //     return this.attrs.tag;
         // }
+        if ( this.name ) { return this.name; }
         const taskId = this.pluginMeta.getTaskId();
         if (taskId) {
-            return taskId.split(".")[1];
+            this.name = taskId.split(".")[1];
+            return this.name;
         }
     }
 
@@ -103,7 +121,7 @@ class CbfieldController extends PluginBase<t.TypeOf<typeof CbfieldMarkup>, t.Typ
      * Returns (user) content in string form.
      */
     getContent(): string {
-        return this.userword ? "1" : "0";
+        return this.userword; //  ? "1" : "0";
     }
 
     /**
@@ -131,9 +149,9 @@ class CbfieldController extends PluginBase<t.TypeOf<typeof CbfieldMarkup>, t.Typ
             this.resetField();
         } else {
             try {
-                this.userword = this.makeBoolean(content.c);
+                this.userword = content.c;
             } catch (TypeError) {
-                this.userword = false;
+                this.userword = "";
                 ok = false;
                 message = "Couldn't find related content (\"c\")";
             }
@@ -169,7 +187,7 @@ class CbfieldController extends PluginBase<t.TypeOf<typeof CbfieldMarkup>, t.Typ
      * Initialize content.
      */
     initCode() {
-        this.userword = this.makeBoolean(this.attrs.initword || "");
+        this.userword = this.attrs.initword || "";
         this.initialValue = this.userword;
         this.result = undefined;
     }
@@ -213,13 +231,30 @@ class CbfieldController extends PluginBase<t.TypeOf<typeof CbfieldMarkup>, t.Typ
         return (this.initialValue != this.userword);
     }
 
+    setChecked(b: boolean) {
+        const cb = this.element.find("#" + this.getName());
+        cb.prop("checked", b);
+        this.userword = b ? "1" : "0";
+        if (this.attrs.autosave) {
+            this.saveText();
+        }
+    }
+
     // noinspection JSUnusedGlobalSymbols
     /**
-     * Autosaver used by ng-blur in cbfieldApp component.
+     * Autosaver used by ng-blur in rbfieldApp component.
      * Needed to seperate from other save methods because of the if-structure.
      * Unused method warning is suppressed, as the method is only called in template.
      */
     autoSave() {
+        const comps = this.vctrl.getTimComponentsByRegex(this.rbname + ".*");
+        const n = this.getName();
+        for (const c of comps) {
+            if ( c.getName() == n ) { continue; }
+            if ( !(c instanceof RbfieldController) ) { continue; }
+            const f: any = c;
+            f.setChecked(false);
+        }
         if (this.preventedAutosave) {
             this.preventedAutosave = false;
             return;
@@ -241,8 +276,7 @@ class CbfieldController extends PluginBase<t.TypeOf<typeof CbfieldMarkup>, t.Typ
         }
         this.errormessage = "";
         this.isRunning = true;
-        let c = "0";
-        if ( this.userword ) { c = "1"; }
+        const c = this.userword;
         this.result = undefined;
         const params = {
             input: {
@@ -274,16 +308,16 @@ class CbfieldController extends PluginBase<t.TypeOf<typeof CbfieldMarkup>, t.Typ
     }
 
     protected getAttributeType() {
-        return CbfieldAll;
+        return RbfieldAll;
     }
 }
 
 /**
- * Introducing cbfieldRunner as HTML component.
+ * Introducing rbfieldRunner as HTML component.
  */
-cbfieldApp.component("cbfieldRunner", {
+rbfieldApp.component("rbfieldRunner", {
     bindings: pluginBindings,
-    controller: CbfieldController,
+    controller: RbfieldController,
     require: {
         vctrl: "^timView",
     },
@@ -298,9 +332,11 @@ cbfieldApp.component("cbfieldRunner", {
       <span class="inputstem" ng-bind-html="::$ctrl.inputstem"></span>
       <span  ng-if="::!$ctrl.isPlainText()" ng-class="{warnFrame: ($ctrl.isUnSaved() )  }">
         <!-- <span ng-if="$ctrl.isUnSaved()"  ng-class="{warnFrame: ($ctrl.isUnSaved() )  }">&nbsp;</span> -->
-        <input type="checkbox"
+        <input type="radio"
                ng-if="::!$ctrl.isPlainText()"
-               name="{{::$ctrl.rbname}}"
+               name="{{::$ctrl.getName()}}"
+               id="{{::$ctrl.getName()}}"
+               value="1"
                ng-style="::$ctrl.cbStyle"
                class="form-control"
                ng-model="$ctrl.userword"

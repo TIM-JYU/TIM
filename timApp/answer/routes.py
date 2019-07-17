@@ -492,6 +492,8 @@ class JsRunnerSchema(GenericMarkupSchema):
     preprogram = fields.Str()
     postprogram = fields.Str()
     timeout = fields.Int()
+    updateFields = fields.List(fields.Str())
+    paramFields = fields.List(fields.Str())
     fields = fields.List(fields.Str(), required=True)
 
     @validates_schema(skip_on_field_errors=True)
@@ -674,6 +676,17 @@ def post_answer(plugintype: str, task_id_ext: str):
         not_found_groups = sorted(list(set(groupnames) - set(g.name for g in found_groups)))
         if not_found_groups:
             abort(404, f'The following groups were not found: {", ".join(not_found_groups)}')
+
+        try:
+            pcomps = verify_json_params('paramComps')
+            preprg = plugin.values["preprogram"]
+            if pcomps and preprg:
+                for cv in pcomps[0]:  #  TODO:  miksi taulukko taulukoista???
+                    rn = '{' + cv['name'] + '}'
+                    preprg = preprg.replace(rn, '"' + cv['c'] + '"')
+                plugin.values["preprogram"] = preprg
+        except:
+            pass
 
         answerdata['data'], answerdata['aliases'], _ = get_fields_and_users(
             plugin.values['fields'],
