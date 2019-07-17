@@ -64,15 +64,16 @@ class JsrunnerController extends PluginBase<t.TypeOf<typeof JsrunnerMarkup>, t.T
 
     async doCheckFields(nosave: boolean) {
         this.isRunning = true;
-
-        const paramComps = [];
+        // const paramComps = [];
+        const paramComps: any = {};
         if (this.attrsall.markup.paramFields) {
             for (const i of this.attrsall.markup.paramFields) {
                 const timComponents = this.vctrl.getTimComponentsByRegex(i);
                 for (const v of timComponents) {
                     const cname = v.getName();
                     const value = v.getContent();
-                    paramComps.push({name: cname, c: value});
+                    // paramComps.push({name: cname, c: value});
+                    if ( cname ) { paramComps[cname] = value; }
                 }
             }
         }

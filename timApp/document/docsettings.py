@@ -2,6 +2,7 @@ from datetime import timedelta
 from typing import Optional, List, Dict, Tuple, Iterable
 
 import yaml
+import re
 
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.macroinfo import MacroInfo
@@ -51,6 +52,8 @@ class DocSettings:
     urlmacros_key = 'urlmacros'
     sisu_require_manual_enroll_key = 'sisu_require_manual_enroll'
 
+    urlmacros_tester = re.compile("[^0-9A-Za-z.,_ ]+")
+
     @classmethod
     def from_paragraph(cls, par: DocParagraph):
         """Constructs DocSettings from the given DocParagraph.
@@ -91,6 +94,7 @@ class DocSettings:
                                     if minvalue is not None:
                                         if uvalue < minvalue:
                                             urlvalue = minvalue
+                                urlvalue =  DocSettings.urlmacros_tester.sub("", str(urlvalue))
                                 yaml_vals.values["macros"][fu] = urlvalue
                             except:
                                 pass

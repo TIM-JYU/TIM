@@ -679,12 +679,10 @@ def post_answer(plugintype: str, task_id_ext: str):
 
         try:
             pcomps = verify_json_params('paramComps')
-            preprg = plugin.values["preprogram"]
-            if pcomps and preprg:
-                for cv in pcomps[0]:  #  TODO:  miksi taulukko taulukoista???
-                    rn = '{' + cv['name'] + '}'
-                    preprg = preprg.replace(rn, '"' + cv['c'] + '"')
-                plugin.values["preprogram"] = preprg
+            if pcomps: # TODO: lisää rajapintaan valmiiksi tuo paramComps, niin ei tarvii lähdekoodia manipuloida
+                preprg = plugin.values.get("preprogram", "")
+                # TODO:  miksi pcomps on taulukko???
+                plugin.values["preprogram"] = "gtools.params = " + json.dumps(pcomps[0]) +";\n" + preprg
         except:
             pass
 
