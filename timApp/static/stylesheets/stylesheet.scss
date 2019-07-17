@@ -1307,6 +1307,14 @@ p.closeButton::before {
     white-space: nowrap;
 }
 
+.top-menu {
+    position: fixed;
+    background: #FFFFFF;
+    top: 0;
+    width: 100%;
+    z-index: 999;
+}
+
 .tim-menu-submenu {
     position: absolute;
     top: 0%;

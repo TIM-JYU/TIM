@@ -19,6 +19,7 @@ const TimMenuMarkup = t.intersection([
     GenericPluginMarkup,
     t.type({
         hoverOpen: withDefault(t.boolean, true),
+        topMenu: withDefault(t.boolean, false),
         separator: withDefault(t.string, "&nbsp;"), // Non-breaking space
         openingSymbol: withDefault(t.string, "&#9662;"), // Caret
     }),
@@ -54,21 +55,28 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
     private openingSymbol: string = "";
     private hoverOpen: boolean = true;
     private separator: string = "";
+    private topMenu: boolean = false;
+    private topBarY = 117;
+    private menuId: string = String.fromCharCode(65 + Math.floor(Math.random() * 26)) + Date.now();
 
     getDefaultMarkup() {
         return {};
     }
 
     buttonText() {
-        return super.buttonText() || "Import";
+        return super.buttonText() || "TimMenu";
     }
 
     $onInit() {
         super.$onInit();
+        this.formMenu();
         this.hoverOpen = this.attrs.hoverOpen;
         this.separator = this.attrs.separator;
+        this.topMenu = this.attrs.topMenu;
         this.openingSymbol = this.attrs.openingSymbol;
-        this.formMenu();
+        if (this.topMenu) {
+            window.onscroll = () => this.toggleSticky();
+        }
     }
 
     /**
@@ -78,10 +86,9 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
         if (!this.attrs.menu) {
             return;
         }
-        // const temp: IMenuItem[] = [];
+        // TODO: Get rid of eval.
         const evaluedMenu = eval(this.attrs.menu);
         this.menu = evaluedMenu;
-        // console.log(this.menu);
     }
 
     protected getAttributeType() {
@@ -108,6 +115,20 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
             item.open = !item.open;
         }
     }
+
+    /**
+     * Makes the element follow when scrolling for one screen height after top bar.
+     */
+    toggleSticky() {
+        // console.log($(window).scrollTop() + " " + $(window).height());
+        if ($(window).scrollTop() >= this.topBarY && $(window).scrollTop() < ($(window).height() + this.topBarY)) {
+            // return "tim-menu top-menu";
+            document.getElementById(this.menuId).classList.add("top-menu");
+        } else {
+            // return "tim-menu";
+            document.getElementById(this.menuId).classList.remove("top-menu");
+        }
+    }
 }
 
 timApp.component("timmenuRunner", {
@@ -118,7 +139,7 @@ timApp.component("timmenuRunner", {
     },
     template: `
 <tim-markup-error ng-if="::$ctrl.markupError" data="::$ctrl.markupError"></tim-markup-error>
-<div class="tim-menu">
+<div id="{{$ctrl.menuId}}" ng-class="tim-menu">
     <span ng-repeat="m in $ctrl.menu">
         <div ng-if="m.items.length > 0" class="btn-group" uib-dropdown is-open="status.isopen" id="simple-dropdown" style="cursor: pointer;">
           <span uib-dropdown-toggle ng-disabled="disabled" ng-bind-html="m.text+$ctrl.openingSymbol"></span>

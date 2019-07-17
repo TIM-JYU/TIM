@@ -1,8 +1,8 @@
 """
-
+TimMenu plugin.
 """
 import os
-from typing import Union, List
+from typing import Union
 
 import attr
 
@@ -57,6 +57,7 @@ class TimMenuItemModel:
 @attr.s(auto_attribs=True)
 class TimMenuMarkupModel(GenericMarkupModel):
     hoverOpen: Union[bool, Missing] = missing
+    topMenu: Union[bool, Missing] = missing
     separator: Union[str, Missing] = missing
     openingSymbol: Union[str, Missing] = missing
     #menu: Union[List[str], Missing] = missing
@@ -73,6 +74,7 @@ class TimMenuItemSchema(Schema):
 
 class TimMenuMarkupSchema(GenericMarkupSchema):
     hoverOpen = fields.Bool(allow_none=True, default=True)
+    topMenu = fields.Bool(allow_none=True, default=False)
     separator = fields.Str(allow_none=True, default="&nbsp;")
     openingSymbol = fields.Str(allow_none=True, default="&#9662;")
     #menu = fields.List(fields.Str())
@@ -159,6 +161,7 @@ class TimMenuHtmlModel(GenericHtmlModel[TimMenuInputModel, TimMenuMarkupModel, T
     def get_browser_json(self):
         r = super().get_browser_json()
         # TODO: Error handling etc.
+        # TODO: Add schemas and models matching the structure to get rid of str(...).
         r['markup']['menu'] = str(parse_menu_string(r['markup']['menu']))
         return r
 
