@@ -763,10 +763,10 @@ timApp.component("tableformRunner", {
     },
     template: `
 <div class="tableform" ng-if="$ctrl.showTable">
-    <button class="timButton"
+    <!--<button class="timButton"
             ng-click="$ctrl.updateTable()">
             Reset table
-    </button>
+    </button>-->
     <tim-markup-error ng-if="::$ctrl.markupError" data="::$ctrl.markupError"></tim-markup-error>
     <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
     <p ng-if="::$ctrl.stem" ng-bind-html="::$ctrl.stem"></p>
