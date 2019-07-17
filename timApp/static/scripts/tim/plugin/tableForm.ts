@@ -171,7 +171,7 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
         return false;
     }
 
-    async $onInit() {
+    $onInit() {
         super.$onInit();
         const d: any =  this.data;
         const table: any =  this.data.table;
@@ -189,7 +189,7 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
         this.rows = this.attrsall.rows || {};
         this.rowKeys = Object.keys(this.rows);
         this.setDataMatrix();
-        this.oldCellValues = JSON.stringify(this.data.userdata.cells);
+        // this.oldCellValues = JSON.stringify(this.data.userdata.cells);
 
         this.data.saveCallBack = (cellsTosave, colValuesAreSame) => this.cellChanged(cellsTosave, colValuesAreSame);
         this.data.cbCallBack = (cbs, n, index) => this.cbChanged(cbs, n, index);
@@ -250,6 +250,44 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
         } catch (e) {
             return 0;
         }
+    }
+
+    /**
+     * Clears tableForm rows and fetches new data to be put into rows
+     * Basically just a reset
+     */
+    public async updateTable() {
+        // TODO: Save before reset?
+        // TODO: Emails etc?
+        const timtab = this.getTimTable();
+        if (!timtab) {
+            return;
+        }
+        const tableResponse = await $http.get <{
+            // TODO: All of these are probably not needed
+            // TODO: Common type/interface for these?
+            aliases: { [index: string]: string },
+            fields: string[];
+            realnamemap: { [index: string]: string },
+            emailmap: { [index: string]: string },
+            rows: IRowsType,
+        }>("/tableForm/fetchTableData?" + $httpParamSerializer({
+            taskid: this.getTaskId(),
+        }));
+        // TODO: Generic reset function
+        console.log("debug");
+        this.rows = tableResponse.data.rows || {};
+        this.rowKeys = Object.keys(tableResponse.data.rows);
+        this.userLocations = {};
+        this.taskLocations = {};
+        this.data.table.countCol = 0;
+        this.data.table.countRow = 0;
+        this.data.table.columns = [];
+        this.data.userdata.cells = {};
+        this.setDataMatrix();
+        timtab.reInitialize();
+        console.log("debug");
+
     }
 
     /**
@@ -725,6 +763,10 @@ timApp.component("tableformRunner", {
     },
     template: `
 <div class="tableform" ng-if="$ctrl.showTable">
+    <button class="timButton"
+            ng-click="$ctrl.updateTable()">
+            Reset table
+    </button>
     <tim-markup-error ng-if="::$ctrl.markupError" data="::$ctrl.markupError"></tim-markup-error>
     <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
     <p ng-if="::$ctrl.stem" ng-bind-html="::$ctrl.stem"></p>
