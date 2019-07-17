@@ -635,36 +635,54 @@ export class ViewCtrl implements IController {
 
     public async updateFields(taskids: string[]) {
         // TODO: if(!taskids) use all formAbs / regular abs
-        // TODO: Parse regular abs to another array
+        // TODO: Change regular answerBrowser's user and force update
         // TODO: Refactor (repeated lines from changeUser)
         const formAbMap = new Map<string, AnswerBrowserController>();
         const fabIds: string[] = [];
+        const regularAbMap = new Map<string, AnswerBrowserController>();
         for (const t of taskids) {
+            const loader = this.getPluginLoader(t);
+            if (!loader) {
+                continue;
+            }
+            loader.loadPlugin();
+            await loader.abLoad.promise;
             const fab = this.getFormAnswerBrowser(t);
             if (fab) {
                 formAbMap.set(t, fab);
                 fabIds.push(t);
-            }
-        }
-        const answerResponse = await $http.post<{ answers: { [index: string]: IAnswer }, userId: number }>("/userAnswersForTasks", {
-            tasks: fabIds,
-            user: this.selectedUser.id,
-        });
-        for (const fab of formAbMap.values()) {
-            const ans = answerResponse.data.answers[fab.taskId];
-            if (ans === undefined) {
-                fab.changeUserAndAnswers(this.selectedUser, []);
             } else {
-                fab.changeUserAndAnswers(this.selectedUser, [ans]);
-            }
-            const timComp = this.getTimComponentByName(fab.taskId.split(".")[1]);
-            if (timComp) {
-                if (fab.selectedAnswer) {
-                    timComp.setAnswer(JSON.parse(fab.selectedAnswer.content));
-                } else {
-                    timComp.resetField();
+                const ab = this.getAnswerBrowser(t);
+                if (ab) {
+                    regularAbMap.set(t, ab);
                 }
             }
+        }
+        if (this.docSettings.form_mode) {
+            const answerResponse = await $http.post<{ answers: { [index: string]: IAnswer }, userId: number }>("/userAnswersForTasks", {
+                tasks: fabIds,
+                user: this.selectedUser.id,
+            });
+            for (const fab of formAbMap.values()) {
+                const ans = answerResponse.data.answers[fab.taskId];
+                if (ans === undefined) {
+                    fab.changeUserAndAnswers(this.selectedUser, []);
+                } else {
+                    fab.changeUserAndAnswers(this.selectedUser, [ans]);
+                }
+                const timComp = this.getTimComponentByName(fab.taskId.split(".")[1]);
+                if (timComp) {
+                    if (fab.selectedAnswer) {
+                        timComp.setAnswer(JSON.parse(fab.selectedAnswer.content));
+                    } else {
+                        timComp.resetField();
+                    }
+                }
+            }
+        }
+        for (const ab of regularAbMap.values()) {
+            ab.getAnswersAndUpdate();
+            ab.loadInfo();
         }
         // console.log("debug line");
     }
@@ -807,10 +825,17 @@ export class ViewCtrl implements IController {
     }
 
     getAnswerBrowser(taskId: string) {
+        // TODO: Probably need a generic function for checking missing docId
+        if (taskId.split(".").length < 2) {
+            taskId = this.docId + "." + name;
+        }
         return (this.abs.get(taskId) || this.formAbs.get(taskId));
     }
 
     getFormAnswerBrowser(taskId: string) {
+        if (taskId.split(".").length < 2) {
+            taskId = this.docId + "." + name;
+        }
         return this.formAbs.get(taskId);
     }
 
@@ -829,6 +854,9 @@ export class ViewCtrl implements IController {
     }
 
     getPluginLoader(taskId: string) {
+        if (taskId.split(".").length < 2) {
+            taskId = this.docId + "." + name;
+        }
         return this.ldrs.get(taskId);
     }
 

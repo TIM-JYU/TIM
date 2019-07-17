@@ -2397,7 +2397,14 @@ export class TimTableController extends DestroyScope implements IController {
         this.initializeCellDataMatrix();
         this.processDataBlockAndCellDataMatrix();
         this.clearSortOrder();
-
+        if (this.userdata) {
+            this.processDataBlock(this.userdata.cells);
+        } else {
+            this.userdata = {
+                type: "Relative",
+                cells: {},
+            };
+        }
         ParCompiler.processAllMathDelayed(this.element);
 
         if (this.currentCell) {

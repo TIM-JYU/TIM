@@ -16,12 +16,15 @@ from pluginserver_flask import GenericMarkupModel, GenericMarkupSchema, GenericH
     InfoSchema, create_blueprint
 from timApp.answer.routes import get_fields_and_users
 from timApp.auth.accesshelper import get_doc_or_abort
+from timApp.auth.sessioninfo import get_current_user_object
+from timApp.plugin.plugin import find_plugin_from_document
 from timApp.plugin.pluginexception import PluginException
 from timApp.plugin.taskid import TaskId
 from timApp.tim_app import csrf
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
-from timApp.util.flask.responsehelper import csv_response
+from timApp.util.flask.requesthelper import verify_json_params
+from timApp.util.flask.responsehelper import csv_response, json_response
 
 
 @attr.s(auto_attribs=True)
@@ -227,6 +230,37 @@ def gen_csv():
         # TODO: Add support >1 char strings like in Korppi
         return "Only 1-character string separators supported for now" 
     return csv_response(temp, 'excel', request.args.get('separator'))
+
+@tableForm_plugin.route('/fetchTableData')
+def fetch_rows():
+    # TODO: Refactor - repeated lines from get_browser_json
+    # TODO: check for correct plugin
+    r = {}
+    curr_user = get_current_user_object()
+    taskid = request.args.get("taskid")
+    tid = TaskId.parse(taskid, False, False)
+    doc = get_doc_or_abort(tid.doc_id)
+    plug = find_plugin_from_document(doc.document, tid, curr_user)
+    debug = plug.values
+    groups = UserGroup.query.filter(UserGroup.name.in_(plug.values.get("groups")))
+    fielddata, aliases, field_names = \
+        get_fields_and_users(plug.values.get("fields"), groups, doc,
+                             curr_user, plug.values.get("removeDocIds", True), add_missing_fields=True)
+    debug = plug.values
+    rows = {}
+    realnames = {}
+    emails = {}
+    for f in fielddata:
+        username = f['user'].name
+        rows[username] = dict(f['fields'])
+        realnames[username] = f['user'].real_name
+        emails[username] = f['user'].email
+    r['rows'] = rows
+    r['realnamemap'] = realnames
+    r['emailmap'] = emails
+    r['fields'] = field_names
+    r['aliases'] = aliases
+    return json_response(r)
 
 
 @tableForm_plugin.route('/answer/', methods=['put'])
