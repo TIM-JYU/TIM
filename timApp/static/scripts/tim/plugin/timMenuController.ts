@@ -36,13 +36,6 @@ const TimMenuAll = t.intersection([
     }),
 ]);
 
-/*
-interface IMenuItem {
-    items: IMenuItem[] | undefined;
-    open: false; // Whether the list of items is shown.
-    text: string;
-}*/
-
 interface IMenuItem {
     items: IMenuItem[] | undefined;
     text: string;
@@ -51,13 +44,13 @@ interface IMenuItem {
 }
 
 class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.TypeOf<typeof TimMenuAll>, typeof TimMenuAll> {
-    private menu: any; // IMenuItem[] = [];
+    private menu: any;
     private openingSymbol: string = "";
     private hoverOpen: boolean = true;
     private separator: string = "";
     private topMenu: boolean = false;
-    private topBarY = 117;
     private menuId: string = String.fromCharCode(65 + Math.floor(Math.random() * 26)) + Date.now();
+    private previousScroll: number | undefined = 0; // Store y-value of previous scroll event for comparison.
 
     getDefaultMarkup() {
         return {};
@@ -120,14 +113,24 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
      * Makes the element follow when scrolling for one screen height after top bar.
      */
     toggleSticky() {
-        // console.log($(window).scrollTop() + " " + $(window).height());
-        if ($(window).scrollTop() >= this.topBarY && $(window).scrollTop() < ($(window).height() + this.topBarY)) {
-            // return "tim-menu top-menu";
-            document.getElementById(this.menuId).classList.add("top-menu");
+        const placeholderY = document.getElementById(`${this.menuId}-placeholder`).getBoundingClientRect().top;
+        const scrollY = $(window).scrollTop();
+        // Sticky can only show when the element's place in document goes outside upper bounds.
+        if (placeholderY < 0) {
+            // When scrolling downwards, don't show fixed menu and hide placeholder.
+            // Otherwise (i.e. scrolling upwards), show menu as fixed and let placeholder take its place in document.
+            if (scrollY > this.previousScroll) {
+                document.getElementById(this.menuId).classList.remove("top-menu");
+                document.getElementById(`${this.menuId}-placeholder-content`).classList.add("hidden");
+            } else {
+                document.getElementById(this.menuId).classList.add("top-menu");
+                document.getElementById(`${this.menuId}-placeholder-content`).classList.remove("hidden");
+            }
         } else {
-            // return "tim-menu";
             document.getElementById(this.menuId).classList.remove("top-menu");
+            document.getElementById(`${this.menuId}-placeholder-content`).classList.add("hidden");
         }
+        this.previousScroll = $(window).scrollTop();
     }
 }
 
@@ -139,6 +142,8 @@ timApp.component("timmenuRunner", {
     },
     template: `
 <tim-markup-error ng-if="::$ctrl.markupError" data="::$ctrl.markupError"></tim-markup-error>
+<span ng-if="$ctrl.topMenu" id="{{$ctrl.menuId}}-placeholder"></span>
+<div ng-if="$ctrl.topMenu" id="{{$ctrl.menuId}}-placeholder-content"><br></div>
 <div id="{{$ctrl.menuId}}" ng-class="tim-menu">
     <span ng-repeat="m in $ctrl.menu">
         <div ng-if="m.items.length > 0" class="btn-group" uib-dropdown is-open="status.isopen" id="simple-dropdown" style="cursor: pointer;">
