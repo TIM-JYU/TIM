@@ -826,7 +826,7 @@ def handle_jsrunner_response(jsonresp, result, current_doc: DocInfo):
             task_content_name_map[task] = 'c'
             continue
         try:
-            if t_id.field  and t_id.field != "points":
+            if t_id.field  and t_id.field != "points" and t_id.field != "styles":
                 task_content_name_map[task] = t_id.field
             else:
                 plug = find_plugin_from_document(dib.document, t_id, curr_user)
@@ -882,6 +882,18 @@ def handle_jsrunner_response(jsonresp, result, current_doc: DocInfo):
                     if points != value:
                         new_answer = True
                     points = value
+                elif field == "styles":
+                    try:
+                        plug = find_plugin_from_document(doc_map[task_id.doc_id].document, task_id, curr_user)
+                        allow_styles = plug.allow_styles_field()
+                        if allow_styles:
+                            if an and content.get(field, None) != value:
+                                new_answer = True
+                            content[field] = value
+                        else:
+                            continue
+                    except TaskNotFoundException as e:
+                        continue
                 else:
                     if an and content.get(field, "") != value:
                         new_answer = True
