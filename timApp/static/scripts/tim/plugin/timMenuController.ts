@@ -6,6 +6,7 @@ import * as t from "io-ts";
 import {PluginBase, pluginBindings} from "tim/plugin/util";
 import {timApp} from "../app";
 import {GenericPluginMarkup, Info, nullable, withDefault} from "./attributes";
+import {IMenuItem} from "ui-grid";
 
 const importDataApp = angular.module("importDataApp", ["ngSanitize"]);
 export const moduleDefs = [importDataApp];
@@ -36,8 +37,8 @@ const TimMenuAll = t.intersection([
     }),
 ]);
 
-interface IMenuItem {
-    items: IMenuItem[] | undefined;
+interface ITimMenuItem {
+    items: ITimMenuItem[] | undefined;
     text: string;
     level: number;
     open: boolean;
@@ -51,6 +52,7 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
     private topMenu: boolean = false;
     private menuId: string = String.fromCharCode(65 + Math.floor(Math.random() * 26)) + Date.now();
     private previousScroll: number | undefined = 0; // Store y-value of previous scroll event for comparison.
+    private previouslyClicked: ITimMenuItem | undefined;
 
     getDefaultMarkup() {
         return {};
@@ -94,18 +96,55 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
 
     /**
      * Close other menus and toggle clicked menu open or closed.
+     * TODO: Better way to do this (for deeper menus).
      * @param item
      * @param parent
      */
-    toggleSubmenu(item: any, parent: IMenuItem) {
-        const wasOpen = item.open;
-        if (parent.items) {
-            for (const i of parent.items) {
-                i.open = false;
+    toggleSubmenu(item: any, parent: ITimMenuItem | undefined) {
+        // Toggle open menu closed and back again when clicking it.
+        if (this.previouslyClicked && (this.previouslyClicked === item || item.open)) {
+            item.open = !item.open;
+            this.previouslyClicked = item;
+            return;
+        }
+        // Close all menus when clicking menu that isn't child of previously clicked.
+        if (parent && parent !== this.previouslyClicked) {
+            for (const menu of this.menu) {
+                this.closeAllInMenuItem(menu);
             }
         }
-        if (!wasOpen) {
-            item.open = !item.open;
+        // A first level menu doesn't have a parent; close all other menus.
+        if (!parent) {
+            for (const menu of this.menu) {
+                if (menu !== item) {
+                    this.closeAllInMenuItem(menu);
+                }
+            }
+        }
+        item.open = true;
+        this.previouslyClicked = item;
+    }
+
+    /**
+     * Closes three tiers of menus.
+     * TODO: Recursion.
+     * @param t1
+     */
+    closeAllInMenuItem(t1: ITimMenuItem) {
+        if (!t1.items) {
+            return;
+        }
+        for (const t2 of t1.items) {
+            t2.open = false;
+            if (!t2.items) {
+                return;
+            }
+            for (const t3 of t2.items) {
+                t3.open = false;
+                if (!t3.items) {
+                    return;
+                }
+            }
         }
     }
 
@@ -145,22 +184,30 @@ timApp.component("timmenuRunner", {
 <span ng-if="$ctrl.topMenu" id="{{$ctrl.menuId}}-placeholder"></span>
 <div ng-if="$ctrl.topMenu" id="{{$ctrl.menuId}}-placeholder-content"><br></div>
 <div id="{{$ctrl.menuId}}" ng-class="tim-menu">
-    <span ng-repeat="m in $ctrl.menu">
-        <div ng-if="m.items.length > 0" class="btn-group" uib-dropdown is-open="status.isopen" id="simple-dropdown" style="cursor: pointer;">
-          <span uib-dropdown-toggle ng-disabled="disabled" ng-bind-html="m.text+$ctrl.openingSymbol"></span>
+    <span ng-repeat="t1 in $ctrl.menu">
+        <div ng-if="t1.items.length > 0" class="btn-group" uib-dropdown is-open="status.isopen" id="simple-dropdown" style="cursor: pointer;">
+          <span uib-dropdown-toggle ng-disabled="disabled" ng-bind-html="t1.text+$ctrl.openingSymbol" ng-click="$ctrl.toggleSubmenu(t1, undefined)"></span>
           <ul class="dropdown-menu" uib-dropdown-menu aria-labelledby="simple-dropdown">
-            <li class="tim-menu-item" ng-repeat="item in m.items" role="menuitem">
-                <span class="tim-menu-item" ng-if="item.items.length > 0">
-                    <span ng-bind-html="item.text+$ctrl.openingSymbol" ng-click="$ctrl.toggleSubmenu(item, m)"></span>
-                    <ul class="tim-menu-submenu" ng-if="item.open">
-                        <li class="tim-menu-item" ng-repeat="submenuitem in item.items" ng-bind-html="submenuitem.text"></li>
+            <li class="tim-menu-item" ng-repeat="t2 in t1.items" role="menuitem">
+                <span class="tim-menu-item" ng-if="t2.items.length > 0">
+                    <span ng-bind-html="t2.text+$ctrl.openingSymbol" ng-click="$ctrl.toggleSubmenu(t2, t1)"></span>
+                    <ul class="tim-menu-submenu" ng-if="t2.open">
+                        <li class="tim-menu-item" ng-repeat="t3 in t2.items">
+                            <span class="tim-menu-item" ng-if="t3.items.length > 0">
+                                <span ng-bind-html="t3.text+$ctrl.openingSymbol" ng-click="$ctrl.toggleSubmenu(t3, t2)"></span>
+                                <ul class="tim-menu-submenu" ng-if="t3.open">
+                                    <li class="tim-menu-item" ng-repeat="t4 in t3.items" ng-bind-html="t4.text"></li>
+                                </ul>
+                            </span>
+                            <span class="tim-menu-item" ng-if="t3.items.length < 1" ng-bind-html="t3.text"></span>
+                        </li>
                     </ul>
-                </span ng-if="item.items.length > 0">
-                <span class="tim-menu-item" ng-if="item.items.length < 1" ng-bind-html="item.text"></span>
+                </span>
+                <span class="tim-menu-item" ng-if="t2.items.length < 1" ng-bind-html="t2.text"></span>
             </li>
           </ul>
         </div>
-        <div ng-if="m.items.length < 1" class="btn-group" style="cursor: pointer;" ng-bind-html="m.text"></div>
+        <div ng-if="t1.items.length < 1" class="btn-group" style="cursor: pointer;" ng-bind-html="t1.text"></div>
         <span ng-if="!$last" ng-bind-html="$ctrl.separator"></span>
     </span>
 </div>
