@@ -102,6 +102,11 @@ class JsrunnerController extends PluginBase<t.TypeOf<typeof JsrunnerMarkup>, t.T
                 if ( this.attrsall.markup.updateFields ) {
                     this.vctrl.updateFields(this.attrsall.markup.updateFields);
                 }
+                // temp code:
+                const chart: any  =  this.vctrl.getTimComponentByName("chart");
+                const d: any = data.web;
+                chart.usercode = JSON.stringify(d.outdata.data);
+                chart.runCode();
             }
         } else {
             this.error = {msg: r.result.data.error || "Unknown error occurred"};

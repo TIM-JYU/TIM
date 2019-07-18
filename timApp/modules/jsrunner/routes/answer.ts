@@ -5,6 +5,7 @@ import {AnswerReturn, ErrorList, IError, IJsRunnerMarkup} from "../public/javasc
 import {AliasDataT, JsrunnerAnswer, UserFieldDataT} from "../servertypes";
 // import numberLines from "./runscript";
 import Tools from "./tools";
+import StatCounter from "./tools";
 
 const router = express.Router();
 
@@ -21,7 +22,7 @@ interface IRunnerData {
 }
 
 type RunnerResult =
-    | {output: string, res: {}, errors: ErrorList, fatalError?: never}
+    | {output: string, res: {}, errors: ErrorList, fatalError?: never, outdata: object}
     | {output: string, fatalError: IError};
 
 /**
@@ -51,11 +52,13 @@ function runner(d: IRunnerData): RunnerResult {
     const markup = d.markup;
     const aliases = d.aliases;
     const saveUsersFields = [];
+    // const statCounters: { [fieldname: string]: StatCounter } = {};
+    const statCounters = {};
     let output = "";
     const errors = [];
     try {
         const guser = data[0];
-        const gtools = new Tools(guser, currDoc, markup, aliases); // create global tools
+        const gtools = new Tools(guser, currDoc, markup, aliases, statCounters); // create global tools
         // tslint:disable
         function runPreProgram(program: string | undefined, saveUsersFields?: never, output?: never, errors?: never,
                             data?: never, d?: never, currDoc?: never, markup?: never, aliases?: never) {
@@ -66,7 +69,7 @@ function runner(d: IRunnerData): RunnerResult {
         gtools.clearOutput();
 
         for (const user of data) {
-            const tools = new Tools(user, currDoc, markup, aliases); // in compiled JS, this is tools_1.default(...)
+            const tools = new Tools(user, currDoc, markup, aliases, statCounters); // in compiled JS, this is tools_1.default(...)
 
             // Fake parameters hide the outer local variables so user script won't accidentally touch them.
             // tslint:disable
@@ -108,7 +111,7 @@ function runner(d: IRunnerData): RunnerResult {
                 }]
             });
         }
-        return {res: saveUsersFields, output, errors};
+        return {res: saveUsersFields, output, errors, outdata: gtools.outdata};
     } catch (e) {
         const err = e as Error;
         const prg = "\n" + numberLines2(d.program, 1);
@@ -174,6 +177,7 @@ router.put("/", async (req, res, next) => {
                 web: {
                     output: result.output,
                     errors: result.errors,
+                    outdata: result.outdata,
                 },
             };
         }
