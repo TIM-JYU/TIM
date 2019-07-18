@@ -104,8 +104,8 @@ class JsrunnerController extends PluginBase<t.TypeOf<typeof JsrunnerMarkup>, t.T
                 }
                 // temp code:
                 const chart: any  =  this.vctrl.getTimComponentByName("chart");
-                const d: any = data.web;
-                chart.usercode = JSON.stringify(d.outdata.data);
+                const tempd: any = data.web;
+                chart.usercode = JSON.stringify(tempd.outdata.data);
                 chart.runCode();
             }
         } else {
