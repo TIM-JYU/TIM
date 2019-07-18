@@ -4,13 +4,16 @@ A button plugin to save other plugins on the same page
 from typing import Union, List
 
 import attr
-from flask import jsonify, render_template_string
+from flask import jsonify, render_template_string, Blueprint
 from marshmallow import Schema, fields, post_load
 from marshmallow.utils import missing
+from webargs.flaskparser import use_args
 
 from pluginserver_flask import GenericMarkupModel, GenericMarkupSchema, GenericHtmlSchema, GenericHtmlModel, \
     Missing, \
-    InfoSchema, create_app
+    InfoSchema, render_multihtml
+
+multisave_route = Blueprint('ms', __name__, url_prefix="/ms")
 
 
 # @attr.s(auto_attribs=True)
@@ -82,11 +85,18 @@ def render_static_multisave(m: MultisaveHtmlModel):
     )
 
 
-app = create_app(__name__, MultisaveHtmlSchema())
+MULTISAVE_HTML_SCHEMA = MultisaveHtmlSchema()
 
 
-@app.route('/reqs/')
-@app.route('/reqs')
+@multisave_route.route('/multihtml/', methods=['post'])
+@use_args(GenericHtmlSchema(many=True), locations=("json",))
+def ms_multihtml(args):  # args: List[GenericHtmlSchema]):
+    ret = render_multihtml(MULTISAVE_HTML_SCHEMA, args)
+    return ret
+
+
+@multisave_route.route('/reqs/')
+@multisave_route.route('/reqs')
 def reqs():
     templates = ["""
 ``` {plugin="multisave"}
@@ -100,9 +110,9 @@ fields:
 - 
 ```"""]
     return jsonify({
-        "js": ["js/build/multisave.js"],
+        "js": ["/field/js/build/multisave.js"],
         "multihtml": True,
-        "css": ["css/multisave.css"],
+        "css": ["/field/css/field.css"],
         'editor_tabs': [
             {
                 'text': 'Plugins',
@@ -131,12 +141,4 @@ fields:
             },
         ],
     },
-    )
-
-
-if __name__ == '__main__':
-    app.run(
-        host='0.0.0.0',
-        port=5000,
-        debug=False,  # for live reloading, this can be turned on
     )

@@ -2,6 +2,8 @@ import * as t from "io-ts";
 import {IError, IJsRunnerMarkup} from "../public/javascripts/jsrunnertypes";
 import {AliasDataT, UserFieldDataT} from "../servertypes";
 
+// TODO:  Add statistical calculation, see: https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance
+
 function genericTypeError(parameterDescription: string, v: unknown) {
     return new Error(`${parameterDescription} has unexpected type: ${typeof v}`);
 }

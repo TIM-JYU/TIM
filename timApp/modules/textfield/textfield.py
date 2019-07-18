@@ -133,8 +133,7 @@ size="{{cols}}"></span></label>
 
 TEXT_FIELD_HTML_SCHEMA = TextfieldHtmlSchema()
 
-# @app.route('/cb/multihtml/', methods=['post'])
-# @use_args(CbfieldHtmlSchema(many=True), locations=("json",))
+
 @textfield_route.route('/multihtml/', methods=['post'])
 @use_args(GenericHtmlSchema(many=True), locations=("json",))
 def tf_multihtml(args):  # args: List[GenericHtmlSchema]):
@@ -180,7 +179,7 @@ errormessage:    #inputcheckerin virheselite, tyhjä = selite on inputchecker
     return jsonify({
         "js": ["/field/js/build/textfield.js"],
         "multihtml": True,
-        "css": ["/field/css/textfield.css", "/numericfield/css/numericfield.css"],
+        "css": ["/field/css/field.css"],
         'editor_tabs': [
             {
                 'text': 'Plugins',

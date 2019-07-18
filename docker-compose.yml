@@ -8,15 +8,12 @@ services:
    - postgresql
    - csplugin
    - pali
-   - textfield
-   - numericfield
-   - multisave
+   - field
    - showfile
    - haskellplugins
    - imagex
    - uploader
    - dumbo
-   - dropdown
    - feedback
   volumes:
    - .:/service
@@ -104,7 +101,7 @@ services:
     PYTHONPATH: /pali:/py:/usr/local/lib/python3.6/dist-packages
   command: ./startAll.sh
   restart: unless-stopped
- textfield:
+ field:
   image: timimages/tim:${TIM_IMAGE_TAG}
   #build: ./timApp/modules/textfield
   volumes:
@@ -115,28 +112,6 @@ services:
    PYTHONPATH: /textfield:/py:/usr/local/lib/python3.6/dist-packages
   command: ./startAll.sh
   restart: unless-stopped
- numericfield:
-  image: timimages/tim:${TIM_IMAGE_TAG}
-  #build: ./timApp/modules/numericfield
-  volumes:
-   - ./timApp/modules/numericfield:/numericfield:ro
-   - ./timApp/modules/py:/py:ro
-  working_dir: /numericfield
-  environment:
-   PYTHONPATH: /numericfield:/py:/usr/local/lib/python3.6/dist-packages
-  command: ./startAll.sh
-  restart: unless-stopped
- multisave:
-  image: timimages/tim:${TIM_IMAGE_TAG}
-  #build: ./timApp/modules/multisave
-  volumes:
-   - ./timApp/modules/multisave:/multisave:ro
-   - ./timApp/modules/py:/py:ro
-  working_dir: /multisave
-  environment:
-   PYTHONPATH: /multisave:/py:/usr/local/lib/python3.6/dist-packages
-  command: ./startAll.sh
-  restart: unless-stopped
  jsrunner:
   image: timimages/tim:${TIM_IMAGE_TAG}
   #build: ./timApp/modules/multisave
@@ -144,16 +119,6 @@ services:
    - ./timApp/modules/jsrunner:/timApp/modules/jsrunner:rw
    - ./timApp/static/scripts:/timApp/static/scripts:ro
   working_dir: /timApp/modules/jsrunner
-  command: ./startAll.sh
-  restart: unless-stopped
- dropdown:
-  image: timimages/tim:${TIM_IMAGE_TAG}
-  volumes:
-   - ./timApp/modules/dropdown:/dropdown:ro
-   - ./timApp/modules/py:/py:ro
-  working_dir: /dropdown
-  environment:
-   PYTHONPATH: /dropdown:/py:/usr/local/lib/python3.6/dist-packages
   command: ./startAll.sh
   restart: unless-stopped
  drag:

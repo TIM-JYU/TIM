@@ -434,7 +434,7 @@ export class ViewCtrl implements IController {
      * @param {string} parId The ID of the table paragraph.
      */
     public addTable(controller: TimTableController, parId: string) {
-        console.log("table added!");
+        // console.log("table added!");
         this.timTables.set(parId, controller);
     }
 

@@ -1,23 +1,25 @@
 """
 Module for serving dropdown item-plugin.
 """
-import re
 from typing import Union, List
 
 import attr
-from flask import jsonify, render_template_string
+from flask import jsonify, render_template_string, Blueprint
 from marshmallow import Schema, fields, post_load, validates, ValidationError
 from marshmallow.utils import missing
 from webargs.flaskparser import use_args
 
 from pluginserver_flask import GenericMarkupModel, GenericMarkupSchema, GenericHtmlSchema, GenericHtmlModel, \
     GenericAnswerSchema, GenericAnswerModel, Missing, \
-    make_base64, InfoSchema, create_app
+    make_base64, InfoSchema, render_multihtml
+
+dropdown_route = Blueprint('dropdown', __name__, url_prefix="/dropdown")
 
 
 @attr.s(auto_attribs=True)
 class DropdownStateModel:
     c: str
+
 
 class DropdownStateSchema(Schema):
     c = fields.Str(required=True)
@@ -63,7 +65,7 @@ class DropdownInputSchema(Schema):
     shuffle = fields.Bool()
 
     @validates('selectedWord')
-    def validate_selectedWord(self, word):
+    def validate_selected_word(self, word):
         if not word:
             raise ValidationError('Must not be empty.')
 
@@ -79,6 +81,9 @@ class DropdownAttrs(Schema):
 
 @attr.s(auto_attribs=True)
 class DropdownHtmlModel(GenericHtmlModel[DropdownInputModel, DropdownMarkupModel, DropdownStateModel]):
+    def get_component_html_name(self) -> str:
+        return 'dropdown-runner'
+
     def get_static_html(self) -> str:
         return render_static_dropdown(self)
 
@@ -141,10 +146,17 @@ def render_static_dropdown(m: DropdownHtmlModel):
     )
 
 
-app = create_app(__name__, DropdownHtmlSchema())
+DROPDOWN_HTML_SCHEMA = DropdownHtmlSchema()
 
 
-@app.route('/answer/', methods=['put'])
+@dropdown_route.route('/multihtml/', methods=['post'])
+@use_args(GenericHtmlSchema(many=True), locations=("json",))
+def dropdown_multihtml(args):  # args: List[GenericHtmlSchema]):
+    ret = render_multihtml(DROPDOWN_HTML_SCHEMA, args)
+    return ret
+
+
+@dropdown_route.route('/answer/', methods=['put'])
 @use_args(DropdownAnswerSchema(), locations=("json",))
 def answer(args: DropdownAnswerModel):
     web = {}
@@ -163,8 +175,9 @@ def answer(args: DropdownAnswerModel):
 
     return jsonify(result)
 
-@app.route('/reqs/')
-@app.route('/reqs')
+
+@dropdown_route.route('/reqs/')
+@dropdown_route.route('/reqs')
 def reqs():
     templates = ["""{#test:dropdown words: [option 1, option 2, option 3]}""", """
 #- {defaultplugin="dropdown"}
@@ -176,9 +189,9 @@ The weather {#drop1 words: [is,do,are⁞]#} nice today.
 The weather {#drop2 words: [is,do,are⁞]#} terrible {#drop3 words: [yesterday, today, tomorrow]#}, don't you think?
 """]
     return jsonify({
-        "js": ["js/build/dropdown.js"],
+        "js": ["/field/js/build/dropdown.js"],
         "multihtml": True,
-        "css": ["css/dropdown.css"],
+        "css": ["/field/css/field.css"],
         'editor_tabs': [
             {
                 'text': 'Plugins',
@@ -207,11 +220,3 @@ The weather {#drop2 words: [is,do,are⁞]#} terrible {#drop3 words: [yesterday, 
             },
         ],
     })
-
-
-if __name__ == '__main__':
-    app.run(
-        host='0.0.0.0',
-        port=5000,
-        debug=False,  # TODO True does not work for some reason (gives "Exec format error")
-    )

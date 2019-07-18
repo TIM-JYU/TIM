@@ -5,15 +5,18 @@ TIM plugin: a numericfield
 from typing import Union
 
 import attr
-from flask import jsonify, render_template_string
+from flask import jsonify, render_template_string, Blueprint
 from marshmallow import Schema, fields, post_load
 from marshmallow.utils import missing
 from webargs.flaskparser import use_args
 
+from common_schemas import TextfieldStateModel, TextfieldStateSchema
 from pluginserver_flask import GenericMarkupModel, GenericMarkupSchema, GenericHtmlSchema, GenericHtmlModel, \
     GenericAnswerSchema, GenericAnswerModel, Missing, \
-    InfoSchema, create_app
-from common_schemas import TextfieldStateModel, TextfieldStateSchema
+    InfoSchema, render_multihtml
+
+numericfield_route = Blueprint('nf', __name__, url_prefix="/nf")
+
 
 NumericfieldStateModel = TextfieldStateModel
 NumericfieldStateSchema = TextfieldStateSchema
@@ -101,7 +104,8 @@ class NumericfieldHtmlSchema(NumericfieldAttrs, GenericHtmlSchema):
 
 
 @attr.s(auto_attribs=True)
-class NumericfieldAnswerModel(GenericAnswerModel[NumericfieldInputModel, NumericfieldMarkupModel, NumericfieldStateModel]):
+class NumericfieldAnswerModel(GenericAnswerModel[NumericfieldInputModel,
+                                                 NumericfieldMarkupModel, NumericfieldStateModel]):
     pass
 
 
@@ -135,10 +139,17 @@ size="{{cols}}"></span></label>
     )
 
 
-app = create_app(__name__, NumericfieldHtmlSchema())
+NUMERIC_FIELD_HTML_SCHEMA = NumericfieldHtmlSchema()
 
 
-@app.route('/answer/', methods=['put'])
+@numericfield_route.route('/multihtml/', methods=['post'])
+@use_args(GenericHtmlSchema(many=True), locations=("json",))
+def nf_multihtml(args):  # args: List[GenericHtmlSchema]):
+    ret = render_multihtml(NUMERIC_FIELD_HTML_SCHEMA, args)
+    return ret
+
+
+@numericfield_route.route('/answer/', methods=['put'])
 @use_args(NumericfieldAnswerSchema(), locations=("json",))
 def answer(args: NumericfieldAnswerModel):
     web = {}
@@ -159,12 +170,11 @@ def answer(args: NumericfieldAnswerModel):
     return jsonify(result)
 
 
-@app.route('/reqs/')
-@app.route('/reqs')
+@numericfield_route.route('/reqs/')
+@numericfield_route.route('/reqs')
 def reqs():
     """Introducing templates for numericfield plugin"""
-    templates = [
-"""``` {#PLUGINNAMEHERE plugin="numericfield"}
+    templates = ["""``` {#PLUGINNAMEHERE plugin="numericfield"}
 header:          # otsikko, tyhjä = ei otsikkoa
 stem:            # kysymys, tyhjä = ei kysymystä
 step:            # numeraalinen askellus, tyhjä = oletus 1.0
@@ -176,17 +186,15 @@ cols: 7          # kentän koko, numeraalinen
 autosave: false  # autosave, pois päältä
 validinput: "^\d{0,3}(\.\d{0,3})?$" # käyttäjäsyötteen rajoitin, tyhjä = ei rajoitusta
 errormessage:    # inputcheckerin virheselite, tyhjä = selite on inputchecker
-```""",
-"""#- {defaultplugin=\"numericfield\" readonly=\"view\"}
+```""", """#- {defaultplugin=\"numericfield\" readonly=\"view\"}
 {% set name,n = 'd', 5 %}
 %% ('{{#'+name+'{0} stem: \"{0}\", autosave: true, readOnlyStyle: plaintext#}}') | srange(1,n+1) -%%
 {#%%name%%sum stem: summa, autosave: true, readOnlyStyle: plaintext#} 
-""",
-]
+""", ]
     return jsonify({
-        "js": ["js/build/numericfield.js"],
+        "js": ["/field/js/build/numericfield.js"],
         "multihtml": True,
-        "css": ["css/numericfield.css"],
+        "css": ["/field/css/field.css"],
         'editor_tabs': [
             {
                 'text': 'Plugins',
@@ -220,12 +228,4 @@ errormessage:    # inputcheckerin virheselite, tyhjä = selite on inputchecker
             },
         ],
     },
-    )
-
-
-if __name__ == '__main__':
-    app.run(
-        host='0.0.0.0',
-        port=5000,
-        debug=False,  # for live reloading, this can be turned on
     )

@@ -24,15 +24,12 @@ CSPLUGIN_NAME = 'csplugin'
 SVNPLUGIN_NAME = 'showfile'
 HASKELLPLUGIN_NAME = 'haskellplugins'
 PALIPLUGIN_NAME = 'pali'
-FIELDPLUGIN_BASE_NAME = 'textfield'  # TODO: chage to field
-NUMERICFIELDPLUGIN_NAME = 'numericfield'
-MULTISAVEPLUGIN_NAME = 'multisave'
+FIELDPLUGIN_BASE_NAME = 'field'
 JSRUNNERPLUGIN_NAME = 'jsrunner'
 IMAGEXPLUGIN_NAME = 'imagex'
 MARKUP = 'markup'
 REGEXATTRS = 'regexattrs'
 AUTOMDATTRS = 'automdattrs'
-DROPDOWNPLUGIN_NAME = 'dropdown'
 FEEDBACKPLUGIN_NAME = 'feedback'
 DRAGPLUGIN_NAME = 'drag'
 
@@ -78,8 +75,8 @@ def get_plugins():
             "textfield": {"host": "http://" + FIELDPLUGIN_BASE_NAME + ":5000/tf/", REGEXATTRS: TEXTFIELDATTRS, AUTOMDATTRS: True},
             "cbfield": {"host": "http://" + FIELDPLUGIN_BASE_NAME + ":5000/cb/", REGEXATTRS: TEXTFIELDATTRS, AUTOMDATTRS: True},
             "rbfield": {"host": "http://" + FIELDPLUGIN_BASE_NAME + ":5000/rb/", REGEXATTRS: TEXTFIELDATTRS, AUTOMDATTRS: True},
-            "numericfield": {"host": "http://" + NUMERICFIELDPLUGIN_NAME + ":5000/", REGEXATTRS: TEXTFIELDATTRS, AUTOMDATTRS: True},
-            "multisave": {"host": "http://" + MULTISAVEPLUGIN_NAME + ":5000/"},
+            "numericfield": {"host": "http://" + FIELDPLUGIN_BASE_NAME + ":5000/nf/", REGEXATTRS: TEXTFIELDATTRS, AUTOMDATTRS: True},
+            "multisave": {"host": "http://" + FIELDPLUGIN_BASE_NAME + ":5000/ms/"},
             "jsrunner": {"host": "http://" + JSRUNNERPLUGIN_NAME + ":5000/"},
             "imagex": {"host": "http://" + IMAGEXPLUGIN_NAME + ":5000/"},
             "qst": {"host": "http://" + "localhost" + f":{current_app.config['QST_PLUGIN_PORT']}/qst/", REGEXATTRS: QSTMDATTRS, AUTOMDATTRS: True},
@@ -88,7 +85,7 @@ def get_plugins():
             "importData": {"host": "http://" + "localhost" + f":{current_app.config['QST_PLUGIN_PORT']}/importData/"},
             "tape": {"host": "http://" + "localhost" + f":{current_app.config['QST_PLUGIN_PORT']}/tape/"},
             "echo": {"host": "http://" + "tim" + ":5000/echoRequest/", "skip_reqs": True},
-            "dropdown": {"host": "http://" + DROPDOWNPLUGIN_NAME + ":5000/"},
+            "dropdown": {"host": "http://" + FIELDPLUGIN_BASE_NAME + ":5000/dropdown/"},
             "feedback": {"host": "http://" + FEEDBACKPLUGIN_NAME + ":5000/", REGEXATTRS: FBMDATTRS, AUTOMDATTRS: True},
             "drag": {"host": "http://" + DRAGPLUGIN_NAME + ":5000/", REGEXATTRS: DRAGATTRS, AUTOMDATTRS: True},
         }

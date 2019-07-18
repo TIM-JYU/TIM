@@ -85,9 +85,8 @@ def cb_reqs():
     """Introducing templates for cbfield plugin"""
     return jsonify({
         "js": ["/field/js/build/cbfield.js"],
-        "css": ["/field/css/textfield.css", "/numericfield/css/numericfield.css"],
+        "css": ["/field/css/field.css"],
         "multihtml": True,
-        # "css": ["css/textfield.css"],
         'editor_tabs': [
             {
                 'text': 'Plugins',
