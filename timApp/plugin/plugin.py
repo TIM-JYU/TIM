@@ -66,6 +66,10 @@ NO_ANSWERBROWSER_PLUGINS = {
     'importData',
 }
 
+ALLOW_STYLES_PLUGINS = {
+    'textfield',
+    'numericfield',
+}
 
 class PluginWrap(Enum):
     Nothing = 1
@@ -340,6 +344,9 @@ class Plugin:
 
     def get_content_field_name(self):
         return CONTENT_FIELD_NAME_MAP.get(self.type, 'c')
+
+    def allow_styles_field(self):
+        return self.type in ALLOW_STYLES_PLUGINS
 
     def is_answer_valid(self, old_answers, tim_info):
         """Determines whether the currently posted answer should be considered valid.

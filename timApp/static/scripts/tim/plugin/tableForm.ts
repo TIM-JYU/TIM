@@ -687,6 +687,7 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
             keys = this.changedCells;
         }
         const replyRows: { [index: string]: { [index: string]: CellType } } = {};
+        const styleRows: { [index: string]: { [index: string]: string } } = {};
         try {
             for (const coord of keys) {
                 const alphaRegExp = new RegExp("([A-Z]*)");
@@ -696,12 +697,22 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
                 }
                 const columnPlace = alpha[0];
                 const numberPlace = coord.substring(columnPlace.length);
+                if (columnPlace === this.userNameColumn
+                    || columnPlace === this.realNameColumn  // TODO: Do we need this anymore?
+                    || columnPlace === this.emailColumn) {  // TODO: Do we need this anymore?
+                    continue;
+                }
                 const cell = this.data.userdata.cells[coord];
                 let cellContent;
+                let cellStyle = null;
                 // TODO: Save cell attributes (e.g backgroundColor) as plugin's own answer to let users take advantage
                 //  of timTable's cell layout editing
                 if (!isPrimitiveCell(cell)) {
                     cellContent = cell.cell;
+                    const cellcopy = JSON.parse(JSON.stringify(cell));
+                    delete cellcopy.cell;
+                    // cellStyle = JSON.stringify(cellcopy);
+                    cellStyle = cellcopy;
                 } else {
                     cellContent = cell;
                 }
@@ -713,17 +724,17 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
                 // else if (typeof cellContent === "boolean") {
                 //     throw new Error("cell was boolean?");
 
-                if (columnPlace === this.userNameColumn
-                    || columnPlace === this.realNameColumn  // TODO: Do we need this anymore?
-                    || columnPlace === this.emailColumn) {  // TODO: Do we need this anymore?
-                    continue;
-                } else {
-                    try {
-                        replyRows[this.userLocations[numberPlace]][this.taskLocations[columnPlace]] = cellContent;
-                    } catch (TypeError) {
-                        replyRows[this.userLocations[numberPlace]] = {};
-                        replyRows[this.userLocations[numberPlace]][this.taskLocations[columnPlace]] = cellContent;
-                    }
+                try {
+                    replyRows[this.userLocations[numberPlace]][this.taskLocations[columnPlace]] = cellContent;
+                } catch (TypeError) {
+                    replyRows[this.userLocations[numberPlace]] = {};
+                    replyRows[this.userLocations[numberPlace]][this.taskLocations[columnPlace]] = cellContent;
+                }
+                if (cellStyle) {
+                    // TODO
+                    const taskWithField = this.taskLocations[columnPlace].split(".");
+                    const docTaskStyles = taskWithField[0] + "." + taskWithField[1] + ".styles";
+                    replyRows[this.userLocations[numberPlace]][docTaskStyles] = cellStyle;
                 }
             }
         } catch (e) {
