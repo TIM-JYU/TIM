@@ -74,6 +74,7 @@ class GenericMarkupModel:
     button: Union[str, None, Missing] = missing
     useCurrentUser: Union[bool, Missing] = missing
     showInView: Union[bool, Missing] = missing
+    globalField: Union[bool, Missing] = missing
 
     def get_visible_data(self):
         return {k: v for k, v in list_not_missing_fields(self) if k not in self.hidden_keys}
@@ -91,6 +92,7 @@ class GenericMarkupSchema(Schema):
     resetText = fields.Str(allow_none=True)
     useCurrentUser = fields.Bool(allow_none=True)
     showInView = fields.Bool()
+    globalField = fields.Bool(allow_none=True)
 
     @pre_load
     def process_minus(self, data):
