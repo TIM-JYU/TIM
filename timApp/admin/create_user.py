@@ -7,31 +7,43 @@ from timApp.timdb.timdb import TimDb
 
 def query_admin():
     timdb = TimDb(app.config['FILES_PATH'])
-    username = input("Username: ")
-    user = User.query.filter_by(name=username).first()
-    if user is not None:
-        if not user.is_admin:
-            print('A user with this username already exists. Do you want to add this user to administrators?')
-            yesno = input('y/n: ')
-            if yesno == 'y':
-                user.groups.append(UserGroup.get_admin_group())
-                print(f'User {username} has been added to administrators.')
+    while True:
+        username = input("Username: ")
+        user = User.query.filter_by(name=username).first()
+        if user is not None:
+            if not user.is_admin:
+                print('A user with this username already exists. Do you want to add this user to administrators?')
+                yesno = input('y/n: ')
+                if yesno == 'y':
+                    user.groups.append(UserGroup.get_admin_group())
+                    print(f'User {username} has been added to administrators.')
+            else:
+                print(f'User {username} is already an administrator.')
         else:
-            print(f'User {username} is already an administrator.')
-    else:
-        realname = input("Real name: ")
-        email = input("Email: ")
-        password = input("Password: ")
+            realname = input("Real name: ")
+            email = input("Email: ")
+            password = input("Password: ")
 
-        print('Add created user to the administrators?')
-        yesno = input('y/n: ')
-        isadmin = False
-        if yesno == 'y':
-            isadmin = True
-        User.create_with_group(username, realname, email, password, is_admin=isadmin)
-
-        print('UserAccount ', username, " created")
-        print('Use ', username, " and password you entered to login.")
+            print('Add created user to the administrators?')
+            yesno = input('y/n: ')
+            isadmin = False
+            if yesno == 'y':
+                isadmin = True
+            print(f"""
+Creating following user:            
+Username: {username}
+Real name: {realname}
+Email: {email}
+Password: {password} 
+Admin: {isadmin}""")
+            yesno = input('Is this correct? y/n/quit: ')
+            if yesno == 'y':
+                User.create_with_group(username, realname, email, password, is_admin=isadmin)
+                print('UserAccount ', username, " created")
+                print('Use ', username, " and password you entered to login.")
+                break
+            elif yesno == 'q' or yesno == 'quit':
+                exit()
     db.session.commit()
     timdb.close()
 
