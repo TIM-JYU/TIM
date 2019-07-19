@@ -482,21 +482,22 @@ def pluginify(doc: Document,
     #  (these tasks could have been omitted from 1st answer query)
     # TODO: Get plugin values before 1st answer query and loop for special cases
     #  (globalField, useCurrentUser etc)
-    task_ids = []
-    plugins_to_change = []
-    for plugin_name, plugin_block_map in plugins.items():
-        for _, plugin in plugin_block_map.items():
-            if plugin.values.get("globalField", False):
-                task_ids.append(plugin.task_id)
-                plugins_to_change.append(plugin)
-    if task_ids:
-        get_latest_for_tasks(task_ids, answer_map)
-        for p in plugins_to_change:
-            a = answer_map.get(p.task_id.doc_task,None)
-            if not a:
-                continue
-            p.answer = a[0]
-            p.answer_count = a[1]
+    if doc.own_settings.get("tipidebug", False):
+        task_ids = []
+        plugins_to_change = []
+        for plugin_name, plugin_block_map in plugins.items():
+            for _, plugin in plugin_block_map.items():
+                if plugin.values.get("globalField", False):
+                    task_ids.append(plugin.task_id)
+                    plugins_to_change.append(plugin)
+        if task_ids:
+            get_latest_for_tasks(task_ids, answer_map)
+            for p in plugins_to_change:
+                a = answer_map.get(p.task_id.doc_task,None)
+                if not a:
+                    continue
+                p.answer = a[0]
+                p.answer_count = a[1]
 
     # taketime("answ", "done", len(answers))
 
