@@ -175,7 +175,7 @@ jsrunnerApp.component("jsRunner", {
             ng-click="$ctrl.checkFields()">
         {{::$ctrl.buttonText()}}
     </button>
-    <p ng-if="$ctrl.error">Fatal error occurred, script results not saved.</p>
+    <p class="error" ng-if="$ctrl.error">Fatal error occurred, script results not saved.</p>
     <pre ng-if="$ctrl.error">{{$ctrl.error.msg}}</pre>
     <pre ng-if="$ctrl.error">{{$ctrl.error.stackTrace}}</pre>
     <jsrunner-error ng-repeat="err in $ctrl.scriptErrors" e="err"></jsrunner-error>
