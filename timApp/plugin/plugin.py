@@ -9,6 +9,7 @@ import attr
 import yaml
 from docutils.nodes import header
 from flask import render_template_string
+from jinja2 import Environment, BaseLoader
 
 import timApp
 from timApp.answer.answer import Answer
@@ -34,6 +35,39 @@ LAZYSTART = "<!--lazy "
 LAZYEND = " lazy-->"
 NOLAZY = "<!--nolazy-->"
 NEVERLAZY = "NEVERLAZY"
+
+JINJAENV = Environment(loader=BaseLoader)
+
+PLG_RTEMPLATE = JINJAENV.from_string("""
+<tim-plugin-loader type="{{abtype}}"
+                   answer-id="{{aid or ''}}"
+                   class="{{plgclass}}"
+                   task-id="{{doc_task_id or ''}}">{{cont|safe}}</tim-plugin-loader>""".replace("\n", ""))
+
+
+def render_template_string2(source, **context):
+    """Renders a template from the given template source string
+    with the given context. Template variables will be autoescaped.
+
+    :param source: the source code of the template to be
+                   rendered
+    :param context: the variables that should be available in the
+                    context of the template.
+    """
+    rtemplate = JINJAENV.from_string(source)
+    return rtemplate.render(**context)
+
+
+def render_template_string3(rtemplate, **context):
+    """Renders a template from the given template source string
+    with the given context. Template variables will be autoescaped.
+
+    :param rtemplate: ready made render template
+    :param context: the variables that should be available in the
+                    context of the template.
+    """
+    res = rtemplate.render(**context)
+    return res
 
 
 # Maintains a mapping of plugin types to names of plugins' content field.
@@ -453,8 +487,23 @@ class Plugin:
 {out}
 </{tag}>
             """.strip()
+            if abtype and self.options.wraptype == PluginWrap.Full and False:
+                return f"""
+<tim-plugin-loader type="{abtype}" answer-id="{self.answer.id if self.answer else None or ''}"
+                   class="{self.get_container_class()}"
+                   task-id="{doc_task_id or ''}">""".replace("\n", "") + \
+                       cont + "</tim-plugin-loader>"  #  0.001 sec
+            if abtype and self.options.wraptype == PluginWrap.Full:  # and False:
+                return render_template_string3(  # TODO: 0.05 sec
+                    PLG_RTEMPLATE,
+                    abtype=abtype,
+                    plgclass=self.get_container_class(),
+                    doc_task_id=doc_task_id,
+                    cont=cont,
+                    aid=self.answer.id if self.answer else None,
+                )
             if abtype and self.options.wraptype == PluginWrap.Full:
-                return render_template_string(
+                return render_template_string2(  # TODO: 0.05 sec with rts3 2.3 sec with rts2, 8.5 sec with rts, 0.0001 sec with f
                     """
 <tim-plugin-loader type="{{abtype}}"
                    answer-id="{{aid or ''}}"

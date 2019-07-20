@@ -405,11 +405,15 @@ def get_html(self: 'TIMServer', ttype, query: QueryClass):
     language_class = languages.get(ttype.lower(), Language)
     language = language_class(query, bycode)
 
-    usercode = get_json_eparam(query.jso, "state", "usercode", "")
+    usercode = get_json_eparam(query.jso, "state", "usercode", None)
 
     state_copy = language.state_copy()
     for key in state_copy:
-        value = get_json_eparam(query.jso, "state", key, "")
+        # value = get_json_eparam(query.jso, "state", key, "")
+        state = query.jso.get("state", {})
+        if not state:
+            break
+        value = state.get(key, None)
         if value:
             js['markup'][key] = value
 
@@ -421,8 +425,8 @@ def get_html(self: 'TIMServer', ttype, query: QueryClass):
         before_open = language.get_default_before_open()
 
     if before_open or is_rv:
-        usercode = language.modify_usercode(usercode)
-        before_open = before_open.replace('{USERCODE}', usercode)
+        susercode = language.modify_usercode(usercode or "")
+        before_open = before_open.replace('{USERCODE}', susercode)
         js['markup']['beforeOpen'] = before_open
 
     jso = json.dumps(js)

@@ -1439,34 +1439,26 @@ class JSframe(Language):
                 "filename": "",
                 "prehtml": "",
                 "posthtml": "",
-                "data":"",
                 "javascript": "",
                 "commands": "",
         }
 
     def state_copy(self):
-        return ["message"]
+        return ["c"]
 
     def iframehtml(self, result, sourcelines, points_rule):
         ma = self.query.jso['markup']
         srchtml = get_by_id(ma, 'srchtml', '')
+        data = ma.get('data', None)
 
-        data = get_by_id(ma, "data", "")
         state = self.query.jso.get("state", {})
-        if state is None:
-            state = {}
-        udata = state.get("data", None)
-        if udata:
-            data = udata
+        if state:
+            c = state.get("c", None)
+            if c is not None:
+                data = c
         if data:
-            if data[0] == '<': # is XML?
-                if not udata:  # send XML in data part
-                    state["data"] = data
-                data = ''
-            else:
-                state["data"] = ''
-        if data: # send ggb in parameters ggbBase64
-            srchtml = srchtml.replace('//GGBBASE64', f'ggbBase64: "{data.strip()}",')
+            init_data = "<script>window.initData = " + json.dumps(data) + ";</script>"
+            srchtml = srchtml.replace("</body>", init_data + "\n</body>")
 
         return srchtml
 

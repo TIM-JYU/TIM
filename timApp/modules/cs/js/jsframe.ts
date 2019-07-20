@@ -1,7 +1,7 @@
 ﻿import angular from "angular";
 import * as t from "io-ts";
 import {IAnswer} from "tim/answer/IAnswer";
-import {ViewCtrl} from "tim/document/viewctrl";
+import {ITimComponent, ViewCtrl} from "tim/document/viewctrl";
 import {GenericPluginMarkup, Info, withDefault} from "tim/plugin/attributes";
 import {PluginBase, pluginBindings} from "tim/plugin/util";
 import {$http, $sce, $timeout} from "tim/util/ngimport";
@@ -23,6 +23,9 @@ const JsframeMarkup = t.intersection([
         width: t.number,
         height: t.number,
         tool: t.boolean,
+        useurl: t.boolean,
+        c: t.any,
+        data: t.any,
     }),
     GenericPluginMarkup,
     t.type({
@@ -71,9 +74,9 @@ interface CustomFrame<T extends Window> extends HTMLIFrameElement {
     contentWindow: T;
 }
 
-class JsframeController extends PluginBase<t.TypeOf<typeof JsframeMarkup>,
+class JsframeController extends PluginBase<t.TypeOf<typeof JsframeMarkup> ,
     t.TypeOf<typeof JsframeAll>,
-    typeof JsframeAll> {
+    typeof JsframeAll> implements ITimComponent {
 
     get english() {
         return this.attrs.lang === "en";
@@ -95,14 +98,13 @@ class JsframeController extends PluginBase<t.TypeOf<typeof JsframeMarkup>,
         return this.english ? "Show task" : "Näytä tehtävä";
     }
 
-    public viewctrl?: ViewCtrl;
+    public viewctrl!: ViewCtrl;
     private span: string = "";
     private error: string = "";
     private console: string = "";
     private message: string = "";
     private userCode: string = "";
     private jsframeoutput: string = "";
-    private jsframeinputfeedback: string = "";
     private jsframepeek: boolean = false;
     private isRunning: boolean = false;
     private isOpen: boolean = false;
@@ -112,6 +114,9 @@ class JsframeController extends PluginBase<t.TypeOf<typeof JsframeMarkup>,
 
     private taskUrl: string = "";
     private htmlUrl: string = "";
+    private initData: string = "";
+
+    private saveResponse: {saved: boolean, message: (string | undefined)} = {saved: false, message: undefined};
 
     $onInit() {
         super.$onInit();
@@ -124,7 +129,11 @@ class JsframeController extends PluginBase<t.TypeOf<typeof JsframeMarkup>,
         if (this.attrs.open) {
             this.isOpen = true;
         }
-        // this.addListener();
+        let data = this.attrs.data;
+        if ( this.attrs.c ) { data = this.attrs.c; }
+        if ( data ) { this.initData = "window.initData = " + JSON.stringify(data) + ";"; }
+        // if ( data ) { this.setData(data); }
+        this.viewctrl.addTimComponent(this);
     }
 
     runShowTask() {
@@ -140,36 +149,78 @@ class JsframeController extends PluginBase<t.TypeOf<typeof JsframeMarkup>,
         f.contentWindow.setData(JSON.parse(a.content));
     }
 
+    private communicationJS = `
+    <script>
+    let port2;
+
+    window.addEventListener('message', function(e) {
+         if ( e.data.msg === "init" ) {
+            port2 = e.ports[0];
+            port2.onmessage = onMessage;
+            port2.postMessage({msg:"Inited"});
+         }
+    });
+
+    function onMessage(event) {
+         console.log(event.data);
+         console.log(event.origin);
+
+         if ( event.data.msg === "setData" ) {
+            setData(event.data.data);
+            port2.postMessage({msg: "Got data!"});
+         }
+         if ( event.data.msg === "getData" ) {
+            port2.postMessage({msg:"data", data: getData()});
+         }
+         if ( event.data.msg === "getDataSave" ) {
+            port2.postMessage({msg:"datasave", data: getData()});
+         }
+    }
+
+    // INITDATA
+    </script>
+    `;
+
     outputAsHtml() {
         // if ( !this.attrs.srchtml ) return "";
         if (this.attrsall.preview) {
             // return "";
         } // TODO: replace when preview delay and preview from markup ready
         $timeout(0);
-        const tid = this.pluginMeta.getTaskId()!.split(".") || ["", ""];
-        const taskId = tid[0] + "." + tid[1];
-        let ab = null;
-
-        let userId = 1;
-        if (this.viewctrl) {
-            ab = this.viewctrl.getAnswerBrowser(taskId);
-            const selectedUser = this.viewctrl.selectedUser;
-            userId = selectedUser.id;
-        }
-        if (ab) {
-            ab.registerAnswerListener((a) => this.changeAnswer(a));
-        }
-        let anr = 0;
-        if (ab) {
-            anr = ab.findSelectedAnswerIndex();
-            if (anr < 0) {
-                anr = 0;
-            }
-        }
-        const html: string = this.attrs.srchtml || "";
-        const datasrc = btoa(html);
         const w = this.attrs.width || 800;
         const h = this.attrs.height || 450;
+        let src = "";
+        if ( this.attrs.useurl ) {
+            const tid = this.pluginMeta.getTaskId()!.split(".") || ["", ""];
+            const taskId = tid[0] + "." + tid[1];
+            let ab = null;
+
+            let userId = 1;
+            if (this.viewctrl) {
+                ab = this.viewctrl.getAnswerBrowser(taskId);
+                const selectedUser = this.viewctrl.selectedUser;
+                userId = selectedUser.id;
+            }
+            if (ab) {
+                ab.registerAnswerListener((a) => this.changeAnswer(a));
+            }
+            let anr = 0;
+            if (ab) {
+                anr = ab.findSelectedAnswerIndex();
+                if (anr < 0) {
+                    anr = 0;
+                }
+            }
+            let url = this.getHtmlUrl() + "/" + userId + "/" + anr;
+            url = url.replace("//", "/");
+            src = 'src="' + url + '"';
+        } else {
+            let html: string = this.attrs.srchtml || "";
+            html = html.replace("</body>", this.communicationJS + "\n</body>");
+            html = html.replace("// INITDATA", this.initData);
+            const datasrc = btoa(html);
+            src = "src='data:text/html;base64," + datasrc;
+        }
 
         // let url = this.getHtmlUrl() + "/" + userId + "/" + anr;
         // url = url.replace("//", "/");
@@ -180,9 +231,8 @@ class JsframeController extends PluginBase<t.TypeOf<typeof JsframeMarkup>,
             "               display: block;" +
             "               width:calc(" + w + "px + 2px);height:calc(" + h + "px + 2px);border: none;'\n" +
             "        sandbox='allow-scripts allow-same-origin'\n" +
-            "        src='data:text/html;base64," + datasrc + "'>\n" +
-            // "src=\"https://www.jsframe.org/material/iframe/id/23587/width/1600/height/715/border/888888/rc/false/ai/false/sdz/false/smb/false/stb/false/stbh/true/ld/false/sri/false\"" +
-            // 'src="'+ '/cs/reqs' + '"' +
+            src +
+            "'>\n" +
             // 'src="' + url + '"' +
             "</iframe>";
         return $sce.trustAsHtml(this.jsframeoutput);
@@ -210,13 +260,13 @@ class JsframeController extends PluginBase<t.TypeOf<typeof JsframeMarkup>,
     async runSend(data: any) {
         if (this.pluginMeta.isPreview()) {
             this.error = "Cannot run plugin while previewing.";
-            return;
+            this.saveResponse.saved = false;
+            return this.saveResponse;
         }
         this.jsframepeek = false;
         this.error = "";
         this.isRunning = true;
         const url = this.getTaskUrl();
-        const jsframeData = "";
         data.type = "jsframe";
         const params = {
             input: data,
@@ -232,46 +282,85 @@ class JsframeController extends PluginBase<t.TypeOf<typeof JsframeMarkup>,
 
         if (!r.ok) {
             this.error = r.result.data.error;
-            return;
+            this.saveResponse.saved = false;
+            return this.saveResponse;
         }
         if (!r.result.data.web) {
             this.error = "No web reply from csPlugin!";
-            return;
+            this.saveResponse.saved = false;
+            return this.saveResponse;
         }
         if (r.result.data.web.error) {
             this.error = r.result.data.web.error;
-            return;
+            this.saveResponse.saved = false;
+            return this.saveResponse;
         }
         if (r.result.data.web.console) {
             this.console = r.result.data.web.console;
-            return;
+            this.saveResponse.saved = true;
+            return this.saveResponse;
         }
         const jsframeResult = r.result.data.web.jsframeResult;
+        this.saveResponse.saved = true;
+        return this.saveResponse;
     }
 
-    getData() {
-        const frameElem = this.element.find(".jsFrameContainer")[0];
-        const f = frameElem.firstChild as CustomFrame<JSFrameWindow>;
-        if (!f.contentWindow.getData) {
-            return;
+    getData(msg: string = "getData") {
+        if ( this.attrs.useurl ) {
+            const frameElem = this.element.find(".jsFrameContainer")[0];
+            const f = frameElem.firstChild as CustomFrame<JSFrameWindow>;
+            if (!f.contentWindow.getData) {
+                return;
+            }
+            return this.getDataReady(f.contentWindow.getData());
         }
-        const s: any = f.contentWindow.getData();
-        if (s.message) {
-            this.message = s.message;
+        this.send({msg: msg });
+    }
+
+    getDataReady(data: any, dosave: boolean = false) {
+        if (data.message) {
+            this.message = data.message;
         }
-        this.runSend(s);
+        if ( dosave ) { this.runSend({c: data}); }
+        return data;
+    }
+
+    setData(data: any) {
+        $timeout(0);
+
+        if ( this.attrs.useurl ) {
+            const frameElem = this.element.find(".jsFrameContainer")[0];
+            const f = frameElem.firstChild as CustomFrame<JSFrameWindow>;
+            if (!f.contentWindow.setData) {
+                return;
+            }
+            f.contentWindow.setData(data);
+        } else {
+            this.send({msg: "setData", data: data });
+        }
+    }
+
+    getContent() {
+        return this.getData();
+    }
+
+    async save() {
+        const data = this.getData("getDataSave");
+        return this.runSend({c: data});
+    }
+
+    isUnSaved() {
+        return false;  // TODO: compare datas
     }
 
     tempSetData() {
         const newData = {  labels: [1, 2, 3, 4, 5, 6],
                            data:   [4, 5, 6, 12, 3, 10] };
-        this.send({msg: "setData", data: newData });
+        this.setData(newData);
     }
 
     tempGetData() {
-        const frameElem = this.element.find(".jsFrameContainer")[0];
-        const f = frameElem.firstChild as CustomFrame<JSFrameWindow>;
-        this.send({msg: "getData" });
+        this.getData();
     }
 
     send(obj: any) {
@@ -286,6 +375,13 @@ class JsframeController extends PluginBase<t.TypeOf<typeof JsframeMarkup>,
         this.channel = new MessageChannel();
         this.channel.port1.onmessage =  (event: any) => {
             console.log(event);
+            const msg = event.data.msg;
+            if ( msg === "data") {
+                this.getDataReady(event.data.data);
+            }
+            if ( msg === "datasave") {
+                this.getDataReady(event.data.data, true);
+            }
         };
         const frameElem = this.element.find(".jsFrameContainer")[0];
         const f = frameElem.firstChild as CustomFrame<JSFrameWindow>;
@@ -350,8 +446,8 @@ jsframeApp.component("jsframeRunner", {
           ng-style="$ctrl.tinyErrorStyle" ng-bind-html="$ctrl.error"></span>
 
     <p class="plgfooter" ng-if="::$ctrl.footer" ng-bind-html="::$ctrl.footer"></p>
-    <button ng-click="$ctrl.tempSetData()">Set data</button>
-    <button ng-click="$ctrl.tempGetData()">Get data</button>
+<!--    <button ng-click="$ctrl.tempSetData()">Set data</button>
+    <button ng-click="$ctrl.tempGetData()">Get data</button> -->
 </div>
 `,
 });
