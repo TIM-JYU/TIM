@@ -489,7 +489,7 @@ def pluginify(doc: Document,
     # TODO: Get plugin values before 1st answer query and loop for special cases
     #  (globalField, useCurrentUser etc)
     taketime("glb", "globalField")
-    if doc.own_settings.get("tipidebug", False):
+    if doc.own_settings.get("tipidebug", False) or True:
         task_ids = []
         plugins_to_change = []
         for plugin_name, plugin_block_map in plugins.items():
