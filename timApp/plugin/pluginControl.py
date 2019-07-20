@@ -305,6 +305,26 @@ def get_answers(user, task_ids, answer_map):
     return cnt, answers
 
 
+def get_latest_for_tasks(task_ids, answer_map):
+    col = func.max(Answer.id).label('col')
+    cnt = func.count(Answer.id).label('cnt')
+    sub = (Answer
+           .query
+           .filter(Answer.task_id.in_(task_ids_to_strlist(task_ids)) & Answer.valid == True)
+           .add_columns(col, cnt)
+           .with_entities(col, cnt)
+           .group_by(Answer.task_id).subquery()
+           )
+    answers: List[Tuple[Answer, int]] = (
+        Answer.query.join(sub, Answer.id == sub.c.col)
+            .with_entities(Answer, sub.c.cnt)
+            .all()
+    )
+    for answer, cnt in answers:
+        answer_map[answer.task_id] = answer, cnt
+    return cnt, answers
+
+
 def pluginify(doc: Document,
               pars: List[DocParagraph],
               user: Optional[User],
@@ -457,6 +477,27 @@ def pluginify(doc: Document,
                 p.answer_count = a[1]
                 # p.options.__setattr__("user", current_user)
                 p.options = p.options._replace(user = current_user)
+
+    # TODO: Change answer to newest answer for plugins with globalField
+    #  (these tasks could have been omitted from 1st answer query)
+    # TODO: Get plugin values before 1st answer query and loop for special cases
+    #  (globalField, useCurrentUser etc)
+    if doc.own_settings.get("tipidebug", False):
+        task_ids = []
+        plugins_to_change = []
+        for plugin_name, plugin_block_map in plugins.items():
+            for _, plugin in plugin_block_map.items():
+                if plugin.values.get("globalField", False):
+                    task_ids.append(plugin.task_id)
+                    plugins_to_change.append(plugin)
+        if task_ids:
+            get_latest_for_tasks(task_ids, answer_map)
+            for p in plugins_to_change:
+                a = answer_map.get(p.task_id.doc_task,None)
+                if not a:
+                    continue
+                p.answer = a[0]
+                p.answer_count = a[1]
 
     # taketime("answ", "done", len(answers))
 
