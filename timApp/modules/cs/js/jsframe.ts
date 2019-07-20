@@ -7,18 +7,18 @@ import {PluginBase, pluginBindings} from "tim/plugin/util";
 import {$http, $sce, $timeout} from "tim/util/ngimport";
 import {to} from "tim/util/utils";
 
-const geogebraApp = angular.module("geogebraApp", ["ngSanitize"]);
-export const moduleDefs = [geogebraApp];
+const jsframeApp = angular.module("jsframeApp", ["ngSanitize"]);
+export const moduleDefs = [jsframeApp];
 
 // this.attrs
-const GeogebraMarkup = t.intersection([
+const JsframeMarkup = t.intersection([
     t.partial({
         beforeOpen: t.string,
         buttonBottom: t.boolean,
         correctresponse: t.boolean,
         generalfeedback: t.boolean,
         showButton: t.string,
-        // srchtml: t.string,
+        srchtml: t.string,
         message: t.string,
         width: t.number,
         height: t.number,
@@ -34,20 +34,20 @@ const GeogebraMarkup = t.intersection([
         // open: withDefault(t.boolean, false),
     }),
 ]);
-const GeogebraAll = t.intersection([
+const JsframeAll = t.intersection([
     t.partial({
         usercode: t.string,
-        // srchtml: t.string,
+        srchtml: t.string,
         norun: t.boolean,
     }),
     t.type({
         info: Info,
-        markup: GeogebraMarkup,
+        markup: JsframeMarkup,
         preview: t.boolean,
     }),
 ]);
 
-type GeogebraResult = string | {
+type JsframeResult = string | {
     answernotes: any,
     api_time: number,
     error: false,
@@ -62,13 +62,6 @@ type GeogebraResult = string | {
     message: string,
 };
 
-interface IGeogebraData {
-    answer: {[name: string]: string};
-    prefix: string;
-    seed?: number;
-    verifyvar: string;
-}
-
 interface JSFrameWindow extends Window {
     getData(): string;
     setData(state: any): void;
@@ -78,9 +71,9 @@ interface CustomFrame<T extends Window> extends HTMLIFrameElement {
     contentWindow: T;
 }
 
-class GeogebraController extends PluginBase<t.TypeOf<typeof GeogebraMarkup>,
-    t.TypeOf<typeof GeogebraAll>,
-    typeof GeogebraAll> {
+class JsframeController extends PluginBase<t.TypeOf<typeof JsframeMarkup>,
+    t.TypeOf<typeof JsframeAll>,
+    typeof JsframeAll> {
 
     get english() {
         return this.attrs.lang === "en";
@@ -108,21 +101,11 @@ class GeogebraController extends PluginBase<t.TypeOf<typeof GeogebraMarkup>,
     private console: string = "";
     private message: string = "";
     private userCode: string = "";
-    private geogebraoutput: string = "";
-    private geogebrainputfeedback: string = "";
-    private geogebrapeek: boolean = false;
-    private geogebrafeedback: string = "";
-    private geogebraformatcorrectresponse: string = "";
-    private geogebrascore: string = "";
-    private geogebrasummariseresponse: string = "";
-    private geogebraanswernotes: string = "";
-    private geogebratime: string = "";
+    private jsframeoutput: string = "";
+    private jsframeinputfeedback: string = "";
+    private jsframepeek: boolean = false;
     private isRunning: boolean = false;
-    private inputrows: number = 1;
     private isOpen: boolean = false;
-    private lastInputFieldId: string = "";
-    private lastInputFieldValue: string = "";
-    private lastInputFieldElement: HTMLInputElement | undefined;
     private button: string = "";
 
     private timer: NodeJS.Timer | undefined;
@@ -141,6 +124,7 @@ class GeogebraController extends PluginBase<t.TypeOf<typeof GeogebraMarkup>,
         if (this.attrs.open) {
             this.isOpen = true;
         }
+        // this.addListener();
     }
 
     runShowTask() {
@@ -159,7 +143,7 @@ class GeogebraController extends PluginBase<t.TypeOf<typeof GeogebraMarkup>,
     outputAsHtml() {
         // if ( !this.attrs.srchtml ) return "";
         if (this.attrsall.preview) {
-            return "";
+            // return "";
         } // TODO: replace when preview delay and preview from markup ready
         $timeout(0);
         const tid = this.pluginMeta.getTaskId()!.split(".") || ["", ""];
@@ -182,34 +166,26 @@ class GeogebraController extends PluginBase<t.TypeOf<typeof GeogebraMarkup>,
                 anr = 0;
             }
         }
-        // const html:string = this.attrs.srchtml;
-        // const datasrc = btoa(html);
-        let w = this.attrs.width || 800;
-        let h = this.attrs.height || 450;
+        const html: string = this.attrs.srchtml || "";
+        const datasrc = btoa(html);
+        const w = this.attrs.width || 800;
+        const h = this.attrs.height || 450;
 
-        if (this.attrs.tool) {
-            w = Math.max(w, 1200);
-            h = Math.max(w, 1100);
-        }
-
-        let url = this.getHtmlUrl() + "/" + userId + "/" + anr;
-        url = url.replace("//", "/");
-        this.geogebraoutput = "<iframe id=\"jsxFrame-stack-jsxgraph-1-div1\"\n" +
-            "        class=\"showGeoGebra geogebraFrame\" \n" +
-            "        style=\"width:calc(" + w + "px + 2px);height:calc(" + h + "px + 2px);border: none;\"\n" +
-            "        sandbox=\"allow-scripts allow-same-origin\"\n" +
-            // "        src=\"data:text/html;base64," + datasrc + "\">\n" +
-            // "src=\"https://www.geogebra.org/material/iframe/id/23587/width/1600/height/715/border/888888/rc/false/ai/false/sdz/false/smb/false/stb/false/stbh/true/ld/false/sri/false\"" +
+        // let url = this.getHtmlUrl() + "/" + userId + "/" + anr;
+        // url = url.replace("//", "/");
+        this.jsframeoutput = "<iframe id='jsxFrame-stack-jsxgraph-1-div1'\n" +
+            "        class='showJsframe jsframeFrame' \n" +
+            "        style='margin-left: auto;\n" +
+            "               margin-right: auto;\n" +
+            "               display: block;" +
+            "               width:calc(" + w + "px + 2px);height:calc(" + h + "px + 2px);border: none;'\n" +
+            "        sandbox='allow-scripts allow-same-origin'\n" +
+            "        src='data:text/html;base64," + datasrc + "'>\n" +
+            // "src=\"https://www.jsframe.org/material/iframe/id/23587/width/1600/height/715/border/888888/rc/false/ai/false/sdz/false/smb/false/stb/false/stbh/true/ld/false/sri/false\"" +
             // 'src="'+ '/cs/reqs' + '"' +
-            'src="' + url + '"' +
+            // 'src="' + url + '"' +
             "</iframe>";
-        const s = $sce.trustAsHtml(this.geogebraoutput);
-        return s;
-    }
-
-    geogebrainputfeedbackAsHtml() {
-        const s = $sce.trustAsHtml(this.geogebrainputfeedback);
-        return s;
+        return $sce.trustAsHtml(this.jsframeoutput);
     }
 
     getHtmlUrl(): string {
@@ -236,12 +212,12 @@ class GeogebraController extends PluginBase<t.TypeOf<typeof GeogebraMarkup>,
             this.error = "Cannot run plugin while previewing.";
             return;
         }
-        this.geogebrapeek = false;
+        this.jsframepeek = false;
         this.error = "";
         this.isRunning = true;
         const url = this.getTaskUrl();
-        const geogebraData = "";
-        data.type = "geogebra";
+        const jsframeData = "";
+        data.type = "jsframe";
         const params = {
             input: data,
         };
@@ -249,7 +225,7 @@ class GeogebraController extends PluginBase<t.TypeOf<typeof GeogebraMarkup>,
         this.console = "";
 
         const r = await to($http<{
-            web: {geogebraResult: GeogebraResult, error?: string, console?: string},
+            web: {jsframeResult: JsframeResult, error?: string, console?: string},
         }>({method: "PUT", url: url, data: params, timeout: 20000},
         ));
         this.isRunning = false;
@@ -270,7 +246,7 @@ class GeogebraController extends PluginBase<t.TypeOf<typeof GeogebraMarkup>,
             this.console = r.result.data.web.console;
             return;
         }
-        const geogebraResult = r.result.data.web.geogebraResult;
+        const jsframeResult = r.result.data.web.jsframeResult;
     }
 
     getData() {
@@ -286,12 +262,42 @@ class GeogebraController extends PluginBase<t.TypeOf<typeof GeogebraMarkup>,
         this.runSend(s);
     }
 
+    tempSetData() {
+        const newData = {  labels: [1, 2, 3, 4, 5, 6],
+                           data:   [4, 5, 6, 12, 3, 10] };
+        this.send({msg: "setData", data: newData });
+    }
+
+    tempGetData() {
+        const frameElem = this.element.find(".jsFrameContainer")[0];
+        const f = frameElem.firstChild as CustomFrame<JSFrameWindow>;
+        this.send({msg: "getData" });
+    }
+
+    send(obj: any) {
+        this.addListener();
+        this.channel.port1.postMessage(obj);
+    }
+
+    private channel: any = 0;
+
+    addListener() {
+        if ( this.channel ) { return; }
+        this.channel = new MessageChannel();
+        this.channel.port1.onmessage =  (event: any) => {
+            console.log(event);
+        };
+        const frameElem = this.element.find(".jsFrameContainer")[0];
+        const f = frameElem.firstChild as CustomFrame<JSFrameWindow>;
+        f.contentWindow.postMessage({msg: "init" }, "*", [this.channel.port2]);
+    }
+
     getDefaultMarkup() {
         return {};
     }
 
     protected getAttributeType() {
-        return GeogebraAll;
+        return JsframeAll;
     }
 
     private stopTimer(): boolean {
@@ -306,7 +312,7 @@ class GeogebraController extends PluginBase<t.TypeOf<typeof GeogebraMarkup>,
 
 const common = {
     bindings: pluginBindings,
-    controller: GeogebraController,
+    controller: JsframeController,
     require: {
         viewctrl: "?^timView",
     },
@@ -316,26 +322,26 @@ const common = {
 
 */
 
-geogebraApp.component("geogebraRunner", {
+jsframeApp.component("jsframeRunner", {
     ...common,
     template: `
-<div ng-cloak ng-class="::{'csRunDiv': $ctrl.attrs.borders}"  class="math que geogebra no-popup-menu" >
+<div ng-cloak ng-class="::{'csRunDiv': $ctrl.attrs.borders}"  class="math que jsframe no-popup-menu" >
     <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
     <p ng-if="::$ctrl.stem" class="stem" ng-bind-html="::$ctrl.stem"></p>
     <p ng-if="!$ctrl.isOpen" class="stem" ng-bind-html="::$ctrl.attrs.beforeOpen"></p>
 
-    <div ng-cloak ng-if="$ctrl.isOpen" id="output" class="jsFrameContainer geogebraOutput" ng-bind-html="::$ctrl.outputAsHtml()">
-    <!--<div ng-cloak id="output" ng-if="::!$ctrl.timWay" class="geogebraOutput" ng-bind-html="$ctrl.output">-->
+    <div ng-cloak ng-if="$ctrl.isOpen" id="output" class="jsFrameContainer jsframeOutput" ng-bind-html="::$ctrl.outputAsHtml()">
+    <!--<div ng-cloak id="output" ng-if="::!$ctrl.timWay" class="jsframeOutput" ng-bind-html="$ctrl.output">-->
     </div>
-    <!-- <div class="peekdiv" id="peek" ng-bind-html="$ctrl.geogebrapeek"></div> -->
+    <!-- <div class="peekdiv" id="peek" ng-bind-html="$ctrl.jsframepeek"></div> -->
     <p class="csRunMenu">
         <button ng-if="!$ctrl.isOpen"  ng-click="$ctrl.runShowTask()"  ng-bind-html="$ctrl.showButton()"></button>
         <button ng-if="$ctrl.isOpen && !$ctrl.attrs.norun" ng-disabled="$ctrl.isRunning" title="(Ctrl-S)" ng-click="$ctrl.getData()"
                 ng-bind-html="::$ctrl.button"></button>
-        <span class="geogebra message"
+        <span class="jsframe message"
               ng-if="$ctrl.message"
               ng-bind-html="$ctrl.message"></span>
-        <span class="geogebra message"
+        <span class="jsframe message"
               ng-if="$ctrl.console"
               ng-bind-html="$ctrl.console"></span>
     </p>
@@ -344,6 +350,8 @@ geogebraApp.component("geogebraRunner", {
           ng-style="$ctrl.tinyErrorStyle" ng-bind-html="$ctrl.error"></span>
 
     <p class="plgfooter" ng-if="::$ctrl.footer" ng-bind-html="::$ctrl.footer"></p>
+    <button ng-click="$ctrl.tempSetData()">Set data</button>
+    <button ng-click="$ctrl.tempGetData()">Get data</button>
 </div>
 `,
 });

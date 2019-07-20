@@ -552,14 +552,13 @@ def handle_common_params(query: QueryClass, tiny, ttype):
         runner = 'cs-parsons-runner'
     if "jypeli" in ttype or "graphics" in ttype or "alloy" in ttype:
         runner = 'cs-jypeli-runner'
-    if "sage" in ttype:
-        runner = 'cs-sage-runner'
+
+    language_runner = language.runner_name()
+    if language_runner:
+        runner = language_runner
+
     if "wescheme" in ttype:
         runner = 'cs-wescheme-runner'
-    if "stack" in ttype:
-        runner = 'stack-runner'
-    if "geogebra" in ttype:
-        runner = 'geogebra-runner'
     return bycode, is_input, js, runner, tiny
 
 
@@ -999,16 +998,24 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
         if is_reqs:
             templs = {}
+            jslist = []
+            csslist = []
+            for language_class in languages.values():  # ask needed js and css files from language
+                language = language_class(query, "")
+
+                list = language.js_files()
+                if list:
+                    jslist.extend(list)
+                list = language.css_files()
+                if list:
+                    csslist.extend(list)
+
             if not (is_tauno or is_rikki or is_parsons or is_simcir or is_graphviz ):
                 templs = get_all_templates('templates')
             result_json = {"js": ["/cs/js/build/csPlugin.js",
-                                  "/cs/js/build/stack.js",
-                                  "/cs/js/build/geogebra.js",
-                                  "/cs/stack/ServerSyncValues.js"
-                                  ],
+                                  ] + jslist,
                            "css": ["/cs/css/cs.css",
-                                   "/cs/css/mathcheck.css"
-                                   ], "multihtml": True, "multimd": True, "canGiveTask": True}
+                                   ] + csslist, "multihtml": True, "multimd": True, "canGiveTask": True}
             if is_parsons:
                 result_json = {"js": ["/cs/js/build/csPlugin.js",
                                       "jqueryui-touch-punch",
