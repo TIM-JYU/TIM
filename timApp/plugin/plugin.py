@@ -40,9 +40,9 @@ JINJAENV = Environment(loader=BaseLoader)
 
 PLG_RTEMPLATE = JINJAENV.from_string("""
 <tim-plugin-loader type="{{abtype}}"
-                   answer-id="{{aid or ''}}"
-                   class="{{plgclass}}"
-                   task-id="{{doc_task_id or ''}}">{{cont|safe}}</tim-plugin-loader>""".replace("\n", ""))
+answer-id="{{aid or ''}}"
+class="{{plgclass}}"
+task-id="{{doc_task_id or ''}}">{{cont|safe}}</tim-plugin-loader>""".replace("\n", " "))
 
 
 def render_template_string2(source, **context):
@@ -482,19 +482,15 @@ class Plugin:
         tag = self.get_wrapper_tag()
         if self.options.wraptype != PluginWrap.Nothing:
             abtype = self.get_answerbrowser_type()
-            cont = f"""
-<{tag} id='{html_task_id}' data-plugin='/{self.type}' {style}>
-{out}
-</{tag}>
-            """.strip()
+            cont = f"""<{tag} id='{html_task_id}' data-plugin='/{self.type}' {style}>{out}</{tag}>""".strip()
             if abtype and self.options.wraptype == PluginWrap.Full and False:
                 return f"""
 <tim-plugin-loader type="{abtype}" answer-id="{self.answer.id if self.answer else None or ''}"
                    class="{self.get_container_class()}"
                    task-id="{doc_task_id or ''}">""".replace("\n", "") + \
                        cont + "</tim-plugin-loader>"  #  0.001 sec
-            if abtype and self.options.wraptype == PluginWrap.Full:  # and False:
-                return render_template_string3(  # TODO: 0.05 sec
+            if abtype and self.options.wraptype == PluginWrap.Full: # and False
+                ret = render_template_string3(  # TODO: 0.05 sec
                     PLG_RTEMPLATE,
                     abtype=abtype,
                     plgclass=self.get_container_class(),
@@ -502,6 +498,7 @@ class Plugin:
                     cont=cont,
                     aid=self.answer.id if self.answer else None,
                 )
+                return ret  # .replace("\n", "") # TODO: for some reason this is important for tables
             if abtype and self.options.wraptype == PluginWrap.Full:
                 return render_template_string2(  # TODO: 0.05 sec with rts3 2.3 sec with rts2, 8.5 sec with rts, 0.0001 sec with f
                     """
