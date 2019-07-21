@@ -121,7 +121,8 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
     }
 
     // TODO: Use answer content as arg or entire IAnswer?
-    setAnswer(content: { [index: string]: string }): { ok: boolean, message: (string | undefined) } {
+    // TODO: get rid of any (styles can arrive as object)
+    setAnswer(content: { [index: string]: any }): { ok: boolean, message: (string | undefined) } {
         let message;
         let ok = true;
         // TODO: should receiving empty answer reset to defaultnumber or clear field?
@@ -134,6 +135,9 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
                 this.userword = "";
                 ok = false;
                 message = "Couldn't find related content (\"c\")";
+            }
+            if (!this.attrs.ignorestyles) {
+                this.applyStyling(content.styles);
             }
         }
         this.initialValue = this.userword;
@@ -244,7 +248,10 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
      * TODO: Could also just apply given styles as they are
      */
     applyStyling(styles: {[index: string]: string}){
-        if (Object.keys(styles).length == 0) this.styles = styles;
+        if (!styles || Object.keys(styles).length == 0) {
+            this.styles = {};
+            return;
+        }
         if (styles.backgroundColor){
             this.styles.backgroundColor = styles.backgroundColor
         }
