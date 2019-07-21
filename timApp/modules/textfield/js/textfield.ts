@@ -23,6 +23,7 @@ const TextfieldMarkup = t.intersection([
         readOnlyStyle: nullable(t.string),
         showname: nullable(t.number),
         autosave: t.boolean,
+        nosave: t.boolean,
     }),
     GenericPluginMarkup,
     t.type({
@@ -250,7 +251,7 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
         if (this.initialValue != this.userword) {
             this.hideSavedText = true;
         }
-        return (this.initialValue != this.userword);
+        return (!this.attrs.nosave && this.initialValue != this.userword);
     }
 
     // noinspection JSUnusedGlobalSymbols

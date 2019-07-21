@@ -26,6 +26,7 @@ const NumericfieldMarkup = t.intersection([
         wheel: t.boolean,
         verticalkeys: t.boolean,
         autosave: t.boolean,
+        nosave: t.boolean,
     }),
     GenericPluginMarkup,
     t.type({
@@ -283,7 +284,7 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
         if (this.initialValue != this.numericvalue) {
             this.hideSavedText = true;
         }
-        return (this.initialValue != this.numericvalue);
+        return (!this.attrs.nosave && this.initialValue != this.numericvalue);
     }
 
     /**

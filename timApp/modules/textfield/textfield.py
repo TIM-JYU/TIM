@@ -30,6 +30,7 @@ class TextfieldMarkupModel(GenericMarkupModel):
     errormessage: Union[str, Missing] = missing
     readOnlyStyle: Union[str, Missing] = missing
     showname: Union[int, Missing] = missing
+    nosave: Union[bool, Missing] = missing
 
 
 class TextfieldMarkupSchema(GenericMarkupSchema):
@@ -46,6 +47,7 @@ class TextfieldMarkupSchema(GenericMarkupSchema):
     errormessage = fields.String(allow_none=True)
     readOnlyStyle = fields.String(allow_none=True)
     showname = fields.Int(allow_none=True)
+    nosave = fields.Boolean()
 
     @post_load
     def make_obj(self, data):

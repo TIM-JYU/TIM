@@ -38,6 +38,7 @@ class NumericfieldMarkupModel(GenericMarkupModel):
     errormessage: Union[str, Missing] = missing
     readOnlyStyle: Union[str, Missing] = missing
     step: Union[float, Missing] = missing
+    nosave: Union[bool, Missing] = missing
 
 
 class NumericfieldMarkupSchema(GenericMarkupSchema):
@@ -57,6 +58,7 @@ class NumericfieldMarkupSchema(GenericMarkupSchema):
     errormessage = fields.String(allow_none=True)
     readOnlyStyle = fields.String(allow_none=True)
     step = fields.Number(allow_none=True)
+    nosave = fields.Boolean()
 
     @post_load
     def make_obj(self, data):
