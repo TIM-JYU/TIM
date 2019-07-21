@@ -67,6 +67,7 @@ const TableFormMarkup = t.intersection([
 ]);
 
 const Rows = t.dictionary(t.string, t.dictionary(t.string, t.union([t.string, t.null, t.number])));
+const Styles = t.dictionary(t.string, t.dictionary(t.string, t.union([t.null, t.dictionary(t.string, t.string)])));
 
 interface IRowsType extends t.TypeOf<typeof Rows> {
 }
@@ -78,6 +79,7 @@ const TableFormAll = t.intersection([
         realnamemap: t.dictionary(t.string, t.string),
         emailmap: t.dictionary(t.string, t.string),
         rows: Rows,
+        styles: Styles,
     }),
     GenericPluginTopLevelFields,
     t.type({markup: TableFormMarkup}),
@@ -105,7 +107,7 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
     };
     // TODO: Change row format to properly typed format (maybe userobject:IRowstype) format
     private rows!: IRowsType;
-    private oldCellValues!: string;
+    private styles!: t.TypeOf<typeof Styles>;
     private realnames = false;
     private usernames = false;
     private emails = false;
@@ -188,8 +190,8 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
 
         this.rows = this.attrsall.rows || {};
         this.rowKeys = Object.keys(this.rows);
+        this.styles = this.attrsall.styles || {};
         this.setDataMatrix();
-        // this.oldCellValues = JSON.stringify(this.data.userdata.cells);
 
         this.data.saveCallBack = (cellsTosave, colValuesAreSame) => this.cellChanged(cellsTosave, colValuesAreSame);
         this.data.cbCallBack = (cbs, n, index) => this.cbChanged(cbs, n, index);
@@ -364,7 +366,11 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
                     //     y++;
                     // }
                     for (y = 0; y < this.rowKeys.length; y++) {
-                        this.data.userdata.cells[colnumToLetters(x + xOffset) + (y + 1)] = this.rows[this.rowKeys[y]][this.attrsall.fields[x]];
+                        // this.data.userdata.cells[colnumToLetters(x + xOffset) + (y + 1)] = this.rows[this.rowKeys[y]][this.attrsall.fields[x]];
+                        this.data.userdata.cells[colnumToLetters(x + xOffset) + (y + 1)] = Object.assign(
+                            {cell: this.rows[this.rowKeys[y]][this.attrsall.fields[x]]},
+                            this.styles[this.rowKeys[y]][this.attrsall.fields[x]],
+                        );
                     }
                 }
             }

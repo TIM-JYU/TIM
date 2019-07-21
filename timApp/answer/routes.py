@@ -448,36 +448,42 @@ def get_fields_and_users(u_fields: List[str], groups: List[UserGroup],
     user_tasks = None
     user_index = -1
     user = None
+    style_map = {}
     for uid, a in answers_with_users:
         if last_user != uid:
             user_index += 1
             user_tasks = {}
+            user_fieldstyles = {}
             user = users[user_index]
-            res.append({'user': user, 'fields': user_tasks})
+            res.append({'user': user, 'fields': user_tasks, 'styles': user_fieldstyles})
             last_user = uid
             if not a:
                 continue
         for task in task_id_map[a.task_id]:
             if not a:
                 value = None
-            elif task.field == "points":
-                value = a.points
-            elif task.field == "datetime":
-                value = time.mktime(a.answered_on.timetuple())
+                style = None
             else:
                 json_str = a.content
                 p = json.loads(json_str)
-                if task.field:
-                    value = p.get(task.field)
+                style = p.get('styles')
+                if task.field == "points":
+                    value = a.points
+                elif task.field == "datetime":
+                    value = time.mktime(a.answered_on.timetuple())
                 else:
-                    if len(p) > 1:
-                        plug = find_plugin_from_document(doc_map[task.doc_id], task, user)
-                        content_field = plug.get_content_field_name()
-                        value = p.get(content_field)
+                    if task.field:
+                        value = p.get(task.field)
                     else:
-                        values_p = list(p.values())
-                        value = values_p[0]
+                        if len(p) > 1:
+                            plug = find_plugin_from_document(doc_map[task.doc_id], task, user)
+                            content_field = plug.get_content_field_name()
+                            value = p.get(content_field)
+                        else:
+                            values_p = list(p.values())
+                            value = values_p[0]
             user_tasks[alias_map.get(task.extended_or_doc_task, task.extended_or_doc_task)] = value
+            user_fieldstyles[alias_map.get(task.extended_or_doc_task, task.extended_or_doc_task)] = style
     return res, jsrunner_alias_map, [alias_map.get(ts.extended_or_doc_task, ts.extended_or_doc_task) for ts in task_ids]
 
 

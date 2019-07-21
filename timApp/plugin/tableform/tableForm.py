@@ -168,16 +168,19 @@ class TableFormHtmlModel(GenericHtmlModel[TableFormInputModel, TableFormMarkupMo
             rows = {}
             realnames = {}
             emails = {}
+            styles = {}
             for f in fielddata:
                 username = f['user'].name
                 rows[username] = dict(f['fields'])
                 realnames[username] = f['user'].real_name
                 emails[username] = f['user'].email
+                styles[username] = dict(f['styles'])
             r['rows'] = rows
             r['realnamemap'] = realnames
             r['emailmap'] = emails
             r['fields'] = field_names
             r['aliases'] = aliases
+            r['styles'] = styles
             # TODO else return "no groups/no fields"
 
         return r
