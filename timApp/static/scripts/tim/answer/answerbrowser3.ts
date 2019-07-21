@@ -104,7 +104,7 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
             return false;
         }
         const a: any = c.attrsall;
-        if (a && a.markup && a.markup.useCurrentUser) {
+        if (a && a.markup && (a.markup.useCurrentUser || a.markup.globalField)) {
             return true;
         }
         return false;
