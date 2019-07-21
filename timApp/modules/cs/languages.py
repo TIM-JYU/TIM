@@ -2,7 +2,6 @@ from subprocess import check_output
 from typing import Optional
 
 import requests
-from click import globals
 
 from points import *
 from run import *
@@ -18,13 +17,13 @@ from fileParams import *  # noqa
 Adding new language to csPlugin:
 
 0. Install new compiler to cs/Dockerfile and build new Docker container from that
-    - in /opt/tim run ./docker-compose.sh build csplugin
+    - in /opt/tim directory run ./dc build csplugin
 1. Add language name to languages list at the bottom of this file
     - remember to use lowercase letters
 2. Add the language class starting with capital letter
 3. Mimic some existing language when creating the new class
     - the simplest one is CC that works when just compiler name end extensions are enough to change 
-4. And language to csPlugin.ts languageTypes.runTypes list
+4. Add language to csPlugin.ts languageTypes.runTypes list
    and to exactly same place the Ace editor highlighter name to languageTypes.aceModes
      - if there is a shorter language name in the list, add a new name before the
        shorter name.  For example there is "r", so every language name starting with "r"
@@ -205,6 +204,9 @@ class Language:
 
 
     def deny_attributes(self):
+        """
+        :return: list of attribute not to be copied to typescipt/javascript client
+        """
         return None
 
     def state_copy(self):
@@ -212,6 +214,22 @@ class Language:
         :return: list of state attribute names to be copied to .ts client code
         """
         return []
+
+    def runner_name(self):
+        """
+        :return: runner name if it differs from cs-runner.  Then normally a new .ts file is also needed
+        """
+        return ""
+
+    def js_files(self):
+        """
+        :return: list of needed js-files (maybe copiled from ts-files)
+        """
+
+    def css_files(self):
+        """
+        :return: list of needed css-files (maybe copiled from scss-files)
+        """
 
     def convert(self, sourcelines):
         return 0, sourcelines, "", ""
@@ -850,7 +868,9 @@ class Processing(JS):
 
 
 class WeScheme(JS):
-    pass
+
+    def runner_name(self):
+        return "cs-wescheme-runner"
 
 
 class VPython(JS):
@@ -941,12 +961,20 @@ class SimCir(Language):
 
 
 class Sage(Language):
-    pass
+
+    def runner_name(self):
+        return "sage-runner"
 
 
 class Stack(Language):
     def can_give_task(self):
         return True
+
+    def runner_name(self):
+        return "stack-runner"
+
+    def js_files(self):
+        return ["/cs/js/build/stack.js", "/cs/stack/ServerSyncValues.js"]
 
     def __init__(self, query, sourcecode):
         super().__init__(query, sourcecode)
@@ -1275,6 +1303,12 @@ class Geogebra(Language):
     def get_default_before_open(self):
         return '<div class="defBeforeOpen"><p>Open GeoGebra</p></div>'
 
+    def runner_name(self):
+        return "geogebra-runner"
+
+    def js_files(self):
+        return ["/cs/js/build/geogebra.js"]
+
     def can_give_task(self):
         return True
 
@@ -1366,13 +1400,67 @@ class Geogebra(Language):
         srchtml = srchtml.replace('GEOSTATE', f"'{geostate}'")
         return srchtml
 
-    def convert(self, sourcelines):
-        url = "http://stack-api-server/api/xmltoyaml.php"
-        data = {'xml': sourcelines}
-        r = requests.post(url=url, data=json.dumps(data))
-        r = r.json()
-        return 0, r.get('yaml'), "", ""
+class JSframe(Language):
+    def get_default_before_open(self):
+        return '<div class="defBeforeOpen"><p>Open JS-frame</p></div>'
 
+    def runner_name(self):
+        return "jsframe-runner"
+
+    def js_files(self):
+        return ["/cs/js/build/jsframe.js"]
+
+    def can_give_task(self):
+        return True
+
+    def __init__(self, query, sourcecode):
+        super().__init__(query, sourcecode)
+        self.sourcefilename = "/tmp/%s/%s.txt" % (self.basename, self.filename)
+        self.fileext = "txt"
+        self.readpoints_default = 'Score: (.*)'
+        self.delete_tmp = False
+
+    def modify_usercode(self, s):
+        return s
+
+    def run(self, result, sourcelines, points_rule):
+        self.save(result)
+        return 0, "JSFrame - saved", "", ""
+
+    def save(self, result):
+        data = dict(self.query.jso["input"])
+        if 'type' in data:
+            del data['type']
+        result["save"] = data
+        return 0, "JSFrame saved", "", ""
+
+    def deny_attributes(self):
+        return { # "srchtml":"",
+                "filename": "",
+                "prehtml": "",
+                "posthtml": "",
+                "javascript": "",
+                "commands": "",
+        }
+
+    def state_copy(self):
+        return ["c"]
+
+    def iframehtml(self, result, sourcelines, points_rule):
+        ma = self.query.jso['markup']
+        srchtml = get_by_id(ma, 'srchtml', '')
+        data = ma.get('data', None)
+
+        state = self.query.jso.get("state", {})
+        if state:
+            c = state.get("c", None)
+            if c is not None:
+                data = c
+        if data:
+            init_data = "<script>window.initData = " + json.dumps(data) + ";</script>"
+            srchtml = srchtml.replace("</body>", init_data + "\n</body>")
+
+        return srchtml
 
 class R(Language):
     def __init__(self, query, sourcecode):
@@ -1424,6 +1512,9 @@ class FS(Language):
 
 
 class Mathcheck(Language):
+    def css_files(self):
+        return ["/cs/css/mathcheck.css"]
+
     def __init__(self, query, sourcecode):
         super().__init__(query, sourcecode)
         self.sourcefilename = "/tmp/%s/%s.txt" % (self.basename, self.filename)
@@ -1630,3 +1721,4 @@ languages["rust"] = Rust
 languages["pascal"] = Pascal
 languages["stack"] = Stack
 languages["geogebra"] = Geogebra
+languages["jsframe"] = JSframe

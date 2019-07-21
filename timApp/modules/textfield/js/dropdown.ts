@@ -184,7 +184,7 @@ dropdownApp.component("dropdownRunner", {
         </select>
         </span></label>
     </div>
-    <div ng-if="$ctrl.error" ng-bind-html="$ctrl.error"></div>
+    <div class="error" ng-if="$ctrl.error" ng-bind-html="$ctrl.error"></div>
     <p ng-if="::$ctrl.footer" ng-bind="::$ctrl.footer" class="plgfooter"></p>
 </div>
 `,

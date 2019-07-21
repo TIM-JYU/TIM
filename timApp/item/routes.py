@@ -356,8 +356,8 @@ def view(item_path, template_name, usergroup=None, route="view"):
     show_unpublished_bg = doc_info.block.is_unpublished() and not app.config['TESTING']
     taketime("view to render")
 
-    reqs = get_all_reqs()
-    # taketime("reqs done")
+    reqs = get_all_reqs()  # This is cached so only first time after restart takes time
+    taketime("reqs done")
     doctemps = doc_settings.get('editor_templates')
     if doctemps:
         reqs["usertemps"] = doctemps
@@ -384,6 +384,7 @@ def view(item_path, template_name, usergroup=None, route="view"):
             "ui.grid.exporter",
             "ui.grid.autoResize",
         ]
+    taketime("before render")
 
     return render_template(template_name,
                            access=access,

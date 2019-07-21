@@ -50,12 +50,21 @@ export type ErrorList = Array<{errors: IError[], user: string}>;
 
 interface AnswerReturnSuccess {
     web:
-        {output: string, errors: ErrorList, fatalError?: undefined};
+        {output: string, errors: ErrorList, fatalError?: undefined, outdata?: object};
     savedata: {};
 }
 
 interface AnswerReturnError {
     web: {output: string, fatalError: IError};
+}
+
+export interface IStatData {
+    n: number;
+    sum: number;
+    min: number;
+    max: number;
+    avg: number;
+    sd: number;
 }
 
 export type AnswerReturn = AnswerReturnSuccess | AnswerReturnError;

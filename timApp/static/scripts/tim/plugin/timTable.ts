@@ -2760,7 +2760,7 @@ timApp.component("timTable", {
         <input class="editInput"  ng-show="$ctrl.isSomeCellBeingEdited()"
                    ng-keydown="$ctrl.keyDownPressedInSmallEditor($event)"
                    ng-keyup="$ctrl.keyUpPressedInSmallEditor($event)" ng-model="$ctrl.editedCellContent"><!--
-             --><span class="inlineEditorButtons" style="position: fixed;" ng-show="$ctrl.isSomeCellBeingEdited()" ><!--
+             --><span class="inlineEditorButtons" style="position: absolute; width: max-content" ng-show="$ctrl.isSomeCellBeingEdited()" ><!--
                  --><button class="timButton buttonOpenBigEditor"
                         ng-click="$ctrl.openBigEditor()" class="timButton"><span class="glyphicon glyphicon-pencil"></span>
                  </button><!--

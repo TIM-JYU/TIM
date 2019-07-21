@@ -315,7 +315,7 @@ def get_alias(name):
 
 def get_fields_and_users(u_fields: List[str], groups: List[UserGroup],
                          d: DocInfo, current_user: User, autoalias: bool = False,
-                         add_missing_fields: bool = False):
+                         add_missing_fields: bool = False, allow_non_teacher: bool = False):
     """
     Return fielddata, aliases, field_names
     :param u_fields: list of fields to be used
@@ -324,6 +324,7 @@ def get_fields_and_users(u_fields: List[str], groups: List[UserGroup],
     :param current_user: current users, check his rights to fields
     :param autoalias: if true, give automatically from d1 same as would be from d1 = d1
     :param add_missing_fields: return estimated field even if it wasn't given previously
+    :param allow_non_teacher: can be used also for non techers if othre rights matches
     :return: fielddata, aliases, field_names
     """
     needs_group_access_check = UserGroup.get_teachers_group() not in current_user.groups
@@ -386,7 +387,8 @@ def get_fields_and_users(u_fields: List[str], groups: List[UserGroup],
         if task_id.doc_id in doc_map:
             continue
         dib = get_doc_or_abort(task_id.doc_id, f'Document {task_id.doc_id} not found')
-        if not current_user.has_teacher_access(dib):
+
+        if not (current_user.has_teacher_access(dib) or allow_non_teacher):
             abort(403, f'Missing teacher access for document {dib.id}')
         doc_map[task_id.doc_id] = dib.document
 
@@ -686,11 +688,13 @@ def post_answer(plugintype: str, task_id_ext: str):
         except:
             pass
 
+        siw = plugin.values.get("showInView", False)
+
         answerdata['data'], answerdata['aliases'], _ = get_fields_and_users(
             plugin.values['fields'],
             found_groups,
             d,
-            get_current_user_object(),
+            get_current_user_object(), allow_non_teacher=siw,
         )
         if plugin.values.get('program') is None:
             abort(400, "Attribute 'program' is required.")
@@ -718,7 +722,8 @@ def post_answer(plugintype: str, task_id_ext: str):
 
     # if plugin.type == 'jsrunner' or plugin.type == 'tableForm' or plugin.type == 'importData':
     if 'savedata' in jsonresp:
-        handle_jsrunner_response(jsonresp, result, d)
+        siw = answer_call_data.get("markup",{}).get("showInView", False)
+        handle_jsrunner_response(jsonresp, result, d, allow_non_teacher = siw)
         db.session.commit()
         if 'save' not in jsonresp: # plugin may also hope some things to be saved
             return json_response(result)
@@ -796,7 +801,7 @@ def post_answer(plugintype: str, task_id_ext: str):
     return json_response(result)
 
 
-def handle_jsrunner_response(jsonresp, result, current_doc: DocInfo):
+def handle_jsrunner_response(jsonresp, result, current_doc: DocInfo = None, allow_non_teacher = False):
     # TODO: Might need to rewrite this function for optimization
     save_obj = jsonresp.get('savedata')
     if not save_obj:
@@ -820,8 +825,13 @@ def handle_jsrunner_response(jsonresp, result, current_doc: DocInfo):
     for task in tasks:
         t_id = TaskId.parse(task, False, False, True)
         dib = doc_map[t_id.doc_id]
-        if not curr_user.has_teacher_access(dib):
+        if not (curr_user.has_teacher_access(dib) or allow_non_teacher):
             return abort(403, f'Missing teacher access for document {dib.id}')
+        try:
+            plugin = verify_task_access(dib, t_id, AccessType.view, TaskIdAccess.ReadWrite)  # , context_user=ctx_user)
+        except (PluginException, TimDbException) as e:
+            return abort(400, str(e))
+
         if t_id.task_name == "grade" or t_id.task_name == "credit":
             task_content_name_map[task] = 'c'
             continue

@@ -316,7 +316,7 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
             this.saveResponse.saved = true;
             this.saveResponse.message = this.errormessage;
         } else {
-            this.errormessage = r.result.data.error || "Syntax error, infinite loop or some other error?";
+            this.errormessage = r.result.data.error || "Syntax error or no reply from server?";
         }
         return this.saveResponse;
     }
@@ -364,7 +364,7 @@ textfieldApp.component("textfieldRunner", {
          <span ng-if="::$ctrl.isPlainText()" style="">{{$ctrl.userword}}</span>
          </span></label>
     </form>
-    <div ng-if="$ctrl.error" style="font-size: 12px" ng-bind-html="$ctrl.error"></div>
+    <div ng-if="$ctrl.errormessage" class="error" style="font-size: 12px" ng-bind-html="$ctrl.errormessage"></div>
     <button class="timButton"
             ng-if="$ctrl.buttonText()"
             ng-disabled="$ctrl.isRunning || $ctrl.readonly"

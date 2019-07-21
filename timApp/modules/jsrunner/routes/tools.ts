@@ -1,8 +1,6 @@
 import * as t from "io-ts";
-import {IError, IJsRunnerMarkup} from "../public/javascripts/jsrunnertypes";
+import {IError, IJsRunnerMarkup, IStatData} from "../public/javascripts/jsrunnertypes";
 import {AliasDataT, UserFieldDataT} from "../servertypes";
-
-// TODO:  Add statistical calculation, see: https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance
 
 function genericTypeError(parameterDescription: string, v: unknown) {
     return new Error(`${parameterDescription} has unexpected type: ${typeof v}`);
@@ -80,16 +78,64 @@ function ensureStringLikeValue(s: unknown): string {
 
 const ABSOLUTE_FIELD_REGEX = /^[0-9]+\./;
 
+class StatCounter {
+    private n = 0;
+    private sum = 0;
+    private min = 1e100;
+    private max = -1e100;
+    private k = 0;
+    private ex = 0;
+    private ex2 = 0;
+
+    constructor() {
+    }
+
+    addValue(v: number) {
+        if (v === undefined) {
+            return;
+        }
+        // See: https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance
+        if ( this.n == 0 ) { this.k = v; }
+        this.n++;
+        this.sum += v;
+        const d = v - this.k;
+        this.ex += d;
+        this.ex2 += d * d;
+        if (v < this.min) {
+            this.min = v;
+        }
+        if (v > this.max) {
+            this.max = v;
+        }
+    }
+
+    getStat(): IStatData {
+        let sd = 0;
+        const dd = (this.ex2 -  (this.ex * this.ex) / this.n);
+        if ( this.n > 1) { sd =  Math.sqrt(dd / (this.n - 1)); }
+        return {
+            n: this.n,
+            sum: this.sum,
+            avg: this.sum / this.n,
+            min: this.min,
+            max: this.max,
+            sd: sd,
+        };
+    }
+}
+
 class Tools {
     private output = "";
     private errors: IError[] = [];
     private result: {[index: string]: unknown} = {};
+    public outdata: object = {};
 
     constructor(
         private data: UserFieldDataT,
         private currDoc: string,
         private markup: IJsRunnerMarkup,
         private aliases: AliasDataT,
+        private statCounters: { [fieldname: string]: StatCounter },
     ) {
     }
 
@@ -191,6 +237,41 @@ class Tools {
             s = def;
         }
         return s;
+    }
+
+    // private statCounters: { [fieldname: string]: StatCounter } = {};
+
+    addStatDataValue(fieldName: string, value: number) {
+        // if ( !this.canStat ) { throw new Error("tools can not stat!, use gtools."); }
+        let sc: StatCounter = this.statCounters[fieldName];
+        if ( sc === undefined ) { sc = new StatCounter(); this.statCounters[fieldName] = sc; }
+        sc.addValue(value);
+    }
+
+    addStatData(fieldName: unknown, start: number, end: number, max: unknown = 1e100) {
+        // if ( !this.canStat ) { throw new Error("tools can not stat!, use gtools."); }
+        const f = ensureStringFieldName(fieldName);
+        const maxv = ensureNumberDefault(max);
+        if (!(checkInt(start) && checkInt(end))) {
+            throw new Error("Parameters 'start' and 'end' must be integers.");
+        }
+        for (let i = start; i <= end; i++) {
+            const name = f + i.toString();
+            let v = this.getDouble(name, NaN);
+            if ( isNaN(v) ) { continue; }
+            v = Math.min(v, maxv);
+            // this.print(name + ": " + v);
+            this.addStatDataValue(name, v);
+        }
+    }
+
+    getStatData(): {[name: string]: IStatData} {
+        // if ( !this.canStat ) { throw new Error("tools can not stat!, use gtools."); }
+        const result: {[name: string]: IStatData} = {};
+        for (const [name, sc] of Object.entries(this.statCounters)) {
+            result[name] = sc.getStat();
+        }
+        return result;
     }
 
     getSum(fieldName: unknown, start: number, end: number, defa: unknown = 0, max: unknown = 1e100): number {

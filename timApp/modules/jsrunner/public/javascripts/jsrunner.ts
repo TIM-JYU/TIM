@@ -102,6 +102,17 @@ class JsrunnerController extends PluginBase<t.TypeOf<typeof JsrunnerMarkup>, t.T
                 if ( this.attrsall.markup.updateFields ) {
                     this.vctrl.updateFields(this.attrsall.markup.updateFields);
                 }
+                // temp code:
+                const tempd: any = data.web;
+                if (!tempd.outdata) { return; }
+                const odata: any = tempd.outdata.data;
+                if (  !odata ) { return; }
+                for (const d of odata ) {
+                    const pname = d.plugin;
+                    const plugin: any  =  this.vctrl.getTimComponentByName(pname);
+                    const save = d.save == true;
+                    plugin.setData(d.data, save);
+                }
             }
         } else {
             this.error = {msg: r.result.data.error || "Unknown error occurred"};
@@ -170,7 +181,7 @@ jsrunnerApp.component("jsRunner", {
             ng-click="$ctrl.checkFields()">
         {{::$ctrl.buttonText()}}
     </button>
-    <p ng-if="$ctrl.error">Fatal error occurred, script results not saved.</p>
+    <p class="error" ng-if="$ctrl.error">Fatal error occurred, script results not saved.</p>
     <pre ng-if="$ctrl.error">{{$ctrl.error.msg}}</pre>
     <pre ng-if="$ctrl.error">{{$ctrl.error.stackTrace}}</pre>
     <jsrunner-error ng-repeat="err in $ctrl.scriptErrors" e="err"></jsrunner-error>

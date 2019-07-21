@@ -144,6 +144,12 @@ class PluginPlacement:
         self.plugins[r].set_output(out)
 
     def get_block_output(self):
+        """   TODO: this did not help very much
+        if self.is_block_plugin:
+            idx = next(iter(self.plugins))
+            p = self.plugins[idx];
+            return p.get_final_output().strip()
+        """
         sorted_ranges = sorted(chain(self.plugins.keys(), self.errors.keys()), key=lambda r: r[0], reverse=True)
         out_md = self.expanded_md
         for sr in sorted_ranges:
@@ -482,7 +488,8 @@ def pluginify(doc: Document,
     #  (these tasks could have been omitted from 1st answer query)
     # TODO: Get plugin values before 1st answer query and loop for special cases
     #  (globalField, useCurrentUser etc)
-    if doc.own_settings.get("tipidebug", False):
+    taketime("glb", "globalField")
+    if doc.own_settings.get("tipidebug", False) or True:
         task_ids = []
         plugins_to_change = []
         for plugin_name, plugin_block_map in plugins.items():
@@ -499,6 +506,7 @@ def pluginify(doc: Document,
                 p.answer = a[0]
                 p.answer_count = a[1]
 
+    taketime("glb", "done")
     # taketime("answ", "done", len(answers))
 
     for plugin_name, plugin_block_map in plugins.items():
@@ -537,7 +545,8 @@ def pluginify(doc: Document,
             else:
                 css_paths.append(f"/{plugin_name}/{src}")
 
-        # Remove duplicates, preserving order
+        # Remove duplicates, preserving order TODO: could this be done out of the loop?
+        # taketime("rmv", "Remove dupl")
         js_paths = list(OrderedDict.fromkeys(js_paths))
         css_paths = list(OrderedDict.fromkeys(css_paths))
 
@@ -552,7 +561,7 @@ def pluginify(doc: Document,
                     list(plugin_block_map.values()),
                     plugin_output_format=output_format,
                     default_auto_md=default_auto_md)
-                # taketime("plg e", plugin_name)
+                taketime("plg e", plugin_name)
             except PluginException as e:
                 for idx, r in plugin_block_map.keys():
                     placements[idx].set_error(r, str(e))
@@ -587,25 +596,34 @@ def pluginify(doc: Document,
                         placements[idx].set_error(r, str(e))
                         continue
                     placements[idx].set_output(r, html)
+    taketime("plg m", "Plugins done")
+
     if debugging_multistate:  # TODO delete this
         return None, None, None, custom_answer_plugin
+
+    taketime("plc", "Placement start")
+
     for idx, place in placements.items():
         par = html_pars[idx]
         par[output_format.value] = place.get_block_output()
+
+    taketime("plc", "Placement done")
 
     # inline plugin blocks need to go through Dumbo to process MD
     if output_format == PluginOutputFormat.HTML:
         htmls_to_dumbo = []
         settings_to_dumbo = []
+        taketime("dumbo", "start 1")
         for k, v in dumbo_opts.items():
             # Need to wrap in div because otherwise dumbo might generate invalid HTML
             htmls_to_dumbo.append({'content': '<div>' + html_pars[k][output_format.value] + '</div>', **v.dict()})
             settings_to_dumbo.append(v)
+        taketime("dumbo", "start 2")
         for h, (idx, s) in zip(call_dumbo(htmls_to_dumbo,
                                           options=doc.get_settings().get_dumbo_options()),
                                dumbo_opts.items()):
             html_pars[idx][output_format.value] = sanitize_html(h)
-    # taketime("phtml done")
+    taketime("phtml done")
 
     return pars, js_paths, css_paths, custom_answer_plugin
 
