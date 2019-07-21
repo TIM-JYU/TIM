@@ -109,7 +109,12 @@ class JsrunnerController extends PluginBase<t.TypeOf<typeof JsrunnerMarkup>, t.T
                 if (  !odata ) { return; }
                 for (const d of odata ) {
                     const pname = d.plugin;
+                    if (!pname) { continue; }
                     const plugin: any  =  this.vctrl.getTimComponentByName(pname);
+                    if (!plugin ) {
+                        if ( !this.error) { this.error = {msg: ""}; }
+                        this.error.msg += `Plugin ${pname} not found. Check plugin names`;
+                    }
                     const save = d.save == true;
                     plugin.setData(d.data, save);
                 }
