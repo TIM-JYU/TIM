@@ -40,7 +40,9 @@ const NumericfieldAll = t.intersection([
         info: Info,
         markup: NumericfieldMarkup,
         preview: t.boolean,
-        state: nullable(t.type({c: t.union([t.string, t.number, t.null])})),
+        state: nullable(t.type({
+            c: t.union([t.string, t.number, t.null]),
+            styles: t.dictionary(t.string, t.string)})),
     }),
 ]);
 
@@ -244,6 +246,24 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
     }
 
     /**
+     * Parses "styles" from the plugin answer that were saved by tableForm
+     * For now only backgroundColor is supported
+     * TODO: see todos at textfield.parseStyling
+     * TODO: duplicate, could be imported
+     */
+    parseStyling() {
+        const styles: { [index: string]: string } = {};
+        if (!this.attrsall.state || !this.attrsall.state.styles) {
+            return styles;
+        }
+        const stateStyles = this.attrsall.state.styles;
+        if (stateStyles.backgroundColor) {
+            styles.backgroundColor = stateStyles.backgroundColor
+        }
+        return styles;
+    }
+
+    /**
      * Method to check numeric input type for stringified numericfield.
      * Used as e.g. to define negative or positive numeric input [0-9]+.
      * @param re validinput defined by given attribute.
@@ -377,7 +397,8 @@ numericfieldApp.component("numericfieldRunner", {
                tooltip-is-open="$ctrl.f.$invalid && $ctrl.f.$dirty"
                tooltip-trigger="mouseenter"
                placeholder="{{::$ctrl.inputplaceholder}}"
-               ng-class="{warnFrame: ($ctrl.isUnSaved() && !$ctrl.redAlert), alertFrame: $ctrl.redAlert}">
+               ng-class="{warnFrame: ($ctrl.isUnSaved() && !$ctrl.redAlert), alertFrame: $ctrl.redAlert}"
+               ng-style="$ctrl.parseStyling()">
       </span>
       <!--<span ng-if="::$ctrl.isPlainText()" style="float:left;" ng-bind-html="$ctrl.inputstem + " " + $ctrl.numericvalue">{{$ctrl.numericvalue}}</span> -->
       <span ng-if="::$ctrl.isPlainText()" style="" >&nbsp;{{$ctrl.numericvalue}}</span>

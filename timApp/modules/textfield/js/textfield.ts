@@ -38,7 +38,9 @@ const TextfieldAll = t.intersection([
         info: Info,
         markup: TextfieldMarkup,
         preview: t.boolean,
-        state: nullable(t.type({c: t.union([t.string, t.number, t.null])})),
+        state: nullable(t.type({
+            c: t.union([t.string, t.number, t.null]),
+            styles: t.dictionary(t.string, t.string)})),
     }),
 ]);
 
@@ -228,6 +230,25 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
     }
 
     /**
+     * Parses "styles" from the plugin answer that were saved by tableForm
+     * For now only backgroundColor is supported
+     * TODO: Extend styling for all attributes in timTable's cellStyles?
+     *  For now tableForm is only able to define backgroundColor or textAlign
+     *  Could also define (and import) generic tim-wide inputstyles
+     */
+    parseStyling(){
+        const styles: {[index: string]: string} = {};
+        if (!this.attrsall.state || !this.attrsall.state.styles){
+            return styles;
+        }
+        const stateStyles = this.attrsall.state.styles;
+        if (stateStyles.backgroundColor){
+            styles.backgroundColor = stateStyles.backgroundColor
+        }
+        return styles;
+    }
+
+    /**
      * Method to check grading input type for textfield.
      * Used as e.g. grading checker for hyv | hyl | 1 | 2 | 3 | 4 | 5.
      * @param re validinput defined by given attribute.
@@ -359,7 +380,8 @@ textfieldApp.component("textfieldRunner", {
                tooltip-trigger="mouseenter"
                placeholder="{{::$ctrl.inputplaceholder}}"
                size="{{::$ctrl.cols}}"
-               ng-class="{warnFrame: ($ctrl.isUnSaved() && !$ctrl.redAlert), alertFrame: $ctrl.redAlert }">
+               ng-class="{warnFrame: ($ctrl.isUnSaved() && !$ctrl.redAlert), alertFrame: $ctrl.redAlert }"
+               ng-style="$ctrl.parseStyling()">
          </span>
          <span ng-if="::$ctrl.isPlainText()" style="">{{$ctrl.userword}}</span>
          </span></label>
