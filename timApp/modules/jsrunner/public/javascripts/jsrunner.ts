@@ -103,10 +103,16 @@ class JsrunnerController extends PluginBase<t.TypeOf<typeof JsrunnerMarkup>, t.T
                     this.vctrl.updateFields(this.attrsall.markup.updateFields);
                 }
                 // temp code:
-                const chart: any  =  this.vctrl.getTimComponentByName("chart");
                 const tempd: any = data.web;
-                chart.setData(tempd.outdata.data);
-                chart.save();
+                if (!tempd.outdata) { return; }
+                const odata: any = tempd.outdata.data;
+                if (  !odata ) { return; }
+                for (const d of odata ) {
+                    const pname = d.plugin;
+                    const plugin: any  =  this.vctrl.getTimComponentByName(pname);
+                    const save = d.save == true;
+                    plugin.setData(d.data, save);
+                }
             }
         } else {
             this.error = {msg: r.result.data.error || "Unknown error occurred"};

@@ -325,9 +325,10 @@ class JsframeController extends PluginBase<t.TypeOf<typeof JsframeMarkup> ,
         return data;
     }
 
-    setData(data: any) {
+    setData(data: any, save: boolean = false) {
         $timeout(0);
 
+        if (save ) { this.runSend({c: data}); }
         if ( this.attrs.useurl ) {
             const frameElem = this.element.find(".jsFrameContainer")[0];
             const f = frameElem.firstChild as CustomFrame<JSFrameWindow>;
