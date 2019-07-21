@@ -24,6 +24,8 @@ const TextfieldMarkup = t.intersection([
         showname: nullable(t.number),
         autosave: t.boolean,
         nosave: t.boolean,
+        ignorestyles: t.boolean,
+        clearstyles: t.boolean,
     }),
     GenericPluginMarkup,
     t.type({
@@ -40,7 +42,7 @@ const TextfieldAll = t.intersection([
         preview: t.boolean,
         state: nullable(t.type({
             c: t.union([t.string, t.number, t.null]),
-            styles: t.dictionary(t.string, t.string)})),
+            styles: nullable(t.dictionary(t.string, t.string))})),
     }),
 ]);
 
@@ -56,6 +58,7 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
     private redAlert = false;
     private saveResponse: {saved: boolean, message: (string | undefined)} = {saved: false, message: undefined};
     private preventedAutosave = false;
+    private styles: {[index: string]: string} = {};
 
     getDefaultMarkup() {
         return {};
@@ -76,6 +79,9 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
         this.vctrl.addTimComponent(this, this.attrs.tag );
         this.initialValue = this.userword;
         if (this.attrs.showname ) { this.initCode(); }
+        if (this.attrsall.state && this.attrsall.state.styles && !this.attrs.ignorestyles){
+            this.applyStyling(this.attrsall.state.styles)
+        }
     }
 
     /**
@@ -235,17 +241,13 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
      * TODO: Extend styling for all attributes in timTable's cellStyles?
      *  For now tableForm is only able to define backgroundColor or textAlign
      *  Could also define (and import) generic tim-wide inputstyles
+     * TODO: Could also just apply given styles as they are
      */
-    parseStyling(){
-        const styles: {[index: string]: string} = {};
-        if (!this.attrsall.state || !this.attrsall.state.styles){
-            return styles;
+    applyStyling(styles: {[index: string]: string}){
+        if (Object.keys(styles).length == 0) this.styles = styles;
+        if (styles.backgroundColor){
+            this.styles.backgroundColor = styles.backgroundColor
         }
-        const stateStyles = this.attrsall.state.styles;
-        if (stateStyles.backgroundColor){
-            styles.backgroundColor = stateStyles.backgroundColor
-        }
-        return styles;
     }
 
     /**
@@ -323,7 +325,7 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
             params.input.nosave = true;
         }
         const url = this.pluginMeta.getAnswerUrl();
-        const r = await to($http.put<{web: {result: string, error?: string}}>(url, params));
+        const r = await to($http.put<{web: {result: string, error?: string, clear?: boolean}}>(url, params));
         this.isRunning = false;
         if (r.ok) {
             const data = r.result.data;
@@ -336,6 +338,9 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
             this.redAlert = false;
             this.saveResponse.saved = true;
             this.saveResponse.message = this.errormessage;
+            if(data.web.clear){
+                this.applyStyling({});
+            }
         } else {
             this.errormessage = r.result.data.error || "Syntax error or no reply from server?";
         }
@@ -381,7 +386,7 @@ textfieldApp.component("textfieldRunner", {
                placeholder="{{::$ctrl.inputplaceholder}}"
                size="{{::$ctrl.cols}}"
                ng-class="{warnFrame: ($ctrl.isUnSaved() && !$ctrl.redAlert), alertFrame: $ctrl.redAlert }"
-               ng-style="$ctrl.parseStyling()">
+               ng-style="$ctrl.styles">
          </span>
          <span ng-if="::$ctrl.isPlainText()" style="">{{$ctrl.userword}}</span>
          </span></label>
