@@ -194,6 +194,7 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
         this.setDataMatrix();
 
         this.data.saveCallBack = (cellsTosave, colValuesAreSame) => this.cellChanged(cellsTosave, colValuesAreSame);
+        this.data.saveStyleCallBack = (cellsTosave, colValuesAreSame) => this.cellChanged(cellsTosave, colValuesAreSame);
         this.data.cbCallBack = (cbs, n, index) => this.cbChanged(cbs, n, index);
 
         if (this.attrs.minWidth) {
