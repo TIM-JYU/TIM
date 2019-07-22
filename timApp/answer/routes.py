@@ -882,7 +882,9 @@ def handle_jsrunner_response(jsonresp, result, current_doc: DocInfo = None, allo
                 points = an.points
                 content = json.loads(an.content)
                 new_answer = False
+            lastfield = "c"
             for field, value in contents.items():
+                lastfield = field
                 if field == 'points':
                     if value == "":
                         value = None
@@ -929,7 +931,7 @@ def handle_jsrunner_response(jsonresp, result, current_doc: DocInfo = None, allo
                 continue
             if content == {}:
                 # TODO: can this be reached without points field?
-                content[task_content_name_map[task_id.doc_task + ".points"]] = None
+                content[task_content_name_map[task_id.doc_task + "." + lastfield]] = None
             content = json.dumps(content)
             ans = Answer(
                 content=content,
