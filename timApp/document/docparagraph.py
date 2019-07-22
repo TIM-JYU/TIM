@@ -359,7 +359,7 @@ class DocParagraph:
         return self.__data['md']
 
     def get_rands_str(self, rnd_seed: SeedType) -> str:
-        ret, self.__rnd_seed = get_rands_as_str(self.attrs, rnd_seed)
+        ret, self.__rnd_seed = get_rands_as_str(self.attrs, rnd_seed, None)
         return ret
 
     def insert_before_md(self, s: str):
@@ -374,7 +374,7 @@ class DocParagraph:
         """ Inserts Jinja rnd variable as a list of random numbers based to attribute rnd and rnd_seed
             return True if attribute rnd found and OK, else False
         """
-        self.__rands, self.__rnd_seed = get_rands_as_dict(self.attrs, rnd_seed)
+        self.__rands, self.__rnd_seed, state = get_rands_as_dict(self.attrs, rnd_seed, None)
         if self.__rands is None:
             return False
         return True

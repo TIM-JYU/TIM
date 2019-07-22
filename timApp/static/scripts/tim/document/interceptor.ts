@@ -53,7 +53,7 @@ timApp.config([() => {
                             const par = angular.element(e).parents(".par");
                             config.data.ref_from = {docId: $window.item.id, par: par.attr("id")};
                         }
-                        config.url += window.location.search;  // make urlmacros possible
+                        config.url += window.location.search;  // make urlmacros possible, must know the page url
                     } else if ( re2.test(config.url)) {
                         config.url += window.location.search;  // make urlmacros possible
                     }
