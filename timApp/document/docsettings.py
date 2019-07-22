@@ -20,7 +20,10 @@ def add_rnd_macros(yaml_vals):
     if DocSettings.rndmacros_key not in yaml_vals.values:
         return
 
-    rnd_seed = g.user.name
+    try:
+        rnd_seed = g.user.name
+    except:
+        rnd_seed = None
     state = None
     if not yaml_vals.values.get('macros', None):
         yaml_vals.values["macros"] = {}
