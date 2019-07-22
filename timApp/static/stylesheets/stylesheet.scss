@@ -1309,7 +1309,9 @@ p.closeButton::before {
 
 .top-menu {
     position: fixed;
-    background: #FFFFFF;
+    background: #f7f7f7;
+    padding: 10px;
+    margin: 0;
     top: 0;
     width: 100%;
     z-index: 999;
