@@ -769,6 +769,11 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
         } else {
             this.error = r.result.data.error; // "Infinite loop or some other error?";
         }
+        const timtab = this.getTimTable();
+        if (!timtab) {
+            return;
+        }
+        timtab.confirmSaved();
         // TODO: Clear changedCells?
     }
 

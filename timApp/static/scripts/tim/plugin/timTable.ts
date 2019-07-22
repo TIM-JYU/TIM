@@ -27,10 +27,10 @@
 // TODO: set styles also by list of cells like value
 
 import {IController, IRootElementService, IScope} from "angular";
-import {getParId} from "tim/document/parhelpers";
+import {getParId, Paragraph} from "tim/document/parhelpers";
 import {timApp} from "../app";
 import {onClick} from "../document/eventhandlers";
-import {ViewCtrl} from "../document/viewctrl";
+import {ITimComponent, ViewCtrl} from "../document/viewctrl";
 import {ParCompiler} from "../editor/parCompiler";
 import {openEditorSimple} from "../editor/pareditor";
 import {DestroyScope} from "../ui/destroyScope";
@@ -381,7 +381,7 @@ export function colnumToLetters(colIndex: number): string {
     return colnumToLetters(remainder - 1) + lastChar;
 }
 
-export class TimTableController extends DestroyScope implements IController {
+export class TimTableController extends DestroyScope implements IController, ITimComponent {
     static $inject = ["$scope", "$element"];
     private error: string = "";
     private taskUrl: string = "";
@@ -396,6 +396,7 @@ export class TimTableController extends DestroyScope implements IController {
     private editing: boolean = false;
     private forcedEditMode: boolean = false;
     private task: boolean = false;
+    private taskid?: string;
     // private hideSaveButton?: boolean = false;
     private hiddenRows: number[] = [];
     // private lockCellCount: boolean = false;
@@ -426,6 +427,7 @@ export class TimTableController extends DestroyScope implements IController {
     private visiblerows: string = "";
     private permTable: number[] = [];
     private permTableToScreen: number[] = []; // inverse perm table to get screencoordinate for row
+    private edited: boolean = false;
 
     /**
      * Stores the last direction that the user moved towards with arrow keys
@@ -458,7 +460,7 @@ export class TimTableController extends DestroyScope implements IController {
         return this.element.parent().attr(name);
     }
 
-    protected getTaskId() {
+    protected getTableTaskId() {
         return this.getParentAttr("id");
     }
 
@@ -547,10 +549,11 @@ export class TimTableController extends DestroyScope implements IController {
             if (this.data.task) {
                 this.task = true;
                 this.forcedEditMode = true;
-                const id = this.getTaskId(); // TODO: why this could be undefined?
+                const id = this.getTableTaskId(); // TODO: why this could be undefined?
                 if (id && id.indexOf("..") >= 0) {
                     this.error = "If task, should also have taskId!";
                 }
+                this.viewctrl.addTimComponent(this);
             }
 
             await $timeout(500);
@@ -886,6 +889,7 @@ export class TimTableController extends DestroyScope implements IController {
         if (!this.task) {
             return;
         }
+        this.edited = false;
         this.error = "";
         this.isRunning = true;
         const url = this.getTaskUrl();
@@ -912,6 +916,15 @@ export class TimTableController extends DestroyScope implements IController {
                     return;
                 }
         */
+    }
+
+    /**
+     * Set's edited flag to false
+     * Used to keep track of unsaved state when table is used as component
+     * in another plugin
+     */
+    public confirmSaved() {
+        this.edited = false;
     }
 
     /*
@@ -1039,6 +1052,7 @@ export class TimTableController extends DestroyScope implements IController {
                 this.setUserContent(c.y, c.x, cellContent);
             }
             if (this.data.saveCallBack) { this.data.saveCallBack(cellsToSave, true); }
+            this.edited = true;
             return;
         }
 
@@ -2577,7 +2591,10 @@ export class TimTableController extends DestroyScope implements IController {
             for (const c of cellsToSave) {
                 this.setUserAttribute(c.row, c.col, c.key, c.c);
             }
-            if (this.data.saveStyleCallBack) { this.data.saveStyleCallBack(cellsToSave, colValuesAreSame); }
+            if (this.data.saveStyleCallBack) {
+                this.data.saveStyleCallBack(cellsToSave, colValuesAreSame);
+            }
+            this.edited = true;
             return;
         }
 
@@ -2677,6 +2694,75 @@ export class TimTableController extends DestroyScope implements IController {
         this.clearSortOrder();
     }
 
+    // TODO: Properly implement ITimComponent
+    /**
+     * Returns the name given to the plugin.
+     */
+    getName(): string | undefined {
+        const taskId = this.getTaskId();
+        if (taskId) {
+            return taskId.split(".")[1];
+        }
+    }
+
+    getTaskId(): string | undefined {
+        const taskId = this.taskid || this.pluginMeta.getTaskId();
+        if (taskId) {
+            const docTask = taskId.split(".");
+            return docTask[0].toString() + "." + docTask[1].toString();
+        }
+    }
+    // getContent: () => string | undefined;
+    getContent() {
+        return "TODO";
+    }
+
+    // getContentArray?: () => string[] | undefined;
+    getAreas(): string[] {
+        const returnList: string[] = [];
+        const parents = this.element.parents(".area");
+        if (parents[0]) {
+            const areaList = parents[0].classList;
+            areaList.forEach(
+                (value) => {
+                    const m = value.match(/^area_(\S+)$/);
+                    if (m) {
+                        returnList.push(m[1]);
+                    }
+                },
+            );
+        }
+        return returnList;
+    }
+
+    belongsToArea(area: string): boolean {
+        return this.getAreas().includes(area);
+    }
+
+    isUnSaved() {
+        return this.edited;
+    }
+
+    // save: () => Promise<{saved: boolean, message: (string | undefined)}>;
+    async save() {
+        return {saved: false, message: "TODO"};
+    }
+
+    public getPar() {
+        return this.element.parents(".par");
+    }
+
+    resetField() {
+        return undefined;
+    }
+
+    supportsSetAnswer() {
+        return false;
+    }
+
+    setAnswer(content: { [index: string]: string }): { ok: boolean, message: (string | undefined) } {
+        return {ok: false, message: "Plugin doesn't support setAnswer"};
+    }
 }
 
 timApp.component("timTable", {

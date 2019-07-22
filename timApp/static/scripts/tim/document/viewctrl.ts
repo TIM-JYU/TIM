@@ -56,7 +56,7 @@ export interface ITimComponent {
     getContentArray?: () => string[] | undefined;
     getAreas: () => string[];
     getTaskId: () => string | undefined;
-    belongsToArea(area: string): boolean;
+    belongsToArea: (area: string) => boolean;
     isUnSaved: () => boolean;
     save: () => Promise<{saved: boolean, message: (string | undefined)}>;
     getPar: () => Paragraph;
