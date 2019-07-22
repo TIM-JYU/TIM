@@ -57,6 +57,7 @@ const TableFormMarkup = t.intersection([
         emailUsersButtonText: nullable(t.string),
         fontSize: withDefault(t.string, "smaller"),
         fixedColor: withDefault(t.string, "#f0f0f0"),
+        saveStyles: withDefault(t.boolean, true),
     }),
     GenericPluginMarkup,
     t.type({
@@ -194,7 +195,9 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
         this.setDataMatrix();
 
         this.data.saveCallBack = (cellsTosave, colValuesAreSame) => this.cellChanged(cellsTosave, colValuesAreSame);
-        this.data.saveStyleCallBack = (cellsTosave, colValuesAreSame) => this.cellChanged(cellsTosave, colValuesAreSame);
+        if (this.attrs.saveStyles) {
+            this.data.saveStyleCallBack = (cellsTosave, colValuesAreSame) => this.cellChanged(cellsTosave, colValuesAreSame);
+        }
         this.data.cbCallBack = (cbs, n, index) => this.cbChanged(cbs, n, index);
 
         if (this.attrs.minWidth) {
@@ -716,10 +719,12 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
                 //  of timTable's cell layout editing
                 if (!isPrimitiveCell(cell)) {
                     cellContent = cell.cell;
-                    const cellcopy = JSON.parse(JSON.stringify(cell));
-                    delete cellcopy.cell;
-                    // cellStyle = JSON.stringify(cellcopy);
-                    cellStyle = cellcopy;
+                    if (this.attrs.saveStyles) {
+                        const cellcopy = JSON.parse(JSON.stringify(cell));
+                        delete cellcopy.cell;
+                        // cellStyle = JSON.stringify(cellcopy);
+                        cellStyle = cellcopy;
+                    }
                 } else {
                     cellContent = cell;
                 }
@@ -737,7 +742,7 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
                     replyRows[this.userLocations[numberPlace]] = {};
                     replyRows[this.userLocations[numberPlace]][this.taskLocations[columnPlace]] = cellContent;
                 }
-                if (cellStyle) {
+                if (cellStyle != null && Object.keys(cellStyle).length != 0) {
                     // TODO
                     const taskWithField = this.taskLocations[columnPlace].split(".");
                     const docTaskStyles = taskWithField[0] + "." + taskWithField[1] + ".styles";

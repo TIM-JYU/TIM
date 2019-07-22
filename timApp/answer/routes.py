@@ -900,12 +900,23 @@ def handle_jsrunner_response(jsonresp, result, current_doc: DocInfo = None, allo
                     points = value
                 elif field == "styles":
                     try:
+                        if type(value) is str:
+                            try:
+                                value = json.loads(value)
+                            except json.decoder.JSONDecodeError:
+                                if not result['web'].get('error', None):
+                                    result['web']['error'] = 'Errors:\n'
+                                result['web'][
+                                    'error'] += f"Value {value} is not valid style syntax for task {task_id.task_name}\n"
+                                continue
                         plug = find_plugin_from_document(doc_map[task_id.doc_id].document, task_id, curr_user)
                         allow_styles = plug.allow_styles_field()
                         if allow_styles:
                             if an and content.get(field, None) != value:
                                 new_answer = True
                             content[field] = value
+                            if not (content.get(task_content_name_map[task], False)):
+                                content[task_content_name_map[task]] = None
                         else:
                             continue
                     except TaskNotFoundException as e:

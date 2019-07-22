@@ -74,6 +74,7 @@ class TableFormMarkupModel(GenericMarkupModel):
     fontSize: Union[str, Missing] = missing
     fixedColor: Union[str, Missing] = missing
     toolbarTemplates: Union[List[dict], Missing] = missing
+    saveStyles: Union[bool, Missing] = True
     fields: Union[List[str], Missing] = missing
 
 
@@ -111,6 +112,7 @@ class TableFormMarkupSchema(GenericMarkupSchema):
     toolbarTemplates = fields.List(fields.Dict())
     fontSize = fields.Str(allow_none=True)
     fixedColor = fields.Str(allow_none=True)
+    saveStyles = fields.Boolean(default=True)
     fields = fields.List(fields.Str())  # Keep this last - bad naming
 
     @post_load
@@ -172,6 +174,9 @@ class TableFormHtmlModel(GenericHtmlModel[TableFormInputModel, TableFormMarkupMo
             for f in fielddata:
                 username = f['user'].name
                 rows[username] = dict(f['fields'])
+                for key, content in rows[username].items():
+                    if type(content) is dict:
+                        rows[username][key] = json.dumps(content)
                 realnames[username] = f['user'].real_name
                 emails[username] = f['user'].email
                 styles[username] = dict(f['styles'])
