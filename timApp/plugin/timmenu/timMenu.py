@@ -60,6 +60,7 @@ class TimMenuMarkupModel(GenericMarkupModel):
     topMenu: Union[bool, Missing] = missing
     separator: Union[str, Missing] = missing
     openingSymbol: Union[str, Missing] = missing
+    backgroundColor: Union[str, Missing] = missing
     #menu: Union[List[str], Missing] = missing
     menu: Union[str, Missing] = missing
 
@@ -73,10 +74,12 @@ class TimMenuItemSchema(Schema):
         return TimMenuItemModel(**data)
 
 class TimMenuMarkupSchema(GenericMarkupSchema):
+    # Defaults here are overridden in TS.
     hoverOpen = fields.Bool(allow_none=True, default=True)
     topMenu = fields.Bool(allow_none=True, default=False)
     separator = fields.Str(allow_none=True, default="&nbsp;")
     openingSymbol = fields.Str(allow_none=True, default="&#9662;")
+    backgroundColor = fields.Str(allow_none=True, default="#FFFFFF")
     #menu = fields.List(fields.Str())
     menu = fields.Str()
     # menu = fields.List(fields.Nested(TimMenuItemSchema))
@@ -101,6 +104,7 @@ class TimMenuInputModel:
     data: str
     separator: str
     openingSymbol: str
+    backgroundColor: str
     url: str
 
 
@@ -108,6 +112,7 @@ class TimMenuInputSchema(Schema):
     data = fields.Str(required=True)
     separator = fields.Str(required=False)
     openingSymbol = fields.Str(required=False)
+    backgroundColor = fields.Str(required=False)
     url = fields.Str(required=False)
 
     @post_load
@@ -137,12 +142,11 @@ def parse_menu_string(menu_str):
         current = TimMenuItem(text_html, level, [])
         for parent in parents:
             if parent.level < level:
-                # print("appending " + str(current) + " to " + str(parent))
                 parent.items.append(current)
                 parents.insert(0, current)
                 break
+        # List has all menus that are parents to any others, but first one contains the whole menu tree.
         menuitem_list = parents[-1].items
-    # print(menuitem_list)
     return menuitem_list
 
 

@@ -6,7 +6,6 @@ import * as t from "io-ts";
 import {PluginBase, pluginBindings} from "tim/plugin/util";
 import {timApp} from "../app";
 import {GenericPluginMarkup, Info, nullable, withDefault} from "./attributes";
-import {IMenuItem} from "ui-grid";
 
 const importDataApp = angular.module("importDataApp", ["ngSanitize"]);
 export const moduleDefs = [importDataApp];
@@ -16,6 +15,7 @@ const TimMenuMarkup = t.intersection([
     t.partial({
         // menu: nullable(t.array(t.string)),
         menu: nullable(t.string),
+        backgroundColor: nullable(t.string),
     }),
     GenericPluginMarkup,
     t.type({
@@ -44,6 +44,8 @@ interface ITimMenuItem {
     open: boolean;
 }
 
+export let activeTopMenu: string | undefined;
+
 class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.TypeOf<typeof TimMenuAll>, typeof TimMenuAll> {
     private menu: any;
     private openingSymbol: string = "";
@@ -53,6 +55,7 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
     private menuId: string = String.fromCharCode(65 + Math.floor(Math.random() * 26)) + Date.now();
     private previousScroll: number | undefined = 0; // Store y-value of previous scroll event for comparison.
     private previouslyClicked: ITimMenuItem | undefined;
+    private style: string = "";
 
     getDefaultMarkup() {
         return {};
@@ -72,6 +75,7 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
         if (this.topMenu) {
             window.onscroll = () => this.toggleSticky();
         }
+        this.setStyles();
     }
 
     /**
@@ -152,6 +156,10 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
      * Makes the element follow when scrolling for one screen height after top bar.
      */
     toggleSticky() {
+        console.log(activeTopMenu);
+        if (activeTopMenu && activeTopMenu !== this.menuId) {
+            console.log(this.menuId + " cancelled");
+        }
         const placeholderY = document.getElementById(`${this.menuId}-placeholder`).getBoundingClientRect().top;
         const scrollY = $(window).scrollTop();
         // Sticky can only show when the element's place in document goes outside upper bounds.
@@ -161,15 +169,24 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
             if (scrollY > this.previousScroll) {
                 document.getElementById(this.menuId).classList.remove("top-menu");
                 document.getElementById(`${this.menuId}-placeholder-content`).classList.add("hidden");
+                activeTopMenu = undefined;
             } else {
                 document.getElementById(this.menuId).classList.add("top-menu");
                 document.getElementById(`${this.menuId}-placeholder-content`).classList.remove("hidden");
+                activeTopMenu = this.menuId;
             }
         } else {
             document.getElementById(this.menuId).classList.remove("top-menu");
             document.getElementById(`${this.menuId}-placeholder-content`).classList.add("hidden");
+            activeTopMenu = undefined;
         }
         this.previousScroll = $(window).scrollTop();
+    }
+
+    private setStyles() {
+        if (this.attrs.backgroundColor) {
+            this.style += `background-color: ${this.attrs.backgroundColor};"`;
+        }
     }
 }
 
@@ -183,19 +200,19 @@ timApp.component("timmenuRunner", {
 <tim-markup-error ng-if="::$ctrl.markupError" data="::$ctrl.markupError"></tim-markup-error>
 <span ng-if="$ctrl.topMenu" id="{{$ctrl.menuId}}-placeholder"></span>
 <div ng-if="$ctrl.topMenu" id="{{$ctrl.menuId}}-placeholder-content"><br></div>
-<div id="{{$ctrl.menuId}}" ng-class="tim-menu">
+<div id="{{$ctrl.menuId}}" class="tim-menu" style="{{$ctrl.style}}">
     <span ng-repeat="t1 in $ctrl.menu">
         <div ng-if="t1.items.length > 0" class="btn-group" uib-dropdown is-open="status.isopen" id="simple-dropdown" style="cursor: pointer;">
           <span uib-dropdown-toggle ng-disabled="disabled" ng-bind-html="t1.text+$ctrl.openingSymbol" ng-click="$ctrl.toggleSubmenu(t1, undefined)"></span>
-          <ul class="dropdown-menu" uib-dropdown-menu aria-labelledby="simple-dropdown">
+          <ul class="dropdown-menu" uib-dropdown-menu aria-labelledby="simple-dropdown" style="{{$ctrl.style}}">
             <li class="tim-menu-item" ng-repeat="t2 in t1.items" role="menuitem">
                 <span class="tim-menu-item" ng-if="t2.items.length > 0">
                     <span ng-bind-html="t2.text+$ctrl.openingSymbol" ng-click="$ctrl.toggleSubmenu(t2, t1)"></span>
-                    <ul class="tim-menu-submenu" ng-if="t2.open">
+                    <ul class="tim-menu-submenu" ng-if="t2.open" style="{{$ctrl.style}}">
                         <li class="tim-menu-item" ng-repeat="t3 in t2.items">
                             <span class="tim-menu-item" ng-if="t3.items.length > 0">
                                 <span ng-bind-html="t3.text+$ctrl.openingSymbol" ng-click="$ctrl.toggleSubmenu(t3, t2)"></span>
-                                <ul class="tim-menu-submenu" ng-if="t3.open">
+                                <ul class="tim-menu-submenu" ng-if="t3.open" style="{{$ctrl.style}}">
                                     <li class="tim-menu-item" ng-repeat="t4 in t3.items" ng-bind-html="t4.text"></li>
                                 </ul>
                             </span>
