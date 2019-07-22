@@ -3,6 +3,7 @@ from typing import Optional, List, Dict, Tuple, Iterable
 
 import yaml
 import re
+import json
 
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.macroinfo import MacroInfo
@@ -11,7 +12,74 @@ from timApp.document.specialnames import DEFAULT_PREAMBLE_DOC
 from timApp.document.yamlblock import YamlBlock
 from timApp.markdown.dumboclient import MathType, DumboOptions, InputFormat
 from timApp.timdb.exceptions import TimDbException, InvalidReferenceException
-from flask.globals import request
+from timApp.util.rndutils import get_rands_as_dict
+from flask.globals import request, g
+
+
+def add_rnd_macros(yaml_vals):
+    if DocSettings.rndmacros_key not in yaml_vals.values:
+        return
+
+    rnd_seed = g.user.name
+    state = None
+    if not yaml_vals.values.get('macros', None):
+        yaml_vals.values["macros"] = {}
+    rndmacros = yaml_vals.values.get(DocSettings.rndmacros_key)
+    if not isinstance(rndmacros, list):
+        rndmacros = [rndmacros]
+    for rndm in rndmacros or {}:
+        if rndm:
+            if isinstance(rndm, str):
+                try:
+                    rndm = json.loads(rndm)
+                except json.JSONDecodeError as e:
+                    raise TimDbException(f'Invalid YAML: {e}')  # TODO don't panic the page, but show the error?
+            if not 'rndnames' in rndm:
+                rndnames = []
+                for rnd_name in rndm:
+                    if rnd_name not in ["seed"]:  # todo put other non rnd names here
+                        rndnames.append(rnd_name)
+                rndm["rndnames"] = ",".join(rndnames)
+            rands, rnd_seed, state = get_rands_as_dict(rndm, rnd_seed, state)
+            for rnd_name in rands or {}:
+                rnd = rands[rnd_name]
+                yaml_vals.values["macros"][rnd_name] = rnd
+
+
+def add_url_macros(yaml_vals):
+    if DocSettings.urlmacros_key not in yaml_vals.values:
+        return
+
+    urlmacros = yaml_vals.values.get(DocSettings.urlmacros_key)
+    for fu in urlmacros:
+        if fu:
+            # request = par.doc.docinfo.request
+
+            # TODO: if allready value and urlmacros.get(fu) then old value wins
+            urlvalue = request.args.get(fu, urlmacros.get(fu))
+            if urlvalue:
+                try:
+                    if not yaml_vals.values.get('macros', None):
+                        yaml_vals.values["macros"] = {}
+                    try:
+                        uvalue = float(urlvalue)
+                    except:
+                        uvalue = None
+                    if uvalue is not None:
+                        maxvalue = yaml_vals.values["macros"].get("MAX" + fu, None)
+                        if maxvalue is not None:
+                            if uvalue > maxvalue:
+                                urlvalue = maxvalue
+                        minvalue = yaml_vals.values["macros"].get("MIN" + fu, None)
+                        if minvalue is not None:
+                            if uvalue < minvalue:
+                                urlvalue = minvalue
+                    urlvalue = DocSettings.urlmacros_tester.sub("", str(urlvalue))
+                    yaml_vals.values["macros"][fu] = urlvalue
+                except:
+                    pass
+    del yaml_vals.values[DocSettings.urlmacros_key]
+
 
 class DocSettings:
     global_plugin_attrs_key = 'global_plugin_attrs'
@@ -50,9 +118,11 @@ class DocSettings:
     comments_key = 'comments'
     course_group_key = 'course_group'
     urlmacros_key = 'urlmacros'
+    rndmacros_key = 'rndmacros'
     sisu_require_manual_enroll_key = 'sisu_require_manual_enroll'
 
     urlmacros_tester = re.compile("[^0-9A-Za-z.,_ ]+")
+
 
     @classmethod
     def from_paragraph(cls, par: DocParagraph):
@@ -68,37 +138,8 @@ class DocSettings:
             yaml_vals = DocSettings.parse_values(par)
             # TODO: comes her at least 6 times with same par?  Could this be cached?
 
-            # Replace some macros be values comoing from URL
-            if DocSettings.urlmacros_key in yaml_vals.values:
-                urlmacros = yaml_vals.values.get(DocSettings.urlmacros_key)
-                for fu in urlmacros:
-                    if fu:
-                        # request = par.doc.docinfo.request
-
-                        # TODO: if allready value and urlmacros.get(fu) then old value wins
-                        urlvalue = request.args.get(fu, urlmacros.get(fu))
-                        if urlvalue:
-                            try:
-                                if not yaml_vals.values.get('macros', None):
-                                    yaml_vals.values["macros"] = {}
-                                try:
-                                    uvalue = float(urlvalue)
-                                except:
-                                    uvalue = None
-                                if uvalue is not None:
-                                    maxvalue = yaml_vals.values["macros"].get("MAX"+fu, None)
-                                    if maxvalue is not None:
-                                        if uvalue > maxvalue:
-                                            urlvalue = maxvalue
-                                    minvalue = yaml_vals.values["macros"].get("MIN"+fu, None)
-                                    if minvalue is not None:
-                                        if uvalue < minvalue:
-                                            urlvalue = minvalue
-                                urlvalue =  DocSettings.urlmacros_tester.sub("", str(urlvalue))
-                                yaml_vals.values["macros"][fu] = urlvalue
-                            except:
-                                pass
-                del yaml_vals.values[DocSettings.urlmacros_key]
+            add_rnd_macros(yaml_vals)  # Make global random numers for document
+            add_url_macros(yaml_vals)  # Replace some macros be values comoing from URL
 
         except yaml.YAMLError as e:
             raise TimDbException(f'Invalid YAML: {e}')
