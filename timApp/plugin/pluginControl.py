@@ -12,6 +12,7 @@ import yaml.parser
 from sqlalchemy import func
 
 from timApp.answer.answer import Answer
+from timApp.util.answerutil import get_fields_and_users, task_ids_to_strlist
 from timApp.auth.accesshelper import has_edit_access, verify_view_access
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docentry import DocEntry
@@ -48,10 +49,6 @@ def get_error_plugin(plugin_name, message, response=None,
         return get_error_tex(f'Plugin {plugin_name} error:', message, response)
 
     return get_error_html(f'Plugin {plugin_name} error: {message}', response)
-
-
-def task_ids_to_strlist(ids: List[TaskId]):
-    return [t.doc_task for t in ids]
 
 
 def find_task_ids(
@@ -212,6 +209,26 @@ class PluginPlacement:
             p_range = 0, len(md)
             try:
                 vals = load_markup_from_yaml(md, settings.global_plugin_attrs(), block.get_attr('plugin'))
+                if plugin_name == 'csPlugin' and 'fields' in vals:
+                    data, aliases, field_names = get_fields_and_users(
+                        vals['fields'],
+                        [],
+                        block.doc.docinfo,
+                        get_current_user_object(),
+                        add_missing_fields=True,
+                        allow_non_teacher=True,  # TODO: the user selected from User list
+                    )
+                    df = data[0]['fields']
+                    da = []
+                    labels = []
+                    for fn in field_names:
+                        da.append(df.get(fn,0))
+                        labels.append(fn)
+                    vals['fielddata'] =  {'data': data[0]['fields'],
+                                          'aliases': aliases,
+                                          'fieldnames' : field_names,
+                                          'graphdata': {'data': da, 'labels': labels}}
+
             except PluginException as e:
                 errs[p_range] = str(e), plugin_name
             else:

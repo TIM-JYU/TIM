@@ -19,7 +19,6 @@ from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docinfo import DocInfo
 from timApp.plugin.plugin import TaskNotFoundException
 from timApp.plugin.plugin import find_plugin_from_document
-from timApp.plugin.pluginControl import task_ids_to_strlist
 from timApp.plugin.pluginexception import PluginException
 from timApp.plugin.taskid import TaskId
 from timApp.timdb.sqa import db
@@ -43,32 +42,8 @@ def chunks(l: List, n: int):
         yield l[i:i + n]
 
 
-def get_useranswers_for_task(user, task_ids, answer_map):
-    """
-    Performs a query for latest valid answers by given user for given task
-    Similar to pluginControl.get_answers but without counting
-    :param user: user
-    :param task_ids: tasks to be queried
-    :param answer_map: a dict where to add each taskID: Answer
-    :return: {taskID: Answer}
-    """
-    col = func.max(Answer.id).label('col')
-    sub = (user
-           .answers
-           .filter(Answer.task_id.in_(task_ids_to_strlist(task_ids)) & Answer.valid == True)
-           .add_columns(col)
-           .with_entities(col)
-           .group_by(Answer.task_id).subquery())
-    answs: List[Answer] = Answer.query.join(sub, Answer.id == sub.c.col) .all()
-    for answer in answs:
-        if len(answer.users_all) > 1:
-            answer_map[answer.task_id] = answer
-        else:
-            # answer_map[answer.task_id] = answer
-            asd = answer.to_json()
-            asd.pop('users')
-            answer_map[answer.task_id] = asd
-    return answs
+def task_ids_to_strlist(ids: List[TaskId]):
+    return [t.doc_task for t in ids]
 
 
 TASK_PROG = re.compile('([\w.]*)\((\d*),(\d*)\)(.*)') # see https://regex101.com/r/ZZuizF/2

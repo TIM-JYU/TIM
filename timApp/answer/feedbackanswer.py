@@ -11,7 +11,7 @@ from timApp.util.flask.responsehelper import csv_response
 from timApp.plugin.taskid import TaskId
 from datetime import datetime
 from timApp.answer.answer import Answer
-from timApp.plugin.pluginControl import task_ids_to_strlist
+from timApp.util.answerutil import task_ids_to_strlist
 
 from timApp.document.docentry import DocEntry, get_documents_in_folder
 from timApp.util.flask.requesthelper import get_option
