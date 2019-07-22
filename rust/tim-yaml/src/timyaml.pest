@@ -1,0 +1,81 @@
+obj = ${
+  BLANK_LINE* ~
+  PEEK_ALL ~
+  PUSH(indentation) ~
+  keyvalue ~
+  (BLANK_LINE+ ~ PEEK_ALL ~ keyvalue)* ~
+  DROP
+}
+
+indentation = _{ SPACE* }
+
+yaml = _{ SOI ~ PUSH("") ~ (obj | "") ~ DROP ~ EOI }
+
+keyvalue = { key ~ ":" ~ (COMMENT | SPACE*) ~ value ~ COMMENT? }
+
+key = { 'a'..'z'+ }
+
+value = _{ multilinevalue | onelinevalue }
+
+onelinevalue = _{boolean | number | onelinestring | null}
+
+multilinevalue = _{ multilinestring | obj | list }
+
+multilinestring = _{ tim_multiline_string | standard_yaml_multiline_string }
+
+tim_multiline_string_content = { (!(PEEK ~ NEWLINE) ~ unquoted_string ~ NEWLINE)* }
+
+tim_multiline_string = {
+  "|" ~
+  SPACE* ~
+  PUSH(unquoted_string) ~
+  NEWLINE ~
+  tim_multiline_string_content ~
+  POP
+}
+
+standard_yaml_multiline_string = { standard_yaml_multiline_string_noindent | standard_yaml_multiline_string_1 }
+
+standard_yaml_multiline_string_noindent = _{
+  "|" ~
+  ("-" | "+")? ~
+  NEWLINE ~
+  PEEK_ALL ~
+  PUSH(SPACE+) ~
+  standard_yaml_multiline_end
+}
+
+standard_yaml_multiline_string_1 = _{
+  "|1" ~
+  ("-" | "+")? ~
+  NEWLINE ~
+  PEEK_ALL ~
+  PUSH(" ") ~
+  standard_yaml_multiline_end
+}
+
+standard_yaml_multiline_end = _{
+  onelinestring ~
+  (((NEWLINE ~ PEEK_ALL ~ onelinestring)+ | (&NEWLINE ~ !PEEK_ALL)) | EOI) ~
+  DROP
+}
+
+onelinestring = _{unquoted_string}
+
+unquoted_string = { (!NEWLINE ~ !COMMENT ~ ANY)+ }
+
+boolean = { "true" | "false" | "yes" | "no" }
+
+number = { '0'..'9'+ }
+
+null = { "null" | "" }
+
+list = { "a" }
+
+SPACE = _{ " " }
+
+WHITESPACE = _{ SPACE | NEWLINE }
+
+BLANK_LINE = _{ (COMMENT | SPACE*) ~ NEWLINE }
+
+COMMENT = _{ (WHITESPACE | SOI) ~ "#" ~ (!NEWLINE ~ ANY)* }

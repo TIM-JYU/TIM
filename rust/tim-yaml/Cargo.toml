@@ -1,0 +1,11 @@
+[package]
+name = "tim-yaml"
+version = "0.1.0"
+authors = ["Mika Lehtinen <mikkalle@student.jyu.fi>"]
+edition = "2018"
+
+[dependencies]
+pest = "2.1.1"
+pest_derive = "2.1.0"
+yaml-rust = "0.4.3"
+snafu = "0.4.2"
