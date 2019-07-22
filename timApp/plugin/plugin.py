@@ -105,6 +105,11 @@ ALLOW_STYLES_PLUGINS = {
     'numericfield',
 }
 
+WANT_FIELDS = {
+    'csPlugin'
+}
+
+
 class PluginWrap(Enum):
     Nothing = 1
     NoLoader = 2

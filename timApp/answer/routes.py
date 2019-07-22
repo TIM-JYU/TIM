@@ -42,7 +42,7 @@ from timApp.plugin.plugin import Plugin, PluginWrap, NEVERLAZY, TaskNotFoundExce
 from timApp.plugin.plugin import PluginType
 from timApp.plugin.plugin import find_plugin_from_document
 from timApp.plugin.pluginControl import find_task_ids, pluginify
-from timApp.plugin.pluginControl import task_ids_to_strlist
+from timApp.util.answerutil import task_ids_to_strlist
 from timApp.plugin.pluginexception import PluginException
 from timApp.plugin.taskid import TaskId, TaskIdAccess
 from timApp.timdb.dbaccess import get_timdb
@@ -54,6 +54,8 @@ from timApp.user.usergroup import UserGroup
 from timApp.util.flask.requesthelper import verify_json_params, get_option, get_consent_opt
 from timApp.util.flask.responsehelper import json_response, ok_response
 from timApp.util.utils import try_load_json, get_current_time
+
+# TODO: Remove methods in util/answerutil where many "moved" here to avoid circular imports
 
 answers = Blueprint('answers',
                     __name__,

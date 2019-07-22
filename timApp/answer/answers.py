@@ -11,11 +11,11 @@ from sqlalchemy.orm import selectinload, defaultload
 from timApp.answer.answer import Answer
 from timApp.answer.answer_models import AnswerTag, UserAnswer
 from timApp.answer.pointsumrule import PointSumRule, PointType
-from timApp.plugin.pluginControl import task_ids_to_strlist
 from timApp.plugin.taskid import TaskId
 from timApp.timdb.sqa import db
 from timApp.user.user import Consent, User
 from timApp.user.usergroup import UserGroup
+from timApp.util.answerutil import task_ids_to_strlist
 from timApp.velp.velp_models import Annotation
 
 

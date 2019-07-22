@@ -14,9 +14,6 @@ export const moduleDefs = [jsframeApp];
 const JsframeMarkup = t.intersection([
     t.partial({
         beforeOpen: t.string,
-        buttonBottom: t.boolean,
-        correctresponse: t.boolean,
-        generalfeedback: t.boolean,
         showButton: t.string,
         srchtml: t.string,
         message: t.string,
@@ -26,6 +23,7 @@ const JsframeMarkup = t.intersection([
         useurl: t.boolean,
         c: t.any,
         data: t.any,
+        fielddata: t.any,
     }),
     GenericPluginMarkup,
     t.type({
@@ -131,7 +129,8 @@ class JsframeController extends PluginBase<t.TypeOf<typeof JsframeMarkup> ,
         }
         let data = this.attrs.data;
         if ( this.attrs.c ) { data = this.attrs.c; }
-        if ( data ) { this.initData = "window.initData = " + JSON.stringify(data) + ";"; }
+        if ( data ) { this.initData = "    window.initData = " + JSON.stringify(data) + ";\n"; }
+        if ( aa.markup.fielddata ) { this.initData += "    window.fieldData = " + JSON.stringify(aa.markup.fielddata) + ";\n"; }
         // if ( data ) { this.setData(data); }
         this.viewctrl.addTimComponent(this);
     }
@@ -162,8 +161,8 @@ class JsframeController extends PluginBase<t.TypeOf<typeof JsframeMarkup> ,
     });
 
     function onMessage(event) {
-         console.log(event.data);
-         console.log(event.origin);
+         // console.log(event.data);
+         // console.log(event.origin);
 
          if ( event.data.msg === "setData" ) {
             setData(event.data.data);
@@ -177,7 +176,7 @@ class JsframeController extends PluginBase<t.TypeOf<typeof JsframeMarkup> ,
          }
     }
 
-    // INITDATA
+// INITDATA
     </script>
     `;
 
@@ -375,7 +374,7 @@ class JsframeController extends PluginBase<t.TypeOf<typeof JsframeMarkup> ,
         if ( this.channel ) { return; }
         this.channel = new MessageChannel();
         this.channel.port1.onmessage =  (event: any) => {
-            console.log(event);
+            // console.log(event);
             const msg = event.data.msg;
             if ( msg === "data") {
                 this.getDataReady(event.data.data);

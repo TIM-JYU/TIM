@@ -1450,14 +1450,20 @@ class JSframe(Language):
         ma = self.query.jso['markup']
         srchtml = get_by_id(ma, 'srchtml', '')
         data = ma.get('data', None)
+        fielddata = ma.get('fielddata', None)
 
         state = self.query.jso.get("state", {})
         if state:
             c = state.get("c", None)
             if c is not None:
                 data = c
+        init_data = ""
         if data:
-            init_data = "<script>window.initData = " + json.dumps(data) + ";</script>"
+            init_data = "window.initData = " + json.dumps(data) + ";\n"
+        if fielddata:
+            init_data += "window.fieldData = " + json.dumps(fielddata) + ";\n"
+        if init_data:
+            init_data = "<script>" + init_data + "</script>"
             srchtml = srchtml.replace("</body>", init_data + "\n</body>")
 
         return srchtml
