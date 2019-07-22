@@ -382,7 +382,7 @@ textfieldApp.component("textfieldRunner", {
                class="form-control"
                ng-model="$ctrl.userword"
                ng-blur="::$ctrl.autoSave()"
-               ng-keydown="$event.keyCode === 13 && $ctrl.saveText() && $ctrl.changeFocus()"
+               ng-keydown="$event.keyCode === 13 && $ctrl.autoSave() && $ctrl.changeFocus()"
                ng-model-options="::$ctrl.modelOpts"
                ng-trim="false"
                ng-pattern="$ctrl.getPattern()"
