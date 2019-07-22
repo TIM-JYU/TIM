@@ -930,7 +930,9 @@ def handle_jsrunner_response(jsonresp, result, current_doc: DocInfo = None, allo
             if not new_answer:
                 continue
             if content == {}:
-                # TODO: can this be reached without points field?
+                # Reached if fields were only points or failed styles
+                if list(contents) == ['styles']:
+                    continue
                 content[task_content_name_map[task_id.doc_task + "." + lastfield]] = None
             content = json.dumps(content)
             ans = Answer(
