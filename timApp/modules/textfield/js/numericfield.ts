@@ -42,7 +42,7 @@ const NumericfieldAll = t.intersection([
         preview: t.boolean,
         state: nullable(t.type({
             c: t.union([t.string, t.number, t.null]),
-            styles: t.dictionary(t.string, t.string)})),
+            styles: nullable(t.dictionary(t.string, t.string))})),
     }),
 ]);
 
