@@ -56,7 +56,7 @@ export interface ITimComponent {
     getContentArray?: () => string[] | undefined;
     getAreas: () => string[];
     getTaskId: () => string | undefined;
-    belongsToArea(area: string): boolean;
+    belongsToArea: (area: string) => boolean;
     isUnSaved: () => boolean;
     save: () => Promise<{saved: boolean, message: (string | undefined)}>;
     getPar: () => Paragraph;
@@ -650,12 +650,12 @@ export class ViewCtrl implements IController {
             await loader.abLoad.promise;
             const fab = this.getFormAnswerBrowser(t);
             if (fab) {
-                formAbMap.set(t, fab);
-                fabIds.push(t);
+                formAbMap.set(fab.taskId, fab);
+                fabIds.push(fab.taskId);
             } else {
                 const ab = this.getAnswerBrowser(t);
                 if (ab) {
-                    regularAbMap.set(t, ab);
+                    regularAbMap.set(ab.taskId, ab);
                 }
             }
         }
@@ -828,14 +828,14 @@ export class ViewCtrl implements IController {
     getAnswerBrowser(taskId: string) {
         // TODO: Probably need a generic function for checking missing docId
         if (taskId.split(".").length < 2) {
-            taskId = this.docId + "." + name;
+            taskId = this.docId + "." + taskId;
         }
         return (this.abs.get(taskId) || this.formAbs.get(taskId));
     }
 
     getFormAnswerBrowser(taskId: string) {
         if (taskId.split(".").length < 2) {
-            taskId = this.docId + "." + name;
+            taskId = this.docId + "." + taskId;
         }
         return this.formAbs.get(taskId);
     }
@@ -856,7 +856,7 @@ export class ViewCtrl implements IController {
 
     getPluginLoader(taskId: string) {
         if (taskId.split(".").length < 2) {
-            taskId = this.docId + "." + name;
+            taskId = this.docId + "." + taskId;
         }
         return this.ldrs.get(taskId);
     }

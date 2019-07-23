@@ -37,6 +37,7 @@ from timApp.document.post_process import hide_names_in_teacher
 from timApp.item.block import Block, BlockType
 from timApp.markdown.dumboclient import call_dumbo
 from timApp.notification.notify import multi_send_email
+from timApp.plugin import pluginControl
 from timApp.plugin.containerLink import call_plugin_answer
 from timApp.plugin.plugin import Plugin, PluginWrap, NEVERLAZY, TaskNotFoundException
 from timApp.plugin.plugin import PluginType
@@ -450,36 +451,42 @@ def get_fields_and_users(u_fields: List[str], groups: List[UserGroup],
     user_tasks = None
     user_index = -1
     user = None
+    style_map = {}
     for uid, a in answers_with_users:
         if last_user != uid:
             user_index += 1
             user_tasks = {}
+            user_fieldstyles = {}
             user = users[user_index]
-            res.append({'user': user, 'fields': user_tasks})
+            res.append({'user': user, 'fields': user_tasks, 'styles': user_fieldstyles})
             last_user = uid
             if not a:
                 continue
         for task in task_id_map[a.task_id]:
             if not a:
                 value = None
-            elif task.field == "points":
-                value = a.points
-            elif task.field == "datetime":
-                value = time.mktime(a.answered_on.timetuple())
+                style = None
             else:
                 json_str = a.content
                 p = json.loads(json_str)
-                if task.field:
-                    value = p.get(task.field)
+                style = p.get('styles')
+                if task.field == "points":
+                    value = a.points
+                elif task.field == "datetime":
+                    value = time.mktime(a.answered_on.timetuple())
                 else:
-                    if len(p) > 1:
-                        plug = find_plugin_from_document(doc_map[task.doc_id], task, user)
-                        content_field = plug.get_content_field_name()
-                        value = p.get(content_field)
+                    if task.field:
+                        value = p.get(task.field)
                     else:
-                        values_p = list(p.values())
-                        value = values_p[0]
+                        if len(p) > 1:
+                            plug = find_plugin_from_document(doc_map[task.doc_id], task, user)
+                            content_field = plug.get_content_field_name()
+                            value = p.get(content_field)
+                        else:
+                            values_p = list(p.values())
+                            value = values_p[0]
             user_tasks[alias_map.get(task.extended_or_doc_task, task.extended_or_doc_task)] = value
+            user_fieldstyles[alias_map.get(task.extended_or_doc_task, task.extended_or_doc_task)] = style
     return res, jsrunner_alias_map, [alias_map.get(ts.extended_or_doc_task, ts.extended_or_doc_task) for ts in task_ids]
 
 
@@ -878,7 +885,9 @@ def handle_jsrunner_response(jsonresp, result, current_doc: DocInfo = None, allo
                 points = an.points
                 content = json.loads(an.content)
                 new_answer = False
+            lastfield = "c"
             for field, value in contents.items():
+                lastfield = field
                 if field == 'points':
                     if value == "":
                         value = None
@@ -896,12 +905,23 @@ def handle_jsrunner_response(jsonresp, result, current_doc: DocInfo = None, allo
                     points = value
                 elif field == "styles":
                     try:
+                        if type(value) is str:
+                            try:
+                                value = json.loads(value)
+                            except json.decoder.JSONDecodeError:
+                                if not result['web'].get('error', None):
+                                    result['web']['error'] = 'Errors:\n'
+                                result['web'][
+                                    'error'] += f"Value {value} is not valid style syntax for task {task_id.task_name}\n"
+                                continue
                         plug = find_plugin_from_document(doc_map[task_id.doc_id].document, task_id, curr_user)
                         allow_styles = plug.allow_styles_field()
                         if allow_styles:
                             if an and content.get(field, None) != value:
                                 new_answer = True
                             content[field] = value
+                            if not (content.get(task_content_name_map[task], False)):
+                                content[task_content_name_map[task]] = None
                         else:
                             continue
                     except TaskNotFoundException as e:
@@ -913,8 +933,10 @@ def handle_jsrunner_response(jsonresp, result, current_doc: DocInfo = None, allo
             if not new_answer:
                 continue
             if content == {}:
-                # TODO: can this be reached without points field?
-                content[task_content_name_map[task_id.doc_task + ".points"]] = None
+                # Reached if fields were only points or failed styles
+                if list(contents) == ['styles']:
+                    continue
+                content[task_content_name_map[task_id.doc_task + "." + lastfield]] = None
             content = json.dumps(content)
             ans = Answer(
                 content=content,
@@ -1055,6 +1077,23 @@ def get_answers(task_id, user_id):
                 for u in answer.users_all:
                     maybe_hide_name(d, u)
         return json_response(user_answers)
+    except Exception as e:
+        return abort(400, str(e))
+
+@answers.route("/globalAnswer/<task_id>")
+def get_global_answers(task_id):
+    verify_logged_in()
+    try:
+        tid = TaskId.parse(task_id)
+    except PluginException as e:
+        return abort(400, str(e))
+    d = get_doc_or_abort(tid.doc_id)
+    user = get_current_user_object()
+    # TODO: Needed?
+    verify_seeanswers_access(d)
+    try:
+        user_answers = pluginControl.get_latest_for_tasks([tid],{})
+        return json_response([user_answers[1][0][0]])
     except Exception as e:
         return abort(400, str(e))
 

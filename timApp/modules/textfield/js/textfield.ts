@@ -23,6 +23,9 @@ const TextfieldMarkup = t.intersection([
         readOnlyStyle: nullable(t.string),
         showname: nullable(t.number),
         autosave: t.boolean,
+        nosave: t.boolean,
+        ignorestyles: t.boolean,
+        clearstyles: t.boolean,
     }),
     GenericPluginMarkup,
     t.type({
@@ -37,7 +40,9 @@ const TextfieldAll = t.intersection([
         info: Info,
         markup: TextfieldMarkup,
         preview: t.boolean,
-        state: nullable(t.type({c: t.union([t.string, t.number, t.null])})),
+        state: nullable(t.type({
+            c: t.union([t.string, t.number, t.null]),
+            styles: nullable(t.dictionary(t.string, t.string))})),
     }),
 ]);
 
@@ -53,6 +58,7 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
     private redAlert = false;
     private saveResponse: {saved: boolean, message: (string | undefined)} = {saved: false, message: undefined};
     private preventedAutosave = false;
+    private styles: {[index: string]: string} = {};
 
     getDefaultMarkup() {
         return {};
@@ -73,6 +79,9 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
         this.vctrl.addTimComponent(this, this.attrs.tag );
         this.initialValue = this.userword;
         if (this.attrs.showname ) { this.initCode(); }
+        if (this.attrsall.state && this.attrsall.state.styles && !this.attrs.ignorestyles){
+            this.applyStyling(this.attrsall.state.styles)
+        }
     }
 
     /**
@@ -112,7 +121,8 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
     }
 
     // TODO: Use answer content as arg or entire IAnswer?
-    setAnswer(content: { [index: string]: string }): { ok: boolean, message: (string | undefined) } {
+    // TODO: get rid of any (styles can arrive as object)
+    setAnswer(content: { [index: string]: any }): { ok: boolean, message: (string | undefined) } {
         let message;
         let ok = true;
         // TODO: should receiving empty answer reset to defaultnumber or clear field?
@@ -125,6 +135,9 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
                 this.userword = "";
                 ok = false;
                 message = "Couldn't find related content (\"c\")";
+            }
+            if (!this.attrs.ignorestyles) {
+                this.applyStyling(content.styles);
             }
         }
         this.initialValue = this.userword;
@@ -227,6 +240,24 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
     }
 
     /**
+     * Parses "styles" from the plugin answer that were saved by tableForm
+     * For now only backgroundColor is supported
+     * TODO: Extend styling for all attributes in timTable's cellStyles?
+     *  For now tableForm is only able to define backgroundColor or textAlign
+     *  Could also define (and import) generic tim-wide inputstyles
+     * TODO: Could also just apply given styles as they are
+     */
+    applyStyling(styles: {[index: string]: string}){
+        if (!styles || Object.keys(styles).length == 0) {
+            this.styles = {};
+            return;
+        }
+        if (styles.backgroundColor){
+            this.styles.backgroundColor = styles.backgroundColor
+        }
+    }
+
+    /**
      * Method to check grading input type for textfield.
      * Used as e.g. grading checker for hyv | hyl | 1 | 2 | 3 | 4 | 5.
      * @param re validinput defined by given attribute.
@@ -250,7 +281,7 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
         if (this.initialValue != this.userword) {
             this.hideSavedText = true;
         }
-        return (this.initialValue != this.userword);
+        return (!this.attrs.nosave && this.initialValue != this.userword);
     }
 
     // noinspection JSUnusedGlobalSymbols
@@ -301,7 +332,7 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
             params.input.nosave = true;
         }
         const url = this.pluginMeta.getAnswerUrl();
-        const r = await to($http.put<{web: {result: string, error?: string}}>(url, params));
+        const r = await to($http.put<{web: {result: string, error?: string, clear?: boolean}}>(url, params));
         this.isRunning = false;
         if (r.ok) {
             const data = r.result.data;
@@ -314,6 +345,9 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
             this.redAlert = false;
             this.saveResponse.saved = true;
             this.saveResponse.message = this.errormessage;
+            if(data.web.clear){
+                this.applyStyling({});
+            }
         } else {
             this.errormessage = r.result.data.error || "Syntax error or no reply from server?";
         }
@@ -348,7 +382,7 @@ textfieldApp.component("textfieldRunner", {
                class="form-control"
                ng-model="$ctrl.userword"
                ng-blur="::$ctrl.autoSave()"
-               ng-keydown="$event.keyCode === 13 && $ctrl.saveText() && $ctrl.changeFocus()"
+               ng-keydown="$event.keyCode === 13 && $ctrl.autoSave() && $ctrl.changeFocus()"
                ng-model-options="::$ctrl.modelOpts"
                ng-trim="false"
                ng-pattern="$ctrl.getPattern()"
@@ -358,7 +392,8 @@ textfieldApp.component("textfieldRunner", {
                tooltip-trigger="mouseenter"
                placeholder="{{::$ctrl.inputplaceholder}}"
                size="{{::$ctrl.cols}}"
-               ng-class="{warnFrame: ($ctrl.isUnSaved() && !$ctrl.redAlert), alertFrame: $ctrl.redAlert }">
+               ng-class="{warnFrame: ($ctrl.isUnSaved() && !$ctrl.redAlert), alertFrame: $ctrl.redAlert }"
+               ng-style="$ctrl.styles">
          </span>
          <span ng-if="::$ctrl.isPlainText()" style="">{{$ctrl.userword}}</span>
          </span></label>

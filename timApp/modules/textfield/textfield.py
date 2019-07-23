@@ -30,6 +30,9 @@ class TextfieldMarkupModel(GenericMarkupModel):
     errormessage: Union[str, Missing] = missing
     readOnlyStyle: Union[str, Missing] = missing
     showname: Union[int, Missing] = missing
+    nosave: Union[bool, Missing] = missing
+    ignorestyles: Union[bool, Missing] = missing
+    clearstyles: Union[bool, Missing] = missing
 
 
 class TextfieldMarkupSchema(GenericMarkupSchema):
@@ -46,6 +49,9 @@ class TextfieldMarkupSchema(GenericMarkupSchema):
     errormessage = fields.String(allow_none=True)
     readOnlyStyle = fields.String(allow_none=True)
     showname = fields.Int(allow_none=True)
+    nosave = fields.Boolean()
+    ignorestyles = fields.Boolean()
+    clearstyles = fields.Boolean()
 
     @post_load
     def make_obj(self, data):
@@ -148,12 +154,18 @@ def answer(args: TextfieldAnswerModel):
     result = {'web': web}
     c = args.input.c
 
+
     nosave = args.input.nosave
 
     if not nosave:
         save = {"c": c}
+        if not args.markup.clearstyles and args.state is not None:
+            if args.state.styles:
+                save = {"c": c, "styles": args.state.styles}
         result["save"] = save
         web['result'] = "saved"
+        if args.markup.clearstyles:
+            web['clear'] = True
 
     return jsonify(result)
 

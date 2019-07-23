@@ -26,6 +26,9 @@ const NumericfieldMarkup = t.intersection([
         wheel: t.boolean,
         verticalkeys: t.boolean,
         autosave: t.boolean,
+        nosave: t.boolean,
+        ignorestyles: t.boolean,
+        clearstyles: t.boolean,
     }),
     GenericPluginMarkup,
     t.type({
@@ -39,7 +42,9 @@ const NumericfieldAll = t.intersection([
         info: Info,
         markup: NumericfieldMarkup,
         preview: t.boolean,
-        state: nullable(t.type({c: t.union([t.string, t.number, t.null])})),
+        state: nullable(t.type({
+            c: t.union([t.string, t.number, t.null]),
+            styles: nullable(t.dictionary(t.string, t.string))})),
     }),
 ]);
 
@@ -53,7 +58,9 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
     private errormessage = "";
     private hideSavedText = true;
     private redAlert = false;
-    private saveResponse: {saved: boolean, message: (string | undefined)} = {saved: false, message: undefined};
+    private saveResponse: { saved: boolean, message: (string | undefined) } = {saved: false, message: undefined};
+    private preventedAutosave = false;
+    private styles: {[index: string]: string} = {};
 
     getDefaultMarkup() {
         return {};
@@ -93,6 +100,9 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
         this.modelOpts = {debounce: {blur: 0}};
         this.vctrl.addTimComponent(this, this.attrs.tag );
         this.initialValue = this.numericvalue;
+        if (this.attrsall.state && this.attrsall.state.styles && !this.attrs.ignorestyles) {
+            this.applyStyling(this.attrsall.state.styles)
+        }
     }
 
     /**
@@ -134,7 +144,7 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
     }
 
     // TODO: Use answer content as arg or entire IAnswer?
-    setAnswer(content: { [index: string]: string }): { ok: boolean, message: (string | undefined) } {
+    setAnswer(content: { [index: string]: any }): { ok: boolean, message: (string | undefined) } {
         let message;
         let ok = true;
         // TODO: should receiving empty answer reset to defaultnumber or clear field?
@@ -154,6 +164,9 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
                 this.numericvalue = undefined;
                 ok = false;
                 message = "Couldn't find related content (\"c\")";
+            }
+            if (!this.attrs.ignorestyles) {
+                this.applyStyling(content.styles);
             }
         }
         this.initialValue = this.numericvalue;
@@ -212,11 +225,15 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
 
     // noinspection JSUnusedGlobalSymbols
     /**
-     * Autosaver used by ng-blur in numericfield-Runner component.
-     * Needed to separate from other save methods because of the if-structure.
+     * Autosaver used by ng-blur in textfieldApp component.
+     * Needed to seperate from other save methods because of the if-structure.
      * Unused method warning is suppressed, as the method is only called in template.
      */
     autoSave() {
+        if (this.preventedAutosave) {
+            this.preventedAutosave = false;
+            return;
+        }
         if (this.attrs.autosave) {
             this.saveText();
         }
@@ -240,6 +257,22 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
      */
     isPlainText() {
         return (this.attrs.readOnlyStyle == "plaintext" && window.location.pathname.startsWith("/view/"));
+    }
+
+
+    /**
+     * Parses "styles" from the plugin answer that were saved by tableForm
+     * For now only backgroundColor is supported
+     * See TODOs at textfield
+     */
+    applyStyling(styles: {[index: string]: string}){
+        if (!styles || Object.keys(styles).length == 0) {
+            this.styles = {};
+            return;
+        }
+        if (styles.backgroundColor){
+            this.styles.backgroundColor = styles.backgroundColor
+        }
     }
 
     /**
@@ -283,7 +316,7 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
         if (this.initialValue != this.numericvalue) {
             this.hideSavedText = true;
         }
-        return (this.initialValue != this.numericvalue);
+        return (!this.attrs.nosave && this.initialValue != this.numericvalue);
     }
 
     /**
@@ -315,7 +348,7 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
             params.input.nosave = true;
         }
         const url = this.pluginMeta.getAnswerUrl();
-        const r = await to($http.put<{web: {result: string, error?: string}}>(url, params));
+        const r = await to($http.put<{web: {result: string, error?: string, clear?: boolean}}>(url, params));
         this.isRunning = false;
         if (r.ok) {
             const data = r.result.data;
@@ -328,6 +361,9 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
                 this.hideSavedText = false;
                 this.redAlert = false;
                 this.saveResponse.saved = true;
+            }
+            if (data.web.clear) {
+                this.applyStyling({});
             }
             this.saveResponse.message = this.errormessage;
         } else {
@@ -367,7 +403,7 @@ numericfieldApp.component("numericfieldRunner", {
                class="form-control"
                ng-model="$ctrl.numericvalue"
                ng-blur="$ctrl.autoSave()"
-               ng-keydown="$event.keyCode === 13 && $ctrl.saveText() && $ctrl.changeFocus()"
+               ng-keydown="$event.keyCode === 13 && $ctrl.autoSave() && $ctrl.changeFocus()"
                ng-model-options="::$ctrl.modelOpts"
                ng-change="$ctrl.checkNumericfield()"
                ng-trim="false"
@@ -376,7 +412,8 @@ numericfieldApp.component("numericfieldRunner", {
                tooltip-is-open="$ctrl.f.$invalid && $ctrl.f.$dirty"
                tooltip-trigger="mouseenter"
                placeholder="{{::$ctrl.inputplaceholder}}"
-               ng-class="{warnFrame: ($ctrl.isUnSaved() && !$ctrl.redAlert), alertFrame: $ctrl.redAlert}">
+               ng-class="{warnFrame: ($ctrl.isUnSaved() && !$ctrl.redAlert), alertFrame: $ctrl.redAlert}"
+               ng-style="$ctrl.styles">
       </span>
       <!--<span ng-if="::$ctrl.isPlainText()" style="float:left;" ng-bind-html="$ctrl.inputstem + " " + $ctrl.numericvalue">{{$ctrl.numericvalue}}</span> -->
       <span ng-if="::$ctrl.isPlainText()" style="" >&nbsp;{{$ctrl.numericvalue}}</span>

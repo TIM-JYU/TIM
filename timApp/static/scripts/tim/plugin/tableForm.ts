@@ -57,6 +57,7 @@ const TableFormMarkup = t.intersection([
         emailUsersButtonText: nullable(t.string),
         fontSize: withDefault(t.string, "smaller"),
         fixedColor: withDefault(t.string, "#f0f0f0"),
+        saveStyles: withDefault(t.boolean, true),
     }),
     GenericPluginMarkup,
     t.type({
@@ -67,6 +68,7 @@ const TableFormMarkup = t.intersection([
 ]);
 
 const Rows = t.dictionary(t.string, t.dictionary(t.string, t.union([t.string, t.null, t.number])));
+const Styles = t.dictionary(t.string, t.dictionary(t.string, t.union([t.null, t.dictionary(t.string, t.string)])));
 
 interface IRowsType extends t.TypeOf<typeof Rows> {
 }
@@ -78,6 +80,7 @@ const TableFormAll = t.intersection([
         realnamemap: t.dictionary(t.string, t.string),
         emailmap: t.dictionary(t.string, t.string),
         rows: Rows,
+        styles: Styles,
     }),
     GenericPluginTopLevelFields,
     t.type({markup: TableFormMarkup}),
@@ -105,7 +108,7 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
     };
     // TODO: Change row format to properly typed format (maybe userobject:IRowstype) format
     private rows!: IRowsType;
-    private oldCellValues!: string;
+    private styles!: t.TypeOf<typeof Styles>;
     private realnames = false;
     private usernames = false;
     private emails = false;
@@ -188,10 +191,13 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
 
         this.rows = this.attrsall.rows || {};
         this.rowKeys = Object.keys(this.rows);
+        this.styles = this.attrsall.styles || {};
         this.setDataMatrix();
-        // this.oldCellValues = JSON.stringify(this.data.userdata.cells);
 
         this.data.saveCallBack = (cellsTosave, colValuesAreSame) => this.cellChanged(cellsTosave, colValuesAreSame);
+        if (this.attrs.saveStyles) {
+            this.data.saveStyleCallBack = (cellsTosave, colValuesAreSame) => this.cellChanged(cellsTosave, colValuesAreSame);
+        }
         this.data.cbCallBack = (cbs, n, index) => this.cbChanged(cbs, n, index);
 
         if (this.attrs.minWidth) {
@@ -364,7 +370,11 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
                     //     y++;
                     // }
                     for (y = 0; y < this.rowKeys.length; y++) {
-                        this.data.userdata.cells[colnumToLetters(x + xOffset) + (y + 1)] = this.rows[this.rowKeys[y]][this.attrsall.fields[x]];
+                        // this.data.userdata.cells[colnumToLetters(x + xOffset) + (y + 1)] = this.rows[this.rowKeys[y]][this.attrsall.fields[x]];
+                        this.data.userdata.cells[colnumToLetters(x + xOffset) + (y + 1)] = Object.assign(
+                            {cell: this.rows[this.rowKeys[y]][this.attrsall.fields[x]]},
+                            this.styles[this.rowKeys[y]][this.attrsall.fields[x]],
+                        );
                     }
                 }
             }
@@ -709,10 +719,12 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
                 //  of timTable's cell layout editing
                 if (!isPrimitiveCell(cell)) {
                     cellContent = cell.cell;
-                    const cellcopy = JSON.parse(JSON.stringify(cell));
-                    delete cellcopy.cell;
-                    // cellStyle = JSON.stringify(cellcopy);
-                    cellStyle = cellcopy;
+                    if (this.attrs.saveStyles) {
+                        const cellcopy = JSON.parse(JSON.stringify(cell));
+                        delete cellcopy.cell;
+                        // cellStyle = JSON.stringify(cellcopy);
+                        cellStyle = cellcopy;
+                    }
                 } else {
                     cellContent = cell;
                 }
@@ -730,7 +742,7 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
                     replyRows[this.userLocations[numberPlace]] = {};
                     replyRows[this.userLocations[numberPlace]][this.taskLocations[columnPlace]] = cellContent;
                 }
-                if (cellStyle) {
+                if (cellStyle != null && Object.keys(cellStyle).length != 0) {
                     // TODO
                     const taskWithField = this.taskLocations[columnPlace].split(".");
                     const docTaskStyles = taskWithField[0] + "." + taskWithField[1] + ".styles";
@@ -757,6 +769,11 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
         } else {
             this.error = r.result.data.error; // "Infinite loop or some other error?";
         }
+        const timtab = this.getTimTable();
+        if (!timtab) {
+            return;
+        }
+        timtab.confirmSaved();
         // TODO: Clear changedCells?
     }
 

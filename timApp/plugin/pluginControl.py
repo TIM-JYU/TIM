@@ -212,7 +212,7 @@ class PluginPlacement:
                 if plugin_name == 'csPlugin' and 'fields' in vals:
                     data, aliases, field_names = get_fields_and_users(
                         vals['fields'],
-                        [],
+                        [user.personal_group_prop],
                         block.doc.docinfo,
                         get_current_user_object(),
                         add_missing_fields=True,
