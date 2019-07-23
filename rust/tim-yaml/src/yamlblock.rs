@@ -64,6 +64,34 @@ mod tests {
     }
 
     #[test]
+    fn flow_list() {
+        print(r#"a: [
+        x,
+        "y",
+        'z[',
+        ]"#);
+    }
+
+    #[test]
+    fn list() {
+        print(r#"
+a:
+- 1
+- 2
+-
+        "#);
+    }
+
+    #[test]
+    fn weird_str() {
+        print(r#"
+a:
+  xx
+ yy
+        "#);
+    }
+
+    #[test]
     fn comments() {
         parses_to!(
             parser: YamlParser,
@@ -74,8 +102,8 @@ t: # start of t
  q: z"#,
 rule: Rule::yaml,
             tokens: [obj(7, 39,
-                    [keyvalue(7, 39, [key(7, 8), obj(22, 39,
-                                                [keyvalue(35, 39, [key(35, 36), unquoted_string(38, 39)])])])]), EOI(39, 39)]
+                    [keyvalue(7, 39, [key(7, 8), obj(34, 39,
+                                                [keyvalue(35, 39, [key(35, 36), unquoted_str(38, 39)])])])]), EOI(39, 39)]
         );
     }
 
@@ -95,10 +123,10 @@ f: g"#,
 rule: Rule::yaml,
             tokens: [obj(1, 20,
             [keyvalue(1, 15,
-                     [key(1, 2), obj(3, 15,
-                                     [keyvalue(5, 9, [key(5, 6), unquoted_string(8, 9)]),
-                                      keyvalue(11, 15, [key(11, 12), unquoted_string(14, 15)])])]),
-             keyvalue(16, 20, [key(16, 17), unquoted_string(19, 20)])]), EOI(20, 20)]
+                     [key(1, 2), obj(4, 15,
+                                     [keyvalue(5, 9, [key(5, 6), unquoted_str(8, 9)]),
+                                      keyvalue(11, 15, [key(11, 12), unquoted_str(14, 15)])])]),
+             keyvalue(16, 20, [key(16, 17), unquoted_str(19, 20)])]), EOI(20, 20)]
         );
 
         parses_to!(
@@ -116,13 +144,13 @@ g:
 "#,
             rule: Rule::yaml,
             tokens: [obj(1, 58,
-            [keyvalue(1, 58, [key(1, 2), obj(3, 58,
-                                             [keyvalue(5, 9, [key(5, 6), unquoted_string(8, 9)]),
-                                              keyvalue(11, 22, [key(11, 12), standard_yaml_multiline_string(14, 22, [unquoted_string(19, 22)])]),
-                                              keyvalue(24, 36, [key(24, 25), standard_yaml_multiline_string(27, 36, [unquoted_string(32, 36)])]),
-                                              keyvalue(38, 58, [key(38, 39), obj(40, 58,
-                                                                                [keyvalue(45, 49, [key(45, 46), unquoted_string(48, 49)]),
-                                                                                 keyvalue(54, 58, [key(54, 55), unquoted_string(57, 58)])])])])])]), EOI(59, 59)]
+            [keyvalue(1, 58, [key(1, 2), obj(4, 58,
+                                             [keyvalue(5, 9, [key(5, 6), unquoted_str(8, 9)]),
+                                              keyvalue(11, 22, [key(11, 12), standard_yaml_multiline_str(14, 22, [multiline_str_line(19, 22)])]),
+                                              keyvalue(24, 36, [key(24, 25), standard_yaml_multiline_str(27, 36, [multiline_str_line(32, 36)])]),
+                                              keyvalue(38, 58, [key(38, 39), obj(41, 58,
+                                                                                [keyvalue(45, 49, [key(45, 46), unquoted_str(48, 49)]),
+                                                                                 keyvalue(54, 58, [key(54, 55), unquoted_str(57, 58)])])])])])]), EOI(59, 59)]
         );
 
         parses_to!(
@@ -145,13 +173,13 @@ ff: hello
 "#,
             rule: Rule::yaml,
             tokens: [obj(0, 81,
-            [keyvalue(0, 4, [key(0, 1), unquoted_string(3, 4)]),
-             keyvalue(5, 9, [key(5, 6), unquoted_string(8, 9)]),
-             keyvalue(10, 22, [key(10, 11), standard_yaml_multiline_string(13, 22, [unquoted_string(16, 18), unquoted_string(20, 22)])]),
-             keyvalue(23, 36, [key(23, 24), standard_yaml_multiline_string(26, 36, [unquoted_string(30, 32), unquoted_string(34, 36)])]),
-             keyvalue(37, 45, [key(37, 38), obj(39, 45, [keyvalue(41, 45, [key(41, 42), unquoted_string(44, 45)])])]),
-             keyvalue(46, 50, [key(46, 47), unquoted_string(49, 50)]),
-             keyvalue(51, 81, [key(51, 57), tim_multiline_string(59, 81, [unquoted_string(60, 62), tim_multiline_string_content(63, 79, [unquoted_string(63, 68), unquoted_string(69, 78)])])])]), EOI(82, 82)]
+            [keyvalue(0, 4, [key(0, 1), unquoted_str(3, 4)]),
+             keyvalue(5, 9, [key(5, 6), unquoted_str(8, 9)]),
+             keyvalue(10, 22, [key(10, 11), standard_yaml_multiline_str(13, 22, [multiline_str_line(16, 18), multiline_str_line(20, 22)])]),
+             keyvalue(23, 36, [key(23, 24), standard_yaml_multiline_str(26, 36, [multiline_str_line(30, 32), multiline_str_line(34, 36)])]),
+             keyvalue(37, 45, [key(37, 38), obj(40, 45, [keyvalue(41, 45, [key(41, 42), unquoted_str(44, 45)])])]),
+             keyvalue(46, 50, [key(46, 47), unquoted_str(49, 50)]),
+             keyvalue(51, 81, [key(51, 57), tim_multiline_str(59, 81, [multiline_str_line(60, 62), tim_multiline_str_content(63, 79, [multiline_str_line(63, 68), multiline_str_line(69, 78)])])])]), EOI(82, 82)]
         );
     }
 

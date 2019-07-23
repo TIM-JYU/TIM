@@ -1,43 +1,58 @@
 obj = ${
-  BLANK_LINE* ~
-  PEEK_ALL ~
-  PUSH(indentation) ~
+  block_start ~
   keyvalue ~
-  (BLANK_LINE+ ~ PEEK_ALL ~ keyvalue)* ~
+  (BLANK_LINES ~ PEEK_ALL ~ keyvalue)* ~
   DROP
 }
 
 indentation = _{ SPACE* }
 
-yaml = _{ SOI ~ PUSH("") ~ (obj | "") ~ DROP ~ EOI }
+yaml = _{ SOI ~ BLANK_LINE* ~ PUSH(indentation) ~ (obj | "") ~ DROP ~ EOI }
 
-keyvalue = { key ~ ":" ~ (COMMENT | SPACE*) ~ value ~ COMMENT? }
+BLANK_LINES = _{ BLANK_LINE+ }
+
+keyvalue = { key ~ ":" ~ (BLANK_LINES | SPACE*) ~ value ~ COMMENT? }
 
 key = { 'a'..'z'+ }
 
-value = _{ multilinevalue | onelinevalue }
+value = _{ multilinestr | obj | flow_list | list | boolean | number | onelinestr | null }
 
-onelinevalue = _{boolean | number | onelinestring | null}
+list_element = { "-" ~ &EOW ~ SPACE* ~ value }
 
-multilinevalue = _{ multilinestring | obj | list }
+block_start = _{
+  BLANK_LINE* ~
+  PEEK_ALL ~ // require correct indentation
+  PUSH(indentation) // new indentation, if any
+}
 
-multilinestring = _{ tim_multiline_string | standard_yaml_multiline_string }
+list = {
+  block_start ~
+  list_element ~
+  (BLANK_LINES ~ PEEK_ALL ~ list_element)* ~
+  DROP
+}
 
-tim_multiline_string_content = { (!(PEEK ~ NEWLINE) ~ unquoted_string ~ NEWLINE)* }
+multilinestr = _{ tim_multiline_str | standard_yaml_multiline_str }
 
-tim_multiline_string = {
+tim_multiline_str_content = { (!(PEEK ~ NEWLINE) ~ multiline_str_line ~ NEWLINE)* }
+
+tim_multiline_str = {
   "|" ~
   SPACE* ~
-  PUSH(unquoted_string) ~
+  PUSH(multiline_str_line) ~
   NEWLINE ~
-  tim_multiline_string_content ~
+  tim_multiline_str_content ~
   POP
 }
 
-standard_yaml_multiline_string = { standard_yaml_multiline_string_noindent | standard_yaml_multiline_string_1 }
+multiline_str_line = { (!NEWLINE ~ ANY)+ }
 
-standard_yaml_multiline_string_noindent = _{
-  "|" ~
+standard_yaml_multiline_str = { standard_yaml_multiline_str_noindent | standard_yaml_multiline_str_1 }
+
+std_multiline_start = _{ "|" | ">" }
+
+standard_yaml_multiline_str_noindent = _{
+  std_multiline_start ~
   ("-" | "+")? ~
   NEWLINE ~
   PEEK_ALL ~
@@ -45,8 +60,9 @@ standard_yaml_multiline_string_noindent = _{
   standard_yaml_multiline_end
 }
 
-standard_yaml_multiline_string_1 = _{
-  "|1" ~
+standard_yaml_multiline_str_1 = _{
+  std_multiline_start ~
+  "1" ~
   ("-" | "+")? ~
   NEWLINE ~
   PEEK_ALL ~
@@ -55,14 +71,28 @@ standard_yaml_multiline_string_1 = _{
 }
 
 standard_yaml_multiline_end = _{
-  onelinestring ~
-  (((NEWLINE ~ PEEK_ALL ~ onelinestring)+ | (&NEWLINE ~ !PEEK_ALL)) | EOI) ~
+  multiline_str_line ~
+  (NEWLINE ~ PEEK_ALL ~ multiline_str_line)* ~
   DROP
 }
 
-onelinestring = _{unquoted_string}
+onelinestr = _{ unquoted_str | double_quoted_str | single_quoted_str }
 
-unquoted_string = { (!NEWLINE ~ !COMMENT ~ ANY)+ }
+unquoted_str = { !illegal_unquoted_start_char ~ ((!(NEWLINE | COMMENT | ": ") | (NEWLINE ~ PEEK_ALL ~ SPACE+)+) ~ ANY)+ }
+
+flow_unquoted_str = { !illegal_unquoted_start_char ~ (!(NEWLINE | COMMENT | ": " | "," | "[" | "]") ~ ANY)+ }
+
+double_quoted_str = { "\"" ~ (("\\" ~ ("\"" | "e" | "r" | "a" | "f" | "v" | "b" | "n" | ("x" ~ ASCII_HEX_DIGIT{2}) | ("u" ~ ASCII_HEX_DIGIT{4}))) | (!"\"" ~ ANY))* ~ "\"" }
+
+single_quoted_str = { "'" ~ (!"'" ~ ANY)* ~ "'" }
+
+illegal_unquoted_start_char = {
+  "&" | "%" | "'" | "\"" | "@" | "!" | "[" | "]" | "*" | "|" | "`" | ">" | ","
+  | (("?" | "-" | "=" | "~") ~ EOW)
+}
+
+// end of word
+EOW = _{ NEWLINE | EOI | SPACE }
 
 boolean = { "true" | "false" | "yes" | "no" }
 
@@ -70,12 +100,16 @@ number = { '0'..'9'+ }
 
 null = { "null" | "" }
 
-list = { "a" }
+flow_list_element = _{ flow_unquoted_str | double_quoted_str | single_quoted_str }
+
+W = _{ (WHITESPACE | COMMENT)* }
+
+flow_list = { "[" ~ W ~ (flow_list_element ~ (W ~ "," ~ W ~ flow_list_element)* ~ ("," ~ W)?)? ~ W ~ "]" }
 
 SPACE = _{ " " }
 
 WHITESPACE = _{ SPACE | NEWLINE }
 
-BLANK_LINE = _{ (COMMENT | SPACE*) ~ NEWLINE }
+BLANK_LINE = _{ COMMENT | NEWLINE | SPACE* ~ &NEWLINE }
 
 COMMENT = _{ (WHITESPACE | SOI) ~ "#" ~ (!NEWLINE ~ ANY)* }
