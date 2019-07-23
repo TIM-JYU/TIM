@@ -16,6 +16,8 @@ const TimMenuMarkup = t.intersection([
         // menu: nullable(t.array(t.string)),
         menu: nullable(t.string),
         backgroundColor: nullable(t.string),
+        textColor: nullable(t.string),
+        fontSize: nullable(t.string),
     }),
     GenericPluginMarkup,
     t.type({
@@ -44,7 +46,7 @@ interface ITimMenuItem {
     open: boolean;
 }
 
-export let activeTopMenu: string | undefined;
+// export let activeTopMenu: string | undefined;
 
 class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.TypeOf<typeof TimMenuAll>, typeof TimMenuAll> {
     private menu: any;
@@ -55,7 +57,8 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
     private menuId: string = String.fromCharCode(65 + Math.floor(Math.random() * 26)) + Date.now();
     private previousScroll: number | undefined = 0; // Store y-value of previous scroll event for comparison.
     private previouslyClicked: ITimMenuItem | undefined;
-    private style: string = "";
+    private menuStyle: string = "";
+    private barStyle: string = "";
 
     getDefaultMarkup() {
         return {};
@@ -156,36 +159,46 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
      * Makes the element follow when scrolling for one screen height after top bar.
      */
     toggleSticky() {
-        console.log(activeTopMenu);
-        if (activeTopMenu && activeTopMenu !== this.menuId) {
-            console.log(this.menuId + " cancelled");
-        }
+        // TODO: Multiple topMenus.
         const placeholderY = document.getElementById(`${this.menuId}-placeholder`).getBoundingClientRect().top;
         const scrollY = $(window).scrollTop();
         // Sticky can only show when the element's place in document goes outside upper bounds.
-        if (placeholderY < 0) {
+        if (scrollY && placeholderY < 0) {
             // When scrolling downwards, don't show fixed menu and hide placeholder.
             // Otherwise (i.e. scrolling upwards), show menu as fixed and let placeholder take its place in document.
-            if (scrollY > this.previousScroll) {
+            if (this.previousScroll && scrollY > this.previousScroll) {
                 document.getElementById(this.menuId).classList.remove("top-menu");
                 document.getElementById(`${this.menuId}-placeholder-content`).classList.add("hidden");
-                activeTopMenu = undefined;
+                // activeTopMenu = undefined;
             } else {
                 document.getElementById(this.menuId).classList.add("top-menu");
                 document.getElementById(`${this.menuId}-placeholder-content`).classList.remove("hidden");
-                activeTopMenu = this.menuId;
+                // activeTopMenu = this.menuId;
             }
         } else {
             document.getElementById(this.menuId).classList.remove("top-menu");
             document.getElementById(`${this.menuId}-placeholder-content`).classList.add("hidden");
-            activeTopMenu = undefined;
+            // activeTopMenu = undefined;
         }
         this.previousScroll = $(window).scrollTop();
     }
 
+    /**
+     * Set styles defined in optional attributes.
+     */
     private setStyles() {
         if (this.attrs.backgroundColor) {
-            this.style += `background-color: ${this.attrs.backgroundColor};"`;
+            this.menuStyle += `background-color: ${this.attrs.backgroundColor}; `;
+            this.barStyle += `background-color: ${this.attrs.backgroundColor}; `;
+        }
+        if (this.attrs.textColor) {
+            // TODO: Doesn't override a?
+            this.menuStyle += `color: ${this.attrs.textColor} !important; `;
+            this.barStyle += `color: ${this.attrs.textColor} !important; `;
+        }
+        if (this.attrs.fontSize) {
+            this.menuStyle += `font-size: ${this.attrs.fontSize}; `;
+            this.barStyle += `font-size: ${this.attrs.fontSize}; `;
         }
     }
 }
@@ -200,19 +213,19 @@ timApp.component("timmenuRunner", {
 <tim-markup-error ng-if="::$ctrl.markupError" data="::$ctrl.markupError"></tim-markup-error>
 <span ng-if="$ctrl.topMenu" id="{{$ctrl.menuId}}-placeholder"></span>
 <div ng-if="$ctrl.topMenu" id="{{$ctrl.menuId}}-placeholder-content"><br></div>
-<div id="{{$ctrl.menuId}}" class="tim-menu" style="{{$ctrl.style}}">
+<div id="{{$ctrl.menuId}}" class="tim-menu" style="{{$ctrl.barStyle}}">
     <span ng-repeat="t1 in $ctrl.menu">
         <div ng-if="t1.items.length > 0" class="btn-group" uib-dropdown is-open="status.isopen" id="simple-dropdown" style="cursor: pointer;">
           <span uib-dropdown-toggle ng-disabled="disabled" ng-bind-html="t1.text+$ctrl.openingSymbol" ng-click="$ctrl.toggleSubmenu(t1, undefined)"></span>
-          <ul class="dropdown-menu" uib-dropdown-menu aria-labelledby="simple-dropdown" style="{{$ctrl.style}}">
+          <ul class="dropdown-menu" uib-dropdown-menu aria-labelledby="simple-dropdown" style="{{$ctrl.menuStyle}}">
             <li class="tim-menu-item" ng-repeat="t2 in t1.items" role="menuitem">
                 <span class="tim-menu-item" ng-if="t2.items.length > 0">
                     <span ng-bind-html="t2.text+$ctrl.openingSymbol" ng-click="$ctrl.toggleSubmenu(t2, t1)"></span>
-                    <ul class="tim-menu-submenu" ng-if="t2.open" style="{{$ctrl.style}}">
+                    <ul class="tim-menu-submenu tim-menu-right tim-menu-up" ng-if="t2.open" style="{{$ctrl.menuStyle}}">
                         <li class="tim-menu-item" ng-repeat="t3 in t2.items">
                             <span class="tim-menu-item" ng-if="t3.items.length > 0">
                                 <span ng-bind-html="t3.text+$ctrl.openingSymbol" ng-click="$ctrl.toggleSubmenu(t3, t2)"></span>
-                                <ul class="tim-menu-submenu" ng-if="t3.open" style="{{$ctrl.style}}">
+                                <ul class="tim-menu-submenu tim-menu-left tim-menu-up" ng-if="t3.open" style="{{$ctrl.menuStyle}}">
                                     <li class="tim-menu-item" ng-repeat="t4 in t3.items" ng-bind-html="t4.text"></li>
                                 </ul>
                             </span>

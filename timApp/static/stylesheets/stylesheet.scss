@@ -1317,10 +1317,24 @@ p.closeButton::before {
     z-index: 999;
 }
 
+.tim-menu-right {
+    left: 110%;
+}
+
+.tim-menu-left {
+    right: 110%;
+}
+
+.tim-menu-up {
+    bottom: 110%;
+}
+
+.tim-menu-down {
+    top: 0%;
+}
+
 .tim-menu-submenu {
     position: absolute;
-    top: 0%;
-    left: 110%;
     z-index: 1001;
     float: left;
     min-width: 160px;
@@ -1341,4 +1355,3 @@ p.closeButton::before {
 .hidden {
     visibility: hidden;
 }
-

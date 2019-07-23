@@ -61,7 +61,8 @@ class TimMenuMarkupModel(GenericMarkupModel):
     separator: Union[str, Missing] = missing
     openingSymbol: Union[str, Missing] = missing
     backgroundColor: Union[str, Missing] = missing
-    #menu: Union[List[str], Missing] = missing
+    textColor: Union[str, Missing] = missing
+    fontSize: Union[str, Missing] = missing
     menu: Union[str, Missing] = missing
 
 
@@ -74,12 +75,13 @@ class TimMenuItemSchema(Schema):
         return TimMenuItemModel(**data)
 
 class TimMenuMarkupSchema(GenericMarkupSchema):
-    # Defaults here are overridden in TS.
     hoverOpen = fields.Bool(allow_none=True, default=True)
     topMenu = fields.Bool(allow_none=True, default=False)
     separator = fields.Str(allow_none=True, default="&nbsp;")
     openingSymbol = fields.Str(allow_none=True, default="&#9662;")
-    backgroundColor = fields.Str(allow_none=True, default="#FFFFFF")
+    backgroundColor = fields.Str(allow_none=True)
+    textColor = fields.Str(allow_none=True)
+    fontSize = fields.Str(allow_none=True)
     #menu = fields.List(fields.Str())
     menu = fields.Str()
     # menu = fields.List(fields.Nested(TimMenuItemSchema))
@@ -105,6 +107,8 @@ class TimMenuInputModel:
     separator: str
     openingSymbol: str
     backgroundColor: str
+    textColor: str
+    fontSize: str
     url: str
 
 
@@ -113,6 +117,7 @@ class TimMenuInputSchema(Schema):
     separator = fields.Str(required=False)
     openingSymbol = fields.Str(required=False)
     backgroundColor = fields.Str(required=False)
+    fontSize = fields.Str(required=False)
     url = fields.Str(required=False)
 
     @post_load
