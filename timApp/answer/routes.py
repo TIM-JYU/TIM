@@ -37,6 +37,7 @@ from timApp.document.post_process import hide_names_in_teacher
 from timApp.item.block import Block, BlockType
 from timApp.markdown.dumboclient import call_dumbo
 from timApp.notification.notify import multi_send_email
+from timApp.plugin import pluginControl
 from timApp.plugin.containerLink import call_plugin_answer
 from timApp.plugin.plugin import Plugin, PluginWrap, NEVERLAZY, TaskNotFoundException
 from timApp.plugin.plugin import PluginType
@@ -1076,6 +1077,23 @@ def get_answers(task_id, user_id):
                 for u in answer.users_all:
                     maybe_hide_name(d, u)
         return json_response(user_answers)
+    except Exception as e:
+        return abort(400, str(e))
+
+@answers.route("/globalAnswer/<task_id>")
+def get_global_answers(task_id):
+    verify_logged_in()
+    try:
+        tid = TaskId.parse(task_id)
+    except PluginException as e:
+        return abort(400, str(e))
+    d = get_doc_or_abort(tid.doc_id)
+    user = get_current_user_object()
+    # TODO: Needed?
+    verify_seeanswers_access(d)
+    try:
+        user_answers = pluginControl.get_latest_for_tasks([tid],{})
+        return json_response([user_answers[1][0][0]])
     except Exception as e:
         return abort(400, str(e))
 

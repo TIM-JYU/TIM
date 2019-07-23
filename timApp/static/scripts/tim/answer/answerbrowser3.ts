@@ -1,4 +1,4 @@
-import {IController, IRootElementService, IScope, ITranscludeFunction} from "angular";
+import {IController, IHttpPromise, IRootElementService, IScope, ITranscludeFunction} from "angular";
 import * as allanswersctrl from "tim/answer/allAnswersController";
 import {timApp} from "tim/app";
 import {timLogTime} from "tim/util/timTiming";
@@ -104,7 +104,7 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
             return false;
         }
         const a: any = c.attrsall;
-        if (a && a.markup && (a.markup.useCurrentUser || a.markup.globalField)) {
+        if (a && a.markup && a.markup.useCurrentUser) {
             return true;
         }
         return false;
@@ -468,7 +468,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
             ref_from_doc_id: this.viewctrl.docId,
             ref_from_par_id: getParId(par),
         };
-        if (this.selectedAnswer.id !== this.loadedAnswer.id || this.loadedAnswer.review !== this.review) {
+        if (this.selectedAnswer.id !== this.loadedAnswer.id || this.loadedAnswer.review !== this.review || this.isGlobalField()) {
             this.loading++;
             const r = await to($http.get<{ html: string, reviewHtml: string }>("/getState", {
                 params: {
@@ -742,7 +742,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
     }
 
     private handleAnswerFetch(data: IAnswer[]) {
-        if (data.length > 0 && (this.hasUserChanged() || data.length !== this.answers.length)) {
+        if (data.length > 0 && (this.hasUserChanged() || data.length !== this.answers.length || this.isGlobalField())) {
             this.answers = data;
             this.updateFiltered();
             this.selectedAnswer = this.filteredAnswers.length > 0 ? this.filteredAnswers[0] : undefined;
@@ -774,6 +774,22 @@ export class AnswerBrowserController extends DestroyScope implements IController
         return uid;
     }
 
+    public isGlobalField() {
+        // TODO: Refactor
+        if (!this.viewctrl || !this.taskId) {
+            return false;
+        }
+        const c: any = this.viewctrl.getTimComponentByName(this.taskId);
+        if (!c) {
+            return false;
+        }
+        const a: any = c.attrsall;
+        if (a && a.markup && a.markup.globalField) {
+            return true;
+        }
+        return false;
+    }
+
     /* Return user answers, null = do not care */
     private async getAnswers() {
         const uid = this.isUseCurrentUser(this.taskId);
@@ -781,11 +797,21 @@ export class AnswerBrowserController extends DestroyScope implements IController
             return undefined;
         }
         this.loading++;
-        const r = await to($http.get<IAnswer[]>(`/answers/${this.taskId}/${uid}`, {
+
+        let r1 = to($http.get<IAnswer[]>(`/answers/${this.taskId}/${uid}`, {
             params: {
                 _: Date.now(),
             },
         }));
+
+        if (this.isGlobalField()) {
+            r1 = to($http.get<IAnswer[]>(`/globalAnswer/${this.taskId}`, {
+                params: {
+                    _: Date.now(),
+                },
+            }));
+        }
+        const r = await r1;
         this.loading--;
         if (!r.ok) {
             this.showError(r.result);
@@ -829,8 +855,8 @@ export class AnswerBrowserController extends DestroyScope implements IController
             // if (!answers || answers.length === 0) {
             //     // if ( answers != null ) { this.resetITimComponent(); }
             // } else {
-            //     // this.loadedAnswer = {review: false, id: undefined};
-            //     // this.changeAnswer();
+            //     this.loadedAnswer = {review: false, id: undefined};
+            //     this.changeAnswer();
             // }
             await this.loadInfo();
         }
