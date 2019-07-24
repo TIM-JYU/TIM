@@ -690,3 +690,12 @@ def finalize_inline_yaml(p_yaml: Optional[str]):
     if '\n' not in p_yaml:
         return f'{{{p_yaml}}}'
     return p_yaml
+
+
+def is_global(plugin: Plugin):
+    return is_global_id(plugin.task_id)
+    # return plugin.values.get("globalField", False)
+
+
+def is_global_id(task_id: TaskId):
+    return task_id.task_name.startswith('GLO')

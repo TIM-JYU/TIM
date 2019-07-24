@@ -26,7 +26,7 @@ from timApp.markdown.htmlSanitize import sanitize_html
 from timApp.plugin.containerLink import plugin_reqs, get_plugin
 from timApp.plugin.containerLink import render_plugin_multi, render_plugin, get_plugins
 from timApp.plugin.plugin import Plugin, PluginRenderOptions, load_markup_from_yaml, expand_macros_for_plugin, \
-    find_inline_plugins, InlinePlugin, finalize_inline_yaml, PluginWrap
+    find_inline_plugins, InlinePlugin, finalize_inline_yaml, PluginWrap, is_global, WANT_FIELDS
 from timApp.plugin.pluginOutputFormat import PluginOutputFormat
 from timApp.plugin.pluginexception import PluginException
 from timApp.plugin.taskid import TaskId
@@ -209,7 +209,7 @@ class PluginPlacement:
             p_range = 0, len(md)
             try:
                 vals = load_markup_from_yaml(md, settings.global_plugin_attrs(), block.get_attr('plugin'))
-                if plugin_name == 'csPlugin' and 'fields' in vals:
+                if plugin_name in WANT_FIELDS and 'fields' in vals:
                     data, aliases, field_names = get_fields_and_users(
                         vals['fields'],
                         [user.personal_group_prop],
@@ -506,22 +506,21 @@ def pluginify(doc: Document,
     # TODO: Get plugin values before 1st answer query and loop for special cases
     #  (globalField, useCurrentUser etc)
     taketime("glb", "globalField")
-    if doc.own_settings.get("tipidebug", False) or True:
-        task_ids = []
-        plugins_to_change = []
-        for plugin_name, plugin_block_map in plugins.items():
-            for _, plugin in plugin_block_map.items():
-                if plugin.values.get("globalField", False):
-                    task_ids.append(plugin.task_id)
-                    plugins_to_change.append(plugin)
-        if task_ids:
-            get_latest_for_tasks(task_ids, answer_map)
-            for p in plugins_to_change:
-                a = answer_map.get(p.task_id.doc_task,None)
-                if not a:
-                    continue
-                p.answer = a[0]
-                p.answer_count = a[1]
+    task_ids = []
+    plugins_to_change = []
+    for plugin_name, plugin_block_map in plugins.items():
+        for _, plugin in plugin_block_map.items():
+            if is_global(plugin):
+                task_ids.append(plugin.task_id)
+                plugins_to_change.append(plugin)
+    if task_ids:
+        get_latest_for_tasks(task_ids, answer_map)
+        for p in plugins_to_change:
+            a = answer_map.get(p.task_id.doc_task,None)
+            if not a:
+                continue
+            p.answer = a[0]
+            p.answer_count = a[1]
 
     taketime("glb", "done")
     # taketime("answ", "done", len(answers))

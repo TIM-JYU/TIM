@@ -33,7 +33,7 @@ const TableFormMarkup = t.intersection([
         maxWidth: t.string,
         minWidth: t.string,
         maxRows: t.string,
-        maxCols: withDefault(t.string, "fit-content"),
+        maxCols: withDefault(t.string, "unset"),
         open: t.boolean,
         filterRow: t.boolean,
         toolbarTemplates: t.array(t.object),
@@ -371,10 +371,16 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
                     // }
                     for (y = 0; y < this.rowKeys.length; y++) {
                         // this.data.userdata.cells[colnumToLetters(x + xOffset) + (y + 1)] = this.rows[this.rowKeys[y]][this.attrsall.fields[x]];
-                        this.data.userdata.cells[colnumToLetters(x + xOffset) + (y + 1)] = Object.assign(
-                            {cell: this.rows[this.rowKeys[y]][this.attrsall.fields[x]]},
-                            this.styles[this.rowKeys[y]][this.attrsall.fields[x]],
-                        );
+                        if ( this.styles && !angular.equals(this.styles, {}) ) {
+                            this.data.userdata.cells[colnumToLetters(x + xOffset) + (y + 1)] = Object.assign(
+                                {cell: this.rows[this.rowKeys[y]][this.attrsall.fields[x]]},
+                                this.styles[this.rowKeys[y]][this.attrsall.fields[x]],
+                            );
+                        } else {
+                            this.data.userdata.cells[colnumToLetters(x + xOffset) + (y + 1)] = Object.assign(
+                                {cell: this.rows[this.rowKeys[y]][this.attrsall.fields[x]]},
+                            );
+                        }
                     }
                 }
             }

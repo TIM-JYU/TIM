@@ -15,6 +15,22 @@ import {Binding, getURLParameter, markAsUsed, Require, to} from "../util/utils";
 import {showAllAnswers} from "./allAnswersController";
 import {IAnswer} from "./IAnswer";
 
+/*
+ * TODO: if forceBrowser and formMode, now does not show the browser after refresh in view-mode.
+ * globalField and useCurrentUser logic:
+ *
+ * - if useCrrentUser:
+ *     - save to current user allways
+ *     - take current user answers
+ *     - do not use/show the answerBrowser unless forceBrowser
+ *
+ * - if globalField:
+ *     - pick the answer from anybody (wins useCurrentUser)
+ *     - save to current user
+ *     - show and use answerBrowser
+ *     - if hideBrowser, still use answerBrowser but do not show
+ */
+
 markAsUsed(allanswersctrl);
 
 timLogTime("answerbrowser3 load", "answ");
@@ -45,13 +61,15 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
     public taskId!: Binding<string, "@">;
     private type!: Binding<string, "@">;
     private showBrowser: boolean = false;
+    private hideBrowser: boolean = false;
+    private forceBrowser: boolean = false;
     private pluginElement?: JQuery;
     public showPlaceholder = true;
     public abLoad = $q.defer<AnswerBrowserController | null>();
 
     constructor(private element: IRootElementService, private scope: IScope, private transclude: ITranscludeFunction) {
         super(scope, element);
-        transclude((clone, s) => {
+        transclude((clone, _) => {
             const c = clone!.filter("[data-plugin]");
             this.pluginElement = c;
             element.append(c);
@@ -69,7 +87,13 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
                 this.loadPlugin();
             }
         }
-        this.showPlaceholder = !this.isInFormMode();
+        if ( this.pluginMarkup().hideBrowser ) {
+            this.hideBrowser = true;
+            this.showPlaceholder = false;
+        }
+        if ( this.pluginMarkup().forceBrowser ) { this.forceBrowser = true; }
+
+        this.showPlaceholder = !this.isInFormMode() && !this.hideBrowser;
     }
 
     $postLink() {
@@ -94,20 +118,47 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
         return taskId && taskId.slice(-1) !== "."; // TODO should check more accurately
     }
 
-    public isUseCurrentUser() {
+    private pluginMarkupCache: any | null = null;
+    private pluginObjectCache: any | null = null;
+
+    public pluginObject(): any {
+        if ( this.pluginObjectCache != null ) { return this.pluginObjectCache; }
         // TODO: Refactor
+        this.pluginObjectCache = {};
         if (!this.viewctrl || !this.taskId) {
-            return false;
+            return this.pluginObjectCache;
         }
         const c: any = this.viewctrl.getTimComponentByName(this.taskId);
         if (!c) {
-            return false;
+            return this.pluginObjectCache;
+        }
+        this.pluginObjectCache = c;
+        return this.pluginObjectCache;
+    }
+
+    // Make a fake markup so it can be used wiyhout if's
+    public pluginMarkup(): any {
+        if ( this.pluginMarkupCache != null ) { return this.pluginMarkupCache; }
+        // TODO: Refactor
+        this.pluginMarkupCache = {};
+        const c: any = this.pluginObject();
+        if (!c) {
+            return this.pluginMarkupCache;
         }
         const a: any = c.attrsall;
-        if (a && a.markup && a.markup.useCurrentUser) {
-            return true;
+        if (a && a.markup) {
+            this.pluginMarkupCache = a.markup;
         }
-        return false;
+        return this.pluginMarkupCache;
+    }
+
+    public isUseCurrentUser(): boolean {
+        return this.pluginMarkup().useCurrentUser;
+    }
+
+    public isGlobal(): boolean {
+        return this.taskId.indexOf("GLO") >= 0;
+        // return this.pluginMarkup().globalField;
     }
 
     loadPlugin = () => {
@@ -121,10 +172,16 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
                 this.abLoad.resolve(ab);
             }
         }
+
         this.scope.$evalAsync(async () => {
             const plugin = this.getPluginElement();
+
             this.compiled = true;
-            if (this.viewctrl && !this.viewctrl.noBrowser && this.isValidTaskId(this.taskId) && this.type !== "lazyonly" && Users.isLoggedIn() && !this.isUseCurrentUser()) {
+            if (this.viewctrl &&
+                (!this.viewctrl.noBrowser || this.forceBrowser) &&
+                this.isValidTaskId(this.taskId) &&
+                this.type !== "lazyonly" && Users.isLoggedIn() &&
+                ((!this.isUseCurrentUser() && !this.isGlobal()) || this.forceBrowser) ) {
                 this.showBrowser = true;
             } else {
                 this.abLoad.resolve(null); // this plugin instance doesn't have answer browser
@@ -182,7 +239,8 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
         if (!this.viewctrl) {
             return false;
         }
-        return this.viewctrl.docSettings.form_mode && this.isFieldPlugin();
+        // return this.viewctrl.docSettings.form_mode && (this.isFieldPlugin() || this.isGlobal());
+        return this.viewctrl.docSettings.form_mode && (this.isFieldPlugin() );
     }
 
     isFieldPlugin() {
@@ -207,7 +265,8 @@ timApp.component("timPluginLoader", {
     template: `
 <div class="answerBrowserPlaceholder" ng-if="$ctrl.answerId && $ctrl.showPlaceholder && !$ctrl.isPreview()" style="width: 1px; height: 23px;"></div>
 <answerbrowser ng-class="{'has-answers': $ctrl.answerId}"
-               ng-if="$ctrl.showBrowser && !$ctrl.isPreview()"
+               ng-if="($ctrl.showBrowser || $ctrl.forceBrowser) && !$ctrl.isPreview()"
+               ng-hide="$ctrl.hideBrowser"
                task-id="$ctrl.taskId"
                answer-id="$ctrl.answerId">
 </answerbrowser>
@@ -274,7 +333,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
     }
 
     async $onInit() {
-        if (this.loader.isInFormMode()) {
+        if (this.loader.isInFormMode() && !this.forceBrowser()) {
             this.element.hide();
         }
         this.viewctrl.registerAnswerBrowser(this);
@@ -468,7 +527,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
             ref_from_doc_id: this.viewctrl.docId,
             ref_from_par_id: getParId(par),
         };
-        if (this.selectedAnswer.id !== this.loadedAnswer.id || this.loadedAnswer.review !== this.review || this.isGlobalField()) {
+        if (this.selectedAnswer.id !== this.loadedAnswer.id || this.loadedAnswer.review !== this.review || this.isGlobal()) {
             this.loading++;
             const r = await to($http.get<{ html: string, reviewHtml: string }>("/getState", {
                 params: {
@@ -663,17 +722,23 @@ export class AnswerBrowserController extends DestroyScope implements IController
     }
 
     getBrowserData() {
+        // This is data for interceptors answer route
         const common = {
             teacher: this.viewctrl.teacherMode,
             saveAnswer: !this.viewctrl.noBrowser,
         };
         if (this.user) {
+            let userId = this.user.id;
+            if ( this.isGlobal() ) {
+                const w: any = window;
+                userId = w.current_user.id;
+            }
             return {
                 answer_id: this.selectedAnswer ? this.selectedAnswer.id : undefined,
                 saveTeacher: this.saveTeacher || (this.loader.isInFormMode() && this.viewctrl.teacherMode), // TODO: Check if correct
                 points: this.points,
                 giveCustomPoints: this.giveCustomPoints,
-                userId: this.user.id,
+                userId: userId,
                 ...common,
             };
         } else {
@@ -742,7 +807,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
     }
 
     private handleAnswerFetch(data: IAnswer[]) {
-        if (data.length > 0 && (this.hasUserChanged() || data.length !== this.answers.length || this.isGlobalField())) {
+        if (data.length > 0 && (this.hasUserChanged() || data.length !== this.answers.length || this.isGlobal())) {
             this.answers = data;
             this.updateFiltered();
             this.selectedAnswer = this.filteredAnswers.length > 0 ? this.filteredAnswers[0] : undefined;
@@ -760,39 +825,55 @@ export class AnswerBrowserController extends DestroyScope implements IController
         }
     }
 
-    private isUseCurrentUser(taskId: string) {
+    private getUserOrCurrentUserForAnswers(taskId: string) {
         let uid = 0;
         if ( this.user ) { uid = this.user.id; }
+        // TODO: refactor to use pluginMarkup()
         const c: any = this.viewctrl.getTimComponentByName(this.taskId.split(".")[1]);
         if ( !c ) { return uid; }
         const a: any = c.attrsall;
-        if ( a && a.markup && a.markup.useCurrentUser ) {
+        if ( a && a.markup && a.markup.useCurrentUser) {
             const w: any = window;
-            this.user = w.current_user;
+            this.user = w.current_user;  // TODO: looks bad when function has a side effect?
             return w.current_user.id;
         }
         return uid;
     }
 
-    public isGlobalField() {
+    private pluginMarkupCache: any | null = null;
+
+    // Make a fake markup so it can be used wiyhout if's
+    public pluginMarkup(): any {
+        if ( this.pluginMarkupCache != null ) { return this.pluginMarkupCache; }
         // TODO: Refactor
+        this.pluginMarkupCache = {};
         if (!this.viewctrl || !this.taskId) {
-            return false;
+            return this.pluginMarkupCache;
         }
-        const c: any = this.viewctrl.getTimComponentByName(this.taskId);
+        const c: any = this.viewctrl.getTimComponentByName(this.taskId); // TODO: why here is no split?
         if (!c) {
-            return false;
+            return this.pluginMarkupCache;
         }
         const a: any = c.attrsall;
-        if (a && a.markup && a.markup.globalField) {
-            return true;
+        if (a && a.markup) {
+            this.pluginMarkupCache = a.markup;
         }
-        return false;
+        return this.pluginMarkupCache;
+    }
+
+    public isGlobal() {
+        return this.taskId.indexOf("GLO") >= 0;
+        // return this.pluginMarkup().globalField;
+    }
+
+    public forceBrowser() {
+        // TODO: Refactor
+        return this.pluginMarkup().forceBrowser;
     }
 
     /* Return user answers, null = do not care */
     private async getAnswers() {
-        const uid = this.isUseCurrentUser(this.taskId);
+        const uid = this.getUserOrCurrentUserForAnswers(this.taskId);
         if (!uid) {
             return undefined;
         }
@@ -804,7 +885,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
             },
         }));
 
-        if (this.isGlobalField()) {
+        if (this.isGlobal()) {
             r1 = to($http.get<IAnswer[]>(`/globalAnswer/${this.taskId}`, {
                 params: {
                     _: Date.now(),

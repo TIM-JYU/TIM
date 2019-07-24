@@ -29,6 +29,8 @@ export const GenericPluginMarkup = t.partial({
     lazy: t.boolean,
     resetText: nullable(t.string),
     stem: nullable(t.string),
+    hideBrowser: t.boolean,
+    forceBrowser: t.boolean,
 });
 
 export const Info = nullable(t.type({

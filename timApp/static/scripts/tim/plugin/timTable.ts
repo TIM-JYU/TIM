@@ -2779,7 +2779,7 @@ timApp.component("timTable", {
     template: `<div ng-if="!$ctrl.disabled" ng-mouseenter="$ctrl.mouseInsideTable()"
      ng-mouseleave="$ctrl.mouseOutTable()">
 <div ng-cloak ng-class="{
-          'csRunDiv': $ctrl.taskBorders}" class=" no-popup-menu" ng-style="::$ctrl.tableStyle()" >
+          'csRunDiv': $ctrl.taskBorders}" class="timTableRunDiv no-popup-menu" ng-style="::$ctrl.tableStyle()" >
     <h4 ng-if="::$ctrl.data.header" ng-bind-html="::$ctrl.data.header"></h4>
     <p ng-if="::$ctrl.data.stem" class="stem" ng-bind-html="::$ctrl.data.stem"></p>
     <div class="timTableContentDiv no-highlight">

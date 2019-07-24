@@ -183,10 +183,20 @@ tim-table {
      }
 
      .timTableTable {
-        width: min-content;
+        /* width: min-content; */
         margin-top: 1.5em;
      }
 
+}
+
+.tableform table {
+    width: min-content;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.tableform .timTableRunDiv {
+    margin: auto;
 }
 
 tim-tape {

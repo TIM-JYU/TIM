@@ -39,7 +39,7 @@ from timApp.markdown.dumboclient import call_dumbo
 from timApp.notification.notify import multi_send_email
 from timApp.plugin import pluginControl
 from timApp.plugin.containerLink import call_plugin_answer
-from timApp.plugin.plugin import Plugin, PluginWrap, NEVERLAZY, TaskNotFoundException
+from timApp.plugin.plugin import Plugin, PluginWrap, NEVERLAZY, TaskNotFoundException, is_global, is_global_id
 from timApp.plugin.plugin import PluginType
 from timApp.plugin.plugin import find_plugin_from_document
 from timApp.plugin.pluginControl import find_task_ids, pluginify
@@ -226,6 +226,30 @@ def get_useranswers_for_task(user, task_ids, answer_map):
     return answs
 
 
+def get_globals_for_tasks(task_ids, answer_map):
+    col = func.max(Answer.id).label('col')
+    cnt = func.count(Answer.id).label('cnt')
+    sub = (Answer
+           .query
+           .filter(Answer.task_id.in_(task_ids_to_strlist(task_ids)) & Answer.valid == True)
+           .add_columns(col, cnt)
+           .with_entities(col, cnt)
+           .group_by(Answer.task_id).subquery()
+           )
+    answers: List[Tuple[Answer, int]] = (
+        Answer.query.join(sub, Answer.id == sub.c.col)
+            .with_entities(Answer, sub.c.cnt)
+            .all()
+    )
+    # for answer, cnt in answers:
+    #     answer_map[answer.task_id] = answer, cnt
+    for answer in answers:
+            # answer_map[answer.task_id] = answer
+            asd = answer.Answer.to_json()
+            answer_map[answer.Answer.task_id] = asd
+    return cnt, answers
+
+
 @answers.route("/userAnswersForTasks", methods=['POST'])
 def get_answers_for_tasks():
     """
@@ -243,16 +267,23 @@ def get_answers_for_tasks():
         doc_map = {}
         fieldlist = {}
         tids = []
+        gtids = []
         for task_id in tasks:
             tid = TaskId.parse(task_id)
             if tid.doc_id not in doc_map:
                 dib = get_doc_or_abort(tid.doc_id, f'Document {tid.doc_id} not found')
                 verify_seeanswers_access(dib)
                 doc_map[tid.doc_id] = dib.document
-            tids.append(tid)
+            if is_global_id(tid):
+                gtids.append(tid)
+            else:
+                tids.append(tid)
         answer_map = {}
         # pluginControl.get_answers(user, tids, answer_map)
-        get_useranswers_for_task(user, tids, answer_map)
+        if tids:
+            get_useranswers_for_task(user, tids, answer_map)
+        if gtids:
+            get_globals_for_tasks(gtids, answer_map)
         return json_response({"answers": answer_map, "userId": user_id})
     except Exception as e:
         return abort(400, str(e))
@@ -640,7 +671,7 @@ def post_answer(plugintype: str, task_id_ext: str):
 
     upload = None
 
-    if ( plugin.values.get("useCurrentUser", False) ):  # For plugins that is saved only for current user
+    if plugin.values.get("useCurrentUser", False) or is_global(plugin):  # For plugins that is saved only for current user
         users = [curr_user];
 
     if isinstance(answerdata, dict):
@@ -1090,12 +1121,13 @@ def get_global_answers(task_id):
     d = get_doc_or_abort(tid.doc_id)
     user = get_current_user_object()
     # TODO: Needed?
-    verify_seeanswers_access(d)
+    # verify_seeanswers_access(d)
     try:
         user_answers = pluginControl.get_latest_for_tasks([tid],{})
         return json_response([user_answers[1][0][0]])
     except Exception as e:
-        return abort(400, str(e))
+        # return abort(400, str(e))
+        return json_response([])
 
 
 @answers.route("/allDocumentAnswersPlain/<path:doc_path>")
@@ -1340,6 +1372,10 @@ def verify_answer_access(
     if answer is None:
         abort(400, 'Non-existent answer')
     tid = TaskId.parse(answer.task_id)
+
+    if is_global_id(tid):
+        return answer, tid.doc_id
+
     d = get_doc_or_abort(tid.doc_id)
     d.document.insert_preamble_pars()
 

@@ -74,6 +74,8 @@ class GenericMarkupModel:
     button: Union[str, None, Missing] = missing
     useCurrentUser: Union[bool, Missing] = missing
     showInView: Union[bool, Missing] = missing
+    hideBrowser: Union[bool, Missing] = missing
+    forceBrowser: Union[bool, Missing] = missing
     globalField: Union[bool, Missing] = missing
 
     def get_visible_data(self):
@@ -92,6 +94,8 @@ class GenericMarkupSchema(Schema):
     resetText = fields.Str(allow_none=True)
     useCurrentUser = fields.Bool(allow_none=True)
     showInView = fields.Bool()
+    hideBrowser = fields.Bool(allow_none=True)
+    forceBrowser = fields.Bool(allow_none=True)
     globalField = fields.Bool(allow_none=True)
 
     @pre_load
