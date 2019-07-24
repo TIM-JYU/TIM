@@ -1333,6 +1333,11 @@ p.closeButton::before {
     top: 100%;
 }
 
+.tim-menu img {
+    vertical-align: baseline;
+    display: inline-block;
+}
+
 .tim-menu-dropdown {
     position: absolute;
     z-index: 1001;
