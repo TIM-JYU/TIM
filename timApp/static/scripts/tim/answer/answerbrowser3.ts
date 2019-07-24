@@ -735,7 +735,9 @@ export class AnswerBrowserController extends DestroyScope implements IController
             }
             return {
                 answer_id: this.selectedAnswer ? this.selectedAnswer.id : undefined,
-                saveTeacher: this.saveTeacher || (this.loader.isInFormMode() && this.viewctrl.teacherMode), // TODO: Check if correct
+                saveTeacher: this.saveTeacher ||
+                    (this.loader.isInFormMode() && this.viewctrl.teacherMode) ||
+                     this.isGlobal() , // TODO: Check if correct
                 points: this.points,
                 giveCustomPoints: this.giveCustomPoints,
                 userId: userId,
