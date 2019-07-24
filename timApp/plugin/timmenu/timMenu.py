@@ -5,6 +5,7 @@ import os
 from typing import Union
 
 import attr
+import uuid
 
 from flask import jsonify, render_template_string
 from marshmallow import Schema, fields, post_load
@@ -36,14 +37,18 @@ class TimMenuStateSchema(Schema):
 
 
 class TimMenuItem:
-    def __init__(self, text: str, level: int, items = None, open = False):
+    def __init__(self, text: str, level: int, id: str = None, items = None, open = False):
         self.text = text
         self.level = level
+        if not id:
+            self.id = str(uuid.uuid4())
+        else:
+            self.id = id
         self.items = items
         self.open = open
 
     def __str__(self):
-        return f"{{level: {self.level}, text: '{self.text}', items: {self.items}}}"
+        return f"{{level: {self.level}, id: '{self.id}', text: '{self.text}', items: {self.items}}}"
 
     def __repr__(self):
         return str(self)
@@ -82,9 +87,7 @@ class TimMenuMarkupSchema(GenericMarkupSchema):
     backgroundColor = fields.Str(allow_none=True)
     textColor = fields.Str(allow_none=True)
     fontSize = fields.Str(allow_none=True)
-    #menu = fields.List(fields.Str())
     menu = fields.Str()
-    # menu = fields.List(fields.Nested(TimMenuItemSchema))
     @post_load
     def make_obj(self, data):
         return TimMenuMarkupModel(**data)
@@ -133,7 +136,7 @@ def parse_menu_string(menu_str):
     """
     menu_split = menu_str.split("\n")
     menuitem_list = []
-    parents = [TimMenuItem("", -1, [])]
+    parents = [TimMenuItem(text="", level=-1, items=[])]
     if not menu_split:
         # TODO: Reporting errors to user.
         raise TimMenuError("'menu' is empty or invalid!")
@@ -144,7 +147,7 @@ def parse_menu_string(menu_str):
         level = list_symbol_index//2
         text_markdown = item[list_symbol_index+1:]
         text_html = call_dumbo([text_markdown])[0].replace("<p>","<span>").replace("</p>","</span>")
-        current = TimMenuItem(text_html, level, [])
+        current = TimMenuItem(text=text_html, level=level, items=[])
         for parent in parents:
             if parent.level < level:
                 parent.items.append(current)
@@ -152,6 +155,7 @@ def parse_menu_string(menu_str):
                 break
         # List has all menus that are parents to any others, but first one contains the whole menu tree.
         menuitem_list = parents[-1].items
+    print(menuitem_list)
     return menuitem_list
 
 

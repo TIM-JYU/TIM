@@ -44,6 +44,7 @@ interface ITimMenuItem {
     text: string;
     level: number;
     open: boolean;
+    id: string;
 }
 
 // export let activeTopMenu: string | undefined;
@@ -135,6 +136,7 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
     /**
      * Closes three tiers of menus.
      * TODO: Recursion.
+     * TODO: In some cases doesn't work as intended.
      * @param t1
      */
     closeAllInMenuItem(t1: ITimMenuItem) {
@@ -160,7 +162,7 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
      */
     toggleSticky() {
         // TODO: Multiple topMenus.
-        const placeholderY = document.getElementById(`${this.menuId}-placeholder`).getBoundingClientRect().top;
+        const placeholderY = this.getBounds(`${this.menuId}-placeholder`).top;
         const scrollY = $(window).scrollTop();
         // Sticky can only show when the element's place in document goes outside upper bounds.
         if (scrollY && placeholderY < 0) {
@@ -183,6 +185,10 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
         this.previousScroll = $(window).scrollTop();
     }
 
+    private getBounds(id: string): ClientRect | DOMRect {
+        return document.getElementById(id).getBoundingClientRect();
+    }
+
     /**
      * Set styles defined in optional attributes.
      */
@@ -201,6 +207,24 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
             this.barStyle += `font-size: ${this.attrs.fontSize}; `;
         }
     }
+
+    /**
+     * Decide what direction submenus open towards.
+     * @param id
+     */
+    private openDirection(id: string) {
+        return ""; // Open straight below and center to the clicked item.
+        const bounds = this.getBounds(id);
+        let horizontal = "tim-menu-right";
+        let vertical = "tim-menu-down";
+        if (bounds.bottom > $(window).height()) {
+            vertical = "tim-menu-up";
+        }
+        if (bounds.right > $(window).width()) {
+            horizontal = "";
+        }
+        return `${horizontal} ${vertical}`;
+    }
 }
 
 timApp.component("timmenuRunner", {
@@ -217,15 +241,15 @@ timApp.component("timmenuRunner", {
     <span ng-repeat="t1 in $ctrl.menu">
         <div ng-if="t1.items.length > 0" class="btn-group" uib-dropdown is-open="status.isopen" id="simple-dropdown" style="cursor: pointer;">
           <span uib-dropdown-toggle ng-disabled="disabled" ng-bind-html="t1.text+$ctrl.openingSymbol" ng-click="$ctrl.toggleSubmenu(t1, undefined)"></span>
-          <ul class="dropdown-menu" uib-dropdown-menu aria-labelledby="simple-dropdown" style="{{$ctrl.menuStyle}}">
+          <ul class="tim-menu-dropdown" id="{{t1.id}}" uib-dropdown-menu aria-labelledby="simple-dropdown" style="{{$ctrl.menuStyle}}">
             <li class="tim-menu-item" ng-repeat="t2 in t1.items" role="menuitem">
                 <span class="tim-menu-item" ng-if="t2.items.length > 0">
                     <span ng-bind-html="t2.text+$ctrl.openingSymbol" ng-click="$ctrl.toggleSubmenu(t2, t1)"></span>
-                    <ul class="tim-menu-submenu tim-menu-right tim-menu-up" ng-if="t2.open" style="{{$ctrl.menuStyle}}">
+                    <ul class="tim-menu-dropdown" id="{{t2.id}}" ng-class="$ctrl.openDirection(t2.id)" ng-if="t2.open" style="{{$ctrl.menuStyle}}">
                         <li class="tim-menu-item" ng-repeat="t3 in t2.items">
                             <span class="tim-menu-item" ng-if="t3.items.length > 0">
                                 <span ng-bind-html="t3.text+$ctrl.openingSymbol" ng-click="$ctrl.toggleSubmenu(t3, t2)"></span>
-                                <ul class="tim-menu-submenu tim-menu-left tim-menu-up" ng-if="t3.open" style="{{$ctrl.menuStyle}}">
+                                <ul class="tim-menu-dropdown" id="{{t3.id}}" ng-class="$ctrl.openDirection(t3.id)" ng-if="t3.open" style="{{$ctrl.menuStyle}}">
                                     <li class="tim-menu-item" ng-repeat="t4 in t3.items" ng-bind-html="t4.text"></li>
                                 </ul>
                             </span>

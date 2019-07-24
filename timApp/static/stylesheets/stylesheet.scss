@@ -1314,26 +1314,26 @@ p.closeButton::before {
     margin: 0;
     top: 0;
     width: 100%;
-    z-index: 999;
+    z-index: 3;
 }
 
 .tim-menu-right {
-    left: 110%;
+    left: 100%;
 }
 
 .tim-menu-left {
-    right: 110%;
+    right: 100%;
 }
 
 .tim-menu-up {
-    bottom: 110%;
+    bottom: 100%;
 }
 
 .tim-menu-down {
-    top: 0%;
+    top: 100%;
 }
 
-.tim-menu-submenu {
+.tim-menu-dropdown {
     position: absolute;
     z-index: 1001;
     float: left;
