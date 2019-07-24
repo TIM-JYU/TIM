@@ -11,11 +11,17 @@ yaml = _{ SOI ~ BLANK_LINE* ~ PUSH(indentation) ~ (obj | "") ~ DROP ~ EOI }
 
 BLANK_LINES = _{ BLANK_LINE+ }
 
-keyvalue = { key ~ ":" ~ (BLANK_LINES | SPACE*) ~ value ~ COMMENT? }
+keyvalue = { basic_str ~ ":" ~ (BLANK_LINES | SPACE*) ~ value }
 
-key = { 'a'..'z'+ }
+value = _{ multilinestr | obj | list | flow_obj | flow_list | boolean | number | basic_str | null }
 
-value = _{ multilinestr | obj | flow_list | list | boolean | number | onelinestr | null }
+flow_value = _{ flow_obj | flow_list | boolean | number | flow_str | null }
+
+flow_str = _{ flow_unquoted_str | double_quoted_str | single_quoted_str }
+
+flow_obj_element = { flow_str ~ SPACE* ~ ":" ~ W ~ flow_value }
+
+flow_obj = { "{" ~ W ~ (flow_obj_element ~ (W ~ "," ~ W ~ flow_obj_element)* ~ ("," ~ W)?)? ~ W ~ "}" }
 
 list_element = { "-" ~ &EOW ~ SPACE* ~ value }
 
@@ -76,18 +82,18 @@ standard_yaml_multiline_end = _{
   DROP
 }
 
-onelinestr = _{ unquoted_str | double_quoted_str | single_quoted_str }
+basic_str = _{ unquoted_str | double_quoted_str | single_quoted_str }
 
-unquoted_str = { !illegal_unquoted_start_char ~ ((!(NEWLINE | COMMENT | ": ") | (NEWLINE ~ PEEK_ALL ~ SPACE+)+) ~ ANY)+ }
+unquoted_str = { !illegal_unquoted_start_char ~ ((!(NEWLINE | COMMENT | (":" ~ EOW)) | (NEWLINE ~ PEEK_ALL ~ SPACE+)+) ~ ANY)+ }
 
-flow_unquoted_str = { !illegal_unquoted_start_char ~ (!(NEWLINE | COMMENT | ": " | "," | "[" | "]") ~ ANY)+ }
+flow_unquoted_str = { !illegal_unquoted_start_char ~ (!(COMMENT | (":" ~ EOW) | "," | "[" | "]" | "{" | "}") ~ ANY)+ }
 
 double_quoted_str = { "\"" ~ (("\\" ~ ("\"" | "e" | "r" | "a" | "f" | "v" | "b" | "n" | ("x" ~ ASCII_HEX_DIGIT{2}) | ("u" ~ ASCII_HEX_DIGIT{4}))) | (!"\"" ~ ANY))* ~ "\"" }
 
 single_quoted_str = { "'" ~ (!"'" ~ ANY)* ~ "'" }
 
 illegal_unquoted_start_char = {
-  "&" | "%" | "'" | "\"" | "@" | "!" | "[" | "]" | "*" | "|" | "`" | ">" | ","
+  "&" | "%" | "'" | "\"" | "@" | "!" | "[" | "]" | "*" | "|" | "`" | ">" | "," | "{" | "}"
   | (("?" | "-" | "=" | "~") ~ EOW)
 }
 
