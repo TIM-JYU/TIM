@@ -65,10 +65,6 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
         return {};
     }
 
-    buttonText() {
-        return super.buttonText() || "TimMenu";
-    }
-
     $onInit() {
         super.$onInit();
         this.formMenu();
@@ -154,11 +150,11 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
     }
 
     /**
-     * Makes the element follow when scrolling for one screen height after top bar.
+     * Makes the element show at top when scrolling towards it from below.
      */
     toggleSticky() {
         // TODO: Multiple topMenus.
-        const placeholderY = this.getBounds(`${this.menuId}-placeholder`).top;
+        const placeholderY = this.getBounds(`${this.menuId}-placeholder`).bottom;
         const scrollY = $(window).scrollTop();
         // Sticky can only show when the element's place in document goes outside upper bounds.
         if (scrollY && placeholderY < 0) {
@@ -210,11 +206,12 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
     }
 
     /**
-     * Decide what direction submenus open towards.
-     * @param id
+     * Decide what direction submenus open towards (currently disabled).
+     * @param id Element id.
      */
     private openDirection(id: string) {
         return ""; // Open straight below and center to the clicked item.
+        /*
         const bounds = this.getBounds(id);
         let horizontal = "tim-menu-right";
         let vertical = "tim-menu-down";
@@ -225,6 +222,7 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
             horizontal = "";
         }
         return `${horizontal} ${vertical}`;
+         */
     }
 }
 
