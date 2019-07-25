@@ -230,16 +230,46 @@ def reqs():
 separator: "|"
 openingSymbol: " &#9661;"
 menu: |!!
- - Title 1
-    - [Item 1](item_1_address)
-    - [Item 2](item_2_address)
-    - [Item 3](item_3_address)
-    - *Non-link item*
- - Title 2
-    - [Item 4](item_4_address)
-    - [Item 5](item_5_address)
+ - Menu title 1
+   - [Menu item 1](item_1_address)
+   - [Menu item 2](item_2_address)
+   - [Menu item 3](item_3_address)
+   - *Non-link item with italics*
+ - Menu title 2
+   - Submenu title 1
+     - [Submenu item 1](submenu_item_1_address)
+     - [Submenu item 2](submenu_item_2_address)
+     - Subsubmenu title 1
+       - [Subsubmenu item 1](subsubmenu_item_1_address)
+   - [Menu item 4](item_4_address)
+   - [Menu item 5](item_5_address)
+ - [Title as direct link 1](title_3_address)
+ - [Title as direct link 2](title_4_address)
+!!
+```
+""","""
+``` {plugin="timMenu"}
+menu: |!!
+ - Menu title 1
+   - [Menu item](item_1_address)
+!!
+```
+""",
+"""
+``` {plugin="timMenu"}
+topMenu: true
+menu: |!!
+ - Menu title 1
+   - [Menu item 1](item_1_address)
+   - [Menu item 2](item_2_address)
+   - [Menu item 3](item_3_address)
+ - Menu title 2
+   - [Menu item 3](item_3_address)
+   - [Menu item 4](item_4_address)
+    - Submenu title
+      - [Submenu item 1](submenu_item_1_address)
+      - [Submenu item 2](submenu_item_2_address)
  - [Title 3](title_3_address)
- - *Non-link title*
 !!
 ```
 """]
@@ -248,12 +278,22 @@ menu: |!!
                 'text': 'Insert',
                 'items': [
                     {
-                        'text': 'Others',
+                        'text': 'Menu',
                         'items': [
                             {
                                 'data': templates[0].strip(),
-                                'text': 'TimMenu',
+                                'text': 'Menu',
                                 'expl': 'Add a dropdown menu bar',
+                            },
+                            {
+                                'data': templates[1].strip(),
+                                'text': 'Menu (simple)',
+                                'expl': 'Add a minimal dropdown menu bar',
+                            },
+                            {
+                                'data': templates[2].strip(),
+                                'text': 'TopMenu',
+                                'expl': 'Add a dropdown menu bar that shows at top when scrolling',
                             },
                         ],
                     },
