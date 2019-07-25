@@ -1101,7 +1101,7 @@ def prepare_for_dumbo(values):
                     continue
                 rowdata[i] = MD + cell
             else:
-                s = cell.get(CELL,'')
+                s = str(cell.get(CELL,''))
                 if s == '':
                     continue
                 cell[CELL] = MD + s

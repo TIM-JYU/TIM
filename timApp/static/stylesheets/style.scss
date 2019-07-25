@@ -140,6 +140,37 @@ tim-table {
     .timTableTable {
         //margin-left: 0px;
         margin: 0px;
+        margin-top: 1.5em;  /* to leave space for editor buttons */
+        margin-right: 0em;  /* - " - */
+    }
+
+    button.timTableEditor {
+        font-size: xx-small;
+        padding: 5px;
+    }
+
+    .buttonAddCol {
+        position: absolute;
+        right: calc(-1em - 11px);
+    }
+
+    .buttonRemoveCol {
+        position: absolute;
+        //right: calc(-2cm - 4px); next to buttonAddCol instead of below it
+        right: calc(-0cm - 0px);
+        /*top: calc(1cm - 15px);*/
+    }
+
+    .buttonAddRow {
+        position: absolute;
+        bottom: calc(-1em - 10px);
+        left:  calc(-1em - 13px);
+    }
+
+    .buttonRemoveRow {
+        position: absolute;
+        bottom: calc(-0em + 5px);
+        left:  calc(-1em - 13px);
     }
 
     .editable {
@@ -154,22 +185,6 @@ tim-table {
         border: 2px dotted #33cccc !important;
     }
 
-    .buttonAddRow {
-        //align-self: flex-start;
-    }
-
-    .buttonAddCol {
-        position: absolute;
-        right: calc(-1cm - 2px);
-    }
-
-    .buttonRemoveCol {
-        position: absolute;
-        //right: calc(-2cm - 4px); next to buttonAddCol instead of below it
-        right: calc(-1cm - 2px);
-        top: calc(1cm - 5px);
-    }
-
     .timTableContentDiv {
         position: relative;
         display: table;
@@ -182,17 +197,13 @@ tim-table {
         width: 100%;
      }
 
-     .timTableTable {
-        /* width: min-content; */
-        margin-top: 1.5em;
-     }
 
 }
 
 .tableform table {
     width: min-content;
-    margin-left: auto;
-    margin-right: auto;
+    /*margin-left: auto;
+    margin-right: auto; */
 }
 
 .tableform .timTableRunDiv {

@@ -428,6 +428,8 @@ export class TimTableController extends DestroyScope implements IController, ITi
     private permTable: number[] = [];
     private permTableToScreen: number[] = []; // inverse perm table to get screencoordinate for row
     private edited: boolean = false;
+    private editInput: any = null;
+    private editInputStyles: string = "";
 
     /**
      * Stores the last direction that the user moved towards with arrow keys
@@ -484,6 +486,7 @@ export class TimTableController extends DestroyScope implements IController, ITi
      */
     async $onInit() {
 
+        this.editInput = this.element.find(".editInput");
         if ( this.data.maxRows ) { this.maxRows = this.data.maxRows; }
         if ( this.data.maxCols ) { this.maxCols = this.data.maxCols; }
 
@@ -969,8 +972,7 @@ export class TimTableController extends DestroyScope implements IController, ITi
                 }
                 delete this.cellDataMatrix[row][col][key];
             }
-            const data = cellValue.cell;
-            this.userdata.cells[coordinate] = data;
+            this.userdata.cells[coordinate] = cellValue.cell;
             return;
         }
 
@@ -1143,8 +1145,8 @@ export class TimTableController extends DestroyScope implements IController, ITi
             return;
         }
         this.openEditor(cell, this.viewctrl.item.id, this.getCellContentString(rowi, coli), parId, rowi, coli);
-        const edit = this.element.find(".editInput");
-        edit.focus();
+        // const edit = this.element.find(".editInput");
+        this.editInput.focus();
     }
 
     /**
@@ -1739,6 +1741,8 @@ export class TimTableController extends DestroyScope implements IController, ITi
     }
 
     private setActiveCell(rowi: number, coli: number) {
+        this.clearSmallEditorStyles();
+
         let cell = this.cellDataMatrix[rowi][coli];
         while (cell.underSpanOf) {
             rowi = cell.underSpanOf.row;
@@ -1914,7 +1918,6 @@ export class TimTableController extends DestroyScope implements IController, ITi
         const inlineEditorDiv = this.element.find(".inlineEditorDiv");
         inlineEditorDiv.height(1);
         inlineEditorDiv[0].style.position = "relative";
-        const edit = this.element.find(".editInput");
         await $timeout();
         // edit.focus();
         const toff = table.offset()!;
@@ -1924,9 +1927,9 @@ export class TimTableController extends DestroyScope implements IController, ITi
                 // edit.focus();
                 return;
             }
-            edit.offset(tableCellOffset);
+            this.editInput.offset(tableCellOffset);
 
-            const editOffset = edit.offset();
+            const editOffset = this.editInput.offset();
             const tableCellWidth = tablecell.innerWidth();
 
             // const editOuterWidth = edit.outerWidth();
@@ -1940,8 +1943,8 @@ export class TimTableController extends DestroyScope implements IController, ITi
                 editOuterWidth = minEditWidth;
             }
 
-            edit.width(editOuterWidth);
-            edit.height(tablecell.innerHeight()! - 2);
+            this.editInput.width(editOuterWidth);
+            this.editInput.height(tablecell.innerHeight()! - 2);
 
             const inlineEditorButtons = this.element.find(".inlineEditorButtons");
             if (this.data.editorButtonsBottom) {
@@ -1955,7 +1958,7 @@ export class TimTableController extends DestroyScope implements IController, ITi
                 });
                 return;
             }
-            const editOuterHeight = edit.outerHeight();
+            const editOuterHeight = this.editInput.outerHeight();
             const buttonOpenBigEditor = this.element.find(".buttonOpenBigEditor");
             const h = buttonOpenBigEditor.height() || 20;
             if (editOffset && editOuterHeight && tableCellOffset && editOuterWidth) {
@@ -1994,7 +1997,7 @@ export class TimTableController extends DestroyScope implements IController, ITi
             }
 
         } finally {
-            edit.focus();
+            this.editInput.focus();
         }
     }
 
@@ -2576,6 +2579,13 @@ export class TimTableController extends DestroyScope implements IController, ITi
         this.data.toolbarTemplates.push(templ);
     }
 
+    clearSmallEditorStyles() {
+       this.editInput = this.element.find(".editInput");
+       this.editInputStyles = "";
+       this.editInput[0].style.backgroundColor = "white";
+       this.editInput[0].style.textAlign = "left";  // TODO: clear all know styles
+    }
+
     /**
      * Tells the server to set a cell style attribute.
      * @param route The route to call.
@@ -2585,6 +2595,19 @@ export class TimTableController extends DestroyScope implements IController, ITi
     async setCellStyleAttribute(route: string, cellsToSave: CellAttrToSave[], colValuesAreSame: boolean) {
         if (!this.viewctrl || !this.activeCell) {
             return;
+        }
+
+        this.clearSmallEditorStyles();
+        if ( this.currentCell ) {
+            for (const c of cellsToSave) {
+                if (this.currentCell.row == c.row && this.currentCell.col == c.col) {
+                    const k: string = styleToHtml[c.key];
+                    if ( k ) {
+                        this.editInputStyles += k + ": " + c.c + ";";
+                    }
+                }
+            }
+            this.editInput[0].style.cssText += " " + this.editInputStyles;
         }
 
         if (this.task) {
@@ -2841,24 +2864,24 @@ timApp.component("timTable", {
             class="glyphicon glyphicon-plus" ng-bind="$ctrl.addRowButtonText"></span></button>
     <button class="timTableEditor timButton buttonRemoveRow" title="Remove row" ng-show="$ctrl.delRowEnabled()" ng-click="$ctrl.removeRow(-1)"><span
             class="glyphicon glyphicon-minus"></span></button>
-    </div>
     <div class="timTableEditor inlineEditorDiv no-highlight" ng-show=$ctrl.isSomeCellBeingEdited()>
-        <input class="editInput"  ng-show="$ctrl.isSomeCellBeingEdited()"
+        <input class="editInput" id="editInput"  ng-show="$ctrl.isSomeCellBeingEdited()"
                    ng-keydown="$ctrl.keyDownPressedInSmallEditor($event)"
                    ng-keyup="$ctrl.keyUpPressedInSmallEditor($event)" ng-model="$ctrl.editedCellContent"><!--
-             --><span class="inlineEditorButtons" style="position: absolute; width: max-content" ng-show="$ctrl.isSomeCellBeingEdited()" ><!--
-                 --><button class="timButton buttonOpenBigEditor"
-                        ng-click="$ctrl.openBigEditor()" class="timButton"><span class="glyphicon glyphicon-pencil"></span>
-                 </button><!--
-                 --><button class="timButton buttonCloseSmallEditor"
-                        ng-click="$ctrl.closeSmallEditor()"
-                        class="timButton"><span class="glyphicon glyphicon-remove"></span>
-                 </button><!--
-                 --><button class="timButton buttonAcceptEdit"
-                        ng-click="$ctrl.saveAndCloseSmallEditor()"
-                         class="timButton"><span class="glyphicon glyphicon-ok"></span>
-                 </button>
-             </span>
+     --><span class="inlineEditorButtons" style="position: absolute; width: max-content" ng-show="$ctrl.isSomeCellBeingEdited()" ><!--
+         --><button class="timButton buttonOpenBigEditor"
+                ng-click="$ctrl.openBigEditor()" class="timButton"><span class="glyphicon glyphicon-pencil"></span>
+             </button><!--
+         --><button class="timButton buttonCloseSmallEditor"
+                ng-click="$ctrl.closeSmallEditor()"
+                class="timButton"><span class="glyphicon glyphicon-remove"></span>
+            </button><!--
+         --><button class="timButton buttonAcceptEdit"
+                 ng-click="$ctrl.saveAndCloseSmallEditor()"
+                 class="timButton"><span class="glyphicon glyphicon-ok"></span>
+            </button>
+         </span>
+    </div>
 
 
     </div>

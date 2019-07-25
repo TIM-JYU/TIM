@@ -33,7 +33,7 @@ const TableFormMarkup = t.intersection([
         maxWidth: t.string,
         minWidth: t.string,
         maxRows: t.string,
-        maxCols: withDefault(t.string, "unset"),
+        maxCols: withDefault(t.string, "fit-content"),
         open: t.boolean,
         filterRow: t.boolean,
         toolbarTemplates: t.array(t.object),
@@ -292,7 +292,7 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
         this.data.userdata.cells = {};
         this.setDataMatrix();
         timtab.reInitialize();
-        console.log("debug");
+        // console.log("debug");
 
     }
 

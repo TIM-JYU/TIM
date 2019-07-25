@@ -640,12 +640,12 @@ This will delete the whole ${options.area ? "area" : "paragraph"} from the docum
                 {
                     func: (e: JQuery.Event, p: Paragraph) => this.viewctrl.questionHandler.addQuestionQst(e, p),
                     desc: "Add question above",
-                    show: this.viewctrl.lectureMode && this.viewctrl.item.rights.editable,
+                    show: /* this.viewctrl.lectureMode && */ this.viewctrl.item.rights.editable,
                 },
                 {
                     func: (e: JQuery.Event, p: Paragraph) => this.viewctrl.questionHandler.editQst(e, p),
                     desc: "Edit question",
-                    show: this.viewctrl.lectureMode && parEditable,
+                    show: /* this.viewctrl.lectureMode && */  parEditable,  // TODO: Condition also that par is a question
                 },
                 {
                     func: (e: JQuery.Event, p: Paragraph) => this.viewctrl.questionHandler.addQuestion(e, p),
