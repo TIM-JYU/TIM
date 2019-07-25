@@ -128,23 +128,43 @@ class TimMenuInputSchema(Schema):
         return TimMenuInputModel(**data)
 
 
+def decide_menu_level(index: int, previous_level: int, max_level: int = 3) -> int:
+    """
+    Parse menu level from indentation with minimum step of two spaces. Following level
+    is always at most one greater than the previous, since skipping a level would break
+    the menu structure.
+    :param index: Number of spaces before beginning of the list.
+    :param previous_level: Previous menu's level.
+    :param max_level: Level ceiling; further indentations go into the same menu level.
+    :return: Menu level decided by indentation.
+    """
+    level = index // 2
+    level = previous_level+1 if level > previous_level else level
+    level = max_level if level > max_level else level
+    return level
+
+
 def parse_menu_string(menu_str):
     """
     Parses a markdown list formatted string into menu structure.
-    :param menu_str: Menu in a single string.
-    :return:
+    :param menu_str: Menu as a single string.
+    :return: Menu as a list of TimMenuItem objects.
     """
     menu_split = menu_str.split("\n")
+    if not menu_split:
+        # TODO: User can't see this yet!
+        raise TimMenuError("'menu' is empty or invalid!")
     menuitem_list = []
     parents = [TimMenuItem(text="", level=-1, items=[])]
-    if not menu_split:
-        # TODO: Reporting errors to user.
-        raise TimMenuError("'menu' is empty or invalid!")
+    previous_level = -1
     for item in menu_split:
-        if not item:
+        try:
+            list_symbol_index = item.index("-")
+        except ValueError:
+            # Skip lines without list symbol "-".
             continue
-        list_symbol_index = item.index("-")
-        level = list_symbol_index//2
+        level = decide_menu_level(list_symbol_index, previous_level)
+        previous_level = level
         text_markdown = item[list_symbol_index+1:]
         text_html = call_dumbo([text_markdown])[0].replace("<p>","<span>").replace("</p>","</span>")
         current = TimMenuItem(text=text_html, level=level, items=[])
@@ -155,7 +175,6 @@ def parse_menu_string(menu_str):
                 break
         # List has all menus that are parents to any others, but first one contains the whole menu tree.
         menuitem_list = parents[-1].items
-    print(menuitem_list)
     return menuitem_list
 
 
