@@ -2582,8 +2582,22 @@ export class TimTableController extends DestroyScope implements IController, ITi
     clearSmallEditorStyles() {
        this.editInput = this.element.find(".editInput");
        this.editInputStyles = "";
+       const stylesNotToClear = [
+           "position",
+           "top",
+           "left",
+           "width",
+           "height",
+       ];
+       for (const key in styleToHtml) {
+           if ( !styleToHtml.hasOwnProperty(key) ) { continue; }
+           if ( key in stylesNotToClear ) { continue; }
+           this.editInput[0].style[key] = "";
+       }
+       /*
        this.editInput[0].style.backgroundColor = "white";
        this.editInput[0].style.textAlign = "left";  // TODO: clear all know styles
+        */
     }
 
     /**

@@ -41,6 +41,7 @@ const ImportDataMarkup = t.intersection([
         url: withDefault(t.string, ""),
         beforeOpen: withDefault(t.string, "+ Open import"),
         placeholder: withDefault(t.string, "Put here content to import"),
+        showInView: withDefault(t.boolean, false),
         // autoplay: withDefault(t.boolean, true),
         // file: t.string,
         // open: withDefault(t.boolean, false),
@@ -68,15 +69,13 @@ interface IImportDataData {
 
 class ImportDataController extends PluginBase<t.TypeOf<typeof ImportDataMarkup>, t.TypeOf<typeof ImportDataAll>, typeof ImportDataAll> {
     private isRunning = false;
-    private output: string = "";
-    private fieldlist: string = "";
-    private vctrl!: ViewCtrl;
     private importText: string = "";
     private error: {message?: string, stacktrace?: string} = {};
     private result: string = "";
     private isOpen: boolean = false;
     private url: string = "";
     private separator: string = ";";
+    private visible: number = -1;
 
     getDefaultMarkup() {
         return {};
@@ -99,8 +98,13 @@ class ImportDataController extends PluginBase<t.TypeOf<typeof ImportDataMarkup>,
         return ImportDataAll;
     }
 
-    isPlainText() {
-        return (window.location.pathname.startsWith("/view/"));
+    isVisible() {
+        if ( this.visible >= 0 ) { return this.visible == 1; }
+        this.visible = 0;
+        if ( this.attrs.showInView ) { this.visible = 1; return true; }
+        const pn = window.location.pathname;
+        if ( pn.match("teacher|answers") ) { this.visible = 1; }
+        return this.visible == 1;
     }
 
     async pickFromWWW() {
@@ -123,7 +127,7 @@ class ImportDataController extends PluginBase<t.TypeOf<typeof ImportDataMarkup>,
     onFileSelect(file: File) {
         if (!file) { return; }
         const reader = new FileReader();
-        reader.onload = ((e) => {
+        reader.onload = ((_) => {
             this.scope.$evalAsync(() => {
                 this.importText = reader.result as string;
             });
@@ -219,7 +223,7 @@ timApp.component("importdataRunner", {
     },
     template: `
 <tim-markup-error ng-if="::$ctrl.markupError" data="::$ctrl.markupError"></tim-markup-error>
-<div ng-cloak ng-class="{'csRunDiv': ($ctrl.attrs.borders && $ctrl.isOpen)}" class="importDataDiv no-popup-menu" ng-if="::!$ctrl.isPlainText()">
+<div ng-cloak ng-class="{'csRunDiv': ($ctrl.attrs.borders && $ctrl.isOpen)}" class="importDataDiv no-popup-menu" ng-if="::$ctrl.isVisible()">
   <p ng-if="!$ctrl.isOpen" class="stem" ng-bind-html="::$ctrl.attrs.beforeOpen" ng-click="$ctrl.isOpen = true"></p>
   <div ng-if="$ctrl.isOpen">
     <p class="closeButton" ng-click="$ctrl.isOpen = false" />

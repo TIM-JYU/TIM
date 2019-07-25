@@ -261,7 +261,7 @@ registerDialogComponent(TimTableEditorToolbarController,
                               ng-hide="$ctrl.hid.colorPicker"
                               event-api="$ctrl.eventApi"
                               options="$ctrl.colorOpts"
-                              style="top: -0.5em;position: relative;">
+                              style="top: -0.01em;position: relative;">
                 </color-picker>
                 <button class="timButton btn-xs"
                         ng-hide="$ctrl.hid.colorPicker"
