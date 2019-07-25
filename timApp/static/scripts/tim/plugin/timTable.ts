@@ -2800,6 +2800,26 @@ export class TimTableController extends DestroyScope implements IController, ITi
     setAnswer(content: { [index: string]: string }): { ok: boolean, message: (string | undefined) } {
         return {ok: false, message: "Plugin doesn't support setAnswer"};
     }
+
+    setData(data: any, save: boolean = false) {
+        if ( !this.userdata ) { return; }
+        if ( data.matrix ) {
+            for (let row = 0; row < data.matrix.length; row++ ) {
+                const r: any = data.matrix[row];
+                for (let col = 0; col < r.length; col++) {
+                    const coordinate = colnumToLetters(col) + "" + (row + 1);
+                    this.userdata.cells[coordinate] = r[col];
+                    // this.setUserContent(row, col, r[col]);
+                }
+            }
+            // this.reInitialize();
+            this.processDataBlock(this.userdata.cells);
+            if ( save ) {
+                this.sendDataBlock();
+            }
+        }
+    }
+
 }
 
 timApp.component("timTable", {

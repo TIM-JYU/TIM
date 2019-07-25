@@ -605,6 +605,11 @@ This will delete the whole ${options.area ? "area" : "paragraph"} from the docum
                     desc: "Follow reference",
                     show: par && isReference(par),
                 },
+                {
+                    func: (e: JQuery.Event, p: Paragraph) => this.showAddParagraphAbove(e, p),
+                    desc: "Add paragraph above",
+                    show: this.viewctrl.item.rights.editable,
+                },
                 {func: (e: JQuery.Event, p: Paragraph) => this.showEditWindow(e, p), desc: "Edit", show: parEditable},
                 {func: (e: JQuery.Event, p: Paragraph) => this.toggleTableEditor(e, p), desc: "Edit table", show: parEditable && timTableEditMode === false},
                 {func: (e: JQuery.Event, p: Paragraph) => this.toggleTableEditor(e, p), desc: "Close table editor", show: parEditable && timTableEditMode === true},
@@ -631,11 +636,6 @@ This will delete the whole ${options.area ? "area" : "paragraph"} from the docum
                     func: (e: JQuery.Event, p: Paragraph) => this.viewctrl.areaHandler.removeAreaMarking(e, p),
                     desc: "Remove area marking",
                     show: $window.editMode === "area",
-                },
-                {
-                    func: (e: JQuery.Event, p: Paragraph) => this.showAddParagraphAbove(e, p),
-                    desc: "Add paragraph above",
-                    show: this.viewctrl.item.rights.editable,
                 },
                 {
                     func: (e: JQuery.Event, p: Paragraph) => this.viewctrl.questionHandler.addQuestionQst(e, p),
