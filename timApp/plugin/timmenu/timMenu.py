@@ -264,8 +264,8 @@ menu: |!!
    - [Menu item 2](item_2_address)
    - [Menu item 3](item_3_address)
  - Menu title 2
-   - [Menu item 3](item_3_address)
    - [Menu item 4](item_4_address)
+   - [Menu item 5](item_5_address)
     - Submenu title
       - [Submenu item 1](submenu_item_1_address)
       - [Submenu item 2](submenu_item_2_address)
@@ -282,18 +282,18 @@ menu: |!!
                         'items': [
                             {
                                 'data': templates[0].strip(),
-                                'text': 'Menu',
-                                'expl': 'Add a dropdown menu bar',
+                                'text': 'timMenu',
+                                'expl': 'Add a dropdown menu bar with submenus',
                             },
                             {
                                 'data': templates[1].strip(),
-                                'text': 'Menu (simple)',
+                                'text': 'timMenu (simple)',
                                 'expl': 'Add a minimal dropdown menu bar',
                             },
                             {
                                 'data': templates[2].strip(),
-                                'text': 'TopMenu',
-                                'expl': 'Add a dropdown menu bar that shows at top when scrolling',
+                                'text': 'timMenu (sticky)',
+                                'expl': 'Add a dropdown menu bar that shows at the top when scrolling',
                             },
                         ],
                     },
