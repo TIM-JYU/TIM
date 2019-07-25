@@ -98,15 +98,11 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
         return TimMenuAll;
     }
 
-    isPlainText() {
-        return (window.location.pathname.startsWith("/view/"));
-    }
-
     /**
      * Close other menus and toggle clicked menu open or closed.
      * TODO: Better way to do this (for deeper menus).
-     * @param item
-     * @param parent
+     * @param item Clicked menu item.
+     * @param parent Menu item parent.
      */
     toggleSubmenu(item: any, parent: ITimMenuItem | undefined) {
         // Toggle open menu closed and back again when clicking it.
@@ -134,10 +130,10 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
     }
 
     /**
-     * Closes three tiers of menus.
+     * Closes three levels of menus.
      * TODO: Recursion.
      * TODO: In some cases doesn't work as intended.
-     * @param t1
+     * @param t1 First level menu item.
      */
     closeAllInMenuItem(t1: ITimMenuItem) {
         if (!t1.items) {
@@ -166,8 +162,9 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
         const scrollY = $(window).scrollTop();
         // Sticky can only show when the element's place in document goes outside upper bounds.
         if (scrollY && placeholderY < 0) {
-            // When scrolling downwards, don't show fixed menu and hide placeholder.
-            // Otherwise (i.e. scrolling upwards), show menu as fixed and let placeholder take its place in document.
+            // When scrolling downwards, don't show fixed menu and hide placeholder content.
+            // Otherwise (i.e. scrolling upwards), show menu as fixed and let placeholder take its place in document
+            // to mitigate page length changes.
             if (this.previousScroll && scrollY > this.previousScroll) {
                 document.getElementById(this.menuId).classList.remove("top-menu");
                 document.getElementById(`${this.menuId}-placeholder-content`).classList.add("hidden");
@@ -185,6 +182,10 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
         this.previousScroll = $(window).scrollTop();
     }
 
+    /**
+     * Return element location and size information.
+     * @param id Element id.
+     */
     private getBounds(id: string): ClientRect | DOMRect {
         return document.getElementById(id).getBoundingClientRect();
     }
@@ -235,8 +236,8 @@ timApp.component("timmenuRunner", {
     },
     template: `
 <tim-markup-error ng-if="::$ctrl.markupError" data="::$ctrl.markupError"></tim-markup-error>
-<span ng-if="$ctrl.topMenu" id="{{$ctrl.menuId}}-placeholder"></span>
-<div ng-if="$ctrl.topMenu" id="{{$ctrl.menuId}}-placeholder-content"><br></div>
+<span ng-cloak ng-if="$ctrl.topMenu" id="{{$ctrl.menuId}}-placeholder"></span>
+<div ng-cloak ng-if="$ctrl.topMenu" class="hidden" id="{{$ctrl.menuId}}-placeholder-content"><br></div>
 <div id="{{$ctrl.menuId}}" class="tim-menu" style="{{$ctrl.barStyle}}">
     <span ng-repeat="t1 in $ctrl.menu">
         <div ng-if="t1.items.length > 0" class="btn-group" uib-dropdown is-open="status.isopen" id="simple-dropdown" style="cursor: pointer;">
