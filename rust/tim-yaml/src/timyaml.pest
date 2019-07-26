@@ -1,7 +1,7 @@
 obj = ${
   block_start ~
   keyvalue ~
-  (BLANK_LINES ~ PEEK_ALL ~ keyvalue)* ~
+  (BLANK_LINE+ ~ PEEK_ALL ~ keyvalue)* ~
   DROP
 }
 
@@ -9,11 +9,18 @@ indentation = _{ SPACE* }
 
 yaml = _{ SOI ~ BLANK_LINE* ~ PUSH(indentation) ~ (obj | "") ~ DROP ~ EOI }
 
-BLANK_LINES = _{ BLANK_LINE+ }
+keyvalue = { basic_str ~ ":" ~ (BLANK_LINE+ | SPACE*) ~ value }
 
-keyvalue = { basic_str ~ ":" ~ (BLANK_LINES | SPACE*) ~ value }
+value = _{ multilinestr | obj | tim_obj | list | flow_obj | flow_list | boolean | number | basic_str | null }
 
-value = _{ multilinestr | obj | list | flow_obj | flow_list | boolean | number | basic_str | null }
+tim_obj = {
+  "@" ~
+  SPACE* ~
+  PUSH(multiline_str_line) ~
+  (BLANK_LINE+ ~ keyvalue)+ ~
+  BLANK_LINE+ ~
+  POP
+}
 
 flow_value = _{ flow_obj | flow_list | boolean | number | flow_str | null }
 
@@ -34,7 +41,7 @@ block_start = _{
 list = {
   block_start ~
   list_element ~
-  (BLANK_LINES ~ PEEK_ALL ~ list_element)* ~
+  (BLANK_LINE+ ~ PEEK_ALL ~ list_element)* ~
   DROP
 }
 

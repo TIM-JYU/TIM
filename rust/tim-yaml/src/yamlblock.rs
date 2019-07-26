@@ -76,6 +76,61 @@ mod tests {
     }
 
     #[test]
+    fn tim_obj() {
+        check!(
+            r#"
+a: @!!
+b: @!1
+c: d
+!1
+!!"#,
+            [
+                obj(
+                    1,
+                    25,
+                    [keyvalue(
+                        1,
+                        25,
+                        [
+                            unquoted_str(1, 2),
+                            tim_obj(
+                                4,
+                                25,
+                                [
+                                    multiline_str_line(5, 7),
+                                    keyvalue(
+                                        8,
+                                        22,
+                                        [
+                                            unquoted_str(8, 9),
+                                            tim_obj(
+                                                11,
+                                                22,
+                                                [
+                                                    multiline_str_line(12, 14),
+                                                    keyvalue(
+                                                        15,
+                                                        19,
+                                                        [
+                                                            unquoted_str(15, 16),
+                                                            unquoted_str(18, 19)
+                                                        ]
+                                                    )
+                                                ]
+                                            )
+                                        ]
+                                    )
+                                ]
+                            )
+                        ]
+                    )]
+                ),
+                EOI(25, 25)
+            ]
+        );
+    }
+
+    #[test]
     fn flow_obj() {
         check!(
             r#"a: {}"#,
