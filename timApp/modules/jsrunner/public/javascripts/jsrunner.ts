@@ -62,6 +62,11 @@ class JsrunnerController extends PluginBase<t.TypeOf<typeof JsrunnerMarkup>, t.T
         this.doCheckFields(false);
     }
 
+    addError(msg: string) {
+        if ( !this.error) { this.error = {msg: ""}; }
+        this.error.msg += msg;
+    }
+
     async doCheckFields(nosave: boolean) {
         this.isRunning = true;
         // const paramComps = [];
@@ -105,18 +110,22 @@ class JsrunnerController extends PluginBase<t.TypeOf<typeof JsrunnerMarkup>, t.T
                 // temp code:
                 const tempd: any = data.web;
                 if (!tempd.outdata) { return; }
-                const odata: any = tempd.outdata.data;
-                if (  !odata ) { return; }
-                for (const d of odata ) {
-                    const pname = d.plugin;
+                const exportdata: any = tempd.outdata.exportdata;
+                if (  !exportdata ) { return; }
+                for (const edata of exportdata ) {
+                    const pname = edata.plugin;
                     if (!pname) { continue; }
                     const plugin: any  =  this.vctrl.getTimComponentByName(pname);
                     if (!plugin ) {
-                        if ( !this.error) { this.error = {msg: ""}; }
-                        this.error.msg += `Plugin ${pname} not found. Check plugin names`;
+                        this.addError(`Plugin ${pname} not found. Check plugin names!`);
+                        continue;
                     }
-                    const save = d.save == true;
-                    plugin.setData(d.data, save);
+                    const save = edata.save == true;
+                    if ( plugin.setData ) {
+                        plugin.setData(edata.data, save);
+                    } else {
+                        this.addError(`Plugin ${pname} has not setData-method!`);
+                    }
                 }
             }
         } else {
@@ -186,7 +195,7 @@ jsrunnerApp.component("jsRunner", {
             ng-click="$ctrl.checkFields()">
         {{::$ctrl.buttonText()}}
     </button>
-    <p class="error" ng-if="$ctrl.error">Fatal error occurred, script results not saved.</p>
+    <p class="error" ng-if="$ctrl.error">Error occurred, script results may not be saved.</p>
     <pre ng-if="$ctrl.error">{{$ctrl.error.msg}}</pre>
     <pre ng-if="$ctrl.error">{{$ctrl.error.stackTrace}}</pre>
     <jsrunner-error ng-repeat="err in $ctrl.scriptErrors" e="err"></jsrunner-error>
