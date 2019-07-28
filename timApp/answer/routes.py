@@ -37,7 +37,6 @@ from timApp.document.post_process import hide_names_in_teacher
 from timApp.item.block import Block, BlockType
 from timApp.markdown.dumboclient import call_dumbo
 from timApp.notification.notify import multi_send_email
-from timApp.plugin import pluginControl
 from timApp.plugin.containerLink import call_plugin_answer
 from timApp.plugin.plugin import Plugin, PluginWrap, NEVERLAZY, TaskNotFoundException, is_global, is_global_id
 from timApp.plugin.plugin import PluginType
@@ -1120,10 +1119,11 @@ def get_global_answers(task_id):
         return abort(400, str(e))
     d = get_doc_or_abort(tid.doc_id)
     user = get_current_user_object()
-    # TODO: Needed?
-    # verify_seeanswers_access(d)
+    # TODO: Check for document answer access or ensure that field is actually global
+    verify_seeanswers_access(d)
     try:
-        user_answers = pluginControl.get_latest_for_tasks([tid],{})
+        #user_answers = pluginControl.get_latest_for_tasks([tid],{})
+        user_answers = get_globals_for_tasks([tid], {})
         return json_response([user_answers[1][0][0]])
     except Exception as e:
         # return abort(400, str(e))
