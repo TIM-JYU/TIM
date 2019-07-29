@@ -1202,6 +1202,42 @@ def get_all_answers_route(task_id):
     return json_response(all_answers)
 
 
+@answers.route("/jsframeUserChange/<task_id>/<user_id>")
+def get_jsframe_data(task_id, user_id):
+    """
+        TODO: Delete (experimental)
+    """
+    tid = TaskId.parse(task_id)
+    doc = get_doc_or_abort(tid.doc_id)
+    # verify_seeanswers_access(doc)
+    user = User.get_by_id(user_id)
+    curr_user = get_current_user_object()
+    plug = get_plugin_from_request(doc.document, tid, curr_user)
+    try:
+        vals = {}
+        fields = plug[1].values['fields']
+        data, aliases, field_names = get_fields_and_users(
+            fields,
+            [user.personal_group_prop],
+            doc,
+            get_current_user_object(),
+            add_missing_fields=True,
+            allow_non_teacher=True,
+        )
+        df = data[0]['fields']
+        da = []
+        labels = []
+        for fn in field_names:
+            da.append(df.get(fn, 0))
+            labels.append(fn)
+        vals['fielddata'] = {'data': data[0]['fields'],
+                             'aliases': aliases,
+                             'fieldnames': field_names,
+                             'graphdata': {'data': da, 'labels': labels}}
+        return json_response(vals)
+    except:
+        return
+
 class GetStateSchema(Schema):
     answer_id = fields.Int(required=True)
     par_id = fields.Str()
