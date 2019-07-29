@@ -340,10 +340,10 @@ reportButton: "Name your generate report button here"
 ```"""]
     editor_tabs = [
             {
-                'text': 'Plugins',
+                'text': 'Fields',
                 'items': [
                     {
-                        'text': 'Fields',
+                        'text': 'Tables',
                         'items': [
                             {
                                 'data': templates[0].strip(),

@@ -208,11 +208,16 @@ errormessage:    # inputcheckerin virheselite, tyhjä = selite on inputchecker
         "css": ["/field/css/field.css"],
         'editor_tabs': [
             {
-                'text': 'Plugins',
+                'text': 'Fields',
                 'items': [
                     {
-                        'text': 'Fields',
+                        'text': 'Numeric',
                         'items': [
+                            {
+                                'data': '#- {defaultplugin="numericfield" readonly="view"}',
+                                'text': 'defaultplugin/numericfield',
+                                'expl': 'Attribuutit kappaleelle jossa inline numericfield',
+                            },
                             {
                                 'data': '{#nf1 autosave: true #}',
                                 'text': 'Numeerinen kenttä (inline, autosave)',

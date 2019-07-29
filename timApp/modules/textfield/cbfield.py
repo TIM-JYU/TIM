@@ -89,10 +89,10 @@ def cb_reqs():
         "multihtml": True,
         'editor_tabs': [
             {
-                'text': 'Plugins',
+                'text': 'Fields',
                 'items': [
                     {
-                        'text': 'Fields',
+                        'text': 'Check/Radio/Drop',
                         'items': [
                             {
                                 'data': "{#cb1 autosave: true #}",

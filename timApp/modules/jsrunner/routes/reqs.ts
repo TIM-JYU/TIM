@@ -49,10 +49,10 @@ router.get("/", (req, res, next) => {
         css: ["stylesheets/jsrunner.css"],
         editor_tabs: [
             {
-                text: "Plugins",
+                text: "Fields",
                 items: [
                     {
-                        text: "Fields",
+                        text: "JSRunner",
                         items: [
                             {
                                 data: templates[0].trim(),

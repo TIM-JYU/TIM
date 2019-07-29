@@ -115,10 +115,10 @@ fields:
         "css": ["/field/css/field.css"],
         'editor_tabs': [
             {
-                'text': 'Plugins',
+                'text': 'Fields',
                 'items': [
                     {
-                        'text': 'Fields',
+                        'text': 'Save/Import',
                         'items': [
                             {
                                 'data': templates[0].strip(),

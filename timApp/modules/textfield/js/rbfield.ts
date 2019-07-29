@@ -52,7 +52,7 @@ class RbfieldController extends PluginBase<t.TypeOf<typeof RbfieldMarkup>, t.Typ
     private hideSavedText = true;
     private redAlert = false;
     private saveResponse: {saved: boolean, message: (string | undefined)} = {saved: false, message: undefined};
-    private preventedAutosave = false;
+    private preventedAutosave = false;  // looks depracated???
     private rbName: string = "";
     private name: string = "";
 
