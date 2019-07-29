@@ -44,6 +44,7 @@ from timApp.plugin.plugin import PluginType
 from timApp.plugin.plugin import find_plugin_from_document
 from timApp.plugin.pluginControl import find_task_ids, pluginify
 from timApp.util.answerutil import task_ids_to_strlist
+from timApp.util.utils import widen_fields, get_alias
 from timApp.plugin.pluginexception import PluginException
 from timApp.plugin.taskid import TaskId, TaskIdAccess
 from timApp.timdb.dbaccess import get_timdb
@@ -287,64 +288,6 @@ def get_answers_for_tasks():
         return json_response({"answers": answer_map, "userId": user_id})
     except Exception as e:
         return abort(400, str(e))
-
-
-TASK_PROG = re.compile('([\w\.]*)\((\d*),(\d*)\)(.*)') # see https://regex101.com/r/ZZuizF/2
-TASK_NAME_PROG = re.compile("(\d+.)?([\w\d]+)[.\[]?.*")  # see https://regex101.com/r/OjnTAn/4
-
-
-def widen_fields(fields: List[str]):
-    """
-    if there is syntax d(1,3) in fileds, it is made d1,d2
-    from d(1,3)=t  would come d1=t1, d2=t2
-    :param fields: list of fields
-    :return: array fields widened
-    """
-    fields1 = []
-    for field in fields:
-        parts = field.split(";")
-        fields1.extend(parts)
-
-    rfields = []
-    for field in fields1:
-        try:
-            t, a, *rest = field.split("=")
-        except ValueError:
-            t, a, rest = field, "", None
-        t = t.strip()
-        a = a.strip()
-        match = re.search(TASK_PROG, t)
-        if not match:
-            rfields.append(field)
-            continue
-
-        tb = match.group(1)
-        n1 = int(match.group(2))
-        n2 = int(match.group(3))
-        te = match.group(4)
-
-        for i in range(n1, n2):
-            tn = tb + str(i) + te
-            if not tb:
-                tn = ""
-            if a:
-                tn += "=" + a + str(i)
-            rfields.append(tn)
-
-    return rfields
-
-
-def get_alias(name):
-    """
-    Get name part form string like 534.d1.points
-    :param name: full name of field
-    :return: just name part of field, like d1
-    """
-    t = name.strip()
-    match = re.search(TASK_NAME_PROG, t)
-    if not match:
-        return name
-    return match.group(2)
 
 
 def get_fields_and_users(u_fields: List[str], groups: List[UserGroup],

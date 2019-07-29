@@ -8,6 +8,7 @@ from flask import abort
 
 import attr
 from timApp.plugin.containerLink import get_plugin
+from timApp.util.utils import widen_fields
 import requests
 
 from flask import jsonify, render_template_string
@@ -177,6 +178,7 @@ def conv_data_csv(data, field_names, separator):
     :param separator: separator to use to separate items
     :return: converted data in TIM-format
     """
+    field_names = widen_fields(field_names)
     res = []
     for r in data:
         parts = r.split(separator)
@@ -201,6 +203,7 @@ def conv_data_field_names(data, field_names, separator):
     :param separator: separator for items
     :return: converted data
     """
+    field_names = widen_fields(field_names)
     fconv = {}
     res = []
     use_all = False
@@ -218,14 +221,20 @@ def conv_data_field_names(data, field_names, separator):
         parts = r.split(separator)
         if len(parts) < 3:
             continue
-        row = f"{parts[0]}"
+        row = ""
         for i in range(1, len(parts)-1, 2):
             tname = parts[i]
-            name = fconv.get(tname, tname)
+            name = fconv.get(tname, None)
+            if not name:
+                if use_all:
+                    name = tname
+                else:
+                    continue
             value = parts[i+1]
             row += (f"{separator}{name}{separator}{value}")
 
-        res.append(row)
+        if row:
+            res.append(f"{parts[0]}" + row)
     return res
 
 
