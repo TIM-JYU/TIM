@@ -20,6 +20,14 @@ class TestImportData(TestCase):
         r1 = conv_data_field_names(data, fields, ";")
         self.assertEqual(e1, r1, "Not same in * case")
 
+    def test_conv_data_field_names4(self):
+        data = ["aknakka;demoA;3;demoB;2", "vesal;demoB;4;demoA;9", "hopohessu;demoC;5"]
+        fields = ["demoA = d1", "demoB=d2", "*"]
+        e1 = ["aknakka;d1;3;d2;2", "vesal;d2;4;d1;9", "hopohessu;demoC;5"]
+
+        r1 = conv_data_field_names(data, fields, ";")
+        self.assertEqual(e1, r1, "Not same in * case")
+
     def test_conv_data_csv(self):
         data = ["aknakka;1;3;4", "vesal;2;3;6"]
         fields = ["d1", "d2", "d3"]

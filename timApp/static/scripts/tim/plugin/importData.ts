@@ -115,7 +115,7 @@ class ImportDataController extends PluginBase<t.TypeOf<typeof ImportDataMarkup>,
         this.error = {};
         this.result = "";
 
-        const url = "/getproxy?url=" + this.attrs.url;
+        const url = "/getproxy?url=" + this.url;
         // TODO: TIMiin oma proxy!
         const r = await to($http<{
             data?: string,

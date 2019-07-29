@@ -27,7 +27,7 @@ class ImportDataStateModel:
     """Model for the information that is stored in TIM database for each answer."""
     url: Union[str, Missing] = None
     separator: Union[str, Missing] = None
-    fields: Union[List[str], Missing] = missing
+    fields: Union[List[str], Missing] = None
 
 class ImportDataStateSchema(Schema):
     url = fields.Str(allow_none=True)
@@ -218,11 +218,14 @@ def conv_data_field_names(data, field_names, separator):
         parts = r.split(separator)
         if len(parts) < 3:
             continue
-        name = fconv.get(parts[1], None)
-        if name:
-            res.append(f"{parts[0]}{separator}{name}{separator}{parts[2]}")
-        elif use_all:
-            res.append(r)
+        row = f"{parts[0]}"
+        for i in range(1, len(parts)-1, 2):
+            tname = parts[i]
+            name = fconv.get(tname, tname)
+            value = parts[i+1]
+            row += (f"{separator}{name}{separator}{value}")
+
+        res.append(row)
     return res
 
 
@@ -311,7 +314,11 @@ def answer(args: ImportDataAnswerModel):
     if separator != defaultseparator or \
             (args.state and args.state.separator and args.state.separator != separator):
         save['separator'] = separator
-    if field_names and len(field_names) > 0 and field_names != args.markup.fields:
+    if not field_names:
+        field_names = []
+    if not args.markup.fields:
+        args.markup.fields = []
+    if field_names != args.markup.fields:
         save['fields'] = field_names
     if save:
         jsonresp["save"] = save
