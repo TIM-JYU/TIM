@@ -1296,8 +1296,10 @@ p.closeButton::before {
 }
 
 .tim-menu {
-    margin-top: 5px;
-    margin-bottom: 10px;
+    padding: .8em;
+    margin-left: -.8em;
+    border-radius: 4px;
+    margin-bottom: 8px;
 }
 
 .tim-menu-item {
@@ -1310,9 +1312,7 @@ p.closeButton::before {
 .top-menu {
     position: fixed;
     background: #f7f7f7;
-    padding: .8em;
-    margin: 0;
-    margin-left: -.8em;
+    margin-top: 0;
     top: 0;
     width: 100%;
     z-index: 3;
