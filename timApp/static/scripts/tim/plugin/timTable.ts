@@ -919,6 +919,7 @@ export class TimTableController extends DestroyScope implements IController, ITi
                     return;
                 }
         */
+        return r;
     }
 
     /**
@@ -2731,7 +2732,6 @@ export class TimTableController extends DestroyScope implements IController, ITi
         this.clearSortOrder();
     }
 
-    // TODO: Properly implement ITimComponent
     /**
      * Returns the name given to the plugin.
      */
@@ -2751,7 +2751,7 @@ export class TimTableController extends DestroyScope implements IController, ITi
     }
     // getContent: () => string | undefined;
     getContent() {
-        return "TODO";
+        return JSON.stringify(this.data.userdata);
     }
 
     // getContentArray?: () => string[] | undefined;
@@ -2782,7 +2782,17 @@ export class TimTableController extends DestroyScope implements IController, ITi
 
     // save: () => Promise<{saved: boolean, message: (string | undefined)}>;
     async save() {
-        return {saved: false, message: "TODO"};
+        if (!this.task) {
+            return {saved: false, message: "Not in task mode"};
+        }
+        if (!this.isUnSaved()) {
+            return {saved: false, message: "No changes"};
+        }
+        const r = await this.sendDataBlockAsync();
+        if (r && r.status == 200) {
+            return {saved: true, message: ""};
+        }
+        return {saved: false, message: "Error saving table"};
     }
 
     public getPar() {

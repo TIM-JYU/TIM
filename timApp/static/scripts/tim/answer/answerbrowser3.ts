@@ -801,6 +801,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
             return;
         }
         const data = await this.getAnswers();
+        // TODO: Force state request? (skip data check)
         if (!data) {
             return;
         }
@@ -881,20 +882,12 @@ export class AnswerBrowserController extends DestroyScope implements IController
         }
         this.loading++;
 
-        let r1 = to($http.get<IAnswer[]>(`/answers/${this.taskId}/${uid}`, {
+        const r = await to($http.get<IAnswer[]>(`/answers/${this.taskId}/${uid}`, {
             params: {
                 _: Date.now(),
             },
         }));
 
-        if (this.isGlobal()) {
-            r1 = to($http.get<IAnswer[]>(`/globalAnswer/${this.taskId}`, {
-                params: {
-                    _: Date.now(),
-                },
-            }));
-        }
-        const r = await r1;
         this.loading--;
         if (!r.ok) {
             this.showError(r.result);
