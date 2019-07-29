@@ -527,7 +527,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
             ref_from_doc_id: this.viewctrl.docId,
             ref_from_par_id: getParId(par),
         };
-        if (this.selectedAnswer.id !== this.loadedAnswer.id || this.loadedAnswer.review !== this.review || this.isGlobal()) {
+        if (this.forceBrowser() || this.selectedAnswer.id !== this.loadedAnswer.id || this.loadedAnswer.review !== this.review || this.isGlobal()) {
             this.loading++;
             const r = await to($http.get<{ html: string, reviewHtml: string }>("/getState", {
                 params: {
@@ -801,7 +801,6 @@ export class AnswerBrowserController extends DestroyScope implements IController
             return;
         }
         const data = await this.getAnswers();
-        // TODO: Force state request? (skip data check)
         if (!data) {
             return;
         }
@@ -810,7 +809,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
     }
 
     private handleAnswerFetch(data: IAnswer[]) {
-        if (data.length > 0 && (this.hasUserChanged() || data.length !== this.answers.length || this.isGlobal())) {
+        if (data.length > 0 && (this.hasUserChanged() || data.length !== this.answers.length) || this.forceBrowser()) {
             this.answers = data;
             this.updateFiltered();
             this.selectedAnswer = this.filteredAnswers.length > 0 ? this.filteredAnswers[0] : undefined;
