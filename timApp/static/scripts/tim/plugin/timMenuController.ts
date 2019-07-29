@@ -23,6 +23,7 @@ const TimMenuMarkup = t.intersection([
     t.type({
         hoverOpen: withDefault(t.boolean, true),
         topMenu: withDefault(t.boolean, false),
+        openAbove: withDefault(t.boolean, false),
         separator: withDefault(t.string, "&nbsp;"), // Non-breaking space
         openingSymbol: withDefault(t.string, "&#9662;"), // Caret
     }),
@@ -55,6 +56,7 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
     private hoverOpen: boolean = true;
     private separator: string = "";
     private topMenu: boolean = false;
+    private openAbove: boolean = false;
     private menuId: string = String.fromCharCode(65 + Math.floor(Math.random() * 26)) + Date.now();
     private previousScroll: number | undefined = 0; // Store y-value of previous scroll event for comparison.
     private previouslyClicked: ITimMenuItem | undefined;
@@ -71,6 +73,7 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
         this.hoverOpen = this.attrs.hoverOpen;
         this.separator = this.attrs.separator;
         this.topMenu = this.attrs.topMenu;
+        this.openAbove = this.attrs.openAbove;
         this.openingSymbol = this.attrs.openingSymbol;
         if (this.topMenu) {
             window.onscroll = () => this.toggleSticky();
@@ -195,23 +198,30 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
     }
 
     /**
-     * Decide what direction submenus open towards (currently disabled).
+     * Decide what direction submenus open towards.
      * @param id Element id.
      */
     private openDirection(id: string) {
-        return ""; // Open straight below and center to the clicked item.
-        /*
-        const bounds = this.getBounds(id);
-        let horizontal = "tim-menu-right";
-        let vertical = "tim-menu-down";
-        if (bounds.bottom > $(window).height()) {
+        // tslint:disable-next-line: prefer-const
+        let horizontal = ""; // Default: centered.
+        let vertical = ""; // Default: below.
+        // If true, opens all menus above.
+        if (this.openAbove) {
             vertical = "tim-menu-up";
         }
-        if (bounds.right > $(window).width()) {
-            horizontal = "";
-        }
         return `${horizontal} ${vertical}`;
-         */
+    }
+
+    /**
+     * Close menus if mouse leaves menu area.
+     * @param mouseInside Whether the mouse cursor is inside any of the menu elements.
+     */
+    private mouseInside(mouseInside: boolean) {
+        if (!mouseInside) {
+            for (const t1 of this.menu) {
+                this.closeAllInMenuItem(t1);
+            }
+        }
     }
 }
 
@@ -225,7 +235,7 @@ timApp.component("timmenuRunner", {
 <tim-markup-error ng-if="::$ctrl.markupError" data="::$ctrl.markupError"></tim-markup-error>
 <span ng-cloak ng-if="$ctrl.topMenu" id="{{$ctrl.menuId}}-placeholder"></span>
 <div ng-cloak ng-if="$ctrl.topMenu" class="hidden" id="{{$ctrl.menuId}}-placeholder-content"><br></div>
-<div id="{{$ctrl.menuId}}" class="tim-menu" style="{{$ctrl.barStyle}}">
+<div id="{{$ctrl.menuId}}" class="tim-menu" style="{{$ctrl.barStyle}}" ng-mouseleave="$ctrl.mouseInside(false)">
     <span ng-repeat="t1 in $ctrl.menu">
         <div ng-if="t1.items.length > 0" class="btn-group" style="cursor: pointer;">
           <span ng-disabled="disabled" ng-bind-html="t1.text+$ctrl.openingSymbol" ng-click="$ctrl.toggleSubmenu(t1, undefined)"></span>

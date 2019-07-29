@@ -63,6 +63,7 @@ class TimMenuItemModel:
 class TimMenuMarkupModel(GenericMarkupModel):
     hoverOpen: Union[bool, Missing] = missing
     topMenu: Union[bool, Missing] = missing
+    openAbove: Union[bool, Missing] = missing
     separator: Union[str, Missing] = missing
     openingSymbol: Union[str, Missing] = missing
     backgroundColor: Union[str, Missing] = missing
@@ -82,6 +83,7 @@ class TimMenuItemSchema(Schema):
 class TimMenuMarkupSchema(GenericMarkupSchema):
     hoverOpen = fields.Bool(allow_none=True, default=True)
     topMenu = fields.Bool(allow_none=True, default=False)
+    openAbove = fields.Bool(allow_none=True, default=False)
     separator = fields.Str(allow_none=True, default="&nbsp;")
     openingSymbol = fields.Str(allow_none=True, default="&#9662;")
     backgroundColor = fields.Str(allow_none=True)
