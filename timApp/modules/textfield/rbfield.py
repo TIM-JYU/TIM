@@ -91,10 +91,10 @@ def rb_reqs():
         "multihtml": True,
         'editor_tabs': [
             {
-                'text': 'Plugins',
+                'text': 'Fields',
                 'items': [
                     {
-                        'text': 'Fields',
+                        'text': 'Check/Radio/Drop',
                         'items': [
                             {
                                 'data': "{#rb1 autosave: true #}",

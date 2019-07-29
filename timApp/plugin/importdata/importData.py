@@ -10,7 +10,7 @@ import attr
 from timApp.plugin.containerLink import get_plugin
 import requests
 
-from flask import jsonify, render_template_string, request
+from flask import jsonify, render_template_string
 from marshmallow import Schema, fields, post_load
 from marshmallow.utils import missing
 from webargs.flaskparser import use_args
@@ -18,14 +18,8 @@ from webargs.flaskparser import use_args
 from pluginserver_flask import GenericMarkupModel, GenericMarkupSchema, GenericHtmlSchema, GenericHtmlModel, \
     GenericAnswerSchema, GenericAnswerModel, Missing, \
     InfoSchema, create_blueprint
-from timApp.answer.routes import get_fields_and_users, handle_jsrunner_response
-from timApp.auth.accesshelper import get_doc_or_abort
-from timApp.plugin.pluginexception import PluginException
-from timApp.plugin.taskid import TaskId
 from timApp.tim_app import csrf
 from timApp.user.user import User
-from timApp.user.usergroup import UserGroup
-from timApp.util.flask.responsehelper import csv_response
 
 
 @attr.s(auto_attribs=True)
@@ -33,10 +27,12 @@ class ImportDataStateModel:
     """Model for the information that is stored in TIM database for each answer."""
     url: Union[str, Missing] = None
     separator: Union[str, Missing] = None
+    fields: Union[List[str], Missing] = missing
 
 class ImportDataStateSchema(Schema):
     url = fields.Str(allow_none=True)
     separator = fields.Str(allow_none=True)
+    fields = fields.List(fields.Str()) # Keep this last
 
     @post_load
     def make_obj(self, data):
@@ -53,6 +49,7 @@ class ImportDataMarkupModel(GenericMarkupModel):
     upload: Union[bool, Missing] = missing
     useurl: Union[bool, Missing] = missing
     useseparator: Union[bool, Missing] = missing
+    usefields: Union[bool, Missing] = missing
     uploadstem: Union[str, Missing] = missing
     urlstem: Union[str, Missing] = missing
     loadButtonText: Union[str, Missing] = missing
@@ -61,6 +58,7 @@ class ImportDataMarkupModel(GenericMarkupModel):
     separator: Union[str, Missing] = missing
     prefilter: Union[str, Missing] = missing
     placeholder: Union[str, Missing] = missing
+    fields: Union[List[str], Missing] = missing
 
 
 
@@ -72,6 +70,7 @@ class ImportDataMarkupSchema(GenericMarkupSchema):
     upload = fields.Bool(allow_none=True)
     useurl = fields.Bool(allow_none=True)
     useseparator = fields.Bool(allow_none=True)
+    usefields = fields.Bool(allow_none=True)
     uploadstem = fields.Str(allow_none=True)
     urlstem = fields.Str(allow_none=True)
     loadButtonText = fields.Str(allow_none=True)
@@ -80,6 +79,7 @@ class ImportDataMarkupSchema(GenericMarkupSchema):
     separator = fields.Str(allow_none=True)
     prefilter = fields.Str(allow_none=True)
     placeholder = fields.Str(allow_none=True)
+    fields = fields.List(fields.Str()) # Keep this last
 
 
     @post_load
@@ -93,11 +93,13 @@ class ImportDataInputModel:
     data: str
     separator: str
     url: str
+    fields: Union[List[str], Missing] = missing
 
 class ImportDataInputSchema(Schema):
     data = fields.Str(required=True)
     separator = fields.Str(required=False)
     url = fields.Str(required=False)
+    fields = fields.List(fields.Str()) # Keep this last
 
     @post_load
     def make_obj(self, data):
@@ -120,7 +122,7 @@ class ImportDataHtmlModel(GenericHtmlModel[ImportDataInputModel, ImportDataMarku
 
     def get_static_html(self) -> str:
         s = self.markup.beforeOpen or "+ Open Import"
-        return render_static_ImportData(self, s)
+        return render_static_import_data(self, s)
 
     def get_browser_json(self):
         r = super().get_browser_json()
@@ -151,7 +153,7 @@ class ImportDataAnswerSchema(ImportDataAttrs, GenericAnswerSchema):
         return ImportDataAnswerModel(**data)
 
 
-def render_static_ImportData(m: ImportDataHtmlModel, s: str):
+def render_static_import_data(m: ImportDataHtmlModel, s: str):
     return render_template_string(
         f"""
 <div class="ImportData">
@@ -165,13 +167,93 @@ def render_static_ImportData(m: ImportDataHtmlModel, s: str):
 
 importData_plugin = create_blueprint(__name__, 'importData', ImportDataHtmlSchema(), csrf)
 
+def conv_data_csv(data, field_names, separator):
+    """
+    Convert csv format "akankka;1,2,3" to TIM-format ["akankka;d1;1", "akankks;d2;2" ...]
+    using field names.  If there is too less fields on data, only those
+    are used.  If there is more columns in data thatn fields, omit extra columns
+    :param data: data in csv-format to convert
+    :param field_names: list of filednames to use for columns
+    :param separator: separator to use to separate items
+    :return: converted data in TIM-format
+    """
+    res = []
+    for r in data:
+        parts = r.split(separator)
+        if len(parts) < 2:
+            continue
+        row = f"{parts[0]}"
+        for i in range(1, len(parts)):
+            if i-1 >= len(field_names):
+                break
+            name = field_names[i-1].strip()
+            row += f"{separator}{name}{separator}{parts[i]}"
+        res.append(row)
+    return res
+
+
+def conv_data_field_names(data, field_names, separator):
+    """
+    Convert field names on TIM-format akankka;demo;2 so that demo is changes if
+    found from field_names
+    :param data: data to convert
+    :param field_names: lits off fileds ana aliases in format "demo=d1"
+    :param separator: separator for items
+    :return: converted data
+    """
+    fconv = {}
+    res = []
+    use_all = False
+    for fn in field_names:
+        pcs = fn.split("=")
+        ffrom = pcs[0].strip()
+        fto = ffrom
+        if len(pcs) >= 2:
+            fto = pcs[1].strip()
+        if ffrom == '*':
+            use_all = True
+        else:
+            fconv[ffrom] = fto
+    for r in data:
+        parts = r.split(separator)
+        if len(parts) < 3:
+            continue
+        name = fconv.get(parts[1], None)
+        if name:
+            res.append(f"{parts[0]}{separator}{name}{separator}{parts[2]}")
+        elif use_all:
+            res.append(r)
+    return res
+
+
+def convert_data(data, field_names, separator):
+    """
+    If there is field_names, then convert data either by changing names (field_names has =)
+    or csv data
+    :param data: data to convert
+    :param field_names: list of fieldnames or fieldnames and aliases
+    :param separator: separator to use between items
+    :return: converted data or data as it is
+    """
+    if not field_names or len(field_names) <= 0:
+        return data
+    f0 = field_names[0]
+    if f0.find("=") > 0: # convert names
+       return conv_data_field_names(data, field_names, separator)
+    return conv_data_csv(data, field_names, separator)
+
+
 @importData_plugin.route('/answer/', methods=['put'])
 @csrf.exempt
 @use_args(ImportDataAnswerSchema(), locations=("json",))
 def answer(args: ImportDataAnswerModel):
     sdata = args.input.data
+    defaultseparator = args.markup.separator or ";"
+    separator = args.input.separator or defaultseparator
     data = sdata.split("\n")
     output = ""
+    field_names = args.input.fields
+    data = convert_data(data, field_names, separator)
     if args.markup.prefilter:
         params = {'code': args.markup.prefilter, 'data': data}
         runurl = get_plugin('jsrunner').get("host") + 'runScript/'
@@ -183,8 +265,6 @@ def answer(args: ImportDataAnswerModel):
         data = result.get("result",[])
         output = result.get("output", "")
     did = int(args.taskID.split(".")[0])
-    defaultseparator = args.markup.separator or ";"
-    separator = args.input.separator or defaultseparator
     if args.markup.docid:
         did = args.markup.docid
     rows = []
@@ -204,12 +284,14 @@ def answer(args: ImportDataAnswerModel):
             wrong += 1
             wrongs += "\n" + r + error
             continue
-        tname = parts[1]
-        value = parts[2]
         uid = u.id
-        if tname.find('.') < 0:
-            tname = f"{did}.{tname}"
-        ur = { 'user': uid, 'fields': {tname: value }}
+        ur = { 'user': uid, 'fields': {}}
+        for i in range(1, len(parts)-1, 2):
+            tname = parts[i]
+            value = parts[i+1]
+            if tname.find('.') < 0:
+                tname = f"{did}.{tname}"
+            ur['fields'][tname] = value
         rows.append(ur)
 
     if output:
@@ -229,6 +311,8 @@ def answer(args: ImportDataAnswerModel):
     if separator != defaultseparator or \
             (args.state and args.state.separator and args.state.separator != separator):
         save['separator'] = separator
+    if field_names and len(field_names) > 0 and field_names != args.markup.fields:
+        save['fields'] = field_names
     if save:
         jsonresp["save"] = save
     # ret = handle_jsrunner_response(jsonresp, result, current_doc)
@@ -247,10 +331,10 @@ buttonText: Import
 ```"""]
     editor_tabs = [
             {
-                'text': 'Plugins',
+                'text': 'Fields',
                 'items': [
                     {
-                        'text': 'Fields',
+                        'text': 'Save/Import',
                         'items': [
                             {
                                 'data': templates[0].strip(),

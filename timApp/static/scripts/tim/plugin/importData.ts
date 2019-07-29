@@ -24,6 +24,7 @@ const ImportDataMarkup = t.intersection([
         width: t.number,
         height: t.number,
         tool: t.boolean,
+        fields: t.array(t.string),
     }),
     GenericPluginMarkup,
     t.type({
@@ -33,6 +34,7 @@ const ImportDataMarkup = t.intersection([
         upload: withDefault(t.boolean, false),
         useurl: withDefault(t.boolean, false),
         useseparator: withDefault(t.boolean, false),
+        usefields: withDefault(t.boolean, false),
         uploadstem: withDefault(t.string, "File to upload:"),
         loadButtonText: withDefault(t.string, "Load from URL"),
         urlstem: withDefault(t.string, "URL: "),
@@ -76,6 +78,7 @@ class ImportDataController extends PluginBase<t.TypeOf<typeof ImportDataMarkup>,
     private url: string = "";
     private separator: string = ";";
     private visible: number = -1;
+    private fields: string = "";
 
     getDefaultMarkup() {
         return {};
@@ -92,6 +95,7 @@ class ImportDataController extends PluginBase<t.TypeOf<typeof ImportDataMarkup>,
         const state: any = aa.state || {};
         this.separator = state.separator || this.attrs.separator;
         this.url = state.url || this.attrs.url;
+        this.fields = (state.fields || this.attrs.fields || []).join("\n");
     }
 
     protected getAttributeType() {
@@ -141,13 +145,17 @@ class ImportDataController extends PluginBase<t.TypeOf<typeof ImportDataMarkup>,
         const text = this.importText;
         const url = this.pluginMeta.getAnswerUrl();
         // url.replace("answer", "importData");
-        const params =   {
+        const params: any =   {
             input: {
                 data: text,
                 separator: this.separator,
                 url: this.url,
             },
         };
+
+        if (this.fields) {
+            params.input.fields = this.fields.split("\n");
+        }
 
         this.error = {};
         this.result = "";
@@ -244,6 +252,8 @@ timApp.component("importdataRunner", {
         <div ng-if="$ctrl.uploadresult"><span ng-bind-html="$ctrl.uploadresult"></span></div>
     </div>
     <p class="form-inline small" ng-if="$ctrl.attrs.useseparator">{{$ctrl.attrs.separatorstem}}<input ng-model="$ctrl.separator" size="5"/></p>
+    <p>Fields:</p>
+    <p><textarea id="fieldsText" ng-if="$ctrl.attrs.usefields" ng-model="$ctrl.fields" placeholder="fields" rows="7" cols="30"></textarea></p>
     <p></p>
     <p><textarea id="importText" ng-model="$ctrl.importText" ng-attr-placeholder="{{$ctrl.attrs.placeholder}}" rows="10" cols="50"></textarea></p>
     <button class="timButton"  ng-disabled="$ctrl.isRunning" ng-click="$ctrl.doImport()">

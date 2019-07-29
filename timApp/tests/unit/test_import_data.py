@@ -1,6 +1,7 @@
 from unittest import TestCase
 from timApp.plugin.importdata.importData import conv_data_field_names
 from timApp.plugin.importdata.importData import conv_data_csv
+from timApp.plugin.importdata.importData import convert_data
 
 class TestImportData(TestCase):
     def test_conv_data_field_names(self):
@@ -17,4 +18,56 @@ class TestImportData(TestCase):
         e1 = ["aknakka;d1;3", "vesal;d2;4", "hopohessu;demoC;5"]
 
         r1 = conv_data_field_names(data, fields, ";")
+        self.assertEqual(e1, r1, "Not same in * case")
+
+    def test_conv_data_csv(self):
+        data = ["aknakka;1;3;4", "vesal;2;3;6"]
+        fields = ["d1", "d2", "d3"]
+
+        e1 = ["aknakka;d1;1;d2;3;d3;4", "vesal;d1;2;d2;3;d3;6"]
+
+        r1 = conv_data_csv(data, fields, ";")
         self.assertEqual(e1, r1, "Not same in normal case")
+
+    def test_conv_data_csv2(self):
+        data = ["aknakka;1;3;4;5;6", "vesal;2;3;6;5;6"]
+        fields = ["d1", "d2", "d3"]
+
+        e1 = ["aknakka;d1;1;d2;3;d3;4", "vesal;d1;2;d2;3;d3;6"]
+
+        r1 = conv_data_csv(data, fields, ";")
+        self.assertEqual(e1, r1, "Not same in too many columns case")
+
+    def test_conv_data_csv3(self):
+        data = ["aknakka;1;3;4;5;6", "vesal;2;3"]
+        fields = ["d1", "d2", "d3"]
+
+        e1 = ["aknakka;d1;1;d2;3;d3;4", "vesal;d1;2;d2;3"]
+
+        r1 = conv_data_csv(data, fields, ";")
+        self.assertEqual(e1, r1, "Not same in too few columns case")
+
+    def test_convert_data(self):
+        data = ["aknakka;d1;3", "vesal;d2;4"]
+        fields = []
+        e1 = ["aknakka;d1;3", "vesal;d2;4"]
+
+        r1 = convert_data(data, fields, ";")
+        self.assertEqual(e1, r1, "Not same in normal case")
+
+    def test_convert_data2(self):
+        data = ["aknakka;1;3;4;5;6", "vesal;2;3"]
+        fields = ["d1", "d2", "d3"]
+
+        e1 = ["aknakka;d1;1;d2;3;d3;4", "vesal;d1;2;d2;3"]
+
+        r1 = convert_data(data, fields, ";")
+        self.assertEqual(e1, r1, "Not same in CSV case")
+
+    def test_convert_data3(self):
+        data = ["aknakka,demoA,3", "vesal,demoB,4", "hopohessu,demoC,5"]
+        fields = ["demoA = d1", "demoB=d2"]
+        e1 = ["aknakka,d1,3", "vesal,d2,4"]
+
+        r1 = conv_data_field_names(data, fields, ",")
+        self.assertEqual(e1, r1, "Not same in change name case")

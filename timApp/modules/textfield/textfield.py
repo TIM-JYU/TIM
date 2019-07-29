@@ -194,10 +194,10 @@ errormessage:    #inputcheckerin virheselite, tyhjä = selite on inputchecker
         "css": ["/field/css/field.css"],
         'editor_tabs': [
             {
-                'text': 'Plugins',
+                'text': 'Fields',
                 'items': [
                     {
-                        'text': 'Fields',
+                        'text': 'Text',
                         'items': [
                             {
                                 'data': '#- {defaultplugin="textfield" readonly="view"}',

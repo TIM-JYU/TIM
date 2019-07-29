@@ -672,7 +672,7 @@ questionItems:
         "css": ["css/feedback.css"],
         'editor_tabs': [
             {
-                'text': 'Plugins',
+                'text': 'Fields',
                 'items': [
                     {
                         'text': 'Feedback',

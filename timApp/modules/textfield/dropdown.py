@@ -179,7 +179,7 @@ def answer(args: DropdownAnswerModel):
 @dropdown_route.route('/reqs/')
 @dropdown_route.route('/reqs')
 def reqs():
-    templates = ["""{#test:dropdown words: [option 1, option 2, option 3]}""", """
+    templates = ["""{#test:dropdown words: [option 1, option 2, option 3]#}""", """
 #- {defaultplugin="dropdown"}
 
 The weather {#drop1 words: [is,do,are⁞]#} nice today.
@@ -194,10 +194,10 @@ The weather {#drop2 words: [is,do,are⁞]#} terrible {#drop3 words: [yesterday, 
         "css": ["/field/css/field.css"],
         'editor_tabs': [
             {
-                'text': 'Plugins',
+                'text': 'Fields',
                 'items': [
                     {
-                        'text': 'Fields',
+                        'text': 'Check/Radio/Drop',
                         'items': [
                             {
                                 'data': templates[0].strip(),

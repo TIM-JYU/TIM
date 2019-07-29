@@ -47,7 +47,7 @@ const TableFormMarkup = t.intersection([
         report: nullable(t.boolean),
         reportButton: nullable(t.string),
         separator: nullable(t.string),
-        singleLine: t.boolean,
+        singleLine: withDefault(t.boolean, true),
         sortBy: nullable(t.string), /* TODO! Username and task, or task and username -- what about points? */
         table: nullable(t.boolean),
         removeDocIds: withDefault(t.boolean, true),

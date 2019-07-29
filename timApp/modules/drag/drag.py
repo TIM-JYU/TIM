@@ -201,10 +201,10 @@ def reqs():
         "css": ["css/drag.css"],
         'editor_tabs': [
             {
-                'text': 'Plugins',
+                'text': 'Fields',
                 'items': [
                     {
-                        'text': 'Fields',
+                        'text': 'Drag',
                         'items': [
                             {
                                 'data': templates[0].strip(),
