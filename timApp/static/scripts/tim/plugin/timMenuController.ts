@@ -86,8 +86,8 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
             return;
         }
         // TODO: Get rid of eval.
-        const evaluedMenu = eval(this.attrs.menu);
-        this.menu = evaluedMenu;
+        // tslint:disable-next-line:no-eval
+        this.menu = eval(this.attrs.menu);
     }
 
     protected getAttributeType() {
@@ -101,7 +101,7 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
      * @param parent Menu item parent.
      */
     toggleSubmenu(item: any, parent: ITimMenuItem | undefined) {
-        // Toggle open menu closed and back again when clicking it.
+        // Toggle open menu closed and back again when clicking.
         if (this.previouslyClicked && (this.previouslyClicked === item || item.open)) {
             item.open = !item.open;
             this.previouslyClicked = item;
@@ -112,40 +112,30 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
             for (const menu of this.menu) {
                 this.closeAllInMenuItem(menu);
             }
+            parent.open = true;
         }
         // A first level menu doesn't have a parent; close all other menus.
-        if (!parent) {
+        if (!parent && item !== this.previouslyClicked) {
             for (const menu of this.menu) {
-                if (menu !== item) {
-                    this.closeAllInMenuItem(menu);
-                }
+                this.closeAllInMenuItem(menu);
             }
         }
+        // Unless already open, clicked item always opens.
         item.open = true;
         this.previouslyClicked = item;
     }
 
     /**
-     * Closes three levels of menus.
-     * TODO: Recursion.
-     * TODO: In some cases doesn't work as intended.
+     * Closes all levels of a menu item recursively.
      * @param t1 First level menu item.
      */
     closeAllInMenuItem(t1: ITimMenuItem) {
+        t1.open = false;
         if (!t1.items) {
             return;
         }
         for (const t2 of t1.items) {
-            t2.open = false;
-            if (!t2.items) {
-                return;
-            }
-            for (const t3 of t2.items) {
-                t3.open = false;
-                if (!t3.items) {
-                    return;
-                }
-            }
+            this.closeAllInMenuItem(t2);
         }
     }
 
@@ -153,37 +143,36 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
      * Makes the element show at top when scrolling towards it from below.
      */
     toggleSticky() {
-        // TODO: Multiple topMenus.
-        const placeholderY = this.getBounds(`${this.menuId}-placeholder`).bottom;
-        const scrollY = $(window).scrollTop();
+        // TODO: Multiple topMenus (storing active topmenu in a global variable failed!).
         // Sticky can only show when the element's place in document goes outside upper bounds.
+        const menu = document.getElementById(this.menuId);
+        const placeholder = document.getElementById(`${this.menuId}-placeholder-content`);
+        const scrollY = $(window).scrollTop();
+        if (!menu || !placeholder) {
+                return;
+        }
+        // TODO: Getting rectangle from placeholder-variable doesn't work?
+        // @ts-ignore
+        const placeholderY = document.getElementById(`${this.menuId}-placeholder`).getBoundingClientRect().bottom;
         if (scrollY && placeholderY < 0) {
             // When scrolling downwards, don't show fixed menu and hide placeholder content.
             // Otherwise (i.e. scrolling upwards), show menu as fixed and let placeholder take its place in document
             // to mitigate page length changes.
             if (this.previousScroll && scrollY > this.previousScroll) {
-                document.getElementById(this.menuId).classList.remove("top-menu");
-                document.getElementById(`${this.menuId}-placeholder-content`).classList.add("hidden");
+                menu.classList.remove("top-menu");
+                placeholder.classList.add("hidden");
                 // activeTopMenu = undefined;
             } else {
-                document.getElementById(this.menuId).classList.add("top-menu");
-                document.getElementById(`${this.menuId}-placeholder-content`).classList.remove("hidden");
+                menu.classList.add("top-menu");
+                placeholder.classList.remove("hidden");
                 // activeTopMenu = this.menuId;
             }
         } else {
-            document.getElementById(this.menuId).classList.remove("top-menu");
-            document.getElementById(`${this.menuId}-placeholder-content`).classList.add("hidden");
+            menu.classList.remove("top-menu");
+            placeholder.classList.add("hidden");
             // activeTopMenu = undefined;
         }
         this.previousScroll = $(window).scrollTop();
-    }
-
-    /**
-     * Return element location and size information.
-     * @param id Element id.
-     */
-    private getBounds(id: string): ClientRect | DOMRect {
-        return document.getElementById(id).getBoundingClientRect();
     }
 
     /**
@@ -238,9 +227,9 @@ timApp.component("timmenuRunner", {
 <div ng-cloak ng-if="$ctrl.topMenu" class="hidden" id="{{$ctrl.menuId}}-placeholder-content"><br></div>
 <div id="{{$ctrl.menuId}}" class="tim-menu" style="{{$ctrl.barStyle}}">
     <span ng-repeat="t1 in $ctrl.menu">
-        <div ng-if="t1.items.length > 0" class="btn-group" uib-dropdown is-open="status.isopen" id="simple-dropdown" style="cursor: pointer;">
-          <span uib-dropdown-toggle ng-disabled="disabled" ng-bind-html="t1.text+$ctrl.openingSymbol" ng-click="$ctrl.toggleSubmenu(t1, undefined)"></span>
-          <ul class="tim-menu-dropdown" id="{{t1.id}}" uib-dropdown-menu aria-labelledby="simple-dropdown" style="{{$ctrl.menuStyle}}">
+        <div ng-if="t1.items.length > 0" class="btn-group" style="cursor: pointer;">
+          <span ng-disabled="disabled" ng-bind-html="t1.text+$ctrl.openingSymbol" ng-click="$ctrl.toggleSubmenu(t1, undefined)"></span>
+          <ul class="tim-menu-dropdown" ng-if="t1.open" ng-class="$ctrl.openDirection(t1.id)" id="{{t1.id}}" style="{{$ctrl.menuStyle}}">
             <li class="tim-menu-item" ng-repeat="t2 in t1.items" role="menuitem">
                 <span class="tim-menu-item" ng-if="t2.items.length > 0">
                     <span ng-bind-html="t2.text+$ctrl.openingSymbol" ng-click="$ctrl.toggleSubmenu(t2, t1)"></span>
