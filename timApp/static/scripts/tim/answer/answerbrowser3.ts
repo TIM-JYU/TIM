@@ -265,7 +265,7 @@ timApp.component("timPluginLoader", {
     template: `
 <div class="answerBrowserPlaceholder" ng-if="$ctrl.answerId && $ctrl.showPlaceholder && !$ctrl.isPreview()" style="width: 1px; height: 23px;"></div>
 <answerbrowser ng-class="{'has-answers': $ctrl.answerId}"
-               ng-if="($ctrl.showBrowser || $ctrl.forceBrowser) && !$ctrl.isPreview()"
+               ng-if="$ctrl.showBrowser && !$ctrl.isPreview()"
                ng-hide="$ctrl.hideBrowser"
                task-id="$ctrl.taskId"
                answer-id="$ctrl.answerId">
