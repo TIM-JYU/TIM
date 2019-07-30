@@ -1,5 +1,4 @@
 """Utility functions."""
-import binascii
 import json
 import os
 import re
@@ -253,3 +252,62 @@ def get_error_message(e: Exception) -> str:
 
 
 Range = Tuple[int, int]
+
+TASK_PROG = re.compile('([\w\.]*)\((\d*),(\d*)\)(.*)') # see https://regex101.com/r/ZZuizF/2
+TASK_NAME_PROG = re.compile("(\d+.)?([\w\d]+)[.\[]?.*")  # see https://regex101.com/r/OjnTAn/4
+
+
+def widen_fields(fields: List[str]):
+    """
+    if there is syntax d(1,3) in fileds, it is made d1,d2
+    from d(1,3)=t  would come d1=t1, d2=t2
+    :param fields: list of fields
+    :return: array fields widened
+    """
+    fields1 = []
+    for field in fields:
+        parts = field.split(";")
+        fields1.extend(parts)
+
+    rfields = []
+    for field in fields1:
+        try:
+            t, a, *rest = field.split("=")
+        except ValueError:
+            t, a, rest = field, "", None
+        t = t.strip()
+        a = a.strip()
+        match = re.search(TASK_PROG, t)
+        if not match:
+            rfields.append(field)
+            continue
+
+        tb = match.group(1)
+        n1 = int(match.group(2))
+        n2 = int(match.group(3))
+        te = match.group(4)
+
+        for i in range(n1, n2):
+            tn = tb + str(i) + te
+            if not tb:
+                tn = ""
+            if a:
+                tn += "=" + a + str(i)
+            rfields.append(tn)
+
+    return rfields
+
+
+def get_alias(name):
+    """
+    Get name part form string like 534.d1.points
+    :param name: full name of field
+    :return: just name part of field, like d1
+    """
+    t = name.strip()
+    match = re.search(TASK_NAME_PROG, t)
+    if not match:
+        return name
+    return match.group(2)
+
+
