@@ -77,6 +77,10 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
         this.topMenu = this.attrs.topMenu;
         this.openAbove = this.attrs.openAbove;
         this.openingSymbol = this.attrs.openingSymbol;
+        // Turn default symbol upwards if menu opens above.
+        if (this.attrs.openAbove && this.openingSymbol == "&#9662;") {
+            this.openingSymbol = "&#9652;";
+        }
         if (this.topMenu) {
             window.onscroll = () => this.toggleSticky();
         }
