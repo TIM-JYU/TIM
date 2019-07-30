@@ -101,9 +101,10 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
      * Close other menus and toggle clicked menu open or closed.
      * TODO: Better way to do this (for deeper menus).
      * @param item Clicked menu item.
-     * @param parent Menu item parent.
+     * @param parent1 Closest menu item parent.
+     * @param parent2 Further menu item parent.
      */
-    toggleSubmenu(item: any, parent: ITimMenuItem | undefined) {
+    toggleSubmenu(item: ITimMenuItem, parent1: ITimMenuItem | undefined, parent2: ITimMenuItem | undefined) {
         // Toggle open menu closed and back again when clicking.
         if (this.previouslyClicked && (this.previouslyClicked === item || item.open)) {
             item.open = !item.open;
@@ -111,14 +112,17 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
             return;
         }
         // Close all menus when clicking menu that isn't child of previously clicked.
-        if (parent && parent !== this.previouslyClicked) {
+        if (parent1 && parent1 !== this.previouslyClicked) {
             for (const menu of this.menu) {
                 this.closeAllInMenuItem(menu);
             }
-            parent.open = true;
+            parent1.open = true;
+            if (parent2) {
+                parent2.open = true;
+            }
         }
         // A first level menu doesn't have a parent; close all other menus.
-        if (!parent && item !== this.previouslyClicked) {
+        if (!parent1 && item !== this.previouslyClicked) {
             for (const menu of this.menu) {
                 this.closeAllInMenuItem(menu);
             }
@@ -219,7 +223,7 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
     private mouseInside(mouseInside: boolean) {
         if (!mouseInside) {
             for (const t1 of this.menu) {
-                this.closeAllInMenuItem(t1);
+                // this.closeAllInMenuItem(t1);
             }
         }
     }
@@ -237,18 +241,19 @@ timApp.component("timmenuRunner", {
 <div ng-cloak ng-if="$ctrl.topMenu" class="hidden" id="{{$ctrl.menuId}}-placeholder-content"><br></div>
 <div id="{{$ctrl.menuId}}" class="tim-menu" style="{{$ctrl.barStyle}}" ng-mouseleave="$ctrl.mouseInside(false)">
     <span ng-repeat="t1 in $ctrl.menu">
-        <div ng-if="t1.items.length > 0" class="btn-group" style="cursor: pointer;">
-          <span ng-disabled="disabled" ng-bind-html="t1.text+$ctrl.openingSymbol" ng-click="$ctrl.toggleSubmenu(t1, undefined)"></span>
+        <div ng-if="t1.items.length > 0" class="btn-group">
+          <span class="tim-menu-item" ng-disabled="disabled" ng-bind-html="t1.text+$ctrl.openingSymbol" ng-click="$ctrl.toggleSubmenu(t1, undefined, undefined)"></span>
           <ul class="tim-menu-dropdown" ng-if="t1.open" ng-class="$ctrl.openDirection(t1.id)" id="{{t1.id}}" style="{{$ctrl.menuStyle}}">
-            <li class="tim-menu-item" ng-repeat="t2 in t1.items" role="menuitem">
+            <li class="tim-menu-list-item" ng-repeat="t2 in t1.items">
                 <span class="tim-menu-item" ng-if="t2.items.length > 0">
-                    <span ng-bind-html="t2.text+$ctrl.openingSymbol" ng-click="$ctrl.toggleSubmenu(t2, t1)"></span>
+                    <span class="tim-menu-item" ng-bind-html="t2.text+$ctrl.openingSymbol" ng-click="$ctrl.toggleSubmenu(t2, t1, undefined)"></span>
                     <ul class="tim-menu-dropdown" id="{{t2.id}}" ng-class="$ctrl.openDirection(t2.id)" ng-if="t2.open" style="{{$ctrl.menuStyle}}">
-                        <li class="tim-menu-item" ng-repeat="t3 in t2.items">
-                            <span class="tim-menu-item" ng-if="t3.items.length > 0">
-                                <span ng-bind-html="t3.text+$ctrl.openingSymbol" ng-click="$ctrl.toggleSubmenu(t3, t2)"></span>
-                                <ul class="tim-menu-dropdown" id="{{t3.id}}" ng-class="$ctrl.openDirection(t3.id)" ng-if="t3.open" style="{{$ctrl.menuStyle}}">
-                                    <li class="tim-menu-item" ng-repeat="t4 in t3.items" ng-bind-html="t4.text"></li>
+                        <li class="tim-menu-list-item" ng-repeat="t3 in t2.items">
+                            <span class="tim-menu-item"ng-if="t3.items.length > 0">
+                                <span class="tim-menu-item" ng-bind-html="t3.text+$ctrl.openingSymbol" ng-click="$ctrl.toggleSubmenu(t3, t2, t1)"></span>
+                                <ul class="tim-menu-dropdown" id="{{t3.id}}" ng-class="$ctrl.openDirection(t3.id)"
+                                    ng-if="t3.open" style="{{$ctrl.menuStyle}}">
+                                    <li class="tim-menu-list-item" ng-repeat="t4 in t3.items" ng-bind-html="t4.text"></li>
                                 </ul>
                             </span>
                             <span class="tim-menu-item" ng-if="t3.items.length < 1" ng-bind-html="t3.text"></span>

@@ -168,7 +168,7 @@ def parse_menu_string(menu_str):
         level = decide_menu_level(list_symbol_index, previous_level)
         previous_level = level
         text_markdown = item[list_symbol_index+1:]
-        text_html = call_dumbo([text_markdown])[0].replace("<p>","<span>").replace("</p>","</span>")
+        text_html = call_dumbo([text_markdown])[0].replace("<p>","").replace("</p>","")
         current = TimMenuItem(text=text_html, level=level, items=[])
         for parent in parents:
             if parent.level < level:
@@ -280,7 +280,7 @@ menu: |!!
                 'text': 'Insert',
                 'items': [
                     {
-                        'text': 'Menu',
+                        'text': 'Menus',
                         'items': [
                             {
                                 'data': templates[0].strip(),

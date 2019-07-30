@@ -1300,13 +1300,23 @@ p.closeButton::before {
     margin-left: -.8em;
     border-radius: 4px;
     margin-bottom: 8px;
+    cursor: pointer;
 }
 
 .tim-menu-item {
+    display: block;
+    width: 100%;
+}
+
+.tim-menu-list-item {
     position: relative;
-    margin: 5px;
-    margin-left: 15px;
+    padding: 5px;
+    padding-left: 15px;
     white-space: nowrap;
+}
+
+.tim-menu-list-item:hover {
+    background: #f7f7f7;
 }
 
 .top-menu {
