@@ -67,6 +67,10 @@ export interface ITimComponent {
     setAnswer: (content: {[index: string]: string}) => {ok: boolean, message: (string | undefined)};
 }
 
+export interface IUserChanged {
+    userChanged: (user: IUser) => void;
+}
+
 export interface IInsertDiffResult {
     type: "insert";
     after_id: string | null;
@@ -125,6 +129,7 @@ export class ViewCtrl implements IController {
     private timTables = new Map<string, TimTableController>();
     private timComponents: Map<string, ITimComponent> = new Map();
     private timComponentTags: Map<string, [string]> = new Map();
+    private userChangeListeners: Map<string, IUserChanged> = new Map();
 
     private pendingUpdates: PendingCollection = new Map<string, string>();
     private document: Document;
@@ -451,6 +456,10 @@ export class ViewCtrl implements IController {
         this.addTimComponent(component, tag);
     }
 
+    public addUserChangeListener(name: string, listener: IUserChanged) {
+        this.userChangeListeners.set(name, listener);
+    }
+
     /**
      * Registers an ITimComponent to the view controller by its name attribute if it has one.
      * @param {ITimComponent} component The component to be registered.
@@ -576,6 +585,9 @@ export class ViewCtrl implements IController {
 
     async changeUser(user: IUser, updateAll: boolean) {
         this.selectedUser = user;
+        for (const uc of this.userChangeListeners.values()) {
+            uc.userChanged(user);
+        }
         if (updateAll) {
             for (const lo of this.ldrs.values()) {
                 lo.loadPlugin();

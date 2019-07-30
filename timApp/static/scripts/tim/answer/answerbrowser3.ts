@@ -511,7 +511,15 @@ export class AnswerBrowserController extends DestroyScope implements IController
     }
 
     async changeAnswer() {
-        if (this.selectedAnswer == null || !this.user) {
+        if (this.forceBrowser() && this.selectedAnswer == null && this.loadedAnswer.id) {
+            this.selectedAnswer = {
+                content: "",
+                id: this.loadedAnswer.id,
+                last_points_modifier: 0,
+                valid: true,
+            };
+        }
+        if ((this.selectedAnswer == null || !this.user)) {
             return;
         }
         this.unDimPlugin();
@@ -527,7 +535,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
             ref_from_doc_id: this.viewctrl.docId,
             ref_from_par_id: getParId(par),
         };
-        if (this.selectedAnswer.id !== this.loadedAnswer.id || this.loadedAnswer.review !== this.review || this.isGlobal()) {
+        if (this.forceBrowser() || this.selectedAnswer.id !== this.loadedAnswer.id || this.loadedAnswer.review !== this.review || this.isGlobal()) {
             this.loading++;
             const r = await to($http.get<{ html: string, reviewHtml: string }>("/getState", {
                 params: {
@@ -809,11 +817,11 @@ export class AnswerBrowserController extends DestroyScope implements IController
     }
 
     private handleAnswerFetch(data: IAnswer[]) {
-        if (data.length > 0 && (this.hasUserChanged() || data.length !== this.answers.length || this.isGlobal())) {
+        if (data.length > 0 && (this.hasUserChanged() || data.length !== this.answers.length) || this.forceBrowser()) {
             this.answers = data;
             this.updateFiltered();
             this.selectedAnswer = this.filteredAnswers.length > 0 ? this.filteredAnswers[0] : undefined;
-            if (!this.selectedAnswer) {
+            if (!this.selectedAnswer && !this.forceBrowser()) {
                 this.dimPlugin();
             } else {
                 this.changeAnswer();
@@ -881,20 +889,12 @@ export class AnswerBrowserController extends DestroyScope implements IController
         }
         this.loading++;
 
-        let r1 = to($http.get<IAnswer[]>(`/answers/${this.taskId}/${uid}`, {
+        const r = await to($http.get<IAnswer[]>(`/answers/${this.taskId}/${uid}`, {
             params: {
                 _: Date.now(),
             },
         }));
 
-        if (this.isGlobal()) {
-            r1 = to($http.get<IAnswer[]>(`/globalAnswer/${this.taskId}`, {
-                params: {
-                    _: Date.now(),
-                },
-            }));
-        }
-        const r = await r1;
         this.loading--;
         if (!r.ok) {
             this.showError(r.result);

@@ -1,11 +1,12 @@
 ﻿import angular from "angular";
 import * as t from "io-ts";
 import {IAnswer} from "tim/answer/IAnswer";
-import {ITimComponent, ViewCtrl} from "tim/document/viewctrl";
+import {ITimComponent, IUserChanged, ViewCtrl} from "tim/document/viewctrl";
 import {GenericPluginMarkup, Info, withDefault} from "tim/plugin/attributes";
 import {PluginBase, pluginBindings} from "tim/plugin/util";
-import {$http, $sce, $timeout} from "tim/util/ngimport";
+import {$http, $httpParamSerializer, $sce, $timeout} from "tim/util/ngimport";
 import {to} from "tim/util/utils";
+import {IUser} from "../../../static/scripts/tim/user/IUser";
 
 const jsframeApp = angular.module("jsframeApp", ["ngSanitize"]);
 export const moduleDefs = [jsframeApp];
@@ -74,7 +75,7 @@ interface CustomFrame<T extends Window> extends HTMLIFrameElement {
 
 class JsframeController extends PluginBase<t.TypeOf<typeof JsframeMarkup> ,
     t.TypeOf<typeof JsframeAll>,
-    typeof JsframeAll> implements ITimComponent {
+    typeof JsframeAll> implements ITimComponent, IUserChanged {
 
     get english() {
         return this.attrs.lang === "en";
@@ -133,6 +134,34 @@ class JsframeController extends PluginBase<t.TypeOf<typeof JsframeMarkup> ,
         if ( aa.markup.fielddata ) { this.initData += "    window.fieldData = " + JSON.stringify(aa.markup.fielddata) + ";\n"; }
         // if ( data ) { this.setData(data); }
         this.viewctrl.addTimComponent(this);
+        if (!this.attrs.forceBrowser) {
+            this.viewctrl.addUserChangeListener(this.getTaskId() || "", this);
+        }
+    }
+
+    async userChanged(user: IUser) {
+        // TODO: Experimental
+        try {
+            const res = await to($http.get<any>(`/jsframeUserChange/${this.getTaskId()}/${user.id}`));
+            this.initData = "";
+            let data = this.attrs.data;
+            if (this.attrs.c) {
+                data = this.attrs.c;
+            }
+            if (data) {
+                this.initData = "    window.initData = " + JSON.stringify(data) + ";\n";
+            }
+            if (res.result.data.fielddata) {
+                this.initData += "    window.fieldData = " + JSON.stringify(res.result.data.fielddata) + ";\n";
+            }
+        } catch (e) {
+            console.log(e);
+            this.error = "Error fetching new data for user" + "\n" + e;
+        }
+        // blink for now, until the bindings are right
+        this.isOpen = false;
+        await $timeout(0);
+        this.isOpen = true;
     }
 
     runShowTask() {

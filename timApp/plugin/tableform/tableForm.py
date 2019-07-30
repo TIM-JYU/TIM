@@ -60,7 +60,7 @@ class TableFormMarkupModel(GenericMarkupModel):
     minWidth: Union[str, Missing] = missing
     singleLine: Union[bool, Missing] = missing
     removeDocIds: Union[bool, Missing] = True
-    open: Union[bool, Missing] = missing
+    open: Union[bool, Missing] = True
     hiddenColumns: Union[List[int], Missing] = missing
     hiddenRows: Union[List[int], Missing] = missing
     filterRow: Union[bool, Missing] = missing
@@ -98,7 +98,7 @@ class TableFormMarkupSchema(GenericMarkupSchema):
     removeDocIds = fields.Boolean(default=True)
     maxWidth = fields.Str()
     minWidth = fields.Str(allow_none=True)
-    open = fields.Boolean(allow_none=True)
+    open = fields.Boolean(default=True)
     filterRow = fields.Boolean(allow_none=True)
     cbColumn = fields.Boolean(allow_none=True)
     nrColumn = fields.Boolean(allow_none=True)
@@ -155,7 +155,7 @@ class TableFormHtmlModel(GenericHtmlModel[TableFormInputModel, TableFormMarkupMo
 
     def get_browser_json(self):
         r = super().get_browser_json()
-        if self.markup.groups and self.markup.fields:
+        if self.markup.open and self.markup.groups and self.markup.fields:
             groups = UserGroup.query.filter(UserGroup.name.in_(self.markup.groups))
             try:
                 tid = TaskId.parse(self.taskID)
@@ -259,16 +259,22 @@ def fetch_rows():
     rows = {}
     realnames = {}
     emails = {}
+    styles = {}
     for f in fielddata:
         username = f['user'].name
         rows[username] = dict(f['fields'])
+        for key, content in rows[username].items():
+            if type(content) is dict:
+                rows[username][key] = json.dumps(content)
         realnames[username] = f['user'].real_name
         emails[username] = f['user'].email
+        styles[username] = dict(f['styles'])
     r['rows'] = rows
     r['realnamemap'] = realnames
     r['emailmap'] = emails
     r['fields'] = field_names
     r['aliases'] = aliases
+    r['styles'] = styles
     return json_response(r)
 
 
