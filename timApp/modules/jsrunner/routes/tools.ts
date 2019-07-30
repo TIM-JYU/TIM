@@ -162,8 +162,12 @@ class Tools {
         return this.normalizeField(fieldName);
     }
 
-    getStudentName(): string {
+    getRealName(): string {
         return this.data.user.real_name;
+    }
+
+    getUserName(): string {
+        return this.data.user.name;
     }
 
     getDouble(fieldName: unknown, defa: unknown = 0): number {
@@ -265,6 +269,18 @@ class Tools {
         }
     }
 
+    addStatDataOf(...fieldNames: string[]) {
+        // if ( !this.canStat ) { throw new Error("tools can not stat!, use gtools."); }
+        const maxv = 1e100;
+        for (const name of fieldNames) {
+            let v = this.getDouble(name, NaN);
+            if ( isNaN(v) ) { continue; }
+            v = Math.min(v, maxv);
+            // this.print(name + ": " + v);
+            this.addStatDataValue(name, v);
+        }
+    }
+
     getStatData(): {[name: string]: IStatData} {
         // if ( !this.canStat ) { throw new Error("tools can not stat!, use gtools."); }
         const result: {[name: string]: IStatData} = {};
@@ -272,6 +288,15 @@ class Tools {
             result[name] = sc.getStat();
         }
         return result;
+    }
+
+    r(value: number, decim: number): number {
+        if ( !checkInt(decim) ) {
+            throw new Error("Parameter 'decim' must be integer.");
+        }
+        const c = ensureNumberDefault(value);
+        const mul = Math.pow(10, decim);
+        return Math.round(c * mul) / mul;
     }
 
     getSum(fieldName: unknown, start: number, end: number, defa: unknown = 0, max: unknown = 1e100): number {
@@ -284,6 +309,16 @@ class Tools {
         let sum = 0;
         for (let i = start; i <= end; i++) {
             sum += Math.min(this.getDouble(f + i.toString(), def), maxv);
+        }
+        return sum;
+    }
+
+    getSumOf(...fieldNames: string[]): number {
+        const def = 0;
+        const maxv = 1e100;
+        let sum = 0;
+        for (const fn of fieldNames) {
+            sum += Math.min(this.getDouble(fn, def), maxv);
         }
         return sum;
     }
