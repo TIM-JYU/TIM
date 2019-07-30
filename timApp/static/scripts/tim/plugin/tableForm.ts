@@ -109,10 +109,15 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
     // TODO: Change row format to properly typed format (maybe userobject:IRowstype) format
     private rows!: IRowsType;
     private styles!: t.TypeOf<typeof Styles>;
+    private fields!: string[];
+    private realnamemap!: { [index: string]: string };
+    private emailmap!: { [index: string]: string };
+    private aliases!: { [index: string]: string };
     private realnames = false;
     private usernames = false;
     private emails = false;
-    private showTable = true;
+    private showTable = false;
+    private tableFetched = false;
     private realNameColumn = "A";
     private userNameColumn = "B";
     private emailColumn = "C";
@@ -192,6 +197,11 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
         this.rows = this.attrsall.rows || {};
         this.rowKeys = Object.keys(this.rows);
         this.styles = this.attrsall.styles || {};
+        this.fields = this.attrsall.fields || [];
+        this.realnamemap = this.attrsall.realnamemap || {};
+        this.emailmap = this.attrsall.emailmap || {};
+        this.aliases = this.attrsall.aliases || {};
+
         this.setDataMatrix();
 
         this.data.saveCallBack = (cellsTosave, colValuesAreSame) => this.cellChanged(cellsTosave, colValuesAreSame);
@@ -209,7 +219,8 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
         if (this.attrs.singleLine) {
             this.data.singleLine = this.attrs.singleLine;
         }
-        if (this.attrs.open != undefined) {
+        if (this.attrs.open) {
+            this.tableFetched = true;
             this.showTable = this.attrs.open;
         }
 
@@ -237,22 +248,22 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
      * @param b username to compare with a
      */
     sortByRealName(a: string, b: string) {
-        if (!this.attrsall.realnamemap) {
+        if (!this.realnamemap) {
             return 0;
         }
         try {
-            return this.attrsall.realnamemap[a].localeCompare(this.attrsall.realnamemap[b]);
+            return this.realnamemap[a].localeCompare(this.realnamemap[b]);
         } catch (e) {
             return 0;
         }
     }
 
     sortByEmail(a: string, b: string) {
-        if (!this.attrsall.emailmap) {
+        if (!this.emailmap) {
             return 0;
         }
         try {
-            return this.attrsall.emailmap[a].localeCompare(this.attrsall.emailmap[b]);
+            return this.emailmap[a].localeCompare(this.emailmap[b]);
         } catch (e) {
             return 0;
         }
@@ -265,10 +276,10 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
     public async updateTable() {
         // TODO: Save before reset?
         // TODO: Emails etc?
-        const timtab = this.getTimTable();
-        if (!timtab) {
-            return;
-        }
+        // const timtab = this.getTimTable();
+        // if (!timtab) {
+        //     return;
+        // }
         const tableResponse = await $http.get <{
             // TODO: All of these are probably not needed
             // TODO: Common type/interface for these?
@@ -277,6 +288,7 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
             realnamemap: { [index: string]: string },
             emailmap: { [index: string]: string },
             rows: IRowsType,
+            styles: t.TypeOf<typeof Styles>,
         }>("/tableForm/fetchTableData?" + $httpParamSerializer({
             taskid: this.getTaskId(),
         }));
@@ -284,6 +296,9 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
         console.log("debug");
         this.rows = tableResponse.data.rows || {};
         this.rowKeys = Object.keys(tableResponse.data.rows);
+        this.fields = tableResponse.data.fields || [];
+        this.realnamemap = tableResponse.data.realnamemap || {};
+        this.styles = tableResponse.data.styles || {};
         this.userLocations = {};
         this.taskLocations = {};
         this.data.table.countCol = 0;
@@ -291,7 +306,7 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
         this.data.table.columns = [];
         this.data.userdata.cells = {};
         this.setDataMatrix();
-        timtab.reInitialize();
+        // timtab.reInitialize();
         // console.log("debug");
 
     }
@@ -314,7 +329,7 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
             this.data.headersStyle = {"backgroundColor": this.fixedColor,
                                       "font-weight": "bold"};
 
-            if (this.attrsall.fields ) { this.data.table.countCol = this.attrsall.fields.length + 3; }
+            if (this.fields ) { this.data.table.countCol = this.fields.length + 3; }
             this.data.table.countRow = Object.keys(this.rows).length;
             let y = 1;
             if (!this.data.lockedCells) {
@@ -324,16 +339,16 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
                 this.data.userdata.cells[this.userNameColumn + y] = {cell: r, backgroundColor: this.fixedColor};
                 this.data.lockedCells.push(this.userNameColumn + y);
                 this.userLocations[y] = r;
-                if ( this.attrsall.realnamemap ) {
+                if ( this.realnamemap ) {
                     this.data.userdata.cells[this.realNameColumn + y] = {
-                        cell: this.attrsall.realnamemap[r],
+                        cell: this.realnamemap[r],
                         backgroundColor: this.fixedColor,
                     };
                     this.data.lockedCells.push(this.realNameColumn + y);
                 }
-                if ( this.attrsall.emailmap ) {
+                if ( this.emailmap ) {
                     this.data.userdata.cells[this.emailColumn + y] = {
-                        cell: this.attrsall.emailmap[r],
+                        cell: this.emailmap[r],
                         backgroundColor: this.fixedColor,
                     };
                     this.data.lockedCells.push(this.emailColumn + y);
@@ -342,10 +357,10 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
             }
             // TODO: Load default cell colors from tableForm's private answer?
             const xOffset = 3;
-            if (this.attrsall.fields) {
-                for (let x = 0; x < this.attrsall.fields.length; x++) {
+            if (this.fields) {
+                for (let x = 0; x < this.fields.length; x++) {
 
-                    const colheader = this.attrsall.fields[x];
+                    const colheader = this.fields[x];
                     this.data.headers.push(colheader);
                     /*
                     this.data.userdata.cells[colnumToLetters(x + xOffset) + 1] = {
@@ -355,8 +370,8 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
                     */
 
                     let contentalias;
-                    if (this.attrsall.aliases && colheader in this.attrsall.aliases) {
-                        contentalias = this.attrsall.aliases[colheader];
+                    if (this.aliases && colheader in this.aliases) {
+                        contentalias = this.aliases[colheader];
                     } else {
                         contentalias = colheader;
                     }
@@ -373,12 +388,12 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
                         // this.data.userdata.cells[colnumToLetters(x + xOffset) + (y + 1)] = this.rows[this.rowKeys[y]][this.attrsall.fields[x]];
                         if ( this.styles && !angular.equals(this.styles, {}) ) {
                             this.data.userdata.cells[colnumToLetters(x + xOffset) + (y + 1)] = Object.assign(
-                                {cell: this.rows[this.rowKeys[y]][this.attrsall.fields[x]]},
-                                this.styles[this.rowKeys[y]][this.attrsall.fields[x]],
+                                {cell: this.rows[this.rowKeys[y]][this.fields[x]]},
+                                this.styles[this.rowKeys[y]][this.fields[x]],
                             );
                         } else {
                             this.data.userdata.cells[colnumToLetters(x + xOffset) + (y + 1)] = Object.assign(
-                                {cell: this.rows[this.rowKeys[y]][this.attrsall.fields[x]]},
+                                {cell: this.rows[this.rowKeys[y]][this.fields[x]]},
                             );
                         }
                     }
@@ -479,8 +494,8 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
         const result: CellType[][] = [];
         const rowcount = Object.keys(this.rows).length + 1;
         let colcount = 0;
-        if (this.attrsall.fields && this.attrsall.fields.length) {
-            colcount = this.attrsall.fields.length + 1;
+        if (this.fields && this.fields.length) {
+            colcount = this.fields.length + 1;
         }
         for (let i = 0; i < rowcount; i++) {
             // TODO: In future: change hiddenRows check if hiddenRows is changed from number[] to IRows
@@ -569,14 +584,14 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
         const selUsers = timTable.getCheckedRows(0, true);
         const ulist = [];
         let usep = "";
-        if ( !this.attrsall.realnamemap ) { return; }
-        if ( !this.attrsall.emailmap ) { return; }
+        if ( !this.realnamemap ) { return; }
+        if ( !this.emailmap ) { return; }
         for (const u of selUsers) {
             const un = u[this.userNameColIndex];
             let s = "";
-            if ( this.listName ) { s = this.attrsall.realnamemap[un]; usep = ", "; }
+            if ( this.listName ) { s = this.realnamemap[un]; usep = ", "; }
             if ( this.listUsername ) { s += usep + un; usep = ", "; }
-            if ( this.listEmail ) { s += usep + this.attrsall.emailmap[un]; usep = ", "; }
+            if ( this.listEmail ) { s += usep + this.emailmap[un]; usep = ", "; }
             usep = "";
             ulist.push([s]);
         }
@@ -680,7 +695,11 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
         this.doSaveText(cells);
     }
 
-    openTable() {
+    async openTable() {
+        if (!this.tableFetched) {
+            await this.updateTable();
+            this.tableFetched = true;
+        }
         this.showTable = true;
     }
 
