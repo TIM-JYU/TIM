@@ -1147,6 +1147,7 @@ def get_all_answers_route(task_id):
 def get_jsframe_data(task_id, user_id):
     """
         TODO: Delete (experimental)
+        TODO: if leave, think rights carefully
     """
     tid = TaskId.parse(task_id)
     doc = get_doc_or_abort(tid.doc_id)
@@ -1156,7 +1157,10 @@ def get_jsframe_data(task_id, user_id):
     plug = get_plugin_from_request(doc.document, tid, curr_user)
     try:
         vals = {}
-        fields = plug[1].values['fields']
+        fields = plug[1].values.get('fields', [])
+        if not fields:
+            return json_response({})
+
         data, aliases, field_names = get_fields_and_users(
             fields,
             [user.personal_group_prop],
@@ -1177,7 +1181,7 @@ def get_jsframe_data(task_id, user_id):
                              'graphdata': {'data': da, 'labels': labels}}
         return json_response(vals)
     except:
-        return
+        return json_response({})
 
 class GetStateSchema(Schema):
     answer_id = fields.Int(required=True)

@@ -25,6 +25,7 @@ const JsframeMarkup = t.intersection([
         c: t.any,
         data: t.any,
         fielddata: t.any,
+        fields: t.any,
     }),
     GenericPluginMarkup,
     t.type({
@@ -114,13 +115,15 @@ class JsframeController extends PluginBase<t.TypeOf<typeof JsframeMarkup> ,
     private taskUrl: string = "";
     private htmlUrl: string = "";
     private initData: string = "";
+    private userName: string = "";
 
     private saveResponse: {saved: boolean, message: (string | undefined)} = {saved: false, message: undefined};
 
     $onInit() {
         super.$onInit();
         this.button = this.buttonText();
-        const aa = this.attrsall;
+        const aa: any = this.attrsall;
+        this.userName = aa.user_id;
         this.userCode = aa.usercode ||  "";
 
         this.message = this.attrs.message || "";
@@ -141,27 +144,23 @@ class JsframeController extends PluginBase<t.TypeOf<typeof JsframeMarkup> ,
 
     async userChanged(user: IUser) {
         // TODO: Experimental
+        if ( user.name == this.userName ) { return; }
+        if ( !this.attrsall.markup.fields ) { return; }
+        this.userName = user.name;
+
         try {
             const res = await to($http.get<any>(`/jsframeUserChange/${this.getTaskId()}/${user.id}`));
             this.initData = "";
-            let data = this.attrs.data;
-            if (this.attrs.c) {
-                data = this.attrs.c;
-            }
-            if (data) {
-                this.initData = "    window.initData = " + JSON.stringify(data) + ";\n";
-            }
+            let data: any = this.attrs.data;
+            if (this.attrs.c) { data = this.attrs.c; }
             if (res.result.data.fielddata) {
-                this.initData += "    window.fieldData = " + JSON.stringify(res.result.data.fielddata) + ";\n";
+                if ( !data ) { data = {}; }
+                data.fielddata = res.result.data.fielddata;
             }
+            if ( data ) { this.setData(data); }
         } catch (e) {
-            console.log(e);
             this.error = "Error fetching new data for user" + "\n" + e;
         }
-        // blink for now, until the bindings are right
-        this.isOpen = false;
-        await $timeout(0);
-        this.isOpen = true;
     }
 
     runShowTask() {
@@ -475,8 +474,8 @@ jsframeApp.component("jsframeRunner", {
           ng-style="$ctrl.tinyErrorStyle" ng-bind-html="$ctrl.error"></span>
 
     <p class="plgfooter" ng-if="::$ctrl.footer" ng-bind-html="::$ctrl.footer"></p>
-<!--    <button ng-click="$ctrl.tempSetData()">Set data</button>
-    <button ng-click="$ctrl.tempGetData()">Get data</button> -->
+    <!--<button ng-click="$ctrl.tempSetData()">Set data</button>
+    <button ng-click="$ctrl.tempGetData()">Get data</button>-->
 </div>
 `,
 });
