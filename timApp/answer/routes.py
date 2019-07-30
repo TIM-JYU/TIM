@@ -1117,10 +1117,8 @@ def get_global_answers(task_id):
         tid = TaskId.parse(task_id)
     except PluginException as e:
         return abort(400, str(e))
-    d = get_doc_or_abort(tid.doc_id)
-    user = get_current_user_object()
-    # TODO: Check for document answer access or ensure that field is actually global
-    verify_seeanswers_access(d)
+    if not is_global_id(tid):
+        return abort(400, 'Task is not global task')
     try:
         #user_answers = pluginControl.get_latest_for_tasks([tid],{})
         user_answers = get_globals_for_tasks([tid], {})
