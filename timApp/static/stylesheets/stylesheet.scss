@@ -1306,6 +1306,7 @@ p.closeButton::before {
 .tim-menu-item {
     display: block;
     width: 100%;
+    color: black;
 }
 
 .tim-menu-list-item {
@@ -1313,10 +1314,30 @@ p.closeButton::before {
     padding: 5px;
     padding-left: 15px;
     white-space: nowrap;
+    background: #FFFFFF;
 }
 
 .tim-menu-list-item:hover {
-    background: #f7f7f7;
+    background: #F7F7F7;
+}
+
+.tim-menu-dropdown {
+    position: absolute;
+    float: left;
+    z-index: 3;
+    min-width: 160px;
+    padding: 5px 0;
+    margin: 2px 0 0;
+    list-style: none;
+    font-size: 14px;
+    text-align: left;
+    background-color: #fff;
+    border: 1px solid #ccc;
+    border: 1px solid rgba(0,0,0,0.15);
+    border-radius: 4px;
+    -webkit-box-shadow: 0 6px 12px rgba(0,0,0,0.175);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.175);
+    background-clip: padding-box;
 }
 
 .top-menu {
@@ -1351,25 +1372,6 @@ p.closeButton::before {
 .tim-menu img {
     vertical-align: baseline;
     display: inline-block;
-}
-
-.tim-menu-dropdown {
-    position: absolute;
-    z-index: 1001;
-    float: left;
-    min-width: 160px;
-    padding: 5px 0;
-    margin: 2px 0 0;
-    list-style: none;
-    font-size: 14px;
-    text-align: left;
-    background-color: #fff;
-    border: 1px solid #ccc;
-    border: 1px solid rgba(0,0,0,0.15);
-    border-radius: 4px;
-    -webkit-box-shadow: 0 6px 12px rgba(0,0,0,0.175);
-    box-shadow: 0 6px 12px rgba(0,0,0,0.175);
-    background-clip: padding-box;
 }
 
 .hidden {
