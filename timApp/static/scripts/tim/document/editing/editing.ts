@@ -370,7 +370,7 @@ This will delete the whole ${options.area ? "area" : "paragraph"} from the docum
 
             const r = await
                 to($http.post<IParResponse>("/newParagraph/", {
-                    text: '``` {settings=""}\nexample:\n```',
+                    text: '``` {settings=""}\nauto_number_headings: 0\n```',
                     docId: this.viewctrl.docId,
                     par_next: parNext,
                 }));

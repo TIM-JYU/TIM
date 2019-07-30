@@ -59,27 +59,21 @@ function runner(d: IRunnerData): RunnerResult {
     try {
         const guser = data[0];
         const gtools = new Tools(guser, currDoc, markup, aliases, statCounters); // create global tools
+        // Fake parameters hide the outer local variables so user script won't accidentally touch them.
         // tslint:disable
-        function runPreProgram(program: string | undefined, saveUsersFields?: never, output?: never, errors?: never,
+        function runProgram(program: string | undefined, tools: Tools, saveUsersFields?: never, output?: never, errors?: never,
                             data?: never, d?: never, currDoc?: never, markup?: never, aliases?: never) {
-            if ( program ) eval(program);
+            if ( program ) eval("function main() {" + program + "} main();");
         }
-        runPreProgram(d.markup.preprogram);
+        runProgram(d.markup.preprogram, gtools);
         output += gtools.getOutput();
         gtools.clearOutput();
 
         for (const user of data) {
             const tools = new Tools(user, currDoc, markup, aliases, statCounters); // in compiled JS, this is tools_1.default(...)
 
-            // Fake parameters hide the outer local variables so user script won't accidentally touch them.
-            // tslint:disable
-            function runProgram(program: string, saveUsersFields?: never, output?: never, errors?: never,
-                                data?: never, d?: never, currDoc?: never, markup?: never, aliases?: never) {
-                eval(program);
-            }
-
             // tslint:enable
-            runProgram(d.program);
+            runProgram(d.program, tools);
             // tools.print("d", JSON.stringify(d));
             // tools.print("User", JSON.stringify(tools));
             saveUsersFields.push(tools.getResult());
@@ -89,12 +83,8 @@ function runner(d: IRunnerData): RunnerResult {
                 errors.push({user: user.user.name, errors: userErrs});
             }
         }
-        // tslint:disable
-        function runPostProgram(program: string | undefined, saveUsersFields?: never, output?: never, errors?: never,
-                            data?: never, d?: never, currDoc?: never, markup?: never, aliases?: never) {
-            if ( program ) eval(program);
-        }
-        runPostProgram(d.markup.postprogram);
+
+        runProgram(d.markup.postprogram, gtools);
         saveUsersFields.push(gtools.getResult());
         output += gtools.getOutput();
         const guserErrs = gtools.getErrors();
@@ -102,13 +92,14 @@ function runner(d: IRunnerData): RunnerResult {
             errors.push({user: guser.user.name, errors: guserErrs});
         }
         if ( errors.length > 0 ) {
+            // TODO: separate errors from pre, program and post
             const prg = numberLines2(d.program, 1);
             errors.push( {
                 user: "program",
                 errors: [{
                     msg: "See program",
-                    stackTrace: prg
-                }]
+                    stackTrace: prg,
+                }],
             });
         }
         return {res: saveUsersFields, output, errors, outdata: gtools.outdata};
