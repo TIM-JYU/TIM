@@ -1180,8 +1180,9 @@ def get_jsframe_data(task_id, user_id):
                              'fieldnames': field_names,
                              'graphdata': {'data': da, 'labels': labels}}
         return json_response(vals)
-    except:
-        return json_response({})
+    except Exception as e:
+        return abort(400, str(e))
+        # return json_response({})
 
 class GetStateSchema(Schema):
     answer_id = fields.Int(required=True)

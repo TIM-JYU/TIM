@@ -63,6 +63,53 @@ textfield-runner .stem, cbfield-runner .stem, rbfield-runner .stem  {
     margin-right: auto;
 }
 
+.fieldCell  textfield-runner h4, .fieldCell  numericfield-runner h4 {
+    font-size: small;
+    background-color: lightgrey;
+    /*outline-style: solid;*/
+    /*outline-width: 1px;*/
+    /*outline-color: #b4b4b4;*/
+    border-bottom-style: solid;
+    border-bottom-width: 1px;
+    border-color: #b4b4b4;
+    text-align: center;
+    height: 30px;
+    line-height: 30px;
+    margin: 0px;
+}
+
+.fieldCell  .textfieldNoSaveDiv, .fieldCell  .numericfieldNoSaveDiv {
+    text-align:center;
+}
+
+
+.fieldCell  textfield-runner input, .fieldCell  numericfield-runner input {
+    margin-left: 5px;
+    margin-right: 5px;
+    margin-top: 5px;
+    text-align: center;
+}
+
+.fieldCell  tim-plugin-loader {
+    width: auto;
+    border-style: solid;
+    border-width: 1px;
+    border-color: #b4b4b4;
+    border-right-width: 0px;
+}
+
+.fieldCell  tim-plugin-loader:last-child {
+    border-style: solid;
+    border-width: 1px;
+    border-color: #b4b4b4;
+    border-right-width: 1px;
+}
+
+.singleLine {
+    /*TODO: generic, move this*/
+    white-space: nowrap;
+}
+
 .pluginrbfield input[type="radio"],.plugincbfield input[type="checkbox"] {
     margin: 0;
     line-height: normal;
