@@ -78,6 +78,157 @@ function ensureStringLikeValue(s: unknown): string {
 
 const ABSOLUTE_FIELD_REGEX = /^[0-9]+\./;
 
+interface Point {
+    x: number;
+    y: number;
+}
+
+interface Linear { // y = a + bb
+    a: number;
+    b: number;
+}
+
+class LineFitter {
+    // see: http://mathworld.wolfram.com/LeastSquaresFitting.html
+    private n = 0;
+    private sumX  = 0;
+    private sumX2 = 0;
+    private sumXY = 0;
+    private sumY  = 0;
+    private sumY2 = 0;
+    private minX = 1e100;
+    private maxX = -1e100;
+    private minY = 1e100;
+    private maxY = -1e100;
+    readonly xname: string;
+    readonly yname: string;
+    private cab: Linear | null = null;
+
+    constructor(xname: string, yname: string) {
+        this.xname = xname;
+        this.yname = yname;
+    }
+
+    add(x: number, y: number): Point {
+        if ( !isNaN(x) &&  !isNaN(y) ) {
+            this.n++;
+            this.sumX += x;
+            this.sumX2 += x * x;
+            this.sumXY += x * y;
+            this.sumY += y;
+            this.sumY2 += y * y;
+            if (x < this.minX) { this.minX = x; }
+            if (x > this.maxX) { this.maxX = x; }
+            if (y < this.minY) { this.minY = y; }
+            if (y > this.maxY) { this.maxY = y; }
+            this.cab = null;
+        }
+        return {x: x, y: y};
+    }
+
+    addxy(xy: any): Point {
+        this.add(xy.x, xy.y);
+        return xy;
+    }
+
+    addField(tools: Tools): Point {
+        return this.add(tools.getDouble(this.xname, NaN), tools.getDouble(this.yname, NaN));
+    }
+
+    ab(): Linear {
+        if ( this.cab ) { return this.cab; }
+        const div = this.n * this.sumX2 - this.sumX * this.sumX;
+        const a = (this.sumY * this.sumX2  - this.sumX * this.sumXY) / div;
+        const b = (this.n * this.sumXY - this.sumX * this.sumY) / div;
+        this.cab = {a: a, b: b};
+        return this.cab;
+    }
+
+    f(x: number): number {
+        const ab = this.ab();
+        return ab.a + ab.b * x;
+    }
+
+    limits() {
+        return {minX: this.minX, maxX: this.maxX, minY: this.minY, maxY: this.maxY, n: this.n};
+    }
+
+    r2() {
+        const ssxx = this.sumX2 - this.sumX * this.sumX / this.n;
+        const ssyy = this.sumY2 - this.sumY * this.sumY / this.n;
+        const ssxy = this.sumXY - this.sumX * this.sumY / this.n;
+        return (ssxy * ssxy) / (ssxx * ssyy);
+    }
+
+    r() {
+        return Math.sqrt(this.r2());
+    }
+
+    line(): Point[] {
+        return [{x: this.minX, y: this.f(this.minX)}, {x: this.maxX, y: this.f(this.maxX)}];
+    }
+}
+
+class Distribution {
+    public labels: number[] = [];
+    public data: number[]   = [];
+    private n = 0;
+    private readonly fieldName: string;
+
+    constructor(n1: number, n2: number, mul: number, fieldName: string) {
+        for (let i = n1; i <= n2; i++) {
+            this.labels[i] = i * mul;
+            this.data[i] = 0;
+        }
+        this.fieldName = fieldName;
+    }
+
+    // Add to closest category
+    add(x: number): number {
+         if ( isNaN(x) ) { return x; }
+         let mini = 0;
+         let mind = 1e100;
+         for (let i = 0; i < this.labels.length; i++) {
+             const d = Math.abs(this.labels[i] - x);
+             if ( d <= mind ) { mind = d; mini = i; }
+         }
+         this.data[mini]++;
+         this.n++;
+         return x;
+    }
+
+    addField(tools: Tools): number {
+         const x = tools.getDouble(this.fieldName, NaN);
+         return this.add(x);
+    }
+
+    get() {
+        return { labels: this.labels, data: this.data, n: this.n };
+    }
+}
+
+class XY {
+    public data: object[] = [];
+    private readonly xname: string;
+    private readonly yname: string;
+
+    constructor(xname: string, yname: string) {
+        this.xname = xname;
+        this.yname = yname;
+    }
+
+    add(x: number, y: number) {
+        if ( !isNaN(x) && !isNaN(y) ) {
+            this.data.push({x: x, y: y});
+        }
+        return {x: x, y: y};
+    }
+
+    addField(tools: Tools): object {
+        return this.add(tools.getDouble(this.xname, NaN), tools.getDouble(this.yname, NaN));
+    }
+}
+
 class StatCounter {
     private n = 0;
     private sum = 0;
@@ -129,13 +280,16 @@ class Tools {
     private errors: IError[] = [];
     private result: {[index: string]: unknown} = {};
     public outdata: object = {};
+    public fitters: { [fieldname: string]: LineFitter } = {};
+    public dists: { [fieldname: string]: Distribution } = {};
+    public xys: { [fieldname: string]: XY } = {};
+    private statCounters: { [fieldname: string]: StatCounter } = {};
 
     constructor(
         private data: UserFieldDataT,
         private currDoc: string,
         private markup: IJsRunnerMarkup,
         private aliases: AliasDataT,
-        private statCounters: { [fieldname: string]: StatCounter },
     ) {
     }
 
@@ -243,6 +397,24 @@ class Tools {
         return s;
     }
 
+    createFitter(xname: string, yname: string) {
+        const fitter = new LineFitter(xname, yname);
+        this.fitters[xname + "_" + yname] = fitter;
+        return fitter;
+    }
+
+    createDistribution(n1: number, n2: number, mul: number, fieldName: string) {
+        const dist = new Distribution(n1, n2, mul, fieldName);
+        if ( fieldName ) { this.dists[fieldName] = dist; }
+        return dist;
+    }
+
+    createXY(xname: string, yname: string) {
+        const xy = new XY(xname, yname);
+        this.xys[xname + "_" + yname] = xy;
+        return xy;
+    }
+
     // private statCounters: { [fieldname: string]: StatCounter } = {};
 
     addStatDataValue(fieldName: string, value: number) {
@@ -297,6 +469,10 @@ class Tools {
         const c = ensureNumberDefault(value);
         const mul = Math.pow(10, decim);
         return Math.round(c * mul) / mul;
+    }
+
+    round(value: number, decim: number): number {
+        return this.r(value, decim);
     }
 
     getSum(fieldName: unknown, start: number, end: number, defa: unknown = 0, max: unknown = 1e100): number {
