@@ -72,9 +72,25 @@ textfield-runner .stem, cbfield-runner .stem, rbfield-runner .stem  {
     border-bottom-style: solid;
     border-bottom-width: 1px;
     border-color: #b4b4b4;
+    /* text-align: center; */
+    /* height: 30px; */
+    line-height: 1.5em;
+    margin: 0px;
+}
+
+.fieldCell textfield-runner .stem, .fieldCell numericfield-runner .stem {
+    font-size: 0.7em;
+    background-color: lightgrey;
+    /* outline-style: solid; */
+    /* outline-width: 1px; */
+    /* outline-color: #b4b4b4; */
+    border-bottom-style: solid;
+    border-bottom-width: 1px;
+    border-color: #b4b4b4;
     text-align: center;
-    height: 30px;
-    line-height: 30px;
+    height: 1.5em;
+    line-height: 1.5em;
+    font-weight: 600;
     margin: 0px;
 }
 
@@ -84,10 +100,10 @@ textfield-runner .stem, cbfield-runner .stem, rbfield-runner .stem  {
 
 
 .fieldCell  textfield-runner input, .fieldCell  numericfield-runner input {
-    margin-left: 5px;
-    margin-right: 5px;
-    margin-top: 5px;
-    text-align: center;
+    margin-left: 2px;
+    margin-right: 2px;
+    margin-top: 2px;
+    /* text-align: center; */
 }
 
 .fieldCell  tim-plugin-loader {
@@ -95,14 +111,14 @@ textfield-runner .stem, cbfield-runner .stem, rbfield-runner .stem  {
     border-style: solid;
     border-width: 1px;
     border-color: #b4b4b4;
-    border-right-width: 0px;
+    margin-right: -1px;
 }
 
 .fieldCell  tim-plugin-loader:last-child {
-    border-style: solid;
+  /*  border-style: solid;
     border-width: 1px;
     border-color: #b4b4b4;
-    border-right-width: 1px;
+    border-right-width: 1px; */
 }
 
 .singleLine {
@@ -134,6 +150,12 @@ textfield-runner .stem, cbfield-runner .stem, rbfield-runner .stem  {
     -webkit-box-shadow: none;
     top: 2px;
     position: relative;
+}
+
+numericfield-runner .form-control, textfield-runner .form-control {
+    height: 2em;
+    display: unset;
+    width: unset;
 }
 
 /* Numeric field */
@@ -211,10 +233,12 @@ input:focus.alertframe {
 
 .inlineplugin label, .numericfield label, .textfield label{
     font-weight: unset;
+    margin-left: 2px;
 }
 
 .inlineplugin input, .numericfield input, .textfield input{
-    padding: 3px;
+    padding: 0px;
+    padding-left: 2px;
 }
 
 /* multisave */

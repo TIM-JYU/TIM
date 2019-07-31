@@ -89,7 +89,10 @@ NEVERLAZY_PLUGINS = {
     'multisave',
     'numericfield',
     'jsrunner',
-    'tableForm'
+    'tableForm',
+    'cbfield',
+    'rbfield'
+    'dropdown'
 }
 
 
