@@ -1312,7 +1312,8 @@ p.closeButton::before {
 .tim-menu-list-item {
     position: relative;
     padding: 5px;
-    padding-left: 15px;
+    padding-left: 20px;
+    padding-right: 20px;
     white-space: nowrap;
     background: #FFFFFF;
 }
@@ -1325,7 +1326,6 @@ p.closeButton::before {
     position: absolute;
     float: left;
     z-index: 3;
-    min-width: 160px;
     padding: 5px 0;
     margin: 2px 0 0;
     list-style: none;

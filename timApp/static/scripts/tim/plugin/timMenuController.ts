@@ -31,7 +31,6 @@ const TimMenuMarkup = t.intersection([
 ]);
 const TimMenuAll = t.intersection([
     t.partial({
-        // menu: t.array(t.string),
         menu: t.string,
     }),
     t.type({
@@ -43,6 +42,7 @@ const TimMenuAll = t.intersection([
 
 interface ITimMenuItem {
     items: ITimMenuItem[] | undefined;
+    width: string | undefined;
     text: string;
     level: number;
     open: boolean;
@@ -61,7 +61,6 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
     private menuId: string = String.fromCharCode(65 + Math.floor(Math.random() * 26)) + Date.now();
     private previousScroll: number | undefined = 0; // Store y-value of previous scroll event for comparison.
     private previouslyClicked: ITimMenuItem | undefined;
-    private menuStyle: string = "";
     private barStyle: string = "";
     private mouseInside: boolean = false; // Whether mouse cursor is inside the menu.
 
@@ -84,7 +83,7 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
         if (this.topMenu) {
             window.onscroll = () => this.toggleSticky();
         }
-        this.setStyles();
+        this.setBarStyles();
         onClick("body", ($this, e) => {
             this.onClick(e);
         });
@@ -97,6 +96,7 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
         if (!this.attrs.menu) {
             return;
         }
+        console.log(this.attrs.menu);
         // TODO: Get rid of eval.
         // tslint:disable-next-line:no-eval
         this.menu = eval(this.attrs.menu);
@@ -192,22 +192,31 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
     }
 
     /**
-     * Set styles defined in optional attributes.
+     * Set styles for menu bar defined in optional attributes.
      */
-    private setStyles() {
+    private setBarStyles() {
         if (this.attrs.backgroundColor) {
-            // this.menuStyle += `background-color: ${this.attrs.backgroundColor}; `;
             this.barStyle += `background-color: ${this.attrs.backgroundColor}; `;
         }
         if (this.attrs.textColor) {
             // TODO: Doesn't override links even with !important.
-            // this.menuStyle += `color: ${this.attrs.textColor}; `;
             this.barStyle += `color: ${this.attrs.textColor}; `;
         }
         if (this.attrs.fontSize) {
-            // this.menuStyle += `font-size: ${this.attrs.fontSize}; `;
             this.barStyle += `font-size: ${this.attrs.fontSize}; `;
         }
+    }
+
+    /**
+     * Sets style based on the object's attributes.
+     * @param item Menu item.
+     */
+    private setStyle(item: ITimMenuItem) {
+        let style = "";
+        if (item.width) {
+            style += `width: ${item.width}; `;
+        }
+        return style;
     }
 
     /**
@@ -230,6 +239,7 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
      * @param e Click event.
      */
     private onClick(e: JQuery.Event) {
+        // TODO: AngularJS doesn't update if clicked outside document text area.
         if (!this.mouseInside) {
             for (const t1 of this.menu) {
                 this.closeAllInMenuItem(t1);
@@ -250,18 +260,18 @@ timApp.component("timmenuRunner", {
 <div ng-cloak ng-if="$ctrl.topMenu" class="hidden" id="{{$ctrl.menuId}}-placeholder-content"><br></div>
 <div id="{{$ctrl.menuId}}" class="tim-menu" style="{{$ctrl.barStyle}}" ng-mouseleave="$ctrl.mouseInside = false" ng-mouseenter="$ctrl.mouseInside = true">
     <span ng-repeat="t1 in $ctrl.menu">
-        <div ng-if="t1.items.length > 0" class="btn-group">
+        <span ng-if="t1.items.length > 0" class="btn-group" style="{{$ctrl.setStyle(t1)}}">
           <span ng-disabled="disabled" ng-bind-html="t1.text+$ctrl.openingSymbol" ng-click="$ctrl.toggleSubmenu(t1, undefined, undefined)"></span>
-          <ul class="tim-menu-dropdown" ng-if="t1.open" ng-class="$ctrl.openDirection(t1.id)" id="{{t1.id}}" style="{{$ctrl.menuStyle}}">
-            <li class="tim-menu-list-item" ng-repeat="t2 in t1.items">
+          <ul class="tim-menu-dropdown" ng-if="t1.open" ng-class="$ctrl.openDirection(t1.id)" id="{{t1.id}}">
+            <li class="tim-menu-list-item" ng-repeat="t2 in t1.items" style="{{$ctrl.setStyle(t2)}}">
                 <span class="tim-menu-item" ng-if="t2.items.length > 0">
                     <span class="tim-menu-item" ng-bind-html="t2.text+$ctrl.openingSymbol" ng-click="$ctrl.toggleSubmenu(t2, t1, undefined)"></span>
-                    <ul class="tim-menu-dropdown" id="{{t2.id}}" ng-class="$ctrl.openDirection(t2.id)" ng-if="t2.open" style="{{$ctrl.menuStyle}}">
-                        <li class="tim-menu-list-item" ng-repeat="t3 in t2.items">
+                    <ul class="tim-menu-dropdown" id="{{t2.id}}" ng-class="$ctrl.openDirection(t2.id)" ng-if="t2.open">
+                        <li class="tim-menu-list-item" ng-repeat="t3 in t2.items" style="{{$ctrl.setStyle(t3)}}">
                             <span class="tim-menu-item"ng-if="t3.items.length > 0">
                                 <span class="tim-menu-item" ng-bind-html="t3.text+$ctrl.openingSymbol" ng-click="$ctrl.toggleSubmenu(t3, t2, t1)"></span>
-                                <ul class="tim-menu-dropdown" id="{{t3.id}}" ng-class="$ctrl.openDirection(t3.id)" ng-if="t3.open" style="{{$ctrl.menuStyle}}">
-                                    <li class="tim-menu-list-item" ng-repeat="t4 in t3.items" ng-bind-html="t4.text"></li>
+                                <ul class="tim-menu-dropdown" id="{{t3.id}}" ng-class="$ctrl.openDirection(t3.id)" ng-if="t3.open">
+                                    <li class="tim-menu-list-item" ng-repeat="t4 in t3.items" ng-bind-html="t4.text" style="{{$ctrl.setStyle(t4)}}"></li>
                                 </ul>
                             </span>
                             <span class="tim-menu-item" ng-if="t3.items.length < 1" ng-bind-html="t3.text"></span>
@@ -271,8 +281,8 @@ timApp.component("timmenuRunner", {
                 <span class="tim-menu-item" ng-if="t2.items.length < 1" ng-bind-html="t2.text"></span>
             </li>
           </ul>
-        </div>
-        <div ng-if="t1.items.length < 1" class="btn-group" style="cursor: pointer;" ng-bind-html="t1.text"></div>
+        </span>
+        <span ng-if="t1.items.length < 1" class="btn-group" style="{{$ctrl.setStyle(t1)}}" ng-bind-html="t1.text"></span>
         <span ng-if="!$last" ng-bind-html="$ctrl.separator"></span>
     </span>
 </div>

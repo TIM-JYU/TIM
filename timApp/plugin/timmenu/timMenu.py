@@ -7,6 +7,7 @@ from typing import Union
 import attr
 import uuid
 
+import re
 from flask import jsonify, render_template_string
 from marshmallow import Schema, fields, post_load
 from marshmallow.utils import missing
@@ -16,6 +17,8 @@ from pluginserver_flask import GenericMarkupModel, GenericMarkupSchema, GenericH
 from timApp.markdown.dumboclient import call_dumbo
 from timApp.tim_app import csrf
 
+# List of supported menuitem-specific attributes.
+att_list = ["width", "height"]
 
 @attr.s(auto_attribs=True)
 class TimMenuStateModel:
@@ -46,9 +49,13 @@ class TimMenuItem:
             self.id = id
         self.items = items
         self.open = open
+        self.width = None
 
     def __str__(self):
-        return f"{{level: {self.level}, id: '{self.id}', text: '{self.text}', items: {self.items}}}"
+        s = f"{{level: {self.level}, id: '{self.id}', text: '{self.text}', items: {self.items}"
+        if self.width:
+            s += f", width: '{self.width}'"
+        return f"{s}}}"
 
     def __repr__(self):
         return str(self)
@@ -146,6 +153,34 @@ def decide_menu_level(index: int, previous_level: int, max_level: int = 3) -> in
     return level
 
 
+def get_width(options: str) -> Union[str, None]:
+    """
+    Returns width if set.
+    :param options: Style string from between brackets.
+    :return: Width including units or None.
+    """
+    print(options)
+    width = re.search('width=(.*)' , options)
+    if width:
+        width = width.groups()[0]
+    return width
+
+
+def get_attributes(line: str, item: TimMenuItem):
+    """
+    Adds attributes recognized from non-list line to the above menuitem.
+    :param line:
+    :param item: Previous menu item.
+    :return:
+    """
+    for att in att_list:
+        try:
+            item.width = line[line.index(f"{att}:")+len(att)+1:].strip()
+            return
+        except ValueError:
+            continue
+
+
 def parse_menu_string(menu_str):
     """
     Parses a markdown list formatted string into menu structure.
@@ -159,11 +194,13 @@ def parse_menu_string(menu_str):
     menuitem_list = []
     parents = [TimMenuItem(text="", level=-1, items=[])]
     previous_level = -1
+    current = None
     for item in menu_split:
         try:
             list_symbol_index = item.index("-")
         except ValueError:
-            # Skip lines without list symbol "-".
+            if current:
+                get_attributes(item, current)
             continue
         level = decide_menu_level(list_symbol_index, previous_level)
         previous_level = level
@@ -231,6 +268,11 @@ def reqs():
 ``` {plugin="timMenu"}
 separator: "|"
 openingSymbol: " &#9661;"
+backgroundColor: "#3CC"
+textColor: white
+fontSize: 14pt
+openAbove: false
+topMenu: false
 menu: |!!
  - Menu title 1
    - [Menu item 1](item_1_address)
@@ -245,8 +287,8 @@ menu: |!!
        - [Subsubmenu item 1](subsubmenu_item_1_address)
    - [Menu item 4](item_4_address)
    - [Menu item 5](item_5_address)
- - [Title as direct link 1](title_3_address)
- - [Title as direct link 2](title_4_address)
+ - [[Title as direct link 1]{.white}](title_3_address)
+ - [[Title as direct link 2]{.white}](title_4_address)
 !!
 ```
 ""","""
@@ -274,6 +316,34 @@ menu: |!!
  - [Title 3](title_3_address)
 !!
 ```
+""",
+"""
+``` {plugin="timMenu"}
+separator: "|"
+menu: |!!
+ - Menu title 1
+   width: 7.5em
+   - [Menu item 1](item_1_address)
+   - [Menu item 2](item_2_address)
+   - [Menu item 3](item_3_address)
+ - Menu title 2
+   width: 7.5em
+   - [Menu item 4](item_4_address)
+   - [Menu item 5](item_5_address)
+    - Submenu title
+      - [Submenu item 1](submenu_item_1_address)
+      - [Submenu item 2](submenu_item_2_address)
+ - Menu title 3
+   width: 7.5em
+   - [Menu item 6](item_6_address)
+   - [Menu item 7](item_7_address)
+   - [Menu item 8](item_8_address)
+ - [Menu title 4](title_4_address)
+    width: 7.5em
+ - [Menu title 5](title_5_address)
+    width: 7.5em
+!!
+```
 """]
     editor_tabs = [
             {
@@ -296,6 +366,11 @@ menu: |!!
                                 'data': templates[2].strip(),
                                 'text': 'timMenu (sticky)',
                                 'expl': 'Add a dropdown menu bar that shows at the top when scrolling',
+                            },
+                            {
+                                'data': templates[3].strip(),
+                                'text': 'timMenu (set width)',
+                                'expl': 'Add a dropdown menu bar with custom menu widths',
                             },
                         ],
                     },
