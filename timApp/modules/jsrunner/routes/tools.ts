@@ -181,8 +181,8 @@ class LineFitter {
     line(xdecim: number, ydecim: number): Point[] {
         const x1 = round(this.minX, xdecim);
         const x2 = round(this.maxX, xdecim);
-        const y1 = round(this.minY, xdecim);
-        const y2 = round(this.maxY, xdecim);
+        const y1 = round(this.minY, ydecim);
+        const y2 = round(this.maxY, ydecim);
         return [{x: x1, y: y1}, {x: x2, y: y2}];
     }
 }
@@ -362,6 +362,11 @@ class Tools {
         return this.handlePossibleNaN(r, s, def);
     }
 
+    getNumber(s: string) {
+        const r = parseFloat(s);
+        return this.handlePossibleNaN(r, s, 0);
+    }
+
     private handlePossibleNaN<T>(r: number, s: unknown, def: T) {
         if (isNaN(r)) {
             return this.reportInputTypeErrorAndReturnDef(s, def);
@@ -413,6 +418,33 @@ class Tools {
             s = def;
         }
         return s;
+    }
+
+    createLimitArray(table: string | string[]): number[][] {
+        const res: number[][] = [];
+        if ( !(table instanceof Array) ) { table = table.split("\n"); }
+        for (const s of table) {
+            const parts = s.split(",");
+            if ( parts.length < 2 ) { return this.reportInputTypeErrorAndReturnDef(table, []); }
+            const limit = this.getNumber(parts[0]);
+            const value = this.getNumber(parts[1]);
+            res.push([limit, value]);
+        }
+        return res;
+    }
+
+    findFirstOf(limits: number[][], c: number, def: number = 0) {
+        let res = def;
+        for (const r of limits) {
+            const limit: number = r[0];
+            const value: number = r[1];
+            if ( c >= limit ) { res = value; }
+        }
+        return res;
+    }
+
+    findFirst(table: string | string[], c: number, def: number = 0) {
+        return this.findFirstOf(this.createLimitArray(table), c, def);
     }
 
     createFitter(xname: string, yname: string) {

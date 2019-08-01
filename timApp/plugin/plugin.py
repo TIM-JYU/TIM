@@ -584,7 +584,7 @@ def parse_plugin_values(par: DocParagraph,
     return parse_plugin_values_macros(par, global_attrs, macroinfo.get_macros(), macroinfo.get_macro_delimiter())
 
 
-TASK_NAME_PROG = re.compile(r'{#([\.\w:]*)([\s\S]*?)?#}')  # see https://regex101.com/r/XmnIZv/33
+TASK_MATCH_PROG = re.compile(r'{#([\.\w:]*)([\s\S]*?)?#}')  # see https://regex101.com/r/XmnIZv/33
 
 def find_inline_plugins_from_str(md) -> Generator[
     Tuple[UnvalidatedTaskId, Optional[str], Range, str], None, None]:
@@ -592,7 +592,7 @@ def find_inline_plugins_from_str(md) -> Generator[
     # TODO make task id optional
     # matches: Iterable[Match] = re.finditer(r'{#([^ }\n]+)(([ \n]*[^{}]*)|([ \n]*[^{}]*{[^{}]*}[^{}]*)*)?}', md)
     # matches: Iterable[Match] = re.finditer(r'{#([^ }\n]+)([ \n][^}]+)?}', md)
-    matches: Iterable[Match] = TASK_NAME_PROG.finditer(md)
+    matches: Iterable[Match] = TASK_MATCH_PROG.finditer(md)
     for m in matches:
         task_str = m.group(1)
         task_id = UnvalidatedTaskId(task_str)
