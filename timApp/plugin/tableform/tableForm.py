@@ -17,6 +17,7 @@ from pluginserver_flask import GenericMarkupModel, GenericMarkupSchema, GenericH
 from timApp.answer.routes import get_fields_and_users
 from timApp.auth.accesshelper import get_doc_or_abort
 from timApp.auth.sessioninfo import get_current_user_object
+from timApp.document.docinfo import DocInfo
 from timApp.plugin.plugin import find_plugin_from_document
 from timApp.plugin.pluginexception import PluginException
 from timApp.plugin.taskid import TaskId
@@ -155,39 +156,13 @@ class TableFormHtmlModel(GenericHtmlModel[TableFormInputModel, TableFormMarkupMo
 
     def get_browser_json(self):
         r = super().get_browser_json()
-        if self.markup.open and self.markup.groups and self.markup.fields:
-            groups = UserGroup.query.filter(UserGroup.name.in_(self.markup.groups))
-            try:
-                tid = TaskId.parse(self.taskID)
-            except PluginException:
-                return
+        if self.markup.open:
+            tid = TaskId.parse(self.taskID)
             d = get_doc_or_abort(tid.doc_id)
             user = User.get_by_name(self.current_user_id)
-            siw = self.markup.showInView
-            fielddata, aliases, field_names = \
-                get_fields_and_users(self.markup.fields, groups, d,
-                                     user, self.markup.removeDocIds, add_missing_fields=True, allow_non_teacher=siw)
-            rows = {}
-            realnames = {}
-            emails = {}
-            styles = {}
-            for f in fielddata:
-                username = f['user'].name
-                rows[username] = dict(f['fields'])
-                for key, content in rows[username].items():
-                    if type(content) is dict:
-                        rows[username][key] = json.dumps(content)
-                realnames[username] = f['user'].real_name
-                emails[username] = f['user'].email
-                styles[username] = dict(f['styles'])
-            r['rows'] = rows
-            r['realnamemap'] = realnames
-            r['emailmap'] = emails
-            r['fields'] = field_names
-            r['aliases'] = aliases
-            r['styles'] = styles
-            # TODO else return "no groups/no fields"
-
+            f = tableform_get_fields(self.markup.fields, self.markup.groups, d,
+                                     user, self.markup.removeDocIds, self.markup.showInView)
+            r = {**r, **f}
         return r
 
 
@@ -242,8 +217,6 @@ def gen_csv():
 
 @tableForm_plugin.route('/fetchTableData')
 def fetch_rows():
-    # TODO: Refactor - repeated lines from get_browser_json
-    # TODO: check for correct plugin
     r = {}
     curr_user = get_current_user_object()
     taskid = request.args.get("taskid")
@@ -251,11 +224,19 @@ def fetch_rows():
     doc = get_doc_or_abort(tid.doc_id)
     plug = find_plugin_from_document(doc.document, tid, curr_user)
     debug = plug.values
-    groups = UserGroup.query.filter(UserGroup.name.in_(plug.values.get("groups")))
+    r = tableform_get_fields(plug.values.get("fields",[]), plug.values.get("groups", []),
+                             doc, curr_user, plug.values.get("removeDocIds"),
+                             plug.values.get("showInView"))
+    return json_response(r)
+
+
+def tableform_get_fields(fields: List[str], groups: List[str],
+                         doc: DocInfo, curr_user: User, remove_doc_ids: bool, allow_non_teacher: bool):
+    queried_groups = UserGroup.query.filter(UserGroup.name.in_(groups))
     fielddata, aliases, field_names = \
-        get_fields_and_users(plug.values.get("fields"), groups, doc,
-                             curr_user, plug.values.get("removeDocIds", True), add_missing_fields=True)
-    debug = plug.values
+        get_fields_and_users(fields, queried_groups, doc,
+                             curr_user, remove_doc_ids, add_missing_fields=True,
+                             allow_non_teacher = allow_non_teacher)
     rows = {}
     realnames = {}
     emails = {}
@@ -269,14 +250,14 @@ def fetch_rows():
         realnames[username] = f['user'].real_name
         emails[username] = f['user'].email
         styles[username] = dict(f['styles'])
+    r = dict()
     r['rows'] = rows
     r['realnamemap'] = realnames
     r['emailmap'] = emails
     r['fields'] = field_names
     r['aliases'] = aliases
     r['styles'] = styles
-    return json_response(r)
-
+    return r
 
 @tableForm_plugin.route('/answer/', methods=['put'])
 @csrf.exempt
