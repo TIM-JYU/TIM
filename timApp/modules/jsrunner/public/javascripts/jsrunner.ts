@@ -69,6 +69,7 @@ class JsrunnerController extends PluginBase<t.TypeOf<typeof JsrunnerMarkup>, t.T
 
     async doCheckFields(nosave: boolean) {
         this.isRunning = true;
+        this.error = undefined;
         // const paramComps = [];
         const paramComps: any = {};
         if (this.attrsall.markup.paramFields) {
