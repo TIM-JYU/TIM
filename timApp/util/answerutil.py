@@ -1,6 +1,5 @@
 """Answer-related routes."""
 import json
-import re
 import time
 from collections import defaultdict
 from datetime import timezone, timedelta, datetime
@@ -26,7 +25,7 @@ from timApp.user.groups import verify_group_view_access
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
 from timApp.util.flask.requesthelper import get_option
-from timApp.util.utils import get_current_time
+from timApp.util.utils import get_current_time, widen_fields, get_alias
 
 
 def points_to_float(points: Union[str, float]):
@@ -44,64 +43,6 @@ def chunks(l: List, n: int):
 
 def task_ids_to_strlist(ids: List[TaskId]):
     return [t.doc_task for t in ids]
-
-
-TASK_PROG = re.compile('([\w.]*)\((\d*),(\d*)\)(.*)') # see https://regex101.com/r/ZZuizF/2
-TASK_NAME_PROG = re.compile("(\d+.)?([\w\d]+)[.\[]?.*")  # see https://regex101.com/r/OjnTAn/4
-
-
-def widen_fields(fields: List[str]):
-    """
-    if there is syntax d(1,3) in fileds, it is made d1,d2
-    from d(1,3)=t  would come d1=t1, d2=t2
-    :param fields: list of fields
-    :return: array fields widened
-    """
-    fields1 = []
-    for field in fields:
-        parts = field.split(";")
-        fields1.extend(parts)
-
-    rfields = []
-    for field in fields1:
-        try:
-            t, a, *rest = field.split("=")
-        except ValueError:
-            t, a, rest = field, "", None
-        t = t.strip()
-        a = a.strip()
-        match = re.search(TASK_PROG, t)
-        if not match:
-            rfields.append(field)
-            continue
-
-        tb = match.group(1)
-        n1 = int(match.group(2))
-        n2 = int(match.group(3))
-        te = match.group(4)
-
-        for i in range(n1, n2):
-            tn = tb + str(i) + te
-            if not tb:
-                tn = ""
-            if a:
-                tn += "=" + a + str(i)
-            rfields.append(tn)
-
-    return rfields
-
-
-def get_alias(name):
-    """
-    Get name part form string like 534.d1.points
-    :param name: full name of field
-    :return: just name part of field, like d1
-    """
-    t = name.strip()
-    match = re.search(TASK_NAME_PROG, t)
-    if not match:
-        return name
-    return match.group(2)
 
 
 def get_fields_and_users(u_fields: List[str], groups: List[UserGroup],
@@ -124,14 +65,14 @@ def get_fields_and_users(u_fields: List[str], groups: List[UserGroup],
         if needs_group_access_check and group.name != current_user.name:
             if not verify_group_view_access(group, current_user, require=False):
                 # return abort(403, f'Missing view access for group {group.name}')
-                continue # TODO: study how to give just warning from missing access, extra return string?
+                continue  # TODO: study how to give just warning from missing access, extra return string?
         ugroups.append(group)
 
     if not ugroups:  # if no access, give at least own group
-       for group in current_user.groups:
-           if group.name == current_user.name:
-               print(group.name + " added just user group")
-               ugroups.append(group)
+        for group in current_user.groups:
+            if group.name == current_user.name:
+                print(group.name + " added just user group")
+                ugroups.append(group)
 
     groups = ugroups
 
@@ -140,7 +81,7 @@ def get_fields_and_users(u_fields: List[str], groups: List[UserGroup],
     alias_map = {}
     jsrunner_alias_map = {}
     doc_map = {}
-    num_prog = re.compile('^\d+\..+/')
+    # num_prog = re.compile('^\d+\..+/')  # moved to widen_fields
 
     u_fields = widen_fields(u_fields)
     tasks_without_fields = []
@@ -239,36 +180,47 @@ def get_fields_and_users(u_fields: List[str], groups: List[UserGroup],
     user_tasks = None
     user_index = -1
     user = None
+    # style_map = {}
     for uid, a in answers_with_users:
+        user_fieldstyles = {}
         if last_user != uid:
             user_index += 1
             user_tasks = {}
             user = users[user_index]
-            res.append({'user': user, 'fields': user_tasks})
+            res.append({'user': user, 'fields': user_tasks, 'styles': user_fieldstyles})
             last_user = uid
             if not a:
                 continue
         for task in task_id_map[a.task_id]:
             if not a:
                 value = None
-            elif task.field == "points":
-                value = a.points
-            elif task.field == "datetime":
-                value = time.mktime(a.answered_on.timetuple())
+                style = None
+
+
+
             else:
                 json_str = a.content
                 p = json.loads(json_str)
-                if task.field:
-                    value = p.get(task.field)
+                style = p.get('styles')
+                if task.field == "points":
+                    value = a.points
+                elif task.field == "datetime":
+                    value = time.mktime(a.answered_on.timetuple())
                 else:
-                    if len(p) > 1:
-                        plug = find_plugin_from_document(doc_map[task.doc_id], task, user)
-                        content_field = plug.get_content_field_name()
-                        value = p.get(content_field)
+
+                    if task.field:
+
+                        value = p.get(task.field)
                     else:
-                        values_p = list(p.values())
-                        value = values_p[0]
+                        if len(p) > 1:
+                            plug = find_plugin_from_document(doc_map[task.doc_id], task, user)
+                            content_field = plug.get_content_field_name()
+                            value = p.get(content_field)
+                        else:
+                            values_p = list(p.values())
+                            value = values_p[0]
             user_tasks[alias_map.get(task.extended_or_doc_task, task.extended_or_doc_task)] = value
+            user_fieldstyles[alias_map.get(task.extended_or_doc_task, task.extended_or_doc_task)] = style
     return res, jsrunner_alias_map, [alias_map.get(ts.extended_or_doc_task, ts.extended_or_doc_task) for ts in task_ids]
 
 

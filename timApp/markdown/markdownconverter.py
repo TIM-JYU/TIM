@@ -11,6 +11,7 @@ from timApp.document.yamlblock import YamlBlock
 from timApp.markdown.dumboclient import call_dumbo
 from timApp.markdown.htmlSanitize import sanitize_html
 from timApp.util.utils import get_error_html, title_to_id
+from timApp.util.utils import widen_fields
 
 
 # noinspection PyUnusedLocal
@@ -32,6 +33,39 @@ def expand_macros_regex(text: str, macros, macro_delimiter=None):
 # To create a new filter,
 #  1. make a class or function
 #  2. and map it in create_environment
+
+def genfields(flds, attrs='', stemfield='stem'):
+    """
+    Generates fields from namelist like ['se1', 'd1', 'd2=demo2']
+    See usescases from: \tim\timApp\tests\server\test_genfields.py
+    :param flds: list of fields, maybe with aliases to show in stem
+    :param attrs: possible list of attributes
+    :param stemfield: field to use to show filed ste, like sten, header or inputstem
+    :return: TIM-format of fields
+    """
+    flds = widen_fields(flds)
+    res = ''
+    if attrs:
+        attrs = ", " + attrs
+    for fld in flds:
+        parts = fld.split("=")
+        id = parts[0].strip()
+        if len(parts) > 1:
+            text = parts[1].strip()
+        else:
+            text = id
+        s = f"{{#{id} {stemfield}: '{text}'{attrs}#}}"
+        res += s
+    return res
+
+def gfrange(s, i1, i2, attrs='', stemfield='stem'):
+    parts = s.split("=")
+    name = f"{parts[0]}({i1},{i2})"
+    alias = ''
+    if len(parts) > 1:
+        alias = parts[1]
+    return genfields(f"{name}={alias}", attrs, stemfield)
+
 
 def srange(s, i1, i2, step=1, *argv):
     """
@@ -164,6 +198,8 @@ def create_environment(macro_delimiter: str):
         trim_blocks=True,
     )
     env.filters['Pz'] = Pz
+    env.filters['gfields'] = genfields
+    env.filters['gfrange'] = gfrange
     env.filters['srange'] = srange
     env.filters['isview'] = isview
 

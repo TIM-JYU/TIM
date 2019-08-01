@@ -55,6 +55,10 @@ class TestWiden_fields(TestCase):
         r1 = widen_fields(["d1;d2;d(3,5)"])
         self.assertEqual(["d1", "d2", "d3", "d4"], r1, "Not same in semicolon line")
 
+    def test_widen_fields7(self):
+        r1 = widen_fields("d1;d2;d(3,5)")
+        self.assertEqual(["d1", "d2", "d3", "d4"], r1, "Not same in semicolon line")
+
     ##############################################################
 class Testget_alias(TestCase):
 

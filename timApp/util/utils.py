@@ -265,6 +265,8 @@ def widen_fields(fields: List[str]):
     :return: array fields widened
     """
     fields1 = []
+    if not isinstance(fields, list):
+        fields = fields.split(";")
     for field in fields:
         parts = field.split(";")
         fields1.extend(parts)
