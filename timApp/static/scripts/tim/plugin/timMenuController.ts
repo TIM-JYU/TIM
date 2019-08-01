@@ -6,8 +6,10 @@ import * as t from "io-ts";
 import {PluginBase, pluginBindings} from "tim/plugin/util";
 import {timApp} from "../app";
 import {onClick} from "../document/eventhandlers";
-import {GenericPluginMarkup, Info, nullable, withDefault} from "./attributes";
 import {ViewCtrl} from "../document/viewctrl";
+import {IRights} from "../user/IRights";
+import {Users} from "../user/userService";
+import {GenericPluginMarkup, Info, nullable, withDefault} from "./attributes";
 
 const importDataApp = angular.module("importDataApp", ["ngSanitize"]);
 export const moduleDefs = [importDataApp];
@@ -56,7 +58,7 @@ interface ITimMenuItem {
 
 class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.TypeOf<typeof TimMenuAll>, typeof TimMenuAll> {
     private menu: any;
-    public viewctrl?: ViewCtrl;
+    public viewctrl: ViewCtrl | undefined;
     private openingSymbol: string = "";
     private hoverOpen: boolean = true;
     private separator: string = "";
@@ -67,6 +69,7 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
     private previouslyClicked: ITimMenuItem | undefined;
     private barStyle: string = "";
     private mouseInside: boolean = false; // Whether mouse cursor is inside the menu.
+    private userRights: IRights | undefined;
 
     getDefaultMarkup() {
         return {};
@@ -91,6 +94,7 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
         onClick("body", ($this, e) => {
             this.onClick(e);
         });
+        this.userRights = Users.getCurrent().folder.rights;
     }
 
     /**
@@ -226,6 +230,24 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
     }
 
     /**
+     * Checks whether the user has required rights to see the menu item.
+     * If no requirements have been set, return true.
+     * @param item Menu item.
+     */
+    private hasRights(item: ITimMenuItem) {
+        if (item.rights && this.userRights) {
+            if (item.rights == "edit") {
+                return this.userRights.editable;
+            }
+            if (item.rights == "manage") {
+                return this.userRights.manage;
+            }
+        } else {
+            return true;
+        }
+    }
+
+    /**
      * Decide what direction submenus open towards.
      * @param id Element id.
      */
@@ -265,19 +287,19 @@ timApp.component("timmenuRunner", {
 <span ng-cloak ng-if="$ctrl.topMenu" id="{{$ctrl.menuId}}-placeholder"></span>
 <div ng-cloak ng-if="$ctrl.topMenu" class="hidden" id="{{$ctrl.menuId}}-placeholder-content"><br></div>
 <div id="{{$ctrl.menuId}}" class="tim-menu" style="{{$ctrl.barStyle}}" ng-mouseleave="$ctrl.mouseInside = false" ng-mouseenter="$ctrl.mouseInside = true">
-    <span ng-repeat="t1 in $ctrl.menu">
-        <span ng-if="t1.items.length > 0" class="btn-group" style="{{$ctrl.setStyle(t1)}}">
+    <span ng-repeat="t1 in $ctrl.menu" ng-if="::$ctrl.hasRights(t1)">
+        <span ng-if="t1.items.length" class="btn-group" style="{{$ctrl.setStyle(t1)}}">
           <span ng-disabled="disabled" ng-bind-html="t1.text+$ctrl.openingSymbol" ng-click="$ctrl.toggleSubmenu(t1, undefined, undefined)"></span>
           <ul class="tim-menu-dropdown" ng-if="t1.open" ng-class="$ctrl.openDirection(t1.id)" id="{{t1.id}}">
-            <li class="tim-menu-list-item" ng-repeat="t2 in t1.items" style="{{$ctrl.setStyle(t2)}}">
+            <li class="tim-menu-list-item" ng-repeat="t2 in t1.items" style="{{$ctrl.setStyle(t2)}}" ng-if="::$ctrl.hasRights(t2)">
                 <span class="tim-menu-item" ng-if="t2.items.length > 0">
                     <span class="tim-menu-item" ng-bind-html="t2.text+$ctrl.openingSymbol" ng-click="$ctrl.toggleSubmenu(t2, t1, undefined)"></span>
                     <ul class="tim-menu-dropdown" id="{{t2.id}}" ng-class="$ctrl.openDirection(t2.id)" ng-if="t2.open">
-                        <li class="tim-menu-list-item" ng-repeat="t3 in t2.items" style="{{$ctrl.setStyle(t3)}}">
+                        <li class="tim-menu-list-item" ng-repeat="t3 in t2.items" style="{{$ctrl.setStyle(t3)}}" ng-if="::$ctrl.hasRights(t3)">
                             <span class="tim-menu-item"ng-if="t3.items.length > 0">
                                 <span class="tim-menu-item" ng-bind-html="t3.text+$ctrl.openingSymbol" ng-click="$ctrl.toggleSubmenu(t3, t2, t1)"></span>
                                 <ul class="tim-menu-dropdown" id="{{t3.id}}" ng-class="$ctrl.openDirection(t3.id)" ng-if="t3.open">
-                                    <li class="tim-menu-list-item" ng-repeat="t4 in t3.items" ng-bind-html="t4.text" style="{{$ctrl.setStyle(t4)}}"></li>
+                                    <li class="tim-menu-list-item" ng-repeat="t4 in t3.items" ng-bind-html="t4.text" style="{{$ctrl.setStyle(t4)}}" ng-if="::$ctrl.hasRights(t4)"></li>
                                 </ul>
                             </span>
                             <span class="tim-menu-item" ng-if="t3.items.length < 1" ng-bind-html="t3.text"></span>
