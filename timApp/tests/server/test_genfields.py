@@ -46,7 +46,7 @@ class TestGenfields(TestCase):
 
     def test_grange(self):
         s1 = "d"
-        e1 = "{#d1 stem: 'demo1'#}{#d2 stem: 'demo2'#}"
+        e1 = "{#d1 stem: 'd1'#}{#d2 stem: 'd2'#}"
 
         r1 = gfrange(s1,1,3)
         self.assertEqual(e1, r1, "Not same in normal case")
