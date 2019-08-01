@@ -480,50 +480,41 @@ def pluginify(doc: Document,
 
     if not user:
         user = current_user
-    if (user.id != current_user.id):  # Check if there are plugins that needs current user data
-        taketime("uplg", "useCurentUser")
-        task_ids = []
-        plugins_to_change = []
-        for plugin_name, plugin_block_map in plugins.items():
-            taketime("plg ", plugin_name)
-            for _, plugin in plugin_block_map.items():
-                if plugin.values.get("useCurrentUser", False):
-                    task_ids.append(plugin.task_id)
-                    plugins_to_change.append(plugin)
-        if task_ids:
-            get_answers(current_user, task_ids, answer_map)
-            for p in plugins_to_change:
-                a = answer_map.get(p.task_id.doc_task,None)
-                if not a:
-                    continue
-                p.answer = a[0]
-                p.answer_count = a[1]
-                # p.options.__setattr__("user", current_user)
-                p.options = p.options._replace(user = current_user)
 
-    # TODO: Change answer to newest answer for plugins with globalField
-    #  (these tasks could have been omitted from 1st answer query)
     # TODO: Get plugin values before 1st answer query and loop for special cases
-    #  (globalField, useCurrentUser etc)
-    taketime("glb", "globalField")
-    task_ids = []
-    plugins_to_change = []
+    #  (these tasks could have been omitted from 1st answer query)
+    glb_task_ids = []
+    glb_plugins_to_change = []
+    curruser_task_ids = []
+    curruser_plugins_to_change = []
+    taketime("glb/ucu", "GLO/currUser")
     for plugin_name, plugin_block_map in plugins.items():
         for _, plugin in plugin_block_map.items():
             if is_global(plugin):
-                task_ids.append(plugin.task_id)
-                plugins_to_change.append(plugin)
-    if task_ids:
-        get_latest_for_tasks(task_ids, answer_map)
-        for p in plugins_to_change:
+                glb_task_ids.append(plugin.task_id)
+                glb_plugins_to_change.append(plugin)
+            elif plugin.values.get("useCurrentUser", False) and (user.id != current_user.id):
+                curruser_task_ids.append(plugin.task_id)
+                curruser_plugins_to_change.append(plugin)
+    if glb_task_ids:
+        get_latest_for_tasks(glb_task_ids, answer_map)
+        for p in glb_plugins_to_change:
             a = answer_map.get(p.task_id.doc_task,None)
             if not a:
                 continue
             p.answer = a[0]
             p.answer_count = a[1]
-
-    taketime("glb", "done")
-    # taketime("answ", "done", len(answers))
+    if curruser_task_ids:
+        get_answers(current_user, curruser_task_ids, answer_map)
+        for p in curruser_plugins_to_change:
+            a = answer_map.get(p.task_id.doc_task, None)
+            if not a:
+                continue
+            p.answer = a[0]
+            p.answer_count = a[1]
+            # p.options.__setattr__("user", current_user)
+            p.options = p.options._replace(user=current_user)
+    taketime("glb/ucu", "done")
 
     for plugin_name, plugin_block_map in plugins.items():
         taketime("plg", plugin_name)
