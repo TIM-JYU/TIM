@@ -30,7 +30,7 @@ const TextfieldMarkup = t.intersection([
     GenericPluginMarkup,
     t.type({
         autoupdate: withDefault(t.number, 500),
-        cols: withDefault(t.number, 7),
+        cols: withDefault(t.number, 6),
     }),
 ]);
 const TextfieldAll = t.intersection([
@@ -378,6 +378,7 @@ textfieldApp.component("textfieldRunner", {
       <span class="inputstem" ng-bind-html="::$ctrl.inputstem"></span>
       <span ng-if="::!$ctrl.isPlainText()" >
         <input type="text"
+               style="width: {{::$ctrl.cols}}em"
                ng-if="::!$ctrl.isPlainText()"
                class="form-control"
                ng-model="$ctrl.userword"
@@ -391,7 +392,6 @@ textfieldApp.component("textfieldRunner", {
                tooltip-is-open="$ctrl.f.$invalid && $ctrl.f.$dirty"
                tooltip-trigger="mouseenter"
                placeholder="{{::$ctrl.inputplaceholder}}"
-               size="{{::$ctrl.cols}}"
                ng-class="{warnFrame: ($ctrl.isUnSaved() && !$ctrl.redAlert), alertFrame: $ctrl.redAlert }"
                ng-style="$ctrl.styles">
          </span>
