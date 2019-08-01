@@ -1,24 +1,23 @@
 """
-TimMenu plugin.
+TimMenu-plugin.
 """
 import os
+import uuid
 from typing import Union
 
 import attr
-import uuid
-
-import re
 from flask import jsonify, render_template_string
 from marshmallow import Schema, fields, post_load
 from marshmallow.utils import missing
 
 from pluginserver_flask import GenericMarkupModel, GenericMarkupSchema, GenericHtmlSchema, GenericHtmlModel, \
-     Missing, InfoSchema, create_blueprint
+    Missing, InfoSchema, create_blueprint, PluginInput, PluginMarkup, PluginState
 from timApp.markdown.dumboclient import call_dumbo
 from timApp.tim_app import csrf
 
 # List of supported menuitem-specific attributes.
 att_list = ["width", "height"]
+
 
 @attr.s(auto_attribs=True)
 class TimMenuStateModel:
@@ -50,11 +49,17 @@ class TimMenuItem:
         self.items = items
         self.open = open
         self.width = None
+        self.height = None
+        self.rights = None
 
     def __str__(self):
         s = f"{{level: {self.level}, id: '{self.id}', text: '{self.text}', items: {self.items}"
         if self.width:
             s += f", width: '{self.width}'"
+        if self.height:
+            s += f", height: '{self.height}'"
+        if self.rights:
+            s += f", rights: '{self.rights}'"
         return f"{s}}}"
 
     def __repr__(self):
@@ -153,32 +158,37 @@ def decide_menu_level(index: int, previous_level: int, max_level: int = 3) -> in
     return level
 
 
-def get_width(options: str) -> Union[str, None]:
+def set_attributes(line: str, item: TimMenuItem):
     """
-    Returns width if set.
-    :param options: Style string from between brackets.
-    :return: Width including units or None.
-    """
-    print(options)
-    width = re.search('width=(.*)' , options)
-    if width:
-        width = width.groups()[0]
-    return width
-
-
-def get_attributes(line: str, item: TimMenuItem):
-    """
-    Adds attributes recognized from non-list line to the above menuitem.
-    :param line:
+    Adds attributes recognized from non-list line to the above menu item.
+    :param line: Attribute line in menu attribute.
     :param item: Previous menu item.
-    :return:
     """
-    for att in att_list:
-        try:
-            item.width = line[line.index(f"{att}:")+len(att)+1:].strip()
-            return
-        except ValueError:
-            continue
+    if not item.width:
+        width = get_attribute(line, "width")
+        if width:
+            item.width = width
+    if not item.height:
+        height = get_attribute(line, "height")
+        if height:
+            item.height = height
+    if not item.rights:
+        rights = get_attribute(line, "rights")
+        if rights:
+            item.rights = rights
+
+
+def get_attribute(line: str, att_name: str) -> Union[str, None]:
+    """
+    Tries parsing given attributes value, if the string contains it.
+    :param line: String in format "attribute_name: value".
+    :param att_name: Name of the attribute to get.
+    :return: Attribute value, or None, if the line doesn't contain it.
+    """
+    try:
+        return line[line.index(f"{att_name}:") + len(att_name) + 1:].strip()
+    except ValueError:
+        return None
 
 
 def parse_menu_string(menu_str):
@@ -200,7 +210,7 @@ def parse_menu_string(menu_str):
             list_symbol_index = item.index("-")
         except ValueError:
             if current:
-                get_attributes(item, current)
+                set_attributes(item, current)
             continue
         level = decide_menu_level(list_symbol_index, previous_level)
         previous_level = level
@@ -225,13 +235,12 @@ class TimMenuHtmlModel(GenericHtmlModel[TimMenuInputModel, TimMenuMarkupModel, T
     def show_in_view_default(self) -> bool:
         return True
 
-    def get_static_html(self) -> str:
-        s = "TimMenu"
-        return render_static_TimMenu(self, s)
+    def get_maybe_empty_static_html(self) -> str:
+        """Renders a static version of the plugin."""
+        return render_static_TimMenu(self, "TimMenu static placeholder")
 
     def get_browser_json(self):
         r = super().get_browser_json()
-        # TODO: Error handling etc.
         # TODO: Add schemas and models matching the structure to get rid of str(...).
         r['markup']['menu'] = str(parse_menu_string(r['markup']['menu']))
         return r
@@ -244,6 +253,16 @@ class TimMenuHtmlSchema(TimMenuAttrs, GenericHtmlSchema):
     def make_obj(self, data):
         # noinspection PyArgumentList
         return TimMenuHtmlModel(**data)
+
+
+# TODO: Where this goes for override?
+def render_plugin_html(m: GenericHtmlModel[PluginInput, PluginMarkup, PluginState]):
+    """Renders HTML for a plugin.
+
+    :param m: The plugin HTML schema.
+    :return: HTML.
+    """
+    return m.get_real_html()
 
 
 def render_static_TimMenu(m: TimMenuHtmlModel, s: str):

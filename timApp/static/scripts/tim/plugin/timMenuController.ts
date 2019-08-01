@@ -7,6 +7,7 @@ import {PluginBase, pluginBindings} from "tim/plugin/util";
 import {timApp} from "../app";
 import {onClick} from "../document/eventhandlers";
 import {GenericPluginMarkup, Info, nullable, withDefault} from "./attributes";
+import {ViewCtrl} from "../document/viewctrl";
 
 const importDataApp = angular.module("importDataApp", ["ngSanitize"]);
 export const moduleDefs = [importDataApp];
@@ -43,6 +44,8 @@ const TimMenuAll = t.intersection([
 interface ITimMenuItem {
     items: ITimMenuItem[] | undefined;
     width: string | undefined;
+    height: string | undefined;
+    rights: string | undefined;  // TODO: Limit to supported rights (view, edit, manage, etc.).
     text: string;
     level: number;
     open: boolean;
@@ -53,6 +56,7 @@ interface ITimMenuItem {
 
 class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.TypeOf<typeof TimMenuAll>, typeof TimMenuAll> {
     private menu: any;
+    public viewctrl?: ViewCtrl;
     private openingSymbol: string = "";
     private hoverOpen: boolean = true;
     private separator: string = "";
@@ -96,7 +100,6 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
         if (!this.attrs.menu) {
             return;
         }
-        console.log(this.attrs.menu);
         // TODO: Get rid of eval.
         // tslint:disable-next-line:no-eval
         this.menu = eval(this.attrs.menu);
@@ -215,6 +218,9 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
         let style = "";
         if (item.width) {
             style += `width: ${item.width}; `;
+        }
+        if (item.height) {
+            style += `height: ${item.height}; `;
         }
         return style;
     }
