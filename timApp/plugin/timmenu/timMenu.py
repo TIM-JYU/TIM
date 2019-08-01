@@ -285,13 +285,13 @@ def reqs():
     """Introducing templates for TimMenu plugin"""
     templates = ["""
 ``` {plugin="timMenu"}
-separator: "|"
-openingSymbol: " &#9661;"
-backgroundColor: "#3CC"
-textColor: white
-fontSize: 14pt
-openAbove: false
-topMenu: false
+separator: "|"              # Symbol(s) separating menu titles
+openingSymbol: " &#9661;"   # Symbol(s) indicating dropdown
+backgroundColor: "#3CC"     # Menu bar background color
+textColor: white            # Menu bar text color
+fontSize: 14pt              # Menu bar text color
+openAbove: false            # Open all menus upwards
+topMenu: false              # Show menu at the top when scrolling from below
 menu: |!!
  - Menu title 1
    - [Menu item 1](item_1_address)
