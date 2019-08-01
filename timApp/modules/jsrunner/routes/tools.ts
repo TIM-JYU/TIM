@@ -76,6 +76,12 @@ function ensureStringLikeValue(s: unknown): string {
     return s;
 }
 
+function round(c: number, decim: number): number {
+    if ( decim == null ) { return c; }
+    const mul = Math.pow(10, decim);
+    return Math.round(c * mul) / mul;
+}
+
 const ABSOLUTE_FIELD_REGEX = /^[0-9]+\./;
 
 interface Point {
@@ -164,8 +170,20 @@ class LineFitter {
         return Math.sqrt(this.r2());
     }
 
-    line(): Point[] {
-        return [{x: this.minX, y: this.f(this.minX)}, {x: this.maxX, y: this.f(this.maxX)}];
+    r2string(decim: number) {
+        return "r² = " + round(this.r2(), decim);
+    }
+
+    rstring(decim: number) {
+        return "r = " + round(this.r(), decim);
+    }
+
+    line(xdecim: number, ydecim: number): Point[] {
+        const x1 = round(this.minX, xdecim);
+        const x2 = round(this.maxX, xdecim);
+        const y1 = round(this.minY, xdecim);
+        const y2 = round(this.maxY, xdecim);
+        return [{x: x1, y: y1}, {x: x2, y: y2}];
     }
 }
 
