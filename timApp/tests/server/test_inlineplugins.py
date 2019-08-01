@@ -9,13 +9,13 @@ class InlinePluginTest(TimRouteTest):
         self.login_test1()
         d = self.create_doc(initial_par="""
 #- {defaultplugin=pali id=Lm7y6R7n5XIb}
-*Hello* {#t1}, {#tx:nonexistent} and {#t2} $x$
+*Hello* {#t1#}, {#tx:nonexistent#} and {#t2#} $x$
 
 #- {defaultplugin=pali math_type=svg id=spOMcE20X2aX}
-Hi {#t3} $x$
+Hi {#t3#} $x$
 
 #- {defaultplugin=pali id=Se0s8FDLbhOp}
-{#t4 header: hi, footer: ho}
+{#t4 header: hi, footer: ho#}
             """)
         r = self.get(d.url, as_tree=True)
         e = r.cssselect('.par')[0]
@@ -30,7 +30,7 @@ Hi {#t3} $x$
             'Lm7y6R7n5XIb',
         )
         self.assert_same_html(e, f"""
-<div class="par" id="Lm7y6R7n5XIb" t="LTB4NDMxYzFjN2M=" attrs='{{"defaultplugin": "pali"}}'>
+<div class="par" id="Lm7y6R7n5XIb" t="MHgyN2U5NDhhMA==" attrs='{{"defaultplugin": "pali"}}'>
 <div class="parContent">
                 <em>Hello</em> <tim-plugin-loader type="full" answer-id="" class="pluginpali inlineplugin" task-id="{d.id}.t1"><span id="{d.id}.t1.Lm7y6R7n5XIb" data-plugin="/pali">
                 <pali-runner json="{self.make_base64(
@@ -68,7 +68,7 @@ Hi {#t3} $x$
             toplevel=s,
         )
         self.assert_same_html(e, f"""
-<div class="par" id="Lm7y6R7n5XIb" t="LTB4NDMxYzFjN2M=" attrs='{{"defaultplugin": "pali"}}'>
+<div class="par" id="Lm7y6R7n5XIb" t="MHgyN2U5NDhhMA==" attrs='{{"defaultplugin": "pali"}}'>
 <div class="parContent">
 <em>Hello</em>
 <tim-plugin-loader type="full" answer-id="" class="pluginpali inlineplugin" task-id="{d.id}.t1">
@@ -90,7 +90,7 @@ Hi {#t3} $x$
             'spOMcE20X2aX',
         )
         self.assert_same_html(r.cssselect('.par')[1], f"""
-<div class="par" id="spOMcE20X2aX" t="LTB4NTRjM2E3ZmE=" attrs='{{"defaultplugin": "pali", "math_type": "svg"}}'>
+<div class="par" id="spOMcE20X2aX" t="LTB4MTk4ZmYxOTQ=" attrs='{{"defaultplugin": "pali", "math_type": "svg"}}'>
 <div class="parContent">
                 Hi
 <tim-plugin-loader type="full" answer-id="" class="pluginpali inlineplugin" task-id="{d.id}.t3">
@@ -113,7 +113,7 @@ Hi {#t3} $x$
                     "footer": "ho", }
         )
         self.assert_same_html(r.cssselect('.par')[2], f"""
-<div class="par" id="Se0s8FDLbhOp" t="LTB4MzJmOWU4MGI=" attrs='{{"defaultplugin": "pali"}}'>
+<div class="par" id="Se0s8FDLbhOp" t="LTB4NGU3YzFkYWM=" attrs='{{"defaultplugin": "pali"}}'>
 <div class="parContent">
 <tim-plugin-loader type="full" answer-id="" class="pluginpali inlineplugin" task-id="{d.id}.t4">
 <span id="{d.id}.t4.Se0s8FDLbhOp" data-plugin="/pali">
@@ -139,7 +139,7 @@ Hi {#t3} $x$
         self.login_test1()
         d = self.create_doc(initial_par="""
 #- {defaultplugin=pali id=a3Xuyg1PF1l1}
-{#t5 initword: }
+{#t5 initword: #}
         """)
         r = self.get(d.url, as_tree=True)
         # Make sure Dumbo won't escape plugin's error HTML.
@@ -176,7 +176,7 @@ Hi {#t3} $x$
 #- {defaultplugin=pali id=SSYigUyqdb7p}
 {#t
 initword: hi
-}
+#}
         """)
         r = self.get(d.url, as_tree=True)
         e = r.cssselect(f'.parContent > tim-plugin-loader[task-id="{d.id}.t"] > span > pali-runner')
@@ -195,7 +195,7 @@ initword: hi
         self.login_test1()
         d = self.create_doc(initial_par="""
 #- {defaultplugin="pali" id=a3Xuyg1PF1l1}
-a {#x initword: } b
+a {#x initword: #} b
         """)
         r = self.get(d.url, as_tree=True)
         self.assert_same_html(r.cssselect('.parContent')[0], f"""
@@ -230,7 +230,7 @@ a {#x initword: } b
         self.login_test1()
         d = self.create_doc(initial_par="""
 #- {defaultplugin=pali}
-{#t}
+{#t#}
 """)
         u = d.url
         grant_view_access(UserGroup.get_anonymous_group().id, d.id)

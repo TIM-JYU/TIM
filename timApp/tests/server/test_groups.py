@@ -145,7 +145,7 @@ class GroupTest2(TimRouteTest):
         self.get('/groups/create/edittest1')
         d = DocEntry.find_by_path('groups/edittest1')
         self.assertEqual('Administrators', d.parent.owner.name)
-        self.assertEqual({'group': 'edittest1'},
+        self.assertEqual({'group': 'edittest1', 'fields': ['info'], 'maxRows': '40em'},
                          d.document.get_settings().get_dict()['macros'])
         self.login_test1()
         self.get('/groups/show/edittest1', expect_status=403)

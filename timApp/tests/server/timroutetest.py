@@ -714,7 +714,7 @@ class TimRouteTest(TimDbTest):
         return p
 
     def assert_same_html(self, elem, expected_html: str):
-        self.assert_elements_equal(elem, html.fromstring(expected_html))
+        self.assert_elements_equal(html.fromstring(expected_html), elem)
 
     def get_no_warn(self, url: str, **kwargs):
         with warnings.catch_warnings():
@@ -787,6 +787,7 @@ class TimRouteTest(TimDbTest):
             "user_id": self.current_user.name,
             'current_user_id': self.current_user.name,
             "userPrint": False,
+            "viewmode": True,
         }
         return expected_json
 
