@@ -69,11 +69,11 @@ JSON.stringify(runScript())`,
     await ctx.global.set("g", JSON.stringify(inputs.data));
     try {
         const result = await script.run(ctx, {timeout: inputs.timeout || 500});
-        if (result === undefined) {
-            res.json({error: "Script failed to return anything (the return value must be JSON serializable)."});
-        } else {
-            const jresult = JSON.parse(result);
+        const jresult = JSON.parse(result);
+        if ("result" in jresult) {
             res.json({result: jresult.result, output: jresult.output});
+        } else {
+            res.json({error: "Script failed to return anything (the return value must be JSON serializable)."});
         }
     } catch (e) {
         res.json({error: e.message});

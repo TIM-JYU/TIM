@@ -38,7 +38,7 @@ interface IItemLink {
 class HeaderController implements IController {
     // To show a button that adds the document to bookmark folder 'My courses'.
     private taggedAsCourse = false;
-    private item: DocumentOrFolder = $window.item;
+    private item?: DocumentOrFolder = $window.item;
     private bookmarked: boolean = false;
     private bookmarks: IBookmarkGroup[] = [];
     private viewctrl?: ViewCtrl;
@@ -50,6 +50,9 @@ class HeaderController implements IController {
 
     $onInit() {
         this.route = document.location.pathname.split("/")[1];
+        if (!this.item) {
+            return;
+        }
         const allowedRoutes = ["view"];
         if (!isRootFolder(this.item)) {
             allowedRoutes.push("manage");
@@ -73,6 +76,9 @@ class HeaderController implements IController {
     }
 
     getMainCourseDocPath() {
+        if (!this.item) {
+            return;
+        }
         if (this.docSettings && this.docSettings.course_main) {
             return this.docSettings.course_main;
         }

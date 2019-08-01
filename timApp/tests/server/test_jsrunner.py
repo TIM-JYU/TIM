@@ -55,7 +55,7 @@ class JsRunnerTest(JsRunnerTestBase):
             ('fields: []\ngroup: testuser1\nprogram: ""\ntimeout: 2000',
              {'web': {'error': 'Invalid input to jsrunner answer route.'}}, 200),
             ('fields: []\ngroup: testuser1\nprogram: ""',
-             {"web": {"output": "", "errors": []}},
+             {"web": {"output": "", "errors": [], "outdata": {}}},
              200),
         ]
         for y, e, s in invalid_yamls:
@@ -171,7 +171,7 @@ tools.print("häh höh håh");
         """)
         self.do_jsrun(
             d,
-            expect_content={'web': {'errors': [], 'output': 'häh höh håh\n'}},
+            expect_content={'web': {'errors': [], 'output': 'häh höh håh\n', 'outdata': {}}},
         )
 
     def test_aliases_and_getters(self):
@@ -316,12 +316,12 @@ group: testuser1
         d.document.add_text("""
 #- {defaultplugin=textfield}
 {% for i in range(1, 25) %}
-{#t%%'%02d'|format(i)%%}
+{#t%%'%02d'|format(i)%%#}
 {% endfor %}
 """)
         self.do_jsrun(
             d,
-            expect_content={"web": {"output": "", "errors": []}},
+            expect_content={"web": {"output": "", "errors": [], "outdata": {}, }},
         )
         self.verify_content(f'{d.id}.t01', 'c', 2, self.test_user_1)
         self.verify_content(f'{d.id}.t02', 'c', 2.1, self.test_user_1)
@@ -405,7 +405,7 @@ tools.setString("t", "hi");
             """,
                 'data': {'a': 7, 'b': 11}})
         self.assertEqual(200, r.status_code)
-        self.assertEqual({'result': {'x': 18, 'y': -4}}, r.json())
+        self.assertEqual({'result': {'x': 18, 'y': -4}, 'output': ''}, r.json())
 
         r = requests.post(
             runscript_url,
@@ -431,7 +431,7 @@ tools.setString("t", "hi");
                 'code': """{""",
                 'data': {}})
         self.assertEqual(200, r.status_code)
-        self.assertEqual({'error': 'Unexpected end of input [script.js:6:39]'}, r.json())
+        self.assertEqual({'error': 'Unexpected end of input [script.js:18:27]\n<pre>\n11: {\n</pre>\n'}, r.json())
 
         r = requests.post(
             runscript_url,
@@ -453,13 +453,13 @@ class JsRunnerGroupTest(JsRunnerTestBase):
 fields: [t1, t2]
 group: testusers
 program: |!!
-tools.setString("t1", tools.getString("t1", "") + "-" + tools.getStudentName());
-tools.setString("t2", tools.getString("t2", "") + "=" + tools.getStudentName());
+tools.setString("t1", tools.getString("t1", "") + "-" + tools.getRealName());
+tools.setString("t2", tools.getString("t2", "") + "=" + tools.getRealName());
 !!
         """)
         d.document.add_text("""
-#- {#t1 plugin=textfield}
-#- {#t2 plugin=textfield}
+#- {#t1 plugin=textfield#}
+#- {#t2 plugin=textfield#}
         """)
         ug = UserGroup.create('testusers')
         ug.users.append(self.test_user_1)
@@ -469,7 +469,7 @@ tools.setString("t2", tools.getString("t2", "") + "=" + tools.getStudentName());
         db.session.commit()
         self.do_jsrun(
             d,
-            expect_content={'web': {'errors': [], 'output': ''}},
+            expect_content={'web': {'errors': [], 'output': '', 'outdata': {}}},
         )
         self.verify_content(f'{d.id}.t1', 'c', '-Test user 1', self.test_user_1)
         self.verify_content(f'{d.id}.t2', 'c', '=Test user 1', self.test_user_1)
@@ -477,7 +477,7 @@ tools.setString("t2", tools.getString("t2", "") + "=" + tools.getStudentName());
         self.verify_content(f'{d.id}.t2', 'c', '=Test user 2', self.test_user_2)
         self.do_jsrun(
             d,
-            expect_content={'web': {'errors': [], 'output': ''}},
+            expect_content={'web': {'errors': [], 'output': '', 'outdata': {}}},
         )
         self.verify_content(f'{d.id}.t1', 'c', '-Test user 1-Test user 1', self.test_user_1, expected_count=2)
         self.verify_content(f'{d.id}.t2', 'c', '=Test user 1=Test user 1', self.test_user_1, expected_count=2)
@@ -485,7 +485,7 @@ tools.setString("t2", tools.getString("t2", "") + "=" + tools.getStudentName());
         self.verify_content(f'{d.id}.t2', 'c', '=Test user 2=Test user 2', self.test_user_2, expected_count=2)
         self.do_jsrun(
             d,
-            expect_content={'web': {'errors': [], 'output': ''}},
+            expect_content={'web': {'errors': [], 'output': '', 'outdata': {}}},
         )
         self.verify_content(f'{d.id}.t1', 'c', '-Test user 1-Test user 1-Test user 1', self.test_user_1,
                             expected_count=3)

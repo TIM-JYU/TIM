@@ -778,7 +778,7 @@ choices:
 ```
 
 #- {defaultplugin=pali}
-{#1}
+{#1#}
 """)
         par = d.document.get_paragraphs()[0]
         self.post_answer('mmcq', f'{d.id}.t1.1.{par.get_id()}', [],
@@ -955,7 +955,7 @@ needed_len: 6
         self.login_test1()
         d = self.create_doc(initial_par="""
 #- {defaultplugin=pali id=a3Xuyg1PF1l1}
-{#t5}
+{#t5#}
         """)
         self.post_answer_no_abdata(
             plugin_type='pali',
@@ -965,7 +965,7 @@ needed_len: 6
 
         d2 = self.create_doc(initial_par=f"""
 #- {{defaultplugin=pali}}
-{{#{d.id}.t5}}
+{{#{d.id}.t5#}}
                 """)
         r = self.get(d2.url, as_tree=True)
         s = {'userword': 'bbbb'}
@@ -987,7 +987,7 @@ needed_len: 6
         self.login_test2()
         d3 = self.create_doc(initial_par=f"""
 #- {{defaultplugin=pali}}
-{{#{d.id}.t5}}
+{{#{d.id}.t5#}}
 
 #- {{#{d.id}.t5 plugin=pali}}
 
@@ -1103,7 +1103,7 @@ needed_len: 6
     def test_readonly_specifier(self):
         for md in ["""
 #- {plugin=pali #t::readonly id=SSYigUyqdb7p}
-        """, """#- {defaultplugin=pali readonly=view id=SSYigUyqdb7p}\n{#t}"""
+        """, """#- {defaultplugin=pali readonly=view id=SSYigUyqdb7p}\n{#t#}"""
                    ]:
             self.login_test1()
             d = self.create_doc(initial_par=md)
@@ -1117,7 +1117,7 @@ needed_len: 6
                 'pali', f'{d.id}.t', user_input={'userword': '2'},
                 expect_status=403,
                 json_key='error',
-                expect_content='This task/field is readonly and thus only writable for teachers.',
+                expect_content='This task/field t is readonly and thus only writable for teachers.',
             )
             self.post_answer('pali', f'{d.id}.t::readonly', user_input={'userword': '3'}, expect_status=403)
             r = self.get(d.url, as_tree=True)
@@ -1175,7 +1175,7 @@ initword: a""")
                 'ref_from_doc_id': d.id,
             },
             expect_status=400,
-            expect_content='Plugin paragraph not found: yyy',
+            expect_content='Task not found in the document: t (potentially because of wrong block id hint)',
             json_key='error',
         )
 
@@ -1235,9 +1235,9 @@ print(x == '%%username%%')
             user_input=uinput2,
             teacher=True,
             user_id=self.test_user_1.id,
-            expect_status=403,
-            json_key='error',
-            expect_content='Permission denied: you are not in teachers group.'
+            # expect_status=403,
+            # json_key='error',
+            # expect_content='Permission denied: you are not in teachers group.'
         )
 
         self.test_user_2.groups.append(UserGroup.get_teachers_group())

@@ -1,3 +1,5 @@
+from time import sleep
+
 from selenium.webdriver import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
@@ -40,8 +42,7 @@ class ParEditorTest(BrowserTest):
         self.accept_consent()
         d = self.create_doc()
         self.goto_document(d)
-        self.click_add_bottom()
-        self.wait_for_editor_load()
+        self.open_editor_from_bottom()
         pareditor = self.get_editor_element()
         ActionChains(self.drv).send_keys('# hello\n\nworld').perform()
         preview = find_preview_element(pareditor)
@@ -71,8 +72,10 @@ class ParEditorTest(BrowserTest):
         pareditor = self.drv.find_element_by_css_selector('pareditor')
         return pareditor
 
-    def click_add_bottom(self):
+    def open_editor_from_bottom(self):
+        sleep(0.1)
         self.find_element_avoid_staleness('.addBottom', click=True)
+        self.wait_for_editor_load()
 
     def test_autocomplete(self):
         self.login_browser_quick_test1()
@@ -85,8 +88,7 @@ class ParEditorTest(BrowserTest):
         self.current_user.set_prefs(prefs)
         db.session.commit()
         self.goto_document(d)
-        self.click_add_bottom()
-        self.wait_for_editor_load()
+        self.open_editor_from_bottom()
         pareditor = self.get_editor_element()
         cb = find_element_by_text(pareditor, 'Autocomplete', 'label')
         cb.click()
@@ -103,8 +105,7 @@ class ParEditorTest(BrowserTest):
         alert = self.drv.switch_to.alert
         alert.accept()
         self.goto_document(d)
-        self.click_add_bottom()
-        self.wait_for_editor_load()
+        self.open_editor_from_bottom()
         pareditor = self.get_editor_element()
         ActionChains(self.drv).send_keys('d').perform()
         self.wait_for_preview_to_finish()
