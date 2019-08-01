@@ -33,7 +33,7 @@ const NumericfieldMarkup = t.intersection([
     GenericPluginMarkup,
     t.type({
         autoupdate: withDefault(t.number, 500),
-        cols: withDefault(t.number, 5),
+        cols: withDefault(t.number, 6),
     }),
 ]);
 const NumericfieldAll = t.intersection([
@@ -135,6 +135,7 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
 
     resetField(): undefined {
         this.initCode();
+        this.applyStyling({});
         return undefined;
     }
 

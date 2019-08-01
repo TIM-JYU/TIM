@@ -275,11 +275,6 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
      */
     public async updateTable() {
         // TODO: Save before reset?
-        // TODO: Emails etc?
-        // const timtab = this.getTimTable();
-        // if (!timtab) {
-        //     return;
-        // }
         const tableResponse = await $http.get <{
             // TODO: All of these are probably not needed
             // TODO: Common type/interface for these?
@@ -293,7 +288,7 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
             taskid: this.getTaskId(),
         }));
         // TODO: Generic reset function
-        console.log("debug");
+        this.aliases = tableResponse.data.aliases || {};
         this.rows = tableResponse.data.rows || {};
         this.rowKeys = Object.keys(tableResponse.data.rows);
         this.fields = tableResponse.data.fields || [];
@@ -306,7 +301,10 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
         this.data.table.columns = [];
         this.data.userdata.cells = {};
         this.setDataMatrix();
-        // timtab.reInitialize();
+        const timtab = this.getTimTable();
+        if (timtab) {
+            timtab.reInitialize();
+        }
         // console.log("debug");
 
     }
