@@ -57,7 +57,7 @@ function runner(d: IRunnerData): RunnerResult {
     const errors = [];
     try {
         const guser = data[0];
-        const gtools = new Tools(guser, currDoc, markup, aliases); // create global tools
+        const gtools = new Tools(guser, currDoc, markup, aliases, true); // create global tools
         // Fake parameters hide the outer local variables so user script won't accidentally touch them.
         // tslint:disable
         function runProgram(program: string | undefined, tools: Tools, saveUsersFields?: never, output?: never, errors?: never,

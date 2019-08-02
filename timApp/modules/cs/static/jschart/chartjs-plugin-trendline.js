@@ -42,8 +42,12 @@ function addFitter(datasetMeta, ctx, dataset, xScale, yScale) {
 
     var fitter = new LineFitter();
     var lastIndex = dataset.data.length - 1;
-    var startPos = datasetMeta.data[0]._model.x;
-    var endPos = datasetMeta.data[lastIndex]._model.x;
+    var startPos = 0;
+    var endPos = 0;
+    if ( lastIndex > 0) {
+        startPos = datasetMeta.data[0]._model.x;
+        endPos = datasetMeta.data[lastIndex]._model.x;
+    }
 
     var xy = false;
     if ( dataset.data && typeof dataset.data[0] === 'object') xy = true;
