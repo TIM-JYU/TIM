@@ -12,25 +12,17 @@ from marshmallow.utils import missing
 
 from pluginserver_flask import GenericMarkupModel, GenericMarkupSchema, GenericHtmlSchema, GenericHtmlModel, \
     Missing, InfoSchema, create_blueprint, PluginInput, PluginMarkup, PluginState
+from timApp.document.timjsonencoder import TimJsonEncoder
 from timApp.markdown.dumboclient import call_dumbo
 from timApp.tim_app import csrf
-
-# List of supported menuitem-specific attributes.
-att_list = ["width", "height"]
 
 
 @attr.s(auto_attribs=True)
 class TimMenuStateModel:
     """Model for the information that is stored in TIM database for each answer."""
-    url: Union[str, Missing] = None
-    separator: Union[str, Missing] = None
-    openingSymbol: Union[str, Missing] = None
 
 
 class TimMenuStateSchema(Schema):
-    url = fields.Str(allow_none=True)
-    separator = fields.Str(allow_none=True)
-    openingSymbol = fields.Str(allow_none=True)
 
     @post_load
     def make_obj(self, data):
@@ -42,10 +34,7 @@ class TimMenuItem:
     def __init__(self, text: str, level: int, id: str = None, items = None, open = False):
         self.text = text
         self.level = level
-        if not id:
-            self.id = str(uuid.uuid4())
-        else:
-            self.id = id
+        self.id = None
         self.items = items
         self.open = open
         self.width = None
@@ -62,8 +51,18 @@ class TimMenuItem:
             s += f", rights: '{self.rights}'"
         return f"{s}}}"
 
+
+    def generate_id(self):
+        self.id = str(uuid.uuid4())
+
+
     def __repr__(self):
         return str(self)
+
+
+    def to_json(self):
+        return self.__dict__
+
 
 @attr.s(auto_attribs=True)
 class TimMenuItemModel:
@@ -114,6 +113,7 @@ class TimMenuAttrs(Schema):
     markup = fields.Nested(TimMenuMarkupSchema)
     state = fields.Nested(TimMenuStateSchema, allow_none=True, required=True)
 
+
 class TimMenuError(Exception):
     """
     Generic timmenu-plugin error.
@@ -122,22 +122,9 @@ class TimMenuError(Exception):
 @attr.s(auto_attribs=True)
 class TimMenuInputModel:
     """Model for the information that is sent from browser (plugin AngularJS component)."""
-    data: str
-    separator: str
-    openingSymbol: str
-    backgroundColor: str
-    textColor: str
-    fontSize: str
-    url: str
 
 
 class TimMenuInputSchema(Schema):
-    data = fields.Str(required=True)
-    separator = fields.Str(required=False)
-    openingSymbol = fields.Str(required=False)
-    backgroundColor = fields.Str(required=False)
-    fontSize = fields.Str(required=False)
-    url = fields.Str(required=False)
 
     @post_load
     def make_obj(self, data):
@@ -180,15 +167,15 @@ def set_attributes(line: str, item: TimMenuItem):
             item.rights = rights
 
 
-def get_attribute(line: str, att_name: str) -> Union[str, None]:
+def get_attribute(line: str, attr_name: str) -> Union[str, None]:
     """
     Tries parsing given attributes value, if the string contains it.
     :param line: String in format "attribute_name: value".
-    :param att_name: Name of the attribute to get.
+    :param attr_name: Name of the attribute to get.
     :return: Attribute value, or None, if the line doesn't contain it.
     """
     try:
-        return line[line.index(f"{att_name}:") + len(att_name) + 1:].strip()
+        return line[line.index(f"{attr_name}:") + len(attr_name) + 1:].strip()
     except ValueError:
         return None
 
@@ -219,6 +206,7 @@ def parse_menu_string(menu_str):
         text_markdown = item[list_symbol_index+1:]
         text_html = call_dumbo([text_markdown])[0].replace("<p>","").replace("</p>","")
         current = TimMenuItem(text=text_html, level=level, items=[])
+        current.generate_id()
         for parent in parents:
             if parent.level < level:
                 parent.items.append(current)
@@ -239,22 +227,19 @@ class TimMenuHtmlModel(GenericHtmlModel[TimMenuInputModel, TimMenuMarkupModel, T
 
     def get_maybe_empty_static_html(self) -> str:
         """Renders a static version of the plugin."""
-        return self.get_real_html()
-        # return render_static_TimMenu(self, "TimMenu static placeholder")
+        return render_static_TimMenu(self)
+
+    def get_json_encoder(self):
+        return TimJsonEncoder
 
     def get_browser_json(self):
         r = super().get_browser_json()
-        # TODO: Add schemas and models matching the structure to get rid of str(...).
+        # r['menu'] = parse_menu_string(r['markup']['menu'])
         r['markup']['menu'] = str(parse_menu_string(r['markup']['menu']))
         return r
 
-    def render_plugin_html(m: GenericHtmlModel[PluginInput, PluginMarkup, PluginState]):
-        """Renders HTML for a plugin.
-
-        :param m: The plugin HTML schema.
-        :return: HTML.
-        """
-        return m.get_real_html()
+    def requires_login(self) -> bool:
+        return False
 
 
 class TimMenuHtmlSchema(TimMenuAttrs, GenericHtmlSchema):
@@ -266,16 +251,10 @@ class TimMenuHtmlSchema(TimMenuAttrs, GenericHtmlSchema):
         return TimMenuHtmlModel(**data)
 
 
-# TODO: Where this goes for override?
-
-
-
-def render_static_TimMenu(m: TimMenuHtmlModel, s: str):
+def render_static_TimMenu(m: TimMenuHtmlModel):
     return render_template_string(
         f"""
-<div class="TimMenu">
- {s}
-</div>
+<div class="TimMenu">TimMenu static placeholder</div>
 <br>
         """,
         **attr.asdict(m.markup),
@@ -292,8 +271,8 @@ def reqs():
 ``` {plugin="timMenu"}
 separator: "|"              # Symbol(s) separating menu titles
 openingSymbol: " &#9661;"   # Symbol(s) indicating dropdown
-backgroundColor: "#F7F7F7"  # Menu bar background color
-textColor: black            # Menu bar text color
+backgroundColor: "#F7F7F7"  # Menu bar background color (overrides basicColors)
+textColor: black            # Menu bar text color (overrides basicColors)
 fontSize: 14pt              # Menu bar font size
 openAbove: false            # Open all menus upwards
 topMenu: false              # Show menu at the top when scrolling from below

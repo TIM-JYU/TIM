@@ -174,6 +174,12 @@ class GenericHtmlModel(GenericRouteModel[PluginInput, PluginMarkup, PluginState]
     current_user_id: str
     access: Union[str, Missing] = missing
 
+    def requires_login(self) -> bool:
+        """
+        Whether the login prompt is shown to anonymous users.
+        """
+        return True
+
     def get_browser_json(self) -> Dict:
         r = dict(list_not_missing_fields(self))
         r['markup'] = self.markup.get_visible_data()
@@ -202,9 +208,13 @@ class GenericHtmlModel(GenericRouteModel[PluginInput, PluginMarkup, PluginState]
 
         return render_template_string(
             """<{{component}} json="{{data}}"></{{component}}>""",
-            data=make_base64(self.get_browser_json()),
+            data=make_base64(self.get_browser_json(), json_encoder=self.get_json_encoder()),
             component=component,
         )
+
+    def get_json_encoder(self):
+        """Set JSON-encoder."""
+        return None
 
     def get_component_html_name(self) -> str:
         """Gets the name of the Angular component as it should be in HTML."""
@@ -256,9 +266,9 @@ def render_plugin_with_login_request(m: GenericHtmlModel[PluginInput, PluginMark
     )
 
 
-def make_base64(d: dict):
+def make_base64(d: dict, json_encoder: None):
     """Converts the given dict to a base64-encoded JSON string."""
-    return base64.b64encode(json.dumps(d, sort_keys=True).encode()).decode()
+    return base64.b64encode(json.dumps(d, sort_keys=True, cls=json_encoder).encode()).decode()
 
 
 def is_lazy(q: GenericHtmlModel):
@@ -301,7 +311,7 @@ def render_plugin_html(m: GenericHtmlModel[PluginInput, PluginMarkup, PluginStat
     :param m: The plugin HTML schema.
     :return: HTML.
     """
-    if m.user_id == "Anonymous":
+    if m.user_id == "Anonymous" and m.requires_login():
         return render_plugin_with_login_request(m)
     if is_lazy(m):
         return render_plugin_lazy(m)
