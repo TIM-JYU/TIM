@@ -225,7 +225,7 @@ def fetch_rows():
     plug = find_plugin_from_document(doc.document, tid, curr_user)
     debug = plug.values
     r = tableform_get_fields(plug.values.get("fields",[]), plug.values.get("groups", []),
-                             doc, curr_user, plug.values.get("removeDocIds"),
+                             doc, curr_user, plug.values.get("removeDocIds", True),
                              plug.values.get("showInView"))
     return json_response(r)
 
