@@ -1123,8 +1123,6 @@ def get_state(args: GetStateModel):
 
     try:
         answer, doc_id = verify_answer_access(answer_id, user_id)
-        if args.doc_id:
-            doc_id = args.doc_id
     except PluginException as e:
         return abort(400, str(e))
     doc = Document(doc_id)
