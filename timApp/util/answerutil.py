@@ -182,14 +182,15 @@ def get_fields_and_users(u_fields: List[str], groups: List[UserGroup],
     answers_with_users.sort(key=lambda x: x[0])
     last_user = None
     user_tasks = None
+    user_fieldstyles = None
     user_index = -1
     user = None
     # style_map = {}
     for uid, a in answers_with_users:
-        user_fieldstyles = {}
         if last_user != uid:
             user_index += 1
             user_tasks = {}
+            user_fieldstyles = {}
             user = users[user_index]
             res.append({'user': user, 'fields': user_tasks, 'styles': user_fieldstyles})
             last_user = uid
@@ -199,9 +200,6 @@ def get_fields_and_users(u_fields: List[str], groups: List[UserGroup],
             if not a:
                 value = None
                 style = None
-
-
-
             else:
                 json_str = a.content
                 p = json.loads(json_str)

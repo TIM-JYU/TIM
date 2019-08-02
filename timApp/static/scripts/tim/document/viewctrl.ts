@@ -626,7 +626,7 @@ export class ViewCtrl implements IController {
                     } else {
                         fab.changeUserAndAnswers(user, [ans]);
                     }
-                    const timComp = this.getTimComponentByName(fab.taskId.split(".")[1]);
+                    const timComp = this.getTimComponentByName(fab.taskId);
                     if (timComp) {
                         if (fab.selectedAnswer) {
                             timComp.setAnswer(JSON.parse(fab.selectedAnswer.content));
@@ -816,7 +816,7 @@ export class ViewCtrl implements IController {
      */
     registerAnswerBrowser(ab: AnswerBrowserController) {
         if (this.docSettings.form_mode) {
-            const timComp = this.getTimComponentByName(ab.taskId.split(".")[1]);
+            const timComp = this.getTimComponentByName(ab.taskId);
             if (timComp && timComp.supportsSetAnswer()) {
                 // TODO: Should propably iterate like below in case of duplicates
                 this.formAbs.set(ab.taskId, ab);
