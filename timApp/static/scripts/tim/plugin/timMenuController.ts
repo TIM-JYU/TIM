@@ -8,7 +8,7 @@ import {timApp} from "../app";
 import {onClick} from "../document/eventhandlers";
 import {ViewCtrl} from "../document/viewctrl";
 import {IRights} from "../user/IRights";
-import {Users} from "../user/userService";
+import {Require} from "../util/utils";
 import {GenericPluginMarkup, Info, nullable, withDefault} from "./attributes";
 
 const importDataApp = angular.module("importDataApp", ["ngSanitize"]);
@@ -47,7 +47,7 @@ interface ITimMenuItem {
     items: ITimMenuItem[] | undefined;
     width: string | undefined;
     height: string | undefined;
-    rights: string | undefined;  // TODO: Limit to supported rights (view, edit, manage, etc.).
+    rights: "view" | "edit" | "manage" | "owner" | undefined;
     text: string;
     level: number;
     open: boolean;
@@ -58,7 +58,7 @@ interface ITimMenuItem {
 
 class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.TypeOf<typeof TimMenuAll>, typeof TimMenuAll> {
     private menu: any;
-    public viewctrl: ViewCtrl | undefined;
+    private vctrl?: Require<ViewCtrl>;
     private openingSymbol: string = "";
     private hoverOpen: boolean = true;
     private separator: string = "";
@@ -77,6 +77,9 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
 
     $onInit() {
         super.$onInit();
+        if (this.vctrl == null) {
+            return;
+        }
         this.formMenu();
         this.hoverOpen = this.attrs.hoverOpen;
         this.separator = this.attrs.separator;
@@ -94,7 +97,7 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
         onClick("body", ($this, e) => {
             this.onClick(e);
         });
-        this.userRights = Users.getCurrent().folder.rights;
+        this.userRights = this.vctrl.item.rights;
     }
 
     /**
@@ -235,15 +238,25 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
      * @param item Menu item.
      */
     private hasRights(item: ITimMenuItem) {
-        if (item.rights && this.userRights) {
+        // If item has no set rights, show to everyone.
+        if (!item.rights) {
+            return true;
+        }
+        if (this.userRights) {
             if (item.rights == "edit") {
                 return this.userRights.editable;
             }
             if (item.rights == "manage") {
                 return this.userRights.manage;
             }
+            if (item.rights == "owner") {
+                return this.userRights.owner;
+            } else {
+                // If none of the supported rights, return true.
+                return true;
+            }
         } else {
-            return true;
+            return (!(item.rights == "edit" || item.rights == "manage" || item.rights == "owner"));
         }
     }
 
@@ -287,30 +300,30 @@ timApp.component("timmenuRunner", {
 <span ng-cloak ng-if="$ctrl.topMenu" id="{{$ctrl.menuId}}-placeholder"></span>
 <div ng-cloak ng-if="$ctrl.topMenu" class="hidden" id="{{$ctrl.menuId}}-placeholder-content"><br></div>
 <div id="{{$ctrl.menuId}}" class="tim-menu" style="{{$ctrl.barStyle}}" ng-mouseleave="$ctrl.mouseInside = false" ng-mouseenter="$ctrl.mouseInside = true">
-    <span ng-repeat="t1 in $ctrl.menu" ng-if="::$ctrl.hasRights(t1)">
-        <span ng-if="t1.items.length" class="btn-group" style="{{$ctrl.setStyle(t1)}}">
+    <span ng-repeat="t1 in $ctrl.menu">
+        <span ng-if="t1.items.length > 0 && $ctrl.hasRights(t1)"" class="btn-group" style="{{$ctrl.setStyle(t1)}}">
           <span ng-disabled="disabled" ng-bind-html="t1.text+$ctrl.openingSymbol" ng-click="$ctrl.toggleSubmenu(t1, undefined, undefined)"></span>
           <ul class="tim-menu-dropdown" ng-if="t1.open" ng-class="$ctrl.openDirection(t1.id)" id="{{t1.id}}">
-            <li class="tim-menu-list-item" ng-repeat="t2 in t1.items" style="{{$ctrl.setStyle(t2)}}" ng-if="::$ctrl.hasRights(t2)">
-                <span class="tim-menu-item" ng-if="t2.items.length > 0">
+            <li class="tim-menu-list-item" ng-repeat="t2 in t1.items" style="{{$ctrl.setStyle(t2)}}">
+                <span class="tim-menu-item" ng-if="t2.items.length > 0 && $ctrl.hasRights(t2)">
                     <span class="tim-menu-item" ng-bind-html="t2.text+$ctrl.openingSymbol" ng-click="$ctrl.toggleSubmenu(t2, t1, undefined)"></span>
                     <ul class="tim-menu-dropdown" id="{{t2.id}}" ng-class="$ctrl.openDirection(t2.id)" ng-if="t2.open">
-                        <li class="tim-menu-list-item" ng-repeat="t3 in t2.items" style="{{$ctrl.setStyle(t3)}}" ng-if="::$ctrl.hasRights(t3)">
-                            <span class="tim-menu-item"ng-if="t3.items.length > 0">
+                        <li class="tim-menu-list-item" ng-repeat="t3 in t2.items" style="{{$ctrl.setStyle(t3)}}">
+                            <span class="tim-menu-item"ng-if="t3.items.length > 0 && $ctrl.hasRights(t3)">
                                 <span class="tim-menu-item" ng-bind-html="t3.text+$ctrl.openingSymbol" ng-click="$ctrl.toggleSubmenu(t3, t2, t1)"></span>
                                 <ul class="tim-menu-dropdown" id="{{t3.id}}" ng-class="$ctrl.openDirection(t3.id)" ng-if="t3.open">
-                                    <li class="tim-menu-list-item" ng-repeat="t4 in t3.items" ng-bind-html="t4.text" style="{{$ctrl.setStyle(t4)}}" ng-if="::$ctrl.hasRights(t4)"></li>
+                                    <li class="tim-menu-list-item" ng-repeat="t4 in t3.items" ng-bind-html="t4.text" style="{{$ctrl.setStyle(t4)}}" ng-if="$ctrl.hasRights(t4)"></li>
                                 </ul>
                             </span>
-                            <span class="tim-menu-item" ng-if="t3.items.length < 1" ng-bind-html="t3.text"></span>
+                            <span class="tim-menu-item" ng-if="t3.items.length < 1  && $ctrl.hasRights(t3)" ng-bind-html="t3.text"></span>
                         </li>
                     </ul>
                 </span>
-                <span class="tim-menu-item" ng-if="t2.items.length < 1" ng-bind-html="t2.text"></span>
+                <span class="tim-menu-item" ng-if="t2.items.length < 1 && $ctrl.hasRights(t2)" ng-bind-html="t2.text"></span>
             </li>
           </ul>
         </span>
-        <span ng-if="t1.items.length < 1" class="btn-group" style="{{$ctrl.setStyle(t1)}}" ng-bind-html="t1.text"></span>
+        <span ng-if="t1.items.length < 1 && $ctrl.hasRights(t1)" class="btn-group" style="{{$ctrl.setStyle(t1)}}" ng-bind-html="t1.text"></span>
         <span ng-if="!$last" ng-bind-html="$ctrl.separator"></span>
     </span>
 </div>
