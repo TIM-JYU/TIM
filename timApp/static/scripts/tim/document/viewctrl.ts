@@ -20,6 +20,7 @@ import {BookmarksController, IBookmarkGroup} from "../bookmark/bookmarks";
 import {IPluginInfoResponse, ParCompiler} from "../editor/parCompiler";
 import {IDocument} from "../item/IItem";
 import {LectureController} from "../lecture/lectureController";
+import {TableFormController} from "../plugin/tableForm";
 import {TimTableController} from "../plugin/timTable";
 import {initCssPrint} from "../printing/cssPrint";
 import {IUser} from "../user/IUser";
@@ -127,6 +128,8 @@ export class ViewCtrl implements IController {
     private velpMode: boolean;
 
     private timTables = new Map<string, TimTableController>();
+    private tableForms = new Map<string, TableFormController>();
+
     private timComponents: Map<string, ITimComponent> = new Map();
     private timComponentTags: Map<string, [string]> = new Map();
     private userChangeListeners: Map<string, IUserChanged> = new Map();
@@ -452,6 +455,16 @@ export class ViewCtrl implements IController {
         return this.timTables.get(parId);
     }
 
+    // TODO: Refactor plugin interface for tableForm:
+    //  - Export entire controller & keep own map vs implement ITimComponent
+    public addTableForm(controller: TableFormController, taskId: string) {
+        this.tableForms.set(taskId, controller);
+    }
+
+    public getTableForm(taskId: string) {
+        return this.tableForms.get(taskId);
+    }
+
     public addTimComponent2(component: ITimComponent, tag?: (string | undefined)) {
         this.addTimComponent(component, tag);
     }
@@ -697,7 +710,21 @@ export class ViewCtrl implements IController {
             ab.getAnswersAndUpdate();
             ab.loadInfo();
         }
-        // console.log("debug line");
+    }
+
+    public updateTable(tableTaskId: string, fields?: string[]) {
+        // TODO Refactor:
+        //  - incorporate into updateFields (call all tables if updateFields was called with "auto" setting.
+        //  - add support for multiple tables
+        const tableForm = this.getTableForm(tableTaskId);
+        if (!tableForm) {
+            return;
+        }
+        if (fields) {
+            tableForm.updateFields(fields);
+        } else {
+            tableForm.updateTable();
+        }
     }
 
     async beginUpdate() {
