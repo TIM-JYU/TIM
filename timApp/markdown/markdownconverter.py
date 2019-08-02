@@ -59,12 +59,17 @@ def genfields(flds, attrs='', stemfield='stem'):
     return res
 
 def gfrange(s, i1, i2, attrs='', stemfield='stem'):
+    flds = s.split(";", 1)
+    s = flds[0]
+    srest = ""
+    if len(flds) > 1:
+        srest = ";" + flds[1]
     parts = s.split("=")
     name = f"{parts[0]}({i1},{i2})"
     alias = ''
     if len(parts) > 1:
         alias = parts[1]
-    return genfields(f"{name}={alias}", attrs, stemfield)
+    return genfields(f"{name}={alias}"+srest, attrs, stemfield)
 
 
 def srange(s, i1, i2, step=1, *argv):
