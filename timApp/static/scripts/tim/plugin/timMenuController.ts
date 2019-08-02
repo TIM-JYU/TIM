@@ -28,6 +28,7 @@ const TimMenuMarkup = t.intersection([
         hoverOpen: withDefault(t.boolean, true),
         topMenu: withDefault(t.boolean, false),
         openAbove: withDefault(t.boolean, false),
+        basicColors: withDefault(t.boolean, false),
         separator: withDefault(t.string, "&nbsp;"), // Non-breaking space
         openingSymbol: withDefault(t.string, "&#9662;"), // Caret
     }),
@@ -63,6 +64,7 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
     private hoverOpen: boolean = true;
     private separator: string = "";
     private topMenu: boolean = false;
+    private basicColors: boolean = false;
     private openAbove: boolean = false;
     private menuId: string = String.fromCharCode(65 + Math.floor(Math.random() * 26)) + Date.now();
     private previousScroll: number | undefined = 0; // Store y-value of previous scroll event for comparison.
@@ -85,6 +87,7 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
         this.separator = this.attrs.separator;
         this.topMenu = this.attrs.topMenu;
         this.openAbove = this.attrs.openAbove;
+        this.basicColors = this.attrs.basicColors;
         this.openingSymbol = this.attrs.openingSymbol;
         // Turn default symbol upwards if menu opens above.
         if (this.attrs.openAbove && this.openingSymbol == "&#9662;") {
@@ -299,9 +302,9 @@ timApp.component("timmenuRunner", {
 <tim-markup-error ng-if="::$ctrl.markupError" data="::$ctrl.markupError"></tim-markup-error>
 <span ng-cloak ng-if="$ctrl.topMenu" id="{{$ctrl.menuId}}-placeholder"></span>
 <div ng-cloak ng-if="$ctrl.topMenu" class="hidden" id="{{$ctrl.menuId}}-placeholder-content"><br></div>
-<div id="{{$ctrl.menuId}}" class="tim-menu" style="{{$ctrl.barStyle}}" ng-mouseleave="$ctrl.mouseInside = false" ng-mouseenter="$ctrl.mouseInside = true">
+<div id="{{$ctrl.menuId}}" class="tim-menu" ng-class="{'tim-menu-basic-colors': $ctrl.basicColors}" style="{{$ctrl.barStyle}}" ng-mouseleave="$ctrl.mouseInside = false" ng-mouseenter="$ctrl.mouseInside = true">
     <span ng-repeat="t1 in $ctrl.menu">
-        <span ng-if="t1.items.length > 0 && $ctrl.hasRights(t1)"" class="btn-group" style="{{$ctrl.setStyle(t1)}}">
+        <span ng-if="t1.items.length > 0 && $ctrl.hasRights(t1)" class="btn-group" style="{{$ctrl.setStyle(t1)}}">
           <span ng-disabled="disabled" ng-bind-html="t1.text+$ctrl.openingSymbol" ng-click="$ctrl.toggleSubmenu(t1, undefined, undefined)"></span>
           <ul class="tim-menu-dropdown" ng-if="t1.open" ng-class="$ctrl.openDirection(t1.id)" id="{{t1.id}}">
             <li class="tim-menu-list-item" ng-repeat="t2 in t1.items" style="{{$ctrl.setStyle(t2)}}">
@@ -324,7 +327,7 @@ timApp.component("timmenuRunner", {
           </ul>
         </span>
         <span ng-if="t1.items.length < 1 && $ctrl.hasRights(t1)" class="btn-group" style="{{$ctrl.setStyle(t1)}}" ng-bind-html="t1.text"></span>
-        <span ng-if="!$last" ng-bind-html="$ctrl.separator"></span>
+        <span ng-if="!$last && $ctrl.hasRights(t1)" ng-bind-html="$ctrl.separator"></span>
     </span>
 </div>
 `,

@@ -76,6 +76,7 @@ class TimMenuMarkupModel(GenericMarkupModel):
     hoverOpen: Union[bool, Missing] = missing
     topMenu: Union[bool, Missing] = missing
     openAbove: Union[bool, Missing] = missing
+    basicColors: Union[bool, Missing] = missing
     separator: Union[str, Missing] = missing
     openingSymbol: Union[str, Missing] = missing
     backgroundColor: Union[str, Missing] = missing
@@ -96,6 +97,7 @@ class TimMenuMarkupSchema(GenericMarkupSchema):
     hoverOpen = fields.Bool(allow_none=True, default=True)
     topMenu = fields.Bool(allow_none=True, default=False)
     openAbove = fields.Bool(allow_none=True, default=False)
+    basicColors = fields.Bool(allow_none=True, default=False)
     separator = fields.Str(allow_none=True, default="&nbsp;")
     openingSymbol = fields.Str(allow_none=True, default="&#9662;")
     backgroundColor = fields.Str(allow_none=True)
@@ -237,13 +239,22 @@ class TimMenuHtmlModel(GenericHtmlModel[TimMenuInputModel, TimMenuMarkupModel, T
 
     def get_maybe_empty_static_html(self) -> str:
         """Renders a static version of the plugin."""
-        return render_static_TimMenu(self, "TimMenu static placeholder")
+        return self.get_real_html()
+        # return render_static_TimMenu(self, "TimMenu static placeholder")
 
     def get_browser_json(self):
         r = super().get_browser_json()
         # TODO: Add schemas and models matching the structure to get rid of str(...).
         r['markup']['menu'] = str(parse_menu_string(r['markup']['menu']))
         return r
+
+    def render_plugin_html(m: GenericHtmlModel[PluginInput, PluginMarkup, PluginState]):
+        """Renders HTML for a plugin.
+
+        :param m: The plugin HTML schema.
+        :return: HTML.
+        """
+        return m.get_real_html()
 
 
 class TimMenuHtmlSchema(TimMenuAttrs, GenericHtmlSchema):
@@ -256,13 +267,7 @@ class TimMenuHtmlSchema(TimMenuAttrs, GenericHtmlSchema):
 
 
 # TODO: Where this goes for override?
-def render_plugin_html(m: GenericHtmlModel[PluginInput, PluginMarkup, PluginState]):
-    """Renders HTML for a plugin.
 
-    :param m: The plugin HTML schema.
-    :return: HTML.
-    """
-    return m.get_real_html()
 
 
 def render_static_TimMenu(m: TimMenuHtmlModel, s: str):
@@ -287,11 +292,12 @@ def reqs():
 ``` {plugin="timMenu"}
 separator: "|"              # Symbol(s) separating menu titles
 openingSymbol: " &#9661;"   # Symbol(s) indicating dropdown
-backgroundColor: "#3CC"     # Menu bar background color
-textColor: white            # Menu bar text color
-fontSize: 14pt              # Menu bar text color
+backgroundColor: "#F7F7F7"  # Menu bar background color
+textColor: black            # Menu bar text color
+fontSize: 14pt              # Menu bar font size
 openAbove: false            # Open all menus upwards
 topMenu: false              # Show menu at the top when scrolling from below
+basicColors: false          # Use TIM default color scheme in menu bar
 menu: |!!
  - Menu title 1
    - [Menu item 1](item_1_address)
@@ -306,8 +312,8 @@ menu: |!!
        - [Subsubmenu item 1](subsubmenu_item_1_address)
    - [Menu item 4](item_4_address)
    - [Menu item 5](item_5_address)
- - [[Title as direct link 1]{.white}](title_3_address)
- - [[Title as direct link 2]{.white}](title_4_address)
+ - [Title as direct link 1](title_3_address)
+ - [Title as direct link 2](title_4_address)
 !!
 ```
 ""","""

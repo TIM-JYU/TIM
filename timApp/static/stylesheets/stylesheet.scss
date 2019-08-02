@@ -1322,6 +1322,11 @@ p.closeButton::before {
     background: #F7F7F7;
 }
 
+.tim-menu-basic-colors {
+    background: $basic-color;
+    color: white;
+}
+
 .tim-menu-dropdown {
     position: absolute;
     float: left;
