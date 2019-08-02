@@ -17,6 +17,7 @@ const multisaveMarkup = t.intersection([
         fields: t.array(t.string),
         followid: t.string,
         jumplink: t.string,
+        jumptarget: t.string,
     }),
     GenericPluginMarkup,
     t.type({
@@ -125,7 +126,7 @@ export class MultisaveController extends PluginBase<t.TypeOf<typeof multisaveMar
             this.isSaved = true;
         }
 
-        if ( this.attrs.jumplink ) { // If tehre is need for jumplink
+        if ( this.attrs.jumplink ) { // If there is need for jumplink
             const values = [];
             for (const v of componentsToSave) {
                 const value = v.getContent();
@@ -136,7 +137,8 @@ export class MultisaveController extends PluginBase<t.TypeOf<typeof multisaveMar
             for (let i = 0; i < values.length; i++) {
                 link = link.replace("{" + i + "}", values[i] || "");
             }
-            window.open(link, "_self");
+            const target = this.attrs.jumptarget || "_self";
+            window.open(link, target);
         }
 
         return this.attrs.followid || this.pluginMeta.getTaskId() || "";

@@ -201,6 +201,7 @@ export interface TimTable {
     nrColumn?: boolean;
     maxRows?: string;
     maxCols?: string;
+    showToolbar?: boolean;
     // lockCellCount?: boolean;
 }
 
@@ -430,6 +431,7 @@ export class TimTableController extends DestroyScope implements IController, ITi
     private edited: boolean = false;
     private editInput: any = null;
     private editInputStyles: string = "";
+    private showToolbar: boolean = true;
 
     /**
      * Stores the last direction that the user moved towards with arrow keys
@@ -485,7 +487,7 @@ export class TimTableController extends DestroyScope implements IController, ITi
      * Set listener and initializes tabledatablock
      */
     async $onInit() {
-
+        if ( this.data.showToolbar == false ) { this.showToolbar = false; }
         this.editInput = this.element.find(".editInput");
         if ( this.data.maxRows ) { this.maxRows = this.data.maxRows; }
         if ( this.data.maxCols ) { this.maxCols = this.data.maxCols; }
@@ -601,7 +603,7 @@ export class TimTableController extends DestroyScope implements IController, ITi
 
     private onClick(e: JQuery.Event) {
         if (this.mouseInTable) {
-            if (this.isInEditMode() && isToolbarEnabled()) {
+            if (this.isInEditMode() && isToolbarEnabled() && this.showToolbar) {
                 openTableEditorToolbar({
                     callbacks: {
                         setCell: (val) => this.setCell(val),
@@ -2592,7 +2594,7 @@ export class TimTableController extends DestroyScope implements IController, ITi
        ];
        for (const key in styleToHtml) {
            if ( !styleToHtml.hasOwnProperty(key) ) { continue; }
-           if ( key in stylesNotToClear ) { continue; }
+           if ( stylesNotToClear.indexOf(key) >= 0 || !this.editInput[0].style[key]) { continue; }
            this.editInput[0].style[key] = "";
        }
        /*

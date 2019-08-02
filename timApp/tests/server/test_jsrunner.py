@@ -431,7 +431,7 @@ tools.setString("t", "hi");
                 'code': """{""",
                 'data': {}})
         self.assertEqual(200, r.status_code)
-        self.assertEqual({'error': 'Unexpected end of input [script.js:18:27]\n<pre>\n11: {\n</pre>\n'}, r.json())
+        self.assertEqual({'error': 'Unexpected end of input [script.js:18:28]\n<pre>\n11: {\n</pre>\n'}, r.json())
 
         r = requests.post(
             runscript_url,

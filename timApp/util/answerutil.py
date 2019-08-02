@@ -83,7 +83,11 @@ def get_fields_and_users(u_fields: List[str], groups: List[UserGroup],
     doc_map = {}
     # num_prog = re.compile('^\d+\..+/')  # moved to widen_fields
 
-    u_fields = widen_fields(u_fields)
+    try:
+        u_fields = widen_fields(u_fields)
+    except Exception as e:
+        return abort(400, f"Problem with field names: {u_fields}\n" + str(e))
+
     tasks_without_fields = []
     for field in u_fields:
         try:

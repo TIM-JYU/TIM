@@ -25,13 +25,15 @@ class MultisaveStateModel:
 @attr.s(auto_attribs=True)
 class MultisaveMarkupModel(GenericMarkupModel):
     jumplink: Union[str, Missing] = missing
+    jumptarget: Union[str, Missing] = missing
     areas: Union[List[str], Missing] = missing
     fields: Union[List[str], Missing] = missing
     tags: Union[List[str], Missing] = missing
 
 
 class MultisaveMarkupSchema(GenericMarkupSchema):
-    jumplink = fields.String(allow_none=True)  # if after fields, problems
+    jumplink = fields.String(allow_none=True)
+    jumptarget = fields.String(allow_none=True)
     areas = fields.List(fields.Str())
     tags = fields.List(fields.Str())
     fields = fields.List(fields.Str())

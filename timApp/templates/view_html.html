@@ -1,7 +1,11 @@
 {% extends "document.html" %}
 
 {% set teacher_mode = route in ("teacher", "answers") %}
-{% set velp_mode = route in ("teacher", "answers", "velp") %}
+{% if doc_settings.show_velps() %}
+  {% set velp_mode = route in ("teacher", "answers", "velp") %}
+{% else %}
+  {% set velp_mode = route in ("velp") %}
+{% endif %}
 {% set lecture_mode = route == "lecture" %}
 {% set slide_mode = route == "slide" %}
 
@@ -145,7 +149,7 @@
                     {% endif %}
                 </div>
             </div>
-            <velp-selection ng-if="$ctrl.reviewCtrl.velpMode || $ctrl.teacherMode">
+            <velp-selection ng-if="$ctrl.reviewCtrl.velpMode || ($ctrl.teacherMode && {{doc_settings.show_velps()|tojson}}) ">
             </velp-selection>
         {% endif %}
     </div>

@@ -308,6 +308,7 @@ class Tools {
         private currDoc: string,
         private markup: IJsRunnerMarkup,
         private aliases: AliasDataT,
+        private canStat: boolean = false,
     ) {
     }
 
@@ -475,7 +476,7 @@ class Tools {
     }
 
     addStatData(fieldName: unknown, start: number, end: number, max: unknown = 1e100) {
-        // if ( !this.canStat ) { throw new Error("tools can not stat!, use gtools."); }
+        if ( !this.canStat ) { throw new Error("tools can not stat!, use gtools."); }
         const f = ensureStringFieldName(fieldName);
         const maxv = ensureNumberDefault(max);
         if (!(checkInt(start) && checkInt(end))) {

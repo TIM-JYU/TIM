@@ -176,7 +176,7 @@ RUN chown -R agent /service
 RUN bash -c "${APT_INSTALL} software-properties-common && add-apt-repository ppa:malteworld/ppa && ${APT_CLEANUP}"
 RUN bash -c "${APT_INSTALL} curl pdftk gpg-agent && ${APT_CLEANUP} && pdftk --version && curl --version"
 
-RUN (curl -sL https://deb.nodesource.com/setup_10.x | bash -) && bash -c "${APT_INSTALL} nodejs && ${APT_CLEANUP}"
+RUN (curl -sL https://deb.nodesource.com/setup_12.x | bash -) && bash -c "${APT_INSTALL} nodejs && ${APT_CLEANUP}"
 RUN npm i npm@latest -g && bash -c "${APT_CLEANUP}"
 RUN npm install -g typescript@3.5 grunt typedoc tslint jspm typescript-formatter && npm cache clean --force && bash -c "${APT_CLEANUP}"
 

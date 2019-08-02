@@ -560,9 +560,21 @@ This will delete the whole ${options.area ? "area" : "paragraph"} from the docum
         return tableCtrl.isInEditMode();
     }
 
+    isQST(par: Paragraph | undefined): boolean | undefined {
+        if (par == null) {
+            return undefined;
+        }
+
+        const attrs: any = par.attr("attrs");
+        if (!attrs) { return false; }
+
+        return ( attrs.indexOf('"plugin": "qst"') >= 0 );
+    }
+
     getEditorFunctions(par?: Paragraph): MenuFunctionList {
         const parEditable = ((!par && this.viewctrl.item.rights.editable) || (par && canEditPar(this.viewctrl.item, par))) || false;
         const timTableEditMode = this.isTimTableInEditMode(par);
+        const qstPar = this.isQST(par);
         if (this.viewctrl.editing) {
             return [
                 {func: () => this.goToEditor(), desc: "Go to editor", show: true},
@@ -645,7 +657,7 @@ This will delete the whole ${options.area ? "area" : "paragraph"} from the docum
                 {
                     func: (e: JQuery.Event, p: Paragraph) => this.viewctrl.questionHandler.editQst(e, p),
                     desc: "Edit question",
-                    show: /* this.viewctrl.lectureMode && */  parEditable,  // TODO: Condition also that par is a question
+                    show: /* this.viewctrl.lectureMode && */  parEditable && qstPar,  // TODO: Condition also that par is a question
                 },
                 {
                     func: (e: JQuery.Event, p: Paragraph) => this.viewctrl.questionHandler.addQuestion(e, p),

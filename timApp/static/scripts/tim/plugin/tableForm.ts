@@ -59,6 +59,7 @@ const TableFormMarkup = t.intersection([
         fixedColor: withDefault(t.string, "#f0f0f0"),
         saveStyles: withDefault(t.boolean, true),
         fields: t.array(t.string),
+        showToolbar: withDefault(t.boolean, true),
     }),
     GenericPluginMarkup,
     t.type({
@@ -205,6 +206,7 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
         this.realnamemap = this.attrsall.realnamemap || {};
         this.emailmap = this.attrsall.emailmap || {};
         this.aliases = this.attrsall.aliases || {};
+        this.data.showToolbar = this.attrs.showToolbar;
 
         this.setDataMatrix();
 
@@ -802,7 +804,7 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
      * @param cells
      */
     async doSaveText(cells: string[]) {
-        this.error = "... saving ...";
+        // this.error = "... saving ...";
         let keys;
         if (cells && cells.length > 0) {
             keys = cells;

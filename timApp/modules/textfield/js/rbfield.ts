@@ -176,8 +176,9 @@ class RbfieldController extends PluginBase<t.TypeOf<typeof RbfieldMarkup>, t.Typ
         return {width: this.attrs.cols + "em", display: "inline-block"};
     }
 
+    // noinspection JSUnusedGlobalSymbols
     get cbStyle() {
-        if ( !this.inputstem ) { return {}; }
+        if ( !this.inputstem && (this.stem || this.header ) ) { return {}; }
         return { // otherwise input stem and cb are vertical
             width: "auto",
         };
@@ -215,6 +216,10 @@ class RbfieldController extends PluginBase<t.TypeOf<typeof RbfieldMarkup>, t.Typ
      */
     isPlainText() {
         return (this.attrs.readOnlyStyle == "plaintext" && window.location.pathname.startsWith("/view/"));
+    }
+
+    isReadOnly() {
+        return (this.attrs.readOnlyStyle == "box" && window.location.pathname.startsWith("/view/")) ? "disable" : "";
     }
 
     // noinspection JSUnusedGlobalSymbols
@@ -341,6 +346,7 @@ rbfieldApp.component("rbfieldRunner", {
                class="form-control"
                ng-model="$ctrl.userword"
                ng-change="$ctrl.autoSave()"
+               ng-disabled="::$ctrl.isReadOnly()"
                ng-model-options="::$ctrl.modelOpts"
                ng-readonly="::$ctrl.readonly"
                uib-tooltip="{{ $ctrl.errormessage }}"
@@ -353,13 +359,6 @@ rbfieldApp.component("rbfieldRunner", {
          <!--</label>-->
     <!--</form> -->
     <div ng-if="$ctrl.error" style="font-size: 12px" ng-bind-html="$ctrl.error"></div>
-    <button class="timButton"
-            ng-if="$ctrl.buttonText()"
-            ng-disabled="$ctrl.isRunning || $ctrl.readonly"
-            ng-click="$ctrl.saveText()">
-        {{::$ctrl.buttonText()}}
-    </button>
-    <p class="savedtext" ng-if="!$ctrl.hideSavedText && $ctrl.buttonText()">Saved!</p>
     <p ng-if="::$ctrl.footer" ng-bind="::$ctrl.footer" class="plgfooter"></p>
 </div>
 `,

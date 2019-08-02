@@ -1,7 +1,7 @@
 /**
  * Defines the client-side implementation of cbfield/label plugin.
  */
-import angular, {INgModelOptions} from "angular";
+import angular from "angular"; // , {INgModelOptions}
 import * as t from "io-ts";
 import {ITimComponent, ViewCtrl} from "tim/document/viewctrl";
 import {GenericPluginMarkup, Info, nullable, withDefault} from "tim/plugin/attributes";
@@ -44,12 +44,11 @@ class CbfieldController extends PluginBase<t.TypeOf<typeof CbfieldMarkup>, t.Typ
     private result?: string;
     private isRunning = false;
     private userword: boolean = false;
-    private modelOpts!: INgModelOptions; // initialized in $onInit, so need to assure TypeScript with "!"
+    // private modelOpts!: INgModelOptions; // initialized in $onInit, so need to assure TypeScript with "!"
     private vctrl!: ViewCtrl;
     private initialValue: boolean = false;
     private errormessage = "";
     private hideSavedText = true;
-    private redAlert = false;
     private saveResponse: {saved: boolean, message: (string | undefined)} = {saved: false, message: undefined};
     private preventedAutosave = false;
 
@@ -64,7 +63,7 @@ class CbfieldController extends PluginBase<t.TypeOf<typeof CbfieldMarkup>, t.Typ
         return super.buttonText() || null;
     }
 
-    makeBoolean(s: string): boolean {
+    static makeBoolean(s: string): boolean {
         if ( s == "" ) { return false; }
         if ( s == "0" ) { return false; }
         if ( s == "false" ) { return false; }
@@ -75,7 +74,7 @@ class CbfieldController extends PluginBase<t.TypeOf<typeof CbfieldMarkup>, t.Typ
     $onInit() {
         super.$onInit();
         const uw = (valueOr(this.attrsall.state && this.attrsall.state.c, this.attrs.initword || "")).toString();
-        this.userword = this.makeBoolean(uw);
+        this.userword = CbfieldController.makeBoolean(uw);
 
         if (this.attrs.tag) {
             this.vctrl.addTimComponent(this, this.attrs.tag);
@@ -131,7 +130,7 @@ class CbfieldController extends PluginBase<t.TypeOf<typeof CbfieldMarkup>, t.Typ
             this.resetField();
         } else {
             try {
-                this.userword = this.makeBoolean(content.c);
+                this.userword = CbfieldController.makeBoolean(content.c);
             } catch (TypeError) {
                 this.userword = false;
                 ok = false;
@@ -158,8 +157,9 @@ class CbfieldController extends PluginBase<t.TypeOf<typeof CbfieldMarkup>, t.Typ
         return {width: this.attrs.cols + "em", display: "inline-block"};
     }
 
+    // noinspection JSUnusedGlobalSymbols
     get cbStyle() {
-        if ( !this.inputstem ) { return {}; }
+        if ( !this.inputstem && (this.stem || this.header ) ) { return {}; }
         return { // otherwise input stem and cb are vertical
             width: "auto",
         };
@@ -169,7 +169,7 @@ class CbfieldController extends PluginBase<t.TypeOf<typeof CbfieldMarkup>, t.Typ
      * Initialize content.
      */
     initCode() {
-        this.userword = this.makeBoolean(this.attrs.initword || "");
+        this.userword = CbfieldController.makeBoolean(this.attrs.initword || "");
         this.initialValue = this.userword;
         this.result = undefined;
     }
@@ -197,6 +197,10 @@ class CbfieldController extends PluginBase<t.TypeOf<typeof CbfieldMarkup>, t.Typ
      */
     isPlainText() {
         return (this.attrs.readOnlyStyle == "plaintext" && window.location.pathname.startsWith("/view/"));
+    }
+
+    isReadOnly() {
+        return (this.attrs.readOnlyStyle == "box" && window.location.pathname.startsWith("/view/")) ? "disable" : "";
     }
 
     // noinspection JSUnusedGlobalSymbols
@@ -292,8 +296,6 @@ cbfieldApp.component("cbfieldRunner", {
     <tim-markup-error ng-if="::$ctrl.markupError" data="::$ctrl.markupError"></tim-markup-error>
     <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
     <p class="stem" ng-if="::$ctrl.stem">{{::$ctrl.stem}}</p>
-    <!--<form name="$ctrl.f" class="form-inline"> -->
-     <!--<label>-->
      <span style="width: 100%">
       <span class="inputstem" ng-bind-html="::$ctrl.inputstem"></span>
       <span  ng-if="::!$ctrl.isPlainText()" ng-class="{warnFrame: ($ctrl.isUnSaved() )  }">
@@ -305,8 +307,8 @@ cbfieldApp.component("cbfieldRunner", {
                class="form-control"
                ng-model="$ctrl.userword"
                ng-change="$ctrl.autoSave()"
+               ng-disabled="::$ctrl.isReadOnly()"
                ng-model-options="::$ctrl.modelOpts"
-               ng-readonly="::$ctrl.readonly"
                uib-tooltip="{{ $ctrl.errormessage }}"
                tooltip-is-open="$ctrl.f.$invalid && $ctrl.f.$dirty"
                tooltip-trigger="mouseenter"
@@ -314,16 +316,8 @@ cbfieldApp.component("cbfieldRunner", {
          </span>
          <span ng-if="::$ctrl.isPlainText()" style="">{{$ctrl.userword}}</span>
          </span>
-         <!--</label>-->
-    <!--</form> -->
     <div ng-if="$ctrl.error" style="font-size: 12px" ng-bind-html="$ctrl.error"></div>
-    <button class="timButton"
-            ng-if="$ctrl.buttonText()"
-            ng-disabled="$ctrl.isRunning || $ctrl.readonly"
-            ng-click="$ctrl.saveText()">
-        {{::$ctrl.buttonText()}}
-    </button>
-    <p class="savedtext" ng-if="!$ctrl.hideSavedText && $ctrl.buttonText()">Saved!</p>
+    <!-- <p class="savedtext" ng-if="!$ctrl.hideSavedText && $ctrl.buttonText()">Saved!</p> -->
     <p ng-if="::$ctrl.footer" ng-bind="::$ctrl.footer" class="plgfooter"></p>
 </div>
 `,

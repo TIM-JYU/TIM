@@ -56,7 +56,7 @@ class TestWiden_fields(TestCase):
         self.assertEqual(["d1", "d2", "d3", "d4"], r1, "Not same in semicolon line")
 
     def test_widen_fields7(self):
-        r1 = widen_fields("d1;d2;d(3,5)")
+        r1 = widen_fields("d1;d2;d( 3, 5)")
         self.assertEqual(["d1", "d2", "d3", "d4"], r1, "Not same in semicolon line")
 
     ##############################################################
@@ -70,7 +70,7 @@ class Testget_alias(TestCase):
         self.assertEqual("d3", get_alias("543.d3.points"), "Not same with docid and points")
 
     def test_get_name3(self):
-        self.assertEqual("t", get_alias("189279.t(1,4).points[2018-04-06 15:66:94, 2019-06-05 12:12:12]"), "Not same in copmplex version")
+        self.assertEqual("t", get_alias("189279.t(1,4).points[2018-04-06 15:66:94, 2019-06-05 12:12:12]"), "Not same in complex version")
 
     def test_get_name4(self):
         self.assertEqual("t3", get_alias("189279.t3.points[2018-04-06 15:66:94, 2019-06-05 12:12:12]"), "Not same with points and date")
