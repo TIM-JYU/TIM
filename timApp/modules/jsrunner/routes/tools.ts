@@ -441,7 +441,7 @@ class Tools {
         return res;
     }
 
-    findFirstOf(limits: number[][], c: number, def: number = 0) {
+    findLastOf(limits: number[][], c: number, def: number = 0) {
         let res = def;
         for (const r of limits) {
             const limit: number = r[0];
@@ -451,8 +451,8 @@ class Tools {
         return res;
     }
 
-    findFirst(table: string | string[], c: number, def: number = 0) {
-        return this.findFirstOf(this.createLimitArray(table), c, def);
+    findLast(table: string | string[], c: number, def: number = 0) {
+        return this.findLastOf(this.createLimitArray(table), c, def);
     }
 
     createFitter(xname: string, yname: string) {
