@@ -125,7 +125,7 @@ class DocSettings:
     sisu_require_manual_enroll_key = 'sisu_require_manual_enroll'
     show_velps_key = "show_velps"
 
-    urlmacros_tester = re.compile("[^0-9A-Za-z.,_ ]+")
+    urlmacros_tester = re.compile("[^0-9A-Za-zÅÄÖåäöÜü.,_ ]+")
 
 
     @classmethod
