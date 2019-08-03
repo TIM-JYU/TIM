@@ -16,7 +16,7 @@ import {IDocument} from "../item/IItem";
 import {showInputDialog} from "../ui/inputDialog";
 import {GenericPluginMarkup, GenericPluginTopLevelFields, nullable, withDefault} from "./attributes";
 import "./tableForm.css";
-import {CellToSave, CellType, colnumToLetters, DataEntity, isPrimitiveCell, TimTable} from "./timTable";
+import {CellAttrToSave, CellToSave, CellType, colnumToLetters, DataEntity, isPrimitiveCell, TimTable} from "./timTable";
 
 const tableFormApp = angular.module("tableFormApp", ["ngSanitize"]);
 export const moduleDefs = [tableFormApp];
@@ -130,6 +130,7 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
     private userLocations: { [index: string]: string } = {};
     private taskLocations: { [index: string]: string } = {};
     private changedCells: string[] = []; // Use same type as data.userdata?
+    private clearStylesCells: string[] = [];
     private userlist: string = "";
     private emaillist: string = "";
     private emailsubject: string = "";
@@ -764,7 +765,7 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
      * @param cellsToSave list of cells that needs to be saved
      * @param colValuesAreSame if all values in on column has same value
      */
-    cellChanged(cellsToSave: CellToSave[], colValuesAreSame: boolean) {
+    cellChanged(cellsToSave: CellToSave[] | CellAttrToSave[], colValuesAreSame: boolean) {
         // TODO make better implementation so singleCellSave is not called one by one
         // TODO: maybe done so that push cells to chengedCells and call save
         // TODO: but first check if saved to person or group and to that column by column
@@ -772,6 +773,11 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
             const coli = c.col;
             const rowi = c.row;
             const content = c.c;
+            // TODO: Ensure type is CellAttrToSave or that CellToSave doesn't contain .key
+            // @ts-ignore - CellAttrToSave contains c.key
+            if (c.key == "CLEAR") {
+                this.clearStylesCells.push(colnumToLetters(coli) + (rowi + 1));
+            }
             if (this.attrs.autosave) {
                 this.singleCellSave(rowi, coli, content);
             } else {
@@ -839,8 +845,6 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
                 const cell = this.data.userdata.cells[coord];
                 let cellContent;
                 let cellStyle = null;
-                // TODO: Save cell attributes (e.g backgroundColor) as plugin's own answer to let users take advantage
-                //  of timTable's cell layout editing
                 if (!isPrimitiveCell(cell)) {
                     cellContent = cell.cell;
                     if (this.attrs.saveStyles) {
@@ -874,8 +878,14 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
                     replyRows[this.userLocations[numberPlace]] = {};
                     replyRows[this.userLocations[numberPlace]][this.taskLocations[columnPlace]] = cellContent;
                 }
-                if (cellStyle != null && Object.keys(cellStyle).length != 0) {
-                    // TODO
+                /* TODO: instead of iterating clearStylesCells could decide that absence of any styles
+                    (e.g primitivecell) would mean result in null style value being sent
+                */
+                if (this.clearStylesCells.includes(columnPlace + numberPlace)) {
+                    const taskWithField = this.taskLocations[columnPlace].split(".");
+                    const docTaskStyles = taskWithField[0] + "." + taskWithField[1] + ".styles";
+                    replyRows[this.userLocations[numberPlace]][docTaskStyles] = null;
+                } else if (cellStyle != null && Object.keys(cellStyle).length != 0) {
                     const taskWithField = this.taskLocations[columnPlace].split(".");
                     const docTaskStyles = taskWithField[0] + "." + taskWithField[1] + ".styles";
                     replyRows[this.userLocations[numberPlace]][docTaskStyles] = cellStyle;
@@ -910,7 +920,8 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
         if (true && this.viewctrl) {
             this.viewctrl.updateFields(Array.from(changedFields));
         }
-        // TODO: Clear changedCells?
+        this.clearStylesCells = [];
+        this.changedCells = [];
     }
 
     protected getAttributeType() {
