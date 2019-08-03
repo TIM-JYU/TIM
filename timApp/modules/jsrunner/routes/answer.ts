@@ -6,7 +6,7 @@ import {AliasDataT, JsrunnerAnswer, UserFieldDataT} from "../servertypes";
 // import numberLines from "./runscript";
 import Tools from "./tools";
 import StatCounter from "./tools";
-
+console.log("Answer");
 const router = express.Router();
 
 // Every time tools.ts (or some of its dependencies) is modified, dist/tools.js must be
