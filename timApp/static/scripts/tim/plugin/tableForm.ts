@@ -370,11 +370,11 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
             // Find out which columns to update
             const taskColumns: { [index: string]: string } = {};
             for (const f of tableFields) {
-                const extendedField = this.aliases[f];
+                const extendedField = this.aliases[f] || f;
                 for (const [key, value] of Object.entries(this.taskLocations)) {
                     if (value == extendedField) {
                         taskColumns[f] = key;
-                        continue;
+                        break;
                     }
                 }
             }
