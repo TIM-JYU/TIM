@@ -183,8 +183,9 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
 
     $onInit() {
         super.$onInit();
-        if (this.viewctrl && this.taskid) {
-            this.viewctrl.addTableForm(this, this.taskid);
+        const tid = this.getTaskId();
+        if (this.viewctrl && tid) {
+            this.viewctrl.addTableForm(this, tid);
         }
         const d: any =  this.data;
         const table: any =  this.data.table;
@@ -321,7 +322,7 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
      */
     public async updateFields(fields: string[]) {
         try {
-            if (!this.tableFetched) {
+            if (!this.tableFetched || !this.viewctrl) {
                 return;
             }
             const fieldsToUpdate: string[] = [];
@@ -350,7 +351,10 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
             }
             for (const aliasfield of this.attrs.fields) {
                 const field = aliasfield.split("=")[0];
-                if (fields.includes(field)) {
+                const docField = this.viewctrl.docId + "." + field;
+                // TODO: Double .includes call - maybe it's better to search for fieldsToUpdate from somethign
+                //  that already has the docID
+                if (fields.includes(field) || fields.includes(docField)) {
                     fieldsToUpdate.push(aliasfield);
                 }
             }

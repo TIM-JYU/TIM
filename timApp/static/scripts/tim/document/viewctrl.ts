@@ -727,6 +727,16 @@ export class ViewCtrl implements IController {
         }
     }
 
+    public updateAllTables(fields?: string[]) {
+        for (const table of this.tableForms.values()) {
+            if (fields && fields.length > 0) {
+                table.updateFields(fields);
+            } else {
+                table.updateTable();
+            }
+        }
+    }
+
     async beginUpdate() {
         const response = await $http.get<{ changed_pars: { [id: string]: string } }>("/getUpdatedPars/" + this.docId);
         this.updatePendingPars(new Map<string, string>(Object.entries(response.data.changed_pars)));

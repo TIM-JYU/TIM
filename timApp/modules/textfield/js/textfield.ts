@@ -59,6 +59,7 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
     private saveResponse: {saved: boolean, message: (string | undefined)} = {saved: false, message: undefined};
     private preventedAutosave = false;
     private styles: {[index: string]: string} = {};
+    private saveCalledExternally = false;
 
     getDefaultMarkup() {
         return {};
@@ -108,6 +109,7 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
      * Save method for other plugins, needed by e.g. multisave plugin.
      */
     async save() {
+        this.saveCalledExternally = true;
         return this.saveText();
     }
 
@@ -292,6 +294,7 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
      * Unused method warning is suppressed, as the method is only called in template.
      */
     autoSave() {
+        this.saveCalledExternally = false;
         if (this.preventedAutosave) {
             this.preventedAutosave = false;
             return;
@@ -348,6 +351,12 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
             this.saveResponse.message = this.errormessage;
             if(data.web.clear){
                 this.applyStyling({});
+            }
+            if (!this.saveCalledExternally && this.vctrl) {
+                const tid = this.getTaskId()
+                if (tid) {
+                    this.vctrl.updateAllTables([tid]);
+                }
             }
         } else {
             this.errormessage = r.result.data.error || "Syntax error or no reply from server?";
