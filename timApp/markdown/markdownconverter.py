@@ -127,9 +127,9 @@ class Belongs:
 def isview(ret_val, mode=None):
     if not mode:
         try:
-            v = g.viewmode
+            v = g.viewmode  # True if in View
         except:
-            return False
+            return True  # not ret_val  # like in preview
         if v:
             return ret_val
         return not ret_val

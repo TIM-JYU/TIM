@@ -200,9 +200,14 @@ errormessage:    #inputcheckerin virheselite, tyhjä = selite on inputchecker
                         'text': 'Text',
                         'items': [
                             {
-                                'data': '#- {defaultplugin="textfield" readonly="view"}',
+                                'data': '#- {defaultplugin="textfield" readonly="view" .fieldCell}',
                                 'text': 'defaultplugin/textfield',
                                 'expl': 'Attribuutit kappaleelle jossa inline textfield',
+                            },
+                            {
+                                'data': "%% 'd;dsum' | gfrange(1,5,'autosave: true, cols: 5') %%",
+                                'text': 'Joukko kenttiä',
+                                'expl': 'Valmis joukko samannimisiä kenttä',
                             },
                             {
                                 'data': "{#tf1 autosave: true #}",

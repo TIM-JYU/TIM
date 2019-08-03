@@ -214,9 +214,14 @@ errormessage:    # inputcheckerin virheselite, tyhjä = selite on inputchecker
                         'text': 'Numeric',
                         'items': [
                             {
-                                'data': '#- {defaultplugin="numericfield" readonly="view"}',
+                                'data': '#- {defaultplugin="numericfield" readonly="view" .fieldCell}',
                                 'text': 'defaultplugin/numericfield',
                                 'expl': 'Attribuutit kappaleelle jossa inline numericfield',
+                            },
+                            {
+                                'data': "%% 'd;dsum' | gfrange(1,5,'autosave: true, cols: 3') %%",
+                                'text': 'Joukko kenttiä',
+                                'expl': 'Valmis joukko samannimisiä kenttä',
                             },
                             {
                                 'data': '{#nf1 autosave: true #}',

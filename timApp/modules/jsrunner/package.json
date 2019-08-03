@@ -10,7 +10,7 @@
   "dependencies": {
     "cookie-parser": "~1.4.3",
     "debug": "~2.6.9",
-    "express": "~4.16.0",
+    "express": "~4.16.4",
     "http-errors": "~1.6.2",
     "io-ts": "^1.9.0",
     "isolated-vm": "^1.7.10",

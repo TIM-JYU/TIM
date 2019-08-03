@@ -18,6 +18,8 @@ function valueTypeError(v: unknown) {
     return genericTypeError("value", v);
 }
 
+const STAT_ERROR =  "tools can not stat!, use gtools.";
+
 const checkString = t.string.is;
 const checkNumber = t.number.is;
 const checkInt = t.Int.is;
@@ -302,6 +304,7 @@ class Tools {
     public dists: { [fieldname: string]: Distribution } = {};
     public xys: { [fieldname: string]: XY } = {};
     private statCounters: { [fieldname: string]: StatCounter } = {};
+    private usePrintLine: boolean = false; // if used println at least one time then print does not do nl
 
     constructor(
         private data: UserFieldDataT,
@@ -310,6 +313,10 @@ class Tools {
         private aliases: AliasDataT,
         private canStat: boolean = false,
     ) {
+    }
+
+    private checkStatError() {
+        if ( !this.canStat ) { throw new Error(STAT_ERROR); }
     }
 
     private normalizeField(fieldName: string) {
@@ -449,18 +456,21 @@ class Tools {
     }
 
     createFitter(xname: string, yname: string) {
+        this.checkStatError();
         const fitter = new LineFitter(xname, yname);
         this.fitters[xname + "_" + yname] = fitter;
         return fitter;
     }
 
     createDistribution(n1: number, n2: number, mul: number, fieldName: string) {
+        this.checkStatError();
         const dist = new Distribution(n1, n2, mul, fieldName);
         if ( fieldName ) { this.dists[fieldName] = dist; }
         return dist;
     }
 
     createXY(xname: string, yname: string) {
+        this.checkStatError();
         const xy = new XY(xname, yname);
         this.xys[xname + "_" + yname] = xy;
         return xy;
@@ -469,14 +479,14 @@ class Tools {
     // private statCounters: { [fieldname: string]: StatCounter } = {};
 
     addStatDataValue(fieldName: string, value: number) {
-        // if ( !this.canStat ) { throw new Error("tools can not stat!, use gtools."); }
+        this.checkStatError();
         let sc: StatCounter = this.statCounters[fieldName];
         if ( sc === undefined ) { sc = new StatCounter(); this.statCounters[fieldName] = sc; }
         sc.addValue(value);
     }
 
     addStatData(fieldName: unknown, start: number, end: number, max: unknown = 1e100) {
-        if ( !this.canStat ) { throw new Error("tools can not stat!, use gtools."); }
+        this.checkStatError();
         const f = ensureStringFieldName(fieldName);
         const maxv = ensureNumberDefault(max);
         if (!(checkInt(start) && checkInt(end))) {
@@ -493,7 +503,7 @@ class Tools {
     }
 
     addStatDataOf(...fieldNames: string[]) {
-        // if ( !this.canStat ) { throw new Error("tools can not stat!, use gtools."); }
+        this.checkStatError();
         const maxv = 1e100;
         for (const name of fieldNames) {
             let v = this.getDouble(name, NaN);
@@ -505,7 +515,7 @@ class Tools {
     }
 
     getStatData(): {[name: string]: IStatData} {
-        // if ( !this.canStat ) { throw new Error("tools can not stat!, use gtools."); }
+        this.checkStatError();
         const result: {[name: string]: IStatData} = {};
         for (const [name, sc] of Object.entries(this.statCounters)) {
             result[name] = sc.getStat();
@@ -635,12 +645,21 @@ class Tools {
         return this.getDouble(f, def);
     }
 
-     print(...args: unknown[]) {
+    print(...args: unknown[]) {
         let sep = "";
         for (const a of args) {
             this.output += sep + a;
             sep = " ";
         }
+        if ( !this.usePrintLine ) { this.output += "\n"; }
+    }
+
+    println(...args: unknown[]) {
+        // For be combatible with Korppi, if only print is used, it prints nl.
+        // But if println is used at least one time before print, then print is
+        // not printing nl.
+        this.usePrintLine = true;
+        this.print(args);
         this.output += "\n";
     }
 

@@ -58,10 +58,12 @@ function runner(d: IRunnerData): RunnerResult {
     try {
         const guser = data[0];
         const gtools = new Tools(guser, currDoc, markup, aliases, true); // create global tools
+        let errorprg: string | undefined = "";
         // Fake parameters hide the outer local variables so user script won't accidentally touch them.
         // tslint:disable
         function runProgram(program: string | undefined, tools: Tools, saveUsersFields?: never, output?: never, errors?: never,
                             data?: never, d?: never, currDoc?: never, markup?: never, aliases?: never) {
+            errorprg = program;
             if ( program ) eval("function main() {" + program + "} main();");
         }
         runProgram(d.markup.preprogram, gtools);
@@ -92,7 +94,7 @@ function runner(d: IRunnerData): RunnerResult {
         }
         if ( errors.length > 0 ) {
             // TODO: separate errors from pre, program and post
-            const prg = numberLines2(d.program, 1);
+            const prg = numberLines2(errorprg, 1);
             errors.push( {
                 user: "program",
                 errors: [{
