@@ -815,6 +815,9 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
         }
         const replyRows: { [index: string]: { [index: string]: CellType } } = {};
         const styleRows: { [index: string]: { [index: string]: string } } = {};
+        const str: string[] = [];
+        // TODO: check how to make typed set
+        const changedFields = new Set(str);
         try {
             for (const coord of keys) {
                 const alphaRegExp = new RegExp("([A-Z]*)");
@@ -853,6 +856,14 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
                 // else if (typeof cellContent === "boolean") {
                 //     throw new Error("cell was boolean?");
 
+                // TODO: If attr (auto)updatefields...
+                if (true && this.viewctrl) {
+                    if (this.viewctrl.selectedUser.name == this.userLocations[numberPlace]) {
+                        const taskWithField = this.taskLocations[columnPlace].split(".");
+                        const docTask = taskWithField[0] + "." + taskWithField[1];
+                        changedFields.add(docTask);
+                    }
+                }
                 try {
                     replyRows[this.userLocations[numberPlace]][this.taskLocations[columnPlace]] = cellContent;
                 } catch (TypeError) {
@@ -891,6 +902,10 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
             return;
         }
         timtab.confirmSaved();
+        // TODO: if this attr (auto)updatefields...
+        if (true && this.viewctrl) {
+            this.viewctrl.updateFields(Array.from(changedFields));
+        }
         // TODO: Clear changedCells?
     }
 
