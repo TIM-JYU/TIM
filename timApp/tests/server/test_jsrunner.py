@@ -127,7 +127,7 @@ program: |!!
             d,
         )
         self.assertEqual('Unexpected end of input', r['web']['fatalError']['msg'])
-        self.assertTrue(r['web']['fatalError']['stackTrace'].startswith('SyntaxError: Unexpected end of input\n'))
+        self.assertTrue(r['web']['fatalError']['stackTrace'].startswith('Unexpected token (3:0)\n'))
 
     def test_invalid_field_name(self):
         d = self.create_jsrun("""

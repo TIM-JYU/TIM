@@ -186,6 +186,8 @@ router.put("/", async (req, res, next) => {
             await script.run(ctx, {timeout: value.markup.timeout || 1000}),
         );
 
+        // console.log(JSON.stringify(result));
+
         if (result.fatalError) {
             const rese: any = result;
             if ( rese.errorprg ) { // TODO: compile here, because I could not do it in runner???
