@@ -58,6 +58,7 @@ const TableFormMarkup = t.intersection([
         fontSize: withDefault(t.string, "smaller"),
         fixedColor: withDefault(t.string, "#f0f0f0"),
         saveStyles: withDefault(t.boolean, true),
+        fields: t.array(t.string),
         showToolbar: withDefault(t.boolean, true),
     }),
     GenericPluginMarkup,
@@ -87,7 +88,7 @@ const TableFormAll = t.intersection([
     t.type({markup: TableFormMarkup}),
 ]);
 
-class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t.TypeOf<typeof TableFormAll>, typeof TableFormAll> {
+export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t.TypeOf<typeof TableFormAll>, typeof TableFormAll> {
     public viewctrl?: ViewCtrl;
     private result?: string;
     private error?: string;
@@ -182,6 +183,9 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
 
     $onInit() {
         super.$onInit();
+        if (this.viewctrl && this.taskid) {
+            this.viewctrl.addTableForm(this, this.taskid);
+        }
         const d: any =  this.data;
         const table: any =  this.data.table;
         if ( this.attrs.fontSize ) { table.fontSize = this.attrs.fontSize; }
@@ -309,6 +313,94 @@ class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t
         }
         // console.log("debug");
 
+    }
+
+    /**
+     * Queries new values for given fields and updates the table
+     * @param fields to be updated
+     */
+    public async updateFields(fields: string[]) {
+        try {
+            if (!this.tableFetched) {
+                return;
+            }
+            const fieldsToUpdate: string[] = [];
+            // TODO: Delete experiments after confirming syntax
+            // // parse from aliases?
+            // for (const [key, value] of Object.entries(this.aliases)) {
+            //     const aliasField = value.split(".")[1];
+            //     if (taskIds.includes(aliasField)) {
+            //         fieldsToUpdate.push(value);
+            //     }
+            // }
+            // // parse directly from fields or other attr?
+            // for (const task of taskIds) {
+            //     if (this.fields.includes(task)) {
+            //         fieldsToUpdate.push(task);
+            //     }
+            // }
+            // use given fields as they are?
+            // fieldsToUpdate = taskIds;
+            // if (fieldsToUpdate.length == 0) {
+            //     return;
+            // }
+            // parse fields from this.attrsall.fields - remove alias part
+            if (!this.attrs.fields) {
+                return;
+            }
+            for (const aliasfield of this.attrs.fields) {
+                const field = aliasfield.split("=")[0];
+                if (fields.includes(field)) {
+                    fieldsToUpdate.push(aliasfield);
+                }
+            }
+            const tableResponse = await $http.get <{
+                rows: IRowsType,
+                styles: t.TypeOf<typeof Styles>,
+                fields: string[],
+            }>("/tableForm/updateFields?" + $httpParamSerializer({
+                fields: fieldsToUpdate,
+                taskid: this.getTaskId(),
+            }));
+            // TODO if response status != ok
+            const rows = tableResponse.data.rows || {};
+            const styles = tableResponse.data.styles || {};
+            const tableFields = tableResponse.data.fields || [];
+
+            // Find out which columns to update
+            const taskColumns: { [index: string]: string } = {};
+            for (const f of tableFields) {
+                const extendedField = this.aliases[f];
+                for (const [key, value] of Object.entries(this.taskLocations)) {
+                    if (value == extendedField) {
+                        taskColumns[f] = key;
+                        continue;
+                    }
+                }
+            }
+
+            for (const f of tableFields) {
+                for (let y = 0; y < this.rowKeys.length; y++) {
+                    if (this.styles && !angular.equals(this.styles, {})) {
+                        this.data.userdata.cells[taskColumns[f] + (y + 1)] = Object.assign(
+                            {cell: rows[this.rowKeys[y]][f]},
+                            this.styles[this.rowKeys[y]][f],
+                        );
+                    } else {
+                        this.data.userdata.cells[taskColumns[f] + (y + 1)] = Object.assign(
+                            {cell: rows[this.rowKeys[y]][f]},
+                        );
+                    }
+                }
+            }
+            const timtab = this.getTimTable();
+            if (timtab) {
+                timtab.reInitialize();
+            }
+        } catch (e) {
+            console.log(e);
+            this.error = "Error updating fields" + "\n" + e;
+        }
     }
 
     /**
@@ -816,10 +908,6 @@ timApp.component("tableformRunner", {
     },
     template: `
 <div class="tableform" ng-if="$ctrl.showTable">
-    <!--<button class="timButton"
-            ng-click="$ctrl.updateTable()">
-            Reset table
-    </button>-->
     <tim-markup-error ng-if="::$ctrl.markupError" data="::$ctrl.markupError"></tim-markup-error>
     <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
     <p ng-if="::$ctrl.stem" ng-bind-html="::$ctrl.stem"></p>

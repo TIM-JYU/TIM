@@ -6,7 +6,7 @@ import os
 from typing import Union, List
 
 import attr
-from flask import jsonify, render_template_string, request
+from flask import jsonify, render_template_string, request, abort
 from marshmallow import Schema, fields, post_load
 from marshmallow.utils import missing
 from webargs.flaskparser import use_args
@@ -227,8 +227,38 @@ def fetch_rows():
     plug = find_plugin_from_document(doc.document, tid, curr_user)
     debug = plug.values
     r = tableform_get_fields(plug.values.get("fields",[]), plug.values.get("groups", []),
-                             doc, curr_user, plug.values.get("removeDocIds"),
+                             doc, curr_user, plug.values.get("removeDocIds", True),
                              plug.values.get("showInView"))
+    return json_response(r)
+
+@tableForm_plugin.route('/updateFields')
+def update_fields():
+    r = {}
+    fields_to_update = request.args.getlist("fields")
+    taskid = request.args.get("taskid")
+    tid = TaskId.parse(taskid, False, False)
+    doc = get_doc_or_abort(tid.doc_id)
+    curr_user = get_current_user_object()
+    plug = find_plugin_from_document(doc.document, tid, curr_user)
+    if not plug:
+        return abort(404, f'Table not found: {tid}')
+    groups = plug.values.get("groups",[])
+    queried_groups = UserGroup.query.filter(UserGroup.name.in_(groups))
+    fielddata, _, field_names = get_fields_and_users(fields_to_update, queried_groups, doc,
+                         curr_user, plug.values.get("removeDocIds"), add_missing_fields=True,
+                         allow_non_teacher=plug.values.get("showInView"))
+    rows = {}
+    styles = {}
+    for f in fielddata:
+        username = f['user'].name
+        rows[username] = dict(f['fields'])
+        for key, content in rows[username].items():
+            if type(content) is dict:
+                rows[username][key] = json.dumps(content)
+        styles[username] = dict(f['styles'])
+    r['rows'] = rows
+    r['styles'] = styles
+    r['fields'] = field_names
     return json_response(r)
 
 
