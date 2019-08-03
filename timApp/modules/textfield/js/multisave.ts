@@ -116,12 +116,21 @@ export class MultisaveController extends PluginBase<t.TypeOf<typeof multisaveMar
 
         this.isSaved = false;
         this.savedFields = 0;
+        let savedIndex = 0;
+        const fieldsToUpdate: string[] = [];
         for (const p of promises) {
             const result = await p;
             if (result.saved) {
                 this.savedFields++;
+                const tid = componentsToSave[savedIndex].getTaskId();
+                if (tid) {
+                    fieldsToUpdate.push(tid);
+                }
             }
+            savedIndex++;
         }
+        // TODO: if this.attrs.updatefields...
+        this.vctrl.updateAllTables(fieldsToUpdate);
         if (this.savedFields !== 0 ) {
             this.isSaved = true;
         }
