@@ -130,7 +130,7 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
     private userLocations: { [index: string]: string } = {};
     private taskLocations: { [index: string]: string } = {};
     private changedCells: string[] = []; // Use same type as data.userdata?
-    private clearStylesCells: string[] = [];
+    private clearStylesCells = new Set<string>();
     private userlist: string = "";
     private emaillist: string = "";
     private emailsubject: string = "";
@@ -351,7 +351,7 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
                 return;
             }
             for (const aliasfield of this.attrs.fields) {
-                const field = aliasfield.split("=")[0];
+                const field = aliasfield.split("=")[0].trim();
                 const docField = this.viewctrl.docId + "." + field;
                 // TODO: Double .includes call - maybe it's better to search for fieldsToUpdate from somethign
                 //  that already has the docID
@@ -775,8 +775,13 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
             const content = c.c;
             // TODO: Ensure type is CellAttrToSave or that CellToSave doesn't contain .key
             // @ts-ignore - CellAttrToSave contains c.key
-            if (c.key == "CLEAR") {
-                this.clearStylesCells.push(colnumToLetters(coli) + (rowi + 1));
+            const changedStyle = c.key;
+            if (changedStyle) {
+                if (changedStyle == "CLEAR") {
+                    this.clearStylesCells.add(colnumToLetters(coli) + (rowi + 1));
+                } else {
+                    this.clearStylesCells.delete(colnumToLetters(coli) + (rowi + 1));
+                }
             }
             if (this.attrs.autosave) {
                 this.singleCellSave(rowi, coli, content);
@@ -825,9 +830,7 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
         }
         const replyRows: { [index: string]: { [index: string]: CellType } } = {};
         const styleRows: { [index: string]: { [index: string]: string } } = {};
-        const str: string[] = [];
-        // TODO: check how to make typed set
-        const changedFields = new Set(str);
+        const changedFields = new Set<string>();
         try {
             for (const coord of keys) {
                 const alphaRegExp = new RegExp("([A-Z]*)");
@@ -881,7 +884,7 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
                 /* TODO: instead of iterating clearStylesCells could decide that absence of any styles
                     (e.g primitivecell) would mean result in null style value being sent
                 */
-                if (this.clearStylesCells.includes(columnPlace + numberPlace)) {
+                if (this.clearStylesCells.has(columnPlace + numberPlace)) {
                     const taskWithField = this.taskLocations[columnPlace].split(".");
                     const docTaskStyles = taskWithField[0] + "." + taskWithField[1] + ".styles";
                     replyRows[this.userLocations[numberPlace]][docTaskStyles] = null;
@@ -920,7 +923,7 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
         if (true && this.viewctrl) {
             this.viewctrl.updateFields(Array.from(changedFields));
         }
-        this.clearStylesCells = [];
+        this.clearStylesCells.clear();
         this.changedCells = [];
     }
 
