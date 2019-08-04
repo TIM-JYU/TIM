@@ -1,6 +1,65 @@
 import * as t from "io-ts";
-import {IError, IJsRunnerMarkup, IStatData} from "../public/javascripts/jsrunnertypes";
+import {IError, IJsRunnerMarkup, INumbersObject} from "../public/javascripts/jsrunnertypes";
 import {AliasDataT, UserFieldDataT} from "../servertypes";
+
+const TASK_PROG = new RegExp(/([\w.]*)\( *(\d*) *, *(\d*) *\)(.*)/);
+
+function widenFields(fields: string | string[]): {names: string[], aliases: string[] } {
+    let fields1: string[] = [];
+    if ( !(fields instanceof Array) ) {
+        fields = fields.split(";");
+    }
+    for ( const field of fields ) {
+        const parts = field.split(";");
+        fields1 = fields1.concat(parts);
+    }
+
+    const rfields: string[] = [];
+    for (const field of fields1) {
+        const parts = field.split("=");
+        let a = "";
+        const tf = parts[0].trim();
+        if (parts.length > 1) {
+            a = parts[1].trim();
+        }
+        const m = TASK_PROG.exec(tf);
+        if ( !m ) {
+            rfields.push(field);
+            continue;
+        }
+
+        const tb = m[1];
+        const n1 = parseInt(m[2], 10);
+        const n2 = parseInt(m[3], 10);
+        const te = m[4];
+
+        for (let i = n1; i < n2; i++) {
+            let tn = tb + i + te;
+            if (!tb) {
+                tn = "";
+            }
+            if (a) {
+                tn += "=" + a + i;
+            }
+            rfields.push(tn);
+        }
+    }
+    const raliases: string[] = [];
+    const rnames: string[] = [];
+    for (const f of rfields) {
+        const parts = f.split("=");
+        const fn = parts[0].trim();
+        if ( !fn ) { continue; }
+        if ( rnames.indexOf(fn) >= 0) { continue; }
+        rnames.push(fn);
+        if ( parts.length < 2) {
+            raliases.push(fn);
+        } else {
+            raliases.push(parts[1].trim());
+        }
+    }
+    return { names: rnames, aliases: raliases};
+}
 
 function genericTypeError(parameterDescription: string, v: unknown) {
     return new Error(`${parameterDescription} has unexpected type: ${typeof v}`);
@@ -280,7 +339,7 @@ class StatCounter {
         }
     }
 
-    getStat(): IStatData {
+    getStat(): { [hname: string]: number }  {
         let sd = 0;
         const dd = (this.ex2 -  (this.ex * this.ex) / this.n);
         if ( this.n > 1) { sd =  Math.sqrt(dd / (this.n - 1)); }
@@ -297,7 +356,131 @@ class StatCounter {
 
 class Stats {
     private counters: { [fieldname: string]: StatCounter } = {};
+    readonly fields: string [] = [];
+    readonly aliases: string [] = [];
+
     constructor(fields: string | string[]) {
+        const fa = widenFields(fields);
+        const flds = fa.names;
+        this.aliases = fa.aliases;
+        for (const f of flds) {
+            this.fields.push(f.trim());
+            this.counters[f] = new StatCounter();
+        }
+    }
+
+    addField(tools: Tools) {
+        const maxv = 1e100;
+        for (const name of this.fields) {
+            let v = tools.getDouble(name, NaN);
+            if ( isNaN(v) ) { continue; }
+            v = Math.min(v, maxv);
+            this.addValue(name, v);
+        }
+    }
+
+    addValue(fieldName: string, value: number, max: number = 1e100) {
+        let sc: StatCounter = this.counters[fieldName];
+        if ( sc === undefined ) { sc = new StatCounter(); this.counters[fieldName] = sc; }
+        if ( isNaN(value) ) { return; }
+        const v = Math.min(value, max);
+        sc.addValue(v);
+    }
+
+    addData(tools: Tools, fieldName: string, start: number, end: number, max: unknown = 1e100) {
+        const maxv = ensureNumberDefault(max);
+        if (!(checkInt(start) && checkInt(end))) {
+            throw new Error("Parameters 'start' and 'end' must be integers.");
+        }
+        for (let i = start; i <= end; i++) {
+            const name = fieldName + i.toString();
+            let v = tools.getDouble(name, NaN);
+            if ( isNaN(v) ) { continue; }
+            v = Math.min(v, maxv);
+            this.addValue(name, v);
+        }
+    }
+
+    addOf(tools: Tools, ...fieldNames: string[]) {
+        const maxv = 1e100;
+        for (const name of fieldNames) {
+            let v = tools.getDouble(name, NaN);
+            if ( isNaN(v) ) { continue; }
+            v = Math.min(v, maxv);
+            // this.print(name + ": " + v);
+            this.addValue(name, v);
+        }
+    }
+
+    getData(): {[name: string]: INumbersObject} {
+        const result: {[name: string]: INumbersObject} = {};
+        for (const [name, sc] of Object.entries(this.counters)) {
+            result[name] = sc.getStat();
+        }
+        return result;
+    }
+
+    // noinspection JSUnusedGlobalSymbols
+    getForTable(headers: string[] | string, decim: number = 2): any {
+        if ( !(headers instanceof Array) ) {
+            headers = headers.split(";");
+        }
+        const matrix: any[] = [];
+        const result = { headers: [""], matrix: matrix };
+        for (const hs of headers) {
+            if ( hs ) {
+                result.headers.push(hs);
+            }
+        }
+        const statData = this.getData();
+        let keys = this.fields;
+        let alis = this.aliases;
+        if (keys.length == 0) { keys = Object.keys(statData); alis = keys; }
+        for (let i = 0; i < keys.length; i++ ) {
+            const f = keys[i];
+            const a = alis[i];
+            const stat = statData[f];
+            if ( !stat ) { continue; }
+            const row: any[] = [a];
+            for (const hs of headers) {
+                if ( !hs ) { continue; }
+                const val: number = stat[hs];
+                row.push((round(val, decim)));
+            }
+          matrix.push(row);
+        }
+        return result;
+    }
+
+    // noinspection JSUnusedGlobalSymbols
+    getForGraph(fields: string | string[], item: string = "avg", decim: number = 2): any {
+        const labels: string[] = [];
+        const data: number[] = [];
+        const result = { labels: labels, data: data };
+        let flds = this.fields;
+        let alis = this.aliases;
+        const statData = this.getData();
+        if ( fields ) {
+            const fa = widenFields(fields);
+            flds = fa.names;
+            alis = fa.aliases;
+        }
+        if (flds.length == 0 ) {
+            flds = Object.keys(statData);
+            alis = flds;
+        }
+        for (let i = 0; i < flds.length; i++ ) {
+            const name = flds[i];
+            const a = alis[i];
+            const stat = statData[name];
+            labels.push(a);
+            if ( !stat ) {
+                data.push(0);
+            } else {
+                data.push(round(stat[item], decim));
+            }
+        }
+        return result;
     }
 }
 
@@ -310,7 +493,6 @@ class Tools {
     public dists: { [fieldname: string]: Distribution } = {};
     public xys: { [fieldname: string]: XY } = {};
     public stats: { [name: string]: Stats } = {};
-    private statCounters: { [fieldname: string]: StatCounter } = {};
     private usePrintLine: boolean = false; // if used println at least one time then print does not do nl
 
     constructor(
@@ -320,6 +502,9 @@ class Tools {
         private aliases: AliasDataT,
         private canStat: boolean = false,
     ) {
+        if ( this.canStat) {
+            this.createStatCounter("GLOBAL", "");
+        }
     }
 
     private checkStatError() {
@@ -448,6 +633,7 @@ class Tools {
         return res;
     }
 
+    // noinspection JSMethodCanBeStatic
     findLastOf(limits: number[][], c: number, def: number = 0) {
         let res = def;
         for (const r of limits) {
@@ -490,53 +676,27 @@ class Tools {
         return stats;
     }
 
-    // private statCounters: { [fieldname: string]: StatCounter } = {};
-
     addStatDataValue(fieldName: string, value: number) {
         this.checkStatError();
-        let sc: StatCounter = this.statCounters[fieldName];
-        if ( sc === undefined ) { sc = new StatCounter(); this.statCounters[fieldName] = sc; }
-        sc.addValue(value);
+        this.stats.GLOBAL.addValue(fieldName, value);
     }
 
-    addStatData(tools: Tools, fieldName: unknown, start: number, end: number, max: unknown = 1e100) {
+    addStatData(tools: Tools, fieldName: string, start: number, end: number, max: number = 1e100) {
         this.checkStatError();
-        const f = ensureStringFieldName(fieldName);
-        const maxv = ensureNumberDefault(max);
-        if (!(checkInt(start) && checkInt(end))) {
-            throw new Error("Parameters 'start' and 'end' must be integers.");
-        }
-        for (let i = start; i <= end; i++) {
-            const name = f + i.toString();
-            let v = tools.getDouble(name, NaN);
-            if ( isNaN(v) ) { continue; }
-            v = Math.min(v, maxv);
-            this.print(name + ": " + v);
-            this.addStatDataValue(name, v);
-        }
+        this.stats.GLOBAL.addData(tools, fieldName, start, end, max);
     }
 
     addStatDataOf(tools: Tools, ...fieldNames: string[]) {
         this.checkStatError();
-        const maxv = 1e100;
-        for (const name of fieldNames) {
-            let v = tools.getDouble(name, NaN);
-            if ( isNaN(v) ) { continue; }
-            v = Math.min(v, maxv);
-            // this.print(name + ": " + v);
-            this.addStatDataValue(name, v);
-        }
+        this.stats.GLOBAL.addOf(tools, ...fieldNames);
     }
 
-    getStatData(): {[name: string]: IStatData} {
+    getStatData(): {[name: string]: INumbersObject} {
         this.checkStatError();
-        const result: {[name: string]: IStatData} = {};
-        for (const [name, sc] of Object.entries(this.statCounters)) {
-            result[name] = sc.getStat();
-        }
-        return result;
+        return this.stats.GLOBAL.getData();
     }
 
+    // noinspection JSMethodCanBeStatic
     r(value: number, decim: number): number {
         if ( !checkInt(decim) ) {
             throw new Error("Parameter 'decim' must be integer.");
@@ -548,6 +708,11 @@ class Tools {
 
     round(value: number, decim: number): number {
         return this.r(value, decim);
+    }
+
+    // noinspection JSMethodCanBeStatic
+    wf(fields: string | string[]): {names: string[], aliases: string[] } {
+        return widenFields(fields);
     }
 
     getSum(fieldName: unknown, start: number, end: number, defa: unknown = 0, max: unknown = 1e100): number {
@@ -579,6 +744,7 @@ class Tools {
         const c = ensureStringLikeValue(content);
         const fn = this.checkAliasAndNormalize(f);
         this.result[fn] = c;
+        this.data.fields[fn] = c;
     }
 
     setInt(fieldName: unknown, content: unknown): void {
@@ -589,6 +755,7 @@ class Tools {
             throw valueTypeError(content);
         }
         this.result[fn] = c;
+        this.data.fields[fn] = c;
     }
 
     setDouble(fieldName: unknown, content: unknown): void {
@@ -596,6 +763,7 @@ class Tools {
         const c = ensureNumberLikeValue(content);
         const fn = this.checkAliasAndNormalize(f);
         this.result[fn] = c;
+        this.data.fields[fn] = c;
     }
 
     getDefaultPoints(): number {

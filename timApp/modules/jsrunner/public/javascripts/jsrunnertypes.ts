@@ -67,5 +67,7 @@ export interface IStatData {
     sd: number;
 }
 
+export interface INumbersObject {[hname: string]: number; }
+
 export type AnswerReturn = AnswerReturnSuccess | AnswerReturnError;
 export type AnswerReturnBrowser = Omit<AnswerReturnSuccess & {web: {error?: string}}, "savedata"> | AnswerReturnError;
