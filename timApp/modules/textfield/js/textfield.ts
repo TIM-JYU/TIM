@@ -79,8 +79,8 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
         this.vctrl.addTimComponent(this, this.attrs.tag );
         this.initialValue = this.userword;
         if (this.attrs.showname ) { this.initCode(); }
-        if (this.attrsall.state && this.attrsall.state.styles && !this.attrs.ignorestyles){
-            this.applyStyling(this.attrsall.state.styles)
+        if (this.attrsall.state && this.attrsall.state.styles && !this.attrs.ignorestyles) {
+            this.applyStyling(this.attrsall.state.styles);
         }
     }
 
@@ -248,13 +248,13 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
      *  Could also define (and import) generic tim-wide inputstyles
      * TODO: Could also just apply given styles as they are
      */
-    applyStyling(styles: {[index: string]: string}){
+    applyStyling(styles: {[index: string]: string}) {
         if (!styles || Object.keys(styles).length == 0) {
             this.styles = {};
             return;
         }
-        if (styles.backgroundColor){
-            this.styles.backgroundColor = styles.backgroundColor
+        if (styles.backgroundColor) {
+            this.styles.backgroundColor = styles.backgroundColor;
         }
     }
 
@@ -297,6 +297,7 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
             return;
         }
         if (this.attrs.autosave) {
+            // noinspection JSIgnoredPromiseFromCall
             this.saveText();
         }
     }
@@ -346,7 +347,7 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
             this.redAlert = false;
             this.saveResponse.saved = true;
             this.saveResponse.message = this.errormessage;
-            if(data.web.clear){
+            if (data.web.clear) {
                 this.applyStyling({});
             }
         } else {

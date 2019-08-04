@@ -295,6 +295,12 @@ class StatCounter {
     }
 }
 
+class Stats {
+    private counters: { [fieldname: string]: StatCounter } = {};
+    constructor(fields: string | string[]) {
+    }
+}
+
 class Tools {
     private output = "";
     private errors: IError[] = [];
@@ -303,6 +309,7 @@ class Tools {
     public fitters: { [fieldname: string]: LineFitter } = {};
     public dists: { [fieldname: string]: Distribution } = {};
     public xys: { [fieldname: string]: XY } = {};
+    public stats: { [name: string]: Stats } = {};
     private statCounters: { [fieldname: string]: StatCounter } = {};
     private usePrintLine: boolean = false; // if used println at least one time then print does not do nl
 
@@ -476,6 +483,13 @@ class Tools {
         return xy;
     }
 
+    createStatCounter(name: string, fields: string | string[]) {
+        this.checkStatError();
+        const stats = new Stats(fields);
+        this.stats[name] = stats;
+        return stats;
+    }
+
     // private statCounters: { [fieldname: string]: StatCounter } = {};
 
     addStatDataValue(fieldName: string, value: number) {
@@ -485,7 +499,7 @@ class Tools {
         sc.addValue(value);
     }
 
-    addStatData(fieldName: unknown, start: number, end: number, max: unknown = 1e100) {
+    addStatData(tools: Tools, fieldName: unknown, start: number, end: number, max: unknown = 1e100) {
         this.checkStatError();
         const f = ensureStringFieldName(fieldName);
         const maxv = ensureNumberDefault(max);
@@ -494,19 +508,19 @@ class Tools {
         }
         for (let i = start; i <= end; i++) {
             const name = f + i.toString();
-            let v = this.getDouble(name, NaN);
+            let v = tools.getDouble(name, NaN);
             if ( isNaN(v) ) { continue; }
             v = Math.min(v, maxv);
-            // this.print(name + ": " + v);
+            this.print(name + ": " + v);
             this.addStatDataValue(name, v);
         }
     }
 
-    addStatDataOf(...fieldNames: string[]) {
+    addStatDataOf(tools: Tools, ...fieldNames: string[]) {
         this.checkStatError();
         const maxv = 1e100;
         for (const name of fieldNames) {
-            let v = this.getDouble(name, NaN);
+            let v = tools.getDouble(name, NaN);
             if ( isNaN(v) ) { continue; }
             v = Math.min(v, maxv);
             // this.print(name + ": " + v);

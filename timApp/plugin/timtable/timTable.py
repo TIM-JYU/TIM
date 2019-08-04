@@ -140,7 +140,10 @@ def tim_table_get_html(jso, review):
     userdata = None
     if state != None:
         userdata = state.get(USERDATA, None)
+        headers = state.get("headers", None)
         values[USERDATA] = userdata
+        if headers:
+            values['headers'] = headers
     if jso.get("review", False):
         udata = ""
         if not userdata:
