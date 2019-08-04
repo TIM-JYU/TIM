@@ -245,7 +245,7 @@ def update_fields():
     groups = plug.values.get("groups",[])
     queried_groups = UserGroup.query.filter(UserGroup.name.in_(groups))
     fielddata, _, field_names = get_fields_and_users(fields_to_update, queried_groups, doc,
-                         curr_user, plug.values.get("removeDocIds"), add_missing_fields=True,
+                         curr_user, plug.values.get("removeDocIds", True), add_missing_fields=True,
                          allow_non_teacher=plug.values.get("showInView"))
     rows = {}
     styles = {}

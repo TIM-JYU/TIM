@@ -718,7 +718,13 @@ def handle_jsrunner_response(jsonresp, result, current_doc: DocInfo = None, allo
                         if allow_styles:
                             if an and content.get(field, None) != value:
                                 new_answer = True
-                            content[field] = value
+                            if value is None:
+                                try:
+                                    del content[field]
+                                except KeyError:
+                                    pass
+                            else:
+                                content[field] = value
                             if not (content.get(task_content_name_map[task], False)):
                                 content[task_content_name_map[task]] = None
                         else:

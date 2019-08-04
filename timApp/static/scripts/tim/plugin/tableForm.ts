@@ -16,7 +16,7 @@ import {IDocument} from "../item/IItem";
 import {showInputDialog} from "../ui/inputDialog";
 import {GenericPluginMarkup, GenericPluginTopLevelFields, nullable, withDefault} from "./attributes";
 import "./tableForm.css";
-import {CellToSave, CellType, colnumToLetters, DataEntity, isPrimitiveCell, TimTable} from "./timTable";
+import {CellAttrToSave, CellToSave, CellType, colnumToLetters, DataEntity, isPrimitiveCell, TimTable} from "./timTable";
 
 const tableFormApp = angular.module("tableFormApp", ["ngSanitize"]);
 export const moduleDefs = [tableFormApp];
@@ -130,6 +130,7 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
     private userLocations: { [index: string]: string } = {};
     private taskLocations: { [index: string]: string } = {};
     private changedCells: string[] = []; // Use same type as data.userdata?
+    private clearStylesCells = new Set<string>();
     private userlist: string = "";
     private emaillist: string = "";
     private emailsubject: string = "";
@@ -183,8 +184,9 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
 
     $onInit() {
         super.$onInit();
-        if (this.viewctrl && this.taskid) {
-            this.viewctrl.addTableForm(this, this.taskid);
+        const tid = this.getTaskId();
+        if (this.viewctrl && tid) {
+            this.viewctrl.addTableForm(this, tid);
         }
         const d: any =  this.data;
         const table: any =  this.data.table;
@@ -321,7 +323,7 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
      */
     public async updateFields(fields: string[]) {
         try {
-            if (!this.tableFetched) {
+            if (!this.tableFetched || !this.viewctrl) {
                 return;
             }
             const fieldsToUpdate: string[] = [];
@@ -349,8 +351,11 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
                 return;
             }
             for (const aliasfield of this.attrs.fields) {
-                const field = aliasfield.split("=")[0];
-                if (fields.includes(field)) {
+                const field = aliasfield.split("=")[0].trim();
+                const docField = this.viewctrl.docId + "." + field;
+                // TODO: Double .includes call - maybe it's better to search for fieldsToUpdate from somethign
+                //  that already has the docID
+                if (fields.includes(field) || fields.includes(docField)) {
                     fieldsToUpdate.push(aliasfield);
                 }
             }
@@ -370,11 +375,11 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
             // Find out which columns to update
             const taskColumns: { [index: string]: string } = {};
             for (const f of tableFields) {
-                const extendedField = this.aliases[f];
+                const extendedField = this.aliases[f] || f;
                 for (const [key, value] of Object.entries(this.taskLocations)) {
                     if (value == extendedField) {
                         taskColumns[f] = key;
-                        continue;
+                        break;
                     }
                 }
             }
@@ -760,7 +765,7 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
      * @param cellsToSave list of cells that needs to be saved
      * @param colValuesAreSame if all values in on column has same value
      */
-    cellChanged(cellsToSave: CellToSave[], colValuesAreSame: boolean) {
+    cellChanged(cellsToSave: CellToSave[] | CellAttrToSave[], colValuesAreSame: boolean) {
         // TODO make better implementation so singleCellSave is not called one by one
         // TODO: maybe done so that push cells to chengedCells and call save
         // TODO: but first check if saved to person or group and to that column by column
@@ -768,6 +773,16 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
             const coli = c.col;
             const rowi = c.row;
             const content = c.c;
+            // TODO: Ensure type is CellAttrToSave or that CellToSave doesn't contain .key
+            // @ts-ignore - CellAttrToSave contains c.key
+            const changedStyle = c.key;
+            if (changedStyle) {
+                if (changedStyle == "CLEAR") {
+                    this.clearStylesCells.add(colnumToLetters(coli) + (rowi + 1));
+                } else {
+                    this.clearStylesCells.delete(colnumToLetters(coli) + (rowi + 1));
+                }
+            }
             if (this.attrs.autosave) {
                 this.singleCellSave(rowi, coli, content);
             } else {
@@ -815,6 +830,7 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
         }
         const replyRows: { [index: string]: { [index: string]: CellType } } = {};
         const styleRows: { [index: string]: { [index: string]: string } } = {};
+        const changedFields = new Set<string>();
         try {
             for (const coord of keys) {
                 const alphaRegExp = new RegExp("([A-Z]*)");
@@ -832,8 +848,6 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
                 const cell = this.data.userdata.cells[coord];
                 let cellContent;
                 let cellStyle = null;
-                // TODO: Save cell attributes (e.g backgroundColor) as plugin's own answer to let users take advantage
-                //  of timTable's cell layout editing
                 if (!isPrimitiveCell(cell)) {
                     cellContent = cell.cell;
                     if (this.attrs.saveStyles) {
@@ -853,14 +867,28 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
                 // else if (typeof cellContent === "boolean") {
                 //     throw new Error("cell was boolean?");
 
+                // TODO: If attr (auto)updatefields...
+                if (true && this.viewctrl) {
+                    if (this.viewctrl.selectedUser.name == this.userLocations[numberPlace]) {
+                        const taskWithField = this.taskLocations[columnPlace].split(".");
+                        const docTask = taskWithField[0] + "." + taskWithField[1];
+                        changedFields.add(docTask);
+                    }
+                }
                 try {
                     replyRows[this.userLocations[numberPlace]][this.taskLocations[columnPlace]] = cellContent;
                 } catch (TypeError) {
                     replyRows[this.userLocations[numberPlace]] = {};
                     replyRows[this.userLocations[numberPlace]][this.taskLocations[columnPlace]] = cellContent;
                 }
-                if (cellStyle != null && Object.keys(cellStyle).length != 0) {
-                    // TODO
+                /* TODO: instead of iterating clearStylesCells could decide that absence of any styles
+                    (e.g primitivecell) would mean result in null style value being sent
+                */
+                if (this.clearStylesCells.has(columnPlace + numberPlace)) {
+                    const taskWithField = this.taskLocations[columnPlace].split(".");
+                    const docTaskStyles = taskWithField[0] + "." + taskWithField[1] + ".styles";
+                    replyRows[this.userLocations[numberPlace]][docTaskStyles] = null;
+                } else if (cellStyle != null && Object.keys(cellStyle).length != 0) {
                     const taskWithField = this.taskLocations[columnPlace].split(".");
                     const docTaskStyles = taskWithField[0] + "." + taskWithField[1] + ".styles";
                     replyRows[this.userLocations[numberPlace]][docTaskStyles] = cellStyle;
@@ -891,7 +919,12 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
             return;
         }
         timtab.confirmSaved();
-        // TODO: Clear changedCells?
+        // TODO: if this attr (auto)updatefields...
+        if (true && this.viewctrl) {
+            this.viewctrl.updateFields(Array.from(changedFields));
+        }
+        this.clearStylesCells.clear();
+        this.changedCells = [];
     }
 
     protected getAttributeType() {
