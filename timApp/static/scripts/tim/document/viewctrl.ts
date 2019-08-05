@@ -691,7 +691,7 @@ export class ViewCtrl implements IController {
                 } else {
                     fab.changeUserAndAnswers(this.selectedUser, [ans]);
                 }
-                const timComp = this.getTimComponentByName(fab.taskId.split(".")[1]);
+                const timComp = this.getTimComponentByName(fab.taskId);
                 if (timComp) {
                     if (fab.selectedAnswer) {
                         timComp.setAnswer(JSON.parse(fab.selectedAnswer.content));
