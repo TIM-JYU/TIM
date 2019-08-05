@@ -41,7 +41,10 @@ class TimDbTest(unittest.TestCase):
         else:
             os.mkdir(cls.test_files_path)
         # Safety mechanism to make sure we are not wiping some production database
-        assert app.config['SQLALCHEMY_DATABASE_URI'].endswith('-test')
+        assert app.config['SQLALCHEMY_DATABASE_URI'].endswith('-test'), \
+            ('Wrong test db URI. This probably means that '
+             'TIM_SETTINGS=testconfig.py environment variable is missing. '
+             'See https://tim.jyu.fi/view/tim/TIMin-kehitys/PyCharm#testauskonfiguraation-luominen')
         # The following throws if the testing database has not been created yet; we can safely ignore it
         try:
             db.drop_all()
