@@ -126,7 +126,6 @@ program: |!!
         r = self.do_jsrun(
             d,
         )
-        # TODO: Fix this test.
         self.assertEqual('Unexpected end of input', r['web']['fatalError']['msg'])
         self.assertTrue(r['web']['fatalError']['stackTrace'].startswith('Unexpected token (1:1)\n'))
 
