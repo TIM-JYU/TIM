@@ -39,7 +39,7 @@ export class ReviewController {
     private velpBadge?: HTMLElementTagNameMap["input"];
     private velpBadgePar?: string;
     private velpSelection!: VelpSelectionController; // initialized through onInit
-    private velpMode: boolean;
+    public velpMode: boolean;
     public velps?: IVelpUI[];
 
     constructor(public vctrl: ViewCtrl) {

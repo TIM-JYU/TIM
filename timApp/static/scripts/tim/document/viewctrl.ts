@@ -329,6 +329,11 @@ export class ViewCtrl implements IController {
         return p.startsWith("/slidefff/") || p.startsWith("/show_slide/");
     }
 
+    // noinspection JSUnusedGlobalSymbols (used in view_html.html)
+    showVelpSelection() {
+        return this.reviewCtrl.velpMode || (this.teacherMode && this.docSettings.show_velps);
+    }
+
     startLiveUpdates() {
         const sc = this.scope;
         const origLiveUpdates = this.liveUpdates;
