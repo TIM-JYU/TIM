@@ -98,7 +98,7 @@ class TestImportData(TestCase):
 
     def test_conv_data_csv5(self):
         data = ["aknakka;1;3;4;5;6", "vesal;2;3"]
-        fields = ["d(1,4)"]
+        fields = ["d(1,3)"]
 
         e1 = ["aknakka;d1;1;d2;3;d3;4", "vesal;d1;2;d2;3"]
 
