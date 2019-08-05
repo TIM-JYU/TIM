@@ -11,7 +11,7 @@ from marshmallow import Schema, fields, post_load
 from marshmallow.utils import missing
 
 from pluginserver_flask import GenericMarkupModel, GenericMarkupSchema, GenericHtmlSchema, GenericHtmlModel, \
-    Missing, InfoSchema, create_blueprint, PluginInput, PluginMarkup, PluginState
+    Missing, InfoSchema, create_blueprint
 from timApp.document.timjsonencoder import TimJsonEncoder
 from timApp.markdown.dumboclient import call_dumbo
 from timApp.tim_app import csrf
@@ -31,10 +31,10 @@ class TimMenuStateSchema(Schema):
 
 
 class TimMenuItem:
-    def __init__(self, text: str, level: int, id: str = None, items = None, open = False):
+    def __init__(self, text: str, level: int, items, open = False):
         self.text = text
         self.level = level
-        self.id = None
+        self.id = ""
         self.items = items
         self.open = open
         self.width = None
@@ -53,6 +53,10 @@ class TimMenuItem:
 
 
     def generate_id(self):
+        """
+        Generate an id string for the menu item.
+        :return: None.
+        """
         self.id = str(uuid.uuid4())
 
 
@@ -61,7 +65,14 @@ class TimMenuItem:
 
 
     def to_json(self):
-        return self.__dict__
+        s = {"level": self.level, "id": self.id, "text": self.text, "open": self.open, "items": self.items}
+        if self.width:
+            s.update({"width": self.width})
+        if self.height:
+            s.update({"height": self.height})
+        if self.rights:
+            s.update({"rights": self.rights})
+        return s
 
 
 @attr.s(auto_attribs=True)
@@ -141,6 +152,7 @@ def decide_menu_level(index: int, previous_level: int, max_level: int = 3) -> in
     :param max_level: Level ceiling; further indentations go into the same menu level.
     :return: Menu level decided by indentation.
     """
+    #TODO: Allow no max_level when recursive menu is implemented.
     level = index // 2
     level = previous_level+1 if level > previous_level else level
     level = max_level if level > max_level else level
@@ -150,6 +162,7 @@ def decide_menu_level(index: int, previous_level: int, max_level: int = 3) -> in
 def set_attributes(line: str, item: TimMenuItem):
     """
     Adds attributes recognized from non-list line to the above menu item.
+    Note: supports only one attribute per line.
     :param line: Attribute line in menu attribute.
     :param item: Previous menu item.
     """
@@ -182,15 +195,29 @@ def get_attribute(line: str, attr_name: str) -> Union[str, None]:
 
 def parse_menu_string(menu_str):
     """
-    Parses a markdown list formatted string into menu structure.
+    Converts menu-attribute string into a menu structure with html content.
+    Note: string uses a custom syntax similar to markdown lists, with hyphen (-) marking
+    a menu item and indentation its level. For example:
+
+     - Menu title 1
+       width: 100px
+       - [Menu item 1](item_1_address)
+       - [Menu item 2](item_2_address)
+       - *Non-link item*
+     - Menu title 2
+       - Submenu title 1
+         height: 60px
+         - [Submenu item 1](submenu_item_1_address)
+         - [Submenu item 2](submenu_item_2_address)
+     - [Menu title as link](menu_title_address)
+
     :param menu_str: Menu as a single string.
-    :return: Menu as a list of TimMenuItem objects.
+    :return: Converted menu as list of menu item objects.
     """
     menu_split = menu_str.split("\n")
     if not menu_split:
-        # TODO: User can't see this yet!
+        # TODO: Users can't see this!
         raise TimMenuError("'menu' is empty or invalid!")
-    menuitem_list = []
     parents = [TimMenuItem(text="", level=-1, items=[])]
     previous_level = -1
     current = None
@@ -204,7 +231,7 @@ def parse_menu_string(menu_str):
         level = decide_menu_level(list_symbol_index, previous_level)
         previous_level = level
         text_markdown = item[list_symbol_index+1:]
-        text_html = call_dumbo([text_markdown])[0].replace("<p>","").replace("</p>","")
+        text_html = call_dumbo([text_markdown])[0].replace("<p>","").replace("</p>","").strip()
         current = TimMenuItem(text=text_html, level=level, items=[])
         current.generate_id()
         for parent in parents:
@@ -212,13 +239,13 @@ def parse_menu_string(menu_str):
                 parent.items.append(current)
                 parents.insert(0, current)
                 break
-        # List has all menus that are parents to any others, but first one contains the whole menu tree.
-        menuitem_list = parents[-1].items
-    return menuitem_list
+    # List has all menus that are parents to any others, but first one contains the whole menu tree.
+    return parents[-1].items
 
 
 @attr.s(auto_attribs=True)
 class TimMenuHtmlModel(GenericHtmlModel[TimMenuInputModel, TimMenuMarkupModel, TimMenuStateModel]):
+
     def get_component_html_name(self) -> str:
         return 'timmenu-runner'
 
@@ -234,8 +261,7 @@ class TimMenuHtmlModel(GenericHtmlModel[TimMenuInputModel, TimMenuMarkupModel, T
 
     def get_browser_json(self):
         r = super().get_browser_json()
-        # r['menu'] = parse_menu_string(r['markup']['menu'])
-        r['markup']['menu'] = str(parse_menu_string(r['markup']['menu']))
+        r['menu'] = parse_menu_string(r['markup']['menu'])
         return r
 
     def requires_login(self) -> bool:

@@ -13,13 +13,13 @@ import {GenericPluginMarkup, Info, nullable, withDefault} from "./attributes";
 // this.attrs
 const TimMenuMarkup = t.intersection([
     t.partial({
-        menu: nullable(t.string),
         backgroundColor: nullable(t.string),
         textColor: nullable(t.string),
         fontSize: nullable(t.string),
     }),
     GenericPluginMarkup,
     t.type({
+        menu: withDefault(t.string, ""),
         hoverOpen: withDefault(t.boolean, true), // Unimplemented.
         topMenu: withDefault(t.boolean, false),
         openAbove: withDefault(t.boolean, false),
@@ -30,32 +30,35 @@ const TimMenuMarkup = t.intersection([
 ]);
 
 interface ITimMenuItem {
-    items: ITimMenuItem[] | undefined;
-    width: string | undefined;
-    height: string | undefined;
-    rights: string | undefined;
-    text: string;
+    height?: string;
+    id: string;
+    items?: ITimMenuItem[];
     level: number;
     open: boolean;
-    id: string;
+    rights?: string;
+    text: string;
+    width?: string;
 }
 
 const ITimMenuItem: t.Type<ITimMenuItem> = t.recursion("ITimMenuItem", () =>
-  t.type({
-      items: t.array(ITimMenuItem),
-      width: t.string,
-      height: t.string,
-      rights: t.string,
-      text: t.string,
-      level: t.number,
-      open: t.boolean,
-      id: t.string,
-  }),
+    t.intersection([
+        t.partial({
+            height: t.string,
+            items: t.array(ITimMenuItem),
+            rights: t.string,
+            width: t.string,
+        }),
+        t.type({
+            id: t.string,
+            level: t.number,
+            open: t.boolean,
+            text: t.string,
+        })]),
 );
 
 const TimMenuAll = t.intersection([
     t.partial({
-        menu: ITimMenuItem,
+        menu: t.array(ITimMenuItem),
     }),
     t.type({
         info: Info,
@@ -65,7 +68,7 @@ const TimMenuAll = t.intersection([
 ]);
 
 class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.TypeOf<typeof TimMenuAll>, typeof TimMenuAll> {
-    private menu: any;
+    private menu: ITimMenuItem[] = [];
     private vctrl?: Require<ViewCtrl>;
     private openingSymbol: string = "";
     private hoverOpen: boolean = true;
@@ -88,7 +91,10 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
         if (this.vctrl == null) {
             return;
         }
-        this.formMenu();
+        if (!this.attrsall.menu) {
+            return;
+        }
+        this.menu = this.attrsall.menu;
         this.hoverOpen = this.attrs.hoverOpen;
         this.separator = this.attrs.separator;
         this.topMenu = this.attrs.topMenu;
@@ -107,18 +113,6 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
             this.onClick(e);
         });
         this.userRights = this.vctrl.item.rights;
-    }
-
-    /**
-     * Turn string-list into leveled menuitem-list.
-     */
-    formMenu() {
-        console.log(this);
-        if (!this.attrs.menu) {
-            return;
-        }
-        // TODO: Get rid of eval.
-        this.menu = eval(this.attrs.menu);
     }
 
     protected getAttributeType() {
@@ -179,8 +173,9 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
      */
     toggleSticky() {
         // TODO: Multiple topMenus.
+        // TODO: Placeholder content takes text-sized space even when hidden.
         const menu = this.element.find(".tim-menu")[0];
-        const placeholder = this.element.find(".tim-menu-placeholder")[0];
+        const placeholder = this.element.find(".tim-menu-placeholder-content")[0];
         const scrollY = $(window).scrollTop();
         if (!menu || !placeholder) {
             return;
@@ -194,14 +189,14 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
             // to mitigate page length changes.
             if (this.previousScroll && scrollY > this.previousScroll) {
                 menu.classList.remove("top-menu");
-                placeholderContent.classList.add("hidden");
+                placeholderContent.classList.add("tim-menu-placeholder-hidden");
             } else {
                 menu.classList.add("top-menu");
-                placeholderContent.classList.remove("hidden");
+                placeholderContent.classList.remove("tim-menu-placeholder-hidden");
             }
         } else {
             menu.classList.remove("top-menu");
-            placeholderContent.classList.add("hidden");
+            placeholderContent.classList.add("tim-menu-placeholder-hidden");
         }
         this.previousScroll = $(window).scrollTop();
     }
@@ -305,8 +300,8 @@ timApp.component("timmenuRunner", {
     },
     template: `
 <tim-markup-error ng-if="::$ctrl.markupError" data="::$ctrl.markupError"></tim-markup-error>
-<span ng-cloak ng-if="$ctrl.topMenu" class="tim-menu-placeholder" id="{{$ctrl.menuId}}-placeholder"></span>
-<div ng-cloak ng-if="$ctrl.topMenu" class="tim-menu-placeholder-content hidden" id="{{$ctrl.menuId}}-placeholder-content"><br></div>
+<span ng-cloak ng-if="$ctrl.topMenu" class="tim-menu-placeholder"></span>
+<span ng-cloak ng-if="$ctrl.topMenu" class="tim-menu-placeholder-content tim-menu-placeholder-hidden"><br></span>
 <div id="{{$ctrl.menuId}}" class="tim-menu" ng-class="{'tim-menu-basic-colors': $ctrl.basicColors}" style="{{$ctrl.barStyle}}" ng-mouseleave="$ctrl.mouseInside = false" ng-mouseenter="$ctrl.mouseInside = true">
     <span ng-repeat="t1 in $ctrl.menu">
         <span ng-if="t1.items.length > 0 && $ctrl.hasRights(t1)" class="btn-group" style="{{$ctrl.setStyle(t1)}}">
