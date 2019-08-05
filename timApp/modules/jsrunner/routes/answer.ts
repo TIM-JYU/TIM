@@ -90,7 +90,11 @@ function runner(d: IRunnerData): RunnerResult {
 
         for (const user of data) {
             const tools = new Tools(user, currDoc, markup, aliases); // in compiled JS, this is tools_1.default(...)
-
+            errorprg = "gtools.addToDatas(tools)";
+            prgname = "addToDatas";
+            if ( d.markup.autoadd ) {
+                gtools.addToDatas(tools);
+            }
             // tslint:enable
             runProgram(d.program, "program", tools);
             // tools.print("d", JSON.stringify(d));
@@ -178,6 +182,7 @@ router.put("/", async (req, res, next) => {
     );
     const ctx = await isolate.createContext({inspector: false});
     await toolsScript.run(ctx);
+    if ( typeof(value.markup.autoadd ) === "undefined" ) { value.markup.autoadd = true; }
     const runnerData: IRunnerData = {
         data: value.input.data,
         currDoc: currDoc[0],

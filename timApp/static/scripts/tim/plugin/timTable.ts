@@ -418,7 +418,12 @@ export class TimTableController extends DestroyScope implements IController, ITi
     public filters: string[] = [];
     public sortDir: number[] = [];
     public sortSymbol: string[] = [];
-    public sortSymbols: string[] = [" ▼", "", " ▲" ];  // ["🢓", "", "🢑"];  // this small does not work in iPad/Android
+    public sortSymbolStyle: any[] = [];
+    public sortSymbolStyles: any[] = [{fontSize: "xx-small"}, {fontSize: "smaller"}, {fontSize: "inherit"}];
+    public emptyRing: number[] = [-1, -1, -1]; // keep this and sortSymbolStyles equal length
+    public sortSymbols: string[] = [" ▼", "", " ▲" ];
+    public sortRing: number[] = [];
+    // ["🢓", "", "🢑"];  // this small does not work in iPad/Android
     public originalHiddenRows: number[] = [];
     private rowDelta = 0;
     private colDelta = 0;
@@ -816,6 +821,8 @@ export class TimTableController extends DestroyScope implements IController, ITi
         }
         this.sortDir = [];
         this.sortSymbol = [];
+        this.sortSymbolStyle = [];
+        this.sortRing = this.emptyRing.slice();
     }
 
     sortData(col: number) {
@@ -824,7 +831,30 @@ export class TimTableController extends DestroyScope implements IController, ITi
         if ( !dir ) { dir = -1; }
         dir = -dir;
         this.sortDir[col] = dir;
+
+        const nl = this.sortRing.length - 1;
+
+        if ( this.sortRing[nl] != col ) { // push old symbols  left and drop leftmost away
+            const coli = this.sortRing.indexOf(col);
+            if ( coli < 0) {  // drop lefmost away
+                const last = this.sortRing.shift() || -1;
+                if (last >= 0) {
+                    this.sortDir[last] = 0;
+                    this.sortSymbol[last] = "";
+                    this.sortSymbolStyle[last] = {};
+                }
+            } else {
+                this.sortRing.splice(coli, 1);
+            }
+            this.sortRing.push(col);
+            for (let i = 0; i < this.sortRing.length; i++) {
+                const ic = this.sortRing[i];
+                this.sortSymbolStyle[ic] = this.sortSymbolStyles[i];
+            }
+        }
+        this.sortSymbolStyle[col] = this.sortSymbolStyles[nl];
         this.sortSymbol[col] = this.sortSymbols[dir + 1];
+
         // this.rowKeys.sort((a, b) => this.sortByRealName(a, b));
         this.permTable.sort((a, b) => this.sortByColumn(a, b, col, dir) );
         for (let i = 0; i < this.permTable.length; i++) {
@@ -1272,7 +1302,7 @@ export class TimTableController extends DestroyScope implements IController, ITi
                 targetCell[key] = value;
             }
         }
-        if ( !targetCell.cell ) { targetCell.cell = ""; }
+        if ( !targetCell.cell && targetCell.cell != 0) { targetCell.cell = ""; }
 
     }
 
@@ -2920,7 +2950,7 @@ timApp.component("timTable", {
              ng-show="::$ctrl.showColumn(coli)"
              ng-click="$ctrl.sortData(coli)"
              title="Click to sort"
-             ng-style="$ctrl.headersStyle"  >{{c}}{{$ctrl.sortSymbol[coli]}}
+             ng-style="$ctrl.headersStyle"  >{{c}}<span ng-style="$ctrl.sortSymbolStyle[coli]">{{$ctrl.sortSymbol[coli]}}</span>
             </td>
         </tr>
 

@@ -304,6 +304,8 @@ class JsRunnerSchema(GenericMarkupSchema):
     timeout = fields.Int()
     updateFields = fields.List(fields.Str())
     paramFields = fields.List(fields.Str())
+    showInView = fields.Bool()
+    autoadd = fields.Bool()
     fields = fields.List(fields.Str(), required=True)
 
     @validates_schema(skip_on_field_errors=True)

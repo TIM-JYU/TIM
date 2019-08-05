@@ -151,7 +151,7 @@ function ensureStringLikeValue(s: unknown): string {
 }
 
 function round(c: number, decim: number): number {
-    if ( decim == null ) { return c; }
+    if ( decim == null || isNaN(decim) ) { return c; }
     const mul = Math.pow(10, decim);
     return Math.round(c * mul) / mul;
 }
@@ -183,8 +183,10 @@ class LineFitter {
     readonly xname: string;
     readonly yname: string;
     private cab: Linear | null = null;
+    public readonly autoadd: boolean;
 
-    constructor(xname: string, yname: string) {
+    constructor(xname: string, yname: string, autoadd: boolean = true) {
+        this.autoadd = autoadd;
         this.xname = xname;
         this.yname = yname;
     }
@@ -215,11 +217,13 @@ class LineFitter {
         return this.add(tools.getDouble(this.xname, NaN), tools.getDouble(this.yname, NaN));
     }
 
-    ab(): Linear {
+    ab(adecim: number = NaN, bdecim: number = NaN): Linear {
         if ( this.cab ) { return this.cab; }
         const div = this.n * this.sumX2 - this.sumX * this.sumX;
-        const a = (this.sumY * this.sumX2  - this.sumX * this.sumXY) / div;
-        const b = (this.n * this.sumXY - this.sumX * this.sumY) / div;
+        let a = (this.sumY * this.sumX2  - this.sumX * this.sumXY) / div;
+        let b = (this.n * this.sumXY - this.sumX * this.sumY) / div;
+        if ( !isNaN(adecim) ) { a = round(a, adecim); if ( isNaN(bdecim) ) { bdecim = adecim; }}
+        if ( !isNaN(bdecim) ) { b = round(b, bdecim); }
         this.cab = {a: a, b: b};
         return this.cab;
     }
@@ -252,11 +256,12 @@ class LineFitter {
         return "r = " + round(this.r(), decim);
     }
 
-    line(xdecim: number, ydecim: number): Point[] {
+    line(xdecim: number = NaN, ydecim: number = NaN): Point[] {
+        if ( !isNaN(xdecim) && isNaN(ydecim)) { ydecim = xdecim; }
         const x1 = round(this.minX, xdecim);
         const x2 = round(this.maxX, xdecim);
-        const y1 = round(this.minY, ydecim);
-        const y2 = round(this.maxY, ydecim);
+        const y1 = round(this.f(x1), ydecim);
+        const y2 = round(this.f(x2), ydecim);
         return [{x: x1, y: y1}, {x: x2, y: y2}];
     }
 }
@@ -266,8 +271,10 @@ class Distribution {
     public data: number[]   = [];
     private n = 0;
     private readonly fieldName: string;
+    public readonly autoadd: boolean = true;
 
-    constructor(n1: number, n2: number, fieldName: string, mul: number = 1) {
+    constructor(fieldName: string, n1: number, n2: number, mul: number = 1, autoadd: boolean) {
+        this.autoadd = autoadd;
         if ( mul == 0 ) { mul = 1; }
         for (let i = n1; i * mul <= n2 + 0.000001; i++) {
             this.labels[i] = i * mul;
@@ -304,17 +311,23 @@ class XY {
     public data: object[] = [];
     private readonly xname: string;
     private readonly yname: string;
+    public readonly fitter: LineFitter;
+    public readonly autoadd: boolean;
 
-    constructor(xname: string, yname: string) {
+    constructor(xname: string, yname: string, autoadd: boolean = true) {
+        this.autoadd = autoadd;
         this.xname = xname;
         this.yname = yname;
+        this.fitter = new LineFitter(xname, yname);
     }
 
     add(x: number, y: number) {
+        const pt = {x: x, y: y};
         if ( !isNaN(x) && !isNaN(y) ) {
-            this.data.push({x: x, y: y});
+            this.data.push(pt);
+            this.fitter.add(x, y);
         }
-        return {x: x, y: y};
+        return pt;
     }
 
     addField(tools: Tools): object {
@@ -374,8 +387,10 @@ class Stats {
     private counters: { [fieldname: string]: StatCounter } = {};
     readonly fields: string [] = [];
     readonly aliases: string [] = [];
+    readonly autoadd: boolean;
 
-    constructor(fields: string | string[]) {
+    constructor(fields: string | string[], autoadd: boolean = true) {
+        this.autoadd = autoadd;
         const fa = separateNamesAndAliases(widenFields(fields));
         const flds = fa.names;
         this.aliases = fa.aliases;
@@ -419,7 +434,8 @@ class Stats {
 
     addOf(tools: Tools, ...fieldNames: string[]) {
         const maxv = 1e100;
-        for (const name of fieldNames) {
+        const fields = widenFields([...fieldNames]);
+        for (const name of fields) {
             let v = tools.getDouble(name, NaN);
             if ( isNaN(v) ) { continue; }
             v = Math.min(v, maxv);
@@ -511,7 +527,6 @@ class Tools {
     public xys: { [fieldname: string]: XY } = {};
     public stats: { [name: string]: Stats } = {};
     private usePrintLine: boolean = false; // if used println at least one time then print does not do nl
-
     constructor(
         private data: UserFieldDataT,
         private currDoc: string,
@@ -520,7 +535,7 @@ class Tools {
         private canStat: boolean = false,
     ) {
         if ( this.canStat) {
-            this.createStatCounter("GLOBAL", "");
+            this.createStatCounter("GLOBAL", "", false);
         }
     }
 
@@ -665,30 +680,40 @@ class Tools {
         return this.findLastOf(this.createLimitArray(table), c, def);
     }
 
-    createFitter(xname: string, yname: string) {
+    createFitter(xname: string, yname: string, autoadd: boolean = true) {
         this.checkStatError();
-        const fitter = new LineFitter(xname, yname);
+        const fitter = new LineFitter(xname, yname, autoadd);
         this.fitters[xname + "_" + yname] = fitter;
         return fitter;
     }
 
-    createDistribution(n1: number, n2: number, fieldName: string, mul: number = 1) {
+    createDistribution(fieldName: string, n1: number, n2: number, mul: number = 1, autoadd = true) {
         this.checkStatError();
-        const dist = new Distribution(n1, n2, fieldName, mul);
+        const dist = new Distribution(fieldName, n1, n2, mul, autoadd);
         if ( fieldName ) { this.dists[fieldName] = dist; }
         return dist;
     }
 
-    createXY(xname: string, yname: string) {
+    addToDatas(tools: Tools) {
+        for (const datas of [this.dists, this.xys, this.fitters, this.stats]) {
+            // noinspection JSUnusedLocalSymbols
+            Object.entries(datas).forEach(
+                ([key, d]) => { if ( d.autoadd ) {
+                    d.addField(tools);
+                 }});
+        }
+    }
+
+    createXY(xname: string, yname: string, autoadd: boolean = true) {
         this.checkStatError();
-        const xy = new XY(xname, yname);
+        const xy = new XY(xname, yname, autoadd);
         this.xys[xname + "_" + yname] = xy;
         return xy;
     }
 
-    createStatCounter(name: string, fields: string | string[]) {
+    createStatCounter(name: string, fields: string | string[], autoadd: boolean = true) {
         this.checkStatError();
-        const stats = new Stats(fields);
+        const stats = new Stats(fields, autoadd);
         this.stats[name] = stats;
         return stats;
     }
@@ -750,7 +775,8 @@ class Tools {
         const def = 0;
         const maxv = 1e100;
         let sum = 0;
-        for (const fn of fieldNames) {
+        const fields = widenFields([...fieldNames]);
+        for (const fn of fields) {
             sum += Math.min(this.getDouble(fn, def), maxv);
         }
         return sum;
@@ -764,25 +790,31 @@ class Tools {
         this.data.fields[fn] = c;
     }
 
-    setInt(fieldName: unknown, content: unknown, minToSave: number = -1000000000): void {
+    setInt(fieldName: unknown, content: unknown, maxNotToSave: number = -1000000000): void {
         const f = ensureStringFieldName(fieldName);
         const c = ensureNumberLikeValue(content);
         const fn = this.checkAliasAndNormalize(f);
         if (!checkInt(c)) {
             throw valueTypeError(content);
         }
-        if ( c <= minToSave ) { return; }
+        if ( c <= maxNotToSave ) {
+            if ( this.getValue(fieldName, "") !== "") { this.setString(fieldName, ""); }
+            return;
+        }
         this.result[fn] = c;
-        this.data.fields[fn] = c;
+        this.data.fields[f] = c;
     }
 
-    setDouble(fieldName: unknown, content: unknown, minToSave: number = -1e100): void {
+    setDouble(fieldName: unknown, content: unknown, maxNotToSave: number = -1e100): void {
         const f = ensureStringFieldName(fieldName);
         const c = ensureNumberLikeValue(content);
         const fn = this.checkAliasAndNormalize(f);
-        if ( c <= minToSave ) { return; }
+        if ( c <= maxNotToSave ) {
+            if ( this.getValue(fieldName, "") !== "") { this.setString(fieldName, ""); }
+            return;
+        }
         this.result[fn] = c;
-        this.data.fields[fn] = c;
+        this.data.fields[f] = c;
     }
 
     getDefaultPoints(): number {
