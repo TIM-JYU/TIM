@@ -127,8 +127,8 @@ program: |!!
             d,
         )
         # TODO: Fix this test.
-        # self.assertEqual('Unexpected end of input', r['web']['fatalError']['msg'])
-        # self.assertTrue(r['web']['fatalError']['stackTrace'].startswith('Unexpected token (3:0)\n'))
+        self.assertEqual('Unexpected end of input', r['web']['fatalError']['msg'])
+        self.assertTrue(r['web']['fatalError']['stackTrace'].startswith('Unexpected token (1:1)\n'))
 
     def test_invalid_field_name(self):
         d = self.create_jsrun("""
