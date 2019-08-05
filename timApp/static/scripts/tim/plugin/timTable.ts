@@ -1247,7 +1247,7 @@ export class TimTableController extends DestroyScope implements IController, ITi
                 targetCell[key] = value;
             }
         }
-        if ( !targetCell.cell ) { targetCell.cell = ""; }
+        if ( !targetCell.cell && targetCell.cell != 0) { targetCell.cell = ""; }
 
     }
 
