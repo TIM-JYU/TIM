@@ -287,6 +287,7 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
             for (const t1 of this.menu) {
                 this.closeAllInMenuItem(t1);
             }
+            // Plugin won't update if clicked outside document area without this.
             this.scope.$evalAsync();
         }
     }

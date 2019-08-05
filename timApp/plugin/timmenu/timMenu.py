@@ -218,10 +218,23 @@ def parse_menu_string(menu_str):
     if not menu_split:
         # TODO: Users can't see this!
         raise TimMenuError("'menu' is empty or invalid!")
+
+    # Separate parts with text content for Dumbo conversion, because Dumbo breaks syntax.
+    text_list = []
+    for item in menu_split:
+        try:
+            list_symbol_index = item.index("-")
+        except ValueError:
+            # Attribute lines get a placeholder in list.
+            text_list.append("")
+            continue
+        text_list.append(item[list_symbol_index+1:])
+    html_text_list = call_dumbo(text_list)
+
     parents = [TimMenuItem(text="", level=-1, items=[])]
     previous_level = -1
     current = None
-    for item in menu_split:
+    for i, item in enumerate(menu_split, start=0):
         try:
             list_symbol_index = item.index("-")
         except ValueError:
@@ -230,8 +243,7 @@ def parse_menu_string(menu_str):
             continue
         level = decide_menu_level(list_symbol_index, previous_level)
         previous_level = level
-        text_markdown = item[list_symbol_index+1:]
-        text_html = call_dumbo([text_markdown])[0].replace("<p>","").replace("</p>","").strip()
+        text_html = html_text_list[i].replace("<p>","").replace("</p>","").strip()
         current = TimMenuItem(text=text_html, level=level, items=[])
         current.generate_id()
         for parent in parents:
