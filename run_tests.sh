@@ -18,5 +18,5 @@ fi
 export IS_TESTING=true
 ./docker-compose.sh up --exit-code-from tests --abort-on-container-exit tests
 exitcode=$?
-./docker-compose.sh down -t 1
+./docker-compose.sh down -t 0 > /dev/null 2>&1
 exit ${exitcode}
