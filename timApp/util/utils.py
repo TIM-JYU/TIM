@@ -253,11 +253,11 @@ def get_error_message(e: Exception) -> str:
 
 Range = Tuple[int, int]
 
-TASK_PROG = re.compile('([\w\.]*)\( *(\d*) *, *(\d*) *\)(.*)') # see https://regex101.com/r/ZZuizF/3
+TASK_PROG = re.compile('([\w.]*)\( *(\d*) *, *(\d*) *\)(.*)') # see https://regex101.com/r/ZZuizF/3
 TASK_NAME_PROG = re.compile("(\d+.)?([\w\d]+)[.\[]?.*")  # see https://regex101.com/r/OjnTAn/4
 
 
-def widen_fields(fields: List[str]):
+def widen_fields(fields: List[str] or str):
     """
     if there is syntax d(1,3) in fileds, it is made d1,d2
     from d(1,3)=t  would come d1=t1, d2=t2
@@ -289,7 +289,7 @@ def widen_fields(fields: List[str]):
         n2 = int(match.group(3))
         te = match.group(4)
 
-        for i in range(n1, n2):
+        for i in range(n1, n2 + 1):
             tn = tb + str(i) + te
             if not tb:
                 tn = ""

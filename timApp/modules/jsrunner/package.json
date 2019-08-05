@@ -18,6 +18,7 @@
     "morgan": "~1.9.0"
   },
   "devDependencies": {
+    "@types/acorn": "^4.0.5",
     "@types/cookie-parser": "^1.4.1",
     "@types/debug": "^4.1.4",
     "@types/http-errors": "^1.6.1",

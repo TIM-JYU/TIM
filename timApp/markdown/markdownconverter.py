@@ -80,10 +80,10 @@ def srange(s, i1, i2, step=1, *argv):
     :param i2: exclusive end index
     :param step: how much increment
     :param argv pair of value to add and mul index
-    :return: like "d1 d2 d3 "  by call sfrom('d{0} ', 1, 4)
+    :return: like "d1 d2 d3 "  by call sfrom('d{0} ', 1, 3)
     """
     result = ''
-    for i in range(i1, i2, step):
+    for i in range(i1, i2+1, step):
         ext = []
         for j in range(0, len(argv), 2):
             add = argv[j]

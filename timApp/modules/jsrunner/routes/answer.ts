@@ -1,4 +1,4 @@
-import child_process from "child_process";
+import {parse} from "acorn";
 import express from "express";
 import {readFileSync} from "fs";
 import ivm from "isolated-vm";
@@ -7,15 +7,20 @@ import {AnswerReturn, ErrorList, IError, IJsRunnerMarkup} from "../public/javasc
 import {AliasDataT, JsrunnerAnswer, UserFieldDataT} from "../servertypes";
 // import numberLines from "./runscript";
 import Tools from "./tools";
-import StatCounter from "./tools";
 
 console.log("answer");
 const router = express.Router();
 
 // https://stackoverflow.com/questions/21856097/how-can-i-check-javascript-code-for-syntax-errors-only-from-the-command-line
+// https://github.com/acornjs/acorn/tree/master/acorn#interface
 function compileProgram(code: string): string {
-    const ret = child_process.spawnSync("acorn", ["--silent"], {input: code});
-    return ret.stderr.toString();
+    try {
+        const ret = parse(code);
+        return ret.toString();
+    } catch (e) {
+        const err: Error = e;
+        return err.message;
+    }
 }
 
 // Every time tools.ts (or some of its dependencies) is modified, dist/tools.js must be
@@ -72,6 +77,7 @@ function runner(d: IRunnerData): RunnerResult {
         const gtools = new Tools(guser, currDoc, markup, aliases, true); // create global tools
         // Fake parameters hide the outer local variables so user script won't accidentally touch them.
         // tslint:disable
+        // noinspection JSUnusedLocalSymbols
         function runProgram(program: string | undefined, pname: string, tools: Tools, saveUsersFields?: never, output?: never, errors?: never,
                             data?: never, d?: never, currDoc?: never, markup?: never, aliases?: never) {
             errorprg = program;
@@ -139,6 +145,7 @@ function runner(d: IRunnerData): RunnerResult {
     }
 }
 
+// noinspection JSUnusedLocalSymbols
 router.put("/", async (req, res, next) => {
     const decoded = JsrunnerAnswer.decode(req.body);
     if (decoded.isLeft()) {
@@ -192,8 +199,7 @@ router.put("/", async (req, res, next) => {
             const rese: any = result;
             if ( rese.errorprg ) { // TODO: compile here, because I could not do it in runner???
                 const err = compileProgram(rese.errorprg);
-                // console.log("err: " + err);
-                result.fatalError.stackTrace = err + result.fatalError.stackTrace;
+                result.fatalError.stackTrace = err + "\n" + result.fatalError.stackTrace;
             }
             r = {
                 web: {

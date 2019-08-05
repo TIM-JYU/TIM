@@ -1,8 +1,9 @@
-import child_process from "child_process";
+import {parse} from "acorn";
 
 function compileProgram(code: string): string {
-    const ret = child_process.spawnSync("acorn", ["--silent"], {input: code});
-    return ret.stderr.toString();
+    // const ret = child_process.spawnSync("acorn", ["--silent"], {input: code});
+    const ret = parse(code);
+    return ret.toString();
 }
 
 console.log("1: " + compileProgram("pri int('kana);"));

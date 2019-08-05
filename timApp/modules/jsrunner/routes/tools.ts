@@ -4,12 +4,17 @@ import {AliasDataT, UserFieldDataT} from "../servertypes";
 
 const TASK_PROG = new RegExp(/([\w.]*)\( *(\d*) *, *(\d*) *\)(.*)/);
 
-function widenFields(fields: string | string[]): {names: string[], aliases: string[] } {
+/**
+ * Return fields widened, so string "d(1,4);dsum" coes out as
+ * a list ["d1, "d2", "d3", "dsum"]
+ * @param fields string/list to widen
+ */
+function widenFields(fields: string | string[]): string[] {
     let fields1: string[] = [];
-    if ( !(fields instanceof Array) ) {
+    if (!(fields instanceof Array)) {
         fields = fields.split(";");
     }
-    for ( const field of fields ) {
+    for (const field of fields) {
         const parts = field.split(";");
         fields1 = fields1.concat(parts);
     }
@@ -23,7 +28,7 @@ function widenFields(fields: string | string[]): {names: string[], aliases: stri
             a = parts[1].trim();
         }
         const m = TASK_PROG.exec(tf);
-        if ( !m ) {
+        if (!m) {
             rfields.push(field);
             continue;
         }
@@ -33,7 +38,7 @@ function widenFields(fields: string | string[]): {names: string[], aliases: stri
         const n2 = parseInt(m[3], 10);
         const te = m[4];
 
-        for (let i = n1; i < n2; i++) {
+        for (let i = n1; i <= n2; i++) {
             let tn = tb + i + te;
             if (!tb) {
                 tn = "";
@@ -44,9 +49,17 @@ function widenFields(fields: string | string[]): {names: string[], aliases: stri
             rfields.push(tn);
         }
     }
+    return rfields;
+}
+
+/**
+ * From name=alias list returns two lists
+ * @param fields list of name=alias pairs
+ */
+function separateNamesAndAliases(fields: string[]): {names: string[], aliases: string[] } {
     const raliases: string[] = [];
     const rnames: string[] = [];
-    for (const f of rfields) {
+    for (const f of fields) {
         const parts = f.split("=");
         const fn = parts[0].trim();
         if ( !fn ) { continue; }
@@ -254,8 +267,9 @@ class Distribution {
     private n = 0;
     private readonly fieldName: string;
 
-    constructor(n1: number, n2: number, mul: number, fieldName: string) {
-        for (let i = n1; i <= n2; i++) {
+    constructor(n1: number, n2: number, fieldName: string, mul: number = 1) {
+        if ( mul == 0 ) { mul = 1; }
+        for (let i = n1; i * mul <= n2 + 0.000001; i++) {
             this.labels[i] = i * mul;
             this.data[i] = 0;
         }
@@ -307,6 +321,8 @@ class XY {
         return this.add(tools.getDouble(this.xname, NaN), tools.getDouble(this.yname, NaN));
     }
 }
+
+const defaultStatHeaders = ["n", "sum", "avg", "min", "max", "sd"];
 
 class StatCounter {
     private n = 0;
@@ -360,7 +376,7 @@ class Stats {
     readonly aliases: string [] = [];
 
     constructor(fields: string | string[]) {
-        const fa = widenFields(fields);
+        const fa = separateNamesAndAliases(widenFields(fields));
         const flds = fa.names;
         this.aliases = fa.aliases;
         for (const f of flds) {
@@ -421,7 +437,8 @@ class Stats {
     }
 
     // noinspection JSUnusedGlobalSymbols
-    getForTable(headers: string[] | string, decim: number = 2): any {
+    getForTable(headers: string[] | string = "", decim: number = 2): any {
+        if ( !headers ) { headers = defaultStatHeaders; }
         if ( !(headers instanceof Array) ) {
             headers = headers.split(";");
         }
@@ -461,7 +478,7 @@ class Stats {
         let alis = this.aliases;
         const statData = this.getData();
         if ( fields ) {
-            const fa = widenFields(fields);
+            const fa = separateNamesAndAliases(widenFields(fields));
             flds = fa.names;
             alis = fa.aliases;
         }
@@ -655,9 +672,9 @@ class Tools {
         return fitter;
     }
 
-    createDistribution(n1: number, n2: number, mul: number, fieldName: string) {
+    createDistribution(n1: number, n2: number, fieldName: string, mul: number = 1) {
         this.checkStatError();
-        const dist = new Distribution(n1, n2, mul, fieldName);
+        const dist = new Distribution(n1, n2, fieldName, mul);
         if ( fieldName ) { this.dists[fieldName] = dist; }
         return dist;
     }
@@ -711,7 +728,7 @@ class Tools {
     }
 
     // noinspection JSMethodCanBeStatic
-    wf(fields: string | string[]): {names: string[], aliases: string[] } {
+    wf(fields: string | string[]): string[]  {
         return widenFields(fields);
     }
 
@@ -747,21 +764,23 @@ class Tools {
         this.data.fields[fn] = c;
     }
 
-    setInt(fieldName: unknown, content: unknown): void {
+    setInt(fieldName: unknown, content: unknown, minToSave: number = -1000000000): void {
         const f = ensureStringFieldName(fieldName);
         const c = ensureNumberLikeValue(content);
         const fn = this.checkAliasAndNormalize(f);
         if (!checkInt(c)) {
             throw valueTypeError(content);
         }
+        if ( c <= minToSave ) { return; }
         this.result[fn] = c;
         this.data.fields[fn] = c;
     }
 
-    setDouble(fieldName: unknown, content: unknown): void {
+    setDouble(fieldName: unknown, content: unknown, minToSave: number = -1e100): void {
         const f = ensureStringFieldName(fieldName);
         const c = ensureNumberLikeValue(content);
         const fn = this.checkAliasAndNormalize(f);
+        if ( c <= minToSave ) { return; }
         this.result[fn] = c;
         this.data.fields[fn] = c;
     }
