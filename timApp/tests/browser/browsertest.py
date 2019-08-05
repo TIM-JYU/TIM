@@ -134,7 +134,7 @@ class BrowserTest(TimLiveServer, TimRouteTest):
         pprint(logs)
 
     def refresh(self):
-        """Refreshes the current browser page"""
+        """Refreshes the current browser page."""
         self.drv.refresh()
 
     def save_screenshot(self, filename: str='screenshot'):
