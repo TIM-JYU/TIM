@@ -6,6 +6,13 @@
     cursor: pointer;
 }
 
+.tim-menu-placeholder-content {
+    padding: .8em;
+    margin-left: -.8em;
+    border-radius: 4px;
+    margin-bottom: 8px;
+}
+
 .tim-menu-item {
     display: block;
     width: 100%;
@@ -77,6 +84,6 @@
     display: inline-block;
 }
 
-.tim-menu-placeholder-hidden {
-    visibility: hidden;
+.tim-menu-hidden {
+    display: none;
 }

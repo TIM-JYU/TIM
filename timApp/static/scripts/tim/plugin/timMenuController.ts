@@ -176,7 +176,7 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
         // TODO: Multiple topMenus.
         // TODO: Placeholder content takes text-sized space even when hidden.
         const menu = this.element.find(".tim-menu")[0];
-        const placeholder = this.element.find(".tim-menu-placeholder-content")[0];
+        const placeholder = this.element.find(".tim-menu-placeholder")[0];
         const scrollY = $(window).scrollTop();
         if (!menu || !placeholder) {
             return;
@@ -190,14 +190,14 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
             // to mitigate page length changes.
             if (this.previousScroll && scrollY > this.previousScroll) {
                 menu.classList.remove("top-menu");
-                placeholderContent.classList.add("tim-menu-placeholder-hidden");
+                placeholderContent.classList.add("tim-menu-hidden");
             } else {
                 menu.classList.add("top-menu");
-                placeholderContent.classList.remove("tim-menu-placeholder-hidden");
+                placeholderContent.classList.remove("tim-menu-hidden");
             }
         } else {
             menu.classList.remove("top-menu");
-            placeholderContent.classList.add("tim-menu-placeholder-hidden");
+            placeholderContent.classList.add("tim-menu-hidden");
         }
         this.previousScroll = $(window).scrollTop();
     }
@@ -303,7 +303,7 @@ timApp.component("timmenuRunner", {
     template: `
 <tim-markup-error ng-if="::$ctrl.markupError" data="::$ctrl.markupError"></tim-markup-error>
 <span ng-cloak ng-if="$ctrl.topMenu" class="tim-menu-placeholder"></span>
-<span ng-cloak ng-if="$ctrl.topMenu" class="tim-menu-placeholder-content tim-menu-placeholder-hidden"><br></span>
+<span ng-cloak ng-if="$ctrl.topMenu" class="tim-menu-placeholder-content tim-menu-hidden"><br></span>
 <div id="{{$ctrl.menuId}}" class="tim-menu" ng-class="{'bgtim white': $ctrl.basicColors}" style="{{$ctrl.barStyle}}" ng-mouseleave="$ctrl.mouseInside = false" ng-mouseenter="$ctrl.mouseInside = true">
     <span ng-repeat="t1 in $ctrl.menu">
         <span ng-if="t1.items.length > 0 && $ctrl.hasRights(t1)" class="btn-group" style="{{$ctrl.setStyle(t1)}}">
