@@ -9,6 +9,7 @@ import {ViewCtrl} from "../document/viewctrl";
 import {IRights} from "../user/IRights";
 import {Require} from "../util/utils";
 import {GenericPluginMarkup, Info, nullable, withDefault} from "./attributes";
+import "./timMenu.css";
 
 // this.attrs
 const TimMenuMarkup = t.intersection([
@@ -71,7 +72,7 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
     private menu: ITimMenuItem[] = [];
     private vctrl?: Require<ViewCtrl>;
     private openingSymbol: string = "";
-    private hoverOpen: boolean = true;
+    // private hoverOpen: boolean = true;
     private separator: string = "";
     private topMenu: boolean = false;
     private basicColors: boolean = false;
@@ -95,7 +96,7 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
             return;
         }
         this.menu = this.attrsall.menu;
-        this.hoverOpen = this.attrs.hoverOpen;
+        // this.hoverOpen = this.attrs.hoverOpen;
         this.separator = this.attrs.separator;
         this.topMenu = this.attrs.topMenu;
         this.openAbove = this.attrs.openAbove;
@@ -303,7 +304,7 @@ timApp.component("timmenuRunner", {
 <tim-markup-error ng-if="::$ctrl.markupError" data="::$ctrl.markupError"></tim-markup-error>
 <span ng-cloak ng-if="$ctrl.topMenu" class="tim-menu-placeholder"></span>
 <span ng-cloak ng-if="$ctrl.topMenu" class="tim-menu-placeholder-content tim-menu-placeholder-hidden"><br></span>
-<div id="{{$ctrl.menuId}}" class="tim-menu" ng-class="{'tim-menu-basic-colors': $ctrl.basicColors}" style="{{$ctrl.barStyle}}" ng-mouseleave="$ctrl.mouseInside = false" ng-mouseenter="$ctrl.mouseInside = true">
+<div id="{{$ctrl.menuId}}" class="tim-menu" ng-class="{'bgtim white': $ctrl.basicColors}" style="{{$ctrl.barStyle}}" ng-mouseleave="$ctrl.mouseInside = false" ng-mouseenter="$ctrl.mouseInside = true">
     <span ng-repeat="t1 in $ctrl.menu">
         <span ng-if="t1.items.length > 0 && $ctrl.hasRights(t1)" class="btn-group" style="{{$ctrl.setStyle(t1)}}">
           <span ng-disabled="disabled" ng-bind-html="t1.text+$ctrl.openingSymbol" ng-click="$ctrl.toggleSubmenu(t1, undefined, undefined)"></span>
