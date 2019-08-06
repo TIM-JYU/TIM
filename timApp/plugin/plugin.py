@@ -470,6 +470,8 @@ class Plugin:
             markup = self.values
             header = str(markup.get("header", markup.get("headerText", "")))
             stem = str(markup.get("stem", "Open plugin"))
+            # Plugins are possibly not visible in lazy form at all if both header and stem are empty,
+            # so we add a placeholder in that case. This is the case for at least mcq and mmcq.
             if not header.strip() and not stem.strip():
                 stem = "+ question"
             out = f'{LAZYSTART}{out}{LAZYEND}<span style="font-weight:bold">{header}</span><div><p>{stem}</p></div>'
