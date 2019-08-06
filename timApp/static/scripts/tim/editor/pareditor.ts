@@ -176,6 +176,7 @@ export class PareditorController extends DialogController<{params: IEditorParams
     private liiteMacroStringEnd = ")%%";  // TODO: May be confused with other macro endings.
     private perusliiteMacroStringBegin = "%%perusliite(";  // Attachment macro without stamping.
     private perusliiteMacroStringEnd = ")%%";
+    private lastKnownDialogHeight?: number;
 
     constructor(protected element: IRootElementService, protected scope: IScope) {
         super(element, scope);
@@ -185,7 +186,7 @@ export class PareditorController extends DialogController<{params: IEditorParams
             this.isIE = true;
         }
 
-        this.element.find(".editorContainer").on("resize", () => this.adjustPreview());
+        this.getEditorContainer().on("resize", () => this.adjustPreview());
 
         const backTicks = "```";
 
@@ -559,7 +560,13 @@ ${backTicks}
                 $("head").prepend('<meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, user-scalable=0">');
             }
         }
-        this.draggable.makeHeightAutomatic();
+        this.draggable.setResizeCallback((params) => {
+            if (!params.state.down) {
+                return;
+            }
+            this.lastKnownDialogHeight = params.h;
+            this.refreshEditorSize();
+        });
         const oldMode = window.localStorage.getItem("oldMode" + this.getOptions().localSaveTag) || (this.getOptions().touchDevice ? "text" : "ace");
         await this.changeEditor(oldMode);
         this.scope.$watch(() => this.autocomplete, () => {
@@ -570,6 +577,25 @@ ${backTicks}
         this.docSettings = $window.docSettings;
 
         this.activeAttachments = this.updateAttachments(true, undefined, undefined);
+    }
+
+    private refreshEditorSize() {
+        if (this.lastKnownDialogHeight == null) {
+            return;
+        }
+        const cont = this.getEditorContainer()[0];
+        const elemHeight = this.element[0].clientHeight;
+        const clientBottom = cont.clientTop + cont.clientHeight;
+        const remainingSpace = this.lastKnownDialogHeight - cont.clientTop - (elemHeight - clientBottom);
+        if (this.isAce(this.editor)) {
+            const lines = remainingSpace / this.editor.editor.renderer.lineHeight;
+            this.editor.editor.setOptions({
+                maxLines: lines,
+                minLines: lines,
+            });
+        } else if (this.editor) {
+            this.editor.editor.height(remainingSpace);
+        }
     }
 
     $postLink() {
@@ -735,7 +761,7 @@ ${backTicks}
       id="teksti"
       wrap="off">
 </textarea>`);
-        this.element.find(".editorContainer").append(textarea);
+        this.getEditorContainer().append(textarea);
         this.editor = new TextAreaParEditor(this.element.find("#teksti"), {
             wrapFn: () => this.wrapFn(),
             saveClicked: () => this.saveClicked(),
@@ -771,7 +797,7 @@ ${backTicks}
             previewDiv.empty().append(compiled);
             this.outofdate = false;
             this.parCount = previewDiv.children().length;
-            this.element.find(".editorContainer").resize();
+            this.getEditorContainer().resize();
         });
     }
 
@@ -1182,7 +1208,7 @@ ${backTicks}
      */
     async changeEditor(initialMode?: string) {
         let text = "";
-        const editorContainer = this.element.find(".editorContainer");
+        const editorContainer = this.getEditorContainer();
         // const pasteInput = this.element.find(".pasteinput");
         // pasteInput.on("drop", (e) => this.onDrop(e));
         // pasteInput.on("dragover", (e) => this.allowDrop(e));
@@ -1270,15 +1296,20 @@ ${backTicks}
                 createCompleter(userWordList, "user"),
             ]);
         }
+        this.refreshEditorSize();
         if (initialMode != null) {
             await this.setInitialText();
         } else if (this.editor && oldPosition) {
             this.editor.setPosition(oldPosition);
         }
         await this.focusEditor();
-        this.element.find(".editorContainer").removeClass("editor-loading");
+        this.getEditorContainer().removeClass("editor-loading");
         setEditorScope(this.editor!);
         this.adjustPreview();
+    }
+
+    private getEditorContainer() {
+        return this.element.find(".editorContainer");
     }
 
     scrollIntoView() {

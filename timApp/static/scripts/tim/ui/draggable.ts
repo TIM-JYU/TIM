@@ -90,6 +90,14 @@ export enum VisibilityFix {
 
 type CssDir = "left" | "right" | "bottom" | "top";
 
+export interface IResizeCallbackParams {
+    w: number;
+    h: number;
+    state: IResizeStates;
+}
+
+export type ResizeCallback = (p: IResizeCallbackParams) => void;
+
 export class DraggableController implements IController {
     static $inject = ["$scope", "$element"];
 
@@ -120,6 +128,7 @@ export class DraggableController implements IController {
     private forceMaximized?: Binding<boolean, "<">;
     private modal?: IModalInstanceService;
     private layoutReady = $q.defer();
+    private resizeCallback?: ResizeCallback;
 
     constructor(private scope: IScope, private element: IRootElementService) {
     }
@@ -578,10 +587,21 @@ export class DraggableController implements IController {
         e.preventDefault();
         e.stopPropagation();
 
-        const size = this.element.css(["width", "height"]);
+        const size = [this.element.css("width"), this.element.css("height")] as const;
         if (this.posKey) {
             setStorage(this.posKey + "Size", size);
         }
+        if (this.resizeCallback) {
+            this.resizeCallback({
+                w: getPixels(size[0]),
+                h: getPixels(size[1]),
+                state: this.resizeStates,
+            });
+        }
+    }
+
+    setResizeCallback(f: ResizeCallback) {
+        this.resizeCallback = f;
     }
 
     async moveTo(p: Pos) {
