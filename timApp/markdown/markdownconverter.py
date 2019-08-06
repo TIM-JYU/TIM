@@ -68,8 +68,8 @@ def gfrange(s, i1, i2, attrs='', stemfield='stem'):
     name = f"{parts[0]}({i1},{i2})"
     alias = ''
     if len(parts) > 1:
-        alias = parts[1]
-    return genfields(f"{name}={alias}"+srest, attrs, stemfield)
+        alias = "="+parts[1]
+    return genfields(f"{name}{alias}"+srest, attrs, stemfield)
 
 
 def srange(s, i1, i2, step=1, *argv):
