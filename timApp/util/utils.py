@@ -273,12 +273,11 @@ def widen_fields(fields: List[str] or str):
 
     rfields = []
     for field in fields1:
-        try:
-            t, a, *rest = field.split("=")
-        except ValueError:
-            t, a, rest = field, "", None
-        t = t.strip()
-        a = a.strip()
+        parts = field.split("=")
+        t = parts[0].strip()
+        a = None
+        if len(parts) > 1:
+            a = parts[1].strip()
         match = re.search(TASK_PROG, t)
         if not match:
             rfields.append(field)
@@ -293,7 +292,7 @@ def widen_fields(fields: List[str] or str):
             tn = tb + str(i) + te
             if not tb:
                 tn = ""
-            if a:
+            if a is not None:  # a is allowed to be empty
                 tn += "=" + a + str(i)
             rfields.append(tn)
 
