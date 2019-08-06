@@ -79,11 +79,6 @@
     top: 100%;
 }
 
-.tim-menu img {
-    vertical-align: baseline;
-    display: inline-block;
-}
-
 .tim-menu-hidden {
     display: none;
 }

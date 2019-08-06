@@ -210,7 +210,6 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
             this.barStyle += `background-color: ${this.attrs.backgroundColor}; `;
         }
         if (this.attrs.textColor) {
-            // TODO: Doesn't override links even with !important.
             this.barStyle += `color: ${this.attrs.textColor}; `;
         }
         if (this.attrs.fontSize) {
