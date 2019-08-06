@@ -59,7 +59,7 @@ class VelpTest(BrowserTest):
         ActionChains(self.drv).move_to_element(create_velp_btn).perform()
 
         self.assert_same_screenshot(velp_selection_element, ['velps/velp_selection_one_velp',
-                                                             'velps/velp_selection_one_velp_alt'])
+                                                             ])
 
         # Selecting text using these styles does not work for some reason:
         # par: WebElement = self.drv.find_element_by_css_selector('.parContent > p')
