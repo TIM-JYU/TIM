@@ -66,6 +66,7 @@ class ScimTest(TimRouteTest):
         self.assertEqual({
             'displayName': 'Sisu User',
             'id': 'sisuuser',
+            'externalId': 'sisuuser',
             'emails': [],
             'meta': {
                 'created': create_stamp_user,
@@ -175,6 +176,7 @@ class ScimTest(TimRouteTest):
             expect_content={
                 'displayName': 'Sisu something',
                 'id': group_id,
+                'externalId': 'sisu-something',
                 'members': [{'$ref': 'http://localhost/scim/Users/sisuuser',
                              'display': 'Sisu User',
                              'value': 'sisuuser'},
@@ -219,6 +221,7 @@ class ScimTest(TimRouteTest):
             expect_content={
                 'displayName': 'Sisu something',
                 'id': group_id,
+                'externalId': 'sisu-something',
                 'members': [{'$ref': 'http://localhost/scim/Users/sisuuser',
                              'display': 'Sisu User',
                              'value': 'sisuuser'},

@@ -43,7 +43,7 @@ class SCIMEntity:
         return {
             'schemas': [f"urn:ietf:params:scim:schemas:core:2.0:{self.scim_resource_type}"],
             'id': self.scim_id,
-            # 'externalId': ug.name,
+            'externalId': self.scim_id,
             'meta': get_meta(self),
             'displayName': self.scim_display_name,
             **self.scim_extra_data,
