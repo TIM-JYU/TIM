@@ -30,6 +30,7 @@ autosave: false
         self.assert_same_screenshot(par, ['textfield/fields_before_answer'])
         runbutton = multisave.find_element_by_css_selector('button')
         runbutton.click()
+        self.wait_until_present('p.savedtext')
         self.refresh()
 
         self.wait_until_present('#t1 input')
