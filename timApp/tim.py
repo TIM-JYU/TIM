@@ -49,6 +49,7 @@ from timApp.note.routes import notes
 from timApp.notification.notify import notify, send_email
 from timApp.plugin.qst.qst import qst_plugin
 from timApp.plugin.routes import plugin_bp
+from timApp.plugin.timmenu.timMenu import timMenu_plugin
 from timApp.plugin.timtable.timTable import timTable_plugin
 from timApp.plugin.tableform.tableForm import tableForm_plugin
 from timApp.plugin.importdata.importData import importData_plugin
@@ -83,6 +84,7 @@ app.register_blueprint(generateMap)
 app.register_blueprint(settings_page)
 app.register_blueprint(manage_page)
 app.register_blueprint(qst_plugin)
+app.register_blueprint(timMenu_plugin)
 app.register_blueprint(timTable_plugin)
 app.register_blueprint(tableForm_plugin)
 app.register_blueprint(importData_plugin)

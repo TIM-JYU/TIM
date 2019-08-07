@@ -1294,3 +1294,12 @@ p.closeButton::before {
 .importDataInner {
     padding-left: 1em;
 }
+
+.tim-menu img {
+    vertical-align: baseline;
+    display: inline-block;
+}
+
+.tim-menu a {
+    color: inherit;
+}

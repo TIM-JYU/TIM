@@ -90,6 +90,7 @@ NEVERLAZY_PLUGINS = {
     'numericfield',
     'jsrunner',
     'tableForm',
+    'timMenu',
     'cbfield',
     'rbfield'
     'dropdown'
