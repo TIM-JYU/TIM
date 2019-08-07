@@ -37,7 +37,7 @@ class ScimTest(TimRouteTest):
                 'externalId': 'sisu-something',
                 'displayName': 'Sisu something',
                 'members': [
-                    {'value': 'sisuuser', 'display': 'Sisu User'},
+                    {'value': 'sisuuser', 'display': 'Sisu User', 'email': 'x@example.com'},
                     {'value': 'sisuuser3', 'display': 'Sisu User 3'},
                 ],
             }, auth=a,
@@ -67,7 +67,7 @@ class ScimTest(TimRouteTest):
             'displayName': 'Sisu User',
             'id': 'sisuuser',
             'externalId': 'sisuuser',
-            'emails': [],
+            'emails': [{'value': 'x@example.com'}],
             'meta': {
                 'created': create_stamp_user,
                 'lastModified': create_stamp_user,
