@@ -149,7 +149,7 @@
                     {% endif %}
                 </div>
             </div>
-            <velp-selection ng-if="$ctrl.reviewCtrl.velpMode || ($ctrl.teacherMode && {{doc_settings.show_velps()|tojson}}) ">
+            <velp-selection ng-if="$ctrl.showVelpSelection()">
             </velp-selection>
         {% endif %}
     </div>

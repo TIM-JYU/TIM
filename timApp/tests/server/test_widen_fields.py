@@ -15,28 +15,28 @@ class TestWiden_fields(TestCase):
         self.assertEqual(e1, r1, "Not same in normal case")
 
     def test_widen_fields1(self):
-        s1 = ["d(1,3)"]
+        s1 = ["d(1,2)"]
         e1 = ["d1", "d2"]
 
         r1 = widen_fields(s1)
         self.assertEqual(e1, r1, "Not same range format")
 
     def test_widen_fields2(self):
-        s1 = ["d(1,3).points"]
+        s1 = ["d(1,2).points"]
         e1 = ["d1.points", "d2.points"]
 
         r1 = widen_fields(s1)
         self.assertEqual(e1, r1, "Not same range format")
 
     def test_widen_fields3(self):
-        s1 = ["543.d(1,3).points"]
+        s1 = ["543.d(1,2).points"]
         e1 = ["543.d1.points", "543.d2.points"]
 
         r1 = widen_fields(s1)
         self.assertEqual(e1, r1, "Not same range format with docid and points")
 
     def test_widen_fields4(self):
-        s1 = ["189279.t(1,4).points[2018-04-06 15:66:94, 2019-06-05 12:12:12] = tp"]
+        s1 = ["189279.t(1,3).points[2018-04-06 15:66:94, 2019-06-05 12:12:12] = tp"]
         e1 = ["189279.t1.points[2018-04-06 15:66:94, 2019-06-05 12:12:12]=tp1",
               "189279.t2.points[2018-04-06 15:66:94, 2019-06-05 12:12:12]=tp2",
               "189279.t3.points[2018-04-06 15:66:94, 2019-06-05 12:12:12]=tp3"]
@@ -45,20 +45,23 @@ class TestWiden_fields(TestCase):
         self.assertEqual(e1, r1, "Not same range format with docid, points and date")
 
     def test_widen_fields5(self):
-        s1 = ["d(1,3) = d"]
+        s1 = ["d(1,2) = d"]
         e1 = ["d1=d1", "d2=d2"]
 
         r1 = widen_fields(s1)
         self.assertEqual(e1, r1, "Not same range format and alias")
 
     def test_widen_fields6(self):
-        r1 = widen_fields(["d1;d2;d(3,5)"])
+        r1 = widen_fields(["d1;d2;d(3,4)"])
         self.assertEqual(["d1", "d2", "d3", "d4"], r1, "Not same in semicolon line")
 
     def test_widen_fields7(self):
-        r1 = widen_fields("d1;d2;d( 3, 5)")
+        r1 = widen_fields("d1;d2;d( 3, 4)")
         self.assertEqual(["d1", "d2", "d3", "d4"], r1, "Not same in semicolon line")
 
+    def test_widen_fields8(self):
+        r1 = widen_fields("d(1,3)=")
+        self.assertEqual(["d1=1", "d2=2", "d3=3"], r1, "Not same in empty assign")
     ##############################################################
 class Testget_alias(TestCase):
 

@@ -26,6 +26,7 @@ export const JsrunnerMarkup = t.intersection([
         timeout: Max1000,
         open: t.boolean,
         showInView: t.boolean,
+        autoadd: t.boolean,
     }),
     GenericPluginMarkup,
     t.type({
@@ -66,6 +67,8 @@ export interface IStatData {
     avg: number;
     sd: number;
 }
+
+export interface INumbersObject {[hname: string]: number; }
 
 export type AnswerReturn = AnswerReturnSuccess | AnswerReturnError;
 export type AnswerReturnBrowser = Omit<AnswerReturnSuccess & {web: {error?: string}}, "savedata"> | AnswerReturnError;

@@ -2,7 +2,7 @@ import express from "express";
 import * as t from "io-ts";
 import ivm from "isolated-vm";
 import {Max1000} from "../public/javascripts/jsrunnertypes";
-
+console.log("rs");
 const router = express.Router();
 
 const RunScriptInput = t.intersection([t.type({

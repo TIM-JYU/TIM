@@ -290,6 +290,8 @@ def view(item_path, template_name, usergroup=None, route="view"):
     if teacher_or_see_answers:
         user_list = None
         ug = None
+        if usergroup is None:
+            usergroup = doc_settings.group()
         if usergroup is not None:
             ug = UserGroup.get_by_name(usergroup)
             if not ug:

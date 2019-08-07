@@ -13,10 +13,10 @@ import * as popupMenu from "tim/document/popupMenu";
 import {QuestionHandler} from "tim/document/question/questions";
 import {initReadings} from "tim/document/readings";
 import {timLogTime} from "tim/util/timTiming";
-import {isPageDirty, markAsUsed, markPageNotDirty, to} from "tim/util/utils";
+import {isPageDirty, markAsUsed, markPageNotDirty} from "tim/util/utils";
 import {AnswerBrowserController, ITaskInfo, PluginLoaderCtrl} from "../answer/answerbrowser3";
 import {IAnswer} from "../answer/IAnswer";
-import {BookmarksController, IBookmarkGroup} from "../bookmark/bookmarks";
+import {BookmarksController} from "../bookmark/bookmarks";
 import {IPluginInfoResponse, ParCompiler} from "../editor/parCompiler";
 import {IDocument} from "../item/IItem";
 import {LectureController} from "../lecture/lectureController";
@@ -25,17 +25,7 @@ import {TimTableController} from "../plugin/timTable";
 import {initCssPrint} from "../printing/cssPrint";
 import {IUser} from "../user/IUser";
 import {Users} from "../user/userService";
-import {
-    $compile,
-    $filter,
-    $http,
-    $httpParamSerializer,
-    $interval,
-    $localStorage,
-    $q,
-    $timeout,
-    $window,
-} from "../util/ngimport";
+import {$compile, $filter, $http, $interval, $localStorage, $q, $timeout, $window} from "../util/ngimport";
 import {AnnotationController} from "../velp/annotation";
 import {ReviewController} from "../velp/reviewController";
 import {DiffController} from "./diffDialog";
@@ -337,6 +327,11 @@ export class ViewCtrl implements IController {
     isSlideView() {
         const p = document.location.pathname;
         return p.startsWith("/slidefff/") || p.startsWith("/show_slide/");
+    }
+
+    // noinspection JSUnusedGlobalSymbols (used in view_html.html)
+    showVelpSelection() {
+        return this.reviewCtrl.velpMode || (this.teacherMode && this.docSettings.show_velps);
     }
 
     startLiveUpdates() {

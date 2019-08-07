@@ -68,8 +68,8 @@ def gfrange(s, i1, i2, attrs='', stemfield='stem'):
     name = f"{parts[0]}({i1},{i2})"
     alias = ''
     if len(parts) > 1:
-        alias = parts[1]
-    return genfields(f"{name}={alias}"+srest, attrs, stemfield)
+        alias = "="+parts[1]
+    return genfields(f"{name}{alias}"+srest, attrs, stemfield)
 
 
 def srange(s, i1, i2, step=1, *argv):
@@ -80,10 +80,10 @@ def srange(s, i1, i2, step=1, *argv):
     :param i2: exclusive end index
     :param step: how much increment
     :param argv pair of value to add and mul index
-    :return: like "d1 d2 d3 "  by call sfrom('d{0} ', 1, 4)
+    :return: like "d1 d2 d3 "  by call sfrom('d{0} ', 1, 3)
     """
     result = ''
-    for i in range(i1, i2, step):
+    for i in range(i1, i2+1, step):
         ext = []
         for j in range(0, len(argv), 2):
             add = argv[j]
@@ -127,9 +127,9 @@ class Belongs:
 def isview(ret_val, mode=None):
     if not mode:
         try:
-            v = g.viewmode
+            v = g.viewmode  # True if in View
         except:
-            return False
+            return True  # not ret_val  # like in preview
         if v:
             return ret_val
         return not ret_val

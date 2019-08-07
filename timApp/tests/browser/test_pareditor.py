@@ -111,4 +111,4 @@ class ParEditorTest(BrowserTest):
         self.wait_for_preview_to_finish()
         self.assert_same_screenshot(pareditor,
                                     ['pareditor/autocomplete_no_document',
-                                     'pareditor/autocomplete_no_document_alt'])
+                                     ])

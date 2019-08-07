@@ -1,5 +1,5 @@
 import express from "express";
-
+console.log("reqs");
 const router = express.Router();
 
 const backTicks = "```";

@@ -31,7 +31,7 @@ type: python
         textarea.send_keys('print("Hello world!")')
         self.find_element('.breadcrumb .active').click()
         par = self.find_element_avoid_staleness('#py > tim-plugin-loader > div')
-        self.assert_same_screenshot(par, ['csplugin/python_before_answer', 'csplugin/python_before_answer_alt'])
+        self.assert_same_screenshot(par, ['csplugin/python_before_answer'])
         runbutton = par.find_element_by_css_selector('button')
         runbutton.click()
         self.wait_until_present('.console')

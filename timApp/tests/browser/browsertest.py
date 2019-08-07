@@ -134,7 +134,7 @@ class BrowserTest(TimLiveServer, TimRouteTest):
         pprint(logs)
 
     def refresh(self):
-        """Refreshes the current browser page"""
+        """Refreshes the current browser page."""
         self.drv.refresh()
 
     def save_screenshot(self, filename: str='screenshot'):
@@ -160,7 +160,10 @@ class BrowserTest(TimLiveServer, TimRouteTest):
          possibility that the element is not in viewport.
         """
         if move_to_element:
-            ActionChains(self.drv).move_to_element(element).perform()
+            # It seems like move_to_element is no longer enough (at least in some cases)
+            # to get the element fully visible, so we have to use JS.
+            self.drv.execute_script("arguments[0].scrollIntoView();", element)
+            # ActionChains(self.drv).move_to_element(element).perform()
         src_base64 = self.drv.get_screenshot_as_base64()
         im = Image(blob=b64decode(src_base64))
 
@@ -227,7 +230,7 @@ class BrowserTest(TimLiveServer, TimRouteTest):
         assert_msg = f'Screenshots did not match (diff value is {result}); ' \
                      f'failed screenshot saved to screenshots/{f}{fail_suffix} ' \
                      f'and difference to screenshots/{f}{fail_suffix}_DIFF'
-        self.assertTrue(self.skip_screenshot_tests or True, msg=assert_msg)
+        self.assertTrue(self.skip_screenshot_tests, msg=assert_msg)
 
     def should_not_exist(self, css_selector: str):
         """Asserts that the current document should not contain any elements that match the specified CSS selector.

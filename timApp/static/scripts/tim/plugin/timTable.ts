@@ -202,6 +202,8 @@ export interface TimTable {
     maxRows?: string;
     maxCols?: string;
     showToolbar?: boolean;
+    button?: string;
+    autosave?: boolean;
     // lockCellCount?: boolean;
 }
 
@@ -416,7 +418,12 @@ export class TimTableController extends DestroyScope implements IController, ITi
     public filters: string[] = [];
     public sortDir: number[] = [];
     public sortSymbol: string[] = [];
-    public sortSymbols: string[] = [" ▼", "", " ▲" ];  // ["🢓", "", "🢑"];  // this small does not work in iPad/Android
+    public sortSymbolStyle: any[] = [];
+    public sortSymbolStyles: any[] = [{fontSize: "xx-small"}, {fontSize: "smaller"}, {fontSize: "inherit"}];
+    public emptyRing: number[] = [-1, -1, -1]; // keep this and sortSymbolStyles equal length
+    public sortSymbols: string[] = [" ▼", "", " ▲" ];
+    public sortRing: number[] = [];
+    // ["🢓", "", "🢑"];  // this small does not work in iPad/Android
     public originalHiddenRows: number[] = [];
     private rowDelta = 0;
     private colDelta = 0;
@@ -432,6 +439,8 @@ export class TimTableController extends DestroyScope implements IController, ITi
     private editInput: any = null;
     private editInputStyles: string = "";
     private showToolbar: boolean = true;
+    private headersStyle?: object;
+    private button: string = "Tallenna";
 
     /**
      * Stores the last direction that the user moved towards with arrow keys
@@ -476,6 +485,9 @@ export class TimTableController extends DestroyScope implements IController, ITi
         return this.element[0];
     }
 
+    /*
+     * Dtaa for hidden things
+     */
     private getHid() {
         if (!this.data.hid) {
             this.data.hid = {};
@@ -488,19 +500,28 @@ export class TimTableController extends DestroyScope implements IController, ITi
      */
     async $onInit() {
         if ( this.data.showToolbar == false ) { this.showToolbar = false; }
+
+        if (typeof this.data.button !== "undefined") {
+            this.button = this.data.button;
+        }
+
         this.editInput = this.element.find(".editInput");
         if ( this.data.maxRows ) { this.maxRows = this.data.maxRows; }
         if ( this.data.maxCols ) { this.maxCols = this.data.maxCols; }
 
+        this.headersStyle = this.data.headersStyle;
+        this.headersStyle = this.data.headersStyle;
+
+        if ( !this.headersStyle ) {
+            this.headersStyle = {"backgroundColor": "lightgray",  "font-weight": "bold"};
+        }
         if (this.data.singleLine) {
-            if ( !this.data.headersStyle ) { this.data.headersStyle = new Object(); }
-            const hs: any = this.data.headersStyle;
+            const hs: any = this.headersStyle;
             hs["white-space"] = "nowrap";
         }
 
         this.initializeCellDataMatrix();
         this.processDataBlockAndCellDataMatrix();
-        this.clearSortOrder();
         this.userdata = this.data.userdata;
         if (this.userdata) {
             this.processDataBlock(this.userdata.cells);
@@ -510,6 +531,7 @@ export class TimTableController extends DestroyScope implements IController, ITi
                 cells: {},
             };
         }
+        this.clearSortOrder();
 
         this.filterRow = this.data.filterRow || false;
         if ( this.cellDataMatrix.length <= 2) { this.filterRow = false; }
@@ -561,7 +583,7 @@ export class TimTableController extends DestroyScope implements IController, ITi
                 this.viewctrl.addTimComponent(this);
             }
 
-            await $timeout(500);
+            await $timeout(0);
             const parId = getParId(this.element.parents(".par"));
             if (parId == null) {
                 console.log("parid null in timtable");
@@ -799,6 +821,8 @@ export class TimTableController extends DestroyScope implements IController, ITi
         }
         this.sortDir = [];
         this.sortSymbol = [];
+        this.sortSymbolStyle = [];
+        this.sortRing = this.emptyRing.slice();
     }
 
     sortData(col: number) {
@@ -807,7 +831,30 @@ export class TimTableController extends DestroyScope implements IController, ITi
         if ( !dir ) { dir = -1; }
         dir = -dir;
         this.sortDir[col] = dir;
+
+        const nl = this.sortRing.length - 1;
+
+        if ( this.sortRing[nl] != col ) { // push old symbols  left and drop leftmost away
+            const coli = this.sortRing.indexOf(col);
+            if ( coli < 0) {  // drop lefmost away
+                const last = this.sortRing.shift() || -1;
+                if (last >= 0) {
+                    this.sortDir[last] = 0;
+                    this.sortSymbol[last] = "";
+                    this.sortSymbolStyle[last] = {};
+                }
+            } else {
+                this.sortRing.splice(coli, 1);
+            }
+            this.sortRing.push(col);
+            for (let i = 0; i < this.sortRing.length; i++) {
+                const ic = this.sortRing[i];
+                this.sortSymbolStyle[ic] = this.sortSymbolStyles[i];
+            }
+        }
+        this.sortSymbolStyle[col] = this.sortSymbolStyles[nl];
         this.sortSymbol[col] = this.sortSymbols[dir + 1];
+
         // this.rowKeys.sort((a, b) => this.sortByRealName(a, b));
         this.permTable.sort((a, b) => this.sortByColumn(a, b, col, dir) );
         for (let i = 0; i < this.permTable.length; i++) {
@@ -905,6 +952,11 @@ export class TimTableController extends DestroyScope implements IController, ITi
                 },
             },
         };
+
+        const p: any = params;
+        if ( this.data.headers ) {
+            p.input.answers.headers = this.data.headers;
+        }
 
         /*
         const r = await to($http<{
@@ -1058,6 +1110,9 @@ export class TimTableController extends DestroyScope implements IController, ITi
             }
             if (this.data.saveCallBack) { this.data.saveCallBack(cellsToSave, true); }
             this.edited = true;
+            if ( this.data.autosave ) {
+                this.sendDataBlockAsync();
+            }
             return;
         }
 
@@ -1213,7 +1268,7 @@ export class TimTableController extends DestroyScope implements IController, ITi
         for (let iy = 0; iy < nrows; iy++) {
             this.cellDataMatrix[iy] = [];
             for (let ix = 0; ix < ncols; ix++) {
-                this.cellDataMatrix[iy][ix] = this.createDummyCell();
+                this.cellDataMatrix[iy][ix] = this.createDummyCell(iy, ix);
             }
 
             const row = this.data.table.rows[iy];
@@ -1450,7 +1505,7 @@ export class TimTableController extends DestroyScope implements IController, ITi
                 continue;
             }
             for (let j = 0; j < this.cellDataMatrix[i - 1].length; j++) {
-                this.cellDataMatrix[i][j] = this.createDummyCell();
+                this.cellDataMatrix[i][j] = this.createDummyCell(i, j);
             }
         }
     }
@@ -1463,7 +1518,7 @@ export class TimTableController extends DestroyScope implements IController, ITi
     private resizeRowWidth(rowIndex: number, width: number) {
         for (const row of this.cellDataMatrix) {
             for (let i = row.length; i < width; i++) {
-                row[i] = this.createDummyCell();
+                row[i] = this.createDummyCell(rowIndex, i);
             }
         }
         this.ensureColums();
@@ -1473,8 +1528,11 @@ export class TimTableController extends DestroyScope implements IController, ITi
      * Creates and returns an "empty" ICell with no content.
      * @returns {{cell: string}}
      */
-    private createDummyCell() {
-        return {cell: ""};
+    private createDummyCell(r: number, c: number): ICell {
+        const cell: ICell = {cell: ""};
+        cell.renderIndexY = r;
+        cell.renderIndexX = c;
+        return cell;
     }
 
     /**
@@ -1486,6 +1544,15 @@ export class TimTableController extends DestroyScope implements IController, ITi
         if (ev.ctrlKey && (ev.keyCode == 40 || ev.keyCode == 39 || ev.keyCode == 38 || ev.keyCode == 37)) {
             this.handleArrowMovement(ev);
         }
+    }
+
+    private lostFocus(ev: any) {
+        // this.saveCurrentCell();
+        // TODO: can not use this, because then save is done also for Cancel, BigEditor, Toolbar buttons and so on
+    }
+
+    private cancelEdit(ev: any) {
+        this.closeSmallEditor();
     }
 
     private keyDownTable = (ev: KeyboardEvent) => {
@@ -2635,6 +2702,9 @@ export class TimTableController extends DestroyScope implements IController, ITi
                 this.data.saveStyleCallBack(cellsToSave, colValuesAreSame);
             }
             this.edited = true;
+            if ( this.data.autosave ) {
+                this.sendDataBlockAsync();
+            }
             return;
         }
 
@@ -2816,6 +2886,9 @@ export class TimTableController extends DestroyScope implements IController, ITi
     setData(data: any, save: boolean = false) {
         if ( !this.userdata ) { return; }
         if ( data.matrix ) {
+            this.userdata.cells = {};
+            this.cellDataMatrix = [];
+            // TODO: tyhjennä muukin taulukko
             for (let row = 0; row < data.matrix.length; row++ ) {
                 const r: any = data.matrix[row];
                 for (let col = 0; col < r.length; col++) {
@@ -2824,8 +2897,12 @@ export class TimTableController extends DestroyScope implements IController, ITi
                     // this.setUserContent(row, col, r[col]);
                 }
             }
+            if ( data.headers ) {
+                this.data.headers = data.headers;
+            }
             // this.reInitialize();
             this.processDataBlock(this.userdata.cells);
+            this.clearSortOrder();
             if ( save ) {
                 this.sendDataBlock();
             }
@@ -2873,7 +2950,7 @@ timApp.component("timTable", {
              ng-show="::$ctrl.showColumn(coli)"
              ng-click="$ctrl.sortData(coli)"
              title="Click to sort"
-             ng-style="$ctrl.data.headersStyle" ng-click="" >{{c}}{{$ctrl.sortSymbol[coli]}}
+             ng-style="$ctrl.headersStyle"  >{{c}}<span ng-style="$ctrl.sortSymbolStyle[coli]">{{$ctrl.sortSymbol[coli]}}</span>
             </td>
         </tr>
 
@@ -2912,6 +2989,7 @@ timApp.component("timTable", {
             class="glyphicon glyphicon-minus"></span></button>
     <div class="timTableEditor inlineEditorDiv no-highlight" ng-show=$ctrl.isSomeCellBeingEdited()>
         <input class="editInput" id="editInput"  ng-show="$ctrl.isSomeCellBeingEdited()"
+                   ng-blur="$ctrl.lostFocus($event)"
                    ng-keydown="$ctrl.keyDownPressedInSmallEditor($event)"
                    ng-keyup="$ctrl.keyUpPressedInSmallEditor($event)" ng-model="$ctrl.editedCellContent"><!--
      --><span class="inlineEditorButtons" style="position: absolute; width: max-content" ng-show="$ctrl.isSomeCellBeingEdited()" ><!--
@@ -2919,7 +2997,7 @@ timApp.component("timTable", {
                 ng-click="$ctrl.openBigEditor()" class="timButton"><span class="glyphicon glyphicon-pencil"></span>
              </button><!--
          --><button class="timButton buttonCloseSmallEditor"
-                ng-click="$ctrl.closeSmallEditor()"
+                ng-click="$ctrl.cancelEdit()"
                 class="timButton"><span class="glyphicon glyphicon-remove"></span>
             </button><!--
          --><button class="timButton buttonAcceptEdit"
@@ -2932,7 +3010,7 @@ timApp.component("timTable", {
 
     </div>
 <div class="csRunMenuArea" ng-show="::($ctrl.task && !$ctrl.data.hideSaveButton)">
-  <p class="csRunMenu"><button class="timButton" ng-show="::$ctrl.task" ng-click="$ctrl.sendDataBlock()" >Tallenna</button></p>
+  <p class="csRunMenu"><button class="timButton" ng-show="::($ctrl.task && $ctrl.button)" ng-click="$ctrl.sendDataBlock()" >{{$ctrl.button}}</button></p>
 </div>
   <p class="plgfooter" ng-if="::$ctrl.data.footer" ng-bind-html="::$ctrl.data.footer"></p>
   <span class="error" ng-show="$ctrl.error" ng-bind="$ctrl.error"></span>

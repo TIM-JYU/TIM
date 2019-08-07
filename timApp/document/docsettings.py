@@ -124,8 +124,9 @@ class DocSettings:
     rndmacros_key = 'rndmacros'
     sisu_require_manual_enroll_key = 'sisu_require_manual_enroll'
     show_velps_key = "show_velps"
+    group_key = "group"
 
-    urlmacros_tester = re.compile("[^0-9A-Za-z.,_ ]+")
+    urlmacros_tester = re.compile("[^0-9A-Za-zÅÄÖåäöÜü.,_ ]+")
 
 
     @classmethod
@@ -228,6 +229,10 @@ class DocSettings:
 
     def show_velps(self) -> bool:
         res = self.__dict.get(self.show_velps_key, True)
+        return res
+
+    def group(self) -> bool:
+        res = self.__dict.get(self.group_key, None)
         return res
 
     def auto_number_start(self) -> int:
