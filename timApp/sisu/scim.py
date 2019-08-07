@@ -4,7 +4,7 @@ from typing import List, Optional, Dict
 
 import attr
 from flask import Blueprint, request, current_app, Response
-from marshmallow import Schema, fields, post_load, ValidationError, missing
+from marshmallow import Schema, fields, post_load, ValidationError, missing, pre_load
 from webargs.flaskparser import use_args
 
 from timApp.auth.login import create_or_update_user
@@ -28,8 +28,19 @@ UNPROCESSABLE_ENTITY = 422
 
 class SCIMMemberSchema(Schema):
     value = fields.Str(required=True)
-    ref = fields.Str(attribute='$ref')
-    display = fields.Str(required=True)
+    ref = fields.Str()
+    display = fields.Str()
+    email = fields.Str()
+    type = fields.Str()
+
+    @pre_load
+    def preload(self, data):
+        if not isinstance(data, dict):
+            return data
+        ref = data.pop('$ref', None)
+        if ref:
+            data['ref'] = ref
+        return data
 
     @post_load
     def make_obj(self, data):
@@ -39,8 +50,10 @@ class SCIMMemberSchema(Schema):
 @attr.s(auto_attribs=True)
 class SCIMMemberModel:
     value: str
-    display: str
+    display: Optional[str] = None
+    email: Optional[str] = None
     ref: Optional[str] = missing
+    type: Optional[str] = missing
 
 
 class SCIMCommonSchema(Schema):
@@ -186,7 +199,7 @@ def get_groups(args: GetGroupsModel):
         for g in groups:  # type: UserGroup
             yield {
                 'id': get_scim_id(g),
-                # 'externalId': g.name,
+                'externalId': get_scim_id(g),
                 'meta': get_meta(g),
             }
 
@@ -294,7 +307,7 @@ def create_sisu_users(args: SCIMGroupModel, ug: UserGroup):
         cumulative_group = UserGroup.create(c_name)
     for u in args.members:
         user = create_or_update_user(
-            None,  # email will be given in /Users route
+            u.email,
             u.display,
             u.value,
             origin=UserOrigin.Sisu,

@@ -91,7 +91,7 @@ def login_with_korppi():
 
 def create_or_update_user(
         email: Optional[str],
-        real_name: str,
+        real_name: Optional[str],
         user_name: str,
         group_to_add: UserGroup,
         origin: UserOrigin,

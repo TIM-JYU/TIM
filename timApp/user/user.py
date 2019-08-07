@@ -194,6 +194,8 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         if self.is_email_user:
             return self.real_name
 
+        if self.real_name is None:
+            return '(real_name is null)'
         # In case of a Korppi user, the last name is always the first.
         names = self.real_name.split(' ')
         if len(names) > 1:
@@ -236,7 +238,7 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
                           is_admin: bool = False,
                           origin: UserOrigin = None,
                           uid: Optional[int] = None):
-        user = User.create(name, real_name or name, email, password=password or '',
+        user = User.create(name, real_name, email, password=password or '',
                            uid=uid,
                            origin=origin)
         group = UserGroup.create(name)

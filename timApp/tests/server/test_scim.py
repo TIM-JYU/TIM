@@ -6,6 +6,8 @@ error_422 = {'detail': 'The request was well-formed but was unable to be followe
              'schemas': ['urn:ietf:params:scim:api:messages:2.0:Error'],
              'status': '422'}
 
+a = ('t', 'pass')
+
 
 class ScimTest(TimRouteTest):
     def test_scim(self):
@@ -28,7 +30,6 @@ class ScimTest(TimRouteTest):
                 'status': '401',
             },
         )
-        a = ('t', 'pass')
         self.json_post('/scim/Groups', auth=a, expect_status=422, expect_content=error_422)
         r = self.json_post(
             '/scim/Groups',
@@ -193,6 +194,7 @@ class ScimTest(TimRouteTest):
                 'Resources': [
                     {
                         'id': group_id,
+                        'externalId': 'sisu-something',
                         'meta': {
                             'created': create_stamp,
                             'lastModified': create_stamp,
@@ -266,3 +268,49 @@ class ScimTest(TimRouteTest):
         self.assertNotEqual(create_stamp, r['meta']['lastModified'])
         g = UserGroup.get_by_name(f'{DELETED_GROUP_PREFIX}sisu-something')
         self.assertIsNone(g)
+
+    def test_no_display_in_members(self):
+        r = self.json_post(
+            '/scim/Groups',
+            json_data={
+                "schemas": [
+                    "urn:ietf:params:scim:schemas:core:2.0:Group"
+                ],
+                "externalId": "jy-CUR-4406-jy-studysubgroup-8514-teachers",
+                "displayName": "XKV0201 2019-08-12--2019-12-23: Harjoitusryhm\u00e4: Opettajat",
+                "members": [
+                    {
+                        "value": "someuser1",
+                        "$ref": "https://timdevs02-5.it.jyu.fi/scim/Users/someuser1",
+                        "type": "User",
+                    },
+                    {
+                        "value": "someuser2",
+                        "$ref": "https://timdevs02-5.it.jyu.fi/scim/Users/someuser2",
+                        "type": "User",
+                    },
+                    {
+                        "value": "someuser3",
+                        "$ref": "https://timdevs02-5.it.jyu.fi/scim/Users/someuser3",
+                        "type": "User",
+                    }
+                ]
+            }, auth=a,
+            expect_status=201,
+            expect_contains={
+                'displayName': 'XKV0201 2019-08-12--2019-12-23: Harjoitusryhmä: Opettajat',
+                'id': 'jy-CUR-4406-jy-studysubgroup-8514-teachers',
+                'members': [
+                    {'$ref': 'http://localhost/scim/Users/someuser1',
+                     'display': None,
+                     'value': 'someuser1'},
+                    {'$ref': 'http://localhost/scim/Users/someuser2',
+                     'display': None,
+                     'value': 'someuser2'},
+                    {'$ref': 'http://localhost/scim/Users/someuser3',
+                     'display': None,
+                     'value': 'someuser3'},
+                ],
+                'schemas': ['urn:ietf:params:scim:schemas:core:2.0:Group'],
+            }
+        )
