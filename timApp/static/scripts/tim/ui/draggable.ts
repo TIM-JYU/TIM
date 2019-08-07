@@ -547,7 +547,7 @@ export class DraggableController implements IController {
         }
     }
 
-    moveResize = (e: JQuery.Event) => {
+    moveResize = async (e: JQuery.Event) => {
         // e.preventDefault();
         const pos = this.getPageXY(e);
         const delta = {
@@ -587,17 +587,29 @@ export class DraggableController implements IController {
         e.preventDefault();
         e.stopPropagation();
 
-        const size = [this.element.css("width"), this.element.css("height")] as const;
+        const size = await this.getSize();
         if (this.posKey) {
             setStorage(this.posKey + "Size", size);
         }
         if (this.resizeCallback) {
             this.resizeCallback({
-                w: getPixels(size[0]),
-                h: getPixels(size[1]),
+                ...await this.getSizeAsNum(),
                 state: this.resizeStates,
             });
         }
+    }
+
+    async getSize() {
+        await this.layoutReady.promise;
+        return this.element.css(["width", "height"]) as {width: string, height: string};
+    }
+
+    async getSizeAsNum() {
+        const s = await this.getSize();
+        return {
+            w: getPixels(s.width),
+            h: getPixels(s.height),
+        };
     }
 
     setResizeCallback(f: ResizeCallback) {

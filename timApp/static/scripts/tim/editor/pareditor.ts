@@ -1224,11 +1224,13 @@ ${backTicks}
             oldPosition = this.editor.getPosition();
         }
         let oldeditor;
+        this.lastKnownDialogHeight = (await this.draggable.getSizeAsNum()).h;
         if (this.isAce(this.editor) || initialMode === "text") {
             oldeditor = this.element.find("#ace_editor");
             oldeditor.remove();
             this.createTextArea(text);
             this.isACE = false;
+            this.refreshEditorSize();
         } else {
             this.isACE = true;
             oldeditor = this.element.find("#teksti");
@@ -1274,6 +1276,7 @@ ${backTicks}
             neweditor.getSession().setUseWrapMode(this.getLocalBool("acewrap", false));
             neweditor.setOptions({maxLines: 28});
             this.editor.setEditorText(text);
+            this.refreshEditorSize();
 
             const langTools = ace.require("ace/ext/language_tools");
 
@@ -1296,7 +1299,6 @@ ${backTicks}
                 createCompleter(userWordList, "user"),
             ]);
         }
-        this.refreshEditorSize();
         if (initialMode != null) {
             await this.setInitialText();
         } else if (this.editor && oldPosition) {
