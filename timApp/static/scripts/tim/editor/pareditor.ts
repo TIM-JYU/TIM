@@ -590,8 +590,8 @@ ${backTicks}
         if (this.isAce(this.editor)) {
             const lines = remainingSpace / this.editor.editor.renderer.lineHeight;
             this.editor.editor.setOptions({
-                maxLines: lines,
-                minLines: lines,
+                maxLines: Math.max(lines, 5),
+                minLines: Math.max(lines, 5),
             });
         } else if (this.editor) {
             this.editor.editor.height(remainingSpace);
