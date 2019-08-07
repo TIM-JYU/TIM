@@ -91,8 +91,8 @@ export enum VisibilityFix {
 type CssDir = "left" | "right" | "bottom" | "top";
 
 export interface IResizeCallbackParams {
-    w: number;
-    h: number;
+    w: number | null;
+    h: number | null;
     state: IResizeStates;
 }
 
@@ -601,14 +601,14 @@ export class DraggableController implements IController {
 
     async getSize() {
         await this.layoutReady.promise;
-        return this.element.css(["width", "height"]) as {width: string, height: string};
+        return {width: this.element[0].style.width || null, height: this.element[0].style.height || null};
     }
 
     async getSizeAsNum() {
         const s = await this.getSize();
         return {
-            w: getPixels(s.width),
-            h: getPixels(s.height),
+            w: s.width != null ? getPixels(s.width) : null,
+            h: s.height != null ? getPixels(s.height) : null,
         };
     }
 

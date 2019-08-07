@@ -561,7 +561,7 @@ ${backTicks}
             }
         }
         this.draggable.setResizeCallback((params) => {
-            if (!params.state.down) {
+            if (!params.state.down || params.h == null) {
                 return;
             }
             this.lastKnownDialogHeight = params.h;
@@ -1224,7 +1224,10 @@ ${backTicks}
             oldPosition = this.editor.getPosition();
         }
         let oldeditor;
-        this.lastKnownDialogHeight = (await this.draggable.getSizeAsNum()).h;
+        const h = (await this.draggable.getSizeAsNum()).h;
+        if (h != null) {
+            this.lastKnownDialogHeight = h;
+        }
         if (this.isAce(this.editor) || initialMode === "text") {
             oldeditor = this.element.find("#ace_editor");
             oldeditor.remove();
