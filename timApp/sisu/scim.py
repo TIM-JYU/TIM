@@ -8,6 +8,7 @@ from marshmallow import Schema, fields, post_load, ValidationError, missing
 from webargs.flaskparser import use_args
 
 from timApp.auth.login import create_or_update_user
+from timApp.tim_app import csrf
 from timApp.timdb.sqa import db
 from timApp.user.scimentity import get_meta
 from timApp.user.user import User, UserOrigin
@@ -196,6 +197,7 @@ def get_groups(args: GetGroupsModel):
     })
 
 
+@csrf.exempt
 @scim.route('/Groups', methods=['post'])
 @use_args(SCIMGroupSchema(), locations=("json",))
 def post_group(args: SCIMGroupModel):
@@ -224,6 +226,7 @@ def get_group(group_id):
     return json_response(group_scim(ug))
 
 
+@csrf.exempt
 @scim.route('/Groups/<group_id>', methods=['put'])
 def put_group(group_id: str):
     ug = get_group_by_scim(group_id)
@@ -233,6 +236,7 @@ def put_group(group_id: str):
     return json_response(group_scim(ug))
 
 
+@csrf.exempt
 @scim.route('/Groups/<group_id>', methods=['delete'])
 def delete_group(group_id):
     ug = get_group_by_scim(group_id)
@@ -249,6 +253,7 @@ def get_user(user_id):
     return json_response(u.get_scim_data())
 
 
+@csrf.exempt
 @scim.route('/Users/<user_id>', methods=['put'])
 def put_user(user_id):
     u = User.get_by_name(user_id)
