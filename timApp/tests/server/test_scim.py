@@ -317,3 +317,23 @@ class ScimTest(TimRouteTest):
                 'schemas': ['urn:ietf:params:scim:schemas:core:2.0:Group'],
             }
         )
+
+    def test_schema_and_id_in_groups_put(self):
+        r = self.json_post(
+            '/scim/Groups',
+            json_data={
+                'externalId': 'somegroup',
+                'displayName': 'Some Group',
+                'members': [
+                    {'value': 'someone', 'display': 'Sisu User'},
+                ],
+            }, auth=a,
+            expect_status=201,
+        )
+        r.pop('meta')
+        r['members'][0]['display'] = 'Changed Name'
+        self.json_put(
+            '/scim/Groups/somegroup',
+            json_data=r,
+            auth=a,
+        )

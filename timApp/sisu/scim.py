@@ -100,6 +100,8 @@ class SCIMUserModel(SCIMCommonModel):
 
 
 class SCIMGroupSchema(SCIMCommonSchema):
+    id = fields.Str()
+    schemas = fields.List(fields.Str())
     members = fields.List(fields.Nested(SCIMMemberSchema), required=True)
 
     @post_load
@@ -110,6 +112,8 @@ class SCIMGroupSchema(SCIMCommonSchema):
 @attr.s(auto_attribs=True)
 class SCIMGroupModel(SCIMCommonModel):
     members: List[SCIMMemberModel]
+    id: Optional[str] = missing
+    schemas: Optional[List[str]] = missing
 
 
 @attr.s(auto_attribs=True)
