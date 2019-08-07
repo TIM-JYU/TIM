@@ -616,14 +616,20 @@ export class ViewCtrl implements IController {
                 user: user.id,
             });
             if (!this.formTaskInfosLoaded) {
-                const taskInfoResponse = await $http.post<{ [index: string]: ITaskInfo }>(
-                    "/infosForTasks",  // + window.location.search,  // done in interceptor
-                    {
-                    tasks: taskList,
-                });
+                // TODO: answerLimit does not currently work with fields and point browser is not visible in forms
+                //  - takes long time to load on pages with lots of form plugins
+                // const taskInfoResponse = await $http.post<{ [index: string]: ITaskInfo }>(
+                //     "/infosForTasks",  // + window.location.search,  // done in interceptor
+                //     {
+                //     tasks: taskList,
+                // });
                 this.formTaskInfosLoaded = true;
                 for (const fab of this.formAbs.values()) {
-                    fab.setInfo(taskInfoResponse.data[fab.taskId]);
+                    // fab.setInfo(taskInfoResponse.data[fab.taskId]);
+                    fab.setInfo({userMin: 0,
+                    userMax: 0,
+                    answerLimit: 0,
+                    });
                 }
             }
             if (answerResponse.data.userId == this.selectedUser.id) {
