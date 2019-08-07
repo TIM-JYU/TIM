@@ -623,7 +623,7 @@ This will delete the whole ${options.area ? "area" : "paragraph"} from the docum
                     show: this.viewctrl.item.rights.editable,
                 },
                 {func: (e: JQuery.Event, p: Paragraph) => this.showEditWindow(e, p), desc: "Edit", show: parEditable},
-                {func: (e: JQuery.Event, p: Paragraph) => this.toggleTableEditor(e, p), desc: "Edit table", show: parEditable && timTableEditMode === false},
+                {func: (e: JQuery.Event, p: Paragraph) => this.toggleTableEditor(e, p), desc: "Edit table", show: parEditable && timTableEditMode === false && par && !isReference(par)},
                 {func: (e: JQuery.Event, p: Paragraph) => this.toggleTableEditor(e, p), desc: "Close table editor", show: parEditable && timTableEditMode === true},
                 {
                     func: (e: JQuery.Event, p: Paragraph) => this.viewctrl.clipboardHandler.cutPar(e, p),
