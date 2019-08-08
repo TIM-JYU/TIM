@@ -337,3 +337,68 @@ class ScimTest(TimRouteTest):
             json_data=r,
             auth=a,
         )
+
+    def test_duplicate_email(self):
+        self.json_post(
+            '/scim/Groups',
+            json_data={
+                'externalId': 'dupemail',
+                'displayName': 'Some Group',
+                'members': [
+                    {'value': 'someone', 'display': 'Sisu User', 'email': 'zzz@example.com'},
+                    {'value': 'someone2', 'display': 'Sisu User', 'email': 'zzz@example.com'},
+                ],
+            }, auth=a,
+            expect_status=422,
+            expect_content={
+                "detail": "The users do not have distinct emails.",
+                "schemas": ["urn:ietf:params:scim:api:messages:2.0:Error"],
+                "status": "422",
+            },
+        )
+        self.json_post(
+            '/scim/Groups',
+            json_data={
+                'externalId': 'dupemail',
+                'displayName': 'Some Group',
+                'members': [
+                    {'value': 'someone', 'display': 'Sisu User', 'email': 'zzz@example.com'},
+                ],
+            }, auth=a,
+            expect_status=201,
+        )
+        self.json_post(
+            '/scim/Groups',
+            json_data={
+                'externalId': 'dupemail2',
+                'displayName': 'Some Group',
+                'members': [
+                    {'value': 'someone2', 'display': 'Sisu User', 'email': 'zzz@example.com'},
+                ],
+            }, auth=a,
+            expect_status=422,
+            expect_content={
+                "detail": "Key (email)=(zzz@example.com) already exists.",
+                "schemas": ["urn:ietf:params:scim:api:messages:2.0:Error"],
+                "status": "422",
+            }
+        )
+
+    def test_duplicate_usernames(self):
+        self.json_post(
+            '/scim/Groups',
+            json_data={
+                'externalId': 'aaagroup',
+                'displayName': 'Some Group',
+                'members': [
+                    {'value': 'aaa', 'display': 'Sisu User', 'email': 'aaa@example.com'},
+                    {'value': 'aaa', 'display': 'Sisu User', 'email': 'aaa2@example.com'},
+                ],
+            }, auth=a,
+            expect_status=422,
+            expect_content={
+                "detail": "The users do not have distinct usernames.",
+                "schemas": ["urn:ietf:params:scim:api:messages:2.0:Error"],
+                "status": "422",
+            },
+        )

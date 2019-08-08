@@ -5,6 +5,7 @@ from typing import List, Optional, Dict
 import attr
 from flask import Blueprint, request, current_app, Response
 from marshmallow import Schema, fields, post_load, ValidationError, missing, pre_load
+from sqlalchemy.exc import IntegrityError
 from webargs.flaskparser import use_args
 
 from timApp.auth.login import create_or_update_user
@@ -309,14 +310,28 @@ def create_sisu_users(args: SCIMGroupModel, ug: UserGroup):
     cumulative_group = UserGroup.get_by_name(c_name)
     if not cumulative_group:
         cumulative_group = UserGroup.create(c_name)
+    emails = [m.email for m in args.members if m.email is not None]
+    unique_emails = set(emails)
+    if len(emails) != len(unique_emails):
+        raise SCIMException(422, f'The users do not have distinct emails.')
+
+    unique_usernames = set(m.value for m in args.members)
+    if len(args.members) != len(unique_usernames):
+        raise SCIMException(422, f'The users do not have distinct usernames.')
+
     for u in args.members:
-        user = create_or_update_user(
-            u.email,
-            u.display,
-            u.value,
-            origin=UserOrigin.Sisu,
-            group_to_add=ug,
-        )
+        try:
+            user = create_or_update_user(
+                u.email,
+                u.display,
+                u.value,
+                origin=UserOrigin.Sisu,
+                group_to_add=ug,
+                allow_finding_by_email=False,
+            )
+        except IntegrityError as e:
+            db.session.rollback()
+            raise SCIMException(422, e.orig.diag.message_detail) from e
         if user not in cumulative_group.users:
             cumulative_group.users.append(user)
 
