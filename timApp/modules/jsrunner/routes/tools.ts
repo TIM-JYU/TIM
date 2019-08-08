@@ -947,6 +947,7 @@ export class Tools extends ToolsBase {
         }
         if ( c <= maxNotToSave ) {
             if ( this.getValue(fieldName, "") !== "") { this.setString(fieldName, ""); }
+            this.data.fields[fn] = "";
             return;
         }
         this.result[fn] = c;
@@ -959,6 +960,7 @@ export class Tools extends ToolsBase {
         const fn = this.checkAliasAndNormalize(f);
         if ( c <= maxNotToSave ) {
             if ( this.getValue(fieldName, "") !== "") { this.setString(fieldName, ""); }
+            this.data.fields[fn] = "";
             return;
         }
         this.result[fn] = c;
