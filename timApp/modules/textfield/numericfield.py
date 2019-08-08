@@ -195,7 +195,7 @@ initnumber:      # alkuarvo, tyhjä = ei alkuarvoa
 buttonText: Save # painikkeen nimi, tyhjä = ei painiketta
 cols: 7          # kentän koko, numeraalinen
 autosave: false  # autosave, pois päältä
-validinput: "^\d{0,3}(\.\d{0,3})?$" # käyttäjäsyötteen rajoitin, tyhjä = ei rajoitusta
+validinput: '^\d{0,3}(\.\d{0,3})?$' # käyttäjäsyötteen rajoitin, tyhjä = ei rajoitusta
 errormessage:    # inputcheckerin virheselite, tyhjä = selite on inputchecker
 ```""", """#- {defaultplugin=\"numericfield\" readonly=\"view\"}
 {% set name,n = 'd', 5 %}
