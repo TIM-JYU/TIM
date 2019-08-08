@@ -875,6 +875,8 @@ def get_answers(task_id, user_id):
     user = User.get_by_id(user_id)
     if user_id != get_current_user_id():
         verify_seeanswers_access(d)
+    elif d.document.get_own_settings().get('need_view_for_answers', False):
+        verify_view_access(d)
     if user is None:
         abort(400, 'Non-existent user')
     try:
