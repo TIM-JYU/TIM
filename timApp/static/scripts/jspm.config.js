@@ -155,7 +155,7 @@ SystemJS.config({
   bundles: {
     "build/ace.js": [
       "tim/editor/ace.ts",
-      "github:ajaxorg/ace-builds@1.2.6/ext-language_tools.js"
+      "github:ajaxorg/ace-builds@1.4.5/ext-language_tools.js"
     ],
     "build/chart.js": [
       "npm:chart.js@2.7.2/src/chart.js"
@@ -183,7 +183,7 @@ SystemJS.config({
     "ifvisible.js": "npm:ifvisible.js@1.0.6",
     "angularjs-color-picker": "npm:angularjs-color-picker@3.4.8",
     "angular-ui-grid": "npm:angular-ui-grid@4.6.3",
-    "ace": "github:ajaxorg/ace-builds@1.2.6",
+    "ace": "github:ajaxorg/ace-builds@1.4.5",
     "constants": "npm:jspm-nodelibs-constants@0.2.1",
     "events": "npm:jspm-nodelibs-events@0.2.2",
     "angular": "npm:angular@1.7.5",

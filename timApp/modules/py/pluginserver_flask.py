@@ -72,6 +72,7 @@ class GenericMarkupModel:
     lazy: Union[bool, Missing] = missing
     buttonText: Union[str, None, Missing] = missing
     button: Union[str, None, Missing] = missing
+    answerLimit: Union[int, Missing] = missing
     useCurrentUser: Union[bool, Missing] = missing
     showInView: Union[bool, Missing] = missing
     hideBrowser: Union[bool, Missing] = missing

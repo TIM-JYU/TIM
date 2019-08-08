@@ -90,6 +90,14 @@ export enum VisibilityFix {
 
 type CssDir = "left" | "right" | "bottom" | "top";
 
+export interface IResizeCallbackParams {
+    w: number | null;
+    h: number | null;
+    state: IResizeStates;
+}
+
+export type ResizeCallback = (p: IResizeCallbackParams) => void;
+
 export class DraggableController implements IController {
     static $inject = ["$scope", "$element"];
 
@@ -120,6 +128,7 @@ export class DraggableController implements IController {
     private forceMaximized?: Binding<boolean, "<">;
     private modal?: IModalInstanceService;
     private layoutReady = $q.defer();
+    private resizeCallback?: ResizeCallback;
 
     constructor(private scope: IScope, private element: IRootElementService) {
     }
@@ -538,7 +547,7 @@ export class DraggableController implements IController {
         }
     }
 
-    moveResize = (e: JQuery.Event) => {
+    moveResize = async (e: JQuery.Event) => {
         // e.preventDefault();
         const pos = this.getPageXY(e);
         const delta = {
@@ -578,10 +587,33 @@ export class DraggableController implements IController {
         e.preventDefault();
         e.stopPropagation();
 
-        const size = this.element.css(["width", "height"]);
+        const size = await this.getSize();
         if (this.posKey) {
             setStorage(this.posKey + "Size", size);
         }
+        if (this.resizeCallback) {
+            this.resizeCallback({
+                ...await this.getSizeAsNum(),
+                state: this.resizeStates,
+            });
+        }
+    }
+
+    async getSize() {
+        await this.layoutReady.promise;
+        return {width: this.element[0].style.width || null, height: this.element[0].style.height || null};
+    }
+
+    async getSizeAsNum() {
+        const s = await this.getSize();
+        return {
+            w: s.width != null ? getPixels(s.width) : null,
+            h: s.height != null ? getPixels(s.height) : null,
+        };
+    }
+
+    setResizeCallback(f: ResizeCallback) {
+        this.resizeCallback = f;
     }
 
     async moveTo(p: Pos) {
