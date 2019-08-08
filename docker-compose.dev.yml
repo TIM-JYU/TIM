@@ -32,7 +32,7 @@ services:
   command: ${PALI_DEV_COMMAND:-/usr/sbin/sshd -D}
   ports:
    - "49997:22"
- field:
+ fields:
  # image: timimages/cs3sudo:rust
  # build:
  #  context: ./timApp/modules/cs

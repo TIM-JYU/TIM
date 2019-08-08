@@ -6,7 +6,7 @@ import ivm from "isolated-vm";
 import {AnswerReturn, ErrorList, IError, IJsRunnerMarkup} from "../public/javascripts/jsrunnertypes";
 import {AliasDataT, JsrunnerAnswer, UserFieldDataT} from "../servertypes";
 // import numberLines from "./runscript";
-import Tools from "./tools";
+import {GTools, Tools, ToolsBase} from "./tools";
 
 console.log("answer");
 const router = express.Router();
@@ -74,11 +74,11 @@ function runner(d: IRunnerData): RunnerResult {
     const errors = [];
     try {
         const guser = data[0];
-        const gtools = new Tools(guser, currDoc, markup, aliases, true); // create global tools
+        const gtools = new GTools(guser, currDoc, markup, aliases); // create global tools
         // Fake parameters hide the outer local variables so user script won't accidentally touch them.
         // tslint:disable
         // noinspection JSUnusedLocalSymbols
-        function runProgram(program: string | undefined, pname: string, tools: Tools, saveUsersFields?: never, output?: never, errors?: never,
+        function runProgram(program: string | undefined, pname: string, tools: ToolsBase, saveUsersFields?: never, output?: never, errors?: never,
                             data?: never, d?: never, currDoc?: never, markup?: never, aliases?: never) {
             errorprg = program;
             prgname = pname;
@@ -108,7 +108,7 @@ function runner(d: IRunnerData): RunnerResult {
         }
 
         runProgram(d.markup.postprogram, "postprogram", gtools);
-        saveUsersFields.push(gtools.getResult());
+        // saveUsersFields.push(gtools.getResult());
         output += gtools.getOutput();
         const guserErrs = gtools.getErrors();
         if (guserErrs.length > 0) {

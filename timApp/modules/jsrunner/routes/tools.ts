@@ -90,8 +90,6 @@ function valueTypeError(v: unknown) {
     return genericTypeError("value", v);
 }
 
-const STAT_ERROR =  "tools can not stat!, use gtools.";
-
 const checkString = t.string.is;
 const checkNumber = t.number.is;
 const checkInt = t.Int.is;
@@ -517,30 +515,212 @@ class Stats {
     }
 }
 
-class Tools {
-    private output = "";
-    private errors: IError[] = [];
-    private result: {[index: string]: unknown} = {};
+export class ToolsBase {
+    protected output = "";
+    protected errors: IError[] = [];
+    protected usePrintLine: boolean = false; // if used println at least one time then print does not do nl
+    constructor(
+        protected data: UserFieldDataT,
+        protected currDoc: string,
+        protected markup: IJsRunnerMarkup,
+        protected aliases: AliasDataT,
+    ) {
+    }
+
+    getNumber(s: string) {
+        const r = parseFloat(s);
+        return this.handlePossibleNaN(r, s, 0);
+    }
+
+    protected handlePossibleNaN<T>(r: number, s: unknown, def: T) {
+        if (isNaN(r)) {
+            return this.reportInputTypeErrorAndReturnDef(s, def);
+        }
+        return r;
+    }
+
+    protected reportInputTypeErrorAndReturnDef<T>(s: unknown, def: T) {
+        this.reportError(`Found value '${s}' of type ${typeof s}, using default value ${def}`);
+        return def;
+    }
+
+    public createLimitArray(table: string | string[]): number[][] {
+        const res: number[][] = [];
+        if ( !(table instanceof Array) ) { table = table.split("\n"); }
+        for (const s of table) {
+            const parts = s.split(",");
+            if ( parts.length < 2 ) { return this.reportInputTypeErrorAndReturnDef(table, []); }
+            const limit = this.getNumber(parts[0]);
+            const value = this.getNumber(parts[1]);
+            res.push([limit, value]);
+        }
+        return res;
+    }
+
+    // noinspection JSMethodCanBeStatic
+    public findLastOf(limits: number[][], c: number, def: number = 0) {
+        let res = def;
+        for (const r of limits) {
+            const limit: number = r[0];
+            const value: number = r[1];
+            if ( c >= limit ) { res = value; }
+        }
+        return res;
+    }
+
+    public findLast(table: string | string[], c: number, def: number = 0) {
+        return this.findLastOf(this.createLimitArray(table), c, def);
+    }
+
+    // noinspection JSMethodCanBeStatic
+    public r(value: number, decim: number): number {
+        if ( !checkInt(decim) ) {
+            throw new Error("Parameter 'decim' must be integer.");
+        }
+        const c = ensureNumberDefault(value);
+        const mul = Math.pow(10, decim);
+        return Math.round(c * mul) / mul;
+    }
+
+    public round(value: number, decim: number): number {
+        return this.r(value, decim);
+    }
+
+    // noinspection JSMethodCanBeStatic
+    public wf(fields: string | string[]): string[]  {
+        return widenFields(fields);
+    }
+
+    public print(...args: unknown[]) {
+        let sep = "";
+        for (const a of args) {
+            this.output += sep + a;
+            sep = " ";
+        }
+        if ( !this.usePrintLine ) { this.output += "\n"; }
+    }
+
+    public println(...args: unknown[]) {
+        // For be combatible with Korppi, if only print is used, it prints nl.
+        // But if println is used at least one time before print, then print is
+        // not printing nl.
+        this.usePrintLine = true;
+        this.print(args);
+        this.output += "\n";
+    }
+
+    public getOutput() {
+        return this.output;
+    }
+
+    public clearOutput() {
+        this.output = "";
+    }
+
+    public getErrors() {
+        return this.errors;
+    }
+
+    public  reportError(msg: string) {
+        this.errors.push({msg, stackTrace: new Error().stack});
+    }
+}
+
+export class GTools extends ToolsBase {
     public outdata: object = {};
     public fitters: { [fieldname: string]: LineFitter } = {};
     public dists: { [fieldname: string]: Distribution } = {};
     public xys: { [fieldname: string]: XY } = {};
     public stats: { [name: string]: Stats } = {};
-    private usePrintLine: boolean = false; // if used println at least one time then print does not do nl
     constructor(
-        private data: UserFieldDataT,
-        private currDoc: string,
-        private markup: IJsRunnerMarkup,
-        private aliases: AliasDataT,
-        private canStat: boolean = false,
+        data: UserFieldDataT,
+        currDoc: string,
+        markup: IJsRunnerMarkup,
+        aliases: AliasDataT,
     ) {
-        if ( this.canStat) {
-            this.createStatCounter("GLOBAL", "", false);
+        super(data, currDoc, markup, aliases);
+        this.createStatCounter("GLOBAL", "", false);
+    }
+
+    createFitter(xname: string, yname: string, autoadd: boolean = true) {
+        const fitter = new LineFitter(xname, yname, autoadd);
+        this.fitters[xname + "_" + yname] = fitter;
+        return fitter;
+    }
+
+    createDistribution(fieldName: string, n1: number, n2: number, mul: number = 1, autoadd = true) {
+        const dist = new Distribution(fieldName, n1, n2, mul, autoadd);
+        if ( fieldName ) { this.dists[fieldName] = dist; }
+        return dist;
+    }
+
+    addToDatas(tools: Tools) {
+        for (const datas of [this.dists, this.xys, this.fitters, this.stats]) {
+            // noinspection JSUnusedLocalSymbols
+            Object.entries(datas).forEach(
+                ([key, d]) => { if ( d.autoadd ) {
+                    d.addField(tools);
+                 }});
         }
     }
 
-    private checkStatError() {
-        if ( !this.canStat ) { throw new Error(STAT_ERROR); }
+    createXY(xname: string, yname: string, autoadd: boolean = true) {
+        const xy = new XY(xname, yname, autoadd);
+        this.xys[xname + "_" + yname] = xy;
+        return xy;
+    }
+
+    createStatCounter(name: string, fields: string | string[], autoadd: boolean = true) {
+        const stats = new Stats(fields, autoadd);
+        this.stats[name] = stats;
+        return stats;
+    }
+
+    addStatDataValue(fieldName: string, value: number) {
+        this.stats.GLOBAL.addValue(fieldName, value);
+    }
+
+    addStatData(tools: Tools, fieldName: string, start: number, end: number, max: number = 1e100) {
+        this.stats.GLOBAL.addData(tools, fieldName, start, end, max);
+    }
+
+    addStatDataOf(tools: Tools, ...fieldNames: string[]) {
+        this.stats.GLOBAL.addOf(tools, ...fieldNames);
+    }
+
+    getStatData(): {[name: string]: INumbersObject} {
+        return this.stats.GLOBAL.getData();
+    }
+
+    // noinspection JSMethodCanBeStatic
+    r(value: number, decim: number): number {
+        if ( !checkInt(decim) ) {
+            throw new Error("Parameter 'decim' must be integer.");
+        }
+        const c = ensureNumberDefault(value);
+        const mul = Math.pow(10, decim);
+        return Math.round(c * mul) / mul;
+    }
+
+    round(value: number, decim: number): number {
+        return this.r(value, decim);
+    }
+
+    // noinspection JSMethodCanBeStatic
+    wf(fields: string | string[]): string[]  {
+        return widenFields(fields);
+    }
+}
+
+export class Tools extends ToolsBase {
+    private result: {[index: string]: unknown} = {};
+    constructor(
+        data: UserFieldDataT,
+        currDoc: string,
+        markup: IJsRunnerMarkup,
+        aliases: AliasDataT,
+    ) {
+        super(data, currDoc, markup, aliases);
     }
 
     private normalizeField(fieldName: string) {
@@ -592,23 +772,6 @@ class Tools {
         const sp = st.replace(",", ".");
         const r = parseFloat(sp);
         return this.handlePossibleNaN(r, s, def);
-    }
-
-    getNumber(s: string) {
-        const r = parseFloat(s);
-        return this.handlePossibleNaN(r, s, 0);
-    }
-
-    private handlePossibleNaN<T>(r: number, s: unknown, def: T) {
-        if (isNaN(r)) {
-            return this.reportInputTypeErrorAndReturnDef(s, def);
-        }
-        return r;
-    }
-
-    private reportInputTypeErrorAndReturnDef<T>(s: unknown, def: T) {
-        this.reportError(`Found value '${s}' of type ${typeof s}, using default value ${def}`);
-        return def;
     }
 
     getInt(fieldName: unknown, defa: unknown = 0): number {
@@ -678,64 +841,6 @@ class Tools {
 
     findLast(table: string | string[], c: number, def: number = 0) {
         return this.findLastOf(this.createLimitArray(table), c, def);
-    }
-
-    createFitter(xname: string, yname: string, autoadd: boolean = true) {
-        this.checkStatError();
-        const fitter = new LineFitter(xname, yname, autoadd);
-        this.fitters[xname + "_" + yname] = fitter;
-        return fitter;
-    }
-
-    createDistribution(fieldName: string, n1: number, n2: number, mul: number = 1, autoadd = true) {
-        this.checkStatError();
-        const dist = new Distribution(fieldName, n1, n2, mul, autoadd);
-        if ( fieldName ) { this.dists[fieldName] = dist; }
-        return dist;
-    }
-
-    addToDatas(tools: Tools) {
-        for (const datas of [this.dists, this.xys, this.fitters, this.stats]) {
-            // noinspection JSUnusedLocalSymbols
-            Object.entries(datas).forEach(
-                ([key, d]) => { if ( d.autoadd ) {
-                    d.addField(tools);
-                 }});
-        }
-    }
-
-    createXY(xname: string, yname: string, autoadd: boolean = true) {
-        this.checkStatError();
-        const xy = new XY(xname, yname, autoadd);
-        this.xys[xname + "_" + yname] = xy;
-        return xy;
-    }
-
-    createStatCounter(name: string, fields: string | string[], autoadd: boolean = true) {
-        this.checkStatError();
-        const stats = new Stats(fields, autoadd);
-        this.stats[name] = stats;
-        return stats;
-    }
-
-    addStatDataValue(fieldName: string, value: number) {
-        this.checkStatError();
-        this.stats.GLOBAL.addValue(fieldName, value);
-    }
-
-    addStatData(tools: Tools, fieldName: string, start: number, end: number, max: number = 1e100) {
-        this.checkStatError();
-        this.stats.GLOBAL.addData(tools, fieldName, start, end, max);
-    }
-
-    addStatDataOf(tools: Tools, ...fieldNames: string[]) {
-        this.checkStatError();
-        this.stats.GLOBAL.addOf(tools, ...fieldNames);
-    }
-
-    getStatData(): {[name: string]: INumbersObject} {
-        this.checkStatError();
-        return this.stats.GLOBAL.getData();
     }
 
     // noinspection JSMethodCanBeStatic
@@ -878,43 +983,8 @@ class Tools {
         return this.getDouble(f, def);
     }
 
-    print(...args: unknown[]) {
-        let sep = "";
-        for (const a of args) {
-            this.output += sep + a;
-            sep = " ";
-        }
-        if ( !this.usePrintLine ) { this.output += "\n"; }
-    }
-
-    println(...args: unknown[]) {
-        // For be combatible with Korppi, if only print is used, it prints nl.
-        // But if println is used at least one time before print, then print is
-        // not printing nl.
-        this.usePrintLine = true;
-        this.print(args);
-        this.output += "\n";
-    }
-
     getResult() {
         return {user: this.data.user.id, fields: this.result};
     }
-
-    getOutput() {
-        return this.output;
-    }
-
-    clearOutput() {
-        this.output = "";
-    }
-
-    getErrors() {
-        return this.errors;
-    }
-
-    private reportError(msg: string) {
-        this.errors.push({msg, stackTrace: new Error().stack});
-    }
 }
 
-export default Tools;
