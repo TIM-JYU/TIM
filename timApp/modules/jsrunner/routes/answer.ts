@@ -3,9 +3,10 @@ import express from "express";
 import {readFileSync} from "fs";
 import ivm from "isolated-vm";
 
+// import numberLines from "./runscript";
+import {Branded, IntBrand} from "io-ts";
 import {AnswerReturn, ErrorList, IError, IJsRunnerMarkup} from "../public/javascripts/jsrunnertypes";
 import {AliasDataT, JsrunnerAnswer, UserFieldDataT} from "../servertypes";
-// import numberLines from "./runscript";
 import {GTools, Tools, ToolsBase} from "./tools";
 
 console.log("answer");
@@ -73,8 +74,13 @@ function runner(d: IRunnerData): RunnerResult {
     let output = "";
     const errors = [];
     try {
-        const guser = data[0];
-        const gtools = new GTools(guser, currDoc, markup, aliases); // create global tools
+        // const guser1 = data[0];
+        // const guser2 = data[data.length - 1];
+
+        const dummyUser = {user: {id: -1 as Branded<number, IntBrand>, name: "pre/post", real_name: "", email: ""},
+                       fields: {}, styles: {}};
+        const dummyTools = new Tools(dummyUser, currDoc, markup, aliases); // in compiled JS, this is tools_1.default(...)
+        const gtools = new GTools(currDoc, markup, aliases, dummyTools); // create global tools
         // Fake parameters hide the outer local variables so user script won't accidentally touch them.
         // tslint:disable
         // noinspection JSUnusedLocalSymbols
@@ -90,10 +96,11 @@ function runner(d: IRunnerData): RunnerResult {
 
         for (const user of data) {
             const tools = new Tools(user, currDoc, markup, aliases); // in compiled JS, this is tools_1.default(...)
+            gtools.setTools(tools);
             errorprg = "gtools.addToDatas(tools)";
             prgname = "addToDatas";
             if ( d.markup.autoadd ) {
-                gtools.addToDatas(tools);
+                gtools.addToDatas();
             }
             // tslint:enable
             runProgram(d.program, "program", tools);
@@ -107,12 +114,15 @@ function runner(d: IRunnerData): RunnerResult {
             }
         }
 
+        // dtools = new Tools(guser2, "", markup, aliases); // in compiled JS, this is tools_1.default(...)
+        gtools.setTools(dummyTools);
+        gtools.clearGtools(); // to avoid circular references if print gtools
         runProgram(d.markup.postprogram, "postprogram", gtools);
         // saveUsersFields.push(gtools.getResult());
         output += gtools.getOutput();
         const guserErrs = gtools.getErrors();
         if (guserErrs.length > 0) {
-            errors.push({user: guser.user.name, errors: guserErrs});
+            errors.push({user: dummyUser.user.name, errors: guserErrs});
         }
         if ( errors.length > 0 ) {
             // TODO: separate errors from pre, program and post
