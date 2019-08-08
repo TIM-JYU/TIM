@@ -229,7 +229,8 @@ def fetch_rows():
     r = tableform_get_fields(plug.values.get("fields",[]), plug.values.get("groups", []),
                              doc, curr_user, plug.values.get("removeDocIds", True),
                              plug.values.get("showInView"))
-    return json_response(r)
+    return json_response(r, headers={"No-Date-Conversion": "true"})
+
 
 @tableForm_plugin.route('/updateFields')
 def update_fields():
@@ -259,7 +260,7 @@ def update_fields():
     r['rows'] = rows
     r['styles'] = styles
     r['fields'] = field_names
-    return json_response(r)
+    return json_response(r, headers={"No-Date-Conversion": "true"})
 
 
 def tableform_get_fields(fields: List[str], groups: List[str],
