@@ -1,10 +1,8 @@
 """Answer-related routes."""
 import json
 import re
-import time
-from collections import defaultdict
 from datetime import timezone, timedelta, datetime
-from typing import Union, List, Tuple, Dict, Match, Iterable
+from typing import Union, List, Tuple, Dict
 
 import attr
 import dateutil.parser
@@ -13,10 +11,9 @@ from flask import Blueprint
 from flask import Response
 from flask import abort
 from flask import request
-from marshmallow import Schema, fields, post_load, validates_schema, ValidationError, pre_load
+from marshmallow import Schema, fields, post_load, validates_schema, ValidationError
 from marshmallow.utils import _Missing, missing
-from sqlalchemy import func, tuple_
-from sqlalchemy.orm import defaultload, joinedload
+from sqlalchemy import func
 from webargs.flaskparser import use_args
 
 from pluginserver_flask import GenericMarkupSchema
@@ -42,16 +39,14 @@ from timApp.plugin.plugin import Plugin, PluginWrap, NEVERLAZY, TaskNotFoundExce
 from timApp.plugin.plugin import PluginType
 from timApp.plugin.plugin import find_plugin_from_document
 from timApp.plugin.pluginControl import find_task_ids, pluginify
-from timApp.util.answerutil import task_ids_to_strlist, get_fields_and_users
-from timApp.util.utils import widen_fields, get_alias
 from timApp.plugin.pluginexception import PluginException
 from timApp.plugin.taskid import TaskId, TaskIdAccess
 from timApp.timdb.dbaccess import get_timdb
 from timApp.timdb.exceptions import TimDbException
 from timApp.timdb.sqa import db
-from timApp.user.groups import verify_group_view_access
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
+from timApp.util.answerutil import task_ids_to_strlist, get_fields_and_users
 from timApp.util.flask.requesthelper import verify_json_params, get_option, get_consent_opt
 from timApp.util.flask.responsehelper import json_response, ok_response
 from timApp.util.utils import try_load_json, get_current_time
@@ -186,7 +181,6 @@ def get_useranswers_for_task(user, task_ids, answer_map):
         if len(answer.users_all) > 1:
             answer_map[answer.task_id] = answer
         else:
-            # answer_map[answer.task_id] = answer
             asd = answer.to_json()
             asd.pop('users')
             answer_map[answer.task_id] = asd
@@ -208,10 +202,7 @@ def get_globals_for_tasks(task_ids, answer_map):
             .with_entities(Answer, sub.c.cnt)
             .all()
     )
-    # for answer, cnt in answers:
-    #     answer_map[answer.task_id] = answer, cnt
     for answer in answers:
-            # answer_map[answer.task_id] = answer
             asd = answer.Answer.to_json()
             answer_map[answer.Answer.task_id] = asd
     return cnt, answers
@@ -628,8 +619,8 @@ def handle_jsrunner_response(jsonresp, result, current_doc: DocInfo = None, allo
             if t_id.field  and t_id.field != "points" and t_id.field != "styles":
                 task_content_name_map[task] = t_id.field
             else:
-                plug = find_plugin_from_document(dib.document, t_id, curr_user)
-                content_field = plug.get_content_field_name()
+                # plug = find_plugin_from_document(dib.document, t_id, curr_user)
+                content_field = plugin.get_content_field_name()
                 task_content_name_map[task] = content_field
         except TaskNotFoundException as e:
             #task_display = t_id.doc_task if t_id.doc_id != current_doc.id else t_id.task_name
@@ -809,15 +800,7 @@ def get_task_infos():
                 dib = get_doc_or_abort(tid.doc_id, f'Document {tid.doc_id} not found')
                 doc_map[tid.doc_id] = dib.document
             plugin = find_plugin_from_document(doc_map[tid.doc_id], tid, user)
-            tim_vars = {'maxPoints': plugin.max_points(),
-                        'userMin': plugin.user_min_points(),
-                        'userMax': plugin.user_max_points(),
-                        'deadline': plugin.deadline(),
-                        'starttime': plugin.starttime(),
-                        'answerLimit': plugin.answer_limit(),
-                        'triesText': plugin.values.get('triesText', 'Tries left:'),
-                        'pointsText': plugin.values.get('pointsText', 'Points:')
-                        }
+            tim_vars = find_tim_vars(plugin)
             infolist[task_id] = tim_vars
         except (TaskNotFoundException, PluginException) as e:
             return abort(400, str(e))
@@ -827,19 +810,22 @@ def get_task_infos():
 def get_task_info(task_id):
     try:
         plugin = Plugin.from_task_id(task_id, user=get_current_user_object())
-        tim_vars = {'maxPoints': plugin.max_points(),
-                    'userMin': plugin.user_min_points(),
-                    'userMax': plugin.user_max_points(),
-                    'deadline': plugin.deadline(),
-                    'starttime': plugin.starttime(),
-                    'answerLimit': plugin.answer_limit(),
-                    'triesText': plugin.values.get('triesText', 'Tries left:'),
-                    'pointsText': plugin.values.get('pointsText', 'Points:')
-                    }
+        tim_vars = find_tim_vars(plugin)
     except PluginException as e:
         return abort(400, str(e))
     return json_response(tim_vars)
 
+def find_tim_vars(plugin: Plugin):
+    tim_vars = {'maxPoints': plugin.max_points(),
+                'userMin': plugin.user_min_points(),
+                'userMax': plugin.user_max_points(),
+                'deadline': plugin.deadline(),
+                'starttime': plugin.starttime(),
+                'answerLimit': plugin.answer_limit(),
+                'triesText': plugin.values.get('triesText', 'Tries left:'),
+                'pointsText': plugin.values.get('pointsText', 'Points:')
+                }
+    return tim_vars
 
 @answers.route("/answers/<task_id>/<user_id>")
 def get_answers(task_id, user_id):
@@ -880,7 +866,6 @@ def get_global_answers(task_id):
     if not is_global_id(tid):
         return abort(400, 'Task is not global task')
     try:
-        #user_answers = pluginControl.get_latest_for_tasks([tid],{})
         user_answers = get_globals_for_tasks([tid], {})
         return json_response([user_answers[1][0][0]])
     except Exception as e:
@@ -1019,10 +1004,6 @@ class GetMultiStatesSchema(Schema):
     user_id = fields.Int(required=True)
     doc_id = fields.Int()
 
-    # @pre_load()
-    # def debug(self, data):
-    #     print("debug me")
-
     @post_load
     def make_obj(self, data):
         return GetMultiStatesModel(**data)
@@ -1064,14 +1045,10 @@ def get_multi_states(args: GetMultiStatesModel):
     doc.insert_preamble_pars()
     answs = Answer.query.filter(Answer.id.in_(answer_ids)).all()
     response = {}
-    # blocks = []
     for ans in answs:
-        ###
         tid = TaskId.parse(ans.task_id)
-        #if parid, maybe_set_hint?
         try:
             doc, plug = get_plugin_from_request(doc, task_id=tid, u=user)
-            #plug = find_plugin_from_document(doc, tid, user)
         except PluginException as e:
             return abort(400, str(e))
         except AssertionError:
@@ -1087,25 +1064,6 @@ def get_multi_states(args: GetMultiStatesModel):
         )
         html = plug.get_final_output()
         response[ans.id] = {'html': html, 'reviewHtml': None}
-        ####
-    #     tid = TaskId.parse(ans.task_id)
-    #     # if parid, maybe_set_hint?
-    #     try:
-    #         doc, plug = get_plugin_from_request(doc, task_id=tid, u=user)
-    #         #plug = find_plugin_from_document(doc, tid, user)
-    #     except PluginException as e:
-    #         return abort(400, str(e))
-    #     block = plug.par
-    #     blocks.append(block)
-    # a, b, c, plug = pluginify(
-    #     doc,
-    #     blocks,
-    #     user,
-    #     # custom_answer=ans,
-    #     pluginwrap=PluginWrap.Nothing,
-    #     do_lazy=NEVERLAZY,
-    # )
-    # print("hmm")
     return json_response(response)
 
 @answers.route("/getState")
