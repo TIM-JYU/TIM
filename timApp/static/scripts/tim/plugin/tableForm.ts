@@ -8,7 +8,7 @@ import {
     pluginBindings,
 } from "tim/plugin/util";
 import {$http, $httpParamSerializer} from "tim/util/ngimport";
-import {to} from "tim/util/utils";
+import {to, widenFields} from "tim/util/utils";
 import {timApp} from "../app";
 import {getParId} from "../document/parhelpers";
 import {ViewCtrl} from "../document/viewctrl";
@@ -350,7 +350,8 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
             if (!this.attrs.fields) {
                 return;
             }
-            for (const aliasfield of this.attrs.fields) {
+            const ownFields = widenFields(this.attrs.fields);
+            for (const aliasfield of ownFields) {
                 const field = aliasfield.split("=")[0].trim();
                 const docField = this.viewctrl.docId + "." + field;
                 // TODO: Double .includes call - maybe it's better to search for fieldsToUpdate from somethign
