@@ -737,7 +737,7 @@ export class TimTableController extends DestroyScope implements IController, ITi
     public static isMatch(regs: RegExp[], cmpfltrs: ComparatorFilter[], row: any[]) {
         for (let c = 0; c < row.length; c++) {
             if ( !regs[c] ) { continue; }
-            const s: string = row[c].cell.toLowerCase();
+            const s: string = row[c].cell.toString().toLowerCase();
             if ( !regs[c].test(s) ) { return false; }
         }
         for (let c = 0; c < row.length; c++) {
