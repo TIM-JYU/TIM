@@ -727,7 +727,9 @@ def handle_jsrunner_response(jsonresp, result, current_doc: DocInfo = None, allo
                                     pass
                             else:
                                 content[field] = value
-                            if not (content.get(task_content_name_map[task], False)):
+                            # Ensure that there's always a content field even when setting styles to empty answer
+                            prev_content_value = content.get(task_content_name_map[task], None)
+                            if prev_content_value is None:
                                 content[task_content_name_map[task]] = None
                         else:
                             continue
