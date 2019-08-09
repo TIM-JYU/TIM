@@ -1,7 +1,58 @@
 import * as t from "io-ts";
 import {IError, IJsRunnerMarkup, INumbersObject} from "../public/javascripts/jsrunnertypes";
 import {AliasDataT, UserFieldDataT} from "../servertypes";
-import {widenFields} from "../../../static/scripts/tim/util/utils";
+
+
+const TASK_PROG = new RegExp(/([\w.]*)\( *(\d*) *, *(\d*) *\)(.*)/);
+
+/**
+ * TODO: Importing this from util.ts breaks jsrunner build? As does exporting from here
+ * Return fields widened, so string "d(1,4);dsum" coes out as
+ * a list ["d1, "d2", "d3", "dsum"]
+ * @param fields string/list to widen
+ */
+export function widenFields(fields: string | string[]): string[] {
+    let fields1: string[] = [];
+    if (!(fields instanceof Array)) {
+        fields = fields.split(";");
+    }
+    for (const field of fields) {
+        const parts = field.split(";");
+        fields1 = fields1.concat(parts);
+    }
+
+    const rfields: string[] = [];
+    for (const field of fields1) {
+        const parts = field.split("=");
+        let a = "";
+        const tf = parts[0].trim();
+        if (parts.length > 1) {
+            a = parts[1].trim();
+        }
+        const m = TASK_PROG.exec(tf);
+        if (!m) {
+            rfields.push(field);
+            continue;
+        }
+
+        const tb = m[1];
+        const n1 = parseInt(m[2], 10);
+        const n2 = parseInt(m[3], 10);
+        const te = m[4];
+
+        for (let i = n1; i <= n2; i++) {
+            let tn = tb + i + te;
+            if (!tb) {
+                tn = "";
+            }
+            if (a) {
+                tn += "=" + a + i;
+            }
+            rfields.push(tn);
+        }
+    }
+    return rfields;
+}
 
 
 /**
