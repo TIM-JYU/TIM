@@ -155,7 +155,7 @@ class PluginPlacement:
                 err, name = self.errors[sr]
                 h = get_error_plugin(name, err, plugin_output_format=self.output_format)
             else:
-                h = p.get_final_output().strip()
+                h = p.get_final_output().strip() # allow inlineplugins to come close each other
             start, end = sr
             out_md = out_md[:start] + h + out_md[end:]
         return out_md

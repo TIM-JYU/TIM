@@ -301,6 +301,7 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
         this.rowKeys = Object.keys(tableResponse.data.rows);
         this.fields = tableResponse.data.fields || [];
         this.realnamemap = tableResponse.data.realnamemap || {};
+        this.emailmap = tableResponse.data.emailmap || {};
         this.styles = tableResponse.data.styles || {};
         this.userLocations = {};
         this.taskLocations = {};
@@ -636,7 +637,7 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
     /**
      * Removes selected users from the group
      */
-    // @ts-ignore
+    // tslint:disable-next-line
     async removeUsers() {
         const timTable = this.getTimTable();
         if (timTable == null) {
@@ -671,6 +672,7 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
         location.reload();
     }
 
+    // tslint:disable-next-line
     listUsernames() {
         const timTable = this.getTimTable();
         if (timTable == null) { return; }
@@ -705,7 +707,7 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
         // TODO: myös iPad toimimaan, ks GeoGebra tai csPlugin jaa tee yleinen copy
     }
 
-    // @ts-ignore
+    // tslint:disable-next-line
     emailUsers() {
         const timTable = this.getTimTable();
         if (timTable == null) { return; }
@@ -715,7 +717,9 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
 
     async sendEmailTim() {
         this.emailMsg = ""; // JSON.stringify(response);
-        const url = this.pluginMeta.getAnswerUrl().replace("answer", "multiSendEmail");
+        const url = this.pluginMeta.getAnswerUrl()
+            .replace("tableForm", "multiSendEmail")
+            .replace("/answer", "");
         const response = await $http.post<string[]>(url, {
             rcpt: this.emaillist.replace(/\n/g, ";"),
             subject: this.emailsubject,
@@ -726,7 +730,7 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
         return;
     }
 
-    // @ts-ignore
+    // tslint:disable-next-line
     public async sendEmail() {
         if ( this.emailtim ) {
             this.sendEmailTim();
@@ -802,6 +806,7 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
         this.doSaveText(cells);
     }
 
+    // tslint:disable-next-line
     async openTable() {
         if (!this.tableFetched) {
             await this.updateTable();
@@ -810,6 +815,7 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
         this.showTable = true;
     }
 
+    // tslint:disable-next-line
     closeTable() {
         this.showTable = false;
     }
