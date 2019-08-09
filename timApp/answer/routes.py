@@ -165,39 +165,6 @@ def chunks(l: List, n: int):
         yield l[i:i + n]
 
 
-@answers.route("/multiplugin2", methods=['POST'])
-def get_answers_for_tasks2():
-    """
-    Queries all answers for given list of tasks by the given user
-    TODO: experimental, delete?
-    :return: {answers:[Answer], user: user_id}
-    """
-    tasks, user_id = verify_json_params('tasks', 'user')
-    try:
-        user_id = int(user_id)
-    except ValueError:
-        abort(404, 'Not a valid user id')
-    user = User.get_by_id(user_id)
-    verify_logged_in()
-    try:
-        doc_map = {}
-        fieldlist = {k: [] for k in tasks}
-        for task_id in tasks:
-            tid = TaskId.parse(task_id)
-            if tid.doc_id not in doc_map:
-                dib = get_doc_or_abort(tid.doc_id, f'Document {tid.doc_id} not found')
-                verify_seeanswers_access(dib)
-                doc_map[tid.doc_id] = dib.document
-        answs = user.answers.options(joinedload(Answer.users_all))\
-            .order_by(Answer.id.desc()).filter(Answer.valid.is_(True))\
-            .filter(Answer.task_id.in_(tasks)).all()
-        for a in answs:
-            fieldlist[a.task_id].append(a)
-        return json_response({"answers": fieldlist, "userId": user_id})
-    except Exception as e:
-        return abort(400, str(e))
-
-
 def get_useranswers_for_task(user, task_ids, answer_map):
     """
     Performs a query for latest valid answers by given user for given task
@@ -250,22 +217,35 @@ def get_globals_for_tasks(task_ids, answer_map):
     return cnt, answers
 
 
+class UserAnswersForTasksSchema(Schema):
+    tasks = fields.List(fields.Str(), required=True)
+    user = fields.Int(required=True)
+
+    @post_load
+    def make_obj(self, data):
+        return UserAnswersForTasksModel(**data)
+
+
+@attr.s(auto_attribs=True)
+class UserAnswersForTasksModel:
+    tasks: List[str]
+    user: int
+
+
 @answers.route("/userAnswersForTasks", methods=['POST'])
-def get_answers_for_tasks():
+@use_args(UserAnswersForTasksSchema())
+def get_answers_for_tasks(args: UserAnswersForTasksModel):
     """
     Route for getting latest valid answers for given user and list of tasks
     :return: {"answers": {taskID: Answer}, "userId": user_id}
     """
-    tasks, user_id = verify_json_params('tasks', 'user')
-    try:
-        user_id = int(user_id)
-    except ValueError:
-        abort(404, 'Not a valid user id')
+    tasks, user_id = args.tasks, args.user
     user = User.get_by_id(user_id)
+    if user is None:
+        abort(400, 'Non-existent user')
     verify_logged_in()
     try:
         doc_map = {}
-        fieldlist = {}
         tids = []
         gtids = []
         for task_id in tasks:
@@ -279,7 +259,6 @@ def get_answers_for_tasks():
             else:
                 tids.append(tid)
         answer_map = {}
-        # pluginControl.get_answers(user, tids, answer_map)
         if tids:
             get_useranswers_for_task(user, tids, answer_map)
         if gtids:
@@ -1036,8 +1015,8 @@ class GetStateSchema(Schema):
 
 
 class GetMultiStatesSchema(Schema):
-    answer_ids = fields.List(fields.Int())
-    user_id = fields.Int()
+    answer_ids = fields.List(fields.Int(), required=True)
+    user_id = fields.Int(required=True)
     doc_id = fields.Int()
 
     # @pre_load()
@@ -1095,15 +1074,16 @@ def get_multi_states(args: GetMultiStatesModel):
             #plug = find_plugin_from_document(doc, tid, user)
         except PluginException as e:
             return abort(400, str(e))
+        except AssertionError:
+            return abort(400, 'answer_id is not associated with doc_id')
         block = plug.par
-        a, b, c, plug = pluginify(
+        _, _, _, plug = pluginify(
             doc,
             [block],
             user,
             custom_answer=ans,
             pluginwrap=PluginWrap.Nothing,
             do_lazy=NEVERLAZY,
-            debugging_multistate=True,
         )
         html = plug.get_final_output()
         response[ans.id] = {'html': html, 'reviewHtml': None}
