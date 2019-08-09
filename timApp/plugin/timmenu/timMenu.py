@@ -309,7 +309,7 @@ timMenu_plugin = create_blueprint(__name__, 'timMenu', TimMenuHtmlSchema(), csrf
 def reqs():
     """Introducing templates for TimMenu plugin"""
     templates = ["""
-``` {plugin="timMenu"}
+``` {plugin="timMenu" .hidden-print}
 separator: "|"              # Symbol(s) separating menu titles
 openingSymbol: " &#9661;"   # Symbol(s) indicating dropdown
 backgroundColor: "#F7F7F7"  # Menu bar background color (overrides basicColors)
@@ -338,7 +338,7 @@ menu: |!!
 !!
 ```
 ""","""
-``` {plugin="timMenu"}
+``` {plugin="timMenu" .hidden-print}
 menu: |!!
  - Menu title 1
    - [Menu item](item_1_address)
@@ -346,7 +346,7 @@ menu: |!!
 ```
 """,
 """
-``` {plugin="timMenu"}
+``` {plugin="timMenu" .hidden-print}
 topMenu: true
 menu: |!!
  - Menu title 1
@@ -364,7 +364,7 @@ menu: |!!
 ```
 """,
 """
-``` {plugin="timMenu"}
+``` {plugin="timMenu" .hidden-print}
 separator: "|"
 menu: |!!
  - Menu title 1
