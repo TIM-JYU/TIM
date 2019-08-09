@@ -267,7 +267,7 @@ def render_plugin_with_login_request(m: GenericHtmlModel[PluginInput, PluginMark
     )
 
 
-def make_base64(d: dict, json_encoder: None):
+def make_base64(d: dict, json_encoder=None):
     """Converts the given dict to a base64-encoded JSON string."""
     return base64.b64encode(json.dumps(d, sort_keys=True, cls=json_encoder).encode()).decode()
 

@@ -8,7 +8,7 @@ services:
    - postgresql
    - csplugin
    - pali
-   - field
+   - fields
    - showfile
    - haskellplugins
    - imagex
@@ -101,15 +101,15 @@ services:
     PYTHONPATH: /pali:/py:/usr/local/lib/python3.6/dist-packages
   command: ./startAll.sh
   restart: unless-stopped
- field:
+ fields:
   image: timimages/tim:${TIM_IMAGE_TAG}
-  build: ./timApp/modules/textfield
+  build: ./timApp/modules/fields
   volumes:
-   - ./timApp/modules/textfield:/textfield:ro
+   - ./timApp/modules/fields:/fields:ro
    - ./timApp/modules/py:/py:ro
-  working_dir: /textfield
+  working_dir: /fields
   environment:
-   PYTHONPATH: /textfield:/py:/usr/local/lib/python3.6/dist-packages
+   PYTHONPATH: /fields:/py:/usr/local/lib/python3.6/dist-packages
   command: ./startAll.sh
   restart: unless-stopped
  jsrunner:
