@@ -802,6 +802,23 @@ class CLisp(Language):
         return code, out, err, pwddir
 
 
+class Quarum(Language):
+    def __init__(self, query, sourcecode):
+        super().__init__(query, sourcecode)
+        self.sourcefilename = "/tmp/%s/%s.q" % (self.basename, self.filename)
+        self.exename = self.sourcefilename
+        self.fileext = "q"
+        self.pure_exename = u"./{0:s}.jar".format(self.filename)
+
+    def run(self, result, sourcelines, points_rule):
+        code, out, err, pwddir = self.runself(["/cs/java/quarum/runquarum", self.filename])
+        # p = re.compile("WARNING:\n"
+        #               "Couldn't re-execute SBCL with proper personality flags (/proc isn't mounted? setuid?)\n"
+        #               "Trying to continue anyway.")
+        # err = re.sub("WARNING:.*\n.*\nTrying to continue anyway.\n", "", err, flags=re.M)
+        return code, out, err, pwddir
+
+
 class Text(Language):
     def __init__(self, query, sourcecode):
         super().__init__(query, sourcecode)
@@ -1728,3 +1745,4 @@ languages["pascal"] = Pascal
 languages["stack"] = Stack
 languages["geogebra"] = Geogebra
 languages["jsframe"] = JSframe
+languages["quarum"] = Quarum

@@ -624,7 +624,7 @@ export class ToolsBase {
     public print(...args: unknown[]) {
         let sep = "";
         for (const a of args) {
-            this.output += sep + a;
+            this.output += sep + JSON.stringify(a);
             sep = " ";
         }
         if ( !this.usePrintLine ) { this.output += "\n"; }
