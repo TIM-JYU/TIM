@@ -241,13 +241,13 @@ class LanguageTypes {
     // What are known language types (be careful not to include partial word):
     runTypes = ["pascal", "fortran", "css", "jypeli", "scala", "java", "graphics", "cc", "c++", "shell", "vpython", "py2", "py", "fs", "clisp",
         "jjs", "psql", "sql", "alloy", "text", "cs", "run", "md", "js", "glowscript", "sage", "simcir",
-        "xml", "octave", "lua", "quarum", "swift", "mathcheck", "html", "processing", "rust", "r", "wescheme", "ping", "kotlin",
+        "xml", "octave", "lua", "quorum", "swift", "mathcheck", "html", "processing", "rust", "r", "wescheme", "ping", "kotlin",
         "smalltalk", "upload"];
 
     // For editor modes see: http://ace.c9.io/build/kitchen-sink.html ja sieltä http://ace.c9.io/build/demo/kitchen-sink/demo.js
     aceModes = ["pascal", "fortran", "css", "csharp", "scala", "java", "java", "c_cpp", "c_cpp", "sh", "python", "python", "python", "fsharp", "lisp",
         "javascript", "sql", "sql", "alloy", "text", "csharp", "run", "text", "javascript", "javascript", "python", "json",
-        "xml", "matlab", "lua", "quarum", "swift", "text", "html", "javascript", "text", "r", "scheme", "text", "kotlin",
+        "xml", "matlab", "lua", "quorum", "swift", "text", "html", "javascript", "text", "r", "scheme", "text", "kotlin",
         "text", "text"];
 
     // What are known test types (be careful not to include partial word):
