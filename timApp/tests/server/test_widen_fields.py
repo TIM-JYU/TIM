@@ -1,6 +1,6 @@
 from unittest import TestCase
-from timApp.answer.routes import widen_fields
-from timApp.answer.routes import get_alias
+from timApp.util.utils import widen_fields, get_alias
+
 
 class TestWiden_fields(TestCase):
     def test_comparesame(self):
