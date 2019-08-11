@@ -71,7 +71,7 @@ def get_fields_and_users(u_fields: List[str], groups: List[UserGroup],
     if not ugroups:  # if no access, give at least own group
         for group in current_user.groups:
             if group.name == current_user.name:
-                print(group.name + " added just user group")
+                # print(group.name + " added just user group")
                 ugroups.append(group)
 
     groups = ugroups

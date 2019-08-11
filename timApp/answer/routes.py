@@ -604,7 +604,8 @@ def handle_jsrunner_response(jsonresp, result, current_doc: DocInfo = None, allo
     for task in tasks:
         t_id = TaskId.parse(task, False, False, True)
         dib = doc_map[t_id.doc_id]
-        if not (curr_user.has_teacher_access(dib) or allow_non_teacher):
+        # TODO: Return case-specific abort messages
+        if not (curr_user.has_teacher_access(dib) or (allow_non_teacher and t_id.doc_id is current_doc.id) or (curr_user.has_view_access(dib) and dib.document.get_own_settings().get("allow_external_jsrunner", False))):
             return abort(403, f'Missing teacher access for document {dib.id}')
         try:
             plugin = verify_task_access(dib, t_id, AccessType.view, TaskIdAccess.ReadWrite)  # , context_user=ctx_user)
