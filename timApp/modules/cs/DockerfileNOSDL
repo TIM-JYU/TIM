@@ -1,4 +1,4 @@
-FROM timimages/cs3:bionic
+FROM timimages/cs3:rust
 RUN ls -la
 USER root
 # RUN rm /usr/lib/x86_64-linux-gnu/libSDL*

@@ -22,7 +22,7 @@ def add_rnd_macros(yaml_vals):
 
     try:
         rnd_seed = g.user.name
-    except:
+    except AttributeError or NameError:
         rnd_seed = None
     state = None
     if not yaml_vals.values.get('macros', None):
@@ -66,7 +66,7 @@ def add_url_macros(yaml_vals):
                         yaml_vals.values["macros"] = {}
                     try:
                         uvalue = float(urlvalue)
-                    except:
+                    except ValueError:
                         uvalue = None
                     if uvalue is not None:
                         maxvalue = yaml_vals.values["macros"].get("MAX" + fu, None)
@@ -79,7 +79,7 @@ def add_url_macros(yaml_vals):
                                 urlvalue = minvalue
                     urlvalue = DocSettings.urlmacros_tester.sub("", str(urlvalue))
                     yaml_vals.values["macros"][fu] = urlvalue
-                except:
+                except TypeError:
                     pass
     del yaml_vals.values[DocSettings.urlmacros_key]
 
@@ -159,7 +159,7 @@ class DocSettings:
         self.doc = doc
         self.__dict = settings_dict if settings_dict else YamlBlock()
         self.user = None
-        self.request = None
+        # self.request = None
 
     def to_paragraph(self) -> DocParagraph:
         text = '```\n' + self.__dict.to_markdown() + '\n```'

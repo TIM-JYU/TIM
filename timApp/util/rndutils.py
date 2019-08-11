@@ -43,7 +43,7 @@ def sep_n_and_jso(jso: str) -> [int, str]:
         n = int(n)
         if n < 0:
             n = 0
-    except:
+    except ValueError:
         n = -1
     n = min(n, MAX_RND_LIST_LEN)
     return n, fix_jso(jso)
@@ -67,7 +67,7 @@ def get_sample_list(myrandom: Random, jso: str) -> List[int]:
         jso = jso[idx+1:]
     try:
         n = int(n)
-    except:
+    except ValueError:
         n = 1
     n = min(n, MAX_RND_LIST_LEN)
 
@@ -179,12 +179,14 @@ def repeat_rnd(list_func, myrandom: Random, jso:str) -> Optional[List[int]]:
     return ret
 
 
-def get_rnds(attrs: Dict, name: str = "rnd", rnd_seed: Optional[int]=None, state = None) -> Tuple[Optional[List[int]], int]:
+def get_rnds(attrs: Dict, name: str = "rnd", rnd_seed: Optional[int]=None, state = None) \
+        -> Tuple[Optional[List[int]], int, int]:
     """
     Returns list of random numbers based on attribute name (def: rnd) and rnd_seed.
     :param attrs: dict of attributes
     :param name: name in attribute dict to use as instructions for the random numbers
     :param rnd_seed: random number initializion seed, if seed is None, use time
+    :param state of last used generator
     :return: list of random numbers and used seed
     """
     if attrs is None:
@@ -220,12 +222,13 @@ def get_rnds(attrs: Dict, name: str = "rnd", rnd_seed: Optional[int]=None, state
     return ret, rnd_seed, myrandom.getstate()
 
 
-def get_rands_as_dict(attrs: Dict, rnd_seed: SeedType, state = None) -> Tuple[Optional[dict], SeedType]:
+def get_rands_as_dict(attrs: Dict, rnd_seed: SeedType, state = None) -> Tuple[Optional[dict], SeedType, int]:
     """
     Returns a dict of random numbers variables (each is a list of random numbers).
     :param attrs: dict where may be attrinute rndnames:"rnd1,rnd2,..,rndn".  Of no names, "rnd"
                   is assumed
     :param rnd_seed: seed to initialize the generator
+    :param state of last used generator
     :return: dict of random variables
     """
     if attrs is None:
@@ -243,20 +246,21 @@ def get_rands_as_dict(attrs: Dict, rnd_seed: SeedType, state = None) -> Tuple[Op
     return ret, rnd_seed, state
 
 
-def get_rands_as_str(attrs: Dict, rnd_seed: SeedType, state = None) -> Tuple[str, SeedType]:
+def get_rands_as_str(attrs: Dict, rnd_seed: SeedType, state = None) -> Tuple[str, SeedType, int]:
     """
     Returns a Jinja2 str of random numbers variables (each is a list of random numbers).
     :param attrs: dict where may be attrinute rndnames:"rnd1,rnd2,..,rndn".  Of no names, "rnd"
                   is assumed
     :param rnd_seed: seed to initialize the generator
+    :param state of last used generator
     :return: Jinja 2 str of random variables
     """
     if attrs is None:
-        return '', rnd_seed
+        return '', rnd_seed, state
     rands, rnd_seed, state = get_rands_as_dict(attrs, rnd_seed, state)
     if rands is None:
-        return '', rnd_seed
-    ret = '', rnd_seed
+        return '', rnd_seed, state
+    ret = ''
     for name, rnds in rands.items():
         if rnds is None:
             continue

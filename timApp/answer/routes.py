@@ -274,7 +274,6 @@ class JsRunnerSchema(GenericMarkupSchema):
     timeout = fields.Int()
     updateFields = fields.List(fields.Str())
     paramFields = fields.List(fields.Str())
-    showInView = fields.Bool()
     autoadd = fields.Bool()
     fields = fields.List(fields.Str(), required=True)
 
@@ -284,8 +283,8 @@ class JsRunnerSchema(GenericMarkupSchema):
             raise ValidationError("Either group or groups must be given.")
 
 
-@answers.route("/<plugintype>/<task_id_ext>/multiSendEmail/", methods=['POST'])
-def multisendemail(plugintype: str, task_id_ext: str):
+@answers.route("/multiSendEmail/<task_id_ext>/", methods=['POST'])
+def multisendemail(task_id_ext: str):
     try:
         tid = TaskId.parse(task_id_ext)
     except PluginException as e:
@@ -959,12 +958,12 @@ def get_jsframe_data(task_id, user_id):
     plug = get_plugin_from_request(doc.document, tid, curr_user)
     try:
         vals = {}
-        fields = plug[1].values.get('fields', [])
-        if not fields:
+        flds = plug[1].values.get('fields', [])
+        if not flds:
             return json_response({})
 
         data, aliases, field_names = get_fields_and_users(
-            fields,
+            flds,
             [user.personal_group_prop],
             doc,
             get_current_user_object(),

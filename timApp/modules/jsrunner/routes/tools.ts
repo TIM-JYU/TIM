@@ -552,7 +552,7 @@ class Stats extends WithGtools {
 export class ToolsBase {
     protected output = "";
     protected errors: IError[] = [];
-    protected usePrintLine: boolean = false; // if used println at least one time then print does not do nl
+    public usePrintLine: boolean = false; // if used println at least one time then print does not do nl
     constructor(
         protected currDoc: string,
         protected markup: IJsRunnerMarkup,
@@ -627,7 +627,11 @@ export class ToolsBase {
     public print(...args: unknown[]) {
         let sep = "";
         for (const a of args) {
-            this.output += sep + a;
+            let as = a;
+            if (typeof a !== "string" && !(a instanceof String)) {
+                as = JSON.stringify(a);
+            }
+            this.output += sep + as;
             sep = " ";
         }
         if ( !this.usePrintLine ) { this.output += "\n"; }
@@ -638,7 +642,7 @@ export class ToolsBase {
         // But if println is used at least one time before print, then print is
         // not printing nl.
         this.usePrintLine = true;
-        this.print(args);
+        this.print(...args);
         this.output += "\n";
     }
 

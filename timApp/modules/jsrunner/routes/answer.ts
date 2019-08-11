@@ -96,6 +96,7 @@ function runner(d: IRunnerData): RunnerResult {
 
         for (const user of data) {
             const tools = new Tools(user, currDoc, markup, aliases); // in compiled JS, this is tools_1.default(...)
+            tools.usePrintLine = gtools.usePrintLine;
             gtools.setTools(tools);
             errorprg = "gtools.addToDatas(tools)";
             prgname = "addToDatas";
@@ -104,6 +105,7 @@ function runner(d: IRunnerData): RunnerResult {
             }
             // tslint:enable
             runProgram(d.program, "program", tools);
+            gtools.usePrintLine = tools.usePrintLine;
             // tools.print("d", JSON.stringify(d));
             // tools.print("User", JSON.stringify(tools));
             saveUsersFields.push(tools.getResult());

@@ -802,6 +802,20 @@ class CLisp(Language):
         return code, out, err, pwddir
 
 
+class Quorum(Language):
+    def __init__(self, query, sourcecode):
+        super().__init__(query, sourcecode)
+        self.sourcefilename = "/tmp/%s/%s.q" % (self.basename, self.filename)
+        self.exename = self.sourcefilename
+        self.fileext = "q"
+        self.pure_exename = u"./{0:s}.jar".format(self.filename)
+
+    def run(self, result, sourcelines, points_rule):
+        code, out, err, pwddir = self.runself(["/cs/java/quorum/runquorum", self.filename])
+        out = re.sub("Quorum 7.0\nBuild Successful\n", "", out, flags=re.M)
+        return code, out, err, pwddir
+
+
 class Text(Language):
     def __init__(self, query, sourcecode):
         super().__init__(query, sourcecode)
@@ -1728,3 +1742,4 @@ languages["pascal"] = Pascal
 languages["stack"] = Stack
 languages["geogebra"] = Geogebra
 languages["jsframe"] = JSframe
+languages["quorum"] = Quorum
