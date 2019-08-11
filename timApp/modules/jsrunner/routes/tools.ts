@@ -934,6 +934,27 @@ export class Tools extends ToolsBase {
         return sum;
     }
 
+    getArray(func: (fname: string) => any, fieldName: unknown, start: number, end: number): any[] {
+        const f = ensureStringFieldName(fieldName);
+        if (!(checkInt(start) && checkInt(end))) {
+            throw new Error("Parameters 'start' and 'end' must be integers.");
+        }
+        const a = [];
+        for (let i = start; i <= end; i++) {
+            a.push(func.call(this, f + i.toString()));
+        }
+        return a;
+    }
+
+    getArrayOf(func: (fname: string) => any, ...fieldNames: string[]): any[] {
+        const a = [];
+        const fields = widenFields([...fieldNames]);
+        for (const fn of fields) {
+            a.push(func.call(this, fn));
+        }
+        return a;
+    }
+
     setString(fieldName: unknown, content: unknown): void {
         const f = ensureStringFieldName(fieldName);
         const c = ensureStringLikeValue(content);
@@ -958,14 +979,17 @@ export class Tools extends ToolsBase {
         this.data.fields[fn] = c;
     }
 
-    setDouble(fieldName: unknown, content: unknown, maxNotToSave: number = -1e100): void {
+    setDouble(fieldName: unknown, content: unknown, maxNotToSave: number = -1e100, decim: number = NaN): void {
         const f = ensureStringFieldName(fieldName);
-        const c = ensureNumberLikeValue(content);
+        let c = ensureNumberLikeValue(content);
         const fn = this.checkAliasAndNormalize(f);
         if ( c <= maxNotToSave ) {
             if ( this.getValue(fieldName, "") !== "") { this.setString(fieldName, ""); }
             this.data.fields[fn] = "";
             return;
+        }
+        if ( !isNaN(c) ) {
+            c = this.round(c, decim);
         }
         this.result[fn] = c;
         this.data.fields[fn] = c;

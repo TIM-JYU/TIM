@@ -1957,14 +1957,16 @@ export class TimTableController extends DestroyScope implements IController, ITi
         // const tableCellOffset = tablecell.offset(); // Ihmeellisesti tämä antoi väärän tuloksen???
         const tableCellOffset = table.children("tbody").last().children("tr").eq(sr + this.rowDelta).children("td").eq(cell.renderIndexX + this.colDelta).offset();
 
-        let cell2y = 0;
-        if (sr > 0) {
-            const tablecell2 = table.children("tbody").last().children("tr").eq(sr - 1 + this.rowDelta).children("td");
+        const cell2y = 0;
+        /*
+        if (sr > 0 && false) { // seems not work when hidden row...
+            const tablecell2 = table.children("tbody").last().children("tr").eq(sr - 1 + this.rowDelta).children("td").eq(cell.renderIndexX + this.colDelta);
             const off2 = tablecell2.offset();
             if (off2) {
                 cell2y = off2.top;
             }
         }
+        */
 
         /*let off;
         if (event && event.target) {
@@ -2031,12 +2033,14 @@ export class TimTableController extends DestroyScope implements IController, ITi
             }
             const editOuterHeight = this.editInput.outerHeight();
             const buttonOpenBigEditor = this.element.find(".buttonOpenBigEditor");
-            const h = buttonOpenBigEditor.height() || 20;
+            const h1 = buttonOpenBigEditor.outerHeight() || 20;
+            const h = tablecell.outerHeight() || 20;
             if (editOffset && editOuterHeight && tableCellOffset && editOuterWidth) {
                 const mul = sr == 0 ? 1 : 2;
                 inlineEditorButtons.offset({
                     left: tableCellOffset.left,
-                    top: (cell2y ? cell2y : editOffset.top) - h - 5,
+                    // top: (cell2y ? cell2y : editOffset.top) - h - 5,
+                    top: editOffset.top - mul * h + (h - h1), //  - 5,
                 });
                 /*
                 const buttonOpenBigEditor = this.element.find(".buttonOpenBigEditor");
@@ -2788,7 +2792,7 @@ export class TimTableController extends DestroyScope implements IController, ITi
     }
 
     private tableStyle() {
-        return {"border": "none", "overflow": "auto", "max-height": this.maxRows, "width": this.maxCols};
+        return {"border": "none", /*"overflow": "auto",*/ "max-height": this.maxRows, "width": this.maxCols};
     }
 
     private isHidden(coli: number) {
