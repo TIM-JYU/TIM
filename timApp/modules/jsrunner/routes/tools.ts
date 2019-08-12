@@ -2,7 +2,6 @@ import * as t from "io-ts";
 import {IError, IJsRunnerMarkup, INumbersObject} from "../public/javascripts/jsrunnertypes";
 import {AliasDataT, UserFieldDataT} from "../servertypes";
 
-
 const TASK_PROG = new RegExp(/([\w.]*)\( *(\d*) *, *(\d*) *\)(.*)/);
 
 /**
@@ -53,7 +52,6 @@ export function widenFields(fields: string | string[]): string[] {
     }
     return rfields;
 }
-
 
 /**
  * From name=alias list returns two lists
