@@ -47,7 +47,7 @@ def task_ids_to_strlist(ids: List[TaskId]):
 
 def get_fields_and_users(u_fields: List[str], groups: List[UserGroup],
                          d: DocInfo, current_user: User, autoalias: bool = False,
-                         add_missing_fields: bool = False, allow_non_teacher: bool = False):
+                         add_missing_fields: bool = False, allow_non_teacher: bool = False, valid_only: bool = True):
     """
     Return fielddata, aliases, field_names
     :param u_fields: list of fields to be used
@@ -148,9 +148,13 @@ def get_fields_and_users(u_fields: List[str], groups: List[UserGroup],
 
     # For some reason, with 7 or more fields, executing the following query is very slow.
     # That's why we split the list of task ids in chunks of size 6 and merge the results.
+    if valid_only:
+        filt = (Answer.valid == True )
+    else:
+        filt = True
     for task_chunk in chunks(task_ids, 6):
         sub += (
-            Answer.query.filter(Answer.task_id.in_(task_ids_to_strlist(task_chunk)))
+            Answer.query.filter(Answer.task_id.in_(task_ids_to_strlist(task_chunk)) & filt )
                 .join(User, Answer.users)
                 .join(UserGroup, User.groups)
                 .filter(group_filter)

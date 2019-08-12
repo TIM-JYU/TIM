@@ -275,6 +275,7 @@ class JsRunnerSchema(GenericMarkupSchema):
     updateFields = fields.List(fields.Str())
     paramFields = fields.List(fields.Str())
     autoadd = fields.Bool()
+    validonly = fields.Bool()
     fields = fields.List(fields.Str(), required=True)
 
     @validates_schema(skip_on_field_errors=True)
@@ -468,12 +469,12 @@ def post_answer(plugintype: str, task_id_ext: str):
             pass
 
         siw = plugin.values.get("showInView", False)
-
+        validonly = plugin.values.get("validonly", True)
         answerdata['data'], answerdata['aliases'], _ = get_fields_and_users(
             plugin.values['fields'],
             found_groups,
             d,
-            get_current_user_object(), allow_non_teacher=siw,
+            get_current_user_object(), allow_non_teacher=siw, valid_only=validonly
         )
         if plugin.values.get('program') is None:
             abort(400, "Attribute 'program' is required.")
