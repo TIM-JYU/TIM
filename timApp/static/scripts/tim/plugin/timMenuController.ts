@@ -84,6 +84,8 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
     private barStyle: string = "";
     private mouseInside: boolean = false; // Whether mouse cursor is inside the menu.
     private userRights: IRights | undefined;
+    private previousSwitch: number | undefined;
+    private topMenuVisible: boolean = false; // Meant to curb unnecessary topMenu state changes.
 
     getDefaultMarkup() {
         return {};
@@ -110,8 +112,21 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
             this.openingSymbol = "&#9652;";
         }
         if (this.topMenu) {
-            window.onscroll = () => this.toggleSticky();
+            window.onscroll = () => {
+                this.toggleSticky();
+            };
+            /*
+            // Throttle; allow only one scroll event per 0.1s.
+            // let time = Date.now();
+            window.onscroll = () => {
+                    if ((time + 100 - Date.now()) < 0) {
+                        this.toggleSticky();
+                        time = Date.now();
+                    }
+                };
+             */
         }
+
         this.setBarStyles();
         onClick("body", ($this, e) => {
             this.onClick(e);
@@ -181,6 +196,7 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
         const menu = this.element.find(".tim-menu")[0];
         const placeholder = this.element.find(".tim-menu-placeholder")[0];
         const scrollY = $(window).scrollTop();
+        const height = 100;
         if (!menu || !placeholder) {
             return;
         }
@@ -191,18 +207,38 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
             // When scrolling downwards, don't show fixed menu and hide placeholder content.
             // Otherwise (i.e. scrolling upwards), show menu as fixed and let placeholder take its place in document
             // to mitigate page length changes.
+            // console.log(this.topMenuVisible + " " + this.previousSwitch + " " + scrollY);
             if (this.previousScroll && scrollY > this.previousScroll) {
+                // If scroll distance is smaller than min height, don't do anything.
+                if (!this.topMenuVisible || (!this.previousSwitch || scrollY > this.previousSwitch + height)) {
+                    this.previousScroll = $(window).scrollTop();
+                    return;
+                }
                 menu.classList.remove("top-menu");
                 placeholderContent.classList.add("tim-menu-hidden");
+                this.previousSwitch = scrollY;
+                this.topMenuVisible = false;
             } else {
+                if (this.topMenuVisible || (this.previousSwitch &&
+                    !(scrollY > this.previousSwitch + height || scrollY < this.previousSwitch - height))) {
+                    this.previousScroll = $(window).scrollTop();
+                    return;
+                }
                 menu.classList.add("top-menu");
                 placeholderContent.classList.remove("tim-menu-hidden");
+                this.previousSwitch = scrollY;
+                this.topMenuVisible = true;
             }
         } else {
+            if (!this.topMenuVisible || (!this.previousSwitch || !scrollY || scrollY > this.previousSwitch + height)) {
+                this.previousScroll = $(window).scrollTop();
+                return;
+            }
             menu.classList.remove("top-menu");
             placeholderContent.classList.add("tim-menu-hidden");
+            this.previousSwitch = scrollY;
+            this.topMenuVisible = false;
         }
-        this.previousScroll = $(window).scrollTop();
     }
 
     /**
@@ -295,6 +331,8 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
         }
     }
 }
+
+
 
 timApp.component("timmenuRunner", {
     bindings: pluginBindings,
