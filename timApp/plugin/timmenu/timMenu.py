@@ -177,7 +177,7 @@ def decide_menu_level(index: int, previous_level: int,  level_indentations, max_
     """
     Parse menu level from indentations by comparing to previously used, i.e. if user
     used (for  first instances) 1 space for level 0, 3 spaces for level 1 and 5 spaces for level 2, then:
-    - 0 spaces > YAML is malformed
+    - 0 spaces > 'YAML is malformed'; going below first indentation of an attribute is not allowed in YAML
     - 1 space > level 0
     - 2-3 spaces > level 1
     - 4-5 spaces > level 2
@@ -196,12 +196,16 @@ def decide_menu_level(index: int, previous_level: int,  level_indentations, max_
             return ind.level
     level = previous_level+1
     level = max_level if level > max_level else level
-    # If last (largest) level in the indentation list is not the same as the one discovered here, add to the list.
-    if level_indentations[-1].level is not level:
+    # If current item level isn't in the indentation list, add it.
+    missing_level = True
+    for ind in level_indentations:
+        if ind.level is level:
+            missing_level = False
+            break
+    if missing_level:
         level_indentations.append(
             TimMenuIndentation(level=level, spaces_min=level_indentations[-1].spaces_max+1, spaces_max=index))
     return level
-
 
 def set_attributes(line: str, item: TimMenuItem):
     """
@@ -300,7 +304,7 @@ def parse_menu_string(menu_str, replace_tabs: bool = False):
                 parents.insert(0, current)
                 break
     # List has all menus that are parents to any others, but first one contains the whole menu tree.
-    # print(level_indentations)
+    print(level_indentations)
     return parents[-1].items
 
 
