@@ -156,6 +156,8 @@ def answer(args: TextfieldAnswerModel):
 
 
     nosave = args.input.nosave
+    if args.markup.nosave:
+        nosave = True
 
     if not nosave:
         save = {"c": c}

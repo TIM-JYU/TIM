@@ -161,7 +161,10 @@ def answer(args: NumericfieldAnswerModel):
     web = {}
     result = {'web': web}
     c = args.input.c
+
     nosave = args.input.nosave
+    if args.markup.nosave:
+        nosave = True
 
     if isinstance(c, Missing):
         web['result'] = "unsaved"
