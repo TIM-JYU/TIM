@@ -77,8 +77,10 @@ timApp.config(["$httpProvider", ($httpProvider: IHttpProvider) => {
     $httpProvider.defaults.headers.get.Pragma = "no-cache";
 
     // convert ISO 8601 date strings to moment objects
-    ($httpProvider.defaults.transformResponse as IHttpResponseTransformer[]).push((responseData) => {
-        convertDateStringsToMoments(responseData);
+    ($httpProvider.defaults.transformResponse as IHttpResponseTransformer[]).push((responseData, headers) => {
+        if (headers("No-Date-Conversion") !== "true") {
+            convertDateStringsToMoments(responseData);
+        }
         return responseData;
     });
 }]);

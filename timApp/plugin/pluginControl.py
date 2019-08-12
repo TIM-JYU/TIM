@@ -312,32 +312,21 @@ KeyType = Tuple[int, Range]
 def get_answers(user, task_ids, answer_map):
     col = func.max(Answer.id).label('col')
     cnt = func.count(Answer.id).label('cnt')
-    sub = (user
-           .answers
-           .filter(Answer.task_id.in_(task_ids_to_strlist(task_ids)) & Answer.valid == True)
-           .add_columns(col, cnt)
-           .with_entities(col, cnt)
-           .group_by(Answer.task_id).subquery())
-    answers: List[Tuple[Answer, int]] = (
-        Answer.query.join(sub, Answer.id == sub.c.col)
-            .with_entities(Answer, sub.c.cnt)
-            .all()
-    )
-    for answer, cnt in answers:
-        answer_map[answer.task_id] = answer, cnt
-    return cnt, answers
-
-
-def get_latest_for_tasks(task_ids, answer_map):
-    col = func.max(Answer.id).label('col')
-    cnt = func.count(Answer.id).label('cnt')
-    sub = (Answer
-           .query
-           .filter(Answer.task_id.in_(task_ids_to_strlist(task_ids)) & Answer.valid == True)
-           .add_columns(col, cnt)
-           .with_entities(col, cnt)
-           .group_by(Answer.task_id).subquery()
-           )
+    if user is None:
+        sub = (Answer
+               .query
+               .filter(Answer.task_id.in_(task_ids_to_strlist(task_ids)) & Answer.valid == True)
+               .add_columns(col, cnt)
+               .with_entities(col, cnt)
+               .group_by(Answer.task_id).subquery()
+               )
+    else:
+        sub = (user
+               .answers
+               .filter(Answer.task_id.in_(task_ids_to_strlist(task_ids)) & Answer.valid == True)
+               .add_columns(col, cnt)
+               .with_entities(col, cnt)
+               .group_by(Answer.task_id).subquery())
     answers: List[Tuple[Answer, int]] = (
         Answer.query.join(sub, Answer.id == sub.c.col)
             .with_entities(Answer, sub.c.cnt)
@@ -351,7 +340,6 @@ def get_latest_for_tasks(task_ids, answer_map):
 def pluginify(doc: Document,
               pars: List[DocParagraph],
               user: Optional[User],
-              debugging_multistate: bool = False, #TODO delete this
               custom_answer: Optional[Answer] = None,
               sanitize=True,
               do_lazy=False,
@@ -497,7 +485,7 @@ def pluginify(doc: Document,
                 curruser_task_ids.append(plugin.task_id)
                 curruser_plugins_to_change.append(plugin)
     if glb_task_ids:
-        get_latest_for_tasks(glb_task_ids, answer_map)
+        get_answers(None, glb_task_ids, answer_map)
         for p in glb_plugins_to_change:
             a = answer_map.get(p.task_id.doc_task,None)
             if not a:
@@ -604,9 +592,6 @@ def pluginify(doc: Document,
                         continue
                     placements[idx].set_output(r, html)
     taketime("plg m", "Plugins done")
-
-    if debugging_multistate:  # TODO delete this
-        return None, None, None, custom_answer_plugin
 
     taketime("plc", "Placement start")
 

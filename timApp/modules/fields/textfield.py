@@ -156,6 +156,8 @@ def answer(args: TextfieldAnswerModel):
 
 
     nosave = args.input.nosave
+    if args.markup.nosave:
+        nosave = True
 
     if not nosave:
         save = {"c": c}
@@ -175,14 +177,14 @@ def answer(args: TextfieldAnswerModel):
 def reqs():
     """Introducing templates for textfield plugin"""
     templates = [
-"""``` {#PLUGINNAMEHERE="textfield"}
+"""``` {#PLUGINNAMEHERE plugin="textfield"}
 header:          # otsikko, tyhjä = ei otsikkoa
 stem:            # kysymys, tyhjä = ei kysymystä
 inputstem:       # vastaus, tyhjä = ei vastausta
 tag:        # seurantaid, tyhjä = ei seurantaid:tä
 initword:        # alkuarvo, tyhjä = ei alkuarvoa
 buttonText: Save # PAINIKKEEN NIMI, TYHJÄ = EI PAINIKETTA
-cols: 1          # kentän koko, numeraalinen
+cols: 7          # kentän koko, numeraalinen
 autosave: false  # autosave, pois päältä
 validinput: '^(hyv|hyl|[12345])$' # käyttäjäsyötteen rajoitin, tyhjä = ei rajoitusta
 errormessage:    #inputcheckerin virheselite, tyhjä = selite on inputchecker

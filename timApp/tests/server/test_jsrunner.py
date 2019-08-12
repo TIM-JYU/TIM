@@ -345,6 +345,9 @@ group: testuser1
 group: testuser2
 fields:
 - {d.id}.t
+program: |!!
+tools.setString("{d.id}.t", "hi");
+!!
         """)
         self.do_jsrun(
             d2,
@@ -366,6 +369,38 @@ tools.setString("{d.id}.t", "hi");
             json_key='error',
         )
 
+        # Can write own answer to another doc via jsrunner if teacher access there
+        self.test_user_2.grant_access(d.id,'teacher')
+        self.do_jsrun(
+            d2,
+        )
+        a = self.verify_content(f'{d.id}.t', 'c', 'hi', self.test_user_2)
+        self.test_user_2.remove_access(d.id, 'teacher')
+        db.session.commit()
+
+        # Can write own answer to another doc via jsrunner if view access and allow_ext
+        d.document.add_setting('allow_external_jsrunner', True)
+        self.test_user_2.remove_access(d.id, 'view')
+        db.session.commit()
+        d2 = self.create_jsrun(f"""
+group: testuser2
+fields: []
+program: |!!
+tools.setString("{d.id}.t", "hi_ext");
+!!
+        """)
+        self.do_jsrun(
+            d2,
+            expect_content=f'Missing teacher access for document {d.id}',
+            expect_status=403,
+            json_key='error',
+        )
+        self.test_user_2.grant_access(d.id, 'view')
+        self.do_jsrun(
+            d2,
+        )
+        a = self.verify_content(f'{d.id}.t', 'c', 'hi_ext', self.test_user_2, expected_count=2)
+
         d2 = self.create_jsrun(f"""
 group: testuser1
 fields: []
@@ -374,21 +409,53 @@ tools.setString("t", "hi");
 !!
         """)
         d2.document.add_text('#- {#t plugin=textfield}')
-        # TODO: Update this; current get_fields_and_users:
-        #  "if no access, give at least own group"
-        # self.do_jsrun(
-        #     d2,
-        #     expect_content=f'Missing view access for group testuser1',
-        #     expect_status=403,
-        #     json_key='error',
-        # )
+        self.do_jsrun(
+            d2,
+        )
+        a = self.verify_content(f'{d2.id}.t', 'c', 'hi', self.test_user_2)
         self.test_user_2.groups.append(UserGroup.get_teachers_group())
         db.session.commit()
         self.do_jsrun(
             d2,
         )
-        a = self.verify_content(f'{d2.id}.t', 'c', 'hi', self.test_user_1)
+        a = self.verify_content(f'{d2.id}.t', 'c', 'hi', self.test_user_1, expected_count=1)
         self.assertEqual(self.test_user_2, a.saver)
+
+        # Can use jsrunner for own group in another doc if view access and showInView: true
+        self.login_test1()
+        d2 = self.create_jsrun(f"""
+groups: []
+fields:
+- t
+program: |!!
+tools.setString("t", "hi");
+!!
+        """)
+        d2.document.add_text('#- {#t plugin=textfield}')
+        self.test_user_2.grant_access(d2.id, 'view')
+        d3 = self.create_jsrun(f"""
+groups: []
+fields:
+- t
+program: |!!
+tools.setString("t", "hi");
+!!
+showInView: True
+        """)
+        d3.document.add_text('#- {#t plugin=textfield}')
+        self.test_user_2.grant_access(d3.id, 'view')
+        self.login_test2()
+        self.do_jsrun(
+            d2,
+            expect_content=f'Missing teacher access for document {d2.id}',
+            expect_status=403,
+            json_key='error',
+        )
+        self.do_jsrun(
+            d3,
+        )
+        a = self.verify_content(f'{d3.id}.t', 'c', 'hi', self.test_user_2)
+
 
     def test_runscript(self):
         runscript_url = 'http://jsrunner:5000/runScript'

@@ -802,6 +802,8 @@ def get_plugin_from_paragraph(doc_id, par_id) -> (DocEntry, Plugin):
         abort(404)
     verify_edit_access(d)
     par = d.document_as_current_user.get_paragraph(par_id)
+    if par.is_reference():
+        abort(400, "This table is referenced from another document")
     return d, Plugin.from_paragraph(par)
 
 

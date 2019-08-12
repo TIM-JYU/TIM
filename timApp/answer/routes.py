@@ -1,10 +1,8 @@
 """Answer-related routes."""
 import json
 import re
-import time
-from collections import defaultdict
 from datetime import timezone, timedelta, datetime
-from typing import Union, List, Tuple, Dict, Match, Iterable
+from typing import Union, List, Tuple, Dict
 
 import attr
 import dateutil.parser
@@ -13,10 +11,9 @@ from flask import Blueprint
 from flask import Response
 from flask import abort
 from flask import request
-from marshmallow import Schema, fields, post_load, validates_schema, ValidationError, pre_load
+from marshmallow import Schema, fields, post_load, validates_schema, ValidationError
 from marshmallow.utils import _Missing, missing
-from sqlalchemy import func, tuple_
-from sqlalchemy.orm import defaultload, joinedload
+from sqlalchemy import func
 from webargs.flaskparser import use_args
 
 from pluginserver_flask import GenericMarkupSchema
@@ -42,16 +39,14 @@ from timApp.plugin.plugin import Plugin, PluginWrap, NEVERLAZY, TaskNotFoundExce
 from timApp.plugin.plugin import PluginType
 from timApp.plugin.plugin import find_plugin_from_document
 from timApp.plugin.pluginControl import find_task_ids, pluginify
-from timApp.util.answerutil import task_ids_to_strlist, get_fields_and_users
-from timApp.util.utils import widen_fields, get_alias
 from timApp.plugin.pluginexception import PluginException
 from timApp.plugin.taskid import TaskId, TaskIdAccess
 from timApp.timdb.dbaccess import get_timdb
 from timApp.timdb.exceptions import TimDbException
 from timApp.timdb.sqa import db
-from timApp.user.groups import verify_group_view_access
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
+from timApp.util.answerutil import task_ids_to_strlist, get_fields_and_users
 from timApp.util.flask.requesthelper import verify_json_params, get_option, get_consent_opt
 from timApp.util.flask.responsehelper import json_response, ok_response
 from timApp.util.utils import try_load_json, get_current_time
@@ -165,39 +160,6 @@ def chunks(l: List, n: int):
         yield l[i:i + n]
 
 
-@answers.route("/multiplugin2", methods=['POST'])
-def get_answers_for_tasks2():
-    """
-    Queries all answers for given list of tasks by the given user
-    TODO: experimental, delete?
-    :return: {answers:[Answer], user: user_id}
-    """
-    tasks, user_id = verify_json_params('tasks', 'user')
-    try:
-        user_id = int(user_id)
-    except ValueError:
-        abort(404, 'Not a valid user id')
-    user = User.get_by_id(user_id)
-    verify_logged_in()
-    try:
-        doc_map = {}
-        fieldlist = {k: [] for k in tasks}
-        for task_id in tasks:
-            tid = TaskId.parse(task_id)
-            if tid.doc_id not in doc_map:
-                dib = get_doc_or_abort(tid.doc_id, f'Document {tid.doc_id} not found')
-                verify_seeanswers_access(dib)
-                doc_map[tid.doc_id] = dib.document
-        answs = user.answers.options(joinedload(Answer.users_all))\
-            .order_by(Answer.id.desc()).filter(Answer.valid.is_(True))\
-            .filter(Answer.task_id.in_(tasks)).all()
-        for a in answs:
-            fieldlist[a.task_id].append(a)
-        return json_response({"answers": fieldlist, "userId": user_id})
-    except Exception as e:
-        return abort(400, str(e))
-
-
 def get_useranswers_for_task(user, task_ids, answer_map):
     """
     Performs a query for latest valid answers by given user for given task
@@ -219,7 +181,6 @@ def get_useranswers_for_task(user, task_ids, answer_map):
         if len(answer.users_all) > 1:
             answer_map[answer.task_id] = answer
         else:
-            # answer_map[answer.task_id] = answer
             asd = answer.to_json()
             asd.pop('users')
             answer_map[answer.task_id] = asd
@@ -241,31 +202,41 @@ def get_globals_for_tasks(task_ids, answer_map):
             .with_entities(Answer, sub.c.cnt)
             .all()
     )
-    # for answer, cnt in answers:
-    #     answer_map[answer.task_id] = answer, cnt
     for answer in answers:
-            # answer_map[answer.task_id] = answer
             asd = answer.Answer.to_json()
             answer_map[answer.Answer.task_id] = asd
     return cnt, answers
 
 
+class UserAnswersForTasksSchema(Schema):
+    tasks = fields.List(fields.Str(), required=True)
+    user = fields.Int(required=True)
+
+    @post_load
+    def make_obj(self, data):
+        return UserAnswersForTasksModel(**data)
+
+
+@attr.s(auto_attribs=True)
+class UserAnswersForTasksModel:
+    tasks: List[str]
+    user: int
+
+
 @answers.route("/userAnswersForTasks", methods=['POST'])
-def get_answers_for_tasks():
+@use_args(UserAnswersForTasksSchema())
+def get_answers_for_tasks(args: UserAnswersForTasksModel):
     """
     Route for getting latest valid answers for given user and list of tasks
     :return: {"answers": {taskID: Answer}, "userId": user_id}
     """
-    tasks, user_id = verify_json_params('tasks', 'user')
-    try:
-        user_id = int(user_id)
-    except ValueError:
-        abort(404, 'Not a valid user id')
+    tasks, user_id = args.tasks, args.user
     user = User.get_by_id(user_id)
+    if user is None:
+        abort(400, 'Non-existent user')
     verify_logged_in()
     try:
         doc_map = {}
-        fieldlist = {}
         tids = []
         gtids = []
         for task_id in tasks:
@@ -279,7 +250,6 @@ def get_answers_for_tasks():
             else:
                 tids.append(tid)
         answer_map = {}
-        # pluginControl.get_answers(user, tids, answer_map)
         if tids:
             get_useranswers_for_task(user, tids, answer_map)
         if gtids:
@@ -305,6 +275,7 @@ class JsRunnerSchema(GenericMarkupSchema):
     updateFields = fields.List(fields.Str())
     paramFields = fields.List(fields.Str())
     autoadd = fields.Bool()
+    validonly = fields.Bool()
     fields = fields.List(fields.Str(), required=True)
 
     @validates_schema(skip_on_field_errors=True)
@@ -498,12 +469,12 @@ def post_answer(plugintype: str, task_id_ext: str):
             pass
 
         siw = plugin.values.get("showInView", False)
-
+        validonly = plugin.values.get("validonly", True)
         answerdata['data'], answerdata['aliases'], _ = get_fields_and_users(
             plugin.values['fields'],
             found_groups,
             d,
-            get_current_user_object(), allow_non_teacher=siw,
+            get_current_user_object(), allow_non_teacher=siw, valid_only=validonly
         )
         if plugin.values.get('program') is None:
             abort(400, "Attribute 'program' is required.")
@@ -634,7 +605,8 @@ def handle_jsrunner_response(jsonresp, result, current_doc: DocInfo = None, allo
     for task in tasks:
         t_id = TaskId.parse(task, False, False, True)
         dib = doc_map[t_id.doc_id]
-        if not (curr_user.has_teacher_access(dib) or allow_non_teacher):
+        # TODO: Return case-specific abort messages
+        if not (curr_user.has_teacher_access(dib) or (allow_non_teacher and t_id.doc_id is current_doc.id) or (curr_user.has_view_access(dib) and dib.document.get_own_settings().get("allow_external_jsrunner", False))):
             return abort(403, f'Missing teacher access for document {dib.id}')
         try:
             plugin = verify_task_access(dib, t_id, AccessType.view, TaskIdAccess.ReadWrite)  # , context_user=ctx_user)
@@ -648,8 +620,8 @@ def handle_jsrunner_response(jsonresp, result, current_doc: DocInfo = None, allo
             if t_id.field  and t_id.field != "points" and t_id.field != "styles":
                 task_content_name_map[task] = t_id.field
             else:
-                plug = find_plugin_from_document(dib.document, t_id, curr_user)
-                content_field = plug.get_content_field_name()
+                # plug = find_plugin_from_document(dib.document, t_id, curr_user)
+                content_field = plugin.get_content_field_name()
                 task_content_name_map[task] = content_field
         except TaskNotFoundException as e:
             #task_display = t_id.doc_task if t_id.doc_id != current_doc.id else t_id.task_name
@@ -726,7 +698,9 @@ def handle_jsrunner_response(jsonresp, result, current_doc: DocInfo = None, allo
                                     pass
                             else:
                                 content[field] = value
-                            if not (content.get(task_content_name_map[task], False)):
+                            # Ensure that there's always a content field even when setting styles to empty answer
+                            prev_content_value = content.get(task_content_name_map[task], None)
+                            if prev_content_value is None:
                                 content[task_content_name_map[task]] = None
                         else:
                             continue
@@ -827,15 +801,7 @@ def get_task_infos():
                 dib = get_doc_or_abort(tid.doc_id, f'Document {tid.doc_id} not found')
                 doc_map[tid.doc_id] = dib.document
             plugin = find_plugin_from_document(doc_map[tid.doc_id], tid, user)
-            tim_vars = {'maxPoints': plugin.max_points(),
-                        'userMin': plugin.user_min_points(),
-                        'userMax': plugin.user_max_points(),
-                        'deadline': plugin.deadline(),
-                        'starttime': plugin.starttime(),
-                        'answerLimit': plugin.answer_limit(),
-                        'triesText': plugin.values.get('triesText', 'Tries left:'),
-                        'pointsText': plugin.values.get('pointsText', 'Points:')
-                        }
+            tim_vars = find_tim_vars(plugin)
             infolist[task_id] = tim_vars
         except (TaskNotFoundException, PluginException) as e:
             return abort(400, str(e))
@@ -845,19 +811,22 @@ def get_task_infos():
 def get_task_info(task_id):
     try:
         plugin = Plugin.from_task_id(task_id, user=get_current_user_object())
-        tim_vars = {'maxPoints': plugin.max_points(),
-                    'userMin': plugin.user_min_points(),
-                    'userMax': plugin.user_max_points(),
-                    'deadline': plugin.deadline(),
-                    'starttime': plugin.starttime(),
-                    'answerLimit': plugin.answer_limit(),
-                    'triesText': plugin.values.get('triesText', 'Tries left:'),
-                    'pointsText': plugin.values.get('pointsText', 'Points:')
-                    }
+        tim_vars = find_tim_vars(plugin)
     except PluginException as e:
         return abort(400, str(e))
     return json_response(tim_vars)
 
+def find_tim_vars(plugin: Plugin):
+    tim_vars = {'maxPoints': plugin.max_points(),
+                'userMin': plugin.user_min_points(),
+                'userMax': plugin.user_max_points(),
+                'deadline': plugin.deadline(),
+                'starttime': plugin.starttime(),
+                'answerLimit': plugin.answer_limit(),
+                'triesText': plugin.values.get('triesText', 'Tries left:'),
+                'pointsText': plugin.values.get('pointsText', 'Points:')
+                }
+    return tim_vars
 
 @answers.route("/answers/<task_id>/<user_id>")
 def get_answers(task_id, user_id):
@@ -874,6 +843,8 @@ def get_answers(task_id, user_id):
     user = User.get_by_id(user_id)
     if user_id != get_current_user_id():
         verify_seeanswers_access(d)
+    elif d.document.get_own_settings().get('need_view_for_answers', False):
+        verify_view_access(d)
     if user is None:
         abort(400, 'Non-existent user')
     try:
@@ -896,7 +867,6 @@ def get_global_answers(task_id):
     if not is_global_id(tid):
         return abort(400, 'Task is not global task')
     try:
-        #user_answers = pluginControl.get_latest_for_tasks([tid],{})
         user_answers = get_globals_for_tasks([tid], {})
         return json_response([user_answers[1][0][0]])
     except Exception as e:
@@ -1031,13 +1001,8 @@ class GetStateSchema(Schema):
 
 
 class GetMultiStatesSchema(Schema):
-    answer_ids = fields.List(fields.Int())
-    user_id = fields.Int()
-    doc_id = fields.Int()
-
-    # @pre_load()
-    # def debug(self, data):
-    #     print("debug me")
+    answer_ids = fields.List(fields.Int(), required=True)
+    user_id = fields.Int(required=True)
 
     @post_load
     def make_obj(self, data):
@@ -1048,7 +1013,6 @@ class GetMultiStatesSchema(Schema):
 class GetMultiStatesModel:
     answer_ids: List[int]
     user_id: int
-    doc_id: int
 
 
 @attr.s(auto_attribs=True)
@@ -1069,58 +1033,37 @@ def get_multi_states(args: GetMultiStatesModel):
     :param args: {answer_ids: list of answers, user_id, doc_id}
     :return: {answerID: {'html': html, 'reviewHtml': None}}
     """
-    answer_ids, user_id, doc_id = args.answer_ids, args.user_id, args.doc_id
+    answer_ids, user_id = args.answer_ids, args.user_id
     print(args)
-    docentry = get_doc_or_abort(doc_id)
-    verify_seeanswers_access(docentry)
-    doc = Document(doc_id)
     user = User.query.get(user_id)
     if user is None:
         abort(400, 'Non-existent user')
-    doc.insert_preamble_pars()
     answs = Answer.query.filter(Answer.id.in_(answer_ids)).all()
     response = {}
-    # blocks = []
+    doc_map = {}
     for ans in answs:
-        ###
         tid = TaskId.parse(ans.task_id)
-        #if parid, maybe_set_hint?
+        if tid.doc_id not in doc_map:
+            dib = get_doc_or_abort(tid.doc_id, f'Document {tid.doc_id} not found')
+            verify_seeanswers_access(dib)
+            doc_map[tid.doc_id] = dib.document
         try:
-            doc, plug = get_plugin_from_request(doc, task_id=tid, u=user)
-            #plug = find_plugin_from_document(doc, tid, user)
+            doc, plug = get_plugin_from_request(doc_map[tid.doc_id], task_id=tid, u=user)
         except PluginException as e:
             return abort(400, str(e))
+        except AssertionError:
+            return abort(400, 'answer_id is not associated with doc_id')
         block = plug.par
-        a, b, c, plug = pluginify(
+        _, _, _, plug = pluginify(
             doc,
             [block],
             user,
             custom_answer=ans,
             pluginwrap=PluginWrap.Nothing,
             do_lazy=NEVERLAZY,
-            debugging_multistate=True,
         )
         html = plug.get_final_output()
         response[ans.id] = {'html': html, 'reviewHtml': None}
-        ####
-    #     tid = TaskId.parse(ans.task_id)
-    #     # if parid, maybe_set_hint?
-    #     try:
-    #         doc, plug = get_plugin_from_request(doc, task_id=tid, u=user)
-    #         #plug = find_plugin_from_document(doc, tid, user)
-    #     except PluginException as e:
-    #         return abort(400, str(e))
-    #     block = plug.par
-    #     blocks.append(block)
-    # a, b, c, plug = pluginify(
-    #     doc,
-    #     blocks,
-    #     user,
-    #     # custom_answer=ans,
-    #     pluginwrap=PluginWrap.Nothing,
-    #     do_lazy=NEVERLAZY,
-    # )
-    # print("hmm")
     return json_response(response)
 
 @answers.route("/getState")

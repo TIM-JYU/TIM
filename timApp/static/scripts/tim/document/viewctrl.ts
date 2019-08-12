@@ -13,7 +13,7 @@ import * as popupMenu from "tim/document/popupMenu";
 import {QuestionHandler} from "tim/document/question/questions";
 import {initReadings} from "tim/document/readings";
 import {timLogTime} from "tim/util/timTiming";
-import {isPageDirty, markAsUsed, markPageNotDirty} from "tim/util/utils";
+import {isPageDirty, markAsUsed, markPageNotDirty, widenFields} from "tim/util/utils";
 import {AnswerBrowserController, ITaskInfo, PluginLoaderCtrl} from "../answer/answerbrowser3";
 import {IAnswer} from "../answer/IAnswer";
 import {BookmarksController} from "../bookmark/bookmarks";
@@ -616,14 +616,20 @@ export class ViewCtrl implements IController {
                 user: user.id,
             });
             if (!this.formTaskInfosLoaded) {
-                const taskInfoResponse = await $http.post<{ [index: string]: ITaskInfo }>(
-                    "/infosForTasks",  // + window.location.search,  // done in interceptor
-                    {
-                    tasks: taskList,
-                });
+                // TODO: answerLimit does not currently work with fields and point browser is not visible in forms
+                //  - takes long time to load on pages with lots of form plugins
+                // const taskInfoResponse = await $http.post<{ [index: string]: ITaskInfo }>(
+                //     "/infosForTasks",  // + window.location.search,  // done in interceptor
+                //     {
+                //     tasks: taskList,
+                // });
                 this.formTaskInfosLoaded = true;
                 for (const fab of this.formAbs.values()) {
-                    fab.setInfo(taskInfoResponse.data[fab.taskId]);
+                    // fab.setInfo(taskInfoResponse.data[fab.taskId]);
+                    fab.setInfo({userMin: 0,
+                    userMax: 0,
+                    answerLimit: 0,
+                    });
                 }
             }
             if (answerResponse.data.userId == this.selectedUser.id) {
@@ -658,6 +664,7 @@ export class ViewCtrl implements IController {
         // TODO: if(!taskids) use all formAbs / regular abs
         // TODO: Change regular answerBrowser's user and force update
         // TODO: Refactor (repeated lines from changeUser)
+        taskids = widenFields(taskids);
         const formAbMap = new Map<string, AnswerBrowserController>();
         const fabIds: string[] = [];
         const regularAbMap = new Map<string, AnswerBrowserController>();
@@ -705,6 +712,8 @@ export class ViewCtrl implements IController {
             ab.getAnswersAndUpdate();
             ab.loadInfo();
         }
+        // TODO: attribute for this? Unsaved column might get updated
+        this.updateAllTables(taskids);
     }
 
     public updateTable(tableTaskId: string, fields?: string[]) {

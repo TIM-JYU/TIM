@@ -2,14 +2,16 @@ import * as t from "io-ts";
 import {IError, IJsRunnerMarkup, INumbersObject} from "../public/javascripts/jsrunnertypes";
 import {AliasDataT, UserFieldDataT} from "../servertypes";
 
+
 const TASK_PROG = new RegExp(/([\w.]*)\( *(\d*) *, *(\d*) *\)(.*)/);
 
 /**
+ * TODO: Importing this from util.ts breaks jsrunner build? As does exporting from here
  * Return fields widened, so string "d(1,4);dsum" coes out as
  * a list ["d1, "d2", "d3", "dsum"]
  * @param fields string/list to widen
  */
-function widenFields(fields: string | string[]): string[] {
+export function widenFields(fields: string | string[]): string[] {
     let fields1: string[] = [];
     if (!(fields instanceof Array)) {
         fields = fields.split(";");
@@ -51,6 +53,7 @@ function widenFields(fields: string | string[]): string[] {
     }
     return rfields;
 }
+
 
 /**
  * From name=alias list returns two lists
