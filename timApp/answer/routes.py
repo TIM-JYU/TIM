@@ -1003,7 +1003,6 @@ class GetStateSchema(Schema):
 class GetMultiStatesSchema(Schema):
     answer_ids = fields.List(fields.Int(), required=True)
     user_id = fields.Int(required=True)
-    doc_id = fields.Int()
 
     @post_load
     def make_obj(self, data):
@@ -1014,7 +1013,6 @@ class GetMultiStatesSchema(Schema):
 class GetMultiStatesModel:
     answer_ids: List[int]
     user_id: int
-    doc_id: int
 
 
 @attr.s(auto_attribs=True)
@@ -1035,7 +1033,7 @@ def get_multi_states(args: GetMultiStatesModel):
     :param args: {answer_ids: list of answers, user_id, doc_id}
     :return: {answerID: {'html': html, 'reviewHtml': None}}
     """
-    answer_ids, user_id, doc_id = args.answer_ids, args.user_id, args.doc_id
+    answer_ids, user_id = args.answer_ids, args.user_id
     print(args)
     user = User.query.get(user_id)
     if user is None:
