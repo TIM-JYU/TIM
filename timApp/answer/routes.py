@@ -235,6 +235,7 @@ def get_answers_for_tasks(args: UserAnswersForTasksModel):
     if user is None:
         abort(400, 'Non-existent user')
     verify_logged_in()
+    currid = get_current_user_id()
     try:
         doc_map = {}
         tids = []
@@ -243,7 +244,10 @@ def get_answers_for_tasks(args: UserAnswersForTasksModel):
             tid = TaskId.parse(task_id)
             if tid.doc_id not in doc_map:
                 dib = get_doc_or_abort(tid.doc_id, f'Document {tid.doc_id} not found')
-                verify_seeanswers_access(dib)
+                if user_id != currid:
+                    verify_seeanswers_access(dib)
+                elif dib.document.get_own_settings().get('need_view_for_answers', False):
+                    verify_view_access(dib)
                 doc_map[tid.doc_id] = dib.document
             if is_global_id(tid):
                 gtids.append(tid)
