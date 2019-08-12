@@ -74,11 +74,13 @@ def get_error_html(message: Union[str, Exception], response: Optional[str]=None)
                                                  f'<pre>---Full response string start---\n{response}\n---Full response string end---</pre>' if response is not None else ''))
 
 
+# noinspection PyUnusedLocal
 def get_error_tex(title, message: Union[str, Exception], response: Optional[str]=None):
     """Wraps an error message in a TeX element 'timpluginerror'.
 
-    :param response: The plugin response string.
+    :param title: The plugin response string.
     :param message: The message to be displayed in the error.
+    :param response: No tused?
     :return: The sanitized error message HTML.
     """
 
@@ -162,6 +164,7 @@ def exclude_keys(obj: Dict[str, Any], *keys: str):
     return {k: v for k, v in obj.items() if k not in keys}
 
 
+# noinspection PyPep8Naming
 class cached_property:
     """
     A property that is only computed once per instance and then replaces itself
@@ -273,6 +276,9 @@ def widen_fields(fields: List[str] or str):
 
     rfields = []
     for field in fields1:
+        field = field.strip()
+        if not field:
+            continue
         parts = field.split("=")
         t = parts[0].strip()
         a = None
