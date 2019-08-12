@@ -157,7 +157,7 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
     }
 
     public isGlobal(): boolean {
-        return this.taskId.indexOf("GLO") >= 0;
+        return this.taskId.indexOf("GLO_") >= 0;
         // return this.pluginMarkup().globalField;
     }
 
@@ -872,7 +872,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
     }
 
     public isGlobal() {
-        return this.taskId.indexOf("GLO") >= 0;
+        return this.taskId.indexOf("GLO_") >= 0;
         // return this.pluginMarkup().globalField;
     }
 

@@ -706,4 +706,4 @@ def is_global(plugin: Plugin):
 def is_global_id(task_id: TaskId):
     if task_id is None:
         return False
-    return task_id.task_name.startswith('GLO')
+    return task_id.task_name.startswith('GLO_')
