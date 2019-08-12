@@ -1037,19 +1037,20 @@ def get_multi_states(args: GetMultiStatesModel):
     """
     answer_ids, user_id, doc_id = args.answer_ids, args.user_id, args.doc_id
     print(args)
-    docentry = get_doc_or_abort(doc_id)
-    verify_seeanswers_access(docentry)
-    doc = Document(doc_id)
     user = User.query.get(user_id)
     if user is None:
         abort(400, 'Non-existent user')
-    doc.insert_preamble_pars()
     answs = Answer.query.filter(Answer.id.in_(answer_ids)).all()
     response = {}
+    doc_map = {}
     for ans in answs:
         tid = TaskId.parse(ans.task_id)
+        if tid.doc_id not in doc_map:
+            dib = get_doc_or_abort(tid.doc_id, f'Document {tid.doc_id} not found')
+            verify_seeanswers_access(dib)
+            doc_map[tid.doc_id] = dib.document
         try:
-            doc, plug = get_plugin_from_request(doc, task_id=tid, u=user)
+            doc, plug = get_plugin_from_request(doc_map[tid.doc_id], task_id=tid, u=user)
         except PluginException as e:
             return abort(400, str(e))
         except AssertionError:
