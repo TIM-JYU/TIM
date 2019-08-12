@@ -21,8 +21,8 @@ export FEEDBACK_DEV_COMMAND=./startAll.sh      # Same as above but for feedback 
 export DRAG_DEV_COMMAND=./startAll.sh          # Same as above but for drag plugin
 export IMAGEX_DEV_COMMAND=./startAll.sh        # Same as above but for imagex plugin
 export IS_DEVELOPMENT=false                    # Whether this is a local development instance (needed for e.g. PyCharm)
-export CONFIG_FILE=''                          # Location of config file to use; OK to be empty when running locally;
-                                                # use 'productionconfig.py' in production
+export CONFIG_FILE=''                          # Location of config file to use in addition to defaultconfig;
+                                                # OK to be empty when running locally
 export LOG_DIR=${DIR}/tim_logs                 # Location of log directory; will be mapped for TIM container at /service/tim_logs
 
 # To print the concrete values of these variables, you can use:
