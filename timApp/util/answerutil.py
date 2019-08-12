@@ -215,8 +215,11 @@ def get_fields_and_users(u_fields: List[str], groups: List[UserGroup],
                         value = p.get(task.field)
                     else:
                         if len(p) > 1:
-                            plug = find_plugin_from_document(doc_map[task.doc_id], task, user)
-                            content_field = plug.get_content_field_name()
+                            try:
+                                plug = find_plugin_from_document(doc_map[task.doc_id], task, user)
+                                content_field = plug.get_content_field_name()
+                            except TaskNotFoundException:
+                                content_field = "c"
                             value = p.get(content_field)
                         else:
                             values_p = list(p.values())
