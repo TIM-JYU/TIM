@@ -988,7 +988,7 @@ export class Tools extends ToolsBase {
             this.data.fields[fn] = "";
             return;
         }
-        if ( !isNaN(c) ) {
+        if ( !isNaN(decim) ) {
             c = this.round(c, decim);
         }
         this.result[fn] = c;
@@ -1060,4 +1060,3 @@ export class Tools extends ToolsBase {
         return {user: this.data.user.id, fields: this.result};
     }
 }
-
