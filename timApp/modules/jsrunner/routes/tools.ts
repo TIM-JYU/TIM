@@ -21,7 +21,9 @@ export function widenFields(fields: string | string[]): string[] {
     }
 
     const rfields: string[] = [];
-    for (const field of fields1) {
+    for (const ffield of fields1) {
+        const field = ffield.trim();
+        if ( !field ) { continue; }
         const parts = field.split("=");
         let a = "";
         const tf = parts[0].trim();
@@ -1041,6 +1043,7 @@ export class Tools extends ToolsBase {
         this.result[fnc] = p;
     }
 
+    // noinspection JSMethodCanBeStatic
     defineTime(s: unknown): number {
         if (!checkString(s)) {
             throw valueTypeError(s);
