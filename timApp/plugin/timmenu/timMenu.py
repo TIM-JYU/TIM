@@ -304,7 +304,7 @@ def parse_menu_string(menu_str, replace_tabs: bool = False):
                 parents.insert(0, current)
                 break
     # List has all menus that are parents to any others, but first one contains the whole menu tree.
-    print(level_indentations)
+    # print(level_indentations)
     return parents[-1].items
 
 
@@ -361,10 +361,10 @@ def reqs():
     templates = ["""
 ``` {plugin="timMenu" .hidden-print}
 separator: "|"              # Symbol(s) separating menu titles
-openingSymbol: " &#9661;"   # Symbol(s) indicating dropdown
+#openingSymbol: " &#9661;"   # Symbol(s) indicating dropdown (remove the first # to use)
 backgroundColor: "#F7F7F7"  # Menu bar background color (overrides basicColors)
 textColor: black            # Menu bar text color (overrides basicColors)
-fontSize: 14pt              # Menu bar font size
+fontSize: 12pt              # Menu bar font size
 openAbove: false            # Open all menus upwards
 keepLinkColors: false       # Use default link colors
 topMenu: false              # Show menu at the top when scrolling from below
