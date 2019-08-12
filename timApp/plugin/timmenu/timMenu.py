@@ -30,7 +30,35 @@ class TimMenuStateSchema(Schema):
         return res
 
 
+class TimMenuIndentation:
+    """
+    A class for saving and comparing indentation levels user has used previously.
+    """
+    def __init__(self, level: int, spaces_min: int, spaces_max: int):
+        self.spaces_min = spaces_min
+        self.spaces_max = spaces_max
+        self.level = level
+
+    def is_this_level(self, index: int):
+        """
+        Check whether the given number of spaces is within the closed range of the indentation level.
+        :param index: First index of the hyphen marking i.e. number of spaces preceding it.
+        :return: True if index is part of the level.
+        """
+        return self.spaces_min <= index <= self.spaces_max
+
+    def __str__(self):
+        return f"{{level: {self.level}, spaces_min: {self.spaces_min}, spaces_max: {self.spaces_max}}}"
+
+    def __repr__(self):
+        return str(self)
+
+
 class TimMenuItem:
+    """
+    Menu item with mandatory attributes (content, level, id, list of contained menu items and opening state)
+    and optional styles.
+    """
     def __init__(self, text: str, level: int, items, open = False):
         self.text = text
         self.level = level
@@ -145,20 +173,33 @@ class TimMenuInputSchema(Schema):
         return TimMenuInputModel(**data)
 
 
-def decide_menu_level(index: int, previous_level: int, max_level: int = 3) -> int:
+def decide_menu_level(index: int, previous_level: int,  level_indentations, max_level: int = 3) -> int:
     """
-    Parse menu level from indentation with minimum step of two spaces. Following level
-    is always at most one greater than the previous, since skipping a level would break
-    the menu structure.
+    Parse menu level from indentations by comparing to previously used, i.e. if user
+    used (for  first instances) 1 space for level 0, 3 spaces for level 1 and 5 spaces for level 2, then:
+    - 0 spaces > YAML is malformed
+    - 1 space > level 0
+    - 2-3 spaces > level 1
+    - 4-5 spaces > level 2
+    - 6+ spaces > level 3
+    Following level is always at most one greater than the previous, since skipping a level
+    would make that menu unreachable by the user.
     :param index: Number of spaces before beginning of the list.
     :param previous_level: Previous menu's level.
+    :param level_indentations: List of previously used level indentations.
     :param max_level: Level ceiling; further indentations go into the same menu level.
     :return: Menu level decided by indentation.
     """
     #TODO: Allow no max_level when recursive menu is implemented.
-    level = index // 2
-    level = previous_level+1 if level > previous_level else level
+    for ind in level_indentations:
+        if ind.is_this_level(index):
+            return ind.level
+    level = previous_level+1
     level = max_level if level > max_level else level
+    # If last (largest) level in the indentation list is not the same as the one discovered here, add to the list.
+    if level_indentations[-1].level is not level:
+        level_indentations.append(
+            TimMenuIndentation(level=level, spaces_min=level_indentations[-1].spaces_max+1, spaces_max=index))
     return level
 
 
@@ -196,7 +237,7 @@ def get_attribute(line: str, attr_name: str) -> Union[str, None]:
         return None
 
 
-def parse_menu_string(menu_str):
+def parse_menu_string(menu_str, replace_tabs: bool = False):
     """
     Converts menu-attribute string into a menu structure with html content.
     Note: string uses a custom syntax similar to markdown lists, with hyphen (-) marking
@@ -215,6 +256,7 @@ def parse_menu_string(menu_str):
      - [Menu title as link](menu_title_address)
 
     :param menu_str: Menu as a single string.
+    :param replace_tabs Replace tabs with four spaces each.
     :return: Converted menu as list of menu item objects.
     """
     menu_split = menu_str.split("\n")
@@ -234,17 +276,20 @@ def parse_menu_string(menu_str):
         text_list.append(item[list_symbol_index+1:])
     html_text_list = call_dumbo(text_list)
 
+    level_indentations = [TimMenuIndentation(level=0, spaces_min=0, spaces_max=0)]
     parents = [TimMenuItem(text="", level=-1, items=[])]
     previous_level = -1
     current = None
     for i, item in enumerate(menu_split, start=0):
         try:
+            if replace_tabs:
+                item = item.replace("\t", "    ")
             list_symbol_index = item.index("-")
         except ValueError:
             if current:
                 set_attributes(item, current)
             continue
-        level = decide_menu_level(list_symbol_index, previous_level)
+        level = decide_menu_level(list_symbol_index, previous_level, level_indentations)
         previous_level = level
         text_html = html_text_list[i].replace("<p>","").replace("</p>","").strip()
         current = TimMenuItem(text=text_html, level=level, items=[])
@@ -255,6 +300,7 @@ def parse_menu_string(menu_str):
                 parents.insert(0, current)
                 break
     # List has all menus that are parents to any others, but first one contains the whole menu tree.
+    # print(level_indentations)
     return parents[-1].items
 
 
@@ -276,7 +322,7 @@ class TimMenuHtmlModel(GenericHtmlModel[TimMenuInputModel, TimMenuMarkupModel, T
 
     def get_browser_json(self):
         r = super().get_browser_json()
-        r['menu'] = parse_menu_string(r['markup']['menu'])
+        r['menu'] = parse_menu_string(r['markup']['menu'], replace_tabs=True)
         return r
 
     def requires_login(self) -> bool:
@@ -356,9 +402,9 @@ menu: |!!
  - Menu title 2
    - [Menu item 4](item_4_address)
    - [Menu item 5](item_5_address)
-    - Submenu title
-      - [Submenu item 1](submenu_item_1_address)
-      - [Submenu item 2](submenu_item_2_address)
+   - Submenu title
+     - [Submenu item 1](submenu_item_1_address)
+     - [Submenu item 2](submenu_item_2_address)
  - [Title 3](title_3_address)
 !!
 ```
@@ -376,9 +422,9 @@ menu: |!!
    width: 7.5em
    - [Menu item 4](item_4_address)
    - [Menu item 5](item_5_address)
-    - Submenu title
-      - [Submenu item 1](submenu_item_1_address)
-      - [Submenu item 2](submenu_item_2_address)
+   - Submenu title
+     - [Submenu item 1](submenu_item_1_address)
+     - [Submenu item 2](submenu_item_2_address)
  - Menu title 3
    width: 7.5em
    - [Menu item 6](item_6_address)
