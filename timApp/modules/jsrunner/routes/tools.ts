@@ -1040,7 +1040,7 @@ export class Tools extends ToolsBase {
         this.result[fnc] = p;
     }
 
-    static defineTime(s: unknown): number {
+    defineTime(s: unknown): number {
         if (!checkString(s)) {
             throw valueTypeError(s);
         }
