@@ -7,7 +7,7 @@ export const ADMIN_GROUPNAME = "Administrators";
 export interface IUser {
     id: number;
     name: string;
-    real_name: string | null;
+    real_name: string;
     velped_task_count: number; // TODO needs a separate type
 }
 
