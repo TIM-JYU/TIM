@@ -18,6 +18,7 @@
 /screenshots
 /tim_logs/
 /timApp/celerybeat-schedule.db
+/timApp/prodconfig.py
 /timApp/modules/cs/data/
 /timApp/modules/cs/generated
 /timApp/modules/cs/java/cs/ComTest.jar
