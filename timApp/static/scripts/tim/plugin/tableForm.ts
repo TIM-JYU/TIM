@@ -8,12 +8,13 @@ import {
     pluginBindings,
 } from "tim/plugin/util";
 import {$http, $httpParamSerializer} from "tim/util/ngimport";
-import {to, widenFields} from "tim/util/utils";
+import {to} from "tim/util/utils";
 import {timApp} from "../app";
 import {getParId} from "../document/parhelpers";
 import {ViewCtrl} from "../document/viewctrl";
 import {IDocument} from "../item/IItem";
 import {showInputDialog} from "../ui/inputDialog";
+import {widenFields} from "../util/common";
 import {GenericPluginMarkup, GenericPluginTopLevelFields, nullable, withDefault} from "./attributes";
 import "./tableForm.css";
 import {CellAttrToSave, CellToSave, CellType, colnumToLetters, DataEntity, isPrimitiveCell, TimTable} from "./timTable";

@@ -1265,3 +1265,38 @@ print(x == '%%username%%')
             expect_content='User 999 not found',
             json_key='error',
         )
+
+    def test_invalid_global_attrs(self):
+        self.login_test1()
+        d = self.create_doc(
+            initial_par="""
+#- {plugin=pali}
+a: b
+""",
+            settings={'global_plugin_attrs': {'all': None}},
+        )
+        self.get(d.url)
+
+        d = self.create_doc(
+            initial_par="""
+#- {plugin=pali}
+""",
+            settings={'global_plugin_attrs': {'all': None}},
+        )
+        self.get(d.url)
+
+        d = self.create_doc(
+            initial_par="""
+#- {plugin=pali}
+""",
+            settings={'global_plugin_attrs': {'pali': None}},
+        )
+        self.get(d.url)
+
+        d = self.create_doc(
+            initial_par="""
+#- {plugin=pali}
+""",
+            settings={'global_plugin_attrs': {'pali': 'a', 'all': 'b'}},
+        )
+        self.get(d.url)

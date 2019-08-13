@@ -574,8 +574,13 @@ def load_markup_from_yaml(yaml_str: str, global_attrs: Dict[str, str], plugin_ty
         if isinstance(global_attrs, str):
             raise PluginException('global_plugin_attrs should be a dict, not str')
         global_attrs = deepcopy(global_attrs)
-        final_values = global_attrs.get('all', {})
-        merge(final_values, global_attrs.get(plugin_type, {}))
+        final_values = global_attrs.get('all')
+        if not isinstance(final_values, dict):
+            final_values = {}
+        plugin_type_globals = global_attrs.get(plugin_type)
+        if not isinstance(plugin_type_globals, dict):
+            plugin_type_globals = {}
+        merge(final_values, plugin_type_globals)
         merge(final_values, values)
         values = final_values
     return values
