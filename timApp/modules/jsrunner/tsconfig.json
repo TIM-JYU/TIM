@@ -11,7 +11,8 @@
     "target": "esnext",
     "baseUrl": ".",
     "paths": {
-      "tim/plugin/*": ["../../static/scripts/tim/plugin/*"]
+      "tim/plugin/*": ["../../static/scripts/tim/plugin/*"],
+      "tim/util/*": ["../../static/scripts/tim/util/*"]
     },
     "lib": [
       "es2018",
