@@ -36,7 +36,7 @@ import {openEditorSimple} from "../editor/pareditor";
 import {DestroyScope} from "../ui/destroyScope";
 import {isArrowKey, KEY_DOWN, KEY_ENTER, KEY_ESC, KEY_F2, KEY_LEFT, KEY_RIGHT, KEY_TAB, KEY_UP} from "../util/keycodes";
 import {$http, $timeout} from "../util/ngimport";
-import {Binding} from "../util/utils";
+import {Binding, isInViewport, scrollToElement} from "../util/utils";
 import {hideToolbar, isToolbarEnabled, openTableEditorToolbar} from "./timTableEditorToolbar";
 import {PluginMeta} from "./util";
 
@@ -2073,6 +2073,9 @@ export class TimTableController extends DestroyScope implements IController, ITi
 
         } finally {
             this.editInput.focus();
+            // if ( !isInViewport(this.editInput[0]) ) {  // TODO: need to test if inside timTable area
+            //     scrollToElement(this.editInput[0]);
+            // }
         }
     }
 
