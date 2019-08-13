@@ -713,7 +713,7 @@ export class ViewCtrl implements IController {
             ab.loadInfo();
         }
         // TODO: attribute for this? Unsaved column might get updated
-        this.updateAllTables(taskids);
+        // this.updateAllTables(taskids);
     }
 
     public updateTable(tableTaskId: string, fields?: string[]) {
