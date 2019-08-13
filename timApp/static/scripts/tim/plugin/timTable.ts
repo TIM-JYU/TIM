@@ -2792,7 +2792,7 @@ export class TimTableController extends DestroyScope implements IController, ITi
     }
 
     private tableStyle() {
-        return {"border": "none", /*"overflow": "auto",*/ "max-height": this.maxRows, "width": this.maxCols};
+        return {"border": "none", "overflow": "auto", "padding-right": "4em", "max-height": this.maxRows, "width": this.maxCols};
     }
 
     private isHidden(coli: number) {
