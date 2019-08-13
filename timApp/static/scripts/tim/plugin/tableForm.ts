@@ -51,7 +51,7 @@ const TableFormMarkup = t.intersection([
         fields: t.array(t.string),
         showToolbar: withDefault(t.boolean, true),
         showEditorButtons: withDefault(t.boolean, true),
-        sisugroups: withDefault(t.boolean, false),
+        sisugroups: t.string,
     }),
     GenericPluginMarkup,
     t.type({
@@ -1003,15 +1003,14 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
         if (timTable == null) { return; }
         const selUsers = timTable.getCheckedRows(0, true);
         const groups = TimTableController.makeSmallerMatrix(selUsers, [1, 3]);
-        const params = {
-            rows: groups,
-        };
-        // TODO: SISU tähän URL
-        const url = this.pluginMeta.getAnswerUrl();
-        const r = await to($http.put<{ web: { result: string, error?: string } }>(url, params));
+        const params = groups.map(([sisuid, timname]) => ({externalId: sisuid, name: timname}));
+        this.isRunning = true;
+        const r = await to($http.post<{ web: { result: string, error?: string } }>("/sisu/createGroupDocs", params));
         this.isRunning = false;
         if (r.ok) {
-           // TODO: SISU tähän sivun refresh tai virheiden näyttäminen
+           location.reload();
+        } else {
+            this.error = r.result.data.error;
         }
     }
 

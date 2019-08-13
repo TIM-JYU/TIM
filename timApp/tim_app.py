@@ -47,6 +47,7 @@ from timApp.notification.pending_notification import PendingNotification, Docume
 from timApp.printing.printeddoc import PrintedDoc
 from timApp.plugin.timtable.row_owner_info import RowOwnerInfo
 from timApp.readmark.readparagraph import ReadParagraph
+from timApp.sisu.scimusergroup import ScimUserGroup
 from timApp.slide.slidestatus import SlideStatus
 from timApp.timdb.sqa import db
 from timApp.user.consentchange import ConsentChange
@@ -109,6 +110,7 @@ reg_models(
     ReadParagraph,
     RowOwnerInfo,
     Runningquestion,
+    ScimUserGroup,
     Showpoints,
     SlideStatus,
     Tag,

@@ -553,7 +553,7 @@ class TimRouteTest(TimDbTest):
         """
         return self.json_post('/logout', json_data={'user_id': user_id})
 
-    def login(self, email: str, passw: str, username: Optional[str] = None, force: bool = False,
+    def login(self, email: str=None, passw: str=None, username: Optional[str] = None, force: bool = False,
               clear_last_doc: bool = True,
               add: bool = False, **kwargs):
         """Logs a user in.
@@ -574,6 +574,8 @@ class TimRouteTest(TimDbTest):
                 # if not flask.has_request_context():
                 #     print('creating request context')
                 #     tim.app.test_request_context().__enter__()
+                if not u:
+                    raise Exception(f"User not found: {username}")
                 with self.client.session_transaction() as s:
                     s['user_id'] = u.id
                     s.pop('other_users', None)

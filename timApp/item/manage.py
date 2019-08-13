@@ -18,7 +18,7 @@ from timApp.auth.sessioninfo import get_current_user_group_object
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.create_item import copy_document_and_enum_translations
 from timApp.document.docentry import DocEntry
-from timApp.document.docinfo import move_document
+from timApp.document.docinfo import move_document, find_free_name
 from timApp.folder.folder import Folder, path_includes
 from timApp.item.block import BlockType
 from timApp.item.item import Item, copy_rights
@@ -364,23 +364,29 @@ def verify_permission_edit_access(item_id: int, perm_type: str) -> Tuple[Item, b
 def del_document(doc_id):
     d = get_doc_or_abort(doc_id)
     verify_ownership(d)
+    f = get_trash_folder()
+    move_document(d, f)
+    db.session.commit()
+    return ok_response()
+
+
+def get_trash_folder():
     trash_folder_path = f'roskis'
     f = Folder.find_by_path(trash_folder_path)
     if not f:
         f = Folder.create(trash_folder_path, owner_group_id=UserGroup.get_admin_group().id, title='Roskakori')
-    move_document(d, f)
-    db.session.commit()
-    return ok_response()
+    return f
 
 
 @manage_page.route("/folders/<folder_id>", methods=["DELETE"])
 def delete_folder(folder_id):
     f = get_folder_or_abort(folder_id)
     verify_ownership(f)
-    if not f.is_empty:
-        return abort(403, "The folder is not empty. Only empty folders can be deleted.")
-
-    f.delete()
+    if f.location == 'users':
+        return abort(403, 'Personal folders cannot be deleted.')
+    trash = get_trash_folder()
+    trash_path = find_free_name(trash, f)
+    f.rename_path(trash_path)
     db.session.commit()
     return ok_response()
 

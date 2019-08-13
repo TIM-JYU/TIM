@@ -165,19 +165,23 @@ def get_non_settings_pars_from_docs(docs: Iterable[DocInfo]) -> Generator[DocPar
 
 
 def move_document(d: DocInfo, destination):
-    from timApp.document.docentry import DocEntry
-    from timApp.folder.folder import Folder
     aliases = d.aliases
     for a in aliases[1:]:
         db.session.delete(a)
     first_alias = aliases[0]
-    short_name = first_alias.short_name
+    first_alias.name = find_free_name(destination, first_alias)
+    first_alias.public = True
+
+
+def find_free_name(destination, item: Item):
+    from timApp.document.docentry import DocEntry
+    from timApp.folder.folder import Folder
+    short_name = item.short_name
     attempt = 0
     while True:
         trash_path = f'{destination.path}/{short_name}'
         if not Folder.find_by_path(trash_path) and not DocEntry.find_by_path(trash_path):
             break
         attempt += 1
-        short_name = f'{first_alias.short_name}_{attempt}'
-    first_alias.name = trash_path
-    first_alias.public = True
+        short_name = f'{item.short_name}_{attempt}'
+    return trash_path

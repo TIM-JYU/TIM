@@ -1,6 +1,8 @@
-import re
 from typing import List
 
+from sqlalchemy.orm import joinedload
+
+from timApp.sisu.scimusergroup import ScimUserGroup
 from timApp.timdb.sqa import db, TimeStampMixin
 from timApp.user.scimentity import SCIMEntity
 from timApp.user.special_group_names import ANONYMOUS_GROUPNAME, LARGE_GROUPS, KORPPI_GROUPNAME, LOGGED_IN_GROUPNAME, \
@@ -8,7 +10,8 @@ from timApp.user.special_group_names import ANONYMOUS_GROUPNAME, LARGE_GROUPS, K
 from timApp.user.usergroupdoc import UserGroupDoc
 from timApp.user.usergroupmember import UserGroupMember
 
-SISU_GROUP_PREFIX = 'sisu:'
+# Prefix is no longer needed because scimusergroup determines the Sisu (SCIM) groups.
+SISU_GROUP_PREFIX = ''
 
 
 def tim_group_to_scim(tim_group: str):
@@ -59,6 +62,9 @@ class UserGroup(db.Model, TimeStampMixin, SCIMEntity):
         uselist=False,
     )
 
+    # For groups created from SCIM API
+    external_id: ScimUserGroup = db.relationship('ScimUserGroup', lazy='select', uselist=False)
+
     @property
     def scim_created(self):
         return self.created
@@ -69,7 +75,7 @@ class UserGroup(db.Model, TimeStampMixin, SCIMEntity):
 
     @property
     def scim_id(self):
-        return tim_group_to_scim(self.name)
+        return self.external_id.external_id if self.external_id else None
 
     @property
     def scim_resource_type(self):
@@ -90,17 +96,11 @@ class UserGroup(db.Model, TimeStampMixin, SCIMEntity):
 
     @property
     def is_sisu(self):
-        return self.name.startswith('sisu:')
+        return self.external_id is not None
 
     @property
     def is_sisu_student_group(self):
-        return self.is_sisu and self.name.endswith('-students')
-
-    def get_sisu_id(self):
-        m = re.fullmatch(r'(sisu:[a-zA-Z0-9_-]+)-(student|teacher)s', self.name)
-        if not m:
-            return None
-        return m.group(1)
+        return self.is_sisu and self.external_id.external_id.endswith('-students')
 
     @staticmethod
     def create(name: str) -> 'UserGroup':
@@ -117,6 +117,11 @@ class UserGroup(db.Model, TimeStampMixin, SCIMEntity):
         group_id = ug.id
         assert group_id is not None and group_id != 0, 'group_id was None'
         return ug
+
+    @staticmethod
+    def get_by_external_id(name: str) -> 'UserGroup':
+        r = get_sisu_groups_by_filter(ScimUserGroup.external_id == name)
+        return r[0] if r else None
 
     @staticmethod
     def get_by_name(name) -> 'UserGroup':
@@ -145,3 +150,15 @@ class UserGroup(db.Model, TimeStampMixin, SCIMEntity):
     @staticmethod
     def get_logged_in_group() -> 'UserGroup':
         return UserGroup.query.filter_by(name=LOGGED_IN_GROUPNAME).one()
+
+
+def get_sisu_groups_by_filter(f) -> List[UserGroup]:
+    from timApp.item.block import Block
+    gs: List[UserGroup] = (
+        UserGroup.query
+            .options(joinedload(UserGroup.admin_doc).joinedload(Block.docentries))
+            .join(ScimUserGroup)
+            .filter(f)
+            .all()
+    )
+    return gs

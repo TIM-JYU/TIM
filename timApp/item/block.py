@@ -103,6 +103,17 @@ class Block(db.Model):
                         type=AccessType.owner.value,
                         accessible_from=get_current_time()))
 
+    def add_rights(self, groups, access_type: AccessType):
+        existing_rights = [ac.usergroup for ac in self.accesses]
+        for gr in groups:
+            if gr not in existing_rights:
+                ba = BlockAccess(
+                    usergroup=gr,
+                    type=access_type.value,
+                    accessible_from=get_current_time(),
+                )
+                self.accesses.append(ba)
+
 
 class BlockType(Enum):
     Document = 0

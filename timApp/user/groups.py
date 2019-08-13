@@ -95,15 +95,7 @@ def create_group(groupname):
     verify_groupadmin()
     if UserGroup.get_by_name(groupname):
         abort(400, 'User group already exists.')
-    has_digits = False
-    has_letters = False
-    has_non_alnum = False
-    for c in groupname:
-        has_digits = has_digits or c.isdigit()
-        has_letters = has_letters or c.isalpha()
-        has_non_alnum = has_non_alnum or not (c.isalnum() or c.isspace())
-    if not has_digits or not has_letters or has_non_alnum:
-        abort(400, 'Usergroup must contain at least one digit and one letter and must be alphanumeric.')
+    validate_groupname(groupname)
     u = UserGroup.create(groupname)
     doc = create_document(
         f'groups/{remove_path_special_chars(groupname)}',
@@ -112,16 +104,8 @@ def create_group(groupname):
         parent_owner=UserGroup.get_admin_group(),
     )
     apply_template(doc)
-    s = doc.document.get_settings().get_dict().get('macros', {})
-    s['group'] = groupname
-    s['fields'] = ['info']
-    s['maxRows'] = "40em"  # maxrows for group list
-    doc.document.add_setting('macros', s)
-    text = '''
-## Omia kenttiä {defaultplugin="textfield" readonly="view"}
-{#info autosave: true #}    
-    '''
-    doc.document.add_text(text)
+    update_group_doc_settings(doc, groupname)
+    add_group_infofield_template(doc)
     u.admin_doc = doc.block
     f = doc.parent
     if len(f.block.accesses) == 1:
@@ -131,6 +115,34 @@ def create_group(groupname):
                                             ))
     db.session.commit()
     return json_response(doc)
+
+
+def add_group_infofield_template(doc):
+    text = '''
+## Omia kenttiä {defaultplugin="textfield" readonly="view"}
+{#info autosave: true #}    
+    '''
+    doc.document.add_text(text)
+
+
+def update_group_doc_settings(doc: DocInfo, groupname: str):
+    s = doc.document.get_settings().get_dict().get('macros', {})
+    s['group'] = groupname
+    s['fields'] = ['info']
+    s['maxRows'] = "40em"  # maxrows for group list
+    doc.document.add_setting('macros', s)
+
+
+def validate_groupname(groupname: str):
+    has_digits = False
+    has_letters = False
+    has_non_alnum = False
+    for c in groupname:
+        has_digits = has_digits or c.isdigit()
+        has_letters = has_letters or c.isalpha()
+        has_non_alnum = has_non_alnum or not (c.isalnum() or c.isspace() or c in '-_')
+    if not has_digits or not has_letters or has_non_alnum:
+        abort(400, 'Usergroup must contain at least one digit and one letter and must not have special chars.')
 
 
 def verify_group_access(ug: UserGroup, access_set, u=None, require=True):
@@ -152,6 +164,8 @@ def verify_group_edit_access(ug: UserGroup, user=None, require=True):
         abort(400, 'Cannot edit special groups.')
     if User.get_by_name(ug.name):
         abort(400, 'Cannot edit personal groups.')
+    if ug.is_sisu:
+        abort(400, 'Cannot modify members of Sisu groups.')
     verify_group_access(ug, edit_access_set, user, require=require)
 
 

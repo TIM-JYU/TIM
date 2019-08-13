@@ -3,7 +3,7 @@ TIM example plugin: a tableFormndrome checker.
 """
 import json
 import os
-from typing import Union, List
+from typing import Union, List, Optional
 
 import attr
 from flask import jsonify, render_template_string, request, abort
@@ -14,6 +14,7 @@ from webargs.flaskparser import use_args
 from pluginserver_flask import GenericMarkupModel, GenericMarkupSchema, GenericHtmlSchema, GenericHtmlModel, \
     GenericAnswerSchema, GenericAnswerModel, Missing, \
     InfoSchema, create_blueprint
+from timApp.sisu.sisu import get_potential_groups
 from timApp.util.answerutil import get_fields_and_users
 from timApp.auth.accesshelper import get_doc_or_abort
 from timApp.auth.sessioninfo import get_current_user_object
@@ -79,7 +80,7 @@ class TableFormMarkupModel(GenericMarkupModel):
     saveStyles: Union[bool, Missing] = True
     showToolbar: Union[bool, Missing] = True
     showEditorButtons: Union[bool, Missing] = True
-    sisugroups: Union[bool, Missing] = missing
+    sisugroups: Union[str, Missing] = missing
     autoUpdateFields: Union[bool, Missing] = True
     autoUpdateTables: Union[bool, Missing] = True
     fields: Union[List[str], Missing] = missing
@@ -122,7 +123,7 @@ class TableFormMarkupSchema(GenericMarkupSchema):
     saveStyles = fields.Boolean(default=True)
     showToolbar = fields.Boolean(default=True)
     showEditorButtons = fields.Boolean(default=True)
-    sisugroups = fields.Boolean(default=True)
+    sisugroups = fields.Str()
     autoUpdateFields = fields.Boolean(default=True)
     autoUpdateTables = fields.Boolean(default=True)
     fields = fields.List(fields.Str())  # Keep this last - bad naming
@@ -154,41 +155,28 @@ class TableFormAttrs(Schema):
     state = fields.Nested(TableFormStateSchema, allow_none=True, required=True)
 
 
-def get_sisugroups(user):
+def get_sisugroups(user: User, sisu_id: Optional[str]):
+    gs = get_potential_groups(user, sisu_id)
     return {
         'rows': {
-            'sisu:jy-CUR-4668-jy-studysubgroup-9515-teachers': {
-                'timname': 'ohj1s19c',
-                'url': '<a href="/view/groups/2019/ITKP102/ohj1s19">URL</a>',
-            },
-            'sisu:jy-CUR-4668-jy-studysubgroup-9515-students': {
-                'timname': 'ohj1s19',
-                'url': '<a href="/view/groups/2019/ITKP102/ohj1s19">URL</a>',
-            },
-            'sisu:jy-CUR-4668-jy-studysubgroup-9516-students': {
-                'timname': '',
-                'url': '',
-            },
+            g.external_id.external_id: {
+                'timname': g.name,
+                'url': f'<a href="{g.admin_doc.docentries[0].url_relative}">URL</a>' if g.admin_doc else None,
+            } for g in gs
         },
         'realnamemap': {
-            'sisu:jy-CUR-4668-jy-studysubgroup-9515-teachers': 'ITKP102 2019-09-09--2019-12-20: Luento 1: Opettajat',
-            'sisu:jy-CUR-4668-jy-studysubgroup-9515-students': 'ITKP102 2019-09-09--2019-12-20: Luento 1: Opiskelijat',
-            'sisu:jy-CUR-4668-jy-studysubgroup-9516-students': 'ITKP102 2019-09-09--2019-12-20: Luento 2: Opiskelijat',
+            g.external_id.external_id: g.display_name for g in gs
         },
         'emailmap': {
-            'sisu:jy-CUR-4668-jy-studysubgroup-9515-teachers': '',
-            'sisu:jy-CUR-4668-jy-studysubgroup-9515-students': '',
-            'sisu:jy-CUR-4668-jy-studysubgroup-9516-students': '',
+            g.external_id.external_id: '' for g in gs
         },
         'fields': ['timname', "url"],
         'aliases': {
             'timname': 'timname',
             'url': 'url'
-    },
+        },
         'styles': {
-            'sisu:jy-CUR-4668-jy-studysubgroup-9515-teachers': {},
-            'sisu:jy-CUR-4668-jy-studysubgroup-9515-students': {},
-            'sisu:jy-CUR-4668-jy-studysubgroup-9516-students': {},
+            g.external_id.external_id: {} for g in gs
         },
     }
 
@@ -211,7 +199,7 @@ class TableFormHtmlModel(GenericHtmlModel[TableFormInputModel, TableFormMarkupMo
             d = get_doc_or_abort(tid.doc_id)
             user = User.get_by_name(self.current_user_id)
             if self.markup.sisugroups:
-                f = get_sisugroups(user)  # TODO: SISU change a proper call hera
+                f = get_sisugroups(user, self.markup.sisugroups)
             else:
                 f = tableform_get_fields(self.markup.fields, self.markup.groups, d,
                                      user, self.markup.removeDocIds, self.markup.showInView)

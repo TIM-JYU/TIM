@@ -1,5 +1,6 @@
 from timApp.bookmark.bookmarks import Bookmarks
 from timApp.item.tag import Tag, TagType
+from timApp.sisu.scimusergroup import ScimUserGroup
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.document.docentry import DocEntry
 from timApp.folder.folder import Folder
@@ -105,17 +106,19 @@ class BookmarkTest2(BookmarkTestBase):
         self.get('/')
         d = self.create_doc()
         d.block.tags.append(Tag(name='TIEP111', type=TagType.CourseCode))
-        d.block.tags.append(Tag(name='sisu:test', type=TagType.Regular))
+        d.block.tags.append(Tag(name='group:ohj1opiskelijat', type=TagType.Regular))
         db.session.commit()
         d2 = self.create_doc()
         d2.block.tags.append(Tag(name='TIEP112', type=TagType.CourseCode))
-        d2.block.tags.append(Tag(name='sisu:test2', type=TagType.Regular))
+        d2.block.tags.append(Tag(name='group:ohj2opiskelijat', type=TagType.Regular))
         db.session.commit()
         self.get('/')
-        ug = UserGroup.create('sisu:test-students')
+        ug = UserGroup(name='ohj1opiskelijat', display_name='asd asd')
         self.test_user_1.groups.append(ug)
-        ug = UserGroup.create('sisu:test2-students')
+        ug.external_id = ScimUserGroup(external_id='jy-CUR-4668-students')
+        ug = UserGroup(name='ohj2opiskelijat', display_name='asd asd')
         self.test_user_1.groups.append(ug)
+        ug.external_id = ScimUserGroup(external_id='jy-CUR-4669-students')
         db.session.commit()
         self.get('/')
         b = Bookmarks(self.test_user_1)

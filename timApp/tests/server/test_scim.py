@@ -1,6 +1,12 @@
+from operator import itemgetter
+from typing import List
+
+from timApp.auth.accesstype import AccessType
+from timApp.document.docentry import DocEntry
 from timApp.sisu.scim import DELETED_GROUP_PREFIX, CUMULATIVE_GROUP_PREFIX, SISU_GROUP_PREFIX
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.user.usergroup import UserGroup
+from timApp.util.utils import seq_to_str
 
 a = ('t', 'pass')
 
@@ -21,6 +27,8 @@ def add_name_parts(datas):
 
 class ScimTest(TimRouteTest):
     def test_scim(self):
+        eid = 'jy-CUR-8888-teachers'
+        display_name = 'ITKP102 2021-09-09--2021-12-20: Opettajat'
         self.json_post(
             '/scim/Groups',
             **scim_error('This action requires authentication.', 401),
@@ -37,8 +45,8 @@ class ScimTest(TimRouteTest):
         r = self.json_post(
             '/scim/Groups',
             json_data={
-                'externalId': 'sisu-something',
-                'displayName': 'Sisu something',
+                'externalId': eid,
+                'displayName': display_name,
                 'members': add_name_parts([
                     {'value': 'sisuuser', 'display': 'Sisu User', 'email': 'x@example.com'},
                     {'value': 'sisuuser3', 'display': 'Sisu User 3'},
@@ -46,8 +54,8 @@ class ScimTest(TimRouteTest):
             }, auth=a,
             expect_status=201,
             expect_contains={
-                'displayName': 'Sisu something',
-                'id': 'sisu-something',
+                'displayName': display_name,
+                'id': eid,
                 'members': [{'$ref': 'http://localhost/scim/Users/sisuuser',
                              'display': 'Sisu User',
                              'value': 'sisuuser'},
@@ -58,9 +66,27 @@ class ScimTest(TimRouteTest):
                 'schemas': ['urn:ietf:params:scim:schemas:core:2.0:Group'],
             }
         )
+
+        self.json_post(
+            '/scim/Groups',
+            json_data={
+                'externalId': eid,
+                'displayName': display_name,
+                'members': [
+                    {'value': 'sisuuser', 'display': 'Sisu User', 'email': 'x@example.com'},
+                    {'value': 'sisuuser3', 'display': 'Sisu User 3'},
+                ],
+            }, auth=a,
+            expect_status=409,
+            expect_content={'detail': f'Group already exists: {eid}',
+                            'schemas': ['urn:ietf:params:scim:api:messages:2.0:Error'],
+                            'status': '409'}
+        )
+
         create_stamp = r['meta']['created']
         self.assertEqual(create_stamp, r['meta']['lastModified'])
         group_id = r['id']
+        self.assertEqual(eid, group_id)
         ru = self.get(
             f'/scim/Users/sisuuser',
             auth=a,
@@ -133,12 +159,12 @@ class ScimTest(TimRouteTest):
         ru3 = update_and_get()
         self.assertEqual(ru3['meta']['lastModified'], new_modified)
 
-        self.assertIsNone(UserGroup.get_by_name('sisu-something'))
+        # self.assertIsNone(UserGroup.get_by_name(eid))
         self.json_post(
             '/scim/Groups',
             json_data={
-                'externalId': 'sisu-something',
-                'displayName': 'Sisu something',
+                'externalId': eid,
+                'displayName': display_name,
                 'members': [],
             }, auth=a,
             expect_status=409,
@@ -159,8 +185,8 @@ class ScimTest(TimRouteTest):
         self.json_put(
             f'/scim/Groups/{group_id}',
             json_data={
-                'externalId': 'sisu-something',
-                'displayName': 'Sisu something',
+                'externalId': eid,
+                'displayName': display_name,
                 'members': add_name_parts([
                     {
                         'display': 'Sisu User',
@@ -173,9 +199,9 @@ class ScimTest(TimRouteTest):
                 ]),
             }, auth=a,
             expect_content={
-                'displayName': 'Sisu something',
+                'displayName': display_name,
                 'id': group_id,
-                'externalId': 'sisu-something',
+                'externalId': eid,
                 'members': [{'$ref': 'http://localhost/scim/Users/sisuuser',
                              'display': 'Sisu User',
                              'value': 'sisuuser'},
@@ -184,22 +210,22 @@ class ScimTest(TimRouteTest):
                              'value': 'sisuuser2'}],
                 'meta': {'created': create_stamp,
                          'lastModified': create_stamp,
-                         'location': 'http://localhost/scim/Groups/sisu-something',
+                         'location': f'http://localhost/scim/Groups/{eid}',
                          'resourceType': 'Group'},
                 'schemas': ['urn:ietf:params:scim:schemas:core:2.0:Group']},
         )
 
-        r = self.get(f'/scim/Groups', auth=a, query_string={'filter': 'externalId sw sisu-'})
+        r = self.get(f'/scim/Groups', auth=a, query_string={'filter': 'externalId sw jy-CUR-8888'})
         self.assertEqual(
             {
                 'Resources': [
                     {
                         'id': group_id,
-                        'externalId': 'sisu-something',
+                        'externalId': eid,
                         'meta': {
                             'created': create_stamp,
                             'lastModified': create_stamp,
-                            'location': 'http://localhost/scim/Groups/sisu-something',
+                            'location': f'http://localhost/scim/Groups/{eid}',
                             'resourceType': 'Group',
                         },
                     },
@@ -215,9 +241,9 @@ class ScimTest(TimRouteTest):
             f'/scim/Groups/{group_id}',
             auth=a,
             expect_content={
-                'displayName': 'Sisu something',
+                'displayName': display_name,
                 'id': group_id,
-                'externalId': 'sisu-something',
+                'externalId': eid,
                 'members': [{'$ref': 'http://localhost/scim/Users/sisuuser',
                              'display': 'Sisu User',
                              'value': 'sisuuser'},
@@ -228,23 +254,23 @@ class ScimTest(TimRouteTest):
                 'meta': {
                     'created': create_stamp,
                     'lastModified': create_stamp,
-                    'location': 'http://localhost/scim/Groups/sisu-something',
+                    'location': f'http://localhost/scim/Groups/{eid}',
                     'resourceType': 'Group'},
                 'schemas': [
                     'urn:ietf:params:scim:schemas:core:2.0:Group']},
         )
         self.json_delete(f'/scim/Groups/{group_id}', auth=a, expect_status=204)
         self.json_delete(f'/scim/Groups/{group_id}', auth=a, expect_status=404)
-        g = UserGroup.get_by_name(f'{CUMULATIVE_GROUP_PREFIX}{SISU_GROUP_PREFIX}sisu-something')
+        g = UserGroup.get_by_name(f'{CUMULATIVE_GROUP_PREFIX}{SISU_GROUP_PREFIX}{eid}')
         self.assertEqual(3, len(g.users.all()))
-        deleted_group = UserGroup.get_by_name(f'{DELETED_GROUP_PREFIX}{SISU_GROUP_PREFIX}sisu-something')
+        deleted_group = UserGroup.get_by_name(f'{DELETED_GROUP_PREFIX}{SISU_GROUP_PREFIX}{eid}')
         self.assertIsNotNone(deleted_group)
 
         r = self.json_post(
             '/scim/Groups',
             json_data={
-                'externalId': 'sisu-something',
-                'displayName': 'Sisu something',
+                'externalId': eid,
+                'displayName': display_name,
                 'members': add_name_parts([
                     {'value': 'sisuuser', 'display': 'Sisu User'},
                     {'value': 'sisuuser3', 'display': 'Sisu User 3'},
@@ -252,7 +278,7 @@ class ScimTest(TimRouteTest):
             }, auth=a,
             expect_status=201,
             expect_contains={
-                'displayName': 'Sisu something',
+                'displayName': display_name,
                 'id': group_id,
                 'members': [{'$ref': 'http://localhost/scim/Users/sisuuser',
                              'display': 'Sisu User',
@@ -265,7 +291,7 @@ class ScimTest(TimRouteTest):
             }
         )
         self.assertNotEqual(create_stamp, r['meta']['lastModified'])
-        g = UserGroup.get_by_name(f'{DELETED_GROUP_PREFIX}sisu-something')
+        g = UserGroup.get_by_name(f'{DELETED_GROUP_PREFIX}{eid}')
         self.assertIsNone(g)
 
     def test_no_display_in_members(self):
@@ -319,7 +345,7 @@ class ScimTest(TimRouteTest):
             '/scim/Groups',
             json_data={
                 'externalId': 'somegroup',
-                'displayName': 'Some Group',
+                'displayName': 'Some Grouppi',
                 'members': add_name_parts([
                     {'value': 'someone', 'display': 'Sisu User'},
                 ]),
@@ -362,7 +388,7 @@ class ScimTest(TimRouteTest):
             '/scim/Groups',
             json_data={
                 'externalId': 'dupemail2',
-                'displayName': 'Some Group',
+                'displayName': 'Some Group2',
                 'members': add_name_parts([
                     {'value': 'someone2', 'display': 'Sisu User', 'email': 'zzz@example.com'},
                 ]),
@@ -375,7 +401,7 @@ class ScimTest(TimRouteTest):
             '/scim/Groups',
             json_data={
                 'externalId': 'aaagroup',
-                'displayName': 'Some Group',
+                'displayName': 'Some Group3',
                 'members': add_name_parts([
                     {'value': 'aaa', 'display': 'Sisu User', 'email': 'aaa@example.com'},
                     {'value': 'aaa', 'display': 'Sisu User', 'email': 'aaa2@example.com'},
@@ -469,6 +495,263 @@ class ScimTest(TimRouteTest):
             }, auth=a,
             expect_status=201,
         )
+
+    def test_potential_groups(self):
+        entries = [
+            ('jy-CUR-4668-administrative-persons', 'ITKP102 P1 2019-09-09--2019-12-20: Rooli - administrative-person',
+             ['uap-1', 'uap-2']),
+            ('jy-CUR-4668-responsible-teachers', 'ITKP102 2019-09-09--2019-12-20: Rooli - responsible-teacher',
+             ['urt-1', 'urt-2']),
+            ('jy-CUR-4668-teachers', 'ITKP102 2019-09-09--2019-12-20: Rooli - teacher',
+             ['ut-1', 'ut-2']),
+            ('jy-CUR-4668-students', 'ITKP102 2019-09-09--2019-12-20: Kaikki opiskelijat',
+             ['us-1', 'us-2']),
+
+            ('jy-CUR-4668-jy-studysubgroup-9515-teachers', 'ITKP102 2019-09-09--2019-12-20: Luento 1: Opettajat',
+             ['u9515-t1', 'u9515-t2']),
+            ('jy-CUR-4668-jy-studysubgroup-9516-teachers', 'ITKP102 2019-09-09--2019-12-20: Luento 2: Opettajat',
+             ['u9516-t1', 'u9516-t2']),
+            ('jy-CUR-4668-studysubgroup-teachers', 'ITKP102 2019-09-09--2019-12-20: Opetusryhmien opettajat',
+             ['ussg-t1', 'ussg-t2']),
+
+            ('jy-CUR-4668-jy-studysubgroup-9515-students', 'ITKP102 2019-09-09--2019-12-20: Luento 1: Opiskelijat',
+             ['u9515-s1', 'u9515-s2']),
+            ('jy-CUR-4668-jy-studysubgroup-9516-students', 'ITKP102 2019-09-09--2019-12-20: Luento 2: Opiskelijat',
+             ['u9516-s1', 'u9516-s2']),
+            ('jy-CUR-4668-studysubgroup-students', 'ITKP102 2019-09-09--2019-12-20: Opetusryhmien Opiskelijat',
+             ['ussg-s1', 'ussg-s2']),
+        ]
+        for (external_id, display_name, users) in entries:
+            self.json_post(
+                '/scim/Groups', {
+                    'externalId': external_id,
+                    'displayName': display_name,
+                    'members': [
+                        {'value': u, 'display': u, 'email': f'{u}@example.com'} for u in users
+                    ],
+                },
+                auth=a,
+                expect_status=201,
+            )
+
+        # Make sure the sisugroup document exists and has proper settings.
+        d = DocEntry.find_by_path('groups/2019/itkp102/09/sisugroups')
+        self.assertEqual({
+            'global_plugin_attrs': {
+                'all': {
+                    'sisugroups': 'jy-CUR-4668',
+                }
+            },
+            'macros': {
+                'course': 'ITKP102 2019-09-09--2019-12-20',
+            },
+            'preamble': 'sisugroups',
+        },
+            d.document.get_settings().get_dict().values)
+        self.assertEqual(
+            {
+                ('jy-CUR-4668-responsible-teachers', AccessType.owner.value),
+                ('jy-CUR-4668-teachers', AccessType.owner.value),
+                ('jy-CUR-4668-studysubgroup-teachers', AccessType.owner.value),
+            },
+            {(ac.usergroup.external_id.external_id, ac.type) for ac in d.block.accesses})
+
+        self.login(username='ut-1')
+        self.get(d.url)
+
+        all_groups = [
+            {'display_name': 'ITKP102 P1 2019-09-09--2019-12-20: Rooli - '
+                             'administrative-person',
+             'doc': None,
+             'external_id': 'jy-CUR-4668-administrative-persons',
+             'name': 'itkp102-19p1-administrative-persons'},
+            {'display_name': 'ITKP102 2019-09-09--2019-12-20: Rooli - responsible-teacher',
+             'doc': None,
+             'external_id': 'jy-CUR-4668-responsible-teachers',
+             'name': 'itkp102-190909-responsible-teachers'},
+            {'display_name': 'ITKP102 2019-09-09--2019-12-20: Rooli - teacher',
+             'doc': None,
+             'external_id': 'jy-CUR-4668-teachers',
+             'name': 'itkp102-190909-teachers'},
+            {'display_name': 'ITKP102 2019-09-09--2019-12-20: Kaikki opiskelijat',
+             'doc': None,
+             'external_id': 'jy-CUR-4668-students',
+             'name': 'itkp102-190909-students'},
+            {'display_name': 'ITKP102 2019-09-09--2019-12-20: Luento 1: Opettajat',
+             'doc': None,
+             'external_id': 'jy-CUR-4668-jy-studysubgroup-9515-teachers',
+             'name': 'itkp102-190909-luento-1-teachers'},
+            {'display_name': 'ITKP102 2019-09-09--2019-12-20: Luento 2: Opettajat',
+             'doc': None,
+             'external_id': 'jy-CUR-4668-jy-studysubgroup-9516-teachers',
+             'name': 'itkp102-190909-luento-2-teachers'},
+            {'display_name': 'ITKP102 2019-09-09--2019-12-20: Opetusryhmien opettajat',
+             'doc': None,
+             'external_id': 'jy-CUR-4668-studysubgroup-teachers',
+             'name': 'itkp102-190909-studysubgroup-teachers'},
+            {'display_name': 'ITKP102 2019-09-09--2019-12-20: Luento 1: Opiskelijat',
+             'doc': None,
+             'external_id': 'jy-CUR-4668-jy-studysubgroup-9515-students',
+             'name': 'itkp102-190909-luento-1-students'},
+            {'display_name': 'ITKP102 2019-09-09--2019-12-20: Luento 2: Opiskelijat',
+             'doc': None,
+             'external_id': 'jy-CUR-4668-jy-studysubgroup-9516-students',
+             'name': 'itkp102-190909-luento-2-students'},
+            {'display_name': 'ITKP102 2019-09-09--2019-12-20: Opetusryhmien Opiskelijat',
+             'doc': None,
+             'external_id': 'jy-CUR-4668-studysubgroup-students',
+             'name': 'itkp102-190909-studysubgroup-students'}]
+        self.check_potential_groups(
+            'urt-1', all_groups)
+        self.check_potential_groups(
+            'uap-1', all_groups)
+        self.check_potential_groups(
+            'ussg-t1', all_groups)
+        self.check_potential_groups(
+            'u9515-s1', [])
+        self.check_potential_groups(
+            'us-1', [])
+        self.check_potential_groups(
+            'u9515-t1',
+            [{'display_name': 'ITKP102 2019-09-09--2019-12-20: Luento 1: Opettajat',
+              'doc': None,
+              'external_id': 'jy-CUR-4668-jy-studysubgroup-9515-teachers',
+              'name': 'itkp102-190909-luento-1-teachers'},
+             {'display_name': 'ITKP102 2019-09-09--2019-12-20: Luento 1: Opiskelijat',
+              'doc': None,
+              'external_id': 'jy-CUR-4668-jy-studysubgroup-9515-students',
+              'name': 'itkp102-190909-luento-1-students'}])
+
+        self.check_no_group_access('us-1', ['jy-CUR-4668-students'])
+        self.check_no_group_access('u9515-t1', ['jy-CUR-4668-students', 'jy-CUR-4668-teachers'])
+        self.check_no_group_access(
+            'u9515-t1',
+            ['jy-CUR-4668-students', 'jy-CUR-4668-jy-studysubgroup-9515-students'],
+            no_access_expected=['jy-CUR-4668-students'],
+        )
+
+        self.login(username='u9515-t1')
+        self.json_post(
+            '/sisu/createGroupDocs', json_data=[
+                {'externalId': 'jy-CUR-4668-jy-studysubgroup-9515-students'},
+                {'externalId': 'jy-CUR-4668-jy-studysubgroup-9515-teachers', 'name': 'teachers'},
+            ],
+            expect_status=400,
+            expect_content='Usergroup must contain at least one digit and one letter and must not have special chars.',
+            json_key='error',
+        )
+
+        r = self.json_post(
+            '/sisu/createGroupDocs', json_data=[
+                {'externalId': 'jy-CUR-4668-jy-studysubgroup-9515-students'},
+                {'externalId': 'jy-CUR-4668-jy-studysubgroup-9515-teachers', 'name': 'teachers1'},
+            ],
+        )
+        r['created'].sort(key=itemgetter('path'))
+        self.assertEqual('groups/2019/itkp102/09/itkp102-190909-luento-1-students', r['created'][0]['path'])
+        self.assertEqual('groups/2019/itkp102/09/teachers1', r['created'][1]['path'])
+
+        r = self.json_post(
+            '/sisu/createGroupDocs', json_data=[
+                {'externalId': 'jy-CUR-4668-jy-studysubgroup-9515-students', 'name': 'students1'},
+                {'externalId': 'jy-CUR-4668-jy-studysubgroup-9515-teachers', 'name': 'teachers2'},
+            ],
+        )
+        r['updated'].sort(key=itemgetter('path'))
+        self.assertEqual('groups/2019/itkp102/09/teachers2', r['updated'][1]['path'])
+        self.assertEqual('groups/2019/itkp102/09/students1', r['updated'][0]['path'])
+        self.assertEqual('teachers2', r['updated'][1]['title'])
+        self.assertEqual('students1', r['updated'][0]['title'])
+        self.assertEqual([], r['created'])
+
+        r = self.json_post(
+            '/sisu/createGroupDocs', json_data=[
+                {'externalId': 'jy-CUR-4668-jy-studysubgroup-9515-students', 'name': 'students1'},
+                {'externalId': 'jy-CUR-4668-jy-studysubgroup-9515-teachers', 'name': 'teachers2'},
+            ],
+        )
+        self.assertEqual([], r['created'])
+        self.assertEqual([], r['updated'])
+
+        d = DocEntry.find_by_path('groups/2019/itkp102/09/students1')
+        self.assertEqual(
+            {
+                ('jy-CUR-4668-administrative-persons', AccessType.owner.value),
+                ('jy-CUR-4668-jy-studysubgroup-9515-teachers', AccessType.owner.value),
+                ('jy-CUR-4668-responsible-teachers', AccessType.owner.value),
+                ('jy-CUR-4668-studysubgroup-teachers', AccessType.owner.value),
+                ('jy-CUR-4668-teachers', AccessType.owner.value),
+            },
+            {(ac.usergroup.external_id.external_id, ac.type) for ac in d.block.accesses})
+        self.assertEqual({
+            'macros': {
+                'group': 'students1',
+                'fields': ['info'],
+                'maxRows': '40em',
+            },
+        },
+            d.document.get_settings().get_dict().values)
+        self.json_post(
+            '/sisu/createGroupDocs', json_data=[
+                {'externalId': 'jy-CUR-4668-jy-studysubgroup-9515-students', 'name': 'teachers1'},
+                {'externalId': 'jy-CUR-4668-jy-studysubgroup-9515-teachers', 'name': 'teachers1'},
+            ],
+            expect_status=403,
+            expect_content="Item with a same name already exists.",
+            json_key='error',
+        )
+
+    def test_no_scim_group_manual_member_update(self):
+        self.json_post(
+            '/scim/Groups', {
+                'externalId': 'jy-CUR-7777-teachers',
+                'displayName': 'ITKP102 2020-09-09--2020-12-20: Rooli - teacher',
+                'members': [
+                    {'value': u, 'display': u, 'email': f'{u}@example.com'} for u in ['abc']
+                ],
+            },
+            auth=a,
+            expect_status=201,
+        )
+        self.login_test3()
+        self.make_admin(self.current_user)
+        ug = UserGroup.get_by_external_id('jy-CUR-7777-teachers')
+        self.get(
+            f'/groups/addmember/{ug.name}/{self.current_user.name}',
+            expect_status=400,
+            expect_content='Cannot modify members of Sisu groups.',
+            json_key='error',
+        )
+        self.get(
+            f'/groups/removemember/{ug.name}/abc',
+            expect_status=400,
+            expect_content='Cannot modify members of Sisu groups.',
+            json_key='error',
+        )
+
+    def check_no_group_access(self, username: str, externalids: List[str], no_access_expected=None):
+        self.login(username=username)
+        if no_access_expected is None:
+            no_access_expected = externalids
+        self.json_post(
+            '/sisu/createGroupDocs', json_data=[
+                {'externalId': externalid} for externalid in externalids
+            ],
+            expect_status=403,
+            expect_content=f"You don't have access to all the requested groups: {seq_to_str(no_access_expected)}",
+            json_key='error',
+        )
+
+    def check_potential_groups(self, uname: str, expected):
+        self.login(username=uname)
+
+        r = self.get(
+            '/sisu/getPotentialGroups',
+        )
+        for g in r:
+            g.pop('id')
+        self.assertEqual(
+            expected, r)
 
 
 def scim_error(msg: str, code=422):

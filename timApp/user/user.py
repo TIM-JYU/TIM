@@ -173,6 +173,7 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
     notifications_alt = db.relationship('Notification')
     groups = db.relationship('UserGroup', secondary=UserGroupMember.__table__,
                              back_populates='users', lazy='joined')
+    groups_dyn = db.relationship('UserGroup', secondary=UserGroupMember.__table__, lazy='dynamic')
     lectures = db.relationship('Lecture', secondary=LectureUsers.__table__,
                                back_populates='users', lazy='dynamic')
     owned_lectures = db.relationship('Lecture', back_populates='owner', lazy='dynamic')
