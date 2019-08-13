@@ -113,6 +113,7 @@ class TimMenuItemModel:
 class TimMenuMarkupModel(GenericMarkupModel):
     # hoverOpen: Union[bool, Missing] = missing
     topMenu: Union[bool, Missing] = missing
+    topMenuTriggerHeight: Union[int, Missing] = missing
     openAbove: Union[bool, Missing] = missing
     keepLinkColors: Union[bool, Missing] = missing
     basicColors: Union[bool, Missing] = missing
@@ -136,6 +137,7 @@ class TimMenuItemSchema(Schema):
 class TimMenuMarkupSchema(GenericMarkupSchema):
     # hoverOpen = fields.Bool(allow_none=True, default=True)
     topMenu = fields.Bool(allow_none=True, default=False)
+    topMenuTriggerHeight = fields.Int(allow_none=True, default=200)
     openAbove = fields.Bool(allow_none=True, default=False)
     keepLinkColors = fields.Bool(allow_none=True, default=False)
     basicColors = fields.Bool(allow_none=True, default=False)

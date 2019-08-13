@@ -23,6 +23,7 @@ const TimMenuMarkup = t.intersection([
         menu: withDefault(t.string, ""),
         hoverOpen: withDefault(t.boolean, true), // Unimplemented.
         topMenu: withDefault(t.boolean, false),
+        topMenuTriggerHeight: withDefault(t.number, 200),
         openAbove: withDefault(t.boolean, false),
         keepLinkColors: withDefault(t.boolean, false),
         basicColors: withDefault(t.boolean, false),
@@ -85,7 +86,9 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
     private mouseInside: boolean = false; // Whether mouse cursor is inside the menu.
     private userRights: IRights | undefined;
     private previousSwitch: number | undefined;
+    private topMenuTriggerHeight: number | undefined; // Pixels to scroll before topMenu appears.
     private topMenuVisible: boolean = false; // Meant to curb unnecessary topMenu state changes.
+    private previouslyScrollingDown: boolean = true;
 
     getDefaultMarkup() {
         return {};
@@ -112,6 +115,13 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
             this.openingSymbol = "&#9652;";
         }
         if (this.topMenu) {
+            // Divided by two because the check is half of the user given height towards either direction.
+            this.topMenuTriggerHeight = Math.floor(this.attrs.topMenuTriggerHeight / 2);
+            if (this.topMenuTriggerHeight == 0) {
+                // Logic doesn't work if the height is zero. Negative number makes it stay after appearing
+                // until scrolled to its original location in document.
+                this.topMenuTriggerHeight = 1;
+            }
             window.onscroll = () => {
                 this.toggleSticky();
             };
@@ -192,51 +202,61 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
      */
     toggleSticky() {
         // TODO: Multiple topMenus.
-        // TODO: Placeholder content takes text-sized space even when hidden.
+        // TODO: Check the trigger height logic.
         const menu = this.element.find(".tim-menu")[0];
         const placeholder = this.element.find(".tim-menu-placeholder")[0];
         const scrollY = $(window).scrollTop();
-        const height = 100;
-        if (!menu || !placeholder) {
+        if (!menu || !placeholder || !this.topMenuTriggerHeight || !scrollY) {
+            return;
+        }
+        if (!this.previousScroll) {
+            this.previousScroll = scrollY;
             return;
         }
         // Placeholder and its content are separate, because when hidden y is 0.
         const placeholderContent = this.element.find(".tim-menu-placeholder-content")[0];
+
+        const belowPlaceholder = placeholder.getBoundingClientRect().bottom < 0;
+        const scrollingDown = scrollY > this.previousScroll;
+        const scrollDirHasChanged = (this.previouslyScrollingDown && !scrollingDown) || (!this.previouslyScrollingDown && scrollingDown);
+        if (scrollDirHasChanged) {
+            // If scrolling direction has changed, set the scroll trigger distance to be centered at that y-coordinate.
+            this.previousSwitch = scrollY;
+        }
+        this.previouslyScrollingDown = scrollingDown;
+        this.previousScroll = $(window).scrollTop();
+        // console.log(this.topMenuVisible + " " + this.previousSwitch + " " + scrollY + " " + this.topMenuTriggerHeight);
+
         // Sticky can only show when the element's place in document goes outside upper bounds.
-        if (scrollY && placeholder.getBoundingClientRect().bottom < 0) {
+        if (belowPlaceholder) {
             // When scrolling downwards, don't show fixed menu and hide placeholder content.
             // Otherwise (i.e. scrolling upwards), show menu as fixed and let placeholder take its place in document
             // to mitigate page length changes.
-            // console.log(this.topMenuVisible + " " + this.previousSwitch + " " + scrollY);
-            if (this.previousScroll && scrollY > this.previousScroll) {
+            if (scrollingDown) {
+                // If topMenu is already hidden, don't try hiding it again.
                 // If scroll distance is smaller than min height, don't do anything.
-                if (!this.topMenuVisible || (!this.previousSwitch || scrollY > this.previousSwitch + height)) {
-                    this.previousScroll = $(window).scrollTop();
+                if (!this.topMenuVisible || (!this.previousSwitch || scrollY > this.previousSwitch + this.topMenuTriggerHeight)) {
                     return;
                 }
                 menu.classList.remove("top-menu");
                 placeholderContent.classList.add("tim-menu-hidden");
-                this.previousSwitch = scrollY;
                 this.topMenuVisible = false;
             } else {
+                // If topMenu is already visible, the rest are redundant.
                 if (this.topMenuVisible || (this.previousSwitch &&
-                    !(scrollY > this.previousSwitch + height || scrollY < this.previousSwitch - height))) {
-                    this.previousScroll = $(window).scrollTop();
+                    !(scrollY > this.previousSwitch + this.topMenuTriggerHeight || scrollY < this.previousSwitch - this.topMenuTriggerHeight))) {
                     return;
                 }
                 menu.classList.add("top-menu");
                 placeholderContent.classList.remove("tim-menu-hidden");
-                this.previousSwitch = scrollY;
                 this.topMenuVisible = true;
             }
         } else {
-            if (!this.topMenuVisible || (!this.previousSwitch || !scrollY || scrollY > this.previousSwitch + height)) {
-                this.previousScroll = $(window).scrollTop();
+            if (!this.topMenuVisible) {
                 return;
             }
             menu.classList.remove("top-menu");
             placeholderContent.classList.add("tim-menu-hidden");
-            this.previousSwitch = scrollY;
             this.topMenuVisible = false;
         }
     }
@@ -331,8 +351,6 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
         }
     }
 }
-
-
 
 timApp.component("timmenuRunner", {
     bindings: pluginBindings,
