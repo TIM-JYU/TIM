@@ -77,6 +77,7 @@ class TableFormMarkupModel(GenericMarkupModel):
     toolbarTemplates: Union[List[dict], Missing] = missing
     saveStyles: Union[bool, Missing] = True
     showToolbar: Union[bool, Missing] = True
+    sisugroups: Union[bool, Missing] = missing
     fields: Union[List[str], Missing] = missing
 
 
@@ -116,6 +117,7 @@ class TableFormMarkupSchema(GenericMarkupSchema):
     fixedColor = fields.Str(allow_none=True)
     saveStyles = fields.Boolean(default=True)
     showToolbar = fields.Boolean(default=True)
+    sisugroups = fields.Boolean(default=True)
     fields = fields.List(fields.Str())  # Keep this last - bad naming
 
     @post_load
@@ -145,6 +147,45 @@ class TableFormAttrs(Schema):
     state = fields.Nested(TableFormStateSchema, allow_none=True, required=True)
 
 
+def get_sisugroups(user):
+    return {
+        'rows': {
+            'sisu:jy-CUR-4668-jy-studysubgroup-9515-teachers': {
+                'timname': 'ohj1s19c',
+                'url': '<a href="/view/groups/2019/ITKP102/ohj1s19">URL</a>',
+            },
+            'sisu:jy-CUR-4668-jy-studysubgroup-9515-students': {
+                'timname': 'ohj1s19',
+                'url': '<a href="/view/groups/2019/ITKP102/ohj1s19">URL</a>',
+            },
+            'sisu:jy-CUR-4668-jy-studysubgroup-9516-students': {
+                'timname': '',
+                'url': '',
+            },
+        },
+        'realnamemap': {
+            'sisu:jy-CUR-4668-jy-studysubgroup-9515-teachers': 'ITKP102 2019-09-09--2019-12-20: Luento 1: Opettajat',
+            'sisu:jy-CUR-4668-jy-studysubgroup-9515-students': 'ITKP102 2019-09-09--2019-12-20: Luento 1: Opiskelijat',
+            'sisu:jy-CUR-4668-jy-studysubgroup-9516-students': 'ITKP102 2019-09-09--2019-12-20: Luento 2: Opiskelijat',
+        },
+        'emailmap': {
+            'sisu:jy-CUR-4668-jy-studysubgroup-9515-teachers': '',
+            'sisu:jy-CUR-4668-jy-studysubgroup-9515-students': '',
+            'sisu:jy-CUR-4668-jy-studysubgroup-9516-students': '',
+        },
+        'fields': ['timname', "url"],
+        'aliases': {
+            'timname': 'timname',
+            'url': 'url'
+    },
+        'styles': {
+            'sisu:jy-CUR-4668-jy-studysubgroup-9515-teachers': {},
+            'sisu:jy-CUR-4668-jy-studysubgroup-9515-students': {},
+            'sisu:jy-CUR-4668-jy-studysubgroup-9516-students': {},
+        },
+    }
+
+
 @attr.s(auto_attribs=True)
 class TableFormHtmlModel(GenericHtmlModel[TableFormInputModel, TableFormMarkupModel, TableFormStateModel]):
     def get_component_html_name(self) -> str:
@@ -162,7 +203,10 @@ class TableFormHtmlModel(GenericHtmlModel[TableFormInputModel, TableFormMarkupMo
             tid = TaskId.parse(self.taskID)
             d = get_doc_or_abort(tid.doc_id)
             user = User.get_by_name(self.current_user_id)
-            f = tableform_get_fields(self.markup.fields, self.markup.groups, d,
+            if self.markup.sisugroups:
+                f = get_sisugroups(user)  # TODO: SISU change a proper call hera
+            else:
+                f = tableform_get_fields(self.markup.fields, self.markup.groups, d,
                                      user, self.markup.removeDocIds, self.markup.showInView)
             r = {**r, **f}
         return r

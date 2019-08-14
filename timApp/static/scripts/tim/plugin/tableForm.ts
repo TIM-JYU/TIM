@@ -17,7 +17,8 @@ import {showInputDialog} from "../ui/inputDialog";
 import {widenFields} from "../util/common";
 import {GenericPluginMarkup, GenericPluginTopLevelFields, nullable, withDefault} from "./attributes";
 import "./tableForm.css";
-import {CellAttrToSave, CellToSave, CellType, colnumToLetters, DataEntity, isPrimitiveCell, TimTable} from "./timTable";
+import {CellAttrToSave, CellToSave, CellType, colnumToLetters, DataEntity,
+    isPrimitiveCell, TimTable, TimTableController} from "./timTable";
 
 const tableFormApp = angular.module("tableFormApp", ["ngSanitize"]);
 export const moduleDefs = [tableFormApp];
@@ -61,6 +62,7 @@ const TableFormMarkup = t.intersection([
         saveStyles: withDefault(t.boolean, true),
         fields: t.array(t.string),
         showToolbar: withDefault(t.boolean, true),
+        sisugroups: withDefault(t.boolean, false),
     }),
     GenericPluginMarkup,
     t.type({
@@ -283,6 +285,7 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
      * Basically just a reset
      */
     public async updateTable() {
+        if ( this.attrsall.markup.sisugroups ) { return; }
         // TODO: Save before reset?
         const tableResponse = await $http.get <{
             // TODO: All of these are probably not needed
@@ -324,6 +327,8 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
      * @param fields to be updated
      */
     public async updateFields(fields: string[]) {
+        if ( this.attrsall.markup.sisugroups ) { return; }
+
         try {
             if (!this.tableFetched || !this.viewctrl) {
                 return;
@@ -425,7 +430,11 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
                 this.rowKeys.sort((a, b) => this.sortByEmail(a, b));
             }
 
-            this.data.headers = ["Henkilön nimi", "Käyttäjänimi", "eMail"];
+            if ( this.attrsall.markup.sisugroups ) {
+                this.data.headers = ["Sisu teksti", "Sisu nimi", ""];
+            } else {
+                this.data.headers = ["Henkilön nimi", "Käyttäjänimi", "eMail"];
+            }
             this.data.headersStyle = {"backgroundColor": this.fixedColor,
                                       "font-weight": "bold"};
 
@@ -775,6 +784,7 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
         // TODO make better implementation so singleCellSave is not called one by one
         // TODO: maybe done so that push cells to chengedCells and call save
         // TODO: but first check if saved to person or group and to that column by column
+        if ( this.attrsall.markup.sisugroups ) { return; }
         for (const c of cellsToSave) {
             const coli = c.col;
             const rowi = c.row;
@@ -935,6 +945,23 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
         this.changedCells = [];
     }
 
+    async orderSisuGroups() {
+        const timTable = this.getTimTable();
+        if (timTable == null) { return; }
+        const selUsers = timTable.getCheckedRows(0, true);
+        const groups = TimTableController.makeSmallerMatrix(selUsers, [1, 3]);
+        const params = {
+            rows: groups,
+        };
+        // TODO: SISU tähän URL
+        const url = this.pluginMeta.getAnswerUrl();
+        const r = await to($http.put<{ web: { result: string, error?: string } }>(url, params));
+        this.isRunning = false;
+        if (r.ok) {
+           // TODO: SISU tähän sivun refresh tai virheiden näyttäminen
+        }
+    }
+
     protected getAttributeType() {
         return TableFormAll;
     }
@@ -985,6 +1012,11 @@ timApp.component("tableformRunner", {
             ng-click="$ctrl.emailUsers()"
             ng-if="$ctrl.attrs.emailUsersButtonText && $ctrl.cbCount">
             {{::$ctrl.attrs.emailUsersButtonText}}
+    </button>
+    <button class="timButton"
+            ng-click="$ctrl.orderSisuGroups()"
+            ng-if="$ctrl.attrs.sisugroups && $ctrl.cbCount">
+            Confirm groups
     </button>
     </div>
     <div class="csRunDiv tableUsers" style="padding: 1em;" ng-if="$ctrl.userlist"> <!-- userlist -->

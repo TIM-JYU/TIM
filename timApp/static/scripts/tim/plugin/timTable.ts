@@ -712,6 +712,23 @@ export class TimTableController extends DestroyScope implements IController, ITi
         return rlist;
     }
 
+    /**
+     * Make smaller matrix by cutting only needed columns
+     * @param rows list of rows to use
+     * @param cols col indecies to take
+     */
+    public static makeSmallerMatrix(rows: string[][], cols: number[]) {
+        const result = [];
+        for ( const r of rows ) {
+            const newrow = [];
+            for (const i of cols ) {
+                newrow.push(r[i]);
+            }
+            result.push(newrow);
+        }
+        return result;
+    }
+
     public getCheckedRows(startFrom: number, visible: boolean) {
         const crows = [];
         for (let i = startFrom; i < this.cellDataMatrix.length; i++) {
