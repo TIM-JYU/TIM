@@ -427,7 +427,7 @@ numericfieldApp.component("numericfieldRunner", {
                ng-style="$ctrl.styles">
       </span>
       <!--<span ng-if="::$ctrl.isPlainText()" style="float:left;" ng-bind-html="$ctrl.inputstem + " " + $ctrl.numericvalue">{{$ctrl.numericvalue}}</span> -->
-      <span ng-if="::$ctrl.isPlainText()" style="" >&nbsp;{{$ctrl.numericvalue}}</span>
+      <span ng-if="::$ctrl.isPlainText()" class="plaintext" style="width: {{::$ctrl.cols}}em">{{$ctrl.numericvalue}}</span>
      </span></label>
     </div>
     <div ng-if="$ctrl.error" style="font-size: 12px" ng-bind-html="$ctrl.error"></div>

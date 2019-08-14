@@ -407,7 +407,7 @@ textfieldApp.component("textfieldRunner", {
                ng-class="{warnFrame: ($ctrl.isUnSaved() && !$ctrl.redAlert), alertFrame: $ctrl.redAlert }"
                ng-style="$ctrl.styles">
          </span>
-         <span ng-if="::$ctrl.isPlainText()" style="">{{$ctrl.userword}}</span>
+         <span ng-if="::$ctrl.isPlainText()" class="plaintext" style="width: {{::$ctrl.cols}}em">{{$ctrl.userword}}</span>
          </span></label>
     </form>
     <div ng-if="$ctrl.errormessage" class="error" style="font-size: 12px" ng-bind-html="$ctrl.errormessage"></div>
