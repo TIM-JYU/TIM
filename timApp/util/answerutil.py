@@ -229,7 +229,7 @@ def get_fields_and_users(u_fields: List[str], groups: List[UserGroup],
                             values_p = list(p.values())
                             value = values_p[0]
             user_tasks[alias_map.get(task.extended_or_doc_task, task.extended_or_doc_task)] = value
-            user_fieldstyles[alias_map.get(task.extended_or_doc_task, task.extended_or_doc_task)] = style
+            # user_fieldstyles[alias_map.get(task.extended_or_doc_task, task.extended_or_doc_task)] = style
     return res, jsrunner_alias_map, [alias_map.get(ts.extended_or_doc_task, ts.extended_or_doc_task) for ts in task_ids]
 
 
