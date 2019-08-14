@@ -28,11 +28,11 @@ export const JsrunnerMarkup = t.intersection([
         showInView: t.boolean,
         autoadd: t.boolean,
         validonly: t.boolean,
+        autoUpdateTables: withDefault(t.boolean, true), // Build failure when in t.types?
     }),
     GenericPluginMarkup,
     t.type({
         // all withDefaults should come here; NOT in t.partial
-        autoUpdateTables: withDefault(t.boolean, true),
     }),
 ]);
 
