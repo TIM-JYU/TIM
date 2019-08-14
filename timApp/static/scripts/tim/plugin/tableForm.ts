@@ -389,10 +389,10 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
 
             for (const f of tableFields) {
                 for (let y = 0; y < this.rowKeys.length; y++) {
-                    if (this.styles && !angular.equals(this.styles, {})) {
+                    if (styles && !angular.equals(styles, {})) {
                         this.data.userdata.cells[taskColumns[f] + (y + 1)] = Object.assign(
                             {cell: rows[this.rowKeys[y]][f]},
-                            this.styles[this.rowKeys[y]][f],
+                            styles[this.rowKeys[y]][f],
                         );
                     } else {
                         this.data.userdata.cells[taskColumns[f] + (y + 1)] = Object.assign(
