@@ -88,7 +88,7 @@ function runner(d: IRunnerData): RunnerResult {
                             data?: never, d?: never, currDoc?: never, markup?: never, aliases?: never) {
             errorprg = program;
             prgname = pname;
-            if ( program ) eval("function main() {" + program + "} main();");
+            if ( program ) eval("function main() {" + program + "\n} main();");
         }
         runProgram(d.markup.preprogram, "preprogram", gtools);
         output += gtools.getOutput();

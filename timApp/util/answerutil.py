@@ -212,19 +212,24 @@ def get_fields_and_users(u_fields: List[str], groups: List[UserGroup],
                     value = a.points
                 elif task.field == "datetime":
                     value = time.mktime(a.answered_on.timetuple())
+                elif task.field == "ALL":
+                    value = p
                 else:
 
                     if task.field:
 
                         value = p.get(task.field)
                     else:
-                        if len(p) > 1:
+                        if len(json_str) > 1:
                             try:
                                 plug = find_plugin_from_document(doc_map[task.doc_id], task, user)
                                 content_field = plug.get_content_field_name()
                             except TaskNotFoundException:
                                 content_field = "c"
-                            value = p.get(content_field)
+                            if isinstance(p, dict):
+                                value = p.get(content_field)
+                            else:
+                                value = p
                         else:
                             values_p = list(p.values())
                             value = values_p[0]
