@@ -233,6 +233,7 @@ def post_group(args: SCIMGroupModel):
         ug.display_name = args.displayName
     else:
         ug = UserGroup(name=gname, display_name=args.displayName)
+        db.session.add(ug)
     update_users(ug, args)
     db.session.commit()
     return json_response(group_scim(ug), status_code=201)
