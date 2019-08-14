@@ -27,8 +27,9 @@ class MultisaveMarkupModel(GenericMarkupModel):
     jumplink: Union[str, Missing] = missing
     jumptarget: Union[str, Missing] = missing
     areas: Union[List[str], Missing] = missing
-    fields: Union[List[str], Missing] = missing
     tags: Union[List[str], Missing] = missing
+    autoUpdateTables: Union[bool, Missing] = True
+    fields: Union[List[str], Missing] = missing
 
 
 class MultisaveMarkupSchema(GenericMarkupSchema):
@@ -36,7 +37,8 @@ class MultisaveMarkupSchema(GenericMarkupSchema):
     jumptarget = fields.String(allow_none=True)
     areas = fields.List(fields.Str())
     tags = fields.List(fields.Str())
-    fields = fields.List(fields.Str())
+    autoUpdateTables = fields.Boolean(default=True)
+    fields = fields.List(fields.Str())  # Keep this last
 
     @post_load
     def make_obj(self, data):

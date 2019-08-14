@@ -33,6 +33,7 @@ class TextfieldMarkupModel(GenericMarkupModel):
     nosave: Union[bool, Missing] = missing
     ignorestyles: Union[bool, Missing] = missing
     clearstyles: Union[bool, Missing] = missing
+    autoUpdateTables: Union[bool, Missing] = True
 
 
 class TextfieldMarkupSchema(GenericMarkupSchema):
@@ -52,6 +53,7 @@ class TextfieldMarkupSchema(GenericMarkupSchema):
     nosave = fields.Boolean()
     ignorestyles = fields.Boolean()
     clearstyles = fields.Boolean()
+    autoUpdateTables = fields.Boolean(default=True)
 
     @post_load
     def make_obj(self, data):

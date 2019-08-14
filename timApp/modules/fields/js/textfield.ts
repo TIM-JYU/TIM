@@ -30,6 +30,7 @@ const TextfieldMarkup = t.intersection([
     GenericPluginMarkup,
     t.type({
         autoupdate: withDefault(t.number, 500),
+        autoUpdateTables: withDefault(t.boolean, true),
         cols: withDefault(t.number, 6),
     }),
 ]);
@@ -353,8 +354,8 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
             if (data.web.clear) {
                 this.applyStyling({});
             }
-            if (!this.saveCalledExternally && this.vctrl) {
-                const tid = this.getTaskId()
+            if (!this.saveCalledExternally && this.vctrl && this.attrs.autoUpdateTables) {
+                const tid = this.getTaskId();
                 if (tid) {
                     this.vctrl.updateAllTables([tid]);
                 }
