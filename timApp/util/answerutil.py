@@ -207,7 +207,10 @@ def get_fields_and_users(u_fields: List[str], groups: List[UserGroup],
             else:
                 json_str = a.content
                 p = json.loads(json_str)
-                style = p.get('styles')
+                try:
+                    style = p.get('styles')
+                except AttributeError:
+                    style = None
                 if task.field == "points":
                     value = a.points
                 elif task.field == "datetime":
