@@ -99,11 +99,15 @@ textfield-runner .stem, cbfield-runner .stem, rbfield-runner .stem  {
 }
 
 
-.fieldCell  textfield-runner input, .fieldCell  numericfield-runner input {
+.fieldCell textfield-runner input, .fieldCell numericfield-runner input {
     margin-left: 2px;
     margin-right: 2px;
     margin-top: 2px;
     /* text-align: center; */
+}
+
+.fieldCell .plaintext {
+    display: inline-block;
 }
 
 .fieldCell  tim-plugin-loader {

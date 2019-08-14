@@ -78,6 +78,8 @@ class TableFormMarkupModel(GenericMarkupModel):
     saveStyles: Union[bool, Missing] = True
     showToolbar: Union[bool, Missing] = True
     sisugroups: Union[bool, Missing] = missing
+    autoUpdateFields: Union[bool, Missing] = True
+    autoUpdateTables: Union[bool, Missing] = True
     fields: Union[List[str], Missing] = missing
 
 
@@ -118,6 +120,8 @@ class TableFormMarkupSchema(GenericMarkupSchema):
     saveStyles = fields.Boolean(default=True)
     showToolbar = fields.Boolean(default=True)
     sisugroups = fields.Boolean(default=True)
+    autoUpdateFields = fields.Boolean(default=True)
+    autoUpdateTables = fields.Boolean(default=True)
     fields = fields.List(fields.Str())  # Keep this last - bad naming
 
     @post_load
@@ -195,7 +199,7 @@ class TableFormHtmlModel(GenericHtmlModel[TableFormInputModel, TableFormMarkupMo
         return False
 
     def get_static_html(self) -> str:
-        return render_static_tableForm(self)
+        return render_static_table_form(self)
 
     def get_browser_json(self):
         r = super().get_browser_json()
@@ -235,7 +239,7 @@ class TableFormAnswerSchema(TableFormAttrs, GenericAnswerSchema):
         return TableFormAnswerModel(**data)
 
 
-def render_static_tableForm(m: TableFormHtmlModel):
+def render_static_table_form(m: TableFormHtmlModel):
     return render_template_string(
         """
 <div class="tableform">
@@ -263,13 +267,13 @@ def gen_csv():
 
 @tableForm_plugin.route('/fetchTableData')
 def fetch_rows():
-    r = {}
+    # r = {}
     curr_user = get_current_user_object()
     taskid = request.args.get("taskid")
     tid = TaskId.parse(taskid, False, False)
     doc = get_doc_or_abort(tid.doc_id)
     plug = find_plugin_from_document(doc.document, tid, curr_user)
-    debug = plug.values
+    # debug = plug.values
     r = tableform_get_fields(plug.values.get("fields",[]), plug.values.get("groups", []),
                              doc, curr_user, plug.values.get("removeDocIds", True),
                              plug.values.get("showInView"))
@@ -307,11 +311,11 @@ def update_fields():
     return json_response(r, headers={"No-Date-Conversion": "true"})
 
 
-def tableform_get_fields(fields: List[str], groups: List[str],
+def tableform_get_fields(flds: List[str], groups: List[str],
                          doc: DocInfo, curr_user: User, remove_doc_ids: bool, allow_non_teacher: bool):
     queried_groups = UserGroup.query.filter(UserGroup.name.in_(groups))
     fielddata, aliases, field_names = \
-        get_fields_and_users(fields, queried_groups, doc,
+        get_fields_and_users(flds, queried_groups, doc,
                              curr_user, remove_doc_ids, add_missing_fields=True,
                              allow_non_teacher = allow_non_teacher)
     rows = {}
@@ -341,14 +345,14 @@ def tableform_get_fields(fields: List[str], groups: List[str],
 @use_args(TableFormAnswerSchema(), locations=("json",))
 def answer(args: TableFormInputModel):
     rows = args.input.replyRows
-    saveRows = []
+    save_rows = []
     for u, r in rows.items():
         user = User.get_by_name(u)
-        saveRows.append({'user': user.id, 'fields': r})
+        save_rows.append({'user': user.id, 'fields': r})
 
     web = {}
     result = {'web': web}
-    savedata = saveRows
+    savedata = save_rows
     result["savedata"] = savedata
     web['result'] = "saved"
     return jsonify(result)

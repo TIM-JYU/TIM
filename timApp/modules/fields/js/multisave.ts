@@ -4,7 +4,7 @@
 import angular, {INgModelOptions} from "angular";
 import * as t from "io-ts";
 import {ITimComponent, ViewCtrl} from "tim/document/viewctrl";
-import {GenericPluginMarkup, Info} from "tim/plugin/attributes";
+import {GenericPluginMarkup, Info, withDefault} from "tim/plugin/attributes";
 import {PluginBase, pluginBindings} from "tim/plugin/util";
 
 const multisaveApp = angular.module("multisaveApp", ["ngSanitize"]);
@@ -22,6 +22,7 @@ const multisaveMarkup = t.intersection([
     GenericPluginMarkup,
     t.type({
         // all withDefaults should come here; NOT in t.partial
+        autoUpdateTables: withDefault(t.boolean, true),
     }),
 ]);
 const multisaveAll = t.intersection([
@@ -129,9 +130,10 @@ export class MultisaveController extends PluginBase<t.TypeOf<typeof multisaveMar
             }
             savedIndex++;
         }
-        // TODO: if this.attrs.updatefields...
-        this.vctrl.updateAllTables(fieldsToUpdate);
-        if (this.savedFields !== 0 ) {
+        if (this.attrs.autoUpdateTables) {
+            this.vctrl.updateAllTables(fieldsToUpdate);
+        }
+        if (this.savedFields !== 0) {
             this.isSaved = true;
         }
 

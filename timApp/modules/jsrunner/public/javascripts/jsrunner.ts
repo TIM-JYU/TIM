@@ -107,6 +107,9 @@ class JsrunnerController extends PluginBase<t.TypeOf<typeof JsrunnerMarkup>, t.T
                 this.output = data.web.output;
                 if ( this.attrsall.markup.updateFields ) {
                     this.vctrl.updateFields(this.attrsall.markup.updateFields);
+                    if(this.attrs.autoUpdateTables){
+                        this.vctrl.updateAllTables(this.attrsall.markup.updateFields);
+                    }
                 }
                 // temp code:
                 const tempd: any = data.web;

@@ -28,14 +28,12 @@ const TableFormMarkup = t.intersection([
         anonNames: nullable(t.boolean),
         autosave: t.boolean,
         hideButtonText: nullable(t.string),
-        openButtonText: withDefault(t.string, "Avaa Taulukko/Raporttinäkymä"),
 
         hiddenColumns: t.array(t.number),
         hiddenRows: t.array(t.number),
         maxWidth: t.string,
         minWidth: t.string,
         maxRows: t.string,
-        maxCols: withDefault(t.string, "fit-content"),
         open: t.boolean,
         filterRow: t.boolean,
         toolbarTemplates: t.array(t.object),
@@ -43,23 +41,14 @@ const TableFormMarkup = t.intersection([
         cbColumn: t.boolean,
         nrColumn: t.boolean,
         groups: t.array(t.string),
-        usernames: withDefault(t.boolean, true),
-        realnames: withDefault(t.boolean, true),
-        emails: withDefault(t.boolean, false),
         report: nullable(t.boolean),
         reportButton: nullable(t.string),
         separator: nullable(t.string),
-        singleLine: withDefault(t.boolean, true),
         sortBy: nullable(t.string), /* TODO! Username and task, or task and username -- what about points? */
         table: nullable(t.boolean),
-        removeDocIds: withDefault(t.boolean, true),
-        taskBorders: withDefault(t.boolean, false),
         removeUsersButtonText: nullable(t.string),
         userListButtonText: nullable(t.string),
         emailUsersButtonText: nullable(t.string),
-        fontSize: withDefault(t.string, "smaller"),
-        fixedColor: withDefault(t.string, "#f0f0f0"),
-        saveStyles: withDefault(t.boolean, true),
         fields: t.array(t.string),
         showToolbar: withDefault(t.boolean, true),
         sisugroups: withDefault(t.boolean, false),
@@ -69,6 +58,20 @@ const TableFormMarkup = t.intersection([
         // all withDefaults should come here; NOT in t.partial
         autoupdate: withDefault(t.number, 500),
         cols: withDefault(t.number, 20),
+        showToolbar: withDefault(t.boolean, true),
+        autoUpdateFields: withDefault(t.boolean, true),
+        autoUpdateTables: withDefault(t.boolean, true),
+        fontSize: withDefault(t.string, "smaller"),
+        fixedColor: withDefault(t.string, "#f0f0f0"),
+        saveStyles: withDefault(t.boolean, true),
+        removeDocIds: withDefault(t.boolean, true),
+        taskBorders: withDefault(t.boolean, false),
+        singleLine: withDefault(t.boolean, true),
+        usernames: withDefault(t.boolean, true),
+        realnames: withDefault(t.boolean, true),
+        emails: withDefault(t.boolean, false),
+        maxCols: withDefault(t.string, "fit-content"),
+        openButtonText: withDefault(t.string, "Avaa Taulukko/Raporttinäkymä"),
     }),
 ]);
 
@@ -394,10 +397,10 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
 
             for (const f of tableFields) {
                 for (let y = 0; y < this.rowKeys.length; y++) {
-                    if (this.styles && !angular.equals(this.styles, {})) {
+                    if (styles && !angular.equals(styles, {})) {
                         this.data.userdata.cells[taskColumns[f] + (y + 1)] = Object.assign(
                             {cell: rows[this.rowKeys[y]][f]},
-                            this.styles[this.rowKeys[y]][f],
+                            styles[this.rowKeys[y]][f],
                         );
                     } else {
                         this.data.userdata.cells[taskColumns[f] + (y + 1)] = Object.assign(
@@ -937,9 +940,14 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
             return;
         }
         timtab.confirmSaved();
-        // TODO: if this attr (auto)updatefields...
-        if (true && this.viewctrl) {
-            this.viewctrl.updateFields(Array.from(changedFields));
+        if (this.viewctrl) {
+            if (this.attrs.autoUpdateFields) {
+                this.viewctrl.updateFields(Array.from(changedFields));
+            }
+            if (this.attrs.autoUpdateTables) {
+                this.viewctrl.updateAllTables(Array.from(changedFields));
+
+            }
         }
         this.clearStylesCells.clear();
         this.changedCells = [];

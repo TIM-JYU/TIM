@@ -33,6 +33,7 @@ const NumericfieldMarkup = t.intersection([
     GenericPluginMarkup,
     t.type({
         autoupdate: withDefault(t.number, 500),
+        autoUpdateTables: withDefault(t.boolean, true),
         cols: withDefault(t.number, 6),
     }),
 ]);
@@ -61,6 +62,7 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
     private saveResponse: { saved: boolean, message: (string | undefined) } = {saved: false, message: undefined};
     private preventedAutosave = false;
     private styles: {[index: string]: string} = {};
+    private saveCalledExternally = false;
 
     getDefaultMarkup() {
         return {};
@@ -130,6 +132,7 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
      * Save method for other plguins, needed by e.g. multisave plugin.
      */
     async save() {
+        this.saveCalledExternally = true;
         return this.saveText();
     }
 
@@ -231,6 +234,7 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
      * Unused method warning is suppressed, as the method is only called in template.
      */
     autoSave() {
+        this.saveCalledExternally = false;
         if (this.preventedAutosave) {
             this.preventedAutosave = false;
             return;
@@ -367,6 +371,12 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
                 this.applyStyling({});
             }
             this.saveResponse.message = this.errormessage;
+            if (!this.saveCalledExternally && this.vctrl && this.attrs.autoUpdateTables) {
+                const tid = this.getTaskId();
+                if (tid) {
+                    this.vctrl.updateAllTables([tid]);
+                }
+            }
         } else {
             this.errormessage = r.result.data.error;
         }
@@ -417,7 +427,7 @@ numericfieldApp.component("numericfieldRunner", {
                ng-style="$ctrl.styles">
       </span>
       <!--<span ng-if="::$ctrl.isPlainText()" style="float:left;" ng-bind-html="$ctrl.inputstem + " " + $ctrl.numericvalue">{{$ctrl.numericvalue}}</span> -->
-      <span ng-if="::$ctrl.isPlainText()" style="" >&nbsp;{{$ctrl.numericvalue}}</span>
+      <span ng-if="::$ctrl.isPlainText()" class="plaintext" style="width: {{::$ctrl.cols}}em">{{$ctrl.numericvalue}}</span>
      </span></label>
     </div>
     <div ng-if="$ctrl.error" style="font-size: 12px" ng-bind-html="$ctrl.error"></div>

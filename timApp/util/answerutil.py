@@ -57,6 +57,7 @@ def get_fields_and_users(u_fields: List[str], groups: List[UserGroup],
     :param autoalias: if true, give automatically from d1 same as would be from d1 = d1
     :param add_missing_fields: return estimated field even if it wasn't given previously
     :param allow_non_teacher: can be used also for non techers if othre rights matches
+    :param valid_only: find only valid answers
     :return: fielddata, aliases, field_names
     """
     needs_group_access_check = UserGroup.get_teachers_group() not in current_user.groups
