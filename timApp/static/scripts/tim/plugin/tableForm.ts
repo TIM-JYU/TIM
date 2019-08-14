@@ -61,6 +61,8 @@ const TableFormMarkup = t.intersection([
         saveStyles: withDefault(t.boolean, true),
         fields: t.array(t.string),
         showToolbar: withDefault(t.boolean, true),
+        autoUpdateFields: withDefault(t.boolean, true),
+        autoUpdateTables: withDefault(t.boolean, true),
     }),
     GenericPluginMarkup,
     t.type({
@@ -927,9 +929,14 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
             return;
         }
         timtab.confirmSaved();
-        // TODO: if this attr (auto)updatefields...
-        if (true && this.viewctrl) {
-            this.viewctrl.updateFields(Array.from(changedFields));
+        if (this.viewctrl) {
+            if (this.attrs.autoUpdateFields) {
+                this.viewctrl.updateFields(Array.from(changedFields));
+            }
+            if (this.attrs.autoUpdateTables) {
+                this.viewctrl.updateAllTables(Array.from(changedFields));
+
+            }
         }
         this.clearStylesCells.clear();
         this.changedCells = [];

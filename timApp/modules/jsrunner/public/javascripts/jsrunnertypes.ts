@@ -1,5 +1,5 @@
 import * as t from "io-ts";
-import {GenericPluginMarkup, GenericPluginTopLevelFields} from "tim/plugin/attributes";
+import {GenericPluginMarkup, GenericPluginTopLevelFields, withDefault} from "tim/plugin/attributes";
 
 export const Max1000 = t.brand(
   t.number,
@@ -28,6 +28,7 @@ export const JsrunnerMarkup = t.intersection([
         showInView: t.boolean,
         autoadd: t.boolean,
         validonly: t.boolean,
+        autoUpdateTables: withDefault(t.boolean, true),
     }),
     GenericPluginMarkup,
     t.type({

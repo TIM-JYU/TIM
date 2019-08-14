@@ -77,6 +77,8 @@ class TableFormMarkupModel(GenericMarkupModel):
     toolbarTemplates: Union[List[dict], Missing] = missing
     saveStyles: Union[bool, Missing] = True
     showToolbar: Union[bool, Missing] = True
+    autoUpdateFields: Union[bool, Missing] = True
+    autoUpdateTables: Union[bool, Missing] = True
     fields: Union[List[str], Missing] = missing
 
 
@@ -116,6 +118,8 @@ class TableFormMarkupSchema(GenericMarkupSchema):
     fixedColor = fields.Str(allow_none=True)
     saveStyles = fields.Boolean(default=True)
     showToolbar = fields.Boolean(default=True)
+    autoUpdateFields = fields.Boolean(default=True)
+    autoUpdateTables = fields.Boolean(default=True)
     fields = fields.List(fields.Str())  # Keep this last - bad naming
 
     @post_load

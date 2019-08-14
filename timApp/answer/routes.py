@@ -280,6 +280,7 @@ class JsRunnerSchema(GenericMarkupSchema):
     paramFields = fields.List(fields.Str())
     autoadd = fields.Bool()
     validonly = fields.Bool()
+    autoUpdateTables = fields.Boolean(default=True)
     fields = fields.List(fields.Str(), required=True)
 
     @validates_schema(skip_on_field_errors=True)
