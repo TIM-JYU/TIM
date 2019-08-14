@@ -207,7 +207,7 @@ def get_fields_and_users(u_fields: List[str], groups: List[UserGroup],
             else:
                 json_str = a.content
                 p = json.loads(json_str)
-                style = p.get('styles')
+                # style = p.get('styles')
                 if task.field == "points":
                     value = a.points
                 elif task.field == "datetime":
