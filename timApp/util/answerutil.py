@@ -201,13 +201,13 @@ def get_fields_and_users(u_fields: List[str], groups: List[UserGroup],
             if not a:
                 continue
         for task in task_id_map[a.task_id]:
-            if not a:
-                value = None
-                style = None
-            else:
+            value = None
+            style = None
+            if a:
                 json_str = a.content
                 p = json.loads(json_str)
-                # style = p.get('styles')
+                if isinstance(p, dict):
+                    style = p.get('styles')
                 if task.field == "points":
                     value = a.points
                 elif task.field == "datetime":
@@ -229,7 +229,7 @@ def get_fields_and_users(u_fields: List[str], groups: List[UserGroup],
                             values_p = list(p.values())
                             value = values_p[0]
             user_tasks[alias_map.get(task.extended_or_doc_task, task.extended_or_doc_task)] = value
-            # user_fieldstyles[alias_map.get(task.extended_or_doc_task, task.extended_or_doc_task)] = style
+            user_fieldstyles[alias_map.get(task.extended_or_doc_task, task.extended_or_doc_task)] = style
     return res, jsrunner_alias_map, [alias_map.get(ts.extended_or_doc_task, ts.extended_or_doc_task) for ts in task_ids]
 
 
