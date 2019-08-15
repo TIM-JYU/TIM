@@ -187,22 +187,12 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
 
     @property
     def pretty_full_name(self):
-        """Returns the user's full name in the form "Firstname Lastname"."""
+        """Returns the user's full name."""
 
-        # Email users can type their name themselves and usually the first name is typed first
-        # and no secondary names are given, so we return the real name as is.
-        if self.is_email_user:
-            return self.real_name
-
-        if self.real_name is None:
-            return '(real_name is null)'
-        # In case of a Korppi user, the last name is always the first.
-        names = self.real_name.split(' ')
-        if len(names) > 1:
-            return names[1] + ' ' + names[0]
-
-        # In case there is only one name for a Korppi user, return the name as is.
-        return self.real_name
+        # Earlier this method attempted to return the name in the form "Firstname Lastname",
+        # but since Sisu changes the real_name order, it isn't possible to reliably do so anymore.
+        # Therefore we just return real_name as is.
+        return self.real_name if self.real_name is not None else '(real_name is null)'
 
     @staticmethod
     def create(
