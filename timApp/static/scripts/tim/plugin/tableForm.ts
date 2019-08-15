@@ -860,13 +860,16 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
      */
     async doSaveText(cells: string[]) {
         // this.error = "... saving ...";
-        let keys;
+        let keys: string[] = [];
         if (cells && cells.length > 0) {
             keys = cells;
         } else {
             // TODO: Force save all?
             // keys = Object.keys(this.data.userdata.cells);
             keys = this.changedCells;
+        }
+        if (keys.length == 0) {
+            return;
         }
         const replyRows: { [index: string]: { [index: string]: CellType } } = {};
         const styleRows: { [index: string]: { [index: string]: string } } = {};
