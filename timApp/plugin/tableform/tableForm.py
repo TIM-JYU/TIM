@@ -289,10 +289,10 @@ def fetch_rows_preview():
     taskid = request.args.get("taskid")
     tid = TaskId.parse(taskid, False, False)
     doc = get_doc_or_abort(tid.doc_id)
-    # With this route we can't be certain about showInView so we just check for teacher access
+    # With this route we can't be certain about showInView so we just check for edit access
     # whoever can open the plugin in preview should have that right
-    if not curr_user.has_teacher_access(doc):
-        return abort(403, f'Missing teacher access for document {doc.id}')
+    if not curr_user.has_edit_access(doc):
+        return abort(403, f'Missing edit access for document {doc.id}')
     fields = request.args.getlist("fields")
     groups = request.args.getlist("groups")
     removeDocIds = get_boolean(request.args.get("removeDocIds"), True)
