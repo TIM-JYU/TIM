@@ -12,7 +12,7 @@ from timApp.auth.login import create_or_update_user
 from timApp.tim_app import csrf
 from timApp.timdb.sqa import db
 from timApp.user.scimentity import get_meta
-from timApp.user.user import User, UserOrigin
+from timApp.user.user import User, UserOrigin, last_name_to_first
 from timApp.user.usergroup import UserGroup, tim_group_to_scim, SISU_GROUP_PREFIX
 from timApp.util.flask.responsehelper import json_response
 from timApp.util.logger import log_warning
@@ -279,7 +279,7 @@ def put_user(user_id):
     if not u:
         raise SCIMException(404, 'User not found.')
     um: SCIMUserModel = load_data_from_req(SCIMUserSchema)
-    u.real_name = um.displayName
+    u.real_name = last_name_to_first(um.displayName)
     if um.emails:
         u.email = um.emails[0].value
     db.session.commit()
@@ -324,7 +324,7 @@ def create_sisu_users(args: SCIMGroupModel, ug: UserGroup):
         try:
             user = create_or_update_user(
                 u.email,
-                u.display,
+                last_name_to_first(u.display),
                 u.value,
                 origin=UserOrigin.Sisu,
                 group_to_add=ug,

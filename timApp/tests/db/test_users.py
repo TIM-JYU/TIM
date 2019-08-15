@@ -4,7 +4,7 @@ from datetime import timedelta
 from timApp.item.block import insert_block, BlockType, Block
 from timApp.tests.db.timdbtest import TimDbTest, TEST_USER_1_ID
 from timApp.timdb.sqa import db
-from timApp.user.user import User
+from timApp.user.user import User, last_name_to_first, last_name_to_last
 from timApp.user.usergroup import UserGroup
 from timApp.user.users import remove_access
 from timApp.user.userutils import get_anon_group_id, grant_access
@@ -202,6 +202,15 @@ class UserTest(TimDbTest):
                    duration=timedelta(days=1))
         self.assertFalse(user.has_view_access(b))
         self.remove(self.get_test_user_1_group_id(), b, v)
+
+    def test_last_name_switch(self):
+        for (fn1, fn2) in [(lambda x: x, last_name_to_first), (last_name_to_last, lambda x: x)]:
+            self.assertEqual(fn1('Doe John'), fn2('John Doe'))
+            self.assertEqual(fn1('Doe John Matt'), fn2('John Matt Doe'))
+            self.assertEqual(fn1('Doe John Matt Henry'), fn2('John Matt Henry Doe'))
+            self.assertEqual(fn1('Someone'), fn2('Someone'))
+            self.assertEqual(fn1(''), fn2(''))
+            self.assertEqual(fn1(None), fn2(None))
 
 
 if __name__ == '__main__':

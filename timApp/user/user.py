@@ -92,6 +92,28 @@ class UserOrigin(Enum):
     Twitter = 9
 
 
+def last_name_to_first(full_name: Optional[str]):
+    """Converts a name of the form "Firstname Middlenames Lastname" to "Lastname Firstname Middlenames".
+    """
+    if full_name is None:
+        return None
+    names = full_name.split(' ')
+    if len(names) > 1:
+        return f'{names[-1]} {" ".join(names[:-1])}'
+    return full_name
+
+
+def last_name_to_last(full_name: Optional[str]):
+    """Converts a name of the form "Lastname Firstname Middlenames" to "Firstname Middlenames Lastname".
+    """
+    if full_name is None:
+        return None
+    names = full_name.split(' ')
+    if len(names) > 1:
+        return f'{" ".join(names[1:])} {names[0]}'
+    return full_name
+
+
 class User(db.Model, TimeStampMixin, SCIMEntity):
     """A user account.
 
@@ -124,7 +146,7 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
 
     @property
     def scim_display_name(self):
-        return self.real_name
+        return last_name_to_last(self.real_name)
 
     @property
     def scim_created(self):
