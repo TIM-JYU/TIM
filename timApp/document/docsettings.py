@@ -141,10 +141,13 @@ class DocSettings:
             raise TimDbException(f'Not a settings paragraph: {par.get_id()}')
         try:
             yaml_vals = DocSettings.parse_values(par)
-            # TODO: comes her at least 6 times with same par?  Could this be cached?
-
-            add_rnd_macros(yaml_vals)  # Make global random numers for document
-            add_url_macros(yaml_vals)  # Replace some macros be values comoing from URL
+            # TODO: Comes here at least 6 times with same par? Could this be cached?
+            # TODO: This rnd + URL handling should not be here.
+            try:
+                add_rnd_macros(yaml_vals)  # Make global random numbers for document
+                add_url_macros(yaml_vals)  # Replace some macros with values coming from URL
+            except RuntimeError:
+                pass
 
         except yaml.YAMLError as e:
             raise TimDbException(f'Invalid YAML: {e}')
