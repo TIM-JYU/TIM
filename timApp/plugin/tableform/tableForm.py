@@ -26,6 +26,7 @@ from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
 from timApp.util.flask.requesthelper import verify_json_params
 from timApp.util.flask.responsehelper import csv_response, json_response
+from timApp.util.utils import get_boolean
 
 
 @attr.s(auto_attribs=True)
@@ -284,7 +285,6 @@ def fetch_rows():
 
 @tableForm_plugin.route('/fetchTableDataPreview')
 def fetch_rows_preview():
-    # r = {}
     curr_user = get_current_user_object()
     taskid = request.args.get("taskid")
     tid = TaskId.parse(taskid, False, False)
@@ -295,7 +295,7 @@ def fetch_rows_preview():
         return abort(403, f'Missing teacher access for document {doc.id}')
     fields = request.args.getlist("fields")
     groups = request.args.getlist("groups")
-    removeDocIds = request.args.get("removeDocIds")
+    removeDocIds = get_boolean(request.args.get("removeDocIds"), True)
     r = tableform_get_fields(fields, groups,
                              doc, curr_user, removeDocIds, allow_non_teacher=True)
     return json_response(r, headers={"No-Date-Conversion": "true"})
