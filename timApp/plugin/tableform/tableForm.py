@@ -275,12 +275,29 @@ def fetch_rows():
     try:
         plug = find_plugin_from_document(doc.document, tid, curr_user)
     except TaskNotFoundException:
-        # TODO: Need another way to get attributes if closed table is opened in preview
-        abort(400, "Unable to open table in preview")
+        return abort(404, f'Table not found: {tid}')
     # debug = plug.values
     r = tableform_get_fields(plug.values.get("fields",[]), plug.values.get("groups", []),
                              doc, curr_user, plug.values.get("removeDocIds", True),
                              plug.values.get("showInView"))
+    return json_response(r, headers={"No-Date-Conversion": "true"})
+
+@tableForm_plugin.route('/fetchTableDataPreview')
+def fetch_rows_preview():
+    # r = {}
+    curr_user = get_current_user_object()
+    taskid = request.args.get("taskid")
+    tid = TaskId.parse(taskid, False, False)
+    doc = get_doc_or_abort(tid.doc_id)
+    # With this route we can't be certain about showInView so we just check for teacher access
+    # whoever can open the plugin in preview should have that right
+    if not curr_user.has_teacher_access(doc):
+        return abort(403, f'Missing teacher access for document {doc.id}')
+    fields = request.args.getlist("fields")
+    groups = request.args.getlist("groups")
+    removeDocIds = request.args.get("removeDocIds")
+    r = tableform_get_fields(fields, groups,
+                             doc, curr_user, removeDocIds, allow_non_teacher=True)
     return json_response(r, headers={"No-Date-Conversion": "true"})
 
 

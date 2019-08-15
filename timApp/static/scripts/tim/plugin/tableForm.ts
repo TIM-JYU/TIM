@@ -34,7 +34,6 @@ const TableFormMarkup = t.intersection([
         maxWidth: t.string,
         minWidth: t.string,
         maxRows: t.string,
-        open: t.boolean,
         filterRow: t.boolean,
         toolbarTemplates: t.array(t.object),
 
@@ -72,6 +71,7 @@ const TableFormMarkup = t.intersection([
         emails: withDefault(t.boolean, false),
         maxCols: withDefault(t.string, "fit-content"),
         openButtonText: withDefault(t.string, "Avaa Taulukko/Raporttinäkymä"),
+        open: withDefault(t.boolean, true),
     }),
 ]);
 
@@ -284,24 +284,43 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
     }
 
     /**
+     * Checks whether plugin is viewed through "preview"-screen
+     * TODO: Generic: move and import.
+     */
+    isPreview() {
+        return this.element.parents(".previewcontent").length > 0;
+    }
+
+    /**
      * Clears tableForm rows and fetches new data to be put into rows
      * Basically just a reset
      */
     public async updateTable() {
         if ( this.attrsall.markup.sisugroups ) { return; }
         // TODO: Save before reset?
-        const tableResponse = await $http.get <{
-            // TODO: All of these are probably not needed
-            // TODO: Common type/interface for these?
+        type requestParams = ({
             aliases: { [index: string]: string },
             fields: string[];
             realnamemap: { [index: string]: string },
             emailmap: { [index: string]: string },
             rows: IRowsType,
             styles: t.TypeOf<typeof Styles>,
-        }>("/tableForm/fetchTableData?" + $httpParamSerializer({
-            taskid: this.getTaskId(),
-        }));
+        });
+        let prom;
+        if (this.isPreview()) {
+            prom = $http.get <requestParams>("/tableForm/fetchTableDataPreview?" + $httpParamSerializer({
+                taskid: this.getTaskId(),
+                fields: this.attrs.fields,
+                groups: this.attrs.groups,
+                removeDocIds: this.attrs.removeDocIds,
+            }));
+        } else {
+            prom = $http.get <requestParams>("/tableForm/fetchTableData?" + $httpParamSerializer({
+                taskid: this.getTaskId(),
+            }));
+        }
+        const tableResponse = await prom;
+
         // TODO: Generic reset function
         this.aliases = tableResponse.data.aliases || {};
         this.rows = tableResponse.data.rows || {};
