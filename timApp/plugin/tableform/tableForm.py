@@ -18,7 +18,7 @@ from timApp.util.answerutil import get_fields_and_users
 from timApp.auth.accesshelper import get_doc_or_abort
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docinfo import DocInfo
-from timApp.plugin.plugin import find_plugin_from_document
+from timApp.plugin.plugin import find_plugin_from_document, TaskNotFoundException
 from timApp.plugin.pluginexception import PluginException
 from timApp.plugin.taskid import TaskId
 from timApp.tim_app import csrf
@@ -272,7 +272,11 @@ def fetch_rows():
     taskid = request.args.get("taskid")
     tid = TaskId.parse(taskid, False, False)
     doc = get_doc_or_abort(tid.doc_id)
-    plug = find_plugin_from_document(doc.document, tid, curr_user)
+    try:
+        plug = find_plugin_from_document(doc.document, tid, curr_user)
+    except TaskNotFoundException:
+        # TODO: Need another way to get attributes if closed table is opened in preview
+        abort(400, "Unable to open table in preview")
     # debug = plug.values
     r = tableform_get_fields(plug.values.get("fields",[]), plug.values.get("groups", []),
                              doc, curr_user, plug.values.get("removeDocIds", True),
