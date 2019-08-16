@@ -122,6 +122,73 @@ class SearchTest(TimRouteTest):
                                  'title_result_count': 0,
                                  'word_result_count': 0})
 
+    def test_search_visible(self):
+        """
+        Tests for searching conditionally visible par.
+        :return:
+        """
+        text_to_search = 'hidden'
+        url = f'search?folder=&query={text_to_search}'
+        u1 = self.test_user_1
+        u1_name = u1.name
+        self.login_test1()
+        d = self.create_doc(initial_par=
+        """
+        #- {visible="%%username in ['akuankka']%%"} hidden text
+        """)
+        self.get(f'search/createContentFile')
+        # User is the doc owner, search results from paragraphs with visibility-condition are always shown.
+        self.get(url,
+                 expect_status=200,
+                 expect_content={'content_results': [{'doc': {'id': d.id,
+                                                              'isFolder': False,
+                                                              'location': d.location,
+                                                              'modified': 'just now',
+                                                              'name': d.short_name,
+                                                              'owner': {
+                                                                  'id': self.get_test_user_1_group_id(),
+                                                                  'name': u1_name},
+                                                              'path': d.path,
+                                                              'public': True,
+                                                              'rights': {
+                                                                  'browse_own_answers': True,
+                                                                  'can_comment': True,
+                                                                  'can_mark_as_read': True,
+                                                                  'editable': True,
+                                                                  'manage': True,
+                                                                  'owner': True,
+                                                                  'see_answers': True,
+                                                                  'teacher': True},
+                                                              'title': d.title,
+                                                              'unpublished': True},
+                                                      'incomplete': False,
+                                                      'num_par_results': 1,
+                                                      'num_title_results': 0,
+                                                      'par_results': [{'num_results': 1,
+                                                                       'par_id':
+                                                                           d.document.get_paragraphs()[
+                                                                               0].get_id(),
+                                                                       'preview': '...visible="%%username in '
+                                                                                  '[\'akuankka\']%%"} hidden '
+                                                                                  'text',
+                                                                       'results': []}],
+                                                      'title_results': []}],
+                                 'incomplete_search_reason': '',
+                                 'errors': [],
+                                 'title_results': [],
+                                 'title_result_count': 0,
+                                 'word_result_count': 1})
+        self.login_test2()
+        # User is not the doc owner, paragraphs with visibility-condition are always skipped.
+        self.get(url,
+                 expect_status=200,
+                 expect_content={'content_results': [],
+                                 'errors': [],
+                                 'incomplete_search_reason': '',
+                                 'title_result_count': 0,
+                                 'title_results': [],
+                                 'word_result_count': 0})
+
     def test_search_plugin(self):
         text_to_search = 'answer'
         plugin_md = """``` {plugin="test"}
