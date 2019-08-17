@@ -588,10 +588,12 @@ ${backTicks}
         const clientBottom = cont.clientTop + cont.clientHeight;
         const remainingSpace = this.lastKnownDialogHeight - cont.clientTop - (elemHeight - clientBottom);
         if (this.isAce(this.editor)) {
-            const lines = remainingSpace / this.editor.editor.renderer.lineHeight;
+            let lh = this.editor.editor.renderer.lineHeight;
+            if ( lh <= 0 ) { lh = 15; } // TODO: get a better value here
+            const lines = remainingSpace / lh;
             this.editor.editor.setOptions({
                 maxLines: Math.max(lines, 5),
-                minLines: Math.max(lines, 5),
+                minLines: Math.min(lines, 5),
             });
         } else if (this.editor) {
             this.editor.editor.height(remainingSpace);
