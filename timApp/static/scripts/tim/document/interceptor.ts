@@ -26,6 +26,7 @@ timApp.config([() => {
         () => {
             const re = /\/[^/]+\/([^/]+)\/answer\/$/;
             const re2 = /\/infosForTasks/;  // add here all routes that needs doc
+            const tfre = /\/tableForm\/(updateFields|fetchTableData)/;
             return {
                 request(config: IRequestConfig) {
                     if (re.test(config.url)) {
@@ -56,6 +57,8 @@ timApp.config([() => {
                         config.url += window.location.search;  // make urlmacros possible, must know the page url
                     } else if ( re2.test(config.url)) {
                         config.url += window.location.search;  // make urlmacros possible
+                    } else if (tfre.test(config.url)) {
+                        config.url += window.location.search.replace("?", "&");  // make urlmacros possible
                     }
                     return config;
                 },

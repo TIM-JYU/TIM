@@ -18,7 +18,7 @@ from timApp.util.answerutil import get_fields_and_users
 from timApp.auth.accesshelper import get_doc_or_abort
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docinfo import DocInfo
-from timApp.plugin.plugin import find_plugin_from_document
+from timApp.plugin.plugin import find_plugin_from_document, TaskNotFoundException
 from timApp.plugin.pluginexception import PluginException
 from timApp.plugin.taskid import TaskId
 from timApp.tim_app import csrf
@@ -26,6 +26,7 @@ from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
 from timApp.util.flask.requesthelper import verify_json_params
 from timApp.util.flask.responsehelper import csv_response, json_response
+from timApp.util.utils import get_boolean
 
 
 @attr.s(auto_attribs=True)
@@ -272,11 +273,31 @@ def fetch_rows():
     taskid = request.args.get("taskid")
     tid = TaskId.parse(taskid, False, False)
     doc = get_doc_or_abort(tid.doc_id)
-    plug = find_plugin_from_document(doc.document, tid, curr_user)
+    try:
+        plug = find_plugin_from_document(doc.document, tid, curr_user)
+    except TaskNotFoundException:
+        return abort(404, f'Table not found: {tid}')
     # debug = plug.values
     r = tableform_get_fields(plug.values.get("fields",[]), plug.values.get("groups", []),
                              doc, curr_user, plug.values.get("removeDocIds", True),
                              plug.values.get("showInView"))
+    return json_response(r, headers={"No-Date-Conversion": "true"})
+
+@tableForm_plugin.route('/fetchTableDataPreview')
+def fetch_rows_preview():
+    curr_user = get_current_user_object()
+    taskid = request.args.get("taskid")
+    tid = TaskId.parse(taskid, False, False)
+    doc = get_doc_or_abort(tid.doc_id)
+    # With this route we can't be certain about showInView so we just check for edit access
+    # whoever can open the plugin in preview should have that right
+    if not curr_user.has_edit_access(doc):
+        return abort(403, f'Missing edit access for document {doc.id}')
+    fields = request.args.getlist("fields")
+    groups = request.args.getlist("groups")
+    removeDocIds = get_boolean(request.args.get("removeDocIds"), True)
+    r = tableform_get_fields(fields, groups,
+                             doc, curr_user, removeDocIds, allow_non_teacher=True)
     return json_response(r, headers={"No-Date-Conversion": "true"})
 
 
