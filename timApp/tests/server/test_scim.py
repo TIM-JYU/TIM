@@ -2,44 +2,47 @@ from timApp.sisu.scim import DELETED_GROUP_PREFIX, CUMULATIVE_GROUP_PREFIX, SISU
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.user.usergroup import UserGroup
 
-error_422 = {'detail': 'The request was well-formed but was unable to be followed due to semantic errors.',
-             'schemas': ['urn:ietf:params:scim:api:messages:2.0:Error'],
-             'status': '422'}
-
 a = ('t', 'pass')
+
+
+def add_name_parts(datas):
+    for data in datas:
+        fullname = data.get('display')
+        if fullname is None:
+            continue
+        fullname = fullname.split(' ')
+        data['name'] = {
+            'givenName': fullname[0],
+            'familyName': fullname[-1],
+            'middleName': ' '.join(fullname[1:-1]) if len(fullname) > 2 else None,
+        }
+    return datas
 
 
 class ScimTest(TimRouteTest):
     def test_scim(self):
         self.json_post(
             '/scim/Groups',
-            expect_status=401,
-            expect_content={
-                'detail': 'This action requires authentication.',
-                'schemas': ['urn:ietf:params:scim:api:messages:2.0:Error'],
-                'status': '401',
-            },
+            **scim_error('This action requires authentication.', 401),
         )
         self.json_post(
             '/scim/Groups',
             auth=('cat', 'dog'),
-            expect_status=401,
-            expect_content={
-                'detail': 'Incorrect username or password.',
-                'schemas': ['urn:ietf:params:scim:api:messages:2.0:Error'],
-                'status': '401',
-            },
+            **scim_error('Incorrect username or password.', 401),
         )
-        self.json_post('/scim/Groups', auth=a, expect_status=422, expect_content=error_422)
+        self.json_post('/scim/Groups', auth=a,
+                       **scim_error(
+                           'The request was well-formed but was unable to be followed due to semantic errors.'),
+                       )
         r = self.json_post(
             '/scim/Groups',
             json_data={
                 'externalId': 'sisu-something',
                 'displayName': 'Sisu something',
-                'members': [
+                'members': add_name_parts([
                     {'value': 'sisuuser', 'display': 'Sisu User', 'email': 'x@example.com'},
                     {'value': 'sisuuser3', 'display': 'Sisu User 3'},
-                ],
+                ]),
             }, auth=a,
             expect_status=201,
             expect_contains={
@@ -141,19 +144,15 @@ class ScimTest(TimRouteTest):
             expect_status=409,
         )
         self.json_put(
-            f'/scim/Groups/{group_id}', auth=a, expect_status=422,
-            expect_content={
-                'detail': 'JSON payload missing.',
-                'schemas': ['urn:ietf:params:scim:api:messages:2.0:Error'],
-                'status': '422',
-            })
+            f'/scim/Groups/{group_id}', auth=a,
+            **scim_error('JSON payload missing.'),
+        )
         self.json_put(
-            f'/scim/Groups/{group_id}', json_data={}, auth=a, expect_status=422,
-            expect_content={'detail': '{"displayName": ["Missing data for required field."], '
-                                      '"externalId": ["Missing data for required field."], "members": '
-                                      '["Missing data for required field."]}',
-                            'schemas': ['urn:ietf:params:scim:api:messages:2.0:Error'],
-                            'status': '422'})
+            f'/scim/Groups/{group_id}', json_data={}, auth=a,
+            **scim_error('{"displayName": ["Missing data for required field."], '
+                         '"externalId": ["Missing data for required field."], "members": '
+                         '["Missing data for required field."]}'),
+        )
         self.json_put(f'/scim/Groups/xxx', auth=a, expect_status=404)
         self.json_put(f'/scim/Groups/group-999', auth=a, expect_status=404)
         self.json_put(f'/scim/Groups/group-xxx', auth=a, expect_status=404)
@@ -162,7 +161,7 @@ class ScimTest(TimRouteTest):
             json_data={
                 'externalId': 'sisu-something',
                 'displayName': 'Sisu something',
-                'members': [
+                'members': add_name_parts([
                     {
                         'display': 'Sisu User',
                         'value': 'sisuuser',
@@ -171,7 +170,7 @@ class ScimTest(TimRouteTest):
                         'display': 'Sisu User 2',
                         'value': 'sisuuser2',
                     },
-                ],
+                ]),
             }, auth=a,
             expect_content={
                 'displayName': 'Sisu something',
@@ -210,11 +209,8 @@ class ScimTest(TimRouteTest):
             }, r)
         r = self.get(
             f'/scim/Groups', auth=a, query_string={'filter': 'asd sw sisu-'},
-            expect_status=422,
-            expect_content={
-                'detail': 'Unsupported filter',
-                'schemas': ['urn:ietf:params:scim:api:messages:2.0:Error'],
-                'status': '422'})
+            **scim_error('Unsupported filter'),
+        )
         r = self.get(
             f'/scim/Groups/{group_id}',
             auth=a,
@@ -249,10 +245,10 @@ class ScimTest(TimRouteTest):
             json_data={
                 'externalId': 'sisu-something',
                 'displayName': 'Sisu something',
-                'members': [
+                'members': add_name_parts([
                     {'value': 'sisuuser', 'display': 'Sisu User'},
                     {'value': 'sisuuser3', 'display': 'Sisu User 3'},
-                ],
+                ]),
             }, auth=a,
             expect_status=201,
             expect_contains={
@@ -281,7 +277,7 @@ class ScimTest(TimRouteTest):
                 ],
                 "externalId": "jy-CUR-4406-jy-studysubgroup-8514-teachers",
                 "displayName": "XKV0201 2019-08-12--2019-12-23: Harjoitusryhm\u00e4: Opettajat",
-                "members": [
+                "members": add_name_parts([
                     {
                         "value": "someuser1",
                         "$ref": "https://timdevs02-5.it.jyu.fi/scim/Users/someuser1",
@@ -297,7 +293,7 @@ class ScimTest(TimRouteTest):
                         "$ref": "https://timdevs02-5.it.jyu.fi/scim/Users/someuser3",
                         "type": "User",
                     }
-                ]
+                ])
             }, auth=a,
             expect_status=201,
             expect_contains={
@@ -324,9 +320,9 @@ class ScimTest(TimRouteTest):
             json_data={
                 'externalId': 'somegroup',
                 'displayName': 'Some Group',
-                'members': [
+                'members': add_name_parts([
                     {'value': 'someone', 'display': 'Sisu User'},
-                ],
+                ]),
             }, auth=a,
             expect_status=201,
         )
@@ -344,26 +340,21 @@ class ScimTest(TimRouteTest):
             json_data={
                 'externalId': 'dupemail',
                 'displayName': 'Some Group',
-                'members': [
+                'members': add_name_parts([
                     {'value': 'someone', 'display': 'Sisu User', 'email': 'zzz@example.com'},
                     {'value': 'someone2', 'display': 'Sisu User', 'email': 'zzz@example.com'},
-                ],
+                ]),
             }, auth=a,
-            expect_status=422,
-            expect_content={
-                "detail": "The users do not have distinct emails.",
-                "schemas": ["urn:ietf:params:scim:api:messages:2.0:Error"],
-                "status": "422",
-            },
+            **scim_error("The users do not have distinct emails."),
         )
         self.json_post(
             '/scim/Groups',
             json_data={
                 'externalId': 'dupemail',
                 'displayName': 'Some Group',
-                'members': [
+                'members': add_name_parts([
                     {'value': 'someone', 'display': 'Sisu User', 'email': 'zzz@example.com'},
-                ],
+                ]),
             }, auth=a,
             expect_status=201,
         )
@@ -372,16 +363,11 @@ class ScimTest(TimRouteTest):
             json_data={
                 'externalId': 'dupemail2',
                 'displayName': 'Some Group',
-                'members': [
+                'members': add_name_parts([
                     {'value': 'someone2', 'display': 'Sisu User', 'email': 'zzz@example.com'},
-                ],
+                ]),
             }, auth=a,
-            expect_status=422,
-            expect_content={
-                "detail": "Key (email)=(zzz@example.com) already exists.",
-                "schemas": ["urn:ietf:params:scim:api:messages:2.0:Error"],
-                "status": "422",
-            }
+            **scim_error("Key (email)=(zzz@example.com) already exists."),
         )
 
     def test_duplicate_usernames(self):
@@ -390,15 +376,105 @@ class ScimTest(TimRouteTest):
             json_data={
                 'externalId': 'aaagroup',
                 'displayName': 'Some Group',
-                'members': [
+                'members': add_name_parts([
                     {'value': 'aaa', 'display': 'Sisu User', 'email': 'aaa@example.com'},
                     {'value': 'aaa', 'display': 'Sisu User', 'email': 'aaa2@example.com'},
+                ]),
+            }, auth=a,
+            **scim_error("The users do not have distinct usernames."),
+        )
+
+    def test_inconsistent_name(self):
+        self.json_post(
+            '/scim/Groups',
+            json_data={
+                'externalId': 'inconsistent',
+                'displayName': 'inconsistent',
+                'members': [
+                    {
+                        'value': 'aaa',
+                        'display': 'John Matt Henry Doe',
+                        'email': 'aaa2@example.com',
+                        'name': {
+                            'givenName': 'John',
+                            'middleName': 'Matt Henryx',
+                            'familyName': 'Doe',
+                        },
+                    },
                 ],
             }, auth=a,
-            expect_status=422,
-            expect_content={
-                "detail": "The users do not have distinct usernames.",
-                "schemas": ["urn:ietf:params:scim:api:messages:2.0:Error"],
-                "status": "422",
-            },
+            **scim_error("The display attribute 'John Matt Henry Doe' is inconsistent with "
+                         "the name attributes 'John Matt Henryx Doe'."),
         )
+        self.json_post(
+            '/scim/Groups',
+            json_data={
+                'externalId': 'inconsistent',
+                'displayName': 'inconsistent',
+                'members': [
+                    {
+                        'value': 'aaa',
+                        'display': 'John Doe',
+                        'email': 'aaa2@example.com',
+                        'name': {
+                            'givenName': 'John',
+                            'middleName': None,
+                            'familyName': 'Doex',
+                        },
+                    },
+                ],
+            }, auth=a,
+            **scim_error("The display attribute 'John Doe' is inconsistent with "
+                         "the name attributes 'John Doex'."),
+        )
+        self.json_post(
+            '/scim/Groups',
+            json_data={
+                'externalId': 'inconsistent',
+                'displayName': 'inconsistent',
+                'members': [
+                    {
+                        'value': 'aaa',
+                        'display': 'John Doe Matt',
+                        'email': 'aaa2@example.com',
+                        'name': {
+                            'givenName': 'Matt',
+                            'middleName': 'John',
+                            'familyName': 'Doe',
+                        },
+                    },
+                ],
+            }, auth=a,
+            **scim_error("The display attribute 'John Doe Matt' is inconsistent with "
+                         "the name attributes 'Matt John Doe'."),
+        )
+        self.json_post(
+            '/scim/Groups',
+            json_data={
+                'externalId': 'inconsistent',
+                'displayName': 'inconsistent',
+                'members': [
+                    {
+                        'value': 'aaa',
+                        'display': 'John Matt Doe',
+                        'email': 'aaa2@example.com',
+                        'name': {
+                            'givenName': 'Matt',
+                            'middleName': 'John',
+                            'familyName': 'Doe',
+                        },
+                    },
+                ],
+            }, auth=a,
+            expect_status=201,
+        )
+
+
+def scim_error(msg: str, code=422):
+    return dict(
+        expect_status=code,
+        expect_content={
+            'detail': msg,
+            'schemas': ['urn:ietf:params:scim:api:messages:2.0:Error'],
+            'status': str(code)},
+    )

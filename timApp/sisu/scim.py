@@ -27,10 +27,39 @@ CUMULATIVE_GROUP_PREFIX = 'cumulative:'
 UNPROCESSABLE_ENTITY = 422
 
 
+class SCIMNameSchema(Schema):
+    familyName = fields.Str(required=True)
+    givenName = fields.Str(required=True)
+    middleName = fields.Str(allow_none=True)
+
+    @post_load
+    def make_obj(self, data):
+        return SCIMNameModel(**data)
+
+
+@attr.s(auto_attribs=True)
+class SCIMNameModel:
+    familyName: str
+    givenName: str
+    middleName: str = None
+
+    def derive_full_name(self, last_name_first: bool):
+        if last_name_first:
+            full = f'{self.familyName} {self.givenName}'
+            if self.middleName:
+                full += f' {self.middleName}'
+            return full
+        else:
+            if self.middleName:
+                return f'{self.givenName} {self.middleName} {self.familyName}'
+            else:
+                return f'{self.givenName} {self.familyName}'
+
 class SCIMMemberSchema(Schema):
     value = fields.Str(required=True)
     ref = fields.Str()
     display = fields.Str()
+    name = fields.Nested(SCIMNameSchema)
     email = fields.Str()
     type = fields.Str()
 
@@ -51,6 +80,7 @@ class SCIMMemberSchema(Schema):
 @attr.s(auto_attribs=True)
 class SCIMMemberModel:
     value: str
+    name: Optional[SCIMNameModel] = None
     display: Optional[str] = None
     email: Optional[str] = None
     ref: Optional[str] = missing
@@ -126,6 +156,7 @@ class SCIMException(Exception):
 
 @scim.errorhandler(SCIMException)
 def item_locked(error: SCIMException):
+    log_warning(error.msg)
     return handle_error_msg_code(error.code, error.msg, error.headers)
 
 
@@ -321,10 +352,21 @@ def create_sisu_users(args: SCIMGroupModel, ug: UserGroup):
         raise SCIMException(422, f'The users do not have distinct usernames.')
 
     for u in args.members:
+        if u.name:
+            expected_name = u.name.derive_full_name(last_name_first=True)
+            consistent = (u.display.endswith(' ' + u.name.familyName) and
+                          set(expected_name.split(' ')[1:]) == set(u.display.split(' ')[:-1]))
+            if not consistent:
+                raise SCIMException(
+                    422,
+                    f"The display attribute '{u.display}' is inconsistent with the name attributes '{u.name.derive_full_name(last_name_first=False)}'.")
+            name_to_use = expected_name
+        else:
+            name_to_use = last_name_to_first(u.display)
         try:
             user = create_or_update_user(
                 u.email,
-                last_name_to_first(u.display),
+                name_to_use,
                 u.value,
                 origin=UserOrigin.Sisu,
                 group_to_add=ug,
