@@ -83,7 +83,12 @@ def srange(s, i1, i2, step=1, *argv):
     :return: like "d1 d2 d3 "  by call sfrom('d{0} ', 1, 3)
     """
     result = ''
-    for i in range(i1, i2+1, step):
+    cor = 1  # correct python range vs normal peple range
+    if step < 0:
+        cor = -1
+    if step == 0:
+        step = 1
+    for i in range(i1, i2+cor, step):
         ext = []
         for j in range(0, len(argv), 2):
             add = argv[j]

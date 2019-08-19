@@ -60,6 +60,7 @@ services:
   environment:
    PYTHONUNBUFFERED: "1"
    TIM_ROOT: ${TIM_ROOT}
+   TIM_HOST: ${TIM_HOST}
    COMPOSE_PROJECT_NAME: ${COMPOSE_PROJECT_NAME}
   user: root
   restart: unless-stopped

@@ -91,7 +91,7 @@ SystemJS.config({
         "eonasdan-bootstrap-datetimepicker"
       ],
       "globals": {
-        "moment": "npm:moment@2.22.2/moment.js"
+        "moment": "npm:moment@2.24.0/moment.js"
       }
     },
     "npm:angular@1.7.5/angular.js": {
@@ -106,7 +106,7 @@ SystemJS.config({
       ],
       "globals": {
         "humanizeDuration": "github:EvanHahn/HumanizeDuration.js@3.15.1/humanize-duration.js",
-        "moment": "npm:moment@2.22.2/moment.js"
+        "moment": "npm:moment@2.24.0/moment.js"
       }
     },
     "npm:katex@0.7.1/dist/contrib/auto-render.min.js": {
@@ -199,7 +199,7 @@ SystemJS.config({
     "bootstrap": "github:twbs/bootstrap@3.3.7",
     "bootstrap-sass": "github:twbs/bootstrap-sass@3.3.7",
     "buffer": "npm:jspm-nodelibs-buffer@0.2.3",
-    "chart.js": "npm:chart.js@2.7.2",
+    "chart.js": "npm:chart.js@2.8.0",
     "child_process": "npm:jspm-nodelibs-child_process@0.2.1",
     "crypto": "npm:jspm-nodelibs-crypto@0.2.1",
     "eonasdan-bootstrap-datetimepicker": "npm:eonasdan-bootstrap-datetimepicker@4.17.47",
@@ -209,7 +209,7 @@ SystemJS.config({
     "jquery": "npm:jquery@2.2.4",
     "katex": "npm:katex@0.7.1",
     "module": "npm:jspm-nodelibs-module@0.2.1",
-    "moment": "npm:moment@2.22.2",
+    "moment": "npm:moment@2.24.0",
     "moment-timezone": "npm:moment-timezone@0.5.21",
     "net": "npm:jspm-nodelibs-net@0.2.1",
     "ng-file-upload": "npm:ng-file-upload@12.2.13",
@@ -485,24 +485,7 @@ SystemJS.config({
     },
     "npm:moment-timezone@0.5.21": {
       "map": {
-        "moment": "npm:moment@2.22.2"
-      }
-    },
-    "npm:chart.js@2.7.2": {
-      "map": {
-        "chartjs-color": "npm:chartjs-color@2.2.0",
-        "moment": "npm:moment@2.22.2"
-      }
-    },
-    "npm:chartjs-color@2.2.0": {
-      "map": {
-        "chartjs-color-string": "npm:chartjs-color-string@0.5.0",
-        "color-convert": "npm:color-convert@0.5.3"
-      }
-    },
-    "npm:chartjs-color-string@0.5.0": {
-      "map": {
-        "color-name": "npm:color-name@1.1.3"
+        "moment": "npm:moment@2.24.0"
       }
     },
     "npm:katex@0.7.1": {
@@ -598,6 +581,23 @@ SystemJS.config({
     "npm:io-ts@1.9.0": {
       "map": {
         "fp-ts": "npm:fp-ts@1.18.2"
+      }
+    },
+    "npm:chart.js@2.8.0": {
+      "map": {
+        "chartjs-color": "npm:chartjs-color@2.3.0",
+        "moment": "npm:moment@2.24.0"
+      }
+    },
+    "npm:chartjs-color@2.3.0": {
+      "map": {
+        "color-convert": "npm:color-convert@0.5.3",
+        "chartjs-color-string": "npm:chartjs-color-string@0.6.0"
+      }
+    },
+    "npm:chartjs-color-string@0.6.0": {
+      "map": {
+        "color-name": "npm:color-name@1.1.4"
       }
     }
   }

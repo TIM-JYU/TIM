@@ -3,7 +3,7 @@
  */
 import angular from "angular";
 import * as t from "io-ts";
-import {ITimComponent, ViewCtrl} from "tim/document/viewctrl";
+import {ViewCtrl} from "tim/document/viewctrl";
 import {PluginBase, pluginBindings} from "tim/plugin/util";
 import {$http} from "tim/util/ngimport";
 import {to} from "tim/util/utils";
@@ -107,7 +107,7 @@ class JsrunnerController extends PluginBase<t.TypeOf<typeof JsrunnerMarkup>, t.T
                 this.output = data.web.output;
                 if ( this.attrsall.markup.updateFields ) {
                     this.vctrl.updateFields(this.attrsall.markup.updateFields);
-                    if(this.attrs.autoUpdateTables){
+                    if (this.attrs.autoUpdateTables) {
                         this.vctrl.updateAllTables(this.attrsall.markup.updateFields);
                     }
                 }
