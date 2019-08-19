@@ -261,7 +261,6 @@ def post_group(args: SCIMGroupModel):
     if deleted_group:
         ug = deleted_group
         ug.name = gname
-        ug.display_name = args.displayName
     else:
         ug = UserGroup(name=gname, display_name=args.displayName)
         db.session.add(ug)
@@ -340,6 +339,7 @@ def update_users(ug: UserGroup, d: SCIMGroupModel):
 def create_sisu_users(args: SCIMGroupModel, ug: UserGroup):
     c_name = f'{CUMULATIVE_GROUP_PREFIX}{ug.name}'
     cumulative_group = UserGroup.get_by_name(c_name)
+    ug.display_name = args.displayName
     if not cumulative_group:
         cumulative_group = UserGroup.create(c_name)
     emails = [m.email for m in args.members if m.email is not None]
