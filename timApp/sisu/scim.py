@@ -156,6 +156,7 @@ class SCIMException(Exception):
 
 @scim.errorhandler(SCIMException)
 def item_locked(error: SCIMException):
+    log_warning(error.msg)
     return handle_error_msg_code(error.code, error.msg, error.headers)
 
 
@@ -353,10 +354,12 @@ def create_sisu_users(args: SCIMGroupModel, ug: UserGroup):
     for u in args.members:
         if u.name:
             expected_name = u.name.derive_full_name(last_name_first=True)
-            if expected_name != last_name_to_first(u.display):
+            consistent = (u.display.endswith(' ' + u.name.familyName) and
+                          set(expected_name.split(' ')[1:]) == set(u.display.split(' ')[:-1]))
+            if not consistent:
                 raise SCIMException(
                     422,
-                    f"The display attribute '{u.display}' is inconsistent with the concatenation of name attributes '{u.name.derive_full_name(last_name_first=False)}'.")
+                    f"The display attribute '{u.display}' is inconsistent with the name attributes '{u.name.derive_full_name(last_name_first=False)}'.")
             name_to_use = expected_name
         else:
             name_to_use = last_name_to_first(u.display)

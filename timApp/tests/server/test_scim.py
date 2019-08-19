@@ -404,7 +404,7 @@ class ScimTest(TimRouteTest):
                 ],
             }, auth=a,
             **scim_error("The display attribute 'John Matt Henry Doe' is inconsistent with "
-                         "the concatenation of name attributes 'John Matt Henryx Doe'."),
+                         "the name attributes 'John Matt Henryx Doe'."),
         )
         self.json_post(
             '/scim/Groups',
@@ -425,7 +425,48 @@ class ScimTest(TimRouteTest):
                 ],
             }, auth=a,
             **scim_error("The display attribute 'John Doe' is inconsistent with "
-                         "the concatenation of name attributes 'John Doex'."),
+                         "the name attributes 'John Doex'."),
+        )
+        self.json_post(
+            '/scim/Groups',
+            json_data={
+                'externalId': 'inconsistent',
+                'displayName': 'inconsistent',
+                'members': [
+                    {
+                        'value': 'aaa',
+                        'display': 'John Doe Matt',
+                        'email': 'aaa2@example.com',
+                        'name': {
+                            'givenName': 'Matt',
+                            'middleName': 'John',
+                            'familyName': 'Doe',
+                        },
+                    },
+                ],
+            }, auth=a,
+            **scim_error("The display attribute 'John Doe Matt' is inconsistent with "
+                         "the name attributes 'Matt John Doe'."),
+        )
+        self.json_post(
+            '/scim/Groups',
+            json_data={
+                'externalId': 'inconsistent',
+                'displayName': 'inconsistent',
+                'members': [
+                    {
+                        'value': 'aaa',
+                        'display': 'John Matt Doe',
+                        'email': 'aaa2@example.com',
+                        'name': {
+                            'givenName': 'Matt',
+                            'middleName': 'John',
+                            'familyName': 'Doe',
+                        },
+                    },
+                ],
+            }, auth=a,
+            expect_status=201,
         )
 
 
