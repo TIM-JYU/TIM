@@ -260,11 +260,25 @@ tableForm_plugin = create_blueprint(__name__, 'tableForm', TableFormHtmlSchema()
 
 @tableForm_plugin.route('/generateCSV')
 def gen_csv():
-    temp = json.loads(request.args.get('data'))
     if len(request.args.get('separator')) > 1:
         # TODO: Add support >1 char strings like in Korppi
-        return "Only 1-character string separators supported for now" 
-    return csv_response(temp, 'excel', request.args.get('separator'))
+        return "Only 1-character string separators supported for now"
+    curr_user = get_current_user_object()
+    fields = request.args.getlist("fields")
+    groups = request.args.getlist("groups")
+    docid = request.args.get("docId")
+    doc = get_doc_or_abort(docid)
+    removeDocIds = get_boolean(request.args.get("removeDocIds"), True)
+    r = tableform_get_fields(fields, groups,
+                             doc, curr_user, removeDocIds, allow_non_teacher=True)
+    data = [[str]]
+    data[0] = ["username"] + r['fields']
+    y_offset = 1
+    for idx, [rowkey, row] in enumerate(r['rows'].items()):
+        data.append([rowkey])
+        for field in r['fields']:
+            data[idx + y_offset].append(row.get(field))
+    return csv_response(data, 'excel', request.args.get('separator'))
 
 @tableForm_plugin.route('/fetchTableData')
 def fetch_rows():

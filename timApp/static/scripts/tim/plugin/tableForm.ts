@@ -607,9 +607,22 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
      * Used to define table view & relative save button in angular, true or false.
      */
     generateReport() {
-        const dataTable = this.generateCSVTable();
+        // const dataTable = this.generateCSVTable();
+        const taskId = this.pluginMeta.getTaskId();
+        if (taskId == undefined) {
+            return;
+        }
+
         const win = window.open("/tableForm/generateCSV?" + $httpParamSerializer({
-            data: JSON.stringify(dataTable),
+            // TODO: support for relevant attrs (realnames, usernames, emails...)
+            // TODO: get relevant user input from timTable (sort, filters, checkboxes...)
+            // taskid: this.getTaskId()
+            // TODO: use taskid? (less data to transfer because of plug.values, but dependant on task existence)
+            // @ts-ignore
+            docId: this.pluginMeta.getTaskId().split(".")[0],
+            fields: this.attrs.fields,
+            groups: this.attrs.groups,
+            removeDocIds: this.attrs.removeDocIds,
             separator: (this.attrs.separator || ","),
         }), "WINDOWID");
         if (win == null) {
@@ -617,6 +630,9 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
         }
     }
 
+    /**
+     * @deprecated
+     */
     generateCSVTable() {
         const timTable = this.getTimTable();
         if (timTable == null) {
