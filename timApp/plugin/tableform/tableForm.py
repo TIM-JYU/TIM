@@ -264,6 +264,7 @@ def gen_csv():
         # TODO: Add support >1 char strings like in Korppi
         return "Only 1-character string separators supported for now"
     curr_user = get_current_user_object()
+    anon_names = request.args.get("anonNames", False)
     fields = request.args.getlist("fields")
     groups = request.args.getlist("groups")
     docid = request.args.get("docId")
@@ -272,12 +273,19 @@ def gen_csv():
     r = tableform_get_fields(fields, groups,
                              doc, curr_user, removeDocIds, allow_non_teacher=True)
     data = [[str]]
-    data[0] = ["username"] + r['fields']
+    if anon_names:
+        data[0] = []
+    else:
+        data[0] = ["username"]
+    data[0] = data[0] + r['fields']
     y_offset = 1
-    for idx, [rowkey, row] in enumerate(r['rows'].items()):
-        data.append([rowkey])
+    for ycoord, [rowkey, row] in enumerate(r['rows'].items()):
+        if anon_names:
+            data.append([])
+        else:
+            data.append([rowkey])
         for field in r['fields']:
-            data[idx + y_offset].append(row.get(field))
+            data[ycoord + y_offset].append(row.get(field))
     return csv_response(data, 'excel', request.args.get('separator'))
 
 @tableForm_plugin.route('/fetchTableData')
