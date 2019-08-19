@@ -260,6 +260,11 @@ tableForm_plugin = create_blueprint(__name__, 'tableForm', TableFormHtmlSchema()
 
 @tableForm_plugin.route('/generateCSV')
 def gen_csv():
+    """
+    Generates a report defined by tableForm attributes
+    # TODO: generic, move
+    :return: CSV containing headerrow and rows for users and values
+    """
     if len(request.args.get('separator')) > 1:
         # TODO: Add support >1 char strings like in Korppi
         return "Only 1-character string separators supported for now"
@@ -279,7 +284,10 @@ def gen_csv():
         data[0] = ["username"]
     data[0] = data[0] + r['fields']
     y_offset = 1
-    for ycoord, [rowkey, row] in enumerate(r['rows'].items()):
+    rowkeys = list(r['rows'].keys())
+    rowkeys.sort()
+    for ycoord, rowkey in enumerate(rowkeys):
+        row = r['rows'].get(rowkey)
         if anon_names:
             data.append([])
         else:
