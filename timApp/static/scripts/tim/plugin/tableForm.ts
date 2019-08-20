@@ -625,6 +625,9 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
             removeDocIds: this.attrs.removeDocIds,
             separator: (this.attrs.separator || ","),
             anonNames: this.attrs.anonNames,
+            realnames: this.attrs.realnames,
+            usernames: this.attrs.usernames,
+            emails: this.attrs.emails,
         }), "WINDOWID");
         if (win == null) {
             this.error = "Failed to open report window.";

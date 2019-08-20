@@ -263,13 +263,17 @@ def gen_csv():
     """
     Generates a report defined by tableForm attributes
     # TODO: generic, move
+    # TODO: add schemas
     :return: CSV containing headerrow and rows for users and values
     """
     if len(request.args.get('separator')) > 1:
         # TODO: Add support >1 char strings like in Korppi
         return "Only 1-character string separators supported for now"
     curr_user = get_current_user_object()
-    anon_names = request.args.get("anonNames", False)
+    # anon_names = request.args.get("anonNames", False)
+    real_names = get_boolean(request.args.get("realnames"), True)
+    user_names = get_boolean(request.args.get("usernames"), True)
+    emails = get_boolean(request.args.get("emails"), False)
     fields = request.args.getlist("fields")
     groups = request.args.getlist("groups")
     docid = request.args.get("docId")
@@ -277,21 +281,25 @@ def gen_csv():
     removeDocIds = get_boolean(request.args.get("removeDocIds"), True)
     r = tableform_get_fields(fields, groups,
                              doc, curr_user, removeDocIds, allow_non_teacher=True)
-    data = [[str]]
-    if anon_names:
-        data[0] = []
-    else:
-        data[0] = ["username"]
-    data[0] = data[0] + r['fields']
-    y_offset = 1
     rowkeys = list(r['rows'].keys())
     rowkeys.sort()
+    data = [[] for i in range(len(rowkeys) + 1)]
+    if real_names:
+        data[0].append("Real name")
+    if user_names:
+        data[0].append("Username")
+    if emails:
+        data[0].append("email")
+    data[0] = data[0] + r['fields']
+    y_offset = 1
     for ycoord, rowkey in enumerate(rowkeys):
         row = r['rows'].get(rowkey)
-        if anon_names:
-            data.append([])
-        else:
-            data.append([rowkey])
+        if real_names:
+            data[ycoord + y_offset].append(r['realnamemap'].get(rowkey))
+        if user_names:
+            data[ycoord + y_offset].append(rowkey)
+        if emails:
+            data[ycoord + y_offset].append(r['emailmap'].get(rowkey))
         for field in r['fields']:
             data[ycoord + y_offset].append(row.get(field))
     return csv_response(data, 'excel', request.args.get('separator'))
