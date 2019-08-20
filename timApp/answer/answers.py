@@ -11,6 +11,7 @@ from sqlalchemy.orm import selectinload, defaultload
 from timApp.answer.answer import Answer
 from timApp.answer.answer_models import AnswerTag, UserAnswer
 from timApp.answer.pointsumrule import PointSumRule, PointType
+from timApp.plugin.plugin import is_global_id
 from timApp.plugin.taskid import TaskId
 from timApp.timdb.sqa import db
 from timApp.user.user import Consent, User
@@ -20,8 +21,11 @@ from timApp.velp.velp_models import Annotation
 
 
 def get_latest_answers_query(task_id: TaskId, users: List[User]):
-    q = Answer.query.filter_by(task_id=task_id.doc_task).join(User, Answer.users).filter(
-        User.id.in_([u.id for u in users])).order_by(Answer.id.desc())
+    if is_global_id(task_id):
+        q = Answer.query.filter_by(task_id=task_id.doc_task).order_by(Answer.id.desc())
+    else:
+        q = Answer.query.filter_by(task_id=task_id.doc_task).join(User, Answer.users).filter(
+            User.id.in_([u.id for u in users])).order_by(Answer.id.desc())
     return q
 
 
@@ -184,11 +188,11 @@ def get_all_answers(task_ids: List[TaskId],
 
 def get_common_answers(users: List[User], task_id: TaskId) -> List[Answer]:
     q = get_latest_answers_query(task_id, users)
-
+    glo = is_global_id(task_id)
     def g():
         user_set = set(users)
         for a in q:  # type: Answer
-            if not (user_set - set(a.users_all)):
+            if not (user_set - set(a.users_all)) or glo:
                 yield a
 
     return list(g())

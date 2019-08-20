@@ -3079,6 +3079,7 @@ csApp.component("csTextRunner", {
            ng-keypress="$ctrl.runCodeIfCR($event);"/>
     <button ng-if="::$ctrl.isRun"
             ng-disabled="$ctrl.isRunning"
+            class = "timButton"
             title="(Ctrl-S)"
             ng-click="$ctrl.runCode();"
             ng-bind-html="::$ctrl.buttonText()"></button>

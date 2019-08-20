@@ -18,9 +18,9 @@ Adding new language to csPlugin:
 
 0. Install new compiler to cs/Dockerfile and build new Docker container from that
     - in /opt/tim directory run ./dc build csplugin
-1. Add language name to languages list at the bottom of this file
+1. Add language name to languages list in languagedict at the bottom of this file
     - remember to use lowercase letters
-2. Add the language class starting with capital letter
+2. Add the language class starting with capital letter to this or new file
 3. Mimic some existing language when creating the new class
     - the simplest one is CC that works when just compiler name end extensions are enough to change 
 4. Add language to csPlugin.ts languageTypes.runTypes list
@@ -202,6 +202,13 @@ class Language:
     def save(self, result): # when used without run, this can change result if needed
         return
 
+    def modify_query(self):
+        """
+        Modify query before send to browser.  No need to remove attributes, this is done
+        next using deny_attribute
+        :return:
+        """
+        return
 
     def deny_attributes(self):
         """
@@ -1414,74 +1421,6 @@ class Geogebra(Language):
         srchtml = srchtml.replace('GEOSTATE', f"'{geostate}'")
         return srchtml
 
-class JSframe(Language):
-    def get_default_before_open(self):
-        return '<div class="defBeforeOpen"><p>Open JS-frame</p></div>'
-
-    def runner_name(self):
-        return "jsframe-runner"
-
-    def js_files(self):
-        return ["/cs/js/build/jsframe.js"]
-
-    def can_give_task(self):
-        return True
-
-    def __init__(self, query, sourcecode):
-        super().__init__(query, sourcecode)
-        self.sourcefilename = "/tmp/%s/%s.txt" % (self.basename, self.filename)
-        self.fileext = "txt"
-        self.readpoints_default = 'Score: (.*)'
-        self.delete_tmp = False
-
-    def modify_usercode(self, s):
-        return s
-
-    def run(self, result, sourcelines, points_rule):
-        self.save(result)
-        return 0, "JSFrame - saved", "", ""
-
-    def save(self, result):
-        data = dict(self.query.jso["input"])
-        if 'type' in data:
-            del data['type']
-        result["save"] = data
-        return 0, "JSFrame saved", "", ""
-
-    def deny_attributes(self):
-        return { # "srchtml":"",
-                "filename": "",
-                "prehtml": "",
-                "posthtml": "",
-                "javascript": "",
-                "commands": "",
-        }
-
-    def state_copy(self):
-        return ["c"]
-
-    def iframehtml(self, result, sourcelines, points_rule):
-        ma = self.query.jso['markup']
-        srchtml = get_by_id(ma, 'srchtml', '')
-        data = ma.get('data', None)
-        fielddata = ma.get('fielddata', None)
-
-        state = self.query.jso.get("state", {})
-        if state:
-            c = state.get("c", None)
-            if c is not None:
-                data = c
-        init_data = ""
-        if data:
-            init_data = "window.initData = " + json.dumps(data) + ";\n"
-        if fielddata:
-            init_data += "window.fieldData = " + json.dumps(fielddata) + ";\n"
-        if init_data:
-            init_data = "<script>" + init_data + "</script>"
-            srchtml = srchtml.replace("</body>", init_data + "\n</body>")
-
-        return srchtml
-
 class R(Language):
     def __init__(self, query, sourcecode):
         super().__init__(query, sourcecode)
@@ -1694,52 +1633,3 @@ class Lang(Language):
 
 dummy_language = Language(QueryClass(), "")
 
-languages = dict()
-languages["jypeli"] = Jypeli
-languages["comtest"] = CSComtest
-languages["shell"] = Shell
-languages["cs"] = CS
-languages["java"] = Java
-languages["graphics"] = Graphics
-languages["jcomtest"] = JComtest
-languages["junit"] = JUnit
-languages["scala"] = Scala
-languages["cc"] = CC
-languages["c++"] = CPP
-languages["ccomtest"] = CComtest
-languages["py"] = PY3
-languages["py2"] = PY2
-languages["swift"] = Swift
-languages["lua"] = Lua
-languages["clisp"] = CLisp
-languages["text"] = Text
-languages["xml"] = XML
-languages["css"] = Css
-languages["jjs"] = JJS
-languages["js"] = JS
-languages["glowscript"] = Glowscript
-languages["vpython"] = VPython
-languages["sql"] = SQL
-languages["psql"] = PSQL
-languages["alloy"] = Alloy
-languages["run"] = Run
-languages["md"] = MD
-languages["html"] = HTML
-languages["simcir"] = SimCir
-languages["sage"] = Sage
-languages["r"] = R
-languages["fs"] = FS
-languages["mathcheck"] = Mathcheck
-languages["upload"] = Upload
-languages["octave"] = Octave
-languages["processing"] = Processing
-languages["wescheme"] = WeScheme
-languages["ping"] = Ping
-languages["kotlin"] = Kotlin
-languages["fortran"] = Fortran
-languages["rust"] = Rust
-languages["pascal"] = Pascal
-languages["stack"] = Stack
-languages["geogebra"] = Geogebra
-languages["jsframe"] = JSframe
-languages["quorum"] = Quorum

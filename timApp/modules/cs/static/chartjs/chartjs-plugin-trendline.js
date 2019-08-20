@@ -101,3 +101,39 @@ LineFitter.prototype = {
         return offset + x * scale;
     }
 };
+
+/**
+ * Simple is object check.
+ * @param item
+ * @returns {boolean}
+ */
+function isObject(item) {
+  return (item && typeof item === 'object' && !Array.isArray(item));
+}
+
+/**
+ * Deep merge two objects.
+ * @param target
+ * @param source
+ */
+function mergeDeep(target, source, forcechar) {
+  if (isObject(target) && isObject(source)) {
+    if ( !forcechar ) forcechar = '!';
+    for (let key in source) {
+      if ( key.startsWith('_') ) { continue; }
+      if ( key.startsWith(forcechar) ) {
+          target[key.substring(1)] = source[key];
+          continue;
+      }
+      if (isObject(source[key])) {
+        // if (!target[key]) Object.assign(target, { [key]: {} });
+        if (!target[key]) target[key] =  {};
+        mergeDeep(target[key], source[key], forcechar);
+      } else {
+        // Object.assign(target, { [key]: source[key] });
+        target[key] = source[key];
+      }
+    }
+  }
+  return target;
+}

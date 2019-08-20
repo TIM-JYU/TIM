@@ -404,7 +404,8 @@ class ScimTest(TimRouteTest):
                 ],
             }, auth=a,
             **scim_error("The display attribute 'John Matt Henry Doe' is inconsistent with "
-                         "the name attributes 'John Matt Henryx Doe'."),
+                         "the name attributes: given='John', middle='Matt Henryx', "
+                         "family='Doe'."),
         )
         self.json_post(
             '/scim/Groups',
@@ -424,8 +425,8 @@ class ScimTest(TimRouteTest):
                     },
                 ],
             }, auth=a,
-            **scim_error("The display attribute 'John Doe' is inconsistent with "
-                         "the name attributes 'John Doex'."),
+            **scim_error("The display attribute 'John Doe' is inconsistent with the name "
+                         "attributes: given='John', middle='None', family='Doex'."),
         )
         self.json_post(
             '/scim/Groups',
@@ -445,8 +446,8 @@ class ScimTest(TimRouteTest):
                     },
                 ],
             }, auth=a,
-            **scim_error("The display attribute 'John Doe Matt' is inconsistent with "
-                         "the name attributes 'Matt John Doe'."),
+            **scim_error("The display attribute 'John Doe Matt' is inconsistent with the "
+                         "name attributes: given='Matt', middle='John', family='Doe'."),
         )
         self.json_post(
             '/scim/Groups',

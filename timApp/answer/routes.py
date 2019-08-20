@@ -125,6 +125,13 @@ def get_iframehtml(plugintype: str, task_id_ext: str, user_id: int, anr: int):
     users = [User.query.get(user_id)]
 
     old_answers = get_common_answers(users, tid)
+    """
+    if is_global_id(tid):
+        answer_map = {}
+        get_globals_for_tasks([tid], answer_map)
+    else:
+        old_answers = get_common_answers(users, tid)
+    """
 
     info = plugin.get_info(users, len(old_answers), look_answer=False and not False, valid=True)
 
@@ -138,6 +145,10 @@ def get_iframehtml(plugintype: str, task_id_ext: str, user_id: int, anr: int):
                         'taskID': tid.doc_task,
                         'info': info,
                         'iframehtml': True}
+
+    vals = get_plug_vals(d, tid, get_current_user_object(), users[0])
+    if vals:
+        answer_call_data['markup']['fielddata'] = vals.get('fielddata', {})
 
     plugin_response = call_plugin_answer(plugintype, answer_call_data)
     try:
@@ -951,6 +962,34 @@ def get_all_answers_route(task_id):
     return json_response(all_answers)
 
 
+def get_plug_vals(doc, tid, curr_user, user):
+    plug = get_plugin_from_request(doc.document, tid, curr_user)
+    vals = {}
+    flds = plug[1].values.get('fields', [])
+    if not flds:
+        return {}
+
+    data, aliases, field_names = get_fields_and_users(
+        flds,
+        [user.personal_group_prop],
+        doc,
+        get_current_user_object(),
+        add_missing_fields=True,
+        allow_non_teacher=True,
+    )
+    df = data[0]['fields']
+    da = []
+    labels = []
+    for fn in field_names:
+        da.append(df.get(fn, 0))
+        labels.append(fn)
+    vals['fielddata'] = {'data': df,
+                         'aliases': aliases,
+                         'fieldnames': field_names,
+                         'graphdata': {'data': da, 'labels': labels}}
+    return vals
+
+
 @answers.route("/jsframeUserChange/<task_id>/<user_id>")
 def get_jsframe_data(task_id, user_id):
     """
@@ -964,29 +1003,32 @@ def get_jsframe_data(task_id, user_id):
     curr_user = get_current_user_object()
     plug = get_plugin_from_request(doc.document, tid, curr_user)
     try:
-        vals = {}
-        flds = plug[1].values.get('fields', [])
-        if not flds:
-            return json_response({})
-
-        data, aliases, field_names = get_fields_and_users(
-            flds,
-            [user.personal_group_prop],
-            doc,
-            get_current_user_object(),
-            add_missing_fields=True,
-            allow_non_teacher=True,
-        )
-        df = data[0]['fields']
-        da = []
-        labels = []
-        for fn in field_names:
-            da.append(df.get(fn, 0))
-            labels.append(fn)
-        vals['fielddata'] = {'data': data[0]['fields'],
-                             'aliases': aliases,
-                             'fieldnames': field_names,
-                             'graphdata': {'data': da, 'labels': labels}}
+        vals = get_plug_vals(doc, tid, curr_user, user)
+        """
+                vals = {}
+                flds = plug[1].values.get('fields', [])
+                if not flds:
+                    return json_response({})
+        
+                data, aliases, field_names = get_fields_and_users(
+                    flds,
+                    [user.personal_group_prop],
+                    doc,
+                    get_current_user_object(),
+                    add_missing_fields=True,
+                    allow_non_teacher=True,
+                )
+                df = data[0]['fields']
+                da = []
+                labels = []
+                for fn in field_names:
+                    da.append(df.get(fn, 0))
+                    labels.append(fn)
+                vals['fielddata'] = {'data': data[0]['fields'],
+                                     'aliases': aliases,
+                                     'fieldnames': field_names,
+                                     'graphdata': {'data': da, 'labels': labels}}
+        """
         return json_response(vals)
     except Exception as e:
         return abort(400, str(e))

@@ -30,7 +30,8 @@ const JsframeMarkup = t.intersection([
     GenericPluginMarkup,
     t.type({
         open: withDefault(t.boolean, true),
-        borders: withDefault(t.boolean, true),
+        borders: withDefault(t.boolean, false),
+        norun: withDefault(t.boolean, true),
         lang: withDefault(t.string, "fi"),
         // autoplay: withDefault(t.boolean, true),
         // file: t.string,
@@ -41,7 +42,6 @@ const JsframeAll = t.intersection([
     t.partial({
         usercode: t.string,
         srchtml: t.string,
-        norun: t.boolean,
     }),
     t.type({
         info: Info,
@@ -214,8 +214,8 @@ class JsframeController extends PluginBase<t.TypeOf<typeof JsframeMarkup> ,
             // return "";
         } // TODO: replace when preview delay and preview from markup ready
         $timeout(0);
-        const w = this.attrs.width || 800;
-        const h = this.attrs.height || 450;
+        const w = this.attrs.width || 800; // for some reason if w/h = 2, does not give hints on Chart.js
+        const h = this.attrs.height || (208 * w / 400);  //  experimental result for Chart.js
         let src = "";
         if ( this.attrs.useurl ) {
             const tid = this.pluginMeta.getTaskId()!.split(".") || ["", ""];
@@ -251,12 +251,12 @@ class JsframeController extends PluginBase<t.TypeOf<typeof JsframeMarkup> ,
 
         // let url = this.getHtmlUrl() + "/" + userId + "/" + anr;
         // url = url.replace("//", "/");
-        this.jsframeoutput = "<iframe id='jsxFrame-stack-jsxgraph-1-div1'\n" +
+        this.jsframeoutput = "<iframe id='jsIFrame'\n" +
             "        class='showJsframe jsframeFrame' \n" +
             "        style='margin-left: auto;\n" +
             "               margin-right: auto;\n" +
             "               display: block;" +
-            "               width:calc(" + w + "px + 2px);height:calc(" + h + "px + 2px);border: none;'\n" +
+            "               width: " + w + "px; height: " + h + "px;border: none;'\n" +
             "        sandbox='allow-scripts allow-same-origin'\n" +
             src +
             "'>\n" +

@@ -7,12 +7,14 @@ import signal
 import socketserver
 
 from languages import *
+from languagedict import languages
 import os
 import glob
 from base64 import b64encode
 from cs_sanitizer import cs_min_sanitize, svg_sanitize, tim_sanitize
 from os.path import splitext
 from fileParams import encode_json_data
+# noinspection PyUnresolvedReferences
 
 #  uid = pwd.getpwnam('agent')[2]
 #  os.setuid(uid)
@@ -511,6 +513,7 @@ def handle_common_params(query: QueryClass, tiny, ttype):
     language = language_class(query, "")
     if query.hide_program:
         get_param_del(query, 'program', '')
+    language.modify_query();
     js = query_params_to_map_check_parts(query, language.deny_attributes())
     # print(js)
 
@@ -949,15 +952,33 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         is_rikki = self.path.find('rikki') >= 0
         print_file = get_param(query, "print", "")
 
+        try:
+            if is_css:
+                if (os.path.isfile(self.path)):
+                    do_headers(self, 'text/css')
+                return self.wout(file_to_string(self.path))
+
+            if is_js:
+                if is_rikki:
+                    return self.wout(file_to_string('js/dirRikki.js'))
+                if (os.path.isfile(self.path)):
+                    do_headers(self, 'application/javascript')
+                return self.wout(file_to_string(self.path))
+        except Exception as e:
+            if str(e).find('[Errno 2]') >= 0:
+                self.send_response(404)
+            else:
+                self.send_response(400)
+            self.end_headers()
+            self.wout(str(e))
+            # self.send_error(404, str(e))
+            return
+
         content_type = 'text/plain'
-        if is_js:
-            content_type = 'application/javascript'
         if is_fullhtml or is_gethtml or is_html or is_ptauno or is_tauno:
             content_type = 'text/html; charset=utf-8'
         if is_reqs or is_answer:
             content_type = "application/json"
-        if is_css:
-            content_type = 'text/css'
         if not is_cache:
             do_headers(self, content_type)
 
@@ -1115,16 +1136,6 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
             # print("Muutos ========")
             # pprint(query.__dict__, indent=2)
-
-            if is_css:
-                # return self.wout(file_to_string('cs.css'))
-                return self.wout(file_to_string(self.path))
-
-            if is_js:
-                if is_rikki:
-                    return self.wout(file_to_string('js/dirRikki.js'))
-                # return self.wout(file_to_string('js/dir.js'))
-                return self.wout(file_to_string(self.path))
 
             if is_html and not is_iframe:
                 # print("HTML:==============")
