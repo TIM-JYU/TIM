@@ -359,7 +359,8 @@ def create_sisu_users(args: SCIMGroupModel, ug: UserGroup):
             if not consistent:
                 raise SCIMException(
                     422,
-                    f"The display attribute '{u.display}' is inconsistent with the name attributes '{u.name.derive_full_name(last_name_first=False)}'.")
+                    f"The display attribute '{u.display}' is inconsistent with the name attributes: "
+                    f"given='{u.name.givenName}', middle='{u.name.middleName}', family='{u.name.familyName}'.")
             name_to_use = expected_name
         else:
             name_to_use = last_name_to_first(u.display)
