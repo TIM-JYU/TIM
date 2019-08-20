@@ -139,6 +139,35 @@ function mergeDeep(target, source, forcechar) {
   return target;
 }
 
+// TIM jsframe function for ChartJS
+
+let basicoptions = {
+    'type': 'bar',
+    'data': {
+        'labels': [1,2,3,4,5,6],
+        'datasets': [
+            {
+                'label': '',
+                'lineTension': 0,
+                'fill': false,
+                'backgroundColor': 'rgba(0,0,255,0.5)',
+                'borderColor': '#0000ff',
+                'borderWidth': 1,
+                'data': [4,5,6,2,3,10],
+            },
+        ]
+    },
+    'options': {
+        'responsive': true,
+        'legend': { 'display': false, 'position': 'right', },
+        'title': { 'display': true, 'text': '' },
+        'scales': {
+            'xAxes': [{ 'position': 'bottom', 'scaleLabel': {'labelString': '', 'display': true}}],
+            'yAxes': [{'type': 'linear', 'position': 'left', 'scaleLabel': {'labelString': '', 'display': true}, 'display': true, 'ticks': { 'min': 0,  }}],
+         }
+    }
+};
+
 let COLORS = [
     '#4dc9f6',
     '#f67019',
@@ -191,15 +220,14 @@ function addData(datasets, datas, keys, dopros) {
 }
 
 
-var globaldata =  {
-}
+let globaldata =  {};
 
 window.onload = function() {
     if ( window.initData ) globaldata = initData; // mergeDeep(globaldata, window.initData);
     setData(globaldata);
-}
+};
 
-var chart = null;
+let chart = null;
 
 /**
  * Be sure that there is n items in datasets, if not clone previous item
@@ -209,11 +237,10 @@ var chart = null;
 function ensureDataSets(datasets, n) {
    let diff = n - datasets.length;
    if ( diff <= 0 ) return;
-   for (i = diff; i < n; i++ ) {
-       datasets[i] = {}
+   for (let i = diff; i < n; i++ ) {
+       datasets[i] = {};
        mergeDeep(datasets[i], datasets[i-1]);
    }
-
 }
 
 /**
@@ -223,8 +250,9 @@ function ensureDataSets(datasets, n) {
 function setData(data) {
   try {
     globaldata = data;
-    if ( window.originalData ) {
-        var newData = {};
+    // noinspection JSUnresolvedVariable
+      if ( window.originalData ) {
+        let newData = {};
         if ( chart ) originalData.datas = null; // prevent another add
         mergeDeep(newData, originalData, '#'); // do not loose possible !
         mergeDeep(newData, data);
@@ -233,21 +261,21 @@ function setData(data) {
     if ( !chart ) {
         let ar = data.aspectRatio || data.options && data.options.aspectRatio;
         if ( ar ) options.options.aspectRatio = ar;
-        var ctx = document.getElementById('canvas').getContext('2d');
+        let ctx = document.getElementById('canvas').getContext('2d');
         chart = new Chart(ctx,options);
     }
-    var datasets = chart.config.data.datasets;
-    var coptions = chart.config.options;
-    var dopros = data.dopros || false;
+    let datasets = chart.config.data.datasets;
+    let coptions = chart.config.options;
+    let dopros = data.dopros || false;
     let fieldindex = data.fieldindex || 0;
 
     if ( data.type ) {
         chart.config.type = data.type;
-        if ( data.type == "scatter" || data.linearx) {
+        if ( data.type === "scatter" || data.linearx) {
            coptions.scales.xAxes = [{ type: 'linear', position: "bottom", scaleLabel: {labelString: "", display: true}}];
            coptions.scales.yAxes = [{ type: 'linear', position: "left",   scaleLabel: {labelString: "", display: true}}];
         }
-        if ( data.type == "scatter" ) {
+        if ( data.type === "scatter" ) {
            datasets[0].showLine = false; // for version 2.8.0
         }
     }
@@ -262,7 +290,7 @@ function setData(data) {
 		datasets[1].borderColor = '#080';
     }
     if ( data.data2 ) {
-       if ( fieldindex == 1 ) fieldindex = 2;
+       if ( fieldindex === 1 ) fieldindex = 2;
        datasets[1].data = dopros ? pros(data.data2) : data.data2;
     }
     if ( data.label ) datasets[0].label = data.label;
@@ -275,8 +303,10 @@ function setData(data) {
         datasets[1].label = data.label2;
     }
     if (typeof data.legend != "undefined") {
+        // noinspection EqualityComparisonWithCoercionJS
         if ( data.legend == false ) {
            coptions.legend.display = false;
+        // noinspection EqualityComparisonWithCoercionJS
         } else if ( data.legend == true ) {
            coptions.legend.display = true;
         } else {
@@ -287,7 +317,7 @@ function setData(data) {
     let fdata = data.fielddata || window.fieldData;
     if ( fdata ) {
        ensureDataSets(datasets, fieldindex+1);
-  	   if ( fieldindex == 0 ) chart.data.labels = fdata.graphdata.labels;
+  	   if ( fieldindex === 0 ) chart.data.labels = fdata.graphdata.labels;
        datasets[fieldindex].data = fdata.graphdata.data;
        datasets[fieldindex].backgroundColor = 'rgba(255,0,0,0.5)';
   	   datasets[fieldindex].borderColor = '#F00';
@@ -302,8 +332,8 @@ function setData(data) {
         };
     }
     if ( data.datas ) {
-        keys = data.datakeys || Object.keys(data.datas)
-        addData(datasets, data.datas, data.datakeys, dopros);
+        let keys = data.datakeys || Object.keys(data.datas);
+        addData(datasets, data.datas, keys, dopros);
     }
 
     if ( data.options ) { mergeDeep(chart.options, data.options); }
@@ -312,13 +342,13 @@ function setData(data) {
 
     chart.update();
   } catch(err) {
-     var cont = document.getElementById('container');
-     var p = document.createElement("p");
-     var textnode = document.createTextNode(err.message);
+     let cont = document.getElementById('container');
+     let p = document.createElement("p");
+     let textnode = document.createTextNode(err.message);
      p.appendChild(textnode);
      cont.insertBefore(p, cont.firstChild);
   }
-};
+}
 
 function getData() {
     return globaldata;
