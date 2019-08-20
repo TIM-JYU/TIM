@@ -385,6 +385,8 @@ def delete_folder(folder_id):
     if f.location == 'users':
         return abort(403, 'Personal folders cannot be deleted.')
     trash = get_trash_folder()
+    if f.location == trash.path:
+        abort(400, 'Folder is already deleted.')
     trash_path = find_free_name(trash, f)
     f.rename_path(trash_path)
     db.session.commit()
