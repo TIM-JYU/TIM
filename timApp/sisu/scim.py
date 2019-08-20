@@ -354,8 +354,10 @@ def create_sisu_users(args: SCIMGroupModel, ug: UserGroup):
     for u in args.members:
         if u.name:
             expected_name = u.name.derive_full_name(last_name_first=True)
-            consistent = (u.display.endswith(' ' + u.name.familyName) and
-                          set(expected_name.split(' ')[1:]) == set(u.display.split(' ')[:-1]))
+            consistent = (u.display.endswith(' ' + u.name.familyName)
+                          # There are some edge cases that prevent this condition from working, so it has been disabled.
+                          # and set(expected_name.split(' ')[1:]) == set(u.display.split(' ')[:-1])
+                          )
             if not consistent:
                 raise SCIMException(
                     422,
