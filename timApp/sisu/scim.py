@@ -357,7 +357,8 @@ def update_users(ug: UserGroup, args: SCIMGroupModel):
     removed_user_names = set(u.name for u in ug.users) - set(u.value for u in args.members)
     removed_users = User.query.filter(User.name.in_(removed_user_names)).all()
     for u in removed_users:
-        ug.users.remove(u)
+        if not is_manually_added(u):
+            ug.users.remove(u)
     c_name = f'{CUMULATIVE_GROUP_PREFIX}{external_id}'
     cumulative_group = UserGroup.get_by_name(c_name)
     ug.display_name = args.displayName
@@ -426,14 +427,22 @@ def update_users(ug: UserGroup, args: SCIMGroupModel):
             d.block.add_rights([ug], AccessType.owner)
 
 
+def is_manually_added(u: User):
+    """It is possible to add user manually to SCIM groups.
+    For now we assume that any email user is such.
+    """
+    return u.is_email_user
+
+
 def group_scim(ug: UserGroup):
     def members():
         for u in ug.users.all():  # type: User
-            yield {
-                'value': u.scim_id,
-                '$ref': u.scim_location,
-                'display': u.scim_display_name,
-            }
+            if not is_manually_added(u):
+                yield {
+                    'value': u.scim_id,
+                    '$ref': u.scim_location,
+                    'display': u.scim_display_name,
+                }
 
     return {
         **ug.get_scim_data(),

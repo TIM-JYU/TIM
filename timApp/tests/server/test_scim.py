@@ -5,6 +5,7 @@ from timApp.auth.accesstype import AccessType
 from timApp.document.docentry import DocEntry
 from timApp.sisu.scim import DELETED_GROUP_PREFIX, CUMULATIVE_GROUP_PREFIX, SISU_GROUP_PREFIX
 from timApp.tests.server.timroutetest import TimRouteTest
+from timApp.user.user import User, UserOrigin
 from timApp.user.usergroup import UserGroup
 from timApp.util.utils import seq_to_str
 
@@ -701,10 +702,11 @@ class ScimTest(TimRouteTest):
             json_key='error',
         )
 
-    def test_no_scim_group_manual_member_update(self):
+    def test_scim_group_manual_member_update(self):
+        eid = 'jy-CUR-7777-teachers'
         self.json_post(
             '/scim/Groups', {
-                'externalId': 'jy-CUR-7777-teachers',
+                'externalId': eid,
                 'displayName': 'ITKP102 2020-09-09--2020-12-20: Rooli - teacher',
                 'members': [
                     {'value': u, 'display': u, 'email': f'{u}@example.com'} for u in ['abc']
@@ -713,20 +715,47 @@ class ScimTest(TimRouteTest):
             auth=a,
             expect_status=201,
         )
-        self.login_test3()
-        self.make_admin(self.current_user)
+        u, _ = User.create_with_group('anon@example.com', 'Anon User', 'anon@example.com', origin=UserOrigin.Email)
+        self.make_admin(u)
+        self.login(username=u.name)
         ug = UserGroup.get_by_external_id('jy-CUR-7777-teachers')
         self.get(
             f'/groups/addmember/{ug.name}/{self.current_user.name}',
-            expect_status=400,
-            expect_content='Cannot modify members of Sisu groups.',
-            json_key='error',
         )
+
+        # The SCIM routes must not report the email users.
+        r = self.get(
+            f'/scim/Groups/{eid}',
+            auth=a,
+        )
+        self.assertEqual(
+            [{'$ref': 'http://localhost/scim/Users/abc', 'display': 'abc', 'value': 'abc'}],
+            r['members'],
+        )
+
+        self.json_put(
+            f'/scim/Groups/{eid}', {
+                'externalId': eid,
+                'displayName': 'ITKP102 2020-09-09--2020-12-20: Rooli - teacher',
+                'members': [
+                    {'value': u, 'display': u, 'email': f'{u}@example.com'} for u in ['abc']
+                ],
+            },
+            auth=a,
+        )
+
+        # The manually added user should not get deleted on SCIM update.
+        ug = UserGroup.get_by_external_id(eid)
+        self.assertEqual(2, len(ug.users.all()))
+
         self.get(
             f'/groups/removemember/{ug.name}/abc',
             expect_status=400,
-            expect_content='Cannot modify members of Sisu groups.',
+            expect_content='Cannot remove non-email users from Sisu groups.',
             json_key='error',
+        )
+        self.get(
+            f'/groups/removemember/{ug.name}/anon@example.com',
         )
 
     def check_no_group_access(self, username: str, externalids: List[str], no_access_expected=None):

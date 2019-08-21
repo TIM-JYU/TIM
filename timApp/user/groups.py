@@ -164,8 +164,8 @@ def verify_group_edit_access(ug: UserGroup, user=None, require=True):
         abort(400, 'Cannot edit special groups.')
     if User.get_by_name(ug.name):
         abort(400, 'Cannot edit personal groups.')
-    if ug.is_sisu:
-        abort(400, 'Cannot modify members of Sisu groups.')
+    if ug.name.startswith('cumulative:') or ug.name.startswith('deleted:'):
+         abort(400, 'Cannot edit special Sisu groups.')
     verify_group_access(ug, edit_access_set, user, require=require)
 
 
@@ -173,43 +173,47 @@ def verify_group_view_access(ug: UserGroup, user=None, require=True):
     return verify_group_access(ug, view_access_set, user, require=require)
 
 
-@groups.route('/addmember/<groupname>/<usernames>')
-def add_member(usernames, groupname):
-    timdb = get_timdb()
+def get_member_infos(groupname: str, usernames: str):
     usernames = get_usernames(usernames)
     group, users = get_uid_gid(groupname, usernames)
     verify_group_edit_access(group)
     existing_usernames = set(u.name for u in users)
     existing_ids = set(u.id for u in group.users)
-    already_exists = set(u.name for u in group.users) & set(usernames)
     not_exist = [name for name in usernames if name not in existing_usernames]
+    return existing_ids, group, not_exist, usernames, users
+
+
+@groups.route('/addmember/<groupname>/<usernames>')
+def add_member(usernames, groupname):
+    existing_ids, group, not_exist, usernames, users = get_member_infos(groupname, usernames)
+    already_exists = set(u.name for u in group.users) & set(usernames)
     added = []
+    ban_non_email_users = group.is_sisu
     for u in users:
         if u.id not in existing_ids:
+            if ban_non_email_users and not u.is_email_user:
+                abort(400, 'Cannot add non-email users to Sisu groups.')
             u.groups.append(group)
             added.append(u.name)
-    timdb.commit()
+    db.session.commit()
     return json_response({'already_belongs': sorted(list(already_exists)), 'added': added, 'not_exist': not_exist})
 
 
 @groups.route('/removemember/<groupname>/<usernames>')
 def remove_member(usernames, groupname):
-    timdb = get_timdb()
-    usernames = get_usernames(usernames)
-    group, users = get_uid_gid(groupname, usernames)
-    verify_group_edit_access(group)
-    existing_usernames = set(u.name for u in users)
-    existing_ids = set(u.id for u in group.users)
-    not_exist = [name for name in usernames if name not in existing_usernames]
+    existing_ids, group, not_exist, usernames, users = get_member_infos(groupname, usernames)
     removed = []
     does_not_belong = []
+    ban_non_email_users = group.is_sisu
     for u in users:
         if u.id not in existing_ids:
             does_not_belong.append(u.name)
             continue
+        if ban_non_email_users and not u.is_email_user:
+            abort(400, 'Cannot remove non-email users from Sisu groups.')
         u.groups.remove(group)
         removed.append(u.name)
-    timdb.commit()
+    db.session.commit()
     return json_response({'removed': removed, 'does_not_belong': does_not_belong, 'not_exist': not_exist})
 
 
@@ -237,7 +241,7 @@ def enroll_to_course(doc_id: int):
         return abort(400, 'Document is not tagged as a course')
 
 
-def get_usernames(usernames):
+def get_usernames(usernames: str):
     usernames = list(set([name.strip() for name in usernames.split(',')]))
     usernames.sort()
     return usernames
