@@ -127,6 +127,9 @@ def get_fields_and_users(u_fields: List[str], groups: List[UserGroup],
 
         if not (current_user.has_teacher_access(dib) or allow_non_teacher):
             abort(403, f'Missing teacher access for document {dib.id}')
+        elif dib.document.get_own_settings().get('need_view_for_answers', False) \
+                and not current_user.has_view_access(dib):
+            abort(403, "Sorry, you don't have permission to use this resource.")
         doc_map[task_id.doc_id] = dib.document
 
     if add_missing_fields:
