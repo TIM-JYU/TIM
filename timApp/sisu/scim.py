@@ -8,11 +8,9 @@ from marshmallow import Schema, fields, post_load, ValidationError, missing, pre
 from sqlalchemy.exc import IntegrityError
 from webargs.flaskparser import use_args
 
-from timApp.auth.accesstype import AccessType
 from timApp.auth.login import create_or_update_user
-from timApp.document.docentry import DocEntry
 from timApp.sisu.scimusergroup import ScimUserGroup
-from timApp.sisu.sisu import create_sisu_document, parse_sisu_group_display_name
+from timApp.sisu.sisu import parse_sisu_group_display_name, refresh_sisu_grouplist_doc
 from timApp.tim_app import csrf
 from timApp.timdb.sqa import db
 from timApp.user.scimentity import get_meta
@@ -406,25 +404,7 @@ def update_users(ug: UserGroup, args: SCIMGroupModel):
         db.session.flush()
         if user not in cumulative_group.users:
             cumulative_group.users.append(user)
-    if ug.external_id.is_teacher and not ug.external_id.is_studysubgroup:
-        gn = parse_sisu_group_display_name(ug.display_name)
-        p = f'{gn.group_doc_root}/sisugroups'
-        d = DocEntry.find_by_path(p)
-        if not d:
-            d = create_sisu_document(p, f'Sisu groups for course {gn.coursecode.upper()}', owner_group=ug)
-            d.document.set_settings({
-                'global_plugin_attrs': {
-                    'all': {
-                        'sisugroups': ug.external_id.course_id,
-                    }
-                },
-                'macros': {
-                    'course': f'{gn.coursecode.upper()} {gn.fulldaterange}',
-                },
-                'preamble': 'sisugroups',
-            })
-        else:
-            d.block.add_rights([ug], AccessType.owner)
+    refresh_sisu_grouplist_doc(ug)
 
 
 def is_manually_added(u: User):

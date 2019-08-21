@@ -3,8 +3,9 @@ from typing import List, Optional, Dict
 
 import attr
 from flask import Blueprint, abort
+from flask.cli import AppGroup
 from marshmallow import Schema, fields, post_load, pre_load
-from sqlalchemy import any_
+from sqlalchemy import any_, true
 from sqlalchemy.exc import IntegrityError
 from webargs.flaskparser import use_args
 
@@ -16,6 +17,7 @@ from timApp.document.docinfo import DocInfo
 from timApp.item.block import Block, BlockType
 from timApp.item.validation import ItemValidationRule, validate_item_and_create_intermediate_folders, validate_item
 from timApp.sisu.scimusergroup import ScimUserGroup
+from timApp.tim_app import app
 from timApp.timdb.sqa import db
 from timApp.user.groups import validate_groupname, update_group_doc_settings, add_group_infofield_template
 from timApp.user.user import User
@@ -254,3 +256,39 @@ def parse_sisu_group_display_name(s: str) -> Optional[SisuDisplayName]:
         desc=desc,
         period=period,
     )
+
+
+sisu_cli = AppGroup('sisu')
+
+@sisu_cli.command('createdocs')
+def create_docs():
+    all_sisu_groups = get_sisu_groups_by_filter(true())
+    for g in all_sisu_groups:
+        print(f'Refreshing {g.external_id.external_id}')
+        refresh_sisu_grouplist_doc(g)
+    db.session.commit()
+
+
+app.cli.add_command(sisu_cli)
+
+
+def refresh_sisu_grouplist_doc(ug: UserGroup):
+    if ug.external_id.is_teacher and not ug.external_id.is_studysubgroup:
+        gn = parse_sisu_group_display_name(ug.display_name)
+        p = f'{gn.group_doc_root}/sisugroups'
+        d = DocEntry.find_by_path(p)
+        if not d:
+            d = create_sisu_document(p, f'Sisu groups for course {gn.coursecode.upper()}', owner_group=ug)
+            d.document.set_settings({
+                'global_plugin_attrs': {
+                    'all': {
+                        'sisugroups': ug.external_id.course_id,
+                    }
+                },
+                'macros': {
+                    'course': f'{gn.coursecode.upper()} {gn.fulldaterange}',
+                },
+                'preamble': 'sisugroups',
+            })
+        else:
+            d.block.add_rights([ug], AccessType.owner)

@@ -31,7 +31,7 @@ def validate_item(item_path: str,
     if not validation_rule:
         validation_rule = ItemValidationRule()
     item_type_str = item_type.name.lower()
-    if not logged_in() and validation_rule.require_login:
+    if validation_rule.require_login and not logged_in():
         abort(403, f'You have to be logged in to perform this action.')
 
     if item_path is None:
