@@ -10,8 +10,8 @@
  */
 var pluginTrendlineLinear = {
     beforeDraw: function(chartInstance) {
-        var yScale;
-        var xScale;
+        let yScale;
+        let xScale;
         for (let axis in chartInstance.scales) {
             if ( axis[0] == 'x')
                 xScale = chartInstance.scales[axis];
@@ -19,11 +19,11 @@ var pluginTrendlineLinear = {
                 yScale = chartInstance.scales[axis];
             if ( xScale && yScale ) break;
         }
-        var ctx = chartInstance.chart.ctx;
+        let ctx = chartInstance.chart.ctx;
 
         chartInstance.data.datasets.forEach(function(dataset, index) {
             if (dataset.trendlineLinear && chartInstance.isDatasetVisible(index)) {
-                var datasetMeta = chartInstance.getDatasetMeta(index);
+                let datasetMeta = chartInstance.getDatasetMeta(index);
                 addFitter(datasetMeta, ctx, dataset, xScale, yScale);
             }
         });
@@ -33,23 +33,23 @@ var pluginTrendlineLinear = {
 };
 
 function addFitter(datasetMeta, ctx, dataset, xScale, yScale) {
-    var style = dataset.trendlineLinear.style || dataset.borderColor;
-    var lineWidth = dataset.trendlineLinear.width || dataset.borderWidth;
-    var lineStyle = dataset.trendlineLinear.lineStyle || "solid";
+    let style = dataset.trendlineLinear.style || dataset.borderColor;
+    let lineWidth = dataset.trendlineLinear.width || dataset.borderWidth;
+    let lineStyle = dataset.trendlineLinear.lineStyle || "solid";
 
     style = (style !== undefined) ? style : "rgba(169,169,169, .6)";
     lineWidth = (lineWidth !== undefined) ? lineWidth : 3;
 
-    var fitter = new LineFitter();
-    var lastIndex = dataset.data.length - 1;
-    var startPos = 0;
-    var endPos = 0;
+    let fitter = new LineFitter();
+    let lastIndex = dataset.data.length - 1;
+    let startPos = 0;
+    let endPos = 0;
     if ( lastIndex > 0) {
         startPos = datasetMeta.data[0]._model.x;
         endPos = datasetMeta.data[lastIndex]._model.x;
     }
 
-    var xy = false;
+    let xy = false;
     if ( dataset.data && typeof dataset.data[0] === 'object') xy = true;
 
     dataset.data.forEach(function(data, index) {
@@ -57,10 +57,10 @@ function addFitter(datasetMeta, ctx, dataset, xScale, yScale) {
         else fitter.add(index, data);
     });
 
-    var x1 = xScale.getPixelForValue(fitter.minx);
-    var x2 = xScale.getPixelForValue(fitter.maxx);
-    var y1 = yScale.getPixelForValue(fitter.f(fitter.minx));
-    var y2 = yScale.getPixelForValue(fitter.f(fitter.maxx));
+    let x1 = xScale.getPixelForValue(fitter.minx);
+    let x2 = xScale.getPixelForValue(fitter.maxx);
+    let y1 = yScale.getPixelForValue(fitter.f(fitter.minx));
+    let y2 = yScale.getPixelForValue(fitter.f(fitter.maxx));
     if ( !xy ) { x1 = startPos; x2 = endPos; }
 
     ctx.lineWidth = lineWidth;
@@ -95,9 +95,9 @@ LineFitter.prototype = {
         if ( x > this.maxx ) this.maxx = x;
     },
     'f': function (x) {
-        var det = this.count * this.sumX2 - this.sumX * this.sumX;
-        var offset = (this.sumX2 * this.sumY - this.sumX * this.sumXY) / det;
-        var scale = (this.count * this.sumXY - this.sumX * this.sumY) / det;
+        let det = this.count * this.sumX2 - this.sumX * this.sumX;
+        let offset = (this.sumX2 * this.sumY - this.sumX * this.sumXY) / det;
+        let scale = (this.count * this.sumXY - this.sumX * this.sumY) / det;
         return offset + x * scale;
     }
 };
@@ -113,8 +113,9 @@ function isObject(item) {
 
 /**
  * Deep merge two objects.
- * @param target
- * @param source
+ * @param target object where to merge
+ * @param source object where from merge
+ * @forcechar char for starting the attribute name when no deepcopy is done, instead object reference
  */
 function mergeDeep(target, source, forcechar) {
   if (isObject(target) && isObject(source)) {
@@ -137,3 +138,4 @@ function mergeDeep(target, source, forcechar) {
   }
   return target;
 }
+

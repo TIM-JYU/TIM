@@ -91,10 +91,15 @@ class JSframe(Language):
 
         opt = get_by_id(ma, "options", None)
         if not opt:
-            opt = JSREADYOPTIONS.get(readyoptions, "")
+            opt = JSREADYOPTIONS.get(readyoptions, None)
+        if opt:
+            opt = json.dumps(opt)
+        else:
+            opt = "basicoptions"
+
         contstyle = 'style="' + get_by_id(ma, "contStyle", 'width: 100%; margin: auto; ') + '"'
 
-        src = src.replace("//OPTIONS", "var options = " + json.dumps(opt) + ";").replace("CONTSTYLE", contstyle)
+        src = src.replace("//OPTIONS", "var options = " + opt + ";").replace("CONTSTYLE", contstyle)
         src = src.replace("##TIM_HOST##", os.environ['TIM_HOST'])
 
         original_data = get_by_id(ma, "data", None)
@@ -105,7 +110,8 @@ class JSframe(Language):
         ma["srchtml"] = src
         return
 
-JSREADYHTML['oneDataChartJS'] = """
+
+JSREADYHTML['oneDataChartJS2'] = """
 <!doctype html>
 <html>
 <head>
@@ -181,7 +187,7 @@ function ensureDataSets(datasets, n) {
        datasets[i] = {}
        mergeDeep(datasets[i], datasets[i-1]);
    }
-   
+
 }
 
 function setData(data) {
@@ -292,7 +298,27 @@ function getData() {
 </html>
 """
 
-JSREADYOPTIONS['oneDataChartJS'] = {
+JSREADYHTML['oneDataChartJS'] = """
+<!doctype html>
+<html>
+<head>
+<script src="https://www.chartjs.org/dist/##CHARTJSVERSION##/Chart.min.js"></script>
+<script src="##TIM_HOST##/csstatic/chartjs/timonedata.js"></script> 
+</head>
+<body>
+<div id="container" CONTSTYLE>
+<canvas id="canvas"></canvas>
+</div>
+<script>
+//OPTIONS	
+//ORIGINALDATA
+
+</script>
+</body>
+</html>
+"""
+
+JSREADYOPTIONS['oneDataChartJS2'] = {
     'type': 'bar',
     'data': {
         'labels': [1,2,3,4,5,6],
