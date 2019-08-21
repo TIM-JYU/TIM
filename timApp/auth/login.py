@@ -27,6 +27,7 @@ from timApp.timdb.sqa import db
 from timApp.user.newuser import NewUser
 from timApp.user.user import User, UserOrigin
 from timApp.user.usergroup import UserGroup
+from timApp.user.users import create_anonymous_user
 from timApp.user.userutils import create_password_hash, check_password_hash
 from timApp.util.flask.requesthelper import verify_json_params, get_option, is_xhr
 from timApp.util.flask.responsehelper import safe_redirect, json_response, ok_response, error_generic
@@ -411,9 +412,8 @@ def quick_login(username):
 
 
 def log_in_as_anonymous(sess) -> User:
-    timdb = get_timdb()
     user_name = 'Anonymous'
     user_real_name = 'Guest'
-    user = timdb.users.create_anonymous_user(user_name, user_real_name)
+    user = create_anonymous_user(user_name, user_real_name)
     sess['user_id'] = user.id
     return user

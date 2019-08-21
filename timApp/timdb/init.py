@@ -14,6 +14,7 @@ from alembic.script import ScriptDirectory
 
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.document import Document
+from timApp.user.users import create_special_usergroups
 from timApp.util.logger import log_info, enable_loggers, log_error, log_warning
 from timApp.admin.migrate_to_postgre import perform_migration
 from timApp.printing.documentprinter import DocumentPrinter
@@ -97,7 +98,7 @@ def initialize_database(create_docs=True):
         sess.add(AccessType(id=5, name='see answers'))
         sess.add(AccessType(id=6, name='owner'))
 
-        timdb.users.create_special_usergroups()
+        create_special_usergroups(sess)
         anon_group = get_anon_group_id()
         precomputed_hashes = [
             '$2b$04$zXpqPI7SNOWkbmYKb6QK9ePEUe.0pxZRctLybWNE1nxw0/WMiYlPu',  # test1pass

@@ -5,21 +5,19 @@ import * as focusMe from "tim/ui/focusMe";
 import {Binding, markAsUsed, to} from "tim/util/utils";
 import {showMessageDialog} from "../ui/dialog";
 import {durationTypes} from "../ui/durationPicker";
+import {IGroup} from "../user/IUser";
 import {$http} from "../util/ngimport";
 
 markAsUsed(focusMe);
 
 export interface IRight {
-    access_name: string;
-    access_type: number;
+    type: number;
     duration_to: Moment | null;
     duration_from: Moment | null;
     duration: null | Duration;
     accessible_to: Moment;
     accessible_from: Moment;
-    fullname?: string;
-    name: string;
-    gid: number;
+    usergroup: IGroup;
 }
 
 export interface IAccessType {
@@ -102,7 +100,7 @@ class RightsEditorController implements IController {
     }
 
     removeConfirm(group: IRight, type: string) {
-        if (window.confirm("Remove " + type + " right from " + group.name + "?")) {
+        if (window.confirm("Remove " + type + " right from " + group.usergroup.name + "?")) {
             this.removePermission(group, type);
         }
     }
@@ -127,7 +125,7 @@ class RightsEditorController implements IController {
     }
 
     async removePermission(right: IRight, type: string) {
-        const r = await to($http.put(`/${this.urlRoot}/remove/${this.itemId}/${right.gid}/${type}`, {}));
+        const r = await to($http.put(`/${this.urlRoot}/remove/${this.itemId}/${right.usergroup.id}/${type}`, {}));
         if (r.ok) {
             await this.getPermissions();
         } else {
@@ -160,7 +158,7 @@ class RightsEditorController implements IController {
     }
 
     getGroupDesc(group: IRight) {
-        return group.fullname ? group.fullname + " (" + group.name + ")" : group.name;
+        return group.usergroup.personal_user ? group.usergroup.personal_user.real_name + " (" + group.usergroup.name + ")" : group.usergroup.name;
     }
 
     shouldShowBeginTime(group: IRight) {
@@ -221,12 +219,19 @@ class RightsEditorController implements IController {
         this.editRight(group);
         this.timeOpt.to = moment();
         this.timeOpt.type = "range";
-        this.addOrEditPermission(group.name, this.accessType);
+        this.addOrEditPermission(group.usergroup.name, this.accessType);
+    }
+
+    findAccessTypeById(id: number) {
+        if (!this.accessTypes) {
+            return;
+        }
+        return this.accessTypes.find((a) => a.id === id);
     }
 
     editRight(group: IRight) {
-        this.groupName = group.name;
-        this.accessType = {id: group.access_type, name: group.access_name};
+        this.groupName = group.usergroup.name;
+        this.accessType = this.findAccessTypeById(group.type);
         this.addingRight = false;
         this.selectedRight = group;
 

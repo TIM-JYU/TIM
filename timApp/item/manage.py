@@ -26,7 +26,7 @@ from timApp.item.validation import validate_item, validate_item_and_create_inter
 from timApp.timdb.dbaccess import get_timdb
 from timApp.timdb.sqa import db
 from timApp.user.usergroup import UserGroup
-from timApp.user.users import remove_access
+from timApp.user.users import remove_access, remove_default_access, get_default_rights_holders, get_rights_holders
 from timApp.user.userutils import grant_access, grant_default_access, get_access_type_id
 from timApp.util.flask.requesthelper import verify_json_params, get_option
 from timApp.util.flask.responsehelper import json_response, ok_response
@@ -256,19 +256,17 @@ def rename_folder(item_id):
 
 @manage_page.route("/permissions/get/<int:item_id>")
 def get_permissions(item_id):
-    timdb = get_timdb()
     i = get_item_or_abort(item_id)
     verify_manage_access(i)
-    grouprights = timdb.users.get_rights_holders(item_id)
+    grouprights = get_rights_holders(item_id)
     return json_response({'grouprights': grouprights, 'accesstypes': AccessType.query.all()})
 
 
 @manage_page.route("/defaultPermissions/<object_type>/get/<int:folder_id>")
 def get_default_document_permissions(folder_id, object_type):
-    timdb = get_timdb()
     f = get_folder_or_abort(folder_id)
     verify_manage_access(f)
-    grouprights = timdb.users.get_default_rights_holders(folder_id, BlockType.from_str(object_type))
+    grouprights = get_default_rights_holders(folder_id, BlockType.from_str(object_type))
     return json_response({'grouprights': grouprights})
 
 
@@ -292,8 +290,7 @@ def add_default_doc_permission(folder_id, group_name, perm_type, object_type):
 def remove_default_doc_permission(folder_id, group_id, perm_type, object_type):
     f = get_folder_or_abort(folder_id)
     verify_manage_access(f)
-    timdb = get_timdb()
-    timdb.users.remove_default_access(group_id, folder_id, perm_type, BlockType.from_str(object_type))
+    remove_default_access(group_id, folder_id, perm_type, BlockType.from_str(object_type))
     db.session.commit()
     return ok_response()
 

@@ -2,6 +2,7 @@ from datetime import timedelta
 
 from timApp.document.docentry import DocEntry
 from timApp.item.item import Item
+from timApp.tests.server.test_default_rights import convert_to_old_format
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.timdb.sqa import db
 from timApp.user.usergroup import UserGroup
@@ -70,7 +71,7 @@ class PermissionTest(TimRouteTest):
                               {'id': 4, 'name': 'manage'},
                               {'id': 5, 'name': 'see answers'},
                               {'id': 6, 'name': 'owner'}])
-            self.assertEqual(rights['grouprights'],
+            self.assertEqual(convert_to_old_format(rights['grouprights']),
                              [{'access_name': 'owner',
                                'access_type': 6,
                                'accessible_from': i.block.accesses[

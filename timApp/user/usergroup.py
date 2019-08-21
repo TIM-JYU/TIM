@@ -3,7 +3,7 @@ from typing import List
 from sqlalchemy.orm import joinedload
 
 from timApp.sisu.scimusergroup import ScimUserGroup
-from timApp.timdb.sqa import db, TimeStampMixin
+from timApp.timdb.sqa import db, TimeStampMixin, include_if_loaded, include_if_exists
 from timApp.user.scimentity import SCIMEntity
 from timApp.user.special_group_names import ANONYMOUS_GROUPNAME, LARGE_GROUPS, KORPPI_GROUPNAME, LOGGED_IN_GROUPNAME, \
     ADMIN_GROUPNAME, GROUPADMIN_GROUPNAME, TEACHERS_GROUPNAME
@@ -87,8 +87,12 @@ class UserGroup(db.Model, TimeStampMixin, SCIMEntity):
     def is_large(self) -> bool:
         return self.name in LARGE_GROUPS
 
-    def __json__(self) -> List[str]:
-        return ['id', 'name']
+    def to_json(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            **include_if_exists('personal_user', self),
+        }
 
     @property
     def pretty_full_name(self):

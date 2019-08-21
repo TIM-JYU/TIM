@@ -312,7 +312,7 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         if self.name == ANONYMOUS_USERNAME:
             return UserGroup.get_anonymous_group()
         for g in self.groups:
-            if g.name == self.name or g.name == 'group of user ' + self.name:
+            if g.name == self.name:
                 return g
         raise TimDbException(f'Personal usergroup for user {self.name} was not found!')
 

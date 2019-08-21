@@ -20,4 +20,5 @@ export interface IFullUser extends IUser {
 export interface IGroup {
     id: number;
     name: string;
+    personal_user?: IUser;
 }

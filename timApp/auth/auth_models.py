@@ -1,4 +1,4 @@
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import db, include_if_loaded
 from timApp.util.utils import get_current_time
 
 
@@ -74,3 +74,16 @@ class BlockAccess(db.Model):
 
     def __ne__(self, other):
         return not self == other
+
+    def to_json(self):
+        return {
+            'block_id': self.block_id,
+            'usergroup_id': self.usergroup_id,
+            'type': self.type,
+            'accessible_from': self.accessible_from,
+            'accessible_to': self.accessible_to,
+            'duration': self.duration,
+            'duration_from': self.duration_from,
+            'duration_to': self.duration_to,
+            **include_if_loaded('usergroup', self),
+        }

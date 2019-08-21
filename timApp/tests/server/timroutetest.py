@@ -512,6 +512,7 @@ class TimRouteTest(TimDbTest):
     def login_anonymous(self):
         with self.client.session_transaction() as s:
             log_in_as_anonymous(s)
+            db.session.commit()
         self.client.session_transaction().__enter__()
 
     def login_test1(self, force: bool = False, add: bool = False, **kwargs):

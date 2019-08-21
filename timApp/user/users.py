@@ -1,10 +1,12 @@
+from typing import List
+
 from sqlalchemy import func
+from sqlalchemy.orm import joinedload
 
 from timApp.auth.auth_models import BlockAccess
 from timApp.item.block import Block, BlockType
 from timApp.timdb.sqa import db
 from timApp.timdb.timdbbase import TimDbBase
-from timApp.timdb.timdbbase import result_as_dict_list
 from timApp.user.special_group_names import ANONYMOUS_USERNAME, ANONYMOUS_GROUPNAME, KORPPI_GROUPNAME, \
     LOGGED_IN_GROUPNAME, \
     LOGGED_IN_USERNAME, ADMIN_GROUPNAME, TEACHERS_GROUPNAME, GROUPADMIN_GROUPNAME
@@ -21,74 +23,72 @@ def remove_access(group_id: int, block_id: int, access_type: str):
             db.session.delete(a)
             break
 
+RightsList = List[BlockAccess]
 
-class Users(TimDbBase):
-    """Handles saving and retrieving user-related information to/from the database."""
 
-    def create_special_usergroups(self):
-        """Creates all special usergroups."""
+def get_rights_holders(block_id: int) -> RightsList:
+    result = (BlockAccess.query
+              .options(
+        joinedload(BlockAccess.usergroup)
+    )
+              .options(joinedload(BlockAccess.atype))
+              .filter_by(block_id=block_id)
+              .join(UserGroup)
+              .outerjoin(User, User.name == UserGroup.name)
+              .with_entities(BlockAccess, UserGroup, User)
+              .all()
+     )
+    results = []
+    for acc, ug, user in result:
+        if user:
+            ug.personal_user = user
+        results.append(acc)
+    return results
 
-        anon = User(id=0, name=ANONYMOUS_USERNAME, real_name='Anonymous user')
-        logged = User(name=LOGGED_IN_USERNAME)
-        anon_group = UserGroup(name=ANONYMOUS_GROUPNAME)
-        logged_group = UserGroup(id=0, name=LOGGED_IN_GROUPNAME)
-        korppi_group = UserGroup(name=KORPPI_GROUPNAME)
-        admin_group = UserGroup(name=ADMIN_GROUPNAME)
-        teachers_group = UserGroup(name=TEACHERS_GROUPNAME)
-        groupadmin_group = UserGroup(name=GROUPADMIN_GROUPNAME)
-        anon.groups.append(anon_group)
-        logged.groups.append(logged_group)
-        self.session.add(anon)
-        self.session.add(logged)
-        self.session.add(korppi_group)
-        self.session.add(admin_group)
-        self.session.add(teachers_group)
-        self.session.add(groupadmin_group)
 
-    def create_anonymous_user(self, name: str, real_name: str, commit: bool = True) -> User:
-        """Creates a new anonymous user.
+def get_default_rights_holders(folder_id: int, object_type: BlockType) -> RightsList:
+    doc = get_default_right_document(folder_id, object_type)
+    if doc is None:
+        return []
+    return get_rights_holders(doc.id)
 
-        :param name: The name of the user to be created.
-        :param real_name: The real name of the user.
-        :returns: The id of the newly created user.
 
-        """
+def remove_default_access(group_id: int, folder_id: int, access_type: str, object_type: BlockType):
+    doc = get_default_right_document(folder_id, object_type, create_if_not_exist=True)
+    remove_access(group_id, doc.id, access_type)
 
-        next_id = User.query.with_entities(func.min(User.id)).scalar() - 1
-        u, _ = User.create_with_group(uid=next_id, name=name + str(abs(next_id)), real_name=real_name)
-        self.session.add(u)
-        if commit:
-            self.session.commit()
-        return u
 
-    def get_rights_holders(self, block_id: int):
-        cursor = self.db.cursor()
-        cursor.execute("""SELECT b.UserGroup_id as gid,
-                                 u.name as name,
-                                 a.id as access_type,
-                                 a.name as access_name,
-                                 accessible_from,
-                                 accessible_to,
-                                 duration,
-                                 duration_from,
-                                 duration_to,
-                                 fullname
-                          FROM BlockAccess b
-                          JOIN UserGroup u ON b.UserGroup_id = u.id
-                          JOIN AccessType a ON b.type = a.id
-                          LEFT JOIN (SELECT ug.id as gid, ua.real_name as fullname
-                                     FROM useraccount ua
-                                     JOIN usergroup ug on ug.name = ua.name
-                                     ) tmp ON tmp.gid = b.UserGroup_id
-                          WHERE Block_id = %s""", [block_id])
-        return result_as_dict_list(cursor)
+def create_special_usergroups(sess):
+    """Creates all special usergroups."""
 
-    def get_default_rights_holders(self, folder_id: int, object_type: BlockType):
-        doc = get_default_right_document(folder_id, object_type)
-        if doc is None:
-            return []
-        return self.get_rights_holders(doc.id)
+    anon = User(id=0, name=ANONYMOUS_USERNAME, real_name='Anonymous user')
+    logged = User(name=LOGGED_IN_USERNAME)
+    anon_group = UserGroup(name=ANONYMOUS_GROUPNAME)
+    logged_group = UserGroup(id=0, name=LOGGED_IN_GROUPNAME)
+    korppi_group = UserGroup(name=KORPPI_GROUPNAME)
+    admin_group = UserGroup(name=ADMIN_GROUPNAME)
+    teachers_group = UserGroup(name=TEACHERS_GROUPNAME)
+    groupadmin_group = UserGroup(name=GROUPADMIN_GROUPNAME)
+    anon.groups.append(anon_group)
+    logged.groups.append(logged_group)
+    sess.add(anon)
+    sess.add(logged)
+    sess.add(korppi_group)
+    sess.add(admin_group)
+    sess.add(teachers_group)
+    sess.add(groupadmin_group)
 
-    def remove_default_access(self, group_id: int, folder_id: int, access_type: str, object_type: BlockType):
-        doc = get_default_right_document(folder_id, object_type, create_if_not_exist=True)
-        remove_access(group_id, doc.id, access_type)
+
+def create_anonymous_user(name: str, real_name: str) -> User:
+    """Creates a new anonymous user.
+
+    :param name: The name of the user to be created.
+    :param real_name: The real name of the user.
+    :returns: The id of the newly created user.
+
+    """
+
+    next_id = User.query.with_entities(func.min(User.id)).scalar() - 1
+    u, _ = User.create_with_group(uid=next_id, name=name + str(abs(next_id)), real_name=real_name)
+    db.session.add(u)
+    return u
