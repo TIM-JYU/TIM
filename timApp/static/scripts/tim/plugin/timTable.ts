@@ -1962,7 +1962,6 @@ export class TimTableController extends DestroyScope implements IController, ITi
      * @param {MouseEvent} event MouseEvent
      */
     private async calculateElementPlaces(rowi: number, coli: number, event?: MouseEvent) {
-        await $timeout();
         const sr = this.permTableToScreen[rowi];
         const table = this.element.find(".timTableTable").first();
         const cell = this.cellDataMatrix[rowi][coli];
@@ -2008,7 +2007,6 @@ export class TimTableController extends DestroyScope implements IController, ITi
         const inlineEditorDiv = this.element.find(".inlineEditorDiv");
         inlineEditorDiv.height(1);
         inlineEditorDiv[0].style.position = "relative";
-        await $timeout();
         // edit.focus();
         const toff = table.offset()!;
         inlineEditorDiv.offset({left: toff.left, top: toff.top + table.height()!});
