@@ -1001,7 +1001,6 @@ def get_jsframe_data(task_id, user_id):
     # verify_seeanswers_access(doc)
     user = User.get_by_id(user_id)
     curr_user = get_current_user_object()
-    plug = get_plugin_from_request(doc.document, tid, curr_user)
     try:
         vals = get_plug_vals(doc, tid, curr_user, user)
         """
