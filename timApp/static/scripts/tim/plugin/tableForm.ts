@@ -1002,12 +1002,13 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
         const timTable = this.getTimTable();
         if (timTable == null) { return; }
         const selUsers = timTable.getCheckedRows(0, true);
-        const groups = TimTableController.makeSmallerMatrix(selUsers, [1, 3]);
+        const groups = TimTableController.makeSmallerMatrix(selUsers, [1, 4]);
         const params = groups.map(([sisuid, timname]) => ({externalId: sisuid, name: timname}));
         this.isRunning = true;
         const r = await to($http.post<{ web: { result: string, error?: string } }>("/sisu/createGroupDocs", params));
         this.isRunning = false;
         if (r.ok) {
+            timTable.confirmSaved();
            location.reload();
         } else {
             this.error = r.result.data.error;

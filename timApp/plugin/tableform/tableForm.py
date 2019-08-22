@@ -162,6 +162,7 @@ def get_sisugroups(user: User, sisu_id: Optional[str]):
             g.external_id.external_id: {
                 'TIM-nimi': g.name,
                 'URL': f'<a href="{g.admin_doc.docentries[0].url_relative}">URL</a>' if g.admin_doc else None,
+                'Jäseniä': g.users.count(),
             } for g in gs
         },
         'realnamemap': {
@@ -170,10 +171,11 @@ def get_sisugroups(user: User, sisu_id: Optional[str]):
         'emailmap': {
             g.external_id.external_id: '' for g in gs
         },
-        'fields': ['TIM-nimi', "URL"],
+        'fields': ['Jäseniä', 'TIM-nimi', 'URL'],
         'aliases': {
             'TIM-nimi': 'TIM-nimi',
-            'URL': 'URL'
+            'URL': 'URL',
+            'Jäseniä': 'Jäseniä',
         },
         'styles': {
             g.external_id.external_id: {} for g in gs
