@@ -14,6 +14,8 @@ class ScimUserGroup(db.Model):
 
     @property
     def is_studysubgroup(self):
+        # Important: "-jy-" prefix must be here because otherwise this would match
+        # the collective group studysubgroup-teachers or studysubgroup-students.
         return '-jy-studysubgroup-' in self.external_id
 
     @property
