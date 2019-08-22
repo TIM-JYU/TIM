@@ -155,6 +155,15 @@ class TableFormAttrs(Schema):
     state = fields.Nested(TableFormStateSchema, allow_none=True, required=True)
 
 
+def get_sisu_group_desc_for_table(g: UserGroup):
+    p = parse_sisu_group_display_name(g.display_name)
+    if g.external_id.is_studysubgroup:
+        return p.desc
+    # We want the most important groups to be at the top of the table.
+    # The '(' at the beginning changes the sort order.
+    return f'({p.desc})'
+
+
 def get_sisugroups(user: User, sisu_id: Optional[str]):
     gs = get_potential_groups(user, sisu_id)
     return {
@@ -166,7 +175,7 @@ def get_sisugroups(user: User, sisu_id: Optional[str]):
             } for g in gs
         },
         'realnamemap': {
-            g.external_id.external_id: parse_sisu_group_display_name(g.display_name).desc if sisu_id else g.display_name for g in gs
+            g.external_id.external_id: get_sisu_group_desc_for_table(g) if sisu_id else g.display_name for g in gs
         },
         'emailmap': {
             g.external_id.external_id: '' for g in gs
