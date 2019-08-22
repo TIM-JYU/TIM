@@ -4,7 +4,7 @@ from timApp.timdb.sqa import db
 
 
 external_id_re = re.compile(
-    r'((jy-[A-Z]+-\d+)-(jy-studysubgroup-\d+-)?)(teachers|responsible-teachers|students|administrative-persons|studysubgroup-teachers)'
+    r'((jy-[A-Z]+-\d+)-(jy-studysubgroup-\d+-)?)(teachers|responsible-teachers|students|administrative-persons|studysubgroup-teachers|studysubgroup-students)'
 )
 
 class ScimUserGroup(db.Model):
