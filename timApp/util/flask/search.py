@@ -977,16 +977,16 @@ def search():
                 pars = line_info['pars']
                 doc_result = DocResult(doc_info)
                 edit_access = has_edit_access(doc_info)
-                is_owner = user.has_ownership(doc_info, allow_admin=True)
+                # is_owner = user.has_ownership(doc_info, allow_admin=True)
 
                 for i, par in enumerate(pars):
                     par_id = par['id']
                     md = par['md']
 
-                    # If par has visibility condition and user is not doc owner (or admin), skip par.
+                    # If par has visibility condition and user can't see markdown (lower than edit), skip it.
                     try:
                         visibility = par['attrs']['visible']
-                        if visibility and not is_owner:
+                        if visibility and not edit_access:
                             break
                     except KeyError:
                         pass
