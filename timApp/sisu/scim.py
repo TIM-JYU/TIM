@@ -256,9 +256,9 @@ def derive_scim_group_name(s: str):
     if not x:
         return remove_path_special_chars(s.lower())
     if x.period:
-        return f'{x.coursecode.lower()}-{x.year[2:]}{x.period.lower()}-{x.desc}'
+        return f'{x.coursecode.lower()}-{x.year[2:]}{x.period.lower()}-{x.desc_slug}'
     else:
-        return f'{x.coursecode.lower()}-{x.year[2:]}{x.month}{x.day}-{x.desc}'
+        return f'{x.coursecode.lower()}-{x.year[2:]}{x.month}{x.day}-{x.desc_slug}'
 
 
 @csrf.exempt

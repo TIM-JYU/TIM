@@ -202,7 +202,9 @@ def create_sisu_document(
     return DocEntry.create(item_path, owner_group.id if owner_group else None, item_title)
 
 
-display_name_re = re.compile(r'([A-Z]+\d+) ((P\d) )?((\d{4})-(\d{2})-(\d{2})--\d{4}-\d{2}-\d{2}): (.+)')
+display_name_re = re.compile(
+    r'(?P<coursecode>[A-Z]+\d+) ((?P<period>P\d) )?(?P<dates>(?P<y>\d{4})-(?P<m>\d{2})-(?P<d>\d{2})--\d{4}-\d{2}-\d{2}): (?P<desc>.+)'
+)
 
 # These are for converting the Sisu display name into English.
 translations = [
@@ -233,25 +235,36 @@ class SisuDisplayName:
     def group_doc_root(self):
         return f'groups/{self.year}/{self.coursecode.lower()}/{self.month}'
 
+    @property
+    def coursecode_and_time(self):
+        return f'{self.coursecode.upper()} {self.period + " " if self.period else ""}{self.fulldaterange}'
+
+    @property
+    def desc_slug(self):
+        """Returns the group description all-lowercase, spaces replaced with '-' and special characters removed.
+        """
+        desc = remove_path_special_chars(self.desc.lower())
+        for f, t in translations:
+            if desc.endswith(f):
+                desc = desc.replace(f, t)
+                break
+        desc = desc.replace('rooli---', '')
+        return desc
+
 
 def parse_sisu_group_display_name(s: str) -> Optional[SisuDisplayName]:
     m = display_name_re.fullmatch(s)
     if not m:
         return None
     coursecode, period, fulldaterange, year, month, day, desc = (
-        m.group(1),
-        m.group(3),
-        m.group(4),
-        m.group(5),
-        m.group(6),
-        m.group(7),
-        remove_path_special_chars(m.group(8).lower()),
+        m.group('coursecode'),
+        m.group('period'),
+        m.group('dates'),
+        m.group('y'),
+        m.group('m'),
+        m.group('d'),
+        m.group('desc'),
     )
-    for f, t in translations:
-        if desc.endswith(f):
-            desc = desc.replace(f, t)
-            break
-    desc = desc.replace('rooli---', '')
     return SisuDisplayName(
         coursecode=coursecode,
         fulldaterange=fulldaterange,
@@ -293,7 +306,7 @@ def refresh_sisu_grouplist_doc(ug: UserGroup):
                     }
                 },
                 'macros': {
-                    'course': f'{gn.coursecode.upper()} {gn.period + " " if gn.period else ""}{gn.fulldaterange}',
+                    'course': gn.coursecode_and_time,
                 },
                 'preamble': 'sisugroups',
             })
