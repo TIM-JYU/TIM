@@ -9,7 +9,7 @@ from sqlalchemy.exc import IntegrityError
 from webargs.flaskparser import use_args
 
 from timApp.auth.login import create_or_update_user
-from timApp.sisu.scimusergroup import ScimUserGroup
+from timApp.sisu.scimusergroup import ScimUserGroup, external_id_re
 from timApp.sisu.sisu import parse_sisu_group_display_name, refresh_sisu_grouplist_doc
 from timApp.tim_app import csrf
 from timApp.timdb.sqa import db
@@ -348,6 +348,8 @@ def load_data_from_req(schema):
 def update_users(ug: UserGroup, args: SCIMGroupModel):
     external_id = args.externalId
     if not ug.external_id:
+        if not external_id_re.fullmatch(external_id):
+            raise SCIMException(422, f'Unexpected externalId format: {external_id}')
         ug.external_id = ScimUserGroup(external_id=external_id)
     else:
         if ug.external_id.external_id != args.externalId:
@@ -359,6 +361,8 @@ def update_users(ug: UserGroup, args: SCIMGroupModel):
             ug.users.remove(u)
     c_name = f'{CUMULATIVE_GROUP_PREFIX}{external_id}'
     cumulative_group = UserGroup.get_by_name(c_name)
+    if not parse_sisu_group_display_name(args.displayName):
+        raise SCIMException(422, f'Unexpected displayName format: {args.displayName}')
     ug.display_name = args.displayName
     if not cumulative_group:
         cumulative_group = UserGroup.create(c_name)

@@ -4,7 +4,7 @@ from timApp.timdb.sqa import db
 
 
 external_id_re = re.compile(
-    r'((jy-[A-Z]+-\d+)-(jy-studysubgroup-\d+-)?)(teachers|responsible-teachers|students|administrative-persons|studysubgroup-teachers|studysubgroup-students)'
+    r'(?P<norole>(?P<courseid>jy-[A-Z]+-\d+)-(jy-studysubgroup-\d+-)?)(?P<role>teachers|responsible-teachers|students|administrative-persons|studysubgroup-teachers|studysubgroup-students)'
 )
 
 class ScimUserGroup(db.Model):
@@ -19,19 +19,19 @@ class ScimUserGroup(db.Model):
         return '-jy-studysubgroup-' in self.external_id
 
     @property
-    def course_id(self):
+    def course_id(self) -> str:
         m = external_id_re.fullmatch(self.external_id)
-        if m:
-            return m.group(2)
-        return None
+        return m.group('courseid')
 
     @property
-    def without_role(self):
+    def without_role(self) -> str:
         m = external_id_re.fullmatch(self.external_id)
-        if m:
-            return m.group(1)
-        return None
+        return m.group('norole')
 
     @property
     def is_teacher(self):
         return self.external_id.endswith('-teachers')
+
+    @property
+    def is_student(self):
+        return self.external_id.endswith('-students')

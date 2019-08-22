@@ -345,8 +345,8 @@ class ScimTest(TimRouteTest):
         r = self.json_post(
             '/scim/Groups',
             json_data={
-                'externalId': 'somegroup',
-                'displayName': 'Some Grouppi',
+                'externalId': 'jy-CUR-1236-teachers',
+                'displayName': 'ITKP106 2019-09-09--2019-12-20: Luento 1: Opettajat',
                 'members': add_name_parts([
                     {'value': 'someone', 'display': 'Sisu User'},
                 ]),
@@ -356,7 +356,7 @@ class ScimTest(TimRouteTest):
         r.pop('meta')
         r['members'][0]['display'] = 'Changed Name'
         self.json_put(
-            '/scim/Groups/somegroup',
+            '/scim/Groups/jy-CUR-1236-teachers',
             json_data=r,
             auth=a,
         )
@@ -365,8 +365,8 @@ class ScimTest(TimRouteTest):
         self.json_post(
             '/scim/Groups',
             json_data={
-                'externalId': 'dupemail',
-                'displayName': 'Some Group',
+                'externalId': 'jy-CUR-1234-teachers',
+                'displayName': 'ITKP102 2019-09-09--2019-12-20: Luento 1: Opettajat',
                 'members': add_name_parts([
                     {'value': 'someone', 'display': 'Sisu User', 'email': 'zzz@example.com'},
                     {'value': 'someone2', 'display': 'Sisu User', 'email': 'zzz@example.com'},
@@ -377,8 +377,8 @@ class ScimTest(TimRouteTest):
         self.json_post(
             '/scim/Groups',
             json_data={
-                'externalId': 'dupemail',
-                'displayName': 'Some Group',
+                'externalId': 'jy-CUR-1234-teachers',
+                'displayName': 'ITKP103 2019-09-09--2019-12-20: Luento 1: Opettajat',
                 'members': add_name_parts([
                     {'value': 'someone', 'display': 'Sisu User', 'email': 'zzz@example.com'},
                 ]),
@@ -388,8 +388,8 @@ class ScimTest(TimRouteTest):
         self.json_post(
             '/scim/Groups',
             json_data={
-                'externalId': 'dupemail2',
-                'displayName': 'Some Group2',
+                'externalId': 'jy-CUR-1235-teachers',
+                'displayName': 'ITKP103 2019-09-09--2019-12-20: Luento 2: Opettajat',
                 'members': add_name_parts([
                     {'value': 'someone2', 'display': 'Sisu User', 'email': 'zzz@example.com'},
                 ]),
@@ -401,8 +401,8 @@ class ScimTest(TimRouteTest):
         self.json_post(
             '/scim/Groups',
             json_data={
-                'externalId': 'aaagroup',
-                'displayName': 'Some Group3',
+                'externalId': 'jy-CUR-1235-teachers',
+                'displayName': 'ITKP104 2019-09-09--2019-12-20: Luento 1: Opettajat',
                 'members': add_name_parts([
                     {'value': 'aaa', 'display': 'Sisu User', 'email': 'aaa@example.com'},
                     {'value': 'aaa', 'display': 'Sisu User', 'email': 'aaa2@example.com'},
@@ -437,8 +437,8 @@ class ScimTest(TimRouteTest):
         self.json_post(
             '/scim/Groups',
             json_data={
-                'externalId': 'inconsistent',
-                'displayName': 'inconsistent',
+                'externalId': 'jy-CUR-1235-teachers',
+                'displayName': 'ITKP105 2019-09-09--2019-12-20: Luento 1: Opettajat',
                 'members': [
                     {
                         'value': 'aaa',
@@ -458,8 +458,8 @@ class ScimTest(TimRouteTest):
         self.json_post(
             '/scim/Groups',
             json_data={
-                'externalId': 'inconsistent',
-                'displayName': 'inconsistent',
+                'externalId': 'jy-CUR-1235-teachers',
+                'displayName': 'ITKP105 2019-09-09--2019-12-20: Luento 1: Opettajat',
                 'members': [
                     {
                         'value': 'aaa',
@@ -479,8 +479,8 @@ class ScimTest(TimRouteTest):
         self.json_post(
             '/scim/Groups',
             json_data={
-                'externalId': 'inconsistent',
-                'displayName': 'inconsistent',
+                'externalId': 'jy-CUR-1235-teachers',
+                'displayName': 'ITKP105 2019-09-09--2019-12-20: Luento 1: Opettajat',
                 'members': [
                     {
                         'value': 'aaa',
@@ -551,6 +551,7 @@ class ScimTest(TimRouteTest):
             d.document.get_settings().get_dict().values)
         self.assertEqual(
             {
+                ('jy-CUR-4668-administrative-persons', AccessType.owner.value),
                 ('jy-CUR-4668-responsible-teachers', AccessType.owner.value),
                 ('jy-CUR-4668-teachers', AccessType.owner.value),
                 ('jy-CUR-4668-studysubgroup-teachers', AccessType.owner.value),

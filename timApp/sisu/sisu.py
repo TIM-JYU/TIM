@@ -291,7 +291,7 @@ app.cli.add_command(sisu_cli)
 
 
 def refresh_sisu_grouplist_doc(ug: UserGroup):
-    if ug.external_id.is_teacher and not ug.external_id.is_studysubgroup:
+    if not ug.external_id.is_student and not ug.external_id.is_studysubgroup:
         gn = parse_sisu_group_display_name(ug.display_name)
         p = f'{gn.group_doc_root}/sisugroups'
         d = DocEntry.find_by_path(p)
