@@ -556,7 +556,8 @@ class ScimTest(TimRouteTest):
                 ('jy-CUR-4668-studysubgroup-teachers', AccessType.owner.value),
             },
             {(ac.usergroup.external_id.external_id, ac.type) for ac in d.block.accesses})
-
+        admin = UserGroup.get_admin_group().id
+        self.assertEqual(admin, d.document.get_changelog().entries[0].group_id)
         self.login(username='ut-1')
         self.get(d.url)
 
@@ -692,6 +693,7 @@ class ScimTest(TimRouteTest):
             },
         },
             d.document.get_settings().get_dict().values)
+        self.assertEqual(admin, d.document.get_changelog().entries[0].group_id)
         self.json_post(
             '/sisu/createGroupDocs', json_data=[
                 {'externalId': 'jy-CUR-4668-jy-studysubgroup-9515-students', 'name': 'teachers1'},

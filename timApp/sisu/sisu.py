@@ -130,6 +130,7 @@ def create_groups_route(args: List[GroupCreateModel]):
     group_map: Dict[str, UserGroup] = {g.external_id.external_id: g for g in allowed_groups}
     created = []
     updated = []
+    admin_id = UserGroup.get_admin_group().id
     for r in requested_external_ids:
         g = group_map[r]
         name = name_map[r]
@@ -157,12 +158,14 @@ def create_groups_route(args: List[GroupCreateModel]):
                 )
                 d.name = new_path
                 updated.append(d)
+            doc.document.modifier_group_id = admin_id
         else:
             doc = create_sisu_document(
                 f'{expected_location}/{name_no_special}',
                 name,
                 owner_group=None,
             )
+            doc.document.modifier_group_id = admin_id
             apply_template(doc)
             add_group_infofield_template(doc)
             g.admin_doc = doc.block
@@ -281,6 +284,8 @@ def refresh_sisu_grouplist_doc(ug: UserGroup):
         d = DocEntry.find_by_path(p)
         if not d:
             d = create_sisu_document(p, f'Sisu groups for course {gn.coursecode.upper()}', owner_group=ug)
+            admin_id = UserGroup.get_admin_group().id
+            d.document.modifier_group_id = admin_id
             d.document.set_settings({
                 'global_plugin_attrs': {
                     'all': {
