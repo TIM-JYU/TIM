@@ -456,7 +456,7 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
             }
 
             if ( this.attrsall.markup.sisugroups ) {
-                this.data.headers = ["Sisu teksti", "Sisu nimi", ""];
+                this.data.headers = ["Ryhmän kuvaus", "Sisu-nimi", ""];
             } else {
                 this.data.headers = ["Henkilön nimi", "Käyttäjänimi", "eMail"];
             }

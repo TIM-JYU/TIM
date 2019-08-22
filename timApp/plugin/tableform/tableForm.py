@@ -14,7 +14,7 @@ from webargs.flaskparser import use_args
 from pluginserver_flask import GenericMarkupModel, GenericMarkupSchema, GenericHtmlSchema, GenericHtmlModel, \
     GenericAnswerSchema, GenericAnswerModel, Missing, \
     InfoSchema, create_blueprint
-from timApp.sisu.sisu import get_potential_groups
+from timApp.sisu.sisu import get_potential_groups, parse_sisu_group_display_name
 from timApp.util.answerutil import get_fields_and_users
 from timApp.auth.accesshelper import get_doc_or_abort
 from timApp.auth.sessioninfo import get_current_user_object
@@ -160,20 +160,20 @@ def get_sisugroups(user: User, sisu_id: Optional[str]):
     return {
         'rows': {
             g.external_id.external_id: {
-                'timname': g.name,
-                'url': f'<a href="{g.admin_doc.docentries[0].url_relative}">URL</a>' if g.admin_doc else None,
+                'TIM-nimi': g.name,
+                'URL': f'<a href="{g.admin_doc.docentries[0].url_relative}">URL</a>' if g.admin_doc else None,
             } for g in gs
         },
         'realnamemap': {
-            g.external_id.external_id: g.display_name for g in gs
+            g.external_id.external_id: parse_sisu_group_display_name(g.display_name).desc if sisu_id else g.display_name for g in gs
         },
         'emailmap': {
             g.external_id.external_id: '' for g in gs
         },
-        'fields': ['timname', "url"],
+        'fields': ['TIM-nimi', "URL"],
         'aliases': {
-            'timname': 'timname',
-            'url': 'url'
+            'TIM-nimi': 'TIM-nimi',
+            'URL': 'URL'
         },
         'styles': {
             g.external_id.external_id: {} for g in gs
