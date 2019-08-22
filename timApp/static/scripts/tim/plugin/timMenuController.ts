@@ -306,6 +306,9 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
             if (item.rights == "edit") {
                 return this.userRights.editable;
             }
+            if (item.rights == "teacher") {
+                return this.userRights.teacher;
+            }
             if (item.rights == "manage") {
                 return this.userRights.manage;
             }

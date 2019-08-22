@@ -178,7 +178,7 @@ class TimMenuInputSchema(Schema):
 def decide_menu_level(index: int, previous_level: int,  level_indentations, max_level: int = 3) -> int:
     """
     Parse menu level from indentations by comparing to previously used, i.e. if user
-    used (for  first instances) 1 space for level 0, 3 spaces for level 1 and 5 spaces for level 2, then:
+    used (for first instances) 1 space for level 0, 3 spaces for level 1 and 5 spaces for level 2, then:
     - 0 spaces > 'YAML is malformed'; going below first indentation of an attribute is not allowed in YAML
     - 1 space > level 0
     - 2-3 spaces > level 1
