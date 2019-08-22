@@ -190,11 +190,8 @@ def add_member(usernames, groupname):
     existing_ids, group, not_exist, usernames, users = get_member_infos(groupname, usernames)
     already_exists = set(u.name for u in group.users) & set(usernames)
     added = []
-    ban_non_email_users = group.is_sisu
     for u in users:
         if u.id not in existing_ids:
-            if ban_non_email_users and not u.is_email_user:
-                abort(400, 'Cannot add non-email users to Sisu groups.')
             u.groups.append(group)
             added.append(u.name)
     db.session.commit()
@@ -206,13 +203,14 @@ def remove_member(usernames, groupname):
     existing_ids, group, not_exist, usernames, users = get_member_infos(groupname, usernames)
     removed = []
     does_not_belong = []
-    ban_non_email_users = group.is_sisu
+    ensure_manually_added = group.is_sisu
+    cumulative = group.get_cumulative() if ensure_manually_added else None
     for u in users:
         if u.id not in existing_ids:
             does_not_belong.append(u.name)
             continue
-        if ban_non_email_users and not u.is_email_user:
-            abort(400, 'Cannot remove non-email users from Sisu groups.')
+        if ensure_manually_added and u in cumulative.users:
+            abort(400, 'Cannot remove not-manually-added users from Sisu groups.')
         u.groups.remove(group)
         removed.append(u.name)
     db.session.commit()

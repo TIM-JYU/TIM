@@ -94,6 +94,11 @@ class UserGroup(db.Model, TimeStampMixin, SCIMEntity):
             **include_if_exists('personal_user', self),
         }
 
+    def get_cumulative(self):
+        if not self.is_sisu:
+            raise Exception('Tried to call get_cumulative for a non-Sisu group.')
+        return UserGroup.get_by_name(CUMULATIVE_GROUP_PREFIX + self.external_id.external_id)
+
     @property
     def pretty_full_name(self):
         return self.name
@@ -166,3 +171,12 @@ def get_sisu_groups_by_filter(f) -> List[UserGroup]:
             .all()
     )
     return gs
+
+
+# When a SCIM group is deleted, the group name gets this prefix.
+DELETED_GROUP_PREFIX = 'deleted:'
+
+# Non-shrinking counterpart of a SCIM group. If a member is added to a SCIM group via SCIM route,
+# it is also added to the corresponding cumulative group. No members are ever deleted from the
+# cumulative group.
+CUMULATIVE_GROUP_PREFIX = 'cumulative:'

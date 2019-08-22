@@ -3,10 +3,10 @@ from typing import List
 
 from timApp.auth.accesstype import AccessType
 from timApp.document.docentry import DocEntry
-from timApp.sisu.scim import DELETED_GROUP_PREFIX, CUMULATIVE_GROUP_PREFIX, SISU_GROUP_PREFIX
+from timApp.sisu.scim import SISU_GROUP_PREFIX
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.user.user import User, UserOrigin
-from timApp.user.usergroup import UserGroup
+from timApp.user.usergroup import UserGroup, DELETED_GROUP_PREFIX, CUMULATIVE_GROUP_PREFIX
 from timApp.util.utils import seq_to_str
 
 a = ('t', 'pass')
@@ -720,14 +720,15 @@ class ScimTest(TimRouteTest):
             expect_status=201,
         )
         u, _ = User.create_with_group('anon@example.com', 'Anon User', 'anon@example.com', origin=UserOrigin.Email)
+        u2, _ = User.create_with_group('mameikal', 'Matti Meikäläinen', 'mameikal@example.com', origin=UserOrigin.Korppi)
         self.make_admin(u)
         self.login(username=u.name)
         ug = UserGroup.get_by_external_id('jy-CUR-7777-teachers')
         self.get(
-            f'/groups/addmember/{ug.name}/{self.current_user.name}',
+            f'/groups/addmember/{ug.name}/{u.name},{u2.name}',
         )
 
-        # The SCIM routes must not report the email users.
+        # The SCIM routes must not report the manually added users.
         r = self.get(
             f'/scim/Groups/{eid}',
             auth=a,
@@ -750,16 +751,19 @@ class ScimTest(TimRouteTest):
 
         # The manually added user should not get deleted on SCIM update.
         ug = UserGroup.get_by_external_id(eid)
-        self.assertEqual(2, len(ug.users.all()))
+        self.assertEqual(3, len(ug.users.all()))
 
         self.get(
             f'/groups/removemember/{ug.name}/abc',
             expect_status=400,
-            expect_content='Cannot remove non-email users from Sisu groups.',
+            expect_content='Cannot remove not-manually-added users from Sisu groups.',
             json_key='error',
         )
         self.get(
             f'/groups/removemember/{ug.name}/anon@example.com',
+        )
+        self.get(
+            f'/groups/removemember/{ug.name}/mameikal',
         )
 
     def check_no_group_access(self, username: str, externalids: List[str], no_access_expected=None):

@@ -15,7 +15,8 @@ from timApp.tim_app import csrf
 from timApp.timdb.sqa import db
 from timApp.user.scimentity import get_meta
 from timApp.user.user import User, UserOrigin, last_name_to_first
-from timApp.user.usergroup import UserGroup, tim_group_to_scim, SISU_GROUP_PREFIX
+from timApp.user.usergroup import UserGroup, tim_group_to_scim, SISU_GROUP_PREFIX, DELETED_GROUP_PREFIX, \
+    CUMULATIVE_GROUP_PREFIX
 from timApp.util.flask.responsehelper import json_response
 from timApp.util.logger import log_warning
 from timApp.util.utils import remove_path_special_chars
@@ -23,9 +24,6 @@ from timApp.util.utils import remove_path_special_chars
 scim = Blueprint('scim',
                  __name__,
                  url_prefix='/scim')
-
-DELETED_GROUP_PREFIX = 'deleted:'
-CUMULATIVE_GROUP_PREFIX = 'cumulative:'
 
 UNPROCESSABLE_ENTITY = 422
 
@@ -354,18 +352,18 @@ def update_users(ug: UserGroup, args: SCIMGroupModel):
     else:
         if ug.external_id.external_id != args.externalId:
             raise SCIMException(422, 'externalId unexpectedly changed')
+    c_name = f'{CUMULATIVE_GROUP_PREFIX}{external_id}'
+    cumulative_group = UserGroup.get_by_name(c_name)
+    if not cumulative_group:
+        cumulative_group = UserGroup.create(c_name)
     removed_user_names = set(u.name for u in ug.users) - set(u.value for u in args.members)
     removed_users = User.query.filter(User.name.in_(removed_user_names)).all()
     for u in removed_users:
-        if not is_manually_added(u):
+        if u in cumulative_group.users:  # Don't remove manually added users
             ug.users.remove(u)
-    c_name = f'{CUMULATIVE_GROUP_PREFIX}{external_id}'
-    cumulative_group = UserGroup.get_by_name(c_name)
     if not parse_sisu_group_display_name(args.displayName):
         raise SCIMException(422, f'Unexpected displayName format: {args.displayName}')
     ug.display_name = args.displayName
-    if not cumulative_group:
-        cumulative_group = UserGroup.create(c_name)
     emails = [m.email for m in args.members if m.email is not None]
     unique_emails = set(emails)
     if len(emails) != len(unique_emails):
@@ -420,8 +418,11 @@ def is_manually_added(u: User):
 
 def group_scim(ug: UserGroup):
     def members():
+        cumulative = ug.get_cumulative()
+        if not cumulative:
+            raise SCIMException(422, f'Cumulative group missing for {ug.name}')
         for u in ug.users.all():  # type: User
-            if not is_manually_added(u):
+            if u in cumulative.users:
                 yield {
                     'value': u.scim_id,
                     '$ref': u.scim_location,
