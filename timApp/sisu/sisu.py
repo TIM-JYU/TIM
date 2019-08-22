@@ -177,7 +177,7 @@ def create_groups_route(args: List[GroupCreateModel]):
         except IntegrityError:
             db.session.rollback()
             return abort(400, f"The group name '{name}' already exists.")
-        update_group_doc_settings(doc, name)
+        update_group_doc_settings(doc, name, extra_macros={'sisugroup': r})
         groups = get_sisu_group_rights(g)
         docblock.add_rights(groups, AccessType.owner)
 

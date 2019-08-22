@@ -1,4 +1,4 @@
-from typing import Tuple, List
+from typing import Tuple, List, Dict, Any
 
 from flask import Blueprint, abort
 
@@ -125,11 +125,13 @@ def add_group_infofield_template(doc):
     doc.document.add_text(text)
 
 
-def update_group_doc_settings(doc: DocInfo, groupname: str):
+def update_group_doc_settings(doc: DocInfo, groupname: str, extra_macros: Dict[str, Any]=None):
     s = doc.document.get_settings().get_dict().get('macros', {})
     s['group'] = groupname
     s['fields'] = ['info']
     s['maxRows'] = "40em"  # maxrows for group list
+    if extra_macros:
+        s.update(extra_macros)
     doc.document.add_setting('macros', s)
 
 

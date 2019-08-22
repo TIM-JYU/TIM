@@ -691,6 +691,7 @@ class ScimTest(TimRouteTest):
                 'group': 'students1',
                 'fields': ['info'],
                 'maxRows': '40em',
+                'sisugroup': 'jy-CUR-4668-jy-studysubgroup-9515-students',
             },
         },
             d.document.get_settings().get_dict().values)
