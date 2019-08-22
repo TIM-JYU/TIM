@@ -67,8 +67,10 @@ def get_group_prefix(g: UserGroup):
 def get_potential_groups(u: User, course_filter: str=None) -> List[UserGroup]:
     """Returns all the Sisu groups that the user shall have access to."""
     sisu_group_memberships = u.groups_dyn.join(ScimUserGroup).all()
-    accessible_prefixes = [get_group_prefix(g) for g in sisu_group_memberships]
-    ug_filter = ScimUserGroup.external_id.like(any_(accessible_prefixes))
+    ug_filter = true()
+    if not u.is_admin:
+        accessible_prefixes = [get_group_prefix(g) for g in sisu_group_memberships]
+        ug_filter = ug_filter & ScimUserGroup.external_id.like(any_(accessible_prefixes))
     if course_filter:
         ug_filter = ug_filter & ScimUserGroup.external_id.startswith(course_filter + '-')
     gs = get_sisu_groups_by_filter(ug_filter)
