@@ -33,5 +33,9 @@ class ScimUserGroup(db.Model):
         return self.external_id.endswith('-teachers')
 
     @property
+    def is_responsible_teacher(self):
+        return self.external_id.endswith('-responsible-teachers')
+
+    @property
     def is_student(self):
         return self.external_id.endswith('-students')

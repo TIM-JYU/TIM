@@ -1,8 +1,10 @@
 import re
+from textwrap import dedent
 from typing import List, Optional, Dict
 
 import attr
-from flask import Blueprint, abort
+import click
+from flask import Blueprint, abort, current_app
 from flask.cli import AppGroup
 from marshmallow import Schema, fields, post_load, pre_load
 from sqlalchemy import any_, true
@@ -16,6 +18,7 @@ from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import DocInfo
 from timApp.item.block import Block, BlockType
 from timApp.item.validation import ItemValidationRule, validate_item_and_create_intermediate_folders, validate_item
+from timApp.notification.notify import send_email
 from timApp.sisu.scimusergroup import ScimUserGroup
 from timApp.tim_app import app
 from timApp.timdb.sqa import db
@@ -236,6 +239,10 @@ class SisuDisplayName:
         return f'groups/{self.year}/{self.coursecode.lower()}/{self.month}'
 
     @property
+    def sisugroups_doc_path(self):
+        return f'{self.group_doc_root}/sisugroups'
+
+    @property
     def coursecode_and_time(self):
         return f'{self.coursecode.upper()} {self.period + " " if self.period else ""}{self.fulldaterange}'
 
@@ -287,13 +294,27 @@ def create_docs():
     db.session.commit()
 
 
+@sisu_cli.command('sendmail')
+@click.argument('course')
+def create_docs(course: str):
+    ug = UserGroup.get_by_external_id(f'{course}-responsible-teachers')
+    if not ug:
+        print('Could not find the responsible teachers group for this course. '
+              'Make sure you typed the course in format "jy-CUR-xxxx".')
+        return
+    p = parse_sisu_group_display_name(ug.display_name)
+    for u in ug.users:
+        print(f'Sending mail to {u.real_name} {u.email}')
+        send_course_group_mail(p, u)
+
+
 app.cli.add_command(sisu_cli)
 
 
 def refresh_sisu_grouplist_doc(ug: UserGroup):
     if not ug.external_id.is_student and not ug.external_id.is_studysubgroup:
         gn = parse_sisu_group_display_name(ug.display_name)
-        p = f'{gn.group_doc_root}/sisugroups'
+        p = gn.sisugroups_doc_path
         d = DocEntry.find_by_path(p)
         if not d:
             d = create_sisu_document(p, f'Sisu groups for course {gn.coursecode.upper()}', owner_group=ug)
@@ -312,3 +333,20 @@ def refresh_sisu_grouplist_doc(ug: UserGroup):
             })
         else:
             d.block.add_rights([ug], AccessType.owner)
+
+
+def send_course_group_mail(p: SisuDisplayName, u: User):
+    send_email(
+        u.email,
+        f'Kurssin {p.coursecode} Sisu-ryhmät on kopioitu TIMiin',
+        dedent(
+            f"""
+                Kurssin {p.coursecode} Sisussa olevat ryhmät on kopioitu TIMiin. Ne löytyvät dokumentista:
+                
+                {current_app.config['TIM_HOST']}/view/{p.sisugroups_doc_path}
+                
+                Dokumentissa on ohjeet ryhmien käyttämiseen TIMissä.
+                
+                Tämä viesti tulee kaikille kurssin vastuuopettajille.
+                """).strip()
+    )

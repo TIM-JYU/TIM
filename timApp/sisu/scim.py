@@ -10,7 +10,7 @@ from webargs.flaskparser import use_args
 
 from timApp.auth.login import create_or_update_user
 from timApp.sisu.scimusergroup import ScimUserGroup, external_id_re
-from timApp.sisu.sisu import parse_sisu_group_display_name, refresh_sisu_grouplist_doc
+from timApp.sisu.sisu import parse_sisu_group_display_name, refresh_sisu_grouplist_doc, send_course_group_mail
 from timApp.tim_app import csrf
 from timApp.timdb.sqa import db
 from timApp.user.scimentity import get_meta
@@ -361,7 +361,8 @@ def update_users(ug: UserGroup, args: SCIMGroupModel):
     for u in removed_users:
         if u in cumulative_group.users:  # Don't remove manually added users
             ug.users.remove(u)
-    if not parse_sisu_group_display_name(args.displayName):
+    p = parse_sisu_group_display_name(args.displayName)
+    if not p:
         raise SCIMException(422, f'Unexpected displayName format: {args.displayName}')
     ug.display_name = args.displayName
     emails = [m.email for m in args.members if m.email is not None]
@@ -373,6 +374,7 @@ def update_users(ug: UserGroup, args: SCIMGroupModel):
     if len(args.members) != len(unique_usernames):
         raise SCIMException(422, f'The users do not have distinct usernames.')
 
+    added_users = set()
     for u in args.members:
         if u.name:
             expected_name = u.name.derive_full_name(last_name_first=True)
@@ -394,12 +396,15 @@ def update_users(ug: UserGroup, args: SCIMGroupModel):
                 name_to_use,
                 u.value,
                 origin=UserOrigin.Sisu,
-                group_to_add=ug,
                 allow_finding_by_email=False,
             )
         except IntegrityError as e:
             db.session.rollback()
             raise SCIMException(422, e.orig.diag.message_detail) from e
+        if ug not in user.groups:
+            user.groups.append(ug)
+            added_users.add(user)
+
         # This flush basically gets rid of a vague error message about AppenderBaseQuery
         # if an error (UniqueViolation) occurs during a server test (because of an error in test code).
         # It is not strictly necessary.
@@ -407,6 +412,11 @@ def update_users(ug: UserGroup, args: SCIMGroupModel):
         if user not in cumulative_group.users:
             cumulative_group.users.append(user)
     refresh_sisu_grouplist_doc(ug)
+
+    # Possibly just checking is_responsible_teacher could be enough.
+    if ug.external_id.is_responsible_teacher and not ug.external_id.is_studysubgroup:
+        for u in added_users:
+            send_course_group_mail(p, u)
 
 
 def is_manually_added(u: User):

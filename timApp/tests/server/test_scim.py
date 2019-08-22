@@ -1,8 +1,10 @@
 from operator import itemgetter
+from pprint import pprint
 from typing import List
 
 from timApp.auth.accesstype import AccessType
 from timApp.document.docentry import DocEntry
+from timApp.notification.notify import sent_mails_in_testing
 from timApp.sisu.scim import SISU_GROUP_PREFIX
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.user.user import User, UserOrigin
@@ -498,11 +500,14 @@ class ScimTest(TimRouteTest):
         )
 
     def test_potential_groups(self):
+        sent_mails_in_testing.clear()
+        responsible_teachers = (
+            'jy-CUR-4668-responsible-teachers', 'ITKP102 P1 2019-09-09--2019-12-20: Rooli - responsible-teacher',
+            ['urt-1', 'urt-2'])
         entries = [
             ('jy-CUR-4668-administrative-persons', 'ITKP102 P1 2019-09-09--2019-12-20: Rooli - administrative-person',
              ['uap-1', 'uap-2']),
-            ('jy-CUR-4668-responsible-teachers', 'ITKP102 P1 2019-09-09--2019-12-20: Rooli - responsible-teacher',
-             ['urt-1', 'urt-2']),
+            responsible_teachers,
             ('jy-CUR-4668-teachers', 'ITKP102 P1 2019-09-09--2019-12-20: Rooli - teacher',
              ['ut-1', 'ut-2']),
             ('jy-CUR-4668-students', 'ITKP102 P1 2019-09-09--2019-12-20: Kaikki opiskelijat',
@@ -706,6 +711,46 @@ class ScimTest(TimRouteTest):
             json_key='error',
         )
 
+        # Make sure there won't be duplicate mails for responsible teachers.
+        for (external_id, display_name, users) in [responsible_teachers]:
+            self.json_put(
+                f'/scim/Groups/{external_id}', {
+                    'externalId': external_id,
+                    'displayName': display_name,
+                    'members': [
+                        {'value': u, 'display': u, 'email': f'{u}@example.com'} for u in users
+                    ],
+                },
+                auth=a,
+            )
+
+        self.assertEqual([
+            {'mail_from': 'tim@jyu.fi',
+             'msg': 'Kurssin ITKP102 Sisussa olevat ryhmät on kopioitu TIMiin. Ne '
+                    'löytyvät dokumentista:\n'
+                    '\n'
+                    'http://localhost/view/groups/2019/itkp102/09/sisugroups\n'
+                    '\n'
+                    'Dokumentissa on ohjeet ryhmien käyttämiseen TIMissä.\n'
+                    '\n'
+                    'Tämä viesti tulee kaikille kurssin vastuuopettajille.',
+             'rcpt': 'urt-1@example.com',
+             'reply_to': 'no-reply@tim.jyu.fi',
+             'subject': 'Kurssin ITKP102 Sisu-ryhmät on kopioitu TIMiin'},
+            {'mail_from': 'tim@jyu.fi',
+             'msg': 'Kurssin ITKP102 Sisussa olevat ryhmät on kopioitu TIMiin. Ne '
+                    'löytyvät dokumentista:\n'
+                    '\n'
+                    'http://localhost/view/groups/2019/itkp102/09/sisugroups\n'
+                    '\n'
+                    'Dokumentissa on ohjeet ryhmien käyttämiseen TIMissä.\n'
+                    '\n'
+                    'Tämä viesti tulee kaikille kurssin vastuuopettajille.',
+             'rcpt': 'urt-2@example.com',
+             'reply_to': 'no-reply@tim.jyu.fi',
+             'subject': 'Kurssin ITKP102 Sisu-ryhmät on kopioitu TIMiin'}],
+            sorted(sent_mails_in_testing, key=itemgetter('rcpt')))
+
     def test_scim_group_manual_member_update(self):
         eid = 'jy-CUR-7777-teachers'
         self.json_post(
@@ -720,7 +765,8 @@ class ScimTest(TimRouteTest):
             expect_status=201,
         )
         u, _ = User.create_with_group('anon@example.com', 'Anon User', 'anon@example.com', origin=UserOrigin.Email)
-        u2, _ = User.create_with_group('mameikal', 'Matti Meikäläinen', 'mameikal@example.com', origin=UserOrigin.Korppi)
+        u2, _ = User.create_with_group('mameikal', 'Matti Meikäläinen', 'mameikal@example.com',
+                                       origin=UserOrigin.Korppi)
         self.make_admin(u)
         self.login(username=u.name)
         ug = UserGroup.get_by_external_id('jy-CUR-7777-teachers')

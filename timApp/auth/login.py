@@ -94,8 +94,8 @@ def create_or_update_user(
         email: Optional[str],
         real_name: Optional[str],
         user_name: str,
-        group_to_add: UserGroup,
         origin: UserOrigin,
+        group_to_add: UserGroup=None,
         allow_finding_by_email=True,
 ):
     user: User = User.query.filter_by(name=user_name).first()
@@ -115,7 +115,7 @@ def create_or_update_user(
     else:
         if real_name and email:
             user.update_info(name=user_name, real_name=real_name, email=email)
-    if group_to_add not in user.groups:
+    if group_to_add and group_to_add not in user.groups:
         user.groups.append(group_to_add)
     return user
 
@@ -178,7 +178,7 @@ def openid_success_handler(resp: KorppiOpenIDResponse):
     if not resp.lastname:
         return abort(400, 'Missing lastname')
     fullname = f'{resp.lastname} {resp.firstname}'
-    user = create_or_update_user(resp.email, fullname, username, UserGroup.get_korppi_group(), UserOrigin.Korppi)
+    user = create_or_update_user(resp.email, fullname, username, UserOrigin.Korppi, UserGroup.get_korppi_group())
     db.session.commit()
     set_user_to_session(user)
     return finish_login()
