@@ -66,13 +66,12 @@ export class MultisaveController extends PluginBase<t.TypeOf<typeof multisaveMar
     }
 
     async sendEmailTim() {
-        return; // WIP
         if (!this.emaillist) {
             return;
         }
         this.emailMsg = ""; // JSON.stringify(response);
 
-        const response = await $http.post<string[]>("/multisave/sendemail", {
+        const response = await $http.post<string[]>("/sendemail/", {
             // rcpt: this.emaillist,
             // subject: this.emailsubject,
             taskid: this.getTaskId(),
@@ -126,6 +125,12 @@ export class MultisaveController extends PluginBase<t.TypeOf<typeof multisaveMar
     }
 
     toggleEmailForm(){
+        const tid = this.pluginMeta.getTaskId();
+        // For now only tasks can send email
+        if (!tid ||  tid.split(".").length < 2)
+        {
+            return;
+        }
         this.showEmailForm = !this.showEmailForm;
     }
 
