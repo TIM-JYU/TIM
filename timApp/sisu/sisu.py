@@ -293,7 +293,7 @@ def refresh_sisu_grouplist_doc(ug: UserGroup):
                     }
                 },
                 'macros': {
-                    'course': f'{gn.coursecode.upper()} {gn.fulldaterange}',
+                    'course': f'{gn.coursecode.upper()} {gn.period + " " if gn.period else ""}{gn.fulldaterange}',
                 },
                 'preamble': 'sisugroups',
             })
