@@ -462,9 +462,11 @@ export class SidebarMenuCtrl implements IController {
     private toggleViewRange() {
         if (this.vctrl && this.item) {
             if (this.partitionDocumentsSetting) {
+                this.partitionDocumentsSetting = false;
                 this.storage.partitionDocuments = false;
                 unpartitionDocument(document);
             } else {
+                this.partitionDocumentsSetting = true;
                 this.storage.partitionDocuments = true;
                 partitionDocument(0, this.viewRangeSetting, document);
             }

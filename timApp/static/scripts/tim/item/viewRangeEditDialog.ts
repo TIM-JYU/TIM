@@ -131,7 +131,7 @@ registerDialogComponent(ViewRangeEditController,
         </div>
         <br>
         <div ng-cloak class="alert alert-warning">
-            <span class="glyphicon glyphicon-exclamation-sign"></span> Note: the page will reload if changes are saved.
+            <span class="glyphicon glyphicon-exclamation-sign"></span> Note: the page may reload if changes are saved.
         </div>
     </dialog-body>
     <dialog-footer>
