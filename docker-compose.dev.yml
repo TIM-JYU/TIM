@@ -13,7 +13,7 @@ services:
   ports:
    - "5432:5432"
  postgresql-test:
-  image: postgres:9.5
+  image: postgres:11
   ports:
    - "5433:5432"
   tmpfs:
