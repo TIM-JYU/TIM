@@ -13,6 +13,7 @@ import {IRelevanceResponse} from "../item/relevanceEdit";
 import {showRelevanceEditDialog} from "../item/relevanceEditDialog";
 import {showTagDialog} from "../item/tagCtrl";
 import {showTagSearchDialog} from "../item/tagSearchCtrl";
+import {partitionDocument, showViewRangeEditDialog, unpartitionDocument} from "../item/viewRangeEditDialog";
 import {ILecture, ILectureListResponse2} from "../lecture/lecturetypes";
 import {ITemplateParams, showPrintDialog} from "../printing/printCtrl";
 import {showConsentDialog} from "../ui/consent";
@@ -63,9 +64,15 @@ export class SidebarMenuCtrl implements IController {
     // number corresponds to values of ConsentType
     // null means that the user has approved only cookies (but has not seen the data collection options)
     // undefined means that the user has not acknowledged anything yet
-    private storage: ngStorage.StorageService & {consent: null | undefined | number};
+    private storage: ngStorage.StorageService & {
+        consent: null | undefined | number,
+        viewRange: null | string,
+        partitionDocuments: null | boolean,
+    };
     private currentRelevance?: number;
     private showRelevance: boolean = true;
+    private partitionDocumentsSetting: boolean = false; // Show documents in parts.
+    private viewRangeSetting: number = 20; // Number of pars per part.
     private showFolderSettings: boolean = false;
     private linkedGroups: IDocument[] = [];
     private item?: DocumentOrFolder;
@@ -93,6 +100,8 @@ export class SidebarMenuCtrl implements IController {
         this.lastTab = this.active;
         this.storage = $localStorage.$default({
             consent: undefined,
+            partitionDocuments: null,
+            viewRange: null,
         });
 
         this.updateLeftSide();
@@ -125,6 +134,7 @@ export class SidebarMenuCtrl implements IController {
         if (this.item) {
             this.showFolderSettings = this.users.isLoggedIn() && this.item.isFolder;
         }
+        this.loadViewRangeSettings();
         // await this.processConsent();
     }
 
@@ -449,6 +459,24 @@ export class SidebarMenuCtrl implements IController {
         }
     }
 
+    private toggleViewRange() {
+        if (this.vctrl && this.item) {
+            if (this.partitionDocumentsSetting) {
+                this.storage.partitionDocuments = false;
+                unpartitionDocument(document);
+            } else {
+                this.storage.partitionDocuments = true;
+                partitionDocument(0, this.viewRangeSetting, document);
+            }
+        }
+    }
+
+    private openViewRangeMenu() {
+        if (this.item) {
+            void showViewRangeEditDialog(this.item);
+        }
+    }
+
     private async createGroup() {
         const doc = await showInputDialog({
             defaultValue: "",
@@ -464,6 +492,15 @@ export class SidebarMenuCtrl implements IController {
             },
         });
         redirectToItem(doc);
+    }
+
+    private loadViewRangeSettings() {
+        if (this.storage.partitionDocuments != null) {
+            this.partitionDocumentsSetting = this.storage.partitionDocuments;
+        }
+        if (this.storage.viewRange != null) {
+            this.viewRangeSetting = +this.storage.viewRange;
+        }
     }
 }
 
@@ -513,6 +550,11 @@ timApp.component("timSidebarMenu", {
         </div>
         <div ng-if="$ctrl.users.isLoggedIn() && $ctrl.vctrl && !$ctrl.vctrl.item.isFolder">
             <h5>Document settings</h5>
+            <a ng-if="!$ctrl.partitionDocumentsSetting" ng-click="$ctrl.toggleViewRange()">Show page in parts</a>
+            <a ng-if="$ctrl.partitionDocumentsSetting" ng-click="$ctrl.toggleViewRange()">Show whole page</a>
+            <a style="display: inline-block" ng-click="$ctrl.openViewRangeMenu()">
+                <span class="glyphicon glyphicon-cog"></span>
+            </a>
             <button ng-if="$ctrl.vctrl.item.rights.editable"
                     class="timButton btn-block"
                     ng-click="$ctrl.vctrl.editingHandler.editSettingsPars()">Edit settings
