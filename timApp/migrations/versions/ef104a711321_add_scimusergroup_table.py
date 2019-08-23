@@ -35,10 +35,15 @@ def upgrade():
     s = orm.Session(bind=bind)
 
     ugs: List[UserGroup] = s.query(UserGroup).filter(UserGroup.name.startswith('sisu:')).all()
+    used_names = set()
     for ug in ugs:
         external_id = ug.name.replace('sisu:', '')
         ug.external_id = ScimUserGroup(external_id=external_id)
-        ug.name = derive_scim_group_name(ug.display_name)
+        default_name = derive_scim_group_name(ug.display_name)
+        if default_name in used_names:
+            default_name += "-1"
+        used_names.add(default_name)
+        ug.name = default_name
 
     ugs: List[UserGroup] = s.query(UserGroup).filter(
         UserGroup.name.like(any_(['deleted:sisu:%', 'cumulative:sisu:%']))
