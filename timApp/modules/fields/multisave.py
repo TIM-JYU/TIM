@@ -31,7 +31,8 @@ class MultisaveMarkupModel(GenericMarkupModel):
     autoUpdateTables: Union[bool, Missing] = True
     emailMode: Union[bool, Missing] = False
     emailRecipients: Union[List[str], Missing] = missing
-    preMessage: Union[str, Missing] = missing
+    emailPreMsg: Union[str, Missing] = missing
+    emailSubject: Union[str, Missing] = missing
     fields: Union[List[str], Missing] = missing
 
 
@@ -43,7 +44,8 @@ class MultisaveMarkupSchema(GenericMarkupSchema):
     autoUpdateTables = fields.Boolean(default=True)
     emailMode = fields.Boolean(default=False)
     emailRecipients = fields.List(fields.Str())
-    preMessage: fields.String(allow_none=True)
+    emailPreMsg = fields.String(allow_none=True)
+    emailSubject = fields.String()
     fields = fields.List(fields.Str())  # Keep this last
 
     @post_load

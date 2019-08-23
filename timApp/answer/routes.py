@@ -316,26 +316,29 @@ def send_email():
     verify_view_access(d)
     curr_user = get_current_user_object()
     try:
-        plug = get_plugin_from_request(d, tid, curr_user)
+        doc, plug = get_plugin_from_request(d.document, tid, curr_user)
     except TaskNotFoundException as e:
         return abort(404, f'Task not found: {taskid}')
     if not plug.values.get("emailMode", False):
         return abort(400, f'Plugin not set to email mode.')
-    rcpts = plug.values.get("rcpts", [])
+    rcpts = plug.values.get("emailRecipients", [])
     # TODO: Use schemas
     if not isinstance(rcpts, list) or len(rcpts) == 0:
         return abort(400, f'Missing email recipients')
     rcpts = ';'.join(rcpts)
-    premsg = plug.values.get("premessage", "")
+    premsg = plug.values.get("emailPreMsg", "")
+    subject = plug.values.get("emailSubject", "")
+    if not isinstance(subject, str) or len(subject) == 0:
+        return abort(400, f'Missing email subject')
     msg = request.json.get('msg')
-    msg = premsg + msg
+    msg = premsg + "\n\n" + msg
     bcc = ""
     bccme = request.json.get('bccme', False)
     if bccme:
         bcc = curr_user.email
     multi_send_email(
         rcpt=rcpts,
-        subject=request.json.get('subject'),
+        subject=subject,
         msg=msg,
         mail_from=curr_user.email,
         reply_to=curr_user.email,

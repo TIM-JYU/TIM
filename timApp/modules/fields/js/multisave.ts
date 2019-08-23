@@ -16,6 +16,7 @@ const multisaveMarkup = t.intersection([
         areas: t.array(t.string),
         tags: t.array(t.string),
         emailRecipients: t.array(t.string),
+        emailSubject: t.string,
         fields: t.array(t.string),
         followid: t.string,
         jumplink: t.string,
@@ -45,7 +46,7 @@ export class MultisaveController extends PluginBase<t.TypeOf<typeof multisaveMar
     private savedFields: number = 0;
     private showEmailForm: boolean = false;
     private emaillist: string[] | undefined = [];
-    private emailsubject: string = "";
+    private emailsubject: string | undefined = "";
     private emailbody: string = "";
     private emailbcc: boolean = false;
     private emailbccme: boolean = true;
@@ -63,10 +64,11 @@ export class MultisaveController extends PluginBase<t.TypeOf<typeof multisaveMar
     $onInit() {
         super.$onInit();
         this.emaillist = this.attrs.emailRecipients;
+        this.emailsubject = this.attrs.emailSubject;
     }
 
     async sendEmailTim() {
-        if (!this.emaillist) {
+        if (!this.emaillist || !this.emailsubject) {
             return;
         }
         this.emailMsg = ""; // JSON.stringify(response);
@@ -99,7 +101,7 @@ export class MultisaveController extends PluginBase<t.TypeOf<typeof multisaveMar
      * TODO: Generic - move and import
      */
     public async sendEmail() {
-        if(!this.emaillist){
+        if(!this.emaillist || !this.emailsubject){
             return;
         }
         if ( this.emailtim ) {
@@ -277,7 +279,6 @@ multisaveApp.component("multisaveRunner", {
                 ng-click="$ctrl.sendEmail()">
                 Lähetä
         </button>
-        <!-- <span class="emailMsg" ng-model="$ctrl.emailMsg"></span> -->
         <span class="savedtext" ng-if="$ctrl.emailMsg">Sent!</span>
         </p>
     </div>
