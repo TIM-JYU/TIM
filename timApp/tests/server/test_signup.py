@@ -145,8 +145,8 @@ class TestSignUp(TimRouteTest):
             email,
             real_name,
             username,
-            group_to_add=UserGroup.get_korppi_group(),
             origin=UserOrigin.Korppi,
+            group_to_add=UserGroup.get_korppi_group(),
         )
         db.session.commit()
         session['user_id'] = u.id

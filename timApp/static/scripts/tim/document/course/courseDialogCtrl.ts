@@ -9,6 +9,8 @@ import {DialogController, registerDialogComponent, showDialog} from "../../ui/di
 import {$http} from "../../util/ngimport";
 import {to} from "../../util/utils";
 
+const groupTagPrefix = "group:";
+
 export class CourseDialogController extends DialogController<{params: IItem}, {}> {
     static component = "timCourseDialog";
     static $inject = ["$element", "$scope"] as const;
@@ -23,6 +25,7 @@ export class CourseDialogController extends DialogController<{params: IItem}, {}
     private datePickerOptions: EonasdanBootstrapDatetimepicker.SetOptions;
     private currentCode: ITag | undefined;
     private currentSubject: ITag | undefined;
+    private studentGroupName = "";
 
     constructor(protected element: IRootElementService, protected scope: IScope) {
         super(element, scope);
@@ -58,6 +61,8 @@ export class CourseDialogController extends DialogController<{params: IItem}, {}
     private async getCurrentSpecialTags() {
         const docPath = this.resolve.params.path;
         const r = await to($http.get<ITag[]>(`/tags/getTags/${docPath}`));
+        this.studentGroupName = "";
+        let groupSep = "";
         if (r.ok) {
             const tags = r.result.data;
             for (const tag of tags) {
@@ -66,6 +71,10 @@ export class CourseDialogController extends DialogController<{params: IItem}, {}
                 }
                 if (tag.type === TagType.Subject) {
                     this.currentSubject = tag;
+                }
+                if (tag.name.startsWith(groupTagPrefix)) {
+                    this.studentGroupName += groupSep + tag.name.slice(groupTagPrefix.length);
+                    groupSep = ";";
                 }
             }
         }
@@ -77,21 +86,20 @@ export class CourseDialogController extends DialogController<{params: IItem}, {}
     private async removeCurrentSpecialTags() {
         const docPath = this.resolve.params.path;
         const data = {tagObject: this.currentSubject};
-        const r = await to($http.post(`/tags/remove/${docPath}`, data));
+        const r = await to($http.post(`/tags/setCourseTags/${docPath}`,
+            {
+                groups: [],
+                tags: [],
+            },
+        ));
         if (!r.ok) {
             this.errorMessage = r.result.data.error;
             this.successMessage = undefined;
             return;
         }
-        const data2 = {tagObject: this.currentCode};
-        const r2 = await to($http.post(`/tags/remove/${docPath}`, data2));
-        if (!r2.ok) {
-            this.errorMessage = r2.result.data.error;
-            this.successMessage = undefined;
-            return;
-        }
         this.currentSubject = undefined;
         this.currentCode = undefined;
+        this.studentGroupName = "";
     }
 
     /**
@@ -110,7 +118,7 @@ export class CourseDialogController extends DialogController<{params: IItem}, {}
     }
 
     /**
-     * Removes course code and subject from teh database.
+     * Removes course code and subject from the database.
      */
     private async unregisterCourse() {
         await this.removeCurrentSpecialTags();
@@ -138,11 +146,6 @@ export class CourseDialogController extends DialogController<{params: IItem}, {}
             return;
         }
 
-        // If the course had existing special tags, remove them first.
-        if (this.currentSubject && this.currentCode) {
-            await this.removeCurrentSpecialTags();
-        }
-
         const codeName = this.courseCode.trim().toUpperCase();
         const codeTag = {
             expires: this.expires, name: codeName, type: TagType.CourseCode,
@@ -150,9 +153,13 @@ export class CourseDialogController extends DialogController<{params: IItem}, {}
         const subjectTag = {
             expires: this.expires, name: this.courseSubject.trim(), type: TagType.Subject,
         };
-        const data = {tags: [codeTag, subjectTag]};
-        const r = await to($http.post(`/tags/add/${docPath}`, data));
 
+        const r = await to($http.post(`/tags/setCourseTags/${docPath}`,
+            {
+                groups: this.studentGroupName.length > 0 ? this.studentGroupName.split(";") : [],
+                tags: [codeTag, subjectTag],
+            },
+        ));
         if (!r.ok) {
             this.errorMessage = r.result.data.error;
             this.successMessage = undefined;
@@ -161,7 +168,6 @@ export class CourseDialogController extends DialogController<{params: IItem}, {}
         this.errorMessage = undefined;
         this.successMessage = `'${codeName}' successfully added as a '${this.courseSubject}' course.`;
         await this.getCurrentSpecialTags();
-        return;
     }
 
     /**
@@ -194,7 +200,7 @@ registerDialogComponent(CourseDialogController,
                     <input required focus-me="$ctrl.focusName" ng-model="$ctrl.courseCode" name="course-code-field"
                            type="text" title="" autocomplete="off"
                            class="form-control" id="course-code-field"
-                           placeholder="Input the course code using capital letters">
+                           placeholder="Course code using capital letters">
                 </div>
                 <tim-error-message></tim-error-message>
             </div>
@@ -224,6 +230,17 @@ registerDialogComponent(CourseDialogController,
                         </span>
                     </div>
                 </div>
+            </div>
+
+            <div class="form-group" tim-error-state>
+                <label for="group-field" class="col-sm-4 control-label">Student group:</label>
+                <div class="col-sm-8">
+                    <input ng-model="$ctrl.studentGroupName" name="group-field"
+                           type="text" autocomplete="off"
+                           class="form-control" id="group-field"
+                           placeholder="Course student group name">
+                </div>
+                <tim-error-message></tim-error-message>
             </div>
         </form>
         <div ng-show="$ctrl.successMessage" class="alert alert-success">

@@ -10,7 +10,7 @@ services:
  postgresql:
   command: "sleep infinity"
  postgresql-test:
-  image: postgres:9.5
+  image: postgres:11
   tmpfs:
    - /var/lib/postgresql/data
  chrome:

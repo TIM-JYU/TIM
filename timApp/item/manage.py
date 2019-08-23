@@ -18,7 +18,7 @@ from timApp.auth.sessioninfo import get_current_user_group_object
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.create_item import copy_document_and_enum_translations
 from timApp.document.docentry import DocEntry
-from timApp.document.docinfo import move_document
+from timApp.document.docinfo import move_document, find_free_name
 from timApp.folder.folder import Folder, path_includes
 from timApp.item.block import BlockType
 from timApp.item.item import Item, copy_rights
@@ -26,7 +26,7 @@ from timApp.item.validation import validate_item, validate_item_and_create_inter
 from timApp.timdb.dbaccess import get_timdb
 from timApp.timdb.sqa import db
 from timApp.user.usergroup import UserGroup
-from timApp.user.users import remove_access
+from timApp.user.users import remove_access, remove_default_access, get_default_rights_holders, get_rights_holders
 from timApp.user.userutils import grant_access, grant_default_access, get_access_type_id
 from timApp.util.flask.requesthelper import verify_json_params, get_option
 from timApp.util.flask.responsehelper import json_response, ok_response
@@ -256,19 +256,17 @@ def rename_folder(item_id):
 
 @manage_page.route("/permissions/get/<int:item_id>")
 def get_permissions(item_id):
-    timdb = get_timdb()
     i = get_item_or_abort(item_id)
     verify_manage_access(i)
-    grouprights = timdb.users.get_rights_holders(item_id)
+    grouprights = get_rights_holders(item_id)
     return json_response({'grouprights': grouprights, 'accesstypes': AccessType.query.all()})
 
 
 @manage_page.route("/defaultPermissions/<object_type>/get/<int:folder_id>")
 def get_default_document_permissions(folder_id, object_type):
-    timdb = get_timdb()
     f = get_folder_or_abort(folder_id)
     verify_manage_access(f)
-    grouprights = timdb.users.get_default_rights_holders(folder_id, BlockType.from_str(object_type))
+    grouprights = get_default_rights_holders(folder_id, BlockType.from_str(object_type))
     return json_response({'grouprights': grouprights})
 
 
@@ -292,8 +290,7 @@ def add_default_doc_permission(folder_id, group_name, perm_type, object_type):
 def remove_default_doc_permission(folder_id, group_id, perm_type, object_type):
     f = get_folder_or_abort(folder_id)
     verify_manage_access(f)
-    timdb = get_timdb()
-    timdb.users.remove_default_access(group_id, folder_id, perm_type, BlockType.from_str(object_type))
+    remove_default_access(group_id, folder_id, perm_type, BlockType.from_str(object_type))
     db.session.commit()
     return ok_response()
 
@@ -364,23 +361,31 @@ def verify_permission_edit_access(item_id: int, perm_type: str) -> Tuple[Item, b
 def del_document(doc_id):
     d = get_doc_or_abort(doc_id)
     verify_ownership(d)
+    f = get_trash_folder()
+    move_document(d, f)
+    db.session.commit()
+    return ok_response()
+
+
+def get_trash_folder():
     trash_folder_path = f'roskis'
     f = Folder.find_by_path(trash_folder_path)
     if not f:
         f = Folder.create(trash_folder_path, owner_group_id=UserGroup.get_admin_group().id, title='Roskakori')
-    move_document(d, f)
-    db.session.commit()
-    return ok_response()
+    return f
 
 
 @manage_page.route("/folders/<folder_id>", methods=["DELETE"])
 def delete_folder(folder_id):
     f = get_folder_or_abort(folder_id)
     verify_ownership(f)
-    if not f.is_empty:
-        return abort(403, "The folder is not empty. Only empty folders can be deleted.")
-
-    f.delete()
+    if f.location == 'users':
+        return abort(403, 'Personal folders cannot be deleted.')
+    trash = get_trash_folder()
+    if f.location == trash.path:
+        abort(400, 'Folder is already deleted.')
+    trash_path = find_free_name(trash, f)
+    f.rename_path(trash_path)
     db.session.commit()
     return ok_response()
 

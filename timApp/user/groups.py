@@ -1,4 +1,4 @@
-from typing import Tuple, List
+from typing import Tuple, List, Dict, Any
 
 from flask import Blueprint, abort
 
@@ -95,15 +95,7 @@ def create_group(groupname):
     verify_groupadmin()
     if UserGroup.get_by_name(groupname):
         abort(400, 'User group already exists.')
-    has_digits = False
-    has_letters = False
-    has_non_alnum = False
-    for c in groupname:
-        has_digits = has_digits or c.isdigit()
-        has_letters = has_letters or c.isalpha()
-        has_non_alnum = has_non_alnum or not (c.isalnum() or c.isspace())
-    if not has_digits or not has_letters or has_non_alnum:
-        abort(400, 'Usergroup must contain at least one digit and one letter and must be alphanumeric.')
+    validate_groupname(groupname)
     u = UserGroup.create(groupname)
     doc = create_document(
         f'groups/{remove_path_special_chars(groupname)}',
@@ -112,16 +104,8 @@ def create_group(groupname):
         parent_owner=UserGroup.get_admin_group(),
     )
     apply_template(doc)
-    s = doc.document.get_settings().get_dict().get('macros', {})
-    s['group'] = groupname
-    s['fields'] = ['info']
-    s['maxRows'] = "40em"  # maxrows for group list
-    doc.document.add_setting('macros', s)
-    text = '''
-## Omia kenttiä {defaultplugin="textfield" readonly="view"}
-{#info autosave: true #}    
-    '''
-    doc.document.add_text(text)
+    update_group_doc_settings(doc, groupname)
+    add_group_infofield_template(doc)
     u.admin_doc = doc.block
     f = doc.parent
     if len(f.block.accesses) == 1:
@@ -131,6 +115,36 @@ def create_group(groupname):
                                             ))
     db.session.commit()
     return json_response(doc)
+
+
+def add_group_infofield_template(doc):
+    text = '''
+## Omia kenttiä {defaultplugin="textfield" readonly="view"}
+{#info autosave: true #}    
+    '''
+    doc.document.add_text(text)
+
+
+def update_group_doc_settings(doc: DocInfo, groupname: str, extra_macros: Dict[str, Any]=None):
+    s = doc.document.get_settings().get_dict().get('macros', {})
+    s['group'] = groupname
+    s['fields'] = ['info']
+    s['maxRows'] = "40em"  # maxrows for group list
+    if extra_macros:
+        s.update(extra_macros)
+    doc.document.add_setting('macros', s)
+
+
+def validate_groupname(groupname: str):
+    has_digits = False
+    has_letters = False
+    has_non_alnum = False
+    for c in groupname:
+        has_digits = has_digits or c.isdigit()
+        has_letters = has_letters or c.isalpha()
+        has_non_alnum = has_non_alnum or not (c.isalnum() or c.isspace() or c in '-_')
+    if not has_digits or not has_letters or has_non_alnum:
+        abort(400, 'Usergroup must contain at least one digit and one letter and must not have special chars.')
 
 
 def verify_group_access(ug: UserGroup, access_set, u=None, require=True):
@@ -152,6 +166,8 @@ def verify_group_edit_access(ug: UserGroup, user=None, require=True):
         abort(400, 'Cannot edit special groups.')
     if User.get_by_name(ug.name):
         abort(400, 'Cannot edit personal groups.')
+    if ug.name.startswith('cumulative:') or ug.name.startswith('deleted:'):
+         abort(400, 'Cannot edit special Sisu groups.')
     verify_group_access(ug, edit_access_set, user, require=require)
 
 
@@ -159,43 +175,45 @@ def verify_group_view_access(ug: UserGroup, user=None, require=True):
     return verify_group_access(ug, view_access_set, user, require=require)
 
 
-@groups.route('/addmember/<groupname>/<usernames>')
-def add_member(usernames, groupname):
-    timdb = get_timdb()
+def get_member_infos(groupname: str, usernames: str):
     usernames = get_usernames(usernames)
     group, users = get_uid_gid(groupname, usernames)
     verify_group_edit_access(group)
     existing_usernames = set(u.name for u in users)
     existing_ids = set(u.id for u in group.users)
-    already_exists = set(u.name for u in group.users) & set(usernames)
     not_exist = [name for name in usernames if name not in existing_usernames]
+    return existing_ids, group, not_exist, usernames, users
+
+
+@groups.route('/addmember/<groupname>/<usernames>')
+def add_member(usernames, groupname):
+    existing_ids, group, not_exist, usernames, users = get_member_infos(groupname, usernames)
+    already_exists = set(u.name for u in group.users) & set(usernames)
     added = []
     for u in users:
         if u.id not in existing_ids:
             u.groups.append(group)
             added.append(u.name)
-    timdb.commit()
+    db.session.commit()
     return json_response({'already_belongs': sorted(list(already_exists)), 'added': added, 'not_exist': not_exist})
 
 
 @groups.route('/removemember/<groupname>/<usernames>')
 def remove_member(usernames, groupname):
-    timdb = get_timdb()
-    usernames = get_usernames(usernames)
-    group, users = get_uid_gid(groupname, usernames)
-    verify_group_edit_access(group)
-    existing_usernames = set(u.name for u in users)
-    existing_ids = set(u.id for u in group.users)
-    not_exist = [name for name in usernames if name not in existing_usernames]
+    existing_ids, group, not_exist, usernames, users = get_member_infos(groupname, usernames)
     removed = []
     does_not_belong = []
+    ensure_manually_added = group.is_sisu
+    cumulative = group.get_cumulative() if ensure_manually_added else None
     for u in users:
         if u.id not in existing_ids:
             does_not_belong.append(u.name)
             continue
+        if ensure_manually_added and u in cumulative.users:
+            abort(400, 'Cannot remove not-manually-added users from Sisu groups.')
         u.groups.remove(group)
         removed.append(u.name)
-    timdb.commit()
+    db.session.commit()
     return json_response({'removed': removed, 'does_not_belong': does_not_belong, 'not_exist': not_exist})
 
 
@@ -223,7 +241,7 @@ def enroll_to_course(doc_id: int):
         return abort(400, 'Document is not tagged as a course')
 
 
-def get_usernames(usernames):
+def get_usernames(usernames: str):
     usernames = list(set([name.strip() for name in usernames.split(',')]))
     usernames.sort()
     return usernames

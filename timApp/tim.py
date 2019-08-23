@@ -57,6 +57,7 @@ from timApp.printing.print import print_blueprint
 from timApp.plugin.tape.tape import tape_plugin
 from timApp.readmark.routes import readings
 from timApp.sisu.scim import scim
+from timApp.sisu.sisu import sisu
 from timApp.tim_app import app, default_secret
 from timApp.timdb.exceptions import ItemAlreadyExistsException
 from timApp.timdb.sqa import db
@@ -116,6 +117,7 @@ app.register_blueprint(tags_blueprint)
 app.register_blueprint(course_blueprint)
 app.register_blueprint(scim)
 app.register_blueprint(feedback)
+app.register_blueprint(sisu)
 
 app.wsgi_app = ReverseProxied(app.wsgi_app)
 
@@ -294,10 +296,7 @@ def update_user_course_bookmarks():
     u = get_current_user_object()
     for gr in u.groups:  # type: UserGroup
         if gr.is_sisu_student_group:
-            sisuid = gr.get_sisu_id()
-            if not sisuid:
-                continue  # Should not happen if is_sisu_student_group is true.
-            docs = DocEntry.query.join(Block).join(Tag).filter(Tag.name == sisuid).with_entities(DocEntry).all()
+            docs = DocEntry.query.join(Block).join(Tag).filter(Tag.name == 'group:' + gr.name).with_entities(DocEntry).all()
             if not docs:
                 continue
             if len(docs) > 1:

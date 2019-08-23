@@ -272,9 +272,9 @@ export class PermCtrl implements IController {
         }
     }
 
-    async deleteFolder(folderId: number) {
-        if (window.confirm("Are you sure you want to delete this folder?")) {
-            const r = await to($http.delete("/folders/" + folderId));
+    async deleteFolder() {
+        if (window.confirm(`Are you sure you want to delete the folder ${this.item.path}?`)) {
+            const r = await to($http.delete(`/folders/${this.item.id}`));
             if (r.ok) {
                 location.replace(`/view/${this.item.location}`);
             } else {

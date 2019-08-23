@@ -1,15 +1,14 @@
-from datetime import datetime, timezone
 from enum import Enum
-from typing import Optional
+from typing import Optional, List
 
 from sqlalchemy import func
 
 from timApp.auth.accesstype import AccessType
-from timApp.item.blockassociation import BlockAssociation
-from timApp.user.usergroup import UserGroup
-from timApp.timdb.sqa import db
 from timApp.auth.auth_models import BlockAccess
+from timApp.item.blockassociation import BlockAssociation
+from timApp.timdb.sqa import db
 from timApp.timtypes import FolderType
+from timApp.user.usergroup import UserGroup
 from timApp.util.utils import get_current_time
 
 
@@ -103,6 +102,17 @@ class Block(db.Model):
                         type=AccessType.owner.value,
                         accessible_from=get_current_time()))
 
+    def add_rights(self, groups, access_type: AccessType):
+        existing_rights = [ac.usergroup for ac in self.accesses]
+        for gr in groups:
+            if gr not in existing_rights:
+                ba = BlockAccess(
+                    usergroup=gr,
+                    type=access_type.value,
+                    accessible_from=get_current_time(),
+                )
+                self.accesses.append(ba)
+
 
 class BlockType(Enum):
     Document = 0
@@ -145,21 +155,20 @@ def insert_block(block_type: BlockType, description: Optional[str], owner_group_
 
 
 def copy_default_rights(item_id: int, item_type: BlockType):
-    from timApp.timdb.dbaccess import get_timdb
     from timApp.user.userutils import grant_access
-    timdb = get_timdb()
-    default_rights = []
+    from timApp.user.users import get_default_rights_holders
+    default_rights: List[BlockAccess] = []
     folder = Block.query.get(item_id).parent
     while folder is not None:
-        default_rights += timdb.users.get_default_rights_holders(folder.id, item_type)
+        default_rights += get_default_rights_holders(folder.id, item_type)
         folder = folder.parent
     for d in default_rights:
-        grant_access(d['gid'],
+        grant_access(d.usergroup_id,
                      item_id,
-                     d['access_name'],
+                     d.atype.name,
                      commit=False,
-                     accessible_from=d['accessible_from'],
-                     accessible_to=d['accessible_to'],
-                     duration_from=d['duration_from'],
-                     duration_to=d['duration_to'],
-                     duration=d['duration'])
+                     accessible_from=d.accessible_from,
+                     accessible_to=d.accessible_to,
+                     duration_from=d.duration_from,
+                     duration_to=d.duration_to,
+                     duration=d.duration)

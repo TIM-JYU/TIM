@@ -7,7 +7,7 @@ from timApp.timdb.sqa import db
 
 class GroupTest(TimRouteTest):
     error_resp = {'error': 'Usergroup must contain at least one digit and one letter and must '
-                           'be alphanumeric.'}
+                           'not have special chars.'}
 
     def enum_admin_and_groupadmin(self):
         yield self.init_admin()

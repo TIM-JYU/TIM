@@ -38,3 +38,7 @@ def include_if_loaded(attr_name: str, obj, key_name=None):
 
 def is_attribute_loaded(attr_name, obj):
     return obj and attr_name not in instance_state(obj).unloaded
+
+
+def include_if_exists(attr_name: str, obj):
+    return {attr_name: getattr(obj, attr_name)} if hasattr(obj, attr_name) else {}

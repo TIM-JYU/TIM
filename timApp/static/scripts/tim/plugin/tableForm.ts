@@ -50,7 +50,8 @@ const TableFormMarkup = t.intersection([
         emailUsersButtonText: nullable(t.string),
         fields: t.array(t.string),
         showToolbar: withDefault(t.boolean, true),
-        sisugroups: withDefault(t.boolean, false),
+        showEditorButtons: withDefault(t.boolean, true),
+        sisugroups: t.string,
     }),
     GenericPluginMarkup,
     t.type({
@@ -58,6 +59,7 @@ const TableFormMarkup = t.intersection([
         autoupdate: withDefault(t.number, 500),
         cols: withDefault(t.number, 20),
         showToolbar: withDefault(t.boolean, true),
+        showEditorButtons: withDefault(t.boolean, true),
         autoUpdateFields: withDefault(t.boolean, true),
         autoUpdateTables: withDefault(t.boolean, true),
         fontSize: withDefault(t.string, "smaller"),
@@ -215,6 +217,7 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
         this.emailmap = this.attrsall.emailmap || {};
         this.aliases = this.attrsall.aliases || {};
         this.data.showToolbar = this.attrs.showToolbar;
+        this.data.showEditorButtons = this.attrs.showEditorButtons;
 
         this.setDataMatrix();
 
@@ -453,7 +456,7 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
             }
 
             if ( this.attrsall.markup.sisugroups ) {
-                this.data.headers = ["Sisu teksti", "Sisu nimi", ""];
+                this.data.headers = ["Kuvaus", "Sisu-nimi", ""];
             } else {
                 this.data.headers = ["Henkilön nimi", "Käyttäjänimi", "eMail"];
             }
@@ -999,16 +1002,16 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
         const timTable = this.getTimTable();
         if (timTable == null) { return; }
         const selUsers = timTable.getCheckedRows(0, true);
-        const groups = TimTableController.makeSmallerMatrix(selUsers, [1, 3]);
-        const params = {
-            rows: groups,
-        };
-        // TODO: SISU tähän URL
-        const url = this.pluginMeta.getAnswerUrl();
-        const r = await to($http.put<{ web: { result: string, error?: string } }>(url, params));
+        const groups = TimTableController.makeSmallerMatrix(selUsers, [1, 4]);
+        const params = groups.map(([sisuid, timname]) => ({externalId: sisuid, name: timname}));
+        this.isRunning = true;
+        const r = await to($http.post<{ web: { result: string, error?: string } }>("/sisu/createGroupDocs", params));
         this.isRunning = false;
         if (r.ok) {
-           // TODO: SISU tähän sivun refresh tai virheiden näyttäminen
+            timTable.confirmSaved();
+           location.reload();
+        } else {
+            this.error = r.result.data.error;
         }
     }
 

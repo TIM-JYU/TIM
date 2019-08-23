@@ -22,9 +22,9 @@ from timApp.document.post_process import post_process_pars, \
     hide_names_in_teacher
 from timApp.folder.folder_view import try_return_folder
 from timApp.item.item import Item
+from timApp.item.tag import GROUP_TAG_PREFIX
 from timApp.item.validation import has_special_chars
 from timApp.tim_app import app
-from timApp.timdb.dbaccess import get_timdb
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.docsettings import DocSettings
 from timApp.document.document import get_index_from_html_list, dereference_pars, Document
@@ -45,7 +45,7 @@ from timApp.folder.folder import Folder
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
 from timApp.util.timtiming import taketime
-from timApp.util.utils import remove_path_special_chars, Range
+from timApp.util.utils import remove_path_special_chars, Range, seq_to_str
 from timApp.util.utils import get_error_message
 
 DEFAULT_RELEVANCE = 10
@@ -225,7 +225,16 @@ def view(item_path, template_name, usergroup=None, route="view"):
         else:
             abort(403)
 
-    timdb = get_timdb()
+    # Check for incorrect group tags.
+    # Disabled for now.
+    if False and verify_manage_access(doc_info, require=False):
+        group_tags = [t.name[len(GROUP_TAG_PREFIX):] for t in doc_info.block.tags if t.name.startswith(GROUP_TAG_PREFIX)]
+        if group_tags:
+            ugs = UserGroup.query.filter(UserGroup.name.in_(group_tags)).all()
+            names = set(ug.name for ug in ugs)
+            missing = set(group_tags) - names
+            if missing:
+                flash(f'Document has incorrect group tags: {seq_to_str(list(missing))}')
 
     if get_option(request, 'login', False) and not logged_in():
         return redirect_to_login()

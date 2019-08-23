@@ -197,7 +197,9 @@ tim-table {
         width: 100%;
      }
 
-
+    .inlineEditorButtons {
+        width: -moz-max-content;
+    }
 }
 
 li.dropradio {

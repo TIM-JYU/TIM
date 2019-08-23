@@ -1,5 +1,6 @@
 from timApp.bookmark.bookmarks import Bookmarks
 from timApp.item.tag import Tag, TagType
+from timApp.sisu.scimusergroup import ScimUserGroup
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.document.docentry import DocEntry
 from timApp.folder.folder import Folder
@@ -105,17 +106,19 @@ class BookmarkTest2(BookmarkTestBase):
         self.get('/')
         d = self.create_doc()
         d.block.tags.append(Tag(name='TIEP111', type=TagType.CourseCode))
-        d.block.tags.append(Tag(name='sisu:test', type=TagType.Regular))
+        d.block.tags.append(Tag(name='group:ohj1opiskelijat', type=TagType.Regular))
         db.session.commit()
         d2 = self.create_doc()
         d2.block.tags.append(Tag(name='TIEP112', type=TagType.CourseCode))
-        d2.block.tags.append(Tag(name='sisu:test2', type=TagType.Regular))
+        d2.block.tags.append(Tag(name='group:ohj2opiskelijat', type=TagType.Regular))
         db.session.commit()
         self.get('/')
-        ug = UserGroup.create('sisu:test-students')
+        ug = UserGroup(name='ohj1opiskelijat', display_name='asd asd')
         self.test_user_1.groups.append(ug)
-        ug = UserGroup.create('sisu:test2-students')
+        ug.external_id = ScimUserGroup(external_id='jy-CUR-4668-students')
+        ug = UserGroup(name='ohj2opiskelijat', display_name='asd asd')
         self.test_user_1.groups.append(ug)
+        ug.external_id = ScimUserGroup(external_id='jy-CUR-4669-students')
         db.session.commit()
         self.get('/')
         b = Bookmarks(self.test_user_1)
@@ -131,3 +134,11 @@ class BookmarkTest2(BookmarkTestBase):
              'items': [{'link': d2.url_relative, 'name': d2.title},
                        {'link': d.url_relative, 'name': d.title}],
              'name': 'My courses'}, b.as_dict()[1])
+
+        # If the group name is changed, the tag name does not change automatically.
+        # Make sure a warning is displayed.
+        ug = UserGroup.get_by_name('ohj2opiskelijat')
+        ug.name = 'someothername'
+        db.session.commit()
+        # The check is disabled for now.
+        # self.assertIn("Document has incorrect group tags: ohj2opiskelijat", self.get(d2.url))

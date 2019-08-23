@@ -203,6 +203,7 @@ export interface TimTable {
     maxRows?: string;
     maxCols?: string;
     showToolbar?: boolean;
+    showEditorButtons?: boolean;
     button?: string;
     autosave?: boolean;
     // lockCellCount?: boolean;
@@ -440,6 +441,7 @@ export class TimTableController extends DestroyScope implements IController, ITi
     private editInput: any = null;
     private editInputStyles: string = "";
     private showToolbar: boolean = true;
+    private showEditorButtons: boolean = true;
     private headersStyle?: object;
     private button: string = "Tallenna";
 
@@ -501,6 +503,7 @@ export class TimTableController extends DestroyScope implements IController, ITi
      */
     async $onInit() {
         if ( this.data.showToolbar == false ) { this.showToolbar = false; }
+        if ( this.data.showEditorButtons == false ) { this.showEditorButtons = false; }
 
         if (typeof this.data.button !== "undefined") {
             this.button = this.data.button;
@@ -1565,8 +1568,11 @@ export class TimTableController extends DestroyScope implements IController, ITi
     }
 
     private lostFocus(ev: any) {
-        // this.saveCurrentCell();
-        // TODO: can not use this, because then save is done also for Cancel, BigEditor, Toolbar buttons and so on
+        if ( !this.showEditorButtons ) {
+            this.saveCurrentCell();
+            this.closeSmallEditor();
+            // TODO: can not use this, because then save is done also for Cancel, BigEditor, Toolbar buttons and so on
+        }
     }
 
     private cancelEdit(ev: any) {
@@ -3016,7 +3022,7 @@ timApp.component("timTable", {
                    ng-blur="$ctrl.lostFocus($event)"
                    ng-keydown="$ctrl.keyDownPressedInSmallEditor($event)"
                    ng-keyup="$ctrl.keyUpPressedInSmallEditor($event)" ng-model="$ctrl.editedCellContent"><!--
-     --><span class="inlineEditorButtons" style="position: absolute; width: max-content" ng-show="$ctrl.isSomeCellBeingEdited()" ><!--
+     --><span class="inlineEditorButtons" style="position: absolute; width: max-content" ng-show="$ctrl.showEditorButtons && $ctrl.isSomeCellBeingEdited()" ><!--
          --><button class="timButton buttonOpenBigEditor"
                 ng-click="$ctrl.openBigEditor()" class="timButton"><span class="glyphicon glyphicon-pencil"></span>
              </button><!--

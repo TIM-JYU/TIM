@@ -9,20 +9,21 @@ from sqlalchemy.exc import IntegrityError
 from webargs.flaskparser import use_args
 
 from timApp.auth.login import create_or_update_user
+from timApp.sisu.scimusergroup import ScimUserGroup, external_id_re
+from timApp.sisu.sisu import parse_sisu_group_display_name, refresh_sisu_grouplist_doc, send_course_group_mail
 from timApp.tim_app import csrf
 from timApp.timdb.sqa import db
 from timApp.user.scimentity import get_meta
 from timApp.user.user import User, UserOrigin, last_name_to_first
-from timApp.user.usergroup import UserGroup, tim_group_to_scim, SISU_GROUP_PREFIX
+from timApp.user.usergroup import UserGroup, tim_group_to_scim, SISU_GROUP_PREFIX, DELETED_GROUP_PREFIX, \
+    CUMULATIVE_GROUP_PREFIX
 from timApp.util.flask.responsehelper import json_response
 from timApp.util.logger import log_warning
+from timApp.util.utils import remove_path_special_chars
 
 scim = Blueprint('scim',
                  __name__,
                  url_prefix='/scim')
-
-DELETED_GROUP_PREFIX = 'deleted:'
-CUMULATIVE_GROUP_PREFIX = 'cumulative:'
 
 UNPROCESSABLE_ENTITY = 422
 
@@ -54,6 +55,7 @@ class SCIMNameModel:
                 return f'{self.givenName} {self.middleName} {self.familyName}'
             else:
                 return f'{self.givenName} {self.familyName}'
+
 
 class SCIMMemberSchema(Schema):
     value = fields.Str(required=True)
@@ -229,13 +231,14 @@ def get_groups(args: GetGroupsModel):
     m = filter_re.fullmatch(args.filter)
     if not m:
         raise SCIMException(422, 'Unsupported filter')
-    groups = UserGroup.query.filter(UserGroup.name.startswith(scim_group_to_tim(m.group(1)))).all()
+    groups = ScimUserGroup.query.filter(ScimUserGroup.external_id.startswith(scim_group_to_tim(m.group(1)))).join(
+        UserGroup).with_entities(UserGroup).all()
 
     def gen_groups():
         for g in groups:  # type: UserGroup
             yield {
-                'id': get_scim_id(g),
-                'externalId': get_scim_id(g),
+                'id': g.scim_id,
+                'externalId': g.scim_id,
                 'meta': get_meta(g),
             }
 
@@ -246,23 +249,34 @@ def get_groups(args: GetGroupsModel):
     })
 
 
+def derive_scim_group_name(s: str):
+    x = parse_sisu_group_display_name(s)
+    if not x:
+        return remove_path_special_chars(s.lower())
+    if x.period:
+        return f'{x.coursecode.lower()}-{x.year[2:]}{x.period.lower()}-{x.desc_slug}'
+    else:
+        return f'{x.coursecode.lower()}-{x.year[2:]}{x.month}{x.day}-{x.desc_slug}'
+
+
 @csrf.exempt
 @scim.route('/Groups', methods=['post'])
 @use_args(SCIMGroupSchema(), locations=("json",))
 def post_group(args: SCIMGroupModel):
     gname = scim_group_to_tim(args.externalId)
-    ug = UserGroup.get_by_name(gname)
+    ug = try_get_group_by_scim(args.externalId)
     if ug:
         msg = f'Group already exists: {gname}'
         log_warning(msg)
         log_warning(str(args))
         raise SCIMException(409, msg)
-    deleted_group = UserGroup.get_by_name(f'{DELETED_GROUP_PREFIX}{gname}')
+    deleted_group = UserGroup.get_by_name(f'{DELETED_GROUP_PREFIX}{args.externalId}')
+    derived_name = derive_scim_group_name(args.displayName)
     if deleted_group:
         ug = deleted_group
-        ug.name = gname
+        ug.name = derived_name
     else:
-        ug = UserGroup(name=gname, display_name=args.displayName)
+        ug = UserGroup(name=derived_name, display_name=args.displayName)
         db.session.add(ug)
     update_users(ug, args)
     db.session.commit()
@@ -289,7 +303,8 @@ def put_group(group_id: str):
 @scim.route('/Groups/<group_id>', methods=['delete'])
 def delete_group(group_id):
     ug = get_group_by_scim(group_id)
-    ug.name = f'{DELETED_GROUP_PREFIX}{ug.name}'
+    ug.name = f'{DELETED_GROUP_PREFIX}{ug.external_id.external_id}'
+    db.session.delete(ug.external_id)
     db.session.commit()
     return Response(status=204)
 
@@ -328,20 +343,28 @@ def load_data_from_req(schema):
     return p
 
 
-def update_users(ug: UserGroup, d: SCIMGroupModel):
-    removed_user_names = set(u.name for u in ug.users) - set(u.value for u in d.members)
-    removed_users = User.query.filter(User.name.in_(removed_user_names)).all()
-    for u in removed_users:
-        ug.users.remove(u)
-    create_sisu_users(d, ug)
-
-
-def create_sisu_users(args: SCIMGroupModel, ug: UserGroup):
-    c_name = f'{CUMULATIVE_GROUP_PREFIX}{ug.name}'
+def update_users(ug: UserGroup, args: SCIMGroupModel):
+    external_id = args.externalId
+    if not ug.external_id:
+        if not external_id_re.fullmatch(external_id):
+            raise SCIMException(422, f'Unexpected externalId format: {external_id}')
+        ug.external_id = ScimUserGroup(external_id=external_id)
+    else:
+        if ug.external_id.external_id != args.externalId:
+            raise SCIMException(422, 'externalId unexpectedly changed')
+    c_name = f'{CUMULATIVE_GROUP_PREFIX}{external_id}'
     cumulative_group = UserGroup.get_by_name(c_name)
-    ug.display_name = args.displayName
     if not cumulative_group:
         cumulative_group = UserGroup.create(c_name)
+    removed_user_names = set(u.name for u in ug.users) - set(u.value for u in args.members)
+    removed_users = User.query.filter(User.name.in_(removed_user_names)).all()
+    for u in removed_users:
+        if u in cumulative_group.users:  # Don't remove manually added users
+            ug.users.remove(u)
+    p = parse_sisu_group_display_name(args.displayName)
+    if not p:
+        raise SCIMException(422, f'Unexpected displayName format: {args.displayName}')
+    ug.display_name = args.displayName
     emails = [m.email for m in args.members if m.email is not None]
     unique_emails = set(emails)
     if len(emails) != len(unique_emails):
@@ -351,6 +374,7 @@ def create_sisu_users(args: SCIMGroupModel, ug: UserGroup):
     if len(args.members) != len(unique_usernames):
         raise SCIMException(422, f'The users do not have distinct usernames.')
 
+    added_users = set()
     for u in args.members:
         if u.name:
             expected_name = u.name.derive_full_name(last_name_first=True)
@@ -372,24 +396,51 @@ def create_sisu_users(args: SCIMGroupModel, ug: UserGroup):
                 name_to_use,
                 u.value,
                 origin=UserOrigin.Sisu,
-                group_to_add=ug,
                 allow_finding_by_email=False,
             )
         except IntegrityError as e:
             db.session.rollback()
             raise SCIMException(422, e.orig.diag.message_detail) from e
+        if ug not in user.groups:
+            user.groups.append(ug)
+            added_users.add(user)
+
+        # This flush basically gets rid of a vague error message about AppenderBaseQuery
+        # if an error (UniqueViolation) occurs during a server test (because of an error in test code).
+        # It is not strictly necessary.
+        db.session.flush()
         if user not in cumulative_group.users:
             cumulative_group.users.append(user)
+    refresh_sisu_grouplist_doc(ug)
+
+    # Possibly just checking is_responsible_teacher could be enough.
+    if ug.external_id.is_responsible_teacher and not ug.external_id.is_studysubgroup:
+        tg = UserGroup.get_teachers_group()
+        for u in added_users:
+            if tg not in u.groups:
+                u.groups.append(tg)
+            send_course_group_mail(p, u)
+
+
+def is_manually_added(u: User):
+    """It is possible to add user manually to SCIM groups.
+    For now we assume that any email user is such.
+    """
+    return u.is_email_user
 
 
 def group_scim(ug: UserGroup):
     def members():
+        cumulative = ug.get_cumulative()
+        if not cumulative:
+            raise SCIMException(422, f'Cumulative group missing for {ug.name}')
         for u in ug.users.all():  # type: User
-            yield {
-                'value': u.scim_id,
-                '$ref': u.scim_location,
-                'display': u.scim_display_name,
-            }
+            if u in cumulative.users:
+                yield {
+                    'value': u.scim_id,
+                    '$ref': u.scim_location,
+                    'display': u.scim_display_name,
+                }
 
     return {
         **ug.get_scim_data(),
@@ -397,11 +448,17 @@ def group_scim(ug: UserGroup):
     }
 
 
-def get_group_by_scim(group_id: str):
+def try_get_group_by_scim(group_id: str):
     try:
-        ug = UserGroup.get_by_name(scim_group_to_tim(group_id))
+        ug = ScimUserGroup.query.filter_by(external_id=scim_group_to_tim(group_id)).join(UserGroup).with_entities(
+            UserGroup).first()
     except ValueError:
         raise SCIMException(404, f'Group {group_id} not found')
+    return ug
+
+
+def get_group_by_scim(group_id: str):
+    ug = try_get_group_by_scim(group_id)
     if not ug:
         raise SCIMException(404, f'Group {group_id} not found')
     return ug

@@ -15,12 +15,14 @@ from timApp.user.usergroup import UserGroup
 from timApp.util.utils import split_location
 
 
-@attr.s
+@attr.s(auto_attribs=True)
 class ItemValidationRule:
     """Rules for item validation."""
 
-    check_write_perm: bool = attr.ib(kw_only=True, default=True)
+    check_write_perm: bool = True
     """Whether to check for write permission of containing folder."""
+    require_login: bool = True
+
 
 
 def validate_item(item_path: str,
@@ -29,7 +31,7 @@ def validate_item(item_path: str,
     if not validation_rule:
         validation_rule = ItemValidationRule()
     item_type_str = item_type.name.lower()
-    if not logged_in():
+    if validation_rule.require_login and not logged_in():
         abort(403, f'You have to be logged in to perform this action.')
 
     if item_path is None:
@@ -58,11 +60,11 @@ def validate_item(item_path: str,
 
 def validate_item_and_create_intermediate_folders(item_path: str,
                                                   item_type: BlockType,
-                                                  owner_group: UserGroup,
+                                                  owner_group: UserGroup=None,
                                                   validation_rule: ItemValidationRule = None):
     validate_item(item_path, item_type, validation_rule)
     item_path, _ = split_location(item_path)
-    Folder.create(item_path, owner_group.id, apply_default_rights=True)
+    Folder.create(item_path, owner_group.id if owner_group else None, apply_default_rights=True)
 
 
 def validate_uploaded_document_content(file_content):

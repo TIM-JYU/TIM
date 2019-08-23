@@ -18,6 +18,7 @@ from flask import request
 from timApp.auth.accesshelper import verify_logged_in, has_edit_access, has_manage_access, \
     get_doc_or_abort, verify_edit_access
 from timApp.timdb.dbaccess import get_timdb
+from timApp.user.users import get_rights_holders
 from timApp.util.flask.responsehelper import json_response, set_no_cache_headers, ok_response
 from timApp.auth.sessioninfo import get_current_user_object, get_current_user_id, get_current_user_group
 from timApp.velp.velp_folders import check_velp_group_folder_path, check_personal_velp_folder
@@ -83,7 +84,7 @@ def get_default_velp_group(doc_id: int):
         found_velp_groups = get_documents_in_folder("velp-groups/" + doc_name)
     velp_groups = []
     for v in found_velp_groups:
-        # if timdb.users.has_view_access(user_id, timdb.documents.get_document_id(v['name'])):
+        # if has_view_access(user_id, timdb.documents.get_document_id(v['name'])):
         velp_groups.append(v.id)
     default_group = timdb.velp_groups.check_velp_group_ids_for_default_group(velp_groups)
     if default_group is not None:
@@ -712,13 +713,13 @@ def create_velp_group(doc_id: int) -> Dict:
         if group_exists is None:
             original_owner = Block.query.get(target.id).owner.id
             velp_group_id = timdb.velp_groups.create_velp_group(velp_group_name, original_owner, new_group_path)
-            rights = timdb.users.get_rights_holders(target.id)
+            rights = get_rights_holders(target.id)
             # Copy all rights but view
             for right in rights:
                 # TODO once someone implements a grant_access that takes access ids instead of strings, change to that
                 # function.
-                if not right['access_name'] == 'view':
-                    grant_access(right['gid'], velp_group_id, right['access_name'], commit=False)
+                if not right.atype.name == 'view':
+                    grant_access(right.usergroup_id, velp_group_id, right.atype.name, commit=False)
         else:
             return abort(400, "Velp group with same name and location exists already.")
 
@@ -762,7 +763,7 @@ def create_default_velp_group(doc_id: int):
     user_group_id = doc.block.owner.id
     user_id = get_current_user_id()
 
-    # if not timdb.users.is_user_id_in_group_id(user_id, user_group_id):
+    # if not is_user_id_in_group_id(user_id, user_group_id):
     #     print("User is not owner of current document")
     #     return abort(403, "User is not owner of current document")
 
@@ -776,13 +777,13 @@ def create_default_velp_group(doc_id: int):
     if group_exists is None:
         velp_group_id = timdb.velp_groups.create_default_velp_group(velp_group_name, user_group_id, new_group_path)
         created_new_group = True
-        rights = timdb.users.get_rights_holders(doc_id)
+        rights = get_rights_holders(doc_id)
         # Copy all rights but view
         for right in rights:
             # TODO once someone implements a grant_access that takes access ids instead of strings, change to that
             # function.
-            if not right['access_name'] == 'view':
-                grant_access(right['gid'], velp_group_id, right['access_name'], commit=False)
+            if not right.atype.name == 'view':
+                grant_access(right.usergroup_id, velp_group_id, right.atype.name, commit=False)
 
     else:
         default = DocEntry.find_by_path(new_group_path)

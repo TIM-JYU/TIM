@@ -25,20 +25,25 @@ class FolderTest(TimRouteTest):
         to_delete = self.get_personal_item_path('delete/this')
         f = self.create_folder(to_delete)
         f2 = Folder.find_by_path(self.get_personal_item_path('delete'))
-        not_empty_error = {'error': 'The folder is not empty. Only empty folders can be deleted.'}
-        self.delete(f'/folders/{f2.id}', expect_status=403,
-                    expect_content=not_empty_error)
+        self.delete(f'/folders/{f2.id}')
+        self.get(f'/folders/{f2.id}', expect_status=404)
         grant_view_access(get_anon_group_id(), f['id'])
         self.delete(f'/folders/{f["id"]}', expect_content=self.ok_resp)
         doc_path = self.get_personal_item_path('delete/somedoc')
         self.create_doc(doc_path)
-        self.delete(f'/folders/{f2.id}', expect_status=403,
-                    expect_content=not_empty_error)
-        d = DocEntry.find_by_path(doc_path)
-        d.name = 'asd'
+        self.delete(
+            f'/folders/{f2.id}',
+            expect_status=400,
+            expect_content='Folder is already deleted.',
+            json_key='error',
+        )
+        self.get(f'/folders/{f2.id}', expect_status=404)
+        d2 = DocEntry.find_by_path(doc_path)
+        d2.name = 'asd'
         d = DocEntry.find_by_path(self.get_personal_item_path('Bookmarks'))
         d.name = 'asd2'
         db.session.commit()
+        f2 = Folder.find_by_path(self.get_personal_item_path('delete'))
         self.delete(f'/folders/{f2.id}', expect_content=self.ok_resp)
 
     def test_intermediate_folders(self):
