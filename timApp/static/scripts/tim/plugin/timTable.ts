@@ -1568,8 +1568,11 @@ export class TimTableController extends DestroyScope implements IController, ITi
     }
 
     private lostFocus(ev: any) {
-        // this.saveCurrentCell();
-        // TODO: can not use this, because then save is done also for Cancel, BigEditor, Toolbar buttons and so on
+        if ( !this.showEditorButtons ) {
+            this.saveCurrentCell();
+            this.closeSmallEditor();
+            // TODO: can not use this, because then save is done also for Cancel, BigEditor, Toolbar buttons and so on
+        }
     }
 
     private cancelEdit(ev: any) {
