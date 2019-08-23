@@ -226,7 +226,8 @@ def view(item_path, template_name, usergroup=None, route="view"):
             abort(403)
 
     # Check for incorrect group tags.
-    if verify_manage_access(doc_info, require=False):
+    # Disabled for now.
+    if False and verify_manage_access(doc_info, require=False):
         group_tags = [t.name[len(GROUP_TAG_PREFIX):] for t in doc_info.block.tags if t.name.startswith(GROUP_TAG_PREFIX)]
         if group_tags:
             ugs = UserGroup.query.filter(UserGroup.name.in_(group_tags)).all()
