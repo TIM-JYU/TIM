@@ -6,6 +6,7 @@ import * as t from "io-ts";
 import {ITimComponent, ViewCtrl} from "tim/document/viewctrl";
 import {GenericPluginMarkup, Info, withDefault} from "tim/plugin/attributes";
 import {PluginBase, pluginBindings} from "tim/plugin/util";
+import {$http} from "../../../static/scripts/tim/util/ngimport";
 
 const multisaveApp = angular.module("multisaveApp", ["ngSanitize"]);
 export const moduleDefs = [multisaveApp];
@@ -14,6 +15,7 @@ const multisaveMarkup = t.intersection([
     t.partial({
         areas: t.array(t.string),
         tags: t.array(t.string),
+        emailRecipients: t.array(t.string),
         fields: t.array(t.string),
         followid: t.string,
         jumplink: t.string,
@@ -22,6 +24,7 @@ const multisaveMarkup = t.intersection([
     GenericPluginMarkup,
     t.type({
         // all withDefaults should come here; NOT in t.partial
+        emailMode: withDefault(t.boolean, false),
         autoUpdateTables: withDefault(t.boolean, true),
     }),
 ]);
@@ -40,17 +43,90 @@ export class MultisaveController extends PluginBase<t.TypeOf<typeof multisaveMar
     private modelOpts!: INgModelOptions; // initialized in $onInit, so need to assure TypeScript with "!"
     private vctrl!: ViewCtrl;
     private savedFields: number = 0;
+    private showEmailForm: boolean = false;
+    private emaillist: string[] | undefined = [];
+    private emailsubject: string = "";
+    private emailbody: string = "";
+    private emailbcc: boolean = false;
+    private emailbccme: boolean = true;
+    private emailtim: boolean = true;
+    private emailMsg: string = "";
 
     getDefaultMarkup() {
         return {};
     }
 
     buttonText() {
-        return super.buttonText() || "Save";
+        return super.buttonText() || (this.attrs.emailMode && "Send email") || "Save";
     }
 
     $onInit() {
         super.$onInit();
+        this.emaillist = this.attrs.emailRecipients;
+    }
+
+    async sendEmailTim() {
+        return; // WIP
+        if (!this.emaillist) {
+            return;
+        }
+        this.emailMsg = ""; // JSON.stringify(response);
+
+        const response = await $http.post<string[]>("/multisave/sendemail", {
+            // rcpt: this.emaillist,
+            // subject: this.emailsubject,
+            taskid: this.getTaskId(),
+            msg: this.emailbody,
+            bccme: this.emailbccme,
+        });
+
+       /* const url = this.pluginMeta.getAnswerUrl()
+            .replace("tableForm", "multiSendEmail")
+            .replace("/answer", "");
+        const response = await $http.post<string[]>(url, {
+            // rcpt: this.emaillist.replace(/\n/g, ";"),
+            rcpt: this.emaillist,
+            subject: this.emailsubject,
+            msg: this.emailbody,
+            bccme: this.emailbccme,
+        });
+        this.emailMsg = "Sent"; // JSON.stringify(response);
+        */
+
+        return;
+    }
+
+    /**
+     * TODO: Generic - move and import
+     */
+    public async sendEmail() {
+        if(!this.emaillist){
+            return;
+        }
+        if ( this.emailtim ) {
+            this.sendEmailTim();
+            return;
+        }
+        const w: any = window;
+        // TODO: iPad do not like ;
+        let  addrs = this.emaillist.join().replace(/\n/g, ",");
+        let bcc = "";
+        if ( this.emailbcc ) {
+            bcc = addrs;
+            addrs = "";
+        }
+        if ( this.emailbccme ) {
+            if ( bcc ) { bcc += ","; }
+            bcc += w.current_user.email;
+        }
+        window.location.href = "mailto:" + addrs
+              + "?" + "subject=" + this.emailsubject
+              + "&" + "body=" + this.emailbody
+              + "&" + "bcc=" + bcc;
+    }
+
+    toggleEmailForm(){
+        this.showEmailForm = !this.showEmailForm;
     }
 
     /**
@@ -62,6 +138,10 @@ export class MultisaveController extends PluginBase<t.TypeOf<typeof multisaveMar
      *   plugin in the same document
      */
     async save() {
+        if(this.attrs.emailMode){
+            this.toggleEmailForm();
+            return;
+        }
         let componentsToSave: ITimComponent[] = [];
         // TODO: componentsToSave as a map?
         if (this.attrs.fields) {
@@ -171,11 +251,31 @@ multisaveApp.component("multisaveRunner", {
     <tim-markup-error ng-if="::$ctrl.markupError" data="::$ctrl.markupError"></tim-markup-error>
     <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
     <button class="timButton"
-            ng-if="::$ctrl.buttonText()"
+            ng-if="!$ctrl.showEmailForm && $ctrl.buttonText()"
             ng-click="$ctrl.save()">
         {{::$ctrl.buttonText()}}
     </button>
     <p class="savedtext" ng-if="$ctrl.isSaved">Saved {{$ctrl.savedFields}} fields!</p>
+    <div class="csRunDiv multisaveEmail" style="padding: 1em;" ng-if="$ctrl.showEmailForm"> <!-- email -->
+        <p class="closeButton" ng-click="$ctrl.toggleEmailForm()"></p>
+        <p><textarea disabled id="emaillist" ng-model="$ctrl.emaillist" rows="4" cols="40"></textarea><p>
+        <p>
+        <label title="Send so that names are not visible (works only non-TIM send)"><input type="checkbox" ng-model="$ctrl.emailbcc">BCC</label>&nbsp;
+        <label title="Send also a copy for me"><input type="checkbox" ng-model="$ctrl.emailbccme" >BCC also for me</label>&nbsp;
+        <label title="Send using TIM.  Every mail is send as a personal mail."><input type="checkbox" ng-model="$ctrl.emailtim" >use TIM to send</label>&nbsp;
+        </p>
+        <p>Subject: <input disabled ng-model="$ctrl.emailsubject" size="60"></p>
+        <p>eMail content:</p>
+        <p><textarea id="emaillist" ng-model="$ctrl.emailbody" rows="10" cols="70"></textarea></p>
+        <p>
+        <button class="timButton"
+                ng-click="$ctrl.sendEmail()">
+                Lähetä
+        </button>
+        <!-- <span class="emailMsg" ng-model="$ctrl.emailMsg"></span> -->
+        <span class="savedtext" ng-if="$ctrl.emailMsg">Sent!</span>
+        </p>
+    </div>
     <p ng-if="::$ctrl.footer" ng-bind="::$ctrl.footer" class="plgfooter"></p>
 </span>
 `,

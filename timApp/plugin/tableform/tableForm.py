@@ -347,8 +347,9 @@ def update_fields():
     tid = TaskId.parse(taskid, False, False)
     doc = get_doc_or_abort(tid.doc_id)
     curr_user = get_current_user_object()
-    plug = find_plugin_from_document(doc.document, tid, curr_user)
-    if not plug:
+    try:
+        plug = find_plugin_from_document(doc.document, tid, curr_user)
+    except TaskNotFoundException:
         return abort(404, f'Table not found: {tid}')
     groups = plug.values.get("groups",[])
     queried_groups = UserGroup.query.filter(UserGroup.name.in_(groups))
