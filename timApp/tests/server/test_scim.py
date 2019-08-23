@@ -750,6 +750,8 @@ class ScimTest(TimRouteTest):
              'reply_to': 'no-reply@tim.jyu.fi',
              'subject': 'Kurssin ITKP102 Sisu-ryhmät on kopioitu TIMiin'}],
             sorted(sent_mails_in_testing, key=itemgetter('rcpt')))
+        self.assertIn(UserGroup.get_teachers_group(), User.get_by_name('urt-1').groups)
+        self.assertNotIn(UserGroup.get_teachers_group(), User.get_by_name('us-1').groups)
 
     def test_scim_group_manual_member_update(self):
         eid = 'jy-CUR-7777-teachers'

@@ -415,7 +415,10 @@ def update_users(ug: UserGroup, args: SCIMGroupModel):
 
     # Possibly just checking is_responsible_teacher could be enough.
     if ug.external_id.is_responsible_teacher and not ug.external_id.is_studysubgroup:
+        tg = UserGroup.get_teachers_group()
         for u in added_users:
+            if tg not in u.groups:
+                u.groups.append(tg)
             send_course_group_mail(p, u)
 
 
