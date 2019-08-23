@@ -72,9 +72,9 @@ class DefaultRightTest(TimRouteTest):
                                         'duration_from': None,
                                         'duration_to': None}]
             expected_default_rights = sorted(expected_default_rights, key=itemgetter('gid'))
-            self.assertDictEqual(
-                {'grouprights': expected_default_rights},
-                def_rights)
+            self.assertEqual(
+                expected_default_rights,
+                sorted(def_rights['grouprights'], key=itemgetter('gid')))
             for d in expected_default_rights:
                 d['accessible_from'] = parser.parse(d['accessible_from'])
                 d['accessible_to'] = parser.parse(d['accessible_to']) if d['accessible_to'] else None
