@@ -1888,7 +1888,7 @@ export class TimTableController extends DestroyScope implements IController, ITi
         }
 
         if (this.currentCell) {
-            if (this.currentCell.row === rowi && this.currentCell.col === coli) {
+            if (this.currentCell.row === rowi && this.currentCell.col === coli && this.currentCell.editorOpen) {
                 return;
             }
         }
@@ -1962,6 +1962,7 @@ export class TimTableController extends DestroyScope implements IController, ITi
      * @param {MouseEvent} event MouseEvent
      */
     private async calculateElementPlaces(rowi: number, coli: number, event?: MouseEvent) {
+        await $timeout();
         const sr = this.permTableToScreen[rowi];
         const table = this.element.find(".timTableTable").first();
         const cell = this.cellDataMatrix[rowi][coli];
