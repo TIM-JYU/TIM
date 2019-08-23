@@ -16,7 +16,7 @@ from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docentry import DocEntry, get_documents
 from timApp.document.docinfo import DocInfo
 from timApp.item.block import Block
-from timApp.item.tag import Tag, TagType
+from timApp.item.tag import Tag, TagType, GROUP_TAG_PREFIX
 from timApp.timdb.sqa import db
 from timApp.user.groups import verify_group_view_access
 from timApp.user.special_group_names import TEACHERS_GROUPNAME
@@ -27,9 +27,6 @@ from timApp.util.flask.responsehelper import ok_response, json_response
 tags_blueprint = Blueprint('tags',
                            __name__,
                            url_prefix='/tags')
-
-
-GROUP_TAG_PREFIX = 'group:'
 
 
 @tags_blueprint.route('/add/<path:doc>', methods=["POST"])

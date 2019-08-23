@@ -37,3 +37,6 @@ class Tag(db.Model):
         :return:
         """
         return set(self.name.lower()) - set('abcdefghijklmnopqrstuvwxyzåäöü0123456789$€£#+*!@%&().:;/- _')
+
+
+GROUP_TAG_PREFIX = 'group:'

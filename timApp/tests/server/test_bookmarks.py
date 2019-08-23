@@ -134,3 +134,10 @@ class BookmarkTest2(BookmarkTestBase):
              'items': [{'link': d2.url_relative, 'name': d2.title},
                        {'link': d.url_relative, 'name': d.title}],
              'name': 'My courses'}, b.as_dict()[1])
+
+        # If the group name is changed, the tag name does not change automatically.
+        # Make sure a warning is displayed.
+        ug = UserGroup.get_by_name('ohj2opiskelijat')
+        ug.name = 'someothername'
+        db.session.commit()
+        self.assertIn("Document has incorrect group tags: ohj2opiskelijat", self.get(d2.url))
