@@ -14,9 +14,11 @@ from sqlalchemy.orm.exc import UnmappedInstanceError, FlushError
 from timApp.auth.accesshelper import verify_view_access, verify_manage_access, check_admin_access
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docentry import DocEntry, get_documents
+from timApp.document.docinfo import DocInfo
 from timApp.item.block import Block
 from timApp.item.tag import Tag, TagType
 from timApp.timdb.sqa import db
+from timApp.user.groups import verify_group_view_access
 from timApp.user.special_group_names import TEACHERS_GROUPNAME
 from timApp.user.usergroup import UserGroup
 from timApp.util.flask.requesthelper import verify_json_params, get_option
@@ -25,6 +27,9 @@ from timApp.util.flask.responsehelper import ok_response, json_response
 tags_blueprint = Blueprint('tags',
                            __name__,
                            url_prefix='/tags')
+
+
+GROUP_TAG_PREFIX = 'group:'
 
 
 @tags_blueprint.route('/add/<path:doc>', methods=["POST"])
@@ -39,23 +44,11 @@ def add_tag(doc):
     if not d:
         abort(404)
     verify_manage_access(d)
+    add_tags_from_request(d)
+    return commit_and_ok()
 
-    tag_dict_list, = verify_json_params('tags')
 
-    tags = []
-    for tag_dict in tag_dict_list:
-        tag_type = TagType(int(tag_dict["type"]))
-        check_tag_access(tag_type, TEACHERS_GROUPNAME)
-        tag_name = tag_dict["name"]
-        tag_expire = tag_dict.get("expires")
-        tag = Tag(name=tag_name, expires=tag_expire, type=tag_type)
-        tags.append(tag)
-
-    if not tags:
-        abort(400, "Tags not found.")
-
-    for tag in tags:
-        d.block.tags.append(tag)
+def commit_and_ok():
     try:
         db.session.commit()
     except (IntegrityError, FlushError):
@@ -64,18 +57,61 @@ def add_tag(doc):
     return ok_response()
 
 
-def check_tag_access(tag_type: TagType, group: str) -> None:
+def add_tags_from_request(d: DocInfo):
+    tag_dict_list, = verify_json_params('tags')
+    tags = []
+    for tag_dict in tag_dict_list:
+        tag_type = TagType(int(tag_dict["type"]))
+        tag_name = tag_dict["name"]
+        tag_expire = tag_dict.get("expires")
+        tag = Tag(name=tag_name, expires=tag_expire, type=tag_type)
+        check_tag_access(tag)
+        tags.append(tag)
+    for tag in tags:
+        d.block.tags.append(tag)
+
+
+def check_tag_access(tag: Tag, check_group=True):
     """
     Checks whether the user is allowed to make changes to the tag type.
     If not allowed, gives abort response.
-    :param tag_type: Tag type.
-    :param group: Group name.
-    :return: None.
+    :param check_group: Whether to check group tag right. Should be false when deleting a tag.
+    :param tag: The tag to check.
     """
-    if tag_type != TagType.Regular:
-        ug = UserGroup.get_by_name(group)
+    if tag.type != TagType.Regular:
+        ug = UserGroup.get_by_name(TEACHERS_GROUPNAME)
         if ug not in get_current_user_object().groups and not check_admin_access():
-            abort(400, f"Managing this tag requires admin or {group} rights.")
+            abort(400, f"Managing this tag requires admin or {TEACHERS_GROUPNAME} rights.")
+    if tag.name.startswith(GROUP_TAG_PREFIX):
+        groupname = tag.name[len(GROUP_TAG_PREFIX):]
+        if check_group:
+            ug = UserGroup.get_by_name(groupname)
+            if not ug:
+                abort(404, f'Usergroup "{groupname}" not found.')
+            verify_group_view_access(ug)
+
+
+@tags_blueprint.route('/setCourseTags/<path:doc>', methods=["POST"])
+def set_group_tags(doc):
+    d = DocEntry.find_by_path(doc)
+    if not d:
+        abort(404)
+    verify_manage_access(d)
+
+    tags_to_remove = [t for t in d.block.tags
+                      if t.name.startswith(GROUP_TAG_PREFIX) or t.type in (TagType.CourseCode, TagType.Subject)]
+    for t in tags_to_remove:
+        check_tag_access(t, check_group=False)
+        db.session.delete(t)
+
+    add_tags_from_request(d)
+
+    new_groups, = verify_json_params('groups')
+    for g in new_groups:
+        t = Tag(name=GROUP_TAG_PREFIX + g, type=TagType.Regular)
+        check_tag_access(t)
+        d.block.tags.append(t)
+    return commit_and_ok()
 
 
 @tags_blueprint.route('/edit/<path:doc>', methods=["POST"])
@@ -96,9 +132,6 @@ def edit_tag(doc):
     new_tag_type = TagType(int(new_tag_dict["type"]))
     old_tag_type = TagType(int(old_tag_dict["type"]))
 
-    check_tag_access(old_tag_type, TEACHERS_GROUPNAME)
-    check_tag_access(new_tag_type, TEACHERS_GROUPNAME)
-
     new_tag_name = new_tag_dict["name"]
     old_tag_name = old_tag_dict["name"]
     new_tag_expire = new_tag_dict.get("expires")
@@ -111,6 +144,8 @@ def edit_tag(doc):
 
     if not old_tag:
         abort(400, "Tag to edit not found.")
+    check_tag_access(old_tag)
+    check_tag_access(new_tag)
     try:
         db.session.delete(old_tag)
         d.block.tags.append(new_tag)
@@ -135,12 +170,12 @@ def remove_tag(doc):
     tag_dict, = verify_json_params('tagObject')
 
     tag_type = TagType(int(tag_dict["type"]))
-    check_tag_access(tag_type, TEACHERS_GROUPNAME)
     tag_name = tag_dict["name"]
     tag_obj = Tag.query.filter_by(block_id=d.id, name=tag_name, type=tag_type).first()
 
     if not tag_obj:
         abort(400, "Tag not found.")
+    check_tag_access(tag_obj)
     try:
         db.session.delete(tag_obj)
         db.session.commit()
