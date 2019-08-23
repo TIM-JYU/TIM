@@ -78,6 +78,7 @@ class TableFormMarkupModel(GenericMarkupModel):
     toolbarTemplates: Union[List[dict], Missing] = missing
     saveStyles: Union[bool, Missing] = True
     showToolbar: Union[bool, Missing] = True
+    showEditorButtons: Union[bool, Missing] = True
     sisugroups: Union[bool, Missing] = missing
     autoUpdateFields: Union[bool, Missing] = True
     autoUpdateTables: Union[bool, Missing] = True
@@ -120,6 +121,7 @@ class TableFormMarkupSchema(GenericMarkupSchema):
     fixedColor = fields.Str(allow_none=True)
     saveStyles = fields.Boolean(default=True)
     showToolbar = fields.Boolean(default=True)
+    showEditorButtons = fields.Boolean(default=True)
     sisugroups = fields.Boolean(default=True)
     autoUpdateFields = fields.Boolean(default=True)
     autoUpdateTables = fields.Boolean(default=True)

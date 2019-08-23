@@ -50,6 +50,7 @@ const TableFormMarkup = t.intersection([
         emailUsersButtonText: nullable(t.string),
         fields: t.array(t.string),
         showToolbar: withDefault(t.boolean, true),
+        showEditorButtons: withDefault(t.boolean, true),
         sisugroups: withDefault(t.boolean, false),
     }),
     GenericPluginMarkup,
@@ -58,6 +59,7 @@ const TableFormMarkup = t.intersection([
         autoupdate: withDefault(t.number, 500),
         cols: withDefault(t.number, 20),
         showToolbar: withDefault(t.boolean, true),
+        showEditorButtons: withDefault(t.boolean, true),
         autoUpdateFields: withDefault(t.boolean, true),
         autoUpdateTables: withDefault(t.boolean, true),
         fontSize: withDefault(t.string, "smaller"),
@@ -215,6 +217,7 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
         this.emailmap = this.attrsall.emailmap || {};
         this.aliases = this.attrsall.aliases || {};
         this.data.showToolbar = this.attrs.showToolbar;
+        this.data.showEditorButtons = this.attrs.showEditorButtons;
 
         this.setDataMatrix();
 
