@@ -701,6 +701,9 @@ export class ViewCtrl implements IController {
                 }
                 const timComp = this.getTimComponentByName(fab.taskId);
                 if (timComp) {
+                    if (timComp.isUnSaved()) {
+                        continue;
+                    }
                     if (fab.selectedAnswer) {
                         timComp.setAnswer(JSON.parse(fab.selectedAnswer.content));
                     } else {
@@ -731,7 +734,16 @@ export class ViewCtrl implements IController {
     }
 
     public updateAllTables(fields?: string[]) {
+        // TODO: Should probably check groups
+        //  currently it is assumed that caller used same groups as tableForm
         for (const table of this.tableForms.values()) {
+            const tid = table.getTaskId();
+            if (tid) {
+                const comptab = this.getTimComponentByName(tid);
+                if (comptab && comptab.isUnSaved()) {
+                    continue;
+                }
+            }
             if (fields && fields.length > 0) {
                 table.updateFields(fields);
             } else {
