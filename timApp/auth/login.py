@@ -162,7 +162,13 @@ def openid_success_handler(resp: KorppiOpenIDResponse):
     if not username:
         return abort(400, username_parse_error)
     if not resp.email:
-        log_warning(f'User did not have email in Korppi: {username}')
+        # Allow existing users to log in even if Korppi didn't give email.
+        u = User.get_by_name(username)
+        if u:
+            log_warning(f'Existing user did not have email in Korppi: {username}')
+            set_user_to_session(u)
+            return finish_login()
+        log_warning(f'New user did not have email in Korppi: {username}')
         raise KorppiEmailException()
     if not resp.fullname:
         return abort(400, 'Missing fullname')
