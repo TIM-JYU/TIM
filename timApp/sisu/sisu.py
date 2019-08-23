@@ -295,17 +295,18 @@ def create_docs():
 
 
 @sisu_cli.command('sendmail')
-@click.argument('course')
-def create_docs(course: str):
-    ug = UserGroup.get_by_external_id(f'{course}-responsible-teachers')
-    if not ug:
-        print('Could not find the responsible teachers group for this course. '
-              'Make sure you typed the course in format "jy-CUR-xxxx".')
-        return
-    p = parse_sisu_group_display_name(ug.display_name)
-    for u in ug.users:
-        print(f'Sending mail to {u.real_name} {u.email}')
-        send_course_group_mail(p, u)
+@click.argument('courses', nargs=-1)
+def send_course_mail_cli(courses: List[str]):
+    for course in courses:
+        ug = UserGroup.get_by_external_id(f'{course}-responsible-teachers')
+        if not ug:
+            print(f'Could not find the responsible teachers group for course {course}. '
+                  'Make sure you typed the course in format "jy-CUR-xxxx".')
+            return
+        p = parse_sisu_group_display_name(ug.display_name)
+        for u in ug.users:
+            print(f'Sending mail to {u.real_name} {u.email}')
+            send_course_group_mail(p, u)
 
 
 app.cli.add_command(sisu_cli)
