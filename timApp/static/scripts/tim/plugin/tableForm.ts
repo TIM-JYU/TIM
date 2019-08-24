@@ -51,6 +51,7 @@ const TableFormMarkup = t.intersection([
         fields: t.array(t.string),
         showToolbar: withDefault(t.boolean, true),
         showEditorButtons: withDefault(t.boolean, true),
+        hid: withDefault(t.object, {}),
         sisugroups: t.string,
     }),
     GenericPluginMarkup,
@@ -204,6 +205,7 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
 
         this.data.hiddenRows = this.attrs.hiddenRows;
         this.data.hiddenColumns = this.attrs.hiddenColumns;
+        this.data.hid = this.attrs.hid;
         this.userfilter = "";
         this.realnames = this.checkToShow(this.attrs.realnames, this.realNameColIndex, true);
         this.usernames = this.checkToShow(this.attrs.usernames, this.userNameColIndex, true);
@@ -341,7 +343,7 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
         this.setDataMatrix();
         const timtab = this.getTimTable();
         if (timtab) {
-            timtab.reInitialize();
+            timtab.reInitialize(false);
         }
         // console.log("debug");
 
@@ -433,7 +435,7 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
             }
             const timtab = this.getTimTable();
             if (timtab) {
-                timtab.reInitialize();
+                timtab.reInitialize(false);
             }
         } catch (e) {
             console.log(e);

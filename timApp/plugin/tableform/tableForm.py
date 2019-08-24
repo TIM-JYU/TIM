@@ -83,6 +83,7 @@ class TableFormMarkupModel(GenericMarkupModel):
     sisugroups: Union[str, Missing] = missing
     autoUpdateFields: Union[bool, Missing] = True
     autoUpdateTables: Union[bool, Missing] = True
+    hid: Union[dict, Missing] = missing
     fields: Union[List[str], Missing] = missing
 
 
@@ -126,6 +127,7 @@ class TableFormMarkupSchema(GenericMarkupSchema):
     sisugroups = fields.Str()
     autoUpdateFields = fields.Boolean(default=True)
     autoUpdateTables = fields.Boolean(default=True)
+    hid = fields.Dict(allow_none=True)
     fields = fields.List(fields.Str())  # Keep this last - bad naming
 
     @post_load

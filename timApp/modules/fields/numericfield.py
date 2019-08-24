@@ -202,10 +202,8 @@ cols: 7          # kentän koko, numeraalinen
 autosave: false  # autosave, pois päältä
 validinput: '^\d{0,3}(\.\d{0,3})?$' # käyttäjäsyötteen rajoitin, tyhjä = ei rajoitusta
 errormessage:    # inputcheckerin virheselite, tyhjä = selite on inputchecker
-```""", """#- {defaultplugin=\"numericfield\" readonly=\"view\"}
-{% set name,n = 'd', 5 %}
-%% ('{{#'+name+'{0} stem: \"{0}\", autosave: true, readOnlyStyle: plaintext#}}') | srange(1,n+1) -%%
-{#%%name%%sum stem: summa, autosave: true, readOnlyStyle: plaintext#} 
+```""", """#- {defaultplugin="numericfield" readonly="view" .fieldCell}
+%% 'd=;dsum=summa' | gfrange(1,5,'autosave: true, cols: 3') %%
 """, ]
     return jsonify({
         "js": ["/field/js/build/numericfield.js"],
@@ -219,12 +217,12 @@ errormessage:    # inputcheckerin virheselite, tyhjä = selite on inputchecker
                         'text': 'Numeric',
                         'items': [
                             {
-                                'data': '#- {defaultplugin="numericfield" readonly="view" .fieldCell}',
+                                'data': '#- {defaultplugin="numericfield" readonly="view" .fieldCell}\n',
                                 'text': 'defaultplugin/numericfield',
                                 'expl': 'Attribuutit kappaleelle jossa inline numericfield',
                             },
                             {
-                                'data': "%% 'd;dsum' | gfrange(1,5,'autosave: true, cols: 3') %%",
+                                'data': "%% 'd;dsum' | gfrange(1,5,'autosave: true, cols: 3') %%\n",
                                 'text': 'Joukko kenttiä',
                                 'expl': 'Valmis joukko samannimisiä kenttä',
                             },
@@ -244,7 +242,7 @@ errormessage:    # inputcheckerin virheselite, tyhjä = selite on inputchecker
                                 'expl': 'Luo kenttä jonka syötteitä käyttäjä ei voi muokata',
                             },
                             {
-                                'data': templates[1].strip(),
+                                'data': templates[1].strip() + '\n',
                                 'text': 'Joukko numeerisia kenttiä ja summa',
                                 'expl': 'Lohko jossa joukko numeerisia kenttiä ja niiden summa',
                             },

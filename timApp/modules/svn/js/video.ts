@@ -307,11 +307,15 @@ class ShowFileController extends PluginBase<t.TypeOf<typeof ShowFileMarkup>,
 </iframe>`;
         } else {
             params = "";
+            let tbe = "";
             if (this.start) {
-                params = "#params=" + this.start; // iPad ei tottele 'loadedmetadata'
+                tbe += this.start; // iPad ei tottele 'loadedmetadata'
                 if (this.end) {
-                    params += "," + this.end;
+                    tbe += "," + this.end;
                 }
+            }
+            if ( tbe ) {
+                params = "#t=" + tbe;
             }
             let autoplay = "";
             if (this.attrs.autoplay) {
