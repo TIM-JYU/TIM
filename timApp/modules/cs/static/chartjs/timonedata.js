@@ -208,7 +208,7 @@ function addData(datasets, datas, keys, dopros) {
             lineTension: 0,
             label: ''+v+  (dopros ? ' %' : ''),
             fill: false,
-            backgroundColor: color(TIMJS.COLORS[ci]).alpha(0.5).rgbString(),
+            backgroundColor: TIMJS.color(TIMJS.COLORS[ci]).alpha(0.5).rgbString(),
             borderColor: TIMJS.COLORS[ci++],
             // borderDash: [3,10],
             borderWidth: 1,
