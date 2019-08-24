@@ -31,6 +31,8 @@ class MultisaveMarkupModel(GenericMarkupModel):
     autoUpdateTables: Union[bool, Missing] = True
     emailMode: Union[bool, Missing] = False
     emailRecipients: Union[List[str], Missing] = missing
+    emailPreMsg: Union[str, Missing] = missing
+    emailSubject: Union[str, Missing] = missing
     fields: Union[List[str], Missing] = missing
 
 
@@ -42,6 +44,8 @@ class MultisaveMarkupSchema(GenericMarkupSchema):
     autoUpdateTables = fields.Boolean(default=True)
     emailMode = fields.Boolean(default=False)
     emailRecipients = fields.List(fields.Str())
+    emailPreMsg = fields.String(allow_none=True)
+    emailSubject = fields.String()
     fields = fields.List(fields.Str())  # Keep this last
 
     @post_load
@@ -101,11 +105,6 @@ MULTISAVE_HTML_SCHEMA = MultisaveHtmlSchema()
 def ms_multihtml(args):  # args: List[GenericHtmlSchema]):
     ret = render_multihtml(MULTISAVE_HTML_SCHEMA, args)
     return ret
-
-
-@multisave_route.route('/sendemail/', methods=['post'])
-def send_email():
-    print("WIP")
 
 
 @multisave_route.route('/reqs/')

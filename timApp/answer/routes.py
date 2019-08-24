@@ -300,6 +300,54 @@ class JsRunnerSchema(GenericMarkupSchema):
             raise ValidationError("Either group or groups must be given.")
 
 
+@answers.route('/sendemail/', methods=['post'])
+def send_email():
+    """
+    WIP - send email with certain attributes set only in plugin values
+    TODO: combine with multisendemail
+    :return:
+    """
+    taskid = request.json.get('taskid')
+    try:
+        tid = TaskId.parse(taskid)
+    except (PluginException, TypeError) as e:
+        return abort(400, f'Task id error: {e}')
+    d = get_doc_or_abort(tid.doc_id)
+    verify_view_access(d)
+    curr_user = get_current_user_object()
+    try:
+        doc, plug = get_plugin_from_request(d.document, tid, curr_user)
+    except TaskNotFoundException as e:
+        return abort(404, f'Task not found: {taskid}')
+    if not plug.values.get("emailMode", False):
+        return abort(400, f'Plugin not set to email mode.')
+    rcpts = plug.values.get("emailRecipients", [])
+    # TODO: Use schemas
+    if not isinstance(rcpts, list) or len(rcpts) == 0:
+        return abort(400, f'Missing email recipients')
+    rcpts = ';'.join(rcpts)
+    premsg = plug.values.get("emailPreMsg", "")
+    subject = plug.values.get("emailSubject", "")
+    if not isinstance(subject, str) or len(subject) == 0:
+        return abort(400, f'Missing email subject')
+    msg = request.json.get('msg')
+    msg = premsg + "\n\n" + msg
+    bcc = ""
+    bccme = request.json.get('bccme', False)
+    if bccme:
+        bcc = curr_user.email
+    multi_send_email(
+        rcpt=rcpts,
+        subject=subject,
+        msg=msg,
+        mail_from=curr_user.email,
+        reply_to=curr_user.email,
+        bcc=bcc
+    )
+    return ok_response()
+
+
+
 @answers.route("/multiSendEmail/<task_id_ext>/", methods=['POST'])
 def multisendemail(task_id_ext: str):
     try:
