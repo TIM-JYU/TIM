@@ -137,7 +137,7 @@ class JsframeController extends PluginBase<t.TypeOf<typeof JsframeMarkup> ,
         let data = this.attrs.data;
         if ( this.attrs.c ) { data = this.attrs.c; }
         if ( data ) { this.initData = "    " + jsobject + "initData = " + JSON.stringify(data) + ";\n"; }
-        if ( aa.markup.fielddata ) { this.initData += "     + jsobject + fieldData = " + JSON.stringify(aa.markup.fielddata) + ";\n"; }
+        if ( aa.markup.fielddata ) { this.initData += "    " + jsobject + "fieldData = " + JSON.stringify(aa.markup.fielddata) + ";\n"; }
         // if ( data ) { this.setData(data); }
         this.viewctrl.addTimComponent(this);
         if (!this.attrs.forceBrowser) {

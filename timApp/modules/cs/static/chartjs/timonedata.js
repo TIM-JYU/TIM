@@ -320,7 +320,7 @@ TIMJS.setData = function(P, data) {
            coptions.legend.position = data.legend;
         }
     }
-    let fdata = data.fielddata || window.fieldData;
+    let fdata = data.fielddata || P.fieldData;
     if ( fdata ) {
        ensureDataSets(datasets, fieldindex+1);
   	   if ( fieldindex === 0 ) P.data.labels = fdata.graphdata.labels;

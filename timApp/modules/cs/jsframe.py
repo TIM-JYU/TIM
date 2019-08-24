@@ -87,7 +87,7 @@ class JSframe(Language):
         src = ma.get("srchtml", "")
         if not src and readyhtml:
             src = JSREADYHTML.get(readyhtml, "")
-        if src.find("TIMJS"):
+        if src.find("TIMJS") >= 0:
             self.jsobject = "TIMJS."
 
         opt = get_by_id(ma, "options", None)
