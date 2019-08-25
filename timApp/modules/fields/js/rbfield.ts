@@ -240,7 +240,7 @@ class RbfieldController extends PluginBase<t.TypeOf<typeof RbfieldMarkup>, t.Typ
         const cb = this.element.find("#" + this.getName());
         cb.prop("checked", b);
         this.userword = b ? "1" : "0";
-        if (this.attrs.autosave) {
+        if (this.attrs.autosave || this.attrs.autosave === undefined) {
             this.saveText();
         }
     }
@@ -264,7 +264,7 @@ class RbfieldController extends PluginBase<t.TypeOf<typeof RbfieldMarkup>, t.Typ
             this.preventedAutosave = false;
             return;
         }
-        if (this.attrs.autosave) {
+        if (this.attrs.autosave || this.attrs.autosave === undefined) {
             this.saveText();
         }
     }

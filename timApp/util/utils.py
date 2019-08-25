@@ -256,7 +256,7 @@ def get_error_message(e: Exception) -> str:
 
 Range = Tuple[int, int]
 
-TASK_PROG = re.compile('([\w.]*)\( *(\d*) *, *(\d*) *\)(.*)') # see https://regex101.com/r/ZZuizF/3
+TASK_PROG = re.compile('([\w\.]*)(:\w*)?\( *(\d*) *, *(\d*) *\)(.*)') # see https://regex101.com/r/ZZuizF/4
 TASK_NAME_PROG = re.compile("(\d+.)?([\w\d]+)[.\[]?.*")  # see https://regex101.com/r/OjnTAn/4
 
 
@@ -290,14 +290,16 @@ def widen_fields(fields: List[str] or str):
             continue
 
         tb = match.group(1)
-        n1 = int(match.group(2))
-        n2 = int(match.group(3))
-        te = match.group(4)
+        ft = match.group(2) or ""
+        n1 = int(match.group(3))
+        n2 = int(match.group(4))
+        te = match.group(5)
 
         for i in range(n1, n2 + 1):
             tn = tb + str(i) + te
             if not tb:
                 tn = ""
+            tn += ft
             if a is not None:  # a is allowed to be empty
                 tn += "=" + a + str(i)
             rfields.append(tn)

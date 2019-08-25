@@ -92,8 +92,8 @@ NEVERLAZY_PLUGINS = {
     'tableForm',
     'timMenu',
     'cbfield',
-    'rbfield'
-    'dropdown'
+    'rbfield',
+    'dropdown',
 }
 
 

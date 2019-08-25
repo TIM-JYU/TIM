@@ -484,7 +484,7 @@ The question ID `#dropdown1` should be unique to the task. It refers to the feed
 should be edited in both the question item and feedback plugins. 
 :::
 
-What {#dropdown1 shuffle: true#} on the stove?
+What {#dropdown1 autosave: false, shuffle: true#} on the stove?
 
 """, """## Item header {defaultplugin="drag"}
 ::: {.info}

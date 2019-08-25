@@ -203,7 +203,7 @@ autosave: false  # autosave, pois päältä
 validinput: '^\d{0,3}(\.\d{0,3})?$' # käyttäjäsyötteen rajoitin, tyhjä = ei rajoitusta
 errormessage:    # inputcheckerin virheselite, tyhjä = selite on inputchecker
 ```""", """#- {defaultplugin="numericfield" readonly="view" .fieldCell}
-%% 'd=;dsum=summa' | gfrange(1,5,'autosave: true, cols: 3') %%
+%% 'd=;dsum=summa' | gfrange(1,5,'cols: 3') %%
 """, ]
     return jsonify({
         "js": ["/field/js/build/numericfield.js"],
@@ -222,12 +222,17 @@ errormessage:    # inputcheckerin virheselite, tyhjä = selite on inputchecker
                                 'expl': 'Attribuutit kappaleelle jossa inline numericfield',
                             },
                             {
-                                'data': "%% 'd;dsum' | gfrange(1,5,'autosave: true, cols: 3') %%\n",
+                                'data': 'numericfield',
+                                'text': 'teksti: numericfield',
+                                'expl': 'Pelkkä kentän tyyppi: numericfield',
+                            },
+                            {
+                                'data': "%% 'd;dsum' | gfrange(1,5,'cols: 3') %%\n",
                                 'text': 'Joukko kenttiä',
                                 'expl': 'Valmis joukko samannimisiä kenttä',
                             },
                             {
-                                'data': '{#nf1 autosave: true #}',
+                                'data': '{#nf1 #}',
                                 'text': 'Numeerinen kenttä (inline, autosave)',
                                 'expl': 'Luo kenttä jonka syötteet ovat vain numeroita',
                             },
@@ -237,7 +242,7 @@ errormessage:    # inputcheckerin virheselite, tyhjä = selite on inputchecker
                                 'expl': 'Luo kenttä jonka syötteet ovat vain numeroita',
                             },
                             {
-                                'data': "{#nf3 readOnlyStyle: plaintext #}",
+                                'data': "{#nf3 autosave: false, readOnlyStyle: plaintext #}",
                                 'text': 'Label kenttä (read only)',
                                 'expl': 'Luo kenttä jonka syötteitä käyttäjä ei voi muokata',
                             },
@@ -245,6 +250,21 @@ errormessage:    # inputcheckerin virheselite, tyhjä = selite on inputchecker
                                 'data': templates[1].strip() + '\n',
                                 'text': 'Joukko numeerisia kenttiä ja summa',
                                 'expl': 'Lohko jossa joukko numeerisia kenttiä ja niiden summa',
+                            },
+                        ],
+                    },
+                    {
+                        'text': 'Settings',
+                        'items': [
+                            {
+                                'data': 'autosave: false,',
+                                'text': 'autosave: false',
+                                'expl': 'ei automaattista tallennusta',
+                            },
+                            {
+                                'data': 'cols: 4,',
+                                'text': 'Sarakkeiden määrä',
+                                'expl': 'Sarakkeiden määrä',
                             },
                         ],
                     },

@@ -118,7 +118,7 @@ class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.T
     }
 
     selfSave() {
-        if (this.attrs.autosave) {
+        if (this.attrs.autosave || this.attrs.autosave === undefined) {
             this.save();
         }
     }

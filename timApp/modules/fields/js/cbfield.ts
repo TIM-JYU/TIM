@@ -228,7 +228,7 @@ class CbfieldController extends PluginBase<t.TypeOf<typeof CbfieldMarkup>, t.Typ
             this.preventedAutosave = false;
             return;
         }
-        if (this.attrs.autosave) {
+        if (this.attrs.autosave || this.attrs.autosave === undefined) {
             this.saveText();
         }
     }

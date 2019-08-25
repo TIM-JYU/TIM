@@ -329,12 +329,12 @@ ${backTicks}
                 entries: [
                     {
                         title: "Add link",
-                        func: () => this.editor!.linkClicked("Linkin_teksti", "Linkin_osoite", false),
+                        func: () => this.editor!.linkClicked("Linkkiteksti", "Linkkiosoite", false),
                         name: "Link",
                     },
                     {
                         title: "Add image",
-                        func: () => this.editor!.linkClicked("Kuvan_teksti", "Kuvan_osoite", true),
+                        func: () => this.editor!.linkClicked("Kuvateksti", "Kuvasoite", true),
                         name: "Image",
                     },
                     {title: "List item", func: () => this.editor!.listClicked(), name: "List"},

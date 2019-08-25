@@ -300,7 +300,7 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
             this.preventedAutosave = false;
             return;
         }
-        if (this.attrs.autosave) {
+        if (this.attrs.autosave || this.attrs.autosave === undefined) {
             // noinspection JSIgnoredPromiseFromCall
             this.saveText();
         }
