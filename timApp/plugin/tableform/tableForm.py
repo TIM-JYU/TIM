@@ -78,12 +78,11 @@ class TableFormMarkupModel(GenericMarkupModel):
     fixedColor: Union[str, Missing] = missing
     toolbarTemplates: Union[List[dict], Missing] = missing
     saveStyles: Union[bool, Missing] = True
-    showToolbar: Union[bool, Missing] = True
-    showEditorButtons: Union[bool, Missing] = True
+    showToolbar: Union[bool, Missing] = missing
     sisugroups: Union[str, Missing] = missing
     autoUpdateFields: Union[bool, Missing] = True
     autoUpdateTables: Union[bool, Missing] = True
-    hid: Union[dict, Missing] = missing
+    hide: Union[dict, Missing] = missing
     fields: Union[List[str], Missing] = missing
 
 
@@ -122,12 +121,11 @@ class TableFormMarkupSchema(GenericMarkupSchema):
     fontSize = fields.Str(allow_none=True)
     fixedColor = fields.Str(allow_none=True)
     saveStyles = fields.Boolean(default=True)
-    showToolbar = fields.Boolean(default=True)
-    showEditorButtons = fields.Boolean(default=True)
+    showToolbar = fields.Boolean(allow_none=True)
     sisugroups = fields.Str()
     autoUpdateFields = fields.Boolean(default=True)
     autoUpdateTables = fields.Boolean(default=True)
-    hid = fields.Dict(allow_none=True)
+    hide = fields.Dict(allow_none=True)
     fields = fields.List(fields.Str())  # Keep this last - bad naming
 
     @post_load
