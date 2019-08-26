@@ -987,7 +987,7 @@ def search():
                     try:
                         visibility = par['attrs']['visible']
                         if visibility and not edit_access:
-                            break
+                            continue
                     except KeyError:
                         pass
 
