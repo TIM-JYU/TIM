@@ -609,6 +609,7 @@ def tag_search():
     :return: Tag search results response.
     """
     (query, folder, regex, case_sensitive, search_whole_words, search_owned_docs) = get_common_search_params(request)
+    relevance_threshold = get_option(request, 'relevanceThreshold', default=1, cast=int)
     results = []
 
     # PostgreSQL doesn't support regex directly, so as workaround get all tags below the search folder
@@ -641,6 +642,8 @@ def tag_search():
     try:
         for d in docs:
             try:
+                if is_excluded(get_document_relevance(d), relevance_threshold):
+                    continue
                 current_doc = d.path
                 m_tags = []
                 m_num = 0
@@ -719,6 +722,7 @@ def path_search():
     (query, folder, regex, case_sensitive, search_whole_words, search_owned_docs) = get_common_search_params(request)
     validate_query(query, search_whole_words)
     term_regex = compile_regex(query, regex, case_sensitive, search_whole_words)
+    relevance_threshold = get_option(request, 'relevanceThreshold', default=1, cast=int)
 
     db_term = f"%{query}%"
     custom_filter = None
@@ -754,6 +758,8 @@ def path_search():
     for d in docs:
         current_doc = d.path
         try:
+            if is_excluded(get_document_relevance(d), relevance_threshold):
+                continue
             path_result = TitleResult()
             matches = list(term_regex.finditer(d.path))
             if matches:
@@ -913,7 +919,6 @@ def search():
                         # Leave documents with excluded relevance out of the results.
                         if is_excluded(relevance, relevance_threshold):
                             continue
-
                 doc_result = DocResult(doc_info)
 
                 doc_title = line_info['doc_title']
@@ -973,7 +978,6 @@ def search():
                     else:
                         if is_excluded(relevance, relevance_threshold):
                             continue
-
                 pars = line_info['pars']
                 doc_result = DocResult(doc_info)
                 edit_access = has_edit_access(doc_info)
