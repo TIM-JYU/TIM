@@ -45,6 +45,7 @@ Admin: {isadmin}""")
                 break
             elif yesno == 'q' or yesno == 'quit':
                 exit()
+                timdb.close()
     db.session.commit()
     timdb.close()
 
