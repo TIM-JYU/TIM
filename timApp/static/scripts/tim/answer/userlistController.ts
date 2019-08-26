@@ -174,7 +174,7 @@ export class UserListController implements IController {
                     }
 
                     if (oldRowCol && oldRowCol.row === newRowCol.row) { return; }
-                    const unsavedTimComponents = this.viewctrl.checkUnSavedTimComponents("userChange");
+                    const unsavedTimComponents = this.viewctrl.checkUnSavedTimComponents(true);
                     if (unsavedTimComponents && !window.confirm("You have unsaved changes. Change user anyway?")) {
                         this.preventedChange = true;
                         if (oldRowCol) {

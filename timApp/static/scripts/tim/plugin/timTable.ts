@@ -2881,11 +2881,11 @@ export class TimTableController extends DestroyScope implements IController, ITi
         return this.getAreas().includes(area);
     }
 
-    isUnSaved(context?: "userChange" | "exit") {
+    isUnSaved(userChange?: boolean) {
         if (!this.task) {
             return false;
         }
-        if (context == "userChange" && this.data.nonUserSpecific) {
+        if (userChange && this.data.nonUserSpecific) {
             return false;
         }
         return this.edited;
