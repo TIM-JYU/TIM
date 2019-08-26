@@ -11,11 +11,12 @@ from flask import flash
 from flask import redirect
 from flask import request
 from flask import session
+from sqlalchemy.orm import joinedload
 
 from timApp.answer.answers import add_missing_users_from_group, get_points_by_rule
 from timApp.auth.accesshelper import verify_view_access, verify_teacher_access, verify_seeanswers_access, \
     get_rights, has_edit_access, get_doc_or_abort, verify_manage_access
-from timApp.item.block import BlockType
+from timApp.item.block import BlockType, Block
 from timApp.item.blockrelevance import BlockRelevance
 from timApp.document.create_item import create_or_copy_item, create_citation_doc
 from timApp.document.post_process import post_process_pars, \
@@ -43,7 +44,7 @@ from timApp.timdb.exceptions import TimDbException, PreambleException
 from timApp.document.docentry import DocEntry, get_documents
 from timApp.folder.folder import Folder
 from timApp.user.user import User
-from timApp.user.usergroup import UserGroup
+from timApp.user.usergroup import UserGroup, get_usergroup_eager_query
 from timApp.util.timtiming import taketime
 from timApp.util.utils import remove_path_special_chars, Range, seq_to_str
 from timApp.util.utils import get_error_message
@@ -226,12 +227,11 @@ def view(item_path, template_name, usergroup=None, route="view"):
             abort(403)
 
     # Check for incorrect group tags.
-    # Disabled for now.
-    if False and verify_manage_access(doc_info, require=False):
-        group_tags = [t.name[len(GROUP_TAG_PREFIX):] for t in doc_info.block.tags if t.name.startswith(GROUP_TAG_PREFIX)]
+    linked_groups = []
+    if verify_manage_access(doc_info, require=False):
+        linked_groups, group_tags = get_linked_groups(doc_info)
         if group_tags:
-            ugs = UserGroup.query.filter(UserGroup.name.in_(group_tags)).all()
-            names = set(ug.name for ug in ugs)
+            names = set(ug.name for ug in linked_groups)
             missing = set(group_tags) - names
             if missing:
                 flash(f'Document has incorrect group tags: {seq_to_str(list(missing))}')
@@ -433,7 +433,7 @@ def view(item_path, template_name, usergroup=None, route="view"):
                            doc_settings=doc_settings,
                            word_list=word_list,
                            memo_minutes=doc_settings.memo_minutes(),
-                           # add_button_text=doc_settings.get_dict().get('addParButtonText', 'Add paragraph')
+                           linked_groups=linked_groups,
                            )
 
 
@@ -454,6 +454,20 @@ def get_items(folder: str):
     folders = Folder.get_all_in_path(root_path=folder)
     folders.sort(key=lambda d: d.title.lower())
     return [f for f in folders if u.has_view_access(f)] + docs
+
+
+def get_linked_groups(i: Item) -> Tuple[List[UserGroup], List[str]]:
+    group_tags = [t.name[len(GROUP_TAG_PREFIX):] for t in i.block.tags if t.name.startswith(GROUP_TAG_PREFIX)]
+    if group_tags:
+        return get_usergroup_eager_query().filter(UserGroup.name.in_(group_tags)).all(), group_tags
+    return [], group_tags
+
+
+@view_page.route('/items/linkedGroups/<int:item_id>')
+def get_linked_groups_route(item_id: int):
+    d = get_doc_or_abort(item_id)
+    verify_teacher_access(d)
+    return json_response(get_linked_groups(d)[0])
 
 
 def should_hide_links(settings: DocSettings, rights: dict):

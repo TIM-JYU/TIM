@@ -18,7 +18,7 @@ import {ITemplate, showPrintDialog} from "../printing/printCtrl";
 import {showConsentDialog} from "../ui/consent";
 import {showMessageDialog} from "../ui/dialog";
 import {showInputDialog} from "../ui/inputDialog";
-import {ADMIN_GROUPNAME, TEACHERS_GROUPNAME} from "../user/IUser";
+import {ADMIN_GROUPNAME, IGroup, TEACHERS_GROUPNAME} from "../user/IUser";
 import {setConsent} from "../user/settingsCtrl";
 import {Users, UserService} from "../user/userService";
 import {$http, $localStorage, $window} from "../util/ngimport";
@@ -62,6 +62,7 @@ export class SidebarMenuCtrl implements IController {
     private showRelevance: boolean = true;
     private showFolderSettings: boolean = false;
     private item?: DocumentOrFolder = $window.item;
+    private linkedGroups: IDocument[] = [];
 
     constructor() {
         this.currentLecturesList = [];
@@ -87,6 +88,18 @@ export class SidebarMenuCtrl implements IController {
 
         this.updateLeftSide();
         $($window).resize(() => this.updateLeftSide());
+        if ($window.linked_groups) {
+            this.updateLinkedGroups($window.linked_groups);
+        }
+    }
+
+    private updateLinkedGroups(groups: IGroup[]) {
+        this.linkedGroups = [];
+        for (const g of groups) {
+            if (g.admin_doc != null) {
+                this.linkedGroups.push(g.admin_doc);
+            }
+        }
     }
 
     async $onInit() {
@@ -285,11 +298,17 @@ export class SidebarMenuCtrl implements IController {
     /**
      * Opens 'Set as a course' -dialog.
      */
-    openCourseDialog() {
+    async openCourseDialog() {
         if (!this.vctrl) {
             return;
         }
-        void showCourseDialog(this.vctrl.item);
+        await to(showCourseDialog(this.vctrl.item));
+        const r = await to($http.get<IGroup[]>(`/items/linkedGroups/${this.vctrl.item.id}`));
+        if (r.ok) {
+            this.updateLinkedGroups(r.result.data);
+        } else {
+            await showMessageDialog(r.result.data.error);
+        }
     }
 
     /**
@@ -438,7 +457,8 @@ timApp.component("timSidebarMenu", {
         lctrl: "?^timLecture",
         vctrl: "?^timView",
     },
-    template: `<div class="btn btn-default btn-sm pull-left" ng-click="$ctrl.showSidebar()" title="Show menu" ng-if="!$ctrl.hideTopButtons">
+    template: `<div class="btn btn-default btn-sm pull-left" ng-click="$ctrl.showSidebar()" title="Show menu"
+     ng-if="!$ctrl.hideTopButtons">
     <i class="glyphicon glyphicon-menu-hamburger" title="Click to open sidebar-menu"></i>
 </div>
 <uib-tabset id="menuTabs" active="$ctrl.active" class="hidden-sm hidden-xs">
@@ -466,7 +486,7 @@ timApp.component("timSidebarMenu", {
             <h5>Folder settings</h5>
             <button class="timButton btn-block" title="Set item relevance value" ng-if="$ctrl.showRelevance"
                     ng-click="$ctrl.openRelevanceEditDialog()">
-                    Edit relevance (<span uib-tooltip="Current relevance value">{{$ctrl.currentRelevance}}</span>)
+                Edit relevance (<span uib-tooltip="Current relevance value">{{$ctrl.currentRelevance}}</span>)
             </button>
         </div>
         <div ng-show="!($ctrl.vctrl.item && !$ctrl.vctrl.item.isFolder)">
@@ -484,7 +504,7 @@ timApp.component("timSidebarMenu", {
             <button class="timButton btn-block" ng-if="$ctrl.vctrl.item.rights.manage"
                     title="Set item relevance value"
                     ng-click="$ctrl.openRelevanceEditDialog()">
-                    Edit relevance (<span uib-tooltip="Current relevance value">{{$ctrl.currentRelevance}}</span>)
+                Edit relevance (<span uib-tooltip="Current relevance value">{{$ctrl.currentRelevance}}</span>)
             </button>
             <button class="timButton btn-block"
                     ng-click="$ctrl.markAllAsRead()"
@@ -533,8 +553,8 @@ timApp.component("timSidebarMenu", {
             </button>
             <h5 style="display: inline-block">Document tags</h5>
             <a style="display: inline-block"
-                     href="https://tim.jyu.fi/view/tim/ohjeita/opettajan-ohje#kurssikoodi">
-            <span class="glyphicon glyphicon-question-sign"></span>
+               href="https://tim.jyu.fi/view/tim/ohjeita/opettajan-ohje#kurssikoodi">
+                <span class="glyphicon glyphicon-question-sign"></span>
             </a>
             <button class="timButton btn-block" ng-show="$ctrl.vctrl.item.rights.manage"
                     title="Add and remove document tags" ng-click="$ctrl.addTag()">Edit tags
@@ -557,12 +577,20 @@ timApp.component("timSidebarMenu", {
                     ng-click="$ctrl.mergePdf()">Merge attachments
             </button>
         </div>
-        <div ng-if="$ctrl.users.isGroupAdmin()">
+        <div ng-if="$ctrl.users.isGroupAdmin() || $ctrl.linkedGroups.length > 0">
             <h5>Groups</h5>
-            <button class="timButton btn-block" title="Create a new group"
-                    ng-click="$ctrl.createGroup()">Create a new group
-            </button>
-            <a href="/view/groups">Browse existing groups</a>
+            <div ng-if="$ctrl.linkedGroups.length > 0">
+                <h6>Linked course groups</h6>
+                <ul class="list-unstyled">
+                    <li ng-repeat="l in $ctrl.linkedGroups"><a href="/view/{{ l.path }}">{{ l.title }}</a></li>
+                </ul>
+            </div>
+            <div ng-if="$ctrl.users.isGroupAdmin()">
+                <button class="timButton btn-block" title="Create a new group"
+                        ng-click="$ctrl.createGroup()">Create a new group
+                </button>
+                <a href="/view/groups">Browse existing groups</a>
+            </div>
         </div>
     </uib-tab>
 
@@ -575,7 +603,7 @@ timApp.component("timSidebarMenu", {
             <li ng-class="$ctrl.headerClass(h)" ng-repeat="h in ::$ctrl.displayIndex"
                 ng-click="h.closed = !h.closed">
                 <a class="a{{::h.h1.level}}" href="#{{::h.h1.id}}" target="_self" ng-click="$event.stopPropagation()">
-                {{::h.h1.text}}</a>
+                    {{::h.h1.text}}</a>
                 <ul class="list-unstyled" ng-if="!h.closed" ng-click="$event.stopPropagation()">
                     <li class="basic" ng-repeat="h2 in h.h2List">
                         <a class="a{{::h2.level}}" href="#{{::h2.id}}" target="_self">{{::h2.text}}</a>
@@ -586,7 +614,7 @@ timApp.component("timSidebarMenu", {
     </uib-tab>
 
     <uib-tab index="2" ng-if="!$ctrl.hideLinks && $ctrl.lctrl.lectureSettings.lectureMode"
-        select="$ctrl.toggleLectures()">
+             select="$ctrl.toggleLectures()">
         <uib-tab-heading>
             <i class="glyphicon glyphicon-education"></i>
         </uib-tab-heading>

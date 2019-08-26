@@ -140,5 +140,4 @@ class BookmarkTest2(BookmarkTestBase):
         ug = UserGroup.get_by_name('ohj2opiskelijat')
         ug.name = 'someothername'
         db.session.commit()
-        # The check is disabled for now.
-        # self.assertIn("Document has incorrect group tags: ohj2opiskelijat", self.get(d2.url))
+        self.assertIn("Document has incorrect group tags: ohj2opiskelijat", self.get(d2.url))

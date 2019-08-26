@@ -9,11 +9,14 @@ import attr
 from flask import jsonify, render_template_string, request, abort
 from marshmallow import Schema, fields, post_load
 from marshmallow.utils import missing
+from sqlalchemy.orm import joinedload
 from webargs.flaskparser import use_args
 
 from pluginserver_flask import GenericMarkupModel, GenericMarkupSchema, GenericHtmlSchema, GenericHtmlModel, \
     GenericAnswerSchema, GenericAnswerModel, Missing, \
     InfoSchema, create_blueprint
+from timApp.item.block import Block
+from timApp.item.tag import Tag, TagType, GROUP_TAG_PREFIX
 from timApp.sisu.sisu import get_potential_groups, parse_sisu_group_display_name
 from timApp.util.answerutil import get_fields_and_users
 from timApp.auth.accesshelper import get_doc_or_abort
@@ -166,12 +169,27 @@ def get_sisu_group_desc_for_table(g: UserGroup):
 
 def get_sisugroups(user: User, sisu_id: Optional[str]):
     gs = get_potential_groups(user, sisu_id)
+    docs_with_course_tag = Tag.query.filter_by(type=TagType.CourseCode).with_entities(Tag.block_id).subquery()
+    tags = (Tag.query
+            .filter(Tag.name.in_([GROUP_TAG_PREFIX + g.name for g in gs]) & Tag.block_id.in_(docs_with_course_tag))
+            .options(joinedload(Tag.block).joinedload(Block.docentries))
+            .all())
+    tag_map = {t.name[len(GROUP_TAG_PREFIX):]: t for t in tags}
+
+    def get_course_page(ug: UserGroup):
+        t: Tag = tag_map.get(ug.name)
+        if t:
+            return f'<a href="{t.block.docentries[0].url_relative}">URL</a>'
+        else:
+            return None
+
     return {
         'rows': {
             g.external_id.external_id: {
                 'TIM-nimi': g.name,
                 'URL': f'<a href="{g.admin_doc.docentries[0].url_relative}">URL</a>' if g.admin_doc else None,
                 'Jäseniä': g.users.count(),
+                'Kurssisivu': get_course_page(g),
             } for g in gs
         },
         'realnamemap': {
@@ -180,11 +198,12 @@ def get_sisugroups(user: User, sisu_id: Optional[str]):
         'emailmap': {
             g.external_id.external_id: '' for g in gs
         },
-        'fields': ['Jäseniä', 'TIM-nimi', 'URL'],
+        'fields': ['Jäseniä', 'TIM-nimi', 'URL', 'Kurssisivu'],
         'aliases': {
             'TIM-nimi': 'TIM-nimi',
             'URL': 'URL',
             'Jäseniä': 'Jäseniä',
+            'Kurssisivu': 'Kurssisivu',
         },
         'styles': {
             g.external_id.external_id: {} for g in gs

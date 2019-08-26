@@ -175,8 +175,8 @@ export type Result<T, U> = Success<T> | Failure<U>;
  * @param promise Promise to wrap.
  * @returns A promise that resolves to either a success or error.
  */
-export function to<T, U = {data: {error: string}}>(promise: IPromise<T>): IPromise<Result<T, U>> {
-    return promise
+export function to<T, U = {data: {error: string}}>(promise: Promise<T> | IPromise<T>): Promise<Result<T, U>> {
+    return (promise as Promise<T>)
         .then<Success<T>>((data: T) => ({ok: true, result: data}))
         .catch<Failure<U>>((err) => {
             return {ok: false, result: err};
