@@ -17,6 +17,7 @@ def query_admin():
                 if yesno == 'y':
                     user.groups.append(UserGroup.get_admin_group())
                     print(f'User {username} has been added to administrators.')
+                    break
             else:
                 print(f'User {username} is already an administrator.')
         else:
