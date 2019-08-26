@@ -206,6 +206,9 @@ export interface TimTable {
     showEditorButtons?: boolean;
     button?: string;
     autosave?: boolean;
+    // TODO: need self-explanatory name for this attribute
+    //  could also use hideBrowser?
+    nonUserSpecific?: boolean; // Whether (task-mode) table should react to user changes
     // lockCellCount?: boolean;
 }
 
@@ -2878,7 +2881,13 @@ export class TimTableController extends DestroyScope implements IController, ITi
         return this.getAreas().includes(area);
     }
 
-    isUnSaved() {
+    isUnSaved(context?: "userChange" | "exit") {
+        if (!this.task) {
+            return false;
+        }
+        if (context == "userChange" && this.data.nonUserSpecific) {
+            return false;
+        }
         return this.edited;
     }
 
