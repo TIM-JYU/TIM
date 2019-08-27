@@ -7,12 +7,18 @@ import {Binding, to} from "../util/utils";
 
 type PreviewList = Array<{from: string, to: string}>;
 
+interface PreviewResponse {
+    preview: PreviewList;
+    dest_exists: boolean;
+}
+
 class CopyFolderCtrl implements IController {
     static $inject = ["$scope"];
     private copyingFolder: "notcopying" | "copying" | "finished";
     private item!: Binding<IItem, "<">;
     private copyPreviewList: PreviewList | undefined;
     private scope: IScope;
+    private destExists?: boolean;
     private copyFolderPath: string | undefined;
     private copyFolderExclude: string;
     private newFolder: any;
@@ -29,12 +35,13 @@ class CopyFolderCtrl implements IController {
 
     async copyFolderPreview(path: string, exclude: string) {
         this.copyingFolder = "notcopying";
-        const r = await to($http.post<PreviewList>(`/copy/${this.item.id}/preview`, {
+        const r = await to($http.post<PreviewResponse>(`/copy/${this.item.id}/preview`, {
             destination: path,
             exclude: exclude,
         }));
         if (r.ok) {
-            this.copyPreviewList = r.result.data;
+            this.copyPreviewList = r.result.data.preview;
+            this.destExists = r.result.data.dest_exists;
         } else {
             await showMessageDialog(r.result.data.error);
         }
@@ -46,6 +53,7 @@ class CopyFolderCtrl implements IController {
         if (r.ok) {
             this.copyingFolder = "finished";
             this.copyPreviewList = undefined;
+            this.destExists = undefined;
             this.newFolder = r.result.data;
         } else {
             this.copyingFolder = "notcopying";
@@ -55,6 +63,7 @@ class CopyFolderCtrl implements IController {
 
     copyParamChanged() {
         this.copyPreviewList = undefined;
+        this.destExists = undefined;
     }
 }
 
@@ -89,6 +98,9 @@ timApp.component("timCopyFolder", {
                 class="glyphicon glyphicon-arrow-right"></i> <span ng-bind="p.to"></span></li>
     </ul>
     <p ng-show="$ctrl.copyPreviewList.length === 0">Nothing would be copied.</p>
+    <tim-alert severity="warning" ng-show="$ctrl.destExists">
+        The destination folder already exists. Make sure this is intended before copying.
+    </tim-alert>
     <button ng-click="$ctrl.copyFolder($ctrl.copyFolderPath, $ctrl.copyFolderExclude)" class="timButton"
             ng-show="$ctrl.copyFolderPath !== item.path &&
                      $ctrl.copyPreviewList.length > 0 &&
