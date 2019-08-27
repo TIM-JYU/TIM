@@ -31,8 +31,14 @@ class JsrunnerController extends PluginBase<t.TypeOf<typeof JsrunnerMarkup>, t.T
         return super.buttonText() || "Run script";
     }
 
+    toggleFieldHelper() {
+        this.isopen = !this.isopen;
+        if (this.isopen) {
+            this.showFieldHelper();
+        }
+    }
+
     showFieldHelper() {
-        this.isopen = this.attrs.open || false;
         const pluginlist = this.vctrl.getTimComponentsByRegex(".*");
         let tasks = "";
         if (this.attrs.docid) {
@@ -55,7 +61,12 @@ class JsrunnerController extends PluginBase<t.TypeOf<typeof JsrunnerMarkup>, t.T
 
     $onInit() {
         super.$onInit();
-        if (this.attrs.fieldhelper && this.isVisible()) { this.showFieldHelper(); }
+        if (this.attrs.fieldhelper && this.isVisible()) {
+            this.isopen = this.attrs.open || false;
+            if (this.isopen) {
+                this.showFieldHelper();
+            }
+        }
     }
 
     checkFields() {
@@ -207,8 +218,8 @@ jsrunnerApp.component("jsRunner", {
     <pre ng-if="$ctrl.output">{{$ctrl.output}}</pre>
     <p ng-if="::$ctrl.footer" ng-bind="::$ctrl.footer" class="plgfooter"></p>
     <div ng-if="::$ctrl.isFieldHelper()">
-    <p ng-show="!$ctrl.isopen" ng-click="$ctrl.isopen=true" >+ Show field list</p>
-    <p ng-show="$ctrl.isopen" ng-click="$ctrl.isopen=false">- Hide field list</p>
+    <p ng-show="!$ctrl.isopen" ng-click="$ctrl.toggleFieldHelper()" >+ Show field list</p>
+    <p ng-show="$ctrl.isopen" ng-click="$ctrl.toggleFieldHelper()">- Hide field list</p>
     <pre ng-show="$ctrl.isopen">{{$ctrl.fieldlist}}</pre>
     </div>
 </div>
