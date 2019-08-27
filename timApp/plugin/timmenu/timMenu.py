@@ -377,27 +377,27 @@ topMenu: false              # Show menu at the top when scrolling from below
 basicColors: false          # Use TIM default color scheme in menu bar
 menu: |!!
  - Menu title 1
-   - [Menu item 1](item_1_address)
-   - [Menu item 2](item_2_address)
-   - [Menu item 3](item_3_address)
+   - [Menu item 1](item1Address)
+   - [Menu item 2](item2Address)
+   - [Menu item 3](item3Address)
    - *Non-link item with italics*
  - Menu title 2
    - Submenu title 1
-     - [Submenu item 1](submenu_item_1_address)
-     - [Submenu item 2](submenu_item_2_address)
+     - [Submenu item 1](submenuItem1Address)
+     - [Submenu item 2](submenuItem2Address)
      - Subsubmenu title 1
-       - [Subsubmenu item 1](subsubmenu_item_1_address)
-   - [Menu item 4](item_4_address)
-   - [Menu item 5](item_5_address)
- - [Title as direct link 1](title_3_address)
- - [Title as direct link 2](title_4_address)
+       - [Subsubmenu item 1](subsubmenuItem1Address)
+   - [Menu item 4](item4Address)
+   - [Menu item 5](item5Address)
+ - [Title as direct link 1](title3Address)
+ - [Title as direct link 2](title4Address)
 !!
 ```
 ""","""
 ``` {plugin="timMenu" .hidden-print}
 menu: |!!
  - Menu title 1
-   - [Menu item](item_1_address)
+   - [Menu item](item1Address)
 !!
 ```
 """,
@@ -406,16 +406,16 @@ menu: |!!
 topMenu: true
 menu: |!!
  - Menu title 1
-   - [Menu item 1](item_1_address)
-   - [Menu item 2](item_2_address)
-   - [Menu item 3](item_3_address)
+   - [Menu item 1](item1Address)
+   - [Menu item 2](item2Address)
+   - [Menu item 3](item3Address)
  - Menu title 2
-   - [Menu item 4](item_4_address)
-   - [Menu item 5](item_5_address)
+   - [Menu item 4](item4Address)
+   - [Menu item 5](item5Address)
    - Submenu title
-     - [Submenu item 1](submenu_item_1_address)
-     - [Submenu item 2](submenu_item_2_address)
- - [Title 3](title_3_address)
+     - [Submenu item 1](submenuItem1Address)
+     - [Submenu item 2](submenuItem2Address)
+ - [Title 3](title3Address)
 !!
 ```
 """,
@@ -425,24 +425,24 @@ separator: "|"
 menu: |!!
  - Menu title 1
    width: 7.5em
-   - [Menu item 1](item_1_address)
-   - [Menu item 2](item_2_address)
-   - [Menu item 3](item_3_address)
+   - [Menu item 1](item1Address)
+   - [Menu item 2](item2Address)
+   - [Menu item 3](item3Address)
  - Menu title 2
    width: 7.5em
-   - [Menu item 4](item_4_address)
-   - [Menu item 5](item_5_address)
+   - [Menu item 4](item4Address)
+   - [Menu item 5](item5Address)
    - Submenu title
-     - [Submenu item 1](submenu_item_1_address)
-     - [Submenu item 2](submenu_item_2_address)
+     - [Submenu item 1](submenuItem1Address)
+     - [Submenu item 2](submenuItem2Address)
  - Menu title 3
    width: 7.5em
-   - [Menu item 6](item_6_address)
-   - [Menu item 7](item_7_address)
-   - [Menu item 8](item_8_address)
- - [Menu title 4](title_4_address)
+   - [Menu item 6](item6Address)
+   - [Menu item 7](item7Address)
+   - [Menu item 8](item8Address)
+ - [Menu title 4](title4Address)
     width: 7.5em
- - [Menu title 5](title_5_address)
+ - [Menu title 5](title5Address)
     width: 7.5em
 !!
 ```
