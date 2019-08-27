@@ -302,12 +302,15 @@ def view(item_path, template_name, usergroup=None, route="view"):
         if usergroup is None:
             usergroup = doc_settings.group()
         if usergroup is not None:
-            ug = UserGroup.get_by_name(usergroup)
-            if not ug:
-                abort(404, 'User group not found')
-            
-            user_dict = {u.id: u for u in ug.users}
-            user_list = list(user_dict.keys())
+            if not isinstance(usergroup, str):
+                flash("The setting 'group' must be a string.")
+            else:
+                ug = UserGroup.get_by_name(usergroup)
+                if not ug:
+                    abort(404, 'User group not found')
+
+                user_dict = {u.id: u for u in ug.users}
+                user_list = list(user_dict.keys())
         user_list = get_points_by_rule(points_sum_rule, task_ids, user_list, flatten=True)
         if ug:
             user_list = add_missing_users_from_group(user_list, ug)
