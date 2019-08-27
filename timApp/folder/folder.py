@@ -182,11 +182,11 @@ class Folder(db.Model, Item):
         if doc is not None:
             return doc
         if create_if_not_exist:
-            rel_folder, _ = split_location(relative_path)
+            rel_folder, short_name = split_location(relative_path)
             Folder.create(join_location(self.get_full_path(), rel_folder), owner_group_id=creator_group_id)
             return DocEntry.create(join_location(self.get_full_path(), relative_path),
                                    owner_group_id=creator_group_id,
-                                   title=relative_path)
+                                   title=short_name)
         else:
             return None
 
