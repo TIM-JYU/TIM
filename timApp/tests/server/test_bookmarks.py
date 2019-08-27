@@ -26,7 +26,7 @@ class BookmarkTest(BookmarkTestBase):
         self.assertIsNone(f)
 
         d = DocEntry.query.filter_by(name=self.current_user.get_personal_folder().path + '/Bookmarks').first()
-        self.assertIsNotNone(d)
+        self.assertEqual('Bookmarks', d.title)
         self.assertEqual([], bookmarks)
         group_name = 'mygroup'
         group_name2 = 'mygroup2'
