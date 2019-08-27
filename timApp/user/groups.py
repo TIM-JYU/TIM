@@ -27,9 +27,12 @@ USERGROUP_NOT_FOUND = 'User group not found'
 SISU_PREFIX = 'sisu-'
 
 
-def verify_groupadmin(require=True):
-    if not check_admin_access():
-        if not UserGroup.get_groupadmin_group() in get_current_user_object().groups:
+def verify_groupadmin(require=True, user=None):
+    curr_user = user
+    if curr_user is None:
+        curr_user = get_current_user_object()
+    if not check_admin_access(user=user):
+        if not UserGroup.get_groupadmin_group() in curr_user.groups:
             if require:
                 abort(403, 'This action requires group administrator rights.')
             else:
@@ -149,15 +152,15 @@ def validate_groupname(groupname: str):
 
 def verify_group_access(ug: UserGroup, access_set, u=None, require=True):
     if ug.name in PRIVILEGED_GROUPS:
-        return verify_admin(require=require)
+        return verify_admin(require=require, user=u)
     b = ug.admin_doc
     if not b:
-        return verify_groupadmin(require=require)
+        return verify_groupadmin(require=require, user=u)
     else:
         if not u:
             u = get_current_user_object()
         if not u.has_some_access(b, access_set):
-            return verify_groupadmin(require=require)
+            return verify_groupadmin(require=require, user=u)
         return True
 
 
