@@ -26,6 +26,7 @@ class SearchTest(TimRouteTest):
                                                                   'name': u_name},
                                                               'path': d.path,
                                                               'public': True,
+                                                              'relevance': None,
                                                               'rights': {
                                                                   'browse_own_answers': True,
                                                                   'can_comment': True,
@@ -150,6 +151,7 @@ class SearchTest(TimRouteTest):
                                                                   'name': u1_name},
                                                               'path': d.path,
                                                               'public': True,
+                                                              'relevance': None,
                                                               'rights': {
                                                                   'browse_own_answers': True,
                                                                   'can_comment': True,
@@ -213,6 +215,7 @@ class SearchTest(TimRouteTest):
                                                       'name': self.test_user_1.name},
                                                   'path': d.path,
                                                   'public': True,
+                                                  'relevance': None,
                                                   'rights': {'browse_own_answers': True,
                                                              'can_comment': True,
                                                              'can_mark_as_read': True,
@@ -282,6 +285,7 @@ class SearchTest(TimRouteTest):
                                                                 'name': self.test_user_1.name},
                                                             'path': d.path,
                                                             'public': True,
+                                                            'relevance': None,
                                                             'rights': {
                                                                 'browse_own_answers': True,
                                                                 'can_comment': True,
@@ -326,6 +330,7 @@ class SearchTest(TimRouteTest):
                                                           'name': u.name},
                                                       'path': d.path,
                                                       'public': True,
+                                                      'relevance': None,
                                                       'rights': {'browse_own_answers': True,
                                                                  'can_comment': True,
                                                                  'can_mark_as_read': True,
@@ -381,6 +386,7 @@ class SearchTest(TimRouteTest):
                                                                 'name': u.name},
                                                             'path': d.path,
                                                             'public': True,
+                                                            'relevance': None,
                                                             'rights': {
                                                                 'browse_own_answers': True,
                                                                 'can_comment': True,
@@ -426,6 +432,7 @@ class SearchTest(TimRouteTest):
                                                                 'name': u.name},
                                                             'path': d.path,
                                                             'public': True,
+                                                            'relevance': None,
                                                             'rights': {
                                                                 'browse_own_answers': True,
                                                                 'can_comment': True,
