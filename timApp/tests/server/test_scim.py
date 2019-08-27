@@ -7,6 +7,7 @@ from timApp.document.docentry import DocEntry
 from timApp.notification.notify import sent_mails_in_testing
 from timApp.sisu.scim import SISU_GROUP_PREFIX
 from timApp.tests.server.timroutetest import TimRouteTest
+from timApp.timdb.sqa import db
 from timApp.user.user import User, UserOrigin
 from timApp.user.usergroup import UserGroup, DELETED_GROUP_PREFIX, CUMULATIVE_GROUP_PREFIX
 from timApp.util.utils import seq_to_str
@@ -390,13 +391,40 @@ class ScimTest(TimRouteTest):
         self.json_post(
             '/scim/Groups',
             json_data={
-                'externalId': 'jy-CUR-1235-teachers',
+                'externalId': 'jy-CUR-1239-teachers',
                 'displayName': 'ITKP103 2019-09-09--2019-12-20: Luento 2: Opettajat',
                 'members': add_name_parts([
                     {'value': 'someone2', 'display': 'Sisu User', 'email': 'zzz@example.com'},
                 ]),
             }, auth=a,
             **scim_error("Key (email)=(zzz@example.com) already exists."),
+        )
+
+        User.create_with_group(name='xxx@example.com', real_name='Some Guy', email='xxx@example.com',
+                               origin=UserOrigin.Email)
+        db.session.commit()
+        # Email user can be upgraded
+        self.json_post(
+            '/scim/Groups',
+            json_data={
+                'externalId': 'jy-CUR-1240-teachers',
+                'displayName': 'ITKP108 2019-09-09--2019-12-20: Luento 1: Opettajat',
+                'members': add_name_parts([
+                    {'value': 'bbb', 'display': 'Sisu User', 'email': 'xxx@example.com'},
+                ]),
+            }, auth=a,
+            expect_status=201,
+        )
+        self.json_post(
+            '/scim/Groups',
+            json_data={
+                'externalId': 'jy-CUR-1241-teachers',
+                'displayName': 'ITKP109 2019-09-09--2019-12-20: Luento 1: Opettajat',
+                'members': add_name_parts([
+                    {'value': 'ccc', 'display': 'Sisu User', 'email': 'xxx@example.com'},
+                ]),
+            }, auth=a,
+            **scim_error("Key (email)=(xxx@example.com) already exists."),
         )
 
     def test_duplicate_usernames(self):

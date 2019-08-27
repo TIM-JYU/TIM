@@ -396,7 +396,7 @@ def update_users(ug: UserGroup, args: SCIMGroupModel):
                 name_to_use,
                 u.value,
                 origin=UserOrigin.Sisu,
-                allow_finding_by_email=False,
+                allow_finding_by_email='EmailUsersOnly',
             )
         except IntegrityError as e:
             db.session.rollback()

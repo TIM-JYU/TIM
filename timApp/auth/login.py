@@ -103,7 +103,9 @@ def create_or_update_user(
     if user is None:
         # Try email
         user: User = User.query.filter_by(email=email).first()
-        if user is not None and email and allow_finding_by_email:
+        if user is not None and email \
+                and (allow_finding_by_email == True
+                     or (user.is_email_user and allow_finding_by_email == 'EmailUsersOnly')):
             # Two possibilities here:
             # 1) An email user signs in using Korppi for the first time. We update the user's username and personal
             # usergroup.
