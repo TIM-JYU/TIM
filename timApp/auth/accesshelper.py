@@ -49,8 +49,8 @@ def get_folder_or_abort(folder_id: int):
     return f
 
 
-def verify_admin(require=True):
-    if not check_admin_access():
+def verify_admin(require=True, user=None):
+    if not check_admin_access(user=user):
         if require:
             abort(403, 'This action requires administrative rights.')
         return False
@@ -202,8 +202,10 @@ def has_ownership(b: ItemOrBlock):
     return get_current_user_object().has_ownership(b)
 
 
-def check_admin_access(block_id=None):
-    curr_user = get_current_user_object()
+def check_admin_access(block_id=None, user=None):
+    curr_user = user
+    if curr_user is None:
+        curr_user = get_current_user_object()
     if curr_user.is_admin:
         return BlockAccess(block_id=block_id,
                            accessible_from=datetime.min.replace(tzinfo=timezone.utc),

@@ -111,6 +111,7 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
         // TODO: give rows (and maybe colums) in data.table
         task: true,
         userdata: {type: "Relative", cells: {}},
+        nonUserSpecific: true,
 
         // saveCallBack: this.singleCellSave
     };

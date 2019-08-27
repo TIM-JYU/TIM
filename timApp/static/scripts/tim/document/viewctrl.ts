@@ -49,7 +49,7 @@ export interface ITimComponent {
     getAreas: () => string[];
     getTaskId: () => string | undefined;
     belongsToArea: (area: string) => boolean;
-    isUnSaved: () => boolean;
+    isUnSaved: (userChange?: boolean) => boolean;
     save: () => Promise<{saved: boolean, message: (string | undefined)}>;
     getPar: () => Paragraph;
     setPluginWords?: (words: string[]) => void;
@@ -566,12 +566,14 @@ export class ViewCtrl implements IController {
     }
 
     /**
+     * Check whether ITimComponents could lose data when leaving page or changing user
+     * @param userChange true if changing user, otherwise undefined or false
      * @returns {boolean} True if at least one registered ITimComponent was in unsaved state
      */
-    public checkUnSavedTimComponents(): boolean {
+    public checkUnSavedTimComponents(userChange?: boolean): boolean {
         let unsavedTimComponents = false;
         for (const t of this.timComponents.values()) {
-            if (t.isUnSaved()) {
+            if (t.isUnSaved(userChange)) {
                 unsavedTimComponents = true;
                 break;
             }
