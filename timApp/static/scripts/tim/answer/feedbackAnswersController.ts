@@ -113,6 +113,6 @@ export class FeedbackAnswersCtrl extends DialogController<{params: IFeedbackAnsw
 registerDialogComponent(FeedbackAnswersCtrl,
     {templateUrl: "/static/templates/allFeedbackAnswersOptions.html"});
 
-export function showFeedbackAnswers(p: IFeedbackAnswersParams): IPromise<FeedbackAnswersCtrl["ret"]> {
+export function showFeedbackAnswers(p: IFeedbackAnswersParams) {
     return showDialog(FeedbackAnswersCtrl, {params: () => p}).result;
 }
