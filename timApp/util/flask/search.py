@@ -894,11 +894,12 @@ def search():
 
             # Any line shorter than this is broken.
             if line and len(line) > 10:
+                # TODO: Combine with repeating parts from content loop.
                 line_info = json.loads(line)
                 doc_id = line_info['doc_id']
                 # TODO: Handle aliases and translated documents.
                 doc_info = DocEntry.query.filter((DocEntry.id == doc_id) & (DocEntry.name.like(folder + "%"))). \
-                    options(lazyload(DocEntry._block)).first()
+                    options(joinedload(DocEntry._block).joinedload(Block.relevance)).first()
                 if not doc_info:
                     continue
                 # If not allowed to view, continue to the next one.
@@ -908,7 +909,6 @@ def search():
                 if search_owned_docs:
                     if not user.has_ownership(doc_info, allow_admin=False):
                         continue
-
                 # If relevance is ignored or not found from search file, skip check.
                 if not ignore_relevance:
                     try:
@@ -956,7 +956,7 @@ def search():
 
                 # TODO: Handle aliases.
                 doc_info = DocEntry.query.filter((DocEntry.id == doc_id) & (DocEntry.name.like(folder + "%"))). \
-                    options(lazyload(DocEntry._block)).first()
+                    options(joinedload(DocEntry._block).joinedload(Block.relevance)).first()
                 if not doc_info:
                     continue
                 # If not allowed to view, continue to the next one.
