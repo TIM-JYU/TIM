@@ -41,7 +41,7 @@ class TaskId:
             raise PluginException('Task name cannot be only a number.')
 
     @staticmethod
-    def parse(s: str, require_doc_id=True, allow_block_hint=True, allow_custom_field=False) -> 'TaskId':
+    def parse(s: str, *, require_doc_id=True, allow_block_hint=True, allow_custom_field=False) -> 'TaskId':
         m = re.fullmatch(r'((\d+)\.)?([a-zåäöA-ZÅÄÖ0-9_-]+)(\.([a-zA-Z0-9_-]+))?(:([a-zA-Z]*)(:(readonly|readwrite))?)?', s)
         if not m:
             raise PluginException('Task name can only have characters a-z, 0-9, "_" and "-".')

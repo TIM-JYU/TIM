@@ -657,7 +657,7 @@ def handle_jsrunner_response(jsonresp, result, current_doc: DocInfo = None, allo
         for tid in task_u.keys():
             tasks.add(tid)
             try:
-                id_num = TaskId.parse(tid, False, False, True)
+                id_num = TaskId.parse(tid, require_doc_id=False, allow_block_hint=False, allow_custom_field=True)
             except PluginException:
                 return abort(400, f'Invalid task name: {tid.split(".")[1]}')
             if not id_num.doc_id:
@@ -667,7 +667,7 @@ def handle_jsrunner_response(jsonresp, result, current_doc: DocInfo = None, allo
     task_content_name_map = {}
     curr_user = get_current_user_object()
     for task in tasks:
-        t_id = TaskId.parse(task, False, False, True)
+        t_id = TaskId.parse(task, require_doc_id=False, allow_block_hint=False, allow_custom_field=True)
         dib = doc_map[t_id.doc_id]
         # TODO: Return case-specific abort messages
         if not (curr_user.has_teacher_access(dib) or (allow_non_teacher and t_id.doc_id == current_doc.id) or (curr_user.has_view_access(dib) and dib.document.get_own_settings().get("allow_external_jsrunner", False))):
@@ -702,7 +702,7 @@ def handle_jsrunner_response(jsonresp, result, current_doc: DocInfo = None, allo
         user_fields = user['fields']
         task_map = {}
         for key, value in user_fields.items():
-            task_id = TaskId.parse(key, False, False, True)
+            task_id = TaskId.parse(key, require_doc_id=False, allow_block_hint=False, allow_custom_field=True)
             field = task_id.field
             if field is None:
                 field = task_content_name_map[task_id.doc_task]
@@ -712,7 +712,7 @@ def handle_jsrunner_response(jsonresp, result, current_doc: DocInfo = None, allo
                 task_map[task_id.doc_task] = {}
                 task_map[task_id.doc_task][field] = value
         for taskid, contents in task_map.items():
-            task_id = TaskId.parse(taskid, False, False)
+            task_id = TaskId.parse(taskid, require_doc_id=False, allow_block_hint=False)
             an: Answer = get_latest_answers_query(task_id, [u]).first()
             points = None
             content = {}

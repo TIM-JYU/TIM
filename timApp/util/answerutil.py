@@ -3,7 +3,7 @@ import json
 import time
 from collections import defaultdict
 from datetime import timezone, timedelta, datetime
-from typing import Union, List
+from typing import Union, List, Tuple, Optional
 
 import dateutil.parser
 import dateutil.relativedelta
@@ -87,7 +87,7 @@ def get_fields_and_users(u_fields: List[str], groups: List[UserGroup],
     try:
         u_fields = widen_fields(u_fields)
     except Exception as e:
-        return abort(400, f"Problem with field names: {u_fields}\n" + str(e))
+        return abort(400, f"Problem with field names: {u_fields}\n{e}")
 
     tasks_without_fields = []
     for field in u_fields:
@@ -106,7 +106,7 @@ def get_fields_and_users(u_fields: List[str], groups: List[UserGroup],
         if a == '':
             return abort(400, f'Alias cannot be empty: {field}')
         try:
-            task_id = TaskId.parse(t, False, False, add_missing_fields)
+            task_id = TaskId.parse(t, require_doc_id=False, allow_block_hint=False, allow_custom_field=add_missing_fields)
         except PluginException as e:
             return abort(400, str(e))
         if task_id.field is None:
@@ -181,7 +181,7 @@ def get_fields_and_users(u_fields: List[str], groups: List[UserGroup],
     for u in users:
         user_map[u.id] = u
     answs = Answer.query.filter(Answer.id.in_(aid for aid, _ in sub)).all()
-    answers_with_users = []
+    answers_with_users: List[Tuple[int, Optional[Answer]]] = []
     for a in answs:
         answers_with_users.append((aid_uid_map[a.id], a))
     missing_users = set(u.id for u in users) - set(uid for uid, _ in answers_with_users)

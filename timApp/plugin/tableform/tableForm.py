@@ -329,7 +329,7 @@ def fetch_rows():
     # r = {}
     curr_user = get_current_user_object()
     taskid = request.args.get("taskid")
-    tid = TaskId.parse(taskid, False, False)
+    tid = TaskId.parse(taskid, require_doc_id=False, allow_block_hint=False)
     doc = get_doc_or_abort(tid.doc_id)
     try:
         plug = find_plugin_from_document(doc.document, tid, curr_user)
@@ -345,7 +345,7 @@ def fetch_rows():
 def fetch_rows_preview():
     curr_user = get_current_user_object()
     taskid = request.args.get("taskid")
-    tid = TaskId.parse(taskid, False, False)
+    tid = TaskId.parse(taskid, require_doc_id=False, allow_block_hint=False)
     doc = get_doc_or_abort(tid.doc_id)
     # With this route we can't be certain about showInView so we just check for edit access
     # whoever can open the plugin in preview should have that right
@@ -364,7 +364,7 @@ def update_fields():
     r = {}
     fields_to_update = request.args.getlist("fields")
     taskid = request.args.get("taskid")
-    tid = TaskId.parse(taskid, False, False)
+    tid = TaskId.parse(taskid, require_doc_id=False, allow_block_hint=False)
     doc = get_doc_or_abort(tid.doc_id)
     curr_user = get_current_user_object()
     try:
