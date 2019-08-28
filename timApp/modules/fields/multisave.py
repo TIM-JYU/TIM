@@ -125,7 +125,8 @@ fields:
 ```""", """
 ``` {plugin="multisave"}
 buttonText: "Send grade and credits to Sisu"
-destCourse: jy-CUR-4668  # change th course Sisu-id 
+destCourse: jy-CUR-4668  # change th course Sisu-id
+showInView: false
 ```"""]
     return jsonify({
         "js": ["/field/js/build/multisave.js"],
