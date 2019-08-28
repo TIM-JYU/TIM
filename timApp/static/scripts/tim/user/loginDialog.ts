@@ -299,12 +299,12 @@ registerDialogComponent(LoginDialogController,
         <div ng-switch-default class="col-sm-12">
         <form ng-submit="$ctrl.loginWithEmail()" ng-show="!$ctrl.showSignup">
             <p class="text-center">
-                JYU students and staff, please log in with Korppi:
+                JYU students and staff, please log in with JY-account:
             </p>
 
             <button class="timButton center-block" type="button"
                     ng-click="$ctrl.korppiLogin($ctrl.addingToSession)">Log in
-                with Korppi
+                with JY-account
             </button>
             <p class="text-center text-smaller"><a href="/view/tim/ongelmia-kirjautumisessa">Problems logging
                 in?</a></p>
@@ -474,11 +474,11 @@ registerDialogComponent(LoginDialogController,
         <div ng-switch-when="fi" class="col-sm-12">
         <form ng-submit="$ctrl.loginWithEmail()" ng-show="!$ctrl.showSignup">
             <p class="text-center">
-                JYU opiskelijat ja henkilökunta, kirjautukaa sisään Korppi-tunnuksilla:
+                JYU opiskelijat ja henkilökunta, kirjautukaa sisään JY-tunnuksilla:
             </p>
 
             <button class="timButton center-block" type="button"
-                    ng-click="$ctrl.korppiLogin($ctrl.addingToSession)">Korppi-kirjautuminen
+                    ng-click="$ctrl.korppiLogin($ctrl.addingToSession)">Kirjaudu JY-tunnuksilla
             </button>
             <p class="text-center text-smaller">
                 <a href="/view/tim/ongelmia-kirjautumisessa">Ongelmia kirjautumisessa?</a>
