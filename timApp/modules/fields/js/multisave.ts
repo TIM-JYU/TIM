@@ -6,6 +6,7 @@ import * as t from "io-ts";
 import {ITimComponent, ViewCtrl} from "tim/document/viewctrl";
 import {GenericPluginMarkup, Info, withDefault} from "tim/plugin/attributes";
 import {PluginBase, pluginBindings} from "tim/plugin/util";
+import {showMessageDialog} from "../../../static/scripts/tim/ui/dialog";
 import {$http} from "../../../static/scripts/tim/util/ngimport";
 
 const multisaveApp = angular.module("multisaveApp", ["ngSanitize"]);
@@ -21,6 +22,7 @@ const multisaveMarkup = t.intersection([
         followid: t.string,
         jumplink: t.string,
         jumptarget: t.string,
+        destCourse: t.string,
     }),
     GenericPluginMarkup,
     t.type({
@@ -101,7 +103,7 @@ export class MultisaveController extends PluginBase<t.TypeOf<typeof multisaveMar
      * TODO: Generic - move and import
      */
     public async sendEmail() {
-        if(!this.emaillist || !this.emailsubject){
+        if (!this.emaillist || !this.emailsubject) {
             return;
         }
         if ( this.emailtim ) {
@@ -126,11 +128,10 @@ export class MultisaveController extends PluginBase<t.TypeOf<typeof multisaveMar
               + "&" + "bcc=" + bcc;
     }
 
-    toggleEmailForm(){
+    toggleEmailForm() {
         const tid = this.pluginMeta.getTaskId();
         // For now only tasks can send email
-        if (!tid ||  tid.split(".").length < 2)
-        {
+        if (!tid ||  tid.split(".").length < 2) {
             return;
         }
         this.showEmailForm = !this.showEmailForm;
@@ -145,7 +146,13 @@ export class MultisaveController extends PluginBase<t.TypeOf<typeof multisaveMar
      *   plugin in the same document
      */
     async save() {
-        if(this.attrs.emailMode){
+
+        if ( this.attrs.destCourse ) {
+           await showMessageDialog("Does not work yet.  Hope it works in October...");
+           return;
+        }
+
+        if (this.attrs.emailMode) {
             this.toggleEmailForm();
             return;
         }
