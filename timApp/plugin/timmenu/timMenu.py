@@ -111,7 +111,7 @@ class TimMenuItemModel:
 
 @attr.s(auto_attribs=True)
 class TimMenuMarkupModel(GenericMarkupModel):
-    # hoverOpen: Union[bool, Missing] = missing
+    hoverOpen: Union[bool, Missing] = missing
     topMenu: Union[bool, Missing] = missing
     topMenuTriggerHeight: Union[int, Missing] = missing
     openAbove: Union[bool, Missing] = missing
@@ -135,7 +135,7 @@ class TimMenuItemSchema(Schema):
 
 
 class TimMenuMarkupSchema(GenericMarkupSchema):
-    # hoverOpen = fields.Bool(allow_none=True, default=True)
+    hoverOpen = fields.Bool(allow_none=True, default=True)
     topMenu = fields.Bool(allow_none=True, default=False)
     topMenuTriggerHeight = fields.Int(allow_none=True, default=200)
     openAbove = fields.Bool(allow_none=True, default=False)
@@ -375,6 +375,7 @@ openAbove: false            # Open all menus upwards
 keepLinkColors: false       # Use default link colors
 topMenu: false              # Show menu at the top when scrolling from below
 basicColors: false          # Use TIM default color scheme in menu bar
+hoverOpen: true             # Allow opening menus without clicking
 menu: |!!
  - Menu title 1
    - [Menu item 1](item1Address)

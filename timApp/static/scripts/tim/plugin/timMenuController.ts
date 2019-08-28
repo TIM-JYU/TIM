@@ -74,7 +74,7 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
     private menu: ITimMenuItem[] = [];
     private vctrl?: Require<ViewCtrl>;
     private openingSymbol: string = "";
-    // private hoverOpen: boolean = true;
+    private hoverOpen: boolean = true;
     private separator: string = "";
     private topMenu: boolean = false;
     private basicColors: boolean = false;
@@ -104,7 +104,7 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
             return;
         }
         this.menu = this.attrsall.menu;
-        // this.hoverOpen = this.attrs.hoverOpen;
+        this.hoverOpen = this.attrs.hoverOpen;
         this.separator = this.attrs.separator;
         this.topMenu = this.attrs.topMenu;
         this.openAbove = this.attrs.openAbove;
@@ -158,6 +158,10 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
      * @param clicked Toggled by a mouse click.
      */
     toggleSubmenu(item: ITimMenuItem, parent1: ITimMenuItem | undefined, parent2: ITimMenuItem | undefined, clicked: boolean) {
+        // If called by mouseenter and hover open is disabled, do nothing.
+        if (!clicked && !this.hoverOpen) {
+            return;
+        }
         // Toggle open menu closed and back again when clicking.
         if (this.previouslyClicked && (this.previouslyClicked === item || item.open)) {
             item.open = !item.open;
@@ -227,7 +231,7 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
         }
         this.previouslyScrollingDown = scrollingDown;
         this.previousScroll = $(window).scrollTop();
-        console.log(this.topMenuVisible + " " + this.previousSwitch + " " + scrollY + " " + this.topMenuTriggerHeight);
+        // console.log(this.topMenuVisible + " " + this.previousSwitch + " " + scrollY + " " + this.topMenuTriggerHeight);
 
         // Sticky can only show when the element's place in document goes outside upper bounds.
         if (belowPlaceholder) {
@@ -356,11 +360,12 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
     }
 
     /**
-     * Close all menus when outside plugin, if they weren't opened with a click.
+     * Handle mouseleave event.
      */
     private mouseLeave() {
         this.mouseInside = false;
-        if (!this.clickedInside) {
+        // Only close menus on mouseleave, if hoverOpen is enabled and menu hasn't been clicked.
+        if (!this.clickedInside && this.hoverOpen) {
             this.closeMenus();
         }
     }
