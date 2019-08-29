@@ -2,52 +2,52 @@
 import time
 import traceback
 from typing import Tuple, Union, Optional, List
-from flask import g
 
 from flask import Blueprint, render_template
 from flask import abort
 from flask import current_app
 from flask import flash
+from flask import g
 from flask import redirect
 from flask import request
 from flask import session
-from sqlalchemy.orm import joinedload
 
 from timApp.answer.answers import add_missing_users_from_group, get_points_by_rule
 from timApp.auth.accesshelper import verify_view_access, verify_teacher_access, verify_seeanswers_access, \
     get_rights, has_edit_access, get_doc_or_abort, verify_manage_access
-from timApp.item.block import BlockType, Block
-from timApp.item.blockrelevance import BlockRelevance
+from timApp.auth.sessioninfo import get_current_user_object, logged_in, current_user_in_lecture, \
+    get_user_settings, save_last_page
 from timApp.document.create_item import create_or_copy_item, create_citation_doc
-from timApp.document.post_process import post_process_pars, \
-    hide_names_in_teacher
-from timApp.folder.folder_view import try_return_folder
-from timApp.item.item import Item
-from timApp.item.tag import GROUP_TAG_PREFIX
-from timApp.item.validation import has_special_chars
-from timApp.tim_app import app
+from timApp.document.docentry import DocEntry, get_documents
+from timApp.document.docinfo import DocInfo
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.docsettings import DocSettings
 from timApp.document.document import get_index_from_html_list, dereference_pars, Document
+from timApp.document.post_process import post_process_pars, \
+    hide_names_in_teacher
 from timApp.document.preloadoption import PreloadOption
-from timApp.markdown.htmlSanitize import sanitize_html
-from timApp.util.logger import log_error
-from timApp.markdown.markdownconverter import create_environment
-from timApp.plugin.pluginControl import find_task_ids, get_all_reqs
-from timApp.timdb.sqa import db
-from timApp.util.flask.requesthelper import get_option, verify_json_params
-from timApp.util.flask.responsehelper import json_response, ok_response
-from timApp.auth.sessioninfo import get_current_user_object, logged_in, current_user_in_lecture, \
-    get_user_settings, save_last_page
-from timApp.document.docinfo import DocInfo
-from timApp.timdb.exceptions import TimDbException, PreambleException
-from timApp.document.docentry import DocEntry, get_documents
 from timApp.folder.folder import Folder
+from timApp.folder.folder_view import try_return_folder
+from timApp.item.block import BlockType
+from timApp.item.blockrelevance import BlockRelevance
+from timApp.item.item import Item
+from timApp.item.tag import GROUP_TAG_PREFIX
+from timApp.item.validation import has_special_chars
+from timApp.markdown.htmlSanitize import sanitize_html
+from timApp.markdown.markdownconverter import create_environment
+from timApp.plugin.plugin import find_task_ids
+from timApp.plugin.pluginControl import get_all_reqs
+from timApp.tim_app import app
+from timApp.timdb.exceptions import TimDbException, PreambleException
+from timApp.timdb.sqa import db
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup, get_usergroup_eager_query
+from timApp.util.flask.requesthelper import get_option, verify_json_params
+from timApp.util.flask.responsehelper import json_response, ok_response
+from timApp.util.logger import log_error
 from timApp.util.timtiming import taketime
-from timApp.util.utils import remove_path_special_chars, Range, seq_to_str
 from timApp.util.utils import get_error_message
+from timApp.util.utils import remove_path_special_chars, Range, seq_to_str
 
 DEFAULT_RELEVANCE = 10
 

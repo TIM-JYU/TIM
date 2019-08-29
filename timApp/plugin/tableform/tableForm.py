@@ -15,21 +15,19 @@ from webargs.flaskparser import use_args
 from pluginserver_flask import GenericMarkupModel, GenericMarkupSchema, GenericHtmlSchema, GenericHtmlModel, \
     GenericAnswerSchema, GenericAnswerModel, Missing, \
     InfoSchema, create_blueprint
-from timApp.item.block import Block
-from timApp.item.tag import Tag, TagType, GROUP_TAG_PREFIX
-from timApp.sisu.sisu import get_potential_groups, parse_sisu_group_display_name
-from timApp.util.answerutil import get_fields_and_users
 from timApp.auth.accesshelper import get_doc_or_abort
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docinfo import DocInfo
+from timApp.item.block import Block
+from timApp.item.tag import Tag, TagType, GROUP_TAG_PREFIX
 from timApp.plugin.plugin import find_plugin_from_document, TaskNotFoundException
-from timApp.plugin.pluginexception import PluginException
 from timApp.plugin.taskid import TaskId
+from timApp.sisu.sisu import get_potential_groups, parse_sisu_group_display_name
 from timApp.tim_app import csrf
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
-from timApp.util.flask.requesthelper import verify_json_params
 from timApp.util.flask.responsehelper import csv_response, json_response
+from timApp.util.get_fields import get_fields_and_users
 from timApp.util.utils import get_boolean
 
 

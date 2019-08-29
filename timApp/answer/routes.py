@@ -1,12 +1,9 @@
 """Answer-related routes."""
 import json
 import re
-from datetime import timezone, timedelta, datetime
 from typing import Union, List, Tuple, Dict
 
 import attr
-import dateutil.parser
-import dateutil.relativedelta
 from flask import Blueprint
 from flask import Response
 from flask import abort
@@ -35,10 +32,11 @@ from timApp.item.block import Block, BlockType
 from timApp.markdown.dumboclient import call_dumbo
 from timApp.notification.notify import multi_send_email
 from timApp.plugin.containerLink import call_plugin_answer
-from timApp.plugin.plugin import Plugin, PluginWrap, NEVERLAZY, TaskNotFoundException, is_global, is_global_id
+from timApp.plugin.plugin import Plugin, PluginWrap, NEVERLAZY, TaskNotFoundException, is_global, is_global_id, \
+    find_task_ids
 from timApp.plugin.plugin import PluginType
 from timApp.plugin.plugin import find_plugin_from_document
-from timApp.plugin.pluginControl import find_task_ids, pluginify
+from timApp.plugin.pluginControl import pluginify
 from timApp.plugin.pluginexception import PluginException
 from timApp.plugin.taskid import TaskId, TaskIdAccess
 from timApp.timdb.dbaccess import get_timdb
@@ -46,10 +44,11 @@ from timApp.timdb.exceptions import TimDbException
 from timApp.timdb.sqa import db
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
-from timApp.util.answerutil import task_ids_to_strlist, get_fields_and_users
+from timApp.util.answerutil import task_ids_to_strlist, period_handling
 from timApp.util.flask.requesthelper import verify_json_params, get_option, get_consent_opt
 from timApp.util.flask.responsehelper import json_response, ok_response
-from timApp.util.utils import try_load_json, get_current_time
+from timApp.util.get_fields import get_fields_and_users
+from timApp.util.utils import try_load_json
 
 # TODO: Remove methods in util/answerutil where many "moved" here to avoid circular imports
 
@@ -164,11 +163,6 @@ def get_iframehtml(plugintype: str, task_id_ext: str, user_id: int, anr: int):
     result = jsonresp['iframehtml']
     db.session.commit()
     return result
-
-
-def chunks(l: List, n: int):
-    for i in range(0, len(l), n):
-        yield l[i:i + n]
 
 
 def get_useranswers_for_task(user, task_ids, answer_map):
@@ -1279,53 +1273,3 @@ def rename_answers(old_name: str, new_name: str, doc_path: str):
         a.task_id = f'{d.id}.{new_name}'
     db.session.commit()
     return json_response({'modified': len(answers_to_rename), 'conflicts': conflicts})
-
-
-def period_handling(task_ids, doc_ids, period):
-    """
-    Returns start and end of an period for answer results.
-    :param task_ids: Task ids containing the answers.
-    :param doc_ids: Documents containing the answers.
-    :param period: Period options: whenever, sincelast, day, week, month, other.
-    :return: Return "from"-period and "to"-period.
-    """
-    period_from = datetime.min.replace(tzinfo=timezone.utc)
-    period_to = get_current_time()
-
-    since_last_key = task_ids[0].doc_task if task_ids else None
-    if len(task_ids) > 1:
-        since_last_key = str(next(d for d in doc_ids))
-        if len(doc_ids) > 1:
-            since_last_key = None
-
-        # Period from which to take results.
-    if period == 'whenever':
-        pass
-    elif period == 'sincelast':
-        u = get_current_user_object()
-        prefs = u.get_prefs()
-        last_answer_fetch = prefs.last_answer_fetch
-        period_from = last_answer_fetch.get(since_last_key, datetime.min.replace(tzinfo=timezone.utc))
-        last_answer_fetch[since_last_key] = get_current_time()
-        prefs.last_answer_fetch = last_answer_fetch
-        u.set_prefs(prefs)
-        db.session.commit()
-    elif period == 'day':
-        period_from = period_to - timedelta(days=1)
-    elif period == 'week':
-        period_from = period_to - timedelta(weeks=1)
-    elif period == 'month':
-        period_from = period_to - dateutil.relativedelta.relativedelta(months=1)
-    elif period == 'other':
-        period_from_str = get_option(request, 'periodFrom', period_from.isoformat())
-        period_to_str = get_option(request, 'periodTo', period_to.isoformat())
-        try:
-            period_from = dateutil.parser.parse(period_from_str)
-        except (ValueError, OverflowError):
-            pass
-        try:
-            period_to = dateutil.parser.parse(period_to_str)
-        except (ValueError, OverflowError):
-            pass
-
-    return period_from, period_to
