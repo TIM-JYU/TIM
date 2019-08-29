@@ -3,17 +3,16 @@ import re
 from copy import deepcopy
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Tuple, Optional, Union, Iterable, Dict, NamedTuple, Generator, Match
+from typing import Tuple, Optional, Union, Iterable, Dict, NamedTuple, Generator, Match, List
 
 import attr
 import yaml
-from docutils.nodes import header
-from flask import render_template_string
 from jinja2 import Environment, BaseLoader
 
 import timApp
 from timApp.answer.answer import Answer
 from timApp.auth.sessioninfo import get_current_user_object
+from timApp.document.docentry import DocEntry
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.document import Document
 from timApp.document.macroinfo import MacroInfo
@@ -92,8 +91,8 @@ NEVERLAZY_PLUGINS = {
     'tableForm',
     'timMenu',
     'cbfield',
-    'rbfield'
-    'dropdown'
+    'rbfield',
+    'dropdown',
 }
 
 
@@ -323,7 +322,6 @@ class Plugin:
 
     def get_info(self, users: Iterable[User], old_answers: int, look_answer: bool = False, valid: bool = True):
         user_ids = ';'.join([u.name for u in users])
-        from timApp.auth.sessioninfo import get_current_user_object
         return {
             # number of earlier answers
             # TODO: this is None when browsing answers with answer browser; should determine the number of answers
@@ -712,3 +710,48 @@ def is_global_id(task_id: TaskId):
     if task_id is None:
         return False
     return task_id.task_name.startswith('GLO_')
+
+
+def find_task_ids(
+        blocks: List[DocParagraph],
+        check_access=True,
+) -> Tuple[List[TaskId], int, List[TaskId]]:
+    """Finds all task plugins from the given list of paragraphs and returns their ids."""
+    task_ids = []
+    plugin_count = 0
+    access_missing = []
+    curr_user = get_current_user_object()
+
+    def handle_taskid(t: TaskId):
+        if not t.doc_id:
+            t.update_doc_id_from_block(block)
+        elif check_access:
+            b = DocEntry.find_by_id(t.doc_id)
+            if b and not curr_user.has_seeanswers_access(b):
+                access_missing.append(t)
+                return True
+
+    for block in blocks:
+        task_id = block.get_attr('taskId')
+        plugin = block.get_attr('plugin')
+        if plugin:
+            plugin_count += 1
+            if task_id:
+                try:
+                    tid = TaskId.parse(task_id, require_doc_id=False, allow_block_hint=False)
+                except PluginException:
+                    continue
+                if handle_taskid(tid):
+                    continue
+                task_ids.append(tid)
+        elif block.get_attr('defaultplugin'):
+            for task_id, _, _, _ in find_inline_plugins(block, block.doc.get_settings().get_macroinfo()):
+                try:
+                    task_id = task_id.validate()
+                except PluginException:
+                    continue
+                plugin_count += 1
+                if handle_taskid(task_id):
+                    continue
+                task_ids.append(task_id)
+    return task_ids, plugin_count, access_missing

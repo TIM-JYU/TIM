@@ -1,23 +1,20 @@
+import csv
 import json
+from datetime import datetime
 from typing import List, Tuple, Iterable
 
 from flask import Blueprint, request, abort
 
-from timApp.answer.routes import period_handling
-from timApp.auth.sessioninfo import get_current_user_object
-from timApp.plugin.plugin import Plugin
-from timApp.user.user import User
-from timApp.util.flask.responsehelper import csv_response
-from timApp.plugin.taskid import TaskId
-from datetime import datetime
 from timApp.answer.answer import Answer
-from timApp.util.answerutil import task_ids_to_strlist
-
-from timApp.document.docentry import DocEntry, get_documents_in_folder
-from timApp.util.flask.requesthelper import get_option
 from timApp.auth.accesshelper import verify_teacher_access
-from timApp.plugin.pluginControl import find_task_ids
-import csv
+from timApp.auth.sessioninfo import get_current_user_object
+from timApp.document.docentry import DocEntry, get_documents_in_folder
+from timApp.plugin.plugin import Plugin, find_task_ids
+from timApp.plugin.taskid import TaskId
+from timApp.user.user import User
+from timApp.util.answerutil import task_ids_to_strlist, period_handling
+from timApp.util.flask.requesthelper import get_option
+from timApp.util.flask.responsehelper import csv_response
 
 feedback = Blueprint('feedback',
                      __name__,

@@ -140,8 +140,9 @@ function mergeDeep(target, source, forcechar) {
 }
 
 // TIM jsframe function for ChartJS
+var TIMJS = {};
 
-let basicoptions = {
+TIMJS.basicoptions = {
     'type': 'bar',
     'data': {
         'labels': [1,2,3,4,5,6],
@@ -168,7 +169,7 @@ let basicoptions = {
     }
 };
 
-let COLORS = [
+TIMJS.COLORS = [
     '#4dc9f6',
     '#f67019',
     '#f53794',
@@ -179,7 +180,8 @@ let COLORS = [
     '#58595b',
     '#8549ba'
 ];
-let color = Chart.helpers.color;
+
+TIMJS.color = Chart.helpers.color;
 
 function pros(od) {
     // return od;
@@ -206,12 +208,12 @@ function addData(datasets, datas, keys, dopros) {
             lineTension: 0,
             label: ''+v+  (dopros ? ' %' : ''),
             fill: false,
-            backgroundColor: color(COLORS[ci]).alpha(0.5).rgbString(),
-            borderColor: COLORS[ci++],
+            backgroundColor: TIMJS.color(TIMJS.COLORS[ci]).alpha(0.5).rgbString(),
+            borderColor: TIMJS.COLORS[ci++],
             // borderDash: [3,10],
             borderWidth: 1,
         };
-        if ( ci > COLORS.length ) ci = 0;
+        if ( ci > TIMJS.COLORS.length ) ci = 0;
         let od = datas[v];
         if ( !od || od.length === 0) continue;
         d.data = dopros ? pros(od) : od;
@@ -220,14 +222,17 @@ function addData(datasets, datas, keys, dopros) {
 }
 
 
-let globaldata =  {};
+TIMJS.globaldata =  {};
+TIMJS.chart = null;
+TIMJS.originalData = {};
+TIMJS.initData =  {};
+TIMJS.options = TIMJS.basicoptions;
 
 window.onload = function() {
-    if ( window.initData ) globaldata = initData; // mergeDeep(globaldata, window.initData);
-    setData(globaldata);
+    if ( TIMJS.initData ) TIMJS.globaldata = TIMJS.initData; // mergeDeep(globaldata, window.initData);
+    TIMJS.setData(TIMJS, TIMJS.globaldata);
 };
 
-let chart = null;
 
 /**
  * Be sure that there is n items in datasets, if not clone previous item
@@ -245,32 +250,33 @@ function ensureDataSets(datasets, n) {
 
 /**
  * Set chart data from data, needs global variables globaldata, chart, originaldata
+ * @param P global data needed to work
  * @param data data to be added or merged to chart
  */
-function setData(data) {
+TIMJS.setData = function(P, data) {
   try {
-    globaldata = data;
+    P.globaldata = data;
     // noinspection JSUnresolvedVariable
-      if ( window.originalData ) {
+      if ( P.originalData ) {
         let newData = {};
-        if ( chart ) originalData.datas = null; // prevent another add
-        mergeDeep(newData, originalData, '#'); // do not loose possible !
+        if ( P.chart ) P.originalData.datas = null; // prevent another add
+        mergeDeep(newData, P.originalData, '#'); // do not loose possible !
         mergeDeep(newData, data);
         data = newData;
     }
-    if ( !chart ) {
+    if ( !P.chart ) {
         let ar = data.aspectRatio || data.options && data.options.aspectRatio;
-        if ( ar ) options.options.aspectRatio = ar;
+        if ( ar ) P.options.options.aspectRatio = ar;
         let ctx = document.getElementById('canvas').getContext('2d');
-        chart = new Chart(ctx,options);
+        P.chart = new Chart(ctx,P.options);
     }
-    let datasets = chart.config.data.datasets;
-    let coptions = chart.config.options;
+    let datasets = P.chart.config.data.datasets;
+    let coptions = P.chart.config.options;
     let dopros = data.dopros || false;
     let fieldindex = data.fieldindex || 0;
 
     if ( data.type ) {
-        chart.config.type = data.type;
+        P.chart.config.type = data.type;
         if ( data.type === "scatter" || data.linearx) {
            coptions.scales.xAxes = [{ type: 'linear', position: "bottom", scaleLabel: {labelString: "", display: true}}];
            coptions.scales.yAxes = [{ type: 'linear', position: "left",   scaleLabel: {labelString: "", display: true}}];
@@ -279,7 +285,7 @@ function setData(data) {
            datasets[0].showLine = false; // for version 2.8.0
         }
     }
-    if ( data.labels ) chart.data.labels = data.labels;
+    if ( data.labels ) P.chart.data.labels = data.labels;
     if ( data.data ) {
        fieldindex++;
        datasets[0].data = dopros ? pros(data.data) : data.data;
@@ -294,7 +300,7 @@ function setData(data) {
        datasets[1].data = dopros ? pros(data.data2) : data.data2;
     }
     if ( data.label ) datasets[0].label = data.label;
-    if ( data.title) chart.options.title.text = data.title; // Tämä pitää olla näin
+    if ( data.title) P.chart.options.title.text = data.title; // Tämä pitää olla näin
     if ( data.xlabel ) coptions.scales.xAxes[0].scaleLabel.labelString = data.xlabel;
     if ( data.ylabel) coptions.scales.yAxes[0].scaleLabel.labelString = data.ylabel;
     if ( data.label && datasets.length > 1 ) coptions.legend.display = true;
@@ -314,10 +320,10 @@ function setData(data) {
            coptions.legend.position = data.legend;
         }
     }
-    let fdata = data.fielddata || window.fieldData;
+    let fdata = data.fielddata || P.fieldData;
     if ( fdata ) {
        ensureDataSets(datasets, fieldindex+1);
-  	   if ( fieldindex === 0 ) chart.data.labels = fdata.graphdata.labels;
+  	   if ( fieldindex === 0 ) P.data.labels = fdata.graphdata.labels;
        datasets[fieldindex].data = fdata.graphdata.data;
        datasets[fieldindex].backgroundColor = 'rgba(255,0,0,0.5)';
   	   datasets[fieldindex].borderColor = '#F00';
@@ -336,11 +342,11 @@ function setData(data) {
         addData(datasets, data.datas, keys, dopros);
     }
 
-    if ( data.options ) { mergeDeep(chart.options, data.options); }
+    if ( data.options ) { mergeDeep(P.chart.options, data.options); }
     if ( data.dataopt ) { mergeDeep(datasets[0], data.dataopt); }
     if ( data.dataopt2 ) { mergeDeep(datasets[1], data.dataopt2); }
 
-    chart.update();
+    P.chart.update();
   } catch(err) {
      let cont = document.getElementById('container');
      let p = document.createElement("p");
@@ -348,8 +354,12 @@ function setData(data) {
      p.appendChild(textnode);
      cont.insertBefore(p, cont.firstChild);
   }
+};
+
+function setData(data) {
+    TIMJS.setData(TIMJS, data);
 }
 
 function getData() {
-    return globaldata;
+    return TIMJS.globaldata;
 }

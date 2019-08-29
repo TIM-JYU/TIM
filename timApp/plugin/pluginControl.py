@@ -12,7 +12,6 @@ import yaml.parser
 from sqlalchemy import func
 
 from timApp.answer.answer import Answer
-from timApp.util.answerutil import get_fields_and_users, task_ids_to_strlist
 from timApp.auth.accesshelper import has_edit_access, verify_view_access
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docentry import DocEntry
@@ -26,12 +25,14 @@ from timApp.markdown.htmlSanitize import sanitize_html
 from timApp.plugin.containerLink import plugin_reqs, get_plugin
 from timApp.plugin.containerLink import render_plugin_multi, render_plugin, get_plugins
 from timApp.plugin.plugin import Plugin, PluginRenderOptions, load_markup_from_yaml, expand_macros_for_plugin, \
-    find_inline_plugins, InlinePlugin, finalize_inline_yaml, PluginWrap, is_global, WANT_FIELDS
+    find_inline_plugins, InlinePlugin, finalize_inline_yaml, PluginWrap, is_global, WANT_FIELDS, find_task_ids
 from timApp.plugin.pluginOutputFormat import PluginOutputFormat
 from timApp.plugin.pluginexception import PluginException
 from timApp.plugin.taskid import TaskId
 from timApp.printing.printsettings import PrintFormat
 from timApp.user.user import User
+from timApp.util.answerutil import task_ids_to_strlist
+from timApp.util.get_fields import get_fields_and_users
 from timApp.util.rndutils import get_simple_hash_from_par_and_user
 from timApp.util.timtiming import taketime
 from timApp.util.utils import get_error_html, get_error_tex, Range
@@ -49,51 +50,6 @@ def get_error_plugin(plugin_name, message, response=None,
         return get_error_tex(f'Plugin {plugin_name} error:', message, response)
 
     return get_error_html(f'Plugin {plugin_name} error: {message}', response)
-
-
-def find_task_ids(
-        blocks: List[DocParagraph],
-        check_access=True,
-) -> Tuple[List[TaskId], int, List[TaskId]]:
-    """Finds all task plugins from the given list of paragraphs and returns their ids."""
-    task_ids = []
-    plugin_count = 0
-    access_missing = []
-    curr_user = get_current_user_object()
-
-    def handle_taskid(t: TaskId):
-        if not t.doc_id:
-            t.update_doc_id_from_block(block)
-        elif check_access:
-            b = DocEntry.find_by_id(t.doc_id)
-            if b and not curr_user.has_seeanswers_access(b):
-                access_missing.append(t)
-                return True
-
-    for block in blocks:
-        task_id = block.get_attr('taskId')
-        plugin = block.get_attr('plugin')
-        if plugin:
-            plugin_count += 1
-            if task_id:
-                try:
-                    tid = TaskId.parse(task_id, require_doc_id=False, allow_block_hint=False)
-                except PluginException:
-                    continue
-                if handle_taskid(tid):
-                    continue
-                task_ids.append(tid)
-        elif block.get_attr('defaultplugin'):
-            for task_id, _, _, _ in find_inline_plugins(block, block.doc.get_settings().get_macroinfo()):
-                try:
-                    task_id = task_id.validate()
-                except PluginException:
-                    continue
-                plugin_count += 1
-                if handle_taskid(task_id):
-                    continue
-                task_ids.append(task_id)
-    return task_ids, plugin_count, access_missing
 
 
 PluginOrError = Union[Plugin, str]  # str represent HTML markup of error

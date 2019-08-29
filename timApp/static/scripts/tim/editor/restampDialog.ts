@@ -153,6 +153,6 @@ registerDialogComponent(RestampDialogController,
 `,
     });
 
-export function showRestampDialog(stampingData: IStampingData): IPromise<RestampDialogClose> {
+export function showRestampDialog(stampingData: IStampingData) {
     return showDialog(RestampDialogController, {params: () => stampingData}).result;
 }

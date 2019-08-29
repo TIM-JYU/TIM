@@ -40,7 +40,7 @@ export class TimTableEditorToolbarController extends DialogController<{params: I
         super.$onInit();
         this.callbacks = this.resolve.params.callbacks;
         this.activeTable = this.resolve.params.activeTable;
-        this.hid = this.activeTable.data.hid;
+        this.hide = this.activeTable.data.hide;
         this.draggable.setCloseFn(undefined); // Hides the close button
         // if (this.activeTable.data.lockCellCount) {
         //     this.lockCellCount = this.activeTable.data.lockCellCount;
@@ -57,7 +57,7 @@ export class TimTableEditorToolbarController extends DialogController<{params: I
     public callbacks!: ITimTableToolbarCallbacks; // $onInit
     public activeTable?: TimTableController;
     private visible: boolean = true;
-    private hid?: any;
+    private hide?: any;
     // private lockCellCount: boolean = false;
 
     private previousBackgroundColor: string = this.DEFAULT_CELL_BGCOLOR;
@@ -68,22 +68,23 @@ export class TimTableEditorToolbarController extends DialogController<{params: I
     }
 
     dismiss() {
-        this.hide();
+        this.hideThis();
     }
 
     /**
      * Hides the toolbar and removes the instance.
      */
-    public hide() {
+    public hideThis() {
         this.close("");
         this.visible = false;
         this.scope.$apply();
         instance = undefined;
     }
 
+    // noinspection JSUnusedGlobalSymbols
     public hideIfActiveTable(table: object) {
         if (table == this.activeTable) {
-            this.hide();
+            this.hideThis();
         }
     }
 
@@ -95,10 +96,11 @@ export class TimTableEditorToolbarController extends DialogController<{params: I
     public show(callbacks: ITimTableToolbarCallbacks, activeTable: TimTableController) {
         this.visible = true;
         this.activeTable = activeTable;
-        this.hid = this.activeTable.data.hid;
+        this.hide = this.activeTable.data.hide;
         this.callbacks = callbacks;
     }
 
+    // noinspection JSUnusedGlobalSymbols
     /**
      * Sets the color of the toolbar's color picker object.
      * @param color The color.
@@ -107,6 +109,7 @@ export class TimTableEditorToolbarController extends DialogController<{params: I
         this.cellBackgroundColor = color;
     }
 
+    // noinspection JSUnusedLocalSymbols
     /**
      * Sets the text-align value of a cell.
      */
@@ -115,6 +118,7 @@ export class TimTableEditorToolbarController extends DialogController<{params: I
         this.callbacks.setCell({textAlign: value});
     }
 
+    // noinspection JSUnusedLocalSymbols
     /**
      * Sets the cell by template
      */
@@ -122,6 +126,7 @@ export class TimTableEditorToolbarController extends DialogController<{params: I
         this.callbacks.setCell(value);
     }
 
+    // noinspection JSUnusedLocalSymbols
     /**
      * Clears cell format
      */
@@ -129,6 +134,7 @@ export class TimTableEditorToolbarController extends DialogController<{params: I
         this.callbacks.setCell({CLEAR: "ALL"});
     }
 
+    // noinspection JSUnusedLocalSymbols
     private pinSelected() {
         const style: any = {};
         if ( !this.activeTable ) { return style; }
@@ -138,6 +144,7 @@ export class TimTableEditorToolbarController extends DialogController<{params: I
         return style;
     }
 
+    // noinspection JSUnusedLocalSymbols
     private changePin() {
         const t: any = this.activeTable;
         if ( !t ) { return; }
@@ -145,6 +152,7 @@ export class TimTableEditorToolbarController extends DialogController<{params: I
         t.startCell = t.activeCell;
     }
 
+    // noinspection JSUnusedLocalSymbols
     /**
      * Add current cell to templates
      */
@@ -152,6 +160,7 @@ export class TimTableEditorToolbarController extends DialogController<{params: I
         this.callbacks.addToTemplates();
     }
 
+    // noinspection JSUnusedLocalSymbols,JSMethodCanBeStatic
     /**
      * Gets the cell text for toolbar
      */
@@ -163,12 +172,14 @@ export class TimTableEditorToolbarController extends DialogController<{params: I
         return v.substr(0, 5);
     }
 
+    // noinspection JSUnusedLocalSymbols
     private eventApi = {
         onClose: (api: any, color: string, $event: any) => {
             TimTableEditorToolbarController.onColorPickerClose(color);
         },
     };
 
+    // noinspection JSUnusedLocalSymbols
     /**
      * Updates the color of a cell when the color picker is closed.
      * @param color The color.
@@ -180,26 +191,32 @@ export class TimTableEditorToolbarController extends DialogController<{params: I
         }
     }
 
+    // noinspection JSUnusedLocalSymbols
     private getStyle() {
         return {"background-color": "#" + this.previousBackgroundColor};
     }
 
+    // noinspection JSUnusedLocalSymbols
     private applyBackgroundColor() {
         this.callbacks.setCell({backgroundColor: "#" + this.previousBackgroundColor});
     }
 
+    // noinspection JSUnusedLocalSymbols
     private addColumn(offset: number) {
         this.callbacks.addColumn(offset);
     }
 
+    // noinspection JSUnusedLocalSymbols
     private addRow(offset: number) {
         this.callbacks.addRow(offset);
     }
 
+    // noinspection JSUnusedLocalSymbols
     private removeColumn() {
         this.callbacks.removeColumn();
     }
 
+    // noinspection JSUnusedLocalSymbols
     private removeRow() {
         this.callbacks.removeRow();
     }
@@ -226,7 +243,7 @@ export function openTableEditorToolbar(p: ITimTableEditorToolbarParams) {
 export function hideToolbar(closingTable: object) {
     if (instance) {
         // instance.hideIfActiveTable(closingTable);
-        instance.hide();
+        instance.hideThis();
     }
 }
 
@@ -237,14 +254,14 @@ registerDialogComponent(TimTableEditorToolbarController,
     <dialog-body>
         <div class="row" >
             <div class="col-xs-12" style="top: -0.8em;">
-                <div class="btn-group" role="menuitem" uib-dropdown ng-hide="$ctrl.hid.editMenu">
+                <div class="btn-group" role="menuitem" uib-dropdown ng-hide="$ctrl.hide.editMenu">
                     <button class="timButton btn-xs" uib-dropdown-toggle>Edit <span class="caret"></span></button>
                     <ul class="dropdown-menu" uib-dropdown-menu>
                         <li role="menuitem" ng-click="$ctrl.removeRow()"><a>Remove row</a></li>
                         <li role="menuitem" ng-click="$ctrl.removeColumn()"><a>Remove column</a></li>
                     </ul>
                 </div>
-                <div class="btn-group" role="menuitem" uib-dropdown ng-hide="$ctrl.hid.insertMenu">
+                <div class="btn-group" role="menuitem" uib-dropdown ng-hide="$ctrl.hide.insertMenu">
                     <button class="timButton btn-xs" uib-dropdown-toggle>Insert <span class="caret"></span></button>
                     <ul class="dropdown-menu" uib-dropdown-menu>
                         <li role="menuitem" ng-click="$ctrl.addRow(0)"><a>Row above</a></li>
@@ -258,29 +275,29 @@ registerDialogComponent(TimTableEditorToolbarController,
         <div class="row">
             <div class="col-xs-12" id="timTableToolbarRow">
                 <color-picker ng-model="$ctrl.cellBackgroundColor"
-                              ng-hide="$ctrl.hid.colorPicker"
+                              ng-hide="$ctrl.hide.colorPicker"
                               event-api="$ctrl.eventApi"
                               options="$ctrl.colorOpts"
                               style="top: -0.01em;position: relative;">
                 </color-picker>
                 <button class="timButton btn-xs"
-                        ng-hide="$ctrl.hid.colorPicker"
+                        ng-hide="$ctrl.hide.colorPicker"
                         ng-click="$ctrl.applyBackgroundColor()">Apply color
                 </button>
                 <button class="timButton btn-xs"
-                        ng-hide="$ctrl.hid.alignLeft"
+                        ng-hide="$ctrl.hide.alignLeft"
                         title="Align left"
                         ng-click="$ctrl.setTextAlign('left')">
                     <i class="glyphicon glyphicon-align-left"></i>
                 </button>
                 <button class="timButton btn-xs"
-                        ng-hide="$ctrl.hid.alignCenter"
+                        ng-hide="$ctrl.hide.alignCenter"
                         title="Align center"
                         ng-click="$ctrl.setTextAlign('center')">
                     <i class="glyphicon glyphicon-align-center"></i>
                 </button>
                 <button class="timButton btn-xs"
-                        ng-hide="$ctrl.hid.alignRight"
+                        ng-hide="$ctrl.hide.alignRight"
                         title="Align right"
                         ng-click="$ctrl.setTextAlign('right')">
                     <i class="glyphicon glyphicon-align-right"></i>
@@ -290,19 +307,19 @@ registerDialogComponent(TimTableEditorToolbarController,
                      <!--{{$ctrl.getCellForToolbar(r)}}-->
                 </button>
                 <button class="timButton btn-xs"
-                        ng-hide="$ctrl.hid.addToTemplates"
+                        ng-hide="$ctrl.hide.addToTemplates"
                         title="Add current cell to templates"
                         ng-click="$ctrl.addToTemplates()">
                     <i class="glyphicon glyphicon-star-empty"></i>
                 </button>
                 <button class="timButton btn-xs"
-                        ng-hide="$ctrl.hid.clearFormat"
+                        ng-hide="$ctrl.hide.clearFormat"
                         title="Clear format"
                         ng-click="$ctrl.clearFormat()">
                     <i class="glyphicon glyphicon-trash"></i>
                 </button>
                 <button class="timButton btn-xs"
-                        ng-hide="$ctrl.hid.changePin"
+                        ng-hide="$ctrl.hide.changePin"
                         title="Pin area corner"
                         ng-style="$ctrl.pinSelected()"
                         ng-click="$ctrl.changePin()">

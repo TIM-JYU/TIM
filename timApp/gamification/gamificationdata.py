@@ -2,11 +2,11 @@
 from collections import defaultdict
 from operator import itemgetter, attrgetter
 
-import timApp.plugin.pluginControl
 from timApp.answer.answers import get_users_for_tasks
 from timApp.auth.sessioninfo import get_current_user_id
 from timApp.document.docentry import DocEntry
 from timApp.document.yamlblock import YamlBlock
+from timApp.plugin.plugin import find_task_ids
 
 
 def gamify(initial_data: YamlBlock):
@@ -98,7 +98,7 @@ def get_demo_data(demo_paths, default_max):
     demos, docs = get_sorted_lists(demo_paths, "demo")
 
     for doc in docs:
-        task_id_list += (timApp.plugin.pluginControl.find_task_ids(doc.document.get_paragraphs()))[0]
+        task_id_list += (find_task_ids(doc.document.get_paragraphs()))[0]
     task_info_list = get_users_for_tasks(task_id_list, [get_current_user_id()], group_by_doc=True)
     task_info_dict = defaultdict(float)
     for task in task_info_list:

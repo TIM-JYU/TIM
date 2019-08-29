@@ -159,6 +159,6 @@ registerDialogComponent(PluginRenameForm,
     `,
     });
 
-export function showRenameDialog(p: IRenameParams): IPromise<RenameResult> {
+export function showRenameDialog(p: IRenameParams) {
     return showDialog(PluginRenameForm, {params: () => p}).result;
 }

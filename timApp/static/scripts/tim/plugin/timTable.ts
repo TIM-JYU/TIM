@@ -27,16 +27,16 @@
 // TODO: set styles also by list of cells like value
 
 import {IController, IRootElementService, IScope} from "angular";
-import {getParId, Paragraph} from "tim/document/parhelpers";
+import {getParId} from "tim/document/parhelpers";
 import {timApp} from "../app";
 import {onClick} from "../document/eventhandlers";
 import {ITimComponent, ViewCtrl} from "../document/viewctrl";
 import {ParCompiler} from "../editor/parCompiler";
 import {openEditorSimple} from "../editor/pareditor";
 import {DestroyScope} from "../ui/destroyScope";
-import {isArrowKey, KEY_DOWN, KEY_ENTER, KEY_ESC, KEY_F2, KEY_LEFT, KEY_RIGHT, KEY_TAB, KEY_UP} from "../util/keycodes";
+import {getKeyCode, isArrowKey, isKeyCode, KEY_DOWN, KEY_ENTER, KEY_ESC, KEY_F2, KEY_LEFT, KEY_RIGHT, KEY_TAB, KEY_UP} from "../util/keycodes";
 import {$http, $timeout} from "../util/ngimport";
-import {Binding, isInViewport, scrollToElement} from "../util/utils";
+import {Binding} from "../util/utils";
 import {hideToolbar, isToolbarEnabled, openTableEditorToolbar} from "./timTableEditorToolbar";
 import {PluginMeta} from "./util";
 
@@ -53,7 +53,7 @@ import {PluginMeta} from "./util";
  * >2<4!  => find all numbers not in range ]2,4[
  * See: https://regex101.com/r/yfHbaH/3
  */
-const numFilterEx: RegExp = /([<=>!]=?) *(-?[\w\.,]*) *(!?) */g;
+const numFilterEx: RegExp = /([<=>!]=?) *(-?[\w.,]*) *(!?) */g;
 
 type NumStr = number | string;
 type FilterComparator = (a: NumStr, b: NumStr) => boolean;
@@ -166,6 +166,20 @@ export interface CellAttrToSave {
     key: string;
 }
 
+export interface HideValues {
+    edit?: boolean;
+    insertMenu?: boolean;
+    editMenu?: boolean;
+    toolbar?: boolean;
+    editorButtons?: boolean;
+    select?: boolean;
+    addRow?: boolean;
+    delRow?: boolean;
+    addCol?: boolean;
+    delCol?: boolean;
+    needFirstClick?: boolean;
+}
+
 export interface TimTable {
     table: ITable;
     id?: string;
@@ -182,7 +196,7 @@ export interface TimTable {
     editorButtonsBottom?: boolean;
     editorButtonsRight?: boolean;
     toolbarTemplates?: any[];
-    hid: {edit?: boolean, insertMenu?: boolean, editMenu?: boolean};
+    hide?: HideValues;
     hideSaveButton?: boolean;
     // hiddenRows?: IRow[];
     hiddenRows?: number[];
@@ -202,8 +216,6 @@ export interface TimTable {
     nrColumn?: boolean;
     maxRows?: string;
     maxCols?: string;
-    showToolbar?: boolean;
-    showEditorButtons?: boolean;
     button?: string;
     autosave?: boolean;
     // TODO: need self-explanatory name for this attribute
@@ -389,6 +401,7 @@ export function colnumToLetters(colIndex: number): string {
     return colnumToLetters(remainder - 1) + lastChar;
 }
 
+// noinspection UnterminatedStatementJS,UnterminatedStatementJS
 export class TimTableController extends DestroyScope implements IController, ITimComponent {
     static $inject = ["$scope", "$element"];
     private error: string = "";
@@ -413,7 +426,7 @@ export class TimTableController extends DestroyScope implements IController, ITi
     public taskBorders: boolean = false;
     private editedCellContent: string | undefined;
     private editedCellInitialContent: string | undefined;
-    private currentCell?: {row: number, col: number, editorOpen: boolean};
+    private currentCell?: {row: number, col: number, editorOpen: boolean}; // null if no cell is edited
     private activeCell?: {row: number, col: number};
     private startCell?: {row: number, col: number};
     private selectedCells: SelectedCells = {cells: [], srows: [], scol1: 0, scol2: 0};
@@ -443,10 +456,10 @@ export class TimTableController extends DestroyScope implements IController, ITi
     private edited: boolean = false;
     private editInput: any = null;
     private editInputStyles: string = "";
-    private showToolbar: boolean = true;
-    private showEditorButtons: boolean = true;
     private headersStyle?: object;
     private button: string = "Tallenna";
+    private noNeedFirstClick: boolean = false;
+    private hide: HideValues = {};
 
     /**
      * Stores the last direction that the user moved towards with arrow keys
@@ -463,7 +476,7 @@ export class TimTableController extends DestroyScope implements IController, ITi
     constructor(private scope: IScope, private element: IRootElementService) {
         super(scope, element);
         this.pluginMeta = new PluginMeta(element);
-        // if ( !this.data.hid ) this.data.hid = {};
+        // if ( !this.data.hide ) this.data.hide = {};
     }
 
     getTaskUrl(): string {
@@ -483,30 +496,17 @@ export class TimTableController extends DestroyScope implements IController, ITi
         return this.getParentAttr("id");
     }
 
-    protected getPlugin() {
-        return this.getParentAttr("data-plugin");
-    }
-
     protected getRootElement() {
         return this.element[0];
-    }
-
-    /*
-     * Dtaa for hidden things
-     */
-    private getHid() {
-        if (!this.data.hid) {
-            this.data.hid = {};
-        }
-        return this.data.hid;
     }
 
     /**
      * Set listener and initializes tabledatablock
      */
     async $onInit() {
-        if ( this.data.showToolbar == false ) { this.showToolbar = false; }
-        if ( this.data.showEditorButtons == false ) { this.showEditorButtons = false; }
+        if (this.data.hide) { this.hide = this.data.hide; }
+
+        this.noNeedFirstClick = this.hide.needFirstClick || false;
 
         if (typeof this.data.button !== "undefined") {
             this.button = this.data.button;
@@ -630,9 +630,14 @@ export class TimTableController extends DestroyScope implements IController, ITi
         // document.removeEventListener("click", this.onClick);
     }
 
+    private hideToolbar() {
+        this.closeSmallEditor();
+        hideToolbar(this);
+    }
+
     private onClick(e: JQuery.Event) {
         if (this.mouseInTable) {
-            if (this.isInEditMode() && isToolbarEnabled() && this.showToolbar) {
+            if (this.isInEditMode() && isToolbarEnabled() && !this.hide.toolbar) {
                 openTableEditorToolbar({
                     callbacks: {
                         setCell: (val) => this.setCell(val),
@@ -645,7 +650,9 @@ export class TimTableController extends DestroyScope implements IController, ITi
                 });
             } else {
                 // Hide the toolbar if we're not in edit mode
-                hideToolbar(this);
+                if ( !this.isSomeCellBeingEdited() ) {
+                    this.hideToolbar();
+                }
             }
         } else {
             const target = e.target;
@@ -668,7 +675,7 @@ export class TimTableController extends DestroyScope implements IController, ITi
                 }
             }
 
-            hideToolbar(this);
+            this.hideToolbar();
         }
     }
 
@@ -681,6 +688,7 @@ export class TimTableController extends DestroyScope implements IController, ITi
         return this.forcedEditMode;
     }
 
+    // noinspection JSUnusedGlobalSymbols
     /**
      * Changes all visible check boxes on this column to same value than header row cb
      * if header row cb clicked. Otherwise just update hidden rows if cbFilter is on.
@@ -746,6 +754,7 @@ export class TimTableController extends DestroyScope implements IController, ITi
         return crows;
     }
 
+    // noinspection JSUnusedLocalSymbols
     public static makeNumFilter(fltr: string) {
 
     }
@@ -755,6 +764,7 @@ export class TimTableController extends DestroyScope implements IController, ITi
      * over all regs if tehere is some condition
      * TODO: add value compare by < and > operators
      * @param regs list of regexp to check
+     * @param cmpfltrs comparator filters
      * @param row where to check values
      */
     public static isMatch(regs: RegExp[], cmpfltrs: ComparatorFilter[], row: any[]) {
@@ -849,6 +859,7 @@ export class TimTableController extends DestroyScope implements IController, ITi
         this.sortRing = this.emptyRing.slice();
     }
 
+    // noinspection JSUnusedGlobalSymbols
     sortData(col: number) {
         this.saveAndCloseSmallEditor();
         let dir = this.sortDir[col];
@@ -887,6 +898,7 @@ export class TimTableController extends DestroyScope implements IController, ITi
         this.disableStartCell();
     }
 
+    // noinspection JSUnusedGlobalSymbols
     public taskBordersf() {
         if (this.data.taskBorders) {
             return true;
@@ -905,21 +917,25 @@ export class TimTableController extends DestroyScope implements IController, ITi
         return this.editing || this.forcedEditMode;
     }
 
+    // noinspection JSUnusedGlobalSymbols
     public addRowEnabled() {
         // return !this.task && this.editRight && this.isInEditMode() && !this.lockCellCount
-        return !this.task && this.editRight && this.isInEditMode();
+        return !this.task && this.editRight && this.isInEditMode() && !this.hide.addRow;
     }
 
+    // noinspection JSUnusedGlobalSymbols
     public delRowEnabled() {
-        return !this.task && this.editRight && this.isInEditMode();
+        return !this.task && this.editRight && this.isInEditMode() && !this.hide.delRow;
     }
 
+    // noinspection JSUnusedGlobalSymbols
     public addColEnabled() {
-        return !this.task && this.editRight && this.isInEditMode();
+        return !this.task && this.editRight && this.isInEditMode() && !this.hide.addCol;
     }
 
+    // noinspection JSUnusedGlobalSymbols
     public delColEnabled() {
-        return !this.task && this.editRight && this.isInEditMode();
+        return !this.task && this.editRight && this.isInEditMode() && !this.hide.delCol;
     }
 
     /**
@@ -932,6 +948,7 @@ export class TimTableController extends DestroyScope implements IController, ITi
         }
     }
 
+    // noinspection JSUnusedGlobalSymbols
     /**
      * Returns true if the simple cell content editor is open.
      */
@@ -939,6 +956,7 @@ export class TimTableController extends DestroyScope implements IController, ITi
         return this.currentCell;
     }
 
+    // noinspection JSUnusedGlobalSymbols
     /**
      * Sets mouseInTable attribute to true
      */
@@ -946,6 +964,7 @@ export class TimTableController extends DestroyScope implements IController, ITi
         this.mouseInTable = true;
     }
 
+    // noinspection JSUnusedGlobalSymbols
     /**
      * Sets mouseInTable attribute to false
      */
@@ -958,6 +977,7 @@ export class TimTableController extends DestroyScope implements IController, ITi
             return;
         }
         this.saveAndCloseSmallEditor();
+        // noinspection JSIgnoredPromiseFromCall
         this.sendDataBlockAsync();
     }
 
@@ -1135,6 +1155,7 @@ export class TimTableController extends DestroyScope implements IController, ITi
             if (this.data.saveCallBack) { this.data.saveCallBack(cellsToSave, true); }
             this.edited = true;
             if ( this.data.autosave ) {
+                // noinspection JSIgnoredPromiseFromCall
                 this.sendDataBlockAsync();
             }
             return;
@@ -1183,7 +1204,7 @@ export class TimTableController extends DestroyScope implements IController, ITi
      * @param {number} row Row index
      * @param {number} col Column index
      */
-    async openEditor(cell: CellEntity, docId: number, value: string, parId: string, row: number, col: number) {
+    async openBigEditorAsync(cell: CellEntity, docId: number, value: string, parId: string, row: number, col: number) {
         if (this.currentCell) {
             this.currentCell.editorOpen = true;
         }
@@ -1198,6 +1219,7 @@ export class TimTableController extends DestroyScope implements IController, ITi
             this.currentCell.editorOpen = false;
         }
         if (result.type == "save" && result.text != this.editedCellInitialContent) {
+            // noinspection JSIgnoredPromiseFromCall
             this.saveCells(result.text, docId, parId, row, col);
             // ctrl.cellDataMatrix[row][col] = result.text
             this.editedCellContent = result.text;
@@ -1218,7 +1240,7 @@ export class TimTableController extends DestroyScope implements IController, ITi
      * @param {number} rowi Row index
      * @param {number} coli Column ndex
      */
-    private editorOpen(cell: CellEntity, rowi: number, coli: number) {
+    private openBigEditorNow(cell: CellEntity, rowi: number, coli: number) {
         if (this.currentCell) {
             this.currentCell.editorOpen = true;
         }
@@ -1226,11 +1248,11 @@ export class TimTableController extends DestroyScope implements IController, ITi
         if (parId === undefined || !this.viewctrl) {
             return;
         }
-        this.openEditor(cell, this.viewctrl.item.id, this.getCellContentString(rowi, coli), parId, rowi, coli);
-        // const edit = this.element.find(".editInput");
-        this.editInput.focus();
+        // noinspection JSIgnoredPromiseFromCall
+        this.openBigEditorAsync(cell, this.viewctrl.item.id, this.getCellContentString(rowi, coli), parId, rowi, coli);
     }
 
+    // noinspection JSUnusedLocalSymbols
     /**
      * Opens advanced editor
      */
@@ -1243,7 +1265,7 @@ export class TimTableController extends DestroyScope implements IController, ITi
             cell: this.editedCellContent,
         };
         if (this.currentCell != undefined) {
-            this.editorOpen(modal, this.currentCell.row, this.currentCell.col);
+            this.openBigEditorNow(modal, this.currentCell.row, this.currentCell.col);
         }
     }
 
@@ -1273,7 +1295,7 @@ export class TimTableController extends DestroyScope implements IController, ITi
      * Initialize celldatamatrix with the values from yaml and yaml only
      * @constructor
      */
-    private initializeCellDataMatrix() {
+    private initializeCellDataMatrix(clearSort: boolean = true) {
         this.cellDataMatrix = [];
         if (!this.data.table) { this.data.table = {}; }
         if (!this.data.table.rows) {
@@ -1306,7 +1328,7 @@ export class TimTableController extends DestroyScope implements IController, ITi
 
         }
         this.ensureColums();
-        this.clearSortOrder();
+        if ( clearSort ) { this.clearSortOrder(); }
     }
 
     /**
@@ -1330,6 +1352,7 @@ export class TimTableController extends DestroyScope implements IController, ITi
 
     }
 
+    // noinspection JSUnusedLocalSymbols
     /**
      * Returns a cell's content as a string.
      * @param {CellEntity} cell The cell.
@@ -1343,6 +1366,7 @@ export class TimTableController extends DestroyScope implements IController, ITi
         return this.cellToString(cell.cell);
     }
 
+    // noinspection JSMethodCanBeStatic
     /**
      * Transforms cell to string
      * @param {CellType} cell Changed cell
@@ -1468,16 +1492,14 @@ export class TimTableController extends DestroyScope implements IController, ITi
         }
     }
 
+    // noinspection JSMethodCanBeStatic
     /**
      * Coordinates validation
      * @param {{col: number, row: number}} address row and column index
      * @returns {boolean} true if valid
      */
     checkThatAddIsValid(address: { col: number; row: number }): boolean {
-        if (address.col >= 0 && address.row >= 0) {
-            return true;
-        }
-        return false;
+        return (address.col >= 0 && address.row >= 0);
     }
 
     /**
@@ -1548,6 +1570,7 @@ export class TimTableController extends DestroyScope implements IController, ITi
         this.ensureColums();
     }
 
+    // noinspection JSMethodCanBeStatic
     /**
      * Creates and returns an "empty" ICell with no content.
      * @returns {{cell: string}}
@@ -1559,25 +1582,29 @@ export class TimTableController extends DestroyScope implements IController, ITi
         return cell;
     }
 
+    // noinspection JSUnusedLocalSymbols
     /**
      * Deals with key events
      * @param {KeyboardEvent} ev Pressed key event
      */
     private keyUpPressedInSmallEditor(ev: KeyboardEvent) {
         // Arrow keys
-        if (ev.ctrlKey && (ev.keyCode == 40 || ev.keyCode == 39 || ev.keyCode == 38 || ev.keyCode == 37)) {
+        if (ev.ctrlKey && isArrowKey(ev) ) {
             this.handleArrowMovement(ev);
         }
     }
 
+    // noinspection JSUnusedLocalSymbols
     private lostFocus(ev: any) {
-        if ( !this.showEditorButtons ) {
+        if ( this.hide.editorButtons ) { // Autosave when no editorButtons
+            // noinspection JSIgnoredPromiseFromCall
             this.saveCurrentCell();
-            this.closeSmallEditor();
+            // this.closeSmallEditor();
             // TODO: can not use this, because then save is done also for Cancel, BigEditor, Toolbar buttons and so on
         }
     }
 
+    // noinspection JSUnusedLocalSymbols
     private cancelEdit(ev: any) {
         this.closeSmallEditor();
     }
@@ -1588,15 +1615,14 @@ export class TimTableController extends DestroyScope implements IController, ITi
         // if (!this.mouseInTable) return;
         // TODO: Check properly if table has focus when preventing default tab behavior
         if (this.currentCell == undefined) { return; }
-        if (ev.keyCode === KEY_TAB) {
+        if ( isKeyCode(ev, KEY_TAB) ) {
             ev.preventDefault();
         }
-
     }
 
     private keyPressTable = (ev: KeyboardEvent) => {
         // if (!this.mouseInTable) return;
-        if (ev.keyCode === KEY_TAB) {
+        if ( isKeyCode(ev, KEY_TAB) ) {
             ev.preventDefault();
         }
     }
@@ -1613,15 +1639,15 @@ export class TimTableController extends DestroyScope implements IController, ITi
             return;
         }
 
-        if (ev.keyCode === KEY_F2) {
-            if (this.getHid().edit) {
+        if ( isKeyCode(ev, KEY_F2) ) { // TODO: change all other keys like this to avoid depreceted warings
+            if (this.hide.edit) {
                 return;
             }
             const modal: CellEntity = {
                 cell: "",
             };
             if (this.currentCell != undefined && !this.bigEditorOpen) {
-                this.editorOpen(modal, this.currentCell.row, this.currentCell.col);
+                this.openBigEditorNow(modal, this.currentCell.row, this.currentCell.col);
                 return;
             }
 
@@ -1632,7 +1658,7 @@ export class TimTableController extends DestroyScope implements IController, ITi
             }
         }
 
-        if (ev.keyCode === KEY_ENTER) {
+        if (  isKeyCode(ev, KEY_ENTER) ) {
             if (!this.isInEditMode() || !this.viewctrl) {
                 return;
             }
@@ -1661,7 +1687,7 @@ export class TimTableController extends DestroyScope implements IController, ITi
             }
         }
 
-        if (ev.keyCode === KEY_TAB) {
+        if ( isKeyCode(ev, KEY_TAB) ) {
             ev.preventDefault();
             if (ev.shiftKey) {
                 this.doCellMovement(Direction.Left);
@@ -1672,7 +1698,7 @@ export class TimTableController extends DestroyScope implements IController, ITi
             return;
         }
 
-        if (ev.keyCode === KEY_ESC) {
+        if ( isKeyCode(ev, KEY_ESC) ) {
             ev.preventDefault();
             this.currentCell = undefined;
             this.scope.$apply();
@@ -1680,7 +1706,7 @@ export class TimTableController extends DestroyScope implements IController, ITi
         }
 
         // Arrow keys
-        if (!this.currentCell && ev.ctrlKey && isArrowKey(ev.keyCode)) {
+        if (!this.currentCell && ev.ctrlKey && isArrowKey(ev)) {
             if (this.handleArrowMovement(ev)) {
                 ev.preventDefault();
             }
@@ -1697,13 +1723,14 @@ export class TimTableController extends DestroyScope implements IController, ITi
             return false;
         }
 
-        if (ev.keyCode === KEY_DOWN) {
+        const keyCode = getKeyCode(ev);
+        if ( keyCode === KEY_DOWN) {
             return this.doCellMovement(Direction.Down);
-        } else if (ev.keyCode === KEY_RIGHT) {
+        } else if (keyCode === KEY_RIGHT) {
             return this.doCellMovement(Direction.Right);
-        } else if (ev.keyCode === KEY_LEFT) {
+        } else if (keyCode === KEY_LEFT) {
             return this.doCellMovement(Direction.Left);
-        } else if (ev.keyCode === KEY_UP) {
+        } else if (keyCode === KEY_UP) {
             return this.doCellMovement(Direction.Up);
         }
         return false;
@@ -1867,9 +1894,11 @@ export class TimTableController extends DestroyScope implements IController, ITi
         rowi = this.constrainRowIndex(rowi);
         coli = this.constrainColumnIndex(rowi, coli);
 
+        // noinspection JSIgnoredPromiseFromCall
         this.openCellForEditing(modal, rowi, coli);
     }
 
+    // noinspection JSUnusedLocalSymbols
     /**
      * Deals with cell clicking
      * @param {CellEntity} cell Cell that was clicked
@@ -1878,6 +1907,7 @@ export class TimTableController extends DestroyScope implements IController, ITi
      * @param {MouseEvent} event If mouse was clikced
      */
     private async cellClicked(cell: CellEntity, rowi: number, coli: number, event?: MouseEvent) {
+        // noinspection JSIgnoredPromiseFromCall
         this.openCellForEditing(cell, rowi, coli, event);
         this.lastDirection = undefined;
     }
@@ -1906,14 +1936,18 @@ export class TimTableController extends DestroyScope implements IController, ITi
         if (this.data.lockedCells && this.data.lockedCells.includes(cellCoordinate)) { return; }
 
         const activeCell = this.activeCell;
-        if (this.getHid().edit) {
+        if (this.hide.edit) {  // if hide-attr contains edit, then no edit
             this.setActiveCell(rowi, coli);
             return;
         }
-        if (this.currentCell ||
-            (activeCell && this.activeCell &&
-                activeCell.row === this.activeCell.row && activeCell.col === this.activeCell.col)) {
-            await this.saveCurrentCell();
+        const isCurrentCell = !!this.currentCell;
+        if (isCurrentCell || this.noNeedFirstClick ||
+            (activeCell &&  // this.activeCell &&
+                activeCell.row === rowi && activeCell.col === coli)) {
+            const newvalue = this.editedCellContent;
+            if (typeof newvalue === "string" && this.editedCellInitialContent != newvalue) {
+                await this.saveCurrentCell();
+            }
             let value: string = "";
             if (!this.task) {
                 value = await this.getCellData(cell, this.viewctrl.item.id, parId, rowi, coli);
@@ -1923,10 +1957,12 @@ export class TimTableController extends DestroyScope implements IController, ITi
             this.editedCellContent = value;
             this.editedCellInitialContent = value;
             this.currentCell = {row: rowi, col: coli, editorOpen: false};
-            this.calculateElementPlaces(rowi, coli, event);
+            // if ( !isCurrentCell ) { await $timeout(); } // time for things to set up
+            // noinspection JSIgnoredPromiseFromCall
+            this.calculateElementPlaces(rowi, coli, event, !isCurrentCell);
         }
         this.setActiveCell(rowi, coli);
-}
+    }
 
     /**
      * Saves the possible currently edited cell.
@@ -1969,43 +2005,21 @@ export class TimTableController extends DestroyScope implements IController, ITi
      * @param {number} rowi Row Index
      * @param {number} coli Column index
      * @param {MouseEvent} event MouseEvent
+     * @param wait should we wait before calcultae
      */
-    private async calculateElementPlaces(rowi: number, coli: number, event?: MouseEvent) {
-        await $timeout();
+    private async calculateElementPlaces(rowi: number, coli: number, event?: MouseEvent, wait: boolean = false) {
+        if ( wait ) { await $timeout(); await $timeout(); } // moved to openCellForEditing
         const sr = this.permTableToScreen[rowi];
         const table = this.element.find(".timTableTable").first();
         const cell = this.cellDataMatrix[rowi][coli];
         if (cell.renderIndexX === undefined || cell.renderIndexY === undefined) {
             return; // we should never be able to get here
         }
-        const ry = this.permTable[cell.renderIndexY];
+        // const ry = this.permTable[cell.renderIndexY];
         const tablecell = table.children("tbody").last().children("tr").eq(sr + this.rowDelta).children("td").eq(cell.renderIndexX + this.colDelta);
         // const tableCellOffset = tablecell.offset(); // Ihmeellisesti tämä antoi väärän tuloksen???
         const tableCellOffset = table.children("tbody").last().children("tr").eq(sr + this.rowDelta).children("td").eq(cell.renderIndexX + this.colDelta).offset();
 
-        const cell2y = 0;
-        /*
-        if (sr > 0 && false) { // seems not work when hidden row...
-            const tablecell2 = table.children("tbody").last().children("tr").eq(sr - 1 + this.rowDelta).children("td").eq(cell.renderIndexX + this.colDelta);
-            const off2 = tablecell2.offset();
-            if (off2) {
-                cell2y = off2.top;
-            }
-        }
-        */
-
-        /*let off;
-        if (event && event.target) {
-            let obj = $(event.target);
-            if (obj.prop("tagName") !== "TD") {
-                obj = obj.parents("td").last();
-            }
-            off = obj.offset();
-            if (!off) { return; }
-        } else {
-            off = tablecell.offset();
-            if (!off) { return; }
-        }*/
         if (!tableCellOffset) {
             return;
         }
@@ -2067,43 +2081,25 @@ export class TimTableController extends DestroyScope implements IController, ITi
                     // top: (cell2y ? cell2y : editOffset.top) - h - 5,
                     top: editOffset.top - mul * h + (h - h1), //  - 5,
                 });
-                /*
-                const buttonOpenBigEditor = this.element.find(".buttonOpenBigEditor");
-                buttonOpenBigEditor.offset({
-                    left: tableCellOffset.left + editOuterWidth,
-                    top: editOffset.top + editOuterHeight ,
-                });
-
-                const buttonOpenBigEditorWidth = buttonOpenBigEditor.outerWidth();
-                const buttonOpenBigEditorOffset = buttonOpenBigEditor.offset();
-
-                const buttonAcceptEdit = this.element.find(".buttonAcceptEdit");
-
-                buttonAcceptEdit.offset({
-                    left: tableCellOffset.left + editOuterWidth,
-                    top: editOffset.top,
-                });
-
-                const buttonAcceptEditOffset = buttonAcceptEdit.offset();
-                const buttonAcceptEditWidth = buttonAcceptEdit.outerWidth();
-
-                if (buttonAcceptEditOffset && buttonAcceptEditWidth) {
-                    this.element.find(".buttonCloseSmallEditor").offset({
-                        left: buttonAcceptEditOffset.left + buttonAcceptEditWidth,
-                        top: editOffset.top,
-                    });
-                }
-                */
             }
 
         } finally {
             this.editInput.focus();
+            if ( !this.hide.select ) {
+                // await $timeout(); // await $timeout();
+                //  this.editInput.select();
+                setTimeout(() => {
+                    this.editInput[0].selectionStart = 0;
+                    this.editInput[0].selectionEnd = 999;
+                }, 10);
+            }
             // if ( !isInViewport(this.editInput[0]) ) {  // TODO: need to test if inside timTable area
             //     scrollToElement(this.editInput[0]);
             // }
         }
     }
 
+    // noinspection JSUnusedLocalSymbols
     /**
      * Sets style attributes for cells
      * @param {number} rowi Table row index
@@ -2203,6 +2199,7 @@ export class TimTableController extends DestroyScope implements IController, ITi
         return idx;
     }
 
+    // noinspection JSMethodCanBeStatic
     /**
      * Checks if dr.range is valid range.  If it is string, change it to array.
      * To prevent another check, mark it checked.
@@ -2240,6 +2237,7 @@ export class TimTableController extends DestroyScope implements IController, ITi
         return;
     }
 
+    // noinspection JSMethodCanBeStatic
     /**
      * Check if index is between r[0]-r[1] where negative means i steps backward
      * @param r range to check, may be like [1,-1]
@@ -2271,6 +2269,7 @@ export class TimTableController extends DestroyScope implements IController, ITi
         return ic2 >= coli;
     }
 
+    // noinspection JSMethodCanBeStatic
     /**
      * Check if index is between r[0]-r[1] where negative means i steps backward
      * @param r range to check, may be like [1,-1]
@@ -2292,6 +2291,7 @@ export class TimTableController extends DestroyScope implements IController, ITi
         return i2 >= index;
     }
 
+    // noinspection JSUnusedLocalSymbols
     /**
      * Sets style attributes for columns
      * @param {IColumn} col The column to be styled
@@ -2321,6 +2321,7 @@ export class TimTableController extends DestroyScope implements IController, ITi
         return styles;
     }
 
+    // noinspection JSUnusedLocalSymbols
     /**
      * Sets style attributes for rows
      * @param {IRow} rowi The row to be styled
@@ -2356,6 +2357,7 @@ export class TimTableController extends DestroyScope implements IController, ITi
         return styles;
     }
 
+    // noinspection JSUnusedLocalSymbols
     /**
      * Sets style attributes for the whole table
      * @returns {{[p: string]: string}}
@@ -2366,13 +2368,14 @@ export class TimTableController extends DestroyScope implements IController, ITi
         return styles;
     }
 
+    // noinspection JSMethodCanBeStatic
     /**
      * Generic function for setting style attributes.
      * Verifies that given style attributes are valid and applies them.
      * Non-valid style attributes are not applied.
-     * @param {{[p: string]: string}} styles The dictionary that will contain the final object styles
+     * @param styles The dictionary that will contain the final object styles
      * @param object The object that contains the user-given style attributes
-     * @param {Set<string>} validAttrs A set that contains the accepted style attributes
+     * @param validAttrs A set that contains the accepted style attributes
      */
     private applyStyle(styles: {[index: string]: string}, object: any, validAttrs: Set<string>) {
         if (!object) {
@@ -2513,10 +2516,10 @@ export class TimTableController extends DestroyScope implements IController, ITi
      * to the cell data matrix and processes all math.
      * Call this when the whole table's content is refreshed.
      */
-    public reInitialize() {
-        this.initializeCellDataMatrix();
+    public reInitialize(clearSort: boolean = true) {
+        this.initializeCellDataMatrix(clearSort);
         this.processDataBlockAndCellDataMatrix();
-        this.clearSortOrder();
+        if ( clearSort ) { this.clearSortOrder(); }
         if (this.userdata) {
             this.processDataBlock(this.userdata.cells);
         } else {
@@ -2525,9 +2528,11 @@ export class TimTableController extends DestroyScope implements IController, ITi
                 cells: {},
             };
         }
+        // noinspection JSIgnoredPromiseFromCall
         ParCompiler.processAllMathDelayed(this.element);
 
         if (this.currentCell) {
+            // noinspection JSIgnoredPromiseFromCall
             this.calculateElementPlaces(this.currentCell.row, this.currentCell.col);
         }
     }
@@ -2585,6 +2590,7 @@ export class TimTableController extends DestroyScope implements IController, ITi
      * Saves the currently edited cell and closes the simple cell content editor.
      */
     public saveAndCloseSmallEditor() {
+        // noinspection JSIgnoredPromiseFromCall
         this.saveCurrentCell();
         this.closeSmallEditor();
     }
@@ -2736,6 +2742,7 @@ export class TimTableController extends DestroyScope implements IController, ITi
             }
             this.edited = true;
             if ( this.data.autosave ) {
+                // noinspection JSIgnoredPromiseFromCall
                 this.sendDataBlockAsync();
             }
             return;
@@ -2751,6 +2758,7 @@ export class TimTableController extends DestroyScope implements IController, ITi
         this.reInitialize();
     }
 
+    // noinspection JSUnusedLocalSymbols
     /**
      * Checks whether a cell is the currently active cell of the table.
      * The active cell is the cell that is being edited, or if no cell is being edited,
@@ -2785,6 +2793,7 @@ export class TimTableController extends DestroyScope implements IController, ITi
         return false;
     }
 
+    // noinspection JSUnusedLocalSymbols
     /**
      * Returns cell content HTML as trusted through AngularJS's SCE service.
      * Disables AngularJS HTML sanitizing for TimTable cells which breaks some attributes
@@ -2796,10 +2805,12 @@ export class TimTableController extends DestroyScope implements IController, ITi
         return this.cellDataMatrix[rowi][coli].cell;
     }
 
+    // noinspection JSUnusedLocalSymbols,JSMethodCanBeStatic
     private showCell(cell: ICell) {
         return !cell.underSpanOf;
     }
 
+    // noinspection JSUnusedLocalSymbols
     /**
      * Returns true if given row should be visible
      * @param index row number
@@ -2810,6 +2821,7 @@ export class TimTableController extends DestroyScope implements IController, ITi
         return (!this.data.hiddenRows || !this.data.hiddenRows.includes(index));
     }
 
+    // noinspection JSUnusedLocalSymbols
     /**
      * Returns true if given column should be visible
      * @param index row number
@@ -2819,15 +2831,18 @@ export class TimTableController extends DestroyScope implements IController, ITi
         return (!this.data.hiddenColumns || !this.data.hiddenColumns.includes(index));
     }
 
+    // noinspection JSUnusedLocalSymbols
     private tableStyle() {
         return {"border": "none", "overflow": "auto", "padding-right": "4em", "max-height": this.maxRows, "width": this.maxCols};
     }
 
+    // noinspection JSUnusedLocalSymbols
     private isHidden(coli: number) {
         if ( !this.data.hiddenColumns ) { return false; }
         return this.data.hiddenColumns.includes(coli);
     }
 
+    // noinspection JSUnusedLocalSymbols
     private clearFilters() {
         for (let i = 0; i < this.filters.length; i++) {
             this.filters[i] = "";
@@ -2968,9 +2983,9 @@ timApp.component("timTable", {
     <h4 ng-if="::$ctrl.data.header" ng-bind-html="::$ctrl.data.header"></h4>
     <p ng-if="::$ctrl.data.stem" class="stem" ng-bind-html="::$ctrl.data.stem"></p>
     <div class="timTableContentDiv no-highlight">
-    <button class="timTableEditor timButton buttonAddCol" title="Add column" ng-show="$ctrl.addColEnabled()"
+    <button class="timTableEditor timButton buttonAddCol" title="Add column" ng-show="::$ctrl.addColEnabled()"
             ng-click="$ctrl.addColumn(-1)"><span class="glyphicon glyphicon-plus"></span></button>
-    <button class="timTableEditor timButton buttonRemoveCol" title="Remove column" ng-show="$ctrl.delColEnabled()"
+    <button class="timTableEditor timButton buttonRemoveCol" title="Remove column" ng-show="::$ctrl.delColEnabled()"
             ng-click="$ctrl.removeColumn(-1)"><span class="glyphicon glyphicon-minus"></span></button>
     <table ng-class="{editable: $ctrl.isInEditMode() && !$ctrl.isInForcedEditMode(), forcedEditable: $ctrl.isInForcedEditMode()}" class="timTableTable"
      ng-style="$ctrl.stylingForTable($ctrl.data.table)" id={{$ctrl.data.table.id}}>
@@ -3022,16 +3037,16 @@ timApp.component("timTable", {
                 </td> <!-- one cell -->
         </tr> <!-- the matrix -->
     </table>
-    <button class="timTableEditor timButton buttonAddRow" title="Add row" ng-show="$ctrl.addRowEnabled()" ng-click="$ctrl.addRow(-1)"><span
+    <button class="timTableEditor timButton buttonAddRow" title="Add row" ng-show="::$ctrl.addRowEnabled()" ng-click="$ctrl.addRow(-1)"><span
             class="glyphicon glyphicon-plus" ng-bind="$ctrl.addRowButtonText"></span></button>
-    <button class="timTableEditor timButton buttonRemoveRow" title="Remove row" ng-show="$ctrl.delRowEnabled()" ng-click="$ctrl.removeRow(-1)"><span
+    <button class="timTableEditor timButton buttonRemoveRow" title="Remove row" ng-show="::$ctrl.delRowEnabled()" ng-click="$ctrl.removeRow(-1)"><span
             class="glyphicon glyphicon-minus"></span></button>
     <div class="timTableEditor inlineEditorDiv no-highlight" ng-show=$ctrl.isSomeCellBeingEdited()>
         <input class="editInput" id="editInput" autocomplete="off" ng-show="$ctrl.isSomeCellBeingEdited()"
                    ng-blur="$ctrl.lostFocus($event)"
                    ng-keydown="$ctrl.keyDownPressedInSmallEditor($event)"
                    ng-keyup="$ctrl.keyUpPressedInSmallEditor($event)" ng-model="$ctrl.editedCellContent"><!--
-     --><span class="inlineEditorButtons" style="position: absolute; width: max-content" ng-show="$ctrl.showEditorButtons && $ctrl.isSomeCellBeingEdited()" ><!--
+     --><span class="inlineEditorButtons" style="position: absolute; width: max-content" ng-show="!$ctrl.hide.editorButtons && $ctrl.isSomeCellBeingEdited()" ><!--
          --><button class="timButton buttonOpenBigEditor"
                 ng-click="$ctrl.openBigEditor()" class="timButton"><span class="glyphicon glyphicon-pencil"></span>
              </button><!--
@@ -3054,7 +3069,6 @@ timApp.component("timTable", {
   <p class="plgfooter" ng-if="::$ctrl.data.footer" ng-bind-html="::$ctrl.data.footer"></p>
   <span class="error" ng-show="$ctrl.error" ng-bind="$ctrl.error"></span>
 </div>
-
 </div>
 `,
 });

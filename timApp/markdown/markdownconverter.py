@@ -53,7 +53,8 @@ def genfields(flds, attrs='', stemfield='stem'):
         if len(parts) > 1:
             text = parts[1].strip()
         else:
-            text = id
+            parts = id.split(":")
+            text = parts[0]
         s = f"{{#{id} {stemfield}: '{text}'{attrs}#}}"
         res += s
     return res
@@ -63,13 +64,32 @@ def gfrange(s, i1, i2, attrs='', stemfield='stem'):
     s = flds[0]
     srest = ""
     if len(flds) > 1:
-        srest = ";" + flds[1]
-    parts = s.split("=")
-    name = f"{parts[0]}({i1},{i2})"
-    alias = ''
-    if len(parts) > 1:
-        alias = "="+parts[1]
-    return genfields(f"{name}{alias}"+srest, attrs, stemfield)
+        srest = flds[1]
+    # parts = s.split("=")
+    # name = f"{parts[0]}({i1},{i2})"
+    i = len(s)
+    ic = s.find(":")  # a:b => a{0}:b
+    ie = s.find("=")  # a=b => a{0}=b{0}  and a:b=c => a{0}:b=b{0}
+    if ic >= 0:
+        i = ic
+    if ie >= 0 and (ie < ic or ic < 0):
+        i = ie
+    if i < 1:
+        return ""
+    s1 = s[:i]
+    s2 = s[i:]
+    f1 = ""
+    f2 = ""
+    if ( s1.find("{") < 0):
+        f1 = "{0}"
+    if ( s2.find("{") < 0):
+        f2 = "{0}"
+    s = s1 + f1 + s2
+    if ie >= 0:
+        s += f2
+    s += ";"
+    s = srange(s, i1, i2)
+    return genfields(s+srest, attrs, stemfield)
 
 
 def srange(s, i1, i2, step=1, *argv):

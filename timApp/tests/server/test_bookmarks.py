@@ -26,7 +26,7 @@ class BookmarkTest(BookmarkTestBase):
         self.assertIsNone(f)
 
         d = DocEntry.query.filter_by(name=self.current_user.get_personal_folder().path + '/Bookmarks').first()
-        self.assertIsNotNone(d)
+        self.assertEqual('Bookmarks', d.title)
         self.assertEqual([], bookmarks)
         group_name = 'mygroup'
         group_name2 = 'mygroup2'
@@ -140,5 +140,4 @@ class BookmarkTest2(BookmarkTestBase):
         ug = UserGroup.get_by_name('ohj2opiskelijat')
         ug.name = 'someothername'
         db.session.commit()
-        # The check is disabled for now.
-        # self.assertIn("Document has incorrect group tags: ohj2opiskelijat", self.get(d2.url))
+        self.assertIn("Document has incorrect group tags: ohj2opiskelijat", self.get(d2.url))

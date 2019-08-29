@@ -49,8 +49,8 @@ const TableFormMarkup = t.intersection([
         userListButtonText: nullable(t.string),
         emailUsersButtonText: nullable(t.string),
         fields: t.array(t.string),
-        showToolbar: withDefault(t.boolean, true),
-        showEditorButtons: withDefault(t.boolean, true),
+        showToolbar: t.boolean,
+        hide: withDefault(t.object, {}),
         sisugroups: t.string,
     }),
     GenericPluginMarkup,
@@ -58,8 +58,6 @@ const TableFormMarkup = t.intersection([
         // all withDefaults should come here; NOT in t.partial
         autoupdate: withDefault(t.number, 500),
         cols: withDefault(t.number, 20),
-        showToolbar: withDefault(t.boolean, true),
-        showEditorButtons: withDefault(t.boolean, true),
         autoUpdateFields: withDefault(t.boolean, true),
         autoUpdateTables: withDefault(t.boolean, true),
         fontSize: withDefault(t.string, "smaller"),
@@ -103,7 +101,7 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
     private isRunning = false;
     private userfilter = "";
     private data: TimTable & { userdata: DataEntity } = {
-        hid: {edit: false, insertMenu: true, editMenu: true},
+        hide: {edit: false, insertMenu: true, editMenu: true},
         hiddenRows: [],
         hiddenColumns: [],
         hideSaveButton: true,
@@ -205,6 +203,19 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
 
         this.data.hiddenRows = this.attrs.hiddenRows;
         this.data.hiddenColumns = this.attrs.hiddenColumns;
+
+        // Initialize hide-attribute
+        this.data.hide = { editMenu: true, insertMenu: true};
+        if ( this.attrs.hide) {
+            this.data.hide = this.attrs.hide; // TODO: TimTablen oletukset tähän
+            const hide: any = this.attrs.hide;
+            if ( hide.editMenu === undefined) { this.data.hide.editMenu = true; }
+            if ( hide.insertMenu === undefined) { this.data.hide.insertMenu = true; }
+        }
+        if ( this.attrs.showToolbar !== undefined ) {
+            this.data.hide.toolbar = this.attrs.showToolbar;
+        }
+
         this.userfilter = "";
         this.realnames = this.checkToShow(this.attrs.realnames, this.realNameColIndex, true);
         this.usernames = this.checkToShow(this.attrs.usernames, this.userNameColIndex, true);
@@ -217,8 +228,6 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
         this.realnamemap = this.attrsall.realnamemap || {};
         this.emailmap = this.attrsall.emailmap || {};
         this.aliases = this.attrsall.aliases || {};
-        this.data.showToolbar = this.attrs.showToolbar;
-        this.data.showEditorButtons = this.attrs.showEditorButtons;
 
         this.setDataMatrix();
 
@@ -342,7 +351,7 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
         this.setDataMatrix();
         const timtab = this.getTimTable();
         if (timtab) {
-            timtab.reInitialize();
+            timtab.reInitialize(false);
         }
         // console.log("debug");
 
@@ -434,7 +443,7 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
             }
             const timtab = this.getTimTable();
             if (timtab) {
-                timtab.reInitialize();
+                timtab.reInitialize(false);
             }
         } catch (e) {
             console.log(e);

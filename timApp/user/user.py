@@ -205,7 +205,7 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
 
     @property
     def is_email_user(self):
-        """Returns whether the user signed up via email."""
+        """Returns whether the user signed up via email and has not been "upgraded" to Korppi or Sisu user."""
         return '@' in self.name or self.name.startswith('testuser')
 
     @property

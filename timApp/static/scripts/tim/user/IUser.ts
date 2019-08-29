@@ -1,4 +1,4 @@
-import {IFolder} from "../item/IItem";
+import {IDocument, IFolder} from "../item/IItem";
 import {ConsentType} from "../ui/consent";
 
 export const TEACHERS_GROUPNAME = "teachers";
@@ -21,4 +21,9 @@ export interface IGroup {
     id: number;
     name: string;
     personal_user?: IUser;
+    admin_doc?: IDocument;
+}
+
+export interface IManagedGroup extends IGroup {
+    admin_doc: IDocument;
 }

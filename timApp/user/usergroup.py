@@ -1,9 +1,10 @@
-from typing import List
+from typing import List, Tuple, Optional
 
 from sqlalchemy.orm import joinedload
 
+from timApp.item.tag import Tag, TagType
 from timApp.sisu.scimusergroup import ScimUserGroup
-from timApp.timdb.sqa import db, TimeStampMixin, include_if_loaded, include_if_exists
+from timApp.timdb.sqa import db, TimeStampMixin, include_if_loaded, include_if_exists, is_attribute_loaded
 from timApp.user.scimentity import SCIMEntity
 from timApp.user.special_group_names import ANONYMOUS_GROUPNAME, LARGE_GROUPS, KORPPI_GROUPNAME, LOGGED_IN_GROUPNAME, \
     ADMIN_GROUPNAME, GROUPADMIN_GROUPNAME, TEACHERS_GROUPNAME
@@ -88,11 +89,15 @@ class UserGroup(db.Model, TimeStampMixin, SCIMEntity):
         return self.name in LARGE_GROUPS
 
     def to_json(self):
-        return {
+        r = {
             'id': self.id,
             'name': self.name,
             **include_if_exists('personal_user', self),
         }
+        if is_attribute_loaded('admin_doc', self):
+            if self.admin_doc:
+                r['admin_doc'] = self.admin_doc.docentries[0]
+        return r
 
     def get_cumulative(self):
         if not self.is_sisu:
@@ -161,11 +166,14 @@ class UserGroup(db.Model, TimeStampMixin, SCIMEntity):
         return UserGroup.query.filter_by(name=LOGGED_IN_GROUPNAME).one()
 
 
-def get_sisu_groups_by_filter(f) -> List[UserGroup]:
+def get_usergroup_eager_query():
     from timApp.item.block import Block
+    return UserGroup.query.options(joinedload(UserGroup.admin_doc).joinedload(Block.docentries))
+
+
+def get_sisu_groups_by_filter(f) -> List[UserGroup]:
     gs: List[UserGroup] = (
-        UserGroup.query
-            .options(joinedload(UserGroup.admin_doc).joinedload(Block.docentries))
+        get_usergroup_eager_query()
             .join(ScimUserGroup)
             .filter(f)
             .all()

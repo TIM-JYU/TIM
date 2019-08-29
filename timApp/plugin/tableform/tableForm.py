@@ -9,24 +9,25 @@ import attr
 from flask import jsonify, render_template_string, request, abort
 from marshmallow import Schema, fields, post_load
 from marshmallow.utils import missing
+from sqlalchemy.orm import joinedload
 from webargs.flaskparser import use_args
 
 from pluginserver_flask import GenericMarkupModel, GenericMarkupSchema, GenericHtmlSchema, GenericHtmlModel, \
     GenericAnswerSchema, GenericAnswerModel, Missing, \
     InfoSchema, create_blueprint
-from timApp.sisu.sisu import get_potential_groups, parse_sisu_group_display_name
-from timApp.util.answerutil import get_fields_and_users
 from timApp.auth.accesshelper import get_doc_or_abort
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docinfo import DocInfo
+from timApp.item.block import Block
+from timApp.item.tag import Tag, TagType, GROUP_TAG_PREFIX
 from timApp.plugin.plugin import find_plugin_from_document, TaskNotFoundException
-from timApp.plugin.pluginexception import PluginException
 from timApp.plugin.taskid import TaskId
+from timApp.sisu.sisu import get_potential_groups, parse_sisu_group_display_name
 from timApp.tim_app import csrf
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
-from timApp.util.flask.requesthelper import verify_json_params
 from timApp.util.flask.responsehelper import csv_response, json_response
+from timApp.util.get_fields import get_fields_and_users
 from timApp.util.utils import get_boolean
 
 
@@ -78,11 +79,11 @@ class TableFormMarkupModel(GenericMarkupModel):
     fixedColor: Union[str, Missing] = missing
     toolbarTemplates: Union[List[dict], Missing] = missing
     saveStyles: Union[bool, Missing] = True
-    showToolbar: Union[bool, Missing] = True
-    showEditorButtons: Union[bool, Missing] = True
+    showToolbar: Union[bool, Missing] = missing
     sisugroups: Union[str, Missing] = missing
     autoUpdateFields: Union[bool, Missing] = True
     autoUpdateTables: Union[bool, Missing] = True
+    hide: Union[dict, Missing] = missing
     fields: Union[List[str], Missing] = missing
 
 
@@ -121,11 +122,11 @@ class TableFormMarkupSchema(GenericMarkupSchema):
     fontSize = fields.Str(allow_none=True)
     fixedColor = fields.Str(allow_none=True)
     saveStyles = fields.Boolean(default=True)
-    showToolbar = fields.Boolean(default=True)
-    showEditorButtons = fields.Boolean(default=True)
+    showToolbar = fields.Boolean(allow_none=True)
     sisugroups = fields.Str()
     autoUpdateFields = fields.Boolean(default=True)
     autoUpdateTables = fields.Boolean(default=True)
+    hide = fields.Dict(allow_none=True)
     fields = fields.List(fields.Str())  # Keep this last - bad naming
 
     @post_load
@@ -166,12 +167,27 @@ def get_sisu_group_desc_for_table(g: UserGroup):
 
 def get_sisugroups(user: User, sisu_id: Optional[str]):
     gs = get_potential_groups(user, sisu_id)
+    docs_with_course_tag = Tag.query.filter_by(type=TagType.CourseCode).with_entities(Tag.block_id).subquery()
+    tags = (Tag.query
+            .filter(Tag.name.in_([GROUP_TAG_PREFIX + g.name for g in gs]) & Tag.block_id.in_(docs_with_course_tag))
+            .options(joinedload(Tag.block).joinedload(Block.docentries))
+            .all())
+    tag_map = {t.name[len(GROUP_TAG_PREFIX):]: t for t in tags}
+
+    def get_course_page(ug: UserGroup):
+        t: Tag = tag_map.get(ug.name)
+        if t:
+            return f'<a href="{t.block.docentries[0].url_relative}">URL</a>'
+        else:
+            return None
+
     return {
         'rows': {
             g.external_id.external_id: {
                 'TIM-nimi': g.name,
                 'URL': f'<a href="{g.admin_doc.docentries[0].url_relative}">URL</a>' if g.admin_doc else None,
                 'Jäseniä': g.users.count(),
+                'Kurssisivu': get_course_page(g),
             } for g in gs
         },
         'realnamemap': {
@@ -180,11 +196,12 @@ def get_sisugroups(user: User, sisu_id: Optional[str]):
         'emailmap': {
             g.external_id.external_id: '' for g in gs
         },
-        'fields': ['Jäseniä', 'TIM-nimi', 'URL'],
+        'fields': ['Jäseniä', 'TIM-nimi', 'URL', 'Kurssisivu'],
         'aliases': {
             'TIM-nimi': 'TIM-nimi',
             'URL': 'URL',
             'Jäseniä': 'Jäseniä',
+            'Kurssisivu': 'Kurssisivu',
         },
         'styles': {
             g.external_id.external_id: {} for g in gs
@@ -310,7 +327,7 @@ def fetch_rows():
     # r = {}
     curr_user = get_current_user_object()
     taskid = request.args.get("taskid")
-    tid = TaskId.parse(taskid, False, False)
+    tid = TaskId.parse(taskid, require_doc_id=False, allow_block_hint=False)
     doc = get_doc_or_abort(tid.doc_id)
     try:
         plug = find_plugin_from_document(doc.document, tid, curr_user)
@@ -326,7 +343,7 @@ def fetch_rows():
 def fetch_rows_preview():
     curr_user = get_current_user_object()
     taskid = request.args.get("taskid")
-    tid = TaskId.parse(taskid, False, False)
+    tid = TaskId.parse(taskid, require_doc_id=False, allow_block_hint=False)
     doc = get_doc_or_abort(tid.doc_id)
     # With this route we can't be certain about showInView so we just check for edit access
     # whoever can open the plugin in preview should have that right
@@ -345,7 +362,7 @@ def update_fields():
     r = {}
     fields_to_update = request.args.getlist("fields")
     taskid = request.args.get("taskid")
-    tid = TaskId.parse(taskid, False, False)
+    tid = TaskId.parse(taskid, require_doc_id=False, allow_block_hint=False)
     doc = get_doc_or_abort(tid.doc_id)
     curr_user = get_current_user_object()
     try:

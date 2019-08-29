@@ -4,7 +4,7 @@ import {IAnswer} from "tim/answer/IAnswer";
 import {ITimComponent, IUserChanged, ViewCtrl} from "tim/document/viewctrl";
 import {GenericPluginMarkup, Info, withDefault} from "tim/plugin/attributes";
 import {PluginBase, pluginBindings} from "tim/plugin/util";
-import {$http, $httpParamSerializer, $sce, $timeout} from "tim/util/ngimport";
+import {$http, $sce, $timeout} from "tim/util/ngimport";
 import {to} from "tim/util/utils";
 import {IUser} from "../../../static/scripts/tim/user/IUser";
 
@@ -128,13 +128,16 @@ class JsframeController extends PluginBase<t.TypeOf<typeof JsframeMarkup> ,
 
         this.message = this.attrs.message || "";
 
+        let jsobject = "window.";
+        if ( this.attrs.srchtml && this.attrs.srchtml.indexOf("TIMJS") >= 0 ) { jsobject = "TIMJS."; }
+
         if (this.attrs.open) {
             this.isOpen = true;
         }
         let data = this.attrs.data;
         if ( this.attrs.c ) { data = this.attrs.c; }
-        if ( data ) { this.initData = "    window.initData = " + JSON.stringify(data) + ";\n"; }
-        if ( aa.markup.fielddata ) { this.initData += "    window.fieldData = " + JSON.stringify(aa.markup.fielddata) + ";\n"; }
+        if ( data ) { this.initData = "    " + jsobject + "initData = " + JSON.stringify(data) + ";\n"; }
+        if ( aa.markup.fielddata ) { this.initData += "    " + jsobject + "fieldData = " + JSON.stringify(aa.markup.fielddata) + ";\n"; }
         // if ( data ) { this.setData(data); }
         this.viewctrl.addTimComponent(this);
         if (!this.attrs.forceBrowser) {

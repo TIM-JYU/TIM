@@ -66,6 +66,10 @@ class TestWiden_fields(TestCase):
     def test_widen_fields9(self):
         r1 = widen_fields("d1;d2;d3;")
         self.assertEqual(["d1", "d2", "d3"], r1, "Not same extra ; case")
+
+    def test_widen_fields10(self):
+        r1 = widen_fields("d:cbfield(1,2)")
+        self.assertEqual(["d1:cbfield", "d2:cbfield"], r1, "Not same extra : case")
     ##############################################################
 class Testget_alias(TestCase):
 

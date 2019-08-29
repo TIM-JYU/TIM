@@ -33,6 +33,7 @@ class MultisaveMarkupModel(GenericMarkupModel):
     emailRecipients: Union[List[str], Missing] = missing
     emailPreMsg: Union[str, Missing] = missing
     emailSubject: Union[str, Missing] = missing
+    destCourse: Union[str, Missing] = missing
     fields: Union[List[str], Missing] = missing
 
 
@@ -46,6 +47,7 @@ class MultisaveMarkupSchema(GenericMarkupSchema):
     emailRecipients = fields.List(fields.Str())
     emailPreMsg = fields.String(allow_none=True)
     emailSubject = fields.String()
+    destCourse = fields.String()
     fields = fields.List(fields.Str())  # Keep this last
 
     @post_load
@@ -120,6 +122,11 @@ areas:
 ``` {plugin="multisave"}
 fields:
 - 
+```""", """
+``` {plugin="multisave"}
+buttonText: "Send grade and credits to Sisu"
+destCourse: jy-CUR-4668  # change th course Sisu-id
+showInView: false
 ```"""]
     return jsonify({
         "js": ["/field/js/build/multisave.js"],
@@ -146,6 +153,11 @@ fields:
                                 'data': templates[2].strip(),
                                 'text': 'Multisave for specific IDs',
                                 'expl': 'Multisave for specific IDs',
+                            },
+                            {
+                                'data': templates[3].strip(),
+                                'text': 'Send to Sisu button',
+                                'expl': 'Button for sending results to Sisu',
                             },
                         ],
                     },

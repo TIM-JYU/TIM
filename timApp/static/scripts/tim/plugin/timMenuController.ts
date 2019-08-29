@@ -23,7 +23,9 @@ const TimMenuMarkup = t.intersection([
         menu: withDefault(t.string, ""),
         hoverOpen: withDefault(t.boolean, true), // Unimplemented.
         topMenu: withDefault(t.boolean, false),
+        topMenuTriggerHeight: withDefault(t.number, 200),
         openAbove: withDefault(t.boolean, false),
+        keepLinkColors: withDefault(t.boolean, false),
         basicColors: withDefault(t.boolean, false),
         separator: withDefault(t.string, "&nbsp;"), // Non-breaking space
         openingSymbol: withDefault(t.string, "&#9662;"), // Caret
@@ -77,11 +79,16 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
     private topMenu: boolean = false;
     private basicColors: boolean = false;
     private openAbove: boolean = false;
+    private keepLinkColors: boolean = false;
     private previousScroll: number | undefined = 0; // Store y-value of previous scroll event for comparison.
     private previouslyClicked: ITimMenuItem | undefined;
     private barStyle: string = "";
     private mouseInside: boolean = false; // Whether mouse cursor is inside the menu.
     private userRights: IRights | undefined;
+    private previousSwitch: number | undefined;
+    private topMenuTriggerHeight: number | undefined; // Pixels to scroll before topMenu appears.
+    private topMenuVisible: boolean = false; // Meant to curb unnecessary topMenu state changes.
+    private previouslyScrollingDown: boolean = true;
 
     getDefaultMarkup() {
         return {};
@@ -100,6 +107,7 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
         this.separator = this.attrs.separator;
         this.topMenu = this.attrs.topMenu;
         this.openAbove = this.attrs.openAbove;
+        this.keepLinkColors = this.attrs.keepLinkColors;
         this.basicColors = this.attrs.basicColors;
         this.openingSymbol = this.attrs.openingSymbol;
         // Turn default symbol upwards if menu opens above.
@@ -107,8 +115,28 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
             this.openingSymbol = "&#9652;";
         }
         if (this.topMenu) {
-            window.onscroll = () => this.toggleSticky();
+            // Divided by two because the check is half of the user given height towards either direction.
+            this.topMenuTriggerHeight = Math.floor(this.attrs.topMenuTriggerHeight / 2);
+            if (this.topMenuTriggerHeight == 0) {
+                // Logic doesn't work if the height is zero. Negative number makes it stay after appearing
+                // until scrolled to its original location in document.
+                this.topMenuTriggerHeight = 1;
+            }
+            window.onscroll = () => {
+                this.toggleSticky();
+            };
+            /*
+            // Throttle; allow only one scroll event per 0.1s.
+            // let time = Date.now();
+            window.onscroll = () => {
+                    if ((time + 100 - Date.now()) < 0) {
+                        this.toggleSticky();
+                        time = Date.now();
+                    }
+                };
+             */
         }
+
         this.setBarStyles();
         onClick("body", ($this, e) => {
             this.onClick(e);
@@ -174,32 +202,63 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
      */
     toggleSticky() {
         // TODO: Multiple topMenus.
-        // TODO: Placeholder content takes text-sized space even when hidden.
+        // TODO: Check the trigger height logic.
         const menu = this.element.find(".tim-menu")[0];
         const placeholder = this.element.find(".tim-menu-placeholder")[0];
         const scrollY = $(window).scrollTop();
-        if (!menu || !placeholder) {
+        if (!menu || !placeholder || !this.topMenuTriggerHeight || !scrollY) {
+            return;
+        }
+        if (!this.previousScroll) {
+            this.previousScroll = scrollY;
             return;
         }
         // Placeholder and its content are separate, because when hidden y is 0.
         const placeholderContent = this.element.find(".tim-menu-placeholder-content")[0];
+
+        const belowPlaceholder = placeholder.getBoundingClientRect().bottom < 0;
+        const scrollingDown = scrollY > this.previousScroll;
+        const scrollDirHasChanged = (this.previouslyScrollingDown && !scrollingDown) || (!this.previouslyScrollingDown && scrollingDown);
+        if (scrollDirHasChanged) {
+            // If scrolling direction has changed, set the scroll trigger distance to be centered at that y-coordinate.
+            this.previousSwitch = scrollY;
+        }
+        this.previouslyScrollingDown = scrollingDown;
+        this.previousScroll = $(window).scrollTop();
+        // console.log(this.topMenuVisible + " " + this.previousSwitch + " " + scrollY + " " + this.topMenuTriggerHeight);
+
         // Sticky can only show when the element's place in document goes outside upper bounds.
-        if (scrollY && placeholder.getBoundingClientRect().bottom < 0) {
+        if (belowPlaceholder) {
             // When scrolling downwards, don't show fixed menu and hide placeholder content.
             // Otherwise (i.e. scrolling upwards), show menu as fixed and let placeholder take its place in document
             // to mitigate page length changes.
-            if (this.previousScroll && scrollY > this.previousScroll) {
+            if (scrollingDown) {
+                // If topMenu is already hidden, don't try hiding it again.
+                // If scroll distance is smaller than min height, don't do anything.
+                if (!this.topMenuVisible || (!this.previousSwitch || scrollY > this.previousSwitch + this.topMenuTriggerHeight)) {
+                    return;
+                }
                 menu.classList.remove("top-menu");
                 placeholderContent.classList.add("tim-menu-hidden");
+                this.topMenuVisible = false;
             } else {
+                // If topMenu is already visible, the rest are redundant.
+                if (this.topMenuVisible || (this.previousSwitch &&
+                    !(scrollY > this.previousSwitch + this.topMenuTriggerHeight || scrollY < this.previousSwitch - this.topMenuTriggerHeight))) {
+                    return;
+                }
                 menu.classList.add("top-menu");
                 placeholderContent.classList.remove("tim-menu-hidden");
+                this.topMenuVisible = true;
             }
         } else {
+            if (!this.topMenuVisible) {
+                return;
+            }
             menu.classList.remove("top-menu");
             placeholderContent.classList.add("tim-menu-hidden");
+            this.topMenuVisible = false;
         }
-        this.previousScroll = $(window).scrollTop();
     }
 
     /**
@@ -246,6 +305,9 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
         if (this.userRights) {
             if (item.rights == "edit") {
                 return this.userRights.editable;
+            }
+            if (item.rights == "teacher") {
+                return this.userRights.teacher;
             }
             if (item.rights == "manage") {
                 return this.userRights.manage;
@@ -303,7 +365,7 @@ timApp.component("timmenuRunner", {
 <tim-markup-error ng-if="::$ctrl.markupError" data="::$ctrl.markupError"></tim-markup-error>
 <span ng-cloak ng-if="$ctrl.topMenu" class="tim-menu-placeholder"></span>
 <span ng-cloak ng-if="$ctrl.topMenu" class="tim-menu-placeholder-content tim-menu-hidden"><br></span>
-<div id="{{$ctrl.menuId}}" class="tim-menu" ng-class="{'bgtim white': $ctrl.basicColors}" style="{{$ctrl.barStyle}}" ng-mouseleave="$ctrl.mouseInside = false" ng-mouseenter="$ctrl.mouseInside = true">
+<div id="{{$ctrl.menuId}}" class="tim-menu" ng-class="{'bgtim white': $ctrl.basicColors, 'hide-link-colors': !$ctrl.keepLinkColors}" style="{{$ctrl.barStyle}}" ng-mouseleave="$ctrl.mouseInside = false" ng-mouseenter="$ctrl.mouseInside = true">
     <span ng-repeat="t1 in $ctrl.menu">
         <span ng-if="t1.items.length > 0 && $ctrl.hasRights(t1)" class="btn-group" style="{{$ctrl.setStyle(t1)}}">
           <span ng-disabled="disabled" ng-bind-html="t1.text+$ctrl.openingSymbol" ng-click="$ctrl.toggleSubmenu(t1, undefined, undefined)"></span>

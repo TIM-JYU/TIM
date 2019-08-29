@@ -103,7 +103,7 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
         this.vctrl.addTimComponent(this, this.attrs.tag );
         this.initialValue = this.numericvalue;
         if (this.attrsall.state && this.attrsall.state.styles && !this.attrs.ignorestyles) {
-            this.applyStyling(this.attrsall.state.styles)
+            this.applyStyling(this.attrsall.state.styles);
         }
     }
 
@@ -239,7 +239,7 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
             this.preventedAutosave = false;
             return;
         }
-        if (this.attrs.autosave) {
+        if (this.attrs.autosave || this.attrs.autosave === undefined) {
             this.saveText();
         }
     }
@@ -264,19 +264,18 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
         return (this.attrs.readOnlyStyle == "plaintext" && window.location.pathname.startsWith("/view/"));
     }
 
-
     /**
      * Parses "styles" from the plugin answer that were saved by tableForm
      * For now only backgroundColor is supported
      * See TODOs at textfield
      */
-    applyStyling(styles: {[index: string]: string}){
+    applyStyling(styles: {[index: string]: string}) {
         if (!styles || Object.keys(styles).length == 0) {
             this.styles = {};
             return;
         }
-        if (styles.backgroundColor){
-            this.styles.backgroundColor = styles.backgroundColor
+        if (styles.backgroundColor) {
+            this.styles.backgroundColor = styles.backgroundColor;
         }
     }
 
@@ -293,7 +292,7 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
         return regExpChecker.test(this.valueOrEmpty);
     }
 
-    // noinspection JSUnusedGlobalSymbols
+    // noinspection JSUnusedGlobalSymbols,JSMethodCanBeStatic
     /**
      * Returns focus on next HTML field.
      * Used by keydown (Enter) in angular.

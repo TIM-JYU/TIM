@@ -3,7 +3,7 @@ TIM plugin: a checkbox field
 """
 import attr
 from textfield import TextfieldAnswerModel, TextfieldAnswerSchema, TextfieldInputModel,\
-    TextfieldMarkupModel, TextfieldAttrs
+     TextfieldMarkupModel, TextfieldAttrs
 from flask import jsonify, render_template_string, Blueprint
 from marshmallow import fields, post_load
 from webargs.flaskparser import use_args
@@ -95,7 +95,17 @@ def cb_reqs():
                         'text': 'Check/Radio/Drop',
                         'items': [
                             {
-                                'data': "{#cb1 autosave: true #}",
+                                'data': '#- {defaultplugin="cbfield" readonly="view" }\n',
+                                'text': 'defaultplugin/cbfield',
+                                'expl': 'Attribuutit kappaleelle jossa inline ruksi-kenttä (cbfield)',
+                            },
+                            {
+                                'data': 'cbfiled',
+                                'text': 'teksti: cbfield',
+                                'expl': 'Pelkkä kentän tyyppi: cbfield',
+                            },
+                            {
+                                'data': "{#cb1 #}",
                                 'text': 'Checkbox (inline, autosave)',
                                 'expl': 'Luo yhden ruksinkenttä',
                             }]

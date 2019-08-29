@@ -890,7 +890,6 @@ def search():
             if line and len(line) > 10:
                 line_info = json.loads(line)
                 doc_id = line_info['doc_id']
-
                 # TODO: Handle aliases and translated documents.
                 doc_info = DocEntry.query.filter((DocEntry.id == doc_id) & (DocEntry.name.like(folder + "%"))). \
                     options(lazyload(DocEntry._block)).first()
@@ -978,10 +977,19 @@ def search():
                 pars = line_info['pars']
                 doc_result = DocResult(doc_info)
                 edit_access = has_edit_access(doc_info)
+                # is_owner = user.has_ownership(doc_info, allow_admin=True)
 
                 for i, par in enumerate(pars):
                     par_id = par['id']
                     md = par['md']
+
+                    # If par has visibility condition and user can't see markdown (lower than edit), skip it.
+                    try:
+                        visibility = par['attrs']['visible']
+                        if visibility and not edit_access:
+                            continue
+                    except KeyError:
+                        pass
 
                     # Tries to get plugin and settings key values from dict;
                     # if par isn't either, gives KeyError and does nothing.

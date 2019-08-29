@@ -79,7 +79,7 @@ class DefaultRightTest(TimRouteTest):
                 d['accessible_from'] = parser.parse(d['accessible_from'])
                 d['accessible_to'] = parser.parse(d['accessible_to']) if d['accessible_to'] else None
             rights_doc = folder.get_document(default_right_paths[obj_type])
-            self.assertIsNotNone(rights_doc)
+            self.assertEqual(f'Default{obj_type_str.capitalize()}Rights', rights_doc.title)
             t_f = folder.get_all_folders()[0]
             self.assertEqual(TEMPLATE_FOLDER_NAME, t_f.short_name)
             self.assertEqual(folder_owner_id, t_f.owner.id)

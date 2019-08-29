@@ -23,8 +23,8 @@ from timApp.folder.folder import Folder, path_includes
 from timApp.item.block import BlockType
 from timApp.item.item import Item, copy_rights
 from timApp.item.validation import validate_item, validate_item_and_create_intermediate_folders, has_special_chars
-from timApp.timdb.dbaccess import get_timdb
 from timApp.timdb.sqa import db
+from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
 from timApp.user.users import remove_access, remove_default_access, get_default_rights_holders, get_rights_holders
 from timApp.user.userutils import grant_access, grant_default_access, get_access_type_id
@@ -414,10 +414,12 @@ def get_copy_folder_params(folder_id):
 def copy_folder_endpoint(folder_id):
     f, dest, compiled = get_copy_folder_params(folder_id)
     o = get_current_user_group_object()
-    validate_item_and_create_intermediate_folders(dest, BlockType.Folder, o)
-    nf = Folder.create(dest, o.id, apply_default_rights=True)
-    ug = get_current_user_object().get_personal_group()
-    copy_folder(f, nf, ug, compiled)
+    nf = Folder.find_by_path(dest)
+    if not nf:
+        validate_item_and_create_intermediate_folders(dest, BlockType.Folder, o)
+        nf = Folder.create(dest, o.id, apply_default_rights=True)
+    u = get_current_user_object()
+    copy_folder(f, nf, u, compiled)
     db.session.commit()
     return json_response(nf)
 
@@ -436,8 +438,14 @@ def copy_folder_preview(folder_id):
     f, dest, compiled = get_copy_folder_params(folder_id)
     preview_list = []
     for i in enum_items(f, compiled):
-        preview_list.append({'to': join_location(dest, i.get_relative_path(f.path)), 'from': i.path})
-    return json_response(preview_list)
+        preview_list.append({
+            'to': join_location(dest, i.get_relative_path(f.path)),
+            'from': i.path,
+        })
+    return json_response({
+        'preview': preview_list,
+        'dest_exists': Folder.find_by_path(dest) is not None,
+    })
 
 
 def enum_items(folder: Folder, exclude_re) -> Generator[Item, None, None]:
@@ -447,22 +455,32 @@ def enum_items(folder: Folder, exclude_re) -> Generator[Item, None, None]:
     for f in folder.get_all_folders():
         if not exclude_re.search(f.path):
             yield f
-            for it in enum_items(f, exclude_re):
-                yield it
+            yield from enum_items(f, exclude_re)
 
 
-def copy_folder(f_from: Folder, f_to: Folder, modifier: UserGroup, exclude_re):
+def copy_folder(f_from: Folder, f_to: Folder, user_who_copies: User, exclude_re):
+    db.session.flush()
+    if not user_who_copies.can_write_to_folder(f_to):
+        abort(403, f'Missing edit access to folder {f_to.path}')
     for d in f_from.get_all_documents(include_subdirs=False):
         if exclude_re.search(d.path):
             continue
-        nd = DocEntry.create(join_location(f_to.path, d.short_name), title=d.title)
+        nd_path = join_location(f_to.path, d.short_name)
+        if DocEntry.find_by_path(nd_path):
+            abort(403, f'Document already exists at path {nd_path}')
+        nd = DocEntry.create(nd_path, title=d.title)
         copy_rights(d, nd)
-        nd.document.modifier_group_id = modifier.id
+        nd.document.modifier_group_id = user_who_copies.get_personal_group().id
         for tr, new_tr in copy_document_and_enum_translations(d, nd, copy_uploads=True):
             copy_rights(tr, new_tr)
     for f in f_from.get_all_folders():
         if exclude_re.search(f.path):
             continue
-        nf = Folder.create(join_location(f_to.path, f.short_name), title=f.title)
-        copy_rights(f, nf)
-        copy_folder(f, nf, modifier, exclude_re)
+        nf_path = join_location(f_to.path, f.short_name)
+        nf = Folder.find_by_path(nf_path)
+        if nf:
+            pass
+        else:
+            nf = Folder.create(nf_path, title=f.title)
+            copy_rights(f, nf)
+        copy_folder(f, nf, user_who_copies, exclude_re)

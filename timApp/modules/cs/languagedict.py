@@ -1,7 +1,8 @@
 from languages import *
 from jsframe import *
+from stack import *
+from geogebra import *
 
-languages = dict()
 languages["jypeli"] = Jypeli
 languages["comtest"] = CSComtest
 languages["shell"] = Shell

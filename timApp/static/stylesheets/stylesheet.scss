@@ -803,7 +803,7 @@ pareditor {
     }
 
     .helpButton {
-        font-size: large;
+        /* font-size: large; */
     }
 
     .tab-content > .active {
@@ -1302,6 +1302,12 @@ p.closeButton::before {
     display: inline-block;
 }
 
-.tim-menu a {
+.hide-link-colors a {
     color: inherit;
+}
+
+.tab-content {
+  border-bottom: lightgray;
+  border-bottom-style: solid;
+  border-bottom-width: thin;
 }

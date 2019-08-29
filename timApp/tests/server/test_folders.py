@@ -174,6 +174,7 @@ class FolderTest(TimRouteTest):
             # print(f"{parameters}\n{stmt}")
             nonlocal stmts
             stmts += 1
+
         event.listen(eng, 'before_cursor_execute', before_cursor_execute)
         self.get('/view/' + self.get_personal_item_path('perf'))
         event.remove(eng, 'before_cursor_execute', before_cursor_execute)
@@ -224,27 +225,48 @@ class FolderCopyTest(TimRouteTest):
                        {'destination': self.get_personal_item_path('b'), 'exclude': None})
         preview = self.json_post(f'/copy/{a.id}/preview',
                                  {'destination': self.get_personal_item_path('b'), 'exclude': ''})
-        self.assertEqual([{'from': 'users/test-user-1/a/d1', 'to': 'users/test-user-1/b/d1'},
-                          {'from': 'users/test-user-1/a/d2', 'to': 'users/test-user-1/b/d2'},
-                          {'from': 'users/test-user-1/a/f1', 'to': 'users/test-user-1/b/f1'},
-                          {'from': 'users/test-user-1/a/f1/d1', 'to': 'users/test-user-1/b/f1/d1'},
-                          {'from': 'users/test-user-1/a/f1/d2', 'to': 'users/test-user-1/b/f1/d2'},
-                          {'from': 'users/test-user-1/a/f1/d3', 'to': 'users/test-user-1/b/f1/d3'},
-                          {'from': 'users/test-user-1/a/a-b', 'to': 'users/test-user-1/b/a-b'},
-                          {'from': 'users/test-user-1/a/a-b/x_y', 'to': 'users/test-user-1/b/a-b/x_y'},
-                          {'from': 'users/test-user-1/a/a-b/x-y', 'to': 'users/test-user-1/b/a-b/x-y'},
-                          {'from': 'users/test-user-1/a/f2', 'to': 'users/test-user-1/b/f2'},
-                          {'from': 'users/test-user-1/a/f2/d1', 'to': 'users/test-user-1/b/f2/d1'}], preview)
+        self.assertEqual({
+            'dest_exists': True,
+            'preview': [
+                {'from': 'users/test-user-1/a/d1', 'to': 'users/test-user-1/b/d1'},
+                {'from': 'users/test-user-1/a/d2', 'to': 'users/test-user-1/b/d2'},
+                {'from': 'users/test-user-1/a/f1', 'to': 'users/test-user-1/b/f1'},
+                {'from': 'users/test-user-1/a/f1/d1',
+                 'to': 'users/test-user-1/b/f1/d1'},
+                {'from': 'users/test-user-1/a/f1/d2',
+                 'to': 'users/test-user-1/b/f1/d2'},
+                {'from': 'users/test-user-1/a/f1/d3',
+                 'to': 'users/test-user-1/b/f1/d3'},
+                {'from': 'users/test-user-1/a/a-b',
+                 'to': 'users/test-user-1/b/a-b'},
+                {'from': 'users/test-user-1/a/a-b/x_y',
+                 'to': 'users/test-user-1/b/a-b/x_y'},
+                {'from': 'users/test-user-1/a/a-b/x-y',
+                 'to': 'users/test-user-1/b/a-b/x-y'},
+                {'from': 'users/test-user-1/a/f2', 'to': 'users/test-user-1/b/f2'},
+                {'from': 'users/test-user-1/a/f2/d1',
+                 'to': 'users/test-user-1/b/f2/d1'},
+            ]}, preview)
         preview = self.json_post(f'/copy/{a.id}/preview',
                                  {'destination': self.get_personal_item_path('b'), 'exclude': 'd1'})
-        self.assertEqual([{'from': 'users/test-user-1/a/d2', 'to': 'users/test-user-1/b/d2'},
-                          {'from': 'users/test-user-1/a/f1', 'to': 'users/test-user-1/b/f1'},
-                          {'from': 'users/test-user-1/a/f1/d2', 'to': 'users/test-user-1/b/f1/d2'},
-                          {'from': 'users/test-user-1/a/f1/d3', 'to': 'users/test-user-1/b/f1/d3'},
-                          {'from': 'users/test-user-1/a/a-b', 'to': 'users/test-user-1/b/a-b'},
-                          {'from': 'users/test-user-1/a/a-b/x_y', 'to': 'users/test-user-1/b/a-b/x_y'},
-                          {'from': 'users/test-user-1/a/a-b/x-y', 'to': 'users/test-user-1/b/a-b/x-y'},
-                          {'from': 'users/test-user-1/a/f2', 'to': 'users/test-user-1/b/f2'}], preview)
+        self.assertEqual({
+            'dest_exists': True,
+            'preview': [
+                {'from': 'users/test-user-1/a/d2', 'to': 'users/test-user-1/b/d2'},
+                {'from': 'users/test-user-1/a/f1', 'to': 'users/test-user-1/b/f1'},
+                {'from': 'users/test-user-1/a/f1/d2',
+                 'to': 'users/test-user-1/b/f1/d2'},
+                {'from': 'users/test-user-1/a/f1/d3',
+                 'to': 'users/test-user-1/b/f1/d3'},
+                {'from': 'users/test-user-1/a/a-b',
+                 'to': 'users/test-user-1/b/a-b'},
+                {'from': 'users/test-user-1/a/a-b/x_y',
+                 'to': 'users/test-user-1/b/a-b/x_y'},
+                {'from': 'users/test-user-1/a/a-b/x-y',
+                 'to': 'users/test-user-1/b/a-b/x-y'},
+                {'from': 'users/test-user-1/a/f2',
+                 'to': 'users/test-user-1/b/f2'},
+            ]}, preview)
         b = Folder.find_by_path(self.get_personal_item_path('b'))
         self.assertEqual('b', b.title)
         d1c = DocEntry.find_by_path(self.get_personal_item_path('b/d1'))
@@ -279,6 +301,54 @@ class FolderCopyTest(TimRouteTest):
         self.json_post(f'/copy/{a.id}',
                        {'destination': self.get_personal_item_path('b'), 'exclude': None},
                        expect_status=403)
+
+    def test_copy_to_existing(self):
+        self.login_test2()
+        d1 = self.create_doc(self.get_personal_item_path('a/d1'))
+        d2 = self.create_doc(self.get_personal_item_path('a/d2'))
+        f1d1 = self.create_doc(self.get_personal_item_path('a/f1/d1'))
+        a = Folder.find_by_path(self.get_personal_item_path('a'))
+        preview = self.json_post(f'/copy/{a.id}/preview',
+                                 {'destination': self.get_personal_item_path('b'), 'exclude': ''})
+        self.assertEqual(
+            {'dest_exists': False,
+             'preview': [
+                 {'from': 'users/test-user-2/a/d1', 'to': 'users/test-user-2/b/d1'},
+                 {'from': 'users/test-user-2/a/d2', 'to': 'users/test-user-2/b/d2'},
+                 {'from': 'users/test-user-2/a/f1', 'to': 'users/test-user-2/b/f1'},
+                 {'from': 'users/test-user-2/a/f1/d1',
+                  'to': 'users/test-user-2/b/f1/d1'},
+             ],
+             }, preview
+        )
+
+        d1 = self.create_doc(self.get_personal_item_path('b/x1'))
+        d2 = self.create_doc(self.get_personal_item_path('b/x2'))
+        f1d1 = self.create_doc(self.get_personal_item_path('b/f1/x1'))
+
+        preview = self.json_post(f'/copy/{a.id}/preview',
+                                 {'destination': self.get_personal_item_path('b'), 'exclude': ''})
+        self.assertEqual(
+            {'dest_exists': True,
+             'preview': [
+                 {'from': 'users/test-user-2/a/d1', 'to': 'users/test-user-2/b/d1'},
+                 {'from': 'users/test-user-2/a/d2', 'to': 'users/test-user-2/b/d2'},
+                 {'from': 'users/test-user-2/a/f1', 'to': 'users/test-user-2/b/f1'},
+                 {'from': 'users/test-user-2/a/f1/d1',
+                  'to': 'users/test-user-2/b/f1/d1'},
+             ],
+             }, preview)
+        preview = self.json_post(
+            f'/copy/{a.id}',
+            {'destination': self.get_personal_item_path('b'), 'exclude': ''}
+        )
+        preview = self.json_post(
+            f'/copy/{a.id}',
+            {'destination': self.get_personal_item_path('b'), 'exclude': ''},
+            expect_content='Document already exists at path users/test-user-2/b/d1',
+            json_key='error',
+            expect_status=403,
+        )
 
 
 class FolderParentTest(TimRouteTest):

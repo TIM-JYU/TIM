@@ -2,12 +2,12 @@
 import time
 import traceback
 from typing import Tuple, Union, Optional, List
-from flask import g
 
 from flask import Blueprint, render_template
 from flask import abort
 from flask import current_app
 from flask import flash
+from flask import g
 from flask import redirect
 from flask import request
 from flask import session
@@ -15,38 +15,39 @@ from flask import session
 from timApp.answer.answers import add_missing_users_from_group, get_points_by_rule
 from timApp.auth.accesshelper import verify_view_access, verify_teacher_access, verify_seeanswers_access, \
     get_rights, has_edit_access, get_doc_or_abort, verify_manage_access
-from timApp.item.block import BlockType
-from timApp.item.blockrelevance import BlockRelevance
+from timApp.auth.sessioninfo import get_current_user_object, logged_in, current_user_in_lecture, \
+    get_user_settings, save_last_page
 from timApp.document.create_item import create_or_copy_item, create_citation_doc
-from timApp.document.post_process import post_process_pars, \
-    hide_names_in_teacher
-from timApp.folder.folder_view import try_return_folder
-from timApp.item.item import Item
-from timApp.item.tag import GROUP_TAG_PREFIX
-from timApp.item.validation import has_special_chars
-from timApp.tim_app import app
+from timApp.document.docentry import DocEntry, get_documents
+from timApp.document.docinfo import DocInfo
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.docsettings import DocSettings
 from timApp.document.document import get_index_from_html_list, dereference_pars, Document
+from timApp.document.post_process import post_process_pars, \
+    hide_names_in_teacher
 from timApp.document.preloadoption import PreloadOption
+from timApp.folder.folder import Folder
+from timApp.folder.folder_view import try_return_folder
+from timApp.item.block import BlockType
+from timApp.item.blockrelevance import BlockRelevance
+from timApp.item.item import Item
+from timApp.item.tag import GROUP_TAG_PREFIX
+from timApp.item.validation import has_special_chars
 from timApp.markdown.htmlSanitize import sanitize_html
-from timApp.util.logger import log_error
 from timApp.markdown.markdownconverter import create_environment
-from timApp.plugin.pluginControl import find_task_ids, get_all_reqs
+from timApp.plugin.plugin import find_task_ids
+from timApp.plugin.pluginControl import get_all_reqs
+from timApp.tim_app import app
+from timApp.timdb.exceptions import TimDbException, PreambleException
 from timApp.timdb.sqa import db
+from timApp.user.user import User
+from timApp.user.usergroup import UserGroup, get_usergroup_eager_query
 from timApp.util.flask.requesthelper import get_option, verify_json_params
 from timApp.util.flask.responsehelper import json_response, ok_response
-from timApp.auth.sessioninfo import get_current_user_object, logged_in, current_user_in_lecture, \
-    get_user_settings, save_last_page
-from timApp.document.docinfo import DocInfo
-from timApp.timdb.exceptions import TimDbException, PreambleException
-from timApp.document.docentry import DocEntry, get_documents
-from timApp.folder.folder import Folder
-from timApp.user.user import User
-from timApp.user.usergroup import UserGroup
+from timApp.util.logger import log_error
 from timApp.util.timtiming import taketime
-from timApp.util.utils import remove_path_special_chars, Range, seq_to_str
 from timApp.util.utils import get_error_message
+from timApp.util.utils import remove_path_special_chars, Range, seq_to_str
 
 DEFAULT_RELEVANCE = 10
 
@@ -226,12 +227,11 @@ def view(item_path, template_name, usergroup=None, route="view"):
             abort(403)
 
     # Check for incorrect group tags.
-    # Disabled for now.
-    if False and verify_manage_access(doc_info, require=False):
-        group_tags = [t.name[len(GROUP_TAG_PREFIX):] for t in doc_info.block.tags if t.name.startswith(GROUP_TAG_PREFIX)]
+    linked_groups = []
+    if verify_manage_access(doc_info, require=False):
+        linked_groups, group_tags = get_linked_groups(doc_info)
         if group_tags:
-            ugs = UserGroup.query.filter(UserGroup.name.in_(group_tags)).all()
-            names = set(ug.name for ug in ugs)
+            names = set(ug.name for ug in linked_groups)
             missing = set(group_tags) - names
             if missing:
                 flash(f'Document has incorrect group tags: {seq_to_str(list(missing))}')
@@ -302,12 +302,15 @@ def view(item_path, template_name, usergroup=None, route="view"):
         if usergroup is None:
             usergroup = doc_settings.group()
         if usergroup is not None:
-            ug = UserGroup.get_by_name(usergroup)
-            if not ug:
-                abort(404, 'User group not found')
-            
-            user_dict = {u.id: u for u in ug.users}
-            user_list = list(user_dict.keys())
+            if not isinstance(usergroup, str):
+                flash("The setting 'group' must be a string.")
+            else:
+                ug = UserGroup.get_by_name(usergroup)
+                if not ug:
+                    abort(404, 'User group not found')
+
+                user_dict = {u.id: u for u in ug.users}
+                user_list = list(user_dict.keys())
         user_list = get_points_by_rule(points_sum_rule, task_ids, user_list, flatten=True)
         if ug:
             user_list = add_missing_users_from_group(user_list, ug)
@@ -433,7 +436,7 @@ def view(item_path, template_name, usergroup=None, route="view"):
                            doc_settings=doc_settings,
                            word_list=word_list,
                            memo_minutes=doc_settings.memo_minutes(),
-                           # add_button_text=doc_settings.get_dict().get('addParButtonText', 'Add paragraph')
+                           linked_groups=linked_groups,
                            )
 
 
@@ -454,6 +457,20 @@ def get_items(folder: str):
     folders = Folder.get_all_in_path(root_path=folder)
     folders.sort(key=lambda d: d.title.lower())
     return [f for f in folders if u.has_view_access(f)] + docs
+
+
+def get_linked_groups(i: Item) -> Tuple[List[UserGroup], List[str]]:
+    group_tags = [t.name[len(GROUP_TAG_PREFIX):] for t in i.block.tags if t.name.startswith(GROUP_TAG_PREFIX)]
+    if group_tags:
+        return get_usergroup_eager_query().filter(UserGroup.name.in_(group_tags)).all(), group_tags
+    return [], group_tags
+
+
+@view_page.route('/items/linkedGroups/<int:item_id>')
+def get_linked_groups_route(item_id: int):
+    d = get_doc_or_abort(item_id)
+    verify_teacher_access(d)
+    return json_response(get_linked_groups(d)[0])
 
 
 def should_hide_links(settings: DocSettings, rights: dict):

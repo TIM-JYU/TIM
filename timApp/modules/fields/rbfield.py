@@ -97,7 +97,17 @@ def rb_reqs():
                         'text': 'Check/Radio/Drop',
                         'items': [
                             {
-                                'data': "{#rb1 autosave: true #}",
+                                'data': '#- {defaultplugin="rbfield" readonly="view" }\n',
+                                'text': 'defaultplugin/rbfield',
+                                'expl': 'Attribuutit kappaleelle jossa inline pallukka-kenttä (rbfield)',
+                            },
+                            {
+                                'data': 'rbfield',
+                                'text': 'teksti: rbfield',
+                                'expl': 'Pelkkä kentän tyyppi: rbfield',
+                            },
+                            {
+                                'data': "{#rb1 #}",
                                 'text': 'Radiobutton (inline, autosave)',
                                 'expl': 'Luo yhden pallukkakentän',
                             }]

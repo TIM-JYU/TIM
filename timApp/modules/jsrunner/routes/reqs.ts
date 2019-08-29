@@ -26,8 +26,6 @@ gradingScale:
   4: 40
   5: 50
 failGrade: hyl
-gradeField: arvosana
-creditField: opintopisteet
 defaultPoints: 5
 program: |!!
 

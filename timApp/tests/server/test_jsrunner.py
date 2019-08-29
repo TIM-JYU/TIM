@@ -1,4 +1,5 @@
 """Server tests for jsrunner plugin."""
+import json
 from typing import List
 
 import requests
@@ -370,7 +371,7 @@ tools.setString("{d.id}.t", "hi");
         )
 
         # Can write own answer to another doc via jsrunner if teacher access there
-        self.test_user_2.grant_access(d.id,'teacher')
+        self.test_user_2.grant_access(d.id, 'teacher')
         self.do_jsrun(
             d2,
         )
@@ -456,7 +457,6 @@ showInView: True
         )
         a = self.verify_content(f'{d3.id}.t', 'c', 'hi', self.test_user_2)
 
-
     def test_runscript(self):
         runscript_url = 'http://jsrunner:5000/runScript'
         r = requests.post(runscript_url)
@@ -511,6 +511,44 @@ showInView: True
         self.assertEqual(200, r.status_code)
         self.assertEqual({'error': 'Script failed to return anything (the return value must be JSON serializable).'},
                          r.json())
+
+    def xtest_points_fields(self):
+        self.login_test1()
+        d = self.create_jsrun("""
+fields:
+ - "user:total_points[2018-04-06 15:66:94, 2019-06-05 12:12:12]=total_range"
+ - "user:total_points=total_all"
+ - "user:1st=a"
+ - "user:2nd=b"
+group: testusers
+program: |!!
+tools.setString("t1", tools.getString("t1", "") + "-" + tools.getRealName());
+tools.setString("t2", tools.getString("t2", "") + "=" + tools.getRealName());
+        !!
+                """)
+        d.document.set_settings(
+            {'point_sum_rule': {'groups': {
+                '1st': 'a.*',
+                '2nd': 'b.*',
+                '3rd': 'c.*',
+            },
+                'count': {'best': 2}}},
+        )
+        d.document.add_text("""
+#- {defaultplugin=textfield}
+{#a01#} {#a02#} {#a03#}
+{#b01#} {#b02#} {#b03#}
+{#c01#} {#c02#} {#c03#}
+        """)
+        u = self.current_user
+        for i in range(1, 4):
+            a = Answer(task_id=f'{d.id}.a0{i}', content=json.dumps({'c': 10 ** (i - 1) * 1}), valid=True)
+            b = Answer(task_id=f'{d.id}.b0{i}', content=json.dumps({'c': 10 ** (i - 1) * 2}), valid=True)
+            c = Answer(task_id=f'{d.id}.c0{i}', content=json.dumps({'c': 10 ** (i - 1) * 3}), valid=True)
+            u.answers.append(a)
+            u.answers.append(b)
+            u.answers.append(c)
+        db.session.commit()
 
 
 class JsRunnerGroupTest(JsRunnerTestBase):

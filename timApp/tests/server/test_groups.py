@@ -136,6 +136,11 @@ class GroupTest(TimRouteTest):
         self.get('/groups/addmember/testing1/testuser1 ,testuser2  ',
                  expect_content={'added': ['testuser1', 'testuser2'], 'already_belongs': [], 'not_exist': []})
 
+    def test_invalid_group_setting(self):
+        d = self.create_doc(settings={'group': ["a", "b"]})
+        html = self.get(d.get_url_for_view('teacher'))
+        self.assertIn("The setting &#39;group&#39; must be a string.", html)
+
 
 class GroupTest2(TimRouteTest):
     def test_group_edit_access(self):
