@@ -9,8 +9,7 @@ from timApp.user.user import User
 class AnswerTest(TimDbTest):
 
     def check_totals(self, user: User, task_ids: List[TaskId], task_count, total_points):
-        self.assertEqual([{**user.basic_info_dict,
-                           'user': user,
+        self.assertEqual([{'user': user,
                            'task_count': task_count,
                            'task_points': total_points,
                            'total_points': total_points,

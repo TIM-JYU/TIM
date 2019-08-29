@@ -3,7 +3,7 @@ import json
 from collections import defaultdict, OrderedDict
 from datetime import datetime
 from operator import itemgetter
-from typing import List, Optional, Dict, Tuple, Iterable
+from typing import List, Optional, Dict, Tuple, Iterable, Any
 
 from sqlalchemy import func, Numeric, Float
 from sqlalchemy.orm import selectinload, defaultload
@@ -199,7 +199,7 @@ def get_common_answers(users: List[User], task_id: TaskId) -> List[Answer]:
 
 
 def get_users_for_tasks(task_ids: List[TaskId], user_ids: Optional[List[int]] = None, group_by_user=True,
-                        group_by_doc=False) -> List[Dict[str, str]]:
+                        group_by_doc=False) -> List[Dict[str, Any]]:
     if not task_ids:
         return []
 
@@ -260,10 +260,7 @@ def get_users_for_tasks(task_ids: List[TaskId], user_ids: Optional[List[int]] = 
         for r in main:
             d = r._asdict()
             d['user'] = d.pop('User')
-            yield {
-                **d,
-                **r.User.basic_info_dict,  # TODO remove this; user info is under user key
-            }
+            yield d
 
     result = list(g())
     return result
@@ -289,7 +286,7 @@ def get_points_by_rule(points_rule: Optional[Dict],
     result = defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: defaultdict(list))))
     for tu in tasks_users:
         for group in rule.find_groups(tu['task_id']):
-            result[tu['id']]['groups'][group]['tasks'].append(tu)
+            result[tu['user'].id]['groups'][group]['tasks'].append(tu)
     for user_id, task_groups in result.items():
         groups = task_groups['groups']
         groupsums = []

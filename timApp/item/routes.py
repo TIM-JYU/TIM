@@ -359,10 +359,8 @@ def view(item_path, template_name, usergroup=None, route="view"):
     index = get_index_from_html_list(t['html'] for t in texts)
 
     if hide_names_in_teacher():
-        for user in user_list:
-            user['name'] = f'user{user["id"]}'
-            user['real_name'] = f'User {user["id"]}'
-            user['email'] = f'user{user["id"]}@example.com'
+        for entry in user_list:
+            entry['user'].hide_name = True
 
     settings = get_user_settings()
     # settings['add_button_text'] = doc_settings.get_dict().get('addParButtonText', 'Add paragraph')
