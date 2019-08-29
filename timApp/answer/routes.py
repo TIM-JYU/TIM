@@ -301,32 +301,15 @@ def send_email():
     TODO: combine with multisendemail
     :return:
     """
-    taskid = request.json.get('taskid')
-    try:
-        tid = TaskId.parse(taskid)
-    except (PluginException, TypeError) as e:
-        return abort(400, f'Task id error: {e}')
-    d = get_doc_or_abort(tid.doc_id)
-    verify_view_access(d)
-    curr_user = get_current_user_object()
-    try:
-        doc, plug = get_plugin_from_request(d.document, tid, curr_user)
-    except TaskNotFoundException as e:
-        return abort(404, f'Task not found: {taskid}')
-    if not plug.values.get("emailMode", False):
-        return abort(400, f'Plugin not set to email mode.')
-    rcpts = plug.values.get("emailRecipients", [])
     # TODO: Use schemas
-    if not isinstance(rcpts, list) or len(rcpts) == 0:
-        return abort(400, f'Missing email recipients')
-    rcpts = ';'.join(rcpts)
-    premsg = plug.values.get("emailPreMsg", "")
-    subject = plug.values.get("emailSubject", "")
-    if not isinstance(subject, str) or len(subject) == 0:
-        return abort(400, f'Missing email subject')
+    curr_user = get_current_user_object()
+    if curr_user not in UserGroup.get_teachers_group().users and curr_user not in UserGroup.get_korppi_group().users:
+        abort(403, "Sorry, you don't have permission to use this resource.")
+    rcpts = request.json.get("rcpts")
     msg = request.json.get('msg')
-    msg = premsg + "\n\n" + msg
     bcc = ""
+    subject = request.json.get("subject")
+    curr_user = get_current_user_object()
     bccme = request.json.get('bccme', False)
     if bccme:
         bcc = curr_user.email

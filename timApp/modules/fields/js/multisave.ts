@@ -16,6 +16,7 @@ const multisaveMarkup = t.intersection([
     t.partial({
         areas: t.array(t.string),
         tags: t.array(t.string),
+        emailPreMsg: t.string,
         emailRecipients: t.array(t.string),
         emailSubject: t.string,
         fields: t.array(t.string),
@@ -49,7 +50,7 @@ export class MultisaveController extends PluginBase<t.TypeOf<typeof multisaveMar
     private showEmailForm: boolean = false;
     private emaillist: string[] | undefined = [];
     private emailsubject: string | undefined = "";
-    private emailbody: string = "";
+    private emailbody: string | undefined = "";
     private emailbcc: boolean = false;
     private emailbccme: boolean = true;
     private emailtim: boolean = true;
@@ -66,6 +67,7 @@ export class MultisaveController extends PluginBase<t.TypeOf<typeof multisaveMar
     $onInit() {
         super.$onInit();
         this.emaillist = this.attrs.emailRecipients;
+        this.emailbody = this.attrs.emailPreMsg;
         this.emailsubject = this.attrs.emailSubject;
     }
 
@@ -76,9 +78,8 @@ export class MultisaveController extends PluginBase<t.TypeOf<typeof multisaveMar
         this.emailMsg = ""; // JSON.stringify(response);
 
         const response = await $http.post<string[]>("/sendemail/", {
-            // rcpt: this.emaillist,
-            // subject: this.emailsubject,
-            taskid: this.getTaskId(),
+            rcpts: this.emaillist,
+            subject: this.emailsubject,
             msg: this.emailbody,
             bccme: this.emailbccme,
         });
@@ -272,13 +273,13 @@ multisaveApp.component("multisaveRunner", {
     <p class="savedtext" ng-if="$ctrl.isSaved">Saved {{$ctrl.savedFields}} fields!</p>
     <div class="csRunDiv multisaveEmail" style="padding: 1em;" ng-if="$ctrl.showEmailForm"> <!-- email -->
         <p class="closeButton" ng-click="$ctrl.toggleEmailForm()"></p>
-        <p><textarea disabled id="emaillist" ng-model="$ctrl.emaillist" rows="4" cols="40"></textarea><p>
+        <p><textarea id="emaillist" ng-model="$ctrl.emaillist" rows="4" cols="40"></textarea><p>
         <p>
         <label title="Send so that names are not visible (works only non-TIM send)"><input type="checkbox" ng-model="$ctrl.emailbcc">BCC</label>&nbsp;
         <label title="Send also a copy for me"><input type="checkbox" ng-model="$ctrl.emailbccme" >BCC also for me</label>&nbsp;
         <label title="Send using TIM.  Every mail is send as a personal mail."><input type="checkbox" ng-model="$ctrl.emailtim" >use TIM to send</label>&nbsp;
         </p>
-        <p>Subject: <input disabled ng-model="$ctrl.emailsubject" size="60"></p>
+        <p>Subject: <input ng-model="$ctrl.emailsubject" size="60"></p>
         <p>eMail content:</p>
         <p><textarea id="emaillist" ng-model="$ctrl.emailbody" rows="10" cols="70"></textarea></p>
         <p>
