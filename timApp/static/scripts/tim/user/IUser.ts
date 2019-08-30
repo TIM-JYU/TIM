@@ -12,6 +12,9 @@ export interface IUser {
 
 export interface IUserListEntry {
     velped_task_count: number;
+    task_points: number;
+    total_points: number;
+    velp_points: number;
     user: IUser;
 }
 

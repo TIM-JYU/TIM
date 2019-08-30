@@ -23,7 +23,7 @@ export interface IExportOptions {
     copy: boolean;
 }
 
-function filterFn(term: string, cellValue: any, row: IGridRowOf<any>, column: IGridColumnOf<any>) {
+function filterFn(term: string, cellValue: string, row: IGridRowOf<unknown>, column: IGridColumnOf<unknown>) {
     try {
         return new RegExp(term, "i").test(cellValue);
     } catch {
@@ -33,7 +33,7 @@ function filterFn(term: string, cellValue: any, row: IGridRowOf<any>, column: IG
 
 export class UserListController implements IController {
     static $inject = ["$scope", "$element"];
-    private gridOptions?: uiGrid.IGridOptionsOf<IUserListEntry> & {gridMenuCustomItems: any};
+    private gridOptions?: uiGrid.IGridOptions & {gridMenuCustomItems: unknown};
     private scope: IScope;
     private gridApi?: uiGrid.IGridApiOf<IUserListEntry>;
     private instantUpdate: boolean = false;
@@ -150,7 +150,7 @@ export class UserListController implements IController {
                     this.fireUserChange(row, this.instantUpdate);
                 });
                 if (this.gridOptions && this.gridOptions.data) {
-                    gridApi.grid.modifyRows(this.gridOptions.data as any[]);
+                    gridApi.grid.modifyRows(this.gridOptions.data as unknown[]);
                     const firstRow = this.gridOptions.data[0] as IUserListEntry;
                     gridApi.selection.selectRow(firstRow);
                     const userName = getURLParameter("user");
@@ -322,7 +322,7 @@ export class UserListController implements IController {
         const data = this.gridApi.core.getVisibleRows(this.gridApi.grid);
         let dataKorppi = "";
 
-        const fields = ["total_points", "task_points", "velp_points", ""];
+        const fields = ["total_points", "task_points", "velp_points"] as const;
         const fieldNames = new Map<string, string>();
         fieldNames.set(fields[0], options.totalPointField);
         fieldNames.set(fields[1], options.taskPointField);
@@ -336,9 +336,9 @@ export class UserListController implements IController {
                     dataKorppi += "\n";
                 }
                 for (const d of data) {
-                    const entity = d.entity as any;
+                    const entity = d.entity;
                     if (entity[f] != null) {
-                        dataKorppi += entity.name + ";" + fieldName + ";" + entity[f] + "\n";
+                        dataKorppi += entity.user.name + ";" + fieldName + ";" + entity[f] + "\n";
                     }
                 }
             }
