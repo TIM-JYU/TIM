@@ -2,13 +2,13 @@ import angular, {IController, IRootElementService, IScope} from "angular";
 import * as t from "io-ts";
 import $ from "jquery";
 import {CellInfo} from "sagecell";
+import {ITimComponent, ViewCtrl} from "tim/document/viewctrl";
 import {IAce, IAceEditor} from "tim/editor/ace-types";
 import {IPluginInfoResponse, ParCompiler} from "tim/editor/parCompiler";
 import {GenericPluginMarkup, Info, nullable, withDefault} from "tim/plugin/attributes";
 import {PluginBase, pluginBindings} from "tim/plugin/util";
 import {$compile, $http, $sce, $timeout, $upload, $window} from "tim/util/ngimport";
-import {fixDefExport, to, valueDefu, valueOr} from "tim/util/utils";
-import {ITimComponent, ViewCtrl} from "../../../static/scripts/tim/document/viewctrl";
+import {copyToClipboard, fixDefExport, getClipboardHelper, to, valueDefu, valueOr} from "tim/util/utils";
 
 interface GlowScriptWindow extends Window {
     runJavaScript(text: string, args: string, input: string, wantsConsole: boolean): string;
@@ -801,8 +801,6 @@ class CsBase extends PluginBase<t.TypeOf<typeof CsMarkup>, t.TypeOf<typeof CsAll
         return {norun: true}; // prevent running broken plugin accidentally
     }
 }
-
-let copyHelperElement: HTMLTextAreaElement | undefined;
 
 function numOrDef(val: string | number | undefined, def: number) {
     if (typeof val === "number") {
@@ -2216,46 +2214,8 @@ class CsController extends CsBase implements ITimComponent {
         this.showCodeNow();
     }
 
-    getClipboardHelper(): HTMLTextAreaElement {  // TODO: could be a TIM global function
-        let e1 = copyHelperElement;  // prevent extra creating and deleting
-        if (e1) {
-            return e1;
-        }
-        e1 = document.createElement("textarea");
-        e1.setAttribute("readonly", "");
-        // e1.style.position = 'absolute';
-        e1.style.position = "fixed"; // fixed seems better for FF and Edge so not to jump to end
-        // e1.style.left = '-9999px';
-        e1.style.top = "-9999px";
-        document.body.appendChild(e1);
-        // document.body.removeChild(el);
-        copyHelperElement = e1;
-        return e1;
-    }
-
-    copyToClipboard(s: string) {  // TODO: could be a TIM global function
-        const e1 = this.getClipboardHelper();
-        e1.value = s;
-        const isIOS = navigator.userAgent.match(/ipad|ipod|iphone/i);
-        if (isIOS) {
-            // e1.contentEditable = true;
-            e1.readOnly = true;
-            const range = document.createRange();
-            range.selectNodeContents(e1);
-            const sel = window.getSelection();
-            if (sel) {
-                sel.removeAllRanges();
-                sel.addRange(range);
-            }
-            e1.setSelectionRange(0, 999999);
-        } else {
-            e1.select();
-        }
-        document.execCommand("copy");
-    }
-
     getFromClipboard() {  // This does not work, it is not possible to get user clp contents
-        const e1 = this.getClipboardHelper();
+        const e1 = getClipboardHelper();
         e1.select();
         document.execCommand("paste");
         e1.select();
@@ -2311,7 +2271,7 @@ class CsController extends CsBase implements ITimComponent {
             post = "\n" + ind + "// BYCODEEND\n" + post;  // TODO: ask comment string from language
         }
         const s = pre + this.usercode + post;
-        this.copyToClipboard(s);
+        copyToClipboard(s);
     }
 
     checkByCodeRemove() {

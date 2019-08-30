@@ -446,3 +446,43 @@ export function posToRelative(e: Element, p: MouseOrTouch | TouchEvent) {
         y: posY - rect.top,
     };
 }
+
+let copyHelperElement: HTMLTextAreaElement | undefined;
+
+export function getClipboardHelper(): HTMLTextAreaElement {
+    let e1 = copyHelperElement;  // prevent extra creating and deleting
+    if (e1) {
+        return e1;
+    }
+    e1 = document.createElement("textarea");
+    e1.setAttribute("readonly", "");
+    // e1.style.position = 'absolute';
+    e1.style.position = "fixed"; // fixed seems better for FF and Edge so not to jump to end
+    // e1.style.left = '-9999px';
+    e1.style.top = "-9999px";
+    document.body.appendChild(e1);
+    // document.body.removeChild(el);
+    copyHelperElement = e1;
+    return e1;
+}
+
+export function copyToClipboard(s: string) {
+    const e1 = getClipboardHelper();
+    e1.value = s;
+    const isIOS = navigator.userAgent.match(/ipad|ipod|iphone/i);
+    if (isIOS) {
+        // e1.contentEditable = true;
+        e1.readOnly = true;
+        const range = document.createRange();
+        range.selectNodeContents(e1);
+        const sel = window.getSelection();
+        if (sel) {
+            sel.removeAllRanges();
+            sel.addRange(range);
+        }
+        e1.setSelectionRange(0, 999999);
+    } else {
+        e1.select();
+    }
+    document.execCommand("copy");
+}
