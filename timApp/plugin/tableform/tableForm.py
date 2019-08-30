@@ -276,27 +276,50 @@ def render_static_table_form(m: TableFormHtmlModel):
 tableForm_plugin = create_blueprint(__name__, 'tableForm', TableFormHtmlSchema(), csrf)
 
 
+class GenerateCSVSchema(Schema):
+    docId = fields.Str(required=True)
+    groups = fields.List(fields.Str(), required=True)
+    separator = fields.Str(required=True)
+    realnames = fields.Boolean()
+    usernames = fields.Boolean()
+    emails = fields.Boolean()
+    removeDocIds = fields.Boolean()
+    fields = fields.List(fields.Str(), required=True)
+
+    @post_load
+    def make_obj(self, data):
+        return GenerateCSVModel(**data)
+
+
+@attr.s(auto_attribs=True)
+class GenerateCSVModel:
+    docId: str
+    fields: List[str]
+    groups: List[str]
+    separator: str = ","
+    realnames: Union[bool, Missing] = True
+    usernames: Union[bool, Missing] = True
+    emails: Union[bool, Missing] = False
+    removeDocIds: Union[bool, Missing] = True
+
+
 @tableForm_plugin.route('/generateCSV')
-def gen_csv():
+@use_args(GenerateCSVSchema())
+def gen_csv(args: GenerateCSVModel):
     """
     Generates a report defined by tableForm attributes
     # TODO: generic, move
     # TODO: add schemas
     :return: CSV containing headerrow and rows for users and values
     """
-    if len(request.args.get('separator')) > 1:
+    curr_user = get_current_user_object()
+    docid, groups, separator, real_names, user_names, emails, removeDocIds, fields = \
+        args.docId, args.groups, args.separator, args.realnames, \
+        args.usernames, args.emails, args.removeDocIds, args.fields
+    if len(separator) > 1:
         # TODO: Add support >1 char strings like in Korppi
         return "Only 1-character string separators supported for now"
-    curr_user = get_current_user_object()
-    # anon_names = request.args.get("anonNames", False)
-    real_names = get_boolean(request.args.get("realnames"), True)
-    user_names = get_boolean(request.args.get("usernames"), True)
-    emails = get_boolean(request.args.get("emails"), False)
-    fields = request.args.getlist("fields")
-    groups = request.args.getlist("groups")
-    docid = request.args.get("docId")
     doc = get_doc_or_abort(docid)
-    removeDocIds = get_boolean(request.args.get("removeDocIds"), True)
     r = tableform_get_fields(fields, groups,
                              doc, curr_user, removeDocIds, allow_non_teacher=True)
     rowkeys = list(r['rows'].keys())
@@ -320,7 +343,7 @@ def gen_csv():
             data[ycoord + y_offset].append(r['emailmap'].get(rowkey))
         for field in r['fields']:
             data[ycoord + y_offset].append(row.get(field))
-    return csv_response(data, 'excel', request.args.get('separator'))
+    return csv_response(data, 'excel', separator)
 
 @tableForm_plugin.route('/fetchTableData')
 def fetch_rows():
