@@ -242,7 +242,7 @@ def get_fields_and_users(u_fields: List[str], groups: List[UserGroup],
                 u: User = r.pop('user')
                 groups = r.pop('groups', None)
                 for field, alias in fs:
-                    # The value can be None if the user has not done any tasks, so we use another sentinel.
+                    # The value can be None if the user has not done any tasks with points, so we use another sentinel.
                     value = r.get(field.field, missing)
                     if value is missing:
                         value = groups[field.field]  # The group should exist because the field was validated above.

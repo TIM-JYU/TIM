@@ -579,7 +579,7 @@ tools.print(tools.getDouble("otherdoc"));
             expect_content={'web': {'errors': [], 'outdata': {}, 'output': '111\n222\n333\n555\n30\n3\n2.5\n'}},
         )
 
-    def test_no_answers_tally(self):
+    def test_no_points_answers_tally(self):
         d = self.create_jsrun("""
 fields:
  - tally:total_points=x
@@ -589,6 +589,7 @@ tools.print(tools.getDouble("x"));
 !!
         """)
         d.document.add_text("""#- {#t plugin=textfield}""")
+        # Add an answer with no points.
         self.current_user.answers.append(Answer(task_id=f'{d.id}.t', valid=True, content=json.dumps({'c': ''})))
         db.session.commit()
         self.do_jsrun(
