@@ -1,5 +1,6 @@
 """Server tests for jsrunner plugin."""
 import json
+from datetime import datetime
 from typing import List
 
 import requests
@@ -512,19 +513,37 @@ showInView: True
         self.assertEqual({'error': 'Script failed to return anything (the return value must be JSON serializable).'},
                          r.json())
 
-    def xtest_points_fields(self):
-        self.login_test1()
-        d = self.create_jsrun("""
+    def test_tally_fields(self):
+        fd = self.create_doc(initial_par="""#- {#t plugin=textfield}""")
+        self.current_user.answers.append(Answer(
+            task_id=f'{fd.id}.t',
+            points=2.5,
+            content=json.dumps({'c': 'x'}),
+            valid=True,
+        ))
+        db.session.commit()
+        d = self.create_jsrun(f"""
 fields:
- - "user:total_points[2018-04-06 15:66:94, 2019-06-05 12:12:12]=total_range"
- - "user:total_points=total_all"
- - "user:1st=a"
- - "user:2nd=b"
-group: testusers
+ - tally:total_points[2018-04-06 12:00:00, 2019-06-05 12:00:00]=total_range
+ - tally:total_points[,2019-06-05 12:00:00]=total_range_end
+ - tally:total_points[2018-04-06 12:00:00,]=total_range_start
+ - tally:total_points=total_all
+ - tally:total_points[,]=total_all_alt
+ - tally:1st=a
+ - tally:2nd=b
+ - tally:3rd=c
+ - tally:task_count
+ - tally:{fd.id}.total_points=otherdoc
+group: testuser1
 program: |!!
-tools.setString("t1", tools.getString("t1", "") + "-" + tools.getRealName());
-tools.setString("t2", tools.getString("t2", "") + "=" + tools.getRealName());
-        !!
+tools.print(tools.getDouble("a"));
+tools.print(tools.getDouble("b"));
+tools.print(tools.getDouble("c"));
+tools.print(tools.getDouble("total_all"));
+tools.print(tools.getDouble("total_range"));
+tools.print(tools.getDouble("task_count"));
+tools.print(tools.getDouble("otherdoc"));
+!!
                 """)
         d.document.set_settings(
             {'point_sum_rule': {'groups': {
@@ -542,13 +561,67 @@ tools.setString("t2", tools.getString("t2", "") + "=" + tools.getRealName());
         """)
         u = self.current_user
         for i in range(1, 4):
-            a = Answer(task_id=f'{d.id}.a0{i}', content=json.dumps({'c': 10 ** (i - 1) * 1}), valid=True)
-            b = Answer(task_id=f'{d.id}.b0{i}', content=json.dumps({'c': 10 ** (i - 1) * 2}), valid=True)
-            c = Answer(task_id=f'{d.id}.c0{i}', content=json.dumps({'c': 10 ** (i - 1) * 3}), valid=True)
-            u.answers.append(a)
-            u.answers.append(b)
-            u.answers.append(c)
+            for letter, num in zip(['a', 'b', 'c'], [1, 2, 3]):
+                c = 10 ** (i - 1) * num
+                tid = f'{d.id}.{letter}0{i}'
+                a = Answer(
+                    task_id=tid,
+                    content=json.dumps({'c': c}),
+                    points=c,
+                    valid=True,
+                )
+                if i == 2 and letter == 'c':
+                    a.answered_on = datetime(2018, 6, 20)
+                u.answers.append(a)
         db.session.commit()
+        self.do_jsrun(
+            d,
+            expect_content={'web': {'errors': [], 'outdata': {}, 'output': '111\n222\n333\n555\n30\n3\n2.5\n'}},
+        )
+
+    def test_invalid_tally_fields(self):
+        invalid_yamls = [
+            ('tally:total_points[2018-04-06 12:00:00, 2019-06-05 12:00:00=total_range',
+             "Invalid tally field format: tally:total_points[2018-04-06 12:00:00, 2019-06-05 12:00:00", 400),
+            ('tally:total_points[2018-04-06 12:00:00]=total_range',
+             "Invalid tally field format: tally:total_points[2018-04-06 12:00:00]", 400),
+            ('tally:total_points[2018-04-06 12:00:00, 2019-06-05 12:00:60]=total_range',
+             "Invalid tally field format: tally:total_points[2018-04-06 12:00:00, 2019-06-05 12:00:60]", 400),
+            ('tally:x',
+             "Unknown tally field: x. Valid tally fields are: total_points, velp_points, task_points, task_count and velped_task_count.",
+             400),
+        ]
+        d = None
+        for y, e, s in invalid_yamls:
+            d = self.create_jsrun(f"""
+fields:
+ - {y}
+group: testuser1
+program: |!!
+!!""")
+            self.do_jsrun(
+                d,
+                expect_content=e,
+                expect_status=s,
+                json_key='error' if s >= 400 else None,
+            )
+        d.document.set_settings(
+            {
+                'point_sum_rule': {
+                    'groups': {
+                        '1st': 'a.*',
+                        '2nd': 'b.*',
+                        '3rd': 'c.*',
+                    },
+                }
+            }
+        )
+        self.do_jsrun(
+            d,
+            expect_content='Unknown tally field: x. Valid tally fields are: total_points, velp_points, task_points, task_count, velped_task_count, 1st, 2nd and 3rd.',
+            expect_status=400,
+            json_key='error',
+        )
 
 
 class JsRunnerGroupTest(JsRunnerTestBase):

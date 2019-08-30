@@ -5,6 +5,7 @@ import yaml
 import re
 import json
 
+from timApp.answer.pointsumrule import PointSumRule
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.macroinfo import MacroInfo
 from timApp.document.randutils import hashfunc
@@ -296,7 +297,13 @@ class DocSettings:
         return self.__dict.get(self.hide_top_buttons_key, default)
 
     def point_sum_rule(self, default=None):
-        return self.__dict.get(self.point_sum_rule_key, default)
+        psr_dict = self.__dict.get(self.point_sum_rule_key, default)
+        if not psr_dict:
+            return None
+        try:
+            return PointSumRule(psr_dict)
+        except:
+            return None
 
     def max_points(self, default=None):
         return self.__dict.get(self.max_points_key, default)

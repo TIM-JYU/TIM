@@ -558,7 +558,7 @@ class PluginTest(TimRouteTest):
                          'count': {count_type: count}}
             rule = PointSumRule(rule_dict)
             points = get_points_by_rule(
-                rule_dict,
+                rule,
                 task_ids, [TEST_USER_1_ID, TEST_USER_2_ID])
             self.assertEqual(tasksum1, points[TEST_USER_1_ID]['task_sum'])
             self.assertEqual(tasksum2, points[TEST_USER_2_ID]['task_sum'])
@@ -576,8 +576,8 @@ class PluginTest(TimRouteTest):
                 self.assertEqual(pts[k]['total_sum'], points[TEST_USER_1_ID]['groups'][k]['total_sum'])
                 self.assertEqual(pts2[k]['total_sum'], points[TEST_USER_2_ID]['groups'][k]['total_sum'])
             points = get_points_by_rule(
-                {'groups': {'1st': g1, '2nd': g2, '3rd': g3},
-                 'count': {count_type: count}},
+                PointSumRule({'groups': {'1st': g1, '2nd': g2, '3rd': g3},
+                 'count': {count_type: count}}),
                 task_ids, [TEST_USER_1_ID, TEST_USER_2_ID], flatten=True)
             self.assertEqual([{'groups': pts,
                                'task_count': 3,

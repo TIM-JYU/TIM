@@ -41,17 +41,28 @@ class TaskId:
             raise PluginException('Task name cannot be only a number.')
 
     @staticmethod
-    def parse(s: str, *, require_doc_id=True, allow_block_hint=True, allow_custom_field=False) -> 'TaskId':
-        m = re.fullmatch(r'((\d+)\.)?([a-zåäöA-ZÅÄÖ0-9_-]+)(\.([a-zA-Z0-9_-]+))?(:([a-zA-Z]*)(:(readonly|readwrite))?)?', s)
+    def parse(
+            s: str, *,
+            require_doc_id=True,
+            allow_block_hint=True,
+            allow_custom_field=False,
+            allow_type=True,
+    ) -> 'TaskId':
+        m = re.fullmatch(
+            r'((?P<docid>\d+)\.)?(?P<name>[a-zåäöA-ZÅÄÖ0-9_-]+)(\.(?P<field>[a-zA-Z0-9_-]+))?(:(?P<type>[a-zA-Z]*)(:(?P<rw>readonly|readwrite))?)?',
+            s,
+        )
         if not m:
             raise PluginException('Task name can only have characters a-z, 0-9, "_" and "-".')
-        doc_id = m.group(2)
+        doc_id = m.group('docid')
         if require_doc_id and not doc_id:
             raise PluginException('The format of task id is invalid. Missing doc id.')
-        task_id_name = m.group(3)
-        block_hint_or_field_access = m.group(5)
-        plugin_type = m.group(7)
-        access = m.group(9)
+        if not allow_type and m.group('type'):
+            raise PluginException('Plugin type not allowed here.')
+        task_id_name = m.group('name')
+        block_hint_or_field_access = m.group('field')
+        plugin_type = m.group('type')
+        access = m.group('rw')
         par_id = None
         field = None
         if block_hint_or_field_access in KNOWN_FIELD_NAMES or allow_custom_field:

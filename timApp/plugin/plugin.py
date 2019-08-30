@@ -594,7 +594,6 @@ TASK_MATCH_PROG = re.compile(r'{#([\.\w:]*)([\s\S]*?)?#}')  # see https://regex1
 
 def find_inline_plugins_from_str(md) -> Generator[
     Tuple[UnvalidatedTaskId, Optional[str], Range, str], None, None]:
-    # "}" not allowed in inlineplugins for now
     # TODO make task id optional
     # matches: Iterable[Match] = re.finditer(r'{#([^ }\n]+)(([ \n]*[^{}]*)|([ \n]*[^{}]*{[^{}]*}[^{}]*)*)?}', md)
     # matches: Iterable[Match] = re.finditer(r'{#([^ }\n]+)([ \n][^}]+)?}', md)

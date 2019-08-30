@@ -5,7 +5,7 @@ from datetime import datetime
 from operator import itemgetter
 from typing import List, Optional, Dict, Tuple, Iterable, Any
 
-from sqlalchemy import func, Numeric, Float
+from sqlalchemy import func, Numeric, Float, true
 from sqlalchemy.orm import selectinload, defaultload
 
 from timApp.answer.answer import Answer
@@ -198,8 +198,18 @@ def get_common_answers(users: List[User], task_id: TaskId) -> List[Answer]:
     return list(g())
 
 
+basic_tally_fields = [
+    'total_points',
+    'velp_points',
+    'task_points',
+    'task_count',
+    'velped_task_count',
+]
+
+
 def get_users_for_tasks(task_ids: List[TaskId], user_ids: Optional[List[int]] = None, group_by_user=True,
-                        group_by_doc=False) -> List[Dict[str, Any]]:
+                        group_by_doc=False,
+                        answer_filter=None) -> List[Dict[str, Any]]:
     if not task_ids:
         return []
 
@@ -210,9 +220,11 @@ def get_users_for_tasks(task_ids: List[TaskId], user_ids: Optional[List[int]] = 
                          func.sum(Annotation.points).label('velp_points'))
           .subquery())
     a2 = Answer.query.with_entities(Answer.id, Answer.points).subquery()
+    if answer_filter is None:
+        answer_filter = true()
     a1 = (Answer.query
           .join(UserAnswer, UserAnswer.answer_id == Answer.id)
-          .filter(Answer.task_id.in_(task_ids_to_strlist(task_ids)) & (Answer.valid == True))
+          .filter(Answer.task_id.in_(task_ids_to_strlist(task_ids)) & (Answer.valid == True) & answer_filter)
           .group_by(UserAnswer.user_id, Answer.task_id)
           .with_entities(Answer.task_id,
                          UserAnswer.user_id.label('uid'),
@@ -266,12 +278,15 @@ def get_users_for_tasks(task_ids: List[TaskId], user_ids: Optional[List[int]] = 
     return result
 
 
-def get_points_by_rule(points_rule: Optional[Dict],
+def get_points_by_rule(points_rule: Optional[PointSumRule],
                        task_ids: List[TaskId],
                        user_ids: Optional[List[int]] = None,
-                       flatten: bool = False):
+                       flatten: bool = False,
+                       answer_filter=None,
+                       ):
     """Computes the point sum from given tasks accoring to the given point rule.
 
+    :param answer_filter: Optional additional filter for answers.
     :param points_rule: The points rule.
     :param task_ids: The list of task ids to consider.
     :param user_ids: The list of users for which to compute the sum.
@@ -280,9 +295,9 @@ def get_points_by_rule(points_rule: Optional[Dict],
 
     """
     if not points_rule:
-        return get_users_for_tasks(task_ids, user_ids)
-    tasks_users = get_users_for_tasks(task_ids, user_ids, group_by_user=False)
-    rule = PointSumRule(points_rule)
+        return get_users_for_tasks(task_ids, user_ids, answer_filter=answer_filter)
+    tasks_users = get_users_for_tasks(task_ids, user_ids, group_by_user=False, answer_filter=answer_filter)
+    rule = points_rule
     result = defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: defaultdict(list))))
     for tu in tasks_users:
         for group in rule.find_groups(tu['task_id']):

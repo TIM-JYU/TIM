@@ -4,16 +4,17 @@ import re
 import time
 from collections import defaultdict
 from datetime import datetime
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, DefaultDict
 
 import attr
 import dateutil.parser
-from sqlalchemy import func
+import pytz
+from sqlalchemy import func, true
 from sqlalchemy.orm import defaultload
 from werkzeug.exceptions import abort
 
 from timApp.answer.answer import Answer
-from timApp.answer.answers import get_points_by_rule
+from timApp.answer.answers import get_points_by_rule, basic_tally_fields
 from timApp.auth.accesshelper import get_doc_or_abort
 from timApp.document.docinfo import DocInfo
 from timApp.plugin.plugin import find_plugin_from_document, TaskNotFoundException, find_task_ids
@@ -23,7 +24,7 @@ from timApp.user.groups import verify_group_view_access
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
 from timApp.util.answerutil import task_ids_to_strlist
-from timApp.util.utils import widen_fields, get_alias
+from timApp.util.utils import widen_fields, get_alias, seq_to_str
 
 
 def chunks(l: List, n: int):
@@ -31,41 +32,58 @@ def chunks(l: List, n: int):
         yield l[i:i + n]
 
 
-userfield_re = re.compile(
-    r'user:((?P<doc>\d+)\.)?(?P<field>[a-zA-Z0-9öäåÖÄÅ_-]+)(\[ *(?P<ds>[^[],]+) *, *(?P<de>[^[],]+) *\])?'
+tallyfield_re = re.compile(
+    r'tally:((?P<doc>\d+)\.)?(?P<field>[a-zA-Z0-9öäåÖÄÅ_-]+)(\[ *(?P<ds>[^\[\],]*) *, *(?P<de>[^\[\],]*) *\])?'
 )
 
 
+fin_timezone = pytz.timezone('Europe/Helsinki')
+
+
 @attr.s(auto_attribs=True)
-class UserField:
-    """In Jsrunner, represents the "user:" type of field."""
+class TallyField:
+    """In Jsrunner, represents the "tally:" type of field."""
     field: str
     doc_id: Optional[int]
     datetime_start: Optional[datetime]
     datetime_end: Optional[datetime]
+    default_doc: DocInfo
+
+    @property
+    def effective_doc_id(self):
+        return self.doc_id or self.default_doc.id
 
     @property
     def grouping_key(self):
-        return f'{self.doc_id}{self.datetime_start}{self.datetime_end}'
+        return f'{self.effective_doc_id}{self.datetime_start}{self.datetime_end}'
+
+    @property
+    def doc_and_field(self):
+        return f'{self.effective_doc_id}.{self.field}'
 
     @staticmethod
-    def try_parse(s: str) -> Optional['UserField']:
-        m = userfield_re.fullmatch(s)
+    def try_parse(s: str, default_doc: DocInfo) -> Optional['TallyField']:
+        m = tallyfield_re.fullmatch(s)
         if not m:
             return None
         try:
             gds = m.group('ds')
             gde = m.group('de')
-            ds, de = dateutil.parser.parse(gds) if gds is not None else None, dateutil.parser.parse(
-                gde) if gde is not None else None
-        except ValueError:
+            ds, de = (dateutil.parser.parse(gds) if gds else None,
+                      dateutil.parser.parse(gde) if gde else None)
+        except (ValueError, OverflowError):
             return None
+        if ds and ds.tzinfo is None:
+            ds = fin_timezone.localize(ds)
+        if de and de.tzinfo is None:
+            de = fin_timezone.localize(de)
         doc = m.group('doc')
-        return UserField(
+        return TallyField(
             field=m.group('field'),
             datetime_start=ds,
             datetime_end=de,
             doc_id=int(doc) if doc else None,
+            default_doc=default_doc,
         )
 
 
@@ -110,7 +128,7 @@ def get_fields_and_users(u_fields: List[str], groups: List[UserGroup],
         return abort(400, f"Problem with field names: {u_fields}\n{e}")
 
     tasks_without_fields = []
-    user_fields = []
+    tally_fields: List[Tuple[TallyField, Optional[str]]] = []
     for field in u_fields:
         try:
             t, a, *rest = field.split("=")
@@ -127,15 +145,24 @@ def get_fields_and_users(u_fields: List[str], groups: List[UserGroup],
         if a == '':
             return abort(400, f'Alias cannot be empty: {field}')
         try:
-            task_id = TaskId.parse(t, require_doc_id=False, allow_block_hint=False,
-                                   allow_custom_field=add_missing_fields)
+            task_id = TaskId.parse(
+                t,
+                require_doc_id=False,
+                allow_block_hint=False,
+                allow_type=False,
+                allow_custom_field=add_missing_fields,
+            )
         except PluginException as e:
-            user_field = UserField.try_parse(t)
-            if not user_field:
-                return abort(400, str(e))
+            tally_field = TallyField.try_parse(t, d)
+            if not tally_field:
+                if t.startswith('tally:'):
+                    return abort(400, f'Invalid tally field format: {t}')
+                else:
+                    return abort(400, str(e))
             else:
-                did = user_field.doc_id if user_field.doc_id else d.id
-                user_fields.append(user_field)
+                did = tally_field.effective_doc_id
+                tally_fields.append((tally_field, a))
+                alias_map_value = tally_field.doc_and_field
         else:
             if task_id.field is None:
                 tasks_without_fields.append(task_id)
@@ -145,12 +172,12 @@ def get_fields_and_users(u_fields: List[str], groups: List[UserGroup],
                 task_id.doc_id = d.id
             task_id_map[task_id.doc_task].append(task_id)
             did = task_id.doc_id
-            if a:
-                alias = a
-                if alias in jsrunner_alias_map:
-                    abort(400, f'Duplicate alias {alias} in fields attribute')
-                alias_map[task_id.extended_or_doc_task] = alias
-                jsrunner_alias_map[alias] = task_id.extended_or_doc_task
+            alias_map_value = task_id.extended_or_doc_task
+        if a:
+            alias_map[alias_map_value] = a
+            if a in jsrunner_alias_map:
+                abort(400, f'Duplicate alias {a} in fields attribute')
+            jsrunner_alias_map[a] = alias_map_value
 
         if did in doc_map:
             continue
@@ -176,21 +203,49 @@ def get_fields_and_users(u_fields: List[str], groups: List[UserGroup],
             except KeyError:
                 pass
 
-    # TODO(Mika): Complete "user:" syntax support.
-    if False and user_fields:
-        field_groups = itertools.groupby(user_fields, key=lambda f: f.grouping_key)
-        for _, x in field_groups:
-            for g in x:
-                d = doc_map[g.doc_id]
-                d.insert_preamble_pars()
-                pars = d.get_dereferenced_paragraphs()
-                get_points_by_rule(
-                    points_rule={},
-                    task_ids=find_task_ids(pars)[0],
-                    user_ids=[],
-                )
-
     group_filter = UserGroup.id.in_([ug.id for ug in groups])
+    tally_field_values: DefaultDict[int, List[Tuple[float, str]]] = defaultdict(list)
+    task_id_cache = {}
+    if tally_fields:
+        field_groups = itertools.groupby(tally_fields, key=lambda f: f[0].grouping_key)
+        for _, x in field_groups:
+            fs = list(x)
+            g = fs[0][0]
+            doc = doc_map[g.doc_id] if g.doc_id else d.document
+            task_ids = task_id_cache.get(doc.doc_id)
+            if task_ids is None:
+                doc.insert_preamble_pars()
+                pars = doc.get_dereferenced_paragraphs()
+                task_ids = find_task_ids(pars, check_access=False)[0]
+                task_id_cache[doc.doc_id] = task_ids
+            ans_filter = true()
+            if g.datetime_start:
+                ans_filter = ans_filter & (Answer.answered_on >= g.datetime_start)
+            if g.datetime_end:
+                ans_filter = ans_filter & (Answer.answered_on < g.datetime_end)
+            psr = doc.get_settings().point_sum_rule()
+            pts = get_points_by_rule(
+                points_rule=psr,
+                task_ids=task_ids,
+                user_ids=User.query.join(UserGroup, User.groups).filter(group_filter).with_entities(User.id).subquery(),
+                flatten=True,
+                answer_filter=ans_filter,
+            )
+
+            known_tally_fields = list(itertools.chain(basic_tally_fields, psr.groups if psr else []))
+            for field, _ in fs:
+                if field.field not in known_tally_fields:
+                    abort(400, f'Unknown tally field: {field.field}. '
+                               f'Valid tally fields are: {seq_to_str(known_tally_fields)}.')
+            for r in pts:
+                u: User = r.pop('user')
+                groups = r.pop('groups', None)
+                for field, alias in fs:
+                    value = r.get(field.field)
+                    if value is None:
+                        value = groups[field.field]  # The group should exist because the field was validated above.
+                        value = value['total_sum']
+                    tally_field_values[u.id].append((value, alias or field.doc_and_field))
     sub = []
     if valid_only:
         filt = (Answer.valid == True)
@@ -240,7 +295,11 @@ def get_fields_and_users(u_fields: List[str], groups: List[UserGroup],
     for uid, a in answers_with_users:
         if last_user != uid:
             user_index += 1
-            user_tasks = {}
+            tally_values = tally_field_values.get(uid)
+            if tally_values:
+                user_tasks = {a: v for v, a in tally_values}
+            else:
+                user_tasks = {}
             user_fieldstyles = {}
             user = users[user_index]
             res.append({'user': user, 'fields': user_tasks, 'styles': user_fieldstyles})
