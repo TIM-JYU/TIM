@@ -579,6 +579,24 @@ tools.print(tools.getDouble("otherdoc"));
             expect_content={'web': {'errors': [], 'outdata': {}, 'output': '111\n222\n333\n555\n30\n3\n2.5\n'}},
         )
 
+    def test_no_points_answers_tally(self):
+        d = self.create_jsrun("""
+fields:
+ - tally:total_points=x
+group: testuser1
+program: |!!
+tools.print(tools.getDouble("x"));
+!!
+        """)
+        d.document.add_text("""#- {#t plugin=textfield}""")
+        # Add an answer with no points.
+        self.current_user.answers.append(Answer(task_id=f'{d.id}.t', valid=True, content=json.dumps({'c': ''})))
+        db.session.commit()
+        self.do_jsrun(
+            d,
+            expect_content={'web': {'errors': [], 'outdata': {}, 'output': '0\n'}},
+        )
+
     def test_invalid_tally_fields(self):
         invalid_yamls = [
             ('tally:total_points[2018-04-06 12:00:00, 2019-06-05 12:00:00=total_range',
