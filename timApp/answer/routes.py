@@ -294,23 +294,38 @@ class JsRunnerSchema(GenericMarkupSchema):
             raise ValidationError("Either group or groups must be given.")
 
 
+class SendEmailSchema(Schema):
+    rcpts = fields.List(fields.Str(), required=True)
+    msg = fields.Str(required=True)
+    subject = fields.Str(required=True)
+    bccme = fields.Boolean(allow_none=True)
+
+    @post_load
+    def make_obj(self, data):
+        return SendEmailModel(**data)
+
+
+@attr.s(auto_attribs=True)
+class SendEmailModel:
+    rcpts: List[str]
+    msg: str
+    subject: str
+    bccme: Union[bool, _Missing] = missing
+
+
 @answers.route('/sendemail/', methods=['post'])
-def send_email():
+@use_args(SendEmailSchema())
+def send_email(args: SendEmailModel):
     """
-    WIP - send email with certain attributes set only in plugin values
+    Route for sending email
     TODO: combine with multisendemail
     :return:
     """
-    # TODO: Use schemas
+    rcpts, msg, subject, bccme = args.rcpts, args.msg, args.subject, args.bccme
     curr_user = get_current_user_object()
     if curr_user not in UserGroup.get_teachers_group().users and curr_user not in UserGroup.get_korppi_group().users:
         abort(403, "Sorry, you don't have permission to use this resource.")
-    rcpts = request.json.get("rcpts")
-    msg = request.json.get('msg')
-    bcc = ""
-    subject = request.json.get("subject")
     curr_user = get_current_user_object()
-    bccme = request.json.get('bccme', False)
     if bccme:
         bcc = curr_user.email
     multi_send_email(
