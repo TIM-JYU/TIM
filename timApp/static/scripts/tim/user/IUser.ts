@@ -8,7 +8,14 @@ export interface IUser {
     id: number;
     name: string;
     real_name: string;
-    velped_task_count: number; // TODO needs a separate type
+}
+
+export interface IUserListEntry {
+    velped_task_count: number;
+    task_points: number;
+    total_points: number;
+    velp_points: number;
+    user: IUser;
 }
 
 export interface IFullUser extends IUser {

@@ -4,9 +4,9 @@ import {timApp} from "tim/app";
 import uiGrid, {IFilterOptions, IGridColumnOf, IGridRowOf} from "ui-grid";
 import {ViewCtrl} from "../document/viewctrl";
 import {DialogController, registerDialogComponent, showDialog, showMessageDialog} from "../ui/dialog";
-import {IUser} from "../user/IUser";
+import {IUser, IUserListEntry} from "../user/IUser";
 import {$timeout} from "../util/ngimport";
-import {Binding, getURLParameter, markAsUsed, Require} from "../util/utils";
+import {Binding, copyToClipboard, getURLParameter, markAsUsed, Require} from "../util/utils";
 import {showAllAnswers} from "./allAnswersController";
 import {showFeedbackAnswers} from "./feedbackAnswersController";
 
@@ -23,7 +23,7 @@ export interface IExportOptions {
     copy: boolean;
 }
 
-function filterFn(term: string, cellValue: any, row: IGridRowOf<any>, column: IGridColumnOf<any>) {
+function filterFn(term: string, cellValue: string, row: IGridRowOf<unknown>, column: IGridColumnOf<unknown>) {
     try {
         return new RegExp(term, "i").test(cellValue);
     } catch {
@@ -33,11 +33,11 @@ function filterFn(term: string, cellValue: any, row: IGridRowOf<any>, column: IG
 
 export class UserListController implements IController {
     static $inject = ["$scope", "$element"];
-    private gridOptions?: uiGrid.IGridOptions & {gridMenuCustomItems: any};
+    private gridOptions?: uiGrid.IGridOptions & {gridMenuCustomItems: unknown};
     private scope: IScope;
-    private gridApi?: uiGrid.IGridApiOf<IUser>;
+    private gridApi?: uiGrid.IGridApiOf<IUserListEntry>;
     private instantUpdate: boolean = false;
-    private columns!: Array<uiGrid.IColumnDefOf<IUser>>; // $onInit
+    private columns!: Array<uiGrid.IColumnDefOf<IUserListEntry>>; // $onInit
     private onUserChange!: Binding<(params: {$USER: IUser, $UPDATEALL: boolean}) => void, "&">;
     private viewctrl!: Require<ViewCtrl>;
     private element: IRootElementService;
@@ -71,13 +71,13 @@ export class UserListController implements IController {
 
         this.columns = [
             {
-                field: "real_name",
+                field: "user.real_name",
                 name: "Full name",
                 cellTooltip: true,
                 headerTooltip: true,
             },
             {
-                field: "name",
+                field: "user.name",
                 name: "Username",
                 cellTooltip: true,
                 headerTooltip: true,
@@ -150,8 +150,9 @@ export class UserListController implements IController {
                     this.fireUserChange(row, this.instantUpdate);
                 });
                 if (this.gridOptions && this.gridOptions.data) {
-                    gridApi.grid.modifyRows(this.gridOptions.data as any[]);
-                    gridApi.selection.selectRow(this.gridOptions.data[0]);
+                    gridApi.grid.modifyRows(this.gridOptions.data as unknown[]);
+                    const firstRow = this.gridOptions.data[0] as IUserListEntry;
+                    gridApi.selection.selectRow(firstRow);
                     const userName = getURLParameter("user");
                     if (userName) {
                         const foundUser = this.findUserByName(userName);
@@ -159,10 +160,10 @@ export class UserListController implements IController {
                             this.gridApi.selection.selectRow(foundUser);
                         } else {
                             void showMessageDialog(`User ${userName} not found from answerers.`);
-                            gridApi.selection.selectRow(this.gridOptions.data[0]);
+                            gridApi.selection.selectRow(firstRow);
                         }
                     } else {
-                        gridApi.selection.selectRow(this.gridOptions.data[0]);
+                        gridApi.selection.selectRow(firstRow);
                     }
                 }
                 gridApi.cellNav.on.navigate(this.scope, (newRowCol, oldRowCol) => {
@@ -181,7 +182,7 @@ export class UserListController implements IController {
                             gridApi.cellNav.scrollToFocus(oldRowCol.row.entity, oldRowCol.col.colDef);
                         } else {
                             if (this.gridOptions && this.gridOptions.data && this.gridOptions.columnDefs) {
-                                gridApi.cellNav.scrollToFocus(this.gridOptions.data[0], this.gridOptions.columnDefs[0]);
+                                gridApi.cellNav.scrollToFocus(this.gridOptions.data[0] as IUserListEntry, this.gridOptions.columnDefs[0]);
                             }
                         }
                         return;
@@ -240,13 +241,13 @@ export class UserListController implements IController {
                         iusers = [];
                         if (this.gridApi) {
                             const selectedUser = this.gridApi.selection.getSelectedRows()[0];
-                            iusers.push(selectedUser);
+                            iusers.push(selectedUser.user);
 
                             const visibleRows = this.gridApi.core.getVisibleRows(this.gridApi.grid);
 
                             for (const row of visibleRows) { // Create string array of visible item.
                                 if (row.entity !== selectedUser) {
-                                    iusers.push(row.entity);
+                                    iusers.push(row.entity.user);
                                 }
                             }
                             if (visibleRows.length <= 0) {
@@ -267,48 +268,8 @@ export class UserListController implements IController {
         };
     }
 
-    fireUserChange(row: uiGrid.IGridRowOf<IUser>, updateAll: boolean) {
-        this.onUserChange({$USER: row.entity, $UPDATEALL: updateAll});
-    }
-
-    copyHelperElement: HTMLTextAreaElement | undefined;
-
-    getClipboardHelper(): HTMLTextAreaElement {  // TODO: could be a TIM global function
-        let e1 = this.copyHelperElement;  // prevent extra creating and deleting
-        if (e1) {
-            return e1;
-        }
-        e1 = document.createElement("textarea");
-        e1.setAttribute("readonly", "");
-        // e1.style.position = 'absolute';
-        e1.style.position = "fixed"; // fixed seems better for FF and Edge so not to jump to end
-        // e1.style.left = '-9999px';
-        e1.style.top = "-9999px";
-        document.body.appendChild(e1);
-        // document.body.removeChild(el);
-        this.copyHelperElement = e1;
-        return e1;
-    }
-
-    copyToClipboard(s: string) {  // TODO: could be a TIM global function
-        const e1 = this.getClipboardHelper();
-        e1.value = s;
-        const isIOS = navigator.userAgent.match(/ipad|ipod|iphone/i);
-        if (isIOS) {
-            // e1.contentEditable = true;
-            e1.readOnly = true;
-            const range = document.createRange();
-            range.selectNodeContents(e1);
-            const sel = window.getSelection();
-            if (sel) {
-                sel.removeAllRanges();
-                sel.addRange(range);
-            }
-            e1.setSelectionRange(0, 999999);
-        } else {
-            e1.select();
-        }
-        document.execCommand("copy");
+    fireUserChange(row: uiGrid.IGridRowOf<IUserListEntry>, updateAll: boolean) {
+        this.onUserChange({$USER: row.entity.user, $UPDATEALL: updateAll});
     }
 
     exportKorppi(options: IExportOptions) {
@@ -321,7 +282,7 @@ export class UserListController implements IController {
         const data = this.gridApi.core.getVisibleRows(this.gridApi.grid);
         let dataKorppi = "";
 
-        const fields = ["total_points", "task_points", "velp_points", ""];
+        const fields = ["total_points", "task_points", "velp_points"] as const;
         const fieldNames = new Map<string, string>();
         fieldNames.set(fields[0], options.totalPointField);
         fieldNames.set(fields[1], options.taskPointField);
@@ -335,9 +296,9 @@ export class UserListController implements IController {
                     dataKorppi += "\n";
                 }
                 for (const d of data) {
-                    const entity = d.entity as any;
+                    const entity = d.entity;
                     if (entity[f] != null) {
-                        dataKorppi += entity.name + ";" + fieldName + ";" + entity[f] + "\n";
+                        dataKorppi += entity.user.name + ";" + fieldName + ";" + entity[f] + "\n";
                     }
                 }
             }
@@ -348,7 +309,7 @@ export class UserListController implements IController {
         }
 
         if ( options.copy ) {
-            this.copyToClipboard(dataKorppi);
+            copyToClipboard(dataKorppi);
             return;
         }
         // from https://stackoverflow.com/a/33542499
@@ -374,7 +335,7 @@ export class UserListController implements IController {
     }
 
     private findUserByName(userName: string) {
-        return this.viewctrl.users.find((u) => u.name === userName);
+        return this.viewctrl.users.find((u) => u.user.name === userName);
     }
 }
 

@@ -23,7 +23,7 @@ import {LectureController} from "../lecture/lectureController";
 import {TableFormController} from "../plugin/tableForm";
 import {TimTableController} from "../plugin/timTable";
 import {initCssPrint} from "../printing/cssPrint";
-import {IUser} from "../user/IUser";
+import {IUser, IUserListEntry} from "../user/IUser";
 import {Users} from "../user/userService";
 import {widenFields} from "../util/common";
 import {$compile, $filter, $http, $interval, $localStorage, $q, $timeout, $window} from "../util/ngimport";
@@ -114,7 +114,7 @@ export class ViewCtrl implements IController {
     public docVersion: [number, number];
     private crumbs: any;
     private startIndex: number;
-    public users: IUser[];
+    public users: IUserListEntry[];
     public teacherMode: boolean;
     private velpMode: boolean;
 
@@ -182,7 +182,7 @@ export class ViewCtrl implements IController {
         setActiveDocument(this.document);
 
         if (this.users.length > 0) {
-            this.selectedUser = this.users[0];
+            this.selectedUser = this.users[0].user;
         } else {
             this.selectedUser = Users.getCurrent();
         }

@@ -290,12 +290,11 @@ def view(item_path, template_name, usergroup=None, route="view"):
     task_ids, plugin_count, no_accesses = find_task_ids(xs, check_access=teacher_or_see_answers)
     if teacher_or_see_answers and no_accesses:
         flash('You do not have full access to the following tasks: ' + ', '.join([t.doc_task for t in no_accesses]))
-    points_sum_rule = doc_settings.point_sum_rule(default={})
-    try:
-        total_tasks = len(points_sum_rule['groups'])
-    except:
+    points_sum_rule = doc_settings.point_sum_rule()
+    if points_sum_rule:
+        total_tasks = len(points_sum_rule.groups)
+    else:
         total_tasks = len(task_ids)
-        points_sum_rule = None
     if teacher_or_see_answers:
         user_list = None
         ug = None
@@ -359,10 +358,8 @@ def view(item_path, template_name, usergroup=None, route="view"):
     index = get_index_from_html_list(t['html'] for t in texts)
 
     if hide_names_in_teacher():
-        for user in user_list:
-            user['name'] = f'user{user["id"]}'
-            user['real_name'] = f'User {user["id"]}'
-            user['email'] = f'user{user["id"]}@example.com'
+        for entry in user_list:
+            entry['user'].hide_name = True
 
     settings = get_user_settings()
     # settings['add_button_text'] = doc_settings.get_dict().get('addParButtonText', 'Add paragraph')

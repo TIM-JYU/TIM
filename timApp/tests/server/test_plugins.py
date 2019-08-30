@@ -558,7 +558,7 @@ class PluginTest(TimRouteTest):
                          'count': {count_type: count}}
             rule = PointSumRule(rule_dict)
             points = get_points_by_rule(
-                rule_dict,
+                rule,
                 task_ids, [TEST_USER_1_ID, TEST_USER_2_ID])
             self.assertEqual(tasksum1, points[TEST_USER_1_ID]['task_sum'])
             self.assertEqual(tasksum2, points[TEST_USER_2_ID]['task_sum'])
@@ -576,8 +576,8 @@ class PluginTest(TimRouteTest):
                 self.assertEqual(pts[k]['total_sum'], points[TEST_USER_1_ID]['groups'][k]['total_sum'])
                 self.assertEqual(pts2[k]['total_sum'], points[TEST_USER_2_ID]['groups'][k]['total_sum'])
             points = get_points_by_rule(
-                {'groups': {'1st': g1, '2nd': g2, '3rd': g3},
-                 'count': {count_type: count}},
+                PointSumRule({'groups': {'1st': g1, '2nd': g2, '3rd': g3},
+                 'count': {count_type: count}}),
                 task_ids, [TEST_USER_1_ID, TEST_USER_2_ID], flatten=True)
             self.assertEqual([{'groups': pts,
                                'task_count': 3,
@@ -585,7 +585,6 @@ class PluginTest(TimRouteTest):
                                'velp_points': velpsum1,
                                'total_points': sum1,
                                'velped_task_count': 3,
-                               **self.test_user_1.basic_info_dict,
                                'user': self.test_user_1},
                               {'groups': pts2,
                                'task_count': 3,
@@ -593,7 +592,6 @@ class PluginTest(TimRouteTest):
                                'velp_points': velpsum2,
                                'total_points': sum2,
                                'velped_task_count': 3,
-                               **self.test_user_2.basic_info_dict,
                                'user': self.test_user_2
                                }], points)
 
@@ -918,10 +916,11 @@ needed_len: 6
         task_id = f'{d.id}.t'
         a = self.post_answer(plugin_type='pali', task_id=task_id, user_input={'userword': 'aaaaaa', 'paliOK': True})
         self.mark_as_read(d, d.document.get_paragraphs()[0].get_id())
+        test1_json_substr = '"user": {"email": "test1@example.com"'
         r = self.get(d.get_url_for_view('teacher'), query_string={'hide_names': True})
-        self.assertNotIn('users = [{"email": "test1@example.com"', r)
+        self.assertNotIn(test1_json_substr, r)
         r = self.get(d.get_url_for_view('teacher'))
-        self.assertNotIn('users = [{"email": "test1@example.com"', r)
+        self.assertNotIn(test1_json_substr, r)
 
         answer_list = self.get_task_answers(task_id)
         self.assertEqual([{'content': '{"userword": "aaaaaa"}',
@@ -947,9 +946,10 @@ needed_len: 6
                                   'username': 'user'}])
 
         r = self.get(d.get_url_for_view('teacher'), query_string={'hide_names': False})
-        self.assertIn('users = [{"email": "test1@example.com"', r)
+
+        self.assertIn(test1_json_substr, r)
         r = self.get(d.get_url_for_view('teacher'))
-        self.assertIn('users = [{"email": "test1@example.com"', r)
+        self.assertIn(test1_json_substr, r)
 
     def test_taskid_reference(self):
         self.login_test1()

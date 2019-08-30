@@ -1158,8 +1158,8 @@ export class ReviewController {
         }
         if (this.vctrl.selectedUser.id !== annotation.user_id) {
             for (const u of this.vctrl.users) {
-                if (u.id === annotation.user_id) {
-                    this.vctrl.changeUser(u, false);
+                if (u.user.id === annotation.user_id) {
+                    this.vctrl.changeUser(u.user, false);
                     break;
                 }
             }
