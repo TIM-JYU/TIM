@@ -40,6 +40,7 @@ from timApp.plugin.pluginControl import get_all_reqs
 from timApp.tim_app import app
 from timApp.timdb.exceptions import TimDbException, PreambleException
 from timApp.timdb.sqa import db
+from timApp.user.groups import verify_group_view_access
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup, get_usergroup_eager_query
 from timApp.util.flask.requesthelper import get_option, verify_json_params
@@ -307,9 +308,11 @@ def view(item_path, template_name, usergroup=None, route="view"):
                 ug = UserGroup.get_by_name(usergroup)
                 if not ug:
                     abort(404, 'User group not found')
-
-                user_dict = {u.id: u for u in ug.users}
-                user_list = list(user_dict.keys())
+                if not verify_group_view_access(ug, require=False):
+                    flash(f"You don't have access to group '{ug.name}'.")
+                    ug = None
+                else:
+                    user_list = [u.id for u in ug.users]
         user_list = get_points_by_rule(points_sum_rule, task_ids, user_list, flatten=True)
         if ug:
             user_list = add_missing_users_from_group(user_list, ug)

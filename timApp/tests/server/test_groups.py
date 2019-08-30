@@ -141,6 +141,14 @@ class GroupTest(TimRouteTest):
         html = self.get(d.get_url_for_view('teacher'))
         self.assertIn("The setting &#39;group&#39; must be a string.", html)
 
+    def test_doc_group_setting_access(self):
+        self.login_test1()
+        no_access_msg = "You don&#39;t have access to group &#39;testuser1&#39;."
+        d = self.create_doc(settings={'group': self.current_user.get_personal_group().name})
+        self.assertNotIn(no_access_msg, self.get(d.get_url_for_view('teacher')))
+        self.test_user_2.grant_access(d.id, 'teacher')
+        self.login_test2()
+        self.assertIn(no_access_msg, self.get(d.get_url_for_view('teacher')))
 
 class GroupTest2(TimRouteTest):
     def test_group_edit_access(self):
