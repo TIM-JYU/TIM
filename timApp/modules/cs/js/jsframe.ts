@@ -4,9 +4,9 @@ import {IAnswer} from "tim/answer/IAnswer";
 import {ITimComponent, IUserChanged, ViewCtrl} from "tim/document/viewctrl";
 import {GenericPluginMarkup, Info, withDefault} from "tim/plugin/attributes";
 import {PluginBase, pluginBindings} from "tim/plugin/util";
+import {IUser} from "tim/user/IUser";
 import {$http, $sce, $timeout} from "tim/util/ngimport";
 import {to} from "tim/util/utils";
-import {IUser} from "../../../static/scripts/tim/user/IUser";
 
 const jsframeApp = angular.module("jsframeApp", ["ngSanitize"]);
 export const moduleDefs = [jsframeApp];
