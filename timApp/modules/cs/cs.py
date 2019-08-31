@@ -932,24 +932,28 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         '''
 
         is_test = ""
+        path = self.path
+        qindex = self.path.find("?")
+        if qindex >=0:
+            path = self.path[:qindex]
 
         is_cache = get_param(query, "cache", False)
-        is_template = self.path.find('/template') >= 0
-        is_fullhtml = self.path.find('/fullhtml') >= 0
-        is_gethtml = self.path.find('/gethtml') >= 0
-        is_html = (self.path.find('/html') >= 0 or self.path.find('.html') >= 0) and not is_gethtml
-        is_css = self.path.find('.css') >= 0
-        is_js = self.path.find('.js') >= 0 or self.path.find('.ts') >= 0
-        is_reqs = self.path.find('/reqs') >= 0
-        is_graphviz  = self.path.find('/graphviz') >= 0
+        is_template = path.find('/template') >= 0
+        is_fullhtml = path.find('/fullhtml') >= 0
+        is_gethtml = path.find('/gethtml') >= 0
+        is_html = (path.find('/html') >= 0 or path.find('.html') >= 0) and not is_gethtml
+        is_css = path.find('.css') >= 0
+        is_js = path.find('.js') >= 0 or path.find('.ts') >= 0
+        is_reqs = path.find('/reqs') >= 0
+        is_graphviz  = path.find('/graphviz') >= 0
         is_iframe_param = get_param_del(query, "iframe", "")
-        is_iframe = (self.path.find('/iframe') >= 0) or is_iframe_param
-        is_answer = self.path.find('/answer') >= 0
-        is_tauno = self.path.find('/tauno') >= 0
-        is_simcir = self.path.find('/simcir') >= 0
-        is_parsons = self.path.find('/parsons') >= 0
-        is_ptauno = self.path.find('/ptauno') >= 0
-        is_rikki = self.path.find('rikki') >= 0
+        is_iframe = (path.find('/iframe') >= 0) or is_iframe_param
+        is_answer = path.find('/answer') >= 0
+        is_tauno = path.find('/tauno') >= 0
+        is_simcir = path.find('/simcir') >= 0
+        is_parsons = path.find('/parsons') >= 0
+        is_ptauno = path.find('/ptauno') >= 0
+        is_rikki = path.find('rikki') >= 0
         print_file = get_param(query, "print", "")
 
         try:
