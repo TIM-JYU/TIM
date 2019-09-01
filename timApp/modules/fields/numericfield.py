@@ -13,7 +13,7 @@ from webargs.flaskparser import use_args
 from common_schemas import TextfieldStateModel, TextfieldStateSchema
 from pluginserver_flask import GenericMarkupModel, GenericMarkupSchema, GenericHtmlSchema, GenericHtmlModel, \
     GenericAnswerSchema, GenericAnswerModel, Missing, \
-    InfoSchema, render_multihtml
+    InfoSchema, render_multihtml, render_multimd
 
 numericfield_route = Blueprint('nf', __name__, url_prefix="/nf")
 
@@ -101,6 +101,8 @@ class NumericfieldHtmlModel(GenericHtmlModel[NumericfieldInputModel, Numericfiel
     def get_static_html(self) -> str:
         return render_static_numericfield(self)
 
+    def get_md(self):
+        return "___"
 
 class NumericfieldHtmlSchema(NumericfieldAttrs, GenericHtmlSchema):
     info = fields.Nested(InfoSchema, allow_none=True, required=True)
@@ -156,6 +158,11 @@ def nf_multihtml(args):  # args: List[GenericHtmlSchema]):
     ret = render_multihtml(NUMERIC_FIELD_HTML_SCHEMA, args)
     return ret
 
+@numericfield_route.route('/multimd/', methods=['post'])
+@use_args(GenericHtmlSchema(many=True), locations=("json",))
+def nf_multimd(args):  # args: List[GenericHtmlSchema]):
+    ret = render_multimd(NUMERIC_FIELD_HTML_SCHEMA, args)
+    return ret
 
 @numericfield_route.route('/answer/', methods=['put'])
 @use_args(NumericfieldAnswerSchema(), locations=("json",))
@@ -208,6 +215,7 @@ errormessage:    # inputcheckerin virheselite, tyhjä = selite on inputchecker
     return jsonify({
         "js": ["/field/js/build/numericfield.js"],
         "multihtml": True,
+        "multimd": True,
         "css": ["/field/css/field.css"],
         'editor_tabs': [
             {

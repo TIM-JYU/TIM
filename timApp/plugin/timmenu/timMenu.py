@@ -334,6 +334,10 @@ class TimMenuHtmlModel(GenericHtmlModel[TimMenuInputModel, TimMenuMarkupModel, T
     def requires_login(self) -> bool:
         return False
 
+    def get_md(self):
+        return ""
+
+
 
 class TimMenuHtmlSchema(TimMenuAttrs, GenericHtmlSchema):
     info = fields.Nested(InfoSchema, allow_none=True, required=True)
@@ -480,6 +484,7 @@ menu: |!!
     return jsonify({
         "js": [],
         "multihtml": True,
+        "multimd": True,
         'editor_tabs': editor_tabs,
         #"default_automd": True,
     },

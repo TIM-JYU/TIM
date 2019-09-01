@@ -130,6 +130,9 @@ class ImportDataHtmlModel(GenericHtmlModel[ImportDataInputModel, ImportDataMarku
         # r['state']['separator'] = ";"
         return r
 
+    def get_md(self):
+        return ""
+
 
 class ImportDataHtmlSchema(ImportDataAttrs, GenericHtmlSchema):
     info = fields.Nested(InfoSchema, allow_none=True, required=True)
@@ -367,6 +370,7 @@ buttonText: Import
     return jsonify({
         "js": [],
         "multihtml": True,
+        "multimd": True,
         'editor_tabs': editor_tabs,
     },
     )

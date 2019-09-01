@@ -89,6 +89,7 @@ def rb_reqs():
         "js": ["/field/js/build/rbfield.js"],
         "css": ["/field/css/field.css"],
         "multihtml": True,
+        "multimd": True,
         'editor_tabs': [
             {
                 'text': 'Fields',

@@ -40,6 +40,7 @@ QSTMDATTRS = ["header", "expl", "stem", "rows", "reason", "choices", "[0-9]", ".
 FBMDATTRS = ["nextTask","questionItems","choices","levels"]
 DRAGATTRS = ["words"]
 TEXTFIELDATTRS = ["header", "stem", "inputstem"]
+GOALTABLEATTRS = ["goals", "stem", "header"]
 
 """
 plugin class attributes
@@ -77,6 +78,7 @@ def get_plugins():
             "cbfield": {"host": "http://" + FIELDPLUGIN_BASE_NAME + ":5000/cb/", REGEXATTRS: TEXTFIELDATTRS, AUTOMDATTRS: True},
             "rbfield": {"host": "http://" + FIELDPLUGIN_BASE_NAME + ":5000/rb/", REGEXATTRS: TEXTFIELDATTRS, AUTOMDATTRS: True},
             "numericfield": {"host": "http://" + FIELDPLUGIN_BASE_NAME + ":5000/nf/", REGEXATTRS: TEXTFIELDATTRS, AUTOMDATTRS: True},
+            "goaltable": {"host": "http://" + FIELDPLUGIN_BASE_NAME + ":5000/goaltable/", REGEXATTRS: GOALTABLEATTRS, AUTOMDATTRS: True},
             "multisave": {"host": "http://" + FIELDPLUGIN_BASE_NAME + ":5000/ms/"},
             "jsrunner": {"host": "http://" + JSRUNNERPLUGIN_NAME + ":5000/"},
             "imagex": {"host": "http://" + IMAGEXPLUGIN_NAME + ":5000/"},
