@@ -156,8 +156,8 @@ def render_static_goaltable(m: GoalTableHtmlModel):
     for s in m.markup.goals or []:
         parts = s.split(";", 3)
         goal = int(parts[1].strip() or "0")
-        iid = s.find(";");
-        ig = s.find(";", iid + 1);
+        iid = s.find(";")
+        ig = s.find(";", iid + 1)
         itemtext = s[ig + 1:].strip() or ""
         table += f"<tr><td>{itemtext}</td>"
         for i in range(mingoal, maxgoal+1):
@@ -168,7 +168,6 @@ def render_static_goaltable(m: GoalTableHtmlModel):
         table += "</tr>"
     table += "</table>"
     template += table
-    result = template  # render_template_string(template.strip(), **attr.asdict(m.markup), )
     template += """<p class ="plgfooter" > {{''}} </p>
 </div>"""
     return render_template_string(template.strip(), **attr.asdict(m.markup),
@@ -191,7 +190,7 @@ def render_md_goaltable(m: GoalTableHtmlModel):
         table += "|---"
     table += " |\n"
     for s in m.markup.goals or []:
-        parts = s.split(";", 3);
+        parts = s.split(";", 3)
         goal = int(parts[1].strip() or "0")
         itemtext = parts[2].strip() or ""
         table += "| " + itemtext
@@ -240,6 +239,26 @@ def goaltable_answer(args: GoalTableAnswerModel):
     return jsonify(result)
 
 
+templates = [
+"""``` {#PLUGINNAMEHERE plugin="goaltable"}
+button: Tallenna
+lazy: false
+borders: true
+header: Osaamistavoitteet
+stem: Siirrä osaamisesi aina sitä vastaavalle kohdalle
+#lang: en
+mingoal: 0
+maxgoal: 6
+initgoal: 0
+goals:
+  - rak      ;3;Rakenteisen ohjelmoinnin perusajatus
+  - alg      ;3;Algoritminen ajattelu                 
+  - cshapr   ;3;C#-kielen perusteet                  
+  - per      ;4;**Peräkkäisyys**
+  - variables;6;Muuttujat                             
+```""",
+]
+
 @goaltable_route.route('/reqs/')
 @goaltable_route.route('/reqs')
 def goaltable_reqs():
@@ -257,9 +276,9 @@ def goaltable_reqs():
                         'text': 'Tables',
                         'items': [
                             {
-                                'data': 'goaltable',
-                                'text': 'teksti: goaltable',
-                                'expl': 'Pelkkä kentän tyyppi: goaltable',
+                                'data': templates[0],
+                                'text': 'GoalTable',
+                                'expl': 'Taulukko esimerkiksi osaamistavoitteiden tekemiseksi',
                             },
                         ]
                     },
