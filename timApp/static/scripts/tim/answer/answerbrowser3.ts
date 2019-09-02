@@ -913,6 +913,9 @@ export class AnswerBrowserController extends DestroyScope implements IController
     }
 
     dimPlugin() {
+        if (this.saveTeacher) {
+            return;
+        }
         this.loader.dimPlugin();
     }
 
@@ -1053,6 +1056,14 @@ export class AnswerBrowserController extends DestroyScope implements IController
     private getTaskName() {
         const [id, name] = this.taskId.split(".");
         return name;
+    }
+
+    private toggleInput() {
+        if (this.saveTeacher) {
+            this.unDimPlugin();
+        } else if (!this.selectedAnswer) {
+            this.dimPlugin();
+        }
     }
 }
 

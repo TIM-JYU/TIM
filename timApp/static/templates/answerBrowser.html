@@ -108,7 +108,10 @@
             </div>
         </div>
         <span class="triesLeft" ng-show="$ctrl.taskInfo.answerLimit && $ctrl.taskInfo.triesText">{{ $ctrl.taskInfo.triesText }} {{ $ctrl.getTriesLeft() }}</span>
-        <span ng-show="$ctrl.answers.length == 0 && $ctrl.viewctrl.teacherMode">(no answers)</span>
+        <div ng-show="$ctrl.answers.length == 0 && $ctrl.viewctrl.teacherMode">
+            <span ng-show="$ctrl.answers.length == 0 && $ctrl.viewctrl.teacherMode">(no answers)</span>
+            <input type="checkbox" ng-model="$ctrl.saveTeacher" ng-change="$ctrl.toggleInput()">Save teacher's fix
+        </div>
     </div>
     <span ng-show="$ctrl.taskInfo.starttime || $ctrl.taskInfo.deadline">
         Answering time:
