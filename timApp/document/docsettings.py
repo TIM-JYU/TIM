@@ -127,7 +127,7 @@ class DocSettings:
     show_velps_key = "show_velps"
     group_key = "group"
 
-    urlmacros_tester = re.compile("[^0-9A-Za-zÅÄÖåäöÜü.,_ ]+")
+    urlmacros_tester = re.compile("[^0-9A-Za-zÅÄÖåäöÜü.,_ \-/]+")
 
 
     @classmethod

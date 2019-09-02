@@ -9,6 +9,7 @@ from typing import List, Optional, Tuple, DefaultDict
 import attr
 import dateutil.parser
 import pytz
+from marshmallow import missing
 from sqlalchemy import func, true
 from sqlalchemy.orm import defaultload
 from werkzeug.exceptions import abort
@@ -241,8 +242,9 @@ def get_fields_and_users(u_fields: List[str], groups: List[UserGroup],
                 u: User = r.pop('user')
                 groups = r.pop('groups', None)
                 for field, alias in fs:
-                    value = r.get(field.field)
-                    if value is None:
+                    # The value can be None if the user has not done any tasks with points, so we use another sentinel.
+                    value = r.get(field.field, missing)
+                    if value is missing:
                         value = groups[field.field]  # The group should exist because the field was validated above.
                         value = value['total_sum']
                     tally_field_values[u.id].append((value, alias or field.doc_and_field))

@@ -153,12 +153,14 @@ def validate_groupname(groupname: str):
 def verify_group_access(ug: UserGroup, access_set, u=None, require=True):
     if ug.name in PRIVILEGED_GROUPS:
         return verify_admin(require=require, user=u)
+    if not u:
+        u = get_current_user_object()
+    if u.get_personal_group() == ug:
+        return True
     b = ug.admin_doc
     if not b:
         return verify_groupadmin(require=require, user=u)
     else:
-        if not u:
-            u = get_current_user_object()
         if not u.has_some_access(b, access_set):
             return verify_groupadmin(require=require, user=u)
         return True

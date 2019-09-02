@@ -72,6 +72,7 @@ class GenericMarkupModel:
     lazy: Union[bool, Missing] = missing
     buttonText: Union[str, None, Missing] = missing
     button: Union[str, None, Missing] = missing
+    lang: Union[str, None, Missing] = missing
     answerLimit: Union[int, Missing] = missing
     useCurrentUser: Union[bool, Missing] = missing
     showInView: Union[bool, Missing] = missing
@@ -91,6 +92,7 @@ class GenericMarkupSchema(Schema):
     stem = fields.Str(allow_none=True)
     buttonText = fields.Str(allow_none=True)
     button = fields.Str(allow_none=True)
+    lang = fields.Str(allow_none=True)
     answerLimit = fields.Int()
     resetText = fields.Str(allow_none=True)
     useCurrentUser = fields.Bool(allow_none=True)
@@ -201,17 +203,40 @@ class GenericHtmlModel(GenericRouteModel[PluginInput, PluginMarkup, PluginState]
         """
         raise NotImplementedError('Must be implemented by a derived class.')
 
+    def get_review(self):
+        if self.state and self.state.c:
+            return f"<pre>{json.dumps(self.state.c)}</pre>"
+
+        return "<pre>review</pre>"
+
     def get_real_html(self) -> str:
         """Renders the plugin as HTML."""
         component = self.get_component_html_name()
         if self.viewmode and not self.show_in_view():
             return render_template_string("")
 
+        if self.review:
+            try:
+                return self.get_review()
+            except:
+                return "<pre>review?</pre>"
+
         return render_template_string(
             """<{{component}} json="{{data}}"></{{component}}>""",
             data=make_base64(self.get_browser_json(), json_encoder=self.get_json_encoder()),
             component=component,
         )
+
+    def get_md(self) -> str:
+        return "Not implemented"
+
+    def get_real_md(self) -> str:
+        """Renders the plugin as HTML."""
+        component = self.get_component_html_name()
+        if self.viewmode and not self.show_in_view():
+            return render_template_string("")
+
+        return self.get_md();
 
     def get_json_encoder(self):
         """Set JSON-encoder."""
@@ -339,6 +364,37 @@ def render_multihtml(schema: GenericHtmlSchema, args: List[GenericHtmlSchema]):
     return jsonify(results)
 
 
+def render_plugin_md(m: GenericHtmlModel[PluginInput, PluginMarkup, PluginState]):
+    """Renders HTML for a plugin.
+
+    :param m: The plugin HTML schema.
+    :return: HTML.
+    """
+    if m.user_id == "Anonymous" and m.requires_login():
+        return render_plugin_with_login_request(m)
+    return m.get_real_md()
+
+
+def render_multimd(schema: GenericHtmlSchema, args: List[GenericHtmlSchema]):
+    """Renders HTMLs according to the given Schema.
+
+    :param schema: The plugin HTML schema.
+    :param args: Partially validated HTML arguments.
+    :return: List of HTMLs.
+    """
+    results = []
+    for a in args:
+        try:
+            p = schema.load(a)
+        except ValidationError as e:
+            results.append(render_validationerror(e))
+        except Exception as e:
+            results.append(render_validationerror(e))
+        else:
+            results.append(render_plugin_md(p))
+    return jsonify(results)
+
+
 def create_app(name: str, html_schema: GenericHtmlSchema):
     """Creates the Flask app for the plugin server.
 
@@ -362,15 +418,15 @@ def register_routes(app, html_schema: GenericHtmlSchema, csrf=None, pre=""):
         ret = render_multihtml(html_schema, args)
         return ret
 
-    """
-    @app.route('/cb/multihtml/', methods=['post'])
+    @app.route(pre+'/multimd/', methods=['post'])
     @use_args(GenericHtmlSchema(many=True), locations=("json",))
-    def cb2_multihtml(args: List[GenericHtmlSchema]):
-        return render_multihtml(html_schema, args)
-    """
+    def multimd(args: List[GenericHtmlSchema]):
+        ret = render_multimd(html_schema, args)
+        return ret
 
     if csrf:
         csrf.exempt(multihtml)
+        csrf.exempt(multimd)
 
     @app.before_request
     def print_rq():

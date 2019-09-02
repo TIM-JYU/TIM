@@ -3,7 +3,6 @@
  */
 import angular from "angular";
 import * as t from "io-ts";
-import {ViewCtrl} from "tim/document/viewctrl";
 import {PluginBase, pluginBindings} from "tim/plugin/util";
 import {$http} from "tim/util/ngimport";
 import {to} from "tim/util/utils";
@@ -111,6 +110,7 @@ class ImportDataController extends PluginBase<t.TypeOf<typeof ImportDataMarkup>,
         return this.visible == 1;
     }
 
+    // noinspection JSUnusedGlobalSymbols
     async pickFromWWW() {
         this.error = {};
         this.result = "";
@@ -131,6 +131,7 @@ class ImportDataController extends PluginBase<t.TypeOf<typeof ImportDataMarkup>,
     onFileSelect(file: File) {
         if (!file) { return; }
         const reader = new FileReader();
+        // noinspection JSUnusedLocalSymbols
         reader.onload = ((_) => {
             this.scope.$evalAsync(() => {
                 this.importText = reader.result as string;
@@ -140,6 +141,7 @@ class ImportDataController extends PluginBase<t.TypeOf<typeof ImportDataMarkup>,
 
     }
 
+    // noinspection JSUnusedGlobalSymbols
     async doImport() {
         this.isRunning = true;
         const text = this.importText;

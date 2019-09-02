@@ -285,3 +285,38 @@ input:focus.alertframe {
 }
 
 /* dropdown */
+
+
+/* GoalTable */
+
+.goalTableDiv .csRunMenuArea {
+    padding-left: 1em;
+}
+
+.goaltable td {
+    border-radius: 3px;
+    padding: 3px !important;
+}
+
+.goalTableDiv label {
+    margin-bottom: unset;
+    font-weight: normal;
+}
+
+.goalTableDiv stem.bloom {
+    font-size: small;
+    color: gray;
+}
+
+.goalspan {
+    width: 1em;
+    border-radius: 10px;
+    display: block;
+    text-align: center;
+}
+
+.notSavedSpan {
+    border-width: 5px;
+    border-color: gold;
+    border-style: solid;
+}

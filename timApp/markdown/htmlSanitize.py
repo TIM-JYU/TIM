@@ -86,6 +86,7 @@ TIM_SAFE_TAGS = [
     'cbfield-runner',
     'rbfield-runner',
     'numericfield-runner',
+    'goaltable-runner',
     'jsframe-runner',
     'video-runner',
 ]

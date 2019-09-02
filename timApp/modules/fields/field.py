@@ -8,6 +8,7 @@ from textfield import textfield_route
 from numericfield import numericfield_route
 from multisave import multisave_route
 from dropdown import dropdown_route
+from goaltable import goaltable_route
 
 
 app = create_app(__name__, GenericHtmlSchema())
@@ -19,6 +20,7 @@ app.register_blueprint(numericfield_route)
 app.register_blueprint(numericfield_route)
 app.register_blueprint(multisave_route)
 app.register_blueprint(dropdown_route)
+app.register_blueprint(goaltable_route)
 
 
 @app.route('/reqs/')

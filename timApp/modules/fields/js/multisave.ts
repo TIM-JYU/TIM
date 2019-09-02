@@ -6,8 +6,8 @@ import * as t from "io-ts";
 import {ITimComponent, ViewCtrl} from "tim/document/viewctrl";
 import {GenericPluginMarkup, Info, withDefault} from "tim/plugin/attributes";
 import {PluginBase, pluginBindings} from "tim/plugin/util";
-import {showMessageDialog} from "../../../static/scripts/tim/ui/dialog";
-import {$http} from "../../../static/scripts/tim/util/ngimport";
+import {showMessageDialog} from "tim/ui/dialog";
+import {$http} from "tim/util/ngimport";
 
 const multisaveApp = angular.module("multisaveApp", ["ngSanitize"]);
 export const moduleDefs = [multisaveApp];
