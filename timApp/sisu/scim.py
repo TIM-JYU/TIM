@@ -294,7 +294,7 @@ def get_group(group_id):
 @csrf.exempt
 @scim.route('/Groups/<group_id>', methods=['put'])
 def put_group(group_id: str):
-    log_info(get_request_message(include_body=True))
+    # log_info(get_request_message(include_body=True))
     try:
         ug = get_group_by_scim(group_id)
         d = load_data_from_req(SCIMGroupSchema)
@@ -302,7 +302,7 @@ def put_group(group_id: str):
         db.session.commit()
         return json_response(group_scim(ug))
     except Exception as e:
-        log_error(traceback.format_exc())
+        # log_error(traceback.format_exc())
         raise
 
 
@@ -415,7 +415,11 @@ def update_users(ug: UserGroup, args: SCIMGroupModel):
         # This flush basically gets rid of a vague error message about AppenderBaseQuery
         # if an error (UniqueViolation) occurs during a server test (because of an error in test code).
         # It is not strictly necessary.
-        db.session.flush()
+        try:
+            db.session.flush()
+        except IntegrityError as e:
+            db.session.rollback()
+            raise SCIMException(422, e.orig.diag.message_detail) from e
         if user not in cumulative_group.users:
             cumulative_group.users.append(user)
     refresh_sisu_grouplist_doc(ug)
