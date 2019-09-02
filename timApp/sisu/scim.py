@@ -1,5 +1,6 @@
 import json
 import re
+import traceback
 from typing import List, Optional, Dict
 
 import attr
@@ -18,7 +19,7 @@ from timApp.user.user import User, UserOrigin, last_name_to_first
 from timApp.user.usergroup import UserGroup, tim_group_to_scim, SISU_GROUP_PREFIX, DELETED_GROUP_PREFIX, \
     CUMULATIVE_GROUP_PREFIX
 from timApp.util.flask.responsehelper import json_response
-from timApp.util.logger import log_warning
+from timApp.util.logger import log_warning, log_error
 from timApp.util.utils import remove_path_special_chars
 
 scim = Blueprint('scim',
@@ -292,11 +293,15 @@ def get_group(group_id):
 @csrf.exempt
 @scim.route('/Groups/<group_id>', methods=['put'])
 def put_group(group_id: str):
-    ug = get_group_by_scim(group_id)
-    d = load_data_from_req(SCIMGroupSchema)
-    update_users(ug, d)
-    db.session.commit()
-    return json_response(group_scim(ug))
+    try:
+        ug = get_group_by_scim(group_id)
+        d = load_data_from_req(SCIMGroupSchema)
+        update_users(ug, d)
+        db.session.commit()
+        return json_response(group_scim(ug))
+    except Exception as e:
+        log_error(traceback.format_exc())
+        raise
 
 
 @csrf.exempt
