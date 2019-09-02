@@ -295,7 +295,7 @@ class JsRunnerSchema(GenericMarkupSchema):
 
 
 class SendEmailSchema(Schema):
-    rcpts = fields.List(fields.Str(), required=True)
+    rcpts = fields.Str(required=True)
     msg = fields.Str(required=True)
     subject = fields.Str(required=True)
     bccme = fields.Boolean(allow_none=True)
@@ -307,7 +307,7 @@ class SendEmailSchema(Schema):
 
 @attr.s(auto_attribs=True)
 class SendEmailModel:
-    rcpts: List[str]
+    rcpts: str
     msg: str
     subject: str
     bccme: Union[bool, _Missing] = missing
