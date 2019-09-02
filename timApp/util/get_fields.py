@@ -213,12 +213,12 @@ def get_fields_and_users(u_fields: List[str], groups: List[UserGroup],
             fs = list(x)
             g = fs[0][0]
             doc = doc_map[g.doc_id] if g.doc_id else d.document
-            task_ids = task_id_cache.get(doc.doc_id)
-            if task_ids is None:
+            tally_task_ids = task_id_cache.get(doc.doc_id)
+            if tally_task_ids is None:
                 doc.insert_preamble_pars()
                 pars = doc.get_dereferenced_paragraphs()
-                task_ids = find_task_ids(pars, check_access=False)[0]
-                task_id_cache[doc.doc_id] = task_ids
+                tally_task_ids = find_task_ids(pars, check_access=False)[0]
+                task_id_cache[doc.doc_id] = tally_task_ids
             ans_filter = true()
             if g.datetime_start:
                 ans_filter = ans_filter & (Answer.answered_on >= g.datetime_start)
@@ -227,7 +227,7 @@ def get_fields_and_users(u_fields: List[str], groups: List[UserGroup],
             psr = doc.get_settings().point_sum_rule()
             pts = get_points_by_rule(
                 points_rule=psr,
-                task_ids=task_ids,
+                task_ids=tally_task_ids,
                 user_ids=User.query.join(UserGroup, User.groups).filter(group_filter).with_entities(User.id).subquery(),
                 flatten=True,
                 answer_filter=ans_filter,

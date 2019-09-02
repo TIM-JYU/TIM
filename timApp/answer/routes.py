@@ -530,7 +530,9 @@ def post_answer(plugintype: str, task_id_ext: str):
             plugin.values['fields'],
             found_groups,
             d,
-            get_current_user_object(), allow_non_teacher=siw, valid_only=validonly
+            get_current_user_object(),
+            # add_missing_fields=True,
+            allow_non_teacher=siw, valid_only=validonly
         )
         if plugin.values.get('program') is None:
             abort(400, "Attribute 'program' is required.")
