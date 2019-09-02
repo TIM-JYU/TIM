@@ -48,7 +48,7 @@ export class MultisaveController extends PluginBase<t.TypeOf<typeof multisaveMar
     private vctrl!: ViewCtrl;
     private savedFields: number = 0;
     private showEmailForm: boolean = false;
-    private emaillist: string[] | undefined = [];
+    private emaillist: string | undefined = "";
     private emailsubject: string | undefined = "";
     private emailbody: string | undefined = "";
     private emailbcc: boolean = false;
@@ -66,7 +66,9 @@ export class MultisaveController extends PluginBase<t.TypeOf<typeof multisaveMar
 
     $onInit() {
         super.$onInit();
-        this.emaillist = this.attrs.emailRecipients;
+        if (this.attrs.emailRecipients) {
+            this.emaillist = this.attrs.emailRecipients.join("\n");
+        }
         this.emailbody = this.attrs.emailPreMsg;
         this.emailsubject = this.attrs.emailSubject;
     }
@@ -78,7 +80,7 @@ export class MultisaveController extends PluginBase<t.TypeOf<typeof multisaveMar
         this.emailMsg = ""; // JSON.stringify(response);
 
         const response = await $http.post<string[]>("/sendemail/", {
-            rcpts: this.emaillist,
+            rcpts: this.emaillist.replace(/\n/g, ";"),
             subject: this.emailsubject,
             msg: this.emailbody,
             bccme: this.emailbccme,
@@ -113,7 +115,7 @@ export class MultisaveController extends PluginBase<t.TypeOf<typeof multisaveMar
         }
         const w: any = window;
         // TODO: iPad do not like ;
-        let  addrs = this.emaillist.join().replace(/\n/g, ",");
+        let  addrs = this.emaillist.replace(/\n/g, ",");
         let bcc = "";
         if ( this.emailbcc ) {
             bcc = addrs;
