@@ -12,6 +12,7 @@ from webargs.flaskparser import use_args
 from timApp.auth.login import create_or_update_user
 from timApp.sisu.scimusergroup import ScimUserGroup, external_id_re
 from timApp.sisu.sisu import parse_sisu_group_display_name, refresh_sisu_grouplist_doc, send_course_group_mail
+from timApp.util.flask.requesthelper import get_request_message
 from timApp.tim_app import csrf
 from timApp.timdb.sqa import db
 from timApp.user.scimentity import get_meta
@@ -19,7 +20,7 @@ from timApp.user.user import User, UserOrigin, last_name_to_first
 from timApp.user.usergroup import UserGroup, tim_group_to_scim, SISU_GROUP_PREFIX, DELETED_GROUP_PREFIX, \
     CUMULATIVE_GROUP_PREFIX
 from timApp.util.flask.responsehelper import json_response
-from timApp.util.logger import log_warning, log_error
+from timApp.util.logger import log_warning, log_error, log_info
 from timApp.util.utils import remove_path_special_chars
 
 scim = Blueprint('scim',
@@ -293,6 +294,7 @@ def get_group(group_id):
 @csrf.exempt
 @scim.route('/Groups/<group_id>', methods=['put'])
 def put_group(group_id: str):
+    log_info(get_request_message(include_body=True))
     try:
         ug = get_group_by_scim(group_id)
         d = load_data_from_req(SCIMGroupSchema)
