@@ -134,3 +134,10 @@ class TestGenfields(TestCase):
 
         r1 = gfrange(s1,1,2)
         self.assertEqual(e1, r1, "Not same in field type case own format alias")
+
+    def test_grange11(self):
+        s1 = "d"
+        e1 = "{#d5 stem: 'd5'#}{#d4 stem: 'd4'#}{#d3 stem: 'd3'#}"
+
+        r1 = gfrange(s1,5,3)
+        self.assertEqual(e1, r1, "Not same in 5,3")

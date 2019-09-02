@@ -88,7 +88,10 @@ def gfrange(s, i1, i2, attrs='', stemfield='stem'):
     if ie >= 0:
         s += f2
     s += ";"
-    s = srange(s, i1, i2)
+    step = 1
+    if i1 > i2:
+        step = -1
+    s = srange(s, i1, i2, step)
     return genfields(s+srest, attrs, stemfield)
 
 
@@ -103,7 +106,7 @@ def srange(s, i1, i2, step=1, *argv):
     :return: like "d1 d2 d3 "  by call sfrom('d{0} ', 1, 3)
     """
     result = ''
-    cor = 1  # correct python range vs normal peple range
+    cor = 1  # correct python range vs normal people range
     if step < 0:
         cor = -1
     if step == 0:
