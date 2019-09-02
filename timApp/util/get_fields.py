@@ -25,6 +25,7 @@ from timApp.plugin.taskid import TaskId
 from timApp.user.groups import verify_group_view_access
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
+from timApp.user.usergroupmember import UserGroupMember
 from timApp.util.answerutil import task_ids_to_strlist
 from timApp.util.utils import widen_fields, get_alias, seq_to_str
 
@@ -219,7 +220,8 @@ def get_fields_and_users(u_fields: List[str], groups: List[UserGroup],
         sub += (
             Answer.query.filter(Answer.task_id.in_(task_ids_to_strlist(task_chunk)) & filt)
                 .join(User, Answer.users)
-                .join(UserGroup, User.groups)
+                .join(UserGroupMember, User.user_groups)
+                .join(UserGroup)
                 .filter(group_filter)
                 .group_by(Answer.task_id, User.id)
                 .with_entities(func.max(Answer.id), User.id)
@@ -230,8 +232,9 @@ def get_fields_and_users(u_fields: List[str], groups: List[UserGroup],
         aid_uid_map[aid] = uid
     users = (
         UserGroup.query.filter(group_filter)
-            .join(User, UserGroup.users)
-            .options(defaultload(UserGroup.users).lazyload(User.groups))
+            .join(UserGroupMember, UserGroup.group_users)
+            .join(User, UserGroupMember.user)
+            .options(defaultload(UserGroup.group_users).defaultload(UserGroupMember.user).lazyload(User.user_groups))
             .with_entities(User)
             .order_by(User.id)
             .all()
@@ -331,7 +334,7 @@ def get_tally_field_values(
         pts = get_points_by_rule(
             points_rule=psr,
             task_ids=tids,
-            user_ids=User.query.join(UserGroup, User.groups).filter(group_filter).with_entities(User.id).subquery(),
+            user_ids=User.query.join(UserGroupMember, User.user_groups).join(User, UserGroupMember.user).filter(group_filter).with_entities(User.id).subquery(),
             flatten=True,
             answer_filter=ans_filter,
         )

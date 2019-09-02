@@ -1,5 +1,7 @@
 from typing import List, Tuple, Optional
 
+from sqlalchemy import func
+from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.orm import joinedload
 
 from timApp.item.tag import Tag, TagType
@@ -47,8 +49,17 @@ class UserGroup(db.Model, TimeStampMixin, SCIMEntity):
     def scim_display_name(self):
         return self.display_name
 
-    users = db.relationship('User', secondary=UserGroupMember.__table__,
-                            back_populates='groups', lazy='dynamic')
+    # users = db.relationship('User', secondary=UserGroupMember.__table__,
+    #                         back_populates='groups', lazy='dynamic')
+    users = association_proxy('group_users', 'user', creator=lambda x: UserGroupMember(user=x))
+    group_users = db.relationship(
+        'UserGroupMember',
+        primaryjoin=(id == UserGroupMember.usergroup_id)
+                    & ((UserGroupMember.membership_end == None) | (
+                func.current_timestamp() < UserGroupMember.membership_end)),
+        cascade="all, delete-orphan",
+        back_populates="group",
+    )
     accesses = db.relationship('BlockAccess', back_populates='usergroup', lazy='dynamic')
     accesses_alt = db.relationship('BlockAccess')
     readparagraphs = db.relationship('ReadParagraph', back_populates='usergroup', lazy='dynamic')

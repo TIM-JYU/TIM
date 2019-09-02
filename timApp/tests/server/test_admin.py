@@ -60,6 +60,8 @@ class MergeTest(TimRouteTest):
         }, r)
         db.session.commit()
         self.assertIsNone(DocEntry.find_by_path(path))
+        #db.session.refresh(self.test_user_1.get_personal_group())
+        #db.session.refresh(self.test_user_2.get_personal_group())
         r = do_merge('testuser2', 'testuser1')
         self.assertEqual({
             'accesses': 0,
@@ -73,6 +75,8 @@ class MergeTest(TimRouteTest):
             'velps': 0,
         }, r)
         db.session.commit()
+        db.session.refresh(self.test_user_1.get_personal_group())
+        db.session.refresh(self.test_user_2.get_personal_group())
         r = do_merge('testuser1', 'testuser2')
         self.assertEqual({
             'accesses': 3,

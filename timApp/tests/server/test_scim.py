@@ -266,7 +266,7 @@ class ScimTest(TimRouteTest):
         self.json_delete(f'/scim/Groups/{group_id}', auth=a, expect_status=204)
         self.json_delete(f'/scim/Groups/{group_id}', auth=a, expect_status=404)
         g = UserGroup.get_by_name(f'{CUMULATIVE_GROUP_PREFIX}{SISU_GROUP_PREFIX}{eid}')
-        self.assertEqual(3, len(g.users.all()))
+        self.assertEqual(3, len(g.users))
         deleted_group = UserGroup.get_by_name(f'{DELETED_GROUP_PREFIX}{SISU_GROUP_PREFIX}{eid}')
         self.assertIsNotNone(deleted_group)
 
@@ -827,7 +827,7 @@ class ScimTest(TimRouteTest):
 
         # The manually added user should not get deleted on SCIM update.
         ug = UserGroup.get_by_external_id(eid)
-        self.assertEqual(3, len(ug.users.all()))
+        self.assertEqual(3, len(ug.users))
 
         self.get(
             f'/groups/removemember/{ug.name}/abc',

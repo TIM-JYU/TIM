@@ -1,3 +1,4 @@
+from operator import attrgetter
 from typing import Tuple, List, Dict, Any
 
 from flask import Blueprint, abort
@@ -10,7 +11,6 @@ from timApp.document.create_item import apply_template, create_document
 from timApp.document.docinfo import DocInfo
 from timApp.item.tag import TagType
 from timApp.item.validation import ItemValidationRule
-from timApp.timdb.dbaccess import get_timdb
 from timApp.timdb.sqa import db
 from timApp.user.special_group_names import SPECIAL_GROUPS, PRIVILEGED_GROUPS
 from timApp.user.user import User, view_access_set, edit_access_set
@@ -54,7 +54,7 @@ def show_members(groupname):
     if not ug:
         abort(404, USERGROUP_NOT_FOUND)
     verify_group_view_access(ug)
-    return json_response(ug.users.all())
+    return json_response(sorted(list(ug.users), key=attrgetter('id')))
 
 
 @groups.route('/usergroups/<username>')

@@ -462,7 +462,7 @@ def group_scim(ug: UserGroup):
         cumulative = ug.get_cumulative()
         if not cumulative:
             raise SCIMException(422, f'Cumulative group missing for {ug.name}')
-        for u in ug.users.all():  # type: User
+        for u in ug.users:  # type: User
             if u in cumulative.users:
                 yield {
                     'value': u.scim_id,

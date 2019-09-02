@@ -130,7 +130,7 @@ def par_info(doc_id, par_id):
     info['doc_name'] = doc.title
 
     group: UserGroup = doc.owner
-    users = group.users.all()
+    users = group.users
     if len(users) == 1:
         info['doc_author'] = f'{users[0].real_name} ({group.name})'
     else:
