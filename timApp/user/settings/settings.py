@@ -21,7 +21,6 @@ from timApp.user.preferences import Preferences
 from timApp.timdb.sqa import db
 from timApp.auth.auth_models import BlockAccess
 from timApp.answer.answer_models import AnswerUpload
-from timApp.util.utils import get_current_time
 
 settings_page = Blueprint('settings_page',
                           __name__,

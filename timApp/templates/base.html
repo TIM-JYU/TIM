@@ -33,6 +33,7 @@ depends=(
             var IS_TESTING = {{ config.TESTING|tojson }};
             var ANGULARMODULES = {{ (jsMods or [])|tojson }};
             var JSMODULES = {{ (js or [])|tojson }};
+            var userPrefs = {{ prefs|tojson }};
             SystemJS.import("tim");
         </script>
         {% block stylesheet %}

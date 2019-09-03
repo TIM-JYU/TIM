@@ -7,6 +7,7 @@ import {timApp} from "../app";
 import {onClick} from "../document/eventhandlers";
 import {ViewCtrl} from "../document/viewctrl";
 import {IRights} from "../user/IRights";
+import {$window} from "../util/ngimport";
 import {Require} from "../util/utils";
 import {GenericPluginMarkup, Info, nullable, withDefault} from "./attributes";
 import "./timMenu.css";
@@ -90,6 +91,7 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
     private topMenuTriggerHeight: number | undefined; // Pixels to scroll before topMenu appears.
     private topMenuVisible: boolean = false; // Meant to curb unnecessary topMenu state changes.
     private previouslyScrollingDown: boolean = true;
+    private userPrefersHoverDisabled: boolean = false;
 
     getDefaultMarkup() {
         return {};
@@ -104,7 +106,6 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
             return;
         }
         this.menu = this.attrsall.menu;
-        this.hoverOpen = this.attrs.hoverOpen;
         this.separator = this.attrs.separator;
         this.topMenu = this.attrs.topMenu;
         this.openAbove = this.attrs.openAbove;
@@ -137,12 +138,16 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
                 };
              */
         }
-
+        console.log($window.userPrefs.disable_menu_hover);
         this.setBarStyles();
         onClick("body", ($this, e) => {
             this.onClick(e);
         });
+        if ($window && $window.userPrefs && $window.userPrefs.disable_menu_hover) {
+            this.userPrefersHoverDisabled = $window.userPrefs.disable_menu_hover;
+        }
         this.userRights = this.vctrl.item.rights;
+        this.hoverOpen = this.attrs.hoverOpen && !this.userPrefersHoverDisabled;
     }
 
     protected getAttributeType() {
