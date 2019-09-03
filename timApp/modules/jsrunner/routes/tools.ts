@@ -755,21 +755,28 @@ export class Tools extends ToolsBase {
     getDouble(fieldName: unknown, defa: unknown = 0): number {
         const f = ensureStringFieldName(fieldName);
         const def = ensureNumberDefault(defa);
-        const s = this.normalizeAndGet(f);
-        if (checkNumber(s)) {
-            return this.handlePossibleNaN(s, s, def);
-        }
-        if (s === null || s === undefined  ) {
+        try {
+            let s = this.normalizeAndGet(f);
+            if (checkNumber(s)) {
+                return this.handlePossibleNaN(s, s, def);
+            }
+            if (s === null || s === undefined) {
+                return def;
+            }
+            s = "" + s;
+            if (typeof s !== "string") {
+                return this.reportInputTypeErrorAndReturnDef(s, def);
+            }
+            const st = s.trim();
+            if (st == "") {
+                return def;
+            }
+            const sp = st.replace(",", ".");
+            const r = parseFloat(sp);
+            return this.handlePossibleNaN(r, s, def);
+        } catch (e) {
             return def;
         }
-        if (typeof s !== "string") {
-            return this.reportInputTypeErrorAndReturnDef(s, def);
-        }
-        const st = s.trim();
-        if ( st == "" ) { return def;  }
-        const sp = st.replace(",", ".");
-        const r = parseFloat(sp);
-        return this.handlePossibleNaN(r, s, def);
     }
 
     getInt(fieldName: unknown, defa: unknown = 0): number {
@@ -872,6 +879,27 @@ export class Tools extends ToolsBase {
             sum += Math.min(this.getDouble(f + i.toString(), def), maxv);
         }
         return sum;
+    }
+
+    getRBi(fieldName: unknown, start: number, end: number, defa: number = -1): number {
+        const f = ensureStringFieldName(fieldName);
+        const def = defa;
+        if (!(checkInt(start) && checkInt(end))) {
+            throw new Error("Parameters 'start' and 'end' must be integers.");
+        }
+        let id = def;
+        for (let i = start; i <= end; i++) {
+            const name = f + i.toString();
+            const rb = this.getString(name, "");
+            if ( rb === "1" ) { id = i; break; }
+        }
+        return id;
+    }
+
+    getRBname(fieldName: unknown, start: number, end: number, defa: string = ""): string {
+        const i = this.getRBi(fieldName, start, end, -1);
+        if ( i < 0 ) { return defa; }
+        return fieldName + i.toString();
     }
 
     getSumOf(...fieldNames: string[]): number {

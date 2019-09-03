@@ -53,6 +53,7 @@ function runner(d: IRunnerData): RunnerResult {
     // TODO: This is allready in runscipt, but does not allow with 2 params???
     // And for some reason it is not found if it is outside this function???
     function numberLines2(s: string, delta: number): string {
+        if ( !s ) { return ""; }
         const lines = s.split("\n");
         let result = "";
         // tslint:disable-next-line: prefer-for-of
@@ -126,7 +127,7 @@ function runner(d: IRunnerData): RunnerResult {
         if (guserErrs.length > 0) {
             errors.push({user: dummyUser.user.name, errors: guserErrs});
         }
-        if ( errors.length > 0 ) {
+        if ( guserErrs.length > 0 ) {
             // TODO: separate errors from pre, program and post
             const prg = "\n" + prgname + ":\n" + numberLines2(errorprg, 1);
             errors.push( {
