@@ -154,6 +154,35 @@ class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.T
     isUnSaved() {
         return false; // TODO
     }
+
+    supportsSetAnswer(): boolean {
+        return true;
+    }
+
+    setAnswer(content: { [index: string]: any }): { ok: boolean, message: (string | undefined) } {
+        let message;
+        let ok = true;
+        if (Object.keys(content).length == 0) {
+            this.resetField();
+        } else {
+            try {
+                this.selectedWord = content.c
+            } catch (TypeError) {
+                this.selectedWord = "";
+                ok = false;
+                message = "Couldn't find related content (\"c\")";
+            }
+        }
+        //this.initialValue = this.selectedWord;
+        return {ok: ok, message: message};
+
+    }
+
+    resetField(): undefined {
+        this.selectedWord = "";
+        return undefined;
+    }
+
 }
 
 dropdownApp.component("dropdownRunner", {
