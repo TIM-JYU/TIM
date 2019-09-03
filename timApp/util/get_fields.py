@@ -4,7 +4,7 @@ import re
 import time
 from collections import defaultdict
 from datetime import datetime
-from typing import List, Optional, Tuple, DefaultDict
+from typing import List, Optional, Tuple, DefaultDict, Dict
 
 import attr
 import dateutil.parser
@@ -18,6 +18,7 @@ from timApp.answer.answer import Answer
 from timApp.answer.answers import get_points_by_rule, basic_tally_fields
 from timApp.auth.accesshelper import get_doc_or_abort
 from timApp.document.docinfo import DocInfo
+from timApp.document.document import Document
 from timApp.plugin.plugin import find_plugin_from_document, TaskNotFoundException, find_task_ids
 from timApp.plugin.pluginexception import PluginException
 from timApp.plugin.taskid import TaskId
@@ -205,49 +206,7 @@ def get_fields_and_users(u_fields: List[str], groups: List[UserGroup],
                 pass
 
     group_filter = UserGroup.id.in_([ug.id for ug in groups])
-    tally_field_values: DefaultDict[int, List[Tuple[float, str]]] = defaultdict(list)
-    task_id_cache = {}
-    if tally_fields:
-        field_groups = itertools.groupby(tally_fields, key=lambda f: f[0].grouping_key)
-        for _, x in field_groups:
-            fs = list(x)
-            g = fs[0][0]
-            doc = doc_map[g.doc_id] if g.doc_id else d.document
-            tally_task_ids = task_id_cache.get(doc.doc_id)
-            if tally_task_ids is None:
-                doc.insert_preamble_pars()
-                pars = doc.get_dereferenced_paragraphs()
-                tally_task_ids = find_task_ids(pars, check_access=False)[0]
-                task_id_cache[doc.doc_id] = tally_task_ids
-            ans_filter = true()
-            if g.datetime_start:
-                ans_filter = ans_filter & (Answer.answered_on >= g.datetime_start)
-            if g.datetime_end:
-                ans_filter = ans_filter & (Answer.answered_on < g.datetime_end)
-            psr = doc.get_settings().point_sum_rule()
-            pts = get_points_by_rule(
-                points_rule=psr,
-                task_ids=tally_task_ids,
-                user_ids=User.query.join(UserGroup, User.groups).filter(group_filter).with_entities(User.id).subquery(),
-                flatten=True,
-                answer_filter=ans_filter,
-            )
-
-            known_tally_fields = list(itertools.chain(basic_tally_fields, psr.groups if psr else []))
-            for field, _ in fs:
-                if field.field not in known_tally_fields:
-                    abort(400, f'Unknown tally field: {field.field}. '
-                               f'Valid tally fields are: {seq_to_str(known_tally_fields)}.')
-            for r in pts:
-                u: User = r.pop('user')
-                groups = r.pop('groups', None)
-                for field, alias in fs:
-                    # The value can be None if the user has not done any tasks with points, so we use another sentinel.
-                    value = r.get(field.field, missing)
-                    if value is missing:
-                        value = groups[field.field]  # The group should exist because the field was validated above.
-                        value = value['total_sum']
-                    tally_field_values[u.id].append((value, alias or field.doc_and_field))
+    tally_field_values = get_tally_field_values(d, doc_map, group_filter, tally_fields)
     sub = []
     if valid_only:
         filt = (Answer.valid == True)
@@ -342,3 +301,54 @@ def get_fields_and_users(u_fields: List[str], groups: List[UserGroup],
             user_tasks[alias_map.get(task.extended_or_doc_task, task.extended_or_doc_task)] = value
             user_fieldstyles[alias_map.get(task.extended_or_doc_task, task.extended_or_doc_task)] = style
     return res, jsrunner_alias_map, [alias_map.get(ts.extended_or_doc_task, ts.extended_or_doc_task) for ts in task_ids]
+
+
+def get_tally_field_values(
+        d: DocInfo,
+        doc_map: Dict[int, Document],
+        group_filter,
+        tally_fields: List[Tuple[TallyField, Optional[str]]],
+):
+    tally_field_values: DefaultDict[int, List[Tuple[float, str]]] = defaultdict(list)
+    task_id_cache = {}
+    field_groups = itertools.groupby(tally_fields, key=lambda f: f[0].grouping_key)
+    for _, x in field_groups:
+        fs = list(x)
+        g = fs[0][0]
+        doc = doc_map[g.doc_id] if g.doc_id else d.document
+        tids = task_id_cache.get(doc.doc_id)
+        if tids is None:
+            doc.insert_preamble_pars()
+            pars = doc.get_dereferenced_paragraphs()
+            tids = find_task_ids(pars, check_access=False)[0]
+            task_id_cache[doc.doc_id] = tids
+        ans_filter = true()
+        if g.datetime_start:
+            ans_filter = ans_filter & (Answer.answered_on >= g.datetime_start)
+        if g.datetime_end:
+            ans_filter = ans_filter & (Answer.answered_on < g.datetime_end)
+        psr = doc.get_settings().point_sum_rule()
+        pts = get_points_by_rule(
+            points_rule=psr,
+            task_ids=tids,
+            user_ids=User.query.join(UserGroup, User.groups).filter(group_filter).with_entities(User.id).subquery(),
+            flatten=True,
+            answer_filter=ans_filter,
+        )
+
+        known_tally_fields = list(itertools.chain(basic_tally_fields, psr.groups if psr else []))
+        for field, _ in fs:
+            if field.field not in known_tally_fields:
+                abort(400, f'Unknown tally field: {field.field}. '
+                           f'Valid tally fields are: {seq_to_str(known_tally_fields)}.')
+        for r in pts:
+            u: User = r.pop('user')
+            groups = r.pop('groups', None)
+            for field, alias in fs:
+                # The value can be None if the user has not done any tasks with points, so we use another sentinel.
+                value = r.get(field.field, missing)
+                if value is missing:
+                    value = groups[field.field]  # The group should exist because the field was validated above.
+                    value = value['total_sum']
+                tally_field_values[u.id].append((value, alias or field.doc_and_field))
+    return tally_field_values
