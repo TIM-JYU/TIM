@@ -579,6 +579,68 @@ tools.print(tools.getDouble("otherdoc"));
             expect_content={'web': {'errors': [], 'outdata': {}, 'output': '111\n222\n333\n555\n30\n3\n2.5\n'}},
         )
 
+    def test_mix_tally_and_normal_fields(self):
+        c = json.dumps({'c': ''})
+        f1 = self.create_doc(initial_par="#- {#t1 plugin=textfield}")
+        f2 = self.create_doc(initial_par="#- {#t3 plugin=textfield}")
+        curr = self.current_user
+        curr.answers.append(Answer(task_id=f'{f1.id}.t1', points=1, valid=True, content=c))
+        curr.answers.append(Answer(task_id=f'{f2.id}.t3', points=10, valid=True, content=c))
+        db.session.commit()
+        d = self.create_jsrun(f"""
+groups:
+ - testuser1
+fields:
+ - tally:{f1.id}.total_points=t11
+ - {f2.id}.t3.points=d11
+ - op(0,5)
+ - t1
+ - d1
+updateFields:  
+ - t1
+ - d1
+program: |!!
+  tools.print(
+    tools.getDouble("t1"),
+    tools.getDouble("d1"),
+  );
+  tools.setDouble("t1", tools.getSum("t1", 1, 1), 0);
+  tools.setDouble("d1", tools.getSum("d1", 1, 1), 0);
+  tools.print(
+    tools.getDouble("t1"),
+    tools.getDouble("d1"),
+    tools.getDouble("op0"),
+    tools.getDouble("op1"),
+    tools.getDouble("op2"),
+    tools.getDouble("op3"),
+    tools.getDouble("op4"),
+  );
+!!""")
+        d.document.add_text("""
+#- {defaultplugin=textfield}
+{#op0#}
+{#op1#}
+{#op2#}
+{#op3#}
+{#op4#}
+{#t1#}
+{#d1#}
+        """)
+        for i in range(0, 5):
+            self.current_user.answers.append(
+                Answer(task_id=f'{d.id}.op{i}', valid=True, content=json.dumps({'c': 10 ** (i + 2)})))
+        db.session.commit()
+        self.do_jsrun(
+            d,
+            expect_content={
+                'web': {
+                    'errors': [],
+                    'outdata': {},
+                    'output': '0 0\n1 10 100 1000 10000 100000 1000000\n',
+                },
+            },
+        )
+
     def test_no_points_answers_tally(self):
         d = self.create_jsrun("""
 fields:
