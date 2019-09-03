@@ -913,9 +913,6 @@ export class AnswerBrowserController extends DestroyScope implements IController
     }
 
     dimPlugin() {
-        if (this.saveTeacher) {
-            return;
-        }
         this.loader.dimPlugin();
     }
 
