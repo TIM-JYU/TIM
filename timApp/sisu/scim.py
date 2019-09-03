@@ -1,26 +1,25 @@
 import json
 import re
-import traceback
 from typing import List, Optional, Dict
 
 import attr
 from flask import Blueprint, request, current_app, Response
 from marshmallow import Schema, fields, post_load, ValidationError, missing, pre_load
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import aliased
 from webargs.flaskparser import use_args
 
 from timApp.auth.login import create_or_update_user
 from timApp.sisu.scimusergroup import ScimUserGroup, external_id_re
 from timApp.sisu.sisu import parse_sisu_group_display_name, refresh_sisu_grouplist_doc, send_course_group_mail
-from timApp.util.flask.requesthelper import get_request_message
 from timApp.tim_app import csrf
 from timApp.timdb.sqa import db
 from timApp.user.scimentity import get_meta
-from timApp.user.user import User, UserOrigin, last_name_to_first
-from timApp.user.usergroup import UserGroup, tim_group_to_scim, SISU_GROUP_PREFIX, DELETED_GROUP_PREFIX, \
-    CUMULATIVE_GROUP_PREFIX
+from timApp.user.user import User, UserOrigin, last_name_to_first, SCIM_USER_NAME
+from timApp.user.usergroup import UserGroup, tim_group_to_scim, SISU_GROUP_PREFIX, DELETED_GROUP_PREFIX
+from timApp.user.usergroupmember import UserGroupMember, membership_active
 from timApp.util.flask.responsehelper import json_response
-from timApp.util.logger import log_warning, log_error, log_info
+from timApp.util.logger import log_warning
 from timApp.util.utils import remove_path_special_chars
 
 scim = Blueprint('scim',
@@ -362,15 +361,9 @@ def update_users(ug: UserGroup, args: SCIMGroupModel):
     else:
         if ug.external_id.external_id != args.externalId:
             raise SCIMException(422, 'externalId unexpectedly changed')
-    c_name = f'{CUMULATIVE_GROUP_PREFIX}{external_id}'
-    cumulative_group = UserGroup.get_by_name(c_name)
-    if not cumulative_group:
-        cumulative_group = UserGroup.create(c_name)
     removed_user_names = set(u.name for u in ug.users) - set(u.value for u in args.members)
-    removed_users = User.query.filter(User.name.in_(removed_user_names)).all()
-    for u in removed_users:
-        if u in cumulative_group.users:  # Don't remove manually added users
-            ug.users.remove(u)
+    for ms in ug.memberships.join(User, UserGroupMember.user).filter(User.name.in_(removed_user_names)):
+        ms.set_expired()
     p = parse_sisu_group_display_name(args.displayName)
     if not p:
         raise SCIMException(422, f'Unexpected displayName format: {args.displayName}')
@@ -385,6 +378,7 @@ def update_users(ug: UserGroup, args: SCIMGroupModel):
         raise SCIMException(422, f'The users do not have distinct usernames.')
 
     added_users = set()
+    scimuser = User.get_scimuser()
     for u in args.members:
         if u.name:
             expected_name = u.name.derive_full_name(last_name_first=True)
@@ -411,8 +405,8 @@ def update_users(ug: UserGroup, args: SCIMGroupModel):
         except IntegrityError as e:
             db.session.rollback()
             return raise_conflict_error(args, e)
-        if ug not in user.groups:
-            user.groups.append(ug)
+        added = user.add_to_group(ug, added_by=scimuser)
+        if added:
             added_users.add(user)
 
         # This flush basically gets rid of a vague error message about AppenderBaseQuery
@@ -423,8 +417,6 @@ def update_users(ug: UserGroup, args: SCIMGroupModel):
         except IntegrityError as e:
             db.session.rollback()
             return raise_conflict_error(args, e)
-        if user not in cumulative_group.users:
-            cumulative_group.users.append(user)
     refresh_sisu_grouplist_doc(ug)
 
     # Possibly just checking is_responsible_teacher could be enough.
@@ -457,18 +449,22 @@ def is_manually_added(u: User):
     return u.is_email_user
 
 
+# Required in group_scim because we need to join User table twice.
+user_membership = aliased(User)
+
+
 def group_scim(ug: UserGroup):
     def members():
-        cumulative = ug.get_cumulative()
-        if not cumulative:
-            raise SCIMException(422, f'Cumulative group missing for {ug.name}')
-        for u in ug.users:  # type: User
-            if u in cumulative.users:
-                yield {
-                    'value': u.scim_id,
-                    '$ref': u.scim_location,
-                    'display': u.scim_display_name,
-                }
+        for u in (ug.memberships
+                .join(User, UserGroupMember.adder)
+                .join(user_membership, UserGroupMember.user)
+                .filter(membership_active & (User.name == SCIM_USER_NAME))
+                .with_entities(user_membership)):
+            yield {
+                'value': u.scim_id,
+                '$ref': u.scim_location,
+                'display': u.scim_display_name,
+            }
 
     return {
         **ug.get_scim_data(),

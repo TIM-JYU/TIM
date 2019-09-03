@@ -195,9 +195,10 @@ def add_member(usernames, groupname):
     existing_ids, group, not_exist, usernames, users = get_member_infos(groupname, usernames)
     already_exists = set(u.name for u in group.users) & set(usernames)
     added = []
+    curr = get_current_user_object()
     for u in users:
         if u.id not in existing_ids:
-            u.groups.append(group)
+            u.add_to_group(group, added_by=curr)
             added.append(u.name)
     db.session.commit()
     return json_response({'already_belongs': sorted(list(already_exists)), 'added': added, 'not_exist': not_exist})
@@ -209,14 +210,14 @@ def remove_member(usernames, groupname):
     removed = []
     does_not_belong = []
     ensure_manually_added = group.is_sisu
-    cumulative = group.get_cumulative() if ensure_manually_added else None
+    su = User.get_scimuser()
     for u in users:
         if u.id not in existing_ids:
             does_not_belong.append(u.name)
             continue
-        if ensure_manually_added and u in cumulative.users:
+        if ensure_manually_added and group.active_memberships[u.id].adder == su:
             abort(400, 'Cannot remove not-manually-added users from Sisu groups.')
-        u.groups.remove(group)
+        group.active_memberships[u.id].set_expired()
         removed.append(u.name)
     db.session.commit()
     return json_response({'removed': removed, 'does_not_belong': does_not_belong, 'not_exist': not_exist})

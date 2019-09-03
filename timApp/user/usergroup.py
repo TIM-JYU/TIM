@@ -1,6 +1,7 @@
 from typing import List
 
 from sqlalchemy.orm import joinedload
+from sqlalchemy.orm.collections import attribute_mapped_collection
 
 from timApp.sisu.scimusergroup import ScimUserGroup
 from timApp.timdb.sqa import db, TimeStampMixin, include_if_exists, is_attribute_loaded
@@ -51,8 +52,18 @@ class UserGroup(db.Model, TimeStampMixin, SCIMEntity):
         UserGroupMember.__table__,
         primaryjoin=(id == UserGroupMember.usergroup_id) & membership_active,
         secondaryjoin="UserGroupMember.user_id == User.id",
-        # cascade="all, delete-orphan",
         back_populates="groups",
+    )
+    memberships = db.relationship(
+        UserGroupMember,
+        back_populates="group",
+        lazy='dynamic',
+    )
+    active_memberships = db.relationship(
+        UserGroupMember,
+        primaryjoin=(id == UserGroupMember.usergroup_id) & membership_active,
+        collection_class=attribute_mapped_collection("user_id"),
+        back_populates="group",
     )
     accesses = db.relationship('BlockAccess', back_populates='usergroup', lazy='dynamic')
     accesses_alt = db.relationship('BlockAccess')
@@ -103,11 +114,6 @@ class UserGroup(db.Model, TimeStampMixin, SCIMEntity):
             if self.admin_doc:
                 r['admin_doc'] = self.admin_doc.docentries[0]
         return r
-
-    def get_cumulative(self):
-        if not self.is_sisu:
-            raise Exception('Tried to call get_cumulative for a non-Sisu group.')
-        return UserGroup.get_by_name(CUMULATIVE_GROUP_PREFIX + self.external_id.external_id)
 
     @property
     def pretty_full_name(self):
@@ -188,8 +194,3 @@ def get_sisu_groups_by_filter(f) -> List[UserGroup]:
 
 # When a SCIM group is deleted, the group name gets this prefix.
 DELETED_GROUP_PREFIX = 'deleted:'
-
-# Non-shrinking counterpart of a SCIM group. If a member is added to a SCIM group via SCIM route,
-# it is also added to the corresponding cumulative group. No members are ever deleted from the
-# cumulative group.
-CUMULATIVE_GROUP_PREFIX = 'cumulative:'

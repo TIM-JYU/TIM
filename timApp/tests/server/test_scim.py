@@ -1,5 +1,4 @@
 from operator import itemgetter
-from pprint import pprint
 from typing import List
 
 from timApp.auth.accesstype import AccessType
@@ -9,7 +8,7 @@ from timApp.sisu.scim import SISU_GROUP_PREFIX
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.timdb.sqa import db
 from timApp.user.user import User, UserOrigin
-from timApp.user.usergroup import UserGroup, DELETED_GROUP_PREFIX, CUMULATIVE_GROUP_PREFIX
+from timApp.user.usergroup import UserGroup, DELETED_GROUP_PREFIX
 from timApp.util.utils import seq_to_str
 
 a = ('t', 'pass')
@@ -265,8 +264,6 @@ class ScimTest(TimRouteTest):
         )
         self.json_delete(f'/scim/Groups/{group_id}', auth=a, expect_status=204)
         self.json_delete(f'/scim/Groups/{group_id}', auth=a, expect_status=404)
-        g = UserGroup.get_by_name(f'{CUMULATIVE_GROUP_PREFIX}{SISU_GROUP_PREFIX}{eid}')
-        self.assertEqual(3, len(g.users))
         deleted_group = UserGroup.get_by_name(f'{DELETED_GROUP_PREFIX}{SISU_GROUP_PREFIX}{eid}')
         self.assertIsNotNone(deleted_group)
 

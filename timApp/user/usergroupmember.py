@@ -1,6 +1,7 @@
 from sqlalchemy import func
 
 from timApp.timdb.sqa import db
+from timApp.util.utils import get_current_time
 
 
 class UserGroupMember(db.Model):
@@ -15,9 +16,16 @@ class UserGroupMember(db.Model):
         'User',
         foreign_keys=[user_id],
     )
+    adder = db.relationship(
+        'User',
+        foreign_keys=[added_by],
+    )
     group = db.relationship(
         'UserGroup',
     )
+
+    def set_expired(self):
+        self.membership_end = get_current_time()
 
 
 membership_active = ((UserGroupMember.membership_end == None) | (

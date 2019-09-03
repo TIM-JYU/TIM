@@ -5,6 +5,7 @@ from typing import List
 from typing import Optional, Union, Set
 
 from sqlalchemy.orm import Query, joinedload
+from sqlalchemy.orm.collections import attribute_mapped_collection
 
 from timApp.answer.answer import Answer
 from timApp.answer.answer_models import UserAnswer
@@ -70,6 +71,7 @@ seeanswers_access_set = {t.value for t in [
     AccessType.manage,
 ]}
 
+SCIM_USER_NAME = ':scimuser'
 
 class Consent(Enum):
     CookieOnly = 1
@@ -185,7 +187,21 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         primaryjoin="User.id == UserGroupMember.user_id",
         lazy='dynamic',
     )
-
+    memberships_dyn = db.relationship(
+        UserGroupMember,
+        foreign_keys="UserGroupMember.user_id",
+        lazy='dynamic',
+    )
+    memberships = db.relationship(
+        UserGroupMember,
+        foreign_keys="UserGroupMember.user_id",
+    )
+    active_memberships = db.relationship(
+        UserGroupMember,
+        primaryjoin=(id == UserGroupMember.user_id) & membership_active,
+        collection_class=attribute_mapped_collection("UserGroupMember.usergroup_id"),
+        # back_populates="group",
+    )
     lectures = db.relationship('Lecture', secondary=LectureUsers.__table__,
                                back_populates='users', lazy='dynamic')
     owned_lectures = db.relationship('Lecture', back_populates='owner', lazy='dynamic')
@@ -396,6 +412,23 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
                 UserGroup.query.filter(UserGroup.name.in_(special_groups))
             )
         return q
+
+    def add_to_group(self, ug: UserGroup, added_by: 'User'):
+        existing: UserGroupMember = self.memberships_dyn.filter_by(group=ug).first()
+        if existing:
+            existing.membership_end = None
+            existing.adder = added_by
+            return False
+        else:
+            self.memberships.append(UserGroupMember(group=ug, adder=added_by))
+            return True
+
+    @staticmethod
+    def get_scimuser():
+        u = User.get_by_name(SCIM_USER_NAME)
+        if not u:
+            u, _ = User.create_with_group(name=SCIM_USER_NAME, real_name='Scim User', email='scimuser@example.com')
+        return u
 
     def update_info(self, name: str, real_name: str, email: str, password: Optional[str] = None):
         group = self.get_personal_group()
