@@ -252,7 +252,7 @@ def get_users_for_tasks(task_ids: List[TaskId], user_ids: Optional[List[int]] = 
 
     # prevents error:
     # column "usergroup_1.id" must appear in the GROUP BY clause or be used in an aggregate function
-    # main = main.options(lazyload(User.user_groups))
+    main = main.options(selectinload(User.groups))
 
     task_sum = func.round(func.sum(tmp.c.points).cast(Numeric), 4).cast(Float).label('task_points')
     velp_sum = func.round(func.coalesce(func.sum(tmp.c.velp_points).cast(Numeric), 0), 4).cast(Float).label(

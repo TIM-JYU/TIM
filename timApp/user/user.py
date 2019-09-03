@@ -1,13 +1,10 @@
 import json
 from datetime import datetime, timedelta, timezone
+from enum import Enum
 from typing import List
 from typing import Optional, Union, Set
 
-from enum import Enum
-
-from sqlalchemy import func
-from sqlalchemy.ext.associationproxy import association_proxy
-from sqlalchemy.orm import Query, joinedload, aliased
+from sqlalchemy.orm import Query, joinedload
 
 from timApp.answer.answer import Answer
 from timApp.answer.answer_models import UserAnswer
@@ -28,7 +25,7 @@ from timApp.user.settings.theme import Theme
 from timApp.user.special_group_names import ANONYMOUS_GROUPNAME, ANONYMOUS_USERNAME, LOGGED_IN_GROUPNAME, \
     SPECIAL_USERNAMES
 from timApp.user.usergroup import UserGroup
-from timApp.user.usergroupmember import UserGroupMember
+from timApp.user.usergroupmember import UserGroupMember, membership_active
 from timApp.user.userutils import grant_access, get_access_type_id, \
     create_password_hash, check_password_hash, check_password_hash_old
 from timApp.util.utils import remove_path_special_chars, cached_property, get_current_time
@@ -174,32 +171,20 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
     consents = db.relationship('ConsentChange', back_populates='user', lazy='select')
     notifications = db.relationship('Notification', back_populates='user', lazy='dynamic')
     notifications_alt = db.relationship('Notification')
-    # groups = db.relationship('UserGroup', secondary=UserGroupMember.__table__,
-    #                          back_populates='users', lazy='joined')
-    # groups_dyn = db.relationship('UserGroup', secondary=UserGroupMember.__table__, lazy='dynamic')
 
-    @classmethod
-    def __declare_last__(cls):
-        raise Exception("usdhf")
-        UGM = aliased(UserGroupMember)
-        cls.user_groups = db.relationship(
-            'UserGroupMember',
-            primaryjoin=(id == UGM.user_id)
-                        & ((UGM.membership_end == None) | (
-                    func.current_timestamp() < UGM.membership_end)),
-            cascade='all, delete-orphan',
-            back_populates='user',
-        )
-        cls.user_groups_dyn = db.relationship(
-            'UserGroupMember',
-            primaryjoin=(id == UGM.user_id)
-                        & ((UGM.membership_end == None) | (
-                    func.current_timestamp() < UGM.membership_end)),
-            cascade='all, delete-orphan',
-            back_populates='user',
-            lazy='dynamic',
-        )
-        cls.groups = association_proxy('user_groups', 'group', creator=lambda x: UserGroupMember(group=x))
+    groups = db.relationship(
+        UserGroup,
+        UserGroupMember.__table__,
+        primaryjoin=(id == UserGroupMember.user_id) & membership_active,
+        back_populates='users',
+        lazy='joined',
+    )
+    groups_dyn = db.relationship(
+        UserGroup,
+        UserGroupMember.__table__,
+        primaryjoin="User.id == UserGroupMember.user_id",
+        lazy='dynamic',
+    )
 
     lectures = db.relationship('Lecture', secondary=LectureUsers.__table__,
                                back_populates='users', lazy='dynamic')

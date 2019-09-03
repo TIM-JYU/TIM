@@ -1,17 +1,14 @@
-from typing import List, Tuple, Optional
+from typing import List
 
-from sqlalchemy import func
-from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.orm import joinedload
 
-from timApp.item.tag import Tag, TagType
 from timApp.sisu.scimusergroup import ScimUserGroup
-from timApp.timdb.sqa import db, TimeStampMixin, include_if_loaded, include_if_exists, is_attribute_loaded
+from timApp.timdb.sqa import db, TimeStampMixin, include_if_exists, is_attribute_loaded
 from timApp.user.scimentity import SCIMEntity
 from timApp.user.special_group_names import ANONYMOUS_GROUPNAME, LARGE_GROUPS, KORPPI_GROUPNAME, LOGGED_IN_GROUPNAME, \
     ADMIN_GROUPNAME, GROUPADMIN_GROUPNAME, TEACHERS_GROUPNAME
 from timApp.user.usergroupdoc import UserGroupDoc
-from timApp.user.usergroupmember import UserGroupMember
+from timApp.user.usergroupmember import UserGroupMember, membership_active
 
 # Prefix is no longer needed because scimusergroup determines the Sisu (SCIM) groups.
 SISU_GROUP_PREFIX = ''
@@ -49,16 +46,13 @@ class UserGroup(db.Model, TimeStampMixin, SCIMEntity):
     def scim_display_name(self):
         return self.display_name
 
-    # users = db.relationship('User', secondary=UserGroupMember.__table__,
-    #                         back_populates='groups', lazy='dynamic')
-    users = association_proxy('group_users', 'user', creator=lambda x: UserGroupMember(user=x))
-    group_users = db.relationship(
-        'UserGroupMember',
-        primaryjoin=(id == UserGroupMember.usergroup_id)
-                    & ((UserGroupMember.membership_end == None) | (
-                func.current_timestamp() < UserGroupMember.membership_end)),
-        cascade="all, delete-orphan",
-        back_populates="group",
+    users = db.relationship(
+        'User',
+        UserGroupMember.__table__,
+        primaryjoin=(id == UserGroupMember.usergroup_id) & membership_active,
+        secondaryjoin="UserGroupMember.user_id == User.id",
+        # cascade="all, delete-orphan",
+        back_populates="groups",
     )
     accesses = db.relationship('BlockAccess', back_populates='usergroup', lazy='dynamic')
     accesses_alt = db.relationship('BlockAccess')

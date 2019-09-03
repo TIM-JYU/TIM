@@ -1,3 +1,5 @@
+from sqlalchemy import func
+
 from timApp.timdb.sqa import db
 
 
@@ -12,9 +14,11 @@ class UserGroupMember(db.Model):
     user = db.relationship(
         'User',
         foreign_keys=[user_id],
-        back_populates='user_groups',
     )
     group = db.relationship(
         'UserGroup',
-        back_populates='group_users',
     )
+
+
+membership_active = ((UserGroupMember.membership_end == None) | (
+        func.current_timestamp() < UserGroupMember.membership_end))
