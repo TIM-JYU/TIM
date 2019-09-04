@@ -63,7 +63,7 @@ textfield-runner .stem, cbfield-runner .stem, rbfield-runner .stem  {
     margin-right: auto;
 }
 
-.fieldCell  textfield-runner h4, .fieldCell  numericfield-runner h4 {
+.fieldCell  textfield-runner h4, .fieldCell  numericfield-runner h4, .fieldCell cbfield-runner .h4, .fieldCell rbfield-runner .h4,  .fieldCell dropdown-runner .h4    {
     font-size: small;
     background-color: lightgrey;
     /*outline-style: solid;*/
@@ -78,7 +78,7 @@ textfield-runner .stem, cbfield-runner .stem, rbfield-runner .stem  {
     margin: 0px;
 }
 
-.fieldCell textfield-runner .stem, .fieldCell numericfield-runner .stem {
+.fieldCell textfield-runner .stem, .fieldCell numericfield-runner .stem, .fieldCell cbfield-runner .stem, .fieldCell rbfield-runner .stem, .fieldCell dropdown-runner .stem  {
     font-size: 0.7em;
     background-color: lightgrey;
     /* outline-style: solid; */

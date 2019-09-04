@@ -39,6 +39,7 @@ const DropdownAll = t.intersection([
 
 class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.TypeOf<typeof DropdownAll>, typeof DropdownAll> implements ITimComponent {
     private error?: string;
+    // noinspection JSMismatchedCollectionQueryUpdate
     private wordList?: string[];
     private selectedWord?: string;
     private vctrl!: ViewCtrl;
@@ -166,14 +167,14 @@ class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.T
             this.resetField();
         } else {
             try {
-                this.selectedWord = content.c
+                this.selectedWord = content.c;
             } catch (TypeError) {
                 this.selectedWord = "";
                 ok = false;
                 message = "Couldn't find related content (\"c\")";
             }
         }
-        //this.initialValue = this.selectedWord;
+        // this.initialValue = this.selectedWord;
         return {ok: ok, message: message};
 
     }
@@ -195,7 +196,7 @@ dropdownApp.component("dropdownRunner", {
 <div>
     <tim-markup-error ng-if="::$ctrl.markupError" data="::$ctrl.markupError"></tim-markup-error>
     <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
-    <p ng-if="::$ctrl.stem">{{::$ctrl.stem}}</p>
+    <p class="stem" ng-if="::$ctrl.stem">{{::$ctrl.stem}}</p>
     <div class="form-inline"><label><span>
         <li class="dropradio" ng-if="::$ctrl.radio" ng-repeat="item in $ctrl.wordList">
         <label><input type="radio"

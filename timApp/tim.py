@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-import pprint
 import time
 import traceback
 
@@ -69,6 +68,7 @@ from timApp.user.usergroup import UserGroup
 from timApp.user.userutils import NoSuchUserException
 from timApp.util.flask.ReverseProxied import ReverseProxied
 from timApp.util.flask.cache import cache
+from timApp.util.flask.requesthelper import get_request_message
 from timApp.util.flask.responsehelper import json_response, ok_response, error_generic, text_response
 from timApp.util.flask.routes_static import static_bp
 from timApp.util.flask.search import search_routes
@@ -362,13 +362,6 @@ def log_request(response):
         if request.method in ('PUT', 'POST', 'DELETE'):
             log_debug(request.get_json(silent=True))
     return response
-
-
-def get_request_message(status_code=None, include_body=False):
-    msg = f'{get_current_user_object().name} [{request.headers.get("X-Forwarded-For") or request.remote_addr}]: {request.method} {request.full_path if request.query_string else request.path} {status_code or ""}'.strip()
-    if not include_body or request.method not in ('POST', 'PUT', 'DELETE'):
-        return msg
-    return f'{msg}\n\n{pprint.pformat(request.get_json(silent=True) or request.get_data(as_text=True))}'
 
 
 @app.after_request

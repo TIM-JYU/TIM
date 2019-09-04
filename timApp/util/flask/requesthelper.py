@@ -1,10 +1,12 @@
 import itertools
+import pprint
 from typing import Optional
 
-from flask import Request, current_app
+from flask import Request, current_app, request
 from flask import request, abort
 from werkzeug.wrappers import BaseRequest
 
+from timApp.auth.sessioninfo import get_current_user_object
 from timApp.timdb.exceptions import InvalidReferenceException
 from timApp.user.user import Consent
 
@@ -94,3 +96,10 @@ def get_consent_opt() -> Optional[Consent]:
     else:
         return abort(400, 'Invalid consent option. Must be "true", "false" or "any".')
     return consent
+
+
+def get_request_message(status_code=None, include_body=False):
+    msg = f'{get_current_user_object().name} [{request.headers.get("X-Forwarded-For") or request.remote_addr}]: {request.method} {request.full_path if request.query_string else request.path} {status_code or ""}'.strip()
+    if not include_body or request.method not in ('POST', 'PUT', 'DELETE'):
+        return msg
+    return f'{msg}\n\n{pprint.pformat(request.get_json(silent=True) or request.get_data(as_text=True))}'
