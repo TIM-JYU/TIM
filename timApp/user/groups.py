@@ -201,7 +201,11 @@ def add_member(usernames, groupname):
             u.add_to_group(group, added_by=curr)
             added.append(u.name)
     db.session.commit()
-    return json_response({'already_belongs': sorted(list(already_exists)), 'added': added, 'not_exist': not_exist})
+    return json_response({
+        'already_belongs': sorted(list(already_exists)),
+        'added': sorted(added),
+        'not_exist': sorted(not_exist),
+    })
 
 
 @groups.route('/removemember/<groupname>/<usernames>')
@@ -220,7 +224,11 @@ def remove_member(usernames, groupname):
         group.active_memberships[u.id].set_expired()
         removed.append(u.name)
     db.session.commit()
-    return json_response({'removed': removed, 'does_not_belong': does_not_belong, 'not_exist': not_exist})
+    return json_response({
+        'removed': sorted(removed),
+        'does_not_belong': sorted(does_not_belong),
+        'not_exist': sorted(not_exist),
+    })
 
 
 def is_course(d: DocInfo):

@@ -30,3 +30,5 @@ class UserGroupMember(db.Model):
 
 membership_active = ((UserGroupMember.membership_end == None) | (
         func.current_timestamp() < UserGroupMember.membership_end))
+
+membership_inactive = (func.current_timestamp() >= UserGroupMember.membership_end)

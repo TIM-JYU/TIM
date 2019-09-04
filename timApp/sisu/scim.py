@@ -362,7 +362,7 @@ def update_users(ug: UserGroup, args: SCIMGroupModel):
         if ug.external_id.external_id != args.externalId:
             raise SCIMException(422, 'externalId unexpectedly changed')
     removed_user_names = set(u.name for u in ug.users) - set(u.value for u in args.members)
-    for ms in ug.memberships.join(User, UserGroupMember.user).filter(User.name.in_(removed_user_names)):
+    for ms in get_scim_memberships(ug).filter(User.name.in_(removed_user_names)).with_entities(UserGroupMember):
         ms.set_expired()
     p = parse_sisu_group_display_name(args.displayName)
     if not p:
@@ -379,44 +379,42 @@ def update_users(ug: UserGroup, args: SCIMGroupModel):
 
     added_users = set()
     scimuser = User.get_scimuser()
-    for u in args.members:
-        if u.name:
-            expected_name = u.name.derive_full_name(last_name_first=True)
-            consistent = (u.display.endswith(' ' + u.name.familyName)
-                          # There are some edge cases that prevent this condition from working, so it has been disabled.
-                          # and set(expected_name.split(' ')[1:]) == set(u.display.split(' ')[:-1])
-                          )
-            if not consistent:
-                raise SCIMException(
-                    422,
-                    f"The display attribute '{u.display}' is inconsistent with the name attributes: "
-                    f"given='{u.name.givenName}', middle='{u.name.middleName}', family='{u.name.familyName}'.")
-            name_to_use = expected_name
-        else:
-            name_to_use = last_name_to_first(u.display)
-        try:
-            user = create_or_update_user(
-                u.email,
-                name_to_use,
-                u.value,
-                origin=UserOrigin.Sisu,
-                allow_finding_by_email='EmailUsersOnly',
-            )
-        except IntegrityError as e:
-            db.session.rollback()
-            return raise_conflict_error(args, e)
-        added = user.add_to_group(ug, added_by=scimuser)
-        if added:
-            added_users.add(user)
+    with db.session.no_autoflush:
+        for u in args.members:
+            if u.name:
+                expected_name = u.name.derive_full_name(last_name_first=True)
+                consistent = (u.display.endswith(' ' + u.name.familyName)
+                              # There are some edge cases that prevent this condition from working, so it has been disabled.
+                              # and set(expected_name.split(' ')[1:]) == set(u.display.split(' ')[:-1])
+                              )
+                if not consistent:
+                    raise SCIMException(
+                        422,
+                        f"The display attribute '{u.display}' is inconsistent with the name attributes: "
+                        f"given='{u.name.givenName}', middle='{u.name.middleName}', family='{u.name.familyName}'.")
+                name_to_use = expected_name
+            else:
+                name_to_use = last_name_to_first(u.display)
+            try:
+                user = create_or_update_user(
+                    u.email,
+                    name_to_use,
+                    u.value,
+                    origin=UserOrigin.Sisu,
+                    allow_finding_by_email='EmailUsersOnly',
+                )
+            except IntegrityError as e:
+                db.session.rollback()
+                return raise_conflict_error(args, e)
+            added = user.add_to_group(ug, added_by=scimuser)
+            if added:
+                added_users.add(user)
 
-        # This flush basically gets rid of a vague error message about AppenderBaseQuery
-        # if an error (UniqueViolation) occurs during a server test (because of an error in test code).
-        # It is not strictly necessary.
-        try:
-            db.session.flush()
-        except IntegrityError as e:
-            db.session.rollback()
-            return raise_conflict_error(args, e)
+    try:
+        db.session.flush()
+    except IntegrityError as e:
+        db.session.rollback()
+        return raise_conflict_error(args, e)
     refresh_sisu_grouplist_doc(ug)
 
     # Possibly just checking is_responsible_teacher could be enough.
@@ -450,16 +448,21 @@ def is_manually_added(u: User):
 
 
 # Required in group_scim because we need to join User table twice.
-user_membership = aliased(User)
+user_adder = aliased(User)
+
+
+def get_scim_memberships(ug: UserGroup):
+    return (ug.memberships
+            .join(user_adder, UserGroupMember.adder)
+            .join(User, UserGroupMember.user)
+            .filter(membership_active & (user_adder.name == SCIM_USER_NAME))
+            )
 
 
 def group_scim(ug: UserGroup):
     def members():
-        for u in (ug.memberships
-                .join(User, UserGroupMember.adder)
-                .join(user_membership, UserGroupMember.user)
-                .filter(membership_active & (User.name == SCIM_USER_NAME))
-                .with_entities(user_membership)):
+        db.session.expire(ug)
+        for u in get_scim_memberships(ug).with_entities(User):
             yield {
                 'value': u.scim_id,
                 '$ref': u.scim_location,

@@ -21,7 +21,6 @@ from timApp.auth.sessioninfo import get_other_users, get_session_users_ids, get_
 from timApp.korppi.openid import KorppiOpenIDResponse
 from timApp.notification.notify import send_email
 from timApp.tim_app import oid
-from timApp.timdb.dbaccess import get_timdb
 from timApp.timdb.exceptions import TimDbException
 from timApp.timdb.sqa import db
 from timApp.user.newuser import NewUser
@@ -322,6 +321,7 @@ def alt_signup_after():
             return abort(400, 'User name already exists. Please try another one.')
         success_status = 'registered'
         user, _ = User.create_with_group(username, real_name, email, password=password, origin=UserOrigin.Email)
+        db.session.flush()
         user_id = user.id
 
     db.session.delete(nu)
@@ -417,5 +417,6 @@ def log_in_as_anonymous(sess) -> User:
     user_name = 'Anonymous'
     user_real_name = 'Guest'
     user = create_anonymous_user(user_name, user_real_name)
+    db.session.flush()
     sess['user_id'] = user.id
     return user

@@ -26,7 +26,7 @@ from timApp.user.settings.theme import Theme
 from timApp.user.special_group_names import ANONYMOUS_GROUPNAME, ANONYMOUS_USERNAME, LOGGED_IN_GROUPNAME, \
     SPECIAL_USERNAMES
 from timApp.user.usergroup import UserGroup
-from timApp.user.usergroupmember import UserGroupMember, membership_active
+from timApp.user.usergroupmember import UserGroupMember, membership_active, membership_inactive
 from timApp.user.userutils import grant_access, get_access_type_id, \
     create_password_hash, check_password_hash, check_password_hash_old
 from timApp.util.utils import remove_path_special_chars, cached_property, get_current_time
@@ -184,7 +184,13 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
     groups_dyn = db.relationship(
         UserGroup,
         UserGroupMember.__table__,
-        primaryjoin="User.id == UserGroupMember.user_id",
+        primaryjoin=id == UserGroupMember.user_id,
+        lazy='dynamic',
+    )
+    groups_inactive = db.relationship(
+        UserGroup,
+        UserGroupMember.__table__,
+        primaryjoin=(id == UserGroupMember.user_id) & membership_inactive,
         lazy='dynamic',
     )
     memberships_dyn = db.relationship(
@@ -267,8 +273,6 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         p_hash = create_password_hash(password) if password != '' else ''
         user = User(id=uid, name=name, real_name=real_name, email=email, pass_=p_hash, origin=origin)
         db.session.add(user)
-        db.session.flush()
-        assert user.id != 0
         return user
 
     @staticmethod
@@ -414,7 +418,7 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         return q
 
     def add_to_group(self, ug: UserGroup, added_by: 'User'):
-        existing: UserGroupMember = self.memberships_dyn.filter_by(group=ug).first()
+        existing: UserGroupMember = self.id is not None and self.memberships_dyn.filter_by(group=ug).first()
         if existing:
             existing.membership_end = None
             existing.adder = added_by

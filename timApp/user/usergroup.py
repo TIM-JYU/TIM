@@ -138,9 +138,6 @@ class UserGroup(db.Model, TimeStampMixin, SCIMEntity):
 
         ug = UserGroup(name=name)
         db.session.add(ug)
-        db.session.flush()
-        group_id = ug.id
-        assert group_id is not None and group_id != 0, 'group_id was None'
         return ug
 
     @staticmethod

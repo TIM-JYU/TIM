@@ -22,6 +22,7 @@ class GroupTest(TimRouteTest):
             t4 = names[3]
             t5 = f't5{is_admin}'
             users_and_groups = [User.create_with_group(name, name, email=name + '@example.com') for name in names]
+            db.session.flush()
             t1gid = users_and_groups[0][1].id
             uids = [u.id for u, g in users_and_groups]
             db.session.commit()
