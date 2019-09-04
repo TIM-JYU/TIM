@@ -1687,13 +1687,20 @@ export class TimTableController extends DestroyScope implements IController, ITi
             }
         }
 
-        if ( isKeyCode(ev, KEY_TAB) ) {
+        if (isKeyCode(ev, KEY_TAB)) {
             ev.preventDefault();
-            if (ev.shiftKey) {
-                this.doCellMovement(Direction.Left);
-                this.disableStartCell();
-            } else {
-                this.doCellMovement(Direction.Right);
+            if (this.currentCell != undefined) {
+                const curRow = this.permTableToScreen[this.currentCell.row];
+                if (ev.shiftKey) {
+                    this.doCellMovement(Direction.Left);
+                    this.disableStartCell();
+                } else {
+                    this.doCellMovement(Direction.Right);
+                    if (this.currentCell.col == this.cellDataMatrix[curRow].length - 1) {
+                        // TODO: Combine movement into one call
+                        this.doCellMovement(Direction.Down);
+                    }
+                }
             }
             return;
         }
