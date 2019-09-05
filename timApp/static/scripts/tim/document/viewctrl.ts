@@ -59,6 +59,11 @@ export interface ITimComponent {
     setAnswer: (content: {[index: string]: string}) => {ok: boolean, message: (string | undefined)};
 }
 
+// TODO: import entire controller?
+export interface IJsRunner {
+    runScriptWithGroups: (groups: string[]) => void;
+}
+
 export interface IUserChanged {
     userChanged: (user: IUser) => void;
 }
@@ -120,6 +125,7 @@ export class ViewCtrl implements IController {
 
     private timTables = new Map<string, TimTableController>();
     private tableForms = new Map<string, TableFormController>();
+    private jsRunners = new Map<string, IJsRunner>();
 
     private timComponents: Map<string, ITimComponent> = new Map();
     private timComponentTags: Map<string, [string]> = new Map();
@@ -461,6 +467,17 @@ export class ViewCtrl implements IController {
         return this.tableForms.get(taskId);
     }
 
+    public addJsRunner(runner: IJsRunner, taskId: string) {
+        this.jsRunners.set(taskId, runner);
+    }
+
+    public getJsRunner(taskId: string) {
+        if (taskId.split(".").length < 2) {
+            taskId = this.docId + "." + taskId;
+        }
+        return this.jsRunners.get(taskId);
+    }
+
     public addTimComponent2(component: ITimComponent, tag?: (string | undefined)) {
         this.addTimComponent(component, tag);
     }
@@ -751,6 +768,13 @@ export class ViewCtrl implements IController {
             } else {
                 table.updateTable();
             }
+        }
+    }
+
+    public runJsRunner(runner: string, groups: string[]) {
+        const jsRunner = this.getJsRunner(runner);
+        if (jsRunner) {
+            jsRunner.runScriptWithGroups(groups);
         }
     }
 

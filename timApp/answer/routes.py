@@ -508,7 +508,16 @@ def post_answer(plugintype: str, task_id_ext: str):
             s.load(plugin.values)
         except ValidationError as e:
             return abort(400, str(e))
-        groupnames = plugin.values.get('groups', [plugin.values.get('group')])
+        groupnames = answerdata.get("groups", None)
+        if groupnames is not None:
+            # TODO: make an elaborate check to determinate if groups are ok if they are given as request parameter
+            #  1. bring tableForm as request arg
+            #  2. +check that tableForm doc is same as jsrunner doc
+            #  3. +check teacher access
+            #  4. Skip other checks if edit access (user can create arbitary tableForms)
+            verify_teacher_access(d)
+        else:
+            groupnames = plugin.values.get('groups', [plugin.values.get('group')])
         g = UserGroup.query.filter(UserGroup.name.in_(groupnames))
         found_groups = g.all()
         not_found_groups = sorted(list(set(groupnames) - set(g.name for g in found_groups)))
