@@ -176,16 +176,16 @@ class Folder(db.Model, Item):
     def get_full_path(self) -> str:
         return join_location(self.location, self.name)
 
-    def get_document(self, relative_path: str, create_if_not_exist=False, creator_group_id: int = None) -> Optional[
+    def get_document(self, relative_path: str, create_if_not_exist=False, creator_group = None) -> Optional[
         DocEntry]:
         doc = DocEntry.query.filter_by(name=join_location(self.get_full_path(), relative_path)).first()
         if doc is not None:
             return doc
         if create_if_not_exist:
             rel_folder, short_name = split_location(relative_path)
-            Folder.create(join_location(self.get_full_path(), rel_folder), owner_group_id=creator_group_id)
+            Folder.create(join_location(self.get_full_path(), rel_folder), owner_group=creator_group)
             return DocEntry.create(join_location(self.get_full_path(), relative_path),
-                                   owner_group_id=creator_group_id,
+                                   owner_group=creator_group,
                                    title=short_name)
         else:
             return None
@@ -199,13 +199,13 @@ class Folder(db.Model, Item):
         return Folder.get_all_in_path(self.path)
 
     @staticmethod
-    def create(path: str, owner_group_id: Optional[int] = None, title=None, apply_default_rights=False) -> 'Folder':
+    def create(path: str, owner_group = None, title=None, apply_default_rights=False) -> 'Folder':
         """Creates a new folder with the specified name. If the folder already exists, it is returned.
 
         :param title: The folder title.
         :param apply_default_rights: Whether to apply default rights from parents.
         :param path: The name of the folder to be created.
-        :param owner_group_id: The id of the owner group.
+        :param owner_group: The owner group.
         :returns: The created or existing folder.
 
         """
@@ -226,22 +226,22 @@ class Folder(db.Model, Item):
             return folder
 
         # Make sure that the parent folder exists
-        p_f = Folder.create(rel_path, owner_group_id)
+        p_f = Folder.create(rel_path, owner_group)
 
         # Templates is a special folder, so it should have the same owner as its parent,
         # except if we're in users folder.
-        owner_group_id = (p_f.owner.id
+        owner_group = (p_f.owner
                           if rel_name == TEMPLATE_FOLDER_NAME and
                              rel_path != 'users' and
-                             p_f.owner else owner_group_id)
-        block_id = insert_block(BlockType.Folder, title or rel_name, owner_group_id).id
+                             p_f.owner else owner_group)
+        block = insert_block(BlockType.Folder, title or rel_name, owner_group)
 
         # noinspection PyArgumentList
-        f = Folder(id=block_id, name=rel_name, location=rel_path)
+        f = Folder(_block=block, name=rel_name, location=rel_path)
         db.session.add(f)
 
         if apply_default_rights:
-            copy_default_rights(f.id, BlockType.Folder)
+            copy_default_rights(f, BlockType.Folder)
 
         return f
 

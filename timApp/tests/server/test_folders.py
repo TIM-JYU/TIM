@@ -1,12 +1,13 @@
 from sqlalchemy import event
 
-from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.auth.accesstype import AccessType
+from timApp.auth.auth_models import BlockAccess
 from timApp.document.docentry import DocEntry
 from timApp.folder.folder import Folder
+from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.timdb.sqa import db
-from timApp.auth.auth_models import BlockAccess
-from timApp.user.userutils import grant_access, grant_view_access, get_anon_group_id
+from timApp.user.usergroup import UserGroup
+from timApp.user.userutils import grant_access, grant_view_access
 
 
 class FolderTest(TimRouteTest):
@@ -17,7 +18,7 @@ class FolderTest(TimRouteTest):
         self.get(f'/manage/{f["path"]}')
         self.login_test2()
         self.get(f'/manage/{f["path"]}', expect_status=403)
-        grant_access(self.get_test_user_2_group_id(), f['id'], 'manage')
+        grant_access(self.test_user_2.get_personal_group(), Folder.get_by_id(f['id']), 'manage')
         self.get(f'/manage/{f["path"]}')
 
     def test_folder_delete(self):
@@ -27,7 +28,7 @@ class FolderTest(TimRouteTest):
         f2 = Folder.find_by_path(self.get_personal_item_path('delete'))
         self.delete(f'/folders/{f2.id}')
         self.get(f'/folders/{f2.id}', expect_status=404)
-        grant_view_access(get_anon_group_id(), f['id'])
+        grant_view_access(UserGroup.get_anonymous_group(), Folder.get_by_id(f['id']))
         self.delete(f'/folders/{f["id"]}', expect_content=self.ok_resp)
         doc_path = self.get_personal_item_path('delete/somedoc')
         self.create_doc(doc_path)
@@ -70,7 +71,7 @@ class FolderTest(TimRouteTest):
         # Create another folder and give access to anonymous users
         fname2 = self.get_personal_item_path('testing2')
         f3 = self.create_folder(fname2)
-        grant_access(get_anon_group_id(), f3['id'], 'view')
+        grant_access(UserGroup.get_anonymous_group(), Folder.get_by_id(f3['id']), 'view')
         t1g = self.get_test_user_1_group_id()
         self.get('/getItems', query_string={'folder': user_folder},
                  expect_content=[{'name': 'testing1',
@@ -111,7 +112,7 @@ class FolderTest(TimRouteTest):
                                   'public': True}])
         self.logout()
         self.get('/getItems', query_string={'folder': user_folder}, expect_status=403)
-        grant_view_access(get_anon_group_id(), self.test_user_1.get_personal_folder().id)
+        grant_view_access(UserGroup.get_anonymous_group(), self.test_user_1.get_personal_folder())
         self.get('/getItems', query_string={'folder': user_folder},
                  expect_content=[{'name': 'testing2',
                                   'title': 'foldertitle',
@@ -209,10 +210,10 @@ class FolderCopyTest(TimRouteTest):
         f1 = Folder.find_by_path(self.get_personal_item_path('a/f1'))
         f2 = Folder.find_by_path(self.get_personal_item_path('a/f2'))
 
-        t2g = self.get_test_user_2_group_id()
-        grant_access(t2g, f1.id, 'view', commit=False)
-        grant_access(t2g, f2.id, 'edit', commit=False)
-        grant_access(t2g, d2.id, 'teacher', commit=False)
+        t2g = self.test_user_2.get_personal_group()
+        grant_access(t2g, f1, 'view', commit=False)
+        grant_access(t2g, f2, 'edit', commit=False)
+        grant_access(t2g, d2, 'teacher', commit=False)
         db.session.commit()
         d1.document.add_paragraph('hello')
         f2d1.document.add_paragraph('hi')
@@ -276,18 +277,18 @@ class FolderCopyTest(TimRouteTest):
         f2d1c = DocEntry.find_by_path(self.get_personal_item_path('b/f2/d1'))
         f1c = Folder.find_by_path(self.get_personal_item_path('b/f1'))
         f2c = Folder.find_by_path(self.get_personal_item_path('b/f2'))
-        t1g = self.get_test_user_1_group_id()
-        self.assertEqual([BlockAccess(block_id=f1c.id, usergroup_id=t1g, type=AccessType.owner.value),
-                          BlockAccess(block_id=f1c.id, usergroup_id=t2g, type=AccessType.view.value),
+        t1g = self.test_user_1.get_personal_group()
+        self.assertEqual([BlockAccess(block_id=f1c.id, usergroup_id=t1g.id, type=AccessType.owner.value),
+                          BlockAccess(block_id=f1c.id, usergroup_id=t2g.id, type=AccessType.view.value),
                           ], f1c.block.accesses)
-        self.assertEqual([BlockAccess(block_id=f2c.id, usergroup_id=t1g, type=AccessType.owner.value),
-                          BlockAccess(block_id=f2c.id, usergroup_id=t2g, type=AccessType.edit.value),
+        self.assertEqual([BlockAccess(block_id=f2c.id, usergroup_id=t1g.id, type=AccessType.owner.value),
+                          BlockAccess(block_id=f2c.id, usergroup_id=t2g.id, type=AccessType.edit.value),
                           ], f2c.block.accesses)
-        self.assertEqual([BlockAccess(block_id=d2c.id, usergroup_id=t1g, type=AccessType.owner.value),
-                          BlockAccess(block_id=d2c.id, usergroup_id=t2g, type=AccessType.teacher.value),
+        self.assertEqual([BlockAccess(block_id=d2c.id, usergroup_id=t1g.id, type=AccessType.owner.value),
+                          BlockAccess(block_id=d2c.id, usergroup_id=t2g.id, type=AccessType.teacher.value),
                           ], d2c.block.accesses)
-        self.assertEqual([BlockAccess(block_id=d2.id, usergroup_id=t1g, type=AccessType.owner.value),
-                          BlockAccess(block_id=d2.id, usergroup_id=t2g, type=AccessType.teacher.value),
+        self.assertEqual([BlockAccess(block_id=d2.id, usergroup_id=t1g.id, type=AccessType.owner.value),
+                          BlockAccess(block_id=d2.id, usergroup_id=t2g.id, type=AccessType.teacher.value),
                           ], d2.block.accesses)
         trs = sorted(f1d1c.translations, key=lambda tr: tr.lang_id)
         self.assertEqual(['', 'en', 'sv'], [tr.lang_id for tr in trs])
@@ -376,11 +377,11 @@ class FolderContentTest(TimRouteTest):
         docname = d.short_name
         folder = self.test_user_1.get_personal_folder()
         folderpath = folder.path
-        grant_view_access(get_anon_group_id(), folder.id)
+        grant_view_access(UserGroup.get_anonymous_group(), folder)
         self.login_test2()
         self.get('/getItems', query_string={'folder': folderpath},
                  expect_content=[])
-        grant_view_access(get_anon_group_id(), d_id)
+        grant_view_access(UserGroup.get_anonymous_group(), d)
         self.get('/getItems', query_string={'folder': folderpath},
                  expect_content=[{
                      'id': d_id,

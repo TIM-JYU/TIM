@@ -1,6 +1,6 @@
 from timApp.document.docentry import DocEntry
-from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.folder.folder import Folder
+from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.timdb.sqa import db
 from timApp.user.userutils import grant_access
 
@@ -28,7 +28,7 @@ class ManageTest(TimRouteTest):
             self.get(f'/notify/{d.id}', expect_content=new_settings)
         self.login_test2()
         self.get(f'/manage/{d.id}', expect_status=403)
-        grant_access(self.get_test_user_2_group_id(), d.id, 'manage')
+        grant_access(self.test_user_2.get_personal_group(), d, 'manage')
         self.get(f'/manage/{d.id}')
 
     def test_item_rights(self):
@@ -41,9 +41,9 @@ class ManageTest(TimRouteTest):
         d3 = self.create_doc()
         new_alias = f'{f.path}/z/y'
         self.json_put(f'/alias/{d3.id}/{new_alias}', expect_status=403)
-        self.current_user.grant_access(f.id, 'view')
+        self.current_user.grant_access(f, 'view')
         self.json_put(f'/alias/{d3.id}/{new_alias}', expect_status=403)
-        self.current_user.grant_access(f.id, 'edit')
+        self.current_user.grant_access(f, 'edit')
         self.json_put(f'/alias/{d3.id}/{new_alias}')
 
         new_alias_2 = f'{pf.path}/z'
@@ -52,13 +52,13 @@ class ManageTest(TimRouteTest):
                        expect_status=403,
                        json_key='error',
                        expect_content="You cannot create documents in this folder.")
-        self.current_user.grant_access(pf.id, 'view')
+        self.current_user.grant_access(pf, 'view')
         self.json_post(f'/alias/{new_alias}',
                        {'new_name': new_alias_2},
                        expect_status=403,
                        json_key='error',
                        expect_content="You cannot create documents in this folder.")
-        self.current_user.grant_access(pf.id, 'edit')
+        self.current_user.grant_access(pf, 'edit')
         self.json_post(f'/alias/{new_alias}',
                        {'new_name': new_alias_2})
 

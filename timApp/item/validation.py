@@ -64,7 +64,7 @@ def validate_item_and_create_intermediate_folders(item_path: str,
                                                   validation_rule: ItemValidationRule = None):
     validate_item(item_path, item_type, validation_rule)
     item_path, _ = split_location(item_path)
-    Folder.create(item_path, owner_group.id if owner_group else None, apply_default_rights=True)
+    Folder.create(item_path, owner_group, apply_default_rights=True)
 
 
 def validate_uploaded_document_content(file_content):

@@ -67,7 +67,7 @@ Test user 1,testuser1,right,aaaaaa,aaaaaa,correct!,0.0,0.{d}
     def test_grant_permission(self):
         self.login_test3()
         d = self.create_doc()
-        grant_access(self.get_test_user_1_group_id(), d.id, 'teacher')
+        grant_access(self.test_user_1.get_personal_group(), d, 'teacher')
         d_path = d.path
         self.login_test1()
         self.get(f'/feedback/report/{d_path}')

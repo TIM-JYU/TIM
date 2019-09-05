@@ -72,10 +72,10 @@ def get_changelog(doc_id, length):
 
 @manage_page.route("/permissions/add/<int:item_id>/<group_name>/<perm_type>", methods=["PUT"])
 def add_permission(item_id, group_name, perm_type):
-    is_owner, group_ids, acc_from, acc_to, dur_from, dur_to, duration = verify_and_get_params(
+    is_owner, groups, acc_from, acc_to, dur_from, dur_to, duration = verify_and_get_params(
         item_id, group_name, perm_type)
     i = get_item_or_abort(item_id)
-    add_perm(acc_from, acc_to, dur_from, dur_to, duration, group_ids, item_id, perm_type)
+    add_perm(acc_from, acc_to, dur_from, dur_to, duration, groups, i, perm_type)
     check_ownership_loss(is_owner, i, perm_type)
     db.session.commit()
     return ok_response()
@@ -87,11 +87,11 @@ def add_permission_recursive(group_name, perm_type, folder_path):
     if not folder:
         abort(404)
     item_id = folder.id
-    _, group_ids, acc_from, acc_to, dur_from, dur_to, duration = verify_and_get_params(
+    _, groups, acc_from, acc_to, dur_from, dur_to, duration = verify_and_get_params(
         item_id, group_name, perm_type)
     for d in folder.get_all_documents(include_subdirs=True):
         _, is_owner = verify_permission_edit_access(d.id, perm_type)
-        add_perm(acc_from, acc_to, dur_from, dur_to, duration, group_ids, d.id, perm_type)
+        add_perm(acc_from, acc_to, dur_from, dur_to, duration, groups, d, perm_type)
         check_ownership_loss(is_owner, d, perm_type)
     db.session.commit()
     return ok_response()
@@ -103,25 +103,25 @@ def remove_permission_recursive(group_name, perm_type, folder_path):
     if not folder:
         abort(404)
     item_id = folder.id
-    _, group_ids, _, _, _, _, _ = verify_and_get_params(
+    _, groups, _, _, _, _, _ = verify_and_get_params(
         item_id, group_name, perm_type)
     for d in folder.get_all_documents(include_subdirs=True):
         _, is_owner = verify_permission_edit_access(d.id, perm_type)
-        for group in group_ids:
+        for group in groups:
             remove_access(group, d.id, perm_type)
         check_ownership_loss(is_owner, d, perm_type)
     db.session.commit()
     return ok_response()
 
 
-def add_perm(acc_from, acc_to, dur_from, dur_to, duration, group_ids, item_id, perm_type):
-    if get_current_user_object().get_personal_folder().id == item_id:
+def add_perm(acc_from, acc_to, dur_from, dur_to, duration, groups, item: Item, perm_type):
+    if get_current_user_object().get_personal_folder().id == item.id:
         if perm_type == 'owner':
             abort(403, 'You cannot add owners to your personal folder.')
     try:
-        for group_id in group_ids:
-            grant_access(group_id,
-                         item_id,
+        for group in groups:
+            grant_access(group,
+                         item,
                          perm_type,
                          accessible_from=acc_from,
                          accessible_to=acc_to,
@@ -272,8 +272,8 @@ def get_default_document_permissions(folder_id, object_type):
 
 @manage_page.route("/defaultPermissions/<object_type>/add/<int:folder_id>/<group_name>/<perm_type>", methods=["PUT"])
 def add_default_doc_permission(folder_id, group_name, perm_type, object_type):
-    _, group_ids, acc_from, acc_to, dur_from, dur_to, duration = verify_and_get_params(folder_id, group_name, perm_type)
-    grant_default_access(group_ids,
+    _, groups, acc_from, acc_to, dur_from, dur_to, duration = verify_and_get_params(folder_id, group_name, perm_type)
+    grant_default_access(groups,
                          folder_id,
                          perm_type,
                          BlockType.from_str(object_type),
@@ -290,7 +290,10 @@ def add_default_doc_permission(folder_id, group_name, perm_type, object_type):
 def remove_default_doc_permission(folder_id, group_id, perm_type, object_type):
     f = get_folder_or_abort(folder_id)
     verify_manage_access(f)
-    remove_default_access(group_id, folder_id, perm_type, BlockType.from_str(object_type))
+    ug = UserGroup.query.get(group_id)
+    if not ug:
+        abort(404, 'Usergroup not found')
+    remove_default_access(ug, folder_id, perm_type, BlockType.from_str(object_type))
     db.session.commit()
     return ok_response()
 
@@ -300,7 +303,6 @@ def verify_and_get_params(item_id, group_name, perm_type):
     groups = UserGroup.query.filter(UserGroup.name.in_(split_by_semicolon(group_name))).all()
     if len(groups) == 0:
         abort(404, 'No user group with this name was found.')
-    group_ids = [group.id for group in groups]
     req_json = request.get_json()
     if req_json is None:
         req_json = {}
@@ -337,7 +339,7 @@ def verify_and_get_params(item_id, group_name, perm_type):
             duration = duration.totimedelta(start=datetime.min)
         except (OverflowError, ValueError):
             abort(400, 'Duration is too long.')
-    return is_owner, group_ids, accessible_from, accessible_to, duration_accessible_from, duration_accessible_to, duration
+    return is_owner, groups, accessible_from, accessible_to, duration_accessible_from, duration_accessible_to, duration
 
 
 def verify_permission_edit_access(item_id: int, perm_type: str) -> Tuple[Item, bool]:
@@ -371,7 +373,7 @@ def get_trash_folder():
     trash_folder_path = f'roskis'
     f = Folder.find_by_path(trash_folder_path)
     if not f:
-        f = Folder.create(trash_folder_path, owner_group_id=UserGroup.get_admin_group().id, title='Roskakori')
+        f = Folder.create(trash_folder_path, owner_group=UserGroup.get_admin_group(), title='Roskakori')
     return f
 
 
@@ -417,7 +419,7 @@ def copy_folder_endpoint(folder_id):
     nf = Folder.find_by_path(dest)
     if not nf:
         validate_item_and_create_intermediate_folders(dest, BlockType.Folder, o)
-        nf = Folder.create(dest, o.id, apply_default_rights=True)
+        nf = Folder.create(dest, o, apply_default_rights=True)
     u = get_current_user_object()
     copy_folder(f, nf, u, compiled)
     db.session.commit()

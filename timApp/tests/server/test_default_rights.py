@@ -4,16 +4,16 @@ from dateutil import parser
 
 from timApp.auth.accesstype import AccessType
 from timApp.auth.auth_models import BlockAccess
-from timApp.document.specialnames import TEMPLATE_FOLDER_NAME
-from timApp.tests.server.timroutetest import TimRouteTest
-from timApp.item.block import BlockType
 from timApp.document.docentry import DocEntry
+from timApp.document.specialnames import TEMPLATE_FOLDER_NAME
 from timApp.folder.folder import Folder
-from timApp.user.usergroup import UserGroup
-from timApp.user.special_group_names import KORPPI_GROUPNAME
+from timApp.item.block import BlockType
+from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.timdb.sqa import db
+from timApp.user.special_group_names import KORPPI_GROUPNAME
+from timApp.user.usergroup import UserGroup
 from timApp.user.users import get_rights_holders, get_default_rights_holders
-from timApp.user.userutils import get_anon_group_id, grant_default_access, default_right_paths
+from timApp.user.userutils import grant_default_access, default_right_paths
 
 
 class DefaultRightTest(TimRouteTest):
@@ -21,17 +21,18 @@ class DefaultRightTest(TimRouteTest):
     def test_document_default_rights(self):
         self.login_test1()
         doc = self.create_doc().document
-        timdb = self.get_db()
         docentry = DocEntry.query.filter_by(id=doc.doc_id).one()
         folder: Folder = docentry.parent
         folder_owner_id = folder.owner.id
-        korppi_id = UserGroup.get_korppi_group().id
+        kg = UserGroup.get_korppi_group()
+        korppi_id = kg.id
         users_folder = Folder.find_by_path('users')
-        grant_default_access([korppi_id], users_folder.id, 'view',
+        db.session.commit()
+        grant_default_access([kg], users_folder.id, 'view',
                              BlockType.Document)
-
+        db.session.commit()
         # Make sure an exception won't be thrown if trying to add a right again
-        acs = grant_default_access([korppi_id], users_folder.id, 'view',
+        acs = grant_default_access([kg], users_folder.id, 'view',
                                    BlockType.Document)
         db.session.commit()
         anon_id = UserGroup.get_anonymous_group().id
@@ -108,7 +109,7 @@ class DefaultRightTest(TimRouteTest):
             new_item_rights = [right for right in new_item_rights if right['access_name'] != 'owner']
             self.assertListEqual(sorted(expected_default_rights, key=itemgetter('gid', 'access_type')),
                                  sorted(new_item_rights, key=itemgetter('gid', 'access_type')))
-            self.json_put(f'/defaultPermissions/{obj_type_str}/remove/{folder.id}/{get_anon_group_id()}/{"view"}',
+            self.json_put(f'/defaultPermissions/{obj_type_str}/remove/{folder.id}/{UserGroup.get_anonymous_group().id}/{"view"}',
                           expect_content=self.ok_resp)
             def_rights = get_default_rights_holders(folder.id, obj_type)
             expected_default_rights = [r for r in expected_default_rights if r['gid'] not in (anon_id, korppi_id)]

@@ -380,7 +380,7 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
             raise TimDbException(f'Found multiple personal folders for user {self.name}: {[f.name for f in folders]}')
         if not folders:
             f = Folder.create('users/' + self.derive_personal_folder_name(),
-                              self.get_personal_group().id,
+                              self.get_personal_group(),
                               title=f"{self.real_name}",
                               apply_default_rights=True)
             db.session.commit()
@@ -495,7 +495,7 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
             return False
         return self.has_edit_access(f)
 
-    def grant_access(self, block_id: int,
+    def grant_access(self, block: ItemOrBlock,
                      access_type: str,
                      accessible_from: Optional[datetime] = None,
                      accessible_to: Optional[datetime] = None,
@@ -503,8 +503,8 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
                      duration_to: Optional[datetime] = None,
                      duration: Optional[timedelta] = None,
                      commit: bool = True):
-        return grant_access(group_id=self.get_personal_group().id,
-                            block_id=block_id,
+        return grant_access(group=self.get_personal_group(),
+                            block=block,
                             access_type=access_type,
                             accessible_from=accessible_from,
                             accessible_to=accessible_to,

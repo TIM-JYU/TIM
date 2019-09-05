@@ -20,7 +20,7 @@ def main():
         if not isinstance(data, list):
             print('File must be a list of JSON objects')
             return
-        d = DocEntry.create('imported', owner_group_id=UserGroup.get_admin_group().id)
+        d = DocEntry.create('imported', owner_group=UserGroup.get_admin_group())
         for p in data:
             d.document.add_paragraph_obj(DocParagraph.from_dict(d.document, p))
         db.session.commit()

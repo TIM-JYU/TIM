@@ -1,9 +1,9 @@
 import random
 
 from timApp.document.docparagraph import DocParagraph
-from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.readmark.readings import mark_read, get_readings
 from timApp.readmark.readparagraphtype import ReadParagraphType
+from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.timdb.sqa import db
 
 
@@ -199,7 +199,7 @@ Document:
 #- {plugin=csPlugin}
 stem: x
         """)
-        self.test_user_2.grant_access(d.id, 'view')
+        self.test_user_2.grant_access(d, 'view')
         self.login_test2()
         par = d.document.get_paragraphs()[0]
         self.copy(d, par, par)

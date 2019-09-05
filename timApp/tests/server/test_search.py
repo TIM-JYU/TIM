@@ -201,7 +201,7 @@ class SearchTest(TimRouteTest):
         self.login_test1()
         d = self.create_doc(initial_par=plugin_md)
         self.get(f'search/createContentFile')
-        self.test_user_1.grant_access(d.id, 'edit')
+        self.test_user_1.grant_access(d, 'edit')
         self.get(f'search?ignoreRelevance=true&folder=&query={text_to_search}',
                  expect_status=200,
                  expect_content={
@@ -252,7 +252,7 @@ class SearchTest(TimRouteTest):
                                  'word_result_count': 0})
 
         self.login_test2()
-        self.test_user_2.grant_access(d.id, 'view')
+        self.test_user_2.grant_access(d, 'view')
         self.get(f'search?folder=&query={text_to_search}',
                  expect_status=200,
                  expect_content={'content_results': [],

@@ -10,7 +10,7 @@ class Bookmarks:
         f = user.get_personal_folder()
         self.bookmark_document = f.get_document('Bookmarks',
                                                 create_if_not_exist=True,
-                                                creator_group_id=user.get_personal_group().id).document
+                                                creator_group=user.get_personal_group()).document
         self.bookmark_data = self.get_bookmarks()
 
     def add_bookmark(self,

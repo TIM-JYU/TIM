@@ -6,13 +6,13 @@ import unittest
 
 from timApp.document.document import Document
 from timApp.document.documentparser import DocumentParser
+from timApp.document.documents import delete_document, import_document_from_file
 from timApp.document.documentwriter import DocumentWriter
 from timApp.document.exceptions import DocExistsError
 from timApp.document.randutils import random_paragraph
 from timApp.tests.db.timdbtest import TimDbTest
-from timApp.document.documents import delete_document, import_document_from_file
 from timApp.timdb.exceptions import TimDbException
-from timApp.user.userutils import get_anon_group_id
+from timApp.user.usergroup import UserGroup
 from timApp.util.utils import EXAMPLE_DOCS_PATH
 
 
@@ -298,7 +298,7 @@ class DocumentTest(TimDbTest):
     def test_import(self):
         import_document_from_file(f'{EXAMPLE_DOCS_PATH}/mmcq_example.md',
                                   'Multiple choice plugin example',
-                                  get_anon_group_id())
+                                  UserGroup.get_anonymous_group())
 
     def test_parwise_diff(self):
         d = self.create_doc().document

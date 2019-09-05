@@ -9,7 +9,8 @@ from timApp.markdown.markdownconverter import md_to_html
 from timApp.note.notes import get_notes
 from timApp.tests.server.timroutetest import TimRouteTest, get_note_id_from_json
 from timApp.user.user import Consent
-from timApp.user.userutils import get_anon_group_id, grant_view_access
+from timApp.user.usergroup import UserGroup
+from timApp.user.userutils import grant_view_access
 
 link_selector = CSSSelector('a')
 
@@ -198,7 +199,7 @@ class TimTest(TimRouteTest):
         doc = self.create_doc()
         hide = "var hideLinks = true;"
 
-        grant_view_access(get_anon_group_id(), doc.id)
+        grant_view_access(UserGroup.get_anonymous_group(), doc)
         self.assertFalse(hide in self.get(f'/view/{doc.id}'))
 
         self.logout()
@@ -219,7 +220,7 @@ class TimTest(TimRouteTest):
         doc = self.create_doc()
         hide = "var hideTopButtons = true;"
 
-        grant_view_access(get_anon_group_id(), doc.id)
+        grant_view_access(UserGroup.get_anonymous_group(), doc)
         self.assertFalse(hide in self.get(f'/view/{doc.id}'))
 
         self.logout()

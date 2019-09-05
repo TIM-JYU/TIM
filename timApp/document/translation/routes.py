@@ -4,7 +4,7 @@ from flask import request, abort, Blueprint
 from sqlalchemy.exc import IntegrityError
 
 from timApp.auth.accesshelper import get_doc_or_abort, verify_view_access, verify_manage_access, has_manage_access
-from timApp.auth.sessioninfo import get_current_user_group
+from timApp.auth.sessioninfo import get_current_user_group, get_current_user_object
 from timApp.document.documents import create_translation
 from timApp.document.translation.translation import Translation
 from timApp.item.block import copy_default_rights, BlockType
@@ -37,12 +37,12 @@ def create_translation_route(tr_doc_id, language):
     verify_manage_access(doc.src_doc)
 
     src_doc = doc.src_doc.document
-    cite_doc = create_translation(src_doc, get_current_user_group())
+    cite_doc = create_translation(src_doc, get_current_user_object().get_personal_group())
     # noinspection PyArgumentList
     tr = Translation(doc_id=cite_doc.doc_id, src_docid=src_doc.doc_id, lang_id=language)
     tr.title = title
     db.session.add(tr)
-    copy_default_rights(cite_doc.doc_id, BlockType.Document)
+    copy_default_rights(tr, BlockType.Document)
     db.session.commit()
     return json_response(tr)
 

@@ -15,6 +15,7 @@ from timApp.tim_app import app
 from timApp.timdb.sqa import db
 from timApp.timdb.timdb import TimDb
 from timApp.user.user import User
+from timApp.user.usergroup import UserGroup
 from timApp.util.filemodehelper import change_permission_and_retry
 from timApp.util.utils import del_content, remove_prefix
 
@@ -62,8 +63,10 @@ class TimDbTest(unittest.TestCase):
         self.db.close()
 
     def create_doc(self, from_file=None, initial_par: Union[str, List[str]]=None, settings=None) -> DocInfo:
-        d = DocEntry.create(f'test{TimDbTest.i}', 0, 'test', from_file=from_file, initial_par=initial_par,
-                            settings=settings)
+        d = DocEntry.create(
+            f'test{TimDbTest.i}',
+            UserGroup.get_anonymous_group(), 'test', from_file=from_file, initial_par=initial_par,
+            settings=settings)
         TimDbTest.i += 1
         return d
 

@@ -202,7 +202,7 @@ def create_sisu_document(
         owner_group,
         validation_rule=ItemValidationRule(check_write_perm=False, require_login=False),
     )
-    return DocEntry.create(item_path, owner_group.id if owner_group else None, item_title)
+    return DocEntry.create(item_path, owner_group, item_title)
 
 
 display_name_re = re.compile(

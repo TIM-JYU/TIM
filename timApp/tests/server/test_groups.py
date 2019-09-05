@@ -1,8 +1,8 @@
 from timApp.document.docentry import DocEntry
 from timApp.tests.server.timroutetest import TimRouteTest
+from timApp.timdb.sqa import db
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
-from timApp.timdb.sqa import db
 
 
 class GroupTest(TimRouteTest):
@@ -147,7 +147,7 @@ class GroupTest(TimRouteTest):
         no_access_msg = "You don&#39;t have access to group &#39;testuser1&#39;."
         d = self.create_doc(settings={'group': self.current_user.get_personal_group().name})
         self.assertNotIn(no_access_msg, self.get(d.get_url_for_view('teacher')))
-        self.test_user_2.grant_access(d.id, 'teacher')
+        self.test_user_2.grant_access(d, 'teacher')
         self.login_test2()
         self.assertIn(no_access_msg, self.get(d.get_url_for_view('teacher')))
 
@@ -163,11 +163,11 @@ class GroupTest2(TimRouteTest):
                          d.document.get_settings().get_dict()['macros'])
         self.login_test1()
         self.get('/groups/show/edittest1', expect_status=403)
-        self.test_user_1.grant_access(d.id, 'view')
+        self.test_user_1.grant_access(d, 'view')
         self.get(d.url)
         self.get(d.parent.url)
         self.get('/groups/show/edittest1')
         self.get('/groups/addmember/edittest1/testuser1', expect_status=403)
-        self.test_user_1.grant_access(d.id, 'edit')
+        self.test_user_1.grant_access(d, 'edit')
         self.get('/groups/addmember/edittest1/testuser1',
                  expect_content={'added': ['testuser1'], 'already_belongs': [], 'not_exist': []})

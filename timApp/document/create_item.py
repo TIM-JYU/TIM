@@ -67,8 +67,8 @@ def do_create_item(
 
     validate_item_and_create_intermediate_folders(item_path, item_type, parent_owner or owner_group, validation_rule)
 
-    item = create_function(item_path, owner_group.id, item_title)
-    grant_access_to_session_users(item.id)
+    item = create_function(item_path, owner_group, item_title)
+    grant_access_to_session_users(item)
     if item_type == BlockType.Document:
         bms = Bookmarks(get_current_user_object())
         bms.add_bookmark('Last edited',
@@ -76,7 +76,7 @@ def do_create_item(
                          item.url_relative,
                          move_to_top=True,
                          limit=app.config['LAST_EDITED_BOOKMARK_LIMIT']).save_bookmarks()
-    copy_default_rights(item.id, item_type)
+    copy_default_rights(item, item_type)
 
     reset_request_access_cache()
     return item
@@ -111,7 +111,7 @@ def copy_document_and_enum_translations(source: DocInfo, target: DocInfo, copy_u
         doc_id = target.id
         new_tr = None
         if not tr.is_original_translation:
-            document = create_document_and_block(get_current_user_group())
+            document = create_document_and_block(get_current_user_object().get_personal_group())
             doc_id = document.doc_id
             new_tr = add_tr_entry(doc_id, target, tr)
             document.docinfo = new_tr
@@ -143,7 +143,7 @@ def create_or_copy_item(
     if isinstance(item, DocInfo):
         if d:
             for tr, new_tr in copy_document_and_enum_translations(d, item, copy_uploads=copy_uploads):
-                copy_default_rights(new_tr.id, BlockType.Document)
+                copy_default_rights(new_tr, BlockType.Document)
         elif use_template:
             apply_template(item, template_name)
     return item

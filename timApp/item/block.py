@@ -132,39 +132,37 @@ class BlockType(Enum):
         return BlockType[type_name.title()]
 
 
-def insert_block(block_type: BlockType, description: Optional[str], owner_group_id: Optional[int] = None) -> Block:
+def insert_block(block_type: BlockType, description: Optional[str], owner_group: Optional[UserGroup] = None) -> Block:
     """Inserts a block to database.
 
     :param description: The name (description) of the block.
-    :param owner_group_id: The owner group of the block.
+    :param owner_group: The owner group of the block.
     :param block_type: The type of the block.
     :returns: The id of the block.
 
     """
     b = Block(description=description, type_id=block_type.value)
-    if owner_group_id is not None:
+    if owner_group is not None:
         access = BlockAccess(block=b,
-                             usergroup_id=owner_group_id,
+                             usergroup=owner_group,
                              type=AccessType.owner.value,
                              accessible_from=get_current_time())
         db.session.add(access)
     db.session.add(b)
-    db.session.flush()
-    assert b.id != 0
     return b
 
 
-def copy_default_rights(item_id: int, item_type: BlockType):
+def copy_default_rights(item, item_type: BlockType):
     from timApp.user.userutils import grant_access
     from timApp.user.users import get_default_rights_holders
     default_rights: List[BlockAccess] = []
-    folder = Block.query.get(item_id).parent
+    folder = item.parent
     while folder is not None:
         default_rights += get_default_rights_holders(folder.id, item_type)
         folder = folder.parent
     for d in default_rights:
-        grant_access(d.usergroup_id,
-                     item_id,
+        grant_access(d.usergroup,
+                     item,
                      d.atype.name,
                      commit=False,
                      accessible_from=d.accessible_from,
