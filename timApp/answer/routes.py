@@ -511,10 +511,28 @@ def post_answer(plugintype: str, task_id_ext: str):
         groupnames = plugin.values.get('groups', [plugin.values.get('group')])
         g = UserGroup.query.filter(UserGroup.name.in_(groupnames))
         found_groups = g.all()
+        req_groups = answerdata.get("groups", None)
+        # Check if groups given as request arg can be considered as subset of groups given in markup
+        if req_groups is not None:
+            all_req_groups = UserGroup.query.filter(UserGroup.name.in_(req_groups)).all()
+            if not curr_user.has_edit_access(d):
+                user_set = set()
+                for g in all_req_groups:
+                    members = g.users.all()
+                    user_set.update(members)
+                for u in user_set:  # type: User
+                    u_within_jsrunner_groups = False
+                    for fg in found_groups:
+                        if fg in u.groups:
+                            u_within_jsrunner_groups = True
+                            break
+                    if not u_within_jsrunner_groups:
+                        abort(403, f'Given groups are not associated with the original groups.')
+            groupnames = req_groups
+            found_groups = all_req_groups
         not_found_groups = sorted(list(set(groupnames) - set(g.name for g in found_groups)))
         if not_found_groups:
             abort(404, f'The following groups were not found: {", ".join(not_found_groups)}')
-
         try:
             pcomps = verify_json_params('paramComps')
             if pcomps: # TODO: lisää rajapintaan valmiiksi tuo paramComps, niin ei tarvii lähdekoodia manipuloida

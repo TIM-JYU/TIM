@@ -1671,14 +1671,10 @@ export class TimTableController extends DestroyScope implements IController, ITi
             }
 
             const parId = getParId(this.element.parents(".par"));
-
-            if (parId && this.currentCell !== undefined && this.currentCell.row !== undefined && this.currentCell.col !== undefined) { // if != undefined is missing, then returns some number if true, if the number is 0 then statement is false
-                const sy = this.permTableToScreen[this.currentCell.row];
-                if (sy === this.cellDataMatrix.length - 1) {
-                    this.doCellMovement(Direction.Right);
-                } else {
-                    this.doCellMovement(Direction.Down);
-                }
+            // if != undefined is missing, then returns some number if true, if the number is 0 then statement is false
+            if (parId && this.currentCell !== undefined && this.currentCell.row !== undefined
+                && this.currentCell.col !== undefined) {
+                this.doCellMovement(Direction.Down);
                 return;
             }
 
@@ -1687,13 +1683,16 @@ export class TimTableController extends DestroyScope implements IController, ITi
             }
         }
 
-        if ( isKeyCode(ev, KEY_TAB) ) {
+        if (isKeyCode(ev, KEY_TAB)) {
             ev.preventDefault();
-            if (ev.shiftKey) {
-                this.doCellMovement(Direction.Left);
-                this.disableStartCell();
-            } else {
-                this.doCellMovement(Direction.Right);
+            if (this.currentCell != undefined) {
+                const curRow = this.permTableToScreen[this.currentCell.row];
+                if (ev.shiftKey) {
+                    this.doCellMovement(Direction.Left);
+                    this.disableStartCell();
+                } else {
+                    this.doCellMovement(Direction.Right);
+                }
             }
             return;
         }
@@ -1725,13 +1724,13 @@ export class TimTableController extends DestroyScope implements IController, ITi
 
         const keyCode = getKeyCode(ev);
         if ( keyCode === KEY_DOWN) {
-            return this.doCellMovement(Direction.Down);
+            return this.doCellMovement(Direction.Down, true);
         } else if (keyCode === KEY_RIGHT) {
-            return this.doCellMovement(Direction.Right);
+            return this.doCellMovement(Direction.Right, true);
         } else if (keyCode === KEY_LEFT) {
-            return this.doCellMovement(Direction.Left);
+            return this.doCellMovement(Direction.Left, true);
         } else if (keyCode === KEY_UP) {
-            return this.doCellMovement(Direction.Up);
+            return this.doCellMovement(Direction.Up, true);
         }
         return false;
     }
@@ -1740,12 +1739,13 @@ export class TimTableController extends DestroyScope implements IController, ITi
      * Switches the edit mode to another cell relative to either the current
      * or last edited cell.
      * @param direction The direction that the cell edit mode should move to.
+     * @param needLastDir Whether to read x/y from previous direction
      */
-    private doCellMovement(direction: Direction): boolean {
+    private doCellMovement(direction: Direction, needLastDir?: boolean): boolean {
         if (this.activeCell) {
             let x = this.activeCell.col;
             let y = this.activeCell.row;
-            if (this.lastDirection) {
+            if (this.lastDirection && needLastDir) {
                 if (UP_OR_DOWN.includes(this.lastDirection.direction)) {
                     if (UP_OR_DOWN.includes(direction)) {
                         x = this.lastDirection.coord;
@@ -1756,17 +1756,55 @@ export class TimTableController extends DestroyScope implements IController, ITi
                     }
                 }
             }
-
             let nextCellCoords = this.getNextCell(x, y, direction);
+            let prevX = x;
+            let prevY = y;
+            let i = 0;
+            const maxIters = this.cellDataMatrix.length * this.cellDataMatrix[0].length;
             /*
             Iterate towards direction until next non-locked cell in a non-hidden row or column is found
-            or until iterator arrives at the same cell
+            or until iterator arrives at the same cell (or iteration gets stuck)
              */
-            while (nextCellCoords) {
-                if (nextCellCoords.row == y && nextCellCoords.col == x) { break; }
+            while (nextCellCoords && i < maxIters) {
+                i++;
+                if (i > maxIters) {
+                    this.error = "Error finding next cell";
+                    return true;
+                }
+                if (nextCellCoords.row == y && nextCellCoords.col == x) {
+                    break;
+                }
+                /* When going right: if returned col was not to the right, then go to next row and restart from col 0.
+                   Apply similar logic to other directions
+                 */
+                if (direction == Direction.Right && nextCellCoords && nextCellCoords.col <= prevX) {
+                    prevY = this.constrainRowIndex(prevY + 1);
+                    prevX = 0;
+                    nextCellCoords = {row: prevY, col: prevX};
+                }
+                if (direction == Direction.Left && nextCellCoords && nextCellCoords.col >= prevX) {
+                    prevY = this.constrainRowIndex(prevY - 1);
+                    prevX = this.cellDataMatrix[prevY].length - 1;
+                    nextCellCoords = {row: prevY, col: prevX};
+                }
+                if (direction == Direction.Down && nextCellCoords && nextCellCoords.row <= prevY) {
+                    prevY = 0;
+                    prevX = this.constrainColumnIndex(prevY, prevX + 1);
+                    nextCellCoords = {row: prevY, col: prevX};
+                }
+                if (direction == Direction.Up && nextCellCoords && nextCellCoords.row >= prevY) {
+                    prevY = this.cellDataMatrix.length - 1;
+                    prevX = this.constrainColumnIndex(prevY, prevX - 1);
+                    nextCellCoords = {row: prevY, col: prevX};
+                }
+                /*
+                Stop iterating if cell is not in hiddenRows/hiddenColumns and is not locked
+                 */
                 if (!(this.data.hiddenRows && this.data.hiddenRows.includes(nextCellCoords.row))
                     && !(this.data.hiddenColumns && this.data.hiddenColumns.includes(nextCellCoords.col))
-                && !(this.data.lockedCells && this.data.lockedCells.includes(colnumToLetters(nextCellCoords.col) + (nextCellCoords.row + 1)))) { break; }
+                    && !(this.data.lockedCells && this.data.lockedCells.includes(colnumToLetters(nextCellCoords.col) + (nextCellCoords.row + 1)))) {
+                    break;
+                }
                 nextCellCoords = this.getNextCell(nextCellCoords.col, nextCellCoords.row, direction);
             }
 

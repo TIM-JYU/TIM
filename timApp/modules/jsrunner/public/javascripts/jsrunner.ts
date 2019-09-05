@@ -3,7 +3,7 @@
  */
 import angular from "angular";
 import * as t from "io-ts";
-import {ViewCtrl} from "tim/document/viewctrl";
+import {IJsRunner, ViewCtrl} from "tim/document/viewctrl";
 import {PluginBase, pluginBindings} from "tim/plugin/util";
 import {$http} from "tim/util/ngimport";
 import {to} from "tim/util/utils";
@@ -13,7 +13,7 @@ import {AnswerReturnBrowser, ErrorList, IError, JsrunnerAll, JsrunnerMarkup} fro
 const jsrunnerApp = angular.module("jsrunnerApp", ["ngSanitize"]);
 export const moduleDefs = [jsrunnerApp];
 
-class JsrunnerController extends PluginBase<t.TypeOf<typeof JsrunnerMarkup>, t.TypeOf<typeof JsrunnerAll>, typeof JsrunnerAll> {
+class JsrunnerController extends PluginBase<t.TypeOf<typeof JsrunnerMarkup>, t.TypeOf<typeof JsrunnerAll>, typeof JsrunnerAll> implements IJsRunner{
     private error?: IError;
     private isRunning = false;
     private output: string = "";
@@ -67,6 +67,10 @@ class JsrunnerController extends PluginBase<t.TypeOf<typeof JsrunnerMarkup>, t.T
                 this.showFieldHelper();
             }
         }
+        const tid = this.getTaskId();
+        if (tid) {
+            this.vctrl.addJsRunner(this, tid);
+        }
     }
 
     checkFields() {
@@ -78,7 +82,7 @@ class JsrunnerController extends PluginBase<t.TypeOf<typeof JsrunnerMarkup>, t.T
         this.error.msg += msg;
     }
 
-    async doCheckFields(nosave: boolean) {
+    async doCheckFields(nosave: boolean, groups?: string[]) {
         this.isRunning = true;
         this.error = undefined;
         // const paramComps = [];
@@ -95,15 +99,19 @@ class JsrunnerController extends PluginBase<t.TypeOf<typeof JsrunnerMarkup>, t.T
             }
         }
 
-        const params = {
+        const params: {paramComps: {}, input: {nosave: boolean, groups: string[] | null}} = {
             paramComps: paramComps,
             input: {
                 nosave: false,
+                groups: null,
             },
         };
 
         if (nosave) {
             params.input.nosave = true;
+        }
+        if(groups){
+            params.input["groups"] = groups;
         }
         const url = this.pluginMeta.getAnswerUrl();
         const r = await to($http.put<AnswerReturnBrowser>(url, params));
@@ -167,6 +175,10 @@ class JsrunnerController extends PluginBase<t.TypeOf<typeof JsrunnerMarkup>, t.T
         const pn = window.location.pathname;
         if ( pn.match("teacher|answers") ) { this.visible = 1; }
         return this.visible == 1;
+    }
+
+    runScriptWithGroups(groups: string[]){
+        this.doCheckFields(false, groups)
     }
 
 }

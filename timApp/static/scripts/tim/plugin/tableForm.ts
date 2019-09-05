@@ -52,6 +52,7 @@ const TableFormMarkup = t.intersection([
         showToolbar: t.boolean,
         hide: withDefault(t.object, {}),
         sisugroups: t.string,
+        runScripts: t.array(t.string),
     }),
     GenericPluginMarkup,
     t.type({
@@ -700,6 +701,13 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
         return result;
     }
 
+    static makeUserArray(users: string[][], colIndex: number): string[] {
+        const result = [];
+        for (const r of users) {
+            result.push(r[colIndex]);
+        }
+        return result;
+    }
     /**
      * Removes selected users from the group
      */
@@ -1025,6 +1033,19 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
         }
     }
 
+    // noinspection JSUnusedLocalSymbols
+    private runJsRunner(runner: string) {
+        const timTable = this.getTimTable();
+        if (timTable == null) {
+            return;
+        }
+        if (this.viewctrl) {
+            const selUsers = timTable.getCheckedRows(0, true);
+            const users = TableFormController.makeUserArray(selUsers, this.userNameColIndex);
+            this.viewctrl.runJsRunner(runner, users);
+        }
+    }
+
     protected getAttributeType() {
         return TableFormAll;
     }
@@ -1075,6 +1096,12 @@ timApp.component("tableformRunner", {
             ng-click="$ctrl.emailUsers()"
             ng-if="$ctrl.attrs.emailUsersButtonText && $ctrl.cbCount">
             {{::$ctrl.attrs.emailUsersButtonText}}
+    </button>
+    <button class="timButton"
+            ng-repeat="s in $ctrl.attrs.runScripts"
+            ng-click="$ctrl.runJsRunner(s)"
+            ng-if="$ctrl.attrs.runScripts && $ctrl.cbCount">
+            Run {{s}}
     </button>
     <button class="timButton"
             ng-click="$ctrl.orderSisuGroups()"

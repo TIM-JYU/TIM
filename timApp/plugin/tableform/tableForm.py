@@ -84,6 +84,7 @@ class TableFormMarkupModel(GenericMarkupModel):
     autoUpdateFields: Union[bool, Missing] = True
     autoUpdateTables: Union[bool, Missing] = True
     hide: Union[dict, Missing] = missing
+    runScripts: Union[List[str], Missing] = missing
     fields: Union[List[str], Missing] = missing
 
 
@@ -127,6 +128,7 @@ class TableFormMarkupSchema(GenericMarkupSchema):
     autoUpdateFields = fields.Boolean(default=True)
     autoUpdateTables = fields.Boolean(default=True)
     hide = fields.Dict(allow_none=True)
+    runScripts = fields.List(fields.Str())
     fields = fields.List(fields.Str())  # Keep this last - bad naming
 
     @post_load
