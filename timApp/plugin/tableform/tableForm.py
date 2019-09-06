@@ -29,7 +29,7 @@ from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
 from timApp.user.usergroupmember import UserGroupMember
 from timApp.util.flask.responsehelper import csv_response, json_response
-from timApp.util.get_fields import get_fields_and_users, MembershipFilter
+from timApp.util.get_fields import get_fields_and_users, MembershipFilter, fin_timezone
 from timApp.util.utils import get_boolean
 
 
@@ -472,7 +472,11 @@ def tableform_get_fields(
             # If the user is not active in any of the groups, we'll show the lastly-ended membership.
             # TODO: It might be possible in the future that the membership_end is in the future.
             if all(m.membership_end is not None for m in relevant_memberships):
-                membership_end = max(m.membership_end for m in relevant_memberships)
+                membership_end = (
+                    max(m.membership_end for m in relevant_memberships)
+                        .astimezone(fin_timezone)
+                        .strftime('%Y-%m-%d %H:%M')
+                )
             membershipmap[username] = membership_end
     r = dict()
     r['rows'] = rows
