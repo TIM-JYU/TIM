@@ -350,6 +350,9 @@ def load_data_from_req(schema):
     return p
 
 
+email_error_re = re.compile(r"Key \(email\)=\((?P<email>[^()]+)\) already exists.")
+
+
 def update_users(ug: UserGroup, args: SCIMGroupModel):
     external_id = args.externalId
     if not ug.external_id:
@@ -407,7 +410,17 @@ def update_users(ug: UserGroup, args: SCIMGroupModel):
             )
         except IntegrityError as e:
             db.session.rollback()
-            raise SCIMException(422, e.orig.diag.message_detail) from e
+            msg = e.orig.diag.message_detail
+            m = email_error_re.fullmatch(msg)
+            if m:
+                em = m.group('email')
+                member = None
+                for x in args.members:
+                    if x.email == em:
+                        member = x
+                        break
+                msg += " Conflicting username is: " + member.value
+            raise SCIMException(422, msg) from e
         if ug not in user.groups:
             user.groups.append(ug)
             added_users.add(user)

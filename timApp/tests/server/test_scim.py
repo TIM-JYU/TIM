@@ -397,7 +397,7 @@ class ScimTest(TimRouteTest):
                     {'value': 'someone2', 'display': 'Sisu User', 'email': 'zzz@example.com'},
                 ]),
             }, auth=a,
-            **scim_error("Key (email)=(zzz@example.com) already exists."),
+            **scim_error("Key (email)=(zzz@example.com) already exists. Conflicting username is: someone2"),
         )
 
         User.create_with_group(name='xxx@example.com', real_name='Some Guy', email='xxx@example.com',
@@ -424,7 +424,7 @@ class ScimTest(TimRouteTest):
                     {'value': 'ccc', 'display': 'Sisu User', 'email': 'xxx@example.com'},
                 ]),
             }, auth=a,
-            **scim_error("Key (email)=(xxx@example.com) already exists."),
+            **scim_error("Key (email)=(xxx@example.com) already exists. Conflicting username is: ccc"),
         )
 
     def test_duplicate_usernames(self):
