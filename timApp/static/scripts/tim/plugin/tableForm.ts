@@ -63,6 +63,7 @@ const TableFormMarkup = t.intersection([
         autoUpdateTables: withDefault(t.boolean, true),
         fontSize: withDefault(t.string, "smaller"),
         fixedColor: withDefault(t.string, "#f0f0f0"),
+        includeUsers: withDefault(t.keyof({active: null, all: null, inactive: null}), "active"),
         saveStyles: withDefault(t.boolean, true),
         removeDocIds: withDefault(t.boolean, true),
         taskBorders: withDefault(t.boolean, false),
@@ -76,24 +77,34 @@ const TableFormMarkup = t.intersection([
     }),
 ]);
 
-const Rows = t.dictionary(t.string, t.dictionary(t.string, t.union([t.string, t.null, t.number])));
-const Styles = t.dictionary(t.string, t.dictionary(t.string, t.union([t.null, t.dictionary(t.string, t.string)])));
+const Rows = t.record(t.string, t.record(t.string, t.union([t.string, t.null, t.number])));
+const Styles = t.record(t.string, t.record(t.string, t.union([t.null, t.record(t.string, t.string)])));
 
 interface IRowsType extends t.TypeOf<typeof Rows> {
 }
 
 const TableFormAll = t.intersection([
     t.partial({
-        aliases: t.dictionary(t.string, t.string),
+        aliases: t.record(t.string, t.string),
         fields: t.array(t.string),
-        realnamemap: t.dictionary(t.string, t.string),
-        emailmap: t.dictionary(t.string, t.string),
+        realnamemap: t.record(t.string, t.string),
+        emailmap: t.record(t.string, t.string),
+        membershipmap: t.record(t.string, t.any),
         rows: Rows,
         styles: Styles,
     }),
     GenericPluginTopLevelFields,
     t.type({markup: TableFormMarkup}),
 ]);
+
+const realNameColumn = "A";
+const userNameColumn = "B";
+const emailColumn = "C";
+const membershipColumn = "D";
+const realNameColIndex = 0;
+const userNameColIndex = 1;
+const emailColIndex = 2;
+const memberShipColIndex = 3;
 
 export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t.TypeOf<typeof TableFormAll>, typeof TableFormAll> {
     public viewctrl?: ViewCtrl;
@@ -120,23 +131,18 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
     private rows!: IRowsType;
     private styles!: t.TypeOf<typeof Styles>;
     private fields!: string[];
-    private realnamemap!: { [index: string]: string };
-    private emailmap!: { [index: string]: string };
-    private aliases!: { [index: string]: string };
+    private realnamemap!: Record<string, string>;
+    private emailmap!: Record<string, string>;
+    private membershipmap!: Record<string, string>;
+    private aliases!: Record<string, string>;
     private realnames = false;
     private usernames = false;
     private emails = false;
     private showTable = false;
     private tableFetched = false;
-    private realNameColumn = "A";
-    private userNameColumn = "B";
-    private emailColumn = "C";
-    private realNameColIndex = 0;
-    private userNameColIndex = 1;
-    private emailColIndex = 2;
     private rowKeys!: string[];
-    private userLocations: { [index: string]: string } = {};
-    private taskLocations: { [index: string]: string } = {};
+    private userLocations: Record<string, string> = {};
+    private taskLocations: Record<string, string> = {};
     private changedCells: string[] = []; // Use same type as data.userdata?
     private clearStylesCells = new Set<string>();
     private userlist: string = "";
@@ -218,9 +224,10 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
         }
 
         this.userfilter = "";
-        this.realnames = this.checkToShow(this.attrs.realnames, this.realNameColIndex, true);
-        this.usernames = this.checkToShow(this.attrs.usernames, this.userNameColIndex, true);
-        this.emails    = this.checkToShow(this.attrs.emails,    this.emailColIndex,    false);
+        this.realnames = this.checkToShow(this.attrs.realnames, realNameColIndex, true);
+        this.usernames = this.checkToShow(this.attrs.usernames, userNameColIndex, true);
+        this.emails    = this.checkToShow(this.attrs.emails,    emailColIndex,    false);
+        this.checkToShow(this.attrs.includeUsers !== "active",  memberShipColIndex, false);
 
         this.rows = this.attrsall.rows || {};
         this.rowKeys = Object.keys(this.rows);
@@ -228,6 +235,7 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
         this.fields = this.attrsall.fields || [];
         this.realnamemap = this.attrsall.realnamemap || {};
         this.emailmap = this.attrsall.emailmap || {};
+        this.membershipmap = this.attrsall.membershipmap || {};
         this.aliases = this.attrsall.aliases || {};
 
         this.setDataMatrix();
@@ -313,10 +321,10 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
         if ( this.attrsall.markup.sisugroups ) { return; }
         // TODO: Save before reset?
         type requestParams = ({
-            aliases: { [index: string]: string },
+            aliases: Record<string, string>,
             fields: string[];
-            realnamemap: { [index: string]: string },
-            emailmap: { [index: string]: string },
+            realnamemap: Record<string, string>,
+            emailmap: Record<string, string>,
             rows: IRowsType,
             styles: t.TypeOf<typeof Styles>,
         });
@@ -417,7 +425,7 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
             const tableFields = tableResponse.data.fields || [];
 
             // Find out which columns to update
-            const taskColumns: { [index: string]: string } = {};
+            const taskColumns: Record<string, string> = {};
             for (const f of tableFields) {
                 const extendedField = this.aliases[f] || f;
                 for (const [key, value] of Object.entries(this.taskLocations)) {
@@ -469,7 +477,7 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
             if ( this.attrsall.markup.sisugroups ) {
                 this.data.headers = ["Kuvaus", "Sisu-nimi", ""];
             } else {
-                this.data.headers = ["Henkilön nimi", "Käyttäjänimi", "eMail"];
+                this.data.headers = ["Henkilön nimi", "Käyttäjänimi", "eMail", "Poistunut?"];
             }
             this.data.headersStyle = {"backgroundColor": this.fixedColor,
                                       "font-weight": "bold"};
@@ -481,27 +489,26 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
                 this.data.lockedCells = [];
             }
             for (const r of this.rowKeys) {
-                this.data.userdata.cells[this.userNameColumn + y] = {cell: r, backgroundColor: this.fixedColor};
-                this.data.lockedCells.push(this.userNameColumn + y);
+                this.data.userdata.cells[userNameColumn + y] = {cell: r, backgroundColor: this.fixedColor};
+                this.data.lockedCells.push(userNameColumn + y);
                 this.userLocations[y] = r;
-                if ( this.realnamemap ) {
-                    this.data.userdata.cells[this.realNameColumn + y] = {
-                        cell: this.realnamemap[r],
-                        backgroundColor: this.fixedColor,
-                    };
-                    this.data.lockedCells.push(this.realNameColumn + y);
-                }
-                if ( this.emailmap ) {
-                    this.data.userdata.cells[this.emailColumn + y] = {
-                        cell: this.emailmap[r],
-                        backgroundColor: this.fixedColor,
-                    };
-                    this.data.lockedCells.push(this.emailColumn + y);
+                for (const [map, col] of [
+                    [this.realnamemap, realNameColumn],
+                    [this.emailmap, emailColumn],
+                    [this.membershipmap, membershipColumn],
+                ] as const) {
+                    if (map) {
+                        this.data.userdata.cells[col + y] = {
+                            cell: map[r],
+                            backgroundColor: this.fixedColor,
+                        };
+                        this.data.lockedCells.push(col + y);
+                    }
                 }
                 y++;
             }
             // TODO: Load default cell colors from tableForm's private answer?
-            const xOffset = 3;
+            const xOffset = memberShipColIndex + 1;
             if (this.fields) {
                 for (let x = 0; x < this.fields.length; x++) {
 
@@ -670,11 +677,11 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
             result.push(row);
             for (let j = 0; j < colcount; j++) {
                 if (this.data.hiddenColumns && this.data.hiddenColumns.includes(j)) { continue; }
-                if (this.anonNames() && j == this.userNameColIndex && i > 0) {
+                if (this.anonNames() && j == userNameColIndex && i > 0) {
                     row.push("Anonymous" + [i]);
                     continue;
                 }
-                if (this.anonNames() && j == this.realNameColIndex && i > 0) {
+                if (this.anonNames() && j == realNameColIndex && i > 0) {
                     row.push("Unknown" + [i]);
                     continue;
                 }
@@ -760,7 +767,7 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
         if ( !this.realnamemap ) { return; }
         if ( !this.emailmap ) { return; }
         for (const u of selUsers) {
-            const un = u[this.userNameColIndex];
+            const un = u[userNameColIndex];
             let s = "";
             if ( this.listName ) { s = this.realnamemap[un]; usep = ", "; }
             if ( this.listUsername ) { s += usep + un; usep = ", "; }
@@ -786,7 +793,7 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
         const timTable = this.getTimTable();
         if (timTable == null) { return; }
         const selUsers = timTable.getCheckedRows(0, true);
-        this.emaillist = TableFormController.makeUserList(selUsers, this.emailColIndex, "", "\n");
+        this.emaillist = TableFormController.makeUserList(selUsers, emailColIndex, "", "\n");
     }
 
     async sendEmailTim() {
@@ -913,7 +920,7 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
             return;
         }
         const replyRows: { [index: string]: { [index: string]: CellType } } = {};
-        const styleRows: { [index: string]: { [index: string]: string } } = {};
+        const styleRows: { [index: string]: Record<string, string> } = {};
         const changedFields = new Set<string>();
         try {
             for (const coord of keys) {
@@ -924,9 +931,9 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
                 }
                 const columnPlace = alpha[0];
                 const numberPlace = coord.substring(columnPlace.length);
-                if (columnPlace === this.userNameColumn
-                    || columnPlace === this.realNameColumn  // TODO: Do we need this anymore?
-                    || columnPlace === this.emailColumn) {  // TODO: Do we need this anymore?
+                if (columnPlace === userNameColumn
+                    || columnPlace === realNameColumn  // TODO: Do we need this anymore?
+                    || columnPlace === emailColumn) {  // TODO: Do we need this anymore?
                     continue;
                 }
                 const cell = this.data.userdata.cells[coord];
@@ -1041,7 +1048,7 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
         }
         if (this.viewctrl) {
             const selUsers = timTable.getCheckedRows(0, true);
-            const users = TableFormController.makeUserArray(selUsers, this.userNameColIndex);
+            const users = TableFormController.makeUserArray(selUsers, userNameColIndex);
             this.viewctrl.runJsRunner(runner, users);
         }
     }

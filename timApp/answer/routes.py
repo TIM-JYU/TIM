@@ -544,7 +544,7 @@ def post_answer(plugintype: str, task_id_ext: str):
 
         siw = plugin.values.get("showInView", False)
         validonly = plugin.values.get("validonly", True)
-        answerdata['data'], answerdata['aliases'], _ = get_fields_and_users(
+        answerdata['data'], answerdata['aliases'], _, _ = get_fields_and_users(
             plugin.values['fields'],
             found_groups,
             d,
@@ -1028,7 +1028,7 @@ def get_plug_vals(doc, tid, curr_user, user):
     if not flds:
         return {}
 
-    data, aliases, field_names = get_fields_and_users(
+    data, aliases, field_names, _ = get_fields_and_users(
         flds,
         [user.personal_group_prop],
         doc,

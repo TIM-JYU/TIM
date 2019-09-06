@@ -176,7 +176,12 @@ class UserGroup(db.Model, TimeStampMixin, SCIMEntity):
 
 def get_usergroup_eager_query():
     from timApp.item.block import Block
-    return UserGroup.query.options(joinedload(UserGroup.admin_doc).joinedload(Block.docentries))
+    return (
+        UserGroup.query
+            .options(joinedload(UserGroup.admin_doc)
+                     .joinedload(Block.docentries))
+            .options(joinedload(UserGroup.active_memberships))
+    )
 
 
 def get_sisu_groups_by_filter(f) -> List[UserGroup]:
