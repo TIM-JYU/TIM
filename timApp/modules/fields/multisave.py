@@ -28,6 +28,7 @@ class MultisaveMarkupModel(GenericMarkupModel):
     jumptarget: Union[str, Missing] = missing
     areas: Union[List[str], Missing] = missing
     tags: Union[List[str], Missing] = missing
+    autoUpdateDuplicates: Union[bool, Missing] = True
     autoUpdateTables: Union[bool, Missing] = True
     emailMode: Union[bool, Missing] = False
     emailRecipients: Union[List[str], Missing] = missing
@@ -42,6 +43,7 @@ class MultisaveMarkupSchema(GenericMarkupSchema):
     jumptarget = fields.String(allow_none=True)
     areas = fields.List(fields.Str())
     tags = fields.List(fields.Str())
+    autoUpdateDuplicates = fields.Boolean(default=True)
     autoUpdateTables = fields.Boolean(default=True)
     emailMode = fields.Boolean(default=False)
     emailRecipients = fields.List(fields.Str())

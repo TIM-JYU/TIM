@@ -29,6 +29,7 @@ const multisaveMarkup = t.intersection([
     t.type({
         // all withDefaults should come here; NOT in t.partial
         emailMode: withDefault(t.boolean, false),
+        autoUpdateDuplicates: withDefault(t.boolean, true),
         autoUpdateTables: withDefault(t.boolean, true),
     }),
 ]);
@@ -160,7 +161,7 @@ export class MultisaveController extends PluginBase<t.TypeOf<typeof multisaveMar
             return;
         }
         let componentsToSave: ITimComponent[] = [];
-        // TODO: componentsToSave as a map?
+        // TODO: get components from vctrl.timComponentArrays in case of duplicates
         if (this.attrs.fields) {
             for (const i of this.attrs.fields) {
                 const timComponents = this.vctrl.getTimComponentsByRegex(i);
@@ -229,6 +230,18 @@ export class MultisaveController extends PluginBase<t.TypeOf<typeof multisaveMar
         }
         if (this.attrs.autoUpdateTables) {
             this.vctrl.updateAllTables(fieldsToUpdate);
+        }
+        if (this.attrs.autoUpdateDuplicates) {
+            const duplicatedFieldsToUpdate = [];
+            for (const field of fieldsToUpdate) {
+                const duplicates = this.vctrl.getTimComponentArray(field);
+                if (duplicates && duplicates.length > 1) {
+                    duplicatedFieldsToUpdate.push(field);
+                }
+            }
+            if (duplicatedFieldsToUpdate.length > 0) {
+                this.vctrl.updateFields(duplicatedFieldsToUpdate);
+            }
         }
         if (this.savedFields !== 0) {
             this.isSaved = true;

@@ -354,10 +354,22 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
             if (data.web.clear) {
                 this.applyStyling({});
             }
-            if (!this.saveCalledExternally && this.vctrl && this.attrs.autoUpdateTables) {
+
+            if (this.vctrl && !this.saveCalledExternally) {
                 const tid = this.getTaskId();
                 if (tid) {
-                    this.vctrl.updateAllTables([tid]);
+                    if (this.attrs.autoUpdateTables) {
+                        this.vctrl.updateAllTables([tid]);
+                    }
+                    if (this.vctrl.docSettings.form_mode) {
+                        const duplicates = this.vctrl.getTimComponentArray(tid);
+                        if (duplicates && duplicates.length > 1) {
+                            this.vctrl.updateFields([tid]);
+                            // for (const dup of duplicates) {
+                            //     dup.setAnswer({"c": this.userword, "styles": this.styles})
+                            // }
+                        }
+                    }
                 }
             }
         } else {

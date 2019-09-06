@@ -56,7 +56,7 @@ export interface ITimComponent {
     setForceAnswerSave?: (force: boolean) => void;
     resetField: () => string | undefined;
     supportsSetAnswer: () => boolean;
-    setAnswer: (content: {[index: string]: string}) => {ok: boolean, message: (string | undefined)};
+    setAnswer: (content: {[index: string]: any}) => {ok: boolean, message: (string | undefined)};
 }
 
 // TODO: import entire controller?
@@ -127,7 +127,9 @@ export class ViewCtrl implements IController {
     private tableForms = new Map<string, TableFormController>();
     private jsRunners = new Map<string, IJsRunner>();
 
+    // TODO: Possibly redundant since same thing can be achieved by just using the array version
     private timComponents: Map<string, ITimComponent> = new Map();
+    // Array to keep reference to possible duplicated fields
     private timComponentArrays: Map<string, [ITimComponent]> = new Map();
     private timComponentTags: Map<string, [string]> = new Map();
     private userChangeListeners: Map<string, IUserChanged> = new Map();
