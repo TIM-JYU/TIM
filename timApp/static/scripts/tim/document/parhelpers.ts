@@ -249,7 +249,10 @@ export function saveCurrentScreenPar() {
     const parId = getParId($(".par:not('.preamble'):onScreen").first());
     if (parId) {
         // Don't replace if the hash is going to stay the same.
-        const hash = getParHash(parId);
+        let hash = getParHash(parId);
+        if (hash == "#HELP_PAR") {
+            hash = "";
+        }
         if (location.hash !== hash) {
             const url = `${location.protocol}//${location.host}${location.pathname}${location.search}${hash}`;
             window.history.replaceState(undefined, document.title, url);
