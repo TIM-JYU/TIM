@@ -3,10 +3,7 @@
  */
 import angular from "angular";
 import * as t from "io-ts";
-import {
-    PluginBase,
-    pluginBindings,
-} from "tim/plugin/util";
+import {PluginBase, pluginBindings,} from "tim/plugin/util";
 import {$http, $httpParamSerializer} from "tim/util/ngimport";
 import {to} from "tim/util/utils";
 import {timApp} from "../app";
@@ -17,8 +14,16 @@ import {showInputDialog} from "../ui/inputDialog";
 import {widenFields} from "../util/common";
 import {GenericPluginMarkup, GenericPluginTopLevelFields, nullable, withDefault} from "./attributes";
 import "./tableForm.css";
-import {CellAttrToSave, CellToSave, CellType, colnumToLetters, DataEntity,
-    isPrimitiveCell, TimTable, TimTableController} from "./timTable";
+import {
+    CellAttrToSave,
+    CellToSave,
+    CellType,
+    colnumToLetters,
+    DataEntity,
+    isPrimitiveCell,
+    TimTable,
+    TimTableController
+} from "./timTable";
 
 const tableFormApp = angular.module("tableFormApp", ["ngSanitize"]);
 export const moduleDefs = [tableFormApp];
@@ -737,13 +742,14 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
 
         await showInputDialog({
             defaultValue: "",
-            text: "<b>Really remove following users from group:</b> " + group + "<br>\n<pre>\n" + msg + "\n</pre>",
-            title: "Remove user from group " + group,
+            text: "<b>Really remove the following users from group:</b> " + group + "<br>\n<pre>\n" + msg + "\n</pre>",
+            title: "Remove users from group " + group,
             isInput: false,
             validator: async () => {
                 const ulist = TableFormController.makeUserList(selUsers, 1, "", ",");
-                // /groups/removemember/group/ ulist
-                const r = await to($http.get<IDocument>(`/groups/removemember/${group}/${ulist}`));
+                const r = await to($http.post<IDocument>(
+                    `/groups/removemember/${group}`,
+                    {names: ulist.split(",")}));
                 if (r.ok) {
                     return {ok: true, result: r.result.data};
                 } else {

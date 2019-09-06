@@ -797,8 +797,8 @@ class ScimTest(TimRouteTest):
         self.make_admin(u)
         self.login(username=u.name)
         ug = UserGroup.get_by_external_id('jy-CUR-7777-teachers')
-        self.get(
-            f'/groups/addmember/{ug.name}/{u.name},{u2.name}',
+        self.json_post(
+            f'/groups/addmember/{ug.name}', {'names': [u.name, u2.name]}
         )
 
         # The SCIM routes must not report the manually added users.
@@ -826,17 +826,17 @@ class ScimTest(TimRouteTest):
         ug = UserGroup.get_by_external_id(eid)
         self.assertEqual(3, len(ug.users))
 
-        self.get(
-            f'/groups/removemember/{ug.name}/abc',
+        self.json_post(
+            f'/groups/removemember/{ug.name}', {'names': ['abc']},
             expect_status=400,
             expect_content='Cannot remove not-manually-added users from Sisu groups.',
             json_key='error',
         )
-        self.get(
-            f'/groups/removemember/{ug.name}/anon@example.com',
+        self.json_post(
+            f'/groups/removemember/{ug.name}', {'names': ['anon@example.com']}
         )
-        self.get(
-            f'/groups/removemember/{ug.name}/mameikal',
+        self.json_post(
+            f'/groups/removemember/{ug.name}', {'names': ['mameikal']}
         )
 
     def check_no_group_access(self, username: str, externalids: List[str], no_access_expected=None):

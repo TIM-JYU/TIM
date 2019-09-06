@@ -33,13 +33,13 @@ class GroupTest(TimRouteTest):
             self.get(f'/groups/create/{groupname}',
                      expect_content={'error': 'User group already exists.'},
                      expect_status=400)
-            self.get(f'/groups/addmember/{groupname}/{t1},{t3}',
+            self.json_post(f'/groups/addmember/{groupname}', {'names': f'{t1},{t3}'.split(',')},
                      expect_content={'added': [t1, t3], 'already_belongs': [], 'not_exist': []})
-            self.get(f'/groups/addmember/{groupname}/{t1},{t3}',
+            self.json_post(f'/groups/addmember/{groupname}', {'names': f'{t1},{t3}'.split(',')},
                      expect_content={'already_belongs': [t1, t3], 'added': [], 'not_exist': []})
-            self.get(f'/groups/addmember/{groupname}/{t1},{t2},{t3},{t4},{t5}',
+            self.json_post(f'/groups/addmember/{groupname}', {'names': f'{t1},{t2},{t3},{t4},{t5}'.split(',')},
                      expect_content={'already_belongs': [t1, t3], 'added': [t2, t4], 'not_exist': [t5]})
-            self.get(f'/groups/addmember/{groupname}/{t1},{t2}',
+            self.json_post(f'/groups/addmember/{groupname}', {'names': f'{t1},{t2}'.split(',')},
                      expect_content={'already_belongs': [t1, t2], 'added': [], 'not_exist': []})
             ug = UserGroup.get_by_name(groupname)
             if is_admin:
@@ -65,11 +65,11 @@ class GroupTest(TimRouteTest):
                 {'email': t4 + '@example.com', 'id': uids[3], 'name': names[3], 'real_name': names[3]}
             ])
 
-            self.get(f'/groups/removemember/{groupname}/{t1},{t3}',
+            self.json_post(f'/groups/removemember/{groupname}', {'names': f'{t1},{t3}'.split(',')},
                      expect_content={'removed': [t1, t3], 'does_not_belong': [], 'not_exist': []})
-            self.get(f'/groups/removemember/{groupname}/{t1},{t3}',
+            self.json_post(f'/groups/removemember/{groupname}', {'names': f'{t1},{t3}'.split(',')},
                      expect_content={'removed': [], 'does_not_belong': [t1, t3], 'not_exist': []})
-            self.get(f'/groups/removemember/{groupname}/{t1},{t2},{t3},{t4},{t5}',
+            self.json_post(f'/groups/removemember/{groupname}', {'names': f'{t1},{t2},{t3},{t4},{t5}'.split(',')},
                      expect_content={'removed': [t2, t4], 'does_not_belong': [t1, t3], 'not_exist': [t5]})
             self.get(f'/groups/show/{groupname}', expect_content=[])
 
@@ -93,31 +93,28 @@ class GroupTest(TimRouteTest):
             self.get('/groups/create/ok ok', expect_status=400, expect_content=self.error_resp)
             self.get(f'/groups/create/test x1{is_admin}')
 
-            self.get('/groups/addmember/Logged-in users/testuser1', expect_status=400,
+            self.json_post('/groups/addmember/Logged-in users', {'names': f'testuser1'.split(',')}, expect_status=400,
                      expect_content={'error': 'Cannot edit special groups.'})
             if not is_admin:
-                self.get(
-                    '/groups/addmember/Group admins/testuser1',
+                self.json_post('/groups/addmember/Group admins', {'names': f'testuser1'.split(',')},
                     expect_status=403,
                     expect_content={'error': 'This action requires administrative rights.'},
                 )
-                self.get(
-                    '/groups/addmember/Administrators/testuser1',
+                self.json_post('/groups/addmember/Administrators', {'names': f'testuser1'.split(',')},
                     expect_status=403,
                     expect_content={'error': 'This action requires administrative rights.'},
                 )
-                self.get(
-                    '/groups/removemember/Administrators/testuser1',
+                self.json_post('/groups/removemember/Administrators', {'names': f'testuser1'.split(',')},
                     expect_status=403,
                     expect_content={'error': 'This action requires administrative rights.'},
                 )
             else:
-                self.get('/groups/addmember/Group admins/testuser1')
-            self.get('/groups/addmember/testuser1/testuser2', expect_status=400,
+                self.json_post('/groups/addmember/Group admins', {'names': f'testuser1'.split(',')})
+            self.json_post('/groups/addmember/testuser1', {'names': f'testuser2'.split(',')}, expect_status=400,
                      expect_content={'error': 'Cannot edit personal groups.'})
-            self.get('/groups/removemember/testuser1/testuser1', expect_status=400,
+            self.json_post('/groups/removemember/testuser1', {'names': f'testuser1'.split(',')}, expect_status=400,
                      expect_content={'error': 'Cannot edit personal groups.'})
-            self.get('/groups/removemember/Logged-in users/testuser1', expect_status=400,
+            self.json_post('/groups/removemember/Logged-in users', {'names': f'testuser1'.split(',')}, expect_status=400,
                      expect_content={'error': 'Cannot edit special groups.'})
 
     def test_nonexistent(self):
@@ -128,13 +125,13 @@ class GroupTest(TimRouteTest):
                  expect_content={'error': 'User group not found'}, expect_status=404)
         self.get(f'/groups/usergroups/asd',
                  expect_content={'error': 'User not found'}, expect_status=404)
-        self.get(f'/groups/addmember/asd/testuser1',
+        self.json_post(f'/groups/addmember/asd', {'names': f'testuser1'.split(',')},
                  expect_content={'error': 'User group not found'}, expect_status=404)
 
     def test_groups_trim(self):
         self.init_admin()
         self.get('/groups/create/testing1')
-        self.get('/groups/addmember/testing1/testuser1 ,testuser2  ',
+        self.json_post('/groups/addmember/testing1', {'names': f'testuser1 ,testuser2  '.split(',')},
                  expect_content={'added': ['testuser1', 'testuser2'], 'already_belongs': [], 'not_exist': []})
 
     def test_invalid_group_setting(self):
@@ -167,7 +164,7 @@ class GroupTest2(TimRouteTest):
         self.get(d.url)
         self.get(d.parent.url)
         self.get('/groups/show/edittest1')
-        self.get('/groups/addmember/edittest1/testuser1', expect_status=403)
+        self.json_post('/groups/addmember/edittest1', {'names': f'testuser1'.split(',')}, expect_status=403)
         self.test_user_1.grant_access(d, 'edit')
-        self.get('/groups/addmember/edittest1/testuser1',
+        self.json_post('/groups/addmember/edittest1', {'names': f'testuser1'.split(',')},
                  expect_content={'added': ['testuser1'], 'already_belongs': [], 'not_exist': []})

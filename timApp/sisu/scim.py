@@ -1,10 +1,9 @@
-import json
 import re
 from typing import List, Optional, Dict
 
 import attr
 from flask import Blueprint, request, current_app, Response
-from marshmallow import Schema, fields, post_load, ValidationError, missing, pre_load
+from marshmallow import Schema, fields, post_load, missing, pre_load
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import aliased
 from webargs.flaskparser import use_args
@@ -18,6 +17,7 @@ from timApp.user.scimentity import get_meta
 from timApp.user.user import User, UserOrigin, last_name_to_first, SCIM_USER_NAME
 from timApp.user.usergroup import UserGroup, tim_group_to_scim, SISU_GROUP_PREFIX, DELETED_GROUP_PREFIX
 from timApp.user.usergroupmember import UserGroupMember, membership_current
+from timApp.util.flask.requesthelper import load_data_from_req, JSONException
 from timApp.util.flask.responsehelper import json_response
 from timApp.util.logger import log_warning
 from timApp.util.utils import remove_path_special_chars
@@ -296,7 +296,10 @@ def put_group(group_id: str):
     # log_info(get_request_message(include_body=True))
     try:
         ug = get_group_by_scim(group_id)
-        d = load_data_from_req(SCIMGroupSchema)
+        try:
+            d = load_data_from_req(SCIMGroupSchema)
+        except JSONException as e:
+            raise SCIMException(422, e.description)
         update_users(ug, d)
         db.session.commit()
         return json_response(group_scim(ug))
@@ -329,24 +332,15 @@ def put_user(user_id):
     u = User.get_by_name(user_id)
     if not u:
         raise SCIMException(404, 'User not found.')
-    um: SCIMUserModel = load_data_from_req(SCIMUserSchema)
+    try:
+        um: SCIMUserModel = load_data_from_req(SCIMUserSchema)
+    except JSONException as e:
+        raise SCIMException(422, e.description)
     u.real_name = last_name_to_first(um.displayName)
     if um.emails:
         u.email = um.emails[0].value
     db.session.commit()
     return json_response(u.get_scim_data())
-
-
-def load_data_from_req(schema):
-    ps = schema()
-    try:
-        j = request.get_json()
-        if j is None:
-            raise SCIMException(422, 'JSON payload missing.')
-        p = ps.load(j)
-    except ValidationError as e:
-        raise SCIMException(422, json.dumps(e.messages, sort_keys=True))
-    return p
 
 
 email_error_re = re.compile(r"Key \(email\)=\((?P<email>[^()]+)\) already exists.")

@@ -1,7 +1,9 @@
 from operator import attrgetter
 from typing import Tuple, List, Dict, Any
 
+import attr
 from flask import Blueprint, abort
+from marshmallow import Schema, fields, post_load
 
 from timApp.auth.accesshelper import verify_admin, check_admin_access, get_doc_or_abort, verify_view_access
 from timApp.auth.accesstype import AccessType
@@ -15,6 +17,7 @@ from timApp.timdb.sqa import db
 from timApp.user.special_group_names import SPECIAL_GROUPS, PRIVILEGED_GROUPS
 from timApp.user.user import User, view_access_set, edit_access_set
 from timApp.user.usergroup import UserGroup
+from timApp.util.flask.requesthelper import load_data_from_req
 from timApp.util.flask.responsehelper import json_response, ok_response
 from timApp.util.utils import remove_path_special_chars, get_current_time
 
@@ -180,7 +183,7 @@ def verify_group_view_access(ug: UserGroup, user=None, require=True):
     return verify_group_access(ug, view_access_set, user, require=require)
 
 
-def get_member_infos(groupname: str, usernames: str):
+def get_member_infos(groupname: str, usernames: List[str]):
     usernames = get_usernames(usernames)
     group, users = get_uid_gid(groupname, usernames)
     verify_group_edit_access(group)
@@ -190,9 +193,23 @@ def get_member_infos(groupname: str, usernames: str):
     return existing_ids, group, not_exist, usernames, users
 
 
-@groups.route('/addmember/<groupname>/<usernames>')
-def add_member(usernames, groupname):
-    existing_ids, group, not_exist, usernames, users = get_member_infos(groupname, usernames)
+@attr.s(auto_attribs=True)
+class NamesModel:
+    names: List[str]
+
+
+class NamesSchema(Schema):
+    names = fields.List(fields.Str(), required=True)
+
+    @post_load
+    def make_obj(self, data):
+        return NamesModel(**data)
+
+
+@groups.route('/addmember/<groupname>', methods=['post'])
+def add_member(groupname):
+    nm: NamesModel = load_data_from_req(NamesSchema)
+    existing_ids, group, not_exist, usernames, users = get_member_infos(groupname, nm.names)
     already_exists = set(u.name for u in group.users) & set(usernames)
     added = []
     curr = get_current_user_object()
@@ -208,9 +225,10 @@ def add_member(usernames, groupname):
     })
 
 
-@groups.route('/removemember/<groupname>/<usernames>')
-def remove_member(usernames, groupname):
-    existing_ids, group, not_exist, usernames, users = get_member_infos(groupname, usernames)
+@groups.route('/removemember/<groupname>', methods=['post'])
+def remove_member(groupname):
+    nm: NamesModel = load_data_from_req(NamesSchema)
+    existing_ids, group, not_exist, usernames, users = get_member_infos(groupname, nm.names)
     removed = []
     does_not_belong = []
     ensure_manually_added = group.is_sisu
@@ -255,7 +273,7 @@ def enroll_to_course(doc_id: int):
         return abort(400, 'Document is not tagged as a course')
 
 
-def get_usernames(usernames: str):
-    usernames = list(set([name.strip() for name in usernames.split(',')]))
+def get_usernames(usernames: List[str]):
+    usernames = list(set([name.strip() for name in usernames]))
     usernames.sort()
     return usernames
