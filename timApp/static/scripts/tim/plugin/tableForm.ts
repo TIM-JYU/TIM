@@ -3,7 +3,7 @@
  */
 import angular from "angular";
 import * as t from "io-ts";
-import {PluginBase, pluginBindings,} from "tim/plugin/util";
+import {PluginBase, pluginBindings} from "tim/plugin/util";
 import {$http, $httpParamSerializer} from "tim/util/ngimport";
 import {to} from "tim/util/utils";
 import {timApp} from "../app";
@@ -22,7 +22,7 @@ import {
     DataEntity,
     isPrimitiveCell,
     TimTable,
-    TimTableController
+    TimTableController,
 } from "./timTable";
 
 const tableFormApp = angular.module("tableFormApp", ["ngSanitize"]);
