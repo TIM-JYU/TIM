@@ -233,7 +233,7 @@ a {#x initword: #} b
 {#t#}
 """)
         u = d.url
-        grant_view_access(UserGroup.get_anonymous_group().id, d.id)
+        grant_view_access(UserGroup.get_anonymous_group(), d)
         self.logout()
         r = self.get(u, as_tree=True).cssselect('.parContent login-menu')
         self.assertTrue(r)

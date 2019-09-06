@@ -8,8 +8,8 @@ class AuthorsTest(TimRouteTest):
         self.login_test1()
         d = self.create_doc()
         url = d.url
-        grant_edit_access(self.test_user_2.get_personal_group().id, d.id)
-        grant_edit_access(self.test_user_3.get_personal_group().id, d.id)
+        grant_edit_access(self.test_user_2.get_personal_group(), d)
+        grant_edit_access(self.test_user_3.get_personal_group(), d)
         self.new_par(d.document, 'par 1')
         self.new_par(d.document, 'par 2')
         self.new_par(d.document, 'par 3')

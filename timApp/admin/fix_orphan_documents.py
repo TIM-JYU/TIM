@@ -16,7 +16,7 @@ def fix_orphans_without_docentry():
     """Finds all documents that do not have a DocEntry and creates a DocEntry for them under 'orphans' directory."""
     with app.test_request_context():
         orphan_folder_title = 'orphans'
-        f = Folder.create('orphans', UserGroup.get_admin_group().id)
+        f = Folder.create('orphans', UserGroup.get_admin_group())
         orphans: List[Block] = Block.query.filter(
             (Block.type_id == 0) &
             Block.id.notin_(DocEntry.query.with_entities(DocEntry.id)) &

@@ -10,7 +10,7 @@ from timApp.util.utils import EXAMPLE_DOCS_PATH
 class PluginTest(TimDbTest):
 
     def test_info(self):
-        d = DocEntry.create('test', self.get_test_user_1_group_id(), from_file=f'{EXAMPLE_DOCS_PATH}/mmcq_example.md')
+        d = DocEntry.create('test', self.test_user_1.get_personal_group(), from_file=f'{EXAMPLE_DOCS_PATH}/mmcq_example.md')
         p = None
         for p in d.document.get_tasks():
             p = Plugin.from_paragraph(p)

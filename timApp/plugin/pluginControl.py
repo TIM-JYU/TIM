@@ -166,7 +166,7 @@ class PluginPlacement:
             try:
                 vals = load_markup_from_yaml(md, settings.global_plugin_attrs(), block.get_attr('plugin'))
                 if plugin_name in WANT_FIELDS and 'fields' in vals and user:
-                    data, aliases, field_names = get_fields_and_users(
+                    data, aliases, field_names, _ = get_fields_and_users(
                         vals['fields'],
                         [user.personal_group_prop],
                         block.doc.docinfo,

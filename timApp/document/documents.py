@@ -12,11 +12,12 @@ from timApp.document.translation.translation import Translation
 from timApp.auth.auth_models import BlockAccess
 from timApp.note.usernote import UserNote
 from timApp.readmark.readparagraph import ReadParagraph
+from timApp.user.usergroup import UserGroup
 
 
 def create_translation(original_doc: Document,
-                       owner_group_id: int) -> Document:
-    doc = create_document_and_block(owner_group_id)
+                       owner_group) -> Document:
+    doc = create_document_and_block(owner_group)
     add_reference_pars(doc, original_doc, 'tr')
     return doc
 
@@ -68,8 +69,8 @@ def delete_document(document_id: int):
     Document.remove(document_id)
 
 
-def import_document(content: str, path: str, owner_group_id: int, title: Optional[str] = None) -> Document:
-    doc = DocEntry.create(path, owner_group_id, title=title).document
+def import_document(content: str, path: str, owner_group: UserGroup, title: Optional[str] = None) -> Document:
+    doc = DocEntry.create(path, owner_group, title=title).document
     parser = DocumentParser(content)
     for block in parser.get_blocks():
         doc.add_paragraph(text=block['md'], attrs=block.get('attrs'))
@@ -78,17 +79,17 @@ def import_document(content: str, path: str, owner_group_id: int, title: Optiona
 
 def import_document_from_file(document_file: str,
                               path: str,
-                              owner_group_id: int,
+                              owner_group: UserGroup,
                               title: Optional[str] = None) -> Document:
     """Imports the specified document in the database.
 
     :param title: Title for the document.
     :param document_file: The file path of the document to import.
     :param path: The path for the document.
-    :param owner_group_id: The owner group of the document.
+    :param owner_group: The owner group of the document.
     :returns: The created document object.
 
     """
     with open(document_file, 'r', encoding='utf-8') as f:
         content = f.read()  # todo: use a stream instead
-    return import_document(content, path, owner_group_id, title=title)
+    return import_document(content, path, owner_group, title=title)

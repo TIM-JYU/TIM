@@ -3,11 +3,12 @@ import json
 
 from timApp.document.docentry import DocEntry
 from timApp.document.document import Document
+from timApp.folder.folder import Folder
 from timApp.item.block import BlockType
 from timApp.tests.server.timroutetest import TimRouteTest
+from timApp.timdb.sqa import db
 from timApp.upload.uploadedfile import StampedPDF, UploadedFile
 from timApp.user.usergroup import UserGroup
-from timApp.timdb.sqa import db
 from timApp.user.userutils import grant_access
 
 
@@ -45,11 +46,9 @@ class UploadTest(TimRouteTest):
                         'file': (io.BytesIO(b'test file'), 'test.md')},
                   expect_status=403,
                   expect_content={'error': 'You cannot create documents in this folder.'})
-        test1_group = self.current_group().id
         self.login_test3()
         j = self.create_folder(fname)
-        grant_access(test1_group, j['id'], 'edit')
-
+        grant_access(self.test_user_1.get_personal_group(), Folder.get_by_id(j['id']), 'edit')
         self.login_test1()
         self.post('/upload/',
                   data={'folder': fname,
@@ -70,34 +69,34 @@ class UploadTest(TimRouteTest):
 
         self.login_test2()
         self.get(f'/files/{j["file"]}', expect_status=403)
-        grant_access(self.get_test_user_2_group_id(), d_id, 'view')
+        grant_access(self.test_user_2.get_personal_group(), d, 'view')
         self.get_no_warn(f'/files/{j["file"]}', expect_content='test file')
 
     def test_upload_image(self):
         self.login_test1()
-        d_id, j = self.create_doc_with_image()
+        di, j = self.create_doc_with_image()
         self.get_no_warn(f'/images/{j}', expect_content='GIF87a')
         self.get(f'/images/1{j}', expect_status=404)
         self.get(f'/images/{j}x', expect_status=404)
 
         self.login_test2()
         self.get(f'/images/{j}', expect_status=403)
-        grant_access(self.get_test_user_2_group_id(), d_id, 'view')
+        grant_access(self.test_user_2.get_personal_group(), di, 'view')
         self.get_no_warn(f'/images/{j}', expect_content='GIF87a', expect_mimetype='image/gif')
 
     def test_upload_copy_doc(self):
         self.login_test1()
-        d_id, j = self.create_doc_with_image()
-        d = self.create_doc(copy_from=d_id)
+        di, j = self.create_doc_with_image()
+        d = self.create_doc(copy_from=di.id)
         copy_id = d.id
-        grant_access(self.get_test_user_2_group_id(), d.id, 'view')
+        grant_access(self.test_user_2.get_personal_group(), d, 'view')
         self.login_test2()
         self.get_no_warn(f'/images/{j}', expect_content='GIF87a')
-        grant_access(self.get_test_user_2_group_id(), d_id, 'view')
+        grant_access(self.test_user_2.get_personal_group(), di, 'view')
         self.test_user_2.remove_access(copy_id, 'view')
         db.session.commit()
         self.get_no_warn(f'/images/{j}', expect_content='GIF87a')
-        self.test_user_2.remove_access(d_id, 'view')
+        self.test_user_2.remove_access(di.id, 'view')
         db.session.commit()
         self.get(f'/images/{j}', expect_status=403)
 
@@ -105,7 +104,7 @@ class UploadTest(TimRouteTest):
         d = self.create_doc()
         d_id = d.id
         j = self.upload_file(d, b'GIF87a', 'test.jpg')
-        return d_id, j['image']
+        return DocEntry.find_by_id(d_id), j['image']
 
     def test_upload_and_stamp(self):
         self.login_test1()

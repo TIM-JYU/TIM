@@ -7,6 +7,7 @@ import {timApp} from "../app";
 import {onClick} from "../document/eventhandlers";
 import {ViewCtrl} from "../document/viewctrl";
 import {IRights} from "../user/IRights";
+import {$window} from "../util/ngimport";
 import {Require} from "../util/utils";
 import {GenericPluginMarkup, Info, nullable, withDefault} from "./attributes";
 import "./timMenu.css";
@@ -74,7 +75,7 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
     private menu: ITimMenuItem[] = [];
     private vctrl?: Require<ViewCtrl>;
     private openingSymbol: string = "";
-    // private hoverOpen: boolean = true;
+    private hoverOpen: boolean = true;
     private separator: string = "";
     private topMenu: boolean = false;
     private basicColors: boolean = false;
@@ -84,11 +85,13 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
     private previouslyClicked: ITimMenuItem | undefined;
     private barStyle: string = "";
     private mouseInside: boolean = false; // Whether mouse cursor is inside the menu.
+    private clickedInside: boolean = false; // Whether a menu has been opened with mouse click.
     private userRights: IRights | undefined;
     private previousSwitch: number | undefined;
     private topMenuTriggerHeight: number | undefined; // Pixels to scroll before topMenu appears.
     private topMenuVisible: boolean = false; // Meant to curb unnecessary topMenu state changes.
     private previouslyScrollingDown: boolean = true;
+    private userPrefersHoverDisabled: boolean = false;
 
     getDefaultMarkup() {
         return {};
@@ -103,7 +106,6 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
             return;
         }
         this.menu = this.attrsall.menu;
-        // this.hoverOpen = this.attrs.hoverOpen;
         this.separator = this.attrs.separator;
         this.topMenu = this.attrs.topMenu;
         this.openAbove = this.attrs.openAbove;
@@ -114,7 +116,7 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
         if (this.attrs.openAbove && this.openingSymbol == "&#9662;") {
             this.openingSymbol = "&#9652;";
         }
-        if (this.topMenu) {
+        if (this.topMenu && !this.attrsall.preview) {
             // Divided by two because the check is half of the user given height towards either direction.
             this.topMenuTriggerHeight = Math.floor(this.attrs.topMenuTriggerHeight / 2);
             if (this.topMenuTriggerHeight == 0) {
@@ -136,12 +138,15 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
                 };
              */
         }
-
         this.setBarStyles();
         onClick("body", ($this, e) => {
             this.onClick(e);
         });
+        if ($window && $window.userPrefs && $window.userPrefs.disable_menu_hover) {
+            this.userPrefersHoverDisabled = $window.userPrefs.disable_menu_hover;
+        }
         this.userRights = this.vctrl.item.rights;
+        this.hoverOpen = this.attrs.hoverOpen && !this.userPrefersHoverDisabled;
     }
 
     protected getAttributeType() {
@@ -154,8 +159,13 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
      * @param item Clicked menu item.
      * @param parent1 Closest menu item parent.
      * @param parent2 Further menu item parent.
+     * @param clicked Toggled by a mouse click.
      */
-    toggleSubmenu(item: ITimMenuItem, parent1: ITimMenuItem | undefined, parent2: ITimMenuItem | undefined) {
+    toggleSubmenu(item: ITimMenuItem, parent1: ITimMenuItem | undefined, parent2: ITimMenuItem | undefined, clicked: boolean) {
+        // If called by mouseenter and hover open is disabled, do nothing.
+        if (!clicked && !this.hoverOpen) {
+            return;
+        }
         // Toggle open menu closed and back again when clicking.
         if (this.previouslyClicked && (this.previouslyClicked === item || item.open)) {
             item.open = !item.open;
@@ -346,12 +356,33 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
      */
     private onClick(e: JQuery.Event) {
         if (!this.mouseInside) {
-            for (const t1 of this.menu) {
-                this.closeAllInMenuItem(t1);
-            }
-            // Plugin won't update if clicked outside document area without this.
-            this.scope.$evalAsync();
+            this.clickedInside = false;
+            this.closeMenus();
+        } else {
+            this.clickedInside = true;
         }
+    }
+
+    /**
+     * Handle mouseleave event.
+     */
+    private mouseLeave() {
+        this.mouseInside = false;
+        // Only close menus on mouseleave, if hoverOpen is enabled and menu hasn't been clicked.
+        if (!this.clickedInside && this.hoverOpen) {
+            this.closeMenus();
+        }
+    }
+
+    /**
+     * Closes all menus and handles updating.
+     */
+    private closeMenus() {
+        for (const t1 of this.menu) {
+            this.closeAllInMenuItem(t1);
+        }
+        // Plugin won't update if clicked outside document area without this.
+        this.scope.$evalAsync();
     }
 }
 
@@ -365,18 +396,18 @@ timApp.component("timmenuRunner", {
 <tim-markup-error ng-if="::$ctrl.markupError" data="::$ctrl.markupError"></tim-markup-error>
 <span ng-cloak ng-if="$ctrl.topMenu" class="tim-menu-placeholder"></span>
 <span ng-cloak ng-if="$ctrl.topMenu" class="tim-menu-placeholder-content tim-menu-hidden"><br></span>
-<div id="{{$ctrl.menuId}}" class="tim-menu" ng-class="{'bgtim white': $ctrl.basicColors, 'hide-link-colors': !$ctrl.keepLinkColors}" style="{{$ctrl.barStyle}}" ng-mouseleave="$ctrl.mouseInside = false" ng-mouseenter="$ctrl.mouseInside = true">
+<div id="{{$ctrl.menuId}}" class="tim-menu" ng-class="{'bgtim white': $ctrl.basicColors, 'hide-link-colors': !$ctrl.keepLinkColors}" style="{{$ctrl.barStyle}}" ng-mouseleave="$ctrl.mouseLeave()" ng-mouseenter="$ctrl.mouseInside = true">
     <span ng-repeat="t1 in $ctrl.menu">
         <span ng-if="t1.items.length > 0 && $ctrl.hasRights(t1)" class="btn-group" style="{{$ctrl.setStyle(t1)}}">
-          <span ng-disabled="disabled" ng-bind-html="t1.text+$ctrl.openingSymbol" ng-click="$ctrl.toggleSubmenu(t1, undefined, undefined)"></span>
+          <span ng-disabled="disabled" ng-bind-html="t1.text+$ctrl.openingSymbol" ng-click="$ctrl.toggleSubmenu(t1, undefined, undefined, true)" ng-mouseenter="$ctrl.toggleSubmenu(t1, undefined, undefined, false)"></span>
           <ul class="tim-menu-dropdown" ng-if="t1.open" ng-class="$ctrl.openDirection(t1.id)" id="{{t1.id}}">
             <li class="tim-menu-list-item" ng-repeat="t2 in t1.items" style="{{$ctrl.setStyle(t2)}}">
                 <span class="tim-menu-item" ng-if="t2.items.length > 0 && $ctrl.hasRights(t2)">
-                    <span class="tim-menu-item" ng-bind-html="t2.text+$ctrl.openingSymbol" ng-click="$ctrl.toggleSubmenu(t2, t1, undefined)"></span>
+                    <span class="tim-menu-item" ng-bind-html="t2.text+$ctrl.openingSymbol" ng-click="$ctrl.toggleSubmenu(t2, t1, undefined, true)" ng-mouseenter="$ctrl.toggleSubmenu(t2, t1, undefined, false)"></span>
                     <ul class="tim-menu-dropdown" id="{{t2.id}}" ng-class="$ctrl.openDirection(t2.id)" ng-if="t2.open">
                         <li class="tim-menu-list-item" ng-repeat="t3 in t2.items" style="{{$ctrl.setStyle(t3)}}">
                             <span class="tim-menu-item" ng-if="t3.items.length > 0 && $ctrl.hasRights(t3)">
-                                <span class="tim-menu-item" ng-bind-html="t3.text+$ctrl.openingSymbol" ng-click="$ctrl.toggleSubmenu(t3, t2, t1)"></span>
+                                <span class="tim-menu-item" ng-bind-html="t3.text+$ctrl.openingSymbol" ng-click="$ctrl.toggleSubmenu(t3, t2, t1, true)" ng-mouseenter="$ctrl.toggleSubmenu(t3, t2, t1, false)"></span>
                                 <ul class="tim-menu-dropdown" id="{{t3.id}}" ng-class="$ctrl.openDirection(t3.id)" ng-if="t3.open">
                                     <li class="tim-menu-list-item" ng-repeat="t4 in t3.items" ng-bind-html="t4.text" style="{{$ctrl.setStyle(t4)}}" ng-if="$ctrl.hasRights(t4)"></li>
                                 </ul>

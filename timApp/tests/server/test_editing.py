@@ -211,7 +211,7 @@ class EditTest(TimRouteTest):
         par_manage = pars[1]
         par3 = pars[2]
         self.post_par(d.document, '#- {edit=manage}\ntest', par_manage.get_id())
-        self.test_user_2.grant_access(d.id, 'edit')
+        self.test_user_2.grant_access(d, 'edit')
 
         self.login_test2()
         self.post_par(d.document, 'asd', par1.get_id())
@@ -240,7 +240,7 @@ class EditTest(TimRouteTest):
                        expect_status=403)
         self.json_post(f'/unwrap_area/{d.id}/a', expect_status=403)
 
-        self.test_user_2.grant_access(d.id, 'manage')
+        self.test_user_2.grant_access(d, 'manage')
         self.post_par(d.document, '#- {edit=manage}\nedited', par1.get_id())
         self.update_whole_doc(d, d.document.export_markdown() + 'new')
         self.post_area(
@@ -324,7 +324,7 @@ macros:
 test
         """)
         d_id = d.id
-        grant_view_access(self.get_test_user_2_group_id(), d_id)
+        grant_view_access(self.test_user_2.get_personal_group(), d)
         par_ids = [p.get_id() for p in d.document.get_paragraphs()]
         self.login_test2()
         self.get(f'/getBlock/{d_id}/{par_ids[0]}', expect_status=403)

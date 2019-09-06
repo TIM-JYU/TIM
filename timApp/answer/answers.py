@@ -6,7 +6,7 @@ from operator import itemgetter
 from typing import List, Optional, Dict, Tuple, Iterable, Any
 
 from sqlalchemy import func, Numeric, Float, true
-from sqlalchemy.orm import selectinload, defaultload
+from sqlalchemy.orm import selectinload, defaultload, lazyload
 
 from timApp.answer.answer import Answer
 from timApp.answer.answer_models import AnswerTag, UserAnswer
@@ -354,7 +354,7 @@ def get_points_by_rule(points_rule: Optional[PointSumRule],
 
 
 def add_missing_users_from_group(result: List, usergroup: UserGroup):
-    users = set(usergroup.users.all())
+    users = set(usergroup.users)
     existing_users = set()
     for d in result:
         existing_users.add(d['user'])

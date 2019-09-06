@@ -32,7 +32,7 @@ class PermissionTest(TimRouteTest):
         self.login_test1()
         d = self.create_doc()
         docid = d.id
-        self.test_user_2.grant_access(docid, 'manage')
+        self.test_user_2.grant_access(d, 'manage')
         self.login_test2()
         self.json_put(f'/permissions/add/{docid}/testuser2/owner',
                       {'from': get_current_time(),

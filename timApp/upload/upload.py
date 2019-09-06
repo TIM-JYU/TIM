@@ -171,7 +171,7 @@ def pluginupload_file(doc_id: int, task_id: str):
             user=u,
             doc=d))
     f.block.set_owner(u.get_personal_group())
-    grant_access_to_session_users(f.id)
+    grant_access_to_session_users(f)
     mt = get_mimetype(f.filesystem_path.as_posix())
     db.session.commit()
     return json_response(
@@ -320,7 +320,7 @@ def upload_document(folder, file):
     content = validate_uploaded_document_content(file)
     validate_item_and_create_intermediate_folders(path, BlockType.Document, get_current_user_group_object())
 
-    doc = import_document(content, path, get_current_user_group())
+    doc = import_document(content, path, get_current_user_group_object())
     db.session.commit()
     return json_response({'id': doc.doc_id})
 

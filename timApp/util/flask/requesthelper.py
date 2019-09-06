@@ -1,9 +1,12 @@
 import itertools
+import json
 import pprint
 from typing import Optional
 
-from flask import Request, current_app, request
+from flask import Request, current_app
 from flask import request, abort
+from marshmallow import ValidationError
+from werkzeug.exceptions import HTTPException
 from werkzeug.wrappers import BaseRequest
 
 from timApp.auth.sessioninfo import get_current_user_object
@@ -103,3 +106,19 @@ def get_request_message(status_code=None, include_body=False):
     if not include_body or request.method not in ('POST', 'PUT', 'DELETE'):
         return msg
     return f'{msg}\n\n{pprint.pformat(request.get_json(silent=True) or request.get_data(as_text=True))}'
+
+
+class JSONException(HTTPException):
+    code = 400
+
+
+def load_data_from_req(schema):
+    ps = schema()
+    try:
+        j = request.get_json()
+        if j is None:
+            raise JSONException(description='JSON payload missing.')
+        p = ps.load(j)
+    except ValidationError as e:
+        raise JSONException(description=json.dumps(e.messages, sort_keys=True))
+    return p

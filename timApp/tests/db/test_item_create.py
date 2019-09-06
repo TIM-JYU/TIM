@@ -1,16 +1,16 @@
-from timApp.tests.db.timdbtest import TimDbTest
-from timApp.timdb.exceptions import TimDbException
 from timApp.document.docentry import DocEntry
 from timApp.folder.folder import Folder
-from timApp.user.usergroup import UserGroup
+from timApp.tests.db.timdbtest import TimDbTest
+from timApp.timdb.exceptions import TimDbException
 from timApp.timdb.sqa import db
+from timApp.user.usergroup import UserGroup
 
 
 class ItemCreateTest(TimDbTest):
     def test_no_document_subitem(self):
         """Tests that items cannot be created under documents and that an item
         cannot be created at the same path as some existing item."""
-        anon_group = UserGroup.get_anonymous_group().id
+        anon_group = UserGroup.get_anonymous_group()
         Folder.create('path/to/folder', anon_group)
         DocEntry.create('path/to/document', anon_group)
         db.session.commit()

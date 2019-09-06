@@ -69,7 +69,7 @@ def get_group_prefix(g: UserGroup):
 
 def get_potential_groups(u: User, course_filter: str=None) -> List[UserGroup]:
     """Returns all the Sisu groups that the user shall have access to."""
-    sisu_group_memberships = u.groups_dyn.join(ScimUserGroup).all()
+    sisu_group_memberships = u.groups_dyn.join(UserGroup).join(ScimUserGroup).with_entities(UserGroup).all()
     ug_filter = true()
     if not u.is_admin:
         accessible_prefixes = [get_group_prefix(g) for g in sisu_group_memberships]
@@ -202,7 +202,7 @@ def create_sisu_document(
         owner_group,
         validation_rule=ItemValidationRule(check_write_perm=False, require_login=False),
     )
-    return DocEntry.create(item_path, owner_group.id if owner_group else None, item_title)
+    return DocEntry.create(item_path, owner_group, item_title)
 
 
 display_name_re = re.compile(

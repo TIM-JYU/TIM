@@ -341,7 +341,7 @@ group: testuser1
         d = self.create_doc(initial_par="""
 #- {plugin=textfield #t}
         """)
-        self.test_user_2.grant_access(d.id, 'view')
+        self.test_user_2.grant_access(d, 'view')
         self.login_test2()
         d2 = self.create_jsrun(f"""
 group: testuser2
@@ -372,7 +372,7 @@ tools.setString("{d.id}.t", "hi");
         )
 
         # Can write own answer to another doc via jsrunner if teacher access there
-        self.test_user_2.grant_access(d.id, 'teacher')
+        self.test_user_2.grant_access(d, 'teacher')
         self.do_jsrun(
             d2,
         )
@@ -397,7 +397,7 @@ tools.setString("{d.id}.t", "hi_ext");
             expect_status=403,
             json_key='error',
         )
-        self.test_user_2.grant_access(d.id, 'view')
+        self.test_user_2.grant_access(d, 'view')
         self.do_jsrun(
             d2,
         )
@@ -434,7 +434,7 @@ tools.setString("t", "hi");
 !!
         """)
         d2.document.add_text('#- {#t plugin=textfield}')
-        self.test_user_2.grant_access(d2.id, 'view')
+        self.test_user_2.grant_access(d2, 'view')
         d3 = self.create_jsrun(f"""
 groups: []
 fields:
@@ -445,7 +445,7 @@ tools.setString("t", "hi");
 showInView: True
         """)
         d3.document.add_text('#- {#t plugin=textfield}')
-        self.test_user_2.grant_access(d3.id, 'view')
+        self.test_user_2.grant_access(d3, 'view')
         self.login_test2()
         self.do_jsrun(
             d2,

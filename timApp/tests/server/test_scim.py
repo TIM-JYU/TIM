@@ -1,5 +1,4 @@
 from operator import itemgetter
-from pprint import pprint
 from typing import List
 
 from timApp.auth.accesstype import AccessType
@@ -9,7 +8,7 @@ from timApp.sisu.scim import SISU_GROUP_PREFIX
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.timdb.sqa import db
 from timApp.user.user import User, UserOrigin
-from timApp.user.usergroup import UserGroup, DELETED_GROUP_PREFIX, CUMULATIVE_GROUP_PREFIX
+from timApp.user.usergroup import UserGroup, DELETED_GROUP_PREFIX
 from timApp.util.utils import seq_to_str
 
 a = ('t', 'pass')
@@ -265,8 +264,6 @@ class ScimTest(TimRouteTest):
         )
         self.json_delete(f'/scim/Groups/{group_id}', auth=a, expect_status=204)
         self.json_delete(f'/scim/Groups/{group_id}', auth=a, expect_status=404)
-        g = UserGroup.get_by_name(f'{CUMULATIVE_GROUP_PREFIX}{SISU_GROUP_PREFIX}{eid}')
-        self.assertEqual(3, len(g.users.all()))
         deleted_group = UserGroup.get_by_name(f'{DELETED_GROUP_PREFIX}{SISU_GROUP_PREFIX}{eid}')
         self.assertIsNotNone(deleted_group)
 
@@ -397,7 +394,7 @@ class ScimTest(TimRouteTest):
                     {'value': 'someone2', 'display': 'Sisu User', 'email': 'zzz@example.com'},
                 ]),
             }, auth=a,
-            **scim_error("Key (email)=(zzz@example.com) already exists."),
+            **scim_error("Key (email)=(zzz@example.com) already exists. Conflicting username is: someone2"),
         )
 
         User.create_with_group(name='xxx@example.com', real_name='Some Guy', email='xxx@example.com',
@@ -424,7 +421,7 @@ class ScimTest(TimRouteTest):
                     {'value': 'ccc', 'display': 'Sisu User', 'email': 'xxx@example.com'},
                 ]),
             }, auth=a,
-            **scim_error("Key (email)=(xxx@example.com) already exists."),
+            **scim_error("Key (email)=(xxx@example.com) already exists. Conflicting username is: ccc"),
         )
 
     def test_duplicate_usernames(self):
@@ -800,8 +797,8 @@ class ScimTest(TimRouteTest):
         self.make_admin(u)
         self.login(username=u.name)
         ug = UserGroup.get_by_external_id('jy-CUR-7777-teachers')
-        self.get(
-            f'/groups/addmember/{ug.name}/{u.name},{u2.name}',
+        self.json_post(
+            f'/groups/addmember/{ug.name}', {'names': [u.name, u2.name]}
         )
 
         # The SCIM routes must not report the manually added users.
@@ -827,19 +824,19 @@ class ScimTest(TimRouteTest):
 
         # The manually added user should not get deleted on SCIM update.
         ug = UserGroup.get_by_external_id(eid)
-        self.assertEqual(3, len(ug.users.all()))
+        self.assertEqual(3, len(ug.users))
 
-        self.get(
-            f'/groups/removemember/{ug.name}/abc',
+        self.json_post(
+            f'/groups/removemember/{ug.name}', {'names': ['abc']},
             expect_status=400,
             expect_content='Cannot remove not-manually-added users from Sisu groups.',
             json_key='error',
         )
-        self.get(
-            f'/groups/removemember/{ug.name}/anon@example.com',
+        self.json_post(
+            f'/groups/removemember/{ug.name}', {'names': ['anon@example.com']}
         )
-        self.get(
-            f'/groups/removemember/{ug.name}/mameikal',
+        self.json_post(
+            f'/groups/removemember/{ug.name}', {'names': ['mameikal']}
         )
 
     def check_no_group_access(self, username: str, externalids: List[str], no_access_expected=None):

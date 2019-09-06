@@ -1,26 +1,25 @@
-import json
 import re
-import traceback
 from typing import List, Optional, Dict
 
 import attr
 from flask import Blueprint, request, current_app, Response
-from marshmallow import Schema, fields, post_load, ValidationError, missing, pre_load
+from marshmallow import Schema, fields, post_load, missing, pre_load
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import aliased
 from webargs.flaskparser import use_args
 
 from timApp.auth.login import create_or_update_user
 from timApp.sisu.scimusergroup import ScimUserGroup, external_id_re
 from timApp.sisu.sisu import parse_sisu_group_display_name, refresh_sisu_grouplist_doc, send_course_group_mail
-from timApp.util.flask.requesthelper import get_request_message
 from timApp.tim_app import csrf
 from timApp.timdb.sqa import db
 from timApp.user.scimentity import get_meta
-from timApp.user.user import User, UserOrigin, last_name_to_first
-from timApp.user.usergroup import UserGroup, tim_group_to_scim, SISU_GROUP_PREFIX, DELETED_GROUP_PREFIX, \
-    CUMULATIVE_GROUP_PREFIX
+from timApp.user.user import User, UserOrigin, last_name_to_first, SCIM_USER_NAME
+from timApp.user.usergroup import UserGroup, tim_group_to_scim, SISU_GROUP_PREFIX, DELETED_GROUP_PREFIX
+from timApp.user.usergroupmember import UserGroupMember, membership_current
+from timApp.util.flask.requesthelper import load_data_from_req, JSONException
 from timApp.util.flask.responsehelper import json_response
-from timApp.util.logger import log_warning, log_error, log_info
+from timApp.util.logger import log_warning
 from timApp.util.utils import remove_path_special_chars
 
 scim = Blueprint('scim',
@@ -297,7 +296,10 @@ def put_group(group_id: str):
     # log_info(get_request_message(include_body=True))
     try:
         ug = get_group_by_scim(group_id)
-        d = load_data_from_req(SCIMGroupSchema)
+        try:
+            d = load_data_from_req(SCIMGroupSchema)
+        except JSONException as e:
+            raise SCIMException(422, e.description)
         update_users(ug, d)
         db.session.commit()
         return json_response(group_scim(ug))
@@ -330,7 +332,10 @@ def put_user(user_id):
     u = User.get_by_name(user_id)
     if not u:
         raise SCIMException(404, 'User not found.')
-    um: SCIMUserModel = load_data_from_req(SCIMUserSchema)
+    try:
+        um: SCIMUserModel = load_data_from_req(SCIMUserSchema)
+    except JSONException as e:
+        raise SCIMException(422, e.description)
     u.real_name = last_name_to_first(um.displayName)
     if um.emails:
         u.email = um.emails[0].value
@@ -338,16 +343,7 @@ def put_user(user_id):
     return json_response(u.get_scim_data())
 
 
-def load_data_from_req(schema):
-    ps = schema()
-    try:
-        j = request.get_json()
-        if j is None:
-            raise SCIMException(422, 'JSON payload missing.')
-        p = ps.load(j)
-    except ValidationError as e:
-        raise SCIMException(422, json.dumps(e.messages, sort_keys=True))
-    return p
+email_error_re = re.compile(r"Key \(email\)=\((?P<email>[^()]+)\) already exists.")
 
 
 def update_users(ug: UserGroup, args: SCIMGroupModel):
@@ -359,15 +355,9 @@ def update_users(ug: UserGroup, args: SCIMGroupModel):
     else:
         if ug.external_id.external_id != args.externalId:
             raise SCIMException(422, 'externalId unexpectedly changed')
-    c_name = f'{CUMULATIVE_GROUP_PREFIX}{external_id}'
-    cumulative_group = UserGroup.get_by_name(c_name)
-    if not cumulative_group:
-        cumulative_group = UserGroup.create(c_name)
     removed_user_names = set(u.name for u in ug.users) - set(u.value for u in args.members)
-    removed_users = User.query.filter(User.name.in_(removed_user_names)).all()
-    for u in removed_users:
-        if u in cumulative_group.users:  # Don't remove manually added users
-            ug.users.remove(u)
+    for ms in get_scim_memberships(ug).filter(User.name.in_(removed_user_names)).with_entities(UserGroupMember):
+        ms.set_expired()
     p = parse_sisu_group_display_name(args.displayName)
     if not p:
         raise SCIMException(422, f'Unexpected displayName format: {args.displayName}')
@@ -382,46 +372,43 @@ def update_users(ug: UserGroup, args: SCIMGroupModel):
         raise SCIMException(422, f'The users do not have distinct usernames.')
 
     added_users = set()
-    for u in args.members:
-        if u.name:
-            expected_name = u.name.derive_full_name(last_name_first=True)
-            consistent = (u.display.endswith(' ' + u.name.familyName)
-                          # There are some edge cases that prevent this condition from working, so it has been disabled.
-                          # and set(expected_name.split(' ')[1:]) == set(u.display.split(' ')[:-1])
-                          )
-            if not consistent:
-                raise SCIMException(
-                    422,
-                    f"The display attribute '{u.display}' is inconsistent with the name attributes: "
-                    f"given='{u.name.givenName}', middle='{u.name.middleName}', family='{u.name.familyName}'.")
-            name_to_use = expected_name
-        else:
-            name_to_use = last_name_to_first(u.display)
-        try:
-            user = create_or_update_user(
-                u.email,
-                name_to_use,
-                u.value,
-                origin=UserOrigin.Sisu,
-                allow_finding_by_email='EmailUsersOnly',
-            )
-        except IntegrityError as e:
-            db.session.rollback()
-            raise SCIMException(422, e.orig.diag.message_detail) from e
-        if ug not in user.groups:
-            user.groups.append(ug)
-            added_users.add(user)
+    scimuser = User.get_scimuser()
+    with db.session.no_autoflush:
+        for u in args.members:
+            if u.name:
+                expected_name = u.name.derive_full_name(last_name_first=True)
+                consistent = (u.display.endswith(' ' + u.name.familyName)
+                              # There are some edge cases that prevent this condition from working, so it has been disabled.
+                              # and set(expected_name.split(' ')[1:]) == set(u.display.split(' ')[:-1])
+                              )
+                if not consistent:
+                    raise SCIMException(
+                        422,
+                        f"The display attribute '{u.display}' is inconsistent with the name attributes: "
+                        f"given='{u.name.givenName}', middle='{u.name.middleName}', family='{u.name.familyName}'.")
+                name_to_use = expected_name
+            else:
+                name_to_use = last_name_to_first(u.display)
+            try:
+                user = create_or_update_user(
+                    u.email,
+                    name_to_use,
+                    u.value,
+                    origin=UserOrigin.Sisu,
+                    allow_finding_by_email='EmailUsersOnly',
+                )
+            except IntegrityError as e:
+                db.session.rollback()
+                return raise_conflict_error(args, e)
+            added = user.add_to_group(ug, added_by=scimuser)
+            if added:
+                added_users.add(user)
 
-        # This flush basically gets rid of a vague error message about AppenderBaseQuery
-        # if an error (UniqueViolation) occurs during a server test (because of an error in test code).
-        # It is not strictly necessary.
-        try:
-            db.session.flush()
-        except IntegrityError as e:
-            db.session.rollback()
-            raise SCIMException(422, e.orig.diag.message_detail) from e
-        if user not in cumulative_group.users:
-            cumulative_group.users.append(user)
+    try:
+        db.session.flush()
+    except IntegrityError as e:
+        db.session.rollback()
+        return raise_conflict_error(args, e)
     refresh_sisu_grouplist_doc(ug)
 
     # Possibly just checking is_responsible_teacher could be enough.
@@ -433,6 +420,20 @@ def update_users(ug: UserGroup, args: SCIMGroupModel):
             send_course_group_mail(p, u)
 
 
+def raise_conflict_error(args, e):
+    msg = e.orig.diag.message_detail
+    m = email_error_re.fullmatch(msg)
+    if m:
+        em = m.group('email')
+        member = None
+        for x in args.members:
+            if x.email == em:
+                member = x
+                break
+        msg += " Conflicting username is: " + member.value
+    raise SCIMException(422, msg) from e
+
+
 def is_manually_added(u: User):
     """It is possible to add user manually to SCIM groups.
     For now we assume that any email user is such.
@@ -440,18 +441,27 @@ def is_manually_added(u: User):
     return u.is_email_user
 
 
+# Required in group_scim because we need to join User table twice.
+user_adder = aliased(User)
+
+
+def get_scim_memberships(ug: UserGroup):
+    return (ug.memberships
+            .join(user_adder, UserGroupMember.adder)
+            .join(User, UserGroupMember.user)
+            .filter(membership_current & (user_adder.name == SCIM_USER_NAME))
+            )
+
+
 def group_scim(ug: UserGroup):
     def members():
-        cumulative = ug.get_cumulative()
-        if not cumulative:
-            raise SCIMException(422, f'Cumulative group missing for {ug.name}')
-        for u in ug.users.all():  # type: User
-            if u in cumulative.users:
-                yield {
-                    'value': u.scim_id,
-                    '$ref': u.scim_location,
-                    'display': u.scim_display_name,
-                }
+        db.session.expire(ug)
+        for u in get_scim_memberships(ug).with_entities(User):
+            yield {
+                'value': u.scim_id,
+                '$ref': u.scim_location,
+                'display': u.scim_display_name,
+            }
 
     return {
         **ug.get_scim_data(),

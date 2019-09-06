@@ -11,9 +11,9 @@ Tested routes from velp.py:
   /<int:doc_id>/create_velp_group
   /<int:doc_id>/create_default_velp_group
 """
-from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.document.docentry import DocEntry
 from timApp.folder.folder import Folder
+from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.timdb.sqa import db
 
 
@@ -29,8 +29,8 @@ class VelpTest(TimRouteTest):
         root_velp_group_folder = "velp-groups"
         user_velp_group_folder = f"{user_folder}/velp-groups"  # users/testuser1/velp groups
         deep_velp_group_folder = f"{deeper_folder}/velp-groups"  # users/testuser1/test/velp groups
-        t1g = self.get_test_user_1_group_id()
-        t2g = self.get_test_user_2_group_id()
+        t1g = self.test_user_1.get_personal_group()
+        t2g = self.test_user_2.get_personal_group()
         Folder.create(user_folder, t1g)
         Folder.create(deeper_folder, t1g)
         Folder.create(root_velp_group_folder, t1g)
@@ -69,7 +69,7 @@ class VelpTest(TimRouteTest):
         # User should only see one of them as velp group due to lack of view right for the other
         test_group1 = f'{user_velp_group_folder}/test1/test_group1'
         test_group2 = f'{user_velp_group_folder}/test1/test_group2'
-        DocEntry.create(test_group1, t1g)
+        DocEntry.create(test_group1, self.test_user_1.get_personal_group())
         DocEntry.create(test_group2, t2g)
         db.session.commit()
         resp = self.get(f'/{str(doc1_id)}/get_velp_groups')
@@ -77,7 +77,7 @@ class VelpTest(TimRouteTest):
 
         # Create default velp group manually for test 3 file which route notices and turns that document to a velp group
         test3_default_path = f'{deep_velp_group_folder}/test3/test3_default'
-        test3_default = DocEntry.create(test3_default_path, t1g).document
+        test3_default = DocEntry.create(test3_default_path, self.test_user_1.get_personal_group()).document
         db.session.commit()
         test3_default_id = test3_default.doc_id
         j = self.json_post(f'/{str(doc3_id)}/create_default_velp_group')
@@ -91,7 +91,7 @@ class VelpTest(TimRouteTest):
         # Add velp group to root velp group folder
         # Both documents test1 and test3 should now have one more velp group to use
         test_group3 = f'{root_velp_group_folder}/test_group3'
-        DocEntry.create(test_group3, t1g)
+        DocEntry.create(test_group3, self.test_user_1.get_personal_group())
         db.session.commit()
         resp = self.get(f'/{str(doc1_id)}/get_velp_groups')
         self.assertEqual(len(resp), 4)

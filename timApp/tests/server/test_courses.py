@@ -1,3 +1,4 @@
+from timApp.document.docentry import DocEntry
 from timApp.item.tag import TagType, Tag
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.timdb.sqa import db
@@ -70,7 +71,7 @@ class CoursesTest(TimRouteTest):
             json_key='error',
         )
 
-        db.session.add(d.block)
+        d = DocEntry.find_by_id(d.id)
         d.block.tags.append(Tag(name='test', type=TagType.CourseCode))
         db.session.commit()
         self.json_post(

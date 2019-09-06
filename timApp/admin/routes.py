@@ -70,7 +70,7 @@ def search_users(term: str):
     result = User.query.filter(
         User.name.ilike(f'%{term}%') |
         User.real_name.ilike(f'%{term}%') |
-        User.email.ilike(f'%{term}%')).all()
+        User.email.ilike(f'%{term}%')).order_by(User.id).all()
     return json_response(result)
 
 

@@ -1,13 +1,14 @@
 import hashlib
 from datetime import datetime, timedelta
-from typing import Optional, List
+from typing import Optional, List, Union
 
 import bcrypt
 
 from timApp.auth.auth_models import AccessType, BlockAccess
 from timApp.document.specialnames import TEMPLATE_FOLDER_NAME
 from timApp.folder.folder import Folder
-from timApp.item.block import BlockType
+from timApp.item.block import BlockType, Block
+from timApp.item.item import ItemBase
 from timApp.timdb.exceptions import TimDbException
 from timApp.timdb.sqa import db
 from timApp.user.special_group_names import ANONYMOUS_GROUPNAME, \
@@ -59,30 +60,30 @@ def get_access_type_id(access_type):
     return access_type_map[access_type]
 
 
-def grant_edit_access(group_id: int, block_id: int):
+def grant_edit_access(group, block):
     """Grants edit access to a group for a block.
 
-    :param group_id: The group id to which to grant view access.
-    :param block_id: The id of the block for which to grant view access.
+    :param group: The group to which to grant view access.
+    :param block: The block for which to grant view access.
 
     """
 
-    grant_access(group_id, block_id, 'edit')
+    grant_access(group, block, 'edit')
 
 
-def grant_view_access(group_id: int, block_id: int):
+def grant_view_access(group, block):
     """Grants view access to a group for a block.
 
-    :param group_id: The group id to which to grant view access.
-    :param block_id: The id of the block for which to grant view access.
+    :param group: The group to which to grant view access.
+    :param block: The block for which to grant view access.
 
     """
 
-    grant_access(group_id, block_id, 'view')
+    grant_access(group, block, 'view')
 
 
-def grant_access(group_id: int,
-                 block_id: int,
+def grant_access(group,
+                 block: Union[ItemBase, Block],
                  access_type: str,
                  accessible_from: Optional[datetime] = None,
                  accessible_to: Optional[datetime] = None,
@@ -98,8 +99,8 @@ def grant_access(group_id: int,
     :param accessible_to: The optional end time for the permission.
     :param duration: The optional duration for the permission.
     :param commit: Whether to commit changes immediately.
-    :param group_id: The group id to which to grant view access.
-    :param block_id: The id of the block for which to grant view access.
+    :param group: The group to which to grant view access.
+    :param block: The block for which to grant view access.
     :param access_type: The kind of access. Possible values are listed in accesstype table.
     :return: The BlockAccess object.
 
@@ -111,15 +112,25 @@ def grant_access(group_id: int,
 
     access_id = get_access_type_id(access_type)
     assert access_id is not None
-    ba = BlockAccess(block_id=block_id,
-                     usergroup_id=group_id,
+    block = block if isinstance(block, Block) else block.block
+    for b in group.accesses:  # type: BlockAccess
+        if b.type == access_id and b.block_id == block.id:
+            b.accessible_from = accessible_from
+            b.accessible_to = accessible_to
+            b.duration = duration
+            b.duration_from = duration_from
+            b.duration_to = duration_to
+            if commit:
+                db.session.commit()
+            return b
+    ba = BlockAccess(block_id=block.id,
                      type=access_id,
                      accessible_from=accessible_from,
                      accessible_to=accessible_to,
                      duration_from=duration_from,
                      duration_to=duration_to,
                      duration=duration)
-    db.session.merge(ba)
+    group.accesses.append(ba)
     if commit:
         db.session.commit()
     return ba
@@ -158,11 +169,11 @@ def get_default_right_document(folder_id, object_type: BlockType, create_if_not_
     # we don't want to have an owner in the default rights by default
     doc = folder.get_document(right_doc_path,
                               create_if_not_exist=create_if_not_exist,
-                              creator_group_id=None)
+                              creator_group=None)
     return doc
 
 
-def grant_default_access(group_ids: List[int],
+def grant_default_access(groups,
                          folder_id: int,
                          access_type: str,
                          object_type: BlockType,
@@ -173,9 +184,9 @@ def grant_default_access(group_ids: List[int],
                          duration: Optional[timedelta] = None) -> List[BlockAccess]:
     doc = get_default_right_document(folder_id, object_type, create_if_not_exist=True)
     accesses = []
-    for group_id in group_ids:
-        accesses.append(grant_access(group_id,
-                                     doc.id,
+    for group in groups:
+        accesses.append(grant_access(group,
+                                     doc,
                                      access_type,
                                      commit=False,
                                      accessible_from=accessible_from,

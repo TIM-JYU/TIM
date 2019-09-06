@@ -4,6 +4,7 @@ import re
 import time
 from collections import defaultdict
 from datetime import datetime
+from enum import Enum, unique
 from typing import List, Optional, Tuple, DefaultDict, Dict
 
 import attr
@@ -11,7 +12,7 @@ import dateutil.parser
 import pytz
 from marshmallow import missing
 from sqlalchemy import func, true
-from sqlalchemy.orm import defaultload
+from sqlalchemy.orm import lazyload, joinedload
 from werkzeug.exceptions import abort
 
 from timApp.answer.answer import Answer
@@ -89,11 +90,34 @@ class TallyField:
         )
 
 
-def get_fields_and_users(u_fields: List[str], groups: List[UserGroup],
-                         d: DocInfo, current_user: User, autoalias: bool = False,
-                         add_missing_fields: bool = False, allow_non_teacher: bool = False, valid_only: bool = True):
+@unique
+class MembershipFilter(Enum):
+    All = 'all'
+    Current = 'current'
+    Deleted = 'deleted'
+
+
+member_filter_relation_map = {
+    MembershipFilter.All: User.groups_dyn,
+    MembershipFilter.Current: User.groups,
+    MembershipFilter.Deleted: User.groups_inactive,
+}
+
+
+def get_fields_and_users(
+        u_fields: List[str],
+        groups: List[UserGroup],
+        d: DocInfo,
+        current_user: User,
+        autoalias: bool = False,
+        add_missing_fields: bool = False,
+        allow_non_teacher: bool = False,
+        valid_only: bool = True,
+        member_filter_type: MembershipFilter = MembershipFilter.Current,
+):
     """
     Return fielddata, aliases, field_names
+    :param member_filter_type: Whether to use all, current or deleted users in groups.
     :param u_fields: list of fields to be used
     :param groups: user groups to be used
     :param d: default document
@@ -206,7 +230,8 @@ def get_fields_and_users(u_fields: List[str], groups: List[UserGroup],
                 pass
 
     group_filter = UserGroup.id.in_([ug.id for ug in groups])
-    tally_field_values = get_tally_field_values(d, doc_map, group_filter, tally_fields)
+    join_relation = member_filter_relation_map[member_filter_type]
+    tally_field_values = get_tally_field_values(d, doc_map, group_filter, join_relation, tally_fields)
     sub = []
     if valid_only:
         filt = (Answer.valid == True)
@@ -219,7 +244,7 @@ def get_fields_and_users(u_fields: List[str], groups: List[UserGroup],
         sub += (
             Answer.query.filter(Answer.task_id.in_(task_ids_to_strlist(task_chunk)) & filt)
                 .join(User, Answer.users)
-                .join(UserGroup, User.groups)
+                .join(UserGroup, join_relation)
                 .filter(group_filter)
                 .group_by(Answer.task_id, User.id)
                 .with_entities(func.max(Answer.id), User.id)
@@ -228,14 +253,17 @@ def get_fields_and_users(u_fields: List[str], groups: List[UserGroup],
     aid_uid_map = {}
     for aid, uid in sub:
         aid_uid_map[aid] = uid
-    users = (
-        UserGroup.query.filter(group_filter)
-            .join(User, UserGroup.users)
-            .options(defaultload(UserGroup.users).lazyload(User.groups))
+    q = (
+        User.query
+            .join(UserGroup, join_relation)
+            .filter(group_filter)
             .with_entities(User)
             .order_by(User.id)
-            .all()
+            .options(lazyload(User.groups))
     )
+    if member_filter_type != MembershipFilter.Current:
+        q = q.options(joinedload(User.memberships))
+    users = q.all()
     user_map = {}
     for u in users:
         user_map[u.id] = u
@@ -300,13 +328,19 @@ def get_fields_and_users(u_fields: List[str], groups: List[UserGroup],
                             value = values_p[0]
             user_tasks[alias_map.get(task.extended_or_doc_task, task.extended_or_doc_task)] = value
             user_fieldstyles[alias_map.get(task.extended_or_doc_task, task.extended_or_doc_task)] = style
-    return res, jsrunner_alias_map, [alias_map.get(ts.extended_or_doc_task, ts.extended_or_doc_task) for ts in task_ids]
+    return (
+        res,
+        jsrunner_alias_map,
+        [alias_map.get(ts.extended_or_doc_task, ts.extended_or_doc_task) for ts in task_ids],
+        groups,
+    )
 
 
 def get_tally_field_values(
         d: DocInfo,
         doc_map: Dict[int, Document],
         group_filter,
+        join_relation,
         tally_fields: List[Tuple[TallyField, Optional[str]]],
 ):
     tally_field_values: DefaultDict[int, List[Tuple[float, str]]] = defaultdict(list)
@@ -331,7 +365,8 @@ def get_tally_field_values(
         pts = get_points_by_rule(
             points_rule=psr,
             task_ids=tids,
-            user_ids=User.query.join(UserGroup, User.groups).filter(group_filter).with_entities(User.id).subquery(),
+            user_ids=User.query.join(UserGroup, join_relation).filter(
+                group_filter).with_entities(User.id).subquery(),
             flatten=True,
             answer_filter=ans_filter,
         )

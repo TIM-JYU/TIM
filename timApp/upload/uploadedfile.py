@@ -62,6 +62,7 @@ class UploadedFile(ItemBase):
 
     @property
     def relative_filesystem_path(self):
+        assert self.id is not None
         return Path(str(self.id)) / self.filename
 
     @property
@@ -105,6 +106,7 @@ class UploadedFile(ItemBase):
             db.session.add(au)
         else:
             file_block = insert_block(block_type=block_type, description=secured_name)
+        db.session.flush()
         f = CLASS_MAPPING[block_type](file_block)
         p = f.filesystem_path
         p.parent.mkdir(parents=True)

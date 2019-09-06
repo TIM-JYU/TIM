@@ -1,6 +1,9 @@
+from operator import attrgetter
 from typing import Tuple, List, Dict, Any
 
+import attr
 from flask import Blueprint, abort
+from marshmallow import Schema, fields, post_load
 
 from timApp.auth.accesshelper import verify_admin, check_admin_access, get_doc_or_abort, verify_view_access
 from timApp.auth.accesstype import AccessType
@@ -10,11 +13,11 @@ from timApp.document.create_item import apply_template, create_document
 from timApp.document.docinfo import DocInfo
 from timApp.item.tag import TagType
 from timApp.item.validation import ItemValidationRule
-from timApp.timdb.dbaccess import get_timdb
 from timApp.timdb.sqa import db
 from timApp.user.special_group_names import SPECIAL_GROUPS, PRIVILEGED_GROUPS
 from timApp.user.user import User, view_access_set, edit_access_set
 from timApp.user.usergroup import UserGroup
+from timApp.util.flask.requesthelper import load_data_from_req
 from timApp.util.flask.responsehelper import json_response, ok_response
 from timApp.util.utils import remove_path_special_chars, get_current_time
 
@@ -54,7 +57,7 @@ def show_members(groupname):
     if not ug:
         abort(404, USERGROUP_NOT_FOUND)
     verify_group_view_access(ug)
-    return json_response(ug.users.all())
+    return json_response(sorted(list(ug.users), key=attrgetter('id')))
 
 
 @groups.route('/usergroups/<username>')
@@ -180,7 +183,7 @@ def verify_group_view_access(ug: UserGroup, user=None, require=True):
     return verify_group_access(ug, view_access_set, user, require=require)
 
 
-def get_member_infos(groupname: str, usernames: str):
+def get_member_infos(groupname: str, usernames: List[str]):
     usernames = get_usernames(usernames)
     group, users = get_uid_gid(groupname, usernames)
     verify_group_edit_access(group)
@@ -190,36 +193,60 @@ def get_member_infos(groupname: str, usernames: str):
     return existing_ids, group, not_exist, usernames, users
 
 
-@groups.route('/addmember/<groupname>/<usernames>')
-def add_member(usernames, groupname):
-    existing_ids, group, not_exist, usernames, users = get_member_infos(groupname, usernames)
+@attr.s(auto_attribs=True)
+class NamesModel:
+    names: List[str]
+
+
+class NamesSchema(Schema):
+    names = fields.List(fields.Str(), required=True)
+
+    @post_load
+    def make_obj(self, data):
+        return NamesModel(**data)
+
+
+@groups.route('/addmember/<groupname>', methods=['post'])
+def add_member(groupname):
+    nm: NamesModel = load_data_from_req(NamesSchema)
+    existing_ids, group, not_exist, usernames, users = get_member_infos(groupname, nm.names)
     already_exists = set(u.name for u in group.users) & set(usernames)
     added = []
+    curr = get_current_user_object()
     for u in users:
         if u.id not in existing_ids:
-            u.groups.append(group)
+            u.add_to_group(group, added_by=curr)
             added.append(u.name)
     db.session.commit()
-    return json_response({'already_belongs': sorted(list(already_exists)), 'added': added, 'not_exist': not_exist})
+    return json_response({
+        'already_belongs': sorted(list(already_exists)),
+        'added': sorted(added),
+        'not_exist': sorted(not_exist),
+    })
 
 
-@groups.route('/removemember/<groupname>/<usernames>')
-def remove_member(usernames, groupname):
-    existing_ids, group, not_exist, usernames, users = get_member_infos(groupname, usernames)
+@groups.route('/removemember/<groupname>', methods=['post'])
+def remove_member(groupname):
+    nm: NamesModel = load_data_from_req(NamesSchema)
+    existing_ids, group, not_exist, usernames, users = get_member_infos(groupname, nm.names)
     removed = []
     does_not_belong = []
     ensure_manually_added = group.is_sisu
-    cumulative = group.get_cumulative() if ensure_manually_added else None
+    su = User.get_scimuser()
     for u in users:
         if u.id not in existing_ids:
             does_not_belong.append(u.name)
             continue
-        if ensure_manually_added and u in cumulative.users:
+        if ensure_manually_added and group.current_memberships[u.id].adder == su:
             abort(400, 'Cannot remove not-manually-added users from Sisu groups.')
-        u.groups.remove(group)
+        group.current_memberships[u.id].set_expired()
         removed.append(u.name)
     db.session.commit()
-    return json_response({'removed': removed, 'does_not_belong': does_not_belong, 'not_exist': not_exist})
+    return json_response({
+        'removed': sorted(removed),
+        'does_not_belong': sorted(does_not_belong),
+        'not_exist': sorted(not_exist),
+    })
 
 
 def is_course(d: DocInfo):
@@ -246,7 +273,7 @@ def enroll_to_course(doc_id: int):
         return abort(400, 'Document is not tagged as a course')
 
 
-def get_usernames(usernames: str):
-    usernames = list(set([name.strip() for name in usernames.split(',')]))
+def get_usernames(usernames: List[str]):
+    usernames = list(set([name.strip() for name in usernames]))
     usernames.sort()
     return usernames

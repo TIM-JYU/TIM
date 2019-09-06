@@ -10,6 +10,7 @@ import {Users} from "./userService";
 interface ISettings {
     css_combined: string;
     custom_css: string;
+    disable_menu_hover: boolean;
 }
 
 export async function setConsent(c: ConsentType) {
@@ -31,7 +32,7 @@ export class SettingsCtrl implements IController {
     private storageClear = false;
 
     constructor() {
-        this.settings = $window.settings;
+        this.settings = $window.userPrefs;
         this.cssFiles = $window.css_files;
         this.notifications = $window.notifications;
         this.updateCss();
@@ -167,6 +168,16 @@ timApp.component("timSettings", {
         </div>
 
     </bootstrap-panel>
+
+    <bootstrap-panel title="Menus">
+        <div class="checkbox"><label>
+            <input type="checkbox" name="disable_menu_hover" ng-model="$ctrl.settings.disable_menu_hover"
+            ng-disabled="$ctrl.saving"> Disable opening menus with mouse hover
+        </label></div>
+        <button class="timButton" ng-disabled="$ctrl.saving" ng-click="$ctrl.submit()">Save changes</button>
+        <tim-loading ng-show="$ctrl.saving"></tim-loading>
+    </bootstrap-panel>
+
     <bootstrap-panel title="Other settings">
         <button class="btn btn-default" ng-click="$ctrl.clearLocalStorage()">Clear local settings storage</button>
         <span ng-if="$ctrl.storageClear">Local storage cleared.</span>

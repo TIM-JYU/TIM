@@ -20,7 +20,7 @@ class NotifyTestBase(TimRouteTest):
         d = self.create_doc()
         title = d.title
         url = d.url
-        self.test_user_2.grant_access(d.id, 'view')
+        self.test_user_2.grant_access(d, 'view')
         self.new_par(d.document, 'test')
         self.assertEqual([], sent_mails_in_testing)
         self.login_test2()
@@ -76,7 +76,7 @@ class NotifyTest(NotifyTestBase):
             'subject': f'Someone modified a paragraph in the document {title}'
         }, sent_mails_in_testing[-1])
 
-        self.test_user_2.grant_access(d.id, 'edit')
+        self.test_user_2.grant_access(d, 'edit')
         self.new_par(d.document, 'test')
         process_pending_notifications()
         pars = d.document.get_paragraphs()
@@ -122,7 +122,7 @@ class NotifyTest(NotifyTestBase):
             'subject': f'Someone deleted a paragraph from the document {title}'
         }, sent_mails_in_testing[-1])
 
-        self.test_user_2.grant_access(d.id, 'teacher')
+        self.test_user_2.grant_access(d, 'teacher')
         self.new_par(d.document, 'test')
         process_pending_notifications()
         pars = d.document.get_paragraphs()
@@ -156,7 +156,7 @@ class NotifyTest(NotifyTestBase):
 #- {plugin=csPlugin #t}
 stem: test
         """)
-        self.test_user_2.grant_access(d.id, 'teacher')
+        self.test_user_2.grant_access(d, 'teacher')
         self.post_comment(plug, public=True, text='Hello')
         process_pending_notifications()
         self.assertEqual(
@@ -175,7 +175,7 @@ class NotifyFolderTest(NotifyTestBase):
     def test_folder_email(self):
         self.login_test1()
         t1_f = self.current_user.get_personal_folder()
-        self.test_user_2.grant_access(t1_f.id, 'view')
+        self.test_user_2.grant_access(t1_f, 'view')
         self.login_test2()
         self.update_notify_settings(t1_f, {'email_comment_add': True, 'email_comment_modify': False,
                                            'email_doc_modify': True})
@@ -186,7 +186,7 @@ class NotifyFolderTest(NotifyTestBase):
         d = self.create_doc()
         self.new_par(d.document, 'test')
         self.assertEqual(0, len(sent_mails_in_testing))
-        self.test_user_2.grant_access(d.id, 'view')
+        self.test_user_2.grant_access(d, 'view')
         self.new_par(d.document, 'test')
         process_pending_notifications()
         self.assertEqual(1, len(sent_mails_in_testing))
@@ -228,8 +228,8 @@ class CutPasteNotifyTest(NotifyTestBase):
         par3.save(add=True)
         process_pending_notifications()
         # d.document.clear_mem_cache()
-        self.test_user_2.grant_access(d.id, 'teacher')
-        self.test_user_2.grant_access(d.id, 'edit')
+        self.test_user_2.grant_access(d, 'teacher')
+        self.test_user_2.grant_access(d, 'edit')
         self.cut(d, par_start=par, par_end=par2)
         # print(d.document.export_markdown())
         process_pending_notifications()

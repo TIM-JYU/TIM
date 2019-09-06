@@ -7,7 +7,7 @@ from typing import Union, List, Optional
 
 import attr
 from flask import jsonify, render_template_string, request, abort
-from marshmallow import Schema, fields, post_load
+from marshmallow import Schema, fields, post_load, validates, ValidationError
 from marshmallow.utils import missing
 from sqlalchemy.orm import joinedload
 from webargs.flaskparser import use_args
@@ -18,6 +18,7 @@ from pluginserver_flask import GenericMarkupModel, GenericMarkupSchema, GenericH
 from timApp.auth.accesshelper import get_doc_or_abort
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docinfo import DocInfo
+from timApp.document.timjsonencoder import TimJsonEncoder
 from timApp.item.block import Block
 from timApp.item.tag import Tag, TagType, GROUP_TAG_PREFIX
 from timApp.plugin.plugin import find_plugin_from_document, TaskNotFoundException
@@ -26,8 +27,9 @@ from timApp.sisu.sisu import get_potential_groups, parse_sisu_group_display_name
 from timApp.tim_app import csrf
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
+from timApp.user.usergroupmember import UserGroupMember
 from timApp.util.flask.responsehelper import csv_response, json_response
-from timApp.util.get_fields import get_fields_and_users
+from timApp.util.get_fields import get_fields_and_users, MembershipFilter, fin_timezone
 from timApp.util.utils import get_boolean
 
 
@@ -85,6 +87,7 @@ class TableFormMarkupModel(GenericMarkupModel):
     autoUpdateTables: Union[bool, Missing] = True
     hide: Union[dict, Missing] = missing
     runScripts: Union[List[str], Missing] = missing
+    includeUsers: str = 'current'
     fields: Union[List[str], Missing] = missing
 
 
@@ -129,7 +132,15 @@ class TableFormMarkupSchema(GenericMarkupSchema):
     autoUpdateTables = fields.Boolean(default=True)
     hide = fields.Dict(allow_none=True)
     runScripts = fields.List(fields.Str())
+    includeUsers = fields.Str(default='current')
     fields = fields.List(fields.Str())  # Keep this last - bad naming
+
+    @validates('includeUsers')
+    def validate_include_users(self, value):
+        try:
+            MembershipFilter(value)
+        except ValueError:
+            raise ValidationError("Invalid includeUsers value. Must be one of 'all', 'current' (default), 'deleted'.")
 
     @post_load
     def make_obj(self, data):
@@ -188,7 +199,7 @@ def get_sisugroups(user: User, sisu_id: Optional[str]):
             g.external_id.external_id: {
                 'TIM-nimi': g.name,
                 'URL': f'<a href="{g.admin_doc.docentries[0].url_relative}">URL</a>' if g.admin_doc else None,
-                'Jäseniä': g.users.count(),
+                'Jäseniä': len(g.current_memberships),
                 'Kurssisivu': get_course_page(g),
             } for g in gs
         },
@@ -219,6 +230,9 @@ class TableFormHtmlModel(GenericHtmlModel[TableFormInputModel, TableFormMarkupMo
     def show_in_view_default(self) -> bool:
         return False
 
+    def get_json_encoder(self):
+        return TimJsonEncoder
+
     def get_static_html(self) -> str:
         return render_static_table_form(self)
 
@@ -231,8 +245,15 @@ class TableFormHtmlModel(GenericHtmlModel[TableFormInputModel, TableFormMarkupMo
             if self.markup.sisugroups:
                 f = get_sisugroups(user, self.markup.sisugroups)
             else:
-                f = tableform_get_fields(self.markup.fields, self.markup.groups, d,
-                                     user, self.markup.removeDocIds, self.markup.showInView)
+                f = tableform_get_fields(
+                    self.markup.fields,
+                    self.markup.groups,
+                    d,
+                    user,
+                    self.markup.removeDocIds,
+                    self.markup.showInView,
+                    group_filter_type=MembershipFilter(self.markup.includeUsers),
+                )
             r = {**r, **f}
         return r
 
@@ -394,9 +415,9 @@ def update_fields():
         plug = find_plugin_from_document(doc.document, tid, curr_user)
     except TaskNotFoundException:
         return abort(404, f'Table not found: {tid}')
-    groups = plug.values.get("groups",[])
-    queried_groups = UserGroup.query.filter(UserGroup.name.in_(groups))
-    fielddata, _, field_names = get_fields_and_users(fields_to_update, queried_groups, doc,
+    groupnames = plug.values.get("groups",[])
+    queried_groups = UserGroup.query.filter(UserGroup.name.in_(groupnames))
+    fielddata, _, field_names, _ = get_fields_and_users(fields_to_update, queried_groups, doc,
                          curr_user, plug.values.get("removeDocIds", True), add_missing_fields=True,
                          allow_non_teacher=plug.values.get("showInView"))
     rows = {}
@@ -414,19 +435,30 @@ def update_fields():
     return json_response(r, headers={"No-Date-Conversion": "true"})
 
 
-def tableform_get_fields(flds: List[str], groups: List[str],
-                         doc: DocInfo, curr_user: User, remove_doc_ids: bool, allow_non_teacher: bool):
-    queried_groups = UserGroup.query.filter(UserGroup.name.in_(groups))
-    fielddata, aliases, field_names = \
+def tableform_get_fields(
+        flds: List[str],
+        groupnames: List[str],
+        doc: DocInfo,
+        curr_user: User,
+        remove_doc_ids: bool,
+        allow_non_teacher: bool,
+        group_filter_type = MembershipFilter.Current,
+):
+    queried_groups = UserGroup.query.filter(UserGroup.name.in_(groupnames))
+    fielddata, aliases, field_names, groups = \
         get_fields_and_users(flds, queried_groups, doc,
                              curr_user, remove_doc_ids, add_missing_fields=True,
-                             allow_non_teacher = allow_non_teacher)
+                             allow_non_teacher = allow_non_teacher,
+                             member_filter_type=group_filter_type)
     rows = {}
     realnames = {}
     emails = {}
     styles = {}
+    group_ids = set(g.id for g in groups)
+    membershipmap = {}
     for f in fielddata:
-        username = f['user'].name
+        u: User = f['user']
+        username = u.name
         rows[username] = dict(f['fields'])
         for key, content in rows[username].items():
             if type(content) is dict:
@@ -434,14 +466,28 @@ def tableform_get_fields(flds: List[str], groups: List[str],
         realnames[username] = f['user'].real_name
         emails[username] = f['user'].email
         styles[username] = dict(f['styles'])
+        if group_filter_type != MembershipFilter.Current:
+            relevant_memberships: List[UserGroupMember] = [m for m in u.memberships if m.usergroup_id in group_ids]
+            membership_end = None
+            # If the user is not active in any of the groups, we'll show the lastly-ended membership.
+            # TODO: It might be possible in the future that the membership_end is in the future.
+            if all(m.membership_end is not None for m in relevant_memberships):
+                membership_end = (
+                    max(m.membership_end for m in relevant_memberships)
+                        .astimezone(fin_timezone)
+                        .strftime('%Y-%m-%d %H:%M')
+                )
+            membershipmap[username] = membership_end
     r = dict()
     r['rows'] = rows
     r['realnamemap'] = realnames
     r['emailmap'] = emails
+    r['membershipmap'] = membershipmap
     r['fields'] = field_names
     r['aliases'] = aliases
     r['styles'] = styles
     return r
+
 
 @tableForm_plugin.route('/answer/', methods=['put'])
 @csrf.exempt

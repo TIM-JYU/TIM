@@ -30,7 +30,7 @@ class MinutesCreation(TimRouteTest):
         self.assertTrue(d2.document.get_settings().memo_minutes() == "minutes")
 
         # Files should not get copied to minutes document.
-        self.test_user_2.grant_access(d2.id, 'view')
+        self.test_user_2.grant_access(d2, 'view')
         self.login_test2()
         self.get(f'/images/{image_path}', expect_status=403)
 

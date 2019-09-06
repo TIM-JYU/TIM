@@ -14,37 +14,39 @@ import copy
 from typing import Optional, List, Iterable, Dict
 
 from timApp.document.docentry import DocEntry
+from timApp.document.docinfo import DocInfo
 from timApp.timdb.sqa import db
 from timApp.timdb.timdbbase import TimDbBase, result_as_dict_list
+from timApp.user.usergroup import UserGroup
 from timApp.velp.velp_models import VelpGroup
 from timApp.util.utils import get_sql_template
 
 
 class VelpGroups(TimDbBase):
 
-    def create_default_velp_group(self, name: str, owner_group_id: int, default_group_path: str):
+    def create_default_velp_group(self, name: str, owner_group: UserGroup, default_group_path: str) -> DocInfo:
         """Creates default velp group for document.
 
         :param name: Name of the new default velp group.
-        :param owner_group_id: The id of the owner group.
+        :param owner_group: The id of the owner group.
         :param default_group_path: Path of new document / velp group
         :return:
 
         """
 
         # Create new document and add its ID to VelpGroupTable
-        new_group = DocEntry.create(default_group_path, owner_group_id)
+        new_group = DocEntry.create(default_group_path, owner_group)
         new_group_id = new_group.id
         valid_until = None
         vg = VelpGroup(id=new_group_id, name=name, valid_until=valid_until, default_group=True)
         db.session.add(vg)
-        return new_group_id
+        return new_group
 
-    def create_velp_group(self, name: str, owner_group_id: int, new_group_path: str, valid_until: Optional[str] = None):
+    def create_velp_group(self, name: str, owner_group: UserGroup, new_group_path: str, valid_until: Optional[str] = None) -> DocInfo:
         """Create a velp group.
 
         :param name: Name of the created group.
-        :param owner_group_id: The id of the owner group.
+        :param owner_group: The id of the owner group.
         :param new_group_path: Path of new document / velp group
         :param valid_until: How long velp group is valid (None is forever).
         :return: new velp group ID
@@ -52,11 +54,11 @@ class VelpGroups(TimDbBase):
         """
 
         # Create new document and add its ID to VelpGroupTable
-        new_group = DocEntry.create(new_group_path, owner_group_id)
+        new_group = DocEntry.create(new_group_path, owner_group)
         new_group_id = new_group.id
         vg = VelpGroup(id=new_group_id, name=name, valid_until=valid_until)
         db.session.add(vg)
-        return new_group_id
+        return new_group
 
     def make_document_a_velp_group(self, name: str, velp_group_id: int, valid_until: Optional[str] = None,
                                    default_group: Optional[bool] = False):
@@ -79,7 +81,6 @@ class VelpGroups(TimDbBase):
                       """, [velp_group_id, name, valid_until, default_group]
                        )
         self.db.commit()
-        return velp_group_id
 
     def update_velp_group_to_default_velp_group(self, velp_group_id: int):
         """Makes velp group a default velp group in velp group table.

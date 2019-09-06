@@ -126,7 +126,7 @@ class DocEntry(db.Model, DocInfo):
 
     @staticmethod
     def create(path: str,
-               owner_group_id: Optional[int] = None,
+               owner_group = None,
                title: Optional[str] = None,
                from_file=None,
                initial_par=None,
@@ -140,7 +140,7 @@ class DocEntry(db.Model, DocInfo):
         :param title: The document title.
         :param path: The path of the document to be created (can be None). If None, no DocEntry is actually added
          to the database; only Block and Document objects are created.
-        :param owner_group_id: The id of the owner group.
+        :param owner_group: The owner group.
         :param is_gamified: Boolean value indicating whether the document is gamified.
         :returns: The newly created document object.
 
@@ -148,9 +148,9 @@ class DocEntry(db.Model, DocInfo):
 
         location, _ = split_location(path)
         from timApp.folder.folder import Folder
-        Folder.create(location, owner_group_id=owner_group_id)
+        Folder.create(location, owner_group=owner_group)
 
-        document = create_document_and_block(owner_group_id, title or path)
+        document = create_document_and_block(owner_group, title or path)
 
         # noinspection PyArgumentList
         docentry = DocEntry(id=document.doc_id, name=path, public=True)
@@ -174,9 +174,13 @@ class DocEntry(db.Model, DocInfo):
         return docentry
 
 
-def create_document_and_block(owner_group_id: int, desc: Optional[str] = None):
-    document_id = insert_block(BlockType.Document, desc, owner_group_id).id
-    document = Document(document_id, modifier_group_id=owner_group_id)
+def create_document_and_block(owner_group, desc: Optional[str] = None):
+    block = insert_block(BlockType.Document, desc, owner_group)
+    # Must flush because we need to know the document id in order to create the document in the filesystem.
+    db.session.flush()
+    document_id = block.id
+    from timApp.user.usergroup import UserGroup
+    document = Document(document_id, modifier_group_id=owner_group.id if owner_group else UserGroup.get_admin_group().id)
     document.create()
     return document
 

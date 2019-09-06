@@ -6,7 +6,6 @@ from sqlalchemy.orm import joinedload
 from timApp.auth.auth_models import BlockAccess
 from timApp.item.block import Block, BlockType
 from timApp.timdb.sqa import db
-from timApp.timdb.timdbbase import TimDbBase
 from timApp.user.special_group_names import ANONYMOUS_USERNAME, ANONYMOUS_GROUPNAME, KORPPI_GROUPNAME, \
     LOGGED_IN_GROUPNAME, \
     LOGGED_IN_USERNAME, ADMIN_GROUPNAME, TEACHERS_GROUPNAME, GROUPADMIN_GROUPNAME
@@ -15,11 +14,11 @@ from timApp.user.usergroup import UserGroup
 from timApp.user.userutils import get_access_type_id, get_default_right_document
 
 
-def remove_access(group_id: int, block_id: int, access_type: str):
+def remove_access(group, block_id: int, access_type: str):
     access_type_id = get_access_type_id(access_type)
     i = Block.query.get(block_id)
     for a in i.accesses:  # type: BlockAccess
-        if a.usergroup_id == group_id and a.type == access_type_id:
+        if a.usergroup_id == group.id and a.type == access_type_id:
             db.session.delete(a)
             break
 
@@ -36,6 +35,7 @@ def get_rights_holders(block_id: int) -> RightsList:
               .join(UserGroup)
               .outerjoin(User, User.name == UserGroup.name)
               .with_entities(BlockAccess, UserGroup, User)
+              .order_by(User.name)
               .all()
      )
     results = []
@@ -53,9 +53,9 @@ def get_default_rights_holders(folder_id: int, object_type: BlockType) -> Rights
     return get_rights_holders(doc.id)
 
 
-def remove_default_access(group_id: int, folder_id: int, access_type: str, object_type: BlockType):
+def remove_default_access(group, folder_id: int, access_type: str, object_type: BlockType):
     doc = get_default_right_document(folder_id, object_type, create_if_not_exist=True)
-    remove_access(group_id, doc.id, access_type)
+    remove_access(group, doc.id, access_type)
 
 
 def create_special_usergroups(sess):

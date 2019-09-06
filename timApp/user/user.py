@@ -1,10 +1,11 @@
 import json
 from datetime import datetime, timedelta, timezone
+from enum import Enum
 from typing import List
 from typing import Optional, Union, Set
 
-from enum import Enum
 from sqlalchemy.orm import Query, joinedload
+from sqlalchemy.orm.collections import attribute_mapped_collection
 
 from timApp.answer.answer import Answer
 from timApp.answer.answer_models import UserAnswer
@@ -25,7 +26,7 @@ from timApp.user.settings.theme import Theme
 from timApp.user.special_group_names import ANONYMOUS_GROUPNAME, ANONYMOUS_USERNAME, LOGGED_IN_GROUPNAME, \
     SPECIAL_USERNAMES
 from timApp.user.usergroup import UserGroup
-from timApp.user.usergroupmember import UserGroupMember
+from timApp.user.usergroupmember import UserGroupMember, membership_current, membership_deleted
 from timApp.user.userutils import grant_access, get_access_type_id, \
     create_password_hash, check_password_hash, check_password_hash_old
 from timApp.util.utils import remove_path_special_chars, cached_property, get_current_time
@@ -70,6 +71,7 @@ seeanswers_access_set = {t.value for t in [
     AccessType.manage,
 ]}
 
+SCIM_USER_NAME = ':scimuser'
 
 class Consent(Enum):
     CookieOnly = 1
@@ -171,9 +173,41 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
     consents = db.relationship('ConsentChange', back_populates='user', lazy='select')
     notifications = db.relationship('Notification', back_populates='user', lazy='dynamic')
     notifications_alt = db.relationship('Notification')
-    groups = db.relationship('UserGroup', secondary=UserGroupMember.__table__,
-                             back_populates='users', lazy='joined')
-    groups_dyn = db.relationship('UserGroup', secondary=UserGroupMember.__table__, lazy='dynamic')
+
+    groups = db.relationship(
+        UserGroup,
+        UserGroupMember.__table__,
+        primaryjoin=(id == UserGroupMember.user_id) & membership_current,
+        back_populates='users',
+        lazy='joined',
+    )
+    groups_dyn = db.relationship(
+        UserGroup,
+        UserGroupMember.__table__,
+        primaryjoin=id == UserGroupMember.user_id,
+        lazy='dynamic',
+    )
+    groups_inactive = db.relationship(
+        UserGroup,
+        UserGroupMember.__table__,
+        primaryjoin=(id == UserGroupMember.user_id) & membership_deleted,
+        lazy='dynamic',
+    )
+    memberships_dyn = db.relationship(
+        UserGroupMember,
+        foreign_keys="UserGroupMember.user_id",
+        lazy='dynamic',
+    )
+    memberships = db.relationship(
+        UserGroupMember,
+        foreign_keys="UserGroupMember.user_id",
+    )
+    active_memberships = db.relationship(
+        UserGroupMember,
+        primaryjoin=(id == UserGroupMember.user_id) & membership_current,
+        collection_class=attribute_mapped_collection("UserGroupMember.usergroup_id"),
+        # back_populates="group",
+    )
     lectures = db.relationship('Lecture', secondary=LectureUsers.__table__,
                                back_populates='users', lazy='dynamic')
     owned_lectures = db.relationship('Lecture', back_populates='owner', lazy='dynamic')
@@ -239,8 +273,6 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         p_hash = create_password_hash(password) if password != '' else ''
         user = User(id=uid, name=name, real_name=real_name, email=email, pass_=p_hash, origin=origin)
         db.session.add(user)
-        db.session.flush()
-        assert user.id != 0
         return user
 
     @staticmethod
@@ -348,7 +380,7 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
             raise TimDbException(f'Found multiple personal folders for user {self.name}: {[f.name for f in folders]}')
         if not folders:
             f = Folder.create('users/' + self.derive_personal_folder_name(),
-                              self.get_personal_group().id,
+                              self.get_personal_group(),
                               title=f"{self.real_name}",
                               apply_default_rights=True)
             db.session.commit()
@@ -384,6 +416,23 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
                 UserGroup.query.filter(UserGroup.name.in_(special_groups))
             )
         return q
+
+    def add_to_group(self, ug: UserGroup, added_by: 'User'):
+        existing: UserGroupMember = self.id is not None and self.memberships_dyn.filter_by(group=ug).first()
+        if existing:
+            existing.membership_end = None
+            existing.adder = added_by
+            return False
+        else:
+            self.memberships.append(UserGroupMember(group=ug, adder=added_by))
+            return True
+
+    @staticmethod
+    def get_scimuser():
+        u = User.get_by_name(SCIM_USER_NAME)
+        if not u:
+            u, _ = User.create_with_group(name=SCIM_USER_NAME, real_name='Scim User', email='scimuser@example.com')
+        return u
 
     def update_info(self, name: str, real_name: str, email: str, password: Optional[str] = None):
         group = self.get_personal_group()
@@ -446,7 +495,7 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
             return False
         return self.has_edit_access(f)
 
-    def grant_access(self, block_id: int,
+    def grant_access(self, block: ItemOrBlock,
                      access_type: str,
                      accessible_from: Optional[datetime] = None,
                      accessible_to: Optional[datetime] = None,
@@ -454,8 +503,8 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
                      duration_to: Optional[datetime] = None,
                      duration: Optional[timedelta] = None,
                      commit: bool = True):
-        return grant_access(group_id=self.get_personal_group().id,
-                            block_id=block_id,
+        return grant_access(group=self.get_personal_group(),
+                            block=block,
                             access_type=access_type,
                             accessible_from=accessible_from,
                             accessible_to=accessible_to,

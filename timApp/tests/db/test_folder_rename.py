@@ -1,24 +1,24 @@
-from timApp.tests.db.timdbtest import TimDbTest
 from timApp.document.docentry import DocEntry
 from timApp.folder.folder import Folder
-from timApp.user.usergroup import UserGroup
+from timApp.tests.db.timdbtest import TimDbTest
 from timApp.timdb.sqa import db
+from timApp.user.usergroup import UserGroup
 
 
 class FolderRenameTest(TimDbTest):
     def test_folder_rename(self):
-        anon_g_id = UserGroup.get_anonymous_group().id
-        Folder.create('path/to/first', anon_g_id)
-        Folder.create('path/to/second', anon_g_id)
-        Folder.create('path/to/third/and/more', anon_g_id)
-        Folder.create('path/to/path/to/path/to', anon_g_id)
-        DocEntry.create('path/to/firstdoc', anon_g_id)
-        DocEntry.create('path/to/seconddoc', anon_g_id)
-        DocEntry.create('path/to/third/and/more/doc', anon_g_id)
+        anon_g = UserGroup.get_anonymous_group()
+        Folder.create('path/to/first', anon_g)
+        Folder.create('path/to/second', anon_g)
+        Folder.create('path/to/third/and/more', anon_g)
+        Folder.create('path/to/path/to/path/to', anon_g)
+        DocEntry.create('path/to/firstdoc', anon_g)
+        DocEntry.create('path/to/seconddoc', anon_g)
+        DocEntry.create('path/to/third/and/more/doc', anon_g)
 
         # these should not get renamed
-        Folder.create('path/to3/first', anon_g_id)
-        Folder.create('some/path/to/first', anon_g_id)
+        Folder.create('path/to3/first', anon_g)
+        Folder.create('some/path/to/first', anon_g)
 
         f = Folder.find_by_path('path/to')
         f.rename_path('path/to2')

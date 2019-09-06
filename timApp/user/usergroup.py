@@ -1,15 +1,15 @@
-from typing import List, Tuple, Optional
+from typing import List
 
 from sqlalchemy.orm import joinedload
+from sqlalchemy.orm.collections import attribute_mapped_collection
 
-from timApp.item.tag import Tag, TagType
 from timApp.sisu.scimusergroup import ScimUserGroup
-from timApp.timdb.sqa import db, TimeStampMixin, include_if_loaded, include_if_exists, is_attribute_loaded
+from timApp.timdb.sqa import db, TimeStampMixin, include_if_exists, is_attribute_loaded
 from timApp.user.scimentity import SCIMEntity
 from timApp.user.special_group_names import ANONYMOUS_GROUPNAME, LARGE_GROUPS, KORPPI_GROUPNAME, LOGGED_IN_GROUPNAME, \
     ADMIN_GROUPNAME, GROUPADMIN_GROUPNAME, TEACHERS_GROUPNAME
 from timApp.user.usergroupdoc import UserGroupDoc
-from timApp.user.usergroupmember import UserGroupMember
+from timApp.user.usergroupmember import UserGroupMember, membership_current
 
 # Prefix is no longer needed because scimusergroup determines the Sisu (SCIM) groups.
 SISU_GROUP_PREFIX = ''
@@ -47,8 +47,24 @@ class UserGroup(db.Model, TimeStampMixin, SCIMEntity):
     def scim_display_name(self):
         return self.display_name
 
-    users = db.relationship('User', secondary=UserGroupMember.__table__,
-                            back_populates='groups', lazy='dynamic')
+    users = db.relationship(
+        'User',
+        UserGroupMember.__table__,
+        primaryjoin=(id == UserGroupMember.usergroup_id) & membership_current,
+        secondaryjoin="UserGroupMember.user_id == User.id",
+        back_populates="groups",
+    )
+    memberships = db.relationship(
+        UserGroupMember,
+        back_populates="group",
+        lazy='dynamic',
+    )
+    current_memberships = db.relationship(
+        UserGroupMember,
+        primaryjoin=(id == UserGroupMember.usergroup_id) & membership_current,
+        collection_class=attribute_mapped_collection("user_id"),
+        back_populates="group",
+    )
     accesses = db.relationship('BlockAccess', back_populates='usergroup', lazy='dynamic')
     accesses_alt = db.relationship('BlockAccess')
     readparagraphs = db.relationship('ReadParagraph', back_populates='usergroup', lazy='dynamic')
@@ -99,11 +115,6 @@ class UserGroup(db.Model, TimeStampMixin, SCIMEntity):
                 r['admin_doc'] = self.admin_doc.docentries[0]
         return r
 
-    def get_cumulative(self):
-        if not self.is_sisu:
-            raise Exception('Tried to call get_cumulative for a non-Sisu group.')
-        return UserGroup.get_by_name(CUMULATIVE_GROUP_PREFIX + self.external_id.external_id)
-
     @property
     def pretty_full_name(self):
         return self.name
@@ -127,9 +138,6 @@ class UserGroup(db.Model, TimeStampMixin, SCIMEntity):
 
         ug = UserGroup(name=name)
         db.session.add(ug)
-        db.session.flush()
-        group_id = ug.id
-        assert group_id is not None and group_id != 0, 'group_id was None'
         return ug
 
     @staticmethod
@@ -168,7 +176,12 @@ class UserGroup(db.Model, TimeStampMixin, SCIMEntity):
 
 def get_usergroup_eager_query():
     from timApp.item.block import Block
-    return UserGroup.query.options(joinedload(UserGroup.admin_doc).joinedload(Block.docentries))
+    return (
+        UserGroup.query
+            .options(joinedload(UserGroup.admin_doc)
+                     .joinedload(Block.docentries))
+            .options(joinedload(UserGroup.current_memberships))
+    )
 
 
 def get_sisu_groups_by_filter(f) -> List[UserGroup]:
@@ -183,8 +196,3 @@ def get_sisu_groups_by_filter(f) -> List[UserGroup]:
 
 # When a SCIM group is deleted, the group name gets this prefix.
 DELETED_GROUP_PREFIX = 'deleted:'
-
-# Non-shrinking counterpart of a SCIM group. If a member is added to a SCIM group via SCIM route,
-# it is also added to the corresponding cumulative group. No members are ever deleted from the
-# cumulative group.
-CUMULATIVE_GROUP_PREFIX = 'cumulative:'

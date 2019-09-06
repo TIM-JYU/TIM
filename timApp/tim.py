@@ -3,6 +3,7 @@
 import time
 import traceback
 
+import requests
 import werkzeug.exceptions as ex
 from flask import Response
 from flask import g, abort, flash
@@ -46,14 +47,14 @@ from timApp.lecture.routes import lecture_routes
 from timApp.markdown.dumboclient import DumboHTMLException
 from timApp.note.routes import notes
 from timApp.notification.notify import notify, send_email
+from timApp.plugin.importdata.importData import importData_plugin
 from timApp.plugin.qst.qst import qst_plugin
 from timApp.plugin.routes import plugin_bp
+from timApp.plugin.tableform.tableForm import tableForm_plugin
+from timApp.plugin.tape.tape import tape_plugin
 from timApp.plugin.timmenu.timMenu import timMenu_plugin
 from timApp.plugin.timtable.timTable import timTable_plugin
-from timApp.plugin.tableform.tableForm import tableForm_plugin
-from timApp.plugin.importdata.importData import importData_plugin
 from timApp.printing.print import print_blueprint
-from timApp.plugin.tape.tape import tape_plugin
 from timApp.readmark.routes import readings
 from timApp.sisu.scim import scim
 from timApp.sisu.sisu import sisu
@@ -68,7 +69,7 @@ from timApp.user.usergroup import UserGroup
 from timApp.user.userutils import NoSuchUserException
 from timApp.util.flask.ReverseProxied import ReverseProxied
 from timApp.util.flask.cache import cache
-from timApp.util.flask.requesthelper import get_request_message
+from timApp.util.flask.requesthelper import get_request_message, JSONException
 from timApp.util.flask.responsehelper import json_response, ok_response, error_generic, text_response
 from timApp.util.flask.routes_static import static_bp
 from timApp.util.flask.search import search_routes
@@ -76,8 +77,6 @@ from timApp.util.logger import log_info, log_error, log_debug, log_warning
 from timApp.util.utils import get_current_time
 from timApp.velp.annotation import annotations
 from timApp.velp.velp import velps
-
-import requests
 
 cache.init_app(app)
 
@@ -165,6 +164,11 @@ ex._aborter.mapping[403] = Forbidden
 @app.errorhandler(Forbidden)
 def forbidden(error):
     return error_generic(error, 403)
+
+
+@app.errorhandler(JSONException)
+def already_exists(error: JSONException):
+    return error_generic(error, error.code)
 
 
 @app.errorhandler(ItemAlreadyExistsException)

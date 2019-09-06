@@ -15,6 +15,7 @@ from timApp.document.docinfo import DocInfo
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.document import Document, dereference_pars
 from timApp.folder.folder import Folder
+from timApp.item.block import Block
 from timApp.item.item import Item, ItemBase
 from timApp.plugin.plugin import Plugin, find_plugin_from_document, maybe_get_plugin_from_par
 from timApp.plugin.pluginexception import PluginException
@@ -301,10 +302,10 @@ def verify_task_access(
     return found_plugin
 
 
-def grant_access_to_session_users(block_id: int):
+def grant_access_to_session_users(i: ItemOrBlock):
     for u in get_other_users_as_list():
-        grant_access(User.get_by_id(int(u['id'])).get_personal_group().id,
-                     block_id,
+        grant_access(User.get_by_id(int(u['id'])).get_personal_group(),
+                     i,
                      'manage',
                      commit=False)
 

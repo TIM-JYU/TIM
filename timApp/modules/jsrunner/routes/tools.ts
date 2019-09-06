@@ -500,7 +500,7 @@ class Stats extends WithGtools {
 export class ToolsBase {
     protected output = "";
     protected errors: IError[] = [];
-    protected noDefComplain: boolean = false;
+    protected useDefComplaint: boolean = true;
     public usePrintLine: boolean = false; // if used println at least one time then print does not do nl
     constructor(
         protected currDoc: string,
@@ -514,8 +514,8 @@ export class ToolsBase {
         return this.handlePossibleNaN(r, s, 0);
     }
 
-    setNoDefComplain(b: boolean) {
-        this.noDefComplain = b;
+    setUseDefComplaint(b: boolean) {
+        this.useDefComplaint = b;
     }
 
     protected handlePossibleNaN<T>(r: number, s: unknown, def: T) {
@@ -526,7 +526,7 @@ export class ToolsBase {
     }
 
     protected reportInputTypeErrorAndReturnDef<T>(s: unknown, def: T) {
-        if ( this.noDefComplain ) { return def; }
+        if ( !this.useDefComplaint ) { return def; }
         this.reportError(`Found value '${s}' of type ${typeof s}, using default value ${def}`);
         return def;
     }

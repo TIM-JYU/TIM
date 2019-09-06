@@ -1,12 +1,13 @@
 from timApp.folder.folder import Folder
 from timApp.user.user import User
+from timApp.user.usergroup import UserGroup
 
 
-def check_velp_group_folder_path(root_path: str, owner_group_id: int, doc_name: str):
+def check_velp_group_folder_path(root_path: str, owner_group: UserGroup, doc_name: str):
     """Checks if velp group folder path exists and if not, creates it.
 
     :param root_path: Root path where method was called from
-    :param owner_group_id: Owner group ID for the new folder if one is to be created
+    :param owner_group: Owner group for the new folder if one is to be created
     :param doc_name:
     :return: Path for velp group folder
 
@@ -35,14 +36,14 @@ def check_velp_group_folder_path(root_path: str, owner_group_id: int, doc_name: 
 
     # If velps folder doesn't exist, create one
     if velps_folder is False:
-        new_block = Folder.create(velps_folder_path, owner_group_id)
+        new_block = Folder.create(velps_folder_path, owner_group)
 
     if doc_name == "":
         return velps_folder_path
 
     # If folder for document in velps folder doesn't exists, create one
     if doc_velp_folder is False:
-        new_block = Folder.create(doc_folder_path, owner_group_id)
+        new_block = Folder.create(doc_folder_path, owner_group)
 
     return doc_folder_path
 
@@ -65,6 +66,6 @@ def check_personal_velp_folder(user: User):
             velps_folder = True
 
     if velps_folder is False:
-        new_block = Folder.create(user_velps_path, user.get_personal_group().id)
+        new_block = Folder.create(user_velps_path, user.get_personal_group())
 
     return user_velps_path

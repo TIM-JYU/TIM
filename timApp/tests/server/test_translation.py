@@ -1,11 +1,11 @@
 from unittest.mock import patch, Mock
 
+from timApp.document.docinfo import DocInfo
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.docsettings import DocSettings
 from timApp.document.document import Document
 from timApp.document.yamlblock import YamlBlock
 from timApp.tests.server.timroutetest import TimRouteTest
-from timApp.document.docinfo import DocInfo
 from timApp.util.utils import EXAMPLE_DOCS_PATH
 
 
@@ -252,7 +252,7 @@ b
                       extra_data={'tags': {'marktranslated': True}})
         self.check_outofdate_count(t, 1)
 
-        self.test_user_2.grant_access(t.id, 'view')
+        self.test_user_2.grant_access(t, 'view')
 
         # only editors should see the outofdate messages
         self.login_test2()

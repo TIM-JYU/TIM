@@ -21,6 +21,7 @@ class Preferences:
     css_files: Dict[str, bool] = attr.Factory(dict)
     custom_css: str = ''
     use_document_word_list: bool = False
+    disable_menu_hover: bool = False
     word_list: str = ''
     email_exclude: str = ''
     last_answer_fetch: Dict[str, str] = attr.Factory(dict)
