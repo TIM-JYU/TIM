@@ -410,17 +410,7 @@ def update_users(ug: UserGroup, args: SCIMGroupModel):
             )
         except IntegrityError as e:
             db.session.rollback()
-            msg = e.orig.diag.message_detail
-            m = email_error_re.fullmatch(msg)
-            if m:
-                em = m.group('email')
-                member = None
-                for x in args.members:
-                    if x.email == em:
-                        member = x
-                        break
-                msg += " Conflicting username is: " + member.value
-            raise SCIMException(422, msg) from e
+            return raise_conflict_error(args, e)
         if ug not in user.groups:
             user.groups.append(ug)
             added_users.add(user)
@@ -432,7 +422,7 @@ def update_users(ug: UserGroup, args: SCIMGroupModel):
             db.session.flush()
         except IntegrityError as e:
             db.session.rollback()
-            raise SCIMException(422, e.orig.diag.message_detail) from e
+            return raise_conflict_error(args, e)
         if user not in cumulative_group.users:
             cumulative_group.users.append(user)
     refresh_sisu_grouplist_doc(ug)
@@ -444,6 +434,20 @@ def update_users(ug: UserGroup, args: SCIMGroupModel):
             if tg not in u.groups:
                 u.groups.append(tg)
             send_course_group_mail(p, u)
+
+
+def raise_conflict_error(args, e):
+    msg = e.orig.diag.message_detail
+    m = email_error_re.fullmatch(msg)
+    if m:
+        em = m.group('email')
+        member = None
+        for x in args.members:
+            if x.email == em:
+                member = x
+                break
+        msg += " Conflicting username is: " + member.value
+    raise SCIMException(422, msg) from e
 
 
 def is_manually_added(u: User):
