@@ -475,7 +475,8 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
             }
 
             if ( this.attrsall.markup.sisugroups ) {
-                this.data.headers = ["Kuvaus", "Sisu-nimi", ""];
+                // These require unique names, otherwise could just use empty strings in place of "invisibleX".
+                this.data.headers = ["Kuvaus", "Sisu-nimi", "invisible1", "invisible2"];
             } else {
                 this.data.headers = ["Henkilön nimi", "Käyttäjänimi", "eMail", "Poistunut?"];
             }
