@@ -138,7 +138,6 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
                 };
              */
         }
-        console.log($window.userPrefs.disable_menu_hover);
         this.setBarStyles();
         onClick("body", ($this, e) => {
             this.onClick(e);

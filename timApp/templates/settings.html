@@ -6,7 +6,6 @@
 {% block head %}
     {{ super() }}
     <script>
-        var settings = {{ prefs|tojson }};
         var css_files = {{ css_files|tojson }};
         var notifications = {{ notifications|tojson }};
     </script>

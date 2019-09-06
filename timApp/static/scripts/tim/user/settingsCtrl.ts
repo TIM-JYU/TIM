@@ -32,7 +32,7 @@ export class SettingsCtrl implements IController {
     private storageClear = false;
 
     constructor() {
-        this.settings = $window.settings;
+        this.settings = $window.userPrefs;
         this.cssFiles = $window.css_files;
         this.notifications = $window.notifications;
         this.updateCss();
@@ -179,7 +179,7 @@ timApp.component("timSettings", {
     </bootstrap-panel>
 
     <bootstrap-panel title="Other settings">
-        <button class="timButton" ng-click="$ctrl.clearLocalStorage()">Clear local settings storage</button>
+        <button class="btn btn-default" ng-click="$ctrl.clearLocalStorage()">Clear local settings storage</button>
         <span ng-if="$ctrl.storageClear">Local storage cleared.</span>
     </bootstrap-panel>
 <!--    <bootstrap-panel title="Consent">
