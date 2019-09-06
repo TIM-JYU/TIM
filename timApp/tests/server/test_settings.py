@@ -127,6 +127,7 @@ class SettingsTest(TimRouteTest):
                                  'use_document_word_list': False,
                                  'word_list': '',
                                  'custom_css': '',
+                                 'disable_menu_hover': False,
                                  })
         self.json_post(
             f'/settings/save',
@@ -138,6 +139,7 @@ class SettingsTest(TimRouteTest):
                 'use_document_word_list': True,
                 'word_list': 'cat\ndog',
                 'custom_css': 'somecss',
+                'disable_menu_hover': True,
             }
         )
         self.get(f'/settings/get',
@@ -149,6 +151,7 @@ class SettingsTest(TimRouteTest):
                      'use_document_word_list': True,
                      'word_list': 'cat\ndog',
                      'custom_css': 'somecss',
+                     'disable_menu_hover': True,
                  })
         self.json_post(
             f'/settings/save',
@@ -160,6 +163,7 @@ class SettingsTest(TimRouteTest):
                 'use_document_word_list': True,
                 'word_list': 'cat\ndog',
                 'custom_css': 'somecss',
+                'disable_menu_hover': True,
             }
         )
         self.get(f'/settings/get',
@@ -171,6 +175,7 @@ class SettingsTest(TimRouteTest):
                      'use_document_word_list': True,
                      'word_list': 'cat\ndog',
                      'custom_css': 'somecss',
+                     'disable_menu_hover': True,
                  })
 
     def test_settings_get_single(self):
