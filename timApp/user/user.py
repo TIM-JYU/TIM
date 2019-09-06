@@ -26,7 +26,7 @@ from timApp.user.settings.theme import Theme
 from timApp.user.special_group_names import ANONYMOUS_GROUPNAME, ANONYMOUS_USERNAME, LOGGED_IN_GROUPNAME, \
     SPECIAL_USERNAMES
 from timApp.user.usergroup import UserGroup
-from timApp.user.usergroupmember import UserGroupMember, membership_active, membership_inactive
+from timApp.user.usergroupmember import UserGroupMember, membership_current, membership_deleted
 from timApp.user.userutils import grant_access, get_access_type_id, \
     create_password_hash, check_password_hash, check_password_hash_old
 from timApp.util.utils import remove_path_special_chars, cached_property, get_current_time
@@ -177,7 +177,7 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
     groups = db.relationship(
         UserGroup,
         UserGroupMember.__table__,
-        primaryjoin=(id == UserGroupMember.user_id) & membership_active,
+        primaryjoin=(id == UserGroupMember.user_id) & membership_current,
         back_populates='users',
         lazy='joined',
     )
@@ -190,7 +190,7 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
     groups_inactive = db.relationship(
         UserGroup,
         UserGroupMember.__table__,
-        primaryjoin=(id == UserGroupMember.user_id) & membership_inactive,
+        primaryjoin=(id == UserGroupMember.user_id) & membership_deleted,
         lazy='dynamic',
     )
     memberships_dyn = db.relationship(
@@ -204,7 +204,7 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
     )
     active_memberships = db.relationship(
         UserGroupMember,
-        primaryjoin=(id == UserGroupMember.user_id) & membership_active,
+        primaryjoin=(id == UserGroupMember.user_id) & membership_current,
         collection_class=attribute_mapped_collection("UserGroupMember.usergroup_id"),
         # back_populates="group",
     )

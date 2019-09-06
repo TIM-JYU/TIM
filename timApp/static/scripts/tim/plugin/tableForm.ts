@@ -63,7 +63,7 @@ const TableFormMarkup = t.intersection([
         autoUpdateTables: withDefault(t.boolean, true),
         fontSize: withDefault(t.string, "smaller"),
         fixedColor: withDefault(t.string, "#f0f0f0"),
-        includeUsers: withDefault(t.keyof({active: null, all: null, inactive: null}), "active"),
+        includeUsers: withDefault(t.keyof({current: null, all: null, deleted: null}), "current"),
         saveStyles: withDefault(t.boolean, true),
         removeDocIds: withDefault(t.boolean, true),
         taskBorders: withDefault(t.boolean, false),
@@ -227,7 +227,7 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
         this.realnames = this.checkToShow(this.attrs.realnames, realNameColIndex, true);
         this.usernames = this.checkToShow(this.attrs.usernames, userNameColIndex, true);
         this.emails    = this.checkToShow(this.attrs.emails,    emailColIndex,    false);
-        this.checkToShow(this.attrs.includeUsers !== "active",  memberShipColIndex, false);
+        this.checkToShow(this.attrs.includeUsers !== "current",  memberShipColIndex, false);
 
         this.rows = this.attrsall.rows || {};
         this.rowKeys = Object.keys(this.rows);

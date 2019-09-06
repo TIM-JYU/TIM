@@ -17,7 +17,7 @@ from timApp.timdb.sqa import db
 from timApp.user.scimentity import get_meta
 from timApp.user.user import User, UserOrigin, last_name_to_first, SCIM_USER_NAME
 from timApp.user.usergroup import UserGroup, tim_group_to_scim, SISU_GROUP_PREFIX, DELETED_GROUP_PREFIX
-from timApp.user.usergroupmember import UserGroupMember, membership_active
+from timApp.user.usergroupmember import UserGroupMember, membership_current
 from timApp.util.flask.responsehelper import json_response
 from timApp.util.logger import log_warning
 from timApp.util.utils import remove_path_special_chars
@@ -455,7 +455,7 @@ def get_scim_memberships(ug: UserGroup):
     return (ug.memberships
             .join(user_adder, UserGroupMember.adder)
             .join(User, UserGroupMember.user)
-            .filter(membership_active & (user_adder.name == SCIM_USER_NAME))
+            .filter(membership_current & (user_adder.name == SCIM_USER_NAME))
             )
 
 

@@ -29,7 +29,7 @@ from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
 from timApp.user.usergroupmember import UserGroupMember
 from timApp.util.flask.responsehelper import csv_response, json_response
-from timApp.util.get_fields import get_fields_and_users, GroupFilter
+from timApp.util.get_fields import get_fields_and_users, MembershipFilter
 from timApp.util.utils import get_boolean
 
 
@@ -87,7 +87,7 @@ class TableFormMarkupModel(GenericMarkupModel):
     autoUpdateTables: Union[bool, Missing] = True
     hide: Union[dict, Missing] = missing
     runScripts: Union[List[str], Missing] = missing
-    includeUsers: str = 'active'
+    includeUsers: str = 'current'
     fields: Union[List[str], Missing] = missing
 
 
@@ -132,15 +132,15 @@ class TableFormMarkupSchema(GenericMarkupSchema):
     autoUpdateTables = fields.Boolean(default=True)
     hide = fields.Dict(allow_none=True)
     runScripts = fields.List(fields.Str())
-    includeUsers = fields.Str(default='active')
+    includeUsers = fields.Str(default='current')
     fields = fields.List(fields.Str())  # Keep this last - bad naming
 
     @validates('includeUsers')
     def validate_include_users(self, value):
         try:
-            GroupFilter(value)
+            MembershipFilter(value)
         except ValueError:
-            raise ValidationError("Invalid includeUsers value. Must be one of 'all', 'active', 'inactive'.")
+            raise ValidationError("Invalid includeUsers value. Must be one of 'all', 'current' (default), 'deleted'.")
 
     @post_load
     def make_obj(self, data):
@@ -199,7 +199,7 @@ def get_sisugroups(user: User, sisu_id: Optional[str]):
             g.external_id.external_id: {
                 'TIM-nimi': g.name,
                 'URL': f'<a href="{g.admin_doc.docentries[0].url_relative}">URL</a>' if g.admin_doc else None,
-                'Jäseniä': len(g.active_memberships),
+                'Jäseniä': len(g.current_memberships),
                 'Kurssisivu': get_course_page(g),
             } for g in gs
         },
@@ -252,7 +252,7 @@ class TableFormHtmlModel(GenericHtmlModel[TableFormInputModel, TableFormMarkupMo
                     user,
                     self.markup.removeDocIds,
                     self.markup.showInView,
-                    group_filter_type=GroupFilter(self.markup.includeUsers),
+                    group_filter_type=MembershipFilter(self.markup.includeUsers),
                 )
             r = {**r, **f}
         return r
@@ -442,14 +442,14 @@ def tableform_get_fields(
         curr_user: User,
         remove_doc_ids: bool,
         allow_non_teacher: bool,
-        group_filter_type = GroupFilter.Active,
+        group_filter_type = MembershipFilter.Current,
 ):
     queried_groups = UserGroup.query.filter(UserGroup.name.in_(groupnames))
     fielddata, aliases, field_names, groups = \
         get_fields_and_users(flds, queried_groups, doc,
                              curr_user, remove_doc_ids, add_missing_fields=True,
                              allow_non_teacher = allow_non_teacher,
-                             group_filter_type=group_filter_type)
+                             member_filter_type=group_filter_type)
     rows = {}
     realnames = {}
     emails = {}
@@ -466,7 +466,7 @@ def tableform_get_fields(
         realnames[username] = f['user'].real_name
         emails[username] = f['user'].email
         styles[username] = dict(f['styles'])
-        if group_filter_type != GroupFilter.Active:
+        if group_filter_type != MembershipFilter.Current:
             relevant_memberships: List[UserGroupMember] = [m for m in u.memberships if m.usergroup_id in group_ids]
             membership_end = None
             # If the user is not active in any of the groups, we'll show the lastly-ended membership.

@@ -28,7 +28,7 @@ class UserGroupMember(db.Model):
         self.membership_end = get_current_time()
 
 
-membership_active = ((UserGroupMember.membership_end == None) | (
+membership_current = ((UserGroupMember.membership_end == None) | (
         func.current_timestamp() < UserGroupMember.membership_end))
 
-membership_inactive = (func.current_timestamp() >= UserGroupMember.membership_end)
+membership_deleted = (func.current_timestamp() >= UserGroupMember.membership_end)

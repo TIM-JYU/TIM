@@ -219,9 +219,9 @@ def remove_member(usernames, groupname):
         if u.id not in existing_ids:
             does_not_belong.append(u.name)
             continue
-        if ensure_manually_added and group.active_memberships[u.id].adder == su:
+        if ensure_manually_added and group.current_memberships[u.id].adder == su:
             abort(400, 'Cannot remove not-manually-added users from Sisu groups.')
-        group.active_memberships[u.id].set_expired()
+        group.current_memberships[u.id].set_expired()
         removed.append(u.name)
     db.session.commit()
     return json_response({

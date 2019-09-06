@@ -9,7 +9,7 @@ from timApp.user.scimentity import SCIMEntity
 from timApp.user.special_group_names import ANONYMOUS_GROUPNAME, LARGE_GROUPS, KORPPI_GROUPNAME, LOGGED_IN_GROUPNAME, \
     ADMIN_GROUPNAME, GROUPADMIN_GROUPNAME, TEACHERS_GROUPNAME
 from timApp.user.usergroupdoc import UserGroupDoc
-from timApp.user.usergroupmember import UserGroupMember, membership_active
+from timApp.user.usergroupmember import UserGroupMember, membership_current
 
 # Prefix is no longer needed because scimusergroup determines the Sisu (SCIM) groups.
 SISU_GROUP_PREFIX = ''
@@ -50,7 +50,7 @@ class UserGroup(db.Model, TimeStampMixin, SCIMEntity):
     users = db.relationship(
         'User',
         UserGroupMember.__table__,
-        primaryjoin=(id == UserGroupMember.usergroup_id) & membership_active,
+        primaryjoin=(id == UserGroupMember.usergroup_id) & membership_current,
         secondaryjoin="UserGroupMember.user_id == User.id",
         back_populates="groups",
     )
@@ -59,9 +59,9 @@ class UserGroup(db.Model, TimeStampMixin, SCIMEntity):
         back_populates="group",
         lazy='dynamic',
     )
-    active_memberships = db.relationship(
+    current_memberships = db.relationship(
         UserGroupMember,
-        primaryjoin=(id == UserGroupMember.usergroup_id) & membership_active,
+        primaryjoin=(id == UserGroupMember.usergroup_id) & membership_current,
         collection_class=attribute_mapped_collection("user_id"),
         back_populates="group",
     )
@@ -180,7 +180,7 @@ def get_usergroup_eager_query():
         UserGroup.query
             .options(joinedload(UserGroup.admin_doc)
                      .joinedload(Block.docentries))
-            .options(joinedload(UserGroup.active_memberships))
+            .options(joinedload(UserGroup.current_memberships))
     )
 
 

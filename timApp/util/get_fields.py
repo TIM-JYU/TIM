@@ -91,16 +91,16 @@ class TallyField:
 
 
 @unique
-class GroupFilter(Enum):
+class MembershipFilter(Enum):
     All = 'all'
-    Active = 'active'
-    Inactive = 'inactive'
+    Current = 'current'
+    Deleted = 'deleted'
 
 
-group_filter_relation_map = {
-    GroupFilter.All: User.groups_dyn,
-    GroupFilter.Active: User.groups,
-    GroupFilter.Inactive: User.groups_inactive,
+member_filter_relation_map = {
+    MembershipFilter.All: User.groups_dyn,
+    MembershipFilter.Current: User.groups,
+    MembershipFilter.Deleted: User.groups_inactive,
 }
 
 
@@ -113,11 +113,11 @@ def get_fields_and_users(
         add_missing_fields: bool = False,
         allow_non_teacher: bool = False,
         valid_only: bool = True,
-        group_filter_type: GroupFilter = GroupFilter.Active,
+        member_filter_type: MembershipFilter = MembershipFilter.Current,
 ):
     """
     Return fielddata, aliases, field_names
-    :param group_filter_type: Whether to use all, active or inactive users in groups.
+    :param member_filter_type: Whether to use all, current or deleted users in groups.
     :param u_fields: list of fields to be used
     :param groups: user groups to be used
     :param d: default document
@@ -230,7 +230,7 @@ def get_fields_and_users(
                 pass
 
     group_filter = UserGroup.id.in_([ug.id for ug in groups])
-    join_relation = group_filter_relation_map[group_filter_type]
+    join_relation = member_filter_relation_map[member_filter_type]
     tally_field_values = get_tally_field_values(d, doc_map, group_filter, join_relation, tally_fields)
     sub = []
     if valid_only:
@@ -261,7 +261,7 @@ def get_fields_and_users(
             .order_by(User.id)
             .options(lazyload(User.groups))
     )
-    if group_filter_type == GroupFilter.All:
+    if member_filter_type != MembershipFilter.Current:
         q = q.options(joinedload(User.memberships))
     users = q.all()
     user_map = {}
