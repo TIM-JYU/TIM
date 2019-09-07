@@ -56,7 +56,7 @@ export interface ITimComponent {
     setForceAnswerSave?: (force: boolean) => void;
     resetField: () => string | undefined;
     supportsSetAnswer: () => boolean;
-    setAnswer: (content: {[index: string]: string}) => {ok: boolean, message: (string | undefined)};
+    setAnswer: (content: {[index: string]: any}) => {ok: boolean, message: (string | undefined)};
 }
 
 // TODO: import entire controller?
@@ -127,7 +127,10 @@ export class ViewCtrl implements IController {
     private tableForms = new Map<string, TableFormController>();
     private jsRunners = new Map<string, IJsRunner>();
 
+    // TODO: Possibly redundant since same thing can be achieved by just using the array version
     private timComponents: Map<string, ITimComponent> = new Map();
+    // Array to keep reference to possible duplicated fields
+    private timComponentArrays: Map<string, [ITimComponent]> = new Map();
     private timComponentTags: Map<string, [string]> = new Map();
     private userChangeListeners: Map<string, IUserChanged> = new Map();
 
@@ -492,12 +495,6 @@ export class ViewCtrl implements IController {
      * @param {string | undefined} tag for accessing  group of ITimComponents
      */
     public addTimComponent(component: ITimComponent, tag?: (string | null)) {
-        if (this.docSettings.form_mode) {
-            const id = component.getTaskId();
-            if (id && this.getFormAnswerBrowser(id)) {
-                return;
-            }
-        }
         // Registering with any other name than docId.taskId breaks
         // form functionality
         const name = component.getTaskId();
@@ -512,7 +509,24 @@ export class ViewCtrl implements IController {
                     this.timComponentTags.set(tag, [name]);
                 }
             }
+            const previousComps = this.getTimComponentArray(name);
+            if (previousComps != undefined) {
+                previousComps.push(component);
+                this.timComponentArrays.set(name, previousComps);
+            } else {
+                this.timComponentArrays.set(name, [component]);
+            }
         }
+    }
+
+    public getTimComponentArray(name: string): [ITimComponent] | undefined {
+        if (!name) {
+            return undefined;
+        }
+        if (name.split(".").length < 2) {
+            name = this.docId + "." + name;
+        }
+        return this.timComponentArrays.get(name);
     }
 
     /**
@@ -660,12 +674,14 @@ export class ViewCtrl implements IController {
                     } else {
                         fab.changeUserAndAnswers(user, [ans]);
                     }
-                    const timComp = this.getTimComponentByName(fab.taskId);
-                    if (timComp) {
-                        if (fab.selectedAnswer) {
-                            timComp.setAnswer(JSON.parse(fab.selectedAnswer.content));
-                        } else {
-                            timComp.resetField();
+                    const timComps = this.getTimComponentArray(fab.taskId);
+                    if (timComps) {
+                        for (const timComp of timComps) {
+                            if (fab.selectedAnswer) {
+                                timComp.setAnswer(JSON.parse(fab.selectedAnswer.content));
+                            } else {
+                                timComp.resetField();
+                            }
                         }
                     }
                 }
@@ -718,15 +734,17 @@ export class ViewCtrl implements IController {
                 } else {
                     fab.changeUserAndAnswers(this.selectedUser, [ans]);
                 }
-                const timComp = this.getTimComponentByName(fab.taskId);
-                if (timComp) {
-                    if (timComp.isUnSaved()) {
-                        continue;
-                    }
-                    if (fab.selectedAnswer) {
-                        timComp.setAnswer(JSON.parse(fab.selectedAnswer.content));
-                    } else {
-                        timComp.resetField();
+                const timComps = this.getTimComponentArray(fab.taskId);
+                if (timComps) {
+                    for (const timComp of timComps) {
+                        if (timComp.isUnSaved()) {
+                            continue;
+                        }
+                        if (fab.selectedAnswer) {
+                            timComp.setAnswer(JSON.parse(fab.selectedAnswer.content));
+                        } else {
+                            timComp.resetField();
+                        }
                     }
                 }
             }
