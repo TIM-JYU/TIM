@@ -15,7 +15,7 @@ from flask import request
 
 from timApp.auth import sessioninfo
 from timApp.auth.accesshelper import verify_view_access
-from timApp.printing.documentprinter import DocumentPrinter, PrintingError, LaTeXError
+from timApp.printing.documentprinter import DocumentPrinter, PrintingError, LaTeXError, TEX_MACROS_KEY
 from timApp.printing.printsettings import PrintFormat
 from timApp.util.flask.requesthelper import verify_json_params, get_option
 from timApp.util.flask.responsehelper import json_response
@@ -24,6 +24,9 @@ from timApp.document.docentry import DocEntry
 from timApp.printing.printeddoc import PrintedDoc
 from timApp.timdb.sqa import db
 
+TEXPRINTTEMPLATE_KEY = "texprinttemplate"
+DEFAULT_PRINT_TEMPLATE_NAME = "templates/printing/runko"
+EMPTY_PRINT_TEMPLATE_NAME = "templates/printing/empty"
 TEMP_DIR_PATH = tempfile.gettempdir()
 DOWNLOADED_IMAGES_ROOT = os.path.join(TEMP_DIR_PATH, 'tim-img-dls')
 
@@ -50,6 +53,45 @@ def pull_doc_path(endpoint, values):
         verify_view_access(g.doc_entry)
 
 
+def template_by_name(template_name, isdef = False):
+    template_doc = DocEntry.find_by_path(template_name)
+    if template_doc is None:
+        return None, 0, "Template not found: " + template_name, False
+    return template_doc, template_doc.id, None, isdef
+
+def get_doc_template_name(doc):
+    texmacros = doc.document.get_settings().get_macroinfo(key=TEX_MACROS_KEY).get_macros()
+    if not texmacros:
+        return None
+    template_name = texmacros.get(TEXPRINTTEMPLATE_KEY)
+    return template_name
+
+def get_template_doc(doc, template_doc_id):
+    template_name = get_doc_template_name(doc)
+    if template_name:
+        return template_by_name(template_name, True)
+
+    # template_doc_id = get_option(trequest, 'templateDocId', -1)
+    try:
+        template_doc_id = int(template_doc_id)
+    except:
+        return "", 0, "Invalid template doc id", False
+
+    if template_doc_id == -1:
+        return template_by_name(DEFAULT_PRINT_TEMPLATE_NAME, True)
+    if template_doc_id == 0:
+        return template_by_name(EMPTY_PRINT_TEMPLATE_NAME)
+
+    template_doc = DocEntry.find_by_id(template_doc_id)
+    if template_doc is None:
+        return None, 0, "There is no template with id " + str(template_doc_id), False
+
+    def_template = DocEntry.find_by_path(DEFAULT_PRINT_TEMPLATE_NAME)
+    isdef = (def_template and def_template.id == template_doc_id)
+
+    return template_doc, template_doc_id, None, isdef
+
+
 @print_blueprint.route("/<path:doc_path>", methods=['POST'])
 def print_document(doc_path):
     file_type, template_doc_id, plugins_user_print = verify_json_params('fileType', 'templateDocId',
@@ -59,18 +101,17 @@ def print_document(doc_path):
                                                                                     'No value for printPluginsUserCode submitted.'])
     remove_old_images, force = verify_json_params('removeOldImages', 'force', require=False)
 
-    if not isinstance(plugins_user_print, bool):
-        abort(400, 'Invalid printPluginsUserCode value')
-    try:
-        template_doc_id = int(template_doc_id)
-    except ValueError:
-        abort(400, 'Invalid template doc id')
+    if not file_type:
+        file_type = 'pdf'
 
     if file_type.lower() not in [f.value for f in PrintFormat]:
         abort(400, "The supplied parameter 'fileType' is invalid.")
 
     doc = g.doc_entry
-    template_doc = DocEntry.find_by_id(template_doc_id)
+    template_doc, template_doc_id, template_error, template_doc_def = get_template_doc(doc, template_doc_id)
+    if template_error:
+        return abort(400, template_error)
+
     print_type = PrintFormat[file_type.upper()]
 
     if remove_old_images:
@@ -79,7 +120,17 @@ def print_document(doc_path):
     existing_doc = check_print_cache(doc_entry=doc, template=template_doc, file_type=print_type,
                                      plugins_user_print=plugins_user_print)
 
-    print_access_url = f'{request.url}?file_type={str(print_type.value).lower()}&template_doc_id={template_doc_id}&plugins_user_code={plugins_user_print}'
+    #  print_access_url = f'{request.url}?file_type={str(print_type.value).lower()}&template_doc_id={template_doc_id}&plugins_user_code={plugins_user_print}'
+    print_access_url = f'{request.url}' # create url for printed page
+    sep = '?'
+    if str(print_type.value).lower() != 'pdf':
+        print_access_url += f'{sep}file_type={str(print_type.value).lower()}'
+        sep = '&'
+    if  not template_doc_def:
+        print_access_url +=  f'{sep}template_doc_id={template_doc_id}'
+        sep = '&'
+    if plugins_user_print:
+        print_access_url += f'{sep}plugins_user_code={plugins_user_print}'
 
     if force == 'true' or force == True:
         existing_doc = None
@@ -122,7 +173,7 @@ def print_document(doc_path):
         print("General error occurred: " + str(err))
         abort(400, str(err))  # TODO: maybe there's a better error code?
 
-    print_access_url = f'{request.url}?file_type={str(print_type.value).lower()}&template_doc_id={template_doc_id}&plugins_user_code={plugins_user_print}'
+    # print_access_url = f'{request.url}?file_type={str(print_type.value).lower()}&template_doc_id={template_doc_id}&plugins_user_code={plugins_user_print}'
 
     return json_response({'success': True, 'url': print_access_url}, status_code=201)
 
@@ -132,7 +183,7 @@ def get_printed_document(doc_path):
     doc = g.doc_entry
 
     file_type = get_option(request, 'file_type', 'pdf')
-    template_doc_id = get_option(request, 'template_doc_id', -1)
+    # template_doc_id = get_option(request, 'template_doc_id', -1)
     plugins_user_print = get_option(request, 'plugins_user_code', False)
     line = request.args.get('line')
 
@@ -140,23 +191,12 @@ def get_printed_document(doc_path):
         abort(400, "The supplied query parameter 'file_type' was invalid.")
 
     print_type = PrintFormat(file_type)
-
     template_doc = None
-    if print_type != PrintFormat.PLAIN:
-        if template_doc_id == -1:
-            template_doc = DocEntry.find_by_path('templates/printing/runko')
-            if template_doc is None:
-                abort(400, "The supplied query parameter 'template_doc_id' was invalid. Needed template runko")
-            template_doc_id = template_doc.id
-        elif template_doc_id == 0:
-            template_doc = DocEntry.find_by_path('templates/printing/empty')
-            if template_doc is None:
-                abort(400, "There is no template empty")
-            template_doc_id = template_doc.id
-        else:
-            template_doc = DocEntry.find_by_id(template_doc_id)
-        if template_doc is None:
-            return abort(400, 'Template doc not found')
+    template_doc_id = get_option(request, 'template_doc_id', -1)
+    if print_type != PrintFormat.PLAIN and print_type != PrintFormat.RST:
+        template_doc, template_doc_id, template_error, _ = get_template_doc(doc, template_doc_id)
+        if template_error:
+            return abort(400, template_error)
 
     cached = check_print_cache(doc_entry=doc,
                                template=template_doc,
@@ -269,10 +309,15 @@ def get_printed_document(doc_path):
 @print_blueprint.route("/templates/<path:doc_path>", methods=['GET'])
 def get_templates(doc_path):
     doc = g.doc_entry
+
+    template_name = get_doc_template_name(doc)
+    if template_name:  # do not give choices if template fixed in doc
+        return json_response({'templates': [], 'doctemplate' : template_name})
+
     user = g.user
 
     templates = DocumentPrinter.get_templates_as_dict(doc, user)
-    return json_response(templates)
+    return json_response({'templates': templates, 'doctemplate' : ''})
 
 
 @print_blueprint.route("/hash/<path:doc_path>", methods=['GET'])

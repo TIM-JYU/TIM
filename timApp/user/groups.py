@@ -125,7 +125,7 @@ def create_group(groupname):
 
 def add_group_infofield_template(doc):
     text = '''
-## Omia kenttiä {defaultplugin="textfield" readonly="view"}
+## Omia kenttiä {defaultplugin="textfield" readonly="view" .hidden-print}
 {#info autosave: true #}    
     '''
     doc.document.add_text(text)

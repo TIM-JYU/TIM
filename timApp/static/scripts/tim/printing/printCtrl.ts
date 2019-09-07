@@ -9,9 +9,14 @@ export interface ITemplate extends IItem {
 
 }
 
+export interface ITemplateParams {
+    templates: ITemplate[];
+    doctemplate: string;
+}
+
 export interface IPrintParams {
     document: IItem;
-    templates: ITemplate[];
+    params: ITemplateParams;
 }
 
 export class PrintCtrl extends DialogController<{params: IPrintParams}, {}> {
@@ -28,6 +33,7 @@ export class PrintCtrl extends DialogController<{params: IPrintParams}, {}> {
     private pluginsUserCode: boolean;
     private selectedTemplate?: ITemplate;
     private templates?: ITemplate[];
+    private doctemplate?: string;
     private createdUrl?: string;
     private document!: IItem; // $onInit
     private selected: {name: string};
@@ -54,7 +60,8 @@ export class PrintCtrl extends DialogController<{params: IPrintParams}, {}> {
     $onInit() {
         super.$onInit();
         this.document = this.resolve.params.document;
-        this.templates = this.resolve.params.templates;
+        this.templates = this.resolve.params.params.templates;
+        this.doctemplate = this.resolve.params.params.doctemplate;
         this.selectedTemplate = this.initTemplate();
     }
 
@@ -101,18 +108,22 @@ export class PrintCtrl extends DialogController<{params: IPrintParams}, {}> {
         }
         */
 
+        let chosenTemplateId = 0;
         if (!this.selectedTemplate) {
-            this.notificationmsg = "You need to choose a template first!";
-            return;
+            if ( this.doctemplate === "" ) {
+                this.notificationmsg = "You need to choose a template first!";
+                return;
+            }
+        } else {
+            chosenTemplateId = this.selectedTemplate.id;
+            this.storage.timPrintingTemplateId = chosenTemplateId;
         }
-        const chosenTemplateId = this.selectedTemplate.id;
-        this.storage.timPrintingTemplateId = chosenTemplateId;
 
         const pluginsUserCode = this.pluginsUserCode;
         const removeOldImages = this.removeOldImages;
         const force = this.forceRefresh;
 
-        if (chosenTemplateId) {
+        if (chosenTemplateId || this.doctemplate ) {
             this.loading = true;
             this.notificationmsg = undefined;
 

@@ -3,11 +3,12 @@
         Print document
     </dialog-header>
     <dialog-body>
-        <div ng-show="($ctrl.templates.length > 0)"></div>
-        <p>The following LaTeX-templates were found that you can use.</p>
+        <div ng-show="$ctrl.doctemplate===''">
+            <p ng-show="$ctrl.templates.length">The following LaTeX-templates were found that you can use.</p>
+            <h5>Please choose a template:</h5>
+        </div>
 
         <form id="template-picker">
-            <h5>Please choose a template:</h5>
             <div class="form-group input-group-sm">
                 <div ng-repeat="item in $ctrl.templates">
                     <div class="radio" ng-show="$ctrl.showTemplate(item)">
@@ -25,7 +26,7 @@
             </div>
         </form>
 
-        <p ng-hide="($ctrl.templates.length > 0)" class="text-danger">
+        <p ng-show="($ctrl.templates.length === 0 && $ctrl.doctemplate === '')" class="text-danger">
             No printing templates were found.
         </p>
 

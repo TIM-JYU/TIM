@@ -14,7 +14,7 @@ import {showRelevanceEditDialog} from "../item/relevanceEditDialog";
 import {showTagDialog} from "../item/tagCtrl";
 import {showTagSearchDialog} from "../item/tagSearchCtrl";
 import {ILecture, ILectureListResponse2} from "../lecture/lecturetypes";
-import {ITemplate, showPrintDialog} from "../printing/printCtrl";
+import {ITemplateParams, showPrintDialog} from "../printing/printCtrl";
 import {showConsentDialog} from "../ui/consent";
 import {showMessageDialog} from "../ui/dialog";
 import {showInputDialog} from "../ui/inputDialog";
@@ -179,9 +179,9 @@ export class SidebarMenuCtrl implements IController {
         if (!this.vctrl) {
             return;
         }
-        const r = await to($http.get<ITemplate[]>(`/print/templates/${this.vctrl.item.path}`));
+        const r = await to($http.get<ITemplateParams>(`/print/templates/${this.vctrl.item.path}`));
         if (r.ok) {
-            await showPrintDialog({templates: r.result.data, document: this.vctrl.item});
+            await showPrintDialog({params: r.result.data, document: this.vctrl.item});
         }
     }
 

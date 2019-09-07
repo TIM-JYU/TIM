@@ -360,6 +360,7 @@ class DocumentPrinter:
                                              '--variable=T1:1',
                                              '--top-level-division=' + top_level,
                                              '--atx-headers',
+                                             '--metadata=pagetitle:""',
                                              # '--verbose',  # this gives non UTF8 results sometimes
                                              '-Mtexdocid=' + str(self._doc_entry.document.doc_id),
                                              ],

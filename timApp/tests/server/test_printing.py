@@ -21,18 +21,15 @@ class PrintingTest(TimRouteTest):
                        expect_content='No template doc selected.', json_key='error')
         self.json_post(f'/print/{d.path}', {'fileType': 'x', 'templateDocId': 'x'}, expect_status=400,
                        expect_content='No value for printPluginsUserCode submitted.', json_key='error')
-        self.json_post(f'/print/{d.path}', {'fileType': 'x', 'templateDocId': 'x', 'printPluginsUserCode': 'x'},
-                       expect_status=400,
-                       expect_content='Invalid printPluginsUserCode value', json_key='error')
-        self.json_post(f'/print/{d.path}', {'fileType': 'x', 'templateDocId': 'x', 'printPluginsUserCode': False},
-                       expect_status=400,
-                       expect_content='Invalid template doc id', json_key='error')
         self.json_post(f'/print/{d.path}', {'fileType': 'x', 'templateDocId': 99, 'printPluginsUserCode': False},
                        expect_status=400,
                        expect_content="The supplied parameter 'fileType' is invalid.", json_key='error')
+        self.json_post(f'/print/{d.path}', {'fileType': 'latex', 'templateDocId': 'x', 'printPluginsUserCode': False},
+                       expect_status=400,
+                       expect_content='Invalid template doc id', json_key='error')
         self.json_post(f'/print/{d.path}', {'fileType': 'latex', 'templateDocId': 99, 'printPluginsUserCode': False},
                        expect_status=400,
-                       expect_content='The template doc was not found.', json_key='error')
+                       expect_content='There is no template with id 99', json_key='error')
 
         self.login_test2()
         self.json_post(f'/print/{d.path}', expect_status=403)
@@ -47,12 +44,13 @@ class PrintingTest(TimRouteTest):
 
         # Reduce test flakiness by removing timestamp.
         tj.pop('modified')
-        tmpl = self.get(f'/print/templates/{d.path}')
+        tmpl = self.get(f'/print/templates/{d.path}').get('templates')
         tmpl[0].pop('modified')
         self.assertEqual([tj], tmpl)
         params_post = {'fileType': 'latex', 'templateDocId': t.id, 'printPluginsUserCode': False}
         params_url = {'file_type': 'latex', 'template_doc_id': t.id, 'plugins_user_code': False}
-        expected_url = f'http://localhost/print/{d.path}?{urllib.parse.urlencode(params_url)}'
+        exp_params = {'file_type': 'latex', 'template_doc_id': t.id}
+        expected_url = f'http://localhost/print/{d.path}?{urllib.parse.urlencode(exp_params)}'
         self.json_post(f'/print/{d.path}', params_post,
                        expect_status=201,
                        expect_content={'success': True,
@@ -62,7 +60,7 @@ class PrintingTest(TimRouteTest):
         t2 = self.create_doc(f'{folder}/{TEMPLATE_FOLDER_NAME}/{PRINT_FOLDER_NAME}/base',
                              from_file=f'{EXAMPLE_DOCS_PATH}/templates/print_base.md')
         tj2 = json.loads(to_json_str(t2))
-        result = self.get(f'/print/templates/{d.path}')
+        result = self.get(f'/print/templates/{d.path}').get('templates')
         self.assert_list_of_dicts_subset(result, map(lambda x: exclude_keys(x, 'modified'), [tj, tj2]))
         params_url = {'file_type': 'latex', 'template_doc_id': t2.id, 'plugins_user_code': False}
         expected_url = f'http://localhost/print/{d.path}?{urllib.parse.urlencode(params_url)}'
