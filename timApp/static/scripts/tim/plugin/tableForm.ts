@@ -1032,9 +1032,9 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
 
     async orderSisuGroups() {
         const timTable = this.getTimTable();
-        if (timTable == null) { return; }
+        if (timTable == null || this.data.headers == null) { return; }
         const selUsers = timTable.getCheckedRows(0, true);
-        const groups = TimTableController.makeSmallerMatrix(selUsers, [1, 3]);
+        const groups = TimTableController.makeSmallerMatrix(selUsers, [1, this.data.headers.indexOf("TIM-nimi")]);
         const params = groups.map(([sisuid, timname]) => ({externalId: sisuid, name: timname}));
         this.isRunning = true;
         const r = await to($http.post<{ web: { result: string, error?: string } }>("/sisu/createGroupDocs", params));
