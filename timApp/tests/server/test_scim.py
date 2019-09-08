@@ -670,7 +670,7 @@ class ScimTest(TimRouteTest):
                 {'externalId': 'jy-CUR-4668-jy-studysubgroup-9515-teachers', 'name': 'teachers'},
             ],
             expect_status=400,
-            expect_content='Usergroup must contain at least one digit and one letter and must not have special chars.',
+            expect_content='Usergroup must contain at least one digit and one letter and must not have special chars: "teachers"' ,
             json_key='error',
         )
 

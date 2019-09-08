@@ -6,8 +6,9 @@ from timApp.user.usergroup import UserGroup
 
 
 class GroupTest(TimRouteTest):
-    error_resp = {'error': 'Usergroup must contain at least one digit and one letter and must '
-                           'not have special chars.'}
+    def error_resp(self, name):
+       return {'error': 'Usergroup must contain at least one digit and one letter and must '
+                           'not have special chars: "' + name + '"'}
 
     def enum_admin_and_groupadmin(self):
         yield self.init_admin()
@@ -87,10 +88,10 @@ class GroupTest(TimRouteTest):
 
     def test_invalid_groups(self):
         for is_admin in self.enum_admin_and_groupadmin():
-            self.get('/groups/create/testgroup', expect_status=400, expect_content=self.error_resp)
-            self.get('/groups/create/1', expect_status=400, expect_content=self.error_resp)
-            self.get('/groups/create/a1@a', expect_status=400, expect_content=self.error_resp)
-            self.get('/groups/create/ok ok', expect_status=400, expect_content=self.error_resp)
+            self.get('/groups/create/testgroup', expect_status=400, expect_content=self.error_resp("testgroup"))
+            self.get('/groups/create/1', expect_status=400, expect_content=self.error_resp("1"))
+            self.get('/groups/create/a1@a', expect_status=400, expect_content=self.error_resp("a1@a"))
+            self.get('/groups/create/ok ok', expect_status=400, expect_content=self.error_resp("ok ok"))
             self.get(f'/groups/create/test x1{is_admin}')
 
             self.json_post('/groups/addmember/Logged-in users', {'names': f'testuser1'.split(',')}, expect_status=400,
