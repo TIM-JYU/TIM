@@ -763,15 +763,20 @@ export class Tools extends ToolsBase {
     getDouble(fieldName: unknown, defa: unknown = 0): number {
         const f = ensureStringFieldName(fieldName);
         const def = ensureNumberDefault(defa);
-        let s = "";
+        let s;
         try {
-            s = "" + this.normalizeAndGet(f);
-            const st = s.replace(REDOUBLE, "");
+            s = this.normalizeAndGet(f);
+            if (s === null || s === undefined) {
+                return def;
+            }
+            const st = ("" + s).replace(REDOUBLE, "");
             if (st == "") {
                 return def;
             }
             let sp = st.replace(",", ".");
+            // this.println("sp1=" + sp);
             if ( sp.startsWith("e") ) { sp = "1" + sp; }
+            // this.println("sp2=" + sp);
             const r = parseFloat(sp);
             return this.handlePossibleNaN(r, s, def);
         } catch (e) {
