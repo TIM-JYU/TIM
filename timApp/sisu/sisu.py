@@ -139,6 +139,8 @@ def create_groups_route(args: List[GroupCreateModel]):
         name = name_map[r]
         if not name:
             name = g.name
+        if name.strip() == "":
+            continue
         validate_groupname(name)
         p = parse_sisu_group_display_name(g.display_name)
         name_no_special = remove_path_special_chars(name)

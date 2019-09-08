@@ -497,6 +497,8 @@ class Stats extends WithGtools {
     }
 }
 
+const REDOUBLE = /[^0-9,.e\-+]+/g;
+
 export class ToolsBase {
     protected output = "";
     protected errors: IError[] = [];
@@ -773,7 +775,7 @@ export class Tools extends ToolsBase {
             if (typeof s !== "string") {
                 return this.reportInputTypeErrorAndReturnDef(s, def);
             }
-            const st = s.trim();
+            const st = s.replace(REDOUBLE, "");
             if (st == "") {
                 return def;
             }
@@ -788,7 +790,8 @@ export class Tools extends ToolsBase {
     getInt(fieldName: unknown, defa: unknown = 0): number {
         const f = ensureStringFieldName(fieldName);
         const def = ensureIntDefault(defa);
-        const s = this.normalizeAndGet(f);
+        // const s = this.normalizeAndGet(f);
+        const s = this.getDouble(fieldName, def);
         if (checkInt(s)) {
             return this.handlePossibleNaN(s, s, def);
         }

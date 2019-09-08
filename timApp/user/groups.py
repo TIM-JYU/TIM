@@ -150,7 +150,8 @@ def validate_groupname(groupname: str):
         has_letters = has_letters or c.isalpha()
         has_non_alnum = has_non_alnum or not (c.isalnum() or c.isspace() or c in '-_')
     if not has_digits or not has_letters or has_non_alnum:
-        abort(400, 'Usergroup must contain at least one digit and one letter and must not have special chars.')
+        abort(400, 'Usergroup must contain at least one digit and one letter and must not have special chars: "' +
+              groupname + '"')
 
 
 def verify_group_access(ug: UserGroup, access_set, u=None, require=True):

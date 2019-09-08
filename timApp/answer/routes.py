@@ -781,6 +781,10 @@ def handle_jsrunner_response(jsonresp, result, current_doc: DocInfo = None, allo
                             continue
                     except TaskNotFoundException as e:
                         continue
+                elif field == "JSSTRING":
+                    if an and json.dumps(content) != value:
+                        new_answer = True
+                    content = json.loads(value)
                 else:
                     if an and content.get(field, "") != value:
                         new_answer = True

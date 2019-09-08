@@ -5,6 +5,7 @@ TIM plugin: a numericfield
 from typing import Union
 
 import attr
+import re
 from flask import jsonify, render_template_string, Blueprint
 from marshmallow import Schema, fields, post_load
 from marshmallow.utils import missing
@@ -42,6 +43,7 @@ class NumericfieldMarkupModel(GenericMarkupModel):
     ignorestyles: Union[bool, Missing] = missing
     clearstyles: Union[bool, Missing] = missing
     autoUpdateTables: Union[bool, Missing] = True
+    save: Union[str, Missing] = 'double'
 
 
 class NumericfieldMarkupSchema(GenericMarkupSchema):
@@ -65,6 +67,7 @@ class NumericfieldMarkupSchema(GenericMarkupSchema):
     ignorestyles = fields.Boolean()
     clearstyles = fields.Boolean()
     autoUpdateTables = fields.Boolean(default=True)
+    save = fields.String(allow_none=True)
 
     @post_load
     def make_obj(self, data):
@@ -74,12 +77,12 @@ class NumericfieldMarkupSchema(GenericMarkupSchema):
 @attr.s(auto_attribs=True)
 class NumericfieldInputModel:
     """Model for the information that is sent from browser (plugin AngularJS component)."""
-    c: float = missing
+    c: str = missing
     nosave: bool = missing
 
 
 class NumericfieldInputSchema(Schema):
-    c = fields.Number(allow_none=True)
+    c = fields.String(allow_none=True)
     nosave = fields.Bool()
 
     @post_load
@@ -164,6 +167,21 @@ def nf_multimd(args):  # args: List[GenericHtmlSchema]):
     ret = render_multimd(NUMERIC_FIELD_HTML_SCHEMA, args)
     return ret
 
+REDOUBLE = re.compile(r"[^0-9,.e\-+]+")
+
+def get_double(c):
+    if isinstance(c, float):
+        return c
+    if isinstance(c, int):
+        return c
+    if isinstance(c, str):
+        c = REDOUBLE.sub("", c)
+        c = c.replace(",", ".")
+        if c.startswith("e"):
+            c = "1"+c
+        return float(c)
+    return 0
+
 @numericfield_route.route('/answer/', methods=['put'])
 @use_args(NumericfieldAnswerSchema(), locations=("json",))
 def answer(args: NumericfieldAnswerModel):
@@ -175,10 +193,29 @@ def answer(args: NumericfieldAnswerModel):
     if args.markup.nosave:
         nosave = True
 
-    if isinstance(c, Missing):
-        web['result'] = "unsaved"
-        web['error'] = "Please enter a number"
-        nosave = True
+    error = ""
+    try:
+        if isinstance(c, Missing):
+            web['result'] = "unsaved"
+            web['error'] = "Please enter a number"
+            return jsonify(result)
+        elif c.strip() == "":
+            c = ""
+        elif args.markup.save == "double":
+            c = get_double(c)
+        elif args.markup.save == "int":
+            c = get_double(c)
+            c = int(c)
+        elif args.markup.save == "round":
+            c = get_double(c)
+            c = round(c, 0)
+    except Exception as e:
+        error = str(e)
+
+    if error:
+        web['result'] = "error"
+        web['error'] = error + " " + args.input.c
+        return jsonify(result)
 
     if not nosave:
         save = {"c": c}
@@ -187,6 +224,7 @@ def answer(args: NumericfieldAnswerModel):
                 save = {"c": c, "styles": args.state.styles}
         result["save"] = save
         web['result'] = "saved"
+        web['value'] = c
         if args.markup.clearstyles:
             web['clear'] = True
 

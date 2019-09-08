@@ -12,12 +12,14 @@ import {to, valueOr} from "tim/util/utils";
 const numericfieldApp = angular.module("numericfieldApp", ["ngSanitize"]);
 export const moduleDefs = [numericfieldApp];
 
+const REDOUBLE = /[^0-9,.e\-+]+/g;
+
 const NumericfieldMarkup = t.intersection([
     t.partial({
         tag: nullable(t.string),
         inputplaceholder: nullable(t.number),
         inputstem: nullable(t.string),
-        initnumber: nullable(t.number),
+        initnumber: nullable(t.string),
         validinput: nullable(t.string),
         errormessage: nullable(t.string),
         readOnlyStyle: nullable(t.string),
@@ -52,10 +54,10 @@ const NumericfieldAll = t.intersection([
 class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMarkup>, t.TypeOf<typeof NumericfieldAll>, typeof NumericfieldAll> implements ITimComponent {
     private result?: string;
     private isRunning = false;
-    private numericvalue?: number;
+    private numericvalue?: string;
     private modelOpts!: INgModelOptions; // initialized in $onInit, so need to assure TypeScript with "!"
     private vctrl!: ViewCtrl;
-    private initialValue?: number;
+    private initialValue?: string;
     private errormessage = "";
     private hideSavedText = true;
     private redAlert = false;
@@ -63,6 +65,14 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
     private preventedAutosave = false;
     private styles: {[index: string]: string} = {};
     private saveCalledExternally = false;
+
+    getDouble(s: string): number {
+        if ( typeof(s) === "number" ) { return s; }
+        s = s.replace(REDOUBLE, "");
+        s = s.replace(",", ".");
+        const d = parseFloat(s);
+        return d;
+    }
 
     getDefaultMarkup() {
         return {};
@@ -84,11 +94,12 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
         const state = this.attrsall.state && this.attrsall.state.c;
         if (state !== undefined) {
             if (typeof state === "number") {
-                this.numericvalue = state;
+                this.numericvalue = state.toString();
             } else if (state !== null) {
                 // TODO: parseFloat accepts too much like "6hello", should have a more accurate float check.
-                this.numericvalue = parseFloat(state.replace(",", "."));
-                if (isNaN(this.numericvalue)) {
+                const numericvalue = this.getDouble(state);
+                this.numericvalue = numericvalue.toString();
+                if (isNaN(numericvalue)) {
                     this.numericvalue = undefined;
                     if (state !== "") {
                         this.errormessage = `State is NaN (${state}); showing empty value.`;
@@ -156,13 +167,13 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
             this.resetField();
         } else {
             try {
-                const parsed = parseFloat(content.c);
+                const parsed = this.getDouble(content.c);
                 if (isNaN(parsed)) {
                     this.numericvalue = undefined;
                     ok = false;
                     message = "Value at \"c\" was not a valid number";
                 } else {
-                    this.numericvalue = parsed;
+                    this.numericvalue = parsed.toString();
                 }
             } catch (TypeError) {
                 this.numericvalue = undefined;
@@ -205,8 +216,8 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
     initCode() {
         this.numericvalue = this.attrs.initnumber || undefined;
         if (this.numericvalue == undefined) {
-            if (this.attrs.initnumber === 0) {
-                this.numericvalue = 0;
+            if (this.attrs.initnumber === "0") {
+                this.numericvalue = "0";
             }
         }
         this.initialValue = this.numericvalue;
@@ -352,7 +363,7 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
             params.input.nosave = true;
         }
         const url = this.pluginMeta.getAnswerUrl();
-        const r = await to($http.put<{web: {result: string, error?: string, clear?: boolean}}>(url, params));
+        const r = await to($http.put<{web: {result: string, error?: string, clear?: boolean, value: string}}>(url, params));
         this.isRunning = false;
         if (r.ok) {
             const data = r.result.data;
@@ -361,6 +372,7 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
             }
             this.result = data.web.result;
             if (this.result === "saved") {
+                this.numericvalue = data.web.value.toString();
                 this.initialValue = this.numericvalue;
                 this.hideSavedText = false;
                 this.redAlert = false;
@@ -418,7 +430,7 @@ numericfieldApp.component("numericfieldRunner", {
      <label><span>
       <span ng-bind-html="::$ctrl.inputstem"></span>
       <span ng-if="::!$ctrl.isPlainText()" ng-class="::{noarrows: (!$ctrl.attrs.arrows)}">
-        <input type="number"
+        <input type="tel" xpattern="[0-9,.a-zA-Z/-]*" pattern=".*"
                style="width: {{::$ctrl.cols}}em"
                step="{{ $ctrl.stepCheck() }}"
                class="form-control"

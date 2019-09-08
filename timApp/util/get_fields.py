@@ -311,7 +311,10 @@ def get_fields_and_users(
                     value = p
                 else:
                     if task.field:
-                        value = p.get(task.field)
+                        try:
+                            value = p.get(task.field)
+                        except:
+                            value = json.dumps(p)
                     else:
                         if len(json_str) > 1:
                             try:
