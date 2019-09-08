@@ -70,6 +70,7 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
         if ( typeof(s) === "number" ) { return s; }
         s = s.replace(REDOUBLE, "");
         s = s.replace(",", ".");
+        if ( s.startsWith("e") ) { s = "1" + s; }
         const d = parseFloat(s);
         return d;
     }

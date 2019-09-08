@@ -763,26 +763,20 @@ export class Tools extends ToolsBase {
     getDouble(fieldName: unknown, defa: unknown = 0): number {
         const f = ensureStringFieldName(fieldName);
         const def = ensureNumberDefault(defa);
+        let s = "";
         try {
-            let s = this.normalizeAndGet(f);
-            if (checkNumber(s)) {
-                return this.handlePossibleNaN(s, s, def);
-            }
-            if (s === null || s === undefined) {
-                return def;
-            }
-            s = "" + s;
-            if (typeof s !== "string") {
-                return this.reportInputTypeErrorAndReturnDef(s, def);
-            }
+            s = "" + this.normalizeAndGet(f);
             const st = s.replace(REDOUBLE, "");
             if (st == "") {
                 return def;
             }
-            const sp = st.replace(",", ".");
+            let sp = st.replace(",", ".");
+            if ( sp.startsWith("e") ) { sp = "1" + sp; }
             const r = parseFloat(sp);
             return this.handlePossibleNaN(r, s, def);
         } catch (e) {
+            if ( !this.useDefComplaint ) { return def; }
+            this.reportError(`Error: ${e.toString()}. Found value '${s}' of type ${typeof s}, using default value ${def}`);
             return def;
         }
     }
@@ -792,16 +786,10 @@ export class Tools extends ToolsBase {
         const def = ensureIntDefault(defa);
         // const s = this.normalizeAndGet(f);
         const s = this.getDouble(fieldName, def);
-        if (checkInt(s)) {
-            return this.handlePossibleNaN(s, s, def);
-        }
-        if (s === null || s === undefined) {
+        if (s === null || s === undefined || isNaN(s)) {
             return def;
         }
-        if (typeof s !== "string") {
-            return this.reportInputTypeErrorAndReturnDef(s, def);
-        }
-        const r = parseInt(s, 10);
+        const r = Math.trunc(s);
         return this.handlePossibleNaN(r, s, def);
     }
 
