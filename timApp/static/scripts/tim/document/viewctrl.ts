@@ -690,19 +690,20 @@ export class ViewCtrl implements IController {
         const timComps = this.getTimComponentArray(fab.taskId);
         if (timComps) {
             for (const timComp of timComps) {
-            if (timComp.isUnSaved()) {
-                return;
-            }
-            if (fab.selectedAnswer) {
-                const parsed = JSON.parse(fab.selectedAnswer.content);
-                if (StringUnknownDict.is(parsed)) {
-                    timComp.setAnswer(parsed);
-                } else {
-                    console.warn("selectedAnswer content was not string dict of strings:", parsed);
+                if (timComp.isUnSaved()) {
+                    continue;
                 }
-            } else {
-                timComp.resetField();
-            }}
+                if (fab.selectedAnswer) {
+                    const parsed = JSON.parse(fab.selectedAnswer.content);
+                    if (StringUnknownDict.is(parsed)) {
+                        timComp.setAnswer(parsed);
+                    } else {
+                        console.warn("selectedAnswer content was not a dict with string keys:", parsed);
+                    }
+                } else {
+                    timComp.resetField();
+                }
+            }
         }
     }
 
