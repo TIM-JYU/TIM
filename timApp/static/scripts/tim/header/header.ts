@@ -94,6 +94,9 @@ class HeaderController implements IController {
      * Checks if the document has been tagged as a course and the tag hasn't expired.
      */
     private async checkIfTaggedAsCourse() {
+        if (this.item && this.item.isFolder) {
+            return; // Folders don't have tags for now.
+        }
         this.taggedAsCourse = false;
         const r = await to($http.get<ITag[]>(`/tags/getTags/${this.getMainCourseDocPath()}`));
         if (r.ok) {
