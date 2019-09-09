@@ -49,7 +49,7 @@ import {
     KEY_UP,
 } from "../util/keycodes";
 import {$http, $timeout} from "../util/ngimport";
-import {Binding} from "../util/utils";
+import {Binding, StringOrNumber} from "../util/utils";
 import {hideToolbar, isToolbarEnabled, openTableEditorToolbar} from "./timTableEditorToolbar";
 import {PluginMeta} from "./util";
 
@@ -2440,12 +2440,13 @@ export class TimTableController extends DestroyScope implements IController, ITi
      * @param object The object that contains the user-given style attributes
      * @param validAttrs A set that contains the accepted style attributes
      */
-    private applyStyle(styles: Record<string, string>, object: Record<string, unknown> | undefined, validAttrs: Set<string>) {
+    private applyStyle(styles: Record<string, string | number>, object: Record<string, unknown> | undefined, validAttrs: Set<string>) {
         if (!object) {
             return;
         }
         for (const [key, value] of Object.entries(object)) {
-            if (!validAttrs.has(key) || !t.string.is(value)) {
+            // At least fontSize needs to be a number, so we accept numbers too.
+            if (!validAttrs.has(key) || !StringOrNumber.is(value)) {
                 continue;
             }
 

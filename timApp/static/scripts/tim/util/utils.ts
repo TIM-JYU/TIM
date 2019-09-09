@@ -420,6 +420,7 @@ export const StringArray = t.array(t.string);
 export const ModuleArray = t.array(t.type({name: t.string, requires: StringArray}));
 export const StringDict = t.record(t.string, t.string);
 export const StringUnknownDict = t.record(t.string, t.unknown);
+export const StringOrNumber = t.union([t.string, t.number]);
 
 export type MouseOrTouch = MouseEvent | Touch;
 
