@@ -327,6 +327,7 @@ def start_page():
 @app.before_request
 def preprocess_request():
     session.permanent = True
+    g.request_start_time = time.monotonic()
     if request.method == 'GET':
         p = request.path
         if '//' in p or (p.endswith('/') and p != '/'):

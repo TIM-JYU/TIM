@@ -1,9 +1,10 @@
 import itertools
 import json
 import pprint
+import time
 from typing import Optional
 
-from flask import Request, current_app
+from flask import Request, current_app, g
 from flask import request, abort
 from marshmallow import ValidationError
 from werkzeug.exceptions import HTTPException
@@ -101,8 +102,21 @@ def get_consent_opt() -> Optional[Consent]:
     return consent
 
 
+def get_request_time():
+    try:
+        return f'{time.monotonic() - g.request_start_time:.3g}s'
+    except AttributeError:
+        return None
+
+
 def get_request_message(status_code=None, include_body=False):
-    msg = f'{get_current_user_object().name} [{request.headers.get("X-Forwarded-For") or request.remote_addr}]: {request.method} {request.full_path if request.query_string else request.path} {status_code or ""}'.strip()
+    msg = f"""
+{get_current_user_object().name}
+[{request.headers.get("X-Forwarded-For") or request.remote_addr}]:
+{request.method}
+{request.full_path if request.query_string else request.path}
+{status_code or ""}
+{get_request_time()}""".replace('\n', ' ').strip()
     if not include_body or request.method not in ('POST', 'PUT', 'DELETE'):
         return msg
     return f'{msg}\n\n{pprint.pformat(request.get_json(silent=True) or request.get_data(as_text=True))}'
