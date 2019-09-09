@@ -18,7 +18,7 @@ FAIL=0
 
 for index in ${!plugins[*]}
 do
-    tslint --project ${plugins[${index}]} &
+    tslint --exclude '../static/scripts/tim/**/*.ts' --project ${plugins[${index}]} &
     pids[${index}]=$!
 done
 
