@@ -1,11 +1,11 @@
-import angular, {IHttpResponse, IRequestConfig} from "angular";
+import angular, {IHttpInterceptorFactory, IHttpResponse, IRequestConfig} from "angular";
 import {timApp} from "tim/app";
 import {timLogTime} from "tim/util/timTiming";
 import {IAnswerSaveEvent} from "../answer/answerbrowser3";
-import {$httpProvider, $q, $window} from "../util/ngimport";
+import {$httpProvider, $q} from "../util/ngimport";
 import {vctrlInstance} from "./viewctrl";
 
-function handleResponse(taskIdFull: string, response: IHttpResponse<any>, params: IAnswerSaveEvent) {
+function handleResponse(taskIdFull: string, response: IHttpResponse<unknown>, params: IAnswerSaveEvent) {
     const parts = taskIdFull.split(".");
     const docId = parseInt(parts[0], 10);
     const taskName = parts[1];
@@ -43,46 +43,49 @@ timApp.config([() => {
                         if (!v) {
                             throw new Error("ViewCtrl was undefined");
                         }
+                        const d = config.data as {abData?: unknown, ref_from?: unknown};
                         if (taskName !== "") {
                             const ab = v.getAnswerBrowser(taskId);
                             if (ab) {
-                                config.data.abData = ab.getBrowserData();
+                                d.abData = ab.getBrowserData();
                             }
                         }
                         const e = document.getElementById(taskIdFull);
                         if (e) {
                             const par = angular.element(e).parents(".par");
-                            config.data.ref_from = {docId: $window.item.id, par: par.attr("id")};
+                            d.ref_from = {docId: v.item.id, par: par.attr("id")};
                         }
                         config.url += window.location.search;  // make urlmacros possible, must know the page url
-                    } else if ( re2.test(config.url)) {
+                    } else if (re2.test(config.url)) {
                         config.url += window.location.search;  // make urlmacros possible
                     } else if (tfre.test(config.url)) {
                         config.url += window.location.search.replace("?", "&");  // make urlmacros possible
                     }
                     return config;
                 },
-                response(response: IHttpResponse<any>) {
+                response(response: IHttpResponse<unknown>) {
                     if (re.test(response.config.url)) {
                         const match = re.exec(response.config.url);
                         if (!match) {
                             return response;
                         }
+                        const resp = response as IHttpResponse<IAnswerSaveEvent>;
                         handleResponse(match[1], response, {
-                            error: response.data.error,
-                            savedNew: response.data.savedNew,
+                            error: resp.data.error,
+                            savedNew: resp.data.savedNew,
                         });
                     }
                     return response;
                 },
-                responseError(response: any) {
+                responseError(response: IHttpResponse<unknown>) {
                     if (re.test(response.config.url)) {
                         const match = re.exec(response.config.url);
                         if (!match) {
                             return $q.reject(response);
                         }
+                        const resp = response as IHttpResponse<IAnswerSaveEvent>;
                         handleResponse(match[1], response, {
-                            error: response.data.error,
+                            error: resp.data.error,
                             savedNew: false,
                         });
                     }
@@ -91,5 +94,5 @@ timApp.config([() => {
             };
         },
     ];
-    $httpProvider.interceptors.push(interceptor);
+    $httpProvider.interceptors.push(interceptor as IHttpInterceptorFactory[]);
 }]);

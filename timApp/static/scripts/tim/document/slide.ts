@@ -1,7 +1,8 @@
 import $ from "jquery";
 import {getURLParameter, IOkResponse, to} from "tim/util/utils";
 import {IDocument, IItem} from "../item/IItem";
-import {$http, $log, $timeout, $window} from "../util/ngimport";
+import {documentglobals, slideglobals} from "../util/globals";
+import {$http, $log, $timeout} from "../util/ngimport";
 
 const pollInterval = 500;
 let receiving = true;
@@ -16,15 +17,14 @@ async function refresh(rv: IFixedReveal) {
     if (1 === 1) { // suppress "unreachable code" warning
         return; // TODO: think this so that things are paired
     }
-    const w = window as any;
-    const item: IItem = w.item;
+    const item: IItem = documentglobals().item;
     while (true) {
         const r = await to($http.get<null | ISlideStatus>("/getslidestatus", {
             cache: false,
             params: {doc_id: item.id},
         }));
         if (r.ok) {
-            const oldstate = rv.getState();
+            const oldstate = rv.getState() as ISlideStatus;
             let oldh = 0;
             let oldv = 0;
             let newh = 0;
@@ -62,8 +62,7 @@ async function updateSlideStatus(h: number, v: number, f: number) {
         return;
     }
     receiving = false;
-    const w = window as any;
-    const item: IItem = w.item;
+    const item: IItem = documentglobals().item;
     const r = await to($http.post<IOkResponse>("/setslidestatus", {
         doc_id: item.id,
         indexf: f,
@@ -80,12 +79,11 @@ async function updateSlideStatus(h: number, v: number, f: number) {
 function initReveal(rv: IFixedReveal) {
     // Full list of configuration options available here:
     // https://github.com/hakimel/reveal.js#configuration
-    const w = window as any;
-    const item: IItem = w.item;
+    const item: IItem = documentglobals().item;
     const hasManage = item.rights.manage;
     const pluginPath = "/static/scripts/jspm_packages/npm/reveal.js@3.8.0/plugin";
 
-    $window.Reveal = rv; // required for Reveal dependencies
+    (window as unknown as {Reveal: unknown}).Reveal = rv; // required for Reveal dependencies
 
     rv.initialize({
         fragments: true,
@@ -95,8 +93,8 @@ function initReveal(rv: IFixedReveal) {
         center: true,
         showNotes: false,
         viewDistance: 10,
-        theme: rv.getQueryHash().theme, // available themes are in /css/theme
-        transition: rv.getQueryHash().transition || "linear", // default/cube/page/concave/zoom/linear/fade/none
+        theme: getURLParameter("theme"), // available themes are in /css/theme
+        transition: getURLParameter("transition") || "linear", // default/cube/page/concave/zoom/linear/fade/none
         dependencies: [
             {
                 async: true,
@@ -134,12 +132,12 @@ function addControl(
 }
 
 export async function initSlideView(d: IDocument) {
-    const w = window as any;
+    const w = slideglobals();
     const bgUrl = w.background_url;
     const bgColor = w.background_color;
     const hasManage = d.rights.manage;
-    const revealCss = import("reveal/css/reveal.css" as any);
-    const jyuCss = import("./jyu.css" as any);
+    const revealCss = import("reveal/css/reveal.css" as string);
+    const jyuCss = import("./jyu.css" as string);
     const rv = await import("reveal");
     if (getURLParameter("controls") == null && hasManage) {
         refresh(rv);

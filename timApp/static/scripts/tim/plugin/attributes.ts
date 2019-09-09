@@ -64,13 +64,14 @@ export interface IGenericPluginMarkup extends t.TypeOf<typeof GenericPluginMarku
 export function withDefault<T extends t.Any>(
     type: T,
     defaultValue: t.TypeOf<T>,
+    // tslint:disable-next-line:no-any
 ): t.Type<t.TypeOf<T>, any> {
     return new t.Type(
         type.name,
-        (v: any): v is T => type.is(v),
-        (v: any, c: any) =>
+        (v: unknown): v is T => type.is(v),
+        (v: unknown, c: t.Context) =>
             type.validate(v !== undefined && v !== null ? v : defaultValue, c),
-        (v: any) => type.encode(v),
+        (v: unknown) => type.encode(v) as t.TypeOf<T>,
     );
 }
 

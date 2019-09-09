@@ -132,7 +132,7 @@ export class GamificationMapCtrl implements IController {
     }
 
     $onInit() {
-        this.parsedData = JSON.parse(this.data);
+        this.parsedData = JSON.parse(this.data) as IParsedData;
         this.buttonText = this.parsedData.buttonText;
         if (!this.buttonText) {
             this.buttonText = defaultButtonText;

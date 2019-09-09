@@ -1,4 +1,3 @@
-import {IPromise} from "angular";
 import {DialogController, registerDialogComponent, showDialog, showMessageDialog} from "../../ui/dialog";
 import {KEY_S} from "../../util/keycodes";
 import {$http} from "../../util/ngimport";
@@ -13,7 +12,7 @@ export interface IManageRenameParams {
 
 export interface IParRenameParams {
     duplicates: Duplicate[];
-    original_par?: {md: string, attrs: any};
+    original_par?: {md: string, attrs: unknown};
     new_par_ids: string[];
     extraData: IExtraData;
 }

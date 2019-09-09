@@ -1,7 +1,7 @@
 import {Coords} from "../util/utils";
 import {Paragraph} from "./parhelpers";
 
-export type MenuFunction = ((e: JQuery.Event, par: Paragraph, coords?: Coords) => any);
+export type MenuFunction = ((e: JQuery.Event, par: Paragraph, coords?: Coords) => unknown);
 
 export interface IMenuFunctionEntry {
     func: MenuFunction;

@@ -28,7 +28,7 @@ export function compileWithViewctrl(html: string | Element | JQuery<HTMLElement>
 export class ParagraphCompiler {
     public async compile(data: IPluginInfoResponse, scope: IScope, view?: ViewCtrl) {
         for (const m of data.js) {
-            const mod = await import(m);
+            const mod = await import(m) as {moduleDefs?: unknown[]};
             const defs = mod.moduleDefs;
             if (ModuleArray.is(defs)) {
                 $injector.loadNewModules(defs.map((d) => d.name));
@@ -86,7 +86,8 @@ export class ParagraphCompiler {
             katexFunction(elem);
             return null;
         } catch (e) {
-            $log.warn(e.message);
+            const err = e as Error;
+            $log.warn(err.message);
             if (tryMathJax) {
                 this.processMathJax(elem);
             }

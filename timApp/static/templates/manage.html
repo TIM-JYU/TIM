@@ -235,10 +235,10 @@
                     <button class="timButton" id="reset" type="reset" value="Reset">Clear</button>
                     </span>
                 </div>
-                <span ng-show="$ctrl.file.progress >= 0 && $ctrl.file.progress < 100"
-                      ng-bind="'Uploading... ' + $ctrl.file.progress + '%'">
+                <span ng-show="$ctrl.progress >= 0 && $ctrl.progress < 100"
+                      ng-bind="'Uploading... ' + $ctrl.progress + '%'">
                 </span>
-                <span ng-show="$ctrl.file.result">Done!</span>
+                <span ng-show="$ctrl.result">Done!</span>
             </form>
         </div>
     </div>

@@ -10,6 +10,8 @@ import {DraggableController, Pos, VisibilityFix} from "./draggable";
 
 markAsUsed(dg);
 
+type ModalScope = IScope & {$$topModalIndex?: number, $$childHead?: ModalScope, $$prevSibling: ModalScope, $$nextSibling: ModalScope};
+
 export abstract class DialogController<T, Ret> implements IController {
     public readonly ret!: Ret; // only used for typing
     public readonly resolve!: Binding<T, "<">;
@@ -121,7 +123,7 @@ export function registerDialogComponent<T extends DialogController<unknown, unkn
             modalInstance: "<",
             resolve: "<",
         },
-        controller: controller as any,
+        controller: controller as unknown as new(...args: unknown[]) => IController,
         controllerAs,
         require: {
             draggable: "^timDraggableFixed",
@@ -143,13 +145,13 @@ class TimDialogCtrl implements IController {
     }
 }
 
-function getModalAndMaxIndex(scope: any) {
-    let mymodal = scope;
+function getModalAndMaxIndex(scope: IScope) {
+    let mymodal = scope as ModalScope;
     while (mymodal.$$topModalIndex === undefined) {
-        mymodal = mymodal.$parent;
+        mymodal = mymodal.$parent as ModalScope;
     }
-    let modal = ($rootScope as any).$$childHead;
-    while (modal.$$prevSibling != null) {
+    let modal = ($rootScope as ModalScope).$$childHead;
+    while (modal != null && modal.$$prevSibling != null) {
         modal = modal.$$prevSibling;
     }
     let maxIndex = -1;
@@ -162,7 +164,7 @@ function getModalAndMaxIndex(scope: any) {
     return {modal: mymodal, maxIndex};
 }
 
-function bringToFront(modalScope: any) {
+function bringToFront(modalScope: IScope) {
     const {modal, maxIndex} = getModalAndMaxIndex(modalScope);
     modal.$$topModalIndex = maxIndex + 1;
 }

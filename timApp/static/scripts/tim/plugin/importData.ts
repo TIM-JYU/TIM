@@ -8,7 +8,7 @@ import {$http} from "tim/util/ngimport";
 import {to} from "tim/util/utils";
 import {timApp} from "../app";
 /* import "./importData.css"; */
-import {GenericPluginMarkup, Info, withDefault} from "./attributes";
+import {GenericPluginMarkup, Info, nullable, withDefault} from "./attributes";
 
 const importDataApp = angular.module("importDataApp", ["ngSanitize"]);
 export const moduleDefs = [importDataApp];
@@ -55,6 +55,11 @@ const ImportDataAll = t.intersection([
         info: Info,
         markup: ImportDataMarkup,
         preview: t.boolean,
+        state: nullable(t.partial({
+            url: t.string,
+            separator: t.string,
+            fields: t.array(t.string),
+        })),
     }),
 ]);
 
@@ -90,11 +95,11 @@ class ImportDataController extends PluginBase<t.TypeOf<typeof ImportDataMarkup>,
     $onInit() {
         super.$onInit();
         this.isOpen = this.attrs.open;
-        const aa: any = this.attrsall; // TODO: miten staten saa?
-        const state: any = aa.state || {};
-        this.separator = state.separator || this.attrs.separator;
-        this.url = state.url || this.attrs.url;
-        this.fields = (state.fields || this.attrs.fields || []).join("\n");
+        const aa = this.attrsall;
+        const state = aa.state;
+        this.separator = (state && state.separator) || this.attrs.separator;
+        this.url = (state && state.url) || this.attrs.url;
+        this.fields = ((state && state.fields) || this.attrs.fields || []).join("\n");
     }
 
     protected getAttributeType() {
@@ -147,17 +152,14 @@ class ImportDataController extends PluginBase<t.TypeOf<typeof ImportDataMarkup>,
         const text = this.importText;
         const url = this.pluginMeta.getAnswerUrl();
         // url.replace("answer", "importData");
-        const params: any =   {
+        const params = {
             input: {
                 data: text,
                 separator: this.separator,
                 url: this.url,
+                fields: this.fields ? this.fields.split("\n") : undefined,
             },
         };
-
-        if (this.fields) {
-            params.input.fields = this.fields.split("\n");
-        }
 
         this.error = {};
         this.result = "";
@@ -174,8 +176,10 @@ class ImportDataController extends PluginBase<t.TypeOf<typeof ImportDataMarkup>,
             if ( e ) {
                 if ( e.startsWith("{") ) {
                     try {
-                        const jse = JSON.parse(e);
-                        this.error.message = jse.error;
+                        const jse = JSON.parse(e) as object;
+                        if (t.type({error: t.string}).is(jse)) {
+                            this.error.message = jse.error;
+                        }
                         if ( this.error ) { return; }
                     } catch (e) { }
                 }

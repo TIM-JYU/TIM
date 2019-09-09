@@ -7,8 +7,9 @@ import {ngStorage} from "ngstorage";
 import {timApp} from "../app";
 import {DocumentOrFolder, IItem, ITag, ITaggedItem} from "../item/IItem";
 import {relevanceSuggestions} from "../item/relevanceEdit";
+import {someglobals} from "../util/globals";
 import {KEY_ENTER} from "../util/keycodes";
-import {$http, $localStorage, $window} from "../util/ngimport";
+import {$http, $localStorage} from "../util/ngimport";
 import {Binding, to} from "../util/utils";
 import {SearchResultController, showSearchResultDialog} from "./searchResultsCtrl";
 
@@ -129,7 +130,7 @@ export class SearchBoxCtrl implements IController {
     private errorMessage: string | undefined; // Message displayed only in search panel.
     private focusMe: boolean = true;
     private loading: boolean = false; // Display loading icon.
-    private item: DocumentOrFolder = $window.item;
+    private item?: DocumentOrFolder = someglobals().item;
     private storage: ngStorage.StorageService & {
         maxDocResultsStorage: null | string,
         relevanceThresholdStorage: null | string,

@@ -4,10 +4,11 @@ import {timApp} from "../app";
 import {IBookmarkGroup} from "../bookmark/bookmarks";
 import {IDocSettings} from "../document/IDocSettings";
 import {ViewCtrl} from "../document/viewctrl";
-import {DocumentOrFolder, isRootFolder, ITag, ITranslation, TagType} from "../item/IItem";
+import {DocumentOrFolder, IDocument, isRootFolder, ITag, TagType} from "../item/IItem";
 import {showMessageDialog} from "../ui/dialog";
 import {Users} from "../user/userService";
-import {$http, $window} from "../util/ngimport";
+import {genericglobals, someglobals} from "../util/globals";
+import {$http} from "../util/ngimport";
 import {capitalizeFirstLetter, to} from "../util/utils";
 
 /**
@@ -38,17 +39,21 @@ interface IItemLink {
 class HeaderController implements IController {
     // To show a button that adds the document to bookmark folder 'My courses'.
     private taggedAsCourse = false;
-    private item?: DocumentOrFolder = $window.item;
+    private item?: DocumentOrFolder = genericglobals().item;
     private bookmarked: boolean = false;
     private bookmarks: IBookmarkGroup[] = [];
     private viewctrl?: ViewCtrl;
     private route?: string;
     private itemLinks!: IItemLink[];
-    private translations: ITranslation[] = $window.translations;
-    private crumbs = $window.breadcrumbs;
-    private docSettings?: IDocSettings = $window.docSettings;
+    private translations?: IDocument[];
+    private crumbs?: unknown;
+    private docSettings?: IDocSettings;
 
     $onInit() {
+        const g = someglobals();
+        this.crumbs = "breadcrumbs" in g ? g.breadcrumbs : undefined;
+        this.translations = "translations" in g ? g.translations : [];
+        this.docSettings = "docSettings" in g ? g.docSettings : undefined;
         this.route = document.location.pathname.split("/")[1];
         if (!this.item) {
             return;

@@ -1,13 +1,15 @@
+import {Ace} from "ace";
 import angular, {IController, IRootElementService, IScope} from "angular";
 import * as t from "io-ts";
 import $ from "jquery";
 import {CellInfo} from "sagecell";
 import {ITimComponent, ViewCtrl} from "tim/document/viewctrl";
-import {IAce, IAceEditor} from "tim/editor/ace-types";
+import IAceEditor = Ace.Editor;
+import {IAce} from "tim/editor/ace";
 import {IPluginInfoResponse, ParCompiler} from "tim/editor/parCompiler";
 import {GenericPluginMarkup, Info, nullable, withDefault} from "tim/plugin/attributes";
 import {PluginBase, pluginBindings} from "tim/plugin/util";
-import {$compile, $http, $sce, $timeout, $upload, $window} from "tim/util/ngimport";
+import {$compile, $http, $sce, $timeout, $upload} from "tim/util/ngimport";
 import {copyToClipboard, fixDefExport, getClipboardHelper, to, valueDefu, valueOr} from "tim/util/utils";
 
 interface GlowScriptWindow extends Window {
@@ -1600,10 +1602,10 @@ class CsController extends CsBase implements ITimComponent {
             if (this.editorIndex === 1 && this.aceEditor) {
                 const editor = this.aceEditor;
                 let cursor = editor.selection.getCursor();
-                const index = editor.session.doc.positionToIndex(cursor, 0);
+                const index = editor.session.getDocument().positionToIndex(cursor, 0);
                 this.usercode = r.s;
                 $timeout(() => {
-                    cursor = editor.session.doc.indexToPosition(index, 0);
+                    cursor = editor.session.getDocument().indexToPosition(index, 0);
                     editor.selection.moveCursorToPosition(cursor);
                     editor.selection.clearSelection();
                 });
@@ -1915,7 +1917,7 @@ class CsController extends CsBase implements ITimComponent {
         let i = 0;
         if (this.editorIndex === 1) {
             editor = this.aceEditor!;
-            i = editor.session.doc.positionToIndex(editor.selection.getCursor(), 0);
+            i = editor.session.getDocument().positionToIndex(editor.selection.getCursor(), 0);
         } else {
             tbox = this.edit;
             i = tbox.selectionStart || 0;
@@ -1938,7 +1940,7 @@ class CsController extends CsBase implements ITimComponent {
         i += text.length;
         await $timeout();
         if (editor) {
-            const cursor = editor.session.doc.indexToPosition(i, 0);
+            const cursor = editor.session.getDocument().indexToPosition(i, 0);
             editor.selection.moveCursorToPosition(cursor);
             editor.selection.clearSelection();
         } else if (tbox) {
@@ -2470,7 +2472,7 @@ class CsController extends CsBase implements ITimComponent {
             this.preview.empty().append(html);
         } else {
             const data = r.result.data;
-            $window.alert("Failed to show preview: " + data.error);
+            alert("Failed to show preview: " + data.error);
         }
     }
 
@@ -2648,7 +2650,7 @@ class CsController extends CsBase implements ITimComponent {
             editorDiv.empty();
             editorDiv.append(this.edit);
             // const editor = ace.edit(editorDiv.find(".csAceEditor")[0]) as IAceEditor;
-            const editor = ace.edit(this.edit) as IAceEditor;
+            const editor = ace.edit(this.edit);
 
             this.aceLoaded(ace, editor);
             if (this.mode) {

@@ -19,7 +19,8 @@ import {clone, getURLParameter, markAsUsed, Require, setStorage, to} from "tim/u
 import {ViewCtrl} from "../document/viewctrl";
 import {IModalInstance, showMessageDialog} from "../ui/dialog";
 import {Users} from "../user/userService";
-import {$http, $log, $timeout, $window} from "../util/ngimport";
+import {someglobals} from "../util/globals";
+import {$http, $log, $timeout} from "../util/ngimport";
 import {
     currentQuestion,
     getAskedQuestionFromQA,
@@ -111,9 +112,10 @@ export class LectureController implements IController {
         this.lectureEnded = false;
         this.wallMessages = [];
 
+        const g = someglobals();
         this.lectureSettings = {
             inLecture: false,
-            lectureMode: $window.lectureMode || false,
+            lectureMode: "lectureMode" in g ? g.lectureMode : false,
             useAnswers: true,
             useQuestions: true,
             useWall: true,
@@ -251,7 +253,7 @@ export class LectureController implements IController {
 
         let passwordGuess = null;
         if (codeRequired) {
-            passwordGuess = $window.prompt(`Please enter a password to join the lecture '${lecture.lecture_code}':`, "") || undefined;
+            passwordGuess = window.prompt(`Please enter a password to join the lecture '${lecture.lecture_code}':`, "") || undefined;
             if (passwordGuess == null) {
                 return false;
             }

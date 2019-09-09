@@ -1,10 +1,10 @@
 import aceimp from "ace";
 import "ace/ext-language_tools";
-import {IAce} from "./ace-types";
 
-let base = SystemJS.normalizeSync("ace");
+let base = (SystemJS.normalizeSync as (x: string) => unknown)("ace") as string;
 base = base.substr(0, base.length - "ace.js".length);
 // basePath will be like "http://domain.com/static/scripts/jspm_packages/github/ajaxorg/ace-builds@1.4.5/"
-(aceimp as any).config.set("basePath", base);
+aceimp.config.set("basePath", base);
 
-export const ace: IAce = aceimp as IAce;
+export const ace = aceimp;
+export type IAce = typeof ace;

@@ -41,10 +41,15 @@ export const timApp = angular.module("timApp", [
     "ngStorage",
     "color.picker",
 ]);
+
+interface IDelegate {
+    onUrlChange(): void;
+    url(): string;
+}
+
 // disable Angular URL manipulation when using ng-include; from http://stackoverflow.com/a/19825756
 timApp.config(["$provide", ($provide: IModule) => {
-    $provide.decorator("$browser", ["$delegate", ($delegate: any) => {
-        //noinspection TsLint
+    $provide.decorator("$browser", ["$delegate", ($delegate: IDelegate) => {
         $delegate.onUrlChange = () => {
         };
         $delegate.url = () => {
@@ -72,9 +77,10 @@ timApp.config(["$httpProvider", ($httpProvider: IHttpProvider) => {
     }
 
     // disable IE ajax request caching; from https://stackoverflow.com/a/19771501
-    $httpProvider.defaults.headers.get["If-Modified-Since"] = "Mon, 26 Jul 1997 05:00:00 GMT";
-    $httpProvider.defaults.headers.get["Cache-Control"] = "no-cache";
-    $httpProvider.defaults.headers.get.Pragma = "no-cache";
+    const hdrs = $httpProvider.defaults.headers.get as {[s: string]: string};
+    hdrs["If-Modified-Since"] = "Mon, 26 Jul 1997 05:00:00 GMT";
+    hdrs["Cache-Control"] = "no-cache";
+    hdrs.Pragma = "no-cache";
 
     // convert ISO 8601 date strings to moment objects
     ($httpProvider.defaults.transformResponse as IHttpResponseTransformer[]).push((responseData, headers) => {
@@ -140,7 +146,7 @@ timApp.directive("onSave", () => {
             if ((event.ctrlKey && (event.which === KEY_ENTER || event.which === KEY_S)) ||
                 (element[0] instanceof HTMLInputElement && event.which === KEY_ENTER)) {
                 scope.$apply(() => {
-                    scope.$eval(attrs.onSave);
+                    scope.$eval(attrs.onSave as string);
                 });
 
                 event.preventDefault();
@@ -158,6 +164,10 @@ timApp.run(["$window", "$q", ($window: IWindowService, $q: IQService) => {
     $window.Promise = $q;
 }]);
 
-timApp.config(["$sanitizeProvider", ($sanitizeProvider: any) => {
+interface ISanitizeProvider {
+    addValidAttrs(attrs: string[]): void;
+}
+
+timApp.config(["$sanitizeProvider", ($sanitizeProvider: ISanitizeProvider) => {
     $sanitizeProvider.addValidAttrs(["style"]);
 }]);

@@ -6,7 +6,7 @@ import {$parse, $timeout} from "../util/ngimport";
 timApp.directive("focusMe", [() => {
     return {
         link(scope: IScope, element: IRootElementService, attrs: IAttributes) {
-            const model = $parse(attrs.focusMe);
+            const model = $parse(attrs.focusMe as string);
             scope.$watch(model, (value) => {
                 if (value === true) {
                     $timeout(() => {
@@ -17,7 +17,7 @@ timApp.directive("focusMe", [() => {
             element.bind("blur", () => {
                 // Catch "model.assign is not a function"
                 try {
-                    scope.$applyAsync(model.assign(scope, false));
+                    scope.$applyAsync(model.assign(scope, false) as string);
                 } catch (e) {
                 }
             });

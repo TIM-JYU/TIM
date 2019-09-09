@@ -1,9 +1,9 @@
 import {IRootElementService, IScope} from "angular";
 import {DialogController, registerDialogComponent, showDialog} from "../ui/dialog";
-import {TimTableController} from "./timTable";
+import {HideValues, IToolbarTemplate, TimTableController} from "./timTable";
 
 export interface ITimTableToolbarCallbacks {
-    setCell: (value: object) => void;
+    setCell: (value: Record<string, string>) => void;
     addToTemplates: () => void;
     addColumn: (offset: number) => void;
     addRow: (offset: number) => void;
@@ -57,7 +57,7 @@ export class TimTableEditorToolbarController extends DialogController<{params: I
     public callbacks!: ITimTableToolbarCallbacks; // $onInit
     public activeTable?: TimTableController;
     private visible: boolean = true;
-    private hide?: any;
+    private hide?: HideValues;
     // private lockCellCount: boolean = false;
 
     private previousBackgroundColor: string = this.DEFAULT_CELL_BGCOLOR;
@@ -122,7 +122,7 @@ export class TimTableEditorToolbarController extends DialogController<{params: I
     /**
      * Sets the cell by template
      */
-    private setCell(value: object) {
+    private setCell(value: Record<string, string>) {
         this.callbacks.setCell(value);
     }
 
@@ -136,7 +136,7 @@ export class TimTableEditorToolbarController extends DialogController<{params: I
 
     // noinspection JSUnusedLocalSymbols
     private pinSelected() {
-        const style: any = {};
+        const style: Record<string, string> = {};
         if ( !this.activeTable ) { return style; }
         if ( this.activeTable.shiftDown ) {
             style.background = "black";
@@ -146,7 +146,7 @@ export class TimTableEditorToolbarController extends DialogController<{params: I
 
     // noinspection JSUnusedLocalSymbols
     private changePin() {
-        const t: any = this.activeTable;
+        const t = this.activeTable;
         if ( !t ) { return; }
         t.shiftDown = !t.shiftDown;
         t.startCell = t.activeCell;
@@ -164,7 +164,7 @@ export class TimTableEditorToolbarController extends DialogController<{params: I
     /**
      * Gets the cell text for toolbar
      */
-    private getCellForToolbar(value: any) {
+    private getCellForToolbar(value: IToolbarTemplate) {
         let v = value.text;
         if ( !v ) { v = value.cell; }
         if ( !v ) { return "\u2003"; } // &#8195  em space &emsp;
@@ -174,7 +174,7 @@ export class TimTableEditorToolbarController extends DialogController<{params: I
 
     // noinspection JSUnusedLocalSymbols
     private eventApi = {
-        onClose: (api: any, color: string, $event: any) => {
+        onClose: (api: unknown, color: string, $event: unknown) => {
             TimTableEditorToolbarController.onColorPickerClose(color);
         },
     };

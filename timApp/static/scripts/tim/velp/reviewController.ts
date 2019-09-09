@@ -5,7 +5,8 @@ import {addElementToParagraphMargin} from "../document/parhelpers";
 import {ViewCtrl} from "../document/viewctrl";
 import {IItem} from "../item/IItem";
 import {showMessageDialog} from "../ui/dialog";
-import {$compile, $http, $window} from "../util/ngimport";
+import {documentglobals} from "../util/globals";
+import {$compile, $http} from "../util/ngimport";
 import {angularWait, assertIsText, checkIfElement, getElementParent, stringOrNull} from "../util/utils";
 import {VelpSelectionController} from "./velpSelection";
 import {IAnnotation, IAnnotationCoordless, IAnnotationInterval, isFullCoord, IVelp, IVelpUI} from "./velptypes";
@@ -45,8 +46,8 @@ export class ReviewController {
     constructor(public vctrl: ViewCtrl) {
         this.scope = vctrl.scope;
         this.annotationsAdded = false;
-        this.velpMode = $window.velpMode;
-        this.item = $window.item;
+        this.velpMode = documentglobals().velpMode;
+        this.item = documentglobals().item;
         this.annotations = [];
         this.annotationids = {0: 0};
         this.zIndex = 1;

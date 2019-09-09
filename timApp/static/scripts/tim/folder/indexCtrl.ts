@@ -1,29 +1,27 @@
 import {IController} from "angular";
 import {timApp} from "tim/app";
-import {IItem} from "../item/IItem";
+import {IFolder, IItem} from "../item/IItem";
+import {IUser} from "../user/IUser";
 import {Users} from "../user/userService";
-import {$http, $timeout, $upload, $window} from "../util/ngimport";
+import {folderglobals} from "../util/globals";
+import {$http} from "../util/ngimport";
 import {to} from "../util/utils";
 
 // Controller used in document index and folders
 
 class IndexCtrl implements IController {
-    private user: any;
-    private folderOwner: string;
-    private parentfolder: string;
+    private user: IUser;
     private itemList: IItem[];
-    private item: any;
+    private item: IFolder;
     private showUpload: boolean = false;
-    private file: any;
     private canCreate: boolean;
     private uploadInProgress: boolean = false;
 
     constructor() {
-        this.user = $window.current_user;
-        this.folderOwner = $window.current_user.name;
-        this.parentfolder = "";
-        this.itemList = $window.items;
-        this.item = $window.item;
+        const fg = folderglobals();
+        this.user = fg.current_user;
+        this.itemList = folderglobals().items;
+        this.item = fg.item;
         this.canCreate = Users.isLoggedIn();
     }
 
@@ -48,43 +46,6 @@ class IndexCtrl implements IController {
         } else {
             this.itemList = [];
         }
-    }
-
-    onFileSelect(file: any) {
-        this.file = file;
-        if (file) {
-            this.file.progress = 0;
-            file.upload = $upload.upload({
-                url: "/upload/",
-                data: {
-                    file,
-                    folder: this.item.location,
-                },
-                method: "POST",
-            });
-
-            file.upload.then((response: any) => {
-                $timeout(() => {
-                    this.getItems();
-                });
-            }, (response: any) => {
-                if (response.status > 0) {
-                    this.file.progress = "Error occurred: " + response.data.error;
-                }
-            }, (evt: any) => {
-                this.file.progress = Math.min(100, Math.floor(100.0 *
-                    evt.loaded / evt.total));
-            });
-
-            file.upload.finally(() => {
-                this.uploadInProgress = false;
-            });
-        }
-    }
-
-    showUploadFnfunction() {
-        this.showUpload = true;
-        this.file = null;
     }
 }
 
@@ -139,17 +100,6 @@ timApp.component("timIndex", {
 <p ng-show="$ctrl.itemList.length == 0">There are no items to show.</p>
 
 <uib-tabset ng-if="$ctrl.canCreate" active="-1">
-    <!--
-    <uib-tab heading="Upload a new document">
-        <div class="form-group">
-            <label for="docUpload">Select a file:</label>
-            <input id="docUpload" class="form-control" type="file" ngf-select="$ctrl.onFileSelect($file)">
-        </div>
-     <span ng-show="$ctrl.file.progress >= 0"
-           ng-bind="$ctrl.file.progress < 100 ? 'Uploading... ' + $ctrl.file.progress + '%' : 'Done!'">
-     </span>
-    </uib-tab>
-    -->
     <uib-tab heading="Create a new document">
         <create-item item-type="document" item-location="{{ $ctrl.item.path }}"></create-item>
     </uib-tab>

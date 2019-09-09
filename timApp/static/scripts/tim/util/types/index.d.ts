@@ -1,5 +1,4 @@
 // All 3rd party libraries without type definitions should be listed here:
-declare module "humanize-duration";
 declare module "angular-messages";
 declare module "angular-timer";
 declare module "angular-eonasdan-datetimepicker";
@@ -41,11 +40,6 @@ interface IFixedReveal extends RevealStatic {
 declare module "reveal" {
     const x: IFixedReveal;
     export = x;
-}
-declare module "ace" {
-    import Ace = AceAjax.Ace;
-    let ace: Ace;
-    export default ace;
 }
 declare module "ace/snippets";
 declare module "rangyinputs";

@@ -21,7 +21,8 @@ import {showInputDialog} from "../ui/inputDialog";
 import {ADMIN_GROUPNAME, IGroup, TEACHERS_GROUPNAME} from "../user/IUser";
 import {setConsent} from "../user/settingsCtrl";
 import {Users, UserService} from "../user/userService";
-import {$http, $localStorage, $window} from "../util/ngimport";
+import {someglobals} from "../util/globals";
+import {$http, $localStorage} from "../util/ngimport";
 import {IOkResponse, Require, to} from "../util/utils";
 
 export interface IHeader {
@@ -36,7 +37,7 @@ export interface IHeaderDisplayIndexItem {
     closed: boolean;
 }
 
-type HeaderIndexItem = [IHeader, IHeader[]];
+export type HeaderIndexItem = [IHeader, IHeader[]];
 
 export class SidebarMenuCtrl implements IController {
     private currentLecturesList: ILecture[];
@@ -61,21 +62,23 @@ export class SidebarMenuCtrl implements IController {
     private currentRelevance?: number;
     private showRelevance: boolean = true;
     private showFolderSettings: boolean = false;
-    private item?: DocumentOrFolder = $window.item;
     private linkedGroups: IDocument[] = [];
+    private item?: DocumentOrFolder;
 
     constructor() {
+        const g = someglobals();
+        this.item = g.item;
         this.currentLecturesList = [];
         this.futureLecturesList = [];
         this.pastLecturesList = [];
         this.users = Users;
-        this.bookmarks = $window.bookmarks; // from base.html
+        this.bookmarks = g.bookmarks; // from base.html
         this.leftSide = $(".left-fixed-side");
-        this.hideLinks = $window.hideLinks;
-        this.hideTopButtons = $window.hideTopButtons;
-        this.displayIndex = this.formDisplayIndex($window.index);
+        this.hideLinks = "hideLinks" in g ? g.hideLinks : false;
+        this.hideTopButtons = "hideTopButtons" in g ? g.hideTopButtons : false;
+        this.displayIndex = "index" in g ? this.formDisplayIndex(g.index) : undefined;
         this.active = -1;
-        if ($window.showIndex) {
+        if ("showIndex" in g ? g.showIndex : false) {
             this.active = 0;
         } else if (Users.isLoggedIn()) {
             // make bookmarks tab active
@@ -87,9 +90,9 @@ export class SidebarMenuCtrl implements IController {
         });
 
         this.updateLeftSide();
-        $($window).resize(() => this.updateLeftSide());
-        if ($window.linked_groups) {
-            this.updateLinkedGroups($window.linked_groups);
+        $(window).resize(() => this.updateLeftSide());
+        if ("linked_groups" in g && g.linked_groups != null) {
+            this.updateLinkedGroups(g.linked_groups);
         }
     }
 
@@ -103,8 +106,9 @@ export class SidebarMenuCtrl implements IController {
     }
 
     async $onInit() {
-        this.documentMemoMinutes = $window.memoMinutes;
-        this.docSettings = $window.docSettings;
+        const g = someglobals();
+        this.documentMemoMinutes = "memoMinutes" in g ? g.memoMinutes : undefined;
+        this.docSettings = "docSettings" in g ? g.docSettings : undefined;
         void this.getCurrentRelevance();
         if (this.item) {
             this.showFolderSettings = this.users.isLoggedIn() && this.item.isFolder;

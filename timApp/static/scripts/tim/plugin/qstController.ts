@@ -54,7 +54,7 @@ class QstController implements IController {
 
     public $onInit() {
         this.isLecturer = (this.lctrl && this.lctrl.isLecturer) || false;
-        this.attrs = JSON.parse(this.json);
+        this.attrs = JSON.parse(this.json) as IQstAttributes;
         // console.log(this.attrs);
         this.preview = makePreview(this.attrs.markup, {answerTable: this.attrs.state || [],
                                                         showCorrectChoices: this.attrs.show_result,

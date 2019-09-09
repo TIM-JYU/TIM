@@ -125,11 +125,11 @@ function qstShortText(s: string): string | string[] {
 }
 
 function timGetLSIntValue(key: string, def: number): number {
-    let val: any = window.localStorage.getItem(key);
+    let val: string | null | number = window.localStorage.getItem(key);
     if (val == null) {
         val = def;
     }
-    val = parseInt(val, 10);
+    val = parseInt(val.toString(), 10);
     if (isNaN(val)) {
         val = def;
     }
@@ -463,7 +463,7 @@ class ChartController implements IController {
                                 // According to http://www.chartjs.org/docs/latest/axes/labelling.html#creating-custom-tick-formats,
                                 // this callback is allowed to return undefined. Type definition is not accurate,
                                 // so we use "as number".
-                                return this.intScale(value, 0) as number;
+                                return this.intScale(value as number, 0) as number;
                             },
                             // stepSize: 1
                         },
@@ -474,7 +474,7 @@ class ChartController implements IController {
                             min: 0,
                             // beginAtZero: true,
                             callback: (value) => {
-                                return this.intScale(value, 1) as number;
+                                return this.intScale(value as number, 1) as number;
                             },
                             // stepSize: 1
                         },

@@ -1,6 +1,7 @@
 import $ from "jquery";
 import {getActiveDocument} from "tim/document/document";
 import {IItem} from "../item/IItem";
+import {isInViewport} from "../util/utils";
 
 export type Paragraph = JQuery;
 export type Paragraphs = JQuery;
@@ -24,7 +25,7 @@ export function getParAttributes(par: Paragraph): {[attr: string]: string} {
     if (!attrs) {
         return {};
     }
-    return JSON.parse(attrs);
+    return JSON.parse(attrs) as {[attr: string]: string};
 }
 
 export function getAreaId($area: Paragraph) {
@@ -246,7 +247,7 @@ export const EDITOR_CLASS_DOT = "." + EDITOR_CLASS;
  */
 export function saveCurrentScreenPar() {
     // noinspection CssInvalidPseudoSelector
-    const parId = getParId($(".par:not('.preamble'):onScreen").first());
+    const parId = getParId($(".par:not('.preamble')").filter((i, e) => isInViewport(e)).first());
     if (parId) {
         // Don't replace if the hash is going to stay the same.
         let hash = getParHash(parId);

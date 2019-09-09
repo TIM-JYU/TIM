@@ -268,7 +268,7 @@ export class TagController extends DialogController<{ params: IItem }, {}> {
  * @param a2 Array containing items to filter from a1.
  * @return Array a1 without any a2 items.
  */
-function arrayDifference(a1: any[], a2: any[]) {
+function arrayDifference<T>(a1: T[], a2: T[]) {
     return a1.filter((item) => a2.indexOf(item) < 0);
 }
 

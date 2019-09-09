@@ -20,13 +20,13 @@ export abstract class Command {
     public abbreviation: string;
     public usesParameter: boolean = true;
 
-    public abstract execute(params: CommandParameters): void;
+    public abstract execute(params: CommandParameters<unknown>): void;
 
     public getParameterName(): string {
         return "Parameter";
     }
 
-    public toString(param: string): string {
+    public toString(param: string | number | undefined): string {
         if ( this.usesParameter ) {
             return this.name + "(" + param + ")";
         }
@@ -41,15 +41,15 @@ export abstract class Command {
 /**
  * The parameters given to a command when it is executed.
  */
-export class CommandParameters {
-    constructor(state: TapeState, mainParam: any, commandList: CommandInstance[]) {
+export class CommandParameters<T> {
+    constructor(state: TapeState, mainParam: T, commandList: CommandInstance[]) {
         this.state = state;
         this.mainParam = mainParam;
         this.commandList = commandList;
     }
 
     public state: TapeState;
-    public mainParam: any;
+    public mainParam: T;
     public commandList: CommandInstance[] = [];
 }
 
@@ -61,7 +61,7 @@ class Input extends Command {
         this.usesParameter = false;
     }
 
-    public execute(params: CommandParameters) {
+    public execute(params: CommandParameters<unknown>) {
         if (params.state.input.length === 0) {
             params.state.stopped = true;
             return;
@@ -78,7 +78,7 @@ class Output extends Command {
         this.usesParameter = false;
     }
 
-    public execute(params: CommandParameters) {
+    public execute(params: CommandParameters<unknown>) {
         if (params.state.hand != null) {
             params.state.output.push(params.state.hand);
             while (params.state.output.length > 6 ) {
@@ -94,7 +94,7 @@ class MemoryCommand extends Command {
         super(name, abbr);
     }
 
-    public execute(params: CommandParameters) { }
+    public execute(params: CommandParameters<unknown>) { }
 
     public getParameterName() {
         return "Memory index";
@@ -108,7 +108,7 @@ class Add extends MemoryCommand {
          super("ADD", "a");
     }
 
-    public execute(params: CommandParameters) {
+    public execute(params: CommandParameters<number>) {
         const memoryIndex = params.mainParam;
         if (memoryIndex >= params.state.memory.length || params.state.hand == null) {
             return;
@@ -123,7 +123,7 @@ class Sub extends MemoryCommand {
         super("SUB", "s");
     }
 
-    public execute(params: CommandParameters) {
+    public execute(params: CommandParameters<number>) {
         const memoryIndex = params.mainParam;
         if (memoryIndex >= params.state.memory.length || params.state.hand == null) {
             return;
@@ -138,7 +138,7 @@ class CopyTo extends MemoryCommand {
         super("COPYTO", "t");
     }
 
-    public execute(params: CommandParameters) {
+    public execute(params: CommandParameters<number>) {
         if (params.state.hand != null) {
             params.state.memory[params.mainParam] = params.state.hand;
         }
@@ -150,7 +150,7 @@ class CopyFrom extends MemoryCommand {
         super("COPYFROM", "f");
     }
 
-    public execute(params: CommandParameters) {
+    public execute(params: CommandParameters<number>) {
         const memoryIndex = params.mainParam;
         if (memoryIndex < params.state.memory.length) {
             params.state.hand = params.state.memory[memoryIndex];
@@ -163,7 +163,7 @@ class DefineLabel extends Command {
         super("Define Label", ".");
     }
 
-    public execute(params: CommandParameters) { }
+    public execute(params: CommandParameters<unknown>) { }
 
     public getParameterName() { return "Label"; }
 
@@ -179,11 +179,11 @@ class Jump extends Command {
         super(name, abbr);
     }
 
-    public execute(params: CommandParameters) {
+    public execute(params: CommandParameters<unknown>) {
         this.jumpToLabel(params);
     }
 
-    protected jumpToLabel(params: CommandParameters) {
+    protected jumpToLabel(params: CommandParameters<unknown>) {
         const index = params.commandList.findIndex((c) => c.command.isLabel() && c.parameter === params.mainParam);
         if (index > -1) {
             params.state.instructionPointer = index + 1;
@@ -198,7 +198,7 @@ class JumpIfZero extends Jump {
         super("JUMPIFZERO", "Z");
     }
 
-    public execute(params: CommandParameters) {
+    public execute(params: CommandParameters<unknown>) {
         if (params.state.hand !== null && params.state.hand === 0) {
             this.jumpToLabel(params);
         }
@@ -210,7 +210,7 @@ class JumpIfNeg extends Jump {
         super("JUMPIFNEG", "N");
     }
 
-    public execute(params: CommandParameters) {
+    public execute(params: CommandParameters<unknown>) {
         if (params.state.hand != null && params.state.hand < 0) {
             this.jumpToLabel(params);
         }
@@ -225,13 +225,13 @@ class JumpIfNeg extends Jump {
  * An instance of a command to be executed. Includes the command and its parameters.
  */
 export class CommandInstance {
-    constructor(cmd: Command, param: any) {
+    constructor(cmd: Command, param: string | number | undefined) {
         this.command = cmd;
         this.parameter = param;
     }
 
     public command: Command;
-    public parameter: any;
+    public parameter: string | number | undefined;
 
     public getName() {
         if (!this.command.usesParameter) {
@@ -357,7 +357,7 @@ export class TapeController implements IController {
 
     private data!: Binding<TapeAttrs, "<">;
 
-    private timer: any;
+    private timer?: NodeJS.Timer;
 
     private inputString: string = "";
     private memString: string = "";
@@ -551,7 +551,7 @@ export class TapeController implements IController {
     private stop() {
         if (this.timer) {
             clearInterval(this.timer);
-            this.timer = null;
+            this.timer = undefined;
         }
     }
 

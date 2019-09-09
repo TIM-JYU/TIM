@@ -5,17 +5,19 @@ import angular from "angular";
 import * as t from "io-ts";
 import {PluginBase, pluginBindings} from "tim/plugin/util";
 import {$http, $httpParamSerializer} from "tim/util/ngimport";
-import {to} from "tim/util/utils";
+import {clone, to} from "tim/util/utils";
 import {timApp} from "../app";
 import {getParId} from "../document/parhelpers";
 import {ViewCtrl} from "../document/viewctrl";
 import {IDocument} from "../item/IItem";
 import {showInputDialog} from "../ui/inputDialog";
+import {Users} from "../user/userService";
 import {widenFields} from "../util/common";
 import {GenericPluginMarkup, GenericPluginTopLevelFields, nullable, withDefault} from "./attributes";
 import "./tableForm.css";
 import {
     CellAttrToSave,
+    CellEntity,
     CellToSave,
     CellType,
     colnumToLetters,
@@ -55,7 +57,10 @@ const TableFormMarkup = t.intersection([
         emailUsersButtonText: nullable(t.string),
         fields: t.array(t.string),
         showToolbar: t.boolean,
-        hide: withDefault(t.object, {}),
+        hide: t.partial({
+            editMenu: t.boolean,
+            insertMenu: t.boolean,
+        }),
         sisugroups: t.string,
         runScripts: t.array(t.string),
     }),
@@ -94,7 +99,7 @@ const TableFormAll = t.intersection([
         fields: t.array(t.string),
         realnamemap: t.record(t.string, t.string),
         emailmap: t.record(t.string, t.string),
-        membershipmap: t.record(t.string, t.any),
+        membershipmap: t.record(t.string, nullable(t.string)),
         rows: Rows,
         styles: Styles,
     }),
@@ -134,11 +139,11 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
     };
     // TODO: Change row format to properly typed format (maybe userobject:IRowstype) format
     private rows!: IRowsType;
-    private styles!: t.TypeOf<typeof Styles>;
+    private styles?: t.TypeOf<typeof Styles>;
     private fields!: string[];
     private realnamemap!: Record<string, string>;
     private emailmap!: Record<string, string>;
-    private membershipmap!: Record<string, string>;
+    private membershipmap!: Record<string, string | null>;
     private aliases!: Record<string, string>;
     private realnames = false;
     private usernames = false;
@@ -207,8 +212,8 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
         if (this.viewctrl && tid) {
             this.viewctrl.addTableForm(this, tid);
         }
-        const d: any =  this.data;
-        const table: any =  this.data.table;
+        const d =  this.data;
+        const table =  this.data.table;
         if ( this.attrs.fontSize ) { table.fontSize = this.attrs.fontSize; }
         d.taskBorders = this.attrs.taskBorders;
         this.fixedColor = this.attrs.fixedColor || this.fixedColor;
@@ -220,7 +225,7 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
         this.data.hide = { editMenu: true, insertMenu: true};
         if ( this.attrs.hide) {
             this.data.hide = this.attrs.hide; // TODO: TimTablen oletukset tähän
-            const hide: any = this.attrs.hide;
+            const hide = this.attrs.hide;
             if ( hide.editMenu === undefined) { this.data.hide.editMenu = true; }
             if ( hide.insertMenu === undefined) { this.data.hide.insertMenu = true; }
         }
@@ -236,7 +241,7 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
 
         this.rows = this.attrsall.rows || {};
         this.rowKeys = Object.keys(this.rows);
-        this.styles = this.attrsall.styles || {};
+        this.styles = this.attrsall.styles;
         this.fields = this.attrsall.fields || [];
         this.realnamemap = this.attrsall.realnamemap || {};
         this.emailmap = this.attrsall.emailmap || {};
@@ -444,14 +449,12 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
             for (const f of tableFields) {
                 for (let y = 0; y < this.rowKeys.length; y++) {
                     if (styles && !angular.equals(styles, {})) {
-                        this.data.userdata.cells[taskColumns[f] + (y + 1)] = Object.assign(
-                            {cell: rows[this.rowKeys[y]][f]},
-                            styles[this.rowKeys[y]][f],
-                        );
+                        this.data.userdata.cells[taskColumns[f] + (y + 1)] = {
+                            cell: rows[this.rowKeys[y]][f],
+                            ...styles[this.rowKeys[y]][f],
+                        };
                     } else {
-                        this.data.userdata.cells[taskColumns[f] + (y + 1)] = Object.assign(
-                            {cell: rows[this.rowKeys[y]][f]},
-                        );
+                        this.data.userdata.cells[taskColumns[f] + (y + 1)] = {cell: rows[this.rowKeys[y]][f]};
                     }
                 }
             }
@@ -545,14 +548,12 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
                     for (y = 0; y < this.rowKeys.length; y++) {
                         // this.data.userdata.cells[colnumToLetters(x + xOffset) + (y + 1)] = this.rows[this.rowKeys[y]][this.attrsall.fields[x]];
                         if ( this.styles && !angular.equals(this.styles, {}) ) {
-                            this.data.userdata.cells[colnumToLetters(x + xOffset) + (y + 1)] = Object.assign(
-                                {cell: this.rows[this.rowKeys[y]][this.fields[x]]},
-                                this.styles[this.rowKeys[y]][this.fields[x]],
-                            );
+                            this.data.userdata.cells[colnumToLetters(x + xOffset) + (y + 1)] = {
+                                cell: this.rows[this.rowKeys[y]][this.fields[x]],
+                                ...this.styles[this.rowKeys[y]][this.fields[x]],
+                            };
                         } else {
-                            this.data.userdata.cells[colnumToLetters(x + xOffset) + (y + 1)] = Object.assign(
-                                {cell: this.rows[this.rowKeys[y]][this.fields[x]]},
-                            );
+                            this.data.userdata.cells[colnumToLetters(x + xOffset) + (y + 1)] = {cell: this.rows[this.rowKeys[y]][this.fields[x]]};
                         }
                     }
                 }
@@ -824,7 +825,6 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
             this.sendEmailTim();
             return;
         }
-        const w: any = window;
         // TODO: iPad do not like ;
         let  addrs = this.emaillist.replace(/\n/g, ",");
         let bcc = "";
@@ -834,7 +834,7 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
         }
         if ( this.emailbccme ) {
             if ( bcc ) { bcc += ","; }
-            bcc += w.current_user.email;
+            bcc += Users.getCurrent().email;
         }
         window.location.href = "mailto:" + addrs
               + "?" + "subject=" + this.emailsubject
@@ -926,8 +926,8 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
         if (keys.length == 0) {
             return;
         }
-        const replyRows: { [index: string]: { [index: string]: CellType } } = {};
-        const styleRows: { [index: string]: Record<string, string> } = {};
+        const replyRows: Record<string, Record<string, CellEntity>> = {};
+        const styleRows: Record<string, Record<string, string>> = {};
         const changedFields = new Set<string>();
         try {
             for (const coord of keys) {
@@ -949,7 +949,7 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
                 if (!isPrimitiveCell(cell)) {
                     cellContent = cell.cell;
                     if (this.attrs.saveStyles) {
-                        const cellcopy = JSON.parse(JSON.stringify(cell));
+                        const cellcopy = clone(cell);
                         delete cellcopy.cell;
                         // cellStyle = JSON.stringify(cellcopy);
                         cellStyle = cellcopy;
@@ -1041,7 +1041,7 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
         this.isRunning = false;
         if (r.ok) {
             timTable.confirmSaved();
-           location.reload();
+            location.reload();
         } else {
             this.error = r.result.data.error;
         }

@@ -3,11 +3,12 @@ import $ from "jquery";
 import {timApp} from "tim/app";
 import {ConsentType} from "../ui/consent";
 import {showMessageDialog} from "../ui/dialog";
-import {$http, $timeout, $window} from "../util/ngimport";
+import {settingsglobals} from "../util/globals";
+import {$http, $timeout} from "../util/ngimport";
 import {IOkResponse, to} from "../util/utils";
 import {Users} from "./userService";
 
-interface ISettings {
+export interface ISettings {
     css_combined: string;
     custom_css: string;
     disable_menu_hover: boolean;
@@ -32,9 +33,9 @@ export class SettingsCtrl implements IController {
     private storageClear = false;
 
     constructor() {
-        this.settings = $window.userPrefs;
-        this.cssFiles = $window.css_files;
-        this.notifications = $window.notifications;
+        this.settings = settingsglobals().userPrefs;
+        this.cssFiles = settingsglobals().css_files;
+        this.notifications = settingsglobals().notifications;
         this.updateCss();
         this.style = document.createElement("style");
         this.style.type = "text/css";

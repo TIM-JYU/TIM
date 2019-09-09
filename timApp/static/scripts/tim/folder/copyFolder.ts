@@ -1,6 +1,6 @@
 import {IController, IScope} from "angular";
 import {timApp} from "../app";
-import {IItem} from "../item/IItem";
+import {IFolder, IItem} from "../item/IItem";
 import {showMessageDialog} from "../ui/dialog";
 import {$http} from "../util/ngimport";
 import {Binding, to} from "../util/utils";
@@ -21,7 +21,7 @@ class CopyFolderCtrl implements IController {
     private destExists?: boolean;
     private copyFolderPath: string | undefined;
     private copyFolderExclude: string;
-    private newFolder: any;
+    private newFolder?: IFolder;
 
     constructor(scope: IScope) {
         this.scope = scope;
@@ -49,7 +49,7 @@ class CopyFolderCtrl implements IController {
 
     async copyFolder(path: string, exclude: string) {
         this.copyingFolder = "copying";
-        const r = await to($http.post(`/copy/${this.item.id}`, {destination: path, exclude: exclude}));
+        const r = await to($http.post<IFolder>(`/copy/${this.item.id}`, {destination: path, exclude: exclude}));
         if (r.ok) {
             this.copyingFolder = "finished";
             this.copyPreviewList = undefined;

@@ -1,6 +1,9 @@
+import AceAjax = Ace;
+import IAceEditor = Ace.Editor;
+import {Ace} from "ace";
+import {ace} from "tim/editor/ace";
 import {wrapText} from "../document/editing/editing";
 import {$log, $timeout} from "../util/ngimport";
-import {IAceEditor} from "./ace-types";
 import {BaseParEditor, CURSOR, focusAfter, IEditorCallbacks, SelectionRange} from "./BaseParEditor";
 
 interface ISnippetManager {
@@ -11,16 +14,16 @@ export class AceParEditor extends BaseParEditor {
     public editor: IAceEditor;
     private snippetManager: ISnippetManager;
 
-    constructor(ace: AceAjax.Ace, editor: AceAjax.Editor, callbacks: IEditorCallbacks, mode: string = "ace/mode/markdown") {
-        super(editor as IAceEditor, callbacks);
-        this.editor = editor as IAceEditor;
-        this.snippetManager = ace.require("ace/snippets").snippetManager;
+    constructor(editor: AceAjax.Editor, callbacks: IEditorCallbacks, mode: string = "ace/mode/markdown") {
+        super(editor, callbacks);
+        this.editor = editor;
+        const snippetModule = ace.require("ace/snippets") as {snippetManager: ISnippetManager};
+        this.snippetManager = snippetModule.snippetManager;
         const line = editor.renderer.lineHeight;
         const containertop = $(".editorContainer").position().top;
         const height = ($(window).innerHeight() || 700) - containertop;
         const max = Math.floor((height / 2) / line);
 
-        this.editor.$blockScrolling = Infinity;
         this.editor.renderer.setPadding(10);
         this.editor.renderer.setScrollMargin(2, 2, 2, 40);
         this.editor.renderer.setVScrollBarAlwaysVisible(true);
@@ -42,7 +45,6 @@ export class AceParEditor extends BaseParEditor {
             bindKey: {
                 win: "Ctrl-S",
                 mac: "Command-S",
-                sender: "editor|cli",
             },
             exec: () => {
                 this.callbacks.saveClicked();
@@ -53,7 +55,6 @@ export class AceParEditor extends BaseParEditor {
             bindKey: {
                 win: "Ctrl-B",
                 mac: "Command-B",
-                sender: "editor|cli",
             },
             exec: () => {
                 this.surroundClicked("**", "**");
@@ -64,7 +65,6 @@ export class AceParEditor extends BaseParEditor {
             bindKey: {
                 win: "Ctrl-I",
                 mac: "Command-I",
-                sender: "editor|cli",
             },
             exec: () => {
                 this.surroundClicked("*", "*", () => this.surroundedByItalic());
@@ -75,7 +75,6 @@ export class AceParEditor extends BaseParEditor {
             bindKey: {
                 win: "Ctrl-O",
                 mac: "Command-O",
-                sender: "editor|cli",
             },
             exec: () => {
                 this.surroundClicked("`", "`");
@@ -86,7 +85,6 @@ export class AceParEditor extends BaseParEditor {
             bindKey: {
                 win: "Ctrl-Alt-O",
                 mac: "Command-Alt-O",
-                sender: "editor|cli",
             },
             exec: () => {
                 this.codeBlockClicked();
@@ -97,7 +95,6 @@ export class AceParEditor extends BaseParEditor {
             bindKey: {
                 win: "Ctrl-1",
                 mac: "Command-1",
-                sender: "editor|cli",
             },
             exec: () => {
                 this.headerClicked("#");
@@ -108,7 +105,6 @@ export class AceParEditor extends BaseParEditor {
             bindKey: {
                 win: "Ctrl-2",
                 mac: "Command-2",
-                sender: "editor|cli",
             },
             exec: () => {
                 this.headerClicked("##");
@@ -119,7 +115,6 @@ export class AceParEditor extends BaseParEditor {
             bindKey: {
                 win: "Ctrl-3",
                 mac: "Command-3",
-                sender: "editor|cli",
             },
             exec: () => {
                 this.headerClicked("###");
@@ -130,7 +125,6 @@ export class AceParEditor extends BaseParEditor {
             bindKey: {
                 win: "Ctrl-4",
                 mac: "Command-4",
-                sender: "editor|cli",
             },
             exec: () => {
                 this.headerClicked("####");
@@ -141,7 +135,6 @@ export class AceParEditor extends BaseParEditor {
             bindKey: {
                 win: "Ctrl-5",
                 mac: "Command-5",
-                sender: "editor|cli",
             },
             exec: () => {
                 this.headerClicked("#####");
@@ -152,7 +145,6 @@ export class AceParEditor extends BaseParEditor {
             bindKey: {
                 win: "Ctrl-Enter",
                 mac: "Command-Enter",
-                sender: "editor|cli",
             },
             exec: () => {
                 this.endLineClicked();
@@ -163,7 +155,6 @@ export class AceParEditor extends BaseParEditor {
             bindKey: {
                 win: "Shift-Enter",
                 mac: "Shift-Enter",
-                sender: "editor|cli",
             },
             exec: () => {
                 this.paragraphClicked();
@@ -174,7 +165,6 @@ export class AceParEditor extends BaseParEditor {
             bindKey: {
                 win: "Ctrl-Y",
                 mac: "Command-Y",
-                sender: "editor|cli",
             },
             exec: () => {
                 this.commentClicked();
@@ -185,16 +175,16 @@ export class AceParEditor extends BaseParEditor {
             bindKey: {
                 win: "Ctrl-M",
                 mac: "Command-M",
-                sender: "editor|cli",
             },
             exec: () => {
                 this.pageBreakClicked();
             },
         });
-        this.editor.keyBinding.addKeyboardHandler(
-            () => {
-                this.checkWrap();
-            }, null,
+        this.editor.keyBinding.setKeyboardHandler({
+                handleKeyboard: () => {
+                    this.checkWrap();
+                },
+            },
         );
     }
 
@@ -464,8 +454,8 @@ export class AceParEditor extends BaseParEditor {
             this.editor.selection.setRange(range, false);
         }
         if (ci >= 0) {
-            const pos = this.editor.session.doc.positionToIndex(start, 0);
-            const r = this.editor.session.doc.indexToPosition(pos + ci, 0);
+            const pos = this.editor.session.getDocument().positionToIndex(start, 0);
+            const r = this.editor.session.getDocument().indexToPosition(pos + ci, 0);
             range.start = r;
             range.end = r;
             this.editor.selection.setRange(range, false);
@@ -582,15 +572,15 @@ export class AceParEditor extends BaseParEditor {
     getPosition(): SelectionRange {
         const r = this.editor.selection.getRange();
         return [
-            this.editor.session.doc.positionToIndex(r.start, 0),
-            this.editor.session.doc.positionToIndex(r.end, 0),
+            this.editor.session.getDocument().positionToIndex(r.start, 0),
+            this.editor.session.getDocument().positionToIndex(r.end, 0),
         ];
     }
 
     setPosition([start, end]: SelectionRange) {
-        const range = this.editor.session.doc.indexToPosition(start, 0);
-        const range2 = this.editor.session.doc.indexToPosition(end, 0);
-        const Range = ace.require("ace/range").Range;
+        const range = this.editor.session.getDocument().indexToPosition(start, 0);
+        const range2 = this.editor.session.getDocument().indexToPosition(end, 0);
+        const Range = ace.Range;
         this.editor.selection.setRange(Range.fromPoints(range, range2), false);
         this.gotoCursor();
     }
@@ -608,7 +598,7 @@ export class AceParEditor extends BaseParEditor {
         if (!r.modified) { return; }
         const editor = this.editor;
         let cursor = editor.selection.getCursor();
-        const index = editor.session.doc.positionToIndex(cursor, 0);
+        const index = editor.session.getDocument().positionToIndex(cursor, 0);
         const range = editor.getSelection().getRange(); // new Range(0,0, 10000,1000);// $scope.editor.session.doc.indexToPosition(100000);
         range.start.row = 0; // TODO: easier way to find full range
         range.end.row = 1000;
@@ -617,7 +607,7 @@ export class AceParEditor extends BaseParEditor {
         // $scope.setEditorText(r.s); // not good, undo does not work
         editor.session.replace(range, r.s);
         $timeout(() => {
-            cursor = editor.session.doc.indexToPosition(index, 0);
+            cursor = editor.session.getDocument().indexToPosition(index, 0);
             editor.selection.moveCursorToPosition(cursor);
             editor.selection.clearSelection();
         });

@@ -8,7 +8,8 @@ import {EditMode} from "tim/document/popupMenu";
 import {ITimComponent, ViewCtrl} from "tim/document/viewctrl";
 import {GenericPluginMarkup, Info, nullable, withDefault} from "tim/plugin/attributes";
 import {PluginBase, pluginBindings} from "tim/plugin/util";
-import {$http, $window} from "tim/util/ngimport";
+import {documentglobals} from "tim/util/globals";
+import {$http} from "tim/util/ngimport";
 import {to} from "tim/util/utils";
 
 const feedbackApp = angular.module("feedbackApp", ["ngSanitize"]);
@@ -154,7 +155,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
         this.checkCorrectAnswersCount();
         this.checkInstructions();
         this.checkDefaultMatch();
-        this.editMode = $window.editMode;
+        this.editMode = documentglobals().editMode;
         if (this.editMode != null) {
             this.edited = true;
         }
@@ -1110,8 +1111,8 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
      *
      */
     async $doCheck() {
-        if (!this.attrsall.preview && this.editMode != $window.editMode) {
-            this.editMode = $window.editMode;
+        if (!this.attrsall.preview && this.editMode != documentglobals().editMode) {
+            this.editMode = documentglobals().editMode;
             const instructions = document.querySelectorAll(".par.instruction");
             if (!this.edited) {
                 this.showParagraph(instructions[0]);

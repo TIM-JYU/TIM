@@ -4,7 +4,8 @@ import {Moment} from "moment";
 import {IPluginInfoResponse} from "../editor/parCompiler";
 import {openEditor, PareditorController} from "../editor/pareditor";
 import {IModalInstance, showMessageDialog} from "../ui/dialog";
-import {$compile, $http, $window} from "../util/ngimport";
+import {documentglobals} from "../util/globals";
+import {$compile, $http} from "../util/ngimport";
 import {isMobileDevice, to} from "../util/utils";
 import {EditPosition, EditType} from "./editing/editing";
 import {IExtraData, IParResponse} from "./editing/edittypes";
@@ -180,7 +181,7 @@ export class NotesHandler {
         const btn = document.createElement("input");
         btn.type = "button";
         btn.classList.add("note-badge");
-        if ($window.velpMode) {
+        if (documentglobals().velpMode) {
             btn.classList.add("note-badge-with-velp");
         }
         btn.classList.add("timButton");

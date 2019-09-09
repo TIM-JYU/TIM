@@ -1,5 +1,5 @@
 import moment from "moment";
-import {$window} from "../util/ngimport";
+import {documentglobals} from "../util/globals";
 import {getParAttributes, getParId, getRefAttrs, Paragraph} from "./parhelpers";
 
 type SectionMap = Map<string, JQuery[]>;
@@ -64,7 +64,7 @@ export class Document {
                 currentSectionPars = this.buildSections(currentSectionPars, child.find(".areaContent"));
             } else if (child.hasClass("par")) {
                 const attrs = getParAttributes(child);
-                const refAttrs = getRefAttrs(child)["ref-attrs"];
+                const refAttrs = getRefAttrs(child)["ref-attrs"] as Record<string, string>;
                 const content = child.children(".parContent");
                 if (content.is(":visible")) {
                     if (content.children("h1, h2, h3").length > 0) {
@@ -88,7 +88,7 @@ export class Document {
     }
 
     public readExpiry() {
-        return moment.duration($window.readExpiry);
+        return moment.duration(documentglobals().readExpiry);
     }
 }
 

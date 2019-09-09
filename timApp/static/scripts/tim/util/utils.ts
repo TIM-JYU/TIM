@@ -3,21 +3,12 @@ import * as t from "io-ts";
 import moment from "moment";
 import {$timeout} from "./ngimport";
 
-export function checkBindings(controller: any, bindings: {[name: string]: string}) {
-    for (const k of Object.keys(bindings)) {
-        if (!bindings[k].startsWith("?")) {
-            if (controller[k] == null) {
-                throw new Error(`Binding is undefined: ${k}`);
-            }
-        }
-    }
-}
-
 const blacklist = new Set(["name", "title"]);
+const UnknownRecord = t.record(t.string, t.unknown);
 
 // adapted from http://aboutcode.net/2013/07/27/json-date-parsing-angularjs.html
-export function convertDateStringsToMoments(input: {[index: string]: any}): void {
-    if (input == null || typeof input !== "object") {
+export function convertDateStringsToMoments(input: unknown): void {
+    if (!UnknownRecord.is(input)) {
         return;
     }
 
@@ -56,7 +47,7 @@ export function stringOrNull(x: {toString: () => string}): string {
 }
 
 export function checkIfElement(x: Node): x is Element {
-    return typeof ((x as any).hasAttribute) === "function";
+    return x instanceof Element;
 }
 
 /**
@@ -153,16 +144,16 @@ export function getURLParameter(sParam: string): string | undefined {
  *
  * @param modules The modules to mark as used.
  */
-export function markAsUsed(...modules: any[]) {
+export function markAsUsed(...modules: unknown[]) {
     // no need to do anything here
 }
 
-export function printJson(data: any, desc: string = "") {
+export function printJson(data: unknown, desc: string = "") {
     console.error(desc, JSON.stringify(data));
 }
 
 export function clone<T>(obj: T): T {
-    return JSON.parse(JSON.stringify(obj));
+    return JSON.parse(JSON.stringify(obj)) as T;
 }
 
 interface Success<T> {ok: true; result: T; }
@@ -179,11 +170,11 @@ export function to<T, U = {data: {error: string}}>(promise: Promise<T> | IPromis
     return (promise as Promise<T>)
         .then<Success<T>>((data: T) => ({ok: true, result: data}))
         .catch<Failure<U>>((err) => {
-            return {ok: false, result: err};
+            return {ok: false, result: err as U};
         });
 }
 
-export function assertNotNull(obj: any) {
+export function assertNotNull(obj: unknown) {
     if (obj == null) {
         throw new Error("object was unexpectedly null or undefined");
     }
@@ -211,12 +202,8 @@ export type Binding<T, Type extends BindingType> = T;
 
 export type Require<T> = Binding<T, "<">;
 
-function getVisualViewport() {
-    const w = window as any;
-    if (!w.visualViewport) {
-        return undefined;
-    }
-    return w.visualViewport as {
+interface ExtendedWindow extends Window {
+    visualViewport?: {
         height: number,
         offsetLeft: number,
         offsetTop: number,
@@ -227,6 +214,15 @@ function getVisualViewport() {
         scale: number,
         width: number,
     };
+    TouchEvent?: unknown;
+}
+
+function getVisualViewport() {
+    const w = window as ExtendedWindow;
+    if (!w.visualViewport) {
+        return undefined;
+    }
+    return w.visualViewport;
 }
 
 function fixClientRectForVisualViewport(r: ClientRect | DOMRect) {
@@ -338,7 +334,7 @@ export function getPageXY(e: JQuery.Event) {
     if (!(
         "pageX" in e) || (
         e.pageX == 0 && e.pageY == 0)) {
-        const originalEvent = e.originalEvent as any;
+        const originalEvent = e.originalEvent as TouchEvent;
         if (originalEvent.touches.length) {
             return {
                 X: originalEvent.touches[0].pageX,
@@ -357,12 +353,12 @@ export function getPageXY(e: JQuery.Event) {
     return {X: e.pageX, Y: e.pageY};
 }
 
-export function setStorage(key: string, value: any) {
+export function setStorage(key: string, value: unknown) {
     const s = JSON.stringify(value);
     window.localStorage.setItem(key, s);
 }
 
-export function getStorage(key: string) {
+export function getStorage(key: string): unknown {
     const s = window.localStorage.getItem(key);
     if (!s) {
         return s;
@@ -396,7 +392,7 @@ export function injectStyle(url: string) {
 }
 
 export function fixDefExport<T>(o: {default: T}) {
-    return o as any as T;
+    return o as unknown as T;
 }
 
 export interface IOkResponse {
@@ -422,11 +418,13 @@ export function valueDefu(s: string | undefined | null, def: string): string {
 
 export const StringArray = t.array(t.string);
 export const ModuleArray = t.array(t.type({name: t.string, requires: StringArray}));
+export const StringDict = t.record(t.string, t.string);
+export const StringUnknownDict = t.record(t.string, t.unknown);
 
 export type MouseOrTouch = MouseEvent | Touch;
 
 export function isTouchEvent(e: MouseOrTouch | TouchEvent): e is TouchEvent {
-    return (window as any).TouchEvent && e instanceof TouchEvent;
+    return (window as ExtendedWindow).TouchEvent && e instanceof TouchEvent;
 }
 
 export function posToRelative(e: Element, p: MouseOrTouch | TouchEvent) {

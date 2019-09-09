@@ -137,12 +137,12 @@ export interface ILecturePerson {
     user: IUser;
 }
 
-export function isLectureListResponse(response: any): response is ILectureListResponse {
-    return response.lectures != null && response.futureLectures != null;
+export function isLectureListResponse(response: unknown): response is ILectureListResponse {
+    return (response as ILectureListResponse).lectures != null && (response as ILectureListResponse).futureLectures != null;
 }
 
-export function isNoUpdatesResponse(response: any): response is INoUpdatesResponse {
-    return response.ms != null;
+export function isNoUpdatesResponse(response: unknown): response is INoUpdatesResponse {
+    return (response as INoUpdatesResponse).ms != null;
 }
 
 export interface ILectureListResponse2 {

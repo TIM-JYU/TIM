@@ -5,7 +5,7 @@ timApp.directive("onEnter", () => (scope, element, attrs) => {
     element.bind("keydown keypress", (event) => {
         if (event.which === KEY_ENTER) {
             scope.$apply(() => {
-                scope.$eval(attrs.onEnter);
+                scope.$eval(attrs.onEnter as string);
             });
             event.preventDefault();
         }

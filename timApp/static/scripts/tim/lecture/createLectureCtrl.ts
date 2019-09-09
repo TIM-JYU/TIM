@@ -19,7 +19,7 @@ import {ILecture, ILectureFormParams, ILectureOptions} from "./lecturetypes";
  * @copyright 2015 Timppa project authors
  */
 
-function isLecture(item: any): item is ILecture {
+function isLecture(item: unknown): item is ILecture {
     const l = item as ILecture;
     return l.end_time !== undefined &&
         l.is_access_code !== undefined &&

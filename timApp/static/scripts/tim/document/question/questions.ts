@@ -1,7 +1,7 @@
 import {IScope} from "angular";
 import $ from "jquery";
 import {showMessageDialog} from "../../ui/dialog";
-import {$window} from "../../util/ngimport";
+import {documentglobals} from "../../util/globals";
 import {EditPosition, EditType} from "../editing/editing";
 import {getParId, Paragraph} from "../parhelpers";
 import {ViewCtrl} from "../viewctrl";
@@ -16,7 +16,7 @@ export class QuestionHandler {
         this.sc = sc;
         this.viewctrl = view;
         if (view.lectureMode) {
-            this.noQuestionAutoNumbering = $window.noQuestionAutoNumbering;
+            this.noQuestionAutoNumbering = documentglobals().noQuestionAutoNumbering;
         }
     }
 
@@ -108,6 +108,6 @@ export class QuestionHandler {
 
     showQuestions() {
         return (this.viewctrl.item.rights.teacher && (this.viewctrl.lectureMode || this.viewctrl.inLecture)) ||
-            ($window.editMode && this.viewctrl.item.rights.editable);
+            (documentglobals().editMode && this.viewctrl.item.rights.editable);
     }
 }

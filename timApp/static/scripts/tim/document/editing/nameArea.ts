@@ -8,7 +8,7 @@ timApp.directive("noPeriod", () => (scope, element, attrs) => {
     element.bind("keydown", (event) => {
         if ($.inArray(event.which, keyCode) !== -1) {
             scope.$apply(() => {
-                scope.$eval(attrs.noPeriod);
+                scope.$eval(attrs.noPeriod as string);
                 event.preventDefault();
             });
             event.preventDefault();

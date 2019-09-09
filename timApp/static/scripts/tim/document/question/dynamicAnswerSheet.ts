@@ -47,20 +47,6 @@ function uncheckRadio(this: HTMLElement) {
     elem.prop("previousValue", elem.prop("checked"));
 }
 
-export function getJsonAnswers(answer: string): AnswerTable {
-    // Converts answer string to JSON table
-    if (answer.length > 0 && answer[0] === "[") {
-        return JSON.parse(answer);
-    }
-    const singleAnswers: AnswerTable = [];
-    const allAnswers = answer.split("|");
-
-    for (const a of allAnswers) {
-        singleAnswers.push(a.split(","));
-    }
-    return singleAnswers;
-}
-
 function deletePar(s: string) {
     if (!s.startsWith("<p>")) {
         return s;

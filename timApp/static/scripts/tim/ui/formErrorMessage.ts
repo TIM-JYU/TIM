@@ -29,7 +29,7 @@ class ErrorStateCtrl implements IController {
                 }
                 // formCtrl is not fully initialized yet (it doesn't have the inputs)
                 await $timeout();
-                this.for = this.formCtrl[name];
+                this.for = this.formCtrl[name] as INgModelController | undefined;
             } else {
                 throw new Error("multiple inputs found for tim-error-state, so it needs 'for' attribute");
             }

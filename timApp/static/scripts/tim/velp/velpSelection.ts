@@ -1,4 +1,5 @@
 import {IController, IFormController} from "angular";
+import * as t from "io-ts";
 import {timApp} from "tim/app";
 import {Binding, clone, markAsUsed, Require} from "tim/util/utils";
 import * as velpSummary from "tim/velp/velpSummary";
@@ -135,8 +136,10 @@ export class VelpSelectionController implements IController {
 
         // Values to store in localstorage:
         this.order = this.getValuesFromLocalStorage(this.velpOrderingKey, "content");
-        this.selectedLabels = JSON.parse(this.getValuesFromLocalStorage(this.velpLabelsKey, "[]"));
-        this.advancedOn = JSON.parse(this.getValuesFromLocalStorage(this.advancedOnKey, "false"));
+        const lbls = JSON.parse(this.getValuesFromLocalStorage(this.velpLabelsKey, "[]"));
+        this.selectedLabels = t.array(t.number).is(lbls) ? lbls : [];
+        const adv = JSON.parse(this.getValuesFromLocalStorage(this.advancedOnKey, "false"));
+        this.advancedOn = t.boolean.is(adv) ? adv : false;
 
         this.onInit({$API: this});
 

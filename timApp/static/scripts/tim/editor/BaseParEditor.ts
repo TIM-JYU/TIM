@@ -1,11 +1,12 @@
+import {Ace} from "ace";
 import {$timeout} from "../util/ngimport";
-import {IAceEditor} from "./ace-types";
 import {AceParEditor} from "./AceParEditor";
 import {TextAreaParEditor} from "./TextAreaParEditor";
+import IAceEditor = Ace.Editor;
 
 export function focusAfter(target: TextAreaParEditor | AceParEditor, key: string, descriptor: PropertyDescriptor) {
-    const originalMethod = descriptor.value;
-    descriptor.value = function(this: BaseParEditor, ...args: any[]) {
+    const originalMethod = descriptor.value as (...args: unknown[]) => void;
+    descriptor.value = function(this: BaseParEditor, ...args: unknown[]) {
         originalMethod.apply(this, args);
         this.callbacks.wrapFn();
     };

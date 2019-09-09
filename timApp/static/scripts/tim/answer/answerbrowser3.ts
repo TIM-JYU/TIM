@@ -1,4 +1,6 @@
-import {IController, IHttpPromise, IRootElementService, IScope, ITranscludeFunction} from "angular";
+// TODO: Fix any types in this file.
+/* tslint:disable:no-any no-unsafe-any */
+import {IController, IRootElementService, IScope, ITranscludeFunction} from "angular";
 import * as allanswersctrl from "tim/answer/allAnswersController";
 import {timApp} from "tim/app";
 import {timLogTime} from "tim/util/timTiming";
@@ -9,8 +11,9 @@ import {DestroyScope} from "../ui/destroyScope";
 import {showMessageDialog} from "../ui/dialog";
 import {IUser} from "../user/IUser";
 import {Users} from "../user/userService";
+import {documentglobals} from "../util/globals";
 import {KEY_DOWN, KEY_LEFT, KEY_RIGHT, KEY_UP} from "../util/keycodes";
-import {$filter, $http, $httpParamSerializer, $q, $timeout, $window} from "../util/ngimport";
+import {$filter, $http, $httpParamSerializer, $q, $timeout} from "../util/ngimport";
 import {Binding, getURLParameter, markAsUsed, Require, to} from "../util/utils";
 import {showAllAnswers} from "./allAnswersController";
 import {IAnswer} from "./IAnswer";
@@ -738,8 +741,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
         if (this.user) {
             let userId = this.user.id;
             if ( this.isGlobal() ) {
-                const w: any = window;
-                userId = w.current_user.id;
+                userId = Users.getCurrent().id;
             }
             return {
                 answer_id: this.selectedAnswer ? this.selectedAnswer.id : undefined,
@@ -843,9 +845,8 @@ export class AnswerBrowserController extends DestroyScope implements IController
         if ( !c ) { return uid; }
         const a: any = c.attrsall;
         if ( a && a.markup && a.markup.useCurrentUser) {
-            const w: any = window;
-            this.user = w.current_user;  // TODO: looks bad when function has a side effect?
-            return w.current_user.id;
+            this.user = Users.getCurrent();  // TODO: looks bad when function has a side effect?
+            return Users.getCurrent().id;
         }
         return uid;
     }
@@ -951,7 +952,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
 
     showVelpsCheckBox() {
         // return this.$parent.teacherMode || $window.velpMode; // && this.$parent.item.rights.teacher;
-        return $window.velpMode || this.element.parents(".par").hasClass("has-annotation");
+        return documentglobals().velpMode || this.element.parents(".par").hasClass("has-annotation");
     }
 
     getTriesLeft() {

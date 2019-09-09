@@ -3,7 +3,8 @@ import $ from "jquery";
 import {watchEditMode} from "tim/document/editing/editmode";
 import {DialogController, registerDialogComponent, showDialog} from "../ui/dialog";
 import {Pos} from "../ui/draggable";
-import {$http, $timeout, $window} from "../util/ngimport";
+import {documentglobals} from "../util/globals";
+import {$http, $timeout} from "../util/ngimport";
 import {to} from "../util/utils";
 import {ViewCtrl} from "./viewctrl";
 import {IMenuFunctionEntry, MenuFunctionList} from "./viewutils";
@@ -38,7 +39,7 @@ export class PopupMenuController extends DialogController<{params: IPopupParams}
 
     constructor(element: IRootElementService, scope: IScope) {
         super(element, scope);
-        this.editState = $window.editMode;
+        this.editState = documentglobals().editMode;
     }
 
     updateAttrs(p: Partial<IPopupParams>) {

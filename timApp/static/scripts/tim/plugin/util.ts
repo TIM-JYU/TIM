@@ -211,7 +211,7 @@ export abstract class PluginBase<MarkupType extends IGenericPluginMarkup, A exte
      * ok: true if content was succesfully parsed
      * message: for replying with possible errors
      */
-    setAnswer(content: { [index: string]: string }): { ok: boolean, message: (string | undefined) } {
+    setAnswer(content: { [index: string]: unknown }): { ok: boolean, message: (string | undefined) } {
         return {ok: false, message: "Plugin doesn't support setAnswer"};
     }
 

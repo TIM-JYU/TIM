@@ -5,7 +5,7 @@ import {getActiveDocument} from "tim/document/document";
 import {IItem} from "../item/IItem";
 import {showMessageDialog} from "../ui/dialog";
 import {Users} from "../user/userService";
-import {$http, $log, $timeout, $window} from "../util/ngimport";
+import {$http, $log, $timeout} from "../util/ngimport";
 import {IOkResponse, isInViewport, markPageDirty, posToRelative, to} from "../util/utils";
 import {showDiffDialog} from "./diffDialog";
 import {EditPosition, EditType} from "./editing/editing";
@@ -99,12 +99,12 @@ async function markAllAsRead() {
     $(".readline").attr("class", "readline read");
 }
 
-let readPromise: IPromise<any> | null = null;
+let readPromise: IPromise<unknown> | null = null;
 let readingParId: string | undefined;
 
 function queueParagraphForReading() {
     //noinspection CssInvalidPseudoSelector
-    const visiblePars = $(".par:not('.preamble'):onScreen").find(".readline").not((i, e) => isAlreadyRead($(e), ReadingType.OnScreen));
+    const visiblePars = $(".par:not('.preamble')").filter((i, e) => isInViewport(e)).find(".readline").not((i, e) => isAlreadyRead($(e), ReadingType.OnScreen));
     const parToRead = visiblePars.first().parents(".par");
     const parId = getParId(parToRead);
 
@@ -122,7 +122,7 @@ function queueParagraphForReading() {
     readPromise = $timeout((async () => {
         await markParRead(parToRead, ReadingType.OnScreen);
         queueParagraphForReading();
-    }) as any, 300 * numWords);
+    }), 300 * numWords);
 }
 
 async function handleSeeChanges(elem: JQuery, e: JQuery.Event) {
@@ -220,9 +220,7 @@ export async function initReadings(sc: ViewCtrl) {
         return false;
     });
 
-    ($ as any).expr[":"].onScreen = isInViewport;
-
-    $($window).scroll(queueParagraphForReading);
+    $(window).scroll(queueParagraphForReading);
 
     queueParagraphForReading();
 

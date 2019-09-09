@@ -45,6 +45,7 @@ import * as annotation from "tim/velp/annotation";
 import * as reviewController from "tim/velp/reviewController";
 import * as velpSelection from "tim/velp/velpSelection";
 import {ParCompiler} from "./editor/parCompiler";
+import {genericglobals} from "./util/globals";
 import {insertLogDivIfEnabled, timLogInit, timLogTime} from "./util/timTiming";
 
 markAsUsed(
@@ -100,7 +101,7 @@ if (document.location) {
 $(async () => {
     timLogTime("DOM ready", "main.ts");
     insertLogDivIfEnabled();
-    const jsmodules = (window as any).JSMODULES;
+    const jsmodules = genericglobals().JSMODULES;
     const moduleLoads = [];
     for (const mname of jsmodules) {
         const m = import(mname);
@@ -108,13 +109,13 @@ $(async () => {
     }
     const angularModules: string[] = [];
     for (const m of moduleLoads) {
-        const loaded = await m;
+        const loaded = await m as {moduleDefs: unknown};
         const mods = loaded.moduleDefs;
         if (ModuleArray.is(mods)) {
             angularModules.push(...mods.map((mm) => mm.name));
         }
     }
-    const extraAngularModules = (window as any).ANGULARMODULES;
+    const extraAngularModules = genericglobals().ANGULARMODULES;
     if (StringArray.is(extraAngularModules)) {
         angularModules.push(...extraAngularModules);
     }

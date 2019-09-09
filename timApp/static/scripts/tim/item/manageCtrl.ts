@@ -4,7 +4,8 @@ import {IChangelogEntry, IManageResponse} from "../document/editing/edittypes";
 import {isManageResponse, showRenameDialog} from "../document/editing/pluginRenameForm";
 import * as copyFolder from "../folder/copyFolder";
 import {showMessageDialog} from "../ui/dialog";
-import {$http, $timeout, $upload, $window} from "../util/ngimport";
+import {manageglobals} from "../util/globals";
+import {$http, $upload} from "../util/ngimport";
 import {clone, markAsUsed, to} from "../util/utils";
 import {IDocument, IFolder, IFullDocument, IItem, ITranslation, redirectToItem} from "./IItem";
 
@@ -41,16 +42,18 @@ export class PermCtrl implements IController {
     private tracWikiText: string = "";
     private saving: boolean = false;
     private readUpdating: boolean = false;
-    private file: any;
+    private file?: File;
     private newAliasForm!: IFormController; // initialized in the template
     private notifySettings: {} = {};
     private objName: string;
+    private progress?: number;
+    private result?: boolean;
 
     constructor() {
         this.newTranslation = {language: "", title: ""};
-        this.accessTypes = $window.accessTypes;
-        this.item = $window.item;
-        this.objName = $window.objName;
+        this.accessTypes = manageglobals().accessTypes;
+        this.item = manageglobals().item;
+        this.objName = manageglobals().objName;
         this.newFolderName = this.item.location;
         this.newAlias = {location: this.newFolderName};
 
@@ -283,13 +286,13 @@ export class PermCtrl implements IController {
         }
     }
 
-    updateDocument(file: any) {
+    async updateDocument(file: File) {
         const d = this.itemAsDocument();
         this.file = file;
         this.fileUploadError = undefined;
         if (file) {
-            this.file.progress = 0;
-            file.upload = $upload.upload({
+            this.progress = 0;
+            const upload = $upload.upload<IFullDocument>({
                 url: "/update/" + this.item.id,
                 data: {
                     file,
@@ -298,24 +301,20 @@ export class PermCtrl implements IController {
                 },
                 method: "POST",
             });
-
-            file.upload.then((response: any) => {
-                $timeout(() => {
-                    this.file.result = response.data;
-                    d.versions = response.data.versions;
-                    this.updateFullText(response.data.fulltext);
-                });
-            }, (response: any) => {
-                if (response.status > 0) {
-                    this.fileUploadError = "Error: " + response.data.error;
-                }
-            }, (evt: any) => {
-                this.file.progress = Math.min(100, Math.floor(100.0 *
+            upload.progress((evt) => {
+                this.progress = Math.min(100, Math.floor(100.0 *
                     evt.loaded / evt.total));
             });
 
-            file.upload.finally(() => {
-            });
+            const r = await to(upload);
+            if (r.ok) {
+                const response = r.result;
+                this.result = true;
+                d.versions = response.data.versions;
+                this.updateFullText(response.data.fulltext);
+            } else {
+                this.fileUploadError = "Error: " + r.result.data.error;
+            }
         }
     }
 

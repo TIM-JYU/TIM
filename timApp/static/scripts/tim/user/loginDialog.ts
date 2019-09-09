@@ -278,7 +278,7 @@ export class LoginDialogController extends DialogController<{params: ILoginParam
         this.draggable.setCaption(this.getTitle());
     }
 
-    private async sendRequest<T>(url: string, data: any): ToReturn<T> {
+    private async sendRequest<T>(url: string, data: unknown): ToReturn<T> {
         this.signUpRequestInProgress = true;
         const r = await to($http.post<T>(url, data));
         this.signUpRequestInProgress = false;

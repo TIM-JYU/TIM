@@ -5,7 +5,8 @@ import {CURSOR} from "../../editor/BaseParEditor";
 import {compileWithViewctrl, IPluginInfoResponse, ParCompiler} from "../../editor/parCompiler";
 import {openEditor, PareditorController} from "../../editor/pareditor";
 import {showMessageDialog} from "../../ui/dialog";
-import {$compile, $http, $timeout, $window} from "../../util/ngimport";
+import {documentglobals} from "../../util/globals";
+import {$compile, $http, $timeout} from "../../util/ngimport";
 import {empty, isMobileDevice, to} from "../../util/utils";
 import {onClick} from "../eventhandlers";
 import {
@@ -479,7 +480,7 @@ This will delete the whole ${options.area ? "area" : "paragraph"} from the docum
                     ...(this.viewctrl.lectureCtrl != null ? {timLecture: {instance: this.viewctrl.lectureCtrl}} : {}),
                 },
             }));
-        if ($window.editMode === "area") {
+        if (documentglobals().editMode === "area") {
             newPars.find(".editline").removeClass("editline").addClass("editline-disabled");
         }
 
@@ -560,15 +561,11 @@ This will delete the whole ${options.area ? "area" : "paragraph"} from the docum
         return tableCtrl.isInEditMode();
     }
 
-    isQST(par: Paragraph | undefined): boolean | undefined {
+    isQST(par: Paragraph | undefined): boolean {
         if (par == null) {
-            return undefined;
+            return false;
         }
-
-        const attrs: any = par.attr("attrs");
-        if (!attrs) { return false; }
-
-        return ( attrs.indexOf('"plugin": "qst"') >= 0 );
+        return getParAttributes(par).plugin === "qst";
     }
 
     getEditorFunctions(par?: Paragraph): MenuFunctionList {
@@ -582,7 +579,7 @@ This will delete the whole ${options.area ? "area" : "paragraph"} from the docum
                 {func: (e: JQuery.Event, p: Paragraph) => this.closeWithoutSaving(e, p), desc: "Close editor and cancel", show: true},
                 {func: empty, desc: "Close menu", show: true},
             ];
-        } else if (this.viewctrl.selection.start != null && $window.editMode) {
+        } else if (this.viewctrl.selection.start != null && documentglobals().editMode) {
             return [
                 {
                     func: (e: JQuery.Event, p: Paragraph) => this.beginAreaEditing(e, p),
@@ -600,7 +597,7 @@ This will delete the whole ${options.area ? "area" : "paragraph"} from the docum
                 {
                     func: (e: JQuery.Event, p: Paragraph) => this.viewctrl.notesHandler.showNoteWindow(e, p),
                     desc: "Comment/note",
-                    show: this.viewctrl.item.rights.can_comment && par && !isHelpPar(par),
+                    show: this.viewctrl.item.rights.can_comment && par != null && !isHelpPar(par),
                 },
                 {
                     func: (e, p) => {
@@ -615,7 +612,7 @@ This will delete the whole ${options.area ? "area" : "paragraph"} from the docum
                         }
                     },
                     desc: "Follow reference",
-                    show: par && isReference(par),
+                    show: par != null && isReference(par),
                 },
                 {
                     func: (e: JQuery.Event, p: Paragraph) => this.showAddParagraphAbove(e, p),
@@ -623,31 +620,31 @@ This will delete the whole ${options.area ? "area" : "paragraph"} from the docum
                     show: this.viewctrl.item.rights.editable,
                 },
                 {func: (e: JQuery.Event, p: Paragraph) => this.showEditWindow(e, p), desc: "Edit", show: parEditable},
-                {func: (e: JQuery.Event, p: Paragraph) => this.toggleTableEditor(e, p), desc: "Edit table", show: parEditable && timTableEditMode === false && par && !isReference(par)},
+                {func: (e: JQuery.Event, p: Paragraph) => this.toggleTableEditor(e, p), desc: "Edit table", show: parEditable && timTableEditMode === false && par != null && !isReference(par)},
                 {func: (e: JQuery.Event, p: Paragraph) => this.toggleTableEditor(e, p), desc: "Close table editor", show: parEditable && timTableEditMode === true},
                 {
                     func: (e: JQuery.Event, p: Paragraph) => this.viewctrl.clipboardHandler.cutPar(e, p),
                     desc: "Cut paragraph",
-                    show: $window.editMode === "par" && parEditable,
+                    show: documentglobals().editMode === "par" && parEditable,
                 },
                 {
                     func: (e: JQuery.Event, p: Paragraph) => this.viewctrl.clipboardHandler.copyPar(e, p),
                     desc: "Copy paragraph",
-                    show: $window.editMode !== "area" && par && !isHelpPar(par),
+                    show: documentglobals().editMode !== "area" && par != null && !isHelpPar(par),
                 },
                 // {func: (e, par) => this.cutArea(e, par), desc: 'Cut area', show: $window.editMode === 'area'},
                 // {func: (e, par) => this.copyArea(e, par), desc: 'Copy area', show: $window.editMode === 'area'},
                 {
                     func: (e: JQuery.Event, p: Paragraph) => this.viewctrl.clipboardHandler.showPasteMenu(e, p),
                     desc: "Paste...",
-                    show: $window.editMode && (this.viewctrl.clipMeta.allowPasteRef || this.viewctrl.clipMeta.allowPasteContent),
+                    show: documentglobals().editMode != null && (this.viewctrl.clipMeta.allowPasteRef || this.viewctrl.clipMeta.allowPasteContent),
                     closeAfter: false,
                 },
-                {func: (e: JQuery.Event, p: Paragraph) => this.viewctrl.clipboardHandler.showMoveMenu(e, p), desc: "Move here...", show: $window.allowMove},
+                {func: (e: JQuery.Event, p: Paragraph) => this.viewctrl.clipboardHandler.showMoveMenu(e, p), desc: "Move here...", show: documentglobals().allowMove},
                 {
                     func: (e: JQuery.Event, p: Paragraph) => this.viewctrl.areaHandler.removeAreaMarking(e, p),
                     desc: "Remove area marking",
-                    show: $window.editMode === "area",
+                    show: documentglobals().editMode === "area",
                 },
                 {
                     func: (e: JQuery.Event, p: Paragraph) => this.viewctrl.questionHandler.addQuestionQst(e, p),
@@ -667,7 +664,7 @@ This will delete the whole ${options.area ? "area" : "paragraph"} from the docum
                 {
                     func: (e: JQuery.Event, p: Paragraph) => this.viewctrl.areaHandler.startArea(e, p),
                     desc: "Start selecting area",
-                    show: $window.editMode === "par" && this.viewctrl.selection.start == null,
+                    show: documentglobals().editMode === "par" && this.viewctrl.selection.start == null,
                 },
                 {func: empty, desc: "Close menu", show: true},
             ];

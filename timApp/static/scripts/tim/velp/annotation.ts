@@ -78,7 +78,7 @@ export class AnnotationController extends DestroyScope implements IController {
 
     $onInit() {
         this.show = this.showStr === "true";
-        this.annotation = JSON.parse(this.annotationdata);
+        this.annotation = JSON.parse(this.annotationdata) as IAnnotationCoordless;
         this.visibleOptions = {
             type: "select",
             value: this.annotation.visible_to,

@@ -1,4 +1,5 @@
 import {IFormController, IRootElementService, IScope} from "angular";
+import * as t from "io-ts";
 import $ from "jquery";
 import moment from "moment";
 import {
@@ -228,8 +229,8 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
 
     private setTime() {
         this.ui = {durationType: "seconds", durationAmount: 30};
-        const timeLimit: number = getStorage("timelimit") || 30;
-        if (timeLimit > 0) {
+        const timeLimit = getStorage("timelimit") || 30;
+        if (t.number.is(timeLimit) && timeLimit > 0) {
             this.ui.durationAmount = timeLimit;
         }
     }
@@ -489,7 +490,7 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
             }
         }
 
-        const t = type;
+        const ty = type;
         if (type === "textarea" || type === "likert") {
             type = "matrix";
         }
@@ -498,7 +499,7 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
         if (type === "matrix" || type === "true-false") {
             for (let i = 0; i < this.rows[0].columns.length; i++) {
                 let text = "";
-                const ch = constHeaders[t];
+                const ch = constHeaders[ty];
                 if (ch && i < ch.length) {
                     text = ch[i];
                 }
@@ -513,11 +514,11 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
             }
         }
 
-        if (t === "likert") {
+        if (ty === "likert") {
             this.question.matrixType = "radiobutton-horizontal";
         }
 
-        if (t === "textarea") {
+        if (ty === "textarea") {
             this.question.matrixType = "textArea";
         }
 

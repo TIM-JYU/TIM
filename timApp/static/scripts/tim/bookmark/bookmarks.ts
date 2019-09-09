@@ -1,10 +1,11 @@
-import {IController, IFormController, IPromise, IRootElementService, IScope} from "angular";
+import {IController, IFormController, IRootElementService, IScope} from "angular";
 import {timApp} from "tim/app";
 import * as focusMe from "tim/ui/focusMe";
 import {Binding, clone, markAsUsed, to} from "tim/util/utils";
 import {ViewCtrl} from "../document/viewctrl";
 import {DialogController, registerDialogComponent, showDialog, showMessageDialog} from "../ui/dialog";
-import {$http, $timeout, $window} from "../util/ngimport";
+import {genericglobals} from "../util/globals";
+import {$http, $timeout} from "../util/ngimport";
 
 markAsUsed(focusMe);
 
@@ -31,8 +32,8 @@ export class BookmarksController implements IController {
     }
 
     $onInit() {
-        if ($window.bookmarks && !this.data) {
-            this.data = clone($window.bookmarks);
+        if (genericglobals().bookmarks && !this.data) {
+            this.data = clone(genericglobals().bookmarks);
         }
         if (this.userId && !this.data) {
             void this.refresh();
@@ -77,7 +78,7 @@ export class BookmarksController implements IController {
 
     async newBookmark(group: string | undefined, e: Event) {
         e.preventDefault();
-        const suggestedName = ($window.item || {}).title || document.title;
+        const suggestedName = (genericglobals().item || {title: undefined}).title || document.title;
         const bookmark = await showBookmarkDialog({
             group: group || "",
             name: suggestedName,

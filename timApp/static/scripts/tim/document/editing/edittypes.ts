@@ -8,7 +8,7 @@ export interface IParResponse {
     changed_pars: {[id: string]: string};
     version: [number, number];
     duplicates?: Duplicate[];
-    original_par?: {md: string, attrs: any};
+    original_par?: {md: string, attrs: unknown};
     new_par_ids?: string[];
 }
 

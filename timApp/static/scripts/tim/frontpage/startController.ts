@@ -9,7 +9,8 @@ import {showMessageDialog} from "../ui/dialog";
 import {FRONT_PAGE_DEFAULT_LANGUAGE} from "../ui/language";
 import {showLoginDialog} from "../user/loginDialog";
 import {Users} from "../user/userService";
-import {$http, $localStorage, $window} from "../util/ngimport";
+import {genericglobals} from "../util/globals";
+import {$http, $localStorage} from "../util/ngimport";
 import {to} from "../util/utils";
 
 markAsUsed(createItem);
@@ -24,7 +25,7 @@ export class StartCtrl implements IController {
     constructor() {
         this.creatingNew = false;
         this.docListOpen = false;
-        this.bookmarks = $window.bookmarks; // from base.html
+        this.bookmarks = genericglobals().bookmarks; // from base.html
         this.storage = $localStorage.$default({language: null});
     }
 

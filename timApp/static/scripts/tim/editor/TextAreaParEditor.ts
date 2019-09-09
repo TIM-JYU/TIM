@@ -181,7 +181,7 @@ export class TextAreaParEditor extends BaseParEditor {
     bottomClicked() {
         const editor = this.editorElement;
         editor.selectionStart = editor.selectionEnd = editor.value.length;
-        this.editor.scrollTop(this.editor.prop("scrollHeight"));
+        this.editor.scrollTop(this.editor[0].scrollHeight);
     }
 
     @focusAfter

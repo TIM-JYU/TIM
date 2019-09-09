@@ -7,7 +7,7 @@ import {timApp} from "../app";
 import {onClick} from "../document/eventhandlers";
 import {ViewCtrl} from "../document/viewctrl";
 import {IRights} from "../user/IRights";
-import {$window} from "../util/ngimport";
+import {genericglobals} from "../util/globals";
 import {Require} from "../util/utils";
 import {GenericPluginMarkup, Info, nullable, withDefault} from "./attributes";
 import "./timMenu.css";
@@ -142,8 +142,8 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
         onClick("body", ($this, e) => {
             this.onClick(e);
         });
-        if ($window && $window.userPrefs && $window.userPrefs.disable_menu_hover) {
-            this.userPrefersHoverDisabled = $window.userPrefs.disable_menu_hover;
+        if (genericglobals().userPrefs.disable_menu_hover) {
+            this.userPrefersHoverDisabled = genericglobals().userPrefs.disable_menu_hover;
         }
         this.userRights = this.vctrl.item.rights;
         this.hoverOpen = this.attrs.hoverOpen && !this.userPrefersHoverDisabled;

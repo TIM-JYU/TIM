@@ -1,18 +1,16 @@
-import {IPromise} from "angular";
-import moment from "moment";
+import moment, {Moment} from "moment";
 import {ngStorage} from "ngstorage";
 import {DialogController, registerDialogComponent, showDialog} from "../ui/dialog";
 import {IUser} from "../user/IUser";
 import {$http, $httpParamSerializer, $localStorage} from "../util/ngimport";
 import {to} from "../util/utils";
-import {IExportOptions} from "./userlistController";
 
-interface IFBOptions {
-    period: any;
+interface IFBOptions<T> {
+    period: "whenever" | "sincelast" | "day" | "week" | "month" | "other";
     valid: string;
     name: string;
-    periodFrom: any;
-    periodTo: any;
+    periodFrom: T;
+    periodTo: T;
     scope: string;
     answers: string;
     format: string;
@@ -30,12 +28,12 @@ export interface IFeedbackAnswersParams {
 export class FeedbackAnswersCtrl extends DialogController<{params: IFeedbackAnswersParams}, {}> {
     static component = "timFeedbackAnswers";
     static $inject = ["$element", "$scope"] as const;
-    private options!: IFBOptions; // $onInit
-    private $storage!: ngStorage.StorageService & {feedbackAnswersOptions: IFBOptions}; // $onInit
+    private options!: IFBOptions<Moment>; // $onInit
+    private $storage!: ngStorage.StorageService & {feedbackAnswersOptions: IFBOptions<number | null>}; // $onInit
     private showSort: boolean = false;
     private datePickerOptionsFrom!: EonasdanBootstrapDatetimepicker.SetOptions; // $onInit
     private datePickerOptionsTo!: EonasdanBootstrapDatetimepicker.SetOptions; // $onInit
-    private lastFetch: any;
+    private lastFetch: unknown;
 
     protected getTitle() {
         return "Export to csv";
@@ -48,7 +46,7 @@ export class FeedbackAnswersCtrl extends DialogController<{params: IFeedbackAnsw
             week: {dow: 1, doy: 4}, // This sets Monday as the first day of the week.
         });
         this.showSort = options.allTasks;
-        this.options = {
+        const defs = {
             period: "whenever",
             valid: "1",
             name: "both",
@@ -59,16 +57,18 @@ export class FeedbackAnswersCtrl extends DialogController<{params: IFeedbackAnsw
             format: "semicolon",
             users: "",
             decimal: "point",
-        };
+        } as const;
         this.$storage = $localStorage.$default({
-            feedbackAnswersOptions: this.options,
+            feedbackAnswersOptions: defs,
         });
 
         const dateFormat = "D.M.YYYY HH:mm:ss";
 
-        this.options = this.$storage.feedbackAnswersOptions;
-        this.options.periodFrom = this.options.periodFrom || Date.now();
-        this.options.periodTo = this.options.periodTo || Date.now();
+        this.options = {
+            ...this.$storage.allAnswersOptions,
+            periodFrom: moment(this.options.periodFrom || Date.now()),
+            periodTo: moment(this.options.periodFrom || Date.now()),
+        };
         this.datePickerOptionsFrom = {
             format: dateFormat,
             defaultDate: moment(this.options.periodFrom),
@@ -96,13 +96,12 @@ export class FeedbackAnswersCtrl extends DialogController<{params: IFeedbackAnsw
     }
 
     ok() {
-        if (this.options.periodFrom) {
-            this.options.periodFrom = this.options.periodFrom.toDate();
-        }
-        if (this.options.periodTo) {
-            this.options.periodTo = this.options.periodTo.toDate();
-        }
-        window.open(this.resolve.params.url + "?" + $httpParamSerializer(this.options), "_blank");
+        const toSerialize: IFBOptions<Date | null> = {
+            ...this.options,
+            periodFrom: this.options.periodFrom.toDate(),
+            periodTo: this.options.periodTo.toDate(),
+        };
+        window.open(this.resolve.params.url + "?" + $httpParamSerializer(toSerialize), "_blank");
         this.close({});
     }
     cancel() {

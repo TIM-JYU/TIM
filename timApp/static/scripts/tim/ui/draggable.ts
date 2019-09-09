@@ -1,5 +1,6 @@
 import {IController, IRootElementService, IScope} from "angular";
 import {IModalInstanceService} from "angular-ui-bootstrap";
+import * as t from "io-ts";
 import {timApp} from "tim/app";
 import {timLogTime} from "tim/util/timTiming";
 import {$compile, $document, $q} from "../util/ngimport";
@@ -295,9 +296,10 @@ export class DraggableController implements IController {
         if (!this.posKey) {
             return;
         }
-        const oldSize: {width?: string, height?: string} = getStorage(this.posKey +
+        const SizeType = t.partial({width: t.string, height: t.string});
+        const oldSize = getStorage(this.posKey +
             "Size");
-        if (oldSize && this.canDrag()) {
+        if (SizeType.is(oldSize) && this.canDrag()) {
             const vps = getViewPortSize();
             if (oldSize.width) {
                 this.element.css("width",
@@ -308,13 +310,14 @@ export class DraggableController implements IController {
                     Math.min(getPixels(oldSize.height), vps.height * 0.97));
             }
         }
-        const oldPos: {left: string, right: string, top: string, bottom: string} | null = getStorage(this.posKey);
+        const PosType = t.partial({left: t.string, right: t.string, top: t.string, bottom: t.string});
+        const oldPos = getStorage(this.posKey);
         // it doesn't make sense to restore Y position if the dialog has absolute position (instead of fixed)
         if (await this.modalHasAbsolutePosition()) {
             const off = this.element.offset() || {left: 20};
             this.element.offset({top: window.pageYOffset, left: off.left});
         }
-        if (oldPos) {
+        if (PosType.is(oldPos)) {
             if (oldPos.left && this.setLeft) {
                 this.element.css("left", oldPos.left);
             }

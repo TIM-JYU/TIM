@@ -5,7 +5,8 @@ import {markAsUsed} from "tim/util/utils";
 import {showQuestionEditDialog} from "../document/question/questionController";
 import {IUser} from "../user/IUser";
 import {Users} from "../user/userService";
-import {$http, $window} from "../util/ngimport";
+import {lectureinfoglobals} from "../util/globals";
+import {$http} from "../util/ngimport";
 import {showLectureDialog} from "./createLectureCtrl";
 import {IAskedQuestion, ILecture, ILectureMessage, IQuestionAnswer} from "./lecturetypes";
 
@@ -40,8 +41,9 @@ export class LectureInfoController implements IController {
     private messages: ILectureMessage[] = [];
 
     constructor(element: IRootElementService) {
-        this.inLecture = $window.inLecture;
-        this.lecture = $window.lecture;
+        const g = lectureinfoglobals();
+        this.inLecture = g.inLecture;
+        this.lecture = g.lecture;
         this.isLecturer = false;
         this.answerers = [];
         this.element = element;

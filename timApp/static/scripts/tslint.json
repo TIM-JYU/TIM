@@ -20,6 +20,8 @@
     "no-boolean-literal-compare": true,
     "unnecessary-bind": true,
     "no-string-literal": true,
+    "no-unsafe-any": true,
+    "no-any": true,
 
     "strict-boolean-expressions": false,
     "restrict-plus-operands": false,

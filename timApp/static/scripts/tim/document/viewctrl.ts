@@ -13,8 +13,8 @@ import * as popupMenu from "tim/document/popupMenu";
 import {QuestionHandler} from "tim/document/question/questions";
 import {initReadings} from "tim/document/readings";
 import {timLogTime} from "tim/util/timTiming";
-import {isPageDirty, markAsUsed, markPageNotDirty} from "tim/util/utils";
-import {AnswerBrowserController, ITaskInfo, PluginLoaderCtrl} from "../answer/answerbrowser3";
+import {isPageDirty, markAsUsed, markPageNotDirty, StringUnknownDict} from "tim/util/utils";
+import {AnswerBrowserController, PluginLoaderCtrl} from "../answer/answerbrowser3";
 import {IAnswer} from "../answer/IAnswer";
 import {BookmarksController} from "../bookmark/bookmarks";
 import {IPluginInfoResponse, ParCompiler} from "../editor/parCompiler";
@@ -26,7 +26,8 @@ import {initCssPrint} from "../printing/cssPrint";
 import {IUser, IUserListEntry} from "../user/IUser";
 import {Users} from "../user/userService";
 import {widenFields} from "../util/common";
-import {$compile, $filter, $http, $interval, $localStorage, $q, $timeout, $window} from "../util/ngimport";
+import {documentglobals} from "../util/globals";
+import {$compile, $filter, $http, $interval, $localStorage, $q, $timeout} from "../util/ngimport";
 import {AnnotationController} from "../velp/annotation";
 import {ReviewController} from "../velp/reviewController";
 import {DiffController} from "./diffDialog";
@@ -56,7 +57,7 @@ export interface ITimComponent {
     setForceAnswerSave?: (force: boolean) => void;
     resetField: () => string | undefined;
     supportsSetAnswer: () => boolean;
-    setAnswer: (content: {[index: string]: any}) => {ok: boolean, message: (string | undefined)};
+    setAnswer: (content: {[index: string]: unknown}) => {ok: boolean, message: (string | undefined)};
 }
 
 // TODO: import entire controller?
@@ -113,11 +114,10 @@ export class ViewCtrl implements IController {
     public docId: number;
 
     private hidePending: boolean;
-    public group: any;
+    public group: unknown;
     public scope: IScope;
     public noBrowser: boolean;
     public docVersion: [number, number];
-    private crumbs: any;
     private startIndex: number;
     public users: IUserListEntry[];
     public teacherMode: boolean;
@@ -165,26 +165,25 @@ export class ViewCtrl implements IController {
 
     // To give an alert if trying to go to another page when doing an adaptive feedback task.
     public doingTask = false;
-    public docSettings: IDocSettings = $window.docSettings;
+    public docSettings: IDocSettings = documentglobals().docSettings;
 
     // Form-mode related attributes.
     private formTaskInfosLoaded = false;
 
     constructor(sc: IScope) {
         timLogTime("ViewCtrl start", "view");
-
-        this.noBrowser = $window.noBrowser;
-        this.docId = $window.item.id;
-        this.docVersion = $window.docVersion;
-        this.crumbs = $window.crumbs;
-        this.item = $window.item;
-        this.startIndex = $window.startIndex;
-        this.users = $window.users;
-        this.group = $window.group;
-        this.teacherMode = $window.teacherMode;
-        this.velpMode = $window.velpMode;
-        this.lectureMode = $window.lectureMode;
-        this.inLecture = $window.in_lecture;
+        const dg = documentglobals();
+        this.noBrowser = dg.noBrowser;
+        this.docId = dg.item.id;
+        this.docVersion = dg.docVersion;
+        this.item = dg.item;
+        this.startIndex = dg.startIndex;
+        this.users = dg.users;
+        this.group = dg.group;
+        this.teacherMode = dg.teacherMode;
+        this.velpMode = dg.velpMode;
+        this.lectureMode = dg.lectureMode;
+        this.inLecture = dg.in_lecture;
         this.scope = sc;
 
         this.document = new Document(this.docId);
@@ -197,9 +196,9 @@ export class ViewCtrl implements IController {
         }
         this.hidePending = false;
 
-        $($window).resize((e) => {
-            if (e.target === $window as any) {
-                const newWidth = $($window).width();
+        $(window).resize((e) => {
+            if (e.target === window) {
+                const newWidth = $(window).width();
                 if (newWidth !== this.oldWidth && newWidth) {
                     this.oldWidth = newWidth;
                     const selected = $(".par.lightselect, .par.selected");
@@ -275,10 +274,10 @@ export class ViewCtrl implements IController {
             noteAccess: "everyone",
         });
 
-        $window.allowMove = false;
-        this.oldWidth = $($window).width() || 500;
+        dg.allowMove = false;
+        this.oldWidth = $(window).width() || 500;
         this.showRefresh = isPageDirty();
-        this.liveUpdates = $window.liveUpdates;
+        this.liveUpdates = dg.liveUpdates;
 
         if (Users.isLoggedIn() && this.liveUpdates) {
             this.startLiveUpdates();
@@ -307,13 +306,13 @@ export class ViewCtrl implements IController {
         window.addEventListener("beforeunload", (e) => {
             saveCurrentScreenPar();
 
-            if ((!this.editing && !this.checkUnSavedTimComponents() && !this.doingTask) || $window.IS_TESTING) {
+            if ((!this.editing && !this.checkUnSavedTimComponents() && !this.doingTask) || documentglobals().IS_TESTING) {
                 return undefined;
             }
 
             const msg = "You are currently editing something. Are you sure you want to leave the page?";
 
-            (e || $window.event).returnValue = msg; // Gecko + IE
+            (e || window.event).returnValue = msg; // Gecko + IE
             return msg; // Gecko + Webkit, Safari, Chrome etc.
         });
         // Change hash whenever user scrolls the document.
@@ -350,7 +349,7 @@ export class ViewCtrl implements IController {
         if (!origLiveUpdates) {
             return;
         }
-        let stop: IPromise<any> | undefined;
+        let stop: IPromise<unknown> | undefined;
         stop = $interval(async () => {
             const response = await $http.get<{ version: [number, number], diff: DiffResult[], live: number }>("/getParDiff/" + this.docId + "/" + this.docVersion[0] + "/" + this.docVersion[1]);
             this.docVersion = response.data.version;
@@ -645,7 +644,7 @@ export class ViewCtrl implements IController {
             for (const fab of this.formAbs.values()) {
                 taskList.push(fab.taskId);
             }
-            const answerResponse = await $http.post<{ answers: { [index: string]: IAnswer }, userId: number }>("/userAnswersForTasks", {
+            const answerResponse = await $http.post<{ answers: { [index: string]: IAnswer | undefined }, userId: number }>("/userAnswersForTasks", {
                 tasks: taskList,
                 user: user.id,
             });
@@ -669,21 +668,7 @@ export class ViewCtrl implements IController {
             if (answerResponse.data.userId == this.selectedUser.id) {
                 for (const fab of this.formAbs.values()) {
                     const ans = answerResponse.data.answers[fab.taskId];
-                    if (ans === undefined) {
-                        fab.changeUserAndAnswers(user, []);
-                    } else {
-                        fab.changeUserAndAnswers(user, [ans]);
-                    }
-                    const timComps = this.getTimComponentArray(fab.taskId);
-                    if (timComps) {
-                        for (const timComp of timComps) {
-                            if (fab.selectedAnswer) {
-                                timComp.setAnswer(JSON.parse(fab.selectedAnswer.content));
-                            } else {
-                                timComp.resetField();
-                            }
-                        }
-                    }
+                    this.handleAnswerSet(ans, fab, user);
                 }
             }
         }
@@ -693,6 +678,31 @@ export class ViewCtrl implements IController {
         // - do the same for /taskinfo and /getState requests
         for (const ab of this.abs.values()) {
             ab.changeUser(user, updateAll);
+        }
+    }
+
+    private handleAnswerSet(ans: IAnswer | undefined, fab: AnswerBrowserController, user: IUser) {
+        if (ans === undefined) {
+            fab.changeUserAndAnswers(user, []);
+        } else {
+            fab.changeUserAndAnswers(user, [ans]);
+        }
+        const timComps = this.getTimComponentArray(fab.taskId);
+        if (timComps) {
+            for (const timComp of timComps) {
+            if (timComp.isUnSaved()) {
+                return;
+            }
+            if (fab.selectedAnswer) {
+                const parsed = JSON.parse(fab.selectedAnswer.content);
+                if (StringUnknownDict.is(parsed)) {
+                    timComp.setAnswer(parsed);
+                } else {
+                    console.warn("selectedAnswer content was not string dict of strings:", parsed);
+                }
+            } else {
+                timComp.resetField();
+            }}
         }
     }
 
@@ -723,30 +733,13 @@ export class ViewCtrl implements IController {
             }
         }
         if (this.docSettings.form_mode) {
-            const answerResponse = await $http.post<{ answers: { [index: string]: IAnswer }, userId: number }>("/userAnswersForTasks", {
+            const answerResponse = await $http.post<{ answers: { [index: string]: IAnswer | undefined }, userId: number }>("/userAnswersForTasks", {
                 tasks: fabIds,
                 user: this.selectedUser.id,
             });
             for (const fab of formAbMap.values()) {
                 const ans = answerResponse.data.answers[fab.taskId];
-                if (ans === undefined) {
-                    fab.changeUserAndAnswers(this.selectedUser, []);
-                } else {
-                    fab.changeUserAndAnswers(this.selectedUser, [ans]);
-                }
-                const timComps = this.getTimComponentArray(fab.taskId);
-                if (timComps) {
-                    for (const timComp of timComps) {
-                        if (timComp.isUnSaved()) {
-                            continue;
-                        }
-                        if (fab.selectedAnswer) {
-                            timComp.setAnswer(JSON.parse(fab.selectedAnswer.content));
-                        } else {
-                            timComp.resetField();
-                        }
-                    }
-                }
+                this.handleAnswerSet(ans, fab, this.selectedUser);
             }
         }
         for (const ab of regularAbMap.values()) {
@@ -834,7 +827,7 @@ export class ViewCtrl implements IController {
     }
 
     applyDynamicStyles(par: Paragraph) {
-        if ($window.editMode) {
+        if (documentglobals().editMode) {
             par.addClass("editmode");
 
             // Show hidden paragraphs if in edit mode
@@ -862,11 +855,11 @@ export class ViewCtrl implements IController {
     }
 
     getEditMode() {
-        return $window.editMode;
+        return documentglobals().editMode;
     }
 
     getAllowMove() {
-        return $window.allowMove;
+        return documentglobals().allowMove;
     }
 
     registerPopupMenu(param: PopupMenuController) {

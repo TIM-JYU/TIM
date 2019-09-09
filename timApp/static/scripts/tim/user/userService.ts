@@ -1,6 +1,7 @@
 import {saveCurrentScreenPar} from "../document/parhelpers";
 import {showMessageDialog} from "../ui/dialog";
-import {$http, $httpParamSerializer, $window} from "../util/ngimport";
+import {genericglobals} from "../util/globals";
+import {$http, $httpParamSerializer} from "../util/ngimport";
 import {to, ToReturn} from "../util/utils";
 import {ADMIN_GROUPNAME, IFullUser, IUser} from "./IUser";
 
@@ -62,7 +63,7 @@ export class UserService {
         saveCurrentScreenPar();
         const targetUrl = "/openIDLogin?provider=korppi";
         const separator = targetUrl.indexOf("?") >= 0 ? "&" : "?";
-        const cameFromRaw = $window.came_from || "";
+        const cameFromRaw = "";
         const anchorRaw = window.location.hash.replace("#", "");
         const redirectFn = () => {
             window.location.replace(targetUrl + separator + $httpParamSerializer({
@@ -94,7 +95,7 @@ export class UserService {
         return userBelongsToGroupOrIsAdmin("Group admins");
     }
 
-    public korppiLogout(redirectFn: () => any) {
+    public korppiLogout(redirectFn: () => void) {
         $http(
             {
                 withCredentials: true,
@@ -130,13 +131,13 @@ export class UserService {
     }
 }
 
-export let Users: UserService = null as any;
+export let Users: UserService;
 
 export function initUserService() {
     if (Users != null) {
         throw new Error("UserService already initialized");
     }
-    Users = new UserService($window.current_user, $window.other_users);
+    Users = new UserService(genericglobals().current_user, genericglobals().other_users);
 }
 
 /**

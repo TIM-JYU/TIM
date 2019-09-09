@@ -1,7 +1,8 @@
 import {IScope} from "angular";
 import {showMessageDialog} from "../../ui/dialog";
 import {Users} from "../../user/userService";
-import {$http, $window} from "../../util/ngimport";
+import {documentglobals} from "../../util/globals";
+import {$http} from "../../util/ngimport";
 import {empty, to} from "../../util/utils";
 import {
     dereferencePar,
@@ -33,6 +34,11 @@ export interface IClipboardMeta {
     allowPasteContent: boolean;
     last_action?: "copy" | "cut" | "paste";
     empty: boolean;
+}
+
+interface IClipBoardResponse {
+    doc_ver: [number, number];
+    pars: Array<{id: string}>;
 }
 
 export class ClipboardHandler {
@@ -79,7 +85,7 @@ export class ClipboardHandler {
     }
 
     async deleteFromSource() {
-        const r = await to($http.post<{doc_ver: any, pars: any[]}>("/clipboard/deletesrc/" + this.viewctrl.docId, {}));
+        const r = await to($http.post<IClipBoardResponse>("/clipboard/deletesrc/" + this.viewctrl.docId, {}));
         if (!r.ok) {
             await showMessageDialog(r.result.data.error);
             return;
@@ -233,7 +239,7 @@ export class ClipboardHandler {
     async cutPar(e: JQuery.Event, par: Paragraph) {
         const docParId = [this.viewctrl.docId, par.attr("id")];
 
-        const r = await to($http.post<{doc_ver: any, pars: any[]}>("/clipboard/cut/" + docParId[0] + "/" + docParId[1] + "/" + docParId[1], {}));
+        const r = await to($http.post<IClipBoardResponse>("/clipboard/cut/" + docParId[0] + "/" + docParId[1] + "/" + docParId[1], {}));
         if (!r.ok) {
             await showMessageDialog(r.result.data.error);
             return;
@@ -269,7 +275,7 @@ export class ClipboardHandler {
         let areaStart;
         let areaEnd;
 
-        if ($window.editMode === "area") {
+        if (documentglobals().editMode === "area") {
             refDocId = getAreaDocId(parOrArea);
             areaName = getAreaId(parOrArea);
             areaStart = getFirstParId(parOrArea);
@@ -285,7 +291,7 @@ export class ClipboardHandler {
 
         if (cut) {
 
-            const r = await to($http.post<{doc_ver: any, pars: any[]}>("/clipboard/cut/" + docId + "/" + areaStart + "/" + areaEnd, {
+            const r = await to($http.post<IClipBoardResponse>("/clipboard/cut/" + docId + "/" + areaStart + "/" + areaEnd, {
                 area_name: areaName,
             }));
             if (!r.ok) {

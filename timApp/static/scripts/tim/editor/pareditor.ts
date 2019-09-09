@@ -1,4 +1,6 @@
+import {Ace} from "ace";
 import angular, {IRootElementService, IScope} from "angular";
+import * as t from "io-ts";
 import $ from "jquery";
 import rangyinputs from "rangyinputs";
 import {setEditorScope} from "tim/editor/editorScope";
@@ -8,10 +10,9 @@ import {IExtraData, ITags} from "../document/editing/edittypes";
 import {IDocSettings} from "../document/IDocSettings";
 import {getElementByParId, getParAttributes} from "../document/parhelpers";
 import {ViewCtrl} from "../document/viewctrl";
-import {IDocument} from "../item/IItem";
 import {DialogController, IModalInstance, registerDialogComponent, showDialog, showMessageDialog} from "../ui/dialog";
-import {$http, $injector, $localStorage, $timeout, $upload, $window} from "../util/ngimport";
-import {IAceEditor} from "./ace-types";
+import {documentglobals, genericglobals} from "../util/globals";
+import {$http, $injector, $localStorage, $timeout, $upload} from "../util/ngimport";
 import {AceParEditor} from "./AceParEditor";
 import {SelectionRange} from "./BaseParEditor";
 import {IPluginInfoResponse, ParCompiler} from "./parCompiler";
@@ -21,6 +22,18 @@ import {TextAreaParEditor} from "./TextAreaParEditor";
 markAsUsed(rangyinputs);
 
 const TIM_TABLE_CELL = "timTableCell";
+
+interface INonStandardFullScreenProperties {
+    webkitFullscreenElement?: Element;
+    msFullscreenElement?: Element;
+    msExitFullscreen?: () => void;
+    webkitExitFullscreen?: () => void;
+}
+
+interface INonStandardFullScreenElement {
+    webkitRequestFullScreen?: () => void;
+    msRequestFullscreen?: () => void;
+}
 
 export interface ITag {
     name: keyof ITags;
@@ -76,12 +89,29 @@ export function getCitePar(docId: number, par: string) {
     return `#- {rd="${docId}" rl="no" rp="${par}"}`;
 }
 
-interface IMenuItemObject {
-    data: string;
-    expl?: string;
-    text?: string;
-    file?: string;
-}
+const MenuItemFileObject = t.intersection([
+    t.type({
+        file: t.string,
+    }),
+    t.partial({
+        expl: t.string,
+        text: t.string,
+    }),
+]);
+
+const MenuItemDataObject = t.intersection([
+    t.type({
+        data: t.string,
+    }),
+    t.partial({
+        expl: t.string,
+        text: t.string,
+    }),
+]);
+
+const MenuItemObject = t.union([MenuItemDataObject, MenuItemFileObject]);
+
+export type IMenuItemObject = t.TypeOf<typeof MenuItemObject>;
 
 export interface IAttachmentData {
     issueNumber: string | number;
@@ -97,21 +127,39 @@ export interface IStampingData {
     meetingDate: string;
 }
 
-type MenuItem = IMenuItemObject | string;
+const MenuItemR = t.union([MenuItemObject, t.string]);
 
-type MenuItemEntries = MenuItem | MenuItem[];
+type MenuItem = t.TypeOf<typeof MenuItemR>;
 
-interface IEditorTabContent {
-    [name: string]: MenuItemEntries;
-}
+const MenuItemEntriesR = t.union([MenuItemR, t.array(MenuItemR)]);
+type MenuItemEntries = t.TypeOf<typeof MenuItemEntriesR>;
 
-interface IEditorTemplateFormatV1 {
-    text: string[];
-    templates: MenuItem[][];
-}
+const EditorTabContent = t.record(t.string, MenuItemEntriesR);
+type IEditorTabContent = t.TypeOf<typeof EditorTabContent>;
 
-interface IEditorTemplateFormatV2 {
-    templates: IEditorTabContent;
+const EditorTemplateFormatV1 = t.type({
+    text: t.array(t.string),
+    templates: t.array(t.array(MenuItemR)),
+});
+
+type IEditorTemplateFormatV1 = t.TypeOf<typeof EditorTemplateFormatV1>;
+
+const EditorTemplateFormatV2 = t.type({
+    templates: EditorTabContent,
+});
+
+type IEditorTemplateFormatV2 = t.TypeOf<typeof EditorTemplateFormatV2>;
+
+function EditorItem<T extends t.Any>(x: T) {
+    return t.intersection([
+        t.type({
+            text: t.string,
+            items: x,
+        }),
+        t.partial({
+            shortcut: t.string,
+        }),
+    ]);
 }
 
 interface IEditorItem<T> {
@@ -120,9 +168,11 @@ interface IEditorItem<T> {
     items: T;
 }
 
-interface IEditorTemplateFormatV3 {
-    editor_tabs: Array<IEditorItem<Array<IEditorItem<MenuItemEntries>>>>;
-}
+const EditorTemplateFormatV3 = t.type({
+    editor_tabs: t.array(EditorItem(t.array(EditorItem(MenuItemEntriesR)))),
+});
+
+type IEditorTemplateFormatV3 = t.TypeOf<typeof EditorTemplateFormatV3>;
 
 interface IEditorTab {
     entries: EditorEntry[];
@@ -132,19 +182,12 @@ interface IEditorTab {
     show?(): boolean;
 }
 
-function isV1Format(d: any): d is IEditorTemplateFormatV1 {
-    return Array.isArray(d.text) && Array.isArray(d.templates);
-}
-
-function isV2Format(d: any): d is IEditorTemplateFormatV2 {
-    return d.text == null && !Array.isArray(d.templates) && d.templates != null;
-}
-
-function isV3Format(d: any): d is IEditorTemplateFormatV3 {
-    return d.editor_tabs != null;
-}
-
 type MenuNameAndItems = Array<[string, MenuItemEntries]>;
+
+function getFullscreenElement(): Element | undefined {
+    const doc = document as INonStandardFullScreenProperties & Document;
+    return doc.fullscreenElement || doc.webkitFullscreenElement || doc.msFullscreenElement;
+}
 
 export class PareditorController extends DialogController<{params: IEditorParams}, IEditorResult> {
     static component = "pareditor";
@@ -497,11 +540,9 @@ ${backTicks}
             },
         ];
 
-        $(document).on("webkitfullscreenchange mozfullscreenchange fullscreenchange MSFullscreenChange", (event) => {
+        $(document).on("webkitfullscreenchange fullscreenchange MSFullscreenChange", (event) => {
             const editor = element[0];
-            const doc: any = document;
-            if (!doc.fullscreenElement &&    // alternative standard method
-                !doc.mozFullScreenElement && !doc.webkitFullscreenElement && !doc.msFullscreenElement) {
+            if (!getFullscreenElement()) {
                 editor.removeAttribute("style");
             }
         });
@@ -514,7 +555,7 @@ ${backTicks}
     getVisibleTabs() {
         // Upload tab is shown separately in the template because
         // it has special content that cannot be placed under "extra".
-        return this.tabs.filter((t) => (!t.show || t.show()) && t.name !== "Upload");
+        return this.tabs.filter((tab) => (!tab.show || tab.show()) && tab.name !== "Upload");
     }
 
     getUploadTab() {
@@ -522,11 +563,11 @@ ${backTicks}
     }
 
     findTab(name: string) {
-        return this.tabs.find((t) => t.name.toLowerCase() === name.toLowerCase());
+        return this.tabs.find((tab) => tab.name.toLowerCase() === name.toLowerCase());
     }
 
-    getTabIndex(t: IEditorTab) {
-        return t.name.toLowerCase();
+    getTabIndex(tab: IEditorTab) {
+        return tab.name.toLowerCase();
     }
 
     $doCheck() {
@@ -574,7 +615,7 @@ ${backTicks}
                 this.editor.setAutoCompletion(this.autocomplete);
             }
         });
-        this.docSettings = $window.docSettings;
+        this.docSettings = documentglobals().docSettings;
 
         this.activeAttachments = this.updateAttachments(true, undefined, undefined);
     }
@@ -630,18 +671,18 @@ ${backTicks}
 
     initCustomTabs() {
         const tabs: {[tab: string]: {[menuName: string]: IEditorMenuItem[] | undefined} | undefined} = {};
-        for (const [plugin, d] of Object.entries($window.reqs)) {
+        for (const [plugin, d] of Object.entries(documentglobals().reqs)) {
             const data = d;
-            let currTabs: Array<[string, MenuNameAndItems]>;
-            if (isV3Format(data)) {
+            let currTabs: ReadonlyArray<[string, MenuNameAndItems]>;
+            if (EditorTemplateFormatV3.is(data)) {
                 // this needs type casts inside maps because otherwise the types are inferred as plain arrays and not tuples
                 currTabs = Object
                     .entries(data.editor_tabs)
                     .map(([k, v]) => [v.text, v.items // editor_tabs is an array, so k is just (unused) index here
-                        .map((m) => [m.text, m.items] as [string, MenuItemEntries])] as [string, MenuNameAndItems]);
-            } else if (isV2Format(data)) {
+                        .map((m) => [m.text, m.items])]);
+            } else if (EditorTemplateFormatV2.is(data)) {
                 currTabs = Object.entries({plugins: Object.entries(data.templates)});
-            } else if (isV1Format(data)) {
+            } else if (EditorTemplateFormatV1.is(data)) {
                 const menus: MenuNameAndItems = [];
                 const menuNames = data.text || [plugin];
                 for (let i = 0; i < menuNames.length; i++) {
@@ -649,6 +690,11 @@ ${backTicks}
                 }
                 currTabs = Object.entries({plugins: menus});
             } else {
+                if (t.record(t.string, t.unknown).is(d)) {
+                    if ("editor_tabs" in d || "templates" in d) {
+                        console.warn("Unrecognized reqs template format: ", d);
+                    }
+                }
                 continue;
             }
             for (const [tab, menus] of currTabs) {
@@ -667,20 +713,20 @@ ${backTicks}
                         } else {
                             templateObj = template;
                         }
-                        const text = (templateObj.text || templateObj.file || templateObj.data);
-                        const file = templateObj.file;
-                        const tempdata = (templateObj.data || null);
+                        let text;
                         let clickfn;
-                        if (tempdata) {
-                            clickfn = () => {
-                                this.putTemplate(tempdata);
-                            };
-                        } else if (file) {
+                        if (MenuItemFileObject.is(templateObj)) {
+                            text = templateObj.text || templateObj.file;
+                            const f = templateObj.file;
                             clickfn = async () => {
-                                await this.getTemplate(plugin, file, j.toString()); // TODO: Why is index needed for getTemplate...?
+                                await this.getTemplate(plugin, f, j.toString()); // TODO: Why is index needed for getTemplate...?
                             };
                         } else {
-                            continue;
+                            text = templateObj.text || templateObj.data;
+                            const dt = templateObj.data;
+                            clickfn = () => {
+                                this.putTemplate(dt);
+                            };
                         }
                         const existingTab = tabs[tab];
                         const item = {name: text, title: templateObj.expl || "", func: clickfn};
@@ -945,7 +991,7 @@ ${backTicks}
     }
 
     isAce(editor: AceParEditor | TextAreaParEditor | undefined): editor is AceParEditor {
-        return editor !== undefined && (editor.editor as IAceEditor).renderer != null;
+        return editor !== undefined && (editor.editor as Ace.Editor).renderer != null;
     }
 
     onPaste(e: JQuery.Event) {
@@ -1023,7 +1069,7 @@ ${backTicks}
         return [indexA, selectIndexB + indexB + endStr.length];
     }
 
-    onFileSelect(file: File) {
+    async onFileSelect(file: File) {
         const editor = this.editor!;
         this.focusEditor();
         this.file = file;
@@ -1079,8 +1125,17 @@ ${backTicks}
                 method: "POST",
                 url: "/upload/",
             });
+            upload.progress((evt) => {
+                if (this.file) {
+                    this.file.progress = Math.min(100, Math.floor(100.0 *
+                        evt.loaded / evt.total));
+                }
+            });
 
-            upload.then((response) => {
+            const result = await to(upload);
+
+            if (result.ok) {
+                const response = result.result;
                 $timeout(() => {
                     const ed = this.editor!;
                     // This check is needed for uploads in other (non-attachment) plugins.
@@ -1088,10 +1143,10 @@ ${backTicks}
                     const isplugin = (ed.editorStartsWith("``` {"));
                     let start = "[File](";
                     let savedir = "/files/";
-                    if (response.data.image  || response.data.file.toString().indexOf(".svg") >= 0 ) {
+                    if (response.data.image || response.data.file.toString().indexOf(".svg") >= 0) {
                         start = "![Image](";
                     }
-                    if (response.data.image ) {
+                    if (response.data.image) {
                         savedir = "/images/";
                         this.uploadedFile = savedir + response.data.image;
                     } else {
@@ -1117,19 +1172,12 @@ ${backTicks}
                         this.activeAttachments = this.updateAttachments(false, this.activeAttachments, stamped);
                     }
                 });
-            }, (response) => {
-                if (response.status > 0 && this.file) {
+            } else {
+                const response = result.result;
+                if (this.file) {
                     this.file.error = response.data.error;
                 }
-            }, (evt) => {
-                if (this.file) {
-                    this.file.progress = Math.min(100, Math.floor(100.0 *
-                        evt.loaded / evt.total));
-                }
-            });
-
-            upload.finally(() => {
-            });
+            }
         }
     }
 
@@ -1158,36 +1206,36 @@ ${backTicks}
         this.activeTab = name;
     }
 
+    // noinspection JSUnusedGlobalSymbols, used in template
     /**
      * @returns {boolean} true if device supports fullscreen, otherwise false
      */
     fullscreenSupported() {
-        const div: any = $(this.element).get(0);
-        const requestMethod = div.requestFullScreen ||
-            div.webkitRequestFullscreen ||
-            div.webkitRequestFullScreen ||
-            div.mozRequestFullScreen ||
-            div.msRequestFullscreen;
-        return (typeof (requestMethod) !== "undefined");
+        const div = this.element[0] as INonStandardFullScreenElement & Element;
+        return div.requestFullscreen != null ||
+            div.webkitRequestFullScreen != null ||
+            div.msRequestFullscreen != null;
     }
 
     /**
      * Makes editor div fullscreen
      */
     goFullScreen() {
-        const div: any = this.element[0];
-        const doc: any = document;
-        if (!doc.fullscreenElement &&    // alternative standard method
-            !doc.mozFullScreenElement && !doc.webkitFullscreenElement && !doc.msFullscreenElement) {
+        const doc = document as INonStandardFullScreenProperties & Document;
+        if (!getFullscreenElement()) {
+            let wentFullscreen = true;
+            const div = this.element[0] as INonStandardFullScreenElement & Element;
+            if (div.requestFullscreen) {
+                div.requestFullscreen();
+            } else if (div.webkitRequestFullScreen) {
+                div.webkitRequestFullScreen();
+            } else if (div.msRequestFullscreen) {
+                div.msRequestFullscreen();
+            } else {
+                wentFullscreen = false;
+            }
 
-            const requestMethod = div.requestFullScreen ||
-                div.webkitRequestFullscreen ||
-                div.webkitRequestFullScreen ||
-                div.mozRequestFullScreen ||
-                div.msRequestFullscreen;
-
-            if (requestMethod) {
-                requestMethod.apply(div);
+            if (wentFullscreen) {
                 div.setAttribute("style", "width: 100%; height: 100%; position: absolute; top: 0px;" +
                     "padding: 2em 5px 5px 5px; background: rgb(224, 224, 224); -webkit-box-sizing: border-box;" +
                     "-moz-box-sizing: border-box; box-sizing: border-box;");
@@ -1197,8 +1245,6 @@ ${backTicks}
                 doc.exitFullscreen();
             } else if (doc.msExitFullscreen) {
                 doc.msExitFullscreen();
-            } else if (doc.mozCancelFullScreen) {
-                doc.mozCancelFullScreen();
             } else if (doc.webkitExitFullscreen) {
                 doc.webkitExitFullscreen();
             }
@@ -1248,13 +1294,13 @@ ${backTicks}
             editorContainer.append(neweditorElem);
             const neweditor = ace.edit(neweditorElem[0]);
 
-            this.editor = new AceParEditor(ace, neweditor, {
+            this.editor = new AceParEditor(neweditor, {
                 wrapFn: () => this.wrapFn(),
                 saveClicked: () => this.saveClicked(),
                 getWrapValue: () => this.wrap.n,
             }, (this.getSaveTag() === "addAbove" || this.getSaveTag() === "addBelow") ? "ace/mode/text" : "ace/mode/markdown");
             this.editor.setAutoCompletion(this.autocomplete);
-            this.editor.editor.renderer.$cursorLayer.setBlinking(!$window.IS_TESTING);
+            this.editor.editor.renderer.$cursorLayer.setBlinking(!genericglobals().IS_TESTING);
             /*iPad does not open the keyboard if not manually focused to editable area
              var iOS = /(iPad|iPhone|iPod)/g.test($window.navigator.platform);
              if (!iOS) editor.focus();*/
@@ -1283,12 +1329,23 @@ ${backTicks}
             this.editor.setEditorText(text);
             this.refreshEditorSize();
 
-            const langTools = ace.require("ace/ext/language_tools");
+            interface ILanguageTools {
+                setCompleters(completers: unknown[]): void;
+                snippetCompleter: unknown;
+                textCompleter: unknown;
+                keyWordCompleter: unknown;
+            }
+            const langTools = ace.require("ace/ext/language_tools") as ILanguageTools;
 
             const wordListStr = (await $http.get<{word_list: string}>("/settings/get/word_list", {params: {_: Date.now()}})).data.word_list;
             const userWordList = wordListStr ? wordListStr.split("\n") : [];
             const createCompleter = (wordList: string[], context: string) => ({
-                getCompletions(editor: any, session: any, pos: any, prefix: any, callback: any) {
+                getCompletions(editor: unknown,
+                               session: unknown,
+                               pos: unknown,
+                               prefix: unknown,
+                               callback: (x: null, words: Array<{caption: string, meta: string, value: string}>) => void,
+                               ) {
                     callback(null, wordList.map((word) => ({
                         caption: word,
                         meta: context,
@@ -1300,7 +1357,7 @@ ${backTicks}
                 langTools.snippetCompleter,
                 langTools.textCompleter,
                 langTools.keyWordCompleter,
-                createCompleter($window.wordList, "document"),
+                createCompleter(documentglobals().wordList, "document"),
                 createCompleter(userWordList, "user"),
             ]);
         }
@@ -1339,8 +1396,8 @@ ${backTicks}
     }
 
     getSourceDocumentLink() {
-        const trs: IDocument[] = $window.translations;
-        const orig = trs.find((t) => t.id === t.src_docid);
+        const trs = documentglobals().translations;
+        const orig = trs.find((tab) => tab.id === tab.src_docid);
         if (orig) {
             const parId = this.getExtraData().par;
             const par = getElementByParId(parId);
@@ -1392,9 +1449,12 @@ ${backTicks}
         if (this.getExtraData().access != null) {
             $localStorage.noteAccess = this.getExtraData().access;
         }
-        for (const [k, v] of Object.entries(this.getExtraData().tags)) {
+        const tags = this.getExtraData().tags;
+        const tagKeys = ["markread", "marktranslated"] as const;
+        for (const key of tagKeys) {
+            const v = tags[key];
             if (v != null) {
-                window.localStorage.setItem(k, v.toString());
+                window.localStorage.setItem(key, v.toString());
             }
         }
         this.setLocalValue("proeditor", this.proeditor.toString());
@@ -1485,11 +1545,11 @@ ${backTicks}
      * Removes line breaks and parses macro string into a dictionary.
      * @param macroText String in JSON-compatible format.
      */
-    private getMacroParamsFromString(macroText: string) {
+    private getMacroParamsFromString(macroText: string): unknown[] {
         // Normal line breaks cause exception with JSON.parse, and replacing them with ones parse understands
         // causes exceptions when line breaks are outside parameters, so just remove them before parsing.
         macroText = macroText.replace(/(\r\n|\n|\r)/gm, "");
-        return JSON.parse(`[${macroText}]`);
+        return JSON.parse(`[${macroText}]`) as unknown[];
     }
 
     /**
@@ -1507,15 +1567,23 @@ ${backTicks}
      * Picks data relevant for restamping from an array and returns it as an object.
      * @param macroParams Array with attachment letter at index 1, issue number 2 and upload url 3.
      */
-    private macroParamsToAttachmentData(macroParams: any): IAttachmentData {
-        return {
-            attachmentLetter: macroParams[1],
-            issueNumber: macroParams[2],
-            upToDate: false,
-            uploadUrl: macroParams[3],
-        };
+    private macroParamsToAttachmentData(macroParams: unknown[]): IAttachmentData {
+        if (MacroParams.is(macroParams)) {
+            return {
+                attachmentLetter: macroParams[1],
+                issueNumber: macroParams[2],
+                upToDate: false,
+                uploadUrl: macroParams[3],
+            };
+        } else {
+            const err = `Unexpected type of macroParams: ${JSON.stringify(macroParams)}`;
+            void showMessageDialog(err);
+            throw new Error(err);
+        }
     }
 }
+
+const MacroParams = t.tuple([t.unknown, t.string, t.union([t.string, t.number]), t.string]);
 
 timApp.component("timEditorMenu", {
     bindings: {
