@@ -58,7 +58,7 @@ export class CreateLectureCtrl extends DialogController<{params: ILectureFormPar
         this.lectureCode = "";
         this.password = "";
         this.options = {
-            max_students: 100, poll_interval: 4, poll_interval_t: 1,
+            max_students: 300, poll_interval: 4, poll_interval_t: 1,
             long_poll: false, long_poll_t: false,
         };
 
