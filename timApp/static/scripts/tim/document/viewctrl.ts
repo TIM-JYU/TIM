@@ -668,7 +668,7 @@ export class ViewCtrl implements IController {
             if (answerResponse.data.userId == this.selectedUser.id) {
                 for (const fab of this.formAbs.values()) {
                     const ans = answerResponse.data.answers[fab.taskId];
-                    this.handleAnswerSet(ans, fab, user);
+                    this.handleAnswerSet(ans, fab, user, true);
                 }
             }
         }
@@ -681,7 +681,7 @@ export class ViewCtrl implements IController {
         }
     }
 
-    private handleAnswerSet(ans: IAnswer | undefined, fab: AnswerBrowserController, user: IUser) {
+    private handleAnswerSet(ans: IAnswer | undefined, fab: AnswerBrowserController, user: IUser, force: boolean) {
         if (ans === undefined) {
             fab.changeUserAndAnswers(user, []);
         } else {
@@ -690,7 +690,7 @@ export class ViewCtrl implements IController {
         const timComps = this.getTimComponentArray(fab.taskId);
         if (timComps) {
             for (const timComp of timComps) {
-                if (timComp.isUnSaved()) {
+                if (timComp.isUnSaved() && !force) {
                     continue;
                 }
                 if (fab.selectedAnswer) {
@@ -740,7 +740,7 @@ export class ViewCtrl implements IController {
             });
             for (const fab of formAbMap.values()) {
                 const ans = answerResponse.data.answers[fab.taskId];
-                this.handleAnswerSet(ans, fab, this.selectedUser);
+                this.handleAnswerSet(ans, fab, this.selectedUser, false);
             }
         }
         for (const ab of regularAbMap.values()) {
