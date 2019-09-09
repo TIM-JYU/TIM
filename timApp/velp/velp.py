@@ -124,7 +124,7 @@ def get_default_personal_velp_group():
             created_new = False
         else:
             user_group = get_current_user_group_object()
-            default_id = timdb.velp_groups.create_default_velp_group(group_name, user_group, new_group_path)
+            default_id = timdb.velp_groups.create_default_velp_group(group_name, user_group, new_group_path).id
             created_new = True
 
         created_velp_group = dict()

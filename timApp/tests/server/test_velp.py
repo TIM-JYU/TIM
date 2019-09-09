@@ -138,6 +138,22 @@ class VelpTest(TimRouteTest):
         self.assertEqual(len(resp), 1)  # Added velp label wasn't added to any velp and thus it can't be found
         # when searching velp labels for doc1
 
+        self.get(
+            '/get_default_personal_velp_group',
+            expect_content={
+                'created_new_group': True,
+                'default': False,
+                'default_group': True,
+                'edit_access': True,
+                'id': 18,
+                'location': 'users/test-user-1/velp-groups/Personal-default',
+                'name': 'Personal-default',
+                'show': True,
+                'target_id': '0',
+                'target_type': 0,
+            }
+        )
+
     def test_nonexistent_group(self):
         self.get('/999/get_velp_groups', expect_status=404)
         self.get('/999/get_default_velp_group', expect_status=404)
