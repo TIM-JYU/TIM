@@ -104,7 +104,7 @@ export interface ILectureMessage {
 export type ILectureFormParams = ILecture | IItem;
 
 export interface ILectureOptions {
-    max_students: number;
+    max_students: number | null;
     poll_interval: number;
     poll_interval_t: number;
     long_poll: boolean;
