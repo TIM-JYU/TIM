@@ -351,6 +351,7 @@ menu: |!!
 """
 ``` {plugin="timMenu" .hidden-print}
 topMenu: true
+topMenuTriggerHeight: 200
 menu: |!!
  - Menu title 1
    - [Menu item 1](item1Address)

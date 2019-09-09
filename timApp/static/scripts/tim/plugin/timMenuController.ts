@@ -138,7 +138,6 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
                 };
              */
         }
-        this.setBarStyles();
         onClick("body", ($this, e) => {
             this.onClick(e);
         });
@@ -147,6 +146,7 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
         }
         this.userRights = this.vctrl.item.rights;
         this.hoverOpen = this.attrs.hoverOpen && !this.userPrefersHoverDisabled;
+        this.setBarStyles();
     }
 
     protected getAttributeType() {
@@ -216,6 +216,7 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
         const menu = this.element.find(".tim-menu")[0];
         const placeholder = this.element.find(".tim-menu-placeholder")[0];
         const scrollY = $(window).scrollTop();
+
         if (!menu || !placeholder || !this.topMenuTriggerHeight || !scrollY) {
             return;
         }
@@ -225,7 +226,6 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
         }
         // Placeholder and its content are separate, because when hidden y is 0.
         const placeholderContent = this.element.find(".tim-menu-placeholder-content")[0];
-
         const belowPlaceholder = placeholder.getBoundingClientRect().bottom < 0;
         const scrollingDown = scrollY > this.previousScroll;
         const scrollDirHasChanged = (this.previouslyScrollingDown && !scrollingDown) || (!this.previouslyScrollingDown && scrollingDown);
@@ -235,7 +235,9 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
         }
         this.previouslyScrollingDown = scrollingDown;
         this.previousScroll = $(window).scrollTop();
-        // console.log(this.topMenuVisible + " " + this.previousSwitch + " " + scrollY + " " + this.topMenuTriggerHeight);
+
+        // Update bar width (in case document width has changed.
+        this.setBarStyles();
 
         // Sticky can only show when the element's place in document goes outside upper bounds.
         if (belowPlaceholder) {
@@ -284,6 +286,16 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
         if (this.attrs.fontSize) {
             this.barStyle += `font-size: ${this.attrs.fontSize}; `;
         }
+        // If menu isn't sticky, default width is fine.
+        if (this.topMenu) {
+            const menuWidth = this.element.parent().width();
+            if (menuWidth) {
+                this.barStyle += `width: ${menuWidth}px; `;
+            } else {
+                this.barStyle = `width: 100%; `;
+            }
+        }
+        this.scope.$evalAsync();
     }
 
     /**

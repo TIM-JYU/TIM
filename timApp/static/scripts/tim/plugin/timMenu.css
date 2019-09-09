@@ -1,6 +1,7 @@
 .tim-menu {
+    max-width: 100%;
+    text-align: left;
     padding: .8em;
-    margin-left: -.8em;
     border-radius: 4px;
     margin-bottom: 8px;
     cursor: pointer;
@@ -55,7 +56,6 @@
     background: #f7f7f7;
     margin-top: 0;
     top: 0;
-    width: 100%;
     z-index: 3;
     -webkit-transition: background 0.2s linear;
     -moz-transition: background 0.2s linear;
