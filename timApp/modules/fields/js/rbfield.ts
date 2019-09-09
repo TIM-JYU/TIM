@@ -141,7 +141,7 @@ class RbfieldController extends PluginBase<t.TypeOf<typeof RbfieldMarkup>, t.Typ
     }
 
     // TODO: Use answer content as arg or entire IAnswer?
-    setAnswer(content: { [index: string]: string }): { ok: boolean, message: (string | undefined) } {
+    setAnswer(content: { [index: string]: unknown }): { ok: boolean, message: (string | undefined) } {
         let message;
         let ok = true;
         // TODO: should receiving empty answer reset to defaultnumber or clear field?
@@ -149,7 +149,7 @@ class RbfieldController extends PluginBase<t.TypeOf<typeof RbfieldMarkup>, t.Typ
             this.resetField();
         } else {
             try {
-                this.userword = content.c;
+                this.userword = content.c as string;
             } catch (TypeError) {
                 this.userword = "";
                 ok = false;

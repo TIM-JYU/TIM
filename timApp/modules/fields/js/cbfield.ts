@@ -122,7 +122,7 @@ class CbfieldController extends PluginBase<t.TypeOf<typeof CbfieldMarkup>, t.Typ
     }
 
     // TODO: Use answer content as arg or entire IAnswer?
-    setAnswer(content: { [index: string]: string }): { ok: boolean, message: (string | undefined) } {
+    setAnswer(content: { [index: string]: unknown }): { ok: boolean, message: (string | undefined) } {
         let message;
         let ok = true;
         // TODO: should receiving empty answer reset to defaultnumber or clear field?
@@ -130,7 +130,7 @@ class CbfieldController extends PluginBase<t.TypeOf<typeof CbfieldMarkup>, t.Typ
             this.resetField();
         } else {
             try {
-                this.userword = CbfieldController.makeBoolean(content.c);
+                this.userword = CbfieldController.makeBoolean(content.c as string);
             } catch (TypeError) {
                 this.userword = false;
                 ok = false;
