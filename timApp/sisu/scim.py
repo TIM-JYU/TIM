@@ -8,10 +8,9 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import aliased
 from webargs.flaskparser import use_args
 
-from timApp.auth.login import create_or_update_user
+from timApp.sisu.parse_display_name import parse_sisu_group_display_name
 from timApp.sisu.scimusergroup import ScimUserGroup, external_id_re
 from timApp.sisu.sisu import refresh_sisu_grouplist_doc, send_course_group_mail
-from timApp.sisu.parse_display_name import parse_sisu_group_display_name
 from timApp.tim_app import csrf
 from timApp.timdb.sqa import db
 from timApp.user.scimentity import get_meta
@@ -356,7 +355,8 @@ def update_users(ug: UserGroup, args: SCIMGroupModel):
     else:
         if ug.external_id.external_id != args.externalId:
             raise SCIMException(422, 'externalId unexpectedly changed')
-    removed_user_names = set(u.name for u in ug.users) - set(u.value for u in args.members)
+    current_usernames = set(u.value for u in args.members)
+    removed_user_names = set(u.name for u in ug.users) - current_usernames
     for ms in get_scim_memberships(ug).filter(User.name.in_(removed_user_names)).with_entities(UserGroupMember):
         ms.set_expired()
     p = parse_sisu_group_display_name(args.displayName)
@@ -374,6 +374,9 @@ def update_users(ug: UserGroup, args: SCIMGroupModel):
 
     added_users = set()
     scimuser = User.get_scimuser()
+    existing_accounts: List[User] = User.query.filter(User.name.in_(current_usernames) | User.email.in_(emails)).all()
+    existing_accounts_dict: Dict[str, User] = {u.name: u for u in existing_accounts}
+    existing_accounts_by_email_dict: Dict[str, User] = {u.email: u for u in existing_accounts}
     with db.session.no_autoflush:
         for u in args.members:
             if u.name:
@@ -390,17 +393,22 @@ def update_users(ug: UserGroup, args: SCIMGroupModel):
                 name_to_use = expected_name
             else:
                 name_to_use = last_name_to_first(u.display)
-            try:
-                user = create_or_update_user(
-                    u.email,
-                    name_to_use,
-                    u.value,
-                    origin=UserOrigin.Sisu,
-                    allow_finding_by_email='EmailUsersOnly',
-                )
-            except IntegrityError as e:
-                db.session.rollback()
-                return raise_conflict_error(args, e)
+            user = existing_accounts_dict.get(u.value)
+            if user:
+                if u.email is not None:
+                    user_email = existing_accounts_by_email_dict.get(u.email)
+                    if user_email and user != user_email:
+                        # TODO: Could probably merge users here automatically.
+                        raise SCIMException(422, f'Users {user.name} and {user_email.name} must be merged because of conflicting emails.')
+                user.update_info(name=u.value, real_name=name_to_use, email=u.email)
+            else:
+                user = existing_accounts_by_email_dict.get(u.email)
+                if user:
+                    if not user.is_email_user:
+                        raise SCIMException(422, f'Key (email)=({user.email}) already exists. Conflicting username is: {u.value}')
+                    user.update_info(name=u.value, real_name=name_to_use, email=u.email)
+                else:
+                    user, _ = User.create_with_group(u.value, name_to_use, u.email, origin=UserOrigin.Sisu)
             added = user.add_to_group(ug, added_by=scimuser)
             if added:
                 added_users.add(user)
