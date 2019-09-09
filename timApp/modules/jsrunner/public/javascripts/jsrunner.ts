@@ -13,7 +13,7 @@ import {AnswerReturnBrowser, ErrorList, IError, JsrunnerAll, JsrunnerMarkup} fro
 const jsrunnerApp = angular.module("jsrunnerApp", ["ngSanitize"]);
 export const moduleDefs = [jsrunnerApp];
 
-class JsrunnerController extends PluginBase<t.TypeOf<typeof JsrunnerMarkup>, t.TypeOf<typeof JsrunnerAll>, typeof JsrunnerAll> implements IJsRunner{
+class JsrunnerController extends PluginBase<t.TypeOf<typeof JsrunnerMarkup>, t.TypeOf<typeof JsrunnerAll>, typeof JsrunnerAll> implements IJsRunner {
     private error?: IError;
     private isRunning = false;
     private output: string = "";
@@ -110,8 +110,8 @@ class JsrunnerController extends PluginBase<t.TypeOf<typeof JsrunnerMarkup>, t.T
         if (nosave) {
             params.input.nosave = true;
         }
-        if(groups){
-            params.input["groups"] = groups;
+        if (groups) {
+            params.input.groups = groups;
         }
         const url = this.pluginMeta.getAnswerUrl();
         const r = await to($http.put<AnswerReturnBrowser>(url, params));
@@ -177,8 +177,8 @@ class JsrunnerController extends PluginBase<t.TypeOf<typeof JsrunnerMarkup>, t.T
         return this.visible == 1;
     }
 
-    runScriptWithGroups(groups: string[]){
-        this.doCheckFields(false, groups)
+    runScriptWithGroups(groups: string[]) {
+        this.doCheckFields(false, groups);
     }
 
 }
