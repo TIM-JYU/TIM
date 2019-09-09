@@ -99,7 +99,7 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
 
     $onInit() {
         super.$onInit();
-        if (this.vctrl == null) {
+        if (this.vctrl == null || this.vctrl.isSlideView()) {
             return;
         }
         if (!this.attrsall.menu) {
