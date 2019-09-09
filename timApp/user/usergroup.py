@@ -1,8 +1,10 @@
 from typing import List
 
+import attr
 from sqlalchemy.orm import joinedload
 from sqlalchemy.orm.collections import attribute_mapped_collection
 
+from timApp.sisu.parse_display_name import parse_sisu_group_display_name
 from timApp.sisu.scimusergroup import ScimUserGroup
 from timApp.timdb.sqa import db, TimeStampMixin, include_if_exists, is_attribute_loaded
 from timApp.user.scimentity import SCIMEntity
@@ -41,7 +43,12 @@ class UserGroup(db.Model, TimeStampMixin, SCIMEntity):
     """Usergroup name (textual identifier)."""
 
     display_name = db.Column(db.Text, nullable=True)
-    """Usergroup display name."""
+    """Usergroup display name. Currently only used for storing certain Sisu course properties:
+     - course code
+     - period (P1...P5)
+     - date range
+     - group description in Sisu
+    """
 
     @property
     def scim_display_name(self):
@@ -196,3 +203,14 @@ def get_sisu_groups_by_filter(f) -> List[UserGroup]:
 
 # When a SCIM group is deleted, the group name gets this prefix.
 DELETED_GROUP_PREFIX = 'deleted:'
+
+
+@attr.s(auto_attribs=True)
+class UserGroupWithSisuGroupPath:
+    """Wrapper for UserGroup that reports the sisugroup path in to_json."""
+    ug: UserGroup
+    def to_json(self):
+        return {
+            **self.ug.to_json(),
+            'sisugroup_path': parse_sisu_group_display_name(self.ug.display_name).sisugroups_doc_path if self.ug.display_name else None
+        }

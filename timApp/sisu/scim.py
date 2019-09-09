@@ -10,7 +10,8 @@ from webargs.flaskparser import use_args
 
 from timApp.auth.login import create_or_update_user
 from timApp.sisu.scimusergroup import ScimUserGroup, external_id_re
-from timApp.sisu.sisu import parse_sisu_group_display_name, refresh_sisu_grouplist_doc, send_course_group_mail
+from timApp.sisu.sisu import refresh_sisu_grouplist_doc, send_course_group_mail
+from timApp.sisu.parse_display_name import parse_sisu_group_display_name
 from timApp.tim_app import csrf
 from timApp.timdb.sqa import db
 from timApp.user.scimentity import get_meta

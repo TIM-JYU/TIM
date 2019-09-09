@@ -42,7 +42,7 @@ from timApp.timdb.exceptions import TimDbException, PreambleException
 from timApp.timdb.sqa import db
 from timApp.user.groups import verify_group_view_access
 from timApp.user.user import User
-from timApp.user.usergroup import UserGroup, get_usergroup_eager_query
+from timApp.user.usergroup import UserGroup, get_usergroup_eager_query, UserGroupWithSisuGroupPath
 from timApp.util.flask.requesthelper import get_option, verify_json_params
 from timApp.util.flask.responsehelper import json_response, ok_response
 from timApp.util.logger import log_error
@@ -232,7 +232,7 @@ def view(item_path, template_name, usergroup=None, route="view"):
     if verify_manage_access(doc_info, require=False):
         linked_groups, group_tags = get_linked_groups(doc_info)
         if group_tags:
-            names = set(ug.name for ug in linked_groups)
+            names = set(ug.ug.name for ug in linked_groups)
             missing = set(group_tags) - names
             if missing:
                 flash(f'Document has incorrect group tags: {seq_to_str(list(missing))}')
@@ -459,10 +459,11 @@ def get_items(folder: str):
     return [f for f in folders if u.has_view_access(f)] + docs
 
 
-def get_linked_groups(i: Item) -> Tuple[List[UserGroup], List[str]]:
+def get_linked_groups(i: Item) -> Tuple[List[UserGroupWithSisuGroupPath], List[str]]:
     group_tags = [t.name[len(GROUP_TAG_PREFIX):] for t in i.block.tags if t.name.startswith(GROUP_TAG_PREFIX)]
     if group_tags:
-        return get_usergroup_eager_query().filter(UserGroup.name.in_(group_tags)).all(), group_tags
+        return list(map(UserGroupWithSisuGroupPath, get_usergroup_eager_query().filter(UserGroup.name.in_(group_tags)).all()
+                        )), group_tags
     return [], group_tags
 
 

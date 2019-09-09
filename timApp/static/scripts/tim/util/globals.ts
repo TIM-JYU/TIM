@@ -3,7 +3,7 @@ import {IDocSettings} from "../document/IDocSettings";
 import {EditMode} from "../document/popupMenu";
 import {DocumentOrFolder, IDocument, IFolder, IFullDocument, IItem} from "../item/IItem";
 import {ILecture} from "../lecture/lecturetypes";
-import {HeaderIndexItem} from "../sidebar/sidebarMenuCtrl";
+import {HeaderIndexItem, IGroupWithSisuPath} from "../sidebar/sidebarMenuCtrl";
 import {IFullUser, IGroup, IUser, IUserListEntry} from "../user/IUser";
 import {ISettings} from "../user/settingsCtrl";
 
@@ -54,7 +54,7 @@ export interface IDocumentGlobals extends IItemGlobals {
     translations: IDocument[];
     velpMode: boolean;
     wordList: string[];
-    linked_groups: IGroup[] | null;
+    linked_groups: IGroupWithSisuPath[] | null;
 }
 
 export interface ILectureInfoGlobals extends IDocumentGlobals {

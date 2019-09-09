@@ -23,7 +23,8 @@ from timApp.item.block import Block
 from timApp.item.tag import Tag, TagType, GROUP_TAG_PREFIX
 from timApp.plugin.plugin import find_plugin_from_document, TaskNotFoundException
 from timApp.plugin.taskid import TaskId
-from timApp.sisu.sisu import get_potential_groups, parse_sisu_group_display_name
+from timApp.sisu.sisu import get_potential_groups
+from timApp.sisu.parse_display_name import parse_sisu_group_display_name
 from timApp.tim_app import csrf
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup

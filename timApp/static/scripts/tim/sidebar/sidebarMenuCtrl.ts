@@ -37,6 +37,10 @@ export interface IHeaderDisplayIndexItem {
     closed: boolean;
 }
 
+export interface IGroupWithSisuPath extends IGroup {
+    sisugroup_path: string | null;
+}
+
 export type HeaderIndexItem = [IHeader, IHeader[]];
 
 export class SidebarMenuCtrl implements IController {
@@ -64,6 +68,7 @@ export class SidebarMenuCtrl implements IController {
     private showFolderSettings: boolean = false;
     private linkedGroups: IDocument[] = [];
     private item?: DocumentOrFolder;
+    private sisugroupPath?: string;
 
     constructor() {
         const g = someglobals();
@@ -96,12 +101,18 @@ export class SidebarMenuCtrl implements IController {
         }
     }
 
-    private updateLinkedGroups(groups: IGroup[]) {
+    private updateLinkedGroups(groups: IGroupWithSisuPath[]) {
         this.linkedGroups = [];
         for (const g of groups) {
             if (g.admin_doc != null) {
                 this.linkedGroups.push(g.admin_doc);
             }
+        }
+        // TODO: Theoretically there can be multiple different courses.
+        //  Should display a list in that case.
+        const gr = groups.find((g) => g.sisugroup_path != null);
+        if (gr && gr.sisugroup_path != null) {
+            this.sisugroupPath = gr.sisugroup_path;
         }
     }
 
@@ -307,7 +318,7 @@ export class SidebarMenuCtrl implements IController {
             return;
         }
         await to(showCourseDialog(this.vctrl.item));
-        const r = await to($http.get<IGroup[]>(`/items/linkedGroups/${this.vctrl.item.id}`));
+        const r = await to($http.get<IGroupWithSisuPath[]>(`/items/linkedGroups/${this.vctrl.item.id}`));
         if (r.ok) {
             this.updateLinkedGroups(r.result.data);
         } else {
@@ -584,7 +595,8 @@ timApp.component("timSidebarMenu", {
         <div ng-if="$ctrl.users.isGroupAdmin() || $ctrl.linkedGroups.length > 0">
             <h5>Groups</h5>
             <div ng-if="$ctrl.linkedGroups.length > 0">
-                <h6>Linked course groups</h6>
+                <h6 ng-if="!$ctrl.sisugroupPath">Linked course groups</h6>
+                <h6 ng-if="$ctrl.sisugroupPath">Linked <a href="/view/{{$ctrl.sisugroupPath}}">course groups</a></h6>
                 <ul class="list-unstyled">
                     <li ng-repeat="l in $ctrl.linkedGroups"><a href="/view/{{ l.path }}">{{ l.title }}</a></li>
                 </ul>
