@@ -56,7 +56,7 @@ class TextfieldMarkupSchema(GenericMarkupSchema):
     autoUpdateTables = fields.Boolean(default=True)
 
     @post_load
-    def make_obj(self, data):
+    def make_obj(self, data, **kwargs):
         return TextfieldMarkupModel(**data)
 
 
@@ -76,7 +76,7 @@ class TextfieldInputSchema(Schema):
         pass
 
     @post_load
-    def make_obj(self, data):
+    def make_obj(self, data, **kwargs):
         return TextfieldInputModel(**data)
 
 
@@ -99,7 +99,7 @@ class TextfieldHtmlSchema(TextfieldAttrs, GenericHtmlSchema):
     info = fields.Nested(InfoSchema, allow_none=True, required=True)
 
     @post_load
-    def make_obj(self, data):
+    def make_obj(self, data, **kwargs):
         # noinspection PyArgumentList
         return TextfieldHtmlModel(**data)
 
@@ -113,7 +113,7 @@ class TextfieldAnswerSchema(TextfieldAttrs, GenericAnswerSchema):
     input = fields.Nested(TextfieldInputSchema, required=True)
 
     @post_load
-    def make_obj(self, data):
+    def make_obj(self, data, **kwargs):
         # noinspection PyArgumentList
         return TextfieldAnswerModel(**data)
 

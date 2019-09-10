@@ -23,8 +23,8 @@ from timApp.item.block import Block
 from timApp.item.tag import Tag, TagType, GROUP_TAG_PREFIX
 from timApp.plugin.plugin import find_plugin_from_document, TaskNotFoundException
 from timApp.plugin.taskid import TaskId
-from timApp.sisu.sisu import get_potential_groups
 from timApp.sisu.parse_display_name import parse_sisu_group_display_name
+from timApp.sisu.sisu import get_potential_groups
 from timApp.tim_app import csrf
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
@@ -42,7 +42,7 @@ class TableFormStateModel:
 
 class TableFormStateSchema(Schema):
     @post_load
-    def make_obj(self, data):
+    def make_obj(self, data, **kwargs):
         return TableFormStateModel(**data)
 
 
@@ -144,7 +144,7 @@ class TableFormMarkupSchema(GenericMarkupSchema):
             raise ValidationError("Invalid includeUsers value. Must be one of 'all', 'current' (default), 'deleted'.")
 
     @post_load
-    def make_obj(self, data):
+    def make_obj(self, data, **kwargs):
         return TableFormMarkupModel(**data)
 
 
@@ -160,7 +160,7 @@ class TableFormInputSchema(Schema):
     nosave = fields.Bool()
 
     @post_load
-    def make_obj(self, data):
+    def make_obj(self, data, **kwargs):
         return TableFormInputModel(**data)
 
 
@@ -263,7 +263,7 @@ class TableFormHtmlSchema(TableFormAttrs, GenericHtmlSchema):
     info = fields.Nested(InfoSchema, allow_none=True, required=True)
 
     @post_load
-    def make_obj(self, data):
+    def make_obj(self, data, **kwargs):
         # noinspection PyArgumentList
         return TableFormHtmlModel(**data)
 
@@ -277,7 +277,7 @@ class TableFormAnswerSchema(TableFormAttrs, GenericAnswerSchema):
     input = fields.Nested(TableFormInputSchema, required=True)
 
     @post_load
-    def make_obj(self, data):
+    def make_obj(self, data, **kwargs):
         # noinspection PyArgumentList
         return TableFormAnswerModel(**data)
 
@@ -311,7 +311,7 @@ class GenerateCSVSchema(Schema):
     fields = fields.List(fields.Str(), required=True)
 
     @post_load
-    def make_obj(self, data):
+    def make_obj(self, data, **kwargs):
         return GenerateCSVModel(**data)
 
 

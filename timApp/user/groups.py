@@ -1,9 +1,9 @@
 from operator import attrgetter
 from typing import Tuple, List, Dict, Any
 
-import attr
+from dataclasses import dataclass
 from flask import Blueprint, abort
-from marshmallow import Schema, fields, post_load
+from marshmallow_dataclass import class_schema
 
 from timApp.auth.accesshelper import verify_admin, check_admin_access, get_doc_or_abort, verify_view_access
 from timApp.auth.accesstype import AccessType
@@ -194,22 +194,17 @@ def get_member_infos(groupname: str, usernames: List[str]):
     return existing_ids, group, not_exist, usernames, users
 
 
-@attr.s(auto_attribs=True)
+@dataclass
 class NamesModel:
     names: List[str]
 
 
-class NamesSchema(Schema):
-    names = fields.List(fields.Str(), required=True)
-
-    @post_load
-    def make_obj(self, data):
-        return NamesModel(**data)
+NamesModelSchema = class_schema(NamesModel)
 
 
 @groups.route('/addmember/<groupname>', methods=['post'])
 def add_member(groupname):
-    nm: NamesModel = load_data_from_req(NamesSchema)
+    nm: NamesModel = load_data_from_req(NamesModelSchema)
     existing_ids, group, not_exist, usernames, users = get_member_infos(groupname, nm.names)
     already_exists = set(u.name for u in group.users) & set(usernames)
     added = []
@@ -228,7 +223,7 @@ def add_member(groupname):
 
 @groups.route('/removemember/<groupname>', methods=['post'])
 def remove_member(groupname):
-    nm: NamesModel = load_data_from_req(NamesSchema)
+    nm: NamesModel = load_data_from_req(NamesModelSchema)
     existing_ids, group, not_exist, usernames, users = get_member_infos(groupname, nm.names)
     removed = []
     does_not_belong = []

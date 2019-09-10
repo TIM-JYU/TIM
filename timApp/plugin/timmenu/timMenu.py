@@ -25,7 +25,7 @@ class TimMenuStateModel:
 class TimMenuStateSchema(Schema):
 
     @post_load
-    def make_obj(self, data):
+    def make_obj(self, data, **kwargs):
         res = TimMenuStateModel(**data)
         return res
 
@@ -130,7 +130,7 @@ class TimMenuItemSchema(Schema):
     level = fields.Int(required=True)
 
     @post_load
-    def make_obj(self, data):
+    def make_obj(self, data, **kwargs):
         return TimMenuItemModel(**data)
 
 
@@ -148,7 +148,7 @@ class TimMenuMarkupSchema(GenericMarkupSchema):
     fontSize = fields.Str(allow_none=True)
     menu = fields.Str()
     @post_load
-    def make_obj(self, data):
+    def make_obj(self, data, **kwargs):
         return TimMenuMarkupModel(**data)
 
 
@@ -171,7 +171,7 @@ class TimMenuInputModel:
 class TimMenuInputSchema(Schema):
 
     @post_load
-    def make_obj(self, data):
+    def make_obj(self, data, **kwargs):
         return TimMenuInputModel(**data)
 
 
@@ -343,7 +343,7 @@ class TimMenuHtmlSchema(TimMenuAttrs, GenericHtmlSchema):
     info = fields.Nested(InfoSchema, allow_none=True, required=True)
 
     @post_load
-    def make_obj(self, data):
+    def make_obj(self, data, **kwargs):
         # noinspection PyArgumentList
         return TimMenuHtmlModel(**data)
 

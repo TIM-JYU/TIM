@@ -2,8 +2,6 @@
 TIM plugin: a radiobutton field
 """
 import attr
-from textfield import TextfieldAnswerModel, TextfieldAnswerSchema, TextfieldInputModel,\
-    TextfieldMarkupModel, TextfieldAttrs
 from flask import jsonify, render_template_string, Blueprint
 from marshmallow import fields, post_load
 from webargs.flaskparser import use_args
@@ -11,6 +9,8 @@ from webargs.flaskparser import use_args
 from common_schemas import TextfieldStateModel
 from pluginserver_flask import GenericHtmlSchema, GenericHtmlModel, \
     InfoSchema, render_multihtml
+from textfield import TextfieldAnswerModel, TextfieldAnswerSchema, TextfieldInputModel, \
+    TextfieldMarkupModel, TextfieldAttrs
 
 rbfield_route = Blueprint('rb', __name__, url_prefix="/rb")
 
@@ -28,7 +28,7 @@ class RbfieldHtmlSchema(TextfieldAttrs, GenericHtmlSchema):
     info = fields.Nested(InfoSchema, allow_none=True, required=True)
 
     @post_load
-    def make_obj(self, data):
+    def make_obj(self, data, **kwargs):
         # noinspection PyArgumentList
         return RbfieldHtmlModel(**data)
 

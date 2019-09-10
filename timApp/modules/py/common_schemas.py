@@ -27,5 +27,5 @@ class TextfieldStateSchema(Schema):
             raise ValidationError(f'State should be str, int, float or None but got {type(c)} with value {c}')
 
     @post_load
-    def make_obj(self, data):
+    def make_obj(self, data, **kwargs):
         return TextfieldStateModel(**data)

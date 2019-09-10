@@ -1,6 +1,6 @@
-import attr
+from dataclasses import field, dataclass
 from flask import Response, abort, request, Blueprint
-from marshmallow import Schema, fields, post_load
+from marshmallow_dataclass import class_schema
 from webargs.flaskparser import use_args
 
 from timApp.auth.accesshelper import get_doc_or_abort, verify_edit_access, can_see_par_source
@@ -55,28 +55,17 @@ def diff_document(doc_id, major1, minor1, major2, minor2):
     return Response(DocumentVersion.get_diff(doc1, doc2), mimetype="text/html")
 
 
-@attr.s(auto_attribs=True)
+@dataclass
 class GetBlockModel:
     doc_id: int = None
     par_id: str = None
     area_start: str = None
     area_end: str = None
-    use_exported: bool = True
+    use_exported: bool = field(default=True)
     par_hash: str = None
 
 
-class GetBlockSchema(Schema):
-    doc_id = fields.Int()
-    par_id = fields.Str()
-    area_start = fields.Str()
-    area_end = fields.Str()
-    use_exported = fields.Bool(missing=True)
-    par_hash = fields.Str(missing=None)
-
-    @post_load
-    def make_obj(self, data):
-        # noinspection PyArgumentList
-        return GetBlockModel(**data)
+GetBlockModelSchema = class_schema(GetBlockModel)
 
 
 @doc_bp.route("/getBlock/<int:doc_id>/<par_id>")
@@ -90,7 +79,7 @@ def get_block(doc_id, par_id):
 
 
 @doc_bp.route("/getBlock")
-@use_args(GetBlockSchema())
+@use_args(GetBlockModelSchema())
 def get_block_schema(args: GetBlockModel):
     return get_block_2(args)
 

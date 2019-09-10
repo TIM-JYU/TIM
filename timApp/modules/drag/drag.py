@@ -1,7 +1,6 @@
 """
 Module for serving drag item-plugin.
 """
-import re
 from typing import Union, List
 
 import attr
@@ -24,7 +23,7 @@ class DragStateSchema(Schema):
     c = fields.List(fields.Str(required=True))
 
     @post_load
-    def make_obj(self, data):
+    def make_obj(self, data, **kwargs):
         return DragStateModel(**data)
 
 
@@ -63,7 +62,7 @@ class DragMarkupSchema(GenericMarkupSchema):
             raise ValidationError('Must be of size 2 x 2.')
 
     @post_load
-    def make_obj(self, data):
+    def make_obj(self, data, **kwargs):
         return DragMarkupModel(**data)
 
 
@@ -90,7 +89,7 @@ class DragInputSchema(Schema):
     shuffle = fields.Bool()
 
     @post_load
-    def make_obj(self, data):
+    def make_obj(self, data, **kwargs):
         return DragInputModel(**data)
 
 
@@ -121,7 +120,7 @@ class DragHtmlSchema(DragAttrs, GenericHtmlSchema):
     info = fields.Nested(InfoSchema, allow_none=True, required=True)
 
     @post_load
-    def make_obj(self, data):
+    def make_obj(self, data, **kwargs):
         # noinspection PyArgumentList
         return DragHtmlModel(**data)
 
@@ -135,7 +134,7 @@ class DragAnswerSchema(DragAttrs, GenericAnswerSchema):
     input = fields.Nested(DragInputSchema, required=True)
 
     @post_load
-    def make_obj(self, data):
+    def make_obj(self, data, **kwargs):
         # noinspection PyArgumentList
         return DragAnswerModel(**data)
 

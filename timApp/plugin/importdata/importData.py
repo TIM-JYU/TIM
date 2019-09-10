@@ -4,13 +4,10 @@ TIM example plugin: a ImportData
 import json
 import os
 from typing import Union, List
-from flask import abort
 
 import attr
-from timApp.plugin.containerLink import get_plugin
-from timApp.util.utils import widen_fields
 import requests
-
+from flask import abort
 from flask import jsonify, render_template_string
 from marshmallow import Schema, fields, post_load
 from marshmallow.utils import missing
@@ -19,8 +16,10 @@ from webargs.flaskparser import use_args
 from pluginserver_flask import GenericMarkupModel, GenericMarkupSchema, GenericHtmlSchema, GenericHtmlModel, \
     GenericAnswerSchema, GenericAnswerModel, Missing, \
     InfoSchema, create_blueprint
+from timApp.plugin.containerLink import get_plugin
 from timApp.tim_app import csrf
 from timApp.user.user import User
+from timApp.util.utils import widen_fields
 
 
 @attr.s(auto_attribs=True)
@@ -36,7 +35,7 @@ class ImportDataStateSchema(Schema):
     fields = fields.List(fields.Str()) # Keep this last
 
     @post_load
-    def make_obj(self, data):
+    def make_obj(self, data, **kwargs):
         res = ImportDataStateModel(**data)
         return res
 
@@ -84,7 +83,7 @@ class ImportDataMarkupSchema(GenericMarkupSchema):
 
 
     @post_load
-    def make_obj(self, data):
+    def make_obj(self, data, **kwargs):
         return ImportDataMarkupModel(**data)
 
 
@@ -103,7 +102,7 @@ class ImportDataInputSchema(Schema):
     fields = fields.List(fields.Str()) # Keep this last
 
     @post_load
-    def make_obj(self, data):
+    def make_obj(self, data, **kwargs):
         return ImportDataInputModel(**data)
 
 
@@ -138,7 +137,7 @@ class ImportDataHtmlSchema(ImportDataAttrs, GenericHtmlSchema):
     info = fields.Nested(InfoSchema, allow_none=True, required=True)
 
     @post_load
-    def make_obj(self, data):
+    def make_obj(self, data, **kwargs):
         # noinspection PyArgumentList
         return ImportDataHtmlModel(**data)
 
@@ -152,7 +151,7 @@ class ImportDataAnswerSchema(ImportDataAttrs, GenericAnswerSchema):
     input = fields.Nested(ImportDataInputSchema, required=False)
 
     @post_load
-    def make_obj(self, data):
+    def make_obj(self, data, **kwargs):
         # noinspection PyArgumentList
         return ImportDataAnswerModel(**data)
 

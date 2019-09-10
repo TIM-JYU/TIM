@@ -1,7 +1,6 @@
 """
 TIM feedback-plugin.
 """
-import re
 from typing import Union, Any
 
 import attr
@@ -30,7 +29,7 @@ class FeedbackStateSchema(Schema):
     correct_answer = fields.Str(required=True)
 
     @post_load
-    def make_obj(self, data):
+    def make_obj(self, data, **kwargs):
         return FeedbackStateModel(**data)
 
 
@@ -68,7 +67,7 @@ class FeedbackMarkupSchema(GenericMarkupSchema):
             raise ValidationError('Must be of size 1 x 2.')
 
     @post_load
-    def make_obj(self, data):
+    def make_obj(self, data, **kwargs):
         return FeedbackMarkupModel(**data)
 
 
@@ -89,7 +88,7 @@ class FeedbackInputSchema(Schema):
     nosave = fields.Bool()
 
     @post_load
-    def make_obj(self, data):
+    def make_obj(self, data, **kwargs):
         return FeedbackInputModel(**data)
 
 
@@ -116,7 +115,7 @@ class FeedbackHtmlSchema(FeedbackAttrs, GenericHtmlSchema):
     info = fields.Nested(InfoSchema, allow_none=True, required=True)
 
     @post_load
-    def make_obj(self, data):
+    def make_obj(self, data, **kwargs):
         # noinspection PyArgumentList
         return FeedbackHtmlModel(**data)
 
@@ -130,7 +129,7 @@ class FeedbackAnswerSchema(FeedbackAttrs, GenericAnswerSchema):
     input = fields.Nested(FeedbackInputSchema, required=True)
 
     @post_load
-    def make_obj(self, data):
+    def make_obj(self, data, **kwargs):
         # noinspection PyArgumentList
         return FeedbackAnswerModel(**data)
 

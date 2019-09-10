@@ -189,6 +189,7 @@ class PluginTest(TimRouteTest):
                                             'answer_id': anon_answers[0]['id'],
                                             'par_id': par_id,
                                             'doc_id': doc.id}, expect_status=403)
+        self.get('/getState', expect_status=422)
         tree = self.get(f'/view/{doc.id}', as_tree=True, query_string={'lazy': False})
         plugs = tree.cssselect(mmcq_xpath)
         summary = tree.cssselect('div.taskSummary')

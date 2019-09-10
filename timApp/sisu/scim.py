@@ -2,8 +2,10 @@ import re
 from typing import List, Optional, Dict
 
 import attr
+from dataclasses import field, dataclass
 from flask import Blueprint, request, current_app, Response
-from marshmallow import Schema, fields, post_load, missing, pre_load
+from marshmallow import missing
+from marshmallow_dataclass import class_schema
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import aliased
 from webargs.flaskparser import use_args
@@ -29,17 +31,7 @@ scim = Blueprint('scim',
 UNPROCESSABLE_ENTITY = 422
 
 
-class SCIMNameSchema(Schema):
-    familyName = fields.Str(required=True)
-    givenName = fields.Str(required=True)
-    middleName = fields.Str(allow_none=True)
-
-    @post_load
-    def make_obj(self, data):
-        return SCIMNameModel(**data)
-
-
-@attr.s(auto_attribs=True)
+@dataclass
 class SCIMNameModel:
     familyName: str
     givenName: str
@@ -58,96 +50,46 @@ class SCIMNameModel:
                 return f'{self.givenName} {self.familyName}'
 
 
-class SCIMMemberSchema(Schema):
-    value = fields.Str(required=True)
-    ref = fields.Str()
-    display = fields.Str(required=True)
-    name = fields.Nested(SCIMNameSchema, required=True)
-    email = fields.Str()
-    type = fields.Str()
-
-    @pre_load
-    def preload(self, data):
-        if not isinstance(data, dict):
-            return data
-        ref = data.pop('$ref', None)
-        if ref:
-            data['ref'] = ref
-        return data
-
-    @post_load
-    def make_obj(self, data):
-        return SCIMMemberModel(**data)
-
-
-@attr.s(auto_attribs=True)
+@dataclass
 class SCIMMemberModel:
     value: str
     name: SCIMNameModel
     display: str
-    email: Optional[str] = None
-    ref: Optional[str] = missing
+    ref: Optional[str] = field(metadata={'data_key': '$ref'})
     type: Optional[str] = missing
+    email: Optional[str] = None
 
 
-class SCIMCommonSchema(Schema):
-    externalId = fields.Str(required=True)
-    displayName = fields.Str(required=True)
-
-
-@attr.s(auto_attribs=True)
+@dataclass
 class SCIMCommonModel:
     externalId: str
     displayName: str
 
 
-@attr.s(auto_attribs=True)
+@dataclass
 class SCIMEmailModel:
     value: str
-    type: str = missing
-    primary: bool = missing
+    type: Optional[str]
+    primary: bool = field(default=True)
 
 
-class SCIMEmailSchema(Schema):
-    value = fields.Str(required=True)
-    type = fields.Str()
-    primary = fields.Bool()
-
-    @post_load
-    def make_obj(self, data):
-        return SCIMEmailModel(**data)
-
-
-class SCIMUserSchema(SCIMCommonSchema):
-    userName = fields.Str(required=True)
-    emails = fields.List(fields.Nested(SCIMEmailSchema), required=True)
-
-    @post_load
-    def make_obj(self, data):
-        return SCIMUserModel(**data)
-
-
-@attr.s(auto_attribs=True)
+@dataclass
 class SCIMUserModel(SCIMCommonModel):
     userName: str
     emails: List[SCIMEmailModel]
 
 
-class SCIMGroupSchema(SCIMCommonSchema):
-    id = fields.Str()
-    schemas = fields.List(fields.Str())
-    members = fields.List(fields.Nested(SCIMMemberSchema), required=True)
-
-    @post_load
-    def make_obj(self, data):
-        return SCIMGroupModel(**data)
+SCIMUserModelSchema = class_schema(SCIMUserModel)
 
 
-@attr.s(auto_attribs=True)
+@dataclass
 class SCIMGroupModel(SCIMCommonModel):
     members: List[SCIMMemberModel]
-    id: Optional[str] = missing
-    schemas: Optional[List[str]] = missing
+    id: Optional[str]
+    schemas: Optional[List[str]]
+
+
+SCIMGroupModelSchema = class_schema(SCIMGroupModel)
 
 
 @attr.s(auto_attribs=True)
@@ -202,17 +144,12 @@ def check_auth():
         raise SCIMException(401, 'Incorrect username or password.', headers=headers)
 
 
-class GetGroupsSchema(Schema):
-    filter = fields.Str(required=True)
-
-    @post_load
-    def post_load(self, data):
-        return GetGroupsModel(**data)
-
-
-@attr.s(auto_attribs=True)
+@dataclass
 class GetGroupsModel:
     filter: str
+
+
+GetGroupsModelSchema = class_schema(GetGroupsModel)
 
 
 def get_scim_id(ug: UserGroup):
@@ -227,7 +164,7 @@ def scim_group_to_tim(sisu_group: str):
 
 
 @scim.route('/Groups')
-@use_args(GetGroupsSchema())
+@use_args(GetGroupsModelSchema())
 def get_groups(args: GetGroupsModel):
     m = filter_re.fullmatch(args.filter)
     if not m:
@@ -262,7 +199,7 @@ def derive_scim_group_name(s: str):
 
 @csrf.exempt
 @scim.route('/Groups', methods=['post'])
-@use_args(SCIMGroupSchema(), locations=("json",))
+@use_args(SCIMGroupModelSchema(), locations=("json",))
 def post_group(args: SCIMGroupModel):
     gname = scim_group_to_tim(args.externalId)
     ug = try_get_group_by_scim(args.externalId)
@@ -297,7 +234,7 @@ def put_group(group_id: str):
     try:
         ug = get_group_by_scim(group_id)
         try:
-            d = load_data_from_req(SCIMGroupSchema)
+            d = load_data_from_req(SCIMGroupModelSchema)
         except JSONException as e:
             raise SCIMException(422, e.description)
         update_users(ug, d)
@@ -333,7 +270,7 @@ def put_user(user_id):
     if not u:
         raise SCIMException(404, 'User not found.')
     try:
-        um: SCIMUserModel = load_data_from_req(SCIMUserSchema)
+        um: SCIMUserModel = load_data_from_req(SCIMUserModelSchema)
     except JSONException as e:
         raise SCIMException(422, e.description)
     u.real_name = last_name_to_first(um.displayName)

@@ -16,7 +16,6 @@ from pluginserver_flask import GenericMarkupModel, GenericMarkupSchema, GenericH
     InfoSchema, create_app
 
 
-
 @attr.s(auto_attribs=True)
 class PaliStateModel:
     """Model for the information that is stored in TIM database for each answer."""
@@ -27,7 +26,7 @@ class PaliStateSchema(Schema):
     userword = fields.Str(required=True)
 
     @post_load
-    def make_obj(self, data):
+    def make_obj(self, data, **kwargs):
         return PaliStateModel(**data)
 
 
@@ -55,7 +54,7 @@ class PaliMarkupSchema(GenericMarkupSchema):
             raise ValidationError('Must be of size 2 x 2.')
 
     @post_load
-    def make_obj(self, data):
+    def make_obj(self, data, **kwargs):
         return PaliMarkupModel(**data)
 
 
@@ -78,7 +77,7 @@ class PaliInputSchema(Schema):
             raise ValidationError('Must not be empty.')
 
     @post_load
-    def make_obj(self, data):
+    def make_obj(self, data, **kwargs):
         return PaliInputModel(**data)
 
 
@@ -107,7 +106,7 @@ class PaliHtmlSchema(PaliAttrs, GenericHtmlSchema):
     info = fields.Nested(InfoSchema, allow_none=True, required=True)
 
     @post_load
-    def make_obj(self, data):
+    def make_obj(self, data, **kwargs):
         # noinspection PyArgumentList
         return PaliHtmlModel(**data)
 
@@ -121,7 +120,7 @@ class PaliAnswerSchema(PaliAttrs, GenericAnswerSchema):
     input = fields.Nested(PaliInputSchema, required=True)
 
     @post_load
-    def make_obj(self, data):
+    def make_obj(self, data, **kwargs):
         # noinspection PyArgumentList
         return PaliAnswerModel(**data)
 

@@ -25,7 +25,7 @@ class DropdownStateSchema(Schema):
     c = fields.Str(required=True)
 
     @post_load
-    def make_obj(self, data):
+    def make_obj(self, data, **kwargs):
         return DropdownStateModel(**data)
 
 
@@ -48,7 +48,7 @@ class DropdownMarkupSchema(GenericMarkupSchema):
     shuffle = fields.Bool()
 
     @post_load
-    def make_obj(self, data):
+    def make_obj(self, data, **kwargs):
         return DropdownMarkupModel(**data)
 
 
@@ -70,7 +70,7 @@ class DropdownInputSchema(Schema):
             raise ValidationError('Must not be empty.')
 
     @post_load
-    def make_obj(self, data):
+    def make_obj(self, data, **kwargs):
         return DropdownInputModel(**data)
 
 
@@ -104,7 +104,7 @@ class DropdownHtmlSchema(DropdownAttrs, GenericHtmlSchema):
     info = fields.Nested(InfoSchema, allow_none=True, required=True)
 
     @post_load
-    def make_obj(self, data):
+    def make_obj(self, data, **kwargs):
         # noinspection PyArgumentList
         return DropdownHtmlModel(**data)
 
@@ -118,7 +118,7 @@ class DropdownAnswerSchema(DropdownAttrs, GenericAnswerSchema):
     input = fields.Nested(DropdownInputSchema, required=True)
 
     @post_load
-    def make_obj(self, data):
+    def make_obj(self, data, **kwargs):
         # noinspection PyArgumentList
         return DropdownAnswerModel(**data)
 

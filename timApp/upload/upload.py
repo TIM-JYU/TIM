@@ -4,23 +4,22 @@ import json
 import os
 import posixpath
 from pathlib import Path, PurePosixPath
-from typing import List, Union
+from typing import List, Optional
 from urllib.parse import unquote, urlparse
 
 import magic
+from dataclasses import dataclass
 from flask import Blueprint, request, send_file, Response
-import attr
 from flask import abort
-from marshmallow import Schema, fields, post_load
-from marshmallow.utils import _Missing, missing
+from marshmallow_dataclass import class_schema
 from webargs.flaskparser import use_args
 from werkzeug.utils import secure_filename
 
 from timApp.auth.accesshelper import verify_view_access, verify_seeanswers_access, verify_task_access, \
     grant_access_to_session_users, get_doc_or_abort, verify_edit_access
 from timApp.auth.accesstype import AccessType
-from timApp.auth.sessioninfo import get_current_user_group, logged_in, get_current_user_group_object
 from timApp.auth.sessioninfo import get_current_user_object
+from timApp.auth.sessioninfo import logged_in, get_current_user_group_object
 from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import DocInfo
 from timApp.document.documents import import_document
@@ -224,58 +223,24 @@ def upload_file():
                 abort(400, str(e))
 
 
-class RestampAttachmentData():
-    def __init__(self, uploadUrl: str,
-                 issueNumber: int,
-                 attachmentLetter: str,
-                 upToDate: bool,):
-
-        self.uploadUrl = uploadUrl
-        self.issueNumber = issueNumber
-        self.attachmentLetter = attachmentLetter
-        self.upToDate = upToDate
-
-
-@attr.s(auto_attribs=True)
+@dataclass
 class AttachmentModel:
     issueNumber: int
     attachmentLetter: str
     uploadUrl: str
-    upToDate: bool
+    upToDate: Optional[bool]
 
 
-@attr.s(auto_attribs=True)
+@dataclass
 class RestampModel:
-    attachments: List[RestampAttachmentData]
+    attachments: List[AttachmentModel]
     meetingDate: str
-    stampFormat: Union[str, _Missing] = missing
-    customStampModel: Union[str, _Missing] = missing
-
-
-class AttachmentSchema(Schema):
-    uploadUrl = fields.Str(required=True)
-    issueNumber = fields.Int(required=True)
-    attachmentLetter = fields.Str(required=True)
-    upToDate = fields.Bool(required=False)
-
-    @post_load
-    def make_obj(self, data):
-        return AttachmentModel(**data)
-
-
-class RestampSchema(Schema):
-    attachments = fields.List(fields.Nested(AttachmentSchema, required=True))
-    meetingDate = fields.Str(required=True)
-    stampFormat = fields.Str(required=False)
-    customStampModel = fields.Str(required=False)
-
-    @post_load
-    def make_obj(self, data):
-        return RestampModel(**data)
+    stampFormat: Optional[str]
+    customStampModel: Optional[str]
 
 
 @upload.route('/upload/restamp', methods=['POST'])
-@use_args(RestampSchema())
+@use_args(class_schema(RestampModel)())
 def restamp_attachments(args: RestampModel):
     """
     Route for updating stamps for one or more uploaded attachments.

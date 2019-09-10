@@ -47,7 +47,7 @@ class InfoSchema(Schema):
     valid = fields.Bool(required=True)
 
     @post_load
-    def make_obj(self, data):
+    def make_obj(self, data, **kwargs):
         return InfoModel(**data)
 
 
@@ -102,7 +102,7 @@ class GenericMarkupSchema(Schema):
     globalField = fields.Bool(allow_none=True)
 
     @pre_load
-    def process_minus(self, data):
+    def process_minus(self, data, **kwargs):
         if isinstance(data, dict):
             hidden_keys = {k[1:] for k in data.keys() if isinstance(k, str) and k.startswith('-')}
             for k in hidden_keys:

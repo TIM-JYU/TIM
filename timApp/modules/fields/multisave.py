@@ -53,7 +53,7 @@ class MultisaveMarkupSchema(GenericMarkupSchema):
     fields = fields.List(fields.Str())  # Keep this last
 
     @post_load
-    def make_obj(self, data):
+    def make_obj(self, data, **kwargs):
         return MultisaveMarkupModel(**data)
 
 
@@ -85,7 +85,7 @@ class MultisaveHtmlSchema(MultisaveAttrs, GenericHtmlSchema):
     info = fields.Nested(InfoSchema, allow_none=True, required=True)
 
     @post_load
-    def make_obj(self, data):
+    def make_obj(self, data, **kwargs):
         # noinspection PyArgumentList
         return MultisaveHtmlModel(**data)
 

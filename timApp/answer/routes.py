@@ -1,15 +1,17 @@
 """Answer-related routes."""
 import json
 import re
-from typing import Union, List, Tuple, Dict
+from typing import Union, List, Tuple, Dict, Optional
 
 import attr
+from dataclasses import field, dataclass
 from flask import Blueprint
 from flask import Response
 from flask import abort
 from flask import request
 from marshmallow import Schema, fields, post_load, validates_schema, ValidationError
 from marshmallow.utils import _Missing, missing
+from marshmallow_dataclass import class_schema
 from sqlalchemy import func
 from webargs.flaskparser import use_args
 
@@ -218,7 +220,7 @@ class UserAnswersForTasksSchema(Schema):
     user = fields.Int(required=True)
 
     @post_load
-    def make_obj(self, data):
+    def make_obj(self, data, **kwargs):
         return UserAnswersForTasksModel(**data)
 
 
@@ -289,7 +291,7 @@ class JsRunnerSchema(GenericMarkupSchema):
     fields = fields.List(fields.Str(), required=True)
 
     @validates_schema(skip_on_field_errors=True)
-    def validate_schema(self, data):
+    def validate_schema(self, data, **kwargs):
         if data.get('group') is None and data.get('groups') is None:
             raise ValidationError("Either group or groups must be given.")
 
@@ -301,7 +303,7 @@ class SendEmailSchema(Schema):
     bccme = fields.Boolean(allow_none=True)
 
     @post_load
-    def make_obj(self, data):
+    def make_obj(self, data, **kwargs):
         return SendEmailModel(**data)
 
 
@@ -1096,25 +1098,13 @@ def get_jsframe_data(task_id, user_id):
         return abort(400, str(e))
         # return json_response({})
 
-class GetStateSchema(Schema):
-    answer_id = fields.Int(required=True)
-    par_id = fields.Str()
-    doc_id = fields.Str()
-    user_id = fields.Int(required=True)
-    review = fields.Bool(missing=False)
-
-
-    @post_load
-    def make_obj(self, data):
-        return GetStateModel(**data)
-
 
 class GetMultiStatesSchema(Schema):
     answer_ids = fields.List(fields.Int(), required=True)
     user_id = fields.Int(required=True)
 
     @post_load
-    def make_obj(self, data):
+    def make_obj(self, data, **kwargs):
         return GetMultiStatesModel(**data)
 
 
@@ -1124,13 +1114,16 @@ class GetMultiStatesModel:
     user_id: int
 
 
-@attr.s(auto_attribs=True)
+@dataclass
 class GetStateModel:
     answer_id: int
     user_id: int
-    review: bool
-    par_id: Union[str, _Missing] = missing
-    doc_id: Union[str, _Missing] = missing
+    par_id: Optional[str]
+    doc_id: Optional[int]
+    review: bool = field(default=False)
+
+
+GetStateSchema = class_schema(GetStateModel)
 
 
 @answers.route("/getMultiStates")
@@ -1174,6 +1167,7 @@ def get_multi_states(args: GetMultiStatesModel):
         html = plug.get_final_output()
         response[ans.id] = {'html': html, 'reviewHtml': None}
     return json_response(response)
+
 
 @answers.route("/getState")
 @use_args(GetStateSchema())

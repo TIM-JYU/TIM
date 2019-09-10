@@ -2,10 +2,10 @@
 TIM plugin: a numericfield
 """
 
+import re
 from typing import Union
 
 import attr
-import re
 from flask import jsonify, render_template_string, Blueprint
 from marshmallow import Schema, fields, post_load
 from marshmallow.utils import missing
@@ -70,7 +70,7 @@ class NumericfieldMarkupSchema(GenericMarkupSchema):
     save = fields.String(allow_none=True)
 
     @post_load
-    def make_obj(self, data):
+    def make_obj(self, data, **kwargs):
         return NumericfieldMarkupModel(**data)
 
 
@@ -86,7 +86,7 @@ class NumericfieldInputSchema(Schema):
     nosave = fields.Bool()
 
     @post_load
-    def make_obj(self, data):
+    def make_obj(self, data, **kwargs):
         return NumericfieldInputModel(**data)
 
 
@@ -111,7 +111,7 @@ class NumericfieldHtmlSchema(NumericfieldAttrs, GenericHtmlSchema):
     info = fields.Nested(InfoSchema, allow_none=True, required=True)
 
     @post_load
-    def make_obj(self, data):
+    def make_obj(self, data, **kwargs):
         # noinspection PyArgumentList
         return NumericfieldHtmlModel(**data)
 
@@ -126,7 +126,7 @@ class NumericfieldAnswerSchema(NumericfieldAttrs, GenericAnswerSchema):
     input = fields.Nested(NumericfieldInputSchema, required=True)
 
     @post_load
-    def make_obj(self, data):
+    def make_obj(self, data, **kwargs):
         # noinspection PyArgumentList
         return NumericfieldAnswerModel(**data)
 

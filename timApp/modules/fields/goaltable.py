@@ -1,19 +1,19 @@
 """
 TIM plugin: a radiobutton field
 """
+import json
+from typing import Union, List
+
 import attr
 from flask import jsonify, render_template_string, Blueprint
 from marshmallow import fields, post_load
 from marshmallow.utils import _Missing
+from marshmallow.utils import missing
 from webargs.flaskparser import use_args
 
 from pluginserver_flask import GenericMarkupModel, GenericMarkupSchema, GenericHtmlSchema, GenericHtmlModel, \
     GenericAnswerSchema, GenericAnswerModel, Missing, \
     InfoSchema, Schema, render_multihtml, render_multimd
-import json
-from typing import Union, List
-
-from marshmallow.utils import missing
 
 goaltable_route = Blueprint('goaltable', __name__, url_prefix="/goaltable")
 
@@ -30,7 +30,7 @@ class GoalTableStateSchema(Schema):
     styles = fields.Dict(keys=fields.Str(), values=fields.Str())
 
     @post_load
-    def make_obj(self, data):
+    def make_obj(self, data, **kwargs):
         res = GoalTableStateModel(**data)
         return res
 
@@ -62,7 +62,7 @@ class GoalTableMarkupSchema(GenericMarkupSchema):
     initgoal = fields.Int(allow_none=True)
 
     @post_load
-    def make_obj(self, data):
+    def make_obj(self, data, **kwargs):
         return GoalTableMarkupModel(**data)
 
 
@@ -79,7 +79,7 @@ class GoalTableInputSchema(Schema):
     nosave = fields.Bool()
 
     @post_load
-    def make_obj(self, data):
+    def make_obj(self, data, **kwargs):
         return GoalTableInputModel(**data)
 
 
@@ -122,7 +122,7 @@ class GoalTableHtmlSchema(GoalTableAttrs, GenericHtmlSchema):
     info = fields.Nested(InfoSchema, allow_none=True, required=True)
 
     @post_load
-    def make_obj(self, data):
+    def make_obj(self, data, **kwargs):
         # noinspection PyArgumentList
         return GoalTableHtmlModel(**data)
 
@@ -136,7 +136,7 @@ class GoalTableAnswerSchema(GoalTableAttrs, GenericAnswerSchema):
     input = fields.Nested(GoalTableInputSchema, required=False)
 
     @post_load
-    def make_obj(self, data):
+    def make_obj(self, data, **kwargs):
         # noinspection PyArgumentList
         return GoalTableAnswerModel(**data)
 
