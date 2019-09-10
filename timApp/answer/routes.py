@@ -695,7 +695,7 @@ def handle_jsrunner_response(jsonresp, result, current_doc: DocInfo = None, allo
             if t_id.field  and t_id.field != "points" and t_id.field != "styles":
                 if plugin.type == "numericfield" or plugin.type == "textfield":
                     if t_id.field != plugin.get_content_field_name():
-                        return abort(403, f'Error saving to {task}: {t_id.field} is not accepted field.')
+                        return abort(400, f'Error saving to {task}: {t_id.field} is not an accepted field.')
                 task_content_name_map[task] = t_id.field
             else:
                 # plug = find_plugin_from_document(dib.document, t_id, curr_user)
@@ -745,11 +745,7 @@ def handle_jsrunner_response(jsonresp, result, current_doc: DocInfo = None, allo
                         try:
                             value = float(value)
                         except ValueError:
-                            if not result['web'].get('error', None):
-                                result['web']['error'] = 'Errors:\n'
-                            result['web'][
-                                'error'] += f"Value {value} is not valid point value for task {task_id.task_name}\n"
-                            continue
+                            return abort(400, f'Value {value} is not valid point value for task {task_id.task_name}')
                     if points != value:
                         new_answer = True
                     points = value
@@ -762,11 +758,8 @@ def handle_jsrunner_response(jsonresp, result, current_doc: DocInfo = None, allo
                                 try:
                                     value = json.loads(value)
                                 except json.decoder.JSONDecodeError:
-                                    if not result['web'].get('error', None):
-                                        result['web']['error'] = 'Errors:\n'
-                                    result['web'][
-                                        'error'] += f"Value {value} is not valid style syntax for task {task_id.task_name}\n"
-                                    continue
+                                    return abort(400,
+                                                 f'Value {value} is not valid style syntax for task {task_id.task_name}')
                         plug = find_plugin_from_document(doc_map[task_id.doc_id].document, task_id, curr_user)
                         allow_styles = plug.allow_styles_field()
                         if allow_styles:
