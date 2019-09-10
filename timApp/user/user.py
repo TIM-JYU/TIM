@@ -128,8 +128,11 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
     name = db.Column(db.Text, nullable=False, unique=True)
     """User name (not full name)."""
 
+    given_name = db.Column(db.Text)
+    last_name = db.Column(db.Text)
+
     real_name = db.Column(db.Text)
-    """Real name. This may be in the form "Lastname Firstname" or "Firstname Lastname"."""
+    """Real (full) name. This may be in the form "Lastname Firstname" or "Firstname Lastname"."""
 
     email = db.Column(db.Text, unique=True)
     """Email address."""
@@ -246,9 +249,8 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
     def pretty_full_name(self):
         """Returns the user's full name."""
 
-        # Earlier this method attempted to return the name in the form "Firstname Lastname",
-        # but since Sisu changes the real_name order, it isn't possible to reliably do so anymore.
-        # Therefore we just return real_name as is.
+        if self.given_name and self.last_name:
+            return f'{self.given_name} {self.last_name}'
         return self.real_name if self.real_name is not None else '(real_name is null)'
 
     @staticmethod
@@ -259,6 +261,8 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
             password: str = '',
             uid: int = None,
             origin: UserOrigin = None,
+            given_name = None,
+            last_name=None,
     ) -> 'User':
         """Creates a new user with the specified name.
 
@@ -271,7 +275,17 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         """
 
         p_hash = create_password_hash(password) if password != '' else ''
-        user = User(id=uid, name=name, real_name=real_name, email=email, pass_=p_hash, origin=origin)
+        # noinspection PyArgumentList
+        user = User(
+            id=uid,
+            name=name,
+            real_name=real_name,
+            last_name=last_name,
+            given_name=given_name,
+            email=email,
+            pass_=p_hash,
+            origin=origin,
+        )
         db.session.add(user)
         return user
 
@@ -282,10 +296,20 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
                           password: Optional[str] = None,
                           is_admin: bool = False,
                           origin: UserOrigin = None,
-                          uid: Optional[int] = None):
-        user = User.create(name, real_name, email, password=password or '',
-                           uid=uid,
-                           origin=origin)
+                          uid: Optional[int] = None,
+                          given_name = None,
+                          last_name=None,
+                          ):
+        user = User.create(
+            name,
+            real_name,
+            email,
+            password=password or '',
+            given_name=given_name,
+            last_name=last_name,
+            uid=uid,
+            origin=origin,
+        )
         group = UserGroup.create(name)
         user.groups.append(group)
         if is_admin:
@@ -434,11 +458,22 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
             u, _ = User.create_with_group(name=SCIM_USER_NAME, real_name='Scim User', email='scimuser@example.com')
         return u
 
-    def update_info(self, name: str, real_name: str, email: str, password: Optional[str] = None):
+    def update_info(
+            self,
+            name: str,
+            real_name: str,
+            email: str,
+            password: Optional[str] = None,
+            given_name: Optional[str]=None,
+            last_name: Optional[str]=None,
+    ):
         if self.name != name:
             group = self.get_personal_group()
             self.name = name
             group.name = name
+        if given_name and last_name:
+            self.given_name = given_name
+            self.last_name = last_name
         self.real_name = real_name
         self.email = email
         if password:

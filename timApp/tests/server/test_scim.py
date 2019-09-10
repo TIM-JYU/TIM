@@ -75,10 +75,10 @@ class ScimTest(TimRouteTest):
             json_data={
                 'externalId': eid,
                 'displayName': display_name,
-                'members': [
+                'members': add_name_parts([
                     {'value': 'sisuuser', 'display': 'Sisu User', 'email': 'x@example.com'},
                     {'value': 'sisuuser3', 'display': 'Sisu User 3'},
-                ],
+                ]),
             }, auth=a,
             expect_status=409,
             expect_content={'detail': f'Group already exists: {eid}',
@@ -307,16 +307,19 @@ class ScimTest(TimRouteTest):
                 "members": add_name_parts([
                     {
                         "value": "someuser1",
+                        "display": "Some User",
                         "$ref": "https://timdevs02-5.it.jyu.fi/scim/Users/someuser1",
                         "type": "User",
                     },
                     {
                         "value": "someuser2",
+                        "display": "Some User",
                         "$ref": "https://timdevs02-5.it.jyu.fi/scim/Users/someuser2",
                         "type": "User",
                     },
                     {
                         "value": "someuser3",
+                        "display": "Some User",
                         "$ref": "https://timdevs02-5.it.jyu.fi/scim/Users/someuser3",
                         "type": "User",
                     }
@@ -328,13 +331,13 @@ class ScimTest(TimRouteTest):
                 'id': 'jy-CUR-4406-jy-studysubgroup-8514-teachers',
                 'members': [
                     {'$ref': 'http://localhost/scim/Users/someuser1',
-                     'display': None,
+                     "display": "Some User",
                      'value': 'someuser1'},
                     {'$ref': 'http://localhost/scim/Users/someuser2',
-                     'display': None,
+                     "display": "Some User",
                      'value': 'someuser2'},
                     {'$ref': 'http://localhost/scim/Users/someuser3',
-                     'display': None,
+                     "display": "Some User",
                      'value': 'someuser3'},
                 ],
                 'schemas': ['urn:ietf:params:scim:schemas:core:2.0:Group'],
@@ -355,6 +358,7 @@ class ScimTest(TimRouteTest):
         )
         r.pop('meta')
         r['members'][0]['display'] = 'Changed Name'
+        add_name_parts(r['members'])
         self.json_put(
             '/scim/Groups/jy-CUR-1236-teachers',
             json_data=r,
@@ -557,9 +561,9 @@ class ScimTest(TimRouteTest):
                 '/scim/Groups', {
                     'externalId': external_id,
                     'displayName': display_name,
-                    'members': [
-                        {'value': u, 'display': u, 'email': f'{u}@example.com'} for u in users
-                    ],
+                    'members': add_name_parts([
+                        {'value': u, 'display': f'User {u}', 'email': f'{u}@example.com'} for u in users
+                    ]),
                 },
                 auth=a,
                 expect_status=201,
@@ -742,9 +746,9 @@ class ScimTest(TimRouteTest):
                 f'/scim/Groups/{external_id}', {
                     'externalId': external_id,
                     'displayName': display_name,
-                    'members': [
-                        {'value': u, 'display': u, 'email': f'{u}@example.com'} for u in users
-                    ],
+                    'members': add_name_parts([
+                        {'value': u, 'display': f'User {u}', 'email': f'{u}@example.com'} for u in users
+                    ]),
                 },
                 auth=a,
             )
@@ -784,13 +788,18 @@ class ScimTest(TimRouteTest):
             '/scim/Groups', {
                 'externalId': eid,
                 'displayName': 'ITKP102 2020-09-09--2020-12-20: Rooli - teacher',
-                'members': [
-                    {'value': u, 'display': u, 'email': f'{u}@example.com'} for u in ['abc']
-                ],
+                'members': add_name_parts([
+                    {'value': u, 'display': f'User {u}', 'email': f'{u}@example.com'} for u in ['abc']
+                ]),
             },
             auth=a,
             expect_status=201,
         )
+        abc = User.get_by_name('abc')
+        self.assertEqual('abc User', abc.real_name)
+        self.assertEqual('User', abc.given_name)
+        self.assertEqual('abc', abc.last_name)
+        self.assertEqual('User abc', abc.pretty_full_name)
         u, _ = User.create_with_group('anon@example.com', 'Anon User', 'anon@example.com', origin=UserOrigin.Email)
         u2, _ = User.create_with_group('mameikal', 'Matti Meikäläinen', 'mameikal@example.com',
                                        origin=UserOrigin.Korppi)
@@ -807,7 +816,7 @@ class ScimTest(TimRouteTest):
             auth=a,
         )
         self.assertEqual(
-            [{'$ref': 'http://localhost/scim/Users/abc', 'display': 'abc', 'value': 'abc'}],
+            [{'$ref': 'http://localhost/scim/Users/abc', 'display': 'User abc', 'value': 'abc'}],
             r['members'],
         )
 
@@ -815,13 +824,17 @@ class ScimTest(TimRouteTest):
             f'/scim/Groups/{eid}', {
                 'externalId': eid,
                 'displayName': 'ITKP102 2020-09-09--2020-12-20: Rooli - teacher',
-                'members': [
-                    {'value': u, 'display': u, 'email': f'{u}@example.com'} for u in ['abc']
-                ],
+                'members': add_name_parts([
+                    {'value': u, 'display': f'Userz {u}z', 'email': f'{u}@example.com'} for u in ['abc']
+                ]),
             },
             auth=a,
         )
-
+        abc = User.get_by_name('abc')
+        self.assertEqual('abcz Userz', abc.real_name)
+        self.assertEqual('Userz', abc.given_name)
+        self.assertEqual('abcz', abc.last_name)
+        self.assertEqual('Userz abcz', abc.pretty_full_name)
         # The manually added user should not get deleted on SCIM update.
         ug = UserGroup.get_by_external_id(eid)
         self.assertEqual(3, len(ug.users))

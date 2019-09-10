@@ -61,8 +61,8 @@ class SCIMNameModel:
 class SCIMMemberSchema(Schema):
     value = fields.Str(required=True)
     ref = fields.Str()
-    display = fields.Str()
-    name = fields.Nested(SCIMNameSchema)
+    display = fields.Str(required=True)
+    name = fields.Nested(SCIMNameSchema, required=True)
     email = fields.Str()
     type = fields.Str()
 
@@ -83,8 +83,8 @@ class SCIMMemberSchema(Schema):
 @attr.s(auto_attribs=True)
 class SCIMMemberModel:
     value: str
-    name: Optional[SCIMNameModel] = None
-    display: Optional[str] = None
+    name: SCIMNameModel
+    display: str
     email: Optional[str] = None
     ref: Optional[str] = missing
     type: Optional[str] = missing
@@ -379,20 +379,17 @@ def update_users(ug: UserGroup, args: SCIMGroupModel):
     existing_accounts_by_email_dict: Dict[str, User] = {u.email: u for u in existing_accounts}
     with db.session.no_autoflush:
         for u in args.members:
-            if u.name:
-                expected_name = u.name.derive_full_name(last_name_first=True)
-                consistent = (u.display.endswith(' ' + u.name.familyName)
-                              # There are some edge cases that prevent this condition from working, so it has been disabled.
-                              # and set(expected_name.split(' ')[1:]) == set(u.display.split(' ')[:-1])
-                              )
-                if not consistent:
-                    raise SCIMException(
-                        422,
-                        f"The display attribute '{u.display}' is inconsistent with the name attributes: "
-                        f"given='{u.name.givenName}', middle='{u.name.middleName}', family='{u.name.familyName}'.")
-                name_to_use = expected_name
-            else:
-                name_to_use = last_name_to_first(u.display)
+            expected_name = u.name.derive_full_name(last_name_first=True)
+            consistent = (u.display.endswith(' ' + u.name.familyName)
+                          # There are some edge cases that prevent this condition from working, so it has been disabled.
+                          # and set(expected_name.split(' ')[1:]) == set(u.display.split(' ')[:-1])
+                          )
+            if not consistent:
+                raise SCIMException(
+                    422,
+                    f"The display attribute '{u.display}' is inconsistent with the name attributes: "
+                    f"given='{u.name.givenName}', middle='{u.name.middleName}', family='{u.name.familyName}'.")
+            name_to_use = expected_name
             user = existing_accounts_dict.get(u.value)
             if user:
                 if u.email is not None:
@@ -400,15 +397,34 @@ def update_users(ug: UserGroup, args: SCIMGroupModel):
                     if user_email and user != user_email:
                         # TODO: Could probably merge users here automatically.
                         raise SCIMException(422, f'Users {user.name} and {user_email.name} must be merged because of conflicting emails.')
-                user.update_info(name=u.value, real_name=name_to_use, email=u.email)
+                user.update_info(
+                    name=u.value,
+                    real_name=name_to_use,
+                    email=u.email,
+                    last_name=u.name.familyName,
+                    given_name=u.name.givenName,
+                )
             else:
                 user = existing_accounts_by_email_dict.get(u.email)
                 if user:
                     if not user.is_email_user:
                         raise SCIMException(422, f'Key (email)=({user.email}) already exists. Conflicting username is: {u.value}')
-                    user.update_info(name=u.value, real_name=name_to_use, email=u.email)
+                    user.update_info(
+                        name=u.value,
+                        real_name=name_to_use,
+                        email=u.email,
+                        last_name=u.name.familyName,
+                        given_name=u.name.givenName,
+                    )
                 else:
-                    user, _ = User.create_with_group(u.value, name_to_use, u.email, origin=UserOrigin.Sisu)
+                    user, _ = User.create_with_group(
+                        u.value,
+                        name_to_use,
+                        u.email,
+                        origin=UserOrigin.Sisu,
+                        last_name=u.name.familyName,
+                        given_name=u.name.givenName,
+                    )
             added = user.add_to_group(ug, added_by=scimuser)
             if added:
                 added_users.add(user)
