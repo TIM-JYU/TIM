@@ -1,5 +1,5 @@
 from flask import Blueprint, abort, request
-from flask import current_app
+from flask import current_app, Response
 from sqlalchemy import func, distinct, true
 from sqlalchemy.exc import IntegrityError
 
@@ -162,6 +162,16 @@ def get_statistics(doc_path):
 
     def row_to_dict(row):
         return dict(zip(column_names, maybe_hide_name_from_row(row)))
+
+    if result_format == 'count':
+        reads =  list(
+            map(
+                row_to_dict,
+                q.all()
+            )
+        )
+
+        return Response(str(len(reads)), mimetype='text/plain')
 
     if result_format == 'csv':
         def gen_rows():
