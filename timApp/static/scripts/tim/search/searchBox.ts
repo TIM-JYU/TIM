@@ -396,6 +396,7 @@ export class SearchBoxCtrl implements IController {
                 maxDocResults: this.maxDocResults,
                 searchContent: this.searchContent,
                 searchTitles: this.searchTitles,
+                searchAttrs: true,
                 ...this.getCommonSearchOptions(),
             },
             url: "/search",
@@ -596,7 +597,6 @@ timApp.component("searchBox", {
             <input type="checkbox" ng-model="$ctrl.searchTags"> Tags</label>
         <label class="font-weight-normal" title="Search document paths">
             <input type="checkbox" ng-model="$ctrl.searchPaths"> Paths</label>
-
       </form>
     </div>
 `,
