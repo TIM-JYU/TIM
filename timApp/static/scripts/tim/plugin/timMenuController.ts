@@ -141,6 +141,7 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
         onClick("body", ($this, e) => {
             this.onClick(e);
         });
+
         if (genericglobals().userPrefs.disable_menu_hover) {
             this.userPrefersHoverDisabled = genericglobals().userPrefs.disable_menu_hover;
         }
@@ -367,11 +368,14 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
      * @param e Click event.
      */
     private onClick(e: JQuery.Event) {
-        if (!this.mouseInside) {
+        if (e.type.includes("touch")) {
+            this.hoverOpen = false;
+        }
+        if (this.mouseInside) {
+            this.clickedInside = true;
+        } else {
             this.clickedInside = false;
             this.closeMenus();
-        } else {
-            this.clickedInside = true;
         }
     }
 
@@ -384,6 +388,10 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
         if (!this.clickedInside && this.hoverOpen) {
             this.closeMenus();
         }
+    }
+
+    private mouseEnter() {
+        this.mouseInside = true;
     }
 
     /**
@@ -408,7 +416,7 @@ timApp.component("timmenuRunner", {
 <tim-markup-error ng-if="::$ctrl.markupError" data="::$ctrl.markupError"></tim-markup-error>
 <span ng-cloak ng-if="$ctrl.topMenu" class="tim-menu-placeholder"></span>
 <span ng-cloak ng-if="$ctrl.topMenu" class="tim-menu-placeholder-content tim-menu-hidden"><br></span>
-<div id="{{$ctrl.menuId}}" class="tim-menu" ng-class="{'bgtim white': $ctrl.basicColors, 'hide-link-colors': !$ctrl.keepLinkColors}" style="{{$ctrl.barStyle}}" ng-mouseleave="$ctrl.mouseLeave()" ng-mouseenter="$ctrl.mouseInside = true">
+<div id="{{$ctrl.menuId}}" class="tim-menu" ng-class="{'bgtim white': $ctrl.basicColors, 'hide-link-colors': !$ctrl.keepLinkColors}" style="{{$ctrl.barStyle}}" ng-mouseleave="$ctrl.mouseLeave()" ng-mouseenter="$ctrl.mouseEnter()">
     <span ng-repeat="t1 in $ctrl.menu">
         <span ng-if="t1.items.length > 0 && $ctrl.hasRights(t1)" class="btn-group" style="{{$ctrl.setStyle(t1)}}">
           <span ng-disabled="disabled" ng-bind-html="t1.text+$ctrl.openingSymbol" ng-click="$ctrl.toggleSubmenu(t1, undefined, undefined, true)" ng-mouseenter="$ctrl.toggleSubmenu(t1, undefined, undefined, false)"></span>
