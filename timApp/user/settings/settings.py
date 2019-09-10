@@ -37,9 +37,11 @@ def show():
     available_css_files = [{'name': theme.filename, 'desc': theme.description} for theme in get_available_themes()]
 
     try:
+        limit = 50
         return render_template('settings.html',
                                css_files=available_css_files,
-                               notifications=get_current_user_notifications())
+                               notification_limit=limit,
+                               notifications=get_current_user_notifications(limit=limit))
     except TemplateNotFound:
         abort(404)
 

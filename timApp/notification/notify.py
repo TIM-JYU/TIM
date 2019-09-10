@@ -65,21 +65,20 @@ def get_user_notify_settings():
     return json_response(nots)
 
 
-def get_current_user_notifications():
-    u = (User.query.options(
-        joinedload(User.notifications_alt)
-            .joinedload(Notification.block)
+def get_current_user_notifications(limit: int = None):
+    q = (Notification.query.filter_by(user_id=get_current_user_id()).options(
+        joinedload(Notification.block)
             .joinedload(Block.docentries)
     ).options(
-        joinedload(User.notifications_alt)
-            .joinedload(Notification.block)
+        joinedload(Notification.block)
             .joinedload(Block.folder)
     ).options(
-        joinedload(User.notifications_alt)
-            .joinedload(Notification.block)
+        joinedload(Notification.block)
             .joinedload(Block.translation)
-    ).get(get_current_user_id()))
-    nots = u.notifications_alt
+    )).order_by(Notification.doc_id.desc())
+    if limit is not None:
+        q = q.limit(limit)
+    nots = q.all()
     return nots
 
 

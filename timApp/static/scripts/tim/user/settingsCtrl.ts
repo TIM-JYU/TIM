@@ -23,14 +23,19 @@ export async function setConsent(c: ConsentType) {
     }
 }
 
+export interface INotification {
+    //
+}
+
 export class SettingsCtrl implements IController {
     private saving = false;
     private style: HTMLElementTagNameMap["style"];
     private settings: ISettings;
     private cssFiles: Array<{}>;
-    private notifications: Array<{}>;
+    private notifications: INotification[];
     private consent: ConsentType | undefined;
     private storageClear = false;
+    private allNotificationsFetched = false;
 
     constructor() {
         this.settings = settingsglobals().userPrefs;
@@ -86,6 +91,20 @@ export class SettingsCtrl implements IController {
         const resp = await $http.get<string>("/static/stylesheets/userPrintSettings.css");
         this.settings.custom_css = resp.data;
     }
+
+    async getAllNotifications() {
+        const resp = await to($http.get<INotification[]>("/notify/all"));
+        if (resp.ok) {
+            this.notifications = resp.result.data;
+            this.allNotificationsFetched = true;
+        } else {
+            void showMessageDialog(resp.result.data.error);
+        }
+    }
+
+    showGetAllNotifications() {
+        return this.notifications.length === settingsglobals().notificationLimit && !this.allNotificationsFetched;
+    }
 }
 
 timApp.component("timSettings", {
@@ -133,7 +152,8 @@ timApp.component("timSettings", {
     </bootstrap-panel>
     <bootstrap-panel title="Notifications">
         <h4>Subscribed items</h4>
-        <p>You get emails from the following documents and folders:</p>
+        <p ng-if="$ctrl.notifications.length > 0">You get emails from the following documents and folders:</p>
+        <p ng-if="$ctrl.notifications.length === 0">You haven't subscribed to any documents or folders.</p>
         <ul>
             <li ng-repeat="n in $ctrl.notifications">
                 <a href="/manage/{{n.item.path}}">
@@ -150,6 +170,11 @@ timApp.component("timSettings", {
                       uib-tooltip="Comment modifications"></span>
             </li>
         </ul>
+        <button ng-click="$ctrl.getAllNotifications()"
+                class="timButton"
+                ng-if="$ctrl.showGetAllNotifications()">
+            Show all
+        </button>
         <h4>Exclusion list</h4>
         <p>
             Sometimes you may want to subscribe to emails from a folder but exclude some documents within it.

@@ -5,7 +5,7 @@ import {DocumentOrFolder, IDocument, IFolder, IFullDocument, IItem} from "../ite
 import {ILecture} from "../lecture/lecturetypes";
 import {HeaderIndexItem, IGroupWithSisuPath} from "../sidebar/sidebarMenuCtrl";
 import {IFullUser, IGroup, IUser, IUserListEntry} from "../user/IUser";
-import {ISettings} from "../user/settingsCtrl";
+import {INotification, ISettings} from "../user/settingsCtrl";
 
 export interface IGenericGlobals {
     IS_TESTING: boolean;
@@ -76,7 +76,8 @@ export interface IManageGlobals extends IGenericGlobals {
 export interface ISettingsGlobals extends IGenericGlobals {
     settings: ISettings;
     css_files: Array<{}>;
-    notifications: Array<{}>;
+    notifications: INotification[];
+    notificationLimit: number;
 }
 
 export type SomeGlobals =
