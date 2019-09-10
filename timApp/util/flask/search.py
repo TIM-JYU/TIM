@@ -1011,7 +1011,7 @@ def search():
                             continue
                     except KeyError:
                         pass
-                    if search_attrs and not ignore_plugins or not edit_access:
+                    if search_attrs and edit_access and not ignore_plugins:
                         try:
                             rd = str(par['attrs'])
                             md = rd.replace("'",'"') + " " + md
