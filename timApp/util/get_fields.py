@@ -176,7 +176,7 @@ def get_fields_and_users(
                 require_doc_id=False,
                 allow_block_hint=False,
                 allow_type=False,
-                allow_custom_field=add_missing_fields,
+                allow_custom_field=True,
             )
         except PluginException as e:
             tally_field = TallyField.try_parse(t, d)
