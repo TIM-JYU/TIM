@@ -5,8 +5,10 @@
     border-radius: 4px;
     margin-bottom: 8px;
     cursor: pointer;
-    text-size-adjust: none;
-    -webkit-text-size-adjust: none;
+    text-size-adjust: unset;
+    -webkit-text-size-adjust: unset;
+    -moz-text-size-adjust: unset;
+
 }
 
 .tim-menu-placeholder-content {
