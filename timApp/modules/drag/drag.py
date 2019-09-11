@@ -3,103 +3,55 @@ Module for serving drag item-plugin.
 """
 from typing import Union, List
 
-import attr
+from dataclasses import dataclass, asdict
 from flask import jsonify, render_template_string
-from marshmallow import Schema, fields, post_load, validates, ValidationError
 from marshmallow.utils import missing
 from webargs.flaskparser import use_args
 
-from pluginserver_flask import GenericMarkupModel, GenericMarkupSchema, GenericHtmlSchema, GenericHtmlModel, \
-    GenericAnswerSchema, GenericAnswerModel, Missing, \
-    make_base64, InfoSchema, create_app
+from marshmallow_dataclass import class_schema
+from pluginserver_flask import GenericMarkupModel, GenericHtmlModel, \
+    GenericAnswerModel, Missing, \
+    create_app
 
 
-@attr.s(auto_attribs=True)
+@dataclass
 class DragStateModel:
     c: List[str]
 
 
-class DragStateSchema(Schema):
-    c = fields.List(fields.Str(required=True))
-
-    @post_load
-    def make_obj(self, data, **_):
-        return DragStateModel(**data)
-
-
-@attr.s(auto_attribs=True)
+@dataclass
 class DragMarkupModel(GenericMarkupModel):
-    points_array: Union[str, Missing] = missing
-    inputstem: Union[str, Missing] = missing
-    needed_len: Union[int, Missing] = missing
-    words: Union[List[str], Missing] = missing
-    max: Union[int, Missing] = missing
+    cols: Union[int, Missing] = missing
     copy: Union[str, Missing] = missing
-    type: Union[str, Missing] = missing
-    trash: Union[bool, Missing] = missing
+    followid: Union[str, Missing] = missing
+    inputstem: Union[str, Missing] = missing
+    max: Union[int, Missing] = missing
+    needed_len: Union[int, Missing] = missing
     savebutton: Union[bool, Missing] = missing
     shuffle: Union[bool, Missing] = missing
-    followid: Union[str, Missing] = missing
+    trash: Union[bool, Missing] = missing
+    type: Union[str, Missing] = missing
+    words: Union[List[str], Missing] = missing
 
 
-class DragMarkupSchema(GenericMarkupSchema):
-    points_array = fields.List(fields.List(fields.Number()))
-    inputstem = fields.Str()
-    needed_len = fields.Int()
-    cols = fields.Int()
-    words = fields.List(fields.Str())
-    copy = fields.String()
-    type = fields.String()
-    max = fields.Int()
-    trash = fields.Bool()
-    savebutton = fields.Bool()
-    shuffle = fields.Bool()
-    followid = fields.String()
-
-    @validates('points_array')
-    def validate_points_array(self, value):
-        if len(value) != 2 or not all(len(v) == 2 for v in value):
-            raise ValidationError('Must be of size 2 x 2.')
-
-    @post_load
-    def make_obj(self, data, **_):
-        return DragMarkupModel(**data)
-
-
-@attr.s(auto_attribs=True)
+@dataclass
 class DragInputModel:
     words: List[str]
-    copy: str = missing
-    type: str = missing
-    max: int = missing
-    trash: bool = missing
-    savebutton: bool = missing
-    shuffle: bool = missing
-    nosave: bool = missing
+
+    copy: Union[str, Missing] = missing
+    max: Union[int, Missing] = missing
+    nosave: Union[bool, Missing] = missing
+    savebutton: Union[bool, Missing] = missing
+    shuffle: Union[bool, Missing] = missing
+    trash: Union[bool, Missing] = missing
+    type: Union[str, Missing] = missing
 
 
-class DragInputSchema(Schema):
-    nosave = fields.Bool()
-    words = fields.List(fields.Str(required=True))
-    copy = fields.String()
-    type = fields.String()
-    max = fields.Int()
-    trash = fields.Bool()
-    savebutton = fields.Bool()
-    shuffle = fields.Bool()
-
-    @post_load
-    def make_obj(self, data, **_):
-        return DragInputModel(**data)
-
-
-class DragAttrs(Schema):
-    markup = fields.Nested(DragMarkupSchema)
-    state = fields.Nested(DragStateSchema, allow_none=True, required=True)
-
-
-@attr.s(auto_attribs=True)
+@dataclass
 class DragHtmlModel(GenericHtmlModel[DragInputModel, DragMarkupModel, DragStateModel]):
+    def get_component_html_name(self) -> str:
+        return 'drag-runner'
+
     def get_static_html(self) -> str:
         return render_static_drag(self)
 
@@ -109,34 +61,10 @@ class DragHtmlModel(GenericHtmlModel[DragInputModel, DragMarkupModel, DragStateM
             r['c'] = self.state.c
         return r
 
-    def get_real_html(self):
-        return render_template_string(
-            """<drag-runner json="{{data}}"></drag-runner>""",
-            data=make_base64(self.get_browser_json()),
-        )
 
-
-class DragHtmlSchema(DragAttrs, GenericHtmlSchema):
-    info = fields.Nested(InfoSchema, allow_none=True, required=True)
-
-    @post_load
-    def make_obj(self, data, **_):
-        # noinspection PyArgumentList
-        return DragHtmlModel(**data)
-
-
-@attr.s(auto_attribs=True)
+@dataclass
 class DragAnswerModel(GenericAnswerModel[DragInputModel, DragMarkupModel, DragStateModel]):
     pass
-
-
-class DragAnswerSchema(DragAttrs, GenericAnswerSchema):
-    input = fields.Nested(DragInputSchema, required=True)
-
-    @post_load
-    def make_obj(self, data, **_):
-        # noinspection PyArgumentList
-        return DragAnswerModel(**data)
 
 
 def render_static_drag(m: DragHtmlModel):
@@ -158,8 +86,12 @@ def render_static_drag(m: DragHtmlModel):
     <p class="plgfooter">{{ footer }}</p>
 </div>
         """,
-        **attr.asdict(m.markup),
+        **asdict(m.markup),
     )
+
+
+DragHtmlSchema = class_schema(DragHtmlModel)
+DragAnswerSchema = class_schema(DragAnswerModel)
 
 
 app = create_app(__name__, DragHtmlSchema)

@@ -1,16 +1,15 @@
 """Answer-related routes."""
 import json
 import re
-from typing import Union, List, Tuple, Dict, Optional
+from typing import Union, List, Tuple, Dict, Optional, Any
 
-import attr
 from dataclasses import dataclass
 from flask import Blueprint
 from flask import Response
 from flask import abort
 from flask import request
-from marshmallow import Schema, fields, post_load, validates_schema, ValidationError
-from marshmallow.utils import _Missing, missing
+from marshmallow import validates_schema, ValidationError
+from marshmallow.utils import _Missing as Missing, missing
 from sqlalchemy import func
 from webargs.flaskparser import use_args
 
@@ -214,19 +213,13 @@ def get_globals_for_tasks(task_ids, answer_map):
     return cnt, answers
 
 
-class UserAnswersForTasksSchema(Schema):
-    tasks = fields.List(fields.Str(), required=True)
-    user = fields.Int(required=True)
-
-    @post_load
-    def make_obj(self, data, **_):
-        return UserAnswersForTasksModel(**data)
-
-
-@attr.s(auto_attribs=True)
+@dataclass
 class UserAnswersForTasksModel:
     tasks: List[str]
     user: int
+
+
+UserAnswersForTasksSchema = class_schema(UserAnswersForTasksModel)
 
 
 @answers.route("/userAnswersForTasks", methods=['POST'])
@@ -269,25 +262,27 @@ def get_answers_for_tasks(args: UserAnswersForTasksModel):
         return abort(400, str(e))
 
 
-class JsRunnerSchema:
-    creditField = fields.Str()
-    gradeField = fields.Str()
-    gradingScale = fields.Dict()
-    defaultPoints = fields.Float()
-    failGrade = fields.Str()
-    fieldhelper = fields.Bool()
-    group = fields.Str()
-    groups = fields.List(fields.Str())
-    program = fields.Str()
-    preprogram = fields.Str()
-    postprogram = fields.Str()
-    timeout = fields.Int()
-    updateFields = fields.List(fields.Str())
-    paramFields = fields.List(fields.Str())
-    autoadd = fields.Bool()
-    validonly = fields.Bool()
-    autoUpdateTables = fields.Boolean(default=True)
-    fields = fields.List(fields.Str(), required=True)
+@dataclass
+class JsRunnerModel:
+    fields: List[str]
+    autoadd: Union[bool, Missing] = missing
+    autoUpdateTables: Union[bool, Missing] = True
+    creditField: Union[str, Missing] = missing
+    defaultPoints: Union[float, Missing] = missing
+    failGrade: Union[str, Missing] = missing
+    fieldhelper: Union[bool, Missing] = missing
+    gradeField: Union[str, Missing] = missing
+    gradingScale: Union[Dict[Any, Any], Missing] = missing
+    group: Union[str, Missing] = missing
+    groups: Union[List[str], Missing] = missing
+    paramFields: Union[List[str], Missing] = missing
+    postprogram: Union[str, Missing] = missing
+    preprogram: Union[str, Missing] = missing
+    program: Union[str, Missing] = missing
+    showInView: Union[bool, Missing] = missing
+    timeout: Union[int, Missing] = missing
+    updateFields: Union[List[str], Missing] = missing
+    validonly: Union[bool, Missing] = missing
 
     @validates_schema(skip_on_field_errors=True)
     def validate_schema(self, data, **_):
@@ -295,23 +290,17 @@ class JsRunnerSchema:
             raise ValidationError("Either group or groups must be given.")
 
 
-class SendEmailSchema(Schema):
-    rcpts = fields.Str(required=True)
-    msg = fields.Str(required=True)
-    subject = fields.Str(required=True)
-    bccme = fields.Boolean(allow_none=True)
-
-    @post_load
-    def make_obj(self, data, **_):
-        return SendEmailModel(**data)
+JsRunnerSchema = class_schema(JsRunnerModel)
 
 
-@attr.s(auto_attribs=True)
+@dataclass
 class SendEmailModel:
     rcpts: str
     msg: str
     subject: str
-    bccme: Union[bool, _Missing] = missing
+    bccme: Union[bool, Missing, None] = missing
+
+SendEmailSchema = class_schema(SendEmailModel)
 
 
 @answers.route('/sendemail/', methods=['post'])
@@ -469,7 +458,7 @@ def post_answer(plugintype: str, task_id_ext: str):
     upload = None
 
     if plugin.values.get("useCurrentUser", False) or is_global(plugin):  # For plugins that is saved only for current user
-        users = [curr_user];
+        users = [curr_user]
 
     if isinstance(answerdata, dict):
         file = answerdata.get('uploadedFile', '')
@@ -1098,19 +1087,12 @@ def get_jsframe_data(task_id, user_id):
         # return json_response({})
 
 
-class GetMultiStatesSchema(Schema):
-    answer_ids = fields.List(fields.Int(), required=True)
-    user_id = fields.Int(required=True)
-
-    @post_load
-    def make_obj(self, data, **_):
-        return GetMultiStatesModel(**data)
-
-
-@attr.s(auto_attribs=True)
+@dataclass
 class GetMultiStatesModel:
     answer_ids: List[int]
     user_id: int
+
+GetMultiStatesSchema = class_schema(GetMultiStatesModel)
 
 
 @dataclass

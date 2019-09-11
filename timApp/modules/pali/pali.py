@@ -5,7 +5,7 @@ import os
 import re
 from typing import Union, List
 
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
 from flask import jsonify, render_template_string
 from marshmallow import validates, ValidationError, missing
 from webargs.flaskparser import use_args
@@ -91,14 +91,7 @@ def render_static_pali(m: PaliHtmlModel):
 {% if footer %}<p class="plgfooter">{{ footer }}</p>{% endif %}
 </div>
         """.strip(),
-        header=m.markup.header,
-        stem=m.markup.stem,
-        inputstem=m.markup.inputstem,
-        inputplaceholder=m.markup.inputplaceholder,
-        cols=m.markup.cols,
-        buttonText=m.markup.buttonText,
-        button=m.markup.button,
-        footer=m.markup.footer,
+        **asdict(m.markup),
         userword=m.state.userword if m.state else '',
     )
 

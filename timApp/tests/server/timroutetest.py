@@ -17,20 +17,20 @@ from lxml import html
 from lxml.html import HtmlElement
 
 import timApp.tim
+from timApp.auth.login import log_in_as_anonymous
+from timApp.document.docentry import DocEntry
+from timApp.document.docinfo import DocInfo
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.document import Document
 from timApp.document.specialnames import TEMPLATE_FOLDER_NAME, PREAMBLE_FOLDER_NAME
 from timApp.document.timjsonencoder import TimJsonEncoder
-from timApp.auth.login import log_in_as_anonymous
+from timApp.document.translation.translation import Translation
 from timApp.readmark.readparagraphtype import ReadParagraphType
 from timApp.tests.db.timdbtest import TimDbTest
-from timApp.document.docinfo import DocInfo
-from timApp.document.docentry import DocEntry
-from timApp.document.translation.translation import Translation
+from timApp.timdb.sqa import db
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
 from timApp.util.utils import remove_prefix
-from timApp.timdb.sqa import db
 
 
 def load_json(resp: Response):
@@ -776,7 +776,6 @@ class TimRouteTest(TimDbTest):
             **toplevel,
             "info": info,
             "markup": {
-                "hidden_keys": [],
                 **markup,
             },
             "state": state,

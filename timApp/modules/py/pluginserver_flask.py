@@ -18,12 +18,12 @@ If validation fails, the plugin returns an error with status code 422.
 import base64
 import json
 from enum import Enum
-from typing import Optional, Union, TypeVar, Generic, Dict, List, Type, Any
+from typing import Optional, Union, TypeVar, Generic, Dict, List, Type
 
 from dataclasses import dataclass, field, asdict
 from flask import Blueprint, request
 from flask import render_template_string, jsonify, Flask
-from marshmallow import pre_load, ValidationError
+from marshmallow import pre_load, ValidationError, Schema
 # noinspection PyProtectedMember
 from marshmallow.utils import _Missing as Missing, missing
 from werkzeug.exceptions import UnprocessableEntity
@@ -48,9 +48,7 @@ class InfoModel:
     valid: bool  # could be False e.g. if answering deadline has passed
 
 
-
 InfoSchema = class_schema(InfoModel)
-
 
 
 def list_not_missing_fields(inst):
@@ -231,10 +229,6 @@ class GenericHtmlModel(GenericRouteModel[PluginInput, PluginMarkup, PluginState]
         return self.show_in_view_default()
 
 
-# TODO
-GenericHtmlSchema = Any # class_schema(GenericHtmlModel)
-
-
 def render_validationerror(e: ValidationError):
     """Renders a validation error as HTML indicating which fields were erroneous."""
     return render_template_string(
@@ -243,7 +237,7 @@ def render_validationerror(e: ValidationError):
 The following fields have invalid values:
 <ul>
 {%- for k, v in errors.items() -%}
-<li>{{k}}: {{v[0]}}</li>
+<li>{{k}}: {{v[0] if v[0] is string else v[0][0]}}</li>
 {%- endfor -%}
 </ul>
 </div>
@@ -315,10 +309,11 @@ def render_plugin_html(m: GenericHtmlModel[PluginInput, PluginMarkup, PluginStat
     return m.get_real_html()
 
 
-def render_multihtml(args, schema):
+def render_multihtml(args, schema: Schema):
     """Renders HTMLs according to the given Schema.
 
-    :param args: Partially validated HTML arguments.
+    :param schema: The marshmallow schema to use for validating the plugin data.
+    :param args: Unvalidated HTML arguments.
     :return: List of HTMLs.
     """
     results = []
@@ -364,7 +359,7 @@ def render_multimd(args, schema):
     return jsonify(results)
 
 
-def create_app(name: str, html_schema: Type[GenericHtmlSchema]):
+def create_app(name: str, html_schema: Type[Schema]):
     """Creates the Flask app for the plugin server.
 
     :param name: Name of import. Usually __name__ should be passed.
@@ -376,7 +371,7 @@ def create_app(name: str, html_schema: Type[GenericHtmlSchema]):
     return app
 
 
-def register_routes(app, html_schema: Type[GenericHtmlSchema], csrf=None, pre=""):
+def register_routes(app, html_schema: Type[Schema], csrf=None, pre=""):
     @app.errorhandler(422)
     def handle_invalid_request(error: UnprocessableEntity):
         return jsonify({'web': {'error': render_validationerror(ValidationError(message=error.data['messages']))}})
@@ -404,7 +399,7 @@ def register_routes(app, html_schema: Type[GenericHtmlSchema], csrf=None, pre=""
     return app
 
 
-def create_blueprint(name: str, plugin_name: str, html_schema: Type[GenericHtmlSchema], csrf=None):
+def create_blueprint(name: str, plugin_name: str, html_schema: Type[Schema], csrf=None):
     bp = Blueprint(f'{plugin_name}_plugin',
                    name,
                    url_prefix=f'/{plugin_name}')

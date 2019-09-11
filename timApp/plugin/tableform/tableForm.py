@@ -3,18 +3,18 @@ TIM example plugin: a tableFormndrome checker.
 """
 import json
 import os
-from typing import Union, List, Optional
+from typing import Union, List, Optional, Dict, Any
 
-import attr
+from dataclasses import dataclass, asdict, field
 from flask import jsonify, render_template_string, request, abort
-from marshmallow import Schema, fields, post_load, validates, ValidationError
 from marshmallow.utils import missing
 from sqlalchemy.orm import joinedload
 from webargs.flaskparser import use_args
 
+from marshmallow_dataclass import class_schema
 from pluginserver_flask import GenericMarkupModel, GenericHtmlModel, \
     GenericAnswerModel, Missing, \
-    InfoSchema, create_blueprint
+    create_blueprint
 from timApp.auth.accesshelper import get_doc_or_abort
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docinfo import DocInfo
@@ -34,140 +34,63 @@ from timApp.util.get_fields import get_fields_and_users, MembershipFilter, fin_t
 from timApp.util.utils import get_boolean
 
 
-@attr.s(auto_attribs=True)
+@dataclass
 class TableFormStateModel:
     """Model for the information that is stored in TIM database for each answer."""
     # TODO: Save user given table layouts like in timTable
 
 
-class TableFormStateSchema(Schema):
-    @post_load
-    def make_obj(self, data, **_):
-        return TableFormStateModel(**data)
-
-
-@attr.s(auto_attribs=True)
+@dataclass
 class TableFormMarkupModel(GenericMarkupModel):
-    groups: Union[List[str], Missing] = missing
-    table: Union[bool, Missing] = missing
-    report: Union[bool, Missing] = missing
-    separator: Union[str, Missing] = missing
     anonNames: Union[bool, Missing] = missing
-    sortBy: Union[str, Missing] = missing
-    dataCollection: Union[str, Missing] = missing
     autosave: Union[bool, Missing] = missing
-    buttonText: Union[str, Missing] = missing
-    hideButtonText: Union[str, Missing] = missing
-    openButtonText: Union[str, Missing] = missing
-    reportButton: Union[str, Missing] = missing
-    realnames: Union[bool, Missing] = missing
-    usernames: Union[bool, Missing] = missing
-    emails: Union[bool, Missing] = missing
-    maxWidth: Union[str, Missing] = missing
-    minWidth: Union[str, Missing] = missing
-    singleLine: Union[bool, Missing] = missing
-    removeDocIds: Union[bool, Missing] = True
-    open: Union[bool, Missing] = True
-    hiddenColumns: Union[List[int], Missing] = missing
-    hiddenRows: Union[List[int], Missing] = missing
-    filterRow: Union[bool, Missing] = missing
-    cbColumn: Union[bool, Missing] = missing
-    nrColumn: Union[bool, Missing] = missing
-    removeUsersButtonText: Union[str, Missing] = missing
-    userListButtonText: Union[str, Missing] = missing
-    emailUsersButtonText: Union[str, Missing] = missing
-    maxRows: Union[str, Missing] = missing
-    maxCols: Union[str, Missing] = missing
-    fontSize: Union[str, Missing] = missing
-    fixedColor: Union[str, Missing] = missing
-    toolbarTemplates: Union[List[dict], Missing] = missing
-    saveStyles: Union[bool, Missing] = True
-    showToolbar: Union[bool, Missing] = missing
-    sisugroups: Union[str, Missing] = missing
     autoUpdateFields: Union[bool, Missing] = True
     autoUpdateTables: Union[bool, Missing] = True
-    hide: Union[dict, Missing] = missing
-    runScripts: Union[List[str], Missing] = missing
-    includeUsers: str = 'current'
+    buttonText: Union[str, Missing, None] = missing
+    cbColumn: Union[bool, Missing, None] = missing
+    dataCollection: Union[str, Missing, None] = missing
+    emails: Union[bool, Missing] = missing
+    emailUsersButtonText: Union[str, Missing, None] = missing
     fields: Union[List[str], Missing] = missing
+    filterRow: Union[bool, Missing, None] = missing
+    fixedColor: Union[str, Missing, None] = missing
+    fontSize: Union[str, Missing, None] = missing
+    groups: Union[List[str], Missing] = missing
+    hiddenColumns: Union[List[int], Missing, None] = missing
+    hiddenRows: Union[List[int], Missing, None] = missing
+    hide: Union[Dict[Any, Any], Missing, None] = missing
+    hideButtonText: Union[str, Missing, None] = missing
+    includeUsers: Union[MembershipFilter, Missing] = field(default=MembershipFilter.Current, metadata={'by_value': True})
+    maxCols: Union[str, Missing, None] = missing
+    maxRows: Union[str, Missing, None] = missing
+    maxWidth: Union[str, Missing] = missing
+    minWidth: Union[str, Missing, None] = missing
+    nrColumn: Union[bool, Missing, None] = missing
+    open: Union[bool, Missing] = True
+    openButtonText: Union[str, Missing, None] = missing
+    realnames: Union[bool, Missing] = missing
+    removeDocIds: Union[bool, Missing] = True
+    removeUsersButtonText: Union[str, Missing, None] = missing
+    report: Union[bool, Missing] = missing
+    reportButton: Union[str, Missing, None] = missing
+    runScripts: Union[List[str], Missing] = missing
+    saveStyles: Union[bool, Missing] = True
+    separator: Union[str, Missing, None] = missing
+    showToolbar: Union[bool, Missing, None] = missing
+    singleLine: Union[bool, Missing, None] = missing
+    sisugroups: Union[str, Missing] = missing
+    sortBy: Union[str, Missing, None] = missing
+    table: Union[bool, Missing] = missing
+    toolbarTemplates: Union[List[Dict[Any, Any]], Missing] = missing
+    userListButtonText: Union[str, Missing, None] = missing
+    usernames: Union[bool, Missing] = missing
 
 
-class TableFormMarkupSchema:
-    groups = fields.List(fields.Str())
-    table = fields.Boolean()
-    report = fields.Boolean()
-    separator = fields.Str(allow_none=True)
-    anonNames = fields.Boolean()
-    sortBy = fields.Str(allow_none=True)
-    dataCollection = fields.Str(allow_none=True)
-    autosave = fields.Boolean()
-    buttonText = fields.Str(allow_none=True)
-    hideButtonText = fields.Str(allow_none=True)
-    openButtonText = fields.Str(allow_none=True)
-    reportButton = fields.Str(allow_none=True)
-    realnames = fields.Boolean()
-    usernames = fields.Boolean()
-    emails = fields.Boolean()
-    singleLine = fields.Boolean(allow_none=True)
-    removeDocIds = fields.Boolean(default=True)
-    maxWidth = fields.Str()
-    minWidth = fields.Str(allow_none=True)
-    open = fields.Boolean(default=True)
-    filterRow = fields.Boolean(allow_none=True)
-    cbColumn = fields.Boolean(allow_none=True)
-    nrColumn = fields.Boolean(allow_none=True)
-    hiddenColumns = fields.List(fields.Number(allow_none=True))
-    hiddenRows = fields.List(fields.Number(allow_none=True))
-    removeUsersButtonText = fields.Str(allow_none=True)
-    userListButtonText = fields.Str(allow_none=True)
-    emailUsersButtonText = fields.Str(allow_none=True)
-    maxRows = fields.Str(allow_none=True)
-    maxCols = fields.Str(allow_none=True)
-    toolbarTemplates = fields.List(fields.Dict())
-    fontSize = fields.Str(allow_none=True)
-    fixedColor = fields.Str(allow_none=True)
-    saveStyles = fields.Boolean(default=True)
-    showToolbar = fields.Boolean(allow_none=True)
-    sisugroups = fields.Str()
-    autoUpdateFields = fields.Boolean(default=True)
-    autoUpdateTables = fields.Boolean(default=True)
-    hide = fields.Dict(allow_none=True)
-    runScripts = fields.List(fields.Str())
-    includeUsers = fields.Str(default='current')
-    fields = fields.List(fields.Str())  # Keep this last - bad naming
-
-    @validates('includeUsers')
-    def validate_include_users(self, value):
-        try:
-            MembershipFilter(value)
-        except ValueError:
-            raise ValidationError("Invalid includeUsers value. Must be one of 'all', 'current' (default), 'deleted'.")
-
-    @post_load
-    def make_obj(self, data, **_):
-        return TableFormMarkupModel(**data)
-
-
-@attr.s(auto_attribs=True)
+@dataclass
 class TableFormInputModel:
     """Model for the information that is sent from browser (plugin AngularJS component)."""
-    replyRows: dict
-    nosave: bool
-
-
-class TableFormInputSchema(Schema):
-    replyRows = fields.Dict()
-    nosave = fields.Bool()
-
-    @post_load
-    def make_obj(self, data, **_):
-        return TableFormInputModel(**data)
-
-
-class TableFormAttrs(Schema):
-    """Common fields for HTML and answer routes."""
-    markup = fields.Nested(TableFormMarkupSchema)
-    state = fields.Nested(TableFormStateSchema, allow_none=True, required=True)
+    replyRows: Union[Dict[Any, Any], Missing] = missing
+    nosave: Union[bool, Missing] = missing
 
 
 def get_sisu_group_desc_for_table(g: UserGroup):
@@ -223,7 +146,7 @@ def get_sisugroups(user: User, sisu_id: Optional[str]):
     }
 
 
-@attr.s(auto_attribs=True)
+@dataclass
 class TableFormHtmlModel(GenericHtmlModel[TableFormInputModel, TableFormMarkupModel, TableFormStateModel]):
     def get_component_html_name(self) -> str:
         return 'tableform-runner'
@@ -259,27 +182,9 @@ class TableFormHtmlModel(GenericHtmlModel[TableFormInputModel, TableFormMarkupMo
         return r
 
 
-class TableFormHtmlSchema(TableFormAttrs):
-    info = fields.Nested(InfoSchema, allow_none=True, required=True)
-
-    @post_load
-    def make_obj(self, data, **_):
-        # noinspection PyArgumentList
-        return TableFormHtmlModel(**data)
-
-
-@attr.s(auto_attribs=True)
+@dataclass
 class TableFormAnswerModel(GenericAnswerModel[TableFormInputModel, TableFormMarkupModel, TableFormStateModel]):
     pass
-
-
-class TableFormAnswerSchema(TableFormAttrs):
-    input = fields.Nested(TableFormInputSchema, required=True)
-
-    @post_load
-    def make_obj(self, data, **_):
-        # noinspection PyArgumentList
-        return TableFormAnswerModel(**data)
 
 
 def render_static_table_form(m: TableFormHtmlModel):
@@ -292,39 +197,27 @@ def render_static_table_form(m: TableFormHtmlModel):
 </div>
 <br>
         """,
-        **attr.asdict(m.markup),
-        # userword=m.state.userword if m.state else '',
+        **asdict(m.markup),
     )
 
+TableFormHtmlSchema = class_schema(TableFormHtmlModel)
+TableFormAnswerSchema = class_schema(TableFormAnswerModel)
 
 tableForm_plugin = create_blueprint(__name__, 'tableForm', TableFormHtmlSchema, csrf)
 
 
-class GenerateCSVSchema(Schema):
-    docId = fields.Str(required=True)
-    groups = fields.List(fields.Str(), required=True)
-    separator = fields.Str(required=True)
-    realnames = fields.Boolean()
-    usernames = fields.Boolean()
-    emails = fields.Boolean()
-    removeDocIds = fields.Boolean()
-    fields = fields.List(fields.Str(), required=True)
-
-    @post_load
-    def make_obj(self, data, **_):
-        return GenerateCSVModel(**data)
-
-
-@attr.s(auto_attribs=True)
+@dataclass
 class GenerateCSVModel:
-    docId: str
+    docId: int
     fields: List[str]
     groups: List[str]
-    separator: str = ","
-    realnames: Union[bool, Missing] = True
+    separator: str
     usernames: Union[bool, Missing] = True
-    emails: Union[bool, Missing] = False
-    removeDocIds: Union[bool, Missing] = True
+    realnames: Union[bool, Missing] = missing
+    removeDocIds: Union[bool, Missing] = missing
+    emails: Union[bool, Missing] = missing
+
+GenerateCSVSchema = class_schema(GenerateCSVModel)
 
 
 @tableForm_plugin.route('/generateCSV')
@@ -493,7 +386,7 @@ def tableform_get_fields(
 @tableForm_plugin.route('/answer/', methods=['put'])
 @csrf.exempt
 @use_args(TableFormAnswerSchema(), locations=("json",))
-def answer(args: TableFormInputModel):
+def answer(args: TableFormAnswerModel):
     rows = args.input.replyRows
     save_rows = []
     for u, r in rows.items():

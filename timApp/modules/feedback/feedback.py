@@ -1,20 +1,21 @@
 """
 TIM feedback-plugin.
 """
-from typing import Union, Any
+from typing import Union, Any, List
 
-import attr
+from dataclasses import dataclass, asdict
 from flask import jsonify, render_template_string
-from marshmallow import Schema, fields, post_load, validates, ValidationError
+from marshmallow import validates, ValidationError
 from marshmallow.utils import missing
 from webargs.flaskparser import use_args
 
-from pluginserver_flask import GenericMarkupModel, GenericMarkupSchema, GenericHtmlSchema, GenericHtmlModel, \
-    GenericAnswerSchema, GenericAnswerModel, Missing, \
-    InfoSchema, create_app
+from marshmallow_dataclass import class_schema
+from pluginserver_flask import GenericMarkupModel, GenericHtmlModel, \
+    GenericAnswerModel, Missing, \
+    create_app
 
 
-@attr.s(auto_attribs=True)
+@dataclass
 class FeedbackStateModel:
     """Model for the information that is stored in TIM database for each answer."""
     user_answer: str
@@ -22,83 +23,38 @@ class FeedbackStateModel:
     feedback: str
     correct_answer: str
 
-class FeedbackStateSchema(Schema):
-    user_answer = fields.Str(required=True)
-    correct = fields.Bool(required=True)
-    feedback = fields.Str(required=True)
-    correct_answer = fields.Str(required=True)
 
-    @post_load
-    def make_obj(self, data, **_):
-        return FeedbackStateModel(**data)
-
-
-@attr.s(auto_attribs=True)
+@dataclass
 class FeedbackMarkupModel(GenericMarkupModel):
-    points_array: Union[str, Missing] = missing
-    questionItems: Union[Any, Missing] = missing
-    choice: Union[Any, Missing] = missing
-    matchElement: Union[Any, Missing] = missing
-    practiceID: Union[Any, Missing] = missing
-    correctsInRow: Union[int, Missing] = missing
-    nextTask: Union[Any, Missing] = missing
-    dragSource: Union[str, Missing] = missing
-    shuffle: Union[bool, Missing] = missing
     area: Union[str, Missing] = missing
+    choice: Union[Any, Missing] = missing
+    correctsInRow: Union[int, Missing] = missing
+    dragSource: Union[str, Missing] = missing
+    matchElement: Union[Any, Missing] = missing
+    nextTask: Union[str, Missing] = missing
+    points_array: Union[List[float], Missing] = missing
+    practiceID: Union[str, Missing] = missing
+    questionItems: Union[Any, Missing] = missing
     showAnswers: Union[bool, Missing] = missing
-
-
-class FeedbackMarkupSchema(GenericMarkupSchema):
-    points_array = fields.List(fields.Number())
-    questionItems = fields.Raw()
-    choice = fields.Raw()
-    matchElement = fields.Raw()
-    practiceID = fields.Str()
-    correctsInRow = fields.Int()
-    nextTask = fields.Str()
-    dragSource = fields.Str()
-    shuffle = fields.Bool()
-    area = fields.Str()
-    showAnswers = fields.Bool()
+    shuffle: Union[bool, Missing] = missing
 
     @validates('points_array')
     def validate_points_array(self, value):
         if len(value) != 2:
             raise ValidationError('Must be of size 1 x 2.')
 
-    @post_load
-    def make_obj(self, data, **_):
-        return FeedbackMarkupModel(**data)
 
-
-@attr.s(auto_attribs=True)
+@dataclass
 class FeedbackInputModel:
     """Model for the information that is sent from browser (plugin AngularJS component)."""
     user_answer: str
     correct: bool
     feedback: str
     correct_answer: str
-    nosave: bool = missing
-
-class FeedbackInputSchema(Schema):
-    user_answer = fields.Str(required=True)
-    correct = fields.Bool(required=True)
-    feedback = fields.Str(required=True)
-    correct_answer = fields.Str(required=True)
-    nosave = fields.Bool()
-
-    @post_load
-    def make_obj(self, data, **_):
-        return FeedbackInputModel(**data)
+    nosave: Union[bool, Missing] = missing
 
 
-class FeedbackAttrs(Schema):
-    """Common fields for HTML and answer routes."""
-    markup = fields.Nested(FeedbackMarkupSchema)
-    state = fields.Nested(FeedbackStateSchema, allow_none=True, required=True)
-
-
-@attr.s(auto_attribs=True)
+@dataclass
 class FeedbackHtmlModel(GenericHtmlModel[FeedbackInputModel, FeedbackMarkupModel, FeedbackStateModel]):
     def get_component_html_name(self) -> str:
         return 'feedback-runner'
@@ -106,32 +62,10 @@ class FeedbackHtmlModel(GenericHtmlModel[FeedbackInputModel, FeedbackMarkupModel
     def get_static_html(self) -> str:
         return render_static_feedback(self)
 
-    def get_browser_json(self):
-        r = super().get_browser_json()
-        return r
 
-
-class FeedbackHtmlSchema(FeedbackAttrs, GenericHtmlSchema):
-    info = fields.Nested(InfoSchema, allow_none=True, required=True)
-
-    @post_load
-    def make_obj(self, data, **_):
-        # noinspection PyArgumentList
-        return FeedbackHtmlModel(**data)
-
-
-@attr.s(auto_attribs=True)
+@dataclass
 class FeedbackAnswerModel(GenericAnswerModel[FeedbackInputModel, FeedbackMarkupModel, FeedbackStateModel]):
     pass
-
-
-class FeedbackAnswerSchema(FeedbackAttrs, GenericAnswerSchema):
-    input = fields.Nested(FeedbackInputSchema, required=True)
-
-    @post_load
-    def make_obj(self, data, **_):
-        # noinspection PyArgumentList
-        return FeedbackAnswerModel(**data)
 
 
 def render_static_feedback(m: FeedbackHtmlModel):
@@ -149,8 +83,12 @@ def render_static_feedback(m: FeedbackHtmlModel):
     <p class="plgfooter">{{ footer }}</p>
 </div>
         """,
-        **attr.asdict(m.markup),
+        **asdict(m.markup),
     )
+
+
+FeedbackHtmlSchema = class_schema(FeedbackHtmlModel)
+FeedbackAnswerSchema = class_schema(FeedbackAnswerModel)
 
 
 app = create_app(__name__, FeedbackHtmlSchema)

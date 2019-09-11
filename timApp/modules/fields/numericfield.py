@@ -3,18 +3,18 @@ TIM plugin: a numericfield
 """
 
 import re
-from typing import Union
+from typing import Union, List
 
-import attr
-from flask import jsonify, render_template_string, Blueprint
-from marshmallow import Schema, fields, post_load
+from dataclasses import dataclass, asdict
+from flask import jsonify, render_template_string, Blueprint, request
 from marshmallow.utils import missing
 from webargs.flaskparser import use_args
 
 from common_schemas import TextfieldStateModel, TextfieldStateSchema
-from pluginserver_flask import GenericMarkupModel, GenericMarkupSchema, GenericHtmlSchema, GenericHtmlModel, \
-    GenericAnswerSchema, GenericAnswerModel, Missing, \
-    InfoSchema, render_multihtml, render_multimd
+from marshmallow_dataclass import class_schema
+from pluginserver_flask import GenericMarkupModel, GenericHtmlModel, \
+    GenericAnswerModel, Missing, \
+    render_multihtml, render_multimd
 
 numericfield_route = Blueprint('nf', __name__, url_prefix="/nf")
 
@@ -23,80 +23,37 @@ NumericfieldStateModel = TextfieldStateModel
 NumericfieldStateSchema = TextfieldStateSchema
 
 
-@attr.s(auto_attribs=True)
+@dataclass
 class NumericfieldMarkupModel(GenericMarkupModel):
-    points_array: Union[str, Missing] = missing
-    inputstem: Union[str, Missing] = missing
-    initnumber: Union[float, Missing] = missing
-    cols: Union[int, Missing] = missing
-    inputplaceholder: Union[int, Missing] = missing
-    tag: Union[str, Missing] = missing
     arrows: Union[bool, Missing] = missing
-    wheel: Union[bool, Missing] = missing
-    verticalkeys: Union[bool, Missing] = missing
     autosave: Union[bool, Missing] = missing
-    validinput: Union[str, Missing] = missing
-    errormessage: Union[str, Missing] = missing
-    readOnlyStyle: Union[str, Missing] = missing
-    step: Union[float, Missing] = missing
-    nosave: Union[bool, Missing] = missing
-    ignorestyles: Union[bool, Missing] = missing
-    clearstyles: Union[bool, Missing] = missing
     autoUpdateTables: Union[bool, Missing] = True
-    save: Union[str, Missing] = 'double'
+    clearstyles: Union[bool, Missing] = missing
+    cols: Union[int, Missing] = missing
+    errormessage: Union[str, Missing, None] = missing
+    ignorestyles: Union[bool, Missing] = missing
+    initnumber: Union[float, Missing, None] = missing
+    inputplaceholder: Union[int, Missing, None] = missing
+    inputstem: Union[str, Missing, None] = missing
+    nosave: Union[bool, Missing] = missing
+    points_array: Union[List[List[str]], Missing] = missing
+    readOnlyStyle: Union[str, Missing, None] = missing
+    save: Union[str, Missing, None] = missing  # TODO default 'double' or missing?
+    step: Union[float, Missing, None] = missing
+    tag: Union[str, Missing, None] = missing
+    validinput: Union[str, Missing, None] = missing
+    verticalkeys: Union[bool, Missing] = missing
+    wheel: Union[bool, Missing] = missing
 
 
-class NumericfieldMarkupSchema(GenericMarkupSchema):
-    points_array = fields.List(fields.List(fields.Number()))
-    header = fields.String(allow_none=True)
-    inputstem = fields.String(allow_none=True)
-    stem = fields.String(allow_none=True)
-    initnumber = fields.Number(allow_none=True)
-    cols = fields.Int()
-    inputplaceholder = fields.Number(allow_none=True)
-    tag = fields.String(allow_none=True)
-    autosave = fields.Boolean()
-    arrows = fields.Boolean()
-    wheel = fields.Boolean()
-    verticalkeys = fields.Boolean()
-    validinput = fields.String(allow_none=True)
-    errormessage = fields.String(allow_none=True)
-    readOnlyStyle = fields.String(allow_none=True)
-    step = fields.Number(allow_none=True)
-    nosave = fields.Boolean()
-    ignorestyles = fields.Boolean()
-    clearstyles = fields.Boolean()
-    autoUpdateTables = fields.Boolean(default=True)
-    save = fields.String(allow_none=True)
-
-    @post_load
-    def make_obj(self, data, **_):
-        return NumericfieldMarkupModel(**data)
-
-
-@attr.s(auto_attribs=True)
+@dataclass
 class NumericfieldInputModel:
     """Model for the information that is sent from browser (plugin AngularJS component)."""
-    c: str = missing
-    nosave: bool = missing
+    c: Union[str, Missing, None] = missing
+    nosave: Union[bool, Missing] = missing
 
 
-class NumericfieldInputSchema(Schema):
-    c = fields.String(allow_none=True)
-    nosave = fields.Bool()
-
-    @post_load
-    def make_obj(self, data, **_):
-        return NumericfieldInputModel(**data)
-
-
-class NumericfieldAttrs(Schema):
-    """Common fields for HTML and answer routes."""
-    markup = fields.Nested(NumericfieldMarkupSchema)
-    state = fields.Nested(NumericfieldStateSchema, allow_none=True, required=True)
-
-
-@attr.s(auto_attribs=True)
+@dataclass
 class NumericfieldHtmlModel(GenericHtmlModel[NumericfieldInputModel, NumericfieldMarkupModel, NumericfieldStateModel]):
     def get_component_html_name(self) -> str:
         return 'numericfield-runner'
@@ -107,28 +64,11 @@ class NumericfieldHtmlModel(GenericHtmlModel[NumericfieldInputModel, Numericfiel
     def get_md(self):
         return "___"
 
-class NumericfieldHtmlSchema(NumericfieldAttrs, GenericHtmlSchema):
-    info = fields.Nested(InfoSchema, allow_none=True, required=True)
 
-    @post_load
-    def make_obj(self, data, **_):
-        # noinspection PyArgumentList
-        return NumericfieldHtmlModel(**data)
-
-
-@attr.s(auto_attribs=True)
+@dataclass
 class NumericfieldAnswerModel(GenericAnswerModel[NumericfieldInputModel,
                                                  NumericfieldMarkupModel, NumericfieldStateModel]):
     pass
-
-
-class NumericfieldAnswerSchema(NumericfieldAttrs, GenericAnswerSchema):
-    input = fields.Nested(NumericfieldInputSchema, required=True)
-
-    @post_load
-    def make_obj(self, data, **_):
-        # noinspection PyArgumentList
-        return NumericfieldAnswerModel(**data)
 
 
 def render_static_numericfield(m: NumericfieldHtmlModel):
@@ -148,24 +88,24 @@ size="{{cols}}"></span></label>
 <a>{{ resetText }}</a>
 <p class="plgfooter">{{ '' }}</p>
 </div>""".strip(),
-        **attr.asdict(m.markup),
+        **asdict(m.markup),
     )
 
 
-NUMERIC_FIELD_HTML_SCHEMA = NumericfieldHtmlSchema()
+NumericfieldHtmlSchema = class_schema(NumericfieldHtmlModel)
+NumericfieldAnswerSchema = class_schema(NumericfieldAnswerModel)
 
 
 @numericfield_route.route('/multihtml/', methods=['post'])
-@use_args(GenericHtmlSchema(many=True), locations=("json",))
-def nf_multihtml(args):  # args: List[GenericHtmlSchema]):
-    ret = render_multihtml(args)
+def nf_multihtml():
+    ret = render_multihtml(request.get_json(), NumericfieldHtmlSchema())
     return ret
 
 @numericfield_route.route('/multimd/', methods=['post'])
-@use_args(GenericHtmlSchema(many=True), locations=("json",))
-def nf_multimd(args):  # args: List[GenericHtmlSchema]):
-    ret = render_multimd(args)
+def nf_multimd():
+    ret = render_multimd(request.get_json(), NumericfieldHtmlSchema)
     return ret
+
 
 REDOUBLE = re.compile(r"[^0-9,.e\-+]+")
 

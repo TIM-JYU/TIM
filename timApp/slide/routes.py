@@ -1,7 +1,6 @@
 import json
 
-import attr
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
 from flask import request, abort, Blueprint
 from webargs.flaskparser import use_args
 
@@ -44,7 +43,7 @@ def setslidestatus(args: SetSlideStatusModel):
     doc_id = args.doc_id
     d = get_doc_or_abort(doc_id)
     verify_manage_access(d)
-    status = attr.asdict(args)
+    status = asdict(args)
     status.pop('doc_id')
     s = SlideStatus(doc_id=doc_id, status=json.dumps(status))
     db.session.merge(s)
