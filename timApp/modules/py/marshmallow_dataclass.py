@@ -40,7 +40,7 @@ import decimal
 import inspect
 import uuid
 from enum import Enum, EnumMeta
-from typing import Dict, Type, List, cast, Tuple, ClassVar, Optional, Any, Mapping, NewType
+from typing import Dict, Type, List, cast, Tuple, ClassVar, Optional, Any, Mapping, NewType, TypeVar
 
 import marshmallow
 import typing_inspect
@@ -219,7 +219,7 @@ def class_schema(clazz: type) -> Type[marshmallow.Schema]:
     attributes = {k: v for k, v in inspect.getmembers(clazz) if not k.startswith('_')}
     # Update the schema members to contain marshmallow fields instead of dataclass fields
     attributes.update(
-        (field.name, field_for_schema(field.type, _get_field_default(field), field.metadata))
+        (field.name, field_for_schema(field.type, _get_field_default(field), field.metadata, clazz, field.name))
         for field in fields if field.init
     )
 
@@ -244,8 +244,10 @@ _native_to_marshmallow: Dict[type, Type[marshmallow.fields.Field]] = {
 
 def field_for_schema(
         typ: type,
-        default=marshmallow.missing,
-        metadata: Mapping[str, Any] = None
+        default=dataclasses.MISSING,
+        metadata: Mapping[str, Any] = None,
+        clazz: type = None,
+        name = None,
 ) -> marshmallow.fields.Field:
     """
     Get a marshmallow Field corresponding to the given python type.
@@ -294,11 +296,11 @@ def field_for_schema(
     """
 
     metadata = {} if metadata is None else dict(metadata)
-    if default is not marshmallow.missing:
+    if default is not marshmallow.missing and default is not dataclasses.MISSING:
         metadata.setdefault('default', default)
         if not metadata.get("required"):  # 'missing' must not be set for required fields.
             metadata.setdefault('missing', default)
-    else:
+    elif default is dataclasses.MISSING:
         metadata.setdefault('required', True)
 
     # If the field was already defined by the user
@@ -308,6 +310,7 @@ def field_for_schema(
 
     # Base types
     if typ in _native_to_marshmallow:
+        check_default(clazz, default, typ, name)
         return _native_to_marshmallow[typ](**metadata)
 
     # Generic types
@@ -315,48 +318,80 @@ def field_for_schema(
     if origin:
         arguments = typing_inspect.get_args(typ, True)
         if origin in (list, List):
+            check_default(clazz, default, list, name)
             return marshmallow.fields.List(
-                field_for_schema(arguments[0]),
+                field_for_schema(arguments[0], clazz=clazz),
                 **metadata
             )
         if origin in (tuple, Tuple):
+            check_default(clazz, default, tuple, name)
             return marshmallow.fields.Tuple(
-                tuple(field_for_schema(arg) for arg in arguments),
+                tuple(field_for_schema(arg, clazz=clazz) for arg in arguments),
                 **metadata
             )
         elif origin in (dict, Dict):
+            check_default(clazz, default, dict, name)
             return marshmallow.fields.Dict(
-                keys=field_for_schema(arguments[0]),
-                values=field_for_schema(arguments[1]),
+                keys=field_for_schema(arguments[0], clazz=clazz),
+                values=field_for_schema(arguments[1], clazz=clazz),
                 **metadata
             )
-        elif typing_inspect.is_optional_type(typ):
-            subtyp = next(t for t in arguments if t is not NoneType)
-            # Treat optional types as types with a None default
-            metadata['default'] = metadata.get('default', None)
-            metadata['missing'] = metadata.get('missing', None)
-            metadata['required'] = False
-            return field_for_schema(subtyp, metadata=metadata)
         elif typing_inspect.is_union_type(typ):
-            subfields = [field_for_schema(subtyp, metadata=metadata) for subtyp in arguments]
-            import marshmallow_union
-            return marshmallow_union.Union(subfields, **metadata)
+            has_none = typing_inspect.is_optional_type(typ)
+            if has_none:
+                metadata['allow_none'] = True
+            if default is not dataclasses.MISSING:
+                metadata['required'] = False
 
+            subfields = [field_for_schema(subtyp, metadata=metadata, clazz=clazz) for subtyp in arguments if subtyp is not NoneType]
+            import marshmallow_union
+            if default is not dataclasses.MISSING:
+                if not any(isinstance_noexcept(default, t) for t in arguments):
+                    report_default_error(clazz, default, typ, name)
+            return marshmallow_union.Union(subfields, **metadata)
+    check_default(clazz, default, typ, name)
     # typing.NewType returns a function with a __supertype__ attribute
     newtype_supertype = getattr(typ, '__supertype__', None)
     if newtype_supertype and inspect.isfunction(typ):
         metadata.setdefault('description', typ.__name__)
-        return field_for_schema(newtype_supertype, metadata=metadata, default=default)
+        return field_for_schema(newtype_supertype, metadata=metadata, default=default, clazz=clazz)
 
     # enumerations
     if type(typ) is EnumMeta:
         import marshmallow_enum
         return marshmallow_enum.EnumField(typ, **metadata)
 
+    # generic types
+    if type(typ) is TypeVar:
+        b = typing_inspect.get_generic_bases(clazz)[0]
+        type_index = typing_inspect.get_args(typing_inspect.get_generic_bases(b)[0]).index(typ)
+        instantiated_type = typing_inspect.get_args(b)[type_index]
+        return marshmallow.fields.Nested(class_schema(instantiated_type), **metadata)
+
     # Nested dataclasses
     forward_reference = getattr(typ, '__forward_arg__', None)
     nested = forward_reference or class_schema(typ)
     return marshmallow.fields.Nested(nested, **metadata)
+
+
+def isinstance_noexcept(default: Any, t: Type):
+    try:
+        return isinstance(default, t)
+    except TypeError:
+        return False
+
+
+def check_default(clazz: Type, default: Any, typ: Type, name: Optional[str]):
+    if default is not dataclasses.MISSING:
+        if not isinstance(default, typ):
+            report_default_error(clazz, default, typ, name)
+
+
+def report_default_error(clazz: Type, default: Any, typ: Type, name: Optional[str]):
+    if not name:
+        raise TypeError(f"Invalid default value {default} supplied in class {clazz.__name__} for {typ}")
+    else:
+        raise TypeError(f"Invalid default value {default} supplied for field {name} in class {clazz.__name__}")
 
 
 def _base_schema(clazz: type) -> Type[marshmallow.Schema]:
@@ -377,8 +412,6 @@ def _get_field_default(field: dataclasses.Field):
     """
     if field.default_factory is not dataclasses.MISSING:
         return field.default_factory
-    elif field.default is dataclasses.MISSING:
-        return marshmallow.missing
     return field.default
 
 
