@@ -27,6 +27,7 @@ const TextfieldMarkup = t.intersection([
         ignorestyles: t.boolean,
         clearstyles: t.boolean,
         textarea: t.boolean,
+        autogrow: t.boolean,
     }),
     GenericPluginMarkup,
     t.type({
@@ -391,8 +392,8 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
     }
 
     autoGrow() {
-        const ele = this.element.find(".textarea").first();
-        //const ele = angular.element(element);
+        const element = this.element.find(".textarea").first();
+        const ele = angular.element(element);
         const scrollHeight = ele.prop("scrollHeight");
         const prevHeight = parseFloat(ele.css("height"));
         if (scrollHeight < prevHeight) {
@@ -402,8 +403,11 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
     }
 
     getHeight(){
-        const element = this.element.find(".textarea").first();
-        const ele = angular.element(element);
+        const ele = this.element.find(".textarea").first();
+        // const ele = angular.element(element);
+        if(!this.attrs.autogrow){
+            return parseFloat(ele.css("height"));
+        }
         return ele.prop("scrollHeight");
     }
 }
@@ -445,13 +449,13 @@ textfieldApp.component("textfieldRunner", {
                ng-class="{warnFrame: ($ctrl.isUnSaved() && !$ctrl.redAlert), alertFrame: $ctrl.redAlert }"
                ng-style="$ctrl.styles">
        <textarea
-               style="width: {{::$ctrl.cols}}em; padding-left: unset; padding-right: 5px; height: {{::$ctrl.getHeight()}}px; overflow:hidden;"
+               style="width: {{::$ctrl.cols}}em; padding: unset; height: {{::$ctrl.getHeight()}}px; overflow:hidden;"
                ng-if="::$ctrl.isTextArea()"
                class="form-control textarea"
                ng-model="$ctrl.userword"
                ng-blur="::$ctrl.autoSave()"
-               ng-keydown="$ctrl.auto_grow($event)"
-               ng-keyup="$ctrl.auto_grow($event)"
+               ng-keydown="::$ctrl.attrs.autogrow && $ctrl.autoGrow()"
+               ng-keyup="::$ctrl.attrs.autogrow && $ctrl.autoGrow()"
                ng-model-options="::$ctrl.modelOpts"
                ng-trim="false"
                ng-pattern="$ctrl.getPattern()"
