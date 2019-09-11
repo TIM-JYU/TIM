@@ -28,7 +28,7 @@ class RbfieldHtmlSchema(TextfieldAttrs, GenericHtmlSchema):
     info = fields.Nested(InfoSchema, allow_none=True, required=True)
 
     @post_load
-    def make_obj(self, data, **kwargs):
+    def make_obj(self, data, **_):
         # noinspection PyArgumentList
         return RbfieldHtmlModel(**data)
 
@@ -60,7 +60,7 @@ RB_FIELD_HTML_SCHEMA = RbfieldHtmlSchema()
 @rbfield_route.route('/multihtml/', methods=['post'])
 @use_args(GenericHtmlSchema(many=True), locations=("json",))
 def rb_multihtml(args):  # args: List[GenericHtmlSchema]):
-    ret = render_multihtml(RB_FIELD_HTML_SCHEMA, args)
+    ret = render_multihtml(args)
     return ret
 
 

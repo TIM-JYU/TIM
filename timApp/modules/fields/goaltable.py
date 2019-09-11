@@ -30,7 +30,7 @@ class GoalTableStateSchema(Schema):
     styles = fields.Dict(keys=fields.Str(), values=fields.Str())
 
     @post_load
-    def make_obj(self, data, **kwargs):
+    def make_obj(self, data, **_):
         res = GoalTableStateModel(**data)
         return res
 
@@ -62,7 +62,7 @@ class GoalTableMarkupSchema(GenericMarkupSchema):
     initgoal = fields.Int(allow_none=True)
 
     @post_load
-    def make_obj(self, data, **kwargs):
+    def make_obj(self, data, **_):
         return GoalTableMarkupModel(**data)
 
 
@@ -79,7 +79,7 @@ class GoalTableInputSchema(Schema):
     nosave = fields.Bool()
 
     @post_load
-    def make_obj(self, data, **kwargs):
+    def make_obj(self, data, **_):
         return GoalTableInputModel(**data)
 
 
@@ -122,7 +122,7 @@ class GoalTableHtmlSchema(GoalTableAttrs, GenericHtmlSchema):
     info = fields.Nested(InfoSchema, allow_none=True, required=True)
 
     @post_load
-    def make_obj(self, data, **kwargs):
+    def make_obj(self, data, **_):
         # noinspection PyArgumentList
         return GoalTableHtmlModel(**data)
 
@@ -136,7 +136,7 @@ class GoalTableAnswerSchema(GoalTableAttrs, GenericAnswerSchema):
     input = fields.Nested(GoalTableInputSchema, required=False)
 
     @post_load
-    def make_obj(self, data, **kwargs):
+    def make_obj(self, data, **_):
         # noinspection PyArgumentList
         return GoalTableAnswerModel(**data)
 
@@ -211,14 +211,14 @@ GOALTABLE_FIELD_HTML_SCHEMA = GoalTableHtmlSchema()
 @goaltable_route.route('/multihtml/', methods=['post'])
 @use_args(GenericHtmlSchema(many=True), locations=("json",))
 def goaltable_multihtml(args):  # args: List[GenericHtmlSchema]):
-    ret = render_multihtml(GOALTABLE_FIELD_HTML_SCHEMA, args)
+    ret = render_multihtml(args)
     return ret
 
 
 @goaltable_route.route('/multimd/', methods=['post'])
 @use_args(GenericHtmlSchema(many=True), locations=("json",))
 def goaltable_multimd(args):  # args: List[GenericHtmlSchema]):
-    ret = render_multimd(GOALTABLE_FIELD_HTML_SCHEMA, args)
+    ret = render_multimd(args)
     return ret
 
 

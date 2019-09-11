@@ -4,18 +4,16 @@ import re
 from typing import Union, List, Tuple, Dict, Optional
 
 import attr
-from dataclasses import field, dataclass
+from dataclasses import dataclass
 from flask import Blueprint
 from flask import Response
 from flask import abort
 from flask import request
 from marshmallow import Schema, fields, post_load, validates_schema, ValidationError
 from marshmallow.utils import _Missing, missing
-from marshmallow_dataclass import class_schema
 from sqlalchemy import func
 from webargs.flaskparser import use_args
 
-from pluginserver_flask import GenericMarkupSchema
 from timApp.answer.answer import Answer
 from timApp.answer.answer_models import AnswerUpload
 from timApp.answer.answers import get_latest_answers_query, get_common_answers, save_answer, get_all_answers
@@ -32,6 +30,7 @@ from timApp.document.document import Document
 from timApp.document.post_process import hide_names_in_teacher
 from timApp.item.block import Block, BlockType
 from timApp.markdown.dumboclient import call_dumbo
+from timApp.modules.py.marshmallow_dataclass import class_schema
 from timApp.notification.notify import multi_send_email
 from timApp.plugin.containerLink import call_plugin_answer
 from timApp.plugin.plugin import Plugin, PluginWrap, NEVERLAZY, TaskNotFoundException, is_global, is_global_id, \
@@ -220,7 +219,7 @@ class UserAnswersForTasksSchema(Schema):
     user = fields.Int(required=True)
 
     @post_load
-    def make_obj(self, data, **kwargs):
+    def make_obj(self, data, **_):
         return UserAnswersForTasksModel(**data)
 
 
@@ -270,7 +269,7 @@ def get_answers_for_tasks(args: UserAnswersForTasksModel):
         return abort(400, str(e))
 
 
-class JsRunnerSchema(GenericMarkupSchema):
+class JsRunnerSchema:
     creditField = fields.Str()
     gradeField = fields.Str()
     gradingScale = fields.Dict()
@@ -291,7 +290,7 @@ class JsRunnerSchema(GenericMarkupSchema):
     fields = fields.List(fields.Str(), required=True)
 
     @validates_schema(skip_on_field_errors=True)
-    def validate_schema(self, data, **kwargs):
+    def validate_schema(self, data, **_):
         if data.get('group') is None and data.get('groups') is None:
             raise ValidationError("Either group or groups must be given.")
 
@@ -303,7 +302,7 @@ class SendEmailSchema(Schema):
     bccme = fields.Boolean(allow_none=True)
 
     @post_load
-    def make_obj(self, data, **kwargs):
+    def make_obj(self, data, **_):
         return SendEmailModel(**data)
 
 
@@ -1104,7 +1103,7 @@ class GetMultiStatesSchema(Schema):
     user_id = fields.Int(required=True)
 
     @post_load
-    def make_obj(self, data, **kwargs):
+    def make_obj(self, data, **_):
         return GetMultiStatesModel(**data)
 
 
@@ -1118,9 +1117,9 @@ class GetMultiStatesModel:
 class GetStateModel:
     answer_id: int
     user_id: int
-    par_id: Optional[str]
-    doc_id: Optional[int]
-    review: bool = field(default=False)
+    par_id: Optional[str] = None
+    doc_id: Optional[int] = None
+    review: bool = False
 
 
 GetStateSchema = class_schema(GetStateModel)

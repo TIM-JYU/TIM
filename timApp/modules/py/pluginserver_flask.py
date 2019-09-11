@@ -17,19 +17,28 @@ If validation fails, the plugin returns an error with status code 422.
 """
 import base64
 import json
-from typing import Optional, Set, Union, TypeVar, Generic, Dict, List
+from enum import Enum
+from typing import Optional, Union, TypeVar, Generic, Dict, List, Type, Any
 
-import attr
-from flask import Blueprint
+from dataclasses import dataclass, field, asdict
+from flask import Blueprint, request
 from flask import render_template_string, jsonify, Flask
-from marshmallow import Schema, fields, post_load, missing, pre_load, ValidationError, validates
+from marshmallow import pre_load, ValidationError
 # noinspection PyProtectedMember
-from marshmallow.utils import _Missing as Missing
-from webargs.flaskparser import use_args
+from marshmallow.utils import _Missing as Missing, missing
 from werkzeug.exceptions import UnprocessableEntity
 
+from marshmallow_dataclass import class_schema
 
-@attr.s(auto_attribs=True)
+
+class PluginJsonEncoder(json.JSONEncoder):
+    def default(self, o):
+        tojson = getattr(o, 'to_json', None)
+        if tojson:
+            return tojson()
+
+
+@dataclass
 class InfoModel:
     """Model for the information that is given by TIM in an answer request."""
     earlier_answers: int
@@ -39,70 +48,43 @@ class InfoModel:
     valid: bool  # could be False e.g. if answering deadline has passed
 
 
-class InfoSchema(Schema):
-    earlier_answers = fields.Int(required=True)
-    look_answer = fields.Bool(required=True)
-    max_answers = fields.Int(required=True, allow_none=True)
-    user_id = fields.Str(required=True)
-    valid = fields.Bool(required=True)
 
-    @post_load
-    def make_obj(self, data, **kwargs):
-        return InfoModel(**data)
+InfoSchema = class_schema(InfoModel)
+
 
 
 def list_not_missing_fields(inst):
-    return ((k, v) for k, v in attr.asdict(inst).items() if v is not missing)
+    return ((k, v) for k, v in asdict(inst).items() if getattr(inst, k) is not missing)
 
 
-@attr.s(auto_attribs=True)
+@dataclass
 class GenericMarkupModel:
     """Specifies which fields the editor can use in the plugin markup.
     This base class defines some fields that are applicable to all plugins.
     """
 
-    hidden_keys: Set[str]
+    hidden_keys: List[str]
     """Meta field that keeps track which markup fields were hidden (that is, prefixed with "-").
     Hidden keys are never sent to browser.
     """
 
-    header: Union[str, Missing] = missing
-    footer: Union[str, Missing] = missing
-    stem: Union[str, Missing] = missing
-    lazy: Union[bool, Missing] = missing
-    buttonText: Union[str, None, Missing] = missing
-    button: Union[str, None, Missing] = missing
-    lang: Union[str, None, Missing] = missing
     answerLimit: Union[int, Missing] = missing
-    useCurrentUser: Union[bool, Missing] = missing
+    button: Union[str, None, Missing] = missing
+    buttonText: Union[str, None, Missing] = missing
+    footer: Union[str, Missing] = missing
+    forceBrowser: Union[bool, Missing, None] = missing
+    globalField: Union[bool, Missing, None] = missing
+    header: Union[str, Missing, None] = missing
+    hideBrowser: Union[bool, Missing, None] = missing
+    lang: Union[str, None, Missing] = missing
+    lazy: Union[bool, Missing] = missing
+    resetText: Union[str, Missing, None] = missing
     showInView: Union[bool, Missing] = missing
-    hideBrowser: Union[bool, Missing] = missing
-    forceBrowser: Union[bool, Missing] = missing
-    globalField: Union[bool, Missing] = missing
-
-    def get_visible_data(self):
-        return {k: v for k, v in list_not_missing_fields(self) if k not in self.hidden_keys}
-
-
-class GenericMarkupSchema(Schema):
-    lazy = fields.Bool()
-    header = fields.Str(allow_none=True)
-    footer = fields.Str()
-    hidden_keys = fields.List(fields.Str(), required=True)
-    stem = fields.Str(allow_none=True)
-    buttonText = fields.Str(allow_none=True)
-    button = fields.Str(allow_none=True)
-    lang = fields.Str(allow_none=True)
-    answerLimit = fields.Int()
-    resetText = fields.Str(allow_none=True)
-    useCurrentUser = fields.Bool(allow_none=True)
-    showInView = fields.Bool()
-    hideBrowser = fields.Bool(allow_none=True)
-    forceBrowser = fields.Bool(allow_none=True)
-    globalField = fields.Bool(allow_none=True)
+    stem: Union[str, Missing, None] = missing
+    useCurrentUser: Union[bool, Missing, None] = missing
 
     @pre_load
-    def process_minus(self, data, **kwargs):
+    def process_minus(self, data, **_):
         if isinstance(data, dict):
             hidden_keys = {k[1:] for k in data.keys() if isinstance(k, str) and k.startswith('-')}
             for k in hidden_keys:
@@ -110,36 +92,8 @@ class GenericMarkupSchema(Schema):
             data['hidden_keys'] = hidden_keys
         return data
 
-
-class GenericHtmlSchema(Schema):
-    access = fields.Str()
-    anonymous = fields.Bool(required=True)
-    doLazy = fields.Raw(required=True)  # boolean or "NEVERLAZY"
-    info = fields.Dict(allow_none=True, required=True)
-    markup = fields.Dict(required=True)
-    preview = fields.Bool(required=True)
-    review = fields.Bool(required=True)
-    viewmode = fields.Bool(required=True)
-    state = fields.Field(allow_none=True, required=True)
-    targetFormat = fields.Str(required=True)
-    taskID = fields.Str(required=True)
-    taskIDExt = fields.Str(required=True)
-    user_id = fields.Str(required=True)
-    userPrint = fields.Bool(required=True)
-    current_user_id = fields.Str(required=True)
-
-    @validates('doLazy')
-    def validate_do_lazy(self, value):
-        if value != 'NEVERLAZY' and not isinstance(value, bool):
-            raise ValidationError('do_lazy must be bool or "NEVERLAZY"')
-
-
-class GenericAnswerSchema(Schema):
-    info = fields.Nested(InfoSchema, required=True)
-    input = fields.Dict(required=True)
-    markup = fields.Dict(required=True)
-    state = fields.Field(allow_none=True, required=True)
-    taskID = fields.Str(required=True)
+    def get_visible_data(self):
+        return {k: v for k, v in list_not_missing_fields(self) if k not in self.hidden_keys and k != 'hidden_keys'}
 
 
 PluginMarkup = TypeVar('PluginMarkup', bound=GenericMarkupModel)
@@ -147,7 +101,7 @@ PluginState = TypeVar('PluginState')
 PluginInput = TypeVar('PluginInput')
 
 
-@attr.s(auto_attribs=True)
+@dataclass
 class GenericRouteModel(Generic[PluginInput, PluginMarkup, PluginState]):
     """Base class for answer and HTML route models. Contains the fields that the routes have in common."""
     info: Optional[InfoModel]
@@ -156,25 +110,37 @@ class GenericRouteModel(Generic[PluginInput, PluginMarkup, PluginState]):
     taskID: str
 
 
-@attr.s(auto_attribs=True)
+@dataclass
 class GenericAnswerModel(GenericRouteModel[PluginInput, PluginMarkup, PluginState]):
     """Generic base class for answer route models."""
     input: PluginInput
 
 
-@attr.s(auto_attribs=True)
+class Laziness(Enum):
+    No = False
+    Yes = True
+    Never = 'NEVERLAZY'
+
+    def to_json(self):
+        return self.value
+
+    def __bool__(self):
+        raise Exception("Please use Laziness.{Yes,No,Never} explicitly.")
+
+
+@dataclass
 class GenericHtmlModel(GenericRouteModel[PluginInput, PluginMarkup, PluginState]):
     """Generic base class for HTML route models."""
     anonymous: bool
-    doLazy: bool
+    current_user_id: str
+    doLazy: Laziness = field(metadata={'by_value': True})
     preview: bool
     review: bool
-    viewmode: bool
     targetFormat: str
     taskIDExt: str
     user_id: str
     userPrint: bool
-    current_user_id: str
+    viewmode: bool
     access: Union[str, Missing] = missing
 
     def requires_login(self) -> bool:
@@ -204,6 +170,7 @@ class GenericHtmlModel(GenericRouteModel[PluginInput, PluginMarkup, PluginState]
         raise NotImplementedError('Must be implemented by a derived class.')
 
     def get_review(self):
+        # TODO: This "if" should be in field classes, not here.
         if self.state and self.state.c:
             return f"<pre>{json.dumps(self.state.c)}</pre>"
 
@@ -236,11 +203,11 @@ class GenericHtmlModel(GenericRouteModel[PluginInput, PluginMarkup, PluginState]
         if self.viewmode and not self.show_in_view():
             return render_template_string("")
 
-        return self.get_md();
+        return self.get_md()
 
     def get_json_encoder(self):
         """Set JSON-encoder."""
-        return None
+        return PluginJsonEncoder
 
     def get_component_html_name(self) -> str:
         """Gets the name of the Angular component as it should be in HTML."""
@@ -262,6 +229,10 @@ class GenericHtmlModel(GenericRouteModel[PluginInput, PluginMarkup, PluginState]
         if self.markup.showInView != missing:
             return self.markup.showInView
         return self.show_in_view_default()
+
+
+# TODO
+GenericHtmlSchema = Any # class_schema(GenericHtmlModel)
 
 
 def render_validationerror(e: ValidationError):
@@ -299,13 +270,13 @@ def make_base64(d: dict, json_encoder=None):
 
 def is_lazy(q: GenericHtmlModel):
     """Determines if the server should render a lazy version of the plugin."""
-    if q.doLazy == 'NEVERLAZY':
+    if q.doLazy == Laziness.Never:
         return False
     if q.markup.lazy:
         return True
     if q.markup.lazy is False:
         return False
-    if q.doLazy:
+    if q.doLazy == Laziness.Yes:
         return True
     return False
 
@@ -344,10 +315,9 @@ def render_plugin_html(m: GenericHtmlModel[PluginInput, PluginMarkup, PluginStat
     return m.get_real_html()
 
 
-def render_multihtml(schema: GenericHtmlSchema, args: List[GenericHtmlSchema]):
+def render_multihtml(args, schema):
     """Renders HTMLs according to the given Schema.
 
-    :param schema: The plugin HTML schema.
     :param args: Partially validated HTML arguments.
     :return: List of HTMLs.
     """
@@ -375,10 +345,9 @@ def render_plugin_md(m: GenericHtmlModel[PluginInput, PluginMarkup, PluginState]
     return m.get_real_md()
 
 
-def render_multimd(schema: GenericHtmlSchema, args: List[GenericHtmlSchema]):
+def render_multimd(args, schema):
     """Renders HTMLs according to the given Schema.
 
-    :param schema: The plugin HTML schema.
     :param args: Partially validated HTML arguments.
     :return: List of HTMLs.
     """
@@ -395,7 +364,7 @@ def render_multimd(schema: GenericHtmlSchema, args: List[GenericHtmlSchema]):
     return jsonify(results)
 
 
-def create_app(name: str, html_schema: GenericHtmlSchema):
+def create_app(name: str, html_schema: Type[GenericHtmlSchema]):
     """Creates the Flask app for the plugin server.
 
     :param name: Name of import. Usually __name__ should be passed.
@@ -407,21 +376,19 @@ def create_app(name: str, html_schema: GenericHtmlSchema):
     return app
 
 
-def register_routes(app, html_schema: GenericHtmlSchema, csrf=None, pre=""):
+def register_routes(app, html_schema: Type[GenericHtmlSchema], csrf=None, pre=""):
     @app.errorhandler(422)
     def handle_invalid_request(error: UnprocessableEntity):
         return jsonify({'web': {'error': render_validationerror(ValidationError(message=error.data['messages']))}})
 
     @app.route(pre+'/multihtml/', methods=['post'])
-    @use_args(GenericHtmlSchema(many=True), locations=("json",))
-    def multihtml(args: List[GenericHtmlSchema]):
-        ret = render_multihtml(html_schema, args)
+    def multihtml():
+        ret = render_multihtml(request.get_json(), html_schema())
         return ret
 
     @app.route(pre+'/multimd/', methods=['post'])
-    @use_args(GenericHtmlSchema(many=True), locations=("json",))
-    def multimd(args: List[GenericHtmlSchema]):
-        ret = render_multimd(html_schema, args)
+    def multimd():
+        ret = render_multimd(request.get_json(), html_schema())
         return ret
 
     if csrf:
@@ -437,7 +404,7 @@ def register_routes(app, html_schema: GenericHtmlSchema, csrf=None, pre=""):
     return app
 
 
-def create_blueprint(name: str, plugin_name: str, html_schema: GenericHtmlSchema, csrf=None):
+def create_blueprint(name: str, plugin_name: str, html_schema: Type[GenericHtmlSchema], csrf=None):
     bp = Blueprint(f'{plugin_name}_plugin',
                    name,
                    url_prefix=f'/{plugin_name}')

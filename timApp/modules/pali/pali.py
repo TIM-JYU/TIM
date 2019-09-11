@@ -3,91 +3,54 @@ TIM example plugin: a palindrome checker.
 """
 import os
 import re
-from typing import Union
+from typing import Union, List
 
-import attr
+from dataclasses import dataclass
 from flask import jsonify, render_template_string
-from marshmallow import Schema, fields, post_load, validates, ValidationError
-from marshmallow.utils import missing
+from marshmallow import validates, ValidationError, missing
 from webargs.flaskparser import use_args
 
-from pluginserver_flask import GenericMarkupModel, GenericMarkupSchema, GenericHtmlSchema, GenericHtmlModel, \
-    GenericAnswerSchema, GenericAnswerModel, Missing, \
-    InfoSchema, create_app
+from marshmallow_dataclass import class_schema
+from pluginserver_flask import GenericMarkupModel, GenericHtmlModel, \
+    GenericAnswerModel, Missing, \
+    create_app
 
 
-@attr.s(auto_attribs=True)
+@dataclass
 class PaliStateModel:
     """Model for the information that is stored in TIM database for each answer."""
     userword: str
 
 
-class PaliStateSchema(Schema):
-    userword = fields.Str(required=True)
-
-    @post_load
-    def make_obj(self, data, **kwargs):
-        return PaliStateModel(**data)
-
-
-@attr.s(auto_attribs=True)
+@dataclass
 class PaliMarkupModel(GenericMarkupModel):
-    points_array: Union[str, Missing] = missing
+    points_array: Union[List[List[float]], Missing] = missing
     inputstem: Union[str, Missing] = missing
     needed_len: Union[int, Missing] = missing
     initword: Union[str, Missing] = missing
     cols: Union[int, Missing] = missing
     inputplaceholder: Union[str, Missing] = missing
 
-
-class PaliMarkupSchema(GenericMarkupSchema):
-    points_array = fields.List(fields.List(fields.Number()))
-    inputstem = fields.Str()
-    needed_len = fields.Int()
-    initword = fields.Str()
-    cols = fields.Int()
-    inputplaceholder = fields.Str()
-
     @validates('points_array')
     def validate_points_array(self, value):
-        if len(value) != 2 or not all(len(v) == 2 for v in value):
+        if value is not missing and (len(value) != 2 or not all(len(v) == 2 for v in value)):
             raise ValidationError('Must be of size 2 x 2.')
 
-    @post_load
-    def make_obj(self, data, **kwargs):
-        return PaliMarkupModel(**data)
 
-
-@attr.s(auto_attribs=True)
+@dataclass
 class PaliInputModel:
     """Model for the information that is sent from browser (plugin AngularJS component)."""
     userword: str
-    paliOK: bool = missing
-    nosave: bool = missing
-
-
-class PaliInputSchema(Schema):
-    userword = fields.Str(required=True)
-    paliOK = fields.Bool()
-    nosave = fields.Bool()
+    paliOK: Union[bool, Missing] = missing
+    nosave: Union[bool, Missing] = missing
 
     @validates('userword')
     def validate_userword(self, word):
         if not word:
             raise ValidationError('Must not be empty.')
 
-    @post_load
-    def make_obj(self, data, **kwargs):
-        return PaliInputModel(**data)
 
-
-class PaliAttrs(Schema):
-    """Common fields for HTML and answer routes."""
-    markup = fields.Nested(PaliMarkupSchema)
-    state = fields.Nested(PaliStateSchema, allow_none=True, required=True)
-
-
-@attr.s(auto_attribs=True)
+@dataclass
 class PaliHtmlModel(GenericHtmlModel[PaliInputModel, PaliMarkupModel, PaliStateModel]):
     def get_component_html_name(self) -> str:
         return 'pali-runner'
@@ -102,27 +65,15 @@ class PaliHtmlModel(GenericHtmlModel[PaliInputModel, PaliMarkupModel, PaliStateM
         return r
 
 
-class PaliHtmlSchema(PaliAttrs, GenericHtmlSchema):
-    info = fields.Nested(InfoSchema, allow_none=True, required=True)
-
-    @post_load
-    def make_obj(self, data, **kwargs):
-        # noinspection PyArgumentList
-        return PaliHtmlModel(**data)
+PaliHtmlSchema = class_schema(PaliHtmlModel)
 
 
-@attr.s(auto_attribs=True)
+@dataclass
 class PaliAnswerModel(GenericAnswerModel[PaliInputModel, PaliMarkupModel, PaliStateModel]):
     pass
 
 
-class PaliAnswerSchema(PaliAttrs, GenericAnswerSchema):
-    input = fields.Nested(PaliInputSchema, required=True)
-
-    @post_load
-    def make_obj(self, data, **kwargs):
-        # noinspection PyArgumentList
-        return PaliAnswerModel(**data)
+PaliAnswerSchema = class_schema(PaliAnswerModel)
 
 
 def render_static_pali(m: PaliHtmlModel):
@@ -140,12 +91,19 @@ def render_static_pali(m: PaliHtmlModel):
 {% if footer %}<p class="plgfooter">{{ footer }}</p>{% endif %}
 </div>
         """.strip(),
-        **attr.asdict(m.markup),
+        header=m.markup.header,
+        stem=m.markup.stem,
+        inputstem=m.markup.inputstem,
+        inputplaceholder=m.markup.inputplaceholder,
+        cols=m.markup.cols,
+        buttonText=m.markup.buttonText,
+        button=m.markup.button,
+        footer=m.markup.footer,
         userword=m.state.userword if m.state else '',
     )
 
 
-app = create_app(__name__, PaliHtmlSchema())
+app = create_app(__name__, PaliHtmlSchema)
 
 
 @app.route('/answer/', methods=['put'])

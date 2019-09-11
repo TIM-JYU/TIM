@@ -1,6 +1,7 @@
-from dataclasses import field, dataclass
+from typing import Optional
+
+from dataclasses import dataclass
 from flask import Response, abort, request, Blueprint
-from marshmallow_dataclass import class_schema
 from webargs.flaskparser import use_args
 
 from timApp.auth.accesshelper import get_doc_or_abort, verify_edit_access, can_see_par_source
@@ -8,6 +9,7 @@ from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.document import Document
 from timApp.document.documentversion import DocumentVersion
+from timApp.modules.py.marshmallow_dataclass import class_schema
 from timApp.timdb.exceptions import TimDbException
 from timApp.util.flask.requesthelper import get_option
 from timApp.util.flask.responsehelper import json_response
@@ -57,12 +59,12 @@ def diff_document(doc_id, major1, minor1, major2, minor2):
 
 @dataclass
 class GetBlockModel:
-    doc_id: int = None
-    par_id: str = None
-    area_start: str = None
-    area_end: str = None
-    use_exported: bool = field(default=True)
-    par_hash: str = None
+    doc_id: int
+    par_id: str
+    area_start: Optional[str] = None
+    area_end: Optional[str] = None
+    par_hash: Optional[str] = None
+    use_exported: bool = True
 
 
 GetBlockModelSchema = class_schema(GetBlockModel)

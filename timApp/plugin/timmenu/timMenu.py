@@ -10,7 +10,7 @@ from flask import jsonify, render_template_string
 from marshmallow import Schema, fields, post_load
 from marshmallow.utils import missing
 
-from pluginserver_flask import GenericMarkupModel, GenericMarkupSchema, GenericHtmlSchema, GenericHtmlModel, \
+from pluginserver_flask import GenericMarkupModel, GenericHtmlModel, \
     Missing, InfoSchema, create_blueprint
 from timApp.document.timjsonencoder import TimJsonEncoder
 from timApp.markdown.dumboclient import call_dumbo
@@ -25,7 +25,7 @@ class TimMenuStateModel:
 class TimMenuStateSchema(Schema):
 
     @post_load
-    def make_obj(self, data, **kwargs):
+    def make_obj(self, data, **_):
         res = TimMenuStateModel(**data)
         return res
 
@@ -130,11 +130,11 @@ class TimMenuItemSchema(Schema):
     level = fields.Int(required=True)
 
     @post_load
-    def make_obj(self, data, **kwargs):
+    def make_obj(self, data, **_):
         return TimMenuItemModel(**data)
 
 
-class TimMenuMarkupSchema(GenericMarkupSchema):
+class TimMenuMarkupSchema:
     hoverOpen = fields.Bool(allow_none=True, default=True)
     topMenu = fields.Bool(allow_none=True, default=False)
     topMenuTriggerHeight = fields.Int(allow_none=True, default=200)
@@ -148,7 +148,7 @@ class TimMenuMarkupSchema(GenericMarkupSchema):
     fontSize = fields.Str(allow_none=True)
     menu = fields.Str()
     @post_load
-    def make_obj(self, data, **kwargs):
+    def make_obj(self, data, **_):
         return TimMenuMarkupModel(**data)
 
 
@@ -171,7 +171,7 @@ class TimMenuInputModel:
 class TimMenuInputSchema(Schema):
 
     @post_load
-    def make_obj(self, data, **kwargs):
+    def make_obj(self, data, **_):
         return TimMenuInputModel(**data)
 
 
@@ -339,11 +339,11 @@ class TimMenuHtmlModel(GenericHtmlModel[TimMenuInputModel, TimMenuMarkupModel, T
 
 
 
-class TimMenuHtmlSchema(TimMenuAttrs, GenericHtmlSchema):
+class TimMenuHtmlSchema(TimMenuAttrs):
     info = fields.Nested(InfoSchema, allow_none=True, required=True)
 
     @post_load
-    def make_obj(self, data, **kwargs):
+    def make_obj(self, data, **_):
         # noinspection PyArgumentList
         return TimMenuHtmlModel(**data)
 
@@ -358,7 +358,7 @@ def render_static_TimMenu(m: TimMenuHtmlModel):
     )
 
 
-timMenu_plugin = create_blueprint(__name__, 'timMenu', TimMenuHtmlSchema(), csrf)
+timMenu_plugin = create_blueprint(__name__, 'timMenu', TimMenuHtmlSchema, csrf)
 
 @timMenu_plugin.route('/reqs/')
 @timMenu_plugin.route('/reqs')

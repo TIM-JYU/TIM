@@ -53,7 +53,7 @@ class MultisaveMarkupSchema(GenericMarkupSchema):
     fields = fields.List(fields.Str())  # Keep this last
 
     @post_load
-    def make_obj(self, data, **kwargs):
+    def make_obj(self, data, **_):
         return MultisaveMarkupModel(**data)
 
 
@@ -85,7 +85,7 @@ class MultisaveHtmlSchema(MultisaveAttrs, GenericHtmlSchema):
     info = fields.Nested(InfoSchema, allow_none=True, required=True)
 
     @post_load
-    def make_obj(self, data, **kwargs):
+    def make_obj(self, data, **_):
         # noinspection PyArgumentList
         return MultisaveHtmlModel(**data)
 
@@ -107,7 +107,7 @@ MULTISAVE_HTML_SCHEMA = MultisaveHtmlSchema()
 @multisave_route.route('/multihtml/', methods=['post'])
 @use_args(GenericHtmlSchema(many=True), locations=("json",))
 def ms_multihtml(args):  # args: List[GenericHtmlSchema]):
-    ret = render_multihtml(MULTISAVE_HTML_SCHEMA, args)
+    ret = render_multihtml(args)
     return ret
 
 

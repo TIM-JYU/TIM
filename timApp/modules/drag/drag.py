@@ -23,7 +23,7 @@ class DragStateSchema(Schema):
     c = fields.List(fields.Str(required=True))
 
     @post_load
-    def make_obj(self, data, **kwargs):
+    def make_obj(self, data, **_):
         return DragStateModel(**data)
 
 
@@ -62,7 +62,7 @@ class DragMarkupSchema(GenericMarkupSchema):
             raise ValidationError('Must be of size 2 x 2.')
 
     @post_load
-    def make_obj(self, data, **kwargs):
+    def make_obj(self, data, **_):
         return DragMarkupModel(**data)
 
 
@@ -89,7 +89,7 @@ class DragInputSchema(Schema):
     shuffle = fields.Bool()
 
     @post_load
-    def make_obj(self, data, **kwargs):
+    def make_obj(self, data, **_):
         return DragInputModel(**data)
 
 
@@ -120,7 +120,7 @@ class DragHtmlSchema(DragAttrs, GenericHtmlSchema):
     info = fields.Nested(InfoSchema, allow_none=True, required=True)
 
     @post_load
-    def make_obj(self, data, **kwargs):
+    def make_obj(self, data, **_):
         # noinspection PyArgumentList
         return DragHtmlModel(**data)
 
@@ -134,7 +134,7 @@ class DragAnswerSchema(DragAttrs, GenericAnswerSchema):
     input = fields.Nested(DragInputSchema, required=True)
 
     @post_load
-    def make_obj(self, data, **kwargs):
+    def make_obj(self, data, **_):
         # noinspection PyArgumentList
         return DragAnswerModel(**data)
 
@@ -162,7 +162,7 @@ def render_static_drag(m: DragHtmlModel):
     )
 
 
-app = create_app(__name__, DragHtmlSchema())
+app = create_app(__name__, DragHtmlSchema)
 
 
 @app.route('/answer/', methods=['put'])

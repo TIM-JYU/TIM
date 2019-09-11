@@ -12,8 +12,8 @@ from marshmallow.utils import missing
 from sqlalchemy.orm import joinedload
 from webargs.flaskparser import use_args
 
-from pluginserver_flask import GenericMarkupModel, GenericMarkupSchema, GenericHtmlSchema, GenericHtmlModel, \
-    GenericAnswerSchema, GenericAnswerModel, Missing, \
+from pluginserver_flask import GenericMarkupModel, GenericHtmlModel, \
+    GenericAnswerModel, Missing, \
     InfoSchema, create_blueprint
 from timApp.auth.accesshelper import get_doc_or_abort
 from timApp.auth.sessioninfo import get_current_user_object
@@ -42,7 +42,7 @@ class TableFormStateModel:
 
 class TableFormStateSchema(Schema):
     @post_load
-    def make_obj(self, data, **kwargs):
+    def make_obj(self, data, **_):
         return TableFormStateModel(**data)
 
 
@@ -92,7 +92,7 @@ class TableFormMarkupModel(GenericMarkupModel):
     fields: Union[List[str], Missing] = missing
 
 
-class TableFormMarkupSchema(GenericMarkupSchema):
+class TableFormMarkupSchema:
     groups = fields.List(fields.Str())
     table = fields.Boolean()
     report = fields.Boolean()
@@ -144,7 +144,7 @@ class TableFormMarkupSchema(GenericMarkupSchema):
             raise ValidationError("Invalid includeUsers value. Must be one of 'all', 'current' (default), 'deleted'.")
 
     @post_load
-    def make_obj(self, data, **kwargs):
+    def make_obj(self, data, **_):
         return TableFormMarkupModel(**data)
 
 
@@ -160,7 +160,7 @@ class TableFormInputSchema(Schema):
     nosave = fields.Bool()
 
     @post_load
-    def make_obj(self, data, **kwargs):
+    def make_obj(self, data, **_):
         return TableFormInputModel(**data)
 
 
@@ -259,11 +259,11 @@ class TableFormHtmlModel(GenericHtmlModel[TableFormInputModel, TableFormMarkupMo
         return r
 
 
-class TableFormHtmlSchema(TableFormAttrs, GenericHtmlSchema):
+class TableFormHtmlSchema(TableFormAttrs):
     info = fields.Nested(InfoSchema, allow_none=True, required=True)
 
     @post_load
-    def make_obj(self, data, **kwargs):
+    def make_obj(self, data, **_):
         # noinspection PyArgumentList
         return TableFormHtmlModel(**data)
 
@@ -273,11 +273,11 @@ class TableFormAnswerModel(GenericAnswerModel[TableFormInputModel, TableFormMark
     pass
 
 
-class TableFormAnswerSchema(TableFormAttrs, GenericAnswerSchema):
+class TableFormAnswerSchema(TableFormAttrs):
     input = fields.Nested(TableFormInputSchema, required=True)
 
     @post_load
-    def make_obj(self, data, **kwargs):
+    def make_obj(self, data, **_):
         # noinspection PyArgumentList
         return TableFormAnswerModel(**data)
 
@@ -297,7 +297,7 @@ def render_static_table_form(m: TableFormHtmlModel):
     )
 
 
-tableForm_plugin = create_blueprint(__name__, 'tableForm', TableFormHtmlSchema(), csrf)
+tableForm_plugin = create_blueprint(__name__, 'tableForm', TableFormHtmlSchema, csrf)
 
 
 class GenerateCSVSchema(Schema):
@@ -311,7 +311,7 @@ class GenerateCSVSchema(Schema):
     fields = fields.List(fields.Str(), required=True)
 
     @post_load
-    def make_obj(self, data, **kwargs):
+    def make_obj(self, data, **_):
         return GenerateCSVModel(**data)
 
 

@@ -85,7 +85,7 @@ class GroupCreateSchema(Schema):
     name = fields.Str()
 
     @pre_load
-    def preload(self, data, **kwargs):
+    def preload(self, data, **_):
         if not isinstance(data, dict):
             return data
         ref = data.pop('$ref', None)
@@ -94,7 +94,7 @@ class GroupCreateSchema(Schema):
         return data
 
     @post_load
-    def make_obj(self, data, **kwargs):
+    def make_obj(self, data, **_):
         return GroupCreateModel(**data)
 
 

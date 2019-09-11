@@ -4,12 +4,11 @@ from typing import List, Optional, Dict
 import attr
 from dataclasses import field, dataclass
 from flask import Blueprint, request, current_app, Response
-from marshmallow import missing
-from marshmallow_dataclass import class_schema
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import aliased
 from webargs.flaskparser import use_args
 
+from timApp.modules.py.marshmallow_dataclass import class_schema
 from timApp.sisu.parse_display_name import parse_sisu_group_display_name
 from timApp.sisu.scimusergroup import ScimUserGroup, external_id_re
 from timApp.sisu.sisu import refresh_sisu_grouplist_doc, send_course_group_mail
@@ -35,7 +34,7 @@ UNPROCESSABLE_ENTITY = 422
 class SCIMNameModel:
     familyName: str
     givenName: str
-    middleName: str = None
+    middleName: Optional[str] = None
 
     def derive_full_name(self, last_name_first: bool):
         if last_name_first:
@@ -55,8 +54,8 @@ class SCIMMemberModel:
     value: str
     name: SCIMNameModel
     display: str
-    ref: Optional[str] = field(metadata={'data_key': '$ref'})
-    type: Optional[str] = missing
+    ref: Optional[str] = field(metadata={'data_key': '$ref'}, default=None)
+    type: Optional[str] = None
     email: Optional[str] = None
 
 
@@ -69,8 +68,8 @@ class SCIMCommonModel:
 @dataclass
 class SCIMEmailModel:
     value: str
-    type: Optional[str]
-    primary: bool = field(default=True)
+    type: Optional[str] = None
+    primary: bool = True
 
 
 @dataclass
@@ -85,8 +84,8 @@ SCIMUserModelSchema = class_schema(SCIMUserModel)
 @dataclass
 class SCIMGroupModel(SCIMCommonModel):
     members: List[SCIMMemberModel]
-    id: Optional[str]
-    schemas: Optional[List[str]]
+    id: Optional[str] = None
+    schemas: Optional[List[str]] = None
 
 
 SCIMGroupModelSchema = class_schema(SCIMGroupModel)

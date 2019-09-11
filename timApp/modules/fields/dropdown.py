@@ -25,7 +25,7 @@ class DropdownStateSchema(Schema):
     c = fields.Str(required=True)
 
     @post_load
-    def make_obj(self, data, **kwargs):
+    def make_obj(self, data, **_):
         return DropdownStateModel(**data)
 
 
@@ -48,7 +48,7 @@ class DropdownMarkupSchema(GenericMarkupSchema):
     shuffle = fields.Bool()
 
     @post_load
-    def make_obj(self, data, **kwargs):
+    def make_obj(self, data, **_):
         return DropdownMarkupModel(**data)
 
 
@@ -70,7 +70,7 @@ class DropdownInputSchema(Schema):
             raise ValidationError('Must not be empty.')
 
     @post_load
-    def make_obj(self, data, **kwargs):
+    def make_obj(self, data, **_):
         return DropdownInputModel(**data)
 
 
@@ -104,7 +104,7 @@ class DropdownHtmlSchema(DropdownAttrs, GenericHtmlSchema):
     info = fields.Nested(InfoSchema, allow_none=True, required=True)
 
     @post_load
-    def make_obj(self, data, **kwargs):
+    def make_obj(self, data, **_):
         # noinspection PyArgumentList
         return DropdownHtmlModel(**data)
 
@@ -118,7 +118,7 @@ class DropdownAnswerSchema(DropdownAttrs, GenericAnswerSchema):
     input = fields.Nested(DropdownInputSchema, required=True)
 
     @post_load
-    def make_obj(self, data, **kwargs):
+    def make_obj(self, data, **_):
         # noinspection PyArgumentList
         return DropdownAnswerModel(**data)
 
@@ -152,7 +152,7 @@ DROPDOWN_HTML_SCHEMA = DropdownHtmlSchema()
 @dropdown_route.route('/multihtml/', methods=['post'])
 @use_args(GenericHtmlSchema(many=True), locations=("json",))
 def dropdown_multihtml(args):  # args: List[GenericHtmlSchema]):
-    ret = render_multihtml(DROPDOWN_HTML_SCHEMA, args)
+    ret = render_multihtml(args)
     return ret
 
 

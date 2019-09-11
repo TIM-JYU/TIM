@@ -13,8 +13,8 @@ from marshmallow import Schema, fields, post_load
 from marshmallow.utils import missing
 from webargs.flaskparser import use_args
 
-from pluginserver_flask import GenericMarkupModel, GenericMarkupSchema, GenericHtmlSchema, GenericHtmlModel, \
-    GenericAnswerSchema, GenericAnswerModel, Missing, \
+from pluginserver_flask import GenericMarkupModel, GenericHtmlModel, \
+    GenericAnswerModel, Missing, \
     InfoSchema, create_blueprint
 from timApp.plugin.containerLink import get_plugin
 from timApp.tim_app import csrf
@@ -35,7 +35,7 @@ class ImportDataStateSchema(Schema):
     fields = fields.List(fields.Str()) # Keep this last
 
     @post_load
-    def make_obj(self, data, **kwargs):
+    def make_obj(self, data, **_):
         res = ImportDataStateModel(**data)
         return res
 
@@ -62,7 +62,7 @@ class ImportDataMarkupModel(GenericMarkupModel):
 
 
 
-class ImportDataMarkupSchema(GenericMarkupSchema):
+class ImportDataMarkupSchema:
     buttonText = fields.Str(allow_none=True)
     docid = fields.Int(allow_none=True)
     open = fields.Bool(allow_none=True)
@@ -83,7 +83,7 @@ class ImportDataMarkupSchema(GenericMarkupSchema):
 
 
     @post_load
-    def make_obj(self, data, **kwargs):
+    def make_obj(self, data, **_):
         return ImportDataMarkupModel(**data)
 
 
@@ -102,7 +102,7 @@ class ImportDataInputSchema(Schema):
     fields = fields.List(fields.Str()) # Keep this last
 
     @post_load
-    def make_obj(self, data, **kwargs):
+    def make_obj(self, data, **_):
         return ImportDataInputModel(**data)
 
 
@@ -133,11 +133,11 @@ class ImportDataHtmlModel(GenericHtmlModel[ImportDataInputModel, ImportDataMarku
         return ""
 
 
-class ImportDataHtmlSchema(ImportDataAttrs, GenericHtmlSchema):
+class ImportDataHtmlSchema(ImportDataAttrs):
     info = fields.Nested(InfoSchema, allow_none=True, required=True)
 
     @post_load
-    def make_obj(self, data, **kwargs):
+    def make_obj(self, data, **_):
         # noinspection PyArgumentList
         return ImportDataHtmlModel(**data)
 
@@ -147,11 +147,11 @@ class ImportDataAnswerModel(GenericAnswerModel[ImportDataInputModel, ImportDataM
     pass
 
 
-class ImportDataAnswerSchema(ImportDataAttrs, GenericAnswerSchema):
+class ImportDataAnswerSchema(ImportDataAttrs):
     input = fields.Nested(ImportDataInputSchema, required=False)
 
     @post_load
-    def make_obj(self, data, **kwargs):
+    def make_obj(self, data, **_):
         # noinspection PyArgumentList
         return ImportDataAnswerModel(**data)
 
@@ -168,7 +168,7 @@ def render_static_import_data(m: ImportDataHtmlModel, s: str):
     )
 
 
-importData_plugin = create_blueprint(__name__, 'importData', ImportDataHtmlSchema(), csrf)
+importData_plugin = create_blueprint(__name__, 'importData', ImportDataHtmlSchema, csrf)
 
 def conv_data_csv(data, field_names, separator):
     """

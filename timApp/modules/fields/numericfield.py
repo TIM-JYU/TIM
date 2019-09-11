@@ -70,7 +70,7 @@ class NumericfieldMarkupSchema(GenericMarkupSchema):
     save = fields.String(allow_none=True)
 
     @post_load
-    def make_obj(self, data, **kwargs):
+    def make_obj(self, data, **_):
         return NumericfieldMarkupModel(**data)
 
 
@@ -86,7 +86,7 @@ class NumericfieldInputSchema(Schema):
     nosave = fields.Bool()
 
     @post_load
-    def make_obj(self, data, **kwargs):
+    def make_obj(self, data, **_):
         return NumericfieldInputModel(**data)
 
 
@@ -111,7 +111,7 @@ class NumericfieldHtmlSchema(NumericfieldAttrs, GenericHtmlSchema):
     info = fields.Nested(InfoSchema, allow_none=True, required=True)
 
     @post_load
-    def make_obj(self, data, **kwargs):
+    def make_obj(self, data, **_):
         # noinspection PyArgumentList
         return NumericfieldHtmlModel(**data)
 
@@ -126,7 +126,7 @@ class NumericfieldAnswerSchema(NumericfieldAttrs, GenericAnswerSchema):
     input = fields.Nested(NumericfieldInputSchema, required=True)
 
     @post_load
-    def make_obj(self, data, **kwargs):
+    def make_obj(self, data, **_):
         # noinspection PyArgumentList
         return NumericfieldAnswerModel(**data)
 
@@ -158,13 +158,13 @@ NUMERIC_FIELD_HTML_SCHEMA = NumericfieldHtmlSchema()
 @numericfield_route.route('/multihtml/', methods=['post'])
 @use_args(GenericHtmlSchema(many=True), locations=("json",))
 def nf_multihtml(args):  # args: List[GenericHtmlSchema]):
-    ret = render_multihtml(NUMERIC_FIELD_HTML_SCHEMA, args)
+    ret = render_multihtml(args)
     return ret
 
 @numericfield_route.route('/multimd/', methods=['post'])
 @use_args(GenericHtmlSchema(many=True), locations=("json",))
 def nf_multimd(args):  # args: List[GenericHtmlSchema]):
-    ret = render_multimd(NUMERIC_FIELD_HTML_SCHEMA, args)
+    ret = render_multimd(args)
     return ret
 
 REDOUBLE = re.compile(r"[^0-9,.e\-+]+")

@@ -29,7 +29,7 @@ class FeedbackStateSchema(Schema):
     correct_answer = fields.Str(required=True)
 
     @post_load
-    def make_obj(self, data, **kwargs):
+    def make_obj(self, data, **_):
         return FeedbackStateModel(**data)
 
 
@@ -67,7 +67,7 @@ class FeedbackMarkupSchema(GenericMarkupSchema):
             raise ValidationError('Must be of size 1 x 2.')
 
     @post_load
-    def make_obj(self, data, **kwargs):
+    def make_obj(self, data, **_):
         return FeedbackMarkupModel(**data)
 
 
@@ -88,7 +88,7 @@ class FeedbackInputSchema(Schema):
     nosave = fields.Bool()
 
     @post_load
-    def make_obj(self, data, **kwargs):
+    def make_obj(self, data, **_):
         return FeedbackInputModel(**data)
 
 
@@ -115,7 +115,7 @@ class FeedbackHtmlSchema(FeedbackAttrs, GenericHtmlSchema):
     info = fields.Nested(InfoSchema, allow_none=True, required=True)
 
     @post_load
-    def make_obj(self, data, **kwargs):
+    def make_obj(self, data, **_):
         # noinspection PyArgumentList
         return FeedbackHtmlModel(**data)
 
@@ -129,7 +129,7 @@ class FeedbackAnswerSchema(FeedbackAttrs, GenericAnswerSchema):
     input = fields.Nested(FeedbackInputSchema, required=True)
 
     @post_load
-    def make_obj(self, data, **kwargs):
+    def make_obj(self, data, **_):
         # noinspection PyArgumentList
         return FeedbackAnswerModel(**data)
 
@@ -153,7 +153,7 @@ def render_static_feedback(m: FeedbackHtmlModel):
     )
 
 
-app = create_app(__name__, FeedbackHtmlSchema())
+app = create_app(__name__, FeedbackHtmlSchema)
 
 @app.route('/answer/', methods=['put'])
 @use_args(FeedbackAnswerSchema(), locations=("json",))

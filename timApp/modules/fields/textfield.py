@@ -56,7 +56,7 @@ class TextfieldMarkupSchema(GenericMarkupSchema):
     autoUpdateTables = fields.Boolean(default=True)
 
     @post_load
-    def make_obj(self, data, **kwargs):
+    def make_obj(self, data, **_):
         return TextfieldMarkupModel(**data)
 
 
@@ -76,7 +76,7 @@ class TextfieldInputSchema(Schema):
         pass
 
     @post_load
-    def make_obj(self, data, **kwargs):
+    def make_obj(self, data, **_):
         return TextfieldInputModel(**data)
 
 
@@ -99,7 +99,7 @@ class TextfieldHtmlSchema(TextfieldAttrs, GenericHtmlSchema):
     info = fields.Nested(InfoSchema, allow_none=True, required=True)
 
     @post_load
-    def make_obj(self, data, **kwargs):
+    def make_obj(self, data, **_):
         # noinspection PyArgumentList
         return TextfieldHtmlModel(**data)
 
@@ -113,7 +113,7 @@ class TextfieldAnswerSchema(TextfieldAttrs, GenericAnswerSchema):
     input = fields.Nested(TextfieldInputSchema, required=True)
 
     @post_load
-    def make_obj(self, data, **kwargs):
+    def make_obj(self, data, **_):
         # noinspection PyArgumentList
         return TextfieldAnswerModel(**data)
 
@@ -145,7 +145,7 @@ TEXT_FIELD_HTML_SCHEMA = TextfieldHtmlSchema()
 @textfield_route.route('/multihtml/', methods=['post'])
 @use_args(GenericHtmlSchema(many=True), locations=("json",))
 def tf_multihtml(args):  # args: List[GenericHtmlSchema]):
-    ret = render_multihtml(TEXT_FIELD_HTML_SCHEMA, args)
+    ret = render_multihtml(args)
     return ret
 
 

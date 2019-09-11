@@ -3,10 +3,10 @@ import json
 import attr
 from dataclasses import dataclass
 from flask import request, abort, Blueprint
-from marshmallow_dataclass import class_schema
 from webargs.flaskparser import use_args
 
 from timApp.auth.accesshelper import get_doc_or_abort, verify_manage_access
+from timApp.modules.py.marshmallow_dataclass import class_schema
 from timApp.slide.slidestatus import SlideStatus
 from timApp.timdb.sqa import db
 from timApp.util.flask.responsehelper import json_response, ok_response

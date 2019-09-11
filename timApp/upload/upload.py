@@ -11,7 +11,6 @@ import magic
 from dataclasses import dataclass
 from flask import Blueprint, request, send_file, Response
 from flask import abort
-from marshmallow_dataclass import class_schema
 from webargs.flaskparser import use_args
 from werkzeug.utils import secure_filename
 
@@ -26,6 +25,7 @@ from timApp.document.documents import import_document
 from timApp.item.block import Block
 from timApp.item.block import BlockType
 from timApp.item.validation import validate_item_and_create_intermediate_folders, validate_uploaded_document_content
+from timApp.modules.py.marshmallow_dataclass import class_schema
 from timApp.plugin.pluginexception import PluginException
 from timApp.plugin.taskid import TaskId, TaskIdAccess
 from timApp.tim_app import app
@@ -228,15 +228,15 @@ class AttachmentModel:
     issueNumber: int
     attachmentLetter: str
     uploadUrl: str
-    upToDate: Optional[bool]
+    upToDate: Optional[bool] = None
 
 
 @dataclass
 class RestampModel:
     attachments: List[AttachmentModel]
     meetingDate: str
-    stampFormat: Optional[str]
-    customStampModel: Optional[str]
+    stampFormat: Optional[str] = None
+    customStampModel: Optional[str] = None
 
 
 @upload.route('/upload/restamp', methods=['POST'])

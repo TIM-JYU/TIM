@@ -3,7 +3,6 @@ from typing import Tuple, List, Dict, Any
 
 from dataclasses import dataclass
 from flask import Blueprint, abort
-from marshmallow_dataclass import class_schema
 
 from timApp.auth.accesshelper import verify_admin, check_admin_access, get_doc_or_abort, verify_view_access
 from timApp.auth.accesstype import AccessType
@@ -13,6 +12,7 @@ from timApp.document.create_item import apply_template, create_document
 from timApp.document.docinfo import DocInfo
 from timApp.item.tag import TagType
 from timApp.item.validation import ItemValidationRule
+from timApp.modules.py.marshmallow_dataclass import class_schema
 from timApp.timdb.sqa import db
 from timApp.user.special_group_names import SPECIAL_GROUPS, PRIVILEGED_GROUPS
 from timApp.user.user import User, view_access_set, edit_access_set

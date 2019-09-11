@@ -28,7 +28,7 @@ class CbfieldHtmlSchema(TextfieldAttrs, GenericHtmlSchema):
     info = fields.Nested(InfoSchema, allow_none=True, required=True)
 
     @post_load
-    def make_obj(self, data, **kwargs):
+    def make_obj(self, data, **_):
         # noinspection PyArgumentList
         return CbfieldHtmlModel(**data)
 
@@ -58,7 +58,7 @@ CB_FIELD_HTML_SCHEMA = CbfieldHtmlSchema()
 @cbfield_route.route('/multihtml/', methods=['post'])
 @use_args(GenericHtmlSchema(many=True), locations=("json",))
 def cb_multihtml(args):  # args: List[GenericHtmlSchema]):
-    ret = render_multihtml(CB_FIELD_HTML_SCHEMA, args)
+    ret = render_multihtml(args)
     return ret
 
 
