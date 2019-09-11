@@ -468,7 +468,7 @@ textfieldApp.component("textfieldRunner", {
                ng-style="$ctrl.styles">
                </textarea>
          </span>
-         <span ng-if="::$ctrl.isPlainText()" class="plaintext" style="width: {{::$ctrl.cols}}em; max-width: 100%">{{$ctrl.userword}}</span>
+         <span ng-if="::$ctrl.isPlainText()" ng-bind-html="$ctrl.userword" class="plaintext" style="width: {{::$ctrl.cols}}em; max-width: 100%"></span>
          </span></label>
     </form>
     <div ng-if="$ctrl.errormessage" class="error" style="font-size: 12px" ng-bind-html="$ctrl.errormessage"></div>
