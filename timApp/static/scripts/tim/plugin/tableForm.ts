@@ -1017,7 +1017,7 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
             return;
         }
         timtab.confirmSaved();
-        if (this.viewctrl) {
+        if (this.viewctrl && changedFields.size > 0) {
             if (this.attrs.autoUpdateFields) {
                 this.viewctrl.updateFields(Array.from(changedFields));
             }
