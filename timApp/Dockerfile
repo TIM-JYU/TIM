@@ -121,6 +121,7 @@ bcrypt \
 celery[redis] \
 cffi \
 cssselect \
+dataclasses \
 docformatter \
 filelock \
 flask \
@@ -142,7 +143,8 @@ isodate \
 libsass \
 lxml \
 marshmallow \
-marshmallow-dataclass[enum,union] \
+marshmallow-enum \
+marshmallow_union \
 mmh3 \
 mypy \
 pandocfilters \
@@ -160,6 +162,7 @@ responses \
 selenium==3.141.0 \
 sphinx \
 sqlalchemy \
+typing-inspect \
 wand \
 webargs \
 && ${PIP_INSTALL} requests --upgrade && ${APT_CLEANUP}"
