@@ -58,12 +58,6 @@ class DropdownHtmlModel(GenericHtmlModel[DropdownInputModel, DropdownMarkupModel
             r['c'] = self.state.c
         return r
 
-    def get_real_html(self):
-        return render_template_string(
-            """<dropdown-runner json="{{data}}"></dropdown-runner>""",
-            data=make_base64(self.get_browser_json()),
-        )
-
 
 @dataclass
 class DropdownAnswerModel(GenericAnswerModel[DropdownInputModel, DropdownMarkupModel, DropdownStateModel]):
