@@ -578,7 +578,7 @@ export class TimTableController extends DestroyScope implements IController, ITi
 
         if ( this.data.nrColumn ) { this.colDelta += 1; }
         if ( this.data.cbColumn ) { this.colDelta += 1; }
-        if ( this.data.headers ) { this.rowDelta += 1; }
+        // if ( this.data.headers ) { this.rowDelta += 1; }
         if ( this.filterRow ) { this.rowDelta += 1; }
 
         let tb = false;
@@ -3088,6 +3088,7 @@ timApp.component("timTable", {
             </td>
         </tr>
         </THEAD>
+        <tbody>
         <tr ng-if="$ctrl.filterRow" ng-init="irowi = 2"> <!-- Filter row -->
             <td class="nrcolumn totalnr" ng-if="::$ctrl.data.nrColumn" >{{$ctrl.visiblerows}}</td>
             <td ng-if="::$ctrl.data.cbColumn"><input type="checkbox" ng-model="$ctrl.cbFilter" ng-change="$ctrl.updateFilter()" title="Check to show only checked rows"> </td>
@@ -3100,7 +3101,6 @@ timApp.component("timTable", {
                  <input type="text" ng-change="$ctrl.updateFilter()" ng-model="$ctrl.filters[coli]" title="Write filter condition">
                </div>
             </td>
-
         </tr> <!-- Now the matrix -->
         <tr ng-repeat="rowi in $ctrl.permTable"
             ng-style="$ctrl.stylingForRow(rowi)" ng-show="$ctrl.showRow(rowi)">
@@ -3116,6 +3116,7 @@ timApp.component("timTable", {
                     <!-- {{rowi+1}}{{irowi+1}} -->
                 </td> <!-- one cell -->
         </tr> <!-- the matrix -->
+        </tbody>
     </table>
     <button class="timTableEditor timButton buttonAddRow" title="Add row" ng-show="::$ctrl.addRowEnabled()" ng-click="$ctrl.addRow(-1)"><span
             class="glyphicon glyphicon-plus" ng-bind="$ctrl.addRowButtonText"></span></button>
