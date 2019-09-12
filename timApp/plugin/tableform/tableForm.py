@@ -176,7 +176,7 @@ class TableFormHtmlModel(GenericHtmlModel[TableFormInputModel, TableFormMarkupMo
                     user,
                     self.markup.removeDocIds,
                     self.markup.showInView,
-                    group_filter_type=MembershipFilter(self.markup.includeUsers),
+                    group_filter_type=self.markup.includeUsers,
                 )
             r = {**r, **f}
         return r
