@@ -20,6 +20,7 @@ textfield_route = Blueprint('tf', __name__, url_prefix="/tf")
 @dataclass
 class TextfieldMarkupModel(GenericMarkupModel):
     autosave: Union[bool, Missing] = missing
+    autogrow: Union[bool, Missing] = missing
     autoUpdateTables: Union[bool, Missing] = True
     clearstyles: Union[bool, Missing] = missing
     cols: Union[int, Missing] = missing
@@ -33,6 +34,7 @@ class TextfieldMarkupModel(GenericMarkupModel):
     readOnlyStyle: Union[str, Missing, None] = missing
     showname: Union[int, Missing, None] = missing
     tag: Union[str, Missing, None] = missing
+    textarea: Union[bool, Missing] = missing
     validinput: Union[str, Missing, None] = missing
 
 

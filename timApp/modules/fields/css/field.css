@@ -12,7 +12,7 @@ textfield-runner .stem {
     border-right-width: thick;
 }
 
-input:focus.warnFrame {
+input:focus.warnFrame, textarea:focus.warnFrame {
     border-right-color: gold !important;
 }
 
@@ -42,6 +42,7 @@ input:focus.alertframe {
     99% { opacity: 0.01; height: 100%; }
     100% { opacity: 0; height: 0%; }
 }
+
 @keyframes fadeOut {
     0% { opacity: 1; height: 100%; }
     99% { opacity: 0.01; height: 100%; }
@@ -117,6 +118,7 @@ textfield-runner .stem, cbfield-runner .stem, rbfield-runner .stem  {
     border-color: #b4b4b4;
     margin-right: -1px;
     display: inline-block;
+    max-width: 100%;
 }
 
 .fieldCell  tim-plugin-loader:last-child {
@@ -173,51 +175,11 @@ numericfield-runner .stem {
     height: 6px;
 }
 
-.warnFrame {
-    border-right-color: gold;
-    border-right-width: thick;
-}
-
-input:focus.warnFrame {
-    border-right-color: gold !important;
-}
-
-.alertFrame {
-    border-color: red;
-    border-width: 2px;
-}
-
-input:focus.alertframe {
-    border-color: red !important;
-}
-
 .plaintextFrame {
     border: none;
     box-shadow: none;
 }
 
-/*
-/ Showing "Saved!" text until fadeOut.
-/ Existing issue: can't redo Saved! text without page refresh.
- */
-.savedtext {
-    display: inline-block;
-    white-space: nowrap;
-    -webkit-animation: fadeOut 2s;
-    animation: fadeOut 2s;
-    animation-fill-mode: forwards;
-}
-
-@-webkit-keyframes fadeOut {
-    0% { opacity: 1; height: 100%; }
-    99% { opacity: 0.01; height: 100%; }
-    100% { opacity: 0; height: 0%; }
-}
-@keyframes fadeOut {
-    0% { opacity: 1; height: 100%; }
-    99% { opacity: 0.01; height: 100%; }
-    100% { opacity: 0; height: 0; }
-}
 
 .pluginnumericfield p {
     padding-top: 0px;
@@ -251,30 +213,6 @@ input:focus.alertframe {
 .pluginmultisave .timButton {
     margin-bottom: 5px;
     margin-top: 5px;
-}
-
-/*
-/ Most likely will not be implemented - showing Saved! text until fadeOut.
-/ Existing issue: can't redo Saved! text without page refresh.
- */
-.savedtext {
-    display: inline-block;
-    overflow: hidden;
-    white-space: nowrap;
-    -webkit-animation: fadeOut 2s;
-    animation: fadeOut 2s;
-    animation-fill-mode: forwards;
-}
-
-@-webkit-keyframes fadeOut {
-    0% { opacity: 1; height: 100%; }
-    99% { opacity: 0.01; height: 100%; }
-    100% { opacity: 0; height: 0%; }
-}
-@keyframes fadeOut {
-    0% { opacity: 1; height: 100%; }
-    99% { opacity: 0.01; height: 100%; }
-    100% { opacity: 0; height: 0; }
 }
 
 .pluginmultisave p {

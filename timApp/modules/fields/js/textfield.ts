@@ -26,6 +26,8 @@ const TextfieldMarkup = t.intersection([
         nosave: t.boolean,
         ignorestyles: t.boolean,
         clearstyles: t.boolean,
+        textarea: t.boolean,
+        autogrow: t.boolean,
     }),
     GenericPluginMarkup,
     t.type({
@@ -243,6 +245,13 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
         return (this.attrs.readOnlyStyle == "plaintext" && window.location.pathname.startsWith("/view/"));
     }
 
+    isTextArea() {
+        if (this.attrs.textarea) {
+            return true;
+        }
+        return false;
+    }
+
     /**
      * Parses "styles" from the plugin answer that were saved by tableForm
      * For now only backgroundColor is supported
@@ -381,8 +390,29 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
     protected getAttributeType() {
         return TextfieldAll;
     }
+
+    autoGrow() {
+        const element = this.element.find(".textarea").first();
+        const ele = angular.element(element);
+        const scrollHeight = ele.prop("scrollHeight");
+        const prevHeight = parseFloat(ele.css("height"));
+        if (scrollHeight < prevHeight) {
+            return;
+        }
+        ele.css("height",  ele.prop("scrollHeight") + "px");
+    }
+
+    getHeight(){
+        const ele = this.element.find(".textarea").first();
+        // const ele = angular.element(element);
+        if(!this.attrs.autogrow){
+            return parseFloat(ele.css("height"));
+        }
+        return ele.prop("scrollHeight");
+    }
 }
 
+// noinspection CssInvalidFunction
 /**
  * Introducing textfieldRunner as HTML component.
  */
@@ -403,7 +433,7 @@ textfieldApp.component("textfieldRunner", {
       <span ng-if="::!$ctrl.isPlainText()" >
         <input type="text"
                style="width: {{::$ctrl.cols}}em"
-               ng-if="::!$ctrl.isPlainText()"
+               ng-if="::!$ctrl.isTextArea()"
                class="form-control"
                ng-model="$ctrl.userword"
                ng-blur="::$ctrl.autoSave()"
@@ -418,8 +448,27 @@ textfieldApp.component("textfieldRunner", {
                placeholder="{{::$ctrl.inputplaceholder}}"
                ng-class="{warnFrame: ($ctrl.isUnSaved() && !$ctrl.redAlert), alertFrame: $ctrl.redAlert }"
                ng-style="$ctrl.styles">
+       <textarea
+               style="width: {{::$ctrl.cols}}em; padding: unset; height: {{::$ctrl.getHeight()}}px; overflow:hidden;"
+               ng-if="::$ctrl.isTextArea()"
+               class="form-control textarea"
+               ng-model="$ctrl.userword"
+               ng-blur="::$ctrl.autoSave()"
+               ng-keydown="::$ctrl.attrs.autogrow && $ctrl.autoGrow()"
+               ng-keyup="::$ctrl.attrs.autogrow && $ctrl.autoGrow()"
+               ng-model-options="::$ctrl.modelOpts"
+               ng-trim="false"
+               ng-pattern="$ctrl.getPattern()"
+               ng-readonly="::$ctrl.readonly"
+               uib-tooltip="{{ $ctrl.errormessage }}"
+               tooltip-is-open="$ctrl.f.$invalid && $ctrl.f.$dirty"
+               tooltip-trigger="mouseenter"
+               placeholder="{{::$ctrl.inputplaceholder}}"
+               ng-class="{warnFrame: ($ctrl.isUnSaved() && !$ctrl.redAlert), alertFrame: $ctrl.redAlert }"
+               ng-style="$ctrl.styles">
+               </textarea>
          </span>
-         <span ng-if="::$ctrl.isPlainText()" class="plaintext" style="width: {{::$ctrl.cols}}em">{{$ctrl.userword}}</span>
+         <span ng-if="::$ctrl.isPlainText()" ng-bind-html="$ctrl.userword" class="plaintext" style="width: {{::$ctrl.cols}}em; max-width: 100%"></span>
          </span></label>
     </form>
     <div ng-if="$ctrl.errormessage" class="error" style="font-size: 12px" ng-bind-html="$ctrl.errormessage"></div>
