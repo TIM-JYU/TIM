@@ -46,9 +46,9 @@ class JsRunnerTest(JsRunnerTestBase):
         invalid_yamls = [
             ('', "{'fields': ['Missing data for required field.']}", 400),
             ('fields: []', "{'_schema': ['Either group or groups must be given.']}", 400),
-            ('fields: []\ngroup: 0', "{'group': ['Not a valid string.']}", 400),
-            ('fields: []\ngroup: 1', "{'group': ['Not a valid string.']}", 400),
-            ('fields: []\nprogram: 1', "{'program': ['Not a valid string.']}", 400),
+            ('fields: []\ngroup: 0', "{'group': [['Not a valid string.'], {'_schema': ['Invalid input type.']}]}", 400),
+            ('fields: []\ngroup: 1', "{'group': [['Not a valid string.'], {'_schema': ['Invalid input type.']}]}", 400),
+            ('fields: []\nprogram: 1', "{'program': [['Not a valid string.'], {'_schema': ['Invalid input type.']}]}", 400),
             ('fields: []\ngroup: xxx', "The following groups were not found: xxx", 404),
             ('fields: []\ngroups: [xxx, yyy]', "The following groups were not found: xxx, yyy", 404),
             ('fields: []\ngroup: testuser1', "Attribute 'program' is required.", 400),
@@ -442,7 +442,7 @@ fields:
 program: |!!
 tools.setString("t", "hi");
 !!
-showInView: True
+showInView: true
         """)
         d3.document.add_text('#- {#t plugin=textfield}')
         self.test_user_2.grant_access(d3, 'view')

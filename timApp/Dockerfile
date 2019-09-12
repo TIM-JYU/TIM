@@ -112,6 +112,7 @@ ENV LD_LIBRARY_PATH /usr/local/lib
 
 ENV PIP_INSTALL="python3 -m pip install"
 RUN bash -c "${PIP_INSTALL} wheel setuptools && ${APT_CLEANUP}"
+RUN bash -c "${APT_INSTALL} libxml2-dev libxmlsec1-dev libxmlsec1-openssl && ${APT_CLEANUP}"
 RUN bash -c "${PIP_INSTALL} \
 attrs \
 autopep8 \
@@ -120,6 +121,7 @@ bcrypt \
 celery[redis] \
 cffi \
 cssselect \
+dataclasses \
 docformatter \
 filelock \
 flask \
@@ -140,7 +142,9 @@ humanize \
 isodate \
 libsass \
 lxml \
-marshmallow==3.0.0rc6 \
+marshmallow \
+marshmallow-enum \
+marshmallow_union \
 mmh3 \
 mypy \
 pandocfilters \
@@ -151,13 +155,16 @@ pylatex \
 pypandoc \
 python-dateutil \
 python-magic \
+python3-saml \
 pytz \
 recommonmark \
 responses \
 selenium==3.141.0 \
 sphinx \
 sqlalchemy \
+typing-inspect \
 wand \
+webargs \
 && ${PIP_INSTALL} requests --upgrade && ${APT_CLEANUP}"
 
 # Install Pandoc

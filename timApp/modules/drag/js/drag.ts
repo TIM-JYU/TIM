@@ -7,7 +7,7 @@ import * as t from "io-ts";
 import {polyfill} from "mobile-drag-drop";
 import {scrollBehaviourDragImageTranslateOverride} from "mobile-drag-drop/scroll-behaviour";
 import {ITimComponent, ViewCtrl} from "tim/document/viewctrl";
-import {GenericPluginMarkup, Info, withDefault} from "tim/plugin/attributes";
+import {GenericPluginMarkup, Info, nullable, withDefault} from "tim/plugin/attributes";
 import {PluginBase, pluginBindings, shuffleStrings} from "tim/plugin/util";
 import {$http} from "tim/util/ngimport";
 import {markAsUsed, to} from "tim/util/utils";
@@ -38,12 +38,12 @@ const DragMarkup = t.intersection([
 ]);
 const DragAll = t.intersection([
     t.partial({
-        c: t.array(t.string),
     }),
     t.type({
         info: Info,
         markup: DragMarkup,
         preview: t.boolean,
+        state: nullable(t.type({c: t.array(t.string)})),
     }),
 ]);
 
@@ -98,8 +98,8 @@ class DragController extends PluginBase<t.TypeOf<typeof DragMarkup>, t.TypeOf<ty
         this.shuffle = this.attrs.shuffle || false;
         this.saveButton = this.attrs.savebutton || false;
         this.wordObjs = [];
-        if (this.attrsall.c) {
-            this.createWordobjs(this.attrsall.c);
+        if (this.attrsall.state) {
+            this.createWordobjs(this.attrsall.state.c);
         } else {
             if (this.shuffle && this.attrs.words) {
                 const words = shuffleStrings(this.attrs.words || []);

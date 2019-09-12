@@ -3,33 +3,26 @@ Module for serving dropdown item-plugin.
 """
 from typing import Union, List
 
-import attr
-from flask import jsonify, render_template_string, Blueprint
-from marshmallow import Schema, fields, post_load, validates, ValidationError
+from dataclasses import dataclass, asdict
+from flask import jsonify, render_template_string, Blueprint, request
+from marshmallow import validates, ValidationError
 from marshmallow.utils import missing
 from webargs.flaskparser import use_args
 
-from pluginserver_flask import GenericMarkupModel, GenericMarkupSchema, GenericHtmlSchema, GenericHtmlModel, \
-    GenericAnswerSchema, GenericAnswerModel, Missing, \
-    make_base64, InfoSchema, render_multihtml
+from marshmallow_dataclass import class_schema
+from pluginserver_flask import GenericMarkupModel, GenericHtmlModel, \
+    GenericAnswerModel, Missing, \
+    make_base64, render_multihtml
 
 dropdown_route = Blueprint('dropdown', __name__, url_prefix="/dropdown")
 
 
-@attr.s(auto_attribs=True)
+@dataclass
 class DropdownStateModel:
     c: str
 
 
-class DropdownStateSchema(Schema):
-    c = fields.Str(required=True)
-
-    @post_load
-    def make_obj(self, data):
-        return DropdownStateModel(**data)
-
-
-@attr.s(auto_attribs=True)
+@dataclass
 class DropdownMarkupModel(GenericMarkupModel):
     words: Union[List[str], Missing] = missing
     instruction: Union[bool, Missing] = missing
@@ -39,47 +32,19 @@ class DropdownMarkupModel(GenericMarkupModel):
     answers: Union[bool, Missing] = missing
 
 
-class DropdownMarkupSchema(GenericMarkupSchema):
-    words = fields.List(fields.Str)
-    instruction = fields.Bool()
-    radio = fields.Bool()
-    autosave = fields.Bool()
-    answers = fields.Bool()
-    shuffle = fields.Bool()
-
-    @post_load
-    def make_obj(self, data):
-        return DropdownMarkupModel(**data)
-
-
-@attr.s(auto_attribs=True)
+@dataclass
 class DropdownInputModel:
     selectedWord: str
-    nosave: bool = missing
-    shuffle: bool = missing
-
-
-class DropdownInputSchema(Schema):
-    selectedWord = fields.Str(required=True)
-    nosave = fields.Bool()
-    shuffle = fields.Bool()
+    nosave: Union[bool, Missing] = missing
+    shuffle: Union[bool, Missing] = missing
 
     @validates('selectedWord')
     def validate_selected_word(self, word):
         if not word:
             raise ValidationError('Must not be empty.')
 
-    @post_load
-    def make_obj(self, data):
-        return DropdownInputModel(**data)
 
-
-class DropdownAttrs(Schema):
-    markup = fields.Nested(DropdownMarkupSchema)
-    state = fields.Nested(DropdownStateSchema, allow_none=True, required=True)
-
-
-@attr.s(auto_attribs=True)
+@dataclass
 class DropdownHtmlModel(GenericHtmlModel[DropdownInputModel, DropdownMarkupModel, DropdownStateModel]):
     def get_component_html_name(self) -> str:
         return 'dropdown-runner'
@@ -87,40 +52,10 @@ class DropdownHtmlModel(GenericHtmlModel[DropdownInputModel, DropdownMarkupModel
     def get_static_html(self) -> str:
         return render_static_dropdown(self)
 
-    def get_browser_json(self):
-        r = super().get_browser_json()
-        if self.state:
-            r['c'] = self.state.c
-        return r
 
-    def get_real_html(self):
-        return render_template_string(
-            """<dropdown-runner json="{{data}}"></dropdown-runner>""",
-            data=make_base64(self.get_browser_json()),
-        )
-
-
-class DropdownHtmlSchema(DropdownAttrs, GenericHtmlSchema):
-    info = fields.Nested(InfoSchema, allow_none=True, required=True)
-
-    @post_load
-    def make_obj(self, data):
-        # noinspection PyArgumentList
-        return DropdownHtmlModel(**data)
-
-
-@attr.s(auto_attribs=True)
+@dataclass
 class DropdownAnswerModel(GenericAnswerModel[DropdownInputModel, DropdownMarkupModel, DropdownStateModel]):
     pass
-
-
-class DropdownAnswerSchema(DropdownAttrs, GenericAnswerSchema):
-    input = fields.Nested(DropdownInputSchema, required=True)
-
-    @post_load
-    def make_obj(self, data):
-        # noinspection PyArgumentList
-        return DropdownAnswerModel(**data)
 
 
 def render_static_dropdown(m: DropdownHtmlModel):
@@ -142,17 +77,17 @@ def render_static_dropdown(m: DropdownHtmlModel):
     <p class="plgfooter">{{ footer }}</p>
 </div>
         """,
-        **attr.asdict(m.markup),
+        **asdict(m.markup),
     )
 
 
-DROPDOWN_HTML_SCHEMA = DropdownHtmlSchema()
+DropdownHtmlSchema = class_schema(DropdownHtmlModel)
+DropdownAnswerSchema = class_schema(DropdownAnswerModel)
 
 
 @dropdown_route.route('/multihtml/', methods=['post'])
-@use_args(GenericHtmlSchema(many=True), locations=("json",))
-def dropdown_multihtml(args):  # args: List[GenericHtmlSchema]):
-    ret = render_multihtml(DROPDOWN_HTML_SCHEMA, args)
+def dropdown_multihtml():
+    ret = render_multihtml(request.get_json(), DropdownHtmlSchema())
     return ret
 
 
