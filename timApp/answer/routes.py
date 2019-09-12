@@ -3,7 +3,7 @@ import json
 import re
 from typing import Union, List, Tuple, Dict, Optional, Any
 
-from dataclasses import dataclass
+from dataclasses import dataclass, MISSING
 from flask import Blueprint
 from flask import Response
 from flask import abort
@@ -13,6 +13,7 @@ from marshmallow.utils import _Missing as Missing, missing
 from sqlalchemy import func
 from webargs.flaskparser import use_args
 
+from pluginserver_flask import GenericMarkupModel
 from timApp.answer.answer import Answer
 from timApp.answer.answer_models import AnswerUpload
 from timApp.answer.answers import get_latest_answers_query, get_common_answers, save_answer, get_all_answers
@@ -263,8 +264,8 @@ def get_answers_for_tasks(args: UserAnswersForTasksModel):
 
 
 @dataclass
-class JsRunnerModel:
-    fields: List[str]
+class JsRunnerModel(GenericMarkupModel):
+    fields: Union[List[str], Missing] = missing  # This is actually required, but we cannot use non-default arguments here...
     autoadd: Union[bool, Missing] = missing
     autoUpdateTables: Union[bool, Missing] = True
     creditField: Union[str, Missing] = missing
@@ -286,6 +287,8 @@ class JsRunnerModel:
 
     @validates_schema(skip_on_field_errors=True)
     def validate_schema(self, data, **_):
+        if data.get('fields') is None:
+            raise ValidationError('Missing data for required field.', field_name='fields')
         if data.get('group') is None and data.get('groups') is None:
             raise ValidationError("Either group or groups must be given.")
 
