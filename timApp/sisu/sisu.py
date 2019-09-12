@@ -1,15 +1,16 @@
 from textwrap import dedent
-from typing import List, Optional, Dict
+from typing import List, Optional, Dict, Union
 
-import attr
 import click
+from dataclasses import dataclass
 from flask import Blueprint, abort, current_app
 from flask.cli import AppGroup
-from marshmallow import Schema, fields, post_load, pre_load
+from marshmallow.utils import _Missing, missing
 from sqlalchemy import any_, true
 from sqlalchemy.exc import IntegrityError
 from webargs.flaskparser import use_args
 
+from marshmallow_dataclass import class_schema
 from timApp.auth.accesstype import AccessType
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.create_item import apply_template
@@ -80,28 +81,12 @@ def get_potential_groups(u: User, course_filter: str=None) -> List[UserGroup]:
     return gs
 
 
-class GroupCreateSchema(Schema):
-    externalId = fields.Str(required=True)
-    name = fields.Str()
-
-    @pre_load
-    def preload(self, data):
-        if not isinstance(data, dict):
-            return data
-        ref = data.pop('$ref', None)
-        if ref:
-            data['ref'] = ref
-        return data
-
-    @post_load
-    def make_obj(self, data):
-        return GroupCreateModel(**data)
-
-
-@attr.s(auto_attribs=True)
+@dataclass
 class GroupCreateModel:
     externalId: str
-    name: Optional[str] = None
+    name: Union[str, _Missing] = missing
+
+GroupCreateSchema = class_schema(GroupCreateModel)
 
 
 def get_sisu_group_rights(g: UserGroup) -> List[UserGroup]:

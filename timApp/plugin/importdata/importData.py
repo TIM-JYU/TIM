@@ -4,116 +4,62 @@ TIM example plugin: a ImportData
 import json
 import os
 from typing import Union, List
-from flask import abort
 
-import attr
-from timApp.plugin.containerLink import get_plugin
-from timApp.util.utils import widen_fields
 import requests
-
+from dataclasses import dataclass, asdict
+from flask import abort
 from flask import jsonify, render_template_string
-from marshmallow import Schema, fields, post_load
 from marshmallow.utils import missing
 from webargs.flaskparser import use_args
 
-from pluginserver_flask import GenericMarkupModel, GenericMarkupSchema, GenericHtmlSchema, GenericHtmlModel, \
-    GenericAnswerSchema, GenericAnswerModel, Missing, \
-    InfoSchema, create_blueprint
+from marshmallow_dataclass import class_schema
+from pluginserver_flask import GenericMarkupModel, GenericHtmlModel, \
+    GenericAnswerModel, Missing, \
+    create_blueprint
+from timApp.plugin.containerLink import get_plugin
 from timApp.tim_app import csrf
 from timApp.user.user import User
+from timApp.util.utils import widen_fields
 
 
-@attr.s(auto_attribs=True)
+@dataclass
 class ImportDataStateModel:
     """Model for the information that is stored in TIM database for each answer."""
-    url: Union[str, Missing] = None
-    separator: Union[str, Missing] = None
-    fields: Union[List[str], Missing] = None
-
-class ImportDataStateSchema(Schema):
-    url = fields.Str(allow_none=True)
-    separator = fields.Str(allow_none=True)
-    fields = fields.List(fields.Str()) # Keep this last
-
-    @post_load
-    def make_obj(self, data):
-        res = ImportDataStateModel(**data)
-        return res
-
-
-@attr.s(auto_attribs=True)
-class ImportDataMarkupModel(GenericMarkupModel):
-    buttonText: Union[str, Missing] = missing
-    docid: Union[int, Missing] = missing
-    open: Union[bool, Missing] = missing
-    borders: Union[bool, Missing] = missing
-    upload: Union[bool, Missing] = missing
-    useurl: Union[bool, Missing] = missing
-    useseparator: Union[bool, Missing] = missing
-    usefields: Union[bool, Missing] = missing
-    uploadstem: Union[str, Missing] = missing
-    urlstem: Union[str, Missing] = missing
-    loadButtonText: Union[str, Missing] = missing
-    url: Union[str, Missing] = missing
-    beforeOpen: Union[str, Missing] = missing
-    separator: Union[str, Missing] = missing
-    prefilter: Union[str, Missing] = missing
-    placeholder: Union[str, Missing] = missing
+    url: Union[str, Missing, None] = missing
+    separator: Union[str, Missing, None] = missing
     fields: Union[List[str], Missing] = missing
 
 
-
-class ImportDataMarkupSchema(GenericMarkupSchema):
-    buttonText = fields.Str(allow_none=True)
-    docid = fields.Int(allow_none=True)
-    open = fields.Bool(allow_none=True)
-    borders = fields.Bool(allow_none=True)
-    upload = fields.Bool(allow_none=True)
-    useurl = fields.Bool(allow_none=True)
-    useseparator = fields.Bool(allow_none=True)
-    usefields = fields.Bool(allow_none=True)
-    uploadstem = fields.Str(allow_none=True)
-    urlstem = fields.Str(allow_none=True)
-    loadButtonText = fields.Str(allow_none=True)
-    url = fields.Str(allow_none=True)
-    beforeOpen = fields.Str(allow_none=True)
-    separator = fields.Str(allow_none=True)
-    prefilter = fields.Str(allow_none=True)
-    placeholder = fields.Str(allow_none=True)
-    fields = fields.List(fields.Str()) # Keep this last
-
-
-    @post_load
-    def make_obj(self, data):
-        return ImportDataMarkupModel(**data)
+@dataclass
+class ImportDataMarkupModel(GenericMarkupModel):
+    beforeOpen: Union[str, Missing, None] = missing
+    borders: Union[bool, Missing, None] = missing
+    docid: Union[int, Missing, None] = missing
+    fields: Union[List[str], Missing] = missing
+    loadButtonText: Union[str, Missing, None] = missing
+    open: Union[bool, Missing, None] = missing
+    placeholder: Union[str, Missing, None] = missing
+    prefilter: Union[str, Missing, None] = missing
+    separator: Union[str, Missing, None] = missing
+    upload: Union[bool, Missing, None] = missing
+    uploadstem: Union[str, Missing, None] = missing
+    url: Union[str, Missing, None] = missing
+    urlstem: Union[str, Missing, None] = missing
+    usefields: Union[bool, Missing, None] = missing
+    useseparator: Union[bool, Missing, None] = missing
+    useurl: Union[bool, Missing, None] = missing
 
 
-@attr.s(auto_attribs=True)
+@dataclass
 class ImportDataInputModel:
     """Model for the information that is sent from browser (plugin AngularJS component)."""
     data: str
-    separator: str
-    url: str
+    separator: Union[str, Missing] = missing
+    url: Union[str, Missing] = missing
     fields: Union[List[str], Missing] = missing
 
-class ImportDataInputSchema(Schema):
-    data = fields.Str(required=True)
-    separator = fields.Str(required=False)
-    url = fields.Str(required=False)
-    fields = fields.List(fields.Str()) # Keep this last
 
-    @post_load
-    def make_obj(self, data):
-        return ImportDataInputModel(**data)
-
-
-class ImportDataAttrs(Schema):
-    """Common fields for HTML and answer routes."""
-    markup = fields.Nested(ImportDataMarkupSchema)
-    state = fields.Nested(ImportDataStateSchema, allow_none=True, required=True)
-
-
-@attr.s(auto_attribs=True)
+@dataclass
 class ImportDataHtmlModel(GenericHtmlModel[ImportDataInputModel, ImportDataMarkupModel, ImportDataStateModel]):
     def get_component_html_name(self) -> str:
         return 'importdata-runner'
@@ -125,36 +71,13 @@ class ImportDataHtmlModel(GenericHtmlModel[ImportDataInputModel, ImportDataMarku
         s = self.markup.beforeOpen or "+ Open Import"
         return render_static_import_data(self, s)
 
-    def get_browser_json(self):
-        r = super().get_browser_json()
-        # r['state']['separator'] = ";"
-        return r
-
     def get_md(self):
         return ""
 
 
-class ImportDataHtmlSchema(ImportDataAttrs, GenericHtmlSchema):
-    info = fields.Nested(InfoSchema, allow_none=True, required=True)
-
-    @post_load
-    def make_obj(self, data):
-        # noinspection PyArgumentList
-        return ImportDataHtmlModel(**data)
-
-
-@attr.s(auto_attribs=True)
+@dataclass
 class ImportDataAnswerModel(GenericAnswerModel[ImportDataInputModel, ImportDataMarkupModel, ImportDataStateModel]):
     pass
-
-
-class ImportDataAnswerSchema(ImportDataAttrs, GenericAnswerSchema):
-    input = fields.Nested(ImportDataInputSchema, required=False)
-
-    @post_load
-    def make_obj(self, data):
-        # noinspection PyArgumentList
-        return ImportDataAnswerModel(**data)
 
 
 def render_static_import_data(m: ImportDataHtmlModel, s: str):
@@ -165,11 +88,15 @@ def render_static_import_data(m: ImportDataHtmlModel, s: str):
 </div>
 <br>
         """,
-        **attr.asdict(m.markup),
+        **asdict(m.markup),
     )
 
 
-importData_plugin = create_blueprint(__name__, 'importData', ImportDataHtmlSchema(), csrf)
+ImportDataHtmlSchema = class_schema(ImportDataHtmlModel)
+ImportDataAnswerSchema = class_schema(ImportDataAnswerModel)
+
+
+importData_plugin = create_blueprint(__name__, 'importData', ImportDataHtmlSchema, csrf)
 
 def conv_data_csv(data, field_names, separator):
     """
@@ -234,7 +161,7 @@ def conv_data_field_names(data, field_names, separator):
                 else:
                     continue
             value = parts[i+1]
-            row += (f"{separator}{name}{separator}{value}")
+            row += f"{separator}{name}{separator}{value}"
 
         if row:
             res.append(f"{parts[0]}" + row)

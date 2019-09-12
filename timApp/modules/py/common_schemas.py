@@ -1,31 +1,17 @@
 """The state model defined in this module is used by both textfield and numericfield."""
-from typing import Union
+from typing import Union, Dict
 
-import attr
-from marshmallow import Schema, fields, validates, ValidationError, post_load
-from marshmallow.utils import _Missing
+from dataclasses import dataclass
+from marshmallow.utils import _Missing, missing
+
+from marshmallow_dataclass import class_schema
 
 
-@attr.s(auto_attribs=True)
+@dataclass
 class TextfieldStateModel:
     """Model for the information that is stored in TIM database for each answer."""
-    c: Union[str, float, None]
-    styles: Union[dict, _Missing] = None
+    c: Union[str, float, int, None]
+    styles: Union[Dict[str, str], _Missing] = missing
 
 
-ACCEPTED_TYPES = (int, float, str, type(None))
-
-
-class TextfieldStateSchema(Schema):
-    c = fields.Raw(required=True, allow_none=True)
-    # TODO: Strict dictionary for style keys
-    styles = fields.Dict(keys=fields.Str(), values=fields.Str())
-
-    @validates('c')
-    def validate_content(self, c):
-        if not isinstance(c, ACCEPTED_TYPES):
-            raise ValidationError(f'State should be str, int, float or None but got {type(c)} with value {c}')
-
-    @post_load
-    def make_obj(self, data):
-        return TextfieldStateModel(**data)
+TextfieldStateSchema = class_schema(TextfieldStateModel)

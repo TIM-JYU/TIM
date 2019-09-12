@@ -2,11 +2,11 @@ import itertools
 import json
 import pprint
 import time
-from typing import Optional
+from typing import Optional, Type
 
 from flask import Request, current_app, g
 from flask import request, abort
-from marshmallow import ValidationError
+from marshmallow import ValidationError, Schema
 from werkzeug.exceptions import HTTPException
 from werkzeug.wrappers import BaseRequest
 
@@ -126,7 +126,7 @@ class JSONException(HTTPException):
     code = 400
 
 
-def load_data_from_req(schema):
+def load_data_from_req(schema: Type[Schema]):
     ps = schema()
     try:
         j = request.get_json()

@@ -152,6 +152,11 @@ def bad_request(error):
     return error_generic(error, 400)
 
 
+@app.errorhandler(422)
+def bad_request(error):
+    return error_generic(error, 422)
+
+
 # noinspection PyClassHasNoInit
 class Forbidden(ex.HTTPException):
     code = 403

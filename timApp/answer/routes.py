@@ -1,19 +1,19 @@
 """Answer-related routes."""
 import json
 import re
-from typing import Union, List, Tuple, Dict
+from typing import Union, List, Tuple, Dict, Optional, Any
 
-import attr
+from dataclasses import dataclass, MISSING
 from flask import Blueprint
 from flask import Response
 from flask import abort
 from flask import request
-from marshmallow import Schema, fields, post_load, validates_schema, ValidationError
-from marshmallow.utils import _Missing, missing
+from marshmallow import validates_schema, ValidationError
+from marshmallow.utils import _Missing as Missing, missing
 from sqlalchemy import func
 from webargs.flaskparser import use_args
 
-from pluginserver_flask import GenericMarkupSchema
+from pluginserver_flask import GenericMarkupModel
 from timApp.answer.answer import Answer
 from timApp.answer.answer_models import AnswerUpload
 from timApp.answer.answers import get_latest_answers_query, get_common_answers, save_answer, get_all_answers
@@ -30,6 +30,7 @@ from timApp.document.document import Document
 from timApp.document.post_process import hide_names_in_teacher
 from timApp.item.block import Block, BlockType
 from timApp.markdown.dumboclient import call_dumbo
+from timApp.modules.py.marshmallow_dataclass import class_schema
 from timApp.notification.notify import multi_send_email
 from timApp.plugin.containerLink import call_plugin_answer
 from timApp.plugin.plugin import Plugin, PluginWrap, NEVERLAZY, TaskNotFoundException, is_global, is_global_id, \
@@ -213,19 +214,13 @@ def get_globals_for_tasks(task_ids, answer_map):
     return cnt, answers
 
 
-class UserAnswersForTasksSchema(Schema):
-    tasks = fields.List(fields.Str(), required=True)
-    user = fields.Int(required=True)
-
-    @post_load
-    def make_obj(self, data):
-        return UserAnswersForTasksModel(**data)
-
-
-@attr.s(auto_attribs=True)
+@dataclass
 class UserAnswersForTasksModel:
     tasks: List[str]
     user: int
+
+
+UserAnswersForTasksSchema = class_schema(UserAnswersForTasksModel)
 
 
 @answers.route("/userAnswersForTasks", methods=['POST'])
@@ -268,49 +263,47 @@ def get_answers_for_tasks(args: UserAnswersForTasksModel):
         return abort(400, str(e))
 
 
-class JsRunnerSchema(GenericMarkupSchema):
-    creditField = fields.Str()
-    gradeField = fields.Str()
-    gradingScale = fields.Dict()
-    defaultPoints = fields.Float()
-    failGrade = fields.Str()
-    fieldhelper = fields.Bool()
-    group = fields.Str()
-    groups = fields.List(fields.Str())
-    program = fields.Str()
-    preprogram = fields.Str()
-    postprogram = fields.Str()
-    timeout = fields.Int()
-    updateFields = fields.List(fields.Str())
-    paramFields = fields.List(fields.Str())
-    autoadd = fields.Bool()
-    validonly = fields.Bool()
-    autoUpdateTables = fields.Boolean(default=True)
-    fields = fields.List(fields.Str(), required=True)
+@dataclass
+class JsRunnerModel(GenericMarkupModel):
+    fields: Union[List[str], Missing] = missing  # This is actually required, but we cannot use non-default arguments here...
+    autoadd: Union[bool, Missing] = missing
+    autoUpdateTables: Union[bool, Missing] = True
+    creditField: Union[str, Missing] = missing
+    defaultPoints: Union[float, Missing] = missing
+    failGrade: Union[str, Missing] = missing
+    fieldhelper: Union[bool, Missing] = missing
+    gradeField: Union[str, Missing] = missing
+    gradingScale: Union[Dict[Any, Any], Missing] = missing
+    group: Union[str, Missing] = missing
+    groups: Union[List[str], Missing] = missing
+    paramFields: Union[List[str], Missing] = missing
+    postprogram: Union[str, Missing] = missing
+    preprogram: Union[str, Missing] = missing
+    program: Union[str, Missing] = missing
+    showInView: Union[bool, Missing] = missing
+    timeout: Union[int, Missing] = missing
+    updateFields: Union[List[str], Missing] = missing
+    validonly: Union[bool, Missing] = missing
 
     @validates_schema(skip_on_field_errors=True)
-    def validate_schema(self, data):
+    def validate_schema(self, data, **_):
+        if data.get('fields') is None:
+            raise ValidationError('Missing data for required field.', field_name='fields')
         if data.get('group') is None and data.get('groups') is None:
             raise ValidationError("Either group or groups must be given.")
 
 
-class SendEmailSchema(Schema):
-    rcpts = fields.Str(required=True)
-    msg = fields.Str(required=True)
-    subject = fields.Str(required=True)
-    bccme = fields.Boolean(allow_none=True)
-
-    @post_load
-    def make_obj(self, data):
-        return SendEmailModel(**data)
+JsRunnerSchema = class_schema(JsRunnerModel)
 
 
-@attr.s(auto_attribs=True)
+@dataclass
 class SendEmailModel:
     rcpts: str
     msg: str
     subject: str
-    bccme: Union[bool, _Missing] = missing
+    bccme: Union[bool, Missing, None] = missing
+
+SendEmailSchema = class_schema(SendEmailModel)
 
 
 @answers.route('/sendemail/', methods=['post'])
@@ -468,7 +461,7 @@ def post_answer(plugintype: str, task_id_ext: str):
     upload = None
 
     if plugin.values.get("useCurrentUser", False) or is_global(plugin):  # For plugins that is saved only for current user
-        users = [curr_user];
+        users = [curr_user]
 
     if isinstance(answerdata, dict):
         file = answerdata.get('uploadedFile', '')
@@ -1095,41 +1088,25 @@ def get_jsframe_data(task_id, user_id):
         return abort(400, str(e))
         # return json_response({})
 
-class GetStateSchema(Schema):
-    answer_id = fields.Int(required=True)
-    par_id = fields.Str()
-    doc_id = fields.Str()
-    user_id = fields.Int(required=True)
-    review = fields.Bool(missing=False)
 
-
-    @post_load
-    def make_obj(self, data):
-        return GetStateModel(**data)
-
-
-class GetMultiStatesSchema(Schema):
-    answer_ids = fields.List(fields.Int(), required=True)
-    user_id = fields.Int(required=True)
-
-    @post_load
-    def make_obj(self, data):
-        return GetMultiStatesModel(**data)
-
-
-@attr.s(auto_attribs=True)
+@dataclass
 class GetMultiStatesModel:
     answer_ids: List[int]
     user_id: int
 
+GetMultiStatesSchema = class_schema(GetMultiStatesModel)
 
-@attr.s(auto_attribs=True)
+
+@dataclass
 class GetStateModel:
     answer_id: int
     user_id: int
-    review: bool
-    par_id: Union[str, _Missing] = missing
-    doc_id: Union[str, _Missing] = missing
+    par_id: Optional[str] = None
+    doc_id: Optional[int] = None
+    review: bool = False
+
+
+GetStateSchema = class_schema(GetStateModel)
 
 
 @answers.route("/getMultiStates")
@@ -1173,6 +1150,7 @@ def get_multi_states(args: GetMultiStatesModel):
         html = plug.get_final_output()
         response[ans.id] = {'html': html, 'reviewHtml': None}
     return json_response(response)
+
 
 @answers.route("/getState")
 @use_args(GetStateSchema())

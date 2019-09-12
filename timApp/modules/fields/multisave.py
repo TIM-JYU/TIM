@@ -3,71 +3,45 @@ A button plugin to save other plugins on the same page
 """
 from typing import Union, List
 
-import attr
-from flask import jsonify, render_template_string, Blueprint
-from marshmallow import Schema, fields, post_load
+from dataclasses import dataclass, asdict
+from flask import jsonify, render_template_string, Blueprint, request
 from marshmallow.utils import missing
-from webargs.flaskparser import use_args
 
-from pluginserver_flask import GenericMarkupModel, GenericMarkupSchema, GenericHtmlSchema, GenericHtmlModel, \
+from marshmallow_dataclass import class_schema
+from pluginserver_flask import GenericMarkupModel, GenericHtmlModel, \
     Missing, \
-    InfoSchema, render_multihtml
+    render_multihtml
 
 multisave_route = Blueprint('ms', __name__, url_prefix="/ms")
 
 
-# @attr.s(auto_attribs=True)
+@dataclass
 class MultisaveStateModel:
     """Model for the information that is stored in TIM database for each answer."""
-    # userword: str
 
 
-@attr.s(auto_attribs=True)
+@dataclass
 class MultisaveMarkupModel(GenericMarkupModel):
-    jumplink: Union[str, Missing] = missing
-    jumptarget: Union[str, Missing] = missing
     areas: Union[List[str], Missing] = missing
-    tags: Union[List[str], Missing] = missing
     autoUpdateDuplicates: Union[bool, Missing] = True
     autoUpdateTables: Union[bool, Missing] = True
-    emailMode: Union[bool, Missing] = False
-    emailRecipients: Union[List[str], Missing] = missing
-    emailPreMsg: Union[str, Missing] = missing
-    emailSubject: Union[str, Missing] = missing
     destCourse: Union[str, Missing] = missing
+    emailMode: Union[bool, Missing] = missing
+    emailPreMsg: Union[str, Missing, None] = missing
+    emailRecipients: Union[List[str], Missing] = missing
+    emailSubject: Union[str, Missing] = missing
     fields: Union[List[str], Missing] = missing
+    jumplink: Union[str, Missing, None] = missing
+    jumptarget: Union[str, Missing, None] = missing
+    tags: Union[List[str], Missing] = missing
 
 
-class MultisaveMarkupSchema(GenericMarkupSchema):
-    jumplink = fields.String(allow_none=True)
-    jumptarget = fields.String(allow_none=True)
-    areas = fields.List(fields.Str())
-    tags = fields.List(fields.Str())
-    autoUpdateDuplicates = fields.Boolean(default=True)
-    autoUpdateTables = fields.Boolean(default=True)
-    emailMode = fields.Boolean(default=False)
-    emailRecipients = fields.List(fields.Str())
-    emailPreMsg = fields.String(allow_none=True)
-    emailSubject = fields.String()
-    destCourse = fields.String()
-    fields = fields.List(fields.Str())  # Keep this last
-
-    @post_load
-    def make_obj(self, data):
-        return MultisaveMarkupModel(**data)
-
-
-@attr.s(auto_attribs=True)
+@dataclass
 class MultisaveInputModel:
     """Model for the information that is sent from browser (plugin AngularJS component)."""
 
 
-class MultisaveAttrs(Schema):
-    """Common fields for HTML and answer routes."""
-    markup = fields.Nested(MultisaveMarkupSchema)
-
-
-@attr.s(auto_attribs=True)
+@dataclass
 class MultisaveHtmlModel(GenericHtmlModel[MultisaveInputModel, MultisaveMarkupModel, MultisaveStateModel]):
 
     def get_component_html_name(self) -> str:
@@ -75,19 +49,6 @@ class MultisaveHtmlModel(GenericHtmlModel[MultisaveInputModel, MultisaveMarkupMo
 
     def get_static_html(self) -> str:
         return render_static_multisave(self)
-
-    def get_browser_json(self):
-        r = super().get_browser_json()
-        return r
-
-
-class MultisaveHtmlSchema(MultisaveAttrs, GenericHtmlSchema):
-    info = fields.Nested(InfoSchema, allow_none=True, required=True)
-
-    @post_load
-    def make_obj(self, data):
-        # noinspection PyArgumentList
-        return MultisaveHtmlModel(**data)
 
 
 def render_static_multisave(m: MultisaveHtmlModel):
@@ -97,17 +58,16 @@ def render_static_multisave(m: MultisaveHtmlModel):
 {{ buttonText or button or "Save" }}
 </button>
 </div>""".strip(),
-        **attr.asdict(m.markup),
+        **asdict(m.markup),
     )
 
 
-MULTISAVE_HTML_SCHEMA = MultisaveHtmlSchema()
+MultisaveHtmlSchema = class_schema(MultisaveHtmlModel)
 
 
 @multisave_route.route('/multihtml/', methods=['post'])
-@use_args(GenericHtmlSchema(many=True), locations=("json",))
-def ms_multihtml(args):  # args: List[GenericHtmlSchema]):
-    ret = render_multihtml(MULTISAVE_HTML_SCHEMA, args)
+def ms_multihtml():
+    ret = render_multihtml(request.get_json(), MultisaveHtmlSchema())
     return ret
 
 

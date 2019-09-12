@@ -1,95 +1,52 @@
 """
 TIM plugin: a radiobutton field
 """
-import attr
-from flask import jsonify, render_template_string, Blueprint
-from marshmallow import fields, post_load
-from marshmallow.utils import _Missing
+import json
+from typing import Union, List, Dict
+
+from dataclasses import dataclass, asdict
+from flask import jsonify, render_template_string, Blueprint, request
+from marshmallow.utils import missing
 from webargs.flaskparser import use_args
 
-from pluginserver_flask import GenericMarkupModel, GenericMarkupSchema, GenericHtmlSchema, GenericHtmlModel, \
-    GenericAnswerSchema, GenericAnswerModel, Missing, \
-    InfoSchema, Schema, render_multihtml, render_multimd
-import json
-from typing import Union, List
-
-from marshmallow.utils import missing
+from marshmallow_dataclass import class_schema
+from pluginserver_flask import GenericMarkupModel, GenericHtmlModel, \
+    GenericAnswerModel, Missing, \
+    render_multihtml, render_multimd
 
 goaltable_route = Blueprint('goaltable', __name__, url_prefix="/goaltable")
 
 
-@attr.s(auto_attribs=True)
+@dataclass
 class GoalTableStateModel:
     """Model for the information that is stored in TIM database for each answer."""
-    c: Union[dict, _Missing] = None
-    styles: Union[dict, _Missing] = None
-
-class GoalTableStateSchema(Schema):
-    # c = fields.Raw(required=True, allow_none=True)
-    c = fields.Dict(keys=fields.Str(), values=fields.Str())
-    styles = fields.Dict(keys=fields.Str(), values=fields.Str())
-
-    @post_load
-    def make_obj(self, data):
-        res = GoalTableStateModel(**data)
-        return res
+    c: Union[Dict[str, str], Missing] = missing
+    styles: Union[Dict[str, str], Missing] = missing
 
 
-@attr.s(auto_attribs=True)
+@dataclass
 class GoalTableMarkupModel(GenericMarkupModel):
-    buttonText: Union[str, Missing] = missing
-    editText: Union[str, Missing] = missing
-    goalText: Union[str, Missing] = missing
-    bloom: Union[bool, Missing] = missing
-    borders: Union[bool, Missing] = missing
-    goals: Union[List[str], Missing] = missing
-    goalscale: Union[List[str], Missing] = missing
-    mingoal: Union[int, Missing] = missing
-    maxgoal: Union[int, Missing] = missing
-    initgoal: Union[int, Missing] = missing
+    buttonText: Union[str, Missing, None] = missing
+    editText: Union[str, Missing, None] = missing
+    goalText: Union[str, Missing, None] = missing
+    bloom: Union[bool, Missing, None] = missing
+    borders: Union[bool, Missing, None] = missing
+    goals: Union[List[str], Missing, None] = missing
+    goalscale: Union[List[str], Missing, None] = missing
+    mingoal: Union[int, Missing, None] = missing
+    maxgoal: Union[int, Missing, None] = missing
+    initgoal: Union[int, Missing, None] = missing
 
 
-class GoalTableMarkupSchema(GenericMarkupSchema):
-    buttonText = fields.Str(allow_none=True)
-    editText = fields.Str(allow_none=True)
-    goalText = fields.Str(allow_none=True)
-    bloom = fields.Bool(allow_none=True)
-    borders = fields.Bool(allow_none=True)
-    goals = fields.List(fields.Str(allow_none=True))
-    goalscale = fields.List(fields.Str(allow_none=True))
-    mingoal = fields.Int(allow_none=True)
-    maxgoal = fields.Int(allow_none=True)
-    initgoal = fields.Int(allow_none=True)
-
-    @post_load
-    def make_obj(self, data):
-        return GoalTableMarkupModel(**data)
-
-
-@attr.s(auto_attribs=True)
+@dataclass
 class GoalTableInputModel:
     """Model for the information that is sent from browser (plugin AngularJS component)."""
     # c: str
-    c: Union[dict, _Missing] = None
-    nosave: bool = missing
-
-class GoalTableInputSchema(Schema):
-    # c = fields.Str(required=True)
-    c = fields.Dict(keys=fields.Str(), values=fields.Str())
-    nosave = fields.Bool()
-
-    @post_load
-    def make_obj(self, data):
-        return GoalTableInputModel(**data)
+    c: Union[Dict[str, str], Missing] = missing
+    nosave: Union[bool, Missing] = missing
 
 
-class GoalTableAttrs(Schema):
-    """Common fields for HTML and answer routes."""
-    markup = fields.Nested(GoalTableMarkupSchema)
-    state = fields.Nested(GoalTableStateSchema, allow_none=True, required=True)
-
-
-@attr.s(auto_attribs=True)
+@dataclass
 class GoalTableHtmlModel(GenericHtmlModel[GoalTableInputModel, GoalTableMarkupModel, GoalTableStateModel]):
     def get_component_html_name(self) -> str:
         return 'goaltable-runner'
@@ -99,11 +56,6 @@ class GoalTableHtmlModel(GenericHtmlModel[GoalTableInputModel, GoalTableMarkupMo
 
     def get_static_html(self) -> str:
         return render_static_goaltable(self)
-
-    def get_browser_json(self):
-        r = super().get_browser_json()
-        # r['state']['separator'] = ";"
-        return r
 
     def get_md(self):
         return render_md_goaltable(self)
@@ -117,28 +69,9 @@ class GoalTableHtmlModel(GenericHtmlModel[GoalTableInputModel, GoalTableMarkupMo
         return "<pre>review</pre>"
 
 
-
-class GoalTableHtmlSchema(GoalTableAttrs, GenericHtmlSchema):
-    info = fields.Nested(InfoSchema, allow_none=True, required=True)
-
-    @post_load
-    def make_obj(self, data):
-        # noinspection PyArgumentList
-        return GoalTableHtmlModel(**data)
-
-
-@attr.s(auto_attribs=True)
+@dataclass
 class GoalTableAnswerModel(GenericAnswerModel[GoalTableInputModel, GoalTableMarkupModel, GoalTableStateModel]):
     pass
-
-
-class GoalTableAnswerSchema(GoalTableAttrs, GenericAnswerSchema):
-    input = fields.Nested(GoalTableInputSchema, required=False)
-
-    @post_load
-    def make_obj(self, data):
-        # noinspection PyArgumentList
-        return GoalTableAnswerModel(**data)
 
 
 def render_static_goaltable(m: GoalTableHtmlModel):
@@ -170,7 +103,7 @@ def render_static_goaltable(m: GoalTableHtmlModel):
     template += table
     template += """<p class ="plgfooter" > {{''}} </p>
 </div>"""
-    return render_template_string(template.strip(), **attr.asdict(m.markup),
+    return render_template_string(template.strip(), **asdict(m.markup),
     )
 
 
@@ -206,19 +139,19 @@ def render_md_goaltable(m: GoalTableHtmlModel):
     return result
 
 
-GOALTABLE_FIELD_HTML_SCHEMA = GoalTableHtmlSchema()
+GoalTableHtmlSchema = class_schema(GoalTableHtmlModel)
+GoalTableAnswerSchema = class_schema(GoalTableAnswerModel)
+
 
 @goaltable_route.route('/multihtml/', methods=['post'])
-@use_args(GenericHtmlSchema(many=True), locations=("json",))
-def goaltable_multihtml(args):  # args: List[GenericHtmlSchema]):
-    ret = render_multihtml(GOALTABLE_FIELD_HTML_SCHEMA, args)
+def goaltable_multihtml():
+    ret = render_multihtml(request.get_json(), GoalTableHtmlSchema())
     return ret
 
 
 @goaltable_route.route('/multimd/', methods=['post'])
-@use_args(GenericHtmlSchema(many=True), locations=("json",))
-def goaltable_multimd(args):  # args: List[GenericHtmlSchema]):
-    ret = render_multimd(GOALTABLE_FIELD_HTML_SCHEMA, args)
+def goaltable_multimd():
+    ret = render_multimd(request.get_json(), GoalTableHtmlSchema)
     return ret
 
 
