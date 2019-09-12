@@ -478,8 +478,8 @@ timApp.component("timSidebarMenu", {
 </div>
 <uib-tabset id="menuTabs" active="$ctrl.active" class="hidden-sm hidden-xs">
     <uib-tab ng-if="!$ctrl.hideLinks && $ctrl.users.isLoggedIn()" index="6">
-        <uib-tab-heading>
-            <i class="glyphicon glyphicon-bookmark"></i>
+        <uib-tab-heading title="bookmarks">
+            <i class="glyphicon glyphicon-bookmark" title="bookmarks"></i>
         </uib-tab-heading>
         <h5>Bookmarks</h5>
         <bookmarks data="$ctrl.bookmarks"></bookmarks>
