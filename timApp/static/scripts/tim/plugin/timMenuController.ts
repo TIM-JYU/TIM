@@ -92,6 +92,7 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
     private topMenuVisible: boolean = false; // Meant to curb unnecessary topMenu state changes.
     private previouslyScrollingDown: boolean = true;
     private userPrefersHoverDisabled: boolean = false;
+    private touchMode: boolean = false; // If a touch event has been detected in HTML body.
 
     getDefaultMarkup() {
         return {};
@@ -141,12 +142,11 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
         onClick("body", ($this, e) => {
             this.onClick(e);
         });
-
         if (genericglobals().userPrefs.disable_menu_hover) {
             this.userPrefersHoverDisabled = genericglobals().userPrefs.disable_menu_hover;
         }
-        this.userRights = this.vctrl.item.rights;
         this.hoverOpen = this.attrs.hoverOpen && !this.userPrefersHoverDisabled;
+        this.userRights = this.vctrl.item.rights;
         this.setBarStyles();
     }
 
@@ -163,8 +163,8 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
      * @param clicked Toggled by a mouse click.
      */
     toggleSubmenu(item: ITimMenuItem, parent1: ITimMenuItem | undefined, parent2: ITimMenuItem | undefined, clicked: boolean) {
-        // If called by mouseenter and hover open is disabled, do nothing.
-        if (!clicked && !this.hoverOpen) {
+        // If called by mouseenter and either hover open is off or touch mode is on, do nothing.
+        if (!clicked && (!this.hoverOpen || this.touchMode)) {
             return;
         }
         // Toggle open menu closed and back again when clicking.
@@ -272,6 +272,7 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
             placeholderContent.classList.add("tim-menu-hidden");
             this.topMenuVisible = false;
         }
+        this.scope.$evalAsync();
     }
 
     /**
@@ -368,9 +369,9 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
      * @param e Click event.
      */
     private onClick(e: JQuery.Event) {
-        if (e.type.includes("touch")) {
-            this.hoverOpen = false;
-        }
+        // console.log("onClick, " + e.type);
+        // Detect touch screen when touch event happens.
+        this.touchMode = e.type.includes("touch");
         if (this.mouseInside) {
             this.clickedInside = true;
         } else {
@@ -383,6 +384,7 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
      * Handle mouseleave event.
      */
     private mouseLeave() {
+        // console.log("mouseLeave");
         this.mouseInside = false;
         // Only close menus on mouseleave, if hoverOpen is enabled and menu hasn't been clicked.
         if (!this.clickedInside && this.hoverOpen) {
@@ -391,6 +393,7 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
     }
 
     private mouseEnter() {
+        // console.log("mouseEnter");
         this.mouseInside = true;
     }
 
