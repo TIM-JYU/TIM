@@ -975,7 +975,7 @@ needed_len: 6
         s = {'userword': 'bbbb'}
         self.assert_plugin_json(r.cssselect('.parContent pali-runner')[0],
                                 self.create_plugin_json(
-                                    d, 't5', state=s, toplevel=s,
+                                    d, 't5', state=s,
                                     info={
                                         'earlier_answers': 1,
                                         'look_answer': False,
@@ -1061,7 +1061,7 @@ needed_len: 6
 
         r = self.get(d.url, as_tree=True)
         s = {'userword': '6'}
-        expected_json = self.create_plugin_json(d, 't', state=s, toplevel=s, par_id='points',
+        expected_json = self.create_plugin_json(d, 't', state=s, par_id='points',
                                                 info={'earlier_answers': 1,
                                                       'look_answer': False,
                                                       'max_answers': None, 'user_id': 'testuser1', 'valid': True}, )
@@ -1099,7 +1099,7 @@ needed_len: 6
         r = self.get(tr.url, as_tree=True)
         self.assert_plugin_json(
             r.cssselect('.parContent pali-runner')[0],
-            self.create_plugin_json(d, 't', state=s, toplevel=s, par_id='SSYigUyqdb7p',
+            self.create_plugin_json(d, 't', state=s, par_id='SSYigUyqdb7p',
                                     info={'earlier_answers': 1,
                                           'look_answer': False,
                                           'max_answers': None, 'user_id': 'testuser1', 'valid': True}, ))

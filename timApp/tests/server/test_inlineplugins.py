@@ -65,7 +65,6 @@ Hi {#t3#} $x$
                 "valid": True,
             },
             state=s,
-            toplevel=s,
         )
         self.assert_same_html(e, f"""
 <div class="par" id="Lm7y6R7n5XIb" t="MHgyN2U5NDhhMA==" attrs='{{"defaultplugin": "pali"}}'>
