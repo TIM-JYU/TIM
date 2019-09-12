@@ -4,7 +4,7 @@
 import angular from "angular";
 import * as t from "io-ts";
 import {ITimComponent, ViewCtrl} from "tim/document/viewctrl";
-import {GenericPluginMarkup, Info, withDefault} from "tim/plugin/attributes";
+import {GenericPluginMarkup, Info, nullable, withDefault} from "tim/plugin/attributes";
 import {PluginBase, pluginBindings, shuffleStrings} from "tim/plugin/util";
 import {$http} from "tim/util/ngimport";
 import {to} from "tim/util/utils";
@@ -28,12 +28,12 @@ const DropdownMarkup = t.intersection([
 ]);
 const DropdownAll = t.intersection([
     t.partial({
-        c: t.string,
     }),
     t.type({
         info: Info,
         markup: DropdownMarkup,
         preview: t.boolean,
+        state: nullable(t.type({c: t.string})),
     }),
 ]);
 
@@ -53,7 +53,7 @@ class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.T
 
     $onInit() {
         super.$onInit();
-        this.selectedWord = this.attrsall.c;
+        this.selectedWord = (this.attrsall.state && this.attrsall.state.c) || undefined;
         this.shuffle = this.attrs.shuffle;
         if (this.shuffle && this.attrs.words) {
             this.wordList = shuffleStrings(this.attrs.words);

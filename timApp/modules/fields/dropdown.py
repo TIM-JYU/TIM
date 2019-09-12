@@ -52,12 +52,6 @@ class DropdownHtmlModel(GenericHtmlModel[DropdownInputModel, DropdownMarkupModel
     def get_static_html(self) -> str:
         return render_static_dropdown(self)
 
-    def get_browser_json(self):
-        r = super().get_browser_json()
-        if self.state:
-            r['c'] = self.state.c
-        return r
-
 
 @dataclass
 class DropdownAnswerModel(GenericAnswerModel[DropdownInputModel, DropdownMarkupModel, DropdownStateModel]):

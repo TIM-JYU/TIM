@@ -71,11 +71,6 @@ class ImportDataHtmlModel(GenericHtmlModel[ImportDataInputModel, ImportDataMarku
         s = self.markup.beforeOpen or "+ Open Import"
         return render_static_import_data(self, s)
 
-    def get_browser_json(self):
-        r = super().get_browser_json()
-        # r['state']['separator'] = ";"
-        return r
-
     def get_md(self):
         return ""
 

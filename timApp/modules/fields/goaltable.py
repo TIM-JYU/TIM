@@ -57,11 +57,6 @@ class GoalTableHtmlModel(GenericHtmlModel[GoalTableInputModel, GoalTableMarkupMo
     def get_static_html(self) -> str:
         return render_static_goaltable(self)
 
-    def get_browser_json(self):
-        r = super().get_browser_json()
-        # r['state']['separator'] = ";"
-        return r
-
     def get_md(self):
         return render_md_goaltable(self)
 

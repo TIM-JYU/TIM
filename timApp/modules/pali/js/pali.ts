@@ -34,11 +34,11 @@ const PaliMarkup = t.intersection([
     }),
 ]);
 const PaliAll = t.intersection([
-    t.partial({
-        userword: t.string,
-    }),
     GenericPluginTopLevelFields,
-    t.type({markup: PaliMarkup}),
+    t.type({
+        markup: PaliMarkup,
+        state: nullable(t.type({userword: t.string})),
+    }),
 ]);
 
 function isPalindrome(s: string) {
@@ -70,7 +70,7 @@ class PaliController extends PluginBase<t.TypeOf<typeof PaliMarkup>, t.TypeOf<ty
 
     $onInit() {
         super.$onInit();
-        this.userword = this.attrsall.userword || this.attrs.initword || "";
+        this.userword = (this.attrsall.state && this.attrsall.state.userword) || this.attrs.initword || "";
         this.modelOpts = {debounce: this.autoupdate};
         this.checkPalindrome();
     }

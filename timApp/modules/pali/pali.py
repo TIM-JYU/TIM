@@ -58,12 +58,6 @@ class PaliHtmlModel(GenericHtmlModel[PaliInputModel, PaliMarkupModel, PaliStateM
     def get_static_html(self) -> str:
         return render_static_pali(self)
 
-    def get_browser_json(self):
-        r = super().get_browser_json()
-        if self.state:
-            r['userword'] = self.state.userword
-        return r
-
 
 PaliHtmlSchema = class_schema(PaliHtmlModel)
 

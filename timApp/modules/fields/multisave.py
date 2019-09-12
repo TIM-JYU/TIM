@@ -50,10 +50,6 @@ class MultisaveHtmlModel(GenericHtmlModel[MultisaveInputModel, MultisaveMarkupMo
     def get_static_html(self) -> str:
         return render_static_multisave(self)
 
-    def get_browser_json(self):
-        r = super().get_browser_json()
-        return r
-
 
 def render_static_multisave(m: MultisaveHtmlModel):
     return render_template_string("""

@@ -55,12 +55,6 @@ class DragHtmlModel(GenericHtmlModel[DragInputModel, DragMarkupModel, DragStateM
     def get_static_html(self) -> str:
         return render_static_drag(self)
 
-    def get_browser_json(self):
-        r = super().get_browser_json()
-        if self.state:
-            r['c'] = self.state.c
-        return r
-
 
 @dataclass
 class DragAnswerModel(GenericAnswerModel[DragInputModel, DragMarkupModel, DragStateModel]):
