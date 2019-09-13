@@ -6,14 +6,14 @@ import {IRootElementService, IScope} from "angular";
 import {ngStorage} from "ngstorage";
 import * as focusMe from "tim/ui/focusMe";
 import {DialogController, registerDialogComponent, showDialog} from "../ui/dialog";
-import {$localStorage} from "../util/ngimport";
-import {markAsUsed} from "../util/utils";
+import {$http, $localStorage} from "../util/ngimport";
+import {markAsUsed, to} from "../util/utils";
 import {IItem} from "./IItem";
 
 markAsUsed(focusMe);
 
 /**
- * Partition document.
+ * Partition document by reloading.
  * @param b First shown par index.
  * @param e Last shown par incex.
  * @param doc Document.
@@ -23,13 +23,50 @@ export function partitionDocument(b: number, e: number, doc: Document) {
 }
 
 /**
- * Disable document view range.
+ * Disable document partitioning by reloading.
  * @param doc Document.
  */
 export function unpartitionDocument(doc: Document) {
     if (doc.location.search.toString().includes("&e=")) {
         doc.location.search = "";
     }
+}
+
+export async function unsetViewRange() {
+    const r = await to($http.get<number>(`/viewrange/unset`));
+    if (!r.ok) {
+        console.log("Failed to remove view range cookie: " + r);
+    } else {
+        console.log("View range cookie set as -1");
+    }
+}
+
+export async function setViewRange(range: number) {
+    const data = {range: range};
+    const r = await to($http.post(`/viewrange/set`, data));
+    if (!r.ok) {
+        console.log("Failed to set view range cookie: " + r);
+    } else {
+        console.log("View range cookie created with value: " + range);
+    }
+}
+
+export async function getViewRange(): Promise<number | undefined> {
+    const r = await to($http.get<number>(`/viewrange/get`));
+    if (!r.ok) {
+        console.log("View range cookie not found: " + r.result.data);
+    } else {
+        console.log("View range cookie found with value: " + r.result.data);
+        return r.result.data;
+    }
+}
+
+export async function nextSet(b: number, preferredSetSize: number) {
+    // TODO: Route returns set begin and end indices.
+}
+
+export async function previousSet(e: number, preferredSetSize: number) {
+    // TODO: Route returns set begin and end indices.
 }
 
 /*
@@ -92,7 +129,8 @@ export class ViewRangeEditController extends DialogController<{ params: IItem },
     private ok() {
         this.saveValues();
         if (this.partitionDocumentsSetting) {
-            partitionDocument(0, this.viewRangeSetting, document);
+            setViewRange(this.viewRangeSetting);
+            // partitionDocument(0, this.viewRangeSetting, document);
         } else {
             unpartitionDocument(document);
         }

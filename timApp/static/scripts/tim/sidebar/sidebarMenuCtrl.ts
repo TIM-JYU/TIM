@@ -8,12 +8,18 @@ import {getActiveDocument} from "../document/document";
 import {IDocSettings} from "../document/IDocSettings";
 import {showMergePdfDialog} from "../document/minutes/mergePdfCtrl";
 import {ViewCtrl} from "../document/viewctrl";
-import {DocumentOrFolder, IDocument, isRootFolder, redirectToItem} from "../item/IItem";
+import {DocumentOrFolder, IDocument, isRootFolder, ITag, redirectToItem} from "../item/IItem";
 import {IRelevanceResponse} from "../item/relevanceEdit";
 import {showRelevanceEditDialog} from "../item/relevanceEditDialog";
 import {showTagDialog} from "../item/tagCtrl";
 import {showTagSearchDialog} from "../item/tagSearchCtrl";
-import {partitionDocument, showViewRangeEditDialog, unpartitionDocument} from "../item/viewRangeEditDialog";
+import {
+    getViewRange,
+    partitionDocument,
+    setViewRange,
+    showViewRangeEditDialog,
+    unpartitionDocument, unsetViewRange
+} from "../item/viewRangeEditDialog";
 import {ILecture, ILectureListResponse2} from "../lecture/lecturetypes";
 import {ITemplateParams, showPrintDialog} from "../printing/printCtrl";
 import {showConsentDialog} from "../ui/consent";
@@ -134,6 +140,7 @@ export class SidebarMenuCtrl implements IController {
         if (this.item) {
             this.showFolderSettings = this.users.isLoggedIn() && this.item.isFolder;
         }
+
         this.loadViewRangeSettings();
         // await this.processConsent();
     }
@@ -459,17 +466,20 @@ export class SidebarMenuCtrl implements IController {
         }
     }
 
-    private toggleViewRange() {
-        if (this.vctrl && this.item) {
-            if (this.partitionDocumentsSetting) {
-                this.partitionDocumentsSetting = false;
-                this.storage.partitionDocuments = false;
-                unpartitionDocument(document);
-            } else {
-                this.partitionDocumentsSetting = true;
-                this.storage.partitionDocuments = true;
-                partitionDocument(0, this.viewRangeSetting, document);
-            }
+    private async toggleViewRange() {
+        // TODO: Make view range in use and view range set by user separate;
+        // if in use range is undefined, view range is not in use.
+        if (!(this.vctrl && this.item)) {
+            return;
+        }
+        const currentViewRange = await getViewRange();
+        if (currentViewRange && currentViewRange > 0) {
+            console.log(currentViewRange);
+            unsetViewRange();
+            unpartitionDocument(document);
+        } else {
+            setViewRange(this.viewRangeSetting);
+            partitionDocument(0, this.viewRangeSetting, document);
         }
     }
 
@@ -496,7 +506,7 @@ export class SidebarMenuCtrl implements IController {
         redirectToItem(doc);
     }
 
-    private loadViewRangeSettings() {
+    private async loadViewRangeSettings() {
         if (this.storage.partitionDocuments != null) {
             this.partitionDocumentsSetting = this.storage.partitionDocuments;
         }

@@ -5,8 +5,7 @@ from typing import Tuple, Union, Optional, List
 
 import attr
 from dataclasses import dataclass
-from flask import Blueprint, render_template
-from flask import abort
+from flask import Blueprint, render_template, make_response, Request, abort
 from flask import current_app
 from flask import flash
 from flask import g
@@ -57,6 +56,7 @@ from timApp.util.utils import get_error_message
 from timApp.util.utils import remove_path_special_chars, Range, seq_to_str
 
 DEFAULT_RELEVANCE = 10
+DEFAULT_VIEWRANGE = 20
 
 view_page = Blueprint('view_page',
                       __name__,
@@ -291,6 +291,12 @@ def view(item_path, template_name, usergroup=None, route="view"):
     except (ValueError, TypeError):
         view_range = None
     start_index = max(view_range[0], 0) if view_range else 0
+
+    current_set_size = get_viewrange_from_cookie(request)
+    print(current_set_size) # TODO: ?
+    # If current_set_size exists, load document according to it.
+    if current_set_size and current_set_size > 0:
+        view_range = decide_set_indices(doc_info, current_set_size, view_range)
 
     doc, xs = get_document(doc_info, view_range)
     g.doc = doc
@@ -755,3 +761,60 @@ def get_document_relevance(i: DocInfo) -> int:
 
     # If parents don't have relevance either, return default value as relevance.
     return DEFAULT_RELEVANCE
+
+
+@view_page.route('/viewrange/unset')
+def unset_viewrange():
+    resp = make_response()
+    resp.set_cookie(key="r", value="-1")
+    return resp
+
+
+@view_page.route('/viewrange/set', methods=["POST"])
+def set_viewrange():
+    """
+    Add cookie for user defined view range (if isn't set, doc won't be partitioned).
+    :return: Response.
+    """
+    range, = verify_json_params('range')
+    if not range or range < 1:
+        range = DEFAULT_VIEWRANGE
+    resp = make_response()
+    resp.set_cookie(key="r", value=str(range))
+    print(resp)
+    return resp
+
+
+@view_page.route('/viewrange/get')
+def get_viewrange():
+    print(get_viewrange_from_cookie(request))
+    range = get_viewrange_from_cookie(request)
+    return json_response(range)
+
+
+def get_viewrange_from_cookie(request: Request):
+    r = request.cookies.get("r")
+    try:
+        return int(r)
+    except:
+        return None
+
+
+def decide_set_indices(doc_info: DocInfo, preferred_set_size: int, view_range, index: int = 0, ascending: bool = True, min_set_size_modifier: float = 0.5):
+    """
+    Decide begin and end indices of paragraph set based on preferred size, areas and number of remaining paragraphs.
+
+    If set_size is 50 and modifier 0.5, this will combine neighboring set if its size is 25 or less.
+
+    :param doc_info: Document.
+    :param preferred_set_size: User defined set size. May change depending on document.
+    :param view_range:
+    :param index:
+    :param ascending: Index is the start index if true, end index if false (i.e. True = next, False = previous).
+    :param min_set_size_modifier: Smallest allowed neighboring set compared to set size.
+    :return:
+    """
+    # TODO: Don't cut areas.
+    # TODO: Combine following set if it's smaller than given fraction of set size.
+    # TODO: Allow going forward (or to the first set) and backward.
+    return view_range
