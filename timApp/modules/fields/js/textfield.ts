@@ -37,15 +37,21 @@ const TextfieldMarkup = t.intersection([
     }),
 ]);
 const TextfieldAll = t.intersection([
-    t.partial({
-    }),
+    t.partial({}),
     t.type({
         info: Info,
         markup: TextfieldMarkup,
         preview: t.boolean,
-        state: nullable(t.type({
-            c: t.union([t.string, t.number, t.null]),
-            styles: nullable(t.dictionary(t.string, t.string))})),
+        state: nullable(
+            t.intersection([
+                t.type({
+                    c: t.union([t.string, t.number, t.null]),
+                }),
+                t.partial({
+                    styles: nullable(t.record(t.string, t.string)),
+                }),
+            ]),
+        ),
     }),
 ]);
 
@@ -402,10 +408,10 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
         ele.css("height",  ele.prop("scrollHeight") + "px");
     }
 
-    getHeight(){
+    getHeight() {
         const ele = this.element.find(".textarea").first();
         // const ele = angular.element(element);
-        if(!this.attrs.autogrow){
+        if (!this.attrs.autogrow) {
             return parseFloat(ele.css("height"));
         }
         return ele.prop("scrollHeight");

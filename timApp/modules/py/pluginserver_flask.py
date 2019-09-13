@@ -20,7 +20,7 @@ import json
 from enum import Enum
 from typing import Optional, Union, TypeVar, Generic, Dict, List, Type
 
-from dataclasses import dataclass, field, asdict
+from dataclasses import dataclass, field, is_dataclass, fields
 from flask import Blueprint, request
 from flask import render_template_string, jsonify, Flask
 from marshmallow import pre_load, ValidationError, Schema
@@ -51,8 +51,19 @@ class InfoModel:
 InfoSchema = class_schema(InfoModel)
 
 
+def asdict_skip_missing(obj):
+    result = []
+    for f in fields(obj):
+        v = getattr(obj, f.name)
+        if v is missing:
+            continue
+        value = asdict_skip_missing(v) if is_dataclass(v) else v
+        result.append((f.name, value))
+    return dict(result)
+
+
 def list_not_missing_fields(inst):
-    return ((k, v) for k, v in asdict(inst).items() if getattr(inst, k) is not missing)
+    return list(((k, v) for k, v in asdict_skip_missing(inst).items()))
 
 
 @dataclass

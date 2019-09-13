@@ -45,9 +45,16 @@ const NumericfieldAll = t.intersection([
         info: Info,
         markup: NumericfieldMarkup,
         preview: t.boolean,
-        state: nullable(t.type({
-            c: t.union([t.string, t.number, t.null]),
-            styles: nullable(t.dictionary(t.string, t.string))})),
+        state: nullable(
+            t.intersection([
+                t.type({
+                    c: t.union([t.string, t.number, t.null]),
+                }),
+                t.partial({
+                    styles: nullable(t.record(t.string, t.string)),
+                }),
+            ]),
+        ),
     }),
 ]);
 
