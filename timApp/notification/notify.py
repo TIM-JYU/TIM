@@ -86,8 +86,8 @@ def send_email(
         rcpt: str,
         subject: str,
         msg: str,
-        mail_from: str = 'tim@jyu.fi',
-        reply_to: str = 'no-reply@tim.jyu.fi',
+        mail_from: str = app.config['HELP_EMAIL'],
+        reply_to: str = app.config['NOREPLY_EMAIL'],
 ) -> Optional[Thread]:
     if is_testing():
         sent_mails_in_testing.append(locals())
@@ -106,8 +106,8 @@ def send_email_impl(
         rcpt: str,
         subject: str,
         msg: str,
-        mail_from: str = 'tim@jyu.fi',
-        reply_to: str = 'no-reply@tim.jyu.fi',
+        mail_from: str = app.config['HELP_EMAIL'],
+        reply_to: str = app.config['NOREPLY_EMAIL'],
 ):
     with flask_app.app_context():
         mime_msg = MIMEText(msg + flask_app.config['MAIL_SIGNATURE'])
@@ -136,8 +136,8 @@ def multi_send_email(
         rcpt: str,
         subject: str,
         msg: str,
-        mail_from: str = 'tim@jyu.fi',
-        reply_to: str = 'no-reply@tim.jyu.fi',
+        mail_from: str = app.config['HELP_EMAIL'],
+        reply_to: str = app.config['NOREPLY_EMAIL'],
         bcc: str = ''
 ) -> Optional[Thread]:
     if is_testing():
@@ -157,8 +157,8 @@ def multi_send_email_impl(
         rcpt: str,
         subject: str,
         msg: str,
-        mail_from: str = 'tim@jyu.fi',
-        reply_to: str = 'no-reply@tim.jyu.fi',
+        mail_from: str = app.config['HELP_EMAIL'],
+        reply_to: str = app.config['NOREPLY_EMAIL'],
         bcc: str = ''
 ):
     with flask_app.app_context():
@@ -404,7 +404,7 @@ def process_pending_notifications():
                 user.email,
                 subject,
                 msg,
-                mail_from='tim@jyu.fi',
+                mail_from=app.config['NOREPLY_EMAIL'],
                 reply_to=reply_to,
             )
             if result:

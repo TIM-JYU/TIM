@@ -103,8 +103,9 @@ class CommentTest(NotifyTestBase):
         self.post_comment(par, True, 'good morning')
         self.post_par(d.document, 'edited', par.get_id())  # test also mixing comments and doc modifications
         self.assertEqual(1, len(sent_mails_in_testing))
+        mail_from = 'no-reply@tim.jyu.fi'
         self.assertEqual(
-            {'mail_from': 'tim@jyu.fi',
+            {'mail_from': mail_from,
              'msg': 'Comment posted: '
                     f'{d.url}#{par.get_id()}\n'
                     '\n'
@@ -116,7 +117,7 @@ class CommentTest(NotifyTestBase):
         process_pending_notifications()
         self.assertEqual(3, len(sent_mails_in_testing))
         self.assertEqual(
-            {'mail_from': 'tim@jyu.fi',
+            {'mail_from': mail_from,
              'msg': 'Comment posted: '
                     f'{d.url}#{par.get_id()}\n'
                     '\n'
@@ -136,7 +137,7 @@ class CommentTest(NotifyTestBase):
              'subject': f'2 people posted 3 comments to the document {d.title}'},
             sent_mails_in_testing[-2])
         self.assertEqual(
-            {'mail_from': 'tim@jyu.fi',
+            {'mail_from': mail_from,
              'msg': 'Paragraph modified: '
                     f'{d.url}#{par.get_id()}',
              'rcpt': 'test2@example.com',

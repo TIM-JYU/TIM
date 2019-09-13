@@ -50,6 +50,7 @@ DISABLE_AUTOMATIC_READINGS = False
 HELP_EMAIL = 'tim@jyu.fi'
 ERROR_EMAIL = 'timwuff.group@korppi.jyu.fi'
 WUFF_EMAIL = 'wuff@tim.jyu.fi'
+NOREPLY_EMAIL = 'no-reply@tim.jyu.fi'
 GLOBAL_NOTIFICATION_FILE = '/tmp/global_notification.html'
 
 QST_PLUGIN_PORT = 5000

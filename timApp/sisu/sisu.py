@@ -258,5 +258,6 @@ def send_course_group_mail(p: SisuDisplayName, u: User):
                 Dokumentissa on ohjeet ryhmien käyttämiseen TIMissä.
                 
                 Tämä viesti tulee kaikille kurssin vastuuopettajille.
-                """).strip()
+                """).strip(),
+        mail_from=app.config['NOREPLY_EMAIL'],
     )
