@@ -28,11 +28,11 @@ export interface IFeedbackAnswersParams {
 export class FeedbackAnswersCtrl extends DialogController<{params: IFeedbackAnswersParams}, {}> {
     static component = "timFeedbackAnswers";
     static $inject = ["$element", "$scope"] as const;
-    private options!: IFBOptions<Moment>; // $onInit
-    private $storage!: ngStorage.StorageService & {feedbackAnswersOptions: IFBOptions<number | null>}; // $onInit
+    private options?: IFBOptions<Moment>;
+    private storage?: ngStorage.StorageService & {feedbackAnswersOptions: IFBOptions<number | null>};
     private showSort: boolean = false;
-    private datePickerOptionsFrom!: EonasdanBootstrapDatetimepicker.SetOptions; // $onInit
-    private datePickerOptionsTo!: EonasdanBootstrapDatetimepicker.SetOptions; // $onInit
+    private datePickerOptionsFrom?: EonasdanBootstrapDatetimepicker.SetOptions;
+    private datePickerOptionsTo?: EonasdanBootstrapDatetimepicker.SetOptions;
     private lastFetch: unknown;
 
     protected getTitle() {
@@ -58,16 +58,16 @@ export class FeedbackAnswersCtrl extends DialogController<{params: IFeedbackAnsw
             users: "",
             decimal: "point",
         } as const;
-        this.$storage = $localStorage.$default({
+        this.storage = $localStorage.$default({
             feedbackAnswersOptions: defs,
         });
 
         const dateFormat = "D.M.YYYY HH:mm:ss";
 
         this.options = {
-            ...this.$storage.allAnswersOptions,
-            periodFrom: moment(this.options.periodFrom || Date.now()),
-            periodTo: moment(this.options.periodFrom || Date.now()),
+            ...this.storage.feedbackAnswersOptions,
+            periodFrom: moment(this.storage.feedbackAnswersOptions.periodFrom || Date.now()),
+            periodTo: moment(this.storage.feedbackAnswersOptions.periodFrom || Date.now()),
         };
         this.datePickerOptionsFrom = {
             format: dateFormat,
@@ -96,10 +96,18 @@ export class FeedbackAnswersCtrl extends DialogController<{params: IFeedbackAnsw
     }
 
     ok() {
+        if (!this.options || !this.storage) {
+            return;
+        }
         const toSerialize: IFBOptions<Date | null> = {
             ...this.options,
             periodFrom: this.options.periodFrom.toDate(),
             periodTo: this.options.periodTo.toDate(),
+        };
+        this.storage.allAnswersOptions = {
+            ...this.options,
+            periodFrom: this.options.periodFrom.valueOf(),
+            periodTo: this.options.periodTo.valueOf(),
         };
         window.open(this.resolve.params.url + "?" + $httpParamSerializer(toSerialize), "_blank");
         this.close({});

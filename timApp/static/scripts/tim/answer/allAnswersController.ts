@@ -24,10 +24,10 @@ export class AllAnswersCtrl extends DialogController<{params: IAllAnswersParams}
     static component = "timAllAnswers";
     static $inject = ["$element", "$scope"] as const;
     private showSort: boolean = false;
-    private options!: IOptions<Moment>; // $onInit
-    private $storage!: ngStorage.StorageService & {allAnswersOptions: IOptions<number | null>}; // $onInit
-    private datePickerOptionsFrom!: EonasdanBootstrapDatetimepicker.SetOptions; // $onInit
-    private datePickerOptionsTo!: EonasdanBootstrapDatetimepicker.SetOptions; // $onInit
+    private options?: IOptions<Moment>;
+    private storage?: ngStorage.StorageService & {allAnswersOptions: IOptions<number | null>};
+    private datePickerOptionsFrom?: EonasdanBootstrapDatetimepicker.SetOptions;
+    private datePickerOptionsTo?: EonasdanBootstrapDatetimepicker.SetOptions;
     private lastFetch: unknown;
 
     protected getTitle() {
@@ -51,14 +51,17 @@ export class AllAnswersCtrl extends DialogController<{params: IAllAnswersParams}
             periodTo: null,
             consent: "any",
         };
-        this.$storage = $localStorage.$default({
+        this.storage = $localStorage.$default({
             allAnswersOptions: defs,
         });
 
         this.options = {
-            ...this.$storage.allAnswersOptions,
-            periodFrom: moment(this.options.periodFrom || Date.now()),
-            periodTo: moment(this.options.periodFrom || Date.now()),
+            ...this.storage.allAnswersOptions,
+            periodFrom: moment(this.storage.allAnswersOptions.periodFrom || Date.now()),
+            periodTo: moment(this.storage.allAnswersOptions.periodFrom || Date.now()),
+            // The consent option was removed from the dialog (because the consent dialog was disabled),
+            // so make sure that it does not restrict the search in case in is in local storage.
+            consent: "any",
         };
         this.datePickerOptionsFrom = {
             format: "D.M.YYYY HH:mm:ss",
@@ -82,10 +85,18 @@ export class AllAnswersCtrl extends DialogController<{params: IAllAnswersParams}
     }
 
     ok() {
+        if (!this.options || !this.storage) {
+            return;
+        }
         const toSerialize: IOptions<Date | null> = {
             ...this.options,
             periodFrom: this.options.periodFrom.toDate(),
             periodTo: this.options.periodTo.toDate(),
+        };
+        this.storage.allAnswersOptions = {
+            ...this.options,
+            periodFrom: this.options.periodFrom.valueOf(),
+            periodTo: this.options.periodTo.valueOf(),
         };
         window.open(this.resolve.params.url + "?" + $httpParamSerializer(toSerialize), "_blank");
         this.close({});
