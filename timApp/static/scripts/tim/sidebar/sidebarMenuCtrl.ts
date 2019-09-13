@@ -479,7 +479,7 @@ timApp.component("timSidebarMenu", {
 <uib-tabset id="menuTabs" active="$ctrl.active" class="hidden-sm hidden-xs">
     <uib-tab ng-if="!$ctrl.hideLinks && $ctrl.users.isLoggedIn()" index="6">
         <uib-tab-heading>
-            <i class="glyphicon glyphicon-bookmark"></i>
+            <i class="glyphicon glyphicon-bookmark" title="Bookmarks"></i>
         </uib-tab-heading>
         <h5>Bookmarks</h5>
         <bookmarks data="$ctrl.bookmarks"></bookmarks>
@@ -487,7 +487,7 @@ timApp.component("timSidebarMenu", {
 
     <uib-tab index="1" ng-if="!$ctrl.hideLinks">
         <uib-tab-heading>
-            <i class="glyphicon glyphicon-cog"></i>
+            <i class="glyphicon glyphicon-cog" title="Document settings"></i>
         </uib-tab-heading>
         <div>
             <h5>Help</h5>
@@ -558,7 +558,7 @@ timApp.component("timSidebarMenu", {
         <div ng-show="$ctrl.vctrl.item && !$ctrl.vctrl.item.isFolder">
             <h5 style="display: inline-block">Print document</h5>
             <a style="display: inline-block" href="https://tim.jyu.fi/view/tim/ohjeita/tulostusohje">
-                <span class="glyphicon glyphicon-question-sign"></span>
+                <span class="glyphicon glyphicon-question-sign" title="Printing help"></span>
             </a>
             <button class="timButton btn-block" title="Print using LaTeX => best quality"
                     ng-click="$ctrl.printDocument()">Print document
@@ -569,7 +569,7 @@ timApp.component("timSidebarMenu", {
             <h5 style="display: inline-block">Document tags</h5>
             <a style="display: inline-block"
                href="https://tim.jyu.fi/view/tim/ohjeita/opettajan-ohje#kurssikoodi">
-                <span class="glyphicon glyphicon-question-sign"></span>
+                <span class="glyphicon glyphicon-question-sign" title="Teachers' help for course code"></span>
             </a>
             <button class="timButton btn-block" ng-show="$ctrl.vctrl.item.rights.manage"
                     title="Add and remove document tags" ng-click="$ctrl.addTag()">Edit tags
@@ -612,7 +612,7 @@ timApp.component("timSidebarMenu", {
 
     <uib-tab ng-if="$ctrl.displayIndex.length > 0" index="0">
         <uib-tab-heading>
-            <i class="glyphicon glyphicon-book"></i>
+            <i class="glyphicon glyphicon-book" title="Document index"></i>
         </uib-tab-heading>
         <h5>Index <a href="#" title="Go to top" class="pull-right">Go to top</a></h5>
         <ul class="subexp">
@@ -632,7 +632,7 @@ timApp.component("timSidebarMenu", {
     <uib-tab index="2" ng-if="!$ctrl.hideLinks && $ctrl.lctrl.lectureSettings.lectureMode"
              select="$ctrl.toggleLectures()">
         <uib-tab-heading>
-            <i class="glyphicon glyphicon-education"></i>
+            <i class="glyphicon glyphicon-education" title="Lecture"></i>
         </uib-tab-heading>
         <h5>Current Lectures</h5>
         <ul>
@@ -664,14 +664,14 @@ timApp.component("timSidebarMenu", {
     <uib-tab ng-if="!$ctrl.hideLinks && $ctrl.lctrl.lectureSettings.inLecture && !$ctrl.lctrl.isLecturer" index="4"
              select="$ctrl.lctrl.getQuestionManually()">
         <uib-tab-heading>
-            <i class="glyphicon glyphicon-question-sign"></i>
+            <i class="glyphicon glyphicon-question-sign" title="Get question"></i>
         </uib-tab-heading>
         Loading question manually...
     </uib-tab>
 
     <uib-tab ng-if="!$ctrl.hideLinks && $ctrl.lctrl.isLecturer && $ctrl.lctrl.lectureSettings.inLecture" index="5">
         <uib-tab-heading>
-            <i class="glyphicon glyphicon-user"></i>
+            <i class="glyphicon glyphicon-user" title="Lecture participants"></i>
         </uib-tab-heading>
         <h5>People logged-in: <span
                 ng-bind="$ctrl.lctrl.lecturerTable.length + $ctrl.lctrl.studentTable.length">None</span></h5>

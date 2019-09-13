@@ -38,15 +38,21 @@ const TextfieldMarkup = t.intersection([
     }),
 ]);
 const TextfieldAll = t.intersection([
-    t.partial({
-    }),
+    t.partial({}),
     t.type({
         info: Info,
         markup: TextfieldMarkup,
         preview: t.boolean,
-        state: nullable(t.type({
-            c: t.union([t.string, t.number, t.null]),
-            styles: nullable(t.dictionary(t.string, t.string))})),
+        state: nullable(
+            t.intersection([
+                t.type({
+                    c: t.union([t.string, t.number, t.null]),
+                }),
+                t.partial({
+                    styles: nullable(t.record(t.string, t.string)),
+                }),
+            ]),
+        ),
     }),
 ]);
 

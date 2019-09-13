@@ -870,7 +870,7 @@ export class TimTableController extends DestroyScope implements IController, ITi
         const na = Number.parseFloat(va);
         const nb = Number.parseFloat(vb);
         if ( isNaN(na) || isNaN(nb)) {
-            return va.localeCompare(vb) * dir;
+            return va.localeCompare(vb, "fi") * dir;
         }
         let ret = 0;
         if ( na > nb ) {

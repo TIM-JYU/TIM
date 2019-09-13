@@ -57,7 +57,7 @@ class NotifyTest(NotifyTestBase):
         self.assertEqual(1, len(sent_mails_in_testing))
         par_id0 = d.document.get_paragraphs()[0].get_id()
         par_id = d.document.get_paragraphs()[1].get_id()
-        mail_from = 'tim@jyu.fi'
+        mail_from = 'no-reply@tim.jyu.fi'
         self.assertEqual({
             'mail_from': mail_from,
             'msg': f'Paragraph added: {url}#{par_id0}\n\nParagraph added: {url}#{par_id}',
@@ -160,7 +160,7 @@ stem: test
         self.post_comment(plug, public=True, text='Hello')
         process_pending_notifications()
         self.assertEqual(
-            {'mail_from': 'tim@jyu.fi',
+            {'mail_from': 'no-reply@tim.jyu.fi',
              'msg': 'Comment posted by Test user 1: '
              f'http://localhost/answers/{d.path}?task=t&user=testuser1\n'
                     '\n'
@@ -233,7 +233,7 @@ class CutPasteNotifyTest(NotifyTestBase):
         self.cut(d, par_start=par, par_end=par2)
         # print(d.document.export_markdown())
         process_pending_notifications()
-        mail_from = 'tim@jyu.fi'
+        mail_from = 'no-reply@tim.jyu.fi'
         self.assertEqual({
             'mail_from': mail_from,
             'msg': 'Paragraph deleted by Test user 1: '

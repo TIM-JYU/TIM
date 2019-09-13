@@ -753,8 +753,9 @@ class ScimTest(TimRouteTest):
                 auth=a,
             )
 
+        noreply = 'no-reply@tim.jyu.fi'
         self.assertEqual([
-            {'mail_from': 'tim@jyu.fi',
+            {'mail_from': noreply,
              'msg': 'Kurssin ITKP102 Sisussa olevat ryhmät on kopioitu TIMiin. Ne '
                     'löytyvät dokumentista:\n'
                     '\n'
@@ -764,9 +765,9 @@ class ScimTest(TimRouteTest):
                     '\n'
                     'Tämä viesti tulee kaikille kurssin vastuuopettajille.',
              'rcpt': 'urt-1@example.com',
-             'reply_to': 'no-reply@tim.jyu.fi',
+             'reply_to': noreply,
              'subject': 'Kurssin ITKP102 Sisu-ryhmät on kopioitu TIMiin'},
-            {'mail_from': 'tim@jyu.fi',
+            {'mail_from': noreply,
              'msg': 'Kurssin ITKP102 Sisussa olevat ryhmät on kopioitu TIMiin. Ne '
                     'löytyvät dokumentista:\n'
                     '\n'
@@ -776,7 +777,7 @@ class ScimTest(TimRouteTest):
                     '\n'
                     'Tämä viesti tulee kaikille kurssin vastuuopettajille.',
              'rcpt': 'urt-2@example.com',
-             'reply_to': 'no-reply@tim.jyu.fi',
+             'reply_to': noreply,
              'subject': 'Kurssin ITKP102 Sisu-ryhmät on kopioitu TIMiin'}],
             sorted(sent_mails_in_testing, key=itemgetter('rcpt')))
         self.assertIn(UserGroup.get_teachers_group(), User.get_by_name('urt-1').groups)
