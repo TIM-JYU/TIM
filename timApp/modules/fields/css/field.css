@@ -208,6 +208,14 @@ numericfield-runner .stem {
     padding-left: 2px;
 }
 
+.inlineplugin textarea, .textfield textarea{
+    padding: 0px;
+    padding-left: 2px;
+    padding-top: 2px;
+    overflow:hidden;
+    height: auto;
+}
+
 /* multisave */
 
 .pluginmultisave .timButton {

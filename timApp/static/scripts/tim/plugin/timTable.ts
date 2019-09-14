@@ -3071,7 +3071,7 @@ timApp.component("timTable", {
      ng-style="$ctrl.stylingForTable($ctrl.data.table)" id={{$ctrl.data.table.id}}>
         <col ng-repeat="c in $ctrl.columns" ng-attr-span="{{c.span}}}" id={{c.id}}
              ng-style="$ctrl.stylingForColumn(c, $index)"/>
-        <THEAD>
+        <thead>
         <tr ng-if="$ctrl.data.headers"> <!-- Header row -->
             <td class="nrcolumn totalnr" ng-if="::$ctrl.data.nrColumn"
                 ng-click="$ctrl.clearFilters()"
@@ -3087,7 +3087,7 @@ timApp.component("timTable", {
              ng-style="$ctrl.headersStyle"  >{{c}}<span ng-style="$ctrl.sortSymbolStyle[coli]">{{$ctrl.sortSymbol[coli]}}</span>
             </td>
         </tr>
-        </THEAD>
+        </thead>
         <tbody>
         <tr ng-if="$ctrl.filterRow" ng-init="irowi = 2"> <!-- Filter row -->
             <td class="nrcolumn totalnr" ng-if="::$ctrl.data.nrColumn" >{{$ctrl.visiblerows}}</td>

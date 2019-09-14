@@ -6,7 +6,7 @@ import * as t from "io-ts";
 import {ITimComponent, ViewCtrl} from "tim/document/viewctrl";
 import {GenericPluginMarkup, Info, nullable, withDefault} from "tim/plugin/attributes";
 import {PluginBase, pluginBindings} from "tim/plugin/util";
-import {$http} from "tim/util/ngimport";
+import {$http, $timeout} from "tim/util/ngimport";
 import {to, valueOr} from "tim/util/utils";
 
 const textfieldApp = angular.module("textfieldApp", ["ngSanitize"]);
@@ -34,6 +34,7 @@ const TextfieldMarkup = t.intersection([
         autoupdate: withDefault(t.number, 500),
         autoUpdateTables: withDefault(t.boolean, true),
         cols: withDefault(t.number, 6),
+        rows: withDefault(t.number, 1),
     }),
 ]);
 const TextfieldAll = t.intersection([
@@ -91,6 +92,9 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
         if (this.attrs.showname ) { this.initCode(); }
         if (this.attrsall.state && this.attrsall.state.styles && !this.attrs.ignorestyles) {
             this.applyStyling(this.attrsall.state.styles);
+        }
+        if(this.attrs.textarea && this.attrs.autogrow){
+            this.autoGrow();
         }
     }
 
@@ -176,6 +180,10 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
      */
     get cols() {
         return this.attrs.cols;
+    }
+
+    get rows() {
+        return this.attrs.rows;
     }
 
     /**
@@ -397,24 +405,15 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
         return TextfieldAll;
     }
 
-    autoGrow() {
-        const element = this.element.find(".textarea").first();
-        const ele = angular.element(element);
+    async autoGrow() {
+        await $timeout(0);
+        const ele = this.element.find(".textarea").first();
         const scrollHeight = ele.prop("scrollHeight");
         const prevHeight = parseFloat(ele.css("height"));
         if (scrollHeight < prevHeight) {
             return;
         }
         ele.css("height",  ele.prop("scrollHeight") + "px");
-    }
-
-    getHeight() {
-        const ele = this.element.find(".textarea").first();
-        // const ele = angular.element(element);
-        if (!this.attrs.autogrow) {
-            return parseFloat(ele.css("height"));
-        }
-        return ele.prop("scrollHeight");
     }
 }
 
@@ -455,7 +454,8 @@ textfieldApp.component("textfieldRunner", {
                ng-class="{warnFrame: ($ctrl.isUnSaved() && !$ctrl.redAlert), alertFrame: $ctrl.redAlert }"
                ng-style="$ctrl.styles">
        <textarea
-               style="width: {{::$ctrl.cols}}em; padding: unset; height: {{::$ctrl.getHeight()}}px; overflow:hidden;"
+               style="width: {{::$ctrl.cols}}em;"
+               rows="{{::$ctrl.rows}}"
                ng-if="::$ctrl.isTextArea()"
                class="form-control textarea"
                ng-model="$ctrl.userword"
