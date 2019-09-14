@@ -16,6 +16,7 @@ class IndexCtrl implements IController {
     private showUpload: boolean = false;
     private canCreate: boolean;
     private uploadInProgress: boolean = false;
+    private showId: boolean = false;
 
     constructor() {
         const fg = folderglobals();
@@ -60,6 +61,7 @@ timApp.component("timIndex", {
         <th>Last modified</th>
         <th>Owner</th>
         <th>Rights</th>
+        <td class="gray" ng-show="$ctrl.showId || true" ng-click="$ctrl.showId = !$ctrl.showId">Id</td>
     </tr>
     </thead>
     <tr ng-show="$ctrl.item.path">
@@ -95,6 +97,9 @@ timApp.component("timIndex", {
             <a title="Teacher" ng-show="item.rights.teacher && !item.isFolder"
                href="/teacher/{{ item.path | escape }}"><i class="glyphicon glyphicon-education"></i></a>
         </td>
+        <td ng-show="$ctrl.showId">
+          {{item.id}}
+        </td>
     </tr>
 </table>
 <p ng-show="$ctrl.itemList.length == 0">There are no items to show.</p>
@@ -108,6 +113,9 @@ timApp.component("timIndex", {
     </uib-tab>
 </uib-tabset>
 <div ng-if="!$ctrl.canCreate">
+</div>
+<div>
+<!--<label>Show id's <input type="checkbox" ng-model="$ctrl.showId"></label> -->
 </div>
     `,
 });
