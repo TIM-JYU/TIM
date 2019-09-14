@@ -53,6 +53,8 @@ import {Binding, StringOrNumber} from "../util/utils";
 import {hideToolbar, isToolbarEnabled, openTableEditorToolbar} from "./timTableEditorToolbar";
 import {PluginMeta} from "./util";
 
+const sortLang: string = "fi";
+
 /**
  * NumFilter class for filtering numbers.
  *
@@ -870,7 +872,7 @@ export class TimTableController extends DestroyScope implements IController, ITi
         const na = Number.parseFloat(va);
         const nb = Number.parseFloat(vb);
         if ( isNaN(na) || isNaN(nb)) {
-            return va.localeCompare(vb, "fi") * dir;
+            return va.localeCompare(vb, sortLang) * dir;
         }
         let ret = 0;
         if ( na > nb ) {

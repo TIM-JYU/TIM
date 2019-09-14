@@ -36,10 +36,13 @@ markAsUsed(velpSummary);
 
 // TODO: show velps with same name side by side. Make changes to the template.
 
+const sortLang: string = "fi";
+
 /**
  * Controller for velp selection
  */
 export class VelpSelectionController implements IController {
+
     private labels: ILabelUI[];
     private velpGroups: IVelpGroupUI[];
     private newVelp: INewVelp;
@@ -1036,7 +1039,7 @@ timApp.filter("orderByWhenNotEditing", () => {
         if (order === "labels") {
             list = velps;
         } else if (order === "content") {
-            list = velps.sort((v1, v2) => v1.content.localeCompare(v2.content));
+            list = velps.sort((v1, v2) => v1.content.localeCompare(v2.content, sortLang));
         } else {
             list = velps.sort((v1, v2) => {
                 const v1o = v1[order];

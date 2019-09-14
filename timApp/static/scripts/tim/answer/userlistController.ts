@@ -31,6 +31,8 @@ function filterFn(term: string, cellValue: string, row: IGridRowOf<unknown>, col
     }
 }
 
+const sortLang = "fi";
+
 export class UserListController implements IController {
     static $inject = ["$scope", "$element"];
     private gridOptions?: uiGrid.IGridOptions & {gridMenuCustomItems: unknown};
@@ -61,6 +63,12 @@ export class UserListController implements IController {
         let anyAnnotations = false;
         let smallFieldWidth = 59;
 
+        function nameCompare(a: IUserListEntry, b: IUserListEntry) {
+            return a.user.real_name.localeCompare(b.user.real_name, sortLang);
+        }
+
+        this.viewctrl.users.sort(nameCompare);
+
         for (const u of this.viewctrl.users) {
             if (u.velped_task_count > 0) {
                 anyAnnotations = true;
@@ -75,6 +83,7 @@ export class UserListController implements IController {
                 name: "Full name",
                 cellTooltip: true,
                 headerTooltip: true,
+                sortingAlgorithm: (a: string, b: string) => a.localeCompare(b, sortLang),
             },
             {
                 field: "user.name",

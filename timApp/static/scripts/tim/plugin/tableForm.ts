@@ -115,6 +115,7 @@ const realNameColIndex = 0;
 const userNameColIndex = 1;
 const emailColIndex = 2;
 const memberShipColIndex = 3;
+const sortLang = "fi";
 
 export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t.TypeOf<typeof TableFormAll>, typeof TableFormAll> {
     public viewctrl?: ViewCtrl;
@@ -298,7 +299,7 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
             return 0;
         }
         try {
-            return this.realnamemap[a].localeCompare(this.realnamemap[b]);
+            return this.realnamemap[a].localeCompare(this.realnamemap[b], sortLang);
         } catch (e) {
             return 0;
         }
@@ -309,7 +310,7 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
             return 0;
         }
         try {
-            return this.emailmap[a].localeCompare(this.emailmap[b]);
+            return this.emailmap[a].localeCompare(this.emailmap[b], sortLang);
         } catch (e) {
             return 0;
         }
