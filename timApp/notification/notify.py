@@ -162,20 +162,18 @@ def multi_send_email_impl(
         bcc: str = ''
 ):
     with flask_app.app_context():
-        mime_msg = MIMEText(msg)  # + flask_app.config['MAIL_SIGNATURE'])
-        mime_msg['Subject'] = subject
-        mime_msg['From'] = mail_from
-        mime_msg['Bcc'] = bcc
-
-        if reply_to:
-            mime_msg.add_header('Reply-To', reply_to)
-
         s = smtplib.SMTP(flask_app.config['MAIL_HOST'])
         rcpts = rcpt.split(";")
         try:
             for rcp in rcpts:
                 try:
                     # TODO: Mailmerge here possible templates.
+                    mime_msg = MIMEText(msg)  # + flask_app.config['MAIL_SIGNATURE'])
+                    mime_msg['Subject'] = subject
+                    mime_msg['From'] = mail_from
+                    mime_msg['Bcc'] = bcc
+                    if reply_to:
+                        mime_msg.add_header('Reply-To', reply_to)
                     mime_msg['To'] = rcp
                     s.sendmail(mail_from, [rcp, bcc], mime_msg.as_string())
                 except (smtplib.SMTPSenderRefused,
