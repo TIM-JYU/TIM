@@ -639,15 +639,14 @@ export class ViewCtrl implements IController {
             for (const lo of this.ldrs.values()) {
                 await lo.abLoad.promise;
             }
-        } else if (this.formAbs.size > 0) {
+        } else {
             // Ensure form answerBrowsers are loaded even without updateAll/form_mode
             // TODO: Refactor: repeated lines from loader promise loop above
             // TODO: Keep track of formAb loders? Finding them here at every user change may be unnecessary
             // TODO: Or flag "loaded" and skip this part
             const loders: PluginLoaderCtrl[] = [];
-            for (const fabid of this.formAbs.keys()) {
-                const loader = this.getPluginLoader(fabid);
-                if (loader) {
+            for (const loader of this.ldrs.values()) {
+                if (loader.isInFormMode()) {
                     loders.push(loader);
                 }
             }
