@@ -239,11 +239,17 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
     }
 
     isInFormMode() {
-        if (!this.viewctrl) {
-            return false;
+        if (this.viewctrl) {
+            // return this.viewctrl.docSettings.form_mode && (this.isFieldPlugin() || this.isGlobal());
+            if (this.viewctrl.docSettings.form_mode && this.isFieldPlugin()) {
+                return true;
+            }
+            const timComp = this.viewctrl.getTimComponentByName(this.taskId);
+            if (timComp && timComp.isForm()) {
+                return true;
+            }
         }
-        // return this.viewctrl.docSettings.form_mode && (this.isFieldPlugin() || this.isGlobal());
-        return this.viewctrl.docSettings.form_mode && (this.isFieldPlugin() );
+        return false;
     }
 
     isFieldPlugin() {

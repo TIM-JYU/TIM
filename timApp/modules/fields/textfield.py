@@ -25,6 +25,7 @@ class TextfieldMarkupModel(GenericMarkupModel):
     clearstyles: Union[bool, Missing] = missing
     cols: Union[int, Missing] = missing
     errormessage: Union[str, Missing, None] = missing
+    form: Union[bool, Missing] = missing
     rows: Union[int, Missing] = missing
     ignorestyles: Union[bool, Missing] = missing
     initword: Union[str, Missing, None] = missing
