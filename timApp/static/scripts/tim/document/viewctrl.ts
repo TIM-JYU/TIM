@@ -50,6 +50,8 @@ export interface ITimComponent {
     getAreas: () => string[];
     getTaskId: () => string | undefined;
     belongsToArea: (area: string) => boolean;
+     // TODO: isForm could be integrated to supporstSetAnswer (sSA true if fieldplugin and form/form_mode)
+    isForm: () => boolean;
     isUnSaved: (userChange?: boolean) => boolean;
     save: () => Promise<{saved: boolean, message: (string | undefined)}>;
     getPar: () => Paragraph;
@@ -637,9 +639,27 @@ export class ViewCtrl implements IController {
             for (const lo of this.ldrs.values()) {
                 await lo.abLoad.promise;
             }
+        } else {
+            // Ensure form answerBrowsers are loaded even without updateAll/form_mode
+            // TODO: Refactor: repeated lines from loader promise loop above
+            // TODO: Keep track of formAb loders? Finding them here at every user change may be unnecessary
+            // TODO: Or flag "loaded" and skip this part
+            const loders: PluginLoaderCtrl[] = [];
+            for (const loader of this.ldrs.values()) {
+                if (loader.isInFormMode()) {
+                    loders.push(loader);
+                }
+            }
+            for (const lo of loders) {
+                lo.loadPlugin();
+                // await lo.abLoad.promise;
+            }
+            for (const lo of loders) {
+                await lo.abLoad.promise;
+            }
         }
 
-        if (this.docSettings.form_mode) {
+        if (this.formAbs.size > 0) {
             const taskList = [];
             for (const fab of this.formAbs.values()) {
                 taskList.push(fab.taskId);
@@ -720,6 +740,8 @@ export class ViewCtrl implements IController {
             if (!loader) {
                 continue;
             }
+            // TODO: Separate loads and awaits into own loops
+            // No need to await before calling next load
             loader.loadPlugin();
             await loader.abLoad.promise;
             const fab = this.getFormAnswerBrowser(t);
@@ -733,7 +755,7 @@ export class ViewCtrl implements IController {
                 }
             }
         }
-        if (this.docSettings.form_mode) {
+        if (this.formAbs.size > 0) {
             const answerResponse = await $http.post<{ answers: { [index: string]: IAnswer | undefined }, userId: number }>("/userAnswersForTasks", {
                 tasks: fabIds,
                 user: this.selectedUser.id,
@@ -899,15 +921,15 @@ export class ViewCtrl implements IController {
 
     /**
      * Registers answerbrowser to related map
-     * If form_mode is enabled and answerBrowser is from timComponent
-     * that supports setting answer then add it to formAbs
+     * If ((form_mode is enabled or plugin wants to be form) and answerBrowser is from timComponent
+     * that supports setting answer) then add it to formAbs
      * else add it to regular ab map
      * @param ab AnswerBrowserController to be registered
      */
     registerAnswerBrowser(ab: AnswerBrowserController) {
-        if (this.docSettings.form_mode) {
-            const timComp = this.getTimComponentByName(ab.taskId);
-            if (timComp && timComp.supportsSetAnswer()) {
+        const timComp = this.getTimComponentByName(ab.taskId);
+        if (timComp) {
+            if ((this.docSettings.form_mode || timComp.isForm()) && timComp.supportsSetAnswer()) {
                 // TODO: Should propably iterate like below in case of duplicates
                 this.formAbs.set(ab.taskId, ab);
                 return;

@@ -31,6 +31,7 @@ class NumericfieldMarkupModel(GenericMarkupModel):
     clearstyles: Union[bool, Missing] = missing
     cols: Union[int, Missing] = missing
     errormessage: Union[str, Missing, None] = missing
+    form: Union[bool, Missing] = missing
     ignorestyles: Union[bool, Missing] = missing
     initnumber: Union[float, Missing, None] = missing
     inputplaceholder: Union[int, Missing, None] = missing

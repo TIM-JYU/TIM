@@ -205,11 +205,21 @@ export abstract class PluginBase<MarkupType extends IGenericPluginMarkup, A exte
     }
 
     /**
+     * @returns {Boolean} true if plugin wants to register as formAnswerBrowser
+     * This mean invisible answerBrowser and direct answer input when changing users in viewCtrl
+     * Should only be used by simple plugins where getState is not necessary when changing answers
+     */
+    public isForm(): boolean {
+        return false;
+    }
+
+    /**
      * Sets plugin's answer content via external call
      * @param content answer to be parsed
      * @returns {ok: boolean, message: (string | undefined)}
      * ok: true if content was succesfully parsed
      * message: for replying with possible errors
+     * TODO: This could be integrated into isForm
      */
     setAnswer(content: { [index: string]: unknown }): { ok: boolean, message: (string | undefined) } {
         return {ok: false, message: "Plugin doesn't support setAnswer"};

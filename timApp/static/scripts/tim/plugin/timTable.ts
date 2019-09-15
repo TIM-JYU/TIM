@@ -3007,6 +3007,10 @@ export class TimTableController extends DestroyScope implements IController, ITi
         return {ok: false, message: "Plugin doesn't support setAnswer"};
     }
 
+    isForm(): boolean {
+        return false;
+    }
+
     setData(data: unknown, save: boolean = false) {
         if (!this.userdata) {
             return;
