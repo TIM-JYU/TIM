@@ -847,13 +847,16 @@ def get_hidden_name(user_id):
 
 
 def should_hide_name(d: DocInfo, user: User):
-    return True
+    # return True
     # return not user.has_teacher_access(d) and user.id != get_current_user_id()
+    return user.id != get_current_user_id()
 
 
 def maybe_hide_name(d: DocInfo, u: User):
     if should_hide_name(d, u):
         u.hide_name = True
+        u.real_name = "User " + str(u.id)
+        u.name = "User " + str(u.id)
 
 @answers.route("/infosForTasks", methods=['POST'])
 def get_task_infos():
@@ -912,15 +915,18 @@ def get_answers(task_id, user_id):
         return abort(400, str(e))
     d = get_doc_or_abort(tid.doc_id)
     user = User.get_by_id(user_id)
+    hide_names = False
     if user_id != get_current_user_id():
         verify_seeanswers_access(d)
+        if not verify_teacher_access(d, require=False, check_duration=True):
+            hide_names = True
     elif d.document.get_own_settings().get('need_view_for_answers', False):
         verify_view_access(d)
     if user is None:
         abort(400, 'Non-existent user')
     try:
         user_answers: List[Answer] = user.get_answers_for_task(tid.doc_task).all()
-        if hide_names_in_teacher():
+        if hide_names_in_teacher() or hide_names:
             for answer in user_answers:
                 for u in answer.users_all:
                     maybe_hide_name(d, u)
@@ -1241,13 +1247,17 @@ def get_task_users(task_id):
     tid = TaskId.parse(task_id)
     d = get_doc_or_abort(tid.doc_id)
     verify_seeanswers_access(d)
+    hide_names = False
+    if not verify_teacher_access(d, require=False, check_duration=True):
+        hide_names = True
+
     usergroup = request.args.get('group')
     q = User.query.join(Answer, User.answers).filter_by(task_id=task_id).join(UserGroup, User.groups).order_by(
         User.real_name.asc())
     if usergroup is not None:
         q = q.filter(UserGroup.name.in_([usergroup]))
     users = q.all()
-    if hide_names_in_teacher():
+    if hide_names_in_teacher() or hide_names:
         for user in users:
             maybe_hide_name(d, user)
     return json_response(users)
