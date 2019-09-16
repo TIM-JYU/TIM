@@ -14,11 +14,13 @@ import {showRelevanceEditDialog} from "../item/relevanceEditDialog";
 import {showTagDialog} from "../item/tagCtrl";
 import {showTagSearchDialog} from "../item/tagSearchCtrl";
 import {
+    getPieceSize,
     getViewRange,
     partitionDocument,
-    setViewRange,
+    setPieceSize,
     showViewRangeEditDialog,
-    unpartitionDocument, unsetViewRange
+    unpartitionDocument,
+    unsetPieceSize,
 } from "../item/viewRangeEditDialog";
 import {ILecture, ILectureListResponse2} from "../lecture/lecturetypes";
 import {ITemplateParams, showPrintDialog} from "../printing/printCtrl";
@@ -466,20 +468,24 @@ export class SidebarMenuCtrl implements IController {
         }
     }
 
+    /**
+     * Partition or unpartition document from 0 to user defined piece size.
+     */
     private async toggleViewRange() {
-        // TODO: Make view range in use and view range set by user separate;
-        // if in use range is undefined, view range is not in use.
+        // TODO: Add component for navigating parts.
         if (!(this.vctrl && this.item)) {
             return;
         }
-        const currentViewRange = await getViewRange();
+        const currentViewRange = await getPieceSize();
         if (currentViewRange && currentViewRange > 0) {
-            console.log(currentViewRange);
-            unsetViewRange();
+            unsetPieceSize();
             unpartitionDocument(document);
         } else {
-            setViewRange(this.viewRangeSetting);
-            partitionDocument(0, this.viewRangeSetting, document);
+            setPieceSize(this.viewRangeSetting);
+            const range = await getViewRange(document, 0, true);
+            if (range) {
+                partitionDocument(range.b, range.e, document);
+            }
         }
     }
 

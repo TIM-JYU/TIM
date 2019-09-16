@@ -292,12 +292,6 @@ def view(item_path, template_name, usergroup=None, route="view"):
         view_range = None
     start_index = max(view_range[0], 0) if view_range else 0
 
-    current_set_size = get_viewrange_from_cookie(request)
-    print(current_set_size) # TODO: ?
-    # If current_set_size exists, load document according to it.
-    if current_set_size and current_set_size > 0:
-        view_range = decide_set_indices(doc_info, current_set_size, view_range)
-
     doc, xs = get_document(doc_info, view_range)
     g.doc = doc
 
@@ -763,36 +757,53 @@ def get_document_relevance(i: DocInfo) -> int:
     return DEFAULT_RELEVANCE
 
 
-@view_page.route('/viewrange/unset')
-def unset_viewrange():
+@view_page.route('/viewrange/unset/piecesize')
+def unset_piece_size():
     resp = make_response()
-    resp.set_cookie(key="r", value="-1")
+    resp.set_cookie(key="r", value="-1", expires=0)
     return resp
 
 
-@view_page.route('/viewrange/set', methods=["POST"])
-def set_viewrange():
+@view_page.route('/viewrange/set/piecesize', methods=["POST"])
+def set_piece_size():
     """
     Add cookie for user defined view range (if isn't set, doc won't be partitioned).
     :return: Response.
     """
-    range, = verify_json_params('range')
-    if not range or range < 1:
-        range = DEFAULT_VIEWRANGE
+    piece_size, = verify_json_params('pieceSize')
+    if not piece_size or piece_size < 1:
+        piece_size = DEFAULT_VIEWRANGE
     resp = make_response()
-    resp.set_cookie(key="r", value=str(range))
-    print(resp)
+    resp.set_cookie(key="r", value=str(piece_size))
     return resp
 
 
-@view_page.route('/viewrange/get')
-def get_viewrange():
-    print(get_viewrange_from_cookie(request))
-    range = get_viewrange_from_cookie(request)
+@view_page.route('/viewrange/get/piecesize')
+def get_piece_size():
+    range = get_piece_size_from_cookie(request)
     return json_response(range)
 
 
-def get_viewrange_from_cookie(request: Request):
+@view_page.route('/viewrange/get/<path:doc_name>/<int:index>/<int:forwards>')
+def get_viewrange(doc_name, index, forwards):
+    taketime("route view begin")
+    current_set_size = get_piece_size_from_cookie(request)
+    doc_info = DocEntry.find_by_path(doc_name, fallback_to_id=True)
+    range = decide_piece_range(doc_info, current_set_size, index, forwards > 0)
+    print(range)
+    try:
+        return json_response({'b': range[0], 'e': range[1]})
+    except Exception as e:
+        print(e)
+        return abort(400, get_error_message(e))
+
+
+def get_piece_size_from_cookie(request: Request) -> Union[int, None]:
+    """
+    Reads piece size from cookie, if it exists.
+    :param request: Request.
+    :return: Piece size integer or None, if cookie not found.
+    """
     r = request.cookies.get("r")
     try:
         return int(r)
@@ -800,7 +811,8 @@ def get_viewrange_from_cookie(request: Request):
         return None
 
 
-def decide_set_indices(doc_info: DocInfo, preferred_set_size: int, view_range, index: int = 0, ascending: bool = True, min_set_size_modifier: float = 0.5):
+def decide_piece_range(doc_info: DocInfo, preferred_set_size: int, index: int = 0,
+                       forwards: bool = True, min_set_size_modifier: float = 0.5) -> Union[Range, None]:
     """
     Decide begin and end indices of paragraph set based on preferred size, areas and number of remaining paragraphs.
 
@@ -808,13 +820,19 @@ def decide_set_indices(doc_info: DocInfo, preferred_set_size: int, view_range, i
 
     :param doc_info: Document.
     :param preferred_set_size: User defined set size. May change depending on document.
-    :param view_range:
     :param index:
-    :param ascending: Index is the start index if true, end index if false (i.e. True = next, False = previous).
+    :param forwards: Begin index is the start index if true, end index if false (i.e. True = next, False = previous).
     :param min_set_size_modifier: Smallest allowed neighboring set compared to set size.
     :return:
     """
+    print(preferred_set_size, index, forwards)
+
+    if forwards:
+        b = index
+        e = preferred_set_size + index
+    else:
+        b = index - preferred_set_size
+        e = index - 1
     # TODO: Don't cut areas.
     # TODO: Combine following set if it's smaller than given fraction of set size.
-    # TODO: Allow going forward (or to the first set) and backward.
-    return view_range
+    return b, e

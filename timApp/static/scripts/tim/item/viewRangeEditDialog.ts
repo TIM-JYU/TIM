@@ -32,8 +32,8 @@ export function unpartitionDocument(doc: Document) {
     }
 }
 
-export async function unsetViewRange() {
-    const r = await to($http.get<number>(`/viewrange/unset`));
+export async function unsetPieceSize() {
+    const r = await to($http.get<number>(`/viewrange/unset/piecesize`));
     if (!r.ok) {
         console.log("Failed to remove view range cookie: " + r);
     } else {
@@ -41,18 +41,18 @@ export async function unsetViewRange() {
     }
 }
 
-export async function setViewRange(range: number) {
-    const data = {range: range};
-    const r = await to($http.post(`/viewrange/set`, data));
+export async function setPieceSize(pieceSize: number) {
+    const data = {pieceSize: pieceSize};
+    const r = await to($http.post(`/viewrange/set/piecesize`, data));
     if (!r.ok) {
         console.log("Failed to set view range cookie: " + r);
     } else {
-        console.log("View range cookie created with value: " + range);
+        console.log("View range cookie created with value: " + pieceSize);
     }
 }
 
-export async function getViewRange(): Promise<number | undefined> {
-    const r = await to($http.get<number>(`/viewrange/get`));
+export async function getPieceSize(): Promise<number | undefined> {
+    const r = await to($http.get<number>(`/viewrange/get/piecesize`));
     if (!r.ok) {
         console.log("View range cookie not found: " + r.result.data);
     } else {
@@ -61,12 +61,23 @@ export async function getViewRange(): Promise<number | undefined> {
     }
 }
 
-export async function nextSet(b: number, preferredSetSize: number) {
-    // TODO: Route returns set begin and end indices.
+export interface IViewRange {
+    b: number;
+    e: number;
 }
 
-export async function previousSet(e: number, preferredSetSize: number) {
-    // TODO: Route returns set begin and end indices.
+export async function getViewRange(doc: Document, index: number, forwards: boolean): Promise<IViewRange | undefined> {
+    let forwardsInt = 1;
+    if (!forwards) {
+        forwardsInt = 0;
+    }
+    const r = await to($http.get<IViewRange>(`/viewrange/get/${doc.location.pathname}/${index}/${forwardsInt}`));
+    if (!r.ok) {
+        console.log(r.result.data);
+    } else {
+        console.log(r.result.data);
+        return r.result.data;
+    }
 }
 
 /*
@@ -129,7 +140,7 @@ export class ViewRangeEditController extends DialogController<{ params: IItem },
     private ok() {
         this.saveValues();
         if (this.partitionDocumentsSetting) {
-            setViewRange(this.viewRangeSetting);
+            setPieceSize(this.viewRangeSetting);
             // partitionDocument(0, this.viewRangeSetting, document);
         } else {
             unpartitionDocument(document);
