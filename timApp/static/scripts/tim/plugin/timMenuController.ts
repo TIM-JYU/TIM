@@ -128,16 +128,9 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
             window.onscroll = () => {
                 this.toggleSticky();
             };
-            /*
-            // Throttle; allow only one scroll event per 0.1s.
-            // let time = Date.now();
-            window.onscroll = () => {
-                    if ((time + 100 - Date.now()) < 0) {
-                        this.toggleSticky();
-                        time = Date.now();
-                    }
-                };
-             */
+            window.onresize = () => {
+                this.setBarStyles();
+            };
         }
         onClick("body", ($this, e) => {
             this.onClick(e);
@@ -237,9 +230,6 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
         this.previouslyScrollingDown = scrollingDown;
         this.previousScroll = $(window).scrollTop();
 
-        // Update bar width (in case document width has changed.
-        this.setBarStyles();
-
         // Sticky can only show when the element's place in document goes outside upper bounds.
         if (belowPlaceholder) {
             // When scrolling downwards, don't show fixed menu and hide placeholder content.
@@ -277,6 +267,7 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
 
     /**
      * Set styles for menu bar defined in optional attributes.
+     * Includes adjusting topMenu width to fit document area width.
      */
     private setBarStyles() {
         if (this.attrs.backgroundColor) {
