@@ -92,7 +92,7 @@ services:
   ports:
    - "49996:22"
  chrome:
-  image: selenium/standalone-chrome:3.141.59
+  image: selenium/standalone-chrome:3.141.59-uranium
   tmpfs:
    - /tmp
    - /home/seluser

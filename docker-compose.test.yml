@@ -14,7 +14,7 @@ services:
   tmpfs:
    - /var/lib/postgresql/data
  chrome:
-  image: selenium/standalone-chrome:3.141.59
+  image: selenium/standalone-chrome:3.141.59-uranium
   tmpfs:
    - /tmp
    - /home/seluser
