@@ -11,6 +11,7 @@ import {genericglobals} from "../util/globals";
 import {Require} from "../util/utils";
 import {GenericPluginMarkup, Info, nullable, withDefault} from "./attributes";
 import "./timMenu.css";
+import $ from "jquery";
 
 // this.attrs
 const TimMenuMarkup = t.intersection([
@@ -229,6 +230,7 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
         }
         this.previouslyScrollingDown = scrollingDown;
         this.previousScroll = $(window).scrollTop();
+        const isSmallScreen = ($(".device-xs").is(":visible") || $(".device-sm").is(":visible"));
 
         // Sticky can only show when the element's place in document goes outside upper bounds.
         if (belowPlaceholder) {
@@ -242,6 +244,7 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
                     return;
                 }
                 menu.classList.remove("top-menu");
+                menu.classList.remove("top-menu-mobile");
                 placeholderContent.classList.add("tim-menu-hidden");
                 this.topMenuVisible = false;
             } else {
@@ -251,6 +254,9 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
                     return;
                 }
                 menu.classList.add("top-menu");
+                if (isSmallScreen) {
+                    menu.classList.add("top-menu-mobile");
+                }
                 placeholderContent.classList.remove("tim-menu-hidden");
                 this.topMenuVisible = true;
             }
@@ -259,6 +265,7 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
                 return;
             }
             menu.classList.remove("top-menu");
+            menu.classList.remove("top-menu-mobile");
             placeholderContent.classList.add("tim-menu-hidden");
             this.topMenuVisible = false;
         }

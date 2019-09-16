@@ -64,6 +64,10 @@
     -ms-transition: background 0.2s linear;
 }
 
+.top-menu-mobile {
+    margin-left: 30px;
+}
+
 .tim-menu-right {
     left: 100%;
 }
