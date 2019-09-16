@@ -29,7 +29,7 @@ from timApp.user.usergroup import UserGroup
 from timApp.user.usergroupmember import UserGroupMember, membership_current, membership_deleted
 from timApp.user.userutils import grant_access, get_access_type_id, \
     create_password_hash, check_password_hash, check_password_hash_old
-from timApp.util.utils import remove_path_special_chars, cached_property, get_current_time
+from timApp.util.utils import remove_path_special_chars, cached_property, get_current_time, fin_timezone
 
 ItemOrBlock = Union[ItemBase, Block]
 maxdate = datetime.max.replace(tzinfo=timezone.utc)
@@ -601,3 +601,15 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
                 'folder': self.get_personal_folder(),
                 'consent': self.consent,
                 } if full else self.basic_info_dict
+
+
+def get_membership_end(u: User, group_ids: Set[int]):
+    relevant_memberships: List[UserGroupMember] = [m for m in u.memberships if m.usergroup_id in group_ids]
+    membership_end = None
+    # If the user is not active in any of the groups, we'll show the lastly-ended membership.
+    # TODO: It might be possible in the future that the membership_end is in the future.
+    if all(m.membership_end is not None for m in relevant_memberships):
+        membership_end = (
+            max(m.membership_end for m in relevant_memberships)
+        )
+    return membership_end

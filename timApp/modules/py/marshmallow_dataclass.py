@@ -238,7 +238,7 @@ _native_to_marshmallow: Dict[type, Type[marshmallow.fields.Field]] = {
     datetime.date: marshmallow.fields.Date,
     decimal.Decimal: marshmallow.fields.Decimal,
     uuid.UUID: marshmallow.fields.UUID,
-    Any: marshmallow.fields.Raw,
+    Any: lambda **x: marshmallow.fields.Raw(allow_none=True, **x),
 }
 
 

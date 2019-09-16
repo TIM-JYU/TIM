@@ -562,7 +562,7 @@ export class ToolsBase {
     }
 
     // noinspection JSMethodCanBeStatic
-    public r(value: number, decim: number): number {
+    public r(value: unknown, decim: unknown): number {
         if ( !checkInt(decim) ) {
             throw new Error("Parameter 'decim' must be integer.");
         }
@@ -571,7 +571,7 @@ export class ToolsBase {
         return Math.round(c * mul) / mul;
     }
 
-    public round(value: number, decim: number): number {
+    public round(value: unknown, decim: unknown): number {
         return this.r(value, decim);
     }
 
@@ -594,7 +594,7 @@ export class ToolsBase {
     }
 
     public println(...args: unknown[]) {
-        // For be combatible with Korppi, if only print is used, it prints nl.
+        // To be compatible with Korppi, if only print is used, it prints nl.
         // But if println is used at least one time before print, then print is
         // not printing nl.
         this.usePrintLine = true;
@@ -614,7 +614,7 @@ export class ToolsBase {
         return this.errors;
     }
 
-    public  reportError(msg: string) {
+    public reportError(msg: string) {
         this.errors.push({msg, stackTrace: new Error().stack});
     }
 }
@@ -699,20 +699,6 @@ export class GTools extends ToolsBase {
         return this.stats.GLOBAL.getData();
     }
 
-    // noinspection JSMethodCanBeStatic
-    r(value: number, decim: number): number {
-        if ( !checkInt(decim) ) {
-            throw new Error("Parameter 'decim' must be integer.");
-        }
-        const c = ensureNumberDefault(value);
-        const mul = Math.pow(10, decim);
-        return Math.round(c * mul) / mul;
-    }
-
-    round(value: number, decim: number): number {
-        return this.r(value, decim);
-    }
-
     setTools(tools: Tools) {
         this.tools = tools;
     }
@@ -760,6 +746,10 @@ export class Tools extends ToolsBase {
         return this.data.user.name;
     }
 
+    getLeaveDate() {
+        return this.data.groupinfo ? this.data.groupinfo.membership_end : undefined;
+    }
+
     getDouble(fieldName: unknown, defa: unknown = 0): number {
         const f = ensureStringFieldName(fieldName);
         const def = ensureNumberDefault(defa);
@@ -805,12 +795,10 @@ export class Tools extends ToolsBase {
         if (s === null || s === undefined) {
             s = def;
         }
-        // if (!checkString(s)) {  // if number this returns error :-(
-        //     return this.reportInputTypeErrorAndReturnDef(s, def);
-        // }
-        // @ts-ignore
-        const st: string = s;
-        return st.toString();
+        if (!StringOrNumber.is(s)) {
+            return this.reportInputTypeErrorAndReturnDef(s, def);
+        }
+        return s.toString();
     }
 
     getValue(fieldName: unknown, def: unknown = "") {
@@ -822,54 +810,7 @@ export class Tools extends ToolsBase {
         return s;
     }
 
-    createLimitArray(table: string | string[]): number[][] {
-        const res: number[][] = [];
-        if ( !(table instanceof Array) ) { table = table.split("\n"); }
-        for (const s of table) {
-            const parts = s.split(",");
-            if ( parts.length < 2 ) { return this.reportInputTypeErrorAndReturnDef(table, []); }
-            const limit = this.getNumber(parts[0]);
-            const value = this.getNumber(parts[1]);
-            res.push([limit, value]);
-        }
-        return res;
-    }
-
-    // noinspection JSMethodCanBeStatic
-    findLastOf(limits: number[][], c: number, def: number = 0) {
-        let res = def;
-        for (const r of limits) {
-            const limit: number = r[0];
-            const value: number = r[1];
-            if ( c >= limit ) { res = value; }
-        }
-        return res;
-    }
-
-    findLast(table: string | string[], c: number, def: number = 0) {
-        return this.findLastOf(this.createLimitArray(table), c, def);
-    }
-
-    // noinspection JSMethodCanBeStatic
-    r(value: number, decim: number): number {
-        if ( !checkInt(decim) ) {
-            throw new Error("Parameter 'decim' must be integer.");
-        }
-        const c = ensureNumberDefault(value);
-        const mul = Math.pow(10, decim);
-        return Math.round(c * mul) / mul;
-    }
-
-    round(value: number, decim: number): number {
-        return this.r(value, decim);
-    }
-
-    // noinspection JSMethodCanBeStatic
-    wf(fields: string | string[]): string[]  {
-        return widenFields(fields);
-    }
-
-    getSum(fieldName: unknown, start: number, end: number, defa: unknown = 0, max: unknown = 1e100): number {
+    getSum(fieldName: unknown, start: unknown, end: unknown, defa: unknown = 0, max: unknown = 1e100): number {
         const f = ensureStringFieldName(fieldName);
         const def = ensureNumberDefault(defa);
         const maxv = ensureNumberDefault(max);
@@ -883,7 +824,7 @@ export class Tools extends ToolsBase {
         return sum;
     }
 
-    getRBi(fieldName: unknown, start: number, end: number, defa: number = -1): number {
+    getRBi(fieldName: unknown, start: unknown, end: unknown, defa: number = -1): number {
         const f = ensureStringFieldName(fieldName);
         const def = defa;
         if (!(checkInt(start) && checkInt(end))) {
@@ -898,7 +839,7 @@ export class Tools extends ToolsBase {
         return id;
     }
 
-    getRBname(fieldName: unknown, start: number, end: number, defa: string = ""): string {
+    getRBname(fieldName: unknown, start: unknown, end: unknown, defa: string = ""): string {
         const i = this.getRBi(fieldName, start, end, -1);
         if ( i < 0 ) { return defa; }
         return fieldName + i.toString();
@@ -915,7 +856,7 @@ export class Tools extends ToolsBase {
         return sum;
     }
 
-    getArray(func: (fname: string) => any, fieldName: unknown, start: number, end: number): any[] {
+    getArray(func: (fname: string) => any, fieldName: unknown, start: unknown, end: unknown): any[] {
         const f = ensureStringFieldName(fieldName);
         if (!(checkInt(start) && checkInt(end))) {
             throw new Error("Parameters 'start' and 'end' must be integers.");

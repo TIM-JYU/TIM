@@ -42,7 +42,7 @@ export class ParmenuHandler {
 
             // Don't show paragraph menu on these specific tags or classes
             if (checkIfIgnored(
-                ["button", "input", "textarea", "a", "answerbrowser"],
+                ["button", "input", "textarea", "a", "answerbrowser", "select"],
                 ["no-popup-menu", "ace_editor"],
                 target,
             )) {

@@ -26,12 +26,11 @@ from timApp.plugin.taskid import TaskId
 from timApp.sisu.parse_display_name import parse_sisu_group_display_name
 from timApp.sisu.sisu import get_potential_groups
 from timApp.tim_app import csrf
-from timApp.user.user import User
+from timApp.user.user import User, get_membership_end
 from timApp.user.usergroup import UserGroup
-from timApp.user.usergroupmember import UserGroupMember
 from timApp.util.flask.responsehelper import csv_response, json_response
-from timApp.util.get_fields import get_fields_and_users, MembershipFilter, fin_timezone
-from timApp.util.utils import get_boolean
+from timApp.util.get_fields import get_fields_and_users, MembershipFilter
+from timApp.util.utils import get_boolean, fin_timezone
 
 
 @dataclass
@@ -361,16 +360,9 @@ def tableform_get_fields(
         emails[username] = f['user'].email
         styles[username] = dict(f['styles'])
         if group_filter_type != MembershipFilter.Current:
-            relevant_memberships: List[UserGroupMember] = [m for m in u.memberships if m.usergroup_id in group_ids]
-            membership_end = None
-            # If the user is not active in any of the groups, we'll show the lastly-ended membership.
-            # TODO: It might be possible in the future that the membership_end is in the future.
-            if all(m.membership_end is not None for m in relevant_memberships):
-                membership_end = (
-                    max(m.membership_end for m in relevant_memberships)
-                        .astimezone(fin_timezone)
-                        .strftime('%Y-%m-%d %H:%M')
-                )
+            membership_end = get_membership_end(u, group_ids)
+            if membership_end:
+                membership_end = membership_end.astimezone(fin_timezone).strftime('%Y-%m-%d %H:%M')
             membershipmap[username] = membership_end
     r = dict()
     r['rows'] = rows

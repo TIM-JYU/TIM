@@ -3,7 +3,7 @@ import json
 import re
 from typing import Union, List, Tuple, Dict, Optional, Any
 
-from dataclasses import dataclass, MISSING
+from dataclasses import dataclass, field
 from flask import Blueprint
 from flask import Response
 from flask import abort
@@ -48,7 +48,7 @@ from timApp.user.usergroup import UserGroup
 from timApp.util.answerutil import task_ids_to_strlist, period_handling
 from timApp.util.flask.requesthelper import verify_json_params, get_option, get_consent_opt
 from timApp.util.flask.responsehelper import json_response, ok_response
-from timApp.util.get_fields import get_fields_and_users
+from timApp.util.get_fields import get_fields_and_users, MembershipFilter
 from timApp.util.utils import try_load_json
 
 # TODO: Remove methods in util/answerutil where many "moved" here to avoid circular imports
@@ -264,7 +264,7 @@ def get_answers_for_tasks(args: UserAnswersForTasksModel):
 
 
 @dataclass
-class JsRunnerModel(GenericMarkupModel):
+class JsRunnerMarkupModel(GenericMarkupModel):
     fields: Union[List[str], Missing] = missing  # This is actually required, but we cannot use non-default arguments here...
     autoadd: Union[bool, Missing] = missing
     autoUpdateTables: Union[bool, Missing] = True
@@ -276,14 +276,16 @@ class JsRunnerModel(GenericMarkupModel):
     gradingScale: Union[Dict[Any, Any], Missing] = missing
     group: Union[str, Missing] = missing
     groups: Union[List[str], Missing] = missing
+    includeUsers: Union[MembershipFilter, Missing] = field(default=MembershipFilter.Current, metadata={'by_value': True})
+    selectIncludeUsers: bool = False
     paramFields: Union[List[str], Missing] = missing
     postprogram: Union[str, Missing] = missing
     preprogram: Union[str, Missing] = missing
     program: Union[str, Missing] = missing
-    showInView: Union[bool, Missing] = missing
+    showInView: bool = False
     timeout: Union[int, Missing] = missing
     updateFields: Union[List[str], Missing] = missing
-    validonly: Union[bool, Missing] = missing
+    validonly: bool = True
 
     @validates_schema(skip_on_field_errors=True)
     def validate_schema(self, data, **_):
@@ -293,7 +295,31 @@ class JsRunnerModel(GenericMarkupModel):
             raise ValidationError("Either group or groups must be given.")
 
 
-JsRunnerSchema = class_schema(JsRunnerModel)
+JsRunnerMarkupSchema = class_schema(JsRunnerMarkupModel)
+
+
+@dataclass
+class JsRunnerInputModel:
+    nosave: Union[bool, Missing] = missing
+    groups: Union[List[str], Missing] = missing
+    paramComps: Union[Dict[str, str], Missing] = missing
+    includeUsers: MembershipFilter = field(default=MembershipFilter.Current, metadata={'by_value': True})
+
+
+@dataclass
+class RefFrom:
+    docId: int
+    par: str
+
+
+@dataclass
+class JsRunnerAnswerModel:
+    input: JsRunnerInputModel
+    ref_from: Optional[RefFrom] = None
+    abData: Union[Dict[str, Any], Missing] = missing
+
+
+JsRunnerAnswerSchema = class_schema(JsRunnerAnswerModel)
 
 
 @dataclass
@@ -496,17 +522,25 @@ def post_answer(plugintype: str, task_id_ext: str):
     state = try_load_json(old_answers[0].content) if logged_in() and len(old_answers) > 0 else None
 
     if plugin.type == 'jsrunner':
-        s = JsRunnerSchema()
+        s = JsRunnerMarkupSchema()
         try:
-            s.load(plugin.values)
+            # noinspection PyTypeChecker
+            runnermarkup: JsRunnerMarkupModel = s.load(plugin.values)
         except ValidationError as e:
             return abort(400, str(e))
-        groupnames = plugin.values.get('groups', [plugin.values.get('group')])
+        try:
+            # noinspection PyTypeChecker
+            runner_req: JsRunnerAnswerModel = JsRunnerAnswerSchema().load(request.get_json())
+        except ValidationError as e:
+            return abort(400, str(e))
+        groupnames = runnermarkup.groups
+        if groupnames is missing:
+            groupnames = [runnermarkup.group]
         g = UserGroup.query.filter(UserGroup.name.in_(groupnames))
         found_groups = g.all()
-        req_groups = answerdata.get("groups", None)
+        req_groups = runner_req.input.groups
         # Check if groups given as request arg can be considered as subset of groups given in markup
-        if req_groups is not None:
+        if req_groups:
             all_req_groups = UserGroup.query.filter(UserGroup.name.in_(req_groups)).all()
             if not curr_user.has_edit_access(d):
                 user_set = set()
@@ -526,25 +560,27 @@ def post_answer(plugintype: str, task_id_ext: str):
         not_found_groups = sorted(list(set(groupnames) - set(g.name for g in found_groups)))
         if not_found_groups:
             abort(404, f'The following groups were not found: {", ".join(not_found_groups)}')
-        try:
-            pcomps = verify_json_params('paramComps')
-            if pcomps: # TODO: lisää rajapintaan valmiiksi tuo paramComps, niin ei tarvii lähdekoodia manipuloida
-                preprg = plugin.values.get("preprogram", "")
-                # TODO:  miksi pcomps on taulukko???
-                plugin.values["preprogram"] = "gtools.params = " + json.dumps(pcomps[0]) +";\n" + preprg
-        except:
-            pass
+        if runner_req.input.paramComps:  # TODO: add paramComps to the interface, so no need to manipulate source code
+            preprg = runnermarkup.preprogram or ''
+            plugin.values["preprogram"] = f"gtools.params = {json.dumps(runner_req.input.paramComps)};\n{preprg}"
 
-        siw = plugin.values.get("showInView", False)
-        validonly = plugin.values.get("validonly", True)
+        siw = runnermarkup.showInView
+        validonly = runnermarkup.validonly
+
+        if not runnermarkup.selectIncludeUsers and runnermarkup.includeUsers != runner_req.input.includeUsers:
+            abort(403, 'Not allowed to select includeUsers option.')
+
         answerdata['data'], answerdata['aliases'], _, _ = get_fields_and_users(
-            plugin.values['fields'],
+            runnermarkup.fields,
             found_groups,
             d,
             get_current_user_object(),
-            allow_non_teacher=siw, valid_only=validonly
+            allow_non_teacher=siw,
+            valid_only=validonly,
+            member_filter_type=runner_req.input.includeUsers,
         )
-        if plugin.values.get('program') is None:
+        answerdata.pop('paramComps', None)  # This isn't needed by jsrunner server, so don't send it.
+        if runnermarkup.program is missing:
             abort(400, "Attribute 'program' is required.")
 
     answer_call_data = {'markup': plugin.values,

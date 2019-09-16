@@ -8,6 +8,7 @@ from typing import List, Optional, Tuple, Union, Dict, Any, Sequence
 
 import base64
 import dateutil.parser
+import pytz
 from lxml.html import HtmlElement
 
 from timApp.markdown.htmlSanitize import sanitize_html
@@ -320,3 +321,4 @@ def get_alias(name):
     return match.group(2)
 
 
+fin_timezone = pytz.timezone('Europe/Helsinki')

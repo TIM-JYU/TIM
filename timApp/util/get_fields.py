@@ -9,7 +9,6 @@ from typing import List, Optional, Tuple, DefaultDict, Dict
 
 import attr
 import dateutil.parser
-import pytz
 from marshmallow import missing
 from sqlalchemy import func, true
 from sqlalchemy.orm import lazyload, joinedload
@@ -24,10 +23,10 @@ from timApp.plugin.plugin import find_plugin_from_document, TaskNotFoundExceptio
 from timApp.plugin.pluginexception import PluginException
 from timApp.plugin.taskid import TaskId
 from timApp.user.groups import verify_group_view_access
-from timApp.user.user import User
+from timApp.user.user import User, get_membership_end
 from timApp.user.usergroup import UserGroup
 from timApp.util.answerutil import task_ids_to_strlist
-from timApp.util.utils import widen_fields, get_alias, seq_to_str
+from timApp.util.utils import widen_fields, get_alias, seq_to_str, fin_timezone
 
 
 def chunks(l: List, n: int):
@@ -38,9 +37,6 @@ def chunks(l: List, n: int):
 tallyfield_re = re.compile(
     r'tally:((?P<doc>\d+)\.)?(?P<field>[a-zA-Z0-9öäåÖÄÅ_-]+)(\[ *(?P<ds>[^\[\],]*) *, *(?P<de>[^\[\],]*) *\])?'
 )
-
-
-fin_timezone = pytz.timezone('Europe/Helsinki')
 
 
 @attr.s(auto_attribs=True)
@@ -106,7 +102,7 @@ member_filter_relation_map = {
 
 def get_fields_and_users(
         u_fields: List[str],
-        groups: List[UserGroup],
+        requested_groups: List[UserGroup],
         d: DocInfo,
         current_user: User,
         autoalias: bool = False,
@@ -119,7 +115,7 @@ def get_fields_and_users(
     Return fielddata, aliases, field_names
     :param member_filter_type: Whether to use all, current or deleted users in groups.
     :param u_fields: list of fields to be used
-    :param groups: user groups to be used
+    :param requested_groups: requested user groups to be used
     :param d: default document
     :param current_user: current users, check his rights to fields
     :param autoalias: if true, give automatically from d1 same as would be from d1 = d1
@@ -130,7 +126,7 @@ def get_fields_and_users(
     """
     needs_group_access_check = UserGroup.get_teachers_group() not in current_user.groups
     ugroups = []
-    for group in groups:
+    for group in requested_groups:
         if needs_group_access_check and group.name != current_user.name:
             if not verify_group_view_access(group, current_user, require=False):
                 # return abort(403, f'Missing view access for group {group.name}')
@@ -229,6 +225,7 @@ def get_fields_and_users(
             except KeyError:
                 pass
 
+    group_id_set = set(ug.id for ug in groups)
     group_filter = UserGroup.id.in_([ug.id for ug in groups])
     join_relation = member_filter_relation_map[member_filter_type]
     tally_field_values = get_tally_field_values(d, doc_map, group_filter, join_relation, tally_fields)
@@ -291,7 +288,12 @@ def get_fields_and_users(
                 user_tasks = {}
             user_fieldstyles = {}
             user = users[user_index]
-            res.append({'user': user, 'fields': user_tasks, 'styles': user_fieldstyles})
+            obj = {'user': user, 'fields': user_tasks, 'styles': user_fieldstyles}
+            res.append(obj)
+            if member_filter_type != MembershipFilter.Current:
+                m_end = get_membership_end(user, group_id_set)
+                if m_end:
+                    obj['groupinfo'] = {'membership_end': time.mktime(m_end.timetuple())}
             last_user = uid
             if not a:
                 continue

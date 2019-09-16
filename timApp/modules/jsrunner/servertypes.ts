@@ -1,10 +1,16 @@
 import * as t from "io-ts";
 import {JsrunnerMarkup} from "./public/javascripts/jsrunnertypes";
 
-export const UserFieldData = t.type({
-    fields: t.record(t.string, t.unknown),
-    user: t.type({id: t.Int, name: t.string, real_name: t.string}),
-});
+export const UserFieldData = t.intersection([
+    t.type({
+        fields: t.record(t.string, t.unknown),
+        user: t.type({id: t.Int, name: t.string, real_name: t.string}),
+    }),
+    t.partial({
+        groupinfo: t.type({
+            membership_end: t.number,
+        }),
+    })]);
 
 export type UserFieldDataT = t.TypeOf<typeof UserFieldData>;
 

@@ -1,16 +1,18 @@
 """Server tests for jsrunner plugin."""
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List
 
 import requests
 
 from timApp.answer.answer import Answer
 from timApp.document.docinfo import DocInfo
+from timApp.plugin.plugin import Plugin
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.timdb.sqa import db
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
+from timApp.user.usergroupmember import UserGroupMember
 
 
 class JsRunnerTestBase(TimRouteTest):
@@ -26,11 +28,20 @@ class JsRunnerTestBase(TimRouteTest):
 #- {{#r plugin=jsrunner}}
 {md}""")
 
-    def do_jsrun(self, d: DocInfo, expect_content=None, expect_status=200, **kwargs):
+    def do_jsrun(
+            self,
+            d: DocInfo,
+            expect_content=None,
+            expect_status=200,
+            user_input=None,
+            **kwargs,
+    ):
+        if not user_input:
+            user_input = {}
         return self.post_answer(
             'jsrunner',
             f'{d.id}.r',
-            user_input={},
+            user_input=user_input,
             expect_content=expect_content,
             expect_status=expect_status,
             **kwargs,
@@ -701,6 +712,75 @@ program: |!!
             expect_content='Unknown tally field: x. Valid tally fields are: total_points, velp_points, task_points, task_count, velped_task_count, 1st, 2nd and 3rd.',
             expect_status=400,
             json_key='error',
+        )
+
+    def test_deleted_users(self):
+        d = self.create_jsrun("""
+fields: []
+group: testusers
+includeUsers: all
+selectIncludeUsers: true
+program: |!!
+tools.print(tools.getLeaveDate());
+!!""")
+        ug = UserGroup.create('testusers')
+        ug.current_memberships[self.test_user_1.id] = UserGroupMember(user=self.test_user_1)
+        ug.current_memberships[self.test_user_2.id] = UserGroupMember(user=self.test_user_2,
+                                                                      membership_end=datetime(2010, 1, 1).replace(tzinfo=timezone.utc))
+        db.session.commit()
+        self.do_jsrun(
+            d,
+            user_input={'includeUsers': 'x'},
+            expect_status=400,
+            expect_content={'error': "{'input': {'includeUsers': ['Invalid enum value x']}}"},
+        )
+        self.do_jsrun(
+            d,
+            user_input={'includeUsers': 'current'},
+            expect_content={"web":{"output":"undefined\n","errors":[],"outdata":{}}},
+        )
+        self.do_jsrun(
+            d,
+            user_input={'includeUsers': 'all'},
+            expect_content={"web":{"output":"undefined\n","errors":[],"outdata":{}}},
+        )
+        gd = self.create_doc()
+        UserGroup.get_by_name('testusers').admin_doc = gd.block
+        db.session.commit()
+        self.do_jsrun(
+            d,
+            user_input={'includeUsers': 'all'},
+            expect_content={'web': {'errors': [], 'outdata': {}, 'output': 'undefined\n1262304000\n'}},
+        )
+        p = d.document.get_paragraphs()[0]
+        plug = Plugin.from_paragraph(p)
+        plug.values['selectIncludeUsers'] = False
+        plug.save()
+        self.do_jsrun(
+            d,
+            user_input={'includeUsers': 'current'},
+            expect_status=403,
+            expect_content='Not allowed to select includeUsers option.',
+            json_key='error',
+        )
+        self.do_jsrun(
+            d,
+            user_input={'includeUsers': 'all'},
+            expect_content={'web': {'errors': [], 'outdata': {}, 'output': 'undefined\n1262304000\n'}},
+        )
+        plug.values.pop('selectIncludeUsers')
+        plug.save()
+        self.do_jsrun(
+            d,
+            user_input={'includeUsers': 'current'},
+            expect_status=403,
+            expect_content='Not allowed to select includeUsers option.',
+            json_key='error',
+        )
+        self.do_jsrun(
+            d,
+            user_input={'includeUsers': 'all'},
+            expect_content={'web': {'errors': [], 'outdata': {}, 'output': 'undefined\n1262304000\n'}},
         )
 
 

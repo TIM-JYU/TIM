@@ -8,7 +8,7 @@ import {PluginBase, pluginBindings} from "tim/plugin/util";
 import {$http} from "tim/util/ngimport";
 import {to} from "tim/util/utils";
 import "../../stylesheets/jsrunner.css";
-import {AnswerReturnBrowser, ErrorList, IError, JsrunnerAll, JsrunnerMarkup} from "./jsrunnertypes";
+import {AnswerReturnBrowser, ErrorList, IError, IncludeUsersOption, JsrunnerAll, JsrunnerMarkup} from "./jsrunnertypes";
 
 const jsrunnerApp = angular.module("jsrunnerApp", ["ngSanitize"]);
 export const moduleDefs = [jsrunnerApp];
@@ -22,6 +22,8 @@ class JsrunnerController extends PluginBase<t.TypeOf<typeof JsrunnerMarkup>, t.T
     private scriptErrors?: ErrorList;
     private isopen: boolean = true;
     private visible: number = -1;
+    private userOpts = Object.keys(IncludeUsersOption.keys);
+    private userOpt: t.TypeOf<typeof IncludeUsersOption> = "current";
 
     getDefaultMarkup() {
         return {};
@@ -36,6 +38,10 @@ class JsrunnerController extends PluginBase<t.TypeOf<typeof JsrunnerMarkup>, t.T
         if (this.isopen) {
             this.showFieldHelper();
         }
+    }
+
+    showIncludeUsersOption() {
+        return this.attrs.selectIncludeUsers;
     }
 
     showFieldHelper() {
@@ -61,6 +67,7 @@ class JsrunnerController extends PluginBase<t.TypeOf<typeof JsrunnerMarkup>, t.T
 
     $onInit() {
         super.$onInit();
+        this.userOpt = this.attrs.includeUsers;
         if (this.attrs.fieldhelper && this.isVisible()) {
             this.isopen = this.attrs.open || false;
             if (this.isopen) {
@@ -85,34 +92,27 @@ class JsrunnerController extends PluginBase<t.TypeOf<typeof JsrunnerMarkup>, t.T
     async doCheckFields(nosave: boolean, groups?: string[]) {
         this.isRunning = true;
         this.error = undefined;
-        // const paramComps = [];
-        const paramComps: any = {};
+        const paramComps: Record<string, string | undefined> = {};
         if (this.attrsall.markup.paramFields) {
             for (const i of this.attrsall.markup.paramFields) {
                 const timComponents = this.vctrl.getTimComponentsByRegex(i);
                 for (const v of timComponents) {
                     const cname = v.getName();
                     const value = v.getContent();
-                    // paramComps.push({name: cname, c: value});
                     if ( cname ) { paramComps[cname] = value; }
                 }
             }
         }
 
-        const params: {paramComps: {}, input: {nosave: boolean, groups: string[] | null}} = {
-            paramComps: paramComps,
+        const params = {
             input: {
-                nosave: false,
-                groups: null,
+                groups: groups,
+                includeUsers: this.userOpt,
+                nosave: nosave,
+                paramComps: paramComps,
             },
         };
 
-        if (nosave) {
-            params.input.nosave = true;
-        }
-        if (groups) {
-            params.input.groups = groups;
-        }
         const url = this.pluginMeta.getAnswerUrl();
         const r = await to($http.put<AnswerReturnBrowser>(url, params));
         this.isRunning = false;
@@ -213,10 +213,17 @@ jsrunnerApp.component("jsRunner", {
         vctrl: "^timView",
     },
     template: `
-<div class="jsRunnerDiv" ng-if="::$ctrl.isVisible()">
+<div ng-if="::$ctrl.isVisible()">
     <tim-markup-error ng-if="::$ctrl.markupError" data="::$ctrl.markupError"></tim-markup-error>
     <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
     <p ng-if="::$ctrl.stem" ng-bind-html="::$ctrl.stem"></p>
+    <div class="form form-inline" ng-if="::$ctrl.showIncludeUsersOption()">
+    Users to include:
+    <select ng-options="o for o in $ctrl.userOpts"
+            ng-model="$ctrl.userOpt"
+            class="form-control">
+    </select>
+    </div>
     <button ng-if="::$ctrl.hasAllAttributes()" class="timButton"
             ng-disabled="$ctrl.isRunning || $ctrl.readonly"
             ng-click="$ctrl.checkFields()">

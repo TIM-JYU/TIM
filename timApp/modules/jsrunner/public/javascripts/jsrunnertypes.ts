@@ -1,11 +1,17 @@
 import * as t from "io-ts";
 import {GenericPluginMarkup, GenericPluginTopLevelFields, withDefault} from "tim/plugin/attributes";
 
-export const Max1000 = t.brand(
-  t.number,
-  (n): n is t.Branded<number, {readonly Max1000: unique symbol}> => n >= 0 && n <= 1000,
-  "Max1000",
+// t.brand causes problems, so we use the deprecated refinement for now.
+export const Max1000 = t.refinement(
+    t.number,
+    (n) => n >= 0 && n <= 1000,
 );
+
+export const IncludeUsersOption = t.keyof({
+    all: null,
+    current: null,
+    deleted: null,
+});
 
 export const JsrunnerMarkup = t.intersection([
     t.partial({
@@ -20,6 +26,7 @@ export const JsrunnerMarkup = t.intersection([
         gradeField: t.string,
         gradingScale: t.record(t.string, t.number),
         groups: t.array(t.string),
+        selectIncludeUsers: t.boolean,
         program: t.string,
         preprogram: t.string,
         postprogram: t.string,
@@ -28,11 +35,11 @@ export const JsrunnerMarkup = t.intersection([
         showInView: t.boolean,
         autoadd: t.boolean,
         validonly: t.boolean,
-        autoUpdateTables: withDefault(t.boolean, true), // Build failure when in t.types?
     }),
     GenericPluginMarkup,
     t.type({
-        // all withDefaults should come here; NOT in t.partial
+        includeUsers: withDefault(IncludeUsersOption, "current"),
+        autoUpdateTables: withDefault(t.boolean, true),
     }),
 ]);
 
@@ -70,7 +77,9 @@ export interface IStatData {
     sd: number;
 }
 
-export interface INumbersObject {[hname: string]: number; }
+export interface INumbersObject {
+    [hname: string]: number;
+}
 
 export type AnswerReturn = AnswerReturnSuccess | AnswerReturnError;
 export type AnswerReturnBrowser = Omit<AnswerReturnSuccess & {web: {error?: string}}, "savedata"> | AnswerReturnError;
