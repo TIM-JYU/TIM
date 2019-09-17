@@ -854,6 +854,10 @@ def should_hide_name(d: DocInfo, user: User):
 
 def maybe_hide_name(d: DocInfo, u: User):
     if should_hide_name(d, u):
+        # NOTE! To anonymize user, do NOT assign to u's real_name, name, etc. attributes here (or anywhere else either)
+        # because it is
+        #  1) dangerous (the anonymization would be persisted if db.session.commit() was called after the assignment)
+        #  2) not necessary because the hiding is done in User.to_json method.
         u.hide_name = True
 
 
