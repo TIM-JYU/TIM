@@ -618,12 +618,13 @@ def post_answer(plugintype: str, task_id_ext: str):
             if points or save_object is not None or tags:
                 result['savedNew'] = save_answer(users,
                                                  tid,
-                                                 json.dumps(save_object),
+                                                 save_object,
                                                  points,
                                                  tags,
                                                  is_valid,
                                                  points_given_by,
-                                                 force_answer)
+                                                 force_answer,
+                                                 plugintype=ptype)
             else:
                 result['savedNew'] = None
             if not is_valid:
@@ -633,12 +634,13 @@ def post_answer(plugintype: str, task_id_ext: str):
             points = points_to_float(points)
             result['savedNew'] = save_answer(users,
                                              tid,
-                                             json.dumps(save_object),
+                                             save_object,
                                              points,
                                              tags,
                                              valid=True,
                                              points_given_by=get_current_user_group(),
-                                             saver=curr_user)
+                                             saver=curr_user,
+                                             plugintype=ptype)
         else:
             result['savedNew'] = None
         if result['savedNew'] is not None and upload is not None:

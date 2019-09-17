@@ -237,11 +237,11 @@ class RbfieldController extends PluginBase<t.TypeOf<typeof RbfieldMarkup>, t.Typ
     }
 
     setChecked(b: boolean) {
-        const cb = this.element.find("#" + this.getName());
-        cb.prop("checked", b);
         this.userword = b ? "1" : "0";
         if (this.attrs.autosave || this.attrs.autosave === undefined) {
-            this.saveText();
+            // We want to save the plugin regardless of unSaved status to prevent two radio buttons
+            // from being checked at the same time.
+            this.doSaveText(false);
         }
     }
 
@@ -257,8 +257,7 @@ class RbfieldController extends PluginBase<t.TypeOf<typeof RbfieldMarkup>, t.Typ
         for (const c of comps) {
             if ( c.getName() == n ) { continue; }
             if ( !(c instanceof RbfieldController) ) { continue; }
-            const f: any = c;
-            f.setChecked(false);
+            c.setChecked(false);
         }
         if (this.preventedAutosave) {
             this.preventedAutosave = false;
@@ -274,11 +273,6 @@ class RbfieldController extends PluginBase<t.TypeOf<typeof RbfieldMarkup>, t.Typ
      * @param nosave true/false parameter boolean checker for the need to save
      */
     async doSaveText(nosave: boolean) {
-        if (!this.isUnSaved()) {
-            this.saveResponse.saved = false;
-            this.saveResponse.message = "No changes";
-            return this.saveResponse;
-        }
         this.errormessage = "";
         this.isRunning = true;
         const c = this.userword;

@@ -6,12 +6,12 @@ from operator import itemgetter
 from typing import List, Optional, Dict, Tuple, Iterable, Any
 
 from sqlalchemy import func, Numeric, Float, true
-from sqlalchemy.orm import selectinload, defaultload, lazyload
+from sqlalchemy.orm import selectinload, defaultload
 
 from timApp.answer.answer import Answer
 from timApp.answer.answer_models import AnswerTag, UserAnswer
 from timApp.answer.pointsumrule import PointSumRule, PointType
-from timApp.plugin.plugin import is_global_id
+from timApp.plugin.plugin import is_global_id, PluginType
 from timApp.plugin.taskid import TaskId
 from timApp.timdb.sqa import db
 from timApp.user.user import Consent, User
@@ -29,17 +29,29 @@ def get_latest_answers_query(task_id: TaskId, users: List[User]):
     return q
 
 
+def is_redundant_answer(content: str, existing_answers: List[Answer], ptype: PluginType):
+    is_redundant = existing_answers and existing_answers[0].content == content
+    if is_redundant:
+        return True
+    if not existing_answers and ptype.type == 'rbfield' and json.loads(content)['c'] == '0':
+        return True
+    return False
+
+
 def save_answer(users: List[User],
                 task_id: TaskId,
-                content: str,
+                content: Any,
                 points: Optional[float],
                 tags: Optional[List[str]] = None,
                 valid: bool = True,
                 points_given_by=None,
                 force_save=False,
-                saver: User = None):
+                saver: User = None,
+                plugintype: Optional[PluginType]=None):
     """Saves an answer to the database.
 
+    :param plugintype: The plugin type.
+    :param saver: Who saved the answer.
     :param points_given_by: The usergroup id who gave the points, or None if they were given by a plugin.
     :param tags: Tags for the answer.
     :param valid: Whether the answer is considered valid (e.g. sent before deadline, etc.)
@@ -50,16 +62,18 @@ def save_answer(users: List[User],
     :param force_save: Whether to force to save the answer even if the latest existing answer has the same content.
 
     """
+    content_str = json.dumps(content)
     if tags is None:
         tags = []
     existing_answers = get_common_answers(users, task_id)
-    if existing_answers and existing_answers[0].content == content and not force_save:
-        a = existing_answers[0]
-        a.points = points
-        a.last_points_modifier = points_given_by
+    if is_redundant_answer(content_str, existing_answers, plugintype) and not force_save:
+        if existing_answers:
+            a = existing_answers[0]
+            a.points = points
+            a.last_points_modifier = points_given_by
         return None
 
-    a = Answer(task_id=task_id.doc_task, content=content, points=points, valid=valid,
+    a = Answer(task_id=task_id.doc_task, content=content_str, points=points, valid=valid,
                last_points_modifier=points_given_by)
     db.session.add(a)
 

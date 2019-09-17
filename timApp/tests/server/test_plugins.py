@@ -1355,3 +1355,20 @@ a: b
             settings={'global_plugin_attrs': {'pali': 'a', 'all': 'b'}},
         )
         self.get(d.url)
+
+    def test_rbfield_no_redundant_save(self):
+        self.login_test1()
+        d = self.create_doc(initial_par="""
+#- {defaultplugin=rbfield}
+{#f #}
+        """)
+        a = self.post_answer('rbfield', f'{d.id}.f', user_input={'c': '0'})
+        self.assertEqual({'web': {'result': 'saved'}, 'savedNew': None}, a)
+        a = self.post_answer('rbfield', f'{d.id}.f', user_input={'c': '1'})
+        self.assertIsInstance(a['savedNew'], int)
+        a = self.post_answer('rbfield', f'{d.id}.f', user_input={'c': '1'})
+        self.assertEqual({'web': {'result': 'saved'}, 'savedNew': None}, a)
+        a = self.post_answer('rbfield', f'{d.id}.f', user_input={'c': '0'})
+        self.assertIsInstance(a['savedNew'], int)
+        a = self.post_answer('rbfield', f'{d.id}.f', user_input={'c': '0'})
+        self.assertEqual({'web': {'result': 'saved'}, 'savedNew': None}, a)
