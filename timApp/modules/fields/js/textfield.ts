@@ -94,7 +94,7 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
         if (this.attrsall.state && this.attrsall.state.styles && !this.attrs.ignorestyles) {
             this.applyStyling(this.attrsall.state.styles);
         }
-        if(this.attrs.textarea && this.attrs.autogrow){
+        if (this.attrs.textarea && this.attrs.autogrow) {
             this.autoGrow();
         }
     }
