@@ -2197,7 +2197,6 @@ export class TimTableController extends DestroyScope implements IController, ITi
             for (const dr of defrange) {
                 const r = dr.validrange || this.checkRange(dr);
                 dr.validrange = r;
-                this.checkRange(dr);
                 if (this.checkIndex2(r, rown, coln, rowi, coli)) {
                     this.applyStyle(styles, dr.def, columnStyles);
                 }
