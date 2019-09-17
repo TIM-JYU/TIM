@@ -25,7 +25,7 @@ class PluginTest(TimDbTest):
         for i, (aid, aid2) in enumerate(a_ids, start=1):
             a: Answer = Answer.query.get(aid)
             self.assert_dict_subset(to_dict(a), {
-                'content': f'content{i}',
+                'content': f'"content{i}"',
                 'points': None,
                 'task_id': p.task_id.doc_task,
                 'valid': True
@@ -33,7 +33,7 @@ class PluginTest(TimDbTest):
             self.assertEqual(i, a.get_answer_number())
             a = Answer.query.get(aid2)
             self.assert_dict_subset(to_dict(a), {
-                'content': f'content{i}',
+                'content': f'"content{i}"',
                 'points': None,
                 'task_id': p.task_id.doc_task,
                 'valid': True

@@ -29,11 +29,11 @@ def get_latest_answers_query(task_id: TaskId, users: List[User]):
     return q
 
 
-def is_redundant_answer(content: str, existing_answers: List[Answer], ptype: PluginType):
+def is_redundant_answer(content: str, existing_answers: List[Answer], ptype: Optional[PluginType]):
     is_redundant = existing_answers and existing_answers[0].content == content
     if is_redundant:
         return True
-    if not existing_answers and ptype.type == 'rbfield' and json.loads(content)['c'] == '0':
+    if not existing_answers and ptype and ptype.type == 'rbfield' and json.loads(content)['c'] == '0':
         return True
     return False
 
