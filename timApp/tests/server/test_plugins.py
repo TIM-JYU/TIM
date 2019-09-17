@@ -921,12 +921,22 @@ needed_len: 6
         a = self.post_answer(plugin_type='pali', task_id=task_id, user_input={'userword': 'aaaaaa', 'paliOK': True})
         self.mark_as_read(d, d.document.get_paragraphs()[0].get_id())
         test1_json_substr = '"user": {"email": "test1@example.com"'
-        r = self.get(d.get_url_for_view('teacher'), query_string={'hide_names': True})
-        self.assertNotIn(test1_json_substr, r)
-        r = self.get(d.get_url_for_view('teacher'))
-        self.assertNotIn(test1_json_substr, r)
+        test2_json_substr = '"user": {"email": "test2@example.com"'
 
-        answer_list = self.get_task_answers(task_id)
+        # but someone with only 'see answers' can only see his own
+        grant_access(self.test_user_2.get_personal_group(), d.block, 'see answers')
+        self.login_test2()
+        self.mark_as_read(d, d.document.get_paragraphs()[0].get_id())
+        a = self.post_answer(plugin_type='pali', task_id=task_id, user_input={'userword': 'aaaaaa', 'paliOK': True})
+        r = self.get(d.get_url_for_view('answers'))
+        # can see own name
+        self.assertNotIn(test1_json_substr, r)
+        self.assertIn(test2_json_substr, r)
+        r = self.get(d.get_url_for_view('answers'))
+        self.assertNotIn(test1_json_substr, r)
+        self.assertIn(test2_json_substr, r)
+
+        answer_list = self.get_task_answers(task_id, self.test_user_1)
         self.assertEqual([{'content': '{"userword": "aaaaaa"}',
                            'last_points_modifier': None,
                            'points': 1.0,
@@ -940,20 +950,61 @@ needed_len: 6
                  expect_content=[{'email': 'user2@example.com',
                                   'id': 2,
                                   'name': 'user2',
-                                  'real_name': 'User 2'}])
+                                  'real_name': 'User 2'},
+                                 {'email': 'test2@example.com',
+                                  'id': 3,
+                                  'name': 'testuser2',
+                                  'real_name': 'Test user 2'}])
+        self.get(
+            f'/read/stats/{d.path}',
+            expect_status=403,
+        )
+
+        self.login_test1()
+        r = self.get(d.get_url_for_view('teacher'), query_string={'hide_names': True})
+        # can see own name
+        self.assertIn(test1_json_substr, r)
+        self.assertNotIn(test2_json_substr, r)
+        r = self.get(d.get_url_for_view('teacher'))
+        self.assertIn(test1_json_substr, r)
+        self.assertNotIn(test2_json_substr, r)
+
         self.get(f'/read/stats/{d.path}',
                  expect_content=[{'any_of_phs': 0,
                                   'click_par': 0,
                                   'click_red': 1,
                                   'hover_par': 0,
                                   'on_screen': 0,
+                                  'username': 'user'},
+                                 {'any_of_phs': 0,
+                                  'click_par': 0,
+                                  'click_red': 1,
+                                  'hover_par': 0,
+                                  'on_screen': 0,
                                   'username': 'user'}])
+
 
         r = self.get(d.get_url_for_view('teacher'), query_string={'hide_names': False})
 
         self.assertIn(test1_json_substr, r)
+        self.assertIn(test2_json_substr, r)
         r = self.get(d.get_url_for_view('teacher'))
         self.assertIn(test1_json_substr, r)
+        self.assertIn(test2_json_substr, r)
+
+        self.get(f'/read/stats/{d.path}',
+                 expect_content=[{'any_of_phs': 0,
+                                  'click_par': 0,
+                                  'click_red': 1,
+                                  'hover_par': 0,
+                                  'on_screen': 0,
+                                  'username': 'testuser1'},
+                                 {'any_of_phs': 0,
+                                  'click_par': 0,
+                                  'click_red': 1,
+                                  'hover_par': 0,
+                                  'on_screen': 0,
+                                  'username': 'testuser2'}])
 
     def test_taskid_reference(self):
         self.login_test1()

@@ -855,8 +855,7 @@ def should_hide_name(d: DocInfo, user: User):
 def maybe_hide_name(d: DocInfo, u: User):
     if should_hide_name(d, u):
         u.hide_name = True
-        u.real_name = "User " + str(u.id)
-        u.name = "User " + str(u.id)
+
 
 @answers.route("/infosForTasks", methods=['POST'])
 def get_task_infos():

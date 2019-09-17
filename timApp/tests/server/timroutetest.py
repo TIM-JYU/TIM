@@ -484,8 +484,8 @@ class TimRouteTest(TimDbTest):
                               "ref_from": {'docId': ref_from[0], 'par': ref_from[1]} if ref_from else None,
                               }, **kwargs)
 
-    def get_task_answers(self, task_id):
-        answer_list = self.get(f'/answers/{task_id}/{self.current_user_id()}')
+    def get_task_answers(self, task_id, user: Optional[User]=None):
+        answer_list = self.get(f'/answers/{task_id}/{user.id if user else self.current_user_id()}')
         return answer_list
 
     @staticmethod
