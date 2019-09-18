@@ -18,7 +18,7 @@ import {
     getViewRange,
     partitionDocument,
     setPieceSize,
-    showViewRangeEditDialog,
+    showViewRangeEditDialog, toggleViewRange,
     unpartitionDocument,
     unsetPieceSize,
 } from "../item/viewRangeEditDialog";
@@ -74,13 +74,11 @@ export class SidebarMenuCtrl implements IController {
     // undefined means that the user has not acknowledged anything yet
     private storage: ngStorage.StorageService & {
         consent: null | undefined | number,
-        viewRange: null | string,
-        partitionDocuments: null | boolean,
+        pieceSize: null | string,
     };
     private currentRelevance?: number;
     private showRelevance: boolean = true;
-    private partitionDocumentsSetting: boolean = false; // Show documents in parts.
-    private viewRangeSetting: number = 20; // Number of pars per part.
+    private pieceSizeSetting: number = 20; // Number of pars per part.
     private showFolderSettings: boolean = false;
     private linkedGroups: IDocument[] = [];
     private item?: DocumentOrFolder;
@@ -109,7 +107,7 @@ export class SidebarMenuCtrl implements IController {
         this.storage = $localStorage.$default({
             consent: undefined,
             partitionDocuments: null,
-            viewRange: null,
+            pieceSize: null,
         });
 
         this.updateLeftSide();
@@ -142,8 +140,9 @@ export class SidebarMenuCtrl implements IController {
         if (this.item) {
             this.showFolderSettings = this.users.isLoggedIn() && this.item.isFolder;
         }
-
-        this.loadViewRangeSettings();
+        if (this.item && !this.item.isFolder) {
+            this.loadViewRangeSettings();
+        }
         // await this.processConsent();
     }
 
@@ -476,17 +475,7 @@ export class SidebarMenuCtrl implements IController {
         if (!(this.vctrl && this.item)) {
             return;
         }
-        const currentViewRange = await getPieceSize();
-        if (currentViewRange && currentViewRange > 0) {
-            unsetPieceSize();
-            unpartitionDocument(document);
-        } else {
-            setPieceSize(this.viewRangeSetting);
-            const range = await getViewRange(document, 0, true);
-            if (range) {
-                partitionDocument(range.b, range.e, document);
-            }
-        }
+        void toggleViewRange(this.pieceSizeSetting);
     }
 
     private openViewRangeMenu() {
@@ -513,11 +502,8 @@ export class SidebarMenuCtrl implements IController {
     }
 
     private async loadViewRangeSettings() {
-        if (this.storage.partitionDocuments != null) {
-            this.partitionDocumentsSetting = this.storage.partitionDocuments;
-        }
-        if (this.storage.viewRange != null) {
-            this.viewRangeSetting = +this.storage.viewRange;
+        if (this.storage.pieceSize != null) {
+            this.pieceSizeSetting = +this.storage.pieceSize;
         }
     }
 }
