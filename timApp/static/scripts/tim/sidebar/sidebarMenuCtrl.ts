@@ -475,7 +475,7 @@ export class SidebarMenuCtrl implements IController {
         if (!(this.vctrl && this.item)) {
             return;
         }
-        void toggleViewRange(this.pieceSizeSetting);
+        void toggleViewRange(this.item.id, this.pieceSizeSetting);
     }
 
     private openViewRangeMenu() {

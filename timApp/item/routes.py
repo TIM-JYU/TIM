@@ -764,13 +764,18 @@ def unset_piece_size():
     return resp
 
 
+@dataclass
+class SetViewRangeModel:
+    pieceSize: int
+
 @view_page.route('/viewrange/set/piecesize', methods=["POST"])
-def set_piece_size():
+@use_args(class_schema(SetViewRangeModel)())
+def set_piece_size(args: SetViewRangeModel):
     """
     Add cookie for user defined view range (if isn't set, doc won't be partitioned).
     :return: Response.
     """
-    piece_size, = verify_json_params('pieceSize')
+    piece_size = args.pieceSize
     if not piece_size or piece_size < 1:
         piece_size = DEFAULT_VIEWRANGE
     resp = make_response()
@@ -778,27 +783,20 @@ def set_piece_size():
     return resp
 
 
-@view_page.route('/viewrange/get/piecesize')
-def get_piece_size():
-    range = get_piece_size_from_cookie(request)
-    return json_response(range)
-
-
-@view_page.route('/viewrange/get/<path:doc_name>/<int:index>/<int:forwards>')
-def get_viewrange(doc_name, index, forwards):
+@view_page.route('/viewrange/get/<int:doc_id>/<int:index>/<int:forwards>')
+def get_viewrange(doc_id, index, forwards):
     taketime("route view begin")
     current_set_size = get_piece_size_from_cookie(request)
-    doc_info = DocEntry.find_by_path(doc_name, fallback_to_id=True)
-    range = decide_piece_range(doc_info, current_set_size, index, forwards > 0)
-    print(range)
+    doc_info = DocEntry.find_by_id(doc_id)
+    view_range = decide_view_range(doc_info, current_set_size, index, forwards > 0)
     try:
-        return json_response({'b': range[0], 'e': range[1]})
+        return json_response({'b': view_range[0], 'e': view_range[1]})
     except Exception as e:
         print(e)
         return abort(400, get_error_message(e))
 
 
-def get_piece_size_from_cookie(request: Request) -> Union[int, None]:
+def get_piece_size_from_cookie(request: Request) -> Optional[int]:
     """
     Reads piece size from cookie, if it exists.
     :param request: Request.
@@ -811,11 +809,10 @@ def get_piece_size_from_cookie(request: Request) -> Union[int, None]:
         return None
 
 
-def decide_piece_range(doc_info: DocInfo, preferred_set_size: int, index: int = 0,
-                       forwards: bool = True, min_set_size_modifier: float = 0.5) -> Union[Range, None]:
+def decide_view_range(doc_info: DocInfo, preferred_set_size: int, index: int = 0,
+                       forwards: bool = True, min_set_size_modifier: float = 0.5) -> Optional[Range]:
     """
     Decide begin and end indices of paragraph set based on preferred size, areas and number of remaining paragraphs.
-
     If set_size is 50 and modifier 0.5, this will combine neighboring set if its size is 25 or less.
 
     :param doc_info: Document.
@@ -825,14 +822,16 @@ def decide_piece_range(doc_info: DocInfo, preferred_set_size: int, index: int = 
     :param min_set_size_modifier: Smallest allowed neighboring set compared to set size.
     :return:
     """
-    print(preferred_set_size, index, forwards)
-
+    # TODO: Clean prints.
+    # print(preferred_set_size, index, forwards)
+    # TODO: Better way to get number of pars?
+    document_length = len(doc_info.document.get_paragraphs())
     if forwards:
         b = index
-        e = preferred_set_size + index
+        e = min(preferred_set_size + index, document_length - 1)
     else:
-        b = index - preferred_set_size
+        b = max(index - preferred_set_size, 0)
         e = index - 1
     # TODO: Don't cut areas.
-    # TODO: Combine following set if it's smaller than given fraction of set size.
+    # TODO: Add the rest of document if it's smaller than given fraction of the piece size.
     return b, e

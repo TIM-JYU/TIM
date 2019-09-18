@@ -14,6 +14,7 @@ markAsUsed(focusMe);
 
 // TODO: Are b and e always in the same order?
 export const viewRangeRegExp = new RegExp("\&b=\\d+\&e=\\d+");
+export const viewRangeCookieRegExp = new RegExp("r=\\d+;");
 
 /**
  * Disable document partitioning by reloading. Preserves other params.
@@ -50,18 +51,20 @@ export async function setPieceSize(pieceSize: number) {
     const r = await to($http.post(`/viewrange/set/piecesize`, data));
     if (!r.ok) {
         console.log("Failed to set view range cookie: " + r);
-    } else {
-        console.log("View range cookie created with value: " + pieceSize);
     }
 }
 
 export async function getPieceSize() {
-    const r = await to($http.get<number>(`/viewrange/get/piecesize`));
-    if (!r.ok) {
-        console.log("View range cookie not found: " + r.result.data);
+    const cookie = document.cookie.match(viewRangeCookieRegExp);
+    let value = 0;
+    if (cookie != null) {
+        value = +cookie[0].replace(/[^\d-]/g, "");
+    }
+    // Convert to null since +string is 0 if string to integer conversion fails.
+    if (value == 0) {
+        return null;
     } else {
-        console.log("View range cookie found with value: " + r.result.data);
-        return r.result.data;
+        return value;
     }
 }
 
@@ -72,35 +75,36 @@ export interface IViewRange {
 
 /**
  * Get view range from the document. Depends on starting index, direction, and document's size, areas and
+ * @param docId
  * @param index
  * @param forwards
  */
-export async function getViewRange(index: number, forwards: boolean) {
+export async function getViewRange(docId: number, index: number, forwards: boolean) {
     let forwardsInt = 1;
     if (!forwards) {
         forwardsInt = 0;
     }
-    const r = await to($http.get<IViewRange>(`/viewrange/get/${document.location.pathname}/${index}/${forwardsInt}`));
+    const r = await to($http.get<IViewRange>(`/viewrange/get/${docId}/${index}/${forwardsInt}`));
     if (!r.ok) {
         console.log(r.result.data);
     } else {
-        console.log(r.result.data);
         return r.result.data;
     }
 }
 
 /**
  * Toggle document partitioning with part starting from index 0.
+ * @param docId
  * @param pieceSize Size of the document part.
  */
-export async function toggleViewRange(pieceSize: number) {
+export async function toggleViewRange(docId: number, pieceSize: number) {
     const currentViewRange = await getPieceSize();
     if (currentViewRange && currentViewRange > 0) {
-        await unsetPieceSize();
+        void unsetPieceSize(); // Waiting for this isn't necessary?
         unpartitionDocument();
     } else {
         await setPieceSize(pieceSize);
-        const range = await getViewRange(0, true);
+        const range = await getViewRange(docId, 0, true);
         if (range) {
             partitionDocument(range.b, range.e);
         }
@@ -163,7 +167,7 @@ export class ViewRangeEditController extends DialogController<{ params: IItem },
         this.saveValues();
         if (this.partitionDocumentsSetting) {
             await setPieceSize(this.viewRangeSetting);
-            const range = await getViewRange(0, true);
+            const range = await getViewRange(this.resolve.params.id, 0, true);
             if (range) {
                 partitionDocument(range.b, range.e);
             }
