@@ -12,23 +12,29 @@ import {IItem} from "./IItem";
 
 markAsUsed(focusMe);
 
+// TODO: Are b and e always in the same order?
+export const viewRangeRegExp = new RegExp("\&b=\\d+\&e=\\d+");
+
 /**
- * Partition document by reloading.
- * @param b First shown par index.
- * @param e Last shown par incex.
- * @param doc Document.
+ * Disable document partitioning by reloading. Preserves other params.
  */
-export function partitionDocument(b: number, e: number, doc: Document) {
-    doc.location.search = `?b=${b}&e=${e}`;
+export function unpartitionDocument() {
+    document.location.search = document.location.search.replace(viewRangeRegExp, "");
 }
 
 /**
- * Disable document partitioning by reloading.
- * @param doc Document.
+ * Partition document by reloading. If there's existing partitioning, replace it,
+ * otherwise add to url parameters.
+ * @param b First shown par index.
+ * @param e Last shown par index.
  */
-export function unpartitionDocument(doc: Document) {
-    if (doc.location.search.toString().includes("&e=")) {
-        doc.location.search = "";
+export function partitionDocument(b: number, e: number) {
+    const allParams = document.location.search;
+    const newParams = `&b=${b}&e=${e}`;
+    if (viewRangeRegExp.test(allParams)) {
+        document.location.search = document.location.search.replace(viewRangeRegExp, newParams);
+    } else {
+        document.location.search += `${newParams}`;
     }
 }
 
@@ -36,8 +42,6 @@ export async function unsetPieceSize() {
     const r = await to($http.get<number>(`/viewrange/unset/piecesize`));
     if (!r.ok) {
         console.log("Failed to remove view range cookie: " + r);
-    } else {
-        console.log("View range cookie set as -1");
     }
 }
 
@@ -51,7 +55,7 @@ export async function setPieceSize(pieceSize: number) {
     }
 }
 
-export async function getPieceSize(): Promise<number | undefined> {
+export async function getPieceSize() {
     const r = await to($http.get<number>(`/viewrange/get/piecesize`));
     if (!r.ok) {
         console.log("View range cookie not found: " + r.result.data);
@@ -66,17 +70,40 @@ export interface IViewRange {
     e: number;
 }
 
-export async function getViewRange(doc: Document, index: number, forwards: boolean): Promise<IViewRange | undefined> {
+/**
+ * Get view range from the document. Depends on starting index, direction, and document's size, areas and
+ * @param index
+ * @param forwards
+ */
+export async function getViewRange(index: number, forwards: boolean) {
     let forwardsInt = 1;
     if (!forwards) {
         forwardsInt = 0;
     }
-    const r = await to($http.get<IViewRange>(`/viewrange/get/${doc.location.pathname}/${index}/${forwardsInt}`));
+    const r = await to($http.get<IViewRange>(`/viewrange/get/${document.location.pathname}/${index}/${forwardsInt}`));
     if (!r.ok) {
         console.log(r.result.data);
     } else {
         console.log(r.result.data);
         return r.result.data;
+    }
+}
+
+/**
+ * Toggle document partitioning with part starting from index 0.
+ * @param pieceSize Size of the document part.
+ */
+export async function toggleViewRange(pieceSize: number) {
+    const currentViewRange = await getPieceSize();
+    if (currentViewRange && currentViewRange > 0) {
+        await unsetPieceSize();
+        unpartitionDocument();
+    } else {
+        await setPieceSize(pieceSize);
+        const range = await getViewRange(0, true);
+        if (range) {
+            partitionDocument(range.b, range.e);
+        }
     }
 }
 
@@ -90,14 +117,13 @@ export class ViewRangeEditController extends DialogController<{ params: IItem },
     private partitionDocumentsSetting: boolean = false;
     private viewRangeSetting: number = 20;
     private storage: ngStorage.StorageService & {
-    viewRange: null | string,
-    partitionDocuments: null | boolean};
+        pieceSize: null | string,
+    };
 
     constructor(protected element: IRootElementService, protected scope: IScope) {
         super(element, scope);
         this.storage = $localStorage.$default({
-            viewRange: null,
-            partitionDocuments: null,
+            pieceSize: null,
         });
     }
 
@@ -111,11 +137,8 @@ export class ViewRangeEditController extends DialogController<{ params: IItem },
      * Fetches options from local storage, if existent.
      */
     public loadValues() {
-        if (this.storage.partitionDocuments != null) {
-            this.partitionDocumentsSetting = this.storage.partitionDocuments;
-        }
-        if (this.storage.viewRange != null) {
-            this.viewRangeSetting = +this.storage.viewRange;
+        if (this.storage.pieceSize != null) {
+            this.viewRangeSetting = +this.storage.pieceSize;
         }
     }
 
@@ -123,8 +146,7 @@ export class ViewRangeEditController extends DialogController<{ params: IItem },
      * Save new values to local storage.
      */
     private saveValues() {
-        this.storage.viewRange = this.viewRangeSetting.toString();
-        this.storage.partitionDocuments = this.partitionDocumentsSetting;
+        this.storage.pieceSize = this.viewRangeSetting.toString();
     }
 
     /*
@@ -137,13 +159,17 @@ export class ViewRangeEditController extends DialogController<{ params: IItem },
     /**
      * Saves view range settings and quits.
      */
-    private ok() {
+    private async ok() {
         this.saveValues();
         if (this.partitionDocumentsSetting) {
-            setPieceSize(this.viewRangeSetting);
-            // partitionDocument(0, this.viewRangeSetting, document);
+            await setPieceSize(this.viewRangeSetting);
+            const range = await getViewRange(0, true);
+            if (range) {
+                partitionDocument(range.b, range.e);
+            }
         } else {
-            unpartitionDocument(document);
+            await unsetPieceSize();
+            unpartitionDocument();
         }
         this.dismiss();
     }
