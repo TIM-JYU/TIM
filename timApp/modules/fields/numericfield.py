@@ -142,7 +142,7 @@ def answer(args: NumericfieldAnswerModel):
             return jsonify(result)
         elif c.strip() == "":
             c = ""
-        elif args.markup.save == "double":
+        elif args.markup.save == "double" or not args.markup.save:
             c = get_double(c)
         elif args.markup.save == "int":
             c = get_double(c)
