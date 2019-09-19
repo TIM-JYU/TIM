@@ -12,7 +12,7 @@ services:
    - .:/service
    - /opt/jspm_cache:/root/.jspm
   working_dir: /service/timApp/static/scripts
-  command: jspm bundle tim/main + tim/document/slide - "(tim/main + tim/document/slide - [tim/**/*])" build/tim.js -wm
+  command: jspm bundle tim/main - "(tim/main - [tim/**/*])" build/tim.js -wm
   restart: unless-stopped
  pali:
   environment:

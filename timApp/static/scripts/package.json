@@ -6,7 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "node build.js",
-    "buildDev": "jspm bundle tim/main + tim/document/slide - \"(tim/main + tim/document/slide - [tim/**/*])\" build/tim.js -wd",
+    "buildDev": "jspm bundle tim/main - \"(tim/main - [tim/**/*])\" build/tim.js -wd",
     "fixLibs": "node fix-libs.js",
     "jspmInstall": "jspm install"
   },
