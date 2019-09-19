@@ -22,9 +22,10 @@ export interface IMergeParams {
     document: IItem;
 }
 
-export interface IAttachmentParams {
-    pdf_paths: string[];
-    incomplete_list: boolean;
+export interface IAttachment {
+    path: string;
+    macro: string;
+    error: string;
 }
 
 export class MergePdfController extends DialogController<{ params: IMergeParams }, {}> {
@@ -32,9 +33,12 @@ export class MergePdfController extends DialogController<{ params: IMergeParams 
     static $inject = ["$element", "$scope"] as const;
     private docUrl?: string;
     private loading: boolean = false;
-    private attachmentList: string[] = [];
-    private warnIncompleteList: boolean = false;
+    private attachmentList: IAttachment[] = [];
+    private checking: boolean = true;
     private errorMessage?: string;
+
+    // TODO: Clean reduntant code and add loading icon when checking.
+    // TODO: Clean prints from server side.
 
     constructor(protected element: IRootElementService, protected scope: IScope) {
         super(element, scope);
@@ -52,14 +56,16 @@ export class MergePdfController extends DialogController<{ params: IMergeParams 
      * Gets a list of attachments in the documents and notes whether invalid files were found.
      */
     async listAttachments() {
-        const url = `/minutes/listAttachments/${this.resolve.params.document.path}`;
-        const r = await to($http.get<IAttachmentParams>(url, {}));
+        this.checking = true;
+        const url = `/minutes/checkAttachments/${this.resolve.params.document.path}`;
+        const r = await to($http.get<IAttachment[]>(url, {}));
         if (!r.ok) {
             this.errorMessage = r.result.data.error;
             return;
         }
-        this.attachmentList = r.result.data.pdf_paths;
-        this.warnIncompleteList = r.result.data.incomplete_list;
+        console.log(r.result.data);
+        this.attachmentList = r.result.data;
+        this.checking = false;
     }
 
     /**
@@ -108,17 +114,20 @@ registerDialogComponent(MergePdfController,
         <p ng-show="$ctrl.attachmentList.length > 0">Following attachments were found from the current document</p>
         <div>
             <ul>
-                <li ng-repeat="x in $ctrl.attachmentList track by $index">{{x}}</li>
+                <li ng-repeat="x in $ctrl.attachmentList track by $index">{{x.path}} {{x.macro}}
+                     <span ng-if="x.error" class="glyphicon glyphicon-warning-sign red" uib-tooltip="{{x.error}}" tooltip-placement="left"></span>
+                </li>
             </ul>
-            <p ng-if="$ctrl.attachmentList.length == 0">No attachments found</p>
+            <p ng-if="$ctrl.attachmentList.length == 0 && !$ctrl.checking">No attachments found</p>
         </div>
-        <div ng-show="$ctrl.warnIncompleteList" class="alert alert-warning">
+        <div ng-if="$ctrl.checking" class="alert alert-warning">
             <span class="glyphicon glyphicon-exclamation-sign"></span>
-            One or more unlisted attachments may have been invalid and won't be part of the merged file.
-            Check attachment macros for broken links and non-pdf files or continue by merging
-            the listed attachments.
+            Checking validity of the attachments, please wait...
         </div>
-
+        <div ng-if="!$ctrl.checking && $ctrl.attachmentList.length > 0" class="alert alert-warning">
+            <span class="glyphicon glyphicon-exclamation-sign"></span>
+            Note: Missing and "%%perusliite" attachments will not be merged.
+        </div>
         <p id="link">
         </p>
         <button class="timButton" ng-click="$ctrl.mergeClicked()" ng-disabled="$ctrl.attachmentList.length == 0">

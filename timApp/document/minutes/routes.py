@@ -211,7 +211,7 @@ def create_or_get_and_wipe_document(path: str, title: str):
     return d
 
 
-@minutes_blueprint.route('/listAttachments/<path:doc>', methods=['GET'])
+@minutes_blueprint.route('/checkAttachments/<path:doc>', methods=['GET'])
 def get_attachment_list(doc):
     """
     Gets the list of valid attachments in the document and whether there was any invalid ones.
@@ -225,16 +225,13 @@ def get_attachment_list(doc):
         verify_edit_access(d)
 
         paragraphs = d.document.get_paragraphs(d)
-        pdf_paths, attachments_with_errors = timApp.util.pdftools.get_attachments_from_paragraphs(paragraphs)
-
-        for i in range(0, len(pdf_paths)):
-            pdf_paths[i] = Path(pdf_paths[i]).name
+        attachments = timApp.util.pdftools.get_attachments_from_pars(paragraphs)
 
     except Exception as err:
         message = str(err)
         abort(404, message)
     else:
-        return json_response({'pdf_paths': pdf_paths, 'incomplete_list': attachments_with_errors})
+        return json_response(attachments)
 
 
 @minutes_blueprint.route('/mergeAttachments/<path:doc>', methods=['GET'])
@@ -249,6 +246,38 @@ def merge_attachments(doc):
         if not d:
             abort(404)
         verify_edit_access(d)
+        # TODO: Route params for adding/removing perusliite.
+        macro_list = ["%%liite"]
+        paragraphs = d.document.get_paragraphs(d)
+
+        pdf_paths, errors = timApp.util.pdftools.get_attachments_from_paragraphs(paragraphs, macro_list)
+        # Uses document name as the base for the merged file name and tmp as folder.
+        doc_name = Path(doc).name
+        merged_pdf_path = Path(timApp.util.pdftools.temp_folder_default_path) / f"{doc_name}_merged.pdf"
+
+        timApp.util.pdftools.merge_pdfs(pdf_paths, merged_pdf_path)
+
+    except Exception as err:
+        message = str(err)
+        abort(404, message)
+    else:
+        return send_file(merged_pdf_path.absolute().as_posix(), mimetype="application/pdf")
+
+
+@minutes_blueprint.route('/mergeAttachments2/<path:doc>', methods=['POST'])
+def merge_chosen_attachments(doc):
+    """
+    A route for merging all the attachments in a document.
+    :param doc: Document path.
+    :return: Merged pdf-file.
+    """
+    try:
+        # TODO: Partial merging: add an attachment list to the route.
+        # TODO: Add skipping perusliite.
+        d = DocEntry.find_by_path(doc)
+        if not d:
+            abort(404)
+        verify_edit_access(d)
 
         paragraphs = d.document.get_paragraphs(d)
         pdf_paths, attachments_with_errors = timApp.util.pdftools.get_attachments_from_paragraphs(paragraphs)
@@ -256,13 +285,39 @@ def merge_attachments(doc):
         # Uses document name as the base for the merged file name and tmp as folder.
         doc_name = Path(doc).name
         merged_pdf_path = Path(timApp.util.pdftools.temp_folder_default_path) / f"{doc_name}_merged.pdf"
-        timApp.util.pdftools.merge_pdf(pdf_paths, merged_pdf_path)
+        timApp.util.pdftools.merge_pdfs(pdf_paths, merged_pdf_path)
 
     except Exception as err:
         message = str(err)
         abort(404, message)
     else:
         return send_file(merged_pdf_path.absolute().as_posix(), mimetype="application/pdf")
+
+
+@minutes_blueprint.route('/testAttachments/<path:doc>', methods=['GET'])
+def test_attachments(doc):
+    """
+    A route for merging all the attachments in a document.
+    :param doc: Document path.
+    :return: Merged pdf-file.
+    """
+    try:
+        d = DocEntry.find_by_path(doc)
+        if not d:
+            abort(404)
+        verify_edit_access(d)
+
+        paragraphs = d.document.get_paragraphs(d)
+        attachments = timApp.util.pdftools.get_attachments_from_pars(paragraphs)
+        results = []
+        for attachment in attachments:
+            valid = attachment.valid and timApp.util.pdftools.test_pdf(attachment.path)
+            results.append({"path": attachment.path, "valid": valid})
+    except Exception as err:
+        message = str(err)
+        abort(404, message)
+    else:
+        return json_response(results)
 
 
 @minutes_blueprint.route('/mergeAttachments/<path:doc>', methods=['POST'])
