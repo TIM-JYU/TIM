@@ -711,7 +711,8 @@ def create_velp_group(doc_id: int) -> Dict:
         new_group_path = velps_folder_path + "/" + velp_group_name
         group_exists = DocEntry.find_by_path(new_group_path)  # Check name so no duplicates are made
         if group_exists is None:
-            original_owner = Block.query.get(target.id).owner
+            b = Block.query.get(target.id)
+            original_owner = b.owners[0]
             velp_group_doc = timdb.velp_groups.create_velp_group(velp_group_name, original_owner, new_group_path)
             rights = get_rights_holders(target.id)
             # Copy all rights but view
@@ -760,7 +761,7 @@ def create_default_velp_group(doc_id: int):
     doc_path, doc_name = split_location(full_path)
 
     verify_logged_in()
-    user_group = doc.block.owner
+    user_group = doc.block.owners[0]
     user_id = get_current_user_id()
 
     verify_edit_access(doc)

@@ -1,16 +1,15 @@
 from operator import attrgetter
-from typing import Tuple, List, Dict, Any
+from typing import Tuple, List, Dict, Any, Optional
 
 from dataclasses import dataclass
 from flask import Blueprint, abort
 
-from timApp.auth.accesshelper import verify_admin, check_admin_access, get_doc_or_abort, verify_view_access
+from timApp.auth.accesshelper import verify_admin, check_admin_access
 from timApp.auth.accesstype import AccessType
 from timApp.auth.auth_models import BlockAccess
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.create_item import apply_template, create_document
 from timApp.document.docinfo import DocInfo
-from timApp.item.tag import TagType
 from timApp.item.validation import ItemValidationRule
 from timApp.modules.py.marshmallow_dataclass import class_schema
 from timApp.timdb.sqa import db
@@ -18,7 +17,7 @@ from timApp.user.special_group_names import SPECIAL_GROUPS, PRIVILEGED_GROUPS, S
 from timApp.user.user import User, view_access_set, edit_access_set
 from timApp.user.usergroup import UserGroup
 from timApp.util.flask.requesthelper import load_data_from_req
-from timApp.util.flask.responsehelper import json_response, ok_response
+from timApp.util.flask.responsehelper import json_response
 from timApp.util.utils import remove_path_special_chars, get_current_time
 
 groups = Blueprint('groups',
@@ -27,7 +26,6 @@ groups = Blueprint('groups',
 
 USER_NOT_FOUND = 'User not found'
 USERGROUP_NOT_FOUND = 'User group not found'
-SISU_PREFIX = 'sisu-'
 
 
 def verify_groupadmin(require=True, user=None):
@@ -170,14 +168,14 @@ def verify_group_access(ug: UserGroup, access_set, u=None, require=True):
         return True
 
 
-def verify_group_edit_access(ug: UserGroup, user=None, require=True):
+def verify_group_edit_access(ug: UserGroup, user: Optional[User]=None, require=True):
     if ug.name in SPECIAL_GROUPS:
         abort(400, 'Cannot edit special groups.')
     if User.get_by_name(ug.name):
         abort(400, 'Cannot edit personal groups.')
     if ug.name.startswith('cumulative:') or ug.name.startswith('deleted:'):
          abort(400, 'Cannot edit special Sisu groups.')
-    verify_group_access(ug, edit_access_set, user, require=require)
+    return verify_group_access(ug, edit_access_set, user, require=require)
 
 
 def verify_group_view_access(ug: UserGroup, user=None, require=True):
@@ -245,30 +243,6 @@ def remove_member(groupname):
         'does_not_belong': sorted(does_not_belong),
         'not_exist': sorted(not_exist),
     })
-
-
-def is_course(d: DocInfo):
-    return any(t.type == TagType.CourseCode for t in d.block.tags)
-
-
-@groups.route('/enrollToCourse/<int:doc_id>')
-def enroll_to_course(doc_id: int):
-    d = get_doc_or_abort(doc_id)
-    verify_view_access(d)
-    if is_course(d):
-        course_group = d.document.get_settings().course_group()
-        if isinstance(course_group, str):
-            ug = UserGroup.get_by_name(course_group)
-            if not ug:
-                return abort(400, 'The specified course group does not exist')
-            verify_group_edit_access(ug, d.owner.users.first())  # TODO assuming only 1 owner which is a person
-            ug.users_all.append(get_current_user_object())
-            db.session.commit()
-            return ok_response()
-        else:
-            return abort(400, 'Document does not have associated course group')
-    else:
-        return abort(400, 'Document is not tagged as a course')
 
 
 def get_usernames(usernames: List[str]):

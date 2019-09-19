@@ -6,6 +6,7 @@ from difflib import SequenceMatcher
 from tempfile import mkstemp
 from time import time
 from typing import List, Optional, Set, Tuple, Union, Iterable, Generator, Dict
+from typing import TYPE_CHECKING
 
 from filelock import FileLock
 from lxml import etree, html
@@ -23,10 +24,12 @@ from timApp.document.preloadoption import PreloadOption
 from timApp.document.validationresult import ValidationResult
 from timApp.document.version import Version
 from timApp.document.yamlblock import YamlBlock
-from timApp.plugin.taskid import TaskId
 from timApp.timdb.exceptions import TimDbException, PreambleException, InvalidReferenceException
-from timApp.timtypes import UserType, DocInfoType
+from timApp.timtypes import DocInfoType
 from timApp.util.utils import get_error_html, trim_markdown
+
+if TYPE_CHECKING:
+    from timApp.user.user import User
 
 
 def get_duplicate_id_msg(conflicting_ids):
@@ -268,7 +271,7 @@ class Document:
             self.own_settings = resolve_settings_for_pars(self.get_settings_pars())
         return self.own_settings
 
-    def get_settings(self, user: UserType=None, use_preamble=True) -> DocSettings:
+    def get_settings(self, user: Optional['User']=None, use_preamble=True) -> DocSettings:
         if self.settings is not None:
             self.settings.user = user
             return self.settings

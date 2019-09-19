@@ -39,8 +39,8 @@ class CoursesTest(TimRouteTest):
                                                                         'location': d.location,
                                                                         'modified': 'just now',
                                                                         'name': "test",
-                                                                        'owner': {'id': self.get_test_user_2_group_id(),
-                                                                                  'name': u.name},
+                                                                        'owners': [{'id': self.get_test_user_2_group_id(),
+                                                                                  'name': u.name}],
                                                                         'path': d.path,
                                                                         'public': True,
                                                                         'rights': {'browse_own_answers': True,
@@ -65,9 +65,9 @@ class CoursesTest(TimRouteTest):
         self.login_test1()
         d = self.create_doc()
         self.json_post(
-            f'/bookmarks/addCourse', {'path': d.path},
+            f'/bookmarks/addCourse', {'path': d.path, 'require_group': True},
             expect_status=400,
-            expect_content='Document is not a course',
+            expect_content='Document is not tagged as a course',
             json_key='error',
         )
 
@@ -75,15 +75,8 @@ class CoursesTest(TimRouteTest):
         d.block.tags.append(Tag(name='test', type=TagType.CourseCode))
         db.session.commit()
         self.json_post(
-            f'/bookmarks/addCourse', {'path': d.path},
-            expect_content=[{'editable': False,
-                             'items': [{
-                                 'link': d.url_relative,
-                                 'name': d.title}],
-                             'name': 'Last edited'},
-                            {'editable': True,
-                             'items': [{
-                                 'link': d.url_relative,
-                                 'name': d.title}],
-                             'name': 'My courses'}]
+            f'/bookmarks/addCourse', {'path': d.path, 'require_group': True},
+            expect_status=400,
+            expect_content='Course does not allow manual enrollment.',
+            json_key='error',
         )

@@ -29,7 +29,6 @@ export interface IGroup {
     id: number;
     name: string;
     personal_user?: IUser;
-    admin_doc?: IDocument;
 }
 
 export interface IManagedGroup extends IGroup {

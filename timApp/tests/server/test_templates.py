@@ -1,3 +1,5 @@
+import json
+
 from timApp.document.create_item import get_templates_for_folder
 from timApp.document.specialnames import TEMPLATE_FOLDER_NAME
 from timApp.document.timjsonencoder import TimJsonEncoder
@@ -12,13 +14,9 @@ class TemplateTest(TimRouteTest):
         folder = self.current_user.get_personal_folder().path
         db.session.expire_on_commit = False
         t1 = self.create_doc(f'{folder}/a/{TEMPLATE_FOLDER_NAME}/T1')
-        t1json = t1.to_json()
+        t1json = json.loads(json.dumps(t1, cls=TimJsonEncoder))
         t2 = self.create_doc(f'{folder}/a/{TEMPLATE_FOLDER_NAME}/T2')
-        t2json = t2.to_json()
-
-        # TODO possibly move this to Item class
-        for t in t1json, t2json:
-            t['owner'] = TimJsonEncoder().default(t['owner'])
+        t2json = json.loads(json.dumps(t2, cls=TimJsonEncoder))
 
         d = self.create_doc(f'{folder}/a/test')
         self.get('/getTemplates',

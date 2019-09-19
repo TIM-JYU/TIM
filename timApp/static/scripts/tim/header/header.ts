@@ -126,7 +126,14 @@ class HeaderController implements IController {
             throw new Error("Bookmarkscontroller not registered");
         }
         const bookmark = {path: `${this.getMainCourseDocPath()}`};
-        await $http.post<IBookmarkGroup[]>("/bookmarks/addCourse", bookmark);
+        const r = await to($http.post<{bookmarks: IBookmarkGroup[], added_to_group: boolean}>("/bookmarks/addCourse", bookmark));
+        if (!r.ok) {
+            await showMessageDialog(r.result.data.error);
+            return;
+        }
+        if (r.result.data.added_to_group) {
+            await to(showMessageDialog("You were successfully added to the course group."));
+        }
         await this.viewctrl.bookmarksCtrl.refresh();
         this.checkIfBookmarked(); // Instead of directly changing boolean this checks if it really was added.
     }

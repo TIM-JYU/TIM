@@ -420,7 +420,7 @@ def get_trash_folder():
     trash_folder_path = f'roskis'
     f = Folder.find_by_path(trash_folder_path)
     if not f:
-        f = Folder.create(trash_folder_path, owner_group=UserGroup.get_admin_group(), title='Roskakori')
+        f = Folder.create(trash_folder_path, owner_groups=UserGroup.get_admin_group(), title='Roskakori')
     return f
 
 

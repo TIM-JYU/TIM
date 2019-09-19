@@ -47,7 +47,7 @@ from timApp.timdb.exceptions import TimDbException, PreambleException
 from timApp.timdb.sqa import db
 from timApp.user.groups import verify_group_view_access
 from timApp.user.user import User
-from timApp.user.usergroup import UserGroup, get_usergroup_eager_query, UserGroupWithSisuGroupPath
+from timApp.user.usergroup import UserGroup, get_usergroup_eager_query, UserGroupWithSisuInfo
 from timApp.user.users import get_rights_holders_all
 from timApp.util.flask.requesthelper import get_option, verify_json_params
 from timApp.util.flask.responsehelper import json_response, ok_response, get_grid_modules
@@ -135,12 +135,13 @@ def par_info(doc_id, par_id):
     doc = get_doc_or_abort(doc_id)
     info['doc_name'] = doc.title
 
-    group: UserGroup = doc.owner
-    users = group.users
-    if len(users) == 1:
-        info['doc_author'] = f'{users[0].real_name} ({group.name})'
-    else:
-        info['doc_author'] = group.name
+    if doc.owners:
+        group: UserGroup = doc.owners[0]  # TODO handle multiple owners
+        users = group.users
+        if len(users) == 1:
+            info['doc_author'] = f'{users[0].real_name} ({group.name})'
+        else:
+            info['doc_author'] = group.name
 
     par_name = doc.document.get_closest_paragraph_title(par_id)
     if par_name is not None:
@@ -498,10 +499,10 @@ def get_items(folder: str, recurse=False):
     return [f for f in folders if u.has_view_access(f)] + docs
 
 
-def get_linked_groups(i: Item) -> Tuple[List[UserGroupWithSisuGroupPath], List[str]]:
-    group_tags = [t.name[len(GROUP_TAG_PREFIX):] for t in i.block.tags if t.name.startswith(GROUP_TAG_PREFIX)]
+def get_linked_groups(i: Item) -> Tuple[List[UserGroupWithSisuInfo], List[str]]:
+    group_tags = [t.get_group_name() for t in i.block.tags if t.name.startswith(GROUP_TAG_PREFIX)]
     if group_tags:
-        return list(map(UserGroupWithSisuGroupPath, get_usergroup_eager_query().filter(UserGroup.name.in_(group_tags)).all()
+        return list(map(UserGroupWithSisuInfo, get_usergroup_eager_query().filter(UserGroup.name.in_(group_tags)).all()
                         )), group_tags
     return [], group_tags
 

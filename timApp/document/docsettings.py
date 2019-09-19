@@ -1,9 +1,10 @@
+import json
+import re
 from datetime import timedelta
 from typing import Optional, List, Dict, Tuple, Iterable
 
 import yaml
-import re
-import json
+from flask.globals import request, g
 
 from timApp.answer.pointsumrule import PointSumRule
 from timApp.document.docparagraph import DocParagraph
@@ -14,7 +15,6 @@ from timApp.document.yamlblock import YamlBlock
 from timApp.markdown.dumboclient import MathType, DumboOptions, InputFormat
 from timApp.timdb.exceptions import TimDbException, InvalidReferenceException
 from timApp.util.rndutils import get_rands_as_dict
-from flask.globals import request, g
 
 
 def add_rnd_macros(yaml_vals):
@@ -124,6 +124,7 @@ class DocSettings:
     urlmacros_key = 'urlmacros'
     rndmacros_key = 'rndmacros'
     sisu_require_manual_enroll_key = 'sisu_require_manual_enroll'
+    course_allow_manual_enroll_key = 'course_allow_manual_enroll'
     show_velps_key = "show_velps"
     group_key = "group"
 
@@ -235,7 +236,7 @@ class DocSettings:
         res = self.__dict.get(self.show_velps_key, True)
         return res
 
-    def group(self) -> bool:
+    def group(self) -> str:
         res = self.__dict.get(self.group_key, None)
         return res
 
@@ -374,6 +375,9 @@ class DocSettings:
 
     def sisu_require_manual_enroll(self):
         return self.__dict.get(self.sisu_require_manual_enroll_key, False)
+
+    def course_allow_manual_enroll(self):
+        return self.__dict.get(self.course_allow_manual_enroll_key, False)
 
 
 def resolve_settings_for_pars(pars: Iterable[DocParagraph]) -> YamlBlock:

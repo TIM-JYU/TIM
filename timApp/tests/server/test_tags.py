@@ -152,7 +152,7 @@ class TagTest(TimRouteTest):
                                                          'location': d.location,
                                                          'modified': 'just now',
                                                          'name': 'doc5',
-                                                         'owner': {'id': self.get_test_user_1_group_id(), 'name': u.name},
+                                                         'owners': [{'id': self.get_test_user_1_group_id(), 'name': u.name}],
                                                          'path': d.path,
                                                          'public': True,
                                                          'rights': {'browse_own_answers': True,

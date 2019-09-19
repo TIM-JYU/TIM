@@ -20,7 +20,7 @@ export interface IItem {
     location: string;
     modified: string; // TODO change type to Moment
     name: string;
-    owner: IGroup;
+    owners: IGroup[];
     path: string;
     public: boolean;
     relevance?: IRelevance;

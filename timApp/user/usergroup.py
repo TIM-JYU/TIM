@@ -117,9 +117,6 @@ class UserGroup(db.Model, TimeStampMixin, SCIMEntity):
             'name': self.name,
             **include_if_exists('personal_user', self),
         }
-        if is_attribute_loaded('admin_doc', self):
-            if self.admin_doc:
-                r['admin_doc'] = self.admin_doc.docentries[0]
         return r
 
     @property
@@ -206,11 +203,12 @@ DELETED_GROUP_PREFIX = 'deleted:'
 
 
 @attr.s(auto_attribs=True)
-class UserGroupWithSisuGroupPath:
+class UserGroupWithSisuInfo:
     """Wrapper for UserGroup that reports the sisugroup path in to_json."""
     ug: UserGroup
     def to_json(self):
         return {
             **self.ug.to_json(),
+            'admin_doc': self.ug.admin_doc.docentries[0] if self.ug.admin_doc else None,
             'sisugroup_path': parse_sisu_group_display_name(self.ug.display_name).sisugroups_doc_path if self.ug.display_name else None
         }

@@ -1,4 +1,6 @@
 from enum import Enum, unique
+from typing import Optional
+
 from timApp.timdb.sqa import db
 
 
@@ -37,6 +39,11 @@ class Tag(db.Model):
         :return:
         """
         return set(self.name.lower()) - set('abcdefghijklmnopqrstuvwxyzåäöü0123456789$€£#+*!@%&().:;/- _')
+
+    def get_group_name(self) -> Optional[str]:
+        if self.name.startswith(GROUP_TAG_PREFIX):
+            return self.name[len(GROUP_TAG_PREFIX):]
+        return None
 
 
 GROUP_TAG_PREFIX = 'group:'

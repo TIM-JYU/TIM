@@ -23,7 +23,7 @@ class DefaultRightTest(TimRouteTest):
         doc = self.create_doc().document
         docentry = DocEntry.query.filter_by(id=doc.doc_id).one()
         folder: Folder = docentry.parent
-        folder_owner_id = folder.owner.id
+        folder_owner_id = folder.owners[0].id
         kg = UserGroup.get_korppi_group()
         korppi_id = kg.id
         users_folder = Folder.find_by_path('users')
@@ -83,7 +83,7 @@ class DefaultRightTest(TimRouteTest):
             self.assertEqual(f'Default{obj_type_str.capitalize()}Rights', rights_doc.title)
             t_f = folder.get_all_folders()[0]
             self.assertEqual(TEMPLATE_FOLDER_NAME, t_f.short_name)
-            self.assertEqual(folder_owner_id, t_f.owner.id)
+            self.assertEqual(folder_owner_id, t_f.owners[0].id)
 
             if obj_type == BlockType.Document:
                 new_doc = self.create_doc().document

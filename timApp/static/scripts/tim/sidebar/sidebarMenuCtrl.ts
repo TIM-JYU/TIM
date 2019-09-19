@@ -39,6 +39,7 @@ export interface IHeaderDisplayIndexItem {
 
 export interface IGroupWithSisuPath extends IGroup {
     sisugroup_path: string | null;
+    admin_doc?: IDocument;
 }
 
 export type HeaderIndexItem = [IHeader, IHeader[]];

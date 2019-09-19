@@ -31,8 +31,8 @@ class UserTest(TimDbTest):
         g2 = UserGroup.create('dummy')
         user.groups.append(g)
 
-        test_block = insert_block(block_type=BlockType.Document, description='test', owner_group=g2)
-        test_block_2 = insert_block(block_type=BlockType.Document, description='test', owner_group=g)
+        test_block = insert_block(block_type=BlockType.Document, description='test', owner_groups=[g2])
+        test_block_2 = insert_block(block_type=BlockType.Document, description='test', owner_groups=[g])
         db.session.commit()
 
         self.assertEqual(user.name, name)
@@ -175,7 +175,7 @@ class UserTest(TimDbTest):
             self.assertTrue(user.has_seeanswers_access(b))
 
     def test_timed_permissions(self):
-        b = insert_block(BlockType.Document, 'testing', self.test_user_2.get_personal_group())
+        b = insert_block(BlockType.Document, 'testing', [self.test_user_2.get_personal_group()])
         user = User.query.get(TEST_USER_1_ID)
         self.assertFalse(user.has_view_access(b))
         v = 'view'

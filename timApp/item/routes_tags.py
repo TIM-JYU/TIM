@@ -2,6 +2,7 @@
 Routes related to tags.
 """
 from datetime import datetime
+from typing import List
 
 from flask import Blueprint
 from flask import abort
@@ -79,13 +80,12 @@ def check_tag_access(tag: Tag, check_group=True):
         ug = UserGroup.get_by_name(TEACHERS_GROUPNAME)
         if ug not in get_current_user_object().groups and not check_admin_access():
             abort(400, f"Managing this tag requires admin or {TEACHERS_GROUPNAME} rights.")
-    if tag.name.startswith(GROUP_TAG_PREFIX):
-        groupname = tag.name[len(GROUP_TAG_PREFIX):]
-        if check_group:
-            ug = UserGroup.get_by_name(groupname)
-            if not ug:
-                abort(404, f'Usergroup "{groupname}" not found.')
-            verify_group_view_access(ug)
+    groupname = tag.get_group_name()
+    if groupname and check_group:
+        ug = UserGroup.get_by_name(groupname)
+        if not ug:
+            abort(404, f'Usergroup "{groupname}" not found.')
+        verify_group_view_access(ug)
 
 
 @tags_blueprint.route('/setCourseTags/<path:doc>', methods=["POST"])
@@ -94,9 +94,9 @@ def set_group_tags(doc):
     if not d:
         abort(404)
     verify_manage_access(d)
-
-    tags_to_remove = [t for t in d.block.tags
-                      if t.name.startswith(GROUP_TAG_PREFIX) or t.type in (TagType.CourseCode, TagType.Subject)]
+    tags: List[Tag] = d.block.tags
+    tags_to_remove = [t for t in tags
+                      if t.get_group_name() or t.type in (TagType.CourseCode, TagType.Subject)]
     for t in tags_to_remove:
         check_tag_access(t, check_group=False)
         db.session.delete(t)

@@ -1,9 +1,10 @@
 from timApp.bookmark.bookmarks import Bookmarks
+from timApp.document.docentry import DocEntry
+from timApp.document.docinfo import DocInfo
+from timApp.folder.folder import Folder
 from timApp.item.tag import Tag, TagType
 from timApp.sisu.scimusergroup import ScimUserGroup
 from timApp.tests.server.timroutetest import TimRouteTest
-from timApp.document.docentry import DocEntry
-from timApp.folder.folder import Folder
 from timApp.timdb.sqa import db
 from timApp.user.usergroup import UserGroup
 
@@ -141,3 +142,83 @@ class BookmarkTest2(BookmarkTestBase):
         ug.name = 'someothername'
         db.session.commit()
         self.assertIn("Document has incorrect group tags: ohj2opiskelijat", self.get(d2.url))
+
+    def refresh(self, i: DocInfo):
+        return DocEntry.find_by_path(i.path)
+
+    def test_manual_enroll(self):
+        self.login_test1()
+        d = self.create_doc()
+        path = d.path
+        params = {'path': path, 'require_group': True}
+        self.json_post(
+            '/bookmarks/addCourse',
+            params,
+            expect_status=400,
+            expect_content='Document is not tagged as a course',
+            json_key='error',
+        )
+        d = self.refresh(d)
+        d.block.tags.append(Tag(type=TagType.CourseCode, name='XXXX111'))
+        db.session.commit()
+        self.json_post(
+            '/bookmarks/addCourse',
+            params,
+            expect_status=400,
+            expect_content='Course does not allow manual enrollment.',
+            json_key='error',
+        )
+        d.document.set_settings({'course_allow_manual_enroll': True})
+        self.json_post(
+            '/bookmarks/addCourse',
+            params,
+            expect_status=400,
+            expect_content='Document does not have associated course group',
+            json_key='error',
+        )
+        d.document.add_setting('group', 'testcourse')
+        self.json_post(
+            '/bookmarks/addCourse',
+            params,
+            expect_status=400,
+            expect_content='The specified course group "testcourse" does not exist.',
+            json_key='error',
+        )
+        UserGroup.create('testcourse')
+        db.session.commit()
+        self.json_post(
+            '/bookmarks/addCourse',
+            params,
+            expect_status=400,
+            expect_content='Document group setting not found in tags.',
+            json_key='error',
+        )
+        d = self.refresh(d)
+        d.block.tags.append(Tag(type=TagType.Regular, name='group:testcourse'))
+        db.session.commit()
+        self.json_post(
+            '/bookmarks/addCourse',
+            params,
+            expect_status=400,
+            expect_content='Some of the document owners does not have edit access to the course group "testcourse".',
+            json_key='error',
+        )
+        nd = self.create_doc()
+        ug = UserGroup.get_by_name('testcourse')
+        ug.admin_doc = nd.block
+        db.session.commit()
+        r = self.json_post(
+            '/bookmarks/addCourse',
+            params,
+        )
+        self.assertTrue(r['added_to_group'])
+        ug = UserGroup.get_by_name('testcourse')
+        self.assertIn(self.test_user_1, ug.users)
+        self.json_post(f'/bookmarks/addCourse', {'path': path})
+        self.json_post(f'/bookmarks/delete', {'group': 'My courses', 'name': d.title})
+        ug = UserGroup.get_by_name('testcourse')
+        self.assertNotIn(self.test_user_1, ug.users)
+
+        d = self.create_doc()
+        self.json_post(f'/bookmarks/add', {'group': 'My courses', 'name': d.title, 'link': d.url_relative})
+        self.json_post(f'/bookmarks/delete', {'group': 'My courses', 'name': d.title})

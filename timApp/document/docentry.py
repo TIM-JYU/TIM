@@ -148,7 +148,7 @@ class DocEntry(db.Model, DocInfo):
 
         location, _ = split_location(path)
         from timApp.folder.folder import Folder
-        Folder.create(location, owner_group=owner_group)
+        Folder.create(location, owner_groups=owner_group)
 
         document = create_document_and_block(owner_group, title or path)
 
@@ -175,7 +175,7 @@ class DocEntry(db.Model, DocInfo):
 
 
 def create_document_and_block(owner_group, desc: Optional[str] = None):
-    block = insert_block(BlockType.Document, desc, owner_group)
+    block = insert_block(BlockType.Document, desc, [owner_group] if owner_group else None)
     # Must flush because we need to know the document id in order to create the document in the filesystem.
     db.session.flush()
     document_id = block.id

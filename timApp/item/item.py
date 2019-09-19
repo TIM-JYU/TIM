@@ -3,13 +3,12 @@ from itertools import accumulate
 from flask import current_app
 from sqlalchemy import tuple_, func
 from sqlalchemy.orm import defaultload
-from sqlalchemy.orm.base import instance_state
 
+from timApp.auth.auth_models import BlockAccess
+from timApp.item.block import Block, BlockType
 from timApp.item.blockrelevance import BlockRelevance
 from timApp.timdb.exceptions import TimDbException
-from timApp.item.block import Block, BlockType
 from timApp.timdb.sqa import db, include_if_loaded
-from timApp.auth.auth_models import BlockAccess
 from timApp.util.utils import split_location, date_to_relative
 
 
@@ -17,8 +16,8 @@ class ItemBase:
     """An item that can be assigned permissions."""
 
     @property
-    def owner(self):
-        return self.block.owner if self.block else None
+    def owners(self):
+        return self.block.owners if self.block else None
 
     @property
     def rights(self):
@@ -26,7 +25,7 @@ class ItemBase:
         return get_rights(self)
 
     @property
-    def block(self):
+    def block(self) -> Block:
         # Relationships are not loaded when constructing an object with __init__.
         if not hasattr(self, '_block') or self._block is None:
             self._block = Block.query.get(self.id)
@@ -145,7 +144,7 @@ class Item(ItemBase):
                 'location': self.location,
                 'id': self.id,
                 'modified': date_to_relative(self.last_modified),
-                'owner': self.owner,
+                'owners': self.owners,
                 'rights': self.rights,
                 'unpublished': self.block.is_unpublished() if self.block else False,
                 'public': self.public,

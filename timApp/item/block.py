@@ -6,6 +6,7 @@ from sqlalchemy import func
 from timApp.auth.accesstype import AccessType
 from timApp.auth.auth_models import BlockAccess
 from timApp.item.blockassociation import BlockAssociation
+from timApp.item.tag import Tag
 from timApp.timdb.sqa import db
 from timApp.timtypes import FolderType
 from timApp.user.usergroup import UserGroup
@@ -40,7 +41,7 @@ class Block(db.Model):
     translation = db.relationship('Translation', back_populates='_block', uselist=False, foreign_keys="Translation.doc_id")
     answerupload = db.relationship('AnswerUpload', back_populates='block', lazy='dynamic')
     accesses = db.relationship('BlockAccess', back_populates='block', lazy='joined')
-    tags = db.relationship('Tag', back_populates='block', lazy='select')
+    tags: List[Tag] = db.relationship('Tag', back_populates='block', lazy='select')
     children = db.relationship('Block',
                                secondary=BlockAssociation.__table__,
                                primaryjoin=id == BlockAssociation.__table__.c.parent,
@@ -59,11 +60,8 @@ class Block(db.Model):
         return ['id', 'type_id', 'description', 'created', 'modified']
 
     @property
-    def owner(self) -> Optional[UserGroup]:
-        owner_access = self.owner_access
-        if not owner_access:
-            return None
-        return owner_access.usergroup
+    def owners(self) -> List[UserGroup]:
+        return [o.usergroup for o in self.owner_accesses]
 
     @property
     def parent(self) -> FolderType:
@@ -78,15 +76,11 @@ class Block(db.Model):
     def is_unpublished(self):
         from timApp.auth.sessioninfo import get_current_user_object
         u = get_current_user_object()
-        return u.has_ownership(self) is not None and (
-                not self.owner or not self.owner.is_large()) and len(self.accesses) <= 1
+        return u.has_ownership(self) is not None and all(not o.is_large() for o in self.owners) and len(self.accesses) <= 1
 
     @property
-    def owner_access(self):
-        for a in self.accesses:
-            if a.type == AccessType.owner.value:
-                return a
-        return None
+    def owner_accesses(self):
+        return [a for a in self.accesses if a.type == AccessType.owner.value]
 
     def set_owner(self, usergroup: UserGroup):
         """Changes the owner group for a block.
@@ -132,22 +126,23 @@ class BlockType(Enum):
         return BlockType[type_name.title()]
 
 
-def insert_block(block_type: BlockType, description: Optional[str], owner_group: Optional[UserGroup] = None) -> Block:
+def insert_block(block_type: BlockType, description: Optional[str], owner_groups: Optional[List[UserGroup]] = None) -> Block:
     """Inserts a block to database.
 
     :param description: The name (description) of the block.
-    :param owner_group: The owner group of the block.
+    :param owner_groups: The owner groups of the block.
     :param block_type: The type of the block.
     :returns: The id of the block.
 
     """
     b = Block(description=description, type_id=block_type.value)
-    if owner_group is not None:
-        access = BlockAccess(block=b,
-                             usergroup=owner_group,
-                             type=AccessType.owner.value,
-                             accessible_from=get_current_time())
-        db.session.add(access)
+    if owner_groups is not None:
+        for owner_group in owner_groups:
+            access = BlockAccess(block=b,
+                                 usergroup=owner_group,
+                                 type=AccessType.owner.value,
+                                 accessible_from=get_current_time())
+            db.session.add(access)
     db.session.add(b)
     return b
 

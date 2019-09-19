@@ -201,7 +201,7 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         foreign_keys="UserGroupMember.user_id",
         lazy='dynamic',
     )
-    memberships = db.relationship(
+    memberships: List[UserGroupMember] = db.relationship(
         UserGroupMember,
         foreign_keys="UserGroupMember.user_id",
     )

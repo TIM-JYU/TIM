@@ -1,4 +1,4 @@
-from typing import List, Iterable
+from typing import List, Iterable, Union
 from typing import Optional
 
 from sqlalchemy import true
@@ -10,6 +10,7 @@ from timApp.item.block import Block, insert_block, copy_default_rights, BlockTyp
 from timApp.document.docentry import DocEntry, get_documents
 from timApp.timdb.sqa import db
 from timApp.auth.auth_models import BlockAccess
+from timApp.user.usergroup import UserGroup
 from timApp.util.utils import split_location, join_location
 
 ROOT_FOLDER_ID = -1
@@ -193,7 +194,7 @@ class Folder(db.Model, Item):
             return doc
         if create_if_not_exist:
             rel_folder, short_name = split_location(relative_path)
-            Folder.create(join_location(self.get_full_path(), rel_folder), owner_group=creator_group)
+            Folder.create(join_location(self.get_full_path(), rel_folder), owner_groups=creator_group)
             return DocEntry.create(join_location(self.get_full_path(), relative_path),
                                    owner_group=creator_group,
                                    title=short_name)
@@ -209,13 +210,13 @@ class Folder(db.Model, Item):
         return Folder.get_all_in_path(self.path)
 
     @staticmethod
-    def create(path: str, owner_group = None, title=None, apply_default_rights=False) -> 'Folder':
+    def create(path: str, owner_groups: Union[List[UserGroup], UserGroup, None] = None, title=None, apply_default_rights=False) -> 'Folder':
         """Creates a new folder with the specified name. If the folder already exists, it is returned.
 
         :param title: The folder title.
         :param apply_default_rights: Whether to apply default rights from parents.
         :param path: The name of the folder to be created.
-        :param owner_group: The owner group.
+        :param owner_groups: The owner group.
         :returns: The created or existing folder.
 
         """
@@ -236,15 +237,20 @@ class Folder(db.Model, Item):
             return folder
 
         # Make sure that the parent folder exists
-        p_f = Folder.create(rel_path, owner_group)
+        p_f = Folder.create(rel_path, owner_groups)
 
         # Templates is a special folder, so it should have the same owner as its parent,
         # except if we're in users folder.
-        owner_group = (p_f.owner
+        owner_groups = (p_f.owners
                           if rel_name == TEMPLATE_FOLDER_NAME and
-                             rel_path != 'users' and
-                             p_f.owner else owner_group)
-        block = insert_block(BlockType.Folder, title or rel_name, owner_group)
+                             rel_path != 'users' else owner_groups)
+        if owner_groups is None:
+            owner_groups = []
+        block = insert_block(
+            BlockType.Folder,
+            title or rel_name,
+            owner_groups if isinstance(owner_groups, list) else [owner_groups],
+        )
 
         # noinspection PyArgumentList
         f = Folder(_block=block, name=rel_name, location=rel_path)

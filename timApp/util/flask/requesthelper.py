@@ -2,17 +2,32 @@ import itertools
 import json
 import pprint
 import time
-from typing import Optional, Type
+import warnings
+from typing import Optional, Type, TypeVar, Callable
 
-from flask import Request, current_app, g
+from dataclasses import is_dataclass
+from flask import Request, current_app, g, Response
 from flask import request, abort
 from marshmallow import ValidationError, Schema
+from webargs.flaskparser import use_args
 from werkzeug.exceptions import HTTPException
 from werkzeug.wrappers import BaseRequest
 
+from marshmallow_dataclass import class_schema
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.timdb.exceptions import InvalidReferenceException
 from timApp.user.user import Consent
+
+
+class EmptyWarning:
+    def warn(self, a, b):
+        pass
+
+
+# We don't want a runtime DeprecationWarning about verify_json_params.
+# It's enough that PyCharm marks it as deprecated.
+# noinspection PyRedeclaration
+warnings = EmptyWarning()
 
 
 def verify_json_params(*args: str, require=True, default=None, error_msgs=None):
@@ -21,6 +36,7 @@ def verify_json_params(*args: str, require=True, default=None, error_msgs=None):
     :param default: The default value for the parameter if it is not found from the request.
     :param require: If True and the parameter is not found, the request is aborted.
     """
+    warnings.warn('Do not use this function in new code. Define a dataclass and use "use_model" decorator in route.', DeprecationWarning)
     result = ()
     json_params = request.get_json() or {}
     if error_msgs is not None:
@@ -136,3 +152,10 @@ def load_data_from_req(schema: Type[Schema]):
     except ValidationError as e:
         raise JSONException(description=json.dumps(e.messages, sort_keys=True))
     return p
+
+ModelType = TypeVar('ModelType')
+
+def use_model(m: Type[ModelType]) -> Callable[[Callable[[ModelType], Response]], None]:
+    if not is_dataclass(m):
+        raise Exception('use_model requires a dataclass')
+    return use_args(class_schema(m)())

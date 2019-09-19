@@ -28,6 +28,7 @@ from timApp.auth.sessioninfo import get_current_user_object, get_other_users_as_
 from timApp.bookmark.bookmarks import Bookmarks
 from timApp.bookmark.routes import bookmarks, add_to_course_bookmark
 from timApp.document.course.routes import course_blueprint
+from timApp.document.course.validate import is_course
 from timApp.document.create_item import get_templates_for_folder
 from timApp.document.docentry import DocEntry
 from timApp.document.document import Document
@@ -42,7 +43,7 @@ from timApp.item.block import Block
 from timApp.item.manage import manage_page
 from timApp.item.routes import view_page
 from timApp.item.routes_tags import tags_blueprint
-from timApp.item.tag import Tag
+from timApp.item.tag import Tag, GROUP_TAG_PREFIX
 from timApp.lecture.routes import lecture_routes
 from timApp.markdown.dumboclient import DumboHTMLException
 from timApp.note.routes import notes
@@ -62,7 +63,7 @@ from timApp.tim_app import app, default_secret
 from timApp.timdb.exceptions import ItemAlreadyExistsException
 from timApp.timdb.sqa import db
 from timApp.upload.upload import upload
-from timApp.user.groups import groups, is_course
+from timApp.user.groups import groups
 from timApp.user.settings.settings import settings_page
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
@@ -308,7 +309,7 @@ def update_user_course_bookmarks():
     u = get_current_user_object()
     for gr in u.groups:  # type: UserGroup
         if gr.is_sisu_student_group:
-            docs = DocEntry.query.join(Block).join(Tag).filter(Tag.name == 'group:' + gr.name).with_entities(DocEntry).all()
+            docs = DocEntry.query.join(Block).join(Tag).filter(Tag.name == GROUP_TAG_PREFIX + gr.name).with_entities(DocEntry).all()
             if not docs:
                 continue
             if len(docs) > 1:

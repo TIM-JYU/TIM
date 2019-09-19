@@ -21,9 +21,9 @@ class SearchTest(TimRouteTest):
                                                               'location': d.location,
                                                               'modified': 'just now',
                                                               'name': d.short_name,
-                                                              'owner': {
+                                                              'owners': [{
                                                                   'id': self.get_test_user_1_group_id(),
-                                                                  'name': u_name},
+                                                                  'name': u_name}],
                                                               'path': d.path,
                                                               'public': True,
                                                               'relevance': None,
@@ -146,9 +146,9 @@ class SearchTest(TimRouteTest):
                                                               'location': d.location,
                                                               'modified': 'just now',
                                                               'name': d.short_name,
-                                                              'owner': {
+                                                              'owners': [{
                                                                   'id': self.get_test_user_1_group_id(),
-                                                                  'name': u1_name},
+                                                                  'name': u1_name}],
                                                               'path': d.path,
                                                               'public': True,
                                                               'relevance': None,
@@ -210,9 +210,9 @@ class SearchTest(TimRouteTest):
                                                   'location': d.location,
                                                   'modified': 'just now',
                                                   'name': d.short_name,
-                                                  'owner': {
+                                                  'owners': [{
                                                       'id': self.get_test_user_1_group_id(),
-                                                      'name': self.test_user_1.name},
+                                                      'name': self.test_user_1.name}],
                                                   'path': d.path,
                                                   'public': True,
                                                   'relevance': None,
@@ -280,9 +280,9 @@ class SearchTest(TimRouteTest):
                                                             'location': 'users/test-user-1',
                                                             'modified': 'just now',
                                                             'name': d.short_name,
-                                                            'owner': {
+                                                            'owners': [{
                                                                 'id': self.get_test_user_1_group_id(),
-                                                                'name': self.test_user_1.name},
+                                                                'name': self.test_user_1.name}],
                                                             'path': d.path,
                                                             'public': True,
                                                             'relevance': None,
@@ -325,9 +325,9 @@ class SearchTest(TimRouteTest):
                                                       'location': d.location,
                                                       'modified': 'just now',
                                                       'name': d.short_name,
-                                                      'owner': {
+                                                      'owners': [{
                                                           'id': self.get_test_user_1_group_id(),
-                                                          'name': u.name},
+                                                          'name': u.name}],
                                                       'path': d.path,
                                                       'public': True,
                                                       'relevance': None,
@@ -381,9 +381,9 @@ class SearchTest(TimRouteTest):
                                                             'location': d.location,
                                                             'modified': 'just now',
                                                             'name': 'd',
-                                                            'owner': {
+                                                            'owners': [{
                                                                 'id': self.get_test_user_1_group_id(),
-                                                                'name': u.name},
+                                                                'name': u.name}],
                                                             'path': d.path,
                                                             'public': True,
                                                             'relevance': None,
@@ -427,9 +427,9 @@ class SearchTest(TimRouteTest):
                                                             'location': d.location,
                                                             'modified': 'just now',
                                                             'name': 'd',
-                                                            'owner': {
+                                                            'owners': [{
                                                                 'id': self.get_test_user_1_group_id(),
-                                                                'name': u.name},
+                                                                'name': u.name}],
                                                             'path': d.path,
                                                             'public': True,
                                                             'relevance': None,
