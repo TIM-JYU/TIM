@@ -181,15 +181,14 @@ cols: 20
                 ],
             },
         ]
-    if os.environ.get('SHOW_TEMPLATES', "True") == "False":
-        editor_tabs = None
-    return jsonify({
+    result = {
         "js": ["js/build/pali.js"],
         "multihtml": True,
         "css": ["css/pali.css"],
-        'editor_tabs': editor_tabs,
-    },
-    )
+    }
+    if os.environ.get('SHOW_TEMPLATES', "True") != "False":
+        result['editor_tabs'] = editor_tabs
+    return jsonify(result)
 
 
 if __name__ == '__main__':
