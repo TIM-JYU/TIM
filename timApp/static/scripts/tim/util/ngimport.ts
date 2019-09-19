@@ -2,44 +2,46 @@
 import * as angular from "angular";
 import {ngStorage} from "ngstorage";
 
-export let $anchorScroll: angular.IAnchorScrollService;
-export let $cacheFactory: angular.ICacheFactoryService;
-export let $compile: angular.ICompileService;
-export let $controller: angular.IControllerService;
-export let $document: angular.IDocumentService;
-export let $exceptionHandler: angular.IExceptionHandlerService;
-export let $filter: angular.IFilterService;
-export let $http: angular.IHttpService;
-export let $httpBackend: angular.IHttpBackendService;
-export let $httpParamSerializer: angular.IHttpParamSerializer;
-export let $httpParamSerializerJQLike: angular.IHttpParamSerializer;
-export let $httpProvider: angular.IHttpProvider;
-export let $injector: angular.auto.IInjectorService;
-export let $interpolate: angular.IInterpolateService;
-export let $interval: angular.IIntervalService;
-export let $locale: angular.ILocaleService;
-export let $localStorage: ngStorage.StorageService;
-export let $location: angular.ILocationService;
-export let $log: angular.ILogService;
-export let $logProvider: angular.ILogProvider;
-export let $parse: angular.IParseService;
-export let $provide: angular.auto.IProvideService;
-export let $q: angular.IQService;
-export let $rootElement: angular.IRootElementService;
-export let $rootScope: angular.IRootScopeService;
-export let $sanitize: angular.sanitize.ISanitizeService;
-export let $sce: angular.ISCEService;
-export let $sceDelegate: angular.ISCEDelegateService;
-export let $templateCache: angular.ITemplateCacheService;
-export let $templateRequest: angular.ITemplateRequestService;
-export let $timeout: angular.ITimeoutService;
-export let $uibModal: angular.ui.bootstrap.IModalService;
-export let $upload: angular.angularFileUpload.IUploadService;
+// These MUST be initialized to non-undefined values. Otherwise lazy loading plugins won't work if the plugin imports
+// and uses some of these.
+export let $anchorScroll: angular.IAnchorScrollService = null as unknown as angular.IAnchorScrollService;
+export let $cacheFactory: angular.ICacheFactoryService = null as unknown as angular.ICacheFactoryService;
+export let $compile: angular.ICompileService = null as unknown as angular.ICompileService;
+export let $controller: angular.IControllerService = null as unknown as angular.IControllerService;
+export let $document: angular.IDocumentService = null as unknown as angular.IDocumentService;
+export let $exceptionHandler: angular.IExceptionHandlerService = null as unknown as angular.IExceptionHandlerService;
+export let $filter: angular.IFilterService = null as unknown as angular.IFilterService;
+export let $http: angular.IHttpService = null as unknown as angular.IHttpService;
+export let $httpBackend: angular.IHttpBackendService = null as unknown as angular.IHttpBackendService;
+export let $httpParamSerializer: angular.IHttpParamSerializer = null as unknown as angular.IHttpParamSerializer;
+export let $httpParamSerializerJQLike: angular.IHttpParamSerializer = null as unknown as angular.IHttpParamSerializer;
+export let $httpProvider: angular.IHttpProvider = null as unknown as angular.IHttpProvider;
+export let $injector: angular.auto.IInjectorService = null as unknown as angular.auto.IInjectorService;
+export let $interpolate: angular.IInterpolateService = null as unknown as angular.IInterpolateService;
+export let $interval: angular.IIntervalService = null as unknown as angular.IIntervalService;
+export let $locale: angular.ILocaleService = null as unknown as angular.ILocaleService;
+export let $localStorage: ngStorage.StorageService = null as unknown as ngStorage.StorageService;
+export let $location: angular.ILocationService = null as unknown as angular.ILocationService;
+export let $log: angular.ILogService = null as unknown as angular.ILogService;
+export let $logProvider: angular.ILogProvider = null as unknown as angular.ILogProvider;
+export let $parse: angular.IParseService = null as unknown as angular.IParseService;
+export let $provide: angular.auto.IProvideService = null as unknown as angular.auto.IProvideService;
+export let $q: angular.IQService = null as unknown as angular.IQService;
+export let $rootElement: angular.IRootElementService = null as unknown as angular.IRootElementService;
+export let $rootScope: angular.IRootScopeService = null as unknown as angular.IRootScopeService;
+export let $sanitize: angular.sanitize.ISanitizeService = null as unknown as angular.sanitize.ISanitizeService;
+export let $sce: angular.ISCEService = null as unknown as angular.ISCEService;
+export let $sceDelegate: angular.ISCEDelegateService = null as unknown as angular.ISCEDelegateService;
+export let $templateCache: angular.ITemplateCacheService = null as unknown as angular.ITemplateCacheService;
+export let $templateRequest: angular.ITemplateRequestService = null as unknown as angular.ITemplateRequestService;
+export let $timeout: angular.ITimeoutService = null as unknown as angular.ITimeoutService;
+export let $uibModal: angular.ui.bootstrap.IModalService = null as unknown as angular.ui.bootstrap.IModalService;
+export let $upload: angular.angularFileUpload.IUploadService = null as unknown as angular.angularFileUpload.IUploadService;
 
 // The following is intentionally commented: $window should not be used to access global variables anymore.
 // Use tim/utils/globals.ts instead.
-// export let $window: angular.IWindowService;
-export let $xhrFactory: angular.IXhrFactory<unknown>;
+// export let $window: angular.IWindowService = null as unknown as angular.IWindowService;
+export let $xhrFactory: angular.IXhrFactory<unknown> = null as unknown as angular.IXhrFactory<unknown>;
 
 export function injectProviders($a: angular.auto.IProvideService,
     $b: angular.IHttpProvider,
