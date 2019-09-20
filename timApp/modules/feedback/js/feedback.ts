@@ -249,7 +249,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
             for (const choice of item.choices) {
                 if (choice.correct) {
                     if (item.pluginNames.length !== choice.match.length && !this.error) {
-                        this.error = `${item.pluginNames}'s correct answer is missing a match for some of its plugins`;
+                        this.error = `${item.pluginNames.toString()}'s correct answer is missing a match for some of its plugins`;
                     }
                 }
             }
@@ -282,7 +282,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
         for (const item of items) {
             const missing = item.choices.every((x) => !x.correct);
             if (missing && !this.error) {
-                this.error = `A question item (${item.pluginNames}) is missing the correct answer.`;
+                this.error = `A question item (${item.pluginNames.toString()}) is missing the correct answer.`;
             }
         }
     }
@@ -297,7 +297,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
         for (const item of items) {
             const defaultMatch = item.choices.filter((x) => x.match.length === 0);
             if (defaultMatch.length === 0 && !this.error) {
-                this.error = `A question item (${item.pluginNames}) is missing default feedback.`;
+                this.error = `A question item (${item.pluginNames.toString()}) is missing default feedback.`;
             }
         }
     }

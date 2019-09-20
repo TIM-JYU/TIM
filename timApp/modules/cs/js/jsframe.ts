@@ -140,8 +140,9 @@ class JsframeController extends PluginBase<t.TypeOf<typeof JsframeMarkup> ,
         if ( aa.markup.fielddata ) { this.initData += "    " + jsobject + "fieldData = " + JSON.stringify(aa.markup.fielddata) + ";\n"; }
         // if ( data ) { this.setData(data); }
         this.viewctrl.addTimComponent(this);
-        if (!this.attrs.forceBrowser) {
-            this.viewctrl.addUserChangeListener(this.getTaskId() || "", this);
+        const tid = this.getTaskId();
+        if (!this.attrs.forceBrowser && tid) {
+            this.viewctrl.addUserChangeListener(tid.docTask(), this);
         }
     }
 
@@ -152,7 +153,11 @@ class JsframeController extends PluginBase<t.TypeOf<typeof JsframeMarkup> ,
         this.userName = user.name;
 
         try {
-            const res = await to($http.get<any>(`/jsframeUserChange/${this.getTaskId()}/${user.id}`));
+            const tid = this.getTaskId();
+            if (!tid) {
+                return;
+            }
+            const res = await to($http.get<any>(`/jsframeUserChange/${tid.docTask()}/${user.id}`));
             this.initData = "";
             let data: any = this.attrs.data;
             if (this.attrs.c) { data = this.attrs.c; }
@@ -221,8 +226,8 @@ class JsframeController extends PluginBase<t.TypeOf<typeof JsframeMarkup> ,
         const h = this.attrs.height || (208 * w / 400);  //  experimental result for Chart.js
         let src = "";
         if ( this.attrs.useurl ) {
-            const tid = this.pluginMeta.getTaskId()!.split(".") || ["", ""];
-            const taskId = tid[0] + "." + tid[1];
+            const tid = this.pluginMeta.getTaskId()!;
+            const taskId = tid.docTask();
             let ab = null;
 
             let userId = 1;

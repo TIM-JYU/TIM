@@ -3,6 +3,7 @@ import {Type} from "io-ts/lib";
 import {Binding} from "../util/utils";
 import {IGenericPluginMarkup, IGenericPluginTopLevelFields} from "./attributes";
 import {getErrors} from "./errors";
+import {TaskId} from "./taskid";
 
 export function getDefaults<MarkupType extends IGenericPluginMarkup,
     A extends IGenericPluginTopLevelFields<MarkupType>,
@@ -35,7 +36,20 @@ export class PluginMeta {
     }
 
     public getTaskId() {
-        return this.taskid || this.getParentAttr("id");
+        const tidStr = this.taskid || this.getParentAttr("id");
+        if (tidStr) {
+            const r = TaskId.tryParse(tidStr);
+            if (r.ok) {
+                return r.result;
+            } else {
+                // If a plugin doesn't have task id, the servers sends "<docid>..<blockid>" in HTML.
+                // Don't warn about those because they are common.
+                // The server should be fixed to not put any taskid attribute in these cases.
+                if (!r.result.startsWith("Task id has empty name:")) {
+                    console.warn(r.result);
+                }
+            }
+        }
     }
 
     protected getPlugin() {
@@ -54,7 +68,7 @@ export class PluginMeta {
         if (i > 0) {
             url = url.substring(i);
         }
-        url += `/${this.getTaskId()}/answer/`;
+        url += `/${this.getTaskId()!.docTask()}/answer/`;
         return url; // + window.location.search;
     }
 
@@ -174,19 +188,17 @@ export abstract class PluginBase<MarkupType extends IGenericPluginMarkup, A exte
     }
 
     /**
-     * Returns the name given to the plugin.
+     * Returns task name of the plugin.
      */
-    getName(): string | undefined {
-        const taskId = this.pluginMeta.getTaskId();
-        if (taskId) { return taskId.split(".")[1]; }
-    }
-
-    getTaskId(): string | undefined {
+    getName() {
         const taskId = this.pluginMeta.getTaskId();
         if (taskId) {
-            const docTask = taskId.split(".");
-            return docTask[0].toString() + "." + docTask[1].toString();
+            return taskId.name;
         }
+    }
+
+    getTaskId() {
+        return this.pluginMeta.getTaskId();
     }
 
     /**

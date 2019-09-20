@@ -162,8 +162,8 @@ class GeogebraController extends PluginBase<t.TypeOf<typeof GeogebraMarkup>,
             return "";
         } // TODO: replace when preview delay and preview from markup ready
         $timeout(0);
-        const tid = this.pluginMeta.getTaskId()!.split(".") || ["", ""];
-        const taskId = tid[0] + "." + tid[1];
+        const tid = this.pluginMeta.getTaskId()!;
+        const taskId = tid.docTask();
         let ab = null;
 
         let userId = 1;

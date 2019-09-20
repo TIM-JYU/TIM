@@ -76,19 +76,6 @@ class DragController extends PluginBase<t.TypeOf<typeof DragMarkup>, t.TypeOf<ty
         return [""];
     }
 
-    /**
-     * Returns either the followid-attribute or the name given to the plugin.
-     */
-    getName(): (string | undefined) {
-        if (this.attrs.followid) {
-            return this.attrs.followid;
-        }
-        const taskId = this.pluginMeta.getTaskId();
-        if (taskId) {
-            return taskId.split(".")[1];
-        }
-    }
-
     $onInit() {
         super.$onInit();
         this.max = this.attrs.max || Number.MAX_VALUE;

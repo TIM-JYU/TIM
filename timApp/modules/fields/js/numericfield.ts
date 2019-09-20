@@ -128,19 +128,6 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
     }
 
     /**
-     * Returns the name given to the plugin.
-     */
-    getName(): string | undefined {
-        // if (this.attrs.tag) {
-        //     return this.attrs.tag;
-        // }
-        const taskId = this.pluginMeta.getTaskId();
-        if (taskId) {
-            return taskId.split(".")[1];
-        }
-    }
-
-    /**
      * Returns (user) content in string form.
      * Not used in numericfield plugin, but promised to be implemented in ITimComponent.
      */
@@ -392,8 +379,9 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
             }
             this.saveResponse.message = this.errormessage;
             if (this.vctrl && !this.saveCalledExternally) {
-                const tid = this.getTaskId();
-                if (tid) {
+                const taskId = this.getTaskId();
+                if (taskId) {
+                    const tid = taskId.docTask();
                     if (this.attrs.autoUpdateTables) {
                         this.vctrl.updateAllTables([tid]);
                     }

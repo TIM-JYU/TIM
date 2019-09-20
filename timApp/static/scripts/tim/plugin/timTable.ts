@@ -50,6 +50,7 @@ import {
 } from "../util/keycodes";
 import {$http, $timeout} from "../util/ngimport";
 import {Binding, StringOrNumber} from "../util/utils";
+import {TaskId} from "./taskid";
 import {hideToolbar, isToolbarEnabled, openTableEditorToolbar} from "./timTableEditorToolbar";
 import {PluginMeta} from "./util";
 
@@ -2927,16 +2928,18 @@ export class TimTableController extends DestroyScope implements IController, ITi
     getName(): string | undefined {
         const taskId = this.getTaskId();
         if (taskId) {
-            return taskId.split(".")[1];
+            return taskId.name;
         }
     }
 
-    getTaskId(): string | undefined {
-        const taskId = this.taskid || this.pluginMeta.getTaskId();
-        if (taskId) {
-            const docTask = taskId.split(".");
-            return docTask[0].toString() + "." + docTask[1].toString();
+    getTaskId(): TaskId | undefined {
+        if (this.taskid) {
+            const r = TaskId.tryParse(this.taskid);
+            if (r.ok) {
+                return r.result;
+            }
         }
+        return this.pluginMeta.getTaskId();
     }
     // getContent: () => string | undefined;
     getContent() {

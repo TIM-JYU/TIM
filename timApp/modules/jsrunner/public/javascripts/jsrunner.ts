@@ -3,7 +3,7 @@
  */
 import angular from "angular";
 import * as t from "io-ts";
-import {IJsRunner, ViewCtrl} from "tim/document/viewctrl";
+import {IJsRunner, RegexOption, ViewCtrl} from "tim/document/viewctrl";
 import {PluginBase, pluginBindings} from "tim/plugin/util";
 import {$http} from "tim/util/ngimport";
 import {to} from "tim/util/utils";
@@ -45,20 +45,20 @@ class JsrunnerController extends PluginBase<t.TypeOf<typeof JsrunnerMarkup>, t.T
     }
 
     showFieldHelper() {
-        const pluginlist = this.vctrl.getTimComponentsByRegex(".*");
+        const pluginlist = this.vctrl.getTimComponentsByRegex(".*", RegexOption.DontPrependCurrentDocId);
         let tasks = "";
         if (this.attrs.docid) {
             for (const plug of pluginlist) {
                 const taskId = plug.getTaskId();
                 if (taskId) {
-                    tasks += " - " + taskId.toString() + "\n";
+                    tasks += " - " + taskId.docTask() + "\n";
                 }
             }
         } else {
             for (const plug of pluginlist) {
                 const name = plug.getName();
                 if (name) {
-                    tasks += " - " + name.toString() + "\n";
+                    tasks += " - " + name + "\n";
                 }
             }
         }
@@ -76,7 +76,7 @@ class JsrunnerController extends PluginBase<t.TypeOf<typeof JsrunnerMarkup>, t.T
         }
         const tid = this.getTaskId();
         if (tid) {
-            this.vctrl.addJsRunner(this, tid);
+            this.vctrl.addJsRunner(this, tid.docTask());
         }
     }
 
@@ -95,7 +95,7 @@ class JsrunnerController extends PluginBase<t.TypeOf<typeof JsrunnerMarkup>, t.T
         const paramComps: Record<string, string | undefined> = {};
         if (this.attrsall.markup.paramFields) {
             for (const i of this.attrsall.markup.paramFields) {
-                const timComponents = this.vctrl.getTimComponentsByRegex(i);
+                const timComponents = this.vctrl.getTimComponentsByRegex(i, RegexOption.PrependCurrentDocId);
                 for (const v of timComponents) {
                     const cname = v.getName();
                     const value = v.getContent();

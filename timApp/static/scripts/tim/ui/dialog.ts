@@ -234,7 +234,7 @@ export function showDialog<T extends DialogController<unknown, unknown>, Service
 <div tim-draggable-fixed
      click="${opts.showMinimizeButton !== undefined ? opts.showMinimizeButton : true}"
      resize="true"
-     save="${opts.saveKey || component}"
+     save="${opts.saveKey || component.component}"
      absolute="${opts.absolute || false}"
      force-maximized="${opts.forceMaximized || false}"
      style="pointer-events: auto;"

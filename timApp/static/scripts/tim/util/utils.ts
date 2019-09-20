@@ -34,7 +34,7 @@ export function angularWait(): IPromise<void> {
 
 export function assertIsText(n: Node): n is Text {
     if (n.nodeType !== Node.TEXT_NODE) {
-        throw new Error("Expected a Text node, got " + n);
+        throw new Error("Expected a Text node, got " + typeof n);
     }
     return true;
 }

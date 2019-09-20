@@ -21,6 +21,7 @@ import {IPluginInfoResponse, ParCompiler} from "../editor/parCompiler";
 import {IDocument} from "../item/IItem";
 import {LectureController} from "../lecture/lectureController";
 import {TableFormController} from "../plugin/tableForm";
+import {TaskId} from "../plugin/taskid";
 import {TimTableController} from "../plugin/timTable";
 import {initCssPrint} from "../printing/cssPrint";
 import {IUser, IUserListEntry} from "../user/IUser";
@@ -48,7 +49,7 @@ export interface ITimComponent {
     getContent: () => string | undefined;
     getContentArray?: () => string[] | undefined;
     getAreas: () => string[];
-    getTaskId: () => string | undefined;
+    getTaskId: () => TaskId | undefined;
     belongsToArea: (area: string) => boolean;
      // TODO: isForm could be integrated to supporstSetAnswer (sSA true if fieldplugin and form/form_mode)
     isForm: () => boolean;
@@ -100,6 +101,11 @@ export interface IChangeDiffResult {
 export type DiffResult = IInsertDiffResult | IReplaceDiffResult | IDeleteDiffResult | IChangeDiffResult;
 
 export let vctrlInstance: ViewCtrl | undefined;
+
+export enum RegexOption {
+    PrependCurrentDocId,
+    DontPrependCurrentDocId,
+}
 
 export class ViewCtrl implements IController {
     private notification: string = "";
@@ -498,8 +504,9 @@ export class ViewCtrl implements IController {
     public addTimComponent(component: ITimComponent, tag?: (string | null)) {
         // Registering with any other name than docId.taskId breaks
         // form functionality
-        const name = component.getTaskId();
-        if (name) {
+        const taskId = component.getTaskId();
+        if (taskId) {
+            const name = taskId.docTask();
             this.timComponents.set(name, component);
             if (tag) {
                 const prev = this.timComponentTags.get(tag);
@@ -574,16 +581,22 @@ export class ViewCtrl implements IController {
     /**
      * Searches for registered ITimComponent whose ID matches the given regexp.
      * @param {string} re The RegExp to be used in search.
+     * @param opt Additional option how to interpret the regex.
      * @returns {ITimComponent[]} List of ITimComponents where the ID matches the regexp.
      */
-    public getTimComponentsByRegex(re: string): ITimComponent[] {
+    public getTimComponentsByRegex(re: string, opt: RegexOption): ITimComponent[] {
         const returnList: ITimComponent[] = [];
-        const reg = new RegExp("^" + re + "$");
-        const regWithDoc = new RegExp("^" + this.docId + "." + re + "$");
+        let reg: RegExp;
+        if (opt == RegexOption.DontPrependCurrentDocId) {
+            reg = new RegExp(`^${re}$`);
+        } else if (opt == RegexOption.PrependCurrentDocId) {
+            reg = new RegExp(`^${this.item.id}\.${re}$`);
+        } else {
+            throw new Error("unreachable");
+        }
+
         for (const [k, v] of this.timComponents) {
             if (reg.test(k)) {
-                returnList.push(v);
-            } else if (regWithDoc.test(k)) {
                 returnList.push(v);
             }
         }
@@ -790,8 +803,9 @@ export class ViewCtrl implements IController {
         // TODO: Should probably check groups
         //  currently it is assumed that caller used same groups as tableForm
         for (const table of this.tableForms.values()) {
-            const tid = table.getTaskId();
-            if (tid) {
+            const taskId = table.getTaskId();
+            if (taskId) {
+                const tid = taskId.docTask();
                 const comptab = this.getTimComponentByName(tid);
                 if (comptab && comptab.isUnSaved()) {
                     continue;

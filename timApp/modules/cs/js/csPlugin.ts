@@ -931,19 +931,6 @@ class CsController extends CsBase implements ITimComponent {
         this.editorModeIndecies = [];
     }
 
-    /**
-     * Returns the name given to the plugin.
-     */
-    getName(): string | undefined {
-        // if (this.attrs.followid) {
-        //    return this.attrs.followid;
-        // }
-        const taskId = this.pluginMeta.getTaskId();
-        if (taskId) {
-            return taskId.split(".")[1];
-        }
-    }
-
     getContent(): string {
         return this.usercode;
     }
@@ -954,7 +941,7 @@ class CsController extends CsBase implements ITimComponent {
     }
 
     isUnSaved() {
-        return this.notSaved && this.pluginMeta.getTaskId() != "" && !this.nosave;
+        return this.notSaved && this.pluginMeta.getTaskId() !== undefined && !this.nosave;
     }
 
     resetField(): undefined {
@@ -1351,8 +1338,10 @@ class CsController extends CsBase implements ITimComponent {
         } // Forces code editor to change to pre
 
         this.processPluginMath();
-
-        csLogTime(this.pluginMeta.getTaskId() || "taskId missing");
+        const tid = this.pluginMeta.getTaskId();
+        if (tid) {
+            csLogTime(tid.docTask());
+        }
 
         this.showUploaded(this.attrsall.uploadedFile, this.attrsall.uploadedType);
         this.initSaved();
@@ -1500,12 +1489,8 @@ class CsController extends CsBase implements ITimComponent {
             this.uploadedFile = undefined;
             this.uploadresult = undefined;
             this.docURL = undefined;
-            const ti = taskId.split(".");
-            if (ti.length < 2) {
-                return;
-            }
             const upload = $upload.upload<{file: string, type: string}>({
-                url: `/pluginUpload/${ti[0]}/${ti[1]}/`,
+                url: `/pluginUpload/${taskId.docId}/${taskId.name}/`,
                 data: {
                     file: file,
                 },
@@ -1616,7 +1601,8 @@ class CsController extends CsBase implements ITimComponent {
     }
 
     logTime(msg: string) {
-        csLogTime(msg + " " + this.pluginMeta.getTaskId());
+        const tid = this.pluginMeta.getTaskId();
+        csLogTime(msg + " " + (tid && tid.docTask()));
         return true;
     }
 
@@ -2464,7 +2450,7 @@ class CsController extends CsBase implements ITimComponent {
         }
         this.lastMD = text;
         const r = await to($http.post<IPluginInfoResponse>(
-            `/preview/${taskId.split(".")[0]}`, {
+            `/preview/${taskId.docId}`, {
                 text: text,
             }));
         if (r.ok) {

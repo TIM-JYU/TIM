@@ -86,19 +86,6 @@ class CbfieldController extends PluginBase<t.TypeOf<typeof CbfieldMarkup>, t.Typ
     }
 
     /**
-     * Returns the name given to the plugin.
-     */
-    getName(): string | undefined {
-        // if (this.attrs.tag) {
-        //     return this.attrs.tag;
-        // }
-        const taskId = this.pluginMeta.getTaskId();
-        if (taskId) {
-            return taskId.split(".")[1];
-        }
-    }
-
-    /**
      * Returns (user) content in string form.
      */
     getContent(): string {

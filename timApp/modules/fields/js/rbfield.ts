@@ -3,7 +3,7 @@
  */
 import angular, {INgModelOptions} from "angular";
 import * as t from "io-ts";
-import {ITimComponent, ViewCtrl} from "tim/document/viewctrl";
+import {ITimComponent, RegexOption, ViewCtrl} from "tim/document/viewctrl";
 import {GenericPluginMarkup, Info, nullable, withDefault} from "tim/plugin/attributes";
 import {PluginBase, pluginBindings} from "tim/plugin/util";
 import {$http} from "tim/util/ngimport";
@@ -54,7 +54,6 @@ class RbfieldController extends PluginBase<t.TypeOf<typeof RbfieldMarkup>, t.Typ
     private saveResponse: {saved: boolean, message: (string | undefined)} = {saved: false, message: undefined};
     private preventedAutosave = false;  // looks depracated???
     private rbName: string = "";
-    private name: string = "";
 
     getDefaultMarkup() {
         return {};
@@ -100,21 +99,6 @@ class RbfieldController extends PluginBase<t.TypeOf<typeof RbfieldMarkup>, t.Typ
         n = n.replace(/[0-9]+/, "");
         this.rbName = n;
         return n;
-    }
-
-    /**
-     * Returns the name given to the plugin.
-     */
-    getName(): string | undefined { // TODO: tämä kantaluokkaan
-        // if (this.attrs.tag) {
-        //     return this.attrs.tag;
-        // }
-        if ( this.name ) { return this.name; }
-        const taskId = this.pluginMeta.getTaskId();
-        if (taskId) {
-            this.name = taskId.split(".")[1];
-            return this.name;
-        }
     }
 
     /**
@@ -252,7 +236,11 @@ class RbfieldController extends PluginBase<t.TypeOf<typeof RbfieldMarkup>, t.Typ
      * Unused method warning is suppressed, as the method is only called in template.
      */
     autoSave() {
-        const comps = this.vctrl.getTimComponentsByRegex(this.rbname + ".*");
+        const tid = this.getTaskId();
+        if (!tid) {
+            return;
+        }
+        const comps = this.vctrl.getTimComponentsByRegex(`${tid.docId}\.${this.rbname}.*`, RegexOption.DontPrependCurrentDocId);
         const n = this.getName();
         for (const c of comps) {
             if ( c.getName() == n ) { continue; }

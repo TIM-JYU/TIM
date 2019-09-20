@@ -211,7 +211,7 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
         super.$onInit();
         const tid = this.getTaskId();
         if (this.viewctrl && tid) {
-            this.viewctrl.addTableForm(this, tid);
+            this.viewctrl.addTableForm(this, tid.docTask());
         }
         const d =  this.data;
         const table =  this.data.table;
@@ -340,16 +340,20 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
             styles: t.TypeOf<typeof Styles>,
         });
         let prom;
+        const tid = this.getTaskId();
+        if (!tid) {
+            return;
+        }
         if (this.isPreview()) {
             prom = $http.get <requestParams>("/tableForm/fetchTableDataPreview?" + $httpParamSerializer({
-                taskid: this.getTaskId(),
+                taskid: tid.docTask(),
                 fields: this.attrs.fields,
                 groups: this.attrs.groups,
                 removeDocIds: this.attrs.removeDocIds,
             }));
         } else {
             prom = $http.get <requestParams>("/tableForm/fetchTableData?" + $httpParamSerializer({
-                taskid: this.getTaskId(),
+                taskid: tid.docTask(),
             }));
         }
         const tableResponse = await prom;
@@ -422,13 +426,17 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
                     fieldsToUpdate.push(aliasfield);
                 }
             }
+            const tid = this.getTaskId();
+            if (!tid) {
+                return;
+            }
             const tableResponse = await $http.get <{
                 rows: IRowsType,
                 styles: t.TypeOf<typeof Styles>,
                 fields: string[],
             }>("/tableForm/updateFields?" + $httpParamSerializer({
                 fields: fieldsToUpdate,
-                taskid: this.getTaskId(),
+                taskid: tid.docTask(),
             }));
             // TODO if response status != ok
             const rows = tableResponse.data.rows || {};
@@ -647,8 +655,7 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
             // TODO: get relevant user input from timTable (sort, filters, checkboxes...)
             // taskid: this.getTaskId()
             // TODO: use taskid? (less data to transfer because of plug.values, but dependant on task existence)
-            // @ts-ignore
-            docId: this.pluginMeta.getTaskId().split(".")[0],
+            docId: taskId.docId,
             fields: this.attrs.fields,
             groups: this.attrs.groups,
             removeDocIds: this.attrs.removeDocIds,
@@ -686,11 +693,11 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
             for (let j = 0; j < colcount; j++) {
                 if (this.data.hiddenColumns && this.data.hiddenColumns.includes(j)) { continue; }
                 if (this.anonNames() && j == userNameColIndex && i > 0) {
-                    row.push("Anonymous" + [i]);
+                    row.push("Anonymous" + i);
                     continue;
                 }
                 if (this.anonNames() && j == realNameColIndex && i > 0) {
-                    row.push("Unknown" + [i]);
+                    row.push("Unknown" + i);
                     continue;
                 }
                 row.push(timTable.cellDataMatrix[i][j].cell);
@@ -1079,7 +1086,7 @@ timApp.component("tableformRunner", {
     <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
     <p ng-if="::$ctrl.stem" ng-bind-html="::$ctrl.stem"></p>
     <tim-table disabled="!$ctrl.tableCheck()" data="::$ctrl.data"
-               taskid="{{$ctrl.pluginMeta.getTaskId()}}" plugintype="{{$ctrl.pluginMeta.getPlugin()}}"></tim-table>
+               taskid="{{$ctrl.pluginMeta.getTaskId().docTask()}}" plugintype="{{$ctrl.pluginMeta.getPlugin()}}"></tim-table>
 
     <div class="hidden-print">
     <button class="timButton"

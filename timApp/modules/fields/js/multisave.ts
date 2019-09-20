@@ -3,7 +3,7 @@
  */
 import angular, {INgModelOptions} from "angular";
 import * as t from "io-ts";
-import {ITimComponent, ViewCtrl} from "tim/document/viewctrl";
+import {ITimComponent, RegexOption, ViewCtrl} from "tim/document/viewctrl";
 import {GenericPluginMarkup, Info, withDefault} from "tim/plugin/attributes";
 import {PluginBase, pluginBindings} from "tim/plugin/util";
 import {showMessageDialog} from "tim/ui/dialog";
@@ -135,7 +135,7 @@ export class MultisaveController extends PluginBase<t.TypeOf<typeof multisaveMar
     toggleEmailForm() {
         const tid = this.pluginMeta.getTaskId();
         // For now only tasks can send email
-        if (!tid ||  tid.split(".").length < 2) {
+        if (!tid) {
             return;
         }
         this.showEmailForm = !this.showEmailForm;
@@ -164,7 +164,7 @@ export class MultisaveController extends PluginBase<t.TypeOf<typeof multisaveMar
         // TODO: get components from vctrl.timComponentArrays in case of duplicates
         if (this.attrs.fields) {
             for (const i of this.attrs.fields) {
-                const timComponents = this.vctrl.getTimComponentsByRegex(i);
+                const timComponents = this.vctrl.getTimComponentsByRegex(i, RegexOption.PrependCurrentDocId);
                 for (const v of timComponents) {
                     if (!componentsToSave.includes(v)) { componentsToSave.push(v); }
                 }
@@ -204,7 +204,7 @@ export class MultisaveController extends PluginBase<t.TypeOf<typeof multisaveMar
 
         // no given followids / areas and no own area found
         if (!this.attrs.fields && !this.attrs.areas && !this.attrs.tags && !ownArea) {
-            componentsToSave = this.vctrl.getTimComponentsByRegex(".*");
+            componentsToSave = this.vctrl.getTimComponentsByRegex(".*", RegexOption.DontPrependCurrentDocId);
         }
 
         const promises = [];
@@ -223,7 +223,7 @@ export class MultisaveController extends PluginBase<t.TypeOf<typeof multisaveMar
                 this.savedFields++;
                 const tid = componentsToSave[savedIndex].getTaskId();
                 if (tid) {
-                    fieldsToUpdate.push(tid);
+                    fieldsToUpdate.push(tid.docTask());
                 }
             }
             savedIndex++;
@@ -261,8 +261,6 @@ export class MultisaveController extends PluginBase<t.TypeOf<typeof multisaveMar
             const target = this.attrs.jumptarget || "_self";
             window.open(link, target);
         }
-
-        return this.attrs.followid || this.pluginMeta.getTaskId() || "";
     }
 
     protected getAttributeType() {
