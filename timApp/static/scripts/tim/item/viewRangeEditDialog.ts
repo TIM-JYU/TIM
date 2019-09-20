@@ -61,7 +61,7 @@ export async function getPieceSize() {
         value = +cookie[0].replace(/[^\d-]/g, "");
     }
     // Convert to null since +string is 0 if string to integer conversion fails.
-    if (value == 0) {
+    if (cookie == null || value == 0) {
         return null;
     } else {
         return value;
@@ -135,6 +135,10 @@ export class ViewRangeEditController extends DialogController<{ params: IItem },
         super.$onInit();
         this.item = this.resolve.params;
         this.loadValues();
+        const cookie = await getPieceSize();
+        if (cookie) {
+            this.partitionDocumentsSetting = true;
+        }
     }
 
     /**
