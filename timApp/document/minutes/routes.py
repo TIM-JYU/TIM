@@ -3,12 +3,19 @@ Routes related to handling faculty council documents, such as meeting invitation
 """
 import ast
 from pathlib import Path
+from typing import List
 
 from flask import Blueprint, send_file, request
 from flask import abort
 
 import timApp.plugin
 import timApp.util
+
+from webargs.flaskparser import use_args
+from dataclasses import dataclass
+
+from marshmallow_dataclass import class_schema
+
 
 from timApp.auth.accesshelper import verify_manage_access, verify_edit_access
 from timApp.document.create_item import create_or_copy_item, create_document
@@ -214,9 +221,10 @@ def create_or_get_and_wipe_document(path: str, title: str):
 @minutes_blueprint.route('/checkAttachments/<path:doc>', methods=['GET'])
 def get_attachment_list(doc):
     """
-    Gets the list of valid attachments in the document and whether there was any invalid ones.
+    Gets the list of all attachments in the document, their macro-types, possible errors,
+    and whether they are selected by default.
     :param doc:
-    :return: List of valid attachments and whether the list is incomplete.
+    :return: List of Attachment objects.
     """
     try:
         d = DocEntry.find_by_path(doc)
@@ -237,7 +245,7 @@ def get_attachment_list(doc):
 @minutes_blueprint.route('/mergeAttachments/<path:doc>', methods=['GET'])
 def merge_attachments(doc):
     """
-    A route for merging all the attachments in a document.
+    Old version of the route for merging all the attachments in a document.
     :param doc: Document path.
     :return: Merged pdf-file.
     """
@@ -246,8 +254,6 @@ def merge_attachments(doc):
         if not d:
             abort(404)
         verify_edit_access(d)
-        # TODO: Partial merging: add an attachment list to the route.
-        # TODO: Route params for adding/removing perusliite.
         macro_list = ["%%liite"]
         paragraphs = d.document.get_paragraphs(d)
 
@@ -265,6 +271,41 @@ def merge_attachments(doc):
         return send_file(merged_pdf_path.absolute().as_posix(), mimetype="application/pdf")
 
 
+@dataclass
+class MergeAttachmentsModel:
+    paths: List[str]
+    doc_path: str
+
+
+@minutes_blueprint.route('/mergeSelectedAttachments', methods=['POST'])
+@use_args(class_schema(MergeAttachmentsModel)())
+def merge_selected_attachments(args: MergeAttachmentsModel):
+    """
+    A route for merging a list of pdfs.
+    :param args Doc path and list of pdf paths.
+    :return: Merged pdf-file.
+    """
+    try:
+        pdf_paths = args.paths
+        doc_path = args.doc_path
+        d = DocEntry.find_by_path(doc_path)
+        if not d:
+            abort(404)
+        verify_edit_access(d)
+        print(args)
+
+        # Uses document name as the base for the merged file name and tmp as folder.
+        doc_name = Path(doc_path).name
+        merged_pdf_path = Path(timApp.util.pdftools.temp_folder_default_path) / f"{doc_name}_merged.pdf"
+        timApp.util.pdftools.merge_pdfs(pdf_paths, merged_pdf_path)
+
+    except Exception as err:
+        message = str(err)
+        abort(404, message)
+    else:
+        return send_file(merged_pdf_path.absolute().as_posix(), mimetype="application/pdf")
+
+
 @minutes_blueprint.route('/mergeAttachments/<path:doc>', methods=['POST'])
 def get_attachments(doc):
     """
@@ -272,6 +313,7 @@ def get_attachments(doc):
     :param doc: document path
     :return: merged pdf-file
     """
+    # TODO: Show the real merged file with user selected contents.
     try:
         d = DocEntry.find_by_path(doc)
         if not d:

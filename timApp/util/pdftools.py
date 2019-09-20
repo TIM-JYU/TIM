@@ -215,13 +215,14 @@ class StampFormatInvalidError(PdfError):
 
 
 class Attachment:
-    def __init__(self, path: str, macro: str = "unknown", error: str = ""):
+    def __init__(self, path: str, macro: str = "unknown", error: str = "", selected: bool = True):
         self.path = path
         self.error = error
         self.macro = macro
+        self.selected = selected
 
     def to_json(self):
-        return {'path': self.path, 'macro': self.macro, 'error': self.error}
+        return {'path': self.path, 'macro': self.macro, 'error': self.error, 'selected': self.selected}
 
 
 class AttachmentStampData:
@@ -399,7 +400,8 @@ def get_attachments_from_pars(paragraphs: List[DocParagraph]) -> List[Attachment
     pdf_list = []
     for par in paragraphs:
         if par.is_plugin() and par.get_attr('plugin') == 'showPdf':
-            error = ""
+            error_message = ""
+            selected = True
             par_plugin = timApp.plugin.plugin.Plugin.from_paragraph(par)
             par_data = par_plugin.values
             par_file = par_data["file"]
@@ -407,14 +409,16 @@ def get_attachments_from_pars(paragraphs: List[DocParagraph]) -> List[Attachment
             # Changes in upload folder need to be updated here as well.
             if par_file.startswith("/files/"):
                 par_file = "/tim_files/blocks" + par_file
-            error = test_pdf(par_file)
+            error_message = test_pdf(par_file)
+            selected = not error_message
             par_str = str(par)
-            macro = "unknown"
+            macro_name = "unknown"
             if "%%liite" in par_str:
-                macro = "liite"
+                macro_name = "liite"
             elif "%%perusliite" in par_str:
-                macro = "perusliite"
-            pdf_list.append(Attachment(par_file, error=error, macro=macro))
+                macro_name = "perusliite"
+                selected = False
+            pdf_list.append(Attachment(par_file, error=error_message, macro=macro_name, selected=selected))
     return pdf_list
 
 

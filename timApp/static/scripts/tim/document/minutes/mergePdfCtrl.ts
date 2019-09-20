@@ -26,6 +26,7 @@ export interface IAttachment {
     path: string;
     macro: string;
     error: string;
+    selected: boolean;
 }
 
 export class MergePdfController extends DialogController<{ params: IMergeParams }, {}> {
@@ -36,9 +37,6 @@ export class MergePdfController extends DialogController<{ params: IMergeParams 
     private attachmentList: IAttachment[] = [];
     private checking: boolean = true;
     private errorMessage?: string;
-
-    // TODO: Clean reduntant code and add loading icon when checking.
-    // TODO: Clean prints from server side.
 
     constructor(protected element: IRootElementService, protected scope: IScope) {
         super(element, scope);
@@ -63,7 +61,6 @@ export class MergePdfController extends DialogController<{ params: IMergeParams 
             this.errorMessage = r.result.data.error;
             return;
         }
-        console.log(r.result.data);
         this.attachmentList = r.result.data;
         this.checking = false;
     }
@@ -73,22 +70,21 @@ export class MergePdfController extends DialogController<{ params: IMergeParams 
      * Show error messages for users.
      */
     async mergeClicked() {
-
         this.loading = true;
-        const url = `/minutes/mergeAttachments/${this.resolve.params.document.path}`;
-        const r = await to($http.get<{url: string}>(url, {}));
+        const url1 = `/minutes/mergeAttachments/${this.resolve.params.document.path}`;
+        const url2 = `/minutes/mergeSelectedAttachments`;
+
+        const r = await to($http.post<{url: string}>(url2, this.getSelectedData()));
         if (!r.ok) {
             void showMessageDialog(r.result.data.error);
             this.loading = false;
             return;
         }
-
         this.loading = false;
-        const r2 = await to($http.post<{url: string}>(url, {}));
+        const r2 = await to($http.post<{url: string}>(url1, {}));
 
         if (!r2.ok) {
             void showMessageDialog(r2.result.data.error);
-            this.loading = false;
             return;
         }
         this.docUrl = r2.result.data.url;
@@ -114,6 +110,16 @@ export class MergePdfController extends DialogController<{ params: IMergeParams 
         // Error case.
         return {color: "red"};
     }
+
+    private getSelectedData() {
+        const paths: string[] = [];
+        for (const attachment of this.attachmentList) {
+            if (attachment.selected) {
+                paths.push(attachment.path);
+            }
+        }
+        return {doc_path: this.resolve.params.document.path, paths: paths};
+    }
 }
 
 /**
@@ -122,17 +128,20 @@ export class MergePdfController extends DialogController<{ params: IMergeParams 
 registerDialogComponent(MergePdfController,
     {
         template:
-            `<tim-dialog>
+            `<tim-dialog class="overflow-visible">
     <dialog-header ng-bind-html="$ctrl.getTitle()">
     </dialog-header>
     <dialog-body>
         <p ng-show="$ctrl.attachmentList.length > 0">Following attachments were found from the current document</p>
         <div>
             <ul>
-                <li ng-repeat="x in $ctrl.attachmentList track by $index">{{x.path}}
-                     <span ng-style="::$ctrl.macroStyle(x.macro)">{{x.macro}}</span>
-                     <span ng-if="x.error" style="color:red;" class="glyphicon glyphicon-warning-sign"
-                        uib-tooltip="{{x.error}}" tooltip-placement="left"></span>
+                <li ng-repeat="x in $ctrl.attachmentList track by $index">
+                    <label>
+                        <input type="checkbox" ng-model="x.selected"> {{x.path}}
+                    </label>
+                    <span ng-style="::$ctrl.macroStyle(x.macro)">{{x.macro}}</span>
+                    <span ng-if="x.error" style="color:red;" class="glyphicon glyphicon-warning-sign"
+                       uib-tooltip="{{x.error}}" tooltip-placement="auto"></span>
                 </li>
             </ul>
             <p ng-if="$ctrl.attachmentList.length == 0 && !$ctrl.checking">No attachments found</p>
@@ -143,11 +152,12 @@ registerDialogComponent(MergePdfController,
         </div>
         <div ng-if="!$ctrl.checking && $ctrl.attachmentList.length > 0" class="alert alert-warning">
             <span class="glyphicon glyphicon-exclamation-sign"></span>
-            Note: Missing and "perusliite" attachments will not be merged.
+            Note: Attachments with errors and "perusliite" macros won't be merged by default.
         </div>
         <p id="link">
         </p>
-        <button class="timButton" ng-click="$ctrl.mergeClicked()" ng-disabled="$ctrl.attachmentList.length == 0">
+        <button class="timButton" ng-click="$ctrl.mergeClicked()" ng-disabled="$ctrl.attachmentList.length == 0"
+                    title="Merge selected files">
                     <span ng-show="$ctrl.loading"><i class="glyphicon glyphicon-refresh glyphicon-refresh-animate"></i>
                     Merging</span>
             <span ng-hide="$ctrl.loading">Merge</span>
