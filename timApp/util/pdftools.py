@@ -315,10 +315,8 @@ def test_pdf(pdf_path: str, timeout_seconds: int = pdfmerge_timeout) -> str:
     """
     test_output_path = Path(timApp.util.pdftools.temp_folder_default_path) / f"pdftk_test.pdf"
     args = ["pdftk"] + [pdf_path] + ["cat", "output", test_output_path.absolute().as_posix()]
-    error = ""
     p = Popen(args, stdout=PIPE, stderr=PIPE)
     out, err = p.communicate(timeout=timeout_seconds)
-    # print(pdf_path, p.returncode, out, err)
     return err.decode(encoding='utf-8')
 
 
@@ -337,7 +335,6 @@ def merge_pdfs(pdf_path_list: List[str], output_path: Path) -> Path:
         pdf_path_args += [pdf_path]
 
     args = ["pdftk"] + pdf_path_args + ["cat", "output", output_path.absolute().as_posix()]
-    print("merge args:", args)
     call_popen(args, pdfmerge_timeout)
     return output_path
 
@@ -373,7 +370,6 @@ def get_attachments_from_paragraphs(paragraphs, include_list: Optional[List[str]
             else:
                 if not include_list or (include_list and "%%liite" in str(par)):
                     pdf_paths += [par_file]
-    print(pdf_paths)
     return pdf_paths, attachments_with_errors
 
 
@@ -403,7 +399,6 @@ def get_attachments_from_pars(paragraphs) -> List[Attachment]:
     for par in paragraphs:
         if par.is_plugin() and par.get_attr('plugin') == 'showPdf':
             error = ""
-            macro = "unknown"
             par_plugin = timApp.plugin.plugin.Plugin.from_paragraph(par)
             par_data = par_plugin.values
             par_file = par_data["file"]
@@ -412,10 +407,12 @@ def get_attachments_from_pars(paragraphs) -> List[Attachment]:
             if par_file.startswith("/files/"):
                 par_file = "/tim_files/blocks" + par_file
             error = test_pdf(par_file)
-            if "%%liite" in str(par):
-                macro = "%%liite"
-            elif "%%perusliite" in str(par):
-                macro = "%%perusliite"
+            par_str = str(par)
+            macro = "unknown"
+            if "%%liite" in par_str:
+                macro = "liite"
+            elif "%%perusliite" in par_str:
+                macro = "perusliite"
             pdf_list.append(Attachment(par_file, error=error, macro=macro))
     return pdf_list
 
@@ -543,7 +540,6 @@ def stamp_pdf(
     args = ["pdftk", pdf_path.absolute().as_posix(),
             "stamp", stamp_path.absolute().as_posix(),
             "output", output_path.absolute().as_posix()]
-    # print(args)
     call_popen(args)
 
     # Optionally clean up the stamp-pdf after use.

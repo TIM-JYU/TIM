@@ -10,8 +10,8 @@ from flask import abort
 import timApp.plugin
 import timApp.util
 
-from timApp.auth.accesshelper import verify_manage_access, verify_edit_access, verify_view_access
-from timApp.document.create_item import do_create_item, create_or_copy_item, create_document
+from timApp.auth.accesshelper import verify_manage_access, verify_edit_access
+from timApp.document.create_item import create_or_copy_item, create_document
 from timApp.document.docsettings import DocSettings
 from timApp.item.block import BlockType
 from timApp.util.flask.requesthelper import verify_json_params
@@ -246,6 +246,7 @@ def merge_attachments(doc):
         if not d:
             abort(404)
         verify_edit_access(d)
+        # TODO: Partial merging: add an attachment list to the route.
         # TODO: Route params for adding/removing perusliite.
         macro_list = ["%%liite"]
         paragraphs = d.document.get_paragraphs(d)
@@ -262,62 +263,6 @@ def merge_attachments(doc):
         abort(404, message)
     else:
         return send_file(merged_pdf_path.absolute().as_posix(), mimetype="application/pdf")
-
-
-@minutes_blueprint.route('/mergeAttachments2/<path:doc>', methods=['POST'])
-def merge_chosen_attachments(doc):
-    """
-    A route for merging all the attachments in a document.
-    :param doc: Document path.
-    :return: Merged pdf-file.
-    """
-    try:
-        # TODO: Partial merging: add an attachment list to the route.
-        # TODO: Add skipping perusliite.
-        d = DocEntry.find_by_path(doc)
-        if not d:
-            abort(404)
-        verify_edit_access(d)
-
-        paragraphs = d.document.get_paragraphs(d)
-        pdf_paths, attachments_with_errors = timApp.util.pdftools.get_attachments_from_paragraphs(paragraphs)
-
-        # Uses document name as the base for the merged file name and tmp as folder.
-        doc_name = Path(doc).name
-        merged_pdf_path = Path(timApp.util.pdftools.temp_folder_default_path) / f"{doc_name}_merged.pdf"
-        timApp.util.pdftools.merge_pdfs(pdf_paths, merged_pdf_path)
-
-    except Exception as err:
-        message = str(err)
-        abort(404, message)
-    else:
-        return send_file(merged_pdf_path.absolute().as_posix(), mimetype="application/pdf")
-
-
-@minutes_blueprint.route('/testAttachments/<path:doc>', methods=['GET'])
-def test_attachments(doc):
-    """
-    A route for merging all the attachments in a document.
-    :param doc: Document path.
-    :return: Merged pdf-file.
-    """
-    try:
-        d = DocEntry.find_by_path(doc)
-        if not d:
-            abort(404)
-        verify_edit_access(d)
-
-        paragraphs = d.document.get_paragraphs(d)
-        attachments = timApp.util.pdftools.get_attachments_from_pars(paragraphs)
-        results = []
-        for attachment in attachments:
-            valid = attachment.valid and timApp.util.pdftools.test_pdf(attachment.path)
-            results.append({"path": attachment.path, "valid": valid})
-    except Exception as err:
-        message = str(err)
-        abort(404, message)
-    else:
-        return json_response(results)
 
 
 @minutes_blueprint.route('/mergeAttachments/<path:doc>', methods=['POST'])
