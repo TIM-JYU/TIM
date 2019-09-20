@@ -104,7 +104,7 @@ export class MergePdfController extends DialogController<{ params: IMergeParams 
      * Pick different colors for macros.
      * @param macro Macro name.
      */
-    private static macroStyle(macro: string) {
+    private macroStyle(macro: string) {
         if (macro == "liite") {
             return "color:green;";
         }
@@ -133,7 +133,7 @@ registerDialogComponent(MergePdfController,
         <div>
             <ul>
                 <li ng-repeat="x in $ctrl.attachmentList track by $index">{{x.path}}
-                     <span style="{{$ctrl.macroStyle(x.macro)}}">{{x.macro}}</span>
+                     <span style="{{::$ctrl.macroStyle(x.macro)}}">{{x.macro}}</span>
                      <span ng-if="x.error" style="color:red;" class="glyphicon glyphicon-warning-sign"
                         uib-tooltip="{{x.error}}" tooltip-placement="left"></span>
                 </li>
