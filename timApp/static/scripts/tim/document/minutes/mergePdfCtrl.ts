@@ -99,6 +99,24 @@ export class MergePdfController extends DialogController<{ params: IMergeParams 
         await this.listAttachments();
         this.loading = false;
     }
+
+    /**
+     * Pick different colors for macros.
+     * @param macro Macro name.
+     */
+    private static macroStyle(macro: string) {
+        if (macro == "liite") {
+            return "color:green;";
+        }
+        if (macro == "perusliite") {
+            return "color:#999900;";
+        }
+        // Error case.
+        if (macro == "unknown") {
+            return "color:red;";
+        }
+        return "";
+    }
 }
 
 /**
@@ -114,8 +132,10 @@ registerDialogComponent(MergePdfController,
         <p ng-show="$ctrl.attachmentList.length > 0">Following attachments were found from the current document</p>
         <div>
             <ul>
-                <li ng-repeat="x in $ctrl.attachmentList track by $index">{{x.path}} {{x.macro}}
-                     <span ng-if="x.error" class="glyphicon glyphicon-warning-sign red" uib-tooltip="{{x.error}}" tooltip-placement="left"></span>
+                <li ng-repeat="x in $ctrl.attachmentList track by $index">{{x.path}}
+                     <span style="{{$ctrl.macroStyle(x.macro)}}">{{x.macro}}</span>
+                     <span ng-if="x.error" style="color:red;" class="glyphicon glyphicon-warning-sign"
+                        uib-tooltip="{{x.error}}" tooltip-placement="left"></span>
                 </li>
             </ul>
             <p ng-if="$ctrl.attachmentList.length == 0 && !$ctrl.checking">No attachments found</p>
@@ -126,7 +146,7 @@ registerDialogComponent(MergePdfController,
         </div>
         <div ng-if="!$ctrl.checking && $ctrl.attachmentList.length > 0" class="alert alert-warning">
             <span class="glyphicon glyphicon-exclamation-sign"></span>
-            Note: Missing and "%%perusliite" attachments will not be merged.
+            Note: Missing and "perusliite" attachments will not be merged.
         </div>
         <p id="link">
         </p>
