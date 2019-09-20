@@ -6,13 +6,15 @@ import uuid
 from pathlib import Path
 from subprocess import Popen, PIPE, run as subprocess_run
 from os import remove, path as os_path
-from typing import Union, List
+from typing import Union, List, Optional
 from urllib import request as url_request
 from urllib.error import HTTPError
 from re import escape as re_escape, compile as re_compile
 import timApp.plugin.plugin
 
 # Default parameter values:
+from timApp.document.docparagraph import DocParagraph
+from timApp.util.utils import get_error_message
 
 temp_folder_default_path = Path("/tmp")
 stamp_model_default_path = Path("static/tex/stamp_model.tex")
@@ -211,6 +213,17 @@ class StampFormatInvalidError(PdfError):
 ##############################################################################
 # Data objects:
 
+
+class Attachment:
+    def __init__(self, path: str, macro: str = "unknown", error: str = ""):
+        self.path = path
+        self.error = error
+        self.macro = macro
+
+    def to_json(self):
+        return {'path': self.path, 'macro': self.macro, 'error': self.error}
+
+
 class AttachmentStampData:
     """
     Contains data to create stamp for one attachment.
@@ -294,7 +307,21 @@ def escape_tex(text: str):
     return tex_escape_re.sub(lambda match: tex_escapes[match.group()], text)
 
 
-def merge_pdf(pdf_path_list: List[str], output_path: Path) -> Path:
+def test_pdf(pdf_path: str, timeout_seconds: int = pdfmerge_timeout) -> str:
+    """
+    Test pdf-file suitability for pdftk.
+    :param pdf_path: Pdf to test.
+    :param timeout_seconds: Timeout after which error is raised.
+    :return: True if valid, false if the pdf caused an error or exception.
+    """
+    test_output_path = Path(timApp.util.pdftools.temp_folder_default_path) / f"pdftk_test.pdf"
+    args = ["pdftk"] + [pdf_path] + ["cat", "output", test_output_path.absolute().as_posix()]
+    p = Popen(args, stdout=PIPE, stderr=PIPE)
+    out, err = p.communicate(timeout=timeout_seconds)
+    return err.decode(encoding='utf-8')
+
+
+def merge_pdfs(pdf_path_list: List[str], output_path: Path) -> Path:
     """
     Merges a list of pdfs using pdftk.
     :param pdf_path_list: List of the paths of pdfs to merge.
@@ -303,28 +330,31 @@ def merge_pdf(pdf_path_list: List[str], output_path: Path) -> Path:
     """
     if not pdf_path_list:
         raise MergeListEmptyError()
+    pdf_path_args = []
     for pdf_path in pdf_path_list:
         check_pdf_validity(Path(pdf_path))
-    args = ["pdftk"] + pdf_path_list + ["cat", "output", output_path.absolute().as_posix()]
-    # print(args)
+        pdf_path_args += [pdf_path]
+
+    args = ["pdftk"] + pdf_path_args + ["cat", "output", output_path.absolute().as_posix()]
     call_popen(args, pdfmerge_timeout)
     return output_path
 
 
-def get_attachments_from_paragraphs(paragraphs):
+def get_attachments_from_paragraphs(paragraphs: List[DocParagraph], include_list: Optional[List[str]] = None):
     """
     Goes through paragraphs and gets attachments from showPdf-macros.
     Checks file validity and gives partial error state if some are invalid.
     :param paragraphs: Document paragraphs.
+    :param include_list: List of macros to search.
     :return: List of pdf paths and whether the list is complete.
     """
+    # TODO: Combine with get_attachments_from_pars.
     (pdf_paths, attachments_with_errors) = ([], False)
     for par in paragraphs:
         if par.is_plugin() and par.get_attr('plugin') == 'showPdf':
             par_plugin = timApp.plugin.plugin.Plugin.from_paragraph(par)
             par_data = par_plugin.values
             par_file = par_data["file"]
-
             # Checks if attachment is TIM-upload and adds prefix.
             # Changes in upload folder need to be updated here as well.
             if par_file.startswith("/files/"):
@@ -339,8 +369,53 @@ def get_attachments_from_paragraphs(paragraphs):
             except PdfError:
                 attachments_with_errors = True
             else:
-                pdf_paths += [par_file]
+                if not include_list or (include_list and "%%liite" in str(par)):
+                    pdf_paths += [par_file]
     return pdf_paths, attachments_with_errors
+
+
+def contains_keyword(string: str, include_list: List[str]) -> bool:
+    """
+    Checks if any key word from the list is in the string.
+    :param string:
+    :param include_list:
+    :return:
+    """
+    contains = False
+    for i in include_list:
+        if i in string:
+            contains = True
+            break
+    return contains
+
+
+def get_attachments_from_pars(paragraphs: List[DocParagraph]) -> List[Attachment]:
+    """
+    Goes through paragraphs and gets attachments from showPdf-macros.
+    Checks file validity with pdftk.
+    :param paragraphs: Document paragraphs.
+    :return: List of pdf paths and whether the list is complete.
+    """
+    pdf_list = []
+    for par in paragraphs:
+        if par.is_plugin() and par.get_attr('plugin') == 'showPdf':
+            error = ""
+            par_plugin = timApp.plugin.plugin.Plugin.from_paragraph(par)
+            par_data = par_plugin.values
+            par_file = par_data["file"]
+            # Checks if attachment is TIM-upload and adds prefix.
+            # Changes in upload folder need to be updated here as well.
+            if par_file.startswith("/files/"):
+                par_file = "/tim_files/blocks" + par_file
+            error = test_pdf(par_file)
+            par_str = str(par)
+            macro = "unknown"
+            if "%%liite" in par_str:
+                macro = "liite"
+            elif "%%perusliite" in par_str:
+                macro = "perusliite"
+            pdf_list.append(Attachment(par_file, error=error, macro=macro))
+    return pdf_list
 
 
 def check_pdf_validity(pdf_path: Path) -> None:
@@ -466,7 +541,6 @@ def stamp_pdf(
     args = ["pdftk", pdf_path.absolute().as_posix(),
             "stamp", stamp_path.absolute().as_posix(),
             "output", output_path.absolute().as_posix()]
-    # print(args)
     call_popen(args)
 
     # Optionally clean up the stamp-pdf after use.
@@ -484,12 +558,11 @@ def call_popen(args: List[str], timeout_seconds=default_subprocess_timeout) -> N
     :return: None.
     """
     try:
-        p = Popen(args, stdout=PIPE)
-        stream_data = p.communicate(timeout=timeout_seconds)[0]
-        # print(str(stream_data))
+        p = Popen(args, stdout=PIPE, stderr=PIPE)
+        out, err = p.communicate(timeout=timeout_seconds)
         rc = p.returncode
         if rc != 0:
-            raise SubprocessError(" ".join(args))
+            raise SubprocessError(err.decode(encoding='utf-8'))
     except FileNotFoundError:
         raise SubprocessError(" ".join(args))
 

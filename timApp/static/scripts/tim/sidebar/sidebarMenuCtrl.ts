@@ -589,6 +589,7 @@ timApp.component("timSidebarMenu", {
                     ng-click="$ctrl.createMinutes()">Create minutes
             </button>
             <button class="timButton btn-block" ng-show="$ctrl.isMinutesOrInvitation()"
+                    title="Display attachments, check their validity, and merge them into single file."
                     ng-click="$ctrl.mergePdf()">Merge attachments
             </button>
         </div>
