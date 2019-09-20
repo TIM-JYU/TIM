@@ -17,7 +17,7 @@ from dataclasses import dataclass
 from marshmallow_dataclass import class_schema
 
 
-from timApp.auth.accesshelper import verify_manage_access, verify_edit_access
+from timApp.auth.accesshelper import verify_manage_access, verify_edit_access, verify_view_access
 from timApp.document.create_item import create_or_copy_item, create_document
 from timApp.document.docsettings import DocSettings
 from timApp.item.block import BlockType
@@ -242,42 +242,13 @@ def get_attachment_list(doc):
         return json_response(attachments)
 
 
-@minutes_blueprint.route('/mergeAttachments/<path:doc>', methods=['GET'])
-def merge_attachments(doc):
-    """
-    Old version of the route for merging all the non-missing liite-macro attachments in a document.
-    :param doc: Document path.
-    :return: Merged pdf-file.
-    """
-    try:
-        d = DocEntry.find_by_path(doc)
-        if not d:
-            abort(404)
-        verify_edit_access(d)
-        macro_list = ["%%liite"]
-        paragraphs = d.document.get_paragraphs(d)
-
-        pdf_paths, errors = timApp.util.pdftools.get_attachments_from_paragraphs(paragraphs, macro_list)
-        # Uses document name as the base for the merged file name and tmp as folder.
-        doc_name = Path(doc).name
-        merged_pdf_path = Path(timApp.util.pdftools.temp_folder_default_path) / f"{doc_name}_merged.pdf"
-
-        timApp.util.pdftools.merge_pdfs(pdf_paths, merged_pdf_path)
-
-    except Exception as err:
-        message = str(err)
-        abort(404, message)
-    else:
-        return send_file(merged_pdf_path.absolute().as_posix(), mimetype="application/pdf")
-
-
 @dataclass
 class MergeAttachmentsModel:
     paths: List[str]
     doc_path: str
 
 
-@minutes_blueprint.route('/mergeSelectedAttachments', methods=['POST'])
+@minutes_blueprint.route('/mergeAttachments', methods=['POST'])
 @use_args(class_schema(MergeAttachmentsModel)())
 def merge_selected_attachments(args: MergeAttachmentsModel):
     """
@@ -292,39 +263,31 @@ def merge_selected_attachments(args: MergeAttachmentsModel):
         if not d:
             abort(404)
         verify_edit_access(d)
-        # TODO: Remove when ready.
-        print(args)
-
         # Uses document name as the base for the merged file name and tmp as folder.
         doc_name = Path(doc_path).name
-        merged_pdf_path = Path(timApp.util.pdftools.temp_folder_default_path) / f"{doc_name}_merged.pdf"
+        merged_file_folder = timApp.util.pdftools.merged_file_folder
+        # TODO: Change folder.
+        merged_pdf_path = merged_file_folder / f"{doc_name}_merged.pdf"
         timApp.util.pdftools.merge_pdfs(pdf_paths, merged_pdf_path)
 
     except Exception as err:
         message = str(err)
         abort(404, message)
     else:
-        return send_file(merged_pdf_path.absolute().as_posix(), mimetype="application/pdf")
+        return json_response({'success': True, 'name': f"{doc_name}_merged.pdf"}, status_code=201)
 
 
-@minutes_blueprint.route('/mergeAttachments/<path:doc>', methods=['POST'])
-def get_attachments(doc):
+@minutes_blueprint.route('/openMergedAttachment/<path:doc_id>/<file_filename>')
+def get_file(doc_id: int, file_filename: str):
     """
-    A route for getting merged document.
-    :param doc: document path
-    :return: merged pdf-file
+    Open a merged file.
+    :param doc_id: Document the file was created in.
+    :param file_filename: File name.
+    :return: Opens the file in browser.
     """
-    # TODO: Show the real merged file with user selected contents.
-    # Currently uses the old route which doesn't take selection into account.
-    try:
-        d = DocEntry.find_by_path(doc)
-        if not d:
-            abort(404)
-        verify_edit_access(d)
-
-    except Exception as err:
-        message = str(err)
-        abort(404, message)
-    else:
-        merge_access_url = request.url
-        return json_response({'success': True, 'url': merge_access_url}, status_code=201)
+    d = DocEntry.find_by_id(doc_id)
+    f = timApp.util.pdftools.merged_file_folder / Path(file_filename)
+    if not f.exists():
+        abort(404, 'File not found')
+    verify_view_access(d)
+    return send_file(f.absolute().as_posix(), mimetype="application/pdf")

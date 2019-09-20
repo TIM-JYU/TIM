@@ -32,7 +32,8 @@ export interface IAttachment {
 export class MergePdfController extends DialogController<{ params: IMergeParams }, {}> {
     static component = "timMergePdf";
     static $inject = ["$element", "$scope"] as const;
-    private docUrl?: string;
+    private mergedFileName?: string;
+    private mergedUrl?: string;
     private loading: boolean = false;
     private attachmentList: IAttachment[] = [];
     private checking: boolean = true;
@@ -71,24 +72,17 @@ export class MergePdfController extends DialogController<{ params: IMergeParams 
      */
     async mergeClicked() {
         this.loading = true;
-        // TODO: Show the right merged file on second route.
-        const url2 = `/minutes/mergeSelectedAttachments`;
-        const url1 = `/minutes/mergeAttachments/${this.resolve.params.document.path}`;
+        const url = `/minutes/mergeAttachments`;
         const data = this.getSelectedAttachmentData();
-        const r = await to($http.post<{url: string}>(url2, data));
+        const r = await to($http.post<{name: string}>(url, data));
         if (!r.ok) {
             void showMessageDialog(r.result.data.error);
             this.loading = false;
             return;
         }
         this.loading = false;
-        const r2 = await to($http.post<{url: string}>(url1, {}));
-
-        if (!r2.ok) {
-            void showMessageDialog(r2.result.data.error);
-            return;
-        }
-        this.docUrl = r2.result.data.url;
+        this.mergedFileName = r.result.data.name;
+        this.mergedUrl = `/minutes/openMergedAttachment/${this.resolve.params.document.id}/${this.mergedFileName}`;
     }
 
     async $onInit() {
@@ -162,24 +156,17 @@ registerDialogComponent(MergePdfController,
             <span class="glyphicon glyphicon-exclamation-sign"></span>
             Checking validity of the attachments, please wait...
         </div>
-        <div ng-if="!$ctrl.checking && $ctrl.attachmentList.length > 0" class="alert alert-warning">
-            <span class="glyphicon glyphicon-exclamation-sign"></span>
-            Note: Attachments with errors and "perusliite" macros won't be selected by default.
-        </div>
-        <p id="link">
-        </p>
         <button class="timButton" ng-click="$ctrl.mergeClicked()" ng-disabled="$ctrl.attachmentList.length == 0"
                     title="Merge selected files">
                     <span ng-show="$ctrl.loading"><i class="glyphicon glyphicon-refresh glyphicon-refresh-animate"></i>
                     Merging</span>
-            <span ng-hide="$ctrl.loading">Merge</span>
+            <span ng-hide="$ctrl.loading">Merge selected</span>
         </button>
         <button class="timButton" ng-click="$ctrl.dismiss()"><span>Cancel</span>
         </button>
-        <div ng-show="$ctrl.docUrl" class="alert alert-success">
+        <div ng-show="$ctrl.mergedFileName" class="alert alert-success">
             <span class="glyphicon glyphicon-ok"></span> Merging succeeded!
-            <a href="{{$ctrl.docUrl}}"
-               target="_blank">View the document.</a>
+            <a href="{{$ctrl.mergedUrl}}" target="_blank">View the document.</a>
         </div>
     </dialog-body>
     <dialog-footer></dialog-footer>

@@ -16,6 +16,7 @@ import timApp.plugin.plugin
 from timApp.document.docparagraph import DocParagraph
 from timApp.util.utils import get_error_message
 
+merged_file_folder = Path("/tim_files/blocks/merged/")
 temp_folder_default_path = Path("/tmp")
 stamp_model_default_path = Path("static/tex/stamp_model.tex")
 # Default format for stamp text.
