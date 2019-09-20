@@ -111,6 +111,9 @@ export class MergePdfController extends DialogController<{ params: IMergeParams 
         return {color: "red"};
     }
 
+    /**
+     * Format the attachment list as route data.
+     */
     private getSelectedData() {
         const paths: string[] = [];
         for (const attachment of this.attachmentList) {
@@ -119,6 +122,14 @@ export class MergePdfController extends DialogController<{ params: IMergeParams 
             }
         }
         return {doc_path: this.resolve.params.document.path, paths: paths};
+    }
+
+    /**
+     * Show only the last part of a file path (the file name).
+     * @param path Path to shorten with either \ or /, doesn't need to be complete.
+     */
+    private shortenPath(path: string) {
+        return path.replace(/^.*[\\\/]/, "");
     }
 }
 
@@ -132,16 +143,16 @@ registerDialogComponent(MergePdfController,
     <dialog-header ng-bind-html="$ctrl.getTitle()">
     </dialog-header>
     <dialog-body>
-        <p ng-show="$ctrl.attachmentList.length > 0">Following attachments were found from the current document</p>
+        <p ng-show="$ctrl.attachmentList.length > 0">Following attachments were found from the current document:</p>
         <div>
-            <ul>
+            <ul class="list-unstyled">
                 <li ng-repeat="x in $ctrl.attachmentList track by $index">
                     <label>
-                        <input type="checkbox" ng-model="x.selected"> {{x.path}}
+                        <input type="checkbox" ng-model="x.selected"> {{::$ctrl.shortenPath(x.path)}}
                     </label>
-                    <span ng-style="::$ctrl.macroStyle(x.macro)">{{x.macro}}</span>
-                    <span ng-if="x.error" style="color:red;" class="glyphicon glyphicon-warning-sign"
-                       uib-tooltip="{{x.error}}" tooltip-placement="auto"></span>
+                    <span ng-style="::$ctrl.macroStyle(x.macro)">{{::x.macro}}</span>
+                    <span ng-if="::x.error" style="color:red;" class="glyphicon glyphicon-warning-sign"
+                       uib-tooltip="{{::x.error}}" tooltip-placement="auto"></span>
                 </li>
             </ul>
             <p ng-if="$ctrl.attachmentList.length == 0 && !$ctrl.checking">No attachments found</p>
@@ -152,7 +163,7 @@ registerDialogComponent(MergePdfController,
         </div>
         <div ng-if="!$ctrl.checking && $ctrl.attachmentList.length > 0" class="alert alert-warning">
             <span class="glyphicon glyphicon-exclamation-sign"></span>
-            Note: Attachments with errors and "perusliite" macros won't be merged by default.
+            Note: Attachments with errors and "perusliite" macros won't be selected by default.
         </div>
         <p id="link">
         </p>
