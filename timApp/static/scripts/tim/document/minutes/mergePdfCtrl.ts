@@ -71,10 +71,11 @@ export class MergePdfController extends DialogController<{ params: IMergeParams 
      */
     async mergeClicked() {
         this.loading = true;
-        const url1 = `/minutes/mergeAttachments/${this.resolve.params.document.path}`;
+        // TODO: Show the right merged file on second route.
         const url2 = `/minutes/mergeSelectedAttachments`;
-
-        const r = await to($http.post<{url: string}>(url2, this.getSelectedData()));
+        const url1 = `/minutes/mergeAttachments/${this.resolve.params.document.path}`;
+        const data = this.getSelectedAttachmentData();
+        const r = await to($http.post<{url: string}>(url2, data));
         if (!r.ok) {
             void showMessageDialog(r.result.data.error);
             this.loading = false;
@@ -114,7 +115,7 @@ export class MergePdfController extends DialogController<{ params: IMergeParams 
     /**
      * Format the attachment list as route data.
      */
-    private getSelectedData() {
+    private getSelectedAttachmentData() {
         const paths: string[] = [];
         for (const attachment of this.attachmentList) {
             if (attachment.selected) {
@@ -128,7 +129,7 @@ export class MergePdfController extends DialogController<{ params: IMergeParams 
      * Show only the last part of a file path (the file name).
      * @param path Path to shorten with either \ or /, doesn't need to be complete.
      */
-    private shortenPath(path: string) {
+    private getFileName(path: string) {
         return path.replace(/^.*[\\\/]/, "");
     }
 }
@@ -148,7 +149,7 @@ registerDialogComponent(MergePdfController,
             <ul class="list-unstyled">
                 <li ng-repeat="x in $ctrl.attachmentList track by $index">
                     <label>
-                        <input type="checkbox" ng-model="x.selected"> {{::$ctrl.shortenPath(x.path)}}
+                        <input type="checkbox" ng-model="x.selected"> {{::$ctrl.getFileName(x.path)}}
                     </label>
                     <span ng-style="::$ctrl.macroStyle(x.macro)">{{::x.macro}}</span>
                     <span ng-if="::x.error" style="color:red;" class="glyphicon glyphicon-warning-sign"

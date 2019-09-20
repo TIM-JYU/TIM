@@ -245,7 +245,7 @@ def get_attachment_list(doc):
 @minutes_blueprint.route('/mergeAttachments/<path:doc>', methods=['GET'])
 def merge_attachments(doc):
     """
-    Old version of the route for merging all the attachments in a document.
+    Old version of the route for merging all the non-missing liite-macro attachments in a document.
     :param doc: Document path.
     :return: Merged pdf-file.
     """
@@ -292,6 +292,7 @@ def merge_selected_attachments(args: MergeAttachmentsModel):
         if not d:
             abort(404)
         verify_edit_access(d)
+        # TODO: Remove when ready.
         print(args)
 
         # Uses document name as the base for the merged file name and tmp as folder.
@@ -314,6 +315,7 @@ def get_attachments(doc):
     :return: merged pdf-file
     """
     # TODO: Show the real merged file with user selected contents.
+    # Currently uses the old route which doesn't take selection into account.
     try:
         d = DocEntry.find_by_path(doc)
         if not d:

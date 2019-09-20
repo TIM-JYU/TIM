@@ -370,6 +370,7 @@ def get_attachments_from_paragraphs(paragraphs: List[DocParagraph], include_list
             except PdfError:
                 attachments_with_errors = True
             else:
+                # TODO: Replace hard coded part.
                 if not include_list or (include_list and "%%liite" in str(par)):
                     pdf_paths += [par_file]
     return pdf_paths, attachments_with_errors
