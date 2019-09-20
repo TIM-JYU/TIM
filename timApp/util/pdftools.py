@@ -13,6 +13,7 @@ from re import escape as re_escape, compile as re_compile
 import timApp.plugin.plugin
 
 # Default parameter values:
+from timApp.document.docparagraph import DocParagraph
 from timApp.util.utils import get_error_message
 
 temp_folder_default_path = Path("/tmp")
@@ -339,7 +340,7 @@ def merge_pdfs(pdf_path_list: List[str], output_path: Path) -> Path:
     return output_path
 
 
-def get_attachments_from_paragraphs(paragraphs, include_list: Optional[List[str]] = None):
+def get_attachments_from_paragraphs(paragraphs: List[DocParagraph], include_list: Optional[List[str]] = None):
     """
     Goes through paragraphs and gets attachments from showPdf-macros.
     Checks file validity and gives partial error state if some are invalid.
@@ -388,7 +389,7 @@ def contains_keyword(string: str, include_list: List[str]) -> bool:
     return contains
 
 
-def get_attachments_from_pars(paragraphs) -> List[Attachment]:
+def get_attachments_from_pars(paragraphs: List[DocParagraph]) -> List[Attachment]:
     """
     Goes through paragraphs and gets attachments from showPdf-macros.
     Checks file validity with pdftk.
