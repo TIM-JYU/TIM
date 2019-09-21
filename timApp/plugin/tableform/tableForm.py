@@ -29,7 +29,7 @@ from timApp.tim_app import csrf
 from timApp.user.user import User, get_membership_end
 from timApp.user.usergroup import UserGroup
 from timApp.util.flask.responsehelper import csv_response, json_response
-from timApp.util.get_fields import get_fields_and_users, MembershipFilter
+from timApp.util.get_fields import get_fields_and_users, MembershipFilter, StringToMembershipFilter
 from timApp.util.utils import get_boolean, fin_timezone
 
 
@@ -237,7 +237,9 @@ def gen_csv(args: GenerateCSVModel):
         return "Only 1-character string separators supported for now"
     doc = get_doc_or_abort(docid)
     r = tableform_get_fields(fields, groups,
-                             doc, curr_user, removeDocIds, allow_non_teacher=True)
+                             doc, curr_user, removeDocIds, allow_non_teacher=True,
+                             # TODO: group_filter_type=self.markup.includeUsers,
+                             )
     rowkeys = list(r['rows'].keys())
     rowkeys.sort()
     data = [[] for i in range(len(rowkeys) + 1)]
@@ -275,7 +277,9 @@ def fetch_rows():
     # debug = plug.values
     r = tableform_get_fields(plug.values.get("fields",[]), plug.values.get("groups", []),
                              doc, curr_user, plug.values.get("removeDocIds", True),
-                             plug.values.get("showInView"))
+                             plug.values.get("showInView"),
+                             group_filter_type = StringToMembershipFilter(plug.values.get("includeUsers")),
+                             )
     return json_response(r, headers={"No-Date-Conversion": "true"})
 
 @tableForm_plugin.route('/fetchTableDataPreview')
@@ -292,7 +296,9 @@ def fetch_rows_preview():
     groups = request.args.getlist("groups")
     removeDocIds = get_boolean(request.args.get("removeDocIds"), True)
     r = tableform_get_fields(fields, groups,
-                             doc, curr_user, removeDocIds, allow_non_teacher=True)
+                             doc, curr_user, removeDocIds, allow_non_teacher=True
+                             #  TODO: group_filter_type = plug.values.get("includeUsers"),
+                             )
     return json_response(r, headers={"No-Date-Conversion": "true"})
 
 

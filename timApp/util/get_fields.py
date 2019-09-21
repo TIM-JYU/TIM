@@ -92,6 +92,13 @@ class MembershipFilter(Enum):
     Current = 'current'
     Deleted = 'deleted'
 
+def StringToMembershipFilter(s):
+    if s == "all":
+        return MembershipFilter.All
+    if s == "deleted":
+        return MembershipFilter.Deleted
+    return MembershipFilter.Current
+
 
 member_filter_relation_map = {
     MembershipFilter.All: User.groups_dyn,
