@@ -335,6 +335,7 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
             aliases: Record<string, string>,
             fields: string[];
             realnamemap: Record<string, string>,
+            membershipmap: Record<string, string>,
             emailmap: Record<string, string>,
             rows: IRowsType,
             styles: t.TypeOf<typeof Styles>,
@@ -360,6 +361,7 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
 
         // TODO: Generic reset function
         this.aliases = tableResponse.data.aliases || {};
+        this.membershipmap = tableResponse.data.membershipmap;
         this.rows = tableResponse.data.rows || {};
         this.rowKeys = Object.keys(tableResponse.data.rows);
         this.fields = tableResponse.data.fields || [];
