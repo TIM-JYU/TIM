@@ -298,7 +298,7 @@ def view(item_path, template_name, usergroup=None, route="view"):
     if teacher_or_see_answers and no_accesses:
         flash('You do not have full access to the following tasks: ' + ', '.join([t.doc_task for t in no_accesses]))
     points_sum_rule = doc_settings.point_sum_rule()
-    if points_sum_rule:
+    if points_sum_rule and not points_sum_rule.count_all:
         total_tasks = len(points_sum_rule.groups)
     else:
         total_tasks = len(task_ids)

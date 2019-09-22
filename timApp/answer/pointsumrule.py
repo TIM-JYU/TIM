@@ -53,6 +53,10 @@ class PointSumRule:
             self.count_type, self.count_amount = next(data['count'].items().__iter__())
         except (StopIteration, KeyError):
             self.count_type, self.count_amount = 'best', 9999
+        self.total = data.get('total', None)
+        self.hide = data.get('hide', None)
+        self.sort = data.get('sort', True)
+        self.count_all = data.get('count_all', False)
 
     def find_groups(self, task_id):
         for g in self.groups.values():
