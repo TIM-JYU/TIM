@@ -143,46 +143,52 @@ export class MergePdfController extends DialogController<{ params: IMergeParams 
 registerDialogComponent(MergePdfController,
     {
         template:
-            `<tim-dialog class="overflow-visible">
+            `<tim-dialog>
     <dialog-header ng-bind-html="$ctrl.getTitle()">
     </dialog-header>
     <dialog-body>
+    <form class="form-horizontal">
         <p ng-if="$ctrl.attachmentList.length > 0">Following attachments were found in the current document:</p>
-        <div>
-            <ul class="list-unstyled">
-                <li ng-repeat="x in $ctrl.attachmentList track by $index">
-                    <label>
-                        <input type="checkbox" ng-model="x.selected" ng-disabled="x.error">
-                        <a href="{{::$ctrl.getAttachmentLinkPath(x.path)}}" target="_blank">{{::$ctrl.getFileName(x.path)}}</a>
-                    </label>
-                    <span ng-style="::$ctrl.macroStyle(x.macro)">{{::x.macro}}</span>
-                    <span ng-if="::x.error" style="color:red;" class="glyphicon glyphicon-warning-sign"
-                       uib-tooltip="{{::x.error}}" tooltip-placement="auto"></span>
-                </li>
-            </ul>
-            <p ng-if="!$ctrl.errorMessage && $ctrl.attachmentList.length == 0 && !$ctrl.checking">No attachments found</p>
-            <div ng-if="$ctrl.errorMessage && !$ctrl.checking" class="alert alert-warning">
-                <span class="glyphicon glyphicon-exclamation-sign"></span>{{$ctrl.errorMessage}}
+        <div class="form-group">
+            <div class="col-sm-12">
+                <ul class="list-unstyled">
+                    <li ng-repeat="x in $ctrl.attachmentList track by $index">
+                        <label>
+                            <input type="checkbox" ng-model="x.selected" ng-disabled="x.error">
+                            <a href="{{::$ctrl.getAttachmentLinkPath(x.path)}}" target="_blank">{{::$ctrl.getFileName(x.path)}}</a>
+                        </label>
+                        <span ng-style="::$ctrl.macroStyle(x.macro)">{{::x.macro}}</span>
+                        <span ng-if="::x.error" style="color:red;" class="glyphicon glyphicon-warning-sign"
+                           uib-tooltip="{{::x.error}}" tooltip-placement="auto"></span>
+                    </li>
+                </ul>
+                <p ng-if="!$ctrl.errorMessage && $ctrl.attachmentList.length == 0 && !$ctrl.checking">No attachments found</p>
+                <div ng-if="$ctrl.errorMessage && !$ctrl.checking" class="alert alert-warning">
+                    <span class="glyphicon glyphicon-exclamation-sign"></span>{{$ctrl.errorMessage}}
+                </div>
             </div>
         </div>
         <div ng-if="$ctrl.checking" class="alert alert-warning">
-            <span class="glyphicon glyphicon-exclamation-sign"></span>
+            <i class="glyphicon glyphicon-refresh glyphicon-refresh-animate"></i>
             Checking validity of the attachments, please wait...
         </div>
-        <button class="timButton" ng-click="$ctrl.mergeClicked()" ng-disabled="$ctrl.attachmentList.length == 0"
-                    title="Merge selected files">
-                    <span ng-if="$ctrl.loading"><i class="glyphicon glyphicon-refresh glyphicon-refresh-animate"></i>
-                    Merging</span>
-            <span ng-hide="$ctrl.loading">Merge selected</span>
-        </button>
-        <button class="timButton" ng-click="$ctrl.dismiss()"><span>Cancel</span>
-        </button>
-        <div ng-if="$ctrl.mergedFileName" class="alert alert-success">
-            <span class="glyphicon glyphicon-ok"></span> Merging succeeded!
-            <a href="{{$ctrl.mergedUrl}}" target="_blank">View the document.</a>
-        </div>
+    </form>
     </dialog-body>
-    <dialog-footer></dialog-footer>
+    <dialog-footer>
+        <div style="float: left;">
+            <button class="timButton" ng-click="$ctrl.mergeClicked()" ng-disabled="$ctrl.attachmentList.length == 0"
+                        title="Merge selected files">
+                        <span ng-if="$ctrl.loading"><i class="glyphicon glyphicon-refresh glyphicon-refresh-animate"></i>
+                        Merging</span>
+                <span ng-hide="$ctrl.loading">Merge selected</span>
+            </button>
+            <button class="timButton" ng-click="$ctrl.dismiss()"><span>Cancel</span></button>
+            <div ng-if="$ctrl.mergedFileName" class="alert alert-success">
+                <span class="glyphicon glyphicon-ok"></span> Merging succeeded!
+                <a href="{{$ctrl.mergedUrl}}" target="_blank">View the document.</a>
+            </div>
+        </div>
+</dialog-footer>
 </tim-dialog>
 `,
     });
