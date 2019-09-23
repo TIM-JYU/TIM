@@ -127,6 +127,14 @@ export class MergePdfController extends DialogController<{ params: IMergeParams 
     private getFileName(path: string) {
         return path.replace(/^.*[\\\/]/, "");
     }
+
+    /**
+     * Parse file path for the link.
+     * @param path Attachment path.
+     */
+    private getAttachmentLinkPath(path: string) {
+        return path.replace("tim_files/blocks/", "");
+    }
 }
 
 /**
@@ -144,7 +152,8 @@ registerDialogComponent(MergePdfController,
             <ul class="list-unstyled">
                 <li ng-repeat="x in $ctrl.attachmentList track by $index">
                     <label>
-                        <input type="checkbox" ng-model="x.selected" ng-disabled="x.error"> {{::$ctrl.getFileName(x.path)}}
+                        <input type="checkbox" ng-model="x.selected" ng-disabled="x.error">
+                        <a href="{{::$ctrl.getAttachmentLinkPath(x.path)}}" target="_blank">{{::$ctrl.getFileName(x.path)}}</a>
                     </label>
                     <span ng-style="::$ctrl.macroStyle(x.macro)">{{::x.macro}}</span>
                     <span ng-if="::x.error" style="color:red;" class="glyphicon glyphicon-warning-sign"
