@@ -2,6 +2,7 @@
 Routes related to handling faculty council documents, such as meeting invitations and minutes
 """
 import ast
+import os
 from pathlib import Path
 from typing import List
 
@@ -265,11 +266,16 @@ def merge_selected_attachments(args: MergeAttachmentsModel):
         verify_edit_access(d)
         # Uses document name as the base for the merged file name and tmp as folder.
         doc_name = Path(doc_path).name
-        merged_file_folder = timApp.util.pdftools.temp_folder_default_path
-        # TODO: Change folder.
-        merged_pdf_path = merged_file_folder / f"{doc_name}_merged.pdf"
-        timApp.util.pdftools.merge_pdfs(pdf_paths, merged_pdf_path)
 
+        if not timApp.util.pdftools.merged_file_folder.exists():
+            os.mkdir(timApp.util.pdftools.merged_file_folder.absolute().as_posix())
+        destination_folder = timApp.util.pdftools.merged_file_folder / str(d.document.doc_id)
+        if not destination_folder.exists():
+            os.mkdir(destination_folder.absolute().as_posix())
+
+        # TODO: Hash.
+        merged_pdf_path = destination_folder / f"{doc_name}_merged.pdf"
+        timApp.util.pdftools.merge_pdfs(pdf_paths, merged_pdf_path)
     except Exception as err:
         message = str(err)
         abort(404, message)
@@ -286,7 +292,7 @@ def get_file(doc_id: int, file_filename: str):
     :return: Opens the file in browser.
     """
     d = DocEntry.find_by_id(doc_id)
-    f = timApp.util.pdftools.temp_folder_default_path / Path(file_filename)
+    f = timApp.util.pdftools.merged_file_folder / str(doc_id) / Path(file_filename)
     if not f.exists():
         abort(404, 'File not found')
     verify_view_access(d)

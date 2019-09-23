@@ -16,8 +16,8 @@ import timApp.plugin.plugin
 from timApp.document.docparagraph import DocParagraph
 from timApp.util.logger import log_error
 
-merged_file_folder = Path("/tim_files/blocks/merged/")
 temp_folder_default_path = Path("/tmp")
+merged_file_folder = temp_folder_default_path / Path("merged_attachments")
 stamp_model_default_path = Path("static/tex/stamp_model.tex")
 # Default format for stamp text.
 default_stamp_format = "Kokous {date}\n\nLIITE {attachment} lista {issue}"
