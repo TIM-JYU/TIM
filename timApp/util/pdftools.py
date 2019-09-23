@@ -220,32 +220,11 @@ class Attachment:
         self.path = path
         self.macro = macro
         self.selected = selected
-        self.error = self.parse_error(error)
+        self.error = error
 
 
     def to_json(self):
         return {'path': self.path, 'macro': self.macro, 'error': self.error, 'selected': self.selected}
-
-
-    def parse_error(self, message: str) -> str:
-        """
-        Shorten long pdftk error messages and log unexpected errors.
-        :param message: Error message string from pdftk.
-        :return: Pre-written error message.
-        """
-        if not message:
-            return ""
-        if "OWNER PASSWORD REQUIRED" in message:
-            return "Error: Unable to merge a password protected file; please remove the password requirement (including empty password)"
-        elif "Error: Unable to find file" in message or "java.io.FileNotFoundEception" in message:
-            return "Error: file not found; merging tool couldn't find the attachment, try reuploading it"
-        elif "java.lang.ClassCastException" in message:
-            return "Error: file contains errors; try recreating the file with a different tool"
-        elif "Server returned HTTP response code: 403 for URL" in message:
-            "Error: file URL forbidden; merging tool couldn't find the attachment link, try reuploading it"
-        else:
-            log_error(f"PDFtk failed to merge an attachment: {message}")
-            return message
 
 
 class AttachmentStampData:
@@ -336,13 +315,41 @@ def test_pdf(pdf_path: str, timeout_seconds: int = pdfmerge_timeout) -> str:
     Test pdf-file suitability for pdftk.
     :param pdf_path: Pdf to test.
     :param timeout_seconds: Timeout after which error is raised.
-    :return: True if valid, false if the pdf caused an error or exception.
+    :return: Return error message (empty string if no error).
     """
+    if is_url(pdf_path):
+        return "Error: Attachment link is an URL; please upload the file to TIM"
+    if not ".pdf" in pdf_path:
+        return "Error: Attachment is not a PDF-file"
+    if not Path(pdf_path).exists():
+        return "Error: file not found; try reuploading it"
     test_output_path = Path(timApp.util.pdftools.temp_folder_default_path) / f"pdftk_test.pdf"
     args = ["pdftk"] + [pdf_path] + ["cat", "output", test_output_path.absolute().as_posix()]
     p = Popen(args, stdout=PIPE, stderr=PIPE)
     out, err = p.communicate(timeout=timeout_seconds)
-    return err.decode(encoding='utf-8')
+    return parse_error(err.decode(encoding='utf-8'))
+
+
+def parse_error(message: str) -> str:
+    """
+    Shortens known long PDFtk error messages and logs unexpected ones.
+    :param message: Error message string from pdftk.
+    :return: Pre-written error message.
+    """
+    if not message:
+        return ""
+    if "OWNER PASSWORD REQUIRED" in message:
+        return "Error: Unable to merge a password protected file; please remove the password requirement (including empty password)"
+    elif "Error: Unable to find file" in message or "java.io.FileNotFoundEception" in message:
+        return "Error: file not found; merging tool couldn't find the attachment, try reuploading it"
+    elif "java.lang.ClassCastException" in message:
+        return "Error: file contains errors; try recreating the file with a different tool"
+    elif "Server returned HTTP response code: 403 for URL" in message:
+        "Error: file URL forbidden; merging tool couldn't find the attachment link, try reuploading it"
+    else:
+        log_error(f"PDFtk failed to merge an attachment: {message}")
+        return message
+
 
 
 def merge_pdfs(pdf_path_list: List[str], output_path: Path) -> Path:
@@ -364,56 +371,6 @@ def merge_pdfs(pdf_path_list: List[str], output_path: Path) -> Path:
     return output_path
 
 
-def get_attachments_from_paragraphs(paragraphs: List[DocParagraph], include_list: Optional[List[str]] = None):
-    """
-    Goes through paragraphs and gets attachments from showPdf-macros.
-    Checks file validity and gives partial error state if some are invalid.
-    :param paragraphs: Document paragraphs.
-    :param include_list: List of macros to search.
-    :return: List of pdf paths and whether the list is complete.
-    """
-    # TODO: Combine with get_attachments_from_pars.
-    (pdf_paths, attachments_with_errors) = ([], False)
-    for par in paragraphs:
-        if par.is_plugin() and par.get_attr('plugin') == 'showPdf':
-            par_plugin = timApp.plugin.plugin.Plugin.from_paragraph(par)
-            par_data = par_plugin.values
-            par_file = par_data["file"]
-            # Checks if attachment is TIM-upload and adds prefix.
-            # Changes in upload folder need to be updated here as well.
-            if par_file.startswith("/files/"):
-                par_file = "/tim_files/blocks" + par_file
-            # If attachment is an url link, mark as a partial error.
-            elif is_url(par_file):
-                attachments_with_errors = True
-                # par_file = download_file_from_url(par_file)
-            try:
-                check_pdf_validity(Path(par_file))
-            # If file is invalid, mark it as a partial error.
-            except PdfError:
-                attachments_with_errors = True
-            else:
-                # TODO: Replace hard coded part.
-                if not include_list or (include_list and "%%liite" in str(par)):
-                    pdf_paths += [par_file]
-    return pdf_paths, attachments_with_errors
-
-
-def contains_keyword(string: str, include_list: List[str]) -> bool:
-    """
-    Checks if any key word from the list is in the string.
-    :param string:
-    :param include_list:
-    :return:
-    """
-    contains = False
-    for i in include_list:
-        if i in string:
-            contains = True
-            break
-    return contains
-
-
 def get_attachments_from_pars(paragraphs: List[DocParagraph]) -> List[Attachment]:
     """
     Goes through paragraphs and gets attachments from showPdf-macros.
@@ -424,8 +381,6 @@ def get_attachments_from_pars(paragraphs: List[DocParagraph]) -> List[Attachment
     pdf_list = []
     for par in paragraphs:
         if par.is_plugin() and par.get_attr('plugin') == 'showPdf':
-            error_message = ""
-            selected = True
             par_plugin = timApp.plugin.plugin.Plugin.from_paragraph(par)
             par_data = par_plugin.values
             par_file = par_data["file"]
@@ -436,6 +391,7 @@ def get_attachments_from_pars(paragraphs: List[DocParagraph]) -> List[Attachment
             error_message = test_pdf(par_file)
             selected = not error_message
             par_str = str(par)
+            # Find macro name and unselect "perusliite"-attachments.
             macro_name = "unknown"
             if "%%liite" in par_str:
                 macro_name = "liite"
