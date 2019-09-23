@@ -14,7 +14,7 @@ from timApp.item.tag import TagType
 from timApp.item.validation import ItemValidationRule
 from timApp.modules.py.marshmallow_dataclass import class_schema
 from timApp.timdb.sqa import db
-from timApp.user.special_group_names import SPECIAL_GROUPS, PRIVILEGED_GROUPS
+from timApp.user.special_group_names import SPECIAL_GROUPS, PRIVILEGED_GROUPS, SPECIAL_USERNAMES
 from timApp.user.user import User, view_access_set, edit_access_set
 from timApp.user.usergroup import UserGroup
 from timApp.util.flask.requesthelper import load_data_from_req
@@ -206,6 +206,8 @@ NamesModelSchema = class_schema(NamesModel)
 def add_member(groupname):
     nm: NamesModel = load_data_from_req(NamesModelSchema)
     existing_ids, group, not_exist, usernames, users = get_member_infos(groupname, nm.names)
+    if set(nm.names) & SPECIAL_USERNAMES:
+        abort(400, 'Cannot add special users.')
     already_exists = set(u.name for u in group.users) & set(usernames)
     added = []
     curr = get_current_user_object()

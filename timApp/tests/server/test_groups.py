@@ -117,6 +117,18 @@ class GroupTest(TimRouteTest):
                      expect_content={'error': 'Cannot edit personal groups.'})
             self.json_post('/groups/removemember/Logged-in users', {'names': f'testuser1'.split(',')}, expect_status=400,
                      expect_content={'error': 'Cannot edit special groups.'})
+            self.json_post(
+                f'/groups/addmember/test x1{is_admin}',
+                {'names': ['Anonymous']},
+                expect_status=400,
+                expect_content={'error': 'Cannot add special users.'},
+            )
+            self.json_post(
+                f'/groups/addmember/test x1{is_admin}',
+                {'names': ['Logged-in user']},
+                expect_status=400,
+                expect_content={'error': 'Cannot add special users.'},
+            )
 
     def test_nonexistent(self):
         self.init_admin()
