@@ -143,7 +143,7 @@ registerDialogComponent(MergePdfController,
             <ul class="list-unstyled">
                 <li ng-repeat="x in $ctrl.attachmentList track by $index">
                     <label>
-                        <input type="checkbox" ng-model="x.selected"> {{::$ctrl.getFileName(x.path)}}
+                        <input type="checkbox" ng-model="x.selected" ng-disabled="x.error"> {{::$ctrl.getFileName(x.path)}}
                     </label>
                     <span ng-style="::$ctrl.macroStyle(x.macro)">{{::x.macro}}</span>
                     <span ng-if="::x.error" style="color:red;" class="glyphicon glyphicon-warning-sign"
