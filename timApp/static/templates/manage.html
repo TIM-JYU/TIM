@@ -1,3 +1,6 @@
+<div ng-if="!$ctrl.loggedIn()">
+    Using manage view requires you to be logged in.
+</div>
 <div ng-if="$ctrl.item.rights.manage" class="panel panel-default">
     <div class="panel-heading">{{ $ctrl.objName }} permissions</div>
     <div class="panel-body">
@@ -45,7 +48,7 @@
     </div>
 </div>
 
-<div class="panel panel-default">
+<div class="panel panel-default" ng-if="$ctrl.loggedIn()">
     <div class="panel-heading">Notifications</div>
     <div class="panel-body">
         <tim-alert severity="info" ng-if="!$ctrl.item.isFolder">
@@ -70,7 +73,7 @@
     </div>
 </div>
 
-<bootstrap-panel title="Relevance">
+<bootstrap-panel title="Relevance" ng-if="$ctrl.item.rights.editable">
         <relevance-edit item="$ctrl.item"></relevance-edit>
 </bootstrap-panel>
 
@@ -364,7 +367,7 @@
             </form>
         </div>
     </div>
-    <bootstrap-panel title="Copy contents">
+    <bootstrap-panel title="Copy contents" ng-if="$ctrl.item.rights.editable">
         <tim-copy-folder item="$ctrl.item"></tim-copy-folder>
     </bootstrap-panel>
     <div ng-if="$ctrl.item.rights.manage" class="panel panel-default">

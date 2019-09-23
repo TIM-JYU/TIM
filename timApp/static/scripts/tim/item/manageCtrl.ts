@@ -4,6 +4,7 @@ import {IChangelogEntry, IManageResponse} from "../document/editing/edittypes";
 import {isManageResponse, showRenameDialog} from "../document/editing/pluginRenameForm";
 import * as copyFolder from "../folder/copyFolder";
 import {showMessageDialog} from "../ui/dialog";
+import {Users} from "../user/userService";
 import {manageglobals} from "../util/globals";
 import {$http, $upload} from "../util/ngimport";
 import {clone, markAsUsed, to} from "../util/utils";
@@ -487,6 +488,9 @@ export class PermCtrl implements IController {
     }
 
     async getNotifySettings() {
+        if (!this.loggedIn()) {
+            return;
+        }
         const r = await to($http.get<{}>("/notify/" + this.item.id));
         if (r.ok) {
             this.notifySettings = r.result.data;
@@ -502,6 +506,10 @@ export class PermCtrl implements IController {
         } else {
             await showMessageDialog(`Could not change notification settings. Error message is: ${r.result.data.error}`);
         }
+    }
+
+    loggedIn() {
+        return Users.isLoggedIn();
     }
 }
 
