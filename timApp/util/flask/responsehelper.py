@@ -95,3 +95,13 @@ def error_generic(error, code, template='error.html'):
                                status=http.client.responses[code]), code
     else:
         return json_response({'error': error.description}, code)
+
+
+def get_grid_modules():
+    return [
+        "ui.grid",
+        "ui.grid.cellNav",
+        "ui.grid.selection",
+        "ui.grid.exporter",
+        "ui.grid.autoResize",
+    ]

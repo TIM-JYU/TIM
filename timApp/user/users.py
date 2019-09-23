@@ -1,4 +1,5 @@
-from typing import List
+from collections import defaultdict
+from typing import List, Tuple, Optional
 
 from sqlalchemy import func
 from sqlalchemy.orm import joinedload
@@ -26,23 +27,29 @@ RightsList = List[BlockAccess]
 
 
 def get_rights_holders(block_id: int) -> RightsList:
-    result = (BlockAccess.query
+    return get_rights_holders_all([block_id])[block_id]
+
+
+def get_rights_holders_all(block_ids: List[int], order_by=None):
+    if not order_by:
+        order_by = User.name
+    result: List[Tuple[BlockAccess, UserGroup, Optional[User]]] = (BlockAccess.query
               .options(
         joinedload(BlockAccess.usergroup)
     )
               .options(joinedload(BlockAccess.atype))
-              .filter_by(block_id=block_id)
+              .filter(BlockAccess.block_id.in_(block_ids))
               .join(UserGroup)
               .outerjoin(User, User.name == UserGroup.name)
               .with_entities(BlockAccess, UserGroup, User)
-              .order_by(User.name)
+              .order_by(order_by)
               .all()
      )
-    results = []
+    results = defaultdict(list)
     for acc, ug, user in result:
         if user:
             ug.personal_user = user
-        results.append(acc)
+        results[acc.block_id].append(acc)
     return results
 
 

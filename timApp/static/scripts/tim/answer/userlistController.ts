@@ -35,19 +35,14 @@ const sortLang = "fi";
 
 export class UserListController implements IController {
     static $inject = ["$scope", "$element"];
-    private gridOptions?: uiGrid.IGridOptions & {gridMenuCustomItems: unknown};
-    private scope: IScope;
+    private gridOptions?: uiGrid.IGridOptionsOf<IUserListEntry> & {gridMenuCustomItems: unknown};
     private gridApi?: uiGrid.IGridApiOf<IUserListEntry>;
     private instantUpdate: boolean = false;
-    private columns!: Array<uiGrid.IColumnDefOf<IUserListEntry>>; // $onInit
     private onUserChange!: Binding<(params: {$USER: IUser, $UPDATEALL: boolean}) => void, "&">;
     private viewctrl!: Require<ViewCtrl>;
-    private element: IRootElementService;
     private preventedChange = false;
 
-    constructor(scope: IScope, element: IRootElementService) {
-        this.scope = scope;
-        this.element = element;
+    constructor(private scope: IScope, private element: IRootElementService) {
     }
 
     $onInit() {
@@ -77,7 +72,7 @@ export class UserListController implements IController {
             }
         }
 
-        this.columns = [
+        const columns: Array<uiGrid.IColumnDefOf<IUserListEntry>> = [
             {
                 field: "user.real_name",
                 name: "Full name",
@@ -131,7 +126,7 @@ export class UserListController implements IController {
                 maxWidth: smallFieldWidth,
             },
         ];
-        for (const c of this.columns) {
+        for (const c of columns) {
             const f: IFixedFilterOptions = {
                 condition: filterFn,
                 rawTerm: true, // Required for RegExp to work.
@@ -151,7 +146,7 @@ export class UserListController implements IController {
             enableGridMenu: true,
             data: this.viewctrl.users,
             enableSorting: true,
-            columnDefs: this.columns,
+            columnDefs: columns,
             onRegisterApi: (gridApi) => {
                 this.gridApi = gridApi;
 
@@ -159,7 +154,7 @@ export class UserListController implements IController {
                     this.fireUserChange(row, this.instantUpdate);
                 });
                 if (this.gridOptions && this.gridOptions.data) {
-                    gridApi.grid.modifyRows(this.gridOptions.data as unknown[]);
+                    gridApi.grid.modifyRows(this.gridOptions.data as IUserListEntry[]);
                     const firstRow = this.gridOptions.data[0] as IUserListEntry;
                     gridApi.selection.selectRow(firstRow);
                     const userName = getURLParameter("user");
@@ -273,7 +268,12 @@ export class UserListController implements IController {
                     order: 50,
                 },
             ],
-            rowTemplate: "<div ng-dblclick=\"grid.appScope.fireUserChange(row, true)\" ng-repeat=\"(colRenderIndex, col) in colContainer.renderedColumns track by col.colDef.name\" class=\"ui-grid-cell\" ng-class=\"{ 'ui-grid-row-header-cell': col.isRowHeader }\" ui-grid-cell></div>",
+            rowTemplate: `
+<div ng-dblclick="grid.appScope.fireUserChange(row, true)"
+     ng-repeat="(colRenderIndex, col) in colContainer.renderedColumns track by col.colDef.name"
+     class="ui-grid-cell"
+     ng-class="{ 'ui-grid-row-header-cell': col.isRowHeader }" ui-grid-cell>
+</div>`,
         };
     }
 

@@ -24,7 +24,7 @@ from timApp.document.documents import import_document_from_file
 from timApp.document.docentry import DocEntry
 from timApp.user.user import User
 from timApp.timdb.sqa import db, get_tim_main_engine
-from timApp.auth.auth_models import AccessType
+from timApp.auth.auth_models import AccessTypeModel
 from timApp.timdb.timdb import TimDb
 from timApp.user.userutils import get_anon_group_id
 from timApp.util.utils import EXAMPLE_DOCS_PATH
@@ -92,12 +92,12 @@ def initialize_database(create_docs=True):
                 flask_migrate.stamp()
         # Alembic disables loggers for some reason
         enable_loggers()
-        sess.add(AccessType(id=1, name='view'))
-        sess.add(AccessType(id=2, name='edit'))
-        sess.add(AccessType(id=3, name='teacher'))
-        sess.add(AccessType(id=4, name='manage'))
-        sess.add(AccessType(id=5, name='see answers'))
-        sess.add(AccessType(id=6, name='owner'))
+        sess.add(AccessTypeModel(id=1, name='view'))
+        sess.add(AccessTypeModel(id=2, name='edit'))
+        sess.add(AccessTypeModel(id=3, name='teacher'))
+        sess.add(AccessTypeModel(id=4, name='manage'))
+        sess.add(AccessTypeModel(id=5, name='see answers'))
+        sess.add(AccessTypeModel(id=6, name='owner'))
 
         create_special_usergroups(sess)
         anon_group = UserGroup.get_anonymous_group()

@@ -112,10 +112,22 @@ timApp.component("timAlert", {
                 this.severity = "danger";
             }
         }
+
+        getIcon() {
+            switch (this.severity) {
+                case "danger":
+                case "warning":
+                    return "exclamation-sign";
+                case "success":
+                    return "ok";
+                default:
+                    return "exclamation-sign";
+            }
+        }
     },
     template: `
 <div uib-alert class="alert alert-{{ $ctrl.severity }}">
-    <span class="glyphicon glyphicon-exclamation-sign"></span>
+    <span class="glyphicon glyphicon-{{$ctrl.getIcon()}}"></span>
     <span ng-transclude></span>
 </div>
     `,

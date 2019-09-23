@@ -116,14 +116,37 @@ class PermissionTest(TimRouteTest):
             d = self.create_doc(self.get_personal_item_path(p))
             ds.append(d)
             t1_f = self.test_user_1.get_personal_folder()
-            t1_f_path = t1_f.path
             self.assertFalse(self.test_user_2.has_view_access(d))
             self.assertFalse(self.test_user_2.has_edit_access(d))
             self.assertFalse(self.test_user_2.has_edit_access(t1_f))
 
-        self.get(f"/permissions/removeRecursive/testuser1/owner/{t1_f_path}", expect_status=403)
+        all_ids = [x.id for x in ds]
+        self.json_put(
+            f"/permissions/edit",
+            {
+                'groups': ['testuser1'],
+                'type': 'owner',
+                'action': 1,
+                'ids': all_ids,
+                'time': {
+                    'type': 'always',
+                },
+            },
+            expect_status=403,
+        )
 
-        self.get(f"/permissions/addRecursive/testuser2;testuser3/view/{t1_f.path}")
+        self.json_put(
+            f"/permissions/edit",
+            {
+                'groups': ['testuser2', 'testuser3'],
+                'type': 'view',
+                'action': 0,
+                'ids': all_ids,
+                'time': {
+                    'type': 'always',
+                },
+            },
+        )
         t1_f = self.test_user_1.get_personal_folder()
         for p in paths:
             d = DocEntry.find_by_path(self.get_personal_item_path(p))
@@ -132,7 +155,18 @@ class PermissionTest(TimRouteTest):
             self.assertFalse(self.test_user_2.has_edit_access(d))
             self.assertFalse(self.test_user_2.has_edit_access(t1_f))
 
-        self.get(f"/permissions/removeRecursive/testuser2/view/{t1_f_path}")
+        self.json_put(
+            f"/permissions/edit",
+            {
+                'groups': ['testuser2'],
+                'type': 'view',
+                'action': 1,
+                'ids': all_ids,
+                'time': {
+                    'type': 'always',
+                },
+            },
+        )
         t1_f = self.test_user_1.get_personal_folder()
         for p in paths:
             d = DocEntry.find_by_path(self.get_personal_item_path(p))
@@ -142,7 +176,18 @@ class PermissionTest(TimRouteTest):
             self.assertFalse(self.test_user_2.has_edit_access(d))
             self.assertFalse(self.test_user_2.has_edit_access(t1_f))
 
-        self.get(f"/permissions/removeRecursive/testuser2;testuser3/view/{t1_f_path}")
+        self.json_put(
+            f"/permissions/edit",
+            {
+                'groups': ['testuser2', 'testuser3'],
+                'type': 'view',
+                'action': 1,
+                'ids': all_ids,
+                'time': {
+                    'type': 'always',
+                },
+            },
+        )
         t1_f = self.test_user_1.get_personal_folder()
         for p in paths:
             d = DocEntry.find_by_path(self.get_personal_item_path(p))
@@ -152,17 +197,77 @@ class PermissionTest(TimRouteTest):
             self.assertFalse(self.test_user_2.has_edit_access(d))
             self.assertFalse(self.test_user_2.has_edit_access(t1_f))
 
-        self.get(f"/permissions/addRecursive/testuser1/view/{self.test_user_2.get_personal_folder().path}",
-                 expect_status=403)
-        self.get(f"/permissions/addRecursive/testuser1/asd/{self.test_user_1.get_personal_folder().path}",
-                 expect_status=400)
-        self.get(f"/permissions/addRecursive/nonexistent/view/{self.test_user_1.get_personal_folder().path}",
-                 expect_status=404)
+        self.login_test2()
+        self.create_doc()
+        self.login_test1()
+        self.json_put(
+            f"/permissions/edit",
+            {
+                'groups': ['testuser1'],
+                'type': 'view',
+                'action': 0,
+                'ids': [x.id for x in self.test_user_2.get_personal_folder().get_all_documents(include_subdirs=True)],
+                'time': {
+                    'type': 'always',
+                },
+            },
+            expect_status=403
+        )
+        self.json_put(
+            f"/permissions/edit",
+            {
+                'groups': ['testuser1'],
+                'type': 'asd',
+                'action': 0,
+                'ids': all_ids,
+                'time': {
+                    'type': 'always',
+                },
+            },
+            expect_status=422,
+        )
+        self.json_put(
+            f"/permissions/edit",
+            {
+                'groups': ['nonexistent'],
+                'type': 'view',
+                'action': 0,
+                'ids': all_ids,
+                'time': {
+                    'type': 'always',
+                },
+            },
+            expect_status=400,
+        )
 
         # If the user doesn't have access to all documents, the operation should not complete.
         d = DocEntry.find_by_path(self.get_personal_item_path(paths[-1]))
         for a in d.block.accesses:
             db.session.delete(a)
         db.session.commit()
-        self.get(f"/permissions/addRecursive/testuser2;testuser3/view/{t1_f_path}", expect_status=403)
-        self.get(f"/permissions/removeRecursive/testuser2;testuser3/view/{t1_f_path}", expect_status=403)
+        self.json_put(
+            f"/permissions/edit",
+            {
+                'groups': ['testuser2', 'testuser3'],
+                'type': 'view',
+                'action': 0,
+                'ids': all_ids,
+                'time': {
+                    'type': 'always',
+                },
+            },
+            expect_status=403
+        )
+        self.json_put(
+            f"/permissions/edit",
+            {
+                'groups': ['testuser2', 'testuser3'],
+                'type': 'view',
+                'action': 1,
+                'ids': all_ids,
+                'time': {
+                    'type': 'always',
+                },
+            },
+            expect_status=403
+        )

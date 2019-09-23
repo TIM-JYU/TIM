@@ -29,7 +29,7 @@ markAsUsed(ngMessages, timer, aedatetimepicker, ngSanitize,
 // timApp's Angular modules:
 // base: 'ngMessages', 'timer', 'ae-datetimepicker', 'ngSanitize', 'ui.bootstrap'
 // item: 'ngFileUpload'
-// view_html: 'ui.ace', 'ngStorage' + plugin modules
+// view_html: 'ngStorage' + plugin modules
 // teacher mode: 'ui.grid', 'ui.grid.cellNav', 'ui.grid.selection', 'ui.grid.exporter', 'ui.grid.autoResize'
 export const timApp = angular.module("timApp", [
     "ngMessages",

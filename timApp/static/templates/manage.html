@@ -2,7 +2,7 @@
     Using manage view requires you to be logged in.
 </div>
 <div ng-if="$ctrl.item.rights.manage" class="panel panel-default">
-    <div class="panel-heading">{{ $ctrl.objName }} permissions</div>
+    <div class="panel-heading">{{ $ctrl.objName }} rights</div>
     <div class="panel-body">
         <uib-tabset>
             <uib-tab heading="Rights for this {{ $ctrl.objName }}">
@@ -23,6 +23,15 @@
                 <rights-editor
                         item-id="$ctrl.item.id"
                         url-root="defaultPermissions/folder"
+                        access-types="$ctrl.accessTypes">
+                </rights-editor>
+            </uib-tab>
+            <uib-tab ng-if="$ctrl.item.isFolder" heading="Rights of subitems">
+                <p>On this tab you can edit rights for many documents/folders at once.
+                    From the table below, you can only select items to which you have manage right.</p>
+                <rights-editor
+                        item-id="$ctrl.item.id"
+                        mass-mode="true"
                         access-types="$ctrl.accessTypes">
                 </rights-editor>
             </uib-tab>

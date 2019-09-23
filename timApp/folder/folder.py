@@ -1,6 +1,8 @@
 from typing import List, Iterable
 from typing import Optional
 
+from sqlalchemy import true
+
 from timApp.document.specialnames import TEMPLATE_FOLDER_NAME
 from timApp.timdb.exceptions import ItemAlreadyExistsException
 from timApp.item.item import Item
@@ -81,16 +83,24 @@ class Folder(db.Model, Item):
         return None
 
     @staticmethod
-    def get_all_in_path(root_path: str = '', filter_ids: Optional[Iterable[int]] = None) -> List['Folder']:
+    def get_all_in_path(
+            root_path: str = '',
+            filter_ids: Optional[Iterable[int]] = None,
+            recurse=False,
+    ) -> List['Folder']:
         """Gets all the folders under a path.
 
+        :param recurse: Whether to search recursively.
         :param root_path: Restricts the search to a specific folder.
         :param filter_ids: An optional iterable of document ids for filtering the folders.
                Must be non-empty if supplied.
         :return: A list of Folder objects.
 
         """
-        q = Folder.query.filter_by(location=root_path)
+        f_filter = Folder.location == root_path
+        if recurse:
+            f_filter = (f_filter | Folder.location.startswith(root_path + '/')) if root_path else true()
+        q = Folder.query.filter(f_filter)
         if filter_ids:
             q = q.filter(Folder.id.in_(filter_ids))
         return q.all()

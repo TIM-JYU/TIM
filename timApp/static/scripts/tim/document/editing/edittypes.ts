@@ -3,7 +3,6 @@ export type PendingCollection = Map<string, string>;
 export interface IParResponse {
     texts: string;
     js: string[];
-    jsModuleIds: string[];
     css: string[];
     changed_pars: {[id: string]: string};
     version: [number, number];

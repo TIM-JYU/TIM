@@ -1,9 +1,31 @@
-<div class="checkbox">
+<div ng-if="$ctrl.massMode && $ctrl.gridReady">
+    <div ui-grid="$ctrl.gridOptions"
+         ui-grid-selection
+         ui-grid-auto-resize
+         ui-grid-cellNav>
+    </div>
+    <div class="form">
+        <label>Action:</label>
+        <div class="radio">
+            <label>
+                <input type="radio" ng-model="$ctrl.massOption" ng-value="0">
+                Add rights
+            </label>
+        </div>
+        <div class="radio">
+            <label>
+                <input type="radio" ng-model="$ctrl.massOption" ng-value="1">
+                Remove rights
+            </label>
+        </div>
+    </div>
+</div>
+<div class="checkbox" ng-if="!$ctrl.massMode">
     <label>
         <input ng-model="$ctrl.showActiveOnly" type="checkbox"/> Show only active or upcoming rights
     </label>
 </div>
-<div class="margin rights-list" ng-repeat="type in $ctrl.accessTypes">
+<div class="margin rights-list" ng-repeat="type in $ctrl.accessTypes" ng-if="!$ctrl.massMode">
     <a ng-click="$ctrl.showAddRightFn(type)"
        title="Click to add {{ type.name }} right to some usergroup">{{ type.name }} right</a><span
         ng-show="filtered.length > 0"> ({{ filtered.length }})</span>:
@@ -72,10 +94,10 @@
                         ng-options="access.name for access in $ctrl.accessTypes track by access.id"></select>
             </div>
         </div>
-        <div class="row">
+        <div class="row" ng-if="!$ctrl.massMode || $ctrl.massOption === 0">
             <div class="form-group col-md-6 input-group-sm">
                 <fieldset>
-                    <legend>Time:</legend>
+                    <label>Time:</label>
                     <div class="radio">
                         <label>
                             <input type="radio" ng-model="$ctrl.timeOpt.type" value="always">
@@ -117,9 +139,9 @@
                             </div>
                         </div>
                     </div>
-                    <tim-duration-picker amount="$ctrl.timeOpt.durationAmount"
+                    <tim-duration-picker amount="$ctrl.durOpt.durationAmount"
                                          ng-show="$ctrl.timeOpt.type == 'duration'"
-                                         type="$ctrl.timeOpt.durationType">
+                                         type="$ctrl.durOpt.durationType">
                     </tim-duration-picker>
                     <div class="form-group" ng-show="$ctrl.timeOpt.type == 'duration'">
                         <div class="col-md-12">Duration unlockable from:
@@ -147,18 +169,24 @@
                 </fieldset>
             </div>
         </div>
-        <button ng-show="$ctrl.addingRight" class="timButton" type="submit" ng-disabled="!$ctrl.groupName">Add</button>
+        <button ng-show="$ctrl.addingRight" class="timButton" type="submit" ng-disabled="!$ctrl.groupName || $ctrl.addDisabled()">
+            {{$ctrl.addOrRemove()}}
+        </button>
         <button ng-show="$ctrl.editingRight()" class="timButton" type="submit">Save</button>
-        <button class="btn btn-default" type="button" ng-click="$ctrl.cancel()">Cancel</button>
+        <button class="btn btn-default" type="button" ng-disabled="$ctrl.addDisabled()" ng-if="!$ctrl.massMode" ng-click="$ctrl.cancel()">Cancel</button>
         <span ng-show="$ctrl.addingRight && !$ctrl.groupName">
-        <button class="timButton" type="button" ng-click="$ctrl.addOrEditPermission('Korppi users', $ctrl.accessType)">Add Korppi users
+        <button class="timButton" type="button" ng-disabled="$ctrl.addDisabled()" ng-click="$ctrl.addOrEditPermission('Korppi users', $ctrl.accessType)">
+            {{$ctrl.addOrRemove()}} Korppi users
         </button>
-        <button class="timButton" type="button" ng-click="$ctrl.addOrEditPermission('Logged-in users', $ctrl.accessType)">Add logged-in
-            users
+        <button class="timButton" type="button" ng-disabled="$ctrl.addDisabled()" ng-click="$ctrl.addOrEditPermission('Logged-in users', $ctrl.accessType)">
+            {{$ctrl.addOrRemove()}} logged-in users
         </button>
-        <button class="timButton" type="button" ng-click="$ctrl.addOrEditPermission('Anonymous users', $ctrl.accessType)">Add anonymous
-            users
+        <button class="timButton" type="button" ng-disabled="$ctrl.addDisabled()" ng-click="$ctrl.addOrEditPermission('Anonymous users', $ctrl.accessType)">
+            {{$ctrl.addOrRemove()}} anonymous users
         </button>
         </span>
     </form>
 </div>
+<tim-alert ng-if="$ctrl.msg" severity="{{$ctrl.severity}}">
+    {{$ctrl.msg}}
+</tim-alert>

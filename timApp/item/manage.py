@@ -1,35 +1,40 @@
 """Routes for manage view."""
 import re
 from datetime import datetime
-from typing import Generator, Tuple
+from enum import Enum
+from typing import Generator, List, Optional
 
 import dateutil.parser
+from dataclasses import dataclass, field
 from flask import Blueprint, render_template
 from flask import abort
 from flask import redirect
 from flask import request
 from isodate import Duration
 from isodate import parse_duration
+from webargs.flaskparser import use_args
 
+from marshmallow_dataclass import class_schema
 from timApp.auth.accesshelper import verify_manage_access, verify_ownership, verify_view_access, has_ownership, \
     verify_edit_access, get_doc_or_abort, get_item_or_abort, get_folder_or_abort
-from timApp.auth.auth_models import AccessType
+from timApp.auth.accesstype import AccessType
+from timApp.auth.auth_models import AccessTypeModel
 from timApp.auth.sessioninfo import get_current_user_group_object
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.create_item import copy_document_and_enum_translations
 from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import move_document, find_free_name
 from timApp.folder.folder import Folder, path_includes
-from timApp.item.block import BlockType
+from timApp.item.block import BlockType, Block
 from timApp.item.item import Item, copy_rights
 from timApp.item.validation import validate_item, validate_item_and_create_intermediate_folders, has_special_chars
 from timApp.timdb.sqa import db
-from timApp.user.user import User
+from timApp.user.user import User, ItemOrBlock
 from timApp.user.usergroup import UserGroup
 from timApp.user.users import remove_access, remove_default_access, get_default_rights_holders, get_rights_holders
 from timApp.user.userutils import grant_access, grant_default_access, get_access_type_id
 from timApp.util.flask.requesthelper import verify_json_params, get_option
-from timApp.util.flask.responsehelper import json_response, ok_response
+from timApp.util.flask.responsehelper import json_response, ok_response, get_grid_modules
 from timApp.util.utils import remove_path_special_chars, split_location, join_location, get_current_time, \
     split_by_semicolon
 
@@ -50,7 +55,7 @@ def manage(path):
 
     verify_view_access(item)
 
-    access_types = AccessType.query.all()
+    access_types = AccessTypeModel.query.all()
     is_folder = isinstance(item, Folder)
     if not is_folder:
         item.serialize_content = True
@@ -60,6 +65,8 @@ def manage(path):
                            route='manage',
                            translations=item.translations if not is_folder else None,
                            item=item,
+                           js=['angular-ui-grid'],
+                           jsMods=get_grid_modules(),
                            access_types=access_types)
 
 
@@ -72,44 +79,79 @@ def get_changelog(doc_id, length):
 
 @manage_page.route("/permissions/add/<int:item_id>/<group_name>/<perm_type>", methods=["PUT"])
 def add_permission(item_id, group_name, perm_type):
-    is_owner, groups, acc_from, acc_to, dur_from, dur_to, duration = verify_and_get_params(
-        item_id, group_name, perm_type)
     i = get_item_or_abort(item_id)
+    is_owner, groups, acc_from, acc_to, dur_from, dur_to, duration = verify_and_get_params(
+        i, group_name, perm_type)
     add_perm(acc_from, acc_to, dur_from, dur_to, duration, groups, i, perm_type)
-    check_ownership_loss(is_owner, i, perm_type)
+    check_ownership_loss(is_owner, i)
     db.session.commit()
     return ok_response()
 
 
-@manage_page.route("/permissions/addRecursive/<group_name>/<perm_type>/<path:folder_path>")
-def add_permission_recursive(group_name, perm_type, folder_path):
-    folder = Folder.find_by_path(folder_path)
-    if not folder:
-        abort(404)
-    item_id = folder.id
-    _, groups, acc_from, acc_to, dur_from, dur_to, duration = verify_and_get_params(
-        item_id, group_name, perm_type)
-    for d in folder.get_all_documents(include_subdirs=True):
-        _, is_owner = verify_permission_edit_access(d.id, perm_type)
-        add_perm(acc_from, acc_to, dur_from, dur_to, duration, groups, d, perm_type)
-        check_ownership_loss(is_owner, d, perm_type)
-    db.session.commit()
-    return ok_response()
+class TimeType(Enum):
+    always = 0
+    range = 1
+    duration = 2
 
 
-@manage_page.route("/permissions/removeRecursive/<group_name>/<perm_type>/<path:folder_path>")
-def remove_permission_recursive(group_name, perm_type, folder_path):
-    folder = Folder.find_by_path(folder_path)
-    if not folder:
-        abort(404)
-    item_id = folder.id
-    _, groups, _, _, _, _, _ = verify_and_get_params(
-        item_id, group_name, perm_type)
-    for d in folder.get_all_documents(include_subdirs=True):
-        _, is_owner = verify_permission_edit_access(d.id, perm_type)
-        for group in groups:
-            remove_access(group, d.id, perm_type)
-        check_ownership_loss(is_owner, d, perm_type)
+@dataclass
+class TimeOpt:
+    type: TimeType
+    duration: Optional[Duration] = None
+    to: Optional[datetime] = None
+    ffrom: Optional[datetime] = field(metadata={'data_key': 'from'}, default=None)
+    durationTo: Optional[datetime] = None
+    durationFrom: Optional[datetime] = None
+
+
+class EditOption(Enum):
+    Add = 0
+    Remove = 1
+
+
+@dataclass
+class PermissionEditModel:
+    ids: List[int]
+    type: AccessType
+    time: TimeOpt
+    action: EditOption = field(metadata={'by_value': True})
+    groups: List[str]
+
+
+@manage_page.route("/permissions/edit", methods=["put"])
+@use_args(class_schema(PermissionEditModel)())
+def edit_permissions(args: PermissionEditModel):
+    groups = UserGroup.query.filter(UserGroup.name.in_(args.groups)).all()
+    nonexistent = set(args.groups) - set(g.name for g in groups)
+    if nonexistent:
+        return abort(400, f'Non-existent groups: {nonexistent}')
+    items = Block.query.filter(Block.id.in_(args.ids)
+                               & Block.type_id.in_([BlockType.Document.value, BlockType.Folder.value])).all()
+    accessible_from = get_current_time()
+    acc_to = None
+    dur_from = None
+    dur_to = None
+    duration = None
+    if args.time.type == TimeType.range:
+        accessible_from = args.time.ffrom
+        acc_to = args.time.to
+    if args.time.type == TimeType.duration:
+        accessible_from = None
+        dur_from = args.time.durationFrom
+        dur_to = args.time.durationTo
+        duration = args.time.duration
+    for i in items:
+        is_owner = verify_permission_edit_access(i, args.type.name)
+        if args.action == EditOption.Add:
+            add_perm(
+                accessible_from, acc_to,
+                dur_from, dur_to,
+                duration, groups, i, args.type.name,
+            )
+        else:
+            for g in groups:
+                remove_perm(g.id, i, args.type.value)
+        check_ownership_loss(is_owner, i)
     db.session.commit()
     return ok_response()
 
@@ -135,21 +177,26 @@ def add_perm(acc_from, acc_to, dur_from, dur_to, duration, groups, item: Item, p
 
 @manage_page.route("/permissions/remove/<int:item_id>/<int:group_id>/<perm_type>", methods=["PUT"])
 def remove_permission(item_id, group_id, perm_type):
-    i, had_ownership = verify_permission_edit_access(item_id, perm_type)
+    i = get_item_or_abort(item_id)
+    had_ownership = verify_permission_edit_access(i, perm_type)
     try:
         t = get_access_type_id(perm_type)
-        for a in i.block.accesses:
-            if a.usergroup_id == group_id and a.type == t:
-                db.session.delete(a)
-                break
+        remove_perm(group_id, i.block, t)
     except KeyError:
         abort(400, 'Unknown permission type')
-    check_ownership_loss(had_ownership, i, perm_type)
+    check_ownership_loss(had_ownership, i)
     db.session.commit()
     return ok_response()
 
 
-def check_ownership_loss(had_ownership, item, perm_type):
+def remove_perm(group_id: int, b: Block, t: int):
+    for a in b.accesses:
+        if a.usergroup_id == group_id and a.type == t:
+            db.session.delete(a)
+            break
+
+
+def check_ownership_loss(had_ownership, item):
     db.session.flush()
     db.session.refresh(item)
     if had_ownership and not has_ownership(item):
@@ -259,7 +306,7 @@ def get_permissions(item_id):
     i = get_item_or_abort(item_id)
     verify_manage_access(i)
     grouprights = get_rights_holders(item_id)
-    return json_response({'grouprights': grouprights, 'accesstypes': AccessType.query.all()})
+    return json_response({'grouprights': grouprights, 'accesstypes': AccessTypeModel.query.all()})
 
 
 @manage_page.route("/defaultPermissions/<object_type>/get/<int:folder_id>")
@@ -272,7 +319,8 @@ def get_default_document_permissions(folder_id, object_type):
 
 @manage_page.route("/defaultPermissions/<object_type>/add/<int:folder_id>/<group_name>/<perm_type>", methods=["PUT"])
 def add_default_doc_permission(folder_id, group_name, perm_type, object_type):
-    _, groups, acc_from, acc_to, dur_from, dur_to, duration = verify_and_get_params(folder_id, group_name, perm_type)
+    i = get_folder_or_abort(folder_id)
+    _, groups, acc_from, acc_to, dur_from, dur_to, duration = verify_and_get_params(i, group_name, perm_type)
     grant_default_access(groups,
                          folder_id,
                          perm_type,
@@ -298,8 +346,8 @@ def remove_default_doc_permission(folder_id, group_id, perm_type, object_type):
     return ok_response()
 
 
-def verify_and_get_params(item_id, group_name, perm_type):
-    _, is_owner = verify_permission_edit_access(item_id, perm_type)
+def verify_and_get_params(item: Item, group_name: str, perm_type: str):
+    is_owner = verify_permission_edit_access(item, perm_type)
     groups = UserGroup.query.filter(UserGroup.name.in_(split_by_semicolon(group_name))).all()
     if len(groups) == 0:
         abort(404, 'No user group with this name was found.')
@@ -342,21 +390,20 @@ def verify_and_get_params(item_id, group_name, perm_type):
     return is_owner, groups, accessible_from, accessible_to, duration_accessible_from, duration_accessible_to, duration
 
 
-def verify_permission_edit_access(item_id: int, perm_type: str) -> Tuple[Item, bool]:
+def verify_permission_edit_access(i: ItemOrBlock, perm_type: str) -> bool:
     """Verifies that the user has right to edit a permission.
 
-    :param item_id: The item id to check for permission.
+    :param i: The item to check for permission.
     :param perm_type: The permission type.
     :return: True if the user has ownership, False if just manage access.
 
     """
-    i = get_item_or_abort(item_id)
     if perm_type == 'owner':
         verify_ownership(i)
-        return i, True
+        return True
     else:
         verify_manage_access(i)
-        return i, False
+        return False
 
 
 @manage_page.route("/documents/<int:doc_id>", methods=["DELETE"])

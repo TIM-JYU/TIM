@@ -2,7 +2,7 @@ from timApp.timdb.sqa import db, include_if_loaded
 from timApp.util.utils import get_current_time
 
 
-class AccessType(db.Model):
+class AccessTypeModel(db.Model):
     """A kind of access that a UserGroup may have to a Block."""
     __tablename__ = 'accesstype'
     id = db.Column(db.Integer, primary_key=True)
@@ -31,7 +31,7 @@ class BlockAccess(db.Model):
 
     block = db.relationship('Block', back_populates='accesses')
     usergroup = db.relationship('UserGroup', back_populates='accesses')
-    atype = db.relationship('AccessType', back_populates='accesses')
+    atype = db.relationship('AccessTypeModel', back_populates='accesses')
 
     @property
     def future(self):

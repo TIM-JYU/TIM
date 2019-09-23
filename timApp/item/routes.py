@@ -3,6 +3,8 @@ import time
 import traceback
 from typing import Tuple, Union, Optional, List
 
+import attr
+from dataclasses import dataclass
 from flask import Blueprint, render_template
 from flask import abort
 from flask import current_app
@@ -11,10 +13,13 @@ from flask import g
 from flask import redirect
 from flask import request
 from flask import session
+from webargs.flaskparser import use_args
 
+from marshmallow_dataclass import class_schema
 from timApp.answer.answers import add_missing_users_from_group, get_points_by_rule
 from timApp.auth.accesshelper import verify_view_access, verify_teacher_access, verify_seeanswers_access, \
     get_rights, has_edit_access, get_doc_or_abort, verify_manage_access
+from timApp.auth.auth_models import BlockAccess
 from timApp.auth.sessioninfo import get_current_user_object, logged_in, current_user_in_lecture, \
     get_user_settings, save_last_page
 from timApp.document.create_item import create_or_copy_item, create_citation_doc
@@ -43,8 +48,9 @@ from timApp.timdb.sqa import db
 from timApp.user.groups import verify_group_view_access
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup, get_usergroup_eager_query, UserGroupWithSisuGroupPath
+from timApp.user.users import get_rights_holders_all
 from timApp.util.flask.requesthelper import get_option, verify_json_params
-from timApp.util.flask.responsehelper import json_response, ok_response
+from timApp.util.flask.responsehelper import json_response, ok_response, get_grid_modules
 from timApp.util.logger import log_error
 from timApp.util.timtiming import taketime
 from timApp.util.utils import get_error_message
@@ -143,13 +149,46 @@ def par_info(doc_id, par_id):
     return json_response(info)
 
 
+@dataclass
+class GetItemsModel:
+    folder: Optional[str] = None
+    folder_id: Optional[int] = None
+    recursive: bool = False
+    include_rights: bool = False
+
+
+@attr.s(auto_attribs=True)
+class ItemWithRights:
+    i: Item
+    rights: List[BlockAccess]
+
+    def to_json(self):
+        return {
+            **self.i.to_json(),
+            'grouprights': self.rights,
+        }
+
+
 @view_page.route("/getItems")
-def items_route():
-    folderpath = request.args.get('folder', '')
-    f = Folder.find_by_path(folderpath)
+@use_args(class_schema(GetItemsModel)())
+def items_route(args: GetItemsModel):
+    if args.folder is not None:
+        f = Folder.find_by_path(args.folder)
+    elif args.folder_id is not None:
+        f = Folder.get_by_id(args.folder_id)
+    else:
+        return abort(400)
+    if not f:
+        return abort(404, 'Folder not found.')
     if not f.is_root():
         verify_view_access(f)
-    return json_response(get_items(folderpath))
+
+    items = get_items(f.path, recurse=args.recursive)
+    if args.include_rights:
+        u = get_current_user_object()
+        rights = get_rights_holders_all([i.id for i in items if u.has_manage_access(i)], order_by=BlockAccess.type)
+        items = [ItemWithRights(i, rights[i.id]) for i in items]
+    return json_response(items)
 
 
 @view_page.route("/view")
@@ -398,13 +437,7 @@ def view(item_path, template_name, usergroup=None, route="view"):
     angular_module_names = []
     if teacher_or_see_answers:
         js_paths.append('angular-ui-grid')
-        angular_module_names += [
-            "ui.grid",
-            "ui.grid.cellNav",
-            "ui.grid.selection",
-            "ui.grid.exporter",
-            "ui.grid.autoResize",
-        ]
+        angular_module_names += get_grid_modules()
     taketime("before render")
 
     return render_template(template_name,
@@ -422,7 +455,6 @@ def view(item_path, template_name, usergroup=None, route="view"):
                            js=js_paths,
                            cssFiles=css_paths,
                            jsMods=angular_module_names,
-                           jsModuleIds=get_module_ids(js_paths),
                            doc_css=doc_css,
                            start_index=start_index,
                            in_lecture=is_in_lecture,
@@ -455,13 +487,13 @@ def redirect_to_login():
                            anchor=session['anchor']), 403
 
 
-def get_items(folder: str):
+def get_items(folder: str, recurse=False):
     u = get_current_user_object()
-    docs = get_documents(search_recursively=False,
+    docs = get_documents(search_recursively=recurse,
                          filter_folder=folder,
                          filter_user=u)
     docs.sort(key=lambda d: d.title.lower())
-    folders = Folder.get_all_in_path(root_path=folder)
+    folders = Folder.get_all_in_path(root_path=folder, recurse=recurse)
     folders.sort(key=lambda d: d.title.lower())
     return [f for f in folders if u.has_view_access(f)] + docs
 

@@ -4,7 +4,7 @@ from typing import Optional, List, Union
 
 import bcrypt
 
-from timApp.auth.auth_models import AccessType, BlockAccess
+from timApp.auth.auth_models import AccessTypeModel, BlockAccess
 from timApp.document.specialnames import TEMPLATE_FOLDER_NAME
 from timApp.folder.folder import Folder
 from timApp.item.block import BlockType, Block
@@ -54,7 +54,7 @@ def get_anon_user_id() -> int:
 
 def get_access_type_id(access_type):
     if not access_type_map:
-        result = AccessType.query.all()
+        result = AccessTypeModel.query.all()
         for row in result:
             access_type_map[row.name] = row.id
     return access_type_map[access_type]

@@ -1,5 +1,6 @@
 // All 3rd party libraries without type definitions should be listed here:
 declare module "angular-messages";
+declare module "angular-ui-grid";
 declare module "angular-timer";
 declare module "angular-eonasdan-datetimepicker";
 declare module "angularjs-color-picker";

@@ -154,6 +154,9 @@ def bad_request(error):
 
 @app.errorhandler(422)
 def bad_request(error):
+    msgs = error.data.get('messages')
+    if msgs:
+        error.description = str(msgs)
     return error_generic(error, 422)
 
 

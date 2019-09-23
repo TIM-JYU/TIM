@@ -44,6 +44,7 @@ from typing import Dict, Type, List, cast, Tuple, ClassVar, Optional, Any, Mappi
 
 import marshmallow
 import typing_inspect
+from isodate import parse_duration, Duration, duration_isoformat
 
 __all__ = [
     'dataclass',
@@ -227,6 +228,17 @@ def class_schema(clazz: type) -> Type[marshmallow.Schema]:
     return cast(Type[marshmallow.Schema], schema_class)
 
 
+class DurationField(marshmallow.fields.Field):
+    def _serialize(self, value: Duration, attr, obj, **kwargs):
+        return duration_isoformat(value)
+
+    def _deserialize(self, value, attr, data, **kwargs):
+        try:
+            return parse_duration(value)
+        except:
+            raise self.make_error('invalid')
+
+
 _native_to_marshmallow: Dict[type, Type[marshmallow.fields.Field]] = {
     int: marshmallow.fields.Integer,
     float: marshmallow.fields.Float,
@@ -237,6 +249,7 @@ _native_to_marshmallow: Dict[type, Type[marshmallow.fields.Field]] = {
     datetime.timedelta: marshmallow.fields.TimeDelta,
     datetime.date: marshmallow.fields.Date,
     decimal.Decimal: marshmallow.fields.Decimal,
+    Duration: DurationField,
     uuid.UUID: marshmallow.fields.UUID,
     Any: lambda **x: marshmallow.fields.Raw(allow_none=True, **x),
 }

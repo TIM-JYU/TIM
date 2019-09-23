@@ -14,7 +14,7 @@ from sqlalchemy.sql.ddl import CreateTable
 
 from timApp.answer.answer import Answer, AnswerSaver
 from timApp.answer.answer_models import AnswerTag, AnswerUpload, UserAnswer
-from timApp.auth.auth_models import AccessType, BlockAccess
+from timApp.auth.auth_models import AccessTypeModel, BlockAccess
 from timApp.item.blockrelevance import BlockRelevance
 from timApp.document.docentry import DocEntry
 from timApp.document.timjsonencoder import TimJsonEncoder
@@ -70,7 +70,7 @@ def reg_models(*_):
 
 # All SQLAlchemy models must be imported in this module. To avoid "unused import" warnings, we pass them to a function.
 reg_models(
-    AccessType,
+    AccessTypeModel,
     Annotation,
     AnnotationComment,
     Answer,
