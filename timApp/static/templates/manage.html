@@ -222,31 +222,6 @@
     </div>
 
     <div ng-if="$ctrl.item.rights.editable" class="panel panel-default">
-        <div class="panel-heading">Upload a new version for this document</div>
-        <div class="panel-body">
-            <div uib-alert class="alert-danger" ng-show="uploadForm.file.$error.pattern">
-                You may only upload markdown files (*.md and *.markdown).
-            </div>
-            <div uib-alert class="alert-danger" ng-show="$ctrl.fileUploadError"
-                 ng-bind="$ctrl.fileUploadError">
-            </div>
-            <form name="uploadForm">
-                <div class="input-group">
-                    <input class="form-control" type="file" name="file" ng-model="$ctrl.file"
-                           ngf-pattern="'.md,.markdown,.txt'" ngf-select="updateDocument($file)">
-                    <span class="input-group-btn">
-                    <button class="timButton" id="reset" type="reset" value="Reset">Clear</button>
-                    </span>
-                </div>
-                <span ng-show="$ctrl.progress >= 0 && $ctrl.progress < 100"
-                      ng-bind="'Uploading... ' + $ctrl.progress + '%'">
-                </span>
-                <span ng-show="$ctrl.result">Done!</span>
-            </form>
-        </div>
-    </div>
-
-    <div ng-if="$ctrl.item.rights.editable" class="panel panel-default">
         <div class="panel-heading">Edit the full document</div>
         <div class="panel-body">
             <form id="fullDocumentEditor">

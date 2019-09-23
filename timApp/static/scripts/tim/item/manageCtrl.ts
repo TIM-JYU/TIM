@@ -6,7 +6,7 @@ import * as copyFolder from "../folder/copyFolder";
 import {showMessageDialog} from "../ui/dialog";
 import {Users} from "../user/userService";
 import {manageglobals} from "../util/globals";
-import {$http, $upload} from "../util/ngimport";
+import {$http} from "../util/ngimport";
 import {clone, markAsUsed, to} from "../util/utils";
 import {IDocument, IFolder, IFullDocument, IItem, ITranslation, redirectToItem} from "./IItem";
 
@@ -283,38 +283,6 @@ export class PermCtrl implements IController {
                 location.replace(`/view/${this.item.location}`);
             } else {
                 await showMessageDialog(r.result.data.error);
-            }
-        }
-    }
-
-    async updateDocument(file: File) {
-        const d = this.itemAsDocument();
-        this.file = file;
-        this.fileUploadError = undefined;
-        if (file) {
-            this.progress = 0;
-            const upload = $upload.upload<IFullDocument>({
-                url: "/update/" + this.item.id,
-                data: {
-                    file,
-                    original: d.fulltext,
-                    version: d.versions[0],
-                },
-                method: "POST",
-            });
-            upload.progress((evt) => {
-                this.progress = Math.min(100, Math.floor(100.0 *
-                    evt.loaded / evt.total));
-            });
-
-            const r = await to(upload);
-            if (r.ok) {
-                const response = r.result;
-                this.result = true;
-                d.versions = response.data.versions;
-                this.updateFullText(response.data.fulltext);
-            } else {
-                this.fileUploadError = "Error: " + r.result.data.error;
             }
         }
     }
