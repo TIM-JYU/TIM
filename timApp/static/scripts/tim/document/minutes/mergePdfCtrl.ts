@@ -183,10 +183,10 @@ registerDialogComponent(MergePdfController,
                 <span ng-hide="$ctrl.loading">Merge selected</span>
             </button>
             <button class="timButton" ng-click="$ctrl.dismiss()"><span>Cancel</span></button>
-            <div ng-if="$ctrl.mergedFileName" class="alert alert-success">
-                <span class="glyphicon glyphicon-ok"></span> Merging succeeded!
-                <a href="{{$ctrl.mergedUrl}}" target="_blank">View the document.</a>
-            </div>
+        </div>
+        <div style="float: right;" ng-if="$ctrl.mergedFileName" class="alert alert-success">
+            <span class="glyphicon glyphicon-ok"></span> Merging succeeded!
+            <a href="{{$ctrl.mergedUrl}}" target="_blank">View the document.</a>
         </div>
 </dialog-footer>
 </tim-dialog>
