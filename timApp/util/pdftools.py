@@ -14,7 +14,7 @@ import timApp.plugin.plugin
 
 # Default parameter values:
 from timApp.document.docparagraph import DocParagraph
-from timApp.util.utils import get_error_message
+from timApp.util.logger import log_error
 
 merged_file_folder = Path("/tim_files/blocks/merged/")
 temp_folder_default_path = Path("/tmp")
@@ -218,12 +218,34 @@ class StampFormatInvalidError(PdfError):
 class Attachment:
     def __init__(self, path: str, macro: str = "unknown", error: str = "", selected: bool = True):
         self.path = path
-        self.error = error
         self.macro = macro
         self.selected = selected
+        self.error = self.parse_error(error)
+
 
     def to_json(self):
         return {'path': self.path, 'macro': self.macro, 'error': self.error, 'selected': self.selected}
+
+
+    def parse_error(self, message: str) -> str:
+        """
+        Shorten long pdftk error messages and log unexpected errors.
+        :param message: Error message string from pdftk.
+        :return: Pre-written error message.
+        """
+        if not message:
+            return ""
+        if "OWNER PASSWORD REQUIRED" in message:
+            return "Error: Unable to merge a password protected file; please remove the password requirement (including empty password)"
+        elif "Error: Unable to find file" in message or "java.io.FileNotFoundEception" in message:
+            return "Error: file not found; merging tool couldn't find the attachment, try reuploading it"
+        elif "java.lang.ClassCastException" in message:
+            return "Error: file contains errors; try recreating the file with a different tool"
+        elif "Server returned HTTP response code: 403 for URL" in message:
+            "Error: file URL forbidden; merging tool couldn't find the attachment link, try reuploading it"
+        else:
+            log_error(f"PDFtk failed to merge an attachment: {message}")
+            return message
 
 
 class AttachmentStampData:
