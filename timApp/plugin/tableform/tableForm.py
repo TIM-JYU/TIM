@@ -363,7 +363,9 @@ def tableform_get_fields(
             if type(content) is dict:
                 rows[username][key] = json.dumps(content)
         realnames[username] = f['user'].real_name
-        emails[username] = f['user'].email
+        email = f['user'].email
+        if email is not None:
+            emails[username] = email
         styles[username] = dict(f['styles'])
         if group_filter_type != MembershipFilter.Current:
             membership_end = get_membership_end(u, group_ids)
