@@ -111,9 +111,9 @@ timApp.component("relevanceEdit", {
                 uib-typeahead="s.value as s.name for s in $ctrl.suggestions | orderBy:'-value'">
         </div>
         <p></p>
-        <div ng-if="$ctrl.isDefault" class="alert alert-warning">
+        <div ng-if="$ctrl.isDefault" class="alert alert-info">
              <span class="glyphicon glyphicon-exclamation-sign"></span>
-             Default relevance value. Note: this may be affected by changes in parent directories.
+             Default relevance value. This may be affected by changes in parent directories.
         </div>
         <div ng-if="$ctrl.isInherited" class="alert alert-info">
              <span class="glyphicon glyphicon-exclamation-sign"></span>
