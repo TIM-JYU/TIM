@@ -820,6 +820,7 @@ def search():
     ignore_plugins = get_option(request, 'ignorePlugins', default=False, cast=bool)
     search_titles = get_option(request, 'searchTitles', default=True, cast=bool)
     search_content = get_option(request, 'searchContent', default=True, cast=bool)
+    search_attrs = get_option(request, 'searchAttrs', default=False, cast=bool)
     relevance_threshold = get_option(request, 'relevanceThreshold', default=1, cast=int)
     ignore_relevance = get_option(request, 'ignoreRelevance', default=False, cast=bool)
     timeout = get_option(request, 'timeout', default=120, cast=int)
@@ -1010,6 +1011,12 @@ def search():
                             continue
                     except KeyError:
                         pass
+                    if search_attrs and edit_access and not ignore_plugins:
+                        try:
+                            rd = str(par['attrs'])
+                            md = rd.replace("'",'"') + " " + md
+                        except KeyError:
+                            pass
 
                     par_result = ParResult(par_id)
                     par_matches = list(term_regex.finditer(md))

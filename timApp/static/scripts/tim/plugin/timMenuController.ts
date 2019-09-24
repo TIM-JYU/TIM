@@ -2,6 +2,7 @@
  * Defines the client-side implementation of JavaScript runner plugin.
  */
 import * as t from "io-ts";
+import $ from "jquery";
 import {PluginBase, pluginBindings} from "tim/plugin/util";
 import {timApp} from "../app";
 import {onClick} from "../document/eventhandlers";
@@ -92,6 +93,7 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
     private topMenuVisible: boolean = false; // Meant to curb unnecessary topMenu state changes.
     private previouslyScrollingDown: boolean = true;
     private userPrefersHoverDisabled: boolean = false;
+    private touchMode: boolean = false; // If a touch event has been detected in HTML body.
 
     getDefaultMarkup() {
         return {};
@@ -99,7 +101,7 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
 
     $onInit() {
         super.$onInit();
-        if (this.vctrl == null) {
+        if (this.vctrl == null || this.vctrl.isSlideView()) {
             return;
         }
         if (!this.attrsall.menu) {
@@ -127,26 +129,19 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
             window.onscroll = () => {
                 this.toggleSticky();
             };
-            /*
-            // Throttle; allow only one scroll event per 0.1s.
-            // let time = Date.now();
-            window.onscroll = () => {
-                    if ((time + 100 - Date.now()) < 0) {
-                        this.toggleSticky();
-                        time = Date.now();
-                    }
-                };
-             */
+            window.onresize = () => {
+                this.setBarStyles();
+            };
         }
-        this.setBarStyles();
         onClick("body", ($this, e) => {
             this.onClick(e);
         });
         if (genericglobals().userPrefs.disable_menu_hover) {
             this.userPrefersHoverDisabled = genericglobals().userPrefs.disable_menu_hover;
         }
-        this.userRights = this.vctrl.item.rights;
         this.hoverOpen = this.attrs.hoverOpen && !this.userPrefersHoverDisabled;
+        this.userRights = this.vctrl.item.rights;
+        this.setBarStyles();
     }
 
     protected getAttributeType() {
@@ -162,8 +157,8 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
      * @param clicked Toggled by a mouse click.
      */
     toggleSubmenu(item: ITimMenuItem, parent1: ITimMenuItem | undefined, parent2: ITimMenuItem | undefined, clicked: boolean) {
-        // If called by mouseenter and hover open is disabled, do nothing.
-        if (!clicked && !this.hoverOpen) {
+        // If called by mouseenter and either hover open is off or touch mode is on, do nothing.
+        if (!clicked && (!this.hoverOpen || this.touchMode)) {
             return;
         }
         // Toggle open menu closed and back again when clicking.
@@ -216,6 +211,7 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
         const menu = this.element.find(".tim-menu")[0];
         const placeholder = this.element.find(".tim-menu-placeholder")[0];
         const scrollY = $(window).scrollTop();
+
         if (!menu || !placeholder || !this.topMenuTriggerHeight || !scrollY) {
             return;
         }
@@ -225,7 +221,6 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
         }
         // Placeholder and its content are separate, because when hidden y is 0.
         const placeholderContent = this.element.find(".tim-menu-placeholder-content")[0];
-
         const belowPlaceholder = placeholder.getBoundingClientRect().bottom < 0;
         const scrollingDown = scrollY > this.previousScroll;
         const scrollDirHasChanged = (this.previouslyScrollingDown && !scrollingDown) || (!this.previouslyScrollingDown && scrollingDown);
@@ -235,7 +230,7 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
         }
         this.previouslyScrollingDown = scrollingDown;
         this.previousScroll = $(window).scrollTop();
-        // console.log(this.topMenuVisible + " " + this.previousSwitch + " " + scrollY + " " + this.topMenuTriggerHeight);
+        const isSmallScreen = ($(".device-xs").is(":visible") || $(".device-sm").is(":visible"));
 
         // Sticky can only show when the element's place in document goes outside upper bounds.
         if (belowPlaceholder) {
@@ -249,6 +244,7 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
                     return;
                 }
                 menu.classList.remove("top-menu");
+                menu.classList.remove("top-menu-mobile");
                 placeholderContent.classList.add("tim-menu-hidden");
                 this.topMenuVisible = false;
             } else {
@@ -258,6 +254,9 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
                     return;
                 }
                 menu.classList.add("top-menu");
+                if (isSmallScreen) {
+                    menu.classList.add("top-menu-mobile");
+                }
                 placeholderContent.classList.remove("tim-menu-hidden");
                 this.topMenuVisible = true;
             }
@@ -266,13 +265,16 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
                 return;
             }
             menu.classList.remove("top-menu");
+            menu.classList.remove("top-menu-mobile");
             placeholderContent.classList.add("tim-menu-hidden");
             this.topMenuVisible = false;
         }
+        this.scope.$evalAsync();
     }
 
     /**
      * Set styles for menu bar defined in optional attributes.
+     * Includes adjusting topMenu width to fit document area width.
      */
     private setBarStyles() {
         if (this.attrs.backgroundColor) {
@@ -284,6 +286,16 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
         if (this.attrs.fontSize) {
             this.barStyle += `font-size: ${this.attrs.fontSize}; `;
         }
+        // If menu isn't sticky, default width is fine.
+        if (this.topMenu) {
+            const menuWidth = this.element.parent().width();
+            if (menuWidth) {
+                this.barStyle += `width: ${menuWidth}px; `;
+            } else {
+                this.barStyle = `width: 100%; `;
+            }
+        }
+        this.scope.$evalAsync();
     }
 
     /**
@@ -355,11 +367,14 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
      * @param e Click event.
      */
     private onClick(e: JQuery.Event) {
-        if (!this.mouseInside) {
+        // console.log("onClick, " + e.type);
+        // Detect touch screen when touch event happens.
+        this.touchMode = e.type.includes("touch");
+        if (this.mouseInside) {
+            this.clickedInside = true;
+        } else {
             this.clickedInside = false;
             this.closeMenus();
-        } else {
-            this.clickedInside = true;
         }
     }
 
@@ -367,11 +382,17 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
      * Handle mouseleave event.
      */
     private mouseLeave() {
+        // console.log("mouseLeave");
         this.mouseInside = false;
         // Only close menus on mouseleave, if hoverOpen is enabled and menu hasn't been clicked.
         if (!this.clickedInside && this.hoverOpen) {
             this.closeMenus();
         }
+    }
+
+    private mouseEnter() {
+        // console.log("mouseEnter");
+        this.mouseInside = true;
     }
 
     /**
@@ -396,7 +417,7 @@ timApp.component("timmenuRunner", {
 <tim-markup-error ng-if="::$ctrl.markupError" data="::$ctrl.markupError"></tim-markup-error>
 <span ng-cloak ng-if="$ctrl.topMenu" class="tim-menu-placeholder"></span>
 <span ng-cloak ng-if="$ctrl.topMenu" class="tim-menu-placeholder-content tim-menu-hidden"><br></span>
-<div id="{{$ctrl.menuId}}" class="tim-menu" ng-class="{'bgtim white': $ctrl.basicColors, 'hide-link-colors': !$ctrl.keepLinkColors}" style="{{$ctrl.barStyle}}" ng-mouseleave="$ctrl.mouseLeave()" ng-mouseenter="$ctrl.mouseInside = true">
+<div id="{{$ctrl.menuId}}" class="tim-menu" ng-class="{'bgtim white': $ctrl.basicColors, 'hide-link-colors': !$ctrl.keepLinkColors}" style="{{$ctrl.barStyle}}" ng-mouseleave="$ctrl.mouseLeave()" ng-mouseenter="$ctrl.mouseEnter()">
     <span ng-repeat="t1 in $ctrl.menu">
         <span ng-if="t1.items.length > 0 && $ctrl.hasRights(t1)" class="btn-group" style="{{$ctrl.setStyle(t1)}}">
           <span ng-disabled="disabled" ng-bind-html="t1.text+$ctrl.openingSymbol" ng-click="$ctrl.toggleSubmenu(t1, undefined, undefined, true)" ng-mouseenter="$ctrl.toggleSubmenu(t1, undefined, undefined, false)"></span>
