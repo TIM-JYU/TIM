@@ -28,6 +28,7 @@ from timApp.document.docentry import DocEntry
 from timApp.timdb.sqa import db
 import timApp.util.pdftools
 import timApp.plugin.plugin
+from timApp.util.utils import get_error_message
 
 minutes_blueprint = Blueprint('minutes',
                               __name__,
@@ -230,15 +231,14 @@ def get_attachment_list(doc):
     try:
         d = DocEntry.find_by_path(doc)
         if not d:
-            abort(404)
+            abort(400)
         verify_edit_access(d)
 
         paragraphs = d.document.get_paragraphs(d)
         attachments = timApp.util.pdftools.get_attachments_from_pars(paragraphs)
 
     except Exception as err:
-        message = str(err)
-        abort(404, message)
+        abort(400, get_error_message(err))
     else:
         return json_response(attachments)
 
@@ -262,7 +262,7 @@ def merge_selected_attachments(args: MergeAttachmentsModel):
         doc_path = args.doc_path
         d = DocEntry.find_by_path(doc_path)
         if not d:
-            abort(404)
+            abort(400)
         verify_edit_access(d)
         # Uses document name as the base for the merged file name and tmp as folder.
         doc_name = Path(doc_path).name
@@ -272,15 +272,13 @@ def merge_selected_attachments(args: MergeAttachmentsModel):
         destination_folder = timApp.util.pdftools.merged_file_folder / str(d.document.doc_id)
         if not destination_folder.exists():
             os.mkdir(destination_folder.absolute().as_posix())
-
-        # TODO: Hash.
-        merged_pdf_path = destination_folder / f"{doc_name}_merged.pdf"
+        attachments_hash = hash('|'.join(sorted(pdf_paths)))
+        merged_pdf_path = destination_folder / f"{doc_name}_{attachments_hash}_merged.pdf"
         timApp.util.pdftools.merge_pdfs(pdf_paths, merged_pdf_path)
     except Exception as err:
-        message = str(err)
-        abort(404, message)
+        abort(400, get_error_message(err))
     else:
-        return json_response({'success': True, 'name': f"{doc_name}_merged.pdf"}, status_code=201)
+        return json_response({'success': True, 'name': f"{doc_name}_{attachments_hash}_merged.pdf"}, status_code=201)
 
 
 @minutes_blueprint.route('/openMergedAttachment/<path:doc_id>/<file_filename>')
