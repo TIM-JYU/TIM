@@ -2,6 +2,7 @@
  * Defines the client-side implementation of JavaScript runner plugin.
  */
 import * as t from "io-ts";
+import $ from "jquery";
 import {PluginBase, pluginBindings} from "tim/plugin/util";
 import {timApp} from "../app";
 import {onClick} from "../document/eventhandlers";
@@ -11,7 +12,6 @@ import {genericglobals} from "../util/globals";
 import {Require} from "../util/utils";
 import {GenericPluginMarkup, Info, nullable, withDefault} from "./attributes";
 import "./timMenu.css";
-import $ from "jquery";
 
 // this.attrs
 const TimMenuMarkup = t.intersection([

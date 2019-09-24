@@ -71,7 +71,6 @@ class TimMenuItem:
             s += f", rights: '{self.rights}'"
         return f"{s}}}"
 
-
     def generate_id(self):
         """
         Generate an id string for the menu item.
@@ -79,10 +78,8 @@ class TimMenuItem:
         """
         self.id = str(uuid.uuid4())
 
-
     def __repr__(self):
         return str(self)
-
 
     def to_json(self):
         s = {"level": self.level, "id": self.id, "text": self.text, "open": self.open, "items": self.items}
@@ -122,6 +119,7 @@ class TimMenuError(Exception):
     Generic timmenu-plugin error.
     """
 
+
 @dataclass
 class TimMenuInputModel:
     """Model for the information that is sent from browser (plugin AngularJS component)."""
@@ -160,6 +158,7 @@ def decide_menu_level(index: int, previous_level: int,  level_indentations, max_
         level_indentations.append(
             TimMenuIndentation(level=level, spaces_min=level_indentations[-1].spaces_max+1, spaces_max=index))
     return level
+
 
 def set_attributes(line: str, item: TimMenuItem):
     """
@@ -249,6 +248,7 @@ def parse_menu_string(menu_str, replace_tabs: bool = False):
             continue
         level = decide_menu_level(list_symbol_index, previous_level, level_indentations)
         previous_level = level
+        # Remove p-tags as unnecessary.
         text_html = html_text_list[i].replace("<p>","").replace("</p>","").strip()
         current = TimMenuItem(text=text_html, level=level, items=[])
         current.generate_id()
@@ -258,12 +258,12 @@ def parse_menu_string(menu_str, replace_tabs: bool = False):
                 parents.insert(0, current)
                 break
     # List has all menus that are parents to any others, but first one contains the whole menu tree.
-    # print(level_indentations)
     return parents[-1].items
 
 
 @dataclass
 class TimMenuHtmlModel(GenericHtmlModel[TimMenuInputModel, TimMenuMarkupModel, TimMenuStateModel]):
+
     def get_static_html(self) -> str:
         return render_static_timmenu(self)
 
@@ -309,7 +309,11 @@ timMenu_plugin = create_blueprint(__name__, 'timMenu', TimMenuHtmlSchema, csrf)
 @timMenu_plugin.route('/reqs/')
 @timMenu_plugin.route('/reqs')
 def reqs():
-    """Introducing templates for TimMenu plugin"""
+    """
+    Introducing templates for TimMenu-plugin.
+    Note: selecting the whole line doesn't work with underscore in some devices, so
+    camel case is used for parts meant to be replaced by the user.
+    """
     templates = ["""
 ``` {plugin="timMenu" .hidden-print}
 separator: "|"              # Symbol(s) separating menu titles
