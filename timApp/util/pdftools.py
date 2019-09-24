@@ -6,7 +6,7 @@ import uuid
 from pathlib import Path
 from subprocess import Popen, PIPE, run as subprocess_run
 from os import remove, path as os_path
-from typing import Union, List, Optional
+from typing import Union, List
 from urllib import request as url_request
 from urllib.error import HTTPError
 from re import escape as re_escape, compile as re_compile
@@ -371,6 +371,23 @@ def merge_pdfs(pdf_path_list: List[str], output_path: Path) -> Path:
     return output_path
 
 
+def parse_tim_url(par_file: str, domain: str) -> str:
+    """
+    Parses TIM-links to point to the corresponding file on the server.
+    Note: Changes in upload folder need to be updated here as well.
+    :param par_file: Link from the macro.
+    :param domain: The TIM-domain (the part between "http://" and "/files"), different for timdevs.
+    :return: TIM upload file path if the link was within TIM, otherwise pass on unchanged.
+    """
+    if par_file.startswith("/files/"):
+        return "/tim_files/blocks" + par_file
+    elif par_file.startswith(f"http://{domain}/files"):
+        par_file = "/tim_files/blocks" + par_file.replace(f"http://{domain}", "")
+    elif par_file.startswith("https:/{domain}/files"):
+        par_file = "/tim_files/blocks" + par_file.replace(f"https://{domain}", "")
+    return par_file
+
+
 def get_attachments_from_pars(paragraphs: List[DocParagraph]) -> List[Attachment]:
     """
     Goes through paragraphs and gets attachments from showPdf-macros.
@@ -384,18 +401,16 @@ def get_attachments_from_pars(paragraphs: List[DocParagraph]) -> List[Attachment
             par_plugin = timApp.plugin.plugin.Plugin.from_paragraph(par)
             par_data = par_plugin.values
             par_file = par_data["file"]
-            # Checks if attachment is TIM-upload and adds prefix.
-            # Changes in upload folder need to be updated here as well.
-            if par_file.startswith("/files/"):
-                par_file = "/tim_files/blocks" + par_file
+            # TODO: Getting right domain in local and timdevs-machines?
+            par_file = parse_tim_url(par_file, "tim.jyu.fi")
             error_message = test_pdf(par_file)
             selected = not error_message
             par_str = str(par)
-            # Find macro name and unselect "perusliite"-attachments.
+            # Find macro name and unselect "unknown"- (bugged) and "perusliite"-attachments.
             macro_name = "unknown"
             if "%%liite" in par_str:
                 macro_name = "liite"
-            elif "%%perusliite" in par_str:
+            elif "%%perusliite" in par_str or "unknown" in par_str:
                 macro_name = "perusliite"
                 selected = False
             pdf_list.append(Attachment(par_file, error=error_message, macro=macro_name, selected=selected))
