@@ -1,5 +1,5 @@
 /**
- * Controller for merging attachments in TIM documents.
+ * Controller for checking PDF-attachment validity and merging them.
  */
 import {IRootElementService, IScope} from "angular";
 import {IItem} from "../../item/IItem";
@@ -32,7 +32,6 @@ export interface IAttachment {
 export class MergePdfController extends DialogController<{ params: IMergeParams }, {}> {
     static component = "timMergePdf";
     static $inject = ["$element", "$scope"] as const;
-    private mergedFileName?: string;
     private mergedUrl?: string;
     private loading: boolean = false;
     private attachmentList: IAttachment[] = [];
@@ -75,15 +74,14 @@ export class MergePdfController extends DialogController<{ params: IMergeParams 
         this.loading = true;
         const url = `/minutes/mergeAttachments`;
         const data = this.getSelectedAttachmentData();
-        const r = await to($http.post<{name: string}>(url, data));
+        const r = await to($http.post<{url: string}>(url, data));
         if (!r.ok) {
             void showMessageDialog(r.result.data.error);
             this.loading = false;
             return;
         }
         this.loading = false;
-        this.mergedFileName = r.result.data.name;
-        this.mergedUrl = `/minutes/openMergedAttachment/${this.resolve.params.document.id}/${this.mergedFileName}`;
+        this.mergedUrl = r.result.data.url;
     }
 
     async $onInit() {
@@ -127,14 +125,6 @@ export class MergePdfController extends DialogController<{ params: IMergeParams 
     private getFileName(path: string) {
         return path.replace(/^.*[\\\/]/, "");
     }
-
-    /**
-     * Parse file path for the link.
-     * @param path Attachment path.
-     */
-    private getAttachmentLinkPath(path: string) {
-        return path.replace("tim_files/blocks/", "");
-    }
 }
 
 /**
@@ -155,7 +145,7 @@ registerDialogComponent(MergePdfController,
                     <li ng-repeat="x in $ctrl.attachmentList track by $index">
                         <label>
                             <input type="checkbox" ng-model="x.selected" ng-disabled="x.error">
-                            <a href="{{::$ctrl.getAttachmentLinkPath(x.path)}}" target="_blank">{{::$ctrl.getFileName(x.path)}}</a>
+                            <a href="{{::x.path}}" target="_blank">{{::$ctrl.getFileName(x.path)}}</a>
                         </label>
                         <span ng-style="::$ctrl.macroStyle(x.macro)">{{::x.macro}}</span>
                         <span ng-if="::x.error" style="color:red;" class="glyphicon glyphicon-warning-sign"
@@ -184,7 +174,7 @@ registerDialogComponent(MergePdfController,
             </button>
             <button class="timButton" ng-click="$ctrl.dismiss()"><span>Cancel</span></button>
         </div>
-        <div style="float: right;" ng-if="$ctrl.mergedFileName" class="alert alert-success">
+        <div style="float: right;" ng-if="$ctrl.mergedUrl" class="alert alert-success">
             <span class="glyphicon glyphicon-ok"></span> Merging succeeded!
             <a href="{{$ctrl.mergedUrl}}" target="_blank">View the document.</a>
         </div>

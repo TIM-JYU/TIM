@@ -363,6 +363,7 @@ def merge_pdfs(pdf_path_list: List[str], output_path: Path) -> Path:
         raise MergeListEmptyError()
     pdf_path_args = []
     for pdf_path in pdf_path_list:
+        pdf_path = parse_tim_url(pdf_path)
         check_pdf_validity(Path(pdf_path))
         pdf_path_args += [pdf_path]
 
@@ -371,7 +372,7 @@ def merge_pdfs(pdf_path_list: List[str], output_path: Path) -> Path:
     return output_path
 
 
-def parse_tim_url(par_file: str, domain: str) -> str:
+def parse_tim_url(par_file: str, domain: str = "tim.jyu.fi") -> str:
     """
     Parses TIM-links to point to the corresponding file on the server.
     Note: Changes in upload folder need to be updated here as well.
@@ -379,6 +380,7 @@ def parse_tim_url(par_file: str, domain: str) -> str:
     :param domain: The TIM-domain (the part between "http://" and "/files"), different for timdevs.
     :return: TIM upload file path if the link was within TIM, otherwise pass on unchanged.
     """
+    # TODO: Getting right domain in local and timdevs-machines?
     if par_file.startswith("/files/"):
         return "/tim_files/blocks" + par_file
     elif par_file.startswith(f"http://{domain}/files"):
@@ -401,8 +403,7 @@ def get_attachments_from_pars(paragraphs: List[DocParagraph]) -> List[Attachment
             par_plugin = timApp.plugin.plugin.Plugin.from_paragraph(par)
             par_data = par_plugin.values
             par_file = par_data["file"]
-            # TODO: Getting right domain in local and timdevs-machines?
-            par_file = parse_tim_url(par_file, "tim.jyu.fi")
+            par_file = parse_tim_url(par_file)
             error_message = test_pdf(par_file)
             selected = not error_message
             par_str = str(par)
@@ -413,6 +414,8 @@ def get_attachments_from_pars(paragraphs: List[DocParagraph]) -> List[Attachment
             elif "%%perusliite" in par_str or "unknown" in par_str:
                 macro_name = "perusliite"
                 selected = False
+            # File check and GUI link require different paths.
+            par_file = par_file.replace("tim_files/blocks/", "")
             pdf_list.append(Attachment(par_file, error=error_message, macro=macro_name, selected=selected))
     return pdf_list
 

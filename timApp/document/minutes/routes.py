@@ -2,15 +2,11 @@
 Routes related to handling faculty council documents, such as meeting invitations and minutes
 """
 import ast
-import os
 from pathlib import Path
 from typing import List
 
-from flask import Blueprint, send_file, request
+from flask import Blueprint, send_file
 from flask import abort
-
-import timApp.plugin
-import timApp.util
 
 from webargs.flaskparser import use_args
 from dataclasses import dataclass
@@ -26,8 +22,7 @@ from timApp.util.flask.requesthelper import verify_json_params
 from timApp.util.flask.responsehelper import safe_redirect, json_response
 from timApp.document.docentry import DocEntry
 from timApp.timdb.sqa import db
-import timApp.util.pdftools
-import timApp.plugin.plugin
+from timApp.util.pdftools import merged_file_folder, merge_pdfs, get_attachments_from_pars
 from timApp.util.utils import get_error_message
 
 minutes_blueprint = Blueprint('minutes',
@@ -235,7 +230,7 @@ def get_attachment_list(doc):
         verify_edit_access(d)
 
         paragraphs = d.document.get_paragraphs(d)
-        attachments = timApp.util.pdftools.get_attachments_from_pars(paragraphs)
+        attachments = get_attachments_from_pars(paragraphs)
 
     except Exception as err:
         abort(400, get_error_message(err))
@@ -264,21 +259,23 @@ def merge_selected_attachments(args: MergeAttachmentsModel):
         if not d:
             abort(400)
         verify_edit_access(d)
-        # Uses document name as the base for the merged file name and tmp as folder.
-        doc_name = Path(doc_path).name
 
-        if not timApp.util.pdftools.merged_file_folder.exists():
-            os.mkdir(timApp.util.pdftools.merged_file_folder.absolute().as_posix())
-        destination_folder = timApp.util.pdftools.merged_file_folder / str(d.document.doc_id)
+        # Create folders when necessary.
+        if not merged_file_folder.exists():
+            merged_file_folder.mkdir()
+        destination_folder = merged_file_folder / str(d.document.doc_id)
         if not destination_folder.exists():
-            os.mkdir(destination_folder.absolute().as_posix())
-        attachments_hash = hash('|'.join(sorted(pdf_paths)))
-        merged_pdf_path = destination_folder / f"{doc_name}_{attachments_hash}_merged.pdf"
-        timApp.util.pdftools.merge_pdfs(pdf_paths, merged_pdf_path)
+            destination_folder.mkdir()
+
+        # Uses document name as the base for the merged file name and tmp as folder.
+        file_name = f"{d.short_name}_{hash('|'.join(sorted(pdf_paths)))}_merged.pdf"
+
+        merge_pdfs(pdf_paths, destination_folder / file_name)
     except Exception as err:
         abort(400, get_error_message(err))
     else:
-        return json_response({'success': True, 'name': f"{doc_name}_{attachments_hash}_merged.pdf"}, status_code=201)
+        url = f"/minutes/openMergedAttachment/{d.id}/{file_name}"
+        return json_response({'success': True, 'url': url}, status_code=201)
 
 
 @minutes_blueprint.route('/openMergedAttachment/<path:doc_id>/<file_filename>')
@@ -290,8 +287,9 @@ def get_file(doc_id: int, file_filename: str):
     :return: Opens the file in browser.
     """
     d = DocEntry.find_by_id(doc_id)
-    f = timApp.util.pdftools.merged_file_folder / str(doc_id) / Path(file_filename)
+    f = merged_file_folder / str(doc_id) / Path(file_filename)
     if not f.exists():
+        # TODO: Create the file here, if user has edit-access.
         abort(404, 'File not found')
     verify_view_access(d)
     return send_file(f.absolute().as_posix(), mimetype="application/pdf")
