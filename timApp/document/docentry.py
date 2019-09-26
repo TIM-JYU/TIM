@@ -3,7 +3,7 @@ from typing import Optional, List
 from timApp.document.docinfo import DocInfo
 from timApp.document.document import Document
 from timApp.document.translation.translation import Translation
-from timApp.gamification.gamificationdocument import GamificationDocument
+from timApp.folder.createopts import FolderCreationOptions
 from timApp.item.block import BlockType
 from timApp.item.block import insert_block
 from timApp.timdb.exceptions import ItemAlreadyExistsException
@@ -131,7 +131,7 @@ class DocEntry(db.Model, DocInfo):
                from_file=None,
                initial_par=None,
                settings=None,
-               is_gamified: bool = False) -> 'DocEntry':
+               folder_opts: FolderCreationOptions=FolderCreationOptions()) -> 'DocEntry':
         """Creates a new document with the specified properties.
 
         :param from_file: If provided, loads the document content from a file.
@@ -141,14 +141,14 @@ class DocEntry(db.Model, DocInfo):
         :param path: The path of the document to be created (can be None). If None, no DocEntry is actually added
          to the database; only Block and Document objects are created.
         :param owner_group: The owner group.
-        :param is_gamified: Boolean value indicating whether the document is gamified.
+        :param folder_opts: Options for creating intermediate folders.
         :returns: The newly created document object.
 
         """
 
         location, _ = split_location(path)
         from timApp.folder.folder import Folder
-        Folder.create(location, owner_groups=owner_group)
+        Folder.create(location, owner_groups=owner_group, creation_opts=folder_opts)
 
         document = create_document_and_block(owner_group, title or path)
 
@@ -168,8 +168,6 @@ class DocEntry(db.Model, DocInfo):
             document.add_text(initial_par)
         if settings is not None:
             document.set_settings(settings)
-        if is_gamified:
-            GamificationDocument.create(document.doc_id)
 
         return docentry
 

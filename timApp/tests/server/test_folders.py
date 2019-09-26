@@ -351,6 +351,13 @@ class FolderCopyTest(TimRouteTest):
             expect_status=403,
         )
 
+    def test_copy_regression(self):
+        self.login_test1()
+        _ = self.create_doc(self.get_personal_item_path('x/templates/b'))
+        f = Folder.find_by_path(self.get_personal_item_path('x'))
+        self.json_post(f'/copy/{f.id}',
+                       {'destination': self.get_personal_item_path('c'), 'exclude': None})
+
 
 class FolderParentTest(TimRouteTest):
     def test_folder_parents(self):

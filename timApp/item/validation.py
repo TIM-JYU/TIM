@@ -11,6 +11,7 @@ from timApp.item.block import BlockType
 from timApp.timdb.exceptions import ItemAlreadyExistsException
 from timApp.document.docentry import DocEntry
 from timApp.folder.folder import Folder
+from timApp.folder.createopts import FolderCreationOptions
 from timApp.user.usergroup import UserGroup
 from timApp.util.utils import split_location
 
@@ -64,7 +65,7 @@ def validate_item_and_create_intermediate_folders(item_path: str,
                                                   validation_rule: ItemValidationRule = None):
     validate_item(item_path, item_type, validation_rule)
     item_path, _ = split_location(item_path)
-    Folder.create(item_path, owner_group, apply_default_rights=True)
+    Folder.create(item_path, owner_group, creation_opts=FolderCreationOptions(apply_default_rights=True))
 
 
 def validate_uploaded_document_content(file_content):

@@ -14,6 +14,7 @@ from timApp.auth.auth_models import BlockAccess
 from timApp.document.docinfo import DocInfo
 from timApp.document.timjsonencoder import TimJsonEncoder
 from timApp.folder.folder import Folder
+from timApp.folder.createopts import FolderCreationOptions
 from timApp.item.block import Block
 from timApp.item.item import ItemBase
 from timApp.lecture.lectureusers import LectureUsers
@@ -406,7 +407,7 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
             f = Folder.create('users/' + self.derive_personal_folder_name(),
                               self.get_personal_group(),
                               title=f"{self.real_name}",
-                              apply_default_rights=True)
+                              creation_opts=FolderCreationOptions(apply_default_rights=True))
             db.session.commit()
             return f
         return folders[0]

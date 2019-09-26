@@ -25,6 +25,7 @@ from timApp.document.create_item import copy_document_and_enum_translations
 from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import move_document, find_free_name
 from timApp.folder.folder import Folder, path_includes
+from timApp.folder.createopts import FolderCreationOptions
 from timApp.item.block import BlockType, Block
 from timApp.item.item import Item, copy_rights
 from timApp.item.validation import validate_item, validate_item_and_create_intermediate_folders, has_special_chars
@@ -466,7 +467,7 @@ def copy_folder_endpoint(folder_id):
     nf = Folder.find_by_path(dest)
     if not nf:
         validate_item_and_create_intermediate_folders(dest, BlockType.Folder, o)
-        nf = Folder.create(dest, o, apply_default_rights=True)
+        nf = Folder.create(dest, o, creation_opts=FolderCreationOptions(apply_default_rights=True))
     u = get_current_user_object()
     copy_folder(f, nf, u, compiled)
     db.session.commit()
@@ -517,7 +518,11 @@ def copy_folder(f_from: Folder, f_to: Folder, user_who_copies: User, exclude_re)
         nd_path = join_location(f_to.path, d.short_name)
         if DocEntry.find_by_path(nd_path):
             abort(403, f'Document already exists at path {nd_path}')
-        nd = DocEntry.create(nd_path, title=d.title)
+        nd = DocEntry.create(
+            nd_path,
+            title=d.title,
+            folder_opts=FolderCreationOptions(get_templates_rights_from_parent=False),
+        )
         copy_rights(d, nd)
         nd.document.modifier_group_id = user_who_copies.get_personal_group().id
         for tr, new_tr in copy_document_and_enum_translations(d, nd, copy_uploads=True):
@@ -530,6 +535,10 @@ def copy_folder(f_from: Folder, f_to: Folder, user_who_copies: User, exclude_re)
         if nf:
             pass
         else:
-            nf = Folder.create(nf_path, title=f.title)
+            nf = Folder.create(
+                nf_path,
+                title=f.title,
+                creation_opts=FolderCreationOptions(get_templates_rights_from_parent=False),
+            )
             copy_rights(f, nf)
         copy_folder(f, nf, user_who_copies, exclude_re)

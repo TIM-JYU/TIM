@@ -4,6 +4,7 @@ from typing import Optional
 from sqlalchemy import true
 
 from timApp.document.specialnames import TEMPLATE_FOLDER_NAME
+from timApp.folder.createopts import FolderCreationOptions
 from timApp.timdb.exceptions import ItemAlreadyExistsException
 from timApp.item.item import Item
 from timApp.item.block import Block, insert_block, copy_default_rights, BlockType
@@ -210,11 +211,16 @@ class Folder(db.Model, Item):
         return Folder.get_all_in_path(self.path)
 
     @staticmethod
-    def create(path: str, owner_groups: Union[List[UserGroup], UserGroup, None] = None, title=None, apply_default_rights=False) -> 'Folder':
+    def create(
+            path: str,
+            owner_groups: Union[List[UserGroup], UserGroup, None] = None,
+            title=None,
+            creation_opts: FolderCreationOptions = FolderCreationOptions(),
+    ) -> 'Folder':
         """Creates a new folder with the specified name. If the folder already exists, it is returned.
 
         :param title: The folder title.
-        :param apply_default_rights: Whether to apply default rights from parents.
+        :param creation_opts: Additional folder creation options.
         :param path: The name of the folder to be created.
         :param owner_groups: The owner group.
         :returns: The created or existing folder.
@@ -242,7 +248,8 @@ class Folder(db.Model, Item):
         # Templates is a special folder, so it should have the same owner as its parent,
         # except if we're in users folder.
         owner_groups = (p_f.owners
-                          if rel_name == TEMPLATE_FOLDER_NAME and
+                          if creation_opts.get_templates_rights_from_parent and
+                             rel_name == TEMPLATE_FOLDER_NAME and
                              rel_path != 'users' else owner_groups)
         if owner_groups is None:
             owner_groups = []
@@ -256,7 +263,7 @@ class Folder(db.Model, Item):
         f = Folder(_block=block, name=rel_name, location=rel_path)
         db.session.add(f)
 
-        if apply_default_rights:
+        if creation_opts.apply_default_rights:
             copy_default_rights(f, BlockType.Folder)
 
         return f
