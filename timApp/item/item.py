@@ -8,7 +8,7 @@ from timApp.auth.auth_models import BlockAccess
 from timApp.item.block import Block, BlockType
 from timApp.item.blockrelevance import BlockRelevance
 from timApp.timdb.exceptions import TimDbException
-from timApp.timdb.sqa import db, include_if_loaded
+from timApp.timdb.sqa import include_if_loaded
 from timApp.util.utils import split_location, date_to_relative
 
 
@@ -177,16 +177,17 @@ class Item(ItemBase):
         return None
 
 
-def copy_rights(source: Item, dest: Item, delete_existing=True):
-    if delete_existing:
-        for a in dest.block.accesses:
-            db.session.delete(a)
+def copy_rights(source: Item, dest: Item):
     for a in source.block.accesses:  # type: BlockAccess
-        dest.block.accesses.append(
-            BlockAccess(usergroup_id=a.usergroup_id,
-                        type=a.type,
-                        accessible_from=a.accessible_from,
-                        accessible_to=a.accessible_to,
-                        duration=a.duration,
-                        duration_from=a.duration_from,
-                        duration_to=a.duration_to,))
+        b = BlockAccess(
+            block_id=dest.block.id,
+            usergroup_id=a.usergroup_id,
+            type=a.type,
+            accessible_from=a.accessible_from,
+            accessible_to=a.accessible_to,
+            duration=a.duration,
+            duration_from=a.duration_from,
+            duration_to=a.duration_to,
+        )
+        if b not in dest.block.accesses:
+            dest.block.accesses.append(b)
