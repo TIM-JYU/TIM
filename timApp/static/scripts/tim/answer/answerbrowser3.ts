@@ -273,9 +273,10 @@ timApp.component("timPluginLoader", {
     },
     template: `
 <div ng-focus="$ctrl.loadPlugin()"
+     ng-if="!$ctrl.compiled"
      title="This loads the plugin if it's not loaded"
-     tabindex="0"
-     class="answerBrowserPlaceholder"
+     tabindex="0"></div>
+<div class="answerBrowserPlaceholder"
      ng-if="$ctrl.answerId && $ctrl.showPlaceholder && !$ctrl.isPreview()"
      style="width: 1px; height: 23px;"></div>
 <answerbrowser ng-class="{'has-answers': $ctrl.answerId}"
