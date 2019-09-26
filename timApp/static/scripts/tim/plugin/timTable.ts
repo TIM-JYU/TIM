@@ -49,7 +49,7 @@ import {
     KEY_UP,
 } from "../util/keycodes";
 import {$http, $timeout} from "../util/ngimport";
-import {Binding, StringOrNumber} from "../util/utils";
+import {Binding, scrollToViewInsideParent, StringOrNumber} from "../util/utils";
 import {TaskId} from "./taskid";
 import {hideToolbar, isToolbarEnabled, openTableEditorToolbar} from "./timTableEditorToolbar";
 import {PluginMeta} from "./util";
@@ -669,8 +669,7 @@ export class TimTableController extends DestroyScope implements IController, ITi
         hideToolbar(this);
     }
 
-    private onClick(e: JQuery.Event) {
-        if (this.mouseInTable) {
+    private openToolbar() {
             if (this.isInEditMode() && isToolbarEnabled() && !this.hide.toolbar) {
                 openTableEditorToolbar({
                     callbacks: {
@@ -682,6 +681,13 @@ export class TimTableController extends DestroyScope implements IController, ITi
                         removeRow: () => this.removeRowFromToolbar(),
                     }, activeTable: this,
                 });
+            }
+    }
+
+    private onClick(e: JQuery.Event) {
+        if (this.mouseInTable) {
+            if (this.isInEditMode() && isToolbarEnabled() && !this.hide.toolbar) {
+                // this.openToolbar();
             } else {
                 // Hide the toolbar if we're not in edit mode
                 if ( !this.isSomeCellBeingEdited() ) {
@@ -1625,17 +1631,20 @@ export class TimTableController extends DestroyScope implements IController, ITi
         // Arrow keys
         if (ev.ctrlKey && isArrowKey(ev) ) {
             this.handleArrowMovement(ev);
+            return;
         }
+        this.doKeyUpTable(ev);
     }
 
     // noinspection JSUnusedLocalSymbols
-    private lostFocus(ev: unknown) {
+    private smallEditorLostFocus(ev: unknown) {
         if ( this.hide.editorButtons ) { // Autosave when no editorButtons
             // noinspection JSIgnoredPromiseFromCall
             this.saveCurrentCell();
             // this.closeSmallEditor();
             // TODO: can not use this, because then save is done also for Cancel, BigEditor, Toolbar buttons and so on
         }
+        // hideToolbar(this);
     }
 
     // noinspection JSUnusedLocalSymbols
@@ -1669,10 +1678,10 @@ export class TimTableController extends DestroyScope implements IController, ITi
         // this.shiftDown = ev.shiftKey;
         this.shiftDown = ev.shiftKey;
 
-        if (!this.mouseInTable) {
-            return;
-        }
+        if (this.mouseInTable) { this.doKeyUpTable(ev); }
+    }
 
+    private doKeyUpTable(ev: KeyboardEvent) {
         if ( isKeyCode(ev, KEY_F2) ) { // TODO: change all other keys like this to avoid depreceted warings
             if (this.hide.edit) {
                 return;
@@ -1950,6 +1959,23 @@ export class TimTableController extends DestroyScope implements IController, ITi
             this.startCell = {row: rowi, col: coli};
         }
         this.selectedCells = this.getSelectedCells(rowi, coli);
+        this.openToolbar();
+
+        const sr = this.permTableToScreen[rowi];
+        const table = this.element.find(".timTableTable").first();
+        if (cell.renderIndexX === undefined || cell.renderIndexY === undefined) {
+            return; // we should never be able to get here
+        }
+        // const ry = this.permTable[cell.renderIndexY];
+        const tablecell = table.children("tbody").last().children("tr").eq(sr + this.rowDelta).children("td").eq(cell.renderIndexX + this.colDelta);
+
+        const parent = this.element.find(".timTableRunDiv");
+        // tablecell[0].scrollIntoView(false);
+        const h = tablecell.height();
+        const w = tablecell.width();
+        if ( h != null && w != null ) {
+            scrollToViewInsideParent(tablecell[0], parent[0], w, 3 * h, w, h);
+        }
         this.scope.$applyAsync();
     }
 
@@ -3132,7 +3158,7 @@ timApp.component("timTable", {
             class="glyphicon glyphicon-minus"></span></button>
     <div class="timTableEditor inlineEditorDiv no-highlight" ng-show=$ctrl.isSomeCellBeingEdited()>
         <input class="editInput" id="editInput" autocomplete="off" ng-show="$ctrl.isSomeCellBeingEdited()"
-                   ng-blur="$ctrl.lostFocus($event)"
+                   ng-blur="$ctrl.smallEditorLostFocus($event)"
                    ng-keydown="$ctrl.keyDownPressedInSmallEditor($event)"
                    ng-keyup="$ctrl.keyUpPressedInSmallEditor($event)" ng-model="$ctrl.editedCellContent"><!--
      --><span class="inlineEditorButtons" style="position: absolute; width: max-content" ng-show="!$ctrl.hide.editorButtons && $ctrl.isSomeCellBeingEdited()" ><!--

@@ -77,6 +77,64 @@ export function scrollToElement(element: Element) {
 }
 
 /**
+ * Scroll element in to view inside parent.
+ * See https://stackoverflow.com/questions/6215779/scroll-if-element-is-not-visible
+ * @param helement html element to scroll
+ * @param hparent html parent wehre to scroll
+ * @param marginleft margins for each direction, these are tried to keep front of scroll dircetion
+ * @param margintop
+ * @param marginright
+ * @param marginbottom
+ */
+export function scrollToViewInsideParent(helement: HTMLElement, hparent: HTMLElement,
+                                         marginleft: number, margintop: number,
+                                         marginright: number, marginbottom: number) {
+    const element = $(helement);                     if ( element == null ) { return false; }
+    const parent = $(hparent);                       if ( parent == null  ) { return false; }
+    const elementOffset = element.offset();          if ( elementOffset == null  ) { return false; }
+    const parentScrollTop = parent.scrollTop();      if ( parentScrollTop == null  ) { return false; }
+    const parentScrollLeft = parent.scrollLeft();    if ( parentScrollLeft == null  ) { return false; }
+    const parentInnerHeight = parent.innerHeight();  if ( parentInnerHeight == null  ) { return false; }
+    const parentInnerWidth = parent.innerWidth();    if ( parentInnerWidth == null  ) { return false; }
+    const parentOffset = parent.offset();            if ( parentOffset == null  ) { return false; }
+    const height = element.innerHeight();            if ( !height ) { return; }
+    const width = element.innerWidth();              if ( !width ) { return; }
+
+    const topdy = parentOffset.top - elementOffset.top + margintop;
+    const bottomdy = (elementOffset.top + height) - (parentOffset.top + parentInnerHeight)  + marginbottom;
+    const leftdx = parentOffset.left - elementOffset.left + marginleft;
+    const rightdx = (elementOffset.left + width) - (parentOffset.left + parentInnerWidth)  + marginright;
+
+    if ( topdy >= 0 ) {  parent.scrollTop(parentScrollTop - topdy );   }
+    if ( bottomdy >= 0 ) { parent.scrollTop(parentScrollTop + bottomdy);  }
+    if ( leftdx >= 0 ) {  parent.scrollLeft(parentScrollLeft - leftdx );   }
+    if ( rightdx >= 0 ) { parent.scrollLeft(parentScrollLeft + rightdx);  }
+    return true;
+
+    /*
+    const offset = elementOffset.top + parentScrollTop;
+    const offsetEnd = offset + height;
+
+    const visibleAreaStart = parent.scrollTop();
+    if ( visibleAreaStart == null ) { return false; }
+
+    const visibleAreaEnd = visibleAreaStart + parentInnerHeight;
+
+    if ( elementOffset.top != 0 ) { return true; }
+
+    if (offset - height < visibleAreaStart) {
+        parent.animate({scrollTop: offset - height}, 600);
+        return false;
+    } else if (offsetEnd > visibleAreaEnd) {
+        parent.animate({scrollTop: parentScrollTop + offsetEnd - visibleAreaEnd }, 600);
+        return false;
+
+    }
+    return true;
+    */
+}
+
+/**
  * Gets the parent element of the given element.
  * @param element - Element whose parent is queried for
  * @returns {Element} Element parent
