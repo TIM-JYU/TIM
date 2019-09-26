@@ -6,14 +6,14 @@
             <div class="input-group input-group-xs">
             <span class="input-group-btn">
                <button class="btn btn-primary" ng-click="$ctrl.randomStudent()" title="Choose random student">R</button>
-               <button class="btn btn-primary" ng-click="$ctrl.changeStudent(-1)">&uarr;</button>
+               <button title="Previous user" class="btn btn-primary" ng-click="$ctrl.changeStudent(-1)">&uarr;</button>
              </span>
                 <select class="form-control"
                         ng-model="$ctrl.user"
                         ng-options="(user.real_name + ' (' + user.name + ')') for user in $ctrl.users track by user.id"
                         ng-change="$ctrl.getAnswersAndUpdate()"></select>
                 <span class="input-group-btn">
-             <button class="btn btn-primary" ng-click="$ctrl.changeStudent(+1)">&darr;</button>
+             <button title="Next user" class="btn btn-primary" ng-click="$ctrl.changeStudent(+1)">&darr;</button>
             </span>
             </div>
         </div>
@@ -30,25 +30,27 @@
                 <div>
                     <div class="input-group input-group-xs">
                 <span class="input-group-btn">
-                    <button class="btn btn-primary prevAnswer" ng-click="$ctrl.previousAnswer()">&larr;</button>
+                    <button title="Previous answer" class="btn btn-primary prevAnswer" ng-click="$ctrl.previousAnswer()">&larr;</button>
                 </span>
-                        <select class="form-control" ng-model="$ctrl.selectedAnswer"
+                        <select class="form-control"
+                                title="List of answers"
+                                ng-model="$ctrl.selectedAnswer"
                                 ng-options="(($ctrl.filteredAnswers.length - idx) + '. ' + (answer.answered_on | timdate )) for (idx, answer) in $ctrl.filteredAnswers | orderBy:'answer.id' track by answer.id"
                                 ng-change="$ctrl.changeAnswer()"></select>
                 <span class="input-group-btn">
-                    <button class="btn btn-primary nextAnswer" ng-click="$ctrl.nextAnswer()">&rarr;</button>
+                    <button title="Next answer" class="btn btn-primary nextAnswer" ng-click="$ctrl.nextAnswer()">&rarr;</button>
                 </span>
                     </div>
                 </div>
                 <div class="no-shrink">
-                    <span>{{ $ctrl.filteredAnswers.length - $ctrl.findSelectedAnswerIndex() }}/<a
+                    <span>{{ $ctrl.filteredAnswers.length - $ctrl.findSelectedAnswerIndex() }}/<a tabindex="0" title="Newest answer"
                             ng-click="$ctrl.setNewest()">{{ $ctrl.filteredAnswers.length }}</a></span>
                     <label class="checkbox-inline" ng-show="$ctrl.anyInvalid">
                         <input type="checkbox" ng-model="$ctrl.onlyValid">Show valid only</label>
                     <span ng-show="$ctrl.showTeacher()"> | <a ng-click="$ctrl.getAllAnswers()">All answers</a>
                     </span>
                     <span ng-if="$ctrl.selectedAnswer">
-                        | <a title="Link to this answer"
+                        | <a title="Link to currently selected answer"
                              ng-click="$event.preventDefault()"
                              ng-href="{{ $ctrl.getAnswerLink() }}">Link</a>
                     </span>
