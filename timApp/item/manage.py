@@ -512,6 +512,7 @@ def copy_folder(f_from: Folder, f_to: Folder, user_who_copies: User, exclude_re)
     db.session.flush()
     if not user_who_copies.can_write_to_folder(f_to):
         abort(403, f'Missing edit access to folder {f_to.path}')
+    folder_opts = FolderCreationOptions(get_templates_rights_from_parent=False)
     for d in f_from.get_all_documents(include_subdirs=False):
         if exclude_re.search(d.path):
             continue
@@ -521,7 +522,7 @@ def copy_folder(f_from: Folder, f_to: Folder, user_who_copies: User, exclude_re)
         nd = DocEntry.create(
             nd_path,
             title=d.title,
-            folder_opts=FolderCreationOptions(get_templates_rights_from_parent=False),
+            folder_opts=folder_opts,
         )
         copy_rights(d, nd)
         nd.document.modifier_group_id = user_who_copies.get_personal_group().id
@@ -538,7 +539,7 @@ def copy_folder(f_from: Folder, f_to: Folder, user_who_copies: User, exclude_re)
             nf = Folder.create(
                 nf_path,
                 title=f.title,
-                creation_opts=FolderCreationOptions(get_templates_rights_from_parent=False),
+                creation_opts=folder_opts,
             )
             copy_rights(f, nf)
         copy_folder(f, nf, user_who_copies, exclude_re)
