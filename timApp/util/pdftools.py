@@ -13,7 +13,9 @@ from re import escape as re_escape, compile as re_compile
 import timApp.plugin.plugin
 
 # Default parameter values:
+from timApp.auth.accesshelper import verify_view_access
 from timApp.document.docparagraph import DocParagraph
+from timApp.upload.uploadedfile import UploadedFile
 from timApp.util.logger import log_error
 
 temp_folder_default_path = Path("/tmp")
@@ -216,15 +218,15 @@ class StampFormatInvalidError(PdfError):
 
 
 class Attachment:
-    def __init__(self, path: str, macro: str = "unknown", error: str = "", selected: bool = True):
-        self.path = path
+    def __init__(self, url: str, macro: str = "unknown", error: str = "", selected: bool = True):
+        self.url = url
         self.macro = macro
         self.selected = selected
         self.error = error
 
 
     def to_json(self):
-        return {'path': self.path, 'macro': self.macro, 'error': self.error, 'selected': self.selected}
+        return {'url': self.url, 'macro': self.macro, 'error': self.error, 'selected': self.selected}
 
 
 class AttachmentStampData:
@@ -352,20 +354,23 @@ def parse_error(message: str) -> str:
 
 
 
-def merge_pdfs(pdf_path_list: List[str], output_path: Path) -> Path:
+def merge_pdfs(pdf_file_list: List[UploadedFile], output_path: Path) -> Path:
     """
-    Merges a list of pdfs using pdftk.
-    :param pdf_path_list: List of the paths of pdfs to merge.
+    Merges a list of PDFs using pdftk.
+    :param pdf_file_list: List of the uploaded files to merge.
     :param output_path: Merged output file path.
     :return: output_path
     """
-    if not pdf_path_list:
+    if not pdf_file_list:
         raise MergeListEmptyError()
     pdf_path_args = []
-    for pdf_path in pdf_path_list:
-        pdf_path = parse_tim_url(pdf_path)
-        check_pdf_validity(Path(pdf_path))
-        pdf_path_args += [pdf_path]
+    for pdf in pdf_file_list:
+        # Check view access for each file before merge.
+        verify_view_access(pdf.block, check_parents=True)
+        # Merge uses path strings.
+        pdf_path_string = parse_tim_url(pdf.filesystem_path.absolute().as_posix())
+        check_pdf_validity(Path(pdf_path_string))
+        pdf_path_args += [pdf_path_string]
 
     args = ["pdftk"] + pdf_path_args + ["cat", "output", output_path.absolute().as_posix()]
     call_popen(args, pdfmerge_timeout)
@@ -385,7 +390,7 @@ def parse_tim_url(par_file: str, domain: str = "tim.jyu.fi") -> str:
         return "/tim_files/blocks" + par_file
     elif par_file.startswith(f"http://{domain}/files"):
         par_file = "/tim_files/blocks" + par_file.replace(f"http://{domain}", "")
-    elif par_file.startswith("https:/{domain}/files"):
+    elif par_file.startswith(f"https://{domain}/files"):
         par_file = "/tim_files/blocks" + par_file.replace(f"https://{domain}", "")
     return par_file
 
@@ -426,6 +431,7 @@ def check_pdf_validity(pdf_path: Path) -> None:
     :param pdf_path: Pdf to check.
     :return: None if not interrupted by error.
     """
+    # TODO: Use UploadedFiles and add rights check?
     if not pdf_path.exists():
         raise AttachmentNotFoundError(pdf_path.absolute().as_posix())
     if ".pdf" not in pdf_path.suffix:

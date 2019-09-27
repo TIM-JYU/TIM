@@ -4,6 +4,7 @@ Routes related to handling faculty council documents, such as meeting invitation
 import ast
 from pathlib import Path
 from typing import List
+from urllib.parse import urlencode
 
 from flask import Blueprint, send_file
 from flask import abort
@@ -14,10 +15,11 @@ from dataclasses import dataclass
 from marshmallow_dataclass import class_schema
 
 
-from timApp.auth.accesshelper import verify_manage_access, verify_edit_access, verify_view_access
+from timApp.auth.accesshelper import verify_manage_access, verify_edit_access
 from timApp.document.create_item import create_or_copy_item, create_document
 from timApp.document.docsettings import DocSettings
 from timApp.item.block import BlockType
+from timApp.upload.uploadedfile import UploadedFile
 from timApp.util.flask.requesthelper import verify_json_params
 from timApp.util.flask.responsehelper import safe_redirect, json_response
 from timApp.document.docentry import DocEntry
@@ -240,25 +242,33 @@ def get_attachment_list(doc):
 
 @dataclass
 class MergeAttachmentsModel:
-    paths: List[str]
-    doc_path: str
+    urls: List[str]
+    doc_id: int
 
 
 @minutes_blueprint.route('/mergeAttachments', methods=['POST'])
 @use_args(class_schema(MergeAttachmentsModel)())
 def merge_selected_attachments(args: MergeAttachmentsModel):
     """
-    A route for merging a list of pdfs.
-    :param args Doc path and list of pdf paths.
-    :return: Merged pdf-file.
+    A route for merging a list of urls.
+    :param args Doc id and list of pdf paths.
+    :return: URL for the GET-route to open the merged file.
     """
     try:
-        pdf_paths = args.paths
-        doc_path = args.doc_path
-        d = DocEntry.find_by_path(doc_path)
+        pdf_urls = args.urls
+        doc_id = args.doc_id
+        d = DocEntry.find_by_id(doc_id)
         if not d:
             abort(400)
         verify_edit_access(d)
+
+        pdf_files = []
+        for pdf in pdf_urls:
+            file = UploadedFile.get_by_url(pdf)
+            if file:
+                pdf_files.append(file)
+            else:
+                abort(404, f"Missing file: {pdf}")
 
         # Create folders when necessary.
         if not merged_file_folder.exists():
@@ -268,28 +278,35 @@ def merge_selected_attachments(args: MergeAttachmentsModel):
             destination_folder.mkdir()
 
         # Uses document name as the base for the merged file name and tmp as folder.
-        file_name = f"{d.short_name}_{hash('|'.join(sorted(pdf_paths)))}_merged.pdf"
-
-        merge_pdfs(pdf_paths, destination_folder / file_name)
+        # Hash is there to avoid mixup with different file selections in same document.
+        file_name = f"{d.short_name}_{hash('|'.join(sorted(pdf_urls)))}_merged.pdf"
+        merge_pdfs(pdf_files, destination_folder / file_name)
     except Exception as err:
         abort(400, get_error_message(err))
     else:
-        url = f"/minutes/openMergedAttachment/{d.id}/{file_name}"
-        return json_response({'success': True, 'url': url}, status_code=201)
+        params = urlencode({'doc_id': doc_id, 'urls': pdf_urls}, doseq=True)
+        return json_response({'success': True, 'url': f"/minutes/openMergedAttachment?{params}"}, status_code=201)
 
 
-@minutes_blueprint.route('/openMergedAttachment/<path:doc_id>/<file_filename>')
-def get_file(doc_id: int, file_filename: str):
+@minutes_blueprint.route('/openMergedAttachment')
+@use_args(class_schema(MergeAttachmentsModel)())
+def open_merged_file(args: MergeAttachmentsModel):
     """
     Open a merged file.
-    :param doc_id: Document the file was created in.
-    :param file_filename: File name.
-    :return: Opens the file in browser.
+    :param args Doc id and list of pdf urls used in the merge.
+    :return: Opens the file in the browser.
     """
+    if not args.urls:
+        abort(404, 'File not found')
+    pdf_urls = args.urls
+    doc_id = args.doc_id
     d = DocEntry.find_by_id(doc_id)
-    f = merged_file_folder / str(doc_id) / Path(file_filename)
+
+    # Right file opens only if parameter hash is the same.
+    merged_file_name = f"{d.short_name}_{hash('|'.join(sorted(pdf_urls)))}_merged.pdf"
+    f = merged_file_folder / str(doc_id) / Path(merged_file_name)
     if not f.exists():
         # TODO: Create the file here, if user has edit-access.
-        abort(404, 'File not found')
-    verify_view_access(d)
+        abort(404, 'File not found! ')
+    verify_edit_access(d)
     return send_file(f.absolute().as_posix(), mimetype="application/pdf")

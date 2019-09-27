@@ -23,7 +23,7 @@ export interface IMergeParams {
 }
 
 export interface IAttachment {
-    path: string;
+    url: string;
     macro: string;
     error: string;
     selected: boolean;
@@ -32,11 +32,11 @@ export interface IAttachment {
 export class MergePdfController extends DialogController<{ params: IMergeParams }, {}> {
     static component = "timMergePdf";
     static $inject = ["$element", "$scope"] as const;
-    private mergedUrl?: string;
-    private loading: boolean = false;
     private attachmentList: IAttachment[] = [];
-    private checking: boolean = true;
+    private loading: boolean = false; // Whether the merging process is underway.
+    private checking: boolean = true; // Whether the attachment check is underway.
     private errorMessage?: string;
+    private mergedUrl?: string; // Link to file opening route with merge data as params.
 
     constructor(protected element: IRootElementService, protected scope: IScope) {
         super(element, scope);
@@ -74,14 +74,14 @@ export class MergePdfController extends DialogController<{ params: IMergeParams 
         this.loading = true;
         const url = `/minutes/mergeAttachments`;
         const data = this.getSelectedAttachmentData();
-        const r = await to($http.post<{url: string}>(url, data));
-        if (!r.ok) {
-            void showMessageDialog(r.result.data.error);
+        const r1 = await to($http.post<{url: string}>(url, data));
+        if (!r1.ok) {
+            void showMessageDialog(r1.result.data.error);
             this.loading = false;
             return;
         }
         this.loading = false;
-        this.mergedUrl = r.result.data.url;
+        this.mergedUrl = r1.result.data.url;
     }
 
     async $onInit() {
@@ -109,21 +109,21 @@ export class MergePdfController extends DialogController<{ params: IMergeParams 
      * Format the attachment list as route data.
      */
     private getSelectedAttachmentData() {
-        const paths: string[] = [];
+        const urls: string[] = [];
         for (const attachment of this.attachmentList) {
             if (attachment.selected) {
-                paths.push(attachment.path);
+                urls.push(attachment.url);
             }
         }
-        return {doc_path: this.resolve.params.document.path, paths: paths};
+        return {doc_id: this.resolve.params.document.id, urls: urls};
     }
 
     /**
-     * Show only the last part of a file path (the file name).
-     * @param path Path to shorten with either \ or /, doesn't need to be complete.
+     * Show only the last part of a file URL or path (the file name).
+     * @param url URL or path to shorten with either \ or /, doesn't need to be complete.
      */
-    private getFileName(path: string) {
-        return path.replace(/^.*[\\\/]/, "");
+    private getFileName(url: string) {
+        return url.replace(/^.*[\\\/]/, "");
     }
 }
 
@@ -145,7 +145,7 @@ registerDialogComponent(MergePdfController,
                     <li ng-repeat="x in $ctrl.attachmentList track by $index">
                         <label>
                             <input type="checkbox" ng-model="x.selected" ng-disabled="x.error">
-                            <a href="{{::x.path}}" target="_blank">{{::$ctrl.getFileName(x.path)}}</a>
+                            <a href="{{::x.url}}" target="_blank">{{::$ctrl.getFileName(x.url)}}</a>
                         </label>
                         <span ng-style="::$ctrl.macroStyle(x.macro)">{{::x.macro}}</span>
                         <span ng-if="::x.error" style="color:red;" class="glyphicon glyphicon-warning-sign"
