@@ -59,7 +59,7 @@ export class UserListController implements IController {
         let smallFieldWidth = 59;
 
         function nameCompare(a: IUserListEntry, b: IUserListEntry) {
-            return a.user.real_name.localeCompare(b.user.real_name, sortLang);
+            return (a.user.real_name || "").localeCompare(b.user.real_name || "", sortLang);
         }
 
         this.viewctrl.users.sort(nameCompare);

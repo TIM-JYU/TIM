@@ -7,8 +7,8 @@ export const ADMIN_GROUPNAME = "Administrators";
 export interface IUser {
     id: number;
     name: string;
-    email: string;
-    real_name: string;
+    email: string | null;
+    real_name: string | null;
 }
 
 export interface IUserListEntry {
