@@ -4,7 +4,7 @@ import json
 import os
 import posixpath
 from pathlib import Path, PurePosixPath
-from typing import List, Optional
+from typing import List, Optional, Union
 from urllib.parse import unquote, urlparse
 
 import magic
@@ -30,7 +30,7 @@ from timApp.plugin.pluginexception import PluginException
 from timApp.plugin.taskid import TaskId, TaskIdAccess
 from timApp.tim_app import app
 from timApp.timdb.sqa import db
-from timApp.upload.uploadedfile import UploadedFile, PluginUpload, PluginUploadInfo, StampedPDF
+from timApp.upload.uploadedfile import PluginUpload, PluginUploadInfo, UploadedFile
 from timApp.util.flask.responsehelper import json_response, ok_response
 from timApp.util.pdftools import StampDataInvalidError, default_stamp_format, AttachmentStampData, \
     PdfError, stamp_pdfs, create_new_tex_file, restamp_pdfs, stamp_model_default_path
@@ -344,18 +344,9 @@ def save_file_and_grant_access(d: DocInfo, content, file, block_type: BlockType)
 
 @upload.route('/files/<int:file_id>/<file_filename>')
 def get_file(file_id, file_filename):
-    f = UploadedFile.find_by_id_and_type(file_id, BlockType.File)
+    f = UploadedFile.get_stamped(file_id, file_filename)
     if not f:
         abort(404, 'File not found')
-    verify_view_access(f, check_parents=True)
-    if file_filename != f.filename:
-        # try to find stamped PDF file
-        s = StampedPDF(f.block)
-        if file_filename != s.filename:
-            abort(404, 'File not found')
-        if not s.filesystem_path.exists():
-            abort(404, 'File not found')
-        f = s
     file_path = f.filesystem_path.as_posix()
     return send_file(file_path, mimetype=get_mimetype(file_path))
 

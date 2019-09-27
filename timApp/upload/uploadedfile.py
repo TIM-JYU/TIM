@@ -1,7 +1,8 @@
 import os
 from pathlib import Path
-from typing import Optional, NamedTuple
+from typing import Optional, NamedTuple, Union
 
+import re
 from flask import current_app
 from werkzeug.utils import secure_filename
 
@@ -51,6 +52,47 @@ class UploadedFile(ItemBase):
         if not b:
             return None
         return CLASS_MAPPING[block_type](b)
+
+    @staticmethod
+    def get_by_url(url: str) -> Optional['UploadedFile']:
+        """
+        Returns UploadedFile object (or StampedPDF) based on given url.
+        :param url: File url.
+        :return: UploadedFile, StampedPDF, or None, if neither was found.
+        """
+        try:
+            file_id = int(re.search(r'files/(.*?)/', url).group(1))
+            filename = Path(url).name
+            if not id or not filename:
+                return None
+        except ValueError:
+            return None
+        else:
+            f = UploadedFile.get_stamped(file_id, filename)
+            if not f:
+                return None
+            return f
+
+    @staticmethod
+    def get_stamped(file_id: int, filename: str) -> Optional[Union['UploadedFile', 'StampedPDF']]:
+        """
+        Get uploaded file or its stamped version, if file name differs (i.e. has "_stamped" in it).
+        :param file_id: File id.
+        :param filename: File name, which may contain "_stamped".
+        :return: UploadedFile, StampedPDF, or None, if neither was found.
+        """
+        f = UploadedFile.find_by_id_and_type(file_id, BlockType.File)
+        if not f:
+            return None
+        if filename != f.filename:
+            # Try to find stamped PDF file.
+            s = StampedPDF(f.block)
+            if filename != s.filename:
+                return None
+            if not s.filesystem_path.exists():
+                return None
+            f = s
+        return f
 
     @property
     def id(self):
