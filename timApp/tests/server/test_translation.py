@@ -4,6 +4,7 @@ from timApp.document.docinfo import DocInfo
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.docsettings import DocSettings
 from timApp.document.document import Document
+from timApp.document.translation.translation import Translation
 from timApp.document.yamlblock import YamlBlock
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.util.utils import EXAMPLE_DOCS_PATH
@@ -252,6 +253,7 @@ b
                       extra_data={'tags': {'marktranslated': True}})
         self.check_outofdate_count(t, 1)
 
+        t = Translation.find_by_id(t.id)
         self.test_user_2.grant_access(t, 'view')
 
         # only editors should see the outofdate messages
