@@ -5,6 +5,7 @@ import string
 import urllib.parse
 from typing import Optional
 
+from dataclasses import dataclass
 from flask import Blueprint, render_template
 from flask import abort
 from flask import current_app
@@ -28,7 +29,7 @@ from timApp.user.user import User, UserOrigin
 from timApp.user.usergroup import UserGroup
 from timApp.user.users import create_anonymous_user
 from timApp.user.userutils import create_password_hash, check_password_hash
-from timApp.util.flask.requesthelper import verify_json_params, get_option, is_xhr
+from timApp.util.flask.requesthelper import verify_json_params, get_option, is_xhr, use_model
 from timApp.util.flask.responsehelper import safe_redirect, json_response, ok_response, error_generic
 from timApp.util.logger import log_error, log_warning
 
@@ -59,7 +60,6 @@ def logout():
         session['other_users'] = group
     else:
         session.pop('user_id', None)
-        session.pop('appcookie', None)
         session.pop('came_from', None)
         session.pop('last_doc', None)
         session.pop('anchor', None)
@@ -187,7 +187,6 @@ def openid_success_handler(resp: KorppiOpenIDResponse):
 
 def set_user_to_session(user: User):
     adding = session.get('adding_user')
-    session.pop('appcookie', None)
     session.pop('adding_user', None)
     if adding:
         if user.id in get_session_users_ids():
@@ -219,9 +218,16 @@ def check_temp_password():
         return ok_response()
 
 
+@dataclass
+class AltSignupModel:
+    email: str
+    url: Optional[str] = None
+
+
 @login_page.route("/altsignup", methods=['POST'])
-def alt_signup():
-    email_or_username, = verify_json_params('email')
+@use_model(AltSignupModel)
+def alt_signup(m: AltSignupModel):
+    email_or_username = m.email
     fail = False
     if not is_valid_email(email_or_username):
         u = User.get_by_name(email_or_username)
@@ -244,13 +250,19 @@ def alt_signup():
         nu = NewUser(email=email, pass_=password_hash)
         db.session.add(nu)
 
+    # Real users should never submit the url parameter.
+    # It is meant for catching bots.
+    if m.url:
+        log_warning(f'Bot registration attempt: {email_or_username}, URL: {m.url}')
+        fail = True
+
     if fail:
+        # We return ok because we don't want to leak any information about the existence of accounts etc.
         return ok_response()
 
     db.session.commit()
 
     session.pop('user_id', None)
-    session.pop('appcookie', None)
 
     try:
         send_email(email, 'Your new TIM password', f'Your password is {password}')

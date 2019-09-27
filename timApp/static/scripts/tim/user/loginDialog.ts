@@ -59,6 +59,8 @@ export class LoginDialogController extends DialogController<{params: ILoginParam
     private signUpRequestInProgress = false;
     private tempPassword: string | undefined;
     private tempPasswordProvided = false;
+    private url: string | undefined;
+    private urlStyle = {position: "absolute", top: "-10em", width: "50%"}; // hide the fake URL field
 
     constructor(protected element: IRootElementService, protected scope: IScope) {
         super(element, scope);
@@ -149,6 +151,7 @@ export class LoginDialogController extends DialogController<{params: ILoginParam
         }
         const r = await this.sendRequest("/altsignup", {
             email: this.email,
+            url: this.url,
         });
         if (!r.ok) {
             this.signUpError = r.result.data.error;
@@ -259,6 +262,14 @@ export class LoginDialogController extends DialogController<{params: ILoginParam
         }
     }
 
+    getUrlLabel() {
+        if (this.language == "fi") {
+            return "Älä kirjoita tähän mitään";
+        } else {
+            return "Do not type anything here";
+        }
+    }
+
     /**
      * Move on to sign up from login.
      */
@@ -366,6 +377,16 @@ registerDialogComponent(LoginDialogController,
                        name="email"
                        required
                        placeholder="Enter your {{ $ctrl.getEmailOrUserText() }}"
+                       type="text"/>
+                <label ng-style="$ctrl.urlStyle" for="url" class="control-label">{{ $ctrl.getUrlLabel() }}</label>
+                <input class="form-control"
+                       ng-style="$ctrl.urlStyle"
+                       tabindex="-1"
+                       id="url"
+                       ng-model="$ctrl.url"
+                       ng-disabled="$ctrl.emailSent"
+                       name="url"
+                       placeholder="{{ $ctrl.getUrlLabel() }}"
                        type="text"/>
             </div>
             <button ng-click="$ctrl.provideEmail()"
@@ -541,6 +562,16 @@ registerDialogComponent(LoginDialogController,
                        name="email"
                        required
                        placeholder="Syötä {{ $ctrl.getEmailOrUserText() }}"
+                       type="text"/>
+                <label ng-style="$ctrl.urlStyle" for="url" class="control-label">{{ $ctrl.getUrlLabel() }}</label>
+                <input class="form-control"
+                       ng-style="$ctrl.urlStyle"
+                       tabindex="-1"
+                       id="url"
+                       ng-model="$ctrl.url"
+                       ng-disabled="$ctrl.emailSent"
+                       name="url"
+                       placeholder="{{ $ctrl.getUrlLabel() }}"
                        type="text"/>
             </div>
             <button ng-click="$ctrl.provideEmail()"

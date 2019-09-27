@@ -16,6 +16,17 @@ class TestSignUp(TimRouteTest):
         super().setUp()
         self.logout()
 
+    def test_block_bot_signup(self):
+        bot_email = 'bot@example.com'
+        self.json_post(
+            '/altsignup',
+            {
+                'email': bot_email,
+                'url': 'http://www.example.com',
+            })
+        self.get('/')  # refresh session
+        self.assertIsNone(NewUser.query.get(bot_email))
+
     def test_signup(self):
         email = 'testingsignup@example.com'
         self.json_post(
