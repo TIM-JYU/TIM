@@ -181,7 +181,7 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
         if ( this.attrs.showname ) {
             const u = this.vctrl.selectedUser;
             if ( this.attrs.showname == 1 ) {
-                this.userword = u.real_name;
+                this.userword = u.real_name || "";
             }
             if ( this.attrs.showname == 2 ) {
                 this.userword = u.name;
