@@ -187,6 +187,11 @@ def expand_macros(text: str, macros, settings, macro_delimiter: Optional[str] = 
         if env is None:
             env = create_environment(macro_delimiter)
     try:
+        charmacros = settings.get_charmacros() if settings else None
+        if ( charmacros):
+            for cm_key, cm_value in charmacros.items():
+                text = text.replace(cm_key, cm_value)
+
         globalmacros = settings.get_globalmacros() if settings else None
         if globalmacros:
             for gmacro in globalmacros:

@@ -647,6 +647,7 @@ export class TimTableController extends DestroyScope implements IController, ITi
         }
         this.totalrows = this.cellDataMatrix.length;
         if ( hl > 0 ) { this.visiblerows = "" + (this.totalrows - hl); }
+        this.setStyles();
     }
 
     $doCheck() {
@@ -3174,10 +3175,11 @@ timApp.component("timTable", {
                  ng-show="$ctrl.showColumn(coli)"
                  ng-repeat="td in $ctrl.cellDataMatrix[rowi]" ng-init="coli = $index" ng-if="$ctrl.showCell(td)"
                  colspan="{{td.colspan}}" rowspan="{{td.rowspan}}"
-                    ng-style="::$ctrl.stylingForCell(rowi, coli)" ng-click="$ctrl.cellClicked(td, rowi, coli, $event)">
+                    ng-click="$ctrl.cellClicked(td, rowi, coli, $event)">
                     <div ng-bind-html="$ctrl.getTrustedCellContentHtml(rowi, coli)"></div>
                     <!-- {{rowi+1}}{{irowi+1}} -->
                 </td> <!-- one cell -->
+                    <!-- ng-style="::$ctrl.stylingForCell(rowi, coli)" -->
         </tr> <!-- the matrix -->
         </tbody>
     </table>

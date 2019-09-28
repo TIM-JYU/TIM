@@ -1383,7 +1383,9 @@ def convert_table(table_json, draw_html_borders: bool = False) -> Table:
     table_default_cell_bgcolor = get_color(table_default_cell_data, key="backgroundColor")
     table_default_cell_textcolor = get_color(table_default_cell_data, key="color")
 
-    table_json_rows = table_json['rows']
+    table_json_rows = table_json.get('rows')
+    if not table_json_rows:
+        return
     for i in range(0, len(table_json_rows)):
         table_row = table.get_or_create_row(i)
         row_data = table_json_rows[i]

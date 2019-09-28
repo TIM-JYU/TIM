@@ -122,6 +122,8 @@ class DocSettings:
     comments_key = 'comments'
     course_group_key = 'course_group'
     urlmacros_key = 'urlmacros'
+    charmacros_key = 'charmacros'
+    postcharmacros_key = 'postcharmacros'
     rndmacros_key = 'rndmacros'
     sisu_require_manual_enroll_key = 'sisu_require_manual_enroll'
     course_allow_manual_enroll_key = 'course_allow_manual_enroll'
@@ -322,6 +324,9 @@ class DocSettings:
             if nm is None:
                 nm = default
         return nm
+
+    def get_charmacros(self, default=None):
+        return self.__dict.get(self.charmacros_key, default)
 
     def preamble(self, default=DEFAULT_PREAMBLE_DOC):
         return self.__dict.get(self.preamble_key, default)
