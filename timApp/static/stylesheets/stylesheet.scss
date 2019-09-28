@@ -1311,3 +1311,22 @@ p.closeButton::before {
   border-bottom-style: solid;
   border-bottom-width: thin;
 }
+
+.reveal {
+  .hideinslide {
+    display: none;
+  }
+}
+
+.showonlyslide {
+    display: none;
+}
+
+.reveal {
+  .showonlyslide {
+    display: unset;
+  }
+}
+
+
+
