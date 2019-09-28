@@ -3081,6 +3081,7 @@ export class TimTableController extends DestroyScope implements IController, ITi
     /**
      * Re-applies styles for every cell in the matrix
      * TODO: Needlessly updates every cell when changing one
+     * TODO: put tablecell-reference to cellDataMatrix so no need to find it every time
      * TODO: Remove other two-way bingings within datamatrix's ng-repeat (showrow, activecell etc)
      */
     setStyles() {
