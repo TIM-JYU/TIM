@@ -2734,6 +2734,7 @@ export class TimTableController extends DestroyScope implements IController, ITi
         if ( cellsToSave ) {
             await this.setCellStyleAttribute("setCell", cellsToSave, true);
         }
+        this.setStyles();
     }
 
     async addToTemplates() {
@@ -3077,6 +3078,33 @@ export class TimTableController extends DestroyScope implements IController, ITi
         }
     }
 
+    /**
+     * Re-applies styles for every cell in the matrix
+     * TODO: Needlessly updates every cell when changing one
+     * TODO: Remove other two-way bingings within datamatrix's ng-repeat (showrow, activecell etc)
+     */
+    setStyles() {
+        const table = this.element.find(".timTableTable").first();
+        for (const [rowIndex, row] of this.permTable.entries()) {
+            const sr = this.permTableToScreen[rowIndex];
+            const rowElement = table.children("tbody").last().children("tr").eq(sr + this.rowDelta);
+            // rowElement.css(this.stylingForRow(rowIndex));
+            for (const [cellIndex, cell] of this.cellDataMatrix[rowIndex].entries()) {
+                console.log(cell);
+                if (cell.renderIndexX === undefined || cell.renderIndexY === undefined) {
+                    return; // we should never be able to get here
+                }
+                const tablecell = rowElement.children("td").eq(cell.renderIndexX + this.colDelta);
+                tablecell.css(this.stylingForCell(rowIndex, cellIndex));
+                // if (!this.showColumn(cellIndex)) {
+                //     tablecell.addClass(".ng-hide");
+                // } else {
+                //     tablecell.removeClass(".ng-hide");
+                // }
+            }
+        }
+    }
+
 }
 
 timApp.component("timTable", {
@@ -3145,7 +3173,7 @@ timApp.component("timTable", {
                  ng-show="$ctrl.showColumn(coli)"
                  ng-repeat="td in $ctrl.cellDataMatrix[rowi]" ng-init="coli = $index" ng-if="$ctrl.showCell(td)"
                  colspan="{{td.colspan}}" rowspan="{{td.rowspan}}"
-                    ng-style="$ctrl.stylingForCell(rowi, coli)" ng-click="$ctrl.cellClicked(td, rowi, coli, $event)">
+                    ng-style="::$ctrl.stylingForCell(rowi, coli)" ng-click="$ctrl.cellClicked(td, rowi, coli, $event)">
                     <div ng-bind-html="$ctrl.getTrustedCellContentHtml(rowi, coli)"></div>
                     <!-- {{rowi+1}}{{irowi+1}} -->
                 </td> <!-- one cell -->
