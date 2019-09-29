@@ -19,7 +19,7 @@ const NumericfieldMarkup = t.intersection([
         tag: nullable(t.string),
         inputplaceholder: nullable(t.number),
         inputstem: nullable(t.string),
-        initnumber: nullable(t.string),
+        initnumber: nullable(t.number),
         validinput: nullable(t.string),
         errormessage: nullable(t.string),
         readOnlyStyle: nullable(t.string),
@@ -101,7 +101,9 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
     $onInit() {
         super.$onInit();
         const state = this.attrsall.state && this.attrsall.state.c;
-        if (state !== undefined) {
+        if (state === undefined || state === null) {
+            this.initCode();
+        } else {
             if (typeof state === "number") {
                 this.numericvalue = state.toString();
             } else if (state !== null) {
@@ -210,11 +212,10 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
      * Initialize content.
      */
     initCode() {
-        this.numericvalue = this.attrs.initnumber || undefined;
-        if (this.numericvalue == undefined) {
-            if (this.attrs.initnumber === "0") {
-                this.numericvalue = "0";
-            }
+        if (this.attrs.initnumber == undefined) {
+                this.numericvalue = "";
+        } else {
+            this.numericvalue = "" + this.attrs.initnumber;
         }
         this.initialValue = this.numericvalue;
         this.result = undefined;

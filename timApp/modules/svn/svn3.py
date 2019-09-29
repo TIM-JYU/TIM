@@ -101,7 +101,7 @@ def timestr_2_sec(value):
         return 0
     if isinstance(value, int):
         return value
-    st = str(value)
+    st = str(value)     # .replace(".", ":").replace(",", ":") # no use because 1:12.1 is 72.1 after YAML
     if st.isdigit():
         return int(st)
     i = len(st) - 1
