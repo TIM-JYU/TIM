@@ -49,6 +49,7 @@ languages["rust"] = Rust
 languages["pascal"] = Pascal
 languages["stack"] = Stack
 languages["geogebra"] = Geogebra
+languages["jsav"] = Jsav
 languages["quorum"] = Quorum
 languages["jsframe"] = JSframe
 languages["chartjs"] = ChartJS

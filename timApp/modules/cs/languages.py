@@ -1020,6 +1020,174 @@ def html_change(s, old, jso, item_id, repfmt, default, valdef = None, delta = 0)
         return s
 
 
+"""
+This is the outer default HTML code for the JSAV plugin.
+Some keywords are later on substituted with user input.
+"""
+
+JSAV_DEFAULT_SRC_HTML = """
+<!DOCTYPE html>
+<html>
+<head>
+  <title>A JSAV Animation</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <link rel="stylesheet" href="/cs/jsav/css/JSAV.css" type="text/css" />
+  <link rel="stylesheet" href="/cs/css/jsav-tim.css" type="text/css" />
+</head>
+<body>
+
+<style>
+//JSAVCSS
+</style>
+
+<div>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/jquery-ui.min.js"></script>
+<script src="/cs/jsav/lib/jquery.transit.js"></script>
+<script src="/cs/jsav/lib/raphael.js"></script>
+<script src="/cs/jsav/build/JSAV.js"></script>
+
+//JSAVHTML
+
+<script type="text/javascript">
+    var logEventHandler;
+    var exercise;
+
+    score = {correct: 0, total: 0};
+    logEventHandler = function(evt) {
+        // This counts the total number of questions
+        if (evt.type === "jsav-question-created") {
+            score.total++;
+        } else if (evt.type === "jsav-question-answer") {
+            if (evt.correct) { score.correct++; }
+        } else if (evt.type === "jsav-exercise-init") {
+            exercise = evt.exercise;
+        }
+    };
+
+    function getData() {
+        if (exercise) {
+            return {"points": exercise.grade().correct };
+        }
+        else {
+            return {"points": score.correct };
+        }
+    }
+
+    window.JSAV_OPTIONS = {
+        logEvent: logEventHandler,
+        element: $(".jsavcontainer"),
+        questionDialogBase: $(".questiondialog"),
+    };
+    //JSAVJAVASCRIPT
+</script>
+
+</div>
+</body>
+</html>
+"""
+
+
+"""
+This is the inner default HTML code for the JSAV plugin.
+"""
+
+JSAV_HTML = """
+<div class="jsavcontainer">
+  <div class="jsavcounter"></div>
+  <div class="jsavoutput jsavline"></div>
+  <div class="jsavcanvas"></div>
+  <div class="jsavcontrols"></div>
+</div>
+<div class="questiondialog"></div>
+"""
+
+class Jsav(Language):
+    def can_give_task(self):
+        return True
+
+    def __init__(self, query, sourcecode):
+        super().__init__(query, sourcecode)
+        self.sourcefilename = "/tmp/%s/%s.txt" % (self.basename, self.filename)
+        self.fileext = "txt"
+        self.readpoints_default = 'Score: (.*)'
+        self.delete_tmp = False
+
+        self.model = False
+        if self.query.jso:
+            state = self.query.jso.get("state", None)
+            if state:
+                self.model = state.get("model", False)
+
+    def state_copy(self):
+        """
+        :return: list of state attribute names from the currently selected answer to be copied to .ts client code
+        """
+        return ["message"]
+
+    def runner_name(self):
+        return "jsav-runner"
+
+    def js_files(self):
+        return ["/cs/js/build/jsav.js"]
+
+    def deny_attributes(self):
+        return {"srchtml":"",
+                "jsavhtml": "",
+                "jsavjs": "",
+                "jsavcss": ""
+        }
+
+    def modify_usercode(self, s):
+        if not s.startswith("{"):
+            return s
+        s = s.replace("&quot;", '"')
+        js = json.loads(s)
+        res = ''
+        for key in js:
+            res += js[key] + "\n"
+        return res
+
+    def run(self, result, sourcelines, points_rule):
+        self.save(result)
+        return 0, "JSAV saved", "", ""
+
+    def save(self, result):
+        data = dict(self.query.jso["input"])
+        if data.get("model", False):
+            self.model = True
+
+        if self.model:
+            data['model'] = "y"
+            result["tim_info"]["valid"] = False
+            result["tim_info"]["validMsg"] = "Et voi enää saada pisteitä kun katsoit vastauksen"
+
+        if 'type' in data:
+            del data['type']
+
+        result["save"] = data
+        return 0, "JSAV saved", "", ""
+
+    def iframehtml(self, result, sourcelines, points_rule):
+        """
+        :return: the finalized HTML code for the JSAV plugin's iframe
+        """
+        ma = self.query.jso['markup']
+        jsavhtml = JSAV_HTML
+        srchtml = get_by_id(ma, 'srchtml', JSAV_DEFAULT_SRC_HTML)
+        srchtml = html_change(srchtml, "//JSAVHTML", ma, "jsavhtml", '{}', "", jsavhtml)
+        srchtml = html_change(srchtml, "//JSAVJAVASCRIPT", ma, "jsavjs", '{}', "")
+        srchtml = html_change(srchtml, "//JSAVCSS", ma, "jsavcss", '{}', "")
+        return srchtml
+
+    def convert(self, sourcelines):
+        url = "http://stack-api-server/api/xmltoyaml.php"
+        data = {'xml' : sourcelines}
+        r = requests.post(url=url, data=json.dumps(data))
+        r = r.json()
+        return 0, r.get('yaml'), "", ""
+
+
 class R(Language):
     def __init__(self, query, sourcecode):
         super().__init__(query, sourcecode)

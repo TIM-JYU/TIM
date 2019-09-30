@@ -1,0 +1,115 @@
+Variable swap
+Add a variable swap exercise
+``` {#PLUGINNAMEHERE plugin="csPlugin"}
+type: jsav
+-pointsRule:
+    pointsKey: points
+path: user
+header: "Exercise: Variable swap"
+stem: Swap the contents of variables a and b.
+width: 800
+height: 280
+jsavhtml: |!!
+  <div class="jsavcontainer">
+    <p class="jsavcanvas">
+    <button class="v-button" id="addHelperVar">Initialize a temporary variable</button>
+    </p>
+  </div>
+!!
+jsavcss: |!!
+  .jsavvaluelabel.jsavvarvalue {
+    color: black !important;
+  }
+  .jsavvarlabel {
+    float: left;
+    margin-left: 20px;
+    color: black !important;
+  }
+  .jsavvariable {
+    margin-top: 40px;
+  }
+  .jsavvariable .jsavvalue {
+    width: 40px;
+    height: 40px;
+    float: left;
+    text-align: center;
+    border: 1px solid #555;
+    margin-left: 10px;
+    border-radius: 25%;
+    cursor: pointer;
+  }
+!!
+jsavjs: |!!
+  var aInitial, bInitial, helpVars, aVariable, bVariable,
+  av = new JSAV();
+  av.recorded(); // we are not recording an AV with an algorithm
+
+  function initialize() {
+    if (aVariable) {
+      aVariable.clear();
+      bVariable.clear();
+      for (var i = helpVars.length; i--; ) {
+        helpVars[i].clear();
+      }
+      selectedVar = null;
+    }
+    helpVars = [];
+    aInitial = JSAV.utils.rand.numKey(0, 10);
+    do { // randomize another var not equal to a
+      bInitial = JSAV.utils.rand.numKey(0, 10);
+    } while (aInitial === bInitial);
+
+    aVariable = av.variable(aInitial, {label: "a = ", visible: true});
+    aVariable.click(varClickHandler);
+    bVariable = av.variable(bInitial, {label: "b = ", visible: true});
+    bVariable.click(varClickHandler);
+    return [aVariable, bVariable];
+  }
+
+  function modelSolution(modeljsav) {
+    var modelAVariable = modeljsav.variable(aInitial, {label: "a = ", visible: true});
+    var modelBVariable = modeljsav.variable(bInitial, {label: "b = ", visible: true});
+    modeljsav.displayInit();
+    modeljsav.umsg("We start by initializing a new variable <code>tmp</code>");
+    var modelHelpVar = modeljsav.variable("", {label: "tmp = ", visible: true});
+    modeljsav.step();
+    modeljsav.umsg("Copy value of variable <code>a</code> to variable <code>tmp</code>.");
+    modeljsav.effects.copyValue(modelAVariable, modelHelpVar);
+    modeljsav.step();
+    modeljsav.umsg("Copy value of variable <code>b</code> to variable <code>a</code>.");
+    modeljsav.effects.copyValue(modelBVariable, modelAVariable);
+    modeljsav.step();
+    modeljsav.umsg("Copy value of variable <code>tmp</code> to variable <code>b</code>.");
+    modeljsav.effects.copyValue(modelHelpVar, modelBVariable);
+    modeljsav.step();
+    modeljsav.umsg("The values of the variables have been swapped.");
+    modeljsav.gradeableStep();
+    return [modelAVariable, modelBVariable];
+  }
+
+  var exercise = av.exercise(modelSolution, initialize, { grader: "finalStep"});
+  exercise.reset();
+
+  $("#addHelperVar").click(function() {
+    var helperVar = av.variable("", {label: "tmp" + (helpVars.length + 1) + " = ", visible: true});
+    helperVar.click(varClickHandler);
+    helpVars.push(helperVar);
+    av.gradeableStep();
+  });
+
+  var selectedVar;
+  function varClickHandler() {
+    if (selectedVar) {
+      selectedVar.unhighlight();
+      if (selectedVar !== this) {
+        av.effects.copyValue(selectedVar, this);
+        av.gradeableStep();
+      }
+      selectedVar = null;
+    } else { // selecting a variable for swap
+      selectedVar = this;
+      selectedVar.highlight();
+    }
+  };
+!!
+```

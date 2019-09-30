@@ -1,0 +1,20 @@
+Empty template including HTML
+Add an empty JSAV template including a field for custom HTML
+``` {#PLUGINNAMEHERE plugin="csPlugin"}
+type: jsav
+-pointsRule:
+    pointsKey: points
+path: user
+header: JSAV Template
+stem: Description
+width: 800
+height: 400
+jsavhtml: |!!
+  <div class="jsavcontainer">
+  </div>
+!!
+jsavcss: |!!
+!!
+jsavjs: |!!
+!!
+```

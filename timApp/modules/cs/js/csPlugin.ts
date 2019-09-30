@@ -993,6 +993,9 @@ class CsController extends CsBase implements ITimComponent {
             case "cs-geogebra-runner":
                 kind = "geogebra";
                 break;
+            case "cs-jsav-runner":
+                kind = "jsav";
+                break;
             case "cs-simcir-runner":
                 kind = "simcir";
                 break;

@@ -1,0 +1,16 @@
+Empty template
+Add a JSAV template with just about the bare necessities
+``` {#PLUGINNAMEHERE plugin="csPlugin"}
+type: jsav
+-pointsRule:
+    pointsKey: points
+path: user
+header: JSAV Template
+stem: Description
+width: 800
+height: 400
+jsavcss: |!!
+!!
+jsavjs: |!!
+!!
+```

@@ -4,3 +4,6 @@
 [submodule "stack"]
 	path = stack
 	url = https://github.com/vesal/moodle-qtype_stack.git
+[submodule "timApp/modules/cs/jsav"]
+	path = timApp/modules/cs/jsav
+	url = https://github.com/vkaravir/JSAV.git

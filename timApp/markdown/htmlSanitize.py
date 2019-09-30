@@ -60,6 +60,7 @@ TIM_SAFE_TAGS = [
     'cs-comtest-runner',
     'cs-comtest-runner-input',
     'cs-console',
+    'cs-jsav-runner',
     'cs-jypeli-runner',
     'cs-jypeli-runner-input',
     'cs-parsons-runner',

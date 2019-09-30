@@ -7,4 +7,6 @@ set -e
 timApp/modules/fields/js   \
 timApp/modules/jsrunner/public/javascripts  timApp/modules/feedback/js timApp/modules/drag/js
 
+./run_command_workdir.sh timApp/modules/cs/jsav bash -c "npm install && grunt"
+
 ./run_command_workdir.sh timApp/modules/jsrunner npm install --no-bin-links --unsafe-perm

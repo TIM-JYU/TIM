@@ -1,0 +1,22 @@
+.jsavcontainer input[name="grade"]{
+    display:none !important;
+}
+.jsavcontainer input[name="answer"]{
+    display:none;
+    border-top-right-radius: 7px;
+    border-bottom-right-radius: 7px;
+    border: 1px solid #777  !important;
+}
+.jsavcontainer input[name="reset"]{
+    border-top-right-radius: 7px;
+    border-bottom-right-radius: 7px;
+    border: 1px solid #777  !important;
+}
+.jsavcounter {
+    position: absolute;
+    right: 0.5em;
+    z-index: 99;
+}
+.jsavoutput {
+    padding-right: 3.5em;
+}
