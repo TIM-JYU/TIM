@@ -15,7 +15,7 @@ from dataclasses import dataclass
 from marshmallow_dataclass import class_schema
 
 
-from timApp.auth.accesshelper import verify_manage_access, verify_edit_access
+from timApp.auth.accesshelper import verify_manage_access, verify_edit_access, get_doc_or_abort
 from timApp.document.create_item import create_or_copy_item, create_document
 from timApp.document.docsettings import DocSettings
 from timApp.item.block import BlockType
@@ -257,9 +257,7 @@ def merge_selected_attachments(args: MergeAttachmentsModel):
     try:
         pdf_urls = args.urls
         doc_id = args.doc_id
-        d = DocEntry.find_by_id(doc_id)
-        if not d:
-            abort(400)
+        d = get_doc_or_abort(doc_id)
         verify_edit_access(d)
 
         pdf_files = []
@@ -300,7 +298,7 @@ def open_merged_file(args: MergeAttachmentsModel):
         abort(404, 'File not found')
     pdf_urls = args.urls
     doc_id = args.doc_id
-    d = DocEntry.find_by_id(doc_id)
+    d = get_doc_or_abort(doc_id)
 
     # Right file opens only if parameter hash is the same.
     merged_file_name = f"{d.short_name}_{hash('|'.join(sorted(pdf_urls)))}_merged.pdf"

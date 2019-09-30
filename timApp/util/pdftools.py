@@ -10,6 +10,9 @@ from typing import Union, List
 from urllib import request as url_request
 from urllib.error import HTTPError
 from re import escape as re_escape, compile as re_compile
+
+from flask import current_app
+
 import timApp.plugin.plugin
 
 # Default parameter values:
@@ -320,9 +323,9 @@ def test_pdf(pdf_path: str, timeout_seconds: int = pdfmerge_timeout) -> str:
     :return: Return error message (empty string if no error).
     """
     if is_url(pdf_path):
-        return "Error: Attachment link is an URL; please upload the file to TIM"
+       return "Error: Attachment link is an URL; please upload the file to TIM"
     if not ".pdf" in pdf_path:
-        return "Error: Attachment is not a PDF-file"
+        return "Error: Attachment is not a PDF file"
     if not Path(pdf_path).exists():
         return "Error: file not found; try reuploading it"
     test_output_path = Path(timApp.util.pdftools.temp_folder_default_path) / f"pdftk_test.pdf"
@@ -353,13 +356,11 @@ def parse_error(message: str) -> str:
         return message
 
 
-
-def merge_pdfs(pdf_file_list: List[UploadedFile], output_path: Path) -> Path:
+def merge_pdfs(pdf_file_list: List[UploadedFile], output_path: Path):
     """
     Merges a list of PDFs using pdftk.
-    :param pdf_file_list: List of the uploaded files to merge.
+    :param pdf_file_list: List of the uploaded files (as objects) to merge.
     :param output_path: Merged output file path.
-    :return: output_path
     """
     if not pdf_file_list:
         raise MergeListEmptyError()
@@ -367,31 +368,26 @@ def merge_pdfs(pdf_file_list: List[UploadedFile], output_path: Path) -> Path:
     for pdf in pdf_file_list:
         # Check view access for each file before merge.
         verify_view_access(pdf.block, check_parents=True)
-        # Merge uses path strings.
-        pdf_path_string = parse_tim_url(pdf.filesystem_path.absolute().as_posix())
-        check_pdf_validity(Path(pdf_path_string))
-        pdf_path_args += [pdf_path_string]
+
+        check_pdf_validity(pdf.filesystem_path)
+        pdf_path_args += [pdf.filesystem_path]
 
     args = ["pdftk"] + pdf_path_args + ["cat", "output", output_path.absolute().as_posix()]
     call_popen(args, pdfmerge_timeout)
-    return output_path
 
 
-def parse_tim_url(par_file: str, domain: str = "tim.jyu.fi") -> str:
+def parse_tim_url(par_file: str) -> str:
     """
     Parses TIM-links to point to the corresponding file on the server.
     Note: Changes in upload folder need to be updated here as well.
     :param par_file: Link from the macro.
-    :param domain: The TIM-domain (the part between "http://" and "/files"), different for timdevs.
     :return: TIM upload file path if the link was within TIM, otherwise pass on unchanged.
     """
-    # TODO: Getting right domain in local and timdevs-machines?
+    domain = current_app.config['TIM_HOST']
     if par_file.startswith("/files/"):
-        return "/tim_files/blocks" + par_file
-    elif par_file.startswith(f"http://{domain}/files"):
-        par_file = "/tim_files/blocks" + par_file.replace(f"http://{domain}", "")
-    elif par_file.startswith(f"https://{domain}/files"):
-        par_file = "/tim_files/blocks" + par_file.replace(f"https://{domain}", "")
+        par_file = "/tim_files/blocks" + par_file
+    elif par_file.startswith(f"{domain}/files"):
+        par_file = "/tim_files/blocks" + par_file.replace(domain, "")
     return par_file
 
 
