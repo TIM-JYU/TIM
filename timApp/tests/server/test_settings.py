@@ -188,3 +188,10 @@ class SettingsTest(TimRouteTest):
                  expect_content={
                      'nonexistent': None,
                  })
+
+    def test_settings_no_xss(self):
+        self.login_test1()
+        scr = '<script>alert("hi")</script>'
+        d = self.create_doc(settings={'x': scr})
+        r = self.get(d.url)
+        self.assertNotIn(scr, r)

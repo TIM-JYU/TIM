@@ -27,7 +27,7 @@ from timApp.util.utils import count_chars_from_beginning, get_error_html, title_
 SKIPPED_ATTRS = {'r', 'rd', 'rp', 'ra', 'rt', 'settings'}
 
 
-se = SandboxedEnvironment()
+se = SandboxedEnvironment(autoescape=True)
 
 
 class DocParagraph:
