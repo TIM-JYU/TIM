@@ -56,27 +56,21 @@ class UploadedFile(ItemBase):
     @staticmethod
     def get_by_url(url: str) -> Optional['UploadedFile']:
         """
-        Returns UploadedFile object (or StampedPDF) based on given url.
-        :param url: File url.
+        Get file matching the given URL string.
+        :param url: File url as a string.
         :return: UploadedFile, StampedPDF, or None, if neither was found.
         """
-        try:
-            file_id = int(re.search(r'files/(.*?)/', url).group(1))
-            filename = Path(url).name
-            if not id or not filename:
-                return None
-        except ValueError:
+        match = re.search(r'/files/(?P<id>\d+)/(?P<filename>.+)', url)
+        if not match:
             return None
-        else:
-            f = UploadedFile.get_stamped(file_id, filename)
-            if not f:
-                return None
-            return f
+        file_id = int(match.group('id'))
+        filename = str(match.group('filename'))
+        return UploadedFile.get_by_id_and_filename(file_id, filename)
 
     @staticmethod
-    def get_stamped(file_id: int, filename: str) -> Optional[Union['UploadedFile', 'StampedPDF']]:
+    def get_by_id_and_filename(file_id: int, filename: str) -> Optional[Union['UploadedFile', 'StampedPDF']]:
         """
-        Get uploaded file or its stamped version, if file name differs (i.e. has "_stamped" in it).
+        Get uploaded file or its stamped version in case file name differs (i.e. it has "_stamped" in it).
         :param file_id: File id.
         :param filename: File name, which may contain "_stamped".
         :return: UploadedFile, StampedPDF, or None, if neither was found.

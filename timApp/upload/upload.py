@@ -4,7 +4,7 @@ import json
 import os
 import posixpath
 from pathlib import Path, PurePosixPath
-from typing import List, Optional, Union
+from typing import List, Optional
 from urllib.parse import unquote, urlparse
 
 import magic
@@ -344,9 +344,10 @@ def save_file_and_grant_access(d: DocInfo, content, file, block_type: BlockType)
 
 @upload.route('/files/<int:file_id>/<file_filename>')
 def get_file(file_id, file_filename):
-    f = UploadedFile.get_stamped(file_id, file_filename)
+    f = UploadedFile.get_by_id_and_filename(file_id, file_filename)
     if not f:
         abort(404, 'File not found')
+    verify_view_access(f, check_parents=True)
     file_path = f.filesystem_path.as_posix()
     return send_file(file_path, mimetype=get_mimetype(file_path))
 
