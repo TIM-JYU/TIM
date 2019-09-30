@@ -15,7 +15,7 @@ from sqlalchemy.orm import lazyload, joinedload
 from werkzeug.exceptions import abort
 
 from timApp.answer.answer import Answer
-from timApp.answer.answers import get_points_by_rule, basic_tally_fields
+from timApp.answer.answers import get_points_by_rule, basic_tally_fields, valid_answers_query
 from timApp.auth.accesshelper import get_doc_or_abort
 from timApp.document.docinfo import DocInfo
 from timApp.document.document import Document
@@ -115,7 +115,6 @@ def get_fields_and_users(
         autoalias: bool = False,
         add_missing_fields: bool = False,
         allow_non_teacher: bool = False,
-        valid_only: bool = True,
         member_filter_type: MembershipFilter = MembershipFilter.Current,
 ):
     """
@@ -237,16 +236,12 @@ def get_fields_and_users(
     join_relation = member_filter_relation_map[member_filter_type]
     tally_field_values = get_tally_field_values(d, doc_map, group_filter, join_relation, tally_fields)
     sub = []
-    if valid_only:
-        filt = (Answer.valid == True)
-    else:
-        filt = True
     # For some reason, with 7 or more fields, executing the following query is very slow in PostgreSQL 9.5.
     # That's why we split the list of task ids in chunks of size 6 and merge the results.
     # TODO: Investigate if this is still true for PostgreSQL 11.
     for task_chunk in chunks(task_ids, 6):
         sub += (
-            Answer.query.filter(Answer.task_id.in_(task_ids_to_strlist(task_chunk)) & filt)
+            valid_answers_query(task_chunk)
                 .join(User, Answer.users)
                 .join(UserGroup, join_relation)
                 .filter(group_filter)

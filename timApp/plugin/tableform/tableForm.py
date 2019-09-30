@@ -316,9 +316,15 @@ def update_fields():
         return abort(404, f'Table not found: {tid}')
     groupnames = plug.values.get("groups",[])
     queried_groups = UserGroup.query.filter(UserGroup.name.in_(groupnames))
-    fielddata, _, field_names, _ = get_fields_and_users(fields_to_update, queried_groups, doc,
-                         curr_user, plug.values.get("removeDocIds", True), add_missing_fields=True,
-                         allow_non_teacher=plug.values.get("showInView"))
+    fielddata, _, field_names, _ = get_fields_and_users(
+        fields_to_update,
+        queried_groups,
+        doc,
+        curr_user,
+        plug.values.get("removeDocIds", True),
+        add_missing_fields=True,
+        allow_non_teacher=plug.values.get("showInView"),
+    )
     rows = {}
     styles = {}
     for f in fielddata:
@@ -345,10 +351,16 @@ def tableform_get_fields(
 ):
     queried_groups = UserGroup.query.filter(UserGroup.name.in_(groupnames))
     fielddata, aliases, field_names, groups = \
-        get_fields_and_users(flds, queried_groups, doc,
-                             curr_user, remove_doc_ids, add_missing_fields=True,
-                             allow_non_teacher = allow_non_teacher,
-                             member_filter_type=group_filter_type)
+        get_fields_and_users(
+            flds,
+            queried_groups,
+            doc,
+            curr_user,
+            remove_doc_ids,
+            add_missing_fields=True,
+            allow_non_teacher=allow_non_teacher,
+            member_filter_type=group_filter_type,
+        )
     rows = {}
     realnames = {}
     emails = {}

@@ -12,6 +12,7 @@ import yaml.parser
 from sqlalchemy import func
 
 from timApp.answer.answer import Answer
+from timApp.answer.answers import valid_answers_query, valid_taskid_filter
 from timApp.auth.accesshelper import has_edit_access, verify_view_access
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docentry import DocEntry
@@ -269,9 +270,7 @@ def get_answers(user, task_ids, answer_map):
     col = func.max(Answer.id).label('col')
     cnt = func.count(Answer.id).label('cnt')
     if user is None:
-        sub = (Answer
-               .query
-               .filter(Answer.task_id.in_(task_ids_to_strlist(task_ids)) & Answer.valid == True)
+        sub = (valid_answers_query(task_ids)
                .add_columns(col, cnt)
                .with_entities(col, cnt)
                .group_by(Answer.task_id).subquery()
@@ -279,7 +278,7 @@ def get_answers(user, task_ids, answer_map):
     else:
         sub = (user
                .answers
-               .filter(Answer.task_id.in_(task_ids_to_strlist(task_ids)) & Answer.valid == True)
+               .filter(valid_taskid_filter(task_ids))
                .add_columns(col, cnt)
                .with_entities(col, cnt)
                .group_by(Answer.task_id).subquery())

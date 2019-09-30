@@ -16,7 +16,8 @@ from webargs.flaskparser import use_args
 from pluginserver_flask import GenericMarkupModel
 from timApp.answer.answer import Answer
 from timApp.answer.answer_models import AnswerUpload
-from timApp.answer.answers import get_latest_answers_query, get_common_answers, save_answer, get_all_answers
+from timApp.answer.answers import get_latest_answers_query, get_common_answers, save_answer, get_all_answers, \
+    valid_answers_query, valid_taskid_filter
 from timApp.auth.accesshelper import verify_logged_in, get_doc_or_abort, verify_manage_access
 from timApp.auth.accesshelper import verify_task_access, verify_teacher_access, verify_seeanswers_access, \
     has_teacher_access, \
@@ -45,7 +46,7 @@ from timApp.timdb.exceptions import TimDbException
 from timApp.timdb.sqa import db
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
-from timApp.util.answerutil import task_ids_to_strlist, period_handling
+from timApp.util.answerutil import period_handling
 from timApp.util.flask.requesthelper import verify_json_params, get_option, get_consent_opt
 from timApp.util.flask.responsehelper import json_response, ok_response
 from timApp.util.get_fields import get_fields_and_users, MembershipFilter
@@ -166,7 +167,7 @@ def get_iframehtml(plugintype: str, task_id_ext: str, user_id: int, anr: int):
     return result
 
 
-def get_useranswers_for_task(user, task_ids, answer_map):
+def get_useranswers_for_task(user: User, task_ids: List[TaskId], answer_map):
     """
     Performs a query for latest valid answers by given user for given task
     Similar to pluginControl.get_answers but without counting
@@ -178,7 +179,7 @@ def get_useranswers_for_task(user, task_ids, answer_map):
     col = func.max(Answer.id).label('col')
     sub = (user
            .answers
-           .filter(Answer.task_id.in_(task_ids_to_strlist(task_ids)) & Answer.valid == True)
+           .filter(valid_taskid_filter(task_ids))
            .add_columns(col)
            .with_entities(col)
            .group_by(Answer.task_id).subquery())
@@ -193,12 +194,10 @@ def get_useranswers_for_task(user, task_ids, answer_map):
     return answs
 
 
-def get_globals_for_tasks(task_ids, answer_map):
+def get_globals_for_tasks(task_ids: List[TaskId], answer_map):
     col = func.max(Answer.id).label('col')
     cnt = func.count(Answer.id).label('cnt')
-    sub = (Answer
-           .query
-           .filter(Answer.task_id.in_(task_ids_to_strlist(task_ids)) & Answer.valid == True)
+    sub = (valid_answers_query(task_ids)
            .add_columns(col, cnt)
            .with_entities(col, cnt)
            .group_by(Answer.task_id).subquery()
@@ -285,7 +284,6 @@ class JsRunnerMarkupModel(GenericMarkupModel):
     showInView: bool = False
     timeout: Union[int, Missing] = missing
     updateFields: Union[List[str], Missing] = missing
-    validonly: bool = True
 
     @validates_schema(skip_on_field_errors=True)
     def validate_schema(self, data, **_):
@@ -565,7 +563,6 @@ def post_answer(plugintype: str, task_id_ext: str):
             plugin.values["preprogram"] = f"gtools.params = {json.dumps(runner_req.input.paramComps)};\n{preprg}"
 
         siw = runnermarkup.showInView
-        validonly = runnermarkup.validonly
 
         if not runnermarkup.selectIncludeUsers and runnermarkup.includeUsers != runner_req.input.includeUsers:
             abort(403, 'Not allowed to select includeUsers option.')
@@ -576,7 +573,6 @@ def post_answer(plugintype: str, task_id_ext: str):
             d,
             get_current_user_object(),
             allow_non_teacher=siw,
-            valid_only=validonly,
             member_filter_type=runner_req.input.includeUsers,
         )
         answerdata.pop('paramComps', None)  # This isn't needed by jsrunner server, so don't send it.

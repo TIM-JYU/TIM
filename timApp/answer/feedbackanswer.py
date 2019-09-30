@@ -6,6 +6,7 @@ from typing import List, Tuple, Iterable
 from flask import Blueprint, request, abort
 
 from timApp.answer.answer import Answer
+from timApp.answer.answers import get_all_answer_initial_query
 from timApp.auth.accesshelper import verify_teacher_access
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docentry import DocEntry, get_documents_in_folder
@@ -44,22 +45,7 @@ def get_all_feedback_answers(task_ids: List[TaskId],
     :return: Compiled list of test results.
     """
 
-    # Query from answer-table for the given time period and TaskId:s.
-    q = (Answer
-         .query
-         .filter((period_from <= Answer.answered_on) & (Answer.answered_on < period_to))
-         .filter(Answer.task_id.in_(task_ids_to_strlist(task_ids))))
-    
-    # Checks validity of answers and filters if needed.
-    if valid == 'all':
-        pass
-    elif valid == '0':
-        q = q.filter_by(valid=False)
-    else:
-        q = q.filter_by(valid=True)
-
-    # Also joins with user table to get user information.
-    q = q.join(User, Answer.users)
+    q = get_all_answer_initial_query(period_from, period_to, task_ids, valid)
 
     # Sorts the answers first with user then by time - for a report of whole test result by one user.
     q = q.order_by(User.name, Answer.answered_on)

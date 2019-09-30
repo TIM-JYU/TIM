@@ -117,17 +117,8 @@ def get_all_answers(task_ids: List[TaskId],
     print_header = print_opt == "all" or print_opt == "header"
     print_answers = print_opt == "all" or print_opt == "answers" or print_opt == "answersnoline"
 
-    q = (Answer
-         .query
-         .filter((period_from <= Answer.answered_on) & (Answer.answered_on < period_to))
-         .filter(Answer.task_id.in_(task_ids_to_strlist(task_ids))))
-    if valid == 'all':
-        pass
-    elif valid == '0':
-        q = q.filter_by(valid=False)
-    else:
-        q = q.filter_by(valid=True)
-    q = q.join(User, Answer.users)
+    q = get_all_answer_initial_query(period_from, period_to, task_ids, valid)
+
     q = q.options(defaultload(Answer.users).lazyload(User.groups))
     if consent is not None:
         q = q.filter_by(consent=consent)
@@ -200,6 +191,21 @@ def get_all_answers(task_ids: List[TaskId],
     return result
 
 
+def get_all_answer_initial_query(period_from, period_to, task_ids, valid):
+    q = (Answer
+         .query
+         .filter((period_from <= Answer.answered_on) & (Answer.answered_on < period_to))
+         .filter(Answer.task_id.in_(task_ids_to_strlist(task_ids))))
+    if valid == 'all':
+        pass
+    elif valid == '0':
+        q = q.filter_by(valid=False)
+    else:
+        q = q.filter_by(valid=True)
+    q = q.join(User, Answer.users)
+    return q
+
+
 def get_common_answers(users: List[User], task_id: TaskId) -> List[Answer]:
     q = get_latest_answers_query(task_id, users)
     glo = is_global_id(task_id)
@@ -221,6 +227,15 @@ basic_tally_fields = [
 ]
 
 
+def valid_answers_query(task_ids: List[TaskId]):
+    return (Answer.query
+            .filter(valid_taskid_filter(task_ids)))
+
+
+def valid_taskid_filter(task_ids: List[TaskId]):
+    return Answer.task_id.in_(task_ids_to_strlist(task_ids)) & (Answer.valid == True)
+
+
 def get_users_for_tasks(task_ids: List[TaskId], user_ids: Optional[List[int]] = None, group_by_user=True,
                         group_by_doc=False,
                         answer_filter=None) -> List[Dict[str, Any]]:
@@ -236,9 +251,9 @@ def get_users_for_tasks(task_ids: List[TaskId], user_ids: Optional[List[int]] = 
     a2 = Answer.query.with_entities(Answer.id, Answer.points).subquery()
     if answer_filter is None:
         answer_filter = true()
-    a1 = (Answer.query
+    a1 = (valid_answers_query(task_ids)
+          .filter(answer_filter)
           .join(UserAnswer, UserAnswer.answer_id == Answer.id)
-          .filter(Answer.task_id.in_(task_ids_to_strlist(task_ids)) & (Answer.valid == True) & answer_filter)
           .group_by(UserAnswer.user_id, Answer.task_id)
           .with_entities(Answer.task_id,
                          UserAnswer.user_id.label('uid'),
