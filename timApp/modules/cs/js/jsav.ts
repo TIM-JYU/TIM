@@ -288,7 +288,7 @@ const common = {
 /**
  * This is the HTML code that is placed when the JSAV plugin is used in a TIM document.
  */
-jsavApp.component("jsavRunner", {
+jsavApp.component("csJsavRunner", {
     ...common,
     require: {
         viewCtrl: "^timView",

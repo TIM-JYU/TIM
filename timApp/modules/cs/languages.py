@@ -1126,7 +1126,7 @@ class Jsav(Language):
         return ["message"]
 
     def runner_name(self):
-        return "jsav-runner"
+        return "cs-jsav-runner"
 
     def js_files(self):
         return ["/cs/js/build/jsav.js"]
