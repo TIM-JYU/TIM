@@ -238,8 +238,10 @@ class DocSettings:
         res = self.__dict.get(self.show_velps_key, True)
         return res
 
-    def group(self) -> str:
+    def group(self) -> Optional[str]:
         res = self.__dict.get(self.group_key, None)
+        if res is not None and not isinstance(res, str):
+            raise ValueError(f'group must be str, not {type(res)}')
         return res
 
     def auto_number_start(self) -> int:

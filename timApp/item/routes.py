@@ -346,14 +346,15 @@ def view(item_path, template_name, usergroup=None, route="view"):
         user_list = None
         ug = None
         if usergroup is None:
-            usergroup = doc_settings.group()
-        if usergroup is not None:
-            if not isinstance(usergroup, str):
+            try:
+                usergroup = doc_settings.group()
+            except ValueError:
                 flash("The setting 'group' must be a string.")
+        if usergroup is not None:
+            ug = UserGroup.get_by_name(usergroup)
+            if not ug:
+                flash(f'User group {usergroup} not found')
             else:
-                ug = UserGroup.get_by_name(usergroup)
-                if not ug:
-                    abort(404, 'User group not found')
                 if not verify_group_view_access(ug, require=False):
                     flash(f"You don't have access to group '{ug.name}'.")
                     ug = None

@@ -244,11 +244,9 @@ class TimTest(TimRouteTest):
     def test_teacher_nonexistent_group(self):
         self.login_test1()
         d = self.create_doc()
-        self.get(f'/teacher/{d.path}',
-                 query_string={'group': 'nonexistent'},
-                 expect_status=404,
-                 json_key='error',
-                 expect_content='User group not found')
+        r = self.get(f'/teacher/{d.path}',
+                 query_string={'group': 'nonexistent'})
+        self.assertIn('User group nonexistent not found', r)
 
     def test_ping(self):
         self.get('/ping')
