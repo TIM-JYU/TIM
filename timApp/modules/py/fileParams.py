@@ -246,6 +246,7 @@ def get_url_lines(url: str):
             print(str(e))
             print("error reading filecache: ", diskcache)
 
+    check_url_scheme(url)
     try:
         req = urlopen(url)
         # ftype = req.headers['content-type']
@@ -282,6 +283,12 @@ def get_url_lines(url: str):
     return lines
 
 
+def check_url_scheme(url: str):
+    scheme = urlparse(url).scheme
+    if scheme not in ('http', 'https'):
+        raise Exception(f"URL scheme must be http or https, got '{scheme}'")
+
+
 # noinspection PyBroadException
 def get_url_lines_as_string(url: str):
     global cache
@@ -307,6 +314,7 @@ def get_url_lines_as_string(url: str):
 
     # print("not in filecache: ", diskcache)
 
+    check_url_scheme(url)
     try:
         req = urlopen(url)
         # ftype = req.headers['content-type']

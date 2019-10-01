@@ -119,13 +119,16 @@ class BrowserTest(TimLiveServer, TimRouteTest):
         self.drv.delete_all_cookies()
         self.login_browser_as('test3@example.com', 'test3pass', TEST_USER_3_NAME)
 
+    def get_browser_url(self):
+        return self.app.config['SELENIUM_BROWSER_URL']
+
     def goto(self, url: str):
         """Navigates to a new URL using the browser.
 
         :param url: The URL to which to navigate. This must be relative.
 
         """
-        url_ = f"{self.app.config['SELENIUM_BROWSER_URL']}{url}"
+        url_ = f"{self.get_browser_url()}{url}"
         # raise Exception(url_)
         self.drv.get(url_)
 
