@@ -1,4 +1,5 @@
 from copy import deepcopy
+from html import escape
 from typing import Dict, Optional
 
 from timApp.timtypes import UserType, DocumentType
@@ -70,7 +71,7 @@ class MacroInfo:
         if not user:
             return {}
         return {
-            'username': user.name,
-            'realname': user.real_name,
-            'useremail': user.email,
+            'username': escape(user.name),
+            'realname': escape(user.real_name) if user.real_name else None,
+            'useremail': escape(user.email) if user.email else None,
         }
