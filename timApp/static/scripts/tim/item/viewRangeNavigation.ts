@@ -55,7 +55,7 @@ timApp.component("viewRangeNavigation", {
     },
     controller: ViewRangeNavigation,
     template: `
-    <div class="view-range-container">
+    <div class="view-range-container" ng-if="$ctrl.currentRange">
         <div class="view-range-buttons">
             <button ng-disabled="$ctrl.currentRange.b <= 0" class="timButton btn-sm"
                 ng-click="$ctrl.move($ctrl.prevRange, false)">Previous part</button>
