@@ -29,6 +29,9 @@ services:
    TIM_SETTINGS: ${CONFIG_FILE}
    TIM_HOST: ${TIM_HOST}
   restart: unless-stopped
+  networks:
+   - db
+   - default
  timagent:
   image: timimages/timagent
   build:
@@ -44,6 +47,8 @@ services:
    - data11:/var/lib/postgresql/data
   command: postgres -c 'max_connections=200'
   restart: unless-stopped
+  networks:
+   - db
  csplugin:
   image: timimages/cs3:rust
   build: ./timApp/modules/cs
@@ -194,6 +199,9 @@ services:
    TIM_SETTINGS: ${CONFIG_FILE}
    TIM_HOST: ${TIM_HOST}
   restart: unless-stopped
+  networks:
+   - db
+   - default
  stack-api-server:
   build: ./stack
   image: timimages/stack
@@ -210,3 +218,5 @@ services:
    BROWSER_URL: ${BROWSER_URL}
 volumes:
  data11:
+networks:
+ db:
