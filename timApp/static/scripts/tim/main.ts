@@ -18,6 +18,7 @@ import * as manageCtrl from "tim/item/manageCtrl";
 import * as relevanceEdit from "tim/item/relevanceEdit";
 import * as rightsEditor from "tim/item/rightsEditor";
 import * as taggedDocumentList from "tim/item/taggedDocumentList";
+import * as viewRangeNavigation from "tim/item/viewRangeNavigation";
 import * as answerToQuestionController from "tim/lecture/answerToQuestionController";
 import * as createLectureCtrl from "tim/lecture/createLectureCtrl";
 import * as lectureController from "tim/lecture/lectureController";
@@ -96,6 +97,7 @@ markAsUsed(
     userMenu,
     velpSelection,
     viewctrl,
+    viewRangeNavigation,
 );
 
 if (document.location) {

@@ -831,7 +831,7 @@ def decide_view_range(doc_info: DocInfo, preferred_set_size: int, index: int = 0
         e = min(preferred_set_size + index, document_length - 1)
     else:
         b = max(index - preferred_set_size, 0)
-        e = index - 1
+        e = index
     # TODO: Don't cut areas.
     # TODO: Add the rest of document if it's smaller than given fraction of the piece size.
     return b, e
